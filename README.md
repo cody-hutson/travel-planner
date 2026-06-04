@@ -10,6 +10,7 @@ A multi-agent trip planning system. Seven specialized agents research, plan, val
 | `agents/` | Behavioral definitions for the 7 agents (enrichment, activities, food, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip |
 | `reference/` | `site-layout-spec.md` — implementation spec for the published travel site |
+| `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
 | `trips/` | Per-trip working directories (git-ignored — never published) |
 
@@ -49,7 +50,7 @@ scripts/publish-trip-site.sh update  trips/<destination>-<year>   # re-publish a
 scripts/publish-trip-site.sh rotate  trips/<destination>-<year>   # change the passphrase
 ```
 
-The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Pass `--plaintext` to publish fully public instead. Full flow in [`CLAUDE.md`](CLAUDE.md).
+The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Note: the per-trip repo name (`<destination>-<year>-trip`) is public, so the destination and year are visible even though the itinerary is encrypted. To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 

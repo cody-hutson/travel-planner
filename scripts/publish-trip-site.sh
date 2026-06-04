@@ -110,7 +110,7 @@ get_passphrase() { # <trip_dir> <force_new:0|1>
   else
     p="$(gen_passphrase)"; printf '%s\n' "$p" > "$pf"; chmod 600 "$pf"
   fi
-  [ "${#p}" -ge 8 ] || die "passphrase missing or too short (need ≥8 chars) — unset STATICRYPT_PASSWORD or fix $pf"
+  [ "${#p}" -ge 12 ] || die "passphrase too weak (need ≥12 chars for a public, brute-forceable ciphertext) — unset STATICRYPT_PASSWORD to auto-generate a strong one, or fix $pf"
   printf '%s' "$p"
 }
 
@@ -134,7 +134,7 @@ encrypt_to_tmp() { # <src_html> <passphrase>
   stage=$(mktemp -d); enc=$(mktemp -d); log=$(mktemp)
   cp "$src_html" "$stage/index.html"
   if ! ( cd "$stage" && STATICRYPT_PASSWORD="$passphrase" \
-        npx --yes staticrypt@3 index.html --short --config false -d "$enc" ) >"$log" 2>&1; then
+        npx --yes staticrypt@3.5.4 index.html --short --config false -d "$enc" ) >"$log" 2>&1; then
     warn "staticrypt failed:"; sed 's/^/    /' "$log" >&2
     rm -rf "$stage" "$enc"; rm -f "$log"; die "encryption step failed."
   fi
@@ -224,6 +224,9 @@ cmd_publish() { # <trip_dir> [--plaintext]
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
+  if gh repo view "${owner}/${slug}" >/dev/null 2>&1; then
+    die "per-trip repo ${owner}/${slug} already exists — use:  $(basename "$0") update ${trip_dir}  (or rotate)"
+  fi
   rm -rf "$pub_dir"; mkdir -p "$pub_dir"
 
   if [ "$plaintext" = "1" ]; then
@@ -306,9 +309,6 @@ cmd_update() { # <trip_dir>
   ok "Guard passed."
 
   ( cd "$pub_dir"
-    if git diff --quiet -- index.html 2>/dev/null && git diff --cached --quiet -- index.html 2>/dev/null; then
-      info "No ciphertext change — site is already up to date."; exit 0
-    fi
     git add index.html
     commit_noreply . "Update trip site"
     git push --quiet origin main
@@ -325,8 +325,10 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   else
     get_passphrase "$trip_dir" 1 >/dev/null   # force-generate a new one
   fi
-  warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one."
+  # Re-encrypt + push under the new passphrase FIRST; cmd_update dies on failure, so the
+  # "rotated" confirmation below is only reached once the new ciphertext is actually live.
   cmd_update "$trip_dir"
+  warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one."
   printf '\n  New passphrase: \033[1;36m%s\033[0m  (saved to %s)\n\n' "$(cat "$pf")" "$pf"
 }
 
