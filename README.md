@@ -41,7 +41,15 @@ Full agent dispatch protocol, mode definitions, output versioning rules, and sit
 
 ## Publishing a Trip Site
 
-When an itinerary is ready, the hub-planner produces a single self-contained HTML file. The publish flow (in `CLAUDE.md`) pushes that file to a per-trip public GitHub repo with Pages enabled — each trip site is a separate standalone repo independent of this engine.
+When an itinerary is ready, Claude produces a single self-contained HTML file and publishes it **private-by-default** — the site is encrypted (StatiCrypt, AES-256-GCM) before anything reaches the web, and only the ciphertext is pushed to a per-trip public GitHub repo with Pages. Visitors get a passphrase prompt and decrypt in-browser, so free hosting still works and the plaintext itinerary never leaves your machine.
+
+```bash
+scripts/publish-trip-site.sh publish trips/<destination>-<year>   # encrypt + publish
+scripts/publish-trip-site.sh update  trips/<destination>-<year>   # re-publish after edits
+scripts/publish-trip-site.sh rotate  trips/<destination>-<year>   # change the passphrase
+```
+
+The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Pass `--plaintext` to publish fully public instead. Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 
