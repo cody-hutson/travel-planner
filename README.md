@@ -15,8 +15,12 @@ A multi-agent trip planning system. Seven specialized agents research, plan, val
 
 ## Using with Claude Code
 
+This is a [Claude Code](https://claude.com/claude-code) project — it works the same in the **desktop app** and the **CLI**.
+
 1. Clone this repo
-2. Open in Claude Code (`cd travel-planner && claude`)
+2. Open it in Claude Code:
+   - **Desktop app** — open the `travel-planner` folder
+   - **CLI** — `cd travel-planner && claude`
 3. Tell Claude you want to plan a trip — the conversation drives the flow per `CLAUDE.md`
 
 Each trip lives in `trips/<destination>-<year>/`. The `trip-context.md` file in that directory is the source of truth; `trip-log.md` is the session bridge across multiple planning chats; `outputs/` accumulates agent artifacts.
