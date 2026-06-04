@@ -1,6 +1,6 @@
 # Tokyo Trip Architecture — Working Framework
 ### Sophie Laurent, Independent Travel Designer
-### Alex's Group · Jul 15–22, 2025
+### Alex's Group · Jul 15–22
 
 ---
 
