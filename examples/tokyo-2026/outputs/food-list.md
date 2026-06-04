@@ -1,4 +1,4 @@
-# Tokyo Food Guide — Alex's Group · Jul 15–22, 2025
+# Tokyo Food Guide — Alex's Group · Jul 15–22
 **Guide by Hana Suzuki** · *Eater · Time Out Tokyo · Lucky Peach*
 **Base:** Ginza Riverside Residence, Ginza Shintomicho · **Group:** 4 adults, mixed adventurousness, no dietary restrictions
 
@@ -639,6 +639,6 @@ Build the structure. Leave room for the accident.
 
 ---
 
-*Food guide by Hana Suzuki · Built for Alex's group, Tokyo Jul 15–22, 2025*
+*Food guide by Hana Suzuki · Built for Alex's group, Tokyo Jul 15–22*
 *Confirm dietary details, budget ceiling, and reservation preferences before locking any bookings.*
 *47 recommendations across all categories · Expanded v2*

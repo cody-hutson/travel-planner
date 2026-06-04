@@ -1,7 +1,7 @@
 # Trip Log — Tokyo
 
 ## Session 2026-04-04 — Migration to Travel Planner
-**Topics:** Migrated Tokyo trip from Projects/Tokyo Trip/ to the new travel-planner system
+**Topics:** Migrated an existing Tokyo trip into the travel-planner system
 **Decisions:**
 - Moved all existing files to trips/tokyo-2026/outputs/ with standardized names
 - Created trip-context.md reconstructed from existing itinerary and architecture files
@@ -16,7 +16,7 @@
 - tokyo_travel_site.html → outputs/tokyo-travel-site.html
 - tokyo_travel_site.html.backup → outputs/tokyo-travel-site.html.backup
 - tokyo_travel_site_original.html → outputs/tokyo-travel-site-v1.html
-**Next steps:** Use ITERATION mode for any future changes. Original files in Projects/Tokyo Trip/ can be removed after confirming everything works.
+**Next steps:** Use ITERATION mode for any future changes. The original files can be removed after confirming everything works.
 **Open questions:** Flight confirmation codes and exact departure details still TBD.
 
 ## Session 2026-04-05 — Major Site Redesign (Desktop + Mobile + Booking)
@@ -46,9 +46,9 @@
 **Branch:** `feature/desktop-redesign` — merged to main.
 **GitHub Pages:** Switched back to main.
 
-## Session 2026-04-05 — Alex + Jordan Itinerary Walkthrough (Voice Transcript)
+## Session 2026-04-05 — Alex + Jordan Itinerary Walkthrough (planning conversation)
 
-**Topics:** Partner walkthrough of full 8-day itinerary. Voice transcript processed for decisions.
+**Topics:** Partner walkthrough of full 8-day itinerary. Planning conversation processed for decisions.
 
 **Decisions:**
 - Day 4 dinner: **Torishiki** (yakitori omakase) replaces Quintessence as primary. Whole group will enjoy cooked yakitori. Quintessence moved to backup (Alex + Jordan only if Torishiki unavailable).

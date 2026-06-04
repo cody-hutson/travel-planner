@@ -2,7 +2,7 @@
 
 A sanitized real-trip example showing what a finished planning cycle looks like across all engine artifacts. Use it as a reference for the shape and depth of agent outputs — not as a template to copy.
 
-> Names, origin city, and GitHub URLs have been scrubbed. The destination, hotel, dates, venues, and itinerary structure are real. The group is a fictional 5-person party (Alex, Jordan, Sam, Pat, Riley) with Tokyo-relevant constraints (heat sensitivity, raw fish preferences, mandatory rest windows).
+> Names, origin city, the property name, exact dates, and GitHub URLs have been scrubbed or made illustrative. The destination, the kinds of venues, and the itinerary structure are real. The group is a fictional 5-person party (Alex, Jordan, Sam, Pat, Riley) with Tokyo-relevant constraints (heat sensitivity, raw fish preferences, mandatory rest windows).
 
 ## What's here
 

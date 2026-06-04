@@ -1,4 +1,4 @@
-# Tokyo Activity Guide — Alex & Group · Jul 15–22, 2025
+# Tokyo Activity Guide — Alex & Group · Jul 15–22
 
 **Group:** Alex · Partner · Partner's Sister · Partner's Mother (heat-sensitive)
 **Base:** Ginza Riverside Residence, Ginza Shintomicho (Chuo-ku)
@@ -608,11 +608,11 @@ The same self-directed Tokyo day — by this point in the trip they'll have thei
 
 *Full menu complete. Ready to slot these into a day-by-day framework when you are.*
 
-**PokéPark KANTO does not open until February 5.** Your trip is July 2025 — this attraction won't exist yet. Here's what the park would have been, and what's available instead:
+**PokéPark KANTO does not open until February 5.** Your trip is in July — this attraction won't exist yet. Here's what the park would have been, and what's available instead:
 
 **What PokéPark KANTO is** *(for future reference or a return trip)*: The world's first permanent outdoor Pokémon attraction, built inside Yomiuriland in Inagi City, western Tokyo. A 500-meter Pokémon Forest trail with over 600 life-size Pokémon in recreated habitats, plus Sedge Town with a Pokémon Center, parade, gym shows, two rides (¥1,200 each extra), and exclusive merchandise. Trainer's Pass from ¥7,900, Elite Trainer's Pass from ¥14,000 — both include Yomiuriland admission. About 45–60 minutes from Shinjuku. Heavy outdoor component — a July visit would require the same heat discipline as any outdoor day.
 
-**Pokémon alternatives available in July 2025:**
+**Pokémon alternatives available in July:**
 
 ### Pokémon Center Mega Tokyo — Ikebukuro (Sunshine City)
 **Best time:** Midday · **Duration:** 1–1.5 hrs
@@ -888,7 +888,7 @@ A well-regarded fully English-speaking spa offering facials, nails, lashes, brow
 
 First, a genuine structural note because this is something most guides bury: **traditional Japanese onsen are gender-separated.** The men's and women's baths are entirely separate spaces. You soak on your side, your partner soaks on theirs, and you reconvene in the locker room or rest area afterward. This is the standard experience and it's worthwhile on its own terms — but if you want to soak *together*, what you're looking for is a **kashikiri-buro** (貸切風呂): a private reserved onsen bath that a couple or small group books exclusively for 45–60 minutes.
 
-**Tattoo policy:** This is a real variable. Traditional onsen in Japan have historically banned visible tattoos (irezumi) due to their historical association with organized crime. In 2025 Tokyo, the policy is changing but inconsistent — roughly divided into "fully tattoo-friendly," "cover small tattoos with waterproof patches," and "no tattoos at all." I've flagged this below for each option. If either of you has tattoos, the private kashikiri option eliminates the problem entirely — staff don't see you undressed.
+**Tattoo policy:** This is a real variable. Traditional onsen in Japan have historically banned visible tattoos (irezumi) due to their historical association with organized crime. In Tokyo, the policy is changing but inconsistent — roughly divided into "fully tattoo-friendly," "cover small tattoos with waterproof patches," and "no tattoos at all." I've flagged this below for each option. If either of you has tattoos, the private kashikiri option eliminates the problem entirely — staff don't see you undressed.
 
 ---
 
@@ -1068,4 +1068,4 @@ If you go Saturday–Sunday, they have roughly Saturday afternoon through Sunday
 
 ---
 
-*Guide: Takeshi Noda · Tokyo Private Tours · Built for Alex's group, Jul 2025*
+*Guide: Takeshi Noda · Tokyo Private Tours · Built for Alex's group, mid-July*
