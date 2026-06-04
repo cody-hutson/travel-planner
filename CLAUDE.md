@@ -239,36 +239,49 @@ When the itinerary changes (iteration mode, new bookings, swapped venues):
 
 ### Publishing to GitHub Pages
 
-When the user says "publish this" or "put this on GitHub":
+**Published trip sites are private-by-default.** A trip itinerary — dates, lodging, who you're travelling with — must not be world-readable. The publish flow encrypts the site before anything reaches the public per-trip repo, so only ciphertext is ever pushed. Free public Pages hosting still works because decryption happens client-side, in the viewer's browser, after they enter the passphrase.
 
-1. **Prep the repo files** in the trip's outputs folder:
-   - Copy/rename the site HTML to `index.html`
-   - No other files needed — the site is self-contained
+When the user says "publish this" or "put this on GitHub", run:
 
-2. **Create a public repo:**
-   ```bash
-   cd trips/[destination-year]/outputs
-   git init
-   git add index.html
-   git commit -m "Initial trip site"
-   gh repo create <your-github-username>/[destination]-[year]-trip --public --source=. --push
-   ```
+```bash
+scripts/publish-trip-site.sh publish trips/[destination-year]
+```
 
-3. **Enable GitHub Pages:**
-   ```bash
-   gh api repos/<your-github-username>/[destination]-[year]-trip/pages -X POST -f source.branch=main -f source.path=/
-   ```
+That one command:
+1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
+2. Runs a fail-closed **pre-push guard** that refuses to push unless the output is verified ciphertext with no plaintext itinerary tokens.
+3. Creates the per-trip **public** repo and pushes **only the ciphertext**, using a no-reply commit identity (never the user's email).
+4. Enables Pages and prints the live URL plus the passphrase.
 
-4. **Site is live at:** `https://<your-github-username>.github.io/[destination]-[year]-trip/`
+If the pre-push guard aborts, **nothing was published** — the error names what failed; rebuild the site and re-run.
 
-5. **Subsequent updates** — when the site is revised:
-   ```bash
-   cd trips/[destination-year]/outputs
-   cp [destination]-travel-site.html index.html
-   git add index.html && git commit -m "Update site" && git push
-   ```
+**Passphrase.** If `$STATICRYPT_PASSWORD` is set it is used; otherwise a strong one is generated and saved to `trips/[destination-year]/.passphrase` (git-ignored, never published). Share it over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
 
-> The trip repo is independent from this engine repo. It's a standalone public repo with just the HTML file. The itinerary markdown and agent outputs stay local — only the finished site is published.
+**Site is live at:** `https://<github-username>.github.io/[destination]-[year]-trip/` — the URL shows a passphrase prompt, not the itinerary.
+
+**Updating after edits** (re-encrypt and re-publish only ciphertext):
+```bash
+scripts/publish-trip-site.sh update trips/[destination-year]
+```
+
+**Rotating the passphrase** (e.g. after sharing with someone who should no longer keep access):
+```bash
+scripts/publish-trip-site.sh rotate trips/[destination-year]
+```
+Rotation re-encrypts under a new passphrase and re-publishes; previously-shared viewers must re-receive the new one.
+
+**Opting out** — publish the itinerary fully public and unencrypted — is explicit and requires confirmation. Interactively the script prompts you to type `PUBLISH`; non-interactively (e.g. when Claude runs it) set `ALLOW_PLAINTEXT=1`:
+```bash
+ALLOW_PLAINTEXT=1 scripts/publish-trip-site.sh publish trips/[destination-year] --plaintext
+```
+
+> **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
+>
+> **What still leaks (metadata).** The per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. (An opaque repo name is tracked as a future enhancement.)
+>
+> **Trust boundary.** Encryption runs via `npx staticrypt` (pinned to an exact version); your passphrase is passed to that package at publish time, so you are trusting the pinned StatiCrypt release and the npm supply chain.
+>
+> The trip repo is independent from this engine repo — a standalone public repo containing only the encrypted `index.html`. The plaintext itinerary, agent outputs, and `.passphrase` stay in the git-ignored `trips/` working dir and are never published.
 
 ### Site References
 
@@ -309,6 +322,7 @@ travel-planner/
 │   ├── 04-transport.md
 │   ├── 05-hub-planner.md
 │   └── 06-validator.md
+├── scripts/                ← publish-trip-site.sh (private publish) + test-publish-guard.sh
 ├── templates/
 │   └── trip-context.template.md
 └── trips/

@@ -10,6 +10,7 @@ A multi-agent trip planning system. Seven specialized agents research, plan, val
 | `agents/` | Behavioral definitions for the 7 agents (enrichment, activities, food, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip |
 | `reference/` | `site-layout-spec.md` — implementation spec for the published travel site |
+| `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
 | `trips/` | Per-trip working directories (git-ignored — never published) |
 
@@ -41,7 +42,15 @@ Full agent dispatch protocol, mode definitions, output versioning rules, and sit
 
 ## Publishing a Trip Site
 
-When an itinerary is ready, the hub-planner produces a single self-contained HTML file. The publish flow (in `CLAUDE.md`) pushes that file to a per-trip public GitHub repo with Pages enabled — each trip site is a separate standalone repo independent of this engine.
+When an itinerary is ready, Claude produces a single self-contained HTML file and publishes it **private-by-default** — the site is encrypted (StatiCrypt, AES-256-CBC + HMAC-SHA256) before anything reaches the web, and only the ciphertext is pushed to a per-trip public GitHub repo with Pages. Visitors get a passphrase prompt and decrypt in-browser, so free hosting still works and the plaintext itinerary never leaves your machine.
+
+```bash
+scripts/publish-trip-site.sh publish trips/<destination>-<year>   # encrypt + publish
+scripts/publish-trip-site.sh update  trips/<destination>-<year>   # re-publish after edits
+scripts/publish-trip-site.sh rotate  trips/<destination>-<year>   # change the passphrase
+```
+
+The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Note: the per-trip repo name (`<destination>-<year>-trip`) is public, so the destination and year are visible even though the itinerary is encrypted. To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 

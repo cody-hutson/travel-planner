@@ -366,12 +366,14 @@ These change per trip — everything else stays the same:
 ## 8. File Structure for Site Generation
 
 ```
-outputs/
-├── [destination]-travel-site.html   ← Source file
-└── [destination]-trip/              ← GitHub Pages repo
+trips/<destination>-<year>/
+├── outputs/<destination>-travel-site.html   ← Source file (plaintext, stays local, git-ignored)
+└── .publish/                                ← per-trip public repo working copy (git-ignored)
     ├── .git/
-    └── index.html                   ← Copy of travel-site.html
+    └── index.html                           ← ENCRYPTED artifact — ciphertext only, never plaintext
 ```
+
+The published `index.html` is the **encrypted** output of the source file, not a raw copy: the publish flow passphrase-gates the site (StatiCrypt) and pushes only ciphertext, so the design system above is what the viewer sees *after* decrypting in-browser. See the publish flow in `CLAUDE.md`.
 
 Site is a single self-contained HTML file. External dependencies:
 - Google Fonts (3 families via CDN)
