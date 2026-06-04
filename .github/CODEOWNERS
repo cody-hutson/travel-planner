@@ -1,0 +1,11 @@
+# Code owners — travel-planner
+#
+# Single-maintainer model: the repository owner owns all paths. On a public
+# repository this routes a review request to the owner on every pull request;
+# external contributors can propose changes via fork PRs but cannot merge.
+# Required-code-owner-review is intentionally NOT enforced as a hard branch-
+# protection gate (a solo owner cannot approve their own PR — that would self-
+# lock the repo). Enforcement of "owner-only merge" comes from branch protection
+# (PR required + CI gate) plus the absence of other write collaborators.
+
+* @cody-hutson

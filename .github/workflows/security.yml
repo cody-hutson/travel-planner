@@ -1,0 +1,89 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+# travel-planner ships no application source code, so the conventional SAST +
+# dependency-audit + secret-scan triple is adapted for a markdown agent-prompt repo:
+#   1. actionlint          — SAST for the workflow YAML (the only executable surface)
+#   2. markdown-link-check  — integrity of cross-references in the agent prompts / docs
+#   3. gitleaks            — secret scanning (universal; full history)
+#
+# Branch-protection required checks MUST match these 3 job name: fields exactly,
+# case-sensitive: "Workflow SAST (actionlint)", "Markdown link integrity (markdown-link-check)",
+# "Secret scanning (gitleaks)".
+
+jobs:
+  actionlint:
+    name: Workflow SAST (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install actionlint
+        run: |
+          # actionlint binary installer (upstream-recommended path)
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.1
+          ./actionlint -version
+      - name: Run actionlint
+        # The -ignore flag suppresses shellcheck SC2016 propagation from the
+        # byte-identically-copied pr-body-parser-clean.yml workflow. Single-quoted
+        # expressions in its embedded shell scripts are intentional (literal grep
+        # patterns + bash variables that must not expand at shellcheck-time).
+        # actionlint v1.7.1 does NOT support the `paths` config schema, so the
+        # config-file approach (.github/actionlint.yaml) is forward-compatible
+        # documentation only; the runtime -ignore flag is the load-bearing
+        # suppression mechanism on the current v1.7.1 pin.
+        run: |
+          ./actionlint -color -ignore 'shellcheck reported issue in this script: SC2016:.+'
+
+  markdown-link-check:
+    name: Markdown link integrity (markdown-link-check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate local markdown links
+        run: |
+          # Deterministic, network-free check: every in-repo [text](path) markdown link
+          # must resolve to a file that exists. External http(s) links are intentionally
+          # NOT gated — itinerary/venue URLs are outside this repo's control and probing
+          # them would make CI slow and flaky. Job name kept stable for branch protection.
+          broken=""
+          while IFS= read -r -d '' f; do
+            dir="$(dirname "$f")"
+            while IFS= read -r t; do
+              case "$t" in http*|mailto:*|tel:*|'#'*|'') continue;; esac
+              tt="${t%%#*}"; tt="${tt%%\?*}"; tt="${tt%% *}"
+              if [ ! -e "$dir/$tt" ] && [ ! -e "$tt" ]; then
+                broken="${broken}${f} -> ${t} | "
+              fi
+            done < <(grep -oE '\]\([^)]+\)' "$f" | sed -E 's/^\]\(//; s/\)$//')
+          done < <(find . -type f -name "*.md" -not -path "./.git/*" -print0)
+          if [ -n "$broken" ]; then
+            echo "::error::broken local markdown link(s):"
+            printf '%s\n' "$broken"
+            exit 1
+          fi
+          echo "All local markdown links resolve."
+
+  gitleaks:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks version
+      - name: Run gitleaks (full history)
+        run: gitleaks detect --source . --no-banner --redact --verbose

@@ -1,0 +1,15 @@
+# Personal trip data — never tracked
+trips/
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.claude/launch.json
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+.env.*.local

@@ -1,0 +1,72 @@
+name: Depersonalization
+
+# Blocks personal data (personal-email addresses, OS user-home paths) from entering
+# the repo via a pull request — in added file content, in commit messages, and in
+# commit author/committer identity. Patterns are generic on purpose: this workflow
+# ships in a public repo, so it must not itself encode any specific person's tokens.
+# An operator-side local scan (kept outside the repo) covers project-specific tokens.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  depersonalization:
+    name: Personal-data gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Scan PR diff + commit metadata for personal data
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -uo pipefail
+
+          # Generic personal-data patterns — NO project- or person-specific tokens.
+          EMAIL='[A-Za-z0-9._%+-]+@(gmail|ymail|yahoo|hotmail|outlook|proton|icloud|live|aol|me)\.[A-Za-z]'
+          USERPATH='/(Users|home)/[A-Za-z0-9._-]+/'
+
+          fail=0
+
+          # 1. Personal email in ADDED lines — every file EXCEPT the intentional
+          #    contact homes (LICENSE, SECURITY.md) where an owner email is allowed.
+          email_hits="$(git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" -- . ':(exclude)LICENSE' ':(exclude)SECURITY.md' \
+            | grep -E '^\+' | grep -v '^\+\+\+' | grep -EI "$EMAIL" || true)"
+          if [ -n "$email_hits" ]; then
+            echo "::error::personal email address found in added lines (allowed only in LICENSE / SECURITY.md)"
+            printf '%s\n' "$email_hits"
+            fail=1
+          fi
+
+          # 2. OS user-home path in ADDED lines — never allowed.
+          path_hits="$(git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" \
+            | grep -E '^\+' | grep -v '^\+\+\+' | grep -EI "$USERPATH" || true)"
+          if [ -n "$path_hits" ]; then
+            echo "::error::OS user-home path (/Users/<name>/ or /home/<name>/) found in added lines"
+            printf '%s\n' "$path_hits"
+            fail=1
+          fi
+
+          # 3. Commit messages + author/committer identity across the PR's commits.
+          #    Catches a personal-email author identity re-entering history.
+          meta="$(git log --format='%B%n%an <%ae>%n%cn <%ce>' "$BASE_SHA".."$HEAD_SHA" || true)"
+          meta_hits="$(printf '%s\n' "$meta" | grep -EI "$EMAIL|$USERPATH" || true)"
+          if [ -n "$meta_hits" ]; then
+            echo "::error::personal data in a commit message or author/committer identity"
+            printf '%s\n' "$meta_hits"
+            echo "Hint: commit with a GitHub noreply email (Settings - Emails - keep my email private)."
+            fail=1
+          fi
+
+          if [ "$fail" -ne 0 ]; then
+            echo "Depersonalization gate FAILED."
+            exit 1
+          fi
+          echo "Depersonalization gate clean — no personal data in this PR."

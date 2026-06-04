@@ -1,0 +1,64 @@
+name: Bug Report
+description: Report a bug or broken behavior in the travel-planner engine
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. This engine is a set of markdown agent prompts driven by Claude Code,
+        so "bugs" are usually: an agent produces wrong/low-quality output, a template or example is
+        incorrect, the site spec doesn't render, or the docs are misleading.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the engine is affected?
+      options:
+        - Agent prompt (agents/)
+        - Worked example (examples/)
+        - Template (templates/)
+        - Reference / site spec (reference/)
+        - Docs (README / CLAUDE.md / SECURITY.md)
+        - Repo config (.github/)
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the broken behavior. Include the exact output or error if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: What you asked Claude Code to do, and what it did. Include the prompt or command where possible.
+      placeholder: |
+        1. Opened the repo in Claude Code
+        2. Said "build the itinerary" for a new trip
+        3. The hub produced a venue twice (anchor on Day 2, alternative on Day 4)
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Claude Code version, model, and OS (helps reproduce).
+      placeholder: "Claude Code latest, Opus, macOS"
+    validations:
+      required: false

@@ -1,0 +1,328 @@
+# Travel Planner — Multi-Agent Trip Planning System
+
+## What This Is
+
+A multi-agent trip planning system. Seven specialized agents research, plan, validate, and produce travel itineraries. The agent prompts in `agents/` define deep behavioral profiles — destination specialist, food writer, itinerary architect, logistics expert, synthesis director, and pre-departure auditor. Each produces a structured artifact. The hub synthesizes all artifacts into a final itinerary. The validator audits it before it's acted on.
+
+## Agent Model Requirement
+
+**All agent dispatches use Opus 4.6 (1M context) with maximum thinking budget. No exceptions.** When spawning agents via the Agent tool, always use `model: "opus"`. The quality of the research and synthesis depends on the model — this is not a place to economize.
+
+---
+
+## Session Protocol
+
+Trip planning spans multiple chats over days or weeks. Files are the memory. Every session follows this protocol.
+
+### Starting a session (any chat that touches a trip)
+
+1. Read this `CLAUDE.md` (auto-loaded)
+2. Read `trips/[destination-year]/trip-context.md` — the source of truth for what's planned
+3. Read `trips/[destination-year]/trip-log.md` — the decision history and session bridge
+4. Scan `trips/[destination-year]/outputs/` — know what exists and what's been produced
+
+This is 30 seconds of file reads that prevents 10 minutes of "where were we?"
+
+### Ending a session
+
+**Scale the log entry to the session.** A quick site edit doesn't need a full decision register. A planning session with 5 decisions does.
+
+- **Quick edits / lookups:** One-line entry in trip-log.md noting what was changed. Or skip the log entirely if the change is trivially visible in the file diff.
+- **Planning sessions (decisions made, options discussed):** Full entry:
+  - Decisions made this session (and rationale)
+  - Options discussed and rejected (and why — this prevents re-litigating)
+  - Any new preferences or constraints surfaced
+  - What the user wants to do next
+  - Current state of the plan (what's solid, what's still open)
+
+### trip-log.md
+
+Created alongside trip-context.md when a trip starts. Running decision register that grows across sessions. Structure:
+
+```markdown
+# Trip Log — [Destination] [Year]
+
+## Session [Date]
+**Topics:** [what was discussed]
+**Decisions:**
+- [Decision — rationale]
+**Rejected:**
+- [Option — why it was rejected]
+**Next steps:** [what the user wants to do next session]
+**Open questions:** [unresolved items]
+```
+
+This file is the primary session bridge. It captures what trip-context.md cannot: the reasoning behind choices, the options that were considered, and the conversational context that informs future decisions.
+
+---
+
+## Output Versioning — Never Lose Agent Work
+
+**Agent outputs accumulate. They do not overwrite.**
+
+When an agent re-runs (e.g., food agent runs again after the user asks for more options):
+- **Append** new content to the existing output file with a dated section header
+- **Never delete** previous research — the hub reads the full accumulated file
+- Previous entries remain as context, alternatives, and history
+
+Example: `food-list.md` after three sessions:
+```markdown
+# Food List — Lisbon
+
+## Initial Research (2026-04-10)
+[35 entries from first run]
+
+## Targeted Update — Dinner Options Near Bairro Alto (2026-04-15)
+[8 new entries addressing user's request for more dinner variety]
+
+## Replacement Options — Day 3 Lunch (2026-04-18)
+[4 alternatives after user rejected the original Day 3 lunch pick]
+```
+
+**Exception:** The hub's `final-itinerary.md` IS replaced on each synthesis (it's the assembled output, not research). But it uses version numbering: v1, v2, etc. Previous versions are preserved as `final-itinerary-v1.md`, `final-itinerary-v2.md`.
+
+**Exception:** `links-reference.md` and `venue-matrix.md` are rebuilt by the hub on each synthesis pass (they reflect the current state of the itinerary, not research history).
+
+---
+
+## How to Use This (Claude Code as Primary Interface)
+
+The user interacts conversationally. **Classify the intent before acting.** Not every request needs an agent. Most requests in an active trip are direct edits or quick lookups.
+
+### Step 1: Classify the request
+
+Before doing anything, determine what kind of request this is:
+
+| Type | Signal | Action | Example |
+|------|--------|--------|---------|
+| **Direct edit** | User wants a specific change to an existing file | Read the file, make the edit, done. No agents. | "Update the emojis on the site", "Fix the typo in Day 3", "Change the dinner time to 8 PM" |
+| **Quick lookup** | User asks about existing plan content | Read the relevant file(s), answer. No agents. | "What's our Day 5 plan?", "What still needs booking?", "What hotel are we at?" |
+| **Site tweak** | User wants visual/design changes to the HTML | Read the site HTML, edit directly. No agents. | "Make the colors warmer", "Add a section for packing list", "Fix the map on Day 2" |
+| **Context update** | User shares new information (booking, date change, preference) | Update trip-context.md and/or trip-log.md. No agents unless the change cascades. | "We booked the hotel", "Mom can't do stairs", "Add a traveler's food allergy" |
+| **Targeted research** | User wants new options or deeper research on a specific topic | Dispatch the relevant spoke agent with a targeted prompt. Append to existing output. | "Find more dinner options near Bairro Alto", "What indoor activities exist near the hotel?" |
+| **Planning change** | User wants to change the itinerary structure (swap days, add a day trip, reschedule) | Update trip-context.md mode notes → dispatch relevant agent(s) → hub patches itinerary | "Swap Day 3 and Day 4", "Replace the afternoon on Day 5 with something indoor" |
+| **Full pipeline** | User wants the initial plan built or a full re-plan | Run the full agent pipeline (enrichment → spokes → hub → validator) | "Build the itinerary", "Start fresh on the plan" |
+| **Site generation** | User wants the travel site built or rebuilt | See Travel Site Generation section | "Build the site", "Create the travel page" |
+| **Publish** | User wants to push to GitHub | See Publishing section | "Publish this", "Push to GitHub" |
+
+**The default is the lightest-weight action that matches the intent.** Direct edits are direct edits. Don't dispatch agents to change an emoji. Don't re-run the food pipeline to fix a typo in a restaurant name. Don't re-synthesize the itinerary to update a booking confirmation code.
+
+**When in doubt, ask.** "Do you want me to just edit that in the site, or should I re-run the food agent for new options?" is better than guessing wrong and re-running the whole pipeline.
+
+### Step 2: Read context (scaled to the request)
+
+| Request type | What to read |
+|-------------|-------------|
+| Direct edit / site tweak | Just the file being edited |
+| Quick lookup | The relevant output file(s) |
+| Context update | trip-context.md (to update it) |
+| Targeted research | trip-context.md + the relevant output file + trip-log.md |
+| Planning change / full pipeline | trip-context.md + trip-log.md + all relevant outputs |
+
+Don't read the entire trip state for a CSS color change. Do read the full state when making planning decisions.
+
+### Starting a new trip
+
+When the user wants to plan a trip:
+1. Create `trips/[destination-year]/`, `trips/[destination-year]/outputs/`
+2. Copy `templates/trip-context.template.md` to `trips/[destination-year]/trip-context.md`
+3. Create `trips/[destination-year]/trip-log.md` with initial session entry
+4. Fill in trip-context through conversation — ask the user questions, don't make them edit markdown
+5. Set the mode based on what's known (IDEATION if exploring, DISCOVERY if destination picked, ENRICHMENT if flights/hotel booked)
+
+### Dispatching agents (only when classification calls for it)
+
+Read the relevant agent prompt from `agents/NN-name.md` and use it as context when producing that agent's output. For research-heavy agents (enrichment, validator), use web search. Always dispatch with Opus 4.6 1M, max thinking budget.
+
+**Agent roster:**
+
+| Agent | Prompt File | Output File | When to dispatch |
+|-------|------------|-------------|-----------------|
+| Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields | New trip setup, destination/hotel change |
+| Activities | `agents/01-activities.md` | `outputs/activities-list.md` | User wants activity research or replacements |
+| Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
+| Scheduling | `agents/03-scheduling.md` | `outputs/scheduling-framework.md` | Structural schedule changes, resequencing |
+| Transport | `agents/04-transport.md` | `outputs/transport-brief.md` | Transport questions requiring research |
+| Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md` | Full synthesis or itinerary restructuring |
+| Validator | `agents/06-validator.md` | `outputs/validation-report.md` | After hub produces/updates itinerary |
+
+**Pipeline flow (full pipeline only):** Enrichment → Spokes (parallel if possible) → Hub → Validator → Remediation (if criticals found)
+
+**For Agent tool calls:** Pass the agent's prompt file content as the agent's instructions. Include the trip-context.md, trip-log.md (for decision context), and any required input files as context. Write the output to the correct file path, following the output versioning rules.
+
+### Modes
+
+Read `trip-context.md` → Mode section to determine what's in scope.
+
+| Mode | What's happening | What runs |
+|------|-----------------|-----------|
+| IDEATION | Exploring options, nothing decided | Activities, Food, Scheduling, Transport produce overview-level output. Hub compares options. Validator skipped. |
+| DISCOVERY | Destination picked, nothing booked | Full pipeline. All agents run. |
+| ENRICHMENT | Flights/hotel confirmed | Full pipeline. Agents plan around fixed anchors. |
+| ITERATION | Existing plan, user wants changes | Only affected agents re-run. Hub patches itinerary. Validator re-checks changed days. |
+| RESEQUENCING | Keep selections, reorder days | Scheduling re-runs. Hub resequences. Validator checks new day-of-week assignments. |
+
+---
+
+## Travel Site Generation
+
+The travel site is a **bespoke creative artifact** — not a template fill. Each trip gets a unique site with destination-specific design, color theming, and visual identity. The site grows as the trip plan evolves.
+
+### Design Principles
+
+- **Destination-specific aesthetic.** Every site reflects its destination: color palette, landmark visuals, typography mood. Tokyo got Japanese red (`#BC002D`) with kana characters and torii-gate gradients. Lisbon would get Portuguese blue/azulejo tones. Paris would get something else entirely.
+- **Editorial luxury quality.** High-end travel magazine feel. Not a data dump — a designed experience you'd want to browse on your phone at the airport.
+- **Functional on the ground.** Sticky navigation, collapsible days, Google Maps links on every venue, booking checklist with progress tracking. It's a planning tool AND a reference tool during the trip.
+- **Grows with the plan.** The site isn't generated once at the end. It's created when there's enough content and updated as the plan evolves. Early versions may be lighter. Final versions are comprehensive.
+
+### What a good site includes
+
+Based on the quality bar established by previous trips:
+- Hero section with destination name, dates, group, key stats
+- Trip overview dashboard with booking action tags per day
+- Sticky day navigation with energy-level color coding and sub-text
+- **Desktop: one day per viewport** — 4-column grid (schedule · highlights · food · map), auto-expand/collapse to fit any screen size
+- **Mobile: progressive disclosure** — one day at a time, bottom nav, collapsible sections
+- **Tablet: 3-column fallback** — map goes full-width at bottom
+- Per-day sections: schedule timeline, featured stop cards (side-by-side, compact/expandable), food cards, transport notes
+- **Booking status indicators** on every card (advance/ahead/walkup/open)
+- **Transport field** on every card (mode + time from hotel)
+- **Featured card enrichments**: insider tips, best timing, group-fit tags
+- Heat/weather zone visualizations where relevant
+- Leaflet maps in dedicated grid column (desktop) or tap-to-show (mobile)
+- Interactive booking checklist sorted by action date with booking window rules
+- Collapsible prep-boxes, transport-boxes, and warn-boxes on desktop
+- Responsive across all screen sizes — viewport-fit JS adapts automatically
+- CSS-art landmark visuals (not stock photos — pure CSS/SVG)
+- Print styles (hide nav, maps, toggles; single-column)
+- See `reference/site-layout-spec.md` for full implementation specification
+
+### How to build it
+
+When the user says "build the site" or "create the travel site":
+
+1. **Read the content sources:**
+   - `outputs/final-itinerary.md` (primary content)
+   - `outputs/links-reference.md` (all venue URLs for maps/links)
+   - `outputs/venue-matrix.md` (day assignments)
+   - `trip-context.md` (group info, dates, constraints for the hero)
+
+2. **Read reference sites for quality standard:**
+   - Check the Site References section below for previous trip sites
+   - Use them as design inspiration — not as templates to copy
+   - Match or exceed the quality bar; adapt the aesthetic to the new destination
+
+3. **Design the destination aesthetic:**
+   - Choose a color palette that evokes the destination
+   - Design CSS-art landmark visuals specific to the location
+   - Select typography that fits the mood (editorial, elegant, destination-appropriate)
+
+4. **Build the full HTML site** as a single self-contained file:
+   - All CSS inline (no external stylesheets except Google Fonts)
+   - Leaflet.js for maps (CDN link is fine)
+   - No build step, no framework — one HTML file that works offline
+   - Write to `outputs/[destination]-travel-site.html`
+   - **Follow `reference/site-layout-spec.md`** for responsive architecture, viewport-fit logic, card system, booking indicators, and mobile/desktop interaction patterns
+
+5. **Iterate with the user.** The first version won't be final. Expect:
+   - Color tweaks ("more muted", "warmer tones")
+   - Content additions as the plan evolves
+   - Section reordering
+   - New features for this specific trip
+
+### Updating the site
+
+When the itinerary changes (iteration mode, new bookings, swapped venues):
+- Read the current site HTML
+- Patch the affected sections — don't regenerate from scratch
+- Preserve any design tweaks the user already approved
+
+### Publishing to GitHub Pages
+
+When the user says "publish this" or "put this on GitHub":
+
+1. **Prep the repo files** in the trip's outputs folder:
+   - Copy/rename the site HTML to `index.html`
+   - No other files needed — the site is self-contained
+
+2. **Create a public repo:**
+   ```bash
+   cd trips/[destination-year]/outputs
+   git init
+   git add index.html
+   git commit -m "Initial trip site"
+   gh repo create <your-github-username>/[destination]-[year]-trip --public --source=. --push
+   ```
+
+3. **Enable GitHub Pages:**
+   ```bash
+   gh api repos/<your-github-username>/[destination]-[year]-trip/pages -X POST -f source.branch=main -f source.path=/
+   ```
+
+4. **Site is live at:** `https://<your-github-username>.github.io/[destination]-[year]-trip/`
+
+5. **Subsequent updates** — when the site is revised:
+   ```bash
+   cd trips/[destination-year]/outputs
+   cp [destination]-travel-site.html index.html
+   git add index.html && git commit -m "Update site" && git push
+   ```
+
+> The trip repo is independent from this engine repo. It's a standalone public repo with just the HTML file. The itinerary markdown and agent outputs stay local — only the finished site is published.
+
+### Site References
+
+Previous trip sites that set the quality bar. Read these when building a new site. Each establishes a different destination aesthetic while maintaining the same editorial quality standard.
+
+| Trip | Itinerary Source | Design Notes |
+|------|------------------|-------------|
+| Tokyo 2026 (worked example) | [`examples/tokyo-2026/outputs/final-itinerary.md`](examples/tokyo-2026/outputs/final-itinerary.md) | Japanese red (#BC002D), Bebas Neue + DM Serif Display + Karla fonts, CSS-art landmark visuals, Leaflet maps, interactive booking checklist, energy-level nav, 3-column day layout, scroll animations, heat zone strips |
+
+> The published HTML for each trip lives in its own standalone public repo (per the publishing section above), not in the engine repo. The example above is the markdown source set; the rendered HTML is produced fresh from those sources per trip.
+>
+> As more trip examples are added, append them here. Each becomes a reference for future sites — an expanding library of design patterns and destination aesthetics.
+
+---
+
+## Key Rules (From Agent Design)
+
+These are encoded in the agent prompts but worth knowing as the orchestrator:
+
+- **trip-context.md is sacred.** Only the enrichment agent modifies it. No activity lists, food picks, or itinerary content goes in this file.
+- **Venue deduplication.** No venue appears as an anchor on one day and an alternative on another. Max 2 appearances total across the full itinerary. The hub builds venue-matrix.md to enforce this BEFORE writing the itinerary.
+- **Hub builds reference files first.** links-reference.md and venue-matrix.md are built before the day-by-day itinerary — not after.
+- **Every 3+ hour outdoor block needs a bailout.** A named indoor venue with address, walking distance, and hours. Not a suggestion to "find somewhere nearby."
+- **Alternatives must vary on two axes.** Price tier AND effort level. Three options at the same price and walk-in status provide no real choice.
+- **Hard constraints are audited every day.** The hub checks. The validator double-checks. A constraint violation in the final output is a system failure.
+- **Closure days matter.** Every venue needs a day-of-week closure check against the day it's scheduled. The validator catches these but the spoke agents should note them.
+
+## File Structure
+
+```
+travel-planner/
+├── CLAUDE.md               ← you are here
+├── agents/                 ← agent behavioral definitions (the knowledge base)
+│   ├── 00-enrichment.md
+│   ├── 01-activities.md
+│   ├── 02-food.md
+│   ├── 03-scheduling.md
+│   ├── 04-transport.md
+│   ├── 05-hub-planner.md
+│   └── 06-validator.md
+├── templates/
+│   └── trip-context.template.md
+└── trips/
+    └── [destination-year]/ ← one folder per trip
+        ├── trip-context.md            ← source of truth for the trip
+        ├── trip-log.md                ← decision history, session bridge
+        └── outputs/
+            ├── activities-list.md     ← accumulates across sessions
+            ├── food-list.md           ← accumulates across sessions
+            ├── scheduling-framework.md
+            ├── transport-brief.md
+            ├── links-reference.md     ← rebuilt by hub each synthesis
+            ├── venue-matrix.md        ← rebuilt by hub each synthesis
+            ├── final-itinerary.md     ← current version (previous versions preserved as v1, v2...)
+            ├── validation-report.md
+            └── [destination]-travel-site.html   ← bespoke, Claude-generated
+```

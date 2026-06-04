@@ -1,0 +1,17 @@
+# actionlint configuration for travel-planner
+#
+# Scopes a shellcheck SC2016 suppression to .github/workflows/pr-body-parser-clean.yml,
+# whose embedded shell scripts intentionally use single-quoted expressions (literal grep
+# patterns and bash variables that must not expand). SC2016 ("expressions don't expand in
+# single quotes") is a false positive there, so it is silenced for that one file only.
+#
+# Version note: actionlint v1.7.1 (pinned in security.yml) does not support the `paths`
+# config schema, so on that pin the load-bearing suppression is the `-ignore` flag in the
+# security.yml "Run actionlint" step. This file is forward-compatible: a newer actionlint
+# that honors `paths` will read the suppression from here, and the `-ignore` flag can be
+# dropped at that point. No other workflow or shellcheck rule is suppressed.
+
+paths:
+  .github/workflows/pr-body-parser-clean.yml:
+    ignore:
+      - 'shellcheck reported issue in this script: SC2016:.+'

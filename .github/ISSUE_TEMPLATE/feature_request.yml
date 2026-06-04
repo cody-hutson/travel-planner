@@ -1,0 +1,44 @@
+name: Feature Request
+description: Suggest a new capability or improvement to the travel-planner engine
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the engine would this touch?
+      options:
+        - Agent prompt (agents/)
+        - Worked example (examples/)
+        - Template (templates/)
+        - Reference / site spec (reference/)
+        - Docs (README / CLAUDE.md)
+        - Repo config (.github/)
+        - New capability
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the gap?
+      description: Describe the limitation or missing capability — what you can't do today, not how to build it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What should the engine do differently? Describe the result, not the implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Optional — examples, related trips, or context that helps.
+    validations:
+      required: false

@@ -1,0 +1,23 @@
+# Dependabot configuration — schedules version updates for GitHub Actions.
+# Pairs with Dependabot security alerts + security updates enabled on the repo.
+#
+# travel-planner ships no application source code and no language-ecosystem manifests
+# (it is a markdown agent-prompt repo), so the only dependency surface is the GitHub
+# Actions used by the workflows in .github/workflows/. If a language ecosystem is ever
+# added (e.g. a future wrapper), add the matching package-ecosystem entry here.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - "dependabot"
+      - "cluster: security"
+    commit-message:
+      prefix: "deps"
+      include: "scope"

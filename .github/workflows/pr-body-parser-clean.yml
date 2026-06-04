@@ -1,0 +1,103 @@
+name: PR body parser-clean
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  parser-clean:
+    name: Close-keyword leak detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for working directory)
+        uses: actions/checkout@v6
+
+      - name: Scan PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          # Handle null/empty body
+          if [ -z "${PR_BODY:-}" ]; then
+            echo "PR body is empty — nothing to scan" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # 1. Override-marker detection (whole-body, requires HTML-comment wrapper)
+          if printf '%s\n' "$PR_BODY" | grep -qE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->'; then
+            {
+              echo "## Override active"
+              echo ""
+              echo 'Marker `<!-- pr-body-parser-clean: allow-close-keyword -->` present in PR body.'
+              echo "Reporting matches for visibility but NOT failing the check."
+              echo ""
+              echo "### Matches detected (override-suppressed):"
+              echo '```'
+              printf '%s\n' "$PR_BODY" | grep -inE '(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) +#?\[?[0-9]' || echo "(none)"
+              echo '```'
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # 2. Locate Issue References anchor (case-insensitive, H1-H6, lenient on trailing colon/whitespace)
+          ANCHOR_LINE=$(printf '%s\n' "$PR_BODY" \
+            | grep -nE '^#{1,6}[[:space:]]+[Ii]ssue [Rr]eferences[[:space:]]*:?[[:space:]]*$' \
+            | head -1 | cut -d: -f1 || true)
+
+          ANCHOR_COUNT=$(printf '%s\n' "$PR_BODY" \
+            | grep -cE '^#{1,6}[[:space:]]+[Ii]ssue [Rr]eferences[[:space:]]*:?[[:space:]]*$' || true)
+
+          # 3. Defensive: warn on multiple anchors (proceed with first)
+          if [ "${ANCHOR_COUNT:-0}" -gt 1 ]; then
+            echo "::warning::Multiple 'Issue References' headers detected ($ANCHOR_COUNT). Using first occurrence as block boundary."
+          fi
+
+          # 4. Extract content OUTSIDE the Issue References block
+          if [ -z "${ANCHOR_LINE:-}" ]; then
+            OUTSIDE_BLOCK="$PR_BODY"
+          else
+            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | head -n $((ANCHOR_LINE - 1)))
+          fi
+
+          # 5. Canonical close-keyword scan (close-family verb immediately followed by #N)
+          MATCHES=$(printf '%s\n' "$OUTSIDE_BLOCK" \
+            | grep -inE '(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) +#?\[?[0-9]' || true)
+
+          # 6. Match handling
+          if [ -n "$MATCHES" ]; then
+            {
+              echo "## :x: PR body parser-clean check FAILED"
+              echo ""
+              echo "Close-family verbs + \`#N\` detected OUTSIDE the dedicated Issue References block."
+              echo "GitHub's auto-close parser is lexical — it matches these patterns regardless of section context or surrounding negation."
+              echo ""
+              echo "### Matches (line:content):"
+              echo '```'
+              echo "$MATCHES"
+              echo '```'
+              echo ""
+              echo "### Remediation"
+              echo ""
+              echo "Use safe phrasing in every section EXCEPT the dedicated \`### Issue References\` block at the bottom of the PR body:"
+              echo ""
+              echo "- \`close #N\` / \`closes #N\` → \`mark #N as closed\` / \`#N → Closed\`"
+              echo "- \`fixes #N\` → \`addresses #N\` / \`corrects the regression in #N\`"
+              echo "- \`resolves #N\` → \`completes the work on #N\` / \`wraps up the task in #N\`"
+              echo ""
+              echo "See CONTRIBUTING.md for the full PR convention."
+              echo ""
+              echo "### Override (intentional close-keyword discussion)"
+              echo ""
+              echo "If this PR legitimately discusses close-keyword semantics, add an HTML-comment marker anywhere in the PR body:"
+              echo ""
+              echo '`<!-- pr-body-parser-clean: allow-close-keyword -->`'
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          echo ":white_check_mark: PR body parser-clean (0 matches outside Issue References block)" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
