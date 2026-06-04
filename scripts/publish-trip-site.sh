@@ -2,8 +2,9 @@
 #
 # publish-trip-site.sh — private-by-default publishing for travel-planner trip sites.
 #
-# Encrypts a generated trip site with StatiCrypt (AES-256-GCM, 600k PBKDF2-SHA256)
-# and publishes ONLY the ciphertext to a per-trip PUBLIC GitHub repo with Pages.
+# Encrypts a generated trip site with StatiCrypt (AES-256-CBC + HMAC-SHA256,
+# 600k PBKDF2-SHA256) and publishes ONLY the ciphertext to a per-trip PUBLIC repo
+# with GitHub Pages.
 # The plaintext itinerary never leaves the git-ignored trips/ working dir, and is
 # never written to the per-trip repo or its history. Because each trip is a fresh
 # repo, privacy is by construction.
@@ -61,6 +62,11 @@ resolve_noreply_identity() {
 
 commit_noreply() { # <repo_dir> <message>
   local repo_dir="$1" msg="$2"
+  # Identity is set via BOTH -c config AND the GIT_* env vars. The env vars take
+  # PRECEDENCE over -c, so a hostile GIT_AUTHOR_EMAIL / GIT_COMMITTER_EMAIL already
+  # in the environment cannot override the no-reply identity into a public repo.
+  GIT_AUTHOR_NAME="$NOREPLY_NAME"    GIT_AUTHOR_EMAIL="$NOREPLY_EMAIL" \
+  GIT_COMMITTER_NAME="$NOREPLY_NAME" GIT_COMMITTER_EMAIL="$NOREPLY_EMAIL" \
   git -C "$repo_dir" -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" \
     commit --quiet -m "$msg"
 }
@@ -68,28 +74,44 @@ commit_noreply() { # <repo_dir> <message>
 # ─────────────────────────────────────────────────────────────────────────────
 # Passphrase generation and resolution.
 # NOTE: With KDF iterations fixed at 600k, passphrase entropy IS the security margin.
-# Default = 6 dictionary words (~77 bits, human-shareable). Falls back to base64 if no
-# system word list. Override the policy here if you want longer/stronger passphrases.
+# Default = 6 word list words chosen with a CSPRNG (/dev/urandom), ~14 bits/word from a
+# ~25k-word list ≈ 88 bits. Falls back to 48 hex chars (192 bits) with no word list.
+# Override the policy here if you want longer/stronger passphrases.
 # ─────────────────────────────────────────────────────────────────────────────
 gen_passphrase() {
-  local wl=/usr/share/dict/words
+  local wl=/usr/share/dict/words n idx out="" tmp
   if [ -r "$wl" ]; then
-    # 6 random lowercase words joined by hyphens (portable: awk, no GNU shuf).
-    awk 'BEGIN{srand()} /^[a-z]{4,8}$/{w[n++]=$0}
-         END{ if(n<6) exit 1; for(i=0;i<6;i++) printf "%s%s",(i?"-":""),w[int(rand()*n)]; print "" }' "$wl" 2>/dev/null \
-      || openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 28
-  else
-    openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 28
+    tmp=$(mktemp)
+    LC_ALL=C grep -E '^[a-z]{4,8}$' "$wl" > "$tmp" 2>/dev/null || true
+    n=$(wc -l < "$tmp"); n=${n//[^0-9]/}
+    if [ "${n:-0}" -ge 2000 ]; then
+      for _ in 1 2 3 4 5 6; do
+        # Uniform-ish CSPRNG index: 4 random bytes from /dev/urandom, mod n.
+        idx=$(( $(od -An -N4 -tu4 < /dev/urandom | tr -d ' ') % n + 1 ))
+        out="${out:+$out-}$(sed -n "${idx}p" "$tmp")"
+      done
+      rm -f "$tmp"; printf '%s' "$out"; return
+    fi
+    rm -f "$tmp"
   fi
+  # Fallback: 48 hex chars (192 bits) straight from the CSPRNG.
+  od -An -N24 -tx1 /dev/urandom | tr -dc 'a-f0-9'
 }
 
 get_passphrase() { # <trip_dir> <force_new:0|1>
-  local trip_dir="$1" force_new="${2:-0}" pf="$1/.passphrase"
-  if [ -n "${STATICRYPT_PASSWORD:-}" ]; then printf '%s' "$STATICRYPT_PASSWORD"; return; fi
-  if [ "$force_new" != "1" ] && [ -r "$pf" ]; then printf '%s' "$(cat "$pf")"; return; fi
-  local new; new="$(gen_passphrase)"
-  printf '%s\n' "$new" > "$pf"; chmod 600 "$pf"
-  printf '%s' "$new"
+  local trip_dir="$1" force_new="${2:-0}" pf="$1/.passphrase" p=""
+  if [ "$force_new" = "1" ]; then
+    # Rotation: always generate a fresh one and persist it — ignore any env override.
+    p="$(gen_passphrase)"; printf '%s\n' "$p" > "$pf"; chmod 600 "$pf"
+  elif [ -n "${STATICRYPT_PASSWORD:-}" ]; then
+    p="$STATICRYPT_PASSWORD"
+  elif [ -r "$pf" ]; then
+    p="$(cat "$pf")"
+  else
+    p="$(gen_passphrase)"; printf '%s\n' "$p" > "$pf"; chmod 600 "$pf"
+  fi
+  [ "${#p}" -ge 8 ] || die "passphrase missing or too short (need ≥8 chars) — unset STATICRYPT_PASSWORD or fix $pf"
+  printf '%s' "$p"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -116,8 +138,10 @@ encrypt_to_tmp() { # <src_html> <passphrase>
     warn "staticrypt failed:"; sed 's/^/    /' "$log" >&2
     rm -rf "$stage" "$enc"; rm -f "$log"; die "encryption step failed."
   fi
-  rm -rf "$stage"; rm -f "$log"
-  [ -f "$enc/index.html" ] || die "encryption produced no $enc/index.html"
+  if [ ! -f "$enc/index.html" ]; then
+    rm -rf "$stage" "$enc"; rm -f "$log"; die "encryption produced no $enc/index.html"
+  fi
+  rm -rf "$stage"; rm -f "$log"   # plaintext copy + log removed; only ciphertext (enc) remains
   printf '%s' "$enc"
 }
 
@@ -142,27 +166,39 @@ strip_to_text() { # <html_file> -> visible text on stdout
 #   return 1  -> NOT safe, abort (do not push)
 #
 # Design latitude (this is why it's yours to own):
-#   • What proves "encrypted"? (StatiCrypt sentinel? absence of the body? entropy?)
-#   • Which plaintext tokens must NEVER appear? Tokens are derived from the source's
-#     VISIBLE TEXT (markup/scripts stripped) and filtered to distinctive itinerary
-#     terms (an uppercase/digit, not generic markup words) — because naive markup
-#     tokens like "DOCTYPE" appear in the encrypted shell too and abort every publish.
-#   • How aggressive is fail-closed? A false abort is safe; a false pass leaks. The
-#     STOPLIST below trades a little leak-coverage on those exact words for usability;
-#     widen or narrow it to taste.
+#   • Proof of encryption is STRUCTURAL, not keyword-based: the published page's visible
+#     text (markup + scripts stripped) must be near-empty, because StatiCrypt replaces the
+#     body with a tiny prompt and the itinerary survives only as ciphertext. This is
+#     casing-independent — it catches an all-lowercase plaintext a token scan would miss.
+#   • The token backstop additionally rejects any distinctive source term that leaked into
+#     the raw bytes. A false abort is safe; a false pass leaks — bias to abort.
+#   • Earlier lesson baked in: a naive "any capitalized word" scan flagged markup like
+#     DOCTYPE (present in the shell too) and aborted every publish — hence visible-text
+#     derivation + a stoplist + the length-based structural proof.
 #
 # Below is a working DEFAULT. Replace the body with your own predicate to taste.
 verify_ciphertext() { # <enc> <src>
-  local enc="$1" src="$2" tok
-  local stoplist='^(doctype|html|head|body|title|meta|link|script|style|charset|viewport|password|passphrase|protected|loading|decrypt|please|enter|button|submit|window|document|function|staticrypt|leaflet|google|fonts)$'
-  # (a) Positive: the StatiCrypt shell must be present.
-  grep -qi 'staticrypt' "$enc" || { warn "guard: StatiCrypt markers absent in output"; return 1; }
+  local enc="$1" src="$2" tok enc_visible
+  local stoplist='^(doctype|html|head|body|title|meta|link|script|style|charset|viewport|password|passphrase|protected|loading|decrypt|please|enter|button|submit|remember|window|document|function|staticrypt|leaflet|google|fonts)$'
+  # Self-check: never certify the source file as its own ciphertext.
+  if [ "$enc" -ef "$src" ]; then warn "guard: enc and src are the same file"; return 1; fi
+  # (a) Positive: StatiCrypt ENCRYPTED-PAYLOAD markers (not merely the word "staticrypt",
+  #     which a plaintext file could contain).
+  grep -qiE 'staticryptEncrypted|staticryptConfig|cryptoEngine' "$enc" \
+    || { warn "guard: StatiCrypt encrypted-payload markers absent"; return 1; }
   # (b) Positive: a passphrase prompt must be present (the gate the viewer hits).
   grep -qiE 'password|passphrase' "$enc" || { warn "guard: no passphrase prompt in output"; return 1; }
-  # (c) Negative: NO distinctive plaintext token from the source's visible text may
-  #     appear anywhere in the published bytes (we grep the RAW output, scripts included).
+  # (c) STRUCTURAL fail-closed proof (casing-independent): the visible text of the
+  #     published page must be near-empty. Real ciphertext shows only the prompt
+  #     (~40 chars); a plaintext itinerary's visible text runs to hundreds+ of chars.
+  enc_visible="$(strip_to_text "$enc" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//')"
+  if [ "${#enc_visible}" -gt 200 ]; then
+    warn "guard: output has ${#enc_visible} visible chars (>200) — looks unencrypted"; return 1
+  fi
+  # (d) Negative backstop: no distinctive plaintext token from the source's visible text
+  #     may appear anywhere in the published bytes (raw, scripts included).
   while IFS= read -r tok; do
-    [ -z "$tok" ] && continue
+    [ -n "$tok" ] || continue
     if grep -qiF -- "$tok" "$enc"; then
       warn "guard: plaintext token '$tok' leaked into output"; return 1
     fi
@@ -183,7 +219,7 @@ cmd_publish() { # <trip_dir> [--plaintext]
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html slug pub_dir owner
+  local site_html slug pub_dir owner ans
   site_html="$(resolve_site_html "$trip_dir")"
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
@@ -191,16 +227,23 @@ cmd_publish() { # <trip_dir> [--plaintext]
   rm -rf "$pub_dir"; mkdir -p "$pub_dir"
 
   if [ "$plaintext" = "1" ]; then
-    warn "PUBLISHING PLAINTEXT (privacy opt-out) — the itinerary will be world-readable."
+    warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
+    if [ -t 0 ]; then
+      printf '  Type PUBLISH to confirm public, unencrypted publishing: '; read -r ans
+      [ "${ans:-}" = "PUBLISH" ] || die "aborted — plaintext not confirmed."
+    elif [ "${ALLOW_PLAINTEXT:-}" != "1" ]; then
+      die "refusing non-interactive plaintext publish; re-run with ALLOW_PLAINTEXT=1 to override."
+    fi
     cp "$site_html" "$pub_dir/index.html"
   else
     local passphrase enc
     passphrase="$(get_passphrase "$trip_dir" 0)"
-    info "Encrypting site (StatiCrypt, 600k PBKDF2)…"
+    info "Encrypting site (StatiCrypt — AES-256-CBC + HMAC, 600k PBKDF2)…"
     enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
-    cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
     info "Running pre-push verify guard…"
-    verify_ciphertext "$pub_dir/index.html" "$site_html" || die "GUARD ABORTED publish — output is not verified ciphertext. Nothing was pushed."
+    verify_ciphertext "$enc/index.html" "$site_html" \
+      || { rm -rf "$enc"; die "GUARD ABORTED publish — output is not verified ciphertext. Nothing was pushed."; }
+    cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
     ok "Guard passed — only ciphertext will be pushed."
   fi
 
@@ -208,7 +251,7 @@ cmd_publish() { # <trip_dir> [--plaintext]
   ( cd "$pub_dir"
     git init -q
     git add index.html
-    git -C . -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" commit --quiet -m "Publish trip site"
+    commit_noreply . "Publish trip site"
     git branch -M main
     gh repo create "$slug" --public --source=. --remote=origin --push >/dev/null
   )
@@ -224,10 +267,18 @@ cmd_publish() { # <trip_dir> [--plaintext]
   fi
 }
 
-ensure_pub_clone() { # <trip_dir> -> ensures <trip_dir>/.publish is the per-trip repo
-  local trip_dir="$1" pub_dir="$1/.publish" slug owner
+ensure_pub_clone() { # <trip_dir> -> ensures <trip_dir>/.publish is the RIGHT per-trip repo
+  local trip_dir="$1" pub_dir="$1/.publish" slug owner got
   slug="$(slug_for "$trip_dir")"; owner="$(gh api user --jq '.login')"
-  if [ ! -d "$pub_dir/.git" ]; then
+  if [ -d "$pub_dir/.git" ]; then
+    # Reuse only if origin actually points at this trip's repo — never push to a
+    # stale clone left over from a different trip.
+    got="$(git -C "$pub_dir" remote get-url origin 2>/dev/null || true)"
+    case "$got" in
+      *"${owner}/${slug}"|*"${owner}/${slug}.git"|*":${slug}.git"|*"/${slug}.git") : ;;
+      *) die "$pub_dir/origin is '$got', not ${owner}/${slug}. Remove $pub_dir and re-run." ;;
+    esac
+  else
     rm -rf "$pub_dir"
     gh repo clone "${owner}/${slug}" "$pub_dir" >/dev/null 2>&1 \
       || die "per-trip repo ${owner}/${slug} not found — run 'publish' first."
@@ -248,9 +299,10 @@ cmd_update() { # <trip_dir>
 
   info "Re-encrypting edited site…"
   enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
-  cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
   info "Running pre-push verify guard…"
-  verify_ciphertext "$pub_dir/index.html" "$site_html" || die "GUARD ABORTED update — output is not verified ciphertext. Nothing was pushed."
+  verify_ciphertext "$enc/index.html" "$site_html" \
+    || { rm -rf "$enc"; die "GUARD ABORTED update — output is not verified ciphertext. Nothing was pushed."; }
+  cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
   ok "Guard passed."
 
   ( cd "$pub_dir"
@@ -258,7 +310,7 @@ cmd_update() { # <trip_dir>
       info "No ciphertext change — site is already up to date."; exit 0
     fi
     git add index.html
-    git -C . -c "user.name=${NOREPLY_NAME}" -c "user.email=${NOREPLY_EMAIL}" commit --quiet -m "Update trip site"
+    commit_noreply . "Update trip site"
     git push --quiet origin main
   )
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"

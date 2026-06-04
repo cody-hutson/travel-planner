@@ -248,7 +248,7 @@ scripts/publish-trip-site.sh publish trips/[destination-year]
 ```
 
 That one command:
-1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-GCM, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
+1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
 2. Runs a fail-closed **pre-push guard** that refuses to push unless the output is verified ciphertext with no plaintext itinerary tokens.
 3. Creates the per-trip **public** repo and pushes **only the ciphertext**, using a no-reply commit identity (never the user's email).
 4. Enables Pages and prints the live URL plus the passphrase.
