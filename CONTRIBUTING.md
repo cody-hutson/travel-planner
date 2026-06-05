@@ -3,6 +3,13 @@
 Thanks for your interest in the travel-planner engine. It's a set of markdown agent
 prompts driven by Claude Code — there's no build step and no application code.
 
+## Contribution model
+
+This is a personal, single-maintainer project. Write access is limited to invited
+collaborators, and unsolicited external pull requests generally won't be merged. If
+you'd like to contribute, open an issue to ask about collaborator access — it's granted
+by invitation only.
+
 ## Ground rules
 
 - **Commit with a GitHub no-reply email, not a personal one.** Turn on
