@@ -14,17 +14,51 @@ A multi-agent trip planning system. Seven specialized agents research, plan, val
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
 | `trips/` | Per-trip working directories (git-ignored — never published) |
 
-## Using with Claude Code
+## Install
 
-This is a [Claude Code](https://claude.com/claude-code) project — it works the same in the **desktop app** and the **CLI**.
+This is a [Claude Code](https://claude.com/claude-code) project — there's nothing to build or install into your system. You clone it and open it in Claude Code, which drives the planning flow per [`CLAUDE.md`](CLAUDE.md). It works the same in the **desktop app** and the **CLI**.
 
-1. Clone this repo
-2. Open it in Claude Code:
-   - **Desktop app** — open the `travel-planner` folder
-   - **CLI** — `cd travel-planner && claude`
-3. Tell Claude you want to plan a trip — the conversation drives the flow per `CLAUDE.md`
+### Prerequisites
 
-Each trip lives in `trips/<destination>-<year>/`. The `trip-context.md` file in that directory is the source of truth; `trip-log.md` is the session bridge across multiple planning chats; `outputs/` accumulates agent artifacts.
+**To plan a trip:**
+
+- [Claude Code](https://claude.com/claude-code) — desktop app or CLI
+- `git` — to clone this repo
+
+**To publish a trip site** (optional — only when you want to share a finished itinerary):
+
+- [Node.js](https://nodejs.org) — provides `npx`, which runs StatiCrypt (`staticrypt@3.5.4`) for encrypt-at-publish
+- [`gh`](https://cli.github.com) (GitHub CLI), authenticated — run `gh auth login` once
+
+### Install steps
+
+```bash
+git clone https://github.com/cody-hutson/travel-planner
+cd travel-planner
+```
+
+Then open the folder in Claude Code:
+
+- **Desktop app** — open the `travel-planner` folder
+- **CLI** — run `claude` from inside the `travel-planner` directory
+
+Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, and `outputs/` accumulates agent artifacts.
+
+### Verify
+
+Confirm the engine cloned intact:
+
+```bash
+ls agents/        # 7 agent definitions
+head -1 CLAUDE.md # operating instructions present
+```
+
+If you intend to publish, confirm the publish toolchain is ready:
+
+```bash
+node --version    # Node.js present (provides npx → StatiCrypt)
+gh auth status    # GitHub CLI authenticated
+```
 
 ## Agent Roster
 
