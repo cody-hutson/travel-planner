@@ -57,7 +57,7 @@ The enrichment agent is the reconciler. When it reads the per-traveler files, it
 
 ### Concrete illustration
 
-*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Needs-vs-Desires Model below.)*
+*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Per-Traveler Model below.)*
 
 Trip-context owns the trip-level constraint — note its name and description cover **both** the stair limit and the continuous-walking ceiling, so the per-traveler walking-distance need links to it without a name/description mismatch:
 
@@ -99,11 +99,15 @@ The constraint exists once (in `trip-context.md`). Jordan's personal specifics e
 
 ---
 
-## The Needs-vs-Desires Model
+## The Per-Traveler Model
 
-The reconciliation rule above fixes *how* per-traveler data links back to the trip-level constraints. This section fixes *what* a per-traveler file actually holds: the structure that separates a traveler's **needs** from their **desires**. Every per-traveler source file is organized around this one distinction.
+The reconciliation rule above fixes *how* per-traveler data links back to the trip-level constraints. This section fixes *what* a per-traveler file actually holds.
 
-**The governing definition:**
+The file is the **individual traveler's preferences only** — what *they* want, need, and prefer. It never holds group-level data: the pipeline aggregates these N individual files into a group view, and any splits or side-bars are pipeline-derived (see the scaling story and forward-hooks below), **never authored in the individual file.**
+
+Its load-bearing structure is the **needs-vs-desires** distinction — every file separates a traveler's **needs** from their **desires** — and around that core it captures a handful of additional **lifecycle facets** (destination leanings, dates, budget appetite, travel style, interests, people dynamics) so one file can serve a trip from first idea through enrichment.
+
+**The governing definition (the needs-vs-desires core):**
 
 > **A need is a constraint that bounds the solution. A desire is an objective optimized within those bounds.**
 
@@ -147,6 +151,21 @@ The field shape for a single desire:
 - **Overlap** — which **other** travelers share this desire (by name), or `solo` if no one else lists it. This is the **desire-overlap signal**: it surfaces where the group already agrees. The match rule the enrichment agent applies is: **two desires overlap when they share a theme tag after case/stem normalization (the deterministic spine), OR when enrichment judges them the same desire in plain-language sense (the augment).** The tag-spine is the reproducible part; the sense-match is the judged augment that catches agreement the tags missed. Because tags are free-text and judgment varies, the signal is **advisory and may shift between refreshes** until the group's tags are normalized — it surfaces likely agreement, it does not certify it. A traveler authoring their own file may leave Overlap blank or note who they *think* shares it; the derived model carries the reconciled answer.
 
 > **Priority tiers are structural labels, not numeric weights.** `anchor` / `wish` / `nice-to-have` rank a traveler's desires by importance so a later capability knows what matters most — they are **not** scores, weights, or coverage percentages, and nothing in this layer multiplies, sums, or optimizes against them. The tier says "this matters more than that"; it does **not** say "this is worth 0.8". How a future capability *balances* desires across the group, or *measures* how well a plan satisfies them, is out of scope here (see What This Document Does Not Define). This document defines the structure the tiers live in; it does not define any math over them.
+
+### Lifecycle facets
+
+Needs and desires are the structural core — but a traveler's preferences span a trip's whole lifecycle, from "where should we even go?" through "what must this day work around?". The per-traveler file therefore carries six additional **lifecycle facets** around the needs/desires core. Each is the individual's own view; each is captured as data only (nothing here scores, optimizes, or computes a group result — see the forward-hooks). Several **link** to trip-level data rather than duplicating it, per the one-source-per-fact rule above.
+
+| Facet | Field shape (the labels) | Role | Links to (one source per fact) |
+|-------|--------------------------|------|--------------------------------|
+| **Destination leanings** | `Would love:` · `Rather skip:` · `Trip vibe:` | The traveler's wishlist for *where* to go, for when no destination is fixed yet. | Aggregated by the pipeline into a group destination shortlist (forward-hook below) — the individual file holds only this traveler's leanings, never the shortlist. |
+| **Dates & availability** | `Can travel:` · `Blackout:` · `Trip length:` | When this traveler can travel, and for how long. | **Links to** the trip's Logistics once dates are set — it refines, never overrides, the trip-level dates; it is not copied into `trip-context.md`. |
+| **Budget appetite** | `Comfort range:` · `Splurge appetite:` | The traveler's personal spend lean — day-to-day comfort and what they'd pay up for. | **Links to** trip-context `## Budget Posture` — it refines, never replaces, the trip-level budget; the trip-level posture stays the SSOT. |
+| **Travel style & pace** | `Pace:` · `Day rhythm:` · `Novelty vs comfort:` · `Planning style:` | How the traveler likes a trip to feel day-to-day. | Owned by the file (a soft personal signal); no trip-level twin. |
+| **Interests & tastes** | `Interests:` · `Cuisine appetite:` | Broad leanings — a soft selection signal, looser than the ranked Desires. | Owned by the file; distinct from (not a duplicate of) the specific tiered Desires. |
+| **People dynamics & togetherness** | `Group time:` · `Split off with:` · `Solo, I'd:` · `Whole-group moments:` | The traveler's own view on together-time vs. own-time, and which moments must include everyone. | Owned by the file as an *individual* view; the pipeline reads it (with desire-overlap and interest divergence) to derive any side-bars — the individual file never authors a split. `Whole-group moments` bounds that derivation (see forward-hook). |
+
+These facets do not relax the needs-vs-desires core or the link-don't-copy rule — they extend the same individual-only, one-source-per-fact model across the trip lifecycle. **Lifecycle note:** the file spans **IDEATION → ENRICHMENT** — a traveler fills the facets relevant to their trip's current stage (destination leanings matter most before a destination is picked; dates/budget/needs matter once it is), leaving the rest blank.
 
 ### Worked example — a per-traveler file
 
@@ -222,6 +241,28 @@ The enrichment agent reconciles both files into `outputs/traveler-model.md` — 
 ```
 
 Each constraint still lives once in `trip-context.md`; each traveler's specifics and desires live once in their own file; the derived model references all of it and adds the cross-traveler overlap. No fact has two owners — and nothing here scores, weights, or optimizes; it is structure only.
+
+### How the model scales
+
+The per-traveler model scales along four dimensions. The first three are about how *one* traveler's data grows; the fourth — **Across** — is how *N* individual files compose into a group, and it is the dimension the satisfaction layer adds.
+
+| Dimension | What grows | How the model absorbs it |
+|-----------|-----------|--------------------------|
+| **Out** (more travelers) | More people on the trip | One more `travelers/<traveler>.md` file — each traveler is an independent change surface; the enrichment agent reconciles however many exist. |
+| **Up** (richer per traveler) | More needs / desires / facets per person | Repeatable need and desire blocks ("add as many as you like"); the lifecycle facets fill in as the trip firms up. |
+| **Over-time** (across the lifecycle) | The trip moves IDEATION → ENRICHMENT | The same file spans the lifecycle — destination leanings early, dates/needs/budget later; a traveler fills the stage-relevant parts. |
+| **Across** (individual ⇄ group) | N individuals become one group view | **The aggregation/decomposition seam.** N individual files **aggregate into a group view** via the **desire-overlap signal** (the default — where the group already agrees), and **decompose into side-bars** via **people-dynamics + desire-overlap + interest divergence** (the exception — where a sub-group's time diverges). Both directions are **pipeline-derived from the individual files** — neither is ever authored in an individual file. |
+
+The **Across** dimension is why the file is kept strictly individual: aggregation and decomposition are only sound if each input is one person's unmixed view. The moment a split were written into an individual file, the group derivation would be reasoning over pre-mixed data.
+
+### Forward-hooks — captured now, computed later
+
+Two group-level capabilities are **enabled** by the data this layer captures but **not built here** — consistent with the document's deferred items ("nothing optimizes yet"). Both are **pipeline-derived and live nowhere in the individual file**; both are **left to design**:
+
+- **(a) Group destination recommendation.** From the aggregated **destination leanings** (`Would love:` / `Rather skip:` / `Trip vibe:` across all travelers), the pipeline can later derive a group destination shortlist. This layer captures the per-traveler leanings; it does **not** rank destinations, score fit, or pick one.
+- **(b) Side-bar / group-split computation.** From **people-dynamics** (`Group time:` / `Split off with:` / `Solo, I'd:`) combined with the **desire-overlap signal** and **interest divergence**, the pipeline can later compute side-bars — who does what together at the **single / small-group / full-group** granularity. The computation is **bounded by each traveler's `Whole-group moments`**: a moment a traveler marks whole-group is a constraint the split must respect (that traveler is not peeled off then). This layer captures the inputs; it does **not** compute any split, assign anyone to a sub-group, or schedule a side-bar.
+
+Both hooks are the **Across** dimension's forward edge: the individual files hold the inputs; the *group* result is a later pipeline capability, not a stored field.
 
 ---
 
@@ -535,6 +576,8 @@ To keep the substrate boundary clear:
 
 - **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here, and the Satisfaction Metrics section above names and types every dimension — but how any **balance signal** (group-equity, the experience axes, rest-recovery balance) is *scored* is out of scope. pass/fail and covered/not are determinable facts; the balance scoring is left to design.
 - **No optimization or ranking logic.** Nothing in the satisfaction layer optimizes yet. The engines *read* the derived model; this document does not specify what they do with it.
+- **No group destination recommendation.** Per-traveler destination leanings are *captured* (forward-hook (a)); aggregating them into a ranked group shortlist — the scoring, the pick — is left to design and is not computed here.
+- **No side-bar / group-split computation.** Per-traveler people-dynamics, desire-overlap, and interest divergence are *captured* (forward-hook (b)); computing any single / small-group / full-group split from them, bounded by `Whole-group moments`, is left to design and is not computed here. No split is ever stored in an individual file.
 - **No replanning policy.** The update signal is defined as a data condition; the decision to re-plan and the fairness logic live with the replanning capability.
 - **No control-flow / consumption sequencing.** Who runs when, and how the hub consumes these artifacts in a pipeline pass, is governed by the control-flow contract, not this data-architecture document.
 

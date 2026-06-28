@@ -106,6 +106,21 @@ link against. Specifically:
   Surface a short cross-traveler overlap summary so the group's points of
   agreement are visible at a glance. This is a *signal*, not a coverage score —
   no math.
+- **Carry the lifecycle facets too.** Beyond needs and desires, each profile
+  may hold the per-traveler lifecycle facets: **destination leanings**
+  (`Would love:` / `Rather skip:` / `Trip vibe:`), **dates & availability**
+  (`Can travel:` / `Blackout:` / `Trip length:`), **budget appetite**
+  (`Comfort range:` / `Splurge appetite:`), **travel style & pace**, **interests
+  & tastes**, and **people dynamics & togetherness** (`Group time:` /
+  `Split off with:` / `Solo, I'd:` / `Whole-group moments:`). Carry each
+  traveler's facets through into `outputs/traveler-model.md` `[DERIVED]`,
+  per-traveler, alongside their needs/desires/overlap — read them off the stable
+  field labels above (the profile wraps those labels in plain-language prose; you
+  parse by the labels). This is carry-through, not computation: you record each
+  individual's facets; you do **not** aggregate them into a group result here
+  (see the forward-hooks below). Per link-don't-copy, budget appetite and dates
+  *link to* their trip-level homes (`## Budget Posture` and Logistics) — refine,
+  never restate them, and never write them into trip-context.md.
 - **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
   projection refreshed from the current source files whenever they change; it
   holds no independent state of its own (the source files are authoritative).
@@ -115,6 +130,23 @@ link against. Specifically:
 This role is **read-and-reconcile only**: source files in, derived model out.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
+
+**Two group-level computations are out of scope here — they are forward-hooks**
+(captured now, computed later by a downstream capability, per
+`reference/data-model.md`). You carry the *inputs* for both into the derived
+model; you do **not** compute either:
+
+- **Group destination recommendation.** You carry each traveler's destination
+  leanings; you do **not** aggregate them into a ranked group shortlist or pick a
+  destination.
+- **Side-bar / group-split computation.** You carry each traveler's people
+  dynamics (and the desire-overlap signal); you do **not** compute any single /
+  small-group / full-group split, assign anyone to a sub-group, or schedule a
+  side-bar. `Whole-group moments` is captured as a future bound on that
+  computation, not acted on here.
+
+Both stay individual-only in the derived model — no group split is ever authored
+into a per-traveler file or computed in this reconciliation.
 
 ### Setup-only seed of initial `locked` event status
 
