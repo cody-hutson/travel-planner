@@ -97,6 +97,132 @@ The constraint exists once (in `trip-context.md`). Jordan's personal specifics e
 
 ---
 
+## The Needs-vs-Desires Model
+
+The reconciliation rule above fixes *how* per-traveler data links back to the trip-level constraints. This section fixes *what* a per-traveler file actually holds: the structure that separates a traveler's **needs** from their **desires**. Every per-traveler source file is organized around this one distinction.
+
+**The governing definition:**
+
+> **A need is a constraint that bounds the solution. A desire is an objective optimized within those bounds.**
+
+A need is non-negotiable — the plan is either inside it or it is broken (a heat ceiling, a mobility limit, an allergy, a required rest window). A desire is a want the plan tries to satisfy as well as it can, given the bounds the needs set — but a missed desire is a worse plan, not a broken one. Needs draw the box; desires are what the trip optimizes for *inside* the box.
+
+This is the same need-vs-want split the original system already half-expresses — needs as `## Hard Constraints` / `## Dietary & Health`, wants scattered through free-text "Key Characteristics". The satisfaction layer makes it explicit, per-traveler, and structured.
+
+### Needs
+
+A need is the traveler's personal stake in a trip-level constraint. The constraint itself is trip-level and lives in `trip-context.md` (the SSOT); the traveler's *need* is the personal specific behind it — and it **links** to the governing constraint rather than restating it (per the Reconciliation Rule above).
+
+Needs cover four categories. Every per-traveler need falls under one:
+
+| Need category | What it bounds | Governing trip-context constraint it links to |
+|---------------|----------------|-----------------------------------------------|
+| **Heat tolerance** | The outdoor-exposure ceiling — how much heat / sun / humidity this traveler can take, and for how long | `## Hard Constraints` (the heat / climate constraint) |
+| **Mobility** | The movement envelope — walking distance, stairs, standing time, terrain, rest-break cadence | `## Hard Constraints` (the mobility / accessibility constraint) and `## Dietary & Health` → mobility notes |
+| **Dietary / health** | The food-and-health boundary — allergies, restrictions, medical needs, pacing limits | `## Dietary & Health` (and any `## Hard Constraints` block that encodes a health non-negotiable) |
+| **Required rest** | The recovery floor — the rest this traveler must get (a slow morning, a mid-day break, an early night) for the rest of the plan to hold | `## Hard Constraints` (a rest / pacing constraint) — add one if the rest need is non-negotiable and none exists yet |
+
+The field shape for a single need:
+
+- **Category** — one of the four above.
+- **Specific** — the personal detail behind the need: the *how much*, the *what exactly*, the personal context. This is what the per-traveler file owns and the constraint block does not.
+- **Applies to** — the link to the governing `trip-context.md` constraint, written as `<Section> → "<Constraint name>"`. This is the link, **never a copy** of the constraint text.
+
+> If a traveler states a need with no governing trip-level constraint yet (e.g. a required-rest floor the trip has not captured as a constraint), that is a signal to add the constraint to `trip-context.md` — the SSOT — and then link to it. The per-traveler file never becomes the de-facto home for a trip-level constraint.
+
+### Desires
+
+A desire is something the traveler wants out of the trip — an activity, a food experience, or a more general wish about pace and feel. Unlike a need, it carries a **priority tier** and an **overlap** signal, and it is owned outright by the traveler's own file (it links to nothing — there is no trip-level "desire constraint").
+
+The field shape for a single desire:
+
+- **Desire** — what the traveler wants (the want-to-do, the would-love-to-see, the kind of day they hope for).
+- **Priority tier** — exactly one of:
+  - **anchor** — a desire the traveler would be genuinely disappointed to miss; the trip should be built to land it.
+  - **wish** — a real want the trip should try hard to include, but which can yield to a need or to another traveler's anchor.
+  - **nice-to-have** — a bonus; pleasant if it fits, no loss if it does not.
+- **Theme tag(s)** *(optional)* — one or more free-text tags grouping the desire by kind (e.g. `food`, `markets`, `museums`, `nightlife`, `nature`, `slow-pace`). Tags are how desires across travelers are matched for overlap; they are descriptive labels, not categories the traveler must pick from.
+- **Overlap** — which **other** travelers share this desire (by name), or `solo` if no one else lists it. This is the **desire-overlap signal**: it surfaces where the group already agrees. The enrichment agent computes it by matching desires across all per-traveler files (by theme tag and plain-language sense) — a traveler authoring their own file may leave it blank or note who they *think* shares it; the derived model carries the reconciled answer.
+
+> **Priority tiers are structural labels, not numeric weights.** `anchor` / `wish` / `nice-to-have` rank a traveler's desires by importance so a later capability knows what matters most — they are **not** scores, weights, or coverage percentages, and nothing in this layer multiplies, sums, or optimizes against them. The tier says "this matters more than that"; it does **not** say "this is worth 0.8". How a future capability *balances* desires across the group, or *measures* how well a plan satisfies them, is out of scope here (see What This Document Does Not Define). This document defines the structure the tiers live in; it does not define any math over them.
+
+### Worked example — a per-traveler file
+
+Jordan's `travelers/Jordan.md`, written out in the full model (extending the smaller illustration in the Reconciliation Rule above):
+
+```markdown
+# Traveler — Jordan
+
+## Needs
+- Category: Mobility
+  Specific: prefers fewer than ~15 minutes continuous walking before a sit-down break; step-free routing.
+  Applies to: Hard Constraints → "Limited stair tolerance"
+- Category: Required rest
+  Specific: needs one slow start (no fixed plan before ~10:00) every other day to keep pace the rest of the trip.
+  Applies to: Hard Constraints → "Daily pacing floor"
+
+## Desires
+- Desire: a slow museum morning rather than a packed sightseeing sprint.
+  Priority tier: anchor
+  Theme tag(s): museums, slow-pace
+  Overlap: Pat
+- Desire: explore local markets.
+  Priority tier: wish
+  Theme tag(s): markets, food
+  Overlap: Pat
+- Desire: one standout coffee place.
+  Priority tier: nice-to-have
+  Theme tag(s): food
+  Overlap: solo
+```
+
+Pat's `travelers/Pat.md` shares two of those desires — which is what produces the overlap above:
+
+```markdown
+# Traveler — Pat
+
+## Needs
+- Category: Heat tolerance
+  Specific: fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days.
+  Applies to: Hard Constraints → "Afternoon heat ceiling"
+
+## Desires
+- Desire: a relaxed museum morning.
+  Priority tier: wish
+  Theme tag(s): museums, slow-pace
+  Overlap: Jordan
+- Desire: wander a local market.
+  Priority tier: anchor
+  Theme tag(s): markets, food
+  Overlap: Jordan
+```
+
+The enrichment agent reconciles both files into `outputs/traveler-model.md` — linking each need to its constraint and carrying the computed overlap signal:
+
+```markdown
+# Traveler Model [DERIVED]
+
+## Jordan
+- Need → Hard Constraints "Limited stair tolerance" (Applies to: Jordan); specific: ~15-min walking ceiling, step-free.
+- Need → Hard Constraints "Daily pacing floor" (Applies to: Jordan); specific: slow start every other day.
+- Desire (anchor): slow museum morning [museums, slow-pace] — shared with Pat.
+- Desire (wish): local markets [markets, food] — shared with Pat.
+- Desire (nice-to-have): standout coffee [food] — solo.
+
+## Pat
+- Need → Hard Constraints "Afternoon heat ceiling" (Applies to: Pat); specific: shade/indoors by early afternoon above ~82°F.
+- Desire (wish): relaxed museum morning [museums, slow-pace] — shared with Jordan.
+- Desire (anchor): local market [markets, food] — shared with Jordan.
+
+## Desire overlap
+- museums / slow-pace morning: Jordan (anchor), Pat (wish)
+- local markets: Jordan (wish), Pat (anchor)
+```
+
+Each constraint still lives once in `trip-context.md`; each traveler's specifics and desires live once in their own file; the derived model references all of it and adds the cross-traveler overlap. No fact has two owners — and nothing here scores, weights, or optimizes; it is structure only.
+
+---
+
 ## Who Writes What — Field Layering
 
 The satisfaction layer preserves the system's **one-writer-per-file** convention. The novelty is that for the per-traveler source files, the *writer is the human* — which is exactly why separate files were chosen: each traveler can own and edit their own file independently.

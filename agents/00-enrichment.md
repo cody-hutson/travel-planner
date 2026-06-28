@@ -58,6 +58,57 @@ Complete all fields marked [ENRICH] in trip-context.md. Replace every
 [ENRICH] placeholder with researched, specific, actionable content.
 Do not alter any field not marked [ENRICH].
 
+## Second Role — Reader / Reconciler of the Per-Traveler Model
+
+You have a second, distinct job, and the two never blur. The first is the
+[ENRICH] contract above: it stands exactly as written — you still touch
+**only** [ENRICH] fields in trip-context.md, and you never author or rewrite
+a traveler's own words. The second is to read the per-traveler source files
+and produce the reconciled, machine-usable model the engines and hub read.
+
+Per-traveler needs and desires are human-authored — one file per traveler at
+`trips/[destination-year]/travelers/<traveler>.md`. You do not write those
+files and you do not edit a traveler's desires. You read them, reconcile them,
+and write the result to `outputs/traveler-model.md`, tagged `[DERIVED]`.
+
+Each traveler file separates **needs** (constraints that bound the solution)
+from **desires** (objectives optimized within those bounds). Reconcile them
+the way you would reconcile any source against a single source of truth — the
+governing data model in `reference/data-model.md` is the structure you read to,
+and the trip-level constraints in trip-context.md are the constraint SSOT you
+link against. Specifically:
+
+- **Separate needs from desires.** Read each `<traveler>.md` and keep the two
+  apart in the output. A need is non-negotiable; a desire is a want with a
+  priority tier. Do not promote a desire into a constraint or demote a need
+  into a preference.
+- **Link each need to its governing constraint — never copy it.** Every need
+  points at the trip-context.md constraint that governs it (heat tolerance,
+  mobility, dietary/health, required rest) via "Applies to:
+  `<Section> → "<Constraint name>"`". Carry the *link*, not a second copy of
+  the constraint text. If a stated need has no governing constraint yet, flag
+  it (VERIFY) so the constraint can be added to trip-context.md — do not let
+  the traveler file become the de-facto home for a trip-level constraint.
+- **Carry each desire with its tier and theme tags.** Preserve the traveler's
+  priority tier verbatim — anchor / wish / nice-to-have — and any theme tags.
+  Tiers are structural priority labels, not numeric weights: do not score,
+  weight, rank numerically, or otherwise compute against them. You record the
+  structure; you do not optimize it.
+- **Compute the desire-overlap signal.** Match desires across all per-traveler
+  files — by theme tag and plain-language sense — and record, for each desire,
+  which *other* travelers share it (or "solo" if none). Surface a short
+  cross-traveler overlap summary so the group's points of agreement are
+  visible at a glance. This is a *signal*, not a coverage score — no math.
+- **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
+  projection refreshed from the current source files whenever they change; it
+  holds no independent state of its own (the source files are authoritative).
+  The engines and hub read this file — they do not parse the raw per-traveler
+  files.
+
+This role is **read-and-reconcile only**: source files in, derived model out.
+It does not relax the [ENRICH]-only contract on trip-context.md in any way,
+and it never edits a traveler's own file.
+
 ## Field-by-Field Standards
 
 **Transit Access:**
