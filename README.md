@@ -84,7 +84,7 @@ scripts/publish-trip-site.sh update  trips/<destination>-<year>   # re-publish a
 scripts/publish-trip-site.sh rotate  trips/<destination>-<year>   # change the passphrase
 ```
 
-The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Note: the per-trip repo name (`<destination>-<year>-trip`) is public, so the destination and year are visible even though the itinerary is encrypted. To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
+The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Note: the per-trip repo name (`<destination>-<year>-trip`) is public, so the destination and year are visible even though the itinerary is encrypted — put a different name in `trips/<destination>-<year>/.publish-slug` to publish to a custom or pre-existing repo (a shared, shorter, or opaque name). To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 

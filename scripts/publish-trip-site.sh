@@ -27,6 +27,10 @@
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
 #
+# Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
+# <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
+# pre-existing repo instead of the derived one (resolved identically by every subcommand).
+#
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -124,7 +128,23 @@ resolve_site_html() { # <trip_dir>
   printf '%s' "$hit"
 }
 
-slug_for() { printf '%s-trip' "$(basename "$1")"; }   # trips/tokyo-2026 -> tokyo-2026-trip
+# Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
+# <basename>-trip. A .publish-slug file lets a convention-named trip dir publish to a
+# custom or pre-existing repo name (e.g. trips/tokyo-2026 -> tokyo-trip) instead of the
+# derived one. The slug names a PUBLIC repo, so it is not secret; it lives in the
+# git-ignored trips/ tree regardless. Resolved identically by publish/update/rotate.
+slug_for() { # <trip_dir>
+  local trip_dir="$1" sf="$1/.publish-slug" slug
+  if [ -s "$sf" ]; then
+    slug="$(tr -d '[:space:]' < "$sf")"
+  else
+    slug="$(basename "$trip_dir")-trip"
+  fi
+  case "$slug" in
+    ''|*[!A-Za-z0-9._-]*) die "invalid publish slug '$slug' — allowed chars: A-Z a-z 0-9 . _ - (fix ${sf} or remove it to use the default '<dir>-trip')" ;;
+  esac
+  printf '%s' "$slug"
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Encrypt the site into a fresh temp dir; echo that dir. Output file: <dir>/index.html
@@ -152,6 +172,20 @@ strip_to_text() { # <html_file> -> visible text on stdout
     || sed -E 's/<[^>]*>/ /g' "$1"
 }
 
+# StatiCrypt boilerplate reference — encrypt a token-LESS decoy so the guard can tell
+# StatiCrypt's fixed shell vocabulary (already, center, click, password…) apart from a
+# genuine itinerary leak. The readable boilerplate is passphrase-independent; only the tiny
+# decoy ciphertext blob varies, so coincidental token matches are negligible. Echoes a temp
+# dir whose index.html is the decoy output; the caller removes it.
+make_boilerplate() { # -> echoes temp dir (boilerplate = <dir>/index.html)
+  local d enc
+  d="$(mktemp -d)"
+  printf '<!DOCTYPE html><html><head><title>x</title></head><body>trip</body></html>' > "$d/src.html"
+  enc="$(encrypt_to_tmp "$d/src.html" "staticrypt-boilerplate-decoy-passphrase")"
+  rm -rf "$d"
+  printf '%s' "$enc"
+}
+
 # ═════════════════════════════════════════════════════════════════════════════
 # verify_ciphertext — THE PRE-PUSH SAFETY GUARD  ◀── your high-judgment function
 # ═════════════════════════════════════════════════════════════════════════════
@@ -161,9 +195,11 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # return non-zero for ANY doubt, which aborts the push.
 #
 # Contract:
-#   verify_ciphertext <encrypted_index_html> <plaintext_source_html>
+#   verify_ciphertext <encrypted_index_html> <plaintext_source_html> [boilerplate_html]
 #   return 0  -> verified ciphertext, safe to push
 #   return 1  -> NOT safe, abort (do not push)
+#   [boilerplate_html] is a token-less decoy encrypted with the same StatiCrypt build; any
+#   token found there is StatiCrypt's own vocabulary (not an itinerary leak) and is not flagged.
 #
 # Design latitude (this is why it's yours to own):
 #   • Proof of encryption is STRUCTURAL, not keyword-based: the published page's visible
@@ -177,8 +213,8 @@ strip_to_text() { # <html_file> -> visible text on stdout
 #     derivation + a stoplist + the length-based structural proof.
 #
 # Below is a working DEFAULT. Replace the body with your own predicate to taste.
-verify_ciphertext() { # <enc> <src>
-  local enc="$1" src="$2" tok enc_visible
+verify_ciphertext() { # <enc> <src> [boilerplate_html]
+  local enc="$1" src="$2" boiler="${3:-}" tok enc_visible
   local stoplist='^(doctype|html|head|body|title|meta|link|script|style|charset|viewport|password|passphrase|protected|loading|decrypt|please|enter|button|submit|remember|window|document|function|staticrypt|leaflet|google|fonts)$'
   # Self-check: never certify the source file as its own ciphertext.
   if [ "$enc" -ef "$src" ]; then warn "guard: enc and src are the same file"; return 1; fi
@@ -196,10 +232,17 @@ verify_ciphertext() { # <enc> <src>
     warn "guard: output has ${#enc_visible} visible chars (>200) — looks unencrypted"; return 1
   fi
   # (d) Negative backstop: no distinctive plaintext token from the source's visible text
-  #     may appear anywhere in the published bytes (raw, scripts included).
+  #     may appear in the published bytes (raw, scripts included) — UNLESS it belongs to
+  #     StatiCrypt's own fixed shell vocabulary. Common itinerary words (Check, Close, Center,
+  #     Already…) also occur in StatiCrypt's HTML/CSS/JS, so without subtracting that vocabulary
+  #     the backstop false-aborts every real itinerary. When a boilerplate reference is supplied
+  #     (a token-less decoy from the same StatiCrypt build), a token found there is boilerplate,
+  #     not a leak, and is skipped; a distinctive leak token (a place/surname) is absent from
+  #     the decoy and still aborts. Check (c) remains the primary structural proof.
   while IFS= read -r tok; do
     [ -n "$tok" ] || continue
     if grep -qiF -- "$tok" "$enc"; then
+      if [ -n "$boiler" ] && grep -qiF -- "$tok" "$boiler"; then continue; fi
       warn "guard: plaintext token '$tok' leaked into output"; return 1
     fi
   done < <(strip_to_text "$src" \
@@ -239,13 +282,15 @@ cmd_publish() { # <trip_dir> [--plaintext]
     fi
     cp "$site_html" "$pub_dir/index.html"
   else
-    local passphrase enc
+    local passphrase enc boiler
     passphrase="$(get_passphrase "$trip_dir" 0)"
     info "Encrypting site (StatiCrypt — AES-256-CBC + HMAC, 600k PBKDF2)…"
     enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
     info "Running pre-push verify guard…"
-    verify_ciphertext "$enc/index.html" "$site_html" \
-      || { rm -rf "$enc"; die "GUARD ABORTED publish — output is not verified ciphertext. Nothing was pushed."; }
+    boiler="$(make_boilerplate || true)"
+    verify_ciphertext "$enc/index.html" "$site_html" "${boiler:+$boiler/index.html}" \
+      || { rm -rf "$enc" "$boiler"; die "GUARD ABORTED publish — output is not verified ciphertext. Nothing was pushed."; }
+    rm -rf "$boiler"
     cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
     ok "Guard passed — only ciphertext will be pushed."
   fi
@@ -294,7 +339,7 @@ cmd_update() { # <trip_dir>
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase enc owner slug
+  local site_html pub_dir passphrase enc owner slug boiler
   site_html="$(resolve_site_html "$trip_dir")"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   passphrase="$(get_passphrase "$trip_dir" 0)"
@@ -303,8 +348,10 @@ cmd_update() { # <trip_dir>
   info "Re-encrypting edited site…"
   enc="$(encrypt_to_tmp "$site_html" "$passphrase")"
   info "Running pre-push verify guard…"
-  verify_ciphertext "$enc/index.html" "$site_html" \
-    || { rm -rf "$enc"; die "GUARD ABORTED update — output is not verified ciphertext. Nothing was pushed."; }
+  boiler="$(make_boilerplate || true)"
+  verify_ciphertext "$enc/index.html" "$site_html" "${boiler:+$boiler/index.html}" \
+    || { rm -rf "$enc" "$boiler"; die "GUARD ABORTED update — output is not verified ciphertext. Nothing was pushed."; }
+  rm -rf "$boiler"
   cp "$enc/index.html" "$pub_dir/index.html"; rm -rf "$enc"
   ok "Guard passed."
 
@@ -336,7 +383,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
 # Dispatch
 # ─────────────────────────────────────────────────────────────────────────────
 usage() {
-  sed -n '3,30p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '3,32p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 

@@ -265,6 +265,8 @@ If the pre-push guard aborts, **nothing was published** — the error names what
 
 **Passphrase.** If `$STATICRYPT_PASSWORD` is set it is used; otherwise a strong one is generated and saved to `trips/[destination-year]/.passphrase` (git-ignored, never published). Share it over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
 
+**Repo name.** By default the per-trip repo is `[destination]-[year]-trip`. To publish to a custom or pre-existing repo — a shorter shared name, an opaque token, or an existing site — put the bare repo name in `trips/[destination-year]/.publish-slug` (git-ignored). `publish`/`update`/`rotate` all resolve it the same way.
+
 **Site is live at:** `https://<github-username>.github.io/[destination]-[year]-trip/` — the URL shows a passphrase prompt, not the itinerary.
 
 **Updating after edits** (re-encrypt and re-publish only ciphertext):
@@ -285,7 +287,7 @@ ALLOW_PLAINTEXT=1 scripts/publish-trip-site.sh publish trips/[destination-year] 
 
 > **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
 >
-> **What still leaks (metadata).** The per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. (An opaque repo name is tracked as a future enhancement.)
+> **What still leaks (metadata).** The per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. (Set an opaque or custom repo name in `trips/[destination-year]/.publish-slug` to avoid the destination/year leak.)
 >
 > **Trust boundary.** Encryption runs via `npx staticrypt` (pinned to an exact version); your passphrase is passed to that package at publish time, so you are trusting the pinned StatiCrypt release and the npm supply chain.
 >

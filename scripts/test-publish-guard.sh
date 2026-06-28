@@ -81,6 +81,16 @@ if verify_ciphertext "$ENC_LEAK" "$SRC"; then FAIL "C: guard missed a leaked pla
 # C2 — REGRESSION: all-lowercase plaintext with sentinel strings must be caught structurally.
 if verify_ciphertext "$PLAIN_LOWER" "$TINY"; then FAIL "C2: guard PASSED all-lowercase plaintext (fail-open!)"; else PASS "C2: guard catches all-lowercase plaintext via visible-body check"; fi
 
+echo "Slug resolution:"
+# F — slug_for: default convention, .publish-slug override (whitespace-trimmed), invalid rejection.
+SDIR="$WORK/osaka-2027"
+[ "$(slug_for "$SDIR")" = "osaka-2027-trip" ] && PASS "F1: default slug = <dir>-trip" || FAIL "F1: default slug wrong"
+mkdir -p "$SDIR"; printf '  custom-site-repo \n' > "$SDIR/.publish-slug"
+[ "$(slug_for "$SDIR")" = "custom-site-repo" ] && PASS "F2: .publish-slug overrides default (trimmed)" || FAIL "F2: override not honored"
+printf 'bad name!\n' > "$SDIR/.publish-slug"
+if ( slug_for "$SDIR" ) >/dev/null 2>&1; then FAIL "F3: invalid slug not rejected (fail-open)"; else PASS "F3: invalid slug rejected"; fi
+rm -f "$SDIR/.publish-slug"
+
 echo "No-reply commit identity:"
 if gh auth status >/dev/null 2>&1; then
   resolve_noreply_identity
@@ -124,6 +134,30 @@ if command -v npx >/dev/null 2>&1; then
   fi
 else
   SKIP "E: npx unavailable"
+fi
+
+echo "Boilerplate subtraction (false-positive fix):"
+if command -v npx >/dev/null 2>&1; then
+  # Itinerary whose words (Check, Center, Closed) also live in StatiCrypt's shell, plus a
+  # distinctive token (Shibuya) that does not. Encrypts correctly either way; the only
+  # difference is whether the guard false-flags the common words.
+  CMN="$WORK/common.html"
+  cat > "$CMN" <<'HTML'
+<!DOCTYPE html><html><head><title>Trip</title></head><body>
+<h1>Itinerary</h1><p>Check-in at the Center hotel. Museum Closed Monday. Shibuya at night.</p>
+</body></html>
+HTML
+  ENC_CMN="$(encrypt_to_tmp "$CMN" "common-words-passphrase-1" 2>/dev/null)"
+  BOIL="$(make_boilerplate 2>/dev/null || true)"
+  if [ -n "${ENC_CMN:-}" ] && [ -n "${BOIL:-}" ] && [ -f "$ENC_CMN/index.html" ] && [ -f "$BOIL/index.html" ]; then
+    if verify_ciphertext "$ENC_CMN/index.html" "$CMN" "$BOIL/index.html"; then PASS "G1: common itinerary words pass once StatiCrypt boilerplate is subtracted"; else FAIL "G1: false positive on common words persists even with boilerplate ref"; fi
+    if verify_ciphertext "$ENC_CMN/index.html" "$CMN"; then FAIL "G2: expected pre-fix false positive not reproduced"; else PASS "G2: without boilerplate ref the false positive still fires (subtraction is the fix)"; fi
+    rm -rf "$ENC_CMN" "$BOIL"
+  else
+    SKIP "G: staticrypt could not run (offline or npx blocked)"
+  fi
+else
+  SKIP "G: npx unavailable"
 fi
 
 echo
