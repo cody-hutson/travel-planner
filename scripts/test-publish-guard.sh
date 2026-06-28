@@ -136,6 +136,30 @@ else
   SKIP "E: npx unavailable"
 fi
 
+echo "Boilerplate subtraction (false-positive fix):"
+if command -v npx >/dev/null 2>&1; then
+  # Itinerary whose words (Check, Center, Closed) also live in StatiCrypt's shell, plus a
+  # distinctive token (Shibuya) that does not. Encrypts correctly either way; the only
+  # difference is whether the guard false-flags the common words.
+  CMN="$WORK/common.html"
+  cat > "$CMN" <<'HTML'
+<!DOCTYPE html><html><head><title>Trip</title></head><body>
+<h1>Itinerary</h1><p>Check-in at the Center hotel. Museum Closed Monday. Shibuya at night.</p>
+</body></html>
+HTML
+  ENC_CMN="$(encrypt_to_tmp "$CMN" "common-words-passphrase-1" 2>/dev/null)"
+  BOIL="$(make_boilerplate 2>/dev/null || true)"
+  if [ -n "${ENC_CMN:-}" ] && [ -n "${BOIL:-}" ] && [ -f "$ENC_CMN/index.html" ] && [ -f "$BOIL/index.html" ]; then
+    if verify_ciphertext "$ENC_CMN/index.html" "$CMN" "$BOIL/index.html"; then PASS "G1: common itinerary words pass once StatiCrypt boilerplate is subtracted"; else FAIL "G1: false positive on common words persists even with boilerplate ref"; fi
+    if verify_ciphertext "$ENC_CMN/index.html" "$CMN"; then FAIL "G2: expected pre-fix false positive not reproduced"; else PASS "G2: without boilerplate ref the false positive still fires (subtraction is the fix)"; fi
+    rm -rf "$ENC_CMN" "$BOIL"
+  else
+    SKIP "G: staticrypt could not run (offline or npx blocked)"
+  fi
+else
+  SKIP "G: npx unavailable"
+fi
+
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
