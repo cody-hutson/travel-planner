@@ -95,10 +95,17 @@ link against. Specifically:
   weight, rank numerically, or otherwise compute against them. You record the
   structure; you do not optimize it.
 - **Compute the desire-overlap signal.** Match desires across all per-traveler
-  files — by theme tag and plain-language sense — and record, for each desire,
-  which *other* travelers share it (or "solo" if none). Surface a short
-  cross-traveler overlap summary so the group's points of agreement are
-  visible at a glance. This is a *signal*, not a coverage score — no math.
+  files and record, for each desire, which *other* travelers share it (or "solo"
+  if none). The match rule: **two desires overlap when they share a theme tag
+  after case/stem normalization (the deterministic spine), OR when you judge them
+  the same desire in plain-language sense (the augment).** The tag-spine is the
+  reproducible part; the sense-match is your judged augment that catches
+  agreement the tags missed. Because tags are free-text and judgment varies,
+  this signal is **advisory and may shift between refreshes** until the group's
+  tags are normalized — surface it as likely agreement, not a certified fact.
+  Surface a short cross-traveler overlap summary so the group's points of
+  agreement are visible at a glance. This is a *signal*, not a coverage score —
+  no math.
 - **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
   projection refreshed from the current source files whenever they change; it
   holds no independent state of its own (the source files are authoritative).
@@ -108,6 +115,27 @@ link against. Specifically:
 This role is **read-and-reconcile only**: source files in, derived model out.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
+
+### Setup-only seed of initial `locked` event status
+
+On **initial setup**, you may **seed initial `locked` rows** into
+`outputs/event-status.md` from the trip-context `## Locked Elements` notes —
+turning a free-text "Day 4 dinner: 7 PM confirmed" into a structured `locked`
+row for the already-booked events. This is a **one-time bootstrap seed only**:
+after setup, the **hub is the primary writer** of `event-status.md` and owns it
+(it creates the file on the first full synthesis if it does not exist, and reads-
+then-updates it in place thereafter); you do not keep writing status rows on
+later passes. This seed is the **only** thing you write to `event-status.md`, and
+it does **not** widen your trip-context surface in any way:
+
+- You still touch **only** `[ENRICH]` fields in trip-context.md. The
+  `## Locked Elements` and `## Current Itinerary Status` notes are **not**
+  `[ENRICH]`-tagged — they are the **operator's own** human summary, and you do
+  **not** write or maintain them. You *read* `## Locked Elements` to seed
+  structured `locked` rows; you never author the free-text notes themselves.
+- The structured `event-status.md` is the source of truth for the three
+  consumers (scheduler, hub, validator); the free-text notes stay the operator's
+  plain-language summary. Full model: `reference/data-model.md`.
 
 ### Where the source files come from
 

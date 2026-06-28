@@ -88,7 +88,21 @@ scheduling framework's bailout flags.
 event's status — `planned` (open, may still need a booking), `locked`
 (booked / confirmed), `firmed` (settled, nothing to book), or `option`
 (an alternative / bailout, never a primary slot). Full model:
-`reference/data-model.md`. The hub both **reads** and **writes** it:
+`reference/data-model.md`. The hub is the **primary writer** of this file
+(the validator only reads it; the enrichment agent may seed initial `locked`
+rows on setup). The hub both **reads** and **writes** it:
+
+- **Create it on the first full synthesis.** In DISCOVERY / ENRICHMENT, if
+  `outputs/event-status.md` does not yet exist, the hub **creates** it,
+  seeding any already-known `locked` events (held reservations, purchased
+  tickets, a confirmed hotel — including any `locked` rows the enrichment
+  agent seeded from `## Locked Elements`). On every later pass the file
+  already exists — read it, then update in place; never re-create it.
+- **Event IDs are opaque and day-independent.** Mint a stable, opaque Event ID
+  the first time you place an event (e.g. `evt-07`) — it is the cross-run join
+  key and must **not** encode the day (the `Day` column carries that), because
+  resequencing moves events across days. Reuse the same ID for that event on
+  every later pass.
 - **Read before synthesizing or patching.** Treat `locked` and `firmed`
   events as fixed — synthesize and resequence around them; do not re-place,
   re-time, or drop them unless the user named them. Only `planned` events are
@@ -99,11 +113,19 @@ event's status — `planned` (open, may still need a booking), `locked`
   (or `locked` if booked at once).
 - **Write back after placing.** When an event becomes booked, set its status
   to `locked`; when the group settles an unbookable choice, set it to
-  `firmed`; new working picks enter as `planned`. Update **in place** — change
-  only the rows whose status actually changed; never wipe or regenerate the
-  file (it must survive the synthesis). Recompute the derived "needs booking"
-  column on any row you touch: it is `yes` exactly when `status = planned` and
-  `requires booking? = yes`.
+  `firmed`; new working picks enter as `planned`. If a booking falls through
+  (a cancelled reservation, a sold-out ticket), regress that event
+  `locked → planned` — it re-opens to iteration and its booking question
+  reopens. Update **in place** — change only the rows whose status actually
+  changed; never wipe or regenerate the file (it must survive the synthesis).
+  Recompute the derived "needs booking" column on any row you touch: it is
+  `yes` exactly when `status = planned` and `requires booking? = yes`.
+- **Delete a removed event's row.** When an event is dropped from the itinerary
+  entirely (not kept as an `option`), **delete** its row from
+  `event-status.md` — this is the one deletion persist-mutable permits. Leaving
+  a ghost row would corrupt the "needs booking" set and the "all events locked"
+  predicate. (Demotion is different: an event kept as a backup becomes an
+  `option` row, not a deleted one.)
 - **Keep the matrix and the status table in agreement.** An event marked
   `option` in status appears as Alt / B (never A) in `venue-matrix.md`; a
   `locked`/`firmed`/`planned` primary pick appears as A. The matrix is rebuilt
@@ -132,24 +154,39 @@ artifact — full model: `reference/data-model.md` → Satisfaction Metrics). Re
   traveler's anchors/wishes → covered or not. It is a boolean presence check —
   not a degree, not a percentage, not a ranking. (A `not covered` anchor is a
   signal worth noting in OPEN DECISIONS, but it is not a constraint failure.)
-- **Needs-compliance — pass/fail.** Mirror the hard-constraint audit you
-  already run (every day against every hard constraint) into the metrics file as
-  a per-need-per-applicable-day `pass` / `fail` record, keyed to each need's
-  governing constraint. This is the *recorded form* of the constraint audit you
-  already perform — not a new check. It must agree with the validator's
-  needs-compliance.
+- **Needs-compliance — pass/fail (your audit; the validator owns the file
+  section).** Run your usual hard-constraint audit — every **applicable** day
+  against every hard constraint — as a per-need-per-applicable-day `pass` /
+  `fail` judgement keyed to each need's governing constraint. A need's
+  **applicable-day set** is derived from its governing constraint
+  (constant-applicability needs apply on all days; conditional needs — a heat
+  ceiling, a scheduled rest floor — apply on their applicable subset) — see
+  `reference/data-model.md` → "A need's applicable-day set"; do not redefine it
+  here. This is the *recorded form* of the constraint audit you already perform —
+  not a new check. The **validator owns the Needs-compliance section** of
+  `satisfaction-metrics.md` (per the section-ownership split below); your audit
+  must **agree** with it — you do not write that section yourself.
 - **Balance signals — named, value `(left to design)`.** Emit group-equity, the
   four experience axes (creativity, fun, excitement, newness), and rest-recovery
   balance as named rows with the value `(left to design)`. Do **not** compute,
   weight, or threshold them — nothing in the satisfaction layer optimizes yet.
   You name and track the dimension; you do not score it.
 
-Write `satisfaction-metrics.md` fresh each synthesis (it is rebuilt/refreshed —
-a derived snapshot of the current itinerary + traveler model; it holds no state
-of its own). Do **not** put any of this in trip-context.md or in the rebuilt
-venue-matrix.md — the coverage view has its own home. If you find yourself
-inventing a coverage percentage or an equity weighting, stop: scoring the
-balance dimensions is design-stage work this layer defers.
+**Section ownership — do not clobber the validator's section.**
+`satisfaction-metrics.md` has two writers. The hub owns the **Desire-coverage**
+and **Balance signals** sections; the **validator** owns the **Needs-compliance**
+section and the needs↔constraint agreement check. **Read-merge-write only your
+own sections:** read the current file, replace the Desire-coverage and
+Balance-signals sections, and write the merged whole back — never regenerate the
+file from scratch, and never overwrite the validator's Needs-compliance section.
+Each section is refreshed by its owner from authoritative inputs (so the file is
+still rebuilt/refreshed per-section, not append-with-history). The needs-compliance
+record you mirror above is for *your own* every-day audit; it must agree with the
+validator's owned section. Full split: `reference/data-model.md` → "Write split —
+section ownership". Do **not** put any of this in trip-context.md or in the
+rebuilt venue-matrix.md — the coverage view has its own home. If you find
+yourself inventing a coverage percentage or an equity weighting, stop: scoring
+the balance dimensions is design-stage work this layer defers.
 
 **Group split tracks:**
 Any day the scheduling framework flagged as requiring a parallel track
@@ -247,7 +284,14 @@ ideation outputs. Format: destination name / one-paragraph appeal case /
 key tradeoffs / best-fit traveler profile / go-consider-skip verdict.
 
 **DISCOVERY / ENRICHMENT:** Full synthesis. Build reference artifacts first,
-then produce final-itinerary.md per output format.
+then produce final-itinerary.md per output format. **Create
+`outputs/event-status.md` if it does not yet exist** (this is its bootstrap
+edge — the hub creates it on the first full synthesis), seeding any already-known
+`locked` events — including any `locked` rows the enrichment agent seeded from
+`## Locked Elements`. Mint an opaque, day-independent Event ID for each event as
+you place it. If the file already exists, read it and update in place — never
+re-create it. Write the hub-owned sections of `satisfaction-metrics.md`
+(desire-coverage + balance signals).
 
 **ITERATION:** Patch the existing final-itinerary.md. Update only the days
 in trip-context.md Mode Notes. Read `outputs/event-status.md` first and honor
@@ -306,23 +350,29 @@ In ITERATION and RESEQUENCING modes, also read:
 Cells: A = anchor, Alt = alternative, B = bailout, blank = not used
 Flags: * = hotel-proximity venue, ! = appears 2x (confirm intentional)
 
-### Output: outputs/satisfaction-metrics.md
+### Output: outputs/satisfaction-metrics.md (hub-owned sections)
 
-The per-traveler coverage / balance read, rebuilt fresh each synthesis. Reported,
-not scored — full model in `reference/data-model.md` → Satisfaction Metrics.
+The per-traveler coverage / balance read. The hub owns and refreshes the
+**Desire-coverage** and **Balance signals** sections only — read-merge-write
+them, never clobbering the validator's **Needs-compliance** section (which the
+validator owns). Reported, not scored — full model in
+`reference/data-model.md` → Satisfaction Metrics.
 
 ```markdown
 # Satisfaction Metrics [DERIVED]
 
 ## Needs-compliance — pass/fail, per need × per applicable day
-| Traveler | Need (category) | Applicable days | Per-day verdict | Overall |
-|----------|-----------------|-----------------|-----------------|---------|
+> Validator-owned section — the hub's own audit must agree with it; the hub does
+> not write this section. Shown here for file context only.
 
-## Desire-coverage — covered / not, per traveler × per desire
+## Desire-coverage — covered / not, per traveler × per desire   ← hub-owned
+> Each verdict carries the desire's tier; a not-covered anchor is distinct from a
+> not-covered nice-to-have (do not flatten the two).
+
 | Traveler | Desire | Priority tier | Covered? |
 |----------|--------|---------------|----------|
 
-## Balance signals — named; scoring left to design
+## Balance signals — named; scoring left to design   ← hub-owned
 | Balance dimension | Granularity | Value |
 |-------------------|-------------|-------|
 | Group-equity | per trip | (left to design) |

@@ -96,7 +96,13 @@ Read `outputs/event-status.md` (the persist-mutable per-event status — see
   or `firmed` event that moved, changed time, was dropped, or was altered while
   it was **not** named in the change is a **Critical** finding. Cite the event,
   its status, what changed, and that the change request did not name it. This is
-  the core iteration-protection guarantee.
+  the core iteration-protection guarantee. Two transitions are **legitimate, not
+  Critical:** (1) a booking that fell through regresses `locked → planned` (the
+  event re-opens and its booking question reopens) — verify the regression is
+  reflected, not flag it; (2) an event genuinely removed from the itinerary has
+  its row **deleted** from `event-status.md` (no ghost row) — a deleted removed
+  event is correct, but confirm it was actually removed from the plan and not
+  silently dropped while still expected.
 - **"Needs booking" matches status.** The booking surfaces (the advance booking
   checklist, "needs booking" flags) must list exactly the events where
   `status = planned` **and** `requires booking? = yes`, and **no** others. Flag
@@ -118,18 +124,37 @@ list — the hub owns the status file.
 Report the satisfaction coverage view for the itinerary to
 `outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
 artifact — see `reference/data-model.md` → Satisfaction Metrics). You **report
-and emit** these dimensions; you do **not** score them. Each dimension has a
-fixed type:
+and emit** these dimensions; you do **not** score them. **Section ownership —
+do not clobber the hub's sections.** This file has two writers: the validator
+owns the **Needs-compliance** section and the **needs ↔ constraint agreement
+check**; the **hub** owns Desire-coverage and Balance signals.
+**Read-merge-write only your own sections** — read the current file, replace the
+Needs-compliance section (and the agreement-check line), write the merged whole
+back, and **never** wipe the hub's Desire-coverage / Balance-signals sections.
+(If the file does not yet exist, write your sections and leave the hub's section
+headers present but empty for the hub to fill.) Full split:
+`reference/data-model.md` → "Write split — section ownership". Each dimension has
+a fixed type:
 
 - **Needs-compliance — pass/fail, per need × per applicable day.** This is the
   *structured, recorded form* of the Constraint compliance audit above — not a
   second judgement. For every traveler need in `outputs/traveler-model.md` (the
   four categories — heat tolerance, mobility, dietary/health, required rest),
-  emit `pass` / `fail` for each day that need applies to, keyed to the
-  governing `trip-context.md` constraint the need links to. A `fail` here is the
-  same finding as a constraint-compliance **Critical** — the two must agree
-  (a needs-compliance `fail` ⇔ a constraint Critical). You are recording the
-  every-day hard-constraint audit as a per-need-per-day pass/fail record, not
+  emit `pass` / `fail` for each day that need **applies** to. A need's
+  applicable-day set is derived from its governing constraint
+  (constant-applicability needs → all days; conditional needs → their applicable
+  subset) — see `reference/data-model.md` → "A need's applicable-day set"; do not
+  redefine it, and do not fail a conditional need on a day its constraint never
+  governed. Key each verdict to the governing `trip-context.md` constraint the
+  need links to. The agreement with constraint-compliance is a **forward
+  implication, not an equivalence:** every needs-compliance `fail` **is** a
+  constraint-compliance **Critical** — but **not** every constraint Critical has
+  a needs-compliance counterpart. A trip-level or group constraint that **no
+  per-traveler need links to** produces a constraint Critical with **no**
+  needs-compliance row, by design. Do **not** enforce the reverse as an invariant
+  (an unlinked constraint Critical with no needs-compliance row is correct, not a
+  discrepancy). You are recording the every-applicable-day hard-constraint audit
+  as a per-need-per-day pass/fail record for the per-traveler-need slice, not
   re-deciding it.
 - **Desire-coverage — covered / not, per traveler × per desire.** For each
   traveler's anchors and wishes (from the traveler model), emit `covered` or
@@ -244,8 +269,10 @@ Also read:
    the source for the satisfaction-metrics report: needs drive needs-compliance,
    anchors/wishes drive desire-coverage)
 
-Write: outputs/satisfaction-metrics.md (the coverage report — see Output
-Format; reported/emitted, never scored).
+Write: outputs/satisfaction-metrics.md — **your owned sections only**
+(Needs-compliance + the needs↔constraint agreement check); read-merge-write,
+never clobbering the hub's Desire-coverage / Balance-signals sections. See Output
+Format; reported/emitted, never scored.
 
 ## Output Format
 
@@ -387,7 +414,7 @@ Needs-booking vs. status — the booking surfaces must equal the
 | Experience axis — newness | per trip | (left to design) |
 | Rest-recovery balance | per trip | (left to design) |
 
-- **Needs-compliance ↔ constraint-compliance agreement:** [confirmed — every needs-compliance `fail` is a constraint Critical and vice versa / list any disagreement]
+- **Needs-compliance → constraint-compliance agreement (forward only):** [confirmed — every needs-compliance `fail` is a constraint Critical; constraint Criticals with no linked per-traveler need correctly have no needs-compliance row / list any needs-compliance `fail` that is NOT a constraint Critical]
 
 ---
 

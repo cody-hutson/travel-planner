@@ -26,8 +26,8 @@ Five artifacts make up the satisfaction substrate. Per-traveler source files are
 |----------|------|--------|-------|-----------|
 | **Per-traveler source files** | `trips/[destination-year]/travelers/<traveler>.md` | Human (the traveler / planner) | Layer 1 — human-authored | Keeps heavy per-traveler detail out of sacred `trip-context.md`; enables async per-traveler authoring (each traveler fills/edits on their own time); makes each file an independent **change surface** (see Forward Connection). Filled from `templates/traveler-intake.template.md`. |
 | **Derived traveler model** | `outputs/traveler-model.md` | Enrichment agent | Derived `[DERIVED]` | The reconciled, machine-usable projection of all per-traveler files **plus** the desire-overlap signal. One place the engines and hub read instead of parsing N source files. |
-| **Per-event status** | `outputs/event-status.md` | Enrichment / hub (per the control-flow contract) | Derived, persist-mutable | Per-event state must **persist across synthesis re-runs**. It cannot live in `trip-context.md` (banned itinerary content) nor in `venue-matrix.md` (rebuilt every synthesis — status would be wiped). A dedicated persistent artifact is the iteration-protection source of truth. |
-| **Satisfaction metrics** | `outputs/satisfaction-metrics.md` | Validator + hub | Derived | The coverage view, written and read by the validator and hub. Formulas are out of scope here — this document only fixes *where the numbers live*, not how they are computed. |
+| **Per-event status** | `outputs/event-status.md` | **Hub (primary writer)**; enrichment seeds initial `locked` rows on setup; validator reads only | Derived, persist-mutable | Per-event state must **persist across synthesis re-runs**. It cannot live in `trip-context.md` (banned itinerary content) nor in `venue-matrix.md` (rebuilt every synthesis — status would be wiped). A dedicated persistent artifact is the iteration-protection source of truth. |
+| **Satisfaction metrics** | `outputs/satisfaction-metrics.md` | Hub + validator (**section-owned** — see Write Split) | Derived | The coverage view. Two writers, but **never clobbering**: each owns distinct sections and read-merge-writes only its own. Formulas are out of scope here — this document only fixes *where the numbers live* and *who owns which section*, not how they are computed. |
 
 > **Sacred rule, restated for this layer.** No per-traveler desire detail, no per-event status, and no metrics go **into** `trip-context.md`. The per-traveler *needs* still reconcile **against** the trip-level constraints in `trip-context.md` (see Reconciliation) — but by *link*, never by copy, and the satisfaction artifacts above are their homes.
 
@@ -57,15 +57,17 @@ The enrichment agent is the reconciler. When it reads the per-traveler files, it
 
 ### Concrete illustration
 
-Trip-context owns the trip-level constraint:
+*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Needs-vs-Desires Model below.)*
+
+Trip-context owns the trip-level constraint — note its name and description cover **both** the stair limit and the continuous-walking ceiling, so the per-traveler walking-distance need links to it without a name/description mismatch:
 
 ```markdown
 ## Hard Constraints
 
-### Limited stair tolerance
-- Description: Cannot manage long or repeated stair climbs; step-free routing required.
+### Limited stair & walking tolerance
+- Description: Cannot manage long or repeated stair climbs or long continuous walks; step-free routing and short walking legs with sit-down breaks required.
 - Applies to: Jordan
-- Practical impact: Venues must have step-free access or a lift; avoid stations that are stairs-only.
+- Practical impact: Venues must have step-free access or a lift; keep continuous walking legs short; avoid stations that are stairs-only.
 - Bailout requirement: No
 ```
 
@@ -76,7 +78,7 @@ Jordan's own source file owns the personal *specifics* of that need — and poin
 
 ## Needs
 - Mobility: prefers fewer than ~15 minutes continuous walking before a sit-down break.
-  Applies to: Hard Constraints → "Limited stair tolerance"
+  Applies to: Hard Constraints → "Limited stair & walking tolerance"
 
 ## Desires
 - Would love one slow museum morning over a packed sightseeing day.
@@ -89,7 +91,7 @@ The enrichment agent reconciles the two into the derived model — carrying the 
 # Traveler Model [DERIVED]
 
 ## Jordan
-- Need → Hard Constraints "Limited stair tolerance" (Applies to: Jordan); specific: ~15-min walking ceiling, sit-down breaks.
+- Need → Hard Constraints "Limited stair & walking tolerance" (Applies to: Jordan); specific: ~15-min walking ceiling, sit-down breaks.
 - Desires: slow museum morning; local markets; low nightlife appetite.
 ```
 
@@ -142,7 +144,7 @@ The field shape for a single desire:
   - **wish** — a real want the trip should try hard to include, but which can yield to a need or to another traveler's anchor.
   - **nice-to-have** — a bonus; pleasant if it fits, no loss if it does not.
 - **Theme tag(s)** *(optional)* — one or more free-text tags grouping the desire by kind (e.g. `food`, `markets`, `museums`, `nightlife`, `nature`, `slow-pace`). Tags are how desires across travelers are matched for overlap; they are descriptive labels, not categories the traveler must pick from.
-- **Overlap** — which **other** travelers share this desire (by name), or `solo` if no one else lists it. This is the **desire-overlap signal**: it surfaces where the group already agrees. The enrichment agent computes it by matching desires across all per-traveler files (by theme tag and plain-language sense) — a traveler authoring their own file may leave it blank or note who they *think* shares it; the derived model carries the reconciled answer.
+- **Overlap** — which **other** travelers share this desire (by name), or `solo` if no one else lists it. This is the **desire-overlap signal**: it surfaces where the group already agrees. The match rule the enrichment agent applies is: **two desires overlap when they share a theme tag after case/stem normalization (the deterministic spine), OR when enrichment judges them the same desire in plain-language sense (the augment).** The tag-spine is the reproducible part; the sense-match is the judged augment that catches agreement the tags missed. Because tags are free-text and judgment varies, the signal is **advisory and may shift between refreshes** until the group's tags are normalized — it surfaces likely agreement, it does not certify it. A traveler authoring their own file may leave Overlap blank or note who they *think* shares it; the derived model carries the reconciled answer.
 
 > **Priority tiers are structural labels, not numeric weights.** `anchor` / `wish` / `nice-to-have` rank a traveler's desires by importance so a later capability knows what matters most — they are **not** scores, weights, or coverage percentages, and nothing in this layer multiplies, sums, or optimizes against them. The tier says "this matters more than that"; it does **not** say "this is worth 0.8". How a future capability *balances* desires across the group, or *measures* how well a plan satisfies them, is out of scope here (see What This Document Does Not Define). This document defines the structure the tiers live in; it does not define any math over them.
 
@@ -156,7 +158,7 @@ Jordan's `travelers/Jordan.md`, written out in the full model (extending the sma
 ## Needs
 - Category: Mobility
   Specific: prefers fewer than ~15 minutes continuous walking before a sit-down break; step-free routing.
-  Applies to: Hard Constraints → "Limited stair tolerance"
+  Applies to: Hard Constraints → "Limited stair & walking tolerance"
 - Category: Required rest
   Specific: needs one slow start (no fixed plan before ~10:00) every other day to keep pace the rest of the trip.
   Applies to: Hard Constraints → "Daily pacing floor"
@@ -203,7 +205,7 @@ The enrichment agent reconciles both files into `outputs/traveler-model.md` — 
 # Traveler Model [DERIVED]
 
 ## Jordan
-- Need → Hard Constraints "Limited stair tolerance" (Applies to: Jordan); specific: ~15-min walking ceiling, step-free.
+- Need → Hard Constraints "Limited stair & walking tolerance" (Applies to: Jordan); specific: ~15-min walking ceiling, step-free.
 - Need → Hard Constraints "Daily pacing floor" (Applies to: Jordan); specific: slow start every other day.
 - Desire (anchor): slow museum morning [museums, slow-pace] — shared with Pat.
 - Desire (wish): local markets [markets, food] — shared with Pat.
@@ -231,7 +233,7 @@ The satisfaction layer preserves the system's **one-writer-per-file** convention
 |-------|-----|-----------|-------|
 | **Layer 1 — human source** | (untagged human input) | The traveler / planner, by hand | `travelers/<traveler>.md` |
 | **Derived — reconciled** | `[DERIVED]` | The enrichment agent (as reader / reconciler) | `outputs/traveler-model.md` |
-| **Derived — status & metrics** | (derived) | Enrichment / hub (status) · validator + hub (metrics) | `outputs/event-status.md`, `outputs/satisfaction-metrics.md` |
+| **Derived — status & metrics** | (derived) | Status: hub (primary writer), enrichment seeds initial `locked` rows, validator reads only · Metrics: hub + validator, **section-owned** (no clobber) | `outputs/event-status.md`, `outputs/satisfaction-metrics.md` |
 | **Enrichment rollups in trip-context** | `[ENRICH]` | The enrichment agent (unchanged) | `trip-context.md` `[ENRICH]` fields |
 
 Two roles for the enrichment agent, kept distinct:
@@ -292,7 +294,7 @@ It is **not** any of the three existing patterns, and the distinction is load-be
 - It is **not (b) rebuilt-each-synthesis** — and this is the critical difference. The whole reason it cannot live in `venue-matrix.md` is that rebuilt artifacts are *wiped and regenerated* each synthesis. Status must **survive** the synthesis, not be recomputed by it. A re-synthesis reads existing status; it does not overwrite it.
 - It is **not (c) versioned** — there are no `event-status-v1.md` / `v2.md` snapshots. There is one living file, mutated in place.
 
-So the substrate adds a fourth lifecycle pattern — **persist-mutable**: a single file, updated in place, that persists across re-runs and is *read* (never blindly overwritten) by synthesis. The other two new artifacts fit the existing **rebuilt** pattern (b) because they are pure derived projections of authoritative inputs.
+So the substrate adds a fourth lifecycle pattern — **persist-mutable**: a single file, updated in place, that persists across re-runs and is *read* (never blindly overwritten) by synthesis. Persist-mutable is not append-only: rows are mutated in place, and a row is **deleted** in the one case where its event is removed from the itinerary (see Orphan removal below) so no ghost row lingers. The other two new artifacts fit the existing **rebuilt** pattern (b) because they are pure derived projections of authoritative inputs.
 
 ---
 
@@ -309,9 +311,11 @@ Every event the itinerary places — an anchor activity, an anchor meal, a day t
 | **planned** | not booked — may still need a reservation | **yes** — freely tweakable | The working state. The event is a current pick the engines iterate toward `locked`. Resequencing and iteration may move, replace, or re-time it. |
 | **locked** | booked / confirmed | **no** — preserved | A reservation is made (a held dinner table, a purchased day-trip ticket, a confirmed hotel). Not re-litigated; iteration leaves it untouched unless the user names it. |
 | **firmed** | none needed | **no** — preserved | A decided event with nothing to book (a free landmark walk the group has settled on, a fixed rest morning). Protected from churn so iteration does not keep re-opening a settled choice — but there is no reservation behind it. |
-| **option** | none needed | n/a — not a primary slot | A backup / alternative held against a primary slot — exactly the engine's existing **alternative** (or **bailout**) concept, now status-tracked. It is never a primary pick, so it is never auto-promoted into one; it is the pool iteration draws *from*, not a slot iteration protects. |
+| **option** | nothing to book *while it is an option* — though it **may carry `requires booking? = yes`** (a bookable backup, e.g. a restaurant alternative that would need a reservation if chosen) | n/a — not a primary slot | A backup / alternative held against a primary slot — exactly the engine's existing **alternative** (or **bailout**) concept, now status-tracked. It is never a primary pick, so it is never auto-promoted into one; it is the pool iteration draws *from*, not a slot iteration protects. An `option` never *shows* as "needs booking" because the derivation requires `status = planned` — but its `requires booking?` flag is real and **takes effect on promotion**: when it flips to `planned`, a `requires booking? = yes` option immediately reads as needs-booking. |
 
 The distinction `firmed` draws that the old free-text list could not: an event can be **decided and protected** without being **booked**. `locked` and `firmed` are both preserved across iteration; they differ only on whether a reservation sits behind them — which is exactly the booking-readiness axis below.
+
+**Status transitions, including the cancellation edge.** Status moves forward as an event is decided and booked — `planned → locked` (a working pick gets a reservation), `planned → firmed` (an unbookable pick is settled), and a deliberate `option → planned` / `option → locked` on an explicit promotion (below). It also moves **backward**: a booked event can fall through — a cancelled reservation, a sold-out ticket, a withdrawn hold — so the reverse edge **`locked → planned`** is part of the model. When a `locked` event regresses to `planned`, it re-opens to iteration and its booking question reopens (the derived "needs booking" recomputes to `yes` if `requires booking? = yes`). This is the only way a preserved event becomes movable again without the user explicitly naming it: the booking behind it ceased to hold.
 
 ### Field shape — one enum plus a `requires booking?` flag
 
@@ -323,7 +327,7 @@ Status drives two *orthogonal* things: **change-protection** (is the event open 
 **Decision: shape (a) — a single `status` enum (`planned` / `locked` / `firmed` / `option`) plus a `requires booking?` flag.** Rationale:
 
 1. **"Exactly one status per event" is the literal field.** The acceptance criterion is that every event carries exactly one status. A single enum *is* that one status — unambiguous to read, to audit, and to render. Two independent fields reintroduce the question "which field is *the* status?", and make "exactly one" something you have to reconstruct rather than read.
-2. **The booking axis is not symmetric across the enum — so a full second field would be mostly derivable.** Three of the four statuses *never* need a booking by definition (`locked` is already booked; `firmed` and `option` have nothing to book). Only `planned` has a live booking question. A full second state field would therefore carry a forced/derivable value on three values out of four. A single `requires booking?` boolean — meaningful only while `planned` — captures exactly the one residual degree of freedom: a `planned` activity that needs no reservation (a walk-up) versus a `planned` restaurant that needs one but has not made it yet.
+2. **The booking axis is not symmetric across the enum — so a full second field would be mostly derivable.** Only `planned` has a **live** booking question: `locked` is already booked, `firmed` has nothing to book, and an `option` — even one whose `requires booking? = yes` (a bookable backup) — has no *active* booking obligation while it is held as an alternative (its flag takes effect only on promotion to `planned`). So across the enum the *active* needs-booking decision lives at exactly one value. A single `requires booking?` boolean — which only *surfaces* a booking while `status = planned` — captures the one residual degree of freedom there: a `planned` activity that needs no reservation (a walk-up) versus a `planned` restaurant that needs one but has not made it yet. The flag itself is a property of the event's kind and is carried on every status (so it is ready when an `option` is promoted); the derivation just gates *when it surfaces* to `planned`.
 3. **Change-protection is fully determined by the enum — no second field needed for it.** `planned` is open; `locked` / `firmed` / `option` are preserved. The protection axis reads straight off the enum, so the only thing the second field has to encode is the booking residual — which is the boolean, not a parallel state machine.
 4. **Both derived views fall out cleanly.** "Needs booking" and "all events locked" (below) are simple predicates over `status` + `requires booking?`. Nothing has to reconcile two state fields that could contradict each other (shape (b) admits nonsense like "open to change but booked").
 
@@ -333,7 +337,7 @@ Status drives two *orthogonal* things: **change-protection** (is the event open 
 
 ### `outputs/event-status.md` shape
 
-A flat per-event table, one row per event, keyed by a stable event id and the day it currently sits on. Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
+A flat per-event table, one row per event, keyed by a stable **Event ID** plus the day the event currently sits on. The Event ID is **opaque and day-independent** — **minted by the hub on first placement** and stable across every re-run — and it is the **cross-run join key** that lets a re-synthesis match a row to the same event. It must **not** encode the day (the `Day` column carries that): resequencing routinely moves an event to a different day, so a day-encoded ID would either lie or force a churned key. The illustrative IDs below (`evt-01`, …) are opaque on purpose; real IDs may be any opaque token but **must** be day-independent. Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
 
 ```markdown
 # Event Status [persist-mutable]
@@ -344,23 +348,29 @@ A flat per-event table, one row per event, keyed by a stable event id and the da
 
 | Event ID | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
 |----------|-------|-----|--------|-------------------|-------------------------|-------|
-| d2-dinner   | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
-| d3-anchor   | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
-| d3-lunch    | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
-| d4-walk     | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
-| d3-lunch-alt | Noodle counter (Day 3 lunch alt) | Day 3 | option  | no  | no  | Backup for d3-lunch; alternative pool |
+| evt-01 | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
+| evt-02 | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
+| evt-03 | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
+| evt-04 | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
+| evt-05 | Noodle counter (Day 3 lunch alt)  | Day 3 | option  | no  | no  | Backup for evt-03; alternative pool |
 ```
 
-The `Needs booking (derived)` column is shown for human scannability but is **computed, not authored**: it is `yes` exactly when `Status = planned` **and** `Requires booking? = yes`. A writer never sets it by hand; the hub recomputes it whenever it touches a row. (Persona names follow the public Pat / Jordan / Sam set used throughout this document.)
+> **Event ID is opaque and day-independent.** The IDs above carry no day (the `Day` column does). `evt-05`'s note references its primary by ID (`evt-03`), not by a day-coded name — so when resequencing moves either event to another day, the join key and the cross-reference both still hold.
+
+The `Needs booking (derived)` column is shown for human scannability but is **computed, not authored**: it is `yes` exactly when `Status = planned` **and** `Requires booking? = yes`. A writer never sets it by hand; the hub recomputes it whenever it touches a row. (The examples use the public Pat / Jordan / Sam persona set.)
 
 ### How booking-readiness and "all events locked" derive
 
 Both site readiness surfaces and the validator's booking check read these predicates off the table — they are not separately authored state:
 
-- **"needs booking"** for an event ⇔ `status = planned` **and** `requires booking? = yes`. By construction, `firmed`, `locked`, and `option` events *never* surface as "needs booking" — `firmed`/`option` have nothing to book, and `locked` is already booked.
+- **"needs booking"** for an event ⇔ `status = planned` **and** `requires booking? = yes`. By construction, `firmed`, `locked`, and `option` events *never* surface as "needs booking" — `firmed` has nothing to book, `locked` is already booked, and an `option` is not a primary slot (so even a `requires booking? = yes` backup stays silent until it is promoted to `planned`).
 - **"all events locked"** ⇔ there is **no** event with `status = planned` **and** `requires booking? = yes` (i.e. no outstanding *planned-needs-booking* event remains). It does **not** require every event to be literally `locked`: a trip of `firmed` and `option` events with no open bookings is legitimately "all booked / nothing outstanding". Phrased over the derived view: *all events locked* ⇔ the "needs booking" set is empty.
 
 This is the precise sense in which the booking checklist can show "everything booked" while the itinerary still contains `firmed` and `option` events — the checklist tracks the *needs-booking* set, which those statuses are not in.
+
+### Orphan removal — the one deletion persist-mutable permits
+
+Persist-mutable means rows are updated in place rather than wiped — but it is **not** append-only. There is exactly one case where a row is **deleted**: when an event is removed from the itinerary entirely (dropped on an iteration, replaced and not retained as an `option`), its row is **deleted from `event-status.md`**. A removed event must not leave a ghost row behind: a lingering `planned`-needs-booking row would corrupt the "needs booking" set (surfacing a booking for an event that no longer exists), and a lingering row would also distort the "all events locked" predicate. Deletion of a removed event's row is therefore the correct in-place mutation, not a violation of persistence — persistence protects the status of events that *remain*; it does not preserve events that are gone. (A demotion is different from a deletion: an event the planner keeps as a backup becomes an `option` row, not a deleted one. Only genuine removal deletes.)
 
 ### How `option` reuses the existing alternatives / bailouts concept
 
@@ -374,18 +384,27 @@ So `option` is the bridge between the satisfaction layer's status model and the 
 
 ### Superseding the `## Locked Elements` precursor
 
-`trip-context.md` keeps its coarse `## Locked Elements` and `## Current Itinerary Status` notes as **trip-level** human-readable context — they remain the sacred file's plain-language summary of "what's fixed", and the enrichment agent still maintains them as before. But the **structured, per-event source of truth** for the three consumers (scheduler, hub, validator) is `outputs/event-status.md`:
+`trip-context.md` keeps its coarse `## Locked Elements` and `## Current Itinerary Status` notes as **trip-level** human-readable context — they remain the sacred file's plain-language summary of "what's fixed". These free-text notes are **operator-maintained** — the planner's own human summary, not an agent-written field: they are not `[ENRICH]`-tagged, so the enrichment agent does **not** write or maintain them (its contract is `[ENRICH]`-only). The **structured, per-event source of truth** for the three consumers (scheduler, hub, validator) is `outputs/event-status.md`:
 
 | Free-text precursor (`trip-context.md`) | Structured layer (`outputs/event-status.md`) |
 |------------------------------------------|----------------------------------------------|
-| "Day 4 dinner: Riverside izakaya, 7 PM confirmed reservation" | a row `d4-dinner … Status: locked, Requires booking?: yes` |
-| "Day 2: day trip — tickets purchased" | a row `d2-trip … Status: locked, Requires booking?: yes` |
-| "Hotel confirmed — no alternatives needed" | a row `lodging … Status: locked, Requires booking?: yes` |
-| "Day 3 museum morning — group settled, nothing to book" | a row `d3-anchor … Status: firmed, Requires booking?: no` |
+| "Day 4 dinner: Riverside izakaya, 7 PM confirmed reservation" | a row `evt-11 … Day: 4, Status: locked, Requires booking?: yes` |
+| "Day 2: day trip — tickets purchased" | a row `evt-12 … Day: 2, Status: locked, Requires booking?: yes` |
+| "Hotel confirmed — no alternatives needed" | a row `evt-13 … Day: —, Status: locked, Requires booking?: yes` |
+| "Day 3 museum morning — group settled, nothing to book" | a row `evt-14 … Day: 3, Status: firmed, Requires booking?: no` |
 
 The free-text list says *that* something is fixed; the structured layer says *which event*, *under which status*, and *whether a booking sits behind it* — the detail the consumers need and the free-text list cannot carry. Per the link-don't-copy rule, the structured layer does not restate the trip-level constraint text; it tracks the *event's* state. Where the two could drift, the structured table is authoritative for the three consumers and the free-text note is the human summary.
 
-> **Write ownership — an assumption to confirm at the control-flow gate.** The storage table above lists this artifact's writer as "enrichment / hub per the control-flow contract." This document owns the **field shape** (settled above); it does **not** finalize *who* writes each row. The working assumption: the **hub** writes status during synthesis/patching (it is the agent that places events and books them), the **validator** reads status to audit it (and writes nothing to it), and the **enrichment agent** may seed initial `locked` rows from the trip-context `## Locked Elements` notes on setup. The final write-owner split is the control-flow contract's call, not this data-architecture document's.
+> **Write ownership — primary-writer decision (row-level split confirmed at the control-flow gate).** The primary-writer roles for `event-status.md` are **decided here**, not deferred:
+> - The **hub is the primary writer.** It writes status during synthesis and patching — it is the agent that places events, books them, and settles them (`planned` → `locked` / `firmed`), and it owns creation of the file (below).
+> - The **validator reads it and writes nothing to it.** It audits status against the itinerary and routes any mismatch to the hub's remediation list; it never mutates a status row.
+> - The **enrichment agent may seed initial `locked` rows** from the trip-context `## Locked Elements` notes on setup (a one-time bootstrap seeding of already-known fixed events). This is the only writer role beyond the hub, and it is setup-only.
+>
+> What remains the control-flow contract's call is the **precise row-level write split** — exactly which agent touches which row in which pass. The *primary-writer roles* above (hub = primary writer, validator = read-only, enrichment = initial-seed only) are settled at this layer; the row-level sequencing is confirmed at the control-flow gate.
+
+### Bootstrap — who creates `event-status.md`
+
+The **hub creates `outputs/event-status.md` on the first full synthesis** (DISCOVERY / ENRICHMENT mode) **if it does not already exist**, seeding any already-known `locked` events (a held reservation, a purchased ticket, a confirmed hotel) — including any `locked` rows the enrichment agent seeded from `## Locked Elements` on setup. On every subsequent pass the file already exists, so the hub **reads it, then updates it in place** (never re-creates it). This is the persist-mutable contract's creation edge: created once, on first synthesis; read-then-updated thereafter; never regenerated from scratch.
 
 ---
 
@@ -426,10 +445,34 @@ Five dimensions make up the satisfaction coverage view. Each is named, typed, an
 | **Needs-compliance** | **pass/fail** | per need × per applicable day | Every traveler **need** (the four categories — heat tolerance, mobility, dietary/health, required rest) is honored on every day that need applies to. A hard gate, evaluated per need per applicable day: each (need, applicable-day) pair is `pass` or `fail`. This is the structured metric form of the existing every-day hard-constraint audit (see Reconciliation below) — **not** a balance score. | Fully defined: it is a pass/fail gate. No formula needed — a need is either honored that day or it is not. |
 | **Desire-coverage** | **covered / not** | per traveler × per desire | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. |
 | **Group-equity** | **balance signal** | per trip (across travelers) | Whether the plan serves the travelers *evenly* — that no traveler is systematically over- or under-served relative to the group. A balance signal across travelers' coverage. | **Left to design.** This layer names the signal and its meaning; it does **not** define how evenness is measured, what counts as "systematically under-served", or any fairness threshold. |
-| **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design.** Each axis is named and defined as a balance signal; how it is scored, weighted, or thresholded is out of scope. |
+| **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design — and note these axes have no upstream data source in the substrate today** (unlike needs and desires, nothing in the per-traveler files or the itinerary yet grounds them), so a later capability must define **both their source and their scoring**; today they are named, ungrounded, and `(left to design)`. |
 | **Rest-recovery balance** | **balance signal** | per trip (across days) | Whether recovery is adequate relative to activity intensity — enough rest/downtime against the demand the plan places on the group. A balance signal over the activity-vs-recovery rhythm. | **Left to design.** Note the seam: the **required-rest** *need* is a hard pass/fail gate under needs-compliance (a non-negotiable rest floor honored or not); **rest-recovery balance** is the softer, trip-wide *signal* of whether the overall rhythm is healthy beyond that floor. The floor is gated; the balance is a signal whose scoring is deferred. |
 
 > **The line this section holds.** Needs-compliance and desire-coverage are *defined to completion* because pass/fail and covered/not are determinable facts about a plan — no math is invented to produce them. Group-equity, the four experience axes, and rest-recovery balance are *defined as named balance signals with stated meaning*, but their scoring is **left to design** — consistent with "nothing optimizes yet". If a future reader is tempted to add a weight, a percentage, or a ranking to any balance signal, that belongs to a later optimization capability, not to this substrate.
+
+### A need's applicable-day set — how it is derived
+
+Needs-compliance is evaluated *per need per applicable day*, so the **applicable-day set** for each need must be defined. It is derived from the **governing trip-context constraint** the need links to (via "Applies to"): a need applies on exactly the days — and within the time blocks — that its constraint governs. Read it off the constraint's `Time blocks affected` / `Applies to` fields (and the scheduling framework's per-constraint day impact):
+
+- A **constant-applicability** need — one whose constraint holds every day regardless of plan (a mobility limit, a dietary/health restriction) — applies on **all days**.
+- A **conditional** need — one whose constraint only bites under certain conditions (a heat ceiling that applies on hot or outdoor-afternoon days; a required-rest floor that applies on its scheduled rest days) — applies on **its applicable subset** only.
+
+This reconciles the language elsewhere that the audit runs "every day": the audit runs **every day the constraint applies** — which is all days for constant-applicability needs and the applicable subset for conditional needs. It is never "every calendar day unconditionally" for a conditional need (a heat ceiling is not *failed* on a cool indoor day it never governed). This rule is stated **here once**; the hub and validator cite it and do not redefine it.
+
+> **Desire-coverage is typed per tier — a missed anchor is not a missed nice-to-have.** Coverage is `covered` / `not covered` reported **per desire, carrying that desire's priority tier**. The tier travels with the verdict on purpose: a `not covered` **anchor** is a categorically more significant outcome than a `not covered` **nice-to-have**, and a later scorer must not flatten the two into one undifferentiated "coverage %". This layer keeps them distinct by reporting the tier alongside each verdict; it does **not** weight them (that would be scoring) — it just refuses to lose the distinction.
+
+### Write split — section ownership (two writers, never clobbering)
+
+`satisfaction-metrics.md` has **two** writers — the hub and the validator — and the naive "each writes the file fresh" would have the second writer **clobber** the first. The substrate forbids that with **section ownership**: each agent owns specific sections and **reads-merges-writes only its own**, never wiping the other's:
+
+| Section | Owner | Why |
+|---------|-------|-----|
+| **Desire-coverage** (covered / not, per traveler × per desire) | **Hub** | The hub builds the itinerary, so it holds the coverage read — which anchors/wishes the plan it just produced actually meets. |
+| **Balance signals** (group-equity, the four experience axes, rest-recovery balance — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
+| **Needs-compliance** (pass/fail, per need × per applicable day) | **Validator** | This is the *recorded form of the validator's every-day constraint audit*; the validator is its natural owner (and the hub's own audit must agree with it). |
+| **Needs ↔ constraint agreement check** | **Validator** | The validator owns the reconciliation that every needs-compliance `fail` is a constraint Critical (see Reconciliation below). |
+
+The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt/refreshed each synthesis (pattern (b)) — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
 
 ### `outputs/satisfaction-metrics.md` shape
 
@@ -460,7 +503,7 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Jordan | Slow museum morning | anchor | covered |
 | Jordan | Local markets       | wish   | covered |
 | Pat    | Local market        | anchor | covered |
-| Pat    | Relaxed museum morning | wish | not covered |
+| Pat    | Relaxed museum morning | wish | covered |
 | Sam    | One standout food experience | anchor | covered |
 
 ## Balance signals — named; scoring left to design
@@ -476,11 +519,13 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Rest-recovery balance | per trip (across days) | (left to design) |
 ```
 
-The pass/fail and covered/not tables carry real verdicts because they are determinable from the plan. The balance-signals table carries `(left to design)` in every value cell on purpose: the dimensions are *named and tracked*, their scoring is *not yet defined*. (Persona names follow the public Pat / Jordan / Sam set used throughout this document.)
+The pass/fail and covered/not tables carry real verdicts because they are determinable from the plan. The balance-signals table carries `(left to design)` in every value cell on purpose: the dimensions are *named and tracked*, their scoring is *not yet defined*. (The metrics examples use the public Pat / Jordan / Sam persona set.)
 
 ### Reconciliation — needs-compliance is the existing every-day audit, made structured
 
-The system already holds the rule **"hard constraints are audited every day"**: the hub checks every day against every hard constraint, and the validator double-checks. **Needs-compliance does not introduce a new rule — it is the structured metric form of that existing audit.** Each traveler need links (per the Reconciliation Rule) to a governing `trip-context.md` constraint; needs-compliance records, per need per applicable day, whether that constraint was honored — the same check the constraint-compliance audit already performs, now emitted as a per-need-per-day pass/fail record rather than only a prose finding. The two must agree: a needs-compliance `fail` is a constraint-compliance Critical, and vice versa. The metric is the audit's *recorded shape*, not a second, competing judgement.
+The system already holds the rule **"hard constraints are audited every day they apply"**: the hub checks every applicable day against every hard constraint, and the validator double-checks. **Needs-compliance does not introduce a new rule — it is the structured metric form of that existing audit.** Each traveler need links (per the Reconciliation Rule) to a governing `trip-context.md` constraint; needs-compliance records, per need per applicable day (the applicable-day set derived as defined above), whether that constraint was honored — the same check the constraint-compliance audit already performs, now emitted as a per-need-per-day pass/fail record rather than only a prose finding.
+
+**The agreement is a forward implication, not an equivalence.** Every needs-compliance `fail` **is** a constraint-compliance Critical — a per-traveler need is broken exactly when the constraint it links to is violated, so a `fail` always has a Critical counterpart. The converse does **not** hold: a constraint Critical need **not** have a needs-compliance counterpart. A trip-level or group constraint with no per-traveler *need* linking to it (a destination-wide rule, a group-level non-negotiable that no individual traveler's need points at) produces a constraint Critical with **no** needs-compliance row — by design, because needs-compliance is keyed to per-traveler needs and that constraint has none. So: *needs-compliance `fail` ⇒ constraint Critical* (always); *constraint Critical ⇒ needs-compliance `fail`* (only when a per-traveler need links to that constraint). The validator must not enforce the reverse as an invariant — an unlinked constraint Critical with no needs-compliance row is correct, not a discrepancy. The metric is the audit's *recorded shape* for the per-traveler-need slice, not a second, competing judgement.
 
 ---
 

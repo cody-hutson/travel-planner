@@ -288,7 +288,9 @@ persist-mutable status layer; see `reference/data-model.md`). The rules:
   state.
 
 The site is a read surface for status — it never writes `event-status.md`. The
-hub owns that file; the site renders what the hub has recorded.
+hub is the **primary writer** of that file (the validator only reads it; the
+enrichment agent may seed initial `locked` rows on setup); the site renders what
+the hub has recorded.
 
 ---
 
