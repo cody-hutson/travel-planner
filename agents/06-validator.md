@@ -85,6 +85,35 @@ Specific checks:
 - Any food venue conflicting with dietary restrictions
 - Any day missing a required indoor midday block
 
+**Status-integrity audit:**
+Read `outputs/event-status.md` (the persist-mutable per-event status — see
+`reference/data-model.md`) and audit the itinerary against it on three points:
+
+- **Iteration didn't disturb protected events.** On an ITERATION or
+  RESEQUENCING pass, every `locked` and `firmed` event must appear in the new
+  itinerary unchanged — same venue, same day, same time block — *unless* the
+  trip-context.md Mode Notes named it as in-scope for the change. Any `locked`
+  or `firmed` event that moved, changed time, was dropped, or was altered while
+  it was **not** named in the change is a **Critical** finding. Cite the event,
+  its status, what changed, and that the change request did not name it. This is
+  the core iteration-protection guarantee.
+- **"Needs booking" matches status.** The booking surfaces (the advance booking
+  checklist, "needs booking" flags) must list exactly the events where
+  `status = planned` **and** `requires booking? = yes`, and **no** others. Flag
+  (Critical) any `firmed`, `locked`, or `option` event shown as "needs booking",
+  and any `planned`-needs-booking event missing from the checklist. The derived
+  "needs booking" column in `event-status.md` must equal that predicate on every
+  row — flag a hand-set value that disagrees.
+- **One status per event; status/matrix agreement.** Every placed event carries
+  exactly one status (flag any event missing a status, or carrying more than
+  one). An event marked `option` must appear as Alt / B (never as an anchor) in
+  `venue-matrix.md` and in the itinerary; an `option` placed in a primary slot
+  is a Critical finding (a silent promotion). Confirm "all events locked" is
+  determinable: it holds exactly when no `planned`-needs-booking event remains.
+
+You audit status; you never change it. Mismatches go to the hub's remediation
+list — the hub owns the status file.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named indoor bailout.
 If any day is missing one, flag it as a critical gap.
@@ -129,11 +158,13 @@ operational detail.
 3. Venue deduplication — anchor/alternative duplicates undermine the
    value of having alternatives
 4. Constraint compliance — any hard constraint violation is Critical
-5. Bailout gaps — any outdoor block without a named escape is Critical
-6. Price staleness — Warning level unless the discrepancy is large enough
+5. Status integrity — a `locked`/`firmed` event altered outside its named
+   change, or a "needs booking" surface that disagrees with status, is Critical
+6. Bailout gaps — any outdoor block without a named escape is Critical
+7. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
-7. Travel restrictions and advisories — Critical if action is required
-8. Local happenings — Note or Warning depending on impact
+8. Travel restrictions and advisories — Critical if action is required
+9. Local happenings — Note or Warning depending on impact
 
 ## Mode Behavior
 
@@ -146,10 +177,16 @@ obvious closure or business status issues. No full matrix required.
 
 **ITERATION:** Re-run only on changed days and any days whose venues were
 affected by the change (e.g., a venue moved from Day 3 to Day 5 needs
-Day 5's day-of-week checked).
+Day 5's day-of-week checked). **Always** run the status-integrity audit
+against `outputs/event-status.md` regardless of which days changed: confirm no
+`locked`/`firmed` event was altered outside the named change, and that "needs
+booking" still matches status.
 
 **RESEQUENCING:** Full pass on all days — the sequence change may have
-introduced new day-of-week conflicts even though no venues changed.
+introduced new day-of-week conflicts even though no venues changed. Run the
+status-integrity audit in full: a resequence must move only `planned` events
+and leave every `locked`/`firmed` event in place, with `option` events still
+alternatives (not promoted into primary slots).
 
 ## Input
 
@@ -162,6 +199,9 @@ Read fully before producing output:
 Also read:
 5. outputs/food-list.md (closed day notes from food agent)
 6. outputs/activities-list.md (any caveat or hours notes from activities agent)
+7. outputs/event-status.md (per-event status — the target of the
+   status-integrity audit: protected `locked`/`firmed` events, the
+   `planned`-needs-booking set, and `option` alternatives)
 
 ## Output Format
 
@@ -182,6 +222,7 @@ File: outputs/validation-report.md
 | Local happenings | | | | |
 | Business status | | | | |
 | Constraint compliance | | | | |
+| Status integrity (protected events + needs-booking) | | | | |
 | Bailout completeness | | | | |
 | Structural integrity | | | | |
 
@@ -247,6 +288,28 @@ Proximity venue usage (hotel-neighborhood):
 | Venue | Scheduled Day | Reservation Type | Window Status | Action Required |
 |-------|--------------|-----------------|--------------|----------------|
 | [Name] | Day [N] | [Required / Recommended] | [Open / Tight / Closed] | [Book now / Confirm / —] |
+
+---
+
+### Status Integrity Report
+
+Protected-event check (ITERATION / RESEQUENCING) — every `locked`/`firmed`
+event must be unchanged unless the change request named it:
+
+| Event | Status | Named in change? | Changed this pass? | Verdict |
+|-------|--------|------------------|--------------------|---------|
+| [Event] | [locked / firmed] | [Yes / No] | [No / moved / re-timed / dropped] | [OK / Critical] |
+
+Needs-booking vs. status — the booking surfaces must equal the
+`planned`-and-`requires booking?` set, and no other status may appear:
+
+| Event | Status | Requires booking? | Needs booking (expected) | On booking checklist? | Verdict |
+|-------|--------|-------------------|--------------------------|-----------------------|---------|
+| [Event] | [planned / locked / firmed / option] | [yes / no] | [yes / no] | [yes / no] | [OK / Critical] |
+
+- **One status per event:** [confirmed / list any event missing or with >1 status]
+- **Status ↔ matrix agreement:** [confirmed / list any `option` shown as anchor]
+- **"All events locked" determinable:** [Yes — N planned-needs-booking remain / No]
 
 ---
 

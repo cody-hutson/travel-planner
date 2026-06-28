@@ -296,6 +296,99 @@ So the substrate adds a fourth lifecycle pattern — **persist-mutable**: a sing
 
 ---
 
+## The Per-Event Status Model
+
+The lifecycle classification above fixes *where* per-event status lives (`outputs/event-status.md`) and *how* it behaves over re-runs (persist-mutable). This section fixes *what* it holds: the structured per-event state that supersedes the coarse free-text `## Locked Elements` precursor in `trip-context.md`, and from which the hub, the scheduler, and the validator read whether an event is open to change and whether it still needs a booking.
+
+Every event the itinerary places — an anchor activity, an anchor meal, a day trip, a fixed reservation — carries **exactly one** status. The status is the per-event answer to two questions a planning pass keeps asking: *is this event open to change?* and *does this event still need a booking?*
+
+### The four statuses
+
+| Status | Booking | Open to iteration? | Meaning |
+|--------|---------|--------------------|---------|
+| **planned** | not booked — may still need a reservation | **yes** — freely tweakable | The working state. The event is a current pick the engines iterate toward `locked`. Resequencing and iteration may move, replace, or re-time it. |
+| **locked** | booked / confirmed | **no** — preserved | A reservation is made (a held dinner table, a purchased day-trip ticket, a confirmed hotel). Not re-litigated; iteration leaves it untouched unless the user names it. |
+| **firmed** | none needed | **no** — preserved | A decided event with nothing to book (a free landmark walk the group has settled on, a fixed rest morning). Protected from churn so iteration does not keep re-opening a settled choice — but there is no reservation behind it. |
+| **option** | none needed | n/a — not a primary slot | A backup / alternative held against a primary slot — exactly the engine's existing **alternative** (or **bailout**) concept, now status-tracked. It is never a primary pick, so it is never auto-promoted into one; it is the pool iteration draws *from*, not a slot iteration protects. |
+
+The distinction `firmed` draws that the old free-text list could not: an event can be **decided and protected** without being **booked**. `locked` and `firmed` are both preserved across iteration; they differ only on whether a reservation sits behind them — which is exactly the booking-readiness axis below.
+
+### Field shape — one enum plus a `requires booking?` flag
+
+Status drives two *orthogonal* things: **change-protection** (is the event open to iteration?) and **booking-readiness** (does it still need a reservation?). The field shape has to carry both without letting them drift apart. Two shapes were considered:
+
+- **(a) A single four-value `status` enum, plus a separate `requires booking?` boolean** — needs-booking is *derived* from the two (`needs booking` ⇔ `status = planned` **and** `requires booking? = yes`).
+- **(b) Two independent fields** — a change-protection state *and* a booking state, tracked separately per event.
+
+**Decision: shape (a) — a single `status` enum (`planned` / `locked` / `firmed` / `option`) plus a `requires booking?` flag.** Rationale:
+
+1. **"Exactly one status per event" is the literal field.** The acceptance criterion is that every event carries exactly one status. A single enum *is* that one status — unambiguous to read, to audit, and to render. Two independent fields reintroduce the question "which field is *the* status?", and make "exactly one" something you have to reconstruct rather than read.
+2. **The booking axis is not symmetric across the enum — so a full second field would be mostly derivable.** Three of the four statuses *never* need a booking by definition (`locked` is already booked; `firmed` and `option` have nothing to book). Only `planned` has a live booking question. A full second state field would therefore carry a forced/derivable value on three values out of four. A single `requires booking?` boolean — meaningful only while `planned` — captures exactly the one residual degree of freedom: a `planned` activity that needs no reservation (a walk-up) versus a `planned` restaurant that needs one but has not made it yet.
+3. **Change-protection is fully determined by the enum — no second field needed for it.** `planned` is open; `locked` / `firmed` / `option` are preserved. The protection axis reads straight off the enum, so the only thing the second field has to encode is the booking residual — which is the boolean, not a parallel state machine.
+4. **Both derived views fall out cleanly.** "Needs booking" and "all events locked" (below) are simple predicates over `status` + `requires booking?`. Nothing has to reconcile two state fields that could contradict each other (shape (b) admits nonsense like "open to change but booked").
+
+`requires booking?` is a property of the event's *kind* (a restaurant table, a timed ticket, a hotel → `yes`; a public-park walk, a self-guided wander → `no`), not of its current status. It is set once when the event enters the model and rarely changes; `status` is what moves as the event is iterated and then booked.
+
+> **No optimization here.** Status and the booking flag are *state*, not scores. Nothing in this layer ranks events by status, weights `anchor` desires against `locked` events, or optimizes a schedule against the status field. Status records *what has been decided and booked*; it does not compute *what should be*. Scheduling-optimization and ranking logic are out of scope (see What This Document Does Not Define).
+
+### `outputs/event-status.md` shape
+
+A flat per-event table, one row per event, keyed by a stable event id and the day it currently sits on. Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
+
+```markdown
+# Event Status [persist-mutable]
+
+> One row per placed event. Exactly one status each.
+> Iteration changes only `planned` rows; `locked` / `firmed` are preserved unless the user names them.
+> `option` rows are alternatives/bailouts — never auto-promoted into a primary slot.
+
+| Event ID | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
+|----------|-------|-----|--------|-------------------|-------------------------|-------|
+| d2-dinner   | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
+| d3-anchor   | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
+| d3-lunch    | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
+| d4-walk     | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
+| d3-lunch-alt | Noodle counter (Day 3 lunch alt) | Day 3 | option  | no  | no  | Backup for d3-lunch; alternative pool |
+```
+
+The `Needs booking (derived)` column is shown for human scannability but is **computed, not authored**: it is `yes` exactly when `Status = planned` **and** `Requires booking? = yes`. A writer never sets it by hand; the hub recomputes it whenever it touches a row. (Persona names follow the public Pat / Jordan / Sam set used throughout this document.)
+
+### How booking-readiness and "all events locked" derive
+
+Both site readiness surfaces and the validator's booking check read these predicates off the table — they are not separately authored state:
+
+- **"needs booking"** for an event ⇔ `status = planned` **and** `requires booking? = yes`. By construction, `firmed`, `locked`, and `option` events *never* surface as "needs booking" — `firmed`/`option` have nothing to book, and `locked` is already booked.
+- **"all events locked"** ⇔ there is **no** event with `status = planned` **and** `requires booking? = yes` (i.e. no outstanding *planned-needs-booking* event remains). It does **not** require every event to be literally `locked`: a trip of `firmed` and `option` events with no open bookings is legitimately "all booked / nothing outstanding". Phrased over the derived view: *all events locked* ⇔ the "needs booking" set is empty.
+
+This is the precise sense in which the booking checklist can show "everything booked" while the itinerary still contains `firmed` and `option` events — the checklist tracks the *needs-booking* set, which those statuses are not in.
+
+### How `option` reuses the existing alternatives / bailouts concept
+
+`option` introduces **no new concept** — it is the status that the engine's *existing* alternatives and bailouts already are, now tracked in the same place as every other event:
+
+- The scheduler's **alternatives** (the per-day options that vary on price and effort) and its **bailout** (the named indoor escape for a 3+ hour outdoor block) are, in status terms, `option` events. They are held against a primary slot; they are not the primary pick.
+- Because an `option` is by definition *not a primary slot*, iteration and resequencing **never auto-promote** it into one. Promotion is a deliberate act — the user (or the hub on an explicit instruction) re-points a primary slot at an option, which flips that event's status from `option` to `planned` (or straight to `locked` if booked at the same time). Absent that explicit act, an `option` stays an alternative across every re-run.
+- The venue-matrix's `Alt` and `B` cells and the event-status `option` rows describe the *same* events from two angles: the matrix is rebuilt each synthesis to show *current placement*; the status table persists to record *what has been decided*. They must agree — an event marked `option` in status should appear as `Alt`/`B` (never `A`) in the matrix.
+
+So `option` is the bridge between the satisfaction layer's status model and the engine's long-standing alternative/bailout architecture — one vocabulary, not two.
+
+### Superseding the `## Locked Elements` precursor
+
+`trip-context.md` keeps its coarse `## Locked Elements` and `## Current Itinerary Status` notes as **trip-level** human-readable context — they remain the sacred file's plain-language summary of "what's fixed", and the enrichment agent still maintains them as before. But the **structured, per-event source of truth** for the three consumers (scheduler, hub, validator) is `outputs/event-status.md`:
+
+| Free-text precursor (`trip-context.md`) | Structured layer (`outputs/event-status.md`) |
+|------------------------------------------|----------------------------------------------|
+| "Day 4 dinner: Riverside izakaya, 7 PM confirmed reservation" | a row `d4-dinner … Status: locked, Requires booking?: yes` |
+| "Day 2: day trip — tickets purchased" | a row `d2-trip … Status: locked, Requires booking?: yes` |
+| "Hotel confirmed — no alternatives needed" | a row `lodging … Status: locked, Requires booking?: yes` |
+| "Day 3 museum morning — group settled, nothing to book" | a row `d3-anchor … Status: firmed, Requires booking?: no` |
+
+The free-text list says *that* something is fixed; the structured layer says *which event*, *under which status*, and *whether a booking sits behind it* — the detail the consumers need and the free-text list cannot carry. Per the link-don't-copy rule, the structured layer does not restate the trip-level constraint text; it tracks the *event's* state. Where the two could drift, the structured table is authoritative for the three consumers and the free-text note is the human summary.
+
+> **Write ownership — an assumption to confirm at the control-flow gate.** The storage table above lists this artifact's writer as "enrichment / hub per the control-flow contract." This document owns the **field shape** (settled above); it does **not** finalize *who* writes each row. The working assumption: the **hub** writes status during synthesis/patching (it is the agent that places events and books them), the **validator** reads status to audit it (and writes nothing to it), and the **enrichment agent** may seed initial `locked` rows from the trip-context `## Locked Elements` notes on setup. The final write-owner split is the control-flow contract's call, not this data-architecture document's.
+
+---
+
 ## Forward Connection — Profile Edits as a Replanning Trigger
 
 Because each per-traveler file is independently editable, the system gains a capability the old free-text model could not offer: **change detection on traveler preferences.**

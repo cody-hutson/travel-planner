@@ -83,6 +83,42 @@ day's structure — not a footnote. Specific venue, address, walking distance,
 approximate hours. Pre-researched to anchor depth. This is triggered by the
 scheduling framework's bailout flags.
 
+**Per-event status discipline:**
+`outputs/event-status.md` is the persist-mutable source of truth for each
+event's status — `planned` (open, may still need a booking), `locked`
+(booked / confirmed), `firmed` (settled, nothing to book), or `option`
+(an alternative / bailout, never a primary slot). Full model:
+`reference/data-model.md`. The hub both **reads** and **writes** it:
+- **Read before synthesizing or patching.** Treat `locked` and `firmed`
+  events as fixed — synthesize and resequence around them; do not re-place,
+  re-time, or drop them unless the user named them. Only `planned` events are
+  freely movable. `option` events are the alternative/bailout pool — place
+  them as Alt / B in the venue matrix, never as A (anchor), and **never
+  auto-promote** one into a primary slot. Promotion is a deliberate user
+  instruction that flips the event's status from `option` to `planned`
+  (or `locked` if booked at once).
+- **Write back after placing.** When an event becomes booked, set its status
+  to `locked`; when the group settles an unbookable choice, set it to
+  `firmed`; new working picks enter as `planned`. Update **in place** — change
+  only the rows whose status actually changed; never wipe or regenerate the
+  file (it must survive the synthesis). Recompute the derived "needs booking"
+  column on any row you touch: it is `yes` exactly when `status = planned` and
+  `requires booking? = yes`.
+- **Keep the matrix and the status table in agreement.** An event marked
+  `option` in status appears as Alt / B (never A) in `venue-matrix.md`; a
+  `locked`/`firmed`/`planned` primary pick appears as A. The matrix is rebuilt
+  each synthesis to show current placement; the status table persists to record
+  what has been decided. They describe the same events and must not contradict.
+- **Booking checklist drives off status.** The advance booking checklist lists
+  exactly the "needs booking" set (`planned` **and** `requires booking?`).
+  "All events locked" means that set is empty — not that every event is
+  literally `locked` (a trip of `firmed`/`option` events with no open booking
+  is legitimately all-booked).
+
+The coarse `## Locked Elements` / `## Current Itinerary Status` notes in
+trip-context.md remain the trip-level human summary; `event-status.md` is the
+structured per-event layer the hub actually plans against.
+
 **Group split tracks:**
 Any day the scheduling framework flagged as requiring a parallel track
 gets one. A subgroup's plan is named venues with timing and logistics for
@@ -161,6 +197,16 @@ planned to its actual window. Reading the itinerary, you can feel the arc.
   Not the last. It has a real deadline.
 - **Arrival/departure neglect:** Both have hard time constraints. Both are
   planned to their actual windows, not treated as full days with a flight note.
+- **Status drift:** Re-placing or dropping a `locked`/`firmed` event the user
+  did not name, or letting the venue matrix contradict the status table (an
+  `option` shown as an anchor). `locked`/`firmed` are preserved; the matrix and
+  the status table describe the same events and must agree.
+- **Silent option promotion:** Lifting an `option` (alternative / bailout) into
+  a primary slot as a side effect of synthesis. Promotion is a deliberate user
+  act that flips the status to `planned`/`locked` — never an automatic upgrade.
+- **Wiping event-status.md:** Regenerating the status file from scratch on a
+  synthesis pass. It is persist-mutable — read it, then update only the rows
+  that changed. Blowing it away destroys the iteration-protection record.
 
 ## Mode Behavior
 
@@ -172,14 +218,24 @@ key tradeoffs / best-fit traveler profile / go-consider-skip verdict.
 then produce final-itinerary.md per output format.
 
 **ITERATION:** Patch the existing final-itinerary.md. Update only the days
-in trip-context.md Mode Notes. Rebuild venue matrix for changed days only.
-State what changed, what was preserved, and any downstream implications.
-Update version number.
+in trip-context.md Mode Notes. Read `outputs/event-status.md` first and honor
+it: patch only `planned` events; preserve `locked`/`firmed` events unless the
+Mode Notes name them; leave `option` events as alternatives (never promote).
+Rebuild venue matrix for changed days only. Write status changes back to
+`event-status.md` in place (a newly booked event → `locked`; a newly settled
+unbookable choice → `firmed`). State what changed, what was preserved, and any
+downstream implications. Update version number.
 
 **RESEQUENCING:** Apply updated scheduling framework from Agent 03 to
-existing selections. Rebuild venue matrix with new day assignments.
-Produce revised final-itinerary.md. State what was resequenced and why
-the new sequence is better. Update version number.
+existing selections. Read `outputs/event-status.md` first: `locked`/`firmed`
+events are fixed anchors the new sequence builds around, only `planned` events
+may change day or time, and `option` events stay alternatives (never
+auto-promoted). Rebuild venue matrix with new day assignments — keep it in
+agreement with the status table (`option` → Alt/B, never A). A pure resequence
+changes placement, not status, so `event-status.md` is read but rarely written
+(write back only if a row's status genuinely changes). Produce revised
+final-itinerary.md. State what was resequenced and why the new sequence is
+better. Update version number.
 
 ## Input
 
@@ -196,6 +252,9 @@ Required inputs:
 In ITERATION and RESEQUENCING modes, also read:
 6. outputs/final-itinerary.md (existing version)
 7. outputs/venue-matrix.md (existing)
+8. outputs/event-status.md (existing per-event status — what is `locked`/`firmed`
+   and must be preserved, what is `planned` and may change, what is `option` and
+   stays an alternative). Written back in place; never wiped or regenerated.
 
 ## Output Format
 
