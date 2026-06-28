@@ -83,6 +83,14 @@ Example: `food-list.md` after three sessions:
 
 **Exception:** `links-reference.md` and `venue-matrix.md` are rebuilt by the hub on each synthesis pass (they reflect the current state of the itinerary, not research history).
 
+### Satisfaction-layer artifacts
+
+The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. Full rationale: `reference/data-model.md`.
+
+- **`event-status.md` — persist-mutable (a fourth pattern).** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass.
+- **`traveler-model.md` — rebuilt/refreshed.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. It holds no independent state — the source files are authoritative — so regeneration is safe.
+- **`satisfaction-metrics.md` — rebuilt/refreshed.** Recomputed by the validator + hub from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative.
+
 ---
 
 ## How to Use This (Claude Code as Primary Interface)
@@ -301,7 +309,10 @@ Previous trip sites that set the quality bar. Read these when building a new sit
 
 These are encoded in the agent prompts but worth knowing as the orchestrator:
 
-- **trip-context.md is sacred.** Only the enrichment agent modifies it. No activity lists, food picks, or itinerary content goes in this file.
+- **trip-context.md is sacred.** Only the enrichment agent modifies it. No activity lists, food picks, or itinerary content goes in this file. No per-traveler desire detail, no per-event status, and no satisfaction metrics go in it either — those have their own homes (see below).
+- **Per-traveler data lives in separate files.** Each traveler's needs and desires live in `trips/[destination-year]/travelers/<traveler>.md` — human-authored, independently editable, one file per traveler. The enrichment agent reads and reconciles them into `outputs/traveler-model.md` (`[DERIVED]`); it does not author the source files. Keeps heavy per-traveler detail out of sacred trip-context.md and makes each file a change surface.
+- **Satisfaction-layer homes.** Per-event status → `outputs/event-status.md` (persists across re-runs). Coverage metrics → `outputs/satisfaction-metrics.md`. Derived per-traveler model + desire-overlap → `outputs/traveler-model.md`. None of these belong in trip-context.md or in the rebuilt venue-matrix.md. Full data architecture: `reference/data-model.md`.
+- **Link, don't copy — one source per fact.** Trip-level constraints stay in trip-context.md `## Hard Constraints` / `## Dietary & Health` (the constraint SSOT). Per-traveler files own per-traveler desires and need-specifics. The enrichment agent *links* a traveler's need to the governing constraint via "Applies to" — it never duplicates the constraint text. A fact has exactly one owner.
 - **Venue deduplication.** No venue appears as an anchor on one day and an alternative on another. Max 2 appearances total across the full itinerary. The hub builds venue-matrix.md to enforce this BEFORE writing the itinerary.
 - **Hub builds reference files first.** links-reference.md and venue-matrix.md are built before the day-by-day itinerary — not after.
 - **Every 3+ hour outdoor block needs a bailout.** A named indoor venue with address, walking distance, and hours. Not a suggestion to "find somewhere nearby."
@@ -322,13 +333,18 @@ travel-planner/
 │   ├── 04-transport.md
 │   ├── 05-hub-planner.md
 │   └── 06-validator.md
+├── reference/              ← engine reference specs
+│   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
+│   └── site-layout-spec.md        ← travel-site responsive/layout specification
 ├── scripts/                ← publish-trip-site.sh (private publish) + test-publish-guard.sh
 ├── templates/
-│   └── trip-context.template.md
+│   ├── trip-context.template.md
+│   └── traveler-intake.template.md   ← per-traveler profile form (new — lands in a later slice)
 └── trips/
     └── [destination-year]/ ← one folder per trip
         ├── trip-context.md            ← source of truth for the trip
         ├── trip-log.md                ← decision history, session bridge
+        ├── travelers/                 ← per-traveler source files (gitignored), one .md per traveler — human-authored
         └── outputs/
             ├── activities-list.md     ← accumulates across sessions
             ├── food-list.md           ← accumulates across sessions
@@ -336,6 +352,9 @@ travel-planner/
             ├── transport-brief.md
             ├── links-reference.md     ← rebuilt by hub each synthesis
             ├── venue-matrix.md        ← rebuilt by hub each synthesis
+            ├── traveler-model.md      ← [DERIVED] reconciled per-traveler model + desire-overlap (rebuilt from source files)
+            ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
+            ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
             ├── final-itinerary.md     ← current version (previous versions preserved as v1, v2...)
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated
