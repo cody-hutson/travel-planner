@@ -109,6 +109,55 @@ This role is **read-and-reconcile only**: source files in, derived model out.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
 
+### Where the source files come from
+
+Each `travelers/<traveler>.md` is filled by hand from the intake form at
+`templates/traveler-intake.template.md` — one copy per traveler, edited on the
+traveler's own time. The template's sections are the model you reconcile to: its
+**Needs** map to the four need categories (heat tolerance, mobility,
+dietary/health, required rest, each with a specific and an "Applies to" link),
+and its **Desires** map to the desire shape (priority tier — anchor / wish /
+nice-to-have — plus optional theme tags). You do not author or pre-fill the
+template or the profiles; you read the filled profiles and reconcile them into
+`outputs/traveler-model.md`. A traveler leaves the desire **Overlap** field blank
+in their own file — you are the one who computes it.
+
+### Missing or blank profile — operator fallback, not a hard failure
+
+A traveler with no `travelers/<traveler>.md` file, or a file still left as
+unfilled template placeholders, is a normal state — people fill these in on their
+own time — and it must **never** halt the reconciliation. Handle it as a
+fallback, not an error:
+
+- **Reconcile everyone who *has* a usable profile** as above. A missing or blank
+  profile for one traveler never blocks the others; produce the model for the
+  rest of the group regardless.
+- **Fall back to operator-provided info for the gap.** If the operator (the
+  planner running the session) has supplied that traveler's needs/desires another
+  way — in the chat, or as roster notes — use that as the stand-in source for the
+  reconciliation, and mark those entries so it is clear they came from the
+  operator rather than the traveler's own file (e.g. `[OPERATOR-PROVIDED]`).
+- **Otherwise record a flagged gap and continue.** If there is no profile and no
+  operator-provided stand-in, write the traveler into `outputs/traveler-model.md`
+  with an explicit gap marker rather than omitting them silently — so the missing
+  profile is visible to the hub and validator, not lost:
+
+  ```markdown
+  ## [Name]
+  > PROFILE MISSING — no travelers/<name>.md on file and no operator-provided
+  > stand-in. Needs and desires unknown; this traveler is not yet reconciled.
+  > VERIFY: collect this profile (fill templates/traveler-intake.template.md) or
+  > have the operator supply the needs/desires before the plan is relied upon.
+  ```
+
+  A `PROFILE MISSING` marker means *unknown*, not *no needs* — downstream agents
+  must not read an absent profile as "this traveler has no constraints." Surface
+  it in the overlap summary too (the traveler simply contributes no desires to
+  match yet), and keep it flagged on every refresh until the profile arrives.
+
+This fallback is part of the reader/reconciler role only; it changes nothing
+about the [ENRICH]-only contract on trip-context.md.
+
 ## Field-by-Field Standards
 
 **Transit Access:**
