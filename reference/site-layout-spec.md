@@ -264,6 +264,34 @@ Gradient bar showing thermal zones across the day:
 - Progress bar with gradient fill
 - Desktop: inline section at page bottom (or slide-up overlay on mobile)
 
+**Derives from tracked event status.** The checklist, book-by dates,
+"needs booking" flags, and the per-item links are not authored independently —
+they derive from per-event status in `outputs/event-status.md` (the
+persist-mutable status layer; see `reference/data-model.md`). The rules:
+
+- **An item appears on the checklist only if it "needs booking"** —
+  `status = planned` **and** `requires booking? = yes`. Those are the open
+  bookings the user still has to act on.
+- **`firmed`, `locked`, and `option` events never show as "needs booking."**
+  A `locked` event is already booked (show it as booked / done, or omit it from
+  the open list); a `firmed` event has nothing to book; an `option` is an
+  alternative, not a primary slot, so it carries no booking obligation. None of
+  these belong in the "still to book" set.
+- **"All booked" / empty checklist** is the rendering of *all events locked* —
+  no `planned`-needs-booking event remains. The progress bar reaches 100% when
+  that set is empty, even if the itinerary still contains `firmed` and `option`
+  events (those are not outstanding bookings).
+- **Booking-status pills elsewhere on the site** (the advance / book-ahead /
+  walk-up / open tiers on each card — see Booking Status Colors) read from the
+  same status: a `planned`-needs-booking card shows its booking tier; a `locked`
+  card shows as booked; `firmed`/`option` cards do not show a "needs booking"
+  state.
+
+The site is a read surface for status — it never writes `event-status.md`. The
+hub is the **primary writer** of that file (the validator only reads it; the
+enrichment agent may seed initial `locked` rows on setup); the site renders what
+the hub has recorded.
+
 ---
 
 ## 4. Responsive Architecture

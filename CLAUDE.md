@@ -83,6 +83,14 @@ Example: `food-list.md` after three sessions:
 
 **Exception:** `links-reference.md` and `venue-matrix.md` are rebuilt by the hub on each synthesis pass (they reflect the current state of the itinerary, not research history).
 
+### Satisfaction-layer artifacts
+
+The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. Full rationale: `reference/data-model.md`.
+
+- **`event-status.md` — persist-mutable (a fourth pattern).** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass. The **hub is the primary writer** and owns it; the file is **created by whichever agent first writes it** — the enrichment agent's setup seed (from `## Locked Elements`), or the hub on the first full synthesis if no seed exists (the validator only reads it). Persist-mutable is not append-only — a row is **deleted** in the one case where its event is removed from the itinerary, so no ghost row lingers.
+- **`traveler-model.md` — rebuilt/refreshed.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. It holds no independent state — the source files are authoritative — so regeneration is safe.
+- **`satisfaction-metrics.md` — rebuilt/refreshed.** Recomputed from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative. Two writers, **section-owned** so they never clobber: the **hub** owns the desire-coverage + balance-signal sections, the **validator** owns the needs-compliance + agreement-check sections, each read-merge-writing only its own.
+
 ---
 
 ## How to Use This (Claude Code as Primary Interface)
@@ -100,7 +108,7 @@ Before doing anything, determine what kind of request this is:
 | **Site tweak** | User wants visual/design changes to the HTML | Read the site HTML, edit directly. No agents. | "Make the colors warmer", "Add a section for packing list", "Fix the map on Day 2" |
 | **Context update** | User shares new information (booking, date change, preference) | Update trip-context.md and/or trip-log.md. No agents unless the change cascades. | "We booked the hotel", "Mom can't do stairs", "Add a traveler's food allergy" |
 | **Targeted research** | User wants new options or deeper research on a specific topic | Dispatch the relevant spoke agent with a targeted prompt. Append to existing output. | "Find more dinner options near Bairro Alto", "What indoor activities exist near the hotel?" |
-| **Planning change** | User wants to change the itinerary structure (swap days, add a day trip, reschedule) | Update trip-context.md mode notes → dispatch relevant agent(s) → hub patches itinerary | "Swap Day 3 and Day 4", "Replace the afternoon on Day 5 with something indoor" |
+| **Planning change** | User wants to change the itinerary structure (swap days, add a day trip, reschedule) | Update trip-context.md mode notes → dispatch relevant agent(s) → hub patches itinerary. Only `planned` events change freely; `locked`/`firmed` events are preserved unless the user names them (see Key Rules → per-event status). | "Swap Day 3 and Day 4", "Replace the afternoon on Day 5 with something indoor" |
 | **Full pipeline** | User wants the initial plan built or a full re-plan | Run the full agent pipeline (enrichment → spokes → hub → validator) | "Build the itinerary", "Start fresh on the plan" |
 | **Site generation** | User wants the travel site built or rebuilt | See Travel Site Generation section | "Build the site", "Create the travel page" |
 | **Publish** | User wants to push to GitHub | See Publishing section | "Publish this", "Push to GitHub" |
@@ -143,8 +151,8 @@ Read the relevant agent prompt from `agents/NN-name.md` and use it as context wh
 | Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
 | Scheduling | `agents/03-scheduling.md` | `outputs/scheduling-framework.md` | Structural schedule changes, resequencing |
 | Transport | `agents/04-transport.md` | `outputs/transport-brief.md` | Transport questions requiring research |
-| Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md` | Full synthesis or itinerary restructuring |
-| Validator | `agents/06-validator.md` | `outputs/validation-report.md` | After hub produces/updates itinerary |
+| Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md`, `outputs/event-status.md` (primary writer), `outputs/satisfaction-metrics.md` (desire-coverage + balance sections) | Full synthesis or itinerary restructuring |
+| Validator | `agents/06-validator.md` | `outputs/validation-report.md`, `outputs/satisfaction-metrics.md` (needs-compliance + agreement-check sections; reads `event-status.md`, never writes it) | After hub produces/updates itinerary |
 
 **Pipeline flow (full pipeline only):** Enrichment → Spokes (parallel if possible) → Hub → Validator → Remediation (if criticals found)
 
@@ -159,8 +167,8 @@ Read `trip-context.md` → Mode section to determine what's in scope.
 | IDEATION | Exploring options, nothing decided | Activities, Food, Scheduling, Transport produce overview-level output. Hub compares options. Validator skipped. |
 | DISCOVERY | Destination picked, nothing booked | Full pipeline. All agents run. |
 | ENRICHMENT | Flights/hotel confirmed | Full pipeline. Agents plan around fixed anchors. |
-| ITERATION | Existing plan, user wants changes | Only affected agents re-run. Hub patches itinerary. Validator re-checks changed days. |
-| RESEQUENCING | Keep selections, reorder days | Scheduling re-runs. Hub resequences. Validator checks new day-of-week assignments. |
+| ITERATION | Existing plan, user wants changes | Only affected agents re-run. Hub patches itinerary. Validator re-checks changed days. Status honored: only `planned` events change freely; `locked`/`firmed` are preserved unless the user names them; `option` events stay alternatives. |
+| RESEQUENCING | Keep selections, reorder days | Scheduling re-runs. Hub resequences. Validator checks new day-of-week assignments. Only `planned` events move; `locked`/`firmed` are fixed anchors; `option` events are not promoted into primary slots. |
 
 ---
 
@@ -301,7 +309,12 @@ Previous trip sites that set the quality bar. Read these when building a new sit
 
 These are encoded in the agent prompts but worth knowing as the orchestrator:
 
-- **trip-context.md is sacred.** Only the enrichment agent modifies it. No activity lists, food picks, or itinerary content goes in this file.
+- **trip-context.md is sacred.** Only the enrichment agent modifies it. No activity lists, food picks, or itinerary content goes in this file. No per-traveler desire detail, no per-event status, and no satisfaction metrics go in it either — those have their own homes (see below).
+- **Per-traveler data lives in separate files.** Each traveler's needs and desires live in `trips/[destination-year]/travelers/<traveler>.md` — human-authored, independently editable, one file per traveler, **filled from the blank intake form at `templates/traveler-intake.template.md`** (copied once per traveler). The enrichment agent reads and reconciles them into `outputs/traveler-model.md` (`[DERIVED]`); it does not author the source files. Keeps heavy per-traveler detail out of sacred trip-context.md and makes each file a change surface. Each file separates **needs** (constraints that bound the solution — e.g. heat, mobility, dietary-health, rest, budget, timing, sensory) from **desires** (wants optimized within those bounds, each carrying a structural priority tier of anchor/wish/nice-to-have, optional theme tags, and a desire-overlap signal); the tier is a priority label, not a numeric weight — nothing optimizes yet. The template spans the trip lifecycle (IDEATION → ENRICHMENT), capturing the individual's destination leanings, dates, budget appetite, travel style, interests, and people dynamics through to needs and desires — all the individual's own view; group destination shortlists and any side-bar splits are pipeline-derived, never authored in the individual file (see `reference/data-model.md`). The flow is **intake template → filled per-traveler profile (human, in the git-ignored `trips/`) → enrichment reconciles → `outputs/traveler-model.md`**; filled profiles carry real personal detail and so live only in the git-ignored working dir — they never go in trip-context.md and are never published. A **missing or blank profile is handled by operator fallback, not a hard failure**: the enrichment agent reconciles everyone who has a usable profile, falls back to operator-provided needs/desires for the gap (marked as operator-provided), and otherwise records a flagged `PROFILE MISSING` gap and continues — an absent profile means *unknown*, never *no constraints*. Full model: `reference/data-model.md`.
+- **Satisfaction-layer homes.** Per-event status → `outputs/event-status.md` (persists across re-runs). Coverage metrics → `outputs/satisfaction-metrics.md`. Derived per-traveler model + desire-overlap → `outputs/traveler-model.md`. None of these belong in trip-context.md or in the rebuilt venue-matrix.md. Full data architecture: `reference/data-model.md`.
+- **Satisfaction metrics — define the dimensions, not the scoring.** `outputs/satisfaction-metrics.md` tracks five named coverage dimensions, each of a fixed type — emitted by the hub (per-traveler coverage read) and the validator (audit report), never scored at this layer. **Needs-compliance** is **pass/fail** per need per applicable day (each need category honored every day it applies — a constant-applicability need applies on all days, a conditional need on its applicable subset; the structured, recorded form of the every-applicable-day hard-constraint audit, *not* a balance score). Its agreement with constraint-compliance is **forward-only**: every needs-compliance `fail` is a constraint Critical, but a trip-level/group constraint with no linked per-traveler need yields a constraint Critical with no needs-compliance row by design. **Desire-coverage** is **covered / not** per traveler per desire (each anchor/wish met by the plan or not — a boolean, not a degree). **Group-equity**, the four **experience axes** (creativity, fun, excitement, newness), and **rest-recovery balance** are named **balance signals** to track — their scoring (formulas, weights, thresholds) is **left to design**, since nothing in the satisfaction layer optimizes yet. Full dimension set, types, and artifact shape: `reference/data-model.md` → Satisfaction Metrics.
+- **Per-event status — only `planned` changes freely.** Every placed event carries exactly one status in `outputs/event-status.md`: `planned` (working state, open to iteration, may still need a booking), `locked` (booked/confirmed, preserved), `firmed` (settled with nothing to book, preserved), or `option` (an alternative/bailout — never a primary slot). Iteration and resequencing change only `planned` events; `locked`/`firmed` are preserved unless the user names them; an `option` is never auto-promoted into a primary slot (that is a deliberate user act). A booking that falls through regresses `locked → planned` (the event re-opens and its booking question reopens), and an event removed from the itinerary has its row **deleted** (the one deletion persist-mutable permits — no ghost row). The **Event ID is opaque and day-independent** (the hub mints it on first placement; it is the cross-run join key and must not encode the day). "Needs booking" derives from status — `planned` **and** `requires booking? = yes` — so `firmed`/`locked`/`option` never read as "needs booking" (an `option` may still carry `requires booking? = yes` as a bookable backup; its flag takes effect only on promotion to `planned`), and "all events locked" means no `planned`-needs-booking event remains. This structured per-event layer supersedes the coarse free-text `## Locked Elements` notes in trip-context.md (which stay as the **operator-maintained** trip-level human summary, not an agent-written field) as the source of truth for the scheduler, hub, and validator. Field-shape decision and full model: `reference/data-model.md`.
+- **Link, don't copy — one source per fact.** Trip-level constraints stay in trip-context.md `## Hard Constraints` / `## Dietary & Health` (the constraint SSOT). Per-traveler files own per-traveler desires and need-specifics. The enrichment agent *links* a traveler's need to the governing constraint via "Applies to" — it never duplicates the constraint text. A fact has exactly one owner.
 - **Venue deduplication.** No venue appears as an anchor on one day and an alternative on another. Max 2 appearances total across the full itinerary. The hub builds venue-matrix.md to enforce this BEFORE writing the itinerary.
 - **Hub builds reference files first.** links-reference.md and venue-matrix.md are built before the day-by-day itinerary — not after.
 - **Every 3+ hour outdoor block needs a bailout.** A named indoor venue with address, walking distance, and hours. Not a suggestion to "find somewhere nearby."
@@ -322,13 +335,18 @@ travel-planner/
 │   ├── 04-transport.md
 │   ├── 05-hub-planner.md
 │   └── 06-validator.md
+├── reference/              ← engine reference specs
+│   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
+│   └── site-layout-spec.md        ← travel-site responsive/layout specification
 ├── scripts/                ← publish-trip-site.sh (private publish) + test-publish-guard.sh
 ├── templates/
-│   └── trip-context.template.md
+│   ├── trip-context.template.md
+│   └── traveler-intake.template.md   ← per-traveler profile form (blank; copied per traveler into the git-ignored trips/.../travelers/)
 └── trips/
     └── [destination-year]/ ← one folder per trip
         ├── trip-context.md            ← source of truth for the trip
         ├── trip-log.md                ← decision history, session bridge
+        ├── travelers/                 ← per-traveler source files (gitignored), one .md per traveler — human-authored
         └── outputs/
             ├── activities-list.md     ← accumulates across sessions
             ├── food-list.md           ← accumulates across sessions
@@ -336,6 +354,9 @@ travel-planner/
             ├── transport-brief.md
             ├── links-reference.md     ← rebuilt by hub each synthesis
             ├── venue-matrix.md        ← rebuilt by hub each synthesis
+            ├── traveler-model.md      ← [DERIVED] reconciled per-traveler model + desire-overlap (rebuilt from source files)
+            ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
+            ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
             ├── final-itinerary.md     ← current version (previous versions preserved as v1, v2...)
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated

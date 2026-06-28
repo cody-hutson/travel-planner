@@ -85,6 +85,98 @@ Specific checks:
 - Any food venue conflicting with dietary restrictions
 - Any day missing a required indoor midday block
 
+**Status-integrity audit:**
+Read `outputs/event-status.md` (the persist-mutable per-event status — see
+`reference/data-model.md`) and audit the itinerary against it on three points:
+
+- **Iteration didn't disturb protected events.** On an ITERATION or
+  RESEQUENCING pass, every `locked` and `firmed` event must appear in the new
+  itinerary unchanged — same venue, same day, same time block — *unless* the
+  trip-context.md Mode Notes named it as in-scope for the change. Any `locked`
+  or `firmed` event that moved, changed time, was dropped, or was altered while
+  it was **not** named in the change is a **Critical** finding. Cite the event,
+  its status, what changed, and that the change request did not name it. This is
+  the core iteration-protection guarantee. Two transitions are **legitimate, not
+  Critical:** (1) a booking that fell through regresses `locked → planned` (the
+  event re-opens and its booking question reopens) — verify the regression is
+  reflected, not flag it; (2) an event genuinely removed from the itinerary has
+  its row **deleted** from `event-status.md` (no ghost row) — a deleted removed
+  event is correct, but confirm it was actually removed from the plan and not
+  silently dropped while still expected.
+- **"Needs booking" matches status.** The booking surfaces (the advance booking
+  checklist, "needs booking" flags) must list exactly the events where
+  `status = planned` **and** `requires booking? = yes`, and **no** others. Flag
+  (Critical) any `firmed`, `locked`, or `option` event shown as "needs booking",
+  and any `planned`-needs-booking event missing from the checklist. The derived
+  "needs booking" column in `event-status.md` must equal that predicate on every
+  row — flag a hand-set value that disagrees.
+- **One status per event; status/matrix agreement.** Every placed event carries
+  exactly one status (flag any event missing a status, or carrying more than
+  one). An event marked `option` must appear as Alt / B (never as an anchor) in
+  `venue-matrix.md` and in the itinerary; an `option` placed in a primary slot
+  is a Critical finding (a silent promotion). Confirm "all events locked" is
+  determinable: it holds exactly when no `planned`-needs-booking event remains.
+
+You audit status; you never change it. Mismatches go to the hub's remediation
+list — the hub owns the status file.
+
+**Satisfaction-metrics report:**
+Report the satisfaction coverage view for the itinerary to
+`outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
+artifact — see `reference/data-model.md` → Satisfaction Metrics). You **report
+and emit** these dimensions; you do **not** score them. **Section ownership —
+do not clobber the hub's sections.** This file has two writers: the validator
+owns the **Needs-compliance** section and the **needs ↔ constraint agreement
+check**; the **hub** owns Desire-coverage and Balance signals.
+**Read-merge-write only your own sections** — read the current file, replace the
+Needs-compliance section (and the agreement-check line), write the merged whole
+back, and **never** wipe the hub's Desire-coverage / Balance-signals sections.
+(If the file does not yet exist, write your sections and leave the hub's section
+headers present but empty for the hub to fill.) Full split:
+`reference/data-model.md` → "Write split — section ownership". Each dimension has
+a fixed type:
+
+- **Needs-compliance — pass/fail, per need × per applicable day.** This is the
+  *structured, recorded form* of the Constraint compliance audit above — not a
+  second judgement. For every traveler need in `outputs/traveler-model.md` (per its
+  need category),
+  emit `pass` / `fail` for each day that need **applies** to. A need's
+  applicable-day set is derived from its governing constraint
+  (constant-applicability needs → all days; conditional needs → their applicable
+  subset) — see `reference/data-model.md` → "A need's applicable-day set"; do not
+  redefine it, and do not fail a conditional need on a day its constraint never
+  governed. Key each verdict to the governing `trip-context.md` constraint the
+  need links to. The agreement with constraint-compliance is a **forward
+  implication, not an equivalence:** every needs-compliance `fail` **is** a
+  constraint-compliance **Critical** — but **not** every constraint Critical has
+  a needs-compliance counterpart. A trip-level or group constraint that **no
+  per-traveler need links to** produces a constraint Critical with **no**
+  needs-compliance row, by design. Do **not** enforce the reverse as an invariant
+  (an unlinked constraint Critical with no needs-compliance row is correct, not a
+  discrepancy). You are recording the every-applicable-day hard-constraint audit
+  as a per-need-per-day pass/fail record for the per-traveler-need slice, not
+  re-deciding it.
+- **Desire-coverage — covered / not, per traveler × per desire.** For each
+  traveler's anchors and wishes (from the traveler model), emit `covered` or
+  `not covered` — a boolean presence check against the itinerary. Not a degree,
+  not a percentage. A `not covered` anchor is worth surfacing as a Warning
+  (a missed anchor is a worse plan), but it is **never** a needs-compliance
+  failure — a desire is optimized within the bounds, not a bound.
+- **Balance signals — named, scoring left to design.** Emit the balance
+  dimensions — **group-equity**, the four **experience axes** (creativity, fun,
+  excitement, newness), and **rest-recovery balance** — as named rows with their
+  value shown as `(left to design)`. You do **not** compute, weight, threshold,
+  or rank them: nothing in the satisfaction layer optimizes yet. Report that the
+  dimension is tracked; do not invent a score for it.
+
+> **Scope guard.** This is a *report*, not an optimizer. You emit pass/fail
+> (needs-compliance), covered/not (desire-coverage), and named balance signals
+> with `(left to design)` values. If you find yourself computing a coverage
+> percentage, an equity score, or a weighting over desires, stop — that is
+> design-stage work this layer explicitly defers. The required-rest *need* is a
+> pass/fail gate under needs-compliance; **rest-recovery balance** is the softer
+> trip-wide signal whose scoring is deferred — keep them distinct.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named indoor bailout.
 If any day is missing one, flag it as a critical gap.
@@ -129,11 +221,13 @@ operational detail.
 3. Venue deduplication — anchor/alternative duplicates undermine the
    value of having alternatives
 4. Constraint compliance — any hard constraint violation is Critical
-5. Bailout gaps — any outdoor block without a named escape is Critical
-6. Price staleness — Warning level unless the discrepancy is large enough
+5. Status integrity — a `locked`/`firmed` event altered outside its named
+   change, or a "needs booking" surface that disagrees with status, is Critical
+6. Bailout gaps — any outdoor block without a named escape is Critical
+7. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
-7. Travel restrictions and advisories — Critical if action is required
-8. Local happenings — Note or Warning depending on impact
+8. Travel restrictions and advisories — Critical if action is required
+9. Local happenings — Note or Warning depending on impact
 
 ## Mode Behavior
 
@@ -146,10 +240,16 @@ obvious closure or business status issues. No full matrix required.
 
 **ITERATION:** Re-run only on changed days and any days whose venues were
 affected by the change (e.g., a venue moved from Day 3 to Day 5 needs
-Day 5's day-of-week checked).
+Day 5's day-of-week checked). **Always** run the status-integrity audit
+against `outputs/event-status.md` regardless of which days changed: confirm no
+`locked`/`firmed` event was altered outside the named change, and that "needs
+booking" still matches status.
 
 **RESEQUENCING:** Full pass on all days — the sequence change may have
-introduced new day-of-week conflicts even though no venues changed.
+introduced new day-of-week conflicts even though no venues changed. Run the
+status-integrity audit in full: a resequence must move only `planned` events
+and leave every `locked`/`firmed` event in place, with `option` events still
+alternatives (not promoted into primary slots).
 
 ## Input
 
@@ -162,6 +262,17 @@ Read fully before producing output:
 Also read:
 5. outputs/food-list.md (closed day notes from food agent)
 6. outputs/activities-list.md (any caveat or hours notes from activities agent)
+7. outputs/event-status.md (per-event status — the target of the
+   status-integrity audit: protected `locked`/`firmed` events, the
+   `planned`-needs-booking set, and `option` alternatives)
+8. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires —
+   the source for the satisfaction-metrics report: needs drive needs-compliance,
+   anchors/wishes drive desire-coverage)
+
+Write: outputs/satisfaction-metrics.md — **your owned sections only**
+(Needs-compliance + the needs↔constraint agreement check); read-merge-write,
+never clobbering the hub's Desire-coverage / Balance-signals sections. See Output
+Format; reported/emitted, never scored.
 
 ## Output Format
 
@@ -182,6 +293,8 @@ File: outputs/validation-report.md
 | Local happenings | | | | |
 | Business status | | | | |
 | Constraint compliance | | | | |
+| Status integrity (protected events + needs-booking) | | | | |
+| Satisfaction metrics (needs-compliance + coverage report) | | | | |
 | Bailout completeness | | | | |
 | Structural integrity | | | | |
 
@@ -247,6 +360,61 @@ Proximity venue usage (hotel-neighborhood):
 | Venue | Scheduled Day | Reservation Type | Window Status | Action Required |
 |-------|--------------|-----------------|--------------|----------------|
 | [Name] | Day [N] | [Required / Recommended] | [Open / Tight / Closed] | [Book now / Confirm / —] |
+
+---
+
+### Status Integrity Report
+
+Protected-event check (ITERATION / RESEQUENCING) — every `locked`/`firmed`
+event must be unchanged unless the change request named it:
+
+| Event | Status | Named in change? | Changed this pass? | Verdict |
+|-------|--------|------------------|--------------------|---------|
+| [Event] | [locked / firmed] | [Yes / No] | [No / moved / re-timed / dropped] | [OK / Critical] |
+
+Needs-booking vs. status — the booking surfaces must equal the
+`planned`-and-`requires booking?` set, and no other status may appear:
+
+| Event | Status | Requires booking? | Needs booking (expected) | On booking checklist? | Verdict |
+|-------|--------|-------------------|--------------------------|-----------------------|---------|
+| [Event] | [planned / locked / firmed / option] | [yes / no] | [yes / no] | [yes / no] | [OK / Critical] |
+
+- **One status per event:** [confirmed / list any event missing or with >1 status]
+- **Status ↔ matrix agreement:** [confirmed / list any `option` shown as anchor]
+- **"All events locked" determinable:** [Yes — N planned-needs-booking remain / No]
+
+---
+
+### Satisfaction Metrics Report
+
+> Reported (not scored) to `outputs/satisfaction-metrics.md`. pass/fail and
+> covered/not are determinable from the plan; balance-signal scoring is left to
+> design. Needs-compliance must agree with the Constraint Compliance audit above.
+
+**Needs-compliance — pass/fail, per need × per applicable day**
+
+| Traveler | Need (category) | Applicable days | Per-day verdict | Overall |
+|----------|-----------------|-----------------|-----------------|---------|
+| [Name] | [Heat / Mobility / Dietary-health / Required-rest] | [days] | [D# pass/fail …] | [pass / fail] |
+
+**Desire-coverage — covered / not, per traveler × per desire**
+
+| Traveler | Desire | Priority tier | Covered? |
+|----------|--------|---------------|----------|
+| [Name] | [Desire] | [anchor / wish] | [covered / not covered] |
+
+**Balance signals — named; scoring left to design**
+
+| Balance dimension | Granularity | Value |
+|-------------------|-------------|-------|
+| Group-equity | per trip | (left to design) |
+| Experience axis — creativity | per trip | (left to design) |
+| Experience axis — fun | per trip | (left to design) |
+| Experience axis — excitement | per trip | (left to design) |
+| Experience axis — newness | per trip | (left to design) |
+| Rest-recovery balance | per trip | (left to design) |
+
+- **Needs-compliance → constraint-compliance agreement (forward only):** [confirmed — every needs-compliance `fail` is a constraint Critical; constraint Criticals with no linked per-traveler need correctly have no needs-compliance row / list any needs-compliance `fail` that is NOT a constraint Critical]
 
 ---
 

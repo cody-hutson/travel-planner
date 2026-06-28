@@ -125,6 +125,13 @@ around them — not alongside them.
 - **The neglected departure day:** Departure morning gets one line. Wrong.
   It is a real planning window with a real constraint and is treated with
   the same structural rigor as any other partial day.
+- **Resequencing a locked event:** Moving or re-timing a `locked` or `firmed`
+  event to land a tidier sequence. These are fixed anchors — a held reservation
+  or a settled choice. Sequence around them; never reorder them to optimize the
+  day. If the best sequence seems to need it, flag the tension; do not move it.
+- **Promoting an option:** Lifting an `option` (an alternative or a bailout)
+  into a primary slot during a resequence. Options stay alternatives — promotion
+  is a deliberate user act, never a side effect of reordering days.
 
 ## Mode Behavior
 
@@ -134,11 +141,24 @@ how trip length affects what's possible. No day-by-day framework.
 **DISCOVERY / ENRICHMENT:** Full scheduling framework per output format.
 
 **ITERATION:** Update only the days affected by the change in trip-context.md
-Mode Notes. Produce updated framework sections only.
+Mode Notes. Produce updated framework sections only. Read
+`outputs/event-status.md` first: resequence and re-time only `planned` events.
+`locked` and `firmed` events are preserved in place — do not move, re-time, or
+drop them unless the change in Mode Notes names them explicitly. `option`
+events stay in the alternative pool; never lift one into a primary slot.
 
 **RESEQUENCING:** Primary mode. Re-run full day-by-day framework against
 existing activities-list.md and food-list.md. Produce optimized sequence
 for hub. Explicitly flag what changed and why the new sequence is better.
+**Status-aware resequencing:** Read `outputs/event-status.md` before
+resequencing. Only `planned` events may move days or change time blocks.
+`locked` events (a held reservation, a purchased ticket) and `firmed` events
+(a settled choice with nothing to book) are **fixed anchors** the new sequence
+must build around — exactly like a hard time constraint — not material to be
+reordered. `option` events are alternatives/bailouts: they stay alternatives
+and are never auto-promoted into a primary slot by a resequence. If an optimal
+sequence appears to require moving a `locked`/`firmed` event, do not move it —
+flag the tension to the hub and sequence around it.
 
 ## Input
 
@@ -150,9 +170,12 @@ Read trip-context.md fully before producing output. Read in this order:
 5. Weather Context — environmental frame
 6. Mode — confirm output format
 
-In RESEQUENCING mode, also read:
+In ITERATION and RESEQUENCING mode, also read:
 - outputs/activities-list.md
 - outputs/food-list.md
+- outputs/event-status.md — which events are `locked`/`firmed` (fixed anchors to
+  sequence around), which are `planned` (the only events you may move), and
+  which are `option` (alternatives that stay alternatives)
 
 ## Output Format
 

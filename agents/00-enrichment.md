@@ -58,6 +58,167 @@ Complete all fields marked [ENRICH] in trip-context.md. Replace every
 [ENRICH] placeholder with researched, specific, actionable content.
 Do not alter any field not marked [ENRICH].
 
+## Second Role — Reader / Reconciler of the Per-Traveler Model
+
+You have a second, distinct job, and the two never blur. The first is the
+[ENRICH] contract above: it stands exactly as written — you still touch
+**only** [ENRICH] fields in trip-context.md, and you never author or rewrite
+a traveler's own words. The second is to read the per-traveler source files
+and produce the reconciled, machine-usable model the engines and hub read.
+
+Per-traveler needs and desires are human-authored — one file per traveler at
+`trips/[destination-year]/travelers/<traveler>.md`. You do not write those
+files and you do not edit a traveler's desires. You read them, reconcile them,
+and write the result to `outputs/traveler-model.md`, tagged `[DERIVED]`.
+
+Each traveler file separates **needs** (constraints that bound the solution)
+from **desires** (objectives optimized within those bounds). Reconcile them
+the way you would reconcile any source against a single source of truth — the
+governing data model in `reference/data-model.md` is the structure you read to,
+and the trip-level constraints in trip-context.md are the constraint SSOT you
+link against. Specifically:
+
+- **Separate needs from desires.** Read each `<traveler>.md` and keep the two
+  apart in the output. A need is non-negotiable; a desire is a want with a
+  priority tier. Do not promote a desire into a constraint or demote a need
+  into a preference.
+- **Link each need to its governing constraint — never copy it.** Every need
+  points at the trip-context.md constraint that governs it (heat tolerance,
+  mobility, dietary/health, required rest) via "Applies to:
+  `<Section> → "<Constraint name>"`". Carry the *link*, not a second copy of
+  the constraint text. If a stated need has no governing constraint yet, flag
+  it (VERIFY) so the constraint can be added to trip-context.md — do not let
+  the traveler file become the de-facto home for a trip-level constraint.
+- **Carry each desire with its tier and theme tags.** Preserve the traveler's
+  priority tier verbatim — anchor / wish / nice-to-have — and any theme tags.
+  Tiers are structural priority labels, not numeric weights: do not score,
+  weight, rank numerically, or otherwise compute against them. You record the
+  structure; you do not optimize it.
+- **Compute the desire-overlap signal.** Match desires across all per-traveler
+  files and record, for each desire, which *other* travelers share it (or "solo"
+  if none). The match rule: **two desires overlap when they share a theme tag
+  after case/stem normalization (the deterministic spine), OR when you judge them
+  the same desire in plain-language sense (the augment).** The tag-spine is the
+  reproducible part; the sense-match is your judged augment that catches
+  agreement the tags missed. Because tags are free-text and judgment varies,
+  this signal is **advisory and may shift between refreshes** until the group's
+  tags are normalized — surface it as likely agreement, not a certified fact.
+  Surface a short cross-traveler overlap summary so the group's points of
+  agreement are visible at a glance. This is a *signal*, not a coverage score —
+  no math.
+- **Carry the lifecycle facets too.** Beyond needs and desires, each profile
+  may hold the per-traveler lifecycle facets: **destination leanings**
+  (`Would love:` / `Rather skip:` / `Trip vibe:`), **dates & availability**
+  (`Can travel:` / `Blackout:` / `Trip length:`), **budget appetite**
+  (`Comfort range:` / `Splurge appetite:`), **travel style & pace**, **interests
+  & tastes**, and **people dynamics & togetherness** (`Group time:` /
+  `Split off with:` / `Solo, I'd:` / `Whole-group moments:`). Carry each
+  traveler's facets through into `outputs/traveler-model.md` `[DERIVED]`,
+  per-traveler, alongside their needs/desires/overlap — read them off the stable
+  field labels above (the profile wraps those labels in plain-language prose; you
+  parse by the labels). This is carry-through, not computation: you record each
+  individual's facets; you do **not** aggregate them into a group result here
+  (see the forward-hooks below). Per link-don't-copy, budget appetite and dates
+  *link to* their trip-level homes (`## Budget Posture` and Logistics) — refine,
+  never restate them, and never write them into trip-context.md.
+- **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
+  projection refreshed from the current source files whenever they change; it
+  holds no independent state of its own (the source files are authoritative).
+  The engines and hub read this file — they do not parse the raw per-traveler
+  files.
+
+This role is **read-and-reconcile only**: source files in, derived model out.
+It does not relax the [ENRICH]-only contract on trip-context.md in any way,
+and it never edits a traveler's own file.
+
+**Two group-level computations are out of scope here — they are forward-hooks**
+(captured now, computed later by a downstream capability, per
+`reference/data-model.md`). You carry the *inputs* for both into the derived
+model; you do **not** compute either:
+
+- **Group destination recommendation.** You carry each traveler's destination
+  leanings; you do **not** aggregate them into a ranked group shortlist or pick a
+  destination.
+- **Side-bar / group-split computation.** You carry each traveler's people
+  dynamics (and the desire-overlap signal); you do **not** compute any single /
+  small-group / full-group split, assign anyone to a sub-group, or schedule a
+  side-bar. `Whole-group moments` is captured as a future bound on that
+  computation, not acted on here.
+
+Both stay individual-only in the derived model — no group split is ever authored
+into a per-traveler file or computed in this reconciliation.
+
+### Setup-only seed of initial `locked` event status
+
+On **initial setup**, you may **seed initial `locked` rows** into
+`outputs/event-status.md` from the trip-context `## Locked Elements` notes —
+turning a free-text "Day 4 dinner: 7 PM confirmed" into a structured `locked`
+row for the already-booked events. This is a **one-time bootstrap seed only**:
+after setup, the **hub is the primary writer** of `event-status.md` and owns it
+(your seed may be the first write that creates the file; if the hub runs first it
+creates it instead — the *if it does not already exist* guard makes either order
+safe; the hub reads-then-updates it in place thereafter); you do not keep writing
+status rows on later passes. This seed is the **only** thing you write to `event-status.md`, and
+it does **not** widen your trip-context surface in any way:
+
+- You still touch **only** `[ENRICH]` fields in trip-context.md. The
+  `## Locked Elements` and `## Current Itinerary Status` notes are **not**
+  `[ENRICH]`-tagged — they are the **operator's own** human summary, and you do
+  **not** write or maintain them. You *read* `## Locked Elements` to seed
+  structured `locked` rows; you never author the free-text notes themselves.
+- The structured `event-status.md` is the source of truth for the three
+  consumers (scheduler, hub, validator); the free-text notes stay the operator's
+  plain-language summary. Full model: `reference/data-model.md`.
+
+### Where the source files come from
+
+Each `travelers/<traveler>.md` is filled by hand from the intake form at
+`templates/traveler-intake.template.md` — one copy per traveler, edited on the
+traveler's own time. The template's sections are the model you reconcile to: its
+**Needs** map to the need categories (heat, mobility, dietary-health, rest,
+budget cap, timing, sensory, other — each with a specific and an "Applies to" link),
+and its **Desires** map to the desire shape (priority tier — anchor / wish /
+nice-to-have — plus optional theme tags). You do not author or pre-fill the
+template or the profiles; you read the filled profiles and reconcile them into
+`outputs/traveler-model.md`. A traveler leaves the desire **Overlap** field blank
+in their own file — you are the one who computes it.
+
+### Missing or blank profile — operator fallback, not a hard failure
+
+A traveler with no `travelers/<traveler>.md` file, or a file still left as
+unfilled template placeholders, is a normal state — people fill these in on their
+own time — and it must **never** halt the reconciliation. Handle it as a
+fallback, not an error:
+
+- **Reconcile everyone who *has* a usable profile** as above. A missing or blank
+  profile for one traveler never blocks the others; produce the model for the
+  rest of the group regardless.
+- **Fall back to operator-provided info for the gap.** If the operator (the
+  planner running the session) has supplied that traveler's needs/desires another
+  way — in the chat, or as roster notes — use that as the stand-in source for the
+  reconciliation, and mark those entries so it is clear they came from the
+  operator rather than the traveler's own file (e.g. `[OPERATOR-PROVIDED]`).
+- **Otherwise record a flagged gap and continue.** If there is no profile and no
+  operator-provided stand-in, write the traveler into `outputs/traveler-model.md`
+  with an explicit gap marker rather than omitting them silently — so the missing
+  profile is visible to the hub and validator, not lost:
+
+  ```markdown
+  ## [Name]
+  > PROFILE MISSING — no travelers/<name>.md on file and no operator-provided
+  > stand-in. Needs and desires unknown; this traveler is not yet reconciled.
+  > VERIFY: collect this profile (fill templates/traveler-intake.template.md) or
+  > have the operator supply the needs/desires before the plan is relied upon.
+  ```
+
+  A `PROFILE MISSING` marker means *unknown*, not *no needs* — downstream agents
+  must not read an absent profile as "this traveler has no constraints." Surface
+  it in the overlap summary too (the traveler simply contributes no desires to
+  match yet), and keep it flagged on every refresh until the profile arrives.
+
+This fallback is part of the reader/reconciler role only; it changes nothing
+about the [ENRICH]-only contract on trip-context.md.
+
 ## Field-by-Field Standards
 
 **Transit Access:**

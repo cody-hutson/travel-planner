@@ -83,6 +83,112 @@ day's structure — not a footnote. Specific venue, address, walking distance,
 approximate hours. Pre-researched to anchor depth. This is triggered by the
 scheduling framework's bailout flags.
 
+**Per-event status discipline:**
+`outputs/event-status.md` is the persist-mutable source of truth for each
+event's status — `planned` (open, may still need a booking), `locked`
+(booked / confirmed), `firmed` (settled, nothing to book), or `option`
+(an alternative / bailout, never a primary slot). Full model:
+`reference/data-model.md`. The hub is the **primary writer** of this file
+(the validator only reads it; the enrichment agent may seed initial `locked`
+rows on setup). The hub both **reads** and **writes** it:
+
+- **Create it if no earlier writer has.** In DISCOVERY / ENRICHMENT, if
+  `outputs/event-status.md` does not yet exist (the enrichment setup seed
+  may already have created it), the hub **creates** it, seeding any
+  already-known `locked` events (held reservations, purchased tickets, a
+  confirmed hotel — including any `locked` rows the enrichment agent seeded
+  from `## Locked Elements`). On every later pass the file already exists —
+  read it, then update in place; never re-create it.
+- **Event IDs are opaque and day-independent.** Mint a stable, opaque Event ID
+  the first time you place an event (e.g. `evt-07`) — it is the cross-run join
+  key and must **not** encode the day (the `Day` column carries that), because
+  resequencing moves events across days. Reuse the same ID for that event on
+  every later pass.
+- **Read before synthesizing or patching.** Treat `locked` and `firmed`
+  events as fixed — synthesize and resequence around them; do not re-place,
+  re-time, or drop them unless the user named them. Only `planned` events are
+  freely movable. `option` events are the alternative/bailout pool — place
+  them as Alt / B in the venue matrix, never as A (anchor), and **never
+  auto-promote** one into a primary slot. Promotion is a deliberate user
+  instruction that flips the event's status from `option` to `planned`
+  (or `locked` if booked at once).
+- **Write back after placing.** When an event becomes booked, set its status
+  to `locked`; when the group settles an unbookable choice, set it to
+  `firmed`; new working picks enter as `planned`. If a booking falls through
+  (a cancelled reservation, a sold-out ticket), regress that event
+  `locked → planned` — it re-opens to iteration and its booking question
+  reopens. Update **in place** — change only the rows whose status actually
+  changed; never wipe or regenerate the file (it must survive the synthesis).
+  Recompute the derived "needs booking" column on any row you touch: it is
+  `yes` exactly when `status = planned` and `requires booking? = yes`.
+- **Delete a removed event's row.** When an event is dropped from the itinerary
+  entirely (not kept as an `option`), **delete** its row from
+  `event-status.md` — this is the one deletion persist-mutable permits. Leaving
+  a ghost row would corrupt the "needs booking" set and the "all events locked"
+  predicate. (Demotion is different: an event kept as a backup becomes an
+  `option` row, not a deleted one.)
+- **Keep the matrix and the status table in agreement.** An event marked
+  `option` in status appears as Alt / B (never A) in `venue-matrix.md`; a
+  `locked`/`firmed`/`planned` primary pick appears as A. The matrix is rebuilt
+  each synthesis to show current placement; the status table persists to record
+  what has been decided. They describe the same events and must not contradict.
+- **Booking checklist drives off status.** The advance booking checklist lists
+  exactly the "needs booking" set (`planned` **and** `requires booking?`).
+  "All events locked" means that set is empty — not that every event is
+  literally `locked` (a trip of `firmed`/`option` events with no open booking
+  is legitimately all-booked).
+
+The coarse `## Locked Elements` / `## Current Itinerary Status` notes in
+trip-context.md remain the trip-level human summary; `event-status.md` is the
+structured per-event layer the hub actually plans against.
+
+**Satisfaction-coverage read:**
+After synthesizing, the hub emits the per-traveler coverage / balance read to
+`outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
+artifact — full model: `reference/data-model.md` → Satisfaction Metrics). Read
+`outputs/traveler-model.md` for each traveler's needs and desires; the read is a
+**coverage view, not a score**:
+
+- **Per-traveler desire-coverage — covered / not.** For each traveler, walk
+  their anchors and wishes and mark each `covered` or `not covered` against the
+  itinerary you just built. This is the hub's core coverage view: each
+  traveler's anchors/wishes → covered or not. It is a boolean presence check —
+  not a degree, not a percentage, not a ranking. (A `not covered` anchor is a
+  signal worth noting in OPEN DECISIONS, but it is not a constraint failure.)
+- **Needs-compliance — pass/fail (your audit; the validator owns the file
+  section).** Run your usual hard-constraint audit — every **applicable** day
+  against every hard constraint — as a per-need-per-applicable-day `pass` /
+  `fail` judgement keyed to each need's governing constraint. A need's
+  **applicable-day set** is derived from its governing constraint
+  (constant-applicability needs apply on all days; conditional needs — a heat
+  ceiling, a scheduled rest floor — apply on their applicable subset) — see
+  `reference/data-model.md` → "A need's applicable-day set"; do not redefine it
+  here. This is the *recorded form* of the constraint audit you already perform —
+  not a new check. The **validator owns the Needs-compliance section** of
+  `satisfaction-metrics.md` (per the section-ownership split below); your audit
+  must **agree** with it — you do not write that section yourself.
+- **Balance signals — named, value `(left to design)`.** Emit group-equity, the
+  four experience axes (creativity, fun, excitement, newness), and rest-recovery
+  balance as named rows with the value `(left to design)`. Do **not** compute,
+  weight, or threshold them — nothing in the satisfaction layer optimizes yet.
+  You name and track the dimension; you do not score it.
+
+**Section ownership — do not clobber the validator's section.**
+`satisfaction-metrics.md` has two writers. The hub owns the **Desire-coverage**
+and **Balance signals** sections; the **validator** owns the **Needs-compliance**
+section and the needs↔constraint agreement check. **Read-merge-write only your
+own sections:** read the current file, replace the Desire-coverage and
+Balance-signals sections, and write the merged whole back — never regenerate the
+file from scratch, and never overwrite the validator's Needs-compliance section.
+Each section is refreshed by its owner from authoritative inputs (so the file is
+still rebuilt/refreshed per-section, not append-with-history). The needs-compliance
+record you mirror above is for *your own* every-day audit; it must agree with the
+validator's owned section. Full split: `reference/data-model.md` → "Write split —
+section ownership". Do **not** put any of this in trip-context.md or in the
+rebuilt venue-matrix.md — the coverage view has its own home. If you find
+yourself inventing a coverage percentage or an equity weighting, stop: scoring
+the balance dimensions is design-stage work this layer defers.
+
 **Group split tracks:**
 Any day the scheduling framework flagged as requiring a parallel track
 gets one. A subgroup's plan is named venues with timing and logistics for
@@ -161,6 +267,16 @@ planned to its actual window. Reading the itinerary, you can feel the arc.
   Not the last. It has a real deadline.
 - **Arrival/departure neglect:** Both have hard time constraints. Both are
   planned to their actual windows, not treated as full days with a flight note.
+- **Status drift:** Re-placing or dropping a `locked`/`firmed` event the user
+  did not name, or letting the venue matrix contradict the status table (an
+  `option` shown as an anchor). `locked`/`firmed` are preserved; the matrix and
+  the status table describe the same events and must agree.
+- **Silent option promotion:** Lifting an `option` (alternative / bailout) into
+  a primary slot as a side effect of synthesis. Promotion is a deliberate user
+  act that flips the status to `planned`/`locked` — never an automatic upgrade.
+- **Wiping event-status.md:** Regenerating the status file from scratch on a
+  synthesis pass. It is persist-mutable — read it, then update only the rows
+  that changed. Blowing it away destroys the iteration-protection record.
 
 ## Mode Behavior
 
@@ -169,17 +285,35 @@ ideation outputs. Format: destination name / one-paragraph appeal case /
 key tradeoffs / best-fit traveler profile / go-consider-skip verdict.
 
 **DISCOVERY / ENRICHMENT:** Full synthesis. Build reference artifacts first,
-then produce final-itinerary.md per output format.
+then produce final-itinerary.md per output format. **Create
+`outputs/event-status.md` if it does not yet exist** (its bootstrap edge —
+whichever agent writes first creates it: the enrichment setup seed, else the
+hub here on the first full synthesis), seeding any already-known
+`locked` events — including any `locked` rows the enrichment agent seeded from
+`## Locked Elements`. Mint an opaque, day-independent Event ID for each event as
+you place it. If the file already exists, read it and update in place — never
+re-create it. Write the hub-owned sections of `satisfaction-metrics.md`
+(desire-coverage + balance signals).
 
 **ITERATION:** Patch the existing final-itinerary.md. Update only the days
-in trip-context.md Mode Notes. Rebuild venue matrix for changed days only.
-State what changed, what was preserved, and any downstream implications.
-Update version number.
+in trip-context.md Mode Notes. Read `outputs/event-status.md` first and honor
+it: patch only `planned` events; preserve `locked`/`firmed` events unless the
+Mode Notes name them; leave `option` events as alternatives (never promote).
+Rebuild venue matrix for changed days only. Write status changes back to
+`event-status.md` in place (a newly booked event → `locked`; a newly settled
+unbookable choice → `firmed`). State what changed, what was preserved, and any
+downstream implications. Update version number.
 
 **RESEQUENCING:** Apply updated scheduling framework from Agent 03 to
-existing selections. Rebuild venue matrix with new day assignments.
-Produce revised final-itinerary.md. State what was resequenced and why
-the new sequence is better. Update version number.
+existing selections. Read `outputs/event-status.md` first: `locked`/`firmed`
+events are fixed anchors the new sequence builds around, only `planned` events
+may change day or time, and `option` events stay alternatives (never
+auto-promoted). Rebuild venue matrix with new day assignments — keep it in
+agreement with the status table (`option` → Alt/B, never A). A pure resequence
+changes placement, not status, so `event-status.md` is read but rarely written
+(write back only if a row's status genuinely changes). Produce revised
+final-itinerary.md. State what was resequenced and why the new sequence is
+better. Update version number.
 
 ## Input
 
@@ -192,10 +326,16 @@ Required inputs:
 3. outputs/food-list.md
 4. outputs/scheduling-framework.md
 5. outputs/transport-brief.md
+6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
+   source for the satisfaction-coverage read: anchors/wishes → covered/not,
+   needs → pass/fail)
 
 In ITERATION and RESEQUENCING modes, also read:
-6. outputs/final-itinerary.md (existing version)
-7. outputs/venue-matrix.md (existing)
+7. outputs/final-itinerary.md (existing version)
+8. outputs/venue-matrix.md (existing)
+9. outputs/event-status.md (existing per-event status — what is `locked`/`firmed`
+   and must be preserved, what is `planned` and may change, what is `option` and
+   stays an alternative). Written back in place; never wiped or regenerated.
 
 ## Output Format
 
@@ -211,6 +351,36 @@ In ITERATION and RESEQUENCING modes, also read:
 
 Cells: A = anchor, Alt = alternative, B = bailout, blank = not used
 Flags: * = hotel-proximity venue, ! = appears 2x (confirm intentional)
+
+### Output: outputs/satisfaction-metrics.md (hub-owned sections)
+
+The per-traveler coverage / balance read. The hub owns and refreshes the
+**Desire-coverage** and **Balance signals** sections only — read-merge-write
+them, never clobbering the validator's **Needs-compliance** section (which the
+validator owns). Reported, not scored — full model in
+`reference/data-model.md` → Satisfaction Metrics.
+
+```markdown
+# Satisfaction Metrics [DERIVED]
+
+## Needs-compliance — pass/fail, per need × per applicable day
+> Validator-owned section — the hub's own audit must agree with it; the hub does
+> not write this section. Shown here for file context only.
+
+## Desire-coverage — covered / not, per traveler × per desire   ← hub-owned
+> Each verdict carries the desire's tier; a not-covered anchor is distinct from a
+> not-covered nice-to-have (do not flatten the two).
+
+| Traveler | Desire | Priority tier | Covered? |
+|----------|--------|---------------|----------|
+
+## Balance signals — named; scoring left to design   ← hub-owned
+| Balance dimension | Granularity | Value |
+|-------------------|-------------|-------|
+| Group-equity | per trip | (left to design) |
+| Experience axis — creativity / fun / excitement / newness | per trip | (left to design) |
+| Rest-recovery balance | per trip | (left to design) |
+```
 
 ---
 

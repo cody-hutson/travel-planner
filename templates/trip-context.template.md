@@ -79,12 +79,17 @@ All other days are locked."]
 
 ## Group
 
-| Person | Role / Relationship | Key Characteristics |
-|--------|---------------------|---------------------|
-| [Name] | Primary traveler / planner | |
-| [Name] | [Relationship] | [Relevant to planning] |
-| [Name] | [Relationship] | [Relevant to planning] |
-| [Name] | [Relationship] | [Relevant to planning] |
+> Roster only. Each traveler's needs and desires live in their own file at
+> `trips/[destination-year]/travelers/<traveler>.md` (human-authored, one per
+> traveler) — not in this table. The enrichment agent reconciles those files
+> into `outputs/traveler-model.md`. See `reference/data-model.md` for the model.
+
+| Person | Role / Relationship | Traveler file |
+|--------|---------------------|---------------|
+| [Name] | Primary traveler / planner | `travelers/[name].md` |
+| [Name] | [Relationship] | `travelers/[name].md` |
+| [Name] | [Relationship] | `travelers/[name].md` |
+| [Name] | [Relationship] | `travelers/[name].md` |
 
 - **Total travelers:** [N]
 - **Travel mode:** [Group moves together / subgroups as noted below]
@@ -99,6 +104,9 @@ All other days are locked."]
 > Non-negotiable. Every agent treats these as primary design drivers.
 > A constraint that is not honored on every applicable day is not being honored.
 > The validator audits every day against every constraint.
+> This section is the trip-level constraint source of truth: per-traveler needs
+> in `travelers/<traveler>.md` *link* here via "Applies to" — they never copy
+> the constraint text. One source per fact (see `reference/data-model.md`).
 
 ### [Constraint Name]
 - **Description:** [What the constraint is]
@@ -157,6 +165,10 @@ All other days are locked."]
 ---
 
 ## Dietary & Health
+
+> Trip-level dietary/health constraint source of truth. Per-traveler dietary and
+> health *needs* in `travelers/<traveler>.md` link here via "Applies to" rather
+> than duplicating these entries. One source per fact (see `reference/data-model.md`).
 
 - **Allergies:** [All known — or "none known; confirm before finalizing food list"]
 - **Dietary restrictions:** [Religious, ethical, medical — or "none"]
