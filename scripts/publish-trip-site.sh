@@ -27,6 +27,10 @@
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
 #
+# Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
+# <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
+# pre-existing repo instead of the derived one (resolved identically by every subcommand).
+#
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -124,7 +128,23 @@ resolve_site_html() { # <trip_dir>
   printf '%s' "$hit"
 }
 
-slug_for() { printf '%s-trip' "$(basename "$1")"; }   # trips/tokyo-2026 -> tokyo-2026-trip
+# Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
+# <basename>-trip. A .publish-slug file lets a convention-named trip dir publish to a
+# custom or pre-existing repo name (e.g. trips/tokyo-2026 -> tokyo-trip) instead of the
+# derived one. The slug names a PUBLIC repo, so it is not secret; it lives in the
+# git-ignored trips/ tree regardless. Resolved identically by publish/update/rotate.
+slug_for() { # <trip_dir>
+  local trip_dir="$1" sf="$1/.publish-slug" slug
+  if [ -s "$sf" ]; then
+    slug="$(tr -d '[:space:]' < "$sf")"
+  else
+    slug="$(basename "$trip_dir")-trip"
+  fi
+  case "$slug" in
+    ''|*[!A-Za-z0-9._-]*) die "invalid publish slug '$slug' — allowed chars: A-Z a-z 0-9 . _ - (fix ${sf} or remove it to use the default '<dir>-trip')" ;;
+  esac
+  printf '%s' "$slug"
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Encrypt the site into a fresh temp dir; echo that dir. Output file: <dir>/index.html
@@ -336,7 +356,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
 # Dispatch
 # ─────────────────────────────────────────────────────────────────────────────
 usage() {
-  sed -n '3,30p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '3,32p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
