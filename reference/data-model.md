@@ -119,18 +119,22 @@ This is the same need-vs-want split the original system already half-expresses �
 
 A need is the traveler's personal stake in a trip-level constraint. The constraint itself is trip-level and lives in `trip-context.md` (the SSOT); the traveler's *need* is the personal specific behind it — and it **links** to the governing constraint rather than restating it (per the Reconciliation Rule above).
 
-Needs cover four categories. Every per-traveler need falls under one:
+Needs cover the categories below. Every per-traveler need falls under one:
 
 | Need category | What it bounds | Governing trip-context constraint it links to |
 |---------------|----------------|-----------------------------------------------|
-| **Heat tolerance** | The outdoor-exposure ceiling — how much heat / sun / humidity this traveler can take, and for how long | `## Hard Constraints` (the heat / climate constraint) |
+| **Heat** | The outdoor-exposure ceiling — how much heat / sun / humidity this traveler can take, and for how long | `## Hard Constraints` (the heat / climate constraint) |
 | **Mobility** | The movement envelope — walking distance, stairs, standing time, terrain, rest-break cadence | `## Hard Constraints` (the mobility / accessibility constraint) and `## Dietary & Health` → mobility notes |
-| **Dietary / health** | The food-and-health boundary — allergies, restrictions, medical needs, pacing limits | `## Dietary & Health` (and any `## Hard Constraints` block that encodes a health non-negotiable) |
-| **Required rest** | The recovery floor — the rest this traveler must get (a slow morning, a mid-day break, an early night) for the rest of the plan to hold | `## Hard Constraints` (a rest / pacing constraint) — add one if the rest need is non-negotiable and none exists yet |
+| **Dietary-health** | The food-and-health boundary — allergies, restrictions, medical needs, pacing limits | `## Dietary & Health` (and any `## Hard Constraints` block that encodes a health non-negotiable) |
+| **Rest** | The recovery floor — the rest this traveler must get (a slow morning, a mid-day break, an early night) for the rest of the plan to hold | `## Hard Constraints` (a rest / pacing constraint) — add one if the rest need is non-negotiable and none exists yet |
+| **Budget cap** | A hard personal spend ceiling — a per-day or per-trip limit the plan must not exceed for this traveler | `## Budget Posture` (the trip-level budget; the per-traveler cap refines it, never duplicates it) |
+| **Timing** | A fixed time boundary — a hard curfew, an early-night requirement, a must-be-back-by, a fixed arrival / departure window | `## Hard Constraints` (a timing / curfew constraint) |
+| **Sensory** | A sensory or medical sensitivity beyond diet — noise, crowds, sun-as-medical, altitude — that bounds where or when this traveler can go | `## Hard Constraints` and/or `## Dietary & Health` (the governing health / sensory note) |
+| **Other** | Any non-negotiable that does not fit the categories above | the relevant `## Hard Constraints` block (add one if none exists yet) |
 
 The field shape for a single need:
 
-- **Category** — one of the four above.
+- **Category** — one of the categories above.
 - **Specific** — the personal detail behind the need: the *how much*, the *what exactly*, the personal context. This is what the per-traveler file owns and the constraint block does not.
 - **Applies to** — the link to the governing `trip-context.md` constraint, written as `<Section> → "<Constraint name>"`. This is the link, **never a copy** of the constraint text.
 
@@ -483,7 +487,7 @@ Five dimensions make up the satisfaction coverage view. Each is named, typed, an
 
 | Dimension | Type | Granularity | What it measures | Scoring |
 |-----------|------|-------------|------------------|---------|
-| **Needs-compliance** | **pass/fail** | per need × per applicable day | Every traveler **need** (the four categories — heat tolerance, mobility, dietary/health, required rest) is honored on every day that need applies to. A hard gate, evaluated per need per applicable day: each (need, applicable-day) pair is `pass` or `fail`. This is the structured metric form of the existing every-day hard-constraint audit (see Reconciliation below) — **not** a balance score. | Fully defined: it is a pass/fail gate. No formula needed — a need is either honored that day or it is not. |
+| **Needs-compliance** | **pass/fail** | per need × per applicable day | Every traveler **need** (per its category — see the Needs table) is honored on every day that need applies to. A hard gate, evaluated per need per applicable day: each (need, applicable-day) pair is `pass` or `fail`. This is the structured metric form of the existing every-day hard-constraint audit (see Reconciliation below) — **not** a balance score. | Fully defined: it is a pass/fail gate. No formula needed — a need is either honored that day or it is not. |
 | **Desire-coverage** | **covered / not** | per traveler × per desire | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. |
 | **Group-equity** | **balance signal** | per trip (across travelers) | Whether the plan serves the travelers *evenly* — that no traveler is systematically over- or under-served relative to the group. A balance signal across travelers' coverage. | **Left to design.** This layer names the signal and its meaning; it does **not** define how evenness is measured, what counts as "systematically under-served", or any fairness threshold. |
 | **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design — and note these axes have no upstream data source in the substrate today** (unlike needs and desires, nothing in the per-traveler files or the itinerary yet grounds them), so a later capability must define **both their source and their scoring**; today they are named, ungrounded, and `(left to design)`. |

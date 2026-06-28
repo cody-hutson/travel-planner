@@ -175,8 +175,8 @@ it does **not** widen your trip-context surface in any way:
 Each `travelers/<traveler>.md` is filled by hand from the intake form at
 `templates/traveler-intake.template.md` — one copy per traveler, edited on the
 traveler's own time. The template's sections are the model you reconcile to: its
-**Needs** map to the four need categories (heat tolerance, mobility,
-dietary/health, required rest, each with a specific and an "Applies to" link),
+**Needs** map to the need categories (heat, mobility, dietary-health, rest,
+budget cap, timing, sensory, other — each with a specific and an "Applies to" link),
 and its **Desires** map to the desire shape (priority tier — anchor / wish /
 nice-to-have — plus optional theme tags). You do not author or pre-fill the
 template or the profiles; you read the filled profiles and reconcile them into

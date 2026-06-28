@@ -138,8 +138,8 @@ a fixed type:
 
 - **Needs-compliance — pass/fail, per need × per applicable day.** This is the
   *structured, recorded form* of the Constraint compliance audit above — not a
-  second judgement. For every traveler need in `outputs/traveler-model.md` (the
-  four categories — heat tolerance, mobility, dietary/health, required rest),
+  second judgement. For every traveler need in `outputs/traveler-model.md` (per its
+  need category),
   emit `pass` / `fail` for each day that need **applies** to. A need's
   applicable-day set is derived from its governing constraint
   (constant-applicability needs → all days; conditional needs → their applicable
