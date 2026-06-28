@@ -114,6 +114,44 @@ Read `outputs/event-status.md` (the persist-mutable per-event status — see
 You audit status; you never change it. Mismatches go to the hub's remediation
 list — the hub owns the status file.
 
+**Satisfaction-metrics report:**
+Report the satisfaction coverage view for the itinerary to
+`outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
+artifact — see `reference/data-model.md` → Satisfaction Metrics). You **report
+and emit** these dimensions; you do **not** score them. Each dimension has a
+fixed type:
+
+- **Needs-compliance — pass/fail, per need × per applicable day.** This is the
+  *structured, recorded form* of the Constraint compliance audit above — not a
+  second judgement. For every traveler need in `outputs/traveler-model.md` (the
+  four categories — heat tolerance, mobility, dietary/health, required rest),
+  emit `pass` / `fail` for each day that need applies to, keyed to the
+  governing `trip-context.md` constraint the need links to. A `fail` here is the
+  same finding as a constraint-compliance **Critical** — the two must agree
+  (a needs-compliance `fail` ⇔ a constraint Critical). You are recording the
+  every-day hard-constraint audit as a per-need-per-day pass/fail record, not
+  re-deciding it.
+- **Desire-coverage — covered / not, per traveler × per desire.** For each
+  traveler's anchors and wishes (from the traveler model), emit `covered` or
+  `not covered` — a boolean presence check against the itinerary. Not a degree,
+  not a percentage. A `not covered` anchor is worth surfacing as a Warning
+  (a missed anchor is a worse plan), but it is **never** a needs-compliance
+  failure — a desire is optimized within the bounds, not a bound.
+- **Balance signals — named, scoring left to design.** Emit the balance
+  dimensions — **group-equity**, the four **experience axes** (creativity, fun,
+  excitement, newness), and **rest-recovery balance** — as named rows with their
+  value shown as `(left to design)`. You do **not** compute, weight, threshold,
+  or rank them: nothing in the satisfaction layer optimizes yet. Report that the
+  dimension is tracked; do not invent a score for it.
+
+> **Scope guard.** This is a *report*, not an optimizer. You emit pass/fail
+> (needs-compliance), covered/not (desire-coverage), and named balance signals
+> with `(left to design)` values. If you find yourself computing a coverage
+> percentage, an equity score, or a weighting over desires, stop — that is
+> design-stage work this layer explicitly defers. The required-rest *need* is a
+> pass/fail gate under needs-compliance; **rest-recovery balance** is the softer
+> trip-wide signal whose scoring is deferred — keep them distinct.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named indoor bailout.
 If any day is missing one, flag it as a critical gap.
@@ -202,6 +240,12 @@ Also read:
 7. outputs/event-status.md (per-event status — the target of the
    status-integrity audit: protected `locked`/`firmed` events, the
    `planned`-needs-booking set, and `option` alternatives)
+8. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires —
+   the source for the satisfaction-metrics report: needs drive needs-compliance,
+   anchors/wishes drive desire-coverage)
+
+Write: outputs/satisfaction-metrics.md (the coverage report — see Output
+Format; reported/emitted, never scored).
 
 ## Output Format
 
@@ -223,6 +267,7 @@ File: outputs/validation-report.md
 | Business status | | | | |
 | Constraint compliance | | | | |
 | Status integrity (protected events + needs-booking) | | | | |
+| Satisfaction metrics (needs-compliance + coverage report) | | | | |
 | Bailout completeness | | | | |
 | Structural integrity | | | | |
 
@@ -310,6 +355,39 @@ Needs-booking vs. status — the booking surfaces must equal the
 - **One status per event:** [confirmed / list any event missing or with >1 status]
 - **Status ↔ matrix agreement:** [confirmed / list any `option` shown as anchor]
 - **"All events locked" determinable:** [Yes — N planned-needs-booking remain / No]
+
+---
+
+### Satisfaction Metrics Report
+
+> Reported (not scored) to `outputs/satisfaction-metrics.md`. pass/fail and
+> covered/not are determinable from the plan; balance-signal scoring is left to
+> design. Needs-compliance must agree with the Constraint Compliance audit above.
+
+**Needs-compliance — pass/fail, per need × per applicable day**
+
+| Traveler | Need (category) | Applicable days | Per-day verdict | Overall |
+|----------|-----------------|-----------------|-----------------|---------|
+| [Name] | [Heat / Mobility / Dietary-health / Required-rest] | [days] | [D# pass/fail …] | [pass / fail] |
+
+**Desire-coverage — covered / not, per traveler × per desire**
+
+| Traveler | Desire | Priority tier | Covered? |
+|----------|--------|---------------|----------|
+| [Name] | [Desire] | [anchor / wish] | [covered / not covered] |
+
+**Balance signals — named; scoring left to design**
+
+| Balance dimension | Granularity | Value |
+|-------------------|-------------|-------|
+| Group-equity | per trip | (left to design) |
+| Experience axis — creativity | per trip | (left to design) |
+| Experience axis — fun | per trip | (left to design) |
+| Experience axis — excitement | per trip | (left to design) |
+| Experience axis — newness | per trip | (left to design) |
+| Rest-recovery balance | per trip | (left to design) |
+
+- **Needs-compliance ↔ constraint-compliance agreement:** [confirmed — every needs-compliance `fail` is a constraint Critical and vice versa / list any disagreement]
 
 ---
 

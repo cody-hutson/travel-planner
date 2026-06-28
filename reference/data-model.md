@@ -399,11 +399,96 @@ This document describes the *capability* and the *data condition* that produces 
 
 ---
 
+## Satisfaction Metrics
+
+The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt/refreshed — pattern (b), a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
+
+It defines the **measurable surface** only. It does **not** define how any balance dimension is scored — no formula, no weight, no threshold, no ranking math. That boundary is deliberate and load-bearing: per the document's own rule, nothing in the satisfaction layer optimizes yet, and "how a coverage number is computed is out of scope." This section names *what is measured and what kind of signal each is*; the scoring of the balance dimensions is **left to design**.
+
+### Three metric types
+
+Every dimension is exactly one of three types. The type — not a number — is what this layer fixes:
+
+| Type | What it answers | Verdict it yields |
+|------|-----------------|-------------------|
+| **pass/fail** | Is a hard gate honored? | `pass` / `fail` — a binary gate. A `fail` means the plan is *broken* on that dimension, not merely sub-optimal. |
+| **covered / not** | Is a specific want met by the plan at all? | `covered` / `not covered` — a boolean presence check. Not a degree, not a percentage. |
+| **balance signal** | Is something distributed or present in healthy measure across the trip? | A named signal to *track* — its meaning is defined here; **how it is scored is left to design**. No verdict enum is fixed at this layer. |
+
+The split mirrors the needs-vs-desires model: a **need** bounds the solution (so its metric is a hard **pass/fail** gate), and a **desire** is optimized within the bounds (so its baseline metric is **covered / not** — was it met at all — with the *quality* of the optimization being a **balance signal** left to design). pass/fail and covered/not are *fully defined* here — they are determinable from the itinerary, the traveler model, and the per-event status today. The balance signals are *named and given meaning* here, but their scoring is the design boundary.
+
+### The dimension set
+
+Five dimensions make up the satisfaction coverage view. Each is named, typed, and given a definition — and for the balance signals, an explicit note that the scoring is deferred.
+
+| Dimension | Type | Granularity | What it measures | Scoring |
+|-----------|------|-------------|------------------|---------|
+| **Needs-compliance** | **pass/fail** | per need × per applicable day | Every traveler **need** (the four categories — heat tolerance, mobility, dietary/health, required rest) is honored on every day that need applies to. A hard gate, evaluated per need per applicable day: each (need, applicable-day) pair is `pass` or `fail`. This is the structured metric form of the existing every-day hard-constraint audit (see Reconciliation below) — **not** a balance score. | Fully defined: it is a pass/fail gate. No formula needed — a need is either honored that day or it is not. |
+| **Desire-coverage** | **covered / not** | per traveler × per desire | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. |
+| **Group-equity** | **balance signal** | per trip (across travelers) | Whether the plan serves the travelers *evenly* — that no traveler is systematically over- or under-served relative to the group. A balance signal across travelers' coverage. | **Left to design.** This layer names the signal and its meaning; it does **not** define how evenness is measured, what counts as "systematically under-served", or any fairness threshold. |
+| **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design.** Each axis is named and defined as a balance signal; how it is scored, weighted, or thresholded is out of scope. |
+| **Rest-recovery balance** | **balance signal** | per trip (across days) | Whether recovery is adequate relative to activity intensity — enough rest/downtime against the demand the plan places on the group. A balance signal over the activity-vs-recovery rhythm. | **Left to design.** Note the seam: the **required-rest** *need* is a hard pass/fail gate under needs-compliance (a non-negotiable rest floor honored or not); **rest-recovery balance** is the softer, trip-wide *signal* of whether the overall rhythm is healthy beyond that floor. The floor is gated; the balance is a signal whose scoring is deferred. |
+
+> **The line this section holds.** Needs-compliance and desire-coverage are *defined to completion* because pass/fail and covered/not are determinable facts about a plan — no math is invented to produce them. Group-equity, the four experience axes, and rest-recovery balance are *defined as named balance signals with stated meaning*, but their scoring is **left to design** — consistent with "nothing optimizes yet". If a future reader is tempted to add a weight, a percentage, or a ranking to any balance signal, that belongs to a later optimization capability, not to this substrate.
+
+### `outputs/satisfaction-metrics.md` shape
+
+A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the current `outputs/traveler-model.md` (it carries no independent state — its inputs are authoritative, so regeneration is safe). It records each dimension at its natural granularity: needs-compliance per need per applicable day, desire-coverage per traveler per desire, and the balance signals named with their value **left to design** (shown as `(left to design)` rather than a number).
+
+```markdown
+# Satisfaction Metrics [DERIVED]
+
+> Rebuilt/refreshed from the current itinerary + outputs/traveler-model.md.
+> pass/fail and covered/not are determinable today; balance-signal scoring is left to design.
+> Persona names follow the public Pat / Jordan / Sam set.
+
+## Needs-compliance — pass/fail, per need × per applicable day
+> Each traveler need honored on every day it applies to. A `fail` means the plan is broken on that day.
+
+| Traveler | Need (category) | Applicable days | Per-day verdict | Overall |
+|----------|-----------------|-----------------|-----------------|---------|
+| Pat    | Heat tolerance (afternoon ceiling) | D1, D3, D4 | D1 pass · D3 pass · D4 pass | pass |
+| Jordan | Mobility (step-free, walking ceiling) | all days | D1 pass · D2 pass · D3 **fail** · D4 pass | **fail** |
+| Jordan | Required rest (slow start every other day) | D2, D4 | D2 pass · D4 pass | pass |
+| Sam    | Dietary/health (allergy) | all days | all pass | pass |
+
+## Desire-coverage — covered / not, per traveler × per desire
+> Each anchor/wish met by the plan or not. Boolean presence — not a degree.
+
+| Traveler | Desire | Priority tier | Covered? |
+|----------|--------|---------------|----------|
+| Jordan | Slow museum morning | anchor | covered |
+| Jordan | Local markets       | wish   | covered |
+| Pat    | Local market        | anchor | covered |
+| Pat    | Relaxed museum morning | wish | not covered |
+| Sam    | One standout food experience | anchor | covered |
+
+## Balance signals — named; scoring left to design
+> These are signals to track, not scores. How each is measured is a later-capability decision.
+
+| Balance dimension | Granularity | Value |
+|-------------------|-------------|-------|
+| Group-equity | per trip (across travelers) | (left to design) |
+| Experience axis — creativity | per trip | (left to design) |
+| Experience axis — fun | per trip | (left to design) |
+| Experience axis — excitement | per trip | (left to design) |
+| Experience axis — newness | per trip | (left to design) |
+| Rest-recovery balance | per trip (across days) | (left to design) |
+```
+
+The pass/fail and covered/not tables carry real verdicts because they are determinable from the plan. The balance-signals table carries `(left to design)` in every value cell on purpose: the dimensions are *named and tracked*, their scoring is *not yet defined*. (Persona names follow the public Pat / Jordan / Sam set used throughout this document.)
+
+### Reconciliation — needs-compliance is the existing every-day audit, made structured
+
+The system already holds the rule **"hard constraints are audited every day"**: the hub checks every day against every hard constraint, and the validator double-checks. **Needs-compliance does not introduce a new rule — it is the structured metric form of that existing audit.** Each traveler need links (per the Reconciliation Rule) to a governing `trip-context.md` constraint; needs-compliance records, per need per applicable day, whether that constraint was honored — the same check the constraint-compliance audit already performs, now emitted as a per-need-per-day pass/fail record rather than only a prose finding. The two must agree: a needs-compliance `fail` is a constraint-compliance Critical, and vice versa. The metric is the audit's *recorded shape*, not a second, competing judgement.
+
+---
+
 ## What This Document Does Not Define
 
 To keep the substrate boundary clear:
 
-- **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here; how a coverage number is computed is out of scope.
+- **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here, and the Satisfaction Metrics section above names and types every dimension — but how any **balance signal** (group-equity, the experience axes, rest-recovery balance) is *scored* is out of scope. pass/fail and covered/not are determinable facts; the balance scoring is left to design.
 - **No optimization or ranking logic.** Nothing in the satisfaction layer optimizes yet. The engines *read* the derived model; this document does not specify what they do with it.
 - **No replanning policy.** The update signal is defined as a data condition; the decision to re-plan and the fairness logic live with the replanning capability.
 - **No control-flow / consumption sequencing.** Who runs when, and how the hub consumes these artifacts in a pipeline pass, is governed by the control-flow contract, not this data-architecture document.
