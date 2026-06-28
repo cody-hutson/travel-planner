@@ -123,9 +123,10 @@ On **initial setup**, you may **seed initial `locked` rows** into
 turning a free-text "Day 4 dinner: 7 PM confirmed" into a structured `locked`
 row for the already-booked events. This is a **one-time bootstrap seed only**:
 after setup, the **hub is the primary writer** of `event-status.md` and owns it
-(it creates the file on the first full synthesis if it does not exist, and reads-
-then-updates it in place thereafter); you do not keep writing status rows on
-later passes. This seed is the **only** thing you write to `event-status.md`, and
+(your seed may be the first write that creates the file; if the hub runs first it
+creates it instead — the *if it does not already exist* guard makes either order
+safe; the hub reads-then-updates it in place thereafter); you do not keep writing
+status rows on later passes. This seed is the **only** thing you write to `event-status.md`, and
 it does **not** widen your trip-context surface in any way:
 
 - You still touch **only** `[ENRICH]` fields in trip-context.md. The

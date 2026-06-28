@@ -404,7 +404,7 @@ The free-text list says *that* something is fixed; the structured layer says *wh
 
 ### Bootstrap — who creates `event-status.md`
 
-The **hub creates `outputs/event-status.md` on the first full synthesis** (DISCOVERY / ENRICHMENT mode) **if it does not already exist**, seeding any already-known `locked` events (a held reservation, a purchased ticket, a confirmed hotel) — including any `locked` rows the enrichment agent seeded from `## Locked Elements` on setup. On every subsequent pass the file already exists, so the hub **reads it, then updates it in place** (never re-creates it). This is the persist-mutable contract's creation edge: created once, on first synthesis; read-then-updated thereafter; never regenerated from scratch.
+**Whichever agent first writes `outputs/event-status.md` creates it** — the enrichment agent's setup seed (when `## Locked Elements` already names fixed events at setup), or, absent any seed, the **hub on the first full synthesis** (DISCOVERY / ENRICHMENT mode). Each writes only **if the file does not already exist**, so the order is safe — no double-create, no wipe: if enrichment seeded it, the hub finds it and reads-then-updates; if not, the hub creates it, seeding any already-known `locked` events (a held reservation, a purchased ticket, a confirmed hotel). On every subsequent pass the file already exists, so the hub **reads it, then updates it in place** (never re-creates it). The **hub owns the file thereafter.** This is the persist-mutable contract's creation edge: created once, by the first writer; read-then-updated by the hub thereafter; never regenerated from scratch.
 
 ---
 

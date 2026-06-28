@@ -92,12 +92,13 @@ event's status — `planned` (open, may still need a booking), `locked`
 (the validator only reads it; the enrichment agent may seed initial `locked`
 rows on setup). The hub both **reads** and **writes** it:
 
-- **Create it on the first full synthesis.** In DISCOVERY / ENRICHMENT, if
-  `outputs/event-status.md` does not yet exist, the hub **creates** it,
-  seeding any already-known `locked` events (held reservations, purchased
-  tickets, a confirmed hotel — including any `locked` rows the enrichment
-  agent seeded from `## Locked Elements`). On every later pass the file
-  already exists — read it, then update in place; never re-create it.
+- **Create it if no earlier writer has.** In DISCOVERY / ENRICHMENT, if
+  `outputs/event-status.md` does not yet exist (the enrichment setup seed
+  may already have created it), the hub **creates** it, seeding any
+  already-known `locked` events (held reservations, purchased tickets, a
+  confirmed hotel — including any `locked` rows the enrichment agent seeded
+  from `## Locked Elements`). On every later pass the file already exists —
+  read it, then update in place; never re-create it.
 - **Event IDs are opaque and day-independent.** Mint a stable, opaque Event ID
   the first time you place an event (e.g. `evt-07`) — it is the cross-run join
   key and must **not** encode the day (the `Day` column carries that), because
@@ -285,8 +286,9 @@ key tradeoffs / best-fit traveler profile / go-consider-skip verdict.
 
 **DISCOVERY / ENRICHMENT:** Full synthesis. Build reference artifacts first,
 then produce final-itinerary.md per output format. **Create
-`outputs/event-status.md` if it does not yet exist** (this is its bootstrap
-edge — the hub creates it on the first full synthesis), seeding any already-known
+`outputs/event-status.md` if it does not yet exist** (its bootstrap edge —
+whichever agent writes first creates it: the enrichment setup seed, else the
+hub here on the first full synthesis), seeding any already-known
 `locked` events — including any `locked` rows the enrichment agent seeded from
 `## Locked Elements`. Mint an opaque, day-independent Event ID for each event as
 you place it. If the file already exists, read it and update in place — never
