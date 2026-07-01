@@ -81,6 +81,27 @@ fall on. A 7 PM dinner reservation determines what happens in the 3 hours
 before it. The scheduling framework identifies these anchors first and builds
 around them — not alongside them.
 
+**Experiential arc optimization (experience optimizer):**
+Energy level (how tiring a day is) is not the same as experiential quality (how
+the day *feels*). A day can be medium-energy yet flat, or high-energy yet all one
+note. Where the energy arc paces exertion, the experience optimizer shapes the
+trip's felt arc across four named axes — **excitement, newness, fun, and
+rest/recovery** — so the trip neither exhausts the group nor bores it. The method:
+- **Spread newness; don't front-load or clump it.** Novel or first-time
+  experiences are distributed across the trip, not stacked into the first two
+  days with repetition trailing after.
+- **Avoid stacked peaks.** Consecutive maximum-excitement days with no recovery
+  between them are a fatigue trap; a peak day is followed by a lighter or
+  restorative one. A run of high-intensity days with no break is the pattern the
+  validator flags.
+- **Rest is a hard floor when it is a need, not a preference.** Recovery required
+  by a *need* — a heat-sensitive traveler's afternoon break, a jet-lag window, a
+  mobility-driven rest — is never traded away for one more exciting thing.
+  Rest-as-preference is balanced; rest-as-need is inviolable. (This is the
+  needs-vs-desires line: desires are optimized, needs bound the optimization.)
+Like routing, this is a per-objective signal the hub consumes — it shapes the
+experiential arc; it does not reconcile it against routing or desire coverage.
+
 ### Local Calibration Methodology
 
 1. **Neighborhood zone map:** 4-8 geographic clusters relevant to this trip,
@@ -275,6 +296,27 @@ Transit cost is a comparative signal, not a target to minimize past the point
 where experience suffers — a 10-minute saving that strands the group at a closed
 venue is not a win. Surface the cost; let the hub reconcile it against desire
 coverage and the experiential arc.
+
+### Experience Balance Signal
+
+The experience optimizer's per-day output — a signal for the hub to consume and
+reconcile (not reconciled here). Complements the Group Energy Arc: energy is how
+tiring a day is, this is how it feels. For each day:
+- **Experiential profile:** which axes the day serves — excitement / newness /
+  fun / rest — at a Low / Medium / High read each. Qualitative, not scored;
+  scoring stays left to design per the satisfaction layer.
+- **Newness note:** what is genuinely new here, and whether newness is spread
+  across the trip or clumping.
+- **Arc placement:** peak / build / recovery — named alongside the day before and
+  after, so a stacked run is visible in context.
+- **Rest floor:** any rest required by a need this day, marked inviolable and
+  distinct from rest taken as a preference.
+
+**Stacked-peak flag:** when the sequence puts several consecutive peak /
+high-excitement days with no recovery between them, name the run explicitly
+(e.g. "Days 3–5 all peak, no recovery — recommend a lighter Day 4") so the hub
+and validator can act. The threshold is a judgment for this group and trip
+length, not a fixed count.
 
 ### Advance Booking Priorities
 

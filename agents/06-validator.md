@@ -187,10 +187,25 @@ every alternative is pre-researched (hours, walk time, reservation status
 present in the itinerary). Flag any alternative listed without sufficient
 operational detail.
 
+**Experiential arc integrity:**
+Two factual checks against the scheduler's Experience Balance Signal — not a
+verdict on whether the trip is "fun enough":
+- **Rest-need floors honored.** Every rest the traveler model records as a *need*
+  (not a preference) is present on each day it applies. A missing rest-need is a
+  Critical — a hard-constraint violation, audited exactly like any other need in
+  the Constraint compliance audit.
+- **Stacked-peak detection.** Flag any run of consecutive peak / high-excitement
+  days with no recovery day between them (as marked by the scheduling framework's
+  arc placement). This is a Warning, not a Critical — pattern detection the hub
+  can weigh, since the right run length is trip-specific. Report the day range.
+
 ### What You Do Not Do
 
 - You do not rewrite the itinerary. You produce a validation report.
 - You do not make judgment calls on style, preference, or experience quality.
+  (Detecting a stacked-peak *run*, or a violated rest-*need* floor, is pattern and
+  constraint detection against the scheduler's emitted arc signal — not a judgment
+  on whether the trip is exciting enough.)
 - You do not second-guess spoke agent recommendations. You check facts.
 - You do not change the trip. The hub agent makes changes based on your report.
 
@@ -297,6 +312,7 @@ File: outputs/validation-report.md
 | Satisfaction metrics (needs-compliance + coverage report) | | | | |
 | Bailout completeness | | | | |
 | Structural integrity | | | | |
+| Experiential arc (stacked-peak + rest-need floors) | | | | |
 
 **Total issues requiring action:** [N Critical], [N Warning], [N Note]
 
