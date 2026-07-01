@@ -3,6 +3,38 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.4.0] — 2026-07-01 — Orchestration: equity-aware planning & replanning
+
+The group planner that runs all three optimization engines and reconciles them
+into one itinerary — and, when plans fall through or someone's wishes change,
+rebuilds it fairly instead of grabbing any replacement. Built on v0.3.0's engines;
+this is the layer that makes them work together for the whole group.
+
+### Added
+- **Equity-aware planning** — the planner runs the routing, experience, and
+  fair-coverage engines together and reconciles where they disagree (a tight route
+  vs. protecting one person's must-see vs. a needed rest day) into a single plan —
+  everyone's needs applied first as hard limits, plus a per-traveler view of who is
+  served and where the trip is lopsided. When the objectives collide, the tradeoff
+  is named and shown, never silently dropped.
+- **Equity-aware replanning ("who lost what")** — when a booking falls through, or
+  a traveler edits their profile (a new must-see, a dropped wish), the planner works
+  out who lost the most, rebuilds toward them first, and regroups the scattered gaps
+  into one coherent thread rather than unrelated swaps — keeping everyone's needs
+  intact through the recovery.
+- **Side-bars / group splits** — when someone wants their own time, or interests
+  diverge enough, the planner proposes single / small-group / full-group side-bars
+  instead of dragging everyone along or leaving anyone out. The default stays one
+  shared plan, and any moment a traveler marks whole-group is never split off.
+
+### Notes
+- The *structure* ships here; the *scoring* is deliberately deferred — how the three
+  objectives rank, how "hardest-hit" and "enough divergence" are measured, and how
+  gaps cluster into a theme are left to a later design pass. Nothing scores yet; the
+  planner reasons with the structure and shows its work.
+- Every recovery and every side-bar still honors each traveler's needs as hard
+  floors — a split or a rebuild never becomes a way to slip a need violation through.
+
 ## [0.3.0] — 2026-07-01 — Optimization engines
 
 The first engines that actually *optimize* a trip against the satisfaction
