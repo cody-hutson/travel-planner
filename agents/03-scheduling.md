@@ -90,9 +90,13 @@ Experiential quality is how the day *feels* — whether it lands as exciting, ne
 and fun, or whether it reads as flat and repetitive. A day can be low-energy and
 still feel rich (a slow, novel discovery), or high-energy and feel dull (a third
 hard museum day in a row). Design the experience dimensions explicitly; do not
-let raw energy stand in for them. Read the day qualitatively across the four
-experience axes — **excitement**, **newness**, **fun**, and **rest/recovery** —
-at Low / Med / High per axis. This is a qualitative read, not a scored one:
+let raw energy stand in for them. Read the day qualitatively — Low / Med / High
+each — across the experience dimensions this optimizer shapes: **excitement**,
+**newness**, and **fun**, balanced against **rest/recovery**. (The substrate names
+four experience axes — creativity, fun, excitement, newness — and tracks
+rest-recovery as a separate balance signal; this engine works the high-energy
+dimensions against rest, it does not redefine that set.) This is a qualitative
+read, not a scored one:
 there is no number to invent, no weight to assign, and no fixed count that makes
 an arc "wrong." Two shaping rules carry most of the work. First, **spread newness
 across the trip rather than clumping it** — three first-time, high-newness

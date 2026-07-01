@@ -328,16 +328,16 @@ Required inputs:
    ordered stop sequence with its summed transit cost and a compared alternative —
    and the experience-balance signal — the per-day experiential arc placement and
    the stacked-peak flag; reconciling those signals against the other objectives
-   is this hub's single routing edit per issue #17, not per-engine work done here)
+   is the hub's job under issue #17, not per-engine work done here)
 5. outputs/transport-brief.md (carries the point-to-point transit matrix — the
    door-to-door group times feeding the scheduler's routing signal; reconciling
-   the signal is issue #17's single hub edit, not per-engine work done here)
+   the signal is the hub's job under issue #17, not per-engine work done here)
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
    needs → pass/fail. Its desire-overlap signal now also carries the attention
    lens — shared desires are efficient to cover, unique desires are protected —
    which the selection-layer agents (01/02) already read to bias their menus;
-   weighing desire-coverage through that lens is issue #17's single hub edit,
+   weighing desire-coverage through that lens is the hub's job under issue #17,
    not per-engine work done here)
 
 In ITERATION and RESEQUENCING modes, also read:
