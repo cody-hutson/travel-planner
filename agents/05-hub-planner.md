@@ -325,9 +325,10 @@ Required inputs:
 2. outputs/activities-list.md
 3. outputs/food-list.md
 4. outputs/scheduling-framework.md (carries the routing signal — the per-day
-   ordered stop sequence with its summed transit cost and a compared alternative;
-   reconciling that signal against the other objectives is this hub's single
-   routing edit per issue #17, not per-engine work done here)
+   ordered stop sequence with its summed transit cost and a compared alternative —
+   and the experience-balance signal — the per-day experiential arc placement and
+   the stacked-peak flag; reconciling those signals against the other objectives
+   is this hub's single routing edit per issue #17, not per-engine work done here)
 5. outputs/transport-brief.md (carries the point-to-point transit matrix — the
    door-to-door group times feeding the scheduler's routing signal; reconciling
    the signal is issue #17's single hub edit, not per-engine work done here)

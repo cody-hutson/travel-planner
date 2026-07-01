@@ -83,6 +83,40 @@ fall on. A 7 PM dinner reservation determines what happens in the 3 hours
 before it. The scheduling framework identifies these anchors first and builds
 around them — not alongside them.
 
+**Experiential arc optimization (experience optimizer):**
+Energy and experience are two different measurements of the same day. Energy is
+how tiring the day is — a quantity you already model in the Group Energy Arc.
+Experiential quality is how the day *feels* — whether it lands as exciting, new,
+and fun, or whether it reads as flat and repetitive. A day can be low-energy and
+still feel rich (a slow, novel discovery), or high-energy and feel dull (a third
+hard museum day in a row). Design the experience dimensions explicitly; do not
+let raw energy stand in for them. Read the day qualitatively across the four
+experience axes — **excitement**, **newness**, **fun**, and **rest/recovery** —
+at Low / Med / High per axis. This is a qualitative read, not a scored one:
+there is no number to invent, no weight to assign, and no fixed count that makes
+an arc "wrong." Two shaping rules carry most of the work. First, **spread newness
+across the trip rather than clumping it** — three first-time, high-newness
+experiences stacked on Days 2-3 with nothing new afterward wastes the arc; a
+novel experience seeded into most days sustains the feeling that the trip keeps
+opening up. Second, **avoid stacked peaks**: a peak day (high excitement, high
+intensity) is followed by a lighter or restorative one, so the group crests and
+recovers rather than grinding through consecutive peaks until the experience
+flattens and the group is spent. A run of back-to-back peak days is the pattern
+to watch for and name — how long a run is too long is a per-trip judgment (a
+young group at an easy destination sustains more than a mixed-age group in
+extreme heat), not a fixed threshold. Rest divides along the needs-vs-desires
+line the routing objective already draws. **Rest as a need** — recovery a
+constraint requires (a heat-sensitive traveler's midday block, a jet-lag
+recovery window, a mobility-driven pacing floor) — is an **inviolable hard
+floor**: it is never traded away for excitement, no matter how much the arc
+wants another peak there. **Rest as a preference** — a group that simply enjoys
+a slower morning — is balanced against excitement like any other desire,
+optimized within the needs envelope. This objective is emitted as an
+experience-balance signal the hub consumes; the scheduler names the arc and
+flags stacked peaks but does **not** reconcile the signal against the other
+agents' objectives — that reconciliation is the hub's single job (issue #17),
+not the scheduler's.
+
 ### Local Calibration Methodology
 
 1. **Neighborhood zone map:** 4-8 geographic clusters relevant to this trip,
@@ -276,6 +310,38 @@ transit cost of that sequence visible — this is the objective, not a rigid sco
   out of the 12-3 PM peak" — or "none binding"]
 - Slack allocation: [if a tighter route freed a slot, its single deliberate use —
   or "no slack freed this day"]
+
+### Experience Balance Signal
+
+The experience-balance signal the hub consumes. Per day, read the experiential
+arc qualitatively — Low / Med / High per axis, never a score — and make the
+trip's shape visible so the hub can reconcile it. Rest that a need requires is
+marked inviolable; rest as a preference is a balanced desire.
+
+**Day [N] — [Date] — [Day of week]**
+- Experiential profile: excitement [Low / Med / High] · newness [Low / Med /
+  High] · fun [Low / Med / High] · rest [Low / Med / High]
+- Newness note: [what is new on this day — a first-time experience, a new zone,
+  a new cuisine — and whether it is spread across the trip or clumping with the
+  newness of adjacent days]
+- Arc placement: [peak / build / recovery] — named against the day before and
+  the day after (e.g. "peak — follows a build on Day [N-1], precedes a recovery
+  on Day [N+1]") so a consecutive run is visible on its face
+- Rest floor: [any need-required rest on this day — heat midday block, jet-lag
+  recovery window, mobility pacing floor — marked **inviolable**; or "none
+  need-required (any slower pacing here is preference, balanced not floored)"]
+
+**Stacked-peak flag**
+
+Name any run of consecutive peak days explicitly — the specific day range and
+what makes each day a peak (e.g. "Days 3-4-5 all read as high-excitement,
+high-intensity peaks with no restorative day between them"). Whether that run
+is too long is a per-trip judgment — call it out against this group's sustained
+capacity at this destination (a young group at an easy destination absorbs a
+longer run than a mixed-age group in extreme heat); do not apply a fixed count.
+Where a need-required rest floor falls inside or adjacent to a peak run, state
+that the floor holds — the run is shortened around it, never the floor traded to
+extend the run. This is a flag for the hub to weigh, not a reconciliation.
 
 ### Advance Booking Priorities
 
