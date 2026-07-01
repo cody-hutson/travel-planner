@@ -52,6 +52,31 @@ logic is the primary sequencing tool. Within a zone, category variety is
 secondary. Zone transitions must be justified by the anchor experience being
 worth the transit investment.
 
+**Point-to-point routing within the zone (transit as tracked cost):**
+Zone sequencing sets the day's cluster; routing sequences the individual stops
+inside it. Once a day's zone is fixed, the order of its events and meals is not
+arbitrary — the transit between two consecutive stops is a real, measurable cost
+paid in group time, and the sequence that minimizes summed door-to-door transit
+across the day is the better one. Reason about that total the way you already
+reason about the day's energy arc: as a quantity to be brought down, not a
+detail left to chance. Use the group-adjusted door-to-door times (the 30-40%
+over-solo figure from the calibration methodology, sourced from the transport
+brief's point-to-point matrix), sum the per-leg cost across the day, and surface
+that total so one ordering can be compared against a credible alternative
+ordering — the reader should be able to see which sequence costs less transit
+and why. This is reasoning guidance, not a scoring formula: there is no weight
+to invent, only the honest group-time total to compare. Needs are hard floors,
+never traded for a shorter route — heat-aware ordering keeps a heat-sensitive
+traveler's long outdoor legs out of the midday peak even when the tighter
+routing would run them straight through it, and any need that bounds the order
+is named. Desires are optimized within that needs envelope. When a tighter
+route frees a scarce slot, that slack is spent on a single deliberate use
+(one added supporting experience, one longer meal, one banked recovery block) —
+never split ambiguously across the day. This objective is emitted as a routing
+signal the hub consumes; the scheduler does not reconcile it against the other
+agents' objectives — that reconciliation is the hub's single job (issue #17),
+not the scheduler's.
+
 **Advance booking as structural anchor:**
 Time-specific reservations and hard-to-get experiences anchor the day they
 fall on. A 7 PM dinner reservation determines what happens in the 3 hours
@@ -231,6 +256,26 @@ whether a bailout applies.
   type of indoor escape is needed
 - Advance reservation flag: Yes / No — if Yes, what category and why
 - Closure watch: [any venue categories to verify for this day of week]
+
+### Transit Cost & Routing Signal
+
+The routing signal the hub consumes. Per day, sequence the stops and make the
+transit cost of that sequence visible — this is the objective, not a rigid score.
+
+**Day [N] — [Date] — [Day of week]**
+- Ordered stop sequence: [stop 1 -> stop 2 -> stop 3 -> ...] — the anchor,
+  meal, and supporting stops in the order the group moves through them
+- Per-leg transit cost: [leg 1: group door-to-door time] · [leg 2: ...] · ...
+  (group-adjusted door-to-door times from transport-brief.md, not solo app times)
+- Total transit cost: [summed group time across all legs for the day]
+- Compared alternative ordering: [alt sequence] — total [summed group time];
+  one credible re-ordering of the same day's stops, with why the recommended
+  sequence is chosen over it (lower transit, or a needs floor the alternative
+  would breach)
+- Needs guardrail: [which need bounded the route — e.g. "heat window held stop 3
+  out of the 12-3 PM peak" — or "none binding"]
+- Slack allocation: [if a tighter route freed a slot, its single deliberate use —
+  or "no slack freed this day"]
 
 ### Advance Booking Priorities
 
