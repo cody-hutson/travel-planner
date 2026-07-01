@@ -64,6 +64,49 @@ name the conflict, explain the tradeoff, and make a reasoned recommendation.
 Never silently discard one spoke's output. The human may disagree — they
 should see what was resolved and why.
 
+*Objective reconciliation (running the engines — issue #17).* Beyond the
+pairwise spoke conflict above, this is where the hub **runs and reconciles the
+three optimization engines** into one itinerary. Do it in a fixed order — needs
+first, then objectives — and do it *only here*: this is the single place the hub
+consumes the engine signals, not a mechanism scattered across the engines or
+elsewhere in this agent.
+
+- **Needs are hard constraints, applied first.** Before any objective is weighed,
+  every traveler need is applied as a hard bound on the solution (read them from
+  `outputs/traveler-model.md`, each keyed to its governing `trip-context.md`
+  constraint). Nothing optimizes below a violated need: an option that breaks a
+  need is out, however well it serves an objective. Needs draw the box; the
+  objectives are reconciled only *inside* it.
+- **Then reconcile the three competing objectives.** Inside the needs box, three
+  engine objectives pull against each other and rarely all maximize at once:
+  - **efficient routing** — the scheduler's routing signal (Required input 4,
+    `scheduling-framework.md`: the per-day ordered stop sequence with its summed
+    transit cost) over the point-to-point matrix (Required input 5,
+    `transport-brief.md`);
+  - **desire coverage through the attention lens** — each traveler's anchors and
+    wishes weighed through the desire-overlap / attention lens on the traveler
+    model (Required input 6, `traveler-model.md`: shared desires are efficient to
+    cover, unique desires are protected);
+  - **experiential arc** — the scheduler's experience-balance signal (Required
+    input 4, `scheduling-framework.md`: the per-day arc placement and the
+    stacked-peak flag).
+- **Reconcile by a documented policy — name the conflict, state the tradeoff,
+  never silently drop an objective.** When the three cannot be jointly maximized,
+  resolve them the way a spoke conflict is resolved: name which objectives
+  collided (e.g. a tight route vs. a protected solo desire vs. a rest day the arc
+  wants), state the tradeoff taken and why, and record it in **Spoke Deviations**.
+  An objective that yields on a given day yields *visibly*, with rationale — it is
+  never dropped without a trace. The **ranking / weighting of the three objectives
+  is left to design** — this agent fixes the *structure* (needs-first →
+  documented reconciliation → conflict surfaced), not a scoring formula, a weight,
+  or a fixed precedence order. If you find yourself assigning the objectives
+  numeric weights or a hard precedence, stop: that is design-stage work this layer
+  defers.
+- **Emit the per-traveler coverage view.** The reconciliation's coverage output is
+  the per-traveler desire-coverage read emitted by the **Satisfaction-coverage
+  read** below — the single view of who is served and where it is lopsided. Do not
+  re-author it here; the reconciliation produces it there.
+
 **Constraint drift detection:**
 The most common hub failure mode is acknowledging hard constraints in the
 overview section and then violating them in the day-by-day detail. Every
@@ -145,7 +188,10 @@ structured per-event layer the hub actually plans against.
 **Satisfaction-coverage read:**
 After synthesizing, the hub emits the per-traveler coverage / balance read to
 `outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
-artifact — full model: `reference/data-model.md` → Satisfaction Metrics). Read
+artifact — full model: `reference/data-model.md` → Satisfaction Metrics). This
+read **is the per-traveler coverage view the objective reconciliation above
+emits** — the single output showing who is served and where the plan is lopsided;
+the reconciliation does not compute a second one. Read
 `outputs/traveler-model.md` for each traveler's needs and desires; the read is a
 **coverage view, not a score**:
 
