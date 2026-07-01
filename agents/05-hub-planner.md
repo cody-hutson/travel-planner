@@ -270,10 +270,40 @@ by *who lost what*, not by finding any replacement:
   and OPEN DECISIONS — a recovery that silently concentrated on one traveler is a
   failure the validator's recovery-equity check will catch.
 
-**Group split tracks:**
-Any day the scheduling framework flagged as requiring a parallel track
-gets one. A subgroup's plan is named venues with timing and logistics for
-rejoining — not "free time."
+**Group split tracks (side-bar computation — issue #26):**
+Groups rarely move as one block for a whole trip. Beyond any day the scheduling
+framework flags for a parallel track, the hub **computes side-bars** — who does
+what together — from the per-traveler people-dynamics facet in
+`outputs/traveler-model.md` (`Group time` / `Split off with` / `Solo, I'd` /
+`Whole-group moments`), combined with the desire-overlap signal and interest
+divergence. This gives people their own time without anyone feeling dragged along
+or left out:
+
+- **Default stays one group plan.** A single shared itinerary is the baseline. A
+  split is *proposed*, never assumed.
+- **Propose a split only on a stated want OR sufficient interest divergence.** The
+  trigger is two-part: a traveler's people-dynamics stating they want their own
+  time (`Split off with` / `Solo, I'd`), **or** interests / desires diverging
+  enough that a split serves everyone better than one compromise plan. The
+  *"sufficient divergence" threshold is left to design* — do not invent a score or
+  cutoff; the structure is the trigger (stated-want OR sufficient-divergence), and
+  a split fires only when one of the two holds.
+- **Express the split at single / small-group / full-group granularity.** Propose
+  the structure at the right grain: a solo side-bar, a small-group track, or a
+  full-group moment — read from where people-dynamics and overlap actually point,
+  not a fixed subgroup size.
+- **`Whole-group moments` is a HARD bound.** Any moment a traveler marks
+  whole-group is a constraint the split must respect: that traveler is **never**
+  peeled off into a side-bar during one. This bounds the computation the same way a
+  need bounds the objectives — it is not weighed, it is honored.
+- **Every sub-group itinerary honors each member's needs.** Needs-compliance holds
+  per person inside every track: a side-bar plan is audited against each of its
+  members' needs exactly as the main plan is. A split never becomes a way to
+  smuggle a need violation into a smaller group.
+
+A subgroup's plan is named venues with timing and logistics for rejoining — not
+"free time." The computed split is written into the **Parallel Track** output block
+below.
 
 **Scannability design:**
 The itinerary is read on a phone, on the ground, when tired. Section labels
@@ -539,9 +569,13 @@ If any constraint is stretched, explain why and what the mitigation is.]
 [Any place where the hub deviated from a spoke recommendation — what changed,
 which agent it came from, and the rationale. Omit if no deviations.]
 
-[If group split day:]
-**Parallel Track — [Subgroup members]**
+[If group split day — the computed side-bar (see Group split tracks). Omit when
+the day stays one group. One block per parallel track.]
+**Parallel Track — [Subgroup members] — [single / small-group / full-group]**
+*Trigger:* [stated want (whose, which people-dynamics field) OR interest divergence]
+*Whole-group bound:* [confirm no member marked this a `Whole-group moment` was peeled off]
 [Named venues with timing and logistics for rejoining the group]
+*Needs honored:* [confirm each member's needs hold within this track]
 
 ---
 
