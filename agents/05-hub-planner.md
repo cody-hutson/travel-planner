@@ -235,6 +235,41 @@ rebuilt venue-matrix.md — the coverage view has its own home. If you find
 yourself inventing a coverage percentage or an equity weighting, stop: scoring
 the balance dimensions is design-stage work this layer defers.
 
+**Disruption-recovery flow (equity-aware replanning — issue #18):**
+Replanning is triggered two ways, and both run the same equitable recovery: a
+**disruption** — an event that regressed `locked → planned` in
+`outputs/event-status.md` (a missed booking, a cancelled hold, a sold-out
+ticket) — or a **changed-profile delta** — the enrichment agent's update signal
+that a traveler edited their `travelers/<traveler>.md` (a new anchor, a dropped
+wish, a revised need). Losses from either rarely hit the group evenly, so recover
+by *who lost what*, not by finding any replacement:
+
+- **Compute the per-traveler loss distribution.** Read what the disruption or the
+  delta removed or changed, against each traveler's anchors and wishes in
+  `outputs/traveler-model.md`, and record — per traveler — which anchors / wishes
+  they lost (or, for a changed profile, what the edit added or dropped for that
+  traveler). This is the recovery's coverage read: whose desires the disruption
+  actually cost, and how unevenly.
+- **Prioritize the hardest-hit traveler(s).** Rebuild toward the traveler(s) who
+  lost the most first — not whoever is easiest to re-slot. The *loss metric* that
+  ranks "hardest-hit" is **left to design** (do not invent a score); the structure
+  is: read the per-traveler losses, order the rebuild by them, and say so.
+- **Re-run the affected engines, needs preserved throughout.** Re-run only the
+  engines the recovery touches (routing / experience / attention as the gap
+  demands), and reconcile them under the same needs-first objective reconciliation
+  above — every traveler need remains a hard bound across the recovery, never
+  traded to backfill a lost desire.
+- **Regroup scattered gaps under a coherent theme.** Where the disruption leaves
+  several holes, prefer rebuilding them as one coherent thread (extend the day's
+  `*Theme:*` label into a recovery thread — e.g. an anime / character thread, a
+  market-crawl thread) over independent ad-hoc swaps. The *theme-clustering* rule
+  that decides which gaps group is **left to design** (do not invent a formula);
+  the structure is: gather the gaps, seek a shared theme, and thread the recovery
+  through it rather than scattering unrelated replacements.
+- **State what was lost, to whom, and how it was rebalanced** in the version log
+  and OPEN DECISIONS — a recovery that silently concentrated on one traveler is a
+  failure the validator's recovery-equity check will catch.
+
 **Group split tracks:**
 Any day the scheduling framework flagged as requiring a parallel track
 gets one. A subgroup's plan is named venues with timing and logistics for
@@ -348,7 +383,12 @@ Mode Notes name them; leave `option` events as alternatives (never promote).
 Rebuild venue matrix for changed days only. Write status changes back to
 `event-status.md` in place (a newly booked event → `locked`; a newly settled
 unbookable choice → `firmed`). State what changed, what was preserved, and any
-downstream implications. Update version number.
+downstream implications. Update version number. **When the iteration is a
+disruption recovery** — an event regressed `locked → planned` (a missed booking /
+cancelled hold), or the enrichment agent emitted a changed-profile delta — run the
+**Disruption-recovery flow** above: compute the per-traveler loss distribution,
+prioritize the hardest-hit, re-run the affected engines with needs preserved, and
+regroup scattered gaps under a coherent theme rather than ad-hoc swaps.
 
 **RESEQUENCING:** Apply updated scheduling framework from Agent 03 to
 existing selections. Read `outputs/event-status.md` first: `locked`/`firmed`
@@ -359,7 +399,10 @@ agreement with the status table (`option` → Alt/B, never A). A pure resequence
 changes placement, not status, so `event-status.md` is read but rarely written
 (write back only if a row's status genuinely changes). Produce revised
 final-itinerary.md. State what was resequenced and why the new sequence is
-better. Update version number.
+better. Update version number. If the resequence is itself driven by a disruption
+(a `locked → planned` regression re-opened an anchor), apply the
+**Disruption-recovery flow** above so the new sequence rebalances the loss rather
+than merely reordering around the hole.
 
 ## Input
 

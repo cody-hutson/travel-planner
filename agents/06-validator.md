@@ -177,6 +177,34 @@ a fixed type:
 > pass/fail gate under needs-compliance; **rest-recovery balance** is the softer
 > trip-wide signal whose scoring is deferred — keep them distinct.
 
+**Recovery-equity check (equity-aware replanning — issue #18):**
+When this pass follows a **disruption recovery** — an event regressed
+`locked → planned` in `outputs/event-status.md` (a missed booking / cancelled
+hold), or the enrichment agent emitted a changed-profile update signal — audit the
+hub's recovery on two points. This is factual pattern and constraint detection over
+the recovered plan vs. the prior version, **not** a verdict on whether the recovery
+was clever, and **not** a score:
+
+- **Losses were not concentrated on one traveler — Warning.** Read the
+  desire-coverage across the recovered itinerary against the prior version and
+  detect whether the recovery left the losses (newly `not covered` anchors /
+  wishes) piled on a single traveler while others were made whole. Report the
+  distribution factually — "the recovery restored Pat and Sam but left both of
+  Jordan's lost anchors uncovered" — as a **Warning** the hub weighs. You report
+  the uneven distribution; you do **not** compute an equity score or a fairness
+  threshold (that scoring is left to design, per the balance-signals guard above).
+- **Needs still hold in the recovered plan — Critical if violated.** Re-confirm
+  needs-compliance over the recovered itinerary: every traveler need still `pass`
+  on every applicable day. A recovery that backfilled a lost desire by trading away
+  a need (a rest floor overwritten, a heat ceiling breached, a mobility limit
+  crossed) is a **Critical** — the same class as any other violated need. Cite the
+  day, the need, its governing constraint, and what the recovery displaced.
+
+Both read off artifacts you already audit (`event-status.md` for the regression,
+`traveler-model.md` for who lost what, the needs-compliance record for the floors);
+this check adds no new state and no scoring — it verifies the recovery was
+equitable and needs-safe, and routes any finding to the hub's remediation list.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named indoor bailout.
 If any day is missing one, flag it as a critical gap.

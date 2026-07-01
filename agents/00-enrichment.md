@@ -49,8 +49,12 @@ Focus on seasonal overview, destination character, and entry requirements.
 **DISCOVERY / ENRICHMENT:** Full enrichment pass on all [ENRICH] fields.
 Include closure cascade rules in Events & Calendar.
 
-**ITERATION / RESEQUENCING:** Re-enrich only if travel dates or accommodation
-changed since last run. Confirm Events & Calendar is current for travel dates.
+**ITERATION / RESEQUENCING:** Re-enrich [ENRICH] fields only if travel dates or
+accommodation changed since last run. Confirm Events & Calendar is current for
+travel dates. Regardless, **re-run profile-change detection** (diff each
+`travelers/<traveler>.md` against the last-processed snapshot) and emit an update
+signal for any traveler whose profile changed — a changed profile is a replanning
+trigger even when dates and lodging did not move.
 
 ## Task
 
@@ -130,6 +134,47 @@ link against. Specifically:
 This role is **read-and-reconcile only**: source files in, derived model out.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
+
+### Profile-change detection — emit a replanning signal on a changed profile
+
+Because each `travelers/<traveler>.md` is independently editable, you provide the
+change-detection the old free-text model could not: on every reconciliation pass,
+**diff each traveler file against the snapshot you last processed** and, when a
+file changed in a way that affects the plan — a new or dropped desire, a revised
+need, a changed preference — **emit an update signal** for that traveler. This
+completes the forward connection the data model designed
+(`reference/data-model.md` → "Forward Connection — Profile Edits as a Replanning
+Trigger"), which sanctions exactly this behavior:
+
+- **Diff against the last-processed snapshot.** Compare each current
+  `travelers/<traveler>.md` to its state at your previous reconciliation. The
+  reconciled `outputs/traveler-model.md` you last wrote is the practical snapshot
+  of what you already processed — a per-traveler entry that no longer matches its
+  source file has changed. A brand-new profile (no prior entry) and a removed
+  profile both count as changes.
+- **Emit an update signal — a candidate replanning trigger.** For each changed
+  traveler, record an **update signal** in the derived model naming *who* changed
+  and *what* changed (added anchor, dropped wish, revised need). Surface it plainly
+  so the hub can see it — e.g. a short `## Update signals` block in
+  `outputs/traveler-model.md`:
+
+  ```markdown
+  ## Update signals [DERIVED]
+  > Candidate replanning triggers — a changed profile alongside the existing
+  > missed-booking (event-status) trigger. The hub owns whether/how to re-plan.
+  - Jordan: added anchor "sumo tournament" [new]; dropped wish "standout coffee".
+  - Pat: revised need — heat ceiling tightened (shade by noon, was early afternoon).
+  ```
+
+- **Signal only — you do not re-plan.** The update signal is a *data condition*;
+  the decision to re-plan and the fair-recovery logic belong to the hub's
+  disruption-recovery flow (equity-aware replanning), not to you. Per the data
+  model, the substrate's job is to make the signal detectable and carry it — the
+  replanning behavior it triggers is owned downstream. You still never edit a
+  traveler's file; you only detect and report the change.
+
+This detection is part of the reader/reconciler role and changes nothing about the
+[ENRICH]-only contract on trip-context.md.
 
 **Two group-level computations are out of scope here — they are forward-hooks**
 (captured now, computed later by a downstream capability, per
