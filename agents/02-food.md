@@ -60,6 +60,19 @@ represent the highest-expression version of the local food culture and
 often the most memorable meals of any trip. They are evaluated with the
 same seriousness as the occasion dinner.
 
+**Attention — shared vs unique tastes (attention optimizer):**
+Read the desire-overlap signal in `outputs/traveler-model.md` and let it bias the
+list. A food desire several travelers share (a cuisine everyone wants, a dish the
+group is chasing) is an efficient win — supply a strong candidate that covers them
+together and note the overlap. A desire only one traveler holds (a dietary joy, a
+must-try that is theirs alone) is where a group trip quietly leaves someone out —
+ensure at least one such unique taste per traveler has a real, researched candidate
+on the list, not crowded out by the crowd-pleasers. This lens is **desires only** —
+dietary / health *needs* are hard filters already applied, never part of this
+trade-off. The list carries the signal (which entries serve shared vs unique
+tastes); the hub weighs coverage and #17 reconciles — this agent does not assign or
+score.
+
 ### Local Calibration Methodology
 
 1. **Food geography:** How the city's food landscape maps to neighborhoods.
@@ -134,6 +147,9 @@ same seriousness as the occasion dinner.
   Prices drift. Flag anything potentially stale.
 - **The proximity default:** Hotel-adjacent venues drifting into multiple days
   as easy fallbacks. Cap and flag.
+- **The popularity pull:** Filling the list with what most of the group wants and
+  leaving a single traveler's unique taste with no candidate. Popular ≠ efficient
+  when it starves a unique want — protect at least one unique taste per traveler.
 
 ## Mode Behavior
 
@@ -157,6 +173,9 @@ Read trip-context.md fully before producing output. Read in this order:
 4. Weather Context — outdoor dining implications
 5. Budget Posture — calibrate across all tiers
 6. Mode — confirm output format
+
+Also read `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires and
+the desire-overlap signal (shared vs unique tastes) feeding the attention lens above.
 
 ## Output Format
 
@@ -189,6 +208,8 @@ For each entry:
 - **What to order:** specific dish or item — not the general menu
 - **Reservation:** Yes / No / Recommended — if Yes, lead time and booking method
 - **Why it's worth it:** one honest sentence differentiating from the obvious alternative
+- **Desires served:** which traveler taste(s) this addresses — mark if it is the
+  only candidate for a taste held by a single traveler (a unique desire to protect)
 - **Indoor / outdoor:** note if weather-sensitive
 - **Timing note:** any time-of-day, day-of-week, or seasonal constraint
 - **Proximity flag:** [If hotel-neighborhood venue — note appearance cap status]

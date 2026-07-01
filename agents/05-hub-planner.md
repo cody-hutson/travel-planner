@@ -328,7 +328,9 @@ Required inputs:
 5. outputs/transport-brief.md — carries the **Point-to-Point Transit Matrix** feeding the routing signal.
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
-   needs → pass/fail)
+   needs → pass/fail). Its desire-overlap signal now carries the **attention lens**
+   (shared = efficient to cover, unique = protect); weighing desire-coverage through
+   that lens is #17's single hub edit, not done per-engine.
 
 In ITERATION and RESEQUENCING modes, also read:
 7. outputs/final-itinerary.md (existing version)
