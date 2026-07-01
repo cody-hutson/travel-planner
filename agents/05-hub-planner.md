@@ -334,7 +334,11 @@ Required inputs:
    the signal is issue #17's single hub edit, not per-engine work done here)
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
-   needs → pass/fail)
+   needs → pass/fail. Its desire-overlap signal now also carries the attention
+   lens — shared desires are efficient to cover, unique desires are protected —
+   which the selection-layer agents (01/02) already read to bias their menus;
+   weighing desire-coverage through that lens is issue #17's single hub edit,
+   not per-engine work done here)
 
 In ITERATION and RESEQUENCING modes, also read:
 7. outputs/final-itinerary.md (existing version)
