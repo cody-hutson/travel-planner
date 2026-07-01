@@ -64,6 +64,49 @@ name the conflict, explain the tradeoff, and make a reasoned recommendation.
 Never silently discard one spoke's output. The human may disagree — they
 should see what was resolved and why.
 
+*Objective reconciliation (running the engines — issue #17).* Beyond the
+pairwise spoke conflict above, this is where the hub **runs and reconciles the
+three optimization engines** into one itinerary. Do it in a fixed order — needs
+first, then objectives — and do it *only here*: this is the single place the hub
+consumes the engine signals, not a mechanism scattered across the engines or
+elsewhere in this agent.
+
+- **Needs are hard constraints, applied first.** Before any objective is weighed,
+  every traveler need is applied as a hard bound on the solution (read them from
+  `outputs/traveler-model.md`, each keyed to its governing `trip-context.md`
+  constraint). Nothing optimizes below a violated need: an option that breaks a
+  need is out, however well it serves an objective. Needs draw the box; the
+  objectives are reconciled only *inside* it.
+- **Then reconcile the three competing objectives.** Inside the needs box, three
+  engine objectives pull against each other and rarely all maximize at once:
+  - **efficient routing** — the scheduler's routing signal (Required input 4,
+    `scheduling-framework.md`: the per-day ordered stop sequence with its summed
+    transit cost) over the point-to-point matrix (Required input 5,
+    `transport-brief.md`);
+  - **desire coverage through the attention lens** — each traveler's anchors and
+    wishes weighed through the desire-overlap / attention lens on the traveler
+    model (Required input 6, `traveler-model.md`: shared desires are efficient to
+    cover, unique desires are protected);
+  - **experiential arc** — the scheduler's experience-balance signal (Required
+    input 4, `scheduling-framework.md`: the per-day arc placement and the
+    stacked-peak flag).
+- **Reconcile by a documented policy — name the conflict, state the tradeoff,
+  never silently drop an objective.** When the three cannot be jointly maximized,
+  resolve them the way a spoke conflict is resolved: name which objectives
+  collided (e.g. a tight route vs. a protected solo desire vs. a rest day the arc
+  wants), state the tradeoff taken and why, and record it in **Spoke Deviations**.
+  An objective that yields on a given day yields *visibly*, with rationale — it is
+  never dropped without a trace. The **ranking / weighting of the three objectives
+  is left to design** — this agent fixes the *structure* (needs-first →
+  documented reconciliation → conflict surfaced), not a scoring formula, a weight,
+  or a fixed precedence order. If you find yourself assigning the objectives
+  numeric weights or a hard precedence, stop: that is design-stage work this layer
+  defers.
+- **Emit the per-traveler coverage view.** The reconciliation's coverage output is
+  the per-traveler desire-coverage read emitted by the **Satisfaction-coverage
+  read** below — the single view of who is served and where it is lopsided. Do not
+  re-author it here; the reconciliation produces it there.
+
 **Constraint drift detection:**
 The most common hub failure mode is acknowledging hard constraints in the
 overview section and then violating them in the day-by-day detail. Every
@@ -145,7 +188,10 @@ structured per-event layer the hub actually plans against.
 **Satisfaction-coverage read:**
 After synthesizing, the hub emits the per-traveler coverage / balance read to
 `outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
-artifact — full model: `reference/data-model.md` → Satisfaction Metrics). Read
+artifact — full model: `reference/data-model.md` → Satisfaction Metrics). This
+read **is the per-traveler coverage view the objective reconciliation above
+emits** — the single output showing who is served and where the plan is lopsided;
+the reconciliation does not compute a second one. Read
 `outputs/traveler-model.md` for each traveler's needs and desires; the read is a
 **coverage view, not a score**:
 
@@ -189,10 +235,75 @@ rebuilt venue-matrix.md — the coverage view has its own home. If you find
 yourself inventing a coverage percentage or an equity weighting, stop: scoring
 the balance dimensions is design-stage work this layer defers.
 
-**Group split tracks:**
-Any day the scheduling framework flagged as requiring a parallel track
-gets one. A subgroup's plan is named venues with timing and logistics for
-rejoining — not "free time."
+**Disruption-recovery flow (equity-aware replanning — issue #18):**
+Replanning is triggered two ways, and both run the same equitable recovery: a
+**disruption** — an event that regressed `locked → planned` in
+`outputs/event-status.md` (a missed booking, a cancelled hold, a sold-out
+ticket) — or a **changed-profile delta** — the enrichment agent's update signal
+that a traveler edited their `travelers/<traveler>.md` (a new anchor, a dropped
+wish, a revised need). Losses from either rarely hit the group evenly, so recover
+by *who lost what*, not by finding any replacement:
+
+- **Compute the per-traveler loss distribution.** Read what the disruption or the
+  delta removed or changed, against each traveler's anchors and wishes in
+  `outputs/traveler-model.md`, and record — per traveler — which anchors / wishes
+  they lost (or, for a changed profile, what the edit added or dropped for that
+  traveler). This is the recovery's coverage read: whose desires the disruption
+  actually cost, and how unevenly.
+- **Prioritize the hardest-hit traveler(s).** Rebuild toward the traveler(s) who
+  lost the most first — not whoever is easiest to re-slot. The *loss metric* that
+  ranks "hardest-hit" is **left to design** (do not invent a score); the structure
+  is: read the per-traveler losses, order the rebuild by them, and say so.
+- **Re-run the affected engines, needs preserved throughout.** Re-run only the
+  engines the recovery touches (routing / experience / attention as the gap
+  demands), and reconcile them under the same needs-first objective reconciliation
+  above — every traveler need remains a hard bound across the recovery, never
+  traded to backfill a lost desire.
+- **Regroup scattered gaps under a coherent theme.** Where the disruption leaves
+  several holes, prefer rebuilding them as one coherent thread (extend the day's
+  `*Theme:*` label into a recovery thread — e.g. an anime / character thread, a
+  market-crawl thread) over independent ad-hoc swaps. The *theme-clustering* rule
+  that decides which gaps group is **left to design** (do not invent a formula);
+  the structure is: gather the gaps, seek a shared theme, and thread the recovery
+  through it rather than scattering unrelated replacements.
+- **State what was lost, to whom, and how it was rebalanced** in the version log
+  and OPEN DECISIONS — a recovery that silently concentrated on one traveler is a
+  failure the validator's recovery-equity check will catch.
+
+**Group split tracks (side-bar computation — issue #26):**
+Groups rarely move as one block for a whole trip. Beyond any day the scheduling
+framework flags for a parallel track, the hub **computes side-bars** — who does
+what together — from the per-traveler people-dynamics facet in
+`outputs/traveler-model.md` (`Group time` / `Split off with` / `Solo, I'd` /
+`Whole-group moments`), combined with the desire-overlap signal and interest
+divergence. This gives people their own time without anyone feeling dragged along
+or left out:
+
+- **Default stays one group plan.** A single shared itinerary is the baseline. A
+  split is *proposed*, never assumed.
+- **Propose a split only on a stated want OR sufficient interest divergence.** The
+  trigger is two-part: a traveler's people-dynamics stating they want their own
+  time (`Split off with` / `Solo, I'd`), **or** interests / desires diverging
+  enough that a split serves everyone better than one compromise plan. The
+  *"sufficient divergence" threshold is left to design* — do not invent a score or
+  cutoff; the structure is the trigger (stated-want OR sufficient-divergence), and
+  a split fires only when one of the two holds.
+- **Express the split at single / small-group / full-group granularity.** Propose
+  the structure at the right grain: a solo side-bar, a small-group track, or a
+  full-group moment — read from where people-dynamics and overlap actually point,
+  not a fixed subgroup size.
+- **`Whole-group moments` is a HARD bound.** Any moment a traveler marks
+  whole-group is a constraint the split must respect: that traveler is **never**
+  peeled off into a side-bar during one. This bounds the computation the same way a
+  need bounds the objectives — it is not weighed, it is honored.
+- **Every sub-group itinerary honors each member's needs.** Needs-compliance holds
+  per person inside every track: a side-bar plan is audited against each of its
+  members' needs exactly as the main plan is. A split never becomes a way to
+  smuggle a need violation into a smaller group.
+
+A subgroup's plan is named venues with timing and logistics for rejoining — not
+"free time." The computed split is written into the **Parallel Track** output block
+below.
 
 **Scannability design:**
 The itinerary is read on a phone, on the ground, when tired. Section labels
@@ -302,7 +413,12 @@ Mode Notes name them; leave `option` events as alternatives (never promote).
 Rebuild venue matrix for changed days only. Write status changes back to
 `event-status.md` in place (a newly booked event → `locked`; a newly settled
 unbookable choice → `firmed`). State what changed, what was preserved, and any
-downstream implications. Update version number.
+downstream implications. Update version number. **When the iteration is a
+disruption recovery** — an event regressed `locked → planned` (a missed booking /
+cancelled hold), or the enrichment agent emitted a changed-profile delta — run the
+**Disruption-recovery flow** above: compute the per-traveler loss distribution,
+prioritize the hardest-hit, re-run the affected engines with needs preserved, and
+regroup scattered gaps under a coherent theme rather than ad-hoc swaps.
 
 **RESEQUENCING:** Apply updated scheduling framework from Agent 03 to
 existing selections. Read `outputs/event-status.md` first: `locked`/`firmed`
@@ -313,7 +429,10 @@ agreement with the status table (`option` → Alt/B, never A). A pure resequence
 changes placement, not status, so `event-status.md` is read but rarely written
 (write back only if a row's status genuinely changes). Produce revised
 final-itinerary.md. State what was resequenced and why the new sequence is
-better. Update version number.
+better. Update version number. If the resequence is itself driven by a disruption
+(a `locked → planned` regression re-opened an anchor), apply the
+**Disruption-recovery flow** above so the new sequence rebalances the loss rather
+than merely reordering around the hole.
 
 ## Input
 
@@ -450,9 +569,13 @@ If any constraint is stretched, explain why and what the mitigation is.]
 [Any place where the hub deviated from a spoke recommendation — what changed,
 which agent it came from, and the rationale. Omit if no deviations.]
 
-[If group split day:]
-**Parallel Track — [Subgroup members]**
+[If group split day — the computed side-bar (see Group split tracks). Omit when
+the day stays one group. One block per parallel track.]
+**Parallel Track — [Subgroup members] — [single / small-group / full-group]**
+*Trigger:* [stated want (whose, which people-dynamics field) OR interest divergence]
+*Whole-group bound:* [confirm no member marked this a `Whole-group moment` was peeled off]
 [Named venues with timing and logistics for rejoining the group]
+*Needs honored:* [confirm each member's needs hold within this track]
 
 ---
 
