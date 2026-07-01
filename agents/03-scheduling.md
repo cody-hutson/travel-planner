@@ -52,6 +52,29 @@ logic is the primary sequencing tool. Within a zone, category variety is
 secondary. Zone transitions must be justified by the anchor experience being
 worth the transit investment.
 
+**Point-to-point routing within the zone (transit as tracked cost):**
+Zone sequencing sets the day's cluster; routing sequences the stops *inside* it.
+Treat travel between consecutive itinerary items — event to meal, meal to event,
+across the day — as a **tracked, minimizable cost**, not invisible connective
+tissue. For each day, order the stops so total door-to-door group transit (the
+adjusted times from the transport brief, never solo app times) is low, and
+**surface that cost** so a proposed sequence can be weighed against an
+alternative on total transit rather than by feel. Two rules bound the
+optimization:
+- **Needs are hard floors, never traded for a shorter route.** A heat-sensitive
+  traveler's midday window, a mobility limit on consecutive walking legs, a rest
+  need — these constrain the route absolutely. A tighter sequence that violates a
+  need is not a cheaper route; it is an invalid one. Route *within* the needs
+  envelope (e.g. heat-aware ordering keeps long outdoor legs out of the midday peak).
+- **Freed slack is spent deliberately, not left loose.** When a swap, a closure,
+  or an efficient route frees a scarce slot, allocate it to a single named use
+  (one free weekday → a day trip *or* a shopping block, not an ambiguous "free
+  afternoon" split three ways). Undirected free time is a planning gap, not
+  flexibility.
+This is the routing optimizer: it makes movement a first-class cost the framework
+minimizes within the constraint envelope. It emits a signal for the hub to
+consume; it does not itself reconcile against the other objectives.
+
 **Advance booking as structural anchor:**
 Time-specific reservations and hard-to-get experiences anchor the day they
 fall on. A 7 PM dinner reservation determines what happens in the 3 hours
@@ -231,6 +254,27 @@ whether a bailout applies.
   type of indoor escape is needed
 - Advance reservation flag: Yes / No — if Yes, what category and why
 - Closure watch: [any venue categories to verify for this day of week]
+
+### Transit Cost & Routing Signal
+
+The routing optimizer's per-day output — a signal for the hub to consume and
+reconcile (reconciliation is not done here). For each day:
+- **Ordered stop sequence:** the intra-day order of anchor event, anchor meal,
+  and supporting stops, chosen to minimize total group transit within the needs
+  envelope.
+- **Transit cost per leg:** consecutive item → item, door-to-door adjusted group
+  time (from the transport brief's point-to-point matrix), with the day's
+  **total transit** summed.
+- **Alternative compared:** one credible alternative ordering and its total, so
+  the choice is legible ("Sequence A = 95 min vs B = 140 min; A chosen").
+- **Needs guardrail note:** which need bounded the route this day (e.g. "midday
+  outdoor leg avoided — heat window 12–3 pm"), or "none binding".
+- **Slack allocation:** any freed slot and its single deliberate use.
+
+Transit cost is a comparative signal, not a target to minimize past the point
+where experience suffers — a 10-minute saving that strands the group at a closed
+venue is not a win. Surface the cost; let the hub reconcile it against desire
+coverage and the experiential arc.
 
 ### Advance Booking Priorities
 

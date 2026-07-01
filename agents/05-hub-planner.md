@@ -324,8 +324,8 @@ Required inputs:
 1. trip-context.md
 2. outputs/activities-list.md
 3. outputs/food-list.md
-4. outputs/scheduling-framework.md
-5. outputs/transport-brief.md
+4. outputs/scheduling-framework.md — carries the **Transit Cost & Routing Signal** (routing optimizer): per-day ordered sequence, total transit, and the needs guardrail. Consume the signal; reconciling it against the other objectives is #17's single hub edit, not done per-engine.
+5. outputs/transport-brief.md — carries the **Point-to-Point Transit Matrix** feeding the routing signal.
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
    needs → pass/fail)

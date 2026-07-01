@@ -197,6 +197,22 @@ arriving. Operational — not promotional.
 
 [Repeat for each accessible line]
 
+### Point-to-Point Transit Matrix
+
+Feeds the scheduling agent's routing optimizer: the door-to-door group times
+*between itinerary stops*, not just hotel-to-area. The scheduler sums these per
+day to compute and compare the transit cost of a sequence.
+
+| From → To | Mode | Door-to-door group time | Notes (heat / luggage / transfers) |
+|-----------|------|-------------------------|------------------------------------|
+
+- Rows are the venue-to-venue legs the current itinerary actually uses (plus any
+  credible alternative leg being weighed) — not an all-pairs matrix.
+- Times are **group** door-to-door (the 30–40% adjustment over solo app times),
+  consistent with the arrival and day-trip estimates above.
+- Flag legs whose physical cost interacts with a need (a long midday outdoor walk
+  for a heat-sensitive traveler) so the scheduler can route around it.
+
 ### Daily Navigation
 
 **Apps:**
