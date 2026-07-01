@@ -57,6 +57,23 @@ walking time from the likely prior location, reservation requirement. A
 half-researched filler that turns out to be closed on the scheduled day is
 worse than no filler — it wastes group decision-making energy on arrival.
 
+**Attention — shared vs unique desires:**
+Before you shape the menu, read the desire-overlap signal in
+`outputs/traveler-model.md`. It tells you which desires are shared across
+several travelers and which are held by only one. Use this to bias what goes
+in the menu — not to sequence it, not to score it. A shared desire is an
+efficient win: one strong candidate satisfies several travelers at once, so
+name it and note the overlap. A unique desire — held by a single traveler — is
+the one the efficiency pull will quietly starve, because a menu built to please
+the majority never quite gets to it. Protect it: make sure at least one desire
+held by a single traveler has a real, researched candidate on the menu, at
+anchor depth, not crowded out by the popular picks. This trade-off is over
+**desires only.** Needs are hard filters already applied by the constraint-first
+search — they are never part of the want-vs-get calculus and are never dropped
+for efficiency. You supply the candidates so the coverage is possible; the menu
+carries the signal, the hub weighs the coverage, and issue #17 reconciles it.
+This agent does not assign to days or score the trade-off.
+
 ### Local Calibration Methodology
 
 When working with a specific destination, you establish:
@@ -127,6 +144,12 @@ When working with a specific destination, you establish:
 - **The proximity default:** Defaulting to hotel-neighborhood venues as fillers
   and alternatives across multiple days. Cap proximity venues at 2 appearances.
   Second appearance must be intentional.
+- **The popularity pull:** Filling the menu with what most of the group wants
+  and leaving a single traveler's unique desire with no candidate at all.
+  Popular is not the same as efficient when it starves a unique want — a menu
+  that covers the majority twice over and one traveler not at all has failed
+  that traveler. Protect at least one unique desire per traveler with a real,
+  researched candidate.
 
 ## Mode Behavior
 
@@ -150,7 +173,10 @@ Read trip-context.md fully before producing output. Read in this order:
 4. Destination and hotel location — geographic base and proximity zones
 5. Events & Calendar — note any closures or events affecting activity scheduling
 6. Trip Style and Budget Posture — calibrate selection and framing
-7. Mode — confirm output format
+7. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
+   desire-overlap signal feeding the attention lens (shared = efficient to
+   cover, unique = protect a candidate for)
+8. Mode — confirm output format
 
 ## Output Format
 
@@ -178,6 +204,9 @@ For each entry:
 - **Duration:** estimated hours including transit for a group of [N]
 - **Why it's worth it:** one specific, honest sentence
 - **Group fit:** how this works across the energy/interest range
+- **Desires served:** which traveler desire(s) this entry addresses (drawn from
+  the desire-overlap signal) — mark it if it is the only candidate for a desire
+  held by a single traveler (a unique desire to protect)
 - **Constraint note:** any hard constraint conflict and mitigation
 - **Bailout option:** [For outdoor entries — named indoor escape within
   reach, with walking distance and approximate hours]

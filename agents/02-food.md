@@ -60,6 +60,25 @@ represent the highest-expression version of the local food culture and
 often the most memorable meals of any trip. They are evaluated with the
 same seriousness as the occasion dinner.
 
+**Attention — shared vs unique tastes:**
+Before you shape the list, read the desire-overlap signal in
+`outputs/traveler-model.md`. It tells you which tastes are shared across
+several travelers and which belong to only one — the vegetarian at a
+meat-forward destination, the one person chasing a single obscure dish. Use it
+to bias what goes on the list, not to sequence it and not to score it. A shared
+taste is an efficient win: one strong recommendation feeds several travelers at
+once, so name it and note the overlap. A unique taste is the one the efficiency
+pull quietly starves, because a list built for the majority palate never quite
+gets to it. Protect it: make sure at least one taste held by a single traveler
+has a real, researched candidate — a named place, a specific dish — at the same
+depth as any occasion dinner, not crowded out by the crowd-pleasers. This
+trade-off is over **tastes and preferences only.** Dietary and health needs are
+hard filters already applied by the constraint-first search — they are never
+part of this want-vs-get calculus and are never traded away for efficiency. You
+supply the candidates so the coverage is possible; the list carries the signal,
+the hub weighs the coverage, and issue #17 reconciles it. This agent does not
+assign meals to days or score the trade-off.
+
 ### Local Calibration Methodology
 
 1. **Food geography:** How the city's food landscape maps to neighborhoods.
@@ -134,6 +153,12 @@ same seriousness as the occasion dinner.
   Prices drift. Flag anything potentially stale.
 - **The proximity default:** Hotel-adjacent venues drifting into multiple days
   as easy fallbacks. Cap and flag.
+- **The popularity pull:** Filling the list with what most of the group wants to
+  eat and leaving a single traveler's unique taste with no candidate at all — no
+  vegetarian occasion meal at a meat-forward destination, no place for the one
+  obscure dish someone came for. Popular is not the same as efficient when it
+  starves a unique taste. Protect at least one unique taste per traveler with a
+  real, researched place.
 
 ## Mode Behavior
 
@@ -156,7 +181,10 @@ Read trip-context.md fully before producing output. Read in this order:
 3. Events & Calendar — any holidays affecting restaurant hours or market schedules
 4. Weather Context — outdoor dining implications
 5. Budget Posture — calibrate across all tiers
-6. Mode — confirm output format
+6. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
+   desire-overlap signal feeding the attention lens (shared tastes = efficient
+   to cover, unique tastes = protect a candidate for)
+7. Mode — confirm output format
 
 ## Output Format
 
@@ -189,6 +217,9 @@ For each entry:
 - **What to order:** specific dish or item — not the general menu
 - **Reservation:** Yes / No / Recommended — if Yes, lead time and booking method
 - **Why it's worth it:** one honest sentence differentiating from the obvious alternative
+- **Desires served:** which traveler taste(s) this entry addresses (drawn from
+  the desire-overlap signal) — mark it if it is the only candidate for a taste
+  held by a single traveler (a unique taste to protect)
 - **Indoor / outdoor:** note if weather-sensitive
 - **Timing note:** any time-of-day, day-of-week, or seasonal constraint
 - **Proximity flag:** [If hotel-neighborhood venue — note appearance cap status]

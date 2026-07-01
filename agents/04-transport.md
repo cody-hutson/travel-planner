@@ -197,6 +197,26 @@ arriving. Operational — not promotional.
 
 [Repeat for each accessible line]
 
+### Point-to-Point Transit Matrix
+
+Door-to-door group times for the specific legs the itinerary strings together —
+this is the number the scheduler's routing cost is built on, so it is group time
+for 4 with mixed ages, not a solo app estimate. List the consecutive-stop legs
+the itinerary actually uses, plus any credible alternative leg being weighed
+against one of them. This is not an all-pairs matrix — only the legs in play.
+
+| Leg (stop -> stop) | Mode | Door-to-door group time | Physical cost flag |
+|--------------------|------|-------------------------|--------------------|
+| [Stop A -> Stop B] | [transit / walk / taxi] | [group minutes] | [need interaction, or —] |
+| [Stop B -> Stop C] | | | |
+| [alt: Stop A -> Stop C] | | | [if this leg is a weighed alternative] |
+
+**Physical cost flags:** call out any leg whose physical cost interacts with a
+hard constraint — a long midday outdoor walk for a heat-sensitive traveler, a
+multi-transfer leg with luggage, extended standing time — so the scheduler routes
+around it rather than through it. A flagged leg is not automatically the wrong
+leg; it is the leg the routing must respect the group's need on.
+
 ### Daily Navigation
 
 **Apps:**

@@ -3,6 +3,35 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.3.0] — 2026-07-01 — Optimization engines
+
+The first engines that actually *optimize* a trip against the satisfaction
+substrate. Each one works a single objective and surfaces its read for the group
+planner to weigh — built on v0.2.0; the planner that runs all three and reconciles
+them across the whole group comes next.
+
+### Added
+- **Geographic routing** — treats travel between stops as a real, minimizable
+  cost: it orders each day so the group spends less time in transit and more time
+  at the places, surfaces that cost so one plan can be compared against another,
+  and spends any freed time on a single deliberate use. It never routes a traveler
+  through a must-avoid (a heat window, a mobility limit).
+- **Experience balance** — shapes how the trip *feels* across the days, not just
+  how tiring it is: it spreads new and exciting things out instead of front-loading
+  them, and avoids stacking too many big days back-to-back with no breather.
+  Required rest (a real need) is always protected.
+- **Fair coverage** — makes sure the plan serves everyone, not just the majority:
+  a want several travelers share is an easy win, while a want only one person holds
+  is protected so no one is quietly left out. It works on wants only — must-haves
+  are always met.
+
+### Notes
+- These engines *surface* their objective; the group planner that runs all three
+  and reconciles them (efficient routing vs. everyone's coverage vs. the trip's
+  arc) is the next release — equity-aware planning.
+- Every engine optimizes *within* each traveler's hard needs. Needs are floors,
+  never traded away for a better score.
+
 ## [0.2.0] — 2026-06-28 — Satisfaction substrate
 
 A structured foundation for understanding what each traveler wants and tracking
