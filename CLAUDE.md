@@ -137,15 +137,17 @@ When the user wants to plan a trip:
 3. Create `trips/[destination-year]/trip-log.md` with initial session entry
 4. Fill in trip-context through conversation — ask the user questions, don't make them edit markdown
 5. Set the mode based on what's known (IDEATION if exploring, DISCOVERY if destination picked, ENRICHMENT if flights/hotel booked)
+6. In IDEATION with no destination yet, dispatch **Destination Ideation** to turn the group's leanings into a ranked shortlist (`outputs/destination-shortlist.md`) for the group to decide from — then, once they pick, set the destination and switch to DISCOVERY
 
 ### Dispatching agents (only when classification calls for it)
 
-Read the relevant agent prompt from `agents/NN-name.md` and use it as context when producing that agent's output. For research-heavy agents (enrichment, validator), use web search. Always dispatch with Opus 4.6 1M, max thinking budget.
+Read the relevant agent prompt from `agents/<name>.md` (see the roster below) and use it as context when producing that agent's output. For research-heavy agents (enrichment, validator), use web search. Always dispatch with Opus 4.6 1M, max thinking budget.
 
 **Agent roster:**
 
 | Agent | Prompt File | Output File | When to dispatch |
 |-------|------------|-------------|-----------------|
+| Destination Ideation | `agents/destination-ideation.md` | `outputs/destination-shortlist.md` | IDEATION with no destination chosen yet — aggregate travelers' leanings into a ranked group shortlist |
 | Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields | New trip setup, destination/hotel change |
 | Activities | `agents/01-activities.md` | `outputs/activities-list.md` | User wants activity research or replacements |
 | Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
@@ -164,7 +166,7 @@ Read `trip-context.md` → Mode section to determine what's in scope.
 
 | Mode | What's happening | What runs |
 |------|-----------------|-----------|
-| IDEATION | Exploring options, nothing decided | Activities, Food, Scheduling, Transport produce overview-level output. Hub compares options. Validator skipped. |
+| IDEATION | Exploring options, nothing decided | **No destination yet:** Destination Ideation aggregates travelers' leanings into a ranked group shortlist (`outputs/destination-shortlist.md`) to decide from. **Destination in play:** Activities, Food, Scheduling, Transport produce overview-level output; Hub compares options. Validator skipped. |
 | DISCOVERY | Destination picked, nothing booked | Full pipeline. All agents run. |
 | ENRICHMENT | Flights/hotel confirmed | Full pipeline. Agents plan around fixed anchors. |
 | ITERATION | Existing plan, user wants changes — including a **disruption recovery**, triggered two ways: an event regressing `locked → planned` in `event-status.md` (a missed booking / cancelled hold) **or** a changed-profile delta (the enrichment agent's update signal that a traveler edited their file). | Only affected agents re-run. Hub patches itinerary. Validator re-checks changed days. Status honored: only `planned` events change freely; `locked`/`firmed` are preserved unless the user names them; `option` events stay alternatives. On a disruption recovery the hub runs its **equity-aware recovery** (per-traveler loss distribution → prioritize hardest-hit → re-run affected engines, needs preserved → regroup gaps under a coherent theme), and the validator runs its **recovery-equity check** (losses not concentrated; needs still hold). |

@@ -177,13 +177,14 @@ This detection is part of the reader/reconciler role and changes nothing about t
 [ENRICH]-only contract on trip-context.md.
 
 **Two group-level computations are out of scope here — they are forward-hooks**
-(captured now, computed later by a downstream capability, per
+(captured now, computed by a downstream capability, per
 `reference/data-model.md`). You carry the *inputs* for both into the derived
 model; you do **not** compute either:
 
 - **Group destination recommendation.** You carry each traveler's destination
   leanings; you do **not** aggregate them into a ranked group shortlist or pick a
-  destination.
+  destination. That aggregation is realized downstream by
+  `agents/destination-ideation.md`.
 - **Side-bar / group-split computation.** You carry each traveler's people
   dynamics (and the desire-overlap signal); you do **not** compute any single /
   small-group / full-group split, assign anyone to a sub-group, or schedule a
