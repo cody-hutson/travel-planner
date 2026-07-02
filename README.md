@@ -79,12 +79,21 @@ Full agent dispatch protocol, mode definitions, output versioning rules, and sit
 When an itinerary is ready, Claude produces a single self-contained HTML file and publishes it **private-by-default** — the site is encrypted (StatiCrypt, AES-256-CBC + HMAC-SHA256) before anything reaches the web, and only the ciphertext is pushed to a per-trip public GitHub repo with Pages. Visitors get a passphrase prompt and decrypt in-browser, so free hosting still works and the plaintext itinerary never leaves your machine.
 
 ```bash
-scripts/publish-trip-site.sh publish trips/<destination>-<year>   # encrypt + publish
-scripts/publish-trip-site.sh update  trips/<destination>-<year>   # re-publish after edits
-scripts/publish-trip-site.sh rotate  trips/<destination>-<year>   # change the passphrase
+scripts/publish-trip-site.sh publish   trips/<destination>-<year>            # encrypt + publish
+scripts/publish-trip-site.sh publish   trips/<destination>-<year> --opaque   # ...with an opaque repo name
+scripts/publish-trip-site.sh update    trips/<destination>-<year>            # re-publish after edits
+scripts/publish-trip-site.sh rotate    trips/<destination>-<year>            # change the passphrase
+scripts/publish-trip-site.sh list                                           # inventory every trip's publish state
+scripts/publish-trip-site.sh unpublish trips/<destination>-<year>           # take the site down (deletes the repo)
 ```
 
-The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one. Note: the per-trip repo name (`<destination>-<year>-trip`) is public, so the destination and year are visible even though the itinerary is encrypted — put a different name in `trips/<destination>-<year>/.publish-slug` to publish to a custom or pre-existing repo (a shared, shorter, or opaque name). To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
+The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one.
+
+**Metadata privacy.** By default the per-trip repo is named `<destination>-<year>-trip` and is public, so the destination and year are visible even though the itinerary is encrypted (commit timestamps also reveal when you publish). Pass `--opaque` to name the repo with a random token instead (e.g. `trip-a1b2c3d4e5`); it's saved to `.publish-slug`, so `update`/`rotate`/`unpublish` resolve the same repo. You can still set your own name in `trips/<destination>-<year>/.publish-slug` (a shared, shorter, or custom name).
+
+**Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
+
+To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 

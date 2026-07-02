@@ -3,6 +3,37 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.5.0] — 2026-07-01 — Publish-flow privacy & lifecycle
+
+Rounds out the private-publish flow (v0.1.0) with the privacy and lifecycle
+controls a real "site manager" needs: hide the destination in the repo name, see
+every published site at a glance, and take a site back down.
+
+### Added
+- **Opaque repo names (`publish --opaque`)** — name the per-trip repo with a random
+  token (e.g. `trip-a1b2c3d4e5`) instead of the readable `[destination]-[year]-trip`,
+  so the destination and year no longer show on your public profile. The name is
+  saved to `.publish-slug`, so `update`/`rotate`/`unpublish` resolve the same repo.
+  Readable names stay the default (opt in per publish).
+- **`list` — published-site inventory (read-only)** — one command shows every trip
+  under `trips/`: its repo, live URL (or "not published"), last-published vs
+  last-edited, and a **stale** flag when your local build is newer than what's
+  deployed. Never writes, encrypts, or pushes.
+- **`unpublish` — takedown** — take a published site down: by default it deletes the
+  per-trip repo (removing the site *and* the destination/year in its name), or
+  `--disable-pages-only` keeps the repo and just takes the site offline. It confirms
+  before an irreversible delete, is idempotent (a no-op if already gone), and is
+  honest that content may linger in third-party caches after takedown.
+
+### Notes
+- Deleting a repo needs the `delete_repo` gh scope (`gh auth refresh -h github.com -s delete_repo`);
+  `unpublish` says so and offers `--disable-pages-only` as the no-extra-scope path.
+- The privacy model is unchanged: published bytes are world-fetchable ciphertext
+  (secret-gated by passphrase + 600k-KDF, not access-controlled). `--opaque` closes
+  the repo-name metadata leak; commit timestamps still reveal publish activity.
+- Regression tests extended (`test-publish-guard.sh` groups H/I/J) covering opaque
+  naming, the inventory helpers, and the takedown safety gates.
+
 ## [0.4.0] — 2026-07-01 — Orchestration: equity-aware planning & replanning
 
 The group planner that runs all three optimization engines and reconciles them

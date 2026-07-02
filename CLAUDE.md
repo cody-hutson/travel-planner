@@ -265,7 +265,7 @@ If the pre-push guard aborts, **nothing was published** — the error names what
 
 **Passphrase.** If `$STATICRYPT_PASSWORD` is set it is used; otherwise a strong one is generated and saved to `trips/[destination-year]/.passphrase` (git-ignored, never published). Share it over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
 
-**Repo name.** By default the per-trip repo is `[destination]-[year]-trip`. To publish to a custom or pre-existing repo — a shorter shared name, an opaque token, or an existing site — put the bare repo name in `trips/[destination-year]/.publish-slug` (git-ignored). `publish`/`update`/`rotate` all resolve it the same way.
+**Repo name.** By default the per-trip repo is `[destination]-[year]-trip`. Pass `--opaque` to `publish` to name it with a random token instead (`trip-<hex>`, no destination/year); the name is saved to `.publish-slug` so every later command resolves the same repo. To publish to a custom or pre-existing repo — a shorter shared name or an existing site — put the bare repo name in `trips/[destination-year]/.publish-slug` (git-ignored). `publish`/`update`/`rotate`/`list`/`unpublish` all resolve it the same way.
 
 **Site is live at:** `https://<github-username>.github.io/[destination]-[year]-trip/` — the URL shows a passphrase prompt, not the itinerary.
 
@@ -280,6 +280,19 @@ scripts/publish-trip-site.sh rotate trips/[destination-year]
 ```
 Rotation re-encrypts under a new passphrase and re-publishes; previously-shared viewers must re-receive the new one.
 
+**Listing published sites** (read-only — never writes, encrypts, or pushes):
+```bash
+scripts/publish-trip-site.sh list
+```
+Prints every trip under `trips/` with its repo, live URL (or "not published"), last-published vs last-edited, and a **stale** flag when your local build is newer than what's deployed.
+
+**Taking a site down:**
+```bash
+scripts/publish-trip-site.sh unpublish trips/[destination-year]                      # delete the repo (default)
+scripts/publish-trip-site.sh unpublish trips/[destination-year] --disable-pages-only # keep repo, site offline
+```
+The default **deletes** the per-trip repo — removing the site *and* the destination/year in its name. Deletion is irreversible, needs the `delete_repo` gh scope (grant once with `gh auth refresh -h github.com -s delete_repo`), and prompts you to type the repo name to confirm. `--disable-pages-only` instead disables Pages and keeps the repo (reversible). Either way `unpublish` is idempotent (a no-op if the site is already gone), and content may persist in third-party caches or clones after takedown.
+
 **Opting out** — publish the itinerary fully public and unencrypted — is explicit and requires confirmation. Interactively the script prompts you to type `PUBLISH`; non-interactively (e.g. when Claude runs it) set `ALLOW_PLAINTEXT=1`:
 ```bash
 ALLOW_PLAINTEXT=1 scripts/publish-trip-site.sh publish trips/[destination-year] --plaintext
@@ -287,7 +300,7 @@ ALLOW_PLAINTEXT=1 scripts/publish-trip-site.sh publish trips/[destination-year] 
 
 > **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
 >
-> **What still leaks (metadata).** The per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. (Set an opaque or custom repo name in `trips/[destination-year]/.publish-slug` to avoid the destination/year leak.)
+> **What still leaks (metadata).** By default the per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. Pass `--opaque` at publish (or set a custom name in `trips/[destination-year]/.publish-slug`) to keep destination/year out of the repo name; commit timestamps still reveal publish activity.
 >
 > **Trust boundary.** Encryption runs via `npx staticrypt` (pinned to an exact version); your passphrase is passed to that package at publish time, so you are trusting the pinned StatiCrypt release and the npm supply chain.
 >
