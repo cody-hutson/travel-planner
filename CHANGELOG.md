@@ -3,6 +3,34 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.6.0] — 2026-07-01 — Destination ideation
+
+The front of IDEATION: help a group decide *where* to go before any destination
+is fixed. From each traveler's individual destination leanings, the planner now
+derives one ranked group shortlist to choose from — so a trip can start at "we
+don't know where to go yet" instead of assuming a destination is already picked.
+
+### Added
+- **Destination Ideation agent (`agents/destination-ideation.md`)** — reads every
+  traveler's destination leanings (`Would love` / `Rather skip` / `Trip vibe`) and
+  writes `outputs/destination-shortlist.md`, a ranked group shortlist. Ranking is
+  **equity-weighted coverage**: love-count adjusted so every traveler is
+  represented near the top, `Rather skip` as a hard veto, and `Trip vibe` as the
+  rationale. It recommends only — the group decides, nothing auto-picks — and hands
+  off to DISCOVERY once a destination is chosen.
+- **Worked example (`examples/ideation-demo/`)** — a four-traveler run showing the
+  ranked shortlist, an applied veto, and the equity case (a lone-lover destination
+  kept that a popularity-only ranking would drop).
+
+### Notes
+- Realizes the data model's forward-hook (a): the per-traveler files still only
+  *capture* leanings; the aggregation lives in the new agent, never in an
+  individual file. Enrichment and the data model were updated to point at the
+  now-realized hook.
+- Ships the destination-ideation seed (group destination recommendation). A fuller
+  ideation flow (group shortlist → group decision → DISCOVERY handoff) remains
+  documented future growth.
+
 ## [0.5.0] — 2026-07-01 — Publish-flow privacy & lifecycle
 
 Rounds out the private-publish flow (v0.1.0) with the privacy and lifecycle
