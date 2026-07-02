@@ -16,13 +16,18 @@
 # passphrase and share it over a private channel.
 #
 # Usage:
-#   publish-trip-site.sh publish <trip-dir> [--plaintext]
-#   publish-trip-site.sh update  <trip-dir>
-#   publish-trip-site.sh rotate  <trip-dir> [--passphrase <new>]
+#   publish-trip-site.sh publish   <trip-dir> [--plaintext] [--opaque]
+#   publish-trip-site.sh update    <trip-dir>
+#   publish-trip-site.sh rotate    <trip-dir> [--passphrase <new>]
+#   publish-trip-site.sh list                       (read-only inventory of all trips under trips/)
+#   publish-trip-site.sh unpublish <trip-dir> [--disable-pages-only] [--yes]
 #
 #   <trip-dir>     A trip working dir, e.g. trips/tokyo-2026 (contains outputs/<name>-travel-site.html)
 #   --plaintext    Opt OUT of privacy: publish the unencrypted site (default is encrypted).
+#   --opaque       Name the per-trip repo opaquely (random slug — no destination/year); persisted to .publish-slug.
 #   --passphrase   Supply a specific new passphrase for rotate (else one is generated).
+#   --disable-pages-only   unpublish: take the site offline but KEEP the repo (reversible). Default DELETES the repo.
+#   --yes          unpublish: skip the interactive confirmation (required for a non-interactive delete).
 #
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
@@ -30,6 +35,7 @@
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
 # pre-existing repo instead of the derived one (resolved identically by every subcommand).
+# --opaque generates such a name for you (a random slug) and saves it there on first publish.
 #
 set -euo pipefail
 
@@ -44,10 +50,15 @@ die()  { printf '\033[1;31m✗ ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 # ─────────────────────────────────────────────────────────────────────────────
 # Preflight — required tooling
 # ─────────────────────────────────────────────────────────────────────────────
-preflight() {
-  command -v npx >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
+# Read-only preflight — gh only (no publish tooling). Used by list / unpublish.
+preflight_ro() {
   command -v gh  >/dev/null 2>&1 || die "gh (GitHub CLI) not found."
   gh auth status >/dev/null 2>&1 || die "gh is not authenticated. Run: gh auth login"
+}
+
+preflight() {
+  command -v npx >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
+  preflight_ro
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -144,6 +155,21 @@ slug_for() { # <trip_dir>
     ''|*[!A-Za-z0-9._-]*) die "invalid publish slug '$slug' — allowed chars: A-Z a-z 0-9 . _ - (fix ${sf} or remove it to use the default '<dir>-trip')" ;;
   esac
   printf '%s' "$slug"
+}
+
+# --opaque: give the per-trip repo a name that leaks neither destination nor year.
+# Generates a random slug ONCE and persists it to .publish-slug (the file slug_for()
+# resolves first), so publish/update/rotate all converge on the same repo. A pre-existing
+# .publish-slug always wins — --opaque never overwrites a name the user already chose.
+ensure_opaque_slug() { # <trip_dir>
+  local trip_dir="$1" sf="$1/.publish-slug" tok
+  if [ -s "$sf" ]; then
+    info "opaque: .publish-slug already set ('$(tr -d '[:space:]' < "$sf")') — keeping it."
+    return
+  fi
+  tok="trip-$(od -An -N5 -tx1 /dev/urandom | tr -dc 'a-f0-9')"
+  printf '%s\n' "$tok" > "$sf"
+  ok "opaque: per-trip repo will be '$tok' (saved to $sf — reused by update/rotate)."
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -256,11 +282,22 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 # ─────────────────────────────────────────────────────────────────────────────
 # Subcommands
 # ─────────────────────────────────────────────────────────────────────────────
-cmd_publish() { # <trip_dir> [--plaintext]
-  local trip_dir="${1:?usage: publish <trip-dir> [--plaintext]}"; shift || true
-  local plaintext=0; [ "${1:-}" = "--plaintext" ] && plaintext=1
+cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
+  local trip_dir="${1:?usage: publish <trip-dir> [--plaintext] [--opaque]}"; shift || true
+  local plaintext=0 opaque=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --plaintext) plaintext=1 ;;
+      --opaque)    opaque=1 ;;
+      *) die "unknown option for publish: $1 (try --plaintext or --opaque)" ;;
+    esac
+    shift
+  done
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   preflight; resolve_noreply_identity
+
+  # --opaque must run BEFORE slug resolution: it writes .publish-slug, which slug_for reads.
+  [ "$opaque" = "1" ] && ensure_opaque_slug "$trip_dir"
 
   local site_html slug pub_dir owner ans
   site_html="$(resolve_site_html "$trip_dir")"
@@ -380,21 +417,138 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Portable date helpers (BSD/macOS first, then GNU/Linux). Echo empty on failure.
+# ─────────────────────────────────────────────────────────────────────────────
+_epoch_of_file() { stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true; }
+_epoch_of_iso()  { date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$1" +%s 2>/dev/null || date -u -d "$1" +%s 2>/dev/null || true; }
+_ymd_of_epoch()  { # <epoch> -> YYYY-MM-DD, or '-' when empty
+  [ -n "${1:-}" ] || { printf '%s' '-'; return; }
+  date -r "$1" +%Y-%m-%d 2>/dev/null || date -d "@$1" +%Y-%m-%d 2>/dev/null || printf '%s' '-'
+}
+# stale = a live site whose local build (edited epoch) is newer than the deployed commit.
+_is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# list — read-only inventory of every trip under ./trips/. Never writes/encrypts/pushes.
+# ─────────────────────────────────────────────────────────────────────────────
+cmd_list() { # (no args)
+  [ -z "${1:-}" ] || die "list takes no arguments — run it from the repo root; it scans ./trips/."
+  preflight_ro
+  [ -d trips ] || die "no ./trips/ directory here — run list from the repo root."
+  local owner; owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
+
+  printf '\n\033[1m%-22s %-24s %-14s %-12s %-12s %s\033[0m\n' \
+    "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "STALE"
+  local any=0 trip_dir base slug site edited_epoch pub_iso pub_epoch status stale
+  for trip_dir in trips/*/; do
+    [ -d "$trip_dir" ] || continue
+    trip_dir="${trip_dir%/}"; base="$(basename "$trip_dir")"; any=1
+    slug="$(slug_for "$trip_dir" 2>/dev/null || printf '?')"
+    site="$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | head -1 || true)"
+    edited_epoch=""; [ -n "$site" ] && edited_epoch="$(_epoch_of_file "$site")"
+    if gh repo view "$owner/$slug" >/dev/null 2>&1; then
+      status="live"
+      pub_iso="$(gh api "repos/$owner/$slug/commits?per_page=1" --jq '.[0].commit.committer.date' 2>/dev/null || true)"
+      pub_epoch="$(_epoch_of_iso "$pub_iso")"
+    else
+      status="not published"; pub_epoch=""
+    fi
+    # Stale = a live site whose local build is newer than the deployed commit.
+    # Left as "-" (indeterminate) unless both timestamps are known.
+    stale="-"
+    if [ "$status" = "live" ] && [ -n "$edited_epoch" ] && [ -n "$pub_epoch" ]; then
+      if _is_stale "$edited_epoch" "$pub_epoch"; then stale="⚠ stale"; else stale="ok"; fi
+    fi
+    printf '%-22s %-24s %-14s %-12s %-12s %s\n' \
+      "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$stale"
+  done
+  [ "$any" = "1" ] || info "no trips found under ./trips/."
+  printf '\n'
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# unpublish — take a published site down. Default DELETES the repo (IRREVERSIBLE);
+# --disable-pages-only keeps the repo and just takes the site offline (reversible).
+# Idempotent: a no-op (success) when the repo is already gone.
+# ─────────────────────────────────────────────────────────────────────────────
+cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
+  local trip_dir="${1:?usage: unpublish <trip-dir> [--disable-pages-only] [--yes]}"; shift || true
+  local disable_only=0 assume_yes=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --disable-pages-only) disable_only=1 ;;
+      --yes|-y)             assume_yes=1 ;;
+      *) die "unknown option for unpublish: $1 (try --disable-pages-only or --yes)" ;;
+    esac
+    shift
+  done
+  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+  preflight_ro
+  local owner slug ans
+  owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
+  slug="$(slug_for "$trip_dir")"
+
+  # Idempotent: nothing to take down if the repo isn't there.
+  if ! gh repo view "$owner/$slug" >/dev/null 2>&1; then
+    ok "unpublish: $owner/$slug does not exist — nothing to take down (no-op)."
+    return 0
+  fi
+
+  if [ "$disable_only" = "1" ]; then
+    info "Disabling GitHub Pages for $owner/$slug (repo kept)…"
+    if gh api -X DELETE "repos/$owner/$slug/pages" >/dev/null 2>&1; then
+      ok "Pages disabled — https://$owner.github.io/$slug/ is now offline. Repo $owner/$slug retained."
+    else
+      warn "Pages may already be disabled (nothing to do)."
+    fi
+    warn "To restore: re-enable Pages in the repo Settings → Pages (branch main / root)."
+    warn "The repo name '$slug' is still public, and content may persist in third-party caches/clones."
+    return 0
+  fi
+
+  # Default: delete the whole public repo (IRREVERSIBLE). Requires the delete_repo OAuth scope.
+  if ! gh auth status 2>&1 | grep -q 'delete_repo'; then
+    warn "Deleting a repo needs the 'delete_repo' OAuth scope, which isn't present on your gh token."
+    warn "Grant it once with:   gh auth refresh -h github.com -s delete_repo"
+    die "unpublish aborted — missing delete_repo scope (or use --disable-pages-only to keep the repo)."
+  fi
+  if [ "$assume_yes" != "1" ]; then
+    if [ -t 0 ]; then
+      printf '  This DELETES the public repo %s/%s and its live site — \033[1mIRREVERSIBLE\033[0m.\n' "$owner" "$slug"
+      printf '  Type the repo name (%s) to confirm: ' "$slug"; read -r ans
+      [ "${ans:-}" = "$slug" ] || die "aborted — confirmation did not match '$slug'."
+    else
+      die "refusing a non-interactive delete without --yes. Re-run with --yes to confirm deleting $owner/$slug."
+    fi
+  fi
+  info "Deleting $owner/$slug…"
+  gh repo delete "$owner/$slug" --yes >/dev/null 2>&1 \
+    || die "delete failed — check the delete_repo scope and that you own $owner/$slug."
+  # The local mirror now points at a deleted repo; remove it so a later publish starts clean.
+  rm -rf "$trip_dir/.publish" 2>/dev/null || true
+  ok "Deleted $owner/$slug — the site and its public repo name are gone."
+  warn "Content may persist in third-party caches/clones even after takedown."
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Dispatch
 # ─────────────────────────────────────────────────────────────────────────────
 usage() {
-  sed -n '3,32p' "$0" | sed 's/^# \{0,1\}//'
+  # Print the header comment block (line 3 → the line before 'set -'), stripped of '# '.
+  sed -n '3,/^set -/p' "$0" | sed '/^set -/d; s/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
 main() {
   local sub="${1:-}"; shift || true
   case "$sub" in
-    publish) cmd_publish "$@" ;;
-    update)  cmd_update  "$@" ;;
-    rotate)  cmd_rotate  "$@" ;;
+    publish)     cmd_publish   "$@" ;;
+    update)      cmd_update    "$@" ;;
+    rotate)      cmd_rotate    "$@" ;;
+    list|status) cmd_list      "$@" ;;
+    unpublish)   cmd_unpublish "$@" ;;
     -h|--help|help|"") usage 0 ;;
-    *) die "unknown subcommand: $sub (try: publish | update | rotate)" ;;
+    *) die "unknown subcommand: $sub (try: publish | update | rotate | list | unpublish)" ;;
   esac
 }
 

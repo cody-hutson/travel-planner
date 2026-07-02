@@ -9,8 +9,9 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2) always run. Identity tests (D) skip without gh auth.
-# Real-StatiCrypt smoke test (E) skips if npx/staticrypt is unavailable.
+# Pure-bash tests (A–C2, F, H, I) always run. Identity (D) + unpublish idempotency (J1)
+# skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
+# H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7).
 #
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -159,6 +160,60 @@ HTML
 else
   SKIP "G: npx unavailable"
 fi
+
+echo "Opaque repo naming (--opaque, #6):"
+OTD="$WORK/tokyo-2026"; mkdir -p "$OTD/outputs"
+ensure_opaque_slug "$OTD" >/dev/null 2>&1
+OSLUG="$(slug_for "$OTD")"
+case "$OSLUG" in trip-*) PASS "H1: --opaque generates a trip-<token> slug ($OSLUG)";; *) FAIL "H1: opaque slug lacks trip- prefix ($OSLUG)";; esac
+if printf '%s' "$OSLUG" | grep -qiE 'tokyo|2026'; then FAIL "H2: opaque slug leaks destination/year ($OSLUG)"; else PASS "H2: opaque slug leaks neither destination nor year"; fi
+ensure_opaque_slug "$OTD" >/dev/null 2>&1
+[ "$(slug_for "$OTD")" = "$OSLUG" ] && PASS "H3: opaque slug is stable across calls (update/rotate resolve the same repo)" || FAIL "H3: opaque slug changed on re-run"
+OTD2="$WORK/kyoto-2026"; mkdir -p "$OTD2"; printf 'chosen-name\n' > "$OTD2/.publish-slug"
+ensure_opaque_slug "$OTD2" >/dev/null 2>&1
+[ "$(slug_for "$OTD2")" = "chosen-name" ] && PASS "H4: pre-existing .publish-slug wins over --opaque" || FAIL "H4: --opaque overwrote an explicit .publish-slug"
+
+echo "Inventory + date helpers (list, #25):"
+EF="$WORK/site.html"; : > "$EF"
+[ -n "$(_epoch_of_file "$EF")" ] && PASS "I1: _epoch_of_file returns an mtime epoch" || FAIL "I1: _epoch_of_file empty"
+IE="$(_epoch_of_iso '2026-06-28T14:36:00Z')"
+[ "$(_ymd_of_epoch "$IE")" = "2026-06-28" ] && PASS "I2: _epoch_of_iso + _ymd_of_epoch round-trip an ISO date" || FAIL "I2: ISO round-trip wrong ($IE -> $(_ymd_of_epoch "$IE"))"
+[ "$(_ymd_of_epoch '')" = "-" ] && PASS "I3: _ymd_of_epoch renders empty as '-'" || FAIL "I3: empty epoch not '-'"
+if _is_stale 200 100 && ! _is_stale 100 200 && ! _is_stale "" 100; then PASS "I4: stale iff local build newer than deployment (empty-safe)"; else FAIL "I4: stale rule wrong"; fi
+if declare -f cmd_list | grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -'; then
+  FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
+else
+  PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs)"
+fi
+
+echo "Unpublish / takedown (#7):"
+# J1 — idempotent no-op on an absent repo (real gh; the repo-view short-circuit).
+if gh auth status >/dev/null 2>&1; then
+  ABSENT="trip-$(od -An -N8 -tx1 /dev/urandom | tr -dc 'a-f0-9')"
+  UDIR="$WORK/unpub"; mkdir -p "$UDIR"; printf '%s\n' "$ABSENT" > "$UDIR/.publish-slug"
+  if ( cmd_unpublish "$UDIR" --yes ) >/dev/null 2>&1; then PASS "J1: unpublish on an absent repo is a no-op (idempotent)"; else FAIL "J1: unpublish errored on an absent repo"; fi
+else
+  SKIP "J1: gh not authenticated"
+fi
+# J2/J3 — decision-branch tests with a MOCK gh (isolates the destructive delete path; no network).
+MDIR="$WORK/mock-trip"; mkdir -p "$MDIR"; printf 'mock-slug\n' > "$MDIR/.publish-slug"
+GHLOG="$WORK/gh.log"
+gh() {  # mock: record the call, respond per fixed scenario (repo EXISTS, delete_repo scope present)
+  printf '%s\n' "$*" >> "$GHLOG"
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 0 ;;
+    "auth status") printf "Token scopes: 'repo', 'delete_repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+: > "$GHLOG"
+if ( cmd_unpublish "$MDIR" </dev/null ) >/dev/null 2>&1; then rc=0; else rc=1; fi
+if [ "$rc" -ne 0 ] && ! grep -q '^repo delete' "$GHLOG"; then PASS "J2: refuses non-interactive delete without --yes (never calls repo delete)"; else FAIL "J2: non-interactive delete not refused (rc=$rc)"; fi
+: > "$GHLOG"
+( cmd_unpublish "$MDIR" --disable-pages-only </dev/null ) >/dev/null 2>&1
+if grep -q 'api -X DELETE' "$GHLOG" && ! grep -q '^repo delete' "$GHLOG"; then PASS "J3: --disable-pages-only disables Pages, never deletes the repo"; else FAIL "J3: disable-pages-only path wrong"; fi
+unset -f gh
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m\n' "$pass" "$fail"
