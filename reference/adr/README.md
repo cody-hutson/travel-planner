@@ -21,3 +21,4 @@ options weighed, the decision, and the consequences.
 | ADR | Title | Status |
 |-----|-------|--------|
 | [ADR-001](ADR-001-nightlife-agent.md) | Dedicated nightlife agent — placement, boundary, coverage | Accepted |
+| [ADR-002](ADR-002-living-site-refresh.md) | Living-site refresh — secret model, client-side ambient data, 0-plaintext-leak | Accepted |
