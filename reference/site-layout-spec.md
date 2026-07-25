@@ -158,7 +158,7 @@ Structure:
 ```
 .act-vis      — Emoji gradient banner (80px mobile, 32px desktop compact, 60px expanded)
 .act-body
-  .act-links  — Map/Website/Tickets pills (absolute top-right, via JS wrapping)
+  .act-links  — Website/Tickets pills (absolute top-right, via JS wrapping); the map link is the standard .map-link, a sibling of this cluster (see Map-Link Component) and exempt from the compact-hide
   .act-kicker — Category · Location (uppercase, muted)
   .card-transit — Mode + time from hotel
   .act-name   — Venue name (display serif)
@@ -178,12 +178,12 @@ Compact always. Two-column grid in `.alt-grid`. Structure:
 ```
 .mini-em    — Emoji icon
 .mini-body
-  .mini-name    — Venue name with map link
+  .mini-name    — Venue name (plain text; the map link is the sibling .map-link, see Map-Link Component)
   .mini-sub     — Category · Area
   .card-transit — Mode + time
   .mini-note    — Short description
   .book-status  — Booking tier pill
-  .mini-links   — Optional extra links
+  .mini-links   — Optional extra links (website / booking); the standard .map-link is separate and always present
 ```
 
 ### Food Cards (`.food-card`)
@@ -196,7 +196,7 @@ Two-column grid in `.meal-cards`. Structure:
 .fc-desc    — Description (hidden desktop compact)
 .fc-foot    — Price + transit
 .book-status — Booking tier pill
-.fc-links   — Map/site links (absolute top-right on desktop)
+.fc-links   — Site links (absolute top-right on desktop); the map link is the standard .map-link, adjacent (see Map-Link Component)
 ```
 
 ### Night Cards (`.night-card`)
@@ -206,7 +206,7 @@ Dark background (navy). Structure:
 .nc-name  — Venue name (display serif)
 .nc-meta  — Location · details
 .nc-desc  — Description (hidden desktop compact)
-.nc-links — Map links
+.nc-links — Standard .map-link (see Map-Link Component)
 ```
 
 ### Section Toggles
@@ -291,6 +291,57 @@ The site is a read surface for status — it never writes `event-status.md`. The
 hub is the **primary writer** of that file (the validator only reads it; the
 enrichment agent may seed initial `locked` rows on setup); the site renders what
 the hub has recorded.
+
+### Map-Link Component
+
+Every event on the site carries the **same** map-link treatment: a single standard `.map-link`
+element. This replaces the former per-tier ad-hoc links — the map pill inside the featured-stop
+link cluster, the map link embedded in the mini-card name, the food-card link cluster, and the
+night-card links — which rendered maps four different ways and let some cards ship with no map
+link at all.
+
+**What is an event.** An *event* is any itinerary element that names a venue with a physical
+location and renders as a card — a **featured stop**, a **mini / alternative / bailout** card, a
+**food** card, or a **night** card — including **each per-track venue on a split day**. Every event
+is a place a traveler navigates *to*, so every event card carries **exactly one** `.map-link`.
+Transit connectors — the mode-and-time transit field, and route/direction links — are **not**
+events (they describe movement *between* events, not a destination) and carry no `.map-link`.
+
+**The location invariant.** Every event card resolves to a map link. A card whose venue has
+neither a map URL nor an official-site URL is a broken card. This is an audited invariant — the
+validator treats a missing or unresolvable link as a hard failure.
+
+**What it renders.** One anchor:
+
+    <a class="map-link" href="{maps_url}" target="_blank" rel="noopener">📍 Map</a>
+
+- A pin glyph + the label **Map** — concise and legible at every card scale (featured, mini, food,
+  night).
+- `href` = the venue's map URL, **sourced from `outputs/links-reference.md`** (the canonical venue
+  list): the venue's Google Maps URL, or — when that venue has no map pin (an in-park venue, or a
+  service reachable only via an official page) — its official-site URL as the fallback. The href is
+  **never hand-authored per card**: the site reads it from `links-reference.md`, so one venue has
+  one URL everywhere it appears.
+
+**Placement and visibility.**
+- On tiers that also carry website / tickets / booking links (featured stops, food cards), those
+  extra links stay in the tier's existing link cluster (`.act-links`, `.fc-links`); the `.map-link`
+  sits **adjacent to** that cluster as a **sibling element, not inside it**. On map-only tiers
+  (mini, night) the `.map-link` is the whole link affordance.
+- **Always reachable, even when a card is compact.** The desktop compact/collapse rules hide a
+  featured stop's description, meta, tips, and its extra-links cluster (`.act-links`). Because the
+  `.map-link` is a **sibling** of that cluster — not a child — the existing `display:none` on
+  `.act-links` leaves it visible with no extra CSS. **Do not add `.map-link` to any compact-hide
+  selector**: a reader must be able to navigate to any venue without expanding the card.
+- **Mini cards:** the venue name (`.mini-name`) is **plain text**; the map link is the sibling
+  `.map-link`, not a link embedded in the name.
+- **Print:** the `.map-link` prints (a usable URL on paper). It is a per-card affordance, distinct
+  from the Leaflet day map (`.map-zone`) that print styles hide — hiding the day map does not hide
+  the per-card map links.
+
+**Not the Leaflet map.** The `.map-link` is the per-event navigation link. It is separate from the
+Leaflet day-map visual (see **Maps** above), which plots the day's route. The two are independent:
+the Leaflet map may be collapsed or hidden without removing any event's `.map-link`.
 
 ---
 

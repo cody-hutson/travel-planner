@@ -205,6 +205,20 @@ Both read off artifacts you already audit (`event-status.md` for the regression,
 this check adds no new state and no scoring — it verifies the recovery was
 equitable and needs-safe, and routes any finding to the hub's remediation list.
 
+**Location-link completeness:**
+Build the event roster from the itinerary: every placed venue that renders as a
+card — featured stops, mini / alternative / bailout cards, food cards, night cards,
+and each per-track venue on a split day. For every event, confirm it resolves to a
+Maps link — or an official-site URL when the venue has no map pin — in
+`outputs/links-reference.md`, and that the event's card renders that standard map
+link. An event with no resolvable entry in `links-reference.md`, or a card whose map
+link is missing, is a **Critical** finding: a reader who cannot navigate to a placed
+venue has a broken itinerary. Cite the event, its day, and whether the gap is a
+missing `links-reference.md` entry or an unrendered link on the card. Transit
+connectors (the mode-and-time transit field, route/direction links) are not events
+and are out of scope for this check. `links-reference.md` is already your primary
+audit target — this check formalizes what a clean audit of it requires.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named indoor bailout.
 If any day is missing one, flag it as a critical gap.
@@ -284,10 +298,14 @@ enough**:
 5. Status integrity — a `locked`/`firmed` event altered outside its named
    change, or a "needs booking" surface that disagrees with status, is Critical
 6. Bailout gaps — any outdoor block without a named escape is Critical
-7. Price staleness — Warning level unless the discrepancy is large enough
+7. Location-link completeness — every itinerary event must resolve to a
+   Maps link (or an official-site URL when the venue has no map pin) in
+   links-reference.md, and its card must render that link; any event with
+   no resolvable link is a hard failure and is always Critical
+8. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
-8. Travel restrictions and advisories — Critical if action is required
-9. Local happenings — Note or Warning depending on impact
+9. Travel restrictions and advisories — Critical if action is required
+10. Local happenings — Note or Warning depending on impact
 
 ## Mode Behavior
 
@@ -356,6 +374,7 @@ File: outputs/validation-report.md
 | Status integrity (protected events + needs-booking) | | | | |
 | Satisfaction metrics (needs-compliance + coverage report) | | | | |
 | Bailout completeness | | | | |
+| Location-link completeness (every event has a Maps link) | | | | |
 | Structural integrity | | | | |
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 
@@ -413,6 +432,17 @@ Proximity venue usage (hotel-neighborhood):
 | Venue | Scheduled Day | Day of Week | Status | Holiday Impact | Notes |
 |-------|--------------|-------------|--------|---------------|-------|
 | [Name] | Day [N] | [Mon-Sun] | [Open / Closed / Unconfirmed] | [If applicable] | |
+
+---
+
+### Location-Link Report
+
+Every event must resolve to a map link in links-reference.md and render it on its card.
+Any MISSING or unrendered link is a Critical (also listed under Critical Issues).
+
+| Event | Day | Card tier | Link in links-reference? | Rendered on card? | Verdict |
+|-------|-----|-----------|--------------------------|-------------------|---------|
+| [Name] | Day [N] | [Featured / Mini / Food / Night] | [Maps / Official-site / MISSING] | [Yes / No] | [OK / Critical] |
 
 ---
 
