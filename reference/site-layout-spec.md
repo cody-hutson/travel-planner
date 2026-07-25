@@ -148,6 +148,81 @@ Per-day nav pills and overview dots:
 - Desktop: compact bar (~114px), click to expand tagline
 - Mobile: full banner with tagline visible
 
+### Day-Header Content Contract
+
+The Day Hero Banner (above) renders two content elements — a **headline** and a
+**tagline**. This contract governs what those two elements *say*. A day header is
+the first thing a reader sees on each day's page; it must read as if a travel
+editor wrote it, not as if a planning tool generated it. The failure this
+prevents: headers that read as AI meta-commentary — narrating the plan, or the
+tool that built it, instead of the day itself.
+
+**The two parts**
+
+| Element | What it is | Form | Example |
+|---|---|---|---|
+| **Headline** | The day's *theme* **or** its *anchor place* — the name of what the day is | A noun phrase, never a sentence. A neighborhood or pairing, a landmark, or a thematic name for the day. No verb-promise, no logistics list, no day-number prefix in the content itself. | `Tsukiji + Ginza` · `DisneySea` · `Arrival` · `A Slow Day, On Purpose` |
+| **Tagline** | One editorial line about the day | One sentence, or two short ones. Speaks about the place and the day — its rhythm, its reason, the one thing worth knowing before you start. Concrete and useful; it earns its place. | `Jet lag will wake you at five — use it. The market is a morning thing, and after that the day loosens on purpose.` |
+
+**What "editorial travel voice" means here**
+
+- **Addresses the reader about the destination** — a magazine standfirst, or a
+  friend who has been there. Second person or plain declarative.
+- **Concrete.** It names a real thing: a time window, a neighborhood, a sensory
+  detail, a constraint made human ("your body thinks it's 2 AM").
+- **Has a point of view.** It knows *why* the day is shaped this way and says so
+  plainly, without hedging.
+- **Earns its place.** Delete it and the reader loses orientation — not just a
+  flourish. If the line would fit any day of any trip, it is filler; cut it.
+- **Present, active energy** where it's natural ("Land, eat, sleep." "Use it.").
+
+**Banned — meta / AI phrasing.** A header must never break the fourth wall
+(reveal itself as generated) or narrate the plan instead of the trip. The
+following patterns are prohibited in both the headline and the tagline:
+
+| # | Banned pattern | Why it fails | Do not write |
+|---|---|---|---|
+| B1 | Design / optimization meta-talk | Describes the plan's construction, not the day | "This day is designed to…", "an optimized itinerary", "carefully balanced", "we've structured this day so that…", "strategically scheduled" |
+| B2 | Assistant / concierge framing | The voice of a chatbot, not an editor | "Here's your…", "we've curated…", "we've hand-picked…", "get ready to…", "enjoy your…" |
+| B3 | Generator self-reference | Reveals the header was machine-made | "AI-generated", "based on your preferences", "tailored to your group", "as requested" |
+| B4 | Empty hype with no referent | Travel-brochure filler that states nothing true | "unforgettable", "the perfect day", "a magical experience", "immerse yourself", "hidden gems", "a feast for the senses" |
+| B5 | Logistics-as-headline | The schedule already lists the day's mechanics | a headline that em-dash-lists the plan: "Breakfast, then the museum, then dinner — with a rest in between" |
+| B6 | Scaffold labels leaking into prose | Emits the template instead of the content | the words "Theme:", "Day type:", or placeholder text like "One honest line about…" appearing in the rendered tagline |
+
+**Voice exemplars.** Each pair is the same day written two ways. The ✗ column is
+the failure the contract exists to stop; the tag names the ban rule it trips.
+
+| Day shape | ✗ AI-notes (banned) | ✓ Editorial voice |
+|---|---|---|
+| Arrival, after a long flight | **Your Optimized Arrival Experience** <br> *This day is thoughtfully designed to ease you into your trip and help you recover from your long flight.* <br> — trips B1 | **Arrival** <br> *You land at four, but your body says it's the middle of the night. Adrenaline carries about ninety minutes — eat something close and sleep before it makes the choice for you.* |
+| Market morning, slow afternoon | **A Curated Day of Local Culture & Cuisine** <br> *Get ready to immerse yourself in an unforgettable culinary adventure through the city's most iconic market!* <br> — trips B2, B4 | **Tsukiji + Ginza** <br> *Jet lag will wake you at five — use it. The market is a morning thing; after that the day loosens on purpose, and a cool department-store floor is minutes away when the heat lands.* |
+| Full theme-park day | **Maximizing Your Theme-Park Value** <br> *We've strategically structured this high-energy day to optimize your time and make the most of your park experience.* <br> — trips B1, B2 | **DisneySea** <br> *One park, one day, no second act. Be at the gate for rope-drop, ride the headliner first, then let the afternoon heat set the pace.* |
+| Peak day with a special dinner | **The Perfect Peak Day** <br> *Immerse yourself in a magical, unforgettable experience showcasing the very best the city has to offer!* <br> — trips B4 | **Ghibli + Shibuya** <br> *The tickets you booked months ago. The morning is slow and green; the night is the dinner you'll still be describing when you're home.* |
+| Departure / travel-out day | **Efficient Departure Logistics** <br> *This carefully planned day ensures a smooth, stress-free transition to the airport based on your preferences.* <br> — trips B1, B3 | **Departure** <br> *One last breakfast at the market, then the airport train while the city is still yawning. Pack the night before — morning-you will be grateful.* |
+| A deliberate rest day | **A Balanced Recovery Day for Optimal Rest** <br> *Recharge and rejuvenate with this thoughtfully curated day of relaxation and self-care.* <br> — trips B2, B4 | **A Slow Day, On Purpose** <br> *Nothing here is required. A late lunch, the pool, a nap — this is the day that makes the last three possible.* |
+
+**Worked before / after.** A real market-and-neighborhood day (jet-lagged early
+wake, market breakfast, no trains, a mandatory afternoon rest, department-store
+AC when midday turns hot):
+
+*Before — AI-notes:*
+
+> **Day 2 — Thu, Jul 16 — An Optimized Day of Market Exploration and Neighborhood Immersion**
+> *Theme: This day is carefully designed to balance a high-energy morning at the market with a relaxed, curated afternoon, optimized to accommodate the group's rest needs while maximizing cultural exposure.*
+
+The headline is a sentence-shaped mission statement (B1, B5); the tagline
+narrates the plan's *design* ("designed to balance", "optimized to", "curated")
+rather than the day (B1, B2). Nothing in it could only be true of *this* day.
+
+*After — editorial voice:*
+
+> **Day 2 — Thu, Jul 16 — Tsukiji + Ginza**
+> *Theme: Jet lag wakes everyone at five — use it. The market is best before the heat, and the rest of the day slows on purpose: no trains, no far neighborhoods, just a cool floor to duck into when midday turns red.*
+
+The headline names the day (anchor places). The tagline is concrete (five AM,
+the heat, no trains), has a point of view (the slow afternoon is deliberate), and
+would fit no other day of the trip.
+
 ### Day Grid
 - **Desktop 1200px+:** `grid-template-columns: 1fr 1.3fr 1fr 0.8fr` (schedule · highlights · food · map)
 - **Tablet 769-1200px:** `1fr 1.2fr 1fr` (map goes full-width at bottom)
