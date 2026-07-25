@@ -246,6 +246,7 @@ When the itinerary changes (iteration mode, new bookings, swapped venues):
 - Read the current site HTML
 - Patch the affected sections — don't regenerate from scratch
 - Preserve any design tweaks the user already approved
+- After patching, run the round-trip completeness check (see `reference/site-layout-spec.md` §9 Plan/Site Single-Sourcing & Round-Trip Fidelity): every element in `final-itinerary.md` — every day and **every track of a split day** — still resolves to a rendered component or a named exclusion, so a patch never silently drops plan detail.
 
 ### Publishing to GitHub Pages
 

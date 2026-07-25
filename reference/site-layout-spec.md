@@ -605,3 +605,127 @@ Site is a single self-contained HTML file. External dependencies:
 - Google Fonts (3 families via CDN)
 - Leaflet.js + CartoDB tiles (via CDN)
 - No build step, no framework, works offline (except maps/fonts)
+
+---
+
+## 9. Plan/Site Single-Sourcing & Round-Trip Fidelity
+
+The site is a **rendering of the plan, single-sourced from `outputs/`.** It reads the plan
+artifacts and renders them; it never authors plan content of its own and never writes back to any
+`outputs/` file. §3's Booking Checklist already establishes this read-surface principle for one
+slice — booking status derives from `event-status.md`, and the site never writes it. This section
+generalizes that principle to the **entire** plan: every element the site shows traces to an
+authoritative `outputs/` artifact, and nothing in `final-itinerary.md` is silently dropped on the
+way to the page.
+
+### 9.1 Single-source authority — which artifact owns which element
+
+Each site element has exactly one authoritative source. Where two artifacts could carry the same
+fact, the authority column decides and the others are read-only consumers of it (one source per
+fact).
+
+| Site element | Authoritative artifact | The site reads it for |
+|---|---|---|
+| Itinerary structure — days, day headers, anchors, supporting stops, bailouts, alternatives, food, transit, nightlife, and **every track of a split day** | `final-itinerary.md` | The plan content and its per-day shape |
+| Every venue link — each `.map-link` href, plus website / tickets / booking links | `links-reference.md` | One URL per venue, everywhere it appears |
+| Day assignment + deduplication — which venue sits on which day, the appears-at-most-twice rule, anchor vs. alternative/bailout placement | `venue-matrix.md` | Placing a venue on the right day, not double-showing it |
+| Booking status, "needs booking" flags, checklist membership, per-card booking-tier pills | `event-status.md` | Whether an event is booked / to-book / settled (per §3's read-surface rule) |
+| Group, dates, home base, trip-level hard constraints — hero + overview facts | `trip-context.md` | Trip-level header and constraint framing |
+
+Two artifacts are **authoritative internally but not reader-facing site content:**
+`traveler-model.md` and `satisfaction-metrics.md` hold per-traveler needs, desires, and coverage.
+They are the planner's internal view and carry personal detail that lives only in the working dir
+and is never published — the site does **not** render them by default (see the Intentional-
+Exclusion list in 9.3).
+
+The rule, stated once: **the site renders `outputs/`; it writes none of it.** A build or update
+reads these artifacts and produces the HTML — it never edits an `outputs/` file as a side effect.
+
+### 9.2 Round-trip completeness — every plan element has a rendered home
+
+Round-trip fidelity is **surjective from plan onto site**: every element in `final-itinerary.md`
+maps to something the site renders. It is **not** bijective — the site may add reference and
+navigation scaffolding (a hero, an overview dashboard, an essentials card, a trip-at-a-glance,
+appendices) that has no single plan-element source. Additive site scaffolding is legitimate;
+**dropped plan detail is not.** The invariant runs one way: plan → site is total; site → plan need
+not be.
+
+**The mapping table (the anti-silent-loss mechanism).** Every element type the itinerary format
+defines resolves to a named site component or to a named exclusion. A day-by-day plan element that
+is neither is a **silent drop** — the defect this contract forbids.
+
+| Itinerary element type | Renders as (site component, §3) |
+|---|---|
+| Advance Booking Checklist | Booking Checklist — status ← `event-status.md`, links ← `links-reference.md` |
+| Trip Overview | Hero + Overview Dashboard |
+| Day header — energy / zone / type / theme | Day Hero Banner + energy-coded day nav |
+| Anchor | Featured Stop Card (`.act-card`) with its `.map-link` |
+| Supporting Experiences | Featured Stop Cards (side-by-side) or Mini Cards |
+| AC Bailout | Mini Card in a Section Toggle, bailout-flagged, with its `.map-link` |
+| Alternatives | Mini Cards in `.alt-grid` under a Section Toggle — Alt/B placement ← `venue-matrix.md` |
+| Food Anchors — breakfast / lunch / dinner + options | Food Cards under Meal Toggles |
+| Transit Notes | `.card-transit` field + collapsible transport-box |
+| Nightlife / later-tonight options | Night Cards (`.night-card`) |
+| Constraint Compliance | Heat/Weather Strip + constraint note |
+| Parallel Track — a split day | **Split-Day Track component** — one labeled track column per subgroup (N≥2), each with its own day map and named endpoints; every per-track event carries its `.map-link` |
+
+**Split days are the sharpest test of this rule.** A split day carries two or more parallel tracks,
+and the failure this contract exists to prevent is a track — or a track's detail — silently
+collapsing into one. Every track of every split day renders as its **own labeled column** through
+the Split-Day Track component; no track is merged away, and each track's events each get the
+location invariant's `.map-link`. (The Split-Day Track component and its exact class names are
+defined by the split-day component section; this contract requires only that all per-track plan
+content route through it, with no track dropped.)
+
+Trip-level reference matter — an essentials card, a trip-at-a-glance table, a key-closures list,
+appendices — is **site-additive** reference content: render it when the plan provides it, sourced
+from `final-itinerary.md`'s front/back matter and `trip-context.md`. It is static reference, not
+the per-day plan detail the completeness rule gates — not a drift risk, and not part of the round-
+trip core.
+
+### 9.3 Intentional exclusions — named, so nothing is silent
+
+Some itinerary elements are **deliberately not reader-facing.** They are named here so that "not
+rendered" is an explicit decision with a reason — not a silent drop. Excluding a listed element is
+correct; dropping an *unlisted* plan element is the defect.
+
+| Excluded element | Why it is not on the site |
+|---|---|
+| Spoke Deviations | The planner's trace of why the plan diverged from a specialist's recommendation. Audit-trail, not reader content. |
+| Open Decisions | Pre-decision options for the planner, not finalized plan. Not a reader-facing commitment. |
+| Itinerary Version Log | Document metadata. |
+| Per-traveler model + satisfaction metrics | Internal coverage view carrying personal detail; kept out of the published surface by design (see 9.1). |
+
+### 9.4 The completeness check — run at build and at update
+
+At **site build** and again at every **site update**, walk 9.2's mapping against the current
+`final-itinerary.md`:
+
+- Every day resolves to a Day Hero Banner and a day grid; every card-bearing element (anchor,
+  supporting, bailout, alternative, food, nightlife) resolves to its component.
+- Every track of every split day resolves to its own labeled Split-Day Track column.
+- Every rendered event carries its `.map-link` (the location invariant).
+- Every element type present in the plan is either rendered (mapping table) or on the
+  Intentional-Exclusion list.
+
+An **update** is the higher-risk moment: patching only the changed sections is correct (do not
+regenerate from scratch), but the walk must still confirm the patch dropped nothing — most often a
+**second track of a split day** changing while only the first was patched. A patch that leaves any
+plan element unrendered and unexcluded fails the check.
+
+### 9.5 Structural-gap boundary — what is a later slice, not this one
+
+The completeness check separates two failures that look alike but scope differently:
+
+- **A build/update that forgot to place an element whose component exists** is an ordinary build
+  defect. The check catches it; fixing it is **in scope** — re-place the element.
+- **A reader-facing plan element type for which no site component can represent it** — a
+  structurally unrepresentable element — is a **component gap.** Designing the missing component is
+  a **fast-follow**, tracked as its own work item and shipped in a later patch release. It is
+  **not** an in-scope expansion of this single-sourcing contract.
+
+This contract's job is to make the mapping **total over the elements today's components can
+render**, and to **surface** any structural gap as a named finding — not to build new components
+under the banner of round-trip fidelity. If the completeness walk turns up an element type with no
+possible rendered home, record it and route it to a fast-follow; do not grow this contract to
+absorb it.
