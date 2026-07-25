@@ -418,6 +418,57 @@ validator treats a missing or unresolvable link as a hard failure.
 Leaflet day-map visual (see **Maps** above), which plots the day's route. The two are independent:
 the Leaflet map may be collapsed or hidden without removing any event's `.map-link`.
 
+### Split-Day Component
+
+Some days divide the group into parallel tracks — a subgroup does one thing while another does
+something else, then they rejoin. The site renders this as a **single day** with a first-class
+**split-day region**: N ≥ 2 labeled track columns side by side, each self-contained with its own
+stops, its own map, and its named endpoints. This replaces the former treatment of duplicating the
+whole day into one full page per subgroup ("take the version for your group"), which forced the
+reader to work out which page was theirs and made who-is-on-which-track invisible at a glance.
+
+**Where the data comes from.** The split-day region renders **from the hub's Parallel Track
+blocks** — on a split day the itinerary already carries one Parallel Track block per track (subgroup
+members, grain, trigger, named venues with timing, and rejoin logistics). The component renders those
+blocks: **one Parallel Track block → one track column.** It introduces no new data and never
+duplicates the day.
+
+**Structure.** A `.split-day` region — full-width, within the one-day viewport — containing:
+
+- `.split-point` — a shared lead-in naming the place and time the group divides (e.g.
+  "Hotel · ~1:30 PM"). The whole-group portion of the day that precedes the split renders normally in
+  the day grid above; when the entire day is split, the day grid is omitted and `.split-day` is the
+  day body.
+- N `.track-col` columns, one per Parallel Track block, laid side by side. Each column holds:
+  - `.track-label` — the subgroup members, verbatim (e.g. "Sam · Pat · Riley"). This is what makes
+    who-is-on-which-track legible at a glance.
+  - `.track-grain` — a small badge: single / small-group / full-group.
+  - `.track-why` — a one-line muted kicker from the block's trigger (why this track exists).
+    Optional; omit when absent.
+  - `.track-stops` — the block's named venues, in order, each rendered as an event card using the
+    existing card tiers (mini card by default for column fit; a featured card for the track's anchor
+    stop — no new card type). **Every stop carries the standard `.map-link`** (see Map-Link
+    Component), sourced from `outputs/links-reference.md` — one venue, one URL, everywhere it appears.
+  - `.track-map` — the track's **own** Leaflet map (a `.map-zone` instance; see Maps), plotting only
+    this track's stops plus its rejoin point. Each track has its own map.
+  - `.track-rejoin` — the named rejoin endpoint and timing, from the block's rejoin logistics (e.g.
+    "Rejoin: Hotel · ~noon next day"). Same-day or next-day.
+
+**Named endpoints.** Every track states two named endpoints: the shared **split point** (where it
+starts) and its **rejoin point** (where and when it reconverges). Neither is a vague "meet up
+later" — both are named places with times, taken straight from the Parallel Track block.
+
+**One day, one header.** A split day keeps a single day section and a single day header; the header
+names the split (e.g. "PokePark AM · Split PM"). The day is never duplicated into per-subgroup
+pages — the split lives in the body, expressed as parallel columns.
+
+**Not rendered.** The Parallel Track block's *Whole-group bound* and *Needs honored* fields are audit
+confirmations (for the validator), not reader content; the component does not render them.
+
+**Distinct from `.split-panel`.** The `.split-day` region (parallel tracks) is unrelated to the
+`.split-panel .warn-box` collapsible caution box above — different components; they share no
+selectors.
+
 ---
 
 ## 4. Responsive Architecture
@@ -470,6 +521,27 @@ the Leaflet map may be collapsed or hidden without removing any event's `.map-li
   .reveal { opacity:1 !important; transform:none !important }
 }
 ```
+
+### Split-Day Region
+
+The `.split-day` region extends the one-day-per-viewport model — the whole day (shared portion +
+split band) still targets a single viewport.
+
+- **Desktop (≥769px):** track columns lay out side by side (`grid-template-columns: repeat(N, 1fr)`
+  for N tracks) within the day viewport, below the shared-portion day grid. Each column carries its
+  own `.map-zone` inline. Extend the viewport-fit collapse priority
+  (nightlife → sec-toggles → meal-toggles) with **track maps last**: if the day still overflows,
+  per-track maps collapse to a per-track "Show track map" trigger — maps are the core affordance of a
+  split day, so they are the last thing collapsed. On a split day the day grid's own map column shows
+  only the shared/whole-group route, or is omitted; the per-track maps are the day's maps.
+- **Tablet (769–1200px):** track columns **stack** (one per row), each a full-width labeled block
+  with its stops, then its `.map-zone` full-width below — matching the tablet convention that the map
+  drops to full width at the bottom. Labels keep each track legible when stacked.
+- **Mobile (≤768px):** tracks stack, one labeled block each, inside the single active `.day-section`
+  (one day at a time is preserved). Each track's map sits behind a per-track "View map" trigger
+  (tap-to-show), matching the mobile map-trigger pattern; each stop's `.map-link` stays visible.
+- **Print:** tracks print stacked and labeled; per-track `.map-zone` maps are hidden (as all Leaflet
+  maps are in print), and each stop's `.map-link` prints as a usable URL.
 
 ---
 
