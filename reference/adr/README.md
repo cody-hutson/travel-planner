@@ -22,3 +22,5 @@ options weighed, the decision, and the consequences.
 |-----|-------|--------|
 | [ADR-001](ADR-001-nightlife-agent.md) | Dedicated nightlife agent — placement, boundary, coverage | Accepted |
 | [ADR-002](ADR-002-living-site-refresh.md) | Living-site refresh — secret model, client-side ambient data, 0-plaintext-leak | Accepted |
+| [ADR-003](ADR-003-group-coordination.md) | Group coordination — change representation, approval workflow, notification, privacy | Accepted |
+| [ADR-004](ADR-004-contact-emergency-privacy.md) | Traveler contact & emergency info — privacy-handling model | Accepted |
