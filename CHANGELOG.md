@@ -3,6 +3,44 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.7.0] — 2026-07-26 — Faithful site rendering
+
+The published site now renders the plan **faithfully and legibly**: every event
+carries a standard, validator-gated map link; days that split the group show as
+parallel labeled tracks instead of duplicate pages; day headers read as editorial
+travel voice rather than AI meta-notes; and the full plan — including split tracks
+— round-trips into the site with nothing silently dropped.
+
+### Added
+- **Standard map-link component + location invariant (`reference/site-layout-spec.md`).**
+  One `.map-link` treatment across every card tier, sourced from
+  `outputs/links-reference.md` — one venue, one URL, everywhere it appears. Every
+  event card carries exactly one; transit connectors carry none.
+- **Location-invariant validator gate (`agents/06-validator.md`).** A new audit —
+  every itinerary event must resolve to a map (or official-site fallback) link, and
+  a missing link is Critical, so a trip with a missing link fails validation.
+- **Day-header content contract (`reference/site-layout-spec.md`).** Day headers are
+  specified as {day theme or anchor place} + {one editorial tagline}, with a ban
+  list for meta/AI phrasing, voice exemplars, and a worked before/after. The hub's
+  day-header output is bound to the contract.
+- **First-class split-day component (`reference/site-layout-spec.md`).** A day that
+  splits the group renders as N≥2 parallel labeled track columns, each with its own
+  map and named split/rejoin endpoints, from the hub's Parallel Track blocks —
+  replacing the old duplicate-full-day-page treatment.
+- **Plan/site single-sourcing & round-trip fidelity (spec §9).** The site is
+  single-sourced from `outputs/`; every plan element resolves to a rendered
+  component or a named exclusion (surjective plan→site, nothing silently dropped),
+  checked at build and at every update.
+- **ADR-005 — Location invariant.** Records the cross-cutting decision that the
+  split-day and unification slices build on.
+
+### Notes
+- A spec/contract release — the deliverables are the site-layout spec, the
+  validator, and the hub contracts; a site is generated per trip from them.
+- Follow-ups noted for a later release: re-synthesizing the Tokyo worked example out
+  of its legacy duplicate-page form, and wiring the day-template nightlife block
+  that §9's round-trip mapping references.
+
 ## [0.6.0] — 2026-07-01 — Destination ideation
 
 The front of IDEATION: help a group decide *where* to go before any destination
