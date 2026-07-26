@@ -531,9 +531,9 @@ Group, dates, hotel, confirmed logistics, hard constraints enforced throughout.
 
 ---
 
-**Day [N] — [Date] — [Day of week]**
+**Day [N] — [Date] — [Day of week] — [Day theme or anchor place]**
 *Energy:* [Low / Medium / High] | *Zone:* [Primary area] | *Type:* [Day type]
-*Theme:* [One honest line — what this day is and why]
+*Theme:* [One editorial tagline. The headline above (the day theme or anchor place) and this tagline both conform to the **Day-Header Content Contract** in `reference/site-layout-spec.md`: editorial travel voice — concrete, with a point of view, in a magazine/friend register — and the meta/AI ban list B1–B6 (no "designed to…/optimized", no "we've curated/here's your…", no generator self-reference, no empty hype, no logistics-as-headline, no scaffold labels) is prohibited.]
 
 **Anchor**
 [Activity name — neighborhood — time — duration — what to know]
