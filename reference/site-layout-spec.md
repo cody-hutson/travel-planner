@@ -401,8 +401,9 @@ validator treats a missing or unresolvable link as a hard failure.
 **Placement and visibility.**
 - On tiers that also carry website / tickets / booking links (featured stops, food cards), those
   extra links stay in the tier's existing link cluster (`.act-links`, `.fc-links`); the `.map-link`
-  sits **adjacent to** that cluster as a **sibling element, not inside it**. On map-only tiers
-  (mini, night) the `.map-link` is the whole link affordance.
+  sits **adjacent to** that cluster as a **sibling element, not inside it**. On tiers without a standing
+  website / tickets cluster (mini, night), the `.map-link` is the primary link affordance; a
+  mini card may still carry optional extra links (`.mini-links`) beside it.
 - **Always reachable, even when a card is compact.** The desktop compact/collapse rules hide a
   featured stop's description, meta, tips, and its extra-links cluster (`.act-links`). Because the
   `.map-link` is a **sibling** of that cluster — not a child — the existing `display:none` on
@@ -667,13 +668,13 @@ is neither is a **silent drop** — the defect this contract forbids.
 | Transit Notes | `.card-transit` field + collapsible transport-box |
 | Nightlife / later-tonight options | Night Cards (`.night-card`) |
 | Constraint Compliance | Heat/Weather Strip + constraint note |
-| Parallel Track — a split day | **Split-Day Track component** — one labeled track column per subgroup (N≥2), each with its own day map and named endpoints; every per-track event carries its `.map-link` |
+| Parallel Track — a split day | **Split-Day Component** — one labeled track column per subgroup (N≥2), each with its own day map and named endpoints; every per-track event carries its `.map-link` |
 
 **Split days are the sharpest test of this rule.** A split day carries two or more parallel tracks,
 and the failure this contract exists to prevent is a track — or a track's detail — silently
 collapsing into one. Every track of every split day renders as its **own labeled column** through
-the Split-Day Track component; no track is merged away, and each track's events each get the
-location invariant's `.map-link`. (The Split-Day Track component and its exact class names are
+the Split-Day Component; no track is merged away, and each track's events each get the
+location invariant's `.map-link`. (The Split-Day Component and its exact class names are
 defined by the split-day component section; this contract requires only that all per-track plan
 content route through it, with no track dropped.)
 

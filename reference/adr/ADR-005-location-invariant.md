@@ -1,6 +1,6 @@
 # ADR-005: Location invariant — every itinerary event carries a standard, validator-gated map link
 
-- **Status:** Proposed (2026-07-25)
+- **Status:** Accepted (2026-07-26)
 - **Deciders:** repo maintainer
 - **Driving work:** the Faithful site rendering epic (#67); foundational invariant consumed by the split-day component and the plan/site unification slices.
 
