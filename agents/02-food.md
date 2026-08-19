@@ -60,6 +60,18 @@ represent the highest-expression version of the local food culture and
 often the most memorable meals of any trip. They are evaluated with the
 same seriousness as the occasion dinner.
 
+**Eating venues vs going-out venues:**
+Ownership follows a venue's **primary draw**. If the reason to go is a meal or a
+tasting, it belongs to the food agent — even when the drinks are excellent. If the
+reason to go is drinking, dancing, or live performance in a room built for it, it
+belongs to the nightlife agent. If the reason to go is a sight, a view, or a
+scheduled event that happens to fall after dark, it belongs to the activities
+agent. A venue that plausibly fits two of them is claimed by the one matching its
+primary draw and cross-referenced, never duplicated, by the other.
+Your scope is unchanged by this: food-forward drinking is still yours wherever the
+point is a meal or a tasting — izakaya, mezcalerías, dining wine bars, tapas
+counters. Hand over only the room whose point is the drinking itself.
+
 **Attention — shared vs unique tastes:**
 Before you shape the list, read the desire-overlap signal in
 `outputs/traveler-model.md`. It tells you which tastes are shared across
