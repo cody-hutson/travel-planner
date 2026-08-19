@@ -3,9 +3,9 @@
 > **This is *your* profile** — what you'd love out of the trip, what you need it to
 > work around, and how you like to travel. One file per person.
 >
-> **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There is one per
-> section, and every one is a pick-from-the-list or a short phrase. Nothing here is
-> compulsory: fill what fits where your trip is right now and come back for the rest.
+> **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There are ten of them,
+> at most one in a section, and most are a pick-from-the-list or a short phrase. Nothing
+> here is compulsory: fill what fits where your trip is right now and come back for the rest.
 >
 > **How to use it:**
 > - Copy this template to `trips/[destination-year]/travelers/<your-name>.md`, then
@@ -300,7 +300,10 @@ rest of the group would not already know who they are.
 
 ### Step 2 — Destination leanings
 Fields: **Would love**, **Rather skip**, **Trip vibe** (starred).
-Ask first whether the destination is already decided — if it is, skip the whole section.
+Ask first whether the destination is already decided — if it is, skip the questions for
+this whole section. **Skipping a section never removes it from the output:** every field
+still ships, each with an em dash where the answer would go (see "producing the finished
+file" below). Dropping the lines loses the labels the planner parses.
 Otherwise offer the vibe options (beach, city, nature, culture, food, or a mix), then where
 they would love to go and anywhere they would rather avoid this time.
 
@@ -333,7 +336,10 @@ This is the important one. Ask whether anything has to be worked around for them
 walking or stairs, food or allergies, rest, a spending ceiling, a fixed time, noise or
 crowds. One block per need, in their own words, as specific as they can make it. If nothing
 is a hard must, write `none` rather than leaving it blank — blank reads as *not answered
-yet*, and the planner treats an unanswered need as unknown, never as none. Leave **Applies
+yet*, and the planner treats an unanswered need as unknown, never as none. **This is the
+one place `none` is used instead of the em dash**: everywhere else an em dash means "no
+answer", but for needs the difference between *"I have none"* and *"not asked yet"* is
+load-bearing, so say it in words. Leave **Applies
 to** blank.
 
 ### Step 8 — Desires — what you want
