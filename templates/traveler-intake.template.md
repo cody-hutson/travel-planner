@@ -248,3 +248,137 @@
 - **Special occasion?:** [Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? e.g., "Mum's 70th, on the Thursday". Skip if it's just a trip.]
 
 [Anything else worth knowing — a quirk, a hope, a worry, a "by the way." Skip if nothing comes to mind.]
+
+---
+
+# END OF PROFILE — the guide below is not part of your profile
+<!-- PROFILE-END -->
+
+> **Filling this in by hand? You're finished — everything above is your profile.** You can
+> stop here. Delete this guide or leave it; the planner ignores anything below this line.
+
+### Filling this out with an assistant
+
+Upload or paste **this whole file** into any assistant — Claude, ChatGPT, Gemini,
+DeepSeek, Grok, whatever you use — and say:
+
+> *Help me fill out this travel profile. Follow the guide at the bottom of the file.*
+
+That is all you need to say. Everything below tells the assistant how to run it.
+
+### Assistant — how to run this interview
+
+You are helping one traveler fill out their own profile. Read the whole file first, then
+follow these rules exactly.
+
+1. **One section at a time,** in the order they appear. Never dump all the questions at
+   once, and never jump ahead to a later section before the current one is settled.
+2. **Two or three questions per section, maximum.** Ask in plain language. The bracketed
+   text in the file is a hint for you — do not read it out as a script.
+3. **Offer the choices.** Where a field lists options, or the section carries a menu, put
+   those in front of them. Recognising something is far faster than recalling it.
+4. **Do the starred fields first.** The ten fields marked with a star are the two-to-three
+   minute pass. When they are done, say what is left and ask whether they want to keep
+   going, stop there, or jump to a particular section. All three are fine answers.
+5. **"Skip" is always valid.** Accept it immediately and move on. Never push twice.
+6. **Never invent.** An unanswered field is a skipped field. Do not fill one in with a
+   plausible guess, and do not infer one field from another.
+7. **Keep their words.** Tighten the wording; do not rewrite the meaning. If you are not
+   sure what they meant, ask — do not paraphrase your way past it.
+8. **Two fields are never asked about.** Leave **Applies to** and **Overlap** blank. The
+   planner works both out.
+
+### Assistant — the sections, in order
+
+### Step 1 — About you
+Fields: **Name** (starred), **Relationship**, **Party**.
+Ask their name. Then whether anyone is travelling with them who will not fill in their own
+form — kids and ages, a partner who is not doing this. Relationship only matters if the
+rest of the group would not already know who they are.
+
+### Step 2 — Destination leanings
+Fields: **Would love**, **Rather skip**, **Trip vibe** (starred).
+Ask first whether the destination is already decided — if it is, skip the whole section.
+Otherwise offer the vibe options (beach, city, nature, culture, food, or a mix), then where
+they would love to go and anywhere they would rather avoid this time.
+
+### Step 3 — Dates & availability
+Fields: **Can travel** (starred), **Blackout**, **Trip length**.
+When can they travel? Then anything they absolutely cannot do, and how long feels right.
+
+### Step 4 — Getting there & back
+Fields: **Leaving from** (starred), **Arrive / leave**, **Journey comfort**, **Passport**.
+Where are they setting out from? Only ask about arriving or leaving separately if they are
+not travelling with the group. Journey comfort covers long-haul, red-eyes, layovers, and
+whether they lean towards flying, train, or driving. Passport is for international trips
+only and is **country and expiry month only — never a passport number.** If they start to
+give you a number, stop them.
+
+### Step 5 — Where you stay
+Fields: **Lodging style** (starred), **Rooming**.
+Hotel, rental, or hostel — plus anything that is a must for them (a kitchen, a lift, quiet).
+Rooming is whether they want their own room, are happy sharing, and with whom. Skip rooming
+if they are travelling alone or do not know the group yet.
+
+### Step 6 — Budget appetite
+Fields: **Comfort range** (starred), **Splurge appetite**.
+Offer the three shapes — keep it lean, mid-range, or spend freely — then ask what they would
+happily pay up for. This is their personal lean, not the group's budget.
+
+### Step 7 — Needs — the must-haves
+Fields per block: **Category**, **Specific** (starred), **Applies to** (leave blank).
+This is the important one. Ask whether anything has to be worked around for them: heat,
+walking or stairs, food or allergies, rest, a spending ceiling, a fixed time, noise or
+crowds. One block per need, in their own words, as specific as they can make it. If nothing
+is a hard must, write `none` rather than leaving it blank — blank reads as *not answered
+yet*, and the planner treats an unanswered need as unknown, never as none. Leave **Applies
+to** blank.
+
+### Step 8 — Desires — what you want
+Fields per block: **Desire** (starred), **Priority tier**, **Theme tag(s)**, **Overlap** (leave blank).
+Offer the archetype menu from the section as starting points, then make each one specific to
+them. For every desire, ask for exactly one priority tier — *anchor* (would be genuinely
+disappointed to miss it), *wish* (try hard, but it can yield), or *nice-to-have* (a bonus).
+Suggest a theme tag or two, reusing the archetype wording where it fits. Leave **Overlap**
+blank.
+
+### Step 9 — Travel style & pace
+Fields: **Pace** (starred), **Day rhythm**, **Novelty vs comfort**, **Planning style**.
+Offer packed, balanced, or relaxed. Then morning or evening person, how far they like to
+stray from the familiar, and planned versus spontaneous.
+
+### Step 10 — Interests & tastes
+Fields: **Interests** (starred), **Cuisine appetite**.
+Read out the tick list from the section and let them pick — three or four is plenty. Then how
+they eat when they travel, including anything they avoid.
+
+### Step 11 — People dynamics & togetherness
+Fields: **Group time**, **Split off with**, **Solo, I'd**, **Whole-group moments**.
+Offer mostly together, some solo or sub-group time, or lots of independent time. Then who
+they would enjoy peeling off with, what they would do alone given the chance, and anything
+they want everyone present for. Skip the section if they do not know the group yet.
+
+### Step 12 — Anything else
+Fields: **Special occasion?**, plus the free-text line at the end.
+Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? Then:
+anything the questions missed.
+
+### Assistant — producing the finished file
+
+When the interview is done, output **one markdown code block** containing the profile and
+nothing else. No preamble, no commentary, no summary afterwards.
+
+- Include **everything above the `# END OF PROFILE` line**, and nothing from below it.
+- Keep every field label **exactly as written**, including the `**bold**` and the star
+  markers. Do not rename, reorder, merge, add, or drop sections or fields.
+- Replace each `[bracketed placeholder]` with their answer. Nothing bracketed survives.
+- For a field they skipped, keep the line and put a single em dash where the answer
+  would go — the bullet, the bold label, then `—`. Do not leave the placeholder text
+  in, and do not delete the line.
+- **Applies to** and **Overlap** get the label and nothing after it.
+- Under **Needs** and **Desires**, delete the unused repeated blocks and keep one block per
+  real need and per real desire — adding more blocks if they have more.
+- Leave the `>` guidance quotes as they are.
+- Put their name into the title line at the very top.
+
+Then tell them to save it as `trips/[destination-year]/travelers/<their-name>.md`.
