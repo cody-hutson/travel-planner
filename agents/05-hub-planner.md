@@ -561,6 +561,16 @@ Group, dates, hotel, confirmed logistics, hard constraints enforced throughout.
 [Key transit or taxi guidance specific to this day's movement pattern.
 Line names, realistic times, first-timer cautions.]
 
+[If nightlife applies tonight — desire-gated and optional, never a forced anchor
+(ADR-001 § 3): it applies when a present traveler holds a nightlife/evening desire, or a
+natural occasion does (weekend, special occasion). Entries obey the venue-matrix dedup
+rules. When it does not apply, write the no-nightlife line instead — never both, never neither.]
+**Nightlife**
+[Venue name — neighborhood — night type — from [time] — what to know]
+[Venue name — neighborhood — night type — from [time] — what to know]
+*Next morning:* [realistic end time and what it costs tomorrow's start]
+No nightlife tonight — [reason: rest day, early start, no present desire]
+
 **Constraint Compliance**
 [Explicitly confirm how each hard constraint is honored today.
 If any constraint is stretched, explain why and what the mitigation is.]
