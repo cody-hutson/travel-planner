@@ -153,10 +153,10 @@
 > tag each one with **how much it matters** so the plan knows what to protect.
 >
 > **Add an entry for each thing you want, and delete the rest.** Fill in the **Desire**
-> and pick exactly one **Priority** — think of it as how much it matters, not a number:
+> and pick exactly one **Priority tier** — think of it as how much it matters, not a number:
 
 - **Desire:** [What you want — e.g., "a slow museum morning rather than a packed sightseeing sprint."]
-- **Priority:** [Exactly one of:
+- **Priority tier:** [Exactly one of:
     - **anchor** — you'd be genuinely disappointed to miss this; build the trip to land it.
     - **wish** — a real want to try hard for, but it can yield to a need or to someone else's anchor.
     - **nice-to-have** — a bonus; lovely if it fits, no loss if it doesn't.]
@@ -164,17 +164,17 @@
 - **Overlap:** [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]
 
 - **Desire:** [Second thing you want — e.g., "explore the local markets."]
-- **Priority:** [anchor / wish / nice-to-have]
+- **Priority tier:** [anchor / wish / nice-to-have]
 - **Theme tag(s):** [*(optional)* — e.g., `markets, food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
 - **Desire:** [Third thing you want — e.g., "one standout coffee place."]
-- **Priority:** [anchor / wish / nice-to-have]
+- **Priority tier:** [anchor / wish / nice-to-have]
 - **Theme tag(s):** [*(optional)* — e.g., `food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
 > Add as many desires as you like; delete the spares. There's no trip-level "desire" —
-> these are yours alone. Priority is a "how much it matters" label, not a score; nothing
+> these are yours alone. Priority tier is a "how much it matters" label, not a score; nothing
 > optimizes against it.
 
 ---
