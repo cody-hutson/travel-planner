@@ -16,8 +16,10 @@
 >   isn't picked yet, the "Destination leanings" section matters most; if dates and a
 >   hotel are already booked, you can skip it. A few lines is fine; a lot is fine too.
 > - Every question has a short example and a "skip if it doesn't apply." Replace each
->   `[bracketed placeholder]` with your own answer, or leave it as-is if you've got
->   nothing to add there.
+>   `[bracketed placeholder]` with your own answer. If a question doesn't apply to you,
+>   keep the line and put a single em dash (`—`) where the answer would go. **Don't leave
+>   the placeholder text sitting there** — the planner reads what's on the line, so a
+>   leftover `[bracketed placeholder]` gets treated as your answer.
 > - For the repeatable blocks (needs, desires), **add as many as you like and delete
 >   the rest.**
 >
