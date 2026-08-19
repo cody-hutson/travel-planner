@@ -1,15 +1,15 @@
 # Travel Planner
 
-A multi-agent trip planning system. Seven specialized agents research, plan, validate, and produce travel itineraries.
+A multi-agent trip planning system. Eight specialized agents research, plan, validate, and produce travel itineraries.
 
 ## Folder Structure
 
 | Path | Purpose |
 |---|---|
 | `CLAUDE.md` | Operating instructions for Claude Code |
-| `agents/` | Behavioral definitions for the 7 agents (enrichment, activities, food, scheduling, transport, hub-planner, validator) |
-| `templates/` | `trip-context.template.md` — copy this when starting a new trip |
-| `reference/` | `site-layout-spec.md` — implementation spec for the published travel site |
+| `agents/` | Behavioral definitions for the 8 agents (destination-ideation, enrichment, activities, food, scheduling, transport, hub-planner, validator) |
+| `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
+| `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
 | `trips/` | Per-trip working directories (git-ignored — never published) |
@@ -42,14 +42,22 @@ Then open the folder in Claude Code:
 - **Desktop app** — open the `travel-planner` folder
 - **CLI** — run `claude` from inside the `travel-planner` directory
 
-Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, and `outputs/` accumulates agent artifacts.
+Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` accumulates agent artifacts.
+
+### Traveler profiles
+
+Each person travelling gets their own profile, copied from `templates/traveler-intake.template.md` into `trips/<destination>-<year>/travelers/`. It captures what someone **needs** (the constraints a plan has to stay inside — heat, mobility, diet, rest) separately from what they **want** (desires the plan tries to land within those bounds), plus their leanings, dates, budget, journey, lodging and party.
+
+The form is **self-guiding**: a ⭐-marked set of about ten fields gives a two-to-three minute first pass, and an interview appendix travels with the file — hand the whole thing to any assistant, say "help me fill this out," and it interviews you section by section and returns just the completed profile. Nothing is compulsory; a missing profile is handled as *unknown*, never as *no constraints*.
+
+Profiles carry real personal detail, so they live only in the git-ignored `trips/` working directory and are never published.
 
 ### Verify
 
 Confirm the engine cloned intact:
 
 ```bash
-ls agents/        # 7 agent definitions
+ls agents/        # 8 agent definitions
 head -1 CLAUDE.md # operating instructions present
 ```
 
@@ -64,13 +72,14 @@ gh auth status    # GitHub CLI authenticated
 
 | Agent | Role |
 |---|---|
-| Enrichment | Destination specialist — fills in trip-context `[ENRICH]` fields |
+| Destination Ideation | Turns the group's leanings into a ranked shortlist — produces `destination-shortlist.md` |
+| Enrichment | Destination specialist — fills in trip-context `[ENRICH]` fields; reconciles traveler profiles into `traveler-model.md` |
 | Activities | Activity finder — produces `activities-list.md` |
 | Food | Food writer — produces `food-list.md` |
 | Scheduling | Itinerary architect — produces `scheduling-framework.md` |
 | Transport | Logistics — produces `transport-brief.md` |
 | Hub Planner | Synthesis director — produces final itinerary + reference files |
-| Validator | Pre-departure audit — produces `validation-report.md` |
+| Validator | Pre-departure audit — produces `validation-report.md`; enforces the fail-closed checks, including that no non-publishable profile field reaches a published artifact |
 
 Full agent dispatch protocol, mode definitions, output versioning rules, and site generation guidance are in [`CLAUDE.md`](CLAUDE.md).
 
