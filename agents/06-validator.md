@@ -90,13 +90,19 @@ Per-traveler profile fields marked non-publishable must never reach a
 publish-bound artifact. Today that class holds exactly one field: **Passport**
 (issuing country and validity, never a number), captured in
 `travelers/<traveler>.md` and carried into `outputs/traveler-model.md`. The
-publish-bound artifacts are **every source the site build reads** — per
-`CLAUDE.md` § Travel Site Generation those are `outputs/final-itinerary.md`,
-`outputs/links-reference.md`, `outputs/venue-matrix.md`, and `trip-context.md` —
-plus the site rendered from them. The hub planner writes three of the four, so
-the audit surface is the whole set, not the itinerary alone.
-`outputs/traveler-model.md` is internal and is already excluded from the site by
-`reference/site-layout-spec.md` §9.1 / §9.3.
+publish-bound artifacts are **every source the site build reads**. The
+authority for that set is the single-source table in
+`reference/site-layout-spec.md` §9.1 — **not** the content-source list in
+`CLAUDE.md` § Travel Site Generation, which enumerates the build procedure's
+primary reads and is narrower. §9.1 names five: `outputs/final-itinerary.md`,
+`outputs/links-reference.md`, `outputs/venue-matrix.md`,
+`outputs/event-status.md`, and `trip-context.md` — plus the site rendered from
+them. The audit surface is all five, not the itinerary alone.
+
+`outputs/traveler-model.md` and `outputs/satisfaction-metrics.md` are the two
+artifacts §9.1 marks authoritative-internally-but-not-reader-facing, and §9.3
+lists them as intentional exclusions; they are not publish-bound and are not
+audited here.
 
 The audit: for every traveler carrying a Passport value in
 `outputs/traveler-model.md`, confirm that neither the issuing country nor the
@@ -337,9 +343,10 @@ enough**:
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
 8. Profile-privacy non-publication — a per-traveler Passport value (issuing
-   country or validity) reaching **any** publish-bound artifact the site build
-   reads (`outputs/final-itinerary.md`, `outputs/links-reference.md`,
-   `outputs/venue-matrix.md`, `trip-context.md`) is a hard failure and is always
+   country or validity) reaching **any** of the five publish-bound artifacts
+   named by `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
+   `outputs/links-reference.md`, `outputs/venue-matrix.md`,
+   `outputs/event-status.md`, `trip-context.md`) is a hard failure and is always
    Critical; an undetermined result is Critical too
 9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
