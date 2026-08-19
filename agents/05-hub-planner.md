@@ -26,11 +26,11 @@ Before writing the itinerary, compile every venue across all spoke outputs
 into a single reference file. For each venue:
 - Canonical name (exactly as it will appear in the itinerary)
 - Neighborhood
-- Category (activity / restaurant / market / transport / etc.)
+- Category (activity / restaurant / market / nightlife / transport / etc.)
 - Google Maps or official site URL
 - Closed day(s) of week
 - Price tier
-- Reservation status
+- Reservation status (for a nightlife venue this slot carries the door/entry policy — cover, guest list, dress code, or walk-in)
 
 This file is the single source of truth for all venue links. It prevents
 inconsistent naming, inconsistent URLs, and ensures the validator has a
@@ -458,11 +458,25 @@ Required inputs:
    which the selection-layer agents (01/02) already read to bias their menus;
    weighing desire-coverage through that lens is the hub's job under issue #17,
    not per-engine work done here)
+7. outputs/nightlife-list.md (the desire-gated going-out menu — pure nightlife only;
+   food-forward drinking stays in food-list.md and non-nightlife evening experiences
+   stay in activities-list.md, per the primary-draw partition. Consume it exactly like
+   the other spoke lists: its venues enter links-reference.md and venue-matrix.md and
+   obey the same dedup rules. Three consumption rules are specific to it: (a) a venue
+   named by two spoke lists — claimed by one, cross-referenced by the other — is ONE
+   venue: one links-reference row, one venue-matrix row, joined on canonical name;
+   (b) a placed nightlife entry never satisfies a day's structural-anchor requirement
+   (see Structural unit enforcement above) — it is an optional per-night entry unless a
+   traveler's desire tier elevates it, so it never stands in for the day's anchor event
+   or anchor meal, though it takes an ordinary A / Alt / B cell like any other venue;
+   (c) the file may be a gate-result stub recording that no present traveler wants
+   nightlife, and on a trip planned before this spoke existed it may be absent — both
+   read as "no nightlife this trip", never as a failure)
 
 In ITERATION and RESEQUENCING modes, also read:
-7. outputs/final-itinerary.md (existing version)
-8. outputs/venue-matrix.md (existing)
-9. outputs/event-status.md (existing per-event status — what is `locked`/`firmed`
+8. outputs/final-itinerary.md (existing version)
+9. outputs/venue-matrix.md (existing)
+10. outputs/event-status.md (existing per-event status — what is `locked`/`firmed`
    and must be preserved, what is `planned` and may change, what is `option` and
    stays an alternative). Written back in place; never wiped or regenerated.
 

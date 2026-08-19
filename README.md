@@ -1,13 +1,13 @@
 # Travel Planner
 
-A multi-agent trip planning system. Eight specialized agents research, plan, validate, and produce travel itineraries.
+A multi-agent trip planning system. Nine specialized agents research, plan, validate, and produce travel itineraries.
 
 ## Folder Structure
 
 | Path | Purpose |
 |---|---|
 | `CLAUDE.md` | Operating instructions for Claude Code |
-| `agents/` | Behavioral definitions for the 8 agents (destination-ideation, enrichment, activities, food, scheduling, transport, hub-planner, validator) |
+| `agents/` | Behavioral definitions for the 9 agents (destination-ideation, enrichment, activities, food, nightlife, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
 | `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
@@ -57,7 +57,7 @@ Profiles carry real personal detail, so they live only in the git-ignored `trips
 Confirm the engine cloned intact:
 
 ```bash
-ls agents/        # 8 agent definitions
+ls agents/        # 9 agent definitions
 head -1 CLAUDE.md # operating instructions present
 ```
 
@@ -76,6 +76,7 @@ gh auth status    # GitHub CLI authenticated
 | Enrichment | Destination specialist — fills in trip-context `[ENRICH]` fields; reconciles traveler profiles into `traveler-model.md` |
 | Activities | Activity finder — produces `activities-list.md` |
 | Food | Food writer — produces `food-list.md` |
+| Nightlife | Going-out curator — produces `nightlife-list.md`; desire-gated, never force-scheduled |
 | Scheduling | Itinerary architect — produces `scheduling-framework.md` |
 | Transport | Logistics — produces `transport-brief.md` |
 | Hub Planner | Synthesis director — produces final itinerary + reference files |
