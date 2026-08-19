@@ -90,15 +90,24 @@ Per-traveler profile fields marked non-publishable must never reach a
 publish-bound artifact. Today that class holds exactly one field: **Passport**
 (issuing country and validity, never a number), captured in
 `travelers/<traveler>.md` and carried into `outputs/traveler-model.md`. The
-publish-bound artifacts are `outputs/final-itinerary.md` and the site built from
-it; `outputs/traveler-model.md` is internal and is already excluded from the site
-by `reference/site-layout-spec.md` §9.1 / §9.3.
+publish-bound artifacts are **every source the site build reads** — per
+`CLAUDE.md` § Travel Site Generation those are `outputs/final-itinerary.md`,
+`outputs/links-reference.md`, `outputs/venue-matrix.md`, and `trip-context.md` —
+plus the site rendered from them. The hub planner writes three of the four, so
+the audit surface is the whole set, not the itinerary alone.
+`outputs/traveler-model.md` is internal and is already excluded from the site by
+`reference/site-layout-spec.md` §9.1 / §9.3.
 
 The audit: for every traveler carrying a Passport value in
 `outputs/traveler-model.md`, confirm that neither the issuing country nor the
-validity appears anywhere in `outputs/final-itinerary.md`. Any occurrence is
-**Critical** and the itinerary is not finalizable until the hub removes it. This
-check has **no Warning tier and no waiver**.
+validity appears anywhere in **any** publish-bound artifact named above. Any
+occurrence in any of them is **Critical** and the itinerary is not finalizable
+until the hub removes it. This check has **no Warning tier and no waiver**.
+
+**If the site build ever reads a new source, that source joins this audit set.**
+The guarantee is scoped to the published render path, not to a frozen list of
+filenames — a source added to the build and not added here reopens the leak this
+check exists to close.
 
 **Fail closed.** If `outputs/traveler-model.md` cannot be read, or a traveler's
 passport carry-through cannot be determined, record a Critical — an undetermined
@@ -328,8 +337,10 @@ enough**:
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
 8. Profile-privacy non-publication — a per-traveler Passport value (issuing
-   country or validity) reaching `outputs/final-itinerary.md` is a hard failure
-   and is always Critical; an undetermined result is Critical too
+   country or validity) reaching **any** publish-bound artifact the site build
+   reads (`outputs/final-itinerary.md`, `outputs/links-reference.md`,
+   `outputs/venue-matrix.md`, `trip-context.md`) is a hard failure and is always
+   Critical; an undetermined result is Critical too
 9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
 10. Travel restrictions and advisories — Critical if action is required
