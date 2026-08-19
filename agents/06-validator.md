@@ -85,6 +85,46 @@ Specific checks:
 - Any food venue conflicting with dietary restrictions
 - Any day missing a required indoor midday block
 
+**Profile-privacy non-publication (fail-closed):**
+Per-traveler profile fields marked non-publishable must never reach a
+publish-bound artifact. Today that class holds exactly one field: **Passport**
+(issuing country and validity, never a number), captured in
+`travelers/<traveler>.md` and carried into `outputs/traveler-model.md`. The
+publish-bound artifacts are **every source the site build reads**. The
+authority for that set is the single-source table in
+`reference/site-layout-spec.md` §9.1 — **not** the content-source list in
+`CLAUDE.md` § Travel Site Generation, which enumerates the build procedure's
+primary reads and is narrower. §9.1 names five: `outputs/final-itinerary.md`,
+`outputs/links-reference.md`, `outputs/venue-matrix.md`,
+`outputs/event-status.md`, and `trip-context.md` — plus the site rendered from
+them. The audit surface is all five, not the itinerary alone.
+
+`outputs/traveler-model.md` and `outputs/satisfaction-metrics.md` are the two
+artifacts §9.1 marks authoritative-internally-but-not-reader-facing, and §9.3
+lists them as intentional exclusions; they are not publish-bound and are not
+audited here.
+
+The audit: for every traveler carrying a Passport value in
+`outputs/traveler-model.md`, confirm that neither the issuing country nor the
+validity appears anywhere in **any** publish-bound artifact named above. Any
+occurrence in any of them is **Critical** and the itinerary is not finalizable
+until the hub removes it. This check has **no Warning tier and no waiver**.
+
+**If the site build ever reads a new source, that source joins this audit set.**
+The guarantee is scoped to the published render path, not to a frozen list of
+filenames — a source added to the build and not added here reopens the leak this
+check exists to close.
+
+**Fail closed.** If `outputs/traveler-model.md` cannot be read, or a traveler's
+passport carry-through cannot be determined, record a Critical — an undetermined
+result is a failure, never a clean pass.
+
+**What is not a finding.** The check keys on a *specific traveler's captured
+value*, never on the word "passport". Destination-level guidance that belongs on
+a published plan — tax-free-shopping notes, a packing-list line, the entry
+requirements enriched into `trip-context.md` `## Destination Baseline`
+(`Visa / entry`) — is correct content and is never flagged.
+
 **Status-integrity audit:**
 Read `outputs/event-status.md` (the persist-mutable per-event status — see
 `reference/data-model.md`) and audit the itinerary against it on three points:
@@ -302,10 +342,16 @@ enough**:
    Maps link (or an official-site URL when the venue has no map pin) in
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
-8. Price staleness — Warning level unless the discrepancy is large enough
+8. Profile-privacy non-publication — a per-traveler Passport value (issuing
+   country or validity) reaching **any** of the five publish-bound artifacts
+   named by `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
+   `outputs/links-reference.md`, `outputs/venue-matrix.md`,
+   `outputs/event-status.md`, `trip-context.md`) is a hard failure and is always
+   Critical; an undetermined result is Critical too
+9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
-9. Travel restrictions and advisories — Critical if action is required
-10. Local happenings — Note or Warning depending on impact
+10. Travel restrictions and advisories — Critical if action is required
+11. Local happenings — Note or Warning depending on impact
 
 ## Mode Behavior
 
@@ -371,6 +417,7 @@ File: outputs/validation-report.md
 | Local happenings | | | | |
 | Business status | | | | |
 | Constraint compliance | | | | |
+| Profile-privacy non-publication (fail-closed) | | | | |
 | Status integrity (protected events + needs-booking) | | | | |
 | Satisfaction metrics (needs-compliance + coverage report) | | | | |
 | Bailout completeness | | | | |

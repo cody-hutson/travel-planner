@@ -3,6 +3,65 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.8.0] — 2026-08-18 — Self-guiding traveler intake
+
+The traveler profile now **guides the person filling it in** — by itself, or through
+any assistant they hand it to — and captures the whole journey rather than just the
+in-destination experience. A traveler arriving at a blank form gets a two-to-three
+minute starred first pass, recognition menus instead of open prompts, and an embedded
+interview that travels to any model family. What they enter is carried all the way
+through to the derived per-traveler model.
+
+### Added
+- **Embedded portable interview (`templates/traveler-intake.template.md`).** A
+  model-agnostic guide below a clear end-of-profile delimiter. Upload the whole file
+  to any assistant, say "help me fill this out", and get a section-by-section
+  interview — one section at a time, choices offered, "skip" always valid, nothing
+  invented — followed by one clean filled profile with the guide stripped. Harmless
+  to a hand-filler who leaves it in place.
+- **Cold-start essentials.** Ten starred fields, one per qualifying section, each
+  answerable by recognition or a short phrase. The star means *start here*, never
+  *required* — a blank profile has always been an operator fallback in this engine,
+  not a failure.
+- **Recognition menus for Interests and Desires.** A tick-what-sparks interest
+  palette and a fifteen-item desire-archetype palette, so the two most open prompts
+  in the form no longer start from a blank page. The archetype wording doubles as a
+  theme-tag vocabulary, which sharpens desire-overlap matching.
+- **Take-off→landing coverage.** New `Getting there & back` section (`Leaving from`,
+  `Arrive / leave`, `Journey comfort`, `Passport`) and `Where you stay` pair
+  (`Lodging style`, `Rooming`), plus `Party` and `Special occasion?`. Each links to
+  its trip-level home — Logistics, Accommodation, Group — and refines it rather than
+  restating it.
+- **Fail-closed passport non-publication check (`agents/06-validator.md`).** Passport
+  is captured as issuing country and validity month only, never a number. The
+  validator now fails the trip if either reaches the published render path, and an
+  undetermined result is a failure rather than a clean pass — so the field ships with
+  its guard rather than on a documented promise.
+
+### Changed
+- **Lifecycle facets: six → nine (`reference/data-model.md`).** The facet table gains
+  Party, Journey & origin, and Accommodation, each with its link target; both prose
+  sites that enumerate the facets now agree with the table.
+- **Enrichment carry-through (`agents/00-enrichment.md`).** All nine facets carried
+  with every field label quoted, `Special occasion?` carried explicitly as a
+  non-facet, and the desire parse anchored on its labels so the hub and validator
+  `Priority tier` columns have something to bind to.
+- **Desire label `Priority:` → `Priority tier:` (`templates/traveler-intake.template.md`).**
+  Aligns the form to the label the data model, hub planner, and validator already use.
+
+### Fixed
+- **Non-conformant need-category values.** The data model's worked examples used
+  `Required rest` and `Heat tolerance`, neither a member of its own enum; corrected
+  to `Rest` and `Heat`. The enrichment agent's category vocabulary was corrected the
+  same way. The template's enum was already correct and is unchanged.
+
+### Notes
+- Six of the eighteen existing facet labels were unquoted in the enrichment
+  carry-through block while that block asserted a parse-by-the-labels contract;
+  repaired in passing since the block was being rewritten.
+- The matching facet enumeration in `CLAUDE.md` is carried separately — see the
+  release PR.
+
 ## [0.7.0] — 2026-07-26 — Faithful site rendering
 
 The published site now renders the plan **faithfully and legibly**: every event

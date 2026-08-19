@@ -87,14 +87,20 @@ link against. Specifically:
   priority tier. Do not promote a desire into a constraint or demote a need
   into a preference.
 - **Link each need to its governing constraint — never copy it.** Every need
-  points at the trip-context.md constraint that governs it (heat tolerance,
-  mobility, dietary/health, required rest) via "Applies to:
+  points at the trip-context.md constraint that governs it (heat, mobility,
+  dietary-health, rest) via "Applies to:
   `<Section> → "<Constraint name>"`". Carry the *link*, not a second copy of
   the constraint text. If a stated need has no governing constraint yet, flag
   it (VERIFY) so the constraint can be added to trip-context.md — do not let
   the traveler file become the de-facto home for a trip-level constraint.
-- **Carry each desire with its tier and theme tags.** Preserve the traveler's
-  priority tier verbatim — anchor / wish / nice-to-have — and any theme tags.
+- **Carry each desire with its tier and theme tags.** Read each desire block off
+  its stable field labels — `Desire:` / `Priority tier:` / `Theme tag(s):` /
+  `Overlap:` — the same way you read the lifecycle facets below; the profile
+  wraps those labels in plain-language prose, and you parse by the labels.
+  Preserve the traveler's `Priority tier:` verbatim — anchor / wish /
+  nice-to-have — and any theme tags, and carry the tier through into
+  `outputs/traveler-model.md` alongside each desire, so the `Priority tier`
+  column the hub and the validator each render resolves against it.
   Tiers are structural priority labels, not numeric weights: do not score,
   weight, rank numerically, or otherwise compute against them. You record the
   structure; you do not optimize it.
@@ -111,20 +117,29 @@ link against. Specifically:
   agreement are visible at a glance. This is a *signal*, not a coverage score —
   no math.
 - **Carry the lifecycle facets too.** Beyond needs and desires, each profile
-  may hold the per-traveler lifecycle facets: **destination leanings**
-  (`Would love:` / `Rather skip:` / `Trip vibe:`), **dates & availability**
-  (`Can travel:` / `Blackout:` / `Trip length:`), **budget appetite**
-  (`Comfort range:` / `Splurge appetite:`), **travel style & pace**, **interests
-  & tastes**, and **people dynamics & togetherness** (`Group time:` /
+  may hold the per-traveler lifecycle facets: **party** (`Party:`),
+  **destination leanings** (`Would love:` / `Rather skip:` / `Trip vibe:`),
+  **dates & availability** (`Can travel:` / `Blackout:` / `Trip length:`),
+  **journey & origin** (`Leaving from:` / `Arrive / leave:` /
+  `Journey comfort:` / `Passport:`), **accommodation** (`Lodging style:` /
+  `Rooming:`), **budget appetite** (`Comfort range:` / `Splurge appetite:`),
+  **travel style & pace** (`Pace:` / `Day rhythm:` / `Novelty vs comfort:` /
+  `Planning style:`), **interests & tastes** (`Interests:` /
+  `Cuisine appetite:`), and **people dynamics & togetherness** (`Group time:` /
   `Split off with:` / `Solo, I'd:` / `Whole-group moments:`). Carry each
   traveler's facets through into `outputs/traveler-model.md` `[DERIVED]`,
   per-traveler, alongside their needs/desires/overlap — read them off the stable
   field labels above (the profile wraps those labels in plain-language prose; you
   parse by the labels). This is carry-through, not computation: you record each
   individual's facets; you do **not** aggregate them into a group result here
-  (see the forward-hooks below). Per link-don't-copy, budget appetite and dates
-  *link to* their trip-level homes (`## Budget Posture` and Logistics) — refine,
-  never restate them, and never write them into trip-context.md.
+  (see the forward-hooks below). Per link-don't-copy, budget appetite, dates,
+  party, journey & origin and accommodation *link to* their trip-level homes
+  (`## Budget Posture`, `## Logistics`, `## Group`, `## Accommodation`) —
+  refine, never restate them, and never write them into trip-context.md.
+  A traveler may also note a **Special occasion?** — a birthday, anniversary,
+  honeymoon, or milestone the trip is marking. It is not a lifecycle facet and
+  links to nothing trip-level; carry it through verbatim alongside their facets
+  so the hub can see it.
 - **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
   projection refreshed from the current source files whenever they change; it
   holds no independent state of its own (the source files are authoritative).
