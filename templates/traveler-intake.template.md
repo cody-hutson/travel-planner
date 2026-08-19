@@ -3,6 +3,10 @@
 > **This is *your* profile** — what you'd love out of the trip, what you need it to
 > work around, and how you like to travel. One file per person.
 >
+> **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There is one per
+> section, and every one is a pick-from-the-list or a short phrase. Nothing here is
+> compulsory: fill what fits where your trip is right now and come back for the rest.
+>
 > **How to use it:**
 > - Copy this template to `trips/[destination-year]/travelers/<your-name>.md`, then
 >   fill it in — or just ask, and an agent will walk you through it question by question.
@@ -37,7 +41,7 @@
 > full list — here you only add anyone travelling with you who won't fill in a
 > form of their own.
 
-- **Name:** [Your name — e.g., Pat]
+- ⭐ **Name:** [Your name — e.g., Pat]
 - **Relationship:** [*(optional)* how you fit in the group — e.g., "Jordan's sister", "traveling with friends". Skip if it doesn't apply.]
 - **Party:** [Anyone travelling with you who won't fill in their own form — e.g., "two kids, 6 and 9", "my dad, 78, travelling on my booking". Skip if everyone in your group is filling in their own.]
 
@@ -50,7 +54,7 @@
 
 - **Would love:** [Places or kinds of places you'd be thrilled to go — e.g., "somewhere coastal in Portugal", "Japan", "anywhere with great food and walkable cities". Skip if the destination is set.]
 - **Rather skip:** [Anywhere you'd prefer to avoid this time — e.g., "long-haul flights", "anywhere very hot in summer". Skip if nothing comes to mind.]
-- **Trip vibe:** [The kind of trip you're after — e.g., beach / city / nature / culture / food / mix. Skip if you're easy.]
+- ⭐ **Trip vibe:** [The kind of trip you're after — e.g., beach / city / nature / culture / food / mix. Skip if you're easy.]
 
 > These are *your* wishlist. The planner gathers everyone's leanings into a group
 > shortlist — you're not picking the destination here, just saying what you'd love.
@@ -61,7 +65,7 @@
 
 > When can you actually travel? Skip the parts that don't apply.
 
-- **Can travel:** [The windows that work for you — e.g., "any time in May", "the week of June 8", "weekends only". Skip if you're flexible.]
+- ⭐ **Can travel:** [The windows that work for you — e.g., "any time in May", "the week of June 8", "weekends only". Skip if you're flexible.]
 - **Blackout:** [Dates you absolutely can't do — e.g., "May 20–24 (work)", "nothing over the holidays". Skip if none.]
 - **Trip length:** [How long feels right — e.g., "4–5 days", "a long weekend", "two weeks if we can". Skip if you're open.]
 
@@ -106,7 +110,7 @@
 > How you like to spend on a trip — your personal lean. Skip either part if you'd
 > rather not say.
 
-- **Comfort range:** [Your day-to-day spend comfort — e.g., "mid-range; happy with simple lunches and a nice dinner", "keep it lean", "comfortable spending freely". Skip if you'd rather not say.]
+- ⭐ **Comfort range:** [Your day-to-day spend comfort — e.g., "mid-range; happy with simple lunches and a nice dinner", "keep it lean", "comfortable spending freely". Skip if you'd rather not say.]
 - **Splurge appetite:** [What you'd happily pay up for versus stay lean on — e.g., "splurge on one standout meal, save on the rest", "pay for comfort on transit, casual on food". Skip if nothing stands out.]
 
 > This is *your* personal lean. It refines — it doesn't replace — the trip-level budget
@@ -129,7 +133,7 @@
 > Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other.
 
 - **Category:** [One of: Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other — e.g., Heat]
-- **Specific:** [Your personal detail — e.g., "fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days." Skip the block entirely if this one doesn't apply to you.]
+- ⭐ **Specific:** [Your personal detail — e.g., "fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days." Skip the block entirely if this one doesn't apply to you.]
 - **Applies to:** [The trip rule this falls under, written as `Hard Constraints → "<rule name>"` or `Dietary & Health → "<rule name>"` — e.g., `Hard Constraints → "Afternoon heat ceiling"`. Leave blank if you're not sure — an agent will link it.]
 
 - **Category:** [Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other]
@@ -152,10 +156,22 @@
 > the kind of day you're hoping for. Unlike a need, a desire is yours alone — and you
 > tag each one with **how much it matters** so the plan knows what to protect.
 >
+> **Stuck? Start from an archetype.** These are the shapes a desire usually takes — pick
+> the ones that sound like your trip, then make each one specific to you:
+>
+> `a signature meal` · `a slow morning` · `a market wander` · `a big view` ·
+> `a museum or gallery` · `live music` · `a day trip out of town` · `time on the water` ·
+> `a neighbourhood to just walk` · `something active` ·
+> `a local ritual (bath, café, sauna)` · `one splurge experience` · `a night out` ·
+> `a quiet hour in nature` · `a hands-on thing (class, workshop, market tour)`
+>
+> The archetype wording also makes a good **Theme tag** — reusing it helps the planner
+> spot where the group already agrees.
+>
 > **Add an entry for each thing you want, and delete the rest.** Fill in the **Desire**
 > and pick exactly one **Priority tier** — think of it as how much it matters, not a number:
 
-- **Desire:** [What you want — e.g., "a slow museum morning rather than a packed sightseeing sprint."]
+- ⭐ **Desire:** [What you want — e.g., "a slow museum morning rather than a packed sightseeing sprint."]
 - **Priority tier:** [Exactly one of:
     - **anchor** — you'd be genuinely disappointed to miss this; build the trip to land it.
     - **wish** — a real want to try hard for, but it can yield to a need or to someone else's anchor.
@@ -183,7 +199,7 @@
 
 > How you like a trip to *feel*, day to day. Skip any line that doesn't fit.
 
-- **Pace:** [packed / balanced / relaxed — e.g., "balanced: a couple of things a day with room to breathe." Skip if you're easy.]
+- ⭐ **Pace:** [packed / balanced / relaxed — e.g., "balanced: a couple of things a day with room to breathe." Skip if you're easy.]
 - **Day rhythm:** [morning or evening person — e.g., "early riser, fading by 9 PM", "slow mornings, alive at night." Skip if it varies.]
 - **Novelty vs comfort:** [how far you like to stray from the familiar — e.g., "love the unfamiliar", "a bit of adventure, but a comfortable base." Skip if no strong lean.]
 - **Planning style:** [planned / spontaneous — e.g., "like a loose plan with room to wander", "book everything in advance." Skip if you don't mind.]
@@ -194,8 +210,16 @@
 
 > The broad stuff you're drawn to — a soft signal that helps shape what gets picked.
 > Skip either line if nothing stands out.
+>
+> **Tick what sparks.** Scan the list and copy across the ones that land — add anything
+> that's missing. Three or four is plenty; there's no right number.
+>
+> `museums` · `history` · `art & design` · `architecture` · `nature & hiking` ·
+> `beaches & water` · `food & markets` · `coffee & cafés` · `bars & nightlife` ·
+> `live music` · `shopping` · `sport` · `photography` · `walking a neighbourhood` ·
+> `festivals & events` · `spa & wellness`
 
-- **Interests:** [Broad leanings — e.g., "museums, history, nature, nightlife, shopping, live music." Skip if you're open to anything.]
+- ⭐ **Interests:** [Copy across the ones that spark from the list above, comma-separated — e.g., "museums, food & markets, walking a neighbourhood." Skip if you're open to anything.]
 - **Cuisine appetite:** [How you eat when you travel — adventurous / familiar / specific loves & avoids — e.g., "adventurous; love street food; not big on seafood." Skip if no strong feelings.]
 
 > This is a soft signal that informs selection — it's broader and looser than the
