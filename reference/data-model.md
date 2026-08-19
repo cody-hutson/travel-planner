@@ -105,7 +105,7 @@ The reconciliation rule above fixes *how* per-traveler data links back to the tr
 
 The file is the **individual traveler's preferences only** — what *they* want, need, and prefer. It never holds group-level data: the pipeline aggregates these N individual files into a group view, and any splits or side-bars are pipeline-derived (see the scaling story and forward-hooks below), **never authored in the individual file.**
 
-Its load-bearing structure is the **needs-vs-desires** distinction — every file separates a traveler's **needs** from their **desires** — and around that core it captures a handful of additional **lifecycle facets** (destination leanings, dates, budget appetite, travel style, interests, people dynamics) so one file can serve a trip from first idea through enrichment.
+Its load-bearing structure is the **needs-vs-desires** distinction — every file separates a traveler's **needs** from their **desires** — and around that core it captures a handful of additional **lifecycle facets** (party, destination leanings, dates, journey & origin, accommodation, budget appetite, travel style, interests, people dynamics) so one file can serve a trip from first idea through enrichment.
 
 **The governing definition (the needs-vs-desires core):**
 
@@ -158,12 +158,15 @@ The field shape for a single desire:
 
 ### Lifecycle facets
 
-Needs and desires are the structural core — but a traveler's preferences span a trip's whole lifecycle, from "where should we even go?" through "what must this day work around?". The per-traveler file therefore carries six additional **lifecycle facets** around the needs/desires core. Each is the individual's own view; each is captured as data only (nothing here scores, optimizes, or computes a group result — see the forward-hooks). Several **link** to trip-level data rather than duplicating it, per the one-source-per-fact rule above.
+Needs and desires are the structural core — but a traveler's preferences span a trip's whole lifecycle, from "where should we even go?" through "what must this day work around?". The per-traveler file therefore carries nine additional **lifecycle facets** around the needs/desires core. Each is the individual's own view; each is captured as data only (nothing here scores, optimizes, or computes a group result — see the forward-hooks). Several **link** to trip-level data rather than duplicating it, per the one-source-per-fact rule above.
 
 | Facet | Field shape (the labels) | Role | Links to (one source per fact) |
 |-------|--------------------------|------|--------------------------------|
+| **Party** | `Party:` | Who is travelling with this traveler and will not fill in a form of their own (a child and their age, a partner who is not filing separately). Their own view of who they are responsible for — never the group roster. | **Links to** trip-context `## Group` — it refines, never replaces, the trip-level roster; the trip-level Group stays the SSOT. Projects from the template's `## About you` section. |
 | **Destination leanings** | `Would love:` · `Rather skip:` · `Trip vibe:` | The traveler's wishlist for *where* to go, for when no destination is fixed yet. | Aggregated by the pipeline into a group destination shortlist (forward-hook below) — the individual file holds only this traveler's leanings, never the shortlist. |
 | **Dates & availability** | `Can travel:` · `Blackout:` · `Trip length:` | When this traveler can travel, and for how long. | **Links to** the trip's Logistics once dates are set — it refines, never overrides, the trip-level dates; it is not copied into `trip-context.md`. |
+| **Journey & origin** | `Leaving from:` · `Arrive / leave:` · `Journey comfort:` · `Passport:` *(country + validity only — never a number)* | Where this traveler sets out from, whether their arrival or departure differs from the group's, and what they can tolerate in transit. | **Links to** trip-context `## Logistics` — it refines, never replaces, the trip-level travel plan; it is not copied into `trip-context.md`. Projects from the template's `## Getting there & back` section. |
+| **Accommodation** | `Lodging style:` · `Rooming:` | The traveler's personal lean on where to stay and how to room — the must-haves behind a booking, not the booking itself. | **Links to** trip-context `## Accommodation` — it refines, never replaces, the trip-level booking; the trip-level section stays the SSOT. Projects from the template's `## Where you stay` section. |
 | **Budget appetite** | `Comfort range:` · `Splurge appetite:` | The traveler's personal spend lean — day-to-day comfort and what they'd pay up for. | **Links to** trip-context `## Budget Posture` — it refines, never replaces, the trip-level budget; the trip-level posture stays the SSOT. |
 | **Travel style & pace** | `Pace:` · `Day rhythm:` · `Novelty vs comfort:` · `Planning style:` | How the traveler likes a trip to feel day-to-day. | Owned by the file (a soft personal signal); no trip-level twin. |
 | **Interests & tastes** | `Interests:` · `Cuisine appetite:` | Broad leanings — a soft selection signal, looser than the ranked Desires. | Owned by the file; distinct from (not a duplicate of) the specific tiered Desires. |
@@ -182,7 +185,7 @@ Jordan's `travelers/Jordan.md`, written out in the full model (extending the sma
 - Category: Mobility
   Specific: prefers fewer than ~15 minutes continuous walking before a sit-down break; step-free routing.
   Applies to: Hard Constraints → "Limited stair & walking tolerance"
-- Category: Required rest
+- Category: Rest
   Specific: needs one slow start (no fixed plan before ~10:00) every other day to keep pace the rest of the trip.
   Applies to: Hard Constraints → "Daily pacing floor"
 
@@ -207,7 +210,7 @@ Pat's `travelers/Pat.md` shares two of those desires — which is what produces 
 # Traveler — Pat
 
 ## Needs
-- Category: Heat tolerance
+- Category: Heat
   Specific: fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days.
   Applies to: Hard Constraints → "Afternoon heat ceiling"
 
