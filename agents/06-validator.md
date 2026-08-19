@@ -85,6 +85,31 @@ Specific checks:
 - Any food venue conflicting with dietary restrictions
 - Any day missing a required indoor midday block
 
+**Profile-privacy non-publication (fail-closed):**
+Per-traveler profile fields marked non-publishable must never reach a
+publish-bound artifact. Today that class holds exactly one field: **Passport**
+(issuing country and validity, never a number), captured in
+`travelers/<traveler>.md` and carried into `outputs/traveler-model.md`. The
+publish-bound artifacts are `outputs/final-itinerary.md` and the site built from
+it; `outputs/traveler-model.md` is internal and is already excluded from the site
+by `reference/site-layout-spec.md` §9.1 / §9.3.
+
+The audit: for every traveler carrying a Passport value in
+`outputs/traveler-model.md`, confirm that neither the issuing country nor the
+validity appears anywhere in `outputs/final-itinerary.md`. Any occurrence is
+**Critical** and the itinerary is not finalizable until the hub removes it. This
+check has **no Warning tier and no waiver**.
+
+**Fail closed.** If `outputs/traveler-model.md` cannot be read, or a traveler's
+passport carry-through cannot be determined, record a Critical — an undetermined
+result is a failure, never a clean pass.
+
+**What is not a finding.** The check keys on a *specific traveler's captured
+value*, never on the word "passport". Destination-level guidance that belongs on
+a published plan — tax-free-shopping notes, a packing-list line, the entry
+requirements enriched into `trip-context.md` `## Destination Baseline`
+(`Visa / entry`) — is correct content and is never flagged.
+
 **Status-integrity audit:**
 Read `outputs/event-status.md` (the persist-mutable per-event status — see
 `reference/data-model.md`) and audit the itinerary against it on three points:
@@ -302,10 +327,13 @@ enough**:
    Maps link (or an official-site URL when the venue has no map pin) in
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
-8. Price staleness — Warning level unless the discrepancy is large enough
+8. Profile-privacy non-publication — a per-traveler Passport value (issuing
+   country or validity) reaching `outputs/final-itinerary.md` is a hard failure
+   and is always Critical; an undetermined result is Critical too
+9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
-9. Travel restrictions and advisories — Critical if action is required
-10. Local happenings — Note or Warning depending on impact
+10. Travel restrictions and advisories — Critical if action is required
+11. Local happenings — Note or Warning depending on impact
 
 ## Mode Behavior
 
@@ -371,6 +399,7 @@ File: outputs/validation-report.md
 | Local happenings | | | | |
 | Business status | | | | |
 | Constraint compliance | | | | |
+| Profile-privacy non-publication (fail-closed) | | | | |
 | Status integrity (protected events + needs-booking) | | | | |
 | Satisfaction metrics (needs-compliance + coverage report) | | | | |
 | Bailout completeness | | | | |
