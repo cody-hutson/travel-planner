@@ -33,10 +33,13 @@
 
 ## About you
 
-> Just so the plan knows whose profile this is.
+> Just so the plan knows whose profile this is. The trip's Group roster holds the
+> full list — here you only add anyone travelling with you who won't fill in a
+> form of their own.
 
 - **Name:** [Your name — e.g., Pat]
 - **Relationship:** [*(optional)* how you fit in the group — e.g., "Jordan's sister", "traveling with friends". Skip if it doesn't apply.]
+- **Party:** [Anyone travelling with you who won't fill in their own form — e.g., "two kids, 6 and 9", "my dad, 78, travelling on my booking". Skip if everyone in your group is filling in their own.]
 
 ---
 
@@ -64,6 +67,37 @@
 
 > Once the trip's dates are set, this links to the trip's logistics — it doesn't
 > override them, it just tells the planner what works for you.
+
+---
+
+## Getting there & back
+
+> Your side of the journey — where you set out from, and what a long travel day
+> does to you. Skip anything that's already settled or doesn't apply to you.
+
+- ⭐ **Leaving from:** [The city or airport you'd set out from — e.g., "Austin (AUS)", "Manchester". Skip only if the whole group leaves from the same place and it's already recorded.]
+- **Arrive / leave:** [*(only if you're not on the group's flights)* when you'd arrive or head home separately — e.g., "arriving a day early", "flying back Sunday night instead of Monday". Skip if you're travelling with the group.]
+- **Journey comfort:** [What you can take on a travel day — long-haul, red-eyes, layovers — and whether you lean towards flying, rail, or driving — e.g., "one long-haul is fine, no red-eyes; happy to take the train if it's under 5 hours". Skip if you're easy.]
+- **Passport:** [*International trips only — the issuing country and the month it's valid through. Never the number.* e.g., "United States, valid through March 2029". Skip for a domestic trip.]
+
+> These refine the trip's Logistics — they don't set them. Your origin and any
+> separate legs tell the planner what your own journey looks like; the booked
+> flights stay in the trip's own file. The passport line exists only so the trip's
+> entry requirements can be checked against your nationality and your document's
+> dates — which is why it never needs a number.
+
+---
+
+## Where you stay
+
+> Where you're comfortable sleeping, and who with. Skip either line if the lodging
+> is already booked or you genuinely don't mind.
+
+- ⭐ **Lodging style:** [Hotel, rental, or hostel — plus anything that's a must for you — e.g., "rental with a kitchen", "hotel; need a lift rather than stairs", "anywhere quiet". Skip if you're happy with whatever the group picks.]
+- **Rooming:** [Whether you'd want your own room, are happy sharing, and with whom — e.g., "own room if it's affordable", "happy to share with Sam". Skip if you're travelling alone or don't know the group yet.]
+
+> This refines the trip's Accommodation — it doesn't choose it. The property, the
+> booking, and the room list stay in the trip's own file.
 
 ---
 
@@ -184,7 +218,9 @@
 
 ## Anything else
 
-> Anything the questions above didn't capture? Free text — say it however you like, or
-> leave it blank.
+> Anything the questions above didn't capture? One quick prompt, then free text —
+> say it however you like, or leave it blank.
+
+- **Special occasion?:** [Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? e.g., "Mum's 70th, on the Thursday". Skip if it's just a trip.]
 
 [Anything else worth knowing — a quirk, a hope, a worry, a "by the way." Skip if nothing comes to mind.]
