@@ -84,13 +84,18 @@
 - ⭐ **Leaving from:** [The city or airport you'd set out from — e.g., "Austin (AUS)", "Manchester". Skip only if the whole group leaves from the same place and it's already recorded.]
 - **Arrive / leave:** [*(only if you're not on the group's flights)* when you'd arrive or head home separately — e.g., "arriving a day early", "flying back Sunday night instead of Monday". Skip if you're travelling with the group.]
 - **Journey comfort:** [What you can take on a travel day — long-haul, red-eyes, layovers — and whether you lean towards flying, rail, or driving — e.g., "one long-haul is fine, no red-eyes; happy to take the train if it's under 5 hours". Skip if you're easy.]
-- **Passport:** [*International trips only — the issuing country and the month it's valid through. Never the number.* e.g., "United States, valid through March 2029". Skip for a domestic trip.]
+- **Passport:** [*International trips only — the issuing country and the month it's valid through. Never the number.* **Yours alone — not your party's.** e.g., "United States, valid through March 2029". Skip for a domestic trip.]
 
 > These refine the trip's Logistics — they don't set them. Your origin and any
 > separate legs tell the planner what your own journey looks like; the booked
 > flights stay in the trip's own file. The passport line exists only so the trip's
 > entry requirements can be checked against your nationality and your document's
-> dates — which is why it never needs a number.
+> dates — which is why it never needs a number, and why it covers exactly one
+> person: you. Anyone travelling with you whose entry requirements also need
+> checking fills in a profile of their own — another copy of this form, saved as
+> `trips/[destination-year]/travelers/<their-name>.md` — and their passport goes
+> on their own line there. Never put a second person's passport on yours. If they
+> won't have a profile of their own, their passport isn't recorded anywhere.
 
 ---
 
@@ -317,7 +322,14 @@ Where are they setting out from? Only ask about arriving or leaving separately i
 not travelling with the group. Journey comfort covers long-haul, red-eyes, layovers, and
 whether they lean towards flying, train, or driving. Passport is for international trips
 only and is **country and expiry month only — never a passport number.** If they start to
-give you a number, stop them.
+give you a number, stop them. It covers **this traveler alone, never their party** — if
+the answer comes back party-shaped ("two of us are Canadian, one is Australian"), record
+only this traveler's own country and dates. This is the one field where you narrow what
+they said rather than **keeping their words** (rule 7): a second person's passport never
+goes on this line. Tell them anyone else whose entry requirements need checking fills in
+their own copy of this form, saved as
+`trips/[destination-year]/travelers/<their-name>.md`; if that person will not have one,
+their passport is simply not recorded.
 
 ### Step 5 — Where you stay
 Fields: **Lodging style** (starred), **Rooming**.
