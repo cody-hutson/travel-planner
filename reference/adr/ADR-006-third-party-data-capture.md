@@ -1,8 +1,8 @@
-# ADR-006: Third-party constraint capture — consent and attribution for party members without a profile
+# ADR-006: Third-party data capture — consent and attribution for party members without a profile
 
 - **Status:** Proposed (2026-08-20)
 - **Deciders:** repo maintainer
-- **Driving work:** the design gate for #119 (no home for the needs of a party member who has no profile); extends the PII precedent set by [ADR-004](ADR-004-contact-emergency-privacy.md); relates to the intake epic #69, which kept per-traveler detail out of the form.
+- **Driving work:** the design gate for #119 (no home for the needs of a party member who has no profile) and for Option A of #120 (a plural-aware `Passport` field); extends the PII precedent set by [ADR-004](ADR-004-contact-emergency-privacy.md); relates to the intake epic #69, which kept per-traveler detail out of the form.
 
 ## Context
 
@@ -34,6 +34,28 @@ bind this space:
    *marked as operator-provided* — on the principle that an absent profile means **unknown**,
    never **no constraints**. Whether that seam is the right home for third-party constraints,
    and whether it satisfies the consent question at all, is undecided.
+
+**Two data classes, one consent question.** A milestone-readiness pre-flight found the same
+question arriving from a second direction. #120 (`Passport` is singular while `Party` is plural)
+can be resolved either by scoping the field explicitly to the person filling the form, or by
+making it **plural-aware** — which would capture *issuing country and validity for party members*.
+That is third-party **identity** data rather than a health constraint, but it is the same consent
+problem: recording personal data about someone who has no profile and cannot opt in. It has no
+covering record today — ADR-004 decides contact and emergency info and treats passport as its
+consistency *anchor*, not its subject; the template's own guidance scopes the field to *"your
+nationality and your document's dates"*.
+
+This ADR therefore covers **both classes**, and may answer them **differently**:
+
+| Class | Example | Driving card |
+|---|---|---|
+| **Constraints** (needs) | a 20-minute walking limit, an afternoon rest floor | #119 |
+| **Identity** (logistics facets) | issuing country and validity for a party member | #120, Option A only |
+
+The classes are not equally sensitive — a mobility limit is health data, while a nationality is
+already captured coarsely for the form's own filler under the passport precedent. A decision that
+permits one and refuses the other is a legitimate outcome; what is not legitimate is leaving
+either undecided while a card that depends on it enters a release.
 
 Doing nothing has a cost the attestation already measured: the group's most plan-breaking
 inputs never reach the planner, and the itinerary breaks on the ground.
@@ -78,17 +100,24 @@ consent claim the system cannot verify.
 
 ## Decision
 
-**Not yet decided — this ADR is `Proposed`.** It is authored to gate #119, which cannot enter
-a release until these questions are settled. Three questions must be answered together:
+**Not yet decided — this ADR is `Proposed`.** It gates #119 outright, and gates Option A of
+#120; neither may enter a release until these questions are settled. Four questions, answered
+**per data class** (constraints and identity may be decided differently):
 
-1. **May third-party health and mobility constraints be captured at all** without that
-   person's own opt-in, or does ADR-004's opt-in requirement extend to this data class?
-2. **If yes, where** — the enrichment operator-provided fallback (Option 3), or a proxy
-   profile with an explicit consent attestation (Option 4)?
-3. **What reaches published output?** Needs currently flow into trip-level `Hard Constraints`.
-   Whether a third-party-sourced constraint may appear there — and in what form — needs an
-   explicit answer, because ADR-004 § 4's non-publication guarantee is scoped to
-   contact/emergency fields and does not cover this class today.
+1. **May third-party data of this class be captured at all** without that person's own opt-in,
+   or does ADR-004's opt-in requirement extend to it? Answer once for **constraints** and once
+   for **identity**.
+2. **If yes, where** — the enrichment operator-provided fallback (Option 3), or a proxy profile
+   with an explicit consent attestation (Option 4)? A permissive answer for identity alone may
+   also be satisfied by the intake form itself, since the passport precedent already lives there
+   for the filler; that is the one case where Option 2 is not automatically foreclosed.
+3. **What reaches published output?** Needs flow into trip-level `Hard Constraints`. Whether a
+   third-party-sourced value may appear there — and in what form — needs an explicit answer,
+   because ADR-004 § 4's non-publication guarantee is scoped to contact/emergency fields and
+   covers neither class today.
+4. **Does a permissive identity answer bind #93?** Per-traveler entry-requirements determination
+   consumes "country + validity only — never passport numbers or other PII". If party passports
+   are captured anywhere, #93's per-traveler resolution depends on where.
 
 **[RECOMMENDED]** Option 3, extended with a provenance marker, on three grounds: it composes
 with a seam that already exists rather than adding a capture surface; it keeps the intake form
@@ -117,3 +146,6 @@ Stated conditionally, for the recommended option; to be finalized when the decis
 **Blocked on this ADR**
 
 - #119 — remains out of a release milestone until this ADR reaches `Accepted`.
+- #120, **Option A only** — the card itself is not blocked. Its Stage-5 fork may resolve to
+  Option B (state the field's singular scope) at any time, which introduces no third-party
+  capture and needs nothing from this ADR.
