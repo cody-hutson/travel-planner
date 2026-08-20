@@ -3,6 +3,66 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.9.0] — 2026-08-20 — Nightlife agent
+
+Going out at night now has **an owner**. Cocktail bars, clubs and live-music
+rooms used to fall between the Activities evening section and the Food agent, so
+nightlife came out inconsistently — sometimes planned, sometimes missing, and
+filed under whichever agent happened to reach for it. A dedicated nightlife agent
+now researches those venues, the hub places them into the evening, and the
+validator checks the nights a traveler actually asked for.
+
+### Added
+- **Nightlife research agent (`agents/07-nightlife.md`).** Owns going-out venues
+  — cocktail bars, clubs, live music, late-night rooms — by the primary-draw
+  test: what is the reason you go? It produces `outputs/nightlife-list.md` and
+  deliberately does not schedule. Night-fit is captured in three day-independent
+  fields — `Nights & hours`, `Night type`, and **`Next-morning cost`** — so a
+  late night is weighed against the morning after rather than judged alone.
+- **A three-depth desire gate.** The agent runs FULL (a full menu, minimum 12
+  entries), LIGHT (minimum 5, weighted to low-key and non-drinking options), or
+  SKIP, depending on how much nightlife the party actually wants. A SKIP still
+  writes a short gate-result note, so a missing list never reads ambiguously as
+  "nobody wanted it" *or* "the agent never ran".
+- **A nightlife block in the day template (`agents/05-hub-planner.md`).** The
+  site layout spec already described how a night card should render; nothing
+  emitted one for it. Each day now carries a Nightlife block — or an explicit
+  no-nightlife line with its reason, never both and never neither.
+- **Per-night coverage check (`agents/06-validator.md`).** On nights a present
+  traveler wants nightlife, the validator reports whether the night is covered.
+  Warning and Note only, with no Critical tier, so nightlife is optimized for
+  and never forced onto a trip as a required anchor.
+
+### Changed
+- **A three-way going-out boundary (`agents/01-activities.md`,
+  `agents/02-food.md`).** Activities, Food and Nightlife now state the same
+  partition reciprocally. If the reason to go is the drinking or the room, it is
+  Nightlife; if it is the eating, it is Food; if it is a sight, a view, or a
+  scheduled event that happens to fall after dark, it is Activities. A venue that
+  plausibly fits two is claimed by its primary draw and cross-referenced by the
+  other, never listed twice.
+- **Nightlife wired into the pipeline (`CLAUDE.md`, `README.md`).** The nightlife
+  agent is dispatched in the research phase after Food and before scheduling,
+  `outputs/nightlife-list.md` becomes a required hub input, and night venues
+  carry the Category and Reservation wiring — for a nightlife venue the
+  reservation slot holds the door policy: cover, guest list, dress code, or
+  walk-in — so every night card resolves to a map link like every other card.
+- **First cross-spoke venue dedup rule.** When two agents propose the same place,
+  one rule now decides which of them keeps it, so a venue stops appearing twice
+  in one plan under two different headings.
+
+### Notes
+- The **natural-occasion** path — nightlife proposed because the trip contains a
+  weekend night, a birthday or a last night, rather than because someone asked
+  for it — is documented but **not yet reachable**. Nightlife driven by a stated
+  desire works throughout; the occasion path is a named follow-up.
+- The Tokyo worked example under `examples/` still splits its evening venues the
+  old way and now disagrees with the boundary this release ships. The example is
+  unchanged here and is being corrected separately.
+- On a night where the group splits into parallel tracks, the day carries one
+  Nightlife block rather than one per track. Split-night nightlife is a named
+  follow-up.
+
 ## [0.8.0] — 2026-08-18 — Self-guiding traveler intake
 
 The traveler profile now **guides the person filling it in** — by itself, or through
