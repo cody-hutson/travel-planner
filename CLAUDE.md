@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A multi-agent trip planning system. Seven specialized agents research, plan, validate, and produce travel itineraries. The agent prompts in `agents/` define deep behavioral profiles — destination specialist, food writer, itinerary architect, logistics expert, synthesis director, and pre-departure auditor. Each produces a structured artifact. The hub synthesizes all artifacts into a final itinerary. The validator audits it before it's acted on.
+A multi-agent trip planning system. Nine specialized agents research, plan, validate, and produce travel itineraries. The agent prompts in `agents/` define deep behavioral profiles — destination specialist, food writer, nightlife curator, itinerary architect, logistics expert, synthesis director, and pre-departure auditor. Each produces a structured artifact. The hub synthesizes all artifacts into a final itinerary. The validator audits it before it's acted on.
 
 ## Agent Model Requirement
 
@@ -151,6 +151,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 | Enrichment | `agents/00-enrichment.md` | Updates `trip-context.md` [ENRICH] fields | New trip setup, destination/hotel change |
 | Activities | `agents/01-activities.md` | `outputs/activities-list.md` | User wants activity research or replacements |
 | Food | `agents/02-food.md` | `outputs/food-list.md` | User wants food research or replacements |
+| Nightlife | `agents/07-nightlife.md` | `outputs/nightlife-list.md` | User wants going-out research, or a full pipeline where a present traveler holds a nightlife/evening desire — the spoke resolves its own desire gate and writes a gate-result stub when nobody does |
 | Scheduling | `agents/03-scheduling.md` | `outputs/scheduling-framework.md` | Structural schedule changes, resequencing |
 | Transport | `agents/04-transport.md` | `outputs/transport-brief.md` | Transport questions requiring research |
 | Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md`, `outputs/event-status.md` (primary writer), `outputs/satisfaction-metrics.md` (desire-coverage + balance sections) | Full synthesis or itinerary restructuring — **runs and reconciles the three optimizer engines** (routing vs. desire-coverage vs. experiential arc) into one itinerary, needs applied as hard constraints first (R1–R4) |
@@ -166,7 +167,7 @@ Read `trip-context.md` → Mode section to determine what's in scope.
 
 | Mode | What's happening | What runs |
 |------|-----------------|-----------|
-| IDEATION | Exploring options, nothing decided | **No destination yet:** Destination Ideation aggregates travelers' leanings into a ranked group shortlist (`outputs/destination-shortlist.md`) to decide from. **Destination in play:** Activities, Food, Scheduling, Transport produce overview-level output; Hub compares options. Validator skipped. |
+| IDEATION | Exploring options, nothing decided | **No destination yet:** Destination Ideation aggregates travelers' leanings into a ranked group shortlist (`outputs/destination-shortlist.md`) to decide from. **Destination in play:** Activities, Food, Nightlife, Scheduling, Transport produce overview-level output; Hub compares options. Validator skipped. |
 | DISCOVERY | Destination picked, nothing booked | Full pipeline. All agents run. |
 | ENRICHMENT | Flights/hotel confirmed | Full pipeline. Agents plan around fixed anchors. |
 | ITERATION | Existing plan, user wants changes — including a **disruption recovery**, triggered two ways: an event regressing `locked → planned` in `event-status.md` (a missed booking / cancelled hold) **or** a changed-profile delta (the enrichment agent's update signal that a traveler edited their file). | Only affected agents re-run. Hub patches itinerary. Validator re-checks changed days. Status honored: only `planned` events change freely; `locked`/`firmed` are preserved unless the user names them; `option` events stay alternatives. On a disruption recovery the hub runs its **equity-aware recovery** (per-traveler loss distribution → prioritize hardest-hit → re-run affected engines, needs preserved → regroup gaps under a coherent theme), and the validator runs its **recovery-equity check** (losses not concentrated; needs still hold). |
@@ -353,7 +354,9 @@ travel-planner/
 │   ├── 03-scheduling.md
 │   ├── 04-transport.md
 │   ├── 05-hub-planner.md
-│   └── 06-validator.md
+│   ├── 06-validator.md
+│   ├── 07-nightlife.md
+│   └── destination-ideation.md
 ├── reference/              ← engine reference specs
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
@@ -367,8 +370,10 @@ travel-planner/
         ├── trip-log.md                ← decision history, session bridge
         ├── travelers/                 ← per-traveler source files (gitignored), one .md per traveler — human-authored
         └── outputs/
+            ├── destination-shortlist.md ← ranked group shortlist (IDEATION, pre-destination)
             ├── activities-list.md     ← accumulates across sessions
             ├── food-list.md           ← accumulates across sessions
+            ├── nightlife-list.md      ← accumulates across sessions
             ├── scheduling-framework.md
             ├── transport-brief.md
             ├── links-reference.md     ← rebuilt by hub each synthesis

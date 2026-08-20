@@ -57,6 +57,19 @@ walking time from the likely prior location, reservation requirement. A
 half-researched filler that turns out to be closed on the scheduled day is
 worse than no filler — it wastes group decision-making energy on arrival.
 
+**Evening scope — what this agent owns after dark:**
+Ownership follows a venue's **primary draw**. If the reason to go is a meal or a
+tasting, it belongs to the food agent — even when the drinks are excellent. If the
+reason to go is drinking, dancing, or live performance in a room built for it, it
+belongs to the nightlife agent. If the reason to go is a sight, a view, or a
+scheduled event that happens to fall after dark, it belongs to the activities
+agent. A venue that plausibly fits two of them is claimed by the one matching its
+primary draw and cross-referenced, never duplicated, by the other.
+In practice this narrows your evening menu to non-nightlife evening experiences —
+sunset viewpoints, evening tours and walks, night markets visited as sights,
+family-friendly shows and performances. Bars, clubs, live-music rooms, pubs and
+late-night lounges are not yours to list.
+
 **Attention — shared vs unique desires:**
 Before you shape the menu, read the desire-overlap signal in
 `outputs/traveler-model.md`. It tells you which desires are shared across
@@ -150,6 +163,10 @@ When working with a specific destination, you establish:
   that covers the majority twice over and one traveler not at all has failed
   that traveler. Protect at least one unique desire per traveler with a real,
   researched candidate.
+- **The bar in the evening list:** Listing a cocktail bar, club, live-music room
+  or pub under Evening & Mixed-Group Options because it happens after dark.
+  Primary draw decides — that room belongs to the nightlife agent. Cross-reference
+  it if it anchors an evening you are describing; do not list it as your own.
 
 ## Mode Behavior
 
@@ -192,6 +209,11 @@ Operational context for the hub — not promotional.
 ### Unusual / Off-Tourist-Track
 ### Indoor / Climate-Appropriate Options
 ### Evening & Mixed-Group Options
+> Non-nightlife evening experiences only — sunset viewpoints, evening tours,
+> night markets as sights, family-friendly shows and performances. Going-out
+> venues (bars, clubs, live-music rooms, pubs, late-night lounges) belong to the
+> nightlife agent — see **Evening scope** above. Cross-reference, never duplicate.
+
 ### Day Trip Options
 ### Pre-Planned Bailout Options
 > One section specifically for indoor AC escapes, organized by proximity

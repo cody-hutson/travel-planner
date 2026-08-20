@@ -264,10 +264,12 @@ Every day with a 3+ hour outdoor block must have a named indoor bailout.
 If any day is missing one, flag it as a critical gap.
 
 **Structural integrity:**
-Check that no day is missing an anchor event or anchor meal. Check that
-every alternative is pre-researched (hours, walk time, reservation status
-present in the itinerary). Flag any alternative listed without sufficient
-operational detail.
+Check that no day is missing an anchor event or anchor meal. A nightlife entry
+never satisfies a day's anchor-event requirement — nightlife is an optional
+per-night entry, so a day whose only anchor-class placement is a going-out venue
+is still missing its anchor. Check that every alternative is pre-researched
+(hours, walk time, reservation status present in the itinerary). Flag any
+alternative listed without sufficient operational detail.
 
 **Experiential arc integrity:**
 Audit the itinerary against the experience-balance signal the scheduler emits
@@ -295,6 +297,72 @@ enough**:
   pattern — "Days 3-4-5 are placed as consecutive peaks" — not ruling that the
   trip is too intense. If a rest-need floor sits inside or adjacent to the run,
   note that the floor is the separate Critical check above; the two do not merge.
+
+**Nightlife coverage (per applicable night):**
+Nightlife is desire-gated and optional by default. Audit it per night, on the
+applicable nights only — the applicable set is derived from the gate, never from
+the calendar, exactly as a need's applicable-day set is derived from its governing
+constraint.
+
+A night is **nightlife-applicable** when either limb holds:
+
+- **Desire limb.** At least one traveler who is *present that night* holds a
+  nightlife-shaped desire in `outputs/traveler-model.md` — a `Desire:` matching a
+  nightlife archetype (`a night out`, `live music`), or carrying a nightlife
+  `Theme tag(s):` (`nightlife`). Any `Priority tier:` qualifies — anchor, wish, or
+  nice-to-have. Carry the tier into the verdict; it does not gate it.
+- **Occasion limb.** A natural occasion falls on that night — a weekend night, or a
+  special occasion in trip-context.md's travel dates or calendar events.
+
+Presence is evaluated **per night**, from the lifecycle facets carried into
+`outputs/traveler-model.md` (`Can travel:` / `Blackout:` / `Arrive / leave:`)
+against that night's date. A traveler who has already left, or whose blackout
+covers the night, does not make it applicable.
+
+**A ticked interest is not a desire.** `bars & nightlife` under a traveler's
+Interests is a soft signal — broader and looser than the ranked Desires. Reading it
+as a desire would force nightlife on a group that ticked a box. Gate on Desires
+only; both strings contain "nightlife", so this distinction is the whole gate.
+
+**A night with neither limb is not applicable and is never flagged** — the same
+rule as not failing a conditional need on a day its constraint never governed.
+
+On each applicable night, read **that day's `**Nightlife**` block** in
+`outputs/final-itinerary.md` and record exactly one verdict:
+
+- **`covered`** — the block carries one or more nightlife entries. No finding.
+- **`declined`** — the block carries the `No nightlife tonight — [reason]` line with
+  a filled reason. No finding. This is a correct outcome, not a gap.
+- **`declined`, plus a Note** — that line is present but malformed: a colon or other
+  separator in place of the em-dash, or the reason left empty or as an unfilled
+  placeholder. The intent is unambiguous, so the night passes; the Note exists so the
+  emitted wording converges rather than drifting silently.
+- **`gap`, a Warning** — the block carries neither an entry nor any no-nightlife
+  statement, or the block is absent from an applicable night. Cite the night, its
+  weekday, and which traveler's desire (with its tier) or which occasion made the
+  night applicable.
+- **`contradiction`, a Warning** — the block carries both an entry and a
+  no-nightlife line. The plan asserts two incompatible things about one night.
+
+On a **non-applicable** night, record `n/a`. A missing block on a non-applicable
+night is a template-conformance **Note**, never a coverage finding.
+
+**Read the block; do not classify venues.** What counts as nightlife was settled by
+the primary-draw partition upstream: food-forward drinking (izakaya, mezcalerías,
+dining wine bars) stays in the Food Anchors block, and non-nightlife evening
+experiences (sunset viewpoints, evening tours, family-friendly shows) stay in the
+anchor and supporting blocks. An after-dark entry outside the Nightlife block does
+not satisfy a nightlife desire and is not yours to reclassify — the block boundary
+is the partition boundary, and the boundary itself has exactly one owner.
+
+**Severity ceiling — this check has no Critical tier.** A nightlife gap is a missed
+desire, and a desire is optimized within the bounds, never a bound — the same rule
+that makes a `not covered` anchor a Warning and never a needs-compliance failure. A
+Critical would make the itinerary unfinalizable until nightlife was placed, which is
+a forced anchor under another name. Warning and Note only, with no escalation path.
+Two things a nightlife venue *can* raise a Critical for are separate checks and stay
+there: a night card with no resolvable map link is Location-link completeness, and a
+placed venue breaking the dedup rules is Venue deduplication.
 
 ### What You Do Not Do
 
@@ -352,6 +420,9 @@ enough**:
    to affect budgeting decisions
 10. Travel restrictions and advisories — Critical if action is required
 11. Local happenings — Note or Warning depending on impact
+12. Nightlife coverage — Warning only. A desired night with no nightlife option and
+    no stated reason is a missed desire, never a bound; this check has no Critical
+    tier and never blocks finalization
 
 ## Mode Behavior
 
@@ -392,6 +463,16 @@ Also read:
 8. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires —
    the source for the satisfaction-metrics report: needs drive needs-compliance,
    anchors/wishes drive desire-coverage)
+9. outputs/nightlife-list.md (the desire-gated going-out menu — read for the same
+   class of caveat you read food-list.md and activities-list.md for: a venue's *good*
+   nights as against its merely *open* nights, door/entry policy, and closure notes
+   the itinerary does not carry. It also records which venues the nightlife spoke
+   actually claimed, so a venue placed in a Nightlife block that the spoke never
+   listed is visible as a possible mis-partition — a Note, not a finding, since the
+   primary-draw boundary is a heuristic. The file may be a gate-result stub recording
+   that no present traveler wants nightlife, and on a trip planned before this spoke
+   existed it may be absent — both mean "no nightlife this trip"; neither is a
+   finding, and an absent file never fails this read.)
 
 Write: outputs/satisfaction-metrics.md — **your owned sections only**
 (Needs-compliance + the needs↔constraint agreement check); read-merge-write,
@@ -424,6 +505,7 @@ File: outputs/validation-report.md
 | Location-link completeness (every event has a Maps link) | | | | |
 | Structural integrity | | | | |
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
+| Nightlife coverage (applicable nights; no Critical tier) | | | | |
 
 **Total issues requiring action:** [N Critical], [N Warning], [N Note]
 
@@ -553,6 +635,23 @@ Needs-booking vs. status — the booking surfaces must equal the
 | Rest-recovery balance | per trip | (left to design) |
 
 - **Needs-compliance → constraint-compliance agreement (forward only):** [confirmed — every needs-compliance `fail` is a constraint Critical; constraint Criticals with no linked per-traveler need correctly have no needs-compliance row / list any needs-compliance `fail` that is NOT a constraint Critical]
+
+---
+
+### Nightlife Coverage Report
+
+> Per applicable night only — a night with no present nightlife desire and no
+> natural occasion is not applicable and is never a gap. Warning and Note only;
+> nothing here blocks finalization.
+
+| Night | Date / weekday | Applicable? | What made it applicable | Block content | Verdict |
+|-------|----------------|-------------|-------------------------|---------------|---------|
+| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries / no-nightlife note / neither / absent] | [covered / declined / gap / contradiction / n/a] |
+
+- **Applicable nights:** [N of M]
+- **Verdicts:** [N covered · N declined · N gap · N contradiction · N n/a]
+- **Gate basis:** [which travelers were read for the desire limb, and who was present when]
+- **Nightlife list read:** [full menu / gate-result stub (SKIP) / absent — none of these is a finding]
 
 ---
 
