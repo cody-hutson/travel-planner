@@ -82,12 +82,12 @@
 > does to you. Skip anything that's already settled or doesn't apply to you.
 
 - ⭐ **Leaving from:** [The city or airport you'd set out from — e.g., "Austin (AUS)", "Manchester". Skip only if the whole group leaves from the same place and it's already recorded.]
-- **Arrive / leave:** [*(only if you're not on the group's flights)* when you'd arrive or head home separately — e.g., "arriving a day early", "flying back Sunday night instead of Monday". Skip if you're travelling with the group.]
+- **Arrive / leave:** [When you'd arrive and head home — even if nothing's booked yet. If you'll be on whatever the group books, say so — e.g., "same as the group", "arriving a day early", "back Sunday night, not Monday". Skip only if you'd rather not say.]
 - **Journey comfort:** [What you can take on a travel day — long-haul, red-eyes, layovers — and whether you lean towards flying, rail, or driving — e.g., "one long-haul is fine, no red-eyes; happy to take the train if it's under 5 hours". Skip if you're easy.]
 - **Passport:** [*International trips only — the issuing country and the month it's valid through. Never the number.* **Yours alone — not your party's.** e.g., "United States, valid through March 2029". Skip for a domestic trip.]
 
-> These refine the trip's Logistics — they don't set them. Your origin and any
-> separate legs tell the planner what your own journey looks like; the booked
+> These refine the trip's Logistics — they don't set them. Your origin and when
+> you arrive and leave tell the planner what your own journey looks like; the booked
 > flights stay in the trip's own file. The passport line exists only so the trip's
 > entry requirements can be checked against your nationality and your document's
 > dates — which is why it never needs a number, and why it covers exactly one
@@ -318,8 +318,10 @@ When can they travel? Then anything they absolutely cannot do, and how long feel
 
 ### Step 4 — Getting there & back
 Fields: **Leaving from** (starred), **Arrive / leave**, **Journey comfort**, **Passport**.
-Where are they setting out from? Only ask about arriving or leaving separately if they are
-not travelling with the group. Journey comfort covers long-haul, red-eyes, layovers, and
+Where are they setting out from? Ask when they expect to arrive and head home,
+whatever the booking state. If they will be on whatever the group books, record
+that as their answer — an empty field means they did not answer, never that they
+match the group. Journey comfort covers long-haul, red-eyes, layovers, and
 whether they lean towards flying, train, or driving. Passport is for international trips
 only and is **country and expiry month only — never a passport number.** If they start to
 give you a number, stop them. It covers **this traveler alone, never their party** — if
