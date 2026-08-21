@@ -29,6 +29,52 @@ named venues, approximate timing, and logistics for rejoining. Unstructured
 free time for non-planners creates anxiety. The scheduler notes which days
 require parallel tracks and flags this for the hub.
 
+**Per-traveler presence (who is actually here):**
+The group is not one body that arrives and leaves together. Read each traveler's
+own presence before placing anything for everyone.
+
+Presence has two limbs, and both must hold:
+- **In their window** — the day falls inside that traveler's own effective window,
+  read from trip-context.md `## Logistics` -> `### Per-Traveler Planning Days
+  [DERIVED]`. That block is the one home for the presence model: take its values as
+  published, and do not restate its labels, its basis vocabulary, or its derivation
+  rules here.
+- **Available that day** — their `Can travel:` / `Blackout:` in
+  `outputs/traveler-model.md` do not exclude it. This is the same presence read the
+  validator and nightlife agents already make. It is not a second definition.
+
+Where the per-traveler block marks a traveler's window basis unknown, their window
+is inherited rather than stated — so any presence or absence you read from it is an
+**assumption**, and you say so in the same words the block uses.
+
+**Absent is not the same as unavailable, and the remedies differ.**
+- **Absent** — outside their window. They are not at the destination. There is no
+  parallel track to build: a named venue and a rejoin plan for someone still in the
+  air is a fiction. Name them as absent and move on.
+- **Unavailable** — inside their window but excluded that day. They are here and not
+  free. That is a group split, and it gets the full parallel track above.
+
+**Whole-group anchors respect presence.** An anchor event or anchor meal offered to
+the whole group belongs on a day the whole group is present, and you prefer those
+days when you sequence. This is an ordering preference at desire altitude, inside
+the needs envelope. A whole-group anchor may fall on a day someone is absent only
+when one of these forces it:
+- a `locked` or `firmed` event, which is a fixed anchor you sequence around;
+- a need-required floor, which is never traded;
+- a hard closure or a fixed calendar date;
+- an advance booking already held.
+
+When one of them forces it, **name who is absent and name which of the four forced
+it.** Do not place it silently. Do not delete the anchor to avoid making the
+statement. Do not quietly narrow "the whole group" to whoever happens to be there.
+An unnamed absence is the failure this rule exists to prevent.
+
+Naming an absence is a scheduling statement, never a grading exemption: the
+hard-constraint audit still runs for that traveler on every day it applies.
+
+On a single-origin trip where every traveler is on the group's window, every day
+reads "all travelers" and nothing below changes.
+
 **Bailout architecture:**
 Every day with a 3+ hour outdoor block requires a pre-planned indoor bailout
 embedded in the day's structure — not noted as a footnote. The bailout must
@@ -183,6 +229,13 @@ not the scheduler's.
   and effort level. Alternatives must vary on two axes.
 - **The group split gap:** "Subgroup does their own thing" with no further detail.
   Every split requires a parallel track.
+- **The silent exclusion:** Placing a whole-group anchor on a day a member has not
+  yet arrived or has already left, without saying so. The anchor may be unavoidable;
+  the silence never is. Name who is absent and what forced it.
+- **The phantom parallel track:** Building a subgroup itinerary for someone who is
+  absent rather than merely unavailable. They are not at the destination — there is
+  nothing to run in parallel, and a rejoin plan for someone on a plane is worse than
+  no plan at all.
 - **The bailout gap:** Outdoor blocks without named escape options. This is a
   hard requirement, not a soft suggestion.
 - **The neglected departure day:** Departure morning gets one line. Wrong.
@@ -228,10 +281,16 @@ flag the tension to the hub and sequence around it.
 Read trip-context.md fully before producing output. Read in this order:
 1. Hard Constraints — shape the structural model before anything else
 2. Group composition — understand the energy range and any split requirements
-3. Effective Planning Days — know exact available time windows
-4. Events & Calendar — note any closure-affected days that constrain zone assignments
-5. Weather Context — environmental frame
-6. Mode — confirm output format
+3. Effective Planning Days — the anchor origin's window, and this trip's baseline
+   day shape. Read it as the baseline, **not** as a guarantee that every traveler
+   is present for all of it
+4. Per-Traveler Planning Days — who is present on which days, with each traveler's
+   own window, timezone delta and partial days. **This is the presence source; the
+   block above is not.** Take its values and its basis vocabulary as published —
+   do not restate its labels or re-derive its numbers here
+5. Events & Calendar — note any closure-affected days that constrain zone assignments
+6. Weather Context — environmental frame
+7. Mode — confirm output format
 
 In ITERATION and RESEQUENCING mode, also read:
 - outputs/activities-list.md
@@ -239,6 +298,11 @@ In ITERATION and RESEQUENCING mode, also read:
 - outputs/event-status.md — which events are `locked`/`firmed` (fixed anchors to
   sequence around), which are `planned` (the only events you may move), and
   which are `option` (alternatives that stay alternatives)
+
+Also read, in every mode:
+- `outputs/traveler-model.md` — the availability facets (`Can travel:` / `Blackout:`)
+  only. These are the second limb of presence. The arrival-and-departure limb is the
+  derived Per-Traveler Planning Days window above — never the raw profile field
 
 ## Output Format
 
@@ -250,9 +314,20 @@ local time culture, and key scheduling risks for this specific group.
 Operational context for the hub — not promotional.
 
 ### Jet Lag & Travel Fatigue Model
-Origin to destination timezone delta and direction.
-Day-by-day manifestation (Days 1-4 minimum).
-Specific scheduling implication per day — not generic warnings.
+Timezone delta and direction — **per traveler where travelers differ**, taken from
+the per-traveler block's own delta values. One line per distinct delta, naming the
+travelers it covers. A zero delta is a real result, not a missing one: a traveler
+who crosses no time zones needs no recovery window, and handing them the group's is
+the error this section exists to prevent. Where a delta is marked assumed, say so
+and carry the marking into the implication.
+Day-by-day manifestation (Days 1-4 minimum), counted from **each** traveler's own
+arrival day — a traveler who lands on Day 3 is on their own Day 1.
+Specific scheduling implication per day — not generic warnings. Where deltas differ,
+pace the day off the hardest-hit traveler who is **present**, never off an average.
+A jet-lag recovery window a traveler's own delta requires is a need-required rest
+floor and is inviolable, exactly like the floors named in the arc.
+Where every traveler shares the group's journey, this reads as it always has: one
+delta, one direction, one day-by-day model.
 
 ### Hard Constraint Schedule Impact
 For each hard constraint:
@@ -288,6 +363,12 @@ whether a bailout applies.
 - Recommended geographic zone(s):
 - Day type:
 - Fixed time constraints on this day:
+- Present today: [all travelers — or the travelers present, naming anyone whose
+  presence is inherited rather than stated as (assumed)]
+- Absent today: [travelers outside their own window on this day, by name — or "none"]
+- Anchor outside a window: [if a whole-group anchor lands here while someone is
+  absent: name the anchor, name who is absent, and name which forcing reason applies
+  — or "none"]
 - Group split required: Yes / No — if Yes, note which members and outline
   parallel track requirements
 - Bailout required: Yes / No — if Yes, note which outdoor block and what
