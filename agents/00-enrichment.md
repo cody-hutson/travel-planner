@@ -163,6 +163,19 @@ link against. Specifically:
   (`## Budget Posture`, `## Logistics`, `## Group`, `## Accommodation`) —
   refine, never restate them, and never write them into trip-context.md.
 
+  **This carry-through is first-party only.** Every facet above is carried for a
+  traveler who stated it in their own profile. A `[THIRD-PARTY]` entry — the
+  party member admitted through the operator fallback below — carries **needs
+  only**: **no lifecycle facet is populated on it**, not `Party:`, not
+  `Journey & origin`, not any of the nine, and not any facet a later release
+  adds. The bound is the entry class, not a list of fields — ADR-006 grants
+  exactly one class, a party member's *needs*, and there is no default-allow for
+  anything outside it. Their facets are not carried, not inferred, and not
+  recorded anywhere, because there is no surface on which they could be: they
+  file no profile, and nothing is authored on their behalf. On a first-party
+  entry the facets appear as usual; on a `[THIRD-PARTY]` entry the count of
+  facet labels is zero.
+
   **`Been here before?` is unknown until it is answered.** It is a closed enum
   (`never` / `once` / `a few times` / `know it well`) — carry the answer through
   verbatim, never normalize it to a neighbouring value. A blank or em-dashed
