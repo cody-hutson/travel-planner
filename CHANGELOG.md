@@ -312,7 +312,7 @@ any stage. Foundation only: nothing optimizes yet.
   equity-aware (re)planning, group side-bars, and destination ideation build on
   it next.
 
-## [0.1.0] — 2026-06-28 — Private-by-default trip sites
+## [0.1.0] — 2026-07-01 — Private-by-default trip sites
 
 - Published trip sites are encrypted client-side and private by default — only
   ciphertext is pushed to the public per-trip repo, gated by a passphrase, so a
