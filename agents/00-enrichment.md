@@ -150,7 +150,8 @@ link against. Specifically:
   `Rooming:`), **budget appetite** (`Comfort range:` / `Splurge appetite:`),
   **travel style & pace** (`Pace:` / `Day rhythm:` / `Novelty vs comfort:` /
   `Planning style:`), **interests & tastes** (`Interests:` /
-  `Cuisine appetite:`), and **people dynamics & togetherness** (`Group time:` /
+  `Cuisine appetite:` / `Been here before?:` / `Already done:`), and
+  **people dynamics & togetherness** (`Group time:` /
   `Split off with:` / `Solo, I'd:` / `Whole-group moments:`). Carry each
   traveler's facets through into `outputs/traveler-model.md` `[DERIVED]`,
   per-traveler, alongside their needs/desires/overlap — read them off the stable
@@ -161,6 +162,13 @@ link against. Specifically:
   party, journey & origin and accommodation *link to* their trip-level homes
   (`## Budget Posture`, `## Logistics`, `## Group`, `## Accommodation`) —
   refine, never restate them, and never write them into trip-context.md.
+
+  **`Been here before?` is unknown until it is answered.** It is a closed enum
+  (`never` / `once` / `a few times` / `know it well`) — carry the answer through
+  verbatim, never normalize it to a neighbouring value. A blank or em-dashed
+  field, and any party member with no profile of their own, is **`unknown`, never
+  `never`**: record it as unknown, and that traveler contributes no depth signal
+  in either direction.
 
   **Resolving origin on a multi-origin trip.** When trip-context.md `## Logistics`
   carries an `### Additional origins` section, resolve every person to **exactly
