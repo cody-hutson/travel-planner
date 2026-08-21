@@ -179,13 +179,14 @@ link against. Specifically:
   **`Been here before?` is unknown until it is answered.** It is a closed enum
   (`never` / `once` / `a few times` / `know it well`) — carry the answer through
   verbatim, never normalize it to a neighbouring value. A blank or em-dashed
-  field, and any party member with no profile of their own, is **`unknown`, never
-  `never`**: record it as unknown, and that traveler contributes no depth signal
-  in either direction.
+  field — and a traveler whose profile is missing entirely (the `PROFILE MISSING`
+  branch below) — is **`unknown`, never `never`**: record it as unknown, and that
+  traveler contributes no depth signal in either direction.
 
   **Resolving origin on a multi-origin trip.** When trip-context.md `## Logistics`
-  carries an `### Additional origins` section, resolve every person to **exactly
-  one** origin and carry the link in the existing "Applies to" form —
+  carries an `### Additional origins` section, resolve every person **who has
+  filed a profile** to **exactly one** origin and carry the link in the existing
+  "Applies to" form —
   `Applies to: ## Logistics → "Origin B — Manchester (MAN)"`. Four rules hold, and
   none of them adds an entry:
   - **The trip level decides; the profile refines.** A person's origin is the one
@@ -199,7 +200,9 @@ link against. Specifically:
   - **An unassigned person inherits the anchor origin (`Origin A`) — as a marked
     assumption on a multi-origin trip, as an assertion on a single-origin trip**
     (there is only one origin to inherit). An empty `Leaving from:` means
-    *unknown*, never *matches the group*.
+    *unknown*, never *matches the group*. **A `[THIRD-PARTY]` entry is out of
+    scope: it has no journey facet to resolve, inherits no origin, and
+    contributes no origin signal in either direction.**
   - **Origin and timing are independent.** A traveler may set out from a different
     place and still arrive and leave with the group, or share the group's origin
     and travel on different dates. Never infer either from the other.
