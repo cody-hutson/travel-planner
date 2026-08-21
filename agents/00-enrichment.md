@@ -184,9 +184,8 @@ link against. Specifically:
   traveler contributes no depth signal in either direction.
 
   **Resolving origin on a multi-origin trip.** When trip-context.md `## Logistics`
-  carries an `### Additional origins` section, resolve every person **who has
-  filed a profile** to **exactly one** origin and carry the link in the existing
-  "Applies to" form —
+  carries an `### Additional origins` section, resolve every person to **exactly
+  one** origin and carry the link in the existing "Applies to" form —
   `Applies to: ## Logistics → "Origin B — Manchester (MAN)"`. Four rules hold, and
   none of them adds an entry:
   - **The trip level decides; the profile refines.** A person's origin is the one
