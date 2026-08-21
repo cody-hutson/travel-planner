@@ -3,6 +3,60 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.9.1] — 2026-08-20 — Intake form: corrective
+
+Three corrections to the traveler intake form that 0.8.0 shipped, and two
+changelog headings that were dated a day early. None of the form fixes changes
+what is asked for or withdraws a claim — each closes a place where the form left
+the reader to guess: **whose** passport belongs on the passport line, whether an
+unbooked flight makes the arrival question moot, and which two of the starred
+fields actually ask you to think.
+
+### Fixed
+- **The `Passport` line covers exactly one person
+  (`templates/traveler-intake.template.md`).** The field now reads **yours alone
+  — not your party's**, and the section note names where a travelling companion's
+  passport belongs: their own copy of this form, saved as
+  `trips/[destination-year]/travelers/<their-name>.md`, on their own line there.
+  If that person will not have a profile at all, the form now says so plainly —
+  their passport is not recorded anywhere — rather than leaving the reader to
+  assume it was captured somewhere. The embedded interview carries the same rule,
+  and needed an explicit local carve-out from its own **keep their words** rule to
+  do it: narrowing a party-shaped answer — *"two of us are Canadian, one is
+  Australian"* — genuinely changes the meaning, so without the carve-out a
+  compliant assistant would record the party-shaped answer verbatim.
+- **`Arrive / leave` is no longer gated on group flights that may not exist
+  (`templates/traveler-intake.template.md`).** The field was prefixed *only if
+  you're not on the group's flights*, which made it unanswerable before anything
+  was booked — the ordinary state of things at intake. It now asks for this
+  traveler's own arrival and departure at any booking state, and *"I'm on whatever
+  the group books"* is a stated answer rather than something inferred from an
+  empty field. The interview says the same and adds the rule that makes it hold:
+  an empty field means **unknown**, never *no constraints*.
+- **The starred quick pass says on the line where the thinking is
+  (`templates/traveler-intake.template.md`).** Eight of the ten starred fields are
+  a pick-from-the-list or a short phrase; two — a need and a desire — ask you to
+  think, and nothing said which. Both now carry **one line is a complete first
+  pass** on the line itself, each with a start-here phrasing and a sharpen-later
+  phrasing, and the desire field states that an archetype from the menu above is a
+  complete answer on its own. `Comfort range` gained its option set on the line —
+  *keep it lean / mid-range / spend freely* — so the one starred money question is
+  answerable by recognition like the rest. Nothing was retracted here; a locator
+  was added.
+- **`[0.8.0]` is dated to the day it was published.** The heading ran a day early
+  and now reads `2026-08-19`.
+- **`[0.1.0]` is dated to the day it was published.** The same defect, further
+  back; the heading now reads `2026-07-01`.
+
+### Notes
+- The two heading corrections are one defect, not two: a date taken from the UTC
+  timestamp rather than from the publish date as it read where the release was
+  cut. A release published in the evening Central time falls on the next day in
+  UTC, so the UTC reading runs a day ahead. Dates in this file are the GitHub
+  Release publish date rendered in Central — this entry's own heading included.
+- The **2–3 minutes** on the starred first pass is unchanged, and is an estimate
+  rather than a measurement — nothing in the repo times a real fill.
+
 ## [0.9.0] — 2026-08-20 — Nightlife agent
 
 Going out at night now has **an owner**. Cocktail bars, clubs and live-music
