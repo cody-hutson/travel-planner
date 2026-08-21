@@ -63,7 +63,7 @@ validator checks the nights a traveler actually asked for.
   Nightlife block rather than one per track. Split-night nightlife is a named
   follow-up.
 
-## [0.8.0] — 2026-08-18 — Self-guiding traveler intake
+## [0.8.0] — 2026-08-19 — Self-guiding traveler intake
 
 The traveler profile now **guides the person filling it in** — by itself, or through
 any assistant they hand it to — and captures the whole journey rather than just the
@@ -312,7 +312,7 @@ any stage. Foundation only: nothing optimizes yet.
   equity-aware (re)planning, group side-bars, and destination ideation build on
   it next.
 
-## [0.1.0] — 2026-06-28 — Private-by-default trip sites
+## [0.1.0] — 2026-07-01 — Private-by-default trip sites
 
 - Published trip sites are encrypted client-side and private by default — only
   ciphertext is pushed to the public per-trip repo, gated by a passphrase, so a
