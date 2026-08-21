@@ -117,6 +117,13 @@ what you give up going conservative vs. what you risk going optimistic.
   total group cost alongside the taxi/private alternative.
 - **The departure afterthought:** Detailed arrival section, one-paragraph departure.
   Departure logistics receive equal depth — they carry equal stakes.
+- **The single-origin assumption:** One arrival section for a party that did not all
+  leave from the same place, or one departure section for a party that does not all
+  go home together. Each stream has its own airport, its own clock, and its own
+  passengers.
+- **Planning a traveler onto a booking they are not on:** Listing someone as a
+  passenger on their origin's flight when their own window states a different
+  arrival. Their origin says where they set out from; it does not say when they land.
 - **Ignoring physical transit cost:** A 15-minute walk in extreme heat with luggage is
   not equivalent to a 5-minute taxi for a group with a heat-sensitive traveler.
   Physical cost is a real cost.
@@ -138,11 +145,17 @@ Mode Notes. Do not regenerate the full brief.
 
 Read trip-context.md fully before producing output. Read in this order:
 1. Group composition — size, constraint notes, mobility
-2. Logistics — arrival and departure times and airports
-3. Accommodation — transit access from enrichment
-4. Hard Constraints — anything affecting physical transit experience
-5. Possible Day Trips — assess logistics for each
-6. Mode — confirm output format
+2. Logistics — arrival and departure times and airports. Read the **whole** section:
+   the unlabelled Outbound/Return legs are the anchor origin, and an
+   `### Additional origins` section, when present, carries one block per further
+   departure origin with the same leg labels. Its absence means one origin
+3. Per-Traveler Planning Days — each traveler's own window, so a traveler who does
+   not travel on their origin's booking is not planned onto it. Take its values as
+   published; do not restate its labels here
+4. Accommodation — transit access from enrichment
+5. Hard Constraints — anything affecting physical transit experience
+6. Possible Day Trips — assess logistics for each
+7. Mode — confirm output format
 
 ## Output Format
 
@@ -156,7 +169,33 @@ File: outputs/transport-brief.md
 a first-time visitor faces, and the one most important thing to know before
 arriving. Operational — not promotional.
 
-### Arrival Transport ([Airport Code] to Hotel)
+### Arrival Transport
+
+One block per **arrival stream** — never one per traveler. Derive the streams before
+writing any of them:
+
+- **Each origin contributes one stream.** Its airport is that origin's last Outbound
+  leg's destination, its arrival time is that leg's `Arrives:`, and its passengers
+  are that origin's `Departing travelers:` — **minus anyone whose own window says
+  they are not on that booking.**
+- **Each traveler whose own window states an arrival different from their origin's
+  booking contributes a stream of their own**, at their own arrival time, into the
+  same destination airport. If no leg records their flight, write the stream from
+  the time you have and flag it `VERIFY` so the leg can be added. Do not invent it,
+  and do not fold them into a booking they are not on.
+- **An origin whose passengers have all moved to streams of their own contributes no
+  booked stream.** Say that in one line; do not write an empty block.
+
+Where the party has one origin and nobody states a different arrival, this is
+exactly one stream and the section reads as it always has.
+
+Run the airport-to-accommodation decision model **per stream**. The model itself is
+unchanged — but `group size` means the size of *that stream*, not the size of the
+party. Two people landing at 06:00 from Manchester are not a group of six, and
+pricing them as one is the error this section exists to prevent.
+
+**Stream — [Origin city] to [Airport Code], [Day, Date, Time TZ]**
+**Passengers:** [Travelers by their `## Group` roster name]
 
 **Recommendation:** [Mode]
 **Rationale:** [Why this is right for this specific group]
@@ -252,6 +291,16 @@ leg; it is the leg the routing must respect the group's need on.
 - **Verdict:** [Recommend / Conditional / Skip — with rationale]
 
 ### Departure Logistics
+
+One block per **departure stream**, derived the same way as arrival and carrying the
+same depth — a detailed arrival section with a one-paragraph departure is the
+anti-pattern above. Each origin's departure is its **first Return leg's `Departs:`**
+from that leg's origin airport; a traveler whose own window states a different
+departure gets a stream of their own at their own time. Where the party leaves
+together, this is one stream and reads as it always has.
+
+**Stream — [Airport Code], [Day, Date, Time TZ]**
+**Passengers:** [Travelers by their `## Group` roster name]
 
 **Flight:** [Departure time]
 **Recommended hotel departure:** [Time]

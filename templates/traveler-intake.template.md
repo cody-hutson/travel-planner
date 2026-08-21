@@ -218,7 +218,7 @@
 ## Interests & tastes
 
 > The broad stuff you're drawn to — a soft signal that helps shape what gets picked.
-> Skip either line if nothing stands out.
+> Skip any line if nothing stands out.
 >
 > **Tick what sparks.** Scan the list and copy across the ones that land — add anything
 > that's missing. Three or four is plenty; there's no right number.
@@ -230,6 +230,8 @@
 
 - ⭐ **Interests:** [Copy across the ones that spark from the list above, comma-separated — e.g., "museums, food & markets, walking a neighbourhood." Skip if you're open to anything.]
 - **Cuisine appetite:** [How you eat when you travel — adventurous / familiar / specific loves & avoids — e.g., "adventurous; love street food; not big on seafood." Skip if no strong feelings.]
+- **Been here before?:** [How well you already know this destination — one of: never / once / a few times / know it well — e.g., "once, about ten years ago." Skip if the destination isn't decided yet, or if you'd rather not say.]
+- **Already done:** [*(optional)* Anything you've already seen or eaten here that you don't need to repeat — e.g., "did the castle and the main museum last time." Skip if it doesn't apply.]
 
 > This is a soft signal that informs selection — it's broader and looser than the
 > specific, ranked Desires above.
@@ -374,9 +376,12 @@ Offer packed, balanced, or relaxed. Then morning or evening person, how far they
 stray from the familiar, and planned versus spontaneous.
 
 ### Step 10 — Interests & tastes
-Fields: **Interests** (starred), **Cuisine appetite**.
+Fields: **Interests** (starred), **Cuisine appetite**, **Been here before?**, **Already done**.
 Read out the tick list from the section and let them pick — three or four is plenty. Then how
-they eat when they travel, including anything they avoid.
+they eat when they travel, including anything they avoid. Then whether they have been here
+before — offer the four options (never, once, a few times, know it well) — and if they have,
+anything they have already done that they would not need to repeat. Skip both if the
+destination is not decided yet.
 
 ### Step 11 — People dynamics & togetherness
 Fields: **Group time**, **Split off with**, **Solo, I'd**, **Whole-group moments**.

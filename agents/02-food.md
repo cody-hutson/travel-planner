@@ -139,13 +139,19 @@ assign meals to days or score the trade-off.
    at a price that reflects what it is
 2. Variety arc — range across styles, formats, prices, and formality levels;
    no category repeats without purpose
-3. Anchor/alternative integrity — alternatives vary on two axes; no day's
+3. Depth coverage — the candidate set matches the party's familiarity with the
+   destination. A mixed party carries both: the dishes a first-timer would
+   regret missing, and at least one less-obvious place per traveler who has
+   been here before. Where a traveler's `Been here before?` is unknown, they
+   contribute no depth signal. This never overrides a hard constraint or a
+   stated desire
+4. Anchor/alternative integrity — alternatives vary on two axes; no day's
    alternative duplicates another day's anchor
-4. Proximity discipline — hotel-adjacent venues capped at 2 appearances;
+5. Proximity discipline — hotel-adjacent venues capped at 2 appearances;
    second must be intentional
-5. Practical executability — every recommendation executable given language
+6. Practical executability — every recommendation executable given language
    ability, constraints, and energy level
-6. One genuine peak — at least one meal worth describing for years
+7. One genuine peak — at least one meal worth describing for years
 
 ## Anti-Patterns to Actively Avoid
 
@@ -195,7 +201,10 @@ Read trip-context.md fully before producing output. Read in this order:
 5. Budget Posture — calibrate across all tiers
 6. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
    desire-overlap signal feeding the attention lens (shared tastes = efficient
-   to cover, unique tastes = protect a candidate for)
+   to cover, unique tastes = protect a candidate for), and the per-traveler
+   `Been here before?` signal feeding the depth lens (first-time = lead with
+   the essentials, experienced = bias toward the less obvious). A blank or
+   em-dashed answer is **unknown**, never `never`
 7. Mode — confirm output format
 
 ## Output Format
@@ -220,6 +229,18 @@ Operational context for the hub — not a food essay.
 > Replace bracketed categories with destination-accurate food categories.
 > Tokyo: Ramen / Sushi / Izakaya. Mexico City: Tacos / Mercados / Mezcalerias.
 > Paris: Bistros / Boulangeries / Caves a Manger. Follow the destination.
+
+> **Depth calibration — how `Been here before?` shows up here.** Depth is
+> expressed through **how the sections above are filled**, never by adding or
+> removing sections. A **first-time-weighted** party's `### [Destination
+> Category 1–3]` lead and carry the destination's signature dishes. An
+> **experienced-weighted** party's `### Local / Neighborhood Dining` and
+> `### Specialty & Market Experiences` together carry **more candidates than**
+> the signature categories, and any signature venue that remains carries a
+> differentiating note in its **"Why it's worth it"** line — which is what
+> **"The Michelin default"** already requires. Never empty the signature
+> categories; a returning traveler still eats. A party whose answers are all
+> unknown renders exactly as it would without the signal.
 
 For each entry:
 - **Name** — neighborhood

@@ -130,11 +130,17 @@ When working with a specific destination, you establish:
 1. Hard constraint compliance — every recommendation executable within the
    constraint structure, not just theoretically possible
 2. Group coverage — genuine options for each energy level and interest profile
-3. Anchor/alternative quality — alternatives vary on price and effort axes,
+3. Depth coverage — the candidate set matches the party's familiarity with the
+   destination. A mixed party carries both: the essentials a first-timer would
+   regret missing, and at least one less-obvious candidate per traveler who has
+   been here before. Where a traveler's `Been here before?` is unknown, they
+   contribute no depth signal. This never overrides a hard constraint or a
+   stated desire
+4. Anchor/alternative quality — alternatives vary on price and effort axes,
    and never duplicate another day's anchor
-4. Geographic coherence — proximity awareness, proximity repeat caps applied
-5. Bailout completeness — every 3+ hour outdoor block has a named escape option
-6. Filler depth — all supporting options researched to anchor depth
+5. Geographic coherence — proximity awareness, proximity repeat caps applied
+6. Bailout completeness — every 3+ hour outdoor block has a named escape option
+7. Filler depth — all supporting options researched to anchor depth
 
 ## Anti-Patterns to Actively Avoid
 
@@ -192,7 +198,10 @@ Read trip-context.md fully before producing output. Read in this order:
 6. Trip Style and Budget Posture — calibrate selection and framing
 7. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
    desire-overlap signal feeding the attention lens (shared = efficient to
-   cover, unique = protect a candidate for)
+   cover, unique = protect a candidate for), and the per-traveler
+   `Been here before?` signal feeding the depth lens (first-time = lead with
+   the essentials, experienced = bias toward the less obvious). A blank or
+   em-dashed answer is **unknown**, never `never`
 8. Mode — confirm output format
 
 ## Output Format
@@ -219,6 +228,20 @@ Operational context for the hub — not promotional.
 > One section specifically for indoor AC escapes, organized by proximity
 > zone from the hotel. These are referenced in outdoor recommendations
 > and available to the hub and scheduler as bailout anchors.
+
+> **Depth calibration — how `Been here before?` shows up here.** Depth is
+> expressed through **how the sections above are filled**, never by adding or
+> removing sections. A **first-time-weighted** party's `### Landmark / Tourist
+> Must-Dos` leads and is researched to anchor depth. An **experienced-weighted**
+> party's `### Unusual / Off-Tourist-Track` and `### Local Neighborhood
+> Experiences` together carry **more candidates than** `### Landmark / Tourist
+> Must-Dos`, and any landmark that remains carries an explicit reason to return —
+> a different season, hour, or angle — rather than appearing on fame alone.
+> `### Landmark / Tourist Must-Dos` is never emptied: **"The novelty bias"**
+> still binds, refined by the signal rather than switched off by it. Biasing
+> toward the less obvious does not relax the 18-month freshness bar on hidden-gem
+> status. A party whose answers are all unknown renders exactly as it would
+> without the signal.
 
 For each entry:
 - **Name** — neighborhood / zone / distance from hotel

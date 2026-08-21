@@ -30,6 +30,11 @@ All other days are locked."]
 ## Logistics
 
 - **Primary traveler:** [Name, home city/state/country]
+  > The traveler whose Outbound and Return legs below describe their journey —
+  > the **anchor origin** (`Origin A`). On a single-origin trip that is the whole
+  > party. On a multi-origin trip it names only this origin's journey; the others
+  > are recorded under `### Additional origins`. This is **not** a seniority or
+  > decision-rights label — the planner role is recorded in the `## Group` roster.
 - **Confirmation code(s):** [Airline / hotel / rail confirmation codes]
 
 ### Outbound
@@ -46,14 +51,99 @@ All other days are locked."]
   - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
 - **Notes:** [Anything relevant]
 
+### Additional origins
+
+> Omit this whole section for a single-origin trip — one origin is the default
+> shape, and the Outbound/Return legs above are it.
+> One block per **origin**, never one per traveler. Name travelers by their
+> `## Group` roster entry — the name only. Their `Leaving from:`, journey comfort
+> and passport stay in `travelers/<traveler>.md` and are never copied here.
+
+#### Origin B — [City, Country ([airport code])]
+- **Departing travelers:** [Names exactly as they appear in the `## Group` roster]
+- **Outbound**
+  - **Leg 1:** [Origin airport code] -> [Connecting airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Leg 2:** [Connecting airport code] -> [Destination airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Notes:** [Layover duration, bags, seat class, anything relevant]
+- **Return**
+  - **Leg 1:** [Destination airport code] -> [Connecting airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Leg 2:** [Connecting airport code] -> [Origin airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Notes:** [Anything relevant]
+- **Confirmation code(s):** [Only if this origin books separately — otherwise omit]
+
+> Add one `#### Origin <letter>` block per additional origin. The anchor origin is
+> the unlabelled Outbound/Return pair above and is always `Origin A`. Every
+> traveler not named in a block here resolves to it; the per-traveler table below
+> says on what basis.
+> Each origin's **arrival** is its last Outbound leg's `Arrives:`; its **departure**
+> is its first Return leg's `Departs:`. Leg labels are identical to the anchor's on
+> purpose — anything that can read the legs above can read these.
+
 ### Effective Planning Days [DERIVED]
 > Computed from flight data. Do not manually edit.
+> **Scope: the anchor origin (`Origin A`).** On a multi-origin trip this is **not**
+> a group-wide guarantee — a traveler on another origin may arrive later or leave
+> earlier. Anything that needs to know who is present on a given day must read each
+> traveler's own derived window in `### Per-Traveler Planning Days [DERIVED]` below,
+> not this block.
 
 - **[Date]:** Arrival day — available from ~[arrival time] local
 - **[Date] – [Date]:** Full planning days ([N] days)
 - **[Date]:** Departure day — must depart hotel by [time] for [departure time] flight
 - **Total:** [N] full days + [N] partial days = [N] effective planning days
 - **Timezone delta:** [Origin TZ] to [Destination TZ] = [+/- N hours], [eastbound/westbound]
+
+### Per-Traveler Planning Days [DERIVED]
+> Computed per traveler. Do not manually edit.
+> Reads each traveler's own profile **by link** — the `## Group` roster below carries
+> the path (`travelers/<name>.md`). No value a traveler wrote is copied here: every
+> cell is derived, and is recomputed when a profile changes.
+> **Recompute trigger:** any traveler profile change (the enrichment agent's update
+> signal in `outputs/traveler-model.md` is the signal to re-derive this block).
+
+- **Last derived:** [Date] — from the traveler profiles as of that date
+- **Baseline inherited by ASSERTED-SAME and UNKNOWN:** the trip-level window above
+
+**Basis** — how each traveler's window and origin were established. One value each,
+from their profile's `## Getting there & back`:
+
+| Basis | Meaning | Behaviour |
+|---|---|---|
+| `ASSERTED-DIFFERENT` | They stated their own arrival/departure, or their own origin | **Pinned** — does not move if the trip-level flights change |
+| `ASSERTED-SAME` | They stated they are on whatever the group books | **Tracks** the trip-level value |
+| `UNKNOWN` | They did not answer (blank, an em dash, or leftover placeholder text) | **Tracks** the trip-level value as a **marked assumption** — every value derived from it reads `(assumed)` |
+
+> An empty field means **unknown**, never "matches the group." A traveler who says
+> they are on the group's booking and a traveler who said nothing both inherit the
+> same window — but only the first one asserted it, and the table says which.
+
+| Traveler | Window basis | Origin basis | Effective window (local) | Full + partial | Timezone delta |
+|----------|--------------|--------------|--------------------------|----------------|----------------|
+| [Name] | [ASSERTED-DIFFERENT / ASSERTED-SAME / UNKNOWN] | [ASSERTED-DIFFERENT / ASSERTED-SAME / UNKNOWN] | [Date, ~time] – [Date, ~time] | [N] full + [N] partial | [Origin TZ] to [Dest TZ] = [+/- N hrs], [eastbound/westbound] |
+| [Name] | | | | | |
+
+> **Single-origin collapse.** If every traveler's Window basis *and* Origin basis is
+> `ASSERTED-SAME` or `UNKNOWN`, the group has one window and one origin — delete the
+> table and keep only the line below. The trip-level block above is everyone's window.
+>
+> `- **All travelers:** trip-level window applies — no traveler states a different arrival, departure, or origin. [N] asserted, [N] assumed.`
+
+> **How each cell is derived.**
+> - **Effective window** — `ASSERTED-DIFFERENT`: resolve their stated arrival and
+>   departure against the trip dates into local instants. Otherwise: the trip-level window.
+> - **Timezone delta** — from *that traveler's* origin to the destination, with direction.
+>   Never the group's origin unless their Origin basis makes it theirs. A traveler whose
+>   origin shares the destination's offset reads `0 hours, no shift` — direction applies
+>   only to a non-zero delta, and a zero delta is a real result, not a missing one.
+> - **Full + partial** — partial days are computed from *that traveler's own* arrival
+>   (after check-in) and departure instants, not once for the group.
+> - **`(assumed)`** — append it to any value whose governing basis is `UNKNOWN`, and to
+>   no other. A value marked `(assumed)` under an `ASSERTED-*` basis is an error, and so
+>   is an unmarked value under `UNKNOWN`.
 
 ---
 

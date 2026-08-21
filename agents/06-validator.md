@@ -87,10 +87,18 @@ Specific checks:
 
 **Profile-privacy non-publication (fail-closed):**
 Per-traveler profile fields marked non-publishable must never reach a
-publish-bound artifact. Today that class holds exactly one field: **Passport**
-(issuing country and validity, never a number), captured in
-`travelers/<traveler>.md` and carried into `outputs/traveler-model.md`. The
-publish-bound artifacts are **every source the site build reads**. The
+publish-bound artifact. Today that class holds exactly two members:
+
+1. **Passport** (issuing country and validity, never a number), captured in
+   `travelers/<traveler>.md` and carried into `outputs/traveler-model.md`.
+2. **Every `[THIRD-PARTY]`-marked value** in `outputs/traveler-model.md` — a
+   need captured for a party member who has no profile of their own, supplied
+   by the operator and marked `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` (see
+   `agents/00-enrichment.md`). It is non-publishable because the person it
+   describes was never able to consent to it being recorded, let alone
+   published — see `reference/adr/ADR-006-third-party-data-capture.md`.
+
+The publish-bound artifacts are **every source the site build reads**. The
 authority for that set is the single-source table in
 `reference/site-layout-spec.md` §9.1 — **not** the content-source list in
 `CLAUDE.md` § Travel Site Generation, which enumerates the build procedure's
@@ -104,10 +112,21 @@ artifacts §9.1 marks authoritative-internally-but-not-reader-facing, and §9.3
 lists them as intentional exclusions; they are not publish-bound and are not
 audited here.
 
-The audit: for every traveler carrying a Passport value in
-`outputs/traveler-model.md`, confirm that neither the issuing country nor the
-validity appears anywhere in **any** publish-bound artifact named above. Any
-occurrence in any of them is **Critical** and the itinerary is not finalizable
+The audit runs on both members of the class, across the same five artifacts:
+
+- **Passport.** For every traveler carrying a Passport value in
+  `outputs/traveler-model.md`, confirm that neither the issuing country nor the
+  validity appears anywhere in **any** publish-bound artifact named above.
+- **`[THIRD-PARTY]` values.** For every `## <Name>` entry in
+  `outputs/traveler-model.md` carrying the `[THIRD-PARTY]` mark, confirm that
+  **none** of its need text reaches **any** publish-bound artifact named above,
+  and that the person's name appears in no `**Applies to:**` line and heads no
+  `## Hard Constraints` block. **Check the anonymized form too:** a rest floor
+  or a walking ceiling that reaches a published artifact with the name stripped
+  is **still a finding** — in a small named party, stripping the name does not
+  strip the identification.
+
+Any occurrence in any of them is **Critical** and the itinerary is not finalizable
 until the hub removes it. This check has **no Warning tier and no waiver**.
 
 **If the site build ever reads a new source, that source joins this audit set.**
@@ -116,14 +135,25 @@ filenames — a source added to the build and not added here reopens the leak th
 check exists to close.
 
 **Fail closed.** If `outputs/traveler-model.md` cannot be read, or a traveler's
-passport carry-through cannot be determined, record a Critical — an undetermined
-result is a failure, never a clean pass.
+passport carry-through cannot be determined, or a `[THIRD-PARTY]` entry's
+carry-through cannot be determined, record a Critical — an undetermined
+result is a failure, never a clean pass. This holds identically for both
+members of the class.
 
 **What is not a finding.** The check keys on a *specific traveler's captured
 value*, never on the word "passport". Destination-level guidance that belongs on
 a published plan — tax-free-shopping notes, a packing-list line, the entry
 requirements enriched into `trip-context.md` `## Destination Baseline`
 (`Visa / entry`) — is correct content and is never flagged.
+
+Nor is a **first-party** traveler's need reaching `trip-context.md`
+`## Hard Constraints`: that is the designed escalation path and it stays open,
+including when the operator relayed that traveler's own needs and the entry
+carries `[OPERATOR-PROVIDED]`. The key this check binds to is `[THIRD-PARTY]`,
+which marks a value whose *subject* could not consent — **not**
+`[OPERATOR-PROVIDED]`, which marks only *who supplied it*. Flagging every
+operator-relayed need would over-block correct content and is a
+misreading of the check.
 
 **Status-integrity audit:**
 Read `outputs/event-status.md` (the persist-mutable per-event status — see
@@ -186,14 +216,27 @@ a fixed type:
   subset) — see `reference/data-model.md` → "A need's applicable-day set"; do not
   redefine it, and do not fail a conditional need on a day its constraint never
   governed. Key each verdict to the governing `trip-context.md` constraint the
-  need links to. The agreement with constraint-compliance is a **forward
+  need links to — except for a `[THIRD-PARTY]` need, which by design has no
+  governing trip-level constraint to key to (see the mirror case below). The
+  agreement with constraint-compliance is a **forward
   implication, not an equivalence:** every needs-compliance `fail` **is** a
   constraint-compliance **Critical** — but **not** every constraint Critical has
   a needs-compliance counterpart. A trip-level or group constraint that **no
   per-traveler need links to** produces a constraint Critical with **no**
   needs-compliance row, by design. Do **not** enforce the reverse as an invariant
   (an unlinked constraint Critical with no needs-compliance row is correct, not a
-  discrepancy). You are recording the every-applicable-day hard-constraint audit
+  discrepancy). **The mirror case holds as well:** a `[THIRD-PARTY]` need has
+  **no** governing trip-level constraint — deliberately, because it never
+  escalates to `trip-context.md` — so emit its row keyed to **the need itself**,
+  as `[THIRD-PARTY] <person> — <category>`, rather than to a constraint name.
+  Such a need is **never silently dropped** (that would leave a captured
+  constraint unenforced, the exact failure this capture path exists to prevent)
+  and its unkeyable link is **never** itself a Critical (the data is correct).
+  This record lands in `outputs/satisfaction-metrics.md`, which §9.3 names an
+  intentional exclusion — so the row is not publish-bound, and writing the
+  person's name into it here is not a non-publication finding. It must not be
+  copied into a publish-bound artifact.
+  You are recording the every-applicable-day hard-constraint audit
   as a per-need-per-day pass/fail record for the per-traveler-need slice, not
   re-deciding it.
 - **Desire-coverage — covered / not, per traveler × per desire.** For each
@@ -410,12 +453,17 @@ placed venue breaking the dedup rules is Venue deduplication.
    Maps link (or an official-site URL when the venue has no map pin) in
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
-8. Profile-privacy non-publication — a per-traveler Passport value (issuing
-   country or validity) reaching **any** of the five publish-bound artifacts
-   named by `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
+8. Profile-privacy non-publication — either member of the non-publishable
+   class reaching **any** of the five publish-bound artifacts named by
+   `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
    `outputs/links-reference.md`, `outputs/venue-matrix.md`,
    `outputs/event-status.md`, `trip-context.md`) is a hard failure and is always
-   Critical; an undetermined result is Critical too
+   Critical. The two members are (a) a per-traveler Passport value (issuing
+   country or validity) and (b) any `[THIRD-PARTY]`-marked value — a need
+   captured for a party member who has no profile of their own — **including
+   its anonymized form**, and including the person's name on an `Applies to:`
+   line. There is **no Warning tier and no waiver**, and an undetermined result
+   is Critical too
 9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
 10. Travel restrictions and advisories — Critical if action is required
