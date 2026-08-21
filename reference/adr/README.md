@@ -25,3 +25,4 @@ options weighed, the decision, and the consequences.
 | [ADR-003](ADR-003-group-coordination.md) | Group coordination — change representation, approval workflow, notification, privacy | Accepted |
 | [ADR-004](ADR-004-contact-emergency-privacy.md) | Traveler contact & emergency info — privacy-handling model | Accepted |
 | [ADR-005](ADR-005-location-invariant.md) | Location invariant — every itinerary event carries a standard, validator-gated map link | Accepted |
+| [ADR-006](ADR-006-third-party-data-capture.md) | Third-party data capture — consent and attribution for party members without a profile | Accepted |
