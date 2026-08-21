@@ -1,6 +1,6 @@
 # ADR-006: Third-party data capture — consent and attribution for party members without a profile
 
-- **Status:** Proposed (2026-08-20)
+- **Status:** Accepted (2026-08-21)
 - **Deciders:** repo maintainer
 - **Driving work:** the design gate for #119 (no home for the needs of a party member who has no profile) and for Option A of #120 (a plural-aware `Passport` field); extends the PII precedent set by [ADR-004](ADR-004-contact-emergency-privacy.md); relates to the intake epic #69, which kept per-traveler detail out of the form.
 
@@ -100,35 +100,68 @@ consent claim the system cannot verify.
 
 ## Decision
 
-**Not yet decided — this ADR is `Proposed`.** It gates #119 outright, and gates Option A of
-#120; neither may enter a release until these questions are settled. Four questions, answered
-**per data class** (constraints and identity may be decided differently):
+**Accepted 2026-08-21.** Answered per data class, as the Context requires. The two classes are
+decided **differently**: constraints are capturable on a non-publishable surface; identity is not
+capturable at all.
 
-1. **May third-party data of this class be captured at all** without that person's own opt-in,
-   or does ADR-004's opt-in requirement extend to it? Answer once for **constraints** and once
-   for **identity**.
-2. **If yes, where** — the enrichment operator-provided fallback (Option 3), or a proxy profile
-   with an explicit consent attestation (Option 4)? A permissive answer for identity alone may
-   also be satisfied by the intake form itself, since the passport precedent already lives there
-   for the filler; that is the one case where Option 2 is not automatically foreclosed.
-3. **What reaches published output?** Needs flow into trip-level `Hard Constraints`. Whether a
-   third-party-sourced value may appear there — and in what form — needs an explicit answer,
-   because ADR-004 § 4's non-publication guarantee is scoped to contact/emergency fields and
-   covers neither class today.
-4. **Does a permissive identity answer bind #93?** Per-traveler entry-requirements determination
-   consumes "country + validity only — never passport numbers or other PII". If party passports
-   are captured anywhere, #93's per-traveler resolution depends on where.
+### Constraints (a party member's needs) — CAPTURE PERMITTED, via Option 3
 
-**[RECOMMENDED]** Option 3, extended with a provenance marker, on three grounds: it composes
-with a seam that already exists rather than adding a capture surface; it keeps the intake form
-unchanged, so ADR-004's rejected option is not reopened; and it inherits the git-ignored
-working-dir boundary, so question 3 resolves conservatively by default. Option 4 is the better
-answer if the maintainer judges that an unverifiable consent attestation is still worth
-recording explicitly. This recommendation is not a decision — it awaits ratification.
+**Q1 — yes**, third-party constraint data may be captured without that person's own opt-in, on a
+surface that cannot be published. ADR-004's opt-in requirement is scoped to capture that reaches a
+*published* artifact; the consent hazard it guards against does not arise where the value cannot be
+published by construction. Refusing capture outright was rejected on measured evidence: the v0.8.0
+attestation showed the group's two most plan-breaking inputs never reaching the planner, which is a
+plan that fails a real traveler rather than a privacy win.
+
+**Q2 — Option 3.** The organizer records the constraint through the existing operator-provided path
+in `agents/00-enrichment.md`, marked with its provenance, resident only in the git-ignored `trips/`
+working directory. No new capture surface; reconciliation and de-duplication reuse the seam where
+the *"exactly once"* requirement is already satisfied.
+
+**Option 4 (proxy profile) rejected**, notwithstanding its more explicit consent story. A proxy
+profile creates a **durable identity artifact for a person who never asked for one**, backed by an
+attestation the system cannot verify. Fewer durable records about a non-consenting person is the
+better privacy posture; an unverifiable consent claim records the appearance of consent rather than
+consent itself. **Option 2 rejected** — ADR-004's rejected option stays rejected. **Option 1
+rejected** on the evidence above.
+
+**Provenance-marking documents that a constraint is second-hand. It does not establish consent, and
+must not be described as though it does.**
+
+### Identity (a party member's issuing country and validity) — CAPTURE REFUSED
+
+**Q1 — no.** ADR-004's opt-in requirement extends to third-party identity data. It is not captured
+in the intake form, in the enrichment fallback, or on any other surface.
+
+This ratifies a resolution that has already shipped. #120 resolved in **v0.9.1** to Option B: the
+`Passport` field is scoped explicitly to the person filling the form — *"**Yours alone — not your
+party's**"* — and the template directs anyone else whose entry requirements need checking to file a
+profile of their own, stating that otherwise *"their passport isn't recorded anywhere."* **Option A
+(a plural-aware field) is foreclosed by that shipped resolution**, not merely declined here.
+
+### Q3 — Published output: nothing third-party-sourced is published
+
+A third-party-sourced constraint **shapes the plan but is never rendered**. It may inform scheduling
+— pacing, rest blocks, walking distances, venue selection — and **must not appear as stated text in
+any published artifact, in attributed or anonymized form**.
+
+**Anonymization is explicitly insufficient.** In a small named party, *"one traveler needs an
+afternoon rest"* discloses health data about an identifiable person; stripping the name does not
+strip the identification.
+
+This **extends ADR-004 § 4's fail-closed non-publication guarantee** — previously scoped to
+contact/emergency fields — to cover third-party-sourced needs. Any future permissive answer here
+requires an equivalent guard and a superseding ADR.
+
+### Q4 — #93 is UNBOUND
+
+Because identity capture is refused, party passports are captured nowhere. #93 (per-traveler
+entry-requirements determination) resolves per-traveler **only for travelers who have filed their own
+profile**, from country + validity on their own form. No dependency on this ADR remains.
 
 ## Consequences
 
-Stated conditionally, for the recommended option; to be finalized when the decision is made.
+Final, for the decision above.
 
 **Positive**
 
@@ -140,12 +173,17 @@ Stated conditionally, for the recommended option; to be finalized when the decis
 
 - The constraint depends on the organizer recording it, so it is only as reliable as that step.
 - Provenance-marking documents that a constraint is second-hand; it does not establish consent.
-- If question 3 is later answered permissively, the non-publication boundary must be revisited
-  with a guard equivalent to ADR-004 § 4's.
+- Question 3 is answered restrictively, so the non-publication boundary holds by construction.
+  Any future permissive answer requires a guard equivalent to ADR-004 § 4's and a superseding ADR.
+- Refusing identity capture means a party member's entry requirements are not determined unless
+  they file their own profile. This is the accepted cost of the opt-in boundary.
 
-**Blocked on this ADR**
+**Released by this ADR**
 
-- #119 — remains out of a release milestone until this ADR reaches `Accepted`.
-- #120, **Option A only** — the card itself is not blocked. Its Stage-5 fork may resolve to
-  Option B (state the field's singular scope) at any time, which introduces no third-party
-  capture and needs nothing from this ADR.
+- **#119 — unblocked.** Its scope is now determined: implement the Option 3 path in
+  `agents/00-enrichment.md` with provenance-marking, no intake-form change, and no publication.
+  The card was written against a wider option space and **must be re-scoped and re-triaged before
+  it is bundled** — it carries `status: approved`, not `status: bundled`, and has not passed a
+  Stage 3 Bundle in any milestone.
+- **#120 — moot.** Shipped in v0.9.1 via Option B; Option A is foreclosed by events. This ADR's
+  gating clause over #120 is discharged, not merely satisfied.
