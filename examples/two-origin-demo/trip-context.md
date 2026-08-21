@@ -45,8 +45,39 @@ content is generated here.
   - Flight: [illustrative] | Departs: Wed, Apr 15, 11:20 AM WEST | Arrives: Wed, Apr 15, 4:05 PM CDT
 - **Notes:** Must depart hotel by ~8:30 AM.
 
+### Additional origins
+
+> One block per **origin**, never one per traveler. Name travelers by their
+> `## Group` roster entry — the name only. Their `Leaving from:`, journey comfort
+> and passport stay in `travelers/<traveler>.md` and are never copied here.
+
+#### Origin B — Manchester, United Kingdom (MAN)
+- **Departing travelers:** Pat
+- **Outbound**
+  - **Leg 1:** MAN -> LIS
+    - Flight: Not yet booked | Departs: Not yet booked | Arrives: Not yet booked
+  - **Notes:** Illustrative example. Pat named this origin, so the trip level
+    records it; Pat has not confirmed timing, so it carries no legs yet. That is
+    why Pat's Origin basis below is `ASSERTED-DIFFERENT` while their Window basis
+    is `UNKNOWN` — the two are independent.
+- **Return**
+  - **Leg 1:** LIS -> MAN
+    - Flight: Not yet booked | Departs: Not yet booked | Arrives: Not yet booked
+  - **Notes:** Not yet booked.
+
+> The anchor origin is the unlabelled Outbound/Return pair above and is always
+> `Origin A`. Every traveler not named in a block here resolves to it; the
+> per-traveler table below says on what basis.
+
 ### Effective Planning Days [DERIVED]
 > Computed from flight data. Do not manually edit.
+> **Scope: the anchor origin (`Origin A`).** On a multi-origin trip this is **not**
+> a group-wide guarantee — a traveler on another origin may arrive later or leave
+> earlier. Anything that needs to know who is present on a given day must read each
+> traveler's own derived window in `### Per-Traveler Planning Days [DERIVED]` below,
+> not this block.
+> On this trip Pat departs from `Origin B`, so the days listed here describe the
+> anchor origin only — they are not Pat's.
 
 - **Apr 9 (Thu):** Arrival day — available from ~1:00 PM local (after hotel check-in)
 - **Apr 10 (Fri) – Apr 14 (Tue):** Full planning days (5 days)
@@ -62,17 +93,29 @@ content is generated here.
 | Traveler | Window basis | Origin basis | Effective window (local) | Full + partial | Timezone delta |
 |----------|--------------|--------------|--------------------------|----------------|----------------|
 | Jordan | `ASSERTED-SAME` | `ASSERTED-DIFFERENT` | Apr 9, ~1:00 PM – Apr 15, ~8:30 AM | 5 full + 2 partial | CDT (UTC-5) to WEST (UTC+1) = +6 hrs, eastbound |
+| Riley | `UNKNOWN` | `ASSERTED-SAME` | Apr 9, ~1:00 PM – Apr 15, ~8:30 AM *(assumed)* | 5 full + 2 partial *(assumed)* | CDT (UTC-5) to WEST (UTC+1) = +6 hrs, eastbound |
 | Pat | `UNKNOWN` | `ASSERTED-DIFFERENT` | Apr 9, ~1:00 PM – Apr 15, ~8:30 AM *(assumed)* | 5 full + 2 partial *(assumed)* | BST (UTC+1) to WEST (UTC+1) = 0 hours, no shift |
 | Sam | `ASSERTED-DIFFERENT` | `UNKNOWN` | Apr 8, ~4:00 PM – Apr 12, ~7:00 PM | 3 full + 2 partial | CDT (UTC-5) to WEST (UTC+1) = +6 hrs, eastbound *(assumed)* |
 
 > **Reading this.** Jordan and Pat hold the same window for different reasons: Jordan
 > said so, Pat said nothing. Pat's window is marked `(assumed)` and stays open to
-> correction — but Pat's **timezone delta is their own**, derived from Manchester, and
-> across these dates it is **zero**: Pat crosses no time zones while the group crosses
-> six. A jet-lag model that gave Pat the group's +6 would be wrong on day one, and the
-> old field shape had no way to notice. Sam's window is pinned to their own dates and
-> does not move if the group's flights change; Sam's timezone delta is `(assumed)`
-> because they never said where they set out from.
+> correction — but Pat's **timezone delta is their own**, derived from their trip-level
+> origin (`Origin B`) rather than the group's, and across these dates it is **zero**:
+> Pat crosses no time zones while the group crosses six. A jet-lag model that gave Pat
+> the group's +6 would be wrong on day one, and the old field shape had no way to
+> notice. Sam's window is pinned to their own dates and does not move if the group's
+> flights change; Sam's timezone delta is `(assumed)` because they never said where
+> they set out from.
+>
+> **Jordan and Riley leave from the same city on different bases.** Jordan *named*
+> Austin, so Jordan's Origin basis is `ASSERTED-DIFFERENT` — **pinned**, and it does
+> not move if the group rebooks out of somewhere else. Riley said only "whatever the
+> group flies out of", so Riley's is `ASSERTED-SAME` — **tracks**, and it would follow
+> that rebooking. Same departure city today, opposite behaviour tomorrow: what
+> classifies a traveler is what they bound their answer to, never whether two values
+> happen to agree. Riley's timezone delta carries no `(assumed)` marker — an
+> `ASSERTED-SAME` origin is asserted, not assumed — while Riley's window cells do,
+> because Riley's Window basis is `UNKNOWN`.
 >
 > Whole-group anchors on Apr 8 and Apr 13–15 fall outside at least one traveler's
 > window. Naming who is absent is the scheduler's job, not this block's.
@@ -84,7 +127,7 @@ content is generated here.
 - **Property name:** [Illustrative — central aparthotel]
 - **Booking status:** Confirmed
 - **Address:** [Illustrative]
-- **Room type:** [Illustrative — sleeps 3]
+- **Room type:** [Illustrative — sleeps 4]
 - **Key amenities:** [Illustrative]
 - **Check-in time:** 1:00 PM — sets the arrival-day window above
 - **Check-out time:** 11:00 AM — hotel departure by ~8:30 AM on the return flight day
@@ -109,14 +152,15 @@ content is generated here.
 | Person | Role / Relationship | Traveler file |
 |--------|---------------------|---------------|
 | Jordan | Primary traveler / planner | `travelers/jordan.md` |
+| Riley | Friend — on the group booking | `travelers/riley.md` |
 | Pat | Friend — joining from a second origin | `travelers/pat.md` |
 | Sam | Friend — own dates | `travelers/sam.md` |
 
-- **Total travelers:** 3
+- **Total travelers:** 4
 - **Travel mode:** Group moves together, with noted exceptions
 - **Subgroup notes:** Sam arrives Apr 8 and departs Apr 12 — Apr 8 and Apr 13–15 are
-  not whole-group days. Pat's timing is unconfirmed; treat Pat's presence on any day
-  as an assumption until their profile is answered.
+  not whole-group days. Pat's and Riley's timing is unconfirmed; treat their presence
+  on any day as an assumption until their profiles are answered.
 
 ---
 
@@ -230,6 +274,7 @@ None identified — this example demonstrates the planning-days derivation only.
 
 - Group booking (AUS -> LIS, Apr 8 / LIS -> AUS, Apr 15) confirmed
 - Sam's own dates (Apr 8 arrival, Apr 12 departure) confirmed
+- Pat's departure origin (`Origin B` — MAN) confirmed; Pat's legs not yet booked
 
 ---
 
@@ -276,7 +321,8 @@ None identified — this example demonstrates the planning-days derivation only.
 
 - This is an illustrative example for the per-traveler planning-days derivation.
   No agent output is generated from it.
-- Pat's timing basis is `UNKNOWN`. Any finding that Pat is present or absent on a
-  given day is an **assumption**, and must be named as one — not a fact.
+- Pat's and Riley's timing basis is `UNKNOWN`. Any finding that either of them is
+  present or absent on a given day is an **assumption**, and must be named as one —
+  not a fact.
 - Sam is not present on Apr 8 morning, or on Apr 13, 14, or 15. A whole-group anchor
   on those days is a scheduling error, not a preference.
