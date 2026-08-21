@@ -3,6 +3,75 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.10.0] — 2026-08-21 — Per-traveler facet depth
+
+A party who leave from different places, or arrive on different days, is now
+modelled as the individual people they are rather than as one representative
+traveller. Five capabilities land together because each is unusable alone: a
+per-traveller derivation of available time, a trip context that can hold more
+than one departure origin, a scheduler and transport brief that read presence, a
+familiarity signal that calibrates recommendation depth, and a home for a party
+member's needs that cannot be published. The single-origin case is unchanged
+throughout — the trip-level blocks still render exactly as before.
+
+### Added
+- **Per-traveller effective planning days
+  (`templates/trip-context.template.md`).** A `[DERIVED]` block sits alongside
+  the trip-level one, deriving each traveller's own window, timezone delta and
+  partial days from their own arrival and departure rather than the group's.
+  `Arrive / leave` and `Leaving from` are each classified independently as
+  stated-different, stated-same-as-group, or unanswered — so a window that is
+  assumed rather than asserted is marked as assumed everywhere it is used.
+  Classification follows what the traveller bound their window to, never numeric
+  coincidence: dates that happen to match the group's stay pinned when the group
+  rebooks.
+- **Additional departure origins (`templates/trip-context.template.md`).** A trip
+  can carry more than one origin, each with its own legs and its own list of who
+  departs on them. The section's absence is what means single-origin, so existing
+  trips are untouched. Leg field labels are identical across the anchor and
+  additional origins, so a consumer parses them with one rule.
+- **Presence in scheduling and transport (`agents/03-scheduling.md`,
+  `agents/04-transport.md`).** Whole-group anchors prefer days on which everyone
+  is present; when a booked event, a hard closure or an immovable need forces one
+  outside a traveller's window, the day names who is absent and which of those
+  reasons forced it. Absent (not at the destination) is kept distinct from
+  unavailable (present but committed elsewhere) — only the latter has a parallel
+  track worth planning. Transport derives one arrival-day stream per origin.
+- **Prior-visit familiarity (`templates/traveler-intake.template.md`,
+  `agents/01-activities.md`, `agents/02-food.md`).** An optional, unstarred field
+  on a closed scale — never / once / a few times / know it well — calibrates how
+  deep recommendations pitch. The starred quick-pass stays at ten fields.
+- **A home for a party member's needs (`agents/00-enrichment.md`).** Where
+  someone in the party will not file a profile of their own, the organiser can
+  record their needs through the existing operator-provided path, marked as
+  second-hand. They reach the planner exactly once, attributed to the right
+  person, and are superseded rather than duplicated if that person later files a
+  profile. The intake form is unchanged: nothing new is asked.
+
+### Changed
+- **Third-party information is barred from published output
+  (`agents/00-enrichment.md`, `agents/06-validator.md`,
+  `reference/data-model.md`).** A need recorded on someone else's behalf shapes
+  the plan — pacing, rest, walking distances, venue choice — but never appears in
+  any publish-bound artifact, in attributed or anonymised form; in a small named
+  party, removing the name does not remove the identification. Two escalation
+  paths that would have carried such a value into the published trip file are
+  closed by carve-out, so first-party escalation continues to work unchanged. The
+  validator treats any leak as Critical, with no warning tier, no waiver, and an
+  undetermined result failing closed. Lifecycle facets are bound to first-party
+  entries by a single class-wide rule rather than a list of fields, so facets
+  added by a later release inherit the bound automatically.
+- **Cold-assistant guidance names the third fallback branch (`CLAUDE.md`).** An
+  assistant filling the form on someone's behalf is told where a profile-less
+  party member's needs belong and that they are never published — the gap that
+  produced this work in the first place.
+
+### Decisions
+- **ADR-006 — third-party data capture** is ratified. Needs recorded on behalf of
+  a party member without a profile may be captured on a non-publishable surface;
+  identity data about that person may not be captured at all. See
+  `reference/adr/ADR-006-third-party-data-capture.md`.
+
 ## [0.9.1] — 2026-08-20 — Intake form: corrective
 
 Three corrections to the traveler intake form that 0.8.0 shipped, and two
