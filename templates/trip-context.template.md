@@ -30,6 +30,11 @@ All other days are locked."]
 ## Logistics
 
 - **Primary traveler:** [Name, home city/state/country]
+  > The traveler whose Outbound and Return legs below describe their journey —
+  > the **anchor origin** (`Origin A`). On a single-origin trip that is the whole
+  > party. On a multi-origin trip it names only this origin's journey; the others
+  > are recorded under `### Additional origins`. This is **not** a seniority or
+  > decision-rights label — the planner role is recorded in the `## Group` roster.
 - **Confirmation code(s):** [Airline / hotel / rail confirmation codes]
 
 ### Outbound
@@ -46,8 +51,43 @@ All other days are locked."]
   - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
 - **Notes:** [Anything relevant]
 
+### Additional origins
+
+> Omit this whole section for a single-origin trip — one origin is the default
+> shape, and the Outbound/Return legs above are it.
+> One block per **origin**, never one per traveler. Name travelers by their
+> `## Group` roster entry — the name only. Their `Leaving from:`, journey comfort
+> and passport stay in `travelers/<traveler>.md` and are never copied here.
+
+#### Origin B — [City, Country ([airport code])]
+- **Departing travelers:** [Names exactly as they appear in the `## Group` roster]
+- **Outbound**
+  - **Leg 1:** [Origin airport code] -> [Connecting airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Leg 2:** [Connecting airport code] -> [Destination airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Notes:** [Layover duration, bags, seat class, anything relevant]
+- **Return**
+  - **Leg 1:** [Destination airport code] -> [Connecting airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Leg 2:** [Connecting airport code] -> [Origin airport code]
+    - Flight: [#] | Departs: [Day, Date, Time TZ] | Arrives: [Day, Date, Time TZ]
+  - **Notes:** [Anything relevant]
+- **Confirmation code(s):** [Only if this origin books separately — otherwise omit]
+
+> Add one `#### Origin <letter>` block per additional origin. The anchor origin is
+> the unlabelled Outbound/Return pair above and is always `Origin A`.
+> Each origin's **arrival** is its last Outbound leg's `Arrives:`; its **departure**
+> is its first Return leg's `Departs:`. Leg labels are identical to the anchor's on
+> purpose — anything that can read the legs above can read these.
+
 ### Effective Planning Days [DERIVED]
 > Computed from flight data. Do not manually edit.
+> **Scope: the anchor origin (`Origin A`).** On a multi-origin trip this is **not**
+> a group-wide guarantee — a traveler on another origin may arrive later or leave
+> earlier. Anything that needs to know who is present on a given day must read each
+> traveler's own derived window in `### Per-Traveler Planning Days [DERIVED]` below,
+> not this block.
 
 - **[Date]:** Arrival day — available from ~[arrival time] local
 - **[Date] – [Date]:** Full planning days ([N] days)

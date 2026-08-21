@@ -136,6 +136,41 @@ link against. Specifically:
   party, journey & origin and accommodation *link to* their trip-level homes
   (`## Budget Posture`, `## Logistics`, `## Group`, `## Accommodation`) —
   refine, never restate them, and never write them into trip-context.md.
+
+  **Resolving origin on a multi-origin trip.** When trip-context.md `## Logistics`
+  carries an `### Additional origins` section, resolve every person to **exactly
+  one** origin and carry the link in the existing "Applies to" form —
+  `Applies to: ## Logistics → "Origin B — Manchester (MAN)"`. Four rules hold, and
+  none of them adds an entry:
+  - **The trip level decides; the profile refines.** A person's origin is the one
+    whose `Departing travelers:` names them. Their own `Leaving from:` is the
+    cross-check, not the answer — if the two disagree, flag it (VERIFY) rather than
+    silently picking one.
+  - **One entry per person, always.** `outputs/traveler-model.md` stays keyed by
+    person — one `## <Name>` entry each. Origin is a *field on* that person's
+    journey facet, never a second grouping axis. N origins never produce N × M
+    entries, and no origin ever gets an entry of its own.
+  - **An unassigned person inherits the anchor origin (`Origin A`) — as a marked
+    assumption on a multi-origin trip, as an assertion on a single-origin trip**
+    (there is only one origin to inherit). An empty `Leaving from:` means
+    *unknown*, never *matches the group*.
+  - **Origin and timing are independent.** A traveler may set out from a different
+    place and still arrive and leave with the group, or share the group's origin
+    and travel on different dates. Never infer either from the other.
+  If someone's `Leaving from:` names a place with no origin block, flag it (VERIFY)
+  so the origin can be added to `## Logistics` — do not create the block yourself,
+  and do not let the traveler file become the de-facto home for a trip-level origin.
+
+  **A changed journey facet is a re-derive trigger — on every trip, not only
+  multi-origin ones.** When a traveler's `Leaving from:` or `Arrive / leave:`
+  changes, name that facet in the update signal you already emit for them
+  (see *Profile-change detection* below) and state that
+  `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`
+  is now stale. You do **not** rewrite that block — journey & origin is still not
+  yours to write into trip-context.md, and the rule above is unchanged. The signal
+  is the only thing that tells the planner to re-run the Layer-2 fill and refresh
+  the block's `Last derived:` line.
+
   A traveler may also note a **Special occasion?** — a birthday, anniversary,
   honeymoon, or milestone the trip is marking. It is not a lifecycle facet and
   links to nothing trip-level; carry it through verbatim alongside their facets
