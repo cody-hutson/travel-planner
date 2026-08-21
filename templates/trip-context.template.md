@@ -76,7 +76,9 @@ All other days are locked."]
 - **Confirmation code(s):** [Only if this origin books separately — otherwise omit]
 
 > Add one `#### Origin <letter>` block per additional origin. The anchor origin is
-> the unlabelled Outbound/Return pair above and is always `Origin A`.
+> the unlabelled Outbound/Return pair above and is always `Origin A`. Every
+> traveler not named in a block here resolves to it; the per-traveler table below
+> says on what basis.
 > Each origin's **arrival** is its last Outbound leg's `Arrives:`; its **departure**
 > is its first Return leg's `Departs:`. Leg labels are identical to the anchor's on
 > purpose — anything that can read the legs above can read these.
