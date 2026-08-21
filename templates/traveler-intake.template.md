@@ -4,8 +4,10 @@
 > work around, and how you like to travel. One file per person.
 >
 > **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There are ten of them,
-> at most one in a section, and most are a pick-from-the-list or a short phrase. Nothing
-> here is compulsory: fill what fits where your trip is right now and come back for the rest.
+> at most one in a section, and most are a pick-from-the-list or a short phrase. The two
+> that ask you to think — a need and a desire — say so on the line: one line is a
+> complete first pass there. Nothing here is compulsory: fill what fits where your trip
+> is right now and come back for the rest.
 >
 > **How to use it:**
 > - Copy this template to `trips/[destination-year]/travelers/<your-name>.md`, then
@@ -117,7 +119,7 @@
 > How you like to spend on a trip — your personal lean. Skip either part if you'd
 > rather not say.
 
-- ⭐ **Comfort range:** [Your day-to-day spend comfort — e.g., "mid-range; happy with simple lunches and a nice dinner", "keep it lean", "comfortable spending freely". Skip if you'd rather not say.]
+- ⭐ **Comfort range:** [Your day-to-day spend comfort — keep it lean / mid-range / spend freely, plus anything worth adding — e.g., "mid-range; happy with simple lunches and a nice dinner", "keep it lean", "comfortable spending freely". Skip if you'd rather not say.]
 - **Splurge appetite:** [What you'd happily pay up for versus stay lean on — e.g., "splurge on one standout meal, save on the rest", "pay for comfort on transit, casual on food". Skip if nothing stands out.]
 
 > This is *your* personal lean. It refines — it doesn't replace — the trip-level budget
@@ -140,7 +142,7 @@
 > Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other.
 
 - **Category:** [One of: Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other — e.g., Heat]
-- ⭐ **Specific:** [Your personal detail — e.g., "fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days." Skip the block entirely if this one doesn't apply to you.]
+- ⭐ **Specific:** [Your personal detail — the *how much* and the *what exactly*. **One line is a complete first pass.** e.g., start with "no direct sun after early afternoon", sharpen later to "fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days." Skip the block entirely if this one doesn't apply to you.]
 - **Applies to:** [The trip rule this falls under, written as `Hard Constraints → "<rule name>"` or `Dietary & Health → "<rule name>"` — e.g., `Hard Constraints → "Afternoon heat ceiling"`. Leave blank if you're not sure — an agent will link it.]
 
 - **Category:** [Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other]
@@ -178,7 +180,7 @@
 > **Add an entry for each thing you want, and delete the rest.** Fill in the **Desire**
 > and pick exactly one **Priority tier** — think of it as how much it matters, not a number:
 
-- ⭐ **Desire:** [What you want — e.g., "a slow museum morning rather than a packed sightseeing sprint."]
+- ⭐ **Desire:** [What you want — an archetype from the list above is a complete answer on its own. **One line is a complete first pass.** e.g., start with "a slow morning", sharpen later to "a slow museum morning rather than a packed sightseeing sprint."]
 - **Priority tier:** [Exactly one of:
     - **anchor** — you'd be genuinely disappointed to miss this; build the trip to land it.
     - **wish** — a real want to try hard for, but it can yield to a need or to someone else's anchor.
@@ -348,7 +350,8 @@ happily pay up for. This is their personal lean, not the group's budget.
 Fields per block: **Category**, **Specific** (starred), **Applies to** (leave blank).
 This is the important one. Ask whether anything has to be worked around for them: heat,
 walking or stairs, food or allergies, rest, a spending ceiling, a fixed time, noise or
-crowds. One block per need, in their own words, as specific as they can make it. If nothing
+crowds. One block per need, in their own words, as specific as they can make it — one line
+is a complete first pass, so take what they give you rather than pressing for more. If nothing
 is a hard must, write `none` rather than leaving it blank — blank reads as *not answered
 yet*, and the planner treats an unanswered need as unknown, never as none. **This is the
 one place `none` is used instead of the em dash**: everywhere else an em dash means "no
@@ -358,7 +361,8 @@ to** blank.
 
 ### Step 8 — Desires — what you want
 Fields per block: **Desire** (starred), **Priority tier**, **Theme tag(s)**, **Overlap** (leave blank).
-Offer the archetype menu from the section as starting points, then make each one specific to
+Offer the archetype menu from the section as starting points — an archetype on its own is
+a complete first pass. Then make each one specific to
 them. For every desire, ask for exactly one priority tier — *anchor* (would be genuinely
 disappointed to miss it), *wish* (try hard, but it can yield), or *nice-to-have* (a bonus).
 Suggest a theme tag or two, reusing the archetype wording where it fits. Leave **Overlap**
