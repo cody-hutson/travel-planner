@@ -3,6 +3,85 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.11.0] — 2026-08-22 — Satisfaction metric refinements
+
+Three refinements to the satisfaction layer, each closing a place where the
+coverage view described something other than the trip as it is actually lived. A
+need was graded on days its traveller had not yet arrived. A want you have every
+morning could only be recorded as a want you have once. And a day's anchor meals
+could all drift into the same grab-and-go format with nothing in the metrics
+noticing. Nothing new is asked of a traveller at intake beyond one optional line
+per desire. The first two changes are invisible on a trip where everyone shares
+the group's window and nobody holds a daily want; the third changes what the food
+agent offers for the anchor role on any trip.
+
+### Added
+- **A want you have every day, recorded as one
+  (`templates/traveler-intake.template.md`, `agents/00-enrichment.md`,
+  `agents/03-scheduling.md`, `agents/05-hub-planner.md`,
+  `agents/06-validator.md`, `reference/data-model.md`).** A desire can now carry
+  an optional `Recurrence:` of `one-off` or `daily` — a morning coffee before the
+  day starts, a swim, an evening walk. It is a separate question from how much
+  the want matters: a daily want may be an anchor, a wish or a nice-to-have, and
+  neither label implies the other. Only an explicit `daily` counts; a blank or
+  em-dashed line is a one-off, and the wording of a desire is never read as
+  evidence of cadence. A daily want becomes a standing slot on every day that
+  traveller is present — their own window, not the trip's — placed in the time
+  block the desire names, and no slot is placed on a day they are away. Three
+  bounds hold: it is never the day's anchor whatever its tier, it never exempts a
+  venue from the two-appearance cap (so a week-long ritual is a week of that kind
+  of stop, not seven visits to one address), and it yields to needs like any
+  other desire. It is reported per day and counts as covered only when every
+  present day carries it; a partial run is not covered, with the missed days
+  named.
+- **Convenience formats are capped as anchor meals, not as entries
+  (`agents/02-food.md`, `agents/05-hub-planner.md`, `reference/data-model.md`,
+  `CLAUDE.md`).** Grab-and-go, konbini and counter, standing-counter,
+  market-stall and the other minimal-commitment formats stay welcome without
+  limit as grazing, snack and casual entries — a thin casual section was always
+  the anti-pattern here. What is capped is how many of them are offered for the
+  **anchor** role: at most two nominations per category across the list, the
+  second one intentional rather than a default. The cap is about commitment and
+  format, never about effort — a walk-in counter can be a legitimate anchor and
+  nothing here pushes toward reservations. Each convenience entry now states its
+  anchor eligibility, the hub honors that marker without recomputing it, and a
+  new anti-pattern names the drift the rule exists to catch: anchors accumulating
+  as convenience formats because they are easy, cheap and always open, until the
+  trip's anchor meals are three konbini runs and a standing counter.
+- **A sixth coverage dimension — meal-variety concentration
+  (`reference/data-model.md`, `agents/05-hub-planner.md`,
+  `agents/06-validator.md`, `CLAUDE.md`).** The satisfaction view now names six
+  dimensions rather than five. The new one is a per-day balance signal for
+  whether a day's meals concentrate in a single convenience format instead of
+  ranging across formats. It follows the same seam the rest-recovery signal
+  already follows: the per-category anchor cap above is the hard selection-time
+  rule, and this is the softer per-day reading of whether the resulting spread is
+  healthy beyond it. Like every balance signal it is named and tracked with its
+  value left to design — nothing in the satisfaction layer scores or optimizes
+  yet.
+
+### Fixed
+- **A need is graded only on the days its traveller is at the destination
+  (`reference/data-model.md`, `agents/06-validator.md`,
+  `agents/05-hub-planner.md`, `agents/03-scheduling.md`).** A need's applicable
+  days are now the days its governing constraint governs **intersected with**
+  that traveller's own at-destination days, so a mobility limit is no longer
+  failed on a day its traveller had not yet landed. Absence is the only presence
+  failure that removes a verdict: a traveller who is at the destination but
+  **unavailable** is still graded, because they are here on a parallel track and
+  their needs bound that track exactly as they bound the main one. Two readings
+  are named separately so each consumer cites the one its own job needs —
+  placement reads presence (there **and** free), grading reads the window alone —
+  and both are defined once in `reference/data-model.md`, with the scheduler, hub
+  and validator citing rather than re-deriving them. The trim is always shown
+  with its reason (`D2–D4 (at destination D2–D4)`) so a reader can tell a
+  presence trim from a constraint subset; a silently narrowed grade is the same
+  failure as an unnamed absence. Where a window is only assumed, every day is
+  still graded and the *(assumed)* marking travels with it — a hard gate is never
+  dropped on a guess — and a party member recorded on needs alone, who carries no
+  presence data at all, is graded on every day the constraint admits rather than
+  none.
+
 ## [0.10.0] — 2026-08-21 — Per-traveler facet depth
 
 A party who leave from different places, or arrive on different days, is now
