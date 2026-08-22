@@ -153,10 +153,17 @@ The field shape for a single desire:
   - **anchor** — a desire the traveler would be genuinely disappointed to miss; the trip should be built to land it.
   - **wish** — a real want the trip should try hard to include, but which can yield to a need or to another traveler's anchor.
   - **nice-to-have** — a bonus; pleasant if it fits, no loss if it does not.
+- **Recurrence** *(optional)* — exactly one of:
+  - **one-off** — a single occasion somewhere in the trip. One placement satisfies it.
+  - **daily** — a want the plan honors on **every day that traveler is present** — their present-day set, per *Presence — a traveler's present-day set* below — never the full trip-day set, and never a rule that depends on the destination.
+
+  Omit the line, or leave it `—`, when the desire is one-off: an unstated recurrence is planned as `one-off`. This is the one field where *not stated* and a stated value coincide in effect, and it is safe **only** because the two produce the same plan — silence never manufactures a daily obligation. (Contrast `Been here before?`, where an unanswered field must read *unknown* and never `never`, because there the two readings calibrate depth in opposite directions.)
 - **Theme tag(s)** *(optional)* — one or more free-text tags grouping the desire by kind (e.g. `food`, `markets`, `museums`, `nightlife`, `nature`, `slow-pace`). Tags are how desires across travelers are matched for overlap; they are descriptive labels, not categories the traveler must pick from.
 - **Overlap** — which **other** travelers share this desire (by name), or `solo` if no one else lists it. This is the **desire-overlap signal**: it surfaces where the group already agrees. The match rule the enrichment agent applies is: **two desires overlap when they share a theme tag after case/stem normalization (the deterministic spine), OR when enrichment judges them the same desire in plain-language sense (the augment).** The tag-spine is the reproducible part; the sense-match is the judged augment that catches agreement the tags missed. Because tags are free-text and judgment varies, the signal is **advisory and may shift between refreshes** until the group's tags are normalized — it surfaces likely agreement, it does not certify it. A traveler authoring their own file may leave Overlap blank or note who they *think* shares it; the derived model carries the reconciled answer.
 
 > **Priority tiers are structural labels, not numeric weights.** `anchor` / `wish` / `nice-to-have` rank a traveler's desires by importance so a later capability knows what matters most — they are **not** scores, weights, or coverage percentages, and nothing in this layer multiplies, sums, or optimizes against them. The tier says "this matters more than that"; it does **not** say "this is worth 0.8". How a future capability *balances* desires across the group, or *measures* how well a plan satisfies them, is out of scope here (see What This Document Does Not Define). This document defines the structure the tiers live in; it does not define any math over them.
+
+> **Recurrence is orthogonal to priority tier, and it is a cadence on the want, not on a venue.** The two axes are independent: a daily want may be an `anchor`, a `wish`, or a `nice-to-have`, and a one-off want may be any of the three. Recurrence is **not** a fourth tier and adds nothing to the tier enum, which stays closed at three. It is also not a licence to repeat a place — a recurring desire recurs as a **slot**, and every venue that fills it obeys the two-appearance cap the venue matrix enforces (`CLAUDE.md` → Key Rules, *Venue deduplication*). A week of morning ritual stops is a week of that kind of stop, not seven visits to one address. And a recurring desire is still a desire: it never becomes the day's structural anchor event or anchor meal, whatever its tier.
 
 ### Lifecycle facets
 
@@ -177,6 +184,28 @@ Needs and desires are the structural core — but a traveler's preferences span 
 > **Depth calibration is coverage, not a score.** `Been here before?` is read by `agents/01-activities.md` and `agents/02-food.md` to calibrate how obvious or deep a candidate set runs. A mixed party does **not** average to a middle depth: the set carries both the essentials a first-timer would regret missing and at least one less-obvious candidate for each traveler who has been here before. Where one depth is unrepresented in the party, the set leans wholly that way; where a traveler's answer is unknown, they contribute no depth signal in either direction. Nothing here weights, ranks or scores travelers against each other — consistent with this document's own rule that nothing in this layer optimizes.
 
 These facets do not relax the needs-vs-desires core or the link-don't-copy rule — they extend the same individual-only, one-source-per-fact model across the trip lifecycle. **Lifecycle note:** the file spans **IDEATION → ENRICHMENT** — a traveler fills the facets relevant to their trip's current stage (destination leanings matter most before a destination is picked; dates/budget/needs matter once it is), leaving the rest blank.
+
+### Presence — a traveler's present-day set
+
+Several consumers need to know whether a traveler is *at the destination* on a given day: the scheduler places whole-group anchors, the validator grades needs per applicable day and gates nightlife per night, and the hub mirrors the needs audit. The rule is stated **here once**; every consumer cites it and none re-derives it.
+
+**A traveler's present-day set** is the set of trip days on which both limbs hold:
+
+- **In their window** — the day falls inside that traveler's own effective window in `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`. That block is the one home for the window; take its values as published. The window is the derived block, **never** the raw `Arrive / leave:` profile field — a traveler whose window basis is `ASSERTED-SAME` tracks a group rebooking while an `ASSERTED-DIFFERENT` window stays pinned, so the raw field and the derived window diverge exactly when it matters.
+- **Available that day** — their `Can travel:` / `Blackout:` facets in `outputs/traveler-model.md` do not exclude it.
+
+A day failing either limb is **not** in the set. The two failures differ and the distinction is carried, never flattened: **absent** (outside the window — not at the destination) versus **unavailable** (inside the window but excluded that day — here and not free). Only *unavailable* has a parallel track worth planning.
+
+**The window limb is separately named, because grading keys off it alone.** A traveler's **at-destination day set** is the days satisfying the **first limb only** — the days they are at the destination, free that day or not. This is not a second predicate competing with the one above: it is that predicate's window limb, named here so each consumer cites the reading its own job needs instead of re-deriving one. Which reading a consumer takes is fixed here, not chosen locally:
+
+- **Placement reads the present-day set — both limbs.** Deciding *where a thing goes* — a whole-group anchor, the standing slot of a recurring desire, an applicable nightlife night — needs the traveler there **and** free. A slot placed on a day someone is excluded is a slot nobody can take, so a placement that ignored the availability limb would plan for an empty chair.
+- **Needs-grading reads the at-destination day set — the window limb.** Deciding *whether a hard constraint is audited* needs only that the plan is doing something with that traveler that day. An **unavailable** traveler is at the destination and carries a full parallel track, so their needs bound that track exactly as they bound the main one — dropping their grade would leave the parallel track unaudited, the mirror of the every-calendar-day defect this rule exists to prevent. **Absent** is the only presence failure that removes a grade: there is no plan-day to honor or to breach.
+
+> **An assumed window never trims a grade.** Where a traveler's `Window basis` is `UNKNOWN`, the block marks the window *(assumed)* and any presence or absence read from it is an assumption, not a fact. On such a traveler, treat every trip day as present for grading and carry the *(assumed)* marking into anything that cites the set. A hard gate is never dropped on a guess.
+
+> **No presence data means every day, never no days.** A subject with no `### Per-Traveler Planning Days [DERIVED]` row and no availability facets has **no derivable window and no derivable availability** — the `[THIRD-PARTY]` party member admitted on needs only, who by design carries no facet at all, is exactly this case. Their at-destination day set is **every trip day**, so their needs are graded on every day the constraint factor admits. Absence of presence data is not evidence of absence, and reading it as an empty set would silently drop the **only** audit surface such a need has: it also has no governing trip-level constraint, so nothing would raise a Critical in its place either. This is the same fail-closed reading as the assumed window above — less data, not different data — and it grants no facet to that person, only a grading default.
+
+On a trip where every traveler shares the group's window and no blackout applies, every traveler's present-day set is the full trip-day set, and nothing that cites this rule changes behavior. **The grading no-op is wider, and the window alone bounds it:** because needs-grading reads the at-destination day set, a blackout never moves a grade. On any trip where every traveler shares the group's window, every need is graded on exactly the days it was graded on before the presence factor existed — blackouts or not.
 
 ### Worked example — a per-traveler file
 
@@ -204,6 +233,11 @@ Jordan's `travelers/Jordan.md`, written out in the full model (extending the sma
   Overlap: Pat
 - Desire: one standout coffee place.
   Priority tier: nice-to-have
+  Theme tag(s): food
+  Overlap: solo
+- Desire: a morning ritual stop — a café or bakery — before the day starts.
+  Priority tier: wish
+  Recurrence: daily
   Theme tag(s): food
   Overlap: solo
 ```
@@ -240,6 +274,7 @@ The enrichment agent reconciles both files into `outputs/traveler-model.md` — 
 - Desire (anchor): slow museum morning [museums, slow-pace] — shared with Pat.
 - Desire (wish): local markets [markets, food] — shared with Pat.
 - Desire (nice-to-have): standout coffee [food] — solo.
+- Desire (wish, daily): morning ritual stop [food] — solo.
 
 ## Pat
 - Need → Hard Constraints "Afternoon heat ceiling" (Applies to: Pat); specific: shade/indoors by early afternoon above ~82°F.
@@ -490,28 +525,39 @@ The split mirrors the needs-vs-desires model: a **need** bounds the solution (so
 
 ### The dimension set
 
-Five dimensions make up the satisfaction coverage view. Each is named, typed, and given a definition — and for the balance signals, an explicit note that the scoring is deferred.
+Six dimensions make up the satisfaction coverage view. Each is named, typed, and given a definition — and for the balance signals, an explicit note that the scoring is deferred.
 
 | Dimension | Type | Granularity | What it measures | Scoring |
 |-----------|------|-------------|------------------|---------|
 | **Needs-compliance** | **pass/fail** | per need × per applicable day | Every traveler **need** (per its category — see the Needs table) is honored on every day that need applies to. A hard gate, evaluated per need per applicable day: each (need, applicable-day) pair is `pass` or `fail`. This is the structured metric form of the existing every-day hard-constraint audit (see Reconciliation below) — **not** a balance score. | Fully defined: it is a pass/fail gate. No formula needed — a need is either honored that day or it is not. |
-| **Desire-coverage** | **covered / not** | per traveler × per desire | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. |
+| **Desire-coverage** | **covered / not** | per traveler × per desire (× per present day for a desire marked `Recurrence: daily`) | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. A desire marked `Recurrence: daily` is measured on **every day of that traveler's present-day set** and is met only when every one of those days carries it. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. A recurring desire's per-day reading is a **set of booleans**, not a ratio — reporting which days were met is not the same as scoring how many. |
 | **Group-equity** | **balance signal** | per trip (across travelers) | Whether the plan serves the travelers *evenly* — that no traveler is systematically over- or under-served relative to the group. A balance signal across travelers' coverage. | **Left to design.** This layer names the signal and its meaning; it does **not** define how evenness is measured, what counts as "systematically under-served", or any fairness threshold. |
 | **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design — and note these axes have no upstream data source in the substrate today** (unlike needs and desires, nothing in the per-traveler files or the itinerary yet grounds them), so a later capability must define **both their source and their scoring**; today they are named, ungrounded, and `(left to design)`. |
 | **Rest-recovery balance** | **balance signal** | per trip (across days) | Whether recovery is adequate relative to activity intensity — enough rest/downtime against the demand the plan places on the group. A balance signal over the activity-vs-recovery rhythm. | **Left to design.** Note the seam: the **required-rest** *need* is a hard pass/fail gate under needs-compliance (a non-negotiable rest floor honored or not); **rest-recovery balance** is the softer, trip-wide *signal* of whether the overall rhythm is healthy beyond that floor. The floor is gated; the balance is a signal whose scoring is deferred. |
+| **Meal-variety concentration** | **balance signal** | per day | Whether the day's meals concentrate in a single convenience-format category rather than ranging across formats. A balance signal over meal-format spread. | **Left to design.** Note the seam: the **per-category anchor cap** is a hard selection-time rule the food agent enforces (`agents/02-food.md` → Convenience-format anchor discipline); **meal-variety concentration** is the softer, per-day *signal* of whether the resulting spread is healthy beyond that cap. The cap is gated; the balance is a signal whose scoring is deferred. |
 
-> **The line this section holds.** Needs-compliance and desire-coverage are *defined to completion* because pass/fail and covered/not are determinable facts about a plan — no math is invented to produce them. Group-equity, the four experience axes, and rest-recovery balance are *defined as named balance signals with stated meaning*, but their scoring is **left to design** — consistent with "nothing optimizes yet". If a future reader is tempted to add a weight, a percentage, or a ranking to any balance signal, that belongs to a later optimization capability, not to this substrate.
+> **The line this section holds.** Needs-compliance and desire-coverage are *defined to completion* because pass/fail and covered/not are determinable facts about a plan — no math is invented to produce them. Group-equity, the four experience axes, rest-recovery balance, and meal-variety concentration are *defined as named balance signals with stated meaning*, but their scoring is **left to design** — consistent with "nothing optimizes yet". If a future reader is tempted to add a weight, a percentage, or a ranking to any balance signal, that belongs to a later optimization capability, not to this substrate.
 
 ### A need's applicable-day set — how it is derived
 
 Needs-compliance is evaluated *per need per applicable day*, so the **applicable-day set** for each need must be defined. It is derived from the **governing trip-context constraint** the need links to (via "Applies to"): a need applies on exactly the days — and within the time blocks — that its constraint governs. Read it off the constraint's `Time blocks affected` / `Applies to` fields (and the scheduling framework's per-constraint day impact):
 
-- A **constant-applicability** need — one whose constraint holds every day regardless of plan (a mobility limit, a dietary/health restriction) — applies on **all days**.
-- A **conditional** need — one whose constraint only bites under certain conditions (a heat ceiling that applies on hot or outdoor-afternoon days; a required-rest floor that applies on its scheduled rest days) — applies on **its applicable subset** only.
+The set has two factors, and a day is applicable only when **both** admit it:
 
-This reconciles the language elsewhere that the audit runs "every day": the audit runs **every day the constraint applies** — which is all days for constant-applicability needs and the applicable subset for conditional needs. It is never "every calendar day unconditionally" for a conditional need (a heat ceiling is not *failed* on a cool indoor day it never governed). This rule is stated **here once**; the hub and validator cite it and do not redefine it.
+- **Constraint factor** — the days the governing constraint governs.
+  - A **constant-applicability** need — one whose constraint holds every day regardless of plan (a mobility limit, a dietary/health restriction) — is admitted on **every day of the trip**.
+  - A **conditional** need — one whose constraint only bites under certain conditions (a heat ceiling that applies on hot or outdoor-afternoon days; a required-rest floor that applies on its scheduled rest days) — is admitted on **its applicable subset** only.
+- **Presence factor** — the traveler's **at-destination day set**, per *Presence — a traveler's present-day set* above. A need is never graded on a day its traveler is not at the destination: there is no plan-day to honor or to breach. It is the **window limb**, never the full present-day set — an *unavailable* traveler is at the destination and carries a parallel track, so their needs are graded that day.
+
+So: **applicable days = the constraint's days ∩ the traveler's at-destination day set.**
+
+This reconciles the language elsewhere that the audit runs "every day": the audit runs **every day the constraint applies to a traveler who is there** — every day that traveler is at the destination for a constant-applicability need, and the intersection of the subset with those days for a conditional one. It is never "every calendar day unconditionally" (a heat ceiling is not *failed* on a cool indoor day it never governed, and a mobility limit is not *failed* on a day its traveler had not yet arrived). This rule is stated **here once**; the scheduler, hub and validator cite it and do not redefine it.
+
+> **Render the trim; never let it read as a conditional.** When presence narrows a need's applicable days, the `Applicable days` cell names the trimmed set **and** its reason — `D2–D4 (at destination D2–D4)` — so a reader can tell a presence trim from a constraint subset. An unnamed absence is the failure `agents/03-scheduling.md` already exists to prevent; a silently trimmed grade is that same failure at the metrics surface.
 
 > **Desire-coverage is typed per tier — a missed anchor is not a missed nice-to-have.** Coverage is `covered` / `not covered` reported **per desire, carrying that desire's priority tier**. The tier travels with the verdict on purpose: a `not covered` **anchor** is a categorically more significant outcome than a `not covered` **nice-to-have**, and a later scorer must not flatten the two into one undifferentiated "coverage %". This layer keeps them distinct by reporting the tier alongside each verdict; it does **not** weight them (that would be scoring) — it just refuses to lose the distinction.
+
+> **A recurring desire is covered only on the days it is honored.** A desire whose `Recurrence` is `daily` carries a coverage reading **per day of that traveler's present-day set** — see *Presence — a traveler's present-day set* above; it is not re-derived here and it is never read against the full trip-day set. The desire is `covered` overall **only when every one of those days carries it**; a partial run is `not covered` with the missed days named. A partial is **not** a third verdict value and **not** a percentage — the enum stays closed at `covered` / `not covered`. And the severity is unchanged: a partly-honored recurring anchor is a worse plan, never a broken one, so it never becomes a needs-compliance failure.
 
 ### Write split — section ownership (two writers, never clobbering)
 
@@ -520,7 +566,7 @@ This reconciles the language elsewhere that the audit runs "every day": the audi
 | Section | Owner | Why |
 |---------|-------|-----|
 | **Desire-coverage** (covered / not, per traveler × per desire) | **Hub** | The hub builds the itinerary, so it holds the coverage read — which anchors/wishes the plan it just produced actually meets. |
-| **Balance signals** (group-equity, the four experience axes, rest-recovery balance — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
+| **Balance signals** (group-equity, the four experience axes, rest-recovery balance, meal-variety concentration — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
 | **Needs-compliance** (pass/fail, per need × per applicable day) | **Validator** | This is the *recorded form of the validator's every-day constraint audit*; the validator is its natural owner (and the hub's own audit must agree with it). |
 | **Needs ↔ constraint agreement check** | **Validator** | The validator owns the reconciliation that every needs-compliance `fail` is a constraint Critical (see Reconciliation below). |
 
@@ -545,18 +591,20 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Pat    | Heat tolerance (afternoon ceiling) | D1, D3, D4 | D1 pass · D3 pass · D4 pass | pass |
 | Jordan | Mobility (step-free, walking ceiling) | all days | D1 pass · D2 pass · D3 **fail** · D4 pass | **fail** |
 | Jordan | Required rest (slow start every other day) | D2, D4 | D2 pass · D4 pass | pass |
-| Sam    | Dietary/health (allergy) | all days | all pass | pass |
+| Sam    | Dietary/health (allergy) | D2–D4 (at destination D2–D4) | D2 pass · D3 pass · D4 pass | pass |
 
 ## Desire-coverage — covered / not, per traveler × per desire
-> Each anchor/wish met by the plan or not. Boolean presence — not a degree.
+> Each anchor/wish met by the plan or not. Boolean presence — not a degree. A desire
+> marked `Recurrence: daily` reads per day across that traveler's present days.
 
-| Traveler | Desire | Priority tier | Covered? |
-|----------|--------|---------------|----------|
-| Jordan | Slow museum morning | anchor | covered |
-| Jordan | Local markets       | wish   | covered |
-| Pat    | Local market        | anchor | covered |
-| Pat    | Relaxed museum morning | wish | covered |
-| Sam    | One standout food experience | anchor | covered |
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
+|----------|--------|---------------|------------------|----------|
+| Jordan | Slow museum morning | anchor | — | covered |
+| Jordan | Local markets       | wish   | — | covered |
+| Pat    | Local market        | anchor | — | covered |
+| Pat    | Relaxed museum morning | wish | — | covered |
+| Sam    | One standout food experience | anchor | — | covered |
+| Sam    | Morning ritual stop | wish | D2 covered · D3 not covered · D4 covered (present D2–D4) | not covered |
 
 ## Balance signals — named; scoring left to design
 > These are signals to track, not scores. How each is measured is a later-capability decision.
@@ -569,6 +617,7 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Experience axis — excitement | per trip | (left to design) |
 | Experience axis — newness | per trip | (left to design) |
 | Rest-recovery balance | per trip (across days) | (left to design) |
+| Meal-variety concentration | per day | (left to design) |
 ```
 
 The pass/fail and covered/not tables carry real verdicts because they are determinable from the plan. The balance-signals table carries `(left to design)` in every value cell on purpose: the dimensions are *named and tracked*, their scoring is *not yet defined*. (The metrics examples use the public Pat / Jordan / Sam persona set.)
@@ -585,7 +634,7 @@ The system already holds the rule **"hard constraints are audited every day they
 
 To keep the substrate boundary clear:
 
-- **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here, and the Satisfaction Metrics section above names and types every dimension — but how any **balance signal** (group-equity, the experience axes, rest-recovery balance) is *scored* is out of scope. pass/fail and covered/not are determinable facts; the balance scoring is left to design.
+- **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here, and the Satisfaction Metrics section above names and types every dimension — but how any **balance signal** (group-equity, the experience axes, rest-recovery balance, meal-variety concentration) is *scored* is out of scope. pass/fail and covered/not are determinable facts; the balance scoring is left to design.
 - **No optimization or ranking logic.** Nothing in the satisfaction layer optimizes yet. The engines *read* the derived model; this document does not specify what they do with it.
 - **No group destination recommendation *in this layer*.** Per-traveler destination leanings are *captured* (forward-hook (a)); aggregating them into a ranked group shortlist is **realized downstream** in `agents/destination-ideation.md` (which recommends — the group still makes the pick), never in this individual-file substrate.
 - **No side-bar / group-split computation.** Per-traveler people-dynamics, desire-overlap, and interest divergence are *captured* (forward-hook (b)); computing any single / small-group / full-group split from them, bounded by `Whole-group moments`, is left to design and is not computed here. No split is ever stored in an individual file.

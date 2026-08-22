@@ -211,14 +211,26 @@ a fixed type:
   second judgement. For every traveler need in `outputs/traveler-model.md` (per its
   need category),
   emit `pass` / `fail` for each day that need **applies** to. A need's
-  applicable-day set is derived from its governing constraint
-  (constant-applicability needs → all days; conditional needs → their applicable
-  subset) — see `reference/data-model.md` → "A need's applicable-day set"; do not
-  redefine it, and do not fail a conditional need on a day its constraint never
-  governed. Key each verdict to the governing `trip-context.md` constraint the
-  need links to — except for a `[THIRD-PARTY]` need, which by design has no
-  governing trip-level constraint to key to (see the mirror case below). The
-  agreement with constraint-compliance is a **forward
+  applicable-day set is the **intersection** of the days its governing
+  constraint governs and that traveler's **at-destination day set** — the window
+  limb, never the full present-day set — see
+  `reference/data-model.md` → "A need's applicable-day set" and "Presence — a
+  traveler's present-day set"; do not redefine either here. Do not fail a conditional
+  need on a day its constraint never governed, and do not grade **any** need on a day
+  its traveler was not at the destination. **Do** grade a traveler who is at the
+  destination but **unavailable** that day: they are here on a parallel track, and
+  their needs bound that track exactly as they bound the main one. Only *absent*
+  removes a verdict; *unavailable* never does. Reconcile against the
+  `Absent today:` lines in `outputs/scheduling-framework.md` — the scheduler names
+  there exactly the travelers outside their own window, so that line and this
+  applicable-day set read the same limb: a traveler named absent on a day carries
+  no verdict for that day, and a verdict rendered for a day the framework names
+  them absent is a discrepancy you report. Where that traveler's window is marked
+  *(assumed)*, grade the day and carry the *(assumed)* marking — an assumed window
+  never trims a grade. Key each verdict to the governing `trip-context.md`
+  constraint the need links to — except for a `[THIRD-PARTY]` need, which by
+  design has no governing trip-level constraint to key to (see the mirror case
+  below). The agreement with constraint-compliance is a **forward
   implication, not an equivalence:** every needs-compliance `fail` **is** a
   constraint-compliance **Critical** — but **not** every constraint Critical has
   a needs-compliance counterpart. A trip-level or group constraint that **no
@@ -232,6 +244,13 @@ a fixed type:
   Such a need is **never silently dropped** (that would leave a captured
   constraint unenforced, the exact failure this capture path exists to prevent)
   and its unkeyable link is **never** itself a Critical (the data is correct).
+  It has **no presence data either** — no planning-days row, no availability
+  facets — so its at-destination day set is **every trip day** under the
+  no-presence-data rule of the presence section cited above, and it is graded on
+  every day the constraint factor admits. An empty applicable-day set for a
+  `[THIRD-PARTY]` need is a derivation error, not a clean pass: with no governing
+  constraint to raise a Critical either, it would leave the subject with no audit
+  surface at all.
   This record lands in `outputs/satisfaction-metrics.md`, which §9.3 names an
   intentional exclusion — so the row is not publish-bound, and writing the
   person's name into it here is not a non-publication finding. It must not be
@@ -245,12 +264,25 @@ a fixed type:
   not a percentage. A `not covered` anchor is worth surfacing as a Warning
   (a missed anchor is a worse plan), but it is **never** a needs-compliance
   failure — a desire is optimized within the bounds, not a bound.
+  A desire carrying `Recurrence: daily` is checked **per day**: its coverage days are
+  that traveler's **present-day set** — see `reference/data-model.md` → "Presence — a
+  traveler's present-day set"; do not re-derive it here and never check it against the
+  full trip-day set. Emit the reading in the `Per-day coverage` cell, naming the
+  present-day set and its reason
+  (`D2 covered · D3 not covered · D4 covered (present D2–D4)`), and set `Covered?` to
+  `covered` **only when every present day carries it** — a partial is `not covered` with
+  the missed days named, never a third verdict value and never a percentage. The severity
+  ceiling is unchanged: a partly-honored recurring anchor is a **Warning**, never a
+  Critical and never a needs-compliance failure. A day the traveler was absent carries no
+  reading at all, and a reading rendered for a day the scheduling framework names them
+  absent is a discrepancy you report.
 - **Balance signals — named, scoring left to design.** Emit the balance
   dimensions — **group-equity**, the four **experience axes** (creativity, fun,
-  excitement, newness), and **rest-recovery balance** — as named rows with their
-  value shown as `(left to design)`. You do **not** compute, weight, threshold,
-  or rank them: nothing in the satisfaction layer optimizes yet. Report that the
-  dimension is tracked; do not invent a score for it.
+  excitement, newness), **rest-recovery balance**, and
+  **meal-variety concentration** — as named rows with their value shown as
+  `(left to design)`. You do **not** compute, weight, threshold, or rank them:
+  nothing in the satisfaction layer optimizes yet. Report that the dimension is
+  tracked; do not invent a score for it.
 
 > **Scope guard.** This is a *report*, not an optimizer. You emit pass/fail
 > (needs-compliance), covered/not (desire-coverage), and named balance signals
@@ -357,10 +389,12 @@ A night is **nightlife-applicable** when either limb holds:
 - **Occasion limb.** A natural occasion falls on that night — a weekend night, or a
   special occasion in trip-context.md's travel dates or calendar events.
 
-Presence is evaluated **per night**, from the lifecycle facets carried into
-`outputs/traveler-model.md` (`Can travel:` / `Blackout:` / `Arrive / leave:`)
-against that night's date. A traveler who has already left, or whose blackout
-covers the night, does not make it applicable.
+Presence is evaluated **per night**, against that night's date, using the **same**
+present-day set the needs audit uses — see `reference/data-model.md` → "Presence — a
+traveler's present-day set". Do not re-derive it here, and do not read the raw
+`Arrive / leave:` profile field: the window limb is the derived
+`### Per-Traveler Planning Days [DERIVED]` block. A traveler outside their window that
+night, or whose blackout covers it, does not make the night applicable.
 
 **A ticked interest is not a desire.** `bars & nightlife` under a traveler's
 Interests is a soft signal — broader and looser than the ranked Desires. Reading it
@@ -521,6 +555,10 @@ Also read:
    that no present traveler wants nightlife, and on a trip planned before this spoke
    existed it may be absent — both mean "no nightlife this trip"; neither is a
    finding, and an absent file never fails this read.)
+10. outputs/scheduling-framework.md (the per-day `Present today:` / `Absent today:`
+    lines — the scheduler's published presence read, which you reconcile against each
+    need's applicable-day set; and the Experience Balance Signal your experiential-arc
+    audit already reads)
 
 Write: outputs/satisfaction-metrics.md — **your owned sections only**
 (Needs-compliance + the needs↔constraint agreement check); read-merge-write,
@@ -667,9 +705,9 @@ Needs-booking vs. status — the booking surfaces must equal the
 
 **Desire-coverage — covered / not, per traveler × per desire**
 
-| Traveler | Desire | Priority tier | Covered? |
-|----------|--------|---------------|----------|
-| [Name] | [Desire] | [anchor / wish] | [covered / not covered] |
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
+|----------|--------|---------------|------------------|----------|
+| [Name] | [Desire] | [anchor / wish] | [`—` for a one-off desire; for a `Recurrence: daily` desire, D# covered / not covered per present day, naming the present-day set] | [covered / not covered] |
 
 **Balance signals — named; scoring left to design**
 
@@ -681,6 +719,7 @@ Needs-booking vs. status — the booking surfaces must equal the
 | Experience axis — excitement | per trip | (left to design) |
 | Experience axis — newness | per trip | (left to design) |
 | Rest-recovery balance | per trip | (left to design) |
+| Meal-variety concentration | per day | (left to design) |
 
 - **Needs-compliance → constraint-compliance agreement (forward only):** [confirmed — every needs-compliance `fail` is a constraint Critical; constraint Criticals with no linked per-traveler need correctly have no needs-compliance row / list any needs-compliance `fail` that is NOT a constraint Critical]
 

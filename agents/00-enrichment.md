@@ -119,13 +119,21 @@ link against. Specifically:
   visible consequence is intended and is not a defect to fix: a reader of the
   published plan sees the rest block and not the reason for it.
 - **Carry each desire with its tier and theme tags.** Read each desire block off
-  its stable field labels — `Desire:` / `Priority tier:` / `Theme tag(s):` /
-  `Overlap:` — the same way you read the lifecycle facets below; the profile
-  wraps those labels in plain-language prose, and you parse by the labels.
+  its stable field labels — `Desire:` / `Priority tier:` / `Recurrence:` /
+  `Theme tag(s):` / `Overlap:` — the same way you read the lifecycle facets below;
+  the profile wraps those labels in plain-language prose, and you parse by the
+  labels.
   Preserve the traveler's `Priority tier:` verbatim — anchor / wish /
   nice-to-have — and any theme tags, and carry the tier through into
   `outputs/traveler-model.md` alongside each desire, so the `Priority tier`
   column the hub and the validator each render resolves against it.
+  Carry `Recurrence:` through the same way — verbatim, `one-off` or `daily`. An
+  absent, blank or em-dashed line is `one-off`; never infer `daily` from the
+  desire's wording. Render it in `outputs/traveler-model.md` **only when it is
+  `daily`**, inside the same parenthetical as the tier — `Desire (wish, daily): …`
+  — so a one-off desire's line is byte-for-byte what it was before. Recurrence
+  is a second, independent label, not a fourth tier: never fold it into
+  `Priority tier:` and never let one imply the other.
   Tiers are structural priority labels, not numeric weights: do not score,
   weight, rank numerically, or otherwise compute against them. You record the
   structure; you do not optimize it.
@@ -322,8 +330,9 @@ traveler's own time. The template's sections are the model you reconcile to: its
 **Needs** map to the need categories (heat, mobility, dietary-health, rest,
 budget cap, timing, sensory, other — each with a specific and an "Applies to" link),
 and its **Desires** map to the desire shape (priority tier — anchor / wish /
-nice-to-have — plus optional theme tags). You do not author or pre-fill the
-template or the profiles; you read the filled profiles and reconcile them into
+nice-to-have — plus an optional recurrence of one-off or daily, and optional
+theme tags). You do not author or pre-fill the template or the profiles; you
+read the filled profiles and reconcile them into
 `outputs/traveler-model.md`. A traveler leaves the desire **Overlap** field blank
 in their own file — you are the one who computes it.
 

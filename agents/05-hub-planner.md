@@ -120,6 +120,20 @@ each day must not duplicate anchors from any other day. Alternatives must
 vary on at least two axes: price tier and effort level. This is enforced
 by the venue matrix before a single day is written.
 
+A **recurring desire** — `Recurrence: daily` in `outputs/traveler-model.md`,
+carried into the scheduling framework's per-day `Recurring desires today:`
+line — is filled on every day inside that traveler's present-day set
+(`reference/data-model.md` → "Presence — a traveler's present-day set"; do not
+re-derive it). It takes an ordinary supporting slot and an ordinary A / Alt / B
+cell: it **never** satisfies the day's anchor-event or anchor-meal requirement
+whatever its tier, and its venues obey the two-appearance cap like every other
+venue — the recurrence is a cadence on the want, never an exemption from the
+matrix. This is the same shape as the nightlife bar on Required input 7(b).
+Where the supplied lists cannot fill the slot on every present day without
+breaching the cap, place what they support, name the shortfall in OPEN
+DECISIONS, and let the coverage read render the desire `not covered` with the
+missed days. A missed desire is a worse plan, never a broken one.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named bailout in the
 day's structure — not a footnote. Specific venue, address, walking distance,
@@ -201,23 +215,32 @@ the reconciliation does not compute a second one. Read
   traveler's anchors/wishes → covered or not. It is a boolean presence check —
   not a degree, not a percentage, not a ranking. (A `not covered` anchor is a
   signal worth noting in OPEN DECISIONS, but it is not a constraint failure.)
+  A desire marked `Recurrence: daily` is read **per day** across that traveler's
+  present-day set (`reference/data-model.md` → "Presence — a traveler's present-day
+  set") and rendered in the `Per-day coverage` cell; it is `covered` only when **every**
+  present day carries it, and a partial is `not covered` with the missed days named. It
+  stays a boolean per day and a boolean overall — no ratio, no percentage, no third
+  verdict value.
 - **Needs-compliance — pass/fail (your audit; the validator owns the file
   section).** Run your usual hard-constraint audit — every **applicable** day
   against every hard constraint — as a per-need-per-applicable-day `pass` /
   `fail` judgement keyed to each need's governing constraint. A need's
-  **applicable-day set** is derived from its governing constraint
-  (constant-applicability needs apply on all days; conditional needs — a heat
-  ceiling, a scheduled rest floor — apply on their applicable subset) — see
-  `reference/data-model.md` → "A need's applicable-day set"; do not redefine it
-  here. This is the *recorded form* of the constraint audit you already perform —
-  not a new check. The **validator owns the Needs-compliance section** of
-  `satisfaction-metrics.md` (per the section-ownership split below); your audit
-  must **agree** with it — you do not write that section yourself.
+  **applicable-day set** is the intersection of the days its governing
+  constraint governs and that traveler's **at-destination day set** — the window
+  limb, so a need is never graded on a day its traveler is not at the destination,
+  and an *unavailable* traveler **is** graded: they are here on a parallel track
+  their needs bound too. See `reference/data-model.md` →
+  "A need's applicable-day set" and "Presence — a traveler's present-day set"; do not
+  redefine either here. This is the *recorded form* of the constraint audit you
+  already perform — not a new check. The **validator owns the Needs-compliance
+  section** of `satisfaction-metrics.md` (per the section-ownership split below);
+  your audit must **agree** with it — you do not write that section yourself.
 - **Balance signals — named, value `(left to design)`.** Emit group-equity, the
-  four experience axes (creativity, fun, excitement, newness), and rest-recovery
-  balance as named rows with the value `(left to design)`. Do **not** compute,
-  weight, or threshold them — nothing in the satisfaction layer optimizes yet.
-  You name and track the dimension; you do not score it.
+  four experience axes (creativity, fun, excitement, newness), rest-recovery
+  balance, and meal-variety concentration as named rows with the value
+  `(left to design)`. Do **not** compute, weight, or threshold them — nothing in
+  the satisfaction layer optimizes yet. You name and track the dimension; you do
+  not score it.
 
 **Section ownership — do not clobber the validator's section.**
 `satisfaction-metrics.md` has two writers. The hub owns the **Desire-coverage**
@@ -442,7 +465,11 @@ all inputs are read.
 Required inputs:
 1. trip-context.md
 2. outputs/activities-list.md
-3. outputs/food-list.md
+3. outputs/food-list.md (one consumption rule is specific to it: an entry marked
+   `grazing/snack only` under **Anchor-meal eligibility** never satisfies a day's
+   structural anchor-meal requirement — see Structural unit enforcement above — and
+   takes an ordinary A / Alt / B cell like any other venue. You honor the food
+   agent's marker; you do not compute, weight, or threshold it.)
 4. outputs/scheduling-framework.md (carries the routing signal — the per-day
    ordered stop sequence with its summed transit cost and a compared alternative —
    and the experience-balance signal — the per-day experiential arc placement and
@@ -512,10 +539,12 @@ validator owns). Reported, not scored — full model in
 
 ## Desire-coverage — covered / not, per traveler × per desire   ← hub-owned
 > Each verdict carries the desire's tier; a not-covered anchor is distinct from a
-> not-covered nice-to-have (do not flatten the two).
+> not-covered nice-to-have (do not flatten the two). A `Recurrence: daily` desire
+> also carries its per-day reading across the traveler's present days; `—` for a
+> one-off.
 
-| Traveler | Desire | Priority tier | Covered? |
-|----------|--------|---------------|----------|
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
+|----------|--------|---------------|------------------|----------|
 
 ## Balance signals — named; scoring left to design   ← hub-owned
 | Balance dimension | Granularity | Value |
@@ -523,6 +552,7 @@ validator owns). Reported, not scored — full model in
 | Group-equity | per trip | (left to design) |
 | Experience axis — creativity / fun / excitement / newness | per trip | (left to design) |
 | Rest-recovery balance | per trip | (left to design) |
+| Meal-variety concentration | per day | (left to design) |
 ```
 
 ---
