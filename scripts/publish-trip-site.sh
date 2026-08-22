@@ -19,7 +19,7 @@
 #   publish-trip-site.sh publish   <trip-dir> [--plaintext] [--opaque]
 #   publish-trip-site.sh update    <trip-dir>
 #   publish-trip-site.sh rotate    <trip-dir> [--passphrase <new>]
-#   publish-trip-site.sh list                       (read-only inventory of all trips under trips/)
+#   publish-trip-site.sh list                       (read-only inventory of all trips under trips/; gh optional)
 #   publish-trip-site.sh unpublish <trip-dir> [--disable-pages-only] [--yes]
 #
 #   <trip-dir>     A trip working dir, e.g. trips/tokyo-2026 (contains outputs/<name>-travel-site.html)
@@ -433,9 +433,16 @@ _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
 # ─────────────────────────────────────────────────────────────────────────────
 cmd_list() { # (no args)
   [ -z "${1:-}" ] || die "list takes no arguments — run it from the repo root; it scans ./trips/."
-  preflight_ro
-  [ -d trips ] || die "no ./trips/ directory here — run list from the repo root."
-  local owner; owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
+  # Local first: scanning ./trips/ needs no GitHub. Only the publish-state columns do.
+  [ -d trips ] || die "no ./trips/ directory here — trips/ ships with the repo, so this is probably not the repo root. cd there and re-run."
+  # Publish state (STATUS/PUBLISHED/STALE) needs gh; the local inventory does not.
+  # Degrade instead of dying, so list still works on a fresh clone with no gh.
+  local owner="" online=0
+  if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+    owner="$(gh api user --jq '.login' 2>/dev/null || true)"
+    [ -n "$owner" ] && online=1
+  fi
+  [ "$online" = "1" ] || warn "gh unavailable or not authenticated — showing local trips only. STATUS/PUBLISHED/STALE need: gh auth login"
 
   printf '\n\033[1m%-22s %-24s %-14s %-12s %-12s %s\033[0m\n' \
     "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "STALE"
@@ -446,12 +453,15 @@ cmd_list() { # (no args)
     slug="$(slug_for "$trip_dir" 2>/dev/null || printf '?')"
     site="$(ls -1t "$trip_dir"/outputs/*-travel-site.html 2>/dev/null | head -1 || true)"
     edited_epoch=""; [ -n "$site" ] && edited_epoch="$(_epoch_of_file "$site")"
-    if gh repo view "$owner/$slug" >/dev/null 2>&1; then
-      status="live"
-      pub_iso="$(gh api "repos/$owner/$slug/commits?per_page=1" --jq '.[0].commit.committer.date' 2>/dev/null || true)"
-      pub_epoch="$(_epoch_of_iso "$pub_iso")"
-    else
-      status="not published"; pub_epoch=""
+    status="-"; pub_epoch=""
+    if [ "$online" = "1" ]; then
+      if gh repo view "$owner/$slug" >/dev/null 2>&1; then
+        status="live"
+        pub_iso="$(gh api "repos/$owner/$slug/commits?per_page=1" --jq '.[0].commit.committer.date' 2>/dev/null || true)"
+        pub_epoch="$(_epoch_of_iso "$pub_iso")"
+      else
+        status="not published"
+      fi
     fi
     # Stale = a live site whose local build is newer than the deployed commit.
     # Left as "-" (indeterminate) unless both timestamps are known.
@@ -462,7 +472,7 @@ cmd_list() { # (no args)
     printf '%-22s %-24s %-14s %-12s %-12s %s\n' \
       "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$stale"
   done
-  [ "$any" = "1" ] || info "no trips found under ./trips/."
+  [ "$any" = "1" ] || info "No trips yet — see trips/README.md to start one."
   printf '\n'
 }
 

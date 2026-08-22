@@ -12,7 +12,7 @@ A multi-agent trip planning system. Nine specialized agents research, plan, vali
 | `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
-| `trips/` | Per-trip working directories (git-ignored — never published) |
+| `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
 ## Install
 
@@ -101,7 +101,7 @@ The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored
 
 **Metadata privacy.** By default the per-trip repo is named `<destination>-<year>-trip` and is public, so the destination and year are visible even though the itinerary is encrypted (commit timestamps also reveal when you publish). Pass `--opaque` to name the repo with a random token instead (e.g. `trip-a1b2c3d4e5`); it's saved to `.publish-slug`, so `update`/`rotate`/`unpublish` resolve the same repo. You can still set your own name in `trips/<destination>-<year>/.publish-slug` (a shared, shorter, or custom name).
 
-**Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
+**Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. It runs without `gh`; the publish-state columns stay blank until you `gh auth login`. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
 
 To publish fully public instead, run `scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext` yourself in a terminal — it asks you to type `PUBLISH` to confirm, and that confirmation is the only guard on the unencrypted path. Full flow in [`CLAUDE.md`](CLAUDE.md).
 
