@@ -178,6 +178,21 @@ Needs and desires are the structural core — but a traveler's preferences span 
 
 These facets do not relax the needs-vs-desires core or the link-don't-copy rule — they extend the same individual-only, one-source-per-fact model across the trip lifecycle. **Lifecycle note:** the file spans **IDEATION → ENRICHMENT** — a traveler fills the facets relevant to their trip's current stage (destination leanings matter most before a destination is picked; dates/budget/needs matter once it is), leaving the rest blank.
 
+### Presence — a traveler's present-day set
+
+Several consumers need to know whether a traveler is *at the destination* on a given day: the scheduler places whole-group anchors, the validator grades needs per applicable day and gates nightlife per night, and the hub mirrors the needs audit. The rule is stated **here once**; every consumer cites it and none re-derives it.
+
+**A traveler's present-day set** is the set of trip days on which both limbs hold:
+
+- **In their window** — the day falls inside that traveler's own effective window in `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`. That block is the one home for the window; take its values as published. The window is the derived block, **never** the raw `Arrive / leave:` profile field — a traveler whose window basis is `ASSERTED-SAME` tracks a group rebooking while an `ASSERTED-DIFFERENT` window stays pinned, so the raw field and the derived window diverge exactly when it matters.
+- **Available that day** — their `Can travel:` / `Blackout:` facets in `outputs/traveler-model.md` do not exclude it.
+
+A day failing either limb is **not** in the set. The two failures differ and the distinction is carried, never flattened: **absent** (outside the window — not at the destination) versus **unavailable** (inside the window but excluded that day — here and not free). Only *unavailable* has a parallel track worth planning.
+
+> **An assumed window never trims a grade.** Where a traveler's `Window basis` is `UNKNOWN`, the block marks the window *(assumed)* and any presence or absence read from it is an assumption, not a fact. On such a traveler, treat every trip day as present for grading and carry the *(assumed)* marking into anything that cites the set. A hard gate is never dropped on a guess.
+
+On a trip where every traveler shares the group's window and no blackout applies, every traveler's present-day set is the full trip-day set, and nothing that cites this rule changes behavior.
+
 ### Worked example — a per-traveler file
 
 Jordan's `travelers/Jordan.md`, written out in the full model (extending the smaller illustration in the Reconciliation Rule above):
@@ -506,10 +521,18 @@ Five dimensions make up the satisfaction coverage view. Each is named, typed, an
 
 Needs-compliance is evaluated *per need per applicable day*, so the **applicable-day set** for each need must be defined. It is derived from the **governing trip-context constraint** the need links to (via "Applies to"): a need applies on exactly the days — and within the time blocks — that its constraint governs. Read it off the constraint's `Time blocks affected` / `Applies to` fields (and the scheduling framework's per-constraint day impact):
 
-- A **constant-applicability** need — one whose constraint holds every day regardless of plan (a mobility limit, a dietary/health restriction) — applies on **all days**.
-- A **conditional** need — one whose constraint only bites under certain conditions (a heat ceiling that applies on hot or outdoor-afternoon days; a required-rest floor that applies on its scheduled rest days) — applies on **its applicable subset** only.
+The set has two factors, and a day is applicable only when **both** admit it:
 
-This reconciles the language elsewhere that the audit runs "every day": the audit runs **every day the constraint applies** — which is all days for constant-applicability needs and the applicable subset for conditional needs. It is never "every calendar day unconditionally" for a conditional need (a heat ceiling is not *failed* on a cool indoor day it never governed). This rule is stated **here once**; the hub and validator cite it and do not redefine it.
+- **Constraint factor** — the days the governing constraint governs.
+  - A **constant-applicability** need — one whose constraint holds every day regardless of plan (a mobility limit, a dietary/health restriction) — is admitted on **every day of the trip**.
+  - A **conditional** need — one whose constraint only bites under certain conditions (a heat ceiling that applies on hot or outdoor-afternoon days; a required-rest floor that applies on its scheduled rest days) — is admitted on **its applicable subset** only.
+- **Presence factor** — the traveler's **present-day set**, per *Presence — a traveler's present-day set* above. A need is never graded on a day its traveler is not at the destination: there is no plan-day to honor or to breach.
+
+So: **applicable days = the constraint's days ∩ the traveler's present-day set.**
+
+This reconciles the language elsewhere that the audit runs "every day": the audit runs **every day the constraint applies to a traveler who is there** — every day of that traveler's presence for a constant-applicability need, and the intersection of the subset with their presence for a conditional one. It is never "every calendar day unconditionally" (a heat ceiling is not *failed* on a cool indoor day it never governed, and a mobility limit is not *failed* on a day its traveler had not yet arrived). This rule is stated **here once**; the scheduler, hub and validator cite it and do not redefine it.
+
+> **Render the trim; never let it read as a conditional.** When presence narrows a need's applicable days, the `Applicable days` cell names the trimmed set **and** its reason — `D2–D4 (present D2–D4)` — so a reader can tell a presence trim from a constraint subset. An unnamed absence is the failure `agents/03-scheduling.md` already exists to prevent; a silently trimmed grade is that same failure at the metrics surface.
 
 > **Desire-coverage is typed per tier — a missed anchor is not a missed nice-to-have.** Coverage is `covered` / `not covered` reported **per desire, carrying that desire's priority tier**. The tier travels with the verdict on purpose: a `not covered` **anchor** is a categorically more significant outcome than a `not covered` **nice-to-have**, and a later scorer must not flatten the two into one undifferentiated "coverage %". This layer keeps them distinct by reporting the tier alongside each verdict; it does **not** weight them (that would be scoring) — it just refuses to lose the distinction.
 
@@ -545,7 +568,7 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Pat    | Heat tolerance (afternoon ceiling) | D1, D3, D4 | D1 pass · D3 pass · D4 pass | pass |
 | Jordan | Mobility (step-free, walking ceiling) | all days | D1 pass · D2 pass · D3 **fail** · D4 pass | **fail** |
 | Jordan | Required rest (slow start every other day) | D2, D4 | D2 pass · D4 pass | pass |
-| Sam    | Dietary/health (allergy) | all days | all pass | pass |
+| Sam    | Dietary/health (allergy) | D2–D4 (present D2–D4) | D2 pass · D3 pass · D4 pass | pass |
 
 ## Desire-coverage — covered / not, per traveler × per desire
 > Each anchor/wish met by the plan or not. Boolean presence — not a degree.

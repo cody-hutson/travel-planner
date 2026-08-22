@@ -33,17 +33,11 @@ require parallel tracks and flags this for the hub.
 The group is not one body that arrives and leaves together. Read each traveler's
 own presence before placing anything for everyone.
 
-Presence has two limbs, and both must hold:
-- **In their window** — the day falls inside that traveler's own effective window,
-  read from trip-context.md `## Logistics` -> `### Per-Traveler Planning Days
-  [DERIVED]`. That block is the one home for the presence model: take its values as
-  published, and do not restate its labels, its basis vocabulary, or its derivation
-  rules here.
-- **Available that day** — their `Can travel:` / `Blackout:` in
-  `outputs/traveler-model.md` do not exclude it. This is the same presence read the
-  validator and nightlife agents already make. It is not a second definition.
-
-Where the per-traveler block marks a traveler's window basis unknown, their window
+Presence has two limbs and both must hold — **in their window** and **available that
+day**. The rule is defined once in `reference/data-model.md` → "Presence — a
+traveler's present-day set"; read it there and do not restate its limbs, its labels or
+its derivation rules here. Take the `### Per-Traveler Planning Days [DERIVED]` values
+as published. Where that block marks a traveler's window basis unknown, their window
 is inherited rather than stated — so any presence or absence you read from it is an
 **assumption**, and you say so in the same words the block uses.
 
@@ -69,8 +63,11 @@ it.** Do not place it silently. Do not delete the anchor to avoid making the
 statement. Do not quietly narrow "the whole group" to whoever happens to be there.
 An unnamed absence is the failure this rule exists to prevent.
 
-Naming an absence is a scheduling statement, never a grading exemption: the
-hard-constraint audit still runs for that traveler on every day it applies.
+Naming an absence is a scheduling statement, not a licence to stop auditing: the
+hard-constraint audit still runs for that traveler on every day it applies — and the
+days it applies are the days their constraint governs **and** they are present
+(`reference/data-model.md` → "A need's applicable-day set"). Absence narrows the
+applicable days; it never waives the audit on a day inside them.
 
 On a single-origin trip where every traveler is on the group's window, every day
 reads "all travelers" and nothing below changes.
@@ -285,8 +282,10 @@ Read trip-context.md fully before producing output. Read in this order:
    day shape. Read it as the baseline, **not** as a guarantee that every traveler
    is present for all of it
 4. Per-Traveler Planning Days — who is present on which days, with each traveler's
-   own window, timezone delta and partial days. **This is the presence source; the
-   block above is not.** Take its values and its basis vocabulary as published —
+   own window, timezone delta and partial days. **This is the window limb's source;
+   the block above is not.** The presence rule itself is defined in
+   `reference/data-model.md` → "Presence — a traveler's present-day set".
+   Take its values and its basis vocabulary as published —
    do not restate its labels or re-derive its numbers here
 5. Events & Calendar — note any closure-affected days that constrain zone assignments
 6. Weather Context — environmental frame

@@ -205,14 +205,14 @@ the reconciliation does not compute a second one. Read
   section).** Run your usual hard-constraint audit — every **applicable** day
   against every hard constraint — as a per-need-per-applicable-day `pass` /
   `fail` judgement keyed to each need's governing constraint. A need's
-  **applicable-day set** is derived from its governing constraint
-  (constant-applicability needs apply on all days; conditional needs — a heat
-  ceiling, a scheduled rest floor — apply on their applicable subset) — see
-  `reference/data-model.md` → "A need's applicable-day set"; do not redefine it
-  here. This is the *recorded form* of the constraint audit you already perform —
-  not a new check. The **validator owns the Needs-compliance section** of
-  `satisfaction-metrics.md` (per the section-ownership split below); your audit
-  must **agree** with it — you do not write that section yourself.
+  **applicable-day set** is the intersection of the days its governing
+  constraint governs and that traveler's **present-day set** — a need is never graded
+  on a day its traveler is not at the destination. See `reference/data-model.md` →
+  "A need's applicable-day set" and "Presence — a traveler's present-day set"; do not
+  redefine either here. This is the *recorded form* of the constraint audit you
+  already perform — not a new check. The **validator owns the Needs-compliance
+  section** of `satisfaction-metrics.md` (per the section-ownership split below);
+  your audit must **agree** with it — you do not write that section yourself.
 - **Balance signals — named, value `(left to design)`.** Emit group-equity, the
   four experience axes (creativity, fun, excitement, newness), and rest-recovery
   balance as named rows with the value `(left to design)`. Do **not** compute,
