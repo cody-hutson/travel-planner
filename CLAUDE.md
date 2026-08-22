@@ -297,10 +297,13 @@ scripts/publish-trip-site.sh unpublish trips/[destination-year] --disable-pages-
 ```
 The default **deletes** the per-trip repo — removing the site *and* the destination/year in its name. Deletion is irreversible, needs the `delete_repo` gh scope (grant once with `gh auth refresh -h github.com -s delete_repo`), and prompts you to type the repo name to confirm. `--disable-pages-only` instead disables Pages and keeps the repo (reversible). Either way `unpublish` is idempotent (a no-op if the site is already gone), and content may persist in third-party caches or clones after takedown.
 
-**Opting out** — publish the itinerary fully public and unencrypted — is explicit and requires confirmation. Interactively the script prompts you to type `PUBLISH`; non-interactively (e.g. when Claude runs it) set `ALLOW_PLAINTEXT=1`:
+**Opting out** — publish the itinerary fully public and unencrypted — is explicit, requires confirmation, and is **an operator action, never a Claude action**. Run it yourself in a terminal:
 ```bash
-ALLOW_PLAINTEXT=1 scripts/publish-trip-site.sh publish trips/[destination-year] --plaintext
+scripts/publish-trip-site.sh publish trips/[destination-year] --plaintext
 ```
+The script prompts you to type `PUBLISH` to confirm.
+
+> **Claude must not set `ALLOW_PLAINTEXT`.** That variable exists so an operator can run the script from their own non-interactive automation. It is not a way for Claude to proceed past the prompt. The confirmation is gated on stdin being a terminal, and **a command Claude runs never has one** — so setting the variable does not "confirm non-interactively", it skips the confirmation entirely. The plaintext branch is also the one branch that does **not** run the pre-push ciphertext guard, so that typed confirmation is currently the only control standing on it. Where a plaintext publish is what the user wants, **print the command above for them to run** and say why; do not run it. Binding rule: `reference/adr/ADR-007-command-entry-point.md` § 2.
 
 > **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
 >
