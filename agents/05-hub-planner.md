@@ -120,6 +120,20 @@ each day must not duplicate anchors from any other day. Alternatives must
 vary on at least two axes: price tier and effort level. This is enforced
 by the venue matrix before a single day is written.
 
+A **recurring desire** — `Recurrence: daily` in `outputs/traveler-model.md`,
+carried into the scheduling framework's per-day `Recurring desires today:`
+line — is filled on every day inside that traveler's present-day set
+(`reference/data-model.md` → "Presence — a traveler's present-day set"; do not
+re-derive it). It takes an ordinary supporting slot and an ordinary A / Alt / B
+cell: it **never** satisfies the day's anchor-event or anchor-meal requirement
+whatever its tier, and its venues obey the two-appearance cap like every other
+venue — the recurrence is a cadence on the want, never an exemption from the
+matrix. This is the same shape as the nightlife bar on Required input 7(b).
+Where the supplied lists cannot fill the slot on every present day without
+breaching the cap, place what they support, name the shortfall in OPEN
+DECISIONS, and let the coverage read render the desire `not covered` with the
+missed days. A missed desire is a worse plan, never a broken one.
+
 **Bailout completeness:**
 Every day with a 3+ hour outdoor block must have a named bailout in the
 day's structure — not a footnote. Specific venue, address, walking distance,
@@ -201,6 +215,12 @@ the reconciliation does not compute a second one. Read
   traveler's anchors/wishes → covered or not. It is a boolean presence check —
   not a degree, not a percentage, not a ranking. (A `not covered` anchor is a
   signal worth noting in OPEN DECISIONS, but it is not a constraint failure.)
+  A desire marked `Recurrence: daily` is read **per day** across that traveler's
+  present-day set (`reference/data-model.md` → "Presence — a traveler's present-day
+  set") and rendered in the `Per-day coverage` cell; it is `covered` only when **every**
+  present day carries it, and a partial is `not covered` with the missed days named. It
+  stays a boolean per day and a boolean overall — no ratio, no percentage, no third
+  verdict value.
 - **Needs-compliance — pass/fail (your audit; the validator owns the file
   section).** Run your usual hard-constraint audit — every **applicable** day
   against every hard constraint — as a per-need-per-applicable-day `pass` /
@@ -512,10 +532,12 @@ validator owns). Reported, not scored — full model in
 
 ## Desire-coverage — covered / not, per traveler × per desire   ← hub-owned
 > Each verdict carries the desire's tier; a not-covered anchor is distinct from a
-> not-covered nice-to-have (do not flatten the two).
+> not-covered nice-to-have (do not flatten the two). A `Recurrence: daily` desire
+> also carries its per-day reading across the traveler's present days; `—` for a
+> one-off.
 
-| Traveler | Desire | Priority tier | Covered? |
-|----------|--------|---------------|----------|
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
+|----------|--------|---------------|------------------|----------|
 
 ## Balance signals — named; scoring left to design   ← hub-owned
 | Balance dimension | Granularity | Value |

@@ -178,23 +178,27 @@
 > spot where the group already agrees.
 >
 > **Add an entry for each thing you want, and delete the rest.** Fill in the **Desire**
-> and pick exactly one **Priority tier** — think of it as how much it matters, not a number:
+> and pick exactly one **Priority tier** — think of it as how much it matters, not a number —
+> and say whether it is a one-off or something you want **every day**:
 
 - ⭐ **Desire:** [What you want — an archetype from the list above is a complete answer on its own. **One line is a complete first pass.** e.g., start with "a slow morning", sharpen later to "a slow museum morning rather than a packed sightseeing sprint."]
 - **Priority tier:** [Exactly one of:
     - **anchor** — you'd be genuinely disappointed to miss this; build the trip to land it.
     - **wish** — a real want to try hard for, but it can yield to a need or to someone else's anchor.
     - **nice-to-have** — a bonus; lovely if it fits, no loss if it doesn't.]
+- **Recurrence:** [*(optional)* `one-off` or `daily`. Most wants are one-off — a single occasion somewhere in the trip. Say `daily` for something you want **every day you're there**: a morning coffee before the day starts, a swim, an evening walk. It's separate from how much it matters — a daily want can be an anchor, a wish, or a nice-to-have. Leave the em dash (`—`) if it's a one-off.]
 - **Theme tag(s):** [*(optional)* a word or two grouping it by kind — e.g., `museums, slow-pace`, `markets, food`, `nature`, `nightlife`. Skip if none come to mind.]
 - **Overlap:** [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]
 
 - **Desire:** [Second thing you want — e.g., "explore the local markets."]
 - **Priority tier:** [anchor / wish / nice-to-have]
+- **Recurrence:** [*(optional)* `one-off` / `daily` — leave `—` for a one-off]
 - **Theme tag(s):** [*(optional)* — e.g., `markets, food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
 - **Desire:** [Third thing you want — e.g., "one standout coffee place."]
 - **Priority tier:** [anchor / wish / nice-to-have]
+- **Recurrence:** [*(optional)* `one-off` / `daily` — leave `—` for a one-off]
 - **Theme tag(s):** [*(optional)* — e.g., `food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
@@ -362,13 +366,16 @@ load-bearing, so say it in words. Leave **Applies
 to** blank.
 
 ### Step 8 — Desires — what you want
-Fields per block: **Desire** (starred), **Priority tier**, **Theme tag(s)**, **Overlap** (leave blank).
+Fields per block: **Desire** (starred), **Priority tier**, **Recurrence**, **Theme tag(s)**, **Overlap** (leave blank).
 Offer the archetype menu from the section as starting points — an archetype on its own is
 a complete first pass. Then make each one specific to
 them. For every desire, ask for exactly one priority tier — *anchor* (would be genuinely
 disappointed to miss it), *wish* (try hard, but it can yield), or *nice-to-have* (a bonus).
 Suggest a theme tag or two, reusing the archetype wording where it fits. Leave **Overlap**
-blank.
+blank. Then ask whether it is a one-off or something they want every day they are there — a
+morning ritual, a daily swim. Record `daily` only when they say so; anything else is
+`one-off`. It is a separate question from how much it matters: ask both, never one
+instead of the other.
 
 ### Step 9 — Travel style & pace
 Fields: **Pace** (starred), **Day rhythm**, **Novelty vs comfort**, **Planning style**.

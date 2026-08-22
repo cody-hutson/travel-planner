@@ -72,6 +72,30 @@ applicable days; it never waives the audit on a day inside them.
 On a single-origin trip where every traveler is on the group's window, every day
 reads "all travelers" and nothing below changes.
 
+**Recurring desires (a standing slot, not a repeated venue):**
+A desire marked `Recurrence: daily` in `outputs/traveler-model.md` is a want the plan
+honors **every day that traveler is present** — not every trip day, and not by any rule
+that depends on the destination. The present-day set is defined once in
+`reference/data-model.md` → "Presence — a traveler's present-day set"; read it there and
+do not re-derive it, restate its limbs, or substitute the trip's day count for it. Carry
+the desire as a **standing slot** in the day shape on each of those days, in the time
+block the desire itself names, and name it on that day's framework line. On a day that
+traveler is absent, no slot is placed — there is no day to honor.
+
+Three bounds hold on the slot, and none is optional:
+- **It is never the day's anchor.** A recurring slot is a supporting slot. It never
+  stands in for the day's anchor event or anchor meal, whatever the desire's priority
+  tier — a daily `anchor`-tier desire is still a supporting slot.
+- **It is a cadence on the want, never an exemption from venue deduplication.** The slot
+  recurs; a venue does not. Every venue that fills it obeys the same two-appearance cap
+  as any other, so a week-long ritual is a week of that kind of stop, not seven visits
+  to one address.
+- **It yields like any desire.** Needs bound the solution; a recurring desire is
+  optimized inside those bounds. Where the slot cannot be placed on a present day, say
+  which day and why — never drop it silently.
+
+Where no traveler holds a recurring desire, nothing above changes the day shape.
+
 **Bailout architecture:**
 Every day with a 3+ hour outdoor block requires a pre-planned indoor bailout
 embedded in the day's structure — not noted as a footnote. The bailout must
@@ -299,9 +323,15 @@ In ITERATION and RESEQUENCING mode, also read:
   which are `option` (alternatives that stay alternatives)
 
 Also read, in every mode:
-- `outputs/traveler-model.md` — the availability facets (`Can travel:` / `Blackout:`)
-  only. These are the second limb of presence. The arrival-and-departure limb is the
-  derived Per-Traveler Planning Days window above — never the raw profile field
+- `outputs/traveler-model.md` — two reads, and only these two:
+  - the availability facets (`Can travel:` / `Blackout:`). These are the second limb of
+    presence. The arrival-and-departure limb is the derived Per-Traveler Planning Days
+    window above — never the raw profile field
+  - each traveler's desires marked `Recurrence: daily` — the desire text and whose it
+    is, so you can place the standing slot below in the right time block. Nothing else
+    from the desire record: not the priority tier, not the theme tags, not the overlap
+    signal, and not one-off desires. Selecting and placing venues for a desire is the
+    hub's job and the selection agents'; yours is the shape of the day
 
 ## Output Format
 
@@ -347,6 +377,8 @@ The standard day unit for this trip:
 - Anchor event slot: [time block, activity type appropriate here]
 - Anchor meal slot: [time block, format appropriate here]
 - Supporting experience slots: [time blocks]
+- Recurring-desire slots: [each `Recurrence: daily` desire in play — whose it is and the
+  time block it belongs in; "none" if no traveler holds one]
 - Alternative axes: [how alternatives should be differentiated for this trip]
 - Bailout slot: [pre-planned escape window — when and what type of venue]
 - Buffer / unscheduled window: [when and how long]
@@ -365,6 +397,9 @@ whether a bailout applies.
 - Present today: [all travelers — or the travelers present, naming anyone whose
   presence is inherited rather than stated as (assumed)]
 - Absent today: [travelers outside their own window on this day, by name — or "none"]
+- Recurring desires today: [each `Recurrence: daily` desire held by a traveler present
+  today, with its time block — or "none". A traveler named absent above carries none
+  today; a recurring slot is never placed on a day its traveler is not here]
 - Anchor outside a window: [if a whole-group anchor lands here while someone is
   absent: name the anchor, name who is absent, and name which forcing reason applies
   — or "none"]

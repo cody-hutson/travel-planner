@@ -251,6 +251,18 @@ a fixed type:
   not a percentage. A `not covered` anchor is worth surfacing as a Warning
   (a missed anchor is a worse plan), but it is **never** a needs-compliance
   failure — a desire is optimized within the bounds, not a bound.
+  A desire carrying `Recurrence: daily` is checked **per day**: its coverage days are
+  that traveler's **present-day set** — see `reference/data-model.md` → "Presence — a
+  traveler's present-day set"; do not re-derive it here and never check it against the
+  full trip-day set. Emit the reading in the `Per-day coverage` cell, naming the
+  present-day set the way the needs audit does
+  (`D2 covered · D3 not covered · D4 covered (present D2–D4)`), and set `Covered?` to
+  `covered` **only when every present day carries it** — a partial is `not covered` with
+  the missed days named, never a third verdict value and never a percentage. The severity
+  ceiling is unchanged: a partly-honored recurring anchor is a **Warning**, never a
+  Critical and never a needs-compliance failure. A day the traveler was absent carries no
+  reading at all, and a reading rendered for a day the scheduling framework names them
+  absent is a discrepancy you report.
 - **Balance signals — named, scoring left to design.** Emit the balance
   dimensions — **group-equity**, the four **experience axes** (creativity, fun,
   excitement, newness), and **rest-recovery balance** — as named rows with their
@@ -679,9 +691,9 @@ Needs-booking vs. status — the booking surfaces must equal the
 
 **Desire-coverage — covered / not, per traveler × per desire**
 
-| Traveler | Desire | Priority tier | Covered? |
-|----------|--------|---------------|----------|
-| [Name] | [Desire] | [anchor / wish] | [covered / not covered] |
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
+|----------|--------|---------------|------------------|----------|
+| [Name] | [Desire] | [anchor / wish] | [`—` for a one-off desire; for a `Recurrence: daily` desire, D# covered / not covered per present day, naming the present-day set] | [covered / not covered] |
 
 **Balance signals — named; scoring left to design**
 

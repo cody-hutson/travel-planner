@@ -153,10 +153,17 @@ The field shape for a single desire:
   - **anchor** — a desire the traveler would be genuinely disappointed to miss; the trip should be built to land it.
   - **wish** — a real want the trip should try hard to include, but which can yield to a need or to another traveler's anchor.
   - **nice-to-have** — a bonus; pleasant if it fits, no loss if it does not.
+- **Recurrence** *(optional)* — exactly one of:
+  - **one-off** — a single occasion somewhere in the trip. One placement satisfies it.
+  - **daily** — a want the plan honors on **every day that traveler is present** — their present-day set, per *Presence — a traveler's present-day set* below — never the full trip-day set, and never a rule that depends on the destination.
+
+  Omit the line, or leave it `—`, when the desire is one-off: an unstated recurrence is planned as `one-off`. This is the one field where *not stated* and a stated value coincide in effect, and it is safe **only** because the two produce the same plan — silence never manufactures a daily obligation. (Contrast `Been here before?`, where an unanswered field must read *unknown* and never `never`, because there the two readings calibrate depth in opposite directions.)
 - **Theme tag(s)** *(optional)* — one or more free-text tags grouping the desire by kind (e.g. `food`, `markets`, `museums`, `nightlife`, `nature`, `slow-pace`). Tags are how desires across travelers are matched for overlap; they are descriptive labels, not categories the traveler must pick from.
 - **Overlap** — which **other** travelers share this desire (by name), or `solo` if no one else lists it. This is the **desire-overlap signal**: it surfaces where the group already agrees. The match rule the enrichment agent applies is: **two desires overlap when they share a theme tag after case/stem normalization (the deterministic spine), OR when enrichment judges them the same desire in plain-language sense (the augment).** The tag-spine is the reproducible part; the sense-match is the judged augment that catches agreement the tags missed. Because tags are free-text and judgment varies, the signal is **advisory and may shift between refreshes** until the group's tags are normalized — it surfaces likely agreement, it does not certify it. A traveler authoring their own file may leave Overlap blank or note who they *think* shares it; the derived model carries the reconciled answer.
 
 > **Priority tiers are structural labels, not numeric weights.** `anchor` / `wish` / `nice-to-have` rank a traveler's desires by importance so a later capability knows what matters most — they are **not** scores, weights, or coverage percentages, and nothing in this layer multiplies, sums, or optimizes against them. The tier says "this matters more than that"; it does **not** say "this is worth 0.8". How a future capability *balances* desires across the group, or *measures* how well a plan satisfies them, is out of scope here (see What This Document Does Not Define). This document defines the structure the tiers live in; it does not define any math over them.
+
+> **Recurrence is orthogonal to priority tier, and it is a cadence on the want, not on a venue.** The two axes are independent: a daily want may be an `anchor`, a `wish`, or a `nice-to-have`, and a one-off want may be any of the three. Recurrence is **not** a fourth tier and adds nothing to the tier enum, which stays closed at three. It is also not a licence to repeat a place — a recurring desire recurs as a **slot**, and every venue that fills it obeys the two-appearance cap the venue matrix enforces (`CLAUDE.md` → Key Rules, *Venue deduplication*). A week of morning ritual stops is a week of that kind of stop, not seven visits to one address. And a recurring desire is still a desire: it never becomes the day's structural anchor event or anchor meal, whatever its tier.
 
 ### Lifecycle facets
 
@@ -221,6 +228,11 @@ Jordan's `travelers/Jordan.md`, written out in the full model (extending the sma
   Priority tier: nice-to-have
   Theme tag(s): food
   Overlap: solo
+- Desire: a morning ritual stop — a café or bakery — before the day starts.
+  Priority tier: wish
+  Recurrence: daily
+  Theme tag(s): food
+  Overlap: solo
 ```
 
 Pat's `travelers/Pat.md` shares two of those desires — which is what produces the overlap above:
@@ -255,6 +267,7 @@ The enrichment agent reconciles both files into `outputs/traveler-model.md` — 
 - Desire (anchor): slow museum morning [museums, slow-pace] — shared with Pat.
 - Desire (wish): local markets [markets, food] — shared with Pat.
 - Desire (nice-to-have): standout coffee [food] — solo.
+- Desire (wish, daily): morning ritual stop [food] — solo.
 
 ## Pat
 - Need → Hard Constraints "Afternoon heat ceiling" (Applies to: Pat); specific: shade/indoors by early afternoon above ~82°F.
@@ -510,7 +523,7 @@ Five dimensions make up the satisfaction coverage view. Each is named, typed, an
 | Dimension | Type | Granularity | What it measures | Scoring |
 |-----------|------|-------------|------------------|---------|
 | **Needs-compliance** | **pass/fail** | per need × per applicable day | Every traveler **need** (per its category — see the Needs table) is honored on every day that need applies to. A hard gate, evaluated per need per applicable day: each (need, applicable-day) pair is `pass` or `fail`. This is the structured metric form of the existing every-day hard-constraint audit (see Reconciliation below) — **not** a balance score. | Fully defined: it is a pass/fail gate. No formula needed — a need is either honored that day or it is not. |
-| **Desire-coverage** | **covered / not** | per traveler × per desire | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. |
+| **Desire-coverage** | **covered / not** | per traveler × per desire (× per present day for a desire marked `Recurrence: daily`) | Each traveler's **desires** (the anchors and wishes from their source file) are either met by the plan or not. A boolean presence check per desire, reported per traveler. A desire marked `Recurrence: daily` is measured on **every day of that traveler's present-day set** and is met only when every one of those days carries it. | Fully defined: a desire is `covered` or `not covered`. No degree, weight, or percentage — that would be scoring, which is out of scope. A recurring desire's per-day reading is a **set of booleans**, not a ratio — reporting which days were met is not the same as scoring how many. |
 | **Group-equity** | **balance signal** | per trip (across travelers) | Whether the plan serves the travelers *evenly* — that no traveler is systematically over- or under-served relative to the group. A balance signal across travelers' coverage. | **Left to design.** This layer names the signal and its meaning; it does **not** define how evenness is measured, what counts as "systematically under-served", or any fairness threshold. |
 | **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design — and note these axes have no upstream data source in the substrate today** (unlike needs and desires, nothing in the per-traveler files or the itinerary yet grounds them), so a later capability must define **both their source and their scoring**; today they are named, ungrounded, and `(left to design)`. |
 | **Rest-recovery balance** | **balance signal** | per trip (across days) | Whether recovery is adequate relative to activity intensity — enough rest/downtime against the demand the plan places on the group. A balance signal over the activity-vs-recovery rhythm. | **Left to design.** Note the seam: the **required-rest** *need* is a hard pass/fail gate under needs-compliance (a non-negotiable rest floor honored or not); **rest-recovery balance** is the softer, trip-wide *signal* of whether the overall rhythm is healthy beyond that floor. The floor is gated; the balance is a signal whose scoring is deferred. |
@@ -535,6 +548,8 @@ This reconciles the language elsewhere that the audit runs "every day": the audi
 > **Render the trim; never let it read as a conditional.** When presence narrows a need's applicable days, the `Applicable days` cell names the trimmed set **and** its reason — `D2–D4 (present D2–D4)` — so a reader can tell a presence trim from a constraint subset. An unnamed absence is the failure `agents/03-scheduling.md` already exists to prevent; a silently trimmed grade is that same failure at the metrics surface.
 
 > **Desire-coverage is typed per tier — a missed anchor is not a missed nice-to-have.** Coverage is `covered` / `not covered` reported **per desire, carrying that desire's priority tier**. The tier travels with the verdict on purpose: a `not covered` **anchor** is a categorically more significant outcome than a `not covered` **nice-to-have**, and a later scorer must not flatten the two into one undifferentiated "coverage %". This layer keeps them distinct by reporting the tier alongside each verdict; it does **not** weight them (that would be scoring) — it just refuses to lose the distinction.
+
+> **A recurring desire is covered only on the days it is honored.** A desire whose `Recurrence` is `daily` carries a coverage reading **per day of that traveler's present-day set** — see *Presence — a traveler's present-day set* above; it is not re-derived here and it is never read against the full trip-day set. The desire is `covered` overall **only when every one of those days carries it**; a partial run is `not covered` with the missed days named. A partial is **not** a third verdict value and **not** a percentage — the enum stays closed at `covered` / `not covered`. And the severity is unchanged: a partly-honored recurring anchor is a worse plan, never a broken one, so it never becomes a needs-compliance failure.
 
 ### Write split — section ownership (two writers, never clobbering)
 
@@ -571,15 +586,17 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Sam    | Dietary/health (allergy) | D2–D4 (present D2–D4) | D2 pass · D3 pass · D4 pass | pass |
 
 ## Desire-coverage — covered / not, per traveler × per desire
-> Each anchor/wish met by the plan or not. Boolean presence — not a degree.
+> Each anchor/wish met by the plan or not. Boolean presence — not a degree. A desire
+> marked `Recurrence: daily` reads per day across that traveler's present days.
 
-| Traveler | Desire | Priority tier | Covered? |
-|----------|--------|---------------|----------|
-| Jordan | Slow museum morning | anchor | covered |
-| Jordan | Local markets       | wish   | covered |
-| Pat    | Local market        | anchor | covered |
-| Pat    | Relaxed museum morning | wish | covered |
-| Sam    | One standout food experience | anchor | covered |
+| Traveler | Desire | Priority tier | Per-day coverage | Covered? |
+|----------|--------|---------------|------------------|----------|
+| Jordan | Slow museum morning | anchor | — | covered |
+| Jordan | Local markets       | wish   | — | covered |
+| Pat    | Local market        | anchor | — | covered |
+| Pat    | Relaxed museum morning | wish | — | covered |
+| Sam    | One standout food experience | anchor | — | covered |
+| Sam    | Morning ritual stop | wish | D2 covered · D3 not covered · D4 covered (present D2–D4) | not covered |
 
 ## Balance signals — named; scoring left to design
 > These are signals to track, not scores. How each is measured is a later-capability decision.
