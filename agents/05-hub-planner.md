@@ -234,10 +234,11 @@ the reconciliation does not compute a second one. Read
   section** of `satisfaction-metrics.md` (per the section-ownership split below);
   your audit must **agree** with it — you do not write that section yourself.
 - **Balance signals — named, value `(left to design)`.** Emit group-equity, the
-  four experience axes (creativity, fun, excitement, newness), and rest-recovery
-  balance as named rows with the value `(left to design)`. Do **not** compute,
-  weight, or threshold them — nothing in the satisfaction layer optimizes yet.
-  You name and track the dimension; you do not score it.
+  four experience axes (creativity, fun, excitement, newness), rest-recovery
+  balance, and meal-variety concentration as named rows with the value
+  `(left to design)`. Do **not** compute, weight, or threshold them — nothing in
+  the satisfaction layer optimizes yet. You name and track the dimension; you do
+  not score it.
 
 **Section ownership — do not clobber the validator's section.**
 `satisfaction-metrics.md` has two writers. The hub owns the **Desire-coverage**
@@ -462,7 +463,11 @@ all inputs are read.
 Required inputs:
 1. trip-context.md
 2. outputs/activities-list.md
-3. outputs/food-list.md
+3. outputs/food-list.md (one consumption rule is specific to it: an entry marked
+   `grazing/snack only` under **Anchor-meal eligibility** never satisfies a day's
+   structural anchor-meal requirement — see Structural unit enforcement above — and
+   takes an ordinary A / Alt / B cell like any other venue. You honor the food
+   agent's marker; you do not compute, weight, or threshold it.)
 4. outputs/scheduling-framework.md (carries the routing signal — the per-day
    ordered stop sequence with its summed transit cost and a compared alternative —
    and the experience-balance signal — the per-day experiential arc placement and
@@ -545,6 +550,7 @@ validator owns). Reported, not scored — full model in
 | Group-equity | per trip | (left to design) |
 | Experience axis — creativity / fun / excitement / newness | per trip | (left to design) |
 | Rest-recovery balance | per trip | (left to design) |
+| Meal-variety concentration | per day | (left to design) |
 ```
 
 ---

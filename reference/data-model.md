@@ -518,7 +518,7 @@ The split mirrors the needs-vs-desires model: a **need** bounds the solution (so
 
 ### The dimension set
 
-Five dimensions make up the satisfaction coverage view. Each is named, typed, and given a definition — and for the balance signals, an explicit note that the scoring is deferred.
+Six dimensions make up the satisfaction coverage view. Each is named, typed, and given a definition — and for the balance signals, an explicit note that the scoring is deferred.
 
 | Dimension | Type | Granularity | What it measures | Scoring |
 |-----------|------|-------------|------------------|---------|
@@ -527,8 +527,9 @@ Five dimensions make up the satisfaction coverage view. Each is named, typed, an
 | **Group-equity** | **balance signal** | per trip (across travelers) | Whether the plan serves the travelers *evenly* — that no traveler is systematically over- or under-served relative to the group. A balance signal across travelers' coverage. | **Left to design.** This layer names the signal and its meaning; it does **not** define how evenness is measured, what counts as "systematically under-served", or any fairness threshold. |
 | **Experience axes** | **balance signal** | per trip (optionally per day) | Whether the trip carries a healthy measure of four experiential qualities: **creativity**, **fun**, **excitement**, and **newness**. Four named balance signals, tracked so a later capability can read the trip's experiential shape. | **Left to design — and note these axes have no upstream data source in the substrate today** (unlike needs and desires, nothing in the per-traveler files or the itinerary yet grounds them), so a later capability must define **both their source and their scoring**; today they are named, ungrounded, and `(left to design)`. |
 | **Rest-recovery balance** | **balance signal** | per trip (across days) | Whether recovery is adequate relative to activity intensity — enough rest/downtime against the demand the plan places on the group. A balance signal over the activity-vs-recovery rhythm. | **Left to design.** Note the seam: the **required-rest** *need* is a hard pass/fail gate under needs-compliance (a non-negotiable rest floor honored or not); **rest-recovery balance** is the softer, trip-wide *signal* of whether the overall rhythm is healthy beyond that floor. The floor is gated; the balance is a signal whose scoring is deferred. |
+| **Meal-variety concentration** | **balance signal** | per day | Whether the day's meals concentrate in a single convenience-format category rather than ranging across formats. A balance signal over meal-format spread. | **Left to design.** Note the seam: the **per-category anchor cap** is a hard selection-time rule the food agent enforces (`agents/02-food.md` → Convenience-format anchor discipline); **meal-variety concentration** is the softer, per-day *signal* of whether the resulting spread is healthy beyond that cap. The cap is gated; the balance is a signal whose scoring is deferred. |
 
-> **The line this section holds.** Needs-compliance and desire-coverage are *defined to completion* because pass/fail and covered/not are determinable facts about a plan — no math is invented to produce them. Group-equity, the four experience axes, and rest-recovery balance are *defined as named balance signals with stated meaning*, but their scoring is **left to design** — consistent with "nothing optimizes yet". If a future reader is tempted to add a weight, a percentage, or a ranking to any balance signal, that belongs to a later optimization capability, not to this substrate.
+> **The line this section holds.** Needs-compliance and desire-coverage are *defined to completion* because pass/fail and covered/not are determinable facts about a plan — no math is invented to produce them. Group-equity, the four experience axes, rest-recovery balance, and meal-variety concentration are *defined as named balance signals with stated meaning*, but their scoring is **left to design** — consistent with "nothing optimizes yet". If a future reader is tempted to add a weight, a percentage, or a ranking to any balance signal, that belongs to a later optimization capability, not to this substrate.
 
 ### A need's applicable-day set — how it is derived
 
@@ -558,7 +559,7 @@ This reconciles the language elsewhere that the audit runs "every day": the audi
 | Section | Owner | Why |
 |---------|-------|-----|
 | **Desire-coverage** (covered / not, per traveler × per desire) | **Hub** | The hub builds the itinerary, so it holds the coverage read — which anchors/wishes the plan it just produced actually meets. |
-| **Balance signals** (group-equity, the four experience axes, rest-recovery balance — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
+| **Balance signals** (group-equity, the four experience axes, rest-recovery balance, meal-variety concentration — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
 | **Needs-compliance** (pass/fail, per need × per applicable day) | **Validator** | This is the *recorded form of the validator's every-day constraint audit*; the validator is its natural owner (and the hub's own audit must agree with it). |
 | **Needs ↔ constraint agreement check** | **Validator** | The validator owns the reconciliation that every needs-compliance `fail` is a constraint Critical (see Reconciliation below). |
 
@@ -609,6 +610,7 @@ A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the cur
 | Experience axis — excitement | per trip | (left to design) |
 | Experience axis — newness | per trip | (left to design) |
 | Rest-recovery balance | per trip (across days) | (left to design) |
+| Meal-variety concentration | per day | (left to design) |
 ```
 
 The pass/fail and covered/not tables carry real verdicts because they are determinable from the plan. The balance-signals table carries `(left to design)` in every value cell on purpose: the dimensions are *named and tracked*, their scoring is *not yet defined*. (The metrics examples use the public Pat / Jordan / Sam persona set.)
@@ -625,7 +627,7 @@ The system already holds the rule **"hard constraints are audited every day they
 
 To keep the substrate boundary clear:
 
-- **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here, and the Satisfaction Metrics section above names and types every dimension — but how any **balance signal** (group-equity, the experience axes, rest-recovery balance) is *scored* is out of scope. pass/fail and covered/not are determinable facts; the balance scoring is left to design.
+- **No metric formulas or scoring math.** `satisfaction-metrics.md` has a *home* here, and the Satisfaction Metrics section above names and types every dimension — but how any **balance signal** (group-equity, the experience axes, rest-recovery balance, meal-variety concentration) is *scored* is out of scope. pass/fail and covered/not are determinable facts; the balance scoring is left to design.
 - **No optimization or ranking logic.** Nothing in the satisfaction layer optimizes yet. The engines *read* the derived model; this document does not specify what they do with it.
 - **No group destination recommendation *in this layer*.** Per-traveler destination leanings are *captured* (forward-hook (a)); aggregating them into a ranked group shortlist is **realized downstream** in `agents/destination-ideation.md` (which recommends — the group still makes the pick), never in this individual-file substrate.
 - **No side-bar / group-split computation.** Per-traveler people-dynamics, desire-overlap, and interest divergence are *captured* (forward-hook (b)); computing any single / small-group / full-group split from them, bounded by `Whole-group moments`, is left to design and is not computed here. No split is ever stored in an individual file.

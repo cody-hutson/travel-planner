@@ -265,10 +265,11 @@ a fixed type:
   absent is a discrepancy you report.
 - **Balance signals — named, scoring left to design.** Emit the balance
   dimensions — **group-equity**, the four **experience axes** (creativity, fun,
-  excitement, newness), and **rest-recovery balance** — as named rows with their
-  value shown as `(left to design)`. You do **not** compute, weight, threshold,
-  or rank them: nothing in the satisfaction layer optimizes yet. Report that the
-  dimension is tracked; do not invent a score for it.
+  excitement, newness), **rest-recovery balance**, and
+  **meal-variety concentration** — as named rows with their value shown as
+  `(left to design)`. You do **not** compute, weight, threshold, or rank them:
+  nothing in the satisfaction layer optimizes yet. Report that the dimension is
+  tracked; do not invent a score for it.
 
 > **Scope guard.** This is a *report*, not an optimizer. You emit pass/fail
 > (needs-compliance), covered/not (desire-coverage), and named balance signals
@@ -705,6 +706,7 @@ Needs-booking vs. status — the booking surfaces must equal the
 | Experience axis — excitement | per trip | (left to design) |
 | Experience axis — newness | per trip | (left to design) |
 | Rest-recovery balance | per trip | (left to design) |
+| Meal-variety concentration | per day | (left to design) |
 
 - **Needs-compliance → constraint-compliance agreement (forward only):** [confirmed — every needs-compliance `fail` is a constraint Critical; constraint Criticals with no linked per-traveler need correctly have no needs-compliance row / list any needs-compliance `fail` that is NOT a constraint Critical]
 

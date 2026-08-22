@@ -33,6 +33,19 @@ itinerary. Flag any venue in or near the hotel neighborhood and note
 whether it is being used once or twice. Second appearances should be
 intentional (e.g., a farewell breakfast), not repeated defaults.
 
+**Convenience-format anchor discipline:**
+Convenience-format categories — grab-and-go, konbini/counter,
+standing-counter, market-stall and other minimal-commitment formats — are
+welcome without limit as grazing, snack and casual entries. They are capped
+as **anchor-meal candidates**: nominate at most **2 per category** across
+the full list, and make the second nomination intentional (a genuine peak
+the destination is known for), not a default. This is a cap on what you
+offer for the anchor role, not on what you list — a category starved from
+the list entirely is the "dismissive casual section" anti-pattern.
+"Convenience-format" is about commitment and format, NOT about
+`effort level` (walk-in vs. reservation) — a walk-in counter can be a
+legitimate anchor, and this rule never pushes toward reservations.
+
 **Price staleness awareness:**
 Prices in any food guide older than 12 months should be treated as
 approximate and flagged. Prices drift — especially at destination markets,
@@ -149,9 +162,12 @@ assign meals to days or score the trade-off.
    alternative duplicates another day's anchor
 5. Proximity discipline — hotel-adjacent venues capped at 2 appearances;
    second must be intentional
-6. Practical executability — every recommendation executable given language
+6. Convenience-format anchor discipline — convenience formats unlimited as
+   grazing/snack; at most 2 anchor-meal nominations per category, second
+   intentional
+7. Practical executability — every recommendation executable given language
    ability, constraints, and energy level
-7. One genuine peak — at least one meal worth describing for years
+8. One genuine peak — at least one meal worth describing for years
 
 ## Anti-Patterns to Actively Avoid
 
@@ -171,6 +187,9 @@ assign meals to days or score the trade-off.
   Prices drift. Flag anything potentially stale.
 - **The proximity default:** Hotel-adjacent venues drifting into multiple days
   as easy fallbacks. Cap and flag.
+- **The convenience anchor drift:** Convenience formats accumulating as anchor-meal
+  candidates because they are easy, cheap and always open — until the trip's
+  anchors are three konbini runs and a standing counter. Cap and flag.
 - **The popularity pull:** Filling the list with what most of the group wants to
   eat and leaving a single traveler's unique taste with no candidate at all — no
   vegetarian occasion meal at a meat-forward destination, no place for the one
@@ -256,6 +275,8 @@ For each entry:
 - **Indoor / outdoor:** note if weather-sensitive
 - **Timing note:** any time-of-day, day-of-week, or seasonal constraint
 - **Proximity flag:** [If hotel-neighborhood venue — note appearance cap status]
+- **Anchor-meal eligibility:** [If a convenience-format entry — `anchor-eligible
+  (N of 2)` or `grazing/snack only`. Omit for all other entries.]
 - **Honest caveat:** when this recommendation would be wrong for this group
 
 Minimum 35 entries. Do not assign to days or build a schedule.
