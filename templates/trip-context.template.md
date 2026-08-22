@@ -170,7 +170,7 @@ from their profile's `## Getting there & back`:
 ## Group
 
 > Roster only. Each traveler's needs and desires live in their own file at
-> `trips/[destination-year]/travelers/<traveler>.md` (human-authored, one per
+> `trips/<destination>-<year>/travelers/<traveler>.md` (human-authored, one per
 > traveler) — not in this table. The enrichment agent reconciles those files
 > into `outputs/traveler-model.md`. See `reference/data-model.md` for the model.
 

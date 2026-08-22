@@ -17,11 +17,13 @@ Trip planning spans multiple chats over days or weeks. Files are the memory. Eve
 ### Starting a session (any chat that touches a trip)
 
 1. Read this `CLAUDE.md` (auto-loaded)
-2. Read `trips/[destination-year]/trip-context.md` — the source of truth for what's planned
-3. Read `trips/[destination-year]/trip-log.md` — the decision history and session bridge
-4. Scan `trips/[destination-year]/outputs/` — know what exists and what's been produced
+2. Read `trips/<destination>-<year>/trip-context.md` — the source of truth for what's planned
+3. Read `trips/<destination>-<year>/trip-log.md` — the decision history and session bridge
+4. Scan `trips/<destination>-<year>/outputs/` — know what exists and what's been produced
 
 This is 30 seconds of file reads that prevents 10 minutes of "where were we?"
+
+**Trip-directory placeholder.** Wherever these docs write `<destination>-<year>` — here, in the README, in the templates and in the agent prompts — substitute the trip's own folder name, as in `trips/tokyo-2026/`. Angle brackets mark a value you replace, following the `usage:` grammar in `scripts/publish-trip-site.sh`: angle for a required value, square for an optional element.
 
 ### Ending a session
 
@@ -132,9 +134,9 @@ Don't read the entire trip state for a CSS color change. Do read the full state 
 ### Starting a new trip
 
 When the user wants to plan a trip:
-1. Create `trips/[destination-year]/`, `trips/[destination-year]/outputs/`
-2. Copy `templates/trip-context.template.md` to `trips/[destination-year]/trip-context.md`
-3. Create `trips/[destination-year]/trip-log.md` with initial session entry
+1. Create `trips/<destination>-<year>/`, `trips/<destination>-<year>/outputs/`
+2. Copy `templates/trip-context.template.md` to `trips/<destination>-<year>/trip-context.md`
+3. Create `trips/<destination>-<year>/trip-log.md` with initial session entry
 4. Fill in trip-context through conversation — ask the user questions, don't make them edit markdown
 5. Set the mode based on what's known (IDEATION if exploring, DISCOVERY if destination picked, ENRICHMENT if flights/hotel booked)
 6. In IDEATION with no destination yet, dispatch **Destination Ideation** to turn the group's leanings into a ranked shortlist (`outputs/destination-shortlist.md`) for the group to decide from — then, once they pick, set the destination and switch to DISCOVERY
@@ -256,7 +258,7 @@ When the itinerary changes (iteration mode, new bookings, swapped venues):
 When the user says "publish this" or "put this on GitHub", run:
 
 ```bash
-scripts/publish-trip-site.sh publish trips/[destination-year]
+scripts/publish-trip-site.sh publish trips/<destination>-<year>
 ```
 
 That one command:
@@ -267,20 +269,20 @@ That one command:
 
 If the pre-push guard aborts, **nothing was published** — the error names what failed; rebuild the site and re-run.
 
-**Passphrase.** If `$STATICRYPT_PASSWORD` is set it is used; otherwise a strong one is generated and saved to `trips/[destination-year]/.passphrase` (git-ignored, never published). Share it over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
+**Passphrase.** If `$STATICRYPT_PASSWORD` is set it is used; otherwise a strong one is generated and saved to `trips/<destination>-<year>/.passphrase` (git-ignored, never published). Share it over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
 
-**Repo name.** By default the per-trip repo is `[destination]-[year]-trip`. Pass `--opaque` to `publish` to name it with a random token instead (`trip-<hex>`, no destination/year); the name is saved to `.publish-slug` so every later command resolves the same repo. To publish to a custom or pre-existing repo — a shorter shared name or an existing site — put the bare repo name in `trips/[destination-year]/.publish-slug` (git-ignored). `publish`/`update`/`rotate`/`list`/`unpublish` all resolve it the same way.
+**Repo name.** By default the per-trip repo is `[destination]-[year]-trip`. Pass `--opaque` to `publish` to name it with a random token instead (`trip-<hex>`, no destination/year); the name is saved to `.publish-slug` so every later command resolves the same repo. To publish to a custom or pre-existing repo — a shorter shared name or an existing site — put the bare repo name in `trips/<destination>-<year>/.publish-slug` (git-ignored). `publish`/`update`/`rotate`/`list`/`unpublish` all resolve it the same way.
 
 **Site is live at:** `https://<github-username>.github.io/[destination]-[year]-trip/` — the URL shows a passphrase prompt, not the itinerary.
 
 **Updating after edits** (re-encrypt and re-publish only ciphertext):
 ```bash
-scripts/publish-trip-site.sh update trips/[destination-year]
+scripts/publish-trip-site.sh update trips/<destination>-<year>
 ```
 
 **Rotating the passphrase** (e.g. after sharing with someone who should no longer keep access):
 ```bash
-scripts/publish-trip-site.sh rotate trips/[destination-year]
+scripts/publish-trip-site.sh rotate trips/<destination>-<year>
 ```
 Rotation re-encrypts under a new passphrase and re-publishes; previously-shared viewers must re-receive the new one.
 
@@ -292,14 +294,14 @@ Prints every trip under `trips/` with its repo, live URL (or "not published"), l
 
 **Taking a site down:**
 ```bash
-scripts/publish-trip-site.sh unpublish trips/[destination-year]                      # delete the repo (default)
-scripts/publish-trip-site.sh unpublish trips/[destination-year] --disable-pages-only # keep repo, site offline
+scripts/publish-trip-site.sh unpublish trips/<destination>-<year>                      # delete the repo (default)
+scripts/publish-trip-site.sh unpublish trips/<destination>-<year> --disable-pages-only # keep repo, site offline
 ```
 The default **deletes** the per-trip repo — removing the site *and* the destination/year in its name. Deletion is irreversible, needs the `delete_repo` gh scope (grant once with `gh auth refresh -h github.com -s delete_repo`), and prompts you to type the repo name to confirm. `--disable-pages-only` instead disables Pages and keeps the repo (reversible). Either way `unpublish` is idempotent (a no-op if the site is already gone), and content may persist in third-party caches or clones after takedown.
 
 **Opting out** — publish the itinerary fully public and unencrypted — is explicit, requires confirmation, and is **an operator action, never a Claude action**. Run it yourself in a terminal:
 ```bash
-scripts/publish-trip-site.sh publish trips/[destination-year] --plaintext
+scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext
 ```
 The script prompts you to type `PUBLISH` to confirm.
 
@@ -307,7 +309,7 @@ The script prompts you to type `PUBLISH` to confirm.
 
 > **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
 >
-> **What still leaks (metadata).** By default the per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. Pass `--opaque` at publish (or set a custom name in `trips/[destination-year]/.publish-slug`) to keep destination/year out of the repo name; commit timestamps still reveal publish activity.
+> **What still leaks (metadata).** By default the per-trip repo is named `[destination]-[year]-trip` and is public, so the destination and year show on your GitHub profile even though the itinerary itself is encrypted; commit timestamps reveal when you publish. Only the itinerary *content* is protected — not the fact that the trip exists. Pass `--opaque` at publish (or set a custom name in `trips/<destination>-<year>/.publish-slug`) to keep destination/year out of the repo name; commit timestamps still reveal publish activity.
 >
 > **Trust boundary.** Encryption runs via `npx staticrypt` (pinned to an exact version); your passphrase is passed to that package at publish time, so you are trusting the pinned StatiCrypt release and the npm supply chain.
 >
@@ -332,7 +334,7 @@ Previous trip sites that set the quality bar. Read these when building a new sit
 These are encoded in the agent prompts but worth knowing as the orchestrator:
 
 - **trip-context.md is sacred.** Only the enrichment agent modifies it. No activity lists, food picks, or itinerary content goes in this file. No per-traveler desire detail, no per-event status, and no satisfaction metrics go in it either — those have their own homes (see below).
-- **Per-traveler data lives in separate files.** Each traveler's needs and desires live in `trips/[destination-year]/travelers/<traveler>.md` — human-authored, independently editable, one file per traveler, **filled from the blank intake form at `templates/traveler-intake.template.md`** (copied once per traveler). The enrichment agent reads and reconciles them into `outputs/traveler-model.md` (`[DERIVED]`); it does not author the source files. Keeps heavy per-traveler detail out of sacred trip-context.md and makes each file a change surface. Each file separates **needs** (constraints that bound the solution — e.g. heat, mobility, dietary-health, rest, budget, timing, sensory) from **desires** (wants optimized within those bounds, each carrying a structural priority tier of anchor/wish/nice-to-have, an optional recurrence of one-off or daily, optional theme tags, and a desire-overlap signal); the tier is a priority label, not a numeric weight, and recurrence is orthogonal to it — a daily want may be an anchor, a wish, or a nice-to-have — nothing optimizes yet. A daily recurrence is a cadence on the want, never an exemption from the venue-deduplication cap below. The template spans the trip lifecycle (IDEATION → ENRICHMENT), capturing the individual's party, destination leanings, dates, journey & origin, accommodation, budget appetite, travel style, interests, and people dynamics through to needs and desires — all the individual's own view; group destination shortlists and any side-bar splits are pipeline-derived, never authored in the individual file (see `reference/data-model.md`). The flow is **intake template → filled per-traveler profile (human, in the git-ignored `trips/`) → enrichment reconciles → `outputs/traveler-model.md`**; filled profiles carry real personal detail and so live only in the git-ignored working dir — they never go in trip-context.md and are never published. A **missing or blank profile is handled by operator fallback, not a hard failure**: the enrichment agent reconciles everyone who has a usable profile, falls back to operator-provided needs/desires for the gap (marked as operator-provided), and otherwise records a flagged `PROFILE MISSING` gap and continues — an absent profile means *unknown*, never *no constraints*. A **third fallback branch covers a party member who will never file a profile at all**: where the operator supplies that person's needs, they are admitted to `outputs/traveler-model.md` as exactly one `## <Name>` entry marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` — needs only, no file created for them anywhere, and no entry at all without operator input. A `[THIRD-PARTY]` value is **never published**: it never escalates into trip-context.md (it triggers no new constraint and its subject is never added to a constraint's `Applies to:` line) and must not appear in any publish-bound artifact in attributed *or* anonymized form — it shapes the plan solely through `outputs/traveler-model.md`, which the site build excludes and the hub applies as a hard bound before any objective; provenance-marking records only that a value is second-hand and never establishes the described person's consent (`reference/adr/ADR-006-third-party-data-capture.md`). Full model: `reference/data-model.md`.
+- **Per-traveler data lives in separate files.** Each traveler's needs and desires live in `trips/<destination>-<year>/travelers/<traveler>.md` — human-authored, independently editable, one file per traveler, **filled from the blank intake form at `templates/traveler-intake.template.md`** (copied once per traveler). The enrichment agent reads and reconciles them into `outputs/traveler-model.md` (`[DERIVED]`); it does not author the source files. Keeps heavy per-traveler detail out of sacred trip-context.md and makes each file a change surface. Each file separates **needs** (constraints that bound the solution — e.g. heat, mobility, dietary-health, rest, budget, timing, sensory) from **desires** (wants optimized within those bounds, each carrying a structural priority tier of anchor/wish/nice-to-have, an optional recurrence of one-off or daily, optional theme tags, and a desire-overlap signal); the tier is a priority label, not a numeric weight, and recurrence is orthogonal to it — a daily want may be an anchor, a wish, or a nice-to-have — nothing optimizes yet. A daily recurrence is a cadence on the want, never an exemption from the venue-deduplication cap below. The template spans the trip lifecycle (IDEATION → ENRICHMENT), capturing the individual's party, destination leanings, dates, journey & origin, accommodation, budget appetite, travel style, interests, and people dynamics through to needs and desires — all the individual's own view; group destination shortlists and any side-bar splits are pipeline-derived, never authored in the individual file (see `reference/data-model.md`). The flow is **intake template → filled per-traveler profile (human, in the git-ignored `trips/`) → enrichment reconciles → `outputs/traveler-model.md`**; filled profiles carry real personal detail and so live only in the git-ignored working dir — they never go in trip-context.md and are never published. A **missing or blank profile is handled by operator fallback, not a hard failure**: the enrichment agent reconciles everyone who has a usable profile, falls back to operator-provided needs/desires for the gap (marked as operator-provided), and otherwise records a flagged `PROFILE MISSING` gap and continues — an absent profile means *unknown*, never *no constraints*. A **third fallback branch covers a party member who will never file a profile at all**: where the operator supplies that person's needs, they are admitted to `outputs/traveler-model.md` as exactly one `## <Name>` entry marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` — needs only, no file created for them anywhere, and no entry at all without operator input. A `[THIRD-PARTY]` value is **never published**: it never escalates into trip-context.md (it triggers no new constraint and its subject is never added to a constraint's `Applies to:` line) and must not appear in any publish-bound artifact in attributed *or* anonymized form — it shapes the plan solely through `outputs/traveler-model.md`, which the site build excludes and the hub applies as a hard bound before any objective; provenance-marking records only that a value is second-hand and never establishes the described person's consent (`reference/adr/ADR-006-third-party-data-capture.md`). Full model: `reference/data-model.md`.
 - **Satisfaction-layer homes.** Per-event status → `outputs/event-status.md` (persists across re-runs). Coverage metrics → `outputs/satisfaction-metrics.md`. Derived per-traveler model + desire-overlap → `outputs/traveler-model.md`. None of these belong in trip-context.md or in the rebuilt venue-matrix.md. Full data architecture: `reference/data-model.md`.
 - **Satisfaction metrics — define the dimensions, not the scoring.** `outputs/satisfaction-metrics.md` tracks six named coverage dimensions, each of a fixed type — emitted by the hub (per-traveler coverage read) and the validator (audit report), never scored at this layer. **Needs-compliance** is **pass/fail** per need per applicable day (each need category honored every day it applies — the applicable days being the days its governing constraint governs **intersected with that traveler's at-destination day set**, so no need is graded on a day its traveler was not at the destination; the structured, recorded form of the every-applicable-day hard-constraint audit, *not* a balance score). Its agreement with constraint-compliance is **forward-only**: every needs-compliance `fail` is a constraint Critical, but a trip-level/group constraint with no linked per-traveler need yields a constraint Critical with no needs-compliance row by design. **Desire-coverage** is **covered / not** per traveler per desire (each anchor/wish met by the plan or not — a boolean, not a degree). **Group-equity**, the four **experience axes** (creativity, fun, excitement, newness), **rest-recovery balance**, and **meal-variety concentration** (per day) are named **balance signals** to track — their scoring (formulas, weights, thresholds) is **left to design**, since nothing in the satisfaction layer optimizes yet. Full dimension set, types, and artifact shape: `reference/data-model.md` → Satisfaction Metrics.
 - **Per-event status — only `planned` changes freely.** Every placed event carries exactly one status in `outputs/event-status.md`: `planned` (working state, open to iteration, may still need a booking), `locked` (booked/confirmed, preserved), `firmed` (settled with nothing to book, preserved), or `option` (an alternative/bailout — never a primary slot). Iteration and resequencing change only `planned` events; `locked`/`firmed` are preserved unless the user names them; an `option` is never auto-promoted into a primary slot (that is a deliberate user act). A booking that falls through regresses `locked → planned` (the event re-opens and its booking question reopens), and an event removed from the itinerary has its row **deleted** (the one deletion persist-mutable permits — no ghost row). The **Event ID is opaque and day-independent** (the hub mints it on first placement; it is the cross-run join key and must not encode the day). "Needs booking" derives from status — `planned` **and** `requires booking? = yes` — so `firmed`/`locked`/`option` never read as "needs booking" (an `option` may still carry `requires booking? = yes` as a bookable backup; its flag takes effect only on promotion to `planned`), and "all events locked" means no `planned`-needs-booking event remains. This structured per-event layer supersedes the coarse free-text `## Locked Elements` notes in trip-context.md (which stay as the **operator-maintained** trip-level human summary, not an agent-written field) as the source of truth for the scheduler, hub, and validator. Field-shape decision and full model: `reference/data-model.md`.
@@ -349,8 +351,8 @@ These are encoded in the agent prompts but worth knowing as the orchestrator:
 
 ```
 travel-planner/
-├── CLAUDE.md               ← you are here
-├── agents/                 ← agent behavioral definitions (the knowledge base)
+├── CLAUDE.md                 ← you are here
+├── agents/                   ← agent behavioral definitions (the knowledge base)
 │   ├── 00-enrichment.md
 │   ├── 01-activities.md
 │   ├── 02-food.md
@@ -360,15 +362,15 @@ travel-planner/
 │   ├── 06-validator.md
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
-├── reference/              ← engine reference specs
+├── reference/                ← engine reference specs
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
-├── scripts/                ← publish-trip-site.sh (private publish) + test-publish-guard.sh
+├── scripts/                  ← publish-trip-site.sh (private publish) + test-publish-guard.sh
 ├── templates/
 │   ├── trip-context.template.md
 │   └── traveler-intake.template.md   ← per-traveler profile form (blank; copied per traveler into the git-ignored trips/.../travelers/)
 └── trips/
-    └── [destination-year]/ ← one folder per trip
+    └── <destination>-<year>/ ← one folder per trip
         ├── trip-context.md            ← source of truth for the trip
         ├── trip-log.md                ← decision history, session bridge
         ├── travelers/                 ← per-traveler source files (gitignored), one .md per traveler — human-authored

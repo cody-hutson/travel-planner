@@ -71,7 +71,7 @@ a traveler's own words. The second is to read the per-traveler source files
 and produce the reconciled, machine-usable model the engines and hub read.
 
 Per-traveler needs and desires are human-authored — one file per traveler at
-`trips/[destination-year]/travelers/<traveler>.md`. You do not write those
+`trips/<destination>-<year>/travelers/<traveler>.md`. You do not write those
 files and you do not edit a traveler's desires. You read them, reconcile them,
 and write the result to `outputs/traveler-model.md`, tagged `[DERIVED]`.
 
