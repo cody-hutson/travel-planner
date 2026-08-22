@@ -362,14 +362,17 @@ travel-planner/
 │   ├── 06-validator.md
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
+├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo
 ├── reference/                ← engine reference specs
+│   ├── adr/                       ← architecture decision records (one file per decision)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
 ├── scripts/                  ← publish-trip-site.sh (private publish) + test-publish-guard.sh
 ├── templates/
 │   ├── trip-context.template.md
 │   └── traveler-intake.template.md   ← per-traveler profile form (blank; copied per traveler into the git-ignored trips/.../travelers/)
-└── trips/
+└── trips/                    ← ships with README.md only; all trip content git-ignored
+    ├── README.md             ← tracked signpost (the one tracked file under trips/)
     └── <destination>-<year>/ ← one folder per trip
         ├── trip-context.md            ← source of truth for the trip
         ├── trip-log.md                ← decision history, session bridge
