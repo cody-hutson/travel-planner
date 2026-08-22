@@ -103,7 +103,7 @@ The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored
 
 **Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
 
-To publish fully public instead, pass `--plaintext` (with `ALLOW_PLAINTEXT=1` for non-interactive runs). Full flow in [`CLAUDE.md`](CLAUDE.md).
+To publish fully public instead, run `scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext` yourself in a terminal — it asks you to type `PUBLISH` to confirm, and that confirmation is the only guard on the unencrypted path. Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 

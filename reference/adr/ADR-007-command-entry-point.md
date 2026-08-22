@@ -1,6 +1,6 @@
 # ADR-007: Command entry point — surface shape, privilege boundary, and taxonomy ownership
 
-- **Status:** Proposed (2026-08-22)
+- **Status:** Accepted (2026-08-22)
 - **Deciders:** repo maintainer
 - **Driving work:** the Command entry point epic (#252); establishes the surface shape and privilege
   model its child slices build against, and fixes the sequencing constraint that binds the
