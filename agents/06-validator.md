@@ -212,14 +212,20 @@ a fixed type:
   need category),
   emit `pass` / `fail` for each day that need **applies** to. A need's
   applicable-day set is the **intersection** of the days its governing
-  constraint governs and that traveler's **present-day set** — see
+  constraint governs and that traveler's **at-destination day set** — the window
+  limb, never the full present-day set — see
   `reference/data-model.md` → "A need's applicable-day set" and "Presence — a
   traveler's present-day set"; do not redefine either here. Do not fail a conditional
   need on a day its constraint never governed, and do not grade **any** need on a day
-  its traveler was not at the destination. Reconcile against the `Absent today:` lines
-  in `outputs/scheduling-framework.md`: a traveler named absent on a day carries no
-  verdict for that day, and a verdict rendered for a day the framework names them
-  absent is a discrepancy you report. Where that traveler's window is marked
+  its traveler was not at the destination. **Do** grade a traveler who is at the
+  destination but **unavailable** that day: they are here on a parallel track, and
+  their needs bound that track exactly as they bound the main one. Only *absent*
+  removes a verdict; *unavailable* never does. Reconcile against the
+  `Absent today:` lines in `outputs/scheduling-framework.md` — the scheduler names
+  there exactly the travelers outside their own window, so that line and this
+  applicable-day set read the same limb: a traveler named absent on a day carries
+  no verdict for that day, and a verdict rendered for a day the framework names
+  them absent is a discrepancy you report. Where that traveler's window is marked
   *(assumed)*, grade the day and carry the *(assumed)* marking — an assumed window
   never trims a grade. Key each verdict to the governing `trip-context.md`
   constraint the need links to — except for a `[THIRD-PARTY]` need, which by
@@ -238,6 +244,13 @@ a fixed type:
   Such a need is **never silently dropped** (that would leave a captured
   constraint unenforced, the exact failure this capture path exists to prevent)
   and its unkeyable link is **never** itself a Critical (the data is correct).
+  It has **no presence data either** — no planning-days row, no availability
+  facets — so its at-destination day set is **every trip day** under the
+  no-presence-data rule of the presence section cited above, and it is graded on
+  every day the constraint factor admits. An empty applicable-day set for a
+  `[THIRD-PARTY]` need is a derivation error, not a clean pass: with no governing
+  constraint to raise a Critical either, it would leave the subject with no audit
+  surface at all.
   This record lands in `outputs/satisfaction-metrics.md`, which §9.3 names an
   intentional exclusion — so the row is not publish-bound, and writing the
   person's name into it here is not a non-publication finding. It must not be
@@ -255,7 +268,7 @@ a fixed type:
   that traveler's **present-day set** — see `reference/data-model.md` → "Presence — a
   traveler's present-day set"; do not re-derive it here and never check it against the
   full trip-day set. Emit the reading in the `Per-day coverage` cell, naming the
-  present-day set the way the needs audit does
+  present-day set and its reason
   (`D2 covered · D3 not covered · D4 covered (present D2–D4)`), and set `Covered?` to
   `covered` **only when every present day carries it** — a partial is `not covered` with
   the missed days named, never a third verdict value and never a percentage. The severity

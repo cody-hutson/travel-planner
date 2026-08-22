@@ -226,8 +226,10 @@ the reconciliation does not compute a second one. Read
   against every hard constraint — as a per-need-per-applicable-day `pass` /
   `fail` judgement keyed to each need's governing constraint. A need's
   **applicable-day set** is the intersection of the days its governing
-  constraint governs and that traveler's **present-day set** — a need is never graded
-  on a day its traveler is not at the destination. See `reference/data-model.md` →
+  constraint governs and that traveler's **at-destination day set** — the window
+  limb, so a need is never graded on a day its traveler is not at the destination,
+  and an *unavailable* traveler **is** graded: they are here on a parallel track
+  their needs bound too. See `reference/data-model.md` →
   "A need's applicable-day set" and "Presence — a traveler's present-day set"; do not
   redefine either here. This is the *recorded form* of the constraint audit you
   already perform — not a new check. The **validator owns the Needs-compliance

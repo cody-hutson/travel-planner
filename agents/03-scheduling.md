@@ -65,9 +65,11 @@ An unnamed absence is the failure this rule exists to prevent.
 
 Naming an absence is a scheduling statement, not a licence to stop auditing: the
 hard-constraint audit still runs for that traveler on every day it applies — and the
-days it applies are the days their constraint governs **and** they are present
-(`reference/data-model.md` → "A need's applicable-day set"). Absence narrows the
-applicable days; it never waives the audit on a day inside them.
+days it applies are the days their constraint governs **and** they are at the
+destination (`reference/data-model.md` → "A need's applicable-day set"). Absence
+narrows the applicable days; it never waives the audit on a day inside them. Being
+**unavailable** narrows nothing at all — an unavailable traveler is at the
+destination, on a parallel track, and every need of theirs is graded that day.
 
 On a single-origin trip where every traveler is on the group's window, every day
 reads "all travelers" and nothing below changes.
