@@ -3,6 +3,85 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.12.0] — 2026-08-22 — First-run experience
+
+Four fixes aimed at the first hour with this repository, and at the release
+process that publishes it. Someone who has just cloned the repo now finds the
+directory their trips belong in, is told why it is empty, and gets a straight
+answer from the one read-only command instead of being sent back to a directory
+they are already standing in. The two documents they are most likely to read
+back-to-back name that directory the same way. They can size roughly what running
+the engine costs before committing to setup. Nothing about how a trip is planned
+changes — this release is about arriving, not about planning.
+
+The fourth fix is about this file. A release changelog used to be written after
+the release had already merged and been tagged, as a separate commit straight to
+`main` — which meant the entry never travelled inside the release it described,
+and never passed the check that reads everything else. This entry is the first one
+written the other way.
+
+### Added
+- **`trips/` is present on a fresh clone, with a signpost that explains it
+  (`trips/README.md`, `.gitignore`).** The directory your trips live in used to
+  exist only after you created a trip, so a new clone simply did not have it and
+  nothing said where trips were meant to go. It now ships with a tracked README
+  explaining what belongs there and why the directory looks empty. Trip data
+  itself is still ignored and still never published — the signpost is the single
+  tracked exception, and a CI invariant now holds both halves of that: the
+  signpost stays tracked, and a trip file underneath it stays ignored.
+- **The README gives an order of magnitude for what running the engine costs
+  (`README.md`).** Planning a trip end to end drives a lot of model usage, and
+  until now nothing said how much. There is now a stated magnitude for a first
+  full plan and for the cheaper things you do repeatedly afterwards — enough to
+  decide whether to start, before investing in setup. It is a magnitude, not a
+  quote: actual cost moves with the model you point at it and with how large the
+  trip is.
+- **A written release procedure (`CONTRIBUTING.md`).** There was no document
+  anywhere in the repo describing how a release is cut. There is now, and the part
+  it exists to state is that the changelog entry belongs on the release branch,
+  landing through the release pull request with everything else — not as a commit
+  to `main` afterwards.
+- **The branch-protection posture is on the record (`SECURITY.md`).** `main`
+  allows its administrator to push directly, bypassing the pull-request
+  requirement and every required check in one step. That was true and undocumented;
+  it is now written down as a decision, with the argument on both sides, the one
+  time it has been used, and the condition that should cause it to be revisited.
+  The mitigation below is honest about its limit: the checks now run on a direct
+  push, but running is not blocking, so what this buys is detection after the
+  fact rather than prevention.
+
+### Changed
+- **One notation for the trip directory, everywhere (`CLAUDE.md`,
+  `templates/traveler-intake.template.md`, `templates/trip-context.template.md`,
+  `agents/00-enrichment.md`, `agents/destination-ideation.md`,
+  `reference/data-model.md`, `examples/two-origin-demo/trip-context.md`).** The
+  documents and the templates they point at had drifted into different ways of
+  writing the same placeholder path, so a reader moving between them had to work
+  out that two spellings meant one directory. Twenty-eight occurrences are now a
+  single convention, and the convention is stated once rather than left to be
+  inferred.
+
+### Fixed
+- **`list` works on a plain clone, and says what is actually wrong
+  (`scripts/publish-trip-site.sh`).** Listing your trips is a read-only scan of a
+  local directory, but it used to require GitHub authentication before it would
+  run — so a new user was stopped by a login prompt for a command that never
+  needed one. It also reported a missing `trips/` directory as though you were
+  running from the wrong place, which sent people to fix a working directory that
+  was already correct. Both are fixed: no authentication for the read-only path,
+  and a missing directory is now reported as a missing directory.
+- **The personal-data gate covers commits that reach `main` without a pull
+  request (`.github/workflows/depersonalization.yml`).** The gate that keeps
+  personal email addresses and OS home paths out of this public repository ran
+  only on pull requests, so anything pushed straight to `main` was never scanned —
+  which is exactly how release changelog entries used to arrive. It now runs on
+  pushes to `main` as well. Adding that trigger alone would have produced the
+  worse outcome of a check that runs, reports clean, and reads nothing, because a
+  push carries no pull-request context to derive a range from; the gate now works
+  out its range from whichever event started it, says in its own output which
+  commits and how many files it read, and fails rather than reporting clean if it
+  cannot work that range out at all.
+
 ## [0.11.0] — 2026-08-22 — Satisfaction metric refinements
 
 Three refinements to the satisfaction layer, each closing a place where the

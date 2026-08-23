@@ -1,12 +1,16 @@
 name: Depersonalization
 
 # Blocks personal data (personal-email addresses, OS user-home paths) from entering
-# the repo via a pull request — in added file content, in commit messages, and in
-# commit author/committer identity. Patterns are generic on purpose: this workflow
-# ships in a public repo, so it must not itself encode any specific person's tokens.
-# An operator-side local scan (kept outside the repo) covers project-specific tokens.
+# the repo — in added file content, in commit messages, and in commit
+# author/committer identity. It runs on every pull request into `main` and on every
+# push that lands on `main`, so a commit that reaches `main` without a pull request
+# is still scanned. Patterns are generic on purpose: this workflow ships in a public
+# repo, so it must not itself encode any specific person's tokens. An operator-side
+# local scan (kept outside the repo) covers project-specific tokens.
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -22,12 +26,57 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Scan PR diff + commit metadata for personal data
+      - name: Scan the pushed/PR range + commit metadata for personal data
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_AFTER_SHA: ${{ github.event.after }}
         run: |
           set -uo pipefail
+
+          # Resolve the diff range from the triggering event. `github.event.pull_request`
+          # is null on a push, so the PR fields cannot be read unconditionally: they would
+          # resolve to empty strings and the range would collapse to "..", which one of the
+          # three scans below accepts silently and the other two error into `|| true` —
+          # a gate that reports success having read nothing.
+          NULL_SHA='0000000000000000000000000000000000000000'
+          case "$EVENT_NAME" in
+            pull_request) BASE_SHA="$PR_BASE_SHA";     HEAD_SHA="$PR_HEAD_SHA" ;;
+            push)         BASE_SHA="$PUSH_BEFORE_SHA"; HEAD_SHA="$PUSH_AFTER_SHA" ;;
+            *)
+              echo "::error::unsupported trigger '$EVENT_NAME' — this job defines no diff range for it."
+              exit 1
+              ;;
+          esac
+
+          # Fail closed: a range this job cannot read is never reported as clean.
+          if [ -z "$BASE_SHA" ] || [ -z "$HEAD_SHA" ]; then
+            echo "::error::could not resolve a diff range for event '$EVENT_NAME' (base='$BASE_SHA' head='$HEAD_SHA'). Nothing was scanned."
+            exit 1
+          fi
+          if [ "$BASE_SHA" = "$NULL_SHA" ] || [ "$HEAD_SHA" = "$NULL_SHA" ]; then
+            echo "::error::range endpoint is the null SHA — this push created or deleted the branch, so there is no before-state to diff against. Nothing was scanned."
+            exit 1
+          fi
+          for sha in "$BASE_SHA" "$HEAD_SHA"; do
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              echo "::error::commit $sha is not present in this checkout — history was rewritten (force-push) or the fetch is too shallow. Nothing was scanned."
+              exit 1
+            fi
+          done
+          if [ "$EVENT_NAME" = "push" ] && ! git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"; then
+            echo "::warning::$BASE_SHA is not an ancestor of $HEAD_SHA — history was rewritten. The content scan still compares both trees in full; the commit-metadata scan covers only commits reachable from the new tip."
+          fi
+
+          # Say what is being scanned, so a green run is self-evidencing.
+          commits="$(git rev-list --count "$BASE_SHA".."$HEAD_SHA")"
+          files="$(git diff --name-only "$BASE_SHA".."$HEAD_SHA" | wc -l | tr -d ' ')"
+          echo "Depersonalization gate: event=$EVENT_NAME range=$BASE_SHA..$HEAD_SHA commits=$commits files_changed=$files"
+          if [ "$commits" -eq 0 ] && [ "$files" -eq 0 ]; then
+            echo "::notice::range is empty — this event introduced no new commits and no file changes."
+          fi
 
           # Generic personal-data patterns — NO project- or person-specific tokens.
           EMAIL='[A-Za-z0-9._%+-]+@(gmail|ymail|yahoo|hotmail|outlook|proton|icloud|live|aol|me)\.[A-Za-z]'
@@ -69,4 +118,4 @@ jobs:
             echo "Depersonalization gate FAILED."
             exit 1
           fi
-          echo "Depersonalization gate clean — no personal data in this PR."
+          echo "Depersonalization gate clean — no personal data in this range."
