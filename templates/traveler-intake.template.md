@@ -10,7 +10,7 @@
 > is right now and come back for the rest.
 >
 > **How to use it:**
-> - Copy this template to `trips/[destination-year]/travelers/<your-name>.md`, then
+> - Copy this template to `trips/<destination>-<year>/travelers/<your-name>.md`, then
 >   fill it in — or just ask, and an agent will walk you through it question by question.
 > - It lives in the git-ignored `trips/` working dir and is **private — never published**,
 >   so put your real details here.
@@ -95,7 +95,7 @@
 > dates — which is why it never needs a number, and why it covers exactly one
 > person: you. Anyone travelling with you whose entry requirements also need
 > checking fills in a profile of their own — another copy of this form, saved as
-> `trips/[destination-year]/travelers/<their-name>.md` — and their passport goes
+> `trips/<destination>-<year>/travelers/<their-name>.md` — and their passport goes
 > on their own line there. Never put a second person's passport on yours. If they
 > won't have a profile of their own, their passport isn't recorded anywhere.
 
@@ -338,7 +338,7 @@ only this traveler's own country and dates. This is the one field where you narr
 they said rather than **keeping their words** (rule 7): a second person's passport never
 goes on this line. Tell them anyone else whose entry requirements need checking fills in
 their own copy of this form, saved as
-`trips/[destination-year]/travelers/<their-name>.md`; if that person will not have one,
+`trips/<destination>-<year>/travelers/<their-name>.md`; if that person will not have one,
 their passport is simply not recorded.
 
 ### Step 5 — Where you stay
@@ -419,4 +419,4 @@ nothing else. No preamble, no commentary, no summary afterwards.
 - Leave the `>` guidance quotes as they are.
 - Put their name into the title line at the very top.
 
-Then tell them to save it as `trips/[destination-year]/travelers/<their-name>.md`.
+Then tell them to save it as `trips/<destination>-<year>/travelers/<their-name>.md`.

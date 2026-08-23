@@ -1,5 +1,9 @@
-# Personal trip data — never tracked
-trips/
+# Personal trip data — never tracked.
+# Contents, not the directory: `trips/` alone would also ignore trips/README.md,
+# and git cannot re-include a file whose parent dir is excluded. Guarded by
+# scripts/test-publish-guard.sh group K — do not "simplify" these two lines.
+trips/*
+!trips/README.md
 
 # macOS
 .DS_Store

@@ -12,7 +12,7 @@ A multi-agent trip planning system. Nine specialized agents research, plan, vali
 | `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
-| `trips/` | Per-trip working directories (git-ignored — never published) |
+| `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
 ## Install
 
@@ -29,6 +29,16 @@ This is a [Claude Code](https://claude.com/claude-code) project — there's noth
 
 - [Node.js](https://nodejs.org) — provides `npx`, which runs StatiCrypt (`staticrypt@3.5.4`) for encrypt-at-publish
 - [`gh`](https://cli.github.com) (GitHub CLI), authenticated — run `gh auth login` once
+
+### What running this costs
+
+Not what the trip costs — what the *engine* costs to run. Planning happens inside Claude Code, so what you spend is model usage on whatever Claude Code plan you already have. This repo can't see your billing and collects no usage data, so what follows is an order of magnitude, not a price; any figure printed here would be wrong the next time plans or model pricing moved.
+
+Nearly all of it is agent dispatches, and [`CLAUDE.md`](CLAUDE.md) already sorts every request by how many it needs. **Building the first full plan is the expensive operation** — the whole pipeline runs (enrichment, five research agents, the hub planner, the validator, plus a remediation pass if the validator finds something critical), several of those agents do live web research, and all of them run on the top model tier, which is a deliberate choice rather than a place the engine economizes. Treat it as one sitting, not a background job. The first site build is a second pass of the same kind — a bespoke design artifact, not a template fill.
+
+**Everything after that is one to two orders of magnitude cheaper**, and it is what an active trip actually consumes. A direct edit, a quick lookup or a site tweak dispatches no agents at all; Claude reads the one file and changes it. Targeted research ("more dinner options near the hotel") dispatches a single agent and appends to what is already there. A structural change, like swapping two days, re-runs only the affected agents plus a hub patch. Updating a published site patches the affected sections instead of regenerating them, and the publish step itself is shell plus `npx` — no model in the loop.
+
+The gap is deliberate: the operating instructions make the lightest action that matches the intent the default, so re-running the food agent to fix a typo is something the engine is explicitly told not to do. What genuinely varies is how much research a destination needs and how many rounds you iterate before a plan feels right — both scale that first pass; neither changes the ratio.
 
 ### Install steps
 
@@ -101,7 +111,7 @@ The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored
 
 **Metadata privacy.** By default the per-trip repo is named `<destination>-<year>-trip` and is public, so the destination and year are visible even though the itinerary is encrypted (commit timestamps also reveal when you publish). Pass `--opaque` to name the repo with a random token instead (e.g. `trip-a1b2c3d4e5`); it's saved to `.publish-slug`, so `update`/`rotate`/`unpublish` resolve the same repo. You can still set your own name in `trips/<destination>-<year>/.publish-slug` (a shared, shorter, or custom name).
 
-**Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
+**Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. It runs without `gh`; the publish-state columns stay blank until you `gh auth login`. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
 
 To publish fully public instead, run `scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext` yourself in a terminal — it asks you to type `PUBLISH` to confirm, and that confirmation is the only guard on the unencrypted path. Full flow in [`CLAUDE.md`](CLAUDE.md).
 

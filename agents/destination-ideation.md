@@ -62,7 +62,7 @@ Read each traveler's destination leanings — the stable field labels
 leanings there per-traveler; the engines and hub read the derived model, not
 raw profiles, and so do you). If the derived model has not been built yet, fall
 back to reading the leaning fields directly from each
-`trips/[destination-year]/travelers/<traveler>.md` — you need only those three
+`trips/<destination>-<year>/travelers/<traveler>.md` — you need only those three
 fields. A traveler who left all three blank simply contributes no leanings yet;
 that is a normal state, not an error (see *Missing leanings* below).
 

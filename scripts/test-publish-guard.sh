@@ -9,9 +9,10 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
-# H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7).
+# H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
+# K = trips/ ignore invariant (#254).
 #
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -184,6 +185,34 @@ if declare -f cmd_list | grep -qE 'git |commit_noreply|staticrypt|repo create|re
   FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
 else
   PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs)"
+fi
+
+echo "Trip-data ignore invariant (#254):"
+if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  # K1 (positive) — the signpost ships. Trackedness, not ignore-state: a tracked
+  # file bypasses .gitignore entirely, so ls-files is the unambiguous test.
+  if git -C "$HERE/.." ls-files --error-unmatch trips/README.md >/dev/null 2>&1; then
+    PASS "K1: trips/README.md is tracked (the signpost ships in a fresh clone)"
+  else
+    FAIL "K1: trips/README.md is NOT tracked — the signpost is absent from a fresh clone"
+  fi
+  # K2 (negative — R2, the limb that matters). check-ignore needs no file on disk,
+  # so nothing synthetic is written. -q, NOT -v: verbose exits 0 on a NEGATION match
+  # too, which would silently invert this verdict.
+  if git -C "$HERE/.." check-ignore -q "trips/zzz-probe-2026/travelers/probe.md"; then
+    PASS "K2: a synthetic trips/<trip>/travelers/<x>.md is still git-ignored"
+  else
+    FAIL "K2: TRIP DATA IS NO LONGER IGNORED — .gitignore stopped guarding trips/ contents"
+  fi
+  # K3 (control arm) — a zero whose control also returns zero is a broken probe.
+  # A tracked, never-ignored path must come back NOT ignored.
+  if git -C "$HERE/.." check-ignore -q "README.md"; then
+    FAIL "K3: control arm broken — check-ignore calls the tracked root README.md ignored; K2 is unusable"
+  else
+    PASS "K3: control arm fires (root README.md not ignored) — K2's verdict is trustworthy"
+  fi
+else
+  SKIP "K: not a git work tree"
 fi
 
 echo "Unpublish / takedown (#7):"

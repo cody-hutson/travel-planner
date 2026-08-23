@@ -80,6 +80,32 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      # Same subject matter as gitleaks — keeping sensitive data out of a public
+      # repo — so it rides this job rather than adding a new check name (which
+      # would need a branch-protection change). Runs BEFORE the gitleaks install
+      # so a transient network failure there cannot mask a real trip-data exposure.
+      # No ${{ }} interpolation: every input is a repo-static literal.
+      - name: Trip-data ignore invariant (#254)
+        run: |
+          set -uo pipefail
+          fail=0
+          # Positive limb: ls-files, NOT check-ignore -v. Verbose exits 0 when ANY
+          # pattern matches, including the !trips/README.md negation, which would
+          # report a correctly-tracked signpost as ignored and invert this check.
+          git ls-files --error-unmatch trips/README.md >/dev/null 2>&1 \
+            || { echo "::error::trips/README.md is not tracked — the signpost is absent from a clone"; fail=1; }
+          # Negative limb: check-ignore works on non-existent paths, so no synthetic
+          # trip file is ever written to disk.
+          git check-ignore -q "trips/zzz-probe-2026/travelers/probe.md" \
+            || { echo "::error::trips/<trip>/travelers/<x>.md is NOT git-ignored — .gitignore stopped guarding trip data"; fail=1; }
+          # Control arm: a zero whose control also returns zero is a broken probe.
+          if git check-ignore -q README.md; then
+            echo "::error::control arm broken — check-ignore reports the tracked root README.md as ignored; the check above is unusable"; fail=1
+          fi
+          [ "$fail" -eq 0 ] || exit 1
+          echo "Trip-data ignore invariant holds: signpost tracked, trip data ignored, control arm fires."
+
       - name: Install gitleaks
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
