@@ -186,6 +186,20 @@ ensure_opaque_slug "$OTD2" >/dev/null 2>&1
 echo "Inventory + date helpers (list, #25):"
 EF="$WORK/site.html"; : > "$EF"
 [ -n "$(_epoch_of_file "$EF")" ] && PASS "I1: _epoch_of_file returns an mtime epoch" || FAIL "I1: _epoch_of_file empty"
+# I1b — I1 asserts only NON-EMPTY, which is satisfied by the wrong answer. On GNU
+# coreutils `stat -f` is --file-system, so the BSD-first form emits filesystem noise on
+# Linux; that is non-empty, so I1 passed while every arithmetic comparison downstream
+# silently stopped working. The epoch must be a BARE INTEGER, and _is_stale must actually
+# order two real files — the control arm is the reversed comparison, which must be false.
+i1e="$(_epoch_of_file "$EF")"
+EF2="$WORK/epoch2"; : > "$EF2"; touch -t 202001010000 "$EF2"; touch -t 203001010000 "$EF"
+i1a="$(_epoch_of_file "$EF")"; i1b="$(_epoch_of_file "$EF2")"
+case "$i1e" in ''|*[!0-9]*) i1ok=0 ;; *) i1ok=1 ;; esac
+if [ "$i1ok" -eq 1 ] && _is_stale "$i1a" "$i1b" && ! _is_stale "$i1b" "$i1a"; then
+  PASS "I1b: _epoch_of_file yields a bare integer and _is_stale orders two real files (control arm: the reverse is false)"
+else
+  FAIL "I1b: epoch is not a comparable integer ('$i1e') or _is_stale cannot order two real files ($i1a vs $i1b) — every freshness check downstream is inert"
+fi
 IE="$(_epoch_of_iso '2026-06-28T14:36:00Z')"
 [ "$(_ymd_of_epoch "$IE")" = "2026-06-28" ] && PASS "I2: _epoch_of_iso + _ymd_of_epoch round-trip an ISO date" || FAIL "I2: ISO round-trip wrong ($IE -> $(_ymd_of_epoch "$IE"))"
 [ "$(_ymd_of_epoch '')" = "-" ] && PASS "I3: _ymd_of_epoch renders empty as '-'" || FAIL "I3: empty epoch not '-'"

@@ -956,7 +956,24 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
 # ─────────────────────────────────────────────────────────────────────────────
 # Portable date helpers (BSD/macOS first, then GNU/Linux). Echo empty on failure.
 # ─────────────────────────────────────────────────────────────────────────────
-_epoch_of_file() { stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true; }
+# mtime epoch, or empty. The two stat dialects do not merely differ, they COLLIDE: BSD
+# stat spells mtime `-f %m`, while on GNU coreutils `-f` is --file-system, so
+# `stat -f %m FILE` there reports the FILESYSTEM for FILE, fails only on the bogus `%m`
+# operand, and still writes to stdout — a bare `||` chain then concatenates that output
+# with the fallback and returns something no arithmetic test can compare. Both forms are
+# tried, and a result is accepted only when it is a bare integer.
+#
+# This surfaced through the freshness gate (#123): the gate read a non-comparable epoch,
+# `_is_stale` errored rather than fired, and a stale model published on Linux while
+# passing on macOS. The pre-existing I1 case asserted only that the output was NON-EMPTY,
+# which filesystem noise satisfies, so it never caught it — see I1b.
+_epoch_of_file() { # <file> -> mtime epoch on stdout, or nothing
+  local e
+  e="$(stat -f %m "$1" 2>/dev/null | head -1)"
+  case "$e" in ''|*[!0-9]*) e="$(stat -c %Y "$1" 2>/dev/null | head -1)" ;; esac
+  case "$e" in ''|*[!0-9]*) return 0 ;; esac
+  printf '%s' "$e"
+}
 _epoch_of_iso()  { date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$1" +%s 2>/dev/null || date -u -d "$1" +%s 2>/dev/null || true; }
 _ymd_of_epoch()  { # <epoch> -> YYYY-MM-DD, or '-' when empty
   [ -n "${1:-}" ] || { printf '%s' '-'; return; }
