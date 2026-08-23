@@ -1,0 +1,78 @@
+name: Publish guard
+
+# Runs scripts/test-publish-guard.sh on every push and every pull request, so the
+# publish-path guards are machine-graded rather than trusted. Added by #123, whose
+# AC 8 requires three things of this file: the environment the suite needs, a skip
+# treated as a failure, and the coverage boundary stated here rather than elsewhere.
+#
+# No ${{ }} interpolation appears in any run: step — every value below is a
+# repo-static literal, so there is no path for event data to reach a shell.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# What a green check here does and does not prove.
+#
+# IN SCOPE — these groups run on every invocation and their verdicts are real:
+#   A-C2  verify_ciphertext fail-closed behaviour, including the all-lowercase
+#         plaintext attack that once passed a token-only scan
+#   F     slug resolution        H  --opaque repo naming     I  list / date helpers
+#   J2/J3 unpublish decision branches, driven by a mock GitHub CLI (no network)
+#   K     trips/ ignore invariant
+#   L     plaintext content guard (#123) — the new predicate and its class source
+#   E, G  real StatiCrypt encryption and boilerplate subtraction, which run because
+#         the Node setup step below provisions them
+#
+# OUT OF SCOPE — deliberately, by name, and declared to the suite below:
+#   D, J1 The two groups that need an AUTHENTICATED GitHub CLI. The CLI is not
+#         authenticated here. The workflow token is an installation token with no
+#         user context, so `gh api user` — which both groups reach — returns 403
+#         rather than a login; wiring it in would turn those groups red for a reason
+#         that has nothing to do with the behaviour they test. They stay operator-run.
+#         Naming them in GUARD_EXPECTED_SKIPS is what keeps their absence STATED
+#         rather than silent: any other skip fails this job.
+#
+# So a green check means: every in-scope group above ran and passed, and no group
+# outside {D, J1} vanished from the run. It does NOT mean the no-reply commit
+# identity (D) or live unpublish idempotency (J1) were exercised on this commit.
+#
+# ── WHY THE STRICT MODE (AC 8 part ii) ───────────────────────────────────────────
+# The suite's skip helper used to increment nothing, and the aggregate verdict tested
+# only the failure counter — so a skipped group contributed to a green exactly as a
+# passing one did. A naive wiring of this workflow would therefore have exited 0 with
+# E and G never run: a green that proves less than it appears to, which is worse than
+# no CI, because it reads as proof. GUARD_STRICT_SKIPS=1 closes that.
+#
+# Accepted trade, stated rather than discovered later: a transient npm-registry
+# outage makes E and G skip, and this check then goes red. That is the intended
+# direction — the same bias-to-abort the guard itself is built on.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  publish-guard:
+    name: Publish guard suite (test-publish-guard.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Provisions node so the real-StatiCrypt groups (E, G) actually run instead of
+      # skipping. Under the strict mode below, a skip of E or G fails this job — so
+      # this step is load-bearing, not a convenience.
+      - name: Set up Node.js (real-StatiCrypt groups E, G)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run the publish-guard suite
+        env:
+          # A SKIP is a FAILURE unless its group is declared below.
+          GUARD_STRICT_SKIPS: '1'
+          # The two declared exclusions — see the coverage boundary at the top.
+          GUARD_EXPECTED_SKIPS: 'D J1'
+        run: ./scripts/test-publish-guard.sh
