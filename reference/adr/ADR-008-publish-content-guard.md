@@ -435,10 +435,11 @@ stated rather than claimed solved, and one that is a scope decision taken at the
 2. **The exit-4 declared non-key — a stopword-only third-party name, OR a stopword-only short
    third-party value.** `is_stop` applies to the name arm as it always did to the other two, so a
    member named **Will** is a *declared non-key* and their name reaching the render is not caught
-   here. **The fail-open reaches both arms of this member, not the name arm alone.** Exit 4 is
-   emitted from the `token` rule and from nowhere else, and the rule table above assigns `token` to
-   two kinds of record: every third-party **name**, and every third-party **field value under five
-   words**. So a short need value with no distinctive token in it — `Timing: not on the day`,
+   here. **The fail-open reaches both arms of this member, not the name arm alone.** Within the
+   matcher, exit 4 is emitted from the `token` rule and from nowhere else (the `exit 4` in the model
+   parse is the unrelated orphaned-mark backstop and means UNDETERMINED — same digit, opposite
+   polarity), and the rule table above assigns `token` to two kinds of record: every third-party
+   **name**, and every third-party **field value under five words**. So a short need value with no distinctive token in it — `Timing: not on the day`,
    `Specific: no more than most` — is a declared non-key too, and the need text reaching the render
    is not caught either (3 of 3 measured, against a control carrying one distinctive token that is
    caught). An earlier revision of this residual said the value arm was *untouched*. That was true
