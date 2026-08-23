@@ -3,6 +3,67 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.13.0] — 2026-08-23 — Publish-path content guard
+
+Publishing a trip site has always had two paths: the default one encrypts the site
+and checks the result before anything is pushed, and the opt-out one publishes it
+in the clear. Only the first was checked. The path whose output is immediately
+world-readable — no passphrase, anyone with the link — copied the rendered page
+straight out with nothing looking at what was in it. That is the wrong way round,
+and this release turns it round: the plaintext path now reads the page it is about
+to publish and refuses if a traveller's passport details, or a need recorded for
+someone who never filled in a profile of their own, have found their way into it.
+It refuses equally when it cannot tell — an unanswerable question is treated as a
+failure, not waved through. Nothing changes for the encrypted path, which is still
+the default and is still checked exactly as before.
+
+### Added
+- **The regression suite now runs on every push and pull request, and a green
+  result means it actually ran (`.github/workflows/publish-guard.yml`,
+  `scripts/test-publish-guard.sh`).** The suite that proves the publish guards
+  work has existed for some time, but nothing ran it except a person remembering
+  to. It now runs in CI. The part worth writing down is the second half of that
+  sentence. The suite skips groups whose prerequisites are missing — real
+  encryption needs Node, two groups need an authenticated GitHub CLI — and a
+  skipped group used to count toward a pass exactly as a passing one did. Wiring
+  the suite up naively would therefore have produced a green tick on a run where
+  whole groups never executed, which is worse than no check at all, because it
+  reads as proof. The CI run now provisions Node so the real-encryption groups
+  genuinely run, treats any skip as a failure, and names the two GitHub-CLI groups
+  it deliberately does not cover — so what the tick does and does not prove is
+  written in the workflow file rather than assumed. Run by hand, the suite behaves
+  exactly as it did before.
+- **The decision, and its limits, are on the record
+  (`reference/adr/ADR-008-publish-content-guard.md`).** A new architecture
+  decision record covers why the existing pre-push check could not simply be
+  called from one more place, which two alternatives were rejected and what killed
+  each of them, and — the part most likely to be forgotten and then over-claimed —
+  exactly what this guard catches and what it does not. It catches a value that
+  reaches the page with the person's name stripped off, which is the case that
+  matters most and the one a name-based check would miss entirely. It does not
+  catch a value that was reworded on the way in. That limit is stated plainly
+  rather than left to be discovered, because the guard is one layer of three and
+  the other two are still doing work.
+
+### Fixed
+- **The plaintext publish path now checks what it is about to publish
+  (`scripts/publish-trip-site.sh`, `scripts/test-publish-guard.sh`).** The check
+  reads the page as a reader would see it and compares it against the two kinds of
+  detail that must never be published: a traveller's passport country and
+  validity, and any need recorded on behalf of a party member who has no profile
+  of their own and so was never able to agree to it being written down. It keys on
+  the traveller's own recorded values, never on words like "passport" — so a
+  packing-list line telling everyone to bring theirs, and the visa and entry notes
+  that belong on a published plan, are not flagged, and were never candidates to
+  be. Stripping a person's name off a detail does not get it past the check, which
+  is the case that motivated keying it this way. When something is found, the
+  refusal names where it came from and never prints the value itself, so the check
+  cannot leak what it exists to protect. If the record of who is travelling is
+  missing, unreadable, or no longer in a shape the check recognises, the publish
+  stops rather than proceeding on a guess; the remedy in every case is to publish
+  encrypted, which is what the default already does. Nothing is pushed when the
+  check refuses, and the refusal happens before the page is copied anywhere.
+
 ## [0.12.0] — 2026-08-22 — First-run experience
 
 Four fixes aimed at the first hour with this repository, and at the release

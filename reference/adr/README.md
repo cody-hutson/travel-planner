@@ -27,3 +27,4 @@ options weighed, the decision, and the consequences.
 | [ADR-005](ADR-005-location-invariant.md) | Location invariant — every itinerary event carries a standard, validator-gated map link | Accepted |
 | [ADR-006](ADR-006-third-party-data-capture.md) | Third-party data capture — consent and attribution for party members without a profile | Accepted |
 | [ADR-007](ADR-007-command-entry-point.md) | Command entry point — surface shape, privilege boundary, and taxonomy ownership | Accepted |
+| [ADR-008](ADR-008-publish-content-guard.md) | Publish-path content guard — a value-keyed predicate on the plaintext limb | Accepted |
