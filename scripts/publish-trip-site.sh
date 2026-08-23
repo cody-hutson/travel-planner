@@ -349,17 +349,39 @@ _norm_words() {
 #   a broken matcher must not be reported to the operator as "your value is too short".
 #
 # RESIDUAL, stated next to the paraphrase residual above and repeated in ADR-008.
-# Exit 4 is a fail-open, and it is scoped to the NAME arm alone. A third-party member
-# whose name is made only of stoplisted words is not keyed, so their name reaching the
-# render is not caught by this guard — layers 1 and 3 still cover it. This is narrower
-# than it looks and wider than is comfortable, both worth saying:
-#   • The VALUE arm — the need text itself, which is what the validator's
-#     anonymized-form clause is actually about — is untouched. The need is still matched
-#     whether attributed, de-attributed, or carrying a name that was never keyed.
-#   • _GUARD_STOP is NORMALIZATION vocabulary, not a list of names, and it is not
-#     extended here. So May, Art, Grace and Rosa still key and can still over-block; only
-#     names inside the existing stoplist (Will) become non-keys. The general problem —
-#     an ordinary-word name — is narrowed, not solved.
+# Exit 4 is a fail-open, and it reaches BOTH ARMS of the [THIRD-PARTY] member — the
+# name and the need text alike. Within THIS matcher it is emitted from the `token` rule
+# and from nowhere else, so its real scope is exactly the set of records
+# nonpublishable_values assigns that rule to, and that set is two things:
+#   • The NAME arm, ALWAYS. An entry name is emitted as `token` unconditionally, so a
+#     member whose name is made only of stoplisted words is a declared non-key and
+#     their name reaching the render is not caught by this guard.
+#   • The VALUE arm, whenever the stated value is SHORTER THAN GUARD_NGRAM (5) tokens.
+#     The rule assignment below picks `token` under that floor, so a short need value
+#     with no distinctive token in it — `Timing: not on the day`, `Specific: no more
+#     than most` — is a declared non-key too, and the need text reaching the render is
+#     not caught either. An earlier revision of this note claimed the value arm was
+#     untouched. That was true only while the third-party value rule was a hard-coded
+#     `phrase`, which has no exit-4 path; the entry-denylist change replaced it with
+#     the word-count choice, and that is what extended exit 4 to the value arm. State
+#     it as the cost it is: `phrase` on a four-word value exits 3, and a sub-floor
+#     UNDETERMINED aborts every publish of that trip forever, with no remedy — the same
+#     unusable fail-closed control the token-branch note argues against. This buys that
+#     back at the price of a wider fail-open, deliberately.
+# What exit 4 does NOT reach, equally worth knowing:
+#   • The PASSPORT member. It is always matched under `conjunctive`, which has no
+#     exit-4 path — under two distinctive tokens is exit 3, UNDETERMINED, and aborts.
+#     Exit 4 is a [THIRD-PARTY]-only fail-open.
+#   • A third-party value of 5 tokens or more. That takes `phrase`, which has no exit-4
+#     path either; its all-stopword windows are skipped and it ends at 1, not 4.
+# Do not confuse any of this with the unrelated `exit 4` in the model-parse awk inside
+# nonpublishable_values: that one is the orphaned-mark backstop and means UNDETERMINED,
+# the opposite polarity. Same digit, different program, different contract.
+# Layers 1 and 3 still cover everything exit 4 lets through. And _GUARD_STOP is
+# NORMALIZATION vocabulary, not a list of names: it is not extended here, so May, Art,
+# Grace and Rosa still key and can still over-block; only words already inside the
+# stoplist (Will) become non-keys. The general problem — an ordinary-word name, or a
+# short value written entirely in ordinary words — is narrowed, not solved.
 #
 # Per-member-class matching is deliberate, and a uniform word-count floor is the
 # design error it exists to avoid: reference/data-model.md defines a passport value as
@@ -447,7 +469,7 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
         if (vn < 1) exit 3
         distinctive = 0
         for (j = 1; j <= vn; j++) if (!is_stop(v[j])) { distinctive = 1; break }
-        if (!distinctive) exit 4        # DECLARED NON-KEY — see the residual note below
+        if (!distinctive) exit 4        # DECLARED NON-KEY — see the residual note above
         for (p = 1; p + vn - 1 <= rn; p++) {
           ok = 1
           for (j = 0; j < vn; j++) if (r[p + j] != v[j + 1]) { ok = 0; break }
@@ -523,7 +545,10 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 #   • a value made ENTIRELY of the closed need-category enum (_GUARD_NEED_ENUM) — schema
 #     vocabulary, not a captured value. Same structural exclusion as the `Passport:`
 #     label. Without it a `Category:` line keys on `rest` or `other` and aborts every
-#     publish whose itinerary uses an ordinary English word.
+#     publish whose itinerary uses an ordinary English word. `Category:` is the EXAMPLE,
+#     not the scope: enum_only() takes the value text and no field, so the exclusion is
+#     FIELD-BLIND and applies under any label. Scoping it to `Category:` looks like the
+#     obvious fix and is the wrong one — ADR-008 § Coverage boundary records why.
 #   • every field of a non-third-party entry other than `Passport:` — so the designed
 #     escalation path for a first-party operator-relayed need stays open. The key is
 #     the third-party mark (the subject could not consent), not who supplied the value.
@@ -596,6 +621,9 @@ _GUARD_AWK_HELPERS='
     #     the SCHEMA vocabulary, not a traveler captured value — the same structural
     #     exclusion as the "Passport:" LABEL, and it is what stops a Category line
     #     aborting every publish whose itinerary says rest, timing, or other.
+    #     The test is FIELD-BLIND: enum_only takes only the value text and is passed no
+    #     field, so it applies under ANY label, not only Category. That is deliberate,
+    #     and narrowing it to Category is the wrong fix — see ADR-008 coverage boundary.
     # Everything else under the entry is IN. reference/data-model.md:170 — "The bound is
     # the entry class, not a list of fields ... there is no default-allow outside it."
     function tp_value(s,   t, c, nxt) {
