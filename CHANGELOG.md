@@ -14,7 +14,9 @@ and this release turns it round: the plaintext path now reads the page it is abo
 to publish and refuses if a traveller's passport details, or a need recorded for
 someone who never filled in a profile of their own, have found their way into it.
 It refuses equally when it cannot tell — an unanswerable question is treated as a
-failure, not waved through. Nothing changes for the encrypted path, which is still
+failure, not waved through. How far each of those two reaches is not the same, and
+where the second one stops is written down below rather than left to be assumed.
+Nothing changes for the encrypted path, which is still
 the default and is still checked exactly as before.
 
 ### Added
@@ -101,7 +103,8 @@ the default and is still checked exactly as before.
   still does not catch is written down in the decision record rather than left to be
   discovered.
 
-  **The half of the check covering party members now covers all of it.** Of the two
+  **The half of the check covering party members is far wider than it was — and it
+  is deliberately not complete.** Of the two
   kinds of detail this check protects, the second is a need recorded on behalf of
   someone who has no profile of their own. A first cut of it looked at two things
   and two things only: that person's name, and one particular line of their record.
@@ -123,6 +126,33 @@ the default and is still checked exactly as before.
   balance is kept the other way too — a need that a traveller stated about
   themselves and asked to have planned around is still allowed onto the page, as it
   always should have been.
+
+  **Where that half stops, stated rather than left to be found.** It is wider, and
+  it is not complete, and that was decided before this release shipped rather than
+  discovered afterwards. Needs recorded for someone else are often very short and
+  written in everyday words — "no stairs", "not in the afternoon", or simply the
+  name of a category on the form. A check that works by looking for the recorded
+  wording on the published page cannot use words like those as what it searches
+  for, because it would then refuse every plan that happens to mention stairs or
+  afternoons, on every attempt, with no way round it short of deleting the record
+  being protected. A refusal like that does not make the check stricter; it makes
+  it something people turn off. So a value made up entirely of everyday or
+  form-vocabulary words is deliberately not used as a search term, and if such a
+  value reaches the page it goes out unnoticed. A longer or more distinctive need
+  is caught, and so is the person's name unless that too is an everyday word.
+
+  There is a second reason, and it is about the records rather than the check:
+  nothing in this repository shows what an entry for such a person actually looks
+  like. Of forty-four worked examples across all the documentation, twelve show a
+  person's entry and none of them shows one recorded this way. The check therefore
+  reads whatever a line states instead of looking for an agreed layout — the right
+  response to there being no agreed layout, and not the same thing as covering
+  everything written about that person. Agreeing that layout, and marking on each
+  detail directly whether it may be published, is a separate piece of work already
+  planned; it is not something this check can settle on its own. None of this
+  affects the rest: passport details are covered as described above, an
+  undeterminable answer still stops the publish, and the encrypted path — the
+  default — is untouched.
 
 ## [0.12.0] — 2026-08-22 — First-run experience
 
