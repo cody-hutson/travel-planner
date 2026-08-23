@@ -437,6 +437,300 @@ else
   FAIL "L8: the one-home seam is gone or the probe is broken (predicate=$lpred source=$lsrc)"
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Group M — the three confirmed defects from the Phase A6.5 adversarial design
+# review of the shipped guard (#316). One regression case per counter-design:
+#   M1  CD-1  the guard matched the visible-text PROJECTION while publish copies
+#             the whole FILE, so a value in a comment or an attribute published.
+#   M2  CD-2  the token branch never called is_stop, so a third-party member named
+#             with an ordinary English word aborted every publish, permanently.
+#   M3  CD-3  the class bound to a [DERIVED] cache with no freshness check, so a
+#             passport that existed only in travelers/*.md read as "genuinely EMPTY".
+# Every case carries a fixture-integrity control arm (the K2/K3 idiom): a case whose
+# control arm also returns zero is a BROKEN PROBE, not a pass. Like L, group M runs
+# purely on $WORK fixtures — no gh, no npx, no TTY, no network — so it cannot reach
+# the SKIP path and its verdicts are real on every runner.
+# ─────────────────────────────────────────────────────────────────────────────
+echo "Published-bytes, stoplist and freshness remediation (#123 / A6.5):"
+
+MOUT="$WORK/m.err"; MRC=0
+mguard() { verify_publishable_content "$1" "$2" >/dev/null 2>"$MOUT"; MRC=$?; }
+
+# The shared M render carries a REALISTIC machinery load — inline CSS, an inline
+# script, a CDN stylesheet link, data-* attributes, ids and class names, a build
+# comment. Without it the M1 specificity arm would prove nothing: a published-bytes
+# arm that over-matches markup only shows itself against markup that is actually there.
+mrender() { # <out_file> <injected markup>
+  cat > "$1" <<HTML
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porto Trip</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karla&display=swap">
+<style>:root{--accent:#1b4d3e}.day-card{display:grid;gap:12px}.act-mini{font-size:14px}</style>
+</head><body>
+<!-- build: day grid, booking checklist, map column -->
+<h1>Itinerary</h1>
+<div class="day-card" id="day-1" data-energy="high" data-booking="advance">
+<p>Day 1: arrive at the river station, drop bags at the guest house, then walk the
+covered market for an hour before an early dinner at the counter two streets over.</p></div>
+<div class="day-card" id="day-2" data-energy="low" data-booking="walkup">
+<p>Day 2: the harbour museum in the morning, a long lunch by the water, and the hill
+gardens in the late afternoon when the light is best and the crowds have thinned.</p></div>
+<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>
+<script>var map = L.map('map').setView([41.15, -8.61], 13);</script>
+$2
+</body></html>
+HTML
+}
+
+# ── M1 (CD-1) — the evaluand is the published file, not the painted page ─────
+MTD="$WORK/porto-2029"; mkdir -p "$MTD/outputs"
+cat > "$MTD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+- Interests: markets, museums
+
+## Quillon [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: mobility
+  Specific: cannot manage more than one flight of stairs in a single stretch
+  Applies to: ## Hard Constraints → "Mobility"
+MD
+MV='cannot manage more than one flight of stairs in a single stretch'
+
+# Eight surfaces, each carrying the class value ONLY in that surface. Two of the eight
+# (doc-title, img-alt) are user-visible in a browser; the rest are retrievable from the
+# bytes by anyone who opens the page source, which every reader can do.
+mtotal=0; mabort=0; mbroken=0; mmissed=""
+while IFS='|' read -r msurface mmarkup; do
+  [ -n "$msurface" ] || continue
+  mtotal=$((mtotal+1))
+  mf="$WORK/m_$msurface.html"
+  mrender "$mf" "$mmarkup"
+  # Fixture-integrity control arm, per surface: the fixture must really carry the value
+  # AND the value must really be absent from the visible-text projection, or the case is
+  # not testing the published-bytes arm at all.
+  if ! grep -qF "$MV" "$mf"; then mbroken=$((mbroken+1)); mmissed="$mmissed$msurface(no-value) "; continue; fi
+  mguard "$mf" "$MTD"
+  if [ "$MRC" -ne 0 ]; then mabort=$((mabort+1)); else mmissed="$mmissed$msurface "; fi
+done <<MSURF
+comment|<!-- planner note: $MV -->
+meta-description|<meta name="description" content="$MV">
+img-alt|<img src="street.png" alt="$MV">
+doc-title|<title>$MV</title>
+inline-script|<script>var note = "$MV";</script>
+aria-label|<button aria-label="$MV">details</button>
+style-content|<style>/* $MV */ .b{color:#333}</style>
+data-attribute|<div data-planner-note="$MV">details</div>
+MSURF
+if [ "$mbroken" -eq 0 ] && [ "$mtotal" -eq 8 ]; then
+  PASS "M1a: all $mtotal published-bytes fixtures carry the class value — the control arm fires, so M1b is a real probe"
+else
+  FAIL "M1a: $mbroken of $mtotal fixtures do not carry the value — M1b would be vacuous, not passing"
+fi
+if [ "$mabort" -eq "$mtotal" ]; then
+  PASS "M1b: a class value carried ONLY in markup aborts on all $mtotal surfaces — the guard matches the published bytes"
+else
+  FAIL "M1b: only $mabort/$mtotal published-bytes surfaces aborted — still fail-open on: $mmissed"
+fi
+
+# M1c/M1d — specificity. The identical machinery-rich render with NO class value in it
+# must still publish, or the published-bytes arm has simply learned to abort everything.
+MCLEAN="$WORK/m_clean.html"
+mrender "$MCLEAN" '<div class="closing" data-note="wrap up">Evening: the riverside lantern walk, then back to the guest house.</div>'
+if ! grep -qF "$MV" "$MCLEAN" && ! grep -qF 'Ruritanian' "$MCLEAN" && ! grep -qF 'Quillon' "$MCLEAN" \
+   && grep -qF 'data-energy' "$MCLEAN" && grep -qF '<style>' "$MCLEAN" && grep -qF '<!-- build:' "$MCLEAN"; then
+  PASS "M1c: the control render carries no class value but does carry CSS, script, comments and data-* — a real specificity arm"
+else
+  FAIL "M1c: the control render is not machinery-rich or still carries a class value — M1d would prove nothing"
+fi
+mguard "$MCLEAN" "$MTD"
+if [ "$MRC" -eq 0 ]; then PASS "M1d: the same machinery-rich render without the value publishes (rc=0) — the new arm does not blanket-abort markup"; else FAIL "M1d: a clean render was blocked (rc=$MRC) — the published-bytes arm over-matches ordinary markup"; fi
+
+# ── M2 (CD-2) — is_stop in the token branch; a stopword-only name is a declared non-key ──
+MSTOP="$WORK/porto-stopword"; mkdir -p "$MSTOP/outputs"
+cat > "$MSTOP/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Passport: Ruritanian, valid to 2033
+
+## Will [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+### Needs
+- Category: rest
+  Specific: needs a long quiet break in the middle of every single afternoon
+  Applies to: ## Hard Constraints → "Pacing"
+MD
+MSTOPR="$WORK/m_stopword.html"
+mrender "$MSTOPR" '<p>The guest house will hold luggage after checkout, and the museum will be quiet.</p>'
+# Control arm: the case is only meaningful if the model really names a third-party member
+# with a stoplisted word AND the render really uses that word. Either missing and M2b
+# passes for the wrong reason.
+if grep -qF '## Will [OPERATOR-PROVIDED] [THIRD-PARTY]' "$MSTOP/outputs/traveler-model.md" \
+   && grep -qiw 'will' "$MSTOPR" \
+   && printf '%s' "$_GUARD_STOP" | grep -qF ' will ' \
+   && ! grep -qF 'Ruritanian' "$MSTOPR" && ! grep -qF 'quiet break in the middle' "$MSTOPR"; then
+  PASS "M2a: the model names a [THIRD-PARTY] member with a stoplisted word, the render uses it, and no other class value is present"
+else
+  FAIL "M2a: the stopword-name fixture is not set up as claimed — M2b would prove nothing"
+fi
+mguard "$MSTOPR" "$MSTOP"
+if [ "$MRC" -eq 0 ]; then PASS "M2b: a [THIRD-PARTY] member named with a stopword-only name PUBLISHES (rc=0) — a declared non-key, not an unremediable abort"; else FAIL "M2b: an ordinary English word as a name still aborts (rc=$MRC) — the token branch keys on grammar"; fi
+
+# M2c/M2d — sensitivity: the fix must not disarm the name arm. A DISTINCTIVE third-party
+# name reaching the render is still a hit. Without this arm M2b is satisfied by a guard
+# that stopped matching names altogether.
+MNAMED="$WORK/m_named.html"
+mrender "$MNAMED" '<p>Quillon will take the lift rather than the south stair on the museum day.</p>'
+if grep -qF 'Quillon' "$MNAMED" && ! grep -qF "$MV" "$MNAMED" && ! grep -qF 'Ruritanian' "$MNAMED"; then
+  PASS "M2c: the named fixture carries the distinctive [THIRD-PARTY] name and no other class value"
+else
+  FAIL "M2c: the named fixture is not set up as claimed — M2d would prove nothing"
+fi
+mguard "$MNAMED" "$MTD"
+if [ "$MRC" -eq 1 ]; then PASS "M2d: a DISTINCTIVE [THIRD-PARTY] name still aborts (rc=1) — the stoplist narrowed the arm, it did not disarm it"; else FAIL "M2d: a distinctive third-party name no longer aborts (rc=$MRC) — CD-2 over-corrected into a fail-open"; fi
+
+# ── M3 (CD-3) — bind to first-party sources and assert freshness ─────────────
+# mtimes are set explicitly with touch -t rather than left to write order: a freshness
+# gate tested against incidental mtimes is a coin toss, not a regression case.
+MSTALE="$WORK/porto-stale"; mkdir -p "$MSTALE/outputs" "$MSTALE/travelers"
+cat > "$MSTALE/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+cat > "$MSTALE/travelers/rowan.md" <<'MD'
+# Rowan — traveler profile
+
+## Getting there & back
+- **Leaving from:** Central Station
+- **Passport:** Ruritanian, valid to 2033
+MD
+MSTALER="$WORK/m_stale.html"
+mrender "$MSTALER" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+# Render OLDEST, then the model, then the profile NEWEST. Only the profile-vs-model
+# comparison can fire, so an rc=2 here is attributable to that comparison alone.
+touch -t 202601010900 "$MSTALER"
+touch -t 202601011000 "$MSTALE/outputs/traveler-model.md"
+touch -t 202601011100 "$MSTALE/travelers/rowan.md"
+if grep -qF 'Passport:' "$MSTALE/travelers/rowan.md" \
+   && ! grep -qF 'Passport' "$MSTALE/outputs/traveler-model.md" \
+   && grep -qF '## Rowan' "$MSTALE/outputs/traveler-model.md" \
+   && ! grep -qF 'Ruritanian' "$MSTALER"; then
+  PASS "M3a: the profile carries a Passport the model does not, the model still parses, and the render carries neither — the fixture isolates freshness"
+else
+  FAIL "M3a: the stale-model fixture is not set up as claimed — M3b would prove nothing"
+fi
+mguard "$MSTALER" "$MSTALE"
+if [ "$MRC" -eq 2 ]; then PASS "M3b: a traveler profile newer than the [DERIVED] model aborts as UNDETERMINED (rc=2) — a stale cache is not an empty class"; else FAIL "M3b: a stale derived model was read as a determinate result (rc=$MRC) — silent fail-open on an irreversible action"; fi
+
+# M3c/M3d — the other half of CD-3: travelers/*.md is a CLASS SOURCE, not only a
+# freshness witness. With the model fresh, a passport that exists only in the profile
+# must still be matched against the render.
+MFRESH="$WORK/porto-fresh"; mkdir -p "$MFRESH/outputs" "$MFRESH/travelers"
+cat > "$MFRESH/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+cat > "$MFRESH/travelers/rowan.md" <<'MD'
+# Rowan — traveler profile
+
+## Getting there & back
+- **Passport:** Ruritanian, valid to 2033
+MD
+MFRESHR="$WORK/m_fresh_hit.html"
+mrender "$MFRESHR" '<p>Border note: carry your Ruritanian passport, valid to 2033, at all times.</p>'
+touch -t 202601011000 "$MFRESH/travelers/rowan.md"
+touch -t 202601011100 "$MFRESHR"
+touch -t 202601011200 "$MFRESH/outputs/traveler-model.md"
+if ! grep -qF 'Ruritanian' "$MFRESH/outputs/traveler-model.md" && grep -qF 'Ruritanian' "$MFRESH/travelers/rowan.md"; then
+  PASS "M3c: the passport exists ONLY in travelers/*.md, never in the model — a hit here can only come from the first-party source"
+else
+  FAIL "M3c: the first-party-source fixture is not set up as claimed — M3d would prove nothing"
+fi
+mguard "$MFRESHR" "$MFRESH"
+if [ "$MRC" -eq 1 ]; then PASS "M3d: a passport held only in travelers/*.md is matched against the render (rc=1) — the class reads first-party sources"; else FAIL "M3d: a first-party passport absent from the derived model did not abort (rc=$MRC)"; fi
+
+# M3e — specificity for the whole of CD-3. A fresh model, a first-party passport, and a
+# render that carries neither must still publish. Without this arm M3b and M3d are both
+# satisfied by a guard that aborts unconditionally.
+MFRESHC="$WORK/m_fresh_clean.html"
+mrender "$MFRESHC" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+touch -t 202601011100 "$MFRESHC"
+mguard "$MFRESHC" "$MFRESH"
+if [ "$MRC" -eq 0 ]; then PASS "M3e: a fresh model with a first-party passport absent from the render publishes (rc=0) — freshness gating is not a blanket abort"; else FAIL "M3e: a clean, fresh trip was blocked (rc=$MRC) — the freshness gate is unusable, which is fail-open in practice"; fi
+
+# ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
+# W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real
+# itinerary repeats both, so an N-day trip offers N-squared candidate pairings and a
+# day-boundary pairing lands inside 25 words. Measured on the shipped guard, a clean
+# render aborted from TWO days onward and never recovered — a permanent false abort in
+# ordinary use. Group N pins both directions: the recurrence must not abort, and a real
+# same-sentence carry-through must still abort.
+echo "Conjunctive window, scoped to a structural block (#123 / PR-7):"
+NTD="$WORK/galway-2027"; mkdir -p "$NTD/outputs"
+cat > "$NTD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Galway 2027 [DERIVED]
+
+## Rowan
+- Passport: Irish, valid to 2027
+MD
+# A six-day render whose day headings carry the validity year and whose day bodies each
+# mention the nationality adjective — both class tokens, many times, never together in
+# one block. This is correct content: the year is a date, the adjective describes a pub.
+nrender() { # <out_file> <days> [final paragraph]
+  {
+    printf '<!DOCTYPE html><html><head><title>Galway Trip</title></head><body>\n<h1>Itinerary</h1>\n'
+    nd=1
+    while [ "$nd" -le "$2" ]; do
+      printf '<h2>Day %d — Friday 12 June 2027</h2>\n' "$nd"
+      printf '<p>Morning at the covered market, then a long lunch by the water and an\n'
+      printf 'afternoon walk through the old town before an evening at a traditional Irish\n'
+      printf 'pub with music from about nine, back to the guest house before midnight.</p>\n'
+      nd=$((nd+1))
+    done
+    [ -n "${3:-}" ] && printf '<p>%s</p>\n' "$3"
+    printf '</body></html>\n'
+  } > "$1"
+}
+NCLEAN="$WORK/n_clean.html"; nrender "$NCLEAN" 6
+# Control arm: the case is only meaningful if BOTH class tokens really do recur, and the
+# passport value never appears as a run. A fixture missing either makes N1b vacuous.
+nirish="$(grep -c 'Irish' "$NCLEAN")"; nyear="$(grep -c '2027' "$NCLEAN")"
+if [ "$nirish" -ge 2 ] && [ "$nyear" -ge 2 ] && ! grep -qF 'Irish, valid to 2027' "$NCLEAN"; then
+  PASS "N1a: both class tokens recur across day boundaries ($nirish / $nyear lines) and never appear as the value itself — the recurrence case is real"
+else
+  FAIL "N1a: the recurrence fixture is not set up as claimed (Irish=$nirish, 2027=$nyear) — N1b would prove nothing"
+fi
+nfalse=0
+for ndays in 1 2 3 4 6; do
+  nf="$WORK/n_$ndays.html"; nrender "$nf" "$ndays"
+  verify_publishable_content "$nf" "$NTD" >/dev/null 2>&1 || nfalse=$((nfalse+1))
+done
+if [ "$nfalse" -eq 0 ]; then
+  PASS "N1b: a clean itinerary whose two class tokens recur across day boundaries publishes at 1, 2, 3, 4 and 6 days (0 false aborts)"
+else
+  FAIL "N1b: $nfalse of 5 day-counts falsely aborted — the conjunctive window still pairs across structural blocks"
+fi
+# N1c — SENSITIVITY. Without this arm N1b is satisfied by a matcher that stopped matching
+# passports at all. The same render, plus the value carried in a single sentence.
+NHIT="$WORK/n_hit.html"
+nrender "$NHIT" 6 'Border note: carry your Irish passport, valid to 2027, at all times.'
+if grep -qF 'Irish passport, valid to 2027' "$NHIT"; then
+  PASS "N1c: the sensitivity fixture carries the passport value inside one block"
+else
+  FAIL "N1c: the sensitivity fixture does not carry the value — N1d would prove nothing"
+fi
+verify_publishable_content "$NHIT" "$NTD" >/dev/null 2>&1; nrc=$?
+if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block still aborts (rc=1) — block scoping narrowed the window, it did not disarm it"; else FAIL "N1d: a real same-block passport carry-through no longer aborts (rc=$nrc) — PR-7 over-corrected into a fail-open"; fi
+
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m\n' "$pass" "$fail" "$skip"
 rc=0

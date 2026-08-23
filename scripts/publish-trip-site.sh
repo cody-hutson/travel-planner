@@ -198,6 +198,54 @@ strip_to_text() { # <html_file> -> visible text on stdout
     || sed -E 's/<[^>]*>/ /g' "$1"
 }
 
+# Everything a reader can retrieve from the PUBLISHED FILE that is not markup machinery:
+# visible text, HTML comment BODIES, every attribute VALUE, and <script>/<style> BODIES.
+# strip_to_text above is the VISIBLE projection and is deliberately left byte-for-byte as
+# it was — verify_ciphertext consumes it, and AC 5 holds that function's behaviour fixed.
+#
+# Why a second projection exists at all: cmd_publish copies the WHOLE FILE, so the whole
+# file is the evaluand, and strip_to_text is not it. strip_to_text deletes script/style
+# bodies wholesale and turns every tag into a space, which discards comments and every
+# attribute value. Measured on the shipped guard, a class value carried ONLY in an HTML
+# comment, a meta description, an img alt, an inline script, an aria-label, a style
+# comment or a data-* attribute published at rc=0 — 7 of the 8 surfaces tried. (The
+# eighth, <title>, is visible text and was already caught; the review's 8/8 is 7/8.)
+# Two of the seven, the img alt and the meta description, are read out by assistive
+# technology and by every link preview, so they are not even "hidden".
+#
+# This is verify_ciphertext check (d)'s idiom — that check greps the RAW BYTES precisely
+# because the visible projection is not what gets published — carried across to a content
+# predicate. (d) needs boilerplate subtraction because StatiCrypt's shell shares ordinary
+# vocabulary with an itinerary; make_boilerplate builds a CONTENT-FREE artifact from the
+# same build and (d) skips any token found in it. This repo has no site build to run a
+# decoy through — the site is authored per trip — so the same subtraction is made
+# STRUCTURALLY instead: tag names and attribute NAMES are the entire machinery vocabulary
+# and the only part of the file guaranteed to carry no trip content, so they are dropped
+# at extraction rather than differenced away afterwards. Same mitigation, same reason,
+# obtained without a decoy that cannot be built here.
+strip_to_published_text() { # <html_file> -> retrievable non-machinery content on stdout
+  perl -0777 -pe "
+    s/<!DOCTYPE[^>]*>/ /gi;                            # the doctype is machinery
+    s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
+    s/<\s*\/?\s*($_GUARD_BLOCK_TAGS)\b/ $_GUARD_BLOCK /gi;   # block boundary, before tag names go
+    s/<\s*\/?\s*([A-Za-z][-A-Za-z0-9]*)/ /g;           # the tag NAME (with its \"<\") is machinery
+    s/([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*/ /g;        # the attribute NAME is machinery; its VALUE stays
+  " "$1" 2>/dev/null
+}
+
+# The VISIBLE projection, block-sentinelled. Byte-identical in outcome to strip_to_text
+# except that a block-level tag leaves a sentinel where it left a space, and the matcher
+# drops the sentinel from the token stream — so the visible arm sees exactly the tokens it
+# always saw, plus the knowledge of where one block ended. strip_to_text itself is NOT
+# touched: verify_ciphertext consumes it and AC 5 fixes that behaviour.
+strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
+  perl -0777 -pe "
+    s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
+    s/<\s*\/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>/ $_GUARD_BLOCK /gi;
+    s/<[^>]+>/ /g;
+  " "$1" 2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
+}
+
 # StatiCrypt boilerplate reference — encrypt a token-LESS decoy so the guard can tell
 # StatiCrypt's fixed shell vocabulary (already, center, click, password…) apart from a
 # genuine itinerary leak. The readable boilerplate is passphrase-independent; only the tiny
@@ -247,6 +295,23 @@ make_boilerplate() { # -> echoes temp dir (boilerplate = <dir>/index.html)
 GUARD_NGRAM=5
 GUARD_WINDOW=25
 
+# The conjunctive window is scoped to ONE STRUCTURAL BLOCK as well as to W words.
+# W=25 alone was calibrated on a fixture carrying one occurrence of each token, and a
+# real itinerary repeats both: measured, `Passport: Irish, valid to 2027` against a clean
+# multi-day render that mentions an Irish pub each day under 2027 date headings aborts
+# from TWO DAYS onward and never recovers, while the same render with a 2033 validity
+# publishes — so the cause is token recurrence across day boundaries, not a real
+# carry-through. A flat word window cannot tell "both facts in one sentence" from "one
+# fact at the end of Tuesday and the other in Wednesday's heading". A block boundary can.
+#
+# The sentinel is an ordinary-looking lowercase token because _norm_words keeps only
+# [a-z0-9] and anything else would be filtered out before the matcher saw it. If a render
+# ever contained this literal string it would split a block that should not have split —
+# which narrows matching rather than widening it, so the failure direction is a missed
+# match, not a false abort. Both are stated in ADR-008.
+_GUARD_BLOCK='zzguardblockzz'
+_GUARD_BLOCK_TAGS='p|div|h[1-6]|li|tr|td|th|dt|dd|section|article|header|footer|aside|nav|main|ul|ol|dl|table|blockquote|figure|figcaption|br|hr|form|fieldset|pre'
+
 # Non-distinctive vocabulary, subtracted before a value is used as a key: articles,
 # prepositions, auxiliaries, and the structural words a document-field value is written
 # with. Requiring these would key on grammar rather than on the traveler value.
@@ -277,9 +342,24 @@ _norm_words() {
 #   exit 0  the value matched the render under <rule>          (a HIT)
 #        1  no match
 #        3  the value is below <rule>'s keyability floor — UNDETERMINED, never a pass
+#        4  DECLARED NON-KEY — the value carries no distinctive token at all (token rule
+#           only). Not a hit and NOT undetermined: a deliberate, bounded fail-open.
 #   any other exit is the matcher itself failing, which the caller also treats as
 #   UNDETERMINED. 3 rather than 2 on purpose: awk exits 2 on its OWN program error, and
 #   a broken matcher must not be reported to the operator as "your value is too short".
+#
+# RESIDUAL, stated next to the paraphrase residual above and repeated in ADR-008.
+# Exit 4 is a fail-open, and it is scoped to the NAME arm alone. A third-party member
+# whose name is made only of stoplisted words is not keyed, so their name reaching the
+# render is not caught by this guard — layers 1 and 3 still cover it. This is narrower
+# than it looks and wider than is comfortable, both worth saying:
+#   • The VALUE arm — the need text itself, which is what the validator's
+#     anonymized-form clause is actually about — is untouched. The need is still matched
+#     whether attributed, de-attributed, or carrying a name that was never keyed.
+#   • _GUARD_STOP is NORMALIZATION vocabulary, not a list of names, and it is not
+#     extended here. So May, Art, Grace and Rosa still key and can still over-block; only
+#     names inside the existing stoplist (Will) become non-keys. The general problem —
+#     an ordinary-word name — is narrowed, not solved.
 #
 # Per-member-class matching is deliberate, and a uniform word-count floor is the
 # design error it exists to avoid: reference/data-model.md defines a passport value as
@@ -288,15 +368,20 @@ _norm_words() {
 # forever. The rule travels with the record; this function only applies it, and knows
 # nothing about which class member produced it.
 _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
-  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" '
+  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" -v BLOCK="$_GUARD_BLOCK" '
     function is_stop(t) { return index(STOP, " " t " ") > 0 }
     BEGIN {
       gsub(/[ \t\n\r]+/, " ", STOP)
       if (substr(STOP, 1, 1) != " ") STOP = " " STOP
       if (substr(STOP, length(STOP), 1) != " ") STOP = STOP " "
+      blkid = 0
     }
     FILENAME == vfname { v[++vn] = $0; next }
-                       { r[++rn] = $0 }
+    # Block sentinels advance the block counter and are DROPPED from the token stream, so
+    # rn, the phrase rule and the token rule see exactly the stream they saw before this
+    # existed. Only the conjunctive rule reads blk[].
+    $0 == BLOCK        { blkid++; next }
+                       { r[++rn] = $0; blk[rn] = blkid }
     END {
       if (rn == 0) exit 3
       if (rule == "conjunctive") {
@@ -321,7 +406,10 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
           cnt[who[right]]++
           if (cnt[who[right]] == 1) covered++
           while (covered == k) {
-            if (pos[right] - pos[left] <= W) exit 0
+            # Same block AND inside W. blk[] is non-decreasing, so equal endpoints mean
+            # every token between them is in that block too. This is what separates
+            # "both facts in one sentence" from "one fact per day, N days apart".
+            if (pos[right] - pos[left] <= W && blk[pos[right]] == blk[pos[left]]) exit 0
             cnt[who[left]]--
             if (cnt[who[left]] == 0) covered--
             left++
@@ -347,8 +435,19 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
         exit 1
       }
       if (rule == "token") {
-        # Whole-word match on the normalized stream — always keyable, no floor.
+        # Whole-word match on the normalized stream. is_stop is applied HERE too, as the
+        # two sibling branches already do — its absence was a defect, not a design.
+        # Without it a third-party member named with an ordinary English word keys on
+        # grammar: "will" already sits in _GUARD_STOP above, so a member named Will made
+        # EVERY publish of that trip abort, forever, with no remedy available to the
+        # operator — the entry cannot be deleted without deleting the very record the
+        # guard exists to protect. An unusable fail-closed control is fail-open in
+        # practice, because it gets worked around.
+        # (No apostrophes in this block: it lives inside a single-quoted awk program.)
         if (vn < 1) exit 3
+        distinctive = 0
+        for (j = 1; j <= vn; j++) if (!is_stop(v[j])) { distinctive = 1; break }
+        if (!distinctive) exit 4        # DECLARED NON-KEY — see the residual note below
         for (p = 1; p + vn - 1 <= rn; p++) {
           ok = 1
           for (j = 0; j < vn; j++) if (r[p + j] != v[j + 1]) { ok = 0; break }
@@ -389,22 +488,23 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 #   • every field of a non-third-party entry other than `Passport:` — so the designed
 #     escalation path for a first-party operator-relayed need stays open. The key is
 #     the third-party mark (the subject could not consent), not who supplied the value.
-nonpublishable_values() { # <trip_dir>
-  local trip_dir="${1:-}" model out rc
-  if [ -z "$trip_dir" ]; then
-    warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
-  fi
-  model="$trip_dir/outputs/traveler-model.md"
-  if [ ! -e "$model" ]; then
-    warn "guard: $model is absent — the non-publishable class cannot be determined"; return 2
-  fi
-  if [ ! -f "$model" ] || [ ! -r "$model" ]; then
-    warn "guard: $model is not a readable regular file — the class cannot be determined"; return 2
-  fi
-  if [ ! -s "$model" ]; then
-    warn "guard: $model is empty — an empty read is not an empty class"; return 2
-  fi
-  out="$(awk '
+#
+# CD-3 — the class binds to FIRST-PARTY SOURCES, not to a derived cache alone.
+# outputs/traveler-model.md is a `[DERIVED]` projection: CLAUDE.md makes
+# travelers/<traveler>.md authoritative and has the enrichment agent refresh the model
+# from those files whenever they change. Binding the class to the projection alone means
+# a passport sitting in travelers/rowan.md right now, but not yet reconciled, is reported
+# as "class parsed and genuinely EMPTY" and the trip publishes at rc=0 — measured. That
+# is a silent fail-open wearing the costume of a clean determinate measurement, which is
+# worse than a loud refusal on an irreversible action. So the class now (a) reads the
+# per-traveler files for the Passport member as well, and (b) refuses when the projection
+# is behind them. Only Passport is read from the profiles: a `[THIRD-PARTY]` subject has
+# no file anywhere, by construction, so the model remains their only source.
+#
+# Shared awk helpers, defined ONCE and used by BOTH parses below. Inlining them twice is
+# exactly how the model parse and the profile parse would drift apart on what counts as
+# "stated"; the same reasoning that makes _norm_words a function makes these one string.
+_GUARD_AWK_HELPERS='
     function clean(s) {
       gsub(/\[[^]]*\]/, " ", s)          # bracketed provenance marks are metadata
       gsub(/[*_`]/, " ", s)              # markdown emphasis
@@ -419,6 +519,53 @@ nonpublishable_values() { # <trip_dir>
       if (t == "unknown" || t == "unspecified" || t == "notstated") return 0
       return 1
     }
+'
+
+nonpublishable_values() { # <trip_dir> [site_html]
+  local trip_dir="${1:-}" site_html="${2:-}" model out rc
+  local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
+  if [ -z "$trip_dir" ]; then
+    warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
+  fi
+  model="$trip_dir/outputs/traveler-model.md"
+  if [ ! -e "$model" ]; then
+    warn "guard: $model is absent — the non-publishable class cannot be determined"; return 2
+  fi
+  if [ ! -f "$model" ] || [ ! -r "$model" ]; then
+    warn "guard: $model is not a readable regular file — the class cannot be determined"; return 2
+  fi
+  if [ ! -s "$model" ]; then
+    warn "guard: $model is empty — an empty read is not an empty class"; return 2
+  fi
+
+  # ── freshness gate (CD-3) ──────────────────────────────────────────────────
+  # _epoch_of_file / _is_stale are this file's own staleness idiom — cmd_list already
+  # flags a locally-rebuilt site against its deployment with them. A probe over the guard
+  # block for that idiom returned 0 while the same probe over the whole file returned 11,
+  # so the guard was the one consumer of a derived artifact that never asked how old it
+  # was. Ties do not fire: _is_stale is a strict >, and mtime granularity is one second.
+  model_epoch="$(_epoch_of_file "$model")"
+  if [ -z "$model_epoch" ]; then
+    warn "guard: the mtime of $model could not be read — its freshness is undetermined, and an undetermined result is never a pass"; return 2
+  fi
+  if [ -d "$trip_dir/travelers" ]; then
+    for pf in "$trip_dir"/travelers/*.md; do
+      [ -e "$pf" ] || continue
+      had_profiles=1
+      if [ ! -f "$pf" ] || [ ! -r "$pf" ]; then
+        warn "guard: a per-traveler profile is not a readable regular file — the class cannot be determined"; return 2
+      fi
+      profile_epoch="$(_epoch_of_file "$pf")"
+      if [ -z "$profile_epoch" ]; then
+        warn "guard: a per-traveler profile's mtime could not be read — freshness undetermined"; return 2
+      fi
+      if _is_stale "$profile_epoch" "$model_epoch"; then
+        warn "guard: a per-traveler profile is newer than $model — the [DERIVED] projection has not absorbed it, so the class is UNDETERMINED, not empty"; return 2
+      fi
+    done
+  fi
+
+  out="$(awk "$_GUARD_AWK_HELPERS"'
     BEGIN { entries = 0; idx = 0; tp = 0; live = 0 }
     /^##[ \t]/ {
       head = $0; sub(/^##[ \t]+/, "", head)
@@ -455,6 +602,56 @@ nonpublishable_values() { # <trip_dir>
     3) warn "guard: no '## <Name>' entry was recognized in $model — the derived-model format has drifted, so the class is UNDETERMINED, not empty"; return 2 ;;
     *) warn "guard: $model could not be parsed (exit $rc) — the class is undetermined"; return 2 ;;
   esac
+
+  # ── first-party sources (CD-3) ─────────────────────────────────────────────
+  # The Passport member, read from the authoritative per-traveler files rather than only
+  # from the projection of them. The label shape is the same one the model parse binds to
+  # — templates/traveler-intake.template.md writes it as "- **Passport:** <country>,
+  # valid through <month year>" — so the same two lines of label handling serve both, and
+  # the placeholder brackets of an unfilled form are removed by clean() and rejected by
+  # stated(). The locator is "profile N", never the file name: a file under travelers/ is
+  # named for the traveler, and naming them would leak on the same axis this guard
+  # protects. N is the position in the shell's sorted glob, so it is stable between runs.
+  if [ "$had_profiles" -eq 1 ]; then
+    pout="$(awk "$_GUARD_AWK_HELPERS"'
+      FNR == 1 { idx++ }
+      {
+        lab = $0
+        sub(/^[ \t]*[-*+][ \t]+/, "", lab)
+        gsub(/\*\*/, "", lab)
+        sub(/^[ \t]+/, "", lab)
+        if (lab ~ /^[Pp]assport[ \t]*:/) {
+          val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+          if (stated(val)) printf "passport\tprofile %d / Passport\tconjunctive\t%s\n", idx, val
+        }
+      }
+    ' "$trip_dir"/travelers/*.md 2>/dev/null)" && prc=0 || prc=$?
+    if [ "${prc:-0}" -ne 0 ]; then
+      warn "guard: the per-traveler profiles under $trip_dir/travelers could not be parsed (exit $prc) — the class is undetermined"; return 2
+    fi
+    [ -z "$pout" ] || out="${out:+$out
+}$pout"
+  fi
+
+  # An EMPTY class is a MEASUREMENT only if the projection is at least as new as the
+  # thing it is being asked about. Empty plus older-than-the-render is the exact shape of
+  # the measured fail-open, so it is refused.
+  #
+  # Deliberately conditioned on emptiness rather than applied unconditionally, and this
+  # is a narrowing of the counter-design that is worth stating. In the normal authoring
+  # order the render is written AFTER the model — enrichment reconciles, then the hub
+  # synthesises, then the site is built — so an unconditional "render newer than model"
+  # gate refuses every correct publish rather than more of them. That is the unusable
+  # fail-closed control the token-branch note above describes, and it ends as a
+  # workaround rather than a guard. A non-empty class needs no such inference: the
+  # projection demonstrably holds class content, and it is matched.
+  if [ -z "$out" ] && [ -n "$site_html" ] && [ -e "$site_html" ]; then
+    render_epoch="$(_epoch_of_file "$site_html")"
+    if [ -n "$render_epoch" ] && _is_stale "$render_epoch" "$model_epoch"; then
+      warn "guard: the class read EMPTY but $model predates the rendered site — an empty read from a projection older than the render is UNDETERMINED, not an empty class"; return 2
+    fi
+  fi
+
   [ -z "$out" ] || printf '%s\n' "$out"
   return 0
 }
@@ -479,7 +676,7 @@ nonpublishable_values() { # <trip_dir>
 # field only. Stage 8: this is a decision, not an inconsistency to fix.
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
-  local recs rc work rfile vfile n member field rule value hit=0 undet=0
+  local recs rc rcv rcp work rfile pfile vfile n member field rule value hit=0 undet=0
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
     warn "guard: content check needs a rendered site and a trip dir"; return 2
@@ -489,17 +686,27 @@ verify_publishable_content() { # <site_html> <trip_dir>
   fi
 
   work="$(mktemp -d)" || { warn "guard: could not stage the content check"; return 2; }
-  rfile="$work/render.words"; vfile="$work/value.words"
+  rfile="$work/render.words"; pfile="$work/published.words"; vfile="$work/value.words"
 
-  strip_to_text "$site_html" | _norm_words > "$rfile"
-  n="$(wc -l < "$rfile" | tr -d '[:space:]')"; n="${n:-0}"
+  # TWO projections of the same file, matched independently, because publish copies the
+  # file and not the painting of it. The visible arm is what a reader sees; the published
+  # arm is what a reader can retrieve. Both use the SAME _norm_words on both sides of the
+  # comparison — one normalization, four streams, no chance of the sides drifting.
+  strip_to_text_blocks "$site_html" | _norm_words > "$rfile"
+  # Sentinels are not words and must not count toward the degraded-extraction floor.
+  n="$(awk -v B="$_GUARD_BLOCK" '$0 != B { c++ } END { print c + 0 }' "$rfile")"; n="${n:-0}"
   if [ "$n" -lt 20 ]; then
     rm -rf "$work"
     warn "guard: the rendered site yielded only $n words of visible text — a degraded extraction is not a clean result"
     return 2
   fi
+  # No word floor on the published arm: a page with no comments, attributes or scripts
+  # yields little here and that is normal, not degraded. An EMPTY published stream is
+  # simply not matched against — _guard_match reads an empty render as UNDETERMINED, and
+  # a file with no markup to inspect is not an undetermined result.
+  strip_to_published_text "$site_html" | _norm_words > "$pfile"
 
-  recs="$(nonpublishable_values "$trip_dir")" && rc=0 || rc=$?
+  recs="$(nonpublishable_values "$trip_dir" "$site_html")" && rc=0 || rc=$?
   if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
   # A parsed-and-empty class is a MEASUREMENT; an unrecognized file is a DEGRADATION.
   # Collapsing them would make a broken parser indistinguishable from a trip that has
@@ -509,11 +716,21 @@ verify_publishable_content() { # <site_html> <trip_dir>
   while IFS="$(printf '\t')" read -r member field rule value; do
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
-    _guard_match "$rule" "$vfile" "$rfile"; rc=$?
+    _guard_match "$rule" "$vfile" "$rfile"; rcv=$?
+    rcp=1
+    [ -s "$pfile" ] && { _guard_match "$rule" "$vfile" "$pfile"; rcp=$?; }
+    # Combine the two arms. A hit on EITHER projection is a hit — the value is in the
+    # file either way. Otherwise the visible arm carries the verdict, because every
+    # non-hit code is a property of the VALUE (its keyability floor, its distinctiveness)
+    # rather than of the projection, so the arms agree on it by construction.
+    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ]; then rc=0
+    elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
+    else rc="$rcv"; fi
     case "$rc" in
-      0) warn "guard: a non-publishable value reached the rendered site — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
+      0) warn "guard: a non-publishable value reached the published file — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
       1) ;;
       3) warn "guard: member '$member', field '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass."; undet=1 ;;
+      4) warn "guard: member '$member', field '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. See ADR-008 § Coverage boundary." ;;
       *) warn "guard: the match for member '$member', field '$field' could not be run (matcher exit $rc) — undetermined, not clean."; undet=1 ;;
     esac
   done <<EOF

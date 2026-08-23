@@ -18,6 +18,11 @@ name: Publish guard
 #   J2/J3 unpublish decision branches, driven by a mock GitHub CLI (no network)
 #   K     trips/ ignore invariant
 #   L     plaintext content guard (#123) — the new predicate and its class source
+#   M     published-bytes matching, the name-arm stoplist, and class freshness — the
+#         three defects the Phase A6.5 adversarial review confirmed against the first
+#         cut of L. M1 pins all eight markup surfaces a value can ride out on
+#   N     the conjunctive window scoped to a structural block, both directions: token
+#         recurrence across day boundaries must not abort, a same-block carry-through must
 #   E, G  real StatiCrypt encryption and boilerplate subtraction, which run because
 #         the Node setup step below provisions them
 #
