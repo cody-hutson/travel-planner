@@ -3,6 +3,157 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.13.0] — 2026-08-23 — Publish-path content guard
+
+Publishing a trip site has always had two paths: the default one encrypts the site
+and checks the result before anything is pushed, and the opt-out one publishes it
+in the clear. Only the first was checked. The path whose output is immediately
+world-readable — no passphrase, anyone with the link — copied the rendered page
+straight out with nothing looking at what was in it. That is the wrong way round,
+and this release turns it round: the plaintext path now reads the page it is about
+to publish and refuses if a traveller's passport details, or a need recorded for
+someone who never filled in a profile of their own, have found their way into it.
+It refuses equally when it cannot tell — an unanswerable question is treated as a
+failure, not waved through. How far each of those two reaches is not the same, and
+where the second one stops is written down below rather than left to be assumed.
+Nothing changes for the encrypted path, which is still
+the default and is still checked exactly as before.
+
+### Added
+- **The regression suite now runs on every push and pull request, and a green
+  result means it actually ran (`.github/workflows/publish-guard.yml`,
+  `scripts/test-publish-guard.sh`).** The suite that proves the publish guards
+  work has existed for some time, but nothing ran it except a person remembering
+  to. It now runs in CI. The part worth writing down is the second half of that
+  sentence. The suite skips groups whose prerequisites are missing — real
+  encryption needs Node, two groups need an authenticated GitHub CLI — and a
+  skipped group used to count toward a pass exactly as a passing one did. Wiring
+  the suite up naively would therefore have produced a green tick on a run where
+  whole groups never executed, which is worse than no check at all, because it
+  reads as proof. The CI run now provisions Node so the real-encryption groups
+  genuinely run, treats any skip as a failure, and names the two GitHub-CLI groups
+  it deliberately does not cover — so what the tick does and does not prove is
+  written in the workflow file rather than assumed. Run by hand, the suite behaves
+  exactly as it did before.
+- **The decision, and its limits, are on the record
+  (`reference/adr/ADR-008-publish-content-guard.md`).** A new architecture
+  decision record covers why the existing pre-push check could not simply be
+  called from one more place, which two alternatives were rejected and what killed
+  each of them, and — the part most likely to be forgotten and then over-claimed —
+  exactly what this guard catches and what it does not. It catches a value that
+  reaches the page with the person's name stripped off, which is the case that
+  matters most and the one a name-based check would miss entirely. It does not
+  catch a value that was reworded on the way in. That limit is stated plainly
+  rather than left to be discovered, because the guard is one layer of three and
+  the other two are still doing work.
+
+### Fixed
+- **The plaintext publish path now checks what it is about to publish
+  (`scripts/publish-trip-site.sh`, `scripts/test-publish-guard.sh`).** The check
+  reads the page as a reader would see it and compares it against the two kinds of
+  detail that must never be published: a traveller's passport country and
+  validity, and any need recorded on behalf of a party member who has no profile
+  of their own and so was never able to agree to it being written down. It keys on
+  the traveller's own recorded values, never on words like "passport" — so a
+  packing-list line telling everyone to bring theirs, and the visa and entry notes
+  that belong on a published plan, are not flagged, and were never candidates to
+  be. Stripping a person's name off a detail does not get it past the check, which
+  is the case that motivated keying it this way. When something is found, the
+  refusal names where it came from and never prints the value itself, so the check
+  cannot leak what it exists to protect. If the record of who is travelling is
+  missing, unreadable, out of date, or no longer in a shape the check recognises,
+  the publish stops rather than proceeding on a guess; the remedy in every case is
+  to publish encrypted, which is what the default already does. Nothing is pushed
+  when the check refuses, and the refusal happens before the page is copied
+  anywhere.
+
+  **The check reads the whole page, not just the part you can see.** A first cut of
+  this check read the page the way a browser paints it — the words a reader sees —
+  while publishing copies the file itself. Those are not the same thing, and the
+  gap between them was measured: a detail sitting in an HTML comment, in a page
+  description, in the alt text of an image, in an inline script, in a style block,
+  or in a data attribute went out unnoticed on seven of the eight places tried. Two
+  of those are not even hidden — alt text and the page description are read aloud
+  by screen readers and shown in every link preview. The check now reads both: what
+  a reader sees, and what a reader can retrieve from the page source. What it
+  deliberately ignores is the markup scaffolding itself — tag and attribute names —
+  which is how it reads a page full of stylesheets and scripts without objecting to
+  all of them.
+
+  **It reads the travellers' own files, not only the summary built from them.** The
+  summary of who is travelling is rebuilt from each traveller's own file whenever
+  those change, so a passport recorded this morning may not be in it yet. The check
+  used to read only the summary, and reported a trip as having nothing to protect
+  when it plainly did. It now reads the travellers' files directly, and refuses to
+  proceed at all when the summary is older than they are — an out-of-date answer is
+  treated as no answer, which is the same rule the rest of this check already
+  follows.
+
+  **Two ways it used to refuse good pages, both fixed.** A party member recorded
+  under an ordinary English name — Will — made every publish of that trip stop, for
+  ever, with no way out that did not involve deleting the very record being
+  protected. And because the check looked for a passport's country and expiry
+  anywhere within twenty-five words of each other, an ordinary multi-day plan that
+  mentioned, say, an Irish pub on each day under headings carrying the expiry year
+  began refusing from the second day onward and never recovered. Both are corrected:
+  a name made only of everyday words is no longer used as a search key, and the two
+  halves of a passport must now appear in the same paragraph rather than merely
+  nearby. A refusal that fires on correct pages is not a stricter check — it is one
+  that gets switched off, which is worse than not having it. What each of these
+  still does not catch is written down in the decision record rather than left to be
+  discovered.
+
+  **The half of the check covering party members is far wider than it was — and it
+  is deliberately not complete.** Of the two
+  kinds of detail this check protects, the second is a need recorded on behalf of
+  someone who has no profile of their own. A first cut of it looked at two things
+  and two things only: that person's name, and one particular line of their record.
+  Everything else written about them was let through. That is backwards — the rule
+  in the data model is that the whole entry for such a person is off limits, with
+  nothing allowed out by default — and it mattered more than a missing line usually
+  would, because the one line being looked for turned out to be the wrong one. It
+  is the label used in a traveller's own hand-filled form, and the check was
+  reading the summary built from those forms, which writes the same information
+  differently. So on a real trip that half of the check could match nothing at all,
+  while still reporting the page as clear. Three things are fixed together: every
+  detail recorded about such a person is now checked rather than a chosen few; the
+  marking that identifies them is read wherever it appears rather than only at the
+  top of their entry, which matters because losing that top-line marking is a known
+  mistake; and the check no longer looks for one particular label, because there is
+  no agreed one to look for. Two related states now stop a publish instead of
+  passing quietly: an entry whose marking has been removed while the details stayed
+  behind, and a marking in the file that the check cannot tie to anything. The
+  balance is kept the other way too — a need that a traveller stated about
+  themselves and asked to have planned around is still allowed onto the page, as it
+  always should have been.
+
+  **Where that half stops, stated rather than left to be found.** It is wider, and
+  it is not complete, and that was decided before this release shipped rather than
+  discovered afterwards. Needs recorded for someone else are often very short and
+  written in everyday words — "no stairs", "not in the afternoon", or simply the
+  name of a category on the form. A check that works by looking for the recorded
+  wording on the published page cannot use words like those as what it searches
+  for, because it would then refuse every plan that happens to mention stairs or
+  afternoons, on every attempt, with no way round it short of deleting the record
+  being protected. A refusal like that does not make the check stricter; it makes
+  it something people turn off. So a value made up entirely of everyday or
+  form-vocabulary words is deliberately not used as a search term, and if such a
+  value reaches the page it goes out unnoticed. A longer or more distinctive need
+  is caught, and so is the person's name unless that too is an everyday word.
+
+  There is a second reason, and it is about the records rather than the check:
+  nothing in this repository shows what an entry for such a person actually looks
+  like. Of forty-four worked examples across all the documentation, twelve show a
+  person's entry and none of them shows one recorded this way. The check therefore
+  reads whatever a line states instead of looking for an agreed layout — the right
+  response to there being no agreed layout, and not the same thing as covering
+  everything written about that person. Agreeing that layout, and marking on each
+  detail directly whether it may be published, is a separate piece of work already
+  planned; it is not something this check can settle on its own. None of this
+  affects the rest: passport details are covered as described above, an
+  undeterminable answer still stops the publish, and the encrypted path — the
+  default — is untouched.
+
 ## [0.12.0] — 2026-08-22 — First-run experience
 
 Four fixes aimed at the first hour with this repository, and at the release
