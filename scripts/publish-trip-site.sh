@@ -212,6 +212,320 @@ make_boilerplate() { # -> echoes temp dir (boilerplate = <dir>/index.html)
   printf '%s' "$enc"
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PLAINTEXT CONTENT GUARD (#123) — the second pre-push predicate.
+#
+# verify_ciphertext (below) answers "is this encrypted?". It cannot answer "is this
+# safe to publish?": every one of its checks inverts on plaintext input, so wiring it
+# into the plaintext limb would abort every plaintext publish rather than guard it.
+# The plaintext limb therefore gets its own predicate here. verify_ciphertext is
+# unchanged and still guards the encrypted limb of publish and all of update.
+#
+# The class of non-publishable content has ONE home: nonpublishable_values(). The
+# predicate is a pure consumer of the records that function emits and holds no
+# knowledge of what the class IS — so re-keying the class to a declared publishability
+# attribute later (#278) is a change to one function body, not a rewrite.
+#
+# COVERAGE BOUNDARY, stated rather than implied. A value that reaches the render
+# DE-ATTRIBUTED — the traveler name stripped — is caught, by construction: the name
+# was never the join key, so removing it changes nothing. A value the hub REWORDED on
+# its way into the render is NOT caught; detecting a paraphrase is a judgement no
+# string match can make. This layer does not subsume the validator profile-privacy
+# audit, which reads the five publish-bound SOURCES and judges; this guard reads the
+# RENDER and matches. Both are needed. Full rationale + rejected alternatives:
+# reference/adr/ADR-008-publish-content-guard.md.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Match parameters. Both are load-bearing and were chosen on a measured sweep rather
+# than by taste (design record: sub-task #315):
+#   GUARD_NGRAM  = 5  — at 3 an incidental three-word run aborts a clean render; at 6
+#                       and above a real five-word carry-through is missed. 4 and 5
+#                       both discriminate; 5 is the tighter of the two.
+#   GUARD_WINDOW = 25 — unbounded (or 200+) an innocent render that mentions one token
+#                       early and the other late FLIPS to a false abort; 50 and below
+#                       does not. The window is what makes the conjunctive rule safe.
+GUARD_NGRAM=5
+GUARD_WINDOW=25
+
+# Non-distinctive vocabulary, subtracted before a value is used as a key: articles,
+# prepositions, auxiliaries, and the structural words a document-field value is written
+# with. Requiring these would key on grammar rather than on the traveler value.
+# This is NORMALIZATION vocabulary — it decides nothing about MEMBERSHIP, which is
+# nonpublishable_values()'s job alone.
+# Kept on ONE line by concatenation, deliberately: awk -v rejects a newline inside an
+# assignment value on the BSD/macOS awk, and a stoplist that silently kills the matcher
+# is a fail-closed guard that never actually matches anything.
+_GUARD_STOP=' a an and any are as at be been being but by can cannot could did do does '\
+'for from good had has have he her hers him his i if in into is it its me more most my '\
+'no nor not of on or our ours out she so some such than that the their theirs them then '\
+'there these they this those through thru till to too until up us valid validity valids '\
+'was we were what when where which while who whom will with would you your yours '\
+'passport passports document documents expire expired expires expiring expiry issue '\
+'issued issuing issuance date dates day days month months year years number numbers '
+
+# Shared normalization — ONE definition, used on BOTH sides of every comparison.
+# stdin -> one lowercase [a-z0-9] token per line. Inlining this twice is exactly how
+# the two sides drift apart, so it is a function and both sides call it.
+_norm_words() {
+  LC_ALL=C tr '[:upper:]' '[:lower:]' \
+    | LC_ALL=C sed -e 's/[^a-z0-9]/ /g' -e 's/  */ /g' \
+    | LC_ALL=C tr ' ' '\n' \
+    | sed '/^$/d'
+}
+
+# _guard_match <rule> <value_tokens_file> <render_tokens_file>
+#   exit 0  the value matched the render under <rule>          (a HIT)
+#        1  no match
+#        3  the value is below <rule>'s keyability floor — UNDETERMINED, never a pass
+#   any other exit is the matcher itself failing, which the caller also treats as
+#   UNDETERMINED. 3 rather than 2 on purpose: awk exits 2 on its OWN program error, and
+#   a broken matcher must not be reported to the operator as "your value is too short".
+#
+# Per-member-class matching is deliberate, and a uniform word-count floor is the
+# design error it exists to avoid: reference/data-model.md defines a passport value as
+# "country + validity only — never a number", which is 2-5 words by construction, so a
+# single floor across the whole class would make EVERY plaintext publish undetermined
+# forever. The rule travels with the record; this function only applies it, and knows
+# nothing about which class member produced it.
+_guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
+  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" '
+    function is_stop(t) { return index(STOP, " " t " ") > 0 }
+    BEGIN {
+      gsub(/[ \t\n\r]+/, " ", STOP)
+      if (substr(STOP, 1, 1) != " ") STOP = " " STOP
+      if (substr(STOP, length(STOP), 1) != " ") STOP = STOP " "
+    }
+    FILENAME == vfname { v[++vn] = $0; next }
+                       { r[++rn] = $0 }
+    END {
+      if (rn == 0) exit 3
+      if (rule == "conjunctive") {
+        # Every distinctive token of the value must appear, and the occurrences must
+        # fall inside one W-word window. This is a direct encoding of the class
+        # definition ("issuing country AND validity" — two facts), and it is strictly
+        # more sensitive here than n-gram containment: it catches a reworded or
+        # order-swapped carry-through that no contiguous run would match.
+        k = 0
+        for (i = 1; i <= vn; i++) {
+          t = v[i]
+          if (is_stop(t)) continue
+          if (t in seen) continue
+          seen[t] = 1; k++; key[k] = t; kidx[t] = k
+        }
+        if (k < 2) exit 3
+        m = 0
+        for (p = 1; p <= rn; p++) if (r[p] in kidx) { m++; pos[m] = p; who[m] = kidx[r[p]] }
+        if (m < k) exit 1
+        left = 1; covered = 0
+        for (right = 1; right <= m; right++) {
+          cnt[who[right]]++
+          if (cnt[who[right]] == 1) covered++
+          while (covered == k) {
+            if (pos[right] - pos[left] <= W) exit 0
+            cnt[who[left]]--
+            if (cnt[who[left]] == 0) covered--
+            left++
+          }
+        }
+        exit 1
+      }
+      if (rule == "phrase") {
+        # Contiguous F-word containment. Catches the verbatim and the de-attributed
+        # form; the floor bounds how small a partial carry-through may be and still
+        # count as a key. A pure-stopword window is not a key.
+        if (vn < F) exit 3
+        for (s = 1; s + F - 1 <= vn; s++) {
+          allstop = 1
+          for (j = 0; j < F; j++) if (!is_stop(v[s + j])) { allstop = 0; break }
+          if (allstop) continue
+          for (p = 1; p + F - 1 <= rn; p++) {
+            ok = 1
+            for (j = 0; j < F; j++) if (r[p + j] != v[s + j]) { ok = 0; break }
+            if (ok) exit 0
+          }
+        }
+        exit 1
+      }
+      if (rule == "token") {
+        # Whole-word match on the normalized stream — always keyable, no floor.
+        if (vn < 1) exit 3
+        for (p = 1; p + vn - 1 <= rn; p++) {
+          ok = 1
+          for (j = 0; j < vn; j++) if (r[p + j] != v[j + 1]) { ok = 0; break }
+          if (ok) exit 0
+        }
+        exit 1
+      }
+      exit 3   # unknown rule -> undetermined, never a pass
+    }
+  ' "$2" "$3"
+}
+
+# ── the single home of the non-publishable class ─────────────────────────────
+# nonpublishable_values <trip_dir>
+#   stdout : one TAB-separated record per line —  <member> <field> <rule> <value>
+#            <member> one of: passport | third-party  (the two members the validator
+#                     profile-privacy check names today)
+#            <field>  a DE-IDENTIFIED locator, e.g. "entry 3 / Specific". Never the
+#                     traveler name: a third-party entry NAME is itself a member of
+#                     this class, so reporting it would leak what the guard protects.
+#            <rule>   one of: conjunctive | phrase | token
+#   return : 0  class enumerated (possibly EMPTY — a determinate measurement)
+#            2  UNDETERMINED — the class could not be determined; caller must abort
+#
+# The match RULE is assigned HERE, alongside membership, because they are one decision.
+# The predicate consumes (member, field, rule, value) and knows nothing else. THIS is
+# the seam #278 re-keys: replacing the membership rule below with "any field carrying
+# the declared publishability attribute" is a change to this body only — the stdout
+# contract, the return contract, the predicate, the call site and every test assertion
+# are unchanged.
+#
+# EXCLUDED AS NON-MEMBERS, and this is the whole anti-over-block mechanism:
+#   • the `Passport:` LABEL. The class is keyed on a traveler CAPTURED VALUE, never on
+#     the word "passport" — so a legitimate packing-list line and a Destination
+#     Baseline `Visa / entry` note are structurally outside the class rather than
+#     stoplisted after the fact. They were never members.
+#   • `Category:` values and `Applies to:` link text — the link, never a copy.
+#   • every field of a non-third-party entry other than `Passport:` — so the designed
+#     escalation path for a first-party operator-relayed need stays open. The key is
+#     the third-party mark (the subject could not consent), not who supplied the value.
+nonpublishable_values() { # <trip_dir>
+  local trip_dir="${1:-}" model out rc
+  if [ -z "$trip_dir" ]; then
+    warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
+  fi
+  model="$trip_dir/outputs/traveler-model.md"
+  if [ ! -e "$model" ]; then
+    warn "guard: $model is absent — the non-publishable class cannot be determined"; return 2
+  fi
+  if [ ! -f "$model" ] || [ ! -r "$model" ]; then
+    warn "guard: $model is not a readable regular file — the class cannot be determined"; return 2
+  fi
+  if [ ! -s "$model" ]; then
+    warn "guard: $model is empty — an empty read is not an empty class"; return 2
+  fi
+  out="$(awk '
+    function clean(s) {
+      gsub(/\[[^]]*\]/, " ", s)          # bracketed provenance marks are metadata
+      gsub(/[*_`]/, " ", s)              # markdown emphasis
+      gsub(/[ \t]+/, " ", s)
+      sub(/^ +/, "", s); sub(/ +$/, "", s)
+      return s
+    }
+    function stated(s,   t) {            # a field present but not filled in is not a member
+      t = tolower(s); gsub(/[^a-z0-9]/, "", t)
+      if (t == "") return 0
+      if (t == "na" || t == "nil" || t == "none" || t == "tbd") return 0
+      if (t == "unknown" || t == "unspecified" || t == "notstated") return 0
+      return 1
+    }
+    BEGIN { entries = 0; idx = 0; tp = 0; live = 0 }
+    /^##[ \t]/ {
+      head = $0; sub(/^##[ \t]+/, "", head)
+      nm = clean(head)
+      key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
+      if (key == "updatesignals") { live = 0; tp = 0; next }   # structural section, not a person
+      entries++; idx = entries; live = 1
+      tp = (index(head, "[THIRD-PARTY]") > 0)
+      if (tp && stated(nm)) printf "third-party\tentry %d / Name\ttoken\t%s\n", idx, nm
+      next
+    }
+    /^###/    { next }                   # deeper headings stay INSIDE the entry
+    /^#[ \t]/ { live = 0; tp = 0; next } # the file title ends any entry
+    live == 1 {
+      lab = $0
+      sub(/^[ \t]*[-*+][ \t]+/, "", lab)
+      gsub(/\*\*/, "", lab)
+      sub(/^[ \t]+/, "", lab)
+      if (lab ~ /^[Pp]assport[ \t]*:/) {
+        val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+        if (stated(val)) printf "passport\tentry %d / Passport\tconjunctive\t%s\n", idx, val
+        next
+      }
+      if (tp && lab ~ /^[Ss]pecific[ \t]*:/) {
+        val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+        if (stated(val)) printf "third-party\tentry %d / Specific\tphrase\t%s\n", idx, val
+        next
+      }
+    }
+    END { if (entries == 0) exit 3 }
+  ' "$model" 2>/dev/null)" && rc=0 || rc=$?
+  case "$rc" in
+    0) ;;
+    3) warn "guard: no '## <Name>' entry was recognized in $model — the derived-model format has drifted, so the class is UNDETERMINED, not empty"; return 2 ;;
+    *) warn "guard: $model could not be parsed (exit $rc) — the class is undetermined"; return 2 ;;
+  esac
+  [ -z "$out" ] || printf '%s\n' "$out"
+  return 0
+}
+
+# verify_publishable_content <site_html> <trip_dir>
+#   return 0  no non-publishable value reached the render — safe to copy
+#          1  HIT          — a non-publishable value is in the render
+#          2  UNDETERMINED — the class or the render could not be determined
+#
+# Three return codes where verify_ciphertext has two, because the test suite has to be
+# able to tell a HIT from an UNDETERMINED: under a binary contract a guard that aborted
+# for the WRONG REASON would still pass its own tests. The call site collapses both to
+# one die, so cmd_publish behaviour stays binary; only the tests read the distinction.
+#
+# This function contains NO class knowledge — no field labels, no member names. It
+# consumes records. That is mechanically checkable, and the suite checks it.
+#
+# It also NEVER echoes the matched value, deliberately diverging from the sibling guard
+# below, which prints the offending token. The strings this one matches are passport
+# values and third-party health needs, and this suite runs in a public Actions log —
+# echoing them would make the guard leak exactly what it exists to protect. Member and
+# field only. Stage 8: this is a decision, not an inconsistency to fix.
+verify_publishable_content() { # <site_html> <trip_dir>
+  local site_html="${1:-}" trip_dir="${2:-}"
+  local recs rc work rfile vfile n member field rule value hit=0 undet=0
+
+  if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
+    warn "guard: content check needs a rendered site and a trip dir"; return 2
+  fi
+  if [ ! -r "$site_html" ]; then
+    warn "guard: the rendered site is absent or unreadable — what would be published cannot be certified"; return 2
+  fi
+
+  work="$(mktemp -d)" || { warn "guard: could not stage the content check"; return 2; }
+  rfile="$work/render.words"; vfile="$work/value.words"
+
+  strip_to_text "$site_html" | _norm_words > "$rfile"
+  n="$(wc -l < "$rfile" | tr -d '[:space:]')"; n="${n:-0}"
+  if [ "$n" -lt 20 ]; then
+    rm -rf "$work"
+    warn "guard: the rendered site yielded only $n words of visible text — a degraded extraction is not a clean result"
+    return 2
+  fi
+
+  recs="$(nonpublishable_values "$trip_dir")" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
+  # A parsed-and-empty class is a MEASUREMENT; an unrecognized file is a DEGRADATION.
+  # Collapsing them would make a broken parser indistinguishable from a trip that has
+  # neither a passport value nor a third-party entry. Absence is not zero.
+  if [ -z "$recs" ]; then rm -rf "$work"; return 0; fi
+
+  while IFS="$(printf '\t')" read -r member field rule value; do
+    [ -n "${rule:-}" ] || continue
+    printf '%s' "$value" | _norm_words > "$vfile"
+    _guard_match "$rule" "$vfile" "$rfile"; rc=$?
+    case "$rc" in
+      0) warn "guard: a non-publishable value reached the rendered site — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
+      1) ;;
+      3) warn "guard: member '$member', field '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass."; undet=1 ;;
+      *) warn "guard: the match for member '$member', field '$field' could not be run (matcher exit $rc) — undetermined, not clean."; undet=1 ;;
+    esac
+  done <<EOF
+$recs
+EOF
+
+  rm -rf "$work"
+  [ "$hit"   -eq 0 ] || return 1
+  [ "$undet" -eq 0 ] || return 2
+  return 0
+}
+
 # ═════════════════════════════════════════════════════════════════════════════
 # verify_ciphertext — THE PRE-PUSH SAFETY GUARD  ◀── your high-judgment function
 # ═════════════════════════════════════════════════════════════════════════════
@@ -311,6 +625,12 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
 
   if [ "$plaintext" = "1" ]; then
     warn "PLAINTEXT publish requested — the itinerary will be WORLD-READABLE, no passphrase."
+    # The content guard runs BEFORE the human gate, not after: one insertion covers both
+    # the interactive typed-PUBLISH limb and the ALLOW_PLAINTEXT non-interactive limb,
+    # and asking someone to type PUBLISH and THEN refusing trains them to read the prompt
+    # as noise. Nothing has been copied to the publish dir at this point.
+    verify_publishable_content "$site_html" "$trip_dir" \
+      || die "GUARD ABORTED publish — the rendered site carries content that must not be published, or the non-publishable class could not be determined. Nothing was pushed. Publish encrypted (drop --plaintext) or resolve the finding above."
     if [ -t 0 ]; then
       printf '  Type PUBLISH to confirm public, unencrypted publishing: '; read -r ans
       [ "${ans:-}" = "PUBLISH" ] || die "aborted — plaintext not confirmed."
