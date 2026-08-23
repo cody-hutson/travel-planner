@@ -1,11 +1,20 @@
 # ADR-008: Publish-path content guard — a value-keyed predicate on the plaintext limb
 
-- **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended the same day after an
-  independent adversarial design review confirmed four defects in the first implementation — the
-  guard matched the visible-text projection rather than the published bytes, the name arm applied no
-  stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and the conjunctive window
-  was calibrated on a single-occurrence fixture. The architecture below is unchanged; its **scope** is
-  corrected, and the coverage boundary now states the measured boundary rather than the intended one.
+- **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **twice** the same day.
+  **First amendment** — an independent adversarial design review confirmed four defects in the first
+  implementation: the guard matched the visible-text projection rather than the published bytes, the
+  name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
+  the conjunctive window was calibrated on a single-occurrence fixture.
+  **Second amendment** — acceptance review found the `[THIRD-PARTY]` half of the class substantially
+  inert against real data, on three compounding fail-open gaps: the arm was a two-**field allowlist**
+  where `reference/data-model.md:170` states an entry-class bound with *no default-allow*; the
+  `[THIRD-PARTY]` mark was read only off the **entry heading**, though `agents/00-enrichment.md:388`
+  requires it on every value and `:421-424` names heading mark-stripping as a known agent error; and
+  the field it did match, `Specific:`, is the **profile** label, bound against the **derived** file.
+  The architecture below — value-keying, the class-source seam, the 0/1/2 contract — is unchanged
+  through both. Its **scope** is corrected, and the coverage boundary states the measured boundary
+  rather than the intended one. Where the two amendments disagreed with an earlier claim in this
+  document, the claim is **corrected in place**, not softened.
 - **Deciders:** repo maintainer
 - **Driving work:** #123, the plaintext content guard. Establishes the mechanism, the class-source
   seam that #278 later re-keys, and — above all — the coverage boundary this layer does and does
@@ -115,11 +124,64 @@ Four parts, all in `scripts/publish-trip-site.sh`:
 **1. `nonpublishable_values <trip_dir> [site_html]` — the single home of the class.** It emits one
 record per non-publishable value: `<member>` (`passport` or `third-party`), `<field>` (a locator),
 `<rule>`, and the value. It returns `0` when the class is enumerated — *possibly empty* — and `2`
-when the class cannot be determined. The `Passport:` label, `Category:` values, `Applies to:` link
-text, and every field of a non-`[THIRD-PARTY]` entry other than `Passport:` are excluded **as
-non-members**, which is the whole anti-over-block mechanism and is why the designed escalation path
-for a first-party `[OPERATOR-PROVIDED]` need stays open. This function is the seam #278 re-keys:
-swapping the membership rule for a declared attribute is a change to this body alone.
+when the class cannot be determined. This function is the seam #278 re-keys: swapping the membership
+rule for a declared attribute is a change to this body alone.
+
+**The `[THIRD-PARTY]` member is an entry denylist, not a field allowlist**, and the polarity is the
+correction that matters most here — because it is the polarity #278 inherits. Under a
+`[THIRD-PARTY]` entry, **every stated field value is in class**, which is what
+`reference/data-model.md:170` says in its own words: *"The bound is the entry class, not a list of
+fields, so it holds for every facet below and for any facet a later release adds … there is no
+default-allow outside it."* The first implementation enumerated exactly two things per entry — the
+heading name and the value of a line labelled `Specific:` — so every other field default-**allowed**.
+Excluded **as non-members**, and this is the whole list: the `Passport:` **label**; the `Applies to:`
+link in both its parenthesized derived form and its standalone profile form, together with the quoted
+constraint name in the derived need-line head (`data-model.md:139` — *"This is the link, **never a
+copy** of the constraint text"* — its target lives in the publish-bound `trip-context.md`, so keying
+on it would abort on correct published content); a value made **entirely** of the closed
+need-category enum, which is schema vocabulary rather than a captured value; and every field of a
+non-`[THIRD-PARTY]` entry other than `Passport:`, which is why the designed escalation path for a
+first-party `[OPERATOR-PROVIDED]` need stays open.
+
+**The parse binds to the entry, not to a label — because the corpus does not specify one.** The
+label the first implementation used, `Specific:`, is the **profile** label. Measured over this
+repository: line-anchored, it occurs 3× in `reference/data-model.md`, all three under
+`# Traveler — Jordan` / `# Traveler — Pat` (i.e. `travelers/<name>.md`), and 2× in
+`templates/traveler-intake.template.md`, which governs that same profile — and **0×** in
+`agents/00-enrichment.md`, the spec that *writes* the derived model, and **0×** in
+`agents/06-validator.md`, which defines the class. The derived model's own worked example
+(`data-model.md:266-283`) writes a need as
+`- Need → Hard Constraints "<c>" (Applies to: <n>); specific: <v>.` — a **mid-line, lowercase**
+label, 4 occurrences, none line-anchored. The guard was parsing the derived file with the profile's
+label.
+
+The deeper finding is that a third-party need's line shape is **underspecified**, and that is what
+decides the design rather than a second label. A third-party need cannot carry the first-party
+derived shape at all: `data-model.md:143` bars it from ever escalating to a trip-level constraint or
+onto an `Applies to:` roster, and `agents/06-validator.md:231-243` says it *"by design has no
+governing trip-level constraint to key to"*. So the link head and the `Applies to:` are both
+unavailable to it, and what remains — a category and a specific — is serialized nowhere. Probed
+across every `.md` in the repository: of 44 fenced example blocks, 12 carry a `## <Name>` heading and
+**0** carry a `[THIRD-PARTY]` entry. There is no worked example to bind to. Any label binding is
+therefore a guess, and a guard bound to a guessed shape is the defect this replaces. The entry
+denylist needs no label: it strips the link constructs and an optional label prefix, then takes
+whatever the line states — which reads the derived need line, the profile-style block and a bare
+bullet identically. **This is a finding about the corpus, not only about the guard**, and #278 is
+where it becomes structural.
+
+**The mark is read at both granularities, and the ordering is load-bearing.** `[THIRD-PARTY]` is
+consulted on the entry heading **and** on each value line, as a union.
+`agents/00-enrichment.md:388` requires the mark on *"every value sourced this way"*, and `:421-424`
+names heading mark-stripping as a **known agent error** that *"silently strip[s] the key the
+publication guard depends on"* — the exact state in which a heading-only read enumerates zero
+third-party records and publishes. The value-level mark is read off the **raw** line, *before*
+`clean()` runs: `clean()` deletes every bracketed provenance mark as metadata, so a mark consulted
+after it has already been erased. Two backstops sit behind this. A `[THIRD-PARTY]` mark present in
+the file that resolves to **no** class record is `2` — an unresolved *presence* is no more an empty
+class than an absence is. And a recorded third-party **supersession** with no per-traveler profile to
+support it is `2`: the sanctioned provenance change is triggered by the person filing their own
+profile (`00-enrichment.md:409-419`), so a supersession with no profile behind it is
+indistinguishable from the bad merge `:420-424` forbids by name.
 
 It reads **two sources, not one**. `outputs/traveler-model.md` is a `[DERIVED]` projection —
 `CLAUDE.md` makes `travelers/<traveler>.md` authoritative and has the enrichment agent refresh the
@@ -145,8 +207,19 @@ pure consumer with no class knowledge.
 | Member | Shape | Match rule |
 |---|---|---|
 | `Passport` value | short structured field | every distinctive token of the value must appear, and the occurrences must fall inside a 25-word window **within one structural block**; fewer than 2 distinctive tokens is undetermined |
-| `[THIRD-PARTY]` need text | prose | contiguous 5-word containment; a pure-stopword window is not a key; under 5 words is undetermined |
+| `[THIRD-PARTY]` field value, ≥ 5 words | prose | contiguous 5-word containment; a pure-stopword window is not a key |
+| `[THIRD-PARTY]` field value, < 5 words | short field | whole-phrase whole-word match; a value with no distinctive token is a *declared non-key* |
 | `[THIRD-PARTY]` name | proper noun | whole-word match, **stoplisted like its two siblings**; a name that reduces to no distinctive token is a *declared non-key* |
+
+**The rule is chosen from the value's own word count, and that is a mitigation rather than a
+preference.** Under an entry denylist most third-party fields are short, and the prose rule reports
+anything under five words as *below its keyability floor* — which the predicate surfaces as
+UNDETERMINED, aborting **every** publish of that trip forever, with no remedy. That is the unusable
+fail-closed control this document already argues against in the name-arm note below, and it would
+have arrived as a side effect of widening the class. Two things prevent it: the short branch above,
+which is determinate on a short value; and the closed-enum exclusion, which keeps a `Category:` line
+from keying on `rest`, `timing` or `other` and aborting on ordinary itinerary English. A category
+carrying text **beyond** the enum is a captured value and still keys.
 
 The block scoping and the stoplist on the name arm are both corrections, not refinements. The
 25-word window alone was calibrated on a fixture carrying **one** occurrence of each token; a real
@@ -225,9 +298,22 @@ the encrypted limb of `publish` and all of `update`.
 **Positive**
 
 - The unguarded limb is guarded, and it is the limb whose output is immediately world-readable.
-- The two directions of the class definition are satisfied **by construction** rather than by a
-  stoplist: correct destination-level content was never a member, and de-attribution changes nothing
-  because the name was never the key.
+- **De-attribution** is handled by construction: the name was never the join key, so stripping it
+  changes nothing about the match (L3).
+- **Correct destination-level content is a non-member by construction — and that is a statement about
+  MEMBERSHIP, not about OUTCOME.** An earlier revision of this document claimed both directions of
+  the class definition were satisfied "by construction rather than by a stoplist", with destination
+  content *"never a member"*. The membership half is true and is the mechanism's real achievement:
+  the word "passport" is never a key, so a packing-list line and a `Visa / entry` note are outside
+  the class rather than stoplisted after the fact. **The outcome half is false, and measurement
+  contradicts it.** The *matcher* re-introduces the over-block the *membership* design was built to
+  prevent: 3 of 3 renders carrying both Passport tokens inside one legitimate structural block
+  falsely abort, against 2 of 2 controls that publish — and one of the three is a `Visa / entry`
+  line, the exact class `agents/06-validator.md:145-147` names as *"correct content [that] is never
+  flagged"*. It is fail-**closed**, so it leaks nothing; it is a false abort on protected content,
+  and this document's own argument at the name-arm note — *an unusable fail-closed control is
+  fail-open in practice, because it gets worked around* — applies to it unchanged. It is **open and
+  undispositioned**, carried as residual 6 below rather than claimed as solved.
 - The class has one home with a stable contract, so #278 re-keys it in a single function body — the
   predicate, the call site and every test assertion are untouched.
 - `verify_ciphertext` is not read, called or edited by any of this, so the encrypted limb's behaviour
@@ -249,37 +335,59 @@ the encrypted limb of `publish` and all of `update`.
   is the stoplist now shared with the other two arms, and it is a **declared non-key** rather than a
   silent skip — see residual 2 below. A name that is merely *uncommon* still keys and can still
   over-block; that remains accepted.
-- The guard's parser binds to field labels (`## <Name>`, `[THIRD-PARTY]`, `Passport:`, `Specific:`)
-  that are guaranteed only by agent prose in `agents/00-enrichment.md` and
-  `templates/traveler-intake.template.md`; no schema pins them. A total format drift is caught loudly
-  by the zero-entries rule. A **partial** drift — one label renamed while the entry heading still
-  parses — degrades quietly. Reading the per-traveler profiles widens this surface slightly: the
-  profile parse binds to the same `Passport:` label and has no zero-entries backstop of its own, since
-  a trip with no profiles is legitimate. This is a named residual and a strong candidate for what #278
-  makes structural.
+- The guard's parser binds to structural markers (`## <Name>`, `[THIRD-PARTY]`, `Passport:`) that are
+  guaranteed only by agent prose in `agents/00-enrichment.md` and
+  `templates/traveler-intake.template.md`; no schema pins them. The third-party arm no longer binds
+  to a **need-field label** at all — it takes what an entry's lines state — precisely because the
+  corpus specifies no such label for this artifact, and the first implementation guessed one and
+  guessed wrong. That removes the largest instance of this residual without removing the residual: a
+  total format drift is still caught loudly by the zero-entries rule, and a **partial** drift — the
+  `Passport:` label renamed, or the `## <Name>` heading form changed — still degrades quietly.
+  Reading the per-traveler profiles widens the surface slightly: the profile parse binds to the same
+  `Passport:` label and has no zero-entries backstop of its own, since a trip with no profiles is
+  legitimate. **That an entry-class bound had to be inferred from prose in three separate documents,
+  with no worked example of the entry it governs, is itself the finding** — and it is a strong
+  candidate for what #278 makes structural.
 - The suite now runs in CI with a strict skip mode, so a transient npm-registry outage turns the check
   red. Accepted deliberately: the alternative is a green that proves less than it appears to.
 
 **Coverage boundary — the part most likely to be forgotten and then over-claimed**
 
 This section states the **measured** boundary. Every claim in it is pinned by a case in
-`scripts/test-publish-guard.sh` groups L, M and N, each with a control arm, because a boundary that is
-asserted rather than measured is the thing this section exists to prevent.
+`scripts/test-publish-guard.sh` groups L, M, N and O, each with a control arm, because a boundary
+that is asserted rather than measured is the thing this section exists to prevent. An acceptance
+review found the previous revision of this section diverging from the measurement in **six** places —
+five silent omissions and one affirmative claim the measurement contradicted. All six are corrected
+here: three by fixing the guard (the field allowlist, the heading-only mark, the model-shape
+mismatch) and three by stating a residual that was previously absent or under-described (encoding
+transforms, the same-block over-block, the line-based floor).
 
-**What is caught.** A class value anywhere in the published bytes — visible text, an HTML comment, any
-attribute value, a `<script>` or `<style>` body — on any of the 8 surfaces measured (group M1). A
+**What is caught.** A class value anywhere in the published bytes — visible text, an HTML comment,
+any attribute value, a `<script>` or `<style>` body — on any of the 8 surfaces measured (group M1). A
 value that reaches the render **de-attributed**, with the traveler name stripped, by construction:
-the name was never the join key, so removing it changes nothing (L3). A passport value that is
-reworded or order-swapped **within one block** (N1d). A passport that exists only in
-`travelers/<traveler>.md` and has not reached the projection yet (M3d). A projection that is stale
-against its first-party sources, or that reads empty while predating the render (M3b).
+the name was never the join key, so removing it changes nothing (L3). **Any** stated field of a
+`[THIRD-PARTY]` entry, not a nominated subset of them (O1). A third-party value whose entry-heading
+mark has been stripped but whose value-level mark survives (O2). A third-party need written in the
+**real derived-model shape** rather than the profile shape (O3). A bad merge that strips both marks
+while retaining the values, and a `[THIRD-PARTY]` mark that resolves to no record — both as
+UNDETERMINED (O4b, O4c). A passport value that is reworded or order-swapped **within one block**
+(N1d). A passport that exists only in `travelers/<traveler>.md` and has not reached the projection
+yet (M3d). A projection that is stale against its first-party sources, or that reads empty while
+predating the render (M3b).
 
-**What is not caught, and why. Four residuals, all deliberate:**
+**What is deliberately NOT in class**, each pinned by a control arm that must publish: a first-party
+`[OPERATOR-PROVIDED]` need, whose escalation to `trip-context.md` is the designed path (O5b, O3c); a
+field value under an **unmarked** entry (O1c); a `Category:` value made entirely of the closed
+need-category enum (O6b), whose sensitivity arm proves the field itself is still live (O6c).
+
+**What is not caught, and why. Seven residuals — four deliberate, three that are open defects
+stated rather than claimed solved:**
 
 1. **Paraphrase.** A value the hub **reworded** on its way into `final-itinerary.md` breaks every
-   n-gram and is **missed**. The class definition names one transform — *the name stripped* — and
-   that one is covered completely; a paraphrase is a judgement no string match can make. #278 states
-   the same limit in its own words, and that is the reason #278 exists.
+   n-gram and is **missed**; a paraphrase is a judgement no string match can make. #278 states the
+   same limit in its own words, and that is the reason #278 exists. **Paraphrase is not the only
+   missed transform** — an earlier revision of this section implied it was. There are **three**
+   transform classes that defeat matching, and the other two are residual 5 below.
 2. **A stopword-only third-party name (new).** `is_stop` now applies to the name arm as it always did
    to the other two, so a member named **Will** is a *declared non-key* and their name reaching the
    render is not caught here. This is a bounded fail-open on the **name arm only** — the value arm,
@@ -298,6 +406,30 @@ against its first-party sources, or that reads empty while predating the render 
    subtraction, and it is what stops the published-bytes arm aborting on ordinary CSS and script
    (M1d). A render containing the literal sentinel `zzguardblockzz` would split a block that should
    not have split — a missed match, never a false abort.
+5. **Encoding transforms — a second and third missed class, previously unstated.** `_norm_words`
+   lowercases and reduces to `[a-z0-9]`; it does not decode HTML entities and does not rejoin a word
+   split by a tag. Measured: a class value carried with a **numeric character entity** in place of a
+   letter, and one **split mid-word by a tag**, both reach `rc=0` against a verbatim control at
+   `rc=1`. So the missed-transform set is **three classes — paraphrase, entity encoding, and
+   mid-word tag splitting — not one.** These are **open**, not accepted: unlike paraphrase they are
+   mechanical and a normalizer could close them. They are stated here because the previous revision
+   of this section named only paraphrase and therefore over-claimed.
+6. **The same-block over-block, on content the class definition explicitly protects — an OPEN
+   DEFECT.** Scoping the conjunctive window to a structural block fixed a permanent false abort
+   across day boundaries and introduced a narrower one inside a block: 3 of 3 renders carrying both
+   Passport tokens in one legitimate block falsely abort, against 2 of 2 controls that publish. One
+   of the three is a `Visa / entry` line — the exact class `agents/06-validator.md:145-147` names as
+   *"correct content [that] is never flagged"*. It is fail-**closed** and leaks nothing, and no
+   acceptance criterion forbids a false abort, so it does not block. It is nonetheless a false abort
+   on protected content, it is **undispositioned**, and the Consequences section above corrects the
+   claim that construction alone prevented it.
+7. **The coverage floor is LINE-based, and "the value" over-states it.** The model parse reads one
+   line at a time with no continuation handling, so a **wrapped** field value contributes each of its
+   lines as a separate record rather than as one value. Each line is matched on its own: a contiguous
+   5-word run of any *single line* is caught, a run that **spans the wrap point** is not, and a
+   continuation line under five words falls to the short-value rule. The entry denylist improved this
+   — the previous revision matched the **first line only**, because only the labelled line was ever
+   read — but it did not eliminate it. Read "what is caught" above with this floor in mind.
 
 **This layer does not subsume the validator's audit.** Three layers hold this invariant and they are
 not interchangeable:
@@ -327,8 +459,18 @@ residuals 1 to 3 above, where layers 1 and 3 are the only cover.
   `ADR-007-command-entry-point.md` § 2 and § 4.
 - Implementation and regression coverage: `scripts/publish-trip-site.sh`,
   `scripts/test-publish-guard.sh` groups **L** (the predicate and its class source), **M** (published
-  bytes, the name-arm stoplist, class freshness) and **N** (the block-scoped conjunctive window),
+  bytes, the name-arm stoplist, class freshness), **N** (the block-scoped conjunctive window) and
+  **O** (the `[THIRD-PARTY]` entry denylist, value-granularity mark reading, the real derived-model
+  shape, the bad-merge and orphaned-mark backstops, and the two over-block controls),
   `.github/workflows/publish-guard.yml`.
+- The entry-class bound with no default-allow, and the `Applies to:` link-never-a-copy rule:
+  `reference/data-model.md` § *Lifecycle facets* (:170) and § *Needs* (:139, :143). The only worked
+  example of `outputs/traveler-model.md`, which is where the derived need-line shape is read from:
+  `reference/data-model.md` § *Worked example — a per-traveler file* (:266-283). The third-party
+  entry's marks, cardinality and needs-only bound, the value-granularity requirement, the named
+  heading mark-stripping error, and the supersede-don't-merge rule: `agents/00-enrichment.md`
+  § *A party member who will never file* (:377-424). That a third-party need has no governing
+  constraint to key to: `agents/06-validator.md` (:231-243).
 - First-party source of the Passport member, and the label shape the profile parse binds to:
   `templates/traveler-intake.template.md`; the `[DERIVED]` status of the projection and the
   refresh contract: `CLAUDE.md` → *Satisfaction-layer artifacts*.

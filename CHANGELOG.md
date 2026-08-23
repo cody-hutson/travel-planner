@@ -101,6 +101,29 @@ the default and is still checked exactly as before.
   still does not catch is written down in the decision record rather than left to be
   discovered.
 
+  **The half of the check covering party members now covers all of it.** Of the two
+  kinds of detail this check protects, the second is a need recorded on behalf of
+  someone who has no profile of their own. A first cut of it looked at two things
+  and two things only: that person's name, and one particular line of their record.
+  Everything else written about them was let through. That is backwards — the rule
+  in the data model is that the whole entry for such a person is off limits, with
+  nothing allowed out by default — and it mattered more than a missing line usually
+  would, because the one line being looked for turned out to be the wrong one. It
+  is the label used in a traveller's own hand-filled form, and the check was
+  reading the summary built from those forms, which writes the same information
+  differently. So on a real trip that half of the check could match nothing at all,
+  while still reporting the page as clear. Three things are fixed together: every
+  detail recorded about such a person is now checked rather than a chosen few; the
+  marking that identifies them is read wherever it appears rather than only at the
+  top of their entry, which matters because losing that top-line marking is a known
+  mistake; and the check no longer looks for one particular label, because there is
+  no agreed one to look for. Two related states now stop a publish instead of
+  passing quietly: an entry whose marking has been removed while the details stayed
+  behind, and a marking in the file that the check cannot tie to anything. The
+  balance is kept the other way too — a need that a traveller stated about
+  themselves and asked to have planned around is still allowed onto the page, as it
+  always should have been.
+
 ## [0.12.0] — 2026-08-22 — First-run experience
 
 Four fixes aimed at the first hour with this repository, and at the release
