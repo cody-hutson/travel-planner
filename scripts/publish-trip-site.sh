@@ -479,12 +479,51 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 # contract, the return contract, the predicate, the call site and every test assertion
 # are unchanged.
 #
+# CD-4 — the [THIRD-PARTY] member is an ENTRY DENYLIST, not a field allowlist.
+# The shipped guard enumerated exactly two things per third-party entry: the heading
+# name, and the value of a line labelled `Specific:`. Every other field DEFAULT-ALLOWED.
+# reference/data-model.md:170 states the opposite polarity outright — "The bound is the
+# entry class, not a list of fields, so it holds for every facet below and for any facet
+# a later release adds ... there is no default-allow outside it" — and #278 would have
+# inherited the allowlist shape when it re-keys this seam. So: under a third-party entry,
+# EVERY stated field value is in class, minus the short non-member list below.
+#
+# The label binding was independently wrong, which is why the polarity fix alone is not
+# enough. `Specific:` is the PROFILE label. Measured over this repository: the
+# line-anchored form occurs 3x in reference/data-model.md — all three under
+# `# Traveler — Jordan` / `# Traveler — Pat`, i.e. `travelers/<name>.md` — and 2x in
+# templates/traveler-intake.template.md, which governs that same profile. It occurs 0x in
+# agents/00-enrichment.md, the spec that WRITES this file, and 0x in agents/06-validator.md,
+# which defines the class. The derived model's own worked example (data-model.md:266-283)
+# writes a need as `- Need → Hard Constraints "<c>" (Applies to: <n>); specific: <v>.` —
+# a mid-line lowercase label, 4 occurrences, none of them line-anchored. The guard was
+# parsing the derived file with the profile's label.
+#
+# And the third-party need's own line shape is UNDERSPECIFIED, which is the finding that
+# decides the design. A third-party need cannot carry the first-party derived shape at
+# all: data-model.md:143 bars it from ever escalating to a trip-level constraint or onto
+# an `Applies to:` roster, and 06-validator.md:231-243 says it "by design has no governing
+# trip-level constraint to key to". So the link head and the Applies-to are both
+# unavailable to it, and what remains — a category and a specific — is serialized nowhere.
+# Probed: of 44 fenced example blocks across every .md in the repository, 12 carry a
+# `## <Name>` heading and 0 carry a [THIRD-PARTY] entry. There is no worked example.
+# Binding to any label is therefore guessing, and a guard bound to a guessed shape is the
+# defect this replaces. The entry denylist needs no label: it takes what the line states.
+#
 # EXCLUDED AS NON-MEMBERS, and this is the whole anti-over-block mechanism:
 #   • the `Passport:` LABEL. The class is keyed on a traveler CAPTURED VALUE, never on
 #     the word "passport" — so a legitimate packing-list line and a Destination
 #     Baseline `Visa / entry` note are structurally outside the class rather than
 #     stoplisted after the fact. They were never members.
-#   • `Category:` values and `Applies to:` link text — the link, never a copy.
+#   • the `Applies to:` link, in both the parenthesized derived form and the standalone
+#     profile form, and the quoted constraint name in the derived need-line head.
+#     data-model.md:139 — "This is the link, **never a copy** of the constraint text."
+#     Its target lives in trip-context.md, which IS publish-bound and legitimately
+#     rendered; keying on it would abort on correct published content.
+#   • a value made ENTIRELY of the closed need-category enum (_GUARD_NEED_ENUM) — schema
+#     vocabulary, not a captured value. Same structural exclusion as the `Passport:`
+#     label. Without it a `Category:` line keys on `rest` or `other` and aborts every
+#     publish whose itinerary uses an ordinary English word.
 #   • every field of a non-third-party entry other than `Passport:` — so the designed
 #     escalation path for a first-party operator-relayed need stays open. The key is
 #     the third-party mark (the subject could not consent), not who supplied the value.
@@ -519,7 +558,71 @@ _GUARD_AWK_HELPERS='
       if (t == "unknown" || t == "unspecified" || t == "notstated") return 0
       return 1
     }
+    # Token count under the SAME normalization _norm_words applies, so a rule chosen
+    # here from a word count is chosen against the stream the matcher will actually see.
+    function wordcount(s,   t, a) {
+      t = tolower(s); gsub(/[^a-z0-9]+/, " ", t)
+      sub(/^ +/, "", t); sub(/ +$/, "", t)
+      if (t == "") return 0
+      return split(t, a, " ")
+    }
+    # True when every token of the value is closed-enum SCHEMA vocabulary.
+    function enum_only(s,   t, a, n, i) {
+      if (ENUM == "") return 0
+      t = tolower(s); gsub(/[^a-z0-9]+/, " ", t)
+      sub(/^ +/, "", t); sub(/ +$/, "", t)
+      if (t == "") return 0
+      n = split(t, a, " ")
+      for (i = 1; i <= n; i++) if (index(ENUM, " " a[i] " ") == 0) return 0
+      return 1
+    }
+    # Everything a [THIRD-PARTY] entry line STATES, minus the non-member list below.
+    # Shape-independent by construction: it removes the LINK constructs and an optional
+    # label prefix, then takes whatever the line states. That reads the derived-model
+    # need line, the profile-style block, and a bare bullet identically — which is the
+    # point, because the corpus does not specify a third-party need line label at all.
+    #
+    # NON-MEMBERS, and this is the whole list:
+    #   - the "Applies to" link, in both its parenthesized derived form and its
+    #     standalone profile form. reference/data-model.md:139 states it outright:
+    #     "This is the link, never a copy of the constraint text." The constraint it
+    #     points at lives in trip-context.md, which IS publish-bound and legitimately
+    #     rendered, so keying on the link text would abort on correct published content.
+    #     data-model.md:143 also bars a third-party person from an Applies-to roster, so
+    #     on this member the field is doubly not a captured value.
+    #   - the quoted constraint name in the derived need line head, for the same reason:
+    #     it is that same link target.
+    #   - a value that reduces entirely to the closed need-category enum. That enum is
+    #     the SCHEMA vocabulary, not a traveler captured value — the same structural
+    #     exclusion as the "Passport:" LABEL, and it is what stops a Category line
+    #     aborting every publish whose itinerary says rest, timing, or other.
+    # Everything else under the entry is IN. reference/data-model.md:170 — "The bound is
+    # the entry class, not a list of fields ... there is no default-allow outside it."
+    function tp_value(s,   t, c, nxt) {
+      t = s
+      sub(/^[Nn]eed[^"]*"[^"]*"[ \t]*/, "", t)                       # derived link head
+      gsub(/\([ \t]*[Aa]pplies[ \t]+to[ \t]*:[^)]*\)/, " ", t)       # parenthesized link
+      sub(/[Aa]pplies[ \t]+to[ \t]*:.*$/, "", t)                     # standalone link
+      sub(/^[ \t]*[;,][ \t]*/, "", t)
+      c = index(t, ":")
+      nxt = substr(t, c + 1, 1)
+      # A label prefix is a SHORT run followed by a colon and whitespace. The whitespace
+      # test is what keeps a clock time in a value (no fixed plan before 10:00) from
+      # being read as a label and having the value cut away behind it.
+      if (c > 1 && c <= 40 && (nxt == " " || nxt == "\t" || nxt == "")) t = substr(t, c + 1)
+      t = clean(t)
+      if (enum_only(t)) return ""
+      return t
+    }
 '
+
+# The closed need-category enum (agents/00-enrichment.md:330-331) plus the schema words a
+# need line is written with. This is SCHEMA vocabulary — it is not a list of names and it
+# is not _GUARD_STOP, which is normalization vocabulary shared by all three match rules.
+# Kept separate and used in ONE place: deciding that a value made only of these states no
+# traveler fact. Extending it narrows the class, so it stays exactly the documented enum.
+_GUARD_NEED_ENUM=' need needs category categories heat mobility dietary health '\
+'rest budget cap timing sensory other specific '
 
 nonpublishable_values() { # <trip_dir> [site_html]
   local trip_dir="${1:-}" site_html="${2:-}" model out rc
@@ -565,8 +668,15 @@ nonpublishable_values() { # <trip_dir> [site_html]
     done
   fi
 
-  out="$(awk "$_GUARD_AWK_HELPERS"'
-    BEGIN { entries = 0; idx = 0; tp = 0; live = 0 }
+  out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" "$_GUARD_AWK_HELPERS"'
+    BEGIN { entries = 0; idx = 0; tp = 0; live = 0; tprecs = 0; sawmark = 0; supersede = 0 }
+    # The raw text is inspected for the mark BEFORE any per-line handling, so the
+    # orphaned-mark backstop in END sees marks the parse may fail to resolve.
+    /\[THIRD-PARTY\]/ { sawmark = 1 }
+    # A supersession removes both marks by design (00-enrichment.md:409-419). Recording
+    # that it happened is what separates a sanctioned provenance change from the bad
+    # merge the same passage forbids; the shell limb below verifies it is supported.
+    tolower($0) ~ /supersed/ && tolower($0) ~ /third-party/ { supersede = 1 }
     /^##[ \t]/ {
       head = $0; sub(/^##[ \t]+/, "", head)
       nm = clean(head)
@@ -574,12 +684,13 @@ nonpublishable_values() { # <trip_dir> [site_html]
       if (key == "updatesignals") { live = 0; tp = 0; next }   # structural section, not a person
       entries++; idx = entries; live = 1
       tp = (index(head, "[THIRD-PARTY]") > 0)
-      if (tp && stated(nm)) printf "third-party\tentry %d / Name\ttoken\t%s\n", idx, nm
+      if (tp && stated(nm)) { printf "third-party\tentry %d / Name\ttoken\t%s\n", idx, nm; tprecs++ }
       next
     }
     /^###/    { next }                   # deeper headings stay INSIDE the entry
     /^#[ \t]/ { live = 0; tp = 0; next } # the file title ends any entry
     live == 1 {
+      raw = $0
       lab = $0
       sub(/^[ \t]*[-*+][ \t]+/, "", lab)
       gsub(/\*\*/, "", lab)
@@ -589,17 +700,72 @@ nonpublishable_values() { # <trip_dir> [site_html]
         if (stated(val)) printf "passport\tentry %d / Passport\tconjunctive\t%s\n", idx, val
         next
       }
-      if (tp && lab ~ /^[Ss]pecific[ \t]*:/) {
-        val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
-        if (stated(val)) printf "third-party\tentry %d / Specific\tphrase\t%s\n", idx, val
+      # ── the [THIRD-PARTY] member: an ENTRY DENYLIST, not a field allowlist ──────
+      # The mark is read at BOTH granularities and the two are a UNION. The heading
+      # limb alone was the shipped defect: 00-enrichment.md:388 requires the mark on
+      # "every value sourced this way", and :421-424 names heading mark-stripping as a
+      # KNOWN agent error which "silently strip[s] the key the publication guard
+      # depends on" — the exact state in which a heading-only read enumerates zero
+      # third-party records and publishes.
+      #
+      # ORDERING IS LOAD-BEARING: the value-level mark is read off the RAW line, before
+      # clean() runs. clean() deletes every bracketed provenance mark as metadata, so a
+      # mark consulted after it has already been erased.
+      vmark = (index(raw, "[THIRD-PARTY]") > 0)
+      if (tp || vmark) {
+        val = tp_value(lab)
+        if (stated(val)) {
+          # Rule assignment travels with the record and is made HERE, alongside
+          # membership, because the two are one decision. It keys off the VALUE, never
+          # off a field label — the label shape of a third-party need is precisely what
+          # the corpus does not specify (see the coverage-boundary note above).
+          #   >= F tokens : prose. The phrase rule catches the verbatim and the
+          #                 de-attributed carry-through.
+          #   <  F tokens : the phrase rule would exit 3 (below its keyability floor)
+          #                 and every publish of the trip would abort as UNDETERMINED,
+          #                 forever, with no remedy — the unusable fail-closed control
+          #                 the token-branch note calls fail-open in practice. The token
+          #                 rule is determinate on a short value, and its is_stop /
+          #                 exit-4 path already handles a value with nothing distinctive
+          #                 in it. Mitigated, not accepted.
+          n = wordcount(val)
+          printf "third-party\tentry %d / field %d\t%s\t%s\n", idx, ++fno[idx], \
+                 (n >= F ? "phrase" : "token"), val
+          tprecs++
+        }
         next
       }
     }
-    END { if (entries == 0) exit 3 }
+    END {
+      if (entries == 0) exit 3
+      # ORPHANED-MARK BACKSTOP. The file carries the non-publication key but the parse
+      # resolved it to nothing. That is not an empty class — it is the parse failing on
+      # a file that says outright it has third-party content, which is the silent
+      # fail-open this guard exists to refuse. Absence is not zero; an unresolved
+      # PRESENCE is not zero either.
+      if (sawmark && tprecs == 0) exit 4
+      if (supersede) exit 5
+    }
   ' "$model" 2>/dev/null)" && rc=0 || rc=$?
   case "$rc" in
     0) ;;
     3) warn "guard: no '## <Name>' entry was recognized in $model — the derived-model format has drifted, so the class is UNDETERMINED, not empty"; return 2 ;;
+    4) warn "guard: $model carries a [THIRD-PARTY] mark that resolved to no class record — the mark is orphaned or the entry did not parse, so the class is UNDETERMINED, not empty"; return 2 ;;
+    5)
+      # A recorded third-party supersession is sanctioned ONLY by the person having
+      # filed their own profile — that is the event that triggers it
+      # (00-enrichment.md:409-411), and their own file is what becomes authoritative.
+      # A supersession claimed with no profile anywhere is unsupported: the marks are
+      # gone and nothing backs the drop, which is indistinguishable from the bad merge
+      # :420-424 forbids. Undetermined, never a pass.
+      # had_profiles is the freshness gate's own glob result, computed above — reused
+      # rather than re-scanned. Deliberately not `find -maxdepth 1 -print -quit`: that
+      # is the same BSD/GNU divergence class as the _epoch_of_file defect this release
+      # already tripped over, and the shell glob has one behaviour everywhere.
+      if [ "$had_profiles" -ne 1 ]; then
+        warn "guard: $model records a [THIRD-PARTY] supersession but no per-traveler profile exists to support it — the provenance change is unverifiable, so the class is UNDETERMINED"; return 2
+      fi
+      ;;
     *) warn "guard: $model could not be parsed (exit $rc) — the class is undetermined"; return 2 ;;
   esac
 

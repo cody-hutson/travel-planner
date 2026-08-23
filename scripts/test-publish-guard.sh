@@ -12,7 +12,10 @@
 # Pure-bash tests (A–C2, F, H, I, K, L) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
-# K = trips/ ignore invariant (#254) · L = plaintext content guard (#123).
+# K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
+# M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
+# conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
+# value-granularity mark, real derived-model shape (#123 AC 3).
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -744,6 +747,293 @@ else
 fi
 verify_publishable_content "$NHIT" "$NTD" >/dev/null 2>&1; nrc=$?
 if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block still aborts (rc=1) — block scoping narrowed the window, it did not disarm it"; else FAIL "N1d: a real same-block passport carry-through no longer aborts (rc=$nrc) — PR-7 over-corrected into a fail-open"; fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Group O (#123 AC 3, second remediation) — the [THIRD-PARTY] member of the class.
+# AC 3 says the class covers "every [THIRD-PARTY]-marked value in
+# outputs/traveler-model.md". The shipped guard covered two things: the entry heading
+# name, and the value of a line labelled `Specific:`. Three compounding gaps, all
+# fail-OPEN, each pinned here by one case:
+#   O1  the third-party arm was a FIELD ALLOWLIST — every other field default-allowed,
+#       against reference/data-model.md:170 ("the bound is the entry class, not a list
+#       of fields ... there is no default-allow outside it").
+#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md:388
+#       requires it on "every value sourced this way" and :421-424 names heading
+#       mark-stripping as a KNOWN agent error. clean() also erased a value-level mark
+#       before it could be consulted, so the ordering is part of the fix.
+#   O3  `Specific:` is the PROFILE label. It occurs 0x in agents/00-enrichment.md (the
+#       spec that WRITES the model) and 0x in agents/06-validator.md; the derived model's
+#       own worked example (reference/data-model.md:266-283) writes the mid-line
+#       `; specific:` form. The guard bound a profile label to a derived file.
+#   O4  a bad merge strips both marks while retaining the values — the state
+#       agents/00-enrichment.md:420-424 forbids by name. It must never publish clean.
+#   O5  the CONTROL that keeps the fix honest: a first-party operator-relayed need is
+#       NOT in class (agents/06-validator.md:152), and must still publish.
+#   O6  the keyability-floor mitigation: a closed-enum category value is schema
+#       vocabulary — neither a hit nor an UNDETERMINED sub-floor abort.
+# Every case carries a fixture-integrity control arm graded BEFORE the verdict it
+# protects (the K2/K3 idiom): a case whose control arm also returns zero is a BROKEN
+# PROBE, not a pass. Every verdict asserts an EXACT return code rather than truthiness —
+# `if func; then FAIL; else PASS` treats exit 127 from a deleted function as success, and
+# the suite already carries four assertions of that shape (AI-009). This group adds none.
+# Like L/M/N, group O runs purely on $WORK fixtures — no gh, no npx, no TTY, no network —
+# so it cannot reach the SKIP path and its verdicts are real on every runner.
+# ─────────────────────────────────────────────────────────────────────────────
+echo "Third-party class: entry denylist, value-granularity mark, real model shape (#123 AC 3):"
+
+OOUT="$WORK/o.err"; ORC=0
+oguard() { verify_publishable_content "$1" "$2" >/dev/null 2>"$OOUT"; ORC=$?; }
+
+# One shared render body, differing only in its final paragraph, so a verdict difference
+# between two O cases is caused by that paragraph and nothing else. It carries the same
+# near-misses group L uses (a packing-list "passport", destination-level entry guidance)
+# and deliberately names NO party member, so a name-arm hit can never be the cause of an
+# O verdict about a field.
+orender() { # <out_file> <final paragraph>
+  cat > "$1" <<HTML
+<!DOCTYPE html><html><head><title>Porto Trip</title></head><body>
+<h1>Itinerary</h1>
+<p>Day 1: arrive at the river station, drop bags at the guest house, then walk the
+covered market for an hour before an early dinner at the counter two streets over.</p>
+<p>Day 2: the harbour museum in the morning, a long lunch by the water, then an
+afternoon rest before the hill gardens in the late light.</p>
+<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>
+<p>Visa / entry: no visa required for stays under ninety days; a passport valid for six
+months beyond arrival is expected at the border.</p>
+<p>$2</p>
+</body></html>
+HTML
+}
+# The model is written AFTER its render in every case below. nonpublishable_values refuses
+# an EMPTY class read from a projection older than the render (CD-3), so a case that
+# expects rc=0 on an empty class must not have a model predating its own fixture render.
+omodel() { # <trip_dir>  — model text on stdin
+  mkdir -p "$1/outputs"; cat > "$1/outputs/traveler-model.md"
+}
+
+# ── O1 — a third-party field OTHER than the one the shipped guard matched ────
+O1R="$WORK/o1.html"
+orender "$O1R" 'Access note: crowded escalators and long unbroken stair flights bring on vertigo.'
+O1TD="$WORK/o1_trip"
+omodel "$O1TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+- Category: mobility
+- Trigger: crowded escalators and long unbroken stair flights bring on vertigo
+- Applies to: ## Hard Constraints -> "Mobility"
+MD
+# O1a — fixture integrity. The case is only about the allowlist if the entry carries NO
+# `Specific:` field at all, the value really is in the render, and the party member is
+# NOT named there (which would make the name arm the cause instead of the field).
+if ! grep -qE '^[[:space:]]*-?[[:space:]]*Specific:' "$O1TD/outputs/traveler-model.md" \
+   && grep -qF 'stair flights bring on vertigo' "$O1R" \
+   && ! grep -qF 'Quill' "$O1R"; then
+  PASS "O1a: the entry carries no 'Specific:' field, the render carries the value, and no name is in the render — O1b is about the field allowlist"
+else
+  FAIL "O1a: the O1 fixture is not set up as claimed — O1b would prove nothing"
+fi
+oguard "$O1R" "$O1TD"
+if [ "$ORC" -eq 1 ]; then PASS "O1b: a third-party field other than 'Specific:' reaching the render aborts (rc=1) — the arm is an entry denylist, not a field allowlist"; else FAIL "O1b: a non-'Specific:' third-party field reached the render without aborting (rc=$ORC) — the field allowlist survives"; fi
+# O1c — SPECIFICITY. The same field text under a NON-third-party entry must publish, or
+# O1b is passing because the words are matched rather than because the entry is in class.
+O1CTD="$WORK/o1_control"
+omodel "$O1CTD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill
+- Trigger: crowded escalators and long unbroken stair flights bring on vertigo
+MD
+oguard "$O1R" "$O1CTD"
+if [ "$ORC" -eq 0 ]; then PASS "O1c: the identical field text under an UNMARKED entry publishes (rc=0) — O1b's abort is caused by the [THIRD-PARTY] mark, not by the words"; else FAIL "O1c: an unmarked entry's field aborted (rc=$ORC) — the denylist is not bound to the mark"; fi
+
+# ── O2 — the mark on the VALUE, not on the heading ───────────────────────────
+O2R="$WORK/o2.html"
+orender "$O2R" 'One member of the party cannot manage more than one flight of stairs in a single stretch.'
+O2TD="$WORK/o2_trip"
+omodel "$O2TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED]
+- Specific: cannot manage more than one flight of stairs in a single stretch [THIRD-PARTY]
+MD
+# O2a — fixture integrity. This is the corpus-named agent error: the heading mark is gone
+# and only the value carries it. If the heading still carried the mark the case would be
+# passing on the heading limb and would prove nothing about value granularity.
+if ! grep -qF '## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]' "$O2TD/outputs/traveler-model.md" \
+   && grep -qF '## Quill [OPERATOR-PROVIDED]'              "$O2TD/outputs/traveler-model.md" \
+   && grep -qF 'single stretch [THIRD-PARTY]'              "$O2TD/outputs/traveler-model.md"; then
+  PASS "O2a: the heading has NO mark and the value does — O2b is about value granularity"
+else
+  FAIL "O2a: the O2 fixture still marks the heading — O2b would prove nothing"
+fi
+oguard "$O2R" "$O2TD"
+if [ "$ORC" -eq 1 ]; then PASS "O2b: a value-level [THIRD-PARTY] mark with a stripped heading mark aborts (rc=1) — the mark is read before clean() erases it"; else FAIL "O2b: a value-level mark was not consulted (rc=$ORC) — heading mark-stripping still empties the class silently"; fi
+# O2c — SENSITIVITY. Remove the value-level mark and nothing else; the same render must
+# publish. Without this arm O2b is satisfied by a guard that aborts on the text alone.
+O2CTD="$WORK/o2_control"
+omodel "$O2CTD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED]
+- Specific: cannot manage more than one flight of stairs in a single stretch
+MD
+oguard "$O2R" "$O2CTD"
+if [ "$ORC" -eq 0 ]; then PASS "O2c: the same model with the value-level mark REMOVED publishes (rc=0) — O2b's abort is caused by the mark itself"; else FAIL "O2c: an unmarked value aborted (rc=$ORC) — O2b is not measuring the mark"; fi
+
+# ── O3 — the REAL derived-model shape ────────────────────────────────────────
+O3R="$WORK/o3.html"
+orender "$O3R" 'One member of the party cannot manage more than one flight of stairs in a single stretch.'
+O3TD="$WORK/o3_trip"
+omodel "$O3TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+- Need; specific: cannot manage more than one flight of stairs in a single stretch.
+MD
+# O3a — fixture integrity. The model must use the DERIVED mid-line `; specific:` form and
+# carry zero line-anchored `Specific:` labels, or the case is re-testing the profile shape
+# the shipped guard already matched.
+if grep -qF '; specific:' "$O3TD/outputs/traveler-model.md" \
+   && ! grep -qE '^[[:space:]]*-?[[:space:]]*Specific:' "$O3TD/outputs/traveler-model.md"; then
+  PASS "O3a: the model uses the derived '; specific:' form and no profile-shape 'Specific:' label — O3b is about the model shape"
+else
+  FAIL "O3a: the O3 fixture is not in the derived shape — O3b would prove nothing"
+fi
+oguard "$O3R" "$O3TD"
+if [ "$ORC" -eq 1 ]; then PASS "O3b: a third-party need in the REAL derived-model shape aborts (rc=1) — the guard is no longer bound to the profile label"; else FAIL "O3b: a derived-shape third-party need did not abort (rc=$ORC) — the guard still binds a profile label to a derived file"; fi
+# O3c — SPECIFICITY, and it is the one that keeps the designed escalation path open. The
+# first-party derived need line from data-model.md's own worked example, value carried
+# verbatim into the render, must publish: a first-party need escalating to trip-context
+# and thence to the page is correct content (agents/06-validator.md:145-152).
+O3CR="$WORK/o3_control.html"
+orender "$O3CR" 'Pacing: a ~15-min walking ceiling, step-free, on every travel day.'
+O3CTD="$WORK/o3_control"
+omodel "$O3CTD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Jordan
+- Need -> Hard Constraints "Limited stair & walking tolerance" (Applies to: Jordan); specific: ~15-min walking ceiling, step-free.
+MD
+oguard "$O3CR" "$O3CTD"
+if [ "$ORC" -eq 0 ]; then PASS "O3c: a FIRST-PARTY need in the same derived shape, carried verbatim into the render, publishes (rc=0) — the escalation path stays open"; else FAIL "O3c: a first-party derived need aborted (rc=$ORC) — the denylist over-reaches beyond the third-party entry class"; fi
+
+# ── O4 — a bad merge: both marks stripped, values retained ───────────────────
+O4R="$WORK/o4.html"
+orender "$O4R" 'One member of the party cannot manage more than one flight of stairs in a single stretch.'
+O4TD="$WORK/o4_trip"
+omodel "$O4TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill
+- Specific: cannot manage more than one flight of stairs in a single stretch
+
+## Update signals [DERIVED]
+- Quill: profile filed; supersedes third-party-sourced entry [provenance change].
+MD
+# O4a — fixture integrity. The bad merge is defined by the marks being GONE while the
+# values stay, with the provenance change recorded. If any mark survived, the case would
+# be re-testing O2 rather than the merge.
+o4marks="$(grep -c 'THIRD-PARTY' "$O4TD/outputs/traveler-model.md")"
+if [ "$o4marks" -eq 1 ] && ! grep -qF '[THIRD-PARTY]' "$O4TD/outputs/traveler-model.md" \
+   && grep -qF 'supersedes third-party-sourced entry' "$O4TD/outputs/traveler-model.md" \
+   && [ ! -d "$O4TD/travelers" ]; then
+  PASS "O4a: both marks are stripped, the supersession is recorded, and no profile backs it — O4b is about the merge"
+else
+  FAIL "O4a: the O4 fixture is not the bad-merge shape (marks=$o4marks) — O4b would prove nothing"
+fi
+oguard "$O4R" "$O4TD"
+if [ "$ORC" -eq 2 ]; then PASS "O4b: a recorded third-party supersession with no profile to support it is UNDETERMINED (rc=2) — never a clean publish"; else FAIL "O4b: a bad-merge model did not abort (rc=$ORC) — stripping the marks silently empties the class"; fi
+# O4c — the ORPHANED-MARK backstop. The file says outright that it holds third-party
+# content and the parse resolves it to nothing. That is the silent fail-open in its
+# purest form: absence is not zero, and an unresolved PRESENCE is not zero either.
+O4OTD="$WORK/o4_orphan"
+omodel "$O4OTD" <<'MD'
+# Traveler Model [DERIVED]
+> One entry below was captured [THIRD-PARTY]; see the enrichment notes.
+
+## Rowan
+- Interests: markets, museums
+MD
+oguard "$O4R" "$O4OTD"
+if [ "$ORC" -eq 2 ]; then PASS "O4c: a [THIRD-PARTY] mark that resolves to no class record is UNDETERMINED (rc=2) — an unresolved mark is not an empty class"; else FAIL "O4c: an orphaned [THIRD-PARTY] mark read as a clean empty class (rc=$ORC)"; fi
+# O4d — SPECIFICITY for O4b. The same supersession WITH a profile backing it is the
+# sanctioned provenance change (agents/00-enrichment.md:409-419) and must not be refused,
+# or the check is an always-abort rather than a discriminator.
+O4STD="$WORK/o4_supported"
+mkdir -p "$O4STD/travelers"
+printf '# Traveler - Quill\n\n## Needs\n- Category: mobility\n' > "$O4STD/travelers/Quill.md"
+omodel "$O4STD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill
+- Specific: cannot manage more than one flight of stairs in a single stretch
+
+## Update signals [DERIVED]
+- Quill: profile filed; supersedes third-party-sourced entry [provenance change].
+MD
+oguard "$O4R" "$O4STD"
+if [ "$ORC" -eq 0 ]; then PASS "O4d: the same supersession WITH a per-traveler profile backing it publishes (rc=0) — the check discriminates supported from unsupported"; else FAIL "O4d: a supported supersession was refused (rc=$ORC) — the check is an always-abort, not a discriminator"; fi
+
+# ── O5 — CONTROL: a first-party operator-relayed need must still publish ─────
+O5R="$WORK/o5.html"
+orender "$O5R" 'Pacing: Wren needs a slow start and no fixed plan before ten in the morning.'
+O5TD="$WORK/o5_trip"
+omodel "$O5TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Wren [OPERATOR-PROVIDED]
+- Specific: needs a slow start and no fixed plan before ten in the morning
+MD
+# O5a — fixture integrity. The entry must carry [OPERATOR-PROVIDED] and NOT [THIRD-PARTY],
+# and the render must really carry the need, or the publish proves nothing.
+if grep -qF '[OPERATOR-PROVIDED]' "$O5TD/outputs/traveler-model.md" \
+   && ! grep -qF 'THIRD-PARTY' "$O5TD/outputs/traveler-model.md" \
+   && grep -qF 'slow start and no fixed plan before ten in the morning' "$O5R"; then
+  PASS "O5a: the entry is [OPERATOR-PROVIDED] and NOT [THIRD-PARTY], and the render carries the need — O5b is a real control"
+else
+  FAIL "O5a: the O5 fixture is not set up as claimed — O5b would prove nothing"
+fi
+oguard "$O5R" "$O5TD"
+if [ "$ORC" -eq 0 ]; then PASS "O5b: an [OPERATOR-PROVIDED] non-third-party need reaching the render PUBLISHES (rc=0) — the key is the mark whose subject could not consent, not who supplied it"; else FAIL "O5b: a first-party operator-relayed need aborted (rc=$ORC) — the denylist over-blocks the designed escalation path"; fi
+
+# ── O6 — the keyability-floor mitigation, not an acceptance ──────────────────
+# Under an entry denylist a one-word field would fall below the phrase rule's floor and
+# return 3, which the predicate reports as UNDETERMINED — every publish of the trip
+# aborting forever with no remedy. Two things prevent that: the rule is chosen from the
+# value's own word count, and a value made entirely of closed-enum SCHEMA vocabulary
+# states no traveler fact and is not a member at all.
+O6R="$WORK/o6.html"
+orender "$O6R" 'The afternoon rest is deliberate; the hill gardens are better in late light.'
+O6TD="$WORK/o6_trip"
+omodel "$O6TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+- Category: rest
+MD
+# O6a — fixture integrity. The render must actually use the enum word, and the entry's
+# only field must be the enum-valued one, or the case is not testing the floor at all.
+if grep -qF 'afternoon rest' "$O6R" && grep -qF '- Category: rest' "$O6TD/outputs/traveler-model.md"; then
+  PASS "O6a: the render uses the enum word and the entry's only field is the enum-valued one — O6b is about the floor"
+else
+  FAIL "O6a: the O6 fixture is not set up as claimed — O6b would prove nothing"
+fi
+oguard "$O6R" "$O6TD"
+if [ "$ORC" -eq 0 ]; then PASS "O6b: a closed-enum category value neither aborts as a hit nor as a sub-floor UNDETERMINED (rc=0) — schema vocabulary is not a captured value"; else FAIL "O6b: an enum-only category value aborted (rc=$ORC) — the entry denylist turned a one-word field into a permanent abort"; fi
+# O6c — SENSITIVITY. A category carrying text BEYOND the enum is a captured value and
+# must still key, or O6b is passing because the category field was dropped entirely.
+O6SR="$WORK/o6_sens.html"
+orender "$O6SR" 'Access note: mobility, vertigo on unbroken stair flights.'
+O6STD="$WORK/o6_sens"
+omodel "$O6STD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+- Category: mobility, vertigo on unbroken stair flights
+MD
+oguard "$O6SR" "$O6STD"
+if [ "$ORC" -eq 1 ]; then PASS "O6c: a category carrying text beyond the enum still aborts (rc=1) — the enum exclusion is scoped to enum-ONLY values"; else FAIL "O6c: a category with a real captured value did not abort (rc=$ORC) — the enum exclusion dropped the whole field"; fi
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m\n' "$pass" "$fail" "$skip"
