@@ -44,6 +44,11 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 1. Branch from `main` — `release/vX.Y.Z-<short-slug>`.
 2. Do the work of the release on that branch.
 3. Add the `## [X.Y.Z]` CHANGELOG entry **on the same branch**, at any point before the PR merges — including after step 4, when a draft PR is opened early and extended.
+   **Date the entry the day you write it** — not the merge day, not the tag day: the entry is
+   authored before the merge, so the merge date isn't knowable without guessing at a future one,
+   and re-dating at merge time would put back the post-merge touch this section exists to remove.
+   An entry's date can therefore be a day or two earlier than its tag; entries before `0.12.0`
+   predate this rule.
 4. Open the release PR and fill in the template, per *Making a change* step 3.
 5. Wait for CI, per *Making a change* step 4. The personal-data gate reads the PR's
    diff and the PR's commit messages and author identities — so the CHANGELOG entry
