@@ -933,14 +933,17 @@ omodel "$O4TD" <<'MD'
 MD
 # O4a — fixture integrity. The bad merge is defined by the marks being GONE while the
 # values stay, with the provenance change recorded. If any mark survived, the case would
-# be re-testing O2 rather than the merge.
+# be re-testing O2 rather than the merge. The count is of the MARK TOKEN in its uppercase
+# form and must be zero; the recorded supersession says "third-party-sourced" in lower
+# case and is deliberately not counted as a surviving mark.
 o4marks="$(grep -c 'THIRD-PARTY' "$O4TD/outputs/traveler-model.md")"
-if [ "$o4marks" -eq 1 ] && ! grep -qF '[THIRD-PARTY]' "$O4TD/outputs/traveler-model.md" \
+o4vals="$(grep -c 'flight of stairs' "$O4TD/outputs/traveler-model.md")"
+if [ "$o4marks" -eq 0 ] && [ "$o4vals" -ge 1 ] \
    && grep -qF 'supersedes third-party-sourced entry' "$O4TD/outputs/traveler-model.md" \
    && [ ! -d "$O4TD/travelers" ]; then
-  PASS "O4a: both marks are stripped, the supersession is recorded, and no profile backs it — O4b is about the merge"
+  PASS "O4a: both marks are stripped ($o4marks), the value survived ($o4vals), the supersession is recorded, and no profile backs it — O4b is about the merge"
 else
-  FAIL "O4a: the O4 fixture is not the bad-merge shape (marks=$o4marks) — O4b would prove nothing"
+  FAIL "O4a: the O4 fixture is not the bad-merge shape (marks=$o4marks values=$o4vals) — O4b would prove nothing"
 fi
 oguard "$O4R" "$O4TD"
 if [ "$ORC" -eq 2 ]; then PASS "O4b: a recorded third-party supersession with no profile to support it is UNDETERMINED (rc=2) — never a clean publish"; else FAIL "O4b: a bad-merge model did not abort (rc=$ORC) — stripping the marks silently empties the class"; fi
@@ -1014,7 +1017,11 @@ omodel "$O6TD" <<'MD'
 MD
 # O6a — fixture integrity. The render must actually use the enum word, and the entry's
 # only field must be the enum-valued one, or the case is not testing the floor at all.
-if grep -qF 'afternoon rest' "$O6R" && grep -qF '- Category: rest' "$O6TD/outputs/traveler-model.md"; then
+# `-e` is required, not stylistic: the pattern begins with a dash, and without `-e` grep
+# parses it as an option bundle and exits 2 — which reads as "pattern absent" and failed
+# this arm on its first CI run. The arm refused rather than passing quietly, which is the
+# direction a fixture-integrity control is supposed to fail in.
+if grep -qF 'afternoon rest' "$O6R" && grep -qF -e '- Category: rest' "$O6TD/outputs/traveler-model.md"; then
   PASS "O6a: the render uses the enum word and the entry's only field is the enum-valued one — O6b is about the floor"
 else
   FAIL "O6a: the O6 fixture is not set up as claimed — O6b would prove nothing"
