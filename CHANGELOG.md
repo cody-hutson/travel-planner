@@ -59,10 +59,47 @@ the default and is still checked exactly as before.
   is the case that motivated keying it this way. When something is found, the
   refusal names where it came from and never prints the value itself, so the check
   cannot leak what it exists to protect. If the record of who is travelling is
-  missing, unreadable, or no longer in a shape the check recognises, the publish
-  stops rather than proceeding on a guess; the remedy in every case is to publish
-  encrypted, which is what the default already does. Nothing is pushed when the
-  check refuses, and the refusal happens before the page is copied anywhere.
+  missing, unreadable, out of date, or no longer in a shape the check recognises,
+  the publish stops rather than proceeding on a guess; the remedy in every case is
+  to publish encrypted, which is what the default already does. Nothing is pushed
+  when the check refuses, and the refusal happens before the page is copied
+  anywhere.
+
+  **The check reads the whole page, not just the part you can see.** A first cut of
+  this check read the page the way a browser paints it — the words a reader sees —
+  while publishing copies the file itself. Those are not the same thing, and the
+  gap between them was measured: a detail sitting in an HTML comment, in a page
+  description, in the alt text of an image, in an inline script, in a style block,
+  or in a data attribute went out unnoticed on seven of the eight places tried. Two
+  of those are not even hidden — alt text and the page description are read aloud
+  by screen readers and shown in every link preview. The check now reads both: what
+  a reader sees, and what a reader can retrieve from the page source. What it
+  deliberately ignores is the markup scaffolding itself — tag and attribute names —
+  which is how it reads a page full of stylesheets and scripts without objecting to
+  all of them.
+
+  **It reads the travellers' own files, not only the summary built from them.** The
+  summary of who is travelling is rebuilt from each traveller's own file whenever
+  those change, so a passport recorded this morning may not be in it yet. The check
+  used to read only the summary, and reported a trip as having nothing to protect
+  when it plainly did. It now reads the travellers' files directly, and refuses to
+  proceed at all when the summary is older than they are — an out-of-date answer is
+  treated as no answer, which is the same rule the rest of this check already
+  follows.
+
+  **Two ways it used to refuse good pages, both fixed.** A party member recorded
+  under an ordinary English name — Will — made every publish of that trip stop, for
+  ever, with no way out that did not involve deleting the very record being
+  protected. And because the check looked for a passport's country and expiry
+  anywhere within twenty-five words of each other, an ordinary multi-day plan that
+  mentioned, say, an Irish pub on each day under headings carrying the expiry year
+  began refusing from the second day onward and never recovered. Both are corrected:
+  a name made only of everyday words is no longer used as a search key, and the two
+  halves of a passport must now appear in the same paragraph rather than merely
+  nearby. A refusal that fires on correct pages is not a stricter check — it is one
+  that gets switched off, which is worse than not having it. What each of these
+  still does not catch is written down in the decision record rather than left to be
+  discovered.
 
 ## [0.12.0] — 2026-08-22 — First-run experience
 
