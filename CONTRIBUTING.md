@@ -43,7 +43,7 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 
 1. Branch from `main` — `release/vX.Y.Z-<short-slug>`.
 2. Do the work of the release on that branch.
-3. Add the `## [X.Y.Z]` CHANGELOG entry **on the same branch**, before opening the PR.
+3. Add the `## [X.Y.Z]` CHANGELOG entry **on the same branch**, at any point before the PR merges — including after step 4, when a draft PR is opened early and extended.
 4. Open the release PR and fill in the template, per *Making a change* step 3.
 5. Wait for CI, per *Making a change* step 4. The personal-data gate reads the PR's
    diff and the PR's commit messages and author identities — so the CHANGELOG entry

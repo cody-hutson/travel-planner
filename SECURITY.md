@@ -67,6 +67,12 @@ above bind the person most likely to touch the branch.
 | Required approving reviews | 0 | Single-maintainer repository; there is no second reviewer to require. |
 | Include administrators (`enforce_admins`) | **false** | The maintainer can push directly to `main`, bypassing the pull-request requirement and all four required checks in one step. |
 
+**One of the four is not app-pinned.** The other three required contexts are pinned
+to the GitHub Actions app; `Personal-data gate` is not, so a check run reporting that
+context name from any integration satisfies it. That asymmetry predates this record
+and is tracked separately — a weaker binding on one required check, not a known
+bypass, and no evidence it has been exercised.
+
 **The consequence, stated plainly.** With `enforce_admins: false` the four required
 checks are a *merge* gate, not a *branch* gate. An administrator pushing directly to
 `main` does not fail them — they are simply never required, so the result reads as a
