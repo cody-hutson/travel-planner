@@ -1,6 +1,7 @@
 # ADR-008: Publish-path content guard — a value-keyed predicate on the plaintext limb
 
-- **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **twice** the same day.
+- **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **three times** the same
+  day.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
@@ -11,9 +12,17 @@
   `[THIRD-PARTY]` mark was read only off the **entry heading**, though `agents/00-enrichment.md:388`
   requires it on every value and `:421-424` names heading mark-stripping as a known agent error; and
   the field it did match, `Specific:`, is the **profile** label, bound against the **derived** file.
+  **Third amendment** — a Stage 9 re-gate found two documentation defects and took one scope
+  decision. The defects: this document, and the shipped source comment it is repeated in, both stated
+  the exit-4 fail-open as reaching *"the name arm only"*, which the entry-denylist change had already
+  falsified against this document's own rule table; and the Coverage boundary stated the closed-enum
+  exclusion as `Category:`-scoped while the Decision section stated it, correctly, as field-blind. The
+  decision: **#123's AC 3 is narrowed to the Passport member**, so the `[THIRD-PARTY]` arm — which
+  ships and fires as described — is no longer claimed as **complete** coverage of that member
+  (residual 8).
   The architecture below — value-keying, the class-source seam, the 0/1/2 contract — is unchanged
-  through both. Its **scope** is corrected, and the coverage boundary states the measured boundary
-  rather than the intended one. Where the two amendments disagreed with an earlier claim in this
+  through all three. Its **scope** is corrected, and the coverage boundary states the measured
+  boundary rather than the intended one. Where any amendment disagreed with an earlier claim in this
   document, the claim is **corrected in place**, not softened.
 - **Deciders:** repo maintainer
 - **Driving work:** #123, the plaintext content guard. Establishes the mechanism, the class-source
@@ -219,7 +228,9 @@ fail-closed control this document already argues against in the name-arm note be
 have arrived as a side effect of widening the class. Two things prevent it: the short branch above,
 which is determinate on a short value; and the closed-enum exclusion, which keeps a `Category:` line
 from keying on `rest`, `timing` or `other` and aborting on ordinary itinerary English. A category
-carrying text **beyond** the enum is a captured value and still keys.
+carrying text **beyond** the enum is a captured value and still keys. `Category:` is the *example*,
+not the scope: the exclusion is **field-blind** — it tests the value text alone and applies under any
+label. See the Coverage boundary, where scoping it to `Category:` is recorded as the wrong fix.
 
 The block scoping and the stoplist on the name arm are both corrections, not refinements. The
 25-word window alone was calibrated on a fixture carrying **one** occurrence of each token; a real
@@ -362,6 +373,20 @@ here: three by fixing the guard (the field allowlist, the heading-only mark, the
 mismatch) and three by stating a residual that was previously absent or under-described (encoding
 transforms, the same-block over-block, the line-based floor).
 
+A **second** acceptance review, run on the revision that made those corrections, found six further
+divergences and **two internal self-contradictions** — a section written to state the measured
+boundary had come to disagree with the Decision section above it. Both self-contradictions are
+corrected in the third amendment: the field-blind enum exclusion, immediately below, and the exit-4
+scope, in residual 2. **Four divergences remain open and are named rather than fixed**, because the
+Stage 9 re-gate scoped that amendment to the false statements and the self-contradictions. They are
+listed here so this section does not read as complete: the `Applies to:` exclusion is **label-bound**,
+so identical constraint text under any other label falsely aborts; the third-party supersede detector
+is a loose whole-file two-substring test, and its `exit 5` also short-circuits a genuine hit into
+UNDETERMINED; a **fully silent** mark strip — both marks gone, no supersession recorded, a real
+profile present — returns `0` and appears in none of the residuals below; and the line-based floor
+mitigation flipped a short value with partial carry-through from abort to publish. The first two are
+fail-**closed** (false aborts); the last two are fail-**open**.
+
 **What is caught.** A class value anywhere in the published bytes — visible text, an HTML comment,
 any attribute value, a `<script>` or `<style>` body — on any of the 8 surfaces measured (group M1). A
 value that reaches the render **de-attributed**, with the traveler name stripped, by construction:
@@ -377,26 +402,62 @@ predating the render (M3b).
 
 **What is deliberately NOT in class**, each pinned by a control arm that must publish: a first-party
 `[OPERATOR-PROVIDED]` need, whose escalation to `trip-context.md` is the designed path (O5b, O3c); a
-field value under an **unmarked** entry (O1c); a `Category:` value made entirely of the closed
-need-category enum (O6b), whose sensitivity arm proves the field itself is still live (O6c).
+field value under an **unmarked** entry (O1c); and **any** value, under **any** label, that reduces
+entirely to the closed need-category enum. That exclusion is **field-blind**, exactly as the Decision
+section states it: `enum_only()` takes only the value text, and no field parameter is passed or
+consulted, so `- Specific: heat` and `- Trigger: rest` are out of class on the same footing as
+`- Category: rest`. An earlier revision of this section wrote it as *"a `Category:` value"* — a
+narrower boundary than the one that ships, wrong in the **fail-open** direction, and in direct
+contradiction of the Decision section above. O6b/O6c pin only the `Category:` case, so the suite
+measures the narrow reading and not the shipped one.
 
-**What is not caught, and why. Seven residuals — four deliberate, three that are open defects
-stated rather than claimed solved:**
+**Scoping that exclusion to `Category:` is the obvious fix, and it is wrong.** Recorded here because
+it was proposed as a one-line change and passed by three review layers. None of `heat`, `mobility`,
+`dietary`, `health`, `rest`, `budget`, `timing`, `sensory` or `other` is in `_GUARD_STOP` — measured,
+0 of 9 against a 115-token stoplist, with a control arm confirming `will`, `valid`, `passport` and
+`the` are in it. So under a `Category:`-scoped exclusion `- Specific: heat` becomes an in-class
+**one-token key** on the token rule, and the guard aborts every publish whose itinerary contains the
+word "heat" — permanently, with no remedy that does not delete the record the guard exists to
+protect. That is the unusable fail-closed control CD-2 (the **Will** defect) existed to remove,
+re-created at a wider blast radius: a broad fail-**closed** traded for a narrow fail-**open**, which
+is the worse of the two by this document's own argument. The real problem is that a short value drawn
+from common English vocabulary is not safely keyable by string matching at all. That is a
+class-definition problem, not a guard defect, and it belongs to #278.
+
+**What is not caught, and why. Eight residuals — four deliberate, three that are open defects
+stated rather than claimed solved, and one that is a scope decision taken at the Stage 9 re-gate:**
 
 1. **Paraphrase.** A value the hub **reworded** on its way into `final-itinerary.md` breaks every
    n-gram and is **missed**; a paraphrase is a judgement no string match can make. #278 states the
    same limit in its own words, and that is the reason #278 exists. **Paraphrase is not the only
    missed transform** — an earlier revision of this section implied it was. There are **three**
    transform classes that defeat matching, and the other two are residual 5 below.
-2. **A stopword-only third-party name (new).** `is_stop` now applies to the name arm as it always did
-   to the other two, so a member named **Will** is a *declared non-key* and their name reaching the
-   render is not caught here. This is a bounded fail-open on the **name arm only** — the value arm,
-   which is what the validator's anonymized-form clause is actually about, is untouched, and the need
-   text is still matched whether attributed or de-attributed. It is deliberate: the alternative was a
-   permanent, unremediable abort on every publish of that trip, and an unusable fail-closed control is
-   fail-open in practice because it gets worked around. Note the residual is **narrowed, not solved**:
-   `_GUARD_STOP` is normalization vocabulary, not a list of names, and it was **not** extended here, so
-   May, Art, Grace and Rosa still key — and can still over-block.
+2. **The exit-4 declared non-key — a stopword-only third-party name, OR a stopword-only short
+   third-party value.** `is_stop` applies to the name arm as it always did to the other two, so a
+   member named **Will** is a *declared non-key* and their name reaching the render is not caught
+   here. **The fail-open reaches both arms of this member, not the name arm alone.** Exit 4 is
+   emitted from the `token` rule and from nowhere else, and the rule table above assigns `token` to
+   two kinds of record: every third-party **name**, and every third-party **field value under five
+   words**. So a short need value with no distinctive token in it — `Timing: not on the day`,
+   `Specific: no more than most` — is a declared non-key too, and the need text reaching the render
+   is not caught either (3 of 3 measured, against a control carrying one distinctive token that is
+   caught). An earlier revision of this residual said the value arm was *untouched*. That was true
+   only while the third-party value rule was a hard-coded `phrase`, which has no exit-4 path; the
+   entry denylist replaced it with the word-count choice in the rule table above, and that is what
+   extended exit 4 to the value arm — so the claim contradicted this document's own rule table for a
+   full revision, and the identical claim shipped in `scripts/publish-trip-site.sh` alongside it.
+   Both are corrected here rather than softened.
+
+   What exit 4 does **not** reach: the **Passport** member, always matched under `conjunctive`, which
+   has no exit-4 path at all — under two distinctive tokens is `3`, undetermined, and aborts; and a
+   third-party value of five words or more, which takes `phrase` and ends at `1`, not `4`.
+
+   The widening is deliberate in its direction even though it was not stated: `phrase` on a four-word
+   value exits `3`, and a sub-floor undetermined aborts every publish of that trip forever with no
+   remedy — an unusable fail-closed control is fail-open in practice because it gets worked around.
+   Note the residual is **narrowed, not solved**: `_GUARD_STOP` is normalization vocabulary, not a
+   list of names, and it was **not** extended here, so May, Art, Grace and Rosa still key — and can
+   still over-block.
 3. **A passport value split across two structural blocks (new).** Scoping the conjunctive window to a
    block is what stops a clean multi-day itinerary aborting forever, and it costs this: a value whose
    two facts land in different blocks — say adjacent table cells — no longer pairs. A carry-through
@@ -430,6 +491,32 @@ stated rather than claimed solved:**
    continuation line under five words falls to the short-value rule. The entry denylist improved this
    — the previous revision matched the **first line only**, because only the labelled line was ever
    read — but it did not eliminate it. Read "what is caught" above with this floor in mind.
+8. **The `[THIRD-PARTY]` member is not claimed as completely covered — a SCOPE DECISION, not a
+   defect statement.** #123's AC 3 originally required this class to cover *"every `[THIRD-PARTY]`-
+   marked value"*. At the Stage 9 re-gate the operator **narrowed AC 3 to the Passport member**, and
+   this document must not read as though the narrowing did not happen. **The third-party arm still
+   ships, and it still fires on the cases it covers** — every stated field of a marked entry (O1),
+   the value-granularity mark (O2), the real derived-model shape (O3), the bad-merge and orphaned-mark
+   backstops (O4b, O4c). What is retracted is the claim of **complete** coverage of that member.
+
+   Two things sit under the retraction, and neither is a coding error.
+   **(a) A short, common-vocabulary value is not reliably keyable by string matching.** A third-party
+   need is often four words of ordinary English, and every route out of that is bad in one direction:
+   key it and an itinerary using the same ordinary word aborts forever (the `Category:`-scoping trap
+   recorded above); do not key it and it publishes (residual 2's value arm, and the field-blind enum
+   exclusion). The exclusion and the short-value branch pick the fail-open side deliberately, and the
+   result is that the arm's coverage is real but partial.
+   **(b) The corpus underspecifies the shape this arm parses.** Measured across every tracked `.md`
+   in this repository: **44** fenced example blocks, **12** carrying a `## <Name>` heading, and
+   **0** carrying a `[THIRD-PARTY]` entry. There is no worked example of the artifact this arm reads,
+   so the entry denylist takes what a line states rather than binding to a shape — which is the right
+   response to the underspecification and is not the same thing as covering the member.
+
+   **#278 is where this is carried.** A declared publishability attribute settles the class by
+   construction rather than by string match, which is the only move that resolves (a), and making the
+   third-party entry shape structural is what resolves (b). Neither is reachable from inside
+   `nonpublishable_values`. Read residual 2 and the enum-exclusion note above as the two measured
+   instances of this one residual.
 
 **This layer does not subsume the validator's audit.** Three layers hold this invariant and they are
 not interchangeable:
