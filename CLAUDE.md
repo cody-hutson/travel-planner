@@ -103,17 +103,29 @@ The user interacts conversationally. **Classify the intent before acting.** Not 
 
 Before doing anything, determine what kind of request this is:
 
-| Type | Signal | Action | Example |
-|------|--------|--------|---------|
-| **Direct edit** | User wants a specific change to an existing file | Read the file, make the edit, done. No agents. | "Update the emojis on the site", "Fix the typo in Day 3", "Change the dinner time to 8 PM" |
-| **Quick lookup** | User asks about existing plan content | Read the relevant file(s), answer. No agents. | "What's our Day 5 plan?", "What still needs booking?", "What hotel are we at?" |
-| **Site tweak** | User wants visual/design changes to the HTML | Read the site HTML, edit directly. No agents. | "Make the colors warmer", "Add a section for packing list", "Fix the map on Day 2" |
-| **Context update** | User shares new information (booking, date change, preference) | Update trip-context.md and/or trip-log.md. No agents unless the change cascades. | "We booked the hotel", "Mom can't do stairs", "Add a traveler's food allergy" |
-| **Targeted research** | User wants new options or deeper research on a specific topic | Dispatch the relevant spoke agent with a targeted prompt. Append to existing output. | "Find more dinner options near Bairro Alto", "What indoor activities exist near the hotel?" |
-| **Planning change** | User wants to change the itinerary structure (swap days, add a day trip, reschedule) | Update trip-context.md mode notes → dispatch relevant agent(s) → hub patches itinerary. Only `planned` events change freely; `locked`/`firmed` events are preserved unless the user names them (see Key Rules → per-event status). | "Swap Day 3 and Day 4", "Replace the afternoon on Day 5 with something indoor" |
-| **Full pipeline** | User wants the initial plan built or a full re-plan | Run the full agent pipeline (enrichment → spokes → hub → validator) | "Build the itinerary", "Start fresh on the plan" |
-| **Site generation** | User wants the travel site built or rebuilt | See Travel Site Generation section | "Build the site", "Create the travel page" |
-| **Publish** | User wants to push to GitHub | See Publishing section | "Publish this", "Push to GitHub" |
+| Type | Signal | Action | Example | Command |
+|------|--------|--------|---------|---------|
+| **Orientation** | User is starting a session, or asks where the trip stands and what to do next | Resolve the active trip and its mode; state what is available and what comes next. Read-only — it mutates nothing. | "Where are we?", "What's the status?", "What can I do next?" | `/trip` |
+| **New trip setup** | User wants to plan a trip that does not exist yet | Follow **Starting a new trip** — scaffold `trips/<destination>-<year>/` with `outputs/`, `travelers/`, `trip-context.md` from the template and `trip-log.md`; set the mode from what the user has stated; hand off to traveler intake. Creates only; never overwrites an existing trip. | "Let's plan Lisbon next spring", "Start a new trip" | `/trip-new` |
+| **Direct edit** | User wants a specific change to an existing file | Read the file, make the edit, done. No agents. | "Update the emojis on the site", "Fix the typo in Day 3", "Change the dinner time to 8 PM" | EXCLUDED: lightest-weight-action |
+| **Quick lookup** | User asks about existing plan content | Read the relevant file(s), answer. No agents. | "What's our Day 5 plan?", "What still needs booking?", "What hotel are we at?" | EXCLUDED: lightest-weight-action |
+| **Site tweak** | User wants visual/design changes to the HTML | Read the site HTML, edit directly. No agents. | "Make the colors warmer", "Add a section for packing list", "Fix the map on Day 2" | EXCLUDED: lightest-weight-action |
+| **Context update** | User shares new information (booking, date change, preference) | Update trip-context.md and/or trip-log.md. No agents. **When the change cascades into the plan, record the fact here first, then invoke `/trip-replan`** — the cascade is a declared second step, not a continuation of this one. | "We booked the hotel", "Mom can't do stairs", "Add a traveler's food allergy" | EXCLUDED: lightest-weight-action |
+| **Targeted research** | User wants new options or deeper research on a specific topic | Dispatch the relevant spoke agent with a targeted prompt. Append to existing output. | "Find more dinner options near Bairro Alto", "What indoor activities exist near the hotel?" | `/trip-research` |
+| **Planning change** | User wants to change the itinerary structure (swap days, add a day trip, reschedule) | Update trip-context.md mode notes → dispatch relevant agent(s) → hub patches itinerary. Only `planned` events change freely; `locked`/`firmed` events are preserved unless the user names them (see Key Rules → per-event status). | "Swap Day 3 and Day 4", "Replace the afternoon on Day 5 with something indoor" | `/trip-replan` |
+| **Full pipeline** | User wants the initial plan built or a full re-plan | Run the full agent pipeline (enrichment → spokes → hub → validator) | "Build the itinerary", "Start fresh on the plan" | `/trip-plan` |
+| **Site generation** | User wants the travel site built or rebuilt | See Travel Site Generation section | "Build the site", "Create the travel page" | `/trip-site` |
+| **Publish — list published sites** | User wants an inventory of what is published | See Publishing to GitHub Pages. Read-only inventory; never writes, encrypts or pushes. | "What's published?", "Which trips have sites up?" | `/trip-list` |
+| **Publish — update a published site** | User wants an already-published site refreshed after edits | See Publishing to GitHub Pages. Re-encrypt and re-publish ciphertext only. | "Push the latest changes to the site", "Update the published page" | `/trip-update` |
+| **Publish — take a site offline** | User wants the live site taken down but the repo kept | See Publishing to GitHub Pages. Disables Pages and keeps the repo — **reversible**; the reversal path is re-enabling Pages in the repo's Settings. | "Take the site down for now", "Turn the page off" | `/trip-offline` |
+| **Publish — first publish (encrypted)** | User wants a finished itinerary published for the first time | Print the terminal command from Publishing to GitHub Pages for the operator to run; do not run it. | "Publish this", "Push the site to GitHub" | EXCLUDED: #330-disclosure + repo-creation |
+| **Publish — first publish, plaintext** | User wants the itinerary published fully public and unencrypted | Print the terminal command from Publishing to GitHub Pages → **Opting out** for the operator to run; do not run it. An operator action, never a Claude action. | "Publish it publicly", "Put it up unencrypted" | EXCLUDED: ADR-007 §2 |
+| **Publish — rotate the passphrase** | User wants the published site's passphrase changed | Print the terminal command from Publishing to GitHub Pages for the operator to run; do not run it. | "Change the site passphrase", "Rotate the password" | EXCLUDED: #330-disclosure + argv-secret |
+| **Publish — delete the published repo** | User wants the published repo deleted outright | Print the terminal command from Publishing to GitHub Pages for the operator to run; do not run it. Irreversible, and the script's typed confirmation cannot fire from a command file. | "Delete the trip repo", "Remove the site completely" | EXCLUDED: ADR-007 §2 |
+
+**The command set owns this taxonomy; this table documents it.** Every row resolves to exactly one command in `.claude/commands/` or to a declared exclusion with a stated reason — there are no silent gaps. **To add or change a request type, add or change the command first, then this table.** `scripts/test-command-taxonomy.sh` asserts the two match in both directions, so a table edited on its own fails CI. See `reference/adr/ADR-007-command-entry-point.md` § 3.
+
+**These rules govern requests that arrive as prose.** A request that arrives as a command has already declared its row — the command fixes the type, the agent and the read, so no classification step remains to get wrong.
 
 **The default is the lightest-weight action that matches the intent.** Direct edits are direct edits. Don't dispatch agents to change an emoji. Don't re-run the food pipeline to fix a typo in a restaurant name. Don't re-synthesize the itinerary to update a booking confirmation code.
 
@@ -123,23 +135,28 @@ Before doing anything, determine what kind of request this is:
 
 | Request type | What to read |
 |-------------|-------------|
+| New trip setup | `templates/trip-context.template.md` and `templates/traveler-intake.template.md` — the templates only. No trip state is read, because none exists yet. |
+| Orientation | `trip-context.md` → the **Mode** and **Primary destination** fields only. Never the whole file, and never `trip-log.md` or `outputs/`. |
 | Direct edit / site tweak | Just the file being edited |
 | Quick lookup | The relevant output file(s) |
 | Context update | trip-context.md (to update it) |
 | Targeted research | trip-context.md + the relevant output file + trip-log.md |
 | Planning change / full pipeline | trip-context.md + trip-log.md + all relevant outputs |
+| Site generation | `outputs/final-itinerary.md` + `outputs/links-reference.md` + `outputs/venue-matrix.md` + `trip-context.md` |
+| Publish (all forms) | The trip directory path only — no trip content is read. |
 
 Don't read the entire trip state for a CSS color change. Do read the full state when making planning decisions.
 
 ### Starting a new trip
 
 When the user wants to plan a trip:
-1. Create `trips/<destination>-<year>/`, `trips/<destination>-<year>/outputs/`
+1. Create `trips/<destination>-<year>/`, `trips/<destination>-<year>/outputs/`, `trips/<destination>-<year>/travelers/`
 2. Copy `templates/trip-context.template.md` to `trips/<destination>-<year>/trip-context.md`
 3. Create `trips/<destination>-<year>/trip-log.md` with initial session entry
 4. Fill in trip-context through conversation — ask the user questions, don't make them edit markdown
 5. Set the mode based on what's known (IDEATION if exploring, DISCOVERY if destination picked, ENRICHMENT if flights/hotel booked)
-6. In IDEATION with no destination yet, dispatch **Destination Ideation** to turn the group's leanings into a ranked shortlist (`outputs/destination-shortlist.md`) for the group to decide from — then, once they pick, set the destination and switch to DISCOVERY
+6. Set up traveler intake — one profile per person at `trips/<destination>-<year>/travelers/<name>.md`, from `templates/traveler-intake.template.md`. Offer the assisted interview first, the self-serve copy second, and the portable hand-off third for travellers who aren't at this machine. Never invent a field — an unanswered field is a skipped field, and a missing profile is handled as *unknown*, never as *no constraints*.
+7. In IDEATION with no destination yet, dispatch **Destination Ideation** to turn the group's leanings into a ranked shortlist (`outputs/destination-shortlist.md`) for the group to decide from — then, once they pick, set the destination and switch to DISCOVERY
 
 ### Dispatching agents (only when classification calls for it)
 
