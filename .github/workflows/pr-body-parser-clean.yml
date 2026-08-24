@@ -60,7 +60,7 @@ jobs:
           if [ -z "${ANCHOR_LINE:-}" ]; then
             OUTSIDE_BLOCK="$PR_BODY"
           else
-            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | head -n $((ANCHOR_LINE - 1)))
+            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | head -n $((ANCHOR_LINE - 1)) || true)
           fi
 
           # 5. Canonical close-keyword scan (close-family verb immediately followed by #N)
