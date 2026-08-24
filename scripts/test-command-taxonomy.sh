@@ -260,6 +260,18 @@ taxonomy_check() {
     fi
   done
 
+  # --- N1 NAMING: every command name is `trip` or `trip-`-prefixed ---
+  # Beyond the four acceptance criteria, and declared as such rather than smuggled in.
+  # It enforces the single-namespace scheme rule, which has no other mechanical check
+  # anywhere in the release. Checked over BOTH populations, so it still holds if the
+  # bijection above is broken. Distinct finding namespace (N, not T) so it is never
+  # mistaken for part of the bijection set.
+  for n in "${ADDRESSED[@]+"${ADDRESSED[@]}"}" "${FSET[@]+"${FSET[@]}"}"; do
+    if [[ ! "$n" =~ ^trip(-[a-z0-9]+)*$ ]]; then
+      printf 'FINDING N1 naming — "%s" is outside the trip namespace; every command must be `trip` or `trip-`-prefixed\n' "$n"; rc=1
+    fi
+  done
+
   printf 'COUNT R_TOTAL %d\n' "$n_rows"
   printf 'COUNT R_ADDRESSED %d\n' "$n_addr"
   printf 'COUNT R_EXCLUDED %d\n' "$n_excl"
@@ -588,6 +600,9 @@ if has_finding "$TX_OUT" T6; then FAIL "B4: T6 — exhaustiveness broken"; show 
 else PASS "B4: T6 — ${R_ADDR} ADDRESSED + ${R_EXCL} EXCLUDED == ${R_TOTAL} rows, no silent gap"; fi
 if [ "${R_ADDR:-0}" -eq 9 ]; then PASS "B5: |ADDRESSED| == 9"; else FAIL "B5: |ADDRESSED| == ${R_ADDR:-0}, expected 9"; fi
 if [ "${R_EXCL:-0}" -eq 8 ]; then PASS "B6: |EXCLUDED| == 8"; else FAIL "B6: |EXCLUDED| == ${R_EXCL:-0}, expected 8"; fi
+# Beyond-AC, declared: the single-namespace scheme rule. It gates like any other check.
+if has_finding "$TX_OUT" N1; then FAIL "B7: N1 — a command name is outside the trip namespace"; show "$TX_OUT" N1
+else PASS "B7: N1 — every command name is \`trip\` or \`trip-\`-prefixed (beyond-AC, declared)"; fi
 
 echo
 echo "── Group C — FORWARD: every ADDRESSED row resolves to a command file (T2, A ⊆ F)."
@@ -685,6 +700,8 @@ mk_md() {
     else                            printf '| Delta request | sig | act | ex | EXCLUDED: #330-disclosure + repo-creation |\n'; fi
     [ "$v" = 'emptycell' ] && printf '| Epsilon request | sig | act | ex |  |\n'
     [ "$v" = 'absent' ]    && printf '| Epsilon request | sig | act | ex | `/trip-absent` |\n'
+    # A row AND its file, so the bijection still holds and only the naming rule fires.
+    [ "$v" = 'badname' ]   && printf '| Zeta request | sig | act | ex | `/other-thing` |\n'
     printf '\n### Step 2: Read context\n'
   } > "$d/CLAUDE.md"
 }
@@ -718,6 +735,7 @@ mk_cmds() {
     printf -- '---\n\n```\n%s list\n```\n' "$SCRIPT_REL"
   } > "$d/commands/trip-list.md"
   [ "$v" = 'ghost' ] && printf -- '---\ndescription: ghost\n---\n' > "$d/commands/trip-ghost.md"
+  [ "$v" = 'badname' ] && printf -- '---\ndescription: other\n---\n' > "$d/commands/other-thing.md"
   return 0
 }
 
@@ -804,6 +822,9 @@ tctl G6 T5 "an EXCLUDED cell carrying the same reason twice (AI-007)"        dup
 tctl G7 T4 "one command name in two ADDRESSED cells (injectivity)"           dupname   ok        '! grep -q "lightest-weight-action" "$WORK/G7/CLAUDE.md"'
 tctl G8 T0 "an empty commands directory — a FAIL, not a vacuous pass (AI-006)" ok      empty     '[ -d "$WORK/G8/commands" ] && [ -z "$(ls -A "$WORK/G8/commands")" ]'
 tctl G9 T0 "an absent Step-1 slice — a FAIL, not a vacuous pass (AI-006)"    noheading ok        '! grep -q "^### Step 1:" "$WORK/G9/CLAUDE.md"'
+# The bijection is INTACT in this fixture — the row and its file both exist — so only the
+# beyond-AC naming rule can fire. That isolation is what makes the arm prove N1 specifically.
+tctl G17 N1 "a command outside the trip namespace, with its row and file both present" badname badname '[ -f "$WORK/G17/commands/other-thing.md" ] && grep -q "other-thing" "$WORK/G17/CLAUDE.md"'
 
 # ── negative arms over adr4_check (CIAC-6(a))
 G10="$WORK/g10"; mk_adr "$G10" form7; mk_script "$G10/pub.sh"; mk_tree "$G10" ok ok
