@@ -52,7 +52,7 @@ Then open the folder in Claude Code:
 - **Desktop app** — open the `travel-planner` folder
 - **CLI** — run `claude` from inside the `travel-planner` directory
 
-Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` accumulates agent artifacts.
+Start a trip with `/trip-new` — it scaffolds the trip directory, `outputs/`, `travelers/`, `trip-context.md` and `trip-log.md`, then walks you through the details. Every session after that opens with `/trip`, which resolves the active trip and its mode and says what's available next. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` accumulates agent artifacts.
 
 ### Traveler profiles
 
@@ -67,8 +67,9 @@ Profiles carry real personal detail, so they live only in the git-ignored `trips
 Confirm the engine cloned intact:
 
 ```bash
-ls agents/        # 9 agent definitions
-head -1 CLAUDE.md # operating instructions present
+ls agents/            # 9 agent definitions
+ls .claude/commands/  # 9 command definitions
+head -1 CLAUDE.md     # operating instructions present
 ```
 
 If you intend to publish, confirm the publish toolchain is ready:
