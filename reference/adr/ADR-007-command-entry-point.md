@@ -47,11 +47,14 @@ One property of the existing publish path shapes this decision decisively. `scri
 protects its plaintext branch with a **TTY-conditional** gate: `if [ -t 0 ]` prompts for a typed
 `PUBLISH` confirmation, and the `elif` branch refuses unless `ALLOW_PLAINTEXT=1` is set. The
 encrypted branch additionally runs `verify_ciphertext` before every push; the plaintext branch does
-not — it copies the rendered HTML straight to `index.html` (the gap #123 records). Bash
-pre-execution inside a command file runs with stdin **not** a TTY. A command wrapping that script
-therefore lands on the side of the branch where the typed confirmation structurally cannot fire and
-the content guard was never called. `cmd_unpublish` has the same shape: its `--yes` flag skips the
-confirmation, and a non-interactive caller needs that flag to function at all.
+not — it copies the rendered HTML straight to `index.html`. That branch is no longer *unguarded*,
+though: the content-guard gap #123 recorded has since been filled by a **different** predicate, a
+publishable-content check inserted immediately above the copy. `verify_ciphertext` itself remains
+encrypted-branch-only, so the two branches carry different guards rather than one guard reaching
+both. Bash pre-execution inside a command file runs with stdin **not** a TTY. A command wrapping
+that script therefore lands on the side of the branch where the typed confirmation structurally
+cannot fire. `cmd_unpublish` has the same shape: its `--yes` flag skips the confirmation, and a
+non-interactive caller needs that flag to function at all.
 
 ## Decision drivers
 
@@ -132,7 +135,7 @@ proves the pattern in this repo.
 ### 4. The publish lifecycle is excluded from the first release
 
 Because the surface cannot reach the TTY-conditional gates described above, and because
-`verify_ciphertext` is absent from the plaintext branch until #123 lands, the publish lifecycle is
+`verify_ciphertext` is absent from the plaintext branch, the publish lifecycle is
 **not addressed by a command in the first release**. Where publishing is the user's intent, the
 surface **prints the terminal command for the operator to run** — a handoff that preserves every
 existing control at zero engineering cost.
@@ -142,7 +145,10 @@ the command surface and the publish script opens for the first time and earns it
 review; it is deferred here, not solved.
 
 **Amendment (2026-08-24, Monday) — the deferral is discharged.** The decision above stands as the
-record of the first release and is not rewritten. What follows is the control review it called for,
+record of the first release. Its substance is preserved; only a stale temporal clause naming the
+content-guard dependency has been corrected in place, and nothing else about it is rewritten — the
+claim that `verify_ciphertext` is absent from the plaintext branch remains, because it is still
+true. What follows is the control review the decision called for,
 and the partition that review produced. It **discharges** the deferral; it does not reverse it. §2's
 bounds are untouched, and the two forms those bounds cover stay out. This section carries a
 machine-parsed table and is read by CI — an edit to it can turn a check red, which is the price of
@@ -267,8 +273,10 @@ and softer invocation path is introduced.
 **Trade-offs**
 
 - More files than a single-command shape, and a bijection guard to maintain alongside them.
-- The publish lifecycle stays a manual terminal step until #123 ships — the surface is deliberately
-  incomplete against its own lifecycle scope for one release.
+- The publish lifecycle stayed a manual terminal step for one release, leaving the surface
+  deliberately incomplete against its own lifecycle scope. The §4 amendment ends that for three of
+  its ten invocation forms; the other seven are declared exclusions, so what remains outside the
+  surface is stated rather than pending.
 - `CLAUDE.md`'s Step-1 table changes role from source of truth to documentation of one; the table
   must be kept accurate to the command set rather than the reverse, which inverts how contributors
   have edited it to date.
@@ -280,8 +288,10 @@ and softer invocation path is introduced.
 - Dispatcher and context-scoping rules being addressed: `CLAUDE.md` → "How to Use This (Claude Code
   as Primary Interface)", Step 1 and Step 2 tables.
 - Agent roster addressed by the surface: `agents/` (nine agents; roster table in `CLAUDE.md`).
-- TTY-conditional gates and the unguarded plaintext branch: `scripts/publish-trip-site.sh` →
-  `cmd_publish`, `cmd_unpublish`, `verify_ciphertext`. The missing plaintext content guard is #123.
+- TTY-conditional gates and the plaintext branch: `scripts/publish-trip-site.sh` → `cmd_publish`,
+  `cmd_unpublish`, `verify_ciphertext`. The plaintext content guard that #123 recorded as missing
+  has since landed, as a predicate distinct from `verify_ciphertext`, which remains
+  encrypted-branch-only.
 - Guard pattern the taxonomy bijection test follows: `scripts/test-publish-guard.sh`.
 - First-run onboarding path: `README.md` → Install, Verify.
 - Epic: #252.
