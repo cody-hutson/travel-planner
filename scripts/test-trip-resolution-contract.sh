@@ -265,10 +265,27 @@ EOF
           ;;
       esac
     done < "$f"
+    #
+    # D2 IS ROLE-NEUTRAL, and that is a repair rather than a preference. It used to fire
+    # only for `population-role: RESOLVE`, and the control-fixture builder below made a
+    # verb table only for RESOLVE fixtures, so a CREATE consumer carrying no table
+    # produced NO FINDING AT ALL. The consequence was not confined to D2: with `rows` at
+    # 0 the checker takes this branch and never reaches D1 either, so a CREATE consumer's
+    # `contract-depth` was unchecked in BOTH directions — and `contract-depth` is what
+    # fixes the evidence prefix a file carries, which is the whole basis of /trip-new's
+    # narrower `Bash(ls:*)` grant (ADR-007 §2, bound 2). /trip-new was therefore the one
+    # consumer whose depth declaration could not be machine-checked while being the
+    # guard's FIRST real population.
+    #
+    # The contract carries no role qualifier on this requirement: its header block lists
+    # the per-verb requirement table as a field every consumer carries, and it states
+    # `contract-depth` equals the maximum depth in that file's own verb table for every
+    # consumer — G2's `CREATE` exception is bounded to G2's own dispositions and reaches
+    # nothing else in the section. The role is reported in the finding for diagnosis and
+    # is read by nothing.
     if [ "$rows" -eq 0 ]; then
-      if [ "$role" = "RESOLVE" ]; then
-        printf 'FINDING D2 %s population-role RESOLVE with no per-verb requirement table (no row carries a depth cell reading G0-G8)\n' "$base"; found=1
-      fi
+      printf 'FINDING D2 %s carries no per-verb requirement table (no row carries a depth cell reading G0-G8), so its contract-depth has nothing to be checked against [population-role: %s]\n' \
+        "$base" "${role:-absent}"; found=1
     elif [ -n "$depth" ] && [ "$maxd" != "$depth" ]; then
       printf 'FINDING D1 %s contract-depth G%s does not equal the maximum depth in its own verb table (G%s)\n' \
         "$base" "$depth" "$maxd"; found=1
@@ -433,8 +450,10 @@ fi
 # saying so. When a later slice adds a code, it adds an arm in this group in the same
 # change. The arms below are keyed to their code so the correspondence is readable:
 #   a  clean tree, MUST NOT FIRE      b  P1     c  H1     d  P2     op P3
-#   nd H2    nr H3    nt D2    dm D1 (max computation)    dd D1 (field-index read)
+#   nd H2    nr H3    nt D2 (RESOLVE)    nc D2 (CREATE)
+#   dm D1 (max computation)    dd D1 (field-index read)    dc D1 (CREATE)
 #   cs code-span depth cells, MUST NOT FIRE      cx D2 (code-span specificity)
+#   hs H2 (code-span HEADER depth — fires, while the same rendering in the CELL passes)
 # and CTL-e is graded LAST, so its "the repo was never written to" claim covers every
 # fixture above it rather than a prefix of them.
 #
@@ -478,10 +497,21 @@ else
       # exactly one field: an arm whose fixture broke several things at once proves the
       # checker fired, not WHICH assertion fired.
       [ "$variant" = "noheader" ] || printf '%s\n' "$CITATION"
-      [ "$variant" = "nodepth" ]  || printf 'contract-depth: G%s\n' "$depth"
+      # `spandepth` renders the HEADER's depth as a code span — the rendering the verb
+      # table's depth CELL accepts and this line does not. It is its own variant so the
+      # arm it feeds changes exactly one thing.
+      if   [ "$variant" = "nodepth" ];   then :
+      elif [ "$variant" = "spandepth" ]; then printf 'contract-depth: `G%s`\n' "$depth"
+      else                                    printf 'contract-depth: G%s\n' "$depth"
+      fi
       [ "$variant" = "norole" ]   || printf 'population-role: %s\n' "$role"
       printf '\n'
-      if [ "$role" = "RESOLVE" ] && [ "$variant" != "notable" ]; then
+      # The table is built for EVERY role, not only RESOLVE. Building it only for
+      # RESOLVE was the second half of D2's asymmetry: the clean tree's CREATE consumer
+      # carried no table, so CTLa2's silence about it was the ROLE EXEMPTION and not a
+      # verdict, and no arm could have caught the exemption. `notable` withholds it from
+      # the RESOLVE consumer and `notablecreate` from the CREATE one.
+      if [ "$variant" != "notable" ] && [ "$variant" != "notablecreate" ]; then
         printf '| verb | lifecycle | mode | destination | depth |\n'
         printf '|---|---|---|---|---|\n'
         case "$variant" in
@@ -501,7 +531,14 @@ else
             printf '| status | ACTIVE | G8 | any | G1 |\n'
             printf '| act | G8 | resolved | decided | G1 |\n'
             ;;
-          codespan)
+          depthmismatchcreate)
+            # The CREATE partner of `depthmismatch`: the file declares G2 while its table
+            # tops out at G1. Two rows again, so the arm exercises the MAXIMUM for this
+            # role rather than a single-row equality.
+            printf '| new | ACTIVE | any | any | G0 |\n'
+            printf '| new-from | ACTIVE | any | any | G1 |\n'
+            ;;
+          codespan|spandepth)
             # Every depth cell rendered as a CODE SPAN — which is exactly how CLAUDE.md's
             # own consumer table renders every depth value, and therefore the only
             # rendered example a command author has to copy. The table is PRESENT and its
@@ -538,18 +575,25 @@ else
   mk_tree() {  # <dir> <variant>
     local d="$1" v="$2"
     mkdir -p "$d"
-    # `overprefix` is the one variant that must land on the G2/CREATE consumer rather
-    # than on `trip`: at depth G8 the required prefix is already the WHOLE list, so
-    # `trip` has no room to carry a surplus and could not express the defect at all.
-    # `trip-new` is the only member of the tree whose declared depth leaves that room —
-    # and it is also the exact consumer whose narrower Bash(ls:*) grant depends on it.
-    if [ "$v" = "overprefix" ]; then
-      mk_consumer "$d" "trip-new"        2 CREATE  overprefix
-      mk_consumer "$d" "trip"            8 RESOLVE ok
-    else
-      mk_consumer "$d" "trip-new"        2 CREATE  ok
-      mk_consumer "$d" "trip"            8 RESOLVE "$v"
-    fi
+    # Three variants must land on the G2/CREATE consumer rather than on `trip`.
+    # `overprefix` because at depth G8 the required prefix is already the WHOLE list, so
+    # `trip` has no room to carry a surplus and could not express the defect at all —
+    # `trip-new` is the only member whose declared depth leaves that room, and it is also
+    # the exact consumer whose narrower Bash(ls:*) grant depends on it. `notablecreate`
+    # and `depthmismatchcreate` because both are about the CREATE role specifically — the
+    # role D2 did not reach and D1 could not be reached through; putting either on a
+    # RESOLVE consumer would re-test the branch that already worked.
+    case "$v" in
+      overprefix)
+        mk_consumer "$d" "trip-new"      2 CREATE  overprefix
+        mk_consumer "$d" "trip"          8 RESOLVE ok ;;
+      notablecreate|depthmismatchcreate)
+        mk_consumer "$d" "trip-new"      2 CREATE  "$v"
+        mk_consumer "$d" "trip"          8 RESOLVE ok ;;
+      *)
+        mk_consumer "$d" "trip-new"      2 CREATE  ok
+        mk_consumer "$d" "trip"          8 RESOLVE "$v" ;;
+    esac
     mk_consumer "$d" "trip-record"       8 RESOLVE ok
     mk_consumer "$d" "trip-publish"      8 RESOLVE ok
     mk_consumer "$d" "trip-decommission" 8 RESOLVE ok
@@ -563,6 +607,24 @@ else
     PASS "CTLa1: fixture integrity — a clean five-file consumer tree was constructed (population $a_pop, built from the extracted canonical)"
   else
     FAIL "CTLa1: the clean fixture tree was not constructed (population $a_pop) — every arm below would prove nothing"
+  fi
+  # CTLa3 is what gives CTLa2 its meaning for the CREATE role. Until this slice the
+  # clean tree's CREATE consumer carried NO verb table and D2 was conditional on RESOLVE,
+  # so CTLa2's silence about trip-new was the role exemption rather than a verdict — and
+  # no arm in this group could have told those two apart. The clean CREATE consumer now
+  # physically carries a readable table whose maximum equals its declared depth, so the
+  # MUST-NOT-FIRE arm below is a statement about the widened rule.
+  a_new_cells=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in *'| G'[0-8]' |'*) a_new_cells=$((a_new_cells+1)) ;; esac
+  done < "$A/trip-new.md"
+  if [ "$a_new_cells" -gt 0 ] \
+     && grep -q -x -F -- 'population-role: CREATE' "$A/trip-new.md" \
+     && grep -q -x -F -- 'contract-depth: G2' "$A/trip-new.md" \
+     && grep -q -F -- '| G2 |' "$A/trip-new.md"; then
+    PASS "CTLa3: fixture integrity — the clean tree's CREATE consumer declares contract-depth G2 and carries $a_new_cells readable depth cell(s) topping out at G2, so CTLa2's silence about it is a verdict on the role-neutral D2 and not the role exemption it used to be"
+  else
+    FAIL "CTLa3: the clean tree's CREATE consumer carries no readable verb table (depth cells=$a_new_cells) — CTLa2 would be silent for the old reason and the role widening would be untested"
   fi
   A_OUT="$(conformance_check "$A" "$CANON_FILE" "$CITATION" "$CANON_N")"; A_RC=$?
   if [ "$A_RC" -eq 0 ]; then
@@ -681,6 +743,37 @@ else
     FAIL "CTLnt2: MUST-FIRE — a RESOLVE consumer with no verb table passed (rc=$NT_RC)"
   fi
 
+  # ── CTL-nc: a CREATE consumer carrying no per-verb requirement table MUST fire D2.
+  # This is the arm the role condition made unreachable. D2 fired only for RESOLVE and
+  # the builder made a table only for RESOLVE fixtures, so the CREATE consumer produced
+  # no finding at all — and because `rows` at 0 takes D2's branch, D1 was unreachable for
+  # that role too. /trip-new was the single consumer whose contract-depth could not be
+  # machine-checked in either direction, while being this guard's FIRST real population.
+  # Its designer carries a verb table anyway; the guard should not depend on that.
+  NC="$WORK/ctl_notablecreate"; mk_tree "$NC" notablecreate
+  nc_rows=0; nc_sib=0; nc_clean=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '|'*) nc_rows=$((nc_rows+1)) ;; esac
+  done < "$NC/trip-new.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '|'*) nc_sib=$((nc_sib+1)) ;; esac
+  done < "$NC/trip.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '|'*) nc_clean=$((nc_clean+1)) ;; esac
+  done < "$A/trip-new.md"
+  if [ "$nc_rows" -eq 0 ] && [ "$nc_sib" -gt 0 ] && [ "$nc_clean" -gt 0 ] \
+     && grep -q -x -F -- 'population-role: CREATE' "$NC/trip-new.md"; then
+    PASS "CTLnc1: fixture integrity — the defective consumer declares population-role CREATE and carries $nc_rows table line(s), while the identical counter reads $nc_sib on its RESOLVE sibling and $nc_clean on the CLEAN tree's own CREATE consumer — two non-zero control arms, so the zero is a measurement and not the builder declining to make a CREATE table"
+  else
+    FAIL "CTLnc1: the CREATE missing-table fixture is not set up as claimed (rows=$nc_rows sibling=$nc_sib clean=$nc_clean) — CTLnc2 would prove nothing"
+  fi
+  NC_OUT="$(conformance_check "$NC" "$CANON_FILE" "$CITATION" "$CANON_N")"; NC_RC=$?
+  if [ "$NC_RC" -ne 0 ] && has_finding "$NC_OUT" 'D2'; then
+    PASS "CTLnc2: MUST-FIRE — a CREATE consumer with no per-verb requirement table is caught (D2); the table requirement is role-neutral, which is how the contract states it"
+  else
+    FAIL "CTLnc2: MUST-FIRE — a CREATE consumer with no verb table passed (rc=$NC_RC); D2 is still role-asymmetric and /trip-new's contract-depth is checked by nothing"
+  fi
+
   # ── CTL-dm: contract-depth disagreeing with the maximum depth in the file's own verb
   # table MUST fire D1. This is the assertion that had no arm ANYWHERE — RP is VACUOUS
   # until the command files land, so before this arm it had never been observed to fire
@@ -728,6 +821,34 @@ else
     PASS "CTLdd3: the finding names G1 — the depth CELL, read by field index; a row-wide matcher would have read the decoy G8, agreed with the declaration and stayed silent"
   else
     FAIL "CTLdd3: D1 fired but named a maximum the depth column does not contain — the decoy was read as a depth: $(printf '%s' "$DD_OUT" | head -2 | tr '\n' ' ')"
+  fi
+
+  # ── CTL-dc: the CREATE partner of CTL-dm, and the arm that proves the widening closed
+  # the defect rather than its symptom. Requiring the table (D2) only makes it PRESENT;
+  # this arm is what shows it is then READ for the CREATE role. What rests on it: the
+  # declared depth fixes the evidence prefix a file may carry, and /trip-new's narrower
+  # `Bash(ls:*)` grant is only true while its prefix is E1 and nothing else (ADR-007 §2,
+  # bound 2). Before this, /trip-new could declare any depth it liked.
+  DC="$WORK/ctl_depthmismatchcreate"; mk_tree "$DC" depthmismatchcreate
+  if grep -q -x -F -- 'contract-depth: G2' "$DC/trip-new.md" \
+     && grep -q -x -F -- 'population-role: CREATE' "$DC/trip-new.md" \
+     && grep -q -x -F -- '| new-from | ACTIVE | any | any | G1 |' "$DC/trip-new.md" \
+     && ! grep -q -F -- '| G2 |' "$DC/trip-new.md" \
+     && grep -q -F -- '| G2 |' "$A/trip-new.md"; then
+    PASS "CTLdc1: fixture integrity — the defective CREATE consumer declares contract-depth G2 while its verb table tops out at G1, and the SAME probe finds a G2 depth cell on the clean tree's CREATE consumer, so the absence is observed rather than assumed"
+  else
+    FAIL "CTLdc1: the CREATE depth-mismatch fixture is not set up as claimed — CTLdc2 would prove nothing"
+  fi
+  DC_OUT="$(conformance_check "$DC" "$CANON_FILE" "$CITATION" "$CANON_N")"; DC_RC=$?
+  if [ "$DC_RC" -ne 0 ] && has_finding "$DC_OUT" 'D1'; then
+    PASS "CTLdc2: MUST-FIRE — a CREATE consumer whose contract-depth disagrees with its own verb table is caught (D1); the depth equality now reaches the one role that carries a narrower tool grant because of it"
+  else
+    FAIL "CTLdc2: MUST-FIRE — a CREATE consumer's contract-depth went unchecked against its own verb table (rc=$DC_RC); D2's widening made the table present without making it read"
+  fi
+  if printf '%s\n' "$DC_OUT" | grep -q -F -- 'verb table (G1)'; then
+    PASS "CTLdc3: the finding names G1 — the MAXIMUM over the CREATE table's {G0, G1}, so the max computation runs for this role and not merely a presence check"
+  else
+    FAIL "CTLdc3: D1 fired on the CREATE consumer but did not name G1 as its table maximum: $(printf '%s' "$DC_OUT" | head -2 | tr '\n' ' ')"
   fi
 
   # ── CTL-op: a consumer carrying MORE of the canonical list than its declared depth
@@ -823,6 +944,37 @@ else
     PASS "CTLcx2: MUST-FIRE — a backticked token that is not a depth is still not a depth, so a table declaring none is still caught (D2); normalising the cell did not widen what counts as a depth"
   else
     FAIL "CTLcx2: MUST-FIRE — a table whose only depth cells are backticked non-depths passed (rc=$CX_RC); the normalisation widened the match and now masks a genuinely absent requirement table"
+  fi
+
+  # ── CTL-hs: `contract-depth` rendered as a CODE SPAN in the HEADER LINE MUST fire H2,
+  # while the SAME rendering in the verb table's depth CELL passes. That asymmetry was
+  # measured rather than designed, so it is now STATED in the contract and asserted here
+  # instead of being left to be discovered. Why it is kept rather than widened away: each
+  # surface accepts exactly the rendering its own worked example shows — the header block
+  # is reproduced from the `trip-contract-header` fence, which renders every one of its
+  # fields bare, and a verb table from the consumer table, which renders every depth value
+  # as a code span. The header block is also the surface whose lines are byte-exact: its
+  # citation line is asserted identical across all five files and `population-role` admits
+  # RESOLVE or CREATE and no other rendering, so tolerating a second rendering of one
+  # field alone would make that block's discipline field-dependent for no gain.
+  HS="$WORK/ctl_spandepth"; mk_tree "$HS" spandepth
+  if grep -q -x -F -- 'contract-depth: `G8`' "$HS/trip.md" \
+     && ! grep -q -x -F -- 'contract-depth: G8' "$HS/trip.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$HS/trip-record.md"; then
+    PASS "CTLhs1: fixture integrity — the defective consumer's contract-depth line is PRESENT and code-span rendered, and the same whole-line probe finds the bare form in its sibling, so the zero here is a rendering difference and not a missing line"
+  else
+    FAIL "CTLhs1: the code-span header fixture is not set up as claimed — CTLhs2 would prove nothing"
+  fi
+  HS_OUT="$(conformance_check "$HS" "$CANON_FILE" "$CITATION" "$CANON_N")"; HS_RC=$?
+  if [ "$HS_RC" -ne 0 ] && has_finding "$HS_OUT" 'H2'; then
+    PASS "CTLhs2: MUST-FIRE — a code-span rendering of the HEADER's contract-depth is not a depth declaration and is graded as an absent one (H2)"
+  else
+    FAIL "CTLhs2: MUST-FIRE — a code-span header depth was accepted (rc=$HS_RC); the header block no longer admits exactly one rendering per field, and the contract says it does"
+  fi
+  if ! has_finding "$HS_OUT" 'D2'; then
+    PASS "CTLhs3: the asymmetry is asserted rather than incidental — the SAME file renders its verb table's depth cells as code spans too, and D2 stayed silent, so the cell accepted precisely the rendering the header rejected"
+  else
+    FAIL "CTLhs3: D2 fired on a table whose depth cells are code spans, so the two surfaces no longer differ in the direction the contract states: $(printf '%s' "$HS_OUT" | head -2 | tr '\n' ' ')"
   fi
 
   # ── CTL-e: the repo was never mutated. A control that writes into the tree it is
