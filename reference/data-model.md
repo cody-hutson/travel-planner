@@ -325,7 +325,7 @@ The satisfaction layer preserves the system's **one-writer-per-file** convention
 
 Two roles for the enrichment agent, kept distinct:
 
-1. **Reader / reconciler of human input.** It reads every `travelers/<traveler>.md`, links each need to the governing `trip-context.md` constraint, computes the desire-overlap signal, and writes the result to `outputs/traveler-model.md` as `[DERIVED]`. It does not author the source files and does not edit a traveler's desires.
+1. **Reader / reconciler of human input.** It reads every `travelers/<traveler>.md`, links each need to the governing `trip-context.md` constraint, computes the desire-overlap signal, and writes the result to `outputs/traveler-model.md` as `[DERIVED]`. **It also reads the model it is about to replace**, solely to carry the `[THIRD-PARTY]` entry admitted through the operator fallback forward verbatim — that entry has **no source file by design** (see the stated exception under **Needs**), so the model it last wrote is the only surviving record of it. That read grants no authoring: it does not author the source files and does not edit a traveler's desires.
 2. **Writer of trip-context `[ENRICH]` rollups (unchanged).** Its existing `[ENRICH]`-only contract on `trip-context.md` is untouched — weather, baseline, events, transit access, and the other `[ENRICH]` fields still behave exactly as before.
 
 The derived traveler model is the **feed**: the engines and the hub read `outputs/traveler-model.md`, and it is the input from which the event-status and metrics homes are populated. Engines and hub do **not** parse the raw per-traveler files.
@@ -340,8 +340,12 @@ templates/traveler-intake.template.md          (the per-traveler intake form)
         ▼
 trips/[dest-year]/travelers/<traveler>.md       (Layer 1 — human-authored, one file per traveler)
         │  enrichment agent reads + reconciles (link to trip-context constraints, never copy)
-        ▼
+        │  ┌─ it ALSO reads the prior revision of the model below before replacing it, and
+        │  │  carries the [THIRD-PARTY] entry forward verbatim — that entry has no source
+        │  │  file by design, so that prior revision is its only surviving record
+        ▼  │
 outputs/traveler-model.md  [DERIVED]            (reconciled model + desire-overlap signal)
+        │◀─┘  prior revision in, rewritten model out — the read grants no authoring
         │  read by ...
         ├────────────► engines        (read the model; nothing optimizes yet)
         ├────────────► hub            (coverage view)

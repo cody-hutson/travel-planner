@@ -242,6 +242,12 @@ link against. Specifically:
   files.
 
 This role is **read-and-reconcile only**: source files in, derived model out.
+**One stated exception to that input list:** the model you are about to replace
+is read as well, solely to carry forward the `[THIRD-PARTY]` entry admitted
+through the operator fallback, which has **no source file by design** — see
+*A party member who will never file* below. The classification is unchanged:
+the read is still read-and-reconcile, it grants no authoring, and the derived
+model remains that entry's record rather than its authority.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
 
