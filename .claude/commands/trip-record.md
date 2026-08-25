@@ -1,5 +1,5 @@
 ---
-description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile. Writes the trip's own files; never publishes.
+description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile; the destination and the mode, the party, trip facts, constraints and bookings, and the per-trip publish repo name. Writes the trip's own files; never publishes.
 argument-hint: <verb> [--trip <slug>] [args...]
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Read, Write, Edit, Task
@@ -51,6 +51,11 @@ population-role: RESOLVE
 | profile | ACTIVE | any | any | G8 |
 | person | ACTIVE | any | any | G8 |
 | travelers | ACTIVE | any | any | G8 |
+| destination | ACTIVE | any | any | G8 |
+| mode | ACTIVE | any | any | G8 |
+| group | ACTIVE | any | any | G8 |
+| fact | ACTIVE | any | any | G8 |
+| .publish-slug | ACTIVE | any | any | G8 |
 ```
 
 The block above is this file's contract declaration. The requirement table sits **inside** it
@@ -440,3 +445,399 @@ until a profile is filled, so a file count under it reads a real group as zero. 
 nothing itself: it renders what enrichment produced, and enrichment takes the `## Group` roster and
 `- **Total travelers:**` from `trip-context.md` as the party. A `- **Total travelers:**` that
 legitimately exceeds the roster's rows is a real state and is never reported as a defect.
+
+## destination <value...>
+
+**Reads:** `trips/<slug>/trip-context.md` — the `## Destination` block and the title line, read before they are written because standing rule 2 confines the `Edit` to the lines being changed and standing rule 4 tests a placeholder by value, and because a destination already decided is echoed from that value before it is replaced. Does not read `outputs/destination-shortlist.md` — the chosen value arrives as this verb's argument, and reading the shortlist would give that value a second source. Dispatches no agent.
+
+The verb that performs the destination hand-off. `agents/destination-ideation.md` ends by saying it
+never writes a destination into `trip-context.md` itself, and `/trip ideas` produces the shortlist
+and names this step without performing it. This is the step they name.
+
+**Argument.** Everything after the verb token, trimmed, is the primary destination value, and it is
+written **verbatim**. It is never normalised, expanded, spell-corrected or resolved against a
+gazetteer — standing rule 3 forbids inventing a value, and expanding `Lisbon` to `Lisbon, Portugal`
+invents one. Never take the destination from the trip's slug, from the shortlist, from the
+conversation's drift, or from the title line. **An empty argument is this verb's own refusal** — say
+that no destination was given, and stop.
+
+**What it writes.**
+
+| Target | Rule |
+|---|---|
+| `- **Primary destination:**` | the argument value, verbatim |
+| `- **Secondary destinations:**` and `- **Neighborhood base:**` | written only where the user states them in the same act; otherwise left exactly as they stand |
+| the title line | its destination token only |
+
+`trips/<slug>/trip-context.md` is the only path this verb writes, and those are the only targets in
+it. In particular it does not write `Current mode` or `Mode notes` — that is `mode`'s act, and §
+*Write ownership* binds the basis for a mode to the act that changes the cell. It writes no
+`[ENRICH]` field and no `[DERIVED]` block.
+
+**Why this verb owns the title line.** § *Write ownership* bundles the title line with the roster
+and the traveler count because those are the fields `/trip-new` seeds, and that row names a
+**writer** rather than a verb — so the split inside this command is made by subject. The title
+line's only variable content is a destination, a month and a year, and the destination is the only
+one of those three this verb establishes. Leaving `# Trip Context — [DESTINATION] …` bracketed once
+a destination is decided is the state standing rule 4 exists to prevent, on the line every reader
+sees first. **The month and the year are left exactly as they stand** unless the user states them in
+the same act, and `group` does not write this line.
+
+**Changing a destination that is already decided.** Legal — a group may change its mind — and it is
+the branch that costs something, so it is stated rather than assumed.
+
+1. **Echo the outgoing value verbatim** before writing anything.
+2. Write the new value.
+3. Say that **every `[ENRICH]`-tagged block is now research for the previous destination** — the tag
+   is the selector, read from the file rather than listed here — and **name no command for the
+   refresh**, saying plainly that no verb of this surface refreshes them at this revision. Reporting
+   staleness while naming nothing is the shape § *Write ownership* already fixes for a block whose
+   writer does not exist.
+4. Say that **the trip directory does not change.** `trip.slug` is the directory name exactly as
+   `E1` spelled it, no verb of this command renames a directory, and a trip scaffolded as
+   `lisbon-2027` that becomes Porto keeps its folder name. **The title line and the slug are allowed
+   to disagree** — the slug is a folder name and the title is content.
+
+**The mode hand-off, named and not performed.** Where the resolved `trip.mode` is `IDEATION`, name
+**`/trip-record mode DISCOVERY`** with the value filled in, and say that this verb does not run it —
+`/trip-new` names the same hand-off in the same order, so the two surfaces agree. **No other value
+of `trip.mode` reaches this naming**, `UNSET` included, because the mode is a different act resting
+on a different evidence class, and § *Write ownership* binds that evidence to whoever changes the
+cell.
+
+**What it never infers.** Nothing here reads a mode as evidence about a destination. `/trip-new`
+writes no destination in any mode, so a freshly scaffolded trip carries `trip.destination` as
+`UNDECIDED` whatever its mode — which is why `/trip-new` names this verb from its `DISCOVERY` branch
+as well as its `IDEATION` one.
+
+**It does not dispatch Destination Ideation.** That dispatch is `/trip ideas`'s, and making it here
+would be a different request type with its own command and its own permissions.
+
+## mode <MODE>
+
+**Reads:** `trips/<slug>/trip-context.md` — the `## Mode` block, read before it is written because `Current mode` and `Mode notes` are replaced in one act, standing rule 2 confines the `Edit` to those lines, and the outgoing `Mode notes` is echoed before it is overwritten. It does **not** re-read that file to learn the trip's mode or its destination: the record block above already carries both by value, and re-deriving them is what § *What the blocks above are* forbids. It performs no read to obtain the mode value set — `CLAUDE.md` § *Modes* is auto-loaded and already in context, so consulting it is not a read this verb makes. Dispatches no agent.
+
+**Argument.** One whitespace-delimited token, ASCII-case-folded, matched by **exact string
+equality** against the mode values in the first column of `CLAUDE.md` § *Modes*, read live from the
+table already in context. That set is **not written into this file** and **not counted** — the same
+discipline § *Selecting the verb* applies to this command's own verb set, and it is what keeps a
+mode a later release adds from needing an edit here. A token matching nothing is **this verb's own
+refusal**: render the token verbatim, render the set read live, and stop. **No near-match, no *"did
+you mean"*, no fallback** to another value — the reasons § *When the token is not a verb of this
+command* gives hold identically here. The canonical value is written in the spelling § *Modes* uses.
+
+**`Mode notes` is written in the same act, and its content is the operator's.** § *Write ownership*
+reads *"Whoever changes `Current mode` writes `Mode notes` in the same act, naming the evidence for
+the new value."* That evidence is **what the user stated in this conversation** — the same *stated,
+not inferred* rule `/trip-new` applies to the starting mode, so it is a shipped convention rather
+than a new one. It is **never** inferred from the destination, from which files exist, from the
+request's wording, or from the mode being requested. Where the user stated no basis, **ask once** —
+one question, not a questionnaire. Where they decline, **write nothing and say so**: a `Mode notes`
+recording that no basis was given is a record of a decision nobody made, and § *Write ownership*
+makes the basis part of the write rather than a courtesy attached to it.
+
+**An unchanged value is a no-op.** Where the requested value equals the resolved `trip.mode`, write
+nothing and say why: the `Mode notes` already in the file is the record of the act that set the
+value, and replacing it with a restatement would overwrite the evidence for a transition this act
+did not make. **`UNSET` is not one of the values § *Modes* carries**, so a `trip.mode` of `UNSET`
+equals no requested value, this branch never fires on it, and the write proceeds — which is what
+makes this verb reach a mode field that has never held a value.
+
+**The undecided-destination report.** Where the requested mode is **not `IDEATION`** and
+`trip.destination` reads `UNDECIDED`, say so, name **`/trip-record destination`**, and then **write
+the mode anyway**. `IDEATION` is the one mode § *Modes* describes as nothing decided, so the test
+needs no ordering over the set and invents none. **This is a report and not a gate.** This verb's
+row constrains `destination` at `any`; there is no branch here that declines to write a mode on
+account of a destination, and none may be added. The inference runs one way only: this verb may read
+`trip.destination` and say it is `UNDECIDED`; nothing here reads a mode as evidence that a
+destination was decided.
+
+**How this verb and § *Write ownership*'s carve-out coexist — the partition is observability.** The
+carve-out admits exactly the procedures it enumerates — **read that enumeration live from § *Write
+ownership*** rather than from here — to write `Current mode`, and it carries its own admission test:
+*the transition is observable from the artifact that procedure just produced, and is announced in
+the same output.* That test draws the line.
+
+| Path | What it covers, and the evidence it rests on |
+|---|---|
+| the carve-out | a transition the acting procedure's own completed artifact makes observable and that it announces in the same output — the evidence is the artifact it just wrote |
+| this verb | every other transition — the evidence is a statement only the operator can make: the group picked, the flights are booked, we want the days reordered before anything runs |
+
+The two are complements: together they are total, and they do not overlap, because a transition
+either is observable in an artifact an enumerated procedure just produced or it is not. **Neither
+becomes the silent default**, and these are the properties that stop it. This verb never fires
+unless the user typed it, because § *Selecting the verb* supplies no verb nobody typed, so it cannot
+become an implicit finaliser of somebody else's work. The carve-out never fires unless an enumerated
+procedure completed work that makes the transition observable and announced it. The no-op above
+stops a manual invocation after an announced transition from overwriting the announced basis with a
+weaker one. And **this verb neither dispatches a planning procedure nor is dispatched by one** —
+nothing here instructs an enumerated procedure to call this verb instead of writing the cell itself,
+which is the hand-off failure the carve-out exists to prevent.
+
+**What it writes.** `Current mode` and `Mode notes` in `trips/<slug>/trip-context.md`, and nothing
+else in that file or in any other. It writes no `[ENRICH]` field and no `[DERIVED]` block.
+
+**A live consequence worth stating.** `ITERATION` and `RESEQUENCING` become reachable through this
+verb. Behaviours that branch on them — the hub's equity-aware disruption recovery, the validator's
+recovery-equity check and its full pass after a resequence, and the scheduler's mode-gated reads —
+begin to execute. That is the point of the verb, and it is also a risk: shipping the writer does not
+test the readers.
+
+## group [<name>]
+
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value, and a row being removed is echoed verbatim before it goes. Reads nothing under `trips/<slug>/travelers/` — the roster is the traveler denominator and a file count there is not, for the reason stated below. Dispatches no agent.
+
+**Scope — the whole of `## Group`:** the roster table, `- **Total travelers:**`, `- **Travel
+mode:**` and `- **Subgroup notes:**`. § *Write ownership* names the roster and the traveler count on
+one row, and the remaining members of the block fall to its default row; those rows name the same
+writer, so which verb serves them is this command's call, and the party is one subject. A user asked
+to route `- **Travel mode:**` to a different verb from the roster would not guess it, and the
+boundary would sit inside one section for no gain.
+
+**Branch selection.**
+
+- **No argument** — render the roster and `- **Total travelers:**` exactly as they stand, and ask
+  what changes. **Write nothing** until the user names a change. This is the read-and-ask entry, and
+  it is also the only path to a removal.
+- **A name** — a **presence probe** on the roster's `Person` column, matched trimmed and
+  ASCII-case-folded. Present → **edit that row**. Absent → **add a row**. The probe runs before
+  either write tool is reached; `allowed-tools` is a pre-approval grant and enforces nothing, which
+  is the same control `profile` rests on.
+
+**Adding a row.** `Person` carries the name **verbatim**. `Traveler file` is `travelers/<file>.md`,
+where `<file>` is `/trip-new`'s transform reused verbatim and attributed to it — lowercase the name,
+replace every run of characters outside `A-Za-z0-9._-` with a single `-`, then trim leading and
+trailing `-`. It is invented nowhere: it is the transform that already wrote the roster's cells at
+scaffold, and a second rule here would make this command disagree with the pointer the intake
+hand-off rests on. An empty result leaves the cell bracketed and names which name needs a filename.
+`Role / Relationship` takes what the user stated and otherwise keeps the template's bracketed
+placeholder. **The row is written in the shape the file's own header row declares, and the header
+row is never rewritten** — a roster carrying a legacy third column in place of `Traveler file` is a
+real state, and re-heading the table would delete content this command does not own. **Name the
+divergence; do not repair it.**
+
+**`- **Total travelers:**` reconciliation — a decision over the states the field can be in, never a
+silent adjustment.** The rules are `/trip-new`'s, carried forward: a stated total wins where one is
+given, the count of names otherwise, the two may legitimately differ, and **the roster is never
+padded with placeholder rows to reach a total**, because a `[Name]` row is indistinguishable from a
+real traveler with a missing profile.
+
+| State of the field after the change | Disposition |
+|---|---|
+| a bracketed placeholder | write the roster's row count |
+| the user stated a total in this act | write the stated total |
+| a number greater than or equal to the row count | leave it — the named person was already inside the count |
+| a number less than the row count | say so and **ask**; write neither value until the user settles it |
+| a removal, and the field equalled the pre-removal row count | decrement it |
+| a removal, and the field exceeded that count | leave it, and say the unnamed remainder grew by one |
+
+**The traveler denominator is the roster and `- **Total travelers:**`, never a file count under
+`travelers/`.** That directory ships empty and stays empty until a profile is filled, so a file
+count reads a real group as zero; the roster is the input `agents/00-enrichment.md`'s `PROFILE
+MISSING` branch, `### Per-Traveler Planning Days [DERIVED]` and the satisfaction layer all read. **A
+`- **Total travelers:**` that legitimately exceeds the roster's rows is a real state and is never
+reported as a defect.**
+
+**A `[THIRD-PARTY]` party member gets no roster row, and is counted in `- **Total travelers:**`.**
+`## Group` and every constraint's `Applies to:` line are publish-bound, and `CLAUDE.md` states that
+a `[THIRD-PARTY]` value never escalates into `trip-context.md` and must not appear in any
+publish-bound artifact in attributed or anonymized form. A roster row would also assert a
+`travelers/<name>.md` that `ADR-006` forbids ever existing. The **count** is a different thing: it
+is not attributed data about a person, the party denominator has to be honest for needs-compliance
+and desire-coverage to have anything to grade against, and a total exceeding the roster is already a
+legitimate state. `person` records such a member's needs and creates no file anywhere; this verb
+records roster rows in `trip-context.md`. **They do not meet**, and the difference between the total
+and the rows is never reported as a defect to reconcile.
+
+**Removing a row.** Only from the no-argument render, or where the user names the person and states
+that they are not travelling. **Echo the whole row verbatim before writing** — the removed bytes
+survive in the transcript, which is what standing rule 2's bound asks of a write that will not
+preserve what it replaces. Remove **only that row**. **Never delete anything under `travelers/`**:
+that file is Layer-1 source and this verb has no delete path to it. Then name where the person may
+still appear, without touching either place: `outputs/traveler-model.md`, until `/trip-record
+travelers` reconciles it, and any constraint's `Applies to:` line, which is `fact`'s.
+
+**After any roster change.** Report `### Per-Traveler Planning Days [DERIVED]` as **stale** and
+**name no command** — that block has no writer in § *Write ownership*, so its staleness is reported
+and never repaired in place, and this verb writes zero bytes of it. Name **`/trip-record
+travelers`** as the reconcile, and **do not run it**: an agent dispatch on a one-line change is
+heavier than the change, which is the same call `profile` makes.
+
+**What it writes.** The `## Group` block of `trips/<slug>/trip-context.md`, and nothing else in that
+file or in any other. It writes no `[ENRICH]` field, no `[DERIVED]` block, and not the title line.
+
+## fact <statement>
+
+**Reads:** `trips/<slug>/trip-context.md` — the one block the statement routes to, read before it is written because standing rule 4 tests a placeholder by value and so separates a fill from a replacement, because an outgoing value is echoed verbatim before it is replaced, and because a new repeat unit is appended under the units already in that block without renumbering or rewriting them. Reads no other block of that file. Reads `outputs/event-status.md` not at all — that file is `/trip-record event`'s, and reading it here would give `## Locked Elements` a second source it does not write. Dispatches no agent.
+
+**The default-row verb.** § *Write ownership*'s default row assigns every untagged field not named
+on another row to this command; inside this command those fields are this verb's, except the ones
+`destination`, `mode` and `group` name. `## Locked Elements` and `## Current Itinerary Status` are
+named to this command on their own row, and they are this verb's too.
+
+**Three ordered steps, and the first is the one that matters.**
+
+**1 — The admission test, before anything else.** *Would the next synthesis pass regenerate the
+bytes I am about to write?* That is § *Write ownership*'s own test — *if the next synthesis pass
+would regenerate those bytes, they do not belong in this file at all* — made decidable. **Yes → this
+is not a fact.** Name the procedure verb that owns it, and **stop**. A restaurant choice lives in
+`outputs/final-itinerary.md`, which is versioned, and in `outputs/venue-matrix.md` and
+`outputs/links-reference.md`, which are rebuilt on every synthesis; writing it here is not a small
+change, it is a change with a deletion already scheduled. The adjacent things that **are** facts:
+the dietary need that made the restaurant wrong, which is `profile`'s; the reservation that got
+confirmed, which is `/trip-record event`'s; and the hard constraint it violated, which is this
+verb's.
+
+**2 — The ownership route.** Which block does the statement land in? A block another writer owns is
+**named, not written**.
+
+| Block class | Route |
+|---|---|
+| `[ENRICH]`-tagged | the enrichment agent's (`agents/00-enrichment.md`). Name it and write nothing — this verb writes no `[ENRICH]` field |
+| `[DERIVED]` | **no writer exists.** Report staleness and **name no command**; this verb writes zero bytes of such a block |
+| `**Lifecycle:**` | `/trip-decommission`'s, **which does not exist at this revision**, so nothing writes that field until it ships and an absent line is the contract's declared default rather than a gap to fill. This verb never writes it |
+| `## Destination`, `## Mode` and `## Group` | a sibling verb of this same command — name it and stop |
+| `## Locked Elements`, `## Current Itinerary Status`, and every other untagged field | **this verb writes it** |
+
+Ownership follows the block and not the command: this verb does not write `## Destination` or
+`Current mode` merely because they sit in the same file under the same command. One block with more
+than one writer is the seam this partition exists to avoid, and it would let a mode reach the file
+without the evidence § *Write ownership* binds to it.
+
+**3 — Ambiguity.** A statement that does not resolve to exactly one block: **ask once, naming the
+candidate blocks.** **Never write to more than one block** to be safe. And **never create a new `##`
+block** — § *Write ownership* assigns a block it does not list to nobody, and requires that *a new
+block gets an owner in this table before it gets content*, so a command that created blocks would
+make that table a description of the past. Adding a `### [Constraint Name]` block under `## Hard
+Constraints`, a `#### Origin <letter>` block under `### Additional origins`, or a row under `##
+Possible Day Trips` is an **instance of a unit the template already defines** and is not creating a
+block.
+
+**Write shapes.**
+
+- **A bracketed placeholder becoming a value is a fill**, not a replacement — the placeholder is the
+  form, not content. Write it.
+- **A value becoming a different value is a replacement.** **Echo the outgoing value verbatim before
+  writing**, and change only that field's lines.
+- **A new unit is appended** under the block's own repeat unit — a `### [Constraint Name]` block
+  under `## Hard Constraints`, a `#### Origin <letter>` block under `### Additional origins`, a row
+  under `## Possible Day Trips` — and **no neighbouring unit is renumbered, reordered or
+  rewritten**. A new `### [Constraint Name]` block is written with **all of the template's fields
+  present**, the unanswered ones keeping their bracketed placeholders.
+- **A removal** names the unit, **echoes it verbatim before writing**, removes no more than the
+  named unit, and **never removes a whole `##` block**.
+- An unanswered field keeps its bracketed placeholder and a field that does not apply takes a single
+  em dash — the distinction standing rule 3 draws, and this verb never collapses it. *"None
+  identified"* under `## Hard Constraints` is written only where the user confirms it, because the
+  template asks for that confirmation.
+
+**Link, don't copy.** A trip-level constraint lives in this file; the personal detail behind one
+traveler's need lives in that traveler's own `travelers/<name>.md`, and the link between them is the
+enrichment agent's, recorded through `Applies to:`. **This verb never copies a traveler's need text
+into a constraint**, and it writes no per-traveler desire detail, no per-event status and no
+satisfaction metric into this file — those have their own homes. **A `[THIRD-PARTY]` subject is
+never added to a constraint's `Applies to:` line**, for the publish-bound reason that also keeps
+them off the roster. After a new trip-level constraint, name **`/trip-record travelers`** as the
+reconcile that establishes the link, and **do not run it**.
+
+**`## Locked Elements` — the seam with `/trip-record event`.** This block is the trip-level **human
+summary**, operator-maintained and not `[ENRICH]`-tagged. `outputs/event-status.md` is the
+**structured source of truth** for the scheduler, the hub and the validator, and where the two could
+drift the structured table is authoritative for those readers and this note is the summary.
+**Writing a note here changes no event's status**, and **this verb never writes
+`outputs/event-status.md`** — that is `/trip-record event`'s, and it is where an event's status is
+recorded. One direction does run and is worth stating: the enrichment agent may **read** `## Locked
+Elements` once, at setup, to seed initial `locked` rows. Say that; do not act on it.
+
+**Cross-block consequences — named, never performed.**
+
+| What was recorded | What this verb names |
+|---|---|
+| a booked transport or lodging anchor — a confirmation code, a flight leg, an accommodation booking status | **`/trip-record mode ENRICHMENT`**, and it does not run it: the mode is another row's cell and its evidence belongs to that act, not this one |
+| a changed or added flight leg, or a new `#### Origin <letter>` block | `### Effective Planning Days` and `### Per-Traveler Planning Days` are **stale**. **Name no command** |
+| a new trip-level constraint | **`/trip-record travelers`**, and it does not run it — travelers' needs link to the constraint, and the link is the enrichment agent's |
+| an event that is now fixed | **`/trip-record event`**, and it does not run it — the note here is the summary, the row there is the truth |
+
+More than one row may fire on one statement: a newly booked flight leg is both an anchor and a
+change to the planning-day inputs.
+
+`## Current Itinerary Status` carries the template's guidance that it is used in `ITERATION` and
+`RESEQUENCING` and left blank in `IDEATION` or `DISCOVERY`. That is guidance: **this verb does not
+gate on the mode** — name the mismatch and write what the user asked for.
+
+**What it writes.** Blocks of `trips/<slug>/trip-context.md`, and nothing else in that file or in
+any other. It names the enrichment agent and dispatches none, so the corpus's *ownership follows the
+writer, not the caller* rule has nothing to exclude on this verb's behalf.
+
+## .publish-slug <name>
+
+**Reads:** `trips/<slug>/.publish-slug` — the existence probe that selects creating the file from replacing it, and, on the replace route, the outgoing value read before it is overwritten, so that it can be echoed and so the reversal has something to restore. Reads `trip-context.md` not at all — nothing in it is this verb's subject. **Reads no `.passphrase`**: reading it would put the secret into the session transcript, which is the failure the publish exclusions exist to avoid. Runs no script and dispatches no agent.
+
+**The one file this verb writes, and it is not `trip-context.md`.** The target is
+`trips/<slug>/.publish-slug` — under `trips/<slug>/` per standing rule 5, where `<slug>` is
+`trip.slug` exactly as `E1` spelled it. That path lies **outside § *Write ownership*'s scope**,
+which is `trip-context.md` block by block; `CLAUDE.md` § *Publishing to GitHub Pages* already
+assigns its author — *put the bare repo name in `trips/<destination>-<year>/.publish-slug`* — and
+this verb is that author acting through a command, exactly as § *Write ownership* assigns `## Locked
+Elements` to *the operator, through `/trip-record`*.
+
+**Why this is not a publish-boundary crossing.** It runs no subcommand of
+`scripts/publish-trip-site.sh`, dispatches no agent, touches no credential and has no out-of-repo
+effect at write time. What it gives an operator is an addressable way to set the repo name
+**before** anything is published. Standing rule 1 and every entry of `disallowed-tools` are
+untouched and unrelaxed.
+
+**Validation — two conjuncts, and they are strict for opposite reasons.**
+
+1. **Charset.** Non-empty, and every character in `A-Za-z0-9._-`. This mirrors `slug_for()` in
+   `scripts/publish-trip-site.sh`, whose rejection case is exactly `''|*[!A-Za-z0-9._-]*`, and it is
+   attributed to that function rather than presented as new. **`/trip-new`'s first-character anchor
+   is deliberately not applied here.** That anchor exists because a slug becomes a directory name
+   and `.` and `..` are the segments that traverse; this value is a **GitHub repo name** and never a
+   path component, so the anchor has no purchase — and applying it would make this command refuse
+   values the resolver accepts, which is a disagreement with the resolver rather than a guard.
+2. **Whitespace is refused**, even though `slug_for()` accepts it. That function reads the file
+   through `tr -d '[:space:]'`, which **deletes** whitespace rather than trimming or rejecting it,
+   so `my repo` resolves to `myrepo` and publishes to a repo the operator never typed, with nothing
+   saying so. The two calls go opposite ways on purpose, and the reason is the difference between
+   the two failure shapes: the resolver **accepts** a leading dot, so refusing it would be this
+   command disagreeing with the resolver; the resolver **silently transforms** whitespace, so
+   accepting it would be this command writing a value that is not the one it validated.
+
+A value failing either conjunct is **this verb's own refusal**: say what was rejected and why, state
+the shape, ask for a corrected value, and **write nothing**. A rejected value is never repaired by
+guessing, and this verb **generates no name of its own** — the operator chooses it, and standing
+rule 3 forbids inventing one.
+
+**File shape — exactly one line.** The bare name and a trailing newline, matching what
+`ensure_opaque_slug()` writes. **No comment line, no second line, no markdown.** `slug_for()` reads
+the whole file through that whitespace delete, so **a second line is concatenated into the slug**
+rather than ignored — a header comment would silently become part of the repo name.
+
+**Create versus replace, selected by an existence probe.** `Read` the target path; the probe runs
+before either write tool is reached. Not readable → **create** with `Write`, which is standing rule
+2's one condition for it. Readable → **replace**, and only after all four of these:
+
+1. **Echo the outgoing value verbatim.**
+2. Say that a site already published under the outgoing value stops being reachable: `update`,
+   `rotate` and `unpublish` all resolve the repo through this file, and **`unpublish` on a name that
+   no longer matches a live repo reports that there is nothing to take down and exits successfully**
+   — the site stays up and the operator is told it is gone. That is the shape the contract's
+   stop-message rule forbids, arriving from the script rather than from a gate.
+3. Name the reversal — **restore the outgoing value**. Reversibility **CHEAP**, and cheap only
+   because step 1 preserved it.
+4. **Ask once**, then write. This verb cannot observe whether the trip is published — it reads no
+   `.passphrase` and it runs no script — so it does not assert that the trip is unpublished. It says
+   what it could not establish, and lets the operator answer.
+
+**One more consequence to state.** A `.publish-slug` that already exists makes an **opaque** publish
+keep the chosen name rather than generating a random one: `ensure_opaque_slug()` returns early when
+the file is non-empty, and says so. An operator who set a memorable name and later wants opacity
+removes or replaces the file first.
+
+**Never.** Runs no subcommand of `scripts/publish-trip-site.sh` — not directly, not through `bash`
+or `sh`. Reads no `.passphrase`. Sets no `ALLOW_PLAINTEXT`. Passes no `--yes` to `unpublish`.
+Generates no name of its own. Writes no path other than `trips/<slug>/.publish-slug`. Where
+publishing itself is what the user wants, name `/trip-publish`, **which does not exist at this
+revision**, and stop; where taking a site down is what they want, name `/trip-decommission`, **which
+does not exist at this revision**, and stop.
