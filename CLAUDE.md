@@ -175,6 +175,68 @@ Read `trip-context.md` → Mode section to determine what's in scope.
 | ITERATION | Existing plan, user wants changes — including a **disruption recovery**, triggered two ways: an event regressing `locked → planned` in `event-status.md` (a missed booking / cancelled hold) **or** a changed-profile delta (the enrichment agent's update signal that a traveler edited their file). | Only affected agents re-run. Hub patches itinerary. Validator re-checks changed days. Status honored: only `planned` events change freely; `locked`/`firmed` are preserved unless the user names them; `option` events stay alternatives. On a disruption recovery the hub runs its **equity-aware recovery** (per-traveler loss distribution → prioritize hardest-hit → re-run affected engines, needs preserved → regroup gaps under a coherent theme), and the validator runs its **recovery-equity check** (losses not concentrated; needs still hold). |
 | RESEQUENCING | Keep selections, reorder days | Scheduling re-runs. Hub resequences. Validator checks new day-of-week assignments. Only `planned` events move; `locked`/`firmed` are fixed anchors; `option` events are not promoted into primary slots. |
 
+### Resolving a trip
+
+Every invocation that operates on a trip — a command, or a free-form request in chat — resolves it here, through one ordered gate ladder. **This section is the single normative statement of that ladder.** No command file, agent prompt or reference doc restates it; a consuming command file carries only the evidence blocks below plus a header block citing this section. `CLAUDE.md` is auto-loaded, so this text is already in context when a command body runs: it adds **no per-invocation read** (`ADR-007` §2, bound 1) and cannot be silently skipped.
+
+**The canonical evidence list — declared once, here.** A consumer carries a **contiguous prefix** of it, byte-identical, from `E1`. `scripts/test-trip-resolution-contract.sh` extracts this list from this section, holds no copy of it, and asserts every consumer against it, so a divergent copy is a red check rather than a latent defect.
+
+```trip-contract-evidence
+E1  !`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+E2  !`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+```
+
+`2>&1` is **mandatory** on every entry, for a stated reason rather than an assumed one. It is **not** what makes G1's canary work — the canary fires on an empty block too, because `README.md` is not a line of an empty block. It is what makes a STOP **diagnosable**, and what removes any dependence on whether `!` pre-execution captures stderr by default, which this repo has not established. **E2 is expected to be error-shaped when the trip population is zero** — the glob does not expand and `grep` errors — so **when G2 resolves a zero population, E2 carries no information and is never read.** Grants are `Bash(ls:*)` for E1 and `Bash(grep:*)` for E2 and nothing wider (`ADR-007` §2, bound 2); `/trip-new` carries the E1-only prefix and correctly stays at `Bash(ls:*)`.
+
+**The placeholder predicate — stated once, field-general.** A field whose **trimmed value begins with `[` and ends with `]` is a placeholder**, never an answer. It is applied by name to `**Current mode:**`, to `- **Primary destination:**`, and to any field a later slice adds. A placeholder is tested **by value**. **A missing line is a different condition — malformed — and is never the same branch** (`ADR-007` §2, bound 6, both halves).
+
+**The gate ladder**, strictly ordered. **G1 and G2 bind all five commands** — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish` and `/trip-decommission`. G3 and G4 bind any invocation operating on an **existing** trip. G5–G7 are per-verb. G8 is post-resolution.
+
+- **G1 — listing trustworthiness.** `trips/README.md` is the only tracked file under `trips/`, so a healthy repo always lists it. **`README.md` must appear as an exact trimmed line of E1** — an exact line, not a substring, because a substring test also matches a trip directory whose name contains `README.md`. Absent → **STOP**: say plainly that the trip listing could not be read, name `trips/` as the directory that could not be listed, and **do not conclude that no trip exists — that conclusion is forbidden here.** An empty or error-shaped block is not evidence of an empty `trips/`. The `.gitignore` invariant the canary rests on (`trips/*` plus `!trips/README.md`) is itself guarded by `scripts/test-publish-guard.sh` **group K**.
+- **G2 — trip population.** `trips[]` is **the lines of E1 minus the `README.md` line** — derived from E1, never from E2. Three terminal branches: **`0`** → name `/trip-new` as the way to create one, and **STOP**; **`1`** → that trip resolves; **`many`** → list each with its destination and mode from E2 and **ask which**, never guessing and never picking the most recently modified. Where **`--trip <slug>`** was supplied and matches exactly one member **case-folded**, that member resolves without asking; `--trip <slug>` is a **contract-level token every command accepts and no verb may consume**, reserved here so adding it later is not an edit to five files. G2's dispositions are **declared per command, not improvised per file**, by `population-role`: **`RESOLVE`** is the default and the role of four commands, taking the three branches exactly as written; **`CREATE`** is **`/trip-new` alone, the single declared exception** — it takes no disposition from G2, because `trips[]` is a collision set, `0` is its normal path, and `many` is not an ask.
+- **G3 — context integrity.** The resolved trip's path prefix must appear in E2. Absent → **STOP**: say that the trip's `trip-context.md` is missing or unreadable, and name the path. **This is the malformed condition, and it is never the same branch as any placeholder condition** (`ADR-007` §2, bound 6, second half).
+- **G4 — lifecycle.** The `**Lifecycle:**` value for the resolved prefix, carried by E2's third alternation arm as a line in `trip-context.md`. Yields **`trip.lifecycle` ∈ {`ACTIVE`, `ARCHIVED`}**, and **an absent `**Lifecycle:**` line defaults to `ACTIVE`.** G4 does not itself stop: **an `ARCHIVED` trip does not resolve as active for any verb that does not declare `lifecycle: ARCHIVED` or `lifecycle: ANY`** in G7's table, and the disposition comes from that table. **Binding constraint: `templates/trip-context.template.md` must never ship a `Lifecycle:` placeholder.** The moment the field ships bracketed, bound 6 binds it and this default inverts from *absent ⇒ ACTIVE* to *absent ⇒ malformed*; absence is a legitimate default here only because no placeholder masks it.
+- **G5 — mode, by value.** The `**Current mode:**` value for the resolved prefix. Four dispositions, and they are four different branches: **line absent** → **malformed, STOP**; **value is a placeholder** → **`UNSET`, STOP**, pointing at `templates/trip-context.template.md` and naming `/trip-record mode` as the remedy; **value is one of the five modes** (IDEATION / DISCOVERY / ENRICHMENT / ITERATION / RESEQUENCING) → resolved; **anything else** → **unrecognised, STOP**. **Never infer a mode** — not from the destination, not from which files exist, not from the request's wording.
+- **G6 — destination, by value.** The `- **Primary destination:**` value for the resolved prefix. Three dispositions, and the first two are not the same branch: **line absent** → **malformed, STOP**; **value is a placeholder** → **`UNDECIDED`**, a legal state and **not** a stop; **value is anything else** → decided.
+- **G7 — mode-serves-verb.** A lookup in the consuming file's own per-verb requirement table, whose columns are **`verb` · `lifecycle` · `mode` · `destination` · `depth`**. Three dispositions: **`RUN`**; **`REDIRECT`** + stop, naming the command that does serve the request; **`REFUSE`** + stop, naming why the resolved state does not serve the verb. Two defaults carry the anti-drift weight — **a verb absent from the table is `REFUSE`, never `RUN`**, so the set is closed and a verb added by a later slice lands in the table or does not run; and **an undeclared `lifecycle` is `ACTIVE`**, which is what makes an archived trip stop resolving as active for every existing and every future verb with no edit to this section. **`destination` is its own column rather than folded into `mode`** because at least one verb gates on destination and not on mode, so a single axis cannot express the surface.
+- **G8 — derived-state freshness.** **Reserved, and report-only.** It is evaluated **after** resolution; it **never changes `trip.resolution`**; and **no gate may be added that blocks on freshness.** That is not a preference — this repo already recorded that an unconditional render-newer-than-model gate refuses every correct publish rather than more of them, and ends as a workaround rather than a guard. `trip.freshness` is a list of `(relation, verdict)` pairs, **empty at this revision**.
+
+**What the contract returns.** Resolution produces a typed record; downstream verbs branch on these fields instead of re-deriving them.
+
+| Field | Values |
+|---|---|
+| `trip.resolution` | `RESOLVED` \| `STOPPED` |
+| `trip.stop_gate` | the gate id that stopped, when `STOPPED` |
+| `trip.slug` | the directory name **exactly as E1 spelled it** |
+| `trip.path` | `trips/<slug>` |
+| `trip.lifecycle` | `ACTIVE` \| `ARCHIVED` |
+| `trip.mode` | one of the five \| `UNSET` — never a guess |
+| `trip.destination` | the value \| `UNDECIDED` |
+| `trip.freshness` | reserved; empty at this revision |
+
+**Every STOP is typed** with the gate id that produced it, in `trip.stop_gate`. **The stop-message rule:** a STOP **names what could not be established and the remedy**, and **never asserts a conclusion about trip state that the gate did not observe.** "Nothing is published, so there is nothing to take offline" is the shape this rule forbids — a conclusion about publication state derived from a directory listing that may have failed.
+
+**How a command consumes this.** A command file carries the evidence prefix, then a fixed contract header block, then its verb-specific text. The header block's first line is the **citation line**, byte-identical across all five files:
+
+```trip-contract-header
+Contract: CLAUDE.md § Resolving a trip
+contract-depth: <G0-G8, the deepest gate this file runs>
+population-role: <RESOLVE or CREATE>
+<the per-verb requirement table: verb · lifecycle · mode · destination · depth>
+```
+
+**`contract-depth` fixes the prefix a file carries:** depth `G3` or deeper **must** carry `E2` (prefix `E1 E2`); depth `G1`–`G2` carries `E1` alone; depth `G0` needs no trip and carries neither. `contract-depth` equals the maximum depth in that file's own verb table. The five consumers:
+
+| Command | `contract-depth` | `population-role` | Prefix | Note |
+|---|---|---|---|---|
+| `/trip-new` | `G2` | `CREATE` | `E1` | Its subject is a trip that does not exist, so G3 does not apply; keeps the narrower `Bash(ls:*)` grant |
+| `/trip <verb>` | `G8` | `RESOLVE` | `E1 E2` | |
+| `/trip-record` | `G8` | `RESOLVE` | `E1 E2` | |
+| `/trip-publish` | `G8` | `RESOLVE` | `E1 E2` | its repo-wide listing verb declares depth `G0` on its own row — that verb needs no trip |
+| `/trip-decommission` | `G8` | `RESOLVE` | `E1 E2` | its reopen verb declares `lifecycle: ARCHIVED` |
+
+Duplicating the evidence blocks and the citation line is **forced by the platform** — the `!` mechanism fires only in a command file's own body and there is no include directive — so it is made safe by assertion rather than avoided. **No normative text is duplicated anywhere**, and the bytes that are duplicated are machine-asserted byte-identical on every push.
+
 ---
 
 ## Travel Site Generation
