@@ -297,6 +297,7 @@ and softer invocation path is introduced.
 
 - Dispatcher and context-scoping rules being addressed: `CLAUDE.md` → "How to Use This (Claude Code
   as Primary Interface)", Step 1 and Step 2 tables.
+- Artifact implementing §2's sixth bound (a field read by value, with absence as its own branch): `CLAUDE.md` → "Resolving a trip", the single normative home of the trip-resolution gate ladder.
 - Agent roster addressed by the surface: `agents/` (nine agents; roster table in `CLAUDE.md`).
 - TTY-conditional gates and the plaintext branch: `scripts/publish-trip-site.sh` → `cmd_publish`,
   `cmd_unpublish`, `verify_ciphertext`. The plaintext content guard that #123 recorded as missing
