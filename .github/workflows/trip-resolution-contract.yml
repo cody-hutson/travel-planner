@@ -37,12 +37,20 @@ name: Trip resolution contract
 #        and would go green while the documented contract drifted away from it
 #   RP   the real consumer population under .claude/commands/: header block present,
 #        evidence blocks byte-identical to the canonical at their index, prefix contiguous
-#        from index 1, declared contract-depth consistent with the prefix carried, and
-#        contract-depth equal to the maximum depth in the file's own verb table
+#        from index 1 and EXACTLY the length the declared contract-depth requires — no
+#        fewer blocks and no more — and contract-depth equal to the maximum depth in the
+#        file's own verb table
 #   CTL  a synthetic five-file fixture tree, built in a temp dir on every invocation and
-#        never written into the repository, with four arms: a clean tree that MUST NOT
-#        fire, plus a dropped stderr redirect, a removed header block, and a declared
-#        depth exceeding the carried prefix, each of which MUST
+#        never written into the repository. Two arms MUST NOT fire — a clean tree, and a
+#        table whose depth cells are rendered as code spans; the rest are deliberate
+#        defects that MUST, one per failure code the checker can emit, alongside the
+#        specificity arms that tell a correct implementation apart from a lookalike one.
+#        THE ARM INVENTORY IS NOT RESTATED HERE, deliberately. It lives in exactly one
+#        place — the CTL banner in the guard script, which is also where the invariant
+#        binding it is stated: every emittable code has a must-fire arm, and a code added
+#        by a later slice adds its arm in the same change. A count copied into this file
+#        is a copy with no assertion behind it, and it has already gone stale once, which
+#        is precisely the failure mode this whole suite exists to catch
 #
 # ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
 # GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo,

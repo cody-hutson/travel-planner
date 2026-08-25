@@ -20,13 +20,16 @@
 #        reason to exist — THIS SCRIPT HOLDS NO COPY of any canonical entry.
 #   RP   the real consumer population under .claude/commands/: citation line present,
 #        evidence blocks byte-identical to the canonical at their index, the prefix
-#        contiguous from index 1, `contract-depth` consistent with the prefix carried,
-#        and `contract-depth` equal to the maximum depth in the file's own verb table.
-#   CTL  a synthetic five-file fixture tree, built in a temp dir ON EVERY RUN. One arm
-#        is a clean tree that MUST NOT fire; the rest are deliberate defects that MUST,
-#        ONE PER FAILURE CODE the checker can emit — H1 H2 H3 P1 P2 D1 D2 — plus a decoy
-#        arm proving the verb-table depth is read by FIELD INDEX and not by a row-wide
-#        match. A code with no arm is a check indistinguishable from one that CANNOT
+#        contiguous from index 1 and EXACTLY the length the declared `contract-depth`
+#        requires — no fewer blocks and no more — and `contract-depth` equal to the
+#        maximum depth in the file's own verb table.
+#   CTL  a synthetic five-file fixture tree, built in a temp dir ON EVERY RUN. Two arms
+#        MUST NOT fire — a clean tree, and a table whose depth cells are rendered as
+#        code spans; the rest are deliberate defects that MUST, ONE PER FAILURE CODE the
+#        checker can emit — H1 H2 H3 P1 P2 P3 D1 D2 — plus the specificity arms, proving
+#        the verb-table depth is read by FIELD INDEX and not by a row-wide match, and
+#        that normalising the depth cell did not widen it into "any token is a depth".
+#        A code with no arm is a check indistinguishable from one that CANNOT
 #        fire, which is the precise defect this suite exists to prevent; leaving one
 #        unexercised inside the anti-drift guard would be that defect at its own root.
 #
@@ -177,15 +180,30 @@ conformance_check() {
       printf 'FINDING H3 %s population-role absent or malformed (want RESOLVE or CREATE)\n' "$base"; found=1
     fi
 
-    # -- evidence prefix, byte-identical and contiguous from index 1 ---------------
+    # -- evidence prefix, byte-identical and EXACTLY the length its depth requires --
     # The required prefix length is derived from the declared depth: a file that runs
     # G3 or deeper reads trip-context.md and therefore needs the WHOLE canonical list;
     # G1-G2 needs E1 alone; G0 needs no trip and carries none. Deriving the deep case
     # from n rather than from a literal 2 is deliberate — when a later slice appends E3,
     # every deep consumer goes red until it carries the appended block, which is the
     # mechanism working rather than a defect.
-    local need=0
+    #
+    # The comparison is an EQUALITY, graded in BOTH directions, because the contract
+    # states an exact prefix and not a minimum. Carrying MORE of the list than the
+    # declared depth requires is its own defect with its own code: every block a file
+    # carries is a grant it must hold, so a G1-G2 consumer that quietly acquires E2
+    # needs `Bash(grep:*)` for a function it does not have (ADR-007 §2, bound 2) and a
+    # minimum-only check stays green while that happens. Equality also makes byte-
+    # identity TOTAL: with no remainder past `need`, EVERY block the file carries is
+    # compared against the canonical, where a minimum check left the surplus — which
+    # may be an arbitrary divergent copy — never examined at all.
+    #
+    # When the depth is absent, H2 has already fired and the requirement is underivable,
+    # so neither direction is graded: reporting a prefix defect against a depth the file
+    # never declared would name the wrong thing.
+    local need=0 depth_known=0
     if [ -n "$depth" ]; then
+      depth_known=1
       if   [ "$depth" -ge 3 ]; then need="$n"
       elif [ "$depth" -ge 1 ]; then need=1
       else need=0
@@ -198,8 +216,11 @@ conformance_check() {
         '!`'*) m=$((m+1)); blocks[$m]="$line" ;;
       esac
     done < "$f"
-    if [ "$m" -lt "$need" ]; then
-      printf 'FINDING P2 %s declares depth G%s (needs %s evidence block(s)) but carries %s\n' \
+    if [ "$depth_known" -eq 1 ] && [ "$m" -lt "$need" ]; then
+      printf 'FINDING P2 %s declares depth G%s (needs exactly %s evidence block(s)) but carries %s\n' \
+        "$base" "$depth" "$need" "$m"; found=1
+    elif [ "$depth_known" -eq 1 ] && [ "$m" -gt "$need" ]; then
+      printf 'FINDING P3 %s declares depth G%s (needs exactly %s evidence block(s)) but carries %s — a surplus block is a tool grant this file has no function for\n' \
         "$base" "$depth" "$need" "$m"; found=1
     fi
     i=1
@@ -215,14 +236,25 @@ conformance_check() {
     # Rows are `| verb | lifecycle | mode | destination | depth |`. The depth cell is
     # read by FIELD INDEX, not by a row-wide match: a row-wide matcher would also read
     # a `G8` mentioned in the lifecycle or mode cell and silently agree with itself.
+    #
+    # The cell is NORMALISED before it is matched, rather than matched with a widened
+    # pattern. Padding is stripped, then a code-span rendering is stripped: CLAUDE.md's
+    # own consumer table renders every depth value as a code span, so that is the only
+    # rendered example a command author has to copy, and `G8` and a backticked `G8` are
+    # the same value. Without this, `rows` falls to 0 on a table that is PRESENT and the
+    # checker reports it absent — a finding that names the wrong defect entirely.
+    # Normalising is deliberately narrower than widening the match: the pattern still
+    # admits exactly G0-G8, so a backticked `G9`, `GG1` or `TBD` is still not a depth and
+    # a table carrying only those still reads as declaring none.
     local maxd=-1 rows=0 c1 c2 c3 c4 c5 rest d
+    local BT='`'
     while IFS= read -r line || [ -n "$line" ]; do
       case "$line" in
         '|'*)
           IFS='|' read -r _ c1 c2 c3 c4 c5 rest <<EOF
 $line
 EOF
-          d="${c5// /}"
+          d="${c5// /}"; d="${d//$BT/}"
           case "$d" in
             G[0-8])
               rows=$((rows+1))
@@ -235,7 +267,7 @@ EOF
     done < "$f"
     if [ "$rows" -eq 0 ]; then
       if [ "$role" = "RESOLVE" ]; then
-        printf 'FINDING D2 %s population-role RESOLVE with no per-verb requirement table\n' "$base"; found=1
+        printf 'FINDING D2 %s population-role RESOLVE with no per-verb requirement table (no row carries a depth cell reading G0-G8)\n' "$base"; found=1
       fi
     elif [ -n "$depth" ] && [ "$maxd" != "$depth" ]; then
       printf 'FINDING D1 %s contract-depth G%s does not equal the maximum depth in its own verb table (G%s)\n' \
@@ -371,14 +403,17 @@ else
   else PASS "RP2: all $RP_POP consumer(s) declare a well-formed contract-depth and population-role"; fi
   if has_finding "$RP_OUT" 'P1'; then FAIL "RP3: a consumer's evidence block diverges from the canonical"; show "$RP_OUT" 'P1'
   else PASS "RP3: every evidence block in all $RP_POP consumer(s) is byte-identical to the canonical at its index"; fi
-  if has_finding "$RP_OUT" 'P2'; then FAIL "RP4: a consumer declares a depth deeper than the evidence prefix it carries"; show "$RP_OUT" 'P2'
-  else PASS "RP4: every consumer carries the contiguous evidence prefix its declared depth requires"; fi
+  # P2 and P3 are the two directions of ONE rule, so they are surfaced together and the
+  # group-level verdict is stated direction-neutrally; the finding line printed by `show`
+  # is what names which direction, and each code carries its own message.
+  if has_finding "$RP_OUT" 'P2|P3'; then FAIL "RP4: a consumer's evidence prefix is not exactly the one its declared depth requires"; show "$RP_OUT" 'P2|P3'
+  else PASS "RP4: every consumer carries exactly the contiguous evidence prefix its declared depth requires — no fewer blocks, and no more"; fi
   if has_finding "$RP_OUT" 'D1|D2'; then FAIL "RP5: a consumer's contract-depth disagrees with its own verb table"; show "$RP_OUT" 'D1|D2'
   else PASS "RP5: every consumer's contract-depth equals the maximum depth in its own verb table"; fi
   # Self-consistency: every finding the checker emitted must have been surfaced above.
   if [ "$RP_RC" -eq 0 ]; then PASS "RP6: the checker returned 0 — no finding of any id went unsurfaced"
   else
-    if has_finding "$RP_OUT" 'H1|H2|H3|P1|P2|D1|D2'; then PASS "RP6: the checker returned $RP_RC and every finding it emitted is accounted for above"
+    if has_finding "$RP_OUT" 'H1|H2|H3|P1|P2|P3|D1|D2'; then PASS "RP6: the checker returned $RP_RC and every finding it emitted is accounted for above"
     else FAIL "RP6: the checker returned $RP_RC but emitted no finding the assertions above recognise"; fi
   fi
 fi
@@ -397,10 +432,16 @@ fi
 # that CANNOT fire — the assertion may already be inert and the suite would stay green
 # saying so. When a later slice adds a code, it adds an arm in this group in the same
 # change. The arms below are keyed to their code so the correspondence is readable:
-#   a  clean tree, MUST NOT FIRE      b  P1     c  H1     d  P2
+#   a  clean tree, MUST NOT FIRE      b  P1     c  H1     d  P2     op P3
 #   nd H2    nr H3    nt D2    dm D1 (max computation)    dd D1 (field-index read)
+#   cs code-span depth cells, MUST NOT FIRE      cx D2 (code-span specificity)
 # and CTL-e is graded LAST, so its "the repo was never written to" claim covers every
 # fixture above it rather than a prefix of them.
+#
+# THE COUNT OF ARMS IS DELIBERATELY NOT RESTATED ANYWHERE ELSE. The keys above are the
+# inventory; a number copied into a second file is a copy with no assertion behind it,
+# which is the exact failure mode this suite exists to catch. The workflow file therefore
+# describes the invariant and points here rather than carrying its own tally.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "── Group CTL — control case: the checker shown PASSING on a correct tree and FAILING on each deliberate defect."
@@ -419,6 +460,7 @@ else
       # evidence prefix
       lim="$depth"
       if [ "$variant" = "shortprefix" ]; then lim=1
+      elif [ "$variant" = "overprefix" ]; then lim="$CANON_N"
       elif [ "$depth" -ge 3 ]; then lim="$CANON_N"
       elif [ "$depth" -ge 1 ]; then lim=1
       else lim=0
@@ -459,6 +501,23 @@ else
             printf '| status | ACTIVE | G8 | any | G1 |\n'
             printf '| act | G8 | resolved | decided | G1 |\n'
             ;;
+          codespan)
+            # Every depth cell rendered as a CODE SPAN — which is exactly how CLAUDE.md's
+            # own consumer table renders every depth value, and therefore the only
+            # rendered example a command author has to copy. The table is PRESENT and its
+            # maximum agrees with the declared depth, so this fixture MUST NOT fire.
+            printf '| status | ACTIVE | any | any | `G1` |\n'
+            printf '| act | ACTIVE | resolved | decided | `G%s` |\n' "$depth"
+            ;;
+          codespanx)
+            # The SPECIFICITY partner of `codespan`. The table is physically present and
+            # its depth cells are code spans, but the tokens inside them are not depths.
+            # If stripping the backticks had widened the match into "a backticked token is
+            # a depth", `rows` would be non-zero here and D2 would fall silent on a table
+            # that declares no per-verb depth at all — the repair masking a real absence.
+            printf '| status | ACTIVE | any | any | `TBD` |\n'
+            printf '| act | ACTIVE | resolved | decided | `TBD` |\n'
+            ;;
           *)
             printf '| status | ACTIVE | any | any | G1 |\n'
             printf '| act | ACTIVE | resolved | decided | G%s |\n' "$depth"
@@ -479,8 +538,18 @@ else
   mk_tree() {  # <dir> <variant>
     local d="$1" v="$2"
     mkdir -p "$d"
-    mk_consumer "$d" "trip-new"          2 CREATE  ok
-    mk_consumer "$d" "trip"              8 RESOLVE "$v"
+    # `overprefix` is the one variant that must land on the G2/CREATE consumer rather
+    # than on `trip`: at depth G8 the required prefix is already the WHOLE list, so
+    # `trip` has no room to carry a surplus and could not express the defect at all.
+    # `trip-new` is the only member of the tree whose declared depth leaves that room —
+    # and it is also the exact consumer whose narrower Bash(ls:*) grant depends on it.
+    if [ "$v" = "overprefix" ]; then
+      mk_consumer "$d" "trip-new"        2 CREATE  overprefix
+      mk_consumer "$d" "trip"            8 RESOLVE ok
+    else
+      mk_consumer "$d" "trip-new"        2 CREATE  ok
+      mk_consumer "$d" "trip"            8 RESOLVE "$v"
+    fi
     mk_consumer "$d" "trip-record"       8 RESOLVE ok
     mk_consumer "$d" "trip-publish"      8 RESOLVE ok
     mk_consumer "$d" "trip-decommission" 8 RESOLVE ok
@@ -659,6 +728,101 @@ else
     PASS "CTLdd3: the finding names G1 — the depth CELL, read by field index; a row-wide matcher would have read the decoy G8, agreed with the declaration and stayed silent"
   else
     FAIL "CTLdd3: D1 fired but named a maximum the depth column does not contain — the decoy was read as a depth: $(printf '%s' "$DD_OUT" | head -2 | tr '\n' ' ')"
+  fi
+
+  # ── CTL-op: a consumer carrying MORE of the canonical list than its declared depth
+  # requires MUST fire P3. This is the converse of CTL-d, and until the prefix rule was
+  # an equality it had nothing to fire: the checker asserted `m >= need` and never
+  # `m == need`, so a G2/CREATE consumer that quietly acquired E2 passed green while
+  # needing a `Bash(grep:*)` grant its function does not justify (ADR-007 §2, bound 2).
+  # The same one-sided reasoning left a G0 consumer free to carry arbitrary DIVERGENT
+  # copies of the canonical blocks with byte-identity never run on them — one defect,
+  # two symptoms, and this arm is what holds the closure of both.
+  OP="$WORK/ctl_overprefix"; mk_tree "$OP" overprefix
+  op_blocks=0; op_clean=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '!`'*) op_blocks=$((op_blocks+1)) ;; esac
+  done < "$OP/trip-new.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '!`'*) op_clean=$((op_clean+1)) ;; esac
+  done < "$A/trip-new.md"
+  if [ "$CANON_N" -gt 1 ] && [ "$op_blocks" -eq "$CANON_N" ] && [ "$op_clean" -eq 1 ] \
+     && grep -q -x -F -- 'contract-depth: G2' "$OP/trip-new.md"; then
+    PASS "CTLop1: fixture integrity — the defective consumer declares depth G2 (which needs E1 alone) while carrying $op_blocks of $CANON_N block(s); the SAME counter reads $op_clean on the clean tree's trip-new, so the surplus is a measured difference and not an assumed one"
+  else
+    FAIL "CTLop1: the over-prefix fixture is not set up as claimed (defective=$op_blocks clean=$op_clean canonical=$CANON_N) — CTLop2 would prove nothing"
+  fi
+  OP_OUT="$(conformance_check "$OP" "$CANON_FILE" "$CITATION" "$CANON_N")"; OP_RC=$?
+  if [ "$OP_RC" -ne 0 ] && has_finding "$OP_OUT" 'P3'; then
+    PASS "CTLop2: MUST-FIRE — a consumer carrying more of the canonical list than its declared depth requires is caught (P3); the prefix rule is an equality, not a minimum, and an over-provisioned command can no longer ship green with a widened tool grant"
+  else
+    FAIL "CTLop2: MUST-FIRE — an over-provisioned prefix passed (rc=$OP_RC); the check is a minimum only, so a widened grant and an unexamined divergent copy both ship green"
+  fi
+
+  # ── CTL-cs: a per-verb requirement table whose depth cells are rendered as CODE SPANS
+  # MUST NOT fire. This is the second MUST-NOT-FIRE arm in the group and it exists for a
+  # specific reason: CLAUDE.md's own consumer table renders every depth value as a code
+  # span, so it is the only rendered example a command author can copy — and before the
+  # cell was normalised, `rows` fell to 0 and a table that is PRESENT was reported absent
+  # as D2. A negative arm cannot catch that; only a positive one can.
+  CS="$WORK/ctl_codespan"; mk_tree "$CS" codespan
+  cs_span=0; cs_bare_def=0; cs_bare_clean=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      *'| `G'*'` |'*)   cs_span=$((cs_span+1)) ;;
+      *'| G'[0-8]' |'*) cs_bare_def=$((cs_bare_def+1)) ;;
+    esac
+  done < "$CS/trip.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in *'| G'[0-8]' |'*) cs_bare_clean=$((cs_bare_clean+1)) ;; esac
+  done < "$A/trip.md"
+  if [ "$cs_span" -gt 0 ] && [ "$cs_bare_def" -eq 0 ] && [ "$cs_bare_clean" -gt 0 ] \
+     && grep -q -x -F -- 'contract-depth: G8' "$CS/trip.md"; then
+    PASS "CTLcs1: fixture integrity — the defective consumer's table carries $cs_span code-span depth cell(s) and $cs_bare_def bare ones, while the identical bare-cell counter reads $cs_bare_clean on the clean tree — so the rendering is the only thing that differs, and the zero is a measurement"
+  else
+    FAIL "CTLcs1: the code-span fixture is not set up as claimed (span=$cs_span bare_here=$cs_bare_def bare_clean=$cs_bare_clean) — CTLcs2 would prove nothing"
+  fi
+  CS_OUT="$(conformance_check "$CS" "$CANON_FILE" "$CITATION" "$CANON_N")"; CS_RC=$?
+  if [ "$CS_RC" -eq 0 ] && ! has_finding "$CS_OUT" 'D1|D2'; then
+    PASS "CTLcs2: MUST-NOT-FIRE — a table whose depth cells are code spans is read as present and its maximum is read correctly; the cell is normalised before it is matched, so the contract's own typography no longer produces a finding that names the wrong defect"
+  else
+    FAIL "CTLcs2: MUST-NOT-FIRE — a table rendered the way CLAUDE.md renders its own was flagged (rc=$CS_RC): $(printf '%s' "$CS_OUT" | head -3 | tr '\n' ' ')"
+  fi
+
+  # ── CTL-cx: the SPECIFICITY arm for that repair. Stripping the backticks must not have
+  # widened the match into "a backticked token is a depth" — if it had, a table declaring
+  # no depth at all would read as declaring one and D2 would fall silent on a genuinely
+  # absent requirement table. CTL-nt covers a table that is not there; this one covers the
+  # nastier case of a table that IS there and declares nothing, which is what a widened
+  # pattern would swallow.
+  CX="$WORK/ctl_codespanx"; mk_tree "$CX" codespanx
+  cx_rows=0; cx_depth=0; cx_sib_depth=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '|'*) cx_rows=$((cx_rows+1)) ;; esac
+  done < "$CX/trip.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      *'| `G'*'` |'*)   cx_depth=$((cx_depth+1)) ;;
+      *'| G'[0-8]' |'*) cx_depth=$((cx_depth+1)) ;;
+    esac
+  done < "$CX/trip.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      *'| `G'*'` |'*)   cx_sib_depth=$((cx_sib_depth+1)) ;;
+      *'| G'[0-8]' |'*) cx_sib_depth=$((cx_sib_depth+1)) ;;
+    esac
+  done < "$CS/trip.md"
+  if [ "$cx_rows" -gt 0 ] && [ "$cx_depth" -eq 0 ] && [ "$cx_sib_depth" -gt 0 ] \
+     && grep -q -x -F -- 'population-role: RESOLVE' "$CX/trip.md"; then
+    PASS "CTLcx1: fixture integrity — the defective consumer carries $cx_rows table line(s) and declares population-role RESOLVE, yet $cx_depth of its cells are a depth in EITHER rendering, while the same two-rendering counter reads $cx_sib_depth on the code-span fixture next door"
+  else
+    FAIL "CTLcx1: the code-span specificity fixture is not set up as claimed (rows=$cx_rows depths=$cx_depth sibling=$cx_sib_depth) — CTLcx2 would prove nothing"
+  fi
+  CX_OUT="$(conformance_check "$CX" "$CANON_FILE" "$CITATION" "$CANON_N")"; CX_RC=$?
+  if [ "$CX_RC" -ne 0 ] && has_finding "$CX_OUT" 'D2'; then
+    PASS "CTLcx2: MUST-FIRE — a backticked token that is not a depth is still not a depth, so a table declaring none is still caught (D2); normalising the cell did not widen what counts as a depth"
+  else
+    FAIL "CTLcx2: MUST-FIRE — a table whose only depth cells are backticked non-depths passed (rc=$CX_RC); the normalisation widened the match and now masks a genuinely absent requirement table"
   fi
 
   # ── CTL-e: the repo was never mutated. A control that writes into the tree it is
