@@ -103,15 +103,39 @@ file lands silently inside the last author's verb section and rebinds it. Zone B
 one section per table row, one row per section, the section heading's first token is that row's
 `verb` cell, and a new section goes below every section already there.
 
+**The repair extension point — a Zone A statement that a permitted edit has falsified.** Zone A is
+closed, and its own extension points nevertheless make it **falsifiable**: appending a requirement
+row, unioning an `allowed-tools` entry, and a verb section naming a use of an existing grant are all
+permitted, and each can make a sentence above the first verb section untrue. A zone that forbids
+every edit while licensing the edits that falsify it forbids the repair of a defect it caused, and
+that state was reached — an `allowed-tools` union left the grant sentence above naming six of the
+seven grants, and the repair had to breach the zone to land. So the repair is a **stated extension
+point**, and it takes exactly this shape:
+
+1. **Only the clause a permitted edit made false may change**, and only that clause. A sentence that
+   is merely now awkward, or that the editing author would have written differently, was not
+   falsified and is not touched.
+2. **The repair lands in the same act as the edit that falsified it**, and the slice's own design
+   names it as a Zone A repair and cites the falsifying edit. A false statement left standing for a
+   later author to find is the failure this point exists to remove.
+3. **The terminal disposition is conversion, not a second repair.** A statement falsified twice is
+   evidence that it enumerates a set the extension points grow: it is rewritten as **the rule that
+   derives the set, never the members**, and the members come out. A statement a permitted edit
+   *will* falsify may be converted pre-emptively by the slice holding this repair, which is the same
+   act performed before the falsification rather than after it. A third repair of one sentence is
+   not available — by then the enumeration is the defect.
+4. **Nothing else in Zone A moves** — not the header block's declaration lines, not the evidence
+   blocks, not the zone rule, and not this extension point.
+
 **The shape of a table row.**
 
 | Cell | Rule |
 |---|---|
 | `verb` | the **bare token**, exactly as a user types it, single whitespace-delimited, ASCII-case-foldable — the token alone, never the token followed by an argument placeholder. § *Selecting the verb* matches the typed token against this column by exact string equality, so a placeholder in the cell makes the verb unmatchable |
-| `lifecycle` | `ACTIVE` on every row of this slice. `ANY` or `ARCHIVED` only where the verb has a stated reason to serve an archived trip, and a write verb does not |
-| `mode` | `any` on every row of this slice |
-| `destination` | `any` on every row of this slice. **No row of this file may gate on a decided destination.** A freshly scaffolded trip has no decided destination whatever its mode, so a destination-gated verb would refuse on a trip the taxonomy says runs the full pipeline |
-| `depth` | `G8` on every row, rendered **bare**. A depth cell elsewhere in the surface tolerates a code span, but this table sits inside a fence where backticks are literal, so it follows the in-fence convention `/trip-new` already ships. The header's `contract-depth` must equal the maximum depth cell in this file, and the contract fixes this command at `G8` |
+| `lifecycle` | the value admitting exactly the trip lifecycles the verb's **own section** states a reason to serve. `ANY` or `ARCHIVED` only where that section states the reason; where it states none the cell takes the contract's declared default, and **every verb of this command writes**, so no verb of it has that reason. The rule is written rather than its output because the output is what goes stale |
+| `mode` | `any` unless the verb's own section states a mode it does not serve, in which case the cell names the modes it does. A verb that must not run without a decided mode says so **in its own row**, naming what it serves, rather than by a halt at the gate that yielded the state |
+| `destination` | the `mode` rule again, with one bound that is not derived and does not move: **no row of this file may gate on a decided destination.** A freshly scaffolded trip has no decided destination whatever its mode, so a destination-gated verb would refuse on a trip the taxonomy says runs the full pipeline |
+| `depth` | **the value the header block's `contract-depth` line declares, read from that line.** The header fixes it, the guard grades the equality in both directions, and a value restated here would be a second declaration that can disagree with the first. Rendered **bare**: a depth cell elsewhere in the surface tolerates a code span, but this table sits inside a fence where backticks are literal, so it follows the in-fence convention `/trip-new` already ships. **The value is never written into this table's own rule text** — hazard 3 below counts any five-column row whose fifth field normalises to a depth as a verb row, and of the nine tables in this file this is the only one that would otherwise carry the token at all |
 
 **Three hazards, and each is a silent failure rather than a loud one.** They come from how the
 conformance guard reads this file, not from taste.
@@ -133,7 +157,7 @@ conformance guard reads this file, not from taste.
 
 | A later slice must add | A later slice must not change |
 |---|---|
-| one requirement-table row per verb it implements, `ACTIVE / any / any / G8`, its `verb` cell a bare token; a `**Reads:**` line at the head of each `## <verb>` section it appends, per § *What the blocks above are*; one `## <verb>` section per row, appended in Zone B below every section already there; `allowed-tools` additions only where a verb needs one and its own design names that verb; and, for a verb that changes a persist-mutable file, that file's own no-overwrite shape — read the file, change the named row, never regenerate it — stated inside that verb's own section | anything in Zone A except those table rows and that `allowed-tools` union; the header block's declaration lines; the evidence blocks; the table's five columns; § *What the blocks above are*; the refusal branches; and the standing clause, except under the Extension rule stated there |
+| one requirement-table row per verb it implements, **every cell taking the value § *The shape of a table row* derives for it** — the cells are not restated here, because a second statement of them is a second source that can disagree with the first; a `**Reads:**` line at the head of each `## <verb>` section it appends, per § *What the blocks above are*; one `## <verb>` section per row, appended in Zone B below every section already there; `allowed-tools` additions only where a verb needs one and its own design names that verb; and, for a verb that changes a persist-mutable file, that file's own no-overwrite shape — read the file, change the named row, never regenerate it — stated inside that verb's own section | anything in Zone A except those table rows, that `allowed-tools` union, and a repair made under § *The repair extension point*; the header block's declaration lines; the evidence blocks; the table's five columns; § *What the blocks above are*; the refusal branches, except a repair or conversion made under that same point; and the standing clause, except under the Extension rule stated there |
 
 **Binding on every later slice, without exception:** no line beginning with the pre-execution
 marker anywhere in the file; no sixth column; no other five-column table with a `G0`–`G8` fifth
@@ -238,6 +262,28 @@ only the verbs that existed when it was written.
    No path is ever built from the `--trip` value.
 6. **Dispatches an agent only where a verb's own section names the agent, its role, and the single
    file that role writes.**
+7. **An append into a file that exists is taken with `Edit`, and it is rule 2's third admitted
+   shape rather than a stretch of its second.** Rule 2's two conditions partition the writes that
+   *replace* something — `Write` where the target is absent, `Edit` where it exists and only the
+   named field's lines change — and an append is neither: no existing line changes, and there is no
+   named field, because the lines being written are not there yet. Read literally, that partition
+   leaves an append with **no sanctioned tool at all**, which is not a narrow reading of rule 2 but
+   a gap in it: an append is the write that most completely satisfies rule 2's own bound, since it
+   overwrites nothing and deletes nothing, and `ADR-007` §2 names *append under a new section rather
+   than rewriting* as one of the three shapes that satisfy the bound. So the shape is admitted here
+   in terms: **the target exists, no existing line changes, and the write adds lines at the end of
+   the file or under the block's own repeat unit.** The probe that establishes the target exists
+   runs before `Edit` is reached, exactly as it does for rule 2's other two conditions. Regenerating
+   the file, rewriting it from scratch, reordering it, merging into a prior unit or deleting one is
+   **not** an append and takes no licence from this rule.
+
+   **This is a widening of rule 2 and is stated as one.** It is here rather than inside one verb
+   section because it binds every verb, present and future: three verbs of this revision already
+   write this shape — `group` adding a roster row, `fact` appending a repeat unit, and `log`
+   appending a session entry — and none of them could name a tool under rule 2 as written. A rule
+   admitting a tool shape for three existing verbs and every future one is precisely what the
+   Extension rule below reserves this clause for; buried in `log` it would protect `log` alone and
+   leave the other two in the same gap.
 
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
@@ -322,13 +368,19 @@ Frozen. This is the G7 render. It happens after the ladder has run, so it carrie
 - **`REFUSE`** — name why the resolved state does not serve the verb, taking the reason from that
   verb's own row of the requirement table, and stop.
 
-Every row of that table declares `lifecycle: ACTIVE` and constrains neither `mode` nor
-`destination`, so the `REFUSE` reachable in this file at this revision is an archived trip: say that
-the trip is archived, and name `/trip-decommission`, **which does not exist at this revision**.
+**The reason is derived from the resolved verb's own row, and never from a universal over the
+table.** Read that row live; the cell whose declared value the resolved record does not satisfy
+**is** the reason, and the render names that cell, the value the row declares and the value the
+ladder resolved. Nothing here states what every row of the table happens to declare: that is a
+closed enumeration of a set the requirement table's own extension point grows, and it is false the
+first time a slice appends a row § *The shape of a table row* already admits — a `lifecycle` naming
+`ANY` or `ARCHIVED`, or a `mode` or `destination` cell naming values. Where the unsatisfied cell is
+`lifecycle`, the render says the trip is archived and names `/trip-decommission`, **which does not
+exist at this revision**.
 
 ## profile <name>
 
-**Reads:** `trips/<slug>/travelers/<file>.md` — the existence probe that selects create from edit, and the outgoing content on the edit route; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2. Does not read `trip-context.md`, in either direction.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, and the outgoing content on the edit route; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it.
 
 The traveler-document verb. It creates a profile that does not exist and edits one that does, and
 the branch is selected by a probe rather than by a tool grant.
@@ -340,13 +392,27 @@ segment by construction, because that charset excludes `/` and `\`. The `Person`
 **verbatim**; only the filename is transformed. **An empty result is refused** — say which name
 needs a filename, and stop.
 
-**The existence probe selects the branch.** `Read` `trips/<slug>/travelers/<file>.md`. Readable →
-**edit**. Not readable → **create**. This probe is the control that makes standing rule 2 operative;
-the tool grants are pre-approval and enforce nothing.
+**Two probes, in this order, and the order is the whole of the control.**
 
-**If `travelers/` itself is absent** — a trip scaffolded before that directory was part of the
-scaffold — stop, say so, and name `/trip-new <slug>`, whose Resume branch is the declared repair
-path for exactly this. No directory-creating grant is taken and this verb creates no directory.
+**1 — The directory-presence probe, and it runs first.** `Read` `trips/<slug>/travelers/`. **Absent
+→ stop**, say so, and name `/trip-new <slug>`, whose Resume branch is the declared repair path for a
+trip scaffolded before that directory was part of the scaffold. No directory-creating grant is taken
+and this verb creates no directory.
+
+**2 — The file-existence probe, reached only once the directory is observed present.** `Read`
+`trips/<slug>/travelers/<file>.md`. Readable → **edit**. Not readable → **create**. This probe is
+the control that makes standing rule 2 operative; the tool grants are pre-approval and enforce
+nothing.
+
+**The precedence, stated rather than left to the order of the paragraphs.** **An absent directory
+wins over whatever the file probe would have said**, and the file probe is not consulted at all
+until the directory is observed present. It is stated because the two conditions are
+**indistinguishable in the file probe's outcome**: a readable directory holding no such file and an
+absent directory both make `trips/<slug>/travelers/<file>.md` unreadable, so a file probe that ran
+first would read a missing scaffold as *not readable*, take the **create** branch, and reach
+`Write` — creating the directory this verb has no grant to create, on the one path the design
+rejected. Running the directory probe second, or naming the branch without ordering it, is that
+same defect written in a different order.
 
 **Create — three routes, offered in this order. The order is the corpus's and none may be dropped.**
 
@@ -449,8 +515,8 @@ vacuously here; it is not a mandate to run the research role.
 
 | Signal class | What this verb names | Why it does not run it |
 |---|---|---|
-| a changed need | `/trip replan`, naming the spokes the need touches | dispatching a planning pipeline is a different request type with its own command and its own permissions |
-| a changed desire | `/trip replan`, with no spoke named | the same |
+| a changed need | `/trip replan`, **which `/trip` does not implement at this revision**, naming the spokes the need touches | dispatching a planning pipeline is a different request type with its own command and its own permissions |
+| a changed desire | `/trip replan`, **which `/trip` does not implement at this revision**, with no spoke named | the same |
 | a changed journey facet | `### Per-Traveler Planning Days [DERIVED]` is **stale** — report it and **name no command** | that block has **no writer** in `CLAUDE.md` § *Write ownership*, so its staleness is reported and never repaired in place |
 | `PROFILE MISSING` | `/trip-record profile <name>` | the profile is the operator's to collect |
 
@@ -614,9 +680,10 @@ boundary would sit inside one section for no gain.
   what changes. **Write nothing** until the user names a change. This is the read-and-ask entry, and
   it is also the only path to a removal.
 - **A name** — a **presence probe** on the roster's `Person` column, matched trimmed and
-  ASCII-case-folded. Present → **edit that row**. Absent → **add a row**. The probe runs before
-  either write tool is reached; `allowed-tools` is a pre-approval grant and enforces nothing, which
-  is the same control `profile` rests on.
+  ASCII-case-folded, **over the named rows only**: a row whose `Person` cell is a placeholder is
+  skipped before the match, per the placeholder rule below. Present → **edit that row**. Absent →
+  **add a row**. The probe runs before either write tool is reached; `allowed-tools` is a
+  pre-approval grant and enforces nothing, which is the same control `profile` rests on.
 
 **Adding a row.** `Person` carries the name **verbatim**. `Traveler file` is `travelers/<file>.md`,
 where `<file>` is `/trip-new`'s transform reused verbatim and attributed to it — lowercase the name,
@@ -630,38 +697,72 @@ row is never rewritten** — a roster carrying a legacy third column in place of
 real state, and re-heading the table would delete content this command does not own. **Name the
 divergence; do not repair it.**
 
+**The named-traveler count — one definition, and every disposition below counts with it.** A
+roster row's `Person` cell is tested by **value** against the placeholder predicate § *Resolving a
+trip* states field-general: **a trimmed value beginning with `[` and ending with `]` is a
+placeholder, never a name.** The **named-traveler count is the number of roster rows whose `Person`
+cell is not a placeholder** — the count of names, which is what `/trip-new` derives the field from
+and is the semantics this section carries forward. **It is never the roster's row count.** The two
+are equal only on a roster whose placeholder rows have all been resized away, and `/trip-new`
+resizes them only when the user answered: **on an unanswered scaffold it leaves the template's four
+`[Name]` rows exactly as they stand**, so the row count on a real trip is routinely four higher than
+the party. Counting rows there would write a party of one as five, which is `ADR-007` §2 bound 6 —
+a placeholder read as evidence — reached by arithmetic instead of by a branch. Standing rule 4
+binds it in this file for the same reason.
+
+**Placeholder rows are unreachable as evidence anywhere in this verb**, not only in the count. A row
+whose `Person` cell is a placeholder **satisfies no presence probe** — it is never *present* for any
+name the user types, so it never selects the edit route and is never edited as though it were
+somebody's row; it **enters no count and no comparison** in the table below; and it is **never
+removed by this verb**, because removal is predicated on a named person who is not travelling and a
+placeholder names nobody. It stays exactly as it stands, which is the state `/trip-new` left and
+this verb does not own.
+
 **`- **Total travelers:**` reconciliation — a decision over the states the field can be in, never a
 silent adjustment.** The rules are `/trip-new`'s, carried forward: a stated total wins where one is
-given, the count of names otherwise, the two may legitimately differ, and **the roster is never
-padded with placeholder rows to reach a total**, because a `[Name]` row is indistinguishable from a
-real traveler with a missing profile.
+given, the named-traveler count otherwise, the two may legitimately differ, and **the roster is
+never padded with placeholder rows to reach a total**, because a `[Name]` row is indistinguishable
+from a real traveler with a missing profile.
 
 | State of the field after the change | Disposition |
 |---|---|
-| a bracketed placeholder | write the roster's row count |
+| a bracketed placeholder | write the named-traveler count |
 | the user stated a total in this act | write the stated total |
-| a number greater than or equal to the row count | leave it — the named person was already inside the count |
-| a number less than the row count | say so and **ask**; write neither value until the user settles it |
-| a removal, and the field equalled the pre-removal row count | decrement it |
+| a number greater than or equal to the named-traveler count | leave it — the named person was already inside the count |
+| a number less than the named-traveler count | say so and **ask**; write neither value until the user settles it |
+| a removal, and the field equalled the pre-removal named-traveler count | decrement it |
 | a removal, and the field exceeded that count | leave it, and say the unnamed remainder grew by one |
 
 **The traveler denominator is the roster and `- **Total travelers:**`, never a file count under
 `travelers/`.** That directory ships empty and stays empty until a profile is filled, so a file
 count reads a real group as zero; the roster is the input `agents/00-enrichment.md`'s `PROFILE
 MISSING` branch, `### Per-Traveler Planning Days [DERIVED]` and the satisfaction layer all read. **A
-`- **Total travelers:**` that legitimately exceeds the roster's rows is a real state and is never
-reported as a defect.**
+`- **Total travelers:**` that legitimately exceeds the named-traveler count is a real state and is
+never reported as a defect** — a stated total may carry a member the roster has no name for.
 
-**A `[THIRD-PARTY]` party member gets no roster row, and is counted in `- **Total travelers:**`.**
-`## Group` and every constraint's `Applies to:` line are publish-bound, and `CLAUDE.md` states that
-a `[THIRD-PARTY]` value never escalates into `trip-context.md` and must not appear in any
-publish-bound artifact in attributed or anonymized form. A roster row would also assert a
-`travelers/<name>.md` that `ADR-006` forbids ever existing. The **count** is a different thing: it
-is not attributed data about a person, the party denominator has to be honest for needs-compliance
-and desire-coverage to have anything to grade against, and a total exceeding the roster is already a
-legitimate state. `person` records such a member's needs and creates no file anywhere; this verb
-records roster rows in `trip-context.md`. **They do not meet**, and the difference between the total
-and the rows is never reported as a defect to reconcile.
+**A `[THIRD-PARTY]` party member gets no roster row, and is not counted in `- **Total travelers:**`
+either.** `## Group` is publish-bound and so is every other field of `trip-context.md`, and
+`CLAUDE.md` states that a `[THIRD-PARTY]` value **never escalates into `trip-context.md`** and must
+not appear in any publish-bound artifact **in attributed *or* anonymized form**. The count is not
+the exception it looks like. Stripping the name is exactly what anonymizing is, and `person` states
+the consequence thirty lines above this one: *in a small named party, stripping the name does not
+strip the identification.* A total of five over four named rows publishes that a fifth party member
+exists and is not one of the four — an unnamed person, identified by subtraction, in the file the
+site build reads. That is the anonymized half of the bound, and it is the half `person` already
+rules out, so this verb agrees with `person` rather than rebutting it. A roster row would also
+assert a `travelers/<name>.md` that `ADR-006` forbids ever existing.
+
+**Where the honest denominator lives instead.** The party denominator needs-compliance and
+desire-coverage grade against is the entry set of `outputs/traveler-model.md`, which carries the
+`[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` entry, which `CLAUDE.md` states the site build **excludes**,
+and which the hub applies as a hard bound before any objective. That member reaches it through
+`person`'s dispatch, not through a number in a publish-bound file — so honesty is preserved in the
+artifact that can hold it and is not bought in the one that cannot. `person` records such a member's
+needs and creates no file anywhere; this verb records roster rows and the count in `trip-context.md`.
+**They meet at exactly this cell and nowhere else**, which is why it is stated here rather than left
+to the reader: a difference between the total and the named-traveler count is never reported as a
+defect to reconcile, and **it is never produced by a `[THIRD-PARTY]` member.** Where the user asks
+for one to be added to the party, name **`/trip-record person <name>`** and **do not run it**.
 
 **Removing a row.** Only from the no-argument render, or where the user names the person and states
 that they are not travelling. **Echo the whole row verbatim before writing** — the removed bytes
@@ -868,8 +969,8 @@ authors no other cell, creates no row, creates no file, and deletes no row.
 status change that **has already happened**, or that the user is deliberately making to the record.
 It never *requests* a planning change. A booking that fell through, a table that was held, a museum
 morning the group settled — those are facts about the world. A wish to re-open a settled event is a
-request to the plan: name **`/trip replan`**, naming the event, and stop. Naming is the whole of
-this verb's part in that; **it does not run it.**
+request to the plan: name **`/trip replan`**, **which `/trip` does not implement at this revision**,
+naming the event, and stop. Naming is the whole of this verb's part in that; **it does not run it.**
 
 **Every refusal in this section is in-verb and post-resolution.** Each one is reached after the trip
 resolved and this verb ran, so **none of them is a branch of the shell**: none sets
@@ -926,7 +1027,7 @@ state machine is the data model's to define, and a set copied into a command is 
 that refuses a legitimate transition the moment the model gains an edge. A pair that section does
 not name is **this verb's own refusal**: render the requested edge verbatim, name that section, and
 stop — and where what the user wants is a change to the plan rather than a record of one, name
-**`/trip replan`** and **do not run it.**
+**`/trip replan`**, **which `/trip` does not implement at this revision**, and **do not run it.**
 
 **What a transition obliges, and what it does not.** These are consequences, not admissibility:
 naming what a transition obliges declares nothing about whether it runs, which stays the model's to
@@ -946,7 +1047,8 @@ never promotes in bulk.
   still shows the event as an alternative — a disagreement that is **reported here and never
   repaired here**, because that file is rebuilt on every synthesis and a hand repair to a rebuilt
   artifact is a change with a deletion already scheduled. Where the slot is what the user wants
-  re-pointed, name **`/trip replan`**, **do not run it**, and stop.
+  re-pointed, name **`/trip replan`**, **which `/trip` does not implement at this revision**, **do
+  not run it**, and stop.
 
 **`planned → locked` and `planned → firmed` — settling.** Which one applies is a fact about whether
 a reservation sits behind the event, not a preference, and **this verb never chooses between them**
@@ -969,9 +1071,9 @@ directions are stated.
   derived cell recomputes to `yes` where `requires booking? = yes`.
 - *Obliges, beyond the file:* the trip now carries the **disruption-recovery trigger** § *Modes*
   names, so the hub's equity-aware recovery and the validator's recovery-equity check belong to the
-  next planning pass. Name **`/trip replan`** and **do not run it.** Name **`/trip-record log`** as
-  well, and do not run it: *why* a booking fell through is exactly what the log carries, and the
-  status table has no field for it.
+  next planning pass. Name **`/trip replan`**, **which `/trip` does not implement at this
+  revision**, and **do not run it.** Name **`/trip-record log`** as well, and do not run it: *why* a
+  booking fell through is exactly what the log carries, and the status table has no field for it.
 - *Does not oblige:* it does not dispatch the hub, does not re-run an agent, and does not patch the
   itinerary. **It does not write `Current mode`.** The regression triggers the *recovery*; the mode
   value is a separate fact resting on a separate evidence class, and inside this command
@@ -1047,6 +1149,19 @@ path for a missing scaffold member. Name it; **do not run it.** No `Write` grant
 this verb creates no file and no directory. That stop is reached after the trip resolved and this
 verb ran, so it sets no `trip.stop_gate`, does not change `trip.resolution`, and renders no gate id.
 
+**The write tool, and the standing rule it is taken under.** `Edit`, under **standing rule 7** — the
+append shape: the target exists, no existing line changes, and the entry is added at end of file.
+The precondition above **is** rule 7's existence probe, and it is what makes the tool reachable: it
+runs before `Edit`, and on its absent branch this verb stops rather than falling through to `Write`.
+Rule 2's own two conditions are cited and neither is met, which is why rule 7 exists rather than
+this section reading one of them loosely: **`Write`** is out because it is admitted only where the
+target is absent, and this verb stops there and disclaims it in terms; **`Edit`**'s rule-2 condition
+speaks of *only the named field's lines* changing, and an append has no named field, because the
+lines it writes are not in the file yet. Stretching that clause to cover an append would make it
+cover any addition to any file and would leave the sibling `## event` — which meets rule 2's `Edit`
+condition literally, and says so — resting on a condition that no longer discriminates. The
+widening is stated in the standing clause where it binds every verb, not asserted here.
+
 **Shape and content.**
 
 - **The entry structure is `CLAUDE.md` § *trip-log.md*'s and is not restated here** — the same
@@ -1066,12 +1181,35 @@ verb ran, so it sets no `trip.stop_gate`, does not change `trip.resolution`, and
   standing rule 3 binds unchanged, and an empty element is never filled to make the entry look
   complete.
 
-**The boundary that keeps the log from becoming a rival source.** A constraint that surfaced in a
-session is recorded here as **a decision and its reasoning** — what was chosen, and why. The
-constraint itself belongs to `trip-context.md` § *Hard Constraints*, which is **`/trip-record
-fact`**'s: name it, and **do not run it.** This is link-don't-copy at the one seam where a session
-entry could quietly become a second source — the log carries what `trip-context.md` cannot, which is
-why a choice was made, and never the fact itself.
+**The boundary that keeps the log from becoming a rival source. There are two seams, not one, and
+the second is the one the scale rule opens.** At both, the log carries **why a choice was made** and
+never the state itself; it is link-don't-copy applied to the two places a session entry could
+quietly become a second source.
+
+**Seam 1 — a constraint.** A constraint that surfaced in a session is recorded here as **a decision
+and its reasoning** — what was chosen, and why. The constraint itself belongs to `trip-context.md`
+§ *Hard Constraints*, which is **`/trip-record fact`**'s: name it, and **do not run it.**
+
+**Seam 2 — the state of the plan, which this verb reaches by binding its scale to § *Ending a
+session*.** That section's full register carries the element *"Current state of the plan (what's
+solid, what's still open)"*, and written as free text that element is a **rival to two structured
+homes at once**: `outputs/event-status.md`, the per-event source of truth for the scheduler, the hub
+and the validator, which is **`/trip-record event`**'s; and `trip-context.md` § *Current Itinerary
+Status*, the trip-level human summary, which is **`/trip-record fact`**'s. This verb is the one that
+will actually compose the narrative, so it is the one that has to hold the line. **Neither the
+guard nor this verb's criterion can observe this seam** — an entry is free text and every rendering
+of it is well-formed — so the discipline is stated here and rests on nothing else.
+
+**What the element carries here, and what it does not.** It carries **what was decided this session
+and why, and what the session left open and why** — the reasoning, which is exactly what neither
+structured home holds. It does **not** carry an event's status, an Event ID, a per-event booking
+state, or a restatement of what those files say; a settled event is `event`'s row and a trip-level
+summary of the plan's standing is `fact`'s block. **Where the session actually changed a status or
+the trip-level summary, name the verb that owns it** — **`/trip-record event`** for the row,
+**`/trip-record fact`** for § *Current Itinerary Status* — and **do not run either.** An entry that
+would read as a status record if the two structured files were deleted has crossed the seam: the
+test is whether removing the log leaves any reader worse off about *state* rather than about
+*reasoning*.
 
 **What it never does.** It writes no byte of `trip-context.md` and no byte of
 `outputs/event-status.md`; `trips/<slug>/trip-log.md` is the only path it writes, built from
