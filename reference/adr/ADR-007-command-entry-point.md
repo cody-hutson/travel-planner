@@ -100,7 +100,7 @@ discoverability is served by the entry point, and least privilege by the command
 
 ### 2. The privilege boundary
 
-Five bounds hold on every command in this surface:
+Six bounds hold on every command in this surface:
 
 - A scoped invocation reads **no more** than the context its Step-2 row assigns. The `!`
   pre-execution mechanism that makes context loading deterministic can equally make it excessive —
@@ -120,6 +120,16 @@ Five bounds hold on every command in this surface:
   new section rather than rewriting; or, where a derived artifact genuinely must be replaced,
   preserve the version being replaced first, or say before writing what will not survive. This bound
   is not negotiable by a later slice.
+- **No command may treat a placeholder as evidence, and no command may predicate a branch on a
+  field's absence where a placeholder makes that field present.** The templates ship every field
+  bracketed, so a freshly-scaffolded trip *has* its `Primary destination` line — the line reads
+  `[City, Country]`. The two halves are one mistake seen from opposite sides: reading the bracketed
+  text as an answer promotes a trip that has settled nothing, and testing the field for absence finds
+  it present and promotes the same trip by the other route. Where a branch means *not yet decided*,
+  it tests the **value** against the placeholder form; absence is a different condition — a malformed
+  or truncated file — and it is never the same branch. The cost is silent: the branch that misfires
+  is the one whose whole purpose is to run the agent that resolves the undecided field, so the
+  command proceeds against placeholder text and the agent never runs.
 
 ### 3. Taxonomy ownership
 

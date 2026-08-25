@@ -45,6 +45,13 @@ built for a destination and its filename carries that destination, so a trip
 without one has no subject and no filename. The mode does not gate this command:
 a site is built from whatever the plan currently holds, at any mode.
 
+**Read that field's value, never its presence.** `trip-context.md` is scaffolded
+from the template, so a trip that has settled nothing still carries the line — it
+reads `[City, Country]`. A bracketed value means the destination is unset;
+anything else is a destination. Resolving on the line's presence takes a
+scaffolded trip past the case below and builds site content out of placeholder
+text. Binding rule: `reference/adr/ADR-007-command-entry-point.md` § 2.
+
 Resolve exactly one case below, in order. Every case that says stop, stops —
 nothing is read further and nothing is written.
 
@@ -65,8 +72,9 @@ Do not guess, and do not pick the most recently modified.
 
 ### A trip with no destination set
 
-A path prefix appears in the second block but carries no `Primary destination:`
-line.
+A path prefix appears in the second block and its `Primary destination:` line
+still reads the template's bracketed placeholder — or the line is missing
+altogether.
 
 Name the trip, say the destination is unset, and point at `trip-context.md` as
 the file that carries it. Stop — there is no destination to design for and no

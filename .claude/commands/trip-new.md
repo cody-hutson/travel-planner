@@ -225,8 +225,10 @@ guess.
 
 ### What the mode means for the next move
 
-- **IDEATION with no destination settled** — name **Destination Ideation** as the
-  next move: the prompt at `agents/destination-ideation.md`, producing
+- **IDEATION** — rule 3 was reached, so no destination was stated and the
+  `Primary destination` field still reads its template placeholder. Name
+  **Destination Ideation** as the next move: the prompt at
+  `agents/destination-ideation.md`, producing
   `outputs/destination-shortlist.md`, a ranked shortlist for the group to decide
   from. **Name it; do not dispatch it.** Dispatching an agent is a different
   request type with its own command and its own permissions.

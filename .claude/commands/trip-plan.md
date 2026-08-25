@@ -98,10 +98,18 @@ what follows is which agents that means dispatching here.
 
 | Resolved mode | What runs |
 |---|---|
-| `IDEATION`, with no `Primary destination` line in the third block | Destination Ideation only — it aggregates the travelers' leanings into a ranked group shortlist for the group to decide from. No other agent runs, and the validator is skipped. |
-| `IDEATION`, with a `Primary destination` present | Activities, Food, Nightlife, Scheduling and Transport at overview level; the hub compares the options rather than committing to one. Validator skipped. |
+| `IDEATION`, with `Primary destination` still reading its bracketed placeholder | Destination Ideation only — it aggregates the travelers' leanings into a ranked group shortlist for the group to decide from. No other agent runs, and the validator is skipped. |
+| `IDEATION`, with `Primary destination` carrying a real destination | Activities, Food, Nightlife, Scheduling and Transport at overview level; the hub compares the options rather than committing to one. Validator skipped. |
 | `DISCOVERY` | Every agent. Full pipeline. |
 | `ENRICHMENT` | Every agent. Full pipeline, planning around the confirmed flights and lodging as fixed anchors. |
+
+**Read that field's value, never its presence.** `/trip-new` scaffolds
+`trip-context.md` from the template, so a trip that has settled nothing still
+carries the line — it reads `[City, Country]`. Testing for a missing line finds it
+present, takes the second row, and plans five spokes against placeholder text
+while the one agent that branch exists to run never fires. A bracketed value is
+the placeholder; anything else is a destination. Binding rule:
+`reference/adr/ADR-007-command-entry-point.md` § 2.
 
 Where the shortlist branch runs and the group then picks a destination, that is
 a new invocation, not a continuation: set the destination, switch the mode to
