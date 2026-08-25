@@ -64,12 +64,34 @@ The slug is `<destination>-<year>`, lowercase and hyphenated — `lisbon-2027`,
 - **If neither, ask for it.** Do not invent a slug, and never create a directory
   under a placeholder name.
 
+**Check the slug's shape before using it for anything.** It becomes a directory
+name, so a slug that is not a plain name does not stay inside `trips/`. A slug is
+valid only if it is non-empty, begins with a letter or a digit, and every
+character is a letter, a digit, `.`, `_` or `-` — one rule that rejects a path
+separator, a `..` segment, a leading dot, and anything non-ASCII. It is the rule
+`scripts/publish-trip-site.sh` already applies to a publish slug.
+
+**If the slug fails that check, say plainly what was rejected and why**, name the
+shape above as the form a slug takes, ask for a corrected one, and **stop. Create
+nothing.** Do not scaffold, do not create a directory, do not write a file. The
+argument is text, and a rejected slug is never repaired by guessing at what was
+meant.
+
+**Lowercase the slug that passes.** The documented form is lowercase, and Gate 3's
+comparison is the only thing standing between a new trip and a live one — so
+`Lisbon-2027` and `lisbon-2027` must not resolve to two different answers. Carry
+the lowercased slug forward: it is the slug for Gate 3 and for every member below.
+
 ### Gate 3 — does it already exist?
 
-Compare the resolved slug against the lines of the first block.
+Compare the resolved slug against the lines of the first block, **ignoring case on
+both sides**. The volume folds case, so a directory differing only in case is the
+same directory — reading it as a new trip would scaffold straight into a live one.
 
 - **Not a line** → the trip is new. Go to **Create**.
-- **A line** → the trip exists. Go to **Resume**.
+- **A line** → the trip exists. Go to **Resume**, under the name exactly as the
+  first block spelled it rather than the lowercased form — that is the directory
+  that is actually there.
 
 ## Create
 
