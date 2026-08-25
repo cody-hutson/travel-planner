@@ -19,23 +19,23 @@ named agent against a change, use `/trip-replan`. To research one topic, use
 
 ## Agents available
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/agents`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/agents"`
 
 ## Trips in this repo
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"`
 
 ## Resolved trip and mode
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*' ${CLAUDE_PROJECT_DIR}/trips/*/trip-context.md`
+!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md`
 
 ## Existing outputs
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips/*/outputs`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"/*/outputs`
 
 ## Traveler profiles
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips/*/travelers`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"/*/travelers`
 
 ## What was asked for
 

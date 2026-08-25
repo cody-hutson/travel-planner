@@ -24,7 +24,7 @@ settling a decision.
 
 ## Existing trips
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"`
 
 ## Today
 

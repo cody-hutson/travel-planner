@@ -24,7 +24,7 @@ caches — say that too, because taking a site offline is not a retraction.
 
 ## Trips in this repo
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips 2>&1`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
 
 ## Resolve before running anything
 

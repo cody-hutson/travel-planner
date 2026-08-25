@@ -17,7 +17,7 @@ command in the publish family whose effect on the world is nothing at all.
 
 ## Trips in this repo
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips 2>&1`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
 
 ## The invocation
 

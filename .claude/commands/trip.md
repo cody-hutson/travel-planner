@@ -13,11 +13,11 @@ is dispatched, no script is run.
 
 ## Trips in this repo
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"`
 
 ## Resolved trip and mode
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*' ${CLAUDE_PROJECT_DIR}/trips/*/trip-context.md`
+!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md`
 
 ## What to do with this
 

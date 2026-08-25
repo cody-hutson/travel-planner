@@ -21,15 +21,15 @@ does not select the trip, and it does not widen what this command reads.
 
 ## Trips in this repo
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"`
 
 ## Resolved trip and mode
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*' ${CLAUDE_PROJECT_DIR}/trips/*/trip-context.md`
+!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md`
 
 ## Existing outputs
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips/*/outputs`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips"/*/outputs`
 
 ## Resolve before building
 

@@ -26,11 +26,11 @@ secret, and neither block below reads its contents.
 
 ## Trips in this repo
 
-!`ls -1 ${CLAUDE_PROJECT_DIR}/trips 2>&1`
+!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
 
 ## Passphrase files present
 
-!`ls -l ${CLAUDE_PROJECT_DIR}/trips/*/.passphrase 2>&1`
+!`ls -l "${CLAUDE_PROJECT_DIR}/trips"/*/.passphrase 2>&1`
 
 This block lists the file's **path, permission bits, size and timestamp — never
 its contents**. Its one job is the check below, and it is the reason this
