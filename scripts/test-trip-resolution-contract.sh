@@ -22,9 +22,13 @@
 #        evidence blocks byte-identical to the canonical at their index, the prefix
 #        contiguous from index 1, `contract-depth` consistent with the prefix carried,
 #        and `contract-depth` equal to the maximum depth in the file's own verb table.
-#   CTL  a synthetic five-file fixture tree, built in a temp dir ON EVERY RUN, with
-#        four arms: a clean tree that MUST NOT fire, and three deliberate defects
-#        that MUST.
+#   CTL  a synthetic five-file fixture tree, built in a temp dir ON EVERY RUN. One arm
+#        is a clean tree that MUST NOT fire; the rest are deliberate defects that MUST,
+#        ONE PER FAILURE CODE the checker can emit — H1 H2 H3 P1 P2 D1 D2 — plus a decoy
+#        arm proving the verb-table depth is read by FIELD INDEX and not by a row-wide
+#        match. A code with no arm is a check indistinguishable from one that CANNOT
+#        fire, which is the precise defect this suite exists to prevent; leaving one
+#        unexercised inside the anti-drift guard would be that defect at its own root.
 #
 # ── WHY CTL IS NOT OPTIONAL DECORATION ───────────────────────────────────────────
 # This contract ships in Wave 0, BEFORE any of the five command files exists. At that
@@ -386,6 +390,17 @@ fi
 #
 # Every arm carries a FIXTURE-INTEGRITY assertion graded FIRST: a control built on a
 # fixture that was never constructed is a green proving nothing, one level down.
+#
+# THE INVARIANT A LATER CONTRIBUTOR MUST HOLD: every failure code `conformance_check`
+# can emit has a must-fire arm here. An emitted code with no arm is a check that has
+# never been observed to fire, and an unexercised check is indistinguishable from one
+# that CANNOT fire — the assertion may already be inert and the suite would stay green
+# saying so. When a later slice adds a code, it adds an arm in this group in the same
+# change. The arms below are keyed to their code so the correspondence is readable:
+#   a  clean tree, MUST NOT FIRE      b  P1     c  H1     d  P2
+#   nd H2    nr H3    nt D2    dm D1 (max computation)    dd D1 (field-index read)
+# and CTL-e is graded LAST, so its "the repo was never written to" claim covers every
+# fixture above it rather than a prefix of them.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "── Group CTL — control case: the checker shown PASSING on a correct tree and FAILING on each deliberate defect."
@@ -417,15 +432,38 @@ else
         fi
         i=$((i+1))
       done
-      # contract header block
+      # contract header block. Each omission is its own variant so a defect arm removes
+      # exactly one field: an arm whose fixture broke several things at once proves the
+      # checker fired, not WHICH assertion fired.
       [ "$variant" = "noheader" ] || printf '%s\n' "$CITATION"
-      printf 'contract-depth: G%s\n' "$depth"
-      printf 'population-role: %s\n\n' "$role"
-      if [ "$role" = "RESOLVE" ]; then
+      [ "$variant" = "nodepth" ]  || printf 'contract-depth: G%s\n' "$depth"
+      [ "$variant" = "norole" ]   || printf 'population-role: %s\n' "$role"
+      printf '\n'
+      if [ "$role" = "RESOLVE" ] && [ "$variant" != "notable" ]; then
         printf '| verb | lifecycle | mode | destination | depth |\n'
         printf '|---|---|---|---|---|\n'
-        printf '| status | ACTIVE | any | any | G1 |\n'
-        printf '| act | ACTIVE | resolved | decided | G%s |\n' "$depth"
+        case "$variant" in
+          depthmismatch)
+            # The table tops out at G2 while the file declares G8. Two rows, not one, so
+            # the arm exercises the MAXIMUM rather than a single-row equality: a checker
+            # that read the first depth cell it met would report G1 and be caught.
+            printf '| status | ACTIVE | any | any | G1 |\n'
+            printf '| act | ACTIVE | resolved | decided | G2 |\n'
+            ;;
+          depthdecoy)
+            # Every DEPTH cell reads G1, but a decoy `G8` sits in the mode cell of one
+            # row and the lifecycle cell of the other — the two cells the checker names.
+            # A row-wide matcher reads a decoy, agrees with the declared G8 and stays
+            # silent; the field-index read sees G1 and fires. This fixture is the only
+            # thing that tells those two implementations apart.
+            printf '| status | ACTIVE | G8 | any | G1 |\n'
+            printf '| act | G8 | resolved | decided | G1 |\n'
+            ;;
+          *)
+            printf '| status | ACTIVE | any | any | G1 |\n'
+            printf '| act | ACTIVE | resolved | decided | G%s |\n' "$depth"
+            ;;
+        esac
       fi
       printf '\nVerb-specific text follows here.\n'
     } > "$d/$name.md"
@@ -515,8 +553,116 @@ else
     FAIL "CTLd2: MUST-FIRE — a declared depth exceeding the carried prefix passed (rc=$D_RC)"
   fi
 
+  # ── CTL-nd: a consumer with no `contract-depth` line MUST fire H2.
+  # H2 and H3 are the two header-field codes the shipped control group never reached.
+  # An absent depth line also collapses the derived prefix requirement to zero, so this
+  # fixture reaches H2 and leaves the prefix assertions untouched.
+  ND="$WORK/ctl_nodepth"; mk_tree "$ND" nodepth
+  if ! grep -q -x -F -- 'contract-depth: G8' "$ND/trip.md" \
+     && grep -q -x -F -- 'population-role: RESOLVE' "$ND/trip.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$ND/trip-record.md"; then
+    PASS "CTLnd1: fixture integrity — the contract-depth line is absent from exactly the defective consumer, its population-role is untouched, and the SAME probe finds the line in the sibling — so the zero is a measurement, not a broken probe"
+  else
+    FAIL "CTLnd1: the depth-removal fixture is not set up as claimed — CTLnd2 would prove nothing"
+  fi
+  ND_OUT="$(conformance_check "$ND" "$CANON_FILE" "$CITATION" "$CANON_N")"; ND_RC=$?
+  if [ "$ND_RC" -ne 0 ] && has_finding "$ND_OUT" 'H2'; then
+    PASS "CTLnd2: MUST-FIRE — a consumer that declares no contract-depth is caught (H2)"
+  else
+    FAIL "CTLnd2: MUST-FIRE — a consumer with no contract-depth passed (rc=$ND_RC); the depth-declaration assertion is inert"
+  fi
+
+  # ── CTL-nr: a consumer with no `population-role` line MUST fire H3.
+  NR="$WORK/ctl_norole"; mk_tree "$NR" norole
+  if ! grep -q -x -F -- 'population-role: RESOLVE' "$NR/trip.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$NR/trip.md" \
+     && grep -q -x -F -- 'population-role: RESOLVE' "$NR/trip-record.md"; then
+    PASS "CTLnr1: fixture integrity — the population-role line is absent from exactly the defective consumer, its contract-depth is untouched, and the same probe finds the line in the sibling"
+  else
+    FAIL "CTLnr1: the role-removal fixture is not set up as claimed — CTLnr2 would prove nothing"
+  fi
+  NR_OUT="$(conformance_check "$NR" "$CANON_FILE" "$CITATION" "$CANON_N")"; NR_RC=$?
+  if [ "$NR_RC" -ne 0 ] && has_finding "$NR_OUT" 'H3'; then
+    PASS "CTLnr2: MUST-FIRE — a consumer that declares no population-role is caught (H3)"
+  else
+    FAIL "CTLnr2: MUST-FIRE — a consumer with no population-role passed (rc=$NR_RC); G2's per-command disposition would be improvised per file with nothing to catch it"
+  fi
+
+  # ── CTL-nt: a RESOLVE consumer carrying no per-verb requirement table MUST fire D2.
+  # The declared role is load-bearing here rather than incidental: D2 is conditional on
+  # RESOLVE, so an arm whose fixture also lost the role line would be testing H3.
+  NT="$WORK/ctl_notable"; mk_tree "$NT" notable
+  nt_rows=0; nt_sib=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '|'*) nt_rows=$((nt_rows+1)) ;; esac
+  done < "$NT/trip.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in '|'*) nt_sib=$((nt_sib+1)) ;; esac
+  done < "$NT/trip-record.md"
+  if [ "$nt_rows" -eq 0 ] && [ "$nt_sib" -gt 0 ] \
+     && grep -q -x -F -- 'population-role: RESOLVE' "$NT/trip.md"; then
+    PASS "CTLnt1: fixture integrity — the defective consumer declares population-role RESOLVE and carries $nt_rows table line(s), while the identical counter reads $nt_sib next door — a zero with a non-zero control arm"
+  else
+    FAIL "CTLnt1: the missing-table fixture is not set up as claimed (rows=$nt_rows sibling=$nt_sib) — CTLnt2 would prove nothing"
+  fi
+  NT_OUT="$(conformance_check "$NT" "$CANON_FILE" "$CITATION" "$CANON_N")"; NT_RC=$?
+  if [ "$NT_RC" -ne 0 ] && has_finding "$NT_OUT" 'D2'; then
+    PASS "CTLnt2: MUST-FIRE — a RESOLVE consumer with no per-verb requirement table is caught (D2); G7's closed-set default has a table to look in"
+  else
+    FAIL "CTLnt2: MUST-FIRE — a RESOLVE consumer with no verb table passed (rc=$NT_RC)"
+  fi
+
+  # ── CTL-dm: contract-depth disagreeing with the maximum depth in the file's own verb
+  # table MUST fire D1. This is the assertion that had no arm ANYWHERE — RP is VACUOUS
+  # until the command files land, so before this arm it had never been observed to fire
+  # at any wave, and "inert" and "never exercised" were the same observation.
+  DM="$WORK/ctl_depthmismatch"; mk_tree "$DM" depthmismatch
+  if grep -q -x -F -- 'contract-depth: G8' "$DM/trip.md" \
+     && grep -q -x -F -- '| act | ACTIVE | resolved | decided | G2 |' "$DM/trip.md" \
+     && ! grep -q -x -F -- '| act | ACTIVE | resolved | decided | G8 |' "$DM/trip.md" \
+     && grep -q -x -F -- '| act | ACTIVE | resolved | decided | G8 |' "$DM/trip-record.md"; then
+    PASS "CTLdm1: fixture integrity — the defective consumer declares contract-depth G8 while its verb table tops out at G2; the sibling still carries the matching G8 row, so the absence is observed rather than assumed"
+  else
+    FAIL "CTLdm1: the depth-mismatch fixture is not set up as claimed — CTLdm2 would prove nothing"
+  fi
+  DM_OUT="$(conformance_check "$DM" "$CANON_FILE" "$CITATION" "$CANON_N")"; DM_RC=$?
+  if [ "$DM_RC" -ne 0 ] && has_finding "$DM_OUT" 'D1'; then
+    PASS "CTLdm2: MUST-FIRE — a consumer whose contract-depth disagrees with the maximum depth in its own verb table is caught (D1)"
+  else
+    FAIL "CTLdm2: MUST-FIRE — a contract-depth disagreeing with its own verb table passed (rc=$DM_RC); the prefix a file carries would no longer be fixed by anything"
+  fi
+  if printf '%s\n' "$DM_OUT" | grep -q -F -- 'verb table (G2)'; then
+    PASS "CTLdm3: the finding names G2 — the MAXIMUM over the table's {G1, G2}, not the first depth cell it met; the max computation is exercised, not merely the inequality"
+  else
+    FAIL "CTLdm3: D1 fired but did not name G2 as the table maximum, so the reported depth is not the maximum: $(printf '%s' "$DM_OUT" | head -2 | tr '\n' ' ')"
+  fi
+
+  # ── CTL-dd: the SPECIFICITY arm for the same assertion. The checker reads the depth
+  # cell by FIELD INDEX precisely so a `G8` mentioned in the lifecycle or mode cell does
+  # not silently satisfy a declared G8. That reasoning was recorded beside the code and
+  # asserted by nothing: a row-wide matcher would have passed every arm above.
+  DD="$WORK/ctl_depthdecoy"; mk_tree "$DD" depthdecoy
+  if grep -q -x -F -- 'contract-depth: G8' "$DD/trip.md" \
+     && grep -q -x -F -- '| status | ACTIVE | G8 | any | G1 |' "$DD/trip.md" \
+     && grep -q -x -F -- '| act | G8 | resolved | decided | G1 |' "$DD/trip.md"; then
+    PASS "CTLdd1: fixture integrity — the defective consumer declares G8 and plants a decoy G8 in one row's mode cell and the other's lifecycle cell, while EVERY depth cell reads G1"
+  else
+    FAIL "CTLdd1: the decoy fixture is not set up as claimed — CTLdd2 would prove nothing"
+  fi
+  DD_OUT="$(conformance_check "$DD" "$CANON_FILE" "$CITATION" "$CANON_N")"; DD_RC=$?
+  if [ "$DD_RC" -ne 0 ] && has_finding "$DD_OUT" 'D1'; then
+    PASS "CTLdd2: MUST-FIRE — a G8 outside the depth column does not satisfy the declared depth; the disagreement is still caught (D1)"
+  else
+    FAIL "CTLdd2: MUST-FIRE — a decoy G8 in a non-depth cell silenced the check (rc=$DD_RC); the depth is being read row-wide, so the assertion agrees with itself"
+  fi
+  if printf '%s\n' "$DD_OUT" | grep -q -F -- 'verb table (G1)'; then
+    PASS "CTLdd3: the finding names G1 — the depth CELL, read by field index; a row-wide matcher would have read the decoy G8, agreed with the declaration and stayed silent"
+  else
+    FAIL "CTLdd3: D1 fired but named a maximum the depth column does not contain — the decoy was read as a depth: $(printf '%s' "$DD_OUT" | head -2 | tr '\n' ' ')"
+  fi
+
   # ── CTL-e: the repo was never mutated. A control that writes into the tree it is
-  # meant to be measuring is not a control.
+  # meant to be measuring is not a control. Graded LAST, after every fixture above.
   if [ ! -e "$ROOT/.claude/commands/trip-decommission.md" ] || [ "$RP_POP" -gt 0 ]; then
     PASS "CTLe: the control case built its five-file population in a temp dir; the repository tree was never written to"
   else
