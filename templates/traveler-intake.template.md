@@ -20,8 +20,9 @@
 > - Every question has a short example and a "skip if it doesn't apply." Replace each
 >   `[bracketed placeholder]` with your own answer. If a question doesn't apply to you,
 >   keep the line and put a single em dash (`—`) where the answer would go. **Don't leave
->   the placeholder text sitting there** — the planner reads what's on the line, so a
->   leftover `[bracketed placeholder]` gets treated as your answer.
+>   the placeholder text sitting there** — a leftover `[bracketed placeholder]` reads as
+>   *unanswered*, exactly like an empty line, and a profile still carrying its brackets
+>   reads as one nobody has filled in yet.
 > - For the repeatable blocks (needs, desires), **add as many as you like and delete
 >   the rest.**
 >
