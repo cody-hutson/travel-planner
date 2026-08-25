@@ -1,8 +1,8 @@
 ---
-description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile; the destination and the mode, the party, trip facts, constraints and bookings, and the per-trip publish repo name. Writes the trip's own files; never publishes.
+description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile; the destination and the mode, the party, trip facts, constraints and bookings, and the per-trip publish repo name; per-event status and the session log. Writes the trip's own files; never publishes.
 argument-hint: <verb> [--trip <slug>] [args...]
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Read, Write, Edit, Task
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Read, Write, Edit, Task
 disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
@@ -14,12 +14,24 @@ The verb is the one the user typed. Nothing in this file supplies a verb they di
 nothing in it reads the wording of the request to decide one.
 
 **The frontmatter above, and what it is held for.** Each grant is held for a use a section below
-names, per `ADR-007` §2 bound 2: `Bash(ls:*)` for the listing block and `Bash(grep:*)` for the
-record block, and nothing else in this file uses either; `Read` for the traveler profile this
-command probes for and edits and for the intake template it copies from; `Write` for a profile
-that does not exist; `Edit` for a named field in a profile that does; `Task` for the enrichment
-dispatch the verbs below name. No directory-creating grant is taken, and no verb of this command
-creates a directory.
+names, per `ADR-007` §2 bound 2. **Two of them are the file's own**, and their set is closed by the
+header block: `Bash(ls:*)` for the listing block and `Bash(grep:*)` for the record block, and
+nothing else in this file uses either. **Every other grant is a verb's, and the verb section that
+takes it is where its use is named** — `Read` and `Edit` by each section that probes for a file or
+changes named lines in one, `Write` by each section that creates a file the trip does not have,
+`Task` by each section that dispatches an agent under standing rule 6, and `Bash(date:*)` by the
+section that needs a date. **Which sections those are is read from the sections, not from here.**
+
+**Why this line names the grants and not their uses.** What a grant is held for is a property of the
+verb, not of the file, and this file is written by more than one slice: a closed list of uses,
+written before a later slice's verbs exist, is stale the moment one lands and is widened by every
+author who meets it — the same reason § *What the blocks above are* states the read-scope ceiling as
+a principle rather than a path list. The two pair, and together they make this file's grant set and
+its read scope both the union of its verb sections, with no second list that can disagree with them.
+It also moves the trigger for editing this line from *a new verb*, which is unbounded and is what
+went stale, to *a new grant*, which is already an edit to the extension point below. **A grant no
+section names is a grant with no function**, and taking one is a defect whatever this line says. No
+directory-creating grant is taken, and no verb of this command creates a directory.
 
 **Frozen.** `disable-model-invocation: true`; `argument-hint`, which is already verb-general; and
 every entry of `disallowed-tools`, which denies the publish script directly and through `bash` and
@@ -56,6 +68,8 @@ population-role: RESOLVE
 | group | ACTIVE | any | any | G8 |
 | fact | ACTIVE | any | any | G8 |
 | .publish-slug | ACTIVE | any | any | G8 |
+| event | ACTIVE | any | any | G8 |
+| log | ACTIVE | any | any | G8 |
 ```
 
 The block above is this file's contract declaration. The requirement table sits **inside** it
@@ -841,3 +855,229 @@ Generates no name of its own. Writes no path other than `trips/<slug>/.publish-s
 publishing itself is what the user wants, name `/trip-publish`, **which does not exist at this
 revision**, and stop; where taking a site down is what they want, name `/trip-decommission`, **which
 does not exist at this revision**, and stop.
+
+## event <id> <state>
+
+**Reads:** `trips/<slug>/outputs/event-status.md` — the row `<id>` names, read **before** it is written because that file is persist-mutable: the read is what locates the one row, supplies its outgoing `Status` for the echo, and makes the never-regenerate shape below checkable rather than merely asserted; `reference/data-model.md` — § *The Per-Event Status Model*, read at invocation for the transitions it names and for the table shape this section cites instead of rendering. Reads `trips/<slug>/trip-context.md` not at all — `## Locked Elements` is the trip-level human summary and `/trip-record fact`'s, and reading it here would give an event's status a second source. It performs no read to obtain the status vocabulary: `CLAUDE.md` § *Key Rules* is auto-loaded and already in context, so consulting it is not a read this verb makes. Dispatches no agent.
+
+The per-event status verb. It changes the `Status` cell of one named row of
+`trips/<slug>/outputs/event-status.md` and recomputes that row's derived needs-booking cell. It
+authors no other cell, creates no row, creates no file, and deletes no row.
+
+**The discriminator, stated first because every refusal below rests on it.** This verb records a
+status change that **has already happened**, or that the user is deliberately making to the record.
+It never *requests* a planning change. A booking that fell through, a table that was held, a museum
+morning the group settled — those are facts about the world. A wish to re-open a settled event is a
+request to the plan: name **`/trip replan`**, naming the event, and stop. Naming is the whole of
+this verb's part in that; **it does not run it.**
+
+**Every refusal in this section is in-verb and post-resolution.** Each one is reached after the trip
+resolved and this verb ran, so **none of them is a branch of the shell**: none sets
+`trip.stop_gate`, none changes `trip.resolution`, and none renders a gate id.
+
+**Argument grammar.** The argument string is an event id followed by a state, and nothing after it.
+
+- **A part missing** — say **which** part was not given, and stop.
+- **Anything after the state** — say the invocation is malformed, and name **`/trip-record log`** as
+  where a reason for the change belongs. The signature carries no note field, so absorbing trailing
+  text into `Notes` would invent a shape standing rule 3 forbids and would make `Notes` a free-text
+  field with two writers. Name `log`; **do not run it.**
+
+**`<id>` is matched by exact, case-sensitive string equality** against the `Event ID` column. Not a
+prefix match, not a nearest match, not a fuzzy match, not a substring match, and **no near-match
+suggestion — no *"did you mean"*** — the reasons § *When the token is not a verb of this command*
+gives hold identically here, and this is a path that writes. No glob, no wildcard, no `all`, no day
+selector, no *"the option on Day 3"*: **one row per invocation.** The case-**sensitivity** is a
+deliberate departure from the verb lookup's case-folding rather than an oversight, and the reason is
+the difference between the two keys: the verb vocabulary is closed and lowercase, whereas the Event
+ID is declared **opaque**, so folding it could collide two distinct keys. Being opaque it is also
+**day-independent** — no day is read out of it and none is written into it, the `Day` column carries
+the day, and this verb does not touch that column.
+
+**`<state>` is ASCII-case-folded and matched by exact string equality against the per-event status
+vocabulary `CLAUDE.md` § *Key Rules* fixes**, read live from the text already in context. That
+vocabulary is **not written into this file** and **not counted** — the same discipline § *Selecting
+the verb* applies to this command's own verb set, and it is what keeps a status a later release adds
+from needing an edit here. A token matching nothing is **this verb's own refusal**: render the token
+verbatim, render the vocabulary read live, and stop. No near-match, no fallback.
+
+**Probes, in this order, before any write tool is reached.**
+
+1. `Read` `trips/<slug>/outputs/event-status.md`. **Absent → stop, and create nothing.** That file
+   is created by whichever agent first writes it — the enrichment agent's setup seed, or the hub on
+   the first full synthesis — and this command is in neither role; it is not a scaffold member of
+   `/trip-new` either, so there is no repair path to name here. Name the path, say that it appears
+   when the plan is first synthesised, and stop.
+2. **A row carrying `<id>`. None → stop, naming the id verbatim.** This verb never creates a row:
+   minting an Event ID is the hub's act on first placement, and a status row for an event the
+   itinerary has not placed is the inverse of the ghost row the model forbids.
+3. **The id is unique. More than one row carries it → stop**, naming the id and that it appears more
+   than once, and **pick neither.** The id is the cross-run join key, so a duplicate is a corrupt
+   file rather than a choice, and selecting one silently would resolve a conflict the file itself
+   records.
+4. **Already in the requested state → say so and write nothing.** A no-op write to a persist-mutable
+   file is still a write, and what makes that file worth reading is that a write in it means
+   something changed.
+
+**Admissibility is cited, never enumerated.** A transition is admitted exactly when
+`reference/data-model.md` § *The Per-Event Status Model* names it, read at invocation. **This file
+enumerates no transition set of its own**, and the reason is stated rather than left to taste: the
+state machine is the data model's to define, and a set copied into a command is a frozen denominator
+that refuses a legitimate transition the moment the model gains an edge. A pair that section does
+not name is **this verb's own refusal**: render the requested edge verbatim, name that section, and
+stop — and where what the user wants is a change to the plan rather than a record of one, name
+**`/trip replan`** and **do not run it.**
+
+**What a transition obliges, and what it does not.** These are consequences, not admissibility:
+naming what a transition obliges declares nothing about whether it runs, which stays the model's to
+say. Each class below is named, never counted.
+
+**`option → planned` — a deliberate user instruction, never automatic.** The verb *is* that
+instruction: the user names the opaque id and names the target state. This verb never selects an
+option to promote, never promotes because a primary slot fell vacant, never promotes by day, and
+never promotes in bulk.
+
+- *Obliges:* the row's `Status` becomes the state the user named, and the derived needs-booking cell
+  recomputes — so a backup carrying `requires booking? = yes` immediately reads as needing a
+  booking, which is the flag taking effect on promotion exactly as the corpus states it.
+- *Does not oblige:* **the primary slot is not re-pointed.** A promotion in the corpus is a re-point
+  plus a flip, and this verb performs the flip half alone, because the itinerary is the hub's
+  artifact and this verb dispatches nothing. Until the next synthesis `outputs/venue-matrix.md`
+  still shows the event as an alternative — a disagreement that is **reported here and never
+  repaired here**, because that file is rebuilt on every synthesis and a hand repair to a rebuilt
+  artifact is a change with a deletion already scheduled. Where the slot is what the user wants
+  re-pointed, name **`/trip replan`**, **do not run it**, and stop.
+
+**`planned → locked` and `planned → firmed` — settling.** Which one applies is a fact about whether
+a reservation sits behind the event, not a preference, and **this verb never chooses between them**
+— the user names the state.
+
+- *Obliges:* the event moves from open-to-iteration to preserved, and drops out of the needs-booking
+  set by the recompute below.
+- *Does not oblige:* **`Requires booking?` is untouched.** It is a property of the event's kind
+  rather than of its status, and **no verb of this command writes it.** A `firmed` row carrying
+  `requires booking? = yes` is therefore neither refused nor tidied up: the flag stays true, stops
+  surfacing, and surfaces again if the event returns to `planned`. `## Locked Elements` is not
+  written either — that block is the trip-level summary and `/trip-record fact`'s, so where a
+  settled event should read that way in the summary too, **name that verb and do not run it.**
+
+**`locked → planned` — the fall-through, and a named trigger.** A cancelled reservation, a sold-out
+ticket, a withdrawn hold. This is the class whose consequence reaches past its own row, so both
+directions are stated.
+
+- *Obliges, in the file:* the event re-opens to iteration and its booking question reopens — the
+  derived cell recomputes to `yes` where `requires booking? = yes`.
+- *Obliges, beyond the file:* the trip now carries the **disruption-recovery trigger** § *Modes*
+  names, so the hub's equity-aware recovery and the validator's recovery-equity check belong to the
+  next planning pass. Name **`/trip replan`** and **do not run it.** Name **`/trip-record log`** as
+  well, and do not run it: *why* a booking fell through is exactly what the log carries, and the
+  status table has no field for it.
+- *Does not oblige:* it does not dispatch the hub, does not re-run an agent, and does not patch the
+  itinerary. **It does not write `Current mode`.** The regression triggers the *recovery*; the mode
+  value is a separate fact resting on a separate evidence class, and inside this command
+  **`/trip-record mode`** is its writer — named here, not run. It also does not delete the row:
+  deletion is predicated on the event being removed from the itinerary, which this verb neither
+  performs nor observes, and a row deleted while its event remains is worse than the ghost row the
+  rule forbids. It touches no `Day`, `Event`, `Requires booking?` or `Notes` cell.
+
+**The one derived cell, and why writing it is not authoring it.** `Status` is the only **authored**
+cell any invocation of this verb writes. The row's needs-booking cell is **recomputed**, by the
+corpus's stated predicate — `planned` **and** `requires booking? = yes` — and by no other rule; the
+corpus calls that column computed rather than authored and states the recompute as a consequence of
+the transition itself. The tradeoff is stated rather than hidden: the same passage also says the hub
+recomputes the cell whenever it touches a row, which can be read as an exclusive grant. **The
+narrower reading is taken** — an obligation stated, not a monopoly — because the alternative writes
+a known falsehood into the file the scheduler, the hub and the validator all read, in exactly the
+case where the falsehood costs most: a reopened booking reading as needing none.
+
+**Why this verb may write a file the pipeline also writes, and why that permission reaches nothing
+else.** The permission comes from that file's **persist-mutable** lifecycle rather than from any
+count of its writers: synthesis *reads* existing status and never regenerates it, so a flip made by
+hand survives the next pass — an exception the lifecycle predicts, not an exception to the rule.
+**Every other artifact the pipeline produces is rebuilt, versioned or appended**, so a hand edit to
+`outputs/venue-matrix.md`, `outputs/traveler-model.md`, `outputs/satisfaction-metrics.md` or
+`outputs/final-itinerary.md` is a change with a deletion already scheduled, and this verb earns no
+licence to make one.
+
+**The no-overwrite shape that follows, and it binds this verb rather than the standing clause.**
+`Read` the file; `Edit` the named row in place; **never regenerate it.** Never rewrite the file from
+scratch, never append a dated section — that is the accumulate pattern and this file is not it —
+never version it, and never create it. Standing rule 2's condition for `Edit` is met in its own
+terms: the target exists, and only the named row's line changes.
+
+**What it never does.** It writes **zero bytes of `trip-context.md`** — not `## Locked Elements`,
+not `## Current Itinerary Status`, not `Current mode`, in either direction.
+`trips/<slug>/outputs/event-status.md` is the only path it writes, built from `trip.slug` exactly as
+`E1` spelled it and never from a `--trip` value, which this verb does not consume. It takes no
+`Write` grant, creates no file and no directory, dispatches no agent, and runs no script. And it
+**never reads a decided destination out of the existence of an event-status file** — that a
+synthesis has run says nothing about `## Destination`. Neither the mode nor the destination is a
+condition of this verb: its row reads `any` in both cells, so a trip whose mode has never been set
+and whose destination is undecided reaches it and runs.
+
+## log
+
+**Reads:** `trips/<slug>/trip-log.md` — read **before** it is written, to confirm the target is the trip's log and to locate the append point at its end; the read never decides the entry's content, which comes from the session, and it never re-opens a prior entry. Reads `trips/<slug>/trip-context.md` not at all — a constraint the session surfaced belongs to that file and is `/trip-record fact`'s, and reading it here would let the log become a second source for a fact whose reasoning is the only part it carries. Reads `trips/<slug>/outputs/event-status.md` not at all — an event's status is `/trip-record event`'s. It performs no read to obtain the entry's structure or its scale: `CLAUDE.md` § *trip-log.md* and § *Ending a session* are auto-loaded and already in context, so consulting them is not a read this verb makes. Dispatches no agent.
+
+The session-entry verb. It appends one entry to `trips/<slug>/trip-log.md` — the file § *Session
+Protocol* makes the session bridge — and does nothing else.
+
+**A named home for an act that stays available conversationally.** `/trip-new` creates this file as
+a scaffold member with the setup entry, and its Resume branch declines to append another, saying in
+terms that session logging is already covered by the existing request types. This verb gives that
+act a typed home without displacing the conversational path: it is not heavier than asking, because
+a free-form request already resolves through the same ladder — this simply types it. **Nothing here
+makes a log entry mandatory**, and a session logged by asking rather than by typing is not an
+omission.
+
+**Argument.** This verb requires no positional argument. Any remaining argument string is the
+entry's **topic**, and never its body: the body is composed from the session, and a one-line
+argument is not a session.
+
+**The date.** Get it by running `date +%F` as a tool call **here in the body, not as a pre-execution
+block**, and use the bare `YYYY-MM-DD` form exactly as the call returned it. The reason is the
+contract rather than style: § *What the blocks above are* fixes how many pre-execution blocks this
+file carries and it already carries all of them, so a further one is a red check on push whatever
+this section says. `Bash(date:*)` is the grant this call takes, and `/trip-new` already takes its
+own date this way for the same stated reason — a shipped convention rather than a new one.
+
+**Precondition.** `Read` `trips/<slug>/trip-log.md`. **Absent → stop, and create nothing:** say
+which path is missing and name **`/trip-new <slug>`**, whose Resume branch is the declared repair
+path for a missing scaffold member. Name it; **do not run it.** No `Write` grant is taken here, and
+this verb creates no file and no directory. That stop is reached after the trip resolved and this
+verb ran, so it sets no `trip.stop_gate`, does not change `trip.resolution`, and renders no gate id.
+
+**Shape and content.**
+
+- **The entry structure is `CLAUDE.md` § *trip-log.md*'s and is not restated here** — the same
+  discipline `profile` applies to the intake template's questions. That section is the authority on
+  its own fields, read live from the text already in context.
+- **The entry's scale is § *Ending a session*'s:** a quick edit gets a one-liner, a planning session
+  gets the full register. That section's remaining disposition — skipping the log — **is not
+  reachable here**, because the verb was typed and the decision to log is therefore already made.
+- **Append only.** A new `## Session <YYYY-MM-DD>` section at end of file, carrying the
+  `— <topic>` suffix shape `/trip-new`'s setup entry uses when a topic was supplied. **No existing
+  line changes:** the title line is not rewritten, and no prior entry is edited, re-ordered, merged,
+  deduplicated or removed. Where a section for the same date already exists, **a second one is
+  appended beside it rather than merged into it** — merging edits a prior entry, and a running
+  register legitimately holds more than one entry for a date.
+- **Never invents.** The content comes from the session. An element with nothing to record is
+  **omitted**, following the omit-the-line convention `/trip-new`'s setup entry already uses;
+  standing rule 3 binds unchanged, and an empty element is never filled to make the entry look
+  complete.
+
+**The boundary that keeps the log from becoming a rival source.** A constraint that surfaced in a
+session is recorded here as **a decision and its reasoning** — what was chosen, and why. The
+constraint itself belongs to `trip-context.md` § *Hard Constraints*, which is **`/trip-record
+fact`**'s: name it, and **do not run it.** This is link-don't-copy at the one seam where a session
+entry could quietly become a second source — the log carries what `trip-context.md` cannot, which is
+why a choice was made, and never the fact itself.
+
+**What it never does.** It writes no byte of `trip-context.md` and no byte of
+`outputs/event-status.md`; `trips/<slug>/trip-log.md` is the only path it writes, built from
+`trip.slug` exactly as `E1` spelled it and never from a `--trip` value, which this verb does not
+consume. It creates no file and no directory, overwrites and reorders no existing entry, dispatches
+no agent, runs no script, and **never runs `/trip-record event`** — recording that a status changed
+is that verb's act, and this one records why it changed. Neither the mode nor the destination is a
+condition of it: its row reads `any` in both cells, and nothing here reads a mode as evidence or
+infers a destination from which files exist.
