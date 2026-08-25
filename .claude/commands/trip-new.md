@@ -267,9 +267,11 @@ A later reader should be able to see whether the mode rests on a booking or on a
 - **IDEATION** — rule 3 was reached, so no destination was stated and `- **Primary destination:**`
   still reads its template placeholder. Name **`/trip ideas`** as the next move: it turns the group's
   leanings into a ranked shortlist at `outputs/destination-shortlist.md` for the group to decide
-  from. **It is a command. Name it; do not dispatch anything.** Once the group picks, name
-  **`/trip-record destination`** as what writes `## Destination` — this command does not own that
-  block.
+  from. **It is a command. Name it; do not dispatch anything.** Once the group picks, the hand-off
+  is two named invocations, in this order: **`/trip-record destination <chosen>`**, which writes
+  `## Destination` — this command does not own that block — then **`/trip-record mode DISCOVERY`**.
+  Name both. Naming only the first leaves the trip in `IDEATION`, where `CLAUDE.md` § *Modes*
+  skips the Validator — an under-run with nothing announcing it.
 - **DISCOVERY or ENRICHMENT** — the trip is ready for the full pipeline once traveler profiles are
   in, and building the first full plan is the expensive operation, so the profiles are worth having
   first. **Name `/trip-record destination` here too.** A destination *was* stated and this command
