@@ -159,12 +159,18 @@ Order:
 1. The rows that `RUN` for this resolved record — lead with them. That is the answer to
    "what can I do next".
 2. The rows that `REDIRECT`, each naming the command it redirects to.
-3. The rows that `REFUSE`, each with the reason from its own row, so the surface never goes
-   silent on a verb the taxonomy declares.
+3. The rows that `REFUSE`, each with the reason from its own row, so the index never goes
+   silent on a verb this file's table declares.
 
 Then name the Step-1 rows whose `Command` cell carries an `EXCLUDED:` marker, read live
 from that table rather than listed here — those are the actions to just ask for, and they
 are stated rather than left as a gap.
+
+The index spans this file's table, which at this revision is narrower than the taxonomy: a
+verb Step 1 declares and this file does not implement holds no row here, so the index does
+not list it. That is not the surface going silent on the verb — typing it reaches *When the
+verb is recognised but this revision does not implement it*, above — it is the index
+declining to advertise what this file does not implement.
 
 `status` declares `lifecycle: ANY` deliberately, rather than leaving that cell to its
 default. Orientation is precisely what an archived trip still needs — it is where the
