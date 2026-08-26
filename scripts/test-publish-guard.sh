@@ -757,8 +757,8 @@ if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block
 #   O1  the third-party arm was a FIELD ALLOWLIST — every other field default-allowed,
 #       against reference/data-model.md:170 ("the bound is the entry class, not a list
 #       of fields ... there is no default-allow outside it").
-#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md:401
-#       requires it on "every value sourced this way" and :462-467 names heading
+#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md:407
+#       requires it on "every value sourced this way" and :468-473 names heading
 #       mark-stripping as a KNOWN agent error. clean() also erased a value-level mark
 #       before it could be consulted, so the ordering is part of the fix.
 #   O3  `Specific:` is the PROFILE label. It occurs 0x in agents/00-enrichment.md (the
@@ -766,7 +766,7 @@ if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block
 #       own worked example (reference/data-model.md:266-283) writes the mid-line
 #       `; specific:` form. The guard bound a profile label to a derived file.
 #   O4  a bad merge strips both marks while retaining the values — the state
-#       agents/00-enrichment.md:461-467 forbids by name. It must never publish clean.
+#       agents/00-enrichment.md:467-473 forbids by name. It must never publish clean.
 #   O5  the CONTROL that keeps the fix honest: a first-party operator-relayed need is
 #       NOT in class (agents/06-validator.md:152), and must still publish.
 #   O6  the keyability-floor mitigation: a closed-enum category value is schema
@@ -961,7 +961,7 @@ MD
 oguard "$O4R" "$O4OTD"
 if [ "$ORC" -eq 2 ]; then PASS "O4c: a [THIRD-PARTY] mark that resolves to no class record is UNDETERMINED (rc=2) — an unresolved mark is not an empty class"; else FAIL "O4c: an orphaned [THIRD-PARTY] mark read as a clean empty class (rc=$ORC)"; fi
 # O4d — SPECIFICITY for O4b. The same supersession WITH a profile backing it is the
-# sanctioned provenance change (agents/00-enrichment.md:450-460) and must not be refused,
+# sanctioned provenance change (agents/00-enrichment.md:456-466) and must not be refused,
 # or the check is an always-abort rather than a discriminator.
 O4STD="$WORK/o4_supported"
 mkdir -p "$O4STD/travelers"
