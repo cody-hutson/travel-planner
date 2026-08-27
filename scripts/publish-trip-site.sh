@@ -730,8 +730,8 @@ nonpublishable_values() { # <trip_dir> [site_html]
       }
       # ── the [THIRD-PARTY] member: an ENTRY DENYLIST, not a field allowlist ──────
       # The mark is read at BOTH granularities and the two are a UNION. The heading
-      # limb alone was the shipped defect: 00-enrichment.md:407 requires the mark on
-      # "every value sourced this way", and :468-473 names heading mark-stripping as a
+      # limb alone was the shipped defect: 00-enrichment.md:406-408 requires the mark on
+      # "every value sourced this way", and :468-473 names mark-stripping as a
       # KNOWN agent error which "silently strip[s] the key the publication guard
       # depends on" — the exact state in which a heading-only read enumerates zero
       # third-party records and publishes.

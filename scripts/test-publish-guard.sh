@@ -757,8 +757,8 @@ if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block
 #   O1  the third-party arm was a FIELD ALLOWLIST — every other field default-allowed,
 #       against reference/data-model.md:170 ("the bound is the entry class, not a list
 #       of fields ... there is no default-allow outside it").
-#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md:407
-#       requires it on "every value sourced this way" and :468-473 names heading
+#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md:406-408
+#       requires it on "every value sourced this way" and :468-473 names
 #       mark-stripping as a KNOWN agent error. clean() also erased a value-level mark
 #       before it could be consulted, so the ordering is part of the fix.
 #   O3  `Specific:` is the PROFILE label. It occurs 0x in agents/00-enrichment.md (the

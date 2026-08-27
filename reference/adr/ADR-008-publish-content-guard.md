@@ -9,8 +9,8 @@
   **Second amendment** — acceptance review found the `[THIRD-PARTY]` half of the class substantially
   inert against real data, on three compounding fail-open gaps: the arm was a two-**field allowlist**
   where `reference/data-model.md:170` states an entry-class bound with *no default-allow*; the
-  `[THIRD-PARTY]` mark was read only off the **entry heading**, though `agents/00-enrichment.md:407`
-  requires it on every value and `:468-473` names heading mark-stripping as a known agent error; and
+  `[THIRD-PARTY]` mark was read only off the **entry heading**, though `agents/00-enrichment.md:406-408`
+  requires it on every value and `:468-473` names mark-stripping as a known agent error; and
   the field it did match, `Specific:`, is the **profile** label, bound against the **derived** file.
   **Third amendment** — a Stage 9 re-gate found two documentation defects and took one scope
   decision. The defects: this document, and the shipped source comment it is repeated in, both stated
@@ -180,8 +180,8 @@ where it becomes structural.
 
 **The mark is read at both granularities, and the ordering is load-bearing.** `[THIRD-PARTY]` is
 consulted on the entry heading **and** on each value line, as a union.
-`agents/00-enrichment.md:407` requires the mark on *"every value sourced this way"*, and `:468-473`
-names heading mark-stripping as a **known agent error** that *"silently strip[s] the key the
+`agents/00-enrichment.md:406-408` requires the mark on *"every value sourced this way"*, and `:468-473`
+names mark-stripping as a **known agent error** that *"silently strip[s] the key the
 publication guard depends on"* — the exact state in which a heading-only read enumerates zero
 third-party records and publishes. The value-level mark is read off the **raw** line, *before*
 `clean()` runs: `clean()` deletes every bracketed provenance mark as metadata, so a mark consulted
@@ -556,7 +556,7 @@ residuals 1 to 3 above, where layers 1 and 3 are the only cover.
   example of `outputs/traveler-model.md`, which is where the derived need-line shape is read from:
   `reference/data-model.md` § *Worked example — a per-traveler file* (:266-283). The third-party
   entry's marks, cardinality and needs-only bound, the value-granularity requirement, the named
-  heading mark-stripping error, and the supersede-don't-merge rule: `agents/00-enrichment.md`
+  mark-stripping error, and the supersede-don't-merge rule: `agents/00-enrichment.md`
   § *A party member who will never file* (:396-473). That a third-party need has no governing
   constraint to key to: `agents/06-validator.md` (:231-243).
 - First-party source of the Passport member, and the label shape the profile parse binds to:
