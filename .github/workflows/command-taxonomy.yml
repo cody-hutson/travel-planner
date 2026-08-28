@@ -48,9 +48,11 @@ name: Command taxonomy
 #   RUNTIME PRIVILEGE. This suite asserts that the command files DECLARE what ADR-007
 #   requires. It does not assert that a declaration is enforced at runtime, and a green
 #   here is NOT a privilege guarantee. On what a `disallowed-tools` line does, this
-#   repository carries two incompatible accounts with nothing arbitrating between them,
-#   and nothing in this repository reads such a line. The guard takes neither account:
-#   every assertion it makes holds under either.
+#   repository carries two incompatible accounts with nothing arbitrating between them.
+#   This suite itself reads such a line: `invocation_check` matches it at the head of a
+#   command file and derives a grant count that later arms branch on. It reads it only as
+#   a DECLARATION — never as evidence that anything enforces it — so the two accounts stay
+#   unarbitrated here. The guard takes neither: every assertion it makes holds under either.
 #
 #   PROSE-RENDERED INVOCATIONS. The invocation limb reaches the FENCED rendering only.
 #   Where a command file renders an invocation as prose across a hard wrap, with a
@@ -63,12 +65,16 @@ name: Command taxonomy
 #
 # ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
 # GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
-# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it has no
-# dependency-gated group — no Node, no gh, no network — so there is no legitimate skip,
-# and every skip fails the job. An empty declaration here is the correct value, not an
-# omission. The guard closes a second door the strict mode does not watch: a POPULATION
-# vanishing. A checkout that un-ships the command surface, or a charter edit that empties
-# the taxonomy slice, goes RED rather than passing vacuously over an empty set.
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY — and the
+# reason is no longer only that nothing here is dependency-gated (no Node, no gh, no
+# network). The suite now has one live SKIP site, B5, and its skip is a SENTINEL rather
+# than an excuse: B5 skips exactly when the leading-dot population is empty, reporting
+# VACUOUS-NOT-PASSING instead of manufacturing a green — and under strict mode that skip
+# then FAILS THE JOB, which is the intended outcome, not a misconfiguration. An empty
+# declaration is therefore still the correct value: declaring B5 as an expected skip
+# would convert a red into a silent pass over an empty set. This is how the strict mode
+# closes the door on a POPULATION vanishing — a checkout that un-ships the command
+# surface, or a charter edit that empties the taxonomy slice, goes RED.
 
 on:
   push:

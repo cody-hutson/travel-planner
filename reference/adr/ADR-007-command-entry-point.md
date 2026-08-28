@@ -23,7 +23,8 @@ type into the same free-form chat rather than anything the repo made addressable
 are left in that tense rather than reversed.** The first, third and fourth describe the repo as it
 then was, with no command file in it. The surface this decision authorises has since shipped: the
 commands live in `.claude/commands/`, and `CLAUDE.md`'s Step-1 table carries a Command cell on every
-row — naming a command or a declared exclusion — which is the bijection §3 below makes checkable and
+row — naming a command or a declared exclusion — which is the coverage invariant §3 below makes
+checkable and
 which `scripts/test-command-taxonomy.sh` grades on every push. The second consequence is the standing
 one, and is written in the present for that reason: classifying free-form prose stays probabilistic
 whatever surface sits in front of it, which is why the decision rests on declared intent rather than
@@ -174,8 +175,15 @@ Six bounds hold on every command in this surface:
 The command set **is** the request taxonomy; `CLAUDE.md`'s Step-1 table documents it. The dependency
 is deliberately inverted from the obvious direction: had the commands restated the table, the two
 would drift and a test would be needed to catch it. With the commands owning the taxonomy, the guard
-becomes a cheap assertion of **bijection** — every Step-1 row resolves to a command or a declared
-exclusion, and every command resolves to a Step-1 row.
+becomes a cheap assertion of **coverage** — every Step-1 row resolves to a command or a declared
+exclusion, and every unit of the command surface is covered by exactly one row.
+
+Under a `/trip <verb>` surface the unit is a (command, verb) pair, not a command, which is why this is
+stated as coverage rather than as the one-to-one mapping an earlier draft of this section named: a
+verbed row covers the pair it names, a verbless row covers every verb its command declares, and where a
+command declares no verb the command itself is the unit. The guard grades that this mapping is total
+and non-overlapping. It does not grade whether the taxonomy the table documents is the right one —
+that stays review-maintained.
 
 The guard is a test in the shape of the existing `scripts/test-publish-guard.sh`, which already
 proves the pattern in this repo.
@@ -341,7 +349,7 @@ and softer invocation path is introduced.
 
 **Trade-offs**
 
-- More files than a single-command shape, and a bijection guard to maintain alongside them.
+- More files than a single-command shape, and a taxonomy guard to maintain alongside them.
 - The publish lifecycle stayed a manual terminal step for one release, leaving the surface
   deliberately incomplete against its own lifecycle scope. The §4 amendment ends that for three of
   its ten invocation forms; the other seven are declared exclusions, so what remains outside the
@@ -362,7 +370,7 @@ and softer invocation path is introduced.
   `cmd_unpublish`, `verify_ciphertext`. The plaintext content guard that #123 recorded as missing
   has since landed, as a predicate distinct from `verify_ciphertext`, which remains
   encrypted-branch-only.
-- Taxonomy bijection guard, and the reader of §4's disposition table:
+- Taxonomy coverage guard, and the reader of §4's disposition table:
   `scripts/test-command-taxonomy.sh`, run by `.github/workflows/command-taxonomy.yml`. It follows the
   pattern `scripts/test-publish-guard.sh` established.
 - First-run onboarding path: `README.md` → Install, First run, Verify.
