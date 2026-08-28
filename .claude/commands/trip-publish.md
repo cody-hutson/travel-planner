@@ -70,7 +70,7 @@ is the case where one file's declared set spans both jobs at once.
 |---|---|
 | `Bash(ls:*)` | the trip-listing evidence block below, which the declared `contract-depth` requires |
 | `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires |
-| `Bash(test:*)` | `update`'s passphrase precondition. Chosen because it is the narrowest primitive that answers *present and readable*, and because it **never opens the path it names** — it answers by exit status, so no file's contents reach any channel. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a file's contents |
+| `Bash(test:*)` | `update`'s passphrase precondition. Chosen because it is the narrowest primitive that answers *present and readable*, and because it **discloses no contents** — it answers by exit status, so no file's contents reach any channel. **It is still a read of the path it names**, under the definition § *What counts as a read here* adopts, and `update`'s `**Reads:**` line declares it as one. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a file's contents |
 | `Bash(scripts/publish-trip-site.sh update:*)` | `update`'s single invocation |
 | `Bash(scripts/publish-trip-site.sh list:*)` | `list`'s single invocation |
 
@@ -89,8 +89,12 @@ pre-approves nothing and forbids nothing, so the bound is again the file's own t
 The trip-record evidence block below greps `trip-context.md` and emits the lines it
 matched. That is reading a file's contents — by design, at the depth the contract requires,
 and it is why no blanket "nothing here reads a file" claim appears anywhere in this file.
-What is ruled out is narrower, and is stated as the rule it is: no construct here directs
-that grant, or any other content-emitting primitive, at a passphrase path.
+**A second grant reads without disclosing:** `Bash(test:*)` observes a path's presence and
+readability, which is a read under § *What counts as a read here* although no contents reach
+any channel. Both are declared where the surface requires reads to be declared — in the
+verb's own `**Reads:**` line — and neither is denied here, because neither is the thing that
+is ruled out. What is ruled out is narrower, and is stated as the rule it is: no construct
+here directs either grant, or any other content-emitting primitive, at a passphrase path.
 
 ### The deny set, as a rule rather than a list
 
@@ -141,22 +145,81 @@ content-emitting primitive at a passphrase path.
 
 ## Contract header
 
-```
+```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
-```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
 | update | ACTIVE | any | any | G8 |
 | list | ANY | any | any | G0 |
+```
+
+The block above is this file's contract declaration. The requirement table sits **inside**
+it because the fence the contract publishes lists that table as one of the block's own
+fields, so the table-inside form is the rendering the canonical states. The cost is that
+the table does not render as markdown, and it is accepted: this is a declaration read by a
+model and by a parser, not a table read by a browser. The info string names the block, so
+it can be located by the same primitive that locates the canonical.
+
+**This file carried a bare fence with the table outside it until this revision.** No check
+observed the difference: `scripts/test-trip-resolution-contract.sh` matches the fence tag
+against `CLAUDE.md` alone, and reads every consumer's citation line, `contract-depth`,
+`population-role` and depth cells by a whole-file line scan that is indifferent to fences.
+The correction is therefore editorial, and it is recorded here rather than left for the
+next reader to rediscover as a difference with no stated reason.
+
+**Frozen.** The citation line, byte-for-byte. `contract-depth: G8` as a **bare** token on
+its own line — a code-span rendering of that line is graded as an *absent* declaration, so
+the tolerance for a code span belongs to a depth **cell** and never to this line.
+`population-role: RESOLVE`. The fence tag. The table's five columns, their order, and their
+header row.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
-have already run; their output is the whole of the trip state this file has read and the
-whole of the trip state it needs. Do not read `trip-context.md` in full, and do not read
-`trip-log.md` or anything under `outputs/` — a rule this file follows, and `Read` is
-denied here besides.
+have already run; their output is the whole of the trip state this file **resolves
+against**, and the whole of the trip state it needs. It is **not** the whole of what this
+file reads, and this file used to say that it was: `update` takes a presence-and-readability
+probe on a per-trip path, and under the definition the rest of this surface uses, that probe
+is a read. Do not read `trip-context.md` in full, and do not read `trip-log.md` or anything
+under `outputs/` — a rule this file follows, and `Read` is a **declared** denial besides,
+under the caveat above on what a declaration establishes.
+
+### What counts as a read here
+
+**This file uses the surface's definition of a read, not a second one.** That definition is
+stated in `.claude/commands/trip-record.md` § *What the blocks above are*, a section that
+marks itself frozen, and it is applied by `.claude/commands/trip.md` in the same terms: **a
+path read only to test whether it exists — or whether it is readable — is a read, and is
+declared.** The reason is the one that section gives: the probe selecting a branch is the
+control the rule on that branch turns on, and an undeclared probe hides the one read the
+rule depends on. That is exactly this file's case — limb (i) of `update`'s precondition is
+the whole of what keeps this command clear of a silent re-key, and until this revision it
+was declared nowhere.
+
+**This file had been using a narrower definition — disclosure — and reading it as the same
+one.** Under that narrower reading a `test` is not a read at all, because no contents reach
+any channel. Both statements are true; they are about **different objects**, and the file's
+error was letting one answer the other's question:
+
+- **A read of a path** is any observation this command makes of the filesystem — presence,
+  readability, contents. It is what a `**Reads:**` line declares, and its purpose is that
+  the reads this command performs are auditable from the file.
+- **A read of a value** is contents reaching a channel. It is what standing rule 4 forbids
+  for a passphrase, and its purpose is that no secret enters the transcript.
+
+So `test -r "trips/<slug>/.passphrase"` **is** a read of that path, **is** declared in
+`update`'s `**Reads:**` line, and is **not** a read of that value — and rule 4 is untouched
+by the declaration. Keeping the narrower definition would have been the worse choice on this
+file specifically: it is the only file on this surface that observes a passphrase path at
+all, so a definition under which that observation is not a read is a definition under which
+the single most consequential read here is the one nothing has to declare.
+
+**The read-scope ceiling for this file.** Every verb reads exactly what its own
+`**Reads:**` line names, and nothing else; silence there is a prohibition rather than a gap.
+The two prohibitions in the paragraph above are stated because they bind verbs whose lines
+do not mention those files at all. How a sibling command renders its own ceiling is that
+command's to state.
 
 Each pre-executed block above is a tool grant this file has to hold, and each is held for
 a use the table above names: the listing block for `Bash(ls:*)`, and the record block for
@@ -206,12 +269,15 @@ protects only the verbs that existed when it was written.
 3. **It never sets `STATICRYPT_PASSWORD`.** A secret set on the invocation sits in the
    command text itself, which is the disclosure the same ADR's § 4 admission rule names
    when it excludes a secret supplied as a command-line argument.
-4. **It never reads, prints, echoes, logs, stores or reproduces a passphrase value, and
-   never substitutes one.** No construct in this file directs a content-emitting primitive
-   at a passphrase path; what touches such a path is the presence-and-readability
-   predicate below, which answers by exit status and never opens the file it names. A
-   refusal names the path and the variable — never a value, never a substitute, never a
-   length, never a prefix.
+4. **It never reads, prints, echoes, logs, stores or reproduces a passphrase *value*, and
+   never substitutes one.** The object of this rule is the value, not the path. No
+   construct in this file directs a content-emitting primitive at a passphrase path; what
+   touches such a path is the presence-and-readability probe below, which answers by exit
+   status and discloses no contents. **That probe is a read of the path, `update`'s
+   `**Reads:**` line declares it as one, and declaring it takes nothing away from this
+   rule** — the declaration and the rule speak about different objects, which is the
+   reconciliation § *What counts as a read here* states. A refusal names the path and the
+   variable — never a value, never a substitute, never a length, never a prefix.
 5. **It writes, creates and deletes no trip content** — nothing this repo treats as the
    trip's own record. It introduces no field, so it claims no row in `CLAUDE.md` → *Write
    ownership — trip-context.md, block by block*. **This rule is scoped to trip content
@@ -303,6 +369,21 @@ later slice adds lands in the table or does not run.
 
 ## update
 
+**Reads:** `trips/<slug>/.passphrase` — the presence-and-readability probe of limb (i)
+below, taken **only** to establish whether that path is there and readable, never to obtain
+its value, and taken **before** any invocation is constructed because it is the control that
+keeps this verb clear of the fall-through re-key limb (i) describes; it answers by exit
+status, so it is a read of the path and not of the contents, and § *What counts as a read
+here* is where those two are kept apart. Reads no `trips/<slug>/trip-context.md`, no
+`trips/<slug>/trip-log.md`, no `trips/<slug>/.publish-slug` and nothing under
+`trips/<slug>/outputs/` — the record block above already carries the lifecycle, the mode and
+the destination by value, the publish script resolves the slug file itself, and a read here
+would give this command a second source for state it does not own. **Reads no passphrase
+value**, on this verb or anywhere in this file. Limb (ii) reads no path at all: it tests an
+environment variable, which is an observation of this process's environment rather than of
+the filesystem, and it is named here so its absence from the path list is not read as an
+omission. Runs `scripts/publish-trip-site.sh update` and dispatches no agent.
+
 **What it is.** Re-encrypt an already-published trip site and push only ciphertext to the
 per-trip repo that already exists. It creates no per-trip GitHub repo, which is what keeps
 it clear of the repo-creation reason that excludes the first publish.
@@ -317,8 +398,10 @@ because nothing in it can produce one.
 ### Precondition — before any invocation is constructed
 
 Run each limb below and let it pass first. Each uses `test`, which answers by exit status
-and never opens the path it names, so no file's contents reach any channel. Run no limb
-through any other primitive.
+and **discloses no contents**, so no file's contents reach any channel. Limb (i) is
+nonetheless a **read** of the path it names, and this verb's `**Reads:**` line above
+declares it as one; limb (ii) reads no path at all. Run no limb through any other
+primitive.
 
 **(i) The trip's passphrase file is present and readable.**
 
@@ -398,6 +481,14 @@ completion line names the live URL. If its pre-push guard aborts, say that nothi
 pushed and name what the script named — a guard abort is not a partial publish.
 
 ## list
+
+**Reads:** nothing beyond the blocks above. It takes no probe of its own, and reads no
+`trips/<slug>/trip-context.md`, no `trips/<slug>/trip-log.md`, no
+`trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`** — the script resolves
+what it needs and reports it, and a read here would give this command its own view of
+publication state, which § *Never assert a publication state that was not observed*
+forbids. Its depth cell is `G0`, so it reads no trip record either. Runs
+`scripts/publish-trip-site.sh list` and dispatches no agent.
 
 Repo-wide, read-only, no trip, no arguments, depth `G0` on its own row. It reports each
 trip with its repo, status, published and edited dates, and the stale flag, exactly as the
