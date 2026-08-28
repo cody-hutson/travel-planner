@@ -54,7 +54,7 @@ Created alongside trip-context.md when a trip starts. Running decision register 
 **Open questions:** [unresolved items]
 ```
 
-This file is the primary session bridge. It captures what trip-context.md cannot: the reasoning behind choices, the options that were considered, and the conversational context that informs future decisions.
+This file is the primary session bridge. It captures what trip-context.md does not hold field by field: the reasoning behind choices, the options that were considered, and the conversational context that informs future decisions. The one field-scoped exception is Mode notes, which records the evidence for the current mode in the act that sets it; the log records why the session reached that decision and never restates that evidence line.
 
 ---
 
@@ -90,7 +90,7 @@ Example: `food-list.md` after three sessions:
 The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. Full rationale: `reference/data-model.md`.
 
 - **`event-status.md` — persist-mutable (a fourth pattern).** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass. The **hub is the primary writer** and owns it; the file is **created by whichever agent first writes it** — the enrichment agent's setup seed (from `## Locked Elements`), or the hub on the first full synthesis if no seed exists (the validator only reads it). Persist-mutable is not append-only — a row is **deleted** in the one case where its event is removed from the itinerary, so no ghost row lingers.
-- **`traveler-model.md` — rebuilt/refreshed.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. It holds no independent state — the source files are authoritative — so regeneration is safe.
+- **`traveler-model.md` — rebuilt/refreshed.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. Every entry projected from a `travelers/<traveler>.md` file holds no independent state — that source file is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged.
 - **`satisfaction-metrics.md` — rebuilt/refreshed.** Recomputed from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative. Two writers, **section-owned** so they never clobber: the **hub** owns the desire-coverage + balance-signal sections, the **validator** owns the needs-compliance + agreement-check sections, each read-merge-writing only its own.
 
 ---
@@ -106,10 +106,10 @@ Before doing anything, determine what kind of request this is:
 | Type | Signal | Action | Example | Command |
 |------|--------|--------|---------|---------|
 | **Orientation** | User is starting a session, or asks where the trip stands and what to do next | Resolve the active trip and its mode; state what is available and what comes next. Read-only — it mutates nothing. | "Where are we?", "What's the status?", "What can I do next?" | `/trip status` |
-| **Direct edit** | User wants a specific change to an existing file | Read the file, make the edit, done. No agents. | "Update the emojis on the site", "Fix the typo in Day 3", "Change the dinner time to 8 PM" | EXCLUDED: lightest-weight-action |
-| **Quick lookup** | User asks about existing plan content | Read the relevant file(s), answer. No agents. | "What's our Day 5 plan?", "What still needs booking?", "What hotel are we at?" | EXCLUDED: lightest-weight-action |
-| **Site tweak** | User wants visual/design changes to the HTML | Read the site HTML, edit directly. No agents. | "Make the colors warmer", "Add a section for packing list", "Fix the map on Day 2" | EXCLUDED: lightest-weight-action |
-| **Context update** | User shares new information (booking, date change, preference) | Update trip-context.md and/or trip-log.md. No agents unless the change cascades. | "We booked the hotel", "Mom can't do stairs", "Add a traveler's food allergy" | EXCLUDED: lightest-weight-action |
+| **Direct edit** | User wants a specific change to an existing file | Read the file, make the edit, done. No agents. **While the trip is ACTIVE** — on an ARCHIVED trip the lightest-weight action is not the edit; `/trip-decommission reopen` comes first. | "Update the emojis on the site", "Fix the typo in Day 3", "Change the dinner time to 8 PM" | EXCLUDED: lightest-weight-action |
+| **Quick lookup** | User asks about existing plan content | Read the relevant file(s), answer. No agents. **While the trip is ACTIVE** — on an ARCHIVED trip say so and name `/trip-decommission reopen`. | "What's our Day 5 plan?", "What still needs booking?", "What hotel are we at?" | EXCLUDED: lightest-weight-action |
+| **Site tweak** | User wants visual/design changes to the HTML | Read the site HTML, edit directly. No agents. **While the trip is ACTIVE** — on an ARCHIVED trip the site is offline and the edit is not the next move; `/trip-decommission reopen` comes first. | "Make the colors warmer", "Add a section for packing list", "Fix the map on Day 2" | EXCLUDED: lightest-weight-action |
+| **Context update** | User shares new information (booking, date change, preference) | Update trip-context.md and/or trip-log.md. No agents unless the change cascades. **While the trip is ACTIVE** — on an ARCHIVED trip `/trip-decommission reopen` comes first. | "We booked the hotel", "Mom can't do stairs", "Add a traveler's food allergy" | EXCLUDED: lightest-weight-action |
 | **Destination ideation** | User is exploring where to go and no destination is chosen yet | Turns the group's leanings into a ranked shortlist (`outputs/destination-shortlist.md`) for the group to decide from. | "Where should we go?", "Give us some options for spring" | `/trip ideas` |
 | **Targeted research** | User wants new options or deeper research on a specific topic | The relevant spoke agent produces targeted research on the topic and appends it to the existing output file. | "Find more dinner options near Bairro Alto", "What indoor activities exist near the hotel?" | `/trip research` |
 | **Planning change** | User wants to change the itinerary structure (swap days, add a day trip, reschedule) | Mode notes in trip-context.md are updated. Only affected agents re-run. Hub patches itinerary. Only `planned` events change freely; `locked`/`firmed` events are preserved unless the user names them (see Key Rules → per-event status). | "Swap Day 3 and Day 4", "Replace the afternoon on Day 5 with something indoor" | `/trip replan` |
@@ -118,6 +118,21 @@ Before doing anything, determine what kind of request this is:
 | **Plan audit** | User wants the existing plan checked without changing it | Runs the Validator alone against the current itinerary and reports findings. No spokes, no hub, no edits. | "Does the plan hold up?", "Check the itinerary for problems" | `/trip check` |
 | **Site generation** | User wants the travel site built or rebuilt | See Travel Site Generation section | "Build the site", "Create the travel page" | `/trip site` |
 | **Publish** | User wants to push to GitHub | See Publishing section | "Publish this", "Push to GitHub" | `/trip-publish update` |
+| **New trip** | User wants to start a trip that does not exist yet | Scaffold the trip directory and its members and set the starting mode from what the user stated. Resumes, repairing only what is missing, when the slug already exists. | "Start planning Lisbon 2027", "New trip to Tokyo" | `/trip-new` |
+| **Traveler profile** | User wants to create or update a traveler's own profile | Create the profile that does not exist, edit the one that does. Never invent a field — an unanswered field is a skipped field. | "Add Dana's profile", "Update my dietary needs" | `/trip-record profile` |
+| **Third-party traveler** | A party member who will never file a profile, whose needs the operator supplies | Record the third-party entry and reconcile the derived traveler model. | "Add Mom — she can't do stairs", "Record Sam's constraints for him" | `/trip-record person` |
+| **Roster reconciliation** | Traveler files changed and the derived model is behind them | Enrichment alone, in its reconciler role — never the research role. | "Re-sync the traveler model", "The profiles changed" | `/trip-record travelers` |
+| **Destination hand-off** | The group has chosen a destination from the shortlist | Write the chosen destination into `trip-context.md`. The ideation agent never writes it itself. | "We picked Lisbon", "Go with option 2" | `/trip-record destination` |
+| **Mode change** | The trip has moved to a different phase, or the mode is unset | Replace `Current mode` and `Mode notes` in one act, echoing the outgoing notes. This is the remedy an unset mode's refusal names. | "We've booked flights", "Set the mode to ITERATION" | `/trip-record mode` |
+| **Group roster** | A traveler joins or leaves, or the party's shape changes | Edit the whole of `## Group` — roster table, total travelers, travel mode, subgroup notes. | "Sam's not coming", "Add two more people" | `/trip-record group` |
+| **Trip fact capture** | User states a fact belonging in `trip-context.md` that no other verb owns | Route the statement to its block and write it there. The default-row verb. | "We booked the hotel", "Budget is 3000 euros" | `/trip-record fact` |
+| **Publish slug** | User wants to set or change the published site's repo name | Create or replace `trips/<slug>/.publish-slug`, echoing the outgoing value so the change is reversible. | "Publish it as lisbon-trip", "Change the site name" | `/trip-record .publish-slug` |
+| **Event status** | A placed event is booked, cancelled, or its hold changes | Change one named row's `Status` cell and recompute that row's derived needs-booking cell. Creates no row and no file. | "We booked the Belem tour", "The 8pm table fell through" | `/trip-record event` |
+| **Session log entry** | A session's reasoning, options considered, or context belongs in the record | Append one entry to `trip-log.md`. Never re-opens a prior entry. | "Log what we decided", "Note why we skipped Sintra" | `/trip-record log` |
+| **Published inventory** | User asks what is published, across trips | Report the published sites the script resolves. Needs no trip resolved. | "What's published?", "Which trips have sites?" | `/trip-publish list` |
+| **Temporary takedown** | User wants the site offline but the trip kept | Disable Pages. The local tree is untouched and no marker is written. | "Take the site down for now", "Hide it temporarily" | `/trip-decommission temporary` |
+| **Trip conclusion** | The trip is over and should be concluded | The takedown, then the lifecycle marker, then a closing log entry — in that order, and the order is load-bearing. | "The trip's done", "Archive Lisbon 2026" | `/trip-decommission archive` |
+| **Trip reopen** | An archived trip needs to be worked on again | Return `**Lifecycle:**` to `ACTIVE`, echoing the outgoing value. | "Reopen Lisbon", "I need to change the archived trip" | `/trip-decommission reopen` |
 
 **The default is the lightest-weight action that matches the intent.** Direct edits are direct edits. Don't dispatch agents to change an emoji. Don't re-run the food pipeline to fix a typo in a restaurant name. Don't re-synthesize the itinerary to update a booking confirmation code.
 
@@ -125,13 +140,23 @@ Before doing anything, determine what kind of request this is:
 
 ### Step 2: Read context (scaled to the request)
 
-| Request type | What to read |
-|-------------|-------------|
-| Direct edit / site tweak | Just the file being edited |
-| Quick lookup | The relevant output file(s) |
-| Context update | trip-context.md (to update it) |
-| Targeted research | trip-context.md + the relevant output file + trip-log.md |
-| Planning change / full pipeline | trip-context.md + trip-log.md + all relevant outputs |
+**What a read is.** A read of a **PATH** is any filesystem observation — existence, readability, a directory probe — and is what a `Reads:` line declares. A read of a **VALUE** is contents reaching a channel, and is what Key Rules' standing rule 4 forbids. **The scope this table assigns is path scope**; no row of it names a value, and none can, because its unit is a path.
+
+**Where the scope is declared.** For every command verb, the assignment is that verb's own `**Reads:**` line in its command file. **This table does not restate them** — a second statement of a read scope drifts from the first and nothing arbitrates it, which is the direction `ADR-007` §3 fixes. It assigns by citation, the way § *Resolving a trip* is cited rather than copied.
+
+| Request | Read scope | Class |
+|---|---|---|
+| `/trip status` · `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the pre-executed blocks |
+| `/trip plan` · `replan` · `reorder` · `research` · `check` · `ideas` | that verb's `**Reads:**` line, **including its attributed-agent clause** | own + attributed-agent |
+| `/trip site` | that verb's `**Reads:**` line | own |
+| `/trip-record person` · `travelers` | that verb's `**Reads:**` line — the verb reads nothing of its own; the reconciler it dispatches reads | own + attributed-agent |
+| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` | that verb's `**Reads:**` line | own |
+| `/trip-publish update` | that verb's `**Reads:**` line — a presence-and-readability probe is a read of the **path**, never of the value | own |
+| `/trip-decommission archive` · `reopen` | that verb's `**Reads:**` line | own |
+| `/trip-new` | **not yet declared** — that file carries no `**Reads:**` line; its reads are stated across its Gate and Create/Resume sections. **This row is a declared gap, not an assignment.** | own |
+| Direct edit · Site tweak | just the file being edited | own |
+| Quick lookup | the relevant output file(s) | own |
+| Context update | `trip-context.md` | own |
 
 Don't read the entire trip state for a CSS color change. Do read the full state when making planning decisions.
 
@@ -204,7 +229,7 @@ E2  !`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Li
 - **G5 — mode, by value.** The `**Current mode:**` value for the resolved prefix. Four dispositions, and they are four different branches: **line absent** → **malformed, STOP**; **value is a placeholder** → **`UNSET`**, a legal state and **not** a stop; **value is one of the five modes** (IDEATION / DISCOVERY / ENRICHMENT / ITERATION / RESEQUENCING) → resolved; **anything else** → **unrecognised, STOP**. **The placeholder branch is the only one of the four that does not stop.** G5 does not dispose of `UNSET` at all: **an `UNSET` mode does not serve any verb whose G7 row does not admit it**, and the disposition comes from that table — the same shape G4 gives `ARCHIVED` and G6 gives `UNDECIDED`. **A verb that refuses on `UNSET` carries the remedy in its own refusal**, pointing at `templates/trip-context.template.md` for the field's shape and permitted values and naming `/trip-record mode` as what sets it. That is what makes the remedy reachable at all: `/trip-record` declares `contract-depth: G8` and so runs this gate, and `/trip-new`'s Resume branch repairs no existing `trip-context.md` — a halt at this gate would leave a bracketed mode a dead end for the whole surface, with the named remedy stopped by the very gate it exists to clear. **`UNSET` is not a sixth mode**: it names the absence of one, it holds no row in § *Modes*, and a verb reporting it says the mode is unset rather than describing what it covers. **Never infer a mode** — not from the destination, not from which files exist, not from the request's wording.
 - **G6 — destination, by value.** The `- **Primary destination:**` value for the resolved prefix. Three dispositions, and the first two are not the same branch: **line absent** → **malformed, STOP**; **value is a placeholder** → **`UNDECIDED`**, a legal state and **not** a stop; **value is anything else** → decided.
 - **G7 — mode-serves-verb.** A lookup in the consuming file's own per-verb requirement table, whose columns are **`verb` · `lifecycle` · `mode` · `destination` · `depth`**. Three dispositions: **`RUN`**; **`REDIRECT`** + stop, naming the command that does serve the request; **`REFUSE`** + stop, naming why the resolved state does not serve the verb. Three defaults carry the anti-drift weight — **a verb absent from the table is `REFUSE`, never `RUN`**, so the set is closed and a verb added by a later slice lands in the table or does not run; **an undeclared `lifecycle` is `ACTIVE`**, which is what makes an archived trip stop resolving as active for every existing and every future verb with no edit to this section; and **a requirement cell reading `any` admits the non-nominal state its own gate can yield — `UNSET` from G5, `UNDECIDED` from G6 — while a cell naming values admits only the values it names**, which is how `lifecycle: ANY` already reads `ARCHIVED`, and which is where a verb that must not run without a decided mode or destination says so: in its own row, naming what it serves, rather than by a halt at the gate that yielded the state. **`destination` is its own column rather than folded into `mode`** because at least one verb gates on destination and not on mode, so a single axis cannot express the surface.
-- **G8 — derived-state freshness.** **Reserved, and report-only.** It is evaluated **after** resolution; it **never changes `trip.resolution`**; and **no gate may be added that blocks on freshness.** That is not a preference — this repo already recorded that an unconditional render-newer-than-model gate refuses every correct publish rather than more of them, and ends as a workaround rather than a guard. `trip.freshness` is a list of `(relation, verdict)` pairs, **empty at this revision**.
+- **G8 — derived-state freshness.** **Reserved, and report-only.** It is evaluated **after** resolution; it **never changes `trip.resolution`**; and **no gate may be added that blocks on freshness.** That is not a preference — this repo already recorded that an unconditional render-newer-than-model gate refuses every correct publish rather than more of them, and ends as a workaround rather than a guard. `trip.freshness` is a list of `(relation, verdict)` pairs. **Which relations a consumer evaluates is that consumer's own declaration**, made the way its per-verb requirement table is made; this section fixes their shape and the report-only rule above, never their membership.
 
 **What the contract returns.** Resolution produces a typed record; downstream verbs branch on these fields instead of re-deriving them.
 
@@ -217,7 +242,7 @@ E2  !`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Li
 | `trip.lifecycle` | `ACTIVE` \| `ARCHIVED` |
 | `trip.mode` | one of the five \| `UNSET` — never a guess |
 | `trip.destination` | the value \| `UNDECIDED` |
-| `trip.freshness` | reserved; empty at this revision |
+| `trip.freshness` | the `(relation, verdict)` pairs the consuming file declares |
 
 **Every STOP is typed** with the gate id that produced it, in `trip.stop_gate`. **The stop-message rule:** a STOP **names what could not be established and the remedy**, and **never asserts a conclusion about trip state that the gate did not observe.** "Nothing is published, so there is nothing to take offline" is the shape this rule forbids — a conclusion about publication state derived from a directory listing that may have failed.
 
@@ -426,7 +451,7 @@ One writer per block. A writer not named for a block does not write it — not "
 | `[DERIVED]` blocks — `### Effective Planning Days`, `### Per-Traveler Planning Days` | **no writer exists** | Not a gap to fill opportunistically. The template forbids manual editing and the enrichment agent declines the write in terms. Until an owner is decided these blocks are read-only to every command, `/trip-record` included; staleness is reported, never repaired in place. |
 | `## Destination` | `/trip-record` | `/trip ideas` produces the shortlist and **names** this step; it never writes the destination itself. |
 | `## Locked Elements` · `## Current Itinerary Status` | the operator, through `/trip-record` | The trip-level human summary. `outputs/event-status.md` is the structured source of truth for the scheduler, hub and validator; enrichment may *read* these notes to seed initial `locked` rows and never authors them. |
-| `**Lifecycle:**` — the lifecycle marker line | `/trip-decommission`, **which does not exist at this revision** | A command-written lifecycle marker, not a Layer-1 human field — named here so the untagged-field row below does not claim it, and `/trip-record` never writes it. **Until `/trip-decommission` ships, nothing writes this field**, and an absent line is the contract's declared default rather than a gap to fill opportunistically (`§ Resolving a trip`, G4). |
+| `**Lifecycle:**` — the lifecycle marker line | `/trip-decommission` | A command-written lifecycle marker, not a Layer-1 human field — named here so the untagged-field row below does not claim it, and `/trip-record` never writes it. Its `archive` verb writes the field; its `reopen` verb returns it to `ACTIVE` rather than removing the line. An absent line is the contract's declared default rather than a gap to fill opportunistically (`§ Resolving a trip`, G4). |
 | every untagged field **not named above** | `/trip-record` | Layer 1 — human source. The default row. An untagged `###` or `####` sub-block inherits its parent `##` section's row. |
 | a block not listed above | nobody | A new block gets an owner in this table before it gets content. |
 
