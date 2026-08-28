@@ -3,7 +3,7 @@ description: Start a new trip — scaffolds the folder, context, log and travele
 argument-hint: [destination-year]
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(date:*), Bash(mkdir:*), Read, Write
-disallowed-tools: [Edit, NotebookEdit]
+disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), Edit, NotebookEdit]
 ---
 
 # New trip setup
@@ -15,9 +15,32 @@ has actually stated, records who is going, and hands off to traveler intake.
 **This command creates. It never overwrites.** Re-running it against a trip that already exists adds
 only the members that are missing and leaves every existing file exactly as it is. `trips/` is
 git-ignored, so there is no history to restore from — a rewritten `trip-context.md` or `trip-log.md`
-is gone for good. `disallowed-tools` denying `Edit` and `NotebookEdit` is the **enforced** expression
-of that rule: `allowed-tools` is a turn-scoped pre-approval grant rather than enforcement, so the
-denial is the only control here that actually stops an overwrite.
+is gone for good. That severity is not this file's own rating:
+`reference/adr/ADR-007-command-entry-point.md` § 2, **bound 5** — *no command may overwrite or
+delete existing trip content* — types a clobber **IRREVERSIBLE**, and names *create only what is
+missing* as the first of the three shapes that satisfy it. **This command takes that shape, and the
+rule above is the whole of what makes it hold.**
+
+**What `disallowed-tools` does at runtime is contested, and this file does not settle it.** Two
+accounts ship in this repo and they are not compatible. `ADR-007` § *Context* says the field
+*removes the named tools from the pool* — a real restriction, turn-scoped like the grant. The
+trip-resolution contract workflow's coverage-boundary note says the opposite where it matters:
+`allowed-tools` and `disallowed-tools` are a turn-scoped pre-approval grant, **every tool stays
+callable**, and a green check there is **not a privilege guarantee** and must not be read as one.
+**Nothing in this repo arbitrates**, because nothing in it reads the field — it appears in the five
+command files, in that workflow note and in the ADR, and in none of them as something a check
+parses.
+
+**What the two accounts agree on is all this file relies on.** Under both, the declaration is
+turn-scoped and clears at the next message, and a tool left off `allowed-tools` is not thereby
+forbidden — it routes through the usual permission settings instead. **Omission is not prohibition**
+either way. And `ADR-007` adds that durable blocking would need a permission-settings deny rule — a
+different artifact, and one this release does not ship. **So the create-only rule above is written
+as a rule this command follows, never as a property its frontmatter guarantees**, which is the form
+`ADR-007` § *Context* requires of a command's conduct — and it therefore holds under
+either account, with nothing left depending on which one is true. The `Edit` and `NotebookEdit`
+denials **corroborate** it as a *declared* restriction whose runtime force this repo does not
+establish. They are not what makes it true, and no bound stated anywhere in this file rests on them.
 
 Takes an optional `[destination-year]` argument, such as `lisbon-2027`. The argument is text. It is
 never executed, and it proposes a name rather than settling a decision.
@@ -78,8 +101,8 @@ corrected one.** The argument is text, and **a rejected slug is never repaired b
 was meant.
 
 **4. Lowercase the slug that passes.** This is the normalised slug, and it happens **before** the
-existence comparison in Gate B. The order is the point: that comparison is the only thing standing
-between a new trip and a live one, and on a case-folding volume `Lisbon-2027` and `lisbon-2027` are
+existence comparison in Gate B. The order is the point: that comparison is what stands between a
+new trip and a live one, and on a case-folding volume `Lisbon-2027` and `lisbon-2027` are
 the same directory. Comparing before normalising lets a case variant read as absent and scaffold
 straight into a live trip. Carry the normalised slug forward — it is what Gate B compares and what
 every member below uses.
@@ -274,9 +297,10 @@ A later reader should be able to see whether the mode rests on a booking or on a
   skips the Validator — an under-run with nothing announcing it.
 - **DISCOVERY or ENRICHMENT** — the trip is ready for the full pipeline once traveler profiles are
   in, and building the first full plan is the expensive operation, so the profiles are worth having
-  first. **Name `/trip-record destination` here too.** A destination *was* stated and this command
-  still cannot write it, so without that naming the trip sits with `- **Primary destination:**` left
-  bracketed and nothing pointing at the fix.
+  first. **Name `/trip-record destination` here too.** A destination *was* stated and the ownership
+  row above still does not give this command that field — a rule it follows, not an inability — so
+  without that naming the trip sits with `- **Primary destination:**` left bracketed and nothing
+  pointing at the fix.
 
 ## Travelers — count and names
 
@@ -358,8 +382,25 @@ Tell the user all four of these:
 
 ## What this command never does
 
-It never dispatches an agent — no agent-dispatch tool is granted in `allowed-tools`, and naming a
-command is not dispatching one. It never runs a script, never touches `scripts/publish-trip-site.sh`,
-and never sets `ALLOW_PLAINTEXT`. It writes no `[ENRICH]` block and no `[DERIVED]` block, and never
-writes a `**Lifecycle:**` line. It writes only under `trips/<slug>/`, and only files that do not
-already exist.
+**Each bound here is labelled by what establishes it, and the three bases are not interchangeable.**
+A **rule** holds because this file says so, and nothing but this file says so. A **declared** denial
+names a `disallowed-tools` entry as corroboration — a restriction whose runtime force this repo does
+not establish, per the contest stated at the top of this file. And a tool left off `allowed-tools`
+establishes **nothing**: omission is not prohibition, so no bound below is claimed from one.
+
+- **It dispatches no agent.** A **rule**. The agent-dispatch tool is neither granted nor denied here,
+  so the deny grammar does not reach it and the allow side would forbid nothing either way; the bound
+  is that no construct in this file dispatches one, and naming a command is not dispatching one.
+- **It runs no script, reaches `scripts/publish-trip-site.sh` by no route, and never sets
+  `ALLOW_PLAINTEXT`.** A **rule**, corroborated by **declared** denials of that script and of the
+  `bash` and `sh` wrappers. The wrapper denial is an enumeration, so a shell outside it is not denied
+  by it — which is why the rule, and not the list, is what carries this. `ALLOW_PLAINTEXT` rests
+  additionally on `ADR-007` § 2, **bound 3**, which forbids it to every command and is not negotiable
+  by a later slice.
+- **It writes no `[ENRICH]` block, no `[DERIVED]` block, and no lifecycle marker line.** A **rule**,
+  resting on `CLAUDE.md` § *Write ownership*: the `[ENRICH]` fields belong to the enrichment agent,
+  the `[DERIVED]` blocks to no writer at all, and the `**Lifecycle:**` line to `/trip-decommission`.
+- **It writes only under `trips/<slug>/`, and only files that do not already exist.** A **rule**, and
+  the one that satisfies `ADR-007` § 2, **bound 5**. It is the create-only rule stated at the top of
+  this file, restated here as a bound rather than re-derived — and, as there, it holds without either
+  account of `disallowed-tools` being the true one.
