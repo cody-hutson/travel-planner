@@ -151,6 +151,14 @@ normal path for this command, not an error condition.
 
 ## Create
 
+**Reads:** `templates/trip-context.template.md` — the copy source member 4 reads before it writes,
+and reading it before the write is what makes member 4's *keeps every other field exactly as it
+ships* rule checkable rather than merely asserted. It reads **no existing trip file**: the trip
+population is carried by the block above, and on this branch no trip directory exists to read. In
+particular it does not read `trip-context.md` or `trip-log.md` — this branch is what creates them,
+and a read of either here would be a read of a file this command had just written. Dispatches no
+agent.
+
 Build all nine members, in this order.
 
 | # | Member | How |
@@ -211,6 +219,16 @@ Member 5's entry follows the `trip-log.md` structure `CLAUDE.md` documents:
 Use the bare `YYYY-MM-DD` form exactly as the `date +%F` call returned it.
 
 ## Resume — repair only
+
+**Reads:** `trips/<slug>/` — the member listing step 1 takes with `ls`, read only to establish which
+scaffold members are present, which is a filesystem observation and is therefore declared;
+`templates/trip-context.template.md` — the copy source, read only on the branch where
+`trip-context.md` is genuinely absent and step 2 reaches `Write`. It reads **no member's content**.
+That is step 3's contract-conformance rule rather than a courtesy: this branch observes member
+**existence** only, and reading a field would change the depth this file declares in its contract
+header block. So it does not read an existing `trips/<slug>/trip-context.md` or
+`trips/<slug>/trip-log.md` — not for the mode, not for `Mode notes`, not for the roster, and not to
+decide anything here. Dispatches no agent.
 
 The trip already exists. **Nothing is rewritten.**
 

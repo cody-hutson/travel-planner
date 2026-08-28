@@ -529,7 +529,13 @@ Order:
    "what can I do next".
 2. The rows that `REDIRECT`, each naming the command it redirects to.
 3. The rows that `REFUSE`, each with the reason from its own row, so the index never goes
-   silent on a verb this file's table declares.
+   silent on a verb this file's table declares. **Where the unsatisfied cell is `lifecycle`
+   — the resolved trip is `ARCHIVED` and the row left that cell at `G7`'s `ACTIVE` default
+   — the reason carries its remedy: name `/trip-decommission reopen` as what returns the
+   trip to `ACTIVE`.** Name it once for the set rather than once per row, and **name it
+   without running it**; it is the same remedy `/trip-decommission`'s own `G7` render names
+   for the same cell, which is why it is stated here as that command's rather than as a
+   behaviour this one owns.
 
 Then name the Step-1 rows whose `Command` cell carries an `EXCLUDED:` marker, read live
 from that table rather than listed here — those are the actions to just ask for, and they
@@ -541,9 +547,11 @@ verb is recognised but this revision does not implement it*, above — it is the
 declining to advertise what this file does not implement.
 
 `status` declares `lifecycle: ANY` deliberately, rather than leaving that cell to its
-default. Orientation is precisely what an archived trip still needs — it is where the
-reopen path gets named — and a `status` that stopped resolving the moment a trip was
-archived would withhold the answer at the one moment the user most needs it.
+default. Orientation is precisely what an archived trip still needs, and on such a trip
+every other row of this file's table refuses on the `lifecycle` cell — so the index's third
+entry above is where the reopen path gets named, and naming it there is what makes that
+true rather than a claim resting on itself. A `status` that stopped resolving the moment a
+trip was archived would withhold that answer at the one moment the user most needs it.
 
 ### The freshness report
 
