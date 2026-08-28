@@ -232,12 +232,22 @@ link against. Specifically:
   links to nothing trip-level; carry it through verbatim alongside their facets
   so the hub can see it.
 - **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
-  projection refreshed from the current source files whenever they change; it
-  holds no independent state of its own (the source files are authoritative).
+  projection refreshed from the current source files whenever they change; every
+  entry projected from a `travelers/<traveler>.md` file holds no independent state
+  of its own (that source file is authoritative). **One stated per-entry
+  exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has
+  no source file to be refreshed from, and is carried forward instead — see
+  *A party member who will never file* below.
   The engines and hub read this file — they do not parse the raw per-traveler
   files.
 
 This role is **read-and-reconcile only**: source files in, derived model out.
+**One stated exception to that input list:** the model you are about to replace
+is read as well, solely to carry forward the `[THIRD-PARTY]` entry admitted
+through the operator fallback, which has **no source file by design** — see
+*A party member who will never file* below. The classification is unchanged:
+the read is still read-and-reconcile, it grants no authoring, and the derived
+model remains that entry's record rather than its authority.
 It does not relax the [ENRICH]-only contract on trip-context.md in any way,
 and it never edits a traveler's own file.
 
@@ -258,6 +268,15 @@ Trigger"), which sanctions exactly this behavior:
   of what you already processed — a per-traveler entry that no longer matches its
   source file has changed. A brand-new profile (no prior entry) and a removed
   profile both count as changes.
+
+  **Carve-out — a `[THIRD-PARTY]` entry has no profile to diff.** The rule above is
+  about **profiles**, and an entry carrying `[OPERATOR-PROVIDED]` **and**
+  `[THIRD-PARTY]` has none by design. Its lack of a source file is its **normal
+  state** — never a *removed profile*, and never an update signal. A pass that simply
+  carries such an entry forward unchanged (see *A party member who will never file*
+  below) has detected no change and reports none. What still signals is what actually
+  changed: the entry's **admission**, a **revision** or **withdrawal** by a fresh
+  operator statement, and **supersession** by the person's own filed profile.
 - **Emit an update signal — a candidate replanning trigger.** For each changed
   traveler, record an **update signal** in the derived model naming *who* changed
   and *what* changed (added anchor, dropped wish, revised need). Surface it plainly
@@ -402,10 +421,38 @@ needs through the same fallback path above, admit them:
   `Party:` value ("two kids, 6 and 9") likewise yields no entry: the name
   arrives *with* the needs, from the operator, or there is nothing to key an
   entry to.
+- **Carried forward across a reconcile — preserved, not re-derived.** Before you
+  write `outputs/traveler-model.md`, read the model you are about to replace. Every
+  `## <Name>` entry there carrying **both** `[OPERATOR-PROVIDED]` and
+  `[THIRD-PARTY]` is carried into the newly written model **verbatim** — same name
+  key, same need text, both marks — on any pass that supplies no operator input for
+  that person. This is the one entry class you **preserve** rather than regenerate,
+  and the reason is exact: that person has **no source file by design**, and ADR-006
+  refuses them any other durable home, so the model you last wrote is the **only
+  surviving record** of what the operator stated. The operator's statement remains
+  the entry's authority; the derived model is its record, never its authority. You
+  are not re-reading the operator's input on this pass — it was a chat turn and it is
+  no longer there — you are declining to lose the only copy of it that still exists.
+  Carrying it **verbatim** is also what protects the marks: `[THIRD-PARTY]` is the
+  non-publication key every downstream guard binds to, so an entry rewritten rather
+  than carried could silently drop it and unbind that guard — the same failure the
+  supersede-do-not-merge rule below names.
 
 **Provenance-marking records that a value is second-hand. It does not establish
 the described person's consent, and must never be written or described as
-though it does.**
+though it does.** This holds unchanged for a carried entry: **carrying is not
+confirming.** A carried entry is exactly as old as the operator statement that
+created it — never describe it as current, re-confirmed, or consented to. A pass
+that carries it re-states nothing about that person; it only declines to lose what
+was already recorded.
+
+**Two exits end a carried entry, and only two.** Anything else leaves it in place.
+**Evaluate supersession before carry-forward**, in that order: once the person's own
+profile has superseded the entry, both marks are gone, so there is nothing left for
+the carry-forward rule to match and a superseded entry is **never re-admitted** on a
+later pass. The second exit is a **fresh operator statement** about that person — one
+that revises the needs replaces the carried text (the newer statement wins), one that
+withdraws them drops the entry. Both are real changes, so both emit an update signal.
 
 **When that person later files their own profile — supersede, do not merge.**
 Their own file becomes authoritative, and the transition is a replacement:
@@ -421,7 +468,9 @@ Their own file becomes authoritative, and the transition is a replacement:
 A merge would be wrong twice over: it would retain non-consented second-hand
 values inside an entry that no longer carries `[THIRD-PARTY]` — silently
 stripping the key the publication guard depends on — and it would state, as the
-person's own words, things they never said.
+person's own words, things they never said. Carrying an entry forward changes
+none of that: a carried entry is **never merged** into a later first-party
+profile, and a superseded one is **never resurrected** by a later pass.
 
 This fallback is part of the reader/reconciler role only; it changes nothing
 about the [ENRICH]-only contract on trip-context.md.

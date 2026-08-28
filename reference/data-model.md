@@ -25,7 +25,7 @@ Five artifacts make up the satisfaction substrate. Per-traveler source files are
 | Artifact | Path | Writer | Layer | Rationale |
 |----------|------|--------|-------|-----------|
 | **Per-traveler source files** | `trips/<destination>-<year>/travelers/<traveler>.md` | Human (the traveler / planner) | Layer 1 — human-authored | Keeps heavy per-traveler detail out of sacred `trip-context.md`; enables async per-traveler authoring (each traveler fills/edits on their own time); makes each file an independent **change surface** (see Forward Connection). Filled from `templates/traveler-intake.template.md`. |
-| **Derived traveler model** | `outputs/traveler-model.md` | Enrichment agent | Derived `[DERIVED]` | The reconciled, machine-usable projection of all per-traveler files **plus** the desire-overlap signal. One place the engines and hub read instead of parsing N source files. |
+| **Derived traveler model** | `outputs/traveler-model.md` | Enrichment agent | Derived `[DERIVED]` | The reconciled, machine-usable projection of all per-traveler files **plus** the desire-overlap signal — **plus one stated exception**: the `[THIRD-PARTY]` entry admitted through the operator fallback, whose subject has no source file by design (see the stated exception under **Needs**), is *carried forward verbatim* across a refresh rather than projected from a file. One place the engines and hub read instead of parsing N source files. |
 | **Per-event status** | `outputs/event-status.md` | **Hub (primary writer)**; enrichment seeds initial `locked` rows on setup; validator reads only | Derived, persist-mutable | Per-event state must **persist across synthesis re-runs**. It cannot live in `trip-context.md` (banned itinerary content) nor in `venue-matrix.md` (rebuilt every synthesis — status would be wiped). A dedicated persistent artifact is the iteration-protection source of truth. |
 | **Satisfaction metrics** | `outputs/satisfaction-metrics.md` | Hub + validator (**section-owned** — see Write Split) | Derived | The coverage view. Two writers, but **never clobbering**: each owns distinct sections and read-merge-writes only its own. Formulas are out of scope here — this document only fixes *where the numbers live* and *who owns which section*, not how they are computed. |
 
@@ -325,7 +325,7 @@ The satisfaction layer preserves the system's **one-writer-per-file** convention
 
 Two roles for the enrichment agent, kept distinct:
 
-1. **Reader / reconciler of human input.** It reads every `travelers/<traveler>.md`, links each need to the governing `trip-context.md` constraint, computes the desire-overlap signal, and writes the result to `outputs/traveler-model.md` as `[DERIVED]`. It does not author the source files and does not edit a traveler's desires.
+1. **Reader / reconciler of human input.** It reads every `travelers/<traveler>.md`, links each need to the governing `trip-context.md` constraint, computes the desire-overlap signal, and writes the result to `outputs/traveler-model.md` as `[DERIVED]`. **It also reads the model it is about to replace**, solely to carry the `[THIRD-PARTY]` entry admitted through the operator fallback forward verbatim — that entry has **no source file by design** (see the stated exception under **Needs**), so the model it last wrote is the only surviving record of it. That read grants no authoring: it does not author the source files and does not edit a traveler's desires.
 2. **Writer of trip-context `[ENRICH]` rollups (unchanged).** Its existing `[ENRICH]`-only contract on `trip-context.md` is untouched — weather, baseline, events, transit access, and the other `[ENRICH]` fields still behave exactly as before.
 
 The derived traveler model is the **feed**: the engines and the hub read `outputs/traveler-model.md`, and it is the input from which the event-status and metrics homes are populated. Engines and hub do **not** parse the raw per-traveler files.
@@ -340,8 +340,12 @@ templates/traveler-intake.template.md          (the per-traveler intake form)
         ▼
 trips/[dest-year]/travelers/<traveler>.md       (Layer 1 — human-authored, one file per traveler)
         │  enrichment agent reads + reconciles (link to trip-context constraints, never copy)
-        ▼
+        │  ┌─ it ALSO reads the prior revision of the model below before replacing it, and
+        │  │  carries the [THIRD-PARTY] entry forward verbatim — that entry has no source
+        │  │  file by design, so that prior revision is its only surviving record
+        ▼  │
 outputs/traveler-model.md  [DERIVED]            (reconciled model + desire-overlap signal)
+        │◀─┘  prior revision in, rewritten model out — the read grants no authoring
         │  read by ...
         ├────────────► engines        (read the model; nothing optimizes yet)
         ├────────────► hub            (coverage view)
@@ -370,7 +374,7 @@ The new artifacts classify as follows:
 | New artifact | Lifecycle | How it behaves | Closest existing pattern |
 |--------------|-----------|----------------|--------------------------|
 | `outputs/event-status.md` | **persist-mutable** (new — fourth pattern) | Updated **in place** as events change status. **Survives every re-synthesis** — never wiped, never regenerated from scratch. It is the iteration-protection source of truth: the record of what has already been booked / locked / fallen-through must outlive any single planning pass. | None — see below |
-| `outputs/traveler-model.md` | rebuilt / refreshed from source | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. It carries no independent state of its own — the source files are authoritative — so regeneration is safe. | (b) rebuilt-each-synthesis |
+| `outputs/traveler-model.md` | rebuilt / refreshed from source | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | (b) rebuilt-each-synthesis |
 | `outputs/satisfaction-metrics.md` | rebuilt / refreshed from inputs | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | (b) rebuilt-each-synthesis |
 
 ### `event-status.md` is genuinely a new fourth pattern

@@ -1,0 +1,114 @@
+name: Trip resolution contract
+
+# Runs scripts/test-trip-resolution-contract.sh on every push and every pull request, so
+# the agreement between CLAUDE.md's trip-resolution contract and the command files that
+# consume it is machine-graded rather than trusted.
+#
+# SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
+# particular in no run: step — every value below is a repo-static literal. The property is
+# stated without writing the token itself, so it stays mechanically checkable: a scan for
+# the interpolation syntax over this file must return exactly zero. There is no path for
+# attacker-controlled event data (issue titles, PR bodies, commit messages, head_ref) to
+# reach a shell.
+#
+# ── WHY A SEPARATE WORKFLOW RATHER THAN A STEP IN AN EXISTING JOB ────────────────
+# The same three concrete reasons the taxonomy workflow already records:
+#
+#   1. SHARED FATE. test-publish-guard.sh sources publish-trip-site.sh. A contract suite
+#      added to that job would inherit a failure mode with nothing to do with the
+#      contract.
+#   2. FAILURE ATTRIBUTION. This suite goes red when a contributor edits the CLAUDE.md
+#      contract section or a command file's evidence blocks. Routing that contributor to
+#      a check named "Publish guard suite", whose header states it proves the
+#      publish-path guards are machine-graded, is a legibility trap.
+#   3. INHERITED ENV. publish-guard.yml declares GUARD_EXPECTED_SKIPS: 'D J1' — the two
+#      declared exclusions of THAT suite. A step added to that job would inherit them.
+#      This suite declares NO expected skips, so it needs its own env block, below.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# What a green check here does and does not prove.
+#
+# IN SCOPE — these groups run on every invocation and their verdicts are real:
+#   PIN  the canonical literals are read FROM CLAUDE.md: the contract section exists and
+#        is uniquely named, its evidence list is a fenced literal indexed contiguously
+#        from E1 with every entry `!`-prefixed and stderr-capturing, and its header block
+#        yields a citation line. PIN also self-checks that the guard script holds NO COPY
+#        of any canonical entry — a guard with its own copy is a second source of truth
+#        and would go green while the documented contract drifted away from it
+#   RP   the real consumer population under .claude/commands/: header block present,
+#        evidence blocks byte-identical to the canonical at their index, prefix contiguous
+#        from index 1 and EXACTLY the length the declared contract-depth requires — no
+#        fewer blocks and no more — and contract-depth equal to the maximum depth in the
+#        file's own verb table
+#   CTL  a synthetic five-file fixture tree, built in a temp dir on every invocation and
+#        never written into the repository. Two arms MUST NOT fire — a clean tree, and a
+#        table whose depth cells are rendered as code spans; the rest are deliberate
+#        defects that MUST, one per failure code the checker can emit, alongside the
+#        specificity arms that tell a correct implementation apart from a lookalike one.
+#        THE ARM INVENTORY IS NOT RESTATED HERE, deliberately. It lives in exactly one
+#        place — the CTL banner in the guard script, which is also where the invariant
+#        binding it is stated: every emittable code has a must-fire arm, and a code added
+#        by a later slice adds its arm in the same change. A count copied into this file
+#        is a copy with no assertion behind it, and it has already gone stale once, which
+#        is precisely the failure mode this whole suite exists to catch
+#
+# ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
+# GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo,
+# so it has a second door that mechanism does not watch: a POPULATION vanishing. The
+# contract ships BEFORE the command files that consume it, so at that point RP is a
+# universally-quantified statement over the empty set — vacuously true, never skipped,
+# silently green. Two things close it. RP prints its observed population count and
+# renders a distinct VACUOUS verdict rather than a bare PASS when that count is zero.
+# And CTL has population 5 by construction on every run, so the suite demonstrates on
+# this very commit that it is still capable of failing. A run in which CTL did not
+# execute is a failure, not a pass.
+#
+# OUT OF SCOPE — deliberately, and by name:
+#   CONDUCT. This suite asserts that a command file DECLARES the contract as CLAUDE.md
+#   states it. It cannot assert that a model actually walks the gate ladder at runtime,
+#   and a green here is not evidence that it did.
+#
+#   RUNTIME PRIVILEGE. `allowed-tools` / `disallowed-tools` are a pre-approval grant,
+#   turn-scoped — every tool stays callable, unlisted tools go through normal permission
+#   settings, and the grant clears at the next message. A GREEN CHECK HERE IS NOT A
+#   PRIVILEGE GUARANTEE, and must not be read as one.
+#
+#   TAXONOMY BIJECTION. That is the command-taxonomy suite's invariant, not this one's.
+#   Two guards, two invariants, no overlap.
+#
+# So a green check means: CLAUDE.md declares exactly one trip-resolution contract, the
+# guard reads that contract rather than a copy of it, every command file present agrees
+# with it byte-for-byte, and the guard demonstrated on this very commit that it can fail.
+#
+# ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
+# GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it is pure
+# bash with no Node, no gh and no network, so it has no dependency-gated group and
+# therefore no legitimate skip. An empty declaration here is the correct value, not an
+# omission.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  trip-resolution-contract:
+    name: Trip resolution contract suite (test-trip-resolution-contract.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # No Node setup step: this suite is pure bash and POSIX text processing. It needs
+      # no Node, no gh and no network, which is exactly why its expected-skip set is empty.
+      - name: Run the trip-resolution-contract suite
+        env:
+          # A SKIP is a FAILURE unless its group is declared below.
+          GUARD_STRICT_SKIPS: '1'
+          # Empty by design — this suite has no dependency-gated group to declare.
+          GUARD_EXPECTED_SKIPS: ''
+        run: ./scripts/test-trip-resolution-contract.sh

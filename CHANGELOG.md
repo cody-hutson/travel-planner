@@ -3,6 +3,105 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.14.0] — 2026-08-28 — Consolidated trip command surface
+
+Asking the planner to do something used to mean describing it in prose and hoping it
+was read as the kind of request you meant. There was nothing to type that named the
+thing you wanted, so the surface you actually had was a paragraph and a guess. This
+release gives that surface a name: five commands covering trip creation, the people
+and context you record, the planning you ask for, publishing, and winding a trip down.
+Between them they answer twenty-four of the twenty-eight entries in the request table;
+the other four say plainly that they are not commands and why, rather than being left
+as a gap you discover by trying.
+
+The commands are the taxonomy, not a restatement of it. That direction is deliberate
+and it is the reason a check is cheap here: had the commands merely echoed a table
+kept somewhere else, the two would drift and something would have to catch it. With
+the commands owning it, a suite in CI asks only whether every entry resolves and
+nothing is covered twice. What that suite does and does not prove is written down in
+the workflow file rather than left to be assumed — because a green tick that reads as
+more than it is would be worse here than no tick at all.
+
+### Added
+
+- **Five commands, and a verb after the first one
+  (`.claude/commands/`).** `/trip` takes a verb for review and every planning
+  procedure — `status`, `plan`, `replan`, `reorder`, `research`, `check`, `ideas`,
+  `site`. `/trip-new` creates a trip, and is its own file because its subject is a
+  trip that does not exist yet, so it takes no disposition from the resolution the
+  others share. `/trip-record` covers travellers and context, which were the largest
+  group of things with nowhere to be written down. `/trip-publish` covers updating a
+  published site and listing what is published. `/trip-decommission` covers making a
+  trip temporary, archiving it, and reopening it. Typing a command with no verb, or
+  with one this revision does not implement, tells you so and names what it does
+  implement, rather than proceeding on a guess.
+
+- **A shared answer to "which trip is this about"
+  (`CLAUDE.md`, `.claude/commands/`).** Every command that acts on an existing trip
+  resolves which one through the same ladder of steps, in the same order, with the
+  same answers — including the two answers that are not a trip: it could not tell, and
+  it will not decide for you. Before this each surface would have had to work that out
+  for itself, and they would have disagreed the first time an edge case arrived.
+
+- **The request table is now checked, on every push and every pull request
+  (`scripts/test-command-taxonomy.sh`, `.github/workflows/command-taxonomy.yml`).**
+  The suite reads the request table and the command files and asks three things: that
+  every addressed entry resolves to something real, that nothing on the command
+  surface is left uncovered, and that nothing is covered twice. It runs with no path
+  filter, so an edit anywhere is graded. **What it does not do is the part worth
+  writing down.** It grades what the command files *declare*. It does not grade
+  whether a declaration is honoured when the command actually runs — this repository
+  carries two incompatible accounts of that, and the suite deliberately takes neither,
+  so every statement it makes is true under both. A green result here is a statement
+  about the table and the files, and not a statement about what a running command is
+  permitted to do.
+
+- **A first-run path in the README (`README.md`).** The README previously did not
+  mention the commands at all — not once — which meant the surface this release exists
+  to provide was invisible to anyone arriving new. It now says what to install, what
+  to type first, and how to check it worked.
+
+- **The decision and its limits are on the record
+  (`reference/adr/ADR-007-command-entry-point.md`).** Why five files rather than one
+  command or nine, what the alternatives cost, and which parts of the publish
+  lifecycle are addressed now — three of its ten forms — versus the seven that are
+  declared exclusions rather than pending work.
+
+### Changed
+
+- **The check asks about coverage, not a one-to-one match
+  (`scripts/test-command-taxonomy.sh`, `reference/adr/ADR-007-command-entry-point.md`).**
+  An earlier draft asserted that each entry maps to exactly one command file. Once a
+  command takes a verb, the thing being matched is a command *and* a verb together,
+  and there is no separate file to point at — so that assertion could not survive the
+  design it was written for. It is replaced by a coverage question, which contains the
+  old one rather than weakening it: where a command declares no verbs at all, the
+  command itself is the unit and the two questions become the same. That is not
+  argued in a comment — the suite constructs that world and demonstrates it. On the
+  real table the difference is not academic: matching by command alone produces
+  nineteen collisions where matching by command-and-verb produces none.
+
+### Fixed
+
+- **A number of things this repository said about itself were not true, and are now
+  either accurate or gone (`.claude/commands/`, `reference/adr/`, `CHANGELOG.md`,
+  `.github/workflows/`, `CLAUDE.md`).** Most were of one kind: a sentence saying that
+  nothing here does some particular thing. Each was true when it was written and was
+  made false later by something else being built — no one edited the sentence, and
+  nothing was watching it. One said that no file in the repository reads a particular
+  document, written an hour before the file that reads it was created. One said a
+  check did not exist while that check was already running. They are repaired by
+  saying what is true and where its boundary is, rather than by asserting the
+  opposite, because the opposite is just as fragile and goes stale the same way. Where
+  a sentence could only have been kept accurate by hand, it was removed instead of
+  rewritten.
+
+  **This did not come out of a review of the prose.** It came out of checking claims
+  against the thing they described, one at a time, across every tracked file — which
+  found roughly five times as many as reading had. Nothing in CI reads a pull request
+  description, an issue, or a design note, and that is where several of these survived
+  longest.
+
 ## [0.13.0] — 2026-08-23 — Publish-path content guard
 
 Publishing a trip site has always had two paths: the default one encrypts the site
@@ -141,15 +240,27 @@ the default and is still checked exactly as before.
   value reaches the page it goes out unnoticed. A longer or more distinctive need
   is caught, and so is the person's name unless that too is an everyday word.
 
-  There is a second reason, and it is about the records rather than the check:
-  nothing in this repository shows what an entry for such a person actually looks
-  like. Of forty-four worked examples across all the documentation, twelve show a
-  person's entry and none of them shows one recorded this way. The check therefore
-  reads whatever a line states instead of looking for an agreed layout — the right
-  response to there being no agreed layout, and not the same thing as covering
-  everything written about that person. Agreeing that layout, and marking on each
-  detail directly whether it may be published, is a separate piece of work already
-  planned; it is not something this check can settle on its own. None of this
+  There is a second reason, and it is about the records rather than the check. As
+  first written, this paragraph said that nothing in the repository showed what an
+  entry for such a person looks like, and offered a count of worked examples as
+  support. **That was wrong on the day it was written, rather than overtaken
+  afterwards**, and it is corrected here rather than quietly dropped.
+  `scripts/test-publish-guard.sh` had been building worked entries of exactly that
+  shape — a `## <Name>` heading carrying `[OPERATOR-PROVIDED]` and
+  `[THIRD-PARTY]`, with that person's needs beneath it — since the three commits
+  that added its third-party fixture groups, every one of them an ancestor of the
+  commit that wrote the claim. The heading form is not left to a fixture to imply
+  either: `CLAUDE.md` and `agents/00-enrichment.md` both state it. What those
+  fixtures are is inputs written to exercise this very check, not a layout it
+  matches against — and the marks an entry carries record **provenance**, who
+  supplied a value and whether its subject is the person who spoke, where the
+  check would need something different: a statement of whether a given line may be
+  published. That is the thing still to be agreed. The check therefore reads
+  whatever a line states instead of looking for an agreed layout — the right
+  response to that, and not the same thing as covering everything written about
+  that person. Agreeing that layout, and marking on each detail directly whether
+  it may be published, is a separate piece of work already planned; it is not
+  something this check can settle on its own. None of this
   affects the rest: passport details are covered as described above, an
   undeterminable answer still stops the publish, and the encrypted path — the
   default — is untouched.

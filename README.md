@@ -7,10 +7,11 @@ A multi-agent trip planning system. Nine specialized agents research, plan, vali
 | Path | Purpose |
 |---|---|
 | `CLAUDE.md` | Operating instructions for Claude Code |
+| `.claude/commands/` | The slash commands — the addressable way in (see [First run](#first-run)) |
 | `agents/` | Behavioral definitions for the 9 agents (destination-ideation, enrichment, activities, food, nightlife, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
 | `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
-| `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; `test-publish-guard.sh` — guard regression tests |
+| `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
 | `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
 | `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
@@ -53,6 +54,24 @@ Then open the folder in Claude Code:
 - **CLI** — run `claude` from inside the `travel-planner` directory
 
 Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` accumulates agent artifacts.
+
+### First run
+
+Conversation is not the only way in. The files in `.claude/commands/` give the engine an address: type `/` in Claude Code and they offer themselves with tab-completion, so the request types [`CLAUDE.md`](CLAUDE.md) routes are visible at the prompt instead of being something you have to know to ask for.
+
+**Start with `/trip`.** With no verb it runs `status`, whose own rule is that it writes nothing and runs no script: it reads what is in `trips/`, resolves the trip and its mode, and states what is available and what comes next. On a fresh clone there are no trips yet — `/trip` says so, and names `/trip-new` as the way to make one.
+
+| Command | What it is for |
+|---|---|
+| `/trip` | The entry point. Bare `/trip` reports where the trip stands; its verbs run the planning work — `plan`, `research`, `replan`, `check` and `site` among them |
+| `/trip-new` | Starts a trip that does not exist yet: the folder, `trip-context.md`, `trip-log.md`, and traveler intake. It only creates — re-run on an existing trip, it adds what is missing and rewrites nothing |
+| `/trip-record` | Writes what you know into the trip's own files — a traveler profile, a third party's needs, the destination, the mode, the party, trip facts, per-event status, the session log |
+| `/trip-publish` | `update` re-publishes an already-public site after edits; `list` reports what is published |
+| `/trip-decommission` | `temporary` takes a site offline, `archive` concludes a finished trip, `reopen` brings an archived one back |
+
+Each file states its own verbs and what each one needs, so the list above is a starting point rather than the whole surface. Once `trips/` holds more than one trip, every command takes `--trip <slug>` to say which.
+
+Three publish actions stay deliberately outside this surface and remain terminal commands you run yourself: creating the published repo in the first place, rotating its passphrase, and deleting it. `/trip-publish` does none of the three — [`reference/adr/ADR-007-command-entry-point.md`](reference/adr/ADR-007-command-entry-point.md) records the reasoning and dispositions every publish form one way or the other.
 
 ### Traveler profiles
 
@@ -113,7 +132,7 @@ The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored
 
 **Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. It runs without `gh`; the publish-state columns stay blank until you `gh auth login`. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
 
-To publish fully public instead, run `scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext` yourself in a terminal — it asks you to type `PUBLISH` to confirm, and that confirmation is the only guard on the unencrypted path. Full flow in [`CLAUDE.md`](CLAUDE.md).
+To publish fully public instead, run `scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext` yourself in a terminal. Two controls stand on that path, in this order: a publishable-content check runs first and refuses if a traveller's passport details, or a need recorded for someone with no profile of their own, have reached the page — and refuses equally when it cannot tell; then it asks you to type `PUBLISH` to confirm. The ciphertext verify is not one of the two — that one runs on the encrypted branch only. Full flow in [`CLAUDE.md`](CLAUDE.md).
 
 ## License
 

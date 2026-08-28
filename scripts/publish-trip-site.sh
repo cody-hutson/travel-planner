@@ -644,7 +644,7 @@ _GUARD_AWK_HELPERS='
     }
 '
 
-# The closed need-category enum (agents/00-enrichment.md:330-331) plus the schema words a
+# The closed need-category enum (agents/00-enrichment.md:349-350) plus the schema words a
 # need line is written with. This is SCHEMA vocabulary — it is not a list of names and it
 # is not _GUARD_STOP, which is normalization vocabulary shared by all three match rules.
 # Kept separate and used in ONE place: deciding that a value made only of these states no
@@ -701,7 +701,7 @@ nonpublishable_values() { # <trip_dir> [site_html]
     # The raw text is inspected for the mark BEFORE any per-line handling, so the
     # orphaned-mark backstop in END sees marks the parse may fail to resolve.
     /\[THIRD-PARTY\]/ { sawmark = 1 }
-    # A supersession removes both marks by design (00-enrichment.md:409-419). Recording
+    # A supersession removes both marks by design (00-enrichment.md:456-466). Recording
     # that it happened is what separates a sanctioned provenance change from the bad
     # merge the same passage forbids; the shell limb below verifies it is supported.
     tolower($0) ~ /supersed/ && tolower($0) ~ /third-party/ { supersede = 1 }
@@ -730,8 +730,8 @@ nonpublishable_values() { # <trip_dir> [site_html]
       }
       # ── the [THIRD-PARTY] member: an ENTRY DENYLIST, not a field allowlist ──────
       # The mark is read at BOTH granularities and the two are a UNION. The heading
-      # limb alone was the shipped defect: 00-enrichment.md:388 requires the mark on
-      # "every value sourced this way", and :421-424 names heading mark-stripping as a
+      # limb alone was the shipped defect: 00-enrichment.md:406-408 requires the mark on
+      # "every value sourced this way", and :468-473 names mark-stripping as a
       # KNOWN agent error which "silently strip[s] the key the publication guard
       # depends on" — the exact state in which a heading-only read enumerates zero
       # third-party records and publishes.
@@ -782,10 +782,10 @@ nonpublishable_values() { # <trip_dir> [site_html]
     5)
       # A recorded third-party supersession is sanctioned ONLY by the person having
       # filed their own profile — that is the event that triggers it
-      # (00-enrichment.md:409-411), and their own file is what becomes authoritative.
+      # (00-enrichment.md:456-458), and their own file is what becomes authoritative.
       # A supersession claimed with no profile anywhere is unsupported: the marks are
       # gone and nothing backs the drop, which is indistinguishable from the bad merge
-      # :420-424 forbids. Undetermined, never a pass.
+      # :467-473 forbids. Undetermined, never a pass.
       # had_profiles is the freshness gate's own glob result, computed above — reused
       # rather than re-scanned. Deliberately not `find -maxdepth 1 -print -quit`: that
       # is the same BSD/GNU divergence class as the _epoch_of_file defect this release
