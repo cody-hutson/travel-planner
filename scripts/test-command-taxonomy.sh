@@ -1371,6 +1371,7 @@ gen_charter() {  # gen_charter <dir> <defect>
     printf '| Direct edit | sig | act, and see %s/trip status%s for the current state | ex | EXCLUDED: lightest-weight-action |\n' "$BT" "$BT"
     for k in "${KEYS[@]}"; do
       if [ "$defect" = 'uncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
+      if [ "$defect" = 'step1drift' ] && [ "$k" = '/trip-record log' ]; then continue; fi
       printf '| %s | sig | act | ex | %s%s%s |\n' "$k" "$BT" "$k" "$BT"
     done
     if [ "$defect" = 'badcell' ];    then printf '| X | sig | act | ex | neither |\n'; fi
@@ -1759,6 +1760,7 @@ ctl GK1  K1 "an ADDRESSED cell naming a verb no requirement table declares"    g
 ctl GK2  K2 "a declared verb covered by no ADDRESSED cell"                     uncovered ok  '! grep -qF "| /trip check |" "$WORK/GK2/CLAUDE.md"'
 ctl GK3  K3 "a command carrying both a verbless and a verbed ADDRESSED cell"   dblcover  ok  'grep -qF "| ex | ${BT}/trip${BT} |" "$WORK/GK3/CLAUDE.md"'
 ctl GS1  S1 "a key present in Step 1 and absent from Step 2"                   step2drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1/CLAUDE.md")" = "1" ]'
+ctl GS1b S1 "the same divergence in the OTHER direction — present in Step 2, absent from Step 1" step1drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1b/CLAUDE.md")" = "1" ]'
 ctl GS2  S2 "only ONE enumeration derivable — SINGLE-SOURCE, not agreement"    nostep2   ok  '! grep -q "^### Step 2:" "$WORK/GS2/CLAUDE.md"'
 ctl GF1  F1 "a verb region invoking the EXCLUDED form rotate"                  ok        rotate      'grep -qF "publish-trip-site.sh rotate" "$WORK/GF1/commands/trip-publish.md"'
 ctl GF2  F2 "an unpublish invocation lacking the pages-only flag"              ok        nounpubflag 'grep -qF "unpublish trips/x" "$WORK/GF2/commands/trip-publish.md"'
