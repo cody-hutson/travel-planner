@@ -3,6 +3,47 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.15.0] — 2026-08-28 — Trip closeout retention posture
+
+A trip could be wound down but not put away. `/trip-decommission archive` arrived in the
+last release and does the public half of that job well — the site goes offline, the trip
+is marked `ARCHIVED`, the log takes a dated closing line — and it stops there deliberately,
+because quietly deleting someone's trip content is not a thing a command should do. What it
+left open was the private half. The folder is still on the machine, it still holds passport
+numbers and lodging, and nothing in the repo said what to do about that. Past trips piled up
+and the guidance for them was nowhere.
+
+This release writes it down. The posture is per folder rather than per trip, because the
+four parts of a trip do not age the same way: the two text files are small and are the part
+worth rereading, the built outputs are the largest thing there and rebuild from those files,
+and the traveller profiles are the most sensitive bytes in the repo and are the one part
+that should not be left in a folder you have stopped opening. A single expiry rule would
+have been wrong for all four.
+
+### Added
+
+- **A retention posture for `trips/` working directories (`trips/README.md`).** A new
+  *After a trip* section states what `archive` does and does not do, then gives a keep or
+  clear disposition for each of `trip-log.md`, `trip-context.md`, `outputs/` and
+  `travelers/`, with the reason attached to each. It also states plainly that nothing
+  expires on its own — no command deletes a trip folder and no timer runs — because the
+  folder that has stopped being useful is the one that stops being noticed.
+
+### Notes
+
+- **The rest of the closeout issue was already shipped, and this release records that rather
+  than rebuilding it.** Of the four acceptance criteria on the closeout story, three were
+  satisfied by `/trip-decommission` in 0.14.0: a trip reaches an `ARCHIVED` state addressed
+  as a taxonomy row, reaching it invokes the command-surface unpublish path with the
+  pages-only flag, and no command passes `--yes` to `unpublish`. Only the retention posture
+  was outstanding. Verified per criterion against the shipped surface before this release
+  was scoped, so the closure rests on evidence rather than on the issue's original framing.
+
+- **Both absolutes the new section states were probed, not assumed.** No command holds an
+  `rm`, `rmdir` or `trash` grant — zero across all five command files, frontmatter and body
+  — and `trips/` contents are git-ignored by `trips/*` with `!trips/README.md` as the
+  exception, confirmed behaviourally rather than by reading the ignore file.
+
 ## [0.14.0] — 2026-08-28 — Consolidated trip command surface
 
 Asking the planner to do something used to mean describing it in prose and hoping it
