@@ -23,11 +23,10 @@ the request to decide one.
 
 ## Contract header
 
-```
+```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
-```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
@@ -39,6 +38,27 @@ population-role: RESOLVE
 | check | ACTIVE | any | DECIDED | G7 |
 | ideas | ACTIVE | IDEATION | UNDECIDED | G7 |
 | site | ACTIVE | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G8 |
+```
+
+The block above is this file's contract declaration. The requirement table sits **inside**
+it because the fence the contract publishes lists that table as one of the block's own
+fields, so the table-inside form is the rendering the canonical states. The cost is that
+the table does not render as markdown, and it is accepted: this is a declaration read by a
+model and by a parser, not a table read by a browser. The info string names the block, so
+it can be located by the same primitive that locates the canonical.
+
+**This file carried a bare fence with the table outside it until this revision.** No check
+observed the difference: `scripts/test-trip-resolution-contract.sh` matches the fence tag
+against `CLAUDE.md` alone, and reads every consumer's citation line, `contract-depth`,
+`population-role` and depth cells by a whole-file line scan that is indifferent to fences.
+The correction is therefore editorial, and it is recorded here rather than left for the
+next reader to rediscover as a difference with no stated reason.
+
+**Frozen.** The citation line, byte-for-byte. `contract-depth: G8` as a **bare** token on
+its own line — a code-span rendering of that line is graded as an *absent* declaration, so
+the tolerance for a code span belongs to a depth **cell** and never to this line.
+`population-role: RESOLVE`. The fence tag. The table's five columns, their order, and
+their header row.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
 have already run, and their output is the whole of the trip state this file **resolves
@@ -236,8 +256,27 @@ state is not why, and naming it would be a false reason.
 
 ## status
 
-Read-only, and read-only as a rule this verb follows. It writes nothing, dispatches no
-agent, runs no script, and reads nothing beyond the pre-executed blocks above.
+**Reads:** nothing beyond the pre-executed blocks above — this verb observes no path at
+verb time, which is the whole of this line rather than an omission from it. It takes no
+probe of its own, and a probe would be a read: under the definition the rest of this file
+uses, an existence probe on a path is a filesystem observation and is declared here, so a
+verb that takes none says that instead of saying nothing. It does not read
+`trips/<slug>/trip-context.md` — the lifecycle, the mode and the destination it renders are
+carried **by value** by the record block above, and a read here would give the render a
+second source of fields the ladder has already resolved, free to disagree with it. It
+reads nothing under `trips/<slug>/outputs/`, not even a probe on a path there: the index is
+evaluated against the resolved record and this file's own table, never against which
+artifacts exist, so a probe would have it report a state it does not claim to report. It
+does not read `agents/<name>.md`, having no agent to supply a prompt to.
+**Reading a column live is not reading a file.** Step 1's `Command` column and this file's
+requirement table are taken from what is already in context — `CLAUDE.md` is auto-loaded,
+and this file's body is the body being run — so *live* there names a read of context and
+adds no per-invocation read of either path. **Dispatches no agent**, so it attributes no
+agent read either: `trips/<slug>/trip-log.md` is read on neither side of that attribution,
+there being no second side.
+
+Read-only, and read-only as a rule this verb follows. It writes nothing and runs no
+script.
 
 `status` is exactly two renders, mutually exclusive, selected by `trip.resolution`.
 
