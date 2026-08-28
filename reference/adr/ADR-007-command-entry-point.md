@@ -362,6 +362,8 @@ and softer invocation path is introduced.
   `cmd_unpublish`, `verify_ciphertext`. The plaintext content guard that #123 recorded as missing
   has since landed, as a predicate distinct from `verify_ciphertext`, which remains
   encrypted-branch-only.
-- Guard pattern the taxonomy bijection test follows: `scripts/test-publish-guard.sh`.
-- First-run onboarding path: `README.md` → Install, Verify.
+- Taxonomy bijection guard, and the reader of §4's disposition table:
+  `scripts/test-command-taxonomy.sh`, run by `.github/workflows/command-taxonomy.yml`. It follows the
+  pattern `scripts/test-publish-guard.sh` established.
+- First-run onboarding path: `README.md` → Install, First run, Verify.
 - Epic: #252.
