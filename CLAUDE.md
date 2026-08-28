@@ -153,7 +153,7 @@ Before doing anything, determine what kind of request this is:
 | `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` | that verb's `**Reads:**` line | own |
 | `/trip-publish update` | that verb's `**Reads:**` line — a presence-and-readability probe is a read of the **path**, never of the value | own |
 | `/trip-decommission archive` · `reopen` | that verb's `**Reads:**` line | own |
-| `/trip-new` | **not yet declared** — that file carries no `**Reads:**` line; its reads are stated across its Gate and Create/Resume sections. **This row is a declared gap, not an assignment.** | own |
+| `/trip-new` | that verb's `**Reads:**` line — one per branch, Create and Resume | own |
 | Direct edit · Site tweak | just the file being edited | own |
 | Quick lookup | the relevant output file(s) | own |
 | Context update | `trip-context.md` | own |
@@ -466,6 +466,7 @@ One writer per block. A writer not named for a block does not write it — not "
 ```
 travel-planner/
 ├── CLAUDE.md                 ← you are here
+├── .claude/commands/         ← the slash commands — the addressable surface (ADR-007)
 ├── agents/                   ← agent behavioral definitions (the knowledge base)
 │   ├── 00-enrichment.md
 │   ├── 01-activities.md
@@ -481,7 +482,7 @@ travel-planner/
 │   ├── adr/                       ← architecture decision records (one file per decision)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
-├── scripts/                  ← publish-trip-site.sh (private publish) + test-publish-guard.sh
+├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites
 ├── templates/
 │   ├── trip-context.template.md
 │   └── traveler-intake.template.md   ← per-traveler profile form (blank; copied per traveler into the git-ignored trips/.../travelers/)
