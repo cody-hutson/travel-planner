@@ -98,6 +98,31 @@ This keeps "one thing to remember" as the user-facing affordance and "one author
 function" as the security property. The two are not in tension once the dispatcher is read-only:
 discoverability is served by the entry point, and least privilege by the commands it points to.
 
+**Amendment (2026-08-28, Friday) — the chosen shape has been narrowed: the dispatcher is not
+read-only.** The two paragraphs above stand as the record of what was chosen and are not rewritten,
+and neither is Option 4's label, which names the shape by the very property this narrows. Both are
+left as written on purpose: an ADR that edits its own decision text stops being a record of a
+decision. What follows states the narrowing beside them.
+
+`/trip` remains the **single entry point for addressing**. It is **not** read-only. Its
+`allowed-tools` grant carries two write primitives — `Edit` and `Write` — and verbs that dispatch a
+writing agent write through it. What survives is a read-only property held **per verb rather than per
+file**: `status` states it as a rule the verb follows — *"It writes nothing and runs no script"* — and
+`check` suppresses the validator's declared writes and offers a diff of `trips/<slug>/` as the
+observable post-condition, rather than the words *writes nothing*. **Which verbs are read-only is
+derived by reading each verb's own section for a stated no-write rule.** This amendment fixes no list
+and no count, because the verb set grows and a count would read that growth as drift.
+
+Two consequences for how the paragraphs above should be read. The tension they dissolve by making the
+dispatcher read-only is dissolved instead by the **discrete privileged commands** — the half of the
+chosen shape that held unchanged. And the privilege property is per-verb while a frontmatter field is
+per-file, so no arrangement of the frontmatter expresses it; a verb's conduct is carried by the rule
+its own section states, which is what § *Context* already requires of every command on this surface.
+
+This amendment asserts nothing about what `disallowed-tools` does at runtime. This repository carries
+more than one account of that and nothing in it arbitrates them, so no sentence above rests on any:
+each is read from the `allowed-tools` grant or from a verb section instead.
+
 ### 2. The privilege boundary
 
 Six bounds hold on every command in this surface:
@@ -160,9 +185,10 @@ content-guard dependency has been corrected in place, and nothing else about it 
 claim that `verify_ciphertext` is absent from the plaintext branch remains, because it is still
 true. What follows is the control review the decision called for,
 and the partition that review produced. It **discharges** the deferral; it does not reverse it. §2's
-bounds are untouched, and the two forms those bounds cover stay out. This section carries a
-machine-parsed table and is read by CI — an edit to it can turn a check red, which is the price of
-the completeness claim below being a check rather than an assertion.
+bounds are untouched, and the two forms those bounds cover stay out. The completeness claim below is
+an **assertion maintained by review**, not a check: no artifact in this repository opens this file, so
+no edit to this section can turn a check red. It becomes a check on the day one parses this table,
+and may be re-stated as one then, naming that reader.
 
 **The deferral had two legs and only one of them cleared.** The content-guard leg is gone: the
 plaintext branch now runs a publishable-content predicate immediately before it copies anything, so
@@ -209,9 +235,9 @@ separate row in `CLAUDE.md`'s Step-1 table; it still earns one here, because com
 
 | # | Invocation form | Disposition | Reasons | Command |
 |---|---|---|---|---|
-| 1 | `list` (alias `status`) | ADDRESSED | — | `/trip-list` |
-| 2 | `update` | ADDRESSED | — | `/trip-update` |
-| 3 | `unpublish --disable-pages-only` | ADDRESSED | — | `/trip-offline` |
+| 1 | `list` (alias `status`) | ADDRESSED | — | `/trip-publish list` |
+| 2 | `update` | ADDRESSED | — | `/trip-publish update` |
+| 3 | `unpublish --disable-pages-only` | ADDRESSED | — | `/trip-decommission temporary` |
 | 4 | `publish` | EXCLUDED | `#330-disclosure` + `repo-creation` | — |
 | 5 | `publish --opaque` | EXCLUDED | `#330-disclosure` | — |
 | 6 | `publish --plaintext` | EXCLUDED | `ADR-007 §2` | — |
