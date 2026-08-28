@@ -2,8 +2,8 @@
 description: Take a trip's site offline, archive a concluded trip, or reopen an archived one. Never deletes trip content.
 argument-hint: <verb> [--trip <slug>]
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Bash(scripts/publish-trip-site.sh:*), Read, Edit
-disallowed-tools: [Bash(bash:*), Bash(sh:*), Write, NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Bash(scripts/publish-trip-site.sh unpublish:*), Read, Edit
+disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/publish-trip-site.sh update:*), Bash(scripts/publish-trip-site.sh rotate:*), Bash(scripts/publish-trip-site.sh list:*), Bash(scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Write, NotebookEdit]
 ---
 
 # /trip-decommission
@@ -21,7 +21,7 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 | `Bash(ls:*)` | the listing block below |
 | `Bash(grep:*)` | the record block below, which reads the lifecycle, the mode and the destination by value |
 | `Bash(date:*)` | `archive`'s closing log entry is dated from a `date +%F` tool call **in the body**, never as a further pre-execution block — the shipped convention `/trip-new` and `/trip-record log` already take, and required here because the header block below fixes how many pre-execution blocks this file carries and it already carries all of them |
-| `Bash(scripts/publish-trip-site.sh:*)` | `temporary` and `archive` invoke one subcommand of it, with one flag, both fixed in this file |
+| `Bash(scripts/publish-trip-site.sh unpublish:*)` | `temporary` and `archive` invoke the `unpublish` arm, with the pages-only flag, both fixed in this file. **The grant is the arm, not the script** — `ADR-007` §1 is one authorization per function, and a script-wide grant would authorize every arm of the dispatch table at once |
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
 
@@ -29,10 +29,24 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 `allowed-tools` is a turn-scoped pre-approval grant and enforces nothing; `disallowed-tools` is the
 only enforced control on this surface.
 
-- `Bash(bash:*)`, `Bash(sh:*)` — the publish script is reachable **only by its own path**, so no
-  wrapper, alias or generated command line can reach a subcommand or a flag this file declines. That
-  is what makes *never sets `ALLOW_PLAINTEXT`, never passes `--yes`* (`ADR-007` §2 bound 3) enforced
-  at the one place it can be.
+- **Every publish-script arm this command does not own is denied by name** — `publish`, `update`,
+  `rotate`, `list` and its `status` alias. `ADR-007` §1 is **one authorization per function**, so the
+  grant above is the `unpublish` arm rather than the script: a script-wide grant would authorize the
+  whole dispatch table at once, which is the privilege union that ADR rejects. **The arms are denied
+  individually rather than described**, because a boundary carried in prose is asserted and a
+  `disallowed-tools` entry is enforced.
+- `Bash(bash:*)`, `Bash(sh:*)` — denied so the per-arm denials above cannot be walked around by a
+  wrapper, an alias or a generated command line. **This denial is what closes the wrapper route; it
+  is not what closes the arms** — the per-arm entries do that, and each is listed.
+
+**What the frontmatter does *not* enforce, stated plainly rather than claimed.** `unpublish` is one
+arm and this command owns one **form** of it — the pages-only takedown. **A per-arm denial cannot
+express a flag's presence inside an arm it grants**, so *never passes `--yes`* and *never takes the
+deleting default* are **rules this file follows, not properties the frontmatter guarantees.** They
+rest on the fixed invocation in each verb section and on the argument string never being forwarded.
+The mechanical check that would grade them reads the command directory for publish-flag literals and
+does not exist at this revision; until it does, this residual is named rather than covered. **No
+prohibition in this file is justified by what the frontmatter omits — omission is not prohibition.**
 - `Write`, `NotebookEdit` — **this command creates no file and no directory.** Every path it touches
   must already exist; a missing one is a stop, never a create. That is the enforced half of
   `ADR-007` §2 bound 5, whose class is **IRREVERSIBLE** because `trips/` is git-ignored and carries
@@ -126,12 +140,15 @@ the verbs that existed when it was written.
 1. **Never sets `ALLOW_PLAINTEXT`, and never passes `--yes` to `unpublish`.** `ADR-007` §2 bound 3,
    which is not negotiable by a later slice. The subcommand and the flag each invoking verb passes
    are fixed in this file; **the verb's argument string is never forwarded to the script**, so no
-   user-supplied token can become a script flag.
+   user-supplied token can become a script flag. **This rule is followed, not enforced** — a per-arm
+   denial cannot express a flag inside an arm this file grants, and the frontmatter section above
+   names that residual rather than covering it.
 2. **Reaches the publish script only by its own path.** Never through `bash` or `sh`, never through
    a wrapper, an alias or a generated command line. `disallowed-tools` is the enforced half of this
    rule.
-3. **Never publishes, and never re-publishes.** No verb here runs `publish`, `update` or `rotate`.
-   Where publishing is what the user wants, name `/trip-publish` and stop.
+3. **Never publishes, and never re-publishes.** No verb here runs `publish`, `update`, `rotate` or
+   `list`. **Each of those arms is denied by name in `disallowed-tools`, so this rule is enforced
+   rather than asserted.** Where publishing is what the user wants, name `/trip-publish` and stop.
 4. **Never reads, writes, moves, prints or removes `trips/<slug>/.passphrase`**, and never renders
    its contents in any output, including a refusal. Reading it would put the secret into the session
    transcript, which is the failure the publish exclusions exist to avoid.
