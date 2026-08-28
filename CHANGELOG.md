@@ -141,15 +141,27 @@ the default and is still checked exactly as before.
   value reaches the page it goes out unnoticed. A longer or more distinctive need
   is caught, and so is the person's name unless that too is an everyday word.
 
-  There is a second reason, and it is about the records rather than the check:
-  nothing in this repository shows what an entry for such a person actually looks
-  like. Of forty-four worked examples across all the documentation, twelve show a
-  person's entry and none of them shows one recorded this way. The check therefore
-  reads whatever a line states instead of looking for an agreed layout — the right
-  response to there being no agreed layout, and not the same thing as covering
-  everything written about that person. Agreeing that layout, and marking on each
-  detail directly whether it may be published, is a separate piece of work already
-  planned; it is not something this check can settle on its own. None of this
+  There is a second reason, and it is about the records rather than the check. As
+  first written, this paragraph said that nothing in the repository showed what an
+  entry for such a person looks like, and offered a count of worked examples as
+  support. **That was wrong on the day it was written, rather than overtaken
+  afterwards**, and it is corrected here rather than quietly dropped.
+  `scripts/test-publish-guard.sh` had been building worked entries of exactly that
+  shape — a `## <Name>` heading carrying `[OPERATOR-PROVIDED]` and
+  `[THIRD-PARTY]`, with that person's needs beneath it — since the three commits
+  that added its third-party fixture groups, every one of them an ancestor of the
+  commit that wrote the claim. The heading form is not left to a fixture to imply
+  either: `CLAUDE.md` and `agents/00-enrichment.md` both state it. What those
+  fixtures are is inputs written to exercise this very check, not a layout it
+  matches against — and the marks an entry carries record **provenance**, who
+  supplied a value and whether its subject is the person who spoke, where the
+  check would need something different: a statement of whether a given line may be
+  published. That is the thing still to be agreed. The check therefore reads
+  whatever a line states instead of looking for an agreed layout — the right
+  response to that, and not the same thing as covering everything written about
+  that person. Agreeing that layout, and marking on each detail directly whether
+  it may be published, is a separate piece of work already planned; it is not
+  something this check can settle on its own. None of this
   affects the rest: passport details are covered as described above, an
   undeterminable answer still stops the publish, and the encrypted path — the
   default — is untouched.

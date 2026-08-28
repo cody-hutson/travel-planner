@@ -11,15 +11,27 @@
 Every way into the planner is a free-form chat. `CLAUDE.md` § "How to Use This" already holds a
 complete dispatcher — a Step-1 table mapping intent signals to actions, each paired with a Step-2
 rule for how much trip state to read. That dispatcher is **implicit**: it fires only if the model
-reads the table and classifies the user's prose correctly. Four consequences follow, each observable
-in the repo as it stands — the nine agents and every request type the table carries are invisible at
-the prompt; classification is probabilistic, and `CLAUDE.md` warns against the precise failure
-("Don't dispatch agents to change an emoji"); sessions start cold with no consistent action that
-re-establishes trip and mode; and `README.md`'s install path hands a newly-cloned repo exactly one
-first move — "Tell Claude you want to plan a trip" — which is prose to type into the same free-form
-chat rather than anything the repo makes addressable.
+reads the table and classifies the user's prose correctly. Four consequences followed, each
+observable in the repo as it stood when this decision was taken — the nine agents and every request
+type the table carried were invisible at the prompt; classification is probabilistic, and `CLAUDE.md`
+warns against the precise failure ("Don't dispatch agents to change an emoji"); sessions started cold
+with no consistent action that re-established trip and mode; and `README.md`'s install path handed a
+newly-cloned repo exactly one first move — "Tell Claude you want to plan a trip" — which was prose to
+type into the same free-form chat rather than anything the repo made addressable.
 
-The engine's functions already exist. What is missing is a way to **address** them.
+**Three of those four record the state this decision was taken against, not the state now, and they
+are left in that tense rather than reversed.** The first, third and fourth describe the repo as it
+then was, with no command file in it. The surface this decision authorises has since shipped: the
+commands live in `.claude/commands/`, and `CLAUDE.md`'s Step-1 table carries a Command cell on every
+row — naming a command or a declared exclusion — which is the bijection §3 below makes checkable and
+which `scripts/test-command-taxonomy.sh` grades on every push. The second consequence is the standing
+one, and is written in the present for that reason: classifying free-form prose stays probabilistic
+whatever surface sits in front of it, which is why the decision rests on declared intent rather than
+on better classification. **This section fixes no count of commands or verbs**, because that set
+grows and a count here would read its growth as drift; the surface is read from that directory and
+that column.
+
+The engine's functions already existed. What was missing was a way to **address** them.
 
 What makes a command surface a different class of fix from better documentation is that a Claude
 Code command file is not merely a prompt shortcut. It carries two mechanisms the prose cannot:
@@ -27,8 +39,9 @@ Code command file is not merely a prompt shortcut. It carries two mechanisms the
 and `!`-prefixed bash pre-execution, which runs before the model sees the prompt and injects its
 output — **deterministic** context loading rather than an instruction to go read something. A
 command therefore converts instruction into mechanism, which is exactly what the four consequences
-above need. `CLAUDE.md` is already correct; what it is not is **addressable** — nothing in the repo
-lets a user invoke one of its rows.
+above need. `CLAUDE.md` was already correct; what it was not is **addressable** — at that point
+nothing in the repo let a user invoke one of its rows. That is the gap this decision closes, and the
+tense is the one the paragraph above explains.
 
 The strength of that first mechanism is worth stating precisely, because the obvious reading
 overstates it. `allowed-tools` is a **pre-approval grant**, not an enforced permission set: every
@@ -185,10 +198,30 @@ content-guard dependency has been corrected in place, and nothing else about it 
 claim that `verify_ciphertext` is absent from the plaintext branch remains, because it is still
 true. What follows is the control review the decision called for,
 and the partition that review produced. It **discharges** the deferral; it does not reverse it. §2's
-bounds are untouched, and the two forms those bounds cover stay out. The completeness claim below is
-an **assertion maintained by review**, not a check: no artifact in this repository opens this file, so
-no edit to this section can turn a check red. It becomes a check on the day one parses this table,
-and may be re-stated as one then, naming that reader.
+bounds are untouched, and the two forms those bounds cover stay out. The completeness claim below was
+recorded as an **assertion maintained by review** on the ground that nothing then parsed this table.
+It anticipated becoming a check, and said it should be re-stated as one **naming that reader**. That
+has happened, so it is re-stated here, with the reader named.
+
+**Its reader, and the mechanism.** `scripts/test-command-taxonomy.sh` opens this file, slices it at
+this section's `### 4.` heading, and parses the disposition table below row by row (`adr4_check`); the
+findings it emits surface as Group E's arms, each of which returns non-zero and fails the suite.
+`.github/workflows/command-taxonomy.yml` runs that suite on every push and on every pull request into
+`main`, under no path filter — so **an edit to the table below can turn a check red.** What the guard
+reads of this section is the table: it collects the lines beginning with a pipe and nothing else, so
+the prose around it, this paragraph included, is not parsed.
+
+**What that check grades, and what it leaves to review.** It grades shape and agreement: that every
+row parses at five columns and carries exactly one of the two dispositions; that every EXCLUDED row
+carries at least one reason from the closed vocabulary below and names no command; that every
+ADDRESSED row's Command cell parses under the same cell grammar `CLAUDE.md`'s Step-1 table uses and
+resolves to a key that is both live on the command surface and ADDRESSED in that table; and that the
+set of forms this table dispositions matches the set the guard holds, compared in both directions. A
+sentinel on the publish script's own dispatch arms fails the suite when they drift from that held set.
+**What it does not grade is whether the held set is the true set of invocation forms** — that
+denominator is still maintained by review, and the sentinel is what makes a drift in it observable
+rather than silent. So the completeness claim below is graded against a denominator, and the
+denominator is reviewed.
 
 **The deferral had two legs and only one of them cleared.** The content-guard leg is gone: the
 plaintext branch now runs a publishable-content predicate immediately before it copies anything, so
