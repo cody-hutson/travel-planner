@@ -95,8 +95,13 @@ arm and this command owns one **form** of it — the pages-only takedown. **A pe
 express a flag's presence inside an arm it grants**, so *never passes `--yes`* and *never takes the
 deleting default* are **rules this file follows, not properties the frontmatter guarantees.** They
 rest on the fixed invocation in each verb section and on the argument string never being forwarded.
-The mechanical check that would grade them reads the command directory for publish-flag literals and
-does not exist at this revision; until it does, this residual is named rather than covered. **No
+The mechanical check that would grade them **exists**: `scripts/test-command-taxonomy.sh` reads the
+command directory and flags publish-flag literals on a publish-script invocation — `F3` on the forbidden
+flag, `F2` on the repo-delete form. It **does not reach this file.** That limb grades **fenced**
+invocations, and this file carries none — the two in the command surface are both in `trip-publish.md` —
+so these rules are unexercised here rather than ungradeable. The second half of them is out of reach of
+any literal scan either way: that the argument string is never forwarded is conduct, not a token. Named
+rather than covered, and now for the accurate reason. **No
 prohibition in this file is justified by what the frontmatter omits — omission is not prohibition.**
 - `Write`, `NotebookEdit` — **what these two entries carry is the names of the two whole-file write
   primitives, and that is the whole of what they carry.** **This command creates no file

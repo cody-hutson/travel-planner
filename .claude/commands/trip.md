@@ -548,7 +548,12 @@ declining to advertise what this file does not implement.
 
 `status` declares `lifecycle: ANY` deliberately, rather than leaving that cell to its
 default. Orientation is precisely what an archived trip still needs, and on such a trip
-every other row of this file's table refuses on the `lifecycle` cell — so the index's third
+the rest of this file's table refuses on the `lifecycle` cell — seven of its eight rows read
+`ACTIVE` at this revision. That is conduct, not construction: **nothing grades this column.**
+The taxonomy guard reads the verb cell and the contract guard the depth cell, so a row appended
+later could carry `ANY` and no check would react. Stated as a count at a revision rather than as
+a property of the table, because the universal form is false the first time a slice appends a
+row — which is the failure this file's sibling names by name. So the index's third
 entry above is where the reopen path gets named, and naming it there is what makes that
 true rather than a claim resting on itself. A `status` that stopped resolving the moment a
 trip was archived would withhold that answer at the one moment the user most needs it.
