@@ -25,41 +25,55 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
 
-**The denials, and what each one establishes — which is narrower than "enforced".**
-`allowed-tools` is a turn-scoped pre-approval grant and enforces nothing. `disallowed-tools`
-**removes the named tools from the pool**, which is a real restriction and the only control this file
-holds over which tools a turn may call — but it is turn-scoped in the same way, and `ADR-007`'s
-Context names a **permission-settings deny rule** as what durable blocking would need, which this
-repo does not ship. **It is not the only control this file relies on**, and saying it was would be
-falsified further down this same file: § *The closing entry* and § *Deleting the trip's public repo*
-both rest on the push-time contract guard, and `temporary` and the hand-off both rest on the
-script's own scope check and typed confirmation. **So every denial below is read as what its entry
-names, never as a general property of the action that entry is about.**
+**The denials, and what each one establishes — which is narrower than "enforced", and narrower than
+anything here can verify.** `allowed-tools` is a turn-scoped pre-approval grant and enforces nothing.
+What `disallowed-tools` does is **honoured by the runtime, and asserted here rather than observed**:
+`ADR-007`'s Context records that it removes the named tools from the pool for the turn, while the
+contract workflow's own scope note records that every tool stays callable and that unlisted tools
+route through the usual permission settings. **Those two statements differ, and nothing in this
+repository settles them, because nothing in it reads a `disallowed-tools` line at all.** These
+entries are **declared, not consumed** — no file constructs, derives or checks anything from them,
+and the contract suite scopes runtime privilege out by name. `ADR-007` adds that durable blocking
+would need a permission-settings deny rule, which this repo does not ship.
+
+**Two consequences, and they govern every denial below.** Each is a claim about what an entry
+**names**, never about what it has been observed to do; and **no claim here can be repaired by
+pointing at an in-repo check, because there is none to point at.** These entries are still the
+strongest control this file has — their strength is simply not established here, and this file does
+not rely on them alone: § *The closing entry* and § *Deleting the trip's public repo* rest on the
+push-time contract guard, and `temporary` and the hand-off rest on the script's own scope check and
+typed confirmation.
 
 - **Every publish-script arm this command does not own is denied by name** — `publish`, `update`,
   `rotate`, `list` and its `status` alias. `ADR-007` §1 is **one authorization per function**, so the
   grant above is the `unpublish` arm rather than the script: a script-wide grant would authorize the
   whole dispatch table at once, which is the privilege union that ADR rejects. **The arms are denied
-  individually rather than described**, because a boundary carried in prose is asserted while a
-  `disallowed-tools` entry removes the named tool from the pool.
-- **What an entry names is a command pattern, and the path in it is part of the name — so the
-  spelling is load-bearing, and here is the residual.** All five denials, and the `unpublish` grant,
-  spell the script **repo-relative**. This file addresses repo paths in its two pre-execution blocks
-  in the **absolute** form, through `${CLAUDE_PROJECT_DIR}` — so both spellings of a repo path live
-  in this file, and for the script entries they are **not interchangeable**. For `Bash(ls:*)` and
-  `Bash(grep:*)` the path is only an argument and the entry names the binary, so the form does not
-  matter there; for the script entries **the path *is* the name**, and nothing in this repo
-  establishes that an entry naming one spelling reaches an invocation written in the other. **Every
-  invocation this file makes is written repo-relative, exactly as the entries spell it** — the
-  `temporary` invocation, `archive` step 2 and the hand-off all do, and a later slice must not depart
-  from it. **That pinning is a rule this file follows; the entries cover the spelling they name and
-  no more.** The same pattern-naming governs `allowed-tools`, so an invocation in the other spelling
-  would sit outside the **grant** as well — not thereby forbidden, since a tool left off that list
-  routes through the usual permission settings, but not pre-approved either.
-- `Bash(bash:*)`, `Bash(sh:*)` — denied so the two interpreters that would most obviously re-enter
-  the script under a different first token are removed from the pool. **What this pair establishes is
-  its two names and no more, and it is not what closes the arms** — the per-arm entries do that, and
-  each is listed. **The wrapper route is wider than the pair, and the remainder is a named residual.**
+  individually rather than described**, because a boundary carried in prose is addressed to a reader
+  while a `disallowed-tools` entry is addressed to the runtime — subject in full to the caveat above.
+- **What an entry carries is a name, and for the script entries the path sits inside that name — so
+  the spelling is load-bearing, and here is the residual.** All five denials, and the `unpublish`
+  grant, spell the script **repo-relative**. This file addresses repo paths in its two pre-execution
+  blocks in the **absolute** form, through `${CLAUDE_PROJECT_DIR}` — so both spellings of a repo path
+  live in this file. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
+  names the binary, so the form does not matter there; for the script entries the path is part of
+  what is named. **Whether the runtime's matching reaches a second spelling of the same path is not
+  established anywhere in this repository, and no check here can settle it, because nothing here
+  reads these entries.** The residual therefore rests on **the absence of any establishing
+  evidence** — a firmer basis than a matching rule this file would otherwise be asserting on its own
+  authority.
+- **What this file does about that is conduct, not coverage.** Every invocation it makes is written
+  repo-relative, exactly as the entries spell it — the `temporary` invocation, `archive` step 2 and
+  the hand-off all do, and a later slice must not depart from it. **That pinning is a rule this file
+  follows.** Deliberately **no second entry in the absolute spelling was added**: its matching
+  behaviour would be exactly as unestablished as the first one's, the spelling space has no
+  enumerable end, and an entry added on a guess would be this same defect wearing the opposite sign.
+  The same naming governs `allowed-tools`, so an invocation in the other spelling would sit outside
+  the **grant** as well — not thereby forbidden, since a tool left off that list routes through the
+  usual permission settings, but not pre-approved either.
+- `Bash(bash:*)`, `Bash(sh:*)` — denied because they are the two interpreters that would most
+  obviously re-enter the script under a different first token. **What this pair carries is its two
+  names and no more, and it is not what closes the arms** — the per-arm entries name those, and each
+  is listed. **The wrapper route is wider than the pair, and the remainder is a named residual.**
   An alias is expanded after the command text is matched, so a command-prefix entry never sees it;
   and a third interpreter, or `env`, `xargs`, `command`, or a generated command line whose first
   token is neither `bash` nor `sh`, is a name these two entries do not carry. **Standing rule 2
@@ -74,8 +88,8 @@ rest on the fixed invocation in each verb section and on the argument string nev
 The mechanical check that would grade them reads the command directory for publish-flag literals and
 does not exist at this revision; until it does, this residual is named rather than covered. **No
 prohibition in this file is justified by what the frontmatter omits — omission is not prohibition.**
-- `Write`, `NotebookEdit` — **what these two entries establish is that the two whole-file write
-  primitives are out of the pool, and that is all they establish.** **This command creates no file
+- `Write`, `NotebookEdit` — **what these two entries carry is the names of the two whole-file write
+  primitives, and that is the whole of what they carry.** **This command creates no file
   and no directory** and overwrites none: every path it touches must already exist, and a missing one
   is a stop, never a create. That conduct serves `ADR-007` §2 bound 5, whose class is **IRREVERSIBLE**
   because `trips/` is git-ignored and carries no history. **The entries do not close creation or
@@ -176,15 +190,16 @@ the verbs that existed when it was written.
 2. **Reaches the publish script only by its own path, spelled repo-relative exactly as the
    frontmatter entries spell it.** Never through `bash` or `sh`, never through a wrapper, an alias or
    a generated command line, and never through a second spelling of the script's own path.
-   `disallowed-tools` carries **two** members of that list — it removes `bash` and `sh` from the
-   pool. **The rest of this rule — the alias, the other interpreters, and the path spelling — is
-   followed, not enforced**, and the frontmatter section above names each as a residual rather than
-   covering it.
+   `disallowed-tools` **names two** members of that list, `bash` and `sh`, and what naming them
+   achieves is subject to the caveat in the frontmatter section above. **The rest of this rule — the
+   alias, the other interpreters, and the path spelling — is followed, not enforced**, and that
+   section names each as a residual rather than covering it.
 3. **Never publishes, and never re-publishes.** No verb here runs `publish`, `update`, `rotate` or
    `list` — nor `status`, which is `list` reached under a second name. **Each of those five arms is
    denied by name in `disallowed-tools`, in the repo-relative spelling, so for that spelling this
-   rule is carried by an entry rather than by prose alone.** The spelling residual named above is the
-   remainder of it. Where publishing is what the user wants, name `/trip-publish` and stop.
+   rule is written into an entry as well as into this clause** — with the frontmatter section's
+   caveat on what an entry achieves, and its spelling residual, both applying in full. Where
+   publishing is what the user wants, name `/trip-publish` and stop.
 4. **Never reads, writes, moves, prints or removes `trips/<slug>/.passphrase`**, and never renders
    its contents in any output, including a refusal. Reading it would put the secret into the session
    transcript, which is the failure the publish exclusions exist to avoid.
@@ -195,8 +210,8 @@ the verbs that existed when it was written.
    rewriting a file, reordering it, merging into a prior unit or deleting one is neither.
 6. **Creates nothing.** No file, no directory. Every path this command touches must already exist; a
    missing one is a stop that names the path and names the repair, and the repair is named rather
-   than run. **`Write` and `NotebookEdit` are denied, which removes those two primitives — it does
-   not establish that no create path exists.** `Bash(ls:*)`, `Bash(grep:*)` and `Bash(date:*)` are
+   than run. **`Write` and `NotebookEdit` are denied by name, which addresses those two primitives —
+   it does not establish that no create path exists.** `Bash(ls:*)`, `Bash(grep:*)` and `Bash(date:*)` are
    granted and sit outside every denial, and a redirection on any of the three would create a file.
    **So *creates nothing* is a rule this file follows** — held by each verb's fixed invocation set
    and by its own `**Reads:**` and *Never* lines, not by the denials. **That residual is named here
