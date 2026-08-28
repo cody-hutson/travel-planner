@@ -25,19 +25,46 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
 
-**The denials, and each is the enforced expression of a rule rather than a restatement of one.**
-`allowed-tools` is a turn-scoped pre-approval grant and enforces nothing; `disallowed-tools` is the
-only enforced control on this surface.
+**The denials, and what each one establishes — which is narrower than "enforced".**
+`allowed-tools` is a turn-scoped pre-approval grant and enforces nothing. `disallowed-tools`
+**removes the named tools from the pool**, which is a real restriction and the only control this file
+holds over which tools a turn may call — but it is turn-scoped in the same way, and `ADR-007`'s
+Context names a **permission-settings deny rule** as what durable blocking would need, which this
+repo does not ship. **It is not the only control this file relies on**, and saying it was would be
+falsified further down this same file: § *The closing entry* and § *Deleting the trip's public repo*
+both rest on the push-time contract guard, and `temporary` and the hand-off both rest on the
+script's own scope check and typed confirmation. **So every denial below is read as what its entry
+names, never as a general property of the action that entry is about.**
 
 - **Every publish-script arm this command does not own is denied by name** — `publish`, `update`,
   `rotate`, `list` and its `status` alias. `ADR-007` §1 is **one authorization per function**, so the
   grant above is the `unpublish` arm rather than the script: a script-wide grant would authorize the
   whole dispatch table at once, which is the privilege union that ADR rejects. **The arms are denied
-  individually rather than described**, because a boundary carried in prose is asserted and a
-  `disallowed-tools` entry is enforced.
-- `Bash(bash:*)`, `Bash(sh:*)` — denied so the per-arm denials above cannot be walked around by a
-  wrapper, an alias or a generated command line. **This denial is what closes the wrapper route; it
-  is not what closes the arms** — the per-arm entries do that, and each is listed.
+  individually rather than described**, because a boundary carried in prose is asserted while a
+  `disallowed-tools` entry removes the named tool from the pool.
+- **What an entry names is a command pattern, and the path in it is part of the name — so the
+  spelling is load-bearing, and here is the residual.** All five denials, and the `unpublish` grant,
+  spell the script **repo-relative**. This file addresses repo paths in its two pre-execution blocks
+  in the **absolute** form, through `${CLAUDE_PROJECT_DIR}` — so both spellings of a repo path live
+  in this file, and for the script entries they are **not interchangeable**. For `Bash(ls:*)` and
+  `Bash(grep:*)` the path is only an argument and the entry names the binary, so the form does not
+  matter there; for the script entries **the path *is* the name**, and nothing in this repo
+  establishes that an entry naming one spelling reaches an invocation written in the other. **Every
+  invocation this file makes is written repo-relative, exactly as the entries spell it** — the
+  `temporary` invocation, `archive` step 2 and the hand-off all do, and a later slice must not depart
+  from it. **That pinning is a rule this file follows; the entries cover the spelling they name and
+  no more.** The same pattern-naming governs `allowed-tools`, so an invocation in the other spelling
+  would sit outside the **grant** as well — not thereby forbidden, since a tool left off that list
+  routes through the usual permission settings, but not pre-approved either.
+- `Bash(bash:*)`, `Bash(sh:*)` — denied so the two interpreters that would most obviously re-enter
+  the script under a different first token are removed from the pool. **What this pair establishes is
+  its two names and no more, and it is not what closes the arms** — the per-arm entries do that, and
+  each is listed. **The wrapper route is wider than the pair, and the remainder is a named residual.**
+  An alias is expanded after the command text is matched, so a command-prefix entry never sees it;
+  and a third interpreter, or `env`, `xargs`, `command`, or a generated command line whose first
+  token is neither `bash` nor `sh`, is a name these two entries do not carry. **Standing rule 2
+  covers the remainder, and it covers it as a rule this file follows rather than as a property these
+  entries guarantee.**
 
 **What the frontmatter does *not* enforce, stated plainly rather than claimed.** `unpublish` is one
 arm and this command owns one **form** of it — the pages-only takedown. **A per-arm denial cannot
@@ -47,10 +74,13 @@ rest on the fixed invocation in each verb section and on the argument string nev
 The mechanical check that would grade them reads the command directory for publish-flag literals and
 does not exist at this revision; until it does, this residual is named rather than covered. **No
 prohibition in this file is justified by what the frontmatter omits — omission is not prohibition.**
-- `Write`, `NotebookEdit` — **this command creates no file and no directory.** Every path it touches
-  must already exist; a missing one is a stop, never a create. That is the enforced half of
-  `ADR-007` §2 bound 5, whose class is **IRREVERSIBLE** because `trips/` is git-ignored and carries
-  no history.
+- `Write`, `NotebookEdit` — **what these two entries establish is that the two whole-file write
+  primitives are out of the pool, and that is all they establish.** **This command creates no file
+  and no directory** and overwrites none: every path it touches must already exist, and a missing one
+  is a stop, never a create. That conduct serves `ADR-007` §2 bound 5, whose class is **IRREVERSIBLE**
+  because `trips/` is git-ignored and carries no history. **The entries do not close creation or
+  overwriting in general** — standing rule 6 names what is left over and why. **The bound is met by
+  rule; these two entries only narrow what the rule has to carry.**
 
 **`Read` and `Edit` are file-general and the frontmatter does not bound them, so the bound is a rule
 this file follows.** `Read` could reach `trips/<slug>/.passphrase`; `Edit` could reach a file
@@ -143,12 +173,18 @@ the verbs that existed when it was written.
    user-supplied token can become a script flag. **This rule is followed, not enforced** — a per-arm
    denial cannot express a flag inside an arm this file grants, and the frontmatter section above
    names that residual rather than covering it.
-2. **Reaches the publish script only by its own path.** Never through `bash` or `sh`, never through
-   a wrapper, an alias or a generated command line. `disallowed-tools` is the enforced half of this
-   rule.
+2. **Reaches the publish script only by its own path, spelled repo-relative exactly as the
+   frontmatter entries spell it.** Never through `bash` or `sh`, never through a wrapper, an alias or
+   a generated command line, and never through a second spelling of the script's own path.
+   `disallowed-tools` carries **two** members of that list — it removes `bash` and `sh` from the
+   pool. **The rest of this rule — the alias, the other interpreters, and the path spelling — is
+   followed, not enforced**, and the frontmatter section above names each as a residual rather than
+   covering it.
 3. **Never publishes, and never re-publishes.** No verb here runs `publish`, `update`, `rotate` or
-   `list`. **Each of those arms is denied by name in `disallowed-tools`, so this rule is enforced
-   rather than asserted.** Where publishing is what the user wants, name `/trip-publish` and stop.
+   `list` — nor `status`, which is `list` reached under a second name. **Each of those five arms is
+   denied by name in `disallowed-tools`, in the repo-relative spelling, so for that spelling this
+   rule is carried by an entry rather than by prose alone.** The spelling residual named above is the
+   remainder of it. Where publishing is what the user wants, name `/trip-publish` and stop.
 4. **Never reads, writes, moves, prints or removes `trips/<slug>/.passphrase`**, and never renders
    its contents in any output, including a refusal. Reading it would put the secret into the session
    transcript, which is the failure the publish exclusions exist to avoid.
@@ -159,7 +195,12 @@ the verbs that existed when it was written.
    rewriting a file, reordering it, merging into a prior unit or deleting one is neither.
 6. **Creates nothing.** No file, no directory. Every path this command touches must already exist; a
    missing one is a stop that names the path and names the repair, and the repair is named rather
-   than run. `Write` is denied at the file level, so no create path exists for any verb.
+   than run. **`Write` and `NotebookEdit` are denied, which removes those two primitives — it does
+   not establish that no create path exists.** `Bash(ls:*)`, `Bash(grep:*)` and `Bash(date:*)` are
+   granted and sit outside every denial, and a redirection on any of the three would create a file.
+   **So *creates nothing* is a rule this file follows** — held by each verb's fixed invocation set
+   and by its own `**Reads:**` and *Never* lines, not by the denials. **That residual is named here
+   rather than covered**, and it is why this is written as a rule at all.
 7. **Writes only under `trips/<slug>/`**, where `<slug>` is `trip.slug` exactly as `E1` spelled it.
    No path is ever built from the `--trip` value.
 8. **Never asserts a conclusion about trip state that no gate and no script observed.** § *The
@@ -298,8 +339,10 @@ observation, attributed to it**. Add nothing, and draw no conclusion beyond what
 **Defence 3 — the no-op line is the forbidden shape arriving from the script, and it is qualified
 rather than relayed.** `unpublish` resolves the repo through `.publish-slug`; on a name that no
 longer matches a live repo it reports that there is nothing to take down and **exits successfully** —
-the site stays up and the operator is told it is gone. `/trip-record .publish-slug` already records
-this consequence and names it as the shape the stop-message rule forbids.
+the site stays up and the operator is told it is gone. **That is a property of the script's own
+resolve-then-report path, and that path is what establishes it here.** `/trip-record .publish-slug`
+is where the name it resolves is set, and is named below as the remedy — not as the basis for this
+claim.
 
 So when the script takes its no-op branch, **do not report the trip as unpublished, and do not say
 nothing is published.** Say, in these terms:
@@ -320,14 +363,19 @@ That is what could not be established, and the remedy. It is not a report that t
 Takes the trip's site offline and leaves the local tree untouched.
 
 **Invokes:** `scripts/publish-trip-site.sh`, subcommand `unpublish`, on `trips/<slug>`, with the
-`--disable-pages-only` flag — and nothing else. **The subcommand and the flag are fixed here**, and
-the verb's argument string is **never forwarded**, so no user-supplied token can become a flag. That
-is what closes the `--yes` path at the point where a caller could otherwise open it.
+`--disable-pages-only` flag — and nothing else. The path is spelled **repo-relative**, exactly as the
+frontmatter entries spell it. **The subcommand and the flag are fixed here**, and the verb's argument
+string is **never forwarded**, so no user-supplied token can become a flag. That closes the
+**caller-supplied** route to `--yes`, and it closes it **by this file's own conduct** — the
+frontmatter cannot express a flag inside an arm it grants, which is the residual named above.
 
 **Writes: nothing.** No byte of the local tree. No marker, no log entry, no file, no directory. This
 is the verb's defining property and it is stated positively rather than inferred from an absent
-grant: the passphrase file is **not read, not written, not moved and not removed**, and the
-disable-only limb touches neither it nor `trips/<slug>/.publish`.
+grant: **this verb takes no `Edit`**, and the passphrase file is **not read, not written, not moved
+and not removed**. **The other half of the claim belongs to the script and is established there
+rather than here:** the disable-only limb returns before the one local removal `unpublish` performs,
+so it touches neither the passphrase file nor `trips/<slug>/.publish`. **The claim rests on that
+limb**, which is where a change to it would have to be caught.
 
 **No additional OAuth scope, and no gate is bypassed.** The disable-only limb returns **before** the
 `delete_repo` scope check and **before** the typed confirmation. Nothing is bypassed because nothing
@@ -498,8 +546,12 @@ never written, and a bracketed value is never written, because a bracketed value
 a placeholder and hand it to `ADR-007` §2 bound 6.
 
 **Placement.** Immediately below the trip's `# Trip Context — …` title line, separated by a blank
-line, above the first `---`. The anchor is **the file's first `#` heading**, which every
-`trip-context.md` carries because the template ships it and `/trip-new` fills it.
+line, above the first `---`. The anchor is **the file's first `#` heading**, which
+`templates/trip-context.template.md` carries as its own first line — so every `trip-context.md`
+scaffolded from that template has one. **That template is what establishes the anchor, and the claim
+is a property of it rather than a universal over the population:** a `trip-context.md` carrying no
+`#` heading has no anchor, and the insert then **stops and names the missing anchor**, rather than
+choosing another place or creating one.
 
 **Why there, and why it is not a sixth mode.**
 
@@ -528,9 +580,13 @@ contract's declared default, tested as its own case.
 `templates/trip-context.template.md` **must never ship a `Lifecycle:` placeholder.** The moment it
 does, `ADR-007` §2 bound 6 binds the field and **G4's default inverts from *absent ⇒ `ACTIVE`* to
 *absent ⇒ malformed***, which would make every trip scaffolded before this command existed read as a
-broken file. **This command touches no template**, and holds no grant it would need to: `Write` is
-denied, and the template lies outside `trips/<slug>/`, which standing rule 7 makes the only place any
-verb here writes.
+broken file. **This command touches no template — and that is a rule it follows, not something its
+frontmatter withholds.** `Write` is denied, but changing a file that already exists needs `Edit`, and
+**`Edit` is granted and file-general**: it is exactly the tool the disclaimed action would take, and
+no entry bounds where it may reach. What holds the template out is standing rule 7 — which makes
+`trips/<slug>/` the only place any verb here writes — together with this section and `archive`'s and
+`reopen`'s *Never* lines. **That is the named residual: `Edit`'s reach is bounded by rule, and
+nothing on this surface bounds it by control.**
 
 ## Deleting the trip's public repo — the operator hand-off
 
