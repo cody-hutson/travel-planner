@@ -9,8 +9,9 @@ disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*
 
 `/trip [verb] [--trip <slug>] [verb args...]`
 
-The verb is the one the user typed. Nothing in this file supplies a verb they did not
-type, and nothing in it reads the wording of the request to decide one.
+The verb is the one the user typed, or — on an empty argument string — the `status` default
+step 3 declares, which is the one verb this file supplies. Nothing in it reads the wording of
+the request to decide one.
 
 ## Trips in this repo
 
@@ -53,14 +54,18 @@ contract registers one for that disposition; nothing reads the column mechanical
 convention costs nothing while it waits, and any token naming `G6`'s decided disposition
 serves in its place.
 
-**The read ceiling, stated for this file.** Beyond the blocks above, **no verb reads
-`trip-context.md` in full, and no verb reads `trip-log.md`.** Nothing under
-`trips/<slug>/outputs/` is read by any verb of this file except the site build, which reads
-the plan artifacts `CLAUDE.md` → *How to build it* and `reference/site-layout-spec.md` § 9.1
-name as its authoritative sources. These are prohibitions on the file, not a permission list:
-what a verb does read is declared in that verb's own `**Reads:**` line, which is its whole
-read scope, and a read no section names is out of scope whether or not these prohibitions
-reach it.
+**The read ceiling, stated for this file.** Exactly two prohibitions hold file-general, and
+both are checkable against every `**Reads:**` line below: **no verb reads `trip-context.md`
+in full** — a verb that reads that file at all names the block it reads — and **no verb reads
+`trip-log.md`**, which is read only by agents a verb dispatches and is attributed to them
+there. **There is no third file-general prohibition, and in particular none over
+`trips/<slug>/outputs/`:** `check` takes an existence probe there and `site` reads its content
+sources, its status source and its own outgoing markup, each declared in that verb's own line.
+Stating one would put a second description of the read scope beside the `**Reads:**` lines,
+free to disagree with them — which is the whole reason the ceiling is this short. What a verb
+reads is declared in its own `**Reads:**` line, which is its whole read scope, and a read no
+section names is out of scope whether or not a file-general prohibition reaches it. The two
+above are stated because they bind verbs whose lines do not mention those files at all.
 
 Each pre-executed block above is a tool grant this file has to hold, and each is held for
 a use the table above names: the listing block for `Bash(ls:*)`, and the record block for
@@ -112,9 +117,11 @@ the legs that read it is the silent no-fire the carve-out exists to end.
 
 The rule is stated here once and **applied** rather than restated. A verb section names the
 value, the artifact whose production makes the transition observable, and the leg of its own
-chain that produces that artifact; the placement follows from the rule. A section that also
-wrote its placement down would be a second source able to drift from the rule that produced
-it, and the two clauses above are what make the placements differ — a chain whose remaining
+chain that produces that artifact; the placement follows from the rule. A section states that
+placement only as the conclusion of the derivation it just showed — a placement carrying its
+derivation cannot drift from the rule without the drift being visible in the same sentence,
+which a bare placement stated on its own could. The two clauses above are what make the
+placements differ — a chain whose remaining
 legs must run under the outgoing mode carries the write to its end, and a chain whose
 remaining legs branch on the incoming value takes it before the first of them.
 
@@ -165,8 +172,8 @@ the hub reads existing status and never regenerates it, so a human flip survives
 
 ## Selecting the verb
 
-A literal lookup. Every step below is lexical, and the last one has a terminal
-else-branch, which is what separates a lookup from a classification.
+A literal lookup. Every step below is lexical, and the matching step — step 4 — has a
+terminal else-branch, which is what separates a lookup from a classification.
 
 1. Take `$ARGUMENTS` as a literal string.
 2. Remove `--trip` together with the value that follows it, from wherever in the string it
@@ -187,7 +194,9 @@ Never infer the verb from the wording of the request, from the trip's mode, from
 files exist, or from anything other than the token step 3 produced.
 
 The recognition set and the set this file implements are read from different places and
-are not the same set. The recognition set is `CLAUDE.md`'s Step-1 `Command` column; the
+neither is derived from the other, so they are not guaranteed to coincide — they may agree
+exactly at any given revision, and that agreement is an observation rather than a
+guarantee. The recognition set is `CLAUDE.md`'s Step-1 `Command` column; the
 set this file implements is the requirement table above. Both are read live, so a verb that is
 recognised but not yet implemented is a fact this file reports rather than a fact it
 records, and neither set is written down here as a number.
@@ -239,8 +248,9 @@ interpret nothing, and assert no conclusion the gate did not observe.
 The listing of trips on an ambiguous population is one of these renders. It is the
 contract's own trip-population disposition, rendered — not a behaviour `status` owns. So
 are the create pointer on an empty population, and the refusal when a supplied `--trip`
-matched no member or matched more than one. Every command in this surface renders these
-identically, because they belong to the contract rather than to any verb.
+matched no member or matched more than one. These belong to the contract rather than to any
+verb, so `status` renders what the contract produced and adds nothing of its own. What a
+sibling command renders is that file's to state, not this one's.
 
 **`RESOLVED`** — render, in this order:
 
@@ -259,8 +269,11 @@ predicate the dispatch above uses. Read this file's own table — do **not** der
 index from `CLAUDE.md`'s Modes table and do **not** derive it from the agent roster. Those
 answer which agents run, not which verbs this command runs; joining them would produce an
 advisory list that can disagree with what the verbs actually do. Reading the same rows the
-dispatch reads is what makes it impossible for the index to advertise a verb that then
-refuses.
+dispatch reads is what keeps the index from advertising a verb the **table** would then
+refuse. It is not a guarantee of no refusal at all, and claiming one would be false: a verb
+the table admits can still stop inside its own section — `check` where no itinerary exists,
+`research` on an agent key that matches nothing. Those stops are the verb's own, declared in
+its own section, and they are not the index disagreeing with the table.
 
 Order:
 
@@ -318,18 +331,26 @@ preserve-first shape, not an exception to it.
 **The mode.** The value is `ITERATION`: § *Modes* describes it as an existing plan the user
 wants changes to, which is what a completed plan leaves behind. The artifact that makes the
 transition observable is `trips/<slug>/outputs/final-itinerary.md`, produced by the hub leg.
-Apply the placement rule: no leg of this chain branches on `ITERATION`, and the validator
-still to run must run under the outgoing mode — the full pass § *Modes* assigns it there,
-not the changed-days pass it would run under `ITERATION` — so advancing before it would
-re-mode the validator into a pass it is not making.
+Apply the placement rule: the `ITERATION` behaviours § *Modes* names — the hub's equity-aware
+disruption recovery and the validator's recovery-equity check — are gated on a **disruption
+recovery**, which this run is not, so no leg of this chain reaches one. It is not that the hub
+and the validator never branch on `ITERATION`; they do, and `replan`'s section places its
+write ahead of exactly those legs. And the validator still to run must run under the outgoing
+mode — the full pass § *Modes* assigns it there, not the changed-days pass it would run under
+`ITERATION` — so advancing before it would re-mode the validator into a pass it is not making.
 
 **Where it writes no mode.** In `IDEATION` § *Modes* runs the overview-level form: the spokes
-produce overview-level output, the hub compares options, the validator is skipped, and **no
-`final-itinerary.md` is produced**. Nothing this run produced makes `ITERATION` observable, so
-`plan` in `IDEATION` writes no mode and announces none — and says so, naming `/trip-record
-mode` as what records a transition whose evidence is a statement only the operator can make.
-`IDEATION` is a state this verb's own row admits, so that path is entered rather than
-described. The same test disposes of a run that halted before the hub leg.
+produce overview-level output, the hub compares options, and the validator is skipped.
+§ *Modes* says nothing about `final-itinerary.md` at that mode, and the roster names that file
+among the hub's outputs — so this section does **not** conclude from that silence that none is
+produced. It applies the conditional above literally instead: **where the hub leg of this run
+did not produce `trips/<slug>/outputs/final-itinerary.md`**, nothing this run produced makes
+`ITERATION` observable, so `plan` writes no mode and announces none — and says so, naming
+`/trip-record mode` as what records a transition whose evidence is a statement only the
+operator can make. Where the hub leg did produce one, the transition is observable and the
+write lands where the placement rule puts it. `IDEATION` is a state this verb's own row
+admits, so that path is entered rather than described, and the same test disposes of a run
+that halted before the hub leg.
 
 **`outputs/event-status.md`.** This verb reads it only through the agents it dispatches — the
 hub and the validator both read it — and the hub writes it, which is the hub's write under
@@ -467,19 +488,27 @@ from that spoke's own row in `CLAUDE.md`'s roster. It reads nothing else: not
 `trip-context.md`, whose mode and destination the record block already carries by value, and
 nothing under `trips/<slug>/outputs/` — the spoke reads its own accumulated output file and
 appending to it is the spoke's write, not this verb's. **Agent reads, attributed:** the spoke
-reads `trips/<slug>/trip-context.md`, `trips/<slug>/trip-log.md` and its own accumulated
-output file. **Dispatches** that one spoke, in the role its roster row states, writing exactly
-the file that row names.
+reads what **its own prompt** declares — at minimum `trips/<slug>/trip-context.md`,
+`trips/<slug>/trip-log.md` and its own accumulated output file, and for some spokes more:
+`agents/03-scheduling.md` also declares `outputs/traveler-model.md` in every mode and, in
+`ITERATION` and `RESEQUENCING`, `outputs/activities-list.md`, `outputs/food-list.md` and
+`outputs/event-status.md`. That list is the spoke's, not this verb's, so it is cited rather
+than closed here — a spoke's reads are read from its prompt at dispatch time.
+**Dispatches** that one spoke, in the role its roster row states, writing exactly the file
+that row names.
 
 **The agent key.** Positional — the first token of the argument string, ASCII-case-folded —
-matched by **exact string equality** against a set derived live from `CLAUDE.md`'s agent
-roster: **the rows whose `Output File` cell names exactly one path under `outputs/`, whose
-file § *Output Versioning* leaves in the accumulating default — naming it in none of that
-section's replaced, rebuilt or persist-mutable exceptions — and whose `When to dispatch` cell
-does not confine the row to a state this verb's own row excludes.** That set is **not written
-into this file and not counted**, and it is what keeps a spoke a later release adds from
-needing an edit here. Everything after the key is the topic, passed to the spoke and
-interpreted by it.
+matched by **exact string equality** against a set of **tokens** derived live from
+`CLAUDE.md`'s agent roster. The derivation has two stages, and they must not be collapsed: a
+row filter, then a cell that supplies the token. **Filter to the rows whose `Output File` cell
+names exactly one path under `outputs/`, whose file § *Output Versioning* leaves in the
+accumulating default — naming it in none of that section's replaced, rebuilt or
+persist-mutable exceptions — and whose `When to dispatch` cell does not confine the row to a
+state this verb's own row excludes. The token of an admitted row is its `Agent` cell,
+ASCII-case-folded.** The filter yields rows; the `Agent` cell yields the comparand — **a typed
+key is never compared against a row.** That set is **not written into this file and not
+counted**, and it is what keeps a spoke a later release adds from needing an edit here.
+Everything after the key is the topic, passed to the spoke and interpreted by it.
 
 A key matching nothing is **this verb's own refusal**: render the token verbatim, render the
 set read live from the roster, and stop. **No near-match, no *"did you mean"*, no fallback** —
@@ -489,10 +518,15 @@ the reasons § *When the token is not a verb of this command* gives hold identic
 dated section; it rewrites nothing, reorders nothing, and deletes no prior research. Research
 that should change *what is placed* is `/trip replan`'s — name it and **do not run it**.
 
-**`outputs/event-status.md`.** Not read, by this verb or by the spoke it dispatches: a spoke
-appends to its own output file and touches no status. Nothing this verb dispatches writes it,
-and this verb writes no byte of it. This chain does not reach the hub, so the per-event status
-bound does not quantify over it.
+**`outputs/event-status.md`.** **This verb reads no byte of it and writes none.** Whether the
+**spoke** reads it is that spoke's own prompt to say, and one of them does:
+`agents/03-scheduling.md` declares a read of it in `ITERATION` and `RESEQUENCING` — both
+states this verb's own row admits — to hold `locked` and `firmed` events fixed while it
+re-times. That read is the
+spoke's under *ownership follows the writer, not the caller*, and it is a read: no spoke this
+key admits names `event-status.md` in its roster `Output File` cell, so **nothing this verb
+dispatches writes it.** This chain does not reach the hub, so the per-event status bound does
+not quantify over it.
 
 **It writes no byte of `trip-context.md`.** The carve-out does not admit this verb.
 
@@ -505,20 +539,30 @@ declared. It reads no content under that directory itself, and it reads no block
 `trip-context.md`: the audit is the validator's and the constraint set is the validator's read.
 **Agent reads, attributed:** the validator reads the current itinerary, the constraint set in
 `trips/<slug>/trip-context.md`, and `trips/<slug>/outputs/event-status.md`, which it never
-writes. **Dispatches** the validator alone, in the role its roster row states, **and the
-dispatch names no output path.**
+writes. **Dispatches** the validator alone, in the role its roster row states. **The dispatch
+names no output path and instructs the validator, in terms, to write neither of the two files
+its own prompt declares** — `outputs/validation-report.md` and `outputs/satisfaction-metrics.md`
+— **and to return its findings in the response instead.**
 
-**No output path, on purpose.** § Step 1 states this audit *"reports findings. No spokes, no
-hub, no edits."* So the validator produces no report file on this verb and its findings return
-to the response. A `check` that wrote `outputs/validation-report.md` would be replacing an
-existing derived artifact and would owe the preserve-or-announce step bound 5 requires; a
-`check` that writes nothing owes none of it, and that is why the bound is not engaged rather
-than satisfied.
+**No output path, on purpose — and the dispatch has to say so.** § Step 1 states this audit
+*"reports findings. No spokes, no hub, no edits."* `agents/06-validator.md` declares its writes
+**unconditionally**: `outputs/validation-report.md` under *Output Format*, and
+`outputs/satisfaction-metrics.md` — its own sections, read-merge-written — under *Input*.
+Neither declaration is gated on a mode or a caller. **Naming no output path therefore
+suppresses nothing**: an omission is not an instruction, and the agent's prompt is what the
+agent follows. The suppression is an explicit instruction this verb places on the dispatch and
+states in its output. A `check` that wrote `outputs/validation-report.md` would be replacing
+an existing derived artifact and would owe the preserve-or-announce step bound 5 requires; a
+`check` whose dispatch suppresses both writes owes none of it, and that is why the bound is
+not engaged rather than satisfied.
 
-**The observable post-condition.** After `check` on a state its own row admits, **no file
-under `trips/<slug>/` differs.** That is a diff, not a reading, and it is what makes this
-verb gradeable by running it rather than by reading this section for the words *writes
-nothing*.
+**The observable post-condition, and what establishes it.** After `check` on a state its own
+row admits, **no file under `trips/<slug>/` should differ** — a diff, not a reading, which is
+what makes this verb gradeable by running it rather than by reading this section for the words
+*writes nothing*. What establishes it is the suppression instruction above, **followed**:
+nothing in the frontmatter and nothing in the dispatch mechanism enforces it, and the two
+files the validator's prompt declares are precisely what a failed suppression leaves behind.
+A diff showing either of them is this verb's defect and the first place to look.
 
 **Frontmatter does not enforce this, and saying it did would be false.** `disallowed-tools` is
 per file, and this file holds `Write` and `Edit` for other verbs. `ADR-007` § *Context* is explicit on
@@ -531,8 +575,8 @@ instruction.
 **Why the row reads `mode: any`.** It admits `UNSET` deliberately. The audit is against the
 itinerary and the constraint set, neither of which is mode-derived. The validator behaviours
 § *Modes* gates to a mode — the recovery-equity check, and the full pass on all days after a
-resequence — simply do not fire outside it, which is correct rather than a gap. This verb
-writes nothing, so admitting the non-nominal state costs nothing.
+resequence — simply do not fire outside it, which is correct rather than a gap. This verb is
+required to leave the trip tree unchanged, so admitting the non-nominal state costs nothing.
 
 **Where there is nothing to audit.** Where the existence probe finds no itinerary — which is
 what `IDEATION` leaves behind, a state this row admits — say so, name `/trip plan`, and stop.
@@ -606,14 +650,20 @@ to a rendered component or to a **named** exclusion. A dropped element is a defe
 site scaffolding with no plan source is not. Where the check does not close, say which element
 did not resolve and do not present the site as current.
 
-**It never publishes.** The standing clause binds this verb: the publish script is unreachable
-from here, directly or through any wrapper, and the wildcard denial on it stays on this file
-permanently. Where publishing is what the user wants, name `/trip-publish` and stop.
+**It never publishes.** The standing clause binds this verb, and it binds it **as a rule this
+verb follows**. `disallowed-tools` narrows the route — it names the script path, `bash` and
+`sh` — but it does not close it: `ADR-007` § *Context* is explicit that `disallowed-tools` is
+turn-scoped and that **durable blocking needs a permission-settings deny rule, a different
+artifact this repo does not ship**, and that a tool left off `allowed-tools` is not thereby
+forbidden. So nothing here is unreachable by construction, and saying it was would be the same
+false move `check`'s section refuses to make about its own frontmatter. It is unreached because
+the rule says so. Where publishing is what the user wants, name `/trip-publish` and stop.
 
 **`outputs/event-status.md`.** **Read** — see the read line above. **Never written**, by this
-verb or by anything it dispatches, which is nothing: the site renders `outputs/` and writes
-none of it. This chain does not reach the hub, so the per-event status bound does not quantify
-over it.
+verb or by anything it dispatches, which is nothing. This verb's one write under `outputs/` is
+its own `<destination>-travel-site.html`; every other artifact there it reads and does not
+write, this file among them. This chain does not reach the hub, so the per-event status bound
+does not quantify over it.
 
 **It writes no byte of `trip-context.md`.** The carve-out does not admit this verb.
 
