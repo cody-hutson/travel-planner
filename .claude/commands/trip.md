@@ -633,8 +633,11 @@ system, the booking indicators and the § 9 round-trip rules; the itinerary sour
 § *Site References* table names, read as the quality bar rather than as templates;
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
-it is changed, because that read is what preserves design already approved and what makes the
-no-regenerate rule below checkable rather than merely asserted. It does not read
+it is changed, because that read is what preserves design already approved — within this run it
+is the only copy of the outgoing markup there will be, the trip tree being git-ignored and
+carrying no history. It does **not** make the no-regenerate rule below checkable: after the
+write there is nothing left to diff the result against, so that rule stands as one this verb
+follows, not one an inspection of the tree can settle afterwards. It does not read
 `trips/<slug>/trip-log.md`: the log carries the reasoning behind choices, and the site renders
 what was chosen. **Dispatches no agent** — the site is authored directly, which is why this
 verb reaches `Write` for its own output rather than for an agent's.
