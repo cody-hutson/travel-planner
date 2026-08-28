@@ -837,7 +837,13 @@ coverage_check() {
   done
 
   # --- K3, second limb: verbless and verbed are mutually exclusive per command ---
-  local c nvl nvb j
+  # The same pass derives what the RETIRED keying would have emitted on this data. The
+  # re-key from the command to the pair is thereby DEMONSTRATED on live rows rather than
+  # asserted: the command-keyed comparator's collision count must strictly exceed the
+  # pair-keyed one, and if the two ever converge the arm that reads this reports itself
+  # as no longer differential rather than as passing. The differential is a property of
+  # the DATA, not of the key rule, so it can drain away with the rule untouched.
+  local c nvl nvb j cmdkeyed=0
   local -a SEENC=()
   for (( i=0; i<${#AKC[@]}; i++ )); do
     c="${AKC[$i]}"
@@ -848,6 +854,7 @@ coverage_check() {
       [ "${AKC[$j]}" = "$c" ] || continue
       if [ "${AKV[$j]}" = '-' ]; then nvl=$((nvl+1)); else nvb=$((nvb+1)); fi
     done
+    [ $((nvl+nvb)) -gt 1 ] && cmdkeyed=$(( cmdkeyed + nvl + nvb - 1 ))
     if [ "$nvl" -gt 0 ] && [ "$nvb" -gt 0 ]; then
       printf 'FINDING K3 EXCLUSIVITY — %s carries both a verbless and a verbed ADDRESSED cell\n' "$c"; rc=1
     fi
@@ -858,6 +865,7 @@ coverage_check() {
 
   printf 'COUNT ADDRCELLS %d\n' "${#AK[@]}"
   printf 'COUNT DBLCOVER %d\n' "$dbl"
+  printf 'COUNT CMDKEYED %d\n' "$cmdkeyed"
   return "$rc"
 }
 
@@ -1683,6 +1691,37 @@ elif [ "$D2_TRIM" -eq "$D2_COL0" ] && [ "$D2_COL0" -gt 0 ]; then
   PASS "G-D2: NO LONGER DIFFERENTIAL — both matchers see ${D2_COL0}. The indented exemplars are gone; this arm no longer establishes the column-0 rule and is reported as such rather than as passing. The rule stands on its own reasoning"
 else
   FAIL "G-D2: the column-0 matcher sees ${D2_COL0} read declarations against the trim-first matcher's ${D2_TRIM} — the column-0 matcher cannot see MORE, so one of the two is broken"
+fi
+
+# ── the re-key differential. K3 is keyed on the PAIR; the retired keying was on the
+# COMMAND. Running both comparators over the live ADDRESSED set is what demonstrates the
+# re-key on real rows instead of asserting it.
+D3_CMD="$(getcount "$COV_OUT" CMDKEYED)"; D3_PAIR="$(getcount "$COV_OUT" DBLCOVER)"
+if [ "${D3_CMD:-0}" -gt "${D3_PAIR:-0}" ]; then
+  PASS "G-D3: LIVE DIFFERENTIAL — over the live ADDRESSED set the COMMAND-keyed comparator emits ${D3_CMD} collisions where the PAIR-keyed one emits ${D3_PAIR:-0}. The re-key is demonstrated on real rows, not claimed"
+elif [ "${D3_CMD:-0}" -eq "${D3_PAIR:-0}" ]; then
+  PASS "G-D3: NO LONGER DIFFERENTIAL — both comparators emit ${D3_CMD:-0}. Every command now carries at most one ADDRESSED cell, so this arm no longer establishes the re-key and is reported as such rather than as passing. The differential is a property of the DATA, not of the key rule, which is untouched"
+else
+  FAIL "G-D3: the command-keyed comparator emits ${D3_CMD:-0} against the pair-keyed ${D3_PAIR:-0} — it cannot emit FEWER, so one of the two is broken"
+fi
+
+# ── the heading-split differential. The section is matched on the heading's FIRST token;
+# the whole-heading matcher runs in the same pass and its result must be a SUBSET. A
+# heading it resolves that the split misses is a hard failure (V6); the differential
+# below is what shows the split is doing work rather than agreeing by accident.
+D4_FT=0; D4_WH=0
+for gf in "$CDIR"/*.md; do
+  [ -e "$gf" ] || continue
+  gb="$(basename "$gf" .md)"
+  gft="$(getcount "$RECS" "FT_$gb")"; gwh="$(getcount "$RECS" "WH_$gb")"
+  D4_FT=$(( D4_FT + ${gft:-0} )); D4_WH=$(( D4_WH + ${gwh:-0} ))
+done
+if [ "$D4_FT" -gt "$D4_WH" ]; then
+  PASS "G-D4: LIVE DIFFERENTIAL — first-token matching resolves ${D4_FT} verb sections where whole-heading matching resolves ${D4_WH}. The $(( D4_FT - D4_WH )) it would lose are argument-signature headings; a whole-heading join under-counts the verb population and every direction of K over it reads a smaller surface"
+elif [ "$D4_FT" -eq "$D4_WH" ] && [ "$D4_FT" -gt 0 ]; then
+  PASS "G-D4: NO LONGER DIFFERENTIAL — both matchers resolve ${D4_FT}. No heading carries an argument signature, so this arm no longer establishes the split and is reported as such rather than as passing. The subset assertion still runs and still fails on a lost member"
+else
+  FAIL "G-D4: first-token matching resolves ${D4_FT} sections against whole-heading's ${D4_WH} — the split cannot resolve FEWER, so one of the two is broken"
 fi
 
 # ── the negative arms. One per emittable id; group Y asserts the mapping is total.
