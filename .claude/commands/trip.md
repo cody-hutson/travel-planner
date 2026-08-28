@@ -27,6 +27,7 @@ the request to decide one.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
@@ -38,27 +39,41 @@ population-role: RESOLVE
 | check | ACTIVE | any | DECIDED | G7 |
 | ideas | ACTIVE | IDEATION | UNDECIDED | G7 |
 | site | ACTIVE | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G8 |
-```
 
-The block above is this file's contract declaration. The requirement table sits **inside**
-it because the fence the contract publishes lists that table as one of the block's own
-fields, so the table-inside form is the rendering the canonical states. The cost is that
-the table does not render as markdown, and it is accepted: this is a declaration read by a
-model and by a parser, not a table read by a browser. The info string names the block, so
-it can be located by the same primitive that locates the canonical.
+The fence above and the requirement table beside it are together this file's contract
+declaration: the fence carries the citation line, `contract-depth` and `population-role`,
+and the table is the fourth field that declaration carries. **The table sits outside the
+fence so that it renders as a markdown table.** The contract's worked example names that
+field on a line that is entirely a placeholder — it describes the field rather than
+rendering it — so the example fixes this block's field set and does not settle where the
+table is drawn. The choice between the two renderings is this file's to make, and it is
+made for the reader: rows a browser renders as a table cost nothing and read better than
+the same rows as literal text.
 
-**This file carried a bare fence with the table outside it until this revision.** No check
-observed the difference: `scripts/test-trip-resolution-contract.sh` matches the fence tag
-against `CLAUDE.md` alone, and reads every consumer's citation line, `contract-depth`,
-`population-role` and depth cells by a whole-file line scan that is indifferent to fences.
-The correction is therefore editorial, and it is recorded here rather than left for the
-next reader to rediscover as a difference with no stated reason.
+**Whether the table sits inside or outside the fence is not a property the resolution
+contract's checker can see, and that was verified from its source rather than assumed.**
+`scripts/test-trip-resolution-contract.sh` opens a fence by its info string at exactly one
+pin, and that pin reads `CLAUDE.md`. Every assertion it makes about a consumer — the
+citation line, `contract-depth`, `population-role`, and the depth cells it reads at
+pipe-field five — is a whole-file line scan carrying no fence state at all, so it reads the
+rows above exactly as it read them when they sat inside the fence. **A check that located
+this file's declared verb set by opening this fence would see the difference.** A locator
+wanting an anchor that survives the rendering should take the requirement table's own
+header row, which is frozen below and does not move with it.
 
 **Frozen.** The citation line, byte-for-byte. `contract-depth: G8` as a **bare** token on
 its own line — a code-span rendering of that line is graded as an *absent* declaration, so
 the tolerance for a code span belongs to a depth **cell** and never to this line.
 `population-role: RESOLVE`. The fence tag. The table's five columns, their order, and
 their header row.
+
+**Five columns, and a sixth is never added — the freeze has teeth rather than only a
+rule.** The checker reads a verb row's depth at pipe-field five. A sixth column inserted
+anywhere in this table moves every depth out of that field; no row then carries a depth the
+checker recognises, and it reports this file as carrying **no per-verb requirement table at
+all** — a finding that names the wrong defect, on every push, in red. So a widening of this
+table fails loudly and immediately instead of quietly changing what a verb is allowed to
+do, which is the property the freeze is for.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
 have already run, and their output is the whole of the trip state this file **resolves
@@ -190,6 +205,137 @@ from which events would be convenient to move. `outputs/event-status.md` is pers
 the hub reads existing status and never regenerates it, so a human flip survives the pass.
 **No verb of this file writes that file itself.**
 
+**Derived-state freshness — this file's relations, and which verbs observe them.** The
+contract's last gate is evaluated **after** resolution, never changes `trip.resolution`, and
+no gate may be added that blocks on it. Which relations a consumer evaluates is that
+consumer's own declaration; the two below are this file's.
+
+**A verb takes a freshness observation only where its own row's depth cell reads the deepest
+gate this file's table declares.** That is the depth cell's stated meaning — the deepest gate
+this file runs — applied per verb, and it makes the set of observing verbs a **derivation
+from** the table rather than a second list beside it that someone has to keep in step.
+Raising a row to that depth admits the verb; lowering it removes the verb; the two cannot
+drift apart because there are not two of them. A verb below that depth does not run this
+gate, takes no observation, and its `**Reads:**` line says nothing about one. The observation
+is **not** lifted to ladder time for the whole file: taken on every invocation regardless of
+whether the verb reports it, it would be exactly the unscoped preload on every invocation
+that `ADR-007` §2 bound 1 exists to remove.
+
+**Every observing verb either renders the list or announces into it, and its own section says
+which.** A verb that renders says so; a verb that announces reports the entries its own run
+changed and **names where the full list is reported** instead of rendering a second copy. The
+property that matters is that no two verbs both render, and it is stated by each section
+about itself — so it is checked by reading the sections, not by trusting a tally kept
+somewhere else that the sections could drift away from.
+
+**The observation is of ORDER, never of time.** One listing per relation, newest-first, over
+that relation's operands — `Bash(ls:*)` with `-1t`, which is the grant the listing block above
+already holds and a second named use of it rather than a widening. The verdict is whether the
+derived side is the **first line** of that listing. `scripts/publish-trip-site.sh` resolves a
+trip's site by exactly this listing, so this report and that publish resolve the same build
+rather than two builds free to differ. **No epoch is read and no duration is computed**, and
+that is a defect avoided rather than a preference: the script records that the two `stat`
+dialects do not merely differ but **collide**, that the collision yielded a non-comparable
+epoch, and that the comparison **errored rather than fired**. An order has no dialect. It also
+has no threshold — no *older than N* rule can be written on top of an order, because an order
+is not a duration. What order costs, stated here rather than discovered later: mtime
+granularity is one second and a listing cannot tell a tie from a lead, so two operands written
+inside the same second may order either way. That is tolerable **because the output is a
+report** — the next observation corrects it and nothing waits on it. It is the first place
+where report-only is a property this file depends on rather than a restriction it accepts.
+
+**The verdicts are `BEHIND`, `CURRENT` and `UNDETERMINED`**, compared by **exact token
+equality, never by substring**. `UNDETERMINED` is not `UNDECIDED`: the second is the value the
+destination gate yields on a placeholder and is an admission value this file's own requirement
+table reads, while the first says a measurement could not be made. No verdict token is a
+member of any vocabulary a gate admits from — not the lifecycle values, not the modes, not the
+destination dispositions, not the gate dispositions, not the resolution values, not the
+population roles, not the depth tokens, not the per-event statuses — so a verdict can never be
+read as something a row admits.
+
+| relation | the derived side | the source side, by rule | when an operand is not observable |
+|---|---|---|---|
+| `itinerary-to-build` | the newest `trips/<slug>/outputs/*-travel-site.html` | the trip-scoped paths `site`'s own `**Reads:**` line declares as inputs to the build, read live from that line | `UNDETERMINED`, naming the operand |
+| `research-to-placement` | `trips/<slug>/outputs/final-itinerary.md` | the accumulating spoke output files `research`'s agent key already derives, read live from that derivation | `UNDETERMINED`, naming the operand |
+
+**Both source sides are rules rather than lists, which is what keeps them from going stale.**
+A later slice giving `site` a new build input adds it to `site`'s own `**Reads:**` line — which
+this file's read-declaration discipline already requires of it — and the first relation follows
+with no edit here. A spoke a later release adds is admitted by `research`'s derivation and the
+second follows the same way. Neither source side is written out here, and neither is counted.
+
+**Four columns, and this table never gains a fifth.** The requirement table's fifth column is
+`depth`, and the gate that decides whether a verb runs reads it. This table has no fifth
+column and in particular **no disposition column**: there is nowhere in it for a verdict to be
+turned into a `RUN`, a `REDIRECT` or a `REFUSE`, and making somewhere is the edit this rule
+forbids. The four-column shape is self-guarding as well as declared — a fifth cell here would
+sit exactly where the checker reads a verb row's depth, which is how a table that is not a
+verb table starts being counted as one.
+
+**What `itinerary-to-build` cannot observe** — listed, because a detector that does not say
+what it cannot see invites the reader to assume it sees everything.
+
+- **Materiality.** A whitespace fix to an input and a rewritten day are the same observation.
+  The report **names the leading source** so the reader can judge; the detector never judges.
+- **The reverse direction.** A hand edit to the site moves the build's mtime, so the relation
+  reads `CURRENT` while the site now says something the plan does not. It is
+  **one-directional by construction.** What catches the reverse is a content-level check —
+  `site`'s own round-trip completeness pass — and that runs only when `site` runs.
+- **Which element diverged.** File granularity, not element granularity. The round-trip check
+  answers that question; this does not.
+- **A build that was never made.** An absent operand yields `UNDETERMINED`, and the render
+  says no site has been built. It is **never `BEHIND`**: *never built* and *built and behind*
+  are different conditions with different remedies, and giving them one branch is the collapse
+  `ADR-007` §2 bound 6 forbids — the bound's own words are that absence is a different
+  condition and *is never the same branch*.
+- **Anything about publication.** The relation stops at the local build.
+- **Which build is the published one.** Two builds can coexist after a destination rename. The
+  rule takes the newest, which is the member the publish script takes — so where the older one
+  is deployed, this reports on the other build, and the report and the publish at least agree
+  about which build they mean.
+
+**What `research-to-placement` cannot observe.**
+
+- **Whether the appended research is worth placing.** An append recording *nothing new found*
+  reads the same as an append carrying eight venues.
+- **Which append is unplaced.** File granularity again: the file accumulates dated sections and
+  a listing does not see inside them.
+- **A considered-and-rejected append.** Here the relation clears **correctly** by construction —
+  the itinerary is replaced on synthesis, so a pass that read the research and deliberately
+  placed none of it still moves the itinerary to newest.
+- **A clearance for the wrong reason.** Any write moving the itinerary's mtime clears the
+  relation, a hand edit included. Declared rather than defended.
+- **Anything before the first synthesis.** No itinerary yields `UNDETERMINED` for the **whole
+  relation**, not `BEHIND` for every spoke — which is what keeps it quiet on a trip nobody has
+  planned yet instead of reporting the entire roster as unplaced. Bound 6 again, and for the
+  same reason.
+- **A spoke output that is a gate result rather than research.** A stub written to record that
+  a gate found nobody holding a desire is newer than the itinerary and reads as unplaced
+  research.
+
+**No verb of this file branches on a freshness verdict, and none adds a gate that blocks on
+one.** This is the file-scope form of the report-only rule the contract's last gate states, and
+it sits in the standing clause because it has to bind verbs that do not exist yet. Rendering
+**by case** is not branching: a verdict may choose which sentence is printed, and may not
+choose whether a verb runs, what it dispatches, what it writes, or where it writes. No verdict
+reaches a stop, a refusal, a redirect or a write — not as a condition, not as a value
+interpolated into a path, and not as the reason given for one.
+
+**Why blocking is not merely unused here, with the weak part named too.** The gate is evaluated
+after resolution, so every disposition that decides whether a verb runs has already been
+produced, from evidence a verdict plays no part in — there is no ordering in which a verdict
+reaches one. Making such an ordering would mean rearranging the ladder, and the ladder is
+stated in exactly one place that no command file restates or amends. The declaration above has
+no field a disposition could occupy and never gains one. And every path either relation
+observes lives under `trips/<slug>/`, which is git-ignored but for its one tracked signpost —
+so **a checkout contains no operand**, and a freshness gate cannot be built in the place this
+repo makes checks authoritative, there being nothing there for it to fail on. What none of that
+reaches is the sentence *"where the build is behind, stop"* written into a verb section by a
+later author. The rule above forbids it in prose, and prose is what this file has until a
+verb-section parser asserts that no command file puts a verdict token in a conditional yielding
+a stop, a refusal or a redirect. That assertion is named here as the residual — not claimed as
+already made.
+
 ## Selecting the verb
 
 A literal lookup. Every step below is lexical, and the matching step — step 4 — has a
@@ -256,17 +402,22 @@ state is not why, and naming it would be a false reason.
 
 ## status
 
-**Reads:** nothing beyond the pre-executed blocks above — this verb observes no path at
-verb time, which is the whole of this line rather than an omission from it. It takes no
-probe of its own, and a probe would be a read: under the definition the rest of this file
-uses, an existence probe on a path is a filesystem observation and is declared here, so a
-verb that takes none says that instead of saying nothing. It does not read
+**Reads:** the pre-executed blocks above, and — for the freshness report alone — one
+newest-first listing per relation this file declares, over that relation's operands under
+`trips/<slug>/outputs/`, taken at verb time with `Bash(ls:*)`. That listing is a filesystem
+observation and is therefore declared here: under the definition the rest of this file uses,
+an observation of a path is a read, so a verb that takes one says so rather than saying
+nothing. **It is the only path observation this verb takes, it observes order and never
+content, and it feeds the freshness report and nothing else.** In particular the **verb index
+takes none**: the index is evaluated against the resolved record and this file's own
+requirement table, never against which artifacts exist, so a probe taken on its behalf would
+have it report a state it does not claim to report. That prohibition is the index's, and it is
+scoped to the index by the reason that gives it — a scope this line states rather than leaving
+to be inferred from a wider silence. It does not read
 `trips/<slug>/trip-context.md` — the lifecycle, the mode and the destination it renders are
 carried **by value** by the record block above, and a read here would give the render a
-second source of fields the ladder has already resolved, free to disagree with it. It
-reads nothing under `trips/<slug>/outputs/`, not even a probe on a path there: the index is
-evaluated against the resolved record and this file's own table, never against which
-artifacts exist, so a probe would have it report a state it does not claim to report. It
+second source of fields the ladder has already resolved, free to disagree with it. It reads
+no **content** under `trips/<slug>/outputs/` and opens no artifact there. It
 does not read `agents/<name>.md`, having no agent to supply a prompt to.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
 requirement table are taken from what is already in context — `CLAUDE.md` is auto-loaded,
@@ -297,9 +448,18 @@ sibling command renders is that file's to state, not this one's.
 2. `trip.lifecycle`.
 3. `trip.mode`, with one line on what that mode covers.
 4. The verb index, below.
+5. The freshness report, below the index.
 
-`trip.freshness` is empty at this revision, so render nothing from it. When it carries
-entries, `status` is where they are reported.
+`status` is where `trip.freshness` is reported, and it renders the **whole** list; the verbs
+that announce into it report only what their own run changed. The report comes **last**, for a
+reason rather than by habit: everything above it is evaluated against the resolved record and
+this file's own table, both already in context, while the freshness report is the one part
+derived from observing the filesystem — and folding an observation-derived list into the
+ordered render above would put two evidence bases in one list. Placing it last also makes
+graceful degradation structural instead of a rule someone has to remember. **Where an
+observation cannot be taken, the report says so and everything above it is unaffected:** a
+failed observation costs the freshness report and nothing else, and never turns a `RESOLVED`
+render into a stop.
 
 ### The verb index
 
@@ -335,6 +495,37 @@ declining to advertise what this file does not implement.
 default. Orientation is precisely what an archived trip still needs — it is where the
 reopen path gets named — and a `status` that stopped resolving the moment a trip was
 archived would withhold the answer at the one moment the user most needs it.
+
+### The freshness report
+
+One line per relation this file declares, each naming the relation and its verdict:
+
+- **`CURRENT`** — the derived side is the newest of that relation's operands.
+- **`BEHIND`** — it is not, and the line **names the leading source**: the operand that came
+  out newest. The detector cannot judge whether the difference matters and does not try. The
+  reader can, and naming the operand is what lets them.
+- **`UNDETERMINED`** — an operand could not be observed, and the line **names which one**.
+  This is its own verdict and is never reported as `BEHIND`: an artifact never produced and
+  one that exists but trails its inputs are different conditions with different remedies.
+
+Render **every** declared relation, the ones reading `CURRENT` included. A report printing
+only its complaints would leave the reader unable to tell a relation that came out clean from
+one that was never evaluated, which is the same silence this file refuses elsewhere.
+
+**State the boundary of what this covers, in the report itself.** `trip.freshness` is a
+property of **the resolved trip's own artifacts**. It carries no publication state and asserts
+nothing about whether anything is published, or about whether what is published matches what
+is here. That is not politeness. The contract's stop-message rule forbids asserting a
+conclusion the gate did not observe, and a freshness report reading clean while a months-old
+build sits deployed is that same shape with the sign flipped — the reader takes *nothing is
+behind* for *nothing is out of date anywhere*, which nothing here established. These relations
+reach the local build and stop; whether a published site matches it is answered where
+publication is resolved, and not here.
+
+**Nothing is announced from this report but the report.** No verdict selects a remedy to run
+and no line of it says a command will be run on the user's behalf. Where a verdict has an
+obvious remedy the report may **name** the verb that supplies it — the way this file names
+verbs everywhere else — and stop there.
 
 ## plan
 
@@ -398,7 +589,12 @@ per-event status bound in the standing clause is placed on the dispatch and stat
 announcement, because this chain reaches the hub.
 
 **Depth.** The row declares `G8` because this verb announces derived-state freshness.
-`trip.freshness` is empty at this revision, so there is nothing yet to announce from it.
+This verb's hub leg replaces `outputs/final-itinerary.md`, which is one relation's derived
+side and a source of the other, so it **announces the entries its own run changed** — naming
+each relation this run moved and the verdict that relation now carries — and names `status` as
+where the whole list is reported, rather than rendering a second copy of it here. Where the
+chain halted before the hub leg, this run moved neither relation: say that, and announce no
+verdict this run did not change.
 
 ## replan
 
@@ -457,7 +653,13 @@ validator both read it — and on a disruption recovery a `locked → planned` r
 it.** The per-event status bound is placed on the dispatch and stated in the announcement.
 
 **Depth.** The row declares `G8` because this verb announces derived-state freshness.
-`trip.freshness` is empty at this revision, so there is nothing yet to announce from it.
+This verb's hub leg replaces `outputs/final-itinerary.md`, so it **announces the entries its
+own run changed** — naming each relation this run moved and the verdict that relation now
+carries — and names `status` as where the whole list is reported. It is also the verb
+`research` names as what places research, so `research-to-placement` clearing is this run's
+observable result and is announced as that rather than as an incidental side effect. The floor
+reaches the hub whatever the coupling conditions admit, so a floor-only run still moves both
+relations and still announces them.
 
 ## reorder
 
@@ -710,4 +912,15 @@ does not quantify over it.
 **It writes no byte of `trip-context.md`.** The carve-out does not admit this verb.
 
 **Depth.** The row declares `G8` because this verb announces derived-state freshness.
-`trip.freshness` is empty at this revision, so there is nothing yet to announce from it.
+This verb writes `trips/<slug>/outputs/<destination>-travel-site.html`, which is one
+relation's derived side, so it **announces the entries its own run changed** — naming each
+relation this run moved and the verdict that relation now carries — and names `status` as
+where the whole list is reported.
+
+**The announcement is not the round-trip completeness check and does not stand in for it.**
+The check above is **content-level**: it establishes that every element of the itinerary
+resolved to a rendered component or to a named exclusion. The relation is **order-level**: it
+establishes only that the build is not older than the inputs this verb's `**Reads:**` line
+declares. A build can be newest and still have dropped an element, and a build can trail its
+inputs while faithfully rendering everything it was built from — so neither result substitutes
+for the other, and both are run and reported separately.
