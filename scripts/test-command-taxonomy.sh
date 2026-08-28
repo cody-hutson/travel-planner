@@ -568,7 +568,9 @@ trimfirst_reads() {
   local f="$1" line n=0 t
   [ -f "$f" ] || { printf '0'; return; }
   while IFS= read -r line || [ -n "$line" ]; do
-    t="$(trim "$line")"
+    # left-trim in pure bash: this runs once per line of the whole surface, so a
+    # command substitution here would fork thousands of times for nothing
+    t="${line#"${line%%[![:space:]]*}"}"
     [[ "$t" == '**Reads:**'* ]] && n=$((n+1))
   done < "$f"
   printf '%d' "$n"
@@ -745,15 +747,19 @@ charter_check() {
 # ─────────────────────────────────────────────────────────────────────────────────
 coverage_check() {
   local recs="$1"
-  local rc=0 line t1 t2 t3 t4
+  local rc=0 line t1 t2 t3 t4 t5
   local -a DK=() DKC=() FILES=() AK=() AKC=() AKV=() RG=() KEYS=()
 
+  # KEY is read into TWO variables deliberately: the last one absorbs the remainder, so a
+  # key that carries whitespace arrives whole and X2 can see it. Every other record is
+  # read into one variable per field, because there the remainder would silently widen a
+  # field that a later comparison keys on.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       'DECL '*)      IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
       'KEY '*)       IFS=' ' read -r t1 t2 <<< "$line"; KEYS+=( "$t2" ) ;;
       'FILE '*)      IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
-      'REGION '*)    IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; RG+=( "$t2:$t3" ) ;;
+      'REGION '*)    IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; RG+=( "$t2:$t3" ) ;;
       'ADDRPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; AKC+=( "$t2" ); AKV+=( "$t3" )
                      if [ "$t3" = '-' ]; then AK+=( "$t2" ); else AK+=( "$t2:$t3" ); fi ;;
     esac
@@ -1080,11 +1086,17 @@ invocation_check() {
     return 1
   fi
 
-  local line t1 t2 t3 t4
+  local line t1 t2 t3 t4 t5
   local -a IL=() IO=()
+  # The record's LAST read variable absorbs the whole remainder of the line, so a record
+  # with N fields must be read into N variables — one more than the field you want, when
+  # a tail follows it. Reading the 5-field INV record into four made the line-number field
+  # carry the argv tail, the region lookup never matched, and every correctly-attributed
+  # invocation on committed state was reported as file-granular. That is the same shape
+  # as the retired transport's defect: a field silently carrying more than it names.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'INV '*) IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; IL+=( "$t2:$t4" ); IO+=( "$t3" ) ;;
+      'INV '*) IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; IL+=( "$t2:$t4" ); IO+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -1180,12 +1192,15 @@ readonly_check() {
     if [ "$seendash" -eq 0 ]; then KEYS+=( "$a" ); else ADJ+=( "$a" ); fi
   done
 
-  local rc=0 line k v t1 t2 t3
+  local rc=0 line k v t1 t2 t3 t4 t5
   local -a INVK=() BANGK=() LIVE=()
+  # See the note in invocation_check: the last read variable absorbs the remainder, so an
+  # INV or BANG record must be read into one variable PER FIELD, or the owner field holds
+  # the owner plus everything after it. DECL has exactly three fields.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'INV '*)  IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
-      'BANG '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t3" != '-' ] && BANGK+=( "$t2:$t3" ) ;;
+      'INV '*)  IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
+      'BANG '*) IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; [ "$t3" != '-' ] && BANGK+=( "$t2:$t3" ) ;;
       'DECL '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
     esac
   done <<< "$recs"
