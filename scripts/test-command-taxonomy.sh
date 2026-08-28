@@ -41,8 +41,21 @@
 #     collapse TERM FOR TERM into the retired forward / reverse / injectivity. The retired
 #     assertion is the zero-verb special case of this one. The door against a VANISHED
 #     requirement table is V0, which fires per file and never degrades, so the fallback
-#     cannot hide a table that disappeared — it is reachable only where a file legitimately
-#     declares a table with no rows.
+#     cannot hide a table that disappeared.
+#
+#     WHAT THE FALLBACK IS REACHABLE ON. NOT "a file that legitimately declares a table
+#     with no rows" — that state is precisely what V0's ZERO-ROWS clause forbids, so it is
+#     neither legitimate nor green. Every path to a file that emits no declaration emits a
+#     finding on the way: A0 where the file is unreadable; V0's ANCHOR clause where the
+#     requirement-table header row is not unique at fence depth 0; V0's ZERO-ROWS clause
+#     where that header row has no rows beneath it; V1 where every row fails the field
+#     count or declares an empty identity; X2 where every identity carries whitespace. The
+#     fallback therefore contributes a coverage unit only on a run that is ALREADY RED. It
+#     is a degeneracy this guard REPORTS, never one it can pass through. Arm GZV builds the
+#     zero-verb world and checks both halves on it — that the collapse holds there, and
+#     that the world is red. This replaces an earlier sentence that named the branch
+#     reachable on a legitimate empty table; the code that sentence justified is unchanged
+#     and the zero-rows clause is intact. What fell was the justification, not the repair.
 #
 #   X   the key channel                                                    (group X)
 #     X1 a key did not round-trip byte-identical · X2 empty or whitespace-bearing key
@@ -64,7 +77,9 @@
 #     S1 a key in one enumeration and not the other · S2 SINGLE-SOURCE
 #
 #   G   controls: must-NOT-fire arms first, the two live differential arms, one must-fire
-#       arm per emittable id, the grammar control, and the derivation mutation pair
+#       arm per emittable id, the grammar control, the derivation mutation pair, and GZV —
+#       the ZERO-VERB world, which exercises the collapse argument above and is the only
+#       arm reaching V0's zero-rows clause
 #   Y   the assertion inventory, machine-checked against this file
 #   Z   non-mutation, asserted by comparing tree state across the run
 #
@@ -115,11 +130,12 @@
 # OUT OF SCOPE — RUNTIME PRIVILEGE. This suite asserts that the files DECLARE what
 # ADR-007 requires. It does not assert that a declaration is enforced at runtime, and a
 # green here is not a privilege guarantee. On what a `disallowed-tools` line does, this
-# repository carries TWO INCOMPATIBLE ACCOUNTS with nothing arbitrating between them, and
-# nothing in this repository reads such a line. This guard takes NEITHER account: every
-# assertion below holds under either, because each is an assertion about what a file
-# DECLARES and none about what a declaration enforces. Asserting either account here
-# would put a CI gate on one side of an open dispute.
+# repository carries TWO INCOMPATIBLE ACCOUNTS. This guard is not their arbiter and takes
+# NEITHER account: every assertion below holds under either, because each is an assertion
+# about what a file DECLARES and none about what a declaration enforces. Asserting either
+# account here would put a CI gate on one side of an open dispute. Whether anything in
+# this repository READS such a line is not claimed here in either direction — this guard
+# does not scan for a reader, so it has no evidence to offer and offers none.
 #
 # OUT OF SCOPE — PROSE-RENDERED INVOCATIONS. Where a command file renders an invocation
 # as prose across a hard wrap, with a forbidden flag named inside a NEGATING sentence in
@@ -129,9 +145,10 @@
 # invocations it attributed so a reader can see what it did and did not reach.
 #
 # OUT OF SCOPE — PER-VERB ARM BINDING. That verb A does not invoke verb B's granted arm
-# is a rule a file follows, not a property this guard can derive: there is no live
-# per-verb arm source. Declared as a residual rather than checked by something that
-# pretends to.
+# is a rule a file follows, not a property this guard can derive: of the surfaces this
+# guard reads — the charter, the command files, ADR-007 and the publish script — none
+# carries a per-verb arm source, and this guard looks for one nowhere else. Declared as a
+# residual rather than checked by something that pretends to.
 #
 # ── THE VACUITY DOORS, AND THE THIRD ONE ─────────────────────────────────────────
 # GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo,
@@ -141,11 +158,22 @@
 # not the absence of evidence about one. GUARD_EXPECTED_SKIPS is correctly EMPTY: this
 # suite has no dependency-gated group, so every skip fails the run.
 #
+# There is exactly one SKIP call site, and it is B5's zero-dotted-cell branch. That is a
+# POPULATION vacuity, not a dependency gate, so it is correctly UNDECLARED and correctly
+# fails a strict run: an unexercised widening obligation is a gap, not a legitimate skip.
+# It is also what makes the strict-skip contract live — the helper was defined and reached
+# by nothing, so the whole mechanism graded a call set that was empty.
+#
 # NO FROZEN DENOMINATOR. No count in this file is asserted against a literal. Every
-# population is derived when it is graded and printed with its derivation rule. The three
-# enumerations this guard HOLDS rather than derives — the publish invocation forms, the
-# dispatch arms, and the declared read-only key set — each carry a live membership-delta
-# sentinel that diffs them AS A SET, because a count holds while membership churns.
+# population is derived when it is graded and printed with its derivation rule. Three of
+# the enumerations this guard HOLDS rather than derives — the publish invocation forms
+# (sentinel E3), the dispatch arms (E6), and the declared read-only key set (R2) — each
+# carry a live membership-delta sentinel that diffs them AS A SET, because a count holds
+# while membership churns. THOSE THREE, AND NOT A CENSUS OF WHAT IS HELD: this guard also
+# holds ALLOWED_SUBS, REASON_ENUM and REQ_COLS, and each of those is graded in ONE
+# direction only — a live value must be a member of the held set, while a held value that
+# has gone dead on the live surface is not detected. That is a stated residual, not
+# coverage.
 #
 # NOTE: publish-trip-site.sh is deliberately NOT sourced. This suite needs zero functions
 # from it, and sourcing a security-critical script to parse a markdown table would create
@@ -195,10 +223,12 @@ EXPECTED_ARMS=( 'publish' 'update' 'rotate' 'list|status' 'unpublish' '-h|--help
 ALLOWED_SUBS=( 'list' 'status' 'update' 'unpublish' )
 
 # The DECLARED read-only key set, and the verb set of its command as adjudicated when the
-# set was last decided. There is no live predicate for "reads and does not write" on this
-# surface: the read declaration is a total body-line convention while the write one is
-# not, so the set cannot yet be derived. It is therefore declared, and the sentinel makes
-# it DETECTED-stale rather than silently stale. What re-arms it is a `**Writes:**`
+# set was last decided. This guard derives no live predicate for "reads and does not
+# write" from the surfaces it reads: the read declaration is a total body-line convention
+# while the write one is not, so the set cannot yet be derived here. It is therefore
+# declared, and sentinel R2 makes it DETECTED-stale rather than silently stale. Its
+# LIVE non-vacuity is a separate question, reported on the R1 line rather than assumed
+# here — see the vacuity branches there. What re-arms it is a `**Writes:**`
 # body-line contract mirroring the read one; at that point the set becomes derived and
 # this holding is deleted rather than maintained.
 #
@@ -234,6 +264,14 @@ trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]
 collapse() { printf '%s' "$1" | tr -s '[:space:]' ' '; }
 lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
+# Membership is tested ELEMENT BY ELEMENT against a haystack passed as separate arguments
+# — never by joining the population into one string and matching a substring, which fails
+# in BOTH directions once a key can carry a space. The call convention is to pass the
+# haystack as "${ARR[@]+"${ARR[@]}"}", which is quoted and empty-safe under `set -u`.
+# SCOPE: that is a convention this file FOLLOWS, not one it asserts. No assertion in this
+# guard reads its own call sites, so a site added with an unquoted word-split haystack
+# would not be reported here. Group Y's inventory is the one place that used the
+# word-split form; it no longer does.
 in_list() { local n="$1"; shift; local e; for e in "$@"; do [ "$e" = "$n" ] && return 0; done; return 1; }
 
 is_sep() { [[ "$1" =~ ^\|[-:[:space:]|]+\|[[:space:]]*$ ]]; }
@@ -1229,8 +1267,24 @@ readonly_check() {
     in_list "$v" "${LIVE[@]+"${LIVE[@]}"}" || { printf 'FINDING R2 MEMBERSHIP-DELTA SENTINEL — the verb "%s" was present when the read-only set was adjudicated and %s no longer declares it. Required action: re-adjudicate the read-only set.\n' "$v" "$READONLY_OF_COMMAND"; rc=1; }
   done
 
+  # --- the CANDIDATE populations, so R1's non-vacuity is DERIVED rather than assumed.
+  # A limb can only fire where a region-attributed record shares its command with the
+  # declared read-only key set; records of any other command are not near-misses, they are
+  # outside the quantifier. Counting all records instead would report a limb as live while
+  # nothing it could match exists — which is how this arm read as covered while both of
+  # its limbs were vacuous on committed state.
+  local rocinv=0 rocbang=0
+  for k in "${INVK[@]+"${INVK[@]}"}"; do
+    case "$k" in "$READONLY_OF_COMMAND":*) rocinv=$((rocinv+1)) ;; esac
+  done
+  for k in "${BANGK[@]+"${BANGK[@]}"}"; do
+    case "$k" in "$READONLY_OF_COMMAND":*) rocbang=$((rocbang+1)) ;; esac
+  done
+
   printf 'COUNT ROKEYS %d\n' "${#KEYS[@]}"
   printf 'COUNT ROLIVE %d\n' "${#LIVE[@]}"
+  printf 'COUNT ROCINV %d\n' "$rocinv"
+  printf 'COUNT ROCBANG %d\n' "$rocbang"
   return "$rc"
 }
 
@@ -1308,6 +1362,9 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
     if [ "$defect" != 'notable' ]; then
       printf -- '| verb | lifecycle | mode | destination | depth |\n|---|---|---|---|---|\n'
       for (( i=0; i<n; i++ )); do
+        # 'norows' keeps the header row and its separator and emits NO data row: the
+        # ZERO-VERB world. Distinct from 'notable', which removes the anchor itself.
+        [ "$defect" = 'norows' ] && continue
         if [ -n "${PARENS[$i]}" ]; then
           printf -- '| %s (%s) | ACTIVE | any | any | G8 |\n' "${IDS[$i]}" "${PARENS[$i]}"
         else
@@ -1361,6 +1418,11 @@ gen_charter() {  # gen_charter <dir> <defect>
   local -a KEYS=( '/trip status' '/trip check' '/trip-record profile' '/trip-record .publish-slug' '/trip-record log' '/trip-publish update' '/trip-publish list' '/trip-new' )
   if [ "$defect" = 'mut' ]; then
     KEYS=( '/trip status' '/trip checkx' '/trip-record profile' '/trip-record .publish-slug' '/trip-record log' '/trip-publish update' '/trip-publish list' '/trip-new' )
+  fi
+  # The ZERO-VERB world's charter: every Step-1 cell verbless, so K1/K2/K3 quantify over
+  # commands rather than pairs. Paired with the 'norows' command defect by arm GZV.
+  if [ "$defect" = 'verbless' ]; then
+    KEYS=( '/trip' '/trip-record' '/trip-publish' '/trip-new' )
   fi
   local k
   {
@@ -1503,13 +1565,19 @@ MD="$ROOT/CLAUDE.md"
 CDIR="$ROOT/.claude/commands"
 ADR="$ROOT/reference/adr/ADR-007-command-entry-point.md"
 PUB="$ROOT/$SCRIPT_REL"
+WF="$ROOT/.github/workflows/command-taxonomy.yml"
 
+# The Z-group watch set: every surface this guard READS, plus the workflow that runs it —
+# that last one because a guard editing its own trigger is the one mutation a reader would
+# least expect this group to miss. The set is those inputs and NOT the whole tree; the Z1
+# line states that scope rather than claiming a tree-wide property this does not establish.
 tree_state() {
   local p
-  for p in "$MD" "$ADR" "$PUB" "$SELF"; do [ -f "$p" ] && cksum < "$p"; done
+  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF"; do [ -f "$p" ] && cksum < "$p"; done
   for p in "$CDIR"/*.md; do [ -e "$p" ] && { printf '%s ' "$(basename "$p")"; cksum < "$p"; }; done
 }
 STATE_BEFORE="$(tree_state)"
+WATCHED="$(printf '%s\n' "$STATE_BEFORE" | grep -c .)"
 
 echo
 echo "── Group N — needle integrity. norm(needle) == needle, asserted before any read."
@@ -1580,13 +1648,20 @@ else PASS "B4: ${S1_ADDR} ADDRESSED + ${S1_EXCL} EXCLUDED accounts for ${S1_ROWS
 if [ "${DOTTED:-0}" -gt 0 ]; then
   PASS "B5: DOTTED-CELL COUNT ${DOTTED:-0} — the leading-dot widening is exercised by LIVE data; ${UNWID:-0} live cell(s) fail the un-widened grammar, so the widened and un-widened forms are DISTINGUISHABLE on this population"
 else
-  PASS "B5: DOTTED-CELL COUNT 0 — READ THIS AS VACUOUS, NOT AS PASSING. No live cell exercises the leading-dot widening, so a green on this arm is evidence about the fixture only, and it must not be read as closure of the widening obligation. ${UNWID:-0} live cell(s) fail the un-widened grammar"
+  # A SKIP, not a PASS. This branch reports the ABSENCE OF EVIDENCE, and a group that
+  # returns PASS on both of its branches cannot fail — it contributes a guaranteed green
+  # to the tally whatever the surface does. GUARD_EXPECTED_SKIPS is empty by design, so
+  # under GUARD_STRICT_SKIPS this fails the run, and that is the intended reading: B5 is
+  # not dependency-gated, so an unexercised widening obligation is a gap rather than a
+  # legitimate skip. This is also the call site that makes the strict-skip contract live;
+  # it was declared and never reached before.
+  SKIP "B5: DOTTED-CELL COUNT 0 — VACUOUS, NOT PASSING. No live cell exercises the leading-dot widening, so this arm has no evidence either way and reports that rather than manufacturing a green. ${UNWID:-0} live cell(s) fail the un-widened grammar"
 fi
 
 echo
 echo "── Group K — the coverage bijection. K1 resolvability, K2 totality, K3 exclusivity."
 if has_finding "$ALL" "$(surface X1 X2)"; then FAIL "K0: the key channel is lossy"; show "$ALL" 'X1|X2'
-else PASS "K0: every emitted key round-trips byte-identical through the record channel; no key is empty or carries whitespace; every membership test passes its haystack quoted"; fi
+else PASS "K0: every emitted key round-trips byte-identical through the record channel, and no key is empty or carries whitespace. SCOPE: X1 and X2 grade the KEY CHANNEL. How this guard's own membership tests quote their haystacks is a property of this file that no assertion here reads, so it is not claimed on this line — see the note at in_list()"; fi
 if has_finding "$ALL" "$(surface K1)"; then FAIL "K1: an ADDRESSED cell covers nothing, or a covered member does not resolve"; show "$ALL" 'K1'
 else PASS "K1: RESOLVABILITY — each of $(getcount "$COV_OUT" ADDRCELLS) ADDRESSED cells covers a non-empty set and every member resolves (file AND declaration AND region)"; fi
 if has_finding "$ALL" "$(surface K2)"; then FAIL "K2: a coverage unit is covered by no ADDRESSED cell"; show "$ALL" 'K2'
@@ -1628,14 +1703,22 @@ else PASS "F5: FILE-GRANULAR FINDINGS $(getcount "$F_OUT" ORPHANINV) — the mea
 
 echo
 echo "── Group R — the DECLARED read-only key set and its membership-delta sentinel."
+RO_CINV="$(getcount "$R_OUT" ROCINV)"; RO_CBANG="$(getcount "$R_OUT" ROCBANG)"
 if has_finding "$ALL" "$(surface R1)"; then FAIL "R1: a read-only region carries an executable instruction"; show "$ALL" 'R1'
-else PASS "R1: each of $(getcount "$R_OUT" ROKEYS) declared read-only regions carries no fenced invocation line and no pre-execution block of its own"; fi
+elif [ "${RO_CINV:-0}" -eq 0 ] && [ "${RO_CBANG:-0}" -eq 0 ]; then
+  PASS "R1: VACUOUS ON BOTH LIMBS — READ THIS AS VACUOUS, NOT AS PASSING. The $(getcount "$R_OUT" ROKEYS) declared read-only keys were quantified over 0 region-attributed invocation records and 0 region-attributed pre-execution records OF ${READONLY_OF_COMMAND}, so neither limb had anything it could match. A green here is evidence about arm GR1's fixture only. Two structural reasons, both live: every fenced invocation on this surface is attributed to a DIFFERENT command, and every pre-execution block sits in the shared contract preamble AHEAD of the first verb section, so the contract's own prefix rule attributes it to no region at all"
+elif [ "${RO_CBANG:-0}" -eq 0 ]; then
+  PASS "R1: PRE-EXECUTION LIMB VACUOUS — the invocation limb quantified $(getcount "$R_OUT" ROKEYS) declared read-only keys over ${RO_CINV} region-attributed invocation record(s) of ${READONLY_OF_COMMAND} and found none in a read-only region; the pre-execution limb had 0 to match and so establishes nothing"
+elif [ "${RO_CINV:-0}" -eq 0 ]; then
+  PASS "R1: INVOCATION LIMB VACUOUS — the pre-execution limb quantified over ${RO_CBANG} region-attributed record(s) of ${READONLY_OF_COMMAND}; the invocation limb had 0 to match and so establishes nothing"
+else PASS "R1: each of $(getcount "$R_OUT" ROKEYS) declared read-only regions carries no fenced invocation line and no pre-execution block of its own, quantified over ${RO_CINV} invocation and ${RO_CBANG} pre-execution record(s) attributed to ${READONLY_OF_COMMAND}'s regions"; fi
 if has_finding "$ALL" "$(surface R2)"; then FAIL "R2: the MEMBERSHIP-DELTA SENTINEL fired — the read-only set needs re-adjudication"; show "$ALL" 'R2'
 else PASS "R2: sentinel — ${READONLY_OF_COMMAND}'s $(getcount "$R_OUT" ROLIVE) live declared verbs match the adjudicated set as a SET, in both directions. A count would hold while membership churned"; fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group G — controls. Fixture-driven under a temp directory, NEVER repo-mutating, so
-# every arm re-proves on each push instead of decaying into a one-time demonstration.
+# Group G — controls. Fixture-driven: every fixture path below is rooted at $WORK, so no
+# arm writes a surface this guard grades, and group Z grades that claim over the watched
+# set. Every arm re-proves on each push instead of decaying into a one-time demonstration.
 # Every arm asserts FIXTURE INTEGRITY FIRST: a control built on a fixture that was never
 # constructed is a green proving nothing, one level down.
 # The must-NOT-fire arms come FIRST, because without them the negative arms prove nothing
@@ -1652,12 +1735,43 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/commands/trip.md" ] && [ -f "$G0/commands
     FAIL "G0b: MUST-NOT-FIRE — the conforming tree was flagged: $(printf '%s' "$G0OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
   else
     PASS "G0b: MUST-NOT-FIRE — a correct tree returns no finding of any id; the guard is not hard-wired red"
-    PASS "G0c: MUST-NOT-FIRE — an argument-signature heading, a leading-dot verb and a parenthetical disposition pair all resolve"
-    PASS "G0d: MUST-NOT-FIRE — four-space-indented read-declaration EXEMPLARS in a non-verb section produce no undeclared-verb finding (the column-0 rule), and a read-declaration line inside a fenced example produces none either (fence depth)"
-    PASS "G0e: MUST-NOT-FIRE — a verb-shaped heading inside a fenced example produces no section, so the file with no real verb sections is not given an invented one"
-    PASS "G0f: MUST-NOT-FIRE — a negating sentence naming a forbidden flag INSIDE a verb region, a grant token rendered as a code span in a body table, and a decoy command span in the Action column all PASS: the test is USE and FIELD-INDEXED, not MENTION and row-wide"
-    PASS "G0g: MUST-NOT-FIRE — a CREATE-role file implementing no verb section resolves through the charter-declared carve-out, and a read declaration in its body is claimed"
-    PASS "G0h: MUST-NOT-FIRE — the fixture charter carries literal EXCLUDED invocations in a fenced block and the invocation limb reports zero: its input set is the command directory and nothing else"
+    # G0c-h each name a SPECIFIC SHAPE the conforming tree is supposed to carry. G0b
+    # establishes only that the tree produced no finding; on its own that is equally
+    # consistent with the shape never having been generated. Each claim below therefore
+    # probes its own shape first, and a missing shape is a fixture-integrity FAILURE, not
+    # a quiet green — the same discipline every ctl/ectl arm already applies, which these
+    # six inherited the label of without the probe.
+    g0claim() {  # g0claim <ok> <id> <claim>
+      if [ "$1" -eq 1 ]; then PASS "$2: MUST-NOT-FIRE — $3"
+      else FAIL "$2: fixture integrity — the shape this arm names is absent from the conforming tree, so its green would prove nothing: $3"; fi
+    }
+    G0S=1
+    grep -qF '## profile <name>' "$G0/commands/trip-record.md" || G0S=0
+    grep -qF '| .publish-slug | ACTIVE' "$G0/commands/trip-record.md" || G0S=0
+    grep -qF '| new (create) | ACTIVE' "$G0/commands/trip-new.md" || G0S=0
+    grep -qF '| new (resume) | ACTIVE' "$G0/commands/trip-new.md" || G0S=0
+    g0claim "$G0S" G0c "an argument-signature heading, a leading-dot verb and a parenthetical disposition pair all resolve"
+    G0S=1
+    grep -qF '    **Reads:** nothing beyond the blocks above.' "$G0/commands/trip.md" || G0S=0
+    grep -qF '**Reads:** an example read line.' "$G0/commands/trip.md" || G0S=0
+    g0claim "$G0S" G0d "four-space-indented read-declaration EXEMPLARS in a non-verb section produce no undeclared-verb finding (the column-0 rule), and a read-declaration line inside a fenced example produces none either (fence depth)"
+    G0S=1
+    grep -qF '## ghostverb' "$G0/commands/trip.md" || G0S=0
+    g0claim "$G0S" G0e "a verb-shaped heading inside a fenced example produces no section, so the file with no real verb sections is not given an invented one"
+    G0S=1
+    grep -qF 'never passes' "$G0/commands/trip.md" || G0S=0
+    grep -qF "| ${BT}Bash(${SCRIPT_REL} update:*)${BT} | the single invocation |" "$G0/commands/trip.md" || G0S=0
+    grep -qF "act, and see ${BT}/trip status${BT} for the current state" "$G0/CLAUDE.md" || G0S=0
+    g0claim "$G0S" G0f "a negating sentence naming a forbidden flag INSIDE a verb region, a grant token rendered as a code span in a body table, and a decoy command span in the Action column all PASS: the test is USE and FIELD-INDEXED, not MENTION and row-wide"
+    G0S=1
+    grep -qF 'population-role: CREATE' "$G0/commands/trip-new.md" || G0S=0
+    grep -qF '## Create' "$G0/commands/trip-new.md" || G0S=0
+    grep -qF '**Reads:** the template it copies from.' "$G0/commands/trip-new.md" || G0S=0
+    g0claim "$G0S" G0g "a CREATE-role file implementing no verb section resolves through the charter-declared carve-out, and a read declaration in its body is claimed"
+    G0S=1
+    grep -qF "${SCRIPT_REL} publish trips/x" "$G0/CLAUDE.md" || G0S=0
+    grep -qF "${SCRIPT_REL} rotate trips/x" "$G0/CLAUDE.md" || G0S=0
+    g0claim "$G0S" G0h "the fixture charter carries literal EXCLUDED invocations in a fenced block and the invocation limb reports zero: its input set is the command directory and nothing else"
   fi
 else
   FAIL "G0a: fixture integrity — the conforming tree was not constructed; G0b-h would prove nothing"
@@ -1673,7 +1787,7 @@ D1_ANCH="$(printf '%s\n' "$RECS" | grep -c '^DECL ')"
 if [ "${D1_ANCH:-0}" -gt "$D1_FENCE" ]; then
   PASS "G-D1: LIVE DIFFERENTIAL — the header-row anchor recovers ${D1_ANCH} declared verbs where the fence-scoped locator this guard replaced recovers ${D1_FENCE}. On committed state the fence-based reading returns a SILENT PLAUSIBLE ZERO, and every direction of K over it would be vacuously true"
 elif [ "${D1_ANCH:-0}" -eq "$D1_FENCE" ] && [ "${D1_ANCH:-0}" -gt 0 ]; then
-  PASS "G-D1: NO LONGER DIFFERENTIAL — both locators recover ${D1_ANCH}. The requirement table has moved back inside the contract-header fence; this arm no longer establishes the anchor choice and is reported as such rather than as passing"
+  PASS "G-D1: NO LONGER DIFFERENTIAL — both locators recover ${D1_ANCH}. The route here is NOT the requirement table moving back inside the contract-header fence: that state unhooks the depth-0 anchor entirely, yields ZERO against a positive fence-scoped count, and lands in the FAIL arm below with V0 firing per file alongside. This branch is reached when every file KEEPS its depth-0 header row AND the contract-header fences come to carry pipe rows totalling the same number. Read that as a coincidence of counts, not agreement of readings: the two comparators count DIFFERENT UNITS — DISTINCT verb identities on the anchor side, RAW fenced rows on the other — so a file declaring one identity across two parenthetical rows already separates them. This arm no longer establishes the anchor choice and is reported as such rather than as passing"
 else
   FAIL "G-D1: the header-row anchor recovers ${D1_ANCH} declared verbs against the fence-scoped locator's ${D1_FENCE} — it cannot be poorer, so one of the two is broken"
 fi
@@ -1848,12 +1962,16 @@ else FAIL "GN1: a needle failing norm(needle) == needle was NOT flagged"; fi
 NEEDLES=( "${NEEDLES_SAVE[@]}" )
 
 # ── the grammar control: the minimal widening admits junk the alternation rejects.
-GRAM_OK=1
+# The two list sizes are COUNTED as the lists are walked, never spelled in the message: a
+# literal there is a frozen denominator that drifts silently the moment a form is added.
+GRAM_OK=1; GRAM_TRUE=0
 for gc in "${BT}/trip status${BT}" "${BT}/trip-record .publish-slug${BT}" "${BT}/trip-decommission --archive${BT}" "${BT}/trip-new${BT}" "${BT}/trip-publish list${BT}" "${BT}/trip-record .a-b${BT}"; do
+  GRAM_TRUE=$((GRAM_TRUE+1))
   [[ "$gc" =~ $CELL_RE ]] || GRAM_OK=0
 done
-GRAM_BAD=0
+GRAM_BAD=0; GRAM_MAL=0
 for gc in "${BT}/trip <verb>${BT}" "${BT}/trip-new new (create)${BT}" "${BT}/Trip status${BT}" "${BT}trip status${BT}" "${BT}/trip status extra${BT}" "${BT}/trip_status${BT}" "${BT}/trip -status${BT}" "${BT}/trip-record .${BT}"; do
+  GRAM_MAL=$((GRAM_MAL+1))
   [[ "$gc" =~ $CELL_RE ]] && GRAM_BAD=$((GRAM_BAD+1))
 done
 MIN_ADMITS_JUNK=0
@@ -1861,7 +1979,7 @@ MIN_ADMITS_JUNK=0
 ALT_REJECTS_JUNK=1
 [[ "${BT}/trip --.x${BT}" =~ $CELL_RE ]] && ALT_REJECTS_JUNK=0
 if [ "$GRAM_OK" -eq 1 ] && [ "$GRAM_BAD" -eq 0 ] && [ "$MIN_ADMITS_JUNK" -eq 1 ] && [ "$ALT_REJECTS_JUNK" -eq 1 ]; then
-  PASS "G-GR: grammar control — six true forms admitted, eight malformed rejected, and the MINIMAL widening admits the junk cell the ALTERNATION rejects. A leading dot is part of an identity; a double dash is a spelling variant the key rule normalises away; the two can never co-occur, so the grammar must not express both at once"
+  PASS "G-GR: grammar control — ${GRAM_TRUE} true forms admitted, ${GRAM_MAL} malformed rejected, and the MINIMAL widening admits the junk cell the ALTERNATION rejects. A leading dot is part of an identity; a double dash is a spelling variant the key rule normalises away; the two can never co-occur, so the grammar must not express both at once"
 else
   FAIL "G-GR: grammar control — true admitted=$GRAM_OK, malformed admitted=$GRAM_BAD, minimal admits junk=$MIN_ADMITS_JUNK, alternation rejects junk=$ALT_REJECTS_JUNK"
 fi
@@ -1888,6 +2006,49 @@ if grep -q "checkx" "$GM1/commands/trip.md" && ! grep -q "checkx" "$GM1/CLAUDE.m
   fi
 else
   FAIL "GM-a: fixture integrity — the mutation pair was not constructed; GM-b and GM-c would prove nothing"
+fi
+
+# ── the ZERO-VERB world. The banner argues that at zero declared verbs every coverage
+# unit is a command, every cell is verbless, and K1/K2/K3 collapse TERM FOR TERM into the
+# retired forward / reverse / injectivity. That argument was the slice's central claim and
+# was ASSERTED NOWHERE IN CODE: no arm built the world it describes. The same world is
+# also the only one that reaches V0's ZERO-ROWS clause — both existing V0 arms (GV0,
+# GV0b) drive the ANCHOR site instead, so the clause the collapse argument turns on was
+# armed by nothing. This arm does both jobs on one constructed world: a charter whose
+# Step-1 cells are all verbless, against command files that keep the requirement-table
+# header row and declare no rows under it.
+GZV="$WORK/gzv"; gen_tree "$GZV" verbless norows
+arm V0
+ZV_FILES=0; ZV_OK=1
+for gf in "$GZV/commands"/*.md; do
+  [ -e "$gf" ] || continue
+  ZV_FILES=$((ZV_FILES+1))
+  grep -qF '| verb | lifecycle | mode | destination | depth |' "$gf" || ZV_OK=0
+  # a data row is the one shape gen_cmd renders for a declared verb; its absence is the
+  # defect, so it is probed as an absence rather than assumed from the generator argument
+  grep -qF '| ACTIVE | any | any | G8 |' "$gf" && ZV_OK=0
+done
+if [ "$ZV_FILES" -gt 0 ] && [ "$ZV_OK" -eq 1 ]; then
+  PASS "GZV-a: fixture integrity — the ZERO-VERB world was constructed: ${ZV_FILES} command files, each carrying a requirement-table header row at fence depth 0 and no data row beneath it"
+  ZVOUT="$(run_tree "$GZV")"
+  if printf '%s\n' "$ZVOUT" | grep -q '^FINDING V0 .*carries no data rows'; then
+    PASS "GZV-b: flagged, naming V0 — the ZERO-ROWS clause fires. This is the emission site neither other V0 arm reaches: GV0 removes the table and GV0b duplicates its header row, so both land on the ANCHOR clause and this one was armed by nothing"
+  else
+    FAIL "GZV-b: a world of requirement tables with no data rows did NOT raise V0's zero-rows clause"
+  fi
+  ZV_UNITS="$(getcount "$ZVOUT" UNITS)"
+  if ! printf '%s\n' "$ZVOUT" | grep -q '^DECL ' && [ "${ZV_UNITS:-0}" -eq "$ZV_FILES" ]; then
+    PASS "GZV-c: COLLAPSE — the record stream carries no declaration at all, and the coverage-unit enumeration is ${ZV_UNITS} units across ${ZV_FILES} command files. Every unit therefore came from the verbless fallback and every unit is a COMMAND, so K1/K2/K3 quantify over commands and are the retired forward / reverse / injectivity term for term. DEMONSTRATED on a constructed world, not argued in a comment"
+  else
+    FAIL "GZV-c: COLLAPSE — the zero-verb world yielded ${ZV_UNITS:-?} coverage units across ${ZV_FILES} command files, or the stream still carried a declaration; the degeneracy argument does not hold on it"
+  fi
+  if printf '%s\n' "$ZVOUT" | grep -q '^FINDING '; then
+    PASS "GZV-d: REACHABILITY — that same world is RED. The verbless fallback contributes coverage units only on a run that is already failing, which is what the banner now states in place of the retired claim that the branch is reachable where a file 'legitimately declares a table with no rows'. There is no such legitimate state: the zero-rows clause forbids it"
+  else
+    FAIL "GZV-d: REACHABILITY — the zero-verb world returned no finding, so the fallback CAN execute on a green run and the banner's reachability statement is false"
+  fi
+else
+  FAIL "GZV-a: fixture integrity — the ZERO-VERB world was not constructed (${ZV_FILES} file(s), shape ok=${ZV_OK}); GZV-b through GZV-d would prove nothing"
 fi
 
 # ── a fresh specificity token, minted per run and never written into the repository.
@@ -1917,34 +2078,59 @@ fi
 # AND exercised by a control arm, and every id a group surfaces or an arm exercises is
 # one this guard can actually emit. This is what stops a finding from being emitted by
 # no group, and a group from testing for an id no code emits.
+#
+# WHAT PER-ID TOTALITY DOES AND DOES NOT ESTABLISH. The unit of this inventory is the
+# finding ID, not the emission SITE. Several ids are emitted from more than one site with
+# a different predicate behind each — V0 has an ANCHOR clause and a ZERO-ROWS clause, V1
+# has a field-count clause and an empty-identity clause, V3 has a no-region clause and a
+# many-regions clause — and an id counts as armed here the moment ONE of its sites is
+# reached. So Y2 is a sound guarantee that NO ID IS UNREACHABLE. It is NOT a guarantee
+# that every predicate is exercised, and it must not be read as one. That gap is not
+# hypothetical: the site the collapse argument turns on — V0's ZERO-ROWS clause — sat
+# unarmed under a green Y2 until arm GZV was added, because both V0 arms drive the anchor
+# site. The unarmed-SITE population is strictly larger than the unarmed-ID population and
+# this guard does not measure it. The granularity is a property of the CRITERION this
+# inventory implements, not a defect in the implementation of it; stated here rather than
+# left to be inferred from a green.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "── Group Y — the assertion inventory, derived from this file and checked in both directions."
 EMIT_MARK="printf ${Q}FIND""ING "
-DECLARED=""
+# The three populations are ARRAYS, and every membership test below passes its haystack
+# as a quoted array expansion. They were space-joined strings tested through an UNQUOTED
+# word-split haystack — the exact transport parse_command_file's header note describes as
+# failing in both directions once a member can carry a space. The ids here happen not to,
+# so nothing was misreported; the inventory group nonetheless ran on the one transport the
+# rest of this guard exists to eliminate, which is not a difference worth keeping.
+DECLARED=()
 while IFS= read -r yline || [ -n "$yline" ]; do
   case "$yline" in
     *"$EMIT_MARK"*)
       yrest="${yline#*"$EMIT_MARK"}"
       yid="${yrest%% *}"
       [[ "$yid" =~ ^[A-Z][0-9]$ ]] || continue
-      in_list "$yid" $DECLARED || DECLARED="$DECLARED$yid "
+      in_list "$yid" "${DECLARED[@]+"${DECLARED[@]}"}" || DECLARED+=( "$yid" )
       ;;
   esac
 done < "$SELF"
 
-SURFACED="$(sort -u "$SURF_LOG" | tr '\n' ' ')"
-ARMED="$(sort -u "$ARM_LOG" | tr '\n' ' ')"
+SURFACED=(); ARMED=()
+while IFS= read -r yid || [ -n "$yid" ]; do
+  [ -n "$yid" ] && SURFACED+=( "$yid" )
+done <<< "$(sort -u "$SURF_LOG")"
+while IFS= read -r yid || [ -n "$yid" ]; do
+  [ -n "$yid" ] && ARMED+=( "$yid" )
+done <<< "$(sort -u "$ARM_LOG")"
 
 y_ms=""; y_ma=""; y_es=""; y_ea=""
-for yid in $DECLARED; do
-  in_list "$yid" $SURFACED || y_ms="$y_ms$yid "
-  in_list "$yid" $ARMED    || y_ma="$y_ma$yid "
+for yid in "${DECLARED[@]+"${DECLARED[@]}"}"; do
+  in_list "$yid" "${SURFACED[@]+"${SURFACED[@]}"}" || y_ms="$y_ms$yid "
+  in_list "$yid" "${ARMED[@]+"${ARMED[@]}"}"       || y_ma="$y_ma$yid "
 done
-for yid in $SURFACED; do in_list "$yid" $DECLARED || y_es="$y_es$yid "; done
-for yid in $ARMED;    do in_list "$yid" $DECLARED || y_ea="$y_ea$yid "; done
+for yid in "${SURFACED[@]+"${SURFACED[@]}"}"; do in_list "$yid" "${DECLARED[@]+"${DECLARED[@]}"}" || y_es="$y_es$yid "; done
+for yid in "${ARMED[@]+"${ARMED[@]}"}";    do in_list "$yid" "${DECLARED[@]+"${DECLARED[@]}"}" || y_ea="$y_ea$yid "; done
 
-NDECL=0; for yid in $DECLARED; do NDECL=$((NDECL+1)); done
+NDECL=${#DECLARED[@]}
 if [ "$NDECL" -eq 0 ]; then
   FAIL "Y0: no emittable finding id was derived from this file — the inventory check would be vacuous"
 else
@@ -1964,13 +2150,16 @@ else
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group Z — the guard mutates nothing.
+# Group Z — the guard mutates none of the surfaces it reads. The watch set is those
+# surfaces plus the workflow that runs this guard — see tree_state for its derivation. It
+# is NOT the whole tree, and the Z1 line states that scope rather than claiming a
+# tree-wide property this comparison does not establish.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "── Group Z — non-mutation."
+echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the working tree is byte-identical before and after this run — every fixture was built under a temporary directory"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow and each command file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi
