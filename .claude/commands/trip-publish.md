@@ -15,21 +15,37 @@ type, and nothing in it reads the wording of the request to decide one.
 
 ## Why this is its own file
 
-`disallowed-tools` removes the named tools from the pool — a real restriction, applied per
-file. `allowed-tools` is a turn-scoped pre-approval grant: a tool left off it is not
-thereby forbidden, it routes through the usual permission settings instead. **Omission is
-not prohibition.** So every claim this file makes about what it cannot do rests on a
-denial, and never on a grant left out.
+`disallowed-tools` removes the named tools from the pool — a real restriction, and
+turn-scoped in the same way as the grant beside it. `allowed-tools` is a turn-scoped
+pre-approval grant: a tool left off it is not thereby forbidden, it routes through the
+usual permission settings instead. **Omission is not prohibition.** Durable blocking would
+need a permission-settings deny rule — a different artifact, and one this release does not
+ship — so this file's conduct is written as rules it follows, never as a property its
+frontmatter guarantees (`reference/adr/ADR-007-command-entry-point.md` § Context).
+
+**So every claim here about what this command will not do is labelled by what establishes
+it, and the two bases are not interchangeable.** A claim resting on a **denial** names the
+denied tool and holds for the turn whatever the model intends. A claim resting on a **rule
+this file follows** holds because the file says so, and nothing but the file says so. What
+is never claimed is the third thing: a prohibition inferred from a grant left out. Where
+this file's reach is bounded by omission alone, it says *unlisted*, not *denied*.
 
 That is why the publish surface is a separate file rather than a rule written inside
-`/trip`. The boundary between editing plan content and pushing to a live public site
-cannot be a rule written inside one file — it has to be a partition of the surface into
-disjoint deny sets. A file that can change plan content denies the publish script and its
-shell wrappers; a file that can reach the publish script denies the content-mutating
-tools. One file cannot hold both deny sets, so folding a publishing verb into `/trip`
-would put `plan`, `replan`, `research` and `site` on the same side of a per-file control
-as a push to a live public site. **The separation is the enforcement**, and it is the
-reason this file exists — not a convenience.
+`/trip`. A rule written inside one file cannot partition privilege — only the declared sets
+can, because they are what the runtime reads. **This file holds the publish half of that
+partition, and that half is observable right here:** it reaches the publish script and
+denies every content-mutating tool. The editing half is a **requirement on the files that
+hold it** — each denies the arms of the publish script it does not own, and both shell
+wrappers. It is stated as a requirement rather than as an observation about those files,
+because a sibling's frontmatter can change without this file changing, and a claim this
+file makes about another file's declarations is a claim it cannot keep true.
+
+One file could not hold both halves and still do either job, so folding a publishing verb
+into `/trip` would put `plan`, `replan`, `research` and `site` on the same side of a
+per-file control as a push to a live public site. **The separation is the control**, and it
+is the reason this file exists — not a convenience. It is a *declared* partition, turn-scoped
+like every grant and denial on this surface rather than a durable guarantee: what it removes
+is the case where one file's declared set spans both jobs at once.
 
 ### What each grant is held for
 
@@ -37,13 +53,27 @@ reason this file exists — not a convenience.
 |---|---|
 | `Bash(ls:*)` | the trip-listing evidence block below, which the declared `contract-depth` requires |
 | `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires |
-| `Bash(test:*)` | `update`'s passphrase precondition. Chosen because it is the narrowest primitive that answers *present and readable*, and because it **has no output channel at all** — it can only exit |
+| `Bash(test:*)` | `update`'s passphrase precondition. Chosen because it is the narrowest primitive that answers *present and readable*, and because it **never opens the path it names** — it answers by exit status, so no file's contents reach any channel. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a file's contents |
 | `Bash(scripts/publish-trip-site.sh update:*)` | `update`'s single invocation |
 | `Bash(scripts/publish-trip-site.sh list:*)` | `list`'s single invocation |
 
-No `Read`, no `Write`, no `Edit`, no `Task`, no `date`, no `mkdir`. Nothing here reads a
-file's contents, writes one, or dispatches an agent — and the content-mutating tools are
-denied rather than merely unlisted, because unlisted would prohibit nothing.
+**Denied, not merely unlisted:** `Read`, `Write`, `Edit`, `NotebookEdit`. Nothing here
+writes a file or edits one, and that rests on those denials — unlisted would prohibit
+nothing.
+
+**Two bounds rest on a rule instead, and are marked as rules rather than dressed as
+denials.** This command **dispatches no agent**: the agent-dispatch tool is neither granted
+nor denied on this surface, so the deny grammar does not reach it and no denial is claimed
+for it — the bound is that no construct below dispatches one. Likewise it runs no `date`,
+no `mkdir` and no primitive outside the grant table above: those are *unlisted*, which
+pre-approves nothing and forbids nothing, so the bound is again the file's own text.
+
+**One grant does read file contents, and this file states that rather than denying it.**
+The trip-record evidence block below greps `trip-context.md` and emits the lines it
+matched. That is reading a file's contents — by design, at the depth the contract requires,
+and it is why no blanket "nothing here reads a file" claim appears anywhere in this file.
+What is ruled out is narrower, and is stated as the rule it is: no construct here directs
+that grant, or any other content-emitting primitive, at a passphrase path.
 
 ### The deny set, as a rule rather than a list
 
@@ -51,8 +81,17 @@ The denied arms are **every arm of the dispatch `case` in `scripts/publish-trip-
 whose body reaches a `cmd_*` function, minus the verbs of this file's requirement table**,
 with each alternation split into its literal tokens so an aliased arm is denied under
 every token that reaches it. Read the dispatch and the table when you need the set: it is
-derived, not written down here as a count or a census, so it re-arms by construction the
-day the script grows an arm. `status` is denied under that rule as the script's alias for
+stated as a derivation rather than as a count or a census, so the correct set is always
+**re-derivable** from live sources and never goes stale as a written-down number.
+
+**Re-deriving it is not automatic, and this file does not claim it is.** `disallowed-tools`
+is a static list in the frontmatter above; nothing compares it to the dispatch. The
+trip-resolution contract suite puts runtime privilege out of scope by name, and no check in
+this repo reads a `disallowed-tools` line at all. So the day the script grows an arm, the
+rule says what the new deny set is — and an editor still has to apply it. The Extension rule
+below is where that obligation is written, and it is the whole of what carries it.
+
+`status` is denied under that rule as the script's alias for
 `list`, while this file implements the literal `list`; a `status` token also collides with
 a different command's verb.
 
@@ -63,11 +102,17 @@ command line can be reached through `bash` or `sh`.
 **What the deny set does not close, stated rather than papered over.** An enumerated
 `disallowed-tools` cannot be closed over every content-emitting primitive, and the wrapper
 denial is itself an enumeration — a shell outside the set this surface denies is not
-denied by it. The closure this file actually delivers is on the **allow** side: the grants
-above are a closed declared set, and the grep grant, which the contract's prefix equality
-forces this file to hold at its declared depth, is structurally capable of emitting a
-file's contents. That residual is bounded by a rule rather than by a denial — no construct
-in this file directs a content-emitting primitive at a passphrase path.
+denied by it.
+
+**Nor does the allow side supply a closure to make up for it.** By this section's own rule,
+a closed grant list forbids nothing: a primitive left off it routes through the permission
+settings rather than being blocked. What the grant table delivers is a closed
+**declaration**, not a closure — every primitive this file intends to use is named there,
+so a use outside it is a departure from the file rather than something the file quietly
+permits. The grep grant, which the contract's prefix equality forces this file to hold at
+its declared depth, is structurally capable of emitting a file's contents. That residual is
+bounded by a rule rather than by a denial — no construct in this file directs a
+content-emitting primitive at a passphrase path.
 
 ## Trips in this repo
 
@@ -133,7 +178,10 @@ protects only the verbs that existed when it was written.
 
 1. **This command reaches only the arms its requirement table names.** It never invokes
    `publish`, `rotate` or `unpublish`, in any form — not directly, not through `bash` or
-   `sh`, not through any wrapper, alias or generated command line.
+   `sh`, not through any other wrapper, alias or generated command line. The direct route
+   and the `bash`/`sh` routes are **denied**; everything past them is a **rule this file
+   follows**, because the wrapper denial is an enumeration and a shell outside it is not
+   denied — as the deny-side residual above states rather than papers over.
 2. **It never sets `ALLOW_PLAINTEXT`, and never passes `--yes` to `unpublish`.** Those are
    the flags that convert a refusal into a silent pass for a non-interactive caller, and
    `reference/adr/ADR-007-command-entry-point.md` § 2 states that bound is not negotiable
@@ -144,12 +192,23 @@ protects only the verbs that existed when it was written.
 4. **It never reads, prints, echoes, logs, stores or reproduces a passphrase value, and
    never substitutes one.** No construct in this file directs a content-emitting primitive
    at a passphrase path; what touches such a path is the presence-and-readability
-   predicate below, which cannot print. A refusal names the path and the variable — never
-   a value, never a substitute, never a length, never a prefix.
-5. **It writes nothing, creates nothing and deletes nothing** under `trips/`. It
-   introduces no field, so it claims no row in `CLAUDE.md` → *Write ownership —
-   trip-context.md, block by block*.
-6. **It creates no repository and takes no site down.**
+   predicate below, which answers by exit status and never opens the file it names. A
+   refusal names the path and the variable — never a value, never a substitute, never a
+   length, never a prefix.
+5. **It writes, creates and deletes no trip content** — nothing this repo treats as the
+   trip's own record. It introduces no field, so it claims no row in `CLAUDE.md` → *Write
+   ownership — trip-context.md, block by block*. **This rule is scoped to trip content
+   rather than to the `trips/` path, because the arm this file owns is not inert under
+   that path:** the script's `update` arm removes and re-creates the per-trip scratch
+   clone at `trips/<slug>/.publish/` and copies the re-encrypted page into it. That
+   directory is a git-ignored scratch clone rather than trip content, which is why it does
+   not cross `reference/adr/ADR-007-command-entry-point.md` § 2's bound against
+   overwriting existing trip content — but it *is* a write under `trips/`, so a rule
+   phrased by path would be false the first time this command ran.
+6. **It creates no per-trip GitHub repository and takes no site down.** Repo creation and
+   Pages-enabling belong to the `publish` arm, takedown to `unpublish`; both are denied.
+   The local clone the `update` arm makes under `trips/` is the scratch working copy rule 5
+   names, not a repository this command creates.
 7. **It never branches on freshness**, and adds no gate that blocks on it. G8 is reserved
    and report-only, and the contract records the reason: an unconditional
    render-newer-than-model gate refuses every correct publish rather than more of them.
@@ -160,8 +219,10 @@ rule binding only that slice's verbs goes in that verb's own section. Adding a v
 row to the requirement table, appended below the rows already there. `allowed-tools` grows
 by union only, and only where the adding slice's own design names the verb that needs the
 grant. **Any arm of the script that is not that slice's verb is added to the deny set in
-the same edit** — the deny rule above is stated as a derivation precisely so that this is
-mechanical rather than remembered.
+the same edit** — the deny rule above is stated as a derivation so that the correct set is
+*computable* rather than recalled. Computing it is not the same as applying it: applying it
+is an editorial step, no check fails if it is skipped, and this sentence is the whole of
+what carries the obligation.
 
 ## Selecting the verb
 
@@ -226,8 +287,8 @@ later slice adds lands in the table or does not run.
 ## update
 
 **What it is.** Re-encrypt an already-published trip site and push only ciphertext to the
-per-trip repo that already exists. It creates no repo, which is what keeps it clear of the
-repo-creation reason that excludes the first publish.
+per-trip repo that already exists. It creates no per-trip GitHub repo, which is what keeps
+it clear of the repo-creation reason that excludes the first publish.
 
 **The passphrase stop is verb selection, not output filtering.** The script paths that
 write a passphrase to standard output belong to arms this file denies. The arms this file
@@ -238,9 +299,9 @@ because nothing in it can produce one.
 
 ### Precondition — before any invocation is constructed
 
-Run each limb below and let it pass first. Each uses `test`, which exits and prints
-nothing, so there is no channel on which a value could appear. Run no limb through any
-other primitive.
+Run each limb below and let it pass first. Each uses `test`, which answers by exit status
+and never opens the path it names, so no file's contents reach any channel. Run no limb
+through any other primitive.
 
 **(i) The trip's passphrase file is present and readable.**
 
@@ -292,14 +353,22 @@ scripts/publish-trip-site.sh update trips/<slug>
 with `<slug>` replaced by `trip.slug`. Run it from the repo root.
 
 **When the trip was never published**, the script refuses before the passphrase is
-touched: it resolves the per-trip clone before it resolves the passphrase, so it creates
-nothing, pushes nothing, and its own message names the remedy — a first publish. This verb
-relies on that refusal rather than duplicating it; a second, weaker pre-check would be a
-guard for a failure the script already guards precisely. A first publish is not a verb of
-this file, so render the named remedy as an **operator hand-off**: point at `CLAUDE.md` →
-*Publishing to GitHub Pages*, print that section's publish command for the operator with
-`trip.slug` substituted for the placeholder trip directory, and stop. Do not propose a
-verb this file denies, and do not construct one.
+touched: it resolves the per-trip clone before it resolves the passphrase, so it creates no
+repository, pushes nothing, mints no passphrase, and its own message names the remedy — a
+first publish. (Resolving the clone does clear a stale scratch clone first; that is rule
+5's scope, and it is not a publish.) This verb relies on that refusal rather than
+duplicating it; a second, weaker pre-check would be a guard for a failure the script
+already guards precisely.
+
+A first publish is not a verb of this file, so render the named remedy as an **operator
+hand-off**: point at `CLAUDE.md` → *Publishing to GitHub Pages*, print that section's
+publish command for the operator to run in their own terminal, with `trip.slug`
+substituted for the placeholder trip directory, and stop. **Print the line** — a hand-off
+that names a section and leaves the operator with nothing runnable has failed, the same
+standard the plaintext hand-off below is held to. **Rendering a command line for the
+operator is not constructing an invocation**, and the two must not be collapsed: what is
+forbidden is running it, routing it through any primitive, or offering `publish` as a verb
+of this command. Do not do those. Do print the line.
 
 **When the resolved trip is `ARCHIVED`**, the row above declares `lifecycle: ACTIVE`, so
 G7 disposes `REFUSE`: name the cell the resolved state does not satisfy and the value the
@@ -328,7 +397,9 @@ no argument.
 
 **Freshness is report-only.** Render the stale column as the script emits it, including
 its indeterminate value. No verb of this file branches on it, and `update` does not
-require staleness — re-publishing unchanged content is legal and harmless.
+require staleness — re-publishing unchanged content is legal. It is not inert, though: it
+pushes a commit, and `reference/adr/ADR-007-command-entry-point.md` § 4 records that
+commit's timestamp as a metadata residual no revert reaches.
 
 ### Never assert a publication state that was not observed
 
