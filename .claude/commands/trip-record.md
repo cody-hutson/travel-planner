@@ -206,10 +206,11 @@ persist-mutable file is read before its named row is written. A list frozen befo
 written would either forbid them or be widened by every author who met it — and a ceiling that
 every author widens is not a ceiling. Placing the obligation on the verb puts the declaration in
 the hands of the author writing the read, and makes this file's whole read scope the union of its
-sections rather than a second list that can disagree with them. `/trip` states its ceiling as a
-closed list of paths, stated for the file rather than per verb; this file's read scope is the union
-of what its verb sections name, and that union grows as later slices land, so the same rendering
-would be wrong inside a single merge.
+sections rather than a second list that can disagree with them. **How a sibling command renders its
+own ceiling is that command's to state, read from its file and never restated here** — a
+restatement is a second source, and it goes false when that file changes with nothing here changing
+to show it. This file's read scope is the union of what its verb sections name, and that union
+grows as later slices land, so a list frozen at one revision would be wrong inside a single merge.
 
 **How every verb section declares it.** Each `## <verb>` section opens with a `**Reads:**` line, as
 its first line, before any procedure, in this rendering:
@@ -264,8 +265,7 @@ only the verbs that existed when it was written.
 1. **Never publishes.** This command never invokes `scripts/publish-trip-site.sh` — not directly,
    not through `bash` or `sh`, not through any wrapper, alias or generated command line. It never
    sets `ALLOW_PLAINTEXT`. It never passes `--yes` to `unpublish`. Where publishing is what the user
-   wants, name `/trip-publish`, **which does not exist at this revision**, and stop; do not reach
-   the script from here.
+   wants, name `/trip-publish` and stop; do not reach the script from here.
 2. **Never overwrites and never deletes existing trip content.** `ADR-007` §2 bound 5, and `trips/`
    is git-ignored, so a clobber is recoverable from nothing. `Write` is used on exactly one
    condition — the target path does not exist. `Edit` is used on exactly one condition — the target
@@ -303,6 +303,24 @@ only the verbs that existed when it was written.
    admitting a tool shape for every verb that writes an append, present and future, is precisely
    what the Extension rule below reserves this clause for; buried in `log` it would protect `log`
    alone and leave every other such verb in the same gap.
+
+8. **Names a command other than itself without asserting that command's availability.** A section
+   names the command and stops. Whether that command is available, and which of its verbs are
+   implemented, is a property of that command's own file and is observed there — **so no section of
+   this file may state it.** A statement of it here is a second source: it goes false the moment
+   that file changes, with nothing in this file changing to show it, and a reader who meets it
+   cannot tell. This is the read-live discipline § *Selecting the verb* applies to this command's
+   own verb set and `mode` applies to the mode vocabulary, applied to a set neither of them reaches.
+
+   **What it bounds, and what it leaves alone.** It bounds a statement of the named command's
+   **availability** — that it exists or does not, that it has shipped or has yet to, which of its
+   verbs are implemented. It does **not** reach naming the command, saying whether this verb runs
+   it, or citing a convention that command ships and attributing it: those are this file's own
+   subject, and each is checkable against the cited file rather than going stale behind it.
+
+   **This binds every verb, present and future, which is why it is here.** Naming a sibling command
+   is not a class one slice owns: **more than one verb of this revision already names one**, and a
+   rule written inside any one of them would leave every other verb free to re-acquire the habit.
 
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
@@ -394,8 +412,7 @@ ladder resolved. Nothing here states what every row of the table happens to decl
 closed enumeration of a set the requirement table's own extension point grows, and it is false the
 first time a slice appends a row § *The shape of a table row* already admits — a `lifecycle` naming
 `ANY` or `ARCHIVED`, or a `mode` or `destination` cell naming values. Where the unsatisfied cell is
-`lifecycle`, the render says the trip is archived and names `/trip-decommission`, **which does not
-exist at this revision**.
+`lifecycle`, the render says the trip is archived and names `/trip-decommission`.
 
 ## profile <name>
 
@@ -539,8 +556,8 @@ vacuously here; it is not a mandate to run the research role.
 
 | Signal class | What this verb names | Why it does not run it |
 |---|---|---|
-| a changed need | `/trip replan`, **which `/trip` does not implement at this revision**, naming the spokes the need touches | dispatching a planning pipeline is a different request type with its own command and its own permissions |
-| a changed desire | `/trip replan`, **which `/trip` does not implement at this revision**, with no spoke named | the same |
+| a changed need | `/trip replan`, naming the spokes the need touches | dispatching a planning pipeline is a different request type with its own command and its own permissions |
+| a changed desire | `/trip replan`, with no spoke named | the same |
 | a changed journey facet | `### Per-Traveler Planning Days [DERIVED]` is **stale** — report it and **name no command** | that block has **no writer** in `CLAUDE.md` § *Write ownership*, so its staleness is reported and never repaired in place |
 | `PROFILE MISSING` | `/trip-record profile <name>` | the profile is the operator's to collect |
 
@@ -556,9 +573,8 @@ reported as a defect.
 **Reads:** `trips/<slug>/trip-context.md` — the `## Destination` block and the title line, read before they are written because standing rule 2 confines the `Edit` to the lines being changed and standing rule 4 tests a placeholder by value, and because a destination already decided is echoed from that value before it is replaced. Does not read `outputs/destination-shortlist.md` — the chosen value arrives as this verb's argument, and reading the shortlist would give that value a second source. Dispatches no agent.
 
 The verb that performs the destination hand-off. `agents/destination-ideation.md` ends by saying it
-never writes a destination into `trip-context.md` itself, and `/trip ideas`, **which `/trip` does
-not implement at this revision**, produces the shortlist and names this step without performing it.
-This is the step they name.
+never writes a destination into `trip-context.md` itself, and `/trip ideas` produces the shortlist
+and names this step without performing it. This is the step they name.
 
 **Argument.** Everything after the verb token, trimmed, is the primary destination value, and it is
 written **verbatim**. It is never normalised, expanded, spell-corrected or resolved against a
@@ -595,10 +611,11 @@ the branch that costs something, so it is stated rather than assumed.
 1. **Echo the outgoing value verbatim** before writing anything.
 2. Write the new value.
 3. Say that **every `[ENRICH]`-tagged block is now research for the previous destination** — the tag
-   is the selector, read from the file rather than listed here — and **name no command for the
-   refresh**, saying plainly that no verb of this surface refreshes them at this revision. Reporting
-   staleness while naming nothing is the shape § *Write ownership* already fixes for a block whose
-   writer does not exist.
+   is the selector, read from the file rather than listed here — and **name the refresh, without
+   running it.** An `[ENRICH]` block has a writer: § *Write ownership* names the enrichment agent,
+   and `CLAUDE.md`'s agent roster names a destination change as a condition for dispatching it, so
+   **the command to name is read live from that roster** rather than listed here. Naming nothing is
+   the shape § *Write ownership* fixes for a block whose writer does not exist, and this is not one.
 4. Say that **the trip directory does not change.** `trip.slug` is the directory name exactly as
    `E1` spelled it, no verb of this command renames a directory, and a trip scaffolded as
    `lisbon-2027` that becomes Porto keeps its folder name. **The title line and the slug are allowed
@@ -617,9 +634,8 @@ command's title line and its `Mode notes`, both of which it owns — so a freshl
 carries `trip.destination` as `UNDECIDED` whatever its mode, which is why `/trip-new` names this
 verb from its `DISCOVERY` branch as well as its `IDEATION` one.
 
-**It does not dispatch Destination Ideation.** That dispatch is `/trip ideas`'s, **which `/trip`
-does not implement at this revision**, and making it here would be a different request type with its
-own command and its own permissions.
+**It does not dispatch Destination Ideation.** That dispatch is `/trip ideas`'s, and making it here
+would be a different request type with its own command and its own permissions.
 
 ## mode <MODE>
 
@@ -847,7 +863,7 @@ verb's.
 |---|---|
 | `[ENRICH]`-tagged | the enrichment agent's (`agents/00-enrichment.md`). Name it and write nothing — this verb writes no `[ENRICH]` field |
 | `[DERIVED]` | **no writer exists.** Report staleness and **name no command**; this verb writes zero bytes of such a block |
-| `**Lifecycle:**` | `/trip-decommission`'s, **which does not exist at this revision**, so nothing writes that field until it ships and an absent line is the contract's declared default rather than a gap to fill. This verb never writes it |
+| `**Lifecycle:**` | `/trip-decommission`'s — name it and stop. An absent line is the contract's declared default rather than a gap to fill. This verb never writes it |
 | `## Destination`, `## Mode` and `## Group` | a sibling verb of this same command — name it and stop |
 | `## Locked Elements`, `## Current Itinerary Status`, and every other untagged field | **this verb writes it** |
 
@@ -996,9 +1012,8 @@ removes or replaces the file first.
 **Never.** Runs no subcommand of `scripts/publish-trip-site.sh` — not directly, not through `bash`
 or `sh`. Reads no `.passphrase`. Sets no `ALLOW_PLAINTEXT`. Passes no `--yes` to `unpublish`.
 Generates no name of its own. Writes no path other than `trips/<slug>/.publish-slug`. Where
-publishing itself is what the user wants, name `/trip-publish`, **which does not exist at this
-revision**, and stop; where taking a site down is what they want, name `/trip-decommission`, **which
-does not exist at this revision**, and stop.
+publishing itself is what the user wants, name `/trip-publish` and stop; where taking a site down is
+what they want, name `/trip-decommission` and stop.
 
 ## event <id> <state>
 
@@ -1012,8 +1027,8 @@ authors no other cell, creates no row, creates no file, and deletes no row.
 status change that **has already happened**, or that the user is deliberately making to the record.
 It never *requests* a planning change. A booking that fell through, a table that was held, a museum
 morning the group settled — those are facts about the world. A wish to re-open a settled event is a
-request to the plan: name **`/trip replan`**, **which `/trip` does not implement at this revision**,
-naming the event, and stop. Naming is the whole of this verb's part in that; **it does not run it.**
+request to the plan: name **`/trip replan`**, naming the event, and stop. Naming is the whole of
+this verb's part in that; **it does not run it.**
 
 **Every refusal in this section is in-verb and post-resolution.** Each one is reached after the trip
 resolved and this verb ran, so **none of them is a branch of the shell**: none sets
@@ -1070,7 +1085,7 @@ state machine is the data model's to define, and a set copied into a command is 
 that refuses a legitimate transition the moment the model gains an edge. A pair that section does
 not name is **this verb's own refusal**: render the requested edge verbatim, name that section, and
 stop — and where what the user wants is a change to the plan rather than a record of one, name
-**`/trip replan`**, **which `/trip` does not implement at this revision**, and **do not run it.**
+**`/trip replan`**, and **do not run it.**
 
 **What a transition obliges, and what it does not.** These are consequences, not admissibility:
 naming what a transition obliges declares nothing about whether it runs, which stays the model's to
@@ -1090,8 +1105,7 @@ never promotes in bulk.
   still shows the event as an alternative — a disagreement that is **reported here and never
   repaired here**, because that file is rebuilt on every synthesis and a hand repair to a rebuilt
   artifact is a change with a deletion already scheduled. Where the slot is what the user wants
-  re-pointed, name **`/trip replan`**, **which `/trip` does not implement at this revision**, **do
-  not run it**, and stop.
+  re-pointed, name **`/trip replan`**, **do not run it**, and stop.
 
 **`option → locked` — promoting and settling in one act, and it carries both.** The model names this
 edge, so what it obliges is the union of the classes it spans and nothing new.
@@ -1101,9 +1115,9 @@ edge, so what it obliges is the union of the classes it spans and nothing new.
   booking is what this transition records.
 - *Does not oblige:* **the primary slot is not re-pointed**, for the reason the promotion class above
   gives and with the same disposition — report the `outputs/venue-matrix.md` disagreement, never
-  repair it here, and where the slot is what the user wants re-pointed name **`/trip replan`**,
-  **which `/trip` does not implement at this revision**, **do not run it**, and stop. **`Requires
-  booking?` and `## Locked Elements` are untouched**, for the reason the settling class below gives.
+  repair it here, and where the slot is what the user wants re-pointed name **`/trip replan`**, **do
+  not run it**, and stop. **`Requires booking?` and `## Locked Elements` are untouched**, for the
+  reason the settling class below gives.
 
 **The fall-through, so a class this section has not written is never a refusal.** An edge
 `reference/data-model.md` § *The Per-Event Status Model* names and this section does not class takes
@@ -1133,8 +1147,8 @@ directions are stated.
   derived cell recomputes to `yes` where `requires booking? = yes`.
 - *Obliges, beyond the file:* the trip now carries the **disruption-recovery trigger** § *Modes*
   names, so the hub's equity-aware recovery and the validator's recovery-equity check belong to the
-  next planning pass. Name **`/trip replan`**, **which `/trip` does not implement at this
-  revision**, and **do not run it.** Name **`/trip-record log`** as well, and do not run it: *why* a
+  next planning pass. Name **`/trip replan`**, and **do not run it.** Name **`/trip-record log`** as
+  well, and do not run it: *why* a
   booking fell through is exactly what the log carries, and the status table has no field for it.
 - *Does not oblige:* it does not dispatch the hub, does not re-run an agent, and does not patch the
   itinerary. **It does not write `Current mode`.** The regression triggers the *recovery*; the mode
