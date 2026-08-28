@@ -60,12 +60,12 @@ and **disagree, say so and ask which was meant.** Do not pick one.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G2
 population-role: CREATE
+```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
 | new (create) | not read at this depth | not read at this depth | not read at this depth | G2 |
 | new (resume) | not read at this depth | not read at this depth | not read at this depth | G2 |
-```
 
 ## What to do with this
 
@@ -73,9 +73,10 @@ The block above has already run and its output sits above this line. **The resol
 comes from it, as the contract states.** Do not list `trips/` again to re-derive that population, and
 do not read an existing trip's files to decide anything here.
 
-The fenced block above is this file's contract declaration. It cites the one normative home of the
-resolution rules and states the depth this file runs at, the role it plays, and what each of its two
-branches requires. It is a declaration, not a procedure: nothing in it is re-derived below.
+The fenced block above is this file's contract declaration, and the requirement table that follows
+it states what each of its two branches requires. The block cites the one normative home of the
+resolution rules and states the depth this file runs at and the role it plays. Both are declarations,
+not procedures: nothing either one states is re-derived below.
 
 Work Gate A and then Gate B, in that order. Do not skip ahead to the scaffold.
 

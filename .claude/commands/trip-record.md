@@ -77,6 +77,7 @@ be narrowed.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
@@ -90,14 +91,17 @@ population-role: RESOLVE
 | .publish-slug | ACTIVE | any | any | G8 |
 | event | ACTIVE | any | any | G8 |
 | log | ACTIVE | any | any | G8 |
-```
 
-The block above is this file's contract declaration. The requirement table sits **inside** it
-because the fence the contract publishes lists that table as one of the block's own fields, so the
-table-inside form is the rendering the canonical states. The cost is that the table does not render
-as markdown, and it is accepted: this is a declaration read by a model and by a parser, not a table
-read by a browser. The info string names the block, so it can be located by the same primitive that
-locates the canonical.
+The block above is this file's contract declaration, and the requirement table sits **below** it,
+outside the fence, so it renders as a markdown table. The fence the contract publishes names that
+table among the block's fields on a line that is **entirely a placeholder** — it describes the field
+rather than rendering it — so the canonical fixes this block's field set and does not settle where
+the table is drawn. The table's own bytes do not move with it: five columns, their order, and their
+header row, unchanged. `scripts/test-trip-resolution-contract.sh` does not grade the placement, and
+that was read out of its source rather than assumed — it opens a fence by info string at one pin and
+that pin reads `CLAUDE.md`, while every assertion it makes about this file reads whole lines of it
+with no fence state at all. **A checker locating this file's declared verb set by opening this fence
+would see the difference**; the table's own header row is the anchor that survives the rendering.
 
 **Frozen.** The citation line, byte-for-byte. `contract-depth: G8` as a **bare** token on its own
 line — a code-span rendering of that line is graded as an *absent* declaration, so the tolerance
@@ -174,7 +178,7 @@ and it takes exactly this shape:
 | `lifecycle` | the value admitting exactly the trip lifecycles the verb's **own section** states a reason to serve. `ANY` or `ARCHIVED` only where that section states the reason; where it states none the cell takes the contract's declared default, and **every verb of this command writes**, so no verb of it has that reason. The rule is written rather than its output because the output is what goes stale |
 | `mode` | `any` unless the verb's own section states a mode it does not serve, in which case the cell names the modes it does. A verb that must not run without a decided mode says so **in its own row**, naming what it serves, rather than by a halt at the gate that yielded the state |
 | `destination` | the `mode` rule again, with one bound that is not derived and does not move: **no row of this file may gate on a decided destination.** A freshly scaffolded trip has no decided destination whatever its mode, so a destination-gated verb would refuse on a trip the taxonomy says runs the full pipeline |
-| `depth` | **the value the header block's `contract-depth` line declares, read from that line.** The header fixes it, the guard grades the equality in both directions, and a value restated here would be a second declaration that can disagree with the first. Rendered **bare**: a depth cell elsewhere in the surface tolerates a code span, but this table sits inside a fence where backticks are literal, so it follows the in-fence convention `/trip-new` already ships. **The value is never written into this table's own rule text** — hazard 3 below counts any five-column row whose fifth field normalises to a depth as a verb row, and hazard 3 forbids every other table the token outright, so this is the only table in this file that would otherwise carry it at all |
+| `depth` | **the value the header block's `contract-depth` line declares, read from that line.** The header fixes it, the guard grades the equality in both directions, and a value restated here would be a second declaration that can disagree with the first. Rendered **bare**, and left that way by the revision that moved this table outside the fence: a depth cell tolerates either rendering, and the guard strips a code span from the cell before it matches, so the value it reads is the same under both. **The value is never written into this table's own rule text** — hazard 3 below counts any five-column row whose fifth field normalises to a depth as a verb row, and hazard 3 forbids every other table the token outright, so this is the only table in this file that would otherwise carry it at all |
 
 **Three hazards, and each is a silent failure rather than a loud one.** They come from how the
 conformance guard reads this file, not from taste.

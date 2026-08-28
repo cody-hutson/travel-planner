@@ -118,17 +118,23 @@ grant is present.**
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
 | temporary | ACTIVE | any | any | G8 |
 | archive | ACTIVE | any | any | G8 |
 | reopen | ARCHIVED | any | any | G8 |
-```
 
-The block above is this file's contract declaration. The requirement table sits **inside** it
-because the fence the contract publishes lists that table as one of the block's own fields, so the
-table-inside form is the rendering the canonical states.
+The block above is this file's contract declaration, and the requirement table sits **below** it,
+outside the fence, so it renders as a markdown table. The fence the contract publishes names that
+table among the block's fields on a line that is **entirely a placeholder** — it describes the field
+rather than rendering it — so the canonical fixes this block's field set and does not settle where
+the table is drawn. `scripts/test-trip-resolution-contract.sh` does not grade the placement either,
+read out of its source rather than assumed: it opens a fence by info string at one pin and that pin
+reads `CLAUDE.md`, while every assertion it makes about this file reads whole lines of it with no
+fence state. **A checker locating this file's declared verb set by opening this fence would see the
+difference**; the table's own header row is the anchor that survives the rendering.
 
 **Frozen.** The citation line, byte-for-byte. `contract-depth: G8` as a **bare** token on its own
 line — a code-span rendering of that line is graded as an *absent* declaration, so the tolerance for

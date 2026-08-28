@@ -149,26 +149,29 @@ content-emitting primitive at a passphrase path.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+```
 
 | verb | lifecycle | mode | destination | depth |
 |---|---|---|---|---|
 | update | ACTIVE | any | any | G8 |
 | list | ANY | any | any | G0 |
-```
 
-The block above is this file's contract declaration. The requirement table sits **inside**
-it because the fence the contract publishes lists that table as one of the block's own
-fields, so the table-inside form is the rendering the canonical states. The cost is that
-the table does not render as markdown, and it is accepted: this is a declaration read by a
-model and by a parser, not a table read by a browser. The info string names the block, so
-it can be located by the same primitive that locates the canonical.
+The block above is this file's contract declaration, and the requirement table sits
+**below** it, outside the fence, so it renders as a markdown table. The fence the
+contract publishes names that table among the block's fields on a line that is **entirely
+a placeholder** — it describes the field rather than rendering it — so the canonical fixes
+this block's field set and does not settle where the table is drawn.
 
-**This file carried a bare fence with the table outside it until this revision.** No check
-observed the difference: `scripts/test-trip-resolution-contract.sh` matches the fence tag
-against `CLAUDE.md` alone, and reads every consumer's citation line, `contract-depth`,
-`population-role` and depth cells by a whole-file line scan that is indifferent to fences.
-The correction is therefore editorial, and it is recorded here rather than left for the
-next reader to rediscover as a difference with no stated reason.
+**The table sat inside the fence for one revision; this returns it to the outside.**
+Neither arrangement is observed by `scripts/test-trip-resolution-contract.sh`, and that
+was read out of its source rather than assumed: it opens a fence by info string at one pin
+and that pin reads `CLAUDE.md`, while every assertion it makes about a consumer — the
+citation line, `contract-depth`, `population-role`, and the depth cells it reads at
+pipe-field five — is a whole-file line scan carrying no fence state. The choice is
+therefore editorial and it is made for the rendered form. **A checker locating this file's
+declared verb set by opening this fence would see the difference**; the table's own header
+row is the anchor that survives the rendering. Both revisions are recorded here rather
+than left for the next reader to rediscover as a difference with no stated reason.
 
 **Frozen.** The citation line, byte-for-byte. `contract-depth: G8` as a **bare** token on
 its own line — a code-span rendering of that line is graded as an *absent* declaration, so
