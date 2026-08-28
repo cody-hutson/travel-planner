@@ -22,8 +22,18 @@ tools from the pool* — a real restriction. The trip-resolution contract workfl
 scope note says the opposite where it matters: `allowed-tools` and `disallowed-tools` are a
 turn-scoped pre-approval grant and **every tool stays callable**, adding that a green check
 there is not a privilege guarantee and must not be read as one. **Nothing in this repo
-arbitrates**, because nothing in it reads the field: it appears in the five command files,
-in that workflow comment and in the ADR, and in none of them as something a check parses.
+arbitrates**, and the reason is narrower than *nothing reads the field*.
+`scripts/test-command-taxonomy.sh` does read it: its invocation classifier walks the
+command directory and matches this file's `disallowed-tools:` line on the publish-script
+grant token that line carries, counting it into a **tool-grant tally** — one term of a
+parse-coverage identity that guard asserts and fails on. That reading is of what this file
+**declares**; the guard says in terms that it takes neither account, because every
+assertion it makes is about a declaration and none about what a declaration enforces. **A
+declaration-level reading is what leaves the runtime question unarbitrated** — not the
+absence of a reader. Where else the field appears is **re-derived from the tree rather than
+listed here**: the list this sentence used to carry named the five command files, one
+workflow comment and the ADR, and was two short — it missed a second workflow comment and
+the guard itself, which is what a written-down census does.
 
 What the two accounts **agree** on is all this file relies on. The declaration is
 turn-scoped and clears at the next message; a tool left off `allowed-tools` is not thereby
@@ -107,8 +117,10 @@ stated as a derivation rather than as a count or a census, so the correct set is
 
 **Re-deriving it is not automatic, and this file does not claim it is.** `disallowed-tools`
 is a static list in the frontmatter above; nothing compares it to the dispatch. The
-trip-resolution contract suite puts runtime privilege out of scope by name, and no check in
-this repo reads a `disallowed-tools` line at all. So the day the script grows an arm, the
+trip-resolution contract suite puts runtime privilege out of scope by name, and where a
+check does read a `disallowed-tools` line — `scripts/test-command-taxonomy.sh` does, in its
+invocation classifier — it counts the line as a **declared tool grant** and compares it to
+nothing, the dispatch included. So the day the script grows an arm, the
 rule says what the new deny set is — and an editor still has to apply it. The Extension rule
 below is where that obligation is written, and it is the whole of what carries it.
 

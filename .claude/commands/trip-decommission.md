@@ -27,19 +27,27 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 
 **The denials, and what each one establishes — which is narrower than "enforced", and narrower than
 anything here can verify.** `allowed-tools` is a turn-scoped pre-approval grant and enforces nothing.
-What `disallowed-tools` does is **honoured by the runtime, and asserted here rather than observed**:
-`ADR-007`'s Context records that it removes the named tools from the pool for the turn, while the
-contract workflow's own scope note records that every tool stays callable and that unlisted tools
-route through the usual permission settings. **Those two statements differ, and nothing in this
-repository settles them, because nothing in it reads a `disallowed-tools` line at all.** These
-entries are **declared, not consumed** — no file constructs, derives or checks anything from them,
-and the contract suite scopes runtime privilege out by name. `ADR-007` adds that durable blocking
+What `disallowed-tools` does at runtime is **contested, and this file does not settle it**, so
+nothing below is asserted about what a runtime makes of these entries: `ADR-007`'s Context records
+that it removes the named tools from the pool for the turn, while the contract workflow's own scope
+note records that every tool stays callable and that unlisted tools route through the usual
+permission settings. **Those two statements differ, and nothing in this repository settles them.**
+That is not because the line goes unread. `scripts/test-command-taxonomy.sh` reads it: its
+invocation classifier matches this file's `disallowed-tools:` line on the publish-script grant token
+the line carries and counts it into a **tool-grant tally**, one term of a parse-coverage identity
+that guard asserts and fails on. It reads the line as a **declaration**, and says in terms that it
+takes neither account — so what it establishes is that the entry was written, never that a runtime
+honours it. **Declared, and read as a declaration, is the whole of what these entries are
+established to be here** — not enforced, and not observed. `ADR-007` adds that durable blocking
 would need a permission-settings deny rule, which this repo does not ship.
 
 **Two consequences, and they govern every denial below.** Each is a claim about what an entry
-**names**, never about what it has been observed to do; and **no claim here can be repaired by
-pointing at an in-repo check, because there is none to point at.** These entries are still the
-strongest control this file has — their strength is simply not established here, and this file does
+**names**, never about what it has been observed to do; and **no claim here about what an entry
+*does* is repaired by pointing at an in-repo check.** A check that reads these lines as
+declarations — the one named above does — corroborates that an entry was written and establishes
+nothing about what a runtime does with it, so it repairs no claim of that kind. These entries are
+still the strongest control this file has — their strength is simply not established here, and this
+file does
 not rely on them alone: § *The closing entry* and § *Deleting the trip's public repo* rest on the
 push-time contract guard, and `temporary` and the hand-off rest on the script's own scope check and
 typed confirmation.
@@ -57,8 +65,10 @@ typed confirmation.
   live in this file. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
   names the binary, so the form does not matter there; for the script entries the path is part of
   what is named. **Whether the runtime's matching reaches a second spelling of the same path is not
-  established anywhere in this repository, and no check here can settle it, because nothing here
-  reads these entries.** The residual therefore rests on **the absence of any establishing
+  established anywhere in this repository, and nothing that reads these entries as declarations can
+  settle it.** A declaration-level read — which is what the check named above performs — exercises no
+  runtime match, so it cannot tell one spelling of the path from another and its silence is not
+  evidence either way. The residual therefore rests on **the absence of any establishing
   evidence** — a firmer basis than a matching rule this file would otherwise be asserting on its own
   authority.
 - **What this file does about that is conduct, not coverage.** Every invocation it makes is written

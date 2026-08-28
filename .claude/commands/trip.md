@@ -67,13 +67,21 @@ the tolerance for a code span belongs to a depth **cell** and never to this line
 `population-role: RESOLVE`. The fence tag. The table's five columns, their order, and
 their header row.
 
-**Five columns, and a sixth is never added — the freeze has teeth rather than only a
-rule.** The checker reads a verb row's depth at pipe-field five. A sixth column inserted
-anywhere in this table moves every depth out of that field; no row then carries a depth the
-checker recognises, and it reports this file as carrying **no per-verb requirement table at
-all** — a finding that names the wrong defect, on every push, in red. So a widening of this
-table fails loudly and immediately instead of quietly changing what a verb is allowed to
-do, which is the property the freeze is for.
+**Five columns, and a sixth is never added — the freeze has teeth rather than only a rule,
+and the teeth are direction-dependent, because the guards carrying them read this table
+differently.** `scripts/test-trip-resolution-contract.sh` reads a verb row's depth at
+pipe-field five. A sixth column inserted **at or to the left of** `depth` moves every depth
+out of that field; no row then carries a depth it recognises, and it reports this file as
+carrying **no per-verb requirement table at all** — a finding that names the wrong defect,
+in red. A sixth column **appended to the right of** `depth` does not reach that limb at
+all: the trailing field falls into the parser's remainder variable, the fifth field still
+reads the depth, and the row census and the declared maximum both come out unchanged, so it
+emits nothing. What catches the appended direction is `scripts/test-command-taxonomy.sh`,
+whose table anchor requires exactly the five column names and whose row check requires
+exactly five fields, so a widened header has no anchor for it to find. A widening therefore
+does fail loudly instead of quietly changing what a verb is allowed to do — which is the
+property the freeze is for — but it fails from whichever guard the direction reaches, and
+the finding it names differs with the direction.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
 have already run, and their output is the whole of the trip state this file **resolves
@@ -85,9 +93,13 @@ value set the contract declares for `trip.destination`, which is the value or `U
 and it is written as a value rather than as `any` because `any` admits the
 non-nominal state by `G7`'s own rule, and a verb that must not run without a settled
 destination has to say so in its own row. The token is a convention of this file until the
-contract registers one for that disposition; nothing reads the column mechanically, so the
-convention costs nothing while it waits, and any token naming `G6`'s decided disposition
-serves in its place.
+contract registers one for that disposition. What the guards read of this column is its
+**name**: `scripts/test-command-taxonomy.sh` matches the header row against the five column
+names and freezes them, while the cell beneath carries no value either guard goes on to
+consume — the depth cell and the verb cell are the ones they read. So the convention costs
+nothing while it waits, and any token naming `G6`'s decided disposition serves in its
+place; a consumer of the cell is what would end that, and is what registering the token
+would be for.
 
 **The read ceiling, stated for this file.** Exactly two prohibitions hold file-general, and
 both are checkable against every `**Reads:**` line below: **no verb reads `trip-context.md`
@@ -109,6 +121,30 @@ grant is speculative and neither is unused. **The header block fixes how many pr
 blocks this file carries, and it already carries all of them** — no slice adds another, and a
 verb needing to know whether an artifact exists asks at verb time with `Read` or
 `Bash(ls:*)`, never with a block.
+
+**What `disallowed-tools` does at runtime is contested, and this file does not settle it.**
+Two accounts ship in this repo and they are not compatible. `ADR-007` § *Context* says the
+field *removes the named tools from the pool* — a real restriction, turn-scoped like the
+grant. The trip-resolution contract workflow's coverage-boundary note says the opposite
+where it matters: `allowed-tools` and `disallowed-tools` alike are a turn-scoped
+pre-approval grant, **every tool stays callable**, and a green check there is not a
+privilege guarantee and must not be read as one. **Nothing in this repo arbitrates**, and
+the reason is narrower than *nothing reads the field*. `scripts/test-command-taxonomy.sh`
+does read it: its invocation classifier matches this file's `disallowed-tools:` line on the
+publish-script grant token that line carries and counts it into a **tool-grant tally**, one
+term of a parse-coverage identity that guard asserts and fails on. It reads the line as a
+**declaration** and says in terms that it takes neither account — so a declaration-level
+reading is what leaves the runtime question unarbitrated, not the absence of a reader.
+
+**What the two accounts agree on is all this file relies on.** The declaration is
+turn-scoped and clears at the next message; a tool left off `allowed-tools` is not thereby
+forbidden — it routes through the usual permission settings instead, so **omission is not
+prohibition** under either account; and durable blocking would need a permission-settings
+deny rule, a different artifact and one this release does not ship. So every *never* below
+names a **rule this file follows, never a property its frontmatter guarantees**, which is
+the form `ADR-007` § *Context* requires of a command's conduct — and each holds under
+**either** account. **The contest is stated once, here.** A verb section names the control
+it actually rests on and does not restate it.
 
 ## Standing clause — binding every verb of this command, present and future
 
@@ -238,9 +274,15 @@ that is a defect avoided rather than a preference: the script records that the t
 dialects do not merely differ but **collide**, that the collision yielded a non-comparable
 epoch, and that the comparison **errored rather than fired**. An order has no dialect. It also
 has no threshold — no *older than N* rule can be written on top of an order, because an order
-is not a duration. What order costs, stated here rather than discovered later: mtime
-granularity is one second and a listing cannot tell a tie from a lead, so two operands written
-inside the same second may order either way. That is tolerable **because the output is a
+is not a duration. What order costs, stated here rather than discovered later: a listing
+cannot tell a tie from a lead, so two operands sharing a stamp may order either way.
+**Whether that state is reachable at all is a property of the filesystem rather than a
+constant, and this was measured rather than assumed** — on the filesystem this repo was
+checked out on, stamps carry nanoseconds, and a newest-first listing put the later of two
+back-to-back writes first in 40 of 40 same-second pairs, with the write order reversed
+flipping the verdict in all 40. So a tie is a state a coarser filesystem admits, not one
+established here, and the cost above is stated as a bound rather than as an observed
+defect. It is tolerable either way **because the output is a
 report** — the next observation corrects it and nothing waits on it. It is the first place
 where report-only is a property this file depends on rather than a restriction it accepts.
 
@@ -300,9 +342,16 @@ what it cannot see invites the reader to assume it sees everything.
   reads the same as an append carrying eight venues.
 - **Which append is unplaced.** File granularity again: the file accumulates dated sections and
   a listing does not see inside them.
-- **A considered-and-rejected append.** Here the relation clears **correctly** by construction —
-  the itinerary is replaced on synthesis, so a pass that read the research and deliberately
-  placed none of it still moves the itinerary to newest.
+- **A considered-and-rejected append.** The relation clears here — the itinerary is
+  replaced on synthesis, so a pass that read the research and deliberately placed none of
+  it still moves the itinerary to newest — but it clears as a **stamp** result rather than
+  because the placement was checked, which is weaker than *correct by construction*. What
+  it compares is when each operand was last written, never whether the derived side took
+  the source in, and the two come apart in **both** directions: a copy whose stamp lands
+  after the source while its content predates it reads `CURRENT` with the research
+  unplaced, and a source restored with its stamp preserved reads newest and yields
+  `BEHIND` on research already placed. **Ordering fidelity is the gap**, and the tie named
+  above is only its narrowest case.
 - **A clearance for the wrong reason.** Any write moving the itinerary's mtime clears the
   relation, a hand edit included. Declared rather than defended.
 - **Anything before the first synthesis.** No itinerary yields `UNDETERMINED` for the **whole
@@ -895,10 +944,12 @@ site scaffolding with no plan source is not. Where the check does not close, say
 did not resolve and do not present the site as current.
 
 **It never publishes.** The standing clause binds this verb, and it binds it **as a rule this
-verb follows**. `disallowed-tools` narrows the route — it names the script path, `bash` and
-`sh` — but it does not close it: `ADR-007` § *Context* is explicit that `disallowed-tools` is
-turn-scoped and that **durable blocking needs a permission-settings deny rule, a different
-artifact this repo does not ship**, and that a tool left off `allowed-tools` is not thereby
+verb follows**. `disallowed-tools` **names** the script path, `bash` and `sh` — and what
+naming them achieves at runtime is the contest stated above, on which this section takes
+neither side. What both accounts give is all this bound needs: `ADR-007` § *Context* is
+explicit that the declaration is turn-scoped, that **durable blocking needs a
+permission-settings deny rule, a different artifact this repo does not ship**, and that a
+tool left off `allowed-tools` is not thereby
 forbidden. So nothing here is unreachable by construction, and saying it was would be the same
 false move `check`'s section refuses to make about its own frontmatter. It is unreached because
 the rule says so. Where publishing is what the user wants, name `/trip-publish` and stop.

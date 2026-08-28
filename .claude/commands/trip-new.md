@@ -27,9 +27,17 @@ accounts ship in this repo and they are not compatible. `ADR-007` § *Context* s
 trip-resolution contract workflow's coverage-boundary note says the opposite where it matters:
 `allowed-tools` and `disallowed-tools` are a turn-scoped pre-approval grant, **every tool stays
 callable**, and a green check there is **not a privilege guarantee** and must not be read as one.
-**Nothing in this repo arbitrates**, because nothing in it reads the field — it appears in the five
-command files, in that workflow note and in the ADR, and in none of them as something a check
-parses.
+**Nothing in this repo arbitrates**, and the reason is narrower than *nothing reads the field*.
+`scripts/test-command-taxonomy.sh` does read it: its invocation classifier walks the command
+directory and matches this file's `disallowed-tools:` line on the publish-script grant token that
+line carries, counting it into a **tool-grant tally** — one term of a parse-coverage identity that
+guard asserts and fails on. That reading is of what this file **declares**; the guard says in terms
+that it takes neither account, because every assertion it makes is about a declaration and none
+about what a declaration enforces. **A declaration-level reading is what leaves the runtime question
+unarbitrated** — not the absence of a reader. Where else the field appears is **re-derived from the
+tree rather than listed here**: the list this sentence used to carry named the five command files,
+one workflow note and the ADR, and was two short — it missed a second workflow note and the guard
+itself, which is what a written-down census does.
 
 **What the two accounts agree on is all this file relies on.** Under both, the declaration is
 turn-scoped and clears at the next message, and a tool left off `allowed-tools` is not thereby
