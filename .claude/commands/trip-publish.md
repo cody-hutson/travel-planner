@@ -15,26 +15,43 @@ type, and nothing in it reads the wording of the request to decide one.
 
 ## Why this is its own file
 
-`disallowed-tools` removes the named tools from the pool — a real restriction, and
-turn-scoped in the same way as the grant beside it. `allowed-tools` is a turn-scoped
-pre-approval grant: a tool left off it is not thereby forbidden, it routes through the
-usual permission settings instead. **Omission is not prohibition.** Durable blocking would
-need a permission-settings deny rule — a different artifact, and one this release does not
-ship — so this file's conduct is written as rules it follows, never as a property its
-frontmatter guarantees (`reference/adr/ADR-007-command-entry-point.md` § Context).
+**What `disallowed-tools` does at runtime is contested, and this file does not settle it.**
+Two accounts ship in this repo and they are not compatible.
+`reference/adr/ADR-007-command-entry-point.md` § Context says the field *removes the named
+tools from the pool* — a real restriction. The trip-resolution contract workflow's
+scope note says the opposite where it matters: `allowed-tools` and `disallowed-tools` are a
+turn-scoped pre-approval grant and **every tool stays callable**, adding that a green check
+there is not a privilege guarantee and must not be read as one. **Nothing in this repo
+arbitrates**, because nothing in it reads the field: it appears in the five command files,
+in that workflow comment and in the ADR, and in none of them as something a check parses.
 
-**So every claim here about what this command will not do is labelled by what establishes
-it, and the two bases are not interchangeable.** A claim resting on a **denial** names the
-denied tool and holds for the turn whatever the model intends. A claim resting on a **rule
-this file follows** holds because the file says so, and nothing but the file says so. What
-is never claimed is the third thing: a prohibition inferred from a grant left out. Where
-this file's reach is bounded by omission alone, it says *unlisted*, not *denied*.
+What the two accounts **agree** on is all this file relies on. The declaration is
+turn-scoped and clears at the next message; a tool left off `allowed-tools` is not thereby
+forbidden, it routes through the usual permission settings instead. **Omission is not
+prohibition** under either account. And durable blocking would need a permission-settings
+deny rule — a different artifact, and one this release does not ship.
+
+**So this file's conduct is written as rules it follows, never as a property its
+frontmatter guarantees**, and that is what keeps it sound under either account: every claim
+below holds without the disputed one being true.
+
+**Each claim here about what this command will not do is labelled by what establishes it,
+and the two bases are not interchangeable.** A claim resting on a **rule this file
+follows** holds because the file says so, and nothing but the file says so. A claim that
+*also* has a `disallowed-tools` entry behind it names that entry as a **declared**
+restriction — one whose runtime force this repo does not establish, and which is therefore
+offered as corroboration rather than as the thing that makes the claim true. What is never
+claimed is the third thing: a prohibition inferred from a grant left out. Where this file's
+reach is bounded by omission alone, it says *unlisted*, not *denied*.
 
 That is why the publish surface is a separate file rather than a rule written inside
-`/trip`. A rule written inside one file cannot partition privilege — only the declared sets
-can, because they are what the runtime reads. **This file holds the publish half of that
-partition, and that half is observable right here:** it reaches the publish script and
-denies every content-mutating tool. The editing half is a **requirement on the files that
+`/trip`. A rule written inside one file cannot partition anything **across** files — only
+the per-file declarations can, because they are the only per-file thing there is to differ.
+What a runtime does with those declarations is the contested question above; the partition
+is a property of the declarations either way, which is why it is stated as one. **This file
+holds the publish half of it, and that half is observable right here:** it reaches the
+publish script and names every content-mutating tool in its `disallowed-tools`. The editing
+half is a **requirement on the files that
 hold it** — each denies the arms of the publish script it does not own, and both shell
 wrappers. It is stated as a requirement rather than as an observation about those files,
 because a sibling's frontmatter can change without this file changing, and a claim this
