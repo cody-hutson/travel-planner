@@ -35,8 +35,28 @@ directory-creating grant is taken, and no verb of this command creates a directo
 
 **Frozen.** `disable-model-invocation: true`; `argument-hint`, which is already verb-general; and
 every entry of `disallowed-tools`, which denies the publish script directly and through `bash` and
-`sh`. That denial is the **enforced** half of the standing clause below — `allowed-tools` is a
-turn-scoped pre-approval grant and enforces nothing.
+`sh`.
+
+**What `disallowed-tools` does at runtime is contested, and this file does not settle it.** Two
+accounts ship in this repo and they are not compatible.
+`reference/adr/ADR-007-command-entry-point.md` § *Context* says the field *removes the named tools
+from the pool* — a real restriction, turn-scoped in the same way as the grant. The trip-resolution
+contract workflow's own scope note says the opposite where it matters: `allowed-tools` and
+`disallowed-tools` alike are a turn-scoped pre-approval grant, **every tool stays callable**, and a
+green check there is not a privilege guarantee and must not be read as one. **Nothing in this repo
+arbitrates**, because nothing in it reads the field: it appears in the five command files, in that
+workflow comment and in the ADR, and in none of them as something a check parses.
+
+**What the two accounts agree on is all this file relies on.** The declaration is turn-scoped and
+clears at the next message; a tool left off `allowed-tools` is not thereby forbidden — it routes
+through the usual permission settings instead, so **omission is not prohibition** under either
+account; and durable blocking would need a permission-settings deny rule, a different artifact and
+one this release does not ship. So every *never* in this file names a **rule this file follows,
+never a property its frontmatter guarantees**: standing rule 1 is what makes this command never
+publish, and these entries stand beside it as a **declared** restriction whose runtime force this
+repo does not establish — corroboration, not the thing that makes the claim true. That is what
+freezes them, and it is what keeps the clause below sound under **either** account. **The contest is
+stated once, here.** A verb section names the control it actually rests on, and does not restate it.
 
 **Extension point — union only.** `allowed-tools` may gain a tool only where the verb that needs
 it is named in the adding slice's own design, and the addition is a union: no entry is removed and
@@ -437,8 +457,9 @@ and this verb creates no directory.
 
 **2 — The file-existence probe, reached only once the directory is observed present.** `Read`
 `trips/<slug>/travelers/<file>.md`. Readable → **edit**. Not readable → **create**. This probe is
-the control that makes standing rule 2 operative; the tool grants are pre-approval and enforce
-nothing.
+the control that makes standing rule 2 operative, and it is the **whole** of that control: what the
+frontmatter does at runtime is the contested question § *The frontmatter above* records, and nothing
+here rests on it either way.
 
 **The precedence, stated rather than left to the order of the paragraphs.** **An absent directory
 wins over whatever the file probe would have said**, and the file probe is not consulted at all
@@ -545,9 +566,10 @@ there that signal is a replanning trigger for a change nobody made.
 one file that role writes, exactly as the `Reads:` line above states them; standing rule 6 is what
 obliges that naming.
 
-**The research role is not run.** That role needs web tools this command does not grant, and running
-it would write `[ENRICH]` fields into `trip-context.md` — fields § *Write ownership* assigns to the
-enrichment agent, so **no verb of this command writes a byte of one.**
+**The research role is not run.** Running it would write `[ENRICH]` fields into `trip-context.md` —
+fields § *Write ownership* assigns to the enrichment agent, so **no verb of this command writes a
+byte of one**, and that rule is the whole of what establishes it. The web tools that role needs are
+merely **unlisted** here, which is not the same as denied and establishes nothing on its own.
 `CLAUDE.md`'s *"ownership follows the writer, not the caller"* is an attribution rule and holds
 vacuously here; it is not a mandate to run the research role.
 
@@ -727,8 +749,9 @@ boundary would sit inside one section for no gain.
 - **A name** — a **presence probe** on the roster's `Person` column, matched trimmed and
   ASCII-case-folded, **over the named rows only**: a row whose `Person` cell is a placeholder is
   skipped before the match, per the placeholder rule below. Present → **edit that row**. Absent →
-  **add a row**. The probe runs before either write tool is reached; `allowed-tools` is a
-  pre-approval grant and enforces nothing, which is the same control `profile` rests on.
+  **add a row**. The probe runs before either write tool is reached and is the whole of the control,
+  which is the same control `profile` rests on; nothing here rests on the frontmatter, whose runtime
+  force § *The frontmatter above* records as contested.
 
 **Adding a row — the append shape standing rule 7 admits**, reached once the read named above has
 established the file and the presence probe has selected this branch. `Person` carries the name
@@ -958,8 +981,10 @@ Elements` to *the operator, through `/trip-record`*.
 **Why this is not a publish-boundary crossing.** It runs no subcommand of
 `scripts/publish-trip-site.sh`, dispatches no agent, touches no credential and has no out-of-repo
 effect at write time. What it gives an operator is an addressable way to set the repo name
-**before** anything is published. Standing rule 1 and every entry of `disallowed-tools` are
-untouched and unrelaxed.
+**before** anything is published. **Standing rule 1 is what establishes that**, and it is untouched;
+every entry of `disallowed-tools` is unchanged too and stands beside it as a **declared**
+restriction — corroboration, on the terms § *The frontmatter above* states, rather than the thing
+that makes the claim true.
 
 **Validation — two conjuncts, and they are strict for opposite reasons.**
 
