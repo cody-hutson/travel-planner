@@ -249,8 +249,7 @@ person's identity originates outside the engine, and the name is *already* the f
 > **Filename correspondence.** The stem of `travelers/<file>.md`, put through the same normalization,
 > MUST equal the entry's traveler key. `.claude/commands/trip-new.md` § *Travelers — count and names*
 > already derives the filename in the forward direction; this rule **closes that derivation in the
-> reverse direction and
-> does not author a second one.**
+> reverse direction and does not author a second one.**
 >
 > **Two travelers whose keys collide are a hard stop at intake, never a silent merge.** The operator
 > disambiguates the display name — `Sam B.` — which changes the key. The engine never mints a suffix:
