@@ -226,9 +226,43 @@ Read trip-context.md fully before producing output. Read in this order:
    em-dashed answer is **unknown**, never `never`
 7. Mode — confirm output format
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it. **Its
+write-stop binds this role directly:** you append to a file you first read, so if
+the existing `outputs/food-list.md` declares a `schema-version` higher than the
+one below, **report and decline the append.** Do not rewrite its frontmatter at
+your own version — that is the irreversible case the rule exists to prevent, in a
+working directory this engine cannot repair.
+
 ## Output Format
 
 File: outputs/food-list.md
+
+**Artifact frontmatter — the first bytes of the file.** Open the file with this
+block, above the H1. Prepend it; move nothing that is already there.
+
+```yaml
+---
+artifact: outputs/food-list.md
+schema-version: 1
+trip: <trip-slug>
+writer: food
+lifecycle: accumulate-append
+provenance: researched
+publish: internal
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own slug. `generated` is the date of **this** run.
+On an append run the block is already there: keep it, set `generated` to today,
+and leave every accumulated section below it untouched — the frontmatter block is
+upgraded in place, body entries are never rewritten. The field set and its
+meanings live in `reference/data-architecture.md` → "Universal frontmatter"; the
+publishability class in `reference/data-architecture.md` → "Publishability"; and
+this class's own declaration in `reference/schemas/food-list.md`. Cite them; do
+not restate them.
 
 ### Destination Food Overview
 4-6 sentences. Defining food categories, price-quality dynamic, key dining
@@ -278,5 +312,45 @@ For each entry:
 - **Anchor-meal eligibility:** [If a convenience-format entry — `anchor-eligible
   (N of 2)` or `grazing/snack only`. Omit for all other entries.]
 - **Honest caveat:** when this recommendation would be wrong for this group
+
+**The entry marker — one fenced block per entry, carrying the venue key and
+nothing else.** Open every entry with it, directly under that entry's heading and
+above the labelled lines:
+
+```artifact-entry
+venue: ven-<token>
+```
+
+`ven-<token>` is the canonical venue key, and **the hub mints it** when it builds
+`outputs/venue-matrix.md` — which runs after you. So read
+`outputs/venue-matrix.md` if it exists and reuse the key it already carries for a
+venue; otherwise write `venue: unminted`. `unminted` is a **declared absence**,
+never a default: a reader takes it as *not yet minted*, never as *no venue*.
+
+The marker is what **selects** an entry. It is a fence rather than a heading
+because this file carries more `###` headings than entries, and rather than the
+entry number because an accumulated file's numbering restarts or continues across
+appended sections. **Nothing else goes in the marker** — no name, no
+neighbourhood, no price, no closure day, no judgement. Everything else about the
+entry stays in the labelled lines above, in prose, exactly as they are written
+today. Full statement: `reference/schemas/food-list.md` → "The entry marker".
+
+**One entry per place.** Before writing, resolve your own list to distinct places.
+A place you have already entered is **cross-referenced from the earlier entry,
+never re-entered** — the shape the worked example already uses ("The baseline —
+already covered in Breakfast"). Where you deliberately list one place twice under
+different roles, **both entries carry the same venue key**, so the hub's
+two-appearance cap counts places rather than rows.
+
+**What never becomes a field.** `Why it's worth it`, `Honest caveat`, `What to
+order`, `Timing note` and the neighbourhood on the `Name` line carry **prose
+only**. They are not candidates for the marker, for frontmatter, or for any
+normalized token a later slice might reach for. They fail the frontmatter/body
+test's second question by construction — two correct writers do not phrase a
+caveat identically — and that failure is the guarantee, not a reminder. A slice
+that normalizes one of them is reading the model, not the test.
+**`Anchor-meal eligibility` is the exception that proves it:** its two tokens are
+read verbatim by the hub, so write them exactly as the list above spells them and
+do not restyle, kebab-case or abbreviate them.
 
 Minimum 35 entries. Do not assign to days or build a schedule.

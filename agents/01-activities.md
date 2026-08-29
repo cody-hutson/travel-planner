@@ -204,9 +204,43 @@ Read trip-context.md fully before producing output. Read in this order:
    em-dashed answer is **unknown**, never `never`
 8. Mode — confirm output format
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it. **Its
+write-stop binds this role directly:** you append to a file you first read, so if
+the existing `outputs/activities-list.md` declares a `schema-version` higher than
+the one below, **report and decline the append.** Do not rewrite its frontmatter
+at your own version — that is the irreversible case the rule exists to prevent, in
+a working directory this engine cannot repair.
+
 ## Output Format
 
 File: outputs/activities-list.md
+
+**Artifact frontmatter — the first bytes of the file.** Open the file with this
+block, above the H1. Prepend it; move nothing that is already there.
+
+```yaml
+---
+artifact: outputs/activities-list.md
+schema-version: 1
+trip: <trip-slug>
+writer: activities
+lifecycle: accumulate-append
+provenance: researched
+publish: internal
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own slug. `generated` is the date of **this** run.
+On an append run the block is already there: keep it, set `generated` to today,
+and leave every accumulated section below it untouched — the frontmatter block is
+upgraded in place, body entries are never rewritten. The field set and its
+meanings live in `reference/data-architecture.md` → "Universal frontmatter"; the
+publishability class in `reference/data-architecture.md` → "Publishability"; and
+this class's own declaration in `reference/schemas/activities-list.md`. Cite
+them; do not restate them.
 
 ### Destination Activity Overview
 4-5 sentences. Geographic structure, activity landscape, key planning
@@ -258,6 +292,46 @@ For each entry:
 - **Reservation / timing:** Yes / No / Recommended — if Yes, lead time
 - **Proximity cap note:** [If hotel-neighborhood venue — flag appearance count]
 - **Honest caveat:** the condition under which this recommendation is wrong
+
+**The entry marker — one fenced block per entry, carrying the venue key and
+nothing else.** Open every entry with it, directly under that entry's heading and
+above the labelled lines:
+
+```artifact-entry
+venue: ven-<token>
+```
+
+`ven-<token>` is the canonical venue key, and **the hub mints it** when it builds
+`outputs/venue-matrix.md` — which runs after you. So read
+`outputs/venue-matrix.md` if it exists and reuse the key it already carries for a
+venue; otherwise write `venue: unminted`. `unminted` is a **declared absence**,
+never a default: a reader takes it as *not yet minted*, never as *no venue*.
+
+The marker is what **selects** an entry. It is a fence rather than a heading
+because not every `###` heading here is an entry, and rather than an entry number
+because this file carries none and its sibling `outputs/food-list.md` does — one
+lifecycle, two entry shapes, so no positional convention is correct across both.
+**Nothing else goes in the marker** — no name, no zone, no duration, no bailout
+venue, no judgement. Everything else about the entry stays in the labelled lines
+above, in prose, exactly as they are written today. Full statement:
+`reference/schemas/activities-list.md` → "The entry marker".
+
+**One entry per place.** Before writing, resolve your own list to distinct places.
+A place you have already entered is **cross-referenced from the earlier entry,
+never re-entered**. Where you deliberately list one place twice under different
+roles — a sight in the morning and a bailout in the afternoon — **both entries
+carry the same venue key**, so the hub's two-appearance cap counts places rather
+than rows. A compound entry naming two places either splits into two entries or
+carries the **primary** venue's key in the marker and names the second in prose;
+the cap needs a countable unit, and one row denoting two places is not one.
+
+**What never becomes a field.** `Why it's worth it`, `Honest caveat`, `Group
+fit`, `Best time`, `Constraint note` and the zone on the `Name` line carry **prose
+only**. They are not candidates for the marker, for frontmatter, or for any
+normalized token a later slice might reach for. They fail the frontmatter/body
+test's second question by construction — two correct writers do not phrase a
+caveat identically — and that failure is the guarantee, not a reminder. A slice
+that normalizes one of them is reading the model, not the test.
 
 Minimum 30 entries across main categories + minimum 5 bailout options.
 Do not sequence, prioritize, or assign to days.

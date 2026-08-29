@@ -229,10 +229,31 @@ Read trip-context.md fully before producing output. Read in this order:
    minimums
 7. Mode — confirm output depth
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it. **Its
+write-stop binds this role directly:** you append to a file you first read, so if
+the existing `outputs/nightlife-list.md` declares a `schema-version` higher than
+the one below, **report and decline the append** — including on the SKIP branch,
+where writing the stub is still a write. Do not rewrite its frontmatter at your
+own version; that is the irreversible case the rule exists to prevent, in a
+working directory this engine cannot repair.
+
 **The SKIP stub.** When the gate resolves SKIP, still write
 `outputs/nightlife-list.md`, containing only the gate result:
 
 ```markdown
+---
+artifact: outputs/nightlife-list.md
+schema-version: 1
+trip: <trip-slug>
+writer: nightlife
+lifecycle: accumulate-append
+provenance: researched
+publish: internal
+generated: <YYYY-MM-DD>
+---
+
 # Nightlife List — [Destination]
 
 ## Gate Result ([date])
@@ -249,11 +270,40 @@ would be ambiguous between "nobody wanted nightlife" and "the spoke never
 ran," and the validator has to tell those apart to write an honest "no
 nightlife tonight — [reason]" note instead of flagging a gap. The stub obeys
 the accumulate-don't-overwrite rule: a later run appends a new dated section
-rather than replacing it.
+rather than replacing it. **The stub is a real instance of this artifact class,
+so it carries the same frontmatter block a full run writes** — an entry
+population of zero is a measurement, not a reason to emit an unversioned file.
+It carries **no entry marker**, because it has no entries.
 
 ## Output Format
 
 File: outputs/nightlife-list.md
+
+**Artifact frontmatter — the first bytes of the file.** Open the file with this
+block, above the H1, on the full branch and the SKIP branch alike. Prepend it;
+move nothing that is already there.
+
+```yaml
+---
+artifact: outputs/nightlife-list.md
+schema-version: 1
+trip: <trip-slug>
+writer: nightlife
+lifecycle: accumulate-append
+provenance: researched
+publish: internal
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own slug. `generated` is the date of **this** run.
+On an append run the block is already there: keep it, set `generated` to today,
+and leave every accumulated section below it untouched — the frontmatter block is
+upgraded in place, body entries are never rewritten. The field set and its
+meanings live in `reference/data-architecture.md` → "Universal frontmatter"; the
+publishability class in `reference/data-architecture.md` → "Publishability"; and
+this class's own declaration in `reference/schemas/nightlife-list.md`. Cite
+them; do not restate them.
 
 ### Destination Nightlife Overview
 4-5 sentences. Which nights of the week this destination's night actually
@@ -307,6 +357,49 @@ For each entry:
 - **Proximity flag:** [If hotel-neighborhood venue — note appearance cap
   status]
 - **Honest caveat:** the condition under which this recommendation is wrong
+
+**The entry marker — one fenced block per entry, carrying the venue key and
+nothing else.** Open every entry with it, directly under that entry's heading and
+above the labelled lines:
+
+```artifact-entry
+venue: ven-<token>
+```
+
+`ven-<token>` is the canonical venue key, and **the hub mints it** when it builds
+`outputs/venue-matrix.md` — which runs after you. So read
+`outputs/venue-matrix.md` if it exists and reuse the key it already carries for a
+venue; otherwise write `venue: unminted`. `unminted` is a **declared absence**,
+never a default: a reader takes it as *not yet minted*, never as *no venue*.
+
+The marker is what **selects** an entry. It is a fence rather than a heading
+because a `## Gate Result` section is a heading and not an entry, and rather than
+an entry number because an accumulated file's numbering restarts or continues
+across appended sections. **Nothing else goes in the marker** — no name, no
+nights, no night type, no door policy, no price, no judgement. Everything else
+about the entry stays in the labelled lines above, in prose, exactly as they are
+written today. Full statement: `reference/schemas/nightlife-list.md` → "The entry
+marker".
+
+**One entry per place.** Before writing, resolve your own list to distinct places.
+A place you have already entered is **cross-referenced from the earlier entry,
+never re-entered**. Where you deliberately list one place twice under different
+roles — a dinner-adjacent bar and a late-night room in the same building —
+**both entries carry the same venue key**, so the hub's two-appearance cap counts
+places rather than rows. This matters most where your list overlaps the food
+agent's: a venue that appears in both spokes is one place, and the shared key is
+what lets the hub see that without comparing name strings.
+
+**What never becomes a field.** `Why it's worth it`, `Honest caveat`, `Group
+fit`, `Next-morning cost`, `Getting home`, `Constraint note` and — read the
+label's own wording — `Dry-friendly` carry **prose only**. `Dry-friendly` asks
+*whether a non-drinking traveler has a real reason to be here, not just permission
+to attend*: that is a judgement, so it is not a boolean and must not be flattened
+into one. None of these is a candidate for the marker, for frontmatter, or for
+any normalized token a later slice might reach for. They fail the frontmatter/body
+test's second question by construction — two correct writers do not phrase a
+caveat identically — and that failure is the guarantee, not a reminder. A slice
+that normalizes one of them is reading the model, not the test.
 
 Minimum 12 entries at FULL depth, minimum 5 at LIGHT. Do not assign to nights
 or days, and do not build a schedule.

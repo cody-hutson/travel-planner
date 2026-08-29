@@ -10,7 +10,7 @@ artifact: outputs/destination-shortlist.md
 schema-version: 1
 path-pattern: trips/*/outputs/destination-shortlist.md
 path-pattern: examples/*/outputs/destination-shortlist.md
-no-witness-because: the tracked instance examples/ideation-demo/outputs/destination-shortlist.md exists but is not yet migrated; the slice that versions it flips this line to witness: in the same commit
+no-witness-because: the tracked instance examples/ideation-demo/outputs/destination-shortlist.md is now migrated and the path arm validates it on every run, but the coverage declaration cannot flip while a declared witness is resolved against whatever tree the validator runs in and the suite's control group builds a synthetic fixture root carrying this corpus without any witness file, so declaring one here fails S5 there by construction
 
 # The universal block — reference/data-architecture.md § 4.4. No class removes a
 # universal field; a class may only narrow one, and each narrowing is stated below.
@@ -27,4 +27,17 @@ field generated: required date
 - **`generated` is `required` here.** § 4.4 omits it only on human-authored classes, and this class is `provenance: derived`.
 - **`writer` is typed, not enumerated.** The writer assignment lives in `reference/data-architecture.md` § 1.1 and this schema does not restate it — a second copy of that assignment would be a second home for it.
 - **The two `path-pattern:` lines are the two trip roots**, not a widened glob. § 1.1 states this class's path trip-relative, and a trip root is either `trips/<slug>/` (the git-ignored working directory) or `examples/<demo>/` (the worked-example stand-in). Anchoring there rather than writing `**/` is what keeps the selector off a file that merely shares a basename with the class — this schema file itself, for one.
-- **Coverage.** This class currently declares `no-witness-because:`. The gate reports the witness / no-witness split on every run, so the coverage question is answered by reading one emitted line rather than by auditing nineteen files.
+- **Coverage.** This class currently declares `no-witness-because:`, and its clause states a **property of the checker**, not a property of the artifact: the instance is migrated, versioned and validated by the path arm on every run — it is the declaration that cannot flip, because a declared witness is resolved against the tree the validator is invoked on and the suite's control group builds a fixture root without one. The gate reports the witness / no-witness split on every run, so the coverage question is still answered by reading one emitted line.
+
+## The entry marker — this class has none, and the silence is deliberate
+
+`../data-architecture.md` § 4.5 rule 2 enumerates the entry-bearing set and its two marker forms. **C4 appears in neither list** — not among the fenced-marker classes, not among the key-column classes. This section states that absence so a later slice does not read it as an oversight and repair it.
+
+The reason is § 4.2's third question. **No consumer branches on any candidate-level value in this artifact**, and that is not an accident of the current corpus — it is a refusal the command surface states twice, in terms:
+
+- `.claude/commands/trip-record.md` — *"Does not read `outputs/destination-shortlist.md` — the chosen value arrives as this verb's argument, and reading the shortlist would give that value a second source."*
+- `.claude/commands/trip.md` — *"nothing under `trips/<slug>/outputs/` — the shortlist is the agent's to write and this verb never reads it back."*
+
+So the rank ordinal, the love-count, the lover names, the vibe line, the equity note and the rationale all fail question 3, and a key for a Destination candidate would be a join nothing joins on. Giving this class an entry marker would build the consumer surface the architecture deliberately declines to have — the over-structuring risk this document names, committed on purpose. **This class takes the universal frontmatter block and nothing else**, and its `[DERIVED]` H1 mark is retained per § 4.4.
+
+**Lifecycle, and a live disagreement it sits on.** § 1.1 assigns `rebuilt-each-synthesis`, and the writing agent's own prompt agrees — *"refreshed when they change; it holds no independent state"*. `.claude/commands/trip.md` says the opposite of the same artifact — *"On a re-run that agent appends under a new dated section and rewrites nothing"* — which is `accumulate-append`. **This schema follows § 1.1**, per § 12's rule that the model wins on the shape. The command file's sentence is the drift, and repairing it belongs to the slice that owns that file.

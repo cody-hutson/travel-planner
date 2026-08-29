@@ -66,6 +66,21 @@ back to reading the leaning fields directly from each
 fields. A traveler who left all three blank simply contributes no leanings yet;
 that is a normal state, not an error (see *Missing leanings* below).
 
+**Versioned artifacts.** `outputs/traveler-model.md`, and any traveler file you
+fall back to, may carry a `schema-version`. Apply the tolerant-read rule exactly
+as stated in `reference/data-architecture.md` → "Tolerant read"; do not restate it
+here and do not reinterpret it.
+
+**And read before you replace.** You rebuild `outputs/destination-shortlist.md`
+wholesale rather than appending to it, so you are not a *reader* of the file you
+are about to overwrite — which is the one gap in the write-stop's wording, and the
+reason it is closed here explicitly. **Before writing, read the existing
+`outputs/destination-shortlist.md`'s frontmatter if the file is there. If its
+`schema-version` is higher than the one you write, report and decline the write.**
+A wholesale rebuild at a lower version destroys fields it cannot re-derive, in a
+working directory this engine cannot repair — exactly the loss the write-stop
+exists to prevent.
+
 ## Method — equity-weighted coverage
 
 This is the ranking policy. Its reproducible **spine** is the love-count and the
@@ -137,6 +152,17 @@ the leanings and refreshed when they change; it holds no independent state).
 Use this shape:
 
 ```markdown
+---
+artifact: outputs/destination-shortlist.md
+schema-version: 1
+trip: <trip-slug>
+writer: destination-ideation
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal
+generated: <YYYY-MM-DD>
+---
+
 # Group Destination Shortlist [DERIVED]
 > A recommendation derived from every traveler's destination leanings.
 > The group decides — nothing here picks a destination.
@@ -163,6 +189,21 @@ and switch to **DISCOVERY** mode — the itinerary pipeline (enrichment → spok
 hub → validator) then plans the chosen destination. This shortlist is not a
 decision; it is the input to one.
 ```
+
+`trip` is the trip directory's own slug; `generated` is the date of this run. The
+field set and its meanings live in `reference/data-architecture.md` → "Universal
+frontmatter"; the publishability class in `reference/data-architecture.md` →
+"Publishability"; and this class's own declaration in
+`reference/schemas/destination-shortlist.md`. Cite them; do not restate them.
+
+**This artifact carries no entry marker and no per-entry fields, and that is the
+design rather than an omission.** Nothing in the engine reads this file back — the
+command surface refuses to, twice and in terms, so that a chosen destination keeps
+exactly one source. A ranked entry's ordinal, love-count, vibe line, equity note
+and rationale therefore have no consumer to branch on them, and structuring them
+would build a machine surface the architecture has deliberately declined. The
+ranking stays prose, the `[DERIVED]` mark stays on the H1, and the frontmatter
+block above is the whole of this class's structure.
 
 Return the written path and a one-line summary (how many candidates, how many
 vetoed, whether every traveler is covered). You never write a destination into
