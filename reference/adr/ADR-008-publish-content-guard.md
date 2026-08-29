@@ -1,7 +1,7 @@
 # ADR-008: Publish-path content guard — a value-keyed predicate on the plaintext limb
 
 - **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **three times** the same
-  day; **citation form amended a fourth time (2026-08-28)**.
+  day; **citation form amended a fourth time (2026-08-28)** and **a fifth time (2026-08-29)**.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
@@ -10,9 +10,9 @@
   inert against real data, on three compounding fail-open gaps: the arm was a two-**field allowlist**
   where `reference/data-model.md` § *Lifecycle facets* states an entry-class bound with *no
   default-allow*; the `[THIRD-PARTY]` mark was read only off the **entry heading**, though
-  `agents/00-enrichment.md` § *A party member who will never file* requires it on every value and
-  names mark-stripping as a known agent error; and the field it did match, `Specific:`, is the
-  **profile** label, bound against the **derived** file.
+  `agents/00-enrichment.md` § *Missing or blank profile* → *A party member who will never file*
+  requires it on every value and names mark-stripping as a known agent error; and the field it did
+  match, `Specific:`, is the **profile** label, bound against the **derived** file.
   **Third amendment** — a Stage 9 re-gate found two documentation defects and took one scope
   decision. The defects: this document, and the shipped source comment it is repeated in, both stated
   the exit-4 fail-open as reaching *"the name arm only"*, which the entry-denylist change had already
@@ -27,10 +27,11 @@
   `agents/06-validator.md` (4 tokens, 4 sites). The engine-wide data-architecture release rewrites the
   first and edits the other two, and a line anchor cannot survive a contended edit; every anchor is
   therefore converted to the **section-anchor form this document's own References section already used
-  alongside them** — § *Needs*, § *Lifecycle facets*, § *Worked example — a per-traveler file*,
-  § *A party member who will never file*, § *Profile-privacy non-publication* and
-  § *Satisfaction-metrics report*, each verified to resolve to exactly one definition site in its
-  file. All twenty are converted in one act rather than the nine an earlier probe surfaced, so this
+  alongside them** — three of them into `reference/data-model.md` (§ *Needs*, § *Lifecycle facets*,
+  § *Worked example — a per-traveler file*), which do resolve, and three into the two agent prompts,
+  which **do not**: each of those three named a **bold lead-in** rather than a heading, so the
+  verification claimed for them here was wrong, and the fifth amendment below repairs them. All
+  twenty are converted in one act rather than the nine an earlier probe surfaced, so this
   document ends with **one** citation convention rather than two. **No decision, rule, residual,
   coverage claim or exit code is changed, and none is re-opened.** The cited text is unchanged and
   still resolves; only the way it is addressed is. Recorded here rather than by supersession because
@@ -38,8 +39,24 @@
   a *change of decision* to a new ADR — and this document has been corrected in place three times
   before on exactly that footing. `ADR-009` records the decisions that release took; it does not
   supersede this one.
+  **Fifth amendment** — the three agent-prompt citations the fourth amendment introduced, repointed to
+  the headings that exist. Each named a **bold lead-in** inside a section rather than the section
+  itself, so none of the three resolved; the fourth amendment's claim that all six were verified is
+  corrected in place above rather than softened. They now read `agents/00-enrichment.md`
+  § *Missing or blank profile* → its third branch, and `agents/06-validator.md` § *What You Audit* →
+  its profile-privacy clause and → its third-party mirror case. **The third one was not a spelling
+  slip.** `agents/06-validator.md` does carry a `Satisfaction Metrics Report` heading, but the
+  sentence cited to it — that a third-party need *"by design has no governing trip-level constraint
+  to key to"* — is not in it; that sentence and its mirror-case paragraph both sit in § *What You
+  Audit*. Repointing to the similarly-named heading would have produced a citation that **resolves
+  and is wrong**, which no resolution sweep can see. **Eleven sites**, across this document (8),
+  `scripts/test-publish-guard.sh` (2) and `scripts/publish-trip-site.sh` (1) — every one a comment or
+  prose line, no executable line touched. The lead-ins are kept as **within-section locators**, the
+  form this document already used at the `Visa / entry` note. **No heading was renamed to match a
+  citation**; the citations were moved to the headings. **No decision, rule, residual, coverage claim
+  or exit code is changed, and none is re-opened.**
   The architecture below — value-keying, the class-source seam, the 0/1/2 contract — is unchanged
-  through all four. Its **scope** is corrected, and the coverage boundary states the measured
+  through all five. Its **scope** is corrected, and the coverage boundary states the measured
   boundary rather than the intended one. Where any amendment disagreed with an earlier claim in this
   document, the claim is **corrected in place**, not softened.
 - **Deciders:** repo maintainer
@@ -187,7 +204,7 @@ The deeper finding is that a third-party need's line shape is **underspecified**
 decides the design rather than a second label. A third-party need cannot carry the first-party
 derived shape at all: `data-model.md` § *Needs* (the stated third-party exception) bars it from ever
 escalating to a trip-level constraint or onto an `Applies to:` roster, and `agents/06-validator.md`
-§ *Satisfaction-metrics report* (the third-party mirror case) says it *"by design has no governing
+§ *What You Audit* → *the third-party mirror case* says it *"by design has no governing
 trip-level constraint to key to"*. So the link head and the `Applies to:` are both
 unavailable to it, and what remains — a category and a specific — is serialized nowhere. Probed
 across every `.md` in the repository: of 44 fenced example blocks, 12 carry a `## <Name>` heading and
@@ -200,9 +217,9 @@ where it becomes structural.
 
 **The mark is read at both granularities, and the ordering is load-bearing.** `[THIRD-PARTY]` is
 consulted on the entry heading **and** on each value line, as a union.
-`agents/00-enrichment.md` § *A party member who will never file* requires the mark on *"every value
-sourced this way"*, and — in that same section's supersede-don't-merge paragraph — names
-mark-stripping as a **known agent error** that *"silently strip[s] the key the
+`agents/00-enrichment.md` § *Missing or blank profile* → *A party member who will never file* requires
+the mark on *"every value sourced this way"*, and — in that same section's supersede-don't-merge
+paragraph — names mark-stripping as a **known agent error** that *"silently strip[s] the key the
 publication guard depends on"* — the exact state in which a heading-only read enumerates zero
 third-party records and publishes. The value-level mark is read off the **raw** line, *before*
 `clean()` runs: `clean()` deletes every bracketed provenance mark as metadata, so a mark consulted
@@ -210,8 +227,8 @@ after it has already been erased. Two backstops sit behind this. A `[THIRD-PARTY
 the file that resolves to **no** class record is `2` — an unresolved *presence* is no more an empty
 class than an absence is. And a recorded third-party **supersession** with no per-traveler profile to
 support it is `2`: the sanctioned provenance change is triggered by the person filing their own
-profile (`00-enrichment.md` § *A party member who will never file* → *When that person later files
-their own profile — supersede, do not merge*), so a supersession with no profile behind it is
+profile (`agents/00-enrichment.md` § *Missing or blank profile* → *When that person later files their
+own profile — supersede, do not merge*), so a supersession with no profile behind it is
 indistinguishable from the bad merge that same paragraph forbids by name.
 
 It reads **two sources, not one**. `outputs/traveler-model.md` is a `[DERIVED]` projection —
@@ -342,10 +359,10 @@ the encrypted limb of `publish` and all of `update`.
   contradicts it.** The *matcher* re-introduces the over-block the *membership* design was built to
   prevent: 3 of 3 renders carrying both Passport tokens inside one legitimate structural block
   falsely abort, against 2 of 2 controls that publish — and one of the three is a `Visa / entry`
-  line, the exact class `agents/06-validator.md` § *Profile-privacy non-publication* → *What is not a
-  finding* names as *"correct content [that] is never flagged"*. It is fail-**closed**, so it leaks
-  nothing; it is a false abort on protected content, and this document's own argument at the
-  name-arm note — *an unusable fail-closed control is
+  line, the exact class `agents/06-validator.md` § *What You Audit* → *Profile-privacy
+  non-publication* → *What is not a finding* names as *"correct content [that] is never flagged"*.
+  It is fail-**closed**, so it leaks nothing; it is a false abort on protected content, and this
+  document's own argument at the name-arm note — *an unusable fail-closed control is
   fail-open in practice, because it gets worked around* — applies to it unchanged. It is **open and
   undispositioned**, carried as residual 6 below rather than claimed as solved.
 - The class has one home with a stable contract, so #278 re-keys it in a single function body — the
@@ -504,7 +521,7 @@ stated rather than claimed solved, and one that is a scope decision taken at the
    across day boundaries and introduced a narrower one inside a block: 3 of 3 renders carrying both
    Passport tokens in one legitimate block falsely abort, against 2 of 2 controls that publish. One
    of the three is a `Visa / entry` line — the exact class `agents/06-validator.md`
-   § *Profile-privacy non-publication* → *What is not a finding* names as
+   § *What You Audit* → *Profile-privacy non-publication* → *What is not a finding* names as
    *"correct content [that] is never flagged"*. It is fail-**closed** and leaks nothing, and no
    acceptance criterion forbids a false abort, so it does not block. It is nonetheless a false abort
    on protected content, it is **undispositioned**, and the Consequences section above corrects the
@@ -580,9 +597,9 @@ residuals 1 to 3 above, where layers 1 and 3 are the only cover.
   `outputs/traveler-model.md`, which is where the derived need-line shape is read from:
   `reference/data-model.md` § *Worked example — a per-traveler file*. The third-party entry's marks,
   cardinality and needs-only bound, the value-granularity requirement, the named mark-stripping
-  error, and the supersede-don't-merge rule: `agents/00-enrichment.md` § *A party member who will
-  never file*. That a third-party need has no governing constraint to key to:
-  `agents/06-validator.md` § *Satisfaction-metrics report* (the third-party mirror case).
+  error, and the supersede-don't-merge rule: `agents/00-enrichment.md` § *Missing or blank profile*
+  → *A party member who will never file*. That a third-party need has no governing constraint to key
+  to: `agents/06-validator.md` § *What You Audit* → *the third-party mirror case*.
 - First-party source of the Passport member, and the label shape the profile parse binds to:
   `templates/traveler-intake.template.md`; the `[DERIVED]` status of the projection and the
   refresh contract: `CLAUDE.md` → *Satisfaction-layer artifacts*.

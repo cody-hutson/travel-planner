@@ -342,7 +342,8 @@ Gradient bar showing thermal zones across the day:
 **Derives from tracked event status.** The checklist, book-by dates,
 "needs booking" flags, and the per-item links are not authored independently —
 they derive from per-event status in `outputs/event-status.md` (the
-persist-mutable status layer; see `reference/data-model.md`). The rules:
+persist-mutable status layer; see `reference/data-architecture.md`
+§ *Lifecycle Classes*). The rules:
 
 - **An item appears on the checklist only if it "needs booking"** —
   `status = planned` **and** `requires booking? = yes`. Those are the open

@@ -343,8 +343,10 @@ rules" assigns this class the fenced form on the ground that its entries are
 prose-shaped — recording in the same table that a fenced block per row *"would
 restructure a table for no gain"*. The declared-key-column form it describes for
 table-shaped entries is assigned to other classes, not to this one. So write the
-table exactly as it is written today: no key column, no per-row fence. Whether this
-matrix should carry a key is a question for the architecture, not for this prompt.
+table exactly as it is written today: no key column, no per-row fence. That question
+went to the architecture rather than to this prompt, and that same section has now
+answered it: a secondary table inside a fence-form class carries no marker, and what
+the missing join costs is recorded there rather than left open.
 
 ### Daily Navigation
 

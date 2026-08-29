@@ -347,6 +347,32 @@ Both forms satisfy the rule's wording — *the marker carries the entity key and
 `artifact-entry` fence info-string is shared with the venue-identity migration, which owns it; where
 the two disagree on the fence's exact info-string, **the venue-identity definition wins.**
 
+**Two cases fall outside both forms, and the disposition is that they carry no marker.** Each was
+raised by the migration slice that met it and routed here rather than decided there. Silence would
+read as an omission a later slice may close; this is the decision instead.
+
+- **A secondary table inside a fence-form class carries no marker.** The form is assigned per
+  **class**, and it attaches to that class's **entries** — not to every table the artifact happens to
+  hold. The live case is C9's *Point-to-Point Transit Matrix*: its rows are legs, but it is a derived
+  cost table sitting beneath the class's prose-shaped stream entries, which already carry the fenced
+  form. Giving one class both forms would make the marker a property of a surface rather than of a
+  class, and nothing would then tell a reader which surface to check. **What it costs, stated rather
+  than deferred:** those door-to-door durations are read numerically by `agents/03-scheduling.md`
+  § *Transit Cost & Routing Signal*, which makes them the highest-value join the class has, and they
+  carry no key — a consumer matches on the leg's stop pair as written, with the display-string
+  fragility § 3.3 measured. Assigning a key there is an identity decision for a later ADR, not a
+  body-shape rule; until one is taken, the matrix is written exactly as its prompt writes it today.
+- **C15 and C16 carry no marker, because they hold no entries of their own.** § 9 gives them an
+  identity target — events by `evt-<token>`, venues by `ven-<token>` — and each of those is a
+  **reference** to an entity another class masters: the Event by C13, the Venue by C11 at the mint
+  point § 3.3 fixes. A reference resolves against the mastering class's key and does not make the
+  referring artifact entry-bearing, which is why **the entry-bearing set is nine and the itinerary is
+  not in it.** **What it costs:** the join runs one way. From `outputs/event-status.md` or
+  `outputs/venue-matrix.md` a reader reaches an itinerary day by key; from the itinerary back, only
+  by display title. Closing that would mean structuring the most narrative artifact in the engine,
+  which Decision 3 of `ADR-009` and the Day-Header Content Contract in `reference/site-layout-spec.md`
+  both rule out — so it is recorded as a cost, not repaired here.
+
 **Rule 3 — the degenerate case is part of every schema.** A class's schema defines the shape of an
 entry with **no source** — the field-label surface exists whether populated or not. A profile-less
 traveler's entry in C12 carries the same field labels as a populated one, with declared-absent
@@ -736,9 +762,20 @@ The order is fixed by two constraints, and both are hard.
 Within those bounds: the schema definitions and the validating gate precede the per-class migrations;
 the publish-guard re-key precedes or accompanies the classes whose publishability it reads; and the
 fixture work lands last, because a fixture can only witness a schema that already exists. **Eight
-in-model classes have no in-repo instance at all**, so the fixture step is what gives them their
-first witness — and a fixture that instantiates an `accumulate-append` class should carry at least
-two dated sections, or that lifecycle stays declared and unwitnessed.
+in-model classes had no in-repo instance at all** when this order was set, so the fixture step is
+what gives them their first witness — and a fixture that instantiates an `accumulate-append` class
+should carry at least two dated sections, or that lifecycle stays declared and unwitnessed.
+
+**That step has landed, and the grading basis it settles is read from one place.** Which classes hold
+a tracked witness, which do not, and why each one that does not never will, is declared per class in
+`reference/schemas/*.md` and reported by the gate on every run as its `CV:` coverage line; the two
+standing exceptions are named, with their reasons stated as durable properties, in
+`reference/schemas/README.md` § *Coverage*. It is not restated here — a second copy of a coverage
+answer is a second home for it, which § 4.3 forbids. **What that home settles for a reader grading a
+migration:** a class whose instances are per-trip files under the git-ignored `trips/` tree can be
+migrated only at its **emitter** — the agent prompt that writes it, and the schema that declares its
+shape — so a class carrying no witness is graded there and never against a repository artifact. That
+is a statement about where a class can exist, not a relaxation of any criterion.
 
 ---
 

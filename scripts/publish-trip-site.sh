@@ -531,9 +531,10 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 # decides the design. A third-party need cannot carry the first-party derived shape at
 # all: reference/data-model.md § Needs (the stated third-party exception) bars it from ever
 # escalating to a trip-level constraint or onto an `Applies to:` roster, and
-# agents/06-validator.md § Satisfaction-metrics report says it "by design has no governing
-# trip-level constraint to key to". So the link head and the Applies-to are both
-# unavailable to it, and what remains — a category and a specific — is serialized nowhere.
+# agents/06-validator.md § What You Audit, in its third-party mirror case, says it "by
+# design has no governing trip-level constraint to key to". So the link head and the
+# Applies-to are both unavailable to it, and what remains — a category and a specific —
+# is serialized nowhere.
 # Probed: of 44 fenced example blocks across every .md in the repository, 12 carry a
 # `## <Name>` heading and 0 carry a [THIRD-PARTY] entry. There is no worked example.
 # Binding to any label is therefore guessing, and a guard bound to a guessed shape is the

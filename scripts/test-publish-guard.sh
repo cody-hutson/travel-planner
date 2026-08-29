@@ -969,8 +969,8 @@ if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block
 #       agents/00-enrichment.md § Missing or blank profile, which forbids it by name
 #       ("supersede, do not merge"). It must never publish clean.
 #   O5  the CONTROL that keeps the fix honest: a first-party operator-relayed need is
-#       NOT in class (agents/06-validator.md § Profile-privacy non-publication), and must
-#       still publish.
+#       NOT in class (agents/06-validator.md § What You Audit, its profile-privacy
+#       non-publication clause), and must still publish.
 #   O6  the keyability-floor mitigation: a closed-enum category value is schema
 #       vocabulary — neither a hit nor an UNDETERMINED sub-floor abort.
 # Every case carries a fixture-integrity control arm graded BEFORE the verdict it
@@ -1107,8 +1107,8 @@ if [ "$ORC" -eq 1 ]; then PASS "O3b: a third-party need in the REAL derived-mode
 # O3c — SPECIFICITY, and it is the one that keeps the designed escalation path open. The
 # first-party derived need line from data-model.md's own worked example, value carried
 # verbatim into the render, must publish: a first-party need escalating to trip-context
-# and thence to the page is correct content (agents/06-validator.md § Profile-privacy
-# non-publication, "What is not a finding").
+# and thence to the page is correct content (agents/06-validator.md § What You Audit, its
+# profile-privacy non-publication clause, "What is not a finding").
 O3CR="$WORK/o3_control.html"
 orender "$O3CR" 'Pacing: a ~15-min walking ceiling, step-free, on every travel day.'
 O3CTD="$WORK/o3_control"
