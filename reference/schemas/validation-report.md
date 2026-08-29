@@ -22,8 +22,15 @@ field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|version
 field provenance: required enum [human|enrich|derived|operator-provided|third-party|researched]
 field publish: required enum [bound|internal|internal-hard|output]
 field generated: required date
+
+# Per-class field. § 4.4 admits per-class fields as extensions of the universal
+# block; this class declares exactly one.
+field critical-count: required integer
 ```
 
+- **`critical-count` is this class's only per-class field, and it is `required`.** It is the count of Critical findings the report carries. It passes § 4.2's boundary test on all three questions, and question 3 is the one that decides it: exactly one consumer branches on validator severity — `CLAUDE.md`'s pipeline flow, which runs *remediation (if criticals found)*. Being `required` is the point: a `rebuilt-each-synthesis` report always carries the field, so `0` is a **measurement** and an absent value is an `A3` violation rather than an ambiguous read. That is absence-versus-zero resolved at the schema instead of at every reader.
+- **`warning-count` and `note-count` are deliberately absent.** They are just as closed and just as byte-identical as `critical-count`; they fail question 3 alone, because no consumer in the corpus branches on either value. The resulting asymmetry — one severity declared in frontmatter, the others not — is not an omission. It **is** the structural distinction between a Critical and a Warning that this class owes: a consumer gates on a declared field rather than by parsing prose.
+- **No boolean `blocking` field.** It is the cleaner expression of the predicate `CLAUDE.md` actually branches on, and it was the leading candidate until the grammar was checked: the artifact frontmatter grammar is scalar-only with a closed type set of `integer · date · slug · string · list<slug> · enum`, and **there is no boolean**. Faking one as a two-member enum would be a worse artifact than an integer that types natively and carries strictly more information. Recorded because a reader looking only at the consumer would reach for the boolean.
 - **`generated` is `required` here.** § 4.4 omits it only on human-authored classes, and this class is `provenance: derived`.
 - **`writer` is typed, not enumerated.** The writer assignment lives in `reference/data-architecture.md` § 1.1 and this schema does not restate it — a second copy of that assignment would be a second home for it.
 - **The two `path-pattern:` lines are the two trip roots**, not a widened glob. § 1.1 states this class's path trip-relative, and a trip root is either `trips/<slug>/` (the git-ignored working directory) or `examples/<demo>/` (the worked-example stand-in). Anchoring there rather than writing `**/` is what keeps the selector off a file that merely shares a basename with the class — this schema file itself, for one.

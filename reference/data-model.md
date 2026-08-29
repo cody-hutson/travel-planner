@@ -509,7 +509,7 @@ This document describes the *capability* and the *data condition* that produces 
 
 ## Satisfaction Metrics
 
-The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt/refreshed — pattern (b), a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
+The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt-each-synthesis — pattern (b), a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
 
 It defines the **measurable surface** only. It does **not** define how any balance dimension is scored — no formula, no weight, no threshold, no ranking math. That boundary is deliberate and load-bearing: per the document's own rule, nothing in the satisfaction layer optimizes yet, and "how a coverage number is computed is out of scope." This section names *what is measured and what kind of signal each is*; the scoring of the balance dimensions is **left to design**.
 
@@ -571,17 +571,30 @@ This reconciles the language elsewhere that the audit runs "every day": the audi
 | **Balance signals** (group-equity, the four experience axes, rest-recovery balance, meal-variety concentration — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
 | **Needs-compliance** (pass/fail, per need × per applicable day) | **Validator** | This is the *recorded form of the validator's every-day constraint audit*; the validator is its natural owner (and the hub's own audit must agree with it). |
 | **Needs ↔ constraint agreement check** | **Validator** | The validator owns the reconciliation that every needs-compliance `fail` is a constraint Critical (see Reconciliation below). |
+| **Frontmatter block** (the universal fields — `reference/data-architecture.md` § *Universal frontmatter*) | **Validator** | One writer, so the block needs no merge rule at all. The validator authors and refreshes it; the hub carries it through its read-merge-write and preserves it byte-for-byte, never authoring it. The class declares **no per-class field**, so no field is written by both — the partition is total and disjoint by construction, which is what keeps the two-writer split out of YAML. |
 
-The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt/refreshed each synthesis (pattern (b)) — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
+The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt-each-synthesis (pattern (b)) — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
 
 ### `outputs/satisfaction-metrics.md` shape
 
-A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the current `outputs/traveler-model.md` (it carries no independent state — its inputs are authoritative, so regeneration is safe). It records each dimension at its natural granularity: needs-compliance per need per applicable day, desire-coverage per traveler per desire, and the balance signals named with their value **left to design** (shown as `(left to design)` rather than a number).
+A `[DERIVED]` artifact, rebuilt-each-synthesis from the current itinerary and the current `outputs/traveler-model.md` (it carries no independent state — its inputs are authoritative, so regeneration is safe). It records each dimension at its natural granularity: needs-compliance per need per applicable day, desire-coverage per traveler per desire, and the balance signals named with their value **left to design** (shown as `(left to design)` rather than a number).
 
 ```markdown
+---
+artifact: outputs/satisfaction-metrics.md
+schema-version: 1
+trip: <trip-slug>
+writer: [hub, validator]
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal-hard
+generated: <YYYY-MM-DD>
+---
+
 # Satisfaction Metrics [DERIVED]
 
-> Rebuilt/refreshed from the current itinerary + outputs/traveler-model.md.
+> Recomputed from the current itinerary + outputs/traveler-model.md. Lifecycle and
+> provenance are declared in the frontmatter above and are not restated here.
 > pass/fail and covered/not are determinable today; balance-signal scoring is left to design.
 > Persona names follow the public Pat / Jordan / Sam set.
 

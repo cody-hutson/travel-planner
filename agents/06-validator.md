@@ -211,7 +211,7 @@ list — the hub owns the status file.
 
 **Satisfaction-metrics report:**
 Report the satisfaction coverage view for the itinerary to
-`outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
+`outputs/satisfaction-metrics.md` (the `rebuilt-each-synthesis` `[DERIVED]` coverage
 artifact — see `reference/data-model.md` → Satisfaction Metrics). You **report
 and emit** these dimensions; you do **not** score them. **Section ownership —
 do not clobber the hub's sections.** This file has two writers: the validator
@@ -270,10 +270,15 @@ a fixed type:
   `[THIRD-PARTY]` need is a derivation error, not a clean pass: with no governing
   constraint to raise a Critical either, it would leave the subject with no audit
   surface at all.
-  This record lands in `outputs/satisfaction-metrics.md`, which §9.3 names an
-  intentional exclusion — so the row is not publish-bound, and writing the
-  person's name into it here is not a non-publication finding. It must not be
-  copied into a publish-bound artifact.
+  This record lands in `outputs/satisfaction-metrics.md`, whose declared
+  artifact class is `publish: internal-hard` — never rendered, and carrying
+  values that must not reach a rendered page in any form, including anonymized.
+  **That declaration is the class source.** `reference/site-layout-spec.md`
+  §9.3 still names the same artifact an intentional exclusion; it is retained as
+  the human-readable statement of the same bound — defence in depth, not a
+  second source. So the row is not publish-bound, writing the person's name into
+  it here is not a non-publication finding, and it must not be copied into a
+  publish-bound artifact.
   You are recording the every-applicable-day hard-constraint audit
   as a per-need-per-day pass/fail record for the per-traveler-need slice, not
   re-deciding it.
@@ -583,9 +588,61 @@ Write: outputs/satisfaction-metrics.md — **your owned sections only**
 never clobbering the hub's Desire-coverage / Balance-signals sections. See Output
 Format; reported/emitted, never scored.
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it.
+
+**The write-stop binds this role as a writer, not only as a reader.** You replace
+`outputs/validation-report.md` wholesale and you read-merge-write your own
+sections of `outputs/satisfaction-metrics.md`. Before either write, check whether
+the file already there declares a `schema-version` higher than the one below. If
+it does, **report and decline the write** — never rewrite it at your own version.
+Check it even on the report you rebuild wholesale: a wholesale replace never
+reads the file it overwrites, so the stop has to fire *before* the write or it
+never fires at all.
+
+**A declined write is a Warning, not a Critical**, and the reason is the forward
+implication above rather than convention: every needs-compliance `fail` **is** a
+constraint-compliance Critical, which is raised by a different check and lands in
+a different artifact. So an undelivered *record* never weakens the constraint
+guarantee, and a Critical here would block finalization over a reporting failure
+rather than a plan failure. Where the declined file is the report itself, state
+the refusal in your response. **If a later change ever weakens that forward
+implication, this severity has to be revisited.**
+
 ## Output Format
 
 File: outputs/validation-report.md
+
+**Artifact frontmatter — the first bytes of the file**, above everything below.
+Prepend it; the report body moves not one line.
+
+```yaml
+---
+artifact: outputs/validation-report.md
+schema-version: 1
+trip: <trip-slug>
+writer: validator
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal
+generated: <YYYY-MM-DD>
+critical-count: <integer>
+---
+```
+
+`critical-count` is the count of Critical findings in this report, and it is
+**required** — a report always carries it, so `0` is a measurement and an absent
+value is a schema violation rather than an ambiguous read. It exists because one
+consumer branches on it: `CLAUDE.md`'s pipeline flow runs remediation *if
+criticals found*. **Warnings and Notes get no such field** — no consumer branches
+on either count, and that asymmetry is deliberate: one severity is a declared
+schema field and the other is not, which is what makes a Critical structurally
+distinguishable from a Warning rather than distinguishable only by reading prose.
+
+**Emit the block only when you write the file.** Under a dispatch that instructs
+you to write neither file and return findings in the response — `/trip check` —
+there is no file, so there is no frontmatter. Do not emit YAML into your response.
 
 ---
 
@@ -611,7 +668,11 @@ File: outputs/validation-report.md
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
 
-**Total issues requiring action:** [N Critical], [N Warning], [N Note]
+**Total issues requiring action:** [N Warning], [N Note] — the Critical total is
+carried in frontmatter as `critical-count` and is not restated here. The per-check
+`Critical` column above stays: it is a *per-check* count, where the frontmatter
+carries the *artifact-level aggregate*. Parts and aggregate are different facts
+with one home each.
 
 ---
 
@@ -715,6 +776,46 @@ Needs-booking vs. status — the booking surfaces must equal the
 > covered/not are determinable from the plan; balance-signal scoring is left to
 > design. Needs-compliance must agree with the Constraint Compliance audit above.
 
+**Artifact frontmatter — the first bytes of the file**, above the H1. Prepend it;
+the sections below move not one line.
+
+```yaml
+---
+artifact: outputs/satisfaction-metrics.md
+schema-version: 1
+trip: <trip-slug>
+writer: [hub, validator]
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal-hard
+generated: <YYYY-MM-DD>
+---
+```
+
+**You author and refresh this block; the hub never does.** That is the whole of
+the ownership rule and it is what keeps two writers off one frontmatter block:
+
+- `writer: [hub, validator]` names both writers because the **file** has two. It
+  is a statement about the file's *sections*, not about the block — the block has
+  exactly one writer, and it is you. This is the single most likely misreading.
+- **The class carries no per-class field.** Every metric lives in the body
+  sections, where the existing section-ownership split already keeps the two
+  writers apart. A validator-owned metric field plus a hub-owned one would push
+  read-merge-write into YAML — a merge surface neither prompt has and no
+  section-ownership rule reaches. The partition is therefore total and disjoint
+  by construction: eight fields, one owner, no residue.
+- The hub **carries** the block through its own read-merge-write and preserves it
+  byte-for-byte; it never authors and never rewrites it.
+- `generated` records **the last validator pass**, not when the file last
+  changed — you refresh it on every pass, which is the freshness an audit
+  artifact's reader needs.
+- On a pass where the file does not yet exist and the hub writes its sections
+  first, the file carries no frontmatter until you run. That file is unversioned,
+  which the tolerant-read rule reads as version 0 and the validating gate skips.
+  The window closes within the same pipeline pass, by construction.
+
+**Emit the block only when you write the file** — the same rule as the report.
+
 **Needs-compliance — pass/fail, per need × per applicable day**
 
 | Traveler | Need (category) | Applicable days | Per-day verdict | Overall |
@@ -794,7 +895,7 @@ Format: Date — Event — Impact on itinerary — Action if any]
 
 ### Validation Metadata
 
-- **Validated:** [Date]
+- **Validated:** carried in frontmatter as `generated`; not restated here.
 - **Itinerary version audited:** [v1 / v2 / etc.]
 - **Items confirmed clean:** [N]
 - **Items requiring human verification:** [List — these could not be
