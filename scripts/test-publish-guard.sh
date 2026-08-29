@@ -13,6 +13,10 @@
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
 # K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
+# L8-L10 grade the publishability DECLARATION: that the class has exactly one home, that
+# the guard's verdict follows a change to it, and that an unreadable declaration is
+# UNDETERMINED rather than an empty class. L11 pins the reserved-heading suppression —
+# both limbs, one of which has no backstop.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -442,16 +446,160 @@ else
   FAIL "L7: guard/copy ordering not proven in cmd_publish (guard='$lgline' copy='$lcline')"
 fi
 
-# L8 — AC 2 structurally: the class has ONE home. The predicate is a pure consumer with
-# no class knowledge, which is what makes the #278 re-key a single-body edit. The second
-# limb is the control arm: the same probe MUST fire on the class source, or the zero on
-# the predicate is a broken probe rather than a clean result.
-lpred="$(declare -f verify_publishable_content | grep -cE 'THIRD-PARTY|Passport:')"
-lsrc="$(declare -f nonpublishable_values      | grep -cE 'THIRD-PARTY|Passport:')"
-if [ "$lpred" -eq 0 ] && [ "$lsrc" -gt 0 ]; then
-  PASS "L8: class knowledge lives in the class source ($lsrc hits) and not in the predicate (0) — control arm fires"
+# L8 — AC 2 structurally: the class has ONE home, and after the re-key that home is the
+# DECLARATION, not this script. Three arms, because two of them are ZEROS: a zero whose
+# control arm also returns zero is a broken probe, not a clean result. Same shape as
+# scripts/test-trip-resolution-contract.sh case PIN5, which asserts the sibling contract
+# with the same polarity — this file holds no copy of the canonical list, and the same
+# probe that finds nothing here finds everything there.
+#
+# The selector list comes from the guard's own reader, so this case holds no copy of the
+# declaration's path, its section heading, its fence name or any row of it. A suite that
+# enumerated the selectors to check that nothing enumerates the selectors would be the
+# second home it exists to detect.
+#
+# NOTE the polarity flip against the pre-re-key form of this case, which required
+# `lsrc > 0` — the class source holding literals was the property it asserted. That form
+# is structurally incapable of passing now, which is why it was rewritten in the same
+# commit as the re-key rather than after it.
+l8sel="$(_guard_declared_selectors)"
+l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
+l8pred=0; l8src=0
+while IFS= read -r l8s; do
+  [ -n "$l8s" ] || continue
+  l8pred=$(( l8pred + $(declare -f verify_publishable_content | grep -cF -- "$l8s") ))
+  l8src=$((  l8src  + $(declare -f nonpublishable_values      | grep -cF -- "$l8s") ))
+done <<EOF
+$l8sel
+EOF
+if [ "$l8n" -gt 0 ] && [ "$l8pred" -eq 0 ] && [ "$l8src" -eq 0 ]; then
+  PASS "L8: the class has ONE home — the declaration carries all $l8n selectors while neither the predicate (0) nor the class source (0) holds a copy; the control arm fires"
 else
-  FAIL "L8: the one-home seam is gone or the probe is broken (predicate=$lpred source=$lsrc)"
+  FAIL "L8: the one-home seam is gone or the probe is broken (declaration=$l8n predicate=$l8pred source=$l8src)"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L9 / L10 — the declaration IS the class source, proved by changing it.
+#
+# Every other case in group L would pass identically against the old shell-literal
+# membership rule. Only a verdict that FOLLOWS the declaration distinguishes a re-key
+# that happened from one that was described, so these are the cases that grade it.
+#
+# The declaration path is re-pointed by assigning the sourced variable in THIS process.
+# publish-trip-site.sh deliberately does not environment-default it — an env-overridable
+# class definition on a fail-closed control would let any caller narrow the class from
+# outside the repository — so a subprocess cannot do what this sourced suite can. That
+# asymmetry is the design, not a gap.
+#
+# The fixture declaration is BUILT FROM the guard's own constants and its own reader, so
+# this file holds no copy of the heading, the fence name or any row.
+L8DECL_REAL="$_GUARD_DECLARATION"
+ldecl_write() { # <file>   (rows on stdin)
+  { printf '%s\n\n' "$_GUARD_DECL_HEADING"
+    printf '```%s\n' "$_GUARD_DECL_FENCE"
+    cat
+    printf '```\n'
+  } > "$1"
+}
+
+# One fixture, one render, two declarations. The render is written BEFORE the model so
+# the empty-class freshness gate reads the projection as at least as new as the render.
+LDECLT="$WORK/l_decl"; mkdir -p "$LDECLT/outputs"
+LDECLR="$WORK/l_decl.html"
+lrender "$LDECLR" "Deposit note: the group papers are held at Meridian Vault 88 until departure."
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Custodian: Meridian Vault 88\n' > "$LDECLT/outputs/traveler-model.md"
+
+# L9b — graded FIRST, because it is the arm that says the fixture is otherwise clean.
+# Under the shipped declaration `Custodian` is not a declared selector, so its value is
+# not in class and the identical render publishes.
+lguard "$LDECLR" "$LDECLT"
+l9b="$LRC"
+if [ "$l9b" -eq 0 ]; then
+  PASS "L9b: a value under an UNDECLARED field label publishes (rc=0) — the guard does not key on labels the declaration never named"
+else
+  FAIL "L9b: an undeclared field label blocked the publish (rc=$l9b) — the class is wider than the declaration"
+fi
+
+# L9a — the same trip and the same render, with one row added to the declaration. A
+# verdict change here is caused by the declaration and by nothing else.
+LDECLF="$WORK/l_decl_extra.md"
+{ _guard_declared_rows
+  printf 'field Custodian %s conjunctive\n' "$_GUARD_DECL_ARTIFACT_MODEL"
+} | ldecl_write "$LDECLF"
+_GUARD_DECLARATION="$LDECLF"
+lguard "$LDECLR" "$LDECLT"
+l9a="$LRC"
+_GUARD_DECLARATION="$L8DECL_REAL"
+if [ "$l9a" -eq 1 ] && [ "$l9b" -eq 0 ]; then
+  PASS "L9a: adding ONE declaration row turns the same render from publish (rc=0) into abort (rc=1) — membership is sourced from the declaration, not from this script"
+else
+  FAIL "L9a: the verdict did not follow the declaration (with row=$l9a, without row=$l9b) — the re-key is described but not delivered"
+fi
+
+# L10 — the SIXTH fail-closed path. An unreadable declaration is not an empty class.
+# Its control arm is L9b immediately above: the identical trip and render return 0 while
+# the declaration resolves, so a 2 here is attributable to the declaration and not to the
+# fixture.
+_GUARD_DECLARATION="$WORK/l_decl_absent.md"
+lguard "$LDECLR" "$LDECLT"
+l10a="$LRC"
+_GUARD_DECLARATION="$L8DECL_REAL"
+if [ "$l10a" -eq 2 ] && [ "$l9b" -eq 0 ]; then
+  PASS "L10: an ABSENT publishability declaration aborts (rc=2) while the same trip publishes (rc=0) once it resolves — a class that cannot be read is UNDETERMINED, never empty"
+else
+  FAIL "L10: an unreadable declaration was not fail-closed (absent=$l10a, present=$l9b)"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L11 — THE RESERVED-HEADING SUPPRESSION, both halves.
+#
+# The model parse reserves one heading key for a structural section that is not a person,
+# and clears the entry state on it. L5d already asserts the BRANCH — a model made only of
+# that section parses zero entries and aborts. What was untested is what the branch
+# SUPPRESSES when other entries exist, and the two limbs of the class are suppressed
+# differently. These cases pin the current behaviour so it cannot drift silently and so
+# the slice that changes it has a failing target to flip.
+#
+# READ THESE AS MEASUREMENTS, NOT AS ENDORSEMENTS. L11a records a value in class that is
+# not caught at all; a PASS here means "the gap is exactly this shape", not "this is
+# correct". The behaviour change belongs to the traveler-identity slice, which owns the
+# reserved-key semantics; this slice owns these two files and so owns the coverage.
+
+# L11a — the FIELD limb under the reserved heading has NO backstop of any kind. Both arms
+# are graded together: the same line under an ordinary entry must abort, or the clean
+# verdict below is a fixture that simply does not match rather than a suppression.
+LSUPF="$WORK/l_sup_field"; mkdir -p "$LSUPF/outputs"
+LSUPR="$WORK/l_sup.html"
+lrender "$LSUPR" "Border note: carry your Ruritanian passport, valid to 2033, at all times."
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n## Update signals [DERIVED]\n- Passport: Ruritanian, valid to 2033\n' > "$LSUPF/outputs/traveler-model.md"
+lguard "$LSUPR" "$LSUPF"
+l11sup="$LRC"
+LSUPC="$WORK/l_sup_ctl"; mkdir -p "$LSUPC/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Passport: Ruritanian, valid to 2033\n' > "$LSUPC/outputs/traveler-model.md"
+lguard "$LSUPR" "$LSUPC"
+l11ctl="$LRC"
+if [ "$l11sup" -eq 0 ] && [ "$l11ctl" -eq 1 ]; then
+  PASS "L11a: a declared FIELD value under the reserved heading reaches the render UNCAUGHT (rc=0) while the identical line under an ordinary entry aborts (rc=1) — the suppression has no backstop, measured not assumed"
+else
+  FAIL "L11a: the reserved-heading field suppression changed shape (suppressed=$l11sup control=$l11ctl) — re-read the heading branch before trusting either verdict"
+fi
+
+# L11b — the ENTRY limb IS backstopped by the orphaned-mark check, but only while no
+# other entry produced a record. Two fixtures differing in exactly that.
+LSUPE="$WORK/l_sup_entry"; mkdir -p "$LSUPE/outputs"
+LSUPER="$WORK/l_sup_entry.html"
+lrender "$LSUPER" "One member of the party cannot manage more than one flight of stairs in a single stretch."
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n## Update signals [DERIVED]\n- Relayed [THIRD-PARTY]: cannot manage more than one flight of stairs in a single stretch\n' > "$LSUPE/outputs/traveler-model.md"
+lguard "$LSUPER" "$LSUPE"
+l11e1="$LRC"
+LSUPE2="$WORK/l_sup_entry2"; mkdir -p "$LSUPE2/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Marlow [OPERATOR-PROVIDED] [THIRD-PARTY]\n\n### Needs\n- Category: rest\n  Specific: an early night on the first evening after the long flight\n\n## Update signals [DERIVED]\n- Relayed [THIRD-PARTY]: cannot manage more than one flight of stairs in a single stretch\n' > "$LSUPE2/outputs/traveler-model.md"
+lguard "$LSUPER" "$LSUPE2"
+l11e2="$LRC"
+if [ "$l11e1" -eq 2 ] && [ "$l11e2" -eq 0 ]; then
+  PASS "L11b: a suppressed ENTRY mark aborts as UNDETERMINED (rc=2) when it is the only one, and is swallowed (rc=0) once another entry produced a record — the backstop is conditional, and this pins the condition"
+else
+  FAIL "L11b: the orphaned-mark backstop changed shape (alone=$l11e1 with-other-record=$l11e2) — re-read the END block before trusting either verdict"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -755,20 +903,23 @@ if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block
 # name, and the value of a line labelled `Specific:`. Three compounding gaps, all
 # fail-OPEN, each pinned here by one case:
 #   O1  the third-party arm was a FIELD ALLOWLIST — every other field default-allowed,
-#       against reference/data-model.md:170 ("the bound is the entry class, not a list
-#       of fields ... there is no default-allow outside it").
-#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md:406-408
-#       requires it on "every value sourced this way" and :468-473 names
-#       mark-stripping as a KNOWN agent error. clean() also erased a value-level mark
-#       before it could be consulted, so the ordering is part of the fix.
+#       against reference/data-model.md § Lifecycle facets ("the bound is the entry
+#       class, not a list of fields ... there is no default-allow outside it").
+#   O2  the mark was read only off the ENTRY HEADING, though agents/00-enrichment.md
+#       § Missing or blank profile, which requires it on "every value sourced this way"
+#       and names mark-stripping as a KNOWN agent error. clean() also erased a value-level
+#       mark before it could be consulted, so the ordering is part of the fix.
 #   O3  `Specific:` is the PROFILE label. It occurs 0x in agents/00-enrichment.md (the
 #       spec that WRITES the model) and 0x in agents/06-validator.md; the derived model's
-#       own worked example (reference/data-model.md:266-283) writes the mid-line
-#       `; specific:` form. The guard bound a profile label to a derived file.
+#       own worked example (reference/data-model.md § Worked example — a per-traveler
+#       file) writes the mid-line `; specific:` form. The guard bound a profile label to
+#       a derived file.
 #   O4  a bad merge strips both marks while retaining the values — the state
-#       agents/00-enrichment.md:467-473 forbids by name. It must never publish clean.
+#       agents/00-enrichment.md § Missing or blank profile, which forbids it by name
+#       ("supersede, do not merge"). It must never publish clean.
 #   O5  the CONTROL that keeps the fix honest: a first-party operator-relayed need is
-#       NOT in class (agents/06-validator.md:152), and must still publish.
+#       NOT in class (agents/06-validator.md § Profile-privacy non-publication), and must
+#       still publish.
 #   O6  the keyability-floor mitigation: a closed-enum category value is schema
 #       vocabulary — neither a hit nor an UNDETERMINED sub-floor abort.
 # Every case carries a fixture-integrity control arm graded BEFORE the verdict it
@@ -905,7 +1056,8 @@ if [ "$ORC" -eq 1 ]; then PASS "O3b: a third-party need in the REAL derived-mode
 # O3c — SPECIFICITY, and it is the one that keeps the designed escalation path open. The
 # first-party derived need line from data-model.md's own worked example, value carried
 # verbatim into the render, must publish: a first-party need escalating to trip-context
-# and thence to the page is correct content (agents/06-validator.md:145-152).
+# and thence to the page is correct content (agents/06-validator.md § Profile-privacy
+# non-publication, "What is not a finding").
 O3CR="$WORK/o3_control.html"
 orender "$O3CR" 'Pacing: a ~15-min walking ceiling, step-free, on every travel day.'
 O3CTD="$WORK/o3_control"
@@ -961,7 +1113,8 @@ MD
 oguard "$O4R" "$O4OTD"
 if [ "$ORC" -eq 2 ]; then PASS "O4c: a [THIRD-PARTY] mark that resolves to no class record is UNDETERMINED (rc=2) — an unresolved mark is not an empty class"; else FAIL "O4c: an orphaned [THIRD-PARTY] mark read as a clean empty class (rc=$ORC)"; fi
 # O4d — SPECIFICITY for O4b. The same supersession WITH a profile backing it is the
-# sanctioned provenance change (agents/00-enrichment.md:456-466) and must not be refused,
+# sanctioned provenance change (agents/00-enrichment.md § Missing or blank profile,
+# "supersede, do not merge") and must not be refused,
 # or the check is an always-abort rather than a discriminator.
 O4STD="$WORK/o4_supported"
 mkdir -p "$O4STD/travelers"

@@ -87,16 +87,31 @@ Specific checks:
 
 **Profile-privacy non-publication (fail-closed):**
 Per-traveler profile fields marked non-publishable must never reach a
-publish-bound artifact. Today that class holds exactly two members:
+publish-bound artifact. **The class itself is declared, not enumerated here:**
+its single home is the `publish-contract-values` declaration in
+`reference/data-architecture.md` § *The declaration*, which states — for every
+member — the field label or entry-level mark that puts a value in class, the
+artifacts the rule is evaluated against, and the match rule that travels with it.
+Read that declaration for the current membership. **Do not restate it here and do
+not carry a private list of members**: a second enumeration drifts from the first,
+and nothing arbitrates between them.
 
-1. **Passport** (issuing country and validity, never a number), captured in
-   `travelers/<traveler>.md` and carried into `outputs/traveler-model.md`.
-2. **Every `[THIRD-PARTY]`-marked value** in `outputs/traveler-model.md` — a
-   need captured for a party member who has no profile of their own, supplied
-   by the operator and marked `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` (see
-   `agents/00-enrichment.md`). It is non-publishable because the person it
-   describes was never able to consent to it being recorded, let alone
-   published — see `reference/adr/ADR-006-third-party-data-capture.md`.
+Two things the declaration does not say, which this check does:
+
+- **Why the class exists.** An entry-marked value describes a party member who has
+  no profile of their own — supplied by the operator and marked
+  `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` (see `agents/00-enrichment.md`). It is
+  non-publishable because the person it describes was never able to consent to it
+  being recorded, let alone published — see
+  `reference/adr/ADR-006-third-party-data-capture.md`. A field-declared value such
+  as a passport is the traveler's own captured document detail, held only so entry
+  requirements can be checked.
+- **That this audit is a layer of its own.** The publish path carries a mechanical
+  guard over the same declaration (`reference/adr/ADR-008-publish-content-guard.md`),
+  and it does not subsume this check. That guard runs at publish time on the
+  rendered bytes; this one runs at validation time on the plan, and catches what a
+  string match cannot — a paraphrase, a restatement, an inference. **Both layers
+  stand.**
 
 The publish-bound artifacts are **every source the site build reads**. The
 authority for that set is the single-source table in
@@ -112,13 +127,15 @@ artifacts §9.1 marks authoritative-internally-but-not-reader-facing, and §9.3
 lists them as intentional exclusions; they are not publish-bound and are not
 audited here.
 
-The audit runs on both members of the class, across the same five artifacts:
+The audit runs on **every declared member**, across the same five artifacts. The
+declaration has two limbs and each is audited on its own terms:
 
-- **Passport.** For every traveler carrying a Passport value in
-  `outputs/traveler-model.md`, confirm that neither the issuing country nor the
-  validity appears anywhere in **any** publish-bound artifact named above.
-- **`[THIRD-PARTY]` values.** For every `## <Name>` entry in
-  `outputs/traveler-model.md` carrying the `[THIRD-PARTY]` mark, confirm that
+- **Field-declared values.** For every traveler carrying a value under a
+  field-declared label in `outputs/traveler-model.md`, confirm that no part of
+  that value appears anywhere in **any** publish-bound artifact named above — for
+  a passport, that means neither the issuing country nor the validity.
+- **Entry-declared values.** For every `## <Name>` entry in
+  `outputs/traveler-model.md` carrying an entry-declared mark, confirm that
   **none** of its need text reaches **any** publish-bound artifact named above,
   and that the person's name appears in no `**Applies to:**` line and heads no
   `## Hard Constraints` block. **Check the anonymized form too:** a rest floor
@@ -134,11 +151,13 @@ The guarantee is scoped to the published render path, not to a frozen list of
 filenames — a source added to the build and not added here reopens the leak this
 check exists to close.
 
-**Fail closed.** If `outputs/traveler-model.md` cannot be read, or a traveler's
-passport carry-through cannot be determined, or a `[THIRD-PARTY]` entry's
-carry-through cannot be determined, record a Critical — an undetermined
-result is a failure, never a clean pass. This holds identically for both
-members of the class.
+**Fail closed.** If `outputs/traveler-model.md` cannot be read, or the declaration
+itself cannot be read, or a field-declared value's carry-through cannot be
+determined, or an entry-declared value's carry-through cannot be determined,
+record a Critical — an undetermined result is a failure, never a clean pass. This
+holds identically for every declared member. **A class that could not be computed
+is not an empty class**, and a declaration that yields nothing is the first case,
+never the second.
 
 **What is not a finding.** The check keys on a *specific traveler's captured
 value*, never on the word "passport". Destination-level guidance that belongs on
@@ -487,17 +506,16 @@ placed venue breaking the dedup rules is Venue deduplication.
    Maps link (or an official-site URL when the venue has no map pin) in
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
-8. Profile-privacy non-publication — either member of the non-publishable
+8. Profile-privacy non-publication — **any** member of the non-publishable
    class reaching **any** of the five publish-bound artifacts named by
    `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
    `outputs/links-reference.md`, `outputs/venue-matrix.md`,
    `outputs/event-status.md`, `trip-context.md`) is a hard failure and is always
-   Critical. The two members are (a) a per-traveler Passport value (issuing
-   country or validity) and (b) any `[THIRD-PARTY]`-marked value — a need
-   captured for a party member who has no profile of their own — **including
-   its anonymized form**, and including the person's name on an `Applies to:`
-   line. There is **no Warning tier and no waiver**, and an undetermined result
-   is Critical too
+   Critical. Membership is read from the `publish-contract-values` declaration in
+   `reference/data-architecture.md` § *The declaration* and is not restated here.
+   A finding covers a declared value **including its anonymized form**, and
+   including the person's name on an `Applies to:` line. There is **no Warning
+   tier and no waiver**, and an undetermined result is Critical too
 9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
 10. Travel restrictions and advisories — Critical if action is required

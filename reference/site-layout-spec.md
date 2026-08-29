@@ -642,6 +642,32 @@ Exclusion list in 9.3).
 The rule, stated once: **the site renders `outputs/`; it writes none of it.** A build or update
 reads these artifacts and produces the HTML — it never edits an `outputs/` file as a side effect.
 
+**The machine-readable projection of this section.** The table above remains the authority for
+which artifacts are publish-bound; the fence below is its projection, and the two are required to
+agree. It exists so that "the publish-bound artifact set is sourced from § 9.1" is *assertable*
+rather than merely asserted, and so a source added to the build lands in one declared place.
+
+```publish-contract-artifacts
+# artifact                          class
+trip-context.md                     bound
+outputs/final-itinerary.md          bound
+outputs/links-reference.md          bound
+outputs/venue-matrix.md             bound
+outputs/event-status.md             bound
+outputs/traveler-model.md           internal-hard
+outputs/satisfaction-metrics.md     internal-hard
+```
+
+The `class` values are the closed four-value enum in `reference/data-architecture.md` § 5.1
+(`bound` | `internal` | `internal-hard` | `output`). `internal-hard` marks the two artifacts § 9.3
+lists as intentional exclusions — never rendered, **and** carrying values that must not reach a
+rendered page in any form, including anonymized.
+
+**The publish guard does not read this fence.** It reads the field/entry declaration in
+`reference/data-architecture.md` § 5.6, which is what decides *which values* are in class. This
+fence declares *which artifacts* the site build may read, which is the validator's audit surface
+and the artifact-schema gate's input. Two declarations, two consumers, one home each.
+
 ### 9.2 Round-trip completeness — every plan element has a rendered home
 
 Round-trip fidelity is **surjective from plan onto site**: every element in `final-itinerary.md`

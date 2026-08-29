@@ -675,3 +675,32 @@ is authoritative for the *satisfaction layer's own content*.** Concretely:
 The scope declared at the top of this document is unchanged: it governs the satisfaction **substrate**
 and still defines no metric formula, no scoring, and no optimization logic. The engine-wide document
 inherits that boundary rather than relaxing it.
+
+---
+
+## Publishability — the satisfaction-layer projection
+
+Two rules stated elsewhere in this document bound what may leave the satisfaction layer:
+
+- § *Lifecycle facets* — **"The bound is the entry class, not a list of fields, so it holds for
+  every facet below and for any facet a later release adds ... there is no default-allow outside
+  it."**
+- § *Needs*, the stated exception — a third-party-sourced need **never** escalates into
+  `trip-context.md` and its subject is **never** added to a constraint's `Applies to:` roster,
+  because `trip-context.md` is publish-bound and rendered.
+
+**Both are now declared, once, in `reference/data-architecture.md` § *Publishability*** — as the
+`publish-contract-values` fence, which the publish-path guard reads and holds no copy of. The
+statements above are this document's satisfaction-layer **specialization** of that declaration, not
+a second home for it: they say what the bound means for the derived model and the per-traveler
+files, and the declaration says which fields and entry classes are in class engine-wide.
+
+**Where the two could disagree, the declaration governs membership and this document governs the
+satisfaction layer's own content** — the same split § *Relationship to the Engine-Wide Data
+Architecture* above already fixes for every other overlap. Adding a member of the non-publishable
+class is a row in that fence; it is not an edit here and it is not an edit to any shell script.
+
+**Citation form.** The two rules above are cited by **section name** from the guard scripts that
+consume them, not by line number. A line citation into a living document goes stale on the next
+insertion and does so silently — nothing in CI resolves a `file.md:NNN` reference — so the citing
+side names the section and the section keeps its name.

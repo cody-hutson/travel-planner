@@ -407,6 +407,57 @@ guard into a fail-open one.
 the class *sourced*, not *complete*: a value the model never captured, or a rendered paraphrase of
 one, is still unreachable. This document makes no claim otherwise.
 
+### 5.6 The declaration
+
+This is the **machine-readable form of § 5.3's union**, and it is the single home of the
+non-publishable class. `scripts/publish-trip-site.sh` reads the fence below and holds no copy of
+any row in it: `nonpublishable_values` became a parameterized evaluator when the class moved here,
+and `scripts/test-publish-guard.sh` case **L8** asserts that separation on every push — the class
+source and the predicate must each carry **zero** declared selectors while this fence carries all
+of them.
+
+**Adding a member of the class is one row here and no edit to any shell script.** That is the whole
+point of the declaration, and it is the property to test a future change against: if admitting a new
+non-publishable field needs a code change, the re-key has been undone.
+
+```publish-contract-values
+# limb   selector        artifact-scope              rule
+field    Passport        travelers/<traveler>.md     conjunctive
+field    Passport        outputs/traveler-model.md   conjunctive
+entry    [THIRD-PARTY]   outputs/traveler-model.md   by-wordcount
+```
+
+Four columns, all required, whitespace-separated. A line whose first non-blank character is `#` is a
+comment and is ignored; a blank line is ignored.
+
+| Column | Domain | Meaning |
+|---|---|---|
+| `limb` | `field` \| `entry` | Which half of § 5.3's union the row contributes to. `field` = *every value of a field declared non-publishable*; `entry` = *every value of an entry whose provenance is third-party*. |
+| `selector` | a field label, or an entry-level mark token | What the parse binds to. A `field` selector is matched case-insensitively as a label prefix followed by `:`, after the existing bullet/emphasis stripping. An `entry` selector is matched as a literal substring of the entry heading **and** of each raw value line — the two granularities compose by union, never by override. |
+| `artifact-scope` | a repo-relative artifact-class path, with `<traveler>` admitted as a glob token | Which artifacts the row is evaluated against. |
+| `rule` | `conjunctive` \| `phrase` \| `token` \| `by-wordcount` | The match rule that travels with the record, because membership and matchability are one decision. `by-wordcount` is the declared name of the shipped `n >= GUARD_NGRAM ? phrase : token` choice, so the declaration expresses today's behaviour rather than changing it. |
+
+**The declaration is itself fail-closed, and this is a sixth UNDETERMINED path added to § 5.4's
+five.** If this file is absent or unreadable, or the fence yields zero rows, `nonpublishable_values`
+returns `2` and the publish aborts. A guard that cannot read its own class definition has not
+measured an empty class; it has failed to measure — and an empty read falling through to a clean
+publish is the exact fail-open § 5.4 exists to refuse, re-created one layer up.
+
+**What deliberately did *not* move here.** The class's **widening** controls are declared; its
+**narrowing** controls stay in the shell. `_GUARD_NEED_ENUM`, the `_GUARD_STOP` normalization
+vocabulary, and `tp_value()`'s non-member exclusions all *shrink* the guarded set when extended, so
+making them easy to edit would be a fail-open surface. A reader who concludes that every
+class-shaped constant should follow the membership rule into this fence would weaken the control
+while appearing to finish the job.
+
+**Composition with per-artifact frontmatter.** This declaration is repo-side and the artifact parse
+is unchanged, so it reaches an artifact carrying no frontmatter at all — which, under § 7.2's
+tolerant read, is every pre-migration artifact and every trip in the git-ignored working dir. Once
+an artifact carries its own frontmatter, the two sources compose by **union, never by override**:
+at version 0 the frontmatter limb contributes nothing and the declaration carries the class; at
+version ≥ 1 both contribute. No artifact loses coverage by not being migrated yet, and none gains a
+second home by being migrated.
+
 ---
 
 ## 6. Lifecycle Classes

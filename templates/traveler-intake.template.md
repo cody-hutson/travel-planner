@@ -99,6 +99,10 @@
 > `trips/<destination>-<year>/travelers/<their-name>.md` — and their passport goes
 > on their own line there. Never put a second person's passport on yours. If they
 > won't have a profile of their own, their passport isn't recorded anywhere.
+> This line is a **declared non-publishable field** — its class is declared in
+> `reference/data-architecture.md` § *Publishability*, and both the publish guard
+> and the validator read it from there — so what you write here shapes the plan
+> and never reaches a published page, in named or anonymised form.
 
 ---
 
