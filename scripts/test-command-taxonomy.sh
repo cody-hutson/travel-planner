@@ -237,9 +237,20 @@ ALLOWED_SUBS=( 'list' 'status' 'update' 'unpublish' )
 # path-mention test red-lights that section, which is the exact defect the use-not-mention
 # rule exists to prevent. The path test is declined rather than weakened into one that
 # passes.
+# `schema` is in the ADJUDICATED set and deliberately NOT in READONLY_KEYS. R2 is a
+# set-difference sentinel in both directions, so a live verb missing from the adjudicated
+# set turns this suite red — that membership is mandatory. R1's predicate is a different
+# one, and it is the reason the key is withheld: R1 asserts that a declared read-only
+# region carries NO EXECUTABLE INSTRUCTION, and the `schema` region carries a fenced
+# invocation by design. That the invocation is of a different script — so R1's INV records,
+# which are publish-script-only, cannot currently see it — is an argument AGAINST the
+# declaration rather than for it. A declaration the guard happens to be unable to falsify
+# is still a false declaration, and it would turn red for the right reason at the wrong
+# time the moment a later slice widened INV to every script. The verb writes nothing; it
+# does not follow that it executes nothing.
 READONLY_KEYS=( '/trip:status' '/trip:check' )
 READONLY_OF_COMMAND='/trip'
-READONLY_ADJUDICATED=( 'status' 'plan' 'replan' 'reorder' 'research' 'check' 'ideas' 'site' )
+READONLY_ADJUDICATED=( 'status' 'plan' 'replan' 'reorder' 'research' 'check' 'ideas' 'site' 'schema' )
 
 SCRIPT_REL='scripts/publish-trip-site.sh'
 
@@ -277,7 +288,43 @@ in_list() { local n="$1"; shift; local e; for e in "$@"; do [ "$e" = "$n" ] && r
 is_sep() { [[ "$1" =~ ^\|[-:[:space:]|]+\|[[:space:]]*$ ]]; }
 
 getcount() { printf '%s\n' "$1" | sed -n "s/^COUNT $2 //p" | head -1; }
-has_finding() { printf '%s\n' "$1" | grep -qE "^FINDING ($2) "; }
+# ── THE HERE-STRING IS LOAD-BEARING, NOT A STYLE CHOICE. Read this before "simplifying"
+# it back into a pipeline.
+#
+# `grep -q` exits the instant it matches, by specification. Feeding it from a pipeline
+# whose writer has not finished writing kills that writer with SIGPIPE, and `pipefail`
+# — set at the top of this file — then reports the PIPELINE as failed even though the
+# match succeeded. The result is a test verdict that depends on process scheduling.
+#
+# This was measured, not theorised: on an unchanged tree, 10 of 30 consecutive runs of
+# this suite went red, on TWO different arms (GR2 x8, GX1b x2). Both are `if <test>;
+# then PASS` sites, so the spurious status showed up as a false RED.
+#
+# Three isolations, because the first two do not explain the sites that actually failed:
+#   * plain variable, payload under the pipe capacity  -> 0 of 300. Never fires.
+#   * plain variable, payload OVER it                  -> 300 of 300. The transition is
+#     exactly 65536 bytes: 0 of 200 at 65535, 189 of 200 at 65536, 100% above. That is
+#     the pipe's capacity, and it is the same default on Linux as here.
+#   * COMMAND SUBSTITUTION on the left of the pipe, payload only a few hundred bytes
+#     -> 35 of 400, intermittent. THIS is the shape that shipped, and the nested
+#     subshell is what makes it fire far below the capacity threshold.
+# Same three under `set +o pipefail`: 0. Same three in the here-string form: 0.
+#
+# The polarity of THIS helper is the inverted one, and it is the dangerous half. Its
+# callers read `if has_finding …; then FAIL; else PASS`, so a spurious non-zero here
+# does not go red — it reports PASS on a state that carries the finding. That direction
+# has never been observed and is the reason this is closed at the shape rather than at
+# the two arms where it happened to surface. Arm PF1 keeps it closed.
+#
+# A here-string is a redirection on a SIMPLE COMMAND, not a pipeline, so `pipefail` has
+# no second exit status to aggregate and there is no second process to signal. The bytes
+# grep reads are identical: bash appends exactly one newline, which is what the
+# `printf '%s\n'` it replaced did.
+has_finding() { grep -qE "^FINDING ($2) " <<<"$1"; }
+# `show` and `getcount` keep their pipelines deliberately. Both END in `head`, which also
+# exits early — but neither one's exit status is ever consulted: both are called inside a
+# command substitution for their OUTPUT, so there is no verdict for a spurious status to
+# corrupt. The defect is a pipeline whose STATUS is read, not a pipeline.
 show()     { printf '%s\n' "$1" | grep -E "^FINDING ($2) " | sed 's/^FINDING /       /' | head -8; }
 
 # Records which ids a reporting group surfaces, so group Y can assert the mapping is
@@ -1731,7 +1778,7 @@ G0="$WORK/g0"; gen_tree "$G0" ok ok
 if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/commands/trip.md" ] && [ -f "$G0/commands/trip-new.md" ] && [ -f "$G0/commands/trip-record.md" ] && [ -f "$G0/commands/trip-publish.md" ]; then
   PASS "G0a: fixture integrity — the conforming tree was constructed"
   G0OUT="$(run_tree "$G0")"
-  if printf '%s\n' "$G0OUT" | grep -q '^FINDING '; then
+  if grep -q '^FINDING ' <<<"$G0OUT"; then
     FAIL "G0b: MUST-NOT-FIRE — the conforming tree was flagged: $(printf '%s' "$G0OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
   else
     PASS "G0b: MUST-NOT-FIRE — a correct tree returns no finding of any id; the guard is not hard-wired red"
@@ -1847,8 +1894,8 @@ ctl() {  # ctl <id> <want> <label> <charter-defect> <cmd-defect> <integrity-prob
   if ! eval "$probe"; then FAIL "${id}a: fixture integrity — the deliberate defect is absent; ${id}b would prove nothing"; return; fi
   PASS "${id}a: fixture integrity — the deliberate defect is present"
   local out; out="$(run_tree "$d")"
-  if ! printf '%s\n' "$out" | grep -q '^FINDING '; then FAIL "${id}b: the deliberate defect was NOT flagged ($label)"
-  elif printf '%s\n' "$out" | grep -q "^FINDING $want "; then PASS "${id}b: flagged, naming $want — $label"
+  if ! grep -q '^FINDING ' <<<"$out"; then FAIL "${id}b: the deliberate defect was NOT flagged ($label)"
+  elif grep -q "^FINDING $want " <<<"$out"; then PASS "${id}b: flagged, naming $want — $label"
   else FAIL "${id}b: flagged but not as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
 }
 
@@ -1891,9 +1938,9 @@ XS1="FILE /a
 DECL /a plan
 KEY /a:plann
 ADDRPARTS /a plan"
-if printf '%s\n' "$XS1" | grep -q '^KEY /a:plann$'; then
+if grep -q '^KEY /a:plann$' <<<"$XS1"; then
   PASS "GX1a: fixture integrity — the synthetic record stream carries a key that disagrees with its declaration"
-  if printf '%s\n' "$(coverage_check "$XS1")" | grep -q '^FINDING X1 '; then
+  if grep -q '^FINDING X1 ' <<<"$(coverage_check "$XS1")"; then
     PASS "GX1b: flagged, naming X1 — an emitted key that did not round-trip byte-identical is caught even though the COUNT of keys is unchanged"
   else FAIL "GX1b: a key whose VALUE changed in transport was NOT flagged"; fi
 else FAIL "GX1a: fixture integrity — the synthetic stream was not built; GX1b would prove nothing"; fi
@@ -1903,9 +1950,9 @@ XS2="FILE /a
 DECL /a plan
 KEY /a:two words
 ADDRPARTS /a plan"
-if printf '%s\n' "$XS2" | grep -q '^KEY /a:two words$'; then
+if grep -q '^KEY /a:two words$' <<<"$XS2"; then
   PASS "GX2a: fixture integrity — the synthetic record stream carries a whitespace-bearing key"
-  if printf '%s\n' "$(coverage_check "$XS2")" | grep -q '^FINDING X2 '; then
+  if grep -q '^FINDING X2 ' <<<"$(coverage_check "$XS2")"; then
     PASS "GX2b: flagged, naming X2 — a whitespace-bearing key is a hard failure, so the lossy channel cannot return by accident"
   else FAIL "GX2b: a whitespace-bearing key was NOT flagged"; fi
 else FAIL "GX2a: fixture integrity — the synthetic stream was not built; GX2b would prove nothing"; fi
@@ -1919,7 +1966,7 @@ ectl() {  # ectl <id> <want> <label> <adr-defect> <script-extra> <probe>
   if ! eval "$probe"; then FAIL "${id}a: fixture integrity — the deliberate defect is absent; ${id}b would prove nothing"; return; fi
   PASS "${id}a: fixture integrity — the deliberate defect is present"
   local out; out="$(adr4_check "$d/ADR.md" "$d/pub.sh" "$GEREC")"
-  if printf '%s\n' "$out" | grep -q "^FINDING $want "; then PASS "${id}b: flagged, naming $want — $label"
+  if grep -q "^FINDING $want " <<<"$out"; then PASS "${id}b: flagged, naming $want — $label"
   else FAIL "${id}b: not flagged as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
 }
 ectl GE1 E1 "a §4 row that does not parse at five columns"                    badrow       ''        'grep -qF "| 10 | ${BT}unpublish${BT} | EXCLUDED |" "$WORK/GE1/ADR.md"'
@@ -1934,29 +1981,29 @@ arm E5
 GE5="$WORK/ge5"; mkdir -p "$GE5"; gen_adr "$GE5" ok
 if [ ! -f "$GE5/pub.sh" ]; then
   PASS "GE5a: fixture integrity — no publish script exists at the fixture path"
-  if printf '%s\n' "$(adr4_check "$GE5/ADR.md" "$GE5/pub.sh" "$GEREC")" | grep -q '^FINDING E5 '; then
+  if grep -q '^FINDING E5 ' <<<"$(adr4_check "$GE5/ADR.md" "$GE5/pub.sh" "$GEREC")"; then
     PASS "GE5b: flagged, naming E5 — an unreadable publish script makes the sentinel unable to run, which is a failure and not a skip"
   else FAIL "GE5b: an unreadable publish script did NOT fail the sentinel"; fi
 else FAIL "GE5a: fixture integrity — a script exists where none should; GE5b would prove nothing"; fi
 
 # ── R-group arms.
 arm R1
-if printf '%s\n' "$GEREC" | grep -q '^INV /trip-publish update '; then
+if grep -q '^INV /trip-publish update ' <<<"$GEREC"; then
   PASS "GR1a: fixture integrity — a fixture verb region carries a fenced invocation line"
-  if printf '%s\n' "$(readonly_check "$GEREC" '/trip-publish:update' -- status check)" | grep -q '^FINDING R1 '; then
+  if grep -q '^FINDING R1 ' <<<"$(readonly_check "$GEREC" '/trip-publish:update' -- status check)"; then
     PASS "GR1b: flagged, naming R1 — a declared read-only key whose region carries an executable instruction. Non-vacuous: regions that DO carry one exist, so the assertion has something to catch"
   else FAIL "GR1b: an executable instruction in a declared read-only region was NOT flagged"; fi
 else FAIL "GR1a: fixture integrity — no fixture region carries an invocation; GR1b would prove nothing"; fi
 
 arm R2
-if printf '%s\n' "$(readonly_check "$RECS" "${READONLY_KEYS[@]}" -- status check nosuchverb)" | grep -q '^FINDING R2 '; then
+if grep -q '^FINDING R2 ' <<<"$(readonly_check "$RECS" "${READONLY_KEYS[@]}" -- status check nosuchverb)"; then
   PASS "GR2: flagged, naming R2 — the MEMBERSHIP-DELTA SENTINEL fires on a set difference in either direction, and the message names the required action. Diffed as a SET: a verb removed and another added holds the count while membership churns"
 else FAIL "GR2: the membership-delta sentinel did not fire on a deliberate set difference"; fi
 
 arm N1
 NEEDLES_SAVE=( "${NEEDLES[@]}" )
 NEEDLES+=( 'trailing ' )
-if printf '%s\n' "$(needle_check)" | grep -q '^FINDING N1 '; then
+if grep -q '^FINDING N1 ' <<<"$(needle_check)"; then
   PASS "GN1: flagged, naming N1 — a needle that does not survive the haystack's normalisation, and is not registered UNTRIMMED, is a build error rather than a silent non-match"
 else FAIL "GN1: a needle failing norm(needle) == needle was NOT flagged"; fi
 NEEDLES=( "${NEEDLES_SAVE[@]}" )
@@ -1994,12 +2041,12 @@ if grep -q "checkx" "$GM1/commands/trip.md" && ! grep -q "checkx" "$GM1/CLAUDE.m
    && grep -q "checkx" "$GM2/commands/trip.md" && grep -q "checkx" "$GM2/CLAUDE.md"; then
   PASS "GM-a: fixture integrity — one tree carries the rename in the command file ONLY; the other carries the same rename on BOTH surfaces"
   M1="$(run_tree "$GM1")"; M2="$(run_tree "$GM2")"
-  if printf '%s\n' "$M1" | grep -q '^FINDING ' && printf '%s\n' "$M1" | grep -q 'checkx'; then
+  if grep -q '^FINDING ' <<<"$M1" && grep -q 'checkx' <<<"$M1"; then
     PASS "GM-b: RED ARM — a verb renamed in a command file with the charter untouched turns the guard red and NAMES the affected key. The verb population is DERIVED, not remembered"
   else
     FAIL "GM-b: RED ARM — a one-sided rename did NOT turn the guard red, or did not name the affected key: $(printf '%s' "$M1" | grep '^FINDING ' | head -1)"
   fi
-  if printf '%s\n' "$M2" | grep -q '^FINDING '; then
+  if grep -q '^FINDING ' <<<"$M2"; then
     FAIL "GM-c: GREEN ARM — the same rename applied to BOTH surfaces was still flagged, so the red arm proves only that the guard dislikes change: $(printf '%s' "$M2" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
   else
     PASS "GM-c: GREEN ARM — the same rename applied to BOTH surfaces stays green. Both arms, or neither: a green run on unchanged state does not satisfy this control; only the pair does"
@@ -2031,18 +2078,18 @@ done
 if [ "$ZV_FILES" -gt 0 ] && [ "$ZV_OK" -eq 1 ]; then
   PASS "GZV-a: fixture integrity — the ZERO-VERB world was constructed: ${ZV_FILES} command files, each carrying a requirement-table header row at fence depth 0 and no data row beneath it"
   ZVOUT="$(run_tree "$GZV")"
-  if printf '%s\n' "$ZVOUT" | grep -q '^FINDING V0 .*carries no data rows'; then
+  if grep -q '^FINDING V0 .*carries no data rows' <<<"$ZVOUT"; then
     PASS "GZV-b: flagged, naming V0 — the ZERO-ROWS clause fires. This is the emission site neither other V0 arm reaches: GV0 removes the table and GV0b duplicates its header row, so both land on the ANCHOR clause and this one was armed by nothing"
   else
     FAIL "GZV-b: a world of requirement tables with no data rows did NOT raise V0's zero-rows clause"
   fi
   ZV_UNITS="$(getcount "$ZVOUT" UNITS)"
-  if ! printf '%s\n' "$ZVOUT" | grep -q '^DECL ' && [ "${ZV_UNITS:-0}" -eq "$ZV_FILES" ]; then
+  if ! grep -q '^DECL ' <<<"$ZVOUT" && [ "${ZV_UNITS:-0}" -eq "$ZV_FILES" ]; then
     PASS "GZV-c: COLLAPSE — the record stream carries no declaration at all, and the coverage-unit enumeration is ${ZV_UNITS} units across ${ZV_FILES} command files. Every unit therefore came from the verbless fallback and every unit is a COMMAND, so K1/K2/K3 quantify over commands and are the retired forward / reverse / injectivity term for term. DEMONSTRATED on a constructed world, not argued in a comment"
   else
     FAIL "GZV-c: COLLAPSE — the zero-verb world yielded ${ZV_UNITS:-?} coverage units across ${ZV_FILES} command files, or the stream still carried a declaration; the degeneracy argument does not hold on it"
   fi
-  if printf '%s\n' "$ZVOUT" | grep -q '^FINDING '; then
+  if grep -q '^FINDING ' <<<"$ZVOUT"; then
     PASS "GZV-d: REACHABILITY — that same world is RED. The verbless fallback contributes coverage units only on a run that is already failing, which is what the banner now states in place of the retired claim that the branch is reachable where a file 'legitimately declares a table with no rows'. There is no such legitimate state: the zero-rows clause forbids it"
   else
     FAIL "GZV-d: REACHABILITY — the zero-verb world returned no finding, so the fallback CAN execute on a green run and the banner's reachability statement is false"
@@ -2147,6 +2194,51 @@ if [ -z "$y_ma" ] && [ -z "$y_ea" ]; then
 else
   [ -n "$y_ma" ] && FAIL "Y2: emittable ids exercised by no control arm: $y_ma"
   [ -n "$y_ea" ] && FAIL "Y2: control arms exercise ids no code emits: $y_ea"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PF — this file's own verdicts do not depend on process scheduling.
+#
+# A verdict site of the form `if <writer> pipes-into grep -q; then` is a live defect under
+# the `pipefail` set at the top of this file, not a style preference: grep -q exits on
+# first match, the writer dies on SIGPIPE, and pipefail reports the pipeline as failed
+# although the match succeeded. Measured on an unchanged tree before it was fixed: 10 red
+# runs in 30, across TWO arms (GR2 and GX1b) that share nothing but the shape.
+#
+# Why a standing arm rather than a comment: the two arms it was OBSERVED on are
+# `if <test>; then PASS` sites, where the spurious status is a false RED and someone
+# notices. has_finding()'s 31 call sites are inverted — `if has_finding …; then FAIL` —
+# where the same status is a false GREEN on a state that carries the finding. The
+# dangerous direction is the one nobody would see, so the shape is what is asserted
+# absent, not the two places it happened to surface.
+#
+# The needle is assembled from two pieces for the same reason EMIT_MARK is: this scan
+# reads THIS FILE, so a literal spelling of the shape in the detector would make the
+# detector match itself and report a defect it just introduced.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PF — no verdict in this file is decided by a pipeline's exit status."
+PF_PIPE_SHAPE='| grep -'"q"
+PF_PIPE_TIGHT='|grep -'"q"
+PF_BAD=0; PF_GOOD=0
+while IFS= read -r pfline || [ -n "$pfline" ]; do
+  case "$pfline" in
+    *"$PF_PIPE_SHAPE"*|*"$PF_PIPE_TIGHT"*) PF_BAD=$((PF_BAD+1)) ;;
+  esac
+  case "$pfline" in
+    *'grep -q'*'<<<'*) PF_GOOD=$((PF_GOOD+1)) ;;
+  esac
+done < "$SELF"
+# Graded in the order that makes the zero mean something: a detector that finds no
+# instance of the CORRECT form is broken, and its zero on the incorrect form would be a
+# probe failure wearing a pass. Same rule as K3 and L4b — an empty input is broken, not
+# clean.
+if [ "$PF_GOOD" -eq 0 ]; then
+  FAIL "PF1: the scan found 0 here-string grep -q sites in this file, so its zero on the pipeline shape proves nothing — the convention or the scan has moved, and neither verdict below is trustworthy"
+elif [ "$PF_BAD" -eq 0 ]; then
+  PASS "PF1: ${PF_GOOD} grep -q sites in this file, 0 of them pipelines — no verdict here can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
+else
+  FAIL "PF1: ${PF_BAD} verdict site(s) in this file pipe into grep -q under pipefail — grep -q exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════

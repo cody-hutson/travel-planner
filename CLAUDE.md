@@ -117,6 +117,7 @@ Before doing anything, determine what kind of request this is:
 | **Full pipeline** | User wants the initial plan built or a full re-plan | Runs the full agent pipeline (enrichment → spokes → hub → validator) | "Build the itinerary", "Start fresh on the plan" | `/trip plan` |
 | **Plan audit** | User wants the existing plan checked without changing it | Runs the Validator alone against the current itinerary and reports findings. No spokes, no hub, no edits. | "Does the plan hold up?", "Check the itinerary for problems" | `/trip check` |
 | **Site generation** | User wants the travel site built or rebuilt | See Travel Site Generation section | "Build the site", "Create the travel page" | `/trip site` |
+| **Artifact validation** | User wants their own trip's files checked against the declared schema | Runs the schema check over the resolved trip's artifacts and reports per-artifact, per-field failures. Read-only, no network, publishes nothing. | "Do my trip files still parse?", "Check the trip data" | `/trip schema` |
 | **Publish** | User wants to push to GitHub | See Publishing section | "Publish this", "Push to GitHub" | `/trip-publish update` |
 | **New trip** | User wants to start a trip that does not exist yet | Scaffold the trip directory and its members and set the starting mode from what the user stated. Resumes, repairing only what is missing, when the slug already exists. | "Start planning Lisbon 2027", "New trip to Tokyo" | `/trip-new` |
 | **Traveler profile** | User wants to create or update a traveler's own profile | Create the profile that does not exist, edit the one that does. Never invent a field — an unanswered field is a skipped field. | "Add Dana's profile", "Update my dietary needs" | `/trip-record profile` |
@@ -149,6 +150,7 @@ Before doing anything, determine what kind of request this is:
 | `/trip status` · `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the pre-executed blocks |
 | `/trip plan` · `replan` · `reorder` · `research` · `check` · `ideas` | that verb's `**Reads:**` line, **including its attributed-agent clause** | own + attributed-agent |
 | `/trip site` | that verb's `**Reads:**` line | own |
+| `/trip schema` | that verb's `**Reads:**` line | own |
 | `/trip-record person` · `travelers` | that verb's `**Reads:**` line — the verb reads nothing of its own; the reconciler it dispatches reads | own + attributed-agent |
 | `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` | that verb's `**Reads:**` line | own |
 | `/trip-publish update` | that verb's `**Reads:**` line — a presence-and-readability probe is a read of the **path**, never of the value | own |

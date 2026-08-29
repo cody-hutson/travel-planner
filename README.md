@@ -63,7 +63,7 @@ Conversation is not the only way in. The files in `.claude/commands/` give the e
 
 | Command | What it is for |
 |---|---|
-| `/trip` | The entry point. Bare `/trip` reports where the trip stands; its verbs run the planning work — `plan`, `research`, `replan`, `check` and `site` among them |
+| `/trip` | The entry point. Bare `/trip` reports where the trip stands; its verbs run the planning work — `plan`, `research`, `replan`, `check`, `site` and `schema` among them |
 | `/trip-new` | Starts a trip that does not exist yet: the folder, `trip-context.md`, `trip-log.md`, and traveler intake. It only creates — re-run on an existing trip, it adds what is missing and rewrites nothing |
 | `/trip-record` | Writes what you know into the trip's own files — a traveler profile, a third party's needs, the destination, the mode, the party, trip facts, per-event status, the session log |
 | `/trip-publish` | `update` re-publishes an already-public site after edits; `list` reports what is published |
