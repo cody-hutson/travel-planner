@@ -595,13 +595,18 @@ working directory, after it is already done.
 An artifact does not need a migration pass to reach the current version if its own lifecycle
 regenerates it. Partitioning the 19 in-model classes by § 6 membership:
 
-| Upgrade burden | Classes | Count | Mechanism |
+| Upgrade burden | Which lifecycle classes | Count | Mechanism |
 |---|---|---|---|
-| **None — self-upgrading by construction** | C4, C10, C11, C12, C14, C15, C16, C17, C19 | **9** | `rebuilt-each-synthesis`, `versioned` and `output` all rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
-| **Writer-upgraded, in place** | C1, C13 (`persist-mutable`) · C2, C5, C6, C7, C8, C9, C18 (`accumulate-append`) | **9** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
-| **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md` | **1** | **Never engine-upgraded. This is a rule, not an omission.** |
+| **None — self-upgrading by construction** | `rebuilt-each-synthesis` · `versioned` · `output` | **9** | All three rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
+| **Writer-upgraded, in place** | `persist-mutable` (except the human-authored class below) · `accumulate-append` | **9** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
+| **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md`, the one human-authored `persist-mutable` class | **1** | **Never engine-upgraded. This is a rule, not an omission.** |
 
 **9 + 9 + 1 = 19.** No class is unaccounted for, and none needs an operator to hand-edit a file.
+
+**Membership is § 6's, not this table's.** This partitions the lifecycle classes by upgrade burden;
+**§ 6 governs which artifact class sits in which lifecycle**, and a class that moves between its rows
+moves between these with it. The counts above are that assignment totalled, not a second roster —
+naming the members again here would give the classification the two homes § 6 exists to prevent.
 
 **Why C3 is never upgraded, and why that still satisfies the requirement.** `travelers/<traveler>.md`
 is human-authored Layer 1 — the traveler's own words. `agents/00-enrichment.md` § *Second Role*
