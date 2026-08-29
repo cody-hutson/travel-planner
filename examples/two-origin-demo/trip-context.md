@@ -1,3 +1,13 @@
+---
+artifact: trip-context.md
+schema-version: 1
+trip: two-origin-demo
+writer: block-owned
+lifecycle: persist-mutable
+provenance: human
+publish: bound
+---
+
 # Trip Context — Lisbon April 2026 (Illustrative Example)
 
 > **Illustrative, sanitized example. Not a real trip.** Placeholder people, a

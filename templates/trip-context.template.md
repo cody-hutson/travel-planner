@@ -11,7 +11,7 @@ publish: bound
 # Trip Context — [DESTINATION] [MONTH] [YEAR]
 
 > Single source of truth for all agents.
-> Layer 1 (user-provided) and Layer 2 (derived) fields are completed before
+> Layer 1 (user-provided) and `[DERIVED]` fields are completed before
 > any agent runs. Fields marked [ENRICH] are completed by the enrichment agent.
 > Activity lists, food selections, and itinerary content never appear in this file.
 > The fence above is this artifact's declaration. Replace `<trip-slug>` with the

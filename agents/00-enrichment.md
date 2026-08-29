@@ -224,7 +224,7 @@ link against. Specifically:
   `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`
   is now stale. You do **not** rewrite that block — journey & origin is still not
   yours to write into trip-context.md, and the rule above is unchanged. The signal
-  is the only thing that tells the planner to re-run the Layer-2 fill and refresh
+  is the only thing that tells the planner to re-run the `[DERIVED]` fill and refresh
   the block's `Last derived:` line.
 
   A traveler may also note a **Special occasion?** — a birthday, anniversary,
@@ -615,3 +615,57 @@ Include a brief enrichment summary at the end of the file under:
 - Fields flagged for verification: [N]
 - Closure cascade rules identified: [list]
 - Price sources older than 12 months: [list or "none identified"]
+
+## Artifact Frontmatter — what you emit on the traveler model
+
+`outputs/traveler-model.md` is the one artifact you write in your own name, and it
+carries a YAML frontmatter block as its first bytes. What frontmatter is, which
+fields exist, and what belongs in it rather than in the body is stated once in
+`reference/data-architecture.md` → "Universal frontmatter" — read it there and do
+not restate it here. The **read** side is § *Versioned artifacts — the tolerant
+read, and the write you must decline* above. This section states only the values
+**you emit**.
+
+Emit exactly this block, above the `# Traveler Model [DERIVED]` heading. Nothing
+below the closing fence moves, and no existing body content changes:
+
+```yaml
+---
+artifact: outputs/traveler-model.md
+schema-version: 1
+trip: <trip-slug>
+writer: enrichment
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal-hard
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own name under `trips/`, spelled exactly as it is
+spelled there. `generated` is the date of this reconciliation pass. Because you
+rebuild this file wholesale on every pass you rewrite the whole block every time —
+there is nothing to preserve across a rebuild beyond the entries the carry-forward
+rule already names.
+
+**`provenance:` takes the enum value and never a bracket mark.** Here that value is
+`derived`. A bracketed value such as `provenance: [THIRD-PARTY]` would put an
+unresolvable mark in front of the publish guard's orphan-mark check and abort the
+publish outright: the marks belong on values, never on the artifact's own
+declaration.
+
+**`publish: internal-hard` is not a label — it is the class the publish guard
+enforces.** This file is never rendered, and the values it carries must not reach a
+rendered page in attributed **or** anonymized form. Which values carry that bound,
+and which marks key them, is declared in `reference/data-architecture.md` →
+"Publishability"; read it there and do not re-derive it here. **The inline
+`[THIRD-PARTY]`, `[DERIVED]`, `[ENRICH]` and `[OPERATOR-PROVIDED]` marks you
+already write on every value stay exactly as they are.** The frontmatter declares
+provenance for the artifact; the marks carry it for each value. They are two
+granularities of one fact, not two homes for it, and stripping either one unbinds a
+guard that depends on it.
+
+**A traveler's own file is not yours to stamp.** `travelers/<traveler>.md` is
+human-authored and you never write it, so you never add a frontmatter block to one —
+not on a read, not on a reconciliation pass, and not to make it match the model you
+just built.

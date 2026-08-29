@@ -57,7 +57,7 @@ The enrichment agent is the reconciler. When it reads the per-traveler files, it
 
 ### Concrete illustration
 
-*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Per-Traveler Model below.)*
+*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Per-Traveler Model below. Every fence here shows an artifact's **body only**: each of these artifacts also carries frontmatter, elided throughout this document — see § *Serialization — the satisfaction-layer projection*.)*
 
 Trip-context owns the trip-level constraint — note its name and description cover **both** the stair limit and the continuous-walking ceiling, so the per-traveler walking-distance need links to it without a name/description mismatch:
 
@@ -209,7 +209,7 @@ On a trip where every traveler shares the group's window and no blackout applies
 
 ### Worked example — a per-traveler file
 
-Jordan's `travelers/Jordan.md`, written out in the full model (extending the smaller illustration in the Reconciliation Rule above):
+Jordan's `travelers/Jordan.md`, written out in the full model — **body only**, its frontmatter elided as everywhere in this document — extending the smaller illustration in the Reconciliation Rule above:
 
 ```markdown
 # Traveler — Jordan
@@ -242,7 +242,7 @@ Jordan's `travelers/Jordan.md`, written out in the full model (extending the sma
   Overlap: solo
 ```
 
-Pat's `travelers/Pat.md` shares two of those desires — which is what produces the overlap above:
+Pat's `travelers/Pat.md` — **body only**, frontmatter elided as above — shares two of those desires, which is what produces the overlap:
 
 ```markdown
 # Traveler — Pat
@@ -263,7 +263,7 @@ Pat's `travelers/Pat.md` shares two of those desires — which is what produces 
   Overlap: Jordan
 ```
 
-The enrichment agent reconciles both files into `outputs/traveler-model.md` — linking each need to its constraint and carrying the computed overlap signal:
+The enrichment agent reconciles both files into `outputs/traveler-model.md` — **body only**, frontmatter elided as above, linking each need to its constraint and carrying the computed overlap signal:
 
 ```markdown
 # Traveler Model [DERIVED]
@@ -846,3 +846,34 @@ reserved-key branch to read this list is the remaining half.
 reserved-key collision. Both intake commands are read-only inputs to this rule rather than editors
 of it, so C2 and C3 are enforced at the reconciler and the intake obligation is recorded here
 rather than dropped.
+
+---
+
+## Serialization — the satisfaction-layer projection
+
+Every artifact this document models carries **YAML frontmatter as its first bytes**, and every
+worked example above shows the **body only**. The engine-wide model — the format, the field set,
+the frontmatter/body boundary test, the publishability classes and the version contract — is stated
+engine-wide in `reference/data-architecture.md` → "Universal frontmatter" and → "Tolerant read", and
+the per-class values for `writer`, `lifecycle`, `provenance` and `publish` are that document's § 1.1
+class enumeration. **This section restates none of them**, and carries no second copy of that table:
+the split is the one § *Relationship to the Engine-Wide Data Architecture* above already fixes, and
+a satisfaction-layer copy of a per-class value would be exactly the second home this document exists
+to prevent.
+
+Three things are this layer's own, and are stated here because nothing else states them:
+
+- **A worked example in this document shows the body and elides the frontmatter, always.** That
+  holds for the three fences under § *Reconciliation Rule — One Source Per Fact*, for the three
+  under § *Worked example — a per-traveler file*, and for any fence a later slice adds. Each of
+  those sites now says so at the point of use; this is the rule those notes point at.
+- **The body shape is unchanged by the frontmatter.** Frontmatter is *prepended* — no heading
+  moves, no field label changes, and the `## <Name>` entry key, the `Applies to:` link form and the
+  inline `[DERIVED]` / `[THIRD-PARTY]` / `[ENRICH]` / `[OPERATOR-PROVIDED]` marks are all exactly as
+  this document already specifies them. The frontmatter declares provenance for the artifact and the
+  marks carry it per value: two granularities of one fact, never two homes for it.
+- **`travelers/<traveler>.md` is the one artifact here that is never engine-written, and it is
+  therefore never engine-upgraded.** A traveler's own file carrying no `schema-version` is
+  permanently valid and is read exactly as it always was
+  (`reference/data-architecture.md` → "The compatibility guarantee"). An absent fence there is not a
+  gap to fill and not a `PROFILE MISSING` case.
