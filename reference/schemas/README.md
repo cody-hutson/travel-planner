@@ -22,7 +22,8 @@ Python. Every route to real JSON Schema validation therefore *adds* a runtime to
 guard surface is deliberately pure bash:
 
 - `npx ajv-cli` puts an npm fetch on every push of a long-lived release branch — the exact
-  dependency-flakiness shape `publish-guard.yml` has already recorded the accepted cost of.
+  dependency-flakiness shape `.github/workflows/publish-guard.yml` has already recorded the
+  accepted cost of.
 - `python3` adds a second scripting language to a surface whose workflow headers assert
   pure-bash as a property, and it makes the suite's expected-skip set non-empty where every
   other pure-bash suite here has an empty one.

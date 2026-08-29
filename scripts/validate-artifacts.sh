@@ -168,16 +168,6 @@ va_glob_match() {
   return 0
 }
 
-# va_pattern_literal_len <pattern> — the count of non-`*` characters. Used to rank two
-# matching patterns: the longest literal wins. This is what lets C18 `outputs/<slug>.md`
-# ship as a genuine residual class without colliding with every named outputs class —
-# `**/outputs/food-list.md` outranks `**/outputs/*.md` on literal length, deterministically
-# and with no precedence list to maintain.
-va_pattern_literal_len() {
-  local p="${1//\*/}"
-  printf '%s' "${#p}"
-}
-
 # va_is_excluded <path> — true when a declared exclusion claims this path.
 va_is_excluded() {
   local path="$1" line pat
@@ -563,6 +553,11 @@ va_select() {
     while IFS="$VA_TAB" read -r cid art p _; do
       [ -n "$p" ] || continue
       if va_glob_match "$f" "$p"; then
+        # Rank two matching patterns by LITERAL length — the count of non-`*` characters —
+        # and let the longest win. That is what lets C18 `outputs/<slug>.md` ship as a
+        # genuine residual class without stealing every named class's file:
+        # `examples/*/outputs/food-list.md` outranks `examples/*/outputs/*.md` on any file
+        # both match, deterministically and with no precedence list to maintain.
         plit="${p//\*/}"; len="${#plit}"
         if [ "$len" -gt "$best_len" ]; then best_len="$len"; best_cid="$cid"; best_art="$art"; fi
       fi
