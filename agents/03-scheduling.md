@@ -335,9 +335,52 @@ Also read, in every mode:
     signal, and not one-off desires. Selecting and placing venues for a desire is the
     hub's job and the selection agents'; yours is the shape of the day
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it. **Its
+write-stop binds this role directly:** you append to
+`outputs/scheduling-framework.md`, which you also read in `ITERATION` and
+`RESEQUENCING`, so if the existing file declares a `schema-version` higher than the
+one below, **report and decline the append.** Do not rewrite its frontmatter at
+your own version — that is the irreversible case the rule exists to prevent, in a
+working directory this engine cannot repair.
+
 ## Output Format
 
 File: outputs/scheduling-framework.md
+
+**Artifact frontmatter — the first bytes of the file.** Open the file with this
+block, above the H1. Prepend it; move nothing that is already there.
+
+```yaml
+---
+artifact: outputs/scheduling-framework.md
+schema-version: 1
+trip: <trip-slug>
+writer: scheduling
+lifecycle: accumulate-append
+provenance: researched
+publish: internal
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own slug. `generated` is the date of **this** run.
+On an append run the block is already there: keep it, set `generated` to today,
+and leave every accumulated section below it untouched — the frontmatter block is
+upgraded in place, body entries are never rewritten. The field set and its
+meanings live in `reference/data-architecture.md` → "Universal frontmatter"; the
+publishability class in `reference/data-architecture.md` → "Publishability"; and
+this class's own declaration in `reference/schemas/scheduling-framework.md`. Cite
+them; do not restate them.
+
+**`lifecycle: accumulate-append` is what `RESEQUENCING` already asks for.** That
+mode's *"re-run full day-by-day framework"* describes the **analysis**, not the
+write: the re-run lands as a new dated section appended beneath the existing body,
+and the previous sequence stays readable. It has to — the same mode requires you to
+*"explicitly flag what changed and why the new sequence is better"*, which is only
+answerable against a prior sequence that is still there. Re-running the framework
+is never a reason to overwrite one.
 
 ### Destination Scheduling Profile
 4-5 sentences. Geographic structure, transit realities, climate frame,
@@ -392,6 +435,11 @@ whether a bailout applies.
 ### Day-by-Day Framework
 
 **Day [N] — [Date] — [Day of week]**
+
+```artifact-entry
+day: <YYYY-MM-DD>
+```
+
 - Energy level:
 - Recommended geographic zone(s):
 - Day type:
@@ -412,12 +460,52 @@ whether a bailout applies.
 - Advance reservation flag: Yes / No — if Yes, what category and why
 - Closure watch: [any venue categories to verify for this day of week]
 
+**The entry marker — one fenced block per entry, carrying the day key and nothing
+else.** Open every per-day entry with it, directly under that entry's own
+`**Day [N] — …**` line and above the labelled lines. It binds **all three** per-day
+surfaces in this file — the framework entry above, the routing signal and the
+experience-balance signal below. Those are three projections of one day, and
+carrying the same key in each is exactly what lets the hub join them.
+
+`<YYYY-MM-DD>` is that day's own calendar date — the **Day** entity's natural key
+(`reference/data-architecture.md` → "The full assignment") — taken from the
+per-traveler window block, never invented. Where a framework is produced against a
+trip whose calendar dates are not yet fixed, write `day: undated`. `undated` is a
+**declared absence**, never a default: a reader takes it as *date not yet fixed*,
+never as *no day*.
+
+**`Day [N]` is not the key and must not become one.** The day index is positional,
+and this file is `accumulate-append` — a later dated section either restarts or
+continues the numbering, and neither is stable. That is the same reason
+`reference/data-architecture.md` → "Venue — surrogate key, forced by measured
+evidence" refuses a file-scoped ordinal as an entry key. Keep `Day [N]` on the line
+where it reads well; the key is the date.
+
+**Nothing else goes in the marker** — no energy level, no day type, no zone, no
+presence or absence list, no signal reading, no flag. Everything else about the
+entry stays in the labelled lines, in prose, exactly as they are written today.
+Full statement: `reference/schemas/scheduling-framework.md` → "The entry marker".
+
+**What never becomes a field.** `Rationale`, `Newness note`, `Arc placement`,
+`Rest floor`, `Needs guardrail`, `Slack allocation`, the `Compared alternative
+ordering` and the stacked-peak flag carry **prose only**. They are not candidates
+for the marker, for frontmatter, or for any normalized token a later slice might
+reach for. They fail the frontmatter/body test's second question by construction —
+two correct writers do not phrase a judgement about a day's arc identically — and
+that failure is the guarantee, not a reminder. A slice that normalizes one of them
+is reading the model, not the test.
+
 ### Transit Cost & Routing Signal
 
 The routing signal the hub consumes. Per day, sequence the stops and make the
 transit cost of that sequence visible — this is the objective, not a rigid score.
 
 **Day [N] — [Date] — [Day of week]**
+
+```artifact-entry
+day: <YYYY-MM-DD>
+```
+
 - Ordered stop sequence: [stop 1 -> stop 2 -> stop 3 -> ...] — the anchor,
   meal, and supporting stops in the order the group moves through them
 - Per-leg transit cost: [leg 1: group door-to-door time] · [leg 2: ...] · ...
@@ -440,6 +528,11 @@ trip's shape visible so the hub can reconcile it. Rest that a need requires is
 marked inviolable; rest as a preference is a balanced desire.
 
 **Day [N] — [Date] — [Day of week]**
+
+```artifact-entry
+day: <YYYY-MM-DD>
+```
+
 - Experiential profile: excitement [Low / Med / High] · newness [Low / Med /
   High] · fun [Low / Med / High] · rest [Low / Med / High]
 - Newness note: [what is new on this day — a first-time experience, a new zone,
