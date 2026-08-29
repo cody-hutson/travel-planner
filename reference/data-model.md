@@ -748,7 +748,7 @@ silently, and nothing in CI resolves one.
 
 ### Filename correspondence is a theorem, not a rule to enforce
 
-The filename transform is stated once, in `.claude/commands/trip-new.md` § *Travelers* (the
+The filename transform is stated once, in `.claude/commands/trip-new.md` § *Travelers — count and names* (the
 roster's `Traveler file` cell), and reused verbatim and attributed by
 `.claude/commands/trip-record.md` on both its profile-create and its roster-append paths:
 
@@ -760,7 +760,7 @@ routes hand the saving to a person rather than to a command — the self-serve c
 hand-off — so `templates/traveler-intake.template.md` states the transform to the human executing
 each of them, once per route, in the *"How to use it"* block and in the assistant hand-off at the
 foot of the form. Those two are guidance for a human keystroke, not a second normative home: a
-change to the rule is an edit to `.claude/commands/trip-new.md` § *Travelers* and then to the four
+change to the rule is an edit to `.claude/commands/trip-new.md` § *Travelers — count and names* and then to the four
 sites listed in this paragraph.
 
 Write `derive(P)` for that transform and `normalize(P)` for the two-step key above. Then for every
