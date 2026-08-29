@@ -901,8 +901,8 @@ destination the record block already carries by value, and nothing under
 back. **Agent reads, attributed:** the ideation agent reads `trips/<slug>/travelers/*.md` for
 the group's leanings and `trips/<slug>/trip-context.md` for the dates and party.
 **Dispatches** Destination Ideation, in the role its roster row states, writing
-`outputs/destination-shortlist.md` alone. On a re-run that agent appends under a new dated
-section and rewrites nothing.
+`outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
+re-run the agent replaces it with the current ranking rather than appending to it.
 
 **Why the row's destination cell reads `UNDECIDED`.** A decided destination means the ideation
 question is already answered, and running the pipeline anyway spends it re-ranking a settled

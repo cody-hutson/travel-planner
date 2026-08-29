@@ -20,7 +20,7 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 | `.claude/commands/` | The slash commands — the addressable way in (see [First run](#first-run)) |
 | `agents/` | Behavioral definitions for the 9 agents (destination-ideation, enrichment, activities, food, nightlife, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
-| `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
+| `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
 | `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus three purpose-built demo fixtures |
 | `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
@@ -63,7 +63,7 @@ Then open the folder in Claude Code:
 - **Desktop app** — open the `travel-planner` folder
 - **CLI** — run `claude` from inside the `travel-planner` directory
 
-Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` accumulates agent artifacts.
+Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` holds the agent artifacts — some accumulating across sessions, others rebuilt, versioned or persisted in place, each per its declared lifecycle class.
 
 ### First run
 

@@ -1,6 +1,21 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28)
+- **Status:** Accepted (2026-08-28); **citation form amended once (2026-08-29)**.
+  **First amendment** — citation form only, and the whole population of it. This document cited
+  `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
+  sites** — three naming the file and two written as bare continuations of them. The script was
+  rewritten in this same release and grew from 1 316 to 1 540 lines, so every one of the five pointed
+  at unrelated content within a commit of this document landing — the exact rot the anchors were
+  supposed to be immune to. All five are converted to the durable form this repository already uses
+  for that file and which this document's own References section already used alongside them:
+  **function name plus verbatim quotation**, naming `nonpublishable_values`, its reserved-key branch,
+  the `CD-4` declaration comment and the top-level `_GUARD_RESERVED_KEYS` list. Two quotations that
+  the rewrite had silently falsified are corrected to the text the source now carries. This document's
+  two citations of `.claude/commands/trip-new.md` § *Travelers* are corrected to the heading that
+  exists, § *Travelers — count and names*. **No decision, rule, residual, coverage claim or key derivation is
+  changed, and none is re-opened.** Recorded here rather than by supersession because an Accepted ADR
+  is immutable **as to its decisions**, and `reference/adr/README.md § Convention` now states the
+  amendment rule this correction follows.
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -140,8 +155,10 @@ them.
 | (b) Per-field only | Yes | **No** — the third-party bound is an *entry-class denylist*, not a field allowlist | Yes | Rejected |
 | **(c) Both, composed by union** | Yes | Yes | Yes — the union is computed, never enumerated twice | **CHOSEN** |
 
-The guard's own source settles this. `scripts/publish-trip-site.sh:504` and `:731` both read *"the
-`[THIRD-PARTY]` member is an ENTRY DENYLIST, not a field allowlist"*, and `:732` states *"The mark is
+The guard's own source settles this. `scripts/publish-trip-site.sh` states it twice — in the `CD-4`
+declaration comment, *"the `[THIRD-PARTY]` member is an ENTRY DENYLIST, not a field allowlist"*, and
+again at the entry limb inside function `nonpublishable_values`, *"a DENYLIST over the entry, not a
+field allowlist"* — and the line below that limb records the composition: *"The declared selector is
 read at BOTH granularities and the two are a UNION."* A per-field-only model cannot express an
 entry-scoped denial, and `reference/data-model.md` § *Lifecycle facets* says the same thing in the
 corpus: *"The bound is the entry class, not a list of fields… there is no default-allow outside it."*
@@ -225,13 +242,14 @@ person's identity originates outside the engine, and the name is *already* the f
 `## <Name>` heading, *already* the `trip-context.md § Group` roster entry.
 
 > **Canonical traveler key** = the `## <Name>` heading text, lowercased, with every character outside
-> `[a-z0-9]` removed — the rule executing at `scripts/publish-trip-site.sh:711`
-> (`key = tolower(nm); gsub(/[^a-z0-9]/, "", key)`). **Uniqueness is asserted over this key**, never
-> over the display name.
+> `[a-z0-9]` removed — the rule executing in `scripts/publish-trip-site.sh`, function
+> `nonpublishable_values` (`key = tolower(nm); gsub(/[^a-z0-9]/, "", key)`). **Uniqueness is asserted
+> over this key**, never over the display name.
 >
 > **Filename correspondence.** The stem of `travelers/<file>.md`, put through the same normalization,
-> MUST equal the entry's traveler key. `.claude/commands/trip-new.md § Travelers` already derives the
-> filename in the forward direction; this rule **closes that derivation in the reverse direction and
+> MUST equal the entry's traveler key. `.claude/commands/trip-new.md` § *Travelers — count and names*
+> already derives the filename in the forward direction; this rule **closes that derivation in the
+> reverse direction and
 > does not author a second one.**
 >
 > **Two travelers whose keys collide are a hard stop at intake, never a silent merge.** The operator
@@ -240,8 +258,9 @@ person's identity originates outside the engine, and the name is *already* the f
 > correspondence above.
 >
 > **Reserved keys are part of the schema.** The guard treats the normalized key `updatesignals` as a
-> structural section rather than a person (`publish-trip-site.sh:712`, which sets both the live and
-> third-party flags to zero and skips the entry). A traveler whose normalized name lands on a reserved
+> structural section rather than a person (the reserved-key branch of `nonpublishable_values`, which
+> sets the live, third-party and entry flags to zero and skips the entry; the list itself is the
+> top-level `_GUARD_RESERVED_KEYS`). A traveler whose normalized name lands on a reserved
 > key is therefore **silently dropped from the non-publishable class — a fail-open inside a
 > fail-closed guard.** The schema MUST carry the reserved-key list and intake MUST reject a collision
 > with it.
@@ -563,17 +582,17 @@ fail-closed paths are non-negotiable.
   2.3 is left in `examples/tokyo-2026/` exactly as it stands. The example set is byte-frozen, and the
   witness is the evidence — a repaired fixture would remove the only in-repo demonstration that a
   name-keyed rule cannot reach the intra-file case.
-- **No reconciliation of `reference/adr/README.md § Convention`, and this ADR diverges from it —
-  stated rather than glossed.** The Convention's `Sections:` line names six — Status · Context ·
-  Decision drivers · Options considered · Decision · Consequences — and this ADR carries a seventh,
-  `## References`. That is not an innovation and it is not conformance: measured across the eight
-  existing ADRs, `## References` appears in **6 of 8** and a `## Follow-on build slices` section in
-  **4 of 8**, and the Convention names neither. This ADR follows the **shipped corpus shape** and
-  records the divergence from the list, rather than asserting a conformance the list does not support.
-  The Convention is also silent on **amendment** — it describes only supersession, a path no ADR in
-  this repository has used, while the path five amendments across two ADRs actually took is
-  undocumented. That silence is what produced the falsified immutability premise twice in this
-  release. Repairing the Convention belongs to #288.
+- **`reference/adr/README.md § Convention` under-described its own corpus, and the reconciliation
+  landed in this release rather than being left to be rediscovered.** When this ADR was written the
+  Convention's `Sections:` line named six — Status · Context · Decision drivers · Options considered ·
+  Decision · Consequences — while `## References` appeared in **6 of the 8** ADRs then existing and a
+  `## Follow-on build slices` section in **4 of 8**, and the Convention named neither. It was also
+  silent on **amendment**: it described only supersession, a path no ADR in this repository has ever
+  used, while the path five amendments across two ADRs had actually taken was undocumented. That
+  silence is what produced the falsified immutability premise twice in this release. The Convention
+  now names `References` as part of the expected spine, states that the list is not a closed set, and
+  carries an explicit amendment rule covering both renderings the corpus uses. This ADR's `##
+  References` section is therefore **conformant**, not a recorded divergence.
 - **Out-of-model file classes are named and excluded, not modelled** — secret material, the publish
   control file, third-party tool state inside `outputs/`, the publish staging clone, and two per-trip
   file classes with zero references anywhere in the tracked corpus. The last two warrant their own
@@ -596,7 +615,7 @@ fail-closed paths are non-negotiable.
 - The command-surface bound on the plaintext publish limb: `reference/adr/ADR-007-command-entry-point.md` § 2.
 - Identity conventions adopted verbatim from running code: the traveler-name normalization and the
   reserved-key branch in `scripts/publish-trip-site.sh`; the filename derivation in
-  `.claude/commands/trip-new.md § Travelers`; the opaque day-independent Event ID in
+  `.claude/commands/trip-new.md` § *Travelers — count and names*; the opaque day-independent Event ID in
   `CLAUDE.md § Key Rules`; the reference-file build order that fixes the venue-key mint point in
   `agents/05-hub-planner.md` § *Pre-Work: Build Reference Artifacts First* — § *Step 1 —
   links-reference.md*, then § *Step 2 — venue-matrix.md*.

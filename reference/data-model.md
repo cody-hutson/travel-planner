@@ -1,6 +1,6 @@
 # Data Model — The Satisfaction Layer
 
-The canonical data-architecture document for the satisfaction layer. It defines **where each new piece of satisfaction data lives, what shape it takes, who writes it, how it flows, and how it reconciles** with the existing `trip-context.md` — so every satisfaction slice builds to one decision rather than re-deciding storage independently.
+The satisfaction layer's specialization of the engine-wide data architecture in `reference/data-architecture.md`. It defines **where each new piece of satisfaction data lives, what shape it takes, who writes it, how it flows, and how it reconciles** with the existing `trip-context.md` — so every satisfaction slice builds to one decision rather than re-deciding storage independently.
 
 This document governs the data **substrate** only — storage homes, artifact shapes, write ownership, and reconciliation, plus this layer's own lifecycle *assignments* against the classes defined in `reference/data-architecture.md` § *Lifecycle Classes*. It deliberately does **not** define metric formulas, scoring algorithms, or any optimization logic, and it does not define the lifecycle classes themselves. Nothing in the satisfaction layer optimizes yet; this is the foundation those later capabilities will read from.
 

@@ -160,8 +160,9 @@ A person's identity originates outside the engine (limb 1), and the name is *alr
 > character removed. **Uniqueness is asserted over this key**, never over the display name.
 >
 > **Filename correspondence.** The stem of `travelers/<file>.md`, put through the same
-> normalization, MUST equal the entry's traveler key. `.claude/commands/trip-new.md` § *Travelers*
-> already derives the filename from the display name; this rule **cites and closes that derivation
+> normalization, MUST equal the entry's traveler key. `.claude/commands/trip-new.md`
+> § *Travelers — count and names* already derives the filename from the display name; this rule
+> **cites and closes that derivation
 > in the reverse direction** rather than authoring a second one.
 >
 > **The same-name case is a hard stop at intake, never a silent merge.** The operator disambiguates
