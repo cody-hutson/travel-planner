@@ -1,6 +1,7 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **citation form amended once (2026-08-29)**.
+- **Status:** Accepted (2026-08-28); **amended twice (2026-08-29)** — citation form, then the
+  `provenance` enum's membership.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -17,6 +18,19 @@
   changed, and none is re-opened.** Recorded here rather than by supersession because an Accepted ADR
   is immutable **as to its decisions**, and `reference/adr/README.md § Convention` now states the
   amendment rule this correction follows.
+  **Second amendment** — the `provenance:` enum's membership, at both sites that render it. This
+  document declared a **five-member** enum, omitting `researched`. Every other surface ships **six**:
+  `reference/data-architecture.md`, all **19** per-class schemas, and **six** of the class rows in its
+  § 1.1 — classes 5–9 and 18, the whole research-output family — depend on that value, and
+  `scripts/validate-artifacts.sh` reads the enum from that section rather than from this document. The
+  omission is a transcription error in the record, not a narrower decision the implementation exceeded;
+  the decision — that provenance is a frontmatter-declared closed enum — is unchanged. The mechanism
+  is visible in Decision 5, which is left standing: the value-level bracket marks are a **four-member**
+  vocabulary, and `researched`, like `human`, carries **no** value-level mark anywhere in the corpus,
+  because both are artifact-scoped. Reading the enum off the marked values yields five. Both renderings
+  now read `human | enrich | derived | operator-provided | third-party | researched`, the order all 19
+  schemas already use. **No decision, rule, residual, coverage claim or key derivation is changed, and
+  none is re-opened.**
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -360,7 +374,7 @@ schema-version: <integer>           # monotonic per class; see Decision 6
 trip: <trip-slug>                   # natural key of the owning Trip
 writer: <writer-id>                 # exactly one
 lifecycle: <accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output>
-provenance: <human|enrich|derived|operator-provided|third-party>
+provenance: <human|enrich|derived|operator-provided|third-party|researched>
 publish: <bound|internal|internal-hard|output>
 generated: <YYYY-MM-DD>             # omitted on human-authored classes
 ---
@@ -434,8 +448,8 @@ the structural attribute — and shipping the third does not discharge the first
 ### 5. Provenance — a frontmatter declaration over a retained inline marker
 
 **`provenance:` is declared in frontmatter**, as a closed enum:
-`human | enrich | derived | operator-provided | third-party` — lowercase-hyphenated, matching the
-repo's existing enum-value convention.
+`human | enrich | derived | operator-provided | third-party | researched` — lowercase-hyphenated,
+matching the repo's existing enum-value convention.
 
 **The inline bracket marks are RETAINED as the per-value rendered marker.** `[THIRD-PARTY]`,
 `[DERIVED]`, `[ENRICH]` and `[OPERATOR-PROVIDED]` are the observed vocabulary and they are
