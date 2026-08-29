@@ -1483,7 +1483,13 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
   fi
 
   # Default: delete the whole public repo (IRREVERSIBLE). Requires the delete_repo OAuth scope.
-  if ! gh auth status 2>&1 | grep -q 'delete_repo'; then
+  # Here-string, not a pipeline: `grep -q` exits on first match, which under the `pipefail`
+  # set at the top of this file can promote the writer's SIGPIPE death to the pipeline's
+  # status and refuse a token that DOES carry the scope. The failure is safe — it aborts
+  # rather than deleting — but it is a refusal the operator cannot act on, since the remedy
+  # it prints has already been applied. A failing `gh` still reaches the same branch: the
+  # substitution yields its diagnostic, the scope is absent from it, and grep returns 1.
+  if ! grep -q 'delete_repo' <<<"$(gh auth status 2>&1)"; then
     warn "Deleting a repo needs the 'delete_repo' OAuth scope, which isn't present on your gh token."
     warn "Grant it once with:   gh auth refresh -h github.com -s delete_repo"
     die "unpublish aborted — missing delete_repo scope (or use --disable-pages-only to keep the repo)."

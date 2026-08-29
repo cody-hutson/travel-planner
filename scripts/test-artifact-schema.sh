@@ -66,6 +66,11 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
+# Resolved BEFORE the source below, and absolutely: group PF reads this file and the
+# validator it sources. Taken after the source, BASH_SOURCE[0] is still this file, but
+# the ordering is not left to be re-derived by a later reader.
+SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
+SELF_VALIDATOR="$HERE/validate-artifacts.sh"
 # shellcheck source=validate-artifacts.sh
 source "$HERE/validate-artifacts.sh"     # BASH_SOURCE guard prevents dispatch
 set +e
@@ -80,7 +85,26 @@ WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
 # has_finding <output> <code> — the code appears as a FINDING token, not as a substring of
 # some longer word. A substring test would let A1 match A10 and read as a pass.
-has_finding() { printf '%s\n' "$1" | grep -q "^FINDING $2 "; }
+#
+# ── THE HERE-STRING IS LOAD-BEARING, NOT A STYLE CHOICE. Read this before "simplifying"
+# it back into a pipeline.
+#
+# `grep -q` exits the instant it matches, by specification. Feeding it from a pipeline
+# whose writer has not finished writing kills that writer with SIGPIPE, and `pipefail` —
+# set at the top of this file — then reports the PIPELINE as failed even though the match
+# succeeded. The result is a test verdict that depends on process scheduling. A here-string
+# is a redirection on a SIMPLE COMMAND, not a pipeline, so pipefail has no second status to
+# aggregate and there is no second process to signal. The bytes grep reads are identical:
+# bash appends exactly one newline, which is what the `printf '%s\n'` it replaced did.
+#
+# This is closed at the SHAPE rather than at any one arm because this helper carries BOTH
+# polarities and the dangerous one is silent. Most callers read `if [ "$R" -ne 0 ] &&
+# has_finding …; then PASS; else FAIL`, where a spurious non-zero is a false RED — someone
+# notices and re-runs. But CTL-A2neg reads `! has_finding "$O" 'A2'`, where the same
+# spurious status is a false GREEN on a state that carries the finding: the arm reports
+# MUST-NOT-FIRE satisfied precisely because the check failed to run. That direction
+# announces nothing, so it is not detectable by re-running. Group PF keeps it closed.
+has_finding() { grep -q "^FINDING $2 " <<<"$1"; }
 
 # ─────────────────────────────────────────────────────────────────────────────────
 echo
@@ -136,7 +160,12 @@ while IFS= read -r xline; do
   xpat="${xline%%|*}"; xrest="${xline#*|}"
   xwar="${xrest%%|*}"; xsec="${xrest#*|}"
   XC_N=$((XC_N+1))
-  if printf '%s\n' "$(xc_section_text "$xsec")" | grep -qF -- "$xwar"; then
+  # Here-string, not a pipeline — see has_finding above. This site is the one where the
+  # defect was OBSERVED in this suite: a command substitution on the left of a pipe into
+  # `grep -q` is the shape that fires far below the pipe-capacity threshold, and its FAIL
+  # branch accuses the CORPUS of an undeclared exclusion. A gate that randomly blames the
+  # thing it guards is worse than no gate, so the shape goes rather than the assertion.
+  if grep -qF -- "$xwar" <<<"$(xc_section_text "$xsec")"; then
     PASS "XC: exclusion '$xpat' has its warrant '$xwar' stated at '$xsec'"
   else
     FAIL "XC: exclusion '$xpat' is applied by the validator but its warrant '$xwar' is NOT stated at '$xsec' — the gate would be narrowing its own scope with nothing in the corpus behind it"
@@ -149,7 +178,7 @@ if [ "$XC_N" -gt 0 ] && [ "$XC_BAD" -eq 0 ]; then
   PASS "XC0: all $XC_N declared exclusions carry a warrant in reference/data-architecture.md, each in its own named section"
 fi
 # Specificity: the section-scoped probe must NOT find a pattern that is not there.
-if printf '%s\n' "$(xc_section_text '## 11. What This Document Does Not Define')" | grep -qF -- 'zzz-no-such-exclusion/*.md'; then
+if grep -qF -- 'zzz-no-such-exclusion/*.md' <<<"$(xc_section_text '## 11. What This Document Does Not Define')"; then
   FAIL "XC1: the section probe matched a pattern that does not exist — every XC pass above is a broken probe"
 else
   PASS "XC1: control — the same section-scoped probe returns nothing for a fabricated exclusion pattern, so the XC passes above are real matches"
@@ -278,7 +307,7 @@ CTL_RAN=0
 FX="$WORK/clean"; mk_root "$FX"
 CLEAN_OUT="$(run_fx "$FX")"; CLEAN_RC=$?
 CTL_RAN=1
-if [ "$CLEAN_RC" -eq 0 ] && ! printf '%s\n' "$CLEAN_OUT" | grep -q '^FINDING '; then
+if [ "$CLEAN_RC" -eq 0 ] && ! grep -q '^FINDING ' <<<"$CLEAN_OUT"; then
   PASS "CTLa: MUST NOT FIRE — a fixture root carrying this commit's real schema corpus and no artifacts validates clean (rc=0)"
 else
   FAIL "CTLa: the clean baseline already fails, so every must-fire arm below proves nothing: $(printf '%s' "$CLEAN_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
@@ -330,7 +359,7 @@ if [ "$B_RC" -ne 0 ] && has_finding "$B_OUT" 'A3' && has_finding "$B_OUT" 'A4'; 
 else
   FAIL "C1b: MUST FIRE — declaring a version did not make the same three violations fail (rc=$B_RC): $(printf '%s' "$B_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
 fi
-if printf '%s\n' "$B_OUT" | grep -q "^FINDING A3 examples/ctl/outputs/food-list.md field writer "; then
+if grep -q "^FINDING A3 examples/ctl/outputs/food-list.md field writer " <<<"$B_OUT"; then
   PASS "C1b-report: the finding names the ARTIFACT and the FIELD, not merely that validation failed — 'FINDING A3 examples/ctl/outputs/food-list.md field writer ...'"
 else
   FAIL "C1b-report: a finding did not name both the artifact and the field: $(printf '%s' "$B_OUT" | grep '^FINDING A3' | head -1)"
@@ -362,7 +391,7 @@ FX="$WORK/a2neg"; mk_root "$FX"
 printf -- '---\nartifact: outputs/no-such-class.md\ntrip: ctl\n---\n\n# x\n' \
   > "$FX/examples/ctl/unclaimed.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -eq 0 ] && ! has_finding "$O" 'A2' && printf '%s\n' "$O" | grep -q '^SKIP examples/ctl/unclaimed.md'; then
+if [ "$R" -eq 0 ] && ! has_finding "$O" 'A2' && grep -q '^SKIP examples/ctl/unclaimed.md' <<<"$O"; then
   PASS "CTL-A2neg: MUST NOT FIRE — the SAME unknown class with no schema-version SKIPS. A2 is gated behind the version check, so the tolerant read's first limb still holds and the gate authored no second rule"
 else
   FAIL "CTL-A2neg: MUST NOT FIRE — an UNVERSIONED artifact naming an unknown class failed (rc=$R); A2 has escaped the version gate and the gate is now inventing a rule § 7.3 does not state"
@@ -510,7 +539,7 @@ fi
 FX="$WORK/tpl"; mk_root "$FX"
 cp "$ROOT/templates/trip-context.template.md" "$FX/templates/trip-context.template.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -eq 0 ] && ! printf '%s\n' "$O" | grep -q 'templates/trip-context.template.md'; then
+if [ "$R" -eq 0 ] && ! grep -q 'templates/trip-context.template.md' <<<"$O"; then
   PASS "CTL-TPL: MUST NOT FIRE — this commit's REAL versioned template, copied into the fixture tree, is excluded and reaches no finding. § 11 declares it an emitter, not an instance"
 else
   FAIL "CTL-TPL: MUST NOT FIRE — the template reached the gate (rc=$R): $(printf '%s' "$O" | grep '^FINDING ' | head -2 | tr '\n' ' ')"
@@ -539,7 +568,7 @@ fi
 
 # ── S9's must-fire arm. XC asserts the real exclusions against the real document; this
 # asserts that the assertion itself can fail.
-if printf '%s\n' "$(xc_section_text '## 11. What This Document Does Not Define')" | grep -qF -- 'templates/*.template.md'; then
+if grep -qF -- 'templates/*.template.md' <<<"$(xc_section_text '## 11. What This Document Does Not Define')"; then
   PASS "CTL-S9: the exclusion-provenance probe FIRES on a pattern that is genuinely declared ('templates/*.template.md' at § 11), and XC1 above showed it returns nothing for one that is not — both arms observed"
 else
   FAIL "CTL-S9: the exclusion-provenance probe cannot find a pattern that IS in § 11; every XC verdict is a broken probe"
@@ -556,6 +585,69 @@ fi
 
 if [ "$CTL_RAN" -ne 1 ]; then
   FAIL "X1: group CTL did not execute — a run without it is a failure, never a pass"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PF — no verdict in this suite, or in the validator it sources, is decided by a
+# pipeline's exit status.
+#
+# A verdict site whose writer pipes into an early-exiting `grep -q` is a live defect under
+# the `pipefail` set at the top of this file, not a style preference: grep -q exits on
+# first match, the writer dies on SIGPIPE, and pipefail reports the pipeline as failed
+# although the match succeeded. It was OBSERVED here, on arm XC, whose FAIL branch accuses
+# the corpus of an exclusion it never made.
+#
+# Why a standing arm rather than a comment: XC is an `if <test>; then PASS` site, where the
+# spurious status is a false RED and someone re-runs. has_finding()'s call sites include
+# the inverted form (`! has_finding` at CTL-A2neg), where the same status is a false GREEN
+# on a state that carries the finding. The dangerous direction is the one nobody would see,
+# so the shape is what is asserted absent, not the arm it happened to surface on.
+#
+# The validator is in the scan set because this suite SOURCES it: its functions run in this
+# shell, under this file's `pipefail`, so a pipeline verdict introduced there would be this
+# suite's defect and no other file's scan would ever see it.
+#
+# The needle is assembled from two pieces because this scan reads its own source — a
+# literal spelling of the shape in the detector would make the detector match itself and
+# report a defect it had just introduced.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PF — no verdict here is decided by a pipeline's exit status."
+PF_PIPE_SHAPE='| grep -'"q"
+PF_PIPE_TIGHT='|grep -'"q"
+PF_BAD=0; PF_GOOD=0; PF_UNREAD=0
+for pffile in "$SELF" "$SELF_VALIDATOR"; do
+  if [ ! -r "$pffile" ]; then
+    PF_UNREAD=$((PF_UNREAD+1)); continue
+  fi
+  while IFS= read -r pfline || [ -n "$pfline" ]; do
+    # An OR-list is not a pipeline. Its two-character operator carries the one-character
+    # one as a substring, so a correct `grep -qF a f OR grep -qF b f` line reads as the
+    # defect shape and would turn this suite red for being right. Neither file in this
+    # scan set carries such a line today; the scrub is here so the scan does not acquire
+    # a false positive the first time one is written. The publish-guard suite's group E
+    # already carries one, which is what makes this a measured concern and not a guess.
+    pfscrub="${pfline//||/  }"
+    case "$pfscrub" in
+      *"$PF_PIPE_SHAPE"*|*"$PF_PIPE_TIGHT"*) PF_BAD=$((PF_BAD+1)) ;;
+    esac
+    case "$pfline" in
+      *'grep -q'*'<<<'*) PF_GOOD=$((PF_GOOD+1)) ;;
+    esac
+  done < "$pffile"
+done
+# Graded in the order that makes the zero mean something: a scan that cannot read its
+# inputs, or that finds no instance of the CORRECT form, is broken, and its zero on the
+# incorrect form would be a probe failure wearing a pass. An empty input is broken, not
+# clean — the same rule XC1 applies to the section probe.
+if [ "$PF_UNREAD" -ne 0 ]; then
+  FAIL "PF1: $PF_UNREAD of the 2 files in the scan set were unreadable, so the verdict below would cover less than it claims"
+elif [ "$PF_GOOD" -eq 0 ]; then
+  FAIL "PF1: the scan found 0 here-string grep -q sites across the scan set, so its zero on the pipeline shape proves nothing — the convention or the scan has moved, and neither verdict is trustworthy"
+elif [ "$PF_BAD" -eq 0 ]; then
+  PASS "PF1: ${PF_GOOD} grep -q sites across this suite and the validator it sources, 0 of them pipelines — no verdict here can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
+else
+  FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
 fi
 
 echo

@@ -30,6 +30,11 @@
 #
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolved BEFORE the source below, and absolutely: group PF reads this file and the
+# publish script it sources. Taken after the source, BASH_SOURCE[0] is still this file,
+# but the ordering is not left to be re-derived by a later reader.
+SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
+SELF_PUBLISH="$HERE/publish-trip-site.sh"
 # shellcheck source=publish-trip-site.sh
 source "$HERE/publish-trip-site.sh"      # BASH_SOURCE guard prevents dispatch
 set +e
@@ -112,7 +117,7 @@ rm -f "$SDIR/.publish-slug"
 echo "No-reply commit identity:"
 if gh auth status >/dev/null 2>&1; then
   resolve_noreply_identity
-  if printf '%s' "$NOREPLY_EMAIL" | grep -qE '@users\.noreply\.github\.com$'; then
+  if grep -qE '@users\.noreply\.github\.com$' <<<"$NOREPLY_EMAIL"; then
     PASS "D1: resolved no-reply email ($NOREPLY_EMAIL)"
   else
     FAIL "D1: email is not a no-reply address ($NOREPLY_EMAIL)"
@@ -121,14 +126,14 @@ if gh auth status >/dev/null 2>&1; then
   echo x > "$R/f"; git -C "$R" add f
   commit_noreply "$R" "test"
   ae="$(git -C "$R" log -1 --format='%ae')"
-  if printf '%s' "$ae" | grep -qE '@users\.noreply\.github\.com$'; then PASS "D2: commit author email is no-reply ($ae)"; else FAIL "D2: commit leaked a non-no-reply email ($ae)"; fi
+  if grep -qE '@users\.noreply\.github\.com$' <<<"$ae"; then PASS "D2: commit author email is no-reply ($ae)"; else FAIL "D2: commit leaked a non-no-reply email ($ae)"; fi
   # D3 — REGRESSION: hostile GIT_*_EMAIL env must NOT override the no-reply identity.
   R2="$WORK/repo2"; mkdir -p "$R2"; git -C "$R2" init -q
   echo x > "$R2/f"; git -C "$R2" add f
   GIT_AUTHOR_EMAIL='leak@personal.com' GIT_COMMITTER_EMAIL='leak@personal.com' \
     GIT_AUTHOR_NAME='Leaky' GIT_COMMITTER_NAME='Leaky' commit_noreply "$R2" "test"
   ae2="$(git -C "$R2" log -1 --format='%ae')"; ce2="$(git -C "$R2" log -1 --format='%ce')"
-  if printf '%s|%s' "$ae2" "$ce2" | grep -qvE 'leak@personal\.com' && printf '%s' "$ae2" | grep -qE '@users\.noreply\.github\.com$'; then
+  if grep -qvE 'leak@personal\.com' <<<"$ae2|$ce2" && grep -qE '@users\.noreply\.github\.com$' <<<"$ae2"; then
     PASS "D3: hostile GIT_*_EMAIL env did NOT leak (author=$ae2 committer=$ce2)"
   else
     FAIL "D3: env var leaked a personal email into the commit (author=$ae2 committer=$ce2)"
@@ -183,7 +188,7 @@ OTD="$WORK/tokyo-2026"; mkdir -p "$OTD/outputs"
 ensure_opaque_slug "$OTD" >/dev/null 2>&1
 OSLUG="$(slug_for "$OTD")"
 case "$OSLUG" in trip-*) PASS "H1: --opaque generates a trip-<token> slug ($OSLUG)";; *) FAIL "H1: opaque slug lacks trip- prefix ($OSLUG)";; esac
-if printf '%s' "$OSLUG" | grep -qiE 'tokyo|2026'; then FAIL "H2: opaque slug leaks destination/year ($OSLUG)"; else PASS "H2: opaque slug leaks neither destination nor year"; fi
+if grep -qiE 'tokyo|2026' <<<"$OSLUG"; then FAIL "H2: opaque slug leaks destination/year ($OSLUG)"; else PASS "H2: opaque slug leaks neither destination nor year"; fi
 ensure_opaque_slug "$OTD" >/dev/null 2>&1
 [ "$(slug_for "$OTD")" = "$OSLUG" ] && PASS "H3: opaque slug is stable across calls (update/rotate resolve the same repo)" || FAIL "H3: opaque slug changed on re-run"
 OTD2="$WORK/kyoto-2026"; mkdir -p "$OTD2"; printf 'chosen-name\n' > "$OTD2/.publish-slug"
@@ -211,7 +216,7 @@ IE="$(_epoch_of_iso '2026-06-28T14:36:00Z')"
 [ "$(_ymd_of_epoch "$IE")" = "2026-06-28" ] && PASS "I2: _epoch_of_iso + _ymd_of_epoch round-trip an ISO date" || FAIL "I2: ISO round-trip wrong ($IE -> $(_ymd_of_epoch "$IE"))"
 [ "$(_ymd_of_epoch '')" = "-" ] && PASS "I3: _ymd_of_epoch renders empty as '-'" || FAIL "I3: empty epoch not '-'"
 if _is_stale 200 100 && ! _is_stale 100 200 && ! _is_stale "" 100; then PASS "I4: stale iff local build newer than deployment (empty-safe)"; else FAIL "I4: stale rule wrong"; fi
-if declare -f cmd_list | grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -'; then
+if grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$(declare -f cmd_list)"; then
   FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
 else
   PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs)"
@@ -783,7 +788,7 @@ mrender "$MSTOPR" '<p>The guest house will hold luggage after checkout, and the 
 # passes for the wrong reason.
 if grep -qF '## Will [OPERATOR-PROVIDED] [THIRD-PARTY]' "$MSTOP/outputs/traveler-model.md" \
    && grep -qiw 'will' "$MSTOPR" \
-   && printf '%s' "$_GUARD_STOP" | grep -qF ' will ' \
+   && grep -qF ' will ' <<<"$_GUARD_STOP" \
    && ! grep -qF 'Ruritanian' "$MSTOPR" && ! grep -qF 'quiet break in the middle' "$MSTOPR"; then
   PASS "M2a: the model names a [THIRD-PARTY] member with a stoplisted word, the render uses it, and no other class value is present"
 else
@@ -1240,6 +1245,69 @@ omodel "$O6STD" <<'MD'
 MD
 oguard "$O6SR" "$O6STD"
 if [ "$ORC" -eq 1 ]; then PASS "O6c: a category carrying text beyond the enum still aborts (rc=1) — the enum exclusion is scoped to enum-ONLY values"; else FAIL "O6c: a category with a real captured value did not abort (rc=$ORC) — the enum exclusion dropped the whole field"; fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PF — no verdict in this suite, or in the publish script it guards, is decided by a
+# pipeline's exit status.
+#
+# A verdict site whose writer pipes into an early-exiting `grep -q` is a live defect under
+# the `pipefail` set at the top of this file, not a style preference: grep -q exits on
+# first match, the writer dies on SIGPIPE, and pipefail reports the pipeline as failed
+# although the match succeeded. Measured on an unchanged tree in the taxonomy suite before
+# it was fixed: 10 red runs in 30, across two arms sharing nothing but the shape.
+#
+# Why a standing arm rather than a comment: the arms where this was OBSERVED are
+# `if <test>; then PASS` sites, where the spurious status is a false RED and someone
+# notices. This suite carried the inverted form too — I5 reads `if <test>; then FAIL`, so
+# a spurious status there reported cmd_list read-only WITHOUT having checked it, and H2
+# reported an opaque slug leak-free the same way. That direction announces nothing, which
+# is why the shape is what is asserted absent rather than the arms it surfaced on.
+#
+# The publish script is in the scan set because this suite SOURCES it — its functions run
+# in this shell under this file's `pipefail` — and because it is the production surface
+# this repo actually ships; a scheduling-dependent verdict there refuses a correct publish.
+#
+# The needle is assembled from two pieces because this scan reads its own source — a
+# literal spelling of the shape in the detector would make the detector match itself and
+# report a defect it had just introduced.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PF — no verdict here is decided by a pipeline's exit status."
+PF_PIPE_SHAPE='| grep -'"q"
+PF_PIPE_TIGHT='|grep -'"q"
+PF_BAD=0; PF_GOOD=0; PF_UNREAD=0
+for pffile in "$SELF" "$SELF_PUBLISH"; do
+  if [ ! -r "$pffile" ]; then
+    PF_UNREAD=$((PF_UNREAD+1)); continue
+  fi
+  while IFS= read -r pfline || [ -n "$pfline" ]; do
+    # An OR-list is not a pipeline. Its two-character operator carries the one-character
+    # one as a substring, so a correct `grep -qF a f OR grep -qF b f` line reads as the
+    # defect shape and would turn this suite red for being right. Neutralise the operator
+    # before the test rather than teaching both patterns about it — group E carries
+    # exactly such a line, so this is a live concern and not a hypothetical one.
+    pfscrub="${pfline//||/  }"
+    case "$pfscrub" in
+      *"$PF_PIPE_SHAPE"*|*"$PF_PIPE_TIGHT"*) PF_BAD=$((PF_BAD+1)) ;;
+    esac
+    case "$pfline" in
+      *'grep -q'*'<<<'*) PF_GOOD=$((PF_GOOD+1)) ;;
+    esac
+  done < "$pffile"
+done
+# Graded in the order that makes the zero mean something: a scan that cannot read its
+# inputs, or that finds no instance of the CORRECT form, is broken, and its zero on the
+# incorrect form would be a probe failure wearing a pass. An empty input is broken, not
+# clean — the same rule this suite's control arms apply to every other probe.
+if [ "$PF_UNREAD" -ne 0 ]; then
+  FAIL "PF1: $PF_UNREAD of the 2 files in the scan set were unreadable, so the verdict below would cover less than it claims"
+elif [ "$PF_GOOD" -eq 0 ]; then
+  FAIL "PF1: the scan found 0 here-string grep -q sites across the scan set, so its zero on the pipeline shape proves nothing — the convention or the scan has moved, and neither verdict is trustworthy"
+elif [ "$PF_BAD" -eq 0 ]; then
+  PASS "PF1: ${PF_GOOD} grep -q sites across this suite and the publish script it guards, 0 of them pipelines — no verdict here can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
+else
+  FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
+fi
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m\n' "$pass" "$fail" "$skip"
