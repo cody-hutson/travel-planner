@@ -2,7 +2,7 @@
 
 The canonical data-architecture document for the satisfaction layer. It defines **where each new piece of satisfaction data lives, what shape it takes, who writes it, how it flows, and how it reconciles** with the existing `trip-context.md` — so every satisfaction slice builds to one decision rather than re-deciding storage independently.
 
-This document governs the data **substrate** only — storage homes, artifact shapes, write ownership, lifecycle, and reconciliation. It deliberately does **not** define metric formulas, scoring algorithms, or any optimization logic. Nothing in the satisfaction layer optimizes yet; this is the foundation those later capabilities will read from.
+This document governs the data **substrate** only — storage homes, artifact shapes, write ownership, and reconciliation, plus this layer's own lifecycle *assignments* against the classes defined in `reference/data-architecture.md` § *Lifecycle Classes*. It deliberately does **not** define metric formulas, scoring algorithms, or any optimization logic, and it does not define the lifecycle classes themselves. Nothing in the satisfaction layer optimizes yet; this is the foundation those later capabilities will read from.
 
 ---
 
@@ -363,29 +363,27 @@ The chain in one line: **intake template → per-traveler source file (human) �
 
 ## Artifact Lifecycle Classification
 
-The original system defines an **Output Versioning** model for `outputs/*.md`. Each new satisfaction artifact must be classified against it so re-runs neither lose state nor accumulate stale duplicates. The existing patterns are:
+**The lifecycle classes are defined once, in `reference/data-architecture.md` § *Lifecycle Classes*.** That document is the engine-wide home for the class set — `accumulate-append`, `rebuilt-each-synthesis`, `versioned`, `persist-mutable`, `output` — and for what each class means. **This section does not restate those definitions.** It records the two things the engine-wide document defers to this one: the **satisfaction layer's own class assignments**, and the derivation that produced `persist-mutable`.
 
-- **(a) Accumulate-append-with-dated-sections** — research outputs (e.g., `food-list.md`, `activities-list.md`). Each re-run appends a dated section; nothing is deleted.
-- **(b) Rebuilt-each-synthesis** — `venue-matrix.md`, `links-reference.md`. Reflect the *current* itinerary state; regenerated from scratch on every synthesis pass.
-- **(c) Versioned** — `final-itinerary.md` → `v1`, `v2`, ... Each synthesis produces a new numbered version; prior versions are preserved as files.
+`CLAUDE.md` § *Output Versioning* cites the same home for the same set. One definition, two citing documents.
 
-The new artifacts classify as follows:
+The satisfaction artifacts take these classes:
 
 | New artifact | Lifecycle | How it behaves | Closest existing pattern |
 |--------------|-----------|----------------|--------------------------|
-| `outputs/event-status.md` | **persist-mutable** (new — fourth pattern) | Updated **in place** as events change status. **Survives every re-synthesis** — never wiped, never regenerated from scratch. It is the iteration-protection source of truth: the record of what has already been booked / locked / fallen-through must outlive any single planning pass. | None — see below |
-| `outputs/traveler-model.md` | rebuilt / refreshed from source | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | (b) rebuilt-each-synthesis |
-| `outputs/satisfaction-metrics.md` | rebuilt / refreshed from inputs | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | (b) rebuilt-each-synthesis |
+| `outputs/event-status.md` | **persist-mutable** | Updated **in place** as events change status. **Survives every re-synthesis** — never wiped, never regenerated from scratch. It is the iteration-protection source of truth: the record of what has already been booked / locked / fallen-through must outlive any single planning pass. | None — see below |
+| `outputs/traveler-model.md` | `rebuilt-each-synthesis` | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | (b) rebuilt-each-synthesis |
+| `outputs/satisfaction-metrics.md` | `rebuilt-each-synthesis` | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | (b) rebuilt-each-synthesis |
 
-### `event-status.md` is genuinely a new fourth pattern
+### Why `persist-mutable` exists — the derivation
 
-It is **not** any of the three existing patterns, and the distinction is load-bearing:
+`outputs/event-status.md` matches **none** of the three classes that preceded it — each read as `reference/data-architecture.md` § *Lifecycle Classes* defines it — and the distinction is load-bearing. This is the reasoning that produced the class; the class itself is defined there, not here.
 
-- It is **not (a) accumulate-append** — old status is *mutated*, not preserved as history. When an event goes from "to book" to "booked", the record changes; we do not keep a dated log of every status it ever held.
-- It is **not (b) rebuilt-each-synthesis** — and this is the critical difference. The whole reason it cannot live in `venue-matrix.md` is that rebuilt artifacts are *wiped and regenerated* each synthesis. Status must **survive** the synthesis, not be recomputed by it. A re-synthesis reads existing status; it does not overwrite it.
-- It is **not (c) versioned** — there are no `event-status-v1.md` / `v2.md` snapshots. There is one living file, mutated in place.
+- **Not `accumulate-append`.** Old status is *mutated*, not preserved as history. When an event goes from "to book" to "booked", the record changes; we do not keep a dated log of every status it ever held.
+- **Not `rebuilt-each-synthesis`** — and this is the critical difference. The whole reason status cannot live in `venue-matrix.md` is that a rebuilt artifact is regenerated each synthesis. Status must **survive** the synthesis, not be recomputed by it. A re-synthesis reads existing status; it does not overwrite it.
+- **Not `versioned`.** There are no `event-status-v1.md` / `v2.md` snapshots. There is one living file, mutated in place.
 
-So the substrate adds a fourth lifecycle pattern — **persist-mutable**: a single file, updated in place, that persists across re-runs and is *read* (never blindly overwritten) by synthesis. Persist-mutable is not append-only: rows are mutated in place, and a row is **deleted** in the one case where its event is removed from the itinerary (see Orphan removal below) so no ghost row lingers. The other two new artifacts fit the existing **rebuilt** pattern (b) because they are pure derived projections of authoritative inputs.
+That is why `persist-mutable` exists. Its definition lives in the engine-wide home; what this section records is the argument that forced it, kept beside its subject artifact. One rider belongs here because it is satisfaction-layer-specific: `persist-mutable` is **not** append-only — rows are mutated in place, and a row is **deleted** in the one case where its event is removed from the itinerary (see Orphan removal below), so no ghost row lingers. The other two satisfaction artifacts take `rebuilt-each-synthesis` — the *Closest existing pattern* column above is where that mapping is recorded — because they are pure derived projections of authoritative inputs.
 
 ---
 

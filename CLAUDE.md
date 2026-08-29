@@ -87,11 +87,11 @@ Example: `food-list.md` after three sessions:
 
 ### Satisfaction-layer artifacts
 
-The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. Full rationale: `reference/data-model.md`.
+The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. **The lifecycle classes are defined once**, in `reference/data-architecture.md` § *Lifecycle Classes* — this section assigns, it does not define. Satisfaction-layer rationale: `reference/data-model.md`.
 
-- **`event-status.md` — persist-mutable (a fourth pattern).** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass. The **hub is the primary writer** and owns it; the file is **created by whichever agent first writes it** — the enrichment agent's setup seed (from `## Locked Elements`), or the hub on the first full synthesis if no seed exists (the validator only reads it). Persist-mutable is not append-only — a row is **deleted** in the one case where its event is removed from the itinerary, so no ghost row lingers.
-- **`traveler-model.md` — rebuilt/refreshed.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. Every entry projected from a `travelers/<traveler>.md` file holds no independent state — that source file is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged.
-- **`satisfaction-metrics.md` — rebuilt/refreshed.** Recomputed from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative. Two writers, **section-owned** so they never clobber: the **hub** owns the desire-coverage + balance-signal sections, the **validator** owns the needs-compliance + agreement-check sections, each read-merge-writing only its own.
+- **`event-status.md` — `persist-mutable`.** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass. The **hub is the primary writer** and owns it; the file is **created by whichever agent first writes it** — the enrichment agent's setup seed (from `## Locked Elements`), or the hub on the first full synthesis if no seed exists (the validator only reads it). Persist-mutable is not append-only — a row is **deleted** in the one case where its event is removed from the itinerary, so no ghost row lingers.
+- **`traveler-model.md` — `rebuilt-each-synthesis`.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. Every entry projected from a `travelers/<traveler>.md` file holds no independent state — that source file is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged.
+- **`satisfaction-metrics.md` — `rebuilt-each-synthesis`.** Recomputed from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative. Two writers, **section-owned** so they never clobber: the **hub** owns the desire-coverage + balance-signal sections, the **validator** owns the needs-compliance + agreement-check sections, each read-merge-writing only its own.
 
 ---
 
@@ -480,7 +480,7 @@ travel-planner/
 ├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
-│   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, lifecycle)
+│   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
 ├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites
 ├── templates/

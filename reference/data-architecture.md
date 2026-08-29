@@ -499,6 +499,19 @@ same instruction shape are already `accumulate-append`. C4 is the converse case:
 `CLAUDE.md`'s exception set either, but its own writing agent declares it refreshed and holding no
 independent state, so the declaration governs and it is `rebuilt-each-synthesis`.
 
+**C17 is the third case, and it is the one the absence rule does not reach.**
+`outputs/validation-report.md` is absent from `CLAUDE.md`'s exception set exactly as C8 and C9 are,
+and — unlike C4 — its writing agent declares no lifecycle either. Read by absence alone it would
+take the accumulating default. It does not, and the ground is substance rather than default: a
+validation report is a **findings snapshot against one itinerary**, so a finding carried past the
+itinerary it was made against reads as live when it is noise. That is the same property that makes
+C14 `rebuilt-each-synthesis`, and C17 is its structural sibling — both are computed from the current
+itinerary and hold no independent state of their own. § 1.1's table is that declaration; this note
+is why the declaration governs and the absence rule yields. **Absence assigns only where nothing
+else declares** — C4 and C17 are the two artifacts where something does, so they are bounded
+exceptions to the rule above rather than counter-examples to it, and a reader who finds the rule
+applied to C8 and C9 but not to C17 is looking at a stated exception, not an inconsistency.
+
 ---
 
 ## 7. Schema Versioning and Tolerant Read
