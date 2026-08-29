@@ -4,7 +4,7 @@
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
-  rewritten in this same release and grew from 1 316 to 1 540 lines, so every one of the five pointed
+  rewritten in this same release and grew from 1,316 to 1,540 lines, so every one of the five pointed
   at unrelated content within a commit of this document landing — the exact rot the anchors were
   supposed to be immune to. All five are converted to the durable form this repository already uses
   for that file and which this document's own References section already used alongside them:
