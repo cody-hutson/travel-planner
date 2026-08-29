@@ -12,6 +12,11 @@
 > **How to use it:**
 > - Copy this template to `trips/<destination>-<year>/travelers/<your-name>.md`, then
 >   fill it in — or just ask, and an agent will walk you through it question by question.
+>   For `<your-name>`, take your name as the trip's Group roster spells it, lowercase it,
+>   replace every run of characters outside `A-Za-z0-9._-` with a single `-`, and trim any
+>   leading or trailing `-` — so Dana Smith saves as `dana-smith.md`. **That stem is how the
+>   planner joins your file to your roster entry**, so a name it cannot match reads as an
+>   unresolved profile rather than as yours.
 > - It lives in the git-ignored `trips/` working dir and is **private — never published**,
 >   so put your real details here.
 > - **Fill in the parts that fit where your trip is right now.** If the destination
@@ -46,7 +51,7 @@
 > full list — here you only add anyone travelling with you who won't fill in a
 > form of their own.
 
-- ⭐ **Name:** [Your name — e.g., Pat]
+- ⭐ **Name:** [Your name, as the trip's Group roster spells it — e.g., Pat. If the roster has it differently, say which is right rather than picking one.]
 - **Relationship:** [*(optional)* how you fit in the group — e.g., "Jordan's sister", "traveling with friends". Skip if it doesn't apply.]
 - **Party:** [Anyone travelling with you who won't fill in their own form — e.g., "two kids, 6 and 9", "my dad, 78, travelling on my booking". Skip if everyone in your group is filling in their own.]
 
@@ -424,4 +429,9 @@ nothing else. No preamble, no commentary, no summary afterwards.
 - Leave the `>` guidance quotes as they are.
 - Put their name into the title line at the very top.
 
-Then tell them to save it as `trips/<destination>-<year>/travelers/<their-name>.md`.
+Then tell them to save it as `trips/<destination>-<year>/travelers/<their-name>.md`, deriving
+`<their-name>` from the name the trip's Group roster carries: lowercase it, replace every run of
+characters outside `A-Za-z0-9._-` with a single `-`, then trim any leading or trailing `-` — so
+Dana Smith becomes `dana-smith.md`. Say why, in one line: that stem is how the planner joins the
+file to the roster entry, and a stem it cannot match reads as an unresolved profile rather than
+as theirs.

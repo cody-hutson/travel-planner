@@ -704,3 +704,147 @@ class is a row in that fence; it is not an edit here and it is not an edit to an
 consume them, not by line number. A line citation into a living document goes stale on the next
 insertion and does so silently — nothing in CI resolves a `file.md:NNN` reference — so the citing
 side names the section and the section keeps its name.
+
+---
+
+## Traveler identity — the satisfaction-layer projection
+
+The identity rule for the Traveler entity is stated engine-wide in `reference/data-architecture.md`
+§ *3.2 Traveler — natural key*, and that document is authoritative for it. **This section is the
+satisfaction layer's own instance of that rule** — the same split § *Relationship to the
+Engine-Wide Data Architecture* above already fixes for every other overlap. It supplies the
+**reserved-key list** that § 3.2 requires
+the schema to carry, and it states the four cases the correspondence rule does not reach. It
+authors **no second key and no second filename transform**: both are quoted from the code that
+already runs them, which is the whole point of choosing a natural key here.
+
+### The key is computed in two steps, and both are load-bearing
+
+The canonical traveler key is the rule executing in `scripts/publish-trip-site.sh`, function
+`nonpublishable_values`, in the branch that handles a `## <Name>` heading of the derived model:
+
+```awk
+nm  = clean(head)
+key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
+```
+
+1. **`clean(head)`** — every bracketed span becomes a space and markdown emphasis is stripped.
+2. **fold and strip** — lowercase, then delete every character outside `[a-z0-9]`.
+
+**Uniqueness is asserted over this key, never over the display name.**
+
+**The compressed one-step form omits the first step.** `reference/data-architecture.md` § 3.2 and
+`reference/adr/ADR-009-data-architecture.md` Decision 2.2 each state step 2 alone. Read literally,
+that form keys `## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]` to `quilloperatorprovidedthirdparty`
+where the code yields `quill` — so the compressed statement and the code disagree on **exactly the
+provenance-marked entry class the publish guard exists to protect**. The running code is
+authoritative. Stating both steps is additive to the engine-wide rule and contradicts no decision
+in it.
+
+The guard is cited here by **function name and quotation rather than by line number**, for the
+reason § *Publishability — the satisfaction-layer projection* → *Citation form* already gives in
+the other direction: a line anchor into a living file goes stale on the next insertion above it,
+silently, and nothing in CI resolves one.
+
+### Filename correspondence is a theorem, not a rule to enforce
+
+The filename transform is stated once, in `.claude/commands/trip-new.md` § *Travelers* (the
+roster's `Traveler file` cell), and reused verbatim and attributed by
+`.claude/commands/trip-record.md` on both its profile-create and its roster-append paths:
+
+> lowercase the name, replace every run of characters outside `A-Za-z0-9._-` with a single `-`,
+> then trim leading and trailing `-`.
+
+**Its restatement sites are closed, and this is the list.** Two of the three documented intake
+routes hand the saving to a person rather than to a command — the self-serve copy and the portable
+hand-off — so `templates/traveler-intake.template.md` states the transform to the human executing
+each of them, once per route, in the *"How to use it"* block and in the assistant hand-off at the
+foot of the form. Those two are guidance for a human keystroke, not a second normative home: a
+change to the rule is an edit to `.claude/commands/trip-new.md` § *Travelers* and then to the four
+sites listed in this paragraph.
+
+Write `derive(P)` for that transform and `normalize(P)` for the two-step key above. Then for every
+display name `P`:
+
+> **`normalize(derive(P)) == normalize(P)`**
+
+`derive` lowercases, maps every forbidden run to `-`, and preserves only `A-Za-z0-9`, `.`, `_` and
+`-`. `normalize` then removes case plus every character outside `[a-z0-9]` — which is exactly `.`,
+`_`, `-` and whatever `derive` had already removed. The surviving ordered alphanumerics are
+identical on both sides.
+
+**So the correspondence holds by construction for every name the derivation touched, and needs no
+enforcement.** What needs stating is the complement — the four cases the equality does not reach.
+
+### The display name has one authority — the `## Group` roster
+
+> The **`Person` cell of the `## Group` roster in `trip-context.md` is the authoritative display
+> name** for every person the model knows about. The `## <Name>` heading in
+> `outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both **projections** of it.
+> Where a projection disagrees with the roster, **the roster is right and the projection is the
+> defect**: the reconciler reports the divergence and never repairs it by rewriting the roster.
+
+This records an authority the command surface already asserts rather than deciding a new one.
+`.claude/commands/trip-record.md` states that *"the denominator is the roster, never the
+directory"* and that enrichment takes the `## Group` roster and `- **Total travelers:**` from
+`trip-context.md` as the party; `.claude/commands/trip-new.md` calls the roster *"the
+**denominator** for profile-gap detection"* with *"no second source for it"*.
+
+Two properties make it the only candidate that works, and neither is convenience. It is **total
+over the entry population**: the two entry classes that have no file at all — `[THIRD-PARTY]` and
+`PROFILE MISSING` — still have a roster row, and those are precisely the classes the publish guard
+is built around, whereas a profile's own title line and a filename stem both fail there. And the
+roster row is the **only surface in the engine carrying the display name (`Person`, verbatim) and
+the derived path (`Traveler file`) as a pair**, so the correspondence has exactly one checkable
+site and the check is within one row rather than a join across files.
+
+### The four cases the correspondence does not reach
+
+These four are the **complete complement** of the equality above, not a sample of it.
+
+| # | Case | Detected where | Disposition |
+|---|---|---|---|
+| **C1** | **Underived stem.** A profile saved by a route that never applied the transform — the self-serve copy or the portable hand-off — whose stem normalizes to something other than the roster `Person`'s key. | Reconciler, per roster row | **Report, never rename.** Name the roster `Person`, the observed file and both keys, and treat the traveler as **unresolved** — *not* as `PROFILE MISSING`. `travelers/<traveler>.md` is human-authored Layer 1 (§ *Who Writes What — Field Layering*), so renaming it is a write the reconciler does not hold. |
+| **C2** | **Empty key.** `normalize(P)` is the empty string — a display name carrying no ASCII alphanumerics. | Reconciler, and intake where it runs | **Hard stop, with the name quoted.** The key is not merely non-unique here, it is **absent**: two such travelers collide at `""`, and `derive(P)` is empty too, so no filename exists for the key to correspond to. The command surface already refuses an empty *derivation* on the create path; this extends the same refusal to the *key*. |
+| **C3** | **Reserved-key collision.** `normalize(P)` equals a declared reserved key (below). | Reconciler, and intake where it runs | **Hard stop at intake; refuse the entry at reconcile.** Admitting it is the fail-open: the guard's parse suppresses the entry, so its values never enter the non-publishable class at all. |
+| **C4** | **Two display names, one key.** Distinct `Person` values whose keys are equal — `Sam B.` and `Sam. B` both key to `samb`. | Reconciler only — it is a property of the **set**, and the reconciler is the one component that holds the set | **Hard stop, both names quoted; the operator disambiguates the display name.** The engine **never mints a suffix**: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence above by construction. |
+
+**C2 is stated nowhere upstream.** Neither § 3.2 nor ADR-009 Decision 2.2 states an empty-key rule,
+and the key normalization carries no empty guard. Without C2 the natural key is neither total nor
+injective, and *"uniqueness is asserted over this key"* is unsatisfiable at the degenerate point.
+
+### Reserved keys
+
+> **A reserved key is the normalized key of any `##` heading that the derived model's own shape
+> defines as a structural section rather than a person.** The list is therefore *derived from the
+> model rather than maintained beside it*: a slice that adds a structural section to
+> `outputs/traveler-model.md` adds its key here in the same edit.
+>
+> **Reserved keys, at this schema version:**
+>
+> | Reserved key | Heading it normalizes | Where that heading is defined |
+> |---|---|---|
+> | `updatesignals` | `## Update signals [DERIVED]` | `agents/00-enrichment.md` § *Profile-change detection* |
+> | `desireoverlap` | `## Desire overlap` | § *Worked example — a per-traveler file* above |
+>
+> **No traveler may carry a display name whose key is reserved.** Intake rejects the name and asks
+> for a disambiguated one; the reconciler refuses the entry and reports it (C3).
+
+**What the guard consumes today, stated so the gap is not mistaken for coverage.** The publish
+guard's derived-model parse reserves **one** key — `updatesignals` — as a hardcoded literal, so
+`## Desire overlap` is currently counted as a **person**: the entry counter fires and the overlap
+lines are read as that non-person's fields. It emits no class record (the overlap block carries no
+declared field label and no entry mark, and a third-party entry contributes no desires by
+construction), so this is an **entry-population defect and not a live leak** — but the guard's
+entry count is not a count of people. Two further gaps in that same branch are measured and pinned
+by cases **L11a** and **L11b** in `scripts/test-publish-guard.sh`: a declared *field* value under
+the reserved heading reaches the render with no backstop of any kind, and a suppressed *entry* mark
+is backstopped only while no other entry produced a record. **All three are guard behaviour and are
+not changed by this section**, which declares the rule and places the reachable half of the
+enforcement at the reconciler — the only component that holds the entry set. Widening the guard's
+reserved-key branch to read this list is the remaining half.
+
+**The intake half is declared and currently unowned.** § 3.2 requires intake to reject a
+reserved-key collision. Both intake commands are read-only inputs to this rule rather than editors
+of it, so C2 and C3 are enforced at the reconciler and the intake obligation is recorded here
+rather than dropped.
