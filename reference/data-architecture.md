@@ -562,6 +562,101 @@ treat unknown fields as absent. A change that **adds a required field, removes a
 enum, or changes a field's meaning** bumps the version by one, and the change states the migration
 for instances at version *n−1*.
 
+### 7.5 The compatibility guarantee
+
+§ 7.2 says what a reader *does*. This says what the engine *promises*, which is the thing a future
+schema change is weighed against. A trip that already exists in a user's working directory keeps
+reading. The engine guarantees three things and declines to guarantee a fourth.
+
+> 1. **An artifact carrying no `schema-version` stays readable at every future version**, and is
+>    never a failure. There is no end-of-support version and no flag day. § 7.2's *absent ⇒ version
+>    0* limb is the whole of the mechanism, which is why that limb is not negotiable later.
+> 2. **A version bump never removes a reader's ability to read an older instance.** A change that
+>    would make an older instance unreadable is not a version bump at all — it is a **new artifact
+>    class**, and § 1.1 gains a row for it. This is what keeps § 7.4's bump rule from quietly
+>    becoming a break rule.
+> 3. **The write-stop is what makes 1 and 2 hold in practice**, and it is stated once at § 7.2. A
+>    guarantee that a newer instance survives contact with an older reader is worth exactly as much
+>    as that reader's refusal to write it — so the write-stop ships as a **refusal, never a
+>    warning**. A warning that is ignored leaves the same destroyed file as no rule at all.
+> 4. **Not guaranteed: that an older instance carries every *field* a newer reader knows.** Later
+>    fields read as declared-absent, never as a default value (§ 7.2, second limb). A consumer that
+>    needs a field its instance predates handles the absence; it does not substitute a default.
+>    Guaranteeing otherwise would require rewriting artifacts the engine has no right to rewrite.
+
+**Why this is stated rather than assumed.** The compatibility surface is a git-ignored directory
+this repository cannot reach, inspect, or repair. A schema change weighed against this guarantee is
+reversible; one weighed against nothing is not — the damage is discovered by a user, in their own
+working directory, after it is already done.
+
+### 7.6 The upgrade contract
+
+**Most of this requirement is already discharged by § 6, and the residue is smaller than it looks.**
+An artifact does not need a migration pass to reach the current version if its own lifecycle
+regenerates it. Partitioning the 19 in-model classes by § 6 membership:
+
+| Upgrade burden | Classes | Count | Mechanism |
+|---|---|---|---|
+| **None — self-upgrading by construction** | C4, C10, C11, C12, C14, C15, C16, C17, C19 | **9** | `rebuilt-each-synthesis`, `versioned` and `output` all rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
+| **Writer-upgraded, in place** | C1, C13 (`persist-mutable`) · C2, C5, C6, C7, C8, C9, C18 (`accumulate-append`) | **9** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
+| **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md` | **1** | **Never engine-upgraded. This is a rule, not an omission.** |
+
+**9 + 9 + 1 = 19.** No class is unaccounted for, and none needs an operator to hand-edit a file.
+
+**Why C3 is never upgraded, and why that still satisfies the requirement.** `travelers/<traveler>.md`
+is human-authored Layer 1 — the traveler's own words. `agents/00-enrichment.md` § *Second Role*
+states the boundary in terms: the engine does not write those files and does not edit a traveler's
+desires. An upgrade pass that rewrote a person's own file to add a frontmatter fence would breach
+the engine's most explicit ownership boundary to satisfy a convenience. **Guarantee 1 is what
+discharges the requirement for this class:** version 0 is permanently valid, so the file never needs
+upgrading. That is an answer, not a deferral.
+
+**No new command verb, and no migration script.** The upgrade is a property of each writer's
+existing write, not a separate operation an operator invokes. A verb would add a surface to the
+command taxonomy — and its guard — for work that nine writers already do on their next run.
+
+### 7.7 The citation-anchor register
+
+`ADR-009` Decision 6.3 states the obligation structurally: it binds **every agent prompt that reads
+any versioned artifact**, and the citation site is *that prompt's input declaration where it has
+one, and its equivalent where it does not*. This register is that statement made executable — it
+names the site per prompt, so the obligation can be discharged and audited rather than interpreted.
+
+**The uniform thing is a role, not a heading.** Eight prompts realize *declare what I read* as a
+heading; one realizes it as a named role. Measured across the nine prompts, the partition is
+`## Input` **7**, `## Inputs` **1**, neither **1** — so a rule keyed to the exact string `## Input`
+would be unexecutable in two of nine, and it is not the corpus's convention in any case: of the
+existing `reference/data-model.md` citations across these prompts, all but one sit outside `## Input`
+altogether. **The anchor is the prompt's own read-declaration site**, enumerated here:
+
+| # | Agent prompt | Read-declaration site | Note |
+|---|---|---|---|
+| 1 | `agents/00-enrichment.md` | `## Second Role — Reader / Reconciler of the Per-Traveler Model` | Carries no input heading at any spelling. This role declares both its reads **and** its write, which is the better fit — the rule's load-bearing half is a write-stop. |
+| 2 | `agents/01-activities.md` | `## Input` | |
+| 3 | `agents/02-food.md` | `## Input` | |
+| 4 | `agents/03-scheduling.md` | `## Input` | |
+| 5 | `agents/04-transport.md` | `## Input` | |
+| 6 | `agents/05-hub-planner.md` | `## Input` | |
+| 7 | `agents/06-validator.md` | `## Input` | |
+| 8 | `agents/07-nightlife.md` | `## Input` | |
+| 9 | `agents/destination-ideation.md` | `## Inputs` | **Plural. Cite in place; do not rename the heading.** The citation reads identically under either spelling, so a rename buys nothing — and agent section headings *are* cited by name elsewhere in the corpus, so a rename is not free either. |
+
+**The citation form is the corpus's own**, not one invented here: a backticked path, an arrow, and
+the section name in quotes — `` `reference/data-architecture.md` → "Tolerant read" `` — which is the
+shape every existing reference-corpus citation in these prompts already uses. **A citation authored
+against this register never carries a line number.** Line-anchored citations into the agent prompts
+are the debt this release is retiring; a new one would add to it.
+
+**A prompt cites; it never restates.** A tenth agent added later declares its site in this table and
+carries the citation — which is the reason the register is a closed table here rather than a
+convention each new prompt rediscovers.
+
+**This table names headings, so renaming one is an edit to this table.** That is the maintenance
+cost the register accepts, deliberately and in exchange for the obligation being auditable at all:
+a heading name is a far more stable anchor than a line number, and — unlike a line number — a stale
+one is visible to any reader who opens the prompt. It is not free, and it is stated so that a later
+rename repairs the register rather than silently orphaning a row.
+
 ---
 
 ## 8. Contracts, Granularity and Enforcement
@@ -654,6 +749,12 @@ that document has held up.
 - **`.claude/commands/*.md` frontmatter is out of scope and out of the gate's selection set.** Those
   files carry an **upstream schema** this repo does not own and cannot change. The artifact schema
   set does not claim them, and the validating gate does not check them.
+- **`templates/*.template.md` are out of the gate's selection set too.** § 1.3 already disposes of
+  them as **emitters, not instances**, and binds the schema to a template's *rendered output* rather
+  than to the template file. The gate therefore adjudicates the instance a template seeds and never
+  the emitter. This is stated because the exclusion is otherwise only inferable: a selector written
+  from § 1.1 alone picks up two files the artifact model has already declared out of scope, and it
+  picks them up at the one moment they declare a version and no schema for their class exists yet.
 - **No prose validation.** The schema constrains frontmatter and declared entry markers. It never
   constrains narrative body content.
 - **No change to the `Applies to` link syntax, the Event ID format, the four event statuses, or the

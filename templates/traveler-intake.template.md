@@ -1,7 +1,22 @@
+---
+artifact: travelers/<traveler>.md
+schema-version: 1
+trip: <trip-slug>
+writer: human
+lifecycle: persist-mutable
+provenance: human
+publish: internal
+---
+
 # Your Travel Profile — [Name]
 
 > **This is *your* profile** — what you'd love out of the trip, what you need it to
 > work around, and how you like to travel. One file per person.
+>
+> **The fence above is not a field you fill in.** Replace `<trip-slug>` with the trip's
+> directory name and leave the rest exactly as it stands. **Your name does not go in it** —
+> it goes in the title line below, and nowhere in the fence. Field shapes and permitted
+> values: `reference/data-architecture.md` → "Universal frontmatter".
 >
 > **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There are ten of them,
 > at most one in a section, and most are a pick-from-the-list or a short phrase. The two
@@ -427,7 +442,11 @@ nothing else. No preamble, no commentary, no summary afterwards.
 - Under **Needs** and **Desires**, delete the unused repeated blocks and keep one block per
   real need and per real desire — adding more blocks if they have more.
 - Leave the `>` guidance quotes as they are.
-- Put their name into the title line at the very top.
+- Leave the frontmatter fence as it stands, except `<trip-slug>`, which takes the trip's
+  directory name. Its values are facts about the artifact class, not answers to a question.
+- Put their name into the `# Your Travel Profile` title line — the first heading, **not** the
+  frontmatter fence above it. A person's name is a body value and never a frontmatter value
+  (`reference/data-architecture.md` → "Traveler — natural key").
 
 Then tell them to save it as `trips/<destination>-<year>/travelers/<their-name>.md`, deriving
 `<their-name>` from the name the trip's Group roster carries: lowercase it, replace every run of

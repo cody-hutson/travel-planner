@@ -535,6 +535,38 @@ exists and you read it. Reporting it as `PROFILE MISSING` would send the operato
 to collect a profile they already have, so keep the two markers distinct and use
 the one that names what actually happened.
 
+### Versioned artifacts — the tolerant read, and the write you must decline
+
+Every artifact you read may carry a `schema-version` in its frontmatter. The rule
+for reading one is stated once in
+`reference/data-architecture.md` → "Tolerant read"; read it there, apply it, and do
+not restate or reinterpret it here. Three consequences fall to this role
+specifically.
+
+**A traveler file carrying no version is normal, and stays normal.**
+`travelers/<traveler>.md` is human-authored and is never upgraded by the engine —
+`reference/data-architecture.md` → "The upgrade contract" declares it tolerated at
+version 0 permanently. An absent fence there is not a defect, not a `PROFILE
+MISSING`, and not a gap to report. Read the body exactly as you always have.
+
+**The write-stop binds you more tightly than it binds a pure reader.** You do not
+edit `outputs/traveler-model.md` — you **replace** it, having just read the copy
+you are about to overwrite. That makes you exactly the reader the write-stop names,
+at exactly the moment it binds. **When its condition holds, report it and decline
+the write.** Leave the file as you found it and say plainly that a newer model was
+present and was not overwritten. Do not downgrade it, do not merge into it, and do
+not treat this as a warning you may proceed past: the file lives in the git-ignored
+working directory, so a downgrade destroys fields nothing in this repository can
+reach or restore. Declining costs one pass; not declining costs the operator data
+they cannot get back.
+
+**You upgrade only what you rewrite whole.** The model you write is rebuilt from
+its sources on every pass, so it carries the current version by construction and
+needs no migration step. **A block you do not own, you do not upgrade** — the
+`[ENRICH]` contract is a field-scoped grant on `trip-context.md` and not a licence
+to touch that file's frontmatter, and the same holds for the initial `locked` rows
+you may seed in `outputs/event-status.md`.
+
 ## Field-by-Field Standards
 
 **Transit Access:**
