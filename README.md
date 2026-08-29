@@ -2,6 +2,16 @@
 
 A multi-agent trip planning system. Nine specialized agents research, plan, validate, and produce travel itineraries.
 
+## What it produces
+
+The headline output is a single self-contained HTML travel site — encrypted before it is published, decrypted in the reader's browser. This is the desktop layout, drawn against the design system in [`reference/site-layout-spec.md`](reference/site-layout-spec.md) and populated from the worked example in [`examples/data-architecture-demo/`](examples/data-architecture-demo/):
+
+![Desktop layout of a generated travel site: a full-bleed hero carrying the destination, the trip dates and four trip stats; a sticky day-navigation strip with per-day colour coding; a day banner above a heat strip marking the trip's no-unshaded-outdoor-block window; and a four-column day grid — schedule timeline, featured stop cards, food and night cards, and a schematic map — with a booking-status pill on every card, over a booking checklist derived from tracked per-event status.](examples/data-architecture-demo/site-preview.svg)
+
+*A figure, not a screenshot — and a fixture, not a real trip. Every name, time, event ID and count in it is taken from [`examples/data-architecture-demo/`](examples/data-architecture-demo/); that [fixture's README](examples/data-architecture-demo/README.md) records how the figure is kept current, and why it is committed as source rather than captured as an image.*
+
+The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — a full planning cycle across every engine artifact, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it.
+
 ## Folder Structure
 
 | Path | Purpose |
@@ -12,7 +22,7 @@ A multi-agent trip planning system. Nine specialized agents research, plan, vali
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
 | `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
-| `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
+| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus three purpose-built demo fixtures |
 | `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
 ## Install

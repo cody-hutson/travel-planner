@@ -146,3 +146,121 @@ and only one of them is obvious:
 and the validator emits no entry-marker finding code, so a green schema check says
 nothing about marker conformance. The markers are here because the fixture's job is to
 show the migrated shape, and for these classes the marker is part of it.
+
+## `site-preview.svg` — the figure in the repo README
+
+`site-preview.svg` renders the site design system in `reference/site-layout-spec.md`
+§§ 1–3 (typography, colour architecture, component catalog), laid out per § 4
+*Desktop*, against **this fixture's** own artifacts. It is embedded in the repo
+`README.md` § *What it produces*.
+
+**It is a figure, not a screenshot, and it is source, not output.** There is no build
+step and no capture step: the file is edited directly. Nothing generates it and
+nothing regenerates it.
+
+### Why it is an SVG and not a screenshot — read this before adding a PNG
+
+The obvious artifact for *"show what the engine produces"* is a screenshot. **It is
+the wrong one here, for a measured reason rather than a stylistic one: this
+repository's only personal-data control cannot see inside a binary.**
+
+`.github/workflows/depersonalization.yml` scans **added diff lines**. Both of its
+content arms are shaped
+
+```
+git diff --unified=0 <base>..<head> … | grep -E '^\+' | grep -v '^\+\+\+' | grep -EI "<pattern>"
+```
+
+and that pipeline is blind to a binary twice over. `git diff` emits **no content
+lines** for a binary file — only `Binary files a/x and b/x differ` — so there is
+nothing for `grep -E '^\+'` to match; and `grep -I` **explicitly suppresses binary
+matches** even where content did reach it. Measured on a purpose-built repository in
+which a PNG and an SVG carried the **identical** leak tokens: the SVG returned **1**
+gate hit, the PNG returned **0**, from **0** added lines.
+
+So a leaked email address, an OS user-home path, or a real traveller's name baked into
+the pixels of a committed screenshot **passes the gate green**. Committing this
+repository's first binary would open a permanent blind spot in the one control
+standing between a public repo and a personal-data leak — and it would do it in the
+artifact class whose whole subject is image content.
+
+**An SVG is text.** Every string in it is a diff line the gate reads, a line a
+reviewer sees in a pull request, and a line `gitleaks` walks. That is the property
+being bought, and it is why the format is not a preference.
+
+The regeneration argument closes it independently. There is **no executable site
+build** in this repository — `CLAUDE.md` § *Travel Site Generation* makes the site "a
+bespoke creative artifact — not a template fill", authored per trip by an agent — so
+**no PNG here could ever be re-derived from tracked inputs**. A captured screenshot
+would be exactly the silently-stale binary that has no way back to a source. An SVG
+has no upstream to drift from: it *is* its own source.
+
+**If you are about to add a screenshot, the answer is no.** Extend or replace this
+figure instead, or open an issue proposing that the personal-data gate learn to read
+binaries first.
+
+### To regenerate, and when to revisit
+
+**To regenerate:** edit `site-preview.svg` directly against §§ 1–3 of the layout spec
+and the fixture artifacts named below.
+
+**Revisit it when either source moves:**
+
+| Source | What a change there means for the figure |
+|---|---|
+| `reference/site-layout-spec.md` §§ 1–3 | Typography, a colour token, or a component's field set changed — the figure shows the old design system |
+| This fixture's `final-itinerary.md`, `event-status.md`, `venue-matrix.md`, `links-reference.md`, `activities-list.md`, `nightlife-list.md`, `trip-context.md` | A name, time, Event ID, venue key, status or count changed — the figure now disagrees with the artifacts it was drawn from |
+
+**Nothing checks either coupling.** The schema gate validates frontmatter and never
+reads a body, and this file carries no frontmatter at all; `markdown-link-check`
+validates that the embed *path* resolves and never looks inside the file. Figure
+staleness is caught by a reader, or not at all — which is why the trigger is written
+down here rather than assumed.
+
+### Constraints on the file itself
+
+GitHub renders a **sanitized** copy of an SVG, so rendering it locally proves nothing.
+Use presentation attributes only — `fill`, `stroke`, `font-family`, `font-size`,
+`font-weight`, `text-anchor`, `opacity`. No `<style>` block, no `style=` or `class=`
+attribute, no `id`-referenced defs (gradients, filters, clip-paths), no `<script>`,
+`<foreignObject>`, `<use>` or `<image>`, no external font, and no
+`dominant-baseline` / `alignment-baseline`. Depth comes from **layered semi-opaque
+rects**, which is why the hero "gradient" is five flat bands. Generic font stacks
+only: the site's three Google Fonts are CDN-loaded and unavailable to a sanitized
+inline SVG, so the figure evokes the § 1 *roles* rather than the exact faces.
+**Verify in the rendered pull-request view, never only locally.**
+
+### What it is not
+
+- **Not an artifact of the data model, and not a row of the table above.** It carries
+  no frontmatter, no schema declares a `.svg` path-pattern, and the selector's
+  declared arm needs an `artifact:` value it does not have — so it resolves
+  `UNMATCHED` by construction, exactly as `examples/*/README.md` resolves `EXCLUDED`.
+  It is deliberately absent from *What each file is here to demonstrate*, and it does
+  not count toward the 17 files F1 ranges over.
+- **Not a witness for C19**, and not a step toward one. C19
+  (`outputs/<destination>-travel-site.html`) is a **decided** `no-witness-because:`
+  above: the site source stays local and git-ignored per
+  `reference/site-layout-spec.md` § 8, so no instance of that class can be tracked. A
+  picture *of* the design system is not an instance of the class, and adding this file
+  changes C19's disposition not at all.
+
+### Two things the figure shows that this fixture does not state
+
+Both are recorded so a reader does not mistake either for fixture data.
+
+- **The per-day colour coding on the day-navigation strip.** § 2 *Energy Level Colors*
+  gives the site six named levels; **this fixture declares no energy level for any
+  day**, because C8 is tier 2 here. The figure uses the § 2 palette to show the
+  *mechanism* — per-day colour coding — and names no level, so it asserts nothing
+  about which day is which.
+- **The accent colour.** `--accent` / `--accent-deep` are per-trip values chosen at
+  site-build time, not fixture data; § 2 says so in the token block itself. The figure
+  uses an azulejo blue on the reasoning `CLAUDE.md` § *Design Principles* gives for
+  Portugal.
+
+One deviation from § 4 *Desktop* is also deliberate: its third column is **food**, and
+this fixture ships **no** `outputs/food-list.md` (C6 is absent on purpose, above). The
+figure's third column therefore carries the Saturday night card beside the standing
+bailout café, and is labelled *food · night*. Inventing restaurants to fill a column
+would have put content in the figure that the fixture does not have.
