@@ -10,7 +10,7 @@ artifact: outputs/<destination>-travel-site.html
 schema-version: 1
 path-pattern: trips/*/outputs/*-travel-site.html
 path-pattern: examples/*/outputs/*-travel-site.html
-no-witness-because: reference/site-layout-spec.md declares this artifact a source file that stays local and git-ignored, so no instance of this class can be tracked and a declared witness would contradict the spec that governs it; this is a decided disposition rather than a gap awaiting a fixture
+no-witness-because: the class is a generated HTML render, not a source artifact, and reference/site-layout-spec.md § 8 declares it a plaintext source file that stays local and git-ignored; a tracked instance would contradict its own governing spec, and examples/tokyo-2026/README.md records the standing rationale for keeping a render out of the examples tree
 
 # The universal block — reference/data-architecture.md § 4.4. No class removes a
 # universal field; a class may only narrow one, and each narrowing is stated below.

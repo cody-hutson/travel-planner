@@ -43,9 +43,10 @@ Non-blocking. An advisory never increments `critical-count`.
 
 | Check | Result |
 |---|---|
-| Hard constraints audited on every applicable day | pass — 12 of 12 (need, day) pairs |
+| Hard constraints audited on every applicable day | pass — 16 of 16 (need, day) pairs, including the operator-provided need |
 | Day-of-week closure check per venue against its scheduled day | pass |
-| Venue deduplication — no anchor/alternative split, max 2 appearances | pass — Café Majestic at the cap, same role both days |
+| Venue deduplication — no anchor/alternative split, max 2 appearances | pass — `ven-b5e0` at the cap, same role both days |
+| Every venue key referenced anywhere resolves to a row in `links-reference.md` | pass — 9 of 9 keys; `ven-b5e0` has a registry row and no event, which is correct for a bailout |
 | Every 3+ hour outdoor block carries a named indoor bailout | pass — no block reaches 3 hours; Café Majestic stands as the `HC-2` bailout |
 | Needs-compliance / constraint-compliance agreement (forward-only) | pass — 0 fails, 0 Criticals |
 | `outputs/event-status.md` read, never written | pass — the validator reads this file and does not own it |

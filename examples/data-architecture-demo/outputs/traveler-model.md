@@ -57,6 +57,32 @@ applies it as a hard bound before any objective.
 | Watch a sunset from a rooftop | wish | one-off |
 | Hear live fado | nice-to-have | one-off |
 
+## Sam `[OPERATOR-PROVIDED]`
+
+**Source:** none — no profile was filed. Needs supplied by the operator and marked as
+such; this entry is the **fallback branch**, not a projection.
+
+**Needs**
+
+| Need | Category | Governing constraint |
+|------|----------|---------------------|
+| Cannot manage long walks between blocks | mobility | `HC-1` |
+
+**Desires**
+
+*None recorded.* The operator supplied needs only, which is what the fallback admits.
+**An absent desire set is `unknown`, never "no desires"** — the same rule that makes an
+absent profile *unknown* rather than *no constraints*. So Sam contributes **no** rows
+to `outputs/satisfaction-metrics.md` § *Desire-coverage*, and the absence is recorded
+here rather than inferred from an empty table there.
+
+This entry is **`[OPERATOR-PROVIDED]` and not `[THIRD-PARTY]`.** Sam is a party member
+who has simply not filed a profile yet, so the entry is a placeholder for a source
+that may still arrive. `[THIRD-PARTY]` marks a person who will never file one and
+whose needs were supplied second-hand about them; that mark additionally bars the
+value from every publish-bound artifact. The two are different fallbacks with
+different downstream rules, and this fixture exercises the first.
+
 ## Desire overlap
 
 The signal the hub reads when one placement can serve more than one traveller.
@@ -72,9 +98,21 @@ The signal the hub reads when one placement can serve more than one traveller.
 
 ## Coverage of the roster
 
-Both travellers filed a usable profile, so neither fallback branch is exercised
-here: there is no `[OPERATOR-PROVIDED]` entry and no `[THIRD-PARTY]` entry. That is
-a **property of this fixture, not of the model** — the fallback branches are
-specified in `reference/data-model.md`, and a `[THIRD-PARTY]` value would in any
-case be barred from every publish-bound artifact, which is why a tracked worked
-example is the wrong place to demonstrate one.
+Three roster members, **two** source files, three entries. The correspondence is not
+one-to-one and is not meant to be: every `travelers/<name>.md` stem resolves to an
+entry here, but an entry can exist without a file. That is the fallback, and reading
+the two counts as a mismatch is the misreading this section exists to prevent.
+
+| Roster member | Source file | Entry | Branch |
+|---|---|---|---|
+| Alex | `travelers/alex.md` | projected | normal |
+| Robin | `travelers/robin.md` | projected | normal |
+| Sam | — | operator-supplied | `[OPERATOR-PROVIDED]` |
+
+**No `[THIRD-PARTY]` entry appears here, deliberately.** That branch covers a person
+who will never file a profile and whose needs the operator supplies *about* them; its
+values must not reach any publish-bound artifact in attributed or anonymized form.
+`outputs/traveler-model.md` is `publish: internal-hard` and would be a legal home for
+one — but a **tracked, world-readable worked example** is not the place to model
+second-hand data about a person, even a fictional one, so the branch is named here
+and left unexercised.

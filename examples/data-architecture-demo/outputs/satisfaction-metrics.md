@@ -40,8 +40,15 @@ constraint's own reach, which is why two of the four rows cover fewer than four 
 | Alex | No shellfish | dietary-health | `DH-1` | May 14–17 (all 4) | pass · pass · pass · pass |
 | Robin | Level or lift approaches only | mobility | `HC-1` | May 14–17 (all 4) | pass · pass · pass · pass |
 | Robin | One slow afternoon mid-trip | rest | — | May 15 (Fri), May 16 (Sat) — the two full days; a partial arrival or departure day has no afternoon to grade | pass · pass |
+| Sam `[OPERATOR-PROVIDED]` | Cannot manage long walks between blocks | mobility | `HC-1` | May 14–17 (all 4) | pass · pass · pass · pass |
 
-**0 fails over 12 graded (need, day) pairs.**
+**0 fails over 16 graded (need, day) pairs.**
+
+**Sam's row is graded exactly like the other three.** An operator-provided need is a
+need: the fallback changes where the value came from and how it is marked, never
+whether it binds. A fixture that graded only the travellers who filed profiles would
+model the opposite rule — that an absent profile means no constraints — which is the
+one reading the model forbids.
 
 The heat row is the one that shows the applicable-day set is **computed, not
 assumed**. Grading it on all four days would report two passes the plan never
@@ -81,6 +88,12 @@ need yields a constraint Critical with **no** needs-compliance row, by design.
 **6 covered / 1 not covered, of 7.** Every anchor and every wish is covered; the one
 uncovered desire is a nice-to-have. `EV-5ab8` covers two rows at once, which is the
 placement the desire-overlap signal in `outputs/traveler-model.md` exists to find.
+
+**Sam contributes no row, and that is not the same as contributing a `not covered`
+one.** The operator supplied needs only, so Sam's desire set is `unknown` rather than
+empty — and a `not covered` row would assert a want that nobody stated. The absence is
+declared in `outputs/traveler-model.md` § *Sam*, so it reads as unknown rather than as
+a gap in this table.
 
 The `not covered` row is deliberate. A coverage table whose every cell reads the
 same way demonstrates one of the boolean's two values and asserts the other.

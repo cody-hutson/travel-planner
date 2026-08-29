@@ -18,6 +18,9 @@ generated: 2026-08-29
 rewritten, because the hub reads the whole accumulated file and earlier entries stay
 useful as alternatives and as the record of what was already considered.
 
+**Entry marker.** C7 is prose-shaped: each entry carries a fenced `artifact-entry`
+block holding the venue key and nothing else, directly under its own heading.
+
 ## Initial Research (2026-08-29)
 
 The desire gate resolved **open**: Alex holds *Watch a sunset from a rooftop* as an
@@ -27,6 +30,10 @@ stub.
 
 ### Base Porto — rooftop bar
 
+```artifact-entry
+venue: ven-8a34
+```
+
 - **Placed as:** `EV-5ab8`, May 16 (Sat), `locked`
 - **Booking:** advance — a table is held
 - **Why:** the only option on this list that serves the rooftop-sunset desire both
@@ -35,6 +42,10 @@ stub.
 - **Price tier:** mid · **Effort:** low
 
 ### Casa do Livro — bar
+
+```artifact-entry
+venue: ven-1d9f
+```
 
 - **Placed as:** `EV-9e34`, May 16 (Sat), `option`
 - **Booking:** advance available, not held — the flag takes effect only on promotion
@@ -49,7 +60,10 @@ would have been two entries and one option.
 
 ### Live fado
 
-**Not placed.** Robin holds *Hear live fado* as a nice-to-have. Nothing on this
-list serves it, and it is recorded here as an uncovered want rather than dropped —
-`outputs/satisfaction-metrics.md` carries the matching `not covered` row. An
-uncovered nice-to-have is a coverage reading, not a failure.
+**No entry marker, because there is no entity to key.** Robin holds *Hear live fado*
+as a nice-to-have and nothing on this list serves it. This is a **want recorded as
+uncovered**, not a venue — so it carries no `artifact-entry` block at all, which is
+different from carrying one that declares `venue: unminted`. An unminted key says
+*this venue exists and the hub has not yet minted its token*; no block says *there is
+no venue here*. `outputs/satisfaction-metrics.md` carries the matching `not covered`
+row. An uncovered nice-to-have is a coverage reading, not a failure.

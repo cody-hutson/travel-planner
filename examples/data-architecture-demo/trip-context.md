@@ -72,6 +72,12 @@ there the two axes diverge, here they cannot.
 |----------|--------------|--------------|---------------------|
 | Alex | `ASSERTED-SAME` | `ASSERTED-SAME` | May 14–17 (all 4) |
 | Robin | `ASSERTED-SAME` | `ASSERTED-SAME` | May 14–17 (all 4) |
+| Sam | `UNKNOWN` | `UNKNOWN` | May 14–17 (all 4, from the group booking) |
+
+Sam's two bases read `UNKNOWN` rather than `ASSERTED-SAME`: with no profile there is
+no answer to have asserted anything, and *unknown* is not *same as the group*. The day
+set is still the trip-level one, because it comes from the group booking rather than
+from Sam.
 
 ## Accommodation
 
@@ -95,10 +101,18 @@ there the two axes diverge, here they cannot.
 |----------|---------|
 | Alex | `travelers/alex.md` |
 | Robin | `travelers/robin.md` |
+| Sam | — no profile filed; needs are operator-provided |
 
-- **Total travelers:** 2
+- **Total travelers:** 3
 - **Travel mode:** Group moves together
 - **Subgroup notes:** None — single origin, one booking, one window.
+
+**Sam is the operator-fallback case, and it is here on purpose.** A traveller with no
+usable profile is handled by fallback, never as a hard failure and never as *no
+constraints*: the enrichment agent reconciles everyone who filed one, takes
+operator-provided needs for the gap, and marks them as such in
+`outputs/traveler-model.md`. An absent profile means **unknown**. Two travellers with
+files and one without is what makes both branches readable in one fixture.
 
 ## Hard Constraints
 
