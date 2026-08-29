@@ -11,8 +11,9 @@
   **function name plus verbatim quotation**, naming `nonpublishable_values`, its reserved-key branch,
   the `CD-4` declaration comment and the top-level `_GUARD_RESERVED_KEYS` list. Two quotations that
   the rewrite had silently falsified are corrected to the text the source now carries. This document's
-  two citations of `.claude/commands/trip-new.md` § *Travelers* are corrected to the heading that
-  exists, § *Travelers — count and names*. **No decision, rule, residual, coverage claim or key derivation is
+  two citations of the filename-derivation section of `.claude/commands/trip-new.md` named a heading
+  that does not exist there; both now name the one that does,
+  § *Travelers — count and names*. **No decision, rule, residual, coverage claim or key derivation is
   changed, and none is re-opened.** Recorded here rather than by supersession because an Accepted ADR
   is immutable **as to its decisions**, and `reference/adr/README.md § Convention` now states the
   amendment rule this correction follows.
