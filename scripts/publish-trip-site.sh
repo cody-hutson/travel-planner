@@ -692,6 +692,31 @@ _GUARD_AWK_HELPERS='
 _GUARD_NEED_ENUM=' need needs category categories heat mobility dietary health '\
 'rest budget cap timing sensory other specific '
 
+# The RESERVED KEYS — the normalized keys of `## ` headings that the derived model's own
+# shape defines as a STRUCTURAL SECTION rather than a person. Declared in the corpus at
+# reference/data-model.md § *Reserved keys*, which is where a slice adding a structural
+# section adds its key.
+#
+# HELD HERE RATHER THAN READ FROM THERE, and the asymmetry stated below the declaration
+# block is exactly why. Reserving a key SUPPRESSES a heading from the entry and field
+# limbs — it REMOVES values from the guarded set — so this is a NARROWING control, and a
+# narrowing control read from a document is a fail-open surface: a corpus edit could widen
+# the suppression without passing a diff of this script. Membership rows are declared
+# because they widen; these are held because they narrow. Same rule, opposite direction.
+#
+# The list carries TWO members and carried one until this release. The second, the
+# derived model's desire-overlap section, was counted as a person, and the consequence
+# was not confined to the entry limb: `entries` is the operand of the END block's
+# `entries == 0` fail-closed sentinel, so a structural section counted as a person is a
+# phantom entry that keeps that sentinel from firing — a model drifted to carry no
+# recognisable person parsed as a clean EMPTY class and published. Both directions are
+# pinned by scripts/test-publish-guard.sh: L11c asserts the sentinel now fires, and L11d
+# measures what the suppression costs under the second heading.
+#
+# Space-padded, and matched space-padded, so `overlap` never matches `desireoverlap` —
+# the same containment rule _GUARD_NEED_ENUM is read with.
+_GUARD_RESERVED_KEYS=' updatesignals desireoverlap '
+
 # ═════════════════════════════════════════════════════════════════════════════
 # THE PUBLISHABILITY DECLARATION — where the class lives now
 # ═════════════════════════════════════════════════════════════════════════════
@@ -858,7 +883,7 @@ nonpublishable_values() { # <trip_dir> [site_html]
     done
   fi
 
-  out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" \
+  out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" -v RESERVED="$_GUARD_RESERVED_KEYS" \
             -v ESEL="$esel" -v ERULE="$erule" -v EFIELDS="$mfields" -v EFRULES="$mrules" \
             "$_GUARD_AWK_HELPERS"'
     # Index of the first declared entry selector occurring in s, or 0. The selectors and
@@ -889,7 +914,9 @@ nonpublishable_values() { # <trip_dir> [site_html]
       head = $0; sub(/^##[ \t]+/, "", head)
       nm = clean(head)
       key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
-      if (key == "updatesignals") { live = 0; tp = 0; ei = 0; next }   # structural section, not a person
+      # Every member of the declared reserved-key list, not one literal. Space-padded on
+      # both sides so a key is matched whole and never as a substring of another.
+      if (index(RESERVED, " " key " ") > 0) { live = 0; tp = 0; ei = 0; next }   # structural section, not a person
       entries++; idx = entries; live = 1
       ei = esel_in(head); tp = (ei > 0)
       # The NAME record keeps the token rule as a property of the PARSE, not of the row:

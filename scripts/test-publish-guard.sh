@@ -602,6 +602,52 @@ else
   FAIL "L11b: the orphaned-mark backstop changed shape (alone=$l11e1 with-other-record=$l11e2) — re-read the END block before trusting either verdict"
 fi
 
+# L11c — THE RESERVED-KEY LIST HAS TWO MEMBERS, AND THE BRANCH READS BOTH.
+#
+# reference/data-model.md § *Reserved keys* declares two: `updatesignals` and
+# `desireoverlap`. The branch held only the first, so `## Desire overlap` — a structural
+# section of the derived model, defined in that document's own worked example — was counted
+# as a person.
+#
+# That is not cosmetic, and the reason is the END block rather than the entry limb.
+# `entries` is the operand of `entries == 0`, the fail-closed format-drift sentinel L5d
+# asserts. A structural section counted as a person is a PHANTOM ENTRY, and a phantom entry
+# is exactly what keeps that sentinel from firing: a model that has drifted to carry no
+# recognisable person still parses as a clean EMPTY class, and an empty class publishes.
+# This is L5d's fixture with the second reserved heading substituted for the first, and it
+# must abort for the same reason L5d's does.
+LDRIFT2="$WORK/l_drifted_overlap"; mkdir -p "$LDRIFT2/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Desire overlap\n- museums / slow-pace morning: Wren (anchor), Rowan (wish)\n' > "$LDRIFT2/outputs/traveler-model.md"
+lguard "$LCLEAN" "$LDRIFT2"
+if [ "$LRC" -eq 2 ]; then
+  PASS "L11c: a model whose only section is the SECOND declared reserved heading aborts (rc=2) — both members of the declared list clear the entry state, so a structural section cannot stand in as a person and mask the zero-entry sentinel"
+else
+  FAIL "L11c: '## Desire overlap' was counted as a person (rc=$LRC) — the guard's reserved-key branch is narrower than the declared list, and a phantom entry can mask the fail-closed zero-entry sentinel"
+fi
+
+# L11d — AND THE COST OF THAT, MEASURED RATHER THAN LEFT TO BE DISCOVERED.
+#
+# READ THIS AS A MEASUREMENT, NOT AS AN ENDORSEMENT — the same reading L11a asks for, for
+# the same reason: reserving a key SUPPRESSES the field and entry limbs beneath it, so
+# widening the list widens L11a's backstop-free gap to a second heading. Both arms are
+# graded together, so a clean verdict cannot be a fixture that simply does not match.
+#
+# The trade is stated where it is made. What is bought is the fail-closed sentinel above,
+# which protects the whole class. What is paid is a declared field value under one further
+# structural heading. The heading is machine-derived by the enrichment agent from the
+# individual files, and a `[THIRD-PARTY]` subject contributes no desires by construction
+# (CLAUDE.md § Key Rules — "needs only"), so nothing that belongs to the guarded class is
+# authored there in the first place.
+LSUPF2="$WORK/l_sup_field_overlap"; mkdir -p "$LSUPF2/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- Interests: markets, museums\n\n## Desire overlap\n- Passport: Ruritanian, valid to 2033\n' > "$LSUPF2/outputs/traveler-model.md"
+lguard "$LSUPR" "$LSUPF2"
+l11dsup="$LRC"
+if [ "$l11dsup" -eq 0 ] && [ "$l11ctl" -eq 1 ]; then
+  PASS "L11d: the suppression under the second reserved heading has the same shape as under the first — a declared FIELD value reaches the render uncaught (rc=0) while the identical line under an ordinary entry aborts (rc=1). The gap is L11a's, now spanning both declared keys, and it is pinned rather than assumed"
+else
+  FAIL "L11d: the second reserved heading's field suppression is not L11a's shape (suppressed=$l11dsup control=$l11ctl) — re-read the heading branch before trusting either verdict"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
 # review of the shipped guard (#316). One regression case per counter-design:
