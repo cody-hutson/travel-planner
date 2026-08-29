@@ -397,6 +397,13 @@ validator treats a missing or unresolvable link as a hard failure.
   service reachable only via an official page) — its official-site URL as the fallback. The href is
   **never hand-authored per card**: the site reads it from `links-reference.md`, so one venue has
   one URL everywhere it appears.
+- **Resolved by venue key, never by display name.** The event carries the venue's `ven-<token>` in
+  `outputs/event-status.md`, and `links-reference.md` declares the same key as its own key column;
+  the site joins the two on that token. It does **not** match the venue's rendered name against the
+  link list — one venue can carry more than one display string across artifacts, so a name match
+  both misses links that exist and invents matches that do not. This is what makes "one venue, one
+  URL" hold by construction rather than by care, and what makes the validator's unresolvable set
+  decidable.
 
 **Placement and visibility.**
 - On tiers that also carry website / tickets / booking links (featured stops, food cards), those
@@ -628,7 +635,7 @@ fact).
 | Site element | Authoritative artifact | The site reads it for |
 |---|---|---|
 | Itinerary structure — days, day headers, anchors, supporting stops, bailouts, alternatives, food, transit, nightlife, and **every track of a split day** | `final-itinerary.md` | The plan content and its per-day shape |
-| Every venue link — each `.map-link` href, plus website / tickets / booking links | `links-reference.md` | One URL per venue, everywhere it appears |
+| Every venue link — each `.map-link` href, plus website / tickets / booking links | `links-reference.md` | One URL per venue, everywhere it appears — resolved by venue key (§3) |
 | Day assignment + deduplication — which venue sits on which day, the appears-at-most-twice rule, anchor vs. alternative/bailout placement | `venue-matrix.md` | Placing a venue on the right day, not double-showing it |
 | Booking status, "needs booking" flags, checklist membership, per-card booking-tier pills | `event-status.md` | Whether an event is booked / to-book / settled (per §3's read-surface rule) |
 | Group, dates, home base, trip-level hard constraints — hero + overview facts | `trip-context.md` | Trip-level header and constraint framing |
@@ -722,6 +729,7 @@ correct; dropping an *unlisted* plan element is the defect.
 | Open Decisions | Pre-decision options for the planner, not finalized plan. Not a reader-facing commitment. |
 | Itinerary Version Log | Document metadata. |
 | Per-traveler model + satisfaction metrics | Internal coverage view carrying personal detail; kept out of the published surface by design (see 9.1). |
+| Artifact frontmatter — the YAML block a plan artifact opens with | Machine-readable identity, lifecycle, provenance and publishability, read by the schema gate and by the agents. It is metadata *about* the artifact rather than plan content in it, and has no reader-facing form. Named here because 9.2's completeness rule is total over every element of `final-itinerary.md`, so once a migrated itinerary carries a block, an unlisted block would read as a silent drop on every build. |
 
 ### 9.4 The completeness check — run at build and at update
 

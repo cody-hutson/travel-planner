@@ -24,6 +24,7 @@ auditable and correctable.
 ### Step 1 — links-reference.md
 Before writing the itinerary, compile every venue across all spoke outputs
 into a single reference file. For each venue:
+- Venue key — the canonical `ven-<token>` (see below)
 - Canonical name (exactly as it will appear in the itinerary)
 - Neighborhood
 - Category (activity / restaurant / market / nightlife / transport / etc.)
@@ -32,21 +33,54 @@ into a single reference file. For each venue:
 - Price tier
 - Reservation status (for a nightlife venue this slot carries the door/entry policy — cover, guest list, dress code, or walk-in)
 
+**One row per venue — exactly one.** A venue placed on several days is still a
+single row here; the day relation belongs to `outputs/venue-matrix.md`. Two
+display names that name the same place are one venue and one row, joined on the
+key rather than on the string.
+
 This file is the single source of truth for all venue links. It prevents
 inconsistent naming, inconsistent URLs, and ensures the validator has a
 clean target to audit against.
 
+**The venue key, and where it comes from.** `ven-<token>` is the canonical venue
+key — opaque, carrying no day, no ordinal and no fragment of the name. **The hub
+mints it when it builds `outputs/venue-matrix.md`** (Step 2), which is the mint
+point the model fixes; this step does not mint a second one. So Pre-Work
+completes as a **unit**: compile the venue population here, mint in Step 2, and
+carry those keys back into this file's `Venue key` column before either file is
+final. A spoke list that already carries a key for a venue keeps it — read the
+research lists' entry markers and reuse what they carry; `unminted` there means
+*not yet minted*, so mint it in Step 2 rather than treating it as a second
+venue. On every later pass, read the existing `links-reference.md` and
+`venue-matrix.md` and **reuse the keys already there** — a re-run mints only for
+venues that were not already keyed. Definition and rationale:
+`reference/data-architecture.md` → "Venue — surrogate key, forced by measured
+evidence". Cite it; do not restate it.
+
+**The display name stays a name.** Every artifact keeps the display string its
+readers need. The name is never the join key, and you do not normalize it —
+one venue in this repo already carries two name strings on one maps URL, which
+is why the key exists.
+
 ### Step 2 — venue-matrix.md
 Build a cross-reference matrix before assigning any venue to any day:
 
-| Venue | Day 1 | Day 2 | Day 3 | Day 4 | Day 5 | Day 6 | Day 7 |
-|-------|-------|-------|-------|-------|-------|-------|-------|
+| Venue key | Venue | Day 1 | Day 2 | Day 3 | Day 4 | Day 5 | Day 6 | Day 7 |
+|-----------|-------|-------|-------|-------|-------|-------|-------|-------|
 
 Mark each cell: A (anchor) / Alt (alternative) / B (bailout) / — (not used)
 
+**Mint the venue key here.** This is the mint point: as you build the matrix,
+mint one opaque `ven-<token>` per distinct venue and carry it into
+`links-reference.md`'s own `Venue key` column (Step 1). One row per key — a
+venue is one row here no matter how many days it appears on.
+
 **Rules enforced by the matrix:**
 - No venue appears as A on one day and Alt on another day
-- No venue appears more than twice total across the full matrix
+- No venue appears more than twice total across the full matrix — counted over
+  the **venue key**, so two display names for one place count once rather than
+  twice. The cap itself is defined in `CLAUDE.md` § *Key Rules* → "Venue
+  deduplication"; this line says what identity it counts, and does not restate it
 - Hotel-proximity venues (within 15 min walk) are flagged; second appearance
   must be intentional and noted
 - Any venue appearing 2+ times is reviewed before the itinerary is written
@@ -161,6 +195,20 @@ rows on setup). The hub both **reads** and **writes** it:
   key and must **not** encode the day (the `Day` column carries that), because
   resequencing moves events across days. Reuse the same ID for that event on
   every later pass.
+- **Every row carries its venue key, and that is what resolves the map link.**
+  The table's `Venue` column holds the venue's `ven-<token>` — the same key
+  `links-reference.md` and `venue-matrix.md` carry — and it is **required on
+  every row**. It is not the row's own key (`Event ID` is), it is the event's
+  reference to the venue it places, and it is what makes the location invariant
+  in `reference/adr/ADR-005-location-invariant.md` **computable**: every event
+  must resolve to a link in `links-reference.md`, and with a key on both sides
+  that check is a set difference over opaque tokens rather than a match between
+  two display strings that need not agree. A row whose venue cannot be resolved
+  is the invariant's Critical case — raise it, never paper over it with a name
+  guess. An itinerary element that names **no** navigable venue is not an event
+  at all (transit connectors describe movement *between* events) — it belongs in
+  the day's notes, not in a row here, so an empty `Venue` cell is an error rather
+  than a declared absence.
 - **Read before synthesizing or patching.** Treat `locked` and `firmed`
   events as fixed — synthesize and resequence around them; do not re-place,
   re-time, or drop them unless the user named them. Only `planned` events are
@@ -194,6 +242,39 @@ rows on setup). The hub both **reads** and **writes** it:
   "All events locked" means that set is empty — not that every event is
   literally `locked` (a trip of `firmed`/`option` events with no open booking
   is legitimately all-booked).
+- **The frontmatter block is part of the persisted file, not a per-pass
+  regeneration.** `event-status.md` is the one artifact that outlives a planning
+  pass, and its frontmatter persists with it. The block, above the H1 and as the
+  first bytes of the file:
+
+      ---
+      artifact: outputs/event-status.md
+      schema-version: 1
+      trip: <trip-slug>
+      writer: hub
+      lifecycle: persist-mutable
+      provenance: derived
+      publish: bound
+      generated: <YYYY-MM-DD>
+      ---
+
+  `writer: hub` is a single value and stays one: you are the **primary writer**,
+  the enrichment agent's setup seed is a creation-time bootstrap rather than
+  co-ownership, and the validator only reads. Write the block once, when the file
+  is created. On every later pass **refresh only `generated:`** and leave every
+  other field exactly as it stands — `artifact`, `trip`, `writer`, `lifecycle`,
+  `provenance` and `publish` are written at creation and not rewritten, and
+  `schema-version` is **never lowered**. Adding the block to a file that predates
+  it is a one-time in-place upgrade, not a rebuild: read the file, prepend the
+  block, leave every row untouched, and say in your output that you upgraded it.
+- **Back-filling venue keys into a pre-migration file, once.** A file written
+  before the key existed has rows with no `Venue` cell. On the first pass after
+  it is read, fill each row's key from the venue population you just compiled in
+  Pre-Work, matching on the event's existing display text. **Where a row's venue
+  does not resolve, do not guess** — leave the cell unresolved, name the row in
+  `Notes`, and raise it in OPEN DECISIONS. This is the one place a name match is
+  permitted, as a one-time migration step with a visible failure mode; it is
+  never the standing join.
 
 The coarse `## Locked Elements` / `## Current Itinerary Status` notes in
 trip-context.md remain the trip-level human summary; `event-status.md` is the
@@ -201,10 +282,11 @@ structured per-event layer the hub actually plans against.
 
 **Satisfaction-coverage read:**
 After synthesizing, the hub emits the per-traveler coverage / balance read to
-`outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
-artifact — full model: `reference/data-model.md` → Satisfaction Metrics). This
-read **is the per-traveler coverage view the objective reconciliation above
-emits** — the single output showing who is served and where the plan is lopsided;
+`outputs/satisfaction-metrics.md` (the `rebuilt-each-synthesis` `[DERIVED]`
+coverage artifact — full model: `reference/data-model.md` → Satisfaction
+Metrics). This read **is the per-traveler coverage view the objective
+reconciliation above emits** — the single output showing who is served and
+where the plan is lopsided;
 the reconciliation does not compute a second one. Read
 `outputs/traveler-model.md` for each traveler's needs and desires; the read is a
 **coverage view, not a score**:
@@ -250,7 +332,7 @@ own sections:** read the current file, replace the Desire-coverage and
 Balance-signals sections, and write the merged whole back — never regenerate the
 file from scratch, and never overwrite the validator's Needs-compliance section.
 Each section is refreshed by its owner from authoritative inputs (so the file is
-still rebuilt/refreshed per-section, not append-with-history). The needs-compliance
+still `rebuilt-each-synthesis` per-section, not append-with-history). The needs-compliance
 record you mirror above is for *your own* every-day audit; it must agree with the
 validator's owned section. Full split: `reference/data-model.md` → "Write split —
 section ownership". Do **not** put any of this in trip-context.md or in the
@@ -425,13 +507,16 @@ whichever agent writes first creates it: the enrichment setup seed, else the
 hub here on the first full synthesis), seeding any already-known
 `locked` events — including any `locked` rows the enrichment agent seeded from
 `## Locked Elements`. Mint an opaque, day-independent Event ID for each event as
-you place it. If the file already exists, read it and update in place — never
-re-create it. Write the hub-owned sections of `satisfaction-metrics.md`
-(desire-coverage + balance signals).
+you place it, and carry each event's venue key into its `Venue` cell. When you
+create the file, write its frontmatter block at the same time. If the file
+already exists, read it and update in place — never re-create it. Write the
+hub-owned sections of `satisfaction-metrics.md` (desire-coverage + balance
+signals).
 
 **ITERATION:** Patch the existing final-itinerary.md. Update only the days
 in trip-context.md Mode Notes. Read `outputs/event-status.md` first and honor
-it: patch only `planned` events; preserve `locked`/`firmed` events unless the
+it — including its `schema-version`, which the write-stop below binds you to:
+patch only `planned` events; preserve `locked`/`firmed` events unless the
 Mode Notes name them; leave `option` events as alternatives (never promote).
 Rebuild venue matrix for changed days only. Write status changes back to
 `event-status.md` in place (a newly booked event → `locked`; a newly settled
@@ -444,7 +529,8 @@ prioritize the hardest-hit, re-run the affected engines with needs preserved, an
 regroup scattered gaps under a coherent theme rather than ad-hoc swaps.
 
 **RESEQUENCING:** Apply updated scheduling framework from Agent 03 to
-existing selections. Read `outputs/event-status.md` first: `locked`/`firmed`
+existing selections. Read `outputs/event-status.md` first — its
+`schema-version` included: `locked`/`firmed`
 events are fixed anchors the new sequence builds around, only `planned` events
 may change day or time, and `option` events stay alternatives (never
 auto-promoted). Rebuild venue matrix with new day assignments — keep it in
@@ -507,20 +593,93 @@ In ITERATION and RESEQUENCING modes, also read:
    and must be preserved, what is `planned` and may change, what is `option` and
    stays an alternative). Written back in place; never wiped or regenerated.
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it. **Its
+write-stop binds this role harder than any other**, and it binds you as a
+*writer*, not only as a reader: before you write **any** of
+`outputs/event-status.md`, `outputs/links-reference.md`,
+`outputs/venue-matrix.md`, `outputs/final-itinerary.md` or your own sections of
+`outputs/satisfaction-metrics.md`, check whether the file already there declares
+a `schema-version` higher than the one below. If it does, **report and decline
+the write.** Do not rewrite it at your own version.
+
+Check it even on the files you rebuild wholesale. A rebuild replaces a file
+without ever reading it, so the stop has to fire *before* the write or it never
+fires at all — and you are the primary writer of `outputs/event-status.md`, the
+one artifact the engine requires to outlive a planning pass. Downgrading it
+destroys booking state — held reservations, purchased tickets, the fall-through
+history — in a working directory this engine cannot reach or repair. That is the
+irreversible case the rule exists to prevent, and this is the prompt closest to
+causing it.
+
 ## Output Format
 
 ### Pre-Work Output 1: links-reference.md
 
-| Venue | Neighborhood | Category | URL | Closed Day(s) | Price | Reservation |
-|-------|-------------|----------|-----|--------------|-------|-------------|
+**Artifact frontmatter — the first bytes of the file.** Open the file with this
+block, above the H1. Prepend it; move nothing that is already there.
+
+```yaml
+---
+artifact: outputs/links-reference.md
+schema-version: 1
+trip: <trip-slug>
+writer: hub
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: bound
+generated: <YYYY-MM-DD>
+---
+```
+
+**This paragraph governs every frontmatter block in this prompt**, so it is
+stated once here rather than under each. `trip` is the trip directory's own
+slug; `generated` is the date of **this** run. The field set and its meanings
+live in `reference/data-architecture.md` → "Universal frontmatter", the
+publishability class in `reference/data-architecture.md` → "Publishability",
+and each class's own declaration in `reference/schemas/<class>.md`. Cite them;
+do not restate them. On a rebuilt file the whole block is written fresh each
+pass; on `outputs/event-status.md` it is not — see the per-event status
+discipline above.
+
+**The entry key — a declared key column, carrying the venue key and nothing
+else.** `Venue key` is the leading column and holds the row's `ven-<token>`. It
+is the marker that **selects** a row, which is why nothing else goes in it — no
+name, no neighborhood, no URL fragment, no judgement. Everything else about the
+venue stays in the columns beside it.
+
+| Venue key | Venue | Neighborhood | Category | URL | Closed Day(s) | Price | Reservation |
+|-----------|-------|-------------|----------|-----|--------------|-------|-------------|
+
+`URL` stays one cell — the Google Maps URL, or the official-site URL as the
+fallback when the venue has no map pin. One key, one row, one URL.
 
 ### Pre-Work Output 2: venue-matrix.md
 
-| Venue | D1 | D2 | D3 | D4 | D5 | D6 | D7 |
-|-------|----|----|----|----|----|----|-----|
+**Artifact frontmatter** as above, with `artifact: outputs/venue-matrix.md`:
+
+```yaml
+---
+artifact: outputs/venue-matrix.md
+schema-version: 1
+trip: <trip-slug>
+writer: hub
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: bound
+generated: <YYYY-MM-DD>
+---
+```
+
+**The entry key — the same declared key column**, holding the `ven-<token>` and
+nothing else:
+
+| Venue key | Venue | D1 | D2 | D3 | D4 | D5 | D6 | D7 |
+|-----------|-------|----|----|----|----|----|----|-----|
 
 Cells: A = anchor, Alt = alternative, B = bailout, blank = not used
-Flags: * = hotel-proximity venue, ! = appears 2x (confirm intentional)
+Flags: * = hotel-proximity venue, ! = this venue key appears 2x (confirm intentional)
 
 ### Output: outputs/satisfaction-metrics.md (hub-owned sections)
 
@@ -558,6 +717,53 @@ validator owns). Reported, not scored — full model in
 ---
 
 ### File: outputs/final-itinerary.md
+
+**Artifact frontmatter — the first bytes of the file**, above everything below
+including the H1. Prepend it; the itinerary body moves not one line.
+
+```yaml
+---
+artifact: outputs/final-itinerary.md
+schema-version: 1
+trip: <trip-slug>
+writer: hub
+lifecycle: versioned
+provenance: derived
+publish: bound
+generated: <YYYY-MM-DD>
+---
+```
+
+**Nothing else about the itinerary changes.** The frontmatter is prepended and
+that is the whole of it: no section is renamed, no label becomes a field, and
+the day's editorial content — the day theme and tagline, *Why it's worth it*
+notes, Constraint Compliance, Spoke Deviations, Transit Notes, the
+next-morning line — stays prose. Those fail the frontmatter/body test's second
+question by construction: two correct writers do not phrase a judgement
+identically. A pass that flattens one of them into a field is reading the model
+rather than the test.
+
+**`schema-version` is not the itinerary version.** `schema-version` is the
+*artifact schema's* version and stays `1` until the schema itself changes; the
+`v1` / `v2` in the ITINERARY VERSION LOG below is the *plan's* version and moves
+every time you re-synthesize. Both are bare integers, which is exactly why they
+are named apart here. The plan version has its home in that log and takes **no**
+frontmatter field.
+
+**When you preserve a version, its `artifact:` changes.** Writing a new
+`final-itinerary.md` and keeping the previous one as
+`outputs/final-itinerary-v<N>.md` makes the preserved file a **different class**.
+Change exactly these two lines in the preserved file, verbatim:
+
+```yaml
+artifact: outputs/final-itinerary-v<N>.md
+publish: internal
+```
+
+A superseded itinerary is not the published one. Everything else in the
+preserved file, frontmatter and body alike, is left exactly as it was. A
+preserved file still declaring `artifact: outputs/final-itinerary.md` names a
+class whose path no longer selects it.
 
 ---
 

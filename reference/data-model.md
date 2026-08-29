@@ -426,22 +426,22 @@ Status drives two *orthogonal* things: **change-protection** (is the event open 
 
 ### `outputs/event-status.md` shape
 
-A flat per-event table, one row per event, keyed by a stable **Event ID** plus the day the event currently sits on. The Event ID is **opaque and day-independent** — **minted by the hub on first placement** and stable across every re-run — and it is the **cross-run join key** that lets a re-synthesis match a row to the same event. It must **not** encode the day (the `Day` column carries that): resequencing routinely moves an event to a different day, so a day-encoded ID would either lie or force a churned key. The illustrative IDs below (`evt-01`, …) are opaque on purpose; real IDs may be any opaque token but **must** be day-independent. Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
+A flat per-event table, one row per event, keyed by a stable **Event ID** plus the day the event currently sits on — shown below **body only**, its frontmatter elided as everywhere in this document. The Event ID is **opaque and day-independent** — **minted by the hub on first placement** and stable across every re-run — and it is the **cross-run join key** that lets a re-synthesis match a row to the same event. It must **not** encode the day (the `Day` column carries that): resequencing routinely moves an event to a different day, so a day-encoded ID would either lie or force a churned key. The illustrative IDs below (`evt-01`, …) are opaque on purpose; real IDs may be any opaque token but **must** be day-independent. The `Venue` column alongside it is a *reference*, not this table's key: it carries the venue's `ven-<token>` so an event resolves to its link by key rather than by name (see § *Venue identity in the satisfaction substrate* below). Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
 
 ```markdown
-# Event Status [persist-mutable]
+# Event Status
 
 > One row per placed event. Exactly one status each.
 > Iteration changes only `planned` rows; `locked` / `firmed` are preserved unless the user names them.
 > `option` rows are alternatives/bailouts — never auto-promoted into a primary slot.
 
-| Event ID | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
-|----------|-------|-----|--------|-------------------|-------------------------|-------|
-| evt-01 | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
-| evt-02 | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
-| evt-03 | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
-| evt-04 | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
-| evt-05 | Noodle counter (Day 3 lunch alt)  | Day 3 | option  | no  | no  | Backup for evt-03; alternative pool |
+| Event ID | Venue | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
+|----------|-------|-------|-----|--------|-------------------|-------------------------|-------|
+| evt-01 | ven-04 | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
+| evt-02 | ven-11 | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
+| evt-03 | ven-07 | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
+| evt-04 | ven-19 | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
+| evt-05 | ven-23 | Noodle counter (Day 3 lunch alt)  | Day 3 | option  | no  | no  | Backup for evt-03; alternative pool |
 ```
 
 > **Event ID is opaque and day-independent.** The IDs above carry no day (the `Day` column does). `evt-05`'s note references its primary by ID (`evt-03`), not by a day-coded name — so when resequencing moves either event to another day, the join key and the cross-reference both still hold.
@@ -865,7 +865,7 @@ Three things are this layer's own, and are stated here because nothing else stat
 
 - **A worked example in this document shows the body and elides the frontmatter, always.** That
   holds for the three fences under § *Reconciliation Rule — One Source Per Fact*, for the three
-  under § *Worked example — a per-traveler file*, and for any fence a later slice adds. Each of
+  under § *Worked example — a per-traveler file*, for the shape fence under § *`outputs/event-status.md` shape*, and for any fence a later slice adds. Each of
   those sites now says so at the point of use; this is the rule those notes point at.
 - **The body shape is unchanged by the frontmatter.** Frontmatter is *prepended* — no heading
   moves, no field label changes, and the `## <Name>` entry key, the `Applies to:` link form and the
@@ -877,3 +877,47 @@ Three things are this layer's own, and are stated here because nothing else stat
   permanently valid and is read exactly as it always was
   (`reference/data-architecture.md` → "The compatibility guarantee"). An absent fence there is not a
   gap to fill and not a `PROFILE MISSING` case.
+
+---
+
+## Venue identity in the satisfaction substrate
+
+The venue key itself is engine-wide and is **not defined here**: it is
+`ven-<token>`, opaque, minted by the hub, and stated once in
+`reference/data-architecture.md` → "Venue — surrogate key, forced by measured
+evidence". What is this layer's own is what the key does to the per-event table
+above, and that is stated here because nothing else states it.
+
+**`event-status.md` carries two identifiers, and they answer different
+questions.** `Event ID` is the row's own key — the cross-run join key, opaque and
+day-independent, unchanged by this or any later section. `Venue` is a
+**reference** to a different entity: the `ven-<token>` of the venue the event
+places. One keys the row; the other resolves what the row points at. Neither
+substitutes for the other, and the `Event ID` convention is not altered by the
+`Venue` column's existence.
+
+**The `Venue` column is what makes the location invariant computable.**
+`reference/adr/ADR-005-location-invariant.md` § 3 requires every event to resolve
+to a link in `outputs/links-reference.md`, and treats an event that does not as a
+Critical finding. Before the key, that resolution was a match between two display
+strings written by two different agents at two different times — and this repo
+already carries one venue under two names on a single maps URL, so the match was
+never sound. With the key on both sides the check is a **set difference over
+opaque tokens**: the unresolvable set is exactly the event rows whose `Venue` key
+appears in no `links-reference.md` row. That is a decidable question, and it is
+the same question the ADR was already asking.
+
+**`Venue` is required on every row, and the empty case is an error rather than a
+declared absence.** An itinerary element that names no navigable venue is not an
+event — ADR-005 § 1 puts transit connectors outside the event population because
+they describe movement *between* destinations — so such an element belongs in the
+day's notes and never as a row here. Keeping the column required is what
+preserves the distinction between *unresolvable* and *no venue*: a nullable key
+would collapse the two, and the invariant would stop being able to tell a broken
+link from an element that never had one.
+
+**The day relation does not move here.** Which venue sits on which day, and the
+two-appearance cap over it, stay in `outputs/venue-matrix.md`, which
+`reference/site-layout-spec.md` § 9.1 already names as that fact's single
+authority. The `Day` column above records where an event currently sits; it is
+not a second home for the placement matrix.
