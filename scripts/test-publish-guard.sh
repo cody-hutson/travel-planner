@@ -555,6 +555,28 @@ else
   FAIL "L10: an unreadable declaration was not fail-closed (absent=$l10a, present=$l9b)"
 fi
 
+# L10b — the SIXTH fail-closed path again, for a PARTIAL read. L10 proves an absent
+# declaration is UNDETERMINED; this proves a declaration that parses in PART is too. The
+# reader keeps four-field rows and drops the rest, so before this case a single malformed
+# row silently narrowed the guarded class while the aggregate row count stayed non-zero.
+#
+# L8 could not see it: L8 counts DISTINCT selectors, and the shipped declaration carries
+# `Passport` on two rows, so dropping one leaves the selector present and L8 green. The
+# validator layer reads the SAME declaration, so both layers narrow together — this is
+# common-mode, not defence in depth. Its control arm is L9b: the identical trip and render
+# return 0 while every row parses, so a 2 here is attributable to the malformed row alone.
+LDECLM="$WORK/l_decl_malformed.md"
+_guard_declared_rows | awk 'NR == 1 { print $0 " extra"; next } { print }' | ldecl_write "$LDECLM"
+_GUARD_DECLARATION="$LDECLM"
+lguard "$LDECLR" "$LDECLT"
+l10b="$LRC"
+_GUARD_DECLARATION="$L8DECL_REAL"
+if [ "$l10b" -eq 2 ] && [ "$l9b" -eq 0 ]; then
+  PASS "L10b: a declaration with ONE malformed row aborts (rc=2) while the same trip publishes (rc=0) once every row parses — a PARTIAL read is UNDETERMINED, never a narrower class"
+else
+  FAIL "L10b: a partially-parsed declaration was not fail-closed (malformed=$l10b, well-formed=$l9b) — a dropped row silently narrows the guarded class"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # L11 — THE RESERVED-HEADING SUPPRESSION, both halves.
 #

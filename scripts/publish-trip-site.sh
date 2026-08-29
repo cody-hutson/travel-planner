@@ -797,6 +797,17 @@ _guard_declared_rows() {
   return 0
 }
 
+# Every row the declaration OFFERS: non-blank and non-comment, whatever its shape.
+# _guard_declared_rows keeps only the well-formed four-field rows, so a difference
+# between the two counts is a row the reader silently DROPPED — and a dropped row
+# narrows the guarded class without narrowing anything the suite can observe.
+_guard_declared_candidates() {
+  [ -f "$_GUARD_DECLARATION" ] && [ -r "$_GUARD_DECLARATION" ] || return 0
+  fence_block "$_GUARD_DECLARATION" "$_GUARD_DECL_FENCE" "$_GUARD_DECL_HEADING" \
+    | awk 'NF > 0 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+
 # Every selector the declaration names, one per line, de-duplicated in first-seen order.
 # This is the probe surface case L8 runs against both function bodies; it is defined
 # here, beside the declaration it reads, so the suite holds no copy of the fence name,
@@ -822,7 +833,7 @@ _guard_limb_rules() { # <limb> <artifact-scope>
 nonpublishable_values() { # <trip_dir> [site_html]
   local trip_dir="${1:-}" site_html="${2:-}" model out rc
   local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
-  local decl_rows decl_n esel erule mfields mrules pfields prules
+  local decl_rows decl_n decl_cand esel erule mfields mrules pfields prules
   if [ -z "$trip_dir" ]; then
     warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
   fi
@@ -838,6 +849,14 @@ nonpublishable_values() { # <trip_dir> [site_html]
   decl_n="$(printf '%s' "$decl_rows" | awk 'NF { c++ } END { print c + 0 }')"
   if [ "$decl_n" -eq 0 ]; then
     warn "guard: the publishability declaration at $_GUARD_DECLARATION could not be read or yielded no rows — the class is UNDETERMINED, not empty"; return 2
+  fi
+  # The same path, for a PARTIAL read. The reader keeps four-field rows and drops the
+  # rest, so a declaration that parses in part yields a class that is narrower than the
+  # one declared — silently, and with the aggregate test above still satisfied. That is
+  # the same fail-open this block refuses, one row down instead of one layer up.
+  decl_cand="$(_guard_declared_candidates)"
+  if [ "${decl_cand:-0}" -ne "$decl_n" ]; then
+    warn "guard: the publishability declaration at $_GUARD_DECLARATION offers ${decl_cand:-0} rows but only $decl_n parse as four whitespace-separated fields — a partial read is UNDETERMINED, not a narrower class"; return 2
   fi
   esel="$(_guard_limb_selectors entry "$_GUARD_DECL_ARTIFACT_MODEL")"
   erule="$(_guard_limb_rules     entry "$_GUARD_DECL_ARTIFACT_MODEL")"
