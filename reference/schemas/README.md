@@ -177,19 +177,32 @@ migration slice versions a class's in-repo instance it flips that class's declar
 rule**, because the failing assertion is the class's own coverage declaration and not the
 skip predicate.
 
-At the commit this corpus lands, **all 19 classes declare `no-witness-because:`**, because
-nothing has been migrated yet. The reasons are not interchangeable and each schema states its
-own:
+The migration is now complete and the split reads **17 witness / 2 no-witness / 19 total**.
+It got there in two moves, and the second one was a fix to the *checker* rather than to the
+corpus. Both are worth stating, because the corpus spent a release unable to declare
+coverage it had already earned.
 
-| Bucket | Classes | Why |
-|---|---|---|
-| A migratable in-repo instance exists | **2** — C1, C4 | Not yet versioned. The slice that versions it flips the declaration in the same commit. |
-| The only instance is frozen | **8** — C2, C5, C6, C8, C9, C10, C15, C18 | Its sole tracked instance sits inside the worked example this release preserves unedited as its regression witness. **Do not edit the fixture to satisfy the gate** — that trades a real regression guard for a green check. |
-| No tracked instance at all | **9** — C3, C7, C11, C12, C13, C14, C16, C17, C19 | Nothing to validate until a migrated fixture exists. |
+1. **`examples/data-architecture-demo/` supplies the missing instances.** Seventeen classes
+   now have a versioned in-repo artifact to point at — either the fixture's own, or, for C1
+   and C4, the instance that was already migrated.
+2. **`mk_root()` in `scripts/test-artifact-schema.sh` now copies every declared witness into
+   the synthetic fixture root it builds.** Before that, a `witness:` here was resolved by S5
+   against a fixture tree carrying this corpus and *none of the files it points at*, so any
+   declaration failed there by construction. That is not hypothetical — the first flip turned
+   `CTLa` red and was reverted rather than kept.
+
+The two remaining `no-witness-because:` clauses are **not a residue of the migration**, and
+neither will be removed by a later slice supplying a fixture:
+
+| Class | Why it has no witness |
+|---|---|
+| **C6** `outputs/food-list.md` | Its only tracked instance is inside the frozen `examples/tokyo-2026/` tree. **Do not edit that fixture to satisfy the gate** — it trades a real regression guard for a green check. Separately, `scripts/test-artifact-schema.sh` mutates *this schema's coverage line* in four must-fire arms, so a flip here silently disarms them; that coupling is recorded in the schema itself. |
+| **C19** `outputs/<destination>-travel-site.html` | `reference/site-layout-spec.md` declares the site source a file that stays local and git-ignored. No instance of this class can be tracked, so a witness would contradict the artifact's own governing spec. A **decided disposition**, not a gap. |
 
 **Each reason is stated as a durable property rather than a ticket number.** A ticket number
 is unresolvable to a reader of this repository and goes stale the moment the work ships; the
-property behind it stays true and is what the next author actually needs.
+property behind it stays true and is what the next author actually needs. That is why the two
+rows above name a frozen fixture and a governing spec rather than the slices that left them.
 
 **`witness` is deliberately the same word this repo uses for the `examples/tokyo-2026/`
 regression witness.** The two senses are the same idea at different scopes — a fixed artifact
@@ -203,5 +216,7 @@ reusing one.
 - **Not that a user's trips validate.** CI cannot reach them.
 - **Not that the guard scripts themselves are lint-clean.** No CI job shellchecks a
   standalone `scripts/*.sh`; `actionlint` lints workflow-embedded shell only.
-- **Not, while the table above reads `0 witness`, that any real artifact was validated.**
-  The suite renders `VACUOUS` rather than `PASS` in that state and says so out loud.
+- **Not, while the split reads `0 witness`, that any real artifact was validated.** The suite
+  renders `VACUOUS` rather than `PASS` in that state and says so out loud. That state is
+  behind this corpus now — the split reads `17 witness` — but the verdict stays, because it
+  is what makes a future regression to zero legible instead of silent.

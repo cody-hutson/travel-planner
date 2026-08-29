@@ -10,7 +10,7 @@ artifact: outputs/<destination>-travel-site.html
 schema-version: 1
 path-pattern: trips/*/outputs/*-travel-site.html
 path-pattern: examples/*/outputs/*-travel-site.html
-no-witness-because: no tracked instance of this class exists anywhere in the repository, so there is nothing to validate until a migrated fixture supplies one
+no-witness-because: reference/site-layout-spec.md declares this artifact a source file that stays local and git-ignored, so no instance of this class can be tracked and a declared witness would contradict the spec that governs it; this is a decided disposition rather than a gap awaiting a fixture
 
 # The universal block — reference/data-architecture.md § 4.4. No class removes a
 # universal field; a class may only narrow one, and each narrowing is stated below.
@@ -27,4 +27,4 @@ field generated: required date
 - **`generated` is `required` here.** § 4.4 omits it only on human-authored classes, and this class is `provenance: derived`.
 - **`writer` is typed, not enumerated.** The writer assignment lives in `reference/data-architecture.md` § 1.1 and this schema does not restate it — a second copy of that assignment would be a second home for it.
 - **The two `path-pattern:` lines are the two trip roots**, not a widened glob. § 1.1 states this class's path trip-relative, and a trip root is either `trips/<slug>/` (the git-ignored working directory) or `examples/<demo>/` (the worked-example stand-in). Anchoring there rather than writing `**/` is what keeps the selector off a file that merely shares a basename with the class — this schema file itself, for one.
-- **Coverage.** This class currently declares `no-witness-because:`. The gate reports the witness / no-witness split on every run, so the coverage question is answered by reading one emitted line rather than by auditing nineteen files.
+- **Coverage.** This class declares `no-witness-because:`, and the clause is **terminal rather than pending**. Every other no-witness clause in this corpus named a condition a later slice could remove; this one names a property of the artifact itself. `reference/site-layout-spec.md` places the site source at `outputs/<destination>-travel-site.html` as a *"Source file (plaintext, stays local, git-ignored)"*, so there is no tracked instance to point at and there will not be one — a witness here would be a coverage claim contradicting the artifact's own governing spec. Reading this as a shortfall would invite exactly the wrong repair: committing a site file to satisfy the gate, which is the same trade as editing the frozen fixture. The gate reports the split on every run, so this disposition is visible in the emitted line rather than only here.

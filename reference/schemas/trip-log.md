@@ -10,7 +10,7 @@ artifact: trip-log.md
 schema-version: 1
 path-pattern: trips/*/trip-log.md
 path-pattern: examples/*/trip-log.md
-no-witness-because: the only tracked instance is examples/tokyo-2026/trip-log.md, inside the worked example this release preserves unedited as its regression witness, so it cannot be versioned here
+witness: examples/data-architecture-demo/trip-log.md
 
 # The universal block — reference/data-architecture.md § 4.4. No class removes a
 # universal field; a class may only narrow one, and each narrowing is stated below.
@@ -27,4 +27,4 @@ field generated: optional date
 - **`generated` is `optional` here.** § 4.4 states it is omitted on human-authored classes. That is a narrowing of an optional universal field, not the removal of one.
 - **`writer` is typed, not enumerated.** The writer assignment lives in `reference/data-architecture.md` § 1.1 and this schema does not restate it — a second copy of that assignment would be a second home for it.
 - **The two `path-pattern:` lines are the two trip roots**, not a widened glob. § 1.1 states this class's path trip-relative, and a trip root is either `trips/<slug>/` (the git-ignored working directory) or `examples/<demo>/` (the worked-example stand-in). Anchoring there rather than writing `**/` is what keeps the selector off a file that merely shares a basename with the class — this schema file itself, for one.
-- **Coverage.** This class currently declares `no-witness-because:`. The gate reports the witness / no-witness split on every run, so the coverage question is answered by reading one emitted line rather than by auditing nineteen files.
+- **Coverage.** This class declares `witness:`. Its witness is the migrated fixture instance, not the frozen `examples/tokyo-2026/` one — the frozen tree stays unedited, and the fixture is what supplies a versioned instance to point at. From this commit a stripped or unversioned witness is finding `S6`, a fail-closed coverage regression.

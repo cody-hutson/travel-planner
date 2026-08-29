@@ -259,11 +259,17 @@ fi
 echo
 echo "CV — the coverage declaration (the line the coverage question is read from)"
 # ─────────────────────────────────────────────────────────────────────────────────
-CV_W=0; CV_N=0
+# CV_WITNESSES accumulates the witness PATHS as well as counting them, because group CTL
+# below copies exactly this set into every fixture root it builds. It is captured HERE rather
+# than re-derived there: a second walk of the corpus would be a second home for the coverage
+# declarations, free to drift out of agreement with this one while both stayed green — the
+# same reason this suite reads the class enumeration from the document instead of holding one.
+CV_W=0; CV_N=0; CV_WITNESSES=""
 while IFS= read -r sf; do
   [ -n "$sf" ] || continue
   sl="$(va_schema_lines "$ROOT" "$sf" 2>/dev/null | grep -v '^FINDING ')"
-  if [ -n "$(va_schema_get "$sl" witness)" ]; then CV_W=$((CV_W+1))
+  cvw="$(va_schema_get "$sl" witness)"
+  if [ -n "$cvw" ]; then CV_W=$((CV_W+1)); CV_WITNESSES="$CV_WITNESSES$cvw$VA_NL"
   elif [ -n "$(va_schema_get "$sl" no-witness-because)" ]; then CV_N=$((CV_N+1)); fi
 done <<EOF
 $SC_FILES
@@ -291,14 +297,49 @@ echo "CTL — a synthetic fixture tree, population by construction, built fresh 
 # down — so each mutation is asserted to have changed the tree before the arm it feeds is
 # graded.
 
-# mk_root <dir> — a fixture repository: the real architecture document and the real schema
-# corpus, plus an empty artifact tree. Copying rather than synthesising is what keeps the
-# CTL arms honest: they exercise the corpus this commit actually ships.
+# mk_root <dir> — a fixture repository: the real architecture document, the real schema
+# corpus, and every witness that corpus declares, plus an empty artifact tree. Copying
+# rather than synthesising is what keeps the CTL arms honest: they exercise the corpus this
+# commit actually ships.
+#
+# ── WHY THE WITNESSES ARE COPIED, AND WHAT IT DOES NOT DO TO THE ARMS ────────────
+# A `witness:` declaration is resolved by S5 against WHATEVER TREE THE VALIDATOR RUNS IN.
+# A fixture root carrying the corpus but none of the files that corpus points at therefore
+# fails S5 for every declared witness BY CONSTRUCTION, and the failure is an artefact of how
+# the fixture is built rather than anything wrong with the repository. That is not a
+# prediction: the first class to flip to `witness:` turned CTLa red with exactly that finding
+# and was reverted at 740dd93 rather than kept, which left the coverage declaration unable to
+# follow the migration it exists to track.
+#
+# Copying the declared witnesses removes that construction artefact and NOTHING ELSE:
+#   * Every MUST-FIRE arm still fires from its own MUTATION, and has_finding() names the code
+#     it is looking for, so added population cannot mask the finding an arm is grading.
+#   * Every MUST-NOT-FIRE arm gets STRICTER, never looser: CTLa, C1a, CTL-A2neg, CTL-TPL and
+#     CTL-RESID all assert rc 0 over the whole fixture, so from here each declared witness
+#     must validate CLEAN in a tree built fresh from this commit. The suite proves more than
+#     it did, not less.
+#   * CTL-S5 keeps its meaning BY ORDERING, not by exemption: mk_root copies the witnesses the
+#     REAL corpus declares, and the S5 mutation runs afterwards naming a path no schema ever
+#     declared — so nothing copied it, and the arm still observes a genuinely missing witness.
+#   * A copy that does not land is not silent. The witness is then absent from the fixture,
+#     which is the same state this fix removed, and CTLa goes red naming S5 and the path.
+#
+# The population is still built fresh in a temp dir on every invocation, still comes entirely
+# from this commit's own tracked files, and is still never a literal in this file.
 mk_root() {
-  local d="$1"
+  local d="$1" w
   mkdir -p "$d/reference/schemas" "$d/examples/ctl/outputs" "$d/templates"
   cp "$ROOT/$VA_ARCH_DOC" "$d/reference/data-architecture.md"
   cp "$ROOT/$VA_SCHEMA_DIR"/*.md "$d/reference/schemas/"
+  # Read from CV_WITNESSES, which group CV above accumulated from the coverage declarations
+  # themselves. No witness path is spelled in this file.
+  while IFS= read -r w; do
+    [ -n "$w" ] || continue
+    case "$w" in */*) mkdir -p "$d/${w%/*}" ;; esac
+    cp "$ROOT/$w" "$d/$w"
+  done <<EOF
+$CV_WITNESSES
+EOF
 }
 run_fx() { va_main --root "$1" --scope dir . 2>&1; }
 
