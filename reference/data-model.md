@@ -646,3 +646,32 @@ To keep the substrate boundary clear:
 - **No control-flow / consumption sequencing.** Who runs when, and how the hub consumes these artifacts in a pipeline pass, is governed by the control-flow contract, not this data-architecture document.
 
 This file is the **data** contract. Behavior contracts live with their respective agents and capabilities.
+
+---
+
+## Relationship to the Engine-Wide Data Architecture
+
+The engine-wide data model is `reference/data-architecture.md`. **This document is the
+satisfaction-layer specialization of it** — the deep model for the satisfaction substrate
+(`outputs/traveler-model.md`, `outputs/event-status.md`, `outputs/satisfaction-metrics.md` and the
+per-traveler source files), together with the reconciliation, presence and metric rules that hold
+that layer together.
+
+**Where the two overlap, the engine-wide document is authoritative for the *shape* and this document
+is authoritative for the *satisfaction layer's own content*.** Concretely:
+
+| Question | Answered by |
+|---|---|
+| Which artifact classes exist across the whole engine, and which are out of the model | `reference/data-architecture.md` |
+| Which entities take surrogate keys and which take natural keys, by what rule | `reference/data-architecture.md` |
+| What is serialized as frontmatter versus what stays prose, and how each artifact is versioned | `reference/data-architecture.md` |
+| The canonical lifecycle-class tokens and their definitions | `reference/data-architecture.md` § *Lifecycle Classes* |
+| Which values may reach a published page, and how that class is computed | `reference/data-architecture.md` § *Publishability* |
+| The needs-vs-desires model, the lifecycle facets, and the link-don't-copy reconciliation | **this document** |
+| A traveler's present-day set and a need's applicable-day set | **this document** |
+| The four event statuses, the booking-readiness derivation, and the orphan-removal rule | **this document** |
+| The satisfaction metric dimensions, their types, and the section-ownership write split | **this document** |
+
+The scope declared at the top of this document is unchanged: it governs the satisfaction **substrate**
+and still defines no metric formula, no scoring, and no optimization logic. The engine-wide document
+inherits that boundary rather than relaxing it.
