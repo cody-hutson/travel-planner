@@ -1,0 +1,126 @@
+name: Artifact schema
+
+# Runs scripts/test-artifact-schema.sh on every push and every pull request, so the
+# agreement between reference/data-architecture.md's artifact model, the per-class schemas
+# in reference/schemas/, and the artifacts in the tree is machine-graded rather than
+# trusted.
+#
+# SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
+# particular in no run: step — every value below is a repo-static literal. The property is
+# stated without writing the token itself, so it stays mechanically checkable: a scan for
+# the interpolation syntax over this file must return exactly zero. There is no path for
+# attacker-controlled event data (issue titles, PR bodies, commit messages, head_ref) to
+# reach a shell.
+#
+# ── WHY A SEPARATE WORKFLOW RATHER THAN A STEP IN AN EXISTING JOB ────────────────
+# The same three concrete reasons the taxonomy and contract workflows already record, each
+# checked against this suite rather than inherited:
+#
+#   1. SHARED FATE. test-publish-guard.sh sources publish-trip-site.sh. A schema suite
+#      added to that job would inherit a failure mode with nothing to do with the schema.
+#   2. FAILURE ATTRIBUTION. This suite goes red when someone edits the artifact model, a
+#      per-class schema, or an artifact's frontmatter. Routing that contributor to a check
+#      named "Publish guard suite" — whose header states it proves the publish-path guards
+#      are machine-graded — is a legibility trap.
+#   3. INHERITED ENV. publish-guard.yml declares GUARD_EXPECTED_SKIPS: 'D J1', the two
+#      declared exclusions of THAT suite. A step added to that job would inherit them.
+#      This suite declares NO expected skips, so it needs its own env block, below.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# What a green check here does and does not prove.
+#
+# IN SCOPE — these groups run on every invocation and their verdicts are real:
+#   SC   the per-class schemas under reference/schemas/: each well-formed, its class-id and
+#        artifact agreeing with the class enumeration in reference/data-architecture.md,
+#        tokens unique, path-patterns inside the declared glob subset, and the corpus in
+#        BIJECTION with that enumeration. The class list is READ FROM the document — neither
+#        the guard nor the validator holds a copy, because a guard with its own copy is a
+#        second source of truth that stays green while the document drifts away from it
+#   XC   every selector exclusion the validator applies has its warrant stated in the
+#        architecture document, in the section the validator names for it. An exclusion is
+#        a statement about what the gate does not adjudicate, so an undeclared one is the
+#        gate quietly narrowing its own scope
+#   AR   the tracked tree: the selector's DENOMINATOR is reported and the whole population
+#        is reconstructed as selected + excluded + unmatched, so a green cannot rest on a
+#        selection nobody counted. The skip predicate's result is reported BY PATH and BY
+#        RESOLVED CLASS rather than merely tallied
+#   CV   the per-class coverage split — "<n> witness / <m> no-witness / <total>". Coverage
+#        is REPORTED as a measurement here, never asserted as a floor: a floor would
+#        red-line the branch as it was raised, which is the risk this design exists to
+#        avoid
+#   CTL  a synthetic fixture tree, built in a temp dir on every invocation and never
+#        written into the repository. Two arms MUST NOT fire; the rest are deliberate
+#        defects that MUST, one per finding code the validator can emit, alongside the
+#        specificity arms that tell a correct implementation from a lookalike.
+#        THE ARM INVENTORY IS NOT RESTATED HERE, deliberately. It lives in exactly one
+#        place — the CTL section of the guard script, which is also where the invariant
+#        binding it is stated: every emittable code has a must-fire arm, and a code added
+#        by a later slice adds its arm in the same change. A count copied into this file
+#        would be a copy with no assertion behind it
+#
+# ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
+# GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo, so
+# it has a second door that mechanism does not watch: a POPULATION vanishing. The gate
+# ships BEFORE any in-repo artifact carries frontmatter, so at this commit every selected
+# file skips under the tolerant read and every statement about a validated artifact is true
+# over the empty set — vacuously true, never skipped, silently green. Three things close
+# it. AR prints its observed denominator and renders a distinct VACUOUS verdict rather than
+# a bare PASS when the versioned population is zero. CV prints the coverage split rather
+# than asserting coverage. And CTL has a population BY CONSTRUCTION on every run, so the
+# suite demonstrates on this very commit that it is still capable of failing.
+#
+# OUT OF SCOPE — deliberately, and by name:
+#   PROSE. The schema constrains frontmatter and declared entry markers. It never
+#   constrains narrative body content, and a green here says nothing about the quality or
+#   the accuracy of any artifact's prose.
+#
+#   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
+#   CI checkout contains no trip. Those artifacts are unreachable by construction, not by
+#   choice, and validating them is a separate local call site driving the same functions.
+#
+#   .claude/commands/*.md. Those files carry an upstream schema this repo does not own and
+#   cannot change. The artifact schema set does not claim them and this gate does not check
+#   them.
+#
+#   THE GUARD SCRIPTS' OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so
+#   no CI job shellchecks a standalone scripts/*.sh. This slice adds two more files to that
+#   unlinted set. Stated so a green is not read as more than it is.
+#
+# So a green check means: the artifact model declares one closed class enumeration, the
+# schema corpus is in bijection with it, every exclusion the gate applies is warranted by
+# the document, every artifact the selector reached was adjudicated under the tolerant-read
+# rule the document states — and the guard demonstrated on this very commit that it can
+# still fail.
+#
+# ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
+# GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it is pure
+# bash with no Node, no gh and no network, so it has no dependency-gated group and
+# therefore no legitimate skip. An empty declaration here is the correct value, not an
+# omission.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  artifact-schema:
+    name: Artifact schema suite (test-artifact-schema.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # No Node setup step: this suite is pure bash and POSIX text processing. It needs
+      # no Node, no gh and no network, which is exactly why its expected-skip set is empty.
+      - name: Run the artifact-schema suite
+        env:
+          # A SKIP is a FAILURE unless its group is declared below.
+          GUARD_STRICT_SKIPS: '1'
+          # Empty by design — this suite has no dependency-gated group to declare.
+          GUARD_EXPECTED_SKIPS: ''
+        run: ./scripts/test-artifact-schema.sh
