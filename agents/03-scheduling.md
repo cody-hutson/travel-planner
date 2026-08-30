@@ -468,8 +468,11 @@ experience-balance signal below. Those are three projections of one day, and
 carrying the same key in each is exactly what lets the hub join them.
 
 `<YYYY-MM-DD>` is that day's own calendar date — the **Day** entity's natural key
-(`reference/data-architecture.md` → "The full assignment") — taken from the
-per-traveler window block, never invented. Where a framework is produced against a
+(`reference/data-architecture.md` → "The full assignment") — taken from
+`### Effective Planning Days`, this trip's baseline day shape, never invented. It
+is not taken from `### Per-Traveler Planning Days`: that block is the **window
+limb's source**, so a Day key drawn from it would vary with who is present.
+Where a framework is produced against a
 trip whose calendar dates are not yet fixed, write `day: undated`. `undated` is a
 **declared absence**, never a default: a reader takes it as *date not yet fixed*,
 never as *no day*.
