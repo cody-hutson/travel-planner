@@ -164,9 +164,15 @@ A person's identity originates outside the engine (limb 1), and the name is *alr
 > § *Travelers — count and names* already derives the filename from the display name; this rule
 > **cites and closes that derivation in the reverse direction** rather than authoring a second one.
 >
-> **The same-name case is a hard stop at intake, never a silent merge.** The operator disambiguates
-> the display name, which changes the key. The engine never mints a suffix: a minted suffix is a
-> surrogate key wearing a natural key's clothes, and it would break the correspondence above.
+> **The same-name case is specified as a hard stop at intake, and the intake half has not
+> shipped.** The rule is that the operator disambiguates the display name, which changes the key,
+> and the engine never mints a suffix: a minted suffix is a surrogate key wearing a natural key's
+> clothes, and it would break the correspondence above. **No intake surface enforces this today.**
+> `.claude/commands/trip-record.md` selects edit-over-create on a file-existence probe with no
+> collision check, so two travelers whose display names normalize to one key share a file and the
+> second overwrites the first, silently — in files the model itself describes as carrying real
+> personal detail. That behaviour predates this release and is unchanged by it; what this section
+> adds is the rule the intake half will hold, not a control that holds it now.
 >
 > **The empty key is a decided case, not an assumed one.** A display name carrying no `[a-z0-9]`
 > character normalizes to the empty string, where the uniqueness assertion above has nothing to
@@ -1036,13 +1042,16 @@ in-model classes had no in-repo instance at all** when this order was set, so th
 what gives them their first witness — and a fixture that instantiates an `accumulate-append` class
 should carry at least two dated sections, or that lifecycle stays declared and unwitnessed.
 
-**That step has landed, and the two-dated-section criterion is met by one instance of six.**
+**That step has landed, and the two-dated-section criterion is met by two instances of six.**
 Measured across the six tracked instances declaring `lifecycle: accumulate-append`, all of them in
-`examples/data-architecture-demo/`: `trip-log.md` carries two dated sections, and the other five —
-`outputs/activities-list.md`, `outputs/nightlife-list.md`, `outputs/rooftop-sunset-bars.md`,
+`examples/data-architecture-demo/`: `trip-log.md` and `outputs/activities-list.md` carry two dated
+sections each, and the other four — `outputs/nightlife-list.md`, `outputs/rooftop-sunset-bars.md`,
 `outputs/scheduling-framework.md` and `outputs/transport-brief.md` — carry one each. In the
-criterion's own terms those five leave the lifecycle **declared and unwitnessed**: their frontmatter
-is witnessed, their accumulation is not. Whether to deepen the fixture is an open decision and is
+criterion's own terms those four leave the lifecycle **declared and unwitnessed**: their frontmatter
+is witnessed, their accumulation is not. `examples/data-architecture-demo/README.md` § *Depth* holds
+the live count and is the authority if the fixture deepens again — this paragraph cites it rather
+than keeping a second copy of the number, because the first copy of it went stale inside this
+release when the fixture gained its second witness. Whether to deepen the fixture is an open decision and is
 not taken here.
 
 **The grading basis that step settles is read from one place.** Which classes hold a tracked
@@ -1102,9 +1111,10 @@ ADR wins on the decision, this document wins on the shape.
 | **Schema versioning** — monotonic integer plus one stated tolerant-read rule carrying a write-stop | § 7 |
 | **Provenance** — a frontmatter-declared closed enum beside retained inline marks; the `provenance:` key narrowed to its own artifact scope, with `researched` and `recorded` as its added members | § 4.4 |
 
-**One item remains genuinely open and needs an operator decision:** several line-number citations
-into `reference/data-model.md` are held by an Accepted ADR whose own status line records that it has been
-amended through the governed path more than once. Whether those citations are **accepted as
-historical provenance and pinned**, or **amended to anchor form** as the repairable ones in the two
-guard scripts are, is a decision this document does not make. Both are defensible; the ADR records
-which was taken.
+**No item remains open here, and the one that stood is discharged.** It asked for a decision on
+several line-number citations into `reference/data-model.md` held by an Accepted ADR: pin them as
+historical provenance, or amend them to anchor form. The second was taken through the governed path,
+and the corpus now carries **no** line-number citation into that file in any direction — every
+reference is section-anchor form. The entry is kept rather than deleted because it records a
+decision that was made, and because it is a worked instance of this release's most persistent
+defect: a statement true when written, left standing after the work it describes was finished.
