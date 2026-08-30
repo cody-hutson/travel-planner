@@ -833,7 +833,7 @@ _guard_limb_rules() { # <limb> <artifact-scope>
 nonpublishable_values() { # <trip_dir> [site_html]
   local trip_dir="${1:-}" site_html="${2:-}" model out rc
   local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
-  local decl_rows decl_n decl_cand esel erule mfields mrules pfields prules
+  local decl_rows decl_n decl_cand decl_eval esel erule mfields mrules pfields prules
   if [ -z "$trip_dir" ]; then
     warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
   fi
@@ -857,6 +857,20 @@ nonpublishable_values() { # <trip_dir> [site_html]
   decl_cand="$(_guard_declared_candidates)"
   if [ "${decl_cand:-0}" -ne "$decl_n" ]; then
     warn "guard: the publishability declaration at $_GUARD_DECLARATION offers ${decl_cand:-0} rows but only $decl_n parse as four whitespace-separated fields — a partial read is UNDETERMINED, not a narrower class"; return 2
+  fi
+  # And the same path once more, for a row that PARSES but is never QUERIED. This
+  # evaluator asks exactly three (limb, artifact-scope) questions; a row naming any
+  # other pair is well-formed, accepted, selected by nothing, and observed by nobody —
+  # so it reads as a member of the class while guarding none of it. That is the shape
+  # fail-open above, one column over: there the row is dropped by the reader, here it
+  # survives the reader and dies at the query. § 5.6 advertises both columns as open
+  # domains, so a row outside the queried set is the documented extension path, not a
+  # hypothetical.
+  decl_eval="$(awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" '
+      ($1 == "entry" && $3 == m) || ($1 == "field" && $3 == m) || ($1 == "field" && $3 == p) { c++ }
+      END { print c + 0 }' <<<"$decl_rows")"
+  if [ "${decl_eval:-0}" -ne "$decl_n" ]; then
+    warn "guard: the publishability declaration at $_GUARD_DECLARATION parses $decl_n rows but this guard evaluates only ${decl_eval:-0} of them — a row naming a limb or artifact-scope the guard never queries guards nothing, and a class that silently guards less than it declares is UNDETERMINED"; return 2
   fi
   esel="$(_guard_limb_selectors entry "$_GUARD_DECL_ARTIFACT_MODEL")"
   erule="$(_guard_limb_rules     entry "$_GUARD_DECL_ARTIFACT_MODEL")"

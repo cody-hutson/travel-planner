@@ -577,6 +577,29 @@ else
   FAIL "L10b: a partially-parsed declaration was not fail-closed (malformed=$l10b, well-formed=$l9b) — a dropped row silently narrows the guarded class"
 fi
 
+# L10c — the SIXTH fail-closed path a third time, for a row that PARSES but is never
+# QUERIED. L10 covers an absent declaration and L10b a partial read; this covers the case
+# where every row is well-formed and one names a (limb, artifact-scope) pair the evaluator
+# does not ask about. Such a row is accepted, selected by nothing, and observed by nobody,
+# so it reads as a member of the class while guarding none of it.
+#
+# This is L10b's defect one column over, and it is the DOCUMENTED extension path: § 5.6
+# presents both columns as open domains while the evaluator matches literal strings. Four
+# mutations were shown silently inert before this case existed — a typo'd artifact-scope,
+# a typo'd limb, a limb outside the pair, and a glob scope. Control arm is L9b: the
+# identical trip and render return 0 while every row is queried.
+LDECLQ="$WORK/l_decl_unqueried.md"
+_guard_declared_rows | awk 'NR == 1 { print $1, $2, $3 "x", $4; next } { print }' | ldecl_write "$LDECLQ"
+_GUARD_DECLARATION="$LDECLQ"
+lguard "$LDECLR" "$LDECLT"
+l10c="$LRC"
+_GUARD_DECLARATION="$L8DECL_REAL"
+if [ "$l10c" -eq 2 ] && [ "$l9b" -eq 0 ]; then
+  PASS "L10c: a well-formed row naming an artifact-scope the guard never queries aborts (rc=2) while the same trip publishes (rc=0) once every row is queried — a row that guards nothing is UNDETERMINED, not a narrower class"
+else
+  FAIL "L10c: an unqueried declaration row was not fail-closed (unqueried=$l10c, queried=$l9b) — a well-formed row can silently guard nothing"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # L11 — THE RESERVED-HEADING SUPPRESSION, both halves.
 #
