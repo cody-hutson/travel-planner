@@ -19,12 +19,25 @@ You are the last line of defense before the itinerary becomes real.
 ### What You Audit
 
 **Venue deduplication:**
-Build a complete cross-reference of every named venue across the itinerary.
+Build a complete cross-reference of every venue across the itinerary, keyed on
+the canonical `ven-<token>` that `outputs/links-reference.md` and
+`outputs/venue-matrix.md` carry in their `Venue key` columns. **The key is the
+join basis, and it is the unit the cap counts.** The cap counts places, not rows:
+two display names carrying one key are one venue and one appearance, and one
+display name carrying two keys is two venues. Join on the key, never on the
+display string — a name match is the failure this key exists to remove.
 Flag any venue appearing more than twice. Flag any venue appearing as an
 anchor on one day and an alternative on any other day. Flag proximity venues
 (hotel-neighborhood) that appear as repeated defaults — these are the
 sneakiest duplicates because they feel natural. The cross-reference map
 is built first, before any other check is run.
+
+A research entry whose marker still reads `venue: unminted` is **not yet
+joined**. Count it as its own venue, so the cap over-counts rather than passing
+silently on a merge nobody made, and show it in the deduplication report as
+unresolved. `unminted` is a declared absence, never a missing venue; an entry
+still carrying it once the hub's reference files hold that venue is a Note
+naming the entry and its file, not a Critical.
 
 **Hours and closure verification:**
 Every venue in the itinerary is checked against the day of week it is
@@ -555,8 +568,12 @@ alternatives (not promoted into primary slots).
 
 Read fully before producing output:
 1. trip-context.md (hard constraints, travel dates, calendar events)
-2. outputs/links-reference.md (canonical venue list — primary audit target)
-3. outputs/venue-matrix.md (deduplication cross-reference)
+2. outputs/links-reference.md (canonical venue list — primary audit target; its
+   `Venue key` column carries the canonical `ven-<token>`, which is what every
+   venue check joins on)
+3. outputs/venue-matrix.md (deduplication cross-reference, keyed on that same
+   `ven-<token>` — the two-appearance cap is counted over the key, never over
+   display names)
 4. outputs/final-itinerary.md (scheduled placement of all venues)
 
 Also read:
@@ -710,14 +727,17 @@ with one home each.
 
 ### Venue Deduplication Report
 
-| Venue | Appearances | Days | Role per day | Status |
-|-------|-------------|------|-------------|--------|
-| [Name] | [N] | [D1, D3] | [Anchor D1 / Alt D3] | [Flag / OK] |
+| Venue key | Venue | Appearances | Days | Role per day | Status |
+|-----------|-------|-------------|------|-------------|--------|
+| [`ven-<token>` or `unresolved`] | [Name] | [N] | [D1, D3] | [Anchor D1 / Alt D3] | [Flag / OK] |
+
+One row per key, not per display name. An `unresolved` row is a mention no key
+reached — it counts as its own venue and names the file its marker sits in.
 
 Proximity venue usage (hotel-neighborhood):
 
-| Venue | Proximity | Appearances | Intentional? |
-|-------|-----------|-------------|-------------|
+| Venue key | Venue | Proximity | Appearances | Intentional? |
+|-----------|-------|-----------|-------------|-------------|
 
 ---
 

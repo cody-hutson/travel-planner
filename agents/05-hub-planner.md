@@ -35,27 +35,76 @@ into a single reference file. For each venue:
 
 **One row per venue — exactly one.** A venue placed on several days is still a
 single row here; the day relation belongs to `outputs/venue-matrix.md`. Two
-display names that name the same place are one venue and one row, joined on the
-key rather than on the string.
+display names that name the same place are one venue and one row — and *which*
+mentions name the same place is settled by the identity procedure below, never
+by comparing the strings.
 
 This file is the single source of truth for all venue links. It prevents
 inconsistent naming, inconsistent URLs, and ensures the validator has a
 clean target to audit against.
 
 **The venue key, and where it comes from.** `ven-<token>` is the canonical venue
-key — opaque, carrying no day, no ordinal and no fragment of the name. **The hub
-mints it when it builds `outputs/venue-matrix.md`** (Step 2), which is the mint
-point the model fixes; this step does not mint a second one. So Pre-Work
-completes as a **unit**: compile the venue population here, mint in Step 2, and
-carry those keys back into this file's `Venue key` column before either file is
-final. A spoke list that already carries a key for a venue keeps it — read the
-research lists' entry markers and reuse what they carry; `unminted` there means
-*not yet minted*, so mint it in Step 2 rather than treating it as a second
-venue. On every later pass, read the existing `links-reference.md` and
-`venue-matrix.md` and **reuse the keys already there** — a re-run mints only for
-venues that were not already keyed. Definition and rationale:
-`reference/data-architecture.md` → "Venue — surrogate key, forced by measured
-evidence". Cite it; do not restate it.
+key — opaque, carrying no day, no ordinal and no fragment of the name. **You mint
+it at your first enumeration of the venue set — before you write either reference
+file.** Enumerating is the first act of Pre-Work and it precedes this file's own
+write: resolve every venue named across the spoke outputs to a distinct place by
+the procedure below, mint one key per place, and only then write the rows here.
+Both reference files therefore carry the key on their first write and neither is
+ever written keyless; Step 2 mints nothing. A spoke list that already carries a
+key for a venue keeps it — read the research lists' entry markers and reuse what
+they carry; `unminted` there means *not yet minted*, so that venue enters the
+enumeration needing a key, never as a second venue. On every later pass, read the
+existing `links-reference.md` and `venue-matrix.md` and **reuse the keys already
+there** — a re-run mints only for venues that were not already keyed. Definition
+and rationale: `reference/data-architecture.md` → "Venue — surrogate key, forced
+by measured evidence". Cite it; do not restate it.
+
+**The spokes cannot read a key you have not minted yet, and you are not a writer
+of their files.** On a first pass every research entry's marker reads
+`venue: unminted`, because the spokes ran before you. You do not reach into
+`outputs/activities-list.md`, `outputs/food-list.md` or `outputs/nightlife-list.md`
+to correct that — each has exactly one writer and it is not you. Each spoke
+resolves its own markers against these two reference files on its next pass, so
+an `unminted` marker converges rather than persisting. Until it does, **an
+unresolved mention is joined by the procedure below and never by its display
+name**, and a mention you could not resolve is declared rather than merged.
+
+**How two mentions become one venue — the identity procedure.** The key is a
+surrogate, so at the enumeration that mints it the key does not yet exist and the
+enumeration cannot join on it. This is what it joins on instead. The rungs are
+ordered and you stop at the first one that decides.
+
+1. **A key already carried decides.** A mention whose entry marker, or whose row
+   in an existing reference file, already holds a `ven-<token>` *is* that venue.
+   Never re-derive a key that exists. This is the standing join, and it is the
+   only rung that is a key rather than evidence.
+2. **The same resolved location decides.** Two mentions that resolve to one
+   physical place — one street address, one map pin — are one venue. The place is
+   what the venue *is*; the name is only what a writer called it.
+3. **A byte-identical maps or official-site URL decides, as evidence of rung 2.**
+   Read it as an assertion that both mentions point at one pin. It is evidence,
+   **not a key**, and it never becomes one — but it is decisive here, because it
+   is the single field the measured collision in this repository's own worked
+   example agrees on across two rows carrying two different display names.
+4. **Nothing below rung 3 decides on its own.** Display-name equality, name
+   similarity, shared neighborhood, shared category and shared price tier are
+   **corroborating signals**. Two mentions agreeing only on a name are a
+   *candidate*; a candidate is settled by resolving its location, never by
+   accepting the name.
+5. **An unresolved candidate is declared, not guessed.** Where the evidence
+   reaches no rung above 4, mint **separate** keys and name the pair in OPEN
+   DECISIONS, citing both mentions and the artifact each came from.
+
+**Why it splits rather than merges when it is unsure.** The two errors are not
+symmetric. A wrong merge deletes a place from the plan and makes the
+two-appearance cap under-count, and neither is visible in the output a reader
+sees. A wrong split leaves two rows that reader can see, and makes the cap
+over-count — which errs toward caution. So an uncertain pair splits, and says so.
+
+**The cap counts keys.** Once this procedure has run, the two-appearance cap and
+every other venue check resolve against `ven-<token>`. A mention still unresolved
+at that point counts as its own venue, so the cap over-counts rather than passing
+silently on a merge nobody checked.
 
 **The display name stays a name.** Every artifact keeps the display string its
 readers need. The name is never the join key, and you do not normalize it —
@@ -70,10 +119,12 @@ Build a cross-reference matrix before assigning any venue to any day:
 
 Mark each cell: A (anchor) / Alt (alternative) / B (bailout) / — (not used)
 
-**Mint the venue key here.** This is the mint point: as you build the matrix,
-mint one opaque `ven-<token>` per distinct venue and carry it into
-`links-reference.md`'s own `Venue key` column (Step 1). One row per key — a
-venue is one row here no matter how many days it appears on.
+**The keys are already minted; carry them.** The mint point is Pre-Work's first
+enumeration of the venue set, before either reference file is written
+(§ *Step 1 — links-reference.md*) — so this step mints nothing and derives no
+second key for a venue Step 1 already carries. Copy each key into the `Venue key`
+column here. One row per key — a venue is one row here no matter how many days it
+appears on.
 
 **Rules enforced by the matrix:**
 - No venue appears as A on one day and Alt on another day
@@ -253,7 +304,7 @@ rows on setup). The hub both **reads** and **writes** it:
       trip: <trip-slug>
       writer: hub
       lifecycle: persist-mutable
-      provenance: derived
+      provenance: recorded
       publish: bound
       generated: <YYYY-MM-DD>
       ---
@@ -267,6 +318,12 @@ rows on setup). The hub both **reads** and **writes** it:
   `schema-version` is **never lowered**. Adding the block to a file that predates
   it is a one-time in-place upgrade, not a rebuild: read the file, prepend the
   block, leave every row untouched, and say in your output that you upgraded it.
+  **A block already carrying `provenance: derived` is corrected to `recorded`
+  once, on those same terms.** `derived` is the corpus's word for *holds no
+  independent state*, which is the opposite of what `persist-mutable` promises of
+  this file, so the old value is a defect to repair rather than a field to
+  preserve. This is the one exception to *not rewritten* above, it fires at most
+  once per file, and it touches no row.
 - **Back-filling venue keys into a pre-migration file, once.** A file written
   before the key existed has rows with no `Venue` cell. On the first pass after
   it is read, fill each row's key from the venue population you just compiled in
@@ -577,7 +634,9 @@ Required inputs:
    the other spoke lists: its venues enter links-reference.md and venue-matrix.md and
    obey the same dedup rules. Three consumption rules are specific to it: (a) a venue
    named by two spoke lists — claimed by one, cross-referenced by the other — is ONE
-   venue: one links-reference row, one venue-matrix row, joined on canonical name;
+   venue: one links-reference row, one venue-matrix row, resolved by the identity
+   procedure in § *Step 1 — links-reference.md* and never by matching display
+   names;
    (b) a placed nightlife entry never satisfies a day's structural-anchor requirement
    (see Structural unit enforcement above) — it is an optional per-night entry unless a
    traveler's desire tier elevates it, so it never stands in for the day's anchor event

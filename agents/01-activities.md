@@ -301,11 +301,31 @@ above the labelled lines:
 venue: ven-<token>
 ```
 
-`ven-<token>` is the canonical venue key, and **the hub mints it** when it builds
-`outputs/venue-matrix.md` — which runs after you. So read
-`outputs/venue-matrix.md` if it exists and reuse the key it already carries for a
-venue; otherwise write `venue: unminted`. `unminted` is a **declared absence**,
+`ven-<token>` is the canonical venue key, and **the hub mints it at its first
+enumeration of the venue set — before it writes either reference file**, which
+runs after you. So read `outputs/links-reference.md` and
+`outputs/venue-matrix.md` if they exist and reuse the key they already carry for
+a venue; otherwise write `venue: unminted`. `unminted` is a **declared absence**,
 never a default: a reader takes it as *not yet minted*, never as *no venue*.
+
+**Resolving an `unminted` marker — do this on every later pass.** For every entry
+already in this file whose marker still reads `unminted`, look that entry's venue
+up in the hub's reference files and, where they carry it, replace `unminted` with
+the key they carry. The transition is **one-way and happens once**: `unminted` →
+`ven-<token>`. A marker already carrying a key is never re-derived, and a venue
+the reference files do not carry stays `unminted` rather than being guessed at.
+This is the step that keeps `unminted` from being permanent — the hub is not a
+writer of this file, so a marker written before the first mint acquires its key
+here or nowhere, and every later read of that entry falls back to matching
+display names, which is never the standing join.
+
+**Upgrading a marker is not rewriting an entry.** The marker is this file's
+entry-level machine-readable block — at entry scope what the frontmatter block is
+at file scope, and you already upgrade that in place on every pass. Resolving one
+changes the marker's `venue:` value and nothing else: **body entries are never
+rewritten**, and every labelled line, heading and word of prose in the entry
+stands exactly as it was written. A marker changes at most once after it is
+created; the frontmatter block you refresh on every pass.
 
 The marker is what **selects** an entry. It is a fence rather than a heading
 because not every `###` heading here is an entry, and rather than an entry number
