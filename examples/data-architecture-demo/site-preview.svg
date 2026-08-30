@@ -40,10 +40,10 @@
   <text x="80" y="240" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="2.2" fill="#FFFFFF" opacity="0.45">DAYS</text>
   <text x="330" y="240" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#C5973A">3</text>
   <text x="362" y="240" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="2.2" fill="#FFFFFF" opacity="0.45">TRAVELLERS</text>
-  <text x="612" y="240" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#C5973A">8</text>
-  <text x="644" y="240" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="2.2" fill="#FFFFFF" opacity="0.45">EVENTS</text>
-  <text x="894" y="240" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#C5973A">9</text>
-  <text x="926" y="240" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="2.2" fill="#FFFFFF" opacity="0.45">VENUES</text>
+  <text x="612" y="240" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#C5973A">11</text>
+  <text x="652" y="240" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="2.2" fill="#FFFFFF" opacity="0.45">EVENTS</text>
+  <text x="894" y="240" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#C5973A">12</text>
+  <text x="934" y="240" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="2.2" fill="#FFFFFF" opacity="0.45">VENUES</text>
 
   <!-- ====================== STICKY DAY NAVIGATION ====================== -->
   <!-- Section 3 Sticky Navigation: pills with an energy-level-coloured underline,
@@ -76,7 +76,7 @@
   <rect x="0" y="316" width="1200" height="72" fill="#1E5A8E" opacity="0.35"/>
   <text x="48" y="342" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="800" letter-spacing="3" fill="#FFFFFF" opacity="0.60">SATURDAY · MAY 16, 2026</text>
   <text x="48" y="372" font-family="Helvetica, Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">Full day, slowed afternoon</text>
-  <text x="1152" y="348" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="800" letter-spacing="2.4" fill="#FFFFFF" opacity="0.60">2 PLACED · 1 ALTERNATIVE</text>
+  <text x="1152" y="348" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="10.5" font-weight="800" letter-spacing="2.4" fill="#FFFFFF" opacity="0.60">3 PLACED · 1 ALTERNATIVE</text>
   <text x="1152" y="370" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-size="13" fill="#FFFFFF" opacity="0.72">patched from v1 — the viewpoint moved 14:00 → 16:30</text>
 
   <!-- ======================== HEAT / WEATHER STRIP ======================== -->
@@ -96,8 +96,11 @@
   <!-- ============================ DAY GRID ============================ -->
   <!-- Section 4 Desktop: grid-template-columns 1fr 1.3fr 1fr 0.8fr
        (schedule · highlights · food · map). Column 3 carries this fixture's night
-       card beside its food card, because the fixture ships nightlife content and
-       deliberately ships no food-list. -->
+       card beside its food card. The food card is the day's anchor meal, researched
+       in outputs/activities-list.md rather than in a food list: C6 is absent from this
+       fixture on purpose, so its food venues live in the research class the fixture
+       does carry. The standing HC-2 bailout is noted between the two cards rather than
+       given a card of its own, because a bailout is not a placement. -->
   <text x="32" y="474" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="3" fill="#8A8078">SCHEDULE</text>
   <text x="313" y="474" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="3" fill="#8A8078">HIGHLIGHTS</text>
   <text x="674" y="474" font-family="Helvetica, Arial, sans-serif" font-size="9.5" font-weight="800" letter-spacing="3" fill="#8A8078">FOOD · NIGHT</text>
@@ -105,26 +108,30 @@
   <rect x="32" y="482" width="1135" height="1" fill="#E4DDD5"/>
 
   <!-- Column 1: schedule timeline -->
-  <rect x="41" y="508" width="2" height="212" fill="#E4DDD5"/>
+  <rect x="41" y="508" width="2" height="186" fill="#E4DDD5"/>
 
   <circle cx="42" cy="516" r="6" fill="#1E5A8E"/>
-  <text x="62" y="512" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#1E5A8E">16:30</text>
-  <text x="62" y="531" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F1117">Miradouro da Vitória</text>
-  <text x="62" y="548" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-c052 · ven-e05b · planned</text>
-  <text x="62" y="564" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">moved out of the HC-2 window</text>
+  <text x="62" y="512" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#1E5A8E">13:00</text>
+  <text x="62" y="531" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F1117">Casa de Pasto Central</text>
+  <text x="62" y="547" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-6e2b · ven-a90d · planned</text>
 
-  <circle cx="42" cy="598" r="6" fill="#1E5A8E"/>
-  <text x="62" y="594" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#1E5A8E">19:30</text>
-  <text x="62" y="613" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F1117">Base Porto</text>
-  <text x="62" y="630" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-5ab8 · ven-8a34 · locked</text>
-  <text x="62" y="646" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">rooftop at sunset</text>
+  <circle cx="42" cy="570" r="6" fill="#1E5A8E"/>
+  <text x="62" y="566" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#1E5A8E">16:30</text>
+  <text x="62" y="585" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F1117">Miradouro da Vitória</text>
+  <text x="62" y="601" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-c052 · ven-e05b · planned</text>
 
-  <circle cx="42" cy="680" r="6" fill="#FAF8F5" stroke="#8A8078" stroke-width="2"/>
-  <text x="62" y="676" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#8A8078">ALT</text>
-  <text x="62" y="695" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#8A8078">Casa do Livro</text>
-  <text x="62" y="712" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-9e34 · ven-1d9f · option</text>
+  <circle cx="42" cy="624" r="6" fill="#1E5A8E"/>
+  <text x="62" y="620" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#1E5A8E">19:30</text>
+  <text x="62" y="639" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#0F1117">Base Porto</text>
+  <text x="62" y="655" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-5ab8 · ven-8a34 · locked</text>
 
-  <text x="32" y="748" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Every ID above is owned by outputs/event-status.md</text>
+  <circle cx="42" cy="678" r="6" fill="#FAF8F5" stroke="#8A8078" stroke-width="2"/>
+  <text x="62" y="674" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="0.6" fill="#8A8078">ALT</text>
+  <text x="62" y="693" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#8A8078">Casa do Livro</text>
+  <text x="62" y="709" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#8A8078">EV-9e34 · ven-1d9f · option</text>
+
+  <text x="32" y="736" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Every ID and key above is read from outputs/event-status.md —</text>
+  <text x="32" y="750" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">outputs/final-itinerary.md carries neither.</text>
 
   <!-- Column 2: featured stop cards (.act-card, desktop compact) -->
   <!-- Desktop compact hides .act-desc, .act-meta, .act-tip, .act-timing, .act-group and
@@ -134,7 +141,7 @@
   <rect x="313" y="500" width="345" height="30" rx="14" fill="#1E5A8E" opacity="0.16"/>
   <rect x="313" y="516" width="345" height="14" fill="#1E5A8E" opacity="0.16"/>
   <text x="331" y="521" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#0E3355" opacity="0.75">◴</text>
-  <text x="331" y="550" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="2.4" fill="#8A8078">VIEWPOINT · ANCHOR</text>
+  <text x="331" y="550" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="2.4" fill="#8A8078">VIEWPOINT · DAY ANCHOR</text>
   <text x="331" y="568" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="700" fill="#1E5A8E">LEVEL APPROACH · OUTDOOR · CLEARS HC-1</text>
   <text x="331" y="593" font-family="Georgia, 'Times New Roman', serif" font-size="16" fill="#0F1117">Miradouro da Vitória</text>
   <rect x="331" y="603" width="66" height="17" rx="8.5" fill="#f0f0f0"/>
@@ -144,7 +151,7 @@
   <rect x="313" y="638" width="345" height="30" rx="14" fill="#C5973A" opacity="0.20"/>
   <rect x="313" y="654" width="345" height="14" fill="#C5973A" opacity="0.20"/>
   <text x="331" y="659" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#0F1117" opacity="0.6">◔</text>
-  <text x="331" y="688" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="2.4" fill="#8A8078">ROOFTOP BAR · ANCHOR</text>
+  <text x="331" y="688" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="2.4" fill="#8A8078">ROOFTOP BAR · NIGHTLIFE</text>
   <text x="331" y="706" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="700" fill="#1E5A8E">LIFT TO THE TERRACE · CLEARS HC-1</text>
   <text x="331" y="731" font-family="Georgia, 'Times New Roman', serif" font-size="16" fill="#0F1117">Base Porto</text>
   <rect x="331" y="741" width="152" height="17" rx="8.5" fill="#fdecea"/>
@@ -152,17 +159,17 @@
 
   <!-- Column 3: food card (.food-card) and night card (.night-card) -->
   <rect x="674" y="500" width="265" height="118" rx="14" fill="#FFFFFF" stroke="#E4DDD5"/>
-  <rect x="893" y="512" width="34" height="17" rx="8.5" fill="#FAF8F5" stroke="#E4DDD5"/>
-  <text x="910" y="524" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="1" fill="#8A8078">ALT</text>
-  <text x="690" y="527" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#C5973A">☕</text>
-  <text x="690" y="552" font-family="Georgia, 'Times New Roman', serif" font-size="14" fill="#0F1117">Café Majestic</text>
-  <text x="690" y="570" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Indoor · level access</text>
-  <text x="690" y="586" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Standing HC-2 bailout · ven-b5e0</text>
+  <rect x="866" y="512" width="61" height="17" rx="8.5" fill="#FAF8F5" stroke="#E4DDD5"/>
+  <text x="896" y="524" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="1" fill="#8A8078">ANCHOR</text>
+  <text x="690" y="527" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#C5973A">◑</text>
+  <text x="690" y="552" font-family="Georgia, 'Times New Roman', serif" font-size="14" fill="#0F1117">Casa de Pasto Central</text>
+  <text x="690" y="570" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Indoor · level entrance · clears HC-1</text>
+  <text x="690" y="586" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Anchor meal · 13:00 · ven-a90d</text>
   <rect x="690" y="594" width="72" height="17" rx="8.5" fill="#f3f9f0"/>
-  <text x="726" y="606" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="1" fill="#2A7D4F">WALK-UP</text>
+  <text x="726" y="606" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8.5" font-weight="800" letter-spacing="1" fill="#2A7D4F">WALK-IN</text>
 
-  <text x="674" y="636" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">At the two-appearance cap ! — Thu and Sat,</text>
-  <text x="674" y="650" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">alternative both times (outputs/venue-matrix.md)</text>
+  <text x="674" y="636" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">Café Majestic (ven-b5e0) stands as the HC-2 bailout —</text>
+  <text x="674" y="650" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#8A8078">at the cap !, role B on Thu and on Sat (venue-matrix.md)</text>
 
   <rect x="674" y="660" width="265" height="104" rx="14" fill="#1a1a2e"/>
   <text x="690" y="687" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#FFFFFF" opacity="0.7">◐</text>

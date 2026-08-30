@@ -21,7 +21,18 @@ useful as alternatives and as the record of what was already considered.
 **Entry marker.** C7 is prose-shaped: each entry carries a fenced `artifact-entry`
 block holding the venue key and nothing else, directly under its own heading.
 
-## Initial Research (2026-08-29)
+**Both markers below are resolved, and `generated:` is why the file's dates differ.**
+The entries were written on the first pass (2026-08-28) and were born
+`venue: unminted`, because a spoke runs before the hub enumerates. The nightlife spoke
+re-ran on 2026-08-29 to re-check the rooftop against the patched Saturday, found nothing
+to add, and **resolved its own two markers in place on that pass** — so `generated:`
+moved to the later date while the dated section below did not, and no section was
+appended. **Resolving a marker is not an append**: the frontmatter block is upgraded in
+place, body entries are never rewritten, and a re-run that confirms rather than adds has
+nothing to accumulate. `outputs/activities-list.md` carries the same mechanism with the
+other outcome — a re-run that *did* append — and states it at length.
+
+## Initial Research (2026-08-28)
 
 The desire gate resolved **open**: Alex holds *Watch a sunset from a rooftop* as an
 anchor and Robin holds it as a wish, so a present traveller holds an
@@ -34,12 +45,14 @@ stub.
 venue: ven-8a34
 ```
 
-- **Placed as:** `EV-5ab8`, May 16 (Sat), `locked`
-- **Booking:** advance — a table is held
+- **Night type:** low-key drink, at sunset
+- **Booking:** advance — a table can be held, and one has been
 - **Why:** the only option on this list that serves the rooftop-sunset desire both
-  travellers hold, which is why it is the anchor rather than an alternative
+  travellers hold, which is why it is offered as the evening's anchor rather than as
+  an alternative
 - **Access:** lift to the terrace — clears `HC-1`
 - **Price tier:** mid · **Effort:** low
+- **Next-morning cost:** an early-evening sitting; nothing it costs the next start
 
 ### Casa do Livro — bar
 
@@ -47,16 +60,23 @@ venue: ven-8a34
 venue: ven-1d9f
 ```
 
-- **Placed as:** `EV-9e34`, May 16 (Sat), `option`
-- **Booking:** advance available, not held — the flag takes effect only on promotion
-- **Why:** the bailout if the rooftop is rained off; indoor, five minutes away
+- **Night type:** low-key drink, indoor
+- **Booking:** advance available, not held
+- **Why:** the fallback if the rooftop is rained off; indoor, five minutes away
 - **Access:** street level — clears `HC-1`
 - **Price tier:** low · **Effort:** low
+- **Next-morning cost:** none
 
 **Alternatives vary on two axes.** Base Porto and Casa do Livro differ on price
 tier **and** on what they are for — a held table at a view venue against a walk-in
 indoor fallback. Two rooftop bars at the same price with the same walk-in status
 would have been two entries and one option.
+
+**Neither entry names the other's key, and neither names an Event ID.** Which of these
+the hub places, on which day, and at which status is the hub's act and lives in
+`outputs/event-status.md` and `outputs/final-itinerary.md`. A research list that
+narrated its own placements would be asserting a decision it does not make, on a pass
+that has not happened yet when the entry is written.
 
 ### Live fado
 
@@ -66,4 +86,10 @@ uncovered**, not a venue — so it carries no `artifact-entry` block at all, whi
 different from carrying one that declares `venue: unminted`. An unminted key says
 *this venue exists and the hub has not yet minted its token*; no block says *there is
 no venue here*. `outputs/satisfaction-metrics.md` carries the matching `not covered`
-row. An uncovered nice-to-have is a coverage reading, not a failure.
+row and `outputs/validation-report.md` carries it as `[W2]`. An uncovered nice-to-have
+is a coverage reading, not a failure.
+
+**This fixture therefore shows all three marker states, one per file**, and they are
+three different facts: a **resolved** key here, `venue: unminted` in
+`outputs/rooftop-sunset-bars.md` and in the second dated section of
+`outputs/activities-list.md`, and **no marker at all** on the entry above.

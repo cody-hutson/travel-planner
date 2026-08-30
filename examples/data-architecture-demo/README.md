@@ -28,19 +28,19 @@ way.
 |---|---|---|---|
 | `trip-context.md` | C1 | 2 | block-owned writer; the single-origin degenerate case |
 | `trip-log.md` | C2 | 2 | `accumulate-append`; why `generated:` is optional on C1–C3 |
-| `travelers/alex.md` · `travelers/robin.md` | C3 | 1 | needs vs desires; tier and recurrence orthogonal; `Applies to:` links rather than copies; the traveller's name in the **title line**, never in frontmatter. Two files for three roster members — Sam's absence is the operator-fallback branch |
-| `outputs/activities-list.md` | C5 | 2 | migrated shape only |
+| `travelers/alex.md` · `travelers/robin.md` | C3 | 1 | the **template's own section and field surface**, which is what `agents/00-enrichment.md` parses; needs vs desires; tier and recurrence orthogonal; `Applies to:` links rather than copies; the traveller's name in the **title line**, never in frontmatter. Two files for three roster members — Sam's absence is the operator-fallback branch |
+| `outputs/activities-list.md` | C5 | 2 | migrated shape, and the fixture's **marker-transition witness** — two dated sections, `unminted` resolving to `ven-<token>` across a pass |
 | `outputs/nightlife-list.md` | C7 | 1 | the desire gate resolving *open*; alternatives varying on two axes |
-| `outputs/scheduling-framework.md` | C8 | 2 | a spoke emitting a signal, not synthesizing |
-| `outputs/transport-brief.md` | C9 | 2 | migrated shape only |
+| `outputs/scheduling-framework.md` | C8 | 2 | a spoke emitting **its own two** signals — routing and experience — and not synthesizing |
+| `outputs/transport-brief.md` | C9 | 2 | migrated shape; the secondary transit table that carries **no** entry marker, by § 4.5's decided case |
 | `outputs/links-reference.md` | C10 | 2 | rebuilt before the itinerary, with `venue-matrix.md` |
-| `outputs/venue-matrix.md` | C11 | 1 | the dedup cap, and the anchor/alternative rule it is **not** the same as |
+| `outputs/venue-matrix.md` | C11 | 1 | the dedup cap, the anchor/alternative rule it is **not** the same as, and the emitter's full three-role vocabulary `A` / `Alt` / `B` |
 | `outputs/traveler-model.md` | C12 | 1 | `[DERIVED]` projection; the desire-overlap signal |
 | `outputs/event-status.md` | C13 | 1 | all four status values; opaque day-independent Event ID; derived needs-booking |
 | `outputs/satisfaction-metrics.md` | C14 | 1 | the one declared non-scalar (`writer: [hub, validator]`); section ownership; the six dimensions with their types |
-| `outputs/final-itinerary.md` | C15 | 2 | `versioned`, current pass |
+| `outputs/final-itinerary.md` | C15 | 2 | `versioned`, current pass; the hub's own prose day shape, carrying **no** ID or key column — the one-way join § 4.5 records as a cost |
 | `outputs/final-itinerary-v1.md` | C16 | 1 | the frozen sibling as its **own class**, `publish: internal` where C15 is `bound` |
-| `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body |
+| `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body; the validator's own sixteen sections and its three-value severity scale; a check that cannot run **declared**, never passed |
 | `outputs/rooftop-sunset-bars.md` | C18 | 2 | the residual class, resolved by longest-literal-pattern-wins |
 
 ## Depth
@@ -63,6 +63,22 @@ keep true.
   links are **not** reproduced — `examples/tokyo-2026/` is the worked example for
   content, and this one is the worked example for shape.
 
+**Depth governs content, not the writer's declared section set.** Tier 2 is a licence
+to leave a section thin; it is never a licence to leave it out. A file whose section
+names do not match the ones its agent prompt declares is not a shallow instance of the
+class — it is a different shape, and shape is the one thing this fixture exists to
+show. So every file below carries its writer's own sections, under its writer's own
+names, with a stated *not exercised* where this fixture has no fact to put in one.
+`outputs/scheduling-framework.md` and `outputs/transport-brief.md` each carry their
+ten; `outputs/validation-report.md` carries its sixteen.
+
+**A check or a field that cannot be exercised here is declared, never passed.** This
+example ships no external URLs, no opening hours, no prices, no real bookings and a
+placeholder destination. Several validator checks therefore have no input. Reporting
+those as passes is how the earlier version of this fixture came to certify a plan that
+placed no meal on any day while omitting the one check that would have caught it — so
+the rule is stated here as a fixture rule rather than left to each file.
+
 ### What is absent, and why
 
 Three classes have **no instance here**, each for its own reason. Absence is
@@ -78,7 +94,11 @@ declared rather than left to be inferred from a missing file.
   and C6 keeps its `no-witness-because:`. **The coupling is fail-safe, not silent** —
   a flip makes those four arms go red rather than quietly pass — but it is a coupling
   between the corpus and the suite, and it is recorded here so the next author meets
-  it before tripping it.
+  it before tripping it. **Where this fixture's food venues live instead:** the plan
+  places one anchor meal on each of its four days, and the research for the three new
+  ones sits in the second dated section of `outputs/activities-list.md` rather than in
+  the class that would normally hold it. That is a property of the fixture and not of
+  the engine, and both files say so.
 - **C19 `outputs/<destination>-travel-site.html` — cannot have a tracked instance.**
   `reference/site-layout-spec.md` declares the site source *"Source file (plaintext,
   stays local, git-ignored)"*. A tracked witness would contradict the spec that
@@ -89,7 +109,7 @@ declared rather than left to be inferred from a missing file.
   `IDEATION`, before a destination is chosen. This trip has one, so a shortlist here
   would contradict the fixture's own mode.
 
-## Internal consistency (F1–F8)
+## Internal consistency (F1–F9)
 
 **These are the fixture's real acceptance criteria, and no CI check can reach them.**
 The schema gate validates frontmatter; it never reads a body, so a fixture whose
@@ -99,13 +119,14 @@ anyway. They are asserted here so a later editor knows what to preserve.
 | # | Invariant | How it is checked |
 |---|---|---|
 | F1 | Every artifact's `trip:` is `data-architecture-demo`. | 17 files, one grep |
-| F2 | Every `ven-<token>` in `venue-matrix.md`, `event-status.md`, `final-itinerary.md` and the research lists resolves to exactly one row in `links-reference.md`. | set difference, both directions |
+| F2 | Every `ven-<token>` in `venue-matrix.md`, `event-status.md` and the research lists resolves to exactly one row in `links-reference.md`. A `venue: unminted` marker names no token and is outside the domain; `final-itinerary.md` carries no keys at all (F4). | set difference, both directions |
 | F3 | `links-reference.md` has **one row per venue and one key per row** — no key on two rows, no display name on two rows. | the registry probe |
-| F4 | Every Event ID in `final-itinerary.md` (itinerary and booking checklist) appears in `event-status.md`, and every `event-status.md` row's venue key resolves under F2. | join |
-| F5 | `Needs booking (derived)` = `yes` **iff** `Status = planned` **and** `Requires booking? = yes`, on every row. | truth table |
+| F4 | `final-itinerary.md` carries **no** Event ID and **no** venue key — C15 holds no entries of its own (§ 4.5) — so every event it names on a day or on the booking checklist resolves to exactly one `event-status.md` row **by display title**, which is the one-way join the model records as a cost. Every `event-status.md` row's venue key resolves under F2. | join, by title one way and by key the other |
+| F5 | `Needs booking (derived)` = `yes` **iff** `Status = planned` **and** `Requires booking? = yes`, on every one of the eleven rows — and exactly one row reads `yes`. | truth table |
 | F6 | Every traveller in `traveler-model.md` appears in `trip-context.md § Group`; every `travelers/<f>.md` stem resolves to a model entry; **Sam has a model entry and no profile file**. | 3 travellers, 2 files |
 | F7 | Every desire in `satisfaction-metrics.md § Desire-coverage` traces to a desire stated in a `travelers/*.md`, or to a declared-absent entry. | join |
-| F8 | No venue key appears more than **twice** in `venue-matrix.md`, counting distinct `A`/`Alt` roles, and the one that appears twice is flagged `!`. | count |
+| F8 | No venue key appears more than **twice** in `venue-matrix.md`, counted over the emitter's three roles `A` / `Alt` / `B`; the one key that appears twice is flagged `!` and holds the **same** role both times, which is what distinguishes the cap from the forbidden anchor/alternative split. | count |
+| F9 | Every day in `final-itinerary.md` carries an anchor event **and** an anchor meal, and no day's anchor event is its nightlife entry. | 4 days, read off the day blocks |
 
 Two further properties are asserted alongside them, because they are the ones a reader
 copying this fixture would most easily get wrong: every `artifact:` is the § 1.1
@@ -132,20 +153,97 @@ reads as a special case.
 | Declared key column | C10, C11 | `Venue key` |
 | | C13 | `Event ID` — the precedent the model itself cites |
 
-`ven-<token>` is **minted once**, by the hub, in `venue-matrix.md`; every other file
-reads it. Three cases are shown deliberately, because they are three different facts
-and only one of them is obvious:
+`ven-<token>` is **minted once, by the hub, at its first enumeration of the venue
+set — before it writes either reference file.** The mint point is fixed against the
+enumeration and not against an artifact: Pre-Work writes `links-reference.md` **first**
+and `venue-matrix.md` second, so minting at the matrix would leave the link file — the
+one-URL-per-venue SSOT the location invariant resolves against — keyless at the moment
+it is written. Both reference files therefore *receive* the keys; neither mints them,
+and neither reads them from the other.
 
-- a **minted** key, in every placed entry;
-- **`venue: unminted`** in `rooftop-sunset-bars.md` — a candidate never carried into
-  the matrix, so no token was ever minted. A declared absence, never a default;
+**The research spokes run before that enumeration, so their markers are born
+`venue: unminted` and resolve one pass late** — `unminted → ven-<token>`, performed in
+place and one-way by the file's own single writer, on its next pass. **`unminted` is a
+converging state, not an instantaneous one**, and on a single-pass trip that never
+re-runs a spoke it never converges at all. That is a **recorded disposition, not a
+defect**: the model states the cost rather than deferring it, and the fixture depicts
+it rather than skipping to the end state.
+
+**The key is a convergence optimisation and never the join basis.** The hub joins two
+mentions to one place by its five-rung identity procedure **at every mint**, not only
+at the first — so a fixture must not imply that venues are matched by reading tokens
+off each other's files.
+
+Four cases are shown deliberately, because they are four different facts and only one
+of them is obvious:
+
+- a **resolved** key, in every entry whose spoke has run again since the mint —
+  `activities-list.md` § *Initial Research*, `nightlife-list.md`, and two of the three
+  entries in `rooftop-sunset-bars.md`;
+- **`venue: unminted`, converging** — the three anchor-meal entries in
+  `activities-list.md` § *Targeted Update*. The hub has already minted and placed those
+  three venues; the markers catch up on that spoke's next pass. This is the transition
+  itself, and it is the state a first-pass trip is *always* in;
+- **`venue: unminted`, permanently** — the third candidate in `rooftop-sunset-bars.md`,
+  never carried forward, so never in the enumeration and never minted. A declared
+  absence, never a default;
 - **no marker at all** on the *Live fado* entry in `nightlife-list.md` — there is no
   venue, so there is no entity to key.
+
+**The two `unminted` cases are the same token and different facts**, which is why both
+are here. One says *not yet*; the other says *not ever*. A fixture carrying only the
+resolved case would teach a state the engine cannot reach on a first pass, and would
+conceal the mechanism entirely.
 
 **None of this is validated by anything.** The fence grammar admits no entry construct
 and the validator emits no entry-marker finding code, so a green schema check says
 nothing about marker conformance. The markers are here because the fixture's job is to
 show the migrated shape, and for these classes the marker is part of it.
+
+## The `accumulate-append` criterion — two of six, and why
+
+`reference/data-architecture.md` § 10 states that **a fixture that instantiates an
+`accumulate-append` class should carry at least two dated sections, or that lifecycle
+stays declared and unwitnessed** — and records that the criterion was met by one
+instance of six, leaving the question open. It is answered here.
+
+**Two of the six now carry two dated sections**, and they were chosen because each
+witnesses something the other cannot:
+
+| Instance | Class | Dated sections | What the second section witnesses |
+|---|---|---|---|
+| `trip-log.md` | C2 | 2 | accumulation as the narrative register — a second session appended, nothing rewritten |
+| `outputs/activities-list.md` | C5 | 2 | accumulation **plus** the marker transition — a resolved section beside an `unminted` one, which needs two sections to exist at all |
+
+**The other four stay at one, on the fixture's own Depth rule, and that is a decision
+rather than an omission.** § 10's criterion is written against the *lifecycle*, not
+against every instance of it: what it guards against is a lifecycle that is declared in
+frontmatter and witnessed nowhere. Two instances witness it, and one of them witnesses
+the hardest thing the lifecycle does. A third, fourth, fifth and sixth copy of the same
+append would add no fact — each would be a second copy of an answer the fixture already
+gives, which is the duplication § 4.3 exists to prevent and the reason
+`README.md` § *Depth* refuses a second `examples/tokyo-2026/` in the first place.
+
+Per instance:
+
+- **`outputs/nightlife-list.md` (C7)** — its spoke *did* re-run on the second pass and
+  found nothing to add, so it resolved its markers in place and appended nothing. That
+  is a real and instructive outcome: **resolving a marker is not an append**, and a
+  re-run that confirms has nothing to accumulate. Manufacturing a second section here
+  would erase that distinction.
+- **`outputs/rooftop-sunset-bars.md` (C18)** — a targeted-research output is **created
+  fresh each time** (§ 7.6), under a new slug per topic, so a given C18 file rarely
+  accumulates at all. One dated section is the shape this class actually takes in the
+  field.
+- **`outputs/scheduling-framework.md` (C8)** and **`outputs/transport-brief.md` (C9)** —
+  tier 2. Both carry their writer's full declared section set, which is the shape claim
+  this fixture makes; a second dated section would add content depth, which is exactly
+  what tier 2 declines and what `examples/tokyo-2026/` supplies.
+
+**Stated here rather than left unmet.** § 10 says the criterion is open and does not
+take the decision; this file takes it, for this fixture, and names the four instances
+it does not apply to and why. A reader auditing the fixture against § 10 finds an
+answer rather than a silent shortfall.
 
 ## `site-preview.svg` — the figure in the repo README
 
@@ -250,10 +348,12 @@ inline SVG, so the figure evokes the § 1 *roles* rather than the exact faces.
 Both are recorded so a reader does not mistake either for fixture data.
 
 - **The per-day colour coding on the day-navigation strip.** § 2 *Energy Level Colors*
-  gives the site six named levels; **this fixture declares no energy level for any
-  day**, because C8 is tier 2 here. The figure uses the § 2 palette to show the
-  *mechanism* — per-day colour coding — and names no level, so it asserts nothing
-  about which day is which.
+  gives the site **six named levels** — Survival / Fragile / Building / Peak /
+  Selective / Comfort. This fixture declares none of them. What it does declare is the
+  hub's own three-value `*Energy:*` field in each day header of
+  `outputs/final-itinerary.md`, which is a different vocabulary and does not map onto
+  the six. The figure uses the § 2 palette to show the *mechanism* — per-day colour
+  coding — and names no level, so it asserts nothing about which day is which.
 - **The accent colour.** `--accent` / `--accent-deep` are per-trip values chosen at
   site-build time, not fixture data; § 2 says so in the token block itself. The figure
   uses an azulejo blue on the reasoning `CLAUDE.md` § *Design Principles* gives for
@@ -261,6 +361,9 @@ Both are recorded so a reader does not mistake either for fixture data.
 
 One deviation from § 4 *Desktop* is also deliberate: its third column is **food**, and
 this fixture ships **no** `outputs/food-list.md` (C6 is absent on purpose, above). The
-figure's third column therefore carries the Saturday night card beside the standing
-bailout café, and is labelled *food · night*. Inventing restaurants to fill a column
-would have put content in the figure that the fixture does not have.
+plan does place an anchor meal on every day, so the column has real content to carry —
+Saturday's is `Casa de Pasto Central` — but that content is researched in
+`outputs/activities-list.md` rather than in the class the column is named for. The
+column therefore carries the Saturday night card beside it and is labelled
+*food · night*. Inventing restaurants to fill it would still have put content in the
+figure that the fixture does not have.

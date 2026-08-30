@@ -36,14 +36,25 @@ body, where it belongs.
 
 ## Session 2026-08-29 (Sat)
 
-**Topics:** Saturday felt over-packed.
+**Topics:** Saturday felt over-packed, and nobody had written down where we were
+eating.
 **Decisions:**
 - Slow the Saturday afternoon. `EV-c052` moved 14:00 → 16:30 and the block after it
   dropped. The move also took the viewpoint out of the `HC-2` window, which was not
   the reason for the change but is why the heat row now passes on that day.
+- Place an anchor meal on every day. `agents/06-validator.md` audits that no day is
+  missing an anchor event **or an anchor meal**, and v1 placed no meal anywhere — so
+  the plan was failing a check whose result the report had never printed. The
+  activities spoke re-ran for three walk-ins; Friday's market hall already covered
+  that day. All three are walk-ins, so the booking checklist did not move and the one
+  open booking is still the only one.
 **Rejected:**
 - Re-running the full pipeline. Two events were `locked` and a re-plan would have had
   to preserve them anyway; the lightest action that matched the intent was a patch.
+- Standing up an `outputs/food-list.md` for the meals. C6 is absent from this fixture
+  on purpose — the reason is a coupling to the schema suite rather than a gap, and
+  `README.md` states it — so the meal research went into `outputs/activities-list.md`
+  and the fixture says so rather than leaving a reader to work it out.
 **Next steps:** book Serralves (`EV-b47e`) — the one needs-booking event left open.
 **Open questions:** whether to chase live fado for Robin, or accept the uncovered
 nice-to-have.

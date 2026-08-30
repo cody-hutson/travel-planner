@@ -37,7 +37,7 @@ constraint's own reach, which is why two of the four rows cover fewer than four 
 | Traveller | Need | Category | Governing | Applicable days | Verdict |
 |---|---|---|---|---|---|
 | Alex | Afternoon sun not tolerable outdoors | heat | `HC-2` | May 14 (Thu), May 16 (Sat) — the only days carrying an outdoor block in the 13:00–16:00 window | pass · pass |
-| Alex | No shellfish | dietary-health | `DH-1` | May 14–17 (all 4) | pass · pass · pass · pass |
+| Alex | No shellfish | dietary-health | `DH-1` | May 14–17 (all 4) — every day carries a group meal for the constraint to bind on | pass · pass · pass · pass |
 | Robin | Level or lift approaches only | mobility | `HC-1` | May 14–17 (all 4) | pass · pass · pass · pass |
 | Robin | One slow afternoon mid-trip | rest | — | May 15 (Fri), May 16 (Sat) — the two full days; a partial arrival or departure day has no afternoon to grade | pass · pass |
 | Sam `[OPERATOR-PROVIDED]` | Cannot manage long walks between blocks | mobility | `HC-1` | May 14–17 (all 4) | pass · pass · pass · pass |
@@ -53,6 +53,15 @@ one reading the model forbids.
 The heat row is the one that shows the applicable-day set is **computed, not
 assumed**. Grading it on all four days would report two passes the plan never
 earned, because Friday and Sunday carry no outdoor block in that window at all.
+
+**The `DH-1` row is the one that shows a pass has to have something to pass on.** A
+dietary constraint is graded per day against the group meals that day carries, so on a
+plan that placed no meal anywhere the row would read four passes over four days holding
+nothing for it to bind to — a verdict with no subject. Every day now carries an anchor
+meal (`outputs/final-itinerary.md` § *Food Anchors*, four of four), so each of these
+four passes is a real reading. That is what makes the row and the
+`agents/06-validator.md` structural-integrity check agree instead of talking past each
+other.
 
 ## Agreement check — *validator-owned*
 
@@ -111,7 +120,7 @@ a weighting the model does not define.
 | Experience axis — excitement | balance signal — scoring undefined | tracked |
 | Experience axis — newness | balance signal — scoring undefined | tracked |
 | Rest-recovery balance | balance signal — scoring undefined | tracked; one slowed afternoon on May 16 (Sat) |
-| Meal-variety concentration (per day) | balance signal — scoring undefined | tracked per day |
+| Meal-variety concentration (per day) | balance signal — scoring undefined | tracked per day — one anchor meal on each of the four days, four distinct venues |
 
 **"Tracked" is the honest entry, and an unscored signal is not a missing one.** The
 four experience axes are listed individually rather than as one row because they are

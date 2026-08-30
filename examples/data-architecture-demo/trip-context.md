@@ -42,7 +42,7 @@ re-plan would have had to preserve.
 ### Outbound
 - **Leg 1:** Origin -> OPO
 - **Date:** May 14, 2026 (Thu)
-- **Notes:** Illustrative example. One group booking; both travelers are on it.
+- **Notes:** Illustrative example. One group booking; all three travelers are on it.
 
 ### Return
 - **Leg 1:** OPO -> Origin
@@ -135,7 +135,7 @@ The **constraint source of truth**. A per-traveler need links here through its
 
 ## Trip Style
 
-- Two travelers, walkable city, low-intensity.
+- Three travelers, walkable city, low-intensity.
 
 ## Budget Posture
 
@@ -153,9 +153,10 @@ The **constraint source of truth**. A per-traveler need links here through its
 
 ## Current Itinerary Status
 
-One patch applied since the first synthesis: Saturday afternoon was slowed. Two
-events are `locked`, one is `firmed`, one is an `option`, and the rest are
-`planned`.
+One patch applied since the first synthesis: Saturday afternoon was slowed, and the
+activities spoke re-ran once to research an anchor meal for each day. Eleven events
+are placed: two are `locked`, one is `firmed`, one is an `option`, and the rest are
+`planned`. One `planned` event still needs a booking.
 
 ## Events & Calendar [ENRICH]
 

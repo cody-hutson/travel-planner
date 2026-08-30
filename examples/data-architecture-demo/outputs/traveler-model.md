@@ -18,6 +18,46 @@ Reconciled from the per-traveler source files. Every entry here is a **projectio
 every synthesis. `publish: internal-hard`: the site build excludes it and the hub
 applies it as a hard bound before any objective.
 
+**Every `##` heading in this file is read as a person unless its key is reserved.**
+`scripts/publish-trip-site.sh` parses this class by taking each `## ` heading,
+lowercasing it and stripping every non-`[a-z0-9]` character, and treating the result as
+a **traveler key** — *unless* that key is on the declared reserved list, which
+`reference/data-model.md` § *Reserved keys* holds and which carries exactly two members
+at this schema version: `updatesignals` (`## Update signals [DERIVED]`) and
+`desireoverlap` (`## Desire overlap`). A structural section whose key is **not** on that
+list is counted as a **person** — a phantom entry, which is what keeps the
+`entries == 0` fail-closed sentinel from firing on a model that has drifted.
+
+**So this file carries no structural `##` heading beyond the reserved one.** The roster
+correspondence that would naturally want a section of its own is written into this
+preamble instead, above the first entry, where the parse is not inside any entry at all.
+The alternative — a new `##` heading — would require adding its key to the reserved list
+in the same edit, which `reference/data-model.md` states in terms is how that list
+grows. **This fixture cannot take that edit** (the list is model-and-guard scope), so it
+takes the shape that needs no edit. A reader replicating this file into a real trip
+inherits the safe shape rather than a heading the guard counts as a person.
+
+**Roster correspondence — three members, two source files, three entries.** The
+correspondence is not one-to-one and is not meant to be: every `travelers/<name>.md`
+stem resolves to an entry here, but an entry can exist without a file. That is the
+fallback, and reading the two counts as a mismatch is the misreading this note exists to
+prevent.
+
+| Roster member | Source file | Entry | Branch |
+|---|---|---|---|
+| Alex | `travelers/alex.md` | projected | normal |
+| Robin | `travelers/robin.md` | projected | normal |
+| Sam | — | operator-supplied | `[OPERATOR-PROVIDED]` |
+
+**Lifecycle facets are carried for a first-party entry and are unstated here.** Beyond
+needs and desires, `agents/00-enrichment.md` carries nine facet groups per traveller —
+party, destination leanings, dates, journey & origin, accommodation, budget appetite,
+travel style, interests, people dynamics. Both source profiles answer the journey group
+and em-dash the rest, and an em dash is *not answered* rather than an answer, so this
+projection carries no facet value for anyone. The labels exist in the source and the
+absence is declared here rather than inferred from an empty section — the degenerate
+case is part of the shape.
+
 ## Alex
 
 **Source:** `travelers/alex.md`
@@ -36,6 +76,11 @@ applies it as a hard bound before any objective.
 | Watch a sunset from a rooftop | anchor | one-off |
 | Spend real time in a good bookshop | wish | one-off |
 | See a working food market | nice-to-have | one-off |
+
+**Recurrence is rendered only when it is `daily`** in a live projection; every desire in
+this fixture is `one-off`, so the column is shown here for the fixture's own
+readability and carries the same value throughout. The tier is a structural priority
+label, never a weight, and nothing here scores it.
 
 ## Robin
 
@@ -83,9 +128,20 @@ whose needs were supplied second-hand about them; that mark additionally bars th
 value from every publish-bound artifact. The two are different fallbacks with
 different downstream rules, and this fixture exercises the first.
 
+**The sentence above is itself read by the guard's entry limb, and in the safe
+direction.** `[THIRD-PARTY]` is a declared entry selector, matched as a literal
+substring of an entry heading **and** of each raw value line inside it — so naming the
+mark in prose inside a person's entry admits that line's value to the non-publishable
+class even though the entry is not third-party. That is over-classification, which is
+the direction a fail-closed guard is built to err in; the opposite reading, a mark that
+resolved to nothing, is the orphaned-mark condition and aborts the publish as
+UNDETERMINED.
+
 ## Desire overlap
 
-The signal the hub reads when one placement can serve more than one traveller.
+The signal the hub reads when one placement can serve more than one traveller. **This
+is also the host of the attention signal** — the attention engine's objective is
+produced here, on the enrichment agent's own file, and never on a spoke's.
 
 | Desire | Held by | Tiers | Overlap |
 |--------|---------|-------|---------|
@@ -96,18 +152,9 @@ The signal the hub reads when one placement can serve more than one traveller.
 | See a working food market | Alex | nice-to-have | no |
 | Hear live fado | Robin | nice-to-have | no |
 
-## Coverage of the roster
-
-Three roster members, **two** source files, three entries. The correspondence is not
-one-to-one and is not meant to be: every `travelers/<name>.md` stem resolves to an
-entry here, but an entry can exist without a file. That is the fallback, and reading
-the two counts as a mismatch is the misreading this section exists to prevent.
-
-| Roster member | Source file | Entry | Branch |
-|---|---|---|---|
-| Alex | `travelers/alex.md` | projected | normal |
-| Robin | `travelers/robin.md` | projected | normal |
-| Sam | — | operator-supplied | `[OPERATOR-PROVIDED]` |
+`desireoverlap` is the normalized key of this heading and it **is** on the declared
+reserved list, which is why this section is a structural section rather than a seventh
+person. It is the one `##` heading in this file that is not an entry.
 
 **No `[THIRD-PARTY]` entry appears here, deliberately.** That branch covers a person
 who will never file a profile and whose needs the operator supplies *about* them; its
