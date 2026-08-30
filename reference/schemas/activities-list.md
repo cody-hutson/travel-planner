@@ -19,7 +19,7 @@ field schema-version: required integer
 field trip: required slug
 field writer: required slug
 field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]
-field provenance: required enum [human|enrich|derived|operator-provided|third-party|researched]
+field provenance: required enum [human|researched|derived|recorded]
 field publish: required enum [bound|internal|internal-hard|output]
 field generated: required date
 ```
@@ -38,7 +38,7 @@ venue: ven-<token>
 ```
 
 - **The block is the entry selector.** A fence rather than a heading, and rather than an entry ordinal. This class's tracked instance carries **no entry ordinals at all** — its entries are bare third-level headings — while its sibling `outputs/food-list.md` numbers every entry. Two members of one lifecycle, two entry shapes: no positional or heading-shape selector is correct across the set, which is what § 3.3 means by *never a heading level*.
-- **`ven-<token>` is minted by the hub**, when it builds `outputs/venue-matrix.md` (§ 3.3) — downstream of this class's writer. On a pass where no matrix exists, or where it does not yet carry the venue, the block declares `venue: unminted`. That is a **declared absence, never a default value**, which is the degenerate case § 4.5 rule 3 requires every schema to define.
+- **`ven-<token>` is minted by the hub**, at its first enumeration of the venue set — before it writes either reference file (§ 3.3) — which is downstream of this class's writer. On a pass where the hub has not yet enumerated, or where its reference files do not yet carry the venue, the block declares `venue: unminted`. That is a **declared absence, never a default value**, which is the degenerate case § 4.5 rule 3 requires every schema to define.
 - **Nothing else enters the marker.** Display name, zone, duration, bailout venue, booking posture and every judgement line stay in the entry's labelled prose, where they already are. § 4.2's frontmatter/body test decides *frontmatter* versus *body*, and this class's frontmatter is file-scoped — one block, the first bytes of the file — so an entry-level value has no field to become. Only the key does, and § 4.5 rule 2 gives it the marker. That is the model's answer rather than this schema's.
 - **The entry's field-label surface is the prompt's**, per § 4.5 rule 3: `agents/01-activities.md` § *Output Format* enumerates the labels every entry carries, and this schema does not restate them — a second copy of that list is a second home for it.
 

@@ -58,7 +58,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 10 | `outputs/links-reference.md` | hub | `rebuilt-each-synthesis` | `derived` | **`bound`** | Venue |
 | 11 | `outputs/venue-matrix.md` | hub | `rebuilt-each-synthesis` | `derived` | **`bound`** | Venue, Day, Placement |
 | 12 | `outputs/traveler-model.md` | enrichment | `rebuilt-each-synthesis` | `derived` | **`internal-hard`** | Traveler, Need, Desire |
-| 13 | `outputs/event-status.md` | hub (primary); enrichment seeds; `/trip-record event` | `persist-mutable` | `derived` | **`bound`** | Event |
+| 13 | `outputs/event-status.md` | hub (primary); enrichment seeds; `/trip-record event` | `persist-mutable` | `recorded` | **`bound`** | Event |
 | 14 | `outputs/satisfaction-metrics.md` | hub + validator (**section-owned**) | `rebuilt-each-synthesis` | `derived` | **`internal-hard`** | Metric |
 | 15 | `outputs/final-itinerary.md` | hub | `versioned` | `derived` | **`bound`** | Day, Event, Venue |
 | 16 | `outputs/final-itinerary-v<N>.md` | hub | `versioned` (frozen sibling) | `derived` | `internal` | as C15 |
@@ -196,9 +196,16 @@ carries three different name strings across three in-repo artifacts — a compou
 the food list, a plain name in the link reference, and a query-encoded form in the maps URL — and a
 second venue witnesses the same divergence.
 
-> **Canonical venue key** = `ven-<token>`, opaque, **minted by the hub when it builds
-> `outputs/venue-matrix.md`** — the same mint point and the same opacity guarantee the Event ID already has,
-> so the engine gains one identity convention rather than two.
+> **Canonical venue key** = `ven-<token>`, opaque, **minted by the hub at its first enumeration of
+> the venue set — before it writes either reference file** (`agents/05-hub-planner.md`
+> § *Pre-Work: Build Reference Artifacts First*). The mint point is fixed against the enumeration
+> rather than against an artifact because Pre-Work writes `outputs/links-reference.md` **first** and
+> `outputs/venue-matrix.md` **second**: minting at the matrix would leave the link file — the
+> one-URL-per-venue SSOT that `reference/adr/ADR-005-location-invariant.md`'s location invariant
+> resolves against — keyless at the moment it is written. `ADR-009` Decision 2.3 is the decision and
+> this is its shape (§ 12). Minting before the first write gives both reference files the key on
+> their first write, and carries the same opacity guarantee the Event ID already has, so the engine
+> gains one identity convention rather than two.
 >
 > **The display name is a field, not a key.** Every artifact keeps the display string its readers
 > need; the key is what the venue matrix's two-appearance cap, the link reference's one-URL-per-venue
@@ -275,7 +282,7 @@ schema-version: <integer>           # monotonic per class; see § 7
 trip: <trip-slug>                   # natural key of the owning Trip
 writer: <writer-id>                 # exactly one; the W column in § 1.1
 lifecycle: <accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output>
-provenance: <human|enrich|derived|operator-provided|third-party|researched>
+provenance: <human|researched|derived|recorded>
 publish: <bound|internal|internal-hard|output>
 generated: <YYYY-MM-DD>             # omitted on human-authored classes
 ---
@@ -302,11 +309,16 @@ is HTML. The field set and its meanings are identical.
 
 #### The `provenance` enum
 
+**The vocabulary is six values across three granularities; the `provenance:` frontmatter key is
+artifact-scoped and its enum is the four artifact-level rows.** The other two granularities are
+carried by the inline bracket marks, below.
+
 | Value | Granularity | Means |
 |---|---|---|
 | `human` | artifact | Layer-1 human input, authored by the traveler or the operator. |
 | `researched` | artifact | The writing agent's own original **research or analysis**. It **holds independent state** and is **not a regenerable projection** of another artifact: re-running the writer against the same inputs is not guaranteed to reproduce it, and nothing upstream can reconstruct it. |
 | `derived` | artifact | A projection of authoritative inputs. It **holds no independent state**, so regenerating it is safe. |
+| `recorded` | artifact | **State the engine itself maintains across runs.** Its values are **acts, not findings or projections** — an identity minted, a status transitioned, a booking held — so nothing upstream can reconstruct them and a regeneration would destroy them rather than reproduce them. |
 | `enrich` | field | The enrichment agent's rollups into `trip-context.md` — a field-scoped class inside a `human` artifact. |
 | `operator-provided` | entry | A value the operator supplied on someone else's behalf. |
 | `third-party` | entry | A value describing a person who did not supply it and cannot consent to it. Never published, in attributed **or** anonymized form (`reference/adr/ADR-006-third-party-data-capture.md`). |
@@ -323,24 +335,69 @@ tagged `[DERIVED]` and declared to *hold no independent state* by its own writin
 `derived` despite being produced by a research-capable agent — **the classification follows the
 declared state property, never the producing agent.**
 
-**The three artifact-level values are the whole artifact-level enum; `enrich`, `operator-provided`
-and `third-party` are field- and entry-scoped and have no artifact-level member.** That is not a gap:
-they mark values inside a mixed artifact, which is a different granularity, and § 5.3 composes the
-two granularities by union.
-
-**Naming — a stated choice, not a silent one.** `researched` slightly under-describes C8 and C9,
-whose content is analytic judgment over research rather than research itself. `agent-authored` would
-cover the union more literally, but it collides conceptually with `enrich`, which is also agent
+**Naming `researched` — a stated choice, not a silent one.** `researched` slightly under-describes C8
+and C9, whose content is analytic judgment over research rather than research itself. `agent-authored`
+would cover the union more literally, but it collides conceptually with `enrich`, which is also agent
 authorship. The name `researched` is kept and **the definition above carries the precision** by
 saying *research or analysis* in terms. This is a judgment call and is recorded as one.
 
+**The `provenance:` key is artifact-scoped, and the four artifact-level values above are the whole
+of its enum.** `enrich`, `operator-provided` and `third-party` are field- and entry-scoped: they mark
+values *inside* a mixed artifact, which is a different granularity, and the inline bracket marks are
+what carry them. The key admitted all six before this document narrowed it, and three of the six were
+**structurally undeclarable through it** — no class row in § 1.1 carries one, and none could, because
+a scalar artifact-level key has no way to say *which value* inside the artifact it describes.
+Narrowing the key to its own scope loses nothing: § 5.3 composes the two granularities by union, so
+what the marks carry is read at the granularity that carries it.
+
+**`recorded` is added here because the enum had no artifact-level member for state the engine
+maintains across runs**, and the two halves are one defect from opposite ends: the enum was short a
+member it needed *because* three of its slots were spent on a granularity it was never able to
+describe. `outputs/event-status.md` was declared `derived` — *holds no independent state, so
+regenerating it is safe* — while its own lifecycle is `persist-mutable`, defined at § 6 as *survives
+every re-run; synthesis reads it and never regenerates it*. Both cannot be true of one class, and it
+is the only class that carried the pair. `derived` was wrong for it for the same reason it was wrong
+for the research lists before `researched` existed: it is the corpus's established word for *holds no
+independent state*, which is exactly what a booking record is not.
+
+**Members of `recorded`: C13.** The discriminator is the property, not the writer: a class is
+`recorded` when its rows are the engine's own **acts** — an `evt-<token>` minted on first placement, a
+status moved from `planned` to `locked`, a reservation held — so that regenerating the file would
+destroy state no input can reconstruct. That is what `agents/05-hub-planner.md` § *Pre-Work: Build
+Reference Artifacts First* means by naming it the one artifact that must outlive a planning pass.
+
+**Naming `recorded` — a stated choice, not a silent one.** `maintained` describes what happens to an
+artifact *after* it is written, which is the lifecycle's axis rather than provenance's; using it here
+would fuse two axes this document and § 6 deliberately keep apart. `persisted` collides outright with
+the `persist-mutable` token. `recorded` takes the participle form the other artifact-level values
+already take — `human`, `researched` and `derived` each say how the content came to be — and it is the
+corpus's own verb for this artifact, `/trip-record event` being what transitions its rows. **It does
+not make `trip-log.md` `recorded`**, and the discriminator is the one the enum already runs on:
+provenance follows what **originated** the content, never which verb filed it. The trip log's body is
+the operator's own narrative (§ 1.4), so C2 stays `human`; C13's rows are the engine's own acts, so it
+is `recorded`. This is a judgment call and is recorded as one.
+
+**What the pair of changes buys, and it is checkable against § 1.1.** Every class still carrying
+`derived` now sits in a lifecycle that rebuilds it wholesale — `rebuilt-each-synthesis`, `versioned`
+or `output` — which is § 7.6's self-upgrading row exactly. `derived` therefore means what its
+definition says of every class that declares it, which it did not before.
+
+**This narrowing does not bump `schema-version`, and the reason is stated rather than assumed.**
+§ 7.4 bumps on a narrowed enum because an instance at version *n−1* may no longer validate at *n*.
+Here that set is empty for every artifact the engine produced: the three removed values are emitted by
+no agent prompt and no template — the artifact-level set any writer emits is `human`, `researched`,
+`derived` — so nothing the engine wrote can carry one. Against the values instances actually occupy
+the change is a **widening**: everything that validated before validates after, and one further value
+becomes available. § 7.4's trigger is an instance that must be migrated, and there is none.
+
 **The four existing inline bracket marks are retained** as the per-value rendered marker; the
-`provenance` key is the artifact- or entry-level **declaration**. They are different granularities,
-not a duplicate home. **That they correspond is a declared gap:** the word `correspond` occurs
+`provenance` key is the artifact-level **declaration**. They are different granularities,
+not a duplicate home — and the narrowing above is what makes that split exact rather than merely
+stated. **That they correspond is a declared gap:** the word `correspond` occurs
 nowhere in `reference/schemas/`, and no enforcement file reads an inline mark against a
-`provenance:` value. **No new inline mark is minted for `researched`**: the existing marks exist to
-mark individual values inside a mixed artifact, whereas a research list is researched in its
-entirety, so an artifact-level declaration is the whole of it.
+`provenance:` value. **No new inline mark is minted for `researched` or for `recorded`**: the existing
+marks exist to mark individual values inside a mixed artifact, whereas a research list is researched
+and a status file recorded in their entirety, so an artifact-level declaration is the whole of each.
 A correspondence assertion, when one ships, reaches only where a mark exists.
 
 ### 4.5 Body-shape rules
@@ -383,8 +440,8 @@ read as an omission a later slice may close; this is the decision instead.
   body-shape rule; until one is taken, the matrix is written exactly as its prompt writes it today.
 - **C15 and C16 carry no marker, because they hold no entries of their own.** § 9 gives them an
   identity target — events by `evt-<token>`, venues by `ven-<token>` — and each of those is a
-  **reference** to an entity another class masters: the Event by C13, the Venue by C11 at the mint
-  point § 3.3 fixes. A reference resolves against the mastering class's key and does not make the
+  **reference** to an entity another class masters: the Event by C13, the Venue by C11 under the
+  identity § 3.3 fixes. A reference resolves against the mastering class's key and does not make the
   referring artifact entry-bearing, which is why **the entry-bearing set is nine and the itinerary is
   not in it.** **What it costs:** the join runs one way. From `outputs/event-status.md` or
   `outputs/venue-matrix.md` a reader reaches an itinerary day by key; from the itinerary back, only
@@ -689,15 +746,22 @@ regenerates it. Partitioning the 19 in-model classes by § 6 membership:
 | Upgrade burden | Which lifecycle classes | Count | Mechanism |
 |---|---|---|---|
 | **None — self-upgrading by construction** | `rebuilt-each-synthesis` · `versioned` · `output` | **9** | All three rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
-| **Writer-upgraded, in place** | `persist-mutable` (except the human-authored class below) · `accumulate-append` | **9** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
+| **Writer-upgraded, in place** | `persist-mutable` · `accumulate-append` — **less the four classes named in the two rows below** | **6** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
 | **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md`, the one human-authored `persist-mutable` class | **1** | **Never engine-upgraded. This is a rule, not an omission.** |
+| **No emitting writer — the upgrade has nobody to perform it** | C1 `trip-context.md` · C2 `trip-log.md` · C18 `outputs/<slug>.md` | **3** | **A declared gap, not a mechanism.** The writer-upgraded row assigns the upgrade to *the owning writer*; these three have no writer surface that emits their frontmatter block at all, so there is no next write for the upgrade to ride. Stated per class below. |
 
-**9 + 9 + 1 = 19.** No class is unaccounted for, and none needs an operator to hand-edit a file.
+**9 + 6 + 1 + 3 = 19.** No class is unaccounted for. **The upgrade is not free of the operator across
+all nineteen:** for C2 and C18 a hand edit is today the only path to a versioned instance, and for C1
+it is the only path for an instance that predates the template. The fourth row is where that is
+stated rather than assumed away.
 
 **Membership is § 6's, not this table's.** This partitions the lifecycle classes by upgrade burden;
 **§ 6 governs which artifact class sits in which lifecycle**, and a class that moves between its rows
 moves between these with it. The counts above are that assignment totalled, not a second roster —
-naming the members again here would give the classification the two homes § 6 exists to prevent.
+naming the members again here would give the classification the two homes § 6 exists to prevent. The
+two exception rows name their members because an exception is not derivable from a lifecycle: C3 is
+excepted on authorship and the three below on the absence of an emitting writer, and neither property
+is one § 6 records.
 
 **Why C3 is never upgraded, and why that still satisfies the requirement.** `travelers/<traveler>.md`
 is human-authored Layer 1 — the traveler's own words. `agents/00-enrichment.md` § *Second Role*
@@ -707,9 +771,39 @@ the engine's most explicit ownership boundary to satisfy a convenience. **Guaran
 discharges the requirement for this class:** version 0 is permanently valid, so the file never needs
 upgrading. That is an answer, not a deferral.
 
+**The three with no emitting writer, and what each is waiting on.** The test is a writer surface — an
+agent prompt, a command file or a template — that emits this class's frontmatter block. A class leaves
+that row on the commit that gives it one, which makes the row self-clearing rather than a standing
+exception. **This is a gap, not an answer**, and that is what separates it from C3 above: C3 is never
+upgraded because upgrading it would breach an ownership boundary, while these three are not upgraded
+because nothing is positioned to do it.
+
+- **C1 `trip-context.md`** — its `writer` is the `block-owned` sentinel, which § 4.4 states in terms
+  *is not a writer id and no tool resolves it to one*. `templates/trip-context.template.md` emits the
+  block, so a trip scaffolded after this ships is born at the current version; nothing upgrades an
+  instance that predates it. `agents/00-enrichment.md` is the one agent with a write grant on this
+  file and its own prompt bars the upgrade — *a block you do not own, you do not upgrade* — because
+  the `[ENRICH]` contract is field-scoped and is not a licence to touch the fence. **That bar is
+  correct and is not the gap**; the gap is that no other writer holds the block.
+- **C2 `trip-log.md`** — no template, and `/trip-record log`, its declared writer, emits no block.
+  `/trip-new` scaffolds the file fenceless, so **every trip created after this ships carries an
+  unversioned artifact** — the sharpest of the three, because it is the only one where the gap
+  reproduces on every new trip rather than only on instances that predate the migration.
+- **C18 `outputs/<slug>.md`** — the targeted-research class is named on no writer surface at all, so
+  the spoke that re-runs has no instruction to emit the block. A targeted-research output is created
+  fresh each time, so like C2 the gap reproduces rather than ageing out.
+
+**Guarantee 1 is what keeps all three readable in the meantime**, exactly as it does for C3: an
+artifact carrying no `schema-version` is read as version 0 and stays valid forever, and the gate skips
+it (§ 7.3). The cost is not a broken read — it is that a class carrying no version cannot be graded
+against its schema, so its shape stays declared and unenforced until a writer emits the block.
+
 **No new command verb, and no migration script.** The upgrade is a property of each writer's
 existing write, not a separate operation an operator invokes. A verb would add a surface to the
-command taxonomy — and its guard — for work that nine writers already do on their next run.
+command taxonomy — and its guard — for work the writer-upgraded classes' writers already do on their
+next run. **That holds for the three classes above too, and it is what makes them repairable rather
+than deferred:** each needs its existing writer to emit the block it already declares, not a new
+surface for an operator to invoke.
 
 ### 7.7 The citation-anchor register
 
@@ -911,7 +1005,7 @@ ADR wins on the decision, this document wins on the shape.
 | **Frontmatter/body boundary** — the three-question test | § 4.2 |
 | **Publishability** — artifact class **and** field classification, composing by **union** | § 5 |
 | **Schema versioning** — monotonic integer plus one stated tolerant-read rule carrying a write-stop | § 7 |
-| **Provenance** — `researched` added to the enum; the name chosen over `agent-authored` with the definition carrying the precision | § 4.4 |
+| **Provenance** — a frontmatter-declared closed enum beside retained inline marks; the `provenance:` key narrowed to its own artifact scope, with `researched` and `recorded` as its added members | § 4.4 |
 
 **One item remains genuinely open and needs an operator decision:** several line-number citations
 into `reference/data-model.md` are held by an Accepted ADR whose own status line records that it has been

@@ -19,7 +19,7 @@ field schema-version: required integer
 field trip: required slug
 field writer: required slug
 field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]
-field provenance: required enum [human|enrich|derived|operator-provided|third-party|researched]
+field provenance: required enum [human|researched|derived|recorded]
 field publish: required enum [bound|internal|internal-hard|output]
 field generated: required date
 ```

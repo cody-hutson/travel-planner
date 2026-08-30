@@ -4,7 +4,7 @@ schema-version: 1
 trip: data-architecture-demo
 writer: hub
 lifecycle: persist-mutable
-provenance: derived
+provenance: recorded
 publish: bound
 generated: 2026-08-29
 ---

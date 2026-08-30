@@ -1,9 +1,10 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended four times (three on 2026-08-29, the fourth on
-  2026-08-30)** — citation form, then the `provenance` enum's membership, then four claims this
+- **Status:** Accepted (2026-08-28); **amended five times (three on 2026-08-29, the fourth and fifth
+  on 2026-08-30)** — citation form, then the `provenance` enum's membership, then four claims this
   record made that the release did not ship, then three enforcement warrants this record asserted
-  that no file implements.
+  that no file implements, then the `provenance:` key narrowed to its own scope with the member that
+  scope was missing.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -30,9 +31,10 @@
   is visible in Decision 5, which is left standing: the value-level bracket marks are a **four-member**
   vocabulary, and `researched`, like `human`, carries **no** value-level mark anywhere in the corpus,
   because both are artifact-scoped. Reading the enum off the marked values yields five. Both renderings
-  now read `human | enrich | derived | operator-provided | third-party | researched`, the order all 19
-  schemas already use. **No decision, rule, residual, coverage claim or key derivation is changed, and
-  none is re-opened.**
+  were set to `human | enrich | derived | operator-provided | third-party | researched`, the order all
+  19 schemas then used; the **fifth amendment** below narrows that key to its artifact scope, so this
+  paragraph records what that amendment established rather than the enum the key carries today. **No
+  decision, rule, residual, coverage claim or key derivation is changed, and none is re-opened.**
   **Third amendment** — four claims corrected against the tree this release actually shipped, and
   the second amendment's own two stale siblings closed with them. **(1) The reserved-key list.**
   Decision 2.2 named `updatesignals` alone; the guard ships **two** members, `updatesignals` and
@@ -76,6 +78,27 @@
   borrowed. **No decision, rule, residual, coverage claim or key derivation is changed, and none is
   re-opened** — each warrant is narrowed to a declared gap, in the register
   `reference/data-architecture.md` § 8 already uses for the four it declares.
+  **Fifth amendment** — the `provenance:` key narrowed to its own scope, and the artifact-scoped
+  member that scope was missing, at both sites that render the enum. This record declared a
+  **six-member** enum on a key that is **artifact-scoped**, while the definition table in
+  `reference/data-architecture.md` § 4.4 already assigned `enrich` to **field** scope and
+  `operator-provided` and `third-party` to **entry** scope. Three of the six were therefore
+  structurally undeclarable through the key: measured across the **19** class rows of that
+  document's § 1.1, those three are used **0** times, against `derived` **10**, `researched` **6**
+  and `human` **3** at the pre-amendment reading. **And the enum was short a member**: no
+  artifact-scoped value described state the engine maintains across runs, so
+  `outputs/event-status.md` was declared `derived` — *holds no independent state, so regenerating it
+  is safe* — against its own `persist-mutable` lifecycle, *survives every re-run; synthesis reads it
+  and never regenerates it*. It is the unique class carrying that pair. The key now reads
+  `human | researched | derived | recorded`, that class is relabelled `recorded`, and every class
+  still carrying `derived` sits in a wholesale-rebuilding lifecycle. **The shape is
+  `reference/data-architecture.md`'s to fix and this record follows it** (§ 12: *the ADR wins on the
+  decision, this document wins on the shape*) — the decision Decision 5 takes, that provenance is a
+  frontmatter-declared closed enum beside retained value-level marks, is untouched, and the
+  narrowing makes the granularity split that decision rests on exact rather than merely stated. The
+  **value-level bracket marks are unchanged** and remain load-bearing in CI. Decision 5's *artifact
+  or entry* is corrected to *artifact* for the same reason. **No decision, rule, residual, coverage
+  claim or key derivation is changed, and none is re-opened.**
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -434,7 +457,7 @@ schema-version: <integer>           # monotonic per class; see Decision 6
 trip: <trip-slug>                   # natural key of the owning Trip
 writer: <writer-id>                 # exactly one
 lifecycle: <accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output>
-provenance: <human|enrich|derived|operator-provided|third-party|researched>
+provenance: <human|researched|derived|recorded>
 publish: <bound|internal|internal-hard|output>
 generated: <YYYY-MM-DD>             # omitted on human-authored classes
 ---
@@ -514,8 +537,11 @@ the structural attribute — and shipping the third does not discharge the first
 ### 5. Provenance — a frontmatter declaration over a retained inline marker
 
 **`provenance:` is declared in frontmatter**, as a closed enum:
-`human | enrich | derived | operator-provided | third-party | researched` — lowercase-hyphenated,
-matching the repo's existing enum-value convention.
+`human | researched | derived | recorded` — lowercase-hyphenated, matching the repo's existing
+enum-value convention. **The key is artifact-scoped and those four are the whole of its enum**;
+`enrich`, `operator-provided` and `third-party` are the field- and entry-scoped half of the
+vocabulary, carried by the inline marks below rather than by this key
+(`reference/data-architecture.md` → "The `provenance` enum", which owns the shape).
 
 **The inline bracket marks are RETAINED as the per-value rendered marker.** `[THIRD-PARTY]`,
 `[DERIVED]`, `[ENRICH]` and `[OPERATOR-PROVIDED]` are the observed vocabulary and they are
@@ -528,8 +554,8 @@ guard's backstop against exactly that.
 
 **The declared exception to the no-double-home rule, stated once, here.** `provenance:` and the inline
 marks are **not two homes for one fact — they are two granularities of one fact.** The frontmatter
-field declares provenance for the **artifact or entry**; the bracket mark carries it for the
-**individual value**. Neither can be derived from the other: an entry-level declaration cannot say
+field declares provenance for the **artifact**; the bracket mark carries it for the
+**individual value**. Neither can be derived from the other: an artifact-level declaration cannot say
 which of its values a later agent added second-hand, and a value-level mark cannot survive an agent
 that strips it. **Asserting that the two correspond is a declared gap:** no schema expresses the
 correspondence and no gate reads an inline mark against a `provenance:` value, so a mark that
