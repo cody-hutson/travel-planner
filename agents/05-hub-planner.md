@@ -640,8 +640,10 @@ live in `reference/data-architecture.md` → "Universal frontmatter", the
 publishability class in `reference/data-architecture.md` → "Publishability",
 and each class's own declaration in `reference/schemas/<class>.md`. Cite them;
 do not restate them. On a rebuilt file the whole block is written fresh each
-pass; on `outputs/event-status.md` it is not — see the per-event status
-discipline above.
+pass, with two exceptions. On `outputs/event-status.md` it is not — see the
+per-event status discipline above. On `outputs/satisfaction-metrics.md` you
+write **no frontmatter at all**: that block has exactly one declared writer, the
+validator, and your ownership of that file is sectional, not frontmatter-wide.
 
 **The entry key — a declared key column, carrying the venue key and nothing
 else.** `Venue key` is the leading column and holds the row's `ven-<token>`. It

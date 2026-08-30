@@ -755,12 +755,16 @@ grades it against the one row that shipped.
 
 ## 9. Per-Artifact Gap Analysis
 
-Current state measured against the target state fixed above. **Every in-model class has the same
-delta on the first four dimensions** — no artifact carries frontmatter, a schema version, a declared
-provenance field, or a declared publishability class today — so those are stated once here rather
-than repeated nineteen times.
+**The pre-migration baseline**, measured against the target state fixed above. **Every in-model
+class had the same delta on the first four dimensions** — no artifact carried frontmatter, a schema
+version, a declared provenance field, or a declared publishability class — so those are stated once
+here rather than repeated nineteen times.
 
-**Universal current state (all of C1–C19):**
+**This release closed that universal delta.** The migrated artifacts carry all four, and
+`examples/data-architecture-demo/` is the worked instance. The table below is retained as the record
+of what the migration had to do; it is not a description of the tree today.
+
+**Universal pre-migration state (all of C1–C19):**
 
 | Dimension | Current | Target | Delta |
 |---|---|---|---|
