@@ -96,6 +96,17 @@ Jardins do Palácio de Cristal — 17:00 — ~1h15 — level paths. Outdoor, and
 Café Majestic — indoor, level access — the standing escape if the gardens block is
 rained or heated off.
 
+**Alternatives**
+*Not exercised on this day.* Ten of the twelve venues in `outputs/venue-matrix.md` are
+anchors, and the deduplication rule forbids a venue anchored on one day standing as an
+alternative on another; Café Majestic is the bailout and already at the two-appearance
+cap. The one venue that could stand here without breaching either rule is Casa do Livro —
+already Saturday's alternative — and placing it again would put a **second** venue at the
+cap, which `outputs/venue-matrix.md` and `README.md` F8 both state in the singular. So the
+section is carried and left unfilled rather than filled by inventing a venue: `README.md`
+§ *Depth* licenses a thin section and never a missing one. **Named by display title and
+not by key**, because this file carries none — see the note above.
+
 **Food Anchors**
 - Breakfast: — *(in transit — the party is travelling)*
 - Lunch: — *(in transit)*
@@ -134,6 +145,10 @@ below, where its lunch counters put it. Listing it twice would give one fact two
 **AC Bailout** *(activate if needed)*
 Not activated — no outdoor block today. Café Majestic remains the standing escape for
 the days that have one.
+
+**Alternatives**
+*Not exercised on this day* — the same bound as Day 1. Nothing about this day narrows it
+further; it is the venue set that runs out, not the day.
 
 **Food Anchors**
 - Breakfast: — *(not placed — see the depth note below)*
@@ -182,14 +197,16 @@ Café Majestic — indoor, level access — the escape for the viewpoint block.
 | Casa do Livro | Indoor bar | Low | Walk-in | — | — |
 
 **Two of the six cells read `—`, and that is a fixture property rather than a plan
-property.** This example ships no per-venue operational detail at all — no addresses,
-no opening hours, no walk times, no external links — which `README.md` § *Depth*
-declares and `outputs/links-reference.md` repeats. On a real trip those cells are
-filled, and `agents/06-validator.md`'s structural-integrity check flags an alternative
-listed without them. The `—` is what keeps that visible instead of inventing hours
-nobody researched. The **two-axis** requirement is met on the axes the fixture does
-carry: Casa do Livro differs from the rooftop on price tier **and** on effort — a
-walk-in indoor room against a held table at a view venue.
+property.** The only per-venue operational detail this example ships is the street
+address the venue-identity procedure consumes as its rung-2 evidence, on the four
+research entries in `outputs/nightlife-list.md` and `outputs/rooftop-sunset-bars.md`;
+it carries no opening hours, no walk times and no external links, which `README.md`
+§ *Depth* declares and `outputs/links-reference.md` repeats for external URLs. On a
+real trip those cells are filled, and `agents/06-validator.md`'s structural-integrity
+check flags an alternative listed without them. The `—` is what keeps that visible
+instead of inventing hours nobody researched. The **two-axis** requirement is met on
+the axes the fixture does carry: Casa do Livro differs from the rooftop on price tier
+**and** on effort — a walk-in indoor room against a held table at a view venue.
 
 **Food Anchors**
 - Breakfast: — *(not placed)*
@@ -240,6 +257,10 @@ None. The window is a morning, and one unhurried thing is what fits in it.
 
 **AC Bailout** *(activate if needed)*
 Not activated — the outdoor block is a morning one, hours clear of the `HC-2` window.
+
+**Alternatives**
+*Not exercised on this day* — the same bound as Day 1, and a departure morning carrying
+one placement has little for an alternative to stand against in any case.
 
 **Food Anchors**
 - Breakfast: Padaria São Bento — 08:30 — walk-in, level, indoor. Early enough to leave

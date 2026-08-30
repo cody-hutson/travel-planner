@@ -60,8 +60,14 @@ keep true.
   `examples/tokyo-2026/` tree.** These get the **migrated-shape minimum**: correct
   frontmatter, plus the least body that keeps this fixture internally consistent.
   Per-venue research detail, addresses, opening hours, booking windows and external
-  links are **not** reproduced — `examples/tokyo-2026/` is the worked example for
-  content, and this one is the worked example for shape.
+  links are **not** reproduced — **except the one case the least-body clause above
+  already requires**: a venue's street address is carried where the five-rung identity
+  procedure needs it as **rung-2** evidence, because a merge whose warrant is missing is
+  one `scripts/test-artifact-schema.sh` group **VI** grades as unwarranted, and its
+  must-fire arm strips exactly those lines to prove it can. Nothing else on that list is
+  exempt, and the exemption is the evidence rung 2 reads rather than location detail
+  generally. `examples/tokyo-2026/` is the worked example for content, and this one is
+  the worked example for shape.
 
 **Depth governs content, not the writer's declared section set.** Tier 2 is a licence
 to leave a section thin; it is never a licence to leave it out. A file whose section
