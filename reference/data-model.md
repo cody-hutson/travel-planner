@@ -365,15 +365,15 @@ The chain in one line: **intake template → per-traveler source file (human) �
 
 **The lifecycle classes are defined once, in `reference/data-architecture.md` § *Lifecycle Classes*.** That document is the engine-wide home for the class set — `accumulate-append`, `rebuilt-each-synthesis`, `versioned`, `persist-mutable`, `output` — and for what each class means. **This section does not restate those definitions.** It records the two things the engine-wide document defers to this one: the **satisfaction layer's own class assignments**, and the derivation that produced `persist-mutable`.
 
-`CLAUDE.md` § *Output Versioning* cites the same home for the same set. One definition, two citing documents.
+`CLAUDE.md` § *Output Versioning* cites the same home for the same set, in its § *Satisfaction-layer artifacts* subsection — which says in terms that it assigns and does not define. **The rest of that section still states the engine's default-and-exception model in its own words, and correctly so:** it is a live input, read by `reference/data-architecture.md` § *Lifecycle Classes*' own absence rule and by `.claude/commands/trip.md`'s `/trip research` agent-key derivation. One definition; this document cites it and restates nothing, and `CLAUDE.md` both cites it and states behaviour the engine reads back.
 
 The satisfaction artifacts take these classes:
 
 | New artifact | Lifecycle | How it behaves | Closest existing pattern |
 |--------------|-----------|----------------|--------------------------|
 | `outputs/event-status.md` | **persist-mutable** | Updated **in place** as events change status. **Survives every re-synthesis** — never wiped, never regenerated from scratch. It is the iteration-protection source of truth: the record of what has already been booked / locked / fallen-through must outlive any single planning pass. | None — see below |
-| `outputs/traveler-model.md` | `rebuilt-each-synthesis` | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | (b) rebuilt-each-synthesis |
-| `outputs/satisfaction-metrics.md` | `rebuilt-each-synthesis` | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | (b) rebuilt-each-synthesis |
+| `outputs/traveler-model.md` | `rebuilt-each-synthesis` | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | rebuilt-each-synthesis |
+| `outputs/satisfaction-metrics.md` | `rebuilt-each-synthesis` | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | rebuilt-each-synthesis |
 
 ### Why `persist-mutable` exists — the derivation
 
@@ -509,7 +509,7 @@ This document describes the *capability* and the *data condition* that produces 
 
 ## Satisfaction Metrics
 
-The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt-each-synthesis — pattern (b), a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
+The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt-each-synthesis, a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
 
 It defines the **measurable surface** only. It does **not** define how any balance dimension is scored — no formula, no weight, no threshold, no ranking math. That boundary is deliberate and load-bearing: per the document's own rule, nothing in the satisfaction layer optimizes yet, and "how a coverage number is computed is out of scope." This section names *what is measured and what kind of signal each is*; the scoring of the balance dimensions is **left to design**.
 
@@ -573,7 +573,7 @@ This reconciles the language elsewhere that the audit runs "every day": the audi
 | **Needs ↔ constraint agreement check** | **Validator** | The validator owns the reconciliation that every needs-compliance `fail` is a constraint Critical (see Reconciliation below). |
 | **Frontmatter block** (the universal fields — `reference/data-architecture.md` § *Universal frontmatter*) | **Validator** | One writer, so the block needs no merge rule at all. The validator authors and refreshes it; the hub carries it through its read-merge-write and preserves it byte-for-byte, never authoring it. The class declares **no per-class field**, so no field is written by both — the partition is total and disjoint by construction, which is what keeps the two-writer split out of YAML. |
 
-The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt-each-synthesis (pattern (b)) — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
+The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt-each-synthesis — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
 
 ### `outputs/satisfaction-metrics.md` shape
 
@@ -820,9 +820,11 @@ These four are the **complete complement** of the equality above, not a sample o
 | **C3** | **Reserved-key collision.** `normalize(P)` equals a declared reserved key (below). | Reconciler, and intake where it runs | **Hard stop at intake; refuse the entry at reconcile.** Admitting it is the fail-open: the guard's parse suppresses the entry, so its values never enter the non-publishable class at all. |
 | **C4** | **Two display names, one key.** Distinct `Person` values whose keys are equal — `Sam B.` and `Sam. B` both key to `samb`. | Reconciler only — it is a property of the **set**, and the reconciler is the one component that holds the set | **Hard stop, both names quoted; the operator disambiguates the display name.** The engine **never mints a suffix**: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence above by construction. |
 
-**C2 is stated nowhere upstream.** Neither § 3.2 nor ADR-009 Decision 2.2 states an empty-key rule,
-and the key normalization carries no empty guard. Without C2 the natural key is neither total nor
-injective, and *"uniqueness is asserted over this key"* is unsatisfiable at the degenerate point.
+**C2 is decided here and cited upstream.** The key normalization itself carries no empty guard, and
+neither § 3.2 nor ADR-009 Decision 2.2 states the rule — each now names the degenerate point and
+cites this case for it, which is the split those documents already take for the four cases. Without
+C2 the natural key would be neither total nor injective, and *"uniqueness is asserted over this
+key"* would be unsatisfiable at the degenerate point; C2 is what makes that assertion total.
 
 ### Reserved keys
 
@@ -842,23 +844,29 @@ injective, and *"uniqueness is asserted over this key"* is unsatisfiable at the 
 > for a disambiguated one; the reconciler refuses the entry and reports it (C3).
 
 **What the guard consumes today, stated so the gap is not mistaken for coverage.** The publish
-guard's derived-model parse reserves **one** key — `updatesignals` — as a hardcoded literal, so
-`## Desire overlap` is currently counted as a **person**: the entry counter fires and the overlap
-lines are read as that non-person's fields. It emits no class record (the overlap block carries no
-declared field label and no entry mark, and a third-party entry contributes no desires by
-construction), so this is an **entry-population defect and not a live leak** — but the guard's
-entry count is not a count of people. Two further gaps in that same branch are measured and pinned
-by cases **L11a** and **L11b** in `scripts/test-publish-guard.sh`: a declared *field* value under
-the reserved heading reaches the render with no backstop of any kind, and a suppressed *entry* mark
-is backstopped only while no other entry produced a record. **All three are guard behaviour and are
-not changed by this section**, which declares the rule and places the reachable half of the
-enforcement at the reconciler — the only component that holds the entry set. Widening the guard's
-reserved-key branch to read this list is the remaining half.
+guard's derived-model parse reads **this whole list** rather than one hardcoded literal:
+`_GUARD_RESERVED_KEYS` holds both members space-padded, and the heading branch matches a normalized
+key against it whole. `## Desire overlap` is therefore treated as the structural section it is and
+no longer counted as a **person** — case **L11c** in `scripts/test-publish-guard.sh` pins that,
+and pins why it mattered: a structural section counted as a person is a phantom entry, and a
+phantom entry keeps the `entries == 0` fail-closed sentinel from firing on a model that has drifted
+to carry no recognisable person at all.
 
-**The intake half is declared and currently unowned.** § 3.2 requires intake to reject a
-reserved-key collision. Both intake commands are read-only inputs to this rule rather than editors
-of it, so C2 and C3 are enforced at the reconciler and the intake obligation is recorded here
-rather than dropped.
+**What the widening did not buy, measured rather than assumed.** Reserving a key *suppresses* the
+field and entry limbs beneath it, so the gap that suppression opens now spans both declared keys
+rather than one. Three cases pin it: **L11a** — a declared *field* value under a reserved heading
+reaches the render with no backstop of any kind; **L11b** — a suppressed *entry* mark is
+backstopped only while no other entry produced a record; **L11d** — the second reserved heading has
+L11a's shape exactly. **All three are guard behaviour and are not changed by this section**, which
+declares the rule and places the reachable half of the enforcement at the reconciler — the only
+component that holds the entry set.
+
+**The intake half is declared and currently unowned, and it is the remaining half.** § 3.2 requires
+intake to reject a reserved-key collision. Both intake commands are read-only inputs to this rule
+rather than editors of it, so C2 and C3 are enforced at the reconciler and the intake obligation is
+recorded here rather than dropped. **No intake command was changed by the release that landed this
+list** — the reserved-key hard stop at intake has not shipped, and a claim that it has should be
+read against `.claude/commands/trip-new.md` itself.
 
 ---
 

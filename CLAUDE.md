@@ -60,6 +60,17 @@ This file is the primary session bridge. It captures what trip-context.md does n
 
 ## Output Versioning — Never Lose Agent Work
 
+> **Why this section is retained, stated so the retention is cited rather than assumed.** The
+> canonical lifecycle-class tokens and their definitions have one home,
+> `reference/data-architecture.md` § *Lifecycle Classes*, and the satisfaction-layer subsection
+> below cites it rather than defining anything. **The default-and-exception model in the rest of
+> this section is not a duplicate of that home — it is a live input read back by the engine**, in
+> two places: that section's own absence rule derives a class for an artifact its exception set
+> does not name, and `.claude/commands/trip.md` derives the `/trip research` agent key by filtering
+> the roster to the rows this section leaves in the accumulating default. Deleting or collapsing
+> this prose would break both reads. Where the two overlap, the engine-wide tokens and definitions
+> govern; **editing the exception set below changes what that command dispatches.**
+
 **Agent outputs accumulate. They do not overwrite.**
 
 When an agent re-runs (e.g., food agent runs again after the user asks for more options):

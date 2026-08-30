@@ -24,7 +24,7 @@ optimization, and no control flow — see *What This Document Does Not Define*.
 | Which entities take surrogate keys and which take natural keys | § 3 Identity Conventions |
 | What goes in frontmatter, what stays in the body | § 4 Serialization |
 | What may reach a published page | § 5 Publishability |
-| How each artifact behaves across re-runs — **the single home** | § 6 Lifecycle Classes |
+| How each artifact behaves across re-runs — **the single home for the class tokens and their definitions**, with `CLAUDE.md` § *Output Versioning* retained as a live input (§ 6) | § 6 Lifecycle Classes |
 | How a schema change is versioned and read tolerantly | § 7 Schema Versioning |
 | Which model element prevents which class of contract defect | § 8 Contracts, Granularity, Enforcement |
 | Current state against target state, per class | § 9 Per-Artifact Gap Analysis |
@@ -168,10 +168,20 @@ A person's identity originates outside the engine (limb 1), and the name is *alr
 > the display name, which changes the key. The engine never mints a suffix: a minted suffix is a
 > surrogate key wearing a natural key's clothes, and it would break the correspondence above.
 >
-> **Reserved-key hazard.** The publish guard treats one normalized key as a structural section
-> rather than as a person. The schema MUST therefore carry a **reserved-key list**, and intake MUST
-> reject a traveler whose normalized key lands on it. Today such a traveler would be silently
-> dropped from the non-publishable class — a fail-open inside a fail-closed guard.
+> **The empty key is a decided case, not an assumed one.** A display name carrying no `[a-z0-9]`
+> character normalizes to the empty string, where the uniqueness assertion above has nothing to
+> assert over and no filename exists for the key to correspond to. That degenerate point is a hard
+> stop, decided as case **C2** in `reference/data-model.md` § *The four cases the correspondence
+> does not reach*. It is cited here rather than re-decided, and it is what makes the assertion
+> above total.
+>
+> **Reserved-key hazard.** The publish guard treats **two** normalized keys — `updatesignals` and
+> `desireoverlap` — as structural sections rather than as people, reading them from a list rather
+> than as a literal. The list the schema carries is declared in `reference/data-model.md`
+> § *Reserved keys*, and intake MUST reject a traveler whose normalized key lands on it. **The
+> intake half has not shipped**: such a traveler is still silently dropped from the non-publishable
+> class — a fail-open inside a fail-closed guard, and the guard-side half of it is pinned open by
+> cases `L11a`, `L11b` and `L11d` in `scripts/test-publish-guard.sh`.
 >
 > **The display name is a body value, never a frontmatter value.** It already has a home in the
 > filename and the heading, so § 4.3's no-double-home rule bars restating it in frontmatter. This
@@ -275,8 +285,15 @@ Per-class fields extend this set; **no class removes a universal field.** Two cl
 declared exception:
 
 - **C14 `outputs/satisfaction-metrics.md`** — `writer` is a two-value **section-owned** list, and no other
-  field is writable by both. The frontmatter partition is total and disjoint by construction: every
-  universal field is written by the *creating* writer and never re-written by the other.
+  field is writable by both. **The two-value list is a statement about the file's sections, not
+  about its frontmatter block: the block has exactly one declared writer, the validator**
+  (`reference/data-model.md` § *Write split — section ownership*, the `Frontmatter block` row, and
+  `agents/06-validator.md`, which authors and refreshes it). The hub carries the block through its
+  own read-merge-write and preserves it byte-for-byte, never authoring it. The frontmatter
+  partition is therefore total and disjoint by construction — every universal field has that one
+  owner, and none is re-written by the other writer. **Read as *whichever writer created the file*
+  this sentence would decide the opposite on a pass where the hub writes its sections first**,
+  which is the reading it exists to close.
 - **C1 `trip-context.md`** — `writer` is `block-owned`, a sentinel meaning *see `CLAUDE.md`
   § Write ownership*. It is not a writer id and no tool resolves it to one.
 
@@ -488,9 +505,24 @@ second home by being migrated.
 
 ## 6. Lifecycle Classes
 
-**This section is the single home for the artifact lifecycle classification.** `reference/data-model.md` cites
-it for the satisfaction artifacts; `CLAUDE.md` § *Output Versioning* cites it for the engine set.
-Neither restates the definitions.
+**This section is the single home for the canonical class tokens and their definitions.**
+`reference/data-model.md` cites it for the satisfaction artifacts and restates none of them.
+`CLAUDE.md` § *Output Versioning* cites it too — its § *Satisfaction-layer artifacts* subsection
+says in terms that it assigns and does not define — but the rest of that section **still states the
+engine's default-and-exception model in its own words, and is retained deliberately for it.** That
+statement is a **live input**, not a leftover: this section's own absence rule below reads it, and
+`.claude/commands/trip.md` derives the `/trip research` agent key from it, admitting exactly the
+roster rows it leaves in the accumulating default. Where the two overlap, the tokens and
+definitions above govern.
+
+**What is not a restatement, and what is.** The nineteen per-class schemas in `reference/schemas/`
+each carry `field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]`
+— the identical five-value **value domain**, a vocabulary constraint rather than a per-class
+assignment, so no schema restates this section (each says the same of `writer:` in terms: *typed,
+not enumerated*). What does restate the assignment is **inside this document**: § 9's
+`Lifecycle: current → target` column states it a third time, after § 1.1's `L` column and the
+`Members` column below. It is named here rather than left unnamed, and § 9 carries the same
+membership disclaimer § 7.6 already carries.
 
 | Canonical token | Definition | Members |
 |---|---|---|
@@ -500,21 +532,29 @@ Neither restates the definitions.
 | `persist-mutable` | A single file, updated **in place**, that survives every re-run. Synthesis *reads* it and never regenerates it. Not append-only: a row is deleted in the one case where its subject is removed, so no ghost row lingers. | C1, C3, C13 |
 | `output` | A render, not a lifecycle-managed source. Rebuilt from the artifacts it renders; never read back as a source. | C19 |
 
-**Legacy spellings.** Two legacy forms exist in the corpus today, and they are **spellings, not
-additional classes**:
+**Legacy spellings — a closed record, not an open instruction.** Two legacy forms existed in the
+corpus before this release, and they were **spellings, not additional classes**:
 
-- the **Title-case section spellings** in `reference/data-model.md` § *Artifact Lifecycle
-  Classification*, where the patterns are introduced as prose headings rather than tokens;
-- a **slash-joined variant** of `rebuilt-each-synthesis`, carried by `CLAUDE.md` § *Output
-  Versioning*, `agents/05-hub-planner.md`, `agents/06-validator.md` and `reference/data-model.md`.
-  It occurs in **two casings**, and a sweep that is not case-insensitive misses one of them.
+- the **Title-case prose-heading spellings** that `reference/data-model.md` § *Artifact Lifecycle
+  Classification* carried — `(a) Accumulate-append-with-dated-sections`, `(b) Rebuilt-each-synthesis`,
+  `(c) Versioned` — introduced as prose headings rather than tokens. That lettered enumeration is
+  gone: the section now cites this one and states that it does not restate the definitions;
+- a **slash-joined variant** of `rebuilt-each-synthesis`, `rebuilt/refreshed`, carried by
+  `CLAUDE.md` § *Output Versioning*, `agents/05-hub-planner.md`, `agents/06-validator.md` and
+  `reference/data-model.md` in **two casings**, so that a case-sensitive sweep would have missed one
+  of them.
 
-`reference/data-model.md`'s own *Closest existing pattern* column already maps the slash-joined
-variant onto `rebuilt-each-synthesis`, so the collapse is that document's stated mapping rather than
-a new judgment here. The canonical tokens above are the hyphenated lowercase forms — the form the
-corpus already uses everywhere for `persist-mutable`. Migration replaces each legacy spelling with
-its canonical token or with a citation to this section, and **the sweep that verifies it must be
-case-insensitive**, or the second casing survives it.
+**Both were replaced in this release, and the corpus now carries neither.** Measured across all
+tracked files: the slash-joined variant stood at **11** occurrences before this release — `CLAUDE.md`
+2, `agents/05-hub-planner.md` 2, `agents/06-validator.md` 1, `reference/data-model.md` 6, and zero
+anywhere else — and stands at **0** now; the lettered prose headings are dissolved. **No sweep
+remains to run, and a reader who takes the paragraph above as an instruction runs a vacuous one.**
+
+The canonical tokens above are the hyphenated lowercase forms — the form the corpus already used
+everywhere for `persist-mutable`. They are recorded here because the compatibility surface reaches
+past the repository: an artifact written before the migration, in a user's git-ignored `trips/`
+directory, may still carry a legacy spelling, and a reader that meets one collapses it onto the
+canonical token above rather than treating it as a sixth class.
 
 **Two classes are assigned by the absence of an exception, and the absence is the assignment.**
 `CLAUDE.md` § *Output Versioning* states one default — agent outputs accumulate, they do not
@@ -692,16 +732,24 @@ rename repairs the register rather than silently orphaning a row.
 
 ## 8. Contracts, Granularity and Enforcement
 
-Five known contract defects each name a model element that would have prevented them. Each element
-below is a **required part of every class's schema**, not a note.
+Five known contract defects each name a model element that would prevent them. **One of the five
+shipped in this release; four did not, and this section declares them rather than continuing to
+assert them.** The `Shipped?` column is the reconciliation — it was written against a tree in which
+`reference/schemas/` held no files, and the nineteen schemas that arrived later implement one row of
+it.
 
-| Defect class | Model element that prevents it |
-|---|---|
-| A predicate two consumers read oppositely on a partial day | **`granularity:` is a declared property of every predicate and every factor** (`day` \| `time-block` \| `instant`), and **every predicate must be total over its declared domain.** The known mismatch — a time-block-granular constraint factor against a day-granular presence factor — becomes a *declared, visible* mismatch rather than an implicit one. |
-| An agent that cannot read a signal another agent publishes | **`reads:` and `writes:` are declared per agent, and `readers:` per artifact class — a closed set, and the two must agree.** A signal published on a channel no consumer opens becomes a *detectable* contract violation rather than a silent one. |
-| Suppliers blind to a field added upstream | **The propagation rule.** Adding a field to an artifact obliges updating every agent in that artifact's declared `readers:` set. The set is **derivable from the model rather than remembered**, which is the whole of the fix. |
-| A subject with no source having no field-label surface | **§ 4.5 rule 3 — the degenerate case is part of every schema**, plus § 4.3, so shared vocabulary is single-sourced and two writers cannot describe the same distinction two ways. |
-| A stated cap with no validator that audits it | **`enforced-by:` is a required property of every declared rule and every numeric cap** in the model. A rule with no enforcement point is a **declared gap**, surfaced at authoring time instead of discovered by a later census. |
+| Defect class | Model element that prevents it | Shipped? |
+|---|---|---|
+| A predicate two consumers read oppositely on a partial day | **`granularity:` as a declared property of every predicate and every factor** (`day` \| `time-block` \| `instant`), with **every predicate total over its declared domain.** The known mismatch — a time-block-granular constraint factor against a day-granular presence factor — would become a *declared, visible* mismatch rather than an implicit one. | **No — declared gap.** No schema carries a `granularity:` field, and totality is asserted nowhere. The mismatch remains implicit. |
+| An agent that cannot read a signal another agent publishes | **`reads:` and `writes:` declared per agent, and `readers:` per artifact class — a closed set, with the two required to agree.** A signal published on a channel no consumer opens would become a *detectable* contract violation rather than a silent one. | **No — declared gap.** No schema carries `readers:`, and no agent prompt carries a machine-readable `reads:` / `writes:` declaration. A prompt's read-declaration *site* is registered in § 7.7, but that register names where a citation goes, not what an agent reads. |
+| Suppliers blind to a field added upstream | **The propagation rule.** Adding a field to an artifact would oblige updating every agent in that artifact's declared `readers:` set, **derivable from the model rather than remembered.** | **No — declared gap, and it follows the row above.** The propagation rule is defined over the `readers:` set, so it cannot ship before that set does. |
+| A subject with no source having no field-label surface | **§ 4.5 rule 3 — the degenerate case is part of every schema**, plus § 4.3, so shared vocabulary is single-sourced and two writers cannot describe the same distinction two ways. | **Yes.** Every class whose shape admits a degenerate entry declares it — `venue: unminted` in the research classes, `day: undated` in C8, the no-source stream in C9 — each stated as a declared absence rather than a default value. |
+| A stated cap with no validator that audits it | **`enforced-by:` as a required property of every declared rule and every numeric cap** in the model. A rule with no enforcement point would be surfaced at authoring time instead of discovered by a later census. | **No — declared gap, and the sharpest one**, because this row states the rule the other three fail: *a rule with no enforcement point is a declared gap*. No schema carries `enforced-by:`; the caps this document states are audited by the guard suites where they are audited at all, and that correspondence is not declared anywhere a reader can query. |
+
+**The four gaps are declared, not deferred silently — and declaring them is what this section's own
+last row requires.** They are properties a later slice may add to the schema grammar; until it does,
+nothing in `reference/schemas/` asserts them, and a reader grading a class against this section
+grades it against the one row that shipped.
 
 ---
 
@@ -721,7 +769,11 @@ than repeated nineteen times.
 | `provenance` declaration | **None as a field.** Provenance exists only as four inline bracket marks on individual values. | § 4.4 `provenance:` | Add the declaration; **retain** the marks; assert correspondence. |
 | `publish` class | **None as a field.** Publishability is inferable only from prose in the site-layout spec and from two literals in the publish guard. | § 5.1 `publish:` | Add the field as the machine-readable projection of the spec section. |
 
-**Per-class deltas on identity and lifecycle** — the dimensions where classes differ:
+**Per-class deltas on identity and lifecycle** — the dimensions where classes differ. **The
+`Lifecycle` column is § 6's assignment projected as a delta, not a second roster** — § 6 governs
+which class sits in which lifecycle, and a class that moves between its rows moves here with it.
+That is the same disclaimer § 7.6 carries, stated here because this column is the third place in
+this document the assignment appears.
 
 | C | Identity: current → target | Lifecycle: current → target |
 |---|---|---|

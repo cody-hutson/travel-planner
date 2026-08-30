@@ -1,7 +1,7 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended twice (2026-08-29)** — citation form, then the
-  `provenance` enum's membership.
+- **Status:** Accepted (2026-08-28); **amended three times (2026-08-29)** — citation form, then the
+  `provenance` enum's membership, then four claims this record made that the release did not ship.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -31,6 +31,29 @@
   now read `human | enrich | derived | operator-provided | third-party | researched`, the order all 19
   schemas already use. **No decision, rule, residual, coverage claim or key derivation is changed, and
   none is re-opened.**
+  **Third amendment** — four claims corrected against the tree this release actually shipped, and
+  the second amendment's own two stale siblings closed with them. **(1) The reserved-key list.**
+  Decision 2.2 named `updatesignals` alone; the guard ships **two** members, `updatesignals` and
+  `desireoverlap`, read as a list, and `scripts/test-publish-guard.sh` case `L11c` pins that both
+  are read. `desireoverlap` appeared **0 times** in this document. **(2) The empty-key degenerate
+  point.** Decision 2.2 asserted that *uniqueness is asserted over this key* while stating no
+  empty-key rule, which `reference/data-model.md` records as leaving that assertion unsatisfiable at
+  the degenerate point; the case is now cited to where it is decided, **C2** in that document.
+  **(3) The Consequences ledger over-reported a discharge.** It stated that *a fail-open in a
+  fail-closed guard is closed* and that the list makes it *a hard stop at intake* — false on both
+  limbs. `.claude/commands/trip-new.md` is byte-identical to `main`, so no intake rejection shipped;
+  `reference/data-model.md` records the intake half as *declared and currently unowned*; and cases
+  `L11a`, `L11b` and `L11d` pin the guard-side suppression open. The entry also **contradicted
+  Decision 2.2 of this same document**, which states the fail-open as live. Decision 2.2 was
+  correct; the ledger entry is corrected to it. **(4) The lifecycle single-home claim was too
+  broad.** Decision 1 and the References section stated that `CLAUDE.md § Output Versioning` merely
+  cites, and that this ADR's classification *supersedes it as the single home*. That section
+  correctly still stands: its default-and-exception model is a **live input**, read by
+  `reference/data-architecture.md § Lifecycle Classes`' own absence rule and by
+  `.claude/commands/trip.md`'s `/trip research` agent-key derivation. Both claims are narrowed to
+  the class tokens and their definitions. **No decision, rule, residual, coverage claim or key
+  derivation is changed, and none is re-opened** — each correction states what the release shipped
+  in place of what this record asserted it had.
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -200,9 +223,14 @@ expanded. It remains the **satisfaction-layer specialization** of the engine-wid
 own `§ What This Document Does Not Define` boundary. Where the two overlap, the engine-wide document
 is authoritative for the shape and `data-model.md` for the satisfaction layer's own content.
 
-**Lifecycle classification has exactly one home: `reference/data-architecture.md § Lifecycle
-classes`.** `reference/data-model.md` cites it. `CLAUDE.md § Output Versioning` cites it. Neither
-restates the definitions.
+**The canonical lifecycle-class tokens and their definitions have exactly one home:
+`reference/data-architecture.md § Lifecycle classes`.** `reference/data-model.md` cites it and
+restates none of them. `CLAUDE.md § Output Versioning` cites it too, and its satisfaction-layer
+subsection assigns without defining — but the rest of that section **states the engine's
+default-and-exception model in its own words and is retained deliberately**, because it is a live
+input rather than a leftover: the lifecycle section's own absence rule reads it, and
+`.claude/commands/trip.md` derives the `/trip research` agent key from it. Where the two overlap,
+the engine-wide tokens and definitions govern.
 
 **The ordering rule — normative, and binding on every slice that edits `reference/data-model.md`.**
 
@@ -271,13 +299,23 @@ person's identity originates outside the engine, and the name is *already* the f
 > a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the filename
 > correspondence above.
 >
-> **Reserved keys are part of the schema.** The guard treats the normalized key `updatesignals` as a
-> structural section rather than a person (the reserved-key branch of `nonpublishable_values`, which
-> sets the live, third-party and entry flags to zero and skips the entry; the list itself is the
-> top-level `_GUARD_RESERVED_KEYS`). A traveler whose normalized name lands on a reserved
-> key is therefore **silently dropped from the non-publishable class — a fail-open inside a
-> fail-closed guard.** The schema MUST carry the reserved-key list and intake MUST reject a collision
-> with it.
+> **The empty key is a decided case.** A display name carrying no `[a-z0-9]` character normalizes to
+> the empty string, at which point the uniqueness assertion above has nothing to assert over and
+> `derive(P)` yields no filename for the key to correspond to. That degenerate point is a hard stop,
+> decided as case **C2** in `reference/data-model.md` § *The four cases the correspondence does not
+> reach*. It is cited here, not re-decided; without it the natural key is neither total nor
+> injective and the uniqueness assertion is unsatisfiable at that point.
+>
+> **Reserved keys are part of the schema.** The guard treats **two** normalized keys —
+> `updatesignals` and `desireoverlap` — as structural sections rather than people, reading them
+> from a list rather than as a single literal (the reserved-key branch of `nonpublishable_values`,
+> which sets the live, third-party and entry flags to zero and skips the entry; the list itself is
+> the top-level `_GUARD_RESERVED_KEYS`, and `scripts/test-publish-guard.sh` case `L11c` pins that
+> both members are read). A traveler whose normalized name lands on a reserved key is
+> **silently dropped from the non-publishable class — a fail-open inside a fail-closed guard**, and
+> that remains true: cases `L11a`, `L11b` and `L11d` in the same suite pin the suppression open.
+> The schema MUST carry the reserved-key list — it does, in `reference/data-model.md`
+> § *Reserved keys* — and intake MUST reject a collision with it, which **has not shipped**.
 
 **2.3 — Venue takes a surrogate key, and the evidence forces it.** The venue *record* is created by a
 research spoke, so limb 1 holds for the surrogate branch. Limb 2 fails decisively: one venue carries
@@ -381,11 +419,13 @@ generated: <YYYY-MM-DD>             # omitted on human-authored classes
 ```
 
 Per-class fields extend this set; **no class removes a universal field.** Two classes carry a declared
-exception: `satisfaction-metrics.md`, whose `writer` is a two-value section-owned list and whose
-frontmatter partition is total and disjoint by construction — every universal field is written by the
-creating writer and never re-written by the other; and `trip-context.md`, whose `writer` is the
-sentinel `block-owned`, meaning *see `CLAUDE.md § Write ownership`* — it is not a writer id and no
-tool resolves it to one.
+exception: `satisfaction-metrics.md`, whose `writer` is a two-value section-owned list — **a
+statement about the file's sections, not about its frontmatter block, which has exactly one declared
+writer, the validator** (`reference/data-model.md § Write split — section ownership`; the hub
+carries the block through its read-merge-write and never authors it), so the frontmatter partition
+is total and disjoint by construction, every universal field having that one owner and none being
+re-written by the other writer; and `trip-context.md`, whose `writer` is the sentinel `block-owned`,
+meaning *see `CLAUDE.md § Write ownership`* — it is not a writer id and no tool resolves it to one.
 
 **Three body rules, and only three, because over-structuring is the named risk.** Every class keeps
 its H1 and its existing body structure — frontmatter is prepended and nothing existing moves.
@@ -554,9 +594,19 @@ fail-closed paths are non-negotiable.
 - **Narrative is protected by construction.** The boundary test's second question cannot be satisfied
   by prose, so the failure mode the epic names — migrating judgment into fields — is structurally
   unavailable rather than discouraged.
-- **A fail-open in a fail-closed guard is closed.** The `updatesignals` reserved-key collision silently
-  dropped a traveler from the non-publishable class; the reserved-key list makes it a hard stop at
-  intake.
+- **The reserved-key list is declared and the guard reads all of it — the fail-open itself is not
+  closed.** What shipped is the list, in `reference/data-model.md` § *Reserved keys*, and a guard
+  branch that reads both of its members rather than one hardcoded literal
+  (`scripts/test-publish-guard.sh` case `L11c`, which pins that a model whose only section is the
+  second reserved heading aborts instead of parsing as a person). **Neither half of the fail-open
+  is closed by that.** A traveler whose normalized name lands on a reserved key is still silently
+  dropped from the non-publishable class: the suppression under a reserved heading has no backstop
+  on the field limb and only a conditional one on the entry limb, pinned as open by cases `L11a`,
+  `L11b` and `L11d`. And it is **not a hard stop at intake** — `.claude/commands/trip-new.md` is
+  unchanged by this release, and `reference/data-model.md` § *Reserved keys* records the intake
+  obligation as *declared and currently unowned*, with the reachable half of the enforcement placed
+  at the reconciler. Decision 2.2 states the fail-open as live; this entry previously stated it as
+  closed, and Decision 2.2 was the correct one.
 - **The mover-set stays empty.** The topology adds a file and appends to another. Nothing moves,
   nothing is renamed, nothing is deleted.
 
@@ -637,5 +687,7 @@ fail-closed paths are non-negotiable.
   `examples/tokyo-2026/outputs/`.
 - The publish-bound artifact set and its intentional exclusions:
   `reference/site-layout-spec.md § 9.1` / § 9.3.
-- Write ownership, the venue-deduplication cap, and the output-versioning model this ADR's lifecycle
-  classification supersedes as the single home: `CLAUDE.md`.
+- Write ownership, the venue-deduplication cap, and the output-versioning model whose **class-token
+  definitions** this ADR's lifecycle classification takes over as the single home — leaving
+  `CLAUDE.md § Output Versioning` standing as a live input, not superseded, per Decision 1:
+  `CLAUDE.md`.
