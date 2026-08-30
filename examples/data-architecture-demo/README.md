@@ -237,10 +237,13 @@ Per instance:
   is a real and instructive outcome: **resolving a marker is not an append**, and a
   re-run that confirms has nothing to accumulate. Manufacturing a second section here
   would erase that distinction.
-- **`outputs/rooftop-sunset-bars.md` (C18)** — a targeted-research output is **created
-  fresh each time** (§ 7.6), under a new slug per topic, so a given C18 file rarely
-  accumulates at all. One dated section is the shape this class actually takes in the
-  field.
+- **`outputs/rooftop-sunset-bars.md` (C18)** — **the class has no producer**, so there is
+  no second pass to accumulate: nothing in the engine opens a slug file, so this
+  instance — like every file in this directory — depicts the class rather than being
+  captured from a run of it. The status is stated once, in
+  `reference/schemas/targeted-research.md` → "Reachability", and cited here rather than
+  restated. One dated section is what a depiction of an `accumulate-append` class needs
+  to carry, and a second would be a second copy of an answer the fixture already gives.
 - **`outputs/scheduling-framework.md` (C8)** and **`outputs/transport-brief.md` (C9)** —
   tier 2. Both carry their writer's full declared section set, which is the shape claim
   this fixture makes; a second dated section would add content depth, which is exactly

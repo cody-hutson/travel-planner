@@ -64,7 +64,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 16 | `outputs/final-itinerary-v<N>.md` | hub | `versioned` (frozen sibling) | `derived` | `internal` | as C15 |
 | 17 | `outputs/validation-report.md` | validator | `rebuilt-each-synthesis` | `derived` | `internal` | Finding |
 | 18 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
-| 19 | `outputs/<destination>-travel-site.html` | site build | `output` | `derived` | **`output`** | (render of C1, C10, C11, C13, C15) |
+| 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C10, C11, C13, C15) |
 
 **C17 gains its first declared lifecycle here.** `outputs/validation-report.md` had no lifecycle anywhere in
 the corpus. It is `rebuilt-each-synthesis` because a finding against a superseded itinerary is noise,
@@ -350,6 +350,15 @@ declared exception:
   which is the reading it exists to close.
 - **C1 `trip-context.md`** — `writer` is `block-owned`, a sentinel meaning *see `CLAUDE.md`
   § Write ownership*. It is not a writer id and no tool resolves it to one.
+
+**The `W` cell is a bare writer-id wherever the class has exactly one, and prose wherever it names
+an ownership arrangement no single id can carry** — a sentinel, a verb, a human author, or several
+writers. Every per-class schema types `writer` as a `slug`, so only the first kind round-trips into
+a frontmatter block; a single-writer class whose cell reads as prose is a **type disagreement
+between this table and that class's own schema**, not a licence the schema grants. That divergence
+is also why `scripts/test-artifact-schema.sh` excludes `writer` from its cross-home comparison and
+**measures** the excluded cell count instead of omitting it silently (arm `CA7`) — the exclusion is
+a recorded property of the data, and it narrows as single-writer cells are regularised.
 
 **C19 carries its declaration in an HTML comment block rather than a YAML fence**, because the file
 is HTML. The field set and its meanings are identical.
@@ -838,10 +847,16 @@ because nothing is positioned to do it.
   on every new trip. What keeps C2 in this row is what keeps C1 in it: the scaffold writes the block
   once, at creation, and no writer of a log that already exists emits one — so an instance predating
   the scaffold has no next write for an upgrade to ride.
-- **C18 `outputs/<slug>.md`** — the targeted-research class is named on no writer surface at all, so
-  the spoke that re-runs has no instruction to emit the block. A targeted-research output is created
-  fresh each time, so the gap reproduces rather than ageing out — and **since C2 gained its scaffold
-  emitter, C18 is the only one of the three where it does.**
+- **C18 `outputs/<slug>.md`** — the targeted-research class is named on no writer surface at all,
+  and for this class that is more than a missing emitter: **no surface produces an instance of it
+  either.** The one targeted-research verb dispatches a spoke to append to the single output file
+  that spoke's roster row names, and each spoke's own `## Output Format` names that same one file —
+  so nothing in the engine opens a new slug file to carry a topic. **C18 is therefore a
+  selector-reachable class with no producer**, which is a different position from C1's and C2's and
+  is stated as such in `reference/schemas/targeted-research.md` → "Reachability", its own home. What
+  follows for this row is that the gap neither ages out nor reproduces: it is dormant, and it goes
+  live on the commit that gives the class a producer — which is the same commit that would have to
+  give it an emitter.
 
 **Guarantee 1 is what keeps all three readable in the meantime**, exactly as it does for C3: an
 artifact carrying no `schema-version` is read as version 0 and stays valid forever, and the gate skips
@@ -886,6 +901,27 @@ the section name in quotes — `` `reference/data-architecture.md` → "Tolerant
 shape every existing reference-corpus citation in these prompts already uses. **A citation authored
 against this register never carries a line number.** Line-anchored citations into the agent prompts
 are the debt this release is retiring; a new one would add to it.
+
+**What checks this form, and what does not — stated so a green is not read as coverage it does not
+give.** The form carries no inline-link syntax — no square-bracketed text immediately followed by a
+parenthesised path — so the repository's link-integrity job, `.github/workflows/security.yml` job
+*Markdown link integrity (markdown-link-check)*, whose scope is that syntax and which requires each
+one to *"resolve to a file that exists"*, has **an empty population over any document written in
+this form.** Its green over such a document is therefore **vacuous, not passing**: it reports that
+zero links were broken, which is a measurement of zero links, and it says nothing whatever about
+whether these citations resolve. **Nothing in the repository resolves a `` `path` → "Section" ``
+citation today.** A moved path, or a heading renamed against the table above, is caught by a reader
+opening the file and by no gate.
+
+**That is the accepted cost of the form, and the alternative is worse rather than merely
+different.** A line anchor is *checkable and wrong* — the failure the first amendment of `ADR-009`
+recorded across five tokens in one file — and converting these citations to inline links would
+close the gap only for the ones converted, leaving a corpus in which two citation forms sit side by
+side and a reader cannot tell which of them any gate stands behind. **One unchecked form applied
+uniformly is more honest than a checked form and an unchecked form that look alike.** What closes
+this properly is a resolver over the form itself — a check that reads the backticked path, requires
+it to exist, and requires the quoted section name to be a heading of it. That is a gate, not a
+prose change, and it is named here so the boundary is a declared gap rather than an unnoticed one.
 
 **A prompt cites; it never restates.** A tenth agent added later declares its site in this table and
 carries the citation — which is the reason the register is a closed table here rather than a
