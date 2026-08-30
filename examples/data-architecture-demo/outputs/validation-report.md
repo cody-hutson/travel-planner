@@ -41,6 +41,21 @@ version of this file committed: it reported a clean bill on a plan with no meal 
 day, omitting the one check that would have caught it. A check you cannot run is
 declared, not passed.
 
+**Two different things are reported as *not exercised*, and they are worth telling
+apart.** Most of the rows below are blocked on an **input this fixture declines to
+carry** — hours, prices, links, real bookings, a real destination. **Bailout
+completeness is not:** every input it needs is here, and the check simply has an **empty
+population**. `agents/06-validator.md` § *What You Audit* triggers it on *every day with
+a 3+ hour outdoor block*, and this plan's outdoor blocks run ~1h15 (Thu), ~45 minutes
+(Sat) and ~1h30 (Sun) — **no day reaches the trigger.** A pass there would have reported
+a bailout floor as held on a plan that never asked it to hold. The named bailouts this
+plan *does* carry are a different requirement — `HC-2` asks an afternoon outdoor block to
+be moved, shaded **or** given a named indoor escape — and reading them as satisfying a
+duration floor would borrow one rule's evidence for another rule's verdict, which is the
+substitution the *Location-Link Report* below refuses in the same terms. On a real trip a
+single 3+ hour outdoor block puts the check back in force, and a day carrying one with no
+named escape is a Critical.
+
 ---
 
 ## Validation Summary
@@ -181,31 +196,6 @@ Note.
 
 Proximity venue usage (hotel-neighborhood): not exercised — this fixture records no
 walking distances, so no venue can be classed as hotel-proximate.
-
----
-
-## Bailout Report
-
-**Not exercised, and the reason is a property of the plan rather than of the fixture's
-depth.** `agents/06-validator.md` § *What You Audit* triggers this check on **every day
-with a 3+ hour outdoor block**. This plan's outdoor blocks run **~1h15** (Thu, the
-gardens), **~45 minutes** (Sat, the viewpoint) and **~1h30** (Sun, the river walk), so
-**no day reaches the trigger and the population the check grades is empty.** A pass over
-an empty population is vacuous, not passing — it would report a bailout floor as held on
-a plan that never asked it to hold, which is the same defect as the clean bill this
-report's earlier version gave a plan with no meal on any day.
-
-**The named bailouts this plan does carry are a different requirement, and they are not
-this check's evidence.** Café Majestic is named on Thu 14 and Sat 16 because **`HC-2`**
-requires an afternoon outdoor block to be moved, shaded **or** given a named indoor
-escape — a constraint on heat, satisfied here by both limbs at once. Reading those two
-named bailouts as satisfying a 3+ hour duration floor would be borrowing one rule's
-evidence for another rule's verdict, which is the substitution the *Location-Link Report*
-below refuses in the same terms.
-
-**A reader should not take the emptiness as a standing property.** On a real trip a
-single 3+ hour outdoor block puts this check back in force for that day, and a day
-carrying one with no named escape is a Critical.
 
 ---
 
