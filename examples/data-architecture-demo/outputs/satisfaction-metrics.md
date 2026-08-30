@@ -97,16 +97,16 @@ need yields a constraint Critical with **no** needs-compliance row, by design.
 
 | Traveller | Desire | Tier | Covered | By |
 |---|---|---|---|---|
-| Alex | Watch a sunset from a rooftop | anchor | **covered** | `EV-5ab8` |
-| Alex | Spend real time in a good bookshop | wish | **covered** | `EV-3f9a` |
-| Alex | See a working food market | nice-to-have | **covered** | `EV-1d60` |
-| Robin | See contemporary art | anchor | **covered** | `EV-b47e` |
-| Robin | Walk along the river | wish | **covered** | `EV-2f77` |
-| Robin | Watch a sunset from a rooftop | wish | **covered** | `EV-5ab8` |
+| Alex | Watch a sunset from a rooftop | anchor | **covered** | `evt-5ab8` |
+| Alex | Spend real time in a good bookshop | wish | **covered** | `evt-3f9a` |
+| Alex | See a working food market | nice-to-have | **covered** | `evt-1d60` |
+| Robin | See contemporary art | anchor | **covered** | `evt-b47e` |
+| Robin | Walk along the river | wish | **covered** | `evt-2f77` |
+| Robin | Watch a sunset from a rooftop | wish | **covered** | `evt-5ab8` |
 | Robin | Hear live fado | nice-to-have | **not covered** | — |
 
 **6 covered / 1 not covered, of 7.** Every anchor and every wish is covered; the one
-uncovered desire is a nice-to-have. `EV-5ab8` covers two rows at once, which is the
+uncovered desire is a nice-to-have. `evt-5ab8` covers two rows at once, which is the
 placement the desire-overlap signal in `outputs/traveler-model.md` exists to find.
 
 **Sam contributes no row, and that is not the same as contributing a `not covered`

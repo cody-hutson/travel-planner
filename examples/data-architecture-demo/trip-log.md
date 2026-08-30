@@ -26,7 +26,7 @@ body, where it belongs.
 **Topics:** first full synthesis.
 **Decisions:**
 - Livraria Lello booked for Thu — timed entry, so it had to be held rather than left
-  open. Recorded as `EV-3f9a`, `locked`.
+  open. Recorded as `evt-3f9a`, `locked`.
 - Base Porto held for Sat sunset — it is the one placement serving a desire both
   travellers hold, so it was worth booking rather than leaving to chance.
 **Rejected:**
@@ -39,7 +39,7 @@ body, where it belongs.
 **Topics:** Saturday felt over-packed, and nobody had written down where we were
 eating.
 **Decisions:**
-- Slow the Saturday afternoon. `EV-c052` moved 14:00 → 16:30 and the block after it
+- Slow the Saturday afternoon. `evt-c052` moved 14:00 → 16:30 and the block after it
   dropped. The move also took the viewpoint out of the `HC-2` window, which was not
   the reason for the change but is why the heat row now passes on that day.
 - Place an anchor meal on every day. `agents/06-validator.md` audits that no day is
@@ -55,6 +55,6 @@ eating.
   on purpose — the reason is a coupling to the schema suite rather than a gap, and
   `README.md` states it — so the meal research went into `outputs/activities-list.md`
   and the fixture says so rather than leaving a reader to work it out.
-**Next steps:** book Serralves (`EV-b47e`) — the one needs-booking event left open.
+**Next steps:** book Serralves (`evt-b47e`) — the one needs-booking event left open.
 **Open questions:** whether to chase live fado for Robin, or accept the uncovered
 nice-to-have.

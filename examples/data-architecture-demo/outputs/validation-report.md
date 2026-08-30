@@ -132,7 +132,7 @@ number is not an independent judgement, it is a count of what follows.
 > Informational. No action required, but worth knowing.
 
 **[N1] — Status/flag pairing that reads like an error and is not**
-- **Finding:** `EV-9e34` is an `option` carrying `requires booking? = yes`.
+- **Finding:** `evt-9e34` is an `option` carrying `requires booking? = yes`.
 - **Context:** the flag takes effect only on promotion to `planned`. An `option` is a
   bookable backup, never a primary slot, so the derived needs-booking cell correctly
   reads `no`. Recorded so a reader does not mistake the pairing for a defect.
@@ -337,7 +337,7 @@ calendar to read.
 > Prioritized action list for the hub agent's remediation pass.
 
 1. No Critical findings — no remediation pass is required for this itinerary.
-2. [W1] Hold the Serralves timed entry before Fri May 15, then move `EV-b47e` to
+2. [W1] Hold the Serralves timed entry before Fri May 15, then move `evt-b47e` to
    `locked` in `outputs/event-status.md` and recompute that row's derived cell.
 3. [W2] Accept as recorded risk, per the recommended default in
    `outputs/final-itinerary.md` § *OPEN DECISIONS*.

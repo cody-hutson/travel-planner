@@ -40,17 +40,17 @@ location invariant resolves against — keyless at the moment it is written.
 
 | Venue key | Venue | Appears as | Day |
 |-----------|-------|-----------|-----|
-| `ven-7b2e` | Livraria Lello | `EV-3f9a` | May 14 (Thu) |
-| `ven-c41a` | Jardins do Palácio de Cristal | `EV-8c21` | May 14 (Thu) |
-| `ven-3c17` | Tasca do Bairro | `EV-7a05` | May 14 (Thu) |
-| `ven-2f68` | Mercado do Bolhão | `EV-1d60` | May 15 (Fri) |
-| `ven-93d7` | Serralves | `EV-b47e` | May 15 (Fri) |
-| `ven-a90d` | Casa de Pasto Central | `EV-6e2b` | May 16 (Sat) |
-| `ven-e05b` | Miradouro da Vitória | `EV-c052` | May 16 (Sat) |
-| `ven-8a34` | Base Porto | `EV-5ab8` | May 16 (Sat) |
-| `ven-1d9f` | Casa do Livro | `EV-9e34` | May 16 (Sat) — alternative |
-| `ven-5e6b` | Padaria São Bento | `EV-d1c8` | May 17 (Sun) |
-| `ven-6c72` | Ribeira riverside | `EV-2f77` | May 17 (Sun) |
+| `ven-7b2e` | Livraria Lello | `evt-3f9a` | May 14 (Thu) |
+| `ven-c41a` | Jardins do Palácio de Cristal | `evt-8c21` | May 14 (Thu) |
+| `ven-3c17` | Tasca do Bairro | `evt-7a05` | May 14 (Thu) |
+| `ven-2f68` | Mercado do Bolhão | `evt-1d60` | May 15 (Fri) |
+| `ven-93d7` | Serralves | `evt-b47e` | May 15 (Fri) |
+| `ven-a90d` | Casa de Pasto Central | `evt-6e2b` | May 16 (Sat) |
+| `ven-e05b` | Miradouro da Vitória | `evt-c052` | May 16 (Sat) |
+| `ven-8a34` | Base Porto | `evt-5ab8` | May 16 (Sat) |
+| `ven-1d9f` | Casa do Livro | `evt-9e34` | May 16 (Sat) — alternative |
+| `ven-5e6b` | Padaria São Bento | `evt-d1c8` | May 17 (Sun) |
+| `ven-6c72` | Ribeira riverside | `evt-2f77` | May 17 (Sun) |
 | `ven-b5e0` | Café Majestic | *(bailout — no event)* | May 14 (Thu), May 16 (Sat) |
 
 **Twelve rows, twelve distinct keys, twelve distinct display names** — one row per

@@ -41,25 +41,25 @@ takes effect only on promotion to `planned`.
 
 | Event ID | Venue | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
 |----------|-------|-------|-----|--------|-------------------|-------------------------|-------|
-| `EV-3f9a` | `ven-7b2e` | Livraria Lello timed entry | May 14 (Thu) | `locked` | yes | no — booked | Timed entry held |
-| `EV-8c21` | `ven-c41a` | Jardins do Palácio de Cristal | May 14 (Thu) | `planned` | no | no | Outdoor; `ven-b5e0` is its bailout |
-| `EV-7a05` | `ven-3c17` | Tasca do Bairro — dinner | May 14 (Thu) | `planned` | no | no | Thursday's anchor meal; walk-in |
-| `EV-1d60` | `ven-2f68` | Mercado do Bolhão — market-hall lunch | May 15 (Fri) | `firmed` | no | no | Friday's anchor meal; group-settled, nothing to book |
-| `EV-b47e` | `ven-93d7` | Serralves — contemporary art | May 15 (Fri) | `planned` | yes | **yes** | The one open booking |
-| `EV-6e2b` | `ven-a90d` | Casa de Pasto Central — lunch | May 16 (Sat) | `planned` | no | no | Saturday's anchor meal; walk-in |
-| `EV-c052` | `ven-e05b` | Miradouro da Vitória | May 16 (Sat) | `planned` | no | no | Re-timed by the Saturday patch; same ID |
-| `EV-5ab8` | `ven-8a34` | Base Porto — rooftop at sunset | May 16 (Sat) | `locked` | yes | no — booked | Table held; covers two desire rows |
-| `EV-9e34` | `ven-1d9f` | Casa do Livro — bar | May 16 (Sat) | `option` | yes | no — an alternative, never a primary slot | Backup for `EV-5ab8`; alternative pool |
-| `EV-d1c8` | `ven-5e6b` | Padaria São Bento — breakfast | May 17 (Sun) | `planned` | no | no | Sunday's anchor meal; walk-in |
-| `EV-2f77` | `ven-6c72` | Riverside walk, Ribeira to the bridge | May 17 (Sun) | `planned` | no | no | Ahead of the ~13:00 departure |
+| `evt-3f9a` | `ven-7b2e` | Livraria Lello timed entry | May 14 (Thu) | `locked` | yes | no — booked | Timed entry held |
+| `evt-8c21` | `ven-c41a` | Jardins do Palácio de Cristal | May 14 (Thu) | `planned` | no | no | Outdoor; `ven-b5e0` is its bailout |
+| `evt-7a05` | `ven-3c17` | Tasca do Bairro — dinner | May 14 (Thu) | `planned` | no | no | Thursday's anchor meal; walk-in |
+| `evt-1d60` | `ven-2f68` | Mercado do Bolhão — market-hall lunch | May 15 (Fri) | `firmed` | no | no | Friday's anchor meal; group-settled, nothing to book |
+| `evt-b47e` | `ven-93d7` | Serralves — contemporary art | May 15 (Fri) | `planned` | yes | **yes** | The one open booking |
+| `evt-6e2b` | `ven-a90d` | Casa de Pasto Central — lunch | May 16 (Sat) | `planned` | no | no | Saturday's anchor meal; walk-in |
+| `evt-c052` | `ven-e05b` | Miradouro da Vitória | May 16 (Sat) | `planned` | no | no | Re-timed by the Saturday patch; same ID |
+| `evt-5ab8` | `ven-8a34` | Base Porto — rooftop at sunset | May 16 (Sat) | `locked` | yes | no — booked | Table held; covers two desire rows |
+| `evt-9e34` | `ven-1d9f` | Casa do Livro — bar | May 16 (Sat) | `option` | yes | no — an alternative, never a primary slot | Backup for `evt-5ab8`; alternative pool |
+| `evt-d1c8` | `ven-5e6b` | Padaria São Bento — breakfast | May 17 (Sun) | `planned` | no | no | Sunday's anchor meal; walk-in |
+| `evt-2f77` | `ven-6c72` | Riverside walk, Ribeira to the bridge | May 17 (Sun) | `planned` | no | no | Ahead of the ~13:00 departure |
 
 **The derived column is a truth table, and every one of the eleven rows is checkable
-against it.** Only `EV-b47e` is `planned` **and** `requires booking? = yes`, so only it
-reads **yes**. `EV-9e34` is the row that makes the rule visible rather than merely
+against it.** Only `evt-b47e` is `planned` **and** `requires booking? = yes`, so only it
+reads **yes**. `evt-9e34` is the row that makes the rule visible rather than merely
 satisfied: it carries `requires booking? = yes` and still reads **no**, because an
 `option` is not a primary slot.
 
-**`EV-9e34`'s note references its primary by ID**, not by a day-coded name — so when a
+**`evt-9e34`'s note references its primary by ID**, not by a day-coded name — so when a
 resequence moves either event to another day, the join key and the cross-reference
 both still hold. That is the same property the ID's day-independence buys, read from
 the `Notes` column.
@@ -68,7 +68,7 @@ the `Notes` column.
 the only one iteration and resequencing change freely, `locked` and `firmed` are
 preserved unless the user names them, and `option` is never auto-promoted.
 
-**One `planned` needs-booking event remains** (`EV-b47e`), so "all events locked" is
+**One `planned` needs-booking event remains** (`evt-b47e`), so "all events locked" is
 false for this trip. That is the reading the phrase is defined by, and a fixture in
 which nothing remained to book could not demonstrate it. **The three anchor meals are
 all walk-ins**, so adding them changed the booking surface not at all — which is the
@@ -85,12 +85,12 @@ declared absence.
 ## What the Saturday patch did
 
 The change recorded in `trip-context.md` § *Mode notes* moved the Saturday afternoon
-later to make it slower. `EV-c052` kept its ID **and its venue key** across that move —
+later to make it slower. `evt-c052` kept its ID **and its venue key** across that move —
 the ID is day-independent, so a re-timing is not a re-identification. No row was
 deleted: row deletion is the single case `persist-mutable` permits, and it applies
 only when an event leaves the itinerary altogether.
 
 **Three rows were added on the same pass**, when the spoke re-ran for anchor meals and
-the hub placed them: `EV-7a05`, `EV-6e2b` and `EV-d1c8`. Adding a row is an ordinary
+the hub placed them: `evt-7a05`, `evt-6e2b` and `evt-d1c8`. Adding a row is an ordinary
 `persist-mutable` write — the file is updated in place, and the rows that were already
 here kept their IDs, their statuses and their held bookings untouched.
