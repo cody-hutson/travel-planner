@@ -83,11 +83,21 @@ set -uo pipefail
 # either arm. That is asserted (AR6) rather than assumed. An unnecessary exclusion is not
 # free — it is a scope narrowing nothing checks.
 # ─────────────────────────────────────────────────────────────────────────────────
+# ── `.publish/` IS ANCHORED ANYWHERE, AND THE `**/` PREFIX IS WHY ────────────────
+# It was written `.publish/**`, which va_glob_match resolves through its `*'/**'` branch as a
+# ROOT-ANCHORED prefix test. That excluded a `.publish/` at the repository root and failed to
+# exclude one inside a trip — which is the only position a real user's publish directory ever
+# occupies, since publish-trip-site.sh writes it under trips/<slug>/. Both arms were observed
+# on identical bytes: excluded at the root, traversed in a trip. The corpus states the
+# exclusion without qualification, so the glob is what was wrong, not the claim. `**/` makes
+# it segment-anywhere, matching the form the .staticrypt.json exclusion above already uses.
+# The WARRANT LITERAL is unchanged, so this is not a new exclusion and S9's provenance
+# assertion grades the same string against the same section.
 VA_EXCLUSIONS='.claude/commands/*.md|.claude/commands/*.md|## 11. What This Document Does Not Define
 templates/*.template.md|templates/*.template.md|## 11. What This Document Does Not Define
 examples/*/README.md|examples/*/README.md|### 1.3 In-repo files carrying no per-trip class
 **/outputs/.staticrypt.json|outputs/.staticrypt.json|### 1.2 Out of model — explicit dispositions (6)
-.publish/**|.publish/|### 1.2 Out of model — explicit dispositions (6)'
+**/.publish/**|.publish/|### 1.2 Out of model — explicit dispositions (6)'
 
 VA_ARCH_DOC='reference/data-architecture.md'
 VA_SCHEMA_DIR='reference/schemas'
@@ -97,6 +107,34 @@ VA_CLASS_HEADING='### 1.1 In-model — per-trip artifact classes (19)'
 # silently break every field split in this file without producing an error.
 VA_TAB=$'\t'
 VA_NL=$'\n'
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# The classifier character sets.
+#
+# ── WHY THESE ARE SPELLED OUT AND NEVER WRITTEN AS RANGES ────────────────────────
+# A bracket RANGE is resolved against the collating sequence of the current locale, not
+# against ASCII. Under a UTF-8 collation the lowercase range also matches uppercase, so the
+# slug predicate ACCEPTED `Hub` and `HUB` for an operator whose shell carries a UTF-8 default
+# while REJECTING them under the C locale CI happens to run in. Nothing pinned the locale for
+# this script or its workflow, so CI enforced a rule an operator's own run did not, and a
+# file that passed locally failed in CI for a reason nothing explained.
+#
+# Pinning LC_ALL was the other candidate and is the weaker one: it makes the answer depend on
+# the pin holding at every entry point, and the suite calls these predicates DIRECTLY rather
+# than through the CLI, so a pin taken at dispatch would not cover them. Spelling the sets
+# removes the collating sequence from the question altogether — with no range to widen, a
+# locale has nothing left to do. The predicate is then invariant by construction rather than
+# by configuration.
+#
+# Asserted in both directions by the suite's group LC: through the real function, under every
+# locale the host declares, and at this source, where the count of remaining ranges must be
+# zero. The trailing `-` in VA_SLUGBODY is LAST on purpose — a `-` elsewhere in a bracket
+# expression is a range operator rather than a literal hyphen.
+# ─────────────────────────────────────────────────────────────────────────────────
+VA_LOWER='abcdefghijklmnopqrstuvwxyz'
+VA_DIGIT='0123456789'
+VA_SLUGHEAD="${VA_LOWER}${VA_DIGIT}"
+VA_SLUGBODY="${VA_LOWER}${VA_DIGIT}-"
 
 # ─────────────────────────────────────────────────────────────────────────────────
 # Primitives
@@ -357,12 +395,17 @@ va_fm_pairs() {
       *:*) key="$(va_trim "${line%%:*}")"; val="$(va_trim "${line#*:}")" ;;
       *)   printf 'FINDING A1 %s field <none> out-of-grammar line -- %s\n' "$rel" "$line"; rc=1; continue ;;
     esac
+    # Spelled sets, not ranges — see the VA_LOWER block above. This predicate carried the
+    # same collation dependence as the slug one and is fixed with it, so the two classifiers
+    # cannot drift apart on what a lowercase character is.
+    # shellcheck disable=SC2254
     case "$key" in
-      [a-z]*) : ;;
+      [$VA_LOWER]*) : ;;
       *) printf 'FINDING A1 %s field %s key is not kebab-case\n' "$rel" "$key"; rc=1; continue ;;
     esac
+    # shellcheck disable=SC2254
     case "$key" in
-      *[!a-z0-9-]*) printf 'FINDING A1 %s field %s key is not kebab-case\n' "$rel" "$key"; rc=1; continue ;;
+      *[!$VA_SLUGBODY]*) printf 'FINDING A1 %s field %s key is not kebab-case\n' "$rel" "$key"; rc=1; continue ;;
     esac
     case " $seen " in
       *" $key "*) printf 'FINDING A1 %s field %s duplicate key\n' "$rel" "$key"; rc=1; continue ;;
@@ -386,12 +429,21 @@ EOF
 }
 
 # va_type_ok <type> <value> <enum-members>
+# The character sets arrive by expansion, which is the intent: the expansion IS the class.
+# Quoting it would make the bracket contents a literal string and the predicate would match
+# nothing — the same reason va_seg_match above leaves its pattern unquoted.
+# shellcheck disable=SC2254
 va_type_ok() {
   local t="$1" v="$2" e="${3:-}"
   case "$t" in
-    integer) case "$v" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac ;;
-    date)    case "$v" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) return 0 ;; *) return 1 ;; esac ;;
-    slug)    case "$v" in [a-z0-9]) return 0 ;; [a-z0-9]*[!a-z0-9-]*) return 1 ;; [a-z0-9]*) return 0 ;; *) return 1 ;; esac ;;
+    integer) case "$v" in ''|*[!$VA_DIGIT]*) return 1 ;; *) return 0 ;; esac ;;
+    date)    case "$v" in [$VA_DIGIT][$VA_DIGIT][$VA_DIGIT][$VA_DIGIT]-[$VA_DIGIT][$VA_DIGIT]-[$VA_DIGIT][$VA_DIGIT]) return 0 ;; *) return 1 ;; esac ;;
+    slug)    case "$v" in
+               '')                  return 1 ;;
+               [!$VA_SLUGHEAD]*)    return 1 ;;
+               *[!$VA_SLUGBODY]*)   return 1 ;;
+               *)                   return 0 ;;
+             esac ;;
     string)  [ -n "$v" ] && return 0 || return 1 ;;
     'list<slug>')
       case "$v" in '['*']') : ;; *) return 1 ;; esac
@@ -752,6 +804,33 @@ va_main() {
     root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   fi
 
+  # ── THE SCOPE MUST RESOLVE BEFORE ANYTHING IS COUNTED (X2) ─────────────────────
+  # `find` on a path that does not exist writes to stderr and yields nothing, and
+  # va_population discards that stderr — so a MISTYPED trip name produced the same empty
+  # population, the same POPULATION line and the same rc 0 as a real directory holding no
+  # files. The two outputs were byte-identical. A user who fat-fingers a trip name was
+  # therefore told their trip was clean, which is the one answer this gate must never give
+  # for a question it never asked.
+  #
+  # These are two different facts and they now take two different verdicts. A scope that does
+  # not RESOLVE is X2 — the code this gate already uses for a required input that is absent or
+  # unreadable — and it fails closed. A scope that resolves to an EMPTY population is not an
+  # error at all; it is reported by the VACUOUS verdict at the end of this function. Keeping
+  # them separate is the whole point: a single verdict covering both would say less than
+  # either, and the empty-but-real case would inherit a failure it does not deserve.
+  if [ "$scope" = "dir" ]; then
+    local target
+    case "$dir" in
+      '') printf 'FINDING X2 <none> --scope dir requires a path\n'; return 1 ;;
+      /*) target="$dir" ;;
+      *)  target="$root/$dir" ;;
+    esac
+    if [ ! -d "$target" ]; then
+      printf 'FINDING X2 %s the --scope dir target does not exist or is not a directory\n' "$dir"
+      return 1
+    fi
+  fi
+
   local rc=0 out sel
   out="$(va_check_corpus "$root")" || rc=1
   [ -n "$out" ] && printf '%s\n' "$out"
@@ -783,6 +862,23 @@ EOF
 
   printf 'POPULATION selected=%s excluded=%s unmatched=%s\n' "$nsel" "$nexc" "$nunm"
   printf 'PREDICATE skipped=%s validated=%s\n' "$nskip" "$nver"
+
+  # ── A GREEN OVER AN EMPTY POPULATION IS VACUOUS, NOT PASSING ───────────────────
+  # scripts/test-artifact-schema.sh has rendered this verdict on the CI arm since it shipped
+  # (AR5), for the reason its own header states: an assertion over the empty set is vacuously
+  # true, never skipped, silently green — a green that proves less than it looks like, which
+  # is worse than no check because it reads as proof. The arm a user runs BY HAND rendered no
+  # such verdict, which left the one surface reached directly as the only place where a pass
+  # over nothing still read as a pass.
+  #
+  # It is a REPORT and deliberately not a failure. An empty population is a real measurement
+  # of the tree and there is nothing wrong with it; what it is not is evidence that anything
+  # was checked. Keyed on the SELECTED count rather than on the scope, because the property
+  # belongs to the population and not to the arm that produced it. Distinct from the X2 above,
+  # which is a scope that never resolved — that one fails closed, this one does not.
+  if [ "$nsel" -eq 0 ]; then
+    printf 'VACUOUS no file was selected, so nothing was validated and nothing was skipped. A green over zero selected files is vacuous, not passing -- the POPULATION line above is the measurement, and it is a statement about the tree rather than about the artifacts in it\n'
+  fi
   return $rc
 }
 

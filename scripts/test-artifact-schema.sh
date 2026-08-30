@@ -30,6 +30,13 @@
 #        member set AND ORDER. The homes are discovered by SHAPE — the key plus a delimited
 #        pipe-list — never by matching the canonical text, so a DRIFTED home is still found
 #        and is then reported rather than quietly leaving the population.
+#   UF   every schema declares every key of the universal frontmatter block (§ 4.4's "no class
+#        removes a universal field"). The key set is read FROM that block and the corpus from
+#        the schema directory, so no count is pinned. Without it a schema can drop a required
+#        field and this suite's output stays BYTE-IDENTICAL — measured, not predicted.
+#   LC   the value and key classifiers answer the same under every locale the host declares.
+#        A bracket range resolves against the collating sequence, so `[a-z]` matched uppercase
+#        under a UTF-8 default and CI enforced a rule an operator's own run did not.
 #   CA   the several homes of each class's assignment agree: § 1.1's columns, § 6's Members
 #        column, § 9's per-class delta column, and the frontmatter of the class's declared
 #        witness. Per-field denominators, because the fields do not all have the same number
@@ -585,6 +592,292 @@ if [ "$EN_OK" -eq 1 ]; then
   else
     FAIL "EN4: specificity failed — fabricated key returned $EN_FAB home(s) over a real-home total of $EN_TOTAL_HOMES"
   fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group UF — no schema silently drops a universal frontmatter field.
+#
+# ── WHAT THIS CLOSES, AND HOW IT WAS OBSERVED ────────────────────────────────────
+# reference/data-architecture.md § 4.4 declares the universal frontmatter block and states
+# the invariant in terms — "no class removes a universal field" — and every schema in the
+# corpus restates it in its own fence comment. NOTHING HELD IT.
+#
+# Measured rather than assumed: deleting one `field` row from one schema and running this
+# suite produced output BYTE-IDENTICAL to the unmutated run — same 76 passed, same 0 failed,
+# same rc 0. A required field left a schema and no assertion moved.
+#
+# ── THE ENUM KEYS WERE NOT COVERED EITHER, AND THAT HAD TO BE TESTED ─────────────
+# The reading this group was written against was that the gap belonged to group EN, which
+# covers enum-valued keys only. It does not. EN compares each enum's MEMBER LIST across the
+# homes it finds, so a schema that drops `field lifecycle:` entirely never disagrees with the
+# canonical — it leaves EN's population, EN2's home count slides by one, and the arm still
+# reports PASS. That was run: deleting an enum-valued universal key is exactly as invisible
+# as deleting a non-enum one, and the only trace is a home count nothing asserts a floor on.
+# So the gap is not one group's. No assertion anywhere bound a schema's declared key set to
+# the universal set, and that is the binding this group adds.
+#
+# ── THE EXPECTATION IS DERIVED, AND NO COUNT IS PINNED ───────────────────────────
+# The universal key set is read FROM § 4.4's own fence through en_fence_lines above — the
+# reflow-immune reader EN0b already proves cannot silently narrow. The schema population is
+# read through va_schema_files and each schema's declared fields through va_schema_lines, the
+# validator's own parser. Neither the number of schemas nor the number of universal keys is
+# spelled in this file, so a legitimate twentieth schema, or a ninth universal field, is
+# picked up with no edit here. A pinned count would be a second source of truth that turns
+# red for being right — the failure this suite already refuses at EN's key derivation.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "UF — every schema declares every universal frontmatter field (§ 4.4)"
+
+# uf_univ_keys [doc] — every key of the universal frontmatter block, enum-valued or not.
+# en_keys narrows to the pipe-list values because group EN is about member lists; the § 4.4
+# invariant is stated over the WHOLE block, so this reads the whole block.
+uf_univ_keys() {
+  en_fence_lines "${1:-$EN_DOC}" | awk '
+    $0 == "---" { next }
+    match($0, /^[a-z][a-z0-9-]*:/) { print substr($0, 1, RLENGTH - 1) }
+  '
+}
+
+# uf_missing <root> — "<schema-path>\t<key>" for every universal key a schema fails to
+# declare as a `field` row. Emits nothing when the invariant holds.
+uf_missing() {
+  local r="$1" sf sl declared keys k
+  keys="$(uf_univ_keys "$r/$VA_ARCH_DOC")"
+  while IFS= read -r sf; do
+    [ -n "$sf" ] || continue
+    sl="$(va_schema_lines "$r" "$sf" 2>/dev/null | grep -v '^FINDING ')"
+    declared="$(va_schema_all "$sl" field | awk '{ print $1 }')"
+    while IFS= read -r k; do
+      [ -n "$k" ] || continue
+      grep -qx -- "$k" <<<"$declared" || printf '%s\t%s\n' "$sf" "$k"
+    done <<INNER
+$keys
+INNER
+  done <<OUTER
+$(va_schema_files "$r")
+OUTER
+}
+
+# uf_fx <dir> — the architecture document and the schema corpus, and nothing else. That is
+# the whole population uf_missing reads, so a fixture carrying more would be carrying it for
+# no arm. Copied from this commit rather than synthesised, for mk_root's stated reason.
+uf_fx() {
+  mkdir -p "$1/$VA_SCHEMA_DIR"
+  cp "$ROOT/$VA_ARCH_DOC" "$1/$VA_ARCH_DOC"
+  cp "$ROOT/$VA_SCHEMA_DIR"/*.md "$1/$VA_SCHEMA_DIR/"
+}
+
+UF_KEYS="$(uf_univ_keys)"
+UF_NKEYS="$(printf '%s\n' "$UF_KEYS" | grep -c '[^[:space:]]')"
+UF_DEN=$((UF_NKEYS * SC_NFILES))
+UF_OK=1
+
+if [ "$UF_NKEYS" -gt 0 ] && [ "$SC_NFILES" -gt 0 ]; then
+  PASS "UF0: the universal-frontmatter block declares $UF_NKEYS key(s) [$(printf '%s' "$UF_KEYS" | tr '\n' ' ')], read FROM $VA_ARCH_DOC § 4.4, against a corpus of $SC_NFILES schema(s) — a DERIVED denominator of $UF_DEN (schema x universal key) pairs, with neither count spelled in this file"
+else
+  FAIL "UF0: the universal key set ($UF_NKEYS) or the schema corpus ($SC_NFILES) is empty — every UF verdict below would be a statement over the empty set"
+  UF_OK=0
+fi
+
+if [ "$UF_OK" -eq 1 ]; then
+  UF_MISS="$(uf_missing "$ROOT")"
+  UF_NMISS="$(printf '%s\n' "$UF_MISS" | grep -c '[^[:space:]]')"
+  if [ "$UF_NMISS" -eq 0 ]; then
+    PASS "UF1: all $UF_DEN (schema x universal key) pairs are declared — no class removes a universal field, which is what § 4.4 says and what nothing checked. The denominator is derived from the corpus and the document, so it grows with either"
+  else
+    FAIL "UF1: $UF_NMISS of $UF_DEN (schema x universal key) pair(s) are MISSING — a schema has silently dropped a universal field: $(printf '%s' "$UF_MISS" | awk -F'\t' '{ printf "%s lacks field %s; ", $1, $2 }' | head -c 400)"
+  fi
+fi
+
+# UF-CTL1 — MUST FIRE, and the mutation is the one that proved the gap. A universal key is
+# deleted from ONE schema in a fixture copy, and the check must report EXACTLY that pair.
+# Both the schema and the key are DERIVED (the first of each), so no class name and no field
+# name is pinned in this file.
+if [ "$UF_OK" -eq 1 ]; then
+  UF_FX1="$WORK/uf-mut1"; uf_fx "$UF_FX1"
+  UF_TGT="$(va_schema_files "$ROOT" | head -1)"
+  UF_TKEY="$(printf '%s\n' "$UF_KEYS" | head -1)"
+  awk -v k="$UF_TKEY" '$0 ~ "^field " k ":" { next } { print }' \
+    "$ROOT/$UF_TGT" > "$UF_FX1/$UF_TGT.new" && mv "$UF_FX1/$UF_TGT.new" "$UF_FX1/$UF_TGT"
+  UF_MUT1=0
+  cmp -s "$ROOT/$UF_TGT" "$UF_FX1/$UF_TGT" || UF_MUT1=1
+  UF_OUT1="$(uf_missing "$UF_FX1")"
+  UF_N1="$(printf '%s\n' "$UF_OUT1" | grep -c '[^[:space:]]')"
+  UF_HIT1="$(awk -F'\t' -v s="$UF_TGT" -v k="$UF_TKEY" '$1==s && $2==k {n++} END{print n+0}' <<<"$UF_OUT1")"
+  # Graded as a DELTA against UF1's own measurement, not against a literal 1. The fixture is
+  # a copy of this commit's corpus, so on a tree that genuinely has a missing field the arm
+  # would otherwise inherit it and fail for the corpus's reason while accusing itself — a
+  # control that mis-attributes its own cause. One mutation must add exactly one pair,
+  # whatever the corpus started from.
+  UF_EXP1=$((UF_NMISS + 1))
+  if [ "$UF_MUT1" -eq 1 ] && [ "$UF_N1" -eq "$UF_EXP1" ] && [ "$UF_HIT1" -eq 1 ]; then
+    PASS "UF-CTL1: MUST FIRE — deleting 'field $UF_TKEY:' from $UF_TGT in a fixture copy adds EXACTLY ONE (schema, key) pair to the reported set ($UF_NMISS -> $UF_N1) and it is that pair. The mutation is asserted to have landed, so the arm grades a changed tree rather than an unbuilt one"
+  else
+    FAIL "UF-CTL1: MUST FIRE — the deletion of 'field $UF_TKEY:' from $UF_TGT was not reported cleanly (mutation-landed=$UF_MUT1, pairs-reported=$UF_N1 against $UF_EXP1 expected, target-pair-found=$UF_HIT1). UF1's count above rests on a probe that does not respond to a known deletion"
+  fi
+fi
+
+# UF-CTL2 — MUST FIRE from the DOCUMENT side. A ninth universal field added to § 4.4 must be
+# required of every schema at once; this is the arm proving the key set actually drives the
+# comparison, rather than the comparison being satisfied by whatever the schemas happen to
+# declare. The fabricated key is added to the fence itself, so the derivation is what carries
+# it — nothing here tells uf_missing which keys to look for.
+if [ "$UF_OK" -eq 1 ]; then
+  UF_FX2="$WORK/uf-mut2"; uf_fx "$UF_FX2"
+  awk '
+    $0 == "```yaml" && !done { print; infence = 1; next }
+    infence && $0 == "---" && !opened { print; opened = 1; print "zzz-fabricated-universal: <value>"; next }
+    infence && $0 == "```" { infence = 0; done = 1 }
+    { print }
+  ' "$ROOT/$VA_ARCH_DOC" > "$UF_FX2/$VA_ARCH_DOC.new" && mv "$UF_FX2/$VA_ARCH_DOC.new" "$UF_FX2/$VA_ARCH_DOC"
+  UF_MUT2=0
+  cmp -s "$ROOT/$VA_ARCH_DOC" "$UF_FX2/$VA_ARCH_DOC" || UF_MUT2=1
+  UF_K2="$(uf_univ_keys "$UF_FX2/$VA_ARCH_DOC" | grep -c '[^[:space:]]')"
+  UF_OUT2="$(uf_missing "$UF_FX2")"
+  UF_HIT2="$(awk -F'\t' '$2=="zzz-fabricated-universal" {n++} END{print n+0}' <<<"$UF_OUT2")"
+  if [ "$UF_MUT2" -eq 1 ] && [ "$UF_K2" -eq "$((UF_NKEYS + 1))" ] && [ "$UF_HIT2" -eq "$SC_NFILES" ]; then
+    PASS "UF-CTL2: MUST FIRE — a fabricated key added to § 4.4's fence is derived as universal ($UF_NKEYS -> $UF_K2) and is then reported missing from all $SC_NFILES schemas. The expectation follows the document, so a ninth universal field would be enforced corpus-wide with no edit to this file"
+  else
+    FAIL "UF-CTL2: MUST FIRE — a fabricated universal key was not enforced corpus-wide (mutation-landed=$UF_MUT2, keys-derived=$UF_K2 against $((UF_NKEYS + 1)) expected, schemas-flagged=$UF_HIT2 of $SC_NFILES)"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group LC — the classifying predicates do not change their answer with the locale.
+#
+# ── THE FINDING ──────────────────────────────────────────────────────────────────
+# `va_type_ok`'s slug arm and `va_fm_pairs`'s kebab-case arm both classified with bracket
+# RANGES. A range is resolved against the collating sequence of the current locale, and under
+# a UTF-8 collation `[a-z]` matches uppercase: `Hub` and `HUB` were REJECTED under LC_ALL=C
+# and ACCEPTED under an operator's own default. Nothing pinned the locale for the validator
+# or its workflow, so CI enforced a rule an operator's own run did not, and a file that
+# passed locally failed in CI for a reason nothing explained.
+#
+# ── THE FIX IS BY CONSTRUCTION, NOT BY PINNING, AND THAT IS WHY LC2 EXISTS ───────
+# Pinning LC_ALL inside the validator would make the answer depend on a pin holding at every
+# entry point — including the ones this suite uses, which call the predicates directly rather
+# than through the CLI. Spelling the character sets explicitly removes the collation table
+# from the question altogether: with no range to widen, there is nothing for a locale to do.
+# LC2 asserts that property at the source, which is the arm that still has teeth on a host
+# whose locale archive contains nothing that folds. LC1 asserts the behaviour through the
+# real function, which is the arm that would have caught the original.
+#
+# ── WHY THE POPULATION IS DERIVED FROM THE HOST ──────────────────────────────────
+# A folding locale cannot be assumed present: C, POSIX and C.UTF-8 all collate by codepoint
+# and none of them reproduces the finding. So the locale set is DERIVED — C and POSIX always,
+# plus whatever the host declares that the probe shows to fold — and the arm reports how many
+# of each it exercised. A run on a host with none is a weaker measurement and says so; it is
+# never a vacuous one, because the set is never smaller than two and LC2 does not depend on
+# the archive at all.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "LC — the classifying predicates are locale-invariant"
+
+# lc_folds <locale> — true when a bracket range folds case under that locale. Probed on a
+# construct THIS FILE owns rather than on the validator, so the probe stays independent of
+# the thing it is used to grade. This is also the one deliberate range in the scan set's
+# neighbourhood, and LC2 below is scoped to the validator for exactly that reason.
+lc_folds() {
+  local LC_ALL="$1"
+  case H in [a-z]) return 0 ;; *) return 1 ;; esac
+}
+
+LC_SET="C
+POSIX"
+LC_FOLD_N=0
+while IFS= read -r lcname; do
+  [ -n "$lcname" ] || continue
+  [ "$LC_FOLD_N" -lt 4 ] || break
+  lc_folds "$lcname" || continue
+  LC_SET="$LC_SET
+$lcname"
+  LC_FOLD_N=$((LC_FOLD_N + 1))
+done <<EOF
+$(locale -a 2>/dev/null)
+EOF
+LC_N="$(printf '%s\n' "$LC_SET" | grep -c '[^[:space:]]')"
+
+if [ "$LC_N" -ge 2 ]; then
+  PASS "LC0: the differential runs over $LC_N locale(s) — C and POSIX, plus the $LC_FOLD_N collation-folding locale(s) this host declares. A folding locale is one where a bracket range matches outside its written span, which is the construct the finding is about"
+else
+  FAIL "LC0: only $LC_N locale(s) were assembled — a differential needs at least two, so LC1 below would be comparing a value with itself"
+fi
+
+# LC1 — THROUGH THE REAL FUNCTION. The values are derived from one lowercase seed by case
+# transformation, because the finding is about case; they are not a spelled table.
+LC_SEED='hub'
+LC_VALUES="$LC_SEED
+$(printf '%s' "$LC_SEED" | tr 'a-z' 'A-Z')
+$(printf '%s' "$LC_SEED" | awk '{ printf "%s%s", toupper(substr($0, 1, 1)), substr($0, 2) }')
+$LC_SEED-9
+$LC_SEED.9"
+LC_DISAGREE=0; LC_PAIRS=0; LC_DETAIL=""
+while IFS= read -r lcv; do
+  [ -n "$lcv" ] || continue
+  lcbase=""
+  while IFS= read -r lcl; do
+    [ -n "$lcl" ] || continue
+    # A subshell, so the assignment cannot outlive the call and each verdict is taken under
+    # exactly the locale it is labelled with.
+    if ( export LC_ALL="$lcl"; va_type_ok slug "$lcv" ); then lcr=accept; else lcr=reject; fi
+    if [ -z "$lcbase" ]; then
+      lcbase="$lcr"
+    else
+      LC_PAIRS=$((LC_PAIRS + 1))
+      if [ "$lcr" != "$lcbase" ]; then
+        LC_DISAGREE=$((LC_DISAGREE + 1))
+        LC_DETAIL="$LC_DETAIL '$lcv' C=$lcbase $lcl=$lcr;"
+      fi
+    fi
+  done <<INNER
+$LC_SET
+INNER
+done <<OUTER
+$LC_VALUES
+OUTER
+if [ "$LC_PAIRS" -gt 0 ] && [ "$LC_DISAGREE" -eq 0 ]; then
+  PASS "LC1: va_type_ok's slug predicate returned the SAME verdict across all $LC_PAIRS (value, locale) comparisons — observed through the real function, not through a standalone rendering of the construct. An operator's shell and CI cannot disagree about what a slug is"
+elif [ "$LC_PAIRS" -eq 0 ]; then
+  FAIL "LC1: no (value, locale) pair was compared — the arm asserted nothing"
+else
+  FAIL "LC1: the slug predicate disagreed with itself on $LC_DISAGREE of $LC_PAIRS comparison(s) — the same value is accepted under one locale and rejected under another, so CI enforces a rule an operator's own run does not:$LC_DETAIL"
+fi
+
+# LC2 — the by-construction arm. Scoped to the VALIDATOR, deliberately: this suite carries a
+# range of its own in lc_folds above, which is the probe rather than the predicate, and a
+# whole-file scan would read it as the defect it exists to detect.
+lc_fn_body() {
+  awk -v fn="$2" '
+    $0 == fn "() {" { inside = 1; next }
+    inside && $0 == "}" { inside = 0 }
+    inside { print }
+  ' "$1"
+}
+lc_ranges() {
+  awk '{ n += gsub(/a-z/, ""); n += gsub(/A-Z/, ""); n += gsub(/0-9/, "") } END { print n + 0 }'
+}
+LC_FNS="va_type_ok
+va_fm_pairs"
+LC_RANGE_TOTAL=0; LC_BODY_LINES=0
+if [ -r "$SELF_VALIDATOR" ]; then
+  while IFS= read -r lcfn; do
+    [ -n "$lcfn" ] || continue
+    lcbody="$(lc_fn_body "$SELF_VALIDATOR" "$lcfn")"
+    LC_BODY_LINES=$((LC_BODY_LINES + $(printf '%s\n' "$lcbody" | grep -c '[^[:space:]]')))
+    LC_RANGE_TOTAL=$((LC_RANGE_TOTAL + $(printf '%s\n' "$lcbody" | lc_ranges)))
+  done <<EOF
+$LC_FNS
+EOF
+fi
+LC_SPEC="$(printf 'case "$v" in [a-z0-9]) return 0 ;; esac\n' | lc_ranges)"
+if [ "$LC_BODY_LINES" -eq 0 ]; then
+  FAIL "LC2: the scan read 0 lines from the classifier bodies — the function names or the validator have moved, and the zero below would cover nothing"
+elif [ "$LC_SPEC" -eq 0 ]; then
+  FAIL "LC2: the range detector found nothing in a synthetic line that carries one, so its zero over the real bodies would be a broken probe wearing a pass"
+elif [ "$LC_RANGE_TOTAL" -eq 0 ]; then
+  PASS "LC2: 0 collation-dependent bracket ranges across $LC_BODY_LINES lines of va_type_ok and va_fm_pairs — both classifiers spell their character sets explicitly, so no collation table can widen one. The detector found $LC_SPEC in a synthetic control line, so the zero is a measurement rather than an empty scan"
+else
+  FAIL "LC2: $LC_RANGE_TOTAL collation-dependent bracket range(s) remain in va_type_ok / va_fm_pairs across $LC_BODY_LINES lines — a range is resolved against the current locale's collating sequence, so these predicates answer differently in CI and in an operator's shell"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -1642,6 +1935,73 @@ if grep -qF -- 'templates/*.template.md' <<<"$(xc_section_text '## 11. What This
   PASS "CTL-S9: the exclusion-provenance probe FIRES on a pattern that is genuinely declared ('templates/*.template.md' at § 11), and XC1 above showed it returns nothing for one that is not — both arms observed"
 else
   FAIL "CTL-S9: the exclusion-provenance probe cannot find a pattern that IS in § 11; every XC verdict is a broken probe"
+fi
+
+# ── The --scope dir target: two facts one verdict used to conflate.
+# A nonexistent path and an empty-but-real directory produced BYTE-IDENTICAL output at rc 0,
+# so a user who mistyped a trip name was told their trip was clean. The two are different
+# facts — one is a scope that does not resolve, the other a scope that resolves to nothing —
+# and they are graded here as two arms because a single verdict covering both would be a
+# worse outcome than two that distinguish them.
+FX="$WORK/scope"; mk_root "$FX"
+mkdir -p "$FX/examples/ctl/empty-but-real"
+SCOPE_MISS_OUT="$(va_main --root "$FX" --scope dir examples/ctl/no-such-trip-xyz 2>&1)"; SCOPE_MISS_RC=$?
+SCOPE_EMPTY_OUT="$(va_main --root "$FX" --scope dir examples/ctl/empty-but-real 2>&1)"; SCOPE_EMPTY_RC=$?
+if [ "$SCOPE_MISS_RC" -ne 0 ] && has_finding "$SCOPE_MISS_OUT" 'X2'; then
+  PASS "CTL-SCOPE1: MUST FIRE — a --scope dir target that does not exist is X2 and fails closed (rc=$SCOPE_MISS_RC). A mistyped trip name is an unreadable population, and an absent population must never read as a population with nothing wrong in it"
+else
+  FAIL "CTL-SCOPE1: MUST FIRE — a nonexistent --scope dir target returned rc=$SCOPE_MISS_RC with no X2. A user who fat-fingers a trip name is being told their trip is clean"
+fi
+if [ "$SCOPE_EMPTY_RC" -eq 0 ] && ! has_finding "$SCOPE_EMPTY_OUT" 'X2'; then
+  PASS "CTL-SCOPE2: MUST NOT FIRE — a real directory that happens to hold no files is not an unreadable population, so it does not take X2. The specificity arm that keeps CTL-SCOPE1 from being an existence check that fires on everything"
+else
+  FAIL "CTL-SCOPE2: MUST NOT FIRE — an empty-but-real directory was reported as unreadable (rc=$SCOPE_EMPTY_RC): $(printf '%s' "$SCOPE_EMPTY_OUT" | grep '^FINDING ' | head -2 | tr '\n' ' ')"
+fi
+if [ "$SCOPE_MISS_OUT" != "$SCOPE_EMPTY_OUT" ]; then
+  PASS "CTL-SCOPE3: the two outputs DIFFER. A path that does not exist and a directory that is merely empty are different facts, and the gate now answers them with two verdicts rather than one shared silence"
+else
+  FAIL "CTL-SCOPE3: a nonexistent path and an empty-but-real directory still produce IDENTICAL output — the conflation is live and CTL-SCOPE1/2 above cannot both be meaningful"
+fi
+
+# ── The VACUOUS verdict on the local arm. The CI arm has rendered one since this suite
+# shipped (AR5); the arm a user runs directly did not, which left the one surface reached by
+# hand as the only one where a green over nothing read as a pass.
+if grep -q '^VACUOUS ' <<<"$SCOPE_EMPTY_OUT"; then
+  PASS "CTL-VAC1: MUST FIRE — a run whose selected population is ZERO renders a VACUOUS verdict on the local arm, in the shape AR5 already uses on the CI arm. A pass over zero selected files is vacuous, not passing"
+else
+  FAIL "CTL-VAC1: MUST FIRE — a run over an empty population rendered no VACUOUS verdict, so the local arm still reports a silent green over nothing"
+fi
+if ! grep -q '^VACUOUS ' <<<"$CLEAN_OUT"; then
+  PASS "CTL-VAC2: MUST NOT FIRE — the same validator over the clean fixture's NON-empty population renders no VACUOUS verdict, so the verdict tracks the measured population rather than being printed unconditionally"
+else
+  FAIL "CTL-VAC2: MUST NOT FIRE — a VACUOUS verdict appeared over a non-empty population, which would make CTL-VAC1 meaningless"
+fi
+
+# ── .publish/ — the exclusion is absolute or it is not an exclusion. Two arms on IDENTICAL
+# bytes, differing only in POSITION. reference/data-architecture.md states the exclusion
+# without qualification; a root-anchored glob made that true at the repository root and false
+# inside a trip, which is the one position a real user's .publish/ ever occupies.
+FX="$WORK/pub"; mk_root "$FX"
+mkdir -p "$FX/examples/ctl/trip/.publish" "$FX/.publish"
+PUB_BYTES="$(printf -- '---\nartifact: outputs/no-such-class.md\nschema-version: 1\ntrip: ctl\n---\n\n# x\n')"
+printf '%s\n' "$PUB_BYTES" > "$FX/examples/ctl/trip/.publish/index.md"
+printf '%s\n' "$PUB_BYTES" > "$FX/.publish/index.md"
+printf '%s\n' "$PUB_BYTES" > "$FX/examples/ctl/trip/notes.md"
+PUB_SEL_IN="$(va_select "$FX" dir examples/ctl/trip)"
+PUB_SEL_RT="$(va_select "$FX" dir .)"
+pub_excluded() { awk -F'\t' -v p="$2" '$1 == "EXCLUDED" && $2 == p { n++ } END { print n + 0 }' <<<"$1"; }
+PUB_IN="$(pub_excluded "$PUB_SEL_IN" 'examples/ctl/trip/.publish/index.md')"
+PUB_RT="$(pub_excluded "$PUB_SEL_RT" '.publish/index.md')"
+PUB_NEG="$(pub_excluded "$PUB_SEL_IN" 'examples/ctl/trip/notes.md')"
+if [ "$PUB_IN" -eq 1 ] && [ "$PUB_RT" -eq 1 ]; then
+  PASS "CTL-PUB1: the .publish/ exclusion holds in BOTH positions on identical bytes — excluded inside a trip AND at the repository root. The corpus states the exclusion absolutely, and it is now absolute rather than root-anchored"
+else
+  FAIL "CTL-PUB1: the .publish/ exclusion is POSITION-DEPENDENT — in-trip excluded=$PUB_IN, repo-root excluded=$PUB_RT (each must be 1). The corpus says .publish/ is never traversed by any selector; at one of these positions it is"
+fi
+if [ "$PUB_NEG" -eq 0 ]; then
+  PASS "CTL-PUB2: the same probe reports 0 for a file of the SAME BYTES outside .publish/, so CTL-PUB1's counts are a measurement of the exclusion rather than of the probe matching everything"
+else
+  FAIL "CTL-PUB2: the exclusion probe matched a file outside .publish/ ($PUB_NEG) — the exclusion is over-broad and CTL-PUB1 proves nothing"
 fi
 
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
