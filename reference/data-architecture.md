@@ -309,9 +309,9 @@ is HTML. The field set and its meanings are identical.
 
 #### The `provenance` enum
 
-**The vocabulary is six values across three granularities; the `provenance:` frontmatter key is
-artifact-scoped and its enum is the four artifact-level rows.** The other two granularities are
-carried by the inline bracket marks, below.
+**The vocabulary is seven values across three granularities; the `provenance:` frontmatter key is
+artifact-scoped and its enum is the four artifact-level rows.** The field- and entry-scoped rows are
+carried by the inline bracket marks, below, and never by the key.
 
 | Value | Granularity | Means |
 |---|---|---|
