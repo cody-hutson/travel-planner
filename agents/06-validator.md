@@ -519,7 +519,8 @@ placed venue breaking the dedup rules is Venue deduplication.
 4. Constraint compliance — any hard constraint violation is Critical
 5. Status integrity — a `locked`/`firmed` event altered outside its named
    change, or a "needs booking" surface that disagrees with status, is Critical
-6. Bailout gaps — any outdoor block without a named escape is Critical
+6. Bailout gaps — a day that reaches the *Bailout completeness* trigger
+   (a 3+ hour outdoor block) with no named indoor escape is Critical
 7. Location-link completeness — every itinerary event must resolve to a
    Maps link (or an official-site URL when the venue has no map pin) in
    links-reference.md, and its card must render that link; any event with
