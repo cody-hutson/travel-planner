@@ -188,11 +188,43 @@ EOF
 # claims to enforce drifts away from it.
 # ─────────────────────────────────────────────────────────────────────────────────
 
-# va_class_rows <root> — emits "<n><TAB><class-name>" per in-model row of § 1.1.
+# va_class_rows <root> — emits one line per in-model row of § 1.1:
+#
+#   "<n><TAB><class-name><TAB><writer><TAB><lifecycle><TAB><provenance><TAB><publish>"
+#
+# ── THE FIRST TWO FIELDS ARE FROZEN, AND THE REASON IS NOT STYLE ─────────────────
+# Fields 1 and 2 are computed by the ORIGINAL expression, character for character, and
+# the four assignment fields are APPENDED. Every existing caller reads by field index —
+# va_check_corpus's S1 lookup (`$1 == n { print $2 }`), its S8 bijection walk (`cut -f1`
+# / `cut -f2`), and the suite's class count (`grep -c '^[0-9]'`) — so appending is
+# transparent to all of them and rewriting either of the first two is not.
+#
+# That is a live hazard rather than a hypothetical one. The class column is extracted by
+# truncating at the CLOSING backtick, not by stripping every backtick on the line, and
+# the two differ on exactly one row: C18 renders as `outputs/<slug>.md` — targeted-research
+# output, where stripping yields the prose tail as part of the class name. That value is
+# what S1 compares a schema's `artifact:` against and what S8 walks for the bijection, so
+# a stripped C18 fails BOTH against a corpus that is correct. The assignment cells take the
+# stripping form because they are short tokens carrying markdown emphasis; the class column
+# must not.
+#
+# ── WHY THE ASSIGNMENT CELLS ARE SPLIT SEPARATELY ────────────────────────────────
+# A markdown row is split on `|` into a FIXED column count, and the split is only performed
+# when that count is exactly right (7 columns => 9 fields, counting the empty leading and
+# trailing pieces the delimiters produce). A row of any other width yields EMPTY assignment
+# fields rather than fields shifted by one, so a changed table width surfaces as an absent
+# assignment — which the suite grades as a parse failure — instead of as four plausible
+# values read out of the wrong columns. A silently shifted field is the failure mode that
+# produces a green over the wrong data.
 va_class_rows() {
   local root="$1" doc="$1/$VA_ARCH_DOC"
   [ -r "$doc" ] || { printf 'FINDING X2 %s the architecture document is absent or unreadable\n' "$VA_ARCH_DOC"; return 1; }
   awk -v heading="$VA_CLASS_HEADING" '
+    function cell(s) {
+      gsub(/\*\*/, "", s); gsub(/`/, "", s)
+      sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s)
+      return s
+    }
     index($0, heading) == 1 { inside = 1; next }
     inside && (/^### / || /^## /) { inside = 0 }
     inside && /^\|[[:space:]]*[0-9]+[[:space:]]*\|[[:space:]]*`[^`]+`/ {
@@ -201,7 +233,9 @@ va_class_rows() {
       n = line; sub(/[[:space:]]*\|.*$/, "", n)
       rest = line; sub(/^[0-9]+[[:space:]]*\|[[:space:]]*/, "", rest)
       sub(/^`/, "", rest); sub(/`.*$/, "", rest)
-      printf "%s\t%s\n", n, rest
+      w = ""; lc = ""; pv = ""; pb = ""
+      if (split($0, F, "|") == 9) { w = cell(F[4]); lc = cell(F[5]); pv = cell(F[6]); pb = cell(F[7]) }
+      printf "%s\t%s\t%s\t%s\t%s\t%s\n", n, rest, w, lc, pv, pb
     }
   ' "$doc"
 }

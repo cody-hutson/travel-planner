@@ -48,6 +48,23 @@ name: Artifact schema
 #        is REPORTED as a measurement here, never asserted as a floor: a floor would
 #        red-line the branch as it was raised, which is the risk this design exists to
 #        avoid
+#   EN   every universal enum has ONE declaration site and every other home in the tracked
+#        tree is byte-identical to it, in member set AND ORDER. Homes are discovered by
+#        SHAPE rather than by matching the canonical text, so a drifted home is found and
+#        reported instead of silently leaving the population — which is the difference
+#        between an assertion and a tautology
+#   CA   the several homes of each class's assignment agree — the class enumeration's
+#        columns, the lifecycle section's Members column, the gap analysis's per-class
+#        delta column, and the frontmatter of the class's declared witness. Denominators
+#        are stated PER FIELD because the fields do not all have the same number of homes
+#   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
+#        both directions and with the class agreeing per row
+#
+# EN, CA and PB each carry their own control arms — a deliberately drifted input that the
+# same probe must FIND and FLAG, and a fabricated input it must NOT match. A zero whose
+# control arm also returned zero is a broken probe, so the controls are what make those
+# zeroes measurements rather than empty scans. THE ARM INVENTORIES ARE NOT RESTATED HERE,
+# for the reason the CTL line below already gives.
 #   CTL  a synthetic fixture tree, built in a temp dir on every invocation and never
 #        written into the repository. Two arms MUST NOT fire; the rest are deliberate
 #        defects that MUST, one per finding code the validator can emit, alongside the
