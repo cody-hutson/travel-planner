@@ -10,7 +10,7 @@ The headline output is a single self-contained HTML travel site — encrypted be
 
 *A figure, not a screenshot — and a fixture, not a real trip. Every name, time, event ID and count in it is taken from [`examples/data-architecture-demo/`](examples/data-architecture-demo/); that [fixture's README](examples/data-architecture-demo/README.md) records how the figure is kept current, and why it is committed as source rather than captured as an image.*
 
-The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — a full planning cycle across every engine artifact, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it.
+The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — one full planning cycle, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it. That example predates the artifact schema: it covers a subset of the artifact classes, and its files carry no `artifact:` frontmatter. For the shape an artifact has now, read the migrated fixture in [`examples/data-architecture-demo/`](examples/data-architecture-demo/), where every artifact carries its declaration block.
 
 ## Folder Structure
 

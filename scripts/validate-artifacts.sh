@@ -617,9 +617,13 @@ va_check_artifact() {
   # second limb governs: declares a version and violates that version's schema => fails
   # closed. A class the corpus does not cover has no schema to violate, and § 11 names
   # this exact moment. The gate treats it as a broken REPOSITORY rather than a broken
-  # artifact — it is an assertion about this repo's internal consistency, it cannot fire
-  # on a user's trip because the gate cannot see one, and it is deliberately gated behind
-  # the version check so an UNVERSIONED artifact naming an unknown class still skips.
+  # artifact — it is an assertion about this repo's internal consistency — and it is
+  # deliberately gated behind the version check so an UNVERSIONED artifact naming an
+  # unknown class still skips. This note once read that the finding could not fire on a
+  # user's trip because the gate could not see one. That warrant no longer holds: the
+  # --scope dir arm reaches a trip under trips/, and this finding is not scoped off that
+  # arm, so it can fire there and exit non-zero. Whether the repo-consistency findings
+  # should be scoped off the local arm is an open decision, recorded here, not settled.
   if [ "$cid" = "UNKNOWN" ] || [ -z "$cid" ]; then
     printf 'FINDING A2 %s field artifact value %s declares schema-version %s but no schema in %s/ covers that class\n' \
       "$rel" "${declared:-<absent>}" "$ver" "$VA_SCHEMA_DIR"

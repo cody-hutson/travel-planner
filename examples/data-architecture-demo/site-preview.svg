@@ -11,6 +11,14 @@
         no tile layer is drawn because CartoDB tiles are CDN-loaded. Committed as
         source: edit this file directly; there is no build step and no capture step.</desc>
 
+  <!-- ========================= PAGE CANVAS ========================= -->
+  <!-- Section 2 Colour Architecture declares cream #FAF8F5 as the page background.
+       Drawn here, first and full-bleed, so the figure carries its own canvas instead
+       of inheriting the host's. Without it the SVG is transparent below the hero and
+       the itinerary rail's navy #0F1117 venue names land on GitHub's dark canvas
+       #0d1117 at 1.00:1, which is invisible rather than merely low-contrast. -->
+  <rect x="0" y="0" width="1200" height="820" fill="#FAF8F5"/>
+
   <!-- ============================ HERO ============================ -->
   <!-- Section 3 Hero Section. The 160deg navy -> accent-deep -> accent gradient is
        rendered as stacked flat rects at descending opacity: no gradient defs, because

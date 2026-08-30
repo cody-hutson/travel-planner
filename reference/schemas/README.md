@@ -158,8 +158,12 @@ The gate keys on the absence of that one key and on nothing else. The two places
 behaviour extends past the literal predicate — `A2` above and `A6` (an in-repo artifact
 declaring a version its own in-repo schema does not define) — are **stated as boundary notes
 in the validator's source**, so a reader finds them rather than discovering them. Both are
-assertions about this repository's internal consistency, and neither can fire on a user's
-trip, because the gate cannot see one.
+assertions about this repository's internal consistency. This paragraph once closed by saying
+neither could fire on a user's trip, because the gate could not see one. That warrant no longer
+holds: the validator's `--scope dir` arm reaches a trip under `trips/`, neither finding is
+scoped off that arm, and so both can fire there and exit non-zero — `A6` on precisely the
+forward-version case the tolerant read tells a *reader* never to fail on. Whether to scope the
+repo-consistency findings off the local arm is an open decision, not one this document settles.
 
 ## Coverage — `witness:` / `no-witness-because:`
 

@@ -562,7 +562,9 @@ they cannot get back.
 
 **You upgrade only what you rewrite whole.** The model you write is rebuilt from
 its sources on every pass, so it carries the current version by construction and
-needs no migration step. **A block you do not own, you do not upgrade** — the
+needs no migration step — and that version rides a frontmatter block you **do**
+emit: its fields and their values are § *Artifact Frontmatter — what you emit on
+the traveler model*, below. **A block you do not own, you do not upgrade** — the
 `[ENRICH]` contract is a field-scoped grant on `trip-context.md` and not a licence
 to touch that file's frontmatter, and the same holds for the initial `locked` rows
 you may seed in `outputs/event-status.md`.
