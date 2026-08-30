@@ -157,9 +157,50 @@ Read trip-context.md fully before producing output. Read in this order:
 6. Possible Day Trips — assess logistics for each
 7. Mode — confirm output format
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it. **Its
+write-stop binds this role directly:** `ITERATION` updates one transport element
+and leaves the rest of the brief standing, which is a read-modify-write of
+`outputs/transport-brief.md` — so if the existing file declares a `schema-version`
+higher than the one below, **report and decline the write.** Do not rewrite its
+frontmatter at your own version — that is the irreversible case the rule exists to
+prevent, in a working directory this engine cannot repair.
+
 ## Output Format
 
 File: outputs/transport-brief.md
+
+**Artifact frontmatter — the first bytes of the file.** Open the file with this
+block, above the H1. Prepend it; move nothing that is already there.
+
+```yaml
+---
+artifact: outputs/transport-brief.md
+schema-version: 1
+trip: <trip-slug>
+writer: transport
+lifecycle: accumulate-append
+provenance: researched
+publish: internal
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own slug. `generated` is the date of **this** run.
+On a later run the block is already there: keep it, set `generated` to today, and
+leave the rest of the brief untouched — the frontmatter block is upgraded in place,
+body entries are never rewritten. The field set and its meanings live in
+`reference/data-architecture.md` → "Universal frontmatter"; the publishability
+class in `reference/data-architecture.md` → "Publishability"; and this class's own
+declaration in `reference/schemas/transport-brief.md`. Cite them; do not restate
+them.
+
+**`lifecycle: accumulate-append` is this prompt's own instruction, made explicit.**
+`ITERATION` already says *"update only the specific transport element … do not
+regenerate the full brief"* — a partial update that preserves everything it does
+not touch. That is accumulation, not a rebuild, and it is why a re-run never
+replaces this file wholesale.
 
 **Exchange rate used:** [Local currency] / USD: [rate] (approximate)
 > All cost estimates in this document use this rate.
@@ -195,6 +236,11 @@ party. Two people landing at 06:00 from Manchester are not a group of six, and
 pricing them as one is the error this section exists to prevent.
 
 **Stream — [Origin city] to [Airport Code], [Day, Date, Time TZ]**
+
+```artifact-entry
+leg: leg-<token>
+```
+
 **Passengers:** [Travelers by their `## Group` roster name]
 
 **Recommendation:** [Mode]
@@ -205,6 +251,41 @@ pricing them as one is the error this section exists to prevent.
 **What goes wrong if wrong choice made:** [One honest sentence]
 
 **Alternative:** [Mode] — [When you'd choose this instead and why]
+
+**The entry marker — one fenced block per stream, carrying the leg key and nothing
+else.** Open every stream with it, directly under that stream's own `**Stream — …**`
+line and above the labelled lines. It binds **both** stream surfaces in this file —
+the arrival streams here and the departure streams below.
+
+`leg-<token>` is opaque and day-independent, the same opacity guarantee the Event ID
+and `ven-<token>` already carry (`reference/data-architecture.md` → "Why the Event
+precedent is correct — preserved, not re-decided"). **You mint it**, on first write
+of that stream: `outputs/transport-brief.md` has exactly one writer, this one, and
+the Leg record does not exist anywhere else in the engine, so there is no upstream
+mint point to read one from. Reuse the token a stream already carries on a later
+run; never re-mint a leg that already has one, and never encode the day, the airport
+or the passenger list into it — a token that encodes a fact changes when the fact
+changes, which is the whole reason the key is a surrogate.
+
+**A stream you cannot source still carries a key.** Where a traveler's own window
+states an arrival and no booked leg records it, you already write the stream from
+the time you have and flag it `VERIFY`. That stream is a real record, so it is
+minted and marked like any other; what is absent is the booking, declared in the
+prose the `VERIFY` flag already governs — never a missing marker.
+
+**Nothing else goes in the marker** — no origin letter, no airport code, no mode, no
+duration, no passenger list, no cost. Everything else about the stream stays in the
+labelled lines, in prose, exactly as they are written today. Full statement:
+`reference/schemas/transport-brief.md` → "The entry marker".
+
+**What never becomes a field.** `Rationale`, `What goes wrong if wrong choice made`,
+`Buffer rationale`, `Luggage handling`, `Group suitability`, the `Alternative`'s
+changing condition and the physical-cost flag notes carry **prose only**. They are
+not candidates for the marker, for frontmatter, or for any normalized token a later
+slice might reach for. They fail the frontmatter/body test's second question by
+construction — two correct writers do not phrase a failure mode identically — and
+that failure is the guarantee, not a reminder. A slice that normalizes one of them
+is reading the model, not the test.
 
 ### Payment & Transit Card Setup
 
@@ -256,6 +337,17 @@ multi-transfer leg with luggage, extended standing time — so the scheduler rou
 around it rather than through it. A flagged leg is not automatically the wrong
 leg; it is the leg the routing must respect the group's need on.
 
+**This table carries no entry marker, and the omission is deliberate.** Its rows are
+legs, but it is table-shaped, and `reference/data-architecture.md` → "Body-shape
+rules" assigns this class the fenced form on the ground that its entries are
+prose-shaped — recording in the same table that a fenced block per row *"would
+restructure a table for no gain"*. The declared-key-column form it describes for
+table-shaped entries is assigned to other classes, not to this one. So write the
+table exactly as it is written today: no key column, no per-row fence. That question
+went to the architecture rather than to this prompt, and that same section has now
+answered it: a secondary table inside a fence-form class carries no marker, and what
+the missing join costs is recorded there rather than left open.
+
 ### Daily Navigation
 
 **Apps:**
@@ -300,6 +392,11 @@ departure gets a stream of their own at their own time. Where the party leaves
 together, this is one stream and reads as it always has.
 
 **Stream — [Airport Code], [Day, Date, Time TZ]**
+
+```artifact-entry
+leg: leg-<token>
+```
+
 **Passengers:** [Travelers by their `## Group` roster name]
 
 **Flight:** [Departure time]

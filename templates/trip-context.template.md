@@ -1,9 +1,23 @@
+---
+artifact: trip-context.md
+schema-version: 1
+trip: <trip-slug>
+writer: block-owned
+lifecycle: persist-mutable
+provenance: human
+publish: bound
+---
+
 # Trip Context — [DESTINATION] [MONTH] [YEAR]
 
 > Single source of truth for all agents.
-> Layer 1 (user-provided) and Layer 2 (derived) fields are completed before
+> Layer 1 (user-provided) and `[DERIVED]` fields are completed before
 > any agent runs. Fields marked [ENRICH] are completed by the enrichment agent.
 > Activity lists, food selections, and itinerary content never appear in this file.
+> The fence above is this artifact's declaration. Replace `<trip-slug>` with the
+> trip's directory name; leave every other field exactly as it stands — they are
+> facts about the artifact class, not about this trip. Field shapes and permitted
+> values: `reference/data-architecture.md` → "Universal frontmatter".
 
 ---
 

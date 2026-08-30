@@ -85,6 +85,9 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
+# Absolute, because group PF reads this file back off disk and this suite is run from
+# whatever directory the runner happens to be in.
+SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
 # NOTE: publish-trip-site.sh is deliberately NOT sourced. This suite needs no function
 # from it, and sourcing a security-critical script to parse markdown would create shared
 # fate — a syntax error there would make the CONTRACT invariant unverifiable for a reason
@@ -294,7 +297,30 @@ EOF
   return "$found"
 }
 
-has_finding() { printf '%s\n' "$1" | grep -qE "^FINDING ($2) "; }
+# ── THE HERE-STRING IS LOAD-BEARING, NOT A STYLE CHOICE. Read this before "simplifying"
+# it back into a pipeline.
+#
+# `grep -q` exits the instant it matches, by specification. Feeding it from a pipeline
+# whose writer has not finished writing kills that writer with SIGPIPE, and `pipefail` —
+# set at the top of this file — then reports the PIPELINE as failed even though the match
+# succeeded. The result is a test verdict that depends on process scheduling. A here-string
+# is a redirection on a SIMPLE COMMAND, not a pipeline, so pipefail has no second status to
+# aggregate and there is no second process to signal. The bytes grep reads are identical:
+# bash appends exactly one newline, which is what the `printf '%s\n'` it replaced did.
+#
+# THIS HELPER IS THE INVERTED POLARITY, AND IT IS THE DANGEROUS HALF. Group RP reads
+# `if has_finding "$RP_OUT" 'H1'; then FAIL`, and CTLcs/CTLhs read `if ! has_finding …;
+# then PASS`. In BOTH the spurious non-zero resolves toward the quiet answer: a real
+# finding goes unreported and the arm records a pass on a state that carries it. Nothing
+# announces that, so it cannot be caught by re-running the way a false red can. That is
+# why this is closed at the shape rather than at the arms where the defect was first seen
+# in the taxonomy suite, which were all `if <test>; then PASS` sites. Group PF keeps it
+# closed.
+has_finding() { grep -qE "^FINDING ($2) " <<<"$1"; }
+# `show` keeps its pipeline deliberately. It also ends in a command that need not read to
+# EOF, but its exit status is never consulted — it is called for its OUTPUT, so there is no
+# verdict for a spurious status to corrupt. The defect is a pipeline whose STATUS is read,
+# not a pipeline.
 show()        { printf '%s\n' "$1" | grep -E "^FINDING ($2) " | sed 's/^/      /'; }
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -793,7 +819,7 @@ else
   else
     FAIL "CTLdm2: MUST-FIRE — a contract-depth disagreeing with its own verb table passed (rc=$DM_RC); the prefix a file carries would no longer be fixed by anything"
   fi
-  if printf '%s\n' "$DM_OUT" | grep -q -F -- 'verb table (G2)'; then
+  if grep -q -F -- 'verb table (G2)' <<<"$DM_OUT"; then
     PASS "CTLdm3: the finding names G2 — the MAXIMUM over the table's {G1, G2}, not the first depth cell it met; the max computation is exercised, not merely the inequality"
   else
     FAIL "CTLdm3: D1 fired but did not name G2 as the table maximum, so the reported depth is not the maximum: $(printf '%s' "$DM_OUT" | head -2 | tr '\n' ' ')"
@@ -817,7 +843,7 @@ else
   else
     FAIL "CTLdd2: MUST-FIRE — a decoy G8 in a non-depth cell silenced the check (rc=$DD_RC); the depth is being read row-wide, so the assertion agrees with itself"
   fi
-  if printf '%s\n' "$DD_OUT" | grep -q -F -- 'verb table (G1)'; then
+  if grep -q -F -- 'verb table (G1)' <<<"$DD_OUT"; then
     PASS "CTLdd3: the finding names G1 — the depth CELL, read by field index; a row-wide matcher would have read the decoy G8, agreed with the declaration and stayed silent"
   else
     FAIL "CTLdd3: D1 fired but named a maximum the depth column does not contain — the decoy was read as a depth: $(printf '%s' "$DD_OUT" | head -2 | tr '\n' ' ')"
@@ -845,7 +871,7 @@ else
   else
     FAIL "CTLdc2: MUST-FIRE — a CREATE consumer's contract-depth went unchecked against its own verb table (rc=$DC_RC); D2's widening made the table present without making it read"
   fi
-  if printf '%s\n' "$DC_OUT" | grep -q -F -- 'verb table (G1)'; then
+  if grep -q -F -- 'verb table (G1)' <<<"$DC_OUT"; then
     PASS "CTLdc3: the finding names G1 — the MAXIMUM over the CREATE table's {G0, G1}, so the max computation runs for this role and not merely a presence check"
   else
     FAIL "CTLdc3: D1 fired on the CREATE consumer but did not name G1 as its table maximum: $(printf '%s' "$DC_OUT" | head -2 | tr '\n' ' ')"
@@ -983,6 +1009,65 @@ else
     PASS "CTLe: the control case built its five-file population in a temp dir; the repository tree was never written to"
   else
     FAIL "CTLe: a fixture appears to have been written into the repository tree"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PF — no verdict in this suite is decided by a pipeline's exit status.
+#
+# A verdict site whose writer pipes into an early-exiting `grep -q` is a live defect under
+# the `pipefail` set at the top of this file, not a style preference: grep -q exits on
+# first match, the writer dies on SIGPIPE, and pipefail reports the pipeline as failed
+# although the match succeeded. Measured on an unchanged tree in the taxonomy suite before
+# it was fixed: 10 red runs in 30, across two arms sharing nothing but the shape.
+#
+# Why a standing arm rather than a comment: this suite routed 21 call sites through one
+# has_finding() helper, and its callers are the INVERTED form — group RP reads
+# `if has_finding …; then FAIL`, CTLcs and CTLhs read `if ! has_finding …; then PASS`. In
+# both, a spurious non-zero resolves toward the quiet answer: the finding goes unreported
+# and the arm records a pass on a state that carries it. A false RED costs a re-run and
+# announces itself; this direction announces nothing. The shape is therefore what is
+# asserted absent, not the arms it happened to surface on elsewhere.
+#
+# This suite deliberately sources nothing (see the note beside `set +o`), so its scan set
+# is correctly this file alone — a scope that follows from the same reasoning that keeps
+# the publish script out of this suite's shell.
+#
+# The needle is assembled from two pieces because this scan reads its own source — a
+# literal spelling of the shape in the detector would make the detector match itself and
+# report a defect it had just introduced.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PF — no verdict in this file is decided by a pipeline's exit status."
+PF_PIPE_SHAPE='| grep -'"q"
+PF_PIPE_TIGHT='|grep -'"q"
+PF_BAD=0; PF_GOOD=0
+if [ ! -r "$SELF" ]; then
+  FAIL "PF1: this file is unreadable at $SELF, so the scan below would cover nothing while reporting a zero"
+else
+  while IFS= read -r pfline || [ -n "$pfline" ]; do
+    # An OR-list is not a pipeline. Its two-character operator carries the one-character
+    # one as a substring, so a correct OR-list of two file-reading greps would read as the
+    # defect shape. Neutralise the operator before the test rather than teaching both
+    # patterns about it: this file carries none today, and the scan must not acquire a
+    # false positive the first time one is written.
+    pfscrub="${pfline//||/  }"
+    case "$pfscrub" in
+      *"$PF_PIPE_SHAPE"*|*"$PF_PIPE_TIGHT"*) PF_BAD=$((PF_BAD+1)) ;;
+    esac
+    case "$pfline" in
+      *'grep -q'*'<<<'*) PF_GOOD=$((PF_GOOD+1)) ;;
+    esac
+  done < "$SELF"
+  # Graded in the order that makes the zero mean something: a detector that finds no
+  # instance of the CORRECT form is broken, and its zero on the incorrect form would be a
+  # probe failure wearing a pass. An empty input is broken, not clean.
+  if [ "$PF_GOOD" -eq 0 ]; then
+    FAIL "PF1: the scan found 0 here-string grep -q sites in this file, so its zero on the pipeline shape proves nothing — the convention or the scan has moved, and neither verdict is trustworthy"
+  elif [ "$PF_BAD" -eq 0 ]; then
+    PASS "PF1: ${PF_GOOD} grep -q sites in this file, 0 of them pipelines — no verdict here, and none of the 21 call sites routed through has_finding, can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
+  else
+    FAIL "PF1: ${PF_BAD} verdict site(s) in this file pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
   fi
 fi
 

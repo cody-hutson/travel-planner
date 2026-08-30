@@ -1,3 +1,14 @@
+---
+artifact: outputs/destination-shortlist.md
+schema-version: 1
+trip: ideation-demo
+writer: destination-ideation
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal
+generated: 2026-08-29
+---
+
 # Group Destination Shortlist [DERIVED]
 > A recommendation derived from every traveler's destination leanings.
 > The group decides — nothing here picks a destination.

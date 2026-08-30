@@ -167,7 +167,7 @@ Build all nine members, in this order.
 | 2 | `trips/<slug>/outputs/` | `mkdir -p` |
 | 3 | `trips/<slug>/travelers/` | `mkdir -p` — **the directory only. No file is ever created inside it.** |
 | 4 | `trips/<slug>/trip-context.md` | `Read` `templates/trip-context.template.md`, then `Write` it with exactly five things filled: the title line, `Current mode`, `Mode notes`, the `## Group` roster, and `- **Total travelers:**` |
-| 5 | `trips/<slug>/trip-log.md` | `Write`, one initial session entry, dated from the `date` call below |
+| 5 | `trips/<slug>/trip-log.md` | `Write` — the frontmatter fence below, then one initial session entry, dated from the `date` call below |
 | 6 | the mode value | the three-rule ladder under *The starting mode* |
 | 7 | the mode basis | written into `Mode notes` **and** into the log entry |
 | 8 | the roster and the traveler count | the rules under *Travelers — count and names* |
@@ -201,9 +201,22 @@ Everything else in that file belongs to another writer.
 
 No `**Lifecycle:**` line is written, and none is added to the template.
 
-Member 5's entry follows the `trip-log.md` structure `CLAUDE.md` documents:
+Member 5 writes the fence and then the entry, and the two together are the file's whole content at
+creation. **Write the block as it stands**, filling `<slug>` and the entry's angle-bracket
+placeholders and nothing else. The entry half follows the `trip-log.md` structure `CLAUDE.md`
+documents:
 
 ```markdown
+---
+artifact: trip-log.md
+schema-version: 1
+trip: <slug>
+writer: operator
+lifecycle: accumulate-append
+provenance: human
+publish: internal
+---
+
 # Trip Log — <Destination> <Year>
 
 ## Session <YYYY-MM-DD> — Trip setup
@@ -217,6 +230,21 @@ Member 5's entry follows the `trip-log.md` structure `CLAUDE.md` documents:
 ```
 
 Use the bare `YYYY-MM-DD` form exactly as the `date +%F` call returned it.
+
+**`trip:` is the only fence field this command fills**, and it takes the normalised slug Gate A
+carried forward. Every other field is a fact about the artifact class rather than about this trip —
+`reference/data-architecture.md` § *In-model — per-trip artifact classes* decides them on this
+class's row, and `reference/schemas/trip-log.md` declares the field set and the enum each value is
+drawn from. Write them exactly as they stand, and cite those two rather than re-deriving one.
+**`generated:` is absent by design** — `reference/data-architecture.md` § *Universal frontmatter*
+omits it on human-authored classes, and this class's schema types it optional for that reason. The
+`date +%F` value is at hand here for the entry heading and is **not** a field of this fence.
+
+**The fence reaches member 5 and nothing else — Resume writes none into a log that already exists.**
+Step 4 there leaves an existing `trip-log.md` alone, and that is unchanged: a log carrying no
+`schema-version` is read as version 0 under `reference/data-architecture.md` § *Tolerant read* and
+stays valid indefinitely, so there is nothing to repair. Writing one would be a rewrite of exactly
+the file the create-only rule at the top of this file exists to protect, and `trips/` is git-ignored.
 
 ## Resume — repair only
 

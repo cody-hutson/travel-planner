@@ -1,7 +1,22 @@
+---
+artifact: travelers/<traveler>.md
+schema-version: 1
+trip: <trip-slug>
+writer: human
+lifecycle: persist-mutable
+provenance: human
+publish: internal
+---
+
 # Your Travel Profile — [Name]
 
 > **This is *your* profile** — what you'd love out of the trip, what you need it to
 > work around, and how you like to travel. One file per person.
+>
+> **The fence above is not a field you fill in.** Replace `<trip-slug>` with the trip's
+> directory name and leave the rest exactly as it stands. **Your name does not go in it** —
+> it goes in the title line below, and nowhere in the fence. Field shapes and permitted
+> values: `reference/data-architecture.md` → "Universal frontmatter".
 >
 > **Short on time? Fill the ⭐ fields first — about 2–3 minutes.** There are ten of them,
 > at most one in a section, and most are a pick-from-the-list or a short phrase. The two
@@ -12,6 +27,11 @@
 > **How to use it:**
 > - Copy this template to `trips/<destination>-<year>/travelers/<your-name>.md`, then
 >   fill it in — or just ask, and an agent will walk you through it question by question.
+>   For `<your-name>`, take your name as the trip's Group roster spells it, lowercase it,
+>   replace every run of characters outside `A-Za-z0-9._-` with a single `-`, and trim any
+>   leading or trailing `-` — so Dana Smith saves as `dana-smith.md`. **That stem is how the
+>   planner joins your file to your roster entry**, so a name it cannot match reads as an
+>   unresolved profile rather than as yours.
 > - It lives in the git-ignored `trips/` working dir and is **private — never published**,
 >   so put your real details here.
 > - **Fill in the parts that fit where your trip is right now.** If the destination
@@ -46,7 +66,7 @@
 > full list — here you only add anyone travelling with you who won't fill in a
 > form of their own.
 
-- ⭐ **Name:** [Your name — e.g., Pat]
+- ⭐ **Name:** [Your name, as the trip's Group roster spells it — e.g., Pat. If the roster has it differently, say which is right rather than picking one.]
 - **Relationship:** [*(optional)* how you fit in the group — e.g., "Jordan's sister", "traveling with friends". Skip if it doesn't apply.]
 - **Party:** [Anyone travelling with you who won't fill in their own form — e.g., "two kids, 6 and 9", "my dad, 78, travelling on my booking". Skip if everyone in your group is filling in their own.]
 
@@ -99,6 +119,10 @@
 > `trips/<destination>-<year>/travelers/<their-name>.md` — and their passport goes
 > on their own line there. Never put a second person's passport on yours. If they
 > won't have a profile of their own, their passport isn't recorded anywhere.
+> This line is a **declared non-publishable field** — its class is declared in
+> `reference/data-architecture.md` § *Publishability*, and both the publish guard
+> and the validator read it from there — so what you write here shapes the plan
+> and never reaches a published page, in named or anonymised form.
 
 ---
 
@@ -418,6 +442,15 @@ nothing else. No preamble, no commentary, no summary afterwards.
 - Under **Needs** and **Desires**, delete the unused repeated blocks and keep one block per
   real need and per real desire — adding more blocks if they have more.
 - Leave the `>` guidance quotes as they are.
-- Put their name into the title line at the very top.
+- Leave the frontmatter fence as it stands, except `<trip-slug>`, which takes the trip's
+  directory name. Its values are facts about the artifact class, not answers to a question.
+- Put their name into the `# Your Travel Profile` title line — the first heading, **not** the
+  frontmatter fence above it. A person's name is a body value and never a frontmatter value
+  (`reference/data-architecture.md` → "Traveler — natural key").
 
-Then tell them to save it as `trips/<destination>-<year>/travelers/<their-name>.md`.
+Then tell them to save it as `trips/<destination>-<year>/travelers/<their-name>.md`, deriving
+`<their-name>` from the name the trip's Group roster carries: lowercase it, replace every run of
+characters outside `A-Za-z0-9._-` with a single `-`, then trim any leading or trailing `-` — so
+Dana Smith becomes `dana-smith.md`. Say why, in one line: that stem is how the planner joins the
+file to the roster entry, and a stem it cannot match reads as an unresolved profile rather than
+as theirs.

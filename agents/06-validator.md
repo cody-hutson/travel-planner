@@ -19,12 +19,25 @@ You are the last line of defense before the itinerary becomes real.
 ### What You Audit
 
 **Venue deduplication:**
-Build a complete cross-reference of every named venue across the itinerary.
+Build a complete cross-reference of every venue across the itinerary, keyed on
+the canonical `ven-<token>` that `outputs/links-reference.md` and
+`outputs/venue-matrix.md` carry in their `Venue key` columns. **The key is the
+join basis, and it is the unit the cap counts.** The cap counts places, not rows:
+two display names carrying one key are one venue and one appearance, and one
+display name carrying two keys is two venues. Join on the key, never on the
+display string — a name match is the failure this key exists to remove.
 Flag any venue appearing more than twice. Flag any venue appearing as an
 anchor on one day and an alternative on any other day. Flag proximity venues
 (hotel-neighborhood) that appear as repeated defaults — these are the
 sneakiest duplicates because they feel natural. The cross-reference map
 is built first, before any other check is run.
+
+A research entry whose marker still reads `venue: unminted` is **not yet
+joined**. Count it as its own venue, so the cap over-counts rather than passing
+silently on a merge nobody made, and show it in the deduplication report as
+unresolved. `unminted` is a declared absence, never a missing venue; an entry
+still carrying it once the hub's reference files hold that venue is a Note
+naming the entry and its file, not a Critical.
 
 **Hours and closure verification:**
 Every venue in the itinerary is checked against the day of week it is
@@ -87,16 +100,31 @@ Specific checks:
 
 **Profile-privacy non-publication (fail-closed):**
 Per-traveler profile fields marked non-publishable must never reach a
-publish-bound artifact. Today that class holds exactly two members:
+publish-bound artifact. **The class itself is declared, not enumerated here:**
+its single home is the `publish-contract-values` declaration in
+`reference/data-architecture.md` § *The declaration*, which states — for every
+member — the field label or entry-level mark that puts a value in class, the
+artifacts the rule is evaluated against, and the match rule that travels with it.
+Read that declaration for the current membership. **Do not restate it here and do
+not carry a private list of members**: a second enumeration drifts from the first,
+and nothing arbitrates between them.
 
-1. **Passport** (issuing country and validity, never a number), captured in
-   `travelers/<traveler>.md` and carried into `outputs/traveler-model.md`.
-2. **Every `[THIRD-PARTY]`-marked value** in `outputs/traveler-model.md` — a
-   need captured for a party member who has no profile of their own, supplied
-   by the operator and marked `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` (see
-   `agents/00-enrichment.md`). It is non-publishable because the person it
-   describes was never able to consent to it being recorded, let alone
-   published — see `reference/adr/ADR-006-third-party-data-capture.md`.
+Two things the declaration does not say, which this check does:
+
+- **Why the class exists.** An entry-marked value describes a party member who has
+  no profile of their own — supplied by the operator and marked
+  `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` (see `agents/00-enrichment.md`). It is
+  non-publishable because the person it describes was never able to consent to it
+  being recorded, let alone published — see
+  `reference/adr/ADR-006-third-party-data-capture.md`. A field-declared value such
+  as a passport is the traveler's own captured document detail, held only so entry
+  requirements can be checked.
+- **That this audit is a layer of its own.** The publish path carries a mechanical
+  guard over the same declaration (`reference/adr/ADR-008-publish-content-guard.md`),
+  and it does not subsume this check. That guard runs at publish time on the
+  rendered bytes; this one runs at validation time on the plan, and catches what a
+  string match cannot — a paraphrase, a restatement, an inference. **Both layers
+  stand.**
 
 The publish-bound artifacts are **every source the site build reads**. The
 authority for that set is the single-source table in
@@ -112,13 +140,15 @@ artifacts §9.1 marks authoritative-internally-but-not-reader-facing, and §9.3
 lists them as intentional exclusions; they are not publish-bound and are not
 audited here.
 
-The audit runs on both members of the class, across the same five artifacts:
+The audit runs on **every declared member**, across the same five artifacts. The
+declaration has two limbs and each is audited on its own terms:
 
-- **Passport.** For every traveler carrying a Passport value in
-  `outputs/traveler-model.md`, confirm that neither the issuing country nor the
-  validity appears anywhere in **any** publish-bound artifact named above.
-- **`[THIRD-PARTY]` values.** For every `## <Name>` entry in
-  `outputs/traveler-model.md` carrying the `[THIRD-PARTY]` mark, confirm that
+- **Field-declared values.** For every traveler carrying a value under a
+  field-declared label in `outputs/traveler-model.md`, confirm that no part of
+  that value appears anywhere in **any** publish-bound artifact named above — for
+  a passport, that means neither the issuing country nor the validity.
+- **Entry-declared values.** For every `## <Name>` entry in
+  `outputs/traveler-model.md` carrying an entry-declared mark, confirm that
   **none** of its need text reaches **any** publish-bound artifact named above,
   and that the person's name appears in no `**Applies to:**` line and heads no
   `## Hard Constraints` block. **Check the anonymized form too:** a rest floor
@@ -134,11 +164,13 @@ The guarantee is scoped to the published render path, not to a frozen list of
 filenames — a source added to the build and not added here reopens the leak this
 check exists to close.
 
-**Fail closed.** If `outputs/traveler-model.md` cannot be read, or a traveler's
-passport carry-through cannot be determined, or a `[THIRD-PARTY]` entry's
-carry-through cannot be determined, record a Critical — an undetermined
-result is a failure, never a clean pass. This holds identically for both
-members of the class.
+**Fail closed.** If `outputs/traveler-model.md` cannot be read, or the declaration
+itself cannot be read, or a field-declared value's carry-through cannot be
+determined, or an entry-declared value's carry-through cannot be determined,
+record a Critical — an undetermined result is a failure, never a clean pass. This
+holds identically for every declared member. **A class that could not be computed
+is not an empty class**, and a declaration that yields nothing is the first case,
+never the second.
 
 **What is not a finding.** The check keys on a *specific traveler's captured
 value*, never on the word "passport". Destination-level guidance that belongs on
@@ -192,7 +224,7 @@ list — the hub owns the status file.
 
 **Satisfaction-metrics report:**
 Report the satisfaction coverage view for the itinerary to
-`outputs/satisfaction-metrics.md` (the rebuilt/refreshed `[DERIVED]` coverage
+`outputs/satisfaction-metrics.md` (the `rebuilt-each-synthesis` `[DERIVED]` coverage
 artifact — see `reference/data-model.md` → Satisfaction Metrics). You **report
 and emit** these dimensions; you do **not** score them. **Section ownership —
 do not clobber the hub's sections.** This file has two writers: the validator
@@ -251,10 +283,15 @@ a fixed type:
   `[THIRD-PARTY]` need is a derivation error, not a clean pass: with no governing
   constraint to raise a Critical either, it would leave the subject with no audit
   surface at all.
-  This record lands in `outputs/satisfaction-metrics.md`, which §9.3 names an
-  intentional exclusion — so the row is not publish-bound, and writing the
-  person's name into it here is not a non-publication finding. It must not be
-  copied into a publish-bound artifact.
+  This record lands in `outputs/satisfaction-metrics.md`, whose declared
+  artifact class is `publish: internal-hard` — never rendered, and carrying
+  values that must not reach a rendered page in any form, including anonymized.
+  **That declaration is the class source.** `reference/site-layout-spec.md`
+  §9.3 still names the same artifact an intentional exclusion; it is retained as
+  the human-readable statement of the same bound — defence in depth, not a
+  second source. So the row is not publish-bound, writing the person's name into
+  it here is not a non-publication finding, and it must not be copied into a
+  publish-bound artifact.
   You are recording the every-applicable-day hard-constraint audit
   as a per-need-per-day pass/fail record for the per-traveler-need slice, not
   re-deciding it.
@@ -482,22 +519,22 @@ placed venue breaking the dedup rules is Venue deduplication.
 4. Constraint compliance — any hard constraint violation is Critical
 5. Status integrity — a `locked`/`firmed` event altered outside its named
    change, or a "needs booking" surface that disagrees with status, is Critical
-6. Bailout gaps — any outdoor block without a named escape is Critical
+6. Bailout gaps — a day that reaches the *Bailout completeness* trigger
+   (a 3+ hour outdoor block) with no named indoor escape is Critical
 7. Location-link completeness — every itinerary event must resolve to a
    Maps link (or an official-site URL when the venue has no map pin) in
    links-reference.md, and its card must render that link; any event with
    no resolvable link is a hard failure and is always Critical
-8. Profile-privacy non-publication — either member of the non-publishable
+8. Profile-privacy non-publication — **any** member of the non-publishable
    class reaching **any** of the five publish-bound artifacts named by
    `reference/site-layout-spec.md` §9.1 (`outputs/final-itinerary.md`,
    `outputs/links-reference.md`, `outputs/venue-matrix.md`,
    `outputs/event-status.md`, `trip-context.md`) is a hard failure and is always
-   Critical. The two members are (a) a per-traveler Passport value (issuing
-   country or validity) and (b) any `[THIRD-PARTY]`-marked value — a need
-   captured for a party member who has no profile of their own — **including
-   its anonymized form**, and including the person's name on an `Applies to:`
-   line. There is **no Warning tier and no waiver**, and an undetermined result
-   is Critical too
+   Critical. Membership is read from the `publish-contract-values` declaration in
+   `reference/data-architecture.md` § *The declaration* and is not restated here.
+   A finding covers a declared value **including its anonymized form**, and
+   including the person's name on an `Applies to:` line. There is **no Warning
+   tier and no waiver**, and an undetermined result is Critical too
 9. Price staleness — Warning level unless the discrepancy is large enough
    to affect budgeting decisions
 10. Travel restrictions and advisories — Critical if action is required
@@ -532,8 +569,12 @@ alternatives (not promoted into primary slots).
 
 Read fully before producing output:
 1. trip-context.md (hard constraints, travel dates, calendar events)
-2. outputs/links-reference.md (canonical venue list — primary audit target)
-3. outputs/venue-matrix.md (deduplication cross-reference)
+2. outputs/links-reference.md (canonical venue list — primary audit target; its
+   `Venue key` column carries the canonical `ven-<token>`, which is what every
+   venue check joins on)
+3. outputs/venue-matrix.md (deduplication cross-reference, keyed on that same
+   `ven-<token>` — the two-appearance cap is counted over the key, never over
+   display names)
 4. outputs/final-itinerary.md (scheduled placement of all venues)
 
 Also read:
@@ -565,9 +606,61 @@ Write: outputs/satisfaction-metrics.md — **your owned sections only**
 never clobbering the hub's Desire-coverage / Balance-signals sections. See Output
 Format; reported/emitted, never scored.
 
+**Versioned artifacts.** Every artifact you read may carry a `schema-version`.
+Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
+→ "Tolerant read"; do not restate it here and do not reinterpret it.
+
+**The write-stop binds this role as a writer, not only as a reader.** You replace
+`outputs/validation-report.md` wholesale and you read-merge-write your own
+sections of `outputs/satisfaction-metrics.md`. Before either write, check whether
+the file already there declares a `schema-version` higher than the one below. If
+it does, **report and decline the write** — never rewrite it at your own version.
+Check it even on the report you rebuild wholesale: a wholesale replace never
+reads the file it overwrites, so the stop has to fire *before* the write or it
+never fires at all.
+
+**A declined write is a Warning, not a Critical**, and the reason is the forward
+implication above rather than convention: every needs-compliance `fail` **is** a
+constraint-compliance Critical, which is raised by a different check and lands in
+a different artifact. So an undelivered *record* never weakens the constraint
+guarantee, and a Critical here would block finalization over a reporting failure
+rather than a plan failure. Where the declined file is the report itself, state
+the refusal in your response. **If a later change ever weakens that forward
+implication, this severity has to be revisited.**
+
 ## Output Format
 
 File: outputs/validation-report.md
+
+**Artifact frontmatter — the first bytes of the file**, above everything below.
+Prepend it; the report body moves not one line.
+
+```yaml
+---
+artifact: outputs/validation-report.md
+schema-version: 1
+trip: <trip-slug>
+writer: validator
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal
+generated: <YYYY-MM-DD>
+critical-count: <integer>
+---
+```
+
+`critical-count` is the count of Critical findings in this report, and it is
+**required** — a report always carries it, so `0` is a measurement and an absent
+value is a schema violation rather than an ambiguous read. It exists because one
+consumer branches on it: `CLAUDE.md`'s pipeline flow runs remediation *if
+criticals found*. **Warnings and Notes get no such field** — no consumer branches
+on either count, and that asymmetry is deliberate: one severity is a declared
+schema field and the other is not, which is what makes a Critical structurally
+distinguishable from a Warning rather than distinguishable only by reading prose.
+
+**Emit the block only when you write the file.** Under a dispatch that instructs
+you to write neither file and return findings in the response — `/trip check` —
+there is no file, so there is no frontmatter. Do not emit YAML into your response.
 
 ---
 
@@ -593,7 +686,11 @@ File: outputs/validation-report.md
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
 
-**Total issues requiring action:** [N Critical], [N Warning], [N Note]
+**Total issues requiring action:** [N Warning], [N Note] — the Critical total is
+carried in frontmatter as `critical-count` and is not restated here. The per-check
+`Critical` column above stays: it is a *per-check* count, where the frontmatter
+carries the *artifact-level aggregate*. Parts and aggregate are different facts
+with one home each.
 
 ---
 
@@ -631,14 +728,17 @@ File: outputs/validation-report.md
 
 ### Venue Deduplication Report
 
-| Venue | Appearances | Days | Role per day | Status |
-|-------|-------------|------|-------------|--------|
-| [Name] | [N] | [D1, D3] | [Anchor D1 / Alt D3] | [Flag / OK] |
+| Venue key | Venue | Appearances | Days | Role per day | Status |
+|-----------|-------|-------------|------|-------------|--------|
+| [`ven-<token>` or `unresolved`] | [Name] | [N] | [D1, D3] | [Anchor D1 / Alt D3] | [Flag / OK] |
+
+One row per key, not per display name. An `unresolved` row is a mention no key
+reached — it counts as its own venue and names the file its marker sits in.
 
 Proximity venue usage (hotel-neighborhood):
 
-| Venue | Proximity | Appearances | Intentional? |
-|-------|-----------|-------------|-------------|
+| Venue key | Venue | Proximity | Appearances | Intentional? |
+|-----------|-------|-----------|-------------|-------------|
 
 ---
 
@@ -696,6 +796,46 @@ Needs-booking vs. status — the booking surfaces must equal the
 > Reported (not scored) to `outputs/satisfaction-metrics.md`. pass/fail and
 > covered/not are determinable from the plan; balance-signal scoring is left to
 > design. Needs-compliance must agree with the Constraint Compliance audit above.
+
+**Artifact frontmatter — the first bytes of the file**, above the H1. Prepend it;
+the sections below move not one line.
+
+```yaml
+---
+artifact: outputs/satisfaction-metrics.md
+schema-version: 1
+trip: <trip-slug>
+writer: [hub, validator]
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal-hard
+generated: <YYYY-MM-DD>
+---
+```
+
+**You author and refresh this block; the hub never does.** That is the whole of
+the ownership rule and it is what keeps two writers off one frontmatter block:
+
+- `writer: [hub, validator]` names both writers because the **file** has two. It
+  is a statement about the file's *sections*, not about the block — the block has
+  exactly one writer, and it is you. This is the single most likely misreading.
+- **The class carries no per-class field.** Every metric lives in the body
+  sections, where the existing section-ownership split already keeps the two
+  writers apart. A validator-owned metric field plus a hub-owned one would push
+  read-merge-write into YAML — a merge surface neither prompt has and no
+  section-ownership rule reaches. The partition is therefore total and disjoint
+  by construction: eight fields, one owner, no residue.
+- The hub **carries** the block through its own read-merge-write and preserves it
+  byte-for-byte; it never authors and never rewrites it.
+- `generated` records **the last validator pass**, not when the file last
+  changed — you refresh it on every pass, which is the freshness an audit
+  artifact's reader needs.
+- On a pass where the file does not yet exist and the hub writes its sections
+  first, the file carries no frontmatter until you run. That file is unversioned,
+  which the tolerant-read rule reads as version 0 and the validating gate skips.
+  The window closes within the same pipeline pass, by construction.
+
+**Emit the block only when you write the file** — the same rule as the report.
 
 **Needs-compliance — pass/fail, per need × per applicable day**
 
@@ -776,7 +916,7 @@ Format: Date — Event — Impact on itinerary — Action if any]
 
 ### Validation Metadata
 
-- **Validated:** [Date]
+- **Validated:** carried in frontmatter as `generated`; not restated here.
 - **Itinerary version audited:** [v1 / v2 / etc.]
 - **Items confirmed clean:** [N]
 - **Items requiring human verification:** [List — these could not be

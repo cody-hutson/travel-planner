@@ -1,8 +1,8 @@
 # Data Model — The Satisfaction Layer
 
-The canonical data-architecture document for the satisfaction layer. It defines **where each new piece of satisfaction data lives, what shape it takes, who writes it, how it flows, and how it reconciles** with the existing `trip-context.md` — so every satisfaction slice builds to one decision rather than re-deciding storage independently.
+The satisfaction layer's specialization of the engine-wide data architecture in `reference/data-architecture.md`. It defines **where each new piece of satisfaction data lives, what shape it takes, who writes it, how it flows, and how it reconciles** with the existing `trip-context.md` — so every satisfaction slice builds to one decision rather than re-deciding storage independently.
 
-This document governs the data **substrate** only — storage homes, artifact shapes, write ownership, lifecycle, and reconciliation. It deliberately does **not** define metric formulas, scoring algorithms, or any optimization logic. Nothing in the satisfaction layer optimizes yet; this is the foundation those later capabilities will read from.
+This document governs the data **substrate** only — storage homes, artifact shapes, write ownership, and reconciliation, plus this layer's own lifecycle *assignments* against the classes defined in `reference/data-architecture.md` § *Lifecycle Classes*. It deliberately does **not** define metric formulas, scoring algorithms, or any optimization logic, and it does not define the lifecycle classes themselves. Nothing in the satisfaction layer optimizes yet; this is the foundation those later capabilities will read from.
 
 ---
 
@@ -57,7 +57,7 @@ The enrichment agent is the reconciler. When it reads the per-traveler files, it
 
 ### Concrete illustration
 
-*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Per-Traveler Model below.)*
+*(This block is a deliberately simplified illustration of the link-don't-copy rule — the per-traveler file follows the fuller `Category:` / `Specific:` / `Applies to:` shape defined in The Per-Traveler Model below. Every fence here shows an artifact's **body only**: each of these artifacts also carries frontmatter, elided throughout this document — see § *Serialization — the satisfaction-layer projection*.)*
 
 Trip-context owns the trip-level constraint — note its name and description cover **both** the stair limit and the continuous-walking ceiling, so the per-traveler walking-distance need links to it without a name/description mismatch:
 
@@ -209,7 +209,7 @@ On a trip where every traveler shares the group's window and no blackout applies
 
 ### Worked example — a per-traveler file
 
-Jordan's `travelers/Jordan.md`, written out in the full model (extending the smaller illustration in the Reconciliation Rule above):
+Jordan's `travelers/Jordan.md`, written out in the full model — **body only**, its frontmatter elided as everywhere in this document — extending the smaller illustration in the Reconciliation Rule above:
 
 ```markdown
 # Traveler — Jordan
@@ -242,7 +242,7 @@ Jordan's `travelers/Jordan.md`, written out in the full model (extending the sma
   Overlap: solo
 ```
 
-Pat's `travelers/Pat.md` shares two of those desires — which is what produces the overlap above:
+Pat's `travelers/Pat.md` — **body only**, frontmatter elided as above — shares two of those desires, which is what produces the overlap:
 
 ```markdown
 # Traveler — Pat
@@ -263,7 +263,7 @@ Pat's `travelers/Pat.md` shares two of those desires — which is what produces 
   Overlap: Jordan
 ```
 
-The enrichment agent reconciles both files into `outputs/traveler-model.md` — linking each need to its constraint and carrying the computed overlap signal:
+The enrichment agent reconciles both files into `outputs/traveler-model.md` — **body only**, frontmatter elided as above, linking each need to its constraint and carrying the computed overlap signal:
 
 ```markdown
 # Traveler Model [DERIVED]
@@ -363,29 +363,27 @@ The chain in one line: **intake template → per-traveler source file (human) �
 
 ## Artifact Lifecycle Classification
 
-The original system defines an **Output Versioning** model for `outputs/*.md`. Each new satisfaction artifact must be classified against it so re-runs neither lose state nor accumulate stale duplicates. The existing patterns are:
+**The lifecycle classes are defined once, in `reference/data-architecture.md` § *Lifecycle Classes*.** That document is the engine-wide home for the class set — `accumulate-append`, `rebuilt-each-synthesis`, `versioned`, `persist-mutable`, `output` — and for what each class means. **This section does not restate those definitions.** It records the two things the engine-wide document defers to this one: the **satisfaction layer's own class assignments**, and the derivation that produced `persist-mutable`.
 
-- **(a) Accumulate-append-with-dated-sections** — research outputs (e.g., `food-list.md`, `activities-list.md`). Each re-run appends a dated section; nothing is deleted.
-- **(b) Rebuilt-each-synthesis** — `venue-matrix.md`, `links-reference.md`. Reflect the *current* itinerary state; regenerated from scratch on every synthesis pass.
-- **(c) Versioned** — `final-itinerary.md` → `v1`, `v2`, ... Each synthesis produces a new numbered version; prior versions are preserved as files.
+`CLAUDE.md` § *Output Versioning* cites the same home for the same set, in its § *Satisfaction-layer artifacts* subsection — which says in terms that it assigns and does not define. **The rest of that section still states the engine's default-and-exception model in its own words, and correctly so:** it is a live input, read by `reference/data-architecture.md` § *Lifecycle Classes*' own absence rule and by `.claude/commands/trip.md`'s `/trip research` agent-key derivation. One definition; this document cites it and restates nothing, and `CLAUDE.md` both cites it and states behaviour the engine reads back.
 
-The new artifacts classify as follows:
+The satisfaction artifacts take these classes:
 
 | New artifact | Lifecycle | How it behaves | Closest existing pattern |
 |--------------|-----------|----------------|--------------------------|
-| `outputs/event-status.md` | **persist-mutable** (new — fourth pattern) | Updated **in place** as events change status. **Survives every re-synthesis** — never wiped, never regenerated from scratch. It is the iteration-protection source of truth: the record of what has already been booked / locked / fallen-through must outlive any single planning pass. | None — see below |
-| `outputs/traveler-model.md` | rebuilt / refreshed from source | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | (b) rebuilt-each-synthesis |
-| `outputs/satisfaction-metrics.md` | rebuilt / refreshed from inputs | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | (b) rebuilt-each-synthesis |
+| `outputs/event-status.md` | **persist-mutable** | Updated **in place** as events change status. **Survives every re-synthesis** — never wiped, never regenerated from scratch. It is the iteration-protection source of truth: the record of what has already been booked / locked / fallen-through must outlive any single planning pass. | None — see below |
+| `outputs/traveler-model.md` | `rebuilt-each-synthesis` | A derived projection. The enrichment agent refreshes it from the **current** per-traveler source files whenever those change. Every entry projected from a `travelers/<traveler>.md` file carries no independent state of its own — that source file is authoritative — so regenerating it is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has **no source file by design** (see the stated exception under **Needs**), so it is **carried forward verbatim** across a refresh rather than re-derived — the operator's statement remains its authority, and this model is the only surviving record of it. The classification is unchanged: the artifact is still rebuilt from source, with that one entry class preserved. | rebuilt-each-synthesis |
+| `outputs/satisfaction-metrics.md` | `rebuilt-each-synthesis` | Recomputed by the validator + hub from the **current** itinerary and the current traveler model. A snapshot of coverage at synthesis time; safe to regenerate because its inputs are authoritative. | rebuilt-each-synthesis |
 
-### `event-status.md` is genuinely a new fourth pattern
+### Why `persist-mutable` exists — the derivation
 
-It is **not** any of the three existing patterns, and the distinction is load-bearing:
+`outputs/event-status.md` matches **none** of the three classes that preceded it — each read as `reference/data-architecture.md` § *Lifecycle Classes* defines it — and the distinction is load-bearing. This is the reasoning that produced the class; the class itself is defined there, not here.
 
-- It is **not (a) accumulate-append** — old status is *mutated*, not preserved as history. When an event goes from "to book" to "booked", the record changes; we do not keep a dated log of every status it ever held.
-- It is **not (b) rebuilt-each-synthesis** — and this is the critical difference. The whole reason it cannot live in `venue-matrix.md` is that rebuilt artifacts are *wiped and regenerated* each synthesis. Status must **survive** the synthesis, not be recomputed by it. A re-synthesis reads existing status; it does not overwrite it.
-- It is **not (c) versioned** — there are no `event-status-v1.md` / `v2.md` snapshots. There is one living file, mutated in place.
+- **Not `accumulate-append`.** Old status is *mutated*, not preserved as history. When an event goes from "to book" to "booked", the record changes; we do not keep a dated log of every status it ever held.
+- **Not `rebuilt-each-synthesis`** — and this is the critical difference. The whole reason status cannot live in `venue-matrix.md` is that a rebuilt artifact is regenerated each synthesis. Status must **survive** the synthesis, not be recomputed by it. A re-synthesis reads existing status; it does not overwrite it.
+- **Not `versioned`.** There are no `event-status-v1.md` / `v2.md` snapshots. There is one living file, mutated in place.
 
-So the substrate adds a fourth lifecycle pattern — **persist-mutable**: a single file, updated in place, that persists across re-runs and is *read* (never blindly overwritten) by synthesis. Persist-mutable is not append-only: rows are mutated in place, and a row is **deleted** in the one case where its event is removed from the itinerary (see Orphan removal below) so no ghost row lingers. The other two new artifacts fit the existing **rebuilt** pattern (b) because they are pure derived projections of authoritative inputs.
+That is why `persist-mutable` exists. Its definition lives in the engine-wide home; what this section records is the argument that forced it, kept beside its subject artifact. One rider belongs here because it is satisfaction-layer-specific: `persist-mutable` is **not** append-only — rows are mutated in place, and a row is **deleted** in the one case where its event is removed from the itinerary (see Orphan removal below), so no ghost row lingers. The other two satisfaction artifacts take `rebuilt-each-synthesis` — the *Closest existing pattern* column above is where that mapping is recorded — because they are pure derived projections of authoritative inputs.
 
 ---
 
@@ -428,22 +426,22 @@ Status drives two *orthogonal* things: **change-protection** (is the event open 
 
 ### `outputs/event-status.md` shape
 
-A flat per-event table, one row per event, keyed by a stable **Event ID** plus the day the event currently sits on. The Event ID is **opaque and day-independent** — **minted by the hub on first placement** and stable across every re-run — and it is the **cross-run join key** that lets a re-synthesis match a row to the same event. It must **not** encode the day (the `Day` column carries that): resequencing routinely moves an event to a different day, so a day-encoded ID would either lie or force a churned key. The illustrative IDs below (`evt-01`, …) are opaque on purpose; real IDs may be any opaque token but **must** be day-independent. Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
+A flat per-event table, one row per event, keyed by a stable **Event ID** plus the day the event currently sits on — shown below **body only**, its frontmatter elided as everywhere in this document. The Event ID is **opaque and day-independent** — **minted by the hub on first placement** and stable across every re-run — and it is the **cross-run join key** that lets a re-synthesis match a row to the same event. It must **not** encode the day (the `Day` column carries that): resequencing routinely moves an event to a different day, so a day-encoded ID would either lie or force a churned key. The illustrative IDs below (`evt-01`, …) are opaque on purpose; real IDs may be any opaque token but **must** be day-independent. The `Venue` column alongside it is a *reference*, not this table's key: it carries the venue's `ven-<token>` so an event resolves to its link by key rather than by name (see § *Venue identity in the satisfaction substrate* below). Updated **in place** (persist-mutable): a re-synthesis *reads* this file to know what to preserve, and writes back only the rows whose status actually changed.
 
 ```markdown
-# Event Status [persist-mutable]
+# Event Status
 
 > One row per placed event. Exactly one status each.
 > Iteration changes only `planned` rows; `locked` / `firmed` are preserved unless the user names them.
 > `option` rows are alternatives/bailouts — never auto-promoted into a primary slot.
 
-| Event ID | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
-|----------|-------|-----|--------|-------------------|-------------------------|-------|
-| evt-01 | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
-| evt-02 | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
-| evt-03 | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
-| evt-04 | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
-| evt-05 | Noodle counter (Day 3 lunch alt)  | Day 3 | option  | no  | no  | Backup for evt-03; alternative pool |
+| Event ID | Venue | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
+|----------|-------|-------|-----|--------|-------------------|-------------------------|-------|
+| evt-01 | ven-04 | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
+| evt-02 | ven-11 | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
+| evt-03 | ven-07 | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
+| evt-04 | ven-19 | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
+| evt-05 | ven-23 | Noodle counter (Day 3 lunch alt)  | Day 3 | option  | no  | no  | Backup for evt-03; alternative pool |
 ```
 
 > **Event ID is opaque and day-independent.** The IDs above carry no day (the `Day` column does). `evt-05`'s note references its primary by ID (`evt-03`), not by a day-coded name — so when resequencing moves either event to another day, the join key and the cross-reference both still hold.
@@ -511,7 +509,7 @@ This document describes the *capability* and the *data condition* that produces 
 
 ## Satisfaction Metrics
 
-The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt/refreshed — pattern (b), a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
+The storage-homes table fixes *where* the coverage view lives (`outputs/satisfaction-metrics.md`) and *how* it behaves over re-runs (rebuilt-each-synthesis, a snapshot recomputed from the current itinerary and traveler model). This section fixes *what* it holds: the **named dimension set** the validator and hub track for a trip, each dimension's **type**, and the artifact's **shape**.
 
 It defines the **measurable surface** only. It does **not** define how any balance dimension is scored — no formula, no weight, no threshold, no ranking math. That boundary is deliberate and load-bearing: per the document's own rule, nothing in the satisfaction layer optimizes yet, and "how a coverage number is computed is out of scope." This section names *what is measured and what kind of signal each is*; the scoring of the balance dimensions is **left to design**.
 
@@ -573,17 +571,30 @@ This reconciles the language elsewhere that the audit runs "every day": the audi
 | **Balance signals** (group-equity, the four experience axes, rest-recovery balance, meal-variety concentration — all `(left to design)`) | **Hub** | Emitted alongside the hub's coverage read; named and tracked, never scored. |
 | **Needs-compliance** (pass/fail, per need × per applicable day) | **Validator** | This is the *recorded form of the validator's every-day constraint audit*; the validator is its natural owner (and the hub's own audit must agree with it). |
 | **Needs ↔ constraint agreement check** | **Validator** | The validator owns the reconciliation that every needs-compliance `fail` is a constraint Critical (see Reconciliation below). |
+| **Frontmatter block** (the universal fields — `reference/data-architecture.md` § *Universal frontmatter*) | **Validator** | One writer, so the block needs no merge rule at all. The validator authors and refreshes it; the hub carries it through its read-merge-write and preserves it byte-for-byte, never authoring it. The class declares **no per-class field**, so no field is written by both — the partition is total and disjoint by construction, which is what keeps the two-writer split out of YAML. |
 
-The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt/refreshed each synthesis (pattern (b)) — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
+The rule each writer follows: **read the current file, replace only your own section(s), write the merged whole back** — never regenerate the file from scratch, never touch a section you do not own. The artifact is still rebuilt-each-synthesis — *each section* is refreshed by its owner from authoritative inputs — but the refresh is per-section, so the two writers compose into one file instead of overwriting each other. (If a future control-flow design prefers a single writer, the clean alternative is to make the **validator the sole writer** and have the hub pass its coverage read in as an input — but the section-ownership split above is the decided model for this substrate.)
 
 ### `outputs/satisfaction-metrics.md` shape
 
-A `[DERIVED]` artifact, rebuilt/refreshed from the current itinerary and the current `outputs/traveler-model.md` (it carries no independent state — its inputs are authoritative, so regeneration is safe). It records each dimension at its natural granularity: needs-compliance per need per applicable day, desire-coverage per traveler per desire, and the balance signals named with their value **left to design** (shown as `(left to design)` rather than a number).
+A `[DERIVED]` artifact, rebuilt-each-synthesis from the current itinerary and the current `outputs/traveler-model.md` (it carries no independent state — its inputs are authoritative, so regeneration is safe). It records each dimension at its natural granularity: needs-compliance per need per applicable day, desire-coverage per traveler per desire, and the balance signals named with their value **left to design** (shown as `(left to design)` rather than a number).
 
 ```markdown
+---
+artifact: outputs/satisfaction-metrics.md
+schema-version: 1
+trip: <trip-slug>
+writer: [hub, validator]
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal-hard
+generated: <YYYY-MM-DD>
+---
+
 # Satisfaction Metrics [DERIVED]
 
-> Rebuilt/refreshed from the current itinerary + outputs/traveler-model.md.
+> Recomputed from the current itinerary + outputs/traveler-model.md. Lifecycle and
+> provenance are declared in the frontmatter above and are not restated here.
 > pass/fail and covered/not are determinable today; balance-signal scoring is left to design.
 > Persona names follow the public Pat / Jordan / Sam set.
 
@@ -646,3 +657,288 @@ To keep the substrate boundary clear:
 - **No control-flow / consumption sequencing.** Who runs when, and how the hub consumes these artifacts in a pipeline pass, is governed by the control-flow contract, not this data-architecture document.
 
 This file is the **data** contract. Behavior contracts live with their respective agents and capabilities.
+
+---
+
+## Relationship to the Engine-Wide Data Architecture
+
+The engine-wide data model is `reference/data-architecture.md`. **This document is the
+satisfaction-layer specialization of it** — the deep model for the satisfaction substrate
+(`outputs/traveler-model.md`, `outputs/event-status.md`, `outputs/satisfaction-metrics.md` and the
+per-traveler source files), together with the reconciliation, presence and metric rules that hold
+that layer together.
+
+**Where the two overlap, the engine-wide document is authoritative for the *shape* and this document
+is authoritative for the *satisfaction layer's own content*.** Concretely:
+
+| Question | Answered by |
+|---|---|
+| Which artifact classes exist across the whole engine, and which are out of the model | `reference/data-architecture.md` |
+| Which entities take surrogate keys and which take natural keys, by what rule | `reference/data-architecture.md` |
+| What is serialized as frontmatter versus what stays prose, and how each artifact is versioned | `reference/data-architecture.md` |
+| The canonical lifecycle-class tokens and their definitions | `reference/data-architecture.md` § *Lifecycle Classes* |
+| Which values may reach a published page, and how that class is computed | `reference/data-architecture.md` § *Publishability* |
+| The needs-vs-desires model, the lifecycle facets, and the link-don't-copy reconciliation | **this document** |
+| A traveler's present-day set and a need's applicable-day set | **this document** |
+| The four event statuses, the booking-readiness derivation, and the orphan-removal rule | **this document** |
+| The satisfaction metric dimensions, their types, and the section-ownership write split | **this document** |
+
+The scope declared at the top of this document is unchanged: it governs the satisfaction **substrate**
+and still defines no metric formula, no scoring, and no optimization logic. The engine-wide document
+inherits that boundary rather than relaxing it.
+
+---
+
+## Publishability — the satisfaction-layer projection
+
+Two rules stated elsewhere in this document bound what may leave the satisfaction layer:
+
+- § *Lifecycle facets* — **"The bound is the entry class, not a list of fields, so it holds for
+  every facet below and for any facet a later release adds ... there is no default-allow outside
+  it."**
+- § *Needs*, the stated exception — a third-party-sourced need **never** escalates into
+  `trip-context.md` and its subject is **never** added to a constraint's `Applies to:` roster,
+  because `trip-context.md` is publish-bound and rendered.
+
+**Both are now declared, once, in `reference/data-architecture.md` § *Publishability*** — as the
+`publish-contract-values` fence, which the publish-path guard reads and holds no copy of. The
+statements above are this document's satisfaction-layer **specialization** of that declaration, not
+a second home for it: they say what the bound means for the derived model and the per-traveler
+files, and the declaration says which fields and entry classes are in class engine-wide.
+
+**Where the two could disagree, the declaration governs membership and this document governs the
+satisfaction layer's own content** — the same split § *Relationship to the Engine-Wide Data
+Architecture* above already fixes for every other overlap. Adding a member of the non-publishable
+class is a row in that fence; it is not an edit here and it is not an edit to any shell script.
+
+**Citation form.** The two rules above are cited by **section name** from the guard scripts that
+consume them, not by line number. A line citation into a living document goes stale on the next
+insertion and does so silently — nothing in CI resolves a `file.md:NNN` reference — so the citing
+side names the section and the section keeps its name.
+
+---
+
+## Traveler identity — the satisfaction-layer projection
+
+The identity rule for the Traveler entity is stated engine-wide in `reference/data-architecture.md`
+§ *3.2 Traveler — natural key*, and that document is authoritative for it. **This section is the
+satisfaction layer's own instance of that rule** — the same split § *Relationship to the
+Engine-Wide Data Architecture* above already fixes for every other overlap. It supplies the
+**reserved-key list** that § 3.2 requires
+the schema to carry, and it states the four cases the correspondence rule does not reach. It
+authors **no second key and no second filename transform**: both are quoted from the code that
+already runs them, which is the whole point of choosing a natural key here.
+
+### The key is computed in two steps, and both are load-bearing
+
+The canonical traveler key is the rule executing in `scripts/publish-trip-site.sh`, function
+`nonpublishable_values`, in the branch that handles a `## <Name>` heading of the derived model:
+
+```awk
+nm  = clean(head)
+key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
+```
+
+1. **`clean(head)`** — every bracketed span becomes a space and markdown emphasis is stripped.
+2. **fold and strip** — lowercase, then delete every character outside `[a-z0-9]`.
+
+**Uniqueness is asserted over this key, never over the display name.**
+
+**The compressed one-step form omits the first step.** `reference/data-architecture.md` § 3.2 and
+`reference/adr/ADR-009-data-architecture.md` Decision 2.2 each state step 2 alone. Read literally,
+that form keys `## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]` to `quilloperatorprovidedthirdparty`
+where the code yields `quill` — so the compressed statement and the code disagree on **exactly the
+provenance-marked entry class the publish guard exists to protect**. The running code is
+authoritative. Stating both steps is additive to the engine-wide rule and contradicts no decision
+in it.
+
+The guard is cited here by **function name and quotation rather than by line number**, for the
+reason § *Publishability — the satisfaction-layer projection* → *Citation form* already gives in
+the other direction: a line anchor into a living file goes stale on the next insertion above it,
+silently, and nothing in CI resolves one.
+
+### Filename correspondence is a theorem, not a rule to enforce
+
+The filename transform is stated once, in `.claude/commands/trip-new.md` § *Travelers — count and names* (the
+roster's `Traveler file` cell), and reused verbatim and attributed by
+`.claude/commands/trip-record.md` on both its profile-create and its roster-append paths:
+
+> lowercase the name, replace every run of characters outside `A-Za-z0-9._-` with a single `-`,
+> then trim leading and trailing `-`.
+
+**Its restatement sites are closed, and this is the list.** Two of the three documented intake
+routes hand the saving to a person rather than to a command — the self-serve copy and the portable
+hand-off — so `templates/traveler-intake.template.md` states the transform to the human executing
+each of them, once per route, in the *"How to use it"* block and in the assistant hand-off at the
+foot of the form. Those two are guidance for a human keystroke, not a second normative home: a
+change to the rule is an edit to `.claude/commands/trip-new.md` § *Travelers — count and names* and then to the four
+sites listed in this paragraph.
+
+Write `derive(P)` for that transform and `normalize(P)` for the two-step key above. Then for every
+display name `P`:
+
+> **`normalize(derive(P)) == normalize(P)`**
+
+`derive` lowercases, maps every forbidden run to `-`, and preserves only `A-Za-z0-9`, `.`, `_` and
+`-`. `normalize` then removes case plus every character outside `[a-z0-9]` — which is exactly `.`,
+`_`, `-` and whatever `derive` had already removed. The surviving ordered alphanumerics are
+identical on both sides.
+
+**So the correspondence holds by construction for every name the derivation touched, and needs no
+enforcement.** What needs stating is the complement — the four cases the equality does not reach.
+
+### The display name has one authority — the `## Group` roster
+
+> The **`Person` cell of the `## Group` roster in `trip-context.md` is the authoritative display
+> name** for every person the model knows about. The `## <Name>` heading in
+> `outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both **projections** of it.
+> Where a projection disagrees with the roster, **the roster is right and the projection is the
+> defect**: the reconciler reports the divergence and never repairs it by rewriting the roster.
+
+This records an authority the command surface already asserts rather than deciding a new one.
+`.claude/commands/trip-record.md` states that *"the denominator is the roster, never the
+directory"* and that enrichment takes the `## Group` roster and `- **Total travelers:**` from
+`trip-context.md` as the party; `.claude/commands/trip-new.md` calls the roster *"the
+**denominator** for profile-gap detection"* with *"no second source for it"*.
+
+Two properties make it the only candidate that works, and neither is convenience. It is **total
+over the entry population**: the two entry classes that have no file at all — `[THIRD-PARTY]` and
+`PROFILE MISSING` — still have a roster row, and those are precisely the classes the publish guard
+is built around, whereas a profile's own title line and a filename stem both fail there. And the
+roster row is the **only surface in the engine carrying the display name (`Person`, verbatim) and
+the derived path (`Traveler file`) as a pair**, so the correspondence has exactly one checkable
+site and the check is within one row rather than a join across files.
+
+### The four cases the correspondence does not reach
+
+These four are the **complete complement** of the equality above, not a sample of it.
+
+| # | Case | Detected where | Disposition |
+|---|---|---|---|
+| **C1** | **Underived stem.** A profile saved by a route that never applied the transform — the self-serve copy or the portable hand-off — whose stem normalizes to something other than the roster `Person`'s key. | Reconciler, per roster row | **Report, never rename.** Name the roster `Person`, the observed file and both keys, and treat the traveler as **unresolved** — *not* as `PROFILE MISSING`. `travelers/<traveler>.md` is human-authored Layer 1 (§ *Who Writes What — Field Layering*), so renaming it is a write the reconciler does not hold. |
+| **C2** | **Empty key.** `normalize(P)` is the empty string — a display name carrying no ASCII alphanumerics. | Reconciler, and intake where it runs | **Hard stop, with the name quoted.** The key is not merely non-unique here, it is **absent**: two such travelers collide at `""`, and `derive(P)` is empty too, so no filename exists for the key to correspond to. The command surface already refuses an empty *derivation* on the create path; this extends the same refusal to the *key*. |
+| **C3** | **Reserved-key collision.** `normalize(P)` equals a declared reserved key (below). | Reconciler, and intake where it runs | **Hard stop at intake; refuse the entry at reconcile.** Admitting it is the fail-open: the guard's parse suppresses the entry, so its values never enter the non-publishable class at all. |
+| **C4** | **Two display names, one key.** Distinct `Person` values whose keys are equal — `Sam B.` and `Sam. B` both key to `samb`. | Reconciler only — it is a property of the **set**, and the reconciler is the one component that holds the set | **Hard stop, both names quoted; the operator disambiguates the display name.** The engine **never mints a suffix**: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence above by construction. |
+
+**C2 is decided here and cited upstream.** The key normalization itself carries no empty guard, and
+neither § 3.2 nor ADR-009 Decision 2.2 states the rule — each now names the degenerate point and
+cites this case for it, which is the split those documents already take for the four cases. Without
+C2 the natural key would be neither total nor injective, and *"uniqueness is asserted over this
+key"* would be unsatisfiable at the degenerate point; C2 is what makes that assertion total.
+
+### Reserved keys
+
+> **A reserved key is the normalized key of any `##` heading that the derived model's own shape
+> defines as a structural section rather than a person.** The list is therefore *derived from the
+> model rather than maintained beside it*: a slice that adds a structural section to
+> `outputs/traveler-model.md` adds its key here in the same edit.
+>
+> **Reserved keys, at this schema version:**
+>
+> | Reserved key | Heading it normalizes | Where that heading is defined |
+> |---|---|---|
+> | `updatesignals` | `## Update signals [DERIVED]` | `agents/00-enrichment.md` § *Profile-change detection* |
+> | `desireoverlap` | `## Desire overlap` | § *Worked example — a per-traveler file* above |
+>
+> **No traveler may carry a display name whose key is reserved.** Intake rejects the name and asks
+> for a disambiguated one; the reconciler refuses the entry and reports it (C3).
+
+**What the guard consumes today, stated so the gap is not mistaken for coverage.** The publish
+guard's derived-model parse reads **this whole list** rather than one hardcoded literal:
+`_GUARD_RESERVED_KEYS` holds both members space-padded, and the heading branch matches a normalized
+key against it whole. `## Desire overlap` is therefore treated as the structural section it is and
+no longer counted as a **person** — case **L11c** in `scripts/test-publish-guard.sh` pins that,
+and pins why it mattered: a structural section counted as a person is a phantom entry, and a
+phantom entry keeps the `entries == 0` fail-closed sentinel from firing on a model that has drifted
+to carry no recognisable person at all.
+
+**What the widening did not buy, measured rather than assumed.** Reserving a key *suppresses* the
+field and entry limbs beneath it, so the gap that suppression opens now spans both declared keys
+rather than one. Three cases pin it: **L11a** — a declared *field* value under a reserved heading
+reaches the render with no backstop of any kind; **L11b** — a suppressed *entry* mark is
+backstopped only while no other entry produced a record; **L11d** — the second reserved heading has
+L11a's shape exactly. **All three are guard behaviour and are not changed by this section**, which
+declares the rule and places the reachable half of the enforcement at the reconciler — the only
+component that holds the entry set.
+
+**The intake half is declared and currently unowned, and it is the remaining half.** § 3.2 requires
+intake to reject a reserved-key collision. Both intake commands are read-only inputs to this rule
+rather than editors of it, so C2 and C3 are enforced at the reconciler and the intake obligation is
+recorded here rather than dropped. **No intake command was changed by the release that landed this
+list** — the reserved-key hard stop at intake has not shipped, and a claim that it has should be
+read against `.claude/commands/trip-new.md` itself.
+
+---
+
+## Serialization — the satisfaction-layer projection
+
+Every artifact this document models carries **YAML frontmatter as its first bytes**, and every
+worked example above shows the **body only**. The engine-wide model — the format, the field set,
+the frontmatter/body boundary test, the publishability classes and the version contract — is stated
+engine-wide in `reference/data-architecture.md` → "Universal frontmatter" and → "Tolerant read", and
+the per-class values for `writer`, `lifecycle`, `provenance` and `publish` are that document's § 1.1
+class enumeration. **This section restates none of them**, and carries no second copy of that table:
+the split is the one § *Relationship to the Engine-Wide Data Architecture* above already fixes, and
+a satisfaction-layer copy of a per-class value would be exactly the second home this document exists
+to prevent.
+
+Three things are this layer's own, and are stated here because nothing else states them:
+
+- **A worked example in this document shows the body and elides the frontmatter, always.** That
+  holds for the three fences under § *Reconciliation Rule — One Source Per Fact*, for the three
+  under § *Worked example — a per-traveler file*, for the shape fence under § *`outputs/event-status.md` shape*, and for any fence a later slice adds. Each of
+  those sites now says so at the point of use; this is the rule those notes point at.
+- **The body shape is unchanged by the frontmatter.** Frontmatter is *prepended* — no heading
+  moves, no field label changes, and the `## <Name>` entry key, the `Applies to:` link form and the
+  inline `[DERIVED]` / `[THIRD-PARTY]` / `[ENRICH]` / `[OPERATOR-PROVIDED]` marks are all exactly as
+  this document already specifies them. The frontmatter declares provenance for the artifact and the
+  marks carry it per value: two granularities of one fact, never two homes for it.
+- **`travelers/<traveler>.md` is the one artifact here that is never engine-written, and it is
+  therefore never engine-upgraded.** A traveler's own file carrying no `schema-version` is
+  permanently valid and is read exactly as it always was
+  (`reference/data-architecture.md` → "The compatibility guarantee"). An absent fence there is not a
+  gap to fill and not a `PROFILE MISSING` case.
+
+---
+
+## Venue identity in the satisfaction substrate
+
+The venue key itself is engine-wide and is **not defined here**: it is
+`ven-<token>`, opaque, minted by the hub, and stated once in
+`reference/data-architecture.md` → "Venue — surrogate key, forced by measured
+evidence". What is this layer's own is what the key does to the per-event table
+above, and that is stated here because nothing else states it.
+
+**`event-status.md` carries two identifiers, and they answer different
+questions.** `Event ID` is the row's own key — the cross-run join key, opaque and
+day-independent, unchanged by this or any later section. `Venue` is a
+**reference** to a different entity: the `ven-<token>` of the venue the event
+places. One keys the row; the other resolves what the row points at. Neither
+substitutes for the other, and the `Event ID` convention is not altered by the
+`Venue` column's existence.
+
+**The `Venue` column is what makes the location invariant computable.**
+`reference/adr/ADR-005-location-invariant.md` § 3 requires every event to resolve
+to a link in `outputs/links-reference.md`, and treats an event that does not as a
+Critical finding. Before the key, that resolution was a match between two display
+strings written by two different agents at two different times — and this repo
+already carries one venue under two names on a single maps URL, so the match was
+never sound. With the key on both sides the check is a **set difference over
+opaque tokens**: the unresolvable set is exactly the event rows whose `Venue` key
+appears in no `links-reference.md` row. That is a decidable question, and it is
+the same question the ADR was already asking.
+
+**`Venue` is required on every row, and the empty case is an error rather than a
+declared absence.** An itinerary element that names no navigable venue is not an
+event — ADR-005 § 1 puts transit connectors outside the event population because
+they describe movement *between* destinations — so such an element belongs in the
+day's notes and never as a row here. Keeping the column required is what
+preserves the distinction between *unresolvable* and *no venue*: a nullable key
+would collapse the two, and the invariant would stop being able to tell a broken
+link from an element that never had one.
+
+**The day relation does not move here.** Which venue sits on which day, and the
+two-appearance cap over it, stay in `outputs/venue-matrix.md`, which
+`reference/site-layout-spec.md` § 9.1 already names as that fact's single
+authority. The `Day` column above records where an event currently sits; it is
+not a second home for the placement matrix.

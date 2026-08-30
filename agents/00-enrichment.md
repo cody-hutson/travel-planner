@@ -224,7 +224,7 @@ link against. Specifically:
   `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`
   is now stale. You do **not** rewrite that block — journey & origin is still not
   yours to write into trip-context.md, and the rule above is unchanged. The signal
-  is the only thing that tells the planner to re-run the Layer-2 fill and refresh
+  is the only thing that tells the planner to re-run the `[DERIVED]` fill and refresh
   the block's `Last derived:` line.
 
   A traveler may also note a **Special occasion?** — a birthday, anniversary,
@@ -475,6 +475,100 @@ profile, and a superseded one is **never resurrected** by a later pass.
 This fallback is part of the reader/reconciler role only; it changes nothing
 about the [ENRICH]-only contract on trip-context.md.
 
+### Traveler identity — the key, the roster, and what to do when they disagree
+
+`reference/data-model.md` § *Traveler identity — the satisfaction-layer projection*
+is the definition home for the traveler key, the filename transform and the
+reserved-key list. Read them there and **do not restate either algorithm** — not
+here, and not in the model you write. This subsection says only what *you* do
+with them.
+
+**The roster is the name authority.** The `Person` cell of the `## Group` roster
+in `trip-context.md` is the authoritative display name for every person the model
+knows about — the same roster you already take as the party and as the
+profile-gap denominator. The `## <Name>` heading you write into
+`outputs/traveler-model.md` and the stem of `travelers/<file>.md` are both
+**projections** of that cell. Where a projection disagrees with the roster, **the
+roster is right and the projection is the defect**: report the divergence, and
+never repair it by rewriting the roster. You do not rename a traveler's file
+either — `travelers/<traveler>.md` is human-authored Layer 1 and is not yours to
+write.
+
+**Assert the correspondence once per roster row, on every pass.** For any name
+the filename transform actually produced, the stem and the `Person` name reduce
+to the same key by construction, so a corresponding row costs you nothing to
+confirm. What you are looking for is the four cases where that equality does not
+reach. Each has exactly one disposition, and none of them is silent:
+
+- **C1 — a file exists but does not correspond.** Its stem reduces to a different
+  key than the roster `Person` does, because it was saved by a route that never
+  applied the transform. Reconcile the traveler under the roster `Person` name,
+  and flag the entry as **unresolved**, naming the roster name, the file you
+  found, and both keys:
+
+  ```markdown
+  ## [Name]
+  > UNRESOLVED — travelers/<observed-file>.md does not correspond to this roster
+  > name (roster key `<a>`, file key `<b>`). The profile was read; the join is
+  > unproven. VERIFY: rename the file to the derived stem, or correct the roster
+  > `Person` cell — whichever is wrong. Do not act on this traveler's needs as
+  > confirmed until the two agree.
+  ```
+
+- **C2 — the name reduces to nothing.** A `Person` value carrying no ASCII
+  alphanumerics has no key and no filename. **Stop and say so**, quoting the name:
+  it cannot be keyed, it cannot be told apart from a second such traveler, and no
+  file can correspond to it. Ask the operator for a name that resolves.
+- **C3 — the name lands on a reserved key.** Refuse the entry and report it,
+  quoting the name and the reserved key it collided with. Admitting it is the
+  fail-open: an entry on a reserved key is dropped by the publish guard's parse,
+  and its values never enter the non-publishable class.
+- **C4 — two roster names share one key.** Stop and report **both** names and the
+  shared key, and ask the operator to disambiguate the display name. **Never mint
+  a suffix** and never merge the two — the engine does not invent identity, and a
+  minted suffix would break the correspondence for both of them.
+
+**`unresolved` is a third condition, and it is not `PROFILE MISSING`.** The two
+fallbacks above are both *"no file"* — a profile not filed yet, and a party member
+who will never file one. C1 is *"a file that does not correspond"*: the profile
+exists and you read it. Reporting it as `PROFILE MISSING` would send the operator
+to collect a profile they already have, so keep the two markers distinct and use
+the one that names what actually happened.
+
+### Versioned artifacts — the tolerant read, and the write you must decline
+
+Every artifact you read may carry a `schema-version` in its frontmatter. The rule
+for reading one is stated once in
+`reference/data-architecture.md` → "Tolerant read"; read it there, apply it, and do
+not restate or reinterpret it here. Three consequences fall to this role
+specifically.
+
+**A traveler file carrying no version is normal, and stays normal.**
+`travelers/<traveler>.md` is human-authored and is never upgraded by the engine —
+`reference/data-architecture.md` → "The upgrade contract" declares it tolerated at
+version 0 permanently. An absent fence there is not a defect, not a `PROFILE
+MISSING`, and not a gap to report. Read the body exactly as you always have.
+
+**The write-stop binds you more tightly than it binds a pure reader.** You do not
+edit `outputs/traveler-model.md` — you **replace** it, having just read the copy
+you are about to overwrite. That makes you exactly the reader the write-stop names,
+at exactly the moment it binds. **When its condition holds, report it and decline
+the write.** Leave the file as you found it and say plainly that a newer model was
+present and was not overwritten. Do not downgrade it, do not merge into it, and do
+not treat this as a warning you may proceed past: the file lives in the git-ignored
+working directory, so a downgrade destroys fields nothing in this repository can
+reach or restore. Declining costs one pass; not declining costs the operator data
+they cannot get back.
+
+**You upgrade only what you rewrite whole.** The model you write is rebuilt from
+its sources on every pass, so it carries the current version by construction and
+needs no migration step — and that version rides a frontmatter block you **do**
+emit: its fields and their values are § *Artifact Frontmatter — what you emit on
+the traveler model*, below. **A block you do not own, you do not upgrade** — the
+`[ENRICH]` contract is a field-scoped grant on `trip-context.md` and not a licence
+to touch that file's frontmatter, and the same holds for the initial `locked` rows
+you may seed in `outputs/event-status.md`.
+
 ## Field-by-Field Standards
 
 **Transit Access:**
@@ -523,3 +617,65 @@ Include a brief enrichment summary at the end of the file under:
 - Fields flagged for verification: [N]
 - Closure cascade rules identified: [list]
 - Price sources older than 12 months: [list or "none identified"]
+
+## Artifact Frontmatter — what you emit on the traveler model
+
+`outputs/traveler-model.md` is the one artifact you write in your own name, and it
+carries a YAML frontmatter block as its first bytes. What frontmatter is, which
+fields exist, and what belongs in it rather than in the body is stated once in
+`reference/data-architecture.md` → "Universal frontmatter" — read it there and do
+not restate it here. The **read** side is § *Versioned artifacts — the tolerant
+read, and the write you must decline* above. This section states only the values
+**you emit**.
+
+Emit exactly this block, above the `# Traveler Model [DERIVED]` heading. Nothing
+below the closing fence moves, and no existing body content changes:
+
+```yaml
+---
+artifact: outputs/traveler-model.md
+schema-version: 1
+trip: <trip-slug>
+writer: enrichment
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal-hard
+generated: <YYYY-MM-DD>
+---
+```
+
+`trip` is the trip directory's own name under `trips/`, spelled exactly as it is
+spelled there. `generated` is the date of this reconciliation pass. Because you
+rebuild this file wholesale on every pass you rewrite the whole block every time —
+there is nothing to preserve across a rebuild beyond the entries the carry-forward
+rule already names.
+
+**`provenance:` takes the enum value and never a bracket mark.** Here that value is
+`derived`. A bracketed value such as `provenance: [THIRD-PARTY]` would put an
+unresolvable mark in front of the publish guard's orphan-mark check and abort the
+publish outright: the marks belong on values, never on the artifact's own
+declaration.
+
+**`publish: internal-hard` is not a label — it is the artifact class this file
+declares, and the schema gate is what holds it.** `scripts/test-artifact-schema.sh`
+requires every witnessed class's frontmatter `publish:` to equal the value
+`reference/data-architecture.md` → "The Artifact Classes" assigns that class (arm
+`CA-witness-publish`), and requires the publish-bound artifact set to match the
+`publish-contract-artifacts` fence in `reference/site-layout-spec.md` (group `PB`).
+**The publish guard is a different control and reads no `publish:` field at all** —
+it keys on the field-and-entry declaration at `reference/data-architecture.md` →
+"Publishability", which decides which *values* are in class rather than which
+artifacts. This file is never rendered, and the values it carries must not reach a
+rendered page in attributed **or** anonymized form. Which values carry that bound,
+and which marks key them, is declared in that same section; read it there and do not
+re-derive it here. **The inline
+`[THIRD-PARTY]`, `[DERIVED]`, `[ENRICH]` and `[OPERATOR-PROVIDED]` marks you
+already write on every value stay exactly as they are.** The frontmatter declares
+provenance for the artifact; the marks carry it for each value. They are two
+granularities of one fact, not two homes for it, and stripping either one unbinds a
+guard that depends on it.
+
+**A traveler's own file is not yours to stamp.** `travelers/<traveler>.md` is
+human-authored and you never write it, so you never add a frontmatter block to one —
+not on a read, not on a reconciliation pass, and not to make it match the model you
+just built.

@@ -482,11 +482,12 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
   ' "$2" "$3"
 }
 
-# ── the single home of the non-publishable class ─────────────────────────────
+# ── the evaluator for the declared non-publishable class ─────────────────────
 # nonpublishable_values <trip_dir>
 #   stdout : one TAB-separated record per line —  <member> <field> <rule> <value>
-#            <member> one of: passport | third-party  (the two members the validator
-#                     profile-privacy check names today)
+#            <member> the declaring limb of the row that put the value in class:
+#                     `field` or `entry`. Sourced from the declaration, never
+#                     enumerated here.
 #            <field>  a DE-IDENTIFIED locator, e.g. "entry 3 / Specific". Never the
 #                     traveler name: a third-party entry NAME is itself a member of
 #                     this class, so reporting it would leak what the guard protects.
@@ -494,20 +495,24 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 #   return : 0  class enumerated (possibly EMPTY — a determinate measurement)
 #            2  UNDETERMINED — the class could not be determined; caller must abort
 #
-# The match RULE is assigned HERE, alongside membership, because they are one decision.
-# The predicate consumes (member, field, rule, value) and knows nothing else. THIS is
-# the seam #278 re-keys: replacing the membership rule below with "any field carrying
-# the declared publishability attribute" is a change to this body only — the stdout
-# contract, the return contract, the predicate, the call site and every test assertion
-# are unchanged.
+# The match RULE still travels WITH the record, because membership and matchability are
+# one decision — but both halves of that decision now come from the declaration's row
+# rather than from a literal in this body. The predicate consumes
+# (member, field, rule, value) and knows nothing else.
+#
+# THE RE-KEY LANDED HERE, and the promise ADR-008 made about this seam held: the stdout
+# contract, the return contract, the predicate, the call site and every content-guard
+# assertion but one are unchanged. This body is now a parameterized evaluator — it
+# knows how to PARSE an artifact and how to APPLY a row, and it knows no member of the
+# class. Adding a member is a row in the declaration and no edit to this file.
 #
 # CD-4 — the [THIRD-PARTY] member is an ENTRY DENYLIST, not a field allowlist.
 # The shipped guard enumerated exactly two things per third-party entry: the heading
 # name, and the value of a line labelled `Specific:`. Every other field DEFAULT-ALLOWED.
-# reference/data-model.md:170 states the opposite polarity outright — "The bound is the
-# entry class, not a list of fields, so it holds for every facet below and for any facet
-# a later release adds ... there is no default-allow outside it" — and #278 would have
-# inherited the allowlist shape when it re-keys this seam. So: under a third-party entry,
+# reference/data-model.md § Lifecycle facets states the opposite polarity outright — "The
+# bound is the entry class, not a list of fields, so it holds for every facet below and for
+# any facet a later release adds ... there is no default-allow outside it" — and the re-key
+# would have inherited the allowlist shape from this seam. So: under a third-party entry,
 # EVERY stated field value is in class, minus the short non-member list below.
 #
 # The label binding was independently wrong, which is why the polarity fix alone is not
@@ -516,17 +521,20 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 # `# Traveler — Jordan` / `# Traveler — Pat`, i.e. `travelers/<name>.md` — and 2x in
 # templates/traveler-intake.template.md, which governs that same profile. It occurs 0x in
 # agents/00-enrichment.md, the spec that WRITES this file, and 0x in agents/06-validator.md,
-# which defines the class. The derived model's own worked example (data-model.md:266-283)
+# which defines the class. The derived model's own worked example (reference/data-model.md
+# § Worked example — a per-traveler file)
 # writes a need as `- Need → Hard Constraints "<c>" (Applies to: <n>); specific: <v>.` —
 # a mid-line lowercase label, 4 occurrences, none of them line-anchored. The guard was
 # parsing the derived file with the profile's label.
 #
 # And the third-party need's own line shape is UNDERSPECIFIED, which is the finding that
 # decides the design. A third-party need cannot carry the first-party derived shape at
-# all: data-model.md:143 bars it from ever escalating to a trip-level constraint or onto
-# an `Applies to:` roster, and 06-validator.md:231-243 says it "by design has no governing
-# trip-level constraint to key to". So the link head and the Applies-to are both
-# unavailable to it, and what remains — a category and a specific — is serialized nowhere.
+# all: reference/data-model.md § Needs (the stated third-party exception) bars it from ever
+# escalating to a trip-level constraint or onto an `Applies to:` roster, and
+# agents/06-validator.md § What You Audit, in its third-party mirror case, says it "by
+# design has no governing trip-level constraint to key to". So the link head and the
+# Applies-to are both unavailable to it, and what remains — a category and a specific —
+# is serialized nowhere.
 # Probed: of 44 fenced example blocks across every .md in the repository, 12 carry a
 # `## <Name>` heading and 0 carry a [THIRD-PARTY] entry. There is no worked example.
 # Binding to any label is therefore guessing, and a guard bound to a guessed shape is the
@@ -539,9 +547,9 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
 #     stoplisted after the fact. They were never members.
 #   • the `Applies to:` link, in both the parenthesized derived form and the standalone
 #     profile form, and the quoted constraint name in the derived need-line head.
-#     data-model.md:139 — "This is the link, **never a copy** of the constraint text."
-#     Its target lives in trip-context.md, which IS publish-bound and legitimately
-#     rendered; keying on it would abort on correct published content.
+#     reference/data-model.md § Needs — "This is the link, **never a copy** of the
+#     constraint text." Its target lives in trip-context.md, which IS publish-bound and
+#     legitimately rendered; keying on it would abort on correct published content.
 #   • a value made ENTIRELY of the closed need-category enum (_GUARD_NEED_ENUM) — schema
 #     vocabulary, not a captured value. Same structural exclusion as the `Passport:`
 #     label. Without it a `Category:` line keys on `rest` or `other` and aborts every
@@ -591,6 +599,37 @@ _GUARD_AWK_HELPERS='
       if (t == "") return 0
       return split(t, a, " ")
     }
+    # ── the two declaration-driven primitives, shared by BOTH parses ───────────
+    # True when <lab> is the declared field selector used as a label: the selector,
+    # optional whitespace, then a colon. Case-insensitive, matching the shipped
+    # behaviour. Deliberately index()-based rather than a built regex: a selector is
+    # corpus text, and a selector carrying a regex metacharacter must not silently
+    # become a pattern — a class definition that matched more than it declared would
+    # be as wrong as one that matched less.
+    function field_hit(lab, sel,   rest) {
+      if (sel == "") return 0
+      if (index(tolower(lab), tolower(sel)) != 1) return 0
+      rest = substr(lab, length(sel) + 1)
+      sub(/^[ \t]+/, "", rest)
+      return (substr(rest, 1, 1) == ":")
+    }
+    # The rule the declaration put on the row, resolved against the value at emission
+    # time. `by-wordcount` is the declared NAME of the shipped word-count choice, so
+    # naming it expresses the existing behaviour rather than changing it:
+    #   >= F tokens : prose. The phrase rule catches the verbatim and the de-attributed
+    #                 carry-through.
+    #   <  F tokens : the phrase rule would exit 3 (below its keyability floor) and every
+    #                 publish of the trip would abort as UNDETERMINED, forever, with no
+    #                 remedy — the unusable fail-closed control the token-branch note
+    #                 calls fail-open in practice. The token rule is determinate on a
+    #                 short value, and its is_stop / exit-4 path already handles a value
+    #                 with nothing distinctive in it. Mitigated, not accepted.
+    # An unrecognised rule token is returned verbatim and the matcher exits 3 on it —
+    # undetermined, never a pass. A malformed declaration cannot widen what publishes.
+    function rule_for(r, val,   n) {
+      if (r == "by-wordcount") { n = wordcount(val); return (n >= F ? "phrase" : "token") }
+      return r
+    }
     # True when every token of the value is closed-enum SCHEMA vocabulary.
     function enum_only(s,   t, a, n, i) {
       if (ENUM == "") return 0
@@ -609,12 +648,12 @@ _GUARD_AWK_HELPERS='
     #
     # NON-MEMBERS, and this is the whole list:
     #   - the "Applies to" link, in both its parenthesized derived form and its
-    #     standalone profile form. reference/data-model.md:139 states it outright:
+    #     standalone profile form. reference/data-model.md § Needs states it outright:
     #     "This is the link, never a copy of the constraint text." The constraint it
     #     points at lives in trip-context.md, which IS publish-bound and legitimately
     #     rendered, so keying on the link text would abort on correct published content.
-    #     data-model.md:143 also bars a third-party person from an Applies-to roster, so
-    #     on this member the field is doubly not a captured value.
+    #     That section stated exception also bars a third-party person from an
+    #     Applies-to roster, so on this member the field is doubly not a captured value.
     #   - the quoted constraint name in the derived need line head, for the same reason:
     #     it is that same link target.
     #   - a value that reduces entirely to the closed need-category enum. That enum is
@@ -624,8 +663,9 @@ _GUARD_AWK_HELPERS='
     #     The test is FIELD-BLIND: enum_only takes only the value text and is passed no
     #     field, so it applies under ANY label, not only Category. That is deliberate,
     #     and narrowing it to Category is the wrong fix — see ADR-008 coverage boundary.
-    # Everything else under the entry is IN. reference/data-model.md:170 — "The bound is
-    # the entry class, not a list of fields ... there is no default-allow outside it."
+    # Everything else under the entry is IN. reference/data-model.md § Lifecycle facets —
+    # "The bound is the entry class, not a list of fields ... there is no default-allow
+    # outside it."
     function tp_value(s,   t, c, nxt) {
       t = s
       sub(/^[Nn]eed[^"]*"[^"]*"[ \t]*/, "", t)                       # derived link head
@@ -644,7 +684,8 @@ _GUARD_AWK_HELPERS='
     }
 '
 
-# The closed need-category enum (agents/00-enrichment.md:349-350) plus the schema words a
+# The closed need-category enum (agents/00-enrichment.md § Where the source files come
+# from) plus the schema words a
 # need line is written with. This is SCHEMA vocabulary — it is not a list of names and it
 # is not _GUARD_STOP, which is normalization vocabulary shared by all three match rules.
 # Kept separate and used in ONE place: deciding that a value made only of these states no
@@ -652,12 +693,192 @@ _GUARD_AWK_HELPERS='
 _GUARD_NEED_ENUM=' need needs category categories heat mobility dietary health '\
 'rest budget cap timing sensory other specific '
 
+# The RESERVED KEYS — the normalized keys of `## ` headings that the derived model's own
+# shape defines as a STRUCTURAL SECTION rather than a person. Declared in the corpus at
+# reference/data-model.md § *Reserved keys*, which is where a slice adding a structural
+# section adds its key.
+#
+# HELD HERE RATHER THAN READ FROM THERE, and the asymmetry stated below the declaration
+# block is exactly why. Reserving a key SUPPRESSES a heading from the entry and field
+# limbs — it REMOVES values from the guarded set — so this is a NARROWING control, and a
+# narrowing control read from a document is a fail-open surface: a corpus edit could widen
+# the suppression without passing a diff of this script. Membership rows are declared
+# because they widen; these are held because they narrow. Same rule, opposite direction.
+#
+# The list carries TWO members and carried one until this release. The second, the
+# derived model's desire-overlap section, was counted as a person, and the consequence
+# was not confined to the entry limb: `entries` is the operand of the END block's
+# `entries == 0` fail-closed sentinel, so a structural section counted as a person is a
+# phantom entry that keeps that sentinel from firing — a model drifted to carry no
+# recognisable person parsed as a clean EMPTY class and published. Both directions are
+# pinned by scripts/test-publish-guard.sh: L11c asserts the sentinel now fires, and L11d
+# measures what the suppression costs under the second heading.
+#
+# Space-padded, and matched space-padded, so `overlap` never matches `desireoverlap` —
+# the same containment rule _GUARD_NEED_ENUM is read with.
+_GUARD_RESERVED_KEYS=' updatesignals desireoverlap '
+
+# ═════════════════════════════════════════════════════════════════════════════
+# THE PUBLISHABILITY DECLARATION — where the class lives now
+# ═════════════════════════════════════════════════════════════════════════════
+# Class MEMBERSHIP no longer lives in this file. It is declared in the corpus, in a
+# named fenced block, and read from there. This script holds no copy of any row of
+# it — that separation is the one-home property test-publish-guard.sh case L8
+# asserts on every push, in both directions: the class source and the predicate must
+# each hold ZERO declared selectors while the declaration holds all of them.
+#
+# What moved and what did NOT, because the asymmetry is the safety property:
+# membership is a WIDENING control — a new row ADDS values to the guarded set — so it
+# is declared. _GUARD_NEED_ENUM, _GUARD_STOP and tp_value()'s non-member list are
+# NARROWING controls: extending any of them REMOVES values from the guarded set. They
+# stay here, in code, behind a diff. "Finish the job by moving the rest of the class
+# constants out" reads like tidying and is a fail-open change.
+_GUARD_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# A plain assignment, and the two things it deliberately is not:
+#   • NOT ${_GUARD_DECLARATION:-...}. An environment-defaulted path on a fail-closed
+#     control is a fail-open surface — a caller could point the guard at a declaration
+#     with fewer rows and narrow the class from outside the repository. This assignment
+#     overwrites whatever it inherits, so a subprocess invocation cannot redirect it.
+#   • NOT readonly. test-publish-guard.sh SOURCES this file and re-points the variable
+#     inside its own process, which is how L9a/L9b/L10 prove the guard's verdict really
+#     does follow the declaration rather than merely being described as following it.
+_GUARD_DECLARATION="$_GUARD_REPO_ROOT/reference/data-architecture.md"
+_GUARD_DECL_FENCE='publish-contract-values'
+_GUARD_DECL_HEADING='### 5.6 The declaration'
+_GUARD_DECL_ARTIFACT_MODEL='outputs/traveler-model.md'
+_GUARD_DECL_ARTIFACT_PROFILE='travelers/<traveler>.md'
+
+# Lines of the first fenced block carrying <info> inside the section headed <heading>.
+# Emitted verbatim — nothing is trimmed here, because the row parse below owns that.
+#
+# Lifted from scripts/test-trip-resolution-contract.sh, the repository's only fenced-
+# block reader, already executed by trip-resolution-contract.yml on every push to every
+# branch. Pure bash, no external dependency: a fail-closed control standing in front of
+# an irreversible action must not acquire a parser to do its job.
+#
+# ONE adaptation from the source, and it is measured rather than stylistic: this file
+# runs under `set -e` and that one does not. A `while` whose last executed body command
+# is a failing `&&` list returns 1, and `x="$(fence_block ...)"` would then abort the
+# whole script. The explicit `return 0` is what makes the lift safe here; the algorithm
+# is otherwise unchanged, byte for byte.
+fence_block() {  # <file> <info> <heading>
+  local f="$1" info="$2" heading="$3"
+  local in_sec=0 in_fence=0 line
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ "$in_sec" -eq 0 ]; then
+      [ "$line" = "$heading" ] && in_sec=1
+      continue
+    fi
+    if [ "$in_fence" -eq 1 ]; then
+      [ "$line" = '```' ] && break
+      printf '%s\n' "$line"
+      continue
+    fi
+    # Outside a fence, the next heading of level 1-3 ends the section.
+    case "$line" in
+      '# '*|'## '*|'### '*) break ;;
+    esac
+    [ "$line" = '```'"$info" ] && in_fence=1
+  done < "$f"
+  return 0
+}
+
+# The declaration's rows, normalized: one row per line as
+#   <limb> <selector> <artifact-scope> <rule>
+# Comment rows (first non-blank character `#`) and blank rows are dropped, and a row
+# that does not carry exactly four fields is dropped rather than half-read — a
+# malformed row that silently contributed three fields would be a class definition
+# nobody wrote. Dropping every malformed row is what makes "zero rows" reachable, and
+# zero rows is UNDETERMINED at the call site below, never an empty class.
+_guard_declared_rows() {
+  [ -f "$_GUARD_DECLARATION" ] && [ -r "$_GUARD_DECLARATION" ] || return 0
+  fence_block "$_GUARD_DECLARATION" "$_GUARD_DECL_FENCE" "$_GUARD_DECL_HEADING" \
+    | awk 'NF == 4 && $1 !~ /^#/ { print $1, $2, $3, $4 }'
+  return 0
+}
+
+# Every row the declaration OFFERS: non-blank and non-comment, whatever its shape.
+# _guard_declared_rows keeps only the well-formed four-field rows, so a difference
+# between the two counts is a row the reader silently DROPPED — and a dropped row
+# narrows the guarded class without narrowing anything the suite can observe.
+_guard_declared_candidates() {
+  [ -f "$_GUARD_DECLARATION" ] && [ -r "$_GUARD_DECLARATION" ] || return 0
+  fence_block "$_GUARD_DECLARATION" "$_GUARD_DECL_FENCE" "$_GUARD_DECL_HEADING" \
+    | awk 'NF > 0 && $1 !~ /^#/ { c++ } END { print c + 0 }'
+  return 0
+}
+
+# Every selector the declaration names, one per line, de-duplicated in first-seen order.
+# This is the probe surface case L8 runs against both function bodies; it is defined
+# here, beside the declaration it reads, so the suite holds no copy of the fence name,
+# the heading or the path either.
+_guard_declared_selectors() {
+  _guard_declared_rows | awk '!seen[$2]++ { print $2 }'
+  return 0
+}
+
+# The selectors of one limb, scoped to one artifact class, space-joined; and the rules
+# that travel with them, space-joined in the same order. Two accessors rather than one
+# parsed structure, because awk receives them as parallel -v strings and a selector can
+# contain no whitespace by the declaration's own column grammar.
+_guard_limb_selectors() { # <limb> <artifact-scope>
+  _guard_declared_rows | awk -v L="$1" -v A="$2" '$1 == L && $3 == A { printf "%s%s", (n++ ? " " : ""), $2 }'
+  return 0
+}
+_guard_limb_rules() { # <limb> <artifact-scope>
+  _guard_declared_rows | awk -v L="$1" -v A="$2" '$1 == L && $3 == A { printf "%s%s", (n++ ? " " : ""), $4 }'
+  return 0
+}
+
 nonpublishable_values() { # <trip_dir> [site_html]
   local trip_dir="${1:-}" site_html="${2:-}" model out rc
   local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
+  local decl_rows decl_n decl_cand decl_eval esel erule mfields mrules pfields prules
   if [ -z "$trip_dir" ]; then
     warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
   fi
+
+  # ── the SIXTH fail-closed path: the declaration itself ─────────────────────
+  # Five UNDETERMINED paths below are properties of the artifact parse and the
+  # freshness gate, and the re-key touches none of them. This one is new, and it is
+  # stated here rather than discovered: a guard that cannot read its own class
+  # definition has not measured an empty class, it has failed to measure. Falling
+  # through to an empty record set would put the fail-open this guard refuses one
+  # layer up, at the declaration instead of at the artifact.
+  decl_rows="$(_guard_declared_rows)"
+  decl_n="$(printf '%s' "$decl_rows" | awk 'NF { c++ } END { print c + 0 }')"
+  if [ "$decl_n" -eq 0 ]; then
+    warn "guard: the publishability declaration at $_GUARD_DECLARATION could not be read or yielded no rows — the class is UNDETERMINED, not empty"; return 2
+  fi
+  # The same path, for a PARTIAL read. The reader keeps four-field rows and drops the
+  # rest, so a declaration that parses in part yields a class that is narrower than the
+  # one declared — silently, and with the aggregate test above still satisfied. That is
+  # the same fail-open this block refuses, one row down instead of one layer up.
+  decl_cand="$(_guard_declared_candidates)"
+  if [ "${decl_cand:-0}" -ne "$decl_n" ]; then
+    warn "guard: the publishability declaration at $_GUARD_DECLARATION offers ${decl_cand:-0} rows but only $decl_n parse as four whitespace-separated fields — a partial read is UNDETERMINED, not a narrower class"; return 2
+  fi
+  # And the same path once more, for a row that PARSES but is never QUERIED. This
+  # evaluator asks exactly three (limb, artifact-scope) questions; a row naming any
+  # other pair is well-formed, accepted, selected by nothing, and observed by nobody —
+  # so it reads as a member of the class while guarding none of it. That is the shape
+  # fail-open above, one column over: there the row is dropped by the reader, here it
+  # survives the reader and dies at the query. § 5.6 advertises both columns as open
+  # domains, so a row outside the queried set is the documented extension path, not a
+  # hypothetical.
+  decl_eval="$(awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" '
+      ($1 == "entry" && $3 == m) || ($1 == "field" && $3 == m) || ($1 == "field" && $3 == p) { c++ }
+      END { print c + 0 }' <<<"$decl_rows")"
+  if [ "${decl_eval:-0}" -ne "$decl_n" ]; then
+    warn "guard: the publishability declaration at $_GUARD_DECLARATION parses $decl_n rows but this guard evaluates only ${decl_eval:-0} of them — a row naming a limb or artifact-scope the guard never queries guards nothing, and a class that silently guards less than it declares is UNDETERMINED"; return 2
+  fi
+  esel="$(_guard_limb_selectors entry "$_GUARD_DECL_ARTIFACT_MODEL")"
+  erule="$(_guard_limb_rules     entry "$_GUARD_DECL_ARTIFACT_MODEL")"
+  mfields="$(_guard_limb_selectors field "$_GUARD_DECL_ARTIFACT_MODEL")"
+  mrules="$(_guard_limb_rules     field "$_GUARD_DECL_ARTIFACT_MODEL")"
+  pfields="$(_guard_limb_selectors field "$_GUARD_DECL_ARTIFACT_PROFILE")"
+  prules="$(_guard_limb_rules     field "$_GUARD_DECL_ARTIFACT_PROFILE")"
+
   model="$trip_dir/outputs/traveler-model.md"
   if [ ! -e "$model" ]; then
     warn "guard: $model is absent — the non-publishable class cannot be determined"; return 2
@@ -696,69 +917,89 @@ nonpublishable_values() { # <trip_dir> [site_html]
     done
   fi
 
-  out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" "$_GUARD_AWK_HELPERS"'
-    BEGIN { entries = 0; idx = 0; tp = 0; live = 0; tprecs = 0; sawmark = 0; supersede = 0 }
-    # The raw text is inspected for the mark BEFORE any per-line handling, so the
-    # orphaned-mark backstop in END sees marks the parse may fail to resolve.
-    /\[THIRD-PARTY\]/ { sawmark = 1 }
-    # A supersession removes both marks by design (00-enrichment.md:456-466). Recording
-    # that it happened is what separates a sanctioned provenance change from the bad
-    # merge the same passage forbids; the shell limb below verifies it is supported.
-    tolower($0) ~ /supersed/ && tolower($0) ~ /third-party/ { supersede = 1 }
+  out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" -v RESERVED="$_GUARD_RESERVED_KEYS" \
+            -v ESEL="$esel" -v ERULE="$erule" -v EFIELDS="$mfields" -v EFRULES="$mrules" \
+            "$_GUARD_AWK_HELPERS"'
+    # Index of the first declared entry selector occurring in s, or 0. The selectors and
+    # their rules arrive as parallel space-joined lists — the declaration grammar makes a
+    # selector whitespace-free, so joining on a space is lossless and both lists are built
+    # from the same filtered rows in the same order.
+    function esel_in(s,   i) { for (i = 1; i <= esn; i++) if (index(s, es[i]) > 0) return i; return 0 }
+    # The same selectors with bracketing stripped and case folded — how the token reads
+    # once it is prose rather than a mark. Used ONLY by the supersession detector below.
+    function ebare_in(s,   i) { for (i = 1; i <= esn; i++) if (ebare[i] != "" && index(s, ebare[i]) > 0) return i; return 0 }
+    BEGIN {
+      esn = split(ESEL,    es, " ");  ern = split(ERULE,   er, " ")
+      efn = split(EFIELDS, ef, " ");  efr = split(EFRULES, ers, " ")
+      for (i = 1; i <= esn; i++) { ebare[i] = tolower(es[i]); gsub(/[][]/, "", ebare[i]) }
+      entries = 0; idx = 0; tp = 0; ei = 0; live = 0; tprecs = 0; sawmark = 0; supersede = 0
+    }
+    # The raw text is inspected for a declared entry selector BEFORE any per-line
+    # handling, so the orphaned-mark backstop in END sees marks the parse may fail to
+    # resolve.
+    esel_in($0) { sawmark = 1 }
+    # A supersession removes the provenance mark by design (agents/00-enrichment.md
+    # § Missing or blank profile, "supersede, do not merge"). Recording that it happened is what separates a sanctioned
+    # provenance change from the bad merge the same passage forbids; the shell limb below
+    # verifies it is supported. It cannot key on the mark — a supersession is exactly the
+    # state in which the mark is gone — so it keys on the DECLARED selector read as prose.
+    tolower($0) ~ /supersed/ { if (ebare_in(tolower($0))) supersede = 1 }
     /^##[ \t]/ {
       head = $0; sub(/^##[ \t]+/, "", head)
       nm = clean(head)
       key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
-      if (key == "updatesignals") { live = 0; tp = 0; next }   # structural section, not a person
+      # Every member of the declared reserved-key list, not one literal. Space-padded on
+      # both sides so a key is matched whole and never as a substring of another.
+      if (index(RESERVED, " " key " ") > 0) { live = 0; tp = 0; ei = 0; next }   # structural section, not a person
       entries++; idx = entries; live = 1
-      tp = (index(head, "[THIRD-PARTY]") > 0)
-      if (tp && stated(nm)) { printf "third-party\tentry %d / Name\ttoken\t%s\n", idx, nm; tprecs++ }
+      ei = esel_in(head); tp = (ei > 0)
+      # The NAME record keeps the token rule as a property of the PARSE, not of the row:
+      # an entry heading is a proper noun, and a proper noun is matched as a token
+      # whatever match rule the row declares for the values beneath it.
+      if (tp && stated(nm)) { printf "entry\tentry %d / Name\ttoken\t%s\n", idx, nm; tprecs++ }
       next
     }
-    /^###/    { next }                   # deeper headings stay INSIDE the entry
-    /^#[ \t]/ { live = 0; tp = 0; next } # the file title ends any entry
+    /^###/    { next }                          # deeper headings stay INSIDE the entry
+    /^#[ \t]/ { live = 0; tp = 0; ei = 0; next } # the file title ends any entry
     live == 1 {
       raw = $0
       lab = $0
       sub(/^[ \t]*[-*+][ \t]+/, "", lab)
       gsub(/\*\*/, "", lab)
       sub(/^[ \t]+/, "", lab)
-      if (lab ~ /^[Pp]assport[ \t]*:/) {
-        val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
-        if (stated(val)) printf "passport\tentry %d / Passport\tconjunctive\t%s\n", idx, val
-        next
+      # ── the FIELD limb: every declared field selector scoped to this artifact ──
+      fh = 0
+      for (i = 1; i <= efn; i++) {
+        if (field_hit(lab, ef[i])) {
+          val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+          if (stated(val)) printf "field\tentry %d / %s\t%s\t%s\n", idx, ef[i], rule_for(ers[i], val), val
+          fh = 1
+          break
+        }
       }
-      # ── the [THIRD-PARTY] member: an ENTRY DENYLIST, not a field allowlist ──────
-      # The mark is read at BOTH granularities and the two are a UNION. The heading
-      # limb alone was the shipped defect: 00-enrichment.md:406-408 requires the mark on
-      # "every value sourced this way", and :468-473 names mark-stripping as a
-      # KNOWN agent error which "silently strip[s] the key the publication guard
-      # depends on" — the exact state in which a heading-only read enumerates zero
-      # third-party records and publishes.
+      if (fh) next
+      # ── the ENTRY limb: a DENYLIST over the entry, not a field allowlist ───────
+      # The declared selector is read at BOTH granularities and the two are a UNION. The
+      # heading limb alone was the shipped defect: agents/00-enrichment.md § Missing or
+      # blank profile, which requires the mark on "every value sourced this way" and names
+      # mark-stripping as a KNOWN agent error which "silently strip[s] the key the
+      # publication guard depends on" — the exact state in which a heading-only read
+      # enumerates zero records for this limb and publishes.
       #
-      # ORDERING IS LOAD-BEARING: the value-level mark is read off the RAW line, before
-      # clean() runs. clean() deletes every bracketed provenance mark as metadata, so a
-      # mark consulted after it has already been erased.
-      vmark = (index(raw, "[THIRD-PARTY]") > 0)
-      if (tp || vmark) {
+      # ORDERING IS LOAD-BEARING: the value-level selector is read off the RAW line,
+      # before clean() runs. clean() deletes every bracketed provenance mark as metadata,
+      # so a selector consulted after it has already been erased.
+      vi = esel_in(raw)
+      if (tp || vi > 0) {
         val = tp_value(lab)
         if (stated(val)) {
-          # Rule assignment travels with the record and is made HERE, alongside
-          # membership, because the two are one decision. It keys off the VALUE, never
-          # off a field label — the label shape of a third-party need is precisely what
-          # the corpus does not specify (see the coverage-boundary note above).
-          #   >= F tokens : prose. The phrase rule catches the verbatim and the
-          #                 de-attributed carry-through.
-          #   <  F tokens : the phrase rule would exit 3 (below its keyability floor)
-          #                 and every publish of the trip would abort as UNDETERMINED,
-          #                 forever, with no remedy — the unusable fail-closed control
-          #                 the token-branch note calls fail-open in practice. The token
-          #                 rule is determinate on a short value, and its is_stop /
-          #                 exit-4 path already handles a value with nothing distinctive
-          #                 in it. Mitigated, not accepted.
-          n = wordcount(val)
-          printf "third-party\tentry %d / field %d\t%s\t%s\n", idx, ++fno[idx], \
-                 (n >= F ? "phrase" : "token"), val
+          # Membership and matchability are still one decision — but both halves now come
+          # from the row that put this value in class, not from a literal here. The rule
+          # keys off the VALUE and never off a field label: the label shape of an
+          # entry-limb value is precisely what the corpus does not specify.
+          ri = (vi > 0 ? vi : ei); if (ri < 1) ri = 1
+          printf "entry\tentry %d / field %d\t%s\t%s\n", idx, ++fno[idx], \
+                 rule_for(er[ri], val), val
           tprecs++
         }
         next
@@ -778,45 +1019,56 @@ nonpublishable_values() { # <trip_dir> [site_html]
   case "$rc" in
     0) ;;
     3) warn "guard: no '## <Name>' entry was recognized in $model — the derived-model format has drifted, so the class is UNDETERMINED, not empty"; return 2 ;;
-    4) warn "guard: $model carries a [THIRD-PARTY] mark that resolved to no class record — the mark is orphaned or the entry did not parse, so the class is UNDETERMINED, not empty"; return 2 ;;
+    4) warn "guard: $model carries a declared entry mark ($esel) that resolved to no class record — the mark is orphaned or the entry did not parse, so the class is UNDETERMINED, not empty"; return 2 ;;
     5)
-      # A recorded third-party supersession is sanctioned ONLY by the person having
-      # filed their own profile — that is the event that triggers it
-      # (00-enrichment.md:456-458), and their own file is what becomes authoritative.
-      # A supersession claimed with no profile anywhere is unsupported: the marks are
-      # gone and nothing backs the drop, which is indistinguishable from the bad merge
-      # :467-473 forbids. Undetermined, never a pass.
+      # A recorded supersession is sanctioned ONLY by the person having filed their own
+      # profile — that is the event that triggers it (agents/00-enrichment.md § Missing or
+      # blank profile), and their own file is what becomes authoritative. A supersession
+      # claimed with no profile anywhere is unsupported: the marks are gone and nothing
+      # backs the drop, which is indistinguishable from the bad merge that section
+      # forbids by name. Undetermined, never a pass.
       # had_profiles is the freshness gate's own glob result, computed above — reused
       # rather than re-scanned. Deliberately not `find -maxdepth 1 -print -quit`: that
       # is the same BSD/GNU divergence class as the _epoch_of_file defect this release
       # already tripped over, and the shell glob has one behaviour everywhere.
       if [ "$had_profiles" -ne 1 ]; then
-        warn "guard: $model records a [THIRD-PARTY] supersession but no per-traveler profile exists to support it — the provenance change is unverifiable, so the class is UNDETERMINED"; return 2
+        warn "guard: $model records a supersession of a declared entry class ($esel) but no per-traveler profile exists to support it — the provenance change is unverifiable, so the class is UNDETERMINED"; return 2
       fi
       ;;
     *) warn "guard: $model could not be parsed (exit $rc) — the class is undetermined"; return 2 ;;
   esac
 
   # ── first-party sources (CD-3) ─────────────────────────────────────────────
-  # The Passport member, read from the authoritative per-traveler files rather than only
-  # from the projection of them. The label shape is the same one the model parse binds to
-  # — templates/traveler-intake.template.md writes it as "- **Passport:** <country>,
-  # valid through <month year>" — so the same two lines of label handling serve both, and
-  # the placeholder brackets of an unfilled form are removed by clean() and rejected by
-  # stated(). The locator is "profile N", never the file name: a file under travelers/ is
-  # named for the traveler, and naming them would leak on the same axis this guard
-  # protects. N is the position in the shell's sorted glob, so it is stable between runs.
+  # The FIELD limb read from the authoritative per-traveler files rather than only from
+  # the projection of them — the rows whose declared artifact-scope is the profile class.
+  # The label shape is the same one the model parse binds to — the intake template writes
+  # each field as a bulleted, bold-emphasised label followed by a colon and the value — so
+  # the same two lines of label handling serve both, and the placeholder brackets of an
+  # unfilled form are
+  # removed by clean() and rejected by stated(). The locator is "profile N", never the
+  # file name: a file under travelers/ is named for the traveler, and naming them would
+  # leak on the same axis this guard protects. N is the position in the shell's sorted
+  # glob, so it is stable between runs.
+  #
+  # Only the FIELD limb is read here, and that is a property of the declaration rather
+  # than of this code: an entry-limb subject has no profile file anywhere by
+  # construction, so no row scopes that limb to this artifact class.
   if [ "$had_profiles" -eq 1 ]; then
-    pout="$(awk "$_GUARD_AWK_HELPERS"'
+    pout="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" \
+                -v PFIELDS="$pfields" -v PFRULES="$prules" "$_GUARD_AWK_HELPERS"'
+      BEGIN { pfn = split(PFIELDS, pf, " "); pfr = split(PFRULES, pr, " ") }
       FNR == 1 { idx++ }
       {
         lab = $0
         sub(/^[ \t]*[-*+][ \t]+/, "", lab)
         gsub(/\*\*/, "", lab)
         sub(/^[ \t]+/, "", lab)
-        if (lab ~ /^[Pp]assport[ \t]*:/) {
-          val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
-          if (stated(val)) printf "passport\tprofile %d / Passport\tconjunctive\t%s\n", idx, val
+        for (i = 1; i <= pfn; i++) {
+          if (field_hit(lab, pf[i])) {
+            val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+            if (stated(val)) printf "field\tprofile %d / %s\t%s\t%s\n", idx, pf[i], rule_for(pr[i], val), val
+            break
+          }
         }
       }
     ' "$trip_dir"/travelers/*.md 2>/dev/null)" && prc=0 || prc=$?
@@ -1265,7 +1517,13 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
   fi
 
   # Default: delete the whole public repo (IRREVERSIBLE). Requires the delete_repo OAuth scope.
-  if ! gh auth status 2>&1 | grep -q 'delete_repo'; then
+  # Here-string, not a pipeline: `grep -q` exits on first match, which under the `pipefail`
+  # set at the top of this file can promote the writer's SIGPIPE death to the pipeline's
+  # status and refuse a token that DOES carry the scope. The failure is safe — it aborts
+  # rather than deleting — but it is a refusal the operator cannot act on, since the remedy
+  # it prints has already been applied. A failing `gh` still reaches the same branch: the
+  # substitution yields its diagnostic, the scope is absent from it, and grep returns 1.
+  if ! grep -q 'delete_repo' <<<"$(gh auth status 2>&1)"; then
     warn "Deleting a repo needs the 'delete_repo' OAuth scope, which isn't present on your gh token."
     warn "Grant it once with:   gh auth refresh -h github.com -s delete_repo"
     die "unpublish aborted — missing delete_repo scope (or use --disable-pages-only to keep the repo)."

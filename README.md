@@ -2,6 +2,16 @@
 
 A multi-agent trip planning system. Nine specialized agents research, plan, validate, and produce travel itineraries.
 
+## What it produces
+
+The headline output is a single self-contained HTML travel site — encrypted before it is published, decrypted in the reader's browser. This is the desktop layout, drawn against the design system in [`reference/site-layout-spec.md`](reference/site-layout-spec.md) and populated from the worked example in [`examples/data-architecture-demo/`](examples/data-architecture-demo/):
+
+![Desktop layout of a generated travel site: a full-bleed hero carrying the destination, the trip dates and four trip stats; a sticky day-navigation strip with per-day colour coding; a day banner above a heat strip marking the trip's no-unshaded-outdoor-block window; and a four-column day grid — schedule timeline, featured stop cards, food and night cards, and a schematic map — with a booking-status pill on every card, over a booking checklist derived from tracked per-event status.](examples/data-architecture-demo/site-preview.svg)
+
+*A figure, not a screenshot — and a fixture, not a real trip. Every name, time, event ID and count in it is taken from [`examples/data-architecture-demo/`](examples/data-architecture-demo/); that [fixture's README](examples/data-architecture-demo/README.md) records how the figure is kept current, and why it is committed as source rather than captured as an image.*
+
+The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — one full planning cycle, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it. That example predates the artifact schema: it covers a subset of the artifact classes, and its files carry no `artifact:` frontmatter. For the shape an artifact has now, read the migrated fixture in [`examples/data-architecture-demo/`](examples/data-architecture-demo/), where every artifact carries its declaration block.
+
 ## Folder Structure
 
 | Path | Purpose |
@@ -10,9 +20,9 @@ A multi-agent trip planning system. Nine specialized agents research, plan, vali
 | `.claude/commands/` | The slash commands — the addressable way in (see [First run](#first-run)) |
 | `agents/` | Behavioral definitions for the 9 agents (destination-ideation, enrichment, activities, food, nightlife, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
-| `reference/` | `data-model.md` — how trip and per-traveler data is structured and reconciled; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
+| `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
-| `examples/` | Worked examples (sanitized real trips). See `examples/tokyo-2026/` |
+| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus three purpose-built demo fixtures |
 | `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
 ## Install
@@ -53,7 +63,7 @@ Then open the folder in Claude Code:
 - **Desktop app** — open the `travel-planner` folder
 - **CLI** — run `claude` from inside the `travel-planner` directory
 
-Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` accumulates agent artifacts.
+Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person, and `outputs/` holds the agent artifacts — some accumulating across sessions, others rebuilt, versioned or persisted in place, each per its declared lifecycle class.
 
 ### First run
 
@@ -63,7 +73,7 @@ Conversation is not the only way in. The files in `.claude/commands/` give the e
 
 | Command | What it is for |
 |---|---|
-| `/trip` | The entry point. Bare `/trip` reports where the trip stands; its verbs run the planning work — `plan`, `research`, `replan`, `check` and `site` among them |
+| `/trip` | The entry point. Bare `/trip` reports where the trip stands; its verbs run the planning work — `plan`, `research`, `replan`, `check`, `site` and `schema` among them |
 | `/trip-new` | Starts a trip that does not exist yet: the folder, `trip-context.md`, `trip-log.md`, and traveler intake. It only creates — re-run on an existing trip, it adds what is missing and rewrites nothing |
 | `/trip-record` | Writes what you know into the trip's own files — a traveler profile, a third party's needs, the destination, the mode, the party, trip facts, per-event status, the session log |
 | `/trip-publish` | `update` re-publishes an already-public site after edits; `list` reports what is published |

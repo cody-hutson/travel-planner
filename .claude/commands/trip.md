@@ -1,7 +1,7 @@
 ---
 description: The trip entry point. Resolves the trip, then runs the verb you typed.
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Read, Task, Edit, Write
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
 disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
@@ -39,6 +39,7 @@ population-role: RESOLVE
 | check | ACTIVE | any | DECIDED | G7 |
 | ideas | ACTIVE | IDEATION | UNDECIDED | G7 |
 | site | ACTIVE | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | G8 |
+| schema | ANY | any | any | G7 |
 
 The fence above and the requirement table beside it are together this file's contract
 declaration: the fence carries the citation line, `contract-depth` and `population-role`,
@@ -548,7 +549,7 @@ declining to advertise what this file does not implement.
 
 `status` declares `lifecycle: ANY` deliberately, rather than leaving that cell to its
 default. Orientation is precisely what an archived trip still needs, and on such a trip
-the rest of this file's table refuses on the `lifecycle` cell — seven of its eight rows read
+the rest of this file's table refuses on the `lifecycle` cell — seven of its nine rows read
 `ACTIVE` at this revision. That is conduct, not construction: **nothing grades this column.**
 The taxonomy guard reads the verb cell and the contract guard the depth cell, so a row appended
 later could carry `ANY` and no check would react. Stated as a count at a revision rather than as
@@ -900,8 +901,8 @@ destination the record block already carries by value, and nothing under
 back. **Agent reads, attributed:** the ideation agent reads `trips/<slug>/travelers/*.md` for
 the group's leanings and `trips/<slug>/trip-context.md` for the dates and party.
 **Dispatches** Destination Ideation, in the role its roster row states, writing
-`outputs/destination-shortlist.md` alone. On a re-run that agent appends under a new dated
-section and rewrites nothing.
+`outputs/destination-shortlist.md` alone. That artifact is `rebuilt-each-synthesis`: on a
+re-run the agent replaces it with the current ranking rather than appending to it.
 
 **Why the row's destination cell reads `UNDECIDED`.** A decided destination means the ideation
 question is already answered, and running the pipeline anyway spends it re-ranking a settled
@@ -988,3 +989,67 @@ establishes only that the build is not older than the inputs this verb's `**Read
 declares. A build can be newest and still have dropped an element, and a build can trail its
 inputs while faithfully rendering everything it was built from — so neither result substitutes
 for the other, and both are run and reported separately.
+
+## schema
+
+**Reads:** `reference/schemas/` — the schema set the check evaluates against, read by the
+script this verb invokes rather than by this verb; `trips/<slug>/` — the **existence probe** on
+the resolved trip path, taken to establish there is a tree to validate, which is a read and is
+declared. It reads no artifact **content** itself: every content read is the script's. It reads
+no block of `trip-context.md`. **Dispatches no agent** — the check is mechanical, not a
+judgment, so there is no prompt to supply and no finding for a model to reach.
+
+Read-only, and read-only as a rule this verb follows. It writes nothing under `trips/<slug>/`
+and nothing anywhere else.
+
+**What it runs** — a single invocation:
+
+```
+scripts/validate-artifacts.sh --scope dir trips/<slug>
+```
+
+**`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
+value — the standing clause's rule, applied.
+
+**Why that script and not the guard suite.** `scripts/test-artifact-schema.sh` is the CI suite:
+it takes no arguments and grades the tracked tree, which is the half CI already reaches.
+The gap this verb closes is the other half — a trip under `trips/`, git-ignored, that no CI
+checkout contains and no CI job can see. `scripts/validate-artifacts.sh` is the validator that
+suite sources, and its `--scope dir` arm is declared in its own usage as the local-trip arm.
+One validator, two call sites, one definition of what conforms; this verb is the second call
+site and authors none of it.
+
+**What it reports.** The script's own per-artifact, per-field findings, rendered unaltered.
+This verb adds no verdict of its own, suppresses none of the script's, and **never** converts a
+finding into a refusal or a redirect.
+
+**An unversioned artifact is not a failure.** An artifact carrying no `schema-version` is read
+as version 0 and **skipped**; a *declared* version that violates its schema fails. The rule is
+**cited, never restated here** — `reference/data-architecture.md` → *Tolerant read* is its one
+home, and a second copy is a second source able to disagree with it.
+
+**Where there is nothing to validate.** Where the existence probe finds no `trips/<slug>/`
+tree, say so and stop. Do not run the script against a path that is not there.
+
+**It never publishes.** The standing clause binds this verb. The script named above is not
+`scripts/publish-trip-site.sh`, reaches no network, creates no repository and writes nothing.
+
+**Why the row reads `lifecycle: ANY`.** The check writes nothing, and an archived trip is
+exactly where a reader most needs to know whether its artifacts still parse under the current
+schema. Admitting the non-nominal state costs nothing here, which is the argument `check`'s
+own section makes for `mode: any`.
+
+**Why `mode: any` and `destination: any`.** Schema conformance is a property of the artifacts,
+not of the planning state. A trip whose destination is still `UNDECIDED` already has a
+`trip-context.md` and may have traveler profiles, and naming modes would exclude trips whose
+artifacts are perfectly validatable.
+
+**Depth.** The row declares `G7`, not `G8`: this verb takes no freshness observation, so it
+neither renders the list nor announces into it. Order between a build and its inputs is
+orthogonal to whether either conforms to its schema.
+
+**`outputs/event-status.md`.** Read only as one artifact among those the script validates;
+**never written**, by this verb or by anything it dispatches, which is nothing. This chain does
+not reach the hub, so the per-event status bound does not quantify over it.
+
+**It writes no byte of `trip-context.md`.** The carve-out does not admit this verb.
