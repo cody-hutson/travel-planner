@@ -221,6 +221,43 @@ second venue witnesses the same divergence.
 > because several are prose sections. **The entry selector must be an explicit marker, never a
 > heading level** — see § 4.5 rule 2.
 
+**How a key reaches an entry written before the mint.** The mint point above opens a window: the
+research spokes write their entry markers before the hub has enumerated, so on a first pass every
+one of those markers reads `venue: unminted` — the declared absence § 8 records for these classes.
+**The spoke resolves its own marker, in place and one-way, on its next pass:** `unminted` →
+`ven-<token>`. The full statement belongs to the prompts that perform it — `agents/01-activities.md`,
+`agents/02-food.md` and `agents/07-nightlife.md`, each § *Output Format*, with the hub's half in
+`agents/05-hub-planner.md` § *Step 1 — links-reference.md*. It is cited here, not restated.
+
+**The grounding is a distinction this document already draws.** The entry marker is the
+entry-scoped member of the class § 4.5 rule 2 defines — a declared machine-readable block carrying
+the entity key and nothing else — and § 7.6 already separates that class from accumulated prose: a
+frontmatter block is *upgraded in place* on the next write, while **body entries are never
+rewritten**. Resolving a marker is the first of those two acts performed at entry scope, by the
+file's single writer. **One writer per file is preserved and the append guarantee is untouched:**
+the hub never reaches into a spoke's file, and the entry's heading, labelled lines and prose stand
+exactly as written.
+
+**What the window costs, stated rather than deferred.** Resolution is **one pass late**. `unminted`
+is a **converging** state, not an instantaneous one — and on a single-pass trip that never re-runs a
+spoke it never converges, so the marker stays `unminted` permanently. **The key is therefore a
+convergence optimisation and never the join basis: the hub joins two mentions to one place by the
+identity procedure at every mint**, not only at the first. That procedure is five ordered rungs in
+`agents/05-hub-planner.md` § *Step 1 — links-reference.md*, stopped at the first rung that decides
+and biased toward splitting an uncertain pair — a wrong merge hides a cap violation invisibly, while
+a wrong split is visible and over-counts. Downstream the same asymmetry is honoured rather than
+worked around: `agents/06-validator.md` § *What You Audit* counts a still-`unminted` entry as its own
+venue, so the two-appearance cap over-counts rather than passing silently on a merge nobody made.
+
+**Why the two alternatives were worse.** Having the hub back-fill the spokes' markers would give
+those files a second writer, against § 1.1's `W (exactly one)` column, which every class is
+declared on. A
+deterministic key each spoke could derive for itself would close the window entirely, but it takes
+the display name as input — name-keying wearing a hash — and the divergence measured above, one
+venue carrying three name strings across three artifacts, is exactly what the surrogate key exists to
+escape. The window is the price of a key no display string can perturb, and it is paid once per
+entry.
+
 ### 3.4 The full assignment
 
 **Surrogate:** Event, Venue, Need, Desire, Leg.
@@ -751,9 +788,9 @@ regenerates it. Partitioning the 19 in-model classes by § 6 membership:
 | **No emitting writer — the upgrade has nobody to perform it** | C1 `trip-context.md` · C2 `trip-log.md` · C18 `outputs/<slug>.md` | **3** | **A declared gap, not a mechanism.** The writer-upgraded row assigns the upgrade to *the owning writer*; these three have no writer surface that emits their frontmatter block at all, so there is no next write for the upgrade to ride. Stated per class below. |
 
 **9 + 6 + 1 + 3 = 19.** No class is unaccounted for. **The upgrade is not free of the operator across
-all nineteen:** for C2 and C18 a hand edit is today the only path to a versioned instance, and for C1
-it is the only path for an instance that predates the template. The fourth row is where that is
-stated rather than assumed away.
+all nineteen:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
+it is the only path for an instance that predates the surface that now emits each one's block at
+creation. The fourth row is where that is stated rather than assumed away.
 
 **Membership is § 6's, not this table's.** This partitions the lifecycle classes by upgrade burden;
 **§ 6 governs which artifact class sits in which lifecycle**, and a class that moves between its rows
@@ -786,12 +823,15 @@ because nothing is positioned to do it.
   the `[ENRICH]` contract is field-scoped and is not a licence to touch the fence. **That bar is
   correct and is not the gap**; the gap is that no other writer holds the block.
 - **C2 `trip-log.md`** — no template, and `/trip-record log`, its declared writer, emits no block.
-  `/trip-new` scaffolds the file fenceless, so **every trip created after this ships carries an
-  unversioned artifact** — the sharpest of the three, because it is the only one where the gap
-  reproduces on every new trip rather than only on instances that predate the migration.
+  `/trip-new` **does** emit the fence, at scaffold and into that member only, so a trip created
+  after that ships is born at the current version and the gap **ages out** rather than reproducing
+  on every new trip. What keeps C2 in this row is what keeps C1 in it: the scaffold writes the block
+  once, at creation, and no writer of a log that already exists emits one — so an instance predating
+  the scaffold has no next write for an upgrade to ride.
 - **C18 `outputs/<slug>.md`** — the targeted-research class is named on no writer surface at all, so
   the spoke that re-runs has no instruction to emit the block. A targeted-research output is created
-  fresh each time, so like C2 the gap reproduces rather than ageing out.
+  fresh each time, so the gap reproduces rather than ageing out — and **since C2 gained its scaffold
+  emitter, C18 is the only one of the three where it does.**
 
 **Guarantee 1 is what keeps all three readable in the meantime**, exactly as it does for C3: an
 artifact carrying no `schema-version` is read as version 0 and stays valid forever, and the gate skips

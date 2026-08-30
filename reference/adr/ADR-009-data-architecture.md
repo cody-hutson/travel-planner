@@ -1,10 +1,11 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended five times (three on 2026-08-29, the fourth and fifth
-  on 2026-08-30)** — citation form, then the `provenance` enum's membership, then four claims this
-  record made that the release did not ship, then three enforcement warrants this record asserted
-  that no file implements, then the `provenance:` key narrowed to its own scope with the member that
-  scope was missing.
+- **Status:** Accepted (2026-08-28); **amended six times (three on 2026-08-29, the fourth, fifth and
+  sixth on 2026-08-30)** — citation form, then the `provenance` enum's membership, then four claims
+  this record made that the release did not ship, then three enforcement warrants this record
+  asserted that no file implements, then the `provenance:` key narrowed to its own scope with the
+  member that scope was missing, then two claims of byte-identity against `main` that a later commit
+  in this same release falsified.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -45,9 +46,13 @@
   the degenerate point; the case is now cited to where it is decided, **C2** in that document.
   **(3) The Consequences ledger over-reported a discharge.** It stated that *a fail-open in a
   fail-closed guard is closed* and that the list makes it *a hard stop at intake* — false on both
-  limbs. `.claude/commands/trip-new.md` is byte-identical to `main`, so no intake rejection shipped;
-  `reference/data-model.md` records the intake half as *declared and currently unowned*; and cases
-  `L11a`, `L11b` and `L11d` pin the guard-side suppression open. The entry also **contradicted
+  limbs. `.claude/commands/trip-new.md` carries no reserved-key check, so no intake rejection
+  shipped; `reference/data-model.md` records the intake half as *declared and currently unowned*;
+  and cases `L11a`, `L11b` and `L11d` pin the guard-side suppression open. **This amendment read
+  that file's byte-identity with `main` as the evidence for the first of those three**; a later
+  commit in this release edited the file for an unrelated reason, so the **sixth amendment** below
+  re-grounds the same conclusion on the file's content and this paragraph records what the third
+  amendment established rather than the evidence it then rested on. The entry also **contradicted
   Decision 2.2 of this same document**, which states the fail-open as live. Decision 2.2 was
   correct; the ledger entry is corrected to it. **(4) The lifecycle single-home claim was too
   broad.** Decision 1 and the References section stated that `CLAUDE.md § Output Versioning` merely
@@ -99,6 +104,20 @@
   **value-level bracket marks are unchanged** and remain load-bearing in CI. Decision 5's *artifact
   or entry* is corrected to *artifact* for the same reason. **No decision, rule, residual, coverage
   claim or key derivation is changed, and none is re-opened.**
+  **Sixth amendment** — two claims of byte-identity against `main`, falsified by a later commit in
+  this same release, and the point each carried re-grounded rather than dropped. This record
+  asserted at two sites that `.claude/commands/trip-new.md` was **byte-identical to `main`** and
+  **unchanged by this release**. It is neither: a later commit gave that file a `trip-log.md`
+  frontmatter emitter, so its blob differs from `main`'s across **30 insertions and 2 deletions**.
+  **The conclusion both claims were evidence for survives, and it is now measured directly rather
+  than inferred from identity:** the file carries **0** occurrences of `reserved`, `updatesignals`
+  or `desireoverlap` at any casing — as it did on `main` — so no reserved-key intake rejection
+  shipped, and `reference/data-model.md` § *Reserved keys* still records that obligation as
+  *declared and currently unowned*. Byte-identity was only ever the evidence for the claim and never
+  the claim itself, which is why a sibling commit touching that file for an unrelated reason could
+  falsify the evidence without touching the finding; the amendment replaces the proxy with the
+  property actually at issue. **No decision, rule, residual, coverage claim or key derivation is
+  changed, and none is re-opened.**
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -658,11 +677,13 @@ fail-closed paths are non-negotiable.
   is closed by that.** A traveler whose normalized name lands on a reserved key is still silently
   dropped from the non-publishable class: the suppression under a reserved heading has no backstop
   on the field limb and only a conditional one on the entry limb, pinned as open by cases `L11a`,
-  `L11b` and `L11d`. And it is **not a hard stop at intake** — `.claude/commands/trip-new.md` is
-  unchanged by this release, and `reference/data-model.md` § *Reserved keys* records the intake
-  obligation as *declared and currently unowned*, with the reachable half of the enforcement placed
-  at the reconciler. Decision 2.2 states the fail-open as live; this entry previously stated it as
-  closed, and Decision 2.2 was the correct one.
+  `L11b` and `L11d`. And it is **not a hard stop at intake** — `.claude/commands/trip-new.md`
+  carries no reserved-key check at any spelling, and `reference/data-model.md` § *Reserved keys*
+  records the intake obligation as *declared and currently unowned*, with the reachable half of the
+  enforcement placed at the reconciler. **This release does edit that file** — to emit the
+  `trip-log.md` frontmatter fence at scaffold — and that edit adds no intake check, so the intake
+  half is unowned still. Decision 2.2 states the fail-open as live; this entry previously stated it
+  as closed, and Decision 2.2 was the correct one.
 - **The mover-set stays empty.** The topology adds a file and appends to another. Nothing moves,
   nothing is renamed, nothing is deleted.
 
