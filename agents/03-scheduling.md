@@ -324,6 +324,18 @@ In ITERATION and RESEQUENCING mode, also read:
   sequence around), which are `planned` (the only events you may move), and
   which are `option` (alternatives that stay alternatives)
 
+In every mode that produces the day-by-day framework — every mode but IDEATION,
+which produces none — also read:
+- `outputs/transport-brief.md` — the point-to-point leg matrix. The per-leg and
+  total transit figures § *Transit Cost & Routing Signal* below requires are the
+  group-adjusted door-to-door times **this file** carries: not solo app times, and
+  not a figure you estimate. **Transport writes this file and you only read it**,
+  which is why transport precedes you in the pipeline — `CLAUDE.md`
+  § *Dispatching agents* states that ordering and cites the reason. **If the brief
+  is absent, or covers no leg of a sequence you are timing, say so on that leg and
+  emit no number for it.** An invented leg time is the failure the ordering exists
+  to prevent, and it is worse than a stated gap because it reads as measured.
+
 Also read, in every mode:
 - `outputs/traveler-model.md` — two reads, and only these two:
   - the availability facets (`Can travel:` / `Blackout:`). These are the second limb of

@@ -656,11 +656,19 @@ unresolvable mark in front of the publish guard's orphan-mark check and abort th
 publish outright: the marks belong on values, never on the artifact's own
 declaration.
 
-**`publish: internal-hard` is not a label — it is the class the publish guard
-enforces.** This file is never rendered, and the values it carries must not reach a
+**`publish: internal-hard` is not a label — it is the artifact class this file
+declares, and the schema gate is what holds it.** `scripts/test-artifact-schema.sh`
+requires every witnessed class's frontmatter `publish:` to equal the value
+`reference/data-architecture.md` → "The Artifact Classes" assigns that class (arm
+`CA-witness-publish`), and requires the publish-bound artifact set to match the
+`publish-contract-artifacts` fence in `reference/site-layout-spec.md` (group `PB`).
+**The publish guard is a different control and reads no `publish:` field at all** —
+it keys on the field-and-entry declaration at `reference/data-architecture.md` →
+"Publishability", which decides which *values* are in class rather than which
+artifacts. This file is never rendered, and the values it carries must not reach a
 rendered page in attributed **or** anonymized form. Which values carry that bound,
-and which marks key them, is declared in `reference/data-architecture.md` →
-"Publishability"; read it there and do not re-derive it here. **The inline
+and which marks key them, is declared in that same section; read it there and do not
+re-derive it here. **The inline
 `[THIRD-PARTY]`, `[DERIVED]`, `[ENRICH]` and `[OPERATOR-PROVIDED]` marks you
 already write on every value stay exactly as they are.** The frontmatter declares
 provenance for the artifact; the marks carry it for each value. They are two
