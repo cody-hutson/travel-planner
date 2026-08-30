@@ -3,6 +3,65 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.16.0] — 2026-08-30 — Artifact model and validation gate
+
+The engine writes about twenty kinds of file, and until now none of them said what it was.
+A research list and a validation report and a traveller profile were all just markdown, and
+every agent that opened one had to work out from context what it had, whether it could be
+appended to or had to be rebuilt, whether the facts in it were researched or derived or typed
+by a person, and whether it was safe to publish. That worked because the agents were written
+by the same hand at the same time. It was not going to keep working, and nothing would have
+told you when it stopped.
+
+This release gives every artifact class a declared identity. Each file now carries frontmatter
+naming its class, its schema version, the trip it belongs to, the writer that owns it, its
+lifecycle, the provenance of what is in it, and whether it may be published. Those are not
+labels for a reader — a validator reads them, and a gate runs the validator on every change.
+
+The part that matters most is publishability. A traveller profile holds passport-adjacent
+detail and lodging and health needs, and the rule that keeps it out of a published site used
+to live in prose that a person had to remember. It is now a field on the artifact, and the
+publish guard reads the field.
+
+### Added
+
+- **A 19-class artifact model** (`reference/data-architecture.md`) with declared identity,
+  lifecycle, provenance and publishability per class, plus the marker forms that carry entity
+  identity inside a file.
+- **Per-class schemas** (`reference/schemas/`) — one per class, declaring the fields that
+  class must carry and the values each may take.
+- **A validator and its CI gate** (`scripts/validate-artifacts.sh`, run by a workflow on every
+  change). It checks that each artifact declares what its class requires and nothing outside
+  the declared value sets.
+- **A worked example** (`examples/data-architecture-demo/`) — a complete four-day trip carried
+  through the model, deliberately uneven so that each class shows the rule it exists to
+  demonstrate rather than repeating a full trip nineteen times.
+
+### Changed
+
+- Nine agent prompts, both templates, `CLAUDE.md` and `README.md` are reconciled to the model,
+  so the file an agent writes matches the class it claims.
+- The venue-deduplication cap now counts **places rather than rows**. Two spellings of one
+  venue were previously two entries and could both appear; they are now one venue behind one
+  key, and the two-appearance cap holds against that key.
+
+### Notes
+
+- **Your existing trips are untouched and keep working.** Artifacts written before this release
+  carry no schema version, and the validator reads a missing version as pre-migration and skips
+  the file. Nothing is rewritten, nothing fails, and nothing needs migrating by hand.
+- **The frozen worked example is now protected by machine rather than by care.** Each of the
+  ten files in `examples/tokyo-2026/` is pinned by content hash, with a test that proves the
+  pin detects a single changed byte.
+- **A same-name traveller collision is still possible and is now documented as such.** Two
+  travellers whose display names normalise to the same key share a file, and the second
+  overwrites the first. This predates the release and is unchanged by it; what changed is that
+  `reference/data-architecture.md` now states the rule, states that the intake check has not
+  shipped, and states what happens today instead of implying a control that does not exist.
+- **A mistyped trip name no longer reports success.** `validate-artifacts.sh` given a path that
+  does not resolve now fails with a finding, where it previously exited clean and looked
+  identical to a real trip with nothing in it.
+
 ## [0.15.0] — 2026-08-28 — Trip closeout retention posture
 
 A trip could be wound down but not put away. `/trip-decommission archive` arrived in the
