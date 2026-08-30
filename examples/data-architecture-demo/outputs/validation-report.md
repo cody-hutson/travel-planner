@@ -57,11 +57,11 @@ declared, not passed.
 | Business status | not exercised — venues are illustrative | 0 | 0 | 0 |
 | Constraint compliance | pass | 0 | 0 | 0 |
 | Profile-privacy non-publication (fail-closed) | pass | 0 | 0 | 0 |
-| Status integrity (protected events + needs-booking) | pass | 0 | 0 | 1 |
+| Status integrity (protected events + needs-booking) | pass | 0 | 1 | 1 |
 | Satisfaction metrics (needs-compliance + coverage report) | pass | 0 | 0 | 1 |
 | Bailout completeness | pass | 0 | 0 | 0 |
 | Location-link completeness (every event has a Maps link) | not exercised — no external URLs by design | 0 | 0 | 0 |
-| Structural integrity | pass on both anchor limbs; alternative-detail limb not exercised | 0 | 1 | 0 |
+| Structural integrity | pass on both anchor limbs; alternative-detail limb not exercised | 0 | 0 | 0 |
 | Experiential arc (stacked-peak + rest-need floors) | pass | 0 | 0 | 0 |
 | Nightlife coverage (applicable nights; no Critical tier) | pass | 0 | 1 | 0 |
 
@@ -69,6 +69,13 @@ declared, not passed.
 frontmatter as `critical-count` and is not restated here. The per-check `Critical`
 column above stays: it is a *per-check* count, where the frontmatter carries the
 *artifact-level aggregate*. Parts and aggregate are different facts with one home each.
+
+**Each count sits on the check that produced it**, which is what makes the column a
+part rather than a second aggregate: `[W1]` and `[N1]` are *Status integrity*, `[N2]`
+is *Satisfaction metrics*, `[W2]` is *Nightlife coverage*. *Structural integrity*
+carries none — its two anchor limbs pass and its third is declared unexercised, which
+is a status and not a finding. A count parked on the wrong check reads as a defect in
+a check that never raised one.
 
 ---
 
