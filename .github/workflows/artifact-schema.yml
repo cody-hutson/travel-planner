@@ -61,13 +61,18 @@ name: Artifact schema
 # ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
 # GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo, so
 # it has a second door that mechanism does not watch: a POPULATION vanishing. The gate
-# ships BEFORE any in-repo artifact carries frontmatter, so at this commit every selected
-# file skips under the tolerant read and every statement about a validated artifact is true
-# over the empty set — vacuously true, never skipped, silently green. Three things close
-# it. AR prints its observed denominator and renders a distinct VACUOUS verdict rather than
-# a bare PASS when the versioned population is zero. CV prints the coverage split rather
-# than asserting coverage. And CTL has a population BY CONSTRUCTION on every run, so the
-# suite demonstrates on this very commit that it is still capable of failing.
+# SHIPPED before any in-repo artifact carried frontmatter, and in that state every selected
+# file skipped under the tolerant read and every statement about a validated artifact was
+# true over the empty set — vacuously true, never skipped, silently green. THAT STATE IS
+# BEHIND THIS CORPUS. Nineteen versioned artifact instances now reach the selector (21
+# tracked files open with a declaration block carrying schema-version; the two
+# templates/*.template.md are excluded by name), CV reads 17 witness / 2 no-witness / 19,
+# and no group renders VACUOUS. The three mechanisms below STAY, because they are what make
+# a future regression to zero legible instead of silent. AR prints its observed denominator
+# and renders a distinct VACUOUS verdict rather than a bare PASS when the versioned
+# population is zero. CV prints the coverage split rather than asserting coverage. And CTL
+# has a population BY CONSTRUCTION on every run, so the suite demonstrates on this very
+# commit that it is still capable of failing.
 #
 # OUT OF SCOPE — deliberately, and by name:
 #   PROSE. The schema constrains frontmatter and declared entry markers. It never

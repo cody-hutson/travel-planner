@@ -76,8 +76,8 @@ this document no in-model class is.
 
 | C | Class | Disposition |
 |---|---|---|
-| 20 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and zero references in the tracked corpus. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
-| 21 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, zero corpus references. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
+| 20 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
+| 21 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
 | 22 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
 | 23 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
 | 24 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
@@ -336,10 +336,12 @@ saying *research or analysis* in terms. This is a judgment call and is recorded 
 
 **The four existing inline bracket marks are retained** as the per-value rendered marker; the
 `provenance` key is the artifact- or entry-level **declaration**. They are different granularities,
-not a duplicate home, and the schema asserts they correspond. **No new inline mark is minted for
-`researched`**: the existing marks exist to mark individual values inside a mixed artifact, whereas
-a research list is researched in its entirety, so an artifact-level declaration is the whole of it.
-Correspondence is asserted only where a mark exists.
+not a duplicate home. **That they correspond is a declared gap:** the word `correspond` occurs
+nowhere in `reference/schemas/`, and no enforcement file reads an inline mark against a
+`provenance:` value. **No new inline mark is minted for `researched`**: the existing marks exist to
+mark individual values inside a mixed artifact, whereas a research list is researched in its
+entirety, so an artifact-level declaration is the whole of it.
+A correspondence assertion, when one ships, reaches only where a mark exists.
 
 ### 4.5 Body-shape rules
 
@@ -402,8 +404,13 @@ values, so a consumer reads *unknown* rather than inferring from a missing label
 ### 5.1 Artifact class — `publish:`, a closed four-value enum
 
 - **`bound`** — the site build reads it. Exactly the five artifacts named in
-  `reference/site-layout-spec.md` § 9.1: C1, C10, C11, C13, C15. That section remains the authority;
-  this field is its machine-readable projection, and the schema asserts the two agree.
+  `reference/site-layout-spec.md` § 9.1: C1, C10, C11, C13, C15. That section remains the authority
+  and this field is its machine-readable projection. **That the two agree is a declared gap:** each
+  schema constrains `publish:` to the enum domain and carries no per-class *value*, and no
+  enforcement file reads the site-layout spec at all, so nothing asserts the correspondence. The
+  capability is real and this release uses it — a schema's `class-id` and `artifact` are each
+  asserted against § 1.1, as findings `S1` and `S8` — which is what makes this a gap rather than a
+  limit.
 - **`internal`** — never rendered.
 - **`internal-hard`** — never rendered **and** carrying values that must not reach a rendered page
   **in any form, including anonymized**. Exactly C12 and C14.
@@ -411,9 +418,14 @@ values, so a consumer reads *unknown* rather than inferring from a missing label
 
 ### 5.2 Field classification
 
-Each schema marks each field `publishable` (the default) or `non-publishable`. **`non-publishable`
-is inherited** by every artifact the field is carried into — which is what makes a passport value
-non-publishable in C3 **and** in C12 from a single declaration.
+A field is `publishable` (the default) or `non-publishable`. **The schema half is a declared gap:**
+the token `non-publishable` occurs zero times across the twenty files in `reference/schemas/`, that
+directory's fence grammar is explicitly closed so a schema cannot express the marking, and no
+enforcement file reads it. What shipped is the repo-side fence at § 5.6, and it does **not**
+inherit — it carries one row per field *per artifact scope*, so a passport value is non-publishable
+in C3 **and** in C12 by **two rows**, not from a single declaration carried into both. Expressing
+the class **in the artifacts** is the residue, and it needs a schema grammar that can carry the
+marking; § 5.6 is the half that did ship, and it says so in its own terms.
 
 ### 5.3 The class source — computed, never enumerated
 
@@ -459,9 +471,18 @@ and `scripts/test-publish-guard.sh` case **L8** asserts that separation on every
 source and the predicate must each carry **zero** declared selectors while this fence carries all
 of them.
 
-**Adding a member of the class is one row here and no edit to any shell script.** That is the whole
-point of the declaration, and it is the property to test a future change against: if admitting a new
-non-publishable field needs a code change, the re-key has been undone.
+**Adding a member of the class inside the queried set is one row here and no edit to any shell
+script.** The evaluator asks exactly three `(limb, artifact-scope)` questions — `entry` and `field`
+against `outputs/traveler-model.md`, and `field` against `travelers/<traveler>.md` — so a further
+non-publishable field on either of those two classes, or a further entry mark on the derived model,
+is one row and nothing else. **A row naming any other pair is presently a code change:** it parses,
+it is queried by nothing, and rather than guard less than it declares the guard aborts the publish
+as UNDETERMINED (`scripts/test-publish-guard.sh` case **L10c**). The columns below admit any of
+`limb`'s two values against **any** repo-relative artifact-class path, while the evaluator matches
+three literal pairs, so the distance between what the declaration admits and what the guard asks is
+a **declared gap** — widening the queried set is what closes it, and until then the fail-closed
+abort is what keeps it visible rather than silent. That a member is admitted by the fence and not
+by a shell literal remains the property to test a future change against.
 
 ```publish-contract-values
 # limb   selector        artifact-scope              rule
@@ -544,11 +565,15 @@ corpus before this release, and they were **spellings, not additional classes**:
   `reference/data-model.md` in **two casings**, so that a case-sensitive sweep would have missed one
   of them.
 
-**Both were replaced in this release, and the corpus now carries neither.** Measured across all
-tracked files: the slash-joined variant stood at **11** occurrences before this release — `CLAUDE.md`
-2, `agents/05-hub-planner.md` 2, `agents/06-validator.md` 1, `reference/data-model.md` 6, and zero
-anywhere else — and stands at **0** now; the lettered prose headings are dissolved. **No sweep
-remains to run, and a reader who takes the paragraph above as an instruction runs a vacuous one.**
+**Both were replaced in this release, and no tracked file but this one still carries either.**
+Measured across all tracked files, **this document included**: the slash-joined variant stood at
+**11** occurrences before this release — `CLAUDE.md` 2, `agents/05-hub-planner.md` 2,
+`agents/06-validator.md` 1, `reference/data-model.md` 6, and zero anywhere else — and stands at
+**1** now, that one being this section's own quotation of it in the closed record above; it is **0**
+in every other tracked file. The lettered prose headings are dissolved. A count taken over a
+population that excluded the measuring document would have read **0** and been wrong, which is why
+the population is named. **No sweep remains to run, and a reader who takes the paragraph above as an
+instruction runs a vacuous one.**
 
 The canonical tokens above are the hyphenated lowercase forms — the form the corpus already used
 everywhere for `persist-mutable`. They are recorded here because the compatibility surface reaches
@@ -822,8 +847,17 @@ in-model classes had no in-repo instance at all** when this order was set, so th
 what gives them their first witness — and a fixture that instantiates an `accumulate-append` class
 should carry at least two dated sections, or that lifecycle stays declared and unwitnessed.
 
-**That step has landed, and the grading basis it settles is read from one place.** Which classes hold
-a tracked witness, which do not, and why each one that does not never will, is declared per class in
+**That step has landed, and the two-dated-section criterion is met by one instance of six.**
+Measured across the six tracked instances declaring `lifecycle: accumulate-append`, all of them in
+`examples/data-architecture-demo/`: `trip-log.md` carries two dated sections, and the other five —
+`outputs/activities-list.md`, `outputs/nightlife-list.md`, `outputs/rooftop-sunset-bars.md`,
+`outputs/scheduling-framework.md` and `outputs/transport-brief.md` — carry one each. In the
+criterion's own terms those five leave the lifecycle **declared and unwitnessed**: their frontmatter
+is witnessed, their accumulation is not. Whether to deepen the fixture is an open decision and is
+not taken here.
+
+**The grading basis that step settles is read from one place.** Which classes hold a tracked
+witness, which do not, and why each one that does not never will, is declared per class in
 `reference/schemas/*.md` and reported by the gate on every run as its `CV:` coverage line; the two
 standing exceptions are named, with their reasons stated as durable properties, in
 `reference/schemas/README.md` § *Coverage*. It is not restated here — a second copy of a coverage

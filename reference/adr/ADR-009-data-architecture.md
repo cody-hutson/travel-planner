@@ -1,7 +1,9 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended three times (2026-08-29)** — citation form, then the
-  `provenance` enum's membership, then four claims this record made that the release did not ship.
+- **Status:** Accepted (2026-08-28); **amended four times (three on 2026-08-29, the fourth on
+  2026-08-30)** — citation form, then the `provenance` enum's membership, then four claims this
+  record made that the release did not ship, then three enforcement warrants this record asserted
+  that no file implements.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -54,6 +56,26 @@
   the class tokens and their definitions. **No decision, rule, residual, coverage claim or key
   derivation is changed, and none is re-opened** — each correction states what the release shipped
   in place of what this record asserted it had.
+  **Fourth amendment** — three enforcement warrants corrected to what the tree enforces, one of them
+  inverted. **(1) Decision 4.1** asserted that *the schema asserts the two agree* of `publish:` and
+  `reference/site-layout-spec.md § 9.1`. Nothing asserts it: the per-class schemas constrain
+  `publish:` to its enum domain and carry no per-class value, and that spec is named **0 times**
+  across all **13** enforcement files — `scripts/*.sh` plus `.github/workflows/*.yml` — against a
+  control of **14** for `data-architecture` over the same population. **(2) Decision 4.2** asserted
+  that each schema marks each field `publishable` or `non-publishable`, and that the marking is
+  **inherited**. `non-publishable` appears **0 times** across the **20** files in
+  `reference/schemas/`, that directory's fence grammar is closed against it, and the repo-side
+  declaration that did ship — `reference/data-architecture.md` § 5.6 — carries one row per field
+  *per artifact scope*, so `Passport` is declared **twice** rather than inherited once. **(3)
+  Decision 5** asserted that *the schema asserts that the two correspond* and that a mark resolving
+  to no declaration is *an UNDETERMINED under Decision 4.4, not a silent pass*. That one is
+  **inverted**: `correspond` occurs **0 times** in `reference/schemas/`, no gate reads an inline
+  mark against a `provenance:` value, and such a mark is today a **silent pass**. Decision 4.4's
+  orphaned-mark path is a different assertion — it fires in the publish guard on a `[THIRD-PARTY]`
+  mark resolving to no *record* in the derived model — and is now named as such rather than
+  borrowed. **No decision, rule, residual, coverage claim or key derivation is changed, and none is
+  re-opened** — each warrant is narrowed to a declared gap, in the register
+  `reference/data-architecture.md` § 8 already uses for the four it declares.
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -444,15 +466,19 @@ Publishability is declared at **two granularities**, and they compose by **union
 
 **4.1 — Artifact class,** the `publish:` field, a closed four-value enum. **`bound`** — the site build
 reads it; exactly the five artifacts named in `reference/site-layout-spec.md § 9.1`, which remains the
-authority while this field is its machine-readable projection, and the schema asserts the two agree.
+authority while this field is its machine-readable projection. **Asserting that the two agree is a
+declared gap:** the per-class schemas constrain `publish:` to the enum domain and carry no per-class
+value, and no enforcement file reads the site-layout spec.
 **`internal`** — never rendered. **`internal-hard`** — never rendered *and* carrying values that must
 not reach a rendered page **in any form, including anonymized**, per `ADR-006`. **`output`** — the
 render itself: a sink, never a source.
 
-**4.2 — Field class.** Each schema marks each field `publishable` (the default) or `non-publishable`.
-`non-publishable` is **inherited** by every artifact the field is carried into, which is what makes a
-`Passport` value non-publishable in the per-traveler profile *and* in the derived model from one
-declaration.
+**4.2 — Field class.** A field is `publishable` (the default) or `non-publishable`. **The schema
+half is a declared gap:** no schema carries the marking, and the fence grammar in
+`reference/schemas/README.md` is closed against it. What shipped is the repo-side declaration at
+`reference/data-architecture.md` § 5.6, and it does not inherit — it carries one row per field *per
+artifact scope*, so a `Passport` value is non-publishable in the per-traveler profile *and* in the
+derived model by **two rows**, not from one declaration.
 
 **4.3 — The class is computed, never enumerated.**
 
@@ -505,8 +531,12 @@ marks are **not two homes for one fact — they are two granularities of one fac
 field declares provenance for the **artifact or entry**; the bracket mark carries it for the
 **individual value**. Neither can be derived from the other: an entry-level declaration cannot say
 which of its values a later agent added second-hand, and a value-level mark cannot survive an agent
-that strips it. **The schema asserts that the two correspond**, and a mark that resolves to no
-declaration is an UNDETERMINED under Decision 4.4, not a silent pass.
+that strips it. **Asserting that the two correspond is a declared gap:** no schema expresses the
+correspondence and no gate reads an inline mark against a `provenance:` value, so a mark that
+resolves to no declaration is today a **silent pass**. Decision 4.4's orphaned-mark path is a
+different assertion and does not reach this case: it fires in the publish guard on a `[THIRD-PARTY]`
+mark that resolves to no *record* in the derived model, never on a mark that resolves to no
+*declaration*.
 
 ### 6. Schema evolution — a monotonic integer, and one tolerant-read rule with a write-stop
 

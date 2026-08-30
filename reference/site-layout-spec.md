@@ -652,8 +652,10 @@ reads these artifacts and produces the HTML — it never edits an `outputs/` fil
 
 **The machine-readable projection of this section.** The table above remains the authority for
 which artifacts are publish-bound; the fence below is its projection, and the two are required to
-agree. It exists so that "the publish-bound artifact set is sourced from § 9.1" is *assertable*
-rather than merely asserted, and so a source added to the build lands in one declared place.
+agree. It exists so that the publish-bound artifact set has **one declared home**, and so a source
+added to the build lands there rather than in whichever consumer needed it. **It is a declared home
+and not yet an asserted one:** no reader resolves it, so "the publish-bound artifact set is sourced
+from § 9.1" stays asserted rather than assertable until one does.
 
 ```publish-contract-artifacts
 # artifact                          class
@@ -673,8 +675,12 @@ rendered page in any form, including anonymized.
 
 **The publish guard does not read this fence.** It reads the field/entry declaration in
 `reference/data-architecture.md` § 5.6, which is what decides *which values* are in class. This
-fence declares *which artifacts* the site build may read, which is the validator's audit surface
-and the artifact-schema gate's input. Two declarations, two consumers, one home each.
+fence declares *which artifacts* the site build may read. **Neither of its intended consumers reads
+it today:** the artifact-schema gate names this spec nowhere, and `agents/06-validator.md` restates
+the five artifact names inline instead — in the same file that cites § 5.6's sibling fence as the
+single home of the class it does read. The fence predates the gate, so it was a forward reference to
+a consumer that then shipped reading a different surface. Two declarations, one home each, and one
+of them still waiting on a reader.
 
 ### 9.2 Round-trip completeness — every plan element has a rendered home
 
