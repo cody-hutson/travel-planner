@@ -518,12 +518,18 @@ values, so a consumer reads *unknown* rather than inferring from a missing label
 
 - **`bound`** — the site build reads it. Exactly the five artifacts named in
   `reference/site-layout-spec.md` § 9.1: C1, C10, C11, C13, C15. That section remains the authority
-  and this field is its machine-readable projection. **That the two agree is a declared gap:** each
-  schema constrains `publish:` to the enum domain and carries no per-class *value*, and no
-  enforcement file reads the site-layout spec at all, so nothing asserts the correspondence. The
-  capability is real and this release uses it — a schema's `class-id` and `artifact` are each
-  asserted against § 1.1, as findings `S1` and `S8` — which is what makes this a gap rather than a
-  limit.
+  and this field is its machine-readable projection. **That the two agree is asserted, and not by a
+  schema.** Each schema still constrains `publish:` to the enum domain and carries no per-class
+  *value*, so the correspondence was a declared gap for as long as the schemas were the only place
+  it could have lived. It is now held one layer up: `scripts/test-artifact-schema.sh` group `PB`
+  resolves the `publish-contract-artifacts` fence § 9.1 declares and requires the fence and this
+  column to be the same set, agreeing per row, in both directions. **The gap the fourth amendment of
+  `ADR-009` declared is closed, and its seventh amendment records the closure**; what remains open
+  is narrower and is stated at the group rather than here — the class selector is derived from the
+  fence, so the wholesale disappearance of every row of one publish class would narrow the selector
+  with it. The schema half of the corpus is asserted against this section independently and by other
+  findings — a schema's `class-id` and `artifact` each against § 1.1, as `S1` and `S8` — so the two
+  layers check different things and neither stands in for the other.
 - **`internal`** — never rendered.
 - **`internal-hard`** — never rendered **and** carrying values that must not reach a rendered page
   **in any form, including anonymized**. Exactly C12 and C14.

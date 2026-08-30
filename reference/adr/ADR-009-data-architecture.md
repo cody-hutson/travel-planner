@@ -1,11 +1,12 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended six times (three on 2026-08-29, the fourth, fifth and
-  sixth on 2026-08-30)** — citation form, then the `provenance` enum's membership, then four claims
-  this record made that the release did not ship, then three enforcement warrants this record
+- **Status:** Accepted (2026-08-28); **amended seven times (three on 2026-08-29, the fourth through
+  the seventh on 2026-08-30)** — citation form, then the `provenance` enum's membership, then four
+  claims this record made that the release did not ship, then three enforcement warrants this record
   asserted that no file implements, then the `provenance:` key narrowed to its own scope with the
   member that scope was missing, then two claims of byte-identity against `main` that a later commit
-  in this same release falsified.
+  in this same release falsified, then the first of those three warrants falsified in turn by the
+  gate that shipped to close it.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -68,7 +69,9 @@
   `reference/site-layout-spec.md § 9.1`. Nothing asserts it: the per-class schemas constrain
   `publish:` to its enum domain and carry no per-class value, and that spec is named **0 times**
   across all **13** enforcement files — `scripts/*.sh` plus `.github/workflows/*.yml` — against a
-  control of **14** for `data-architecture` over the same population. **(2) Decision 4.2** asserted
+  control of **14** for `data-architecture` over the same population. A gate shipped later in this
+  same release closes that gap, so the **seventh amendment** below records what this paragraph
+  established rather than the state the tree now carries. **(2) Decision 4.2** asserted
   that each schema marks each field `publishable` or `non-publishable`, and that the marking is
   **inherited**. `non-publishable` appears **0 times** across the **20** files in
   `reference/schemas/`, that directory's fence grammar is closed against it, and the repo-side
@@ -118,6 +121,35 @@
   falsify the evidence without touching the finding; the amendment replaces the proxy with the
   property actually at issue. **No decision, rule, residual, coverage claim or key derivation is
   changed, and none is re-opened.**
+  **Seventh amendment** — the fourth amendment's first warrant, falsified by a later commit in this
+  same release, and replaced with the property rather than with a fresher census. That warrant
+  recorded that **nothing asserts** the correspondence between `publish:` and
+  `reference/site-layout-spec.md § 9.1`, and evidenced it by counting: the spec named **0** times
+  across the enforcement files, against a control. **The count was true when it was written and the
+  claim it carried is now false** — a gate landed afterwards that closes exactly this gap, and
+  nothing returned to this record. `scripts/test-artifact-schema.sh` carries a group whose own
+  declaration is *"the publish-bound artifact set matches the spec fence that declares it"*: group
+  `PB` resolves the `publish-contract-artifacts` fence § 9.1 declares, requires every class it
+  carries to be a member of the canonical `publish` enum the suite extracts from the
+  universal-frontmatter declaration rather than spelling for itself, and requires the fence's
+  artifacts to be **exactly** the § 1.1 rows whose publish column carries one of the fence's
+  classes, with the class agreeing per row. The correspondence is therefore asserted on every push,
+  and the spec is read by an enforcement file. **The amendment carries no replacement count, and
+  that is the correction rather than an omission from it:** the warrant's census was the evidence
+  and never the claim, and a census written into present-tense prose is precisely what the sixth
+  amendment above was also written to undo. What replaces it is a property with a named holder —
+  *the correspondence is asserted, by group `PB` of that suite* — so a commit adding a second
+  asserter cannot silently falsify it, and a commit removing this one fails at a name a reader can
+  resolve. The group's own residual is stated where it belongs, in that group's header: it cannot
+  catch the wholesale disappearance of every row of one publish class, because the class selector
+  is derived from the fence. **The other two limbs of the fourth amendment were re-checked at this
+  one and stand as recorded** — `non-publishable` and `correspond` each occur **0** times across
+  `reference/schemas/`, measured against a control term present 25 times in the same twenty files,
+  so those two zeroes are measurements and not an empty scan. **Decision 4.1 below is corrected in
+  place**, and so is the sentence `reference/data-architecture.md` § 5.1 carried, which stated the
+  same thing about the same section. **No decision, rule, residual, coverage claim or key
+  derivation is changed, and none is re-opened** — a gap this record declared has been closed by
+  the tree, and the record now says so.
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -508,9 +540,12 @@ Publishability is declared at **two granularities**, and they compose by **union
 
 **4.1 — Artifact class,** the `publish:` field, a closed four-value enum. **`bound`** — the site build
 reads it; exactly the five artifacts named in `reference/site-layout-spec.md § 9.1`, which remains the
-authority while this field is its machine-readable projection. **Asserting that the two agree is a
-declared gap:** the per-class schemas constrain `publish:` to the enum domain and carry no per-class
-value, and no enforcement file reads the site-layout spec.
+authority while this field is its machine-readable projection. **That the two agree is asserted, and
+the assertion lives in the gate rather than in the schema grammar:** `scripts/test-artifact-schema.sh`
+group `PB` resolves the `publish-contract-artifacts` fence § 9.1 declares and requires the
+publish-bound set and that fence to agree in both directions. The per-class schemas still constrain
+`publish:` to the enum domain and carry no per-class value — which is why the gap the fourth
+amendment declared was real, and why the seventh records its closure at the gate that took it.
 **`internal`** — never rendered. **`internal-hard`** — never rendered *and* carrying values that must
 not reach a rendered page **in any form, including anonymized**, per `ADR-006`. **`output`** — the
 render itself: a sink, never a source.
