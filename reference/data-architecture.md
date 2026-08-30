@@ -244,8 +244,12 @@ spoke it never converges, so the marker stays `unminted` permanently. **The key 
 convergence optimisation and never the join basis: the hub joins two mentions to one place by the
 identity procedure at every mint**, not only at the first. That procedure is five ordered rungs in
 `agents/05-hub-planner.md` § *Step 1 — links-reference.md*, stopped at the first rung that decides
-and biased toward splitting an uncertain pair — a wrong merge hides a cap violation invisibly, while
-a wrong split is visible and over-counts. Downstream the same asymmetry is honoured rather than
+and biased toward splitting an uncertain pair. **The warrant for that bias is visibility, and it is
+stated once, there** — a wrong split leaves two adjacent rows a reader can see, while a merged place
+is simply absent. It is *not* that a wrong split is the safe direction for the cap: the cap counts
+appearances per key, so a split lowers both counts and can let a real violation through. That
+section carries the full statement and the cost; this one cites it and does not restate it.
+Downstream the same asymmetry is honoured rather than
 worked around: `agents/06-validator.md` § *What You Audit* counts a still-`unminted` entry as its own
 venue, so the two-appearance cap over-counts rather than passing silently on a merge nobody made.
 
@@ -970,9 +974,60 @@ The order is fixed by two constraints, and both are hard.
    specifically its write-stop — is what keeps a partially-migrated working directory readable. A
    migration that landed first would put artifacts into the field that un-migrated agents could
    silently downgrade, in a git-ignored directory this repo cannot reach.
-2. **The worked example is a byte-identical regression witness and is not edited in place.** The
-   files under `examples/tokyo-2026/` are asserted byte-for-byte by the guard suites. Migration adds
-   *new* fixtures that instantiate the schema; it does not rewrite the witness.
+2. **The worked example is a byte-identical regression witness and is not edited in place.** Every
+   file under `examples/tokyo-2026/` is pinned by content address in the freeze declaration below,
+   and `scripts/test-artifact-schema.sh` group **FW** asserts each one byte-for-byte on every push —
+   the comparison is `git hash-object`'s, so byte-identity is literally what is compared. The pinned
+   set is checked against the tracked set **in both directions**, so a file added under the witness
+   or deleted from it fails as loudly as a file whose bytes moved. Migration adds *new* fixtures that
+   instantiate the schema; it does not rewrite the witness.
+
+   **What that assertion does not reach, stated so the freeze is not read as more than it is.** It
+   is a statement about *content identity*, not about *conformance*: none of these files carries a
+   `schema-version`, so the validating gate selects them and then **skips** them under § 7.2's
+   tolerant read, exactly as it does every other version-0 artifact. The witness is frozen and
+   unvalidated, and those are two different properties — freezing it is what makes it a regression
+   witness, and migrating it is what would make it a conformance one. This constraint deliberately
+   chooses the first.
+
+#### The freeze declaration
+
+**This fence is the machine-readable form of constraint 2, and it is the single home of the
+freeze.** `scripts/test-artifact-schema.sh` group **FW** reads it, recomputes each file's content
+hash from the working tree, and compares — so the freeze is asserted on every push rather than
+held only as a review constraint. It is the same declaration-in-the-corpus mechanism § 5.6 uses
+for the non-publishable class: the document declares, the script reads, and neither holds a copy
+of the other's answer.
+
+The digest is `git hash-object`'s — git's own content address, so the comparison is byte-for-byte
+by construction and needs no external hashing tool, no network, and no second commit to diff
+against. **A path set mismatch fails in both directions:** a file added under the witness, or one
+deleted from it, fails as loudly as a file whose bytes moved.
+
+```frozen-witness-digest
+# blob-sha1                                  path
+4d21d3f1ed0243926708c9e0c6db0cc0252efc8e  examples/tokyo-2026/README.md
+4e8ca528f8d42b2772a862ca1fe2f0fe9ac6e7be  examples/tokyo-2026/trip-context.md
+31ccf68d0ae6ae0fc59fefae90b3568df6d641b3  examples/tokyo-2026/trip-log.md
+c060dbd10e190ae95cd2cfbf7357d4a58e88e60d  examples/tokyo-2026/outputs/casual-dining-family.md
+edb650563899d0e3f0719bb284174d70e5bee063  examples/tokyo-2026/outputs/final-itinerary.md
+b22d10458c35ad2e12dbd1dc068ec20444b28424  examples/tokyo-2026/outputs/food-list.md
+b0763fc90e320a678912f5a89d5d33a0a0740242  examples/tokyo-2026/outputs/links-reference.md
+4221c899f6729c6e712bffec1d4bb00f772fcf52  examples/tokyo-2026/outputs/scheduling-framework.md
+e671aa24effdb9f3e8e1791b9d2edc70447b847f  examples/tokyo-2026/outputs/transport-brief.md
+d658872d50bf7b50d60192871dc8465dbd948f14  examples/tokyo-2026/outputs/activities-list.md
+```
+
+Two columns, both required, whitespace-separated. A line whose first non-blank character is `#`
+is a comment and is ignored; a blank line is ignored.
+
+**What to do when the witness legitimately has to change.** The freeze is a review constraint,
+not a prohibition — it exists so that a change is *deliberate and visible*, never so that it is
+impossible. Edit the file and update its row here **in the same commit**. The diff then carries
+both halves side by side, which is the whole point: a reviewer sees the content change and the
+re-pin together, and a content change arriving *without* its re-pin turns the branch red. Do not
+regenerate the whole fence to make a red go away — re-pin only the rows you meant to change, or
+the assertion stops being a freeze and becomes a rubber stamp.
 
 Within those bounds: the schema definitions and the validating gate precede the per-class migrations;
 the publish-guard re-key precedes or accompanies the classes whose publishability it reads; and the

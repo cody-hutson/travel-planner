@@ -62,6 +62,11 @@ Café Majestic — indoor, level access.
 - Lunch: — *(not placed)*
 - Dinner: — *(not placed)*
 
+**Transit Notes**
+On foot within the centre all day: viewpoint, then the second afternoon block, then the
+terrace. Three stops on one Saturday afternoon with no transfer between them — which is
+the density the patch removed rather than a routing problem it solved.
+
 **Nightlife**
 Base Porto — centre — rooftop drinks at sunset — from 19:30 — lift to the terrace, table
 held.

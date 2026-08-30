@@ -45,6 +45,8 @@ stub.
 venue: ven-8a34
 ```
 
+- **Location:** Rua do Miradouro 12, Centro — the same address the targeted-research
+  entry carries, which is what joined the two mentions
 - **Night type:** low-key drink, at sunset
 - **Booking:** advance — a table can be held, and one has been
 - **Why:** the only option on this list that serves the rooftop-sunset desire both
@@ -60,6 +62,8 @@ venue: ven-8a34
 venue: ven-1d9f
 ```
 
+- **Location:** Rua do Miradouro 40, Centro — a different address on the same street,
+  which is what keeps it a **second** venue rather than a second name for the first
 - **Night type:** low-key drink, indoor
 - **Booking:** advance available, not held
 - **Why:** the fallback if the rooftop is rained off; indoor, five minutes away

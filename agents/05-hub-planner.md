@@ -81,11 +81,21 @@ ordered and you stop at the first one that decides.
 2. **The same resolved location decides.** Two mentions that resolve to one
    physical place — one street address, one map pin — are one venue. The place is
    what the venue *is*; the name is only what a writer called it.
-3. **A byte-identical maps or official-site URL decides, as evidence of rung 2.**
-   Read it as an assertion that both mentions point at one pin. It is evidence,
-   **not a key**, and it never becomes one — but it is decisive here, because it
-   is the single field the measured collision in this repository's own worked
-   example agrees on across two rows carrying two different display names.
+3. **A byte-identical *maps* URL decides, as evidence of rung 2.** Read it as an
+   assertion that both mentions point at one pin. It is evidence, **not a key**,
+   and it never becomes one — but it is decisive here, because it is the single
+   field the measured collision in this repository's own worked example agrees on
+   across two rows carrying two different display names.
+   **An official-site URL does NOT decide, and this is a narrowing, not an
+   omission.** A maps URL is one pin; an official site is one *business*, which
+   may have many locations. The counter-example is inside the frozen witness:
+   `examples/tokyo-2026/outputs/links-reference.md` places two distinct cafés on
+   two different days, carrying two different map pins and a byte-identical
+   official site. Reading that site as decisive merges them — and because this
+   rung fires *before* rung 4's demotion and rung 5's split-bias, the safety net
+   never engages. Rung 1 then freezes the merge on every later pass. A shared
+   official site is a **corroborating signal under rung 4**; where it is the only
+   agreement, the pair reaches rung 5.
 4. **Nothing below rung 3 decides on its own.** Display-name equality, name
    similarity, shared neighborhood, shared category and shared price tier are
    **corroborating signals**. Two mentions agreeing only on a name are a
@@ -96,10 +106,22 @@ ordered and you stop at the first one that decides.
    DECISIONS, citing both mentions and the artifact each came from.
 
 **Why it splits rather than merges when it is unsure.** The two errors are not
-symmetric. A wrong merge deletes a place from the plan and makes the
-two-appearance cap under-count, and neither is visible in the output a reader
-sees. A wrong split leaves two rows that reader can see, and makes the cap
-over-count — which errs toward caution. So an uncertain pair splits, and says so.
+symmetric, and the asymmetry is **visibility** — not that either one is safe for
+the cap. A wrong merge deletes a place from the plan, and nothing in the output a
+reader sees records that it happened. A wrong split leaves **two rows that reader
+can see**, next to each other, in the file whose whole job is one row per venue.
+One error is recoverable by reading; the other is not. So an uncertain pair
+splits, and says so in OPEN DECISIONS.
+
+**What a wrong split costs, stated rather than glossed.** It is *not* the
+cautious direction for the cap, and reading it as such gets the right answer for
+a wrong reason. The cap counts appearances **per key**, so splitting one place
+into two keys *lowers* both counts: three appearances of one venue read as
+two-plus-one, and **both pass**. A wrong split therefore lets a real cap
+violation through. It is accepted anyway, because a violation that is visible in
+two adjacent rows is one someone can still catch, and a merged place that is
+simply gone is not. The declaration in OPEN DECISIONS is what makes that
+recoverable rather than merely survivable.
 
 **The cap counts keys.** Once this procedure has run, the two-appearance cap and
 every other venue check resolve against `ven-<token>`. A mention still unresolved

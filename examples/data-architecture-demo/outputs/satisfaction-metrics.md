@@ -9,7 +9,7 @@ publish: internal-hard
 generated: 2026-08-29
 ---
 
-# Satisfaction Metrics
+# Satisfaction Metrics [DERIVED]
 
 > **Illustrative, sanitized example. Not a real trip.**
 
@@ -36,7 +36,7 @@ constraint's own reach, which is why two of the four rows cover fewer than four 
 
 | Traveller | Need | Category | Governing | Applicable days | Verdict |
 |---|---|---|---|---|---|
-| Alex | Afternoon sun not tolerable outdoors | heat | `HC-2` | May 14 (Thu), May 16 (Sat) — the only days carrying an outdoor block in the 13:00–16:00 window | pass · pass |
+| Alex | Afternoon sun not tolerable outdoors | heat | `HC-2` | May 14 (Thu), May 16 (Sat) — the only days carrying an **afternoon** outdoor block, which is what `HC-2` reaches | pass · pass |
 | Alex | No shellfish | dietary-health | `DH-1` | May 14–17 (all 4) — every day carries a group meal for the constraint to bind on | pass · pass · pass · pass |
 | Robin | Level or lift approaches only | mobility | `HC-1` | May 14–17 (all 4) | pass · pass · pass · pass |
 | Robin | One slow afternoon mid-trip | rest | — | May 15 (Fri), May 16 (Sat) — the two full days; a partial arrival or departure day has no afternoon to grade | pass · pass |
@@ -51,8 +51,19 @@ model the opposite rule — that an absent profile means no constraints — whic
 one reading the model forbids.
 
 The heat row is the one that shows the applicable-day set is **computed, not
-assumed**. Grading it on all four days would report two passes the plan never
-earned, because Friday and Sunday carry no outdoor block in that window at all.
+assumed**. Grading it on all four days would report two passes the plan never earned:
+Friday carries no outdoor block at all, and Sunday's is a 09:30 river walk — a morning
+block, hours clear of the window, which `HC-2` never reaches.
+
+**Both graded days pass *because the constraint moved the block*, not because it was
+never at risk, and the difference is the whole point of grading them.** `HC-2` reads
+*any block that would sit in direct sun in that window is moved, shaded, or given an
+indoor bailout* — so its applicable days are the ones carrying a block it had to act
+on. Thursday's garden block is placed at 17:00 and Saturday's viewpoint was **re-timed
+from 14:00 to 16:30** by the patch this version records
+(`outputs/final-itinerary-v1.md`). Neither now sits inside 13:00–16:00; both are the
+constraint's own work, and a reading that dropped these two days would report the
+constraint as having done nothing.
 
 **The `DH-1` row is the one that shows a pass has to have something to pass on.** A
 dietary constraint is graded per day against the group meals that day carries, so on a

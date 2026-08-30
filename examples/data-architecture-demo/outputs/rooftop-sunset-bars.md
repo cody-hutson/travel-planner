@@ -48,10 +48,24 @@ section header carries the earlier one. The third is the case below.
 venue: ven-8a34
 ```
 
+- **Location:** Rua do Miradouro 12, Centro
+
 Carried forward into `outputs/nightlife-list.md` and placed by the hub. **The key here
 is the token the hub minted at its enumeration**, resolved into this marker by this
 file's own writer on its next pass. A research list **reads** venue keys and never mints
 them.
+
+**Why one key and not two, stated in the procedure's own terms.** This entry and the
+`Base Porto — rooftop bar` entry in `outputs/nightlife-list.md` are two mentions with
+two different display strings, and at the hub's enumeration neither carried a token —
+so rung 1 could not decide. What decided is **rung 2**: both mentions resolve to one
+street address, and the place is what the venue *is*. The `Location:` line above is
+that evidence, carried on the entry rather than asserted about it, which is what makes
+the merge checkable instead of merely stated. Without it the pair reaches no rung above
+4 — name similarity is explicitly demoted there — and **rung 5 would require two keys
+and a declared pair in OPEN DECISIONS**, not one key. `scripts/test-artifact-schema.sh`
+group **VI** asserts exactly that, so this fixture cannot quietly drift into an
+undeclared merge.
 
 ### Casa do Livro
 
@@ -59,7 +73,12 @@ them.
 venue: ven-1d9f
 ```
 
-Carried forward as the alternative, and resolved the same way on the same pass.
+- **Location:** Rua do Miradouro 40, Centro
+
+Carried forward as the alternative, and resolved the same way on the same pass. Its
+address differs from `ven-8a34`'s, which is why rung 2 makes these **two** venues on
+the same evidence that made the pair above **one** — the rung decides both directions,
+and a fixture showing only the merge would leave a reader to guess at the other.
 
 ### A third candidate, considered and not carried forward
 

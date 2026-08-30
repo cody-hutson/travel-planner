@@ -79,9 +79,12 @@ would lie the moment a venue is renamed, and a key encoding the day would lie th
 moment the hub moved it — and the whole point of a join key is that neither of those
 edits touches it.
 
-**Bailout coverage.** `HC-2` requires any outdoor block that would sit in direct sun
-between 13:00 and 16:00 to carry a named indoor bailout. `ven-b5e0` is the bailout for
-both such blocks, which is why it is the venue that reaches the cap.
+**Bailout coverage.** `HC-2` requires an outdoor block that would sit in direct sun
+between 13:00 and 16:00 to be moved, shaded, **or** given a named indoor bailout.
+`ven-b5e0` is the named bailout on the two days carrying an afternoon outdoor block —
+Thu 14 and Sat 16 — which is why it is the venue that reaches the cap. **Neither block
+now sits inside the window**: both were placed clear of it, and the bailout is carried
+anyway rather than treated as discharged by the timing alone.
 
 **Three rows here were minted at this pass and their research markers have not caught
 up.** `ven-3c17`, `ven-a90d` and `ven-5e6b` are the anchor-meal venues appended to

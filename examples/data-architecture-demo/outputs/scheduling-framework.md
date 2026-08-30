@@ -67,9 +67,12 @@ opens at 14:00.
 ### Hard Constraint Schedule Impact
 
 `HC-2` is the constraint that binds *placement time* rather than venue choice: no
-unshaded outdoor block between 13:00 and 16:00. It reaches the two days carrying an
-outdoor block in that window and no others, which is why
-`outputs/satisfaction-metrics.md` grades Alex's heat need on two days rather than four.
+unshaded outdoor block between 13:00 and 16:00. **No outdoor block is scheduled inside
+that window on any day** — which is the constraint holding, not the constraint being
+idle. It reaches the two days carrying an **afternoon** outdoor block, May 14 and
+May 16, and no others: Friday carries no outdoor block, and Sunday's is a morning one.
+That is why `outputs/satisfaction-metrics.md` grades Alex's heat need on two days
+rather than four.
 `HC-1` binds venue choice on every day and never the clock. Robin's rest need floors one
 slow afternoon on a full day.
 

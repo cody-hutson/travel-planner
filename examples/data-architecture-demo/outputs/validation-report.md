@@ -47,7 +47,7 @@ declared, not passed.
 
 | Check | Status | Critical | Warning | Note |
 |-------|--------|----------|---------|------|
-| Venue deduplication | pass | 0 | 0 | 0 |
+| Venue deduplication | pass | 0 | 0 | 1 |
 | Hours / closure matrix | not exercised — no opening hours in this fixture | 0 | 0 | 0 |
 | Holiday closure cascades | not exercised — placeholder destination, no calendar | 0 | 0 | 0 |
 | Reservation availability | not exercised — no real bookings | 0 | 0 | 0 |
@@ -59,23 +59,23 @@ declared, not passed.
 | Profile-privacy non-publication (fail-closed) | pass | 0 | 0 | 0 |
 | Status integrity (protected events + needs-booking) | pass | 0 | 1 | 1 |
 | Satisfaction metrics (needs-compliance + coverage report) | pass | 0 | 0 | 1 |
-| Bailout completeness | pass | 0 | 0 | 0 |
+| Bailout completeness | not exercised — no day reaches the check's 3+ hour outdoor-block trigger | 0 | 0 | 0 |
 | Location-link completeness (every event has a Maps link) | not exercised — no external URLs by design | 0 | 0 | 0 |
 | Structural integrity | pass on both anchor limbs; alternative-detail limb not exercised | 0 | 0 | 0 |
 | Experiential arc (stacked-peak + rest-need floors) | pass | 0 | 0 | 0 |
 | Nightlife coverage (applicable nights; no Critical tier) | pass | 0 | 1 | 0 |
 
-**Total issues requiring action:** 2 Warning, 2 Note — the Critical total is carried in
+**Total issues requiring action:** 2 Warning, 3 Note — the Critical total is carried in
 frontmatter as `critical-count` and is not restated here. The per-check `Critical`
 column above stays: it is a *per-check* count, where the frontmatter carries the
 *artifact-level aggregate*. Parts and aggregate are different facts with one home each.
 
 **Each count sits on the check that produced it**, which is what makes the column a
 part rather than a second aggregate: `[W1]` and `[N1]` are *Status integrity*, `[N2]`
-is *Satisfaction metrics*, `[W2]` is *Nightlife coverage*. *Structural integrity*
-carries none — its two anchor limbs pass and its third is declared unexercised, which
-is a status and not a finding. A count parked on the wrong check reads as a defect in
-a check that never raised one.
+is *Satisfaction metrics*, `[N3]` is *Venue deduplication*, `[W2]` is *Nightlife
+coverage*. *Structural integrity* carries none — its two anchor limbs pass and its third
+is declared unexercised, which is a status and not a finding. A count parked on the
+wrong check reads as a defect in a check that never raised one.
 
 ---
 
@@ -129,6 +129,18 @@ number is not an independent judgement, it is a count of what follows.
   is declared in `outputs/traveler-model.md`, so it reads as unknown rather than as a
   gap in the coverage table.
 
+**[N3] — Research markers still `unminted` on venues the registry already holds**
+- **Finding:** three entries in the second dated section of `outputs/activities-list.md`
+  — *Tasca do Bairro*, *Casa de Pasto Central* and *Padaria São Bento* — carry
+  `venue: unminted` while `outputs/links-reference.md` already holds `ven-3c17`,
+  `ven-a90d` and `ven-5e6b` for those places.
+- **Context:** this is the mint window, not a defect. The hub minted at the pass that
+  wrote the registry; the activities spoke resolves its own markers on its **next** run,
+  which has not happened. `agents/06-validator.md` § *What You Audit* grades exactly this
+  state as **a Note naming the entry and its file, never a Critical** — the marker is a
+  declared absence, and the entries are listed as `unresolved` above so the cap is
+  counted over a population nobody assumed.
+
 ---
 
 ## Venue Deduplication Report
@@ -138,17 +150,62 @@ number is not an independent judgement, it is a count of what follows.
 | `ven-b5e0` | Café Majestic | 2 | Thu 14, Sat 16 | Bailout Thu / Bailout Sat | OK — at the cap, same role both days |
 | `ven-1d9f` | Casa do Livro | 1 | Sat 16 | Alt Sat | OK |
 | *(the other ten keys)* | — | 1 each | — | Anchor | OK |
+| `unresolved` | Tasca do Bairro — `outputs/activities-list.md` | 0 | — | — | OK — see [N3] |
+| `unresolved` | Casa de Pasto Central — `outputs/activities-list.md` | 0 | — | — | OK — see [N3] |
+| `unresolved` | Padaria São Bento — `outputs/activities-list.md` | 0 | — | — | OK — see [N3] |
+| `unresolved` | A third candidate, considered and not carried forward — `outputs/rooftop-sunset-bars.md` | 0 | — | — | OK — never enumerated |
 
 One row per key, not per display name. **No key appears as an anchor on one day and an
-alternative on another**, and no key exceeds two appearances. An `unresolved` row would
-be a mention no key reached — it would count as its own venue and name the file its
-marker sits in. There are three such mentions in this tree, in the second dated section
-of `outputs/activities-list.md`; they resolve to `ven-3c17`, `ven-a90d` and `ven-5e6b`
-in the registry, so each counts once rather than twice, and the cap holds either way
-because each of those venues appears exactly once.
+alternative on another**, and no key exceeds two appearances.
+
+**The four `unresolved` rows are required, not decorative.** `agents/06-validator.md`
+§ *What You Audit* states it in terms: a research entry whose marker still reads
+`venue: unminted` is **not yet joined** — *count it as its own venue, so the cap
+over-counts rather than passing silently on a merge nobody made, and show it in the
+deduplication report as unresolved*. The rule is keyed on the **marker's** state, not on
+whether the registry happens to hold a row for that venue, so an entry is listed here
+until its own writer resolves it. Each row names the file its marker sits in, which is
+what makes it actionable.
+
+**Their appearance count is 0 because a research mention is not a placement.** The
+placements those three entries researched are already in the registry under `ven-3c17`,
+`ven-a90d` and `ven-5e6b`, each appearing exactly once — so the cap holds on either
+reading, and listing the mentions separately is what keeps that a *measurement* rather
+than an assumption that the mention and the registry row are the same venue.
+
+**The fourth row is a different case and is not [N3].** The third candidate in
+`outputs/rooftop-sunset-bars.md` was never carried forward, so it never entered the
+hub's enumeration and no key was ever minted for it. It is unresolved permanently and
+correctly — there is nothing for its writer to converge on, which is why it carries no
+Note.
 
 Proximity venue usage (hotel-neighborhood): not exercised — this fixture records no
 walking distances, so no venue can be classed as hotel-proximate.
+
+---
+
+## Bailout Report
+
+**Not exercised, and the reason is a property of the plan rather than of the fixture's
+depth.** `agents/06-validator.md` § *What You Audit* triggers this check on **every day
+with a 3+ hour outdoor block**. This plan's outdoor blocks run **~1h15** (Thu, the
+gardens), **~45 minutes** (Sat, the viewpoint) and **~1h30** (Sun, the river walk), so
+**no day reaches the trigger and the population the check grades is empty.** A pass over
+an empty population is vacuous, not passing — it would report a bailout floor as held on
+a plan that never asked it to hold, which is the same defect as the clean bill this
+report's earlier version gave a plan with no meal on any day.
+
+**The named bailouts this plan does carry are a different requirement, and they are not
+this check's evidence.** Café Majestic is named on Thu 14 and Sat 16 because **`HC-2`**
+requires an afternoon outdoor block to be moved, shaded **or** given a named indoor
+escape — a constraint on heat, satisfied here by both limbs at once. Reading those two
+named bailouts as satisfying a 3+ hour duration floor would be borrowing one rule's
+evidence for another rule's verdict, which is the substitution the *Location-Link Report*
+below refuses in the same terms.
+
+**A reader should not take the emptiness as a standing property.** On a real trip a
+single 3+ hour outdoor block puts this check back in force for that day, and a day
+carrying one with no named escape is a Critical.
 
 ---
 
@@ -301,12 +358,18 @@ calendar to read.
 
 - **Validated:** carried in frontmatter as `generated`; not restated here.
 - **Itinerary version audited:** v2.
-- **Items confirmed clean:** 9 checks passed; 8 declared not exercised with their
+- **Items confirmed clean:** 8 checks passed; 9 declared not exercised with their
   reason; 0 Critical.
-- **Items requiring human verification:** the eight not-exercised checks above. Each is
-  blocked on an input this fixture declines to carry by design — external links, hours,
-  prices, real bookings, a real destination — and none of them is blocked on a judgement
-  a validator could have made from what is here.
+- **Items requiring human verification:** the nine not-exercised checks above. **Eight
+  are blocked on an input this fixture declines to carry by design** — external links,
+  hours, prices, real bookings, a real destination — and none of those is blocked on a
+  judgement a validator could have made from what is here. **The ninth,
+  *Bailout completeness*, is a different kind of not-exercised and is worth telling
+  apart:** every input it needs is present, and the check simply has an **empty
+  population** — no day in this plan carries the 3+ hour outdoor block that triggers it.
+  A missing input and an empty population are both correctly reported as not-exercised
+  and are repaired by opposite things: one by deepening the fixture, the other only by a
+  plan that reaches the trigger.
 
 ---
 

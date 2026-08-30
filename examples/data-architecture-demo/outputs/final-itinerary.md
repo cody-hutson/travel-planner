@@ -71,8 +71,8 @@ are walk-ins — so none of them belongs on a checklist.
 Three travellers, one origin, one booking, four days in Porto from Thursday 14 to
 Sunday 17 May 2026. The party is on foot the whole trip and every approach is level or
 lift-served, because `HC-1` bounds it. `HC-2` keeps unshaded outdoor blocks out of the
-13:00–16:00 window, and Café Majestic stands as the named indoor escape for both days
-that carry one. `DH-1` puts no shellfish on any group meal, and every day now carries
+13:00–16:00 window — **no day places one inside it** — and Café Majestic stands as the
+named indoor escape on the two days carrying an afternoon outdoor block. `DH-1` puts no shellfish on any group meal, and every day now carries
 an anchor meal for it to bind on. One synthesis has run and one patch has been applied;
 one booking remains open.
 

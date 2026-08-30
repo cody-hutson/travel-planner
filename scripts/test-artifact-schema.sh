@@ -363,28 +363,62 @@ echo "EN — the universal enums: one home, and every other home byte-identical 
 EN_DOC="$ROOT/$VA_ARCH_DOC"
 
 # The universal-frontmatter block's enum-valued keys. Derived, never listed.
-en_keys() {
+#
+# ── WHY THE FENCE IS RE-JOINED BEFORE IT IS MATCHED, AND WHY THAT IS THE WHOLE POINT ──
+# Read this before "simplifying" the accumulator back into a single per-line match.
+#
+# The key set is DERIVED (see the group header above), which is what lets a fourth enum
+# field be picked up with no edit here. The derivation's failure mode is that it can only
+# ever NARROW: a key is discovered by matching `key: <a|b|c>` on ONE line, so a one-line
+# MARKDOWN REFLOW of the declaration block — wrapping a long pipe-list across two lines —
+# drops that key from the set entirely. The suite then emits FEWER assertions, every one
+# green, exit 0, with that enum's homes across the tracked tree checked by NOTHING. A
+# coverage floor that can silently drop is not a floor, and nothing in EN2 could tell the
+# two greens apart: one key checked and reported, one key never in the population.
+#
+# Pinning an expected COUNT here would close it, and is rejected: a literal count is a
+# second source of truth that a legitimate fourth enum turns red for being right. So the
+# derivation is made reflow-IMMUNE instead of merely counted. A line holding an unclosed
+# `<` is held and joined to its continuation, and the whitespace a reflow introduces
+# around the `|` delimiters is normalized away — so a reflowed block yields the IDENTICAL
+# key set and the IDENTICAL canonical payload rather than a shorter one. EN0b below is the
+# control arm that proves it, built by reflowing the real document at runtime.
+en_fence_lines() {
   awk '
     $0 ~ /^### 4\.4 / { insec = 1; next }
     insec && (/^### / || /^## /) { insec = 0 }
-    insec && $0 == "```yaml" { infence = 1; next }
-    infence && $0 == "```" { infence = 0; next }
-    infence && match($0, /^[a-z][a-z0-9-]*:[^<>]*<[^<>]*\|[^<>]*>/) { k = $0; sub(/:.*$/, "", k); print k }
-  ' "$EN_DOC"
+    insec && $0 == "```yaml" { infence = 1; pend = ""; next }
+    infence && $0 == "```" {
+      if (pend != "") { gsub(/[ \t]*\|[ \t]*/, "|", pend); print pend }
+      infence = 0; pend = ""; next
+    }
+    infence {
+      line = $0
+      if (pend != "") { sub(/^[ \t]+/, "", line); pend = pend " " line }
+      else { pend = line }
+      # An unclosed `<` is a wrapped declaration, not a finished one: hold it and join
+      # the continuation. Anything else is complete as written and is emitted now.
+      if (index(pend, "<") > 0 && index(pend, ">") == 0) next
+      gsub(/[ \t]*\|[ \t]*/, "|", pend)
+      print pend; pend = ""
+    }
+  ' "$1"
+}
+
+en_keys() {
+  en_fence_lines "${1:-$EN_DOC}" | awk '
+    match($0, /^[a-z][a-z0-9-]*:[^<>]*<[^<>]*\|[^<>]*>/) { k = $0; sub(/:.*$/, "", k); print k }
+  '
 }
 
 # en_canonical <key> — the member list, from the universal-frontmatter block and nowhere
 # else. One line per declaration site, so the caller can assert the site is singular.
 en_canonical() {
-  awk -v key="$1" '
-    $0 ~ /^### 4\.4 / { insec = 1; next }
-    insec && (/^### / || /^## /) { insec = 0 }
-    insec && $0 == "```yaml" { infence = 1; next }
-    infence && $0 == "```" { infence = 0; next }
-    infence && index($0, key ":") == 1 {
+  en_fence_lines "${2:-$EN_DOC}" | awk -v key="$1" '
+    index($0, key ":") == 1 {
       if (match($0, /<[^<>]*\|[^<>]*>/)) print substr($0, RSTART + 1, RLENGTH - 2)
     }
-  ' "$EN_DOC"
+  '
 }
 
 # en_probe <key> <file>... — "<file>\t<line>\t<payload>" per home. ONE awk process over the
@@ -426,6 +460,48 @@ elif [ "$EN_NKEYS" -gt 0 ] && [ "$EN_NFILES" -gt 0 ]; then
 else
   FAIL "EN0: no enum-valued key was extracted from the universal-frontmatter block ($EN_NKEYS), or the tracked population is empty ($EN_NFILES) — every EN verdict below would be over an empty set"
   EN_OK=0
+fi
+
+# EN0b — THE CONTROL ARM FOR THE DERIVATION ITSELF, and it is the one this group was
+# missing. Every arm below asserts that the HOMES agree with the canonical; none of them
+# can see the key set SHRINK, because a key that leaves the population takes its own
+# assertion with it. So the derivation is re-run against a REFLOWED rendering of the real
+# document, built at runtime by wrapping each declaration's pipe-list across two lines —
+# the exact edit a markdown formatter makes — and the two key sets must be IDENTICAL.
+#
+# The reflow is generated FROM the document, never from a literal: a fabricated fixture
+# would stop tracking the block the moment a fourth enum was added to it.
+if [ "$EN_OK" -eq 1 ]; then
+  EN_RF="$WORK/en-reflowed.md"
+  awk '
+    infence && match($0, /^[a-z][a-z0-9-]*:[^<>]*<[^<>]*\|[^<>]*>/) {
+      # Wrap at the LAST delimiter, so the payload spans two lines exactly as a
+      # formatter would leave it.
+      p = $0
+      if (match(p, /\|[^<>|]*>/)) {
+        printf "%s|\n            %s\n", substr(p, 1, RSTART - 1), substr(p, RSTART + 1)
+        next
+      }
+    }
+    { print }
+    $0 == "```yaml" { infence = 1 }
+    $0 == "```" { infence = 0 }
+  ' "$EN_DOC" > "$EN_RF"
+  EN_RF_KEYS="$(en_keys "$EN_RF")"
+  EN_RF_N="$(printf '%s\n' "$EN_RF_KEYS" | grep -c '[^[:space:]]')"
+  EN_RF_DIFF=0
+  [ "$EN_RF_KEYS" = "$EN_KEYS" ] || EN_RF_DIFF=1
+  # The mutation must be asserted to have LANDED, or an identical key set proves only
+  # that the reflow builder did nothing.
+  EN_RF_MUT=0
+  cmp -s "$EN_DOC" "$EN_RF" || EN_RF_MUT=1
+  if [ "$EN_RF_MUT" -eq 1 ] && [ "$EN_RF_DIFF" -eq 0 ] && [ "$EN_RF_N" -eq "$EN_NKEYS" ]; then
+    PASS "EN0b: control — the declaration block was REFLOWED at runtime (the mutation is asserted to have landed) and the same derivation returns the IDENTICAL $EN_RF_N key(s). A markdown reflow cannot silently narrow this group's population, which is the one failure the arms below are structurally unable to see"
+  elif [ "$EN_RF_MUT" -eq 0 ]; then
+    FAIL "EN0b: the reflow control produced a byte-identical document, so it asserted nothing — the builder no longer matches the declaration block's shape"
+  else
+    FAIL "EN0b: reflowing the declaration block CHANGED the derived key set ($EN_NKEYS -> $EN_RF_N). A one-line wrap silently drops an enum from this group's population and every home it had is then checked by nothing. Derived: [$(printf '%s' "$EN_RF_KEYS" | tr '\n' ' ')] against [$(printf '%s' "$EN_KEYS" | tr '\n' ' ')]"
+  fi
 fi
 
 if [ "$EN_OK" -eq 1 ]; then
@@ -895,6 +971,349 @@ if [ "$PB_OK" -eq 1 ]; then
     PASS "PB3: control — dropping a fence row makes the same comparator report an unmatched § 1.1 class ($PB_C1), and adding a fabricated row makes it report an unmatched fence row ($PB_C2). Both mutations were asserted to have landed, so PB2's zeroes are measurements in both directions rather than one"
   else
     FAIL "PB3: the control arm did not behave (mutations-landed=$PB_MUT dropped-row-detected=$PB_C1 added-row-detected=$PB_C2) — PB2's zeroes have no control behind them"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FW — the frozen regression witness is held by an ASSERTION, not by convention.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# reference/data-architecture.md § 10 constraint 2 declares the worked example under
+# examples/tokyo-2026/ a byte-identical regression witness. Until this group shipped,
+# NOTHING in the repository enforced that. No enforcement file referenced the directory
+# at all, and none of the witness's files carries a schema-version — so the validating
+# gate SELECTS them and then SKIPS them under the tolerant read. The witness was neither
+# validated nor frozen, and an edit to it passed every required suite green. The freeze
+# was real only as a review constraint, which is a person remembering, not a gate.
+#
+# ── WHY A CONTENT PIN AND NOT A DIFF AGAINST THE BASE BRANCH ─────────────────────
+# A branch-versus-base diff is the obvious mechanism and it was rejected on two grounds,
+# both checkable. FIRST: this suite's workflow checks out at the default depth, so the
+# base branch's history is NOT in the CI working copy — the diff would need either a
+# deeper fetch or a network call, and a freeze that depends on fetching a moving ref at
+# an arbitrary time is a freeze with a race in it. SECOND, and the one that decides it:
+# a diff against the base goes EMPTY the moment this branch merges, so the assertion
+# would become tautological on exactly the commit that made it permanent. A content pin
+# read from the corpus keeps its teeth forever and needs no history at all.
+#
+# The digest is git's own content address (`git hash-object`), so byte-for-byte is what
+# is literally compared, with no external hashing tool and no second tree to diff.
+#
+# ── THE DECLARATION LIVES IN THE DOCUMENT, NOT IN THIS FILE ──────────────────────
+# The pinned rows are read from the `frozen-witness-digest` fence in the architecture
+# document — the same declaration-in-the-corpus mechanism § 5.6 already uses for the
+# non-publishable class. A digest list held HERE would be a second source of truth: the
+# document would claim a freeze this file enforced against its own copy, free to drift.
+# The path set is compared in BOTH directions, so a file added under the witness or
+# deleted from it fails as loudly as a file whose bytes moved.
+#
+# ── WHEN THE WITNESS LEGITIMATELY HAS TO CHANGE ──────────────────────────────────
+# Edit the file and re-pin its row in the SAME commit; the diff then carries the content
+# change and the re-pin side by side, which is the visibility the freeze exists to buy.
+# A content change arriving WITHOUT its re-pin turns this group red. The document's own
+# § 10 states this too, so a reader who meets the red is not stuck.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "FW — the frozen regression witness is content-pinned by the corpus"
+
+FW_DOC="$ROOT/$VA_ARCH_DOC"
+
+# fw_rows — the declared (digest, path) pairs. Read from the fence and nowhere else.
+fw_rows() {
+  awk '
+    $0 == "```frozen-witness-digest" { infence = 1; next }
+    infence && $0 == "```" { infence = 0; next }
+    infence {
+      line = $0
+      sub(/^[ \t]+/, "", line); sub(/[ \t]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, f, /[ \t]+/)
+      if (n >= 2) printf "%s\t%s\n", f[1], f[2]
+    }
+  ' "$FW_DOC"
+}
+
+# fw_compare <base-dir> — "<rows>\t<mismatched>\t<missing>\t<detail>". ONE comparator,
+# driven by both the real arm and the control arm below. A control that ran different
+# code from the assertion would prove nothing about the assertion.
+fw_compare() {
+  local base="$1" nrow=0 nbad=0 nmiss=0 detail="" d p actual
+  while IFS=$'\t' read -r d p; do
+    [ -n "$p" ] || continue
+    nrow=$((nrow+1))
+    if [ ! -r "$base/$p" ]; then nmiss=$((nmiss+1)); detail="$detail $p(absent)"; continue; fi
+    actual="$(git hash-object -- "$base/$p" 2>/dev/null)"
+    [ "$actual" = "$d" ] || { nbad=$((nbad+1)); detail="$detail $p"; }
+  done <<EOF
+$(fw_rows)
+EOF
+  printf '%s\t%s\t%s\t%s\n' "$nrow" "$nbad" "$nmiss" "$detail"
+}
+
+FW_OK=1
+FW_PAIRS="$(fw_rows)"
+FW_NROW="$(printf '%s\n' "$FW_PAIRS" | grep -c '[^[:space:]]')"
+if [ ! -r "$FW_DOC" ]; then
+  FAIL "FW0: $VA_ARCH_DOC is not readable, so the freeze declaration could not be read. Not a skip and not a pass"
+  FW_OK=0
+elif [ "$FW_NROW" -gt 0 ]; then
+  PASS "FW0: the freeze declaration in $VA_ARCH_DOC § 10 pins $FW_NROW file(s); this suite holds no copy of any digest"
+else
+  FAIL "FW0: the \`frozen-witness-digest\` fence yielded ZERO rows. An empty declaration is a freeze that asserts nothing, and every verdict below would be over the empty set — this fails rather than passing quietly"
+  FW_OK=0
+fi
+
+# FW1 — the pinned path set and the tracked path set are the same set. Derived from the
+# declared paths' common directory prefix, so this file names no directory of its own.
+if [ "$FW_OK" -eq 1 ]; then
+  FW_ROOT="$(printf '%s\n' "$FW_PAIRS" | awk -F'\t' '
+    NF > 1 {
+      p = $2; sub(/\/[^\/]*$/, "", p)
+      if (pref == "") { pref = p; next }
+      while (pref != "" && index(p "/", pref "/") != 1) sub(/\/[^\/]*$/, "", pref)
+    }
+    END { print pref }')"
+  FW_TRACKED="$(cd "$ROOT" && git ls-files "$FW_ROOT" 2>/dev/null | sort)"
+  FW_DECL="$(printf '%s\n' "$FW_PAIRS" | awk -F'\t' 'NF>1{print $2}' | sort)"
+  FW_NTRK="$(printf '%s\n' "$FW_TRACKED" | grep -c '[^[:space:]]')"
+  FW_ONLY_TRK="$(comm -23 <(printf '%s\n' "$FW_TRACKED") <(printf '%s\n' "$FW_DECL") | grep -c '[^[:space:]]')"
+  FW_ONLY_DEC="$(comm -13 <(printf '%s\n' "$FW_TRACKED") <(printf '%s\n' "$FW_DECL") | grep -c '[^[:space:]]')"
+  if [ -n "$FW_ROOT" ] && [ "$FW_NTRK" -gt 0 ] && [ "$FW_ONLY_TRK" -eq 0 ] && [ "$FW_ONLY_DEC" -eq 0 ]; then
+    PASS "FW1: the declaration covers the witness EXACTLY — $FW_NROW pinned against $FW_NTRK tracked under '$FW_ROOT/', compared in both directions. A file added to the witness is as much a failure as one deleted"
+  else
+    FAIL "FW1: the pinned set and the tracked set differ under '$FW_ROOT/' (tracked=$FW_NTRK pinned=$FW_NROW tracked-but-unpinned=$FW_ONLY_TRK pinned-but-untracked=$FW_ONLY_DEC)"
+    FW_OK=0
+  fi
+fi
+
+# FW2 — the assertion itself.
+if [ "$FW_OK" -eq 1 ]; then
+  FW_R="$(fw_compare "$ROOT")"
+  FW_N="$(printf '%s' "$FW_R" | cut -f1)"; FW_BAD="$(printf '%s' "$FW_R" | cut -f2)"
+  FW_MISS="$(printf '%s' "$FW_R" | cut -f3)"; FW_DET="$(printf '%s' "$FW_R" | cut -f4)"
+  if [ "$FW_N" -gt 0 ] && [ "$FW_BAD" -eq 0 ] && [ "$FW_MISS" -eq 0 ]; then
+    PASS "FW2: all $FW_N file(s) of the frozen witness are byte-identical to their pinned content address — the freeze is now asserted on every push rather than held as a review constraint"
+  else
+    FAIL "FW2: the frozen witness has MOVED ($FW_BAD of $FW_N mismatched, $FW_MISS absent):$FW_DET — if the change was deliberate, re-pin those rows in reference/data-architecture.md § 10 in this same commit"
+  fi
+fi
+
+# FW3 — THE MUST-FIRE ARM. The witness is unmodified today, so FW2 green proves nothing
+# on its own: a comparator that always returned zero would look exactly the same. A copy
+# is mutated by one appended byte and run through the SAME comparator, which must report
+# exactly that one file and must still match every other. Both limbs matter — a detector
+# that flagged everything would satisfy the first and fail the second.
+if [ "$FW_OK" -eq 1 ]; then
+  FW_MUT_DIR="$WORK/fw-mutated"
+  mkdir -p "$FW_MUT_DIR"
+  ( cd "$ROOT" && git ls-files "$FW_ROOT" 2>/dev/null | while IFS= read -r f; do
+      mkdir -p "$FW_MUT_DIR/$(dirname "$f")" && cp "$ROOT/$f" "$FW_MUT_DIR/$f"
+    done )
+  FW_VICTIM="$(printf '%s\n' "$FW_DECL" | head -1)"
+  printf '\n' >> "$FW_MUT_DIR/$FW_VICTIM"
+  FW_LANDED=0
+  cmp -s "$ROOT/$FW_VICTIM" "$FW_MUT_DIR/$FW_VICTIM" || FW_LANDED=1
+  FW_CR="$(fw_compare "$FW_MUT_DIR")"
+  FW_CBAD="$(printf '%s' "$FW_CR" | cut -f2)"; FW_CMISS="$(printf '%s' "$FW_CR" | cut -f3)"
+  if [ "$FW_LANDED" -eq 1 ] && [ "$FW_CBAD" -eq 1 ] && [ "$FW_CMISS" -eq 0 ]; then
+    PASS "FW3: control — one byte appended to '$FW_VICTIM' in a temp copy (the mutation is asserted to have landed) and the same comparator reports EXACTLY 1 of $FW_N mismatched, with the other $((FW_N - 1)) still matching. FW2's zero is a measurement, and this suite demonstrates on this commit that the freeze can still fail"
+  else
+    FAIL "FW3: the must-fire arm did not behave (mutation-landed=$FW_LANDED detected=$FW_CBAD expected=1 absent=$FW_CMISS) — FW2's zero has no control behind it and cannot be read as a freeze"
+  fi
+  # FW3b — the repository was never written to. A freeze assertion that mutated the thing
+  # it freezes would be the defect, not the guard.
+  FW_RR="$(fw_compare "$ROOT" | cut -f2)"
+  if [ "$FW_RR" -eq 0 ]; then
+    PASS "FW3b: the control mutated a temp copy only — the witness in the repository is still byte-identical to its pin after the arm above ran"
+  else
+    FAIL "FW3b: the witness in the REPOSITORY differs from its pin after the control arm ran — the control wrote into the tree it is meant to be measuring"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group VI — the venue-identity split rule has a witness.
+#
+# ── THE INVARIANT ────────────────────────────────────────────────────────────────
+# agents/05-hub-planner.md § "Step 1 — links-reference.md" fixes how two mentions become
+# one venue: five ordered rungs, stopped at the first that decides, biased toward
+# SPLITTING an uncertain pair. Rung 2 decides on a resolved location; rung 3 on a
+# byte-identical maps URL as evidence of rung 2; rung 4 demotes every name-shaped signal
+# to corroborating; rung 5 is the catch-all — where nothing above decides, mint SEPARATE
+# keys and name the pair in OPEN DECISIONS.
+#
+# So a MERGE is a claim, and this group asserts the claim carries its warrant:
+#
+#   where one `ven-` key is bound to more than one distinct display string, EITHER
+#   location evidence appears on the mentions' own entries, OR the pair is declared
+#   in OPEN DECISIONS.
+#
+# ── WHY IT IS WORTH ASSERTING AND NOT MERELY STATING ─────────────────────────────
+# The two errors are not symmetric and only one of them is visible. A wrong SPLIT leaves
+# two rows a reader can see. A wrong MERGE deletes a place from the plan and leaves
+# nothing behind — and rung 1 then freezes it, because a key already carried decides on
+# every later pass. An unwarranted merge is therefore the one identity error that gets
+# quieter over time, which is exactly the class a person re-reading prose will not catch.
+#
+# ── THE PROBE READS BINDINGS, NEVER NAMES ───────────────────────────────────────
+# A mention is discovered by its `artifact-entry` fence or by a declared key column — the
+# two marker forms § 4.5 rule 2 assigns — never by matching a display string. Keyed on
+# names, this group would define its population as the set of pairs that already agree,
+# which is the tautology EN's own header warns about in the same terms.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "VI — a merged venue key carries the warrant the identity procedure requires"
+
+# vi_bindings <file>... — "<key>\t<display>\t<file>\t<located>\t<is-source>" per mention.
+#
+# `located` is 1 when the mention's own entry carries a declared Location line — the
+# rung-2 evidence. `is-source` separates the two marker forms, and the separation is
+# load-bearing rather than tidy: a fenced `artifact-entry` in a research list is a SOURCE
+# mention, one of the things the hub had to join, so it is what must carry the evidence.
+# A declared key column in the registry or the matrix is the hub's OUTPUT of that same
+# decision. Counting a table row as evidence would let a merge warrant ITSELF — the guard
+# would read the hub's conclusion back as its own premise and go green on every merge.
+# Table rows still contribute their DISPLAY STRING, because the divergence across
+# artifacts is exactly what the surrogate key exists to absorb.
+vi_bindings() {
+  [ "$#" -gt 0 ] || return 0
+  awk '
+    function flush() {
+      if (pk != "") { printf "%s\t%s\t%s\t%d\t1\n", pk, ph, pf, loc; pk = "" }
+    }
+    FNR == 1 { flush(); heading = ""; loc = 0; infence = 0 }
+    /^#{2,6}[ \t]/ {
+      flush(); h = $0; sub(/^#+[ \t]*/, "", h); sub(/[ \t]+$/, "", h)
+      heading = h; loc = 0; next
+    }
+    $0 ~ /^```artifact-entry[ \t]*$/ { infence = 1; next }
+    infence && $0 ~ /^```[ \t]*$/ { infence = 0; next }
+    infence && $0 ~ /^venue:[ \t]*ven-[0-9a-f]+[ \t]*$/ {
+      k = $0; sub(/^venue:[ \t]*/, "", k); sub(/[ \t]+$/, "", k)
+      pk = k; ph = heading; pf = FILENAME; next
+    }
+    # A declared key column: | `ven-xxxx` | Display | ... — a display string, never
+    # evidence. See the header above.
+    /^\|/ {
+      n = split($0, c, "|")
+      if (n >= 3) {
+        a = c[2]; b = c[3]
+        gsub(/^[ \t`]+|[ \t`]+$/, "", a); gsub(/^[ \t]+|[ \t]+$/, "", b)
+        if (a ~ /^ven-[0-9a-f]+$/ && b != "" && b != "-" && b != "—") {
+          printf "%s\t%s\t%s\t0\t0\n", a, b, FILENAME
+        }
+      }
+    }
+    {
+      l = $0; sub(/^[ \t]*[-*][ \t]+/, "", l); gsub(/\*\*/, "", l)
+      if (l ~ /^[Ll]ocation:[ \t]*[^ \t]/) loc = 1
+    }
+    END { flush() }
+  ' "$@"
+}
+
+# vi_violations <bindings> <open-decisions-text> — one line per key whose merge is
+# unwarranted. The same evaluator drives the real arm and the control arm below.
+#
+# The OPEN DECISIONS limb is applied HERE IN SHELL and deliberately not through an awk
+# `-v` assignment. That text is a multi-line extract, and awk rejects an embedded newline
+# in a `-v` value: the program aborts mid-parse, the command substitution yields nothing,
+# and the caller reads ZERO violations. That is a broken probe wearing a pass, and it is
+# the exact shape this suite refuses everywhere else — so the multi-line value never
+# reaches awk at all.
+vi_violations() {
+  local cand k cline
+  cand="$(awk -F'\t' '
+    NF > 4 {
+      key = $1
+      if (!((key SUBSEP $2) in seenstr)) { seenstr[key SUBSEP $2] = 1; nstr[key]++ }
+      # Only a SOURCE mention can satisfy or fail the evidence test; a table row is the
+      # decision written down, never a warrant for it.
+      if ($5 == 1) { nsrc[key]++; if ($4 == 0) unlocated[key]++ }
+      where[key] = where[key] " " $2 "(" $3 ")"
+    }
+    END {
+      for (k in nstr) {
+        if (nstr[k] < 2) continue
+        if (unlocated[k] + 0 == 0) continue
+        printf "%s\t%d\t%d\t%s\n", k, nstr[k], unlocated[k] + 0, where[k]
+      }
+    }
+  ' <<EOF
+$1
+EOF
+)"
+  while IFS= read -r cline; do
+    [ -n "$cline" ] || continue
+    k="${cline%%$'\t'*}"
+    # A declared pair discharges the requirement — rung 5's other half.
+    if grep -qF -- "$k" <<<"$2"; then continue; fi
+    printf '%s\n' "$cline"
+  done <<EOF
+$cand
+EOF
+}
+
+VI_FILES=(); VI_NFILES=0
+while IFS= read -r vif; do
+  [ -n "$vif" ] || continue
+  if [ -r "$ROOT/$vif" ]; then VI_FILES+=("$ROOT/$vif"); VI_NFILES=$((VI_NFILES+1)); fi
+done <<EOF
+$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null)
+EOF
+
+VI_OK=1
+VI_BIND="$(vi_bindings ${VI_FILES[@]+"${VI_FILES[@]}"})"
+VI_NBIND="$(printf '%s\n' "$VI_BIND" | grep -c '[^[:space:]]')"
+VI_NKEYS="$(printf '%s\n' "$VI_BIND" | awk -F'\t' 'NF>4{print $1}' | sort -u | grep -c '[^[:space:]]')"
+VI_NSRC="$(printf '%s\n' "$VI_BIND" | awk -F'\t' 'NF>4 && $5==1{n++} END{print n+0}')"
+VI_NMULTI="$(printf '%s\n' "$VI_BIND" | awk -F'\t' 'NF>4{print $1 "\t" $2}' | sort -u | awk -F'\t' '{n[$1]++} END{c=0; for (k in n) if (n[k] > 1) c++; print c+0}')"
+# The declared-pair surface is an OPEN DECISIONS **table row**, and only a table row is
+# read. A whole-section sweep pulls in the surrounding prose — several agent prompts
+# discuss OPEN DECISIONS at length — and any key token happening to appear in that prose
+# would silently discharge a violation. Rung 5 requires the pair to be NAMED in the
+# table, so the table is the population.
+VI_OD="$(awk '
+  index($0, "OPEN DECISIONS") > 0 { insec = 1; next }
+  insec && (/^#{1,6}[ \t]/ || /^---[ \t]*$/) { insec = 0; next }
+  insec && /^\|/ { print }
+' ${VI_FILES[@]+"${VI_FILES[@]}"} 2>/dev/null)"
+
+printf '  BINDINGS: %d mention(s) over %d key(s) across %d tracked markdown file(s); %d are source mentions; %d key(s) carry more than one display string\n' \
+  "$VI_NBIND" "$VI_NKEYS" "$VI_NFILES" "$VI_NSRC" "$VI_NMULTI"
+
+if [ "$VI_NBIND" -gt 0 ] && [ "$VI_NKEYS" -gt 0 ] && [ "$VI_NSRC" -gt 0 ]; then
+  PASS "VI0: the binding probe has a NON-EMPTY population — $VI_NBIND mention(s) over $VI_NKEYS key(s), $VI_NSRC of them source mentions. Discovered by marker form, never by display string"
+else
+  FAIL "VI0: the probe found no key bindings, or no SOURCE mention among them (bindings=$VI_NBIND keys=$VI_NKEYS source=$VI_NSRC). Every verdict below would be over the empty set, and a zero here is a broken probe rather than a clean corpus"
+  VI_OK=0
+fi
+
+if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -eq 0 ]; then
+  VACUOUS "VI1: no key in this corpus is bound to more than one display string, so the split rule has nothing to grade. This is a real measurement of the tree, not a skipped group — the arm below still proves the evaluator can fail"
+elif [ "$VI_OK" -eq 1 ]; then
+  VI_BAD="$(vi_violations "$VI_BIND" "$VI_OD")"
+  VI_NBAD="$(printf '%s\n' "$VI_BAD" | grep -c '[^[:space:]]')"
+  if [ "$VI_NBAD" -eq 0 ]; then
+    PASS "VI1: all $VI_NMULTI merged key(s) carry their warrant — each is either located on every mention (rung 2) or declared in OPEN DECISIONS (rung 5). A merge with neither would be an identity claim the corpus does not support"
+  else
+    FAIL "VI1: $VI_NBAD of $VI_NMULTI merged key(s) carry NO warrant — the identity procedure's rungs 2 and 3 cannot fire without location evidence, rung 4 forbids deciding on the name, so rung 5 requires separate keys and a declared pair:"
+    printf '%s\n' "$VI_BAD" | awk -F'\t' 'NF>3 { printf "      %s: %s display string(s), %s unlocated mention(s), no OPEN DECISIONS row —%s\n", $1, $2, $3, $4 }'
+  fi
+fi
+
+# VI2 — THE MUST-FIRE ARM, and it is inside the assertion. The location lines are stripped
+# from a runtime copy of the corpus and the SAME evaluator must then report the merges as
+# unwarranted. Without it, VI1's zero and an evaluator that cannot fail are the same green.
+if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
+  VI_STRIP="$(printf '%s\n' "$VI_BIND" | awk -F'\t' 'NF>4 { printf "%s\t%s\t%s\t0\t%s\n", $1, $2, $3, $5 }')"
+  VI_C1="$(vi_violations "$VI_STRIP" "$VI_OD" | grep -c '[^[:space:]]')"
+  VI_C2="$(vi_violations "$VI_BIND" "" | grep -c '[^[:space:]]')"
+  VI_LANDED=0
+  [ "$VI_STRIP" != "$VI_BIND" ] && VI_LANDED=1
+  if [ "$VI_LANDED" -eq 1 ] && [ "$VI_C1" -ge 1 ]; then
+    PASS "VI2: control — with every mention's location evidence stripped from a runtime copy (the mutation is asserted to have landed) the same evaluator reports $VI_C1 unwarranted merge(s), and with the OPEN DECISIONS text emptied it reports $VI_C2. VI1's zero is a measurement of both limbs rather than an evaluator that cannot fail"
+  else
+    FAIL "VI2: the must-fire arm did not behave (mutation-landed=$VI_LANDED stripped-location-detected=$VI_C1 expected>=1) — VI1's verdict has no control behind it"
   fi
 fi
 
