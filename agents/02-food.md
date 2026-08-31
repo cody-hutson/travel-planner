@@ -392,8 +392,14 @@ that normalizes one of them is reading the model, not the test.
 **`Anchor-meal eligibility` is the exception that proves it:** its three tokens
 are normalized — write them exactly as the list above spells them and do not
 restyle, kebab-case or abbreviate them. `grazing/snack only` is the one the hub
-matches verbatim; `anchor-eligible` and `not convenience-format` are read by the
-validator's convenience-format anchor cap audit. The `<category>` carried inside
+matches verbatim, and `anchor-eligible` is the one the validator's
+convenience-format anchor cap audit tallies. **`not convenience-format` has no
+reader that matches the token** — nothing anywhere reads its text. What is read
+is the *presence* of the line it completes: the validator flags an entry whose
+eligibility line is missing, because a required line that is absent is an
+undeclared state. So write it to make an ordinary entry's state declared — so a
+reader can tell an ineligible venue from a forgotten marker — not because
+something matches on it. The `<category>` carried inside
 `anchor-eligible (N of 2, <category>)` is the one free-text part — name it in the
 register the *Convenience-format anchor discipline* above uses, not as a
 normalized token.
