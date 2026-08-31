@@ -79,6 +79,7 @@ named escape is a Critical.
 | Structural integrity | pass on both anchor limbs; alternative-detail limb not exercised | 0 | 0 | 0 |
 | Experiential arc (stacked-peak + rest-need floors) | pass | 0 | 0 | 0 |
 | Nightlife coverage (applicable nights; no Critical tier) | pass | 0 | 1 | 0 |
+| Convenience-format anchor cap (per category; no Critical tier) | not exercised — no outputs/food-list.md in this fixture; C6 absent on purpose | 0 | 0 | 0 |
 
 **Total issues requiring action:** 2 Warning, 3 Note — the Critical total is carried in
 frontmatter as `critical-count` and is not restated here. The per-check `Critical`
@@ -348,12 +349,12 @@ calendar to read.
 
 - **Validated:** carried in frontmatter as `generated`; not restated here.
 - **Itinerary version audited:** v2.
-- **Items confirmed clean:** 8 checks passed; 9 declared not exercised with their
+- **Items confirmed clean:** 8 checks passed; 10 declared not exercised with their
   reason; 0 Critical.
-- **Items requiring human verification:** the nine not-exercised checks above. **Eight
+- **Items requiring human verification:** the ten not-exercised checks above. **Nine
   are blocked on an input this fixture declines to carry by design** — external links,
   hours, prices, real bookings, a real destination — and none of those is blocked on a
-  judgement a validator could have made from what is here. **The ninth,
+  judgement a validator could have made from what is here. **The tenth,
   *Bailout completeness*, is a different kind of not-exercised and is worth telling
   apart:** every input it needs is present, and the check simply has an **empty
   population** — no day in this plan carries the 3+ hour outdoor block that triggers it.
