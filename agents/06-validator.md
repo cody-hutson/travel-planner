@@ -776,7 +776,23 @@ category.
 | [konbini/counter] | [N] | [1, 2] | 2 | [OK / OVER-CAP] |
 
 **Marker coverage:** [E of T entries carry an **Anchor-meal eligibility**
-line]. Entries with no line are named here, and the cap is **unverifiable**
+line]. **T is the count of fenced `artifact-entry` blocks in
+`outputs/food-list.md`** — that block is this class's declared entry selector
+(`reference/data-architecture.md` § 4.5 rule 2; `reference/schemas/food-list.md`
+→ *The entry marker*), one per entry. Count the markers. Do **not** count `###`
+headings and do **not** count entry ordinals: the marker exists precisely
+because this class carries more third-level headings than entries, and because
+an `accumulate-append` file's numbering restarts or continues across appended
+sections. **E is the subset of those same entries that carry the line.**
+Because T is fixed by the marker and not by the line, a missing line lowers E
+against an unchanged T — which is the only arrangement under which the
+`unverifiable` limb below can fire at all. Were T instead the count of entries
+carrying an eligibility line, E and T would be equal by construction, the ratio
+would read `T of T` on every file, and a missing line would make the coverage
+read *better* rather than worse. **Where the file carries entries but no
+markers at all, T is not measurable: report `unverifiable` and name the
+condition — never read a marker-less file as `0 of 0`.**
+Entries with no line are named here, and the cap is **unverifiable**
 over them. Report `no convenience-format entries declared` only when the tally
 is empty **and** every entry carries a line; report `unverifiable` when any
 line is missing. An empty tally with full coverage is a measurement; an empty
