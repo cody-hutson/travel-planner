@@ -1,7 +1,7 @@
 # ADR-008: Publish-path content guard — a value-keyed predicate on the plaintext limb
 
 - **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **three times** the same
-  day; **citation form amended a fourth time (2026-08-28)** and **a fifth time (2026-08-29)**.
+  day; **citation form amended a fourth time (2026-08-28)**, **a fifth time (2026-08-29)** and **a sixth time (2026-08-30)**.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
@@ -55,8 +55,16 @@
   form this document already used at the `Visa / entry` note. **No heading was renamed to match a
   citation**; the citations were moved to the headings. **No decision, rule, residual, coverage claim
   or exit code is changed, and none is re-opened.**
+  **Sixth amendment** — citation form only, and the last of it. Three citations of
+  `reference/data-model.md` in this document carried the bare basename where the other nine carried
+  the path: the § *Needs* citation in the Decision's non-member list, the § *Worked example — a
+  per-traveler file* citation in the derived-model paragraph, and the § *Needs* citation of the
+  third-party exception. The fourth amendment replaced their line anchors and left the path form as
+  it found it. All three now carry `reference/`, so this document names that file one way in all
+  twelve places. **No decision, rule, residual, coverage claim or exit code is changed, and none is
+  re-opened.**
   The architecture below — value-keying, the class-source seam, the 0/1/2 contract — is unchanged
-  through all five. Its **scope** is corrected, and the coverage boundary states the measured
+  through all six. Its **scope** is corrected, and the coverage boundary states the measured
   boundary rather than the intended one. Where any amendment disagreed with an earlier claim in this
   document, the claim is **corrected in place**, not softened.
 - **Deciders:** repo maintainer
@@ -181,7 +189,7 @@ entry — the heading name and the value of a line labelled `Specific:` — so e
 default-**allowed**.
 Excluded **as non-members**, and this is the whole list: the `Passport:` **label**; the `Applies to:`
 link in both its parenthesized derived form and its standalone profile form, together with the quoted
-constraint name in the derived need-line head (`data-model.md` § *Needs* — *"This is the link,
+constraint name in the derived need-line head (`reference/data-model.md` § *Needs* — *"This is the link,
 **never a copy** of the constraint text"* — its target lives in the publish-bound `trip-context.md`,
 so keying on it would abort on correct published content); a value made **entirely** of the closed
 need-category enum, which is schema vocabulary rather than a captured value; and every field of a
@@ -195,14 +203,14 @@ repository: line-anchored, it occurs 3× in `reference/data-model.md`, all three
 `templates/traveler-intake.template.md`, which governs that same profile — and **0×** in
 `agents/00-enrichment.md`, the spec that *writes* the derived model, and **0×** in
 `agents/06-validator.md`, which defines the class. The derived model's own worked example
-(`data-model.md` § *Worked example — a per-traveler file*) writes a need as
+(`reference/data-model.md` § *Worked example — a per-traveler file*) writes a need as
 `- Need → Hard Constraints "<c>" (Applies to: <n>); specific: <v>.` — a **mid-line, lowercase**
 label, 4 occurrences, none line-anchored. The guard was parsing the derived file with the profile's
 label.
 
 The deeper finding is that a third-party need's line shape is **underspecified**, and that is what
 decides the design rather than a second label. A third-party need cannot carry the first-party
-derived shape at all: `data-model.md` § *Needs* (the stated third-party exception) bars it from ever
+derived shape at all: `reference/data-model.md` § *Needs* (the stated third-party exception) bars it from ever
 escalating to a trip-level constraint or onto an `Applies to:` roster, and `agents/06-validator.md`
 § *What You Audit* → *the third-party mirror case* says it *"by design has no governing
 trip-level constraint to key to"*. So the link head and the `Applies to:` are both
