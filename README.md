@@ -22,7 +22,7 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
 | `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
-| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus three purpose-built demo fixtures |
+| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus four purpose-built demo fixtures |
 | `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
 ## Install
@@ -89,7 +89,9 @@ Each person travelling gets their own profile, copied from `templates/traveler-i
 
 The form is **self-guiding**: a ⭐-marked set of about ten fields gives a two-to-three minute first pass, and an interview appendix travels with the file — hand the whole thing to any assistant, say "help me fill this out," and it interviews you section by section and returns just the completed profile. Nothing is compulsory; a missing profile is handled as *unknown*, never as *no constraints*.
 
-Profiles carry real personal detail, so they live only in the git-ignored `trips/` working directory and are never published.
+For the shape and depth a filled profile has, read the worked pair in [`examples/data-architecture-demo/travelers/`](examples/data-architecture-demo/travelers/) — [`alex.md`](examples/data-architecture-demo/travelers/alex.md) and [`robin.md`](examples/data-architecture-demo/travelers/robin.md). They carry the template's own sections and field labels, the needs-vs-desires split worked through rather than described, and all three priority tiers — anchor, wish, nice-to-have — so you can hold a draft up against a finished one before the pipeline ever reads it.
+
+Your own profiles carry real personal detail, so they live only in the git-ignored `trips/` working directory and are never published. The worked pair above is the other case — invented fixture people, carrying no real personal detail to withhold — and both files open by saying so.
 
 ### Verify
 
