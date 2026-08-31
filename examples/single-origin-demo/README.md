@@ -53,9 +53,9 @@ Under the rule the table is **deleted**, not left in place with three identical 
 The census is what the deletion is not allowed to lose. `2 asserted` is Mira and Ravi,
 who each said they were on the group's arrangements. `1 assumed` is Tess, who
 *inherits* the trip-level window rather than having agreed to it — so anything derived
-from Tess's presence on a given day is an assumption and has to be named as one. Both
-travelers end up with the same dates; only one of them consented to them, and the two
-counts are how a reader still knows that after the table is gone.
+from Tess's presence on a given day is an assumption and has to be named as one. All
+three travelers end up with the same dates; only two of them consented to them, and
+the two counts are how a reader still knows that after the table is gone.
 
 **What would break the collapse.** A traveler who *named* an origin — even DEN, this
 trip's own — would classify `ASSERTED-DIFFERENT` and **pin** it. The precondition

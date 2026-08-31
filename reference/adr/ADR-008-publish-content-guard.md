@@ -60,9 +60,8 @@
   the path: the § *Needs* citation in the Decision's non-member list, the § *Worked example — a
   per-traveler file* citation in the derived-model paragraph, and the § *Needs* citation of the
   third-party exception. The fourth amendment replaced their line anchors and left the path form as
-  it found it. All three now carry `reference/`, so this document names that file one way in all
-  twelve places. **No decision, rule, residual, coverage claim or exit code is changed, and none is
-  re-opened.**
+  it found it. All three now carry `reference/`, so this document names that file one way throughout.
+  **No decision, rule, residual, coverage claim or exit code is changed, and none is re-opened.**
   The architecture below — value-keying, the class-source seam, the 0/1/2 contract — is unchanged
   through all six. Its **scope** is corrected, and the coverage boundary states the measured
   boundary rather than the intended one. Where any amendment disagreed with an earlier claim in this

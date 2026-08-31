@@ -1656,8 +1656,8 @@ fi
 # 21 and 320. A guard pinned to a line number would have been wrong before it was written,
 # so every surface here is discovered by its MARKUP SHAPE and the line number is an OUTPUT
 # of that discovery rather than an input to it. One pair of functions drives the real arms
-# and all ten control arms, the vi_bindings/vi_violations idiom above: an evaluator that is
-# not the one under test proves nothing about the one that ships.
+# and all thirteen control arms, the vi_bindings/vi_violations idiom above: an evaluator
+# that is not the one under test proves nothing about the one that ships.
 #
 # ── AR3 IS NOT FALSIFIED, AND THAT IS GRADED RATHER THAN CLAIMED ────────────────
 # AR3 asserts that NO templates/*.template.md reaches the selector, because a template's
@@ -1927,7 +1927,7 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
   ST_NVIOL="$(printf '%s\n' "$ST_VIOL" | grep -c '[^[:space:]]')"
   if [ "$ST_NVIOL" -eq 0 ]; then
-    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the ten CTL-ST arms below show this same evaluator failing on eight single-surface mutations and staying silent on two edits that change no surface"
+    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the thirteen CTL-ST arms below show this same evaluator failing on eleven single-surface mutations and staying silent on two edits that change no surface"
   else
     FAIL "ST1: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
     printf '%s\n' "$ST_VIOL" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
@@ -1946,7 +1946,7 @@ if [ "$ST_OK" -eq 1 ]; then
   fi
 fi
 
-# ── The control arms. Eight single-surface mutations that MUST turn ST red, and two edits
+# ── The control arms. Eleven single-surface mutations that MUST turn ST red, and two edits
 # that MUST NOT. Every fixture is a copy of the REAL file, mutated at a line the probe
 # DISCOVERED, so no arm can drift away from the surface it is meant to exercise.
 if [ "$ST_OK" -eq 1 ]; then
@@ -1988,8 +1988,56 @@ if [ "$ST_OK" -eq 1 ]; then
     FAIL "CTL-ST-R2: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
   fi
 
+  # ── LABELS-ORDER, MARKED-EMPTY and ANNOT-EMPTY each have a branch in st_violations and,
+  # until these three arms, had nothing showing the branch can be REACHED. An emitted code no
+  # arm has been observed firing is a claim about the evaluator rather than a measurement of
+  # it — the standard the eight arms above already meet, applied to the three codes that
+  # shipped without it. Each is provoked ALONE, and each asserts its OWN code rather than
+  # settling for a red, because a red proves only that something fired.
+
+  # O1 — a pure REORDER, the case LABELS-ORDER was split from LABELS-SET to name. Transposing
+  # two appendix annotations leaves both label SETS equal and every count untouched, so
+  # LABELS-SET is silent by construction and LABELS-ORDER is the only surface that can still
+  # see the edit. The two sites must be distinct lines: one sub() per call means a
+  # transposition inside a single line would rewrite the label this arm had just written and
+  # cancel to no edit, so the precondition is GRADED rather than assumed, the way R2 grades
+  # its own.
+  ST_AB1="$(st_field ANNOT 1 3 "$ST_SURF")"
+  ST_AL2="$(st_field ANNOT 2 2 "$ST_SURF")"; ST_AB2="$(st_field ANNOT 2 3 "$ST_SURF")"
+  if [ "$ST_AL1" != "$ST_AL2" ]; then
+    ST_FX="$(st_fixture o1)"
+    st_line_sub "$ST_FX" "$ST_AL1" "[*][*]$ST_AB1[*][*]" "**$ST_AB2**"
+    st_line_sub "$ST_FX" "$ST_AL2" "[*][*]$ST_AB2[*][*]" "**$ST_AB1**"
+    st_mustfire CTL-ST-O1 "$ST_FX" LABELS-ORDER "the appendix's first two annotations are TRANSPOSED ('$ST_AB1' at line $ST_AL1 with '$ST_AB2' at line $ST_AL2), so both sets stay equal and every count stays put — the one edit only an order-aware comparison can see"
+  else
+    FAIL "CTL-ST-O1: MUST FIRE — the first two appendix annotations both sit on line $ST_AL1, so transposing them would cancel to no edit and this arm would grade nothing. LABELS-ORDER needs two annotations on distinct lines to be provoked"
+  fi
+
+  # E1 — the MARKED surface emptied outright. The star is stripped from every marked bullet
+  # the probe DISCOVERED, one sub per RECORD rather than one per line, so the several-per-line
+  # shape st_surfaces already handles is emptied too. MARKED-EMPTY is what stops ST1's "the
+  # fields ARE the reference count" from becoming a statement over the empty set: without this
+  # arm, a template that had lost every star could still be reported as four homes in
+  # agreement about nothing.
+  ST_FX="$(st_fixture e1)"; ST_I=1
+  while [ "$ST_I" -le "$ST_NMARK" ]; do
+    st_line_sub "$ST_FX" "$(st_field MARKED "$ST_I" 2 "$ST_SURF")" "${ST_STAR}[ ]*" ""
+    ST_I=$((ST_I + 1))
+  done
+  st_mustfire CTL-ST-E1 "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the three homes that merely describe it describing nothing"
+
+  # E2 — the ANNOT surface emptied the same way and for the same reason: the appendix's
+  # per-field restatement is the home ST1 compares label FOR label, and a zero there would
+  # make that comparison vacuous while both numerals still agreed with the marked set.
+  ST_FX="$(st_fixture e2)"; ST_I=1
+  while [ "$ST_I" -le "$ST_NANNOT" ]; do
+    st_line_sub "$ST_FX" "$(st_field ANNOT "$ST_I" 2 "$ST_SURF")" "[ ]*[(]starred[)]" ""
+    ST_I=$((ST_I + 1))
+  done
+  st_mustfire CTL-ST-E2 "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
+
   ST_FX="$(st_fixture clean)"
-  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes all eight arms above mean something"
+  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes all eleven arms above mean something"
 
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
   st_mustnotfire CTL-ST-NEUTRAL "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
