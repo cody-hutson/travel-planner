@@ -490,7 +490,7 @@ travel-planner/
 │   ├── 06-validator.md
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
-├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo
+├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)

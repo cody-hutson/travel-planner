@@ -74,6 +74,13 @@ there the two axes diverge, here they cannot.
 | Robin | `ASSERTED-SAME` | `ASSERTED-SAME` | May 14–17 (all 4) |
 | Sam | `UNKNOWN` | `UNKNOWN` | May 14–17 (all 4, from the group booking) |
 
+**Deliberate non-collapse.** Every basis above is `ASSERTED-SAME` or `UNKNOWN`, which is
+the single-origin collapse precondition in `templates/trip-context.template.md` — under that
+rule a real trip context deletes this table and keeps only the `**All travelers:**` line.
+This example keeps the table on purpose, to show the per-traveller basis values the collapse
+hides. It is a teaching projection, not a conforming render; the worked instance of the
+collapse itself is `examples/single-origin-demo/`.
+
 Sam's two bases read `UNKNOWN` rather than `ASSERTED-SAME`: with no profile there is
 no answer to have asserted anything, and *unknown* is not *same as the group*. The day
 set is still the trip-level one, because it comes from the group booking rather than
