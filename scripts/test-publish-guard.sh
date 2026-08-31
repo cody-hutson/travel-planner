@@ -9,10 +9,13 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
 # K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
+# Q = analysis/ workspace ignore invariant (same shape as K, lower severity)
+# K4/Q4 are RULE-level, not state-level: they fail on a deleted negation line, which
+# K1/Q1 cannot see because a tracked file bypasses .gitignore altogether.
 # L8-L10 grade the publishability DECLARATION: that the class has exactly one home, that
 # the guard's verdict follows a change to it, and that an unreadable declaration is
 # UNDETERMINED rather than an empty class. L11 pins the reserved-heading suppression —
@@ -246,8 +249,71 @@ if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   else
     PASS "K3: control arm fires (root README.md not ignored) — K2's verdict is trustworthy"
   fi
+  # K4 (rule-level, not state-level). K1 proves the file is IN THE INDEX,
+  # which stays true even if the negation line is deleted — a tracked file bypasses
+  # .gitignore entirely, so K1 and K2 both keep passing while the rule rots.
+  # --no-index is LOAD-BEARING: check-ignore consults the index by default and
+  # short-circuits to "not ignored" for any tracked path WITHOUT evaluating the
+  # rules, so without it this assertion re-reads state and can never go red.
+  # Verified by falsification: with the negation line deleted, the default form
+  # still passed. K2/Q2 need no such flag — they probe untracked synthetic paths.
+  # This is the only assertion that fails on a deleted `!trips/README.md` line,
+  # and the failure it prevents is a re-add after a delete silently not working.
+  if git -C "$HERE/.." check-ignore -q --no-index "trips/README.md"; then
+    FAIL "K4: the !trips/README.md negation is gone — the trips signpost survives only because it is already tracked"
+  else
+    PASS "K4: the negation pattern re-includes trips/README.md (the rule, not just the index, is intact)"
+  fi
 else
   SKIP "K: not a git work tree"
+fi
+
+echo "Analysis-workspace ignore invariant:"
+# Same invariant shape as K, different blast radius. K guards passport-bearing trip
+# data; Q guards the analysis workspace — operator working material (raw issue pulls,
+# scratch scripts, findings about a commit that is no longer HEAD). Kept a separate
+# group rather than folded into K so the two severities stay separately reportable.
+if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  # Q1 (positive) — the signpost ships. Trackedness, not ignore-state: a tracked file
+  # bypasses .gitignore entirely, so ls-files is the unambiguous test.
+  if git -C "$HERE/.." ls-files --error-unmatch analysis/README.md >/dev/null 2>&1; then
+    PASS "Q1: analysis/README.md is tracked (the signpost ships in a fresh clone)"
+  else
+    FAIL "Q1: analysis/README.md is NOT tracked — the folder is absent from a fresh clone"
+  fi
+  # Q2 (negative — the limb that matters). Probes at the DEEPEST real shape, not the
+  # shallowest: a dated subfolder's _cache/ is where the raw pulls land, so a rule that
+  # only caught top-level files would pass a shallow probe and leak the bytes that
+  # actually matter. check-ignore needs no file on disk; nothing synthetic is written.
+  # -q, NOT -v: verbose exits 0 on a NEGATION match too, inverting the verdict.
+  if git -C "$HERE/.." check-ignore -q "analysis/zzz-probe-2026-01-01/_cache/graphql_issues.json"; then
+    PASS "Q2: a synthetic analysis/<name>-YYYY-MM-DD/_cache/<x> is still git-ignored"
+  else
+    FAIL "Q2: ANALYSIS IS NO LONGER IGNORED — .gitignore stopped guarding analysis/ contents"
+  fi
+  # Q3 (control arm) — a zero whose control also returns zero is a broken probe.
+  if git -C "$HERE/.." check-ignore -q "README.md"; then
+    FAIL "Q3: control arm broken — check-ignore calls the tracked root README.md ignored; Q2 is unusable"
+  else
+    PASS "Q3: control arm fires (root README.md not ignored) — Q2's verdict is trustworthy"
+  fi
+  # Q4 (rule-level, not state-level). Q1 proves the file is IN THE INDEX,
+  # which stays true even if the negation line is deleted — a tracked file bypasses
+  # .gitignore entirely, so Q1 and Q2 both keep passing while the rule rots.
+  # --no-index is LOAD-BEARING: check-ignore consults the index by default and
+  # short-circuits to "not ignored" for any tracked path WITHOUT evaluating the
+  # rules, so without it this assertion re-reads state and can never go red.
+  # Verified by falsification: with the negation line deleted, the default form
+  # still passed. K2/Q2 need no such flag — they probe untracked synthetic paths.
+  # This is the only assertion that fails on a deleted `!analysis/README.md` line,
+  # and the failure it prevents is a re-add after a delete silently not working.
+  if git -C "$HERE/.." check-ignore -q --no-index "analysis/README.md"; then
+    FAIL "Q4: the !analysis/README.md negation is gone — the analysis signpost survives only because it is already tracked"
+  else
+    PASS "Q4: the negation pattern re-includes analysis/README.md (the rule, not just the index, is intact)"
+  fi
+else
+  SKIP "Q: not a git work tree"
 fi
 
 echo "Unpublish / takedown (#7):"
