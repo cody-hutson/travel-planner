@@ -48,8 +48,8 @@
 #        per-field `(starred)` annotations, and the marked fields themselves — which are the
 #        only home that is not a restatement of another, so they are the reference count.
 #        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
-#        carries ten control arms: eight single-surface mutations that must turn it red, and
-#        two edits that must not.
+#        carries control arms covering every violation code it can emit, each mutating ONE
+#        surface alone and each required to turn it red, and two edits that must not.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
@@ -1656,7 +1656,7 @@ fi
 # 21 and 320. A guard pinned to a line number would have been wrong before it was written,
 # so every surface here is discovered by its MARKUP SHAPE and the line number is an OUTPUT
 # of that discovery rather than an input to it. One pair of functions drives the real arms
-# and all thirteen control arms, the vi_bindings/vi_violations idiom above: an evaluator
+# and every control arm alike, the vi_bindings/vi_violations idiom above: an evaluator
 # that is not the one under test proves nothing about the one that ships.
 #
 # ── AR3 IS NOT FALSIFIED, AND THAT IS GRADED RATHER THAN CLAIMED ────────────────
@@ -1927,7 +1927,7 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
   ST_NVIOL="$(printf '%s\n' "$ST_VIOL" | grep -c '[^[:space:]]')"
   if [ "$ST_NVIOL" -eq 0 ]; then
-    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the thirteen CTL-ST arms below show this same evaluator failing on eleven single-surface mutations and staying silent on two edits that change no surface"
+    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface"
   else
     FAIL "ST1: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
     printf '%s\n' "$ST_VIOL" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
@@ -1946,9 +1946,10 @@ if [ "$ST_OK" -eq 1 ]; then
   fi
 fi
 
-# ── The control arms. Eleven single-surface mutations that MUST turn ST red, and two edits
-# that MUST NOT. Every fixture is a copy of the REAL file, mutated at a line the probe
-# DISCOVERED, so no arm can drift away from the surface it is meant to exercise.
+# ── The control arms. Single-surface mutations that MUST turn ST red, covering every
+# violation code the evaluator can report, and two edits that MUST NOT. Every fixture is a
+# copy of the REAL file, mutated at a line the probe DISCOVERED, so no arm can drift away
+# from the surface it is meant to exercise.
 if [ "$ST_OK" -eq 1 ]; then
   ST_PL1="$(st_field PROSE 1 2 "$ST_SURF")";  ST_PV1="$(st_field PROSE 1 3 "$ST_SURF")"
   ST_PL2="$(st_field PROSE 2 2 "$ST_SURF")";  ST_PV2="$(st_field PROSE 2 3 "$ST_SURF")"
@@ -1991,7 +1992,7 @@ if [ "$ST_OK" -eq 1 ]; then
   # ── LABELS-ORDER, MARKED-EMPTY and ANNOT-EMPTY each have a branch in st_violations and,
   # until these three arms, had nothing showing the branch can be REACHED. An emitted code no
   # arm has been observed firing is a claim about the evaluator rather than a measurement of
-  # it — the standard the eight arms above already meet, applied to the three codes that
+  # it — the standard the arms above already meet, applied to the three codes that
   # shipped without it. Each is provoked ALONE, and each asserts its OWN code rather than
   # settling for a red, because a red proves only that something fired.
 
@@ -2037,7 +2038,7 @@ if [ "$ST_OK" -eq 1 ]; then
   st_mustfire CTL-ST-E2 "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
 
   ST_FX="$(st_fixture clean)"
-  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes all eleven arms above mean something"
+  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes every must-fire arm above mean something"
 
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
   st_mustnotfire CTL-ST-NEUTRAL "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"

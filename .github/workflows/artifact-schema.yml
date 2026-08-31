@@ -65,11 +65,8 @@ name: Artifact schema
 #        that is not a restatement of another, and therefore the reference count. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
 #        surfaced this named two line numbers that had already moved. ST carries its own
-#        must-fire and specificity arms inside the group: eight mutations of a runtime
-#        copy, each touching ONE surface alone, that the same evaluator must FLAG — and
-#        two it must NOT, an unmutated copy and an edit that changes the file without
-#        touching any surface. Without the second pair, an evaluator that failed on any
-#        difference at all would pass every mutation arm and still be worthless
+#        must-fire and specificity arms inside the group; THE ARM INVENTORY IS NOT RESTATED
+#        HERE, for the reason the CTL line below already gives
 #
 # EN, CA and PB each carry their own control arms — a deliberately drifted input that the
 # same probe must FIND and FLAG, and a fabricated input it must NOT match. A zero whose
