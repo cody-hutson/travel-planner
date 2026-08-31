@@ -5,6 +5,16 @@
 trips/*
 !trips/README.md
 
+# Repo-scoped analysis workspace — operator working material, never committed.
+# Audits, reviews and gap analyses ABOUT this repo, in dated <name>-YYYY-MM-DD/
+# subfolders. Same shape as trips/ above and for the same reason: contents, not the
+# directory, so the signpost README survives while everything beside it stays local.
+# Rooted (leading /) so only the workspace at the repo root is caught — a future
+# docs/analysis/ is not silently swallowed. Guarded by
+# scripts/test-publish-guard.sh group Q — do not "simplify" these two lines.
+/analysis/*
+!/analysis/README.md
+
 # macOS
 .DS_Store
 
