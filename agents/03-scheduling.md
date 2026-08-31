@@ -86,8 +86,7 @@ traveler is absent, no slot is placed — there is no day to honor.
 
 Three bounds hold on the slot, and none is optional:
 - **It is never the day's anchor.** A recurring slot is a supporting slot. It never
-  stands in for the day's anchor event or anchor meal, whatever the desire's priority
-  tier — a daily `anchor`-tier desire is still a supporting slot.
+  stands in for the day's anchor event or anchor meal.
 - **It is a cadence on the want, never an exemption from venue deduplication.** The slot
   recurs; a venue does not. Every venue that fills it obeys the same two-appearance cap
   as any other, so a week-long ritual is a week of that kind of stop, not seven visits
