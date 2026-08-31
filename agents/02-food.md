@@ -220,9 +220,11 @@ Read trip-context.md fully before producing output. Read in this order:
 5. Budget Posture — calibrate across all tiers
 6. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
    desire-overlap signal feeding the attention lens (shared tastes = efficient
-   to cover, unique tastes = protect a candidate for), and the per-traveler
-   `Been here before?` signal feeding the depth lens (first-time = lead with
-   the essentials, experienced = bias toward the less obvious). A blank or
+   to cover, unique tastes = protect a candidate for), the per-traveler
+   `Recurrence` marking, which raises the candidate floor for any desire marked
+   `daily`, and the per-traveler `Been here before?` signal feeding the depth
+   lens (first-time = lead with the essentials, experienced = bias toward the
+   less obvious). A blank or
    em-dashed answer is **unknown**, never `never`
 7. Mode — confirm output format
 
@@ -374,3 +376,24 @@ read verbatim by the hub, so write them exactly as the list above spells them an
 do not restyle, kebab-case or abbreviate them.
 
 Minimum 35 entries. Do not assign to days or build a schedule.
+
+**A recurring desire raises this floor.** Where a traveler's desires include one
+marked `Recurrence: daily`, the plan opens a standing slot for it on every day of
+that traveler's honored-day set (`reference/data-model.md` → "A recurring
+desire's honored-day set — how it is derived"; cite it, do not re-derive it).
+Supply **enough distinct places capable of filling that slot** that it can be
+filled on every one of those days **without breaching the venue-deduplication
+cap** (`CLAUDE.md` § *Key Rules* → "Venue deduplication"; cite it, do not restate
+it) — the cap counts places, not entries, and a recurring desire is a cadence on
+the want, never a license to repeat a place: a daily coffee ritual is a week of
+different counters, not one café seven mornings running.
+You are supplying a **count of distinct candidates, not a schedule**: which day
+each one lands on is the hub's to decide. Where the destination genuinely cannot
+support the count, supply what it does support — the hub names the shortfall and
+the coverage read renders the desire `not covered` with the missed days.
+
+Where a candidate you supply for a recurring slot is convenience-format, mark its
+eligibility as the Convenience-format anchor discipline above directs. A
+recurring slot is never the day's anchor meal, so the anchor cap does not count
+these nominations — but the entry still declares its state, so a reader can tell
+an ineligible venue from a forgotten marker. Do not restate that rule here.
