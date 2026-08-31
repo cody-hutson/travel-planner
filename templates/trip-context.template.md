@@ -49,6 +49,10 @@ All other days are locked."]
   > party. On a multi-origin trip it names only this origin's journey; the others
   > are recorded under `### Additional origins`. This is **not** a seniority or
   > decision-rights label — the planner role is recorded in the `## Group` roster.
+  > **Who departs on this origin is not listed here.** It is every `## Group`
+  > roster member not named under `### Additional origins` below — that section
+  > states the rule, and the anchor deliberately carries no `Departing travelers:`
+  > line of its own, so the party has one home rather than two.
 - **Confirmation code(s):** [Airline / hotel / rail confirmation codes]
 
 ### Outbound
