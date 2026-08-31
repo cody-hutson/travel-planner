@@ -40,7 +40,7 @@ way.
 | `outputs/satisfaction-metrics.md` | C14 | 1 | the one declared non-scalar (`writer: [hub, validator]`); section ownership; the six dimensions with their types |
 | `outputs/final-itinerary.md` | C15 | 2 | `versioned`, current pass; the hub's own prose day shape, carrying **no** ID or key column — the one-way join § 4.5 records as a cost |
 | `outputs/final-itinerary-v1.md` | C16 | 1 | the frozen sibling as its **own class**, `publish: internal` where C15 is `bound` |
-| `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body; the validator's own sixteen sections and its three-value severity scale; a check that cannot run **declared**, never passed |
+| `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body; the validator's own seventeen sections and its three-value severity scale; a check that cannot run **declared**, never passed |
 | `outputs/rooftop-sunset-bars.md` | C18 | 2 | the residual class, resolved by longest-literal-pattern-wins |
 
 ## Depth
@@ -76,7 +76,7 @@ class — it is a different shape, and shape is the one thing this fixture exist
 show. So every file below carries its writer's own sections, under its writer's own
 names, with a stated *not exercised* where this fixture has no fact to put in one.
 `outputs/scheduling-framework.md` and `outputs/transport-brief.md` each carry their
-ten; `outputs/validation-report.md` carries its sixteen.
+ten; `outputs/validation-report.md` carries its seventeen.
 
 **A check or a field that cannot be exercised here is declared, never passed.** This
 example ships no external URLs, no opening hours, no prices, no real bookings and a

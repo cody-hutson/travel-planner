@@ -25,12 +25,16 @@ noise, so this file is recomputed rather than accumulated. That is the same reas
 `outputs/satisfaction-metrics.md` is rebuilt.
 
 **The section set and the severity vocabulary below are `agents/06-validator.md`
-§ *Output Format*, not this fixture's own.** All sixteen sections that prompt declares
+§ *Output Format*, not this fixture's own.** All seventeen sections that prompt declares
 are present, in its order, and the severities are its three — **Critical**,
 **Warning**, **Note**. A report that renamed them would put a second vocabulary on one
 scale: a reader could not tell whether an "Advisory" was a Warning or a Note, and
 nothing would arbitrate it. The heading level is this file's own — the prompt renders
 these one level deeper because they sit inside its `## Output Format` section.
+*What this report does not cover*, last below, is this fixture's own eighteenth heading
+and is **not** one of the seventeen: a bare count of `##` headings here reads 18 against
+the prompt's 17 and settles nothing. The claim is set-equality against the prompt's
+list, in its order — never a tally.
 
 **Where a check is declared *not exercised*, that is a property of this fixture and
 never a pass.** This example ships no external URLs, no opening hours, no prices, no
@@ -197,6 +201,26 @@ Note.
 
 Proximity venue usage (hotel-neighborhood): not exercised — this fixture records no
 walking distances, so no venue can be classed as hotel-proximate.
+
+---
+
+## Convenience-Format Anchor Cap Report
+
+**Not exercised.** The cap tallies `anchor-eligible` nominations per convenience-format
+category off the **Anchor-meal eligibility** lines in `outputs/food-list.md`, and this
+fixture ships no such file — C6 is absent on purpose, for the schema-suite coupling
+`README.md` § *What is absent, and why* records. With no artifact to read there is no
+tally, and no marker coverage to report over it.
+
+**Not exercised is not `unverifiable`, and keeping those two apart is this check's own
+point.** `agents/06-validator.md` § *Output Format* reserves `unverifiable` for a
+food-list that **is** present and carries entries whose eligibility line is missing —
+the `E of T` marker-coverage reading, where T is the file's fenced `artifact-entry`
+markers. That verdict needs the file. With none there is no E, no T and no ratio, which
+is the same no-input state *Closure Matrix* and *Price Flags* below declare. Reporting
+the clean `no convenience-format entries declared` limb here would be precisely the
+empty-tally pass the prompt withholds it for. On a real trip one entry missing its
+eligibility line puts the cap back in force as `unverifiable`, never as a pass.
 
 ---
 
