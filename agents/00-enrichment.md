@@ -204,12 +204,21 @@ link against. Specifically:
     person — one `## <Name>` entry each. Origin is a *field on* that person's
     journey facet, never a second grouping axis. N origins never produce N × M
     entries, and no origin ever gets an entry of its own.
-  - **An unassigned person inherits the anchor origin (`Origin A`) — as a marked
-    assumption on a multi-origin trip, as an assertion on a single-origin trip**
-    (there is only one origin to inherit). An empty `Leaving from:` means
-    *unknown*, never *matches the group*. **A `[THIRD-PARTY]` entry is out of
-    scope: it has no journey facet to resolve, inherits no origin, and
-    contributes no origin signal in either direction.**
+  - **An unassigned person inherits the anchor origin (`Origin A`), and their
+    Origin basis is `UNKNOWN` — on every trip shape, single-origin included.**
+    The basis records *what the person stated*, never whether the inheritance
+    could have gone another way: a traveler who says they are on the group's
+    booking and a traveler who said nothing both inherit the same origin, and
+    only the first one asserted it. So the inherited value carries `(assumed)`,
+    and on a single-origin trip that traveler counts toward the `[N] assumed`
+    half of the collapse line, never the `[N] asserted` half. The three basis
+    values and the `(assumed)` marker are defined once, in
+    `templates/trip-context.template.md` § *Per-Traveler Planning Days
+    [DERIVED]*; read them there rather than describing warrant in words of your
+    own. An empty `Leaving from:` means *unknown*, never *matches the group*.
+    **A `[THIRD-PARTY]` entry is out of scope: it has no journey facet to
+    resolve, inherits no origin, and contributes no origin signal in either
+    direction.**
   - **Origin and timing are independent.** A traveler may set out from a different
     place and still arrive and leave with the group, or share the group's origin
     and travel on different dates. Never infer either from the other.
@@ -377,11 +386,30 @@ fallback, not an error:
 
   ```markdown
   ## [Name]
-  > PROFILE MISSING — no travelers/<name>.md on file and no operator-provided
-  > stand-in. Needs and desires unknown; this traveler is not yet reconciled.
-  > VERIFY: collect this profile (fill templates/traveler-intake.template.md) or
-  > have the operator supply the needs/desires before the plan is relied upon.
+
+  **Source:** none — no `travelers/<name>.md` on file and no operator-provided
+  stand-in. This entry is the **flagged-gap branch**, not a projection.
+
+  > PROFILE MISSING — needs and desires unknown; this traveler is not yet
+  > reconciled. VERIFY: collect this profile (fill
+  > templates/traveler-intake.template.md) or have the operator supply the
+  > needs/desires before the plan is relied upon.
+
+  **Trip-level facets** — the facets the trip level decides. They are carried
+  here because they do not depend on a profile; no first-party facet appears,
+  because this traveler stated nothing.
+
+  - **Origin** — `Applies to: ## Logistics → "[Origin block name]"` — basis
+    `UNKNOWN`, value `(assumed)`
   ```
+
+  **The `Trip-level facets` block is where a facet value lands for this class,
+  and `Origin` is presently its only member.** It is rendered on a
+  multi-origin trip — the shape `### Additional origins` creates. On a
+  single-origin trip render the block with `Origin` stated as *not applicable —
+  one origin, no `### Additional origins` section*, declared rather than left
+  blank: an absence a reader must infer from an empty section is the reading
+  this model does not use.
 
   A `PROFILE MISSING` marker means *unknown*, not *no needs* — downstream agents
   must not read an absent profile as "this traveler has no constraints." Surface
