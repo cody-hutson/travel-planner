@@ -3,6 +3,62 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.17.0] — 2026-08-31 — Corpus and process hygiene
+
+This release is about the repository's own quality rather than the product's. Four things were
+wrong with it, and they shared a shape: each was a claim the repository made about itself that
+nothing checked.
+
+The intake template told a reader that ten fields were starred. It said so in the banner, again
+in the agent appendix, and once more as ten per-field annotations — and no script in the
+repository read any of them. Starring an eleventh field and updating the banner alone would have
+shipped a stale appendix, with every gate green, and the appendix is the surface an agent reads
+to run the intake. The stale copy is the one that would have driven the conversation.
+
+Two rendering rules that shipped in 0.10.0 had no worked instance anywhere. A rule with no
+example is a rule nobody has read end to end, and one of them — the single-origin collapse —
+turned out to be contradicted by the only fixture that met its precondition.
+
+A decision record named one of its target files two ways inside a single paragraph. And the
+`travelers/` artifact class, which a user must author by hand before anything else works, had a
+filled example in the repository that the section documenting it never pointed at.
+
+### Added
+
+- **`examples/single-origin-demo/`** — a worked instance of the single-origin collapse
+  rendering and the `**All travelers:**` marker. It ships the raw inputs alongside the collapsed
+  line so the warrant census is independently derivable, states that the per-traveller table is
+  absent rather than omitted, and names the falsifier: a traveller who states an origin — even
+  the trip's own — pins it and breaks the collapse.
+- **Group `ST` in the artifact-schema suite** — the starred-field count is now inspected across
+  all four of its homes: the banner, the appendix rule, and the per-field annotations, compared
+  against the marked fields themselves. Surfaces are discovered by markup shape rather than by
+  line number, because the report that surfaced this defect cited lines 6 and 295 for content
+  that had already moved to 21 and 320.
+
+### Changed
+
+- `README.md`'s traveller-profiles section now links the worked pair in
+  `examples/data-architecture-demo/travelers/`, and the privacy rule that closes it is scoped to
+  the reader's own profiles so a published fixture and an unpublished real profile describe
+  disjoint populations rather than a rule and an exception.
+- `examples/data-architecture-demo/` is marked as a deliberate non-collapse, so the corpus no
+  longer holds a fixture that silently contradicts a shipped rule.
+- ADR-008 names every target by its repository-relative path.
+
+### Fixed
+
+- Three citations in ADR-008 carried a bare basename where nine carried the path.
+
+### Note on what this release did not buy
+
+The defect class it exists to remove — a count asserted in prose that goes stale when its
+subject moves — recurred five times during the work of removing it, including once in prose that
+passed all eight required checks green. Every instance was caught by reading; none by a gate.
+Where a numeral could be deleted rather than corrected it was, on the reasoning that a corrected
+number is the same defect waiting for the next change. The gap that remains — that nothing
+detects the next one — is tracked, not closed.
+
 ## [0.16.0] — 2026-08-30 — Artifact model and validation gate
 
 The engine writes about twenty kinds of file, and until now none of them said what it was.
