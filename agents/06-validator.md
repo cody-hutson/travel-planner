@@ -39,6 +39,20 @@ unresolved. `unminted` is a declared absence, never a missing venue; an entry
 still carrying it once the hub's reference files hold that venue is a Note
 naming the entry and its file, not a Critical.
 
+**Convenience-format anchor cap:**
+The food agent caps convenience-format anchor-meal nominations at 2 per
+category across `outputs/food-list.md` (`agents/02-food.md` →
+*Convenience-format anchor discipline*). Audit it from the artifact, not from
+behaviour. Read every entry's **Anchor-meal eligibility** line and tally the
+`anchor-eligible` nominations per named category, over the whole accumulated
+file. Flag any category carrying more than 2. Flag any entry whose eligibility
+line is **missing** — a required line that is absent is an undeclared state,
+and the cap cannot be read over it. Flag any `anchor-eligible` nomination whose
+category is unnamed, and any category whose ordinals do not run 1..N without
+repeat. You count the declared markers; you do not classify venues into
+convenience formats yourself — the marker is the food agent's declaration, and
+re-deriving it is the classification this role does not do.
+
 **Hours and closure verification:**
 Every venue in the itinerary is checked against the day of week it is
 scheduled. The primary closure check matrix is: venue x day-of-week x
@@ -544,6 +558,10 @@ placed venue breaking the dedup rules is Venue deduplication.
 12. Nightlife coverage — Warning only. A desired night with no nightlife option and
     no stated reason is a missed desire, never a bound; this check has no Critical
     tier and never blocks finalization
+13. Convenience-format anchor cap — Warning only. An over-cap category, an
+    undeclared eligibility line, or an unnamed category is a selection-discipline
+    finding on the research list, never a defect in the itinerary; this check has
+    no Critical tier and never blocks finalization
 
 ## Mode Behavior
 
@@ -580,7 +598,9 @@ Read fully before producing output:
 4. outputs/final-itinerary.md (scheduled placement of all venues)
 
 Also read:
-5. outputs/food-list.md (closed day notes from food agent)
+5. outputs/food-list.md (closed day notes from the food agent, and the
+   **Anchor-meal eligibility** lines the convenience-format anchor cap audit
+   counts)
 6. outputs/activities-list.md (any caveat or hours notes from activities agent)
 7. outputs/event-status.md (per-event status — the target of the
    status-integrity audit: protected `locked`/`firmed` events, the
@@ -687,6 +707,7 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Structural integrity | | | | |
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
+| Convenience-format anchor cap (per category; no Critical tier) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
@@ -741,6 +762,25 @@ Proximity venue usage (hotel-neighborhood):
 
 | Venue key | Venue | Proximity | Appearances | Intentional? |
 |-----------|-------|-----------|-------------|-------------|
+
+---
+
+### Convenience-Format Anchor Cap Report
+
+Counted from `outputs/food-list.md` **Anchor-meal eligibility** lines, per
+convenience-format category, over the whole accumulated file. One row per
+category.
+
+| Category | Anchor-eligible nominations | Ordinals seen | Cap | Verdict |
+|----------|-----------------------------|---------------|-----|---------|
+| [konbini/counter] | [N] | [1, 2] | 2 | [OK / OVER-CAP] |
+
+**Marker coverage:** [E of T entries carry an **Anchor-meal eligibility**
+line]. Entries with no line are named here, and the cap is **unverifiable**
+over them. Report `no convenience-format entries declared` only when the tally
+is empty **and** every entry carries a line; report `unverifiable` when any
+line is missing. An empty tally with full coverage is a measurement; an empty
+tally with missing lines is not.
 
 ---
 
