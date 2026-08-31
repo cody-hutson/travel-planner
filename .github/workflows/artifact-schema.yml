@@ -59,6 +59,17 @@ name: Artifact schema
 #        are stated PER FIELD because the fields do not all have the same number of homes
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row
+#   ST   the starred-field count in templates/traveler-intake.template.md agrees across ALL
+#        FOUR of its homes: the banner numeral, the appendix rule-4 numeral, the appendix's
+#        per-field (starred) annotations, and the marked fields themselves — the only home
+#        that is not a restatement of another, and therefore the reference count. Surfaces
+#        are discovered by MARKUP SHAPE and never by line number, because the report that
+#        surfaced this named two line numbers that had already moved. ST carries its own
+#        must-fire and specificity arms inside the group: eight mutations of a runtime
+#        copy, each touching ONE surface alone, that the same evaluator must FLAG — and
+#        two it must NOT, an unmutated copy and an edit that changes the file without
+#        touching any surface. Without the second pair, an evaluator that failed on any
+#        difference at all would pass every mutation arm and still be worthless
 #
 # EN, CA and PB each carry their own control arms — a deliberately drifted input that the
 # same probe must FIND and FLAG, and a fabricated input it must NOT match. A zero whose
@@ -92,9 +103,14 @@ name: Artifact schema
 # commit that it is still capable of failing.
 #
 # OUT OF SCOPE — deliberately, and by name:
-#   PROSE. The schema constrains frontmatter and declared entry markers. It never
-#   constrains narrative body content, and a green here says nothing about the quality or
-#   the accuracy of any artifact's prose.
+#   PROSE, with ONE NAMED EXCEPTION. The schema constrains frontmatter and declared entry
+#   markers. It never constrains narrative body content, and a green here still says
+#   nothing about the quality or the accuracy of any artifact's prose. The exception is
+#   group ST, which checks exactly one prose INVARIANT and nothing else: that the
+#   self-referential starred-field count in templates/traveler-intake.template.md agrees
+#   with itself across its four homes. Agreement is not accuracy — ST stays green on four
+#   homes that agree on a wrong number — so this clause is NARROWED here rather than
+#   removed, and no other prose in any artifact is adjudicated by this gate.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
 #   CI checkout contains no trip. Those artifacts are unreachable by construction, not by

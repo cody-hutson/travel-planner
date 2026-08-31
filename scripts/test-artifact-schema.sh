@@ -43,12 +43,19 @@
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
+#   ST   the starred-field count in templates/traveler-intake.template.md agrees across ALL
+#        FOUR of its homes: the banner numeral, the appendix rule-4 numeral, the appendix's
+#        per-field `(starred)` annotations, and the marked fields themselves — which are the
+#        only home that is not a restatement of another, so they are the reference count.
+#        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
+#        carries ten control arms: eight single-surface mutations that must turn it red, and
+#        two edits that must not.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
 #        A code with no arm is a check indistinguishable from one that CANNOT fire.
 #
-# ── WHY EN, CA AND PB RUN AGAINST THE REAL TREE AND NOT INSIDE A FIXTURE ─────────
+# ── WHY EN, CA, PB AND ST RUN AGAINST THE REAL TREE AND NOT INSIDE A FIXTURE ─────
 # Each is a statement about THIS COMMIT'S corpus — how many homes an enum has, whether four
 # documents agree, whether a spec fence matches a table — so the population that makes them
 # meaningful is the tracked tree itself. They therefore read $ROOT directly and add NO
@@ -59,6 +66,14 @@
 # construction — the coupling that already turned CTL red once in this release and had to be
 # reverted rather than patched forward. Each group carries its own control arms instead, so
 # none of them depends on CTL's fixture to be non-vacuous.
+#
+# ST joins them on the same terms, and for one further reason of its own. AR3 asserts that
+# NO templates/*.template.md reaches the selector, because a template's `trip:` value is the
+# placeholder <trip-slug> and would fail A4 — so a check that read the template BY ADDING IT
+# TO THE SELECTOR would falsify an assertion this suite currently passes. ST reads the file
+# directly instead and adds no finding code, which leaves va_select's output untouched; the
+# ST-AR3 arm then re-reads AR_NTPL in the same run and asserts it is still zero, so the
+# constraint is GRADED rather than promised in a comment.
 #
 # ── WHY CTL IS NOT OPTIONAL DECORATION ───────────────────────────────────────────
 # This gate ships BEFORE any in-repo artifact carries frontmatter. At that commit every
@@ -1608,6 +1623,376 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
   else
     FAIL "VI2: the must-fire arm did not behave (mutation-landed=$VI_LANDED stripped-location-detected=$VI_C1 expected>=1) — VI1's verdict has no control behind it"
   fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group ST — the starred-field count is ONE fact with FOUR homes inside one template,
+# and the three homes that merely describe it must agree with the one that IS it.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# templates/traveler-intake.template.md tells a traveller how many of its fields carry the
+# star, and it tells them TWICE in prose — in the banner at the top and again in rule 4 of
+# the agent appendix at the bottom — while the appendix ALSO restates the starred set field
+# by field as `**Label** (starred)`. Only one of those four surfaces is not a restatement:
+# the marked fields themselves. The other three are claims about it.
+#
+# Nothing in this repository read that template before this group. So starring an eleventh
+# field and updating the banner alone would have shipped a stale appendix, in two places,
+# with every gate green — and the appendix is the surface an agent reads to run the intake,
+# so the stale copy is the one that drives the conversation. It has not happened yet: all
+# four homes agree on this commit. That is precisely when the guard is cheap, and it is why
+# it is added now rather than after the first drift. A latent defect is still a defect; the
+# only thing that is latent is the evidence.
+#
+# ── WHY IT LIVES HERE AND NOT IN A SCRIPT OF ITS OWN ─────────────────────────────
+# The status checks this repository requires on main are JOB NAMES. A new workflow would
+# produce a name that is not among them, so it could go red without stopping a merge — an
+# advisory check wearing the clothes of a gate, which is the one shape this suite exists to
+# refuse. Group ST inherits the already-required artifact-schema context and therefore
+# blocks from its first commit, with no branch-protection change assumed, needed or made.
+#
+# ── THE PROBE IS KEYED ON SHAPE, NEVER ON A LINE NUMBER ─────────────────────────
+# The report that surfaced this named the two numerals at lines 6 and 295. They are live at
+# 21 and 320. A guard pinned to a line number would have been wrong before it was written,
+# so every surface here is discovered by its MARKUP SHAPE and the line number is an OUTPUT
+# of that discovery rather than an input to it. One pair of functions drives the real arms
+# and all ten control arms, the vi_bindings/vi_violations idiom above: an evaluator that is
+# not the one under test proves nothing about the one that ships.
+#
+# ── AR3 IS NOT FALSIFIED, AND THAT IS GRADED RATHER THAN CLAIMED ────────────────
+# AR3 asserts that NO templates/*.template.md reaches the selector, because a template's
+# `trip:` value is the placeholder <trip-slug> and would fail A4. This group reads the
+# template DIRECTLY with its own text processing and adds NO finding code to the validator,
+# so va_select's output is untouched — the same reason EN, CA and PB stay clear of CTL.
+# ST-AR3 re-reads AR_NTPL in this same run and asserts it is still zero, which makes the
+# constraint an observation rather than a promise in a comment.
+#
+# ── ST HAS NO LEGITIMATE SKIP ───────────────────────────────────────────────────
+# The population is a tracked file, so it exists by construction. A missing or unreadable
+# template is a FAILURE here, never a SKIP and never VACUOUS: the file going away is itself
+# drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "ST — the starred-field count agrees across all four of its homes in one template"
+
+ST_REL="templates/traveler-intake.template.md"
+ST_FILE="$ROOT/$ST_REL"
+ST_STAR='⭐'
+ST_DIR="$WORK/st"
+mkdir -p "$ST_DIR"
+
+# st_surfaces <file> — one TAB record per discovered assertion site, three surfaces:
+#
+#   PROSE<TAB><line><TAB><count-as-integer>   a sentence that STATES the number
+#   MARKED<TAB><line><TAB><label>             a field whose bullet IS the star
+#   ANNOT<TAB><line><TAB><label>              the appendix's per-field restatement
+#
+# The glyph is located with index()/substr() rather than matched inside a bracket
+# expression, for the reason group LC states about the validator: a bracket range resolves
+# against the current locale's collating sequence, so CI and an operator's shell can
+# disagree about what it matched. index() is a search with no collation in it at all, and
+# every bracket used below is a NAMED CLASS rather than a range, which is the same fix LC2
+# already enforces on va_type_ok.
+#
+# PROSE is the hard surface, and it is hard for a specific reason: BOTH prose sites carry a
+# COMPETING cardinal. The banner reads "about 2-3 minutes" before it reads "ten of them",
+# and rule 4 reads "the two-to-three minute pass" after it reads "the ten fields". A reader
+# that took the first number on the line would report 2 for the banner, agree with nothing,
+# and be wrong in a way that never announces itself. So a number counts only when it is
+# followed — within at most three intervening words, across whitespace or dashes only — by
+# `field`/`fields` or by `of them`. That window is what rejects both decoys, and it was
+# tuned against them rather than guessed. A line that is itself a MARKED or an ANNOT record
+# is never also a PROSE record: the surfaces are disjoint by construction, so a starred
+# field can never be miscounted as a claim about how many starred fields there are.
+st_surfaces() {
+  awk -v star="$ST_STAR" -v ndash='–' -v mdash='—' '
+    # cardinal <token> — the integer this token ENDS with at a word boundary, or -1.
+    # Anchoring at the end of the token is what enforces the "number, then a separator"
+    # shape: rule 4 opens with the list marker "4." and that 4 is NOT a cardinal here,
+    # because a period follows it rather than a space. That single property is the whole
+    # difference between reading the rule and reading its number.
+    function cardinal(tok,   c, p, w) {
+      if (match(tok, /[0-9]+$/)) {
+        c = substr(tok, RSTART, RLENGTH)
+        if (length(c) > 3) return -1
+        p = (RSTART == 1) ? "" : substr(tok, RSTART - 1, 1)
+        if (p == "" || p !~ /[[:alnum:]_]/) return c + 0
+        return -1
+      }
+      w = tolower(tok)
+      if (match(w, /[[:alpha:]]+$/)) {
+        c = substr(w, RSTART, RLENGTH)
+        p = (RSTART == 1) ? "" : substr(w, RSTART - 1, 1)
+        if ((p == "" || p !~ /[[:alnum:]_]/) && (c in NUM)) return NUM[c]
+      }
+      return -1
+    }
+    BEGIN {
+      split("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty", nw, " ")
+      for (i = 1; i <= 20; i++) NUM[nw[i]] = i
+      slen = length(star)
+    }
+    {
+      line = $0; isfield = 0
+      # MARKED — a list item whose bullet carries the glyph, then a bold label and a colon.
+      if (match(line, /^-[ \t]*/)) {
+        rest = substr(line, RLENGTH + 1)
+        if (index(rest, star) == 1) {
+          rest = substr(rest, slen + 1); sub(/^[ \t]+/, "", rest)
+          if (match(rest, /^\*\*[^*]+:\*\*/)) {
+            printf "MARKED\t%d\t%s\n", FNR, substr(rest, 3, RLENGTH - 5)
+            isfield = 1
+          }
+        }
+      }
+      # ANNOT — the appendix naming one starred field. Every match on the line, because the
+      # appendix lists several fields per line and only some of them are starred.
+      seg = line
+      while (match(seg, /\*\*[^*]+\*\*[ \t]*\(starred\)/)) {
+        lab = substr(seg, RSTART + 2, RLENGTH - 2)
+        sub(/\*\*[ \t]*\(starred\)$/, "", lab)
+        printf "ANNOT\t%d\t%s\n", FNR, lab
+        seg = substr(seg, RSTART + RLENGTH)
+        isfield = 1
+      }
+      if (isfield) next
+      # PROSE — a claim ABOUT the starred set, so the line must refer to the star at all.
+      low = tolower(line)
+      if (index(line, star) == 0 && low !~ /(^|[^[:alnum:]_])(starred|stars|star)([^[:alnum:]_]|$)/) next
+      t = line
+      gsub(ndash, " ", t); gsub(mdash, " ", t); gsub(/-/, " ", t)
+      sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+      n = split(t, w, /[ \t]+/)
+      for (i = 1; i <= n; i++) {
+        v = cardinal(w[i])
+        if (v < 0) continue
+        for (j = i + 1; j <= i + 4 && j <= n; j++) {
+          if (w[j] ~ /^fields?([^[:alnum:]_]|$)/) { printf "PROSE\t%d\t%d\n", FNR, v; break }
+          if (w[j] == "of" && j < n && w[j + 1] ~ /^them([^[:alnum:]_]|$)/) { printf "PROSE\t%d\t%d\n", FNR, v; break }
+        }
+      }
+    }
+  ' "$1"
+}
+
+# st_violations <surfaces> — one "<CODE><TAB><detail>" line per disagreement.
+#
+# MARKED is the reference count, because it is the only one of the four homes that is not a
+# restatement of another: the fields ARE the starred set, the rest describe it.
+#
+# PROSE-POP is pinned at EXACTLY two rather than floored at one, and the pin is the point.
+# A floor cannot see the deletion of one of two sites, which is the drift this group was
+# asked to catch — the same reason AR2, AR3 and AR6 pin exact zeros with a stated warrant
+# instead of asserting "not too many". A third assertion added on purpose turns ST red and
+# is declared in the same change. That is the intent rather than the cost.
+#
+# LABELS-SET and LABELS-ORDER are two codes and not one because a rename and a reorder are
+# different facts about the corpus, and a single verdict covering both would name neither —
+# the CTL-SCOPE rule applied one level up.
+st_violations() {
+  awk -F'\t' '
+    $1 == "PROSE"  { np++; pl[np] = $2; pv[np] = $3 }
+    $1 == "MARKED" { nm++; ml[nm] = $3 }
+    $1 == "ANNOT"  { na++; al[na] = $3; if (a1 == "") a1 = $2; a2 = $2 }
+    END {
+      np += 0; nm += 0; na += 0
+      if (np != 2)
+        printf "PROSE-POP\t%d prose count assertion(s) discovered; this template states the starred count in exactly 2 places, the banner and appendix rule 4\n", np
+      if (nm == 0)
+        printf "MARKED-EMPTY\tno field carries the star bullet, so the reference count would be a statement over the empty set\n"
+      if (na == 0)
+        printf "ANNOT-EMPTY\tno appendix annotation restates a starred field\n"
+      for (i = 1; i <= np; i++)
+        if (pv[i] + 0 != nm)
+          printf "DISAGREE\tthe prose assertion at line %s says %s; %d field(s) actually carry the star\n", pl[i], pv[i], nm
+      if (na != nm)
+        printf "DISAGREE\tthe appendix restates %d starred field(s), lines %s-%s; %d field(s) actually carry the star\n", na, a1, a2, nm
+      for (i = 1; i <= nm; i++) inm[ml[i]] = 1
+      for (i = 1; i <= na; i++) ina[al[i]] = 1
+      d = ""
+      for (i = 1; i <= nm; i++) if (!(ml[i] in ina)) d = d " marked-only:" ml[i]
+      for (i = 1; i <= na; i++) if (!(al[i] in inm)) d = d " annotated-only:" al[i]
+      if (d != "")
+        printf "LABELS-SET\tthe marked set and the appendix set are not the same set —%s\n", d
+      else {
+        om = ""; oa = ""
+        for (i = 1; i <= nm; i++) om = om "|" ml[i]
+        for (i = 1; i <= na; i++) oa = oa "|" al[i]
+        if (om != oa)
+          printf "LABELS-ORDER\tthe same labels appear in a different order — marked: %s / appendix: %s\n", substr(om, 2), substr(oa, 2)
+      }
+    }
+  ' <<EOF
+$1
+EOF
+}
+
+# st_has <violations> <code> — the code appears as a whole FIELD, never as the prefix of a
+# longer one. Here-string rather than a pipeline, deliberately: group PF grades the shape,
+# and an early-exiting grep fed by a pipeline reports failure on a SUCCESSFUL match under
+# the pipefail set at the top of this file.
+st_has() { grep -q "^$2$(printf '\t')" <<<"$1"; }
+
+# st_n <kind> <surfaces> — how many records of one surface were discovered.
+st_n() { printf '%s\n' "$2" | awk -F'\t' -v k="$1" '$1 == k { n++ } END { print n + 0 }'; }
+
+# st_field <kind> <ordinal> <column> <surfaces> — one cell of a discovered record, so every
+# mutation below aims at a site the probe FOUND rather than at a line this file names.
+st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o) { print $c; exit } }'; }
+
+# st_fixture <name> — a fresh copy of the real template under the run's temp dir. Never
+# $ROOT: CTLe grades, last of all, that this suite never wrote into the tree it measures.
+st_fixture() { cp "$ST_FILE" "$ST_DIR/$1.md" && printf '%s\n' "$ST_DIR/$1.md"; }
+
+# st_line_sub <file> <line> <ere> <replacement> — one substitution on ONE line, in place.
+st_line_sub() {
+  awk -v ln="$2" -v a="$3" -v b="$4" 'NR == ln { sub(a, b) } { print }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+
+# st_line_del <file> <line> — remove ONE line.
+st_line_del() { awk -v ln="$2" 'NR != ln' "$1" > "$1.new" && mv "$1.new" "$1"; }
+
+# st_word <n> — the English name of a small integer, so the mutators below can rewrite a
+# numeral without this file holding a copy of the one the template happens to use.
+st_word() { printf '%s\n' "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty" | awk -v n="$1" '{ print $n }'; }
+
+# st_bump <file> <line> <value> — restate the prose numeral at <line> as one less, in
+# whichever form the line writes it. Tries the word first and the digits only if the word
+# did not land, so the arm still exercises the surface if the template is ever rewritten to
+# say "10" instead of "ten" — and if NEITHER lands the arm reports mutation-landed=0 and
+# fails, which is the honest outcome rather than a green over an unmutated file.
+st_bump() {
+  local f="$1" ln="$2" v="$3"
+  st_line_sub "$f" "$ln" "[ ]$(st_word "$v")[ ]" " $(st_word "$((v - 1))") "
+  if cmp -s "$ST_FILE" "$f"; then
+    st_line_sub "$f" "$ln" "[ ]${v}[ ]" " $((v - 1)) "
+  fi
+}
+
+# st_mustfire <arm> <fixture> <code> <what> — one surface mutated ALONE, and the SAME
+# evaluator must then report <code>. The mutation is asserted to have LANDED before the
+# verdict is read: a fixture that was never actually changed makes a must-fire arm's
+# silence meaningless, which is the C1-integrity and VI2 discipline one level down.
+st_mustfire() {
+  local id="$1" fx="$2" want="$3" what="$4" landed=0 v n
+  cmp -s "$ST_FILE" "$fx" || landed=1
+  v="$(st_violations "$(st_surfaces "$fx")")"
+  n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  if [ "$landed" -eq 1 ] && st_has "$v" "$want"; then
+    PASS "$id: MUST FIRE — $what, and the same evaluator reports $want ($n violation(s) in all). The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$id: MUST FIRE — $what, but the evaluator did not report $want (mutation-landed=$landed violations=$n). ST1's zero has no control behind it for this surface"
+  fi
+}
+
+# st_mustnotfire <arm> <fixture> <edit-expected> <what> — the arms that tell a correct
+# evaluator from a lookalike. Without them an evaluator that returned a violation for ANY
+# difference would pass every must-fire arm above and still be worthless.
+st_mustnotfire() {
+  local id="$1" fx="$2" wantedit="$3" what="$4" landed=0 v n
+  cmp -s "$ST_FILE" "$fx" || landed=1
+  v="$(st_violations "$(st_surfaces "$fx")")"
+  n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  if [ "$landed" -eq "$wantedit" ] && [ "$n" -eq 0 ]; then
+    PASS "$id: MUST NOT FIRE — $what, and the evaluator reports 0 violations"
+  else
+    FAIL "$id: MUST NOT FIRE — $what, but the evaluator reports $n violation(s) (differs-from-original=$landed, expected $wantedit):$(printf '%s\n' "$v" | awk -F'\t' 'NF>1 { printf " %s", $1 }')"
+  fi
+}
+
+ST_OK=1
+ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0
+if [ -r "$ST_FILE" ]; then
+  ST_SURF="$(st_surfaces "$ST_FILE")"
+  ST_NPROSE="$(st_n PROSE "$ST_SURF")"
+  ST_NMARK="$(st_n MARKED "$ST_SURF")"
+  ST_NANNOT="$(st_n ANNOT "$ST_SURF")"
+  ST_NGLYPH="$(awk -v star="$ST_STAR" '{ s = $0; while ((p = index(s, star)) > 0) { n++; s = substr(s, p + length(star)) } } END { print n + 0 }' "$ST_FILE")"
+fi
+
+printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s appendix annotation(s) in %s, over %s star glyph(s) in the file\n' \
+  "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH"
+
+if [ ! -r "$ST_FILE" ]; then
+  FAIL "ST0: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
+  ST_OK=0
+elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; then
+  PASS "ST0: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
+else
+  FAIL "ST0: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
+  ST_OK=0
+fi
+
+if [ "$ST_OK" -eq 1 ]; then
+  ST_VIOL="$(st_violations "$ST_SURF")"
+  ST_NVIOL="$(printf '%s\n' "$ST_VIOL" | grep -c '[^[:space:]]')"
+  if [ "$ST_NVIOL" -eq 0 ]; then
+    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the ten CTL-ST arms below show this same evaluator failing on eight single-surface mutations and staying silent on two edits that change no surface"
+  else
+    FAIL "ST1: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
+    printf '%s\n' "$ST_VIOL" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
+  fi
+
+  if [ "$ST_NGLYPH" -gt "$ST_NMARK" ]; then
+    PASS "ST2: the reference count is $ST_NMARK MARKED FIELDS and not the $ST_NGLYPH star glyphs the file contains, and the inequality is observed here rather than assumed. The banner's own mention of the glyph is prose about the convention, excluded by the shape MARKED matches — so a counter that had quietly become a glyph tally would report $ST_NGLYPH and be caught by this arm"
+  else
+    FAIL "ST2: the marked-field count ($ST_NMARK) is not strictly below the glyph count ($ST_NGLYPH), so the discriminator between counting fields and counting glyphs is UNTESTED on this tree and ST1's agreement proves less than it appears to"
+  fi
+
+  if [ "${AR_NTPL:-unset}" = "0" ]; then
+    PASS "ST-AR3: AR3 is re-read in this same run and still reports 0 template(s) reaching the selector. Group ST reads $ST_REL directly and adds no finding code to the validator, so the constraint that this check must not drag a template into va_select is an observation here, not a promise in a comment"
+  else
+    FAIL "ST-AR3: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
+  fi
+fi
+
+# ── The control arms. Eight single-surface mutations that MUST turn ST red, and two edits
+# that MUST NOT. Every fixture is a copy of the REAL file, mutated at a line the probe
+# DISCOVERED, so no arm can drift away from the surface it is meant to exercise.
+if [ "$ST_OK" -eq 1 ]; then
+  ST_PL1="$(st_field PROSE 1 2 "$ST_SURF")";  ST_PV1="$(st_field PROSE 1 3 "$ST_SURF")"
+  ST_PL2="$(st_field PROSE 2 2 "$ST_SURF")";  ST_PV2="$(st_field PROSE 2 3 "$ST_SURF")"
+  ST_ML1="$(st_field MARKED 1 2 "$ST_SURF")"; ST_MB1="$(st_field MARKED 1 3 "$ST_SURF")"
+  ST_AL1="$(st_field ANNOT 1 2 "$ST_SURF")"
+
+  ST_FX="$(st_fixture m1)"; st_bump "$ST_FX" "$ST_PL1" "$ST_PV1"
+  st_mustfire CTL-ST-M1 "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields and the appendix untouched"
+
+  ST_FX="$(st_fixture m2)"; st_bump "$ST_FX" "$ST_PL2" "$ST_PV2"
+  st_mustfire CTL-ST-M2 "$ST_FX" DISAGREE "the APPENDIX RULE-4 numeral alone is restated as $((ST_PV2 - 1)) at line $ST_PL2, with the banner and the annotations untouched"
+
+  ST_FX="$(st_fixture m3)"; st_line_sub "$ST_FX" "$ST_ML1" "${ST_STAR}[ ]*" ""
+  st_mustfire CTL-ST-M3 "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving every numeral and every annotation as it was"
+
+  ST_FX="$(st_fixture m4)"; st_line_sub "$ST_FX" "$ST_AL1" "[ ]*[(]starred[)]" ""
+  st_mustfire CTL-ST-M4 "$ST_FX" DISAGREE "ONE appendix annotation is dropped at line $ST_AL1, leaving both numerals and every marked field as they were"
+
+  ST_FX="$(st_fixture d1)"; st_line_del "$ST_FX" "$ST_PL1"
+  st_mustfire CTL-ST-D1 "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1) — the case a count-only comparison passes, because the remaining numeral still agrees"
+
+  ST_FX="$(st_fixture d2)"; st_line_del "$ST_FX" "$ST_PL2"
+  st_mustfire CTL-ST-D2 "$ST_FX" PROSE-POP "the APPENDIX RULE-4 assertion is DELETED outright (line $ST_PL2), the same hole at the other site"
+
+  ST_FX="$(st_fixture r1)"; st_line_sub "$ST_FX" "$ST_ML1" "[*][*]$ST_MB1:[*][*]" "**$ST_MB1 (renamed):**"
+  st_mustfire CTL-ST-R1 "$ST_FX" LABELS-SET "ONE marked field is RENAMED ('$ST_MB1', line $ST_ML1) and every count is left equal, so only a label-for-label comparison can see it"
+
+  # R2 is the subtle one: the banner keeps its glyph and keeps its numeral, but stops being
+  # a countable assertion. It is the failure a count-only comparison cannot see, because
+  # nothing was deleted and nothing disagrees — an assertion quietly became a sentence.
+  ST_FX="$(st_fixture r2)"; st_line_sub "$ST_FX" "$ST_PL1" "[ ]of[ ]them" " like that"
+  ST_R2_KEPT=0
+  awk -v ln="$ST_PL1" -v star="$ST_STAR" 'NR == ln && index($0, star) > 0 { f = 1 } END { exit(f ? 0 : 1) }' "$ST_FX" && ST_R2_KEPT=1
+  if [ "$ST_R2_KEPT" -eq 1 ]; then
+    st_mustfire CTL-ST-R2 "$ST_FX" PROSE-POP "the BANNER is REWORDED out of the count shape at line $ST_PL1 while KEEPING its star glyph (asserted present on the mutated line) — it still looks like the assertion and no longer is one"
+  else
+    FAIL "CTL-ST-R2: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
+  fi
+
+  ST_FX="$(st_fixture clean)"
+  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes all eight arms above mean something"
+
+  ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
+  st_mustnotfire CTL-ST-NEUTRAL "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
