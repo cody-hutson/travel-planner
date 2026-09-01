@@ -440,6 +440,62 @@ Both read off artifacts you already audit (`event-status.md` for the regression,
 this check adds no new state and no scoring — it verifies the recovery was
 equitable and needs-safe, and routes any finding to the hub's remediation list.
 
+**Price-tier preservation on a replacement:**
+Trigger on the artifact, not on the mode: for every
+`## Replacement Options — <slot> (<date>)` section in `outputs/food-list.md`, the
+food agent has re-sourced that slot, and the entries beneath the header are the
+replacements. The section persists in the file after the pass that wrote it, so
+this check reads it whatever mode you are running in. Two limbs, both over
+artifacts you already read, and both decided by what the entry **declares**
+rather than by a scale — no shipped scale relates a currency band to the trip's
+posture, so there is no band-against-posture ordering for you to compute:
+
+- **The reconciliation statement is present — Warning if it is absent.** A
+  replacement entry states how its price sits against the trip's floor:
+  `trip-context.md` § *Budget Posture*, its `Overall tier` and its `Meals:`
+  splurge appetite, refined by each traveler's `Splurge appetite`. An entry
+  carrying no such statement is a **Warning** — cite the event, the slot, and
+  that the entry is silent on the floor. You check that the reconciliation was
+  made; you do not grade its answer. A `Mixed` overall tier is not an ordering,
+  so it neither excuses the statement nor supplies a verdict — it is the posture
+  that makes the stated reasoning most necessary.
+- **A drop below the superseded entry is declared — Warning if it is not.** The
+  research lists accumulate and never delete, so the entry the section supersedes
+  is still above it in the same file, carrying its `Price range`. Compare that
+  against the replacement's. A lower price tier **with** a stated reason on the
+  entry is correct and is **not** a finding — report it as declared. A lower
+  price tier carrying **no** stated reason is a **Warning**: cite both, the
+  event, and the day.
+
+**Where the superseded entry is not identifiable** — the appended section names
+no slot, because the list predates the replacement-header convention
+`agents/02-food.md` § *Mode Behavior* now binds — the second limb is **declared,
+never passed**, the first limb still runs, and you say which one ran. That is the
+**blocked-on-missing-input** kind. Where the file carries no
+`## Replacement Options` section at all, the population is **empty**, which is
+the other kind: say that, rather than reporting the check clean. The two are
+repaired by opposite things, and neither is a pass.
+
+**Coverage boundary, stated rather than left to be inferred.** This check reads
+`outputs/food-list.md` and no other research list. An activity entry carries no
+price field at all, so a superseded activity's price is recoverable by nobody,
+engine or human. A nightlife entry does carry one, but no floor obligation binds
+that spoke, so auditing a missing declaration there would report a failure
+against a pass that was never asked to make one. This check's population equals
+the obligation's population, exactly.
+
+**Severity ceiling — this check has no Critical tier.** A price tier is a desire
+attribute, and a desire is optimized within the bounds, never a bound — the same
+rule that makes a nightlife gap a Warning. A Critical would make the itinerary
+unfinalizable over a price tier, which is a forced anchor under another name. The
+one budget question that genuinely *is* a bound — a traveler's `Budget cap`, the
+hard personal spend ceiling `reference/data-model.md` routes to
+`## Budget Posture` — is audited by **no shipped check today**. Name that gap
+where you meet it; this check does not become its owner and does not raise it.
+
+You report the trade; you do not judge whether it was worth making, and you
+compute no score. This check adds no new state.
+
 **Location-link completeness:**
 Build the event roster from the itinerary: every placed venue that renders as a
 card — featured stops, mini / alternative / bailout cards, food cards, night cards,
@@ -668,6 +724,10 @@ obvious closure or business status issues. No full matrix required. Run the
 **per-event status presence** check here as well — a plan synthesised before
 this substrate existed resolves `DISCOVERY`, so a light pass that skipped the
 presence read would never fire on the population that check exists for.
+Run the **price-tier preservation** check here as well — a replacement section
+persists in `outputs/food-list.md` whatever mode the trip was left in, so a
+light pass that skipped that read would never reach a slot re-sourced through
+`/trip research food`, which writes no mode at all.
 
 **ENRICHMENT:** Full validation pass per output format.
 
@@ -679,6 +739,9 @@ against `outputs/event-status.md` regardless of which days changed: confirm no
 booking" still matches status. The **per-event status presence** check is not
 day-scoped either — it reads whether that file exists at all, and no
 changed-day narrowing bears on that.
+**Price-tier preservation** is not day-scoped either — its population is the
+replacement sections `outputs/food-list.md` carries, so a replacement appended
+for a day this run did not change is still inside it.
 
 **RESEQUENCING:** Full pass on all days — the sequence change may have
 introduced new day-of-week conflicts even though no venues changed. Run the
@@ -689,7 +752,10 @@ alternatives (not promoted into primary slots).
 ## Input
 
 Read fully before producing output:
-1. trip-context.md (hard constraints, travel dates, calendar events)
+1. trip-context.md (hard constraints, travel dates, calendar events; and
+   § *Budget Posture* — its `Overall tier` and `Meals:` splurge appetite are the
+   floor the price-tier preservation check reads. You read the floor; you never
+   set it)
 2. outputs/links-reference.md (canonical venue list — primary audit target; its
    `Venue key` column carries the canonical `ven-<token>`, which is what every
    venue check joins on)
@@ -813,6 +879,7 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Convenience-format anchor cap (per category; no Critical tier) | | | | |
 | Per-event status presence (synthesised plan; Warning only) | | | | |
 | Transit currency on changed days (routing signal re-derived) | | | | |
+| Price-tier preservation on a replacement (food-list only; no Critical tier) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
