@@ -3,6 +3,90 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.19.0] — 2026-09-01 — Nightlife fast-follows
+
+Three gaps shipped alongside the nightlife capability in 0.9.0 and were accepted as named
+fast-follows rather than release blockers. They were not three instances of one defect — one was
+structural, one was an advertised path that no code reached, one was a documentation claim the
+engine had newly contradicted. What they shared was the reason none of them blocked: every one of
+them fails silently. Nothing errors, nothing warns, and the plan a traveller reads looks complete.
+
+The natural-occasion trigger was advertised in the architecture decision that introduced it, in the
+hub's day template, and in the nightlife agent's own gate table. It was reachable from none of them.
+Dispatch conditioned on a stated desire alone, so a Saturday, a birthday or a last night produced no
+nightlife research at all; and even where dispatch had fired, the gate resolved against a file that
+does not carry trip dates, leaving two of its three occasion members unevaluable. The agent then
+wrote a stub asserting that no occasion applied — a claim it had no way to check, which downstream
+consumers read as settled.
+
+A split night had no join between the two things that describe it. The day-level Nightlife block
+carries entries with no members field; the parallel track blocks carry members but refuse night
+cards. On a fully-split day the day grid is omitted entirely, so those night cards had nowhere to
+live. Every available encoding lost something, and the one that lost the most lost it invisibly: a
+present traveller's nightlife desire could disappear into a decline line that the validator reads as
+a correct outcome rather than a gap.
+
+And the worked example the README points readers to still held all six of its evening venues under
+Activities, which the three-way ownership boundary the engine now ships directly contradicts. That
+example is a byte-identical regression witness and is not edited in place, so correcting it in the
+obvious way was not available.
+
+Four things are true now. The occasion limb resolves as a trip-level projection of the per-night
+rule the hub and validator already apply, sourced from fields that exist, with the one member no
+component could act on withdrawn rather than left advertised — a documented trigger no path can
+reach is the condition this work existed to remove, not one to leave behind. A split night expresses
+per-subgroup nightlife through a members slot on the entry line and the decline line alike, joined to
+the track block by verbatim string equality, and a desire lost to a split night now produces a
+finding at every priority tier the gate admits. A new fixture demonstrates the evening ownership
+boundary end to end, including a venue whose primary draw reassigns it from Food to Nightlife.
+And the frozen witness is untouched.
+
+One thing worth recording about how this release was built: most of its defects were found by
+reading rather than by running. Every gate stayed green through all of them, because a test suite
+verifies behaviour a rule has and cannot see a rule that only appears to exist.
+
+### Added
+
+- **`examples/evening-boundary-demo/`** — a worked instance of the three-way evening ownership
+  boundary, resolving two Activities, two Food and two Nightlife entries from one evening. It
+  demonstrates the cross-spoke condition in both directions: a venue whose primary draw moves it
+  from Food to Nightlife, and its mirror. Its `outputs/food-list.md` **discharges class C6's
+  coverage declaration** — that class previously had no schema witness precisely because its only
+  instance sat inside the frozen worked example and could not be versioned.
+- **A per-subgroup member slot on the nightlife entry line and the no-nightlife line**, joined to
+  the Parallel Track block's members string by verbatim string equality. On an unsplit night
+  `whole group` reproduces prior behaviour exactly — the rule generalises, and the unsplit case is
+  its identity.
+- **A nightlife band as a declared region of the day body**, rendered on every day regardless of
+  which day-body shape is present, so a fully-split day's night cards have a container.
+- **A render-contract row for the nightlife decline line.** A *stated* decline and a *dropped*
+  subgroup must not look alike on the page.
+
+### Changed
+
+- **The occasion limb is a trip-level projection**, not a per-night test evaluated by a night-blind
+  gate. Each member resolves from a source that carries it: the weekend member from the outbound and
+  return legs, the occasion member from the traveller carry-through and the calendar.
+- **The gate's input set is stated at the gate** rather than inferred from the read-order list that
+  happens to precede it, so a later addition to that list does not silently widen what resolves the
+  gate.
+- **A malformed no-nightlife line is judged by a criterion, not a list** — the test is whether *who
+  declined* stays determinable. An unreadable member slot is never the reason a night passes.
+- **The completeness walk covers the nightlife band's contents in full**, night cards and decline
+  lines alike, rather than only its card-bearing elements.
+
+### Fixed
+
+- **The natural-occasion trigger is reachable end to end.** Dispatch admits it, and the component
+  that evaluates it can read the fields it names.
+- **The SKIP stub no longer asserts that no occasion applied** unless that was actually evaluated —
+  an unverified claim that had been propagating into the validator's basis field.
+- **A decline that covers a desire-holder is a gap, not a correct outcome.** The finding this work
+  exists to surface is now reachable on the case it was written for.
+- **The worked example's divergence note names the nightlife ownership boundary**, so a reader
+  landing on the frozen example is told which of its sections predates the shipped behaviour and
+  where the compliant instance lives.
+
 ## [0.18.0] — 2026-08-31 — Satisfaction fast-follows
 
 Six items held out of earlier releases on purpose, each a gap in a specification rather than a
