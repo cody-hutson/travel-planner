@@ -52,7 +52,7 @@ anything**, and resolve to exactly one of three depths:
 | Signal present | Depth | Output |
 |---|---|---|
 | At least one traveler holds a desire whose text or theme tag is nightlife-shaped — archetypes `a night out` / `live music`, theme tag `nightlife` | **FULL** | full menu, minimum 12 entries |
-| No such desire, but a nightlife **interest** (`bars & nightlife`, `live music`) is present, **or** a natural occasion applies (a weekend night, a birthday, a last night) | **LIGHT** | minimum 5 entries, concentrated in the low-key and non-drinking sections |
+| No such desire, but a nightlife **interest** (`bars & nightlife`, `live music`) is present, **or** a natural occasion applies (a weekend night, a birthday, a last night), resolved as the trip-level projection defined below | **LIGHT** | minimum 5 entries, concentrated in the low-key and non-drinking sections |
 | Neither | **SKIP** | the gate-result stub described under `## Input` — and stop |
 
 **An interest alone never reaches FULL.** The intake form calls the interests
@@ -66,6 +66,33 @@ counts as present if they are on the trip at all — read `Can travel:` /
 `Blackout:` / `Arrive / leave:` in `outputs/traveler-model.md`. Per-night
 presence is the hub's to evaluate at placement time. You do not know which
 night is which, and you do not need to.
+
+**The occasion limb is a trip-level projection, never a per-night test.**
+Its three members are per-night predicates and this gate is night-blind, so
+resolve the limb as the one question this altitude can answer: **does this
+trip contain at least one night a natural occasion would apply to?** — does a
+weekend night fall inside the trip's span, or a special occasion inside
+trip-context.md's travel dates or calendar events. That is the exact
+trip-level projection of the per-night rule the hub applies at placement time
+and the validator applies in its coverage check, so all three resolve one
+predicate instead of three.
+
+**`a last night` never raises depth on its own.** Every trip has a last night,
+so at trip level that member is universally true and carries no signal — a limb
+that always holds is not a gate. It stays in the enumeration because it is a
+real per-night occasion, and it is **the hub's to apply at placement time**,
+where the night is known. Which night is the last night, and which night an
+occasion actually lands on, both remain the hub's per-night call.
+
+**Resolve each member from its own source, and never assert one you could not
+read.** Weekend night: the `### Outbound` / `### Return` legs' `[Day, Date,
+Time TZ]` — the only weekday trip-context.md's template governs. Special
+occasion: `## Events & Calendar`, whose dated public entries are holidays,
+festivals and major events. Birthday and other personal occasions: the
+`Special occasion?` carry-through in `outputs/traveler-model.md` — `## Events &
+Calendar` has no field for one, and `agents/00-enrichment.md` states the datum
+links to nothing trip-level. If a member has no readable source on this trip,
+record that in the stub's `Basis:` line rather than asserting the limb.
 
 **Night-shape, not day-shape:**
 Every recommendation carries when it is good in **nights of the week and
@@ -214,9 +241,15 @@ Read trip-context.md fully before producing output. Read in this order:
 1. `outputs/traveler-model.md` — **first, and before any research.** The
    `[DERIVED]` per-traveler desires with their `Priority tier:` (`anchor` /
    `wish` / `nice-to-have`), theme tags, interests, the desire-overlap signal,
-   and the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`).
-   **Resolve the desire gate here.** If it resolves SKIP, write the stub and
-   stop — do not read further and do not research.
+   and the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`),
+   and the `Special occasion?` carry-through if one is present. Then, for the
+   occasion limb only, `trip-context.md` → `## Logistics` → `### Outbound` /
+   `### Return` (the legs' `Departs:` / `Arrives:` `[Day, Date, Time TZ]`,
+   which give the trip's span and its weekdays) and `trip-context.md` →
+   `## Events & Calendar` (its dated public entries).
+   **Resolve the desire gate here**, against those fields and no others, taking
+   the occasion limb at the trip level defined above. If it resolves SKIP,
+   write the stub and stop — do not read the steps below and do not research.
 2. Hard Constraints — noise, mobility, health and sensory, curfew and timing.
    Hard filters, applied before anything is generated
 3. Group composition — the full energy range, including who will not be
@@ -259,10 +292,14 @@ generated: <YYYY-MM-DD>
 ## Gate Result ([date])
 **Depth:** SKIP — no present traveler holds a nightlife desire or theme tag,
 and no natural occasion applies.
-**Basis:** [which travelers were read; which signals were absent]
+**Basis:** [which travelers were read; which signals were absent; which
+trip-context.md sections were read for the occasion limb and what they showed.
+If a member of the limb had no readable source, name it here and drop the
+occasion clause from the Depth line rather than asserting it.]
 **Consequence:** no nightlife entries produced. The hub places none, and the
 validator's per-night check reads this as "no present desire" rather than a
-gap.
+gap. When the Depth line carries no occasion clause, that read covers the
+desire limb only — the occasion limb stays the hub's per-night call.
 ```
 
 This is a **normal file for this spoke**, not an error state. A missing file
