@@ -465,7 +465,14 @@ obliged, and the two limbs oblige different sets: the **desire limb** yields a
 **per-traveler** obligation — the desire-holders present that night, at any tier — and the
 **occasion limb** yields a **whole-group** obligation. Entries and no-nightlife lines each
 name a member set in their `[whole group | Subgroup members]` slot, and `whole group` names
-everyone present that night.
+everyone present that night. **That slot has exactly two admissible readings** — `whole group`,
+or verbatim a Parallel Track block's `[Subgroup members]` string for that day. **A slot that is
+neither, whatever it says, names no member set at all:** it is not a wider set and not a narrower
+one, so it covers nobody and discharges nobody, and any member set the gate obliged that only
+that line could have accounted for is left unaccounted for — a `gap` under the bullet below.
+Record the slot as read in a Note alongside whatever verdict the night resolves to, so the
+wording still converges. This governs **every slot-bearing line, entry and no-nightlife alike**,
+and it holds in one direction only: **an unreadable slot is never the reason a night passes.**
 
 - **`covered`** — the block carries one or more nightlife entries, and every member set the
   gate obliged is named by an entry's member slot, or discharged by a no-nightlife line in
@@ -475,11 +482,15 @@ everyone present that night.
   a filled reason. No finding. This is a correct outcome, not a gap. A decline discharges
   only the member set its line names, and only a set the desire limb did not oblige — an
   occasion-limb-only night, or a member set holding no nightlife desire.
-- **`declined`, plus a Note** — that line is present but malformed: a colon or other
-  separator in place of the em-dash, the reason left empty or as an unfilled
-  placeholder, or a member slot that is neither `whole group` nor a Parallel Track block's
-  `[Subgroup members]` string on that day. The intent is unambiguous, so the night passes;
-  the Note exists so the emitted wording converges rather than drifting silently.
+- **`declined`, plus a Note** — the line is present and its member slot reads, but the line is
+  malformed. **The test is whether *who declined* stays determinable, not whether the
+  malformation appears on a list:** a colon or other separator in place of the em-dash, and the
+  reason left empty or as an unfilled placeholder, are the forms seen so far, and both leave the
+  member set legible. That legibility is why the intent is unambiguous and the night passes; the
+  Note exists so the emitted wording converges rather than drifting silently. **An unreadable or
+  absent member slot is not one of these** — there the member set is exactly what cannot be
+  determined. It names no member set, discharges nobody, and the night resolves on that basis by
+  the rule in the obligation preamble above.
 - **`gap`, a Warning** — either the block carries neither an entry nor any no-nightlife
   statement for a member set the gate obliged, or the block is absent from an applicable
   night, **or** a no-nightlife line's member slot includes a traveler the gate obliged via

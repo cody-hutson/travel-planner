@@ -719,6 +719,7 @@ is neither is a **silent drop** — the defect this contract forbids.
 | Food Anchors — breakfast / lunch / dinner + options | Food Cards under Meal Toggles |
 | Transit Notes | `.card-transit` field + collapsible transport-box |
 | Nightlife / later-tonight options | Night Cards (`.night-card`) in the nightlife band (`.night-zone`); on a split night each card carries its `.nc-who` members string |
+| Nightlife decline — the `No nightlife tonight` line | A stated line in the nightlife band (`.night-zone`), carrying its member slot verbatim in the same `.nc-who` form the cards use — `whole group` on an unsplit night, the subgroup's members string on a split one. A decline produces no `.night-card`, so this introduces **no new card type**; the band already renders whenever the block has content, and a decline is content. It is rendered rather than excluded because a *stated* decline and a *dropped* subgroup must not look alike on the page — which is the silent drop this contract forbids. |
 | Constraint Compliance | Heat/Weather Strip + constraint note |
 | Parallel Track — a split day | **Split-Day Component** — one labeled track column per subgroup (N≥2), each with its own day map and named endpoints; every per-track event carries its `.map-link` |
 
@@ -758,7 +759,9 @@ At **site build** and again at every **site update**, walk 9.2's mapping against
 - Every day resolves to a Day Hero Banner and a day body — a day grid, a `.split-day` region,
   or both; every card-bearing element (anchor, supporting, bailout, alternative, food,
   nightlife) resolves to its component, and the nightlife band renders regardless of which
-  day-body shape is present.
+  day-body shape is present. The band's contents are walked in full — night cards **and** any
+  `No nightlife tonight` line, which is block content rather than absence, and which on a split
+  night is the only thing that distinguishes a stated decline from a dropped subgroup.
 - Every track of every split day resolves to its own labeled Split-Day Track column.
 - Every rendered event carries its `.map-link` (the location invariant).
 - Every element type present in the plan is either rendered (mapping table) or on the
