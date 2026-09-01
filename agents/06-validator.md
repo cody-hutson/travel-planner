@@ -792,6 +792,11 @@ would read `T of T` on every file, and a missing line would make the coverage
 read *better* rather than worse. **Where the file carries entries but no
 markers at all, T is not measurable: report `unverifiable` and name the
 condition — never read a marker-less file as `0 of 0`.**
+**Where markers cover only some of them, the same holds: an entry the file
+presents that carries no `artifact-entry` block of its own is counted by
+neither T nor E, so the ratio certifies full coverage over entries the
+selector cannot see — report `unverifiable`, name those entries, and use that
+evidence only to refuse the measurement, never as T.**
 Entries with no line are named here, and the cap is **unverifiable**
 over them. Report `no convenience-format entries declared` only when the tally
 is empty **and** every entry carries a line; report `unverifiable` when any
