@@ -206,6 +206,11 @@ assign meals to days or score the trade-off.
   obscure dish someone came for. Popular is not the same as efficient when it
   starves a unique taste. Protect at least one unique taste per traveler with a
   real, researched place.
+- **The securable downgrade:** A re-sourced slot quietly refilled at a lower
+  price tier because the cheaper candidate was the one with a table free. The
+  trade may be right — but it is the traveler's to make, so it is named on the
+  entry, never absorbed. An undeclared drop is the splurge being spent on
+  availability.
 
 ## Mode Behavior
 
@@ -216,6 +221,42 @@ dynamic, key dining culture norms. No specific restaurant listings.
 
 **ITERATION:** Replacement options for the specific meal slot or category in
 trip-context.md Mode Notes. Full depth. Do not regenerate the full list.
+
+**Head the appended section `## Replacement Options — <slot> (<date>)`, and name
+the slot you are replacing in the `<topic>` position.** That header is what lets a
+later reader — and the validator — find the entry a replacement supersedes. The
+form is the append convention `CLAUDE.md` § *Output Versioning* already
+illustrates, not a new one.
+
+**A replacement carries the slot's price tier as a floor.** Before you nominate,
+read what the slot was: its entry is still in `outputs/food-list.md` — this file
+accumulates and never deletes, so the superseded entry and its `Price range` are
+above your new section. Nominate at or above that price tier where the destination
+offers it, and hold the trip's `## Budget Posture` floor (`Overall tier`, and the
+`Meals:` splurge appetite, refined by each traveler's `Splurge appetite`) as the
+standing lower bound.
+
+**Every replacement entry states how its price sits against that floor** — one
+line, on the entry, whether the price tier held or dropped. Where every candidate
+at or above it is unavailable for the dates — sold out, closed, no window — say
+so **on the entry**, name the price tier you dropped to and why, and nominate it
+anyway. A declared trade-down is a decision the hub can weigh; a silent one is the
+splurge being spent on securability, which is why the statement is required on
+every entry and not only on the ones you already know you dropped. A `Mixed`
+overall tier is not an ordering; the reconciliation statement is still required,
+and it is what carries the reasoning a `Mixed` posture makes necessary.
+
+This is a floor on **one re-sourced slot**, never on the list: the range rules
+above (`price tier` variety across alternatives, price tiers across the trip) are
+unchanged and still bind.
+
+**Where this branch is reached, stated as a limitation and not as a safety
+property.** `/trip research food` is the path that runs it; `/trip replan` and
+`/trip reorder` do not dispatch this agent at all. On a trip still in DISCOVERY
+the branch above governs — a full list, not a replacement — so this obligation is
+not in force there, and no replacement section exists for anything downstream to
+read. `/trip-record mode` is the operator path that brings such a trip into
+ITERATION.
 
 **RESEQUENCING:** No new output. Food assignments resequenced by hub from
 existing food-list.md.
