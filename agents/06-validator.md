@@ -67,6 +67,46 @@ Beyond the standard matrix, you check for:
 - Markets and outdoor venues that operate on specific day-of-week schedules
   only
 
+**Transit currency on changed days:**
+On an `ITERATION` pass, for every day in your changed-day set — the same set
+your Mode Behavior already scopes the re-run to — confirm the day's transit
+record was re-derived *with* the change rather than carried over from before
+it. Three points, all read off artifacts you already audit:
+
+- **A routing-signal entry exists for the day — Critical if it does not.**
+  `outputs/scheduling-framework.md` § *Transit Cost & Routing Signal* carries
+  one entry per day, keyed by the `day:` marker in its `artifact-entry` fence.
+  For each changed day, confirm an entry carrying that day's key is present. A
+  changed day with no entry is a **Critical**: the scheduler ran on this pass
+  and the hub reconciled that day over a route it never published. Cite the day.
+- **The entry's three transit lines carry a value — Warning where one does
+  not.** `Ordered stop sequence`, `Per-leg transit cost` and `Total transit
+  cost` must each carry content rather than an unfilled bracket. Prose is a
+  legitimate value: where the brief covers no leg of a sequence,
+  `agents/03-scheduling.md` § *Transit Cost & Routing Signal* requires the
+  scheduler to say so on that leg and emit no number, so a stated condition is
+  a filled line and not a gap. An unfilled line is a **Warning** — the route is
+  published and its cost is not recorded. Name the day and the line.
+- **The day's transit guidance is not the pre-change guidance — Warning.**
+  `outputs/final-itinerary.md` carries a per-day `**Transit Notes**` block. On
+  a changed day it must be present and non-template. A block still carrying its
+  bracketed placeholder, or empty, is a **Warning**: the day moved and the
+  reader's navigation guidance did not.
+
+**Match on the `day:` key and on nothing else.** The sequence names stops by
+role, the itinerary names them by title, and neither side carries a
+`ven-<token>` — so do not reconcile the two populations of stops against each
+other, and do not read a short sequence as a missing stop. What the producer is
+contracted to carry is stated at `agents/03-scheduling.md` § *Transit Cost &
+Routing Signal*, and it is narrower than the day's placed-venue roster by
+design.
+
+This check adds no new state and no scoring. It does not price a leg, propose a
+route, or judge whether the routing is good — those belong to the transport
+spoke and the hub. It asks one question: after a move, is the day's transit
+record current with the plan. It does not run on `IDEATION`, `DISCOVERY`,
+`ENRICHMENT` or `RESEQUENCING` — say so rather than reporting it clean.
+
 **Price staleness:**
 Flag any price in the itinerary where the source data is older than
 12 months or where the venue category is known for frequent price changes.
@@ -681,8 +721,10 @@ Also read:
    finding, and an absent file never fails this read.)
 10. outputs/scheduling-framework.md (the per-day `Present today:` / `Absent today:`
     lines — the scheduler's published presence read, which you reconcile against each
-    need's applicable-day set; and the Experience Balance Signal your experiential-arc
-    audit already reads)
+    need's applicable-day set; the Experience Balance Signal your experiential-arc
+    audit already reads; and, on a changed day, the § *Transit Cost & Routing Signal*
+    entry — its `Ordered stop sequence` and `Per-leg transit cost` are what the
+    transit-currency audit reads. You read that entry; you never re-derive it)
 
 Write: outputs/satisfaction-metrics.md — **your owned sections only**
 (Needs-compliance + the needs↔constraint agreement check); read-merge-write,
@@ -770,6 +812,7 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
 | Convenience-format anchor cap (per category; no Critical tier) | | | | |
 | Per-event status presence (synthesised plan; Warning only) | | | | |
+| Transit currency on changed days (routing signal re-derived) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
