@@ -45,9 +45,15 @@ by two independent allocations that happen to sum.
 Rows 1, 3, 4 and 5 are the four referents `agents/07-nightlife.md`'s ownership
 calibration table needs. **That table is anonymized** — it describes its venues and
 names none — so the coupling is semantic: each of its four verdicts (Nightlife / Food /
-Food / Activities) resolves to exactly one row above, by **stated draw** rather than by
-name. The *Its stated draw* column is written in that table's own vocabulary so the
-resolution is checkable by a reader rather than asserted here.
+Food / Activities) resolves to exactly one row above. **Stated draw alone does not get
+there.** The *Its stated draw* column is written in that table's own vocabulary, and it
+settles the Nightlife verdict and the Activities verdict; but both **Food** verdicts read
+*a meal* and tie rows 3 and 4, and *Owner* ties them too. The *Role* column separates
+them — it labels each of the four with a token from that table's own description (*the
+alley / arches / stall-lane / crossing verdict*) — and *Role* is the column that
+**governs**. The *Entry* description separates the same two independently and corroborates
+rather than competes. Both routes are stated so the resolution is checkable by a reader
+rather than asserted here.
 
 Row 6 exists because `agents/07-nightlife.md` rule 3 hands Activities **two** limbs — *a
 sight, a view,* **or** *a scheduled event that happens to occur after dark* — and a
@@ -80,7 +86,7 @@ a check that cannot discriminate.
 |---|---|---|
 | E1 | The six evening entries split **2 Activities / 2 Food / 2 Nightlife** by owner. | count the fenced `artifact-entry` blocks per file: 2 / 2 / 2 |
 | E2 | Every one of the six venues carries an `artifact-entry` fence in **exactly one** list; its cross-reference in the other list is prose and carries **no fence**. | set difference over the fenced blocks and the prose mentions, both directions |
-| E3 | Each of the four ownership verdicts in `agents/07-nightlife.md`'s calibration table resolves to **exactly one** row of the table above, by stated draw. | four verdicts, read against the *Its stated draw* column |
+| E3 | Each of the four ownership verdicts in `agents/07-nightlife.md`'s calibration table resolves to **exactly one** row of the table above. | the four verdicts, read against the *Its stated draw* and *Owner* columns first — neither separates the two **Food** verdicts, which tie rows 3 and 4 — then against the *Role* column, which labels each of the four with a token from that table's own description of the venue and is the discriminator that **governs**. The *Entry* description separates the same two independently: a corroborating route, not a competing one, and where the two disagree *Role* governs, because it states the binding rather than inferring it. |
 | E4 | Every file carries its writer's **full declared section set**, under the writer's own names, with a stated *not exercised* where this fixture has no fact. | three files, read against each agent prompt's `## Output Format` |
 
 E2 is the one a schema gate structurally cannot reach, and it is also the one this
