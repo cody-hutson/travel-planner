@@ -198,9 +198,11 @@ Read trip-context.md fully before producing output. Read in this order:
 6. Trip Style and Budget Posture — calibrate selection and framing
 7. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
    desire-overlap signal feeding the attention lens (shared = efficient to
-   cover, unique = protect a candidate for), and the per-traveler
-   `Been here before?` signal feeding the depth lens (first-time = lead with
-   the essentials, experienced = bias toward the less obvious). A blank or
+   cover, unique = protect a candidate for), the per-traveler `Recurrence`
+   marking, which raises the candidate floor for any desire marked `daily`, and
+   the per-traveler `Been here before?` signal feeding the depth lens
+   (first-time = lead with the essentials, experienced = bias toward the less
+   obvious). A blank or
    em-dashed answer is **unknown**, never `never`
 8. Mode — confirm output format
 
@@ -355,3 +357,18 @@ that normalizes one of them is reading the model, not the test.
 
 Minimum 30 entries across main categories + minimum 5 bailout options.
 Do not sequence, prioritize, or assign to days.
+
+**A recurring desire raises this floor.** Where a traveler's desires include one
+marked `Recurrence: daily`, the plan opens a standing slot for it on every day of
+that traveler's honored-day set (`reference/data-model.md` → "A recurring
+desire's honored-day set — how it is derived"; cite it, do not re-derive it).
+Supply **enough distinct venues capable of filling that slot** that it can be
+filled on every one of those days **without breaching the venue-deduplication
+cap** (`CLAUDE.md` § *Key Rules* → "Venue deduplication"; cite it, do not restate
+it) — the cap counts places, not entries, and a recurring desire is a cadence on
+the want, never a license to repeat a place: a daily morning walk is a week of
+different walks, not the same park seven times.
+You are supplying a **count of distinct candidates, not a schedule**: which day
+each one lands on is the hub's to decide. Where the destination genuinely cannot
+support the count, supply what it does support — the hub names the shortfall and
+the coverage read renders the desire `not covered` with the missed days.

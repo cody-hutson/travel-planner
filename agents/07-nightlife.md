@@ -214,7 +214,9 @@ Read trip-context.md fully before producing output. Read in this order:
 1. `outputs/traveler-model.md` — **first, and before any research.** The
    `[DERIVED]` per-traveler desires with their `Priority tier:` (`anchor` /
    `wish` / `nice-to-have`), theme tags, interests, the desire-overlap signal,
-   and the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`).
+   and the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`), and
+   the per-traveler `Recurrence` marking, which raises the candidate floor for any
+   desire marked `daily`.
    **Resolve the desire gate here.** If it resolves SKIP, write the stub and
    stop — do not read further and do not research.
 2. Hard Constraints — noise, mobility, health and sensory, curfew and timing.
@@ -423,3 +425,18 @@ that normalizes one of them is reading the model, not the test.
 
 Minimum 12 entries at FULL depth, minimum 5 at LIGHT. Do not assign to nights
 or days, and do not build a schedule.
+
+**A recurring desire raises this floor.** Where a traveler's desires include one
+marked `Recurrence: daily`, the plan opens a standing slot for it on every day of
+that traveler's honored-day set (`reference/data-model.md` → "A recurring
+desire's honored-day set — how it is derived"; cite it, do not re-derive it).
+Supply **enough distinct rooms capable of filling that slot** that it can be
+filled on every one of those days **without breaching the venue-deduplication
+cap** (`CLAUDE.md` § *Key Rules* → "Venue deduplication"; cite it, do not restate
+it) — the cap counts places, not entries, and a recurring desire is a cadence on
+the want, never a license to repeat a place: a nightly low-key drink is a run of
+different rooms, not one bar every night.
+You are supplying a **count of distinct candidates, not a schedule**: which day
+each one lands on is the hub's to decide. Where the destination genuinely cannot
+support the count, supply what it does support — the hub names the shortfall and
+the coverage read renders the desire `not covered` with the missed days.
