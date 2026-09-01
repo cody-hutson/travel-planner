@@ -104,6 +104,10 @@ what you give up going conservative vs. what you risk going optimistic.
    against this group's hard constraints
 5. Departure confidence — final journey planned with a buffer that reflects
    real stakes, not optimistic scheduling
+6. Depth coverage — the framing matches the party's familiarity with the
+   destination. Where a traveler's `Been here before?` is unknown, they
+   contribute no depth signal. This never overrides a hard constraint, a
+   stated need, or first-arrival clarity
 
 ## Anti-Patterns to Actively Avoid
 
@@ -155,7 +159,16 @@ Read trip-context.md fully before producing output. Read in this order:
 4. Accommodation — transit access from enrichment
 5. Hard Constraints — anything affecting physical transit experience
 6. Possible Day Trips — assess logistics for each
-7. Mode — confirm output format
+7. `outputs/traveler-model.md` — the per-traveler `Been here before?` signal
+   feeding the depth lens (first-time = lead with orientation, experienced =
+   lead with what has changed). A blank or em-dashed answer is **unknown**,
+   never `never`. **Read this file for the depth signal and for nothing else.**
+   Stream membership comes from `## Logistics` and the `## Group` roster, never
+   from here: a `[THIRD-PARTY]` entry carries needs only and has no journey
+   facet by rule (`agents/00-enrichment.md` → "Resolving origin on a
+   multi-origin trip"), so an origin read off this file would silently drop a
+   real passenger from a stream you are sizing and pricing
+8. Mode — confirm output format
 
 **Versioned artifacts.** Every artifact you read may carry a `schema-version`.
 Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`
@@ -219,6 +232,12 @@ writing any of them:
   leg's destination, its arrival time is that leg's `Arrives:`, and its passengers
   are that origin's `Departing travelers:` — **minus anyone whose own window says
   they are not on that booking.**
+- **The anchor origin (`Origin A`) carries no `Departing travelers:` line, and that
+  is not an omission.** Its passengers are **every `## Group` roster member not
+  named under `### Additional origins`** — the closed derivation
+  `templates/trip-context.template.md` states there. Apply the same minus-clause to
+  it. On a single-origin trip that section is absent and the anchor's passengers are
+  the whole roster.
 - **Each traveler whose own window states an arrival different from their origin's
   booking contributes a stream of their own**, at their own arrival time, into the
   same destination airport. If no leg records their flight, write the stream from
@@ -411,3 +430,19 @@ leg: leg-<token>
 | Conservative | | On-time buffer | Early arrival wait |
 | Recommended | | Reasonable buffer | Minor delay absorbed |
 | Optimistic | | Extra morning time | Any disruption = missed flight |
+
+> **Depth calibration — how `Been here before?` shows up here.** Depth is
+> expressed through **how the sections above are filled**, never by adding or
+> removing sections. A **first-time-weighted** party gets `### Destination
+> Transport Character` and `### Payment & Transit Card Setup` at full
+> orientation depth — the obtain / load / tap sequence written out step by step.
+> An **experienced-weighted** party gets those two compressed to what has
+> *changed* — a fare-system revision, a card no longer sold, a line that has
+> opened — and the recovered depth goes to `### Point-to-Point Transit Matrix`
+> and `### Day Trip Logistics`, where a returning traveler's real questions sit.
+> `### Arrival Transport` and `### Departure Logistics` are **never** compressed:
+> familiarity does not reduce the stakes of a booked flight, and **"The departure
+> afterthought"** still binds. No traveler's answer, and no attribution of an
+> answer to a person, is written into this file — the signal changes how much is
+> written, never what is disclosed. A party whose answers are all unknown renders
+> exactly as it would without the signal.

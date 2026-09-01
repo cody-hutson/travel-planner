@@ -396,11 +396,11 @@ Offer the archetype menu from the section as starting points — an archetype on
 a complete first pass. Then make each one specific to
 them. For every desire, ask for exactly one priority tier — *anchor* (would be genuinely
 disappointed to miss it), *wish* (try hard, but it can yield), or *nice-to-have* (a bonus).
-Suggest a theme tag or two, reusing the archetype wording where it fits. Leave **Overlap**
-blank. Then ask whether it is a one-off or something they want every day they are there — a
+Then ask whether it is a one-off or something they want every day they are there — a
 morning ritual, a daily swim. Record `daily` only when they say so; anything else is
 `one-off`. It is a separate question from how much it matters: ask both, never one
-instead of the other.
+instead of the other. Suggest a theme tag or two, reusing the archetype wording where
+it fits. Leave **Overlap** blank.
 
 ### Step 9 — Travel style & pace
 Fields: **Pace** (starred), **Day rhythm**, **Novelty vs comfort**, **Planning style**.

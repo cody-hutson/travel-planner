@@ -94,6 +94,14 @@ Calendar` has no field for one, and `agents/00-enrichment.md` states the datum
 links to nothing trip-level. If a member has no readable source on this trip,
 record that in the stub's `Basis:` line rather than asserting the limb.
 
+**What the gate reads — and what it does not.** The three rows above resolve on
+the desire and theme-tag signal, the interest signal, and the occasion limb, and
+on nothing else. `Recurrence` is the worked case — a desire marked `daily`
+raises the candidate floor under `## Output Format`, and a desire that is not
+nightlife-shaped does not become nightlife-shaped by recurring. The test is the
+same for any field a later release adds to step 1: if changing its value cannot
+change the answer to FULL / LIGHT / SKIP, it is not a gate input.
+
 **Night-shape, not day-shape:**
 Every recommendation carries when it is good in **nights of the week and
 hours** — never in trip days. A club that only fills Friday and Saturday, a
@@ -241,13 +249,15 @@ Read trip-context.md fully before producing output. Read in this order:
 1. `outputs/traveler-model.md` — **first, and before any research.** The
    `[DERIVED]` per-traveler desires with their `Priority tier:` (`anchor` /
    `wish` / `nice-to-have`), theme tags, interests, the desire-overlap signal,
-   and the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`),
-   and the `Special occasion?` carry-through if one is present. Then, for the
-   occasion limb only, `trip-context.md` → `## Logistics` → `### Outbound` /
-   `### Return` (the legs' `Departs:` / `Arrives:` `[Day, Date, Time TZ]`,
-   which give the trip's span and its weekdays) and `trip-context.md` →
-   `## Events & Calendar` (its dated public entries).
-   **Resolve the desire gate here**, against those fields and no others, taking
+   the presence facets (`Can travel:` / `Blackout:` / `Arrive / leave:`), the
+   per-traveler `Recurrence` marking, which raises the candidate floor for any
+   desire marked `daily`, and the `Special occasion?` carry-through if one is
+   present. Then, for the occasion limb only, `trip-context.md` →
+   `## Logistics` → `### Outbound` / `### Return` (the legs' `Departs:` /
+   `Arrives:` `[Day, Date, Time TZ]`, which give the trip's span and its
+   weekdays) and `trip-context.md` → `## Events & Calendar` (its dated public
+   entries).
+   **Resolve the desire gate here**, on the gate inputs named above, taking
    the occasion limb at the trip level defined above. If it resolves SKIP,
    write the stub and stop — do not read the steps below and do not research.
 2. Hard Constraints — noise, mobility, health and sensory, curfew and timing.
@@ -460,3 +470,18 @@ that normalizes one of them is reading the model, not the test.
 
 Minimum 12 entries at FULL depth, minimum 5 at LIGHT. Do not assign to nights
 or days, and do not build a schedule.
+
+**A recurring desire raises this floor.** Where a traveler's desires include one
+marked `Recurrence: daily`, the plan opens a standing slot for it on every day of
+that traveler's honored-day set (`reference/data-model.md` → "A recurring
+desire's honored-day set — how it is derived"; cite it, do not re-derive it).
+Supply **enough distinct rooms capable of filling that slot** that it can be
+filled on every one of those days **without breaching the venue-deduplication
+cap** (`CLAUDE.md` § *Key Rules* → "Venue deduplication"; cite it, do not restate
+it) — the cap counts places, not entries, and a recurring desire is a cadence on
+the want, never a license to repeat a place: a nightly low-key drink is a run of
+different rooms, not one bar every night.
+You are supplying a **count of distinct candidates, not a schedule**: which day
+each one lands on is the hub's to decide. Where the destination genuinely cannot
+support the count, supply what it does support — the hub names the shortfall and
+the coverage read renders the desire `not covered` with the missed days.

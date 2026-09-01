@@ -76,25 +76,25 @@ reads "all travelers" and nothing below changes.
 
 **Recurring desires (a standing slot, not a repeated venue):**
 A desire marked `Recurrence: daily` in `outputs/traveler-model.md` is a want the plan
-honors **every day that traveler is present** — not every trip day, and not by any rule
-that depends on the destination. The present-day set is defined once in
-`reference/data-model.md` → "Presence — a traveler's present-day set"; read it there and
-do not re-derive it, restate its limbs, or substitute the trip's day count for it. Carry
-the desire as a **standing slot** in the day shape on each of those days, in the time
-block the desire itself names, and name it on that day's framework line. On a day that
-traveler is absent, no slot is placed — there is no day to honor.
+honors **every day of that traveler's honored-day set** — not every trip day, and not by
+any rule that depends on the destination. The honored-day set is defined once in
+`reference/data-model.md` → "A recurring desire's honored-day set — how it is derived";
+read it there and do not re-derive it, restate its factors, or substitute the trip's day
+count for it. Carry the desire as a **standing slot** in the day shape on each of those
+days, in the time block the desire itself names, and name it on that day's framework
+line. On a day that traveler is absent, no slot is placed — there is no day to honor.
 
 Three bounds hold on the slot, and none is optional:
 - **It is never the day's anchor.** A recurring slot is a supporting slot. It never
-  stands in for the day's anchor event or anchor meal, whatever the desire's priority
-  tier — a daily `anchor`-tier desire is still a supporting slot.
+  stands in for the day's anchor event or anchor meal.
 - **It is a cadence on the want, never an exemption from venue deduplication.** The slot
   recurs; a venue does not. Every venue that fills it obeys the same two-appearance cap
   as any other, so a week-long ritual is a week of that kind of stop, not seven visits
   to one address.
 - **It yields like any desire.** Needs bound the solution; a recurring desire is
-  optimized inside those bounds. Where the slot cannot be placed on a present day, say
-  which day and why — never drop it silently.
+  optimized inside those bounds. Where the slot cannot be placed on an honored day, say
+  which day and why — never drop it silently. A day outside the honored-day set is not a
+  missed placement and is not reported as one — the desire was never owed there.
 
 Where no traveler holds a recurring desire, nothing above changes the day shape.
 
@@ -459,9 +459,10 @@ day: <YYYY-MM-DD>
 - Present today: [all travelers — or the travelers present, naming anyone whose
   presence is inherited rather than stated as (assumed)]
 - Absent today: [travelers outside their own window on this day, by name — or "none"]
-- Recurring desires today: [each `Recurrence: daily` desire held by a traveler present
-  today, with its time block — or "none". A traveler named absent above carries none
-  today; a recurring slot is never placed on a day its traveler is not here]
+- Recurring desires today: [each `Recurrence: daily` desire honored today, with its time
+  block — or "none". A traveler named absent above carries none today; a recurring slot
+  is never placed on a day its traveler is not here, and a day the desire's own time
+  block does not reach carries none either]
 - Anchor outside a window: [if a whole-group anchor lands here while someone is
   absent: name the anchor, name who is absent, and name which forcing reason applies
   — or "none"]

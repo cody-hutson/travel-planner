@@ -46,6 +46,16 @@ the list entirely is the "dismissive casual section" anti-pattern.
 `effort level` (walk-in vs. reservation) — a walk-in counter can be a
 legitimate anchor, and this rule never pushes toward reservations.
 
+**The cap does not reach a recurring slot.** A `Recurrence: daily` desire is
+filled by a standing supporting slot, and a recurring slot is never the day's
+anchor meal whatever the desire's tier (`agents/03-scheduling.md` → the three
+bounds on the slot; `reference/data-model.md` → *Recurrence is orthogonal to
+priority tier*). The candidates that fill it are therefore not anchor-meal
+nominations, and this cap does not count them — supply as many distinct
+candidates as that slot needs. What binds there is the two-appearance venue
+cap, not this one. Mark each such entry `grazing/snack only`: it is the honest
+reading, and it is what keeps the two rules mutually satisfiable.
+
 **Price staleness awareness:**
 Prices in any food guide older than 12 months should be treated as
 approximate and flagged. Prices drift — especially at destination markets,
@@ -164,7 +174,7 @@ assign meals to days or score the trade-off.
    second must be intentional
 6. Convenience-format anchor discipline — convenience formats unlimited as
    grazing/snack; at most 2 anchor-meal nominations per category, second
-   intentional
+   intentional, and every entry declares its eligibility state
 7. Practical executability — every recommendation executable given language
    ability, constraints, and energy level
 8. One genuine peak — at least one meal worth describing for years
@@ -220,9 +230,11 @@ Read trip-context.md fully before producing output. Read in this order:
 5. Budget Posture — calibrate across all tiers
 6. `outputs/traveler-model.md` — the `[DERIVED]` per-traveler desires + the
    desire-overlap signal feeding the attention lens (shared tastes = efficient
-   to cover, unique tastes = protect a candidate for), and the per-traveler
-   `Been here before?` signal feeding the depth lens (first-time = lead with
-   the essentials, experienced = bias toward the less obvious). A blank or
+   to cover, unique tastes = protect a candidate for), the per-traveler
+   `Recurrence` marking, which raises the candidate floor for any desire marked
+   `daily`, and the per-traveler `Been here before?` signal feeding the depth
+   lens (first-time = lead with the essentials, experienced = bias toward the
+   less obvious). A blank or
    em-dashed answer is **unknown**, never `never`
 7. Mode — confirm output format
 
@@ -309,8 +321,16 @@ For each entry:
 - **Indoor / outdoor:** note if weather-sensitive
 - **Timing note:** any time-of-day, day-of-week, or seasonal constraint
 - **Proximity flag:** [If hotel-neighborhood venue — note appearance cap status]
-- **Anchor-meal eligibility:** [If a convenience-format entry — `anchor-eligible
-  (N of 2)` or `grazing/snack only`. Omit for all other entries.]
+- **Anchor-meal eligibility:** [Required on every entry. Convenience-format
+  entry: `anchor-eligible (N of 2, <category>)` or `grazing/snack only`. Every
+  other entry: `not convenience-format`. `<category>` is the convenience-format
+  category the cap counts this nomination within — named in the words
+  *Convenience-format anchor discipline* above uses (grab-and-go,
+  konbini/counter, standing-counter, market-stall, or the destination's own
+  minimal-commitment format named in the same register). The category is
+  carried only on `anchor-eligible`, because that is what the cap counts;
+  `grazing/snack only` is not a nomination. Write `grazing/snack only`
+  byte-exactly — the hub matches it verbatim.]
 - **Honest caveat:** when this recommendation would be wrong for this group
 
 **The entry marker — one fenced block per entry, carrying the venue key and
@@ -369,8 +389,40 @@ normalized token a later slice might reach for. They fail the frontmatter/body
 test's second question by construction — two correct writers do not phrase a
 caveat identically — and that failure is the guarantee, not a reminder. A slice
 that normalizes one of them is reading the model, not the test.
-**`Anchor-meal eligibility` is the exception that proves it:** its two tokens are
-read verbatim by the hub, so write them exactly as the list above spells them and
-do not restyle, kebab-case or abbreviate them.
+**`Anchor-meal eligibility` is the exception that proves it:** its three tokens
+are normalized — write them exactly as the list above spells them and do not
+restyle, kebab-case or abbreviate them. `grazing/snack only` is the one the hub
+matches verbatim, and `anchor-eligible` is the one the validator's
+convenience-format anchor cap audit tallies. **`not convenience-format` has no
+reader that matches the token** — nothing anywhere reads its text. What is read
+is the *presence* of the line it completes: the validator flags an entry whose
+eligibility line is missing, because a required line that is absent is an
+undeclared state. So write it to make an ordinary entry's state declared — so a
+reader can tell an ineligible venue from a forgotten marker — not because
+something matches on it. The `<category>` carried inside
+`anchor-eligible (N of 2, <category>)` is the one free-text part — name it in the
+register the *Convenience-format anchor discipline* above uses, not as a
+normalized token.
 
 Minimum 35 entries. Do not assign to days or build a schedule.
+
+**A recurring desire raises this floor.** Where a traveler's desires include one
+marked `Recurrence: daily`, the plan opens a standing slot for it on every day of
+that traveler's honored-day set (`reference/data-model.md` → "A recurring
+desire's honored-day set — how it is derived"; cite it, do not re-derive it).
+Supply **enough distinct places capable of filling that slot** that it can be
+filled on every one of those days **without breaching the venue-deduplication
+cap** (`CLAUDE.md` § *Key Rules* → "Venue deduplication"; cite it, do not restate
+it) — the cap counts places, not entries, and a recurring desire is a cadence on
+the want, never a license to repeat a place: a daily coffee ritual is a week of
+different counters, not one café seven mornings running.
+You are supplying a **count of distinct candidates, not a schedule**: which day
+each one lands on is the hub's to decide. Where the destination genuinely cannot
+support the count, supply what it does support — the hub names the shortfall and
+the coverage read renders the desire `not covered` with the missed days.
+
+Where a candidate you supply for a recurring slot is convenience-format, mark its
+eligibility as the Convenience-format anchor discipline above directs. A
+recurring slot is never the day's anchor meal, so the anchor cap does not count
+these nominations — but the entry still declares its state, so a reader can tell
+an ineligible venue from a forgotten marker. Do not restate that rule here.

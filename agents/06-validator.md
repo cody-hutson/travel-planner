@@ -39,6 +39,20 @@ unresolved. `unminted` is a declared absence, never a missing venue; an entry
 still carrying it once the hub's reference files hold that venue is a Note
 naming the entry and its file, not a Critical.
 
+**Convenience-format anchor cap:**
+The food agent caps convenience-format anchor-meal nominations at 2 per
+category across `outputs/food-list.md` (`agents/02-food.md` →
+*Convenience-format anchor discipline*). Audit it from the artifact, not from
+behaviour. Read every entry's **Anchor-meal eligibility** line and tally the
+`anchor-eligible` nominations per named category, over the whole accumulated
+file. Flag any category carrying more than 2. Flag any entry whose eligibility
+line is **missing** — a required line that is absent is an undeclared state,
+and the cap cannot be read over it. Flag any `anchor-eligible` nomination whose
+category is unnamed, and any category whose ordinals do not run 1..N without
+repeat. You count the declared markers; you do not classify venues into
+convenience formats yourself — the marker is the food agent's declaration, and
+re-deriving it is the classification this role does not do.
+
 **Hours and closure verification:**
 Every venue in the itinerary is checked against the day of week it is
 scheduled. The primary closure check matrix is: venue x day-of-week x
@@ -302,13 +316,15 @@ a fixed type:
   (a missed anchor is a worse plan), but it is **never** a needs-compliance
   failure — a desire is optimized within the bounds, not a bound.
   A desire carrying `Recurrence: daily` is checked **per day**: its coverage days are
-  that traveler's **present-day set** — see `reference/data-model.md` → "Presence — a
-  traveler's present-day set"; do not re-derive it here and never check it against the
-  full trip-day set. Emit the reading in the `Per-day coverage` cell, naming the
-  present-day set and its reason
-  (`D2 covered · D3 not covered · D4 covered (present D2–D4)`), and set `Covered?` to
-  `covered` **only when every present day carries it** — a partial is `not covered` with
-  the missed days named, never a third verdict value and never a percentage. The severity
+  that traveler's **honored-day set** — see `reference/data-model.md` → "A recurring
+  desire's honored-day set — how it is derived"; do not re-derive it here and never
+  check it against the full trip-day set. Emit the reading in the `Per-day coverage`
+  cell, naming the honored-day set and its reason
+  (`D2 covered · D3 — (morning block not reached) · D4 covered (honored D2, D4)`), and
+  set `Covered?` to `covered` **only when every honored day carries it** — a partial is
+  `not covered` with the missed days named, never a third verdict value and never a
+  percentage. A day trimmed by the desire's own time block carries that reading and its
+  reason, never silence. The severity
   ceiling is unchanged: a partly-honored recurring anchor is a **Warning**, never a
   Critical and never a needs-compliance failure. A day the traveler was absent carries no
   reading at all, and a reading rendered for a day the scheduling framework names them
@@ -542,6 +558,10 @@ placed venue breaking the dedup rules is Venue deduplication.
 12. Nightlife coverage — Warning only. A desired night with no nightlife option and
     no stated reason is a missed desire, never a bound; this check has no Critical
     tier and never blocks finalization
+13. Convenience-format anchor cap — Warning only. An over-cap category, an
+    undeclared eligibility line, or an unnamed category is a selection-discipline
+    finding on the research list, never a defect in the itinerary; this check has
+    no Critical tier and never blocks finalization
 
 ## Mode Behavior
 
@@ -578,7 +598,9 @@ Read fully before producing output:
 4. outputs/final-itinerary.md (scheduled placement of all venues)
 
 Also read:
-5. outputs/food-list.md (closed day notes from food agent)
+5. outputs/food-list.md (closed day notes from the food agent, and the
+   **Anchor-meal eligibility** lines the convenience-format anchor cap audit
+   counts)
 6. outputs/activities-list.md (any caveat or hours notes from activities agent)
 7. outputs/event-status.md (per-event status — the target of the
    status-integrity audit: protected `locked`/`firmed` events, the
@@ -685,6 +707,7 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Structural integrity | | | | |
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
+| Convenience-format anchor cap (per category; no Critical tier) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
@@ -739,6 +762,46 @@ Proximity venue usage (hotel-neighborhood):
 
 | Venue key | Venue | Proximity | Appearances | Intentional? |
 |-----------|-------|-----------|-------------|-------------|
+
+---
+
+### Convenience-Format Anchor Cap Report
+
+Counted from `outputs/food-list.md` **Anchor-meal eligibility** lines, per
+convenience-format category, over the whole accumulated file. One row per
+category.
+
+| Category | Anchor-eligible nominations | Ordinals seen | Cap | Verdict |
+|----------|-----------------------------|---------------|-----|---------|
+| [konbini/counter] | [N] | [1, 2] | 2 | [OK / OVER-CAP] |
+
+**Marker coverage:** [E of T entries carry an **Anchor-meal eligibility**
+line]. **T is the count of fenced `artifact-entry` blocks in
+`outputs/food-list.md`** — that block is this class's declared entry selector
+(`reference/data-architecture.md` § 4.5 rule 2; `reference/schemas/food-list.md`
+→ *The entry marker*), one per entry. Count the markers. Do **not** count `###`
+headings and do **not** count entry ordinals: the marker exists precisely
+because this class carries more third-level headings than entries, and because
+an `accumulate-append` file's numbering restarts or continues across appended
+sections. **E is the subset of those same entries that carry the line.**
+Because T is fixed by the marker and not by the line, a missing line lowers E
+against an unchanged T — which is the only arrangement under which the
+`unverifiable` limb below can fire at all. Were T instead the count of entries
+carrying an eligibility line, E and T would be equal by construction, the ratio
+would read `T of T` on every file, and a missing line would make the coverage
+read *better* rather than worse. **Where the file carries entries but no
+markers at all, T is not measurable: report `unverifiable` and name the
+condition — never read a marker-less file as `0 of 0`.**
+**Where markers cover only some of them, the same holds: an entry the file
+presents that carries no `artifact-entry` block of its own is counted by
+neither T nor E, so the ratio certifies full coverage over entries the
+selector cannot see — report `unverifiable`, name those entries, and use that
+evidence only to refuse the measurement, never as T.**
+Entries with no line are named here, and the cap is **unverifiable**
+over them. Report `no convenience-format entries declared` only when the tally
+is empty **and** every entry carries a line; report `unverifiable` when any
+line is missing. An empty tally with full coverage is a measurement; an empty
+tally with missing lines is not.
 
 ---
 
@@ -847,7 +910,7 @@ the ownership rule and it is what keeps two writers off one frontmatter block:
 
 | Traveler | Desire | Priority tier | Per-day coverage | Covered? |
 |----------|--------|---------------|------------------|----------|
-| [Name] | [Desire] | [anchor / wish] | [`—` for a one-off desire; for a `Recurrence: daily` desire, D# covered / not covered per present day, naming the present-day set] | [covered / not covered] |
+| [Name] | [Desire] | [anchor / wish] | [`—` for a one-off desire; for a `Recurrence: daily` desire, D# covered / not covered per honored day, naming the honored-day set] | [covered / not covered] |
 
 **Balance signals — named; scoring left to design**
 
