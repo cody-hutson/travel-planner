@@ -910,7 +910,7 @@ fi
 #
 # ── `writer` IS DELIBERATELY NOT COMPARED, AND THE OMISSION IS MEASURED ──────────
 # § 1.1 states the writer as PROSE carrying qualifiers, while the frontmatter states a token
-# or an inline list. Two of the seventeen witnessed classes are correct AND unequal by
+# or an inline list. Two of the eighteen witnessed classes are correct AND unequal by
 # design: the section-owned class renders as a two-writer prose phrase against a two-value
 # list, and the residual targeted-research class names its writer generically because the
 # writer varies per instance while its witness names the concrete spoke that produced it. A
@@ -918,12 +918,14 @@ fi
 # field is excluded rather than compared badly — and CA7 below reports the excluded count as
 # a measurement so the exclusion is never silent.
 #
-# ── THE WITNESS DENOMINATOR IS 17, NOT 19, AND THAT IS CORRECT ───────────────────
-# Two classes declare `no-witness-because:` instead of a witness. Their absence from the
-# fourth home is the coverage declaration working, not a gap, so they are excluded from the
-# witness comparison BY THEIR OWN DECLARATION (read from CV_NOWITNESS_IDS) rather than by
+# ── THE WITNESS DENOMINATOR IS 18, NOT 19, AND THAT IS CORRECT ───────────────────
+# One class — C19 — declares `no-witness-because:` instead of a witness. Its absence from the
+# fourth home is the coverage declaration working, not a gap, so it is excluded from the
+# witness comparison BY ITS OWN DECLARATION (read from CV_NOWITNESS_IDS) rather than by
 # arithmetic. A class that declared NEITHER branch would fall out of both sets, which is why
-# CA6 asserts the two partitions close on the class enumeration.
+# CA6 asserts the two partitions close on the class enumeration. The denominator moved 17 -> 18
+# when C6 gained a tracked witness outside the frozen fixture; it is read live from the corpus
+# here, so this comment is the only thing that had to move with it.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "CA — the class-assignment homes agree (§ 1.1 · § 6 · § 9 · the witness frontmatter)"
@@ -1121,7 +1123,7 @@ EOF
 # from it are missing BY DECLARATION; a class declaring neither branch would silently shrink
 # that denominator and every arm above would still read green over a smaller population.
 if [ "$((CA_WIT_N + CA_NOWIT_N))" -eq "$CA_N" ] && [ "$CA_N" -gt 0 ]; then
-  PASS "CA6: the witness partition closes on the class enumeration — $CA_WIT_N witnessed + $CA_NOWIT_N declared-no-witness = $CA_N classes. The two classes absent from the witness home are absent by design, and the denominator above reflects that rather than treating it as a gap"
+  PASS "CA6: the witness partition closes on the class enumeration — $CA_WIT_N witnessed + $CA_NOWIT_N declared-no-witness = $CA_N classes. The $CA_NOWIT_N class(es) absent from the witness home are absent by design, and the denominator above reflects that rather than treating it as a gap"
 else
   FAIL "CA6: $CA_WIT_N + $CA_NOWIT_N != $CA_N — a class declares neither coverage branch, so the witness denominator is smaller than it looks"
 fi
@@ -2274,7 +2276,7 @@ else
 fi
 
 FX="$WORK/s5"; mk_root "$FX"
-sed 's|^no-witness-because: .*$|witness: examples/ctl/outputs/does-not-exist.md|' \
+sed 's|^witness: .*$|witness: examples/ctl/outputs/does-not-exist.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
 if [ "$R" -ne 0 ] && has_finding "$O" 'S5'; then
@@ -2285,7 +2287,7 @@ fi
 
 FX="$WORK/s6"; mk_root "$FX"
 printf -- '# Food List — CTL fixture with no frontmatter at all\n' > "$FX/examples/ctl/outputs/food-list.md"
-sed 's|^no-witness-because: .*$|witness: examples/ctl/outputs/food-list.md|' \
+sed 's|^witness: .*$|witness: examples/ctl/outputs/food-list.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
 if [ "$R" -ne 0 ] && has_finding "$O" 'S6'; then
@@ -2295,7 +2297,7 @@ else
 fi
 
 FX="$WORK/s7"; mk_root "$FX"
-sed 's|^no-witness-because: .*$|witness: reference/schemas/README.md\nno-witness-because: both, which is not allowed|' \
+sed 's|^witness: .*$|witness: reference/schemas/README.md\nno-witness-because: both, which is not allowed|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
 if [ "$R" -ne 0 ] && has_finding "$O" 'S7'; then
@@ -2304,7 +2306,7 @@ else
   FAIL "CTL-S7: MUST FIRE — a schema declaring both coverage branches was accepted (rc=$R)"
 fi
 FX="$WORK/s7b"; mk_root "$FX"
-grep -v '^no-witness-because: ' "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
+grep -v '^witness: ' "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
 if [ "$R" -ne 0 ] && has_finding "$O" 'S7'; then
   PASS "CTL-S7b: MUST FIRE — declaring NEITHER is S7 too. A class with no coverage statement is the silent-absence case the declaration exists to prevent"
