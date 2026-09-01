@@ -468,7 +468,9 @@ name a member set in their `[whole group | Subgroup members]` slot, and `whole g
 everyone present that night.
 
 - **`covered`** — the block carries one or more nightlife entries, and every member set the
-  gate obliged is named by an entry's member slot or by a no-nightlife line's. No finding.
+  gate obliged is named by an entry's member slot, or discharged by a no-nightlife line in
+  the sense the `declined` bullet below defines. A decline that covers a desire-holder is
+  not a discharge, so it does not make the night `covered`. No finding.
 - **`declined`** — the block carries the `No nightlife tonight — [reason]` line with
   a filled reason. No finding. This is a correct outcome, not a gap. A decline discharges
   only the member set its line names, and only a set the desire limb did not oblige — an
