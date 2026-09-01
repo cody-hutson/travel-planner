@@ -282,7 +282,17 @@ Dark background (navy). Structure:
 .nc-meta  — Location · details
 .nc-desc  — Description (hidden desktop compact)
 .nc-links — Standard .map-link (see Map-Link Component)
+.nc-who   — Whose night: the subgroup members verbatim, or "whole group"
 ```
+
+**Placement — the nightlife band (`.night-zone`).** Night Cards render in a nightlife band: a
+region of the day body, rendered after the day's primary content region — after the day grid on
+an unsplit or partially-split day, and after `.split-day` on a fully-split one, where the day
+grid is omitted. The band renders on **every** day whose `final-itinerary.md` carries a
+`**Nightlife**` block with content, and it is the unit the viewport-fit collapse priority
+already names as "nightlife". On a split night each card's `.nc-who` carries the same verbatim
+members string `.track-label` carries above it, so a reader matches a night card to its track
+column by identical text.
 
 ### Section Toggles
 Used for alternative venue sections (coffee, nearby stops, outdoor/indoor):
@@ -708,7 +718,7 @@ is neither is a **silent drop** — the defect this contract forbids.
 | Alternatives | Mini Cards in `.alt-grid` under a Section Toggle — Alt/B placement ← `venue-matrix.md` |
 | Food Anchors — breakfast / lunch / dinner + options | Food Cards under Meal Toggles |
 | Transit Notes | `.card-transit` field + collapsible transport-box |
-| Nightlife / later-tonight options | Night Cards (`.night-card`) |
+| Nightlife / later-tonight options | Night Cards (`.night-card`) in the nightlife band (`.night-zone`); on a split night each card carries its `.nc-who` members string |
 | Constraint Compliance | Heat/Weather Strip + constraint note |
 | Parallel Track — a split day | **Split-Day Component** — one labeled track column per subgroup (N≥2), each with its own day map and named endpoints; every per-track event carries its `.map-link` |
 
@@ -745,8 +755,10 @@ correct; dropping an *unlisted* plan element is the defect.
 At **site build** and again at every **site update**, walk 9.2's mapping against the current
 `final-itinerary.md`:
 
-- Every day resolves to a Day Hero Banner and a day grid; every card-bearing element (anchor,
-  supporting, bailout, alternative, food, nightlife) resolves to its component.
+- Every day resolves to a Day Hero Banner and a day body — a day grid, a `.split-day` region,
+  or both; every card-bearing element (anchor, supporting, bailout, alternative, food,
+  nightlife) resolves to its component, and the nightlife band renders regardless of which
+  day-body shape is present.
 - Every track of every split day resolves to its own labeled Split-Day Track column.
 - Every rendered event carries its `.map-link` (the location invariant).
 - Every element type present in the plan is either rendered (mapping table) or on the
