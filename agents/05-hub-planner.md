@@ -901,12 +901,17 @@ Line names, realistic times, first-timer cautions.]
 [If nightlife applies tonight — desire-gated and optional, never a forced anchor
 (ADR-001 § 3): it applies when a present traveler holds a nightlife/evening desire, or a
 natural occasion does (weekend, special occasion). Entries obey the venue-matrix dedup
-rules. When it does not apply, write the no-nightlife line instead — never both, never neither.]
+rules. When it does not apply, write the no-nightlife line instead. On any night, each
+present traveler is named by exactly one of — an entry whose member slot includes them, or
+a no-nightlife line whose member slot includes them — never both, never neither. On a night
+the group stays together, one `whole group` entry or one `whole group` no-nightlife line
+discharges this for everyone. A member slot naming a subgroup carries that subgroup's
+`[Subgroup members]` string from its Parallel Track block, verbatim.]
 **Nightlife**
-[Venue name — neighborhood — night type — from [time] — what to know]
-[Venue name — neighborhood — night type — from [time] — what to know]
+[Venue name — neighborhood — night type — from [time] — [whole group | Subgroup members] — what to know]
+[Venue name — neighborhood — night type — from [time] — [whole group | Subgroup members] — what to know]
 *Next morning:* [realistic end time and what it costs tomorrow's start]
-No nightlife tonight — [reason: rest day, early start, no present desire]
+No nightlife tonight — [whole group | Subgroup members] — [reason: rest day, early start, no present desire]
 
 **Constraint Compliance**
 [Explicitly confirm how each hard constraint is honored today.

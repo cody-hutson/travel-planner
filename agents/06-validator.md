@@ -460,19 +460,35 @@ rule as not failing a conditional need on a day its constraint never governed.
 On each applicable night, read **that day's `**Nightlife**` block** in
 `outputs/final-itinerary.md` and record exactly one verdict:
 
-- **`covered`** — the block carries one or more nightlife entries. No finding.
+**Whose night the gate obliged.** Every verdict is scoped to the member set the gate
+obliged, and the two limbs oblige different sets: the **desire limb** yields a
+**per-traveler** obligation — the desire-holders present that night, at any tier — and the
+**occasion limb** yields a **whole-group** obligation. Entries and no-nightlife lines each
+name a member set in their `[whole group | Subgroup members]` slot, and `whole group` names
+everyone present that night.
+
+- **`covered`** — the block carries one or more nightlife entries, and every member set the
+  gate obliged is named by an entry's member slot or by a no-nightlife line's. No finding.
 - **`declined`** — the block carries the `No nightlife tonight — [reason]` line with
-  a filled reason. No finding. This is a correct outcome, not a gap.
+  a filled reason. No finding. This is a correct outcome, not a gap. A decline discharges
+  only the member set its line names, and only a set the desire limb did not oblige — an
+  occasion-limb-only night, or a member set holding no nightlife desire.
 - **`declined`, plus a Note** — that line is present but malformed: a colon or other
-  separator in place of the em-dash, or the reason left empty or as an unfilled
-  placeholder. The intent is unambiguous, so the night passes; the Note exists so the
-  emitted wording converges rather than drifting silently.
-- **`gap`, a Warning** — the block carries neither an entry nor any no-nightlife
-  statement, or the block is absent from an applicable night. Cite the night, its
-  weekday, and which traveler's desire (with its tier) or which occasion made the
-  night applicable.
+  separator in place of the em-dash, the reason left empty or as an unfilled
+  placeholder, or a member slot that is neither `whole group` nor a Parallel Track block's
+  `[Subgroup members]` string on that day. The intent is unambiguous, so the night passes;
+  the Note exists so the emitted wording converges rather than drifting silently.
+- **`gap`, a Warning** — either the block carries neither an entry nor any no-nightlife
+  statement for a member set the gate obliged, or the block is absent from an applicable
+  night, **or** a no-nightlife line's member slot includes a traveler the gate obliged via
+  the desire limb. A decline that covers a desire-holder is a `gap`, not a `declined` — it
+  is the split-night loss this check exists to surface, and it fires at every tier the gate
+  admits. Cite the night, its weekday, the unserved member set, and which traveler's desire
+  (with its tier) or which occasion made the night applicable.
 - **`contradiction`, a Warning** — the block carries both an entry and a
-  no-nightlife line. The plan asserts two incompatible things about one night.
+  no-nightlife line whose member slots intersect. The plan asserts two incompatible things
+  about one night. On an unsplit night both slots read `whole group`, they intersect, and
+  this fires exactly as it does today.
 
 On a **non-applicable** night, record `n/a`. A missing block on a non-applicable
 night is a template-conformance **Note**, never a coverage finding.
@@ -936,7 +952,7 @@ the ownership rule and it is what keeps two writers off one frontmatter block:
 
 | Night | Date / weekday | Applicable? | What made it applicable | Block content | Verdict |
 |-------|----------------|-------------|-------------------------|---------------|---------|
-| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries / no-nightlife note / neither / absent] | [covered / declined / gap / contradiction / n/a] |
+| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [covered / declined / gap / contradiction / n/a] |
 
 - **Applicable nights:** [N of M]
 - **Verdicts:** [N covered · N declined · N gap · N contradiction · N n/a]
