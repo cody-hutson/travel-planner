@@ -52,7 +52,7 @@ anything**, and resolve to exactly one of three depths:
 | Signal present | Depth | Output |
 |---|---|---|
 | At least one traveler holds a desire whose text or theme tag is nightlife-shaped — archetypes `a night out` / `live music`, theme tag `nightlife` | **FULL** | full menu, minimum 12 entries |
-| No such desire, but a nightlife **interest** (`bars & nightlife`, `live music`) is present, **or** a natural occasion applies (a weekend night, a birthday, a last night), resolved as the trip-level projection defined below | **LIGHT** | minimum 5 entries, concentrated in the low-key and non-drinking sections |
+| No such desire, but a nightlife **interest** (`bars & nightlife`, `live music`) is present, **or** a natural occasion applies (a weekend night, a birthday), resolved as the trip-level projection defined below | **LIGHT** | minimum 5 entries, concentrated in the low-key and non-drinking sections |
 | Neither | **SKIP** | the gate-result stub described under `## Input` — and stop |
 
 **An interest alone never reaches FULL.** The intake form calls the interests
@@ -68,7 +68,7 @@ presence is the hub's to evaluate at placement time. You do not know which
 night is which, and you do not need to.
 
 **The occasion limb is a trip-level projection, never a per-night test.**
-Its three members are per-night predicates and this gate is night-blind, so
+Its members are per-night predicates and this gate is night-blind, so
 resolve the limb as the one question this altitude can answer: **does this
 trip contain at least one night a natural occasion would apply to?** — does a
 weekend night fall inside the trip's span, or a special occasion inside
@@ -77,12 +77,12 @@ trip-level projection of the per-night rule the hub applies at placement time
 and the validator applies in its coverage check, so all three resolve one
 predicate instead of three.
 
-**`a last night` never raises depth on its own.** Every trip has a last night,
-so at trip level that member is universally true and carries no signal — a limb
-that always holds is not a gate. It stays in the enumeration because it is a
-real per-night occasion, and it is **the hub's to apply at placement time**,
-where the night is known. Which night is the last night, and which night an
-occasion actually lands on, both remain the hub's per-night call.
+**`a last night` is not a member of this limb.** Every trip has a last night, so
+at trip level that predicate is universally true: it cannot change the answer to
+FULL / LIGHT / SKIP, and by the gate-input test below it is therefore not a gate
+input. A limb that always holds is not a gate. It is withdrawn from the
+enumeration rather than carried as an inert member — do not reintroduce it here
+unless it can change that answer.
 
 **Resolve each member from its own source, and never assert one you could not
 read.** Weekend night: the `### Outbound` / `### Return` legs' `[Day, Date,
