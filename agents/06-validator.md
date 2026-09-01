@@ -201,6 +201,33 @@ which marks a value whose *subject* could not consent — **not**
 operator-relayed need would over-block correct content and is a
 misreading of the check.
 
+**Per-event status presence:**
+Where `outputs/final-itinerary.md` is present (Input 4) and
+`outputs/event-status.md` is absent (Input 7), the trip carries a synthesised
+plan and no per-event status at all. Report it. This is a **Warning**, never
+Critical: nothing placed is wrong, so the plan is not defective — the engine
+simply cannot say what is booked, what is at risk, and what fell through. The
+argument is the one this file already makes for a declined write: a Critical
+here would block finalization over a reporting failure rather than a plan
+failure.
+
+**The audit below is not exercised in this state, and an unexercised check is
+declared, never passed.** Say which kind of unexercised it is — this is the
+**blocked-on-missing-input** case, not the empty-population case, and the two
+are repaired by opposite things. An empty result reported as a clean one is the
+precise failure this report exists to prevent.
+
+**Name the repair; do not run it.** `reference/data-model.md`
+§ *Bootstrap — who creates `event-status.md`* states the repair and the mode
+bound on it, and it is stated there rather than restated here — read it live
+and name what it names. **You create nothing and you become no writer of the
+file.** Naming a verb is not writing it: this role reads `event-status.md` and
+writes nothing to it, in this state as in every other.
+
+Where `outputs/event-status.md` is present, this check contributes nothing and
+the audit below proceeds exactly as it does today. The no-finding path is the
+ordinary path.
+
 **Status-integrity audit:**
 Read `outputs/event-status.md` (the persist-mutable per-event status — see
 `reference/data-model.md`) and audit the itinerary against it on three points:
@@ -597,7 +624,10 @@ placed venue breaking the dedup rules is Venue deduplication.
 **IDEATION:** Does not run.
 
 **DISCOVERY:** Light pass. Check named venues in any draft concepts for
-obvious closure or business status issues. No full matrix required.
+obvious closure or business status issues. No full matrix required. Run the
+**per-event status presence** check here as well — a plan synthesised before
+this substrate existed resolves `DISCOVERY`, so a light pass that skipped the
+presence read would never fire on the population that check exists for.
 
 **ENRICHMENT:** Full validation pass per output format.
 
@@ -606,7 +636,9 @@ affected by the change (e.g., a venue moved from Day 3 to Day 5 needs
 Day 5's day-of-week checked). **Always** run the status-integrity audit
 against `outputs/event-status.md` regardless of which days changed: confirm no
 `locked`/`firmed` event was altered outside the named change, and that "needs
-booking" still matches status.
+booking" still matches status. The **per-event status presence** check is not
+day-scoped either — it reads whether that file exists at all, and no
+changed-day narrowing bears on that.
 
 **RESEQUENCING:** Full pass on all days — the sequence change may have
 introduced new day-of-week conflicts even though no venues changed. Run the
@@ -737,6 +769,7 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
 | Convenience-format anchor cap (per category; no Critical tier) | | | | |
+| Per-event status presence (synthesised plan; Warning only) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
@@ -862,6 +895,11 @@ Any MISSING or unrendered link is a Critical (also listed under Critical Issues)
 ---
 
 ### Status Integrity Report
+
+- **Event status read:** [present / absent — plan synthesised, no per-event status (Warning)]
+
+When this reads *absent*, the two tables below carry no rows because the file
+has no rows to audit — not because the audit passed.
 
 Protected-event check (ITERATION / RESEQUENCING) — every `locked`/`firmed`
 event must be unchanged unless the change request named it:
