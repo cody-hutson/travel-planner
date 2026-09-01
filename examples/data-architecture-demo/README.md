@@ -90,17 +90,22 @@ the rule is stated here as a fixture rule rather than left to each file.
 Three classes have **no instance here**, each for its own reason. Absence is
 declared rather than left to be inferred from a missing file.
 
-- **C6 `outputs/food-list.md` — absent on purpose.** `scripts/test-artifact-schema.sh`
-  uses `reference/schemas/food-list.md` as the workhorse whose **coverage
-  declaration** it mutates, in four must-fire arms (`CTL-S5`, `CTL-S6`, `CTL-S7`,
-  `CTL-S7b`). Each of those arms rewrites that schema's `no-witness-because:` line;
-  if the line were not there the rewrite would be a no-op and the arm would stop
-  testing what it names. Supplying a migrated food-list here would make C6's stated
-  reason false and invite exactly that flip, so the fixture leaves the class alone
-  and C6 keeps its `no-witness-because:`. **The coupling is fail-safe, not silent** —
-  a flip makes those four arms go red rather than quietly pass — but it is a coupling
-  between the corpus and the suite, and it is recorded here so the next author meets
-  it before tripping it. **Where this fixture's food venues live instead:** the plan
+- **C6 `outputs/food-list.md` — absent on this fixture's own Depth rule.** C6 is
+  witnessed, and its witness is `examples/evening-boundary-demo/outputs/food-list.md` —
+  a separate fixture built for the evening ownership boundary. This one still ships no
+  food-list, now for one reason rather than two: nothing in what this fixture exists to
+  demonstrate needs the class, and a second general fixture is the cost § *Depth* argues
+  against. **The reason that is spent, recorded because it is the one a reader will
+  meet in the suite:** `scripts/test-artifact-schema.sh` uses
+  `reference/schemas/food-list.md` as the workhorse whose **coverage declaration** it
+  mutates, in four must-fire arms (`CTL-S5`, `CTL-S6`, `CTL-S7`, `CTL-S7b`), and while
+  C6 declared `no-witness-because:` each of those arms rewrote that line. Supplying a
+  food-list here would have made C6's stated reason false and invited a flip that turned
+  all four rewrites into no-ops. The flip happened elsewhere and the arms were re-pointed
+  at the surviving `witness:` line in the same commit, so the coupling is discharged
+  rather than still pending — but it is still a coupling between the corpus and the
+  suite, and `reference/schemas/food-list.md` records it so the next author meets it
+  before tripping it. **Where this fixture's food venues live instead:** the plan
   places one anchor meal on each of its four days, and the research for the three new
   ones sits in the second dated section of `outputs/activities-list.md` rather than in
   the class that would normally hold it. That is a property of the fixture and not of

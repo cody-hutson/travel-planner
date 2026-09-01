@@ -89,11 +89,17 @@ name: Artifact schema
 # SHIPPED before any in-repo artifact carried frontmatter, and in that state every selected
 # file skipped under the tolerant read and every statement about a validated artifact was
 # true over the empty set — vacuously true, never skipped, silently green. THAT STATE IS
-# BEHIND THIS CORPUS. Nineteen versioned artifact instances now reach the selector (21
-# tracked files open with a declaration block carrying schema-version; the two
-# templates/*.template.md are excluded by name), CV reads 17 witness / 2 no-witness / 19,
-# and no group renders VACUOUS. The three mechanisms below STAY, because they are what make
-# a future regression to zero legible instead of silent. AR prints its observed denominator
+# BEHIND THIS CORPUS. The selector reaches a non-empty versioned population on every run, and
+# the suite EMITS its own denominators rather than this file asserting them: AR prints
+# `<n> selected / <m> excluded / <u> unmatched = <t> tracked` together with the count it
+# validated clean, and CV prints `<w> witness / <n> no-witness / <total>`. As of this commit
+# those read 32 selected of 119 tracked with 23 validated clean, and 18 witness / 1
+# no-witness / 19 — the last class declaring no-witness-because being C19, whose clause is
+# terminal rather than pending. Every one of those figures is derived at run time, so this
+# comment is the one place they can go stale, and it therefore states them as the values
+# EMITTED on one commit rather than as a property of the gate. No group renders VACUOUS. The
+# three mechanisms below STAY, because they are what make a future regression to zero legible
+# instead of silent. AR prints its observed denominator
 # and renders a distinct VACUOUS verdict rather than a bare PASS when the versioned
 # population is zero. CV prints the coverage split rather than asserting coverage. And CTL
 # has a population BY CONSTRUCTION on every run, so the suite demonstrates on this very

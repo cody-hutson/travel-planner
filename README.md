@@ -10,7 +10,7 @@ The headline output is a single self-contained HTML travel site — encrypted be
 
 *A figure, not a screenshot — and a fixture, not a real trip. Every name, time, event ID and count in it is taken from [`examples/data-architecture-demo/`](examples/data-architecture-demo/); that [fixture's README](examples/data-architecture-demo/README.md) records how the figure is kept current, and why it is committed as source rather than captured as an image.*
 
-The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — one full planning cycle, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it. That example predates the artifact schema: it covers a subset of the artifact classes, and its files carry no `artifact:` frontmatter. For the shape an artifact has now, read the migrated fixture in [`examples/data-architecture-demo/`](examples/data-architecture-demo/), where every artifact carries its declaration block.
+The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — one full planning cycle, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it. That example predates the artifact schema: it covers a subset of the artifact classes, and its files carry no `artifact:` frontmatter. For the shape an artifact has now, read the migrated fixture in [`examples/data-architecture-demo/`](examples/data-architecture-demo/), where every artifact carries its declaration block. It also predates the **three-way evening ownership boundary** the engine now ships: its `## Evening / Nightlife (Mixed Group)` section routes every evening venue to the activities spoke, where the shipped rule splits them across activities, food and nightlife by each venue's primary draw — so a reader following that section would route venues in a way the agent prompts now forbid. For the compliant shape, read [`examples/evening-boundary-demo/`](examples/evening-boundary-demo/).
 
 ## Folder Structure
 
@@ -22,7 +22,7 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler; a self-guiding profile of what each person needs and wants |
 | `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
-| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus four purpose-built demo fixtures |
+| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus five purpose-built demo fixtures |
 | `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
 
 ## Install

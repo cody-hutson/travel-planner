@@ -181,32 +181,48 @@ migration slice versions a class's in-repo instance it flips that class's declar
 rule**, because the failing assertion is the class's own coverage declaration and not the
 skip predicate.
 
-The migration is now complete and the split reads **17 witness / 2 no-witness / 19 total**.
-It got there in two moves, and the second one was a fix to the *checker* rather than to the
-corpus. Both are worth stating, because the corpus spent a release unable to declare
-coverage it had already earned.
+The migration is complete and the split reads **18 witness / 1 no-witness / 19 total**.
+It got there in three moves, and only the first was a change to the *corpus* alone. All
+three are worth stating, because the corpus spent a release unable to declare coverage it
+had already earned, and because the third one falsified a prediction this section used to
+make.
 
 1. **`examples/data-architecture-demo/` supplies the missing instances.** Seventeen classes
-   now have a versioned in-repo artifact to point at — either the fixture's own, or, for C1
+   gained a versioned in-repo artifact to point at — either the fixture's own, or, for C1
    and C4, the instance that was already migrated.
 2. **`mk_root()` in `scripts/test-artifact-schema.sh` now copies every declared witness into
    the synthetic fixture root it builds.** Before that, a `witness:` here was resolved by S5
    against a fixture tree carrying this corpus and *none of the files it points at*, so any
    declaration failed there by construction. That is not hypothetical — the first flip turned
    `CTLa` red and was reverted rather than kept.
+3. **`examples/evening-boundary-demo/` supplies C6's.** The only tracked `outputs/food-list.md`
+   was the one inside the frozen `examples/tokyo-2026/` tree, so the class could not be
+   versioned anywhere and declared `no-witness-because:` instead. A new fixture — not an edit
+   to the frozen one — removed that reason without trading away the regression guard, and the
+   four must-fire arms that mutate C6's coverage line were re-pointed at the surviving
+   `witness:` line in the same commit. `reference/schemas/food-list.md` records both halves.
 
-The two remaining `no-witness-because:` clauses are **not a residue of the migration**, and
-neither will be removed by a later slice supplying a fixture:
+**One `no-witness-because:` clause is left, and the prediction that used to sit here was
+wrong.** This section read that *the two remaining clauses are not a residue of the migration,
+and neither will be removed by a later slice supplying a fixture.* One of them was. C6's clause
+named a **condition** — the only tracked instance sits inside a frozen tree — and a condition
+can be discharged by changing it, which move 3 did. The falsified prediction is recorded rather
+than quietly deleted, because the reasoning that produced it is the reasoning a reader would
+otherwise repeat: **a clause naming a condition is pending; only a clause naming a property of
+the artifact itself is terminal.** The one that remains names a property.
 
 | Class | Why it has no witness |
 |---|---|
-| **C6** `outputs/food-list.md` | Its only tracked instance is inside the frozen `examples/tokyo-2026/` tree. **Do not edit that fixture to satisfy the gate** — it trades a real regression guard for a green check. Separately, `scripts/test-artifact-schema.sh` mutates *this schema's coverage line* in four must-fire arms, so a flip here silently disarms them; that coupling is recorded in the schema itself. |
 | **C19** `outputs/<destination>-travel-site.html` | `reference/site-layout-spec.md` declares the site source a file that stays local and git-ignored. No instance of this class can be tracked, so a witness would contradict the artifact's own governing spec. A **decided disposition**, not a gap. |
+
+**`1 no-witness` is not `1 still to do`.** There is no later slice that could supply a fixture
+for C19, because no instance of it can be tracked at all — the migration is finished, not one
+class short of finished.
 
 **Each reason is stated as a durable property rather than a ticket number.** A ticket number
 is unresolvable to a reader of this repository and goes stale the moment the work ships; the
-property behind it stays true and is what the next author actually needs. That is why the two
-rows above name a frozen fixture and a governing spec rather than the slices that left them.
+property behind it stays true and is what the next author actually needs. That is why the row
+above names a governing spec rather than the slice that left it.
 
 **`witness` is deliberately the same word this repo uses for the `examples/tokyo-2026/`
 regression witness.** The two senses are the same idea at different scopes — a fixed artifact
@@ -222,5 +238,5 @@ reusing one.
   standalone `scripts/*.sh`; `actionlint` lints workflow-embedded shell only.
 - **Not, while the split reads `0 witness`, that any real artifact was validated.** The suite
   renders `VACUOUS` rather than `PASS` in that state and says so out loud. That state is
-  behind this corpus now — the split reads `17 witness` — but the verdict stays, because it
+  behind this corpus now — the split reads `18 witness` — but the verdict stays, because it
   is what makes a future regression to zero legible instead of silent.
