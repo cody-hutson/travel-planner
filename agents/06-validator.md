@@ -460,19 +460,48 @@ rule as not failing a conditional need on a day its constraint never governed.
 On each applicable night, read **that day's `**Nightlife**` block** in
 `outputs/final-itinerary.md` and record exactly one verdict:
 
-- **`covered`** — the block carries one or more nightlife entries. No finding.
+**Whose night the gate obliged.** Every verdict is scoped to the member set the gate
+obliged, and the two limbs oblige different sets: the **desire limb** yields a
+**per-traveler** obligation — the desire-holders present that night, at any tier — and the
+**occasion limb** yields a **whole-group** obligation. Entries and no-nightlife lines each
+name a member set in their `[whole group | Subgroup members]` slot, and `whole group` names
+everyone present that night. **That slot has exactly two admissible readings** — `whole group`,
+or verbatim a Parallel Track block's `[Subgroup members]` string for that day. **A slot that is
+neither, whatever it says, names no member set at all:** it is not a wider set and not a narrower
+one, so it covers nobody and discharges nobody, and any member set the gate obliged that only
+that line could have accounted for is left unaccounted for — a `gap` under the bullet below.
+Record the slot as read in a Note alongside whatever verdict the night resolves to, so the
+wording still converges. This governs **every slot-bearing line, entry and no-nightlife alike**,
+and it holds in one direction only: **an unreadable slot is never the reason a night passes.**
+
+- **`covered`** — the block carries one or more nightlife entries, and every member set the
+  gate obliged is named by an entry's member slot, or discharged by a no-nightlife line in
+  the sense the `declined` bullet below defines. A decline that covers a desire-holder is
+  not a discharge, so it does not make the night `covered`. No finding.
 - **`declined`** — the block carries the `No nightlife tonight — [reason]` line with
-  a filled reason. No finding. This is a correct outcome, not a gap.
-- **`declined`, plus a Note** — that line is present but malformed: a colon or other
-  separator in place of the em-dash, or the reason left empty or as an unfilled
-  placeholder. The intent is unambiguous, so the night passes; the Note exists so the
-  emitted wording converges rather than drifting silently.
-- **`gap`, a Warning** — the block carries neither an entry nor any no-nightlife
-  statement, or the block is absent from an applicable night. Cite the night, its
-  weekday, and which traveler's desire (with its tier) or which occasion made the
-  night applicable.
+  a filled reason. No finding. This is a correct outcome, not a gap. A decline discharges
+  only the member set its line names, and only a set the desire limb did not oblige — an
+  occasion-limb-only night, or a member set holding no nightlife desire.
+- **`declined`, plus a Note** — the line is present and its member slot reads, but the line is
+  malformed. **The test is whether *who declined* stays determinable, not whether the
+  malformation appears on a list:** a colon or other separator in place of the em-dash, and the
+  reason left empty or as an unfilled placeholder, are the forms seen so far, and both leave the
+  member set legible. That legibility is why the intent is unambiguous and the night passes; the
+  Note exists so the emitted wording converges rather than drifting silently. **An unreadable or
+  absent member slot is not one of these** — there the member set is exactly what cannot be
+  determined. It names no member set, discharges nobody, and the night resolves on that basis by
+  the rule in the obligation preamble above.
+- **`gap`, a Warning** — either the block carries neither an entry nor any no-nightlife
+  statement for a member set the gate obliged, or the block is absent from an applicable
+  night, **or** a no-nightlife line's member slot includes a traveler the gate obliged via
+  the desire limb. A decline that covers a desire-holder is a `gap`, not a `declined` — it
+  is the split-night loss this check exists to surface, and it fires at every tier the gate
+  admits. Cite the night, its weekday, the unserved member set, and which traveler's desire
+  (with its tier) or which occasion made the night applicable.
 - **`contradiction`, a Warning** — the block carries both an entry and a
-  no-nightlife line. The plan asserts two incompatible things about one night.
+  no-nightlife line whose member slots intersect. The plan asserts two incompatible things
+  about one night. On an unsplit night both slots read `whole group`, they intersect, and
+  this fires exactly as it does today.
 
 On a **non-applicable** night, record `n/a`. A missing block on a non-applicable
 night is a template-conformance **Note**, never a coverage finding.
@@ -936,7 +965,7 @@ the ownership rule and it is what keeps two writers off one frontmatter block:
 
 | Night | Date / weekday | Applicable? | What made it applicable | Block content | Verdict |
 |-------|----------------|-------------|-------------------------|---------------|---------|
-| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries / no-nightlife note / neither / absent] | [covered / declined / gap / contradiction / n/a] |
+| Day [N] | [YYYY-MM-DD, Sat] | [yes / no] | [Traveler — "desire" (tier) / weekend / occasion / —] | [N entries (member sets) / no-nightlife note (member sets) / neither / absent] | [covered / declined / gap / contradiction / n/a] |
 
 - **Applicable nights:** [N of M]
 - **Verdicts:** [N covered · N declined · N gap · N contradiction · N n/a]
