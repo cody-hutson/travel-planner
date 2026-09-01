@@ -681,7 +681,15 @@ evidence that decided it, announced per the standing clause:
 |---|---|---|
 | a **zone change** — the change moves an event into or out of a geographic zone the day was built around | the point-to-point leg set the day's routing rests on | transport |
 | a **time-anchoring reservation** — the change adds, moves or drops a reservation the day's timing is pinned to | the day's timing framework and the slack around it | scheduling |
-| a **day move** — the change relocates an event to a different day | the day-of-week assumptions the placed selections were checked against | scheduling |
+| a **day move** — the change relocates an event to a different day | the day-of-week assumptions the placed selections were checked against, and the consecutive-stop legs both the day it left and the day it lands on are priced over | scheduling, transport |
+| a **venue substitution** — the change replaces a placed event's venue | the door-to-door leg the day's routing is priced over, and the matrix row carrying that stop | transport |
+
+**The admitted set is a set.** Two rows naming the same agent admit it once — a reserved
+event relocated to another day satisfies both the time-anchoring-reservation row and the
+day-move row, and dispatches scheduling a single time. Where the admitted set holds both
+transport and scheduling, they run in that order: `CLAUDE.md` § *Dispatching agents* binds
+transport-before-scheduling on **every** verb that dispatches both spokes, and is cited
+here rather than restated.
 
 **A condition belongs to that set by satisfying a rule, not by being written into it:** a
 condition belongs where its truth makes another agent's output stale, and the agent whose
