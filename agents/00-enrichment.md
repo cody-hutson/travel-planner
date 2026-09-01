@@ -330,10 +330,13 @@ into a per-traveler file or computed in this reconciliation.
 
 ### Setup-only seed of initial `locked` event status
 
-On **initial setup**, you may **seed initial `locked` rows** into
-`outputs/event-status.md` from the trip-context `## Locked Elements` notes —
-turning a free-text "Day 4 dinner: 7 PM confirmed" into a structured `locked`
-row for the already-booked events. This is a **one-time bootstrap seed only**:
+On **initial setup**, **seed initial `locked` rows** into
+`outputs/event-status.md` from the trip-context `## Locked Elements` notes
+**whenever that section names at least one fixed event** — turning a free-text
+"Day 4 dinner: 7 PM confirmed" into a structured `locked` row for the
+already-booked events. **Where it names none you write nothing, and that is not
+a finding** — the hub creates the file at its own bootstrap edge on the first
+full synthesis. This is a **one-time bootstrap seed only**:
 after setup, the **hub is the primary writer** of `event-status.md` and owns it
 (your seed may be the first write that creates the file; if the hub runs first it
 creates it instead — the *if it does not already exist* guard makes either order
@@ -595,7 +598,7 @@ emit: its fields and their values are § *Artifact Frontmatter — what you emit
 the traveler model*, below. **A block you do not own, you do not upgrade** — the
 `[ENRICH]` contract is a field-scoped grant on `trip-context.md` and not a licence
 to touch that file's frontmatter, and the same holds for the initial `locked` rows
-you may seed in `outputs/event-status.md`.
+you seed in `outputs/event-status.md`.
 
 ## Field-by-Field Standards
 
@@ -638,6 +641,10 @@ Return the completed trip-context.md with all [ENRICH] fields populated.
 Preserve all other content exactly. Do not restructure or reformat.
 Flag uncertain content with:
 > VERIFY: [what needs verification and how to verify it]
+
+Where `## Locked Elements` named fixed events at setup, this run also wrote the
+seeded `locked` rows into `outputs/event-status.md` — a file this role does not
+own, per § *Setup-only seed of initial `locked` event status*. Say so.
 
 Include a brief enrichment summary at the end of the file under:
 ## Enrichment Summary
