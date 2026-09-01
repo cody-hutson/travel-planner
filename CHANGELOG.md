@@ -3,6 +3,105 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.18.0] — 2026-08-31 — Satisfaction fast-follows
+
+Six items held out of earlier releases on purpose, each a gap in a specification rather than a
+defect in a build. They shared a shape: a rule stated in one place, then narrowed or re-derived
+or read somewhere nothing could check it.
+
+The presence predicate decides whether a traveller counts as present on a given day, and it
+quantified over whole days. Windows in this corpus are routinely bounded mid-day, so a day could
+be half inside one — and nothing anywhere said whether such a day was in the set. Two consumers
+citing the same predicate could classify an arrival day oppositely and both be defensible.
+
+Recurring desires shipped with a scheduler that opens a standing slot on each of a traveller's
+days, a hub that fills it and a validator that grades it — and three supplier agents that had
+never heard of them. The consequence was visible in the corpus's own worked example, where a
+three-day morning ritual grades `not covered` because nobody had been told to nominate a third
+distinct venue.
+
+The convenience-format cap was the only numeric cap in the corpus with no validator audit. The
+marker it rested on was opt-in and named no category, so an omitted marker read as *eligible*
+and the cap was not checkable from the produced file even by hand.
+
+Two per-traveller signals stopped short of their readers. The transport agent read
+`trip-context.md` and nothing else, so the depth signal never reached it and the anchor origin's
+passenger list had no literal source. And a traveller with no profile on file had a place to be
+named but no place to carry a field value.
+
+Four things are true now. A partial day is a whole day to the presence predicate, settled in one
+sentence at the definition and with no coverage threshold — a fraction of a day is never a
+fraction of a membership. Suppliers are told to nominate enough distinct places to fill a
+recurring slot on every day it is owed, inside the venue cap that already applies. The
+convenience-format cap is audited from the produced artifact rather than from the agent's
+behaviour. And the transport agent reads the per-traveller channel — for depth and nothing else —
+while a profile-less traveller has a declared block to carry a facet value in.
+
+### Added
+
+- **A recurring desire's honored-day set** (`reference/data-model.md`) — the days a recurring
+  desire is actually owed on: the traveller's present-day set intersected with the days that
+  desire's own time block reaches. It exists because settling partial days made a second question
+  visible — a day-granular presence rule cannot say whether a traveller's half day contains a
+  morning. Trimming the obligation here leaves the presence predicate untouched: the day stays in
+  the traveller's present-day set, and only this desire's claim on it narrows. Derived once, and
+  cited rather than re-derived by the scheduler, the hub, the validator and all three suppliers.
+- **A convenience-format anchor cap report** in the validator's output, counted per category from
+  the food list's own eligibility lines. Its marker-coverage denominator is fixed by the entry
+  marker rather than by the eligibility line, so a missing line lowers coverage instead of
+  improving it — and where the selector cannot see an entry the file presents, the report refuses
+  the measurement by name instead of certifying it.
+- **A recurring-desire supply obligation** on the activities, food and nightlife agents — a count
+  of distinct candidates, never a schedule — with the `Recurrence` marking added to each one's
+  read order.
+- **A depth lens on the transport agent**, expressed as how its existing sections are filled
+  rather than as sections added or removed. Arrival and departure are never compressed, and no
+  traveller's answer is written into the brief.
+- **A `Trip-level facets` block on the profile-missing branch** of the enrichment agent, giving
+  that class a defined home for a facet value. `Origin` is its only member today, and on a
+  single-origin trip the block renders with `Origin` declared not applicable rather than left
+  blank.
+
+### Changed
+
+- The presence predicate resolves partial arrival and departure days **at its definition**, and
+  says in the same place that it settles membership only: a time block a traveller's window does
+  not contain narrows what an obligation reaches, never whether the traveller is present.
+- Recurring-desire coverage now reads against the honored-day set everywhere it read against the
+  present-day set. A day trimmed by the desire's own time block renders that reason rather than
+  silence — absent, unavailable, and present-but-out-of-block stay three distinct states.
+- The hub no longer names a shortfall for a day the desire was never owed on.
+- `Anchor-meal eligibility` is required on every food entry, in one of three spelled tokens, with
+  the convenience-format category carried on the nomination the cap counts.
+- The transport agent's anchor stream states the closed derivation for its passengers — every
+  roster member not named under an additional origin — where the template previously made that
+  derivable without giving it a source.
+- An unassigned traveller's inherited origin carries basis `UNKNOWN` and the `(assumed)` marker on
+  every trip shape, single-origin included, in the vocabulary the template already defines. The
+  basis records what a person stated, not whether the inheritance could have gone another way.
+
+### Fixed
+
+- The scheduler's prose no longer reasons about a desire's priority tier, a field its own Input
+  contract says it does not receive. The clause was a universal quantifier and nothing
+  misbehaved; it read as though the scheduler could see something it cannot.
+- The intake template's recurrence question sits beside the priority-tier question a traveller
+  answers in the same breath, rather than after the overlap instruction where the specification's
+  literal wording had put it.
+
+### Note on what this release did not close
+
+This is prompt and reference text — thirteen files, no code and no schema change. Nothing added
+here is enforced by a gate: every rule is one an agent is told to follow, and the new cap audit
+is an instruction to the validator rather than a script that runs.
+
+Six follow-on cards were raised by the work itself and are open. Among them: the transport agent
+is now a named reader of the mixed-party depth rule with no way to satisfy it or disclose an
+exemption; a domain term the presence predicate leans on is used four times and defined none; the
+new cap report's measurement path has no worked instance anywhere in the repository; and the
+artifact-model section that four of these cards point-fixed still carries a row asserting a
+shipped element this release falsified. They are tracked, not closed.
+
 ## [0.17.0] — 2026-08-31 — Corpus and process hygiene
 
 This release is about the repository's own quality rather than the product's. Four things were
