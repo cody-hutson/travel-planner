@@ -27,6 +27,13 @@
 # outputs/change-summary.md, an `internal` artifact verify_publishable_content never
 # sees. Grades the clean/HIT/UNDETERMINED triple, the RE-DERIVED word floor, and the
 # markdown block sentinel that keeps the conjunctive rule scoped.
+# S = the organizer-confirm gate (#552 AC 5) — the republish path gates on the
+# organizer's confirmation of an ITINERARY-CONTENT change, not on publish-as-such, so a
+# coordination-marker-only republish still reaches the group. Grades both branches
+# (confirmed republish, rejected hold), the stale and malformed-record cases, that the
+# abort is the DEFAULT arm rather than an enumerated one, rotate's inheritance and
+# cmd_publish's ungated safety end-to-end against a mock gh, and that neither ADR-002
+# Decision 4 guard was touched.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -1524,6 +1531,350 @@ RRECH="$WORK/r_recur_hit.md"; rsections "$RRECH" 6
 printf '\nNote for the group: carry your Irish passport, valid to 2027, on the day.\n' >> "$RRECH"
 verify_summary_content "$RRECH" "$RTD" >/dev/null 2>&1; RRC=$?
 if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the value inside ONE block still aborts (rc=1) — the sentinel narrowed the window, it did not disarm it"; else FAIL "R5c: a real same-block carry-through no longer aborts (rc=$RRC) — the projection over-corrected into a fail-open"; fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group S (#552 AC 5) — the organizer-confirm gate on the republish path
+#
+# GROUP LETTER. The #700 design specified `R`, measured before #550 landed; #550 then
+# took `R` for the change-summary content guard. `S` is the next free letter under the
+# design's own rule — the monotonic sequence with `P` skipped, because `P` collides on
+# prefix with the existing two-letter group `PF`.
+#
+# WHAT THIS GROUP GRADES, and why it is keyed the way it is. ADR-002 Decision 2 permits
+# only a city-ambient client-side fetch, so every coordination marker lives inside the
+# published bytes: showing a traveller that a change is pending REQUIRES a publish, of a
+# site whose itinerary content is the one already published. A gate keyed on
+# publish-as-such aborts that act and the pending state becomes unreachable. So the gate
+# keys on ITINERARY-CONTENT CHANGE, and this group grades both halves of that:
+#
+#   S0   the itinerary projection MOVES on a plan edit          (the group's denominator)
+#   S1   no published baseline -> ungated, exactly as today      (back-compat)
+#   S2   plan moved, nothing confirmed -> ABORT, nothing pushed  (AC 2, rejected hold)
+#   S3   plan moved, confirmation covers it -> proceed           (AC 1, confirmed republish)
+#   S4   plan moved AFTER it was confirmed -> stale -> ABORT     (stale-approval hole)
+#   S5   a malformed record is never read as approval            (ADR-007 §2 placeholder bound)
+#   S6   the abort is the DEFAULT ARM, not an enumerated case    (structural)
+#   S7   marker-only republish passes, and an edit under the same marker does not  (D6)
+#   S8   rotate inherits the gate through cmd_update             (no rotate exemption)
+#   S9   cmd_publish stays ungated and cannot overwrite a plan   (ungated-path proof)
+#   S10  the two ADR-002 D4 guards are untouched by this gate    (CIAC-3)
+#
+# S6 IS THE ARM THAT DISCHARGES THE RISK. S2 and S4 test that the KNOWN rejection paths
+# abort; S6 injects a token no author anticipated, and the empty string, and tests that
+# those abort too — that the wildcard is the default rather than a listed case. Without
+# it the design is merely tested against the failure mode; with it, no resolver output
+# reaches a push.
+#
+# Every arm is offline: no network, no real gh, no Node, no TTY. The two end-to-end arms
+# drive a shell-function mock of gh (and of npx, which preflight probes), the same
+# technique groups J2/J3 already use — so this group has no legitimate skip and is
+# deliberately NOT declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "Organizer-confirm gate (#552 AC 5):"
+
+# A render carrying real itinerary text, an optional coordination-notice band, and both
+# a <style> rule and a <script> body — so the arms below cover the whole boundary rather
+# than only the paragraph text.
+s_render() { # <file> <viewpoint-time> <marker: none|pending|updated>
+  local f="$1" t="$2" m="${3:-none}" band=""
+  if [ "$m" != "none" ]; then
+    band="<div class=\"coord-notice is-${m}\"><span>A change is ${m}</span> <time>2027-06-02</time></div>"
+  fi
+  cat > "$f" <<HTML
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>.coord-notice{background:#eee}.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+${band}
+<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at ${t}. Then the riverside walk to the bridge.</p>
+<p>Dinner at Tasca do Bairro, eight in the evening.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+}
+
+# One trip dir per scenario. Separate dirs rather than one dir mutated between arms:
+# several arms turn on a sidecar being ABSENT, and a fixture whose absence is produced by
+# a removal is a fixture whose setup can silently half-succeed.
+s_fixture() { # <name> <viewpoint-time> <marker> -> echoes the trip dir
+  local d="$WORK/$1"
+  mkdir -p "$d/outputs"
+  s_render "$d/outputs/porto-travel-site.html" "$2" "$3"
+  printf '%s' "$d"
+}
+
+s_record() { # <file> <digest> <second-key>
+  printf 'digest=%s\n%s=2027-06-01T00:00:00Z\n' "$2" "$3" > "$1"
+}
+
+# ── S0 — THE DENOMINATOR. Every "unchanged" verdict below is an equality between two
+# digests, and an equality between two EMPTY strings would satisfy most of them. This arm
+# establishes that the projection reads something and that it discriminates.
+S_SCRATCH="$WORK/s_scratch.html"
+s_render "$S_SCRATCH" "14:00" none      ; S_DA="$(itinerary_digest "$S_SCRATCH")"
+s_render "$S_SCRATCH" "16:30" none      ; S_DB="$(itinerary_digest "$S_SCRATCH")"
+s_render "$S_SCRATCH" "14:00" pending   ; S_DAP="$(itinerary_digest "$S_SCRATCH")"
+s_render "$S_SCRATCH" "14:00" updated   ; S_DAU="$(itinerary_digest "$S_SCRATCH")"
+S_TEXTLEN=${#S_DA}
+if [ "$S_TEXTLEN" -gt 0 ] && [ "$S_DA" != "$S_DB" ]; then
+  PASS "S0: the itinerary projection is non-empty and MOVES when one scheduled time moves ($S_DA -> $S_DB) — the equalities asserted below are measurements, not two empty strings compared"
+else
+  FAIL "S0: the projection read '$S_DA' / '$S_DB' — it is empty, or it does not discriminate a plan edit, and every verdict in this group would be vacuous"
+fi
+
+# ── S1 — BACK-COMPAT. No published baseline means the gate has no anchor, and a trip with
+# no coordination history republishes exactly as it did before this card. This is the
+# property every already-published trip relies on, so it is graded first.
+S1D="$(s_fixture s1 14:00 none)"
+S_ST="$(change_confirmation_state "$S1D")"
+( require_change_confirmation "$S1D" ) >/dev/null 2>&1; S_RC=$?
+if [ "$S_ST" = "none-pending" ] && [ "$S_RC" -eq 0 ]; then
+  PASS "S1: a trip with no published-itinerary baseline resolves none-pending and the gate returns 0 — behaviour is byte-preserved for every trip with no coordination state"
+else
+  FAIL "S1: an ungated trip resolved '$S_ST' (rc=$S_RC) — this card would break every trip published before it"
+fi
+
+# ── S2 — AC 2, THE REJECTED HOLD. The plan moved and nobody confirmed it.
+S2D="$(s_fixture s2 16:30 none)"
+s_record "$S2D/.published-itinerary" "$S_DA" published
+S_ST="$(change_confirmation_state "$S2D")"
+( require_change_confirmation "$S2D" ) >/dev/null 2>&1; S_RC=$?
+if [ "$S_ST" = "unconfirmed" ] && [ "$S_RC" -ne 0 ]; then
+  PASS "S2: an itinerary change with no confirmation resolves unconfirmed and the gate ABORTS (rc=$S_RC) — the published plan holds unchanged"
+else
+  FAIL "S2: an unconfirmed itinerary change resolved '$S_ST' (rc=$S_RC) — a change nobody approved would republish"
+fi
+
+# ── S3 — AC 1, THE CONFIRMED REPUBLISH.
+S3D="$(s_fixture s3 16:30 none)"
+s_record "$S3D/.published-itinerary" "$S_DA" published
+s_record "$S3D/.change-confirmed"    "$S_DB" confirmed
+S_ST="$(change_confirmation_state "$S3D")"
+( require_change_confirmation "$S3D" ) >/dev/null 2>&1; S_RC=$?
+if [ "$S_ST" = "confirmed" ] && [ "$S_RC" -eq 0 ]; then
+  PASS "S3: a confirmation whose digest covers this exact itinerary content resolves confirmed and the gate returns 0 — the approved republish proceeds"
+else
+  FAIL "S3: a correctly confirmed change resolved '$S_ST' (rc=$S_RC) — the gate is unusable on its own happy path"
+fi
+
+# ── S4 — THE STALE-APPROVAL HOLE. The organizer confirmed, then the plan moved again. An
+# approval that carried forward across a later re-bake would approve content nobody saw.
+S4D="$(s_fixture s4 16:30 none)"
+s_record "$S4D/.published-itinerary" "$S_DA" published
+s_record "$S4D/.change-confirmed"    "$S_DA" confirmed
+S_ST="$(change_confirmation_state "$S4D")"
+( require_change_confirmation "$S4D" ) >/dev/null 2>&1; S_RC=$?
+if [ "$S_ST" = "stale" ] && [ "$S_RC" -ne 0 ]; then
+  PASS "S4: a confirmation recorded before a further re-bake resolves stale and the gate ABORTS (rc=$S_RC) — an approval cannot carry forward onto content it never covered"
+else
+  FAIL "S4: a superseded confirmation resolved '$S_ST' (rc=$S_RC) — a stale approval rides a later edit"
+fi
+
+# ── S5 — ADR-007 §2's PLACEHOLDER BOUND. A record that is present but says nothing is
+# never read as approval. Two shapes, because they fail at different places: no digest
+# line at all, and a placeholder value where a digest belongs.
+S5D="$(s_fixture s5d 16:30 none)"
+s_record "$S5D/.published-itinerary" "$S_DA" published
+printf 'confirmed=2027-06-01T00:00:00Z\nnote=approved verbally\n' > "$S5D/.change-confirmed"
+S_ST5A="$(change_confirmation_state "$S5D")"
+S5E="$(s_fixture s5e 16:30 none)"
+s_record "$S5E/.published-itinerary" "$S_DA" published
+printf 'digest=[TBD]\nconfirmed=2027-06-01T00:00:00Z\n' > "$S5E/.change-confirmed"
+S_ST5B="$(change_confirmation_state "$S5E")"
+if [ "$S_ST5A" = "unconfirmed" ] && [ "$S_ST5B" = "unconfirmed" ]; then
+  PASS "S5: a record with no digest line ($S_ST5A) and a record whose digest is a placeholder ($S_ST5B) both resolve unconfirmed — the branch tests the VALUE, so a malformed record is never approval"
+else
+  FAIL "S5: malformed records resolved '$S_ST5A' / '$S_ST5B' — one of them is being read as an approval"
+fi
+
+# ── S6 — STRUCTURAL. THIS IS THE ARM THAT DISCHARGES THE RISK THE DESIGN WAS BUILT
+# AGAINST. S2 and S4 prove the two KNOWN rejection paths abort. S6 proves the UNKNOWN ones
+# do — that `*)` is the default arm rather than an enumerated case — by injecting a token
+# no author anticipated and, separately, the empty string. Its control arm is the same
+# stub emitting `confirmed`: without that arm, a require_change_confirmation that aborted
+# on absolutely everything would pass S6 while being useless.
+S_ORIG_RESOLVER="$(declare -f change_confirmation_state)"
+change_confirmation_state() { printf 'zzz-unrecognised-token'; }
+( require_change_confirmation "$S1D" ) >/dev/null 2>&1; S_RC6A=$?
+change_confirmation_state() { printf ''; }
+( require_change_confirmation "$S1D" ) >/dev/null 2>&1; S_RC6B=$?
+change_confirmation_state() { printf 'confirmed'; }
+( require_change_confirmation "$S1D" ) >/dev/null 2>&1; S_RC6C=$?
+eval "$S_ORIG_RESOLVER"
+if [ "$S_RC6C" -eq 0 ]; then
+  PASS "S6a: CONTROL — the injection harness itself lets an allowlisted token through (rc=$S_RC6C), so a non-zero below is the wildcard firing rather than the gate refusing everything"
+else
+  FAIL "S6a: the control stub emitting 'confirmed' did NOT proceed (rc=$S_RC6C) — S6b would prove nothing"
+fi
+if [ "$S_RC6A" -ne 0 ] && [ "$S_RC6B" -ne 0 ]; then
+  PASS "S6b: an unrecognised token (rc=$S_RC6A) and the EMPTY STRING (rc=$S_RC6B) both abort — the proceed set is the allowlist and the abort is the default arm, so no resolver output reaches a push"
+else
+  FAIL "S6b: unrecognised=$S_RC6A empty=$S_RC6B — at least one unlisted token PUBLISHES; the case has been inverted into an enumerated-abort with a permissive default"
+fi
+if [ "$(change_confirmation_state "$S1D")" = "none-pending" ]; then
+  PASS "S6c: the real resolver was restored after the injection — the arms below grade production code"
+else
+  FAIL "S6c: the stub survived the restore; every arm after S6 is grading a stub"
+fi
+
+# ── S7 — D6, THE MARKER-ONLY REPUBLISH. #551 must be able to publish a site whose
+# itinerary content is the published one and whose coordination-state marker says pending.
+# The three arms are one assertion and two controls: without the S7c control, S7a and S7b
+# are equally satisfied by a projection that discriminates nothing at all.
+S7D="$(s_fixture s7d 14:00 pending)"
+s_record "$S7D/.published-itinerary" "$S_DA" published
+S_ST7A="$(change_confirmation_state "$S7D")"
+( require_change_confirmation "$S7D" ) >/dev/null 2>&1; S_RC7A=$?
+S7E="$(s_fixture s7e 14:00 updated)"
+s_record "$S7E/.published-itinerary" "$S_DAP" published
+S_ST7B="$(change_confirmation_state "$S7E")"
+( require_change_confirmation "$S7E" ) >/dev/null 2>&1; S_RC7B=$?
+S7F="$(s_fixture s7f 16:30 pending)"
+s_record "$S7F/.published-itinerary" "$S_DA" published
+S_ST7C="$(change_confirmation_state "$S7F")"
+( require_change_confirmation "$S7F" ) >/dev/null 2>&1; S_RC7C=$?
+if [ "$S_ST7A" = "none-pending" ] && [ "$S_RC7A" -eq 0 ]; then
+  PASS "S7a: a republish whose itinerary content is unchanged and whose coordination-state marker was ADDED passes the gate (state=$S_ST7A, rc=$S_RC7A) — 'change pending' is reachable"
+else
+  FAIL "S7a: adding a coordination marker resolved '$S_ST7A' (rc=$S_RC7A) — the pending state cannot be shown, and #551 AC 1 and AC 3 fail inside this file"
+fi
+if [ "$S_ST7B" = "none-pending" ] && [ "$S_RC7B" -eq 0 ] && [ "$S_DAP" = "$S_DAU" ]; then
+  PASS "S7b: the marker CHANGING (pending -> updated, with its date) also passes (state=$S_ST7B, rc=$S_RC7B) and both marked renders carry the same itinerary digest as the unmarked one — the notice band is outside the boundary, not merely absent from it"
+else
+  FAIL "S7b: a marker transition resolved '$S_ST7B' (rc=$S_RC7B); marked digests $S_DAP / $S_DAU vs unmarked $S_DA — the band is inside the digest and a standing confirmation is invalidated by a state change"
+fi
+if [ "$S_ST7C" != "none-pending" ] && [ "$S_RC7C" -ne 0 ]; then
+  PASS "S7c: CONTROL — the SAME marker with the itinerary edited underneath it still ABORTS (state=$S_ST7C, rc=$S_RC7C) — the excision removes the band, not the plan, so S7a/S7b are not a projection that ignores everything"
+else
+  FAIL "S7c: an itinerary edit published under a coordination marker resolved '$S_ST7C' (rc=$S_RC7C) — the band excision is swallowing plan content and an unapproved change would ship behind a marker"
+fi
+# S7d — THE CAP'S POLARITY. The excision is bounded, and the bound is what forbids the
+# only dangerous failure: an excision running PAST the band would delete plan content and
+# a real change would read as "unchanged". A band the pattern cannot resolve must therefore
+# leave its text IN the digest — the republish then reads as a change and aborts, which is
+# an inconvenience rather than a leak. This arm asserts that polarity on a band whose
+# closing tag never arrives.
+S7G="$(s_fixture s7g 14:00 none)"
+cat > "$S7G/outputs/porto-travel-site.html" <<'HTML'
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>.coord-notice{background:#eee}.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+<div class="coord-notice is-pending"><span>A change is pending</span>
+<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at 14:00. Then the riverside walk to the bridge.</p>
+<p>Dinner at Tasca do Bairro, eight in the evening.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+s_record "$S7G/.published-itinerary" "$S_DA" published
+S_ST7D="$(change_confirmation_state "$S7G")"
+( require_change_confirmation "$S7G" ) >/dev/null 2>&1; S_RC7D=$?
+if [ "$S_ST7D" != "none-pending" ] && [ "$S_RC7D" -ne 0 ]; then
+  PASS "S7d: an unterminated coordination band is NOT excised, so its text stays inside the digest and the republish ABORTS (state=$S_ST7D, rc=$S_RC7D) — the bounded excision fails closed, and cannot run past the band into plan content"
+else
+  FAIL "S7d: a band the pattern could not resolve still resolved '$S_ST7D' (rc=$S_RC7D) — the excision is unbounded and can delete itinerary content, which is the one failure direction that hides a real change"
+fi
+
+# ── S8 / S9 — the two END-TO-END arms, driven by a shell-function mock of gh and npx
+# (groups J2/J3 use the same technique). These are the arms that prove the gate's POSITION
+# rather than its logic: on an abort nothing has been cloned and nothing pushed.
+S_GHLOG="$WORK/s_gh.log"
+gh() {   # mock: record the call, answer the read-only probes, create/clone nothing real
+  printf '%s\n' "$*" >> "$S_GHLOG"
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 0 ;;
+    "auth status") printf "Token scopes: 'repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+npx() { return 0; }   # preflight probes for it; no arm below reaches an encryption
+
+# S8 — ROTATE INHERITS THE GATE, and must not be exempted. cmd_rotate re-encrypts the same
+# render, so an exempt rotate is a silent republish of unapproved content by another route.
+S8D="$(s_fixture s8 16:30 none)"
+s_record "$S8D/.published-itinerary" "$S_DA" published
+: > "$S_GHLOG"
+( cmd_rotate "$S8D" ) >/dev/null 2>&1; S_RC8A=$?
+S_LOG8A="$(cat "$S_GHLOG")"
+S_REACHED8A="$(printf '%s\n' "$S_LOG8A" | grep -c .)"
+S8E="$(s_fixture s8e 16:30 none)"
+s_record "$S8E/.published-itinerary" "$S_DA" published
+s_record "$S8E/.change-confirmed"    "$S_DB" confirmed
+: > "$S_GHLOG"
+( cmd_rotate "$S8E" ) >/dev/null 2>&1
+S_LOG8B="$(cat "$S_GHLOG")"
+case "$S_LOG8B" in *"repo clone"*) S_CLONE8B=1 ;; *) S_CLONE8B=0 ;; esac
+case "$S_LOG8A" in *"repo clone"*) S_CLONE8A=1 ;; *) S_CLONE8A=0 ;; esac
+if [ "$S_REACHED8A" -gt 0 ] && [ "$S_CLONE8B" -eq 1 ]; then
+  PASS "S8a: CONTROL — the mock was reached on the blocked run ($S_REACHED8A gh calls) and a CONFIRMED rotate does go on to clone the per-trip repo, so the zero asserted below is a measurement rather than a run that never got started"
+else
+  FAIL "S8a: reached=$S_REACHED8A clone-on-confirmed=$S_CLONE8B — the harness never exercised the publish path, and S8b would prove nothing"
+fi
+if [ "$S_RC8A" -ne 0 ] && [ "$S_CLONE8A" -eq 0 ]; then
+  PASS "S8b: rotate on an unconfirmed itinerary change ABORTS (rc=$S_RC8A) and never clones the per-trip repo — the gate is inherited through cmd_update and fires before any network effect"
+else
+  FAIL "S8b: rotate returned rc=$S_RC8A with clone=$S_CLONE8A — rotate is exempt from the gate, which republishes unapproved content by another route"
+fi
+
+# S9 — cmd_publish STAYS UNGATED, and that is safe rather than assumed: it dies when the
+# per-trip repo already exists, so it structurally cannot overwrite a published plan.
+S9D="$(s_fixture s9 16:30 none)"
+s_record "$S9D/.published-itinerary" "$S_DA" published
+: > "$S_GHLOG"
+( cmd_publish "$S9D" ) >/dev/null 2>&1; S_RC9=$?
+S_LOG9="$(cat "$S_GHLOG")"
+case "$S_LOG9" in *"repo view"*)   S_VIEW9=1 ;;   *) S_VIEW9=0 ;; esac
+case "$S_LOG9" in *"repo create"*) S_CREATE9=1 ;; *) S_CREATE9=0 ;; esac
+unset -f gh npx
+if [ "$S_VIEW9" -eq 1 ] && [ "$S_RC9" -ne 0 ] && [ "$S_CREATE9" -eq 0 ]; then
+  PASS "S9a: cmd_publish against an existing per-trip repo dies (rc=$S_RC9) after the existence probe and before any repo creation — leaving it ungated cannot overwrite a published plan"
+else
+  FAIL "S9a: probe=$S_VIEW9 rc=$S_RC9 create=$S_CREATE9 — cmd_publish reached a publish over an existing repo, and the ungated-path argument does not hold"
+fi
+# The structural half of the same claim, read from the PARSED function bodies rather than
+# from source text: bash discards comments, so a mention of an identifier in a comment
+# cannot fake a call site.
+S_BODY_PUB="$(declare -f cmd_publish)"
+S_BODY_UPD="$(declare -f cmd_update)"
+case "$S_BODY_PUB" in *require_change_confirmation*) S_PUBGATED=1 ;; *) S_PUBGATED=0 ;; esac
+case "$S_BODY_PUB" in *record_published_itinerary*)  S_PUBRECS=1 ;; *) S_PUBRECS=0 ;; esac
+case "$S_BODY_UPD" in *require_change_confirmation*) S_UPDGATED=1 ;; *) S_UPDGATED=0 ;; esac
+if [ "$S_UPDGATED" -eq 1 ] && [ "$S_PUBGATED" -eq 0 ] && [ "$S_PUBRECS" -eq 1 ]; then
+  PASS "S9b: cmd_update calls the gate and cmd_publish does not, while cmd_publish DOES record the baseline — recording is not gating, and the sensitivity arm (cmd_update=$S_UPDGATED) shows the detector fires"
+else
+  FAIL "S9b: cmd_update gated=$S_UPDGATED, cmd_publish gated=$S_PUBGATED, cmd_publish records=$S_PUBRECS — the gate has moved onto the wrong path, or the first-publish baseline is no longer established"
+fi
+
+# ── S10 — CIAC-3. This card must not weaken the two guards carrying ADR-002 Decision 4's
+# fail-closed zero-plaintext-leak invariant. Read from the parsed bodies for the same
+# reason as S9b. STATED BOUND: this is the coupling test, not a byte-identity test —
+# byte-identity against origin/main cannot be asserted here because the CI checkout is
+# shallow and a git-based arm would SKIP, which under GUARD_STRICT_SKIPS turns the job red
+# for an undeclared group. Byte-identity is verified at review against origin/main; what
+# this arm holds is that no part of the gate has reached inside either guard.
+S_BODY_VPC="$(declare -f verify_publishable_content)"
+S_BODY_VC="$(declare -f verify_ciphertext)"
+S_LEAK=0
+for s_tok in require_change_confirmation change_confirmation_state itinerary_digest \
+             strip_to_itinerary_text record_published_itinerary published_itinerary_path; do
+  case "$S_BODY_VPC" in *"$s_tok"*) S_LEAK=$((S_LEAK+1)) ;; esac
+  case "$S_BODY_VC"  in *"$s_tok"*) S_LEAK=$((S_LEAK+1)) ;; esac
+done
+S_SENS=0
+for s_tok in require_change_confirmation record_published_itinerary; do
+  case "$S_BODY_UPD" in *"$s_tok"*) S_SENS=$((S_SENS+1)) ;; esac
+done
+S_SPEC=0
+for s_body in "$S_BODY_VPC" "$S_BODY_VC" "$S_BODY_UPD" "$S_BODY_PUB"; do
+  case "$s_body" in *zzz_not_a_real_identifier*) S_SPEC=$((S_SPEC+1)) ;; esac
+done
+if [ "${#S_BODY_VPC}" -gt 0 ] && [ "${#S_BODY_VC}" -gt 0 ] && [ "$S_SENS" -eq 2 ] && [ "$S_SPEC" -eq 0 ] && [ "$S_LEAK" -eq 0 ]; then
+  PASS "S10: 0 of 12 (6 identifiers x 2 guards) gate identifiers appear inside verify_publishable_content (${#S_BODY_VPC}B) or verify_ciphertext (${#S_BODY_VC}B); the sensitivity arm found both identifiers in cmd_update (2/2) and the specificity arm found a fabricated one in 0 of 4 bodies — the zero is a measurement"
+else
+  FAIL "S10: leak=$S_LEAK sensitivity=$S_SENS specificity=$S_SPEC vpc=${#S_BODY_VPC}B vc=${#S_BODY_VC}B — either the gate has reached inside an ADR-002 D4 guard, or this probe cannot see one"
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group PF — no verdict in this suite, or in the publish script it guards, is decided by a
