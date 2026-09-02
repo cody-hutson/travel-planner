@@ -1852,7 +1852,7 @@ cat > "$R7TD/outputs/traveler-model.md" <<'MD'
 ## Rowan
 - Passport: Irish, valid to 2027
 
-## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+## Quill [OPERATOR-PROVIDED]
 - Category: mobility
 - Trigger: crowded escalators and long unbroken stair flights bring on vertigo
 - Applies to: ## Hard Constraints -> "Mobility"
@@ -3555,6 +3555,10 @@ t8_state_at_build() { # <trip_dir> <state-record> <build-YYYY-MM-DD> <window-day
   se="$(_epoch_of_iso "${since}T00:00:00Z")"
   be="$(_epoch_of_iso "${3}T00:00:00Z")"
   [ -n "$se" ] && [ -n "$be" ] || return 0
+  # DISCRIMINATION MUTATION — TEMPORARY, reverted in the next commit. The prune is
+  # short-circuited so T8b must go RED. Its purpose is to prove T8b is wired to the
+  # prune rather than reporting a value it would report anyway.
+  printf '%s' "$st"; return 0
   if [ "$(( (be - se) / 86400 ))" -gt "$4" ]; then printf '%s' "$5"; return 0; fi
   printf '%s' "$st"
 }
