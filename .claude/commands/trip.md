@@ -932,12 +932,14 @@ constraints the hero and overview render, and no other block;
 `trips/<slug>/outputs/event-status.md` — the authoritative source
 `reference/site-layout-spec.md` § 9.1 names for booking status, *needs booking* flags,
 checklist membership and the per-card booking tiers, read because § 3 makes the site a read
-surface for status; `trips/<slug>/outputs/change-summary.md` — its artifact-level `status`
-field alone, the one input deciding the `coordination-state` this build writes, read because
-`reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for it exactly as
-the checklist is for booking status; `trips/<slug>/.change-confirmed` — its `confirmed=`
-line alone, the organizer's recorded approval and the event the `updated` state's
-`coordination-since` decays from, read because a date taken from this build instead would
+surface for status; `trips/<slug>/outputs/change-summary.md` — its dated entries
+alone, which are what raise a change in the first place, read because
+`reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for the
+coordination state exactly as the checklist is for booking status;
+`trips/<slug>/.change-confirmed` — its `digest=` and `confirmed=` lines, the organizer's
+recorded approval: the one event both deciding the `coordination-state` this build writes and
+dating the `updated` state's decay, read because it is the only record any shipped surface
+writes when the organizer decides, and because a date taken from this build instead would
 restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; the itinerary sources the
 § *Site References* table names, read as the quality bar rather than as templates;
@@ -957,33 +959,60 @@ preserve design tweaks already approved; `Write` is reached only where the file 
 exist. A regenerate silently drops plan detail and approved design, which is the overwrite
 bound 5 forbids, and it takes no licence from the append shape either.
 
-**The coordination state comes from one field, and the mapping is closed.**
-`reference/schemas/travel-site.md` declares `coordination-state` and `coordination-since` on this
-build's own frontmatter, and `reference/site-layout-spec.md` § 3 declares what the render does
-with them. This verb decides only the value, and it decides it from
-`trips/<slug>/outputs/change-summary.md`'s artifact-level `status`: `pending` → `pending`, with
-`coordination-since` the date of the newest undecided entry; `confirmed` → `updated`, with
-`coordination-since` the date the confirmation itself was recorded — the `YYYY-MM-DD`
-prefix of the `confirmed=` line of `trips/<slug>/.change-confirmed`, the organizer's
-recorded approval, and where that record is unreadable the date of the newest decided
-entry; never the date of this build; `rejected`, or no
-`outputs/change-summary.md` at all, → `none`, with `coordination-since` omitted. **The file's
-presence is not the signal.** That class is `accumulate-append`, so it exists from the first
-summary onward and outlives every decision recorded in it — a build reading presence would
-announce a change pending on a trip whose last change was confirmed months ago. `status` is what
-the class declares as the answer to *is a change pending for this trip?*, and it is the only
-thing read here. Where the state resolves to `none` the notice is **not emitted at all**; § 3
-states that rule and this verb does not restate it.
+**The coordination state comes from the organizer's recorded approval, and the mapping is
+closed.** `reference/schemas/travel-site.md` declares `coordination-state` and
+`coordination-since` on this build's own frontmatter, and `reference/site-layout-spec.md` § 3
+declares what the render does with them. This verb decides only the value, and it
+decides it from `trips/<slug>/.change-confirmed` — the organizer's recorded approval —
+read against the dated entries of `trips/<slug>/outputs/change-summary.md`, which are what
+raise a change in the first place. Two readings settle the whole mapping. The record counts
+as an approval only where its `digest=` parses as a token, so a record present but saying
+nothing is not consent; and an
+entry is **undecided** where its date is later than the `YYYY-MM-DD` prefix of `confirmed=`, or
+where there is no approval to measure it against at all. The three limbs, closed: at least one
+undecided entry → `pending`, with `coordination-since` the date of the newest undecided entry;
+no undecided entry and a readable approval → `updated`, with `coordination-since` the date the
+approval itself was recorded — the `YYYY-MM-DD` prefix of the `confirmed=` line of
+`trips/<slug>/.change-confirmed`, never the date of this build; no
+`outputs/change-summary.md`, or no entry in one, → `none`, with `coordination-since` omitted.
+Where the state resolves to `none` the notice is **not emitted at all**; § 3 states that rule
+and this verb does not restate it.
 
-**The same property decides the date, and it is why the `updated` limb does not anchor to
-this run.** Nothing clears a `confirmed` either, so a `coordination-since` re-derived from
-the build would be re-stamped on every later rebuild: § 3's seven-day window would restart
-each time instead of decaying, and a trip rebuilt months later would announce itself as
-recently updated — the failure `reference/schemas/travel-site.md` says this field exists to
-prevent, and the same failure class the presence reading above is rejected for, one state
-over. The confirmation is an event with its own recorded moment, so the limb reads that
-moment and no build changes it. The `pending` limb already anchors to an **entry** rather
-than to a run; this one now has the same shape.
+**Neither the file's presence nor its `status` field is the signal, and the second of those is
+a correction.** Presence was rejected first and for a reason that still holds: C20 is
+`accumulate-append`, so the file exists from the first summary onward and outlives every
+decision recorded in it, and a build reading presence would announce a change pending on a trip
+whose last change was confirmed months ago. `status` was the reading that replaced it, and it
+fails one step further down the same argument. Nothing in this repository ever moves that field
+off `pending` — `confirm` records the organizer's decision by writing `digest=` and `confirmed=`
+to `trips/<slug>/.change-confirmed` and writes nothing else, and no other surface promotes it —
+so a state keyed on it could never reach `updated` at all, and, § 3 giving the seven-day window
+to `is-updated` alone, the pending band would never decay either. It would **latch**: the
+organizer confirms, the plan republishes, and the site goes on telling every traveller a change
+is pending, indefinitely. **What clears `pending` is an approval recorded later than the newest
+entry** — one `confirm` away, an event with its own moment, and nothing rewritten.
+
+**The same record dates the `updated` state, and it is why that limb does not anchor to this
+run.** `confirm` writes `confirmed=` at the instant the organizer types CONFIRM and no later
+path re-stamps it — `publish` and `update` write `.published-itinerary`, a different sidecar —
+so a date read from it moves when and only when the organizer decides again. A
+`coordination-since` re-derived from the build would be re-stamped on every later rebuild:
+§ 3's window would restart each time instead of decaying, and a trip rebuilt months later would
+announce itself as recently updated, the failure `reference/schemas/travel-site.md` says this
+field exists to prevent. The `pending` limb anchors to an **entry** rather than to a run for the
+same reason.
+
+**And the `updated` limb is pruned at the build where its window has already closed.** Where the
+recorded approval is older than the window § 3 declares, this build writes `none` and emits no
+band. That is **not** § 3's decay moved to build time: § 3 evaluates the window at **open**
+against the reader's own clock and this verb does not touch that. It is a floor in the one
+direction that cannot freeze — the build is never earlier than the approval and an open of these
+bytes is never earlier than the build, so a window already closed at the build is closed at
+every open of what the build produced, and the prune can only remove a band that was already
+dead. Without it a trip whose one change was confirmed a year ago carries an `updated`
+frontmatter, a band node, a CSS rule and a script branch in every render for the rest of its
+life; AC 5 asks that a site with no pending change and no *recent* update render exactly as it
+does today, byte for byte.
 
 **The round-trip completeness check, run after every build and every patch.** Every element of
 `outputs/final-itinerary.md` — **every day, and every track of a split day** — still resolves

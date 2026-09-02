@@ -2539,13 +2539,12 @@ else
 fi
 
 # ── T5 — THE ANCHOR. `coordination-since` for the `updated` state must not move when the
-# underlying confirmation has not. C20's `status` is artifact-scoped, required and
-# `accumulate-append`, so nothing ever clears a `confirmed`: a rule that anchors `updated`
-# to the run re-derives a fresh date on EVERY later rebuild, the seven-day decay window
-# § 3 evaluates at open restarts each time, and a trip rebuilt months later still
-# announces itself as recently updated. That is precisely the failure C19's schema says
-# this field exists to prevent, one state over from the presence-keying the design already
-# rejected for `pending`.
+# underlying confirmation has not. A rule that anchors `updated` to the run re-derives a fresh
+# date on EVERY later rebuild, the seven-day decay window § 3 evaluates at open restarts each
+# time, and a trip rebuilt months later still announces itself as recently updated. That is
+# precisely the failure C19's schema says this field exists to prevent, one state over from the
+# presence-keying the design already rejected for `pending` — and one state short of the
+# `status`-keying T6 replaces, which is the same argument run to its end.
 #
 # THE RULE IS READ FROM THE DOCUMENT, NOT SPELLED HERE — the same reason T1 reads the
 # class token from the component contract rather than holding a literal.
@@ -2564,8 +2563,36 @@ fi
 # grades the CONTRACT's anchor and a resolution built to it — not a build script's output,
 # and it does not claim that a given run followed the contract.
 T_TRIPMD="$HERE/../.claude/commands/trip.md"
-T5_MARK='`confirmed` → `updated`'
-T5_STOP='`rejected`'
+# RECONCILED with the mapping this remediation replaced (D11). The limb is no longer keyed
+# to a `status` VALUE, so `\`confirmed\` → \`updated\`` is not the marker any more and
+# `\`rejected\`` is not a limb at all: the arrow into `updated` is what locates it, and the
+# `none` limb that follows is what bounds it. Markers are LOCATORS pointing at the document,
+# never a copy of the rule — the rule itself is still read out of what they bracket.
+# THE MUTATION INJECTOR, shared by T5's control and T6a's. Paragraph-scoped and
+# newline-normalising, so it injects after a marker the document has WRAPPED across two
+# lines exactly as it does after one held on a single line. The line-based form this
+# replaces was silently layout-dependent: a reflow of the mapping moved the marker across a
+# line break, the injection then landed nowhere, and the control failed for a reason that
+# had nothing to do with the extractor it exists to grade. Only the FIRST matching paragraph
+# is normalised, and the extractors it feeds normalise newlines themselves, so nothing about
+# the copy's line layout reaches a verdict.
+t_inject_after_mark() { # <file> <mark> <injection> -> mutated document on stdout
+  awk -v mark="$2" -v inj="$3" '
+    BEGIN { RS = ""; ORS = "\n\n" }
+    {
+      p = $0
+      if (!done) {
+        gsub(/\n/, " ", p)
+        a = index(p, mark)
+        if (a > 0) { p = substr(p, 1, a + length(mark) - 1) inj substr(p, a + length(mark)); done = 1 }
+        else p = $0
+      }
+      print p
+    }' "$1"
+}
+
+T5_MARK='→ `updated`'
+T5_STOP='`none`'
 
 # The `confirmed` -> `updated` limb, as one line. Paragraph-scoped (RS="") so a marker
 # elsewhere in a 1000-line command file cannot be mistaken for this one.
@@ -2627,8 +2654,14 @@ t5_since() { # <trip_dir> <build_date> <field-token> <path-token>
   return 0
 }
 
-# Two trips differing in ONE thing: the date on the organizer's recorded approval. Both
-# carry a `status: confirmed` summary, so both take the `updated` limb.
+# Two trips differing in ONE thing: the date on the organizer's recorded approval. Both take
+# the `updated` limb, and under the mapping this remediation replaced they could only take it
+# through a MANUFACTURED `status: confirmed` — a value no shipped surface writes, which was the
+# tell that the state was keyed on a phantom source. The summaries below carry
+# `status: pending`, the only value anything in this repository produces, and both trips still
+# resolve `updated` because their recorded approval post-dates every entry. The fixture is
+# therefore conformant with what the corpus can actually emit, and it doubles as a specificity
+# arm for D11: an implementation still reading `status` resolves `pending` on both.
 T5_CONF_A='2027-06-01T09:14:22Z'
 T5_CONF_B='2027-08-15T11:02:47Z'
 T5_BUILD_1='2027-06-02'
@@ -2642,7 +2675,7 @@ t5_trip() { # <dir> <confirmed-iso>
   {
     printf -- '---\nartifact: outputs/change-summary.md\nschema-version: 1\ntrip: t5-fixture\n'
     printf -- 'writer: hub\nlifecycle: accumulate-append\nprovenance: derived\n'
-    printf -- 'publish: internal\ngenerated: %s\nstatus: confirmed\n---\n\n' "${2:0:10}"
+    printf -- 'publish: internal\ngenerated: %s\nstatus: pending\n---\n\n' "${2:0:10}"
     printf -- '## 2027-05-28 — first synthesis\n\n## 2027-05-30 — proposed change\n'
   } > "$1/outputs/change-summary.md"
 }
@@ -2660,12 +2693,8 @@ T5_PATH="$(t5_path   "$T_DIR/limb_tok.txt")"
 # Asking instead whether an invented token appears in the REAL extraction is a question
 # whose answer is `no` whether the extractor works or not — it would answer the same over
 # an empty file. Same technique as T2's mutation control and UF-CTL2's in the schema suite.
-awk -v mark="$T5_MARK" -v inj=' the `zzqfab=` line of `zzq/fab/.zzq-record` and' '
-  { if (!done) {
-      a = index($0, mark)
-      if (a > 0) { $0 = substr($0, 1, a + length(mark) - 1) inj substr($0, a + length(mark)); done = 1 }
-    }
-    print }' "$T_TRIPMD" > "$T_DIR/tripmd_mut.md"
+t_inject_after_mark "$T_TRIPMD" "$T5_MARK" ' the `zzqfab=` line of `zzq/fab/.zzq-record` and' \
+  > "$T_DIR/tripmd_mut.md"
 t5_limb   "$T_DIR/tripmd_mut.md"  > "$T_DIR/limb_mut.txt"
 t5_tokens "$T_DIR/limb_mut.txt"   > "$T_DIR/limb_mut_tok.txt"
 T5_CTL_FIELD="$(t5_field "$T_DIR/limb_mut_tok.txt")"
@@ -2864,12 +2893,8 @@ T6_E2='2027-07-04'
 # invented token appears in the REAL extraction is a question whose answer is `no` whether
 # the extractor works or not — it answers the same over an empty file. Same technique as
 # T2's and T5's controls, and UF-CTL2's in the artifact-schema suite.
-awk -v mark="$T6_MARK" -v inj=' `zzq/fab/.zzq-state-record` and' '
-  { if (!done) {
-      a = index($0, mark)
-      if (a > 0) { $0 = substr($0, 1, a + length(mark) - 1) inj substr($0, a + length(mark)); done = 1 }
-    }
-    print }' "$T_TRIPMD" > "$T6_DIR/tripmd_mut.md"
+t_inject_after_mark "$T_TRIPMD" "$T6_MARK" ' `zzq/fab/.zzq-state-record` and' \
+  > "$T6_DIR/tripmd_mut.md"
 T6_CTL_REC="$(t6_state_record "$T6_DIR/tripmd_mut.md")"
 if [ -z "$T6_DOCREC" ]; then
   FAIL "T6a: no record could be extracted from the '$T6_MARK' clause of $(basename "$T_TRIPMD") — the mapping has moved or been renamed, and every verdict below would be over an empty token rather than a measurement"

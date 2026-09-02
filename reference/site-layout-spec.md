@@ -179,9 +179,8 @@ obvious wrong move, and because the §9.4 completeness walk is unaffected either
 
 **The value comes from one place, and this section does not say where.** `coordination-state`
 and `coordination-since` are declared on C19's frontmatter in
-`reference/schemas/travel-site.md`; the build's resolution of them from
-`outputs/change-summary.md` is declared in the `site` verb's read scope in
-`.claude/commands/trip.md`. This section owns what the render *does* with the state and the
+`reference/schemas/travel-site.md`; the build's resolution of them is declared in the
+`site` verb's read scope in `.claude/commands/trip.md`. This section owns what the render *does* with the state and the
 reader-facing label; it holds no second copy of where the state comes from.
 
 ### Overview Dashboard
