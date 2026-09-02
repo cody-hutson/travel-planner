@@ -47,7 +47,10 @@
 # document rather than spelled here), its state VOCABULARY (the contract's variants and
 # C19's coordination-state enum, set-diffed both ways), and the NULL CASE: absent a
 # pending change or a recent update the render is byte-identical to a pre-component
-# render and the itinerary projection is byte-identical to strip_to_text.
+# render and the itinerary projection is byte-identical to strip_to_text. T5 grades the
+# ANCHOR (AC 2, second remediation) — that `coordination-since` for the `updated` state is
+# read from the confirmation's own record rather than re-derived from the run, so the
+# seven-day decay window does not restart on every rebuild.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -2312,6 +2315,7 @@ fi
 #   T2  the component's variants and the schema's enum agree        (spec <-> schema)
 #   T3  absent a pending change, the render emits nothing           (AC 5, the render)
 #   T4  absent a pending change, the publish path is what it was    (AC 5, the digest)
+#   T5  coordination-since is anchored to the confirmation, not the run   (AC 2)
 #
 # T1 IS THE ARM THAT HOLDS THE ONE THING #552 ASKED #551 TO HOLD, AND IT IS NOT S7a.
 # publish-trip-site.sh binds the notice's identity at the line marked SEAM S4, and the
@@ -2527,6 +2531,162 @@ elif cmp -s "$T_DIR/proj_new_null.txt" "$T_DIR/proj_old_null.txt"; then
   PASS "T4: on the null-case render the itinerary projection is byte-identical to strip_to_text ($(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B) — absent a pending change the publish path is exactly what it was before this milestone. The control arm confirms the two projections DIFFER on a marked render, so the identity is a measurement"
 else
   FAIL "T4: the itinerary projection and strip_to_text disagree on a render with NO coordination band — $(wc -c < "$T_DIR/proj_new_null.txt" | tr -d ' ')B vs $(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B. Something in the excision is firing with no band present, and every trip with no coordination activity would republish differently than it does today"
+fi
+
+# ── T5 — THE ANCHOR. `coordination-since` for the `updated` state must not move when the
+# underlying confirmation has not. C20's `status` is artifact-scoped, required and
+# `accumulate-append`, so nothing ever clears a `confirmed`: a rule that anchors `updated`
+# to the run re-derives a fresh date on EVERY later rebuild, the seven-day decay window
+# § 3 evaluates at open restarts each time, and a trip rebuilt months later still
+# announces itself as recently updated. That is precisely the failure C19's schema says
+# this field exists to prevent, one state over from the presence-keying the design already
+# rejected for `pending`.
+#
+# THE RULE IS READ FROM THE DOCUMENT, NOT SPELLED HERE — the same reason T1 reads the
+# class token from the component contract rather than holding a literal.
+# reference/site-layout-spec.md § 3 says in terms that it keeps no second copy of where
+# the state comes from and names the `site` verb in .claude/commands/trip.md as the one
+# home. A literal here would be that second copy, and it would leave this arm green
+# through a document that had moved the anchor back to the build.
+#
+# WHAT IS EXTRACTED, and the pairing rule. From the `confirmed` -> `updated` limb of that
+# mapping: the first backticked FIELD token (the `name=` shape) and the first backticked
+# PATH token that FOLLOWS it. A limb naming neither has no artifact-side source at all —
+# it can only be anchored to the run, and the resolver below then has nothing to return
+# but the build's own date, which is what the subject comparison sees.
+#
+# STATED BOUND, the same one T3 carries: there is no site BUILD in this repository. T5
+# grades the CONTRACT's anchor and a resolution built to it — not a build script's output,
+# and it does not claim that a given run followed the contract.
+T_TRIPMD="$HERE/../.claude/commands/trip.md"
+T5_MARK='`confirmed` → `updated`'
+T5_STOP='`rejected`'
+
+# The `confirmed` -> `updated` limb, as one line. Paragraph-scoped (RS="") so a marker
+# elsewhere in a 1000-line command file cannot be mistaken for this one.
+t5_limb() { # <trip-md> -> the limb text on stdout
+  awk -v mark="$T5_MARK" -v stop="$T5_STOP" '
+    BEGIN { RS = ""; FS = "\n" }
+    {
+      p = $0
+      gsub(/\n/, " ", p)
+      a = index(p, mark)
+      if (a == 0) next
+      p = substr(p, a + length(mark))
+      b = index(p, stop)
+      if (b > 0) p = substr(p, 1, b - 1)
+      print p
+      exit
+    }' "$1"
+}
+
+# Every backticked token of a file, one per line, in document order.
+t5_tokens() { # <file>
+  awk '{
+    s = $0
+    while ((a = index(s, "`")) > 0) {
+      s = substr(s, a + 1)
+      b = index(s, "`")
+      if (b == 0) break
+      print substr(s, 1, b - 1)
+      s = substr(s, b + 1)
+    }
+  }' "$1"
+}
+
+# The pair, read in two passes rather than one space-joined line: splitting a joined pair
+# is shell-dependent and buys nothing here.
+t5_field() { awk '$0 ~ /^[a-z][a-z0-9-]*=$/ && f == "" { f = $0 } END { print f }' "$1"; }
+t5_path()  { awk '$0 ~ /^[a-z][a-z0-9-]*=$/ && f == "" { f = $0; next }
+                  f != "" && p == "" && $0 ~ /\// && $0 ~ /\./ { p = $0 }
+                  END { print p }' "$1"; }
+
+# coordination-since for `updated`, resolved exactly as the document declares it. Where
+# the limb names a record and a field, the value is that record's, and the build date
+# passed in is unused — which is the whole property. Where the limb names neither, the
+# rule is anchored to the run and the build's own date is all there is to return, so the
+# build date is a real limb of this function rather than a decoration.
+t5_since() { # <trip_dir> <build_date> <field-token> <path-token>
+  local dir="$1" build="$2" field="$3" path="$4" rel line v
+  if [ -z "$field" ] || [ -z "$path" ]; then printf '%s' "$build"; return 0; fi
+  rel="$path"
+  case "$rel" in
+    trips/*/*) rel="${rel#trips/}"; rel="${rel#*/}" ;;
+  esac
+  [ -r "$dir/$rel" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "$field"*) v="${line#"$field"}"; printf '%s' "${v:0:10}"; return 0 ;;
+    esac
+  done < "$dir/$rel"
+  return 0
+}
+
+# Two trips differing in ONE thing: the date on the organizer's recorded approval. Both
+# carry a `status: confirmed` summary, so both take the `updated` limb.
+T5_CONF_A='2027-06-01T09:14:22Z'
+T5_CONF_B='2027-08-15T11:02:47Z'
+T5_BUILD_1='2027-06-02'
+T5_BUILD_2='2027-11-20'
+T5_EXPECT_A="${T5_CONF_A:0:10}"
+T5_EXPECT_B="${T5_CONF_B:0:10}"
+
+t5_trip() { # <dir> <confirmed-iso>
+  mkdir -p "$1/outputs"
+  printf 'digest=4294967295-1234\nconfirmed=%s\n' "$2" > "$1/.change-confirmed"
+  {
+    printf -- '---\nartifact: outputs/change-summary.md\nschema-version: 1\ntrip: t5-fixture\n'
+    printf -- 'writer: hub\nlifecycle: accumulate-append\nprovenance: derived\n'
+    printf -- 'publish: internal\ngenerated: %s\nstatus: confirmed\n---\n\n' "${2:0:10}"
+    printf -- '## 2027-05-28 — first synthesis\n\n## 2027-05-30 — proposed change\n'
+  } > "$1/outputs/change-summary.md"
+}
+t5_trip "$T_DIR/tripA" "$T5_CONF_A"
+t5_trip "$T_DIR/tripB" "$T5_CONF_B"
+
+t5_limb   "$T_TRIPMD"            > "$T_DIR/limb.txt"
+t5_tokens "$T_DIR/limb.txt"      > "$T_DIR/limb_tok.txt"
+T5_FIELD="$(t5_field "$T_DIR/limb_tok.txt")"
+T5_PATH="$(t5_path   "$T_DIR/limb_tok.txt")"
+
+# CONTROL — the extractor must be reading the DOCUMENT. A fabricated (field, path) pair is
+# injected into a copy of trip.md immediately after the limb marker, and the same three
+# steps are re-run over the copy; both halves must come back carrying the injection.
+# Asking instead whether an invented token appears in the REAL extraction is a question
+# whose answer is `no` whether the extractor works or not — it would answer the same over
+# an empty file. Same technique as T2's mutation control and UF-CTL2's in the schema suite.
+awk -v mark="$T5_MARK" -v inj=' the `zzqfab=` line of `zzq/fab/.zzq-record` and' '
+  { if (!done) {
+      a = index($0, mark)
+      if (a > 0) { $0 = substr($0, 1, a + length(mark) - 1) inj substr($0, a + length(mark)); done = 1 }
+    }
+    print }' "$T_TRIPMD" > "$T_DIR/tripmd_mut.md"
+t5_limb   "$T_DIR/tripmd_mut.md"  > "$T_DIR/limb_mut.txt"
+t5_tokens "$T_DIR/limb_mut.txt"   > "$T_DIR/limb_mut_tok.txt"
+T5_CTL_FIELD="$(t5_field "$T_DIR/limb_mut_tok.txt")"
+T5_CTL_PATH="$(t5_path   "$T_DIR/limb_mut_tok.txt")"
+
+# The subject: ONE trip, ONE unchanged confirmation, TWO builds months apart.
+T5_A1="$(t5_since "$T_DIR/tripA" "$T5_BUILD_1" "$T5_FIELD" "$T5_PATH")"
+T5_A2="$(t5_since "$T_DIR/tripA" "$T5_BUILD_2" "$T5_FIELD" "$T5_PATH")"
+T5_B1="$(t5_since "$T_DIR/tripB" "$T5_BUILD_1" "$T5_FIELD" "$T5_PATH")"
+
+if [ "$T5_BUILD_1" = "$T5_BUILD_2" ] || [ "$T5_CONF_A" = "$T5_CONF_B" ]; then
+  FAIL "T5: fixture integrity — the two build dates ($T5_BUILD_1, $T5_BUILD_2) or the two recorded confirmations ($T5_CONF_A, $T5_CONF_B) are equal, so neither the invariance nor the sensitivity below could fail"
+elif [ "$T5_CTL_FIELD" != 'zzqfab=' ] || [ "$T5_CTL_PATH" != 'zzq/fab/.zzq-record' ]; then
+  FAIL "T5-CTL: a (field, path) pair injected into a copy of $(basename "$T_TRIPMD") was NOT recovered (field='$T5_CTL_FIELD', path='$T5_CTL_PATH', both expected) — the extractor has stopped reading the mapping, so whatever it reports about the real document is this file's own answer rather than the document's"
+elif [ "$T5_A1" != "$T5_A2" ]; then
+  FAIL "T5: coordination-since MOVED with the build on an UNCHANGED confirmation — '$T5_A1' at build $T5_BUILD_1 against '$T5_A2' at build $T5_BUILD_2, over one trip whose recorded approval did not move. The limb yielded field='$T5_FIELD' path='$T5_PATH'; empty means it names no artifact-side source and is anchored to the RUN, so every rebuild re-stamps the date and § 3's seven-day window restarts instead of decaying from the confirmation. Limb read: [$(cat "$T_DIR/limb.txt")]"
+elif [ -z "$T5_A1" ]; then
+  FAIL "T5: the source the limb names (field='$T5_FIELD' path='$T5_PATH') resolved to NOTHING on a fixture that carries it, so the equality above is between two empty strings rather than between two dates"
+elif [ "$T5_A1" = "$T5_BUILD_1" ] || [ "$T5_A1" = "$T5_BUILD_2" ]; then
+  FAIL "T5: coordination-since resolved to a BUILD date ('$T5_A1') rather than to the confirmation's own — the two builds happen to agree, but the value is still the run's"
+elif [ "$T5_A1" != "$T5_EXPECT_A" ]; then
+  FAIL "T5: coordination-since resolved '$T5_A1' where the trip's recorded confirmation is $T5_CONF_A — the anchor is neither the build nor the confirmation, and the decay window would start from a third date"
+elif [ "$T5_B1" != "$T5_EXPECT_B" ]; then
+  FAIL "T5-CTL: the second trip's recorded confirmation is $T5_CONF_B but coordination-since resolved '$T5_B1' — the resolver is not reading the record it was pointed at, so the agreement above is a constant this file produced rather than a measurement of the document's anchor"
+else
+  PASS "T5: coordination-since for \`updated\` is anchored to the confirmation, not to the run — one trip whose recorded approval did not move resolved '$T5_A1' at build $T5_BUILD_1 AND at build $T5_BUILD_2, months apart, so § 3's seven-day window decays from the confirmation instead of restarting on every rebuild. The value is neither build date and equals the trip's own recorded confirmation ($T5_CONF_A); the second fixture, differing only in that record, resolved '$T5_B1' — so the invariance is a measurement and not a constant. The (field, path) pair '$T5_FIELD' / '$T5_PATH' was read from $(basename "$T_TRIPMD"), and an injected pair was recovered from a mutated copy, so the anchor is the document's rather than this file's"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
