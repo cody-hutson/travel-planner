@@ -120,6 +120,51 @@ currently open, partially closed, or fully booked. Flag anything where
 the lead time is tight or the window may already be partially filled.
 Note the booking method and any international visitor complications.
 
+**Booking feasibility at the horizon:**
+Near the trip's start the question is no longer whether a booking window is
+under pressure, but whether each thing the plan still needs to book can still be
+secured in the days that are left. `reference/replan-protocol.md` defines
+`days-to-trip-start` and the per-item horizon this check reads. The horizon is
+read from the plan's own declared lead times; no day count is set here.
+
+**Population.** The `planned`-and-`requires booking? = yes` set — the predicate
+the *Status-integrity audit* below already fixes, cited and not re-derived —
+read from `outputs/event-status.md` (Input 7) and joined to the **ADVANCE
+BOOKING CHECKLIST** in `outputs/final-itinerary.md` (Input 4), in the shape
+`agents/05-hub-planner.md` declares for it. Read Input 4 at that exact path: a
+superseded `outputs/final-itinerary-v1.md` sitting beside it is not this input,
+and reading it would report a trip that does exercise this check as one that
+does not.
+
+**Where that population cannot be read, this check is not exercised, and an
+unexercised check is declared, never passed.** Say which of the two inputs was
+missing, or that the itinerary carries its booking surface in a shape other than
+the declared one — the two are repaired by different things. Report no count in
+that state, not even a zero, and raise no finding *about* the missing input:
+that absence is another check's population, not this one's.
+
+**What is reported.** Two counts, and no state word of their own: how many items
+are inside their own horizon, and how many of those are past a deadline their
+own row declares. An item past its declared deadline is a **Critical** — the
+itinerary depends on an event that can no longer be secured, which is a defect
+in the plan and not a note about it, on the ground *Priorities* item 1 already
+applies to a venue closure on a scheduled day. An item inside its horizon that
+has passed no declared deadline enters the first count only.
+
+**Where no horizon can be read from the row.** A row whose `Lead Time` is absent
+or is not expressed as a countable span, **and** whose `Deadline` resolves to no
+date, carries no horizon at all, and no reading is taken over it. Report that as
+a **Warning** naming the item and the cell: a required value that is absent is
+an undeclared state, and this gap is in the record rather than in the plan. A
+row carrying either operand is read from the one it carries.
+
+**The boundary.** This check proposes no booking, books nothing, sets no
+deadline, and re-times no event. It asks one question: is each thing the plan
+still needs to book still securable in the time left. The remedy is the hub's,
+and where that remedy is a date move, name it and cite
+`reference/replan-protocol.md` § *What shifts, and what does not* — the coupling
+table stating what a day move makes stale is not restated here.
+
 **Travel restrictions and advisories:**
 Check for any current entry requirements, health advisories, or travel
 warnings for the destination that may have changed since the context
@@ -728,6 +773,10 @@ Run the **price-tier preservation** check here as well — a replacement section
 persists in `outputs/food-list.md` whatever mode the trip was left in, so a
 light pass that skipped that read would never reach a slot re-sourced through
 `/trip research food`, which writes no mode at all.
+Run the **booking feasibility at the horizon** check here as well — this is the
+mode a trip with nothing booked sits in, and a legacy plan stays in it because
+nothing wrote a later one, so a light pass that skipped the horizon read would
+miss the population most exposed to it.
 
 **ENRICHMENT:** Full validation pass per output format.
 
@@ -742,6 +791,9 @@ changed-day narrowing bears on that.
 **Price-tier preservation** is not day-scoped either — its population is the
 replacement sections `outputs/food-list.md` carries, so a replacement appended
 for a day this run did not change is still inside it.
+**Booking feasibility at the horizon** is not day-scoped either — its
+population is items, not days, so an item whose own deadline has passed on a
+day this run did not touch is still a defect in the plan.
 
 **RESEQUENCING:** Full pass on all days — the sequence change may have
 introduced new day-of-week conflicts even though no venues changed. Run the
