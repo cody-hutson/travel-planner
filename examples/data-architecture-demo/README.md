@@ -122,7 +122,7 @@ declared rather than left to be inferred from a missing file.
   `IDEATION`, before a destination is chosen. This trip has one, so a shortlist here
   would contradict the fixture's own mode.
 
-## Internal consistency (F1–F9)
+## Internal consistency (F1–F10)
 
 **These are the fixture's real acceptance criteria, and no CI check can reach them.**
 The schema gate validates frontmatter; it never reads a body, so a fixture whose
@@ -352,7 +352,7 @@ inline SVG, so the figure evokes the § 1 *roles* rather than the exact faces.
   declared arm needs an `artifact:` value it does not have — so it resolves
   `UNMATCHED` by construction, exactly as `examples/*/README.md` resolves `EXCLUDED`.
   It is deliberately absent from *What each file is here to demonstrate*, and it does
-  not count toward the 17 files F1 ranges over.
+  not count toward the 19 files F1 ranges over.
 - **Not a witness for C19**, and not a step toward one. C19
   (`outputs/<destination>-travel-site.html`) is a **decided** `no-witness-because:`
   above: the site source stays local and git-ignored per

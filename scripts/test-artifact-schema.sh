@@ -987,7 +987,7 @@ fi
 #
 # ── `writer` IS DELIBERATELY NOT COMPARED, AND THE OMISSION IS MEASURED ──────────
 # § 1.1 states the writer as PROSE carrying qualifiers, while the frontmatter states a token
-# or an inline list. Two of the nineteen witnessed classes are correct AND unequal by
+# or an inline list. Two of the twenty witnessed classes are correct AND unequal by
 # design: the section-owned class renders as a two-writer prose phrase against a two-value
 # list, and the residual targeted-research class names its writer generically because the
 # writer varies per instance while its witness names the concrete spoke that produced it. A

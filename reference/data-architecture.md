@@ -610,19 +610,25 @@ coverage read better rather than worse."* **M is counted the same way and for th
 markers, never `###` headings and never ordinals** — so a class's two coverage measurements agree on
 what an entry is.
 
-**Three limbs, and the third is the one that argument also supplies.** N = 0 ⇒ the estimate renders
+**Four limbs, and the last is the one that argument also supplies.** N = 0 ⇒ the estimate renders
 `undetermined` and no total. `0 < N < M` ⇒ it renders a total **carrying its own `N of M` coverage**,
-never presented as complete. And **where a file carries entries but no markers at all, M is not
-measurable — the estimate renders `undetermined` and names the condition, never `0 of 0`**, which is
-the validator's `unverifiable` limb applied here. That limb is reachable rather than theoretical:
-under § 7.2's tolerant read a pre-migration artifact in a user's git-ignored `trips/` carries no
-markers at all, and `examples/tokyo-2026/` is pinned by § 10 and asserted by group `FW`, so its
-entries can never gain them.
+never presented as complete. `N = M` ⇒ it renders a total **and still states `N of M`**, because a
+reader cannot otherwise tell full coverage from a denominator that was never computed. And **where a
+file carries entries but no markers at all, M is not measurable — the estimate renders `undetermined`
+and names the condition, never `0 of 0`**, which is the validator's `unverifiable` limb applied here.
+That limb is reachable rather than theoretical: under § 7.2's tolerant read a pre-migration artifact
+in a user's git-ignored `trips/` carries no markers at all, and `examples/tokyo-2026/` is pinned by
+§ 10 and asserted by group `FW`, so its entries can never gain them.
 
-An estimate that answered any of the three with a total of `0` would report *this trip costs nothing*
+**The first three limbs are the `measured` verdict's three arithmetic cases and the fourth is the
+other verdict**, which is why the count is four rather than three: `N = M` is not a degenerate reading
+of `0 < N < M` — it is the one case where a total could be presented as complete, and the rule refuses
+to let it be.
+
+An estimate that answered any limb with a total of `0` would report *this trip costs nothing*
 where the truth is *nothing was readable* — the parsed-and-empty versus could-not-be-computed
 distinction § 5.4 protects one layer down, met again here.
-`reference/schemas/cost-estimate.md` is where all three are a schema rather than a paragraph.
+`reference/schemas/cost-estimate.md` is where all four are a schema rather than a paragraph.
 
 ---
 

@@ -1,6 +1,6 @@
 # ADR-011: Per-traveler cost estimation — a new in-model class, and the one field the entry marker admits
 
-- **Status:** Proposed (2026-09-02)
+- **Status:** Accepted (2026-09-02)
 - **Deciders:** repo maintainer
 - **Driving work:** the per-traveler cost-estimation milestone. This record is the prerequisite
   architecture decision that work's first acceptance criterion requires.
@@ -216,6 +216,19 @@ a `rebuilt-each-synthesis` artifact always carries them, so `0` is a measurement
 is an `A3` violation rather than an ambiguous read. Absence-versus-zero is resolved at the schema
 instead of at every reader.
 
+**Requiring all three forces a convention on the `unverifiable` limb, and this record states it
+rather than leaving the writer to invent one.** Under `coverage: unverifiable` the counts are not
+computable — that is what the verdict means — yet both are `required integer` with no
+conditional-optional arm and no sentinel, so a writer **must** emit an integer for each. The
+convention is **`cost-bearing-items: 0` and `priced-items: 0`, neither of them a measurement**, and
+the reading rule that makes it safe is **read the pair only when `coverage: measured`.** That is not
+the collapse this decision exists to prevent: the collapse belongs to a *two-field* artifact, where
+`0` is the whole answer and nothing distinguishes an empty class from a failed read. Here the third
+field **is** the distinguisher, which is the entire argument for adding it. Making the counts
+conditionally optional was the alternative and it is **rejected**: an optional field makes absence
+and zero ambiguous at every reader, re-creating the problem one field over rather than resolving it
+at the schema. `reference/schemas/cost-estimate.md` carries the convention in full.
+
 **Three per-class fields is one more than any existing class declares, and it is warranted rather
 than convenient.** Measured across the corpus: C19 `travel-site.md` declares two
 (`coordination-state`, `coordination-since`), C17 and C20 declare one each, and the other seventeen
@@ -241,6 +254,49 @@ projection of C12's content, and **the class moves to `internal-hard` and takes 
 `reference/site-layout-spec.md` § 9.1's `publish-contract-artifacts` fence.** § 5.1's two classes
 differ on exactly that axis. A roster name beside a number does not meet the `internal-hard` bar; a
 roster name beside a number beside a reason does.
+
+**Reconciliation with `ADR-004` — the bound's polarity is what does the work, not its coverage.**
+`ADR-004` § 1 confines a traveller's contact method and emergency contact to the git-ignored `trips/`
+working directory and states the non-publication guarantee as a **denial**: those fields are *never*
+written to the published artifact or to `trip-context.md`. A denial is only enforceable against a set
+someone enumerates, and `ADR-004` § 2 enumerates a **minimum** field set — a contact method plus one
+emergency contact — not a maximum. C21 is a location `ADR-004` does not name, because it did not
+exist when that record was written: a new `outputs/*.md` is neither the published artifact nor
+`trip-context.md`, so nothing in `ADR-004`'s own wording reaches it. **This record does not rely on
+that silence.** The derivation bound above is written in the opposite polarity — an **allowlist of
+exactly two things**, a `## Group` roster name and a money figure — so every `ADR-004` field is
+outside C21 by construction rather than by a rule that had to anticipate it, and so is every field a
+later slice adds under that record's follow-on build slices. A contact method is not a roster name and
+not a money figure; it is barred by the same clause that bars a shoe size. **The one place the two
+records genuinely differ is enforcement, and it is stated rather than smoothed.** `ADR-004` § 4 makes
+its guarantee *fail-closed* — a validator check plus a build-time exclusion — while C21 ships with
+nothing that reads its body at all (see Consequences). The bound is therefore **declared and
+unenforced today**, which is exactly the status § 4.5.1's own correspondence gap carries, and it is
+sound only because **C21 has no producer**: nothing writes the file, so there is no write for a check
+to grade. `ADR-004`'s enforcement pattern becomes owed at the moment the estimating slice supplies a
+writer, and that slice inherits the obligation from this paragraph rather than discovering it.
+
+**Reconciliation with `ADR-008` — this record adds no value the guard would have to match.**
+`ADR-008`'s `verify_publishable_content` is a predicate over the **published file** on the
+`--plaintext` limb, sourced from `nonpublishable_values`, which reads `outputs/traveler-model.md` and
+the per-traveler profiles. C21 is neither of those, so the guard **gains no source and loses no
+coverage** from this change: nothing here widens `nonpublishable_values`, adds a class member, or
+touches either publish limb. `publish: internal` closes the other direction — the site build never
+reads C21, so no byte of it reaches the render the guard certifies. **The question `ADR-008` actually
+forces is sharper than either of those, and it is why the bound is drawn where it is.** C21 could, in
+principle, manufacture a class value on a path the guard cannot see: a money figure paired with a
+*reason* is a projection of a `[THIRD-PARTY]` need, and `ADR-008`'s own coverage boundary — residual
+8(a), and residual 2's value arm — records that a short, common-vocabulary need value is **not
+reliably keyable by string matching** and is deliberately left on the fail-open side. A need that
+reached a rendered page *through* a cost estimate would land in precisely the blind spot that document
+declines to claim as covered. So the bound bars the justification string **outright**, at the artifact,
+rather than letting a value travel and trusting a matcher `ADR-008` has already measured as partial.
+**The escalation tripwire is the same argument in structural form.** `ADR-008`'s three-layer table
+names a declared field attribute — layer 3 — as the only mechanism that settles the class *by
+construction* rather than *by detection*, and the tripwire is that shape: a `publish:` class change
+plus a § 9.1 fence row, not a new string for a matcher to find. A C21 that ever carries a reason
+leaves the guard's blind spot by **changing its own declaration**, which is the move `ADR-008` says is
+the only one that works.
 
 **Under `internal`, no fence row is owed today, and that is checkable rather than asserted.**
 `scripts/test-artifact-schema.sh` group `PB` derives its class selector **from the fence**, and § 9.1
@@ -310,10 +366,18 @@ emitters together would spend that window in one commit.
 
 ## Consequences
 
-- **The marker rule is no longer absolute, and every restatement of it had to move.** Six schemas and
-  five agent prompts stated *the marker carries the entity key and nothing else*; each is reconciled
-  in this change rather than annotated. That the sentence had eleven homes is itself a finding: the
-  amendment cost more edits than the decision did.
+- **The marker rule is no longer absolute, and every restatement of it had to move.** Measured on the
+  merge base: **five schemas and five agent prompts** stated *the marker carries the entity key and
+  nothing else* — C5's, C6's, C7's, C8's and C9's schemas, and the five spoke prompts that write
+  them. **`reference/schemas/targeted-research.md` did not**, and that absence is the finding inside
+  the finding: C18 is the residual class whose existence decides Decision 4, and the rule it inherits
+  had never been written down in its own schema. It gains the statement here — a home **added**
+  rather than repaired, which is why the schema count is five and the reconciled-file count is not.
+  Two further restatements sit outside those ten and are reconciled with them:
+  `examples/data-architecture-demo/outputs/venue-matrix.md`, which restates the rule as a fixture
+  note, and `reference/data-architecture.md` itself, which is the rule's own home (§ 4.5 rule 2) and
+  restates it twice more inside itself. **That a rule stated once had ten restatements outside its own
+  document is itself the finding:** the amendment cost more edits than the decision did.
 - **Coverage on the tracked corpus is `0 of 17`, and it stays there.** The frozen tree's 42 priced
   entries cannot gain markers, and the demo fixture ships no prices. **A future reader must not read
   that zero as a defect** — it is the freeze and the fixture rule working as designed.
@@ -336,6 +400,13 @@ emitters together would spend that window in one commit.
   § 4.5.1 (the amendment and the field grammar) · § 5.1 (`internal` vs `internal-hard`) · § 5.4 (the
   parsed-and-empty distinction this record applies one layer up) · § 10 (the frozen witness)
 - `reference/schemas/cost-estimate.md` — the class's shape, the coverage pair, the rendering rule
+- `reference/adr/ADR-004-contact-emergency-privacy.md` — the per-traveler privacy model Decision 6
+  reconciles against: its § 1 storage confinement and § 2 minimum field set, and the § 4 fail-closed
+  enforcement C21 owes only once it has a producer
 - `reference/adr/ADR-006-third-party-data-capture.md` — the bound Decision 6 rests on
+- `reference/adr/ADR-008-publish-content-guard.md` — the publish-path content guard Decision 6
+  reconciles against: the class source this record does not widen, and the coverage boundary
+  (residual 2's value arm, residual 8(a)) whose fail-open side is why the justification string is
+  barred at the artifact rather than left to the matcher
 - `reference/adr/ADR-009-data-architecture.md` — the model this record amends
 - `reference/site-layout-spec.md` § 9.1 — the fence the escalation tripwire names
