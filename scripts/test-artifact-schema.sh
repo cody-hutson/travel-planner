@@ -1441,6 +1441,423 @@ if [ "$FW_OK" -eq 1 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group PS — the per-event status presence check has a witness, and its silence is EARNED.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# agents/06-validator.md § "Per-event status presence" fires on a trip whose plan is
+# synthesised and whose outputs/event-status.md was never created. The shipped corpus
+# already holds the pair that exercises it — examples/tokyo-2026/ carries
+# outputs/final-itinerary.md and NO outputs/event-status.md, and
+# examples/data-architecture-demo/ carries both — and until this group nothing asserted
+# it. Nothing in this repository exercises the validator's prose checks against
+# examples/ in general; that gap is real and is NOT closed here. This group closes it
+# for one check.
+#
+# ── WHY THE CONTROL CANNOT BE "FIXED" AWAY, AND WHY PS SITS AFTER FW ─────────────
+# The absence that makes the real arm fire is itself gate-held. Group FW above pins
+# examples/tokyo-2026/ against the `frozen-witness-digest` fence and compares the path
+# set in BOTH directions, and outputs/event-status.md is not in the pinned set — so
+# adding that file to make PS1 "pass" turns FW1 red in the same run. The assertion and
+# the freeze protect each other, which is why this group is placed after the freeze it
+# depends on rather than before it.
+#
+# ── WHAT THE `HASOUT` LIMB IS, AND WHAT IT IS NOT ────────────────────────────────
+# LS1 below gates on HASOUT — the trip has at least one file under its outputs/. That is
+# a FIXTURE-POPULATION selector and NOT a statement of the enrichment seed's shipped
+# semantics. The seed's obligation fires at INITIAL SETUP, which is exactly when
+# outputs/ does not yet exist, so HASOUT would be wrong as a rule. It is used here to
+# separate trips that have reached synthesis from trips that have not, and the two it
+# separates out are reported DECLARED-NOT-EXERCISED rather than counted as failures.
+# Without it the naive `bullets >= 1` trigger selects two trips whose Locked Elements
+# name booked FLIGHTS and traveler dates rather than placed itinerary events — seeding
+# either would mint a status row for an event the itinerary never placed, which
+# .claude/commands/trip-record.md probe 2 names as the inverse of the ghost row the
+# model forbids. PS-N below asserts that those two false positives are real rather than
+# asserted, so the limb is measured rather than trusted.
+#
+# ── A GREEN OVER AN EMPTY SELECTION IS NOT A PASS ────────────────────────────────
+# Every extractor here FAILS on an empty read rather than reporting containment
+# satisfied. A renamed heading surfaces as a zero-row extraction, and a zero-row
+# extraction is a broken instrument, not a clean result.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "PS — the per-event status presence check, exercised against examples/"
+
+# ps_trips — the denominator. First two path components of every tracked file under
+# examples/, which is the trip-directory set and is derived, never listed here.
+PS_TRIPS="$(cd "$ROOT" && git ls-files examples/ 2>/dev/null | awk -F/ 'NF>2 {print $1"/"$2}' | sort -u)"
+PS_NTRIP="$(printf '%s\n' "$PS_TRIPS" | grep -c '[^[:space:]]')"
+
+# ps_sets <base-dir> — "<fires>\t<silent>\t<outside>", each a space-joined trip list.
+# ONE comparator, driven by the real arm and by every control arm below. A control that
+# ran different code from the assertion would prove nothing about the assertion.
+ps_sets() {
+  local base="$1" t fires="" silent="" outside=""
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
+    if [ -r "$base/$t/outputs/final-itinerary.md" ]; then
+      if [ -r "$base/$t/outputs/event-status.md" ]; then silent="$silent $t"; else fires="$fires $t"; fi
+    else
+      outside="$outside $t"
+    fi
+  done <<EOF
+$(printf '%s\n' "$PS_TRIPS")
+EOF
+  printf '%s\t%s\t%s\n' "${fires# }" "${silent# }" "${outside# }"
+}
+
+# ps_dne <text> — a check this corpus cannot exercise. Emitted as its own line and
+# counted as neither a pass nor a failure, because it is neither: the fixture corpus
+# this suite reads says it in its own words — a check you cannot run is declared, not
+# passed.
+ps_dne() { printf '  \033[1;36mDECLARED-NOT-EXERCISED\033[0m %s\n' "$*"; }
+
+PS_OK=1
+if [ "$PS_NTRIP" -eq 0 ]; then
+  FAIL "PS0: no trip directories extracted from examples/, so every verdict below would be over the empty set — this fails rather than passing quietly"
+  PS_OK=0
+else
+  PASS "PS0: the denominator was DERIVED from the tracked tree — $PS_NTRIP trip director(ies) under examples/; this group names none of them as a list"
+fi
+
+if [ "$PS_OK" -eq 1 ]; then
+  PS_R="$(ps_sets "$ROOT")"
+  PS_FIRE="$(printf '%s' "$PS_R" | cut -f1)"
+  PS_SIL="$(printf '%s' "$PS_R" | cut -f2)"
+  PS_OUT="$(printf '%s' "$PS_R" | cut -f3)"
+  PS_NFIRE="$(printf '%s\n' $PS_FIRE | grep -c '[^[:space:]]')"
+  PS_NSIL="$(printf '%s\n' $PS_SIL | grep -c '[^[:space:]]')"
+  PS_NOUT="$(printf '%s\n' $PS_OUT | grep -c '[^[:space:]]')"
+  printf '  POPULATION: %s fires / %s silent / %s outside = %s trip(s) under examples/\n' \
+    "$PS_NFIRE" "$PS_NSIL" "$PS_NOUT" "$PS_NTRIP"
+
+  # PS1 — the check fires where it must, and on exactly that trip.
+  if [ "$PS_FIRE" = "examples/tokyo-2026" ]; then
+    PASS "PS1: the presence check's predicate — a synthesised plan with no per-event status — selects EXACTLY examples/tokyo-2026, whose own trip-context says it was planned before the multi-agent system existed. That is the legacy cohort the check exists for, in fixture form"
+  else
+    FAIL "PS1: the predicate selected '$PS_FIRE' where examples/tokyo-2026 alone was expected — either a fixture gained or lost outputs/event-status.md, or the selector is wrong"
+    PS_OK=0
+  fi
+
+  # PS2 — the specificity arm's subject, named rather than left implicit.
+  if [ "$PS_SIL" = "examples/data-architecture-demo" ]; then
+    PASS "PS2: exactly one trip is synthesised AND carries outputs/event-status.md — examples/data-architecture-demo — so the check has a subject its predicate reaches and stays silent on"
+  else
+    FAIL "PS2: the silent set is '$PS_SIL' where examples/data-architecture-demo alone was expected"
+    PS_OK=0
+  fi
+
+  # PS3 — the trips outside the population, declared rather than counted as passes.
+  for t in $PS_OUT; do
+    ps_dne "PS3: $t carries no outputs/final-itinerary.md, so the presence check's population does not include it. Outside the predicate, not a passing subject"
+  done
+  [ "$PS_NOUT" -gt 0 ] && PASS "PS3: all $PS_NOUT trip(s) outside the predicate are declared above, one line each, rather than folded into a count that would read as clean"
+
+  # PS4 — the partition closes, and the denominator is pinned so a NEW fixture forces
+  # this group to be re-read rather than absorbed silently.
+  if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
+    FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
+    PS_OK=0
+  elif [ "$PS_NTRIP" -eq 6 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 6 pinned when this group shipped"
+  else
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 6 pinned when this group shipped. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    PS_OK=0
+  fi
+fi
+
+# PS-C1 / PS-C2 / PS-C3 — THE MUST-FIRE ARMS. The corpus is unmutated today, so PS1's set
+# equality proves nothing on its own: a selector that always returned the same list would
+# look exactly the same. Each arm builds its OWN fixture tree by construction — one path
+# omitted, or one added — and runs the SAME comparator the real arm ran. Building rather
+# than editing keeps the arms independent of each other's order, and keeps every write
+# inside the temp directory.
+#
+# PS-C2 is the arm that matters. A specificity arm that is silent because the selector
+# never reached it is not a specificity arm at all.
+ps_build() {
+  local dest="$1" omit="$2" add="$3" f
+  mkdir -p "$dest"
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    [ "$f" = "$omit" ] && continue
+    mkdir -p "$dest/$(dirname "$f")" && cp "$ROOT/$f" "$dest/$f"
+  done <<EOF
+$(cd "$ROOT" && git ls-files examples/ 2>/dev/null)
+EOF
+  if [ -n "$add" ]; then
+    mkdir -p "$dest/$(dirname "$add")"
+    printf 'control-arm fixture byte\n' > "$dest/$add"
+  fi
+  return 0
+}
+
+PS_C1DIR="$WORK/ps-c1"; PS_C2DIR="$WORK/ps-c2"; PS_C3DIR="$WORK/ps-c3"
+if [ "$PS_OK" -eq 1 ]; then
+  ps_build "$PS_C1DIR" "" "examples/tokyo-2026/outputs/event-status.md"
+  ps_build "$PS_C2DIR" "examples/data-architecture-demo/outputs/event-status.md" ""
+  ps_build "$PS_C3DIR" "examples/tokyo-2026/outputs/final-itinerary.md" ""
+
+  PS_C1="$(printf '%s' "$(ps_sets "$PS_C1DIR")" | cut -f1)"
+  if [ -r "$PS_C1DIR/examples/tokyo-2026/outputs/event-status.md" ] && [ -z "$PS_C1" ]; then
+    PASS "PS-C1: control — a tree built WITH outputs/event-status.md under the firing trip (asserted present before the verdict is read) and the same comparator reports an EMPTY firing set. PS1 is a measurement, not a tautology"
+  else
+    FAIL "PS-C1: the arm did not behave (fires='$PS_C1', expected empty) — PS1's result has no control behind it"
+  fi
+
+  PS_C2="$(printf '%s' "$(ps_sets "$PS_C2DIR")" | cut -f1)"
+  PS_NC2="$(printf '%s\n' $PS_C2 | grep -c '[^[:space:]]')"
+  case " $PS_C2 " in *" examples/data-architecture-demo "*) PS_C2HIT=1 ;; *) PS_C2HIT=0 ;; esac
+  if [ ! -r "$PS_C2DIR/examples/data-architecture-demo/outputs/event-status.md" ] && [ "$PS_C2HIT" -eq 1 ] && [ "$PS_NC2" -eq 2 ]; then
+    PASS "PS-C2: control — a tree built WITHOUT outputs/event-status.md under the silent trip (asserted absent) raises the firing set to $PS_NC2, including examples/data-architecture-demo, and leaves the other member matching. The specificity arm is vetted: the selector genuinely reaches that trip, so PS2's silence is earned rather than invisible"
+  else
+    FAIL "PS-C2: the arm did not behave (fires='$PS_C2', hit=$PS_C2HIT, n=$PS_NC2, expected 2 including examples/data-architecture-demo) — PS2's silence cannot be read as specificity"
+  fi
+
+  PS_C3="$(printf '%s' "$(ps_sets "$PS_C3DIR")" | cut -f1)"
+  if [ ! -r "$PS_C3DIR/examples/tokyo-2026/outputs/final-itinerary.md" ] && [ -z "$PS_C3" ]; then
+    PASS "PS-C3: control — a tree built WITHOUT outputs/final-itinerary.md under the firing trip drops the firing set to EMPTY, so the synthesis limb is load-bearing rather than decorative"
+  else
+    FAIL "PS-C3: the arm did not behave (fires='$PS_C3', expected empty) — the predicate is not reading the synthesis limb"
+  fi
+
+  PS_RR="$(printf '%s' "$(ps_sets "$ROOT")" | cut -f1)"
+  if [ "$PS_RR" = "$PS_FIRE" ]; then
+    PASS "PS-C4: the arms above built into the temp directory only — re-reading the repository returns the same firing set it returned before them"
+  else
+    FAIL "PS-C4: the repository's firing set changed from '$PS_FIRE' to '$PS_RR' after the control arms ran — a control wrote into the tree it is meant to be measuring"
+  fi
+fi
+
+# ── PS-A4 / PS-A5 — the report surfaces the fixture mirrors, and the divergence counted.
+# examples/data-architecture-demo/outputs/validation-report.md mirrors the validator's
+# declared check list and its Status Integrity Report structure. CONTAINMENT is asserted,
+# not set-equality: this release adds rows to the prompt and the fixture is deliberately
+# not edited — every assertion in this group derives its value from the fixtures being
+# unedited, and a fixture edited to make an assertion pass is the failure this group
+# exists to prevent. So the fixture must carry no row the prompt does not declare, and the
+# rows the prompt declares and the fixture does not are REPORTED, with their count, as
+# declared-not-exercised. That turns a silent divergence into a counted one.
+PS_FIX="$ROOT/examples/data-architecture-demo/outputs/validation-report.md"
+PS_PROMPT="$ROOT/agents/06-validator.md"
+
+# ps_rows <file> <exact-heading-line> — the first cell of every non-separator table row
+# under that heading. One row per line; a label wrapped across lines is not a row this
+# extractor can see, and both files are one-row-per-line at this commit. A heading rename
+# surfaces as a ZERO-row extraction, which is graded as broken below rather than clean.
+ps_rows() {
+  awk -v h="$2" '
+    /^#+ / { inside = ($0 == h); next }
+    inside && /^\|/ {
+      line = $0
+      if (line ~ /^\|[- |:]+\|$/) next
+      sub(/^\|/, "", line)
+      n = index(line, "|"); if (n < 2) next
+      lab = substr(line, 1, n - 1)
+      gsub(/^[ \t]+|[ \t]+$/, "", lab)
+      if (tolower(lab) == "check" || lab == "") next
+      print lab
+    }
+  ' "$1" 2>/dev/null
+}
+
+# ps_bullets <file> <exact-heading-line> — the label of every `- **Label:**` bullet.
+ps_bullets() {
+  awk -v h="$2" '
+    /^#+ / { inside = ($0 == h); next }
+    inside && /^- \*\*/ {
+      line = $0; sub(/^- \*\*/, "", line)
+      n = index(line, ":**"); if (n < 2) next
+      print substr(line, 1, n - 1)
+    }
+  ' "$1" 2>/dev/null
+}
+
+# ps_contain <subset-file> <superset-file> — members of subset absent from superset.
+# ONE comparator, driven by the real arms and by the control arms below. Plain lexical
+# sort: comm compares byte strings, and any other ordering hands it an input it does not
+# understand and a wrong set difference with it.
+ps_contain() { comm -23 <(sort "$1") <(sort "$2"); }
+
+PS_D="$WORK/ps-lists"; mkdir -p "$PS_D"
+ps_rows "$PS_PROMPT" '### Validation Summary' > "$PS_D/prompt-rows"
+ps_rows "$PS_FIX"    '## Validation Summary'  > "$PS_D/fix-rows"
+PS_NPR="$(grep -c '[^[:space:]]' "$PS_D/prompt-rows")"
+PS_NFR="$(grep -c '[^[:space:]]' "$PS_D/fix-rows")"
+
+if [ "$PS_NPR" -eq 0 ] || [ "$PS_NFR" -eq 0 ]; then
+  FAIL "PS-A4: an extractor returned ZERO rows (prompt=$PS_NPR fixture=$PS_NFR). A renamed heading or a re-shaped table surfaces exactly this way, and an empty extraction is a broken instrument — it must never read as containment satisfied"
+else
+  PS_EXTRA="$(ps_contain "$PS_D/fix-rows" "$PS_D/prompt-rows" | tr '\n' ';')"
+  PS_ONLYP="$(ps_contain "$PS_D/prompt-rows" "$PS_D/fix-rows")"
+  PS_NONLYP="$(printf '%s\n' "$PS_ONLYP" | grep -c '[^[:space:]]')"
+  if [ -z "$PS_EXTRA" ]; then
+    PASS "PS-A4: every one of the fixture's $PS_NFR Validation Summary rows is a check the prompt declares (prompt declares $PS_NPR). Containment rather than equality, because the prompt is what this release edits and the fixture is deliberately not"
+  else
+    FAIL "PS-A4: the fixture carries Validation Summary row(s) the prompt does not declare: $PS_EXTRA"
+  fi
+  if [ "$PS_NONLYP" -gt 0 ]; then
+    while IFS= read -r r; do
+      [ -n "$r" ] && ps_dne "PS-A4: the prompt declares '$r' and the shipped fixture report carries no row for it — unexercised in that fixture, never passed in it"
+    done <<EOF
+$PS_ONLYP
+EOF
+    ps_dne "PS-A4: $PS_NONLYP of the prompt's $PS_NPR declared checks have no row in the fixture's mirror. One bounded fixture edit closes it; the count is what keeps it from being silent until then"
+  fi
+fi
+
+# PS-A5 — the same shape over the Status Integrity Report block.
+ps_bullets "$PS_PROMPT" '### Status Integrity Report' > "$PS_D/prompt-bul"
+ps_bullets "$PS_FIX"    '## Status Integrity Report'  > "$PS_D/fix-bul"
+PS_NPB="$(grep -c '[^[:space:]]' "$PS_D/prompt-bul")"
+PS_NFB="$(grep -c '[^[:space:]]' "$PS_D/fix-bul")"
+if [ "$PS_NPB" -eq 0 ] || [ "$PS_NFB" -eq 0 ]; then
+  FAIL "PS-A5: a bullet extractor returned ZERO (prompt=$PS_NPB fixture=$PS_NFB) — a broken instrument, not a clean containment"
+else
+  PS_BEXTRA="$(ps_contain "$PS_D/fix-bul" "$PS_D/prompt-bul" | tr '\n' ';')"
+  PS_BONLY="$(ps_contain "$PS_D/prompt-bul" "$PS_D/fix-bul")"
+  if [ -z "$PS_BEXTRA" ]; then
+    PASS "PS-A5: all $PS_NFB Status Integrity Report bullet(s) in the fixture are bullets the prompt declares (prompt declares $PS_NPB)"
+  else
+    FAIL "PS-A5: the fixture's Status Integrity Report carries bullet(s) the prompt does not declare: $PS_BEXTRA"
+  fi
+  while IFS= read -r b; do
+    [ -n "$b" ] && ps_dne "PS-A5: the prompt declares the '$b' bullet and the shipped fixture report does not carry it — unexercised in that fixture, never passed in it"
+  done <<EOF
+$PS_BONLY
+EOF
+fi
+
+# PS-A4C / PS-A5C — THE MUST-FIRE ARMS for containment. A containment test that can only
+# go green is not a test. Each perturbs ONE member of a temp LIST and runs the SAME
+# comparator, which must name exactly that member and no other.
+PS_VICT="$(head -1 "$PS_D/fix-rows")"
+awk -v v="$PS_VICT" '$0 == v { print v " ZZ"; next } { print }' "$PS_D/fix-rows" > "$PS_D/fix-rows-mut"
+if [ -n "$PS_VICT" ] && ! cmp -s "$PS_D/fix-rows" "$PS_D/fix-rows-mut"; then
+  PS_MR="$(ps_contain "$PS_D/fix-rows-mut" "$PS_D/prompt-rows" | tr '\n' ';')"
+  if [ "$PS_MR" = "${PS_VICT} ZZ;" ]; then
+    PASS "PS-A4C: control — one fixture row is renamed to '${PS_VICT} ZZ' in a temp list (the perturbation is asserted to have landed) and the same comparator names EXACTLY that row and no other. PS-A4's clean result is a measurement, and a detector that flagged everything would fail this arm's second limb"
+  else
+    FAIL "PS-A4C: the arm did not behave (reported '$PS_MR', expected '${PS_VICT} ZZ;') — PS-A4 cannot be read as containment"
+  fi
+else
+  FAIL "PS-A4C: the row perturbation did not land, so the control proves nothing about PS-A4"
+fi
+# The victim is drawn from the list being PERTURBED, not from the one it is compared
+# against: this release adds a bullet the prompt declares and the fixture does not, so a
+# victim taken from the prompt list can be absent from the fixture list and the
+# perturbation lands on nothing. The arm caught exactly that on its first run and reported
+# it as a broken control rather than as a pass, which is the branch it exists for.
+PS_BVICT="$(head -1 "$PS_D/fix-bul")"
+grep -vxF -- "$PS_BVICT" "$PS_D/fix-bul" > "$PS_D/fix-bul-mut"
+if [ -n "$PS_BVICT" ] && ! cmp -s "$PS_D/fix-bul" "$PS_D/fix-bul-mut"; then
+  PS_MB="$(ps_contain "$PS_D/prompt-bul" "$PS_D/fix-bul-mut" | grep -c "^${PS_BVICT}$")"
+  if [ "$PS_MB" -eq 1 ]; then
+    PASS "PS-A5C: control — the '$PS_BVICT' bullet is dropped from a temp copy of the fixture list and the same comparator reports it missing. PS-A5's containment can still fail"
+  else
+    FAIL "PS-A5C: the arm did not behave (the dropped bullet was not reported missing) — PS-A5 proves nothing"
+  fi
+else
+  FAIL "PS-A5C: the bullet perturbation did not land — PS-A5 has no control behind it"
+fi
+
+# ── LS0..LS3 — the setup seed's trigger, and the ghost-row hazard the limb keeps out.
+# agents/00-enrichment.md § "Setup-only seed of initial `locked` event status" obliges the
+# seed whenever `## Locked Elements` names at least one fixed event. TRIGGERED is that
+# trigger intersected with the fixture-population limb this group's header describes.
+ps_locked_bullets() {
+  awk '
+    /^## / { inside = ($0 == "## Locked Elements"); next }
+    inside && /^- / { n++ }
+    END { print n+0 }
+  ' "$1" 2>/dev/null
+}
+ps_hasout() { [ -d "$1/outputs" ] && [ -n "$(ls -A "$1/outputs" 2>/dev/null)" ]; }
+
+# ps_lock_sets <base-dir> — "<triggered>\t<silent>\t<presynth>\t<naive>". ONE comparator
+# again, driven by the real arm and by the two control trees built above.
+ps_lock_sets() {
+  local base="$1" t nb trig="" sil="" pre="" naive=""
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
+    [ -r "$base/$t/trip-context.md" ] || continue
+    nb="$(ps_locked_bullets "$base/$t/trip-context.md")"
+    [ "$nb" -ge 1 ] || continue
+    naive="$naive $t"
+    if ps_hasout "$base/$t"; then
+      if [ -r "$base/$t/outputs/event-status.md" ]; then sil="$sil $t"; else trig="$trig $t"; fi
+    else
+      pre="$pre $t"
+    fi
+  done <<EOF
+$(printf '%s\n' "$PS_TRIPS")
+EOF
+  printf '%s\t%s\t%s\t%s\n' "${trig# }" "${sil# }" "${pre# }" "${naive# }"
+}
+
+PS_LR="$(ps_lock_sets "$ROOT")"
+PS_TRIG="$(printf '%s' "$PS_LR" | cut -f1)"
+PS_LSIL="$(printf '%s' "$PS_LR" | cut -f2)"
+PS_PRE="$(printf '%s' "$PS_LR" | cut -f3)"
+PS_NAIVE="$(printf '%s' "$PS_LR" | cut -f4)"
+PS_NNAIVE="$(printf '%s\n' $PS_NAIVE | grep -c '[^[:space:]]')"
+PS_NPRE="$(printf '%s\n' $PS_PRE | grep -c '[^[:space:]]')"
+
+if [ "$PS_NNAIVE" -eq 0 ]; then
+  FAIL "LS0: no fixture carries a '## Locked Elements' section with bullets, so every seed verdict below would be over the empty set — this fails rather than passing quietly"
+else
+  PASS "LS0: $PS_NNAIVE trip(s) name at least one element under '## Locked Elements' — the seed's trigger has a population to be measured over"
+
+  if [ "$PS_TRIG" = "examples/tokyo-2026" ]; then
+    PASS "LS1: the seed trigger selects EXACTLY examples/tokyo-2026 — a trip whose Locked Elements name five dated placed events and a confirmed hotel, which has reached synthesis, and whose seed has not fired. A standing instance of the obligation with the write outstanding"
+  else
+    FAIL "LS1: the seed trigger selected '$PS_TRIG' where examples/tokyo-2026 alone was expected"
+  fi
+
+  if [ "$PS_LSIL" = "examples/data-architecture-demo" ]; then
+    PASS "LS2: exactly one trip names Locked Elements AND already carries outputs/event-status.md — examples/data-architecture-demo — so LS1's selector reaches a trip it correctly stays silent on"
+  else
+    FAIL "LS2: the silent set is '$PS_LSIL' where examples/data-architecture-demo alone was expected"
+  fi
+
+  while IFS= read -r t; do
+    [ -n "$t" ] && ps_dne "LS3: $t names Locked Elements and has reached no synthesis at all, so it sits outside this group's observable population. Its bullets name booked flights and traveler dates rather than placed itinerary events, and a status row for an event the itinerary never placed is the inverse of the ghost row .claude/commands/trip-record.md forbids. That bound is SEMANTIC and belongs to the seed's own text; this path-shaped selector does not decide it and does not claim to"
+  done <<EOF
+$(printf '%s\n' $PS_PRE)
+EOF
+
+  # PS-N — the false positives are MEASURED, so the fixture-population limb is earned
+  # rather than assumed. A limb that removed nothing on this corpus would be unmotivated,
+  # and this arm says so rather than carrying it quietly.
+  if [ "$PS_NPRE" -gt 0 ] && [ "$PS_NNAIVE" -gt "$PS_NPRE" ]; then
+    PASS "PS-N: the naive trigger — 'bullets >= 1' with no population limb — selects $PS_NNAIVE trip(s), of which $PS_NPRE carry no outputs/ at all. The limb removes real false positives rather than hypothetical ones, and the count is read from the corpus rather than asserted here"
+  else
+    FAIL "PS-N: the naive trigger selects $PS_NNAIVE with $PS_NPRE pre-synthesis — on this corpus the population limb removes nothing, so it is unmotivated and should be dropped rather than kept unmeasured"
+  fi
+fi
+
+# LS-D1 / LS-D2 — the must-fire arms, over the SAME two trees PS-C1 and PS-C2 built and
+# through the SAME comparator. Reusing those trees is deliberate: both comparators are
+# then driven over one set of perturbations, so a tree that failed to build shows up in
+# both places rather than silently weakening one.
+if [ "$PS_OK" -eq 1 ]; then
+  PS_D1="$(printf '%s' "$(ps_lock_sets "$PS_C1DIR")" | cut -f1)"
+  if [ -z "$PS_D1" ]; then
+    PASS "LS-D1: control — over the tree carrying outputs/event-status.md under the firing trip, the trigger set goes EMPTY. LS1 is measuring the seed's absence rather than restating the fixture list"
+  else
+    FAIL "LS-D1: the arm did not behave (triggered='$PS_D1', expected empty)"
+  fi
+  PS_D2="$(printf '%s' "$(ps_lock_sets "$PS_C2DIR")" | cut -f1)"
+  PS_ND2="$(printf '%s\n' $PS_D2 | grep -c '[^[:space:]]')"
+  case " $PS_D2 " in *" examples/data-architecture-demo "*) PS_D2HIT=1 ;; *) PS_D2HIT=0 ;; esac
+  if [ "$PS_D2HIT" -eq 1 ] && [ "$PS_ND2" -eq 2 ]; then
+    PASS "LS-D2: control — over the tree built without outputs/event-status.md under the silent trip, the trigger set rises to $PS_ND2 including examples/data-architecture-demo. LS2's silence is earned: the selector reaches that trip"
+  else
+    FAIL "LS-D2: the arm did not behave (triggered='$PS_D2', hit=$PS_D2HIT, n=$PS_ND2, expected 2 including examples/data-architecture-demo)"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group VI — the venue-identity split rule has a witness.
 #
 # ── THE INVARIANT ────────────────────────────────────────────────────────────────

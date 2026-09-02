@@ -84,6 +84,10 @@ named escape is a Critical.
 | Experiential arc (stacked-peak + rest-need floors) | pass | 0 | 0 | 0 |
 | Nightlife coverage (applicable nights; no Critical tier) | pass | 0 | 1 | 0 |
 | Convenience-format anchor cap (per category; no Critical tier) | not exercised — no outputs/food-list.md in this fixture; C6 absent on purpose | 0 | 0 | 0 |
+| Per-event status presence (synthesised plan; Warning only) | pass | 0 | 0 | 0 |
+| Transit currency on changed days (routing signal re-derived) | pass | 0 | 0 | 0 |
+| Price-tier preservation on a replacement (food-list only; no Critical tier) | not exercised — no outputs/food-list.md in this fixture, so no replacement section to read | 0 | 0 | 0 |
+| Booking feasibility at the horizon (items inside their own lead time) | not exercised — no reading date reaches the near-trip-start trigger; this plan's one booking deadline falls the day after the trip begins | 0 | 0 | 0 |
 
 **Total issues requiring action:** 2 Warning, 3 Note — the Critical total is carried in
 frontmatter as `critical-count` and is not restated here. The per-check `Critical`
@@ -264,6 +268,9 @@ The three anchor meals take no row: all three are walk-ins with nothing to reser
 
 ## Status Integrity Report
 
+- **Event status read:** present — `outputs/event-status.md` carries all eleven events,
+  so the two tables below audit a real population rather than an empty one.
+
 Protected-event check (ITERATION) — every `locked`/`firmed` event must be unchanged
 unless the change request named it:
 
@@ -373,18 +380,21 @@ calendar to read.
 
 - **Validated:** carried in frontmatter as `generated`; not restated here.
 - **Itinerary version audited:** v2.
-- **Items confirmed clean:** 8 checks passed; 10 declared not exercised with their
+- **Items confirmed clean:** 10 checks passed; 12 declared not exercised with their
   reason; 0 Critical.
-- **Items requiring human verification:** the ten not-exercised checks above. **Nine
+- **Items requiring human verification:** the twelve not-exercised checks above. **Ten
   are blocked on an input this fixture declines to carry by design** — external links,
-  hours, prices, real bookings, a real destination — and none of those is blocked on a
-  judgement a validator could have made from what is here. **The tenth,
-  *Bailout completeness*, is a different kind of not-exercised and is worth telling
-  apart:** every input it needs is present, and the check simply has an **empty
-  population** — no day in this plan carries the 3+ hour outdoor block that triggers it.
-  A missing input and an empty population are both correctly reported as not-exercised
-  and are repaired by opposite things: one by deepening the fixture, the other only by a
-  plan that reaches the trigger.
+  hours, prices, real bookings, a real destination, no `outputs/food-list.md` — and none
+  of those is blocked on a judgement a validator could have made from what is here.
+  **The other two, *Bailout completeness* and *Booking feasibility at the horizon*, are a
+  different kind of not-exercised and are worth telling apart:** every input each one
+  needs is present, and each simply has an **empty population** — no day in this plan
+  carries the 3+ hour outdoor block that triggers the first, and no reading date reaches
+  the second's near-trip-start trigger, because this plan's one booking deadline falls
+  the day after the trip begins and no date is both before the start and after that
+  deadline. A missing input and an empty population are both correctly reported as
+  not-exercised and are repaired by opposite things: one by deepening the fixture, the
+  other only by a plan that reaches the trigger.
 
 ---
 

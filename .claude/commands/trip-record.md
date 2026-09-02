@@ -1103,8 +1103,11 @@ verbatim, render the vocabulary read live, and stop. No near-match, no fallback.
 1. `Read` `trips/<slug>/outputs/event-status.md`. **Absent → stop, and create nothing.** That file
    is created by whichever agent first writes it — the enrichment agent's setup seed, or the hub on
    the first full synthesis — and this command is in neither role; it is not a scaffold member of
-   `/trip-new` either, so there is no repair path to name here. Name the path, say that it appears
-   when the plan is first synthesised, and stop.
+   `/trip-new` either. Name the path, say that it appears when the plan is first synthesised, and
+   name the repair `reference/data-model.md` § *Bootstrap — who creates `event-status.md`* states —
+   **`/trip plan`** where the resolved mode admits it, and the mode-recording step first where it
+   does not. **Do not run it**, and stop. Naming a verb is not writing the file: this verb stays
+   outside the creator set that section fixes.
 2. **A row carrying `<id>`. None → stop, naming the id verbatim.** This verb never creates a row:
    minting an Event ID is the hub's act on first placement, and a status row for an event the
    itinerary has not placed is the inverse of the ghost row the model forbids.

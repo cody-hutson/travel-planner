@@ -141,7 +141,14 @@ or car-dependent?
 **DISCOVERY / ENRICHMENT:** Full transport brief per output format.
 
 **ITERATION:** Update only the specific transport element in trip-context.md
-Mode Notes. Do not regenerate the full brief.
+Mode Notes. Do not regenerate the full brief. **A move is such an element.**
+Where the Mode Notes name an event that changed day or venue, the element to
+update is the leg set that move touches — on the receiving day, the legs into
+and out of the new stop; on the day it left, the legs that close the gap it
+left behind. Price those legs into § *Point-to-Point Transit Matrix* and leave
+every other row of the brief standing. You are not re-deriving the day's order:
+the scheduler derives it from the matrix you produce, which is why you run
+before it.
 
 **RESEQUENCING:** No new output unless day trip logistics change.
 
@@ -168,7 +175,13 @@ Read trip-context.md fully before producing output. Read in this order:
    facet by rule (`agents/00-enrichment.md` → "Resolving origin on a
    multi-origin trip"), so an origin read off this file would silently drop a
    real passenger from a stream you are sizing and pricing
-8. Mode — confirm output format
+8. Mode — confirm output format, and read the **Mode Notes** for a named
+   change. On `ITERATION` a note relocating an event to another day, or
+   replacing its venue with one at a different address, is a **move**: take
+   from it the event, the day it left, the day it lands on, and the venue it
+   now occupies. Those four values are the whole of what a move-triggered
+   re-run needs, and the note is their only source. Where the notes name no
+   such change, this is not a move-triggered run
 
 **Versioned artifacts.** Every artifact you read may carry a `schema-version`.
 Apply the tolerant-read rule exactly as stated in `reference/data-architecture.md`

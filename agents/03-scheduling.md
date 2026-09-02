@@ -285,6 +285,10 @@ Mode Notes. Produce updated framework sections only. Read
 `locked` and `firmed` events are preserved in place — do not move, re-time, or
 drop them unless the change in Mode Notes names them explicitly. `option`
 events stay in the alternative pool; never lift one into a primary slot.
+`### Advance Booking Priorities` is the exception to *updated sections only*:
+re-produce it whenever `days-to-trip-start` has brought any item inside its
+horizon (`reference/replan-protocol.md`), regardless of which days changed — a
+booking window closing on a day this run did not touch is still closing.
 
 **RESEQUENCING:** Primary mode. Re-run full day-by-day framework against
 existing activities-list.md and food-list.md. Produce optimized sequence
@@ -577,3 +581,16 @@ extend the run. This is a flag for the hub to weigh, not a reconciliation.
 
 | Category | Lead Time Required | Why It Books Out | How to Book |
 |----------|-------------------|-----------------|-------------|
+
+**Order this section by what the days remaining no longer cover.** An item that
+`reference/replan-protocol.md` places **inside its horizon** — the days left no
+longer cover the lead time its own row declares — leads the section, ahead of
+items whose window is still open; where several are inside, the one with the
+least room leads. `outputs/event-status.md` is the source and
+`outputs/final-itinerary.md` carries the advance-booking checklist derived from
+it: this section names the priority and does not restate the row.
+
+**Do not propose a replacement that cannot be booked in the time left.** A
+substitution whose own lead time exceeds the days remaining before the day it
+would sit on is not an alternative — offering it as one turns a single
+unbookable item into two and reports the plan as repaired.

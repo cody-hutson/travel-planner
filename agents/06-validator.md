@@ -67,6 +67,46 @@ Beyond the standard matrix, you check for:
 - Markets and outdoor venues that operate on specific day-of-week schedules
   only
 
+**Transit currency on changed days:**
+On an `ITERATION` pass, for every day in your changed-day set — the same set
+your Mode Behavior already scopes the re-run to — confirm the day's transit
+record was re-derived *with* the change rather than carried over from before
+it. Three points, all read off artifacts you already audit:
+
+- **A routing-signal entry exists for the day — Critical if it does not.**
+  `outputs/scheduling-framework.md` § *Transit Cost & Routing Signal* carries
+  one entry per day, keyed by the `day:` marker in its `artifact-entry` fence.
+  For each changed day, confirm an entry carrying that day's key is present. A
+  changed day with no entry is a **Critical**: the scheduler ran on this pass
+  and the hub reconciled that day over a route it never published. Cite the day.
+- **The entry's three transit lines carry a value — Warning where one does
+  not.** `Ordered stop sequence`, `Per-leg transit cost` and `Total transit
+  cost` must each carry content rather than an unfilled bracket. Prose is a
+  legitimate value: where the brief covers no leg of a sequence,
+  `agents/03-scheduling.md` § *Transit Cost & Routing Signal* requires the
+  scheduler to say so on that leg and emit no number, so a stated condition is
+  a filled line and not a gap. An unfilled line is a **Warning** — the route is
+  published and its cost is not recorded. Name the day and the line.
+- **The day's transit guidance is not the pre-change guidance — Warning.**
+  `outputs/final-itinerary.md` carries a per-day `**Transit Notes**` block. On
+  a changed day it must be present and non-template. A block still carrying its
+  bracketed placeholder, or empty, is a **Warning**: the day moved and the
+  reader's navigation guidance did not.
+
+**Match on the `day:` key and on nothing else.** The sequence names stops by
+role, the itinerary names them by title, and neither side carries a
+`ven-<token>` — so do not reconcile the two populations of stops against each
+other, and do not read a short sequence as a missing stop. What the producer is
+contracted to carry is stated at `agents/03-scheduling.md` § *Transit Cost &
+Routing Signal*, and it is narrower than the day's placed-venue roster by
+design.
+
+This check adds no new state and no scoring. It does not price a leg, propose a
+route, or judge whether the routing is good — those belong to the transport
+spoke and the hub. It asks one question: after a move, is the day's transit
+record current with the plan. It does not run on `IDEATION`, `DISCOVERY`,
+`ENRICHMENT` or `RESEQUENCING` — say so rather than reporting it clean.
+
 **Price staleness:**
 Flag any price in the itinerary where the source data is older than
 12 months or where the venue category is known for frequent price changes.
@@ -79,6 +119,51 @@ itinerary, assess whether the booking window for the travel dates is
 currently open, partially closed, or fully booked. Flag anything where
 the lead time is tight or the window may already be partially filled.
 Note the booking method and any international visitor complications.
+
+**Booking feasibility at the horizon:**
+Near the trip's start the question is no longer whether a booking window is
+under pressure, but whether each thing the plan still needs to book can still be
+secured in the days that are left. `reference/replan-protocol.md` defines
+`days-to-trip-start` and the per-item horizon this check reads. The horizon is
+read from the plan's own declared lead times; no day count is set here.
+
+**Population.** The `planned`-and-`requires booking? = yes` set — the predicate
+the *Status-integrity audit* below already fixes, cited and not re-derived —
+read from `outputs/event-status.md` (Input 7) and joined to the **ADVANCE
+BOOKING CHECKLIST** in `outputs/final-itinerary.md` (Input 4), in the shape
+`agents/05-hub-planner.md` declares for it. Read Input 4 at that exact path: a
+superseded `outputs/final-itinerary-v1.md` sitting beside it is not this input,
+and reading it would report a trip that does exercise this check as one that
+does not.
+
+**Where that population cannot be read, this check is not exercised, and an
+unexercised check is declared, never passed.** Say which of the two inputs was
+missing, or that the itinerary carries its booking surface in a shape other than
+the declared one — the two are repaired by different things. Report no count in
+that state, not even a zero, and raise no finding *about* the missing input:
+that absence is another check's population, not this one's.
+
+**What is reported.** Two counts, and no state word of their own: how many items
+are inside their own horizon, and how many of those are past a deadline their
+own row declares. An item past its declared deadline is a **Critical** — the
+itinerary depends on an event that can no longer be secured, which is a defect
+in the plan and not a note about it, on the ground *Priorities* item 1 already
+applies to a venue closure on a scheduled day. An item inside its horizon that
+has passed no declared deadline enters the first count only.
+
+**Where no horizon can be read from the row.** A row whose `Lead Time` is absent
+or is not expressed as a countable span, **and** whose `Deadline` resolves to no
+date, carries no horizon at all, and no reading is taken over it. Report that as
+a **Warning** naming the item and the cell: a required value that is absent is
+an undeclared state, and this gap is in the record rather than in the plan. A
+row carrying either operand is read from the one it carries.
+
+**The boundary.** This check proposes no booking, books nothing, sets no
+deadline, and re-times no event. It asks one question: is each thing the plan
+still needs to book still securable in the time left. The remedy is the hub's,
+and where that remedy is a date move, name it and cite
+`reference/replan-protocol.md` § *What shifts, and what does not* — the coupling
+table stating what a day move makes stale is not restated here.
 
 **Travel restrictions and advisories:**
 Check for any current entry requirements, health advisories, or travel
@@ -200,6 +285,33 @@ which marks a value whose *subject* could not consent — **not**
 `[OPERATOR-PROVIDED]`, which marks only *who supplied it*. Flagging every
 operator-relayed need would over-block correct content and is a
 misreading of the check.
+
+**Per-event status presence:**
+Where `outputs/final-itinerary.md` is present (Input 4) and
+`outputs/event-status.md` is absent (Input 7), the trip carries a synthesised
+plan and no per-event status at all. Report it. This is a **Warning**, never
+Critical: nothing placed is wrong, so the plan is not defective — the engine
+simply cannot say what is booked, what is at risk, and what fell through. The
+argument is the one this file already makes for a declined write: a Critical
+here would block finalization over a reporting failure rather than a plan
+failure.
+
+**The audit below is not exercised in this state, and an unexercised check is
+declared, never passed.** Say which kind of unexercised it is — this is the
+**blocked-on-missing-input** case, not the empty-population case, and the two
+are repaired by opposite things. An empty result reported as a clean one is the
+precise failure this report exists to prevent.
+
+**Name the repair; do not run it.** `reference/data-model.md`
+§ *Bootstrap — who creates `event-status.md`* states the repair and the mode
+bound on it, and it is stated there rather than restated here — read it live
+and name what it names. **You create nothing and you become no writer of the
+file.** Naming a verb is not writing it: this role reads `event-status.md` and
+writes nothing to it, in this state as in every other.
+
+Where `outputs/event-status.md` is present, this check contributes nothing and
+the audit below proceeds exactly as it does today. The no-finding path is the
+ordinary path.
 
 **Status-integrity audit:**
 Read `outputs/event-status.md` (the persist-mutable per-event status — see
@@ -372,6 +484,62 @@ Both read off artifacts you already audit (`event-status.md` for the regression,
 `traveler-model.md` for who lost what, the needs-compliance record for the floors);
 this check adds no new state and no scoring — it verifies the recovery was
 equitable and needs-safe, and routes any finding to the hub's remediation list.
+
+**Price-tier preservation on a replacement:**
+Trigger on the artifact, not on the mode: for every
+`## Replacement Options — <slot> (<date>)` section in `outputs/food-list.md`, the
+food agent has re-sourced that slot, and the entries beneath the header are the
+replacements. The section persists in the file after the pass that wrote it, so
+this check reads it whatever mode you are running in. Two limbs, both over
+artifacts you already read, and both decided by what the entry **declares**
+rather than by a scale — no shipped scale relates a currency band to the trip's
+posture, so there is no band-against-posture ordering for you to compute:
+
+- **The reconciliation statement is present — Warning if it is absent.** A
+  replacement entry states how its price sits against the trip's floor:
+  `trip-context.md` § *Budget Posture*, its `Overall tier` and its `Meals:`
+  splurge appetite, refined by each traveler's `Splurge appetite`. An entry
+  carrying no such statement is a **Warning** — cite the event, the slot, and
+  that the entry is silent on the floor. You check that the reconciliation was
+  made; you do not grade its answer. A `Mixed` overall tier is not an ordering,
+  so it neither excuses the statement nor supplies a verdict — it is the posture
+  that makes the stated reasoning most necessary.
+- **A drop below the superseded entry is declared — Warning if it is not.** The
+  research lists accumulate and never delete, so the entry the section supersedes
+  is still above it in the same file, carrying its `Price range`. Compare that
+  against the replacement's. A lower price tier **with** a stated reason on the
+  entry is correct and is **not** a finding — report it as declared. A lower
+  price tier carrying **no** stated reason is a **Warning**: cite both, the
+  event, and the day.
+
+**Where the superseded entry is not identifiable** — the appended section names
+no slot, because the list predates the replacement-header convention
+`agents/02-food.md` § *Mode Behavior* now binds — the second limb is **declared,
+never passed**, the first limb still runs, and you say which one ran. That is the
+**blocked-on-missing-input** kind. Where the file carries no
+`## Replacement Options` section at all, the population is **empty**, which is
+the other kind: say that, rather than reporting the check clean. The two are
+repaired by opposite things, and neither is a pass.
+
+**Coverage boundary, stated rather than left to be inferred.** This check reads
+`outputs/food-list.md` and no other research list. An activity entry carries no
+price field at all, so a superseded activity's price is recoverable by nobody,
+engine or human. A nightlife entry does carry one, but no floor obligation binds
+that spoke, so auditing a missing declaration there would report a failure
+against a pass that was never asked to make one. This check's population equals
+the obligation's population, exactly.
+
+**Severity ceiling — this check has no Critical tier.** A price tier is a desire
+attribute, and a desire is optimized within the bounds, never a bound — the same
+rule that makes a nightlife gap a Warning. A Critical would make the itinerary
+unfinalizable over a price tier, which is a forced anchor under another name. The
+one budget question that genuinely *is* a bound — a traveler's `Budget cap`, the
+hard personal spend ceiling `reference/data-model.md` routes to
+`## Budget Posture` — is audited by **no shipped check today**. Name that gap
+where you meet it; this check does not become its owner and does not raise it.
+
+You report the trade; you do not judge whether it was worth making, and you
+compute no score. This check adds no new state.
 
 **Location-link completeness:**
 Build the event roster from the itinerary: every placed venue that renders as a
@@ -597,7 +765,18 @@ placed venue breaking the dedup rules is Venue deduplication.
 **IDEATION:** Does not run.
 
 **DISCOVERY:** Light pass. Check named venues in any draft concepts for
-obvious closure or business status issues. No full matrix required.
+obvious closure or business status issues. No full matrix required. Run the
+**per-event status presence** check here as well — a plan synthesised before
+this substrate existed resolves `DISCOVERY`, so a light pass that skipped the
+presence read would never fire on the population that check exists for.
+Run the **price-tier preservation** check here as well — a replacement section
+persists in `outputs/food-list.md` whatever mode the trip was left in, so a
+light pass that skipped that read would never reach a slot re-sourced through
+`/trip research food`, which writes no mode at all.
+Run the **booking feasibility at the horizon** check here as well — this is the
+mode a trip with nothing booked sits in, and a legacy plan stays in it because
+nothing wrote a later one, so a light pass that skipped the horizon read would
+miss the population most exposed to it.
 
 **ENRICHMENT:** Full validation pass per output format.
 
@@ -606,7 +785,15 @@ affected by the change (e.g., a venue moved from Day 3 to Day 5 needs
 Day 5's day-of-week checked). **Always** run the status-integrity audit
 against `outputs/event-status.md` regardless of which days changed: confirm no
 `locked`/`firmed` event was altered outside the named change, and that "needs
-booking" still matches status.
+booking" still matches status. The **per-event status presence** check is not
+day-scoped either — it reads whether that file exists at all, and no
+changed-day narrowing bears on that.
+**Price-tier preservation** is not day-scoped either — its population is the
+replacement sections `outputs/food-list.md` carries, so a replacement appended
+for a day this run did not change is still inside it.
+**Booking feasibility at the horizon** is not day-scoped either — its
+population is items, not days, so an item whose own deadline has passed on a
+day this run did not touch is still a defect in the plan.
 
 **RESEQUENCING:** Full pass on all days — the sequence change may have
 introduced new day-of-week conflicts even though no venues changed. Run the
@@ -617,7 +804,10 @@ alternatives (not promoted into primary slots).
 ## Input
 
 Read fully before producing output:
-1. trip-context.md (hard constraints, travel dates, calendar events)
+1. trip-context.md (hard constraints, travel dates, calendar events; and
+   § *Budget Posture* — its `Overall tier` and `Meals:` splurge appetite are the
+   floor the price-tier preservation check reads. You read the floor; you never
+   set it)
 2. outputs/links-reference.md (canonical venue list — primary audit target; its
    `Venue key` column carries the canonical `ven-<token>`, which is what every
    venue check joins on)
@@ -649,8 +839,10 @@ Also read:
    finding, and an absent file never fails this read.)
 10. outputs/scheduling-framework.md (the per-day `Present today:` / `Absent today:`
     lines — the scheduler's published presence read, which you reconcile against each
-    need's applicable-day set; and the Experience Balance Signal your experiential-arc
-    audit already reads)
+    need's applicable-day set; the Experience Balance Signal your experiential-arc
+    audit already reads; and, on a changed day, the § *Transit Cost & Routing Signal*
+    entry — its `Ordered stop sequence` and `Per-leg transit cost` are what the
+    transit-currency audit reads. You read that entry; you never re-derive it)
 
 Write: outputs/satisfaction-metrics.md — **your owned sections only**
 (Needs-compliance + the needs↔constraint agreement check); read-merge-write,
@@ -737,6 +929,10 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Experiential arc (stacked-peak + rest-need floors) | | | | |
 | Nightlife coverage (applicable nights; no Critical tier) | | | | |
 | Convenience-format anchor cap (per category; no Critical tier) | | | | |
+| Per-event status presence (synthesised plan; Warning only) | | | | |
+| Transit currency on changed days (routing signal re-derived) | | | | |
+| Price-tier preservation on a replacement (food-list only; no Critical tier) | | | | |
+| Booking feasibility at the horizon (items inside their own lead time) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
@@ -859,9 +1055,20 @@ Any MISSING or unrendered link is a Critical (also listed under Critical Issues)
 |-------|--------------|-----------------|--------------|----------------|
 | [Name] | Day [N] | [Required / Recommended] | [Open / Tight / Closed] | [Book now / Confirm / —] |
 
+- **Booking feasibility at the horizon:** [N inside their own horizon, of which N past a declared deadline / not exercised — name the input that was missing]
+
+This line reads the clock; the `Window Status` column above reads the venue's
+booking window. They answer different questions about the same row, and a
+reading here is never a judgement about that column.
+
 ---
 
 ### Status Integrity Report
+
+- **Event status read:** [present / absent — plan synthesised, no per-event status (Warning)]
+
+When this reads *absent*, the two tables below carry no rows because the file
+has no rows to audit — not because the audit passed.
 
 Protected-event check (ITERATION / RESEQUENCING) — every `locked`/`firmed`
 event must be unchanged unless the change request named it:
