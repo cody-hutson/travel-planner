@@ -1692,6 +1692,13 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   gh api -X POST "repos/${owner}/${slug}/pages" -f "source.branch=main" -f "source.path=/" >/dev/null 2>&1 \
     || warn "Pages may already be enabled, or will activate shortly."
 
+  # First publish establishes the baseline the #552 gate compares against. cmd_publish
+  # itself stays UNGATED — it dies above when the per-trip repo already exists, so it
+  # structurally cannot overwrite a published plan — but without this line the gate
+  # would have no anchor on a freshly published trip and the FIRST unapproved change
+  # after a publish would sail through. Recording is not gating.
+  record_published_itinerary "$trip_dir" "$site_html"
+
   ok "Published: https://${owner}.github.io/${slug}/"
   if [ "$plaintext" != "1" ]; then
     printf '\n  Passphrase: \033[1;36m%s\033[0m  (saved to %s/.passphrase — git-ignored)\n' \
@@ -1726,6 +1733,12 @@ cmd_update() { # <trip_dir>
 
   local site_html pub_dir passphrase enc owner slug boiler
   site_html="$(resolve_site_html "$trip_dir")"
+  # THE ORGANIZER-CONFIRM GATE (#552, ADR-003 § Decision 2). Its position is exact
+  # and load-bearing: after the render is resolved (the gate digests it) and BEFORE
+  # ensure_pub_clone, which performs network I/O and can remove the publish dir. On
+  # an abort nothing has been cloned, encrypted, copied or pushed — the same
+  # discipline the plaintext gate states for itself in cmd_publish.
+  require_change_confirmation "$trip_dir"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   passphrase="$(get_passphrase "$trip_dir" 0)"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
@@ -1745,6 +1758,11 @@ cmd_update() { # <trip_dir>
     commit_noreply . "Update trip site"
     git push --quiet origin main
   )
+  # The push succeeded, so this itinerary content IS what is published now. Recorded
+  # here rather than earlier for that reason: a sidecar written before the push would
+  # claim content a failed push never delivered, and the next republish would then
+  # compare against a plan nobody can see.
+  record_published_itinerary "$trip_dir" "$site_html"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
 }
 
