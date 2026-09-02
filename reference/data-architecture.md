@@ -608,6 +608,7 @@ by a shell literal remains the property to test a future change against.
 field    Passport        travelers/<traveler>.md     conjunctive
 field    Passport        outputs/traveler-model.md   conjunctive
 entry    [THIRD-PARTY]   outputs/traveler-model.md   by-wordcount
+field    Documents       outputs/traveler-model.md   conjunctive
 ```
 
 Four columns, all required, whitespace-separated. A line whose first non-blank character is `#` is a

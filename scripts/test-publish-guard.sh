@@ -765,6 +765,61 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# L12 — EVERY declared field selector on the derived model is actually guarded, and a
+# label that merely BEGINS with one is not.
+#
+# This case names no selector. It reads the field-limb selectors for the model class off
+# the declaration through the guard's own accessor and its own constants, so it grades
+# whatever § 5.6 says at the moment it runs rather than whatever it said when it was
+# written. A row added to the fence is graded by this case on the next run with no edit
+# here; a row removed shrinks the denominator instead of silently passing.
+#
+# Two arms per selector, and the second is the point:
+#   subject — the value under the declared label aborts (rc=1) and the record names
+#             member + selector without echoing the value (L1b's rule, per selector).
+#   R-5     — the IDENTICAL value under a label that merely begins with that selector
+#             publishes (rc=0). field_hit is prefix-THEN-colon, so `<selector> foo:` is
+#             not `<selector>:` and nothing matches it. That is a fail-OPEN direction on
+#             a privacy fence, and it is the reason a requirement set gets its own
+#             declared selector rather than being hung off an existing one under a
+#             longer label. Pinned as measured behaviour, not endorsed.
+#
+# The denominator is asserted at two or more so a collapsed selector list cannot pass
+# this case vacuously — a zero-length loop would otherwise satisfy every equality below.
+L12SEL="$(_guard_limb_selectors field "$_GUARD_DECL_ARTIFACT_MODEL")"
+l12n=0; l12hit=0; l12named=0; l12open=0
+for l12s in $L12SEL; do
+  l12n=$((l12n + 1))
+  L12T="$WORK/l12_$l12n"; mkdir -p "$L12T/outputs"
+  L12R="$WORK/l12_$l12n.html"
+  l12val="Kestrel Vault 41 clearance $l12n"
+  # Render first, then the model, so the freshness gate reads the projection as at
+  # least as new as the render (the L9 idiom).
+  lrender "$L12R" "Holding note: $l12val is filed with the courier before departure."
+  printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **%s:** %s\n' "$l12s" "$l12val" \
+    > "$L12T/outputs/traveler-model.md"
+  lguard "$L12R" "$L12T"
+  [ "$LRC" -eq 1 ] && l12hit=$((l12hit + 1))
+  if grep -qF "entry 1 / $l12s" "$LOUT" && ! grep -qF "$l12val" "$LOUT"; then
+    l12named=$((l12named + 1))
+  fi
+  printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **%s requirements:** %s\n' "$l12s" "$l12val" \
+    > "$L12T/outputs/traveler-model.md"
+  lguard "$L12R" "$L12T"
+  [ "$LRC" -eq 0 ] && l12open=$((l12open + 1))
+done
+if [ "$l12n" -ge 2 ] && [ "$l12hit" -eq "$l12n" ] && [ "$l12named" -eq "$l12n" ]; then
+  PASS "L12: all $l12n declared field selectors on the model class abort the publish (rc=1) and name member + selector without echoing the value — the case reads the selectors off the declaration and hardcodes none"
+else
+  FAIL "L12: a declared field selector was not guarded (selectors=$l12n aborted=$l12hit named=$l12named) — either the class is narrower than the declaration or the probe read no selectors at all"
+fi
+if [ "$l12n" -ge 2 ] && [ "$l12open" -eq "$l12n" ]; then
+  PASS "L12b: for all $l12n selectors, the identical value under a label that merely BEGINS with the selector publishes (rc=0) — field_hit is prefix-then-colon, so a longer label is UNGUARDED. Measured, and the reason a new requirement set owes its own declared selector rather than a longer label over an existing one"
+else
+  FAIL "L12b: the prefix-then-colon shape changed (selectors=$l12n published=$l12open) — re-read field_hit before trusting L12's verdict or any claim that a longer label is covered"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
 # review of the shipped guard (#316). One regression case per counter-design:
 #   M1  CD-1  the guard matched the visible-text PROJECTION while publish copies

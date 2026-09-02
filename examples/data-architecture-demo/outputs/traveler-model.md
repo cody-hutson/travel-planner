@@ -58,6 +58,20 @@ projection carries no facet value for anyone. The labels exist in the source and
 absence is declared here rather than inferred from an empty section — the degenerate
 case is part of the shape.
 
+**`Documents:` is derived content, not a facet — so its presence below does not
+contradict the paragraph above.** The per-traveller document set is computed from a
+traveller's facets plus researched entry policy rather than stated by the traveller
+(`agents/00-enrichment.md` § *Derive the per-traveler document set*;
+`reference/data-model.md` § *Lifecycle facets*), so no reader should take it for an
+added facet. Its **value** is em-dashed on the two projected entries for the same
+reason `Passport:` is em-dashed in the source profiles: `reference/data-architecture.md`
+§ 5.6 now carries a `Documents` row scoped to this very class, and a tracked,
+world-readable worked example is the one place a declared non-publishable value must not
+go. The label ships because the guard's field limb reads it from this class; the em dash
+keeps the field demonstrated and empty at the same time. Sam's entry states `unknown`
+instead, and that is not an exception to the rule: `unknown` is the declared *absence*
+the profile-less branch requires, never a derived set.
+
 ## Alex
 
 **Source:** `travelers/alex.md`
@@ -82,6 +96,10 @@ this fixture is `one-off`, so the column is shown here for the fixture's own
 readability and carries the same value throughout. The tier is a structural priority
 label, never a weight, and nothing here scores it.
 
+**Derived**
+
+- **Documents:** —
+
 ## Robin
 
 **Source:** `travelers/robin.md`
@@ -102,6 +120,10 @@ label, never a weight, and nothing here scores it.
 | Watch a sunset from a rooftop | wish | one-off |
 | Hear live fado | nice-to-have | one-off |
 
+**Derived**
+
+- **Documents:** —
+
 ## Sam `[OPERATOR-PROVIDED]`
 
 **Source:** none — no profile was filed. Needs supplied by the operator and marked as
@@ -120,6 +142,15 @@ such; this entry is the **fallback branch**, not a projection.
 absent profile *unknown* rather than *no constraints*. So Sam contributes **no** rows
 to `outputs/satisfaction-metrics.md` § *Desire-coverage*, and the absence is recorded
 here rather than inferred from an empty table there.
+
+**Derived**
+
+- **Documents:** unknown — no passport country on file
+
+  The profile-less form. A traveller with no filed profile still carries the line, so a
+  consumer reads *unknown* rather than *nothing required* — the same rule that makes an
+  absent profile *unknown* rather than *no constraints*. It is the declared absence, not
+  a derived set, which is why it is stated here where a real value would not be.
 
 This entry is **`[OPERATOR-PROVIDED]` and not `[THIRD-PARTY]`.** Sam is a party member
 who has simply not filed a profile yet, so the entry is a placeholder for a source
