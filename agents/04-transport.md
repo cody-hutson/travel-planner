@@ -131,6 +131,11 @@ what you give up going conservative vs. what you risk going optimistic.
 - **Ignoring physical transit cost:** A 15-minute walk in extreme heat with luggage is
   not equivalent to a 5-minute taxi for a group with a heat-sensitive traveler.
   Physical cost is a real cost.
+- **The dead zone:** Routing the party to the door and stopping there. A plan that
+  lands them two hours before check-in, or turns them out of the room six hours
+  before the flight, has left them standing in a lobby with their bags for hours it
+  never planned. Those hours are part of the arrival and the departure day, and the
+  luggage is the reason they are hard.
 
 ## Mode Behavior
 
@@ -163,7 +168,15 @@ Read trip-context.md fully before producing output. Read in this order:
 3. Per-Traveler Planning Days — each traveler's own window, so a traveler who does
    not travel on their origin's booking is not planned onto it. Take its values as
    published; do not restate its labels here
-4. Accommodation — transit access from enrichment
+4. Accommodation — transit access from enrichment, and that section's
+   `Check-in time:` and `Check-out time:`. Take them as published; do not restate
+   them as fields of this brief. They bound the two windows the brief has to plan:
+   between a stream landing and check-in, and between check-out and a stream
+   leaving, the party is holding its luggage with no room to leave it in. **Read
+   them on every run, whatever the mode** — item 8's four move values are the whole
+   of what a Mode Note supplies *about a move*, not a closing of this list, and a
+   move onto the arrival or departure day is exactly when these two windows need
+   reading again
 5. Hard Constraints — anything affecting physical transit experience
 6. Possible Day Trips — assess logistics for each
 7. `outputs/traveler-model.md` — the per-traveler `Been here before?` signal
@@ -279,10 +292,39 @@ leg: leg-<token>
 **Rationale:** [Why this is right for this specific group]
 **Cost:** [Local] / [USD] per person, [Local] / [USD] group total
 **Duration:** [Realistic group time — not app estimate]
-**Luggage handling:** [Specific to this mode]
+**Luggage handling:** [Specific to this mode — and to this stream's bags]
 **What goes wrong if wrong choice made:** [One honest sentence]
 
 **Alternative:** [Mode] — [When you'd choose this instead and why]
+
+**What `Luggage handling:` has to answer, per stream.** Not a note that the mode
+copes with bags — the bags themselves, on this stream, on this day. Three things:
+
+- **The bag count you actually planned against**, and how it moved the
+  recommendation. Three travelers with cabin bags and four with eight cases are
+  not the same stream, and the mode that suits one is often wrong for the other.
+  State the number so a reader can correct it rather than guess at it.
+- **The arrival-side flow before transport**, where it changes the plan.
+  Immigration and customs, and where the bags are actually collected, decide when
+  this stream reaches the transport you are recommending — say so where that moves
+  a time or a mode, and leave it out where it does not.
+- **The pre-check-in window.** Read the `Check-in time:` from § *Input* against
+  this stream's arrival and say whether the party can get into the room on
+  landing. Where they cannot, the bags need a named home for those hours — the
+  property's own bag drop, a left-luggage office, lockers at the arrival station —
+  named concretely rather than as "store them somewhere". Where the destination
+  has a **luggage-forwarding service**, name it and say whether it is worth using
+  on this stream. Where none exists, say that: a stated absence is an answer, an
+  omission is not.
+
+**This is the dated, per-stream half of the brief, and the boundary is worth
+holding.** These lines change when the arrival instant or the bag count changes,
+and they are executed on the day. The undated, trip-level orientation a traveler
+reads *before* they are moving — how the fare system works, which app to hold,
+what the signage does — belongs to § *Destination Transport Character*, § *Payment
+& Transit Card Setup* and § *Daily Navigation*, written once for the trip rather
+than repeated per stream. A sentence that would be true for any traveler arriving
+any day this year is not this section's.
 
 **The entry marker — one fenced block per stream, carrying the leg key and nothing
 else.** Open every stream with it, directly under that stream's own `**Stream — …**`
@@ -436,7 +478,28 @@ leg: leg-<token>
 **Buffer rationale:** [Why this buffer — what's the failure mode if you cut it]
 **Route:** [Specific transit or transfer]
 **Cost:** [Local + USD, group total]
-**Luggage options:** [If relevant]
+**Luggage options:** [Where the bags are between check-out and this flight]
+
+**`Luggage options:` is not conditional.** Every departure stream has bags and a
+gap; what varies is the answer, never whether one is owed. The optional-looking
+placeholder this line used to carry is gone, because it let the departure half go
+unanswered on exactly the trips where it mattered — the shape **"The departure
+afterthought"** already names. Three things:
+
+- **The post-check-out window.** Read the `Check-out time:` from § *Input*
+  against this stream's `Recommended hotel departure:`. Where the party is out of
+  the room well before it leaves for the airport, say where the bags are for those
+  hours — the property's own hold, a left-luggage office, lockers near wherever
+  the last morning is spent — named, not gestured at.
+- **Luggage assembly belongs in `Buffer rationale:`, not in a label of its own.**
+  Getting a group and its cases out of a property is not instantaneous, and a
+  buffer derived as though it were is the buffer that fails. Fold those minutes
+  into the rationale you already write.
+- **Forwarding, where the destination has it.** Hold-to-airport services exist in
+  some places and not others. Where one exists, name it and weigh it against
+  carrying the bags through the departure route. Where none exists, **say so** —
+  "no such service operates here" is a complete answer and the one thing a reader
+  cannot infer from silence.
 
 | Scenario | Departure time | What you gain | What you risk |
 |----------|---------------|---------------|---------------|
