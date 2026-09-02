@@ -267,8 +267,8 @@ independently decides one. Limb (iii) is what makes the revert property a criter
 coincidence of the current script. Limb (ii)'s *or by command-line argument* is what stops a secret
 passed on the command line from reading as safe once a standard-output fix lands.
 
-**The disposition of every invocation form.** Ten forms exist: the dispatch table admits six
-subcommand arms, and the user-facing options on those arms resolve to ten distinct parseable
+**The disposition of every invocation form.** Eleven forms exist: the dispatch table admits seven
+subcommand arms, and the user-facing options on those arms resolve to eleven distinct parseable
 invocations. Each carries exactly one disposition, and each excluded one carries at least one reason
 from a closed vocabulary. A flag that changes neither the disposition nor the reason earns no
 separate row in `CLAUDE.md`'s Step-1 table; it still earns one here, because completeness over
@@ -286,6 +286,20 @@ separate row in `CLAUDE.md`'s Step-1 table; it still earns one here, because com
 | 8 | `rotate` | EXCLUDED | `#330-disclosure` | — |
 | 9 | `rotate --passphrase` | EXCLUDED | `#330-disclosure` + `argv-secret` | — |
 | 10 | `unpublish` (delete) | EXCLUDED | `ADR-007 §2` | — |
+| 11 | `confirm` | EXCLUDED | `ADR-007 §2` | — |
+
+**Row 11 is the substantive call this table exists to make, not bookkeeping.** `update` is
+already ADDRESSED, so an agent can trigger a republish. `confirm` records the organizer's
+approval of an itinerary change, and if it were addressable too, an agent could confirm and
+then update in one breath — the gate would be decorative, and the organizer's decision that
+ADR-003 § Decision 2 reserves to a person would be taken by the surface acting on their
+behalf. Excluding it means an agent-triggered `update` on an unconfirmed itinerary change
+**aborts**, which is the protection. The reason is §2's privilege boundary, whose second
+bound requires a command's tool grant to be *"the minimum for its function"*: a command
+carrying the confirm capability exceeds the minimum for every function the surface has.
+The consequence is a constraint on the command surface rather than an omission from it —
+`.claude/commands/trip-publish.md` **must not** gain this invocation, because an EXCLUDED
+row that names a command is a finding.
 
 The reason vocabulary is closed at five values — `ADR-007 §2`, `#330-disclosure`, `repo-creation`,
 `argv-secret` and `lightest-weight-action` — and is shared with `CLAUDE.md`'s Step-1 table so one

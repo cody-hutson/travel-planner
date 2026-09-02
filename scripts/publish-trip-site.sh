@@ -18,6 +18,7 @@
 # Usage:
 #   publish-trip-site.sh publish   <trip-dir> [--plaintext] [--opaque]
 #   publish-trip-site.sh update    <trip-dir>
+#   publish-trip-site.sh confirm   <trip-dir>   (interactive; records the organizer's approval of an itinerary change)
 #   publish-trip-site.sh rotate    <trip-dir> [--passphrase <new>]
 #   publish-trip-site.sh list                       (read-only inventory of all trips under trips/; gh optional)
 #   publish-trip-site.sh unpublish <trip-dir> [--disable-pages-only] [--yes]
@@ -28,6 +29,13 @@
 #   --passphrase   Supply a specific new passphrase for rotate (else one is generated).
 #   --disable-pages-only   unpublish: take the site offline but KEEP the repo (reversible). Default DELETES the repo.
 #   --yes          unpublish: skip the interactive confirmation (required for a non-interactive delete).
+#
+# Organizer-confirm gate (ADR-003 § Decision 2). update refuses when the itinerary content
+# of the outgoing render differs from what is currently published and no organizer
+# confirmation covers it; rotate republishes through update and inherits the refusal. A
+# republish carrying the SAME itinerary content — a coordination-state marker change, say —
+# is not a plan change and passes. Record the approval with `confirm` (terminal only, no
+# override flag); it binds to that exact itinerary content, so a later edit re-opens the gate.
 #
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
@@ -1998,11 +2006,12 @@ main() {
   case "$sub" in
     publish)     cmd_publish   "$@" ;;
     update)      cmd_update    "$@" ;;
+    confirm)     cmd_confirm   "$@" ;;
     rotate)      cmd_rotate    "$@" ;;
     list|status) cmd_list      "$@" ;;
     unpublish)   cmd_unpublish "$@" ;;
     -h|--help|help|"") usage 0 ;;
-    *) die "unknown subcommand: $sub (try: publish | update | rotate | list | unpublish)" ;;
+    *) die "unknown subcommand: $sub (try: publish | update | confirm | rotate | list | unpublish)" ;;
   esac
 }
 
