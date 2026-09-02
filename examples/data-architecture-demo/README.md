@@ -75,8 +75,8 @@ names do not match the ones its agent prompt declares is not a shallow instance 
 class — it is a different shape, and shape is the one thing this fixture exists to
 show. So every file below carries its writer's own sections, under its writer's own
 names, with a stated *not exercised* where this fixture has no fact to put in one.
-`outputs/scheduling-framework.md` and `outputs/transport-brief.md` each carry their
-ten; `outputs/validation-report.md` carries its seventeen.
+`outputs/scheduling-framework.md` carries its ten and `outputs/transport-brief.md` its
+eleven; `outputs/validation-report.md` carries its seventeen.
 
 **A check or a field that cannot be exercised here is declared, never passed.** This
 example ships no external URLs, no opening hours, no prices, no real bookings and a
