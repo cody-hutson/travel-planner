@@ -1189,6 +1189,152 @@ EOF
   return 0
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# The markdown sibling of the guard, for an artifact that is never published.
+#
+# ── WHY A SECOND EVALUAND AND NOT A SECOND MECHANISM ─────────────────────────
+# outputs/change-summary.md (C20) is `publish: internal`. It is shared by the
+# organizer out of band and never reaches the render, so verify_publishable_content
+# never sees it: that function is HTML-bound on both of its projections and is called
+# from exactly one site, cmd_publish's plaintext limb, on the file being published.
+# Reusing it here would mean either widening it to a second evaluand class or calling
+# it on a file it was not written for.
+#
+# What IS reused is everything below it, and all three are evaluand-agnostic by
+# construction: nonpublishable_values (the class SOURCE), _norm_words (the shared
+# normalization), and _guard_match (the matcher, which consumes two token files and
+# knows nothing about the class that produced them). This function therefore adds one
+# projection and no membership knowledge — it declares ZERO selectors, no literal
+# field label and no literal member name, exactly as its HTML sibling does. That is
+# the property test-publish-guard.sh case L8 grades, and L8 names its target functions
+# explicitly, so this one is added to that list in the same change.
+
+# The degraded-extraction floor for a markdown summary. DELIBERATELY NOT the 20-word
+# floor verify_publishable_content applies, and copying that number here would be the
+# error rather than the safe default.
+#
+# CALIBRATION. That floor is derived from a rendered multi-day site, where fewer than
+# twenty visible words means the HTML extraction fell over. This artifact's minimum
+# legitimate shape is one rendered change line: `Tuesday dinner moved 19:00 to 20:00`
+# normalizes to SEVEN tokens. A floor of 20 would return 2 — UNDETERMINED, never a
+# pass — on every small summary, and an UNDETERMINED that no correct input can clear
+# is a fail-closed control with no remedy, which ADR-008 argues against twice and which
+# in practice gets worked around rather than satisfied.
+#
+# 4 sits below the seven-token minimum with margin, and above what the cases this floor
+# exists to catch actually produce: an empty, unreadable or truncated file yields 0.
+# Note the asymmetry with the HTML arm and why it is correct — the markdown projection
+# below is NON-LOSSY (it inserts sentinels and drops nothing), so there is no extraction
+# machinery here that can silently degrade. The floor guards the file, not the parser.
+GUARD_SUMMARY_FLOOR=4
+
+# strip_md_to_text_blocks <markdown_file> -> text with block sentinels on stdout
+#
+# The markdown counterpart of strip_to_text_blocks. THE SENTINEL IS THE WHOLE POINT and
+# it is not cosmetic: _guard_match's `conjunctive` rule requires both distinctive tokens
+# of a value inside ONE structural block as well as inside GUARD_WINDOW. With no
+# sentinel every token lands in block 0, blk[pos[right]] == blk[pos[left]] is true for
+# every pair, and the rule degrades to a bare word window — which is verbatim the
+# N-squared day-pairing false abort that ADR-008's first amendment exists to fix, and
+# which measured as a permanent abort from two days onward. A summary accumulates a
+# dated section per re-bake, so it has exactly the recurrence shape that defect needs.
+#
+# The block boundaries are markdown's own: a blank line, an ATX heading, a list item, a
+# table row, a rule or frontmatter fence, a code fence, a block quote. Emitted BEFORE
+# the line's own text, so the line opens the new block rather than closing the old one.
+strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentinels on stdout
+  awk -v B="$_GUARD_BLOCK" '
+    /^[[:space:]]*$/                                  { print B; next }
+    /^[[:space:]]*#{1,6}[[:space:]]/                  { print B }
+    /^[[:space:]]*([-*+]|[0-9]+[.)])[[:space:]]/      { print B }
+    /^[[:space:]]*\|/                                 { print B }
+    /^[[:space:]]*(---|===|___|\*\*\*)/               { print B }
+    /^[[:space:]]*(```|~~~)/                          { print B }
+    /^[[:space:]]*>/                                  { print B }
+    { print }
+  ' "$1"
+}
+
+# verify_summary_content <change_summary_md> <trip_dir>
+#   return 0  no non-publishable value reached the summary
+#          1  HIT          — a non-publishable value is in the summary
+#          2  UNDETERMINED — the class or the summary could not be determined
+#
+# The same three-code contract as verify_publishable_content, for the same reason: a
+# binary contract cannot tell a guard that aborted for the RIGHT reason from one that
+# aborted for the wrong one, and the suite has to.
+#
+# ── THIS IS LAYER 2. LAYER 1 IS THE DERIVATION BOUND AND IT IS THE STRONGER ONE ──
+# agents/05-hub-planner.md constrains the generator to read only `publish: bound`
+# classes — C11, C13 and C1 — and never an `internal-hard` one, so the derived rows
+# carry no more than the site already encrypts. That is a PROVABLE bound: a value never
+# read cannot leak. What Layer 1 does not bound is free text an agent writes into the
+# summary alongside the derived rows, and that residue is what this function grades.
+#
+# It NEVER echoes the matched value, deliberately, for the reason its HTML sibling
+# states: the strings matched here are passport values and third-party health needs,
+# and this runs in a public Actions log.
+#
+# ONE projection, not two. The HTML sibling matches a visible arm and a retrievable arm
+# because publish copies the file rather than the painting of it. There is no such split
+# here: the projection below drops nothing, so the tokens it yields ARE the file's, and a
+# second arm would be the same stream twice.
+verify_summary_content() { # <change_summary_md> <trip_dir>
+  local summary_md="${1:-}" trip_dir="${2:-}"
+  local recs rc work sfile vfile n member field rule value hit=0 undet=0
+
+  if [ -z "$summary_md" ] || [ -z "$trip_dir" ]; then
+    warn "guard: the summary check needs a change summary and a trip dir"; return 2
+  fi
+  if [ ! -r "$summary_md" ]; then
+    warn "guard: the change summary is absent or unreadable — what would be shared cannot be certified"; return 2
+  fi
+
+  work="$(mktemp -d)" || { warn "guard: could not stage the summary check"; return 2; }
+  sfile="$work/summary.words"; vfile="$work/value.words"
+
+  strip_md_to_text_blocks "$summary_md" | _norm_words > "$sfile"
+  # Sentinels are not words and must not count toward the floor — the same subtraction
+  # the HTML arm makes, for the same reason.
+  n="$(awk -v B="$_GUARD_BLOCK" '$0 != B { c++ } END { print c + 0 }' "$sfile")"; n="${n:-0}"
+  if [ "$n" -lt "$GUARD_SUMMARY_FLOOR" ]; then
+    rm -rf "$work"
+    warn "guard: the change summary yielded only $n words — below the $GUARD_SUMMARY_FLOOR-word floor, so a degraded read is not a clean result"
+    return 2
+  fi
+
+  # The class comes from the declaration, through the one function that owns it. The
+  # second argument is the artifact being certified: nonpublishable_values uses it only
+  # for the empty-class-versus-stale-model mtime comparison, which is not HTML-specific,
+  # so passing the summary preserves the semantics exactly — the class read empty but
+  # the model predates the artifact ⇒ 2.
+  recs="$(nonpublishable_values "$trip_dir" "$summary_md")" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
+  # A parsed-and-empty class is a MEASUREMENT; an unrecognized model is a DEGRADATION,
+  # and nonpublishable_values has already returned 2 for that above. Absence is not zero.
+  if [ -z "$recs" ]; then rm -rf "$work"; return 0; fi
+
+  while IFS="$(printf '\t')" read -r member field rule value; do
+    [ -n "${rule:-}" ] || continue
+    printf '%s' "$value" | _norm_words > "$vfile"
+    _guard_match "$rule" "$vfile" "$sfile"; rc=$?
+    case "$rc" in
+      0) warn "guard: a non-publishable value reached the change summary — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
+      1) ;;
+      3) warn "guard: member '$member', field '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass."; undet=1 ;;
+      4) warn "guard: member '$member', field '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. See ADR-008 § Coverage boundary." ;;
+      *) warn "guard: the match for member '$member', field '$field' could not be run (matcher exit $rc) — undetermined, not clean."; undet=1 ;;
+    esac
+  done <<EOF
+$recs
+EOF
+
+  rm -rf "$work"
+  [ "$hit"   -eq 0 ] || return 1
+  [ "$undet" -eq 0 ] || return 2
+  return 0
+}
+
 # ═════════════════════════════════════════════════════════════════════════════
 # verify_ciphertext — THE PRE-PUSH SAFETY GUARD  ◀── your high-judgment function
 # ═════════════════════════════════════════════════════════════════════════════
