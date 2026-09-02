@@ -3431,6 +3431,222 @@ else
   FAIL "T7c: the frontmatter's coordination fields still move the digest (none=$T7_FN pending=$T7_BP updated=$T7_FU) — the comment excision in strip_to_itinerary_text has regressed or been removed, the declaration block is back inside the digest, and on a conformant render every state transition reads to the gate as an itinerary change"
 fi
 
+# ── Group T, Stage 9 pre-merge (#551 AC 5) — THE PRUNE, and how `none` is reached
+#    on a trip that has history ─────────────────────────────────────────────────
+#
+# NOT A REMEDIATION. Nothing below fixes a defect: T8 exercises a declared rule that was
+# never exercised, so it is expected to PASS on its first run. A failure would be a
+# Stage 9 finding about what the release actually enforces.
+#
+# WHAT T6 LEFT UNGRADED, and it is a proper SUBSET rather than an omission at the edge.
+# t6_state is a pure function of two records: it takes no build date and it has no
+# window. Under it, once a trip has carried a dated entry `e` is non-empty forever, so
+# every later resolution is `pending` or `updated` and `none` is unreachable. T6e does
+# reach `none` — over a trip with NO change summary at all, a trip that has never
+# coordinated anything. So the three arms above grade the mapping's three limbs on a
+# trip with no history, and say nothing about the one state a trip WITH history has to
+# be able to return to.
+#
+# WHY THAT MATTERS TO AC 5. T3 asserts the null-case render is BYTE-IDENTICAL to a
+# pre-component render, and § 3 makes non-emission a byte-level property because the site
+# is encrypted wholesale. But T3 grades what `none` DOES; nothing graded how a trip that
+# has coordinated once ever REACHES it again. .claude/commands/trip.md answers that in
+# one clause: "the `updated` limb is pruned at the build where its window has already
+# closed ... this build writes `none` and emits no band". Without the prune, a trip whose
+# one change was confirmed a year ago carries an `updated` frontmatter, a band node, a
+# CSS rule and a script branch in every render for the rest of its life — and AC 5's byte
+# claim, which asks that a site with no pending change and no RECENT update render exactly
+# as it does today, is false for every trip that has ever had a change.
+#
+# WHAT THE PRUNE IS NOT. It is not § 3's decay moved to build time. § 3 evaluates the
+# window at OPEN against the reader's own clock and nothing here touches that. The prune
+# is a FLOOR in the one direction that cannot freeze: the build is never earlier than the
+# approval and an open is never earlier than the build, so a window already closed at the
+# build is closed at every open of what the build produced. It can only remove a band
+# that was already dead.
+#
+#   T8a  the WINDOW and the null-state token, read from the two documents, both controlled
+#   T8b  THE SUBJECT — a trip WITH history reaches `none` through the prune
+#   T8c  CONTROL — the same trip inside the window still resolves `updated`
+#   T8d  SCOPE — the prune does not reach the `pending` limb
+#
+# HOW THE RULE IS READ, and it is the same discipline T1, T2, T5 and T6a follow: the
+# SHAPE is held here, the SOURCE is the documents'. The window comes from § 3 of the
+# component contract, the state the prune writes comes from the `site` verb's own clause,
+# and the record comes from T6a's extraction. Each is recovered from a mutated copy of
+# its own source, so an extractor that has stopped reading its document fails here rather
+# than quietly supplying this file's answer.
+#
+# STATED BOUND, the same one T3, T5 and T6 carry: there is no site BUILD in this
+# repository. These arms grade the CONTRACT's prune and a resolution built to it, not a
+# build script's output, and no arm claims that a given run followed it.
+#
+# Offline: two tracked documents, four sourced shell functions, fixtures under $WORK, awk
+# and bash. No network, no gh, no Node, no TTY. No legitimate skip, and deliberately NOT
+# declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "Coordination state — the build-time prune, and the null state on a trip with history (#551 AC 5):"
+
+T8_DIR="$WORK/t551c"; mkdir -p "$T8_DIR"
+T8_BT='`'
+
+# The window § 3 declares, read from the component contract rather than spelled here —
+# the same reason T1 reads the class token from it instead of holding a literal.
+t8_window() { # [<spec-file>] -> the window in whole days, or nothing
+  awk 'match($0, /W = [0-9]+ days/) {
+         s = substr($0, RSTART, RLENGTH); gsub(/[^0-9]/, "", s); print s; exit
+       }' "${1:-$T_SPEC}"
+}
+
+# The state the `site` verb's PRUNE clause says the build writes. Paragraph-scoped (RS="")
+# for the reason T5's and T6a's extractors are: a phrase elsewhere in a 1000-line command
+# file must not be mistaken for this one. Taken from the document so that a corpus which
+# renamed the null state does not leave this group asserting the old name.
+T8_MARK='pruned at the build'
+T8_WRITES='this build writes'
+t8_prune_state() { # <trip-md> -> the state the prune clause names, or nothing
+  awk -v mark="$T8_MARK" -v w="$T8_WRITES" '
+    BEGIN { RS = ""; FS = "\n" }
+    {
+      p = $0
+      gsub(/\n/, " ", p)
+      a = index(p, mark); if (a == 0) next
+      b = index(p, w);    if (b == 0 || b < a) next
+      p = substr(p, b + length(w))
+      i = index(p, "`"); if (i == 0) exit
+      p = substr(p, i + 1)
+      j = index(p, "`"); if (j == 0) exit
+      print substr(p, 1, j - 1); exit
+    }' "$1"
+}
+
+# The `updated` limb's `coordination-since`: the YYYY-MM-DD prefix of the record's
+# `confirmed=` line, which is what the mapping declares and what T5 grades. Read behind
+# the SHIPPED _record_digest, so a record present but saying nothing yields no date —
+# ADR-007 § 2's placeholder bound, the same read T6e's third case grades.
+t8_since() { # <trip_dir> <state-record-path> -> YYYY-MM-DD, or nothing
+  local dir="$1" rel line
+  rel="$(t6_rel "$2")"
+  [ -n "$(_record_digest "$dir/$rel")" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      confirmed=*) line="${line#confirmed=}"; printf '%s' "${line:0:10}"; return 0 ;;
+    esac
+  done < "$dir/$rel"
+  return 0
+}
+
+# coordination-state as the BUILD writes it: t6_state's three limbs, then the prune on the
+# `updated` limb alone. Generic over the record, the window and the null-state token, all
+# three of which come from the documents rather than from this file.
+#
+# _epoch_of_iso is the SOURCED converter, not date arithmetic written here. The BSD/GNU
+# divergence it exists to absorb is the same class of defect this release already tripped
+# over once in _epoch_of_file, and a second hand-rolled date path is how the two drift
+# apart. An unconvertible date prints NOTHING rather than falling back to the un-pruned
+# state: a silent degradation here would let T8b pass without the prune ever running.
+t8_state_at_build() { # <trip_dir> <state-record> <build-YYYY-MM-DD> <window-days> <none-token>
+  local st since se be
+  st="$(t6_state "$1" "$2")"
+  [ "$st" = 'updated' ] || { printf '%s' "$st"; return 0; }
+  since="$(t8_since "$1" "$2")"
+  [ -n "$since" ] || { printf '%s' "$st"; return 0; }
+  se="$(_epoch_of_iso "${since}T00:00:00Z")"
+  be="$(_epoch_of_iso "${3}T00:00:00Z")"
+  [ -n "$se" ] && [ -n "$be" ] || return 0
+  if [ "$(( (be - se) / 86400 ))" -gt "$4" ]; then printf '%s' "$5"; return 0; fi
+  printf '%s' "$st"
+}
+
+T8_W="$(t8_window)"
+T8_NONE="$(t8_prune_state "$T_TRIPMD")"
+
+# CONTROLS — runtime mutations, not fabricated-token lookups. Both extractors are re-run
+# over copies of their OWN source documents with a value injected, and each must come back
+# carrying the injection. Asking whether an invented token appears in the REAL extraction
+# is a question whose answer is `no` whether the extractor works or not — it answers the
+# same over an empty file. Index-based substitution rather than a regex, for the reason
+# field_hit() is index-based: corpus text carrying a metacharacter must not become a
+# pattern. Same technique as T2's, T5's and T6a's controls.
+T8_SPEC_MUT="$T8_DIR/spec_mut.md"
+awk -v old="W = $T8_W days" -v new="W = 4242 days" '
+  { i = index($0, old); if (i > 0) $0 = substr($0, 1, i - 1) new substr($0, i + length(old)); print }
+' "$T_SPEC" > "$T8_SPEC_MUT"
+T8_TRIPMD_MUT="$T8_DIR/tripmd_mut.md"
+awk -v old="$T8_WRITES $T8_BT$T8_NONE$T8_BT" -v new="$T8_WRITES ${T8_BT}zzqfab${T8_BT}" '
+  { i = index($0, old); if (i > 0) $0 = substr($0, 1, i - 1) new substr($0, i + length(old)); print }
+' "$T_TRIPMD" > "$T8_TRIPMD_MUT"
+T8_CTL_W="$(t8_window "$T8_SPEC_MUT")"
+T8_CTL_NONE="$(t8_prune_state "$T8_TRIPMD_MUT")"
+
+# ── T8a — THE TWO DOCUMENT-SOURCED INPUTS. A window this file invented would make every
+# verdict below this file's own answer, and a null-state token spelled here would leave
+# the group green through a corpus that had renamed it.
+T8_WOK=0
+case "$T8_W" in ''|*[!0-9]*) ;; *) [ "$T8_W" -gt 0 ] && T8_WOK=1 ;; esac
+if [ "$T8_WOK" -ne 1 ]; then
+  FAIL "T8a: no positive whole-day window could be read from $(basename "$T_SPEC") (got '$T8_W') — § 3 declares the window this prune is measured against, and every verdict below would be over a window this file invented"
+elif [ -z "$T8_NONE" ]; then
+  FAIL "T8a: the '$T8_MARK' clause in $(basename "$T_TRIPMD") named no state for the build to write — the prune clause has moved or been renamed, so the rule graded below is one this file holds rather than one the corpus declares"
+elif [ "$T8_CTL_W" != '4242' ] || [ "$T8_CTL_NONE" != 'zzqfab' ]; then
+  FAIL "T8a-CTL: an injected value was NOT recovered (window arm='$T8_CTL_W', expected 4242; state arm='$T8_CTL_NONE', expected zzqfab) — at least one extractor has stopped reading its document, so what it reports about the real one is this file's answer rather than the document's"
+else
+  PASS "T8a: the window is $T8_W day(s), read from § 3 of $(basename "$T_SPEC"), and the '$T8_MARK' clause in $(basename "$T_TRIPMD") writes '$T8_NONE' — each recovered from a mutated copy of its own source document (4242 / zzqfab), so the rule graded below is the corpus's and not this file's"
+fi
+
+# THE FIXTURE: a trip that HAS carried an entry and whose one change was approved. This is
+# the case T6c/T6d/T6e cannot reach — t6_state resolves it `updated` at every build,
+# forever, because it takes no build date and has no window.
+T8_TRIP="$(t6_trip "$T8_DIR/tripW" "$T6_E1")"
+# shellcheck disable=SC2059  # the format IS the subject — it is read out of cmd_confirm
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T8_TRIP/$T6_SHIPREC"
+T8_SINCE="$(t8_since "$T8_TRIP" "$T6_DOCREC")"
+T8_ENTRY="$(t6_newest_entry "$T8_TRIP/outputs/change-summary.md")"
+T8_UNPRUNED="$(t6_state "$T8_TRIP" "$T6_DOCREC")"
+T8_BUILD_FAR='2027-09-30'
+T8_BUILD_NEAR='2027-06-02'
+T8_FAR="$(t8_state_at_build  "$T8_TRIP" "$T6_DOCREC" "$T8_BUILD_FAR"  "$T8_W" "$T8_NONE")"
+T8_NEAR="$(t8_state_at_build "$T8_TRIP" "$T6_DOCREC" "$T8_BUILD_NEAR" "$T8_W" "$T8_NONE")"
+
+# ── T8b — THE SUBJECT. The first two branches are what separate this arm from T6e: a
+# `none` over a trip with no entry would be T6e's limb re-graded, and a fixture that did
+# not resolve `updated` first would give the prune nothing to act on.
+if [ -z "$T8_ENTRY" ]; then
+  FAIL "T8b: the fixture's change summary carries no dated entry, so a '$T8_NONE' below would be T6e's no-entry limb rather than the prune — telling those two apart is what this arm exists for"
+elif [ "$T8_UNPRUNED" != 'updated' ]; then
+  FAIL "T8b: the fixture resolves '$T8_UNPRUNED' before the prune, not 'updated' — the prune is scoped to the \`updated\` limb, so there would be nothing here for it to act on"
+elif [ -z "$T8_FAR" ]; then
+  FAIL "T8b: the prune returned nothing — _epoch_of_iso converted neither '$T8_SINCE' nor '$T8_BUILD_FAR' on this runner, so no verdict here is a measurement"
+elif [ "$T8_FAR" = "$T8_NONE" ]; then
+  PASS "T8b: a trip that HAS carried an entry (dated $T8_ENTRY), approved at $T8_SINCE, resolves '$T8_NONE' at a build outside the ${T8_W}-day window ($T8_BUILD_FAR) — while the un-pruned mapping resolves '$T8_UNPRUNED' on that same trip at every build forever. This is the ONLY route back to '$T8_NONE' once a trip has history: T6e reaches it over a trip with no change summary at all. AC 5's byte claim rests on it, and T3 grades what the state then does to the render"
+else
+  FAIL "T8b: a trip whose approval is far outside the ${T8_W}-day window resolved '$T8_FAR', not '$T8_NONE' — the prune the \`site\` verb declares is not being applied, so a trip whose one change was confirmed long ago carries a band node, a CSS rule and a script branch in every render for the rest of its life, and AC 5's byte claim is false for every trip that has ever had a change"
+fi
+
+# ── T8c — CONTROL. A resolver that returned the null token whenever it saw a build date
+# would satisfy T8b perfectly and measure nothing. The SAME trip and the SAME approval,
+# read at a build INSIDE the window, must still resolve `updated` and still emit the band.
+if [ "$T8_NEAR" = 'updated' ]; then
+  PASS "T8c: CONTROL — the same trip and the same approval read at a build INSIDE the window ($T8_BUILD_NEAR, one day after $T8_SINCE against a ${T8_W}-day window) resolves 'updated'. So T8b's '$T8_NONE' is a measurement of the window rather than a resolver returning one value, and the prune removes only a band that was already dead"
+else
+  FAIL "T8c: a build one day after the approval resolved '$T8_NEAR', not 'updated' — the prune is firing INSIDE the window, so a change confirmed yesterday is never announced to the group at all, which is the opposite defect and a worse one than the latch"
+fi
+
+# ── T8d — SCOPE. The prune is the `updated` limb's alone. An entry raised AFTER the
+# approval is undecided, the state is `pending`, and `pending` has no window to close —
+# § 3 gives the seven-day decay to `is-updated` alone. A prune that reached `pending`
+# would stop announcing a change the group never approved, once the build was old enough.
+T8_TRIPV="$(t6_trip "$T8_DIR/tripV" "$T6_E1" "$T6_E2")"
+# shellcheck disable=SC2059  # as above
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T8_TRIPV/$T6_SHIPREC"
+T8_PEND="$(t8_state_at_build "$T8_TRIPV" "$T6_DOCREC" "$T8_BUILD_FAR" "$T8_W" "$T8_NONE")"
+if [ "$T8_PEND" = 'pending' ]; then
+  PASS "T8d: SCOPE — a trip carrying a further entry dated $T6_E2, later than the same approval, still resolves 'pending' at the same far build ($T8_BUILD_FAR). The prune is scoped to the \`updated\` limb and does not reach an unapproved change: a pending band has no window to close, § 3 giving the decay to \`is-updated\` alone"
+else
+  FAIL "T8d: an UNDECIDED entry dated $T6_E2 resolved '$T8_PEND' at build $T8_BUILD_FAR — the prune has reached the \`pending\` limb, so a change the group never approved stops being announced once the build is old enough. That is a silent wrong statement to the reader, in the opposite direction from the latch T6c removed"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group PF — no verdict in this suite, or in the publish script it guards, is decided by a
 # pipeline's exit status.
