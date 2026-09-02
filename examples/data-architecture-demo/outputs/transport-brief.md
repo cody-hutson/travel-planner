@@ -57,6 +57,14 @@ leg: leg-04a1
 May 14 (Thu). Arrival ~13:00; accommodation from 14:00, which is what makes the arrival
 day a half day rather than a full one.
 
+**Luggage handling.** That hour is the pre-check-in window, and it is planned rather
+than left standing: three travelers on one booking, their own bags, and no room yet.
+The bags are carried to the base and held there until check-in — an hour does not
+justify a storage run, and the base is reached on foot on this walkable core. Where the
+property could not hold them, the fallback here is left-luggage at the arrival station.
+No forwarding service is priced on this fixture, and a single short transfer gives one
+nothing to save.
+
 ### Payment & Transit Card Setup
 
 Not exercised — this fixture records no fares, so there is no payment product to
@@ -126,6 +134,14 @@ leg: leg-9f3c
 May 17 (Sun). Afternoon flight, depart accommodation ~13:00 — which is what leaves
 Sunday a usable morning and lets the riverside walk and the anchor breakfast be placed
 at all.
+
+**Luggage options.** Check-out is 11:00 and the party leaves at ~13:00, so there are two
+hours of Sunday morning in which the bags are out of the room and the group is not yet
+travelling. They go into the property's hold at check-out and are collected on the way
+out; that is what keeps the riverside walk placeable *after* check-out instead of
+forcing it ahead of breakfast. The collection stop and the minutes it takes to get three
+people and their bags moving sit inside the departure buffer, not beside it. No
+forwarding service is priced on this fixture; the airport run is one transfer.
 
 ---
 
