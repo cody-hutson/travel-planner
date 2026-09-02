@@ -1458,9 +1458,9 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 #       strip_to_text deletes <script>/<style> bodies wholesale and turns every
 #       tag into a space, so a pure styling or scripting change moves nothing here
 #       by construction. That is the property this boundary needs. This projection
-#       ALSO excises HTML comments as a construct, which strip_to_text does not —
-#       see strip_to_itinerary_text — so on a comment-bearing render the two are
-#       deliberately not the same answer.
+#       ALSO excises C19's DECLARATION BLOCK as a construct, which strip_to_text
+#       does not — see strip_to_itinerary_text — so on a render carrying that block
+#       the two are deliberately not the same answer.
 #   (2) WHITESPACE-COLLAPSED, so a re-indent or a markup reflow is not a plan
 #       change. The collapse is verify_ciphertext check (c)'s own idiom
 #       (tr -s '[:space:]' ' ' then trim), reused rather than reinvented.
@@ -1468,14 +1468,20 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 #       would sit inside the digest. It is identified by its class token, and the
 #       excision is bounded — see strip_to_itinerary_text.
 #
-# WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, HTML comment
-# bodies, attribute values, <script> and <style> bodies. A change confined to one
+# WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, C19's
+# declaration block, attribute values, <script> and <style> bodies. A change confined to one
 # of those does not move the digest and can ride a standing confirmation. That is
 # the same coverage boundary ADR-008 draws between its two projections, and it is
 # the deliberate price of (1): pulling those surfaces in would make every CSS or
-# script edit — including #551's own — read as an itinerary change. THE COMMENT
+# script edit — including #551's own — read as an itinerary change. THE DECLARATION
 # CLAUSE IS HONOURED BY AN EXCISION OF ITS OWN: the tag strip alone cannot collapse
 # a comment whose body carries a `>`, and C19's declaration block always carries one.
+# THAT EXCISION IS ANCHORED TO THE BLOCK'S DECLARED POSITION, so it is narrower than
+# "comment bodies" and deliberately so: a comment ELSEWHERE in the body is left to the
+# tag strip, and one whose body carries a `>` leaves residue INSIDE the digest, where a
+# change to it fires the gate. Noisier, and the closed direction — the alternative read
+# `<!--` as an opener inside a quoted attribute value and swallowed plan text between it
+# and the next `-->`, which failed OPEN. See strip_to_itinerary_text.
 #
 # ── WHY A PUBLISHED BASELINE EXISTS AT ALL ───────────────────────────────────
 # "Differs from what is currently published" needs a local anchor, and there is
@@ -1537,48 +1543,84 @@ _COORD_NOTICE_CAP=512
 # turns it into this file's existing "nothing" answer for a projection it could not
 # take — an answer every caller already handles as "not a match".
 #
-# ── HTML COMMENTS ARE EXCISED AS A CONSTRUCT (#552, third remediation) ────────
+# ── THE DECLARATION BLOCK IS EXCISED BY THE CORPUS'S OWN FRONTMATTER GRAMMAR ──
+# (#552, fourth remediation — AI-012, and the AI-014 wording it corrects)
+#
 # `s/<[^>]+>/ /g` stops at the first `>`, so it cannot collapse a comment whose body
-# contains one — it consumes `<!--` through that inner `>` as if it were a tag and
-# leaves the rest of the comment standing as visible text. C19's declaration rides an
-# `<!-- ... -->` block, and its `artifact:` field — `required` on its own fence, and
-# held equal to the selecting class's declared string by validate-artifacts.sh finding
-# A5 — carries a `>` inside `outputs/<destination>-travel-site.html`. The `>` is
-# therefore mandatory on every CONFORMANT render: this was the normal path, not an edge
-# case. `generated:` sits in that same block and changes on every build, so a next-day
-# republish carrying no itinerary change at all digested differently and the gate asked
-# the organizer to confirm a routine rebuild — decision D6's content-keying collapsing
-# back toward publish-keying. Graded by group S12.
+# contains one — it consumes `<!--` through that inner `>` as if it were a tag and leaves
+# the rest of the comment standing as visible text. C19's declaration rides an
+# `<!-- ... -->` block, and its `artifact:` field — `required` on its own fence, and held
+# equal to the selecting class's declared string by validate-artifacts.sh finding A5 —
+# carries a `>` inside `outputs/<destination>-travel-site.html`. The `>` is therefore
+# mandatory on every CONFORMANT render: this was the normal path, not an edge case.
+# `generated:` sits in that same block and changes on every build, so a next-day republish
+# carrying no itinerary change at all digested differently and the gate asked the organizer
+# to confirm a routine rebuild — decision D6's content-keying collapsing back toward
+# publish-keying. Graded by group S12.
 #
-# THIS RESTORES A BOUNDARY THIS FILE ALREADY DECLARED rather than drawing a new one:
-# the boundary note above lists HTML comment bodies among the surfaces OUTSIDE the
-# digest. The declaration was correct and the implementation did not honour it.
+# THIS RESTORES A BOUNDARY THIS FILE ALREADY DECLARED rather than drawing a new one: the
+# boundary note above lists HTML comment bodies among the surfaces OUTSIDE the digest.
 #
-# WHAT THE EXPRESSION MATCHES: `<!--`, the shortest run of characters (`/s`, so it
-# crosses newlines — the block is multi-line) up to the FIRST `-->`, and that `-->`.
-# WHAT IT DOES NOT MATCH: an unterminated comment. `-->` is the only terminator it will
-# accept, so absent one the expression matches NOTHING, the body stays in the digest,
-# and a marker-only republish then reads as an itinerary change and ABORTS — the same
-# fail-closed direction the band's cap produces, reached by a different route.
+# WHY THE MATCH IS ANCHORED, AND WHY THE PREVIOUS `s/<!--.*?-->/ /gs` WAS NOT SAFE. That
+# expression was a regex over raw text with no notion of HTML structure, so it read `<!--`
+# as a comment opener WHEREVER it appeared — including inside a QUOTED ATTRIBUTE VALUE,
+# where HTML5 says it is character data and not a comment at all. The lazy match then ran
+# from that attribute to the next genuine `-->` and deleted everything between,
+# reader-visible plan text included. THAT FAILED OPEN: a real itinerary edit inside the
+# swallowed span left the digest unmoved, the gate read "content unchanged", and an
+# unapproved plan change would publish behind a confirmation the organizer never gave.
+# Every other residual on this gate leaves MORE in the digest and therefore ABORTS; that
+# one left less, which is the one direction ADR-003 § Decision 2 cannot tolerate. Graded
+# by group S13.
 #
-# WHY IT CANNOT OVER-REACH INTO PLAN CONTENT, and why it needs no cap where the band
-# does. The band's excision is capped because its terminator is `</\1>` — a closing tag
-# the document supplies EVERYWHERE, so a mis-shaped band finds a spurious one nearby and
-# a lazy match takes it; `.{0,$cap}?` is what bounds how far that can run. A comment has
-# no such ambiguity: the only string that can close it is a literal `-->`. The lazy
-# quantifier is what makes that bound real — a greedy `.*` would run from the first
-# `<!--` to the LAST `-->` in the file and swallow every paragraph between two comments,
-# which is exactly the plan-text deletion the cap exists to prevent. A cap here would be
-# actively harmful in the other direction: a frontmatter that grew past it would silently
-# stop being excised and this defect would return, un-graded. The one span this can take
-# beyond a comment needs BOTH an unclosed `<!--` AND a later literal `-->`, and the span
-# it then takes is exactly the span the comment grammar designates for that opener.
+# AND THE RENDER THAT REACHED IT WAS WELL-FORMED. The note that stood in this position
+# reasoned about the over-reach as though the offending render were malformed, and called
+# the span taken "exactly the span the comment grammar designates for that opener". An
+# `html.parser` oracle over such a render says otherwise: it reads the attribute-borne
+# `<!--` as an attribute VALUE and reports TWO comments where the regex found three. The
+# comment grammar designates nothing for that opener, because inside a quoted attribute
+# value there is no opener. Reading the case as malformed input under-estimates its
+# reachability, which is why the wording is corrected here rather than left to mislead.
 #
-# ORDER IS LOAD-BEARING. The comment limb runs AFTER the script/style limb. A `<script>`
-# body may legitimately contain the characters `<!--` inside a string; excising comments
-# first would start a match there and run to the frontmatter's `-->`, taking the plan
-# text in between. Removing script and style bodies wholesale first leaves no such opener
-# behind. It runs BEFORE the tag strip because that is the limb it exists to pre-empt.
+# WHAT THE EXPRESSION MATCHES NOW: exactly the block `scripts/validate-artifacts.sh` reads.
+# `va_frontmatter` locates C19's declaration with
+# `NR==1 && $0 != "<!--" { exit } ... $0 == "-->" { exit }` — line 1 exactly `<!--`, and a
+# terminator line that is exactly `-->`. `\A<!--\n … \n-->(?=\n|\z)` is that grammar
+# written as a regex. ONE CONTRACT, TWO READERS, AGREEING BY CONSTRUCTION: this projection
+# excises precisely what the validator reads as frontmatter, so the two cannot drift on
+# what the declaration block is.
+#
+# AND THAT IS WHAT REMOVES THE ATTRIBUTE HAZARD — by construction rather than by care. The
+# match can begin only at byte 0. An attribute value sits inside a tag and a tag has a `<`
+# to its left, so an attribute-borne `<!--` is never at byte 0, and there is no unanchored
+# comment matcher left in this program for one to catch on.
+#
+# WHAT IT NO LONGER MATCHES, STATED AS A COST RATHER THAN LEFT TO BE DISCOVERED. A comment
+# in the BODY is no longer excised as a construct. One whose body carries no `>` is still
+# collapsed wholesale by the tag strip below and never reaches the digest. One whose body
+# DOES carry a `>` now leaves residue as visible text, so a change to it moves the digest
+# and fires the gate. That is noisier, and it is the CLOSED direction: the organizer is
+# asked to confirm something that was not a plan change, which ABORTS a republish rather
+# than publishing an unapproved one. The excision is narrowed back to the requirement that
+# produced it, which was never "excise every comment" but "keep C19's declaration out of
+# the digest" — and the over-generalisation from the first to the second is what opened
+# the hazard.
+#
+# EVERY OTHER SHAPE FAILS CLOSED, AND THE ANCHOR IS THE REASON. An unterminated block, a
+# block that is not at line 1, and a CRLF block each fail the match, so the block stays in
+# the digest, a routine republish reads as an itinerary change, and it ABORTS. Each of
+# those is also REJECTED by `va_frontmatter`, so the projection and the validator disagree
+# about no render. A cap is neither needed nor wanted here: the match runs from byte 0 to
+# the first line-anchored `-->`, which is the validator's own terminator, and a frontmatter
+# that grew past a cap would silently stop being excised.
+#
+# ORDER IS NO LONGER LOAD-BEARING FOR THIS LIMB, and it is kept in place rather than moved.
+# The previous expression had to run after the script/style limb because a `<script>` body
+# may legitimately contain the characters `<!--`, and an unanchored match would start
+# there. An anchored match cannot start inside a script body, or anywhere but byte 0, so
+# that ordering constraint is discharged by the anchor rather than by the sequence. The
+# limb stays where it was because moving it would change no answer and cost a reader the
+# diff.
 #
 # THE REPLACEMENT IS A SPACE, not nothing — the tag strip's idiom, and what keeps
 # `foo<!--c-->bar` from digesting as a single token.
@@ -1588,7 +1630,7 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
     my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
     s{<\s*([A-Za-z][-A-Za-z0-9]*)\b[^>]*\bclass\s*=\s*(["\x27])[^"\x27]*(?<![-\w])$c(?![-\w])[^"\x27]*\2[^>]*>.{0,$cap}?<\s*/\s*\1\s*>}{ }gis;
     s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
-    s/<!--.*?-->/ /gs;
+    s/\A<!--\n(?:.*?\n)?-->(?=\n|\z)/ /s;
     s/<[^>]+>/ /g;
   ' "$1"
 }
