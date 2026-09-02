@@ -34,15 +34,15 @@ optimization, and no control flow — see *What This Document Does Not Define*.
 
 ## 1. The Artifact Classes
 
-The enumeration is **closed at 25**: 19 in-model per-trip artifact classes, and 6 classes explicitly
+The enumeration is **closed at 26**: 20 in-model per-trip artifact classes, and 6 classes explicitly
 declared out of the model. Every class has a target state **or** a stated out-of-model disposition.
 Declaring a class out is a valid outcome; leaving one unmentioned is not.
 
-**Class identifiers are written `C1` … `C25`** and are used throughout this document to refer to a
+**Class identifiers are written `C1` … `C26`** and are used throughout this document to refer to a
 row of the enumeration below. `W` = the single writer · `L` = lifecycle class (§ 6) ·
 `Prov` = provenance (§ 4.4) · `P` = publishability class (§ 5.1).
 
-### 1.1 In-model — per-trip artifact classes (19)
+### 1.1 In-model — per-trip artifact classes (20)
 
 | C | Class | W (exactly one) | L | Prov | P | Primary entities |
 |---|---|---|---|---|---|---|
@@ -65,6 +65,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 17 | `outputs/validation-report.md` | validator | `rebuilt-each-synthesis` | `derived` | `internal` | Finding |
 | 18 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
 | 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C10, C11, C13, C15) |
+| 20 | `outputs/change-summary.md` | hub | `accumulate-append` | `derived` | `internal` | Venue, Event, Day |
 
 **C17 gains its first declared lifecycle here.** `outputs/validation-report.md` had no lifecycle anywhere in
 the corpus. It is `rebuilt-each-synthesis` because a finding against a superseded itinerary is noise,
@@ -76,12 +77,12 @@ this document no in-model class is.
 
 | C | Class | Disposition |
 |---|---|---|
-| 20 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
-| 21 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
-| 22 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
-| 23 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
-| 24 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
-| 25 | `.publish/` | **OUT — publish staging clone** (it contains its own `.git`). Never traversed by any selector. |
+| 21 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
+| 22 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
+| 23 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
+| 24 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
+| 25 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
+| 26 | `.publish/` | **OUT — publish staging clone** (it contains its own `.git`). Never traversed by any selector. |
 
 ### 1.3 In-repo files carrying no per-trip class
 
@@ -320,7 +321,7 @@ rule keys on — **is not copied into frontmatter.** This is `reference/data-mod
 copy — one source per fact* rule extended to the serialization axis, and it is what keeps a migrated
 artifact from acquiring two owners for one fact.
 
-### 4.4 Universal frontmatter — every in-model class (C1–C19)
+### 4.4 Universal frontmatter — every in-model class (C1–C20)
 
 ```yaml
 ---
@@ -538,7 +539,7 @@ values, so a consumer reads *unknown* rather than inferring from a missing label
 ### 5.2 Field classification
 
 A field is `publishable` (the default) or `non-publishable`. **The schema half is a declared gap:**
-the token `non-publishable` occurs zero times across the twenty files in `reference/schemas/`, that
+the token `non-publishable` occurs zero times across the twenty-one files in `reference/schemas/`, that
 directory's fence grammar is explicitly closed so a schema cannot express the marking, and no
 enforcement file reads it. What shipped is the repo-side fence at § 5.6, and it does **not**
 inherit — it carries one row per field *per artifact scope*, so a passport value is non-publishable
@@ -656,7 +657,7 @@ statement is a **live input**, not a leftover: this section's own absence rule b
 roster rows it leaves in the accumulating default. Where the two overlap, the tokens and
 definitions above govern.
 
-**What is not a restatement, and what is.** The nineteen per-class schemas in `reference/schemas/`
+**What is not a restatement, and what is.** The twenty per-class schemas in `reference/schemas/`
 each carry `field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]`
 — the identical five-value **value domain**, a vocabulary constraint rather than a per-class
 assignment, so no schema restates this section (each says the same of `writer:` in terms: *typed,
@@ -667,7 +668,7 @@ membership disclaimer § 7.6 already carries.
 
 | Canonical token | Definition | Members |
 |---|---|---|
-| `accumulate-append` | Each re-run **appends** a new dated section; nothing is deleted. The full accumulated file is what downstream reads. | C2, C5, C6, C7, C8, C9, C18 |
+| `accumulate-append` | Each re-run **appends** a new dated section; nothing is deleted. The full accumulated file is what downstream reads. | C2, C5, C6, C7, C8, C9, C18, C20 |
 | `rebuilt-each-synthesis` | Regenerated from scratch each synthesis pass from authoritative inputs. Safe to regenerate because it holds no independent state. | C4, C10, C11, C12, C14, C17 |
 | `versioned` | Each synthesis produces a new numbered version; prior versions are preserved as sibling files. | C15, C16 |
 | `persist-mutable` | A single file, updated **in place**, that survives every re-run. Synthesis *reads* it and never regenerates it. Not append-only: a row is deleted in the one case where its subject is removed, so no ghost row lingers. | C1, C3, C13 |
@@ -804,17 +805,17 @@ working directory, after it is already done.
 
 **Most of this requirement is already discharged by § 6, and the residue is smaller than it looks.**
 An artifact does not need a migration pass to reach the current version if its own lifecycle
-regenerates it. Partitioning the 19 in-model classes by § 6 membership:
+regenerates it. Partitioning the 20 in-model classes by § 6 membership:
 
 | Upgrade burden | Which lifecycle classes | Count | Mechanism |
 |---|---|---|---|
 | **None — self-upgrading by construction** | `rebuilt-each-synthesis` · `versioned` · `output` | **9** | All three rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
-| **Writer-upgraded, in place** | `persist-mutable` · `accumulate-append` — **less the four classes named in the two rows below** | **6** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
+| **Writer-upgraded, in place** | `persist-mutable` · `accumulate-append` — **less the four classes named in the two rows below** | **7** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
 | **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md`, the one human-authored `persist-mutable` class | **1** | **Never engine-upgraded. This is a rule, not an omission.** |
 | **No emitting writer — the upgrade has nobody to perform it** | C1 `trip-context.md` · C2 `trip-log.md` · C18 `outputs/<slug>.md` | **3** | **A declared gap, not a mechanism.** The writer-upgraded row assigns the upgrade to *the owning writer*; these three have no writer surface that emits their frontmatter block at all, so there is no next write for the upgrade to ride. Stated per class below. |
 
-**9 + 6 + 1 + 3 = 19.** No class is unaccounted for. **The upgrade is not free of the operator across
-all nineteen:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
+**9 + 7 + 1 + 3 = 20.** No class is unaccounted for. **The upgrade is not free of the operator across
+all twenty:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
 it is the only path for an instance that predates the surface that now emits each one's block at
 creation. The fourth row is where that is stated rather than assumed away.
 
@@ -947,7 +948,7 @@ rename repairs the register rather than silently orphaning a row.
 Five known contract defects each name a model element that would prevent them. **One of the five
 shipped in this release; four did not, and this section declares them rather than continuing to
 assert them.** The `Shipped?` column is the reconciliation — it was written against a tree in which
-`reference/schemas/` held no files, and the nineteen schemas that arrived later implement one row of
+`reference/schemas/` held no files, and the twenty schemas that arrived later implement one row of
 it.
 
 | Defect class | Model element that prevents it | Shipped? |
@@ -970,7 +971,7 @@ grades it against the one row that shipped.
 **The pre-migration baseline**, measured against the target state fixed above. **Every in-model
 class had the same delta on the first four dimensions** — no artifact carried frontmatter, a schema
 version, a declared provenance field, or a declared publishability class — so those are stated once
-here rather than repeated nineteen times.
+here rather than repeated twenty times.
 
 **This release closed that universal delta.** The migrated artifacts carry all four, and
 `examples/data-architecture-demo/` is the worked instance. The table below is retained as the record
@@ -1009,8 +1010,9 @@ this document the assignment appears.
 | 17 | Findings unkeyed → Finding, surrogate | **Undeclared anywhere** → `rebuilt-each-synthesis` (**new declaration**) |
 | 18 | Same as C5–C7 | Not previously named as a class → `accumulate-append` |
 | 19 | N/A — a render | Not previously named as a class → `output` (**new class token**) |
+| 20 | n/a — post-migration class | n/a — declared `accumulate-append` at creation |
 
-**Out-of-model classes C20–C25** carry no target state by construction; their delta is the explicit
+**Out-of-model classes C21–C26** carry no target state by construction; their delta is the explicit
 disposition in § 1.2, which is what makes them non-silent.
 
 ---
@@ -1135,7 +1137,7 @@ that document has held up.
   moves into frontmatter.
 - **Not the publish path's completeness.** Paraphrase remains out of reach (§ 5.5).
 - **No migration.** This document specifies; the migration slices migrate.
-- **Out-of-model classes C20–C25** are named and excluded, not modelled.
+- **Out-of-model classes C21–C26** are named and excluded, not modelled.
 
 ---
 

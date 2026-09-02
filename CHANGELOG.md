@@ -3,6 +3,107 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.21.0] — 2026-09-02 — Group coordination
+
+A plan that changes has to say so, and this release is about the three audiences it has
+to say it to: the organizer who decides, the traveller who arrives at the site, and the
+record that has to still be readable afterwards. The four gaps closed here were not four
+instances of one defect. What they shared is that every one of them had to be solved
+*inside the published bytes* — `ADR-002` § *Decision 2* permits only a city-ambient
+client-side fetch, so there is no side channel a coordination signal could travel down.
+
+That constraint is what made the obvious gate wrong. The first cut refused a republish
+whenever a change was pending, which reads as prudence and is in fact a deadlock: showing
+a traveller that a change is pending *requires* a publish — of a site whose itinerary is
+the one already published, carrying a marker that says pending. A gate keyed on
+publish-as-such aborts precisely that act, and the state it exists to protect becomes
+unreachable. The gate that shipped keys on itinerary-content change instead: a
+marker-only republish passes, an unapproved plan change does not.
+
+Four things are true now. A plan shift emits a before/after summary the organizer can
+share out of band, bounded so it carries no more than the shift. A traveller arriving at
+the site is told that a change is pending, or that the plan was recently updated, rather
+than reading a page that looks settled while it is not. A republish that moves the
+itinerary stops until the organizer confirms it, against a digest bound to the exact
+content being approved. And the v2 direction has a decision record instead of an open
+question.
+
+### Added
+
+- **`outputs/change-summary.md` (class `C20`)** — the before/after record of a plan shift,
+  appended rather than rewritten, so a re-bake that shifts nothing appends nothing and a
+  decision nobody made cannot be destroyed by a later pass. It is `publish: internal`: it is
+  shared out of band, and a content guard holds it to that boundary.
+- **The coordination notice, and non-emission as a contract rule** — a band the site emits
+  in a `pending` or a recently-updated variant, plus two optional per-class fields carrying
+  the state and the date it was anchored to. Absent or `none` coordination state emits
+  *nothing*, and that silence is specified rather than incidental: it is what makes the
+  band's absence readable as "no coordination activity" instead of "not implemented".
+- **The organizer-confirm gate on the republish path** — a resolver, an abort, a recorder,
+  and a `confirm` subcommand. The proceed set is the allowlist and the default aborts, so no
+  token the resolver can emit — including one no author anticipated, including the empty
+  string — reaches a push. The published baseline is a git-ignored sidecar in the trip dir:
+  the published artifact is ciphertext by construction, and recording a plaintext fingerprint
+  in the public repo would have been a new disclosure surface.
+- **`ADR-010`** — per-traveller approval collection needs a **transport**, not a **server**.
+  The card arrived carrying the opposite premise, and testing it first is what kept this from
+  being scoped as a revision of the repository's security posture. `ADR-003` does not merely
+  permit an out-of-band transport; it already relies on one, in the words *their own channel*.
+  The more useful half of the record is what that test surfaced: **that channel has never been
+  named**, in two records one release apart, and a mechanism — unlike a human reading a
+  summary — cannot resolve a placeholder by using whichever channel it already has. The
+  record states the attestation ceiling and declines to name the channel, deliberately.
+
+### Changed
+
+- **The itinerary-content projection is a sibling of the existing text projection, not an
+  edit to it.** It excises the notice band and the declaration block, under a bounded cap that
+  makes the fail-open direction unreachable: a mis-shaped band matches nothing, the marker
+  text stays in the digest, and the republish then reads as an itinerary change and aborts.
+  Both failure directions land fail-closed.
+- **The projection has one limb.** It shipped carrying a `perl … || sed` fallback copied from
+  a neighbour where the two limbs compute approximately the same answer. Here they do not —
+  only the perl program excises the band — so a failing or absent perl silently substituted a
+  different projection into the gate's digest and every marker-only republish aborted. The
+  limb was removed rather than taught, because `sed` cannot express the excision.
+
+### Fixed
+
+- **A day-eight deadlock that nothing had been asserting against.** The build-time prune
+  that rewrites coordination state to `none` once a trip's window closes is digest-neutral
+  *only because* the declaration block leaves the digest — and the block's two coordination
+  fields are covered by that excision and by nothing else. Had it stopped being neutral, every
+  trip whose one change was confirmed would have found its next republish reading as an
+  itinerary change and deadlocked at the gate on the day its window closed. The coupling was
+  recorded and then held by nothing; arm `S13f` now names and asserts it, carrying its own
+  discrimination limb so that a projection which swallowed its input could not satisfy it
+  vacuously.
+
+### Note on what this release did not close
+
+This release did not go straight through. Six remediation rounds sit behind the four cards,
+and three of the findings above — the publish-as-such gate, the two-limbed projection, and the
+unnamed prune coupling — were each found after the design they belonged to had been accepted.
+The pattern is worth stating: each was a case of a construct that looked correct in isolation
+and was wrong only in relation to something else in the same release.
+
+Two qualifications ride along, neither of them fixed here.
+
+The `pending` state clears only where the change also moved the projected itinerary text.
+`confirm` refuses to write while the resolver reads `none-pending`, and the resolver reads
+`none-pending` whenever the outgoing render's itinerary digest already equals the published
+one — so a confirmation cannot be recorded against a change the gate cannot see, and the band
+stays up. It over-warns and never under-warns, and the next itinerary-moving change resolves
+it. But a reader of the contract alone would predict the band clears one `confirm` away, and
+on the first publish after a re-bake it does not.
+
+And `C20`'s `status` field has no live consumer. The schema justifies the field on the ground
+that a consumer branches on its value, naming the site's pending state and the confirm gate as
+the two. Neither reads it: the gate is keyed on itinerary digests end to end and says so in
+terms, and the site's state was re-keyed onto the confirmation record precisely because nothing
+in the corpus ever moves `status` off `pending`. The field is display-only today, and the
+schema's stated reason for requiring it is ahead of the code.
+
 ## [0.20.0] — 2026-09-01 — Short-horizon replan protocol
 
 A replan had no clock. `ITERATION` reasoned identically three days before a trip and three

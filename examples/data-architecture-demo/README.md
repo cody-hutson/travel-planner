@@ -36,17 +36,18 @@ way.
 | `outputs/links-reference.md` | C10 | 2 | rebuilt before the itinerary, with `venue-matrix.md` |
 | `outputs/venue-matrix.md` | C11 | 1 | the dedup cap, the anchor/alternative rule it is **not** the same as, and the emitter's full three-role vocabulary `A` / `Alt` / `B` |
 | `outputs/traveler-model.md` | C12 | 1 | `[DERIVED]` projection; the desire-overlap signal |
-| `outputs/event-status.md` | C13 | 1 | all four status values; opaque day-independent Event ID; derived needs-booking |
+| `outputs/event-status.md` | C13 | 1 | all four status values; opaque day-independent Event ID; derived needs-booking; the structured `Time` the change summary compares, including the one declared-absence row |
 | `outputs/satisfaction-metrics.md` | C14 | 1 | the one declared non-scalar (`writer: [hub, validator]`); section ownership; the six dimensions with their types |
 | `outputs/final-itinerary.md` | C15 | 2 | `versioned`, current pass; the hub's own prose day shape, carrying **no** ID or key column — the one-way join § 4.5 records as a cost |
 | `outputs/final-itinerary-v1.md` | C16 | 1 | the frozen sibling as its **own class**, `publish: internal` where C15 is `bound` |
 | `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body; the validator's own seventeen sections and its three-value severity scale; a check that cannot run **declared**, never passed |
 | `outputs/rooftop-sunset-bars.md` | C18 | 2 | the residual class, resolved by longest-literal-pattern-wins |
+| `outputs/change-summary.md` | C20 | 1 | `accumulate-append` keeping a decided entry beside an undecided one; the keyed four-bucket difference and the unkeyed removal it cannot see; the one per-class field, `status` |
 
 ## Depth
 
 **This fixture is deliberately uneven, on a declared rule rather than by accident.**
-Reproducing a full worked example for nineteen classes would put a second copy of
+Reproducing a full worked example for twenty classes would put a second copy of
 `examples/tokyo-2026/` in the repository, and a second copy is a second thing to
 keep true.
 

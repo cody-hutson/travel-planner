@@ -16,6 +16,11 @@
 #        present and singular, and the corpus in BIJECTION with the document's in-model
 #        enumeration. The class list is READ FROM the document; neither this suite nor
 #        the validator holds a copy of it.
+#   HC   the § 1.1 heading and VA_CLASS_HEADING are ONE string with two homes, and the
+#        count INSIDE that heading equals the number of rows the validator extracts. The
+#        failure this closes is not a wrong answer but an answer over the empty set: a
+#        correct doc edit that leaves the constant behind makes va_class_rows return zero,
+#        and SC2/SC3/CA/PB/UF then all go green over nothing.
 #   XC   every selector exclusion the validator applies is declared in the architecture
 #        document, IN THE SECTION the validator names for it (S9). An exclusion is a
 #        statement about what the gate does not adjudicate, so an undeclared one is the
@@ -182,6 +187,78 @@ if [ "$SC_NFILES" -eq "$SC_NCLASS" ]; then
   PASS "SC3: the corpus and the enumeration are the same size ($SC_NFILES = $SC_NCLASS) — stated as an observed equality, with SC2's bijection check as the assertion behind it"
 else
   FAIL "SC3: $SC_NFILES schema files against $SC_NCLASS declared classes"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────────
+echo
+echo "HC — the § 1.1 heading and the constant that matches it are ONE string"
+# ─────────────────────────────────────────────────────────────────────────────────
+# ── THE COUPLING, AND WHY ITS FAILURE MODE IS WORSE THAN A RED ARM ───────────────
+# scripts/validate-artifacts.sh pins VA_CLASS_HEADING to the § 1.1 heading INCLUDING its
+# literal class count, and va_class_rows consumes it as `awk -v heading=` with
+# `index($0, heading) == 1`. The doc heading and that constant are therefore ONE STRING
+# WITH TWO HOMES, and nothing held them together: adding a class and correctly updating
+# the document — the obvious, careful edit — makes the constant match no line at all,
+# va_class_rows returns ZERO rows, and SC0 fails while SC2, SC3, CA, PB and UF all
+# evaluate over the empty set.
+#
+# That is the shape this suite refuses everywhere else: not a wrong answer, but an answer
+# computed over nothing. SC0 does catch the zero, but it catches it as a symptom one layer
+# downstream of the cause, and it cannot say WHICH of the two homes moved. These arms say
+# it, and they say it in the terms an author can act on.
+#
+# The coupling was found independently by two Stage 5 reviewers and is named in no card.
+# Adding a 20th class is what surfaced it; this group is what stops the 21st from being a
+# silent empty measurement. The GENERAL class of unguarded doc-to-code couplings is routed
+# to intake rather than solved here — this group closes the one instance the corpus has.
+
+# HC1 — the two homes are the same string. Read from the document by SHAPE (a line that
+# BEGINS with the constant, which is index()==1's own semantics) and never by re-spelling
+# the heading here: a copy in this file would be a THIRD home, green while the other two
+# drifted apart from each other.
+hc_lines="$(awk -v h="$VA_CLASS_HEADING" 'index($0, h) == 1 { c++ } END { print c + 0 }' "$ROOT/$VA_ARCH_DOC")"
+if [ "$hc_lines" -eq 1 ]; then
+  PASS "HC1: VA_CLASS_HEADING matches exactly one line of $VA_ARCH_DOC — the constant and the heading are one string, held by this arm rather than by memory"
+else
+  FAIL "HC1: VA_CLASS_HEADING matches $hc_lines line(s) of $VA_ARCH_DOC, expected exactly 1 — at 0 the constant was left behind by a document edit and va_class_rows returns ZERO rows, at 2+ the heading is not unique and rows are read from more than one section"
+fi
+
+# HC1-CTL — MUST FIRE. HC1 is a comparison against a document, so a probe that could not
+# see a mismatch would report the same green. One character is changed in the constant and
+# the same awk must then find nothing.
+hc_mut="${VA_CLASS_HEADING}zzqx7"
+hc_mut_lines="$(awk -v h="$hc_mut" 'index($0, h) == 1 { c++ } END { print c + 0 }' "$ROOT/$VA_ARCH_DOC")"
+if [ "$hc_mut_lines" -eq 0 ]; then
+  PASS "HC1-CTL: MUST FIRE — a one-token mutation of the constant matches no line (0), so HC1's match is a measurement and not an artefact of the probe"
+else
+  FAIL "HC1-CTL: MUST FIRE — a deliberately wrong heading still matched $hc_mut_lines line(s); HC1 cannot distinguish agreement from a broken probe"
+fi
+
+# HC2 — the COUNT INSIDE the heading equals the number of rows the validator extracts.
+# HC1 proves the two homes agree with each other; it does not prove either of them is
+# TRUE. A heading reading (19) above twenty rows would satisfy HC1 perfectly, with the
+# constant faithfully matching a document that misstates its own enumeration — and § 1's
+# prose count, § 4.4's range and § 7.6's arithmetic are all read against that number.
+hc_declared="$(printf '%s' "$VA_CLASS_HEADING" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')"
+if [ -n "$hc_declared" ] && [ "$hc_declared" -eq "$SC_NCLASS" ]; then
+  PASS "HC2: the heading declares $hc_declared in-model classes and va_class_rows extracts $SC_NCLASS — the literal count is the row count, not a number that once was"
+else
+  FAIL "HC2: the heading declares '${hc_declared:-<no count found>}' in-model classes but va_class_rows extracts $SC_NCLASS — one of the two moved without the other"
+fi
+
+# HC2-CTL — MUST FIRE. Comparing SC_NCLASS+1 against SC_NCLASS would be arithmetic, not a
+# control: it is true whatever the extractor does, so it would pass over a `sed` that had
+# stopped reading the string at all. The real question is whether hc_declared TRACKS the
+# heading it is given, so the extractor is re-run over a heading DERIVED from the live one
+# with a different count substituted in — no second copy of the heading text is spelled
+# here — and it must read the substituted number back rather than the live one.
+hc_ctl_want=$(( SC_NCLASS + 1 ))
+hc_ctl_head="$(printf '%s' "$VA_CLASS_HEADING" | sed "s/([0-9][0-9]*)/($hc_ctl_want)/")"
+hc_ctl_got="$(printf '%s' "$hc_ctl_head" | sed -n 's/.*(\([0-9][0-9]*\)).*/\1/p')"
+if [ "$hc_ctl_got" = "$hc_ctl_want" ] && [ "$hc_ctl_got" -ne "$SC_NCLASS" ]; then
+  PASS "HC2-CTL: MUST FIRE — the same extractor reads $hc_ctl_got from a heading declaring $hc_ctl_want, a value different from the live $SC_NCLASS, so HC2 reads the count OUT OF the string rather than reporting a fixed number"
+else
+  FAIL "HC2-CTL: MUST FIRE — the extractor returned '${hc_ctl_got:-<empty>}' for a heading declaring $hc_ctl_want; HC2's equality is not reading the heading and grades nothing"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -910,7 +987,7 @@ fi
 #
 # ── `writer` IS DELIBERATELY NOT COMPARED, AND THE OMISSION IS MEASURED ──────────
 # § 1.1 states the writer as PROSE carrying qualifiers, while the frontmatter states a token
-# or an inline list. Two of the eighteen witnessed classes are correct AND unequal by
+# or an inline list. Two of the nineteen witnessed classes are correct AND unequal by
 # design: the section-owned class renders as a two-writer prose phrase against a two-value
 # list, and the residual targeted-research class names its writer generically because the
 # writer varies per instance while its witness names the concrete spoke that produced it. A
@@ -918,14 +995,15 @@ fi
 # field is excluded rather than compared badly — and CA7 below reports the excluded count as
 # a measurement so the exclusion is never silent.
 #
-# ── THE WITNESS DENOMINATOR IS 18, NOT 19, AND THAT IS CORRECT ───────────────────
+# ── THE WITNESS DENOMINATOR IS 19, NOT 20, AND THAT IS CORRECT ───────────────────
 # One class — C19 — declares `no-witness-because:` instead of a witness. Its absence from the
 # fourth home is the coverage declaration working, not a gap, so it is excluded from the
 # witness comparison BY ITS OWN DECLARATION (read from CV_NOWITNESS_IDS) rather than by
 # arithmetic. A class that declared NEITHER branch would fall out of both sets, which is why
 # CA6 asserts the two partitions close on the class enumeration. The denominator moved 17 -> 18
-# when C6 gained a tracked witness outside the frozen fixture; it is read live from the corpus
-# here, so this comment is the only thing that had to move with it.
+# when C6 gained a tracked witness outside the frozen fixture, and 18 -> 19 when C20 arrived
+# with one; it is read live from the corpus here, so this comment is the only thing that had
+# to move with it.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "CA — the class-assignment homes agree (§ 1.1 · § 6 · § 9 · the witness frontmatter)"

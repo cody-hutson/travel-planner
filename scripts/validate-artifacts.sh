@@ -101,7 +101,7 @@ examples/*/README.md|examples/*/README.md|### 1.3 In-repo files carrying no per-
 
 VA_ARCH_DOC='reference/data-architecture.md'
 VA_SCHEMA_DIR='reference/schemas'
-VA_CLASS_HEADING='### 1.1 In-model — per-trip artifact classes (19)'
+VA_CLASS_HEADING='### 1.1 In-model — per-trip artifact classes (20)'
 # The internal record separator, named rather than written. A literal tab inside shell
 # quoting is invisible in a diff, and one editor pass that converts it to spaces would
 # silently break every field split in this file without producing an error.
