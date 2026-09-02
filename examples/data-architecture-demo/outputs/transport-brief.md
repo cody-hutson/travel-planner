@@ -16,7 +16,7 @@ generated: 2026-08-28
 
 **Depth: tier 2 — the migrated-shape minimum.** See `README.md` § *Depth*.
 `examples/tokyo-2026/outputs/transport-brief.md` is the worked example for this class's
-*content*. **Section shape is not content depth**, so the ten sections
+*content*. **Section shape is not content depth**, so the eleven sections
 `agents/04-transport.md` § *Output Format* declares are all present below, in its order
 and under its names.
 
@@ -69,6 +69,30 @@ nothing to save.
 
 Not exercised — this fixture records no fares, so there is no payment product to
 compare. On a real trip this section carries the card or app the group buys and where.
+
+### Pre-Departure Transit Familiarization
+
+Present and thin, which is the tier-2 shape rather than an omission. This is what a
+traveler reads *before* leaving: § *Payment & Transit Card Setup* above holds the
+purchase procedure and § *Daily Navigation* below holds the apps and the in-trip
+mistakes, so nothing here restates either.
+
+**Fare model:** Not exercised — this fixture records no fares, so there is no zone,
+transfer window or reduced-fare rule to state. On a real trip this carries the mental
+model: how a fare is computed, and what forfeits a transfer.
+
+**Conventions & etiquette:** Not exercised as destination research. The one movement
+constraint this plan does carry is stated where it binds — the `HC-1` walkability
+requirement in *Daily Navigation* below — rather than duplicated here.
+
+**Primer resources:** Not exercised. The shape a real brief carries is one line per item,
+and **external links are not reproduced** — `README.md` § *Depth* excludes them from the
+tier-2 minimum, so these carry the entry shape and no live URL.
+
+- [Publisher's own "how to ride" page] — [Transit authority] · [web, ~5 min] — [ticket
+  types and the validation rule]
+- [Short system explainer] — [Named publisher] · [video, ~6 min] — [what the lines are
+  and how they interchange]
 
 ### Pass Assessment
 
