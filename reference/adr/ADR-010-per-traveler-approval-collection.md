@@ -1,8 +1,8 @@
 # ADR-010: Per-traveler approval collection — transport over server, the attestation ceiling, and the unnamed channel
 
-- **Status:** Proposed (2026-09-01). Ratification is this release's design gate. The two-step is the
-  one this corpus already uses: `ADR-006` and `ADR-007` each landed `Proposed` and were flipped to
-  `Accepted` by a later ratifying commit.
+- **Status:** Accepted (2026-09-02). Landed `Proposed` (2026-09-01) and ratified here, by the
+  two-step this corpus already uses: `ADR-006` and `ADR-007` each landed `Proposed` and were
+  flipped to `Accepted` by a later ratifying commit.
 - **Deciders:** repo maintainer
 - **Driving work:** #88, under the group-coordination epic (#77). This record is the prerequisite
   architecture decision #88's first acceptance criterion requires, and it is that card's whole
@@ -260,12 +260,16 @@ those approvals bound are baked into the next published ciphertext.
   test — and it is a real commitment, not a detail.
 - Satisfies **detectability** without crossing Decision 4, because the published values are a count
   and a digest and neither identifies anybody.
-- **Would introduce this repository's first cryptographic surface.** Probed at this branch's head
-  across all **121** tracked files: **0** occurrences of any asymmetric-cryptography primitive
+- **Would introduce this repository's first cryptographic surface.** Probed at `326a2a1`, the
+  commit this record was added on top of — the tree as it stood before this record existed — across
+  all **121** tracked files: **0** occurrences of any asymmetric-cryptography primitive
   (`crypto.subtle`, `generateKeyPair`, `ECDSA`, `Ed25519`, `P-256`, `secp256`, `createSign`,
   `createVerify`, `importKey`, `SPKI`, `pkcs8`), against a sensitivity arm (`staticrypt`) returning
-  **28** hits in 7 files and a specificity arm returning 0. The repository's only cryptography today
-  is StatiCrypt, invoked as a tool rather than composed as a primitive.
+  **28** hits in 7 files and a specificity arm returning 0. **The anchor is that parent rather than
+  this branch's head deliberately.** At the head the same probe returns **11** — one occurrence of
+  each token listed above, every one of them inside this list — so the parent is the anchor that
+  measures the repository, and the head would measure this record quoting itself. The repository's
+  only cryptography today is StatiCrypt, invoked as a tool rather than composed as a primitive.
 - Costs **ceremony**: one enrollment per traveler per trip and one copy/paste per traveler per
   change, against `ADR-003`'s low-ceremony driver. Key custody is the traveler's browser, so cleared
   site data or a second device means re-enrolling, and no recovery path can exist — one held by the
