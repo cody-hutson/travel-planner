@@ -506,8 +506,12 @@ posture, so there is no band-against-posture ordering for you to compute:
   that makes the stated reasoning most necessary.
 - **A drop below the superseded entry is declared — Warning if it is not.** The
   research lists accumulate and never delete, so the entry the section supersedes
-  is still above it in the same file, carrying its `Price range`. Compare that
-  against the replacement's. A lower price tier **with** a stated reason on the
+  is still above it in the same file, carrying **its own money line — whichever
+  label its writing agent declares** (`**Price:**` in `outputs/food-list.md`,
+  `**Price range:**` in `outputs/nightlife-list.md`). Read the label the entry
+  carries rather than one spelling: the labels differ per class by their prompts'
+  own declarations, and a check keyed to a single spelling reads one list and
+  silently skips the other. Compare that against the replacement's. A lower price tier **with** a stated reason on the
   entry is correct and is **not** a finding — report it as declared. A lower
   price tier carrying **no** stated reason is a **Warning**: cite both, the
   event, and the day.

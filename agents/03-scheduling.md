@@ -501,10 +501,18 @@ continues the numbering, and neither is stable. That is the same reason
 evidence" refuses a file-scoped ordinal as an entry key. Keep `Day [N]` on the line
 where it reads well; the key is the date.
 
-**Nothing else goes in the marker** — no energy level, no day type, no zone, no
-presence or absence list, no signal reading, no flag. Everything else about the
-entry stays in the labelled lines, in prose, exactly as they are written today.
-Full statement: `reference/schemas/scheduling-framework.md` → "The entry marker".
+**Nothing else goes in the marker but the declared cost field** — no energy level,
+no day type, no zone, no presence or absence list, no signal reading, no flag.
+Everything else about the entry stays in the labelled lines, in prose, exactly as
+they are written today. Full statement:
+`reference/schemas/scheduling-framework.md` → "The entry marker".
+
+**The cost field is admitted here and you never write it.** `reference/data-architecture.md`
+→ "The cost field — the one addition rule 2 admits" assigns that field by marker
+**form**, so every fenced class admits it — this one included. **A Day has no
+purchase**, so nothing in this file populates it: your markers carry the day key
+and nothing else, exactly as they do today. It is named here so the admission is a
+stated non-use rather than an omission a later slice reads as an oversight.
 
 **What never becomes a field.** `Rationale`, `Newness note`, `Arc placement`,
 `Rest floor`, `Needs guardrail`, `Slack allocation`, the `Compared alternative

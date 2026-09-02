@@ -333,10 +333,18 @@ The marker is what **selects** an entry. It is a fence rather than a heading
 because not every `###` heading here is an entry, and rather than an entry number
 because this file carries none and its sibling `outputs/food-list.md` does — one
 lifecycle, two entry shapes, so no positional convention is correct across both.
-**Nothing else goes in the marker** — no name, no zone, no duration, no bailout
-venue, no judgement. Everything else about the entry stays in the labelled lines
-above, in prose, exactly as they are written today. Full statement:
-`reference/schemas/activities-list.md` → "The entry marker".
+**Nothing else goes in the marker but the declared cost field** — no name, no
+zone, no duration, no bailout venue, no judgement. Everything else about the entry
+stays in the labelled lines above, in prose, exactly as they are written today.
+Full statement: `reference/schemas/activities-list.md` → "The entry marker".
+
+**The cost field, and it is optional.** `reference/data-architecture.md` → "The cost
+field — the one addition rule 2 admits" amended the marker rule to admit one
+`cost: <amount> <currency> <basis>` line below the key. **You do not emit it yet** —
+this prompt is unchanged in what it writes, and it declares no money label in the
+entry surface above, so a marker with no `cost:` line is the correct output today.
+It is described here so an entry you meet carrying one is read rather than treated
+as out of grammar.
 
 **One entry per place.** Before writing, resolve your own list to distinct places.
 A place you have already entered is **cross-referenced from the earlier entry,

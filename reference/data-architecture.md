@@ -34,15 +34,15 @@ optimization, and no control flow — see *What This Document Does Not Define*.
 
 ## 1. The Artifact Classes
 
-The enumeration is **closed at 26**: 20 in-model per-trip artifact classes, and 6 classes explicitly
+The enumeration is **closed at 27**: 21 in-model per-trip artifact classes, and 6 classes explicitly
 declared out of the model. Every class has a target state **or** a stated out-of-model disposition.
 Declaring a class out is a valid outcome; leaving one unmentioned is not.
 
-**Class identifiers are written `C1` … `C26`** and are used throughout this document to refer to a
+**Class identifiers are written `C1` … `C27`** and are used throughout this document to refer to a
 row of the enumeration below. `W` = the single writer · `L` = lifecycle class (§ 6) ·
 `Prov` = provenance (§ 4.4) · `P` = publishability class (§ 5.1).
 
-### 1.1 In-model — per-trip artifact classes (20)
+### 1.1 In-model — per-trip artifact classes (21)
 
 | C | Class | W (exactly one) | L | Prov | P | Primary entities |
 |---|---|---|---|---|---|---|
@@ -66,6 +66,20 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 18 | `outputs/<slug>.md` — targeted-research output | the spoke that re-ran | `accumulate-append` | `researched` | `internal` | Venue, Candidate |
 | 19 | `outputs/<destination>-travel-site.html` | `site-build` | `output` | `derived` | **`output`** | (render of C1, C10, C11, C13, C15) |
 | 20 | `outputs/change-summary.md` | hub | `accumulate-append` | `derived` | `internal` | Venue, Event, Day |
+| 21 | `outputs/cost-estimate.md` | hub | `rebuilt-each-synthesis` | `derived` | `internal` | Traveler, Venue, Leg |
+
+**C21 is added here, and two nearer homes were rejected rather than not considered.**
+`outputs/cost-estimate.md` is the per-traveler cost projection; `reference/adr/ADR-011-per-traveler-cost-estimation.md`
+is authoritative for the decision and this row is its shape. **C14 `outputs/satisfaction-metrics.md`
+was rejected** because its `publish:` class is `internal-hard` — never rendered *in any form,
+including anonymized* (§ 5.1) — and a cost figure a traveller may be shown cannot live inside a
+class whose whole declaration is that its values may not be shown. Folding cost into C14 would have
+forced either a widening of `internal-hard` or a per-field exception inside it, and § 5.1 admits
+neither. **C15 `outputs/final-itinerary.md` was rejected** because it is `publish: bound` and
+`versioned`: a cost estimate placed there would reach a rendered page by its host's class, and it
+would freeze into every `final-itinerary-v<N>.md` sibling — pinning a derived projection that holds
+no independent state into an artifact whose lifecycle exists to preserve state. A separate
+`rebuilt-each-synthesis` class is what keeps the projection regenerable and off the page.
 
 **C17 gains its first declared lifecycle here.** `outputs/validation-report.md` had no lifecycle anywhere in
 the corpus. It is `rebuilt-each-synthesis` because a finding against a superseded itinerary is noise,
@@ -77,12 +91,12 @@ this document no in-model class is.
 
 | C | Class | Disposition |
 |---|---|---|
-| 21 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
-| 22 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
-| 23 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
-| 24 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
-| 25 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
-| 26 | `.publish/` | **OUT — publish staging clone** (it contains its own `.git`). Never traversed by any selector. |
+| 22 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
+| 23 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
+| 24 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
+| 25 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
+| 26 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
+| 27 | `.publish/` | **OUT — publish staging clone** (it contains its own `.git`). Never traversed by any selector. |
 
 ### 1.3 In-repo files carrying no per-trip class
 
@@ -238,7 +252,8 @@ one of those markers reads `venue: unminted` — the declared absence § 8 recor
 
 **The grounding is a distinction this document already draws.** The entry marker is the
 entry-scoped member of the class § 4.5 rule 2 defines — a declared machine-readable block carrying
-the entity key and nothing else — and § 7.6 already separates that class from accumulated prose: a
+the entity key, and in the fenced form the optional cost field § 4.5.1 admits, and nothing else —
+and § 7.6 already separates that class from accumulated prose: a
 frontmatter block is *upgraded in place* on the next write, while **body entries are never
 rewritten**. Resolving a marker is the first of those two acts performed at entry scope, by the
 file's single writer. **One writer per file is preserved and the append guarantee is untouched:**
@@ -321,7 +336,7 @@ rule keys on — **is not copied into frontmatter.** This is `reference/data-mod
 copy — one source per fact* rule extended to the serialization axis, and it is what keeps a migrated
 artifact from acquiring two owners for one fact.
 
-### 4.4 Universal frontmatter — every in-model class (C1–C20)
+### 4.4 Universal frontmatter — every in-model class (C1–C21)
 
 ```yaml
 ---
@@ -465,8 +480,14 @@ Only three, because over-structuring is the named risk.
 nothing existing moves.
 
 **Rule 2 — entry-bearing classes carry an explicit entry marker**, because heading level is not a
-reliable selector (§ 3.3). **The marker carries the entity key and nothing else**; the entry's prose
-is untouched.
+reliable selector (§ 3.3). **The marker carries the entity key, and — in the fenced form only — an
+optional normalized cost. Nothing else**; the entry's prose is untouched.
+
+**The cost field is an amendment to this rule, and it is the one field the key has ever admitted
+company from.** It is decided in `reference/adr/ADR-011-per-traveler-cost-estimation.md` and its
+grammar is § 4.5.1 below. Until that record, this rule read *the marker carries the entity key and
+nothing else*; the sentence above is the amended form and the schemas and prompts that restated the
+old one are reconciled to it.
 
 The entry-bearing set is nine classes, and it takes **two marker forms** because the classes have two
 shapes:
@@ -476,9 +497,14 @@ shapes:
 | **A fenced `artifact-entry` block** carrying the key | C5, C6, C7, C8, C9, C18 | These are prose-shaped: entries are headings and paragraphs, so there is no column to declare. A fence is the only marker that attaches a key to a prose entry without restructuring it. |
 | **A declared key column** in the entry table | C10, C11, C13 | These are table-shaped, and the repo already does exactly this — `outputs/event-status.md` declares an `Event ID` column as its cross-run join key. A fenced block per row would restructure a table for no gain, and the per-class frontmatter grammar is scalar-only, so the key cannot be hoisted out of the table into the fence. |
 
-Both forms satisfy the rule's wording — *the marker carries the entity key and nothing else*. The
-`artifact-entry` fence info-string is shared with the venue-identity migration, which owns it; where
-the two disagree on the fence's exact info-string, **the venue-identity definition wins.**
+Both forms satisfy the rule's wording, and the amendment above is why the two now differ in what
+they admit. **The fenced form admits the optional cost field; the declared-key-column form does
+not**, and that asymmetry is decided rather than incidental: a table already has columns, so a cost
+belonging to a table-shaped class is a column of that table and needs no marker grammar to carry it.
+C10, C11 and C13 are untouched by § 4.5.1. The `artifact-entry` fence info-string is shared with the
+venue-identity migration, which owns it; where the two disagree on the fence's exact info-string,
+**the venue-identity definition wins.** **§ 4.5.1 changes no info-string**: a cost line sits *inside*
+the fence, and the fence's opening token is the venue-identity migration's to set.
 
 **Two cases fall outside both forms, and the disposition is that they carry no marker.** Each was
 raised by the migration slice that met it and routed here rather than decided there. Silence would
@@ -511,6 +537,93 @@ entry with **no source** — the field-label surface exists whether populated or
 traveler's entry in C12 carries the same field labels as a populated one, with declared-absent
 values, so a consumer reads *unknown* rather than inferring from a missing label.
 
+#### 4.5.1 The cost field — the one addition rule 2 admits
+
+**Grammar.** One optional line inside the `artifact-entry` fence, below the key line:
+
+```artifact-entry
+venue: ven-<token>
+cost: <amount> <currency> <basis>
+```
+
+| Part | Domain | Meaning |
+|---|---|---|
+| `amount` | a non-negative integer | The **low bound** where the entry's prose carries a range, and the point value where it carries one. Minor units are not carried; a value is rounded down to the whole major unit. |
+| `currency` | an ISO 4217 alpha-3 code | The currency the prose states, never a conversion. A converted figure is a second value with a rate and a date behind it, and neither has a home here. |
+| `basis` | `per-person` \| `group-total` | The two bases the corpus already writes. `agents/04-transport.md` § *Output Format* emits `[Local] / [USD] per person, [Local] / [USD] group total` on every stream, so the enum is read off the corpus rather than minted for it. |
+
+**The degenerate case is `cost: undetermined`** — rule 3 applies to this field as it does to every
+other. An entry whose prose carries no money value, or carries one the grammar above cannot
+normalize, declares the absence rather than omitting the line **once the entry's writer has begun
+emitting the field at all**; a marker written before that emitter exists carries no `cost:` line, and
+that is the field being optional rather than an absence being declared. A reader distinguishes the
+two: **no line** means *this writer does not yet emit cost*, and `undetermined` means *this writer
+looked and found nothing normalizable*. Collapsing them would destroy at entry scope exactly the
+distinction § 5.4 protects at artifact scope.
+
+**Why this is not a second home for a value that already exists (§ 4.3).** The entry's prose money
+line — `**Price:**` in C6, `**Price range:**` in C7, `**Cost:**` in C9 — is retained unchanged, and
+rule 1 forbids moving it. The two are not the same value: the prose line carries a **range in a
+local currency with a human unit and any caveat the writer attached**, and the marker carries a
+**single normalized scalar with a declared basis**. The marker is derivable from the prose and the
+prose is not derivable from the marker, so the marker is a projection and the prose remains the
+master. **That they correspond is a declared gap**, in the same terms and for the same reason § 4.4
+declares it of the inline provenance marks against the `provenance:` key: no file in this repository
+reads a prose money line against a `cost:` value, and none is added here. A correspondence assertion,
+when one ships, reaches only the entries that carry both.
+
+**Which classes admit the field, and it is decided by form and not by a roster.** Every class in the
+**fenced** row of the table above — C5, C6, C7, C8, C9, C18 — admits it. The alternative was to admit
+it only in the four classes whose prompts declare a money label today (C5's does not; C6's, C7's and
+C9's do), and that was rejected: § 4.5 assigns a marker form **per class shape**, and a cost carve-out
+keyed on which classes happen to be priced would be the first per-class exception in a rule whose
+whole construction is form-scoped. It would also need a maintained roster of the priced set — a
+second home for a fact § 1.1's own Primary-entities column already carries, which § 4.3 forbids.
+**C18 decides it on its own:** it is the residual class, the arm that gives any `outputs/*.md` no
+named class claims a schema to resolve against, so a residual admitting *less* than the classes it
+stands in for would put a targeted re-run of the food agent — writing exactly the shape C6 writes —
+out of grammar at the one moment the residual exists to catch it.
+
+**Admission is not obligation, and no prompt gains a cost line in this change.** `agents/03-scheduling.md`
+and the targeted-research spokes are untouched; a Day has no purchase, so C8's field is admitted and
+unexercised. That is the intended state: the grammar is uniform, and what a writer emits is the
+writer's own declaration.
+
+**The estimate's denominator is computed, never enumerated.** C21 ranges over the entries of every
+class whose § 1.1 **Primary entities** cell names `Venue` or `Leg` — which resolves today to C5, C6,
+C7, C9 and C18, and excludes C8, whose entities are Day, Block and Signal. Reading the set out of the
+column that already holds it is the same move § 5.3 makes for the non-publishable class and the
+schema README makes for the selector: a class that later gains a priced entity enters the denominator
+without an edit here, and one that loses it leaves.
+
+**The denominator is defined independently of whether a cost line is present, and that is the whole
+point.** If M were *the entries carrying a `cost:` line*, then N = M by construction and the coverage
+ratio would be 1 on every run — a measurement of nothing, reported as complete coverage. So M is the
+count of entries that **may** carry one and N is the count that **do**, and C21 states both.
+
+**That argument is not new here, and the corpus already runs it one scope down.**
+`agents/06-validator.md` § *Marker coverage* fixes its own `E of T` the same way and says why in
+terms: `T` is the count of fenced `artifact-entry` blocks, never the count of entries carrying the
+line, because *"were T instead the count of entries carrying an eligibility line, E and T would be
+equal by construction, the ratio would read `T of T` on every file, and a missing line would make the
+coverage read better rather than worse."* **M is counted the same way and for the same reason —
+markers, never `###` headings and never ordinals** — so a class's two coverage measurements agree on
+what an entry is.
+
+**Three limbs, and the third is the one that argument also supplies.** N = 0 ⇒ the estimate renders
+`undetermined` and no total. `0 < N < M` ⇒ it renders a total **carrying its own `N of M` coverage**,
+never presented as complete. And **where a file carries entries but no markers at all, M is not
+measurable — the estimate renders `undetermined` and names the condition, never `0 of 0`**, which is
+the validator's `unverifiable` limb applied here. That limb is reachable rather than theoretical:
+under § 7.2's tolerant read a pre-migration artifact in a user's git-ignored `trips/` carries no
+markers at all, and `examples/tokyo-2026/` is pinned by § 10 and asserted by group `FW`, so its
+entries can never gain them.
+
+An estimate that answered any of the three with a total of `0` would report *this trip costs nothing*
+where the truth is *nothing was readable* — the parsed-and-empty versus could-not-be-computed
+distinction § 5.4 protects one layer down, met again here.
+`reference/schemas/cost-estimate.md` is where all three are a schema rather than a paragraph.
+
 ---
 
 ## 5. Publishability
@@ -539,7 +652,7 @@ values, so a consumer reads *unknown* rather than inferring from a missing label
 ### 5.2 Field classification
 
 A field is `publishable` (the default) or `non-publishable`. **The schema half is a declared gap:**
-the token `non-publishable` occurs zero times across the twenty-one files in `reference/schemas/`, that
+the token `non-publishable` occurs zero times across the twenty-two files in `reference/schemas/`, that
 directory's fence grammar is explicitly closed so a schema cannot express the marking, and no
 enforcement file reads it. What shipped is the repo-side fence at § 5.6, and it does **not**
 inherit — it carries one row per field *per artifact scope*, so a passport value is non-publishable
@@ -656,7 +769,7 @@ statement is a **live input**, not a leftover: this section's own absence rule b
 roster rows it leaves in the accumulating default. Where the two overlap, the tokens and
 definitions above govern.
 
-**What is not a restatement, and what is.** The twenty per-class schemas in `reference/schemas/`
+**What is not a restatement, and what is.** The twenty-one per-class schemas in `reference/schemas/`
 each carry `field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]`
 — the identical five-value **value domain**, a vocabulary constraint rather than a per-class
 assignment, so no schema restates this section (each says the same of `writer:` in terms: *typed,
@@ -668,7 +781,7 @@ membership disclaimer § 7.6 already carries.
 | Canonical token | Definition | Members |
 |---|---|---|
 | `accumulate-append` | Each re-run **appends** a new dated section; nothing is deleted. The full accumulated file is what downstream reads. | C2, C5, C6, C7, C8, C9, C18, C20 |
-| `rebuilt-each-synthesis` | Regenerated from scratch each synthesis pass from authoritative inputs. Safe to regenerate because it holds no independent state. | C4, C10, C11, C12, C14, C17 |
+| `rebuilt-each-synthesis` | Regenerated from scratch each synthesis pass from authoritative inputs. Safe to regenerate because it holds no independent state. | C4, C10, C11, C12, C14, C17, C21 |
 | `versioned` | Each synthesis produces a new numbered version; prior versions are preserved as sibling files. | C15, C16 |
 | `persist-mutable` | A single file, updated **in place**, that survives every re-run. Synthesis *reads* it and never regenerates it. Not append-only: a row is deleted in the one case where its subject is removed, so no ghost row lingers. | C1, C3, C13 |
 | `output` | A render, not a lifecycle-managed source. Rebuilt from the artifacts it renders; never read back as a source. | C19 |
@@ -804,17 +917,23 @@ working directory, after it is already done.
 
 **Most of this requirement is already discharged by § 6, and the residue is smaller than it looks.**
 An artifact does not need a migration pass to reach the current version if its own lifecycle
-regenerates it. Partitioning the 20 in-model classes by § 6 membership:
+regenerates it. Partitioning the 21 in-model classes by § 6 membership:
 
 | Upgrade burden | Which lifecycle classes | Count | Mechanism |
 |---|---|---|---|
-| **None — self-upgrading by construction** | `rebuilt-each-synthesis` · `versioned` · `output` | **9** | All three rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
+| **None — self-upgrading by construction** | `rebuilt-each-synthesis` · `versioned` · `output` | **10** | All three rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
 | **Writer-upgraded, in place** | `persist-mutable` · `accumulate-append` — **less the four classes named in the two rows below** | **7** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
 | **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md`, the one human-authored `persist-mutable` class | **1** | **Never engine-upgraded. This is a rule, not an omission.** |
 | **No emitting writer — the upgrade has nobody to perform it** | C1 `trip-context.md` · C2 `trip-log.md` · C18 `outputs/<slug>.md` | **3** | **A declared gap, not a mechanism.** The writer-upgraded row assigns the upgrade to *the owning writer*; these three have no writer surface that emits their frontmatter block at all, so there is no next write for the upgrade to ride. Stated per class below. |
 
-**9 + 7 + 1 + 3 = 20.** No class is unaccounted for. **The upgrade is not free of the operator across
-all twenty:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
+**10 + 7 + 1 + 3 = 21.** No class is unaccounted for. **C21 lands in the first row and adds nothing to
+the residue, and its position is C18's rather than C1's.** It is `rebuilt-each-synthesis`, so on the
+first pass that writes one the instance is born at the current version and no older one is preserved
+to migrate. **No surface writes one today** — the class is declared and unproduced, exactly as C18 is
+— but the fourth row is for a class whose instances exist and have no emitter, and C21 has no
+instances at all outside its own witness. Its gap is a producer, not an upgrade. **The upgrade is not
+free of the operator across
+all twenty-one:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
 it is the only path for an instance that predates the surface that now emits each one's block at
 creation. The fourth row is where that is stated rather than assumed away.
 
@@ -947,7 +1066,7 @@ rename repairs the register rather than silently orphaning a row.
 Five known contract defects each name a model element that would prevent them. **One of the five
 shipped in this release; four did not, and this section declares them rather than continuing to
 assert them.** The `Shipped?` column is the reconciliation — it was written against a tree in which
-`reference/schemas/` held no files, and the twenty schemas that arrived later implement one row of
+`reference/schemas/` held no files, and the per-class schemas that arrived later implement one row of
 it.
 
 | Defect class | Model element that prevents it | Shipped? |
@@ -1010,8 +1129,9 @@ this document the assignment appears.
 | 18 | Same as C5–C7 | Not previously named as a class → `accumulate-append` |
 | 19 | N/A — a render | Not previously named as a class → `output` (**new class token**) |
 | 20 | n/a — post-migration class | n/a — declared `accumulate-append` at creation |
+| 21 | n/a — post-migration class | n/a — declared `rebuilt-each-synthesis` at creation |
 
-**Out-of-model classes C21–C26** carry no target state by construction; their delta is the explicit
+**Out-of-model classes C22–C27** carry no target state by construction; their delta is the explicit
 disposition in § 1.2, which is what makes them non-silent.
 
 ---
@@ -1136,7 +1256,7 @@ that document has held up.
   moves into frontmatter.
 - **Not the publish path's completeness.** Paraphrase remains out of reach (§ 5.5).
 - **No migration.** This document specifies; the migration slices migrate.
-- **Out-of-model classes C21–C26** are named and excluded, not modelled.
+- **Out-of-model classes C22–C27** are named and excluded, not modelled.
 
 ---
 

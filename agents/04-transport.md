@@ -305,10 +305,20 @@ the time you have and flag it `VERIFY`. That stream is a real record, so it is
 minted and marked like any other; what is absent is the booking, declared in the
 prose the `VERIFY` flag already governs — never a missing marker.
 
-**Nothing else goes in the marker** — no origin letter, no airport code, no mode, no
-duration, no passenger list, no cost. Everything else about the stream stays in the
-labelled lines, in prose, exactly as they are written today. Full statement:
-`reference/schemas/transport-brief.md` → "The entry marker".
+**Nothing else goes in the marker but the declared cost field** — no origin letter,
+no airport code, no mode, no duration, no passenger list. Everything else about the
+stream stays in the labelled lines, in prose, exactly as they are written today. Full
+statement: `reference/schemas/transport-brief.md` → "The entry marker".
+
+**The cost field, and it is optional.** `reference/data-architecture.md` → "The cost
+field — the one addition rule 2 admits" amended the marker rule to admit one
+`cost: <amount> <currency> <basis>` line below the key, where `basis` is
+`per-person` or `group-total`. **You do not emit it yet** — this prompt is unchanged
+in what it writes, and a marker with no `cost:` line is the correct output today.
+The line is described here so that a stream you meet carrying one is read rather
+than treated as out of grammar. **Your `**Cost:**` prose line is unaffected and stays
+the master**: it carries both bases with whatever caveat the estimate needs, and the
+marker's scalar would be a low-bound projection of it, never a replacement.
 
 **What never becomes a field.** `Rationale`, `What goes wrong if wrong choice made`,
 `Buffer rationale`, `Luggage handling`, `Group suitability`, the `Alternative`'s

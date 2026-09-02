@@ -26,7 +26,9 @@ entry marker is a **declared key column** rather than a fenced block — the sam
 `outputs/event-status.md` already uses for `Event ID`. The prose-shaped research
 classes (C5, C7, C9, C18) carry their own key in an `artifact-entry` fence instead,
 and carry it **one pass late**. Two marker forms, one rule: the marker carries the
-entity key and nothing else.
+entity key — and, in the fenced form only, one optional `cost:` line, which
+§ 4.5.1 admits and this table's declared-key-column form does not. A table already
+has columns, so a cost belonging to a table-shaped class is a column of it.
 
 **The rule:** no venue appears as an anchor on one day and an alternative on another,
 and no venue exceeds **2 appearances** in total.
