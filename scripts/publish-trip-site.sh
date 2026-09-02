@@ -1631,7 +1631,13 @@ _digest_of() { # (stdin) -> one stable identity token
 # The output is byte-identical to the pipeline it replaces for every input the
 # projection can take: command substitution strips trailing newlines, which
 # `tr -s '[:space:]' ' '` followed by `sed 's/ *$//'` had already collapsed and
-# trimmed. Existing .published-itinerary sidecars keep matching.
+# trimmed. That claim is about THIS function's shape and is unaffected by the comment
+# excision added to strip_to_itinerary_text afterwards — which does move the token on a
+# comment-bearing render, once. No published trip is exposed to that: the sidecar, the
+# gate and the projection all arrive in the same unreleased milestone, so there is no
+# baseline recorded under the earlier projection anywhere outside this branch. A sidecar
+# written by an earlier commit OF this branch does not match and re-anchors on the next
+# confirmed republish — fail-closed, and the only direction it could go.
 itinerary_digest() { # <html_file> -> identity token, or nothing
   [ -r "${1:-}" ] || return 0
   local text
