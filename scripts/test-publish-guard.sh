@@ -1535,10 +1535,10 @@ if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the valu
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group S (#552 AC 5) — the organizer-confirm gate on the republish path
 #
-# GROUP LETTER. The #700 design specified `R`, measured before #550 landed; #550 then
-# took `R` for the change-summary content guard. `S` is the next free letter under the
-# design's own rule — the monotonic sequence with `P` skipped, because `P` collides on
-# prefix with the existing two-letter group `PF`.
+# GROUP LETTER. This group's design specified `R`, chosen when `R` was the next free
+# letter; #550 then took it for the change-summary content guard. `S` is the next free
+# letter under the same rule — the monotonic sequence with `P` skipped, because `P`
+# collides on prefix with the existing two-letter group `PF`.
 #
 # WHAT THIS GROUP GRADES, and why it is keyed the way it is. ADR-002 Decision 2 permits
 # only a city-ambient client-side fetch, so every coordination marker lives inside the
