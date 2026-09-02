@@ -1799,6 +1799,128 @@ else
   FAIL "R6f: a key mutation reported DROPPED=$R6KD ADDED=$R6KA MOVED=$R6KM, not the 1/1/0 that distinguishes a re-identification from a re-timing — R6e cannot be read as evidence"
 fi
 
+# ── Group R, Stage 9 pre-merge (#550 AC 5) — the OTHER member of the class ───
+#
+# NOT A REMEDIATION, and the distinction matters to how a failure here is read. Nothing
+# below fixes a defect: R7 exercises behaviour believed correct and never exercised, so
+# it is expected to PASS on its first run. A failure would be a Stage 9 finding about
+# what the release actually enforces, not a bug to repair in place.
+#
+# WHAT R1-R5 LEFT UNGRADED. AC 5 binds the summary against the ADR-008 non-publishable
+# class, and reference/data-architecture.md § 5.6 declares that class as three rows over
+# TWO members: `Passport`, on the profile and derived-model scopes, and the
+# `[THIRD-PARTY]` entry mark on the derived model. R1-R5's fixture carries a `Passport`
+# line and nothing else, so every verdict above is about one of the two. R0 asserts the
+# class is non-empty, which is the arm that keeps those verdicts from being vacuous — but
+# non-empty is not complete, and one populated record is what it takes to satisfy it.
+#
+# WHY THE GAP IS NOT COSMETIC, and it is a property of the DECLARATION rather than of the
+# fixture. The two members do not travel the same code path:
+#   • `Passport` declares rule `conjunctive`, which is the ONLY branch of _guard_match
+#     that reads blk[]. R5 grades the markdown block sentinel, so R5 grades it for that
+#     member alone.
+#   • `[THIRD-PARTY]` declares `by-wordcount`, which rule_for resolves to `phrase` or
+#     `token` at emission time against the VALUE. Neither branch reads blk[] at all, so
+#     the sentinel R5 validates is INERT for exactly this member and nothing above
+#     reaches its matching path.
+# It is also the member with the more elaborate parse — an entry DENYLIST read at heading
+# AND value granularity, with a supersession detector and an orphaned-mark backstop.
+# Group O grades all of that through verify_publishable_content, the HTML arm.
+# verify_summary_content consumes the SAME records through a DIFFERENT projection
+# (strip_md_to_text_blocks, not strip_to_text / strip_to_published_text), and whether the
+# records survive that projection was, until this arm, unmeasured on this side.
+#
+#   R7a  DENOMINATOR — this fixture puts an entry-limb record in class; R1-R5's does not
+#   R7b  THE SUBJECT — a third-party value carried into the summary aborts as a HIT
+#   R7c  SPECIFICITY — the summary R1 certifies clean still passes on the same fixture
+#
+# Offline like the rest of group R: fixtures under $WORK, two sourced functions, no gh,
+# no npx, no TTY, no network. It cannot reach the SKIP path.
+echo
+echo "Change-summary content guard, the [THIRD-PARTY] member (#550 AC 5):"
+
+# A SECOND fixture trip rather than another entry in $RTD. Adding a class member there
+# would change what R0-R5 measure, and R7a's denominator is precisely that the two
+# fixtures differ. The entry's shape is the derived model's own, as group O writes it:
+# the mark on the heading, a closed-enum `Category` line (schema vocabulary, not a
+# captured value — O6), a stated need line, and the Applies-to LINK that is deliberately
+# NOT a member (reference/data-model.md § Needs: "the link, never a copy").
+R7TD="$WORK/r7_trip"; mkdir -p "$R7TD/outputs"
+cat > "$R7TD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2026 [DERIVED]
+
+## Rowan
+- Passport: Irish, valid to 2027
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+- Category: mobility
+- Trigger: crowded escalators and long unbroken stair flights bring on vertigo
+- Applies to: ## Hard Constraints -> "Mobility"
+MD
+
+# R7a — THE DENOMINATOR, and it is the whole reason the arms below are here. Both counts
+# come from the SHIPPED class evaluator rather than from a grep of the fixture, so what
+# is compared is what the guard will actually be handed: R1-R5's fixture must contribute
+# NO entry-limb record — that is the coverage gap, measured rather than asserted — and
+# this one must contribute at least one carrying a rule OTHER than `conjunctive`, which
+# is what puts it on the phrase/token branches the block sentinel does not reach.
+R7RECS="$(nonpublishable_values "$R7TD" 2>/dev/null)"; R7RC=$?
+R7ERECS="$(printf '%s\n' "$R7RECS" | awk -F'\t' '$1 == "entry" { c++ } END { print c + 0 }')"
+R7ENONC="$(printf '%s\n' "$R7RECS" | awk -F'\t' '$1 == "entry" && $3 != "conjunctive" { c++ } END { print c + 0 }')"
+R7RULES="$(printf '%s\n' "$R7RECS" | awk -F'\t' '$1 == "entry" { printf "%s%s", (n++ ? " " : ""), $3 }')"
+R7OLDE="$(nonpublishable_values "$RTD" 2>/dev/null | awk -F'\t' '$1 == "entry" { c++ } END { print c + 0 }')"
+if [ "$R7RC" -ne 0 ]; then
+  FAIL "R7a: the class could not be enumerated from the third-party fixture (rc=$R7RC) — every verdict below would be over an UNDETERMINED read rather than over a class"
+elif [ "$R7OLDE" -ne 0 ]; then
+  FAIL "R7a: R1-R5's fixture now contributes $R7OLDE entry-limb record(s) — those arms are no longer scoped to the \`Passport\` member alone, so the gap this arm closes has MOVED rather than closed and R7a's denominator no longer says what it claims"
+elif [ "$R7ERECS" -ge 1 ] && [ "$R7ENONC" -ge 1 ]; then
+  PASS "R7a: DENOMINATOR — the third-party fixture puts $R7ERECS entry-limb record(s) in class carrying rule(s) [$R7RULES], $R7ENONC of them NOT \`conjunctive\`, while R1-R5's fixture contributes $R7OLDE. So R1-R5 grade one declared member and the arms below grade the other, on the phrase/token branches that read no block sentinel"
+else
+  FAIL "R7a: the third-party fixture yielded $R7ERECS entry-limb record(s), $R7ENONC of them non-conjunctive, rules [$R7RULES] — the declared entry mark did not reach the class, so an abort below would be caused by the \`Passport\` record and would prove nothing about this member"
+fi
+
+# R7b — THE SUBJECT. The third-party need value carried into the summary as free text
+# beside the derived rows. That residue is exactly what this predicate exists to grade:
+# Layer 1's derivation bound (agents/05-hub-planner.md, `publish: bound` classes only)
+# provably covers the derived ROWS and does not cover prose an agent writes around them.
+R7HIT="$WORK/r7_hit.md"; rfront "$R7HIT"
+cat >> "$R7HIT" <<'MD'
+
+## 2026-05-10 — proposed change
+
+**In plain language:** the Saturday viewpoint moved later in the afternoon.
+
+| Bucket | Key | What | Before | After |
+|--------|-----|------|--------|-------|
+| MOVED | `evt-c052` | The viewpoint | May 16 (Sat) 14:00 | May 16 (Sat) 16:30 |
+
+Note for the group: it moved because crowded escalators and long unbroken stair flights bring on vertigo.
+MD
+R7HITOK=0
+grep -qF 'crowded escalators and long unbroken stair flights bring on vertigo' "$R7HIT" && R7HITOK=1
+verify_summary_content "$R7HIT" "$R7TD" >/dev/null 2>&1; R7HRC=$?
+if [ "$R7HITOK" -ne 1 ]; then
+  FAIL "R7b: the fixture does not carry the third-party value inside one block — the verdict below would be about a summary that never held the subject"
+elif [ "$R7HRC" -eq 1 ]; then
+  PASS "R7b: a [THIRD-PARTY] need value carried into the change summary aborts as a HIT (rc=1) — AC 5 names two members of the ADR-008 class with \`or\`, and the summary guard is now measured against BOTH rather than against the one R1-R5 exercise"
+else
+  FAIL "R7b: a third-party need value carried into the summary returned rc=$R7HRC, not 1 — the summary guard enforces AC 5 for the \`Passport\` member and not for the \`[THIRD-PARTY]\` one. A third-party health need shared out of band with the group is the class this bound exists for"
+fi
+
+# R7c — SPECIFICITY. The summary R1 certifies clean against the ONE-member fixture must
+# still certify clean against the TWO-member one. Without it R7b is satisfied by a guard
+# that aborts on any summary once an entry-limb record is in class — which would make
+# every trip carrying a third-party entry unable to publish a summary at all, the
+# unusable fail-closed control ADR-008 argues against twice. Deliberately R1's own
+# artifact rather than a fresh one: what is asserted is that GROWING THE CLASS changed no
+# verdict on a correct summary, and only the same file can say that.
+verify_summary_content "$RCLEAN" "$R7TD" >/dev/null 2>&1; R7CRC=$?
+if [ "$R7CRC" -eq 0 ]; then
+  PASS "R7c: SPECIFICITY — the summary R1 certifies clean still passes (rc=0) against the fixture carrying the [THIRD-PARTY] entry, whose class holds $R7ERECS further record(s). So R7b's abort is caused by the value that was carried, not by the entry's presence in the class"
+else
+  FAIL "R7c: a clean summary returned rc=$R7CRC against the third-party fixture — the entry-limb records abort or undetermine a correct summary on their own, so R7b is not evidence and no trip carrying a third-party entry could ever publish a change summary"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group S (#552 AC 5) — the organizer-confirm gate on the republish path
 #
