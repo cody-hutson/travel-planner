@@ -932,7 +932,10 @@ constraints the hero and overview render, and no other block;
 `trips/<slug>/outputs/event-status.md` — the authoritative source
 `reference/site-layout-spec.md` § 9.1 names for booking status, *needs booking* flags,
 checklist membership and the per-card booking tiers, read because § 3 makes the site a read
-surface for status; `reference/site-layout-spec.md` — the responsive architecture, the card
+surface for status; `trips/<slug>/outputs/change-summary.md` — its artifact-level `status`
+field alone, the one input deciding the `coordination-state` this build writes, read because
+`reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for it exactly as
+the checklist is for booking status; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; the itinerary sources the
 § *Site References* table names, read as the quality bar rather than as templates;
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
@@ -950,6 +953,21 @@ verb reaches `Write` for its own output rather than for an agent's.
 preserve design tweaks already approved; `Write` is reached only where the file does not
 exist. A regenerate silently drops plan detail and approved design, which is the overwrite
 bound 5 forbids, and it takes no licence from the append shape either.
+
+**The coordination state comes from one field, and the mapping is closed.**
+`reference/schemas/travel-site.md` declares `coordination-state` and `coordination-since` on this
+build's own frontmatter, and `reference/site-layout-spec.md` § 3 declares what the render does
+with them. This verb decides only the value, and it decides it from
+`trips/<slug>/outputs/change-summary.md`'s artifact-level `status`: `pending` → `pending`, with
+`coordination-since` the date of the newest undecided entry; `confirmed` → `updated`, with
+`coordination-since` the date this build's republish lands; `rejected`, or no
+`outputs/change-summary.md` at all, → `none`, with `coordination-since` omitted. **The file's
+presence is not the signal.** That class is `accumulate-append`, so it exists from the first
+summary onward and outlives every decision recorded in it — a build reading presence would
+announce a change pending on a trip whose last change was confirmed months ago. `status` is what
+the class declares as the answer to *is a change pending for this trip?*, and it is the only
+thing read here. Where the state resolves to `none` the notice is **not emitted at all**; § 3
+states that rule and this verb does not restate it.
 
 **The round-trip completeness check, run after every build and every patch.** Every element of
 `outputs/final-itinerary.md` — **every day, and every track of a split day** — still resolves
