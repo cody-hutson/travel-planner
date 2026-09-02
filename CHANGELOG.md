@@ -3,6 +3,110 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.22.0] — 2026-09-02 — Pre-departure preparation layer
+
+The itinerary began once the traveller was settled and ended before they left. Three of the
+four gaps closed here sit in that unplanned space, and the fourth exists to stop the first
+from going stale. What the three shared is that each is work a traveller has to have done
+*before* they are moving — hold the right documents, understand how the fares work, know
+where the bags go — and the engine planned the middle of the trip as though all of it had
+somehow already happened.
+
+Luggage is what makes the two edge days hard, and the reason neither can be planned as an
+ordinary day with a flight note attached. A party that lands two hours before check-in is
+holding its bags in a lobby; a party turned out of the room six hours before its flight is
+doing the same in reverse. Both windows are bounded by values the brief already reads —
+`Check-in time:` and `Check-out time:` — and neither had ever been read against the stream's
+own arrival or departure instant.
+
+The obvious way to keep that content fresh was wrong, instructively. `ITERATION` already said
+a move updates the legs it touches and leaves *every other row of the brief standing*, which
+is exactly right for the transit matrix, where an untouched leg genuinely has not changed.
+Arrival- and departure-day content is not that kind of row: its validity depends on *which day
+is the arrival day*, so a move onto or off one stales it while touching no leg it owns. The
+rule that shipped **narrows** that sentence rather than replacing it — one named class of dated
+content re-derives, and outside it every other row still stands. The dates it keys on are a
+**set**, one per origin plus any traveller whose own window states its own, because a single
+arrival day is the assumption the brief's own **single-origin** failure mode already names.
+
+Four things are true now. The arrival and departure days are planned around the bags: a stated
+bag count, the customs and collection flow where it moves a time or a mode, and a named home
+for the luggage in each window — with a stated absence where no forwarding service exists.
+Every traveller carries a derived, dated document set determined from their own passport facet
+and the trip's destination pair, fenced by construction rather than by good intentions. A
+traveller can learn how the fare system works before departure instead of on the platform. And
+a move that lands on the arrival day, or leaves the departure day, now obliges a refresh of
+exactly the lines it invalidated.
+
+### Added
+
+- **`§ Pre-Departure Transit Familiarization` in the transport brief (class `C9`)** — the fare
+  *model* rather than the purchase steps: how fares are computed, tap-in versus
+  tap-in-and-out, the transfer window and what forfeits it, who rides reduced; three to five
+  destination-specific conventions a first-timer gets wrong; and two to four vetted primers
+  with the publisher named on every one. It cites the sections that already own the
+  obtain / load / tap sequence and the in-trip app set rather than copying them, and a
+  resource whose publisher cannot be named does not go in the list. The section carries **no
+  entry marker**, deliberately: `§ 1.1` gives this class the entities *Leg* and *Signal*, and
+  a primer is neither, so there is no key for a marker to carry.
+- **The per-traveller document set — one `- **Documents:**` line per entry on `C12`** — derived
+  from the traveller's own `Passport:` facet and the origin / destination pair, over four
+  statuses (`have`, `obtain`, `file-before-travel`, `unknown`), with an `ACTION:` prefix where
+  the derivation found a *problem* rather than a step, and a required `· checked <YYYY-MM-DD>`
+  on the same rule the corpus already puts on price and hours data: entry policy is
+  time-sensitive, and an undated derivation cannot be judged current.
+- **A publish-guard arm on the new field** — `field Documents outputs/traveler-model.md
+  conjunctive`. The privacy requirement is a declaration the guard reads, not a rule an author
+  has to remember at writing time.
+- **`The dead zone`, a transport failure mode** — routing the party to the door and stopping
+  there. The hours on either side of the room are part of the arrival and the departure day,
+  and the luggage is the reason they are hard.
+
+### Changed
+
+- **`Luggage options:` is no longer conditional.** It shipped as `[If relevant]`, and that
+  optionality is what let the departure half go unanswered on exactly the trips where it
+  mattered — the shape **"The departure afterthought"** already names. Every departure stream
+  has bags and a gap; what varies is the answer, never whether one is owed.
+- **Luggage assembly folds into `Buffer rationale:` rather than taking a label of its own.**
+  Getting a group and its cases out of a property is not instantaneous, and a buffer derived as
+  though it were is the buffer that fails.
+- **The dated and the undated halves of `C9` are separated in terms.** Per-stream arrival and
+  departure lines change when the arrival instant or the bag count changes and are executed on
+  the day; trip-level orientation is written once and read before departure. A sentence that
+  would be true for any traveller arriving any day this year is not the per-stream section's.
+  Two of this milestone's stories landed in the same class, and that boundary is what keeps
+  them from blurring into each other.
+- **The hub reads the widened `C9`.** The arrival and departure plans reach the day through
+  those days' **Transit Notes** — carried, not re-derived and not dropped, and taking no block
+  of their own. `Arrival/departure neglect` now names the bags: a day written as though the
+  room is ready on landing, or as though the luggage disappears at check-out, is the same
+  neglect wearing different clothes.
+- **`Documents:` is derived content, not a tenth lifecycle facet.** The nine facets are carried
+  through from what a traveller stated; this set is computed from their facets plus researched
+  policy. Reading it as a facet would put a derived value under a rule written for stated ones,
+  and the facet count is unchanged by it.
+
+### Fixed
+
+- **A derived requirement set could have been written about a person whose identity data was
+  never captured.** A `[THIRD-PARTY]` entry carries no `Documents:` line at all: ADR-006 grants
+  that entry exactly one class — the party member's needs — and deriving entry requirements
+  about them is precisely the capture that grant refuses. An `[OPERATOR-PROVIDED]` traveller
+  who is expected to file *does* carry the line, as `unknown` until their profile arrives.
+- **An unreconciled traveller would have read as one needing no documents.** A first-party
+  traveller with no filed profile carries the line as `unknown — no passport country on file`
+  rather than not at all, so the absence of a *requirement* stays distinguishable from the
+  absence of a *derivation*.
+- **A payload the publish guard could not see.** The whole value sits on the label's own line.
+  Rendered as a nested sub-list under `- **Documents:**`, the guard — which reads a field's
+  value from the label's line — would have read straight past it. The fail-open direction is
+  closed by shape rather than by care.
+- **The passport country and expiry date have one home, and the derivation no longer copies
+  them into a second.** The verdict is stated by reference — `passport — have (valid through
+  the required buffer)` — never by restating the values that produced it. The `§ 5.6`
+  publishability row is the backstop behind that rule, not a licence to ignore it.
+
 ## [0.21.0] — 2026-09-02 — Group coordination
 
 A plan that changes has to say so, and this release is about the three audiences it has
