@@ -41,7 +41,11 @@
 # remediation) — that strip_to_itinerary_text has ONE limb, so a failing or absent perl
 # cannot substitute a second, band-retaining projection into the digest; that the failure
 # is audible and early rather than silent; and that an empty answer means the projection
-# failed rather than that the render had no visible text.
+# failed rather than that the render had no visible text. S12 grades that projection
+# against a CONFORMANT C19 render (third remediation, SEAM-2) — that the declaration block
+# C19 carries in an HTML comment leaves the itinerary digest by construction, so neither a
+# coordination state transition nor a next-day `generated:` drift reads to the gate as an
+# itinerary change, while a real plan edit still does.
 # T = the coordination notice (#551 AC 5) — the band's IDENTITY (the class token the
 # component contract declares is the one the shipped projection excises, read from the
 # document rather than spelled here), its state VOCABULARY (the contract's variants and
@@ -2298,6 +2302,191 @@ if [ "$S11_RC_PERL" -eq 0 ] && [ "$S11_RC_NOPERL" -ne 0 ] && [ "$S11_NAMES_PERL"
   PASS "S11g: preflight passes with perl present (rc=$S11_RC_PERL, the control, so the stubs are not refusing everything) and ABORTS naming perl when it is absent (rc=$S11_RC_NOPERL) — the dependency fails early and by name, before any clone, encryption or push"
 else
   FAIL "S11g: control rc=$S11_RC_PERL, stripped-PATH rc=$S11_RC_NOPERL, message names perl=$S11_NAMES_PERL (message: ${S11_MSG_NOPERL:-none}) — preflight does not probe perl, so its absence is discovered mid-run as a projection that answers differently rather than up front as a missing dependency"
+fi
+
+# ── Group S, third remediation (#552, SEAM-2) — C19's DECLARATION BLOCK ──────
+#
+# S0–S10 grade the GATE. S11 grades the PROJECTION's single limb. S12 grades what that
+# projection does with the one construct EVERY conformant render carries and no fixture
+# in this suite had ever built.
+#
+# THE DEFECT. The projection's last limb is `s/<[^>]+>/ /g`, and it stops at the first
+# `>`. It therefore cannot collapse an HTML comment whose body contains one. C19's
+# declaration rides an `<!-- … -->` block (reference/data-architecture.md § 4.5), and its
+# `artifact:` field — `required`, per its own schema fence — carries a `>` inside
+# `outputs/<destination>-travel-site.html`. scripts/validate-artifacts.sh finding A5 holds
+# that value equal to the selecting class's own declared string, so the `>` is not an edge
+# case a render may happen to avoid: it is mandatory on every CONFORMANT render, and the
+# normal path is the broken one.
+#
+# WHAT IT COSTS, and why it is a defect rather than a preference. The block's body then
+# sits inside the itinerary digest. `generated:` sits inside the block. `generated:`
+# changes every day. So a next-day republish carrying ZERO itinerary change digests
+# differently, the gate reads "content changed", and it demands an organizer confirmation
+# for a routine rebuild. Operator decision D6 keys this gate on itinerary-CONTENT change
+# precisely so it is not keyed on publish-as-such — and a build timestamp inside "content"
+# collapses the first back toward the second. It fails CLOSED, so it is a usability and
+# semantic defect and not a leak; that is why it is repaired rather than escalated.
+#
+# THE BOUNDARY THIS RESTORES IS THE ONE THE SCRIPT ALREADY DECLARED. publish-trip-site.sh
+# states in terms, above strip_to_itinerary_text: "WHAT IS OUTSIDE THE BOUNDARY, stated
+# rather than implied: markup, HTML COMMENT BODIES, attribute values, <script> and <style>
+# bodies." The comment body was inside the digest anyway. This is conformance to a stated
+# boundary, not a new policy.
+#
+# WHY NOTHING CAUGHT IT. Every fixture that reaches this projection — s_render above,
+# t_page and t_page_pre in group T — builds no frontmatter at all, so the construct was
+# never in front of the projection. T7 built the first conformant render and MEASURED the
+# residual (T7c), correctly declining to repair a projection owned by another card. S12 is
+# that repair's grade, and T7c is re-scoped to the invariance in the same commit.
+#
+#   S12a  the whole state transition — band AND frontmatter — leaves the digest fixed
+#   S12b  `generated:` drift alone moves nothing         (the next-day republish)
+#   S12c  CONTROL — a real itinerary change still moves it
+#   S12d  the projection DIFFERS from strip_to_text on comment-bearing input and still
+#         AGREES on comment-free input                   (T4's identity, scoped)
+#
+# S12c IS WHAT MAKES a AND b MEASUREMENTS. A projection that dropped everything it was
+# given would satisfy both perfectly. Without an arm showing the same projection still
+# moves on a real plan edit, the two invariances prove nothing.
+#
+# THE FIXTURE'S `>` IS THE CORPUS'S, NOT THIS FILE'S. The artifact string is READ FROM
+# C19's schema fence below rather than spelled here — the same discipline T1 applies to
+# the class token. A fixture that spelled it would stay green through a corpus that had
+# moved the placeholder, which is the one change that would make these arms vacuous, and
+# S12a's first guard fails loudly on exactly that.
+S12_SCHEMA="$HERE/../reference/schemas/travel-site.md"
+S12_ART="$(awk -F': ' '/^artifact: / { print $2; exit }' "$S12_SCHEMA" 2>/dev/null)"
+
+# A CONFORMANT C19 render: the declaration block, then the site. Parameterised on the two
+# frontmatter coordination fields, the band, the plan text and `generated:`, so each arm
+# below varies exactly one thing and holds the rest fixed.
+s12_page() { # <file> <fm-state> <fm-since> <band-state> <plan-time> <generated>
+  local f="$1" fs="$2" fc="$3" bs="$4" tm="$5" gen="$6" band="" rule="" since=""
+  [ -z "$fc" ] || since="coordination-since: ${fc}
+"
+  if [ "$bs" != "none" ]; then
+    band="<div class=\"coord-notice is-${bs}\"><span>A change is ${bs}</span> <time>2027-06-02</time></div>
+"
+    rule=".coord-notice{background:#eee}"
+  fi
+  cat > "$f" <<HTML
+<!--
+artifact: ${S12_ART}
+schema-version: 1
+trip: porto-2027
+writer: site
+lifecycle: output
+provenance: derived
+publish: output
+generated: ${gen}
+coordination-state: ${fs}
+${since}-->
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>${rule}.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+${band}<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at ${tm}. Then the riverside walk to the bridge.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+}
+
+# The three states as a real transition moves them: the band and the frontmatter TOGETHER.
+# T7a holds the frontmatter fixed and varies only the band; T7c holds the band fixed and
+# varies only the frontmatter. Neither is the transition a trip actually undergoes.
+s12_page "$WORK/s12_st_none.html"    none    ""           none    16:30 2027-06-02
+s12_page "$WORK/s12_st_pending.html" pending 2027-05-30   pending 16:30 2027-06-02
+s12_page "$WORK/s12_st_updated.html" updated 2027-06-01   updated 16:30 2027-06-02
+# The same pending render, rebuilt the next day. NOTHING else moves.
+s12_page "$WORK/s12_gen_day2.html"   pending 2027-05-30   pending 16:30 2027-06-03
+# The same pending render with one scheduled time moved — the control.
+s12_page "$WORK/s12_plan_moved.html" pending 2027-05-30   pending 21:00 2027-06-02
+S12_DN="$(itinerary_digest "$WORK/s12_st_none.html")"
+S12_DP="$(itinerary_digest "$WORK/s12_st_pending.html")"
+S12_DU="$(itinerary_digest "$WORK/s12_st_updated.html")"
+S12_G2="$(itinerary_digest "$WORK/s12_gen_day2.html")"
+S12_PM="$(itinerary_digest "$WORK/s12_plan_moved.html")"
+
+# ── S12a — THE SUBJECT. On a conformant render the coordination state transition is
+# outside the itinerary digest — the band AND the declaration block's two coordination
+# fields move together and the token does not move at all.
+if [ -z "$S12_ART" ] || [ "${S12_ART#*>}" = "$S12_ART" ]; then
+  FAIL "S12a: the artifact string read from $(basename "$S12_SCHEMA") is '${S12_ART:-<empty>}' and carries no '>' — the fixture below then builds a comment the old tag-strip collapses anyway, this group stops exercising the defect it exists for, and every equality in it would be vacuous. C19's placeholder has moved, or the fence has"
+elif [ -z "$S12_DN" ]; then
+  FAIL "S12a: itinerary_digest returned nothing for the conformant render — the projection is not readable here and no equality below would mean anything"
+elif [ "$S12_DN" = "$S12_DP" ] && [ "$S12_DN" = "$S12_DU" ]; then
+  PASS "S12a: on a render carrying C19's declaration block the WHOLE coordination transition is outside the itinerary digest — none, pending and updated all read $S12_DN with the band and the frontmatter's two coordination fields moving together. S12c shows the same projection still moves on a plan edit ($S12_DP -> $S12_PM), so this is a measurement and not a projection that drops everything"
+else
+  FAIL "S12a: the coordination state is INSIDE the itinerary digest on a conformant render — none=$S12_DN pending=$S12_DP updated=$S12_DU. \`s/<[^>]+>/ /g\` stops at the '>' inside '$S12_ART', so the declaration block survives into the projection and every state transition reads to the gate as an itinerary change. Operator decision D6's deadlock is reinstated on the normal path"
+fi
+
+# ── S12b — THE NEXT-DAY REPUBLISH. `generated:` is a required field carrying the build
+# date, so it changes on every rebuild. If it is inside the digest, the gate demands a
+# confirmation for a republish that changed no itinerary content at all — which is the
+# gate keying on publish-as-such by the back door.
+if cmp -s "$WORK/s12_st_pending.html" "$WORK/s12_gen_day2.html"; then
+  FAIL "S12b: the two renders are byte-identical, so the equality below compares a file with itself — the fixture is not varying \`generated:\` and this arm measures nothing"
+elif [ -z "$S12_G2" ]; then
+  FAIL "S12b: itinerary_digest returned nothing for the next-day render — no equality here would mean anything"
+elif [ "$S12_DP" = "$S12_G2" ]; then
+  PASS "S12b: rebuilding the same site the next day moves \`generated:\` 2027-06-02 -> 2027-06-03 and the itinerary digest not at all ($S12_G2) — the two renders DO differ in bytes, so the equality is over a real change that the projection correctly declines to see. A routine rebuild no longer asks the organizer to confirm an itinerary change that did not happen"
+else
+  FAIL "S12b: a one-day \`generated:\` drift moved the digest $S12_DP -> $S12_G2 with no itinerary change whatsoever. Every next-day republish aborts at the gate, and the build timestamp is being treated as itinerary content"
+fi
+
+# ── S12c — THE CONTROL. Depends on no defect and holds in both directions: it is what
+# makes S12a and S12b measurements rather than the signature of a projection that
+# discriminates nothing.
+if [ -n "$S12_PM" ] && [ "$S12_PM" != "$S12_DP" ]; then
+  PASS "S12c: CONTROL — moving one scheduled time (16:30 -> 21:00) under the SAME conformant fixture moves the digest ($S12_DP -> $S12_PM), so the invariances above are properties of the excision and not of a projection that drops its input"
+else
+  FAIL "S12c: a plan edit under the conformant fixture left the digest at '$S12_PM' against '$S12_DP' — the projection cannot see an itinerary change on a render carrying a declaration block, so S12a and S12b prove nothing and the gate would wave an unapproved plan change through"
+fi
+
+# ── S12d — WHERE THE TWO PROJECTIONS MUST NOW DIVERGE, AND WHERE THEY MUST NOT.
+# T4 asserts strip_to_itinerary_text byte-identical to strip_to_text on the null case.
+# That identity is still intended — on input carrying no HTML comment, which is what
+# T4's fixtures build. It is NOT intended here: this projection must excise the comment
+# construct and strip_to_text (byte-frozen, on verify_ciphertext's path) must not. So the
+# divergence is asserted in the same arm as the identity, and the arm carries both — an
+# inequality alone would be satisfied by any change at all, and the equality alone is
+# what T4 already holds.
+#
+# The subject render carries a declaration block and NO band, so the band limb cannot
+# fire and the comment excision is the only thing the two projections can disagree about.
+S12_FREE="$WORK/s12_comment_free.html"
+cat > "$S12_FREE" <<'HTML'
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at 16:30. Then the riverside walk to the bridge.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+strip_to_itinerary_text "$WORK/s12_st_none.html" > "$WORK/s12_itin_bearing.txt"
+strip_to_text           "$WORK/s12_st_none.html" > "$WORK/s12_text_bearing.txt"
+strip_to_itinerary_text "$S12_FREE"              > "$WORK/s12_itin_free.txt"
+strip_to_text           "$S12_FREE"              > "$WORK/s12_text_free.txt"
+# `provenance` is a C19 field name and appears in this fixture ONLY inside the block, so
+# its presence in one projection and absence from the other names WHAT the difference is.
+# Read with `case` rather than grep: group PF's rule, and no pipeline to be decided by.
+S12_TOK_IN_TEXT=0; S12_TOK_IN_ITIN=0
+case "$(cat "$WORK/s12_text_bearing.txt")" in *provenance*) S12_TOK_IN_TEXT=1 ;; esac
+case "$(cat "$WORK/s12_itin_bearing.txt")" in *provenance*) S12_TOK_IN_ITIN=1 ;; esac
+if [ ! -s "$WORK/s12_text_bearing.txt" ] || [ ! -s "$WORK/s12_text_free.txt" ]; then
+  FAIL "S12d: strip_to_text produced nothing for one of the two fixtures, so the comparisons below would be between empty files"
+elif [ "$S12_TOK_IN_TEXT" -ne 1 ]; then
+  FAIL "S12d: the token 'provenance' is not in strip_to_text's output for the comment-bearing render — the fixture is not carrying a declaration block, or the detector cannot see one, and its absence from the itinerary projection would prove nothing"
+elif ! cmp -s "$WORK/s12_itin_free.txt" "$WORK/s12_text_free.txt"; then
+  FAIL "S12d: the two projections disagree on a COMMENT-FREE render ($(wc -c < "$WORK/s12_itin_free.txt" | tr -d ' ')B vs $(wc -c < "$WORK/s12_text_free.txt" | tr -d ' ')B) — the excision is firing where there is nothing to excise, and T4's identity is broken with it"
+elif cmp -s "$WORK/s12_itin_bearing.txt" "$WORK/s12_text_bearing.txt"; then
+  FAIL "S12d: the two projections are byte-identical on a COMMENT-BEARING render, and 'provenance' is in both — strip_to_itinerary_text is not excising C19's declaration block, so its body is in the digest and S12a/S12b's invariances cannot hold"
+elif [ "$S12_TOK_IN_ITIN" -ne 0 ]; then
+  FAIL "S12d: the projections differ on the comment-bearing render but 'provenance' survives into the itinerary projection — the difference is something other than the declaration block, and the block is still in the digest"
+else
+  PASS "S12d: the two projections AGREE on a comment-free render ($(wc -c < "$WORK/s12_itin_free.txt" | tr -d ' ')B, T4's identity, still intended and still held) and DIFFER on a comment-bearing one ($(wc -c < "$WORK/s12_itin_bearing.txt" | tr -d ' ')B vs $(wc -c < "$WORK/s12_text_bearing.txt" | tr -d ' ')B). The difference is named rather than assumed: 'provenance' is present in strip_to_text's output and absent from the itinerary projection's, so what was removed is the declaration block. strip_to_text is untouched — CIAC-3 keeps it on verify_ciphertext's path byte-for-byte"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
