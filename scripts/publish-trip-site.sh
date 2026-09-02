@@ -1470,12 +1470,12 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 #
 # WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, HTML comment
 # bodies, attribute values, <script> and <style> bodies. A change confined to one
-# of those does not move the digest and can ride a standing confirmation. The comment
-# clause is honoured by an excision of its own; the tag strip alone cannot collapse a
-# comment whose body carries a `>`, and C19's declaration block always carries one. That is
+# of those does not move the digest and can ride a standing confirmation. That is
 # the same coverage boundary ADR-008 draws between its two projections, and it is
 # the deliberate price of (1): pulling those surfaces in would make every CSS or
-# script edit — including #551's own — read as an itinerary change.
+# script edit — including #551's own — read as an itinerary change. THE COMMENT
+# CLAUSE IS HONOURED BY AN EXCISION OF ITS OWN: the tag strip alone cannot collapse
+# a comment whose body carries a `>`, and C19's declaration block always carries one.
 #
 # ── WHY A PUBLISHED BASELINE EXISTS AT ALL ───────────────────────────────────
 # "Differs from what is currently published" needs a local anchor, and there is
