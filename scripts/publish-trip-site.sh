@@ -1402,6 +1402,225 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
   return 0
 }
 
+# ═════════════════════════════════════════════════════════════════════════════
+# ORGANIZER-CONFIRM GATE (#552) — ADR-003 § Decision 2
+# ═════════════════════════════════════════════════════════════════════════════
+# ADR-003 decided a republish gates on the ORGANIZER's confirmation, not on a
+# system-counted quorum. This block is the gate: three pure resolvers, one abort,
+# and one recorder. It is deliberately placed BELOW the ADR-008 guard region and
+# ABOVE every subcommand, so it shares no hunk with either.
+#
+# ── WHAT THE GATE MEASURES, AND WHY IT IS NOT "A PUBLISH IS HAPPENING" ────────
+# The first cut of this design blocked a republish whenever a change was pending.
+# That is wrong here, and the reason is structural rather than stylistic: ADR-002
+# Decision 2 permits only a city-ambient client-side fetch, so ALL coordination
+# state lives inside the published bytes. Showing a traveller that a change is
+# pending therefore REQUIRES a publish — of a site whose itinerary content is the
+# one already published, carrying a coordination marker that says pending. A gate
+# keyed on publish-as-such aborts exactly that act, and the "change pending" state
+# becomes unreachable.
+#
+# So the gate keys on ITINERARY-CONTENT CHANGE:
+#   • itinerary content == what is currently published  -> nothing to confirm
+#   • itinerary content moved, and no confirmation      -> abort
+# A coordination-marker-only republish passes. An unapproved plan change does not.
+#
+# ── THE ITINERARY-CONTENT BOUNDARY, STATED SO A REVIEWER CAN SEE THE BYTES ────
+# "Itinerary content" is the VISIBLE TEXT of the site render, whitespace-collapsed,
+# with the coordination-notice band excised. Three parts, each grounded:
+#
+#   (1) VISIBLE TEXT, not the whole file. This repository already names that
+#       projection as itinerary content: strip_to_text's own contract line is
+#       "so the guard derives leak-tokens from itinerary *content*, not shared
+#       markup." Taking the whole file, or strip_to_published_text, would put the
+#       notice's CSS rule, its script branch, its `is-pending` class token and
+#       every attribute value inside the digest — and a marker-only republish
+#       would then read as an itinerary change, which is the deadlock again.
+#       strip_to_text deletes <script>/<style> bodies wholesale and turns every
+#       tag into a space, so a pure styling or scripting change moves nothing here
+#       by construction. That is the property this boundary needs.
+#   (2) WHITESPACE-COLLAPSED, so a re-indent or a markup reflow is not a plan
+#       change. The collapse is verify_ciphertext check (c)'s own idiom
+#       (tr -s '[:space:]' ' ' then trim), reused rather than reinvented.
+#   (3) THE NOTICE BAND EXCISED. The band is visible text, so without this it
+#       would sit inside the digest. It is identified by its class token, and the
+#       excision is bounded — see strip_to_itinerary_text.
+#
+# WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, HTML comment
+# bodies, attribute values, <script> and <style> bodies. A change confined to one
+# of those does not move the digest and can ride a standing confirmation. That is
+# the same coverage boundary ADR-008 draws between its two projections, and it is
+# the deliberate price of (1): pulling those surfaces in would make every CSS or
+# script edit — including #551's own — read as an itinerary change.
+#
+# ── WHY A PUBLISHED BASELINE EXISTS AT ALL ───────────────────────────────────
+# "Differs from what is currently published" needs a local anchor, and there is
+# none to be had from the published artifact: it is ciphertext by construction,
+# which is the whole point of ADR-002. Recording a fingerprint of the plaintext in
+# the per-trip PUBLIC repo would be a new disclosure surface, so it is not done.
+# The anchor is therefore a git-ignored sidecar in the trip dir, written by the
+# publish paths after a push succeeds. Absent, the gate has no anchor and the trip
+# republishes exactly as it does today — which is also the back-compat property
+# every trip published before this change relies on.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# SEAM S4 (#551) — the coordination notice's identity, and the only line in this
+# file that binds to #551's render. #551 declares the band as `.coord-notice` with
+# variants `.coord-notice.is-pending` / `.coord-notice.is-updated`, and declares
+# NON-EMISSION when coordination-state is absent or `none` — so on a trip with no
+# coordination activity there is nothing here to excise and the projection equals
+# strip_to_text exactly. If that class token changes, this line changes and nothing
+# else does.
+_COORD_NOTICE_CLASS='coord-notice'
+# The excision cap, in source characters. #551 declares the band's content as "a
+# static label string + the coordination-since date. Nothing else." — so a few
+# hundred characters is generous. The cap is what makes the FAIL-OPEN direction
+# unreachable: an unterminated or mis-shaped band matches nothing, the marker text
+# stays in the digest, and a marker-only republish then reads as an itinerary
+# change and ABORTS. Both failure directions land fail-closed; only an excision
+# that ran PAST the band could hide a plan change, and the cap forbids it.
+_COORD_NOTICE_CAP=512
+
+# The itinerary-content projection. A SIBLING of strip_to_text, not an edit to it:
+# verify_ciphertext consumes strip_to_text and #550's AC 5 holds its behaviour
+# fixed, so this file's established pattern is a new projection beside it — the
+# same reason strip_to_text_blocks and strip_to_published_text exist.
+strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout
+  COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
+  perl -0777 -pe '
+    my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
+    s{<\s*([A-Za-z][-A-Za-z0-9]*)\b[^>]*\bclass\s*=\s*(["\x27])[^"\x27]*(?<![-\w])$c(?![-\w])[^"\x27]*\2[^>]*>.{0,$cap}?<\s*/\s*\1\s*>}{ }gis;
+    s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
+    s/<[^>]+>/ /g;
+  ' "$1" 2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
+}
+
+# SEAM (#88) — the digest primitive, reading STDIN. cksum, not shasum/sha256sum:
+# those are the BSD-vs-GNU dialect split this file documents at length above
+# _epoch_of_file, and cksum in the stdin form is the repository's only existing
+# digest idiom (scripts/test-command-taxonomy.sh). The stdin form omits the
+# filename, so the token depends only on content; BOTH emitted fields (checksum and
+# byte length) are combined, so the token binds size as well as CRC.
+# STATED TRADE: cksum is CRC-32 — it detects change, it does not resist forgery.
+# That is the correct property here, because ADR-003 places the trust in the
+# organizer explicitly and there is no adversary in this threat model. Should #88
+# later collect attributable per-traveler approvals, forgery resistance becomes
+# real and the swap is this one function body.
+_digest_of() { # (stdin) -> one stable identity token
+  cksum | awk '{ printf "%s-%s", $1, $2 }'
+}
+
+# The itinerary-content identity of a site render. Nothing on an unreadable file —
+# the caller decides what an unreadable render means, and every caller here treats
+# it as "not a match" rather than as "unchanged".
+itinerary_digest() { # <html_file> -> identity token, or nothing
+  [ -r "${1:-}" ] || return 0
+  strip_to_itinerary_text "$1" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of
+}
+
+# The three sidecars, one resolver each. All three sit inside the trip dir, which
+# .gitignore excludes (`trips/*`) and which no subcommand ever copies into the
+# per-trip repo — so none of them is a publish surface.
+#
+# SEAM S1 (#550) — DISPLAY ONLY, and deliberately not load-bearing. #550 landed the
+# pending change as outputs/change-summary.md (class C20) carrying a `status`
+# field, not as a presence-marker file. The gate does not read it: keying on it
+# would key on publish-as-such, which is exactly what this design must not do.
+# cmd_confirm prints it so the organizer confirms against a named artifact.
+pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
+# The organizer's recorded approval, digest-bound to the itinerary it approves.
+change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
+# The itinerary content as of the last successful push. Written by cmd_publish and
+# cmd_update; read only here.
+published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
+
+# The `digest=` line of a two-line record, or NOTHING when the file is absent, the
+# line is missing, or the token is not a well-formed digest. Folding those three
+# into one empty answer is what satisfies ADR-007 §2's bound that no command may
+# predicate a branch on a field's ABSENCE where a placeholder makes that field
+# present: every caller branches on the VALUE, and a malformed record is never read
+# as approval. Written as a read loop rather than a pipeline on purpose — a
+# `sed ... | head -1` would be the early-exit-under-pipefail shape this suite's
+# group PF grades against.
+_record_digest() { # <record_file> -> digest token, or nothing
+  local f="${1:-}" line tok=""
+  [ -r "$f" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      digest=*) tok="${line#digest=}"; break ;;
+    esac
+  done < "$f"
+  case "$tok" in
+    ''|*[!A-Za-z0-9-]*) return 0 ;;
+  esac
+  printf '%s' "$tok"
+}
+
+# Records the itinerary content that is now live. Called AFTER a push succeeds, so
+# the sidecar never claims content that was not published. Atomic: written to a
+# temp file in the same directory, then moved into place, so a crash mid-write
+# cannot leave a half-record that _record_digest would read as a digest.
+record_published_itinerary() { # <trip_dir> <site_html>
+  local trip_dir="$1" site_html="$2" out tmp dg
+  out="$(published_itinerary_path "$trip_dir")"
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || return 0
+  tmp="$(mktemp "${out}.XXXXXX")" || return 0
+  printf 'digest=%s\npublished=%s\n' "$dg" "$(_iso_now)" > "$tmp"
+  mv -f "$tmp" "$out"
+}
+
+# SEAM S2 (#88) — the resolver. Pure: reads files, no network, no TTY, no writes.
+# #88 replaces THIS BODY to aggregate per-traveler approvals against its decided
+# threshold; the four-token contract, require_change_confirmation and its call site
+# all survive that replacement unchanged, provided #88 emits from this vocabulary —
+# which the allowlist-proceed case below enforces by aborting on anything else.
+#
+#   none-pending  no published baseline, OR the outgoing itinerary content is
+#                 exactly what is already published        -> proceed
+#   unconfirmed   itinerary content moved, and no parseable confirmation  -> abort
+#   stale         itinerary content moved since it was confirmed          -> abort
+#   confirmed     the confirmation covers this exact itinerary content    -> proceed
+change_confirmation_state() { # <trip_dir> -> one token on stdout
+  local trip_dir="$1" base_dg out_dg rec_dg
+  base_dg="$(_record_digest "$(published_itinerary_path "$trip_dir")")"
+  if [ -z "$base_dg" ]; then printf 'none-pending'; return 0; fi
+  out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
+  if [ "$out_dg" = "$base_dg" ]; then printf 'none-pending'; return 0; fi
+  rec_dg="$(_record_digest "$(change_confirmation_path "$trip_dir")")"
+  if [ -z "$rec_dg" ]; then printf 'unconfirmed'; return 0; fi
+  if [ "$rec_dg" = "$out_dg" ]; then printf 'confirmed'; return 0; fi
+  printf 'stale'
+}
+
+# SEAM S3 (#85) — THE GATE. One argument, no side effects, no TTY, no network, and
+# bound to the site-HTML artifact rather than to any caller's locals — which is why
+# relocating it onto #85's event-driven path is moving this one call line.
+#
+# TWO PROPERTIES ARE LOAD-BEARING AND MUST NOT BE VARIED:
+#
+#  1. `local state` is DECLARED on its own line and ASSIGNED on the next. A combined
+#     `local state="$(…)"` returns the exit status of `local`, masking the command
+#     substitution's status so `set -e` can never fire on it. Known bash trap.
+#  2. The PROCEED SET IS THE ALLOWLIST and `*)` is the abort. Written the other way
+#     round — enumerating the abort cases with a permissive default — an unknown or
+#     empty token would PUBLISH. That inversion is the whole risk this design was
+#     built against: with this ordering there is no value the resolver can emit,
+#     including one no author anticipated and including the empty string, that
+#     reaches a push. It is unreachable rather than merely tested.
+#     Do NOT add a marker-only exemption branch here. Keying the gate on itinerary
+#     content is what makes the marker-only republish pass; an exemption inside a
+#     fail-closed guard is the failure mode this shape exists to remove.
+require_change_confirmation() { # <trip_dir>
+  local trip_dir="$1"
+  local state
+  state="$(change_confirmation_state "$trip_dir")"
+  case "$state" in
+    none-pending|confirmed) return 0 ;;
+    *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
+  esac
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Subcommands
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1529,6 +1748,58 @@ cmd_update() { # <trip_dir>
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
 }
 
+cmd_confirm() { # <trip_dir>
+  local trip_dir="${1:?usage: confirm <trip-dir>}"
+  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+
+  local site_html state pending rec tmp dg ans
+  site_html="$(resolve_site_html "$trip_dir")"
+  state="$(change_confirmation_state "$trip_dir")"
+
+  # Refuse when there is no itinerary change in front of the organizer. A
+  # confirmation recorded now would be a PRE-AUTHORISATION of an unseen future
+  # change, and the gate would then wave through whatever the next bake produces.
+  # Expressed through the resolver rather than through a second definition of
+  # "pending", so there is exactly one answer to "has the plan moved?".
+  [ "$state" != "none-pending" ] \
+    || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+
+  # TTY-only, with no override flag, and the absence of the flag is the point.
+  # ADR-007 §2 names the two existing flags that convert a refusal into a silent
+  # pass for a non-interactive caller and states that bound is not negotiable by a
+  # later slice. A third such override would be precisely the class of thing that
+  # bound forbids, so this requirement is hard: no automation can attest a group's
+  # consensus on the group's behalf.
+  [ -t 0 ] || die "confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
+
+  printf '\n  Confirming the itinerary change for: %s\n' "$trip_dir"
+  printf '  Site render     : %s\n' "$site_html"
+  pending="$(pending_change_path "$trip_dir")"
+  if [ -r "$pending" ]; then
+    printf '  Change summary  : %s\n' "$pending"
+  else
+    warn "no change summary at $pending — confirming from the render alone."
+  fi
+  printf '  Gate state      : %s\n' "$state"
+  printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
+  [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
+
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || die "could not read the itinerary content of $site_html — nothing was recorded."
+  rec="$(change_confirmation_path "$trip_dir")"
+  tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
+  printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
+  mv -f "$tmp" "$rec"
+
+  # The pending change summary is NOT deleted or promoted here. #551 reads it to
+  # render the "change pending" state, and the writer never promotes its own output
+  # — the promotion IS the organizer's decision, and this record is where that
+  # decision lives. No post-republish cleanup is needed anywhere either: a later
+  # re-bake moves the itinerary content, the digest stops matching, and the state
+  # resolves `stale` on its own.
+  ok "Confirmed. The next  $(basename "$0") update ${trip_dir}  will publish this itinerary; a further edit re-opens the gate."
+}
+
 cmd_rotate() { # <trip_dir> [--passphrase <new>]
   local trip_dir="${1:?usage: rotate <trip-dir> [--passphrase <new>]}"; shift || true
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
@@ -1567,6 +1838,9 @@ _epoch_of_file() { # <file> -> mtime epoch on stdout, or nothing
   printf '%s' "$e"
 }
 _epoch_of_iso()  { date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$1" +%s 2>/dev/null || date -u -d "$1" +%s 2>/dev/null || true; }
+# Now, in the same ISO-8601 UTC shape _epoch_of_iso parses back. One spelling that
+# is identical on BSD and GNU date, so it does not join the dialect split above.
+_iso_now()       { date -u +%Y-%m-%dT%H:%M:%SZ; }
 _ymd_of_epoch()  { # <epoch> -> YYYY-MM-DD, or '-' when empty
   [ -n "${1:-}" ] || { printf '%s' '-'; return; }
   date -r "$1" +%Y-%m-%d 2>/dev/null || date -d "@$1" +%Y-%m-%d 2>/dev/null || printf '%s' '-'
