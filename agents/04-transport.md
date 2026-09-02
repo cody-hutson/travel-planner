@@ -155,6 +155,18 @@ every other row of the brief standing. You are not re-deriving the day's order:
 the scheduler derives it from the matrix you produce, which is why you run
 before it.
 
+That narrowing is the leg set's alone. It does not reach the arrival- and
+departure-day content — § *Arrival Transport*'s `Luggage handling:` and
+§ *Departure Logistics*'s `Luggage options:`, with the assembly minutes in
+`Buffer rationale:` — whose windows are fixed to a particular day, so a move
+onto or off one stales them while touching no leg they own. Those dates are a
+**set**: one per origin from `## Logistics`, plus any traveler whose own window
+states its own (§ *Input* items 2–3) — never a single arrival day, the failure
+**The single-origin assumption** already names. Where a move lands an event on
+a date in that set, or takes one off it, re-derive those lines for the streams
+whose own date it touched, `VERIFY` streams included. This narrows the sentence
+above rather than replacing it: outside this class, every other row stands.
+
 **RESEQUENCING:** No new output unless day trip logistics change.
 
 ## Input
