@@ -65,7 +65,18 @@ preflight_ro() {
 }
 
 preflight() {
-  command -v npx >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
+  command -v npx  >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
+  # perl is not optional on the publish paths, and it is probed HERE so that its absence
+  # is an early, named, actionable failure rather than a projection that quietly answers
+  # differently mid-run. Every verdict this file reaches about the CONTENT of a render is
+  # computed from a perl text projection — strip_to_text (verify_ciphertext),
+  # strip_to_published_text (verify_publishable_content) and strip_to_itinerary_text (the
+  # #552 organizer-confirm gate). The last of the three has no equivalent expressible in
+  # sed, so there is nothing to degrade to; see the note above strip_to_itinerary_text.
+  # cmd_update calls this BEFORE it resolves the render and before the gate runs, so on a
+  # machine without perl the operator is told to install perl instead of being told, by
+  # the gate itself, that an itinerary changed which did not.
+  command -v perl >/dev/null 2>&1 || die "perl not found — this script derives every content verdict (the ciphertext guard, the publishable-content guard, and the organizer-confirm gate) from perl text projections. Install perl and re-run."
   preflight_ro
 }
 
@@ -1493,14 +1504,41 @@ _COORD_NOTICE_CAP=512
 # verify_ciphertext consumes strip_to_text and #550's AC 5 holds its behaviour
 # fixed, so this file's established pattern is a new projection beside it — the
 # same reason strip_to_text_blocks and strip_to_published_text exist.
-strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout
+#
+# ONE LIMB, AND WHY (#552 D10). This function shipped with strip_to_text's
+# `perl … 2>/dev/null || sed -E 's/<[^>]*>/ /g'` idiom copied onto it. That idiom
+# is honest THERE — strip_to_text's perl program is a tag-stripper and little else,
+# so the sed limb computes approximately the same answer — and dishonest HERE,
+# because the two limbs compute different things: this perl program also excises
+# the coordination band, and the sed limb does not. A failing or absent perl
+# therefore substituted a DIFFERENT projection into the gate's digest, silently
+# (`||` reads a status, and `2>/dev/null` threw away the only message), a
+# marker-only republish read as an itinerary change, and the gate aborted — which
+# is operator decision D6 conditionally reinstated. Graded by group S11.
+#
+# The limb is REMOVED rather than taught to excise, because sed cannot express this
+# program: it slurps the whole file (-0777), back-references the band's own tag name
+# (\1), and BOUNDS the excision with a lazy quantifier. The bound is the single
+# property that keeps the excision from running past the band into plan content — an
+# over-running excision deletes plan text, the digest then reads "unchanged", and an
+# unapproved change ships behind a marker. An approximate sed limb would put that one
+# FAIL-OPEN direction back on the table, so there is no honest fallback to offer;
+# strip_to_published_text, whose program is likewise inexpressible in sed, already has
+# this shape. perl is asserted in preflight instead of assumed here.
+#
+# stderr is deliberately NOT discarded. The `2>/dev/null` existed to silence perl
+# before falling back; with nothing to fall back to it would silence the one message
+# that explains the failure. The non-zero status now reaches itinerary_digest, which
+# turns it into this file's existing "nothing" answer for a projection it could not
+# take — an answer every caller already handles as "not a match".
+strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
   COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
   perl -0777 -pe '
     my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
     s{<\s*([A-Za-z][-A-Za-z0-9]*)\b[^>]*\bclass\s*=\s*(["\x27])[^"\x27]*(?<![-\w])$c(?![-\w])[^"\x27]*\2[^>]*>.{0,$cap}?<\s*/\s*\1\s*>}{ }gis;
     s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
     s/<[^>]+>/ /g;
-  ' "$1" 2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
+  ' "$1"
 }
 
 # SEAM (#88) — the digest primitive, reading STDIN. cksum, not shasum/sha256sum:
@@ -1521,9 +1559,32 @@ _digest_of() { # (stdin) -> one stable identity token
 # The itinerary-content identity of a site render. Nothing on an unreadable file —
 # the caller decides what an unreadable render means, and every caller here treats
 # it as "not a match" rather than as "unchanged".
+#
+# A FAILED PROJECTION TAKES THAT SAME "NOTHING" PATH (#552 D10), and the projection is
+# therefore run and CHECKED before the pipeline rather than inside it. Written as a
+# pipeline, a projection that failed still emitted nothing INTO the pipeline, and
+# `cksum` over nothing is a perfectly well-formed token (`4294967295-0`) that
+# _record_digest's charset test accepts and change_confirmation_state compares. The
+# gate would then be deciding from a digest that identifies no itinerary at all. So
+# the status is read first, and it is the ONLY discriminator: a render whose visible
+# text is legitimately empty still projects successfully and still gets that token,
+# because an empty itinerary is a real identity a trip may hold. Emptiness of the
+# OUTPUT means "empty render"; a non-zero STATUS means "no answer". Graded by S11b/S11d.
+#
+# `local text` is declared on its own line and assigned on the next, then read with an
+# explicit `||` — the combined `local text="$(…)"` form returns the status of `local`
+# and would mask exactly the failure this is here to catch. Same bash trap
+# require_change_confirmation names below, same reason.
+#
+# The output is byte-identical to the pipeline it replaces for every input the
+# projection can take: command substitution strips trailing newlines, which
+# `tr -s '[:space:]' ' '` followed by `sed 's/ *$//'` had already collapsed and
+# trimmed. Existing .published-itinerary sidecars keep matching.
 itinerary_digest() { # <html_file> -> identity token, or nothing
   [ -r "${1:-}" ] || return 0
-  strip_to_itinerary_text "$1" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of
+  local text
+  text="$(strip_to_itinerary_text "$1")" || return 0
+  printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of
 }
 
 # The three sidecars, one resolver each. All three sit inside the trip dir, which
