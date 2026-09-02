@@ -134,6 +134,25 @@ one venue in this repo already carries two name strings on one maps URL, which
 is why the key exists.
 
 ### Step 2 — venue-matrix.md
+
+**Before you overwrite anything here, capture the before-state.** This step is the
+last moment at which the *prior* plan still exists on disk: `outputs/venue-matrix.md`
+is `rebuilt-each-synthesis` and is about to be replaced wholesale, and
+`outputs/event-status.md` is `persist-mutable` and is about to be updated in place.
+Read both files **as they stand now** and hold the two keyed maps below. Nothing
+downstream can reconstruct them — a summary derived after the overwrite is derived
+from the new plan twice, and reports no change.
+
+| Read from | Key | Value held |
+|-----------|-----|------------|
+| `outputs/venue-matrix.md` | `ven-<token>` | `(day, role)` |
+| `outputs/event-status.md` | `Event ID` | `status` |
+
+Then build the matrix. When it and `outputs/event-status.md` are written, take the
+keyed set difference of the before-maps against the after-maps and emit
+`outputs/change-summary.md` per § *Output: outputs/change-summary.md* — which also
+states the condition under which you emit **nothing at all**.
+
 Build a cross-reference matrix before assigning any venue to any day:
 
 | Venue key | Venue | Day 1 | Day 2 | Day 3 | Day 4 | Day 5 | Day 6 | Day 7 |
@@ -767,6 +786,113 @@ nothing else:
 
 Cells: A = anchor, Alt = alternative, B = bailout, blank = not used
 Flags: * = hotel-proximity venue, ! = this venue key appears 2x (confirm intentional)
+
+### Output: outputs/change-summary.md
+
+The group-facing record of what a re-bake moved — the artifact ADR-003 § *Decision 1*
+requires so that a traveler update which shifts the plan produces a **proposed
+change** rather than a silent republish. You are the only writer: you hold the
+before-state and the after-state in one operation (§ *Step 2 — venue-matrix.md*),
+and no actor downstream of synthesis can recover the before-state at all.
+
+**Artifact frontmatter — the first bytes of the file:**
+
+```yaml
+---
+artifact: outputs/change-summary.md
+schema-version: 1
+trip: <trip-slug>
+writer: hub
+lifecycle: accumulate-append
+provenance: derived
+publish: internal
+generated: <YYYY-MM-DD>
+status: pending
+---
+```
+
+**`status` is this class's one per-class field, and you only ever write `pending`.**
+It is the state the organizer-confirm surface reads and moves to `confirmed` or
+`rejected`. Promoting your own summary would make the confirmation a formality;
+the decision is the organizer's, and the field is how it is recorded.
+
+**`accumulate-append`, and the reason is a safety property rather than a style.**
+Each emission appends a new dated section and deletes nothing, so a change nobody
+has confirmed yet **cannot** be destroyed by a later synthesis. Rebuilding this
+file, or updating it in place, would discard a pending change on the next re-bake —
+the precise failure this artifact exists to prevent.
+
+**Derived from keys, never from prose.** The content is a keyed set difference over
+the two maps captured at Step 2, in four buckets:
+
+| Bucket | Condition |
+|--------|-----------|
+| **ADDED** | key present in the after-map, absent from the before-map |
+| **DROPPED** | key present in the before-map, absent from the after-map |
+| **MOVED** | key in both, and its `(day, role)` differs |
+| **STATUS-CHANGED** | key in both, and its `Status` differs |
+
+Write each bucket as rows, one per key. The plain-language line a reader sees —
+*"Saturday afternoon: Miradouro da Vitória moved 14:00 → 16:30; the block after it
+dropped"* — is a **rendering of those rows**, not the artifact's content. Render it
+from the row; never write a sentence you did not derive.
+
+**`outputs/final-itinerary.md` is NOT diffed, and must not be.** It carries no
+`Event ID` and no `ven-<token>` by deliberate design (`ADR-009` § *Decision 3*), so
+diffing it against `outputs/final-itinerary-v<N>.md` is **prose diffing** — the
+thing this artifact was specified to replace. The structured sources are
+`outputs/venue-matrix.md` and `outputs/event-status.md`, and they are the only two.
+
+**The no-op rule — emit a summary if and only if the keyed set difference is
+non-empty.** All four buckets empty means **write nothing**: no new dated section,
+no file touched, and any existing `pending` entry left exactly as it was. Two
+readings this rules out, both of which look reasonable and are wrong:
+
+- It is **not** "append an empty section". A re-bake that shifted nothing has no
+  proposed change, and a dated section saying so is noise the group must read past.
+- It is **not** "delete the prior summary". A no-op re-bake that cleared a pending
+  entry would silently discard an unconfirmed change.
+
+**The derivation bound — what you may read, stated as a constraint on the
+generator.** Every field of every row is sourced from a `publish: bound` class:
+`outputs/venue-matrix.md` (C11), `outputs/event-status.md` (C13), and `trip-context.md`
+(C1) for day and date labels. You read **no `internal-hard` class** into this file —
+never `outputs/traveler-model.md`, never `outputs/satisfaction-metrics.md`. The
+summary therefore carries no more than the published site already encrypts, which
+is what discharges ADR-003 § *Decision 4*. This is a bound on the derivation, not a
+filter applied afterwards: a value that was never read cannot leak. Any free-text
+note you add is **inside** the bound too — it is the residue the publish-side
+regression check grades, and the check has no way to un-write a value you chose to
+carry.
+
+**Do not fold this into the ITINERARY VERSION LOG.** That log is authored prose you
+write about the plan's own versions; this is a derived artifact with a different
+provenance, a different lifecycle and a different consumer. One fact, one home.
+
+```markdown
+---
+<frontmatter as above>
+---
+
+# Change Summary
+
+## <YYYY-MM-DD> — proposed change
+
+**In plain language:** [one or two sentences rendering the rows below]
+
+| Bucket | Key | What | Before | After |
+|--------|-----|------|--------|-------|
+| MOVED | `evt-xxxx` | [event or venue as displayed] | [day / role / status] | [day / role / status] |
+| DROPPED | `ven-xxxx` | [as displayed] | [day / role] | — |
+| ADDED | `evt-xxxx` | [as displayed] | — | [day / role / status] |
+```
+
+**The bucket is the first column, deliberately.** A table whose first column is a
+`ven-<token>` and whose second is a display string is the *declared key column*
+form the venue registry and the matrix use, and it is read as a venue-identity
+binding by the artifact-schema suite's venue-identity group. This file records a
+**change**, not an identity decision, so it must not present itself as a second
+place where a key is bound to a name.
 
 ### Output: outputs/satisfaction-metrics.md (hub-owned sections)
 
