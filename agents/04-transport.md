@@ -131,6 +131,11 @@ what you give up going conservative vs. what you risk going optimistic.
 - **Ignoring physical transit cost:** A 15-minute walk in extreme heat with luggage is
   not equivalent to a 5-minute taxi for a group with a heat-sensitive traveler.
   Physical cost is a real cost.
+- **The dead zone:** Routing the party to the door and stopping there. A plan that
+  lands them two hours before check-in, or turns them out of the room six hours
+  before the flight, has left them standing in a lobby with their bags for hours it
+  never planned. Those hours are part of the arrival and the departure day, and the
+  luggage is the reason they are hard.
 
 ## Mode Behavior
 
@@ -150,6 +155,18 @@ every other row of the brief standing. You are not re-deriving the day's order:
 the scheduler derives it from the matrix you produce, which is why you run
 before it.
 
+That narrowing is the leg set's alone. It does not reach the arrival- and
+departure-day content — § *Arrival Transport*'s `Luggage handling:` and
+§ *Departure Logistics*'s `Luggage options:`, with the assembly minutes in
+`Buffer rationale:` — whose windows are fixed to a particular day, so a move
+onto or off one stales them while touching no leg they own. Those dates are a
+**set**: one per origin from `## Logistics`, plus any traveler whose own window
+states its own (§ *Input* items 2–3) — never a single arrival day, the failure
+**The single-origin assumption** already names. Where a move lands an event on
+a date in that set, or takes one off it, re-derive those lines for the streams
+whose own date it touched, `VERIFY` streams included. This narrows the sentence
+above rather than replacing it: outside this class, every other row stands.
+
 **RESEQUENCING:** No new output unless day trip logistics change.
 
 ## Input
@@ -163,7 +180,15 @@ Read trip-context.md fully before producing output. Read in this order:
 3. Per-Traveler Planning Days — each traveler's own window, so a traveler who does
    not travel on their origin's booking is not planned onto it. Take its values as
    published; do not restate its labels here
-4. Accommodation — transit access from enrichment
+4. Accommodation — transit access from enrichment, and that section's
+   `Check-in time:` and `Check-out time:`. Take them as published; do not restate
+   them as fields of this brief. They bound the two windows the brief has to plan:
+   between a stream landing and check-in, and between check-out and a stream
+   leaving, the party is holding its luggage with no room to leave it in. **Read
+   them on every run, whatever the mode** — item 8's four move values are the whole
+   of what a Mode Note supplies *about a move*, not a closing of this list, and a
+   move onto the arrival or departure day is exactly when these two windows need
+   reading again
 5. Hard Constraints — anything affecting physical transit experience
 6. Possible Day Trips — assess logistics for each
 7. `outputs/traveler-model.md` — the per-traveler `Been here before?` signal
@@ -279,10 +304,42 @@ leg: leg-<token>
 **Rationale:** [Why this is right for this specific group]
 **Cost:** [Local] / [USD] per person, [Local] / [USD] group total
 **Duration:** [Realistic group time — not app estimate]
-**Luggage handling:** [Specific to this mode]
+**Luggage handling:** [Specific to this mode — and to this stream's bags]
 **What goes wrong if wrong choice made:** [One honest sentence]
 
 **Alternative:** [Mode] — [When you'd choose this instead and why]
+
+**What `Luggage handling:` has to answer, per stream.** Not a note that the mode
+copes with bags — the bags themselves, on this stream, on this day. Three things:
+
+- **The bag count you actually planned against**, and how it moved the
+  recommendation. Three travelers with cabin bags and four with eight cases are
+  not the same stream, and the mode that suits one is often wrong for the other.
+  State the number so a reader can correct it rather than guess at it.
+- **The arrival-side flow before transport**, where it changes the plan.
+  Immigration and customs, and where the bags are actually collected, decide when
+  this stream reaches the transport you are recommending — say so where that moves
+  a time or a mode, and leave it out where it does not.
+- **The pre-check-in window.** Read the `Check-in time:` from § *Input* against
+  this stream's arrival and say whether the party can get into the room on
+  landing. Where they cannot, the bags need a named home for those hours — the
+  property's own bag drop, a left-luggage office, lockers at the arrival station —
+  named concretely rather than as "store them somewhere". Where the destination
+  has a **luggage-forwarding service**, name it and say whether it is worth using
+  on this stream. Where none exists, say that: a stated absence is an answer, an
+  omission is not.
+
+**This is the dated, per-stream half of the brief, and the boundary is worth
+holding.** These lines change when the arrival instant or the bag count changes,
+and they are executed on the day. The undated, trip-level orientation a traveler
+reads *before* they are moving — what kind of transit destination this is, how
+the card is obtained, which app to hold, what the signage does — belongs to
+§ *Destination Transport Character*, § *Payment & Transit Card Setup* and
+§ *Daily Navigation*, written once for the trip rather than repeated per stream.
+The fare model itself — how a fare is computed, what forfeits the transfer
+window, who rides reduced — is § *Pre-Departure Transit Familiarization*'s.
+A sentence that would be true for any traveler arriving any day this year is not
+this section's.
 
 **The entry marker — one fenced block per stream, carrying the leg key and nothing
 else.** Open every stream with it, directly under that stream's own `**Stream — …**`
@@ -329,6 +386,36 @@ is reading the model, not the test.
 3.
 **Mobile wallet compatibility:** [Apple Pay / Google Pay for US visitors]
 **Most common setup mistake:** [What first-timers get wrong]
+
+### Pre-Departure Transit Familiarization
+
+Written to be read **before departure**, not on the platform. This section orients the
+traveler to how the system *works*. It does not restate what the brief already owns:
+the obtain / load / tap procedure is § *Payment & Transit Card Setup*, the app set and
+the in-trip mistakes are § *Daily Navigation*, and day-of movement is § *Arrival
+Transport* and § *Departure Logistics*. Cite them; do not copy them.
+
+**Fare model:** [How fares are computed — flat / zonal / distance-based; tap-in only or
+tap-in-and-out; the transfer window and what forfeits it; who is eligible for a reduced
+fare. Conceptual, 2-3 sentences — the mental model, not the purchase steps.]
+
+**Conventions & etiquette:** [3-5 destination-specific norms a first-timer gets wrong —
+queueing and boarding order, priority seating, eating / drinking, phone and voice,
+escalator side, luggage handling. Behavioural, not procedural. Say what a visitor does
+wrong, not what is merely customary.]
+
+**Primer resources:** 2-4 vetted items, watchable or readable before departure.
+- [Title] — [Publisher] · [format, running length or read time] — [what it teaches that
+  this brief does not]
+
+Name the publisher on every item and prefer the transit authority's own page over a
+third-party explainer where both cover the same ground. A resource whose publisher
+cannot be named does not go in the list.
+
+**This section carries no entry marker, and the omission is deliberate.** `§ 1.1` gives
+this class the primary entities *Leg* and *Signal*; a primer resource is neither, so
+there is no key for a marker to carry. The same reasoning the *Point-to-Point Transit
+Matrix* records below applies here.
 
 ### Pass Assessment
 
@@ -436,7 +523,28 @@ leg: leg-<token>
 **Buffer rationale:** [Why this buffer — what's the failure mode if you cut it]
 **Route:** [Specific transit or transfer]
 **Cost:** [Local + USD, group total]
-**Luggage options:** [If relevant]
+**Luggage options:** [Where the bags are between check-out and this flight]
+
+**`Luggage options:` is not conditional.** Every departure stream has bags and a
+gap; what varies is the answer, never whether one is owed. The optional-looking
+placeholder this line used to carry is gone, because it let the departure half go
+unanswered on exactly the trips where it mattered — the shape **"The departure
+afterthought"** already names. Three things:
+
+- **The post-check-out window.** Read the `Check-out time:` from § *Input*
+  against this stream's `Recommended hotel departure:`. Where the party is out of
+  the room well before it leaves for the airport, say where the bags are for those
+  hours — the property's own hold, a left-luggage office, lockers near wherever
+  the last morning is spent — named, not gestured at.
+- **Luggage assembly belongs in `Buffer rationale:`, not in a label of its own.**
+  Getting a group and its cases out of a property is not instantaneous, and a
+  buffer derived as though it were is the buffer that fails. Fold those minutes
+  into the rationale you already write.
+- **Forwarding, where the destination has it.** Hold-to-airport services exist in
+  some places and not others. Where one exists, name it and weigh it against
+  carrying the bags through the departure route. Where none exists, **say so** —
+  "no such service operates here" is a complete answer and the one thing a reader
+  cannot infer from silence.
 
 | Scenario | Departure time | What you gain | What you risk |
 |----------|---------------|---------------|---------------|
@@ -447,12 +555,18 @@ leg: leg-<token>
 > **Depth calibration — how `Been here before?` shows up here.** Depth is
 > expressed through **how the sections above are filled**, never by adding or
 > removing sections. A **first-time-weighted** party gets `### Destination
-> Transport Character` and `### Payment & Transit Card Setup` at full
-> orientation depth — the obtain / load / tap sequence written out step by step.
-> An **experienced-weighted** party gets those two compressed to what has
+> Transport Character`, `### Payment & Transit Card Setup` and
+> `### Pre-Departure Transit Familiarization` at full orientation depth — the
+> obtain / load / tap sequence written out step by step, and the fare model and
+> conventions read in full before departure.
+> An **experienced-weighted** party gets those three compressed to what has
 > *changed* — a fare-system revision, a card no longer sold, a line that has
 > opened — and the recovered depth goes to `### Point-to-Point Transit Matrix`
 > and `### Day Trip Logistics`, where a returning traveler's real questions sit.
+> For a returning party the primer's `Primer resources:` list may read a single
+> stated line saying no primer is needed rather than carrying items — the section
+> is still present and still filled, which is what "never by adding or removing
+> sections" requires.
 > `### Arrival Transport` and `### Departure Logistics` are **never** compressed:
 > familiarity does not reduce the stakes of a booked flight, and **"The departure
 > afterthought"** still binds. No traveler's answer, and no attribution of an

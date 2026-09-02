@@ -240,6 +240,53 @@ link against. Specifically:
   honeymoon, or milestone the trip is marking. It is not a lifecycle facet and
   links to nothing trip-level; carry it through verbatim alongside their facets
   so the hub can see it.
+- **Derive the per-traveler document set.** Entry and exit requirements depend on
+  the individual traveler *and* on the destination pair, so they are derived
+  per person, never stated once for the group. Read the traveler's `Passport:`
+  facet (country and validity) off their own profile and the origin/destination
+  pair off `trip-context.md` `## Logistics` and `## Destination`, research the
+  requirement set that pair currently carries — passport-validity buffers,
+  visas and visa-waiver registrations, arrival and customs declaration forms,
+  health or vaccination attestations, minor-travel documentation — and emit
+  **exactly one `- **Documents:**` line** on that traveler's entry in
+  `outputs/traveler-model.md`:
+
+  ```markdown
+  - **Documents:** <item> — <status>[; <item> — <status>]… · checked <YYYY-MM-DD>
+  ```
+
+  - **`status` is one of four values**: `have` (the traveler already holds it),
+    `obtain` (it must be acquired, but not filed in advance), `file-before-travel`
+    (a pre-travel filing — an entry registration, a customs pre-declaration),
+    or `unknown` (you could not determine it). Prefix a clause with **`ACTION:`**
+    where the derivation found a *problem* rather than a step — a passport
+    expiring inside the destination's required buffer is
+    `passport — ACTION: expires inside the destination's required buffer`.
+  - **`· checked <YYYY-MM-DD>` is required**, following the same rule
+    § *Field-by-Field Standards* puts on price and hours data: entry policy is
+    time-sensitive, and an undated derivation cannot be judged current. Where a
+    requirement cannot be confirmed, say so in the value as `unknown` **and**
+    flag it with the usual `> VERIFY:` line rather than guessing.
+  - **Never restate the passport country or the expiry date.** State the derived
+    verdict *by reference* — `passport — have (valid through the required
+    buffer)`, not the country or the date that produced it. Those values have one
+    home, the `Passport:` facet, and this is the control that keeps them there;
+    the § 5.6 publishability row on `Documents` is the backstop behind it, not a
+    licence to restate them.
+  - **The whole value sits on the label's own line.** Never render the set as a
+    nested sub-list beneath `- **Documents:**` — the publish guard reads a field's
+    value from the label's line, so a payload on its own line is a payload the
+    guard does not see.
+  - **This is derived content, not a tenth lifecycle facet.** The nine facets
+    above are carried through from what a traveler stated; this set is computed
+    from their facets plus researched policy. It is bounded on its own terms,
+    which is why the facet rules do not reach it.
+  - **A `[THIRD-PARTY]` entry carries no `Documents:` line at all.** ADR-006
+    grants exactly one class for that entry — the party member's *needs* — and a
+    derived requirement set about a person whose identity data was never captured
+    is precisely the capture that grant refuses. An `[OPERATOR-PROVIDED]` entry
+    for a traveler expected to file *does* carry the line, as `unknown` until
+    their profile arrives.
 - **Write `outputs/traveler-model.md` as `[DERIVED]`.** This is a derived
   projection refreshed from the current source files whenever they change; every
   entry projected from a `travelers/<traveler>.md` file holds no independent state
@@ -418,6 +465,13 @@ fallback, not an error:
   must not read an absent profile as "this traveler has no constraints." Surface
   it in the overlap summary too (the traveler simply contributes no desires to
   match yet), and keep it flagged on every refresh until the profile arrives.
+
+  **The derived document set follows the same rule.** A first-party traveler with
+  no filed profile still carries its line —
+  `- **Documents:** unknown — no passport country on file · checked <date>` — so a
+  consumer reads *unknown* rather than *nothing required*. Omitting the line here
+  would make an unreconciled traveler indistinguishable from one who needs no
+  documents, which is the reading this branch exists to prevent.
 
 **A party member who will never file — the third branch.** The two branches
 above concern a *traveler*: someone expected to file a profile who has not done
@@ -645,6 +699,10 @@ Flag uncertain content with:
 Where `## Locked Elements` named fixed events at setup, this run also wrote the
 seeded `locked` rows into `outputs/event-status.md` — a file this role does not
 own, per § *Setup-only seed of initial `locked` event status*. Say so.
+
+This run also emits the derived `- **Documents:**` line on every first-party
+entry of `outputs/traveler-model.md`, per § *Derive the per-traveler document
+set* — one line per entry, dated, and never on a `[THIRD-PARTY]` entry.
 
 Include a brief enrichment summary at the end of the file under:
 ## Enrichment Summary

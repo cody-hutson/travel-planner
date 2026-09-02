@@ -16,7 +16,7 @@ generated: 2026-08-28
 
 **Depth: tier 2 — the migrated-shape minimum.** See `README.md` § *Depth*.
 `examples/tokyo-2026/outputs/transport-brief.md` is the worked example for this class's
-*content*. **Section shape is not content depth**, so the ten sections
+*content*. **Section shape is not content depth**, so the eleven sections
 `agents/04-transport.md` § *Output Format* declares are all present below, in its order
 and under its names.
 
@@ -57,10 +57,42 @@ leg: leg-04a1
 May 14 (Thu). Arrival ~13:00; accommodation from 14:00, which is what makes the arrival
 day a half day rather than a full one.
 
+**Luggage handling.** That hour is the pre-check-in window, and it is planned rather
+than left standing: three travelers on one booking, their own bags, and no room yet.
+The bags are carried to the base and held there until check-in — an hour does not
+justify a storage run, and the base is reached on foot on this walkable core. Where the
+property could not hold them, the fallback here is left-luggage at the arrival station.
+No forwarding service is priced on this fixture, and a single short transfer gives one
+nothing to save.
+
 ### Payment & Transit Card Setup
 
 Not exercised — this fixture records no fares, so there is no payment product to
 compare. On a real trip this section carries the card or app the group buys and where.
+
+### Pre-Departure Transit Familiarization
+
+Present and thin, which is the tier-2 shape rather than an omission. This is what a
+traveler reads *before* leaving: § *Payment & Transit Card Setup* above holds the
+purchase procedure and § *Daily Navigation* below holds the apps and the in-trip
+mistakes, so nothing here restates either.
+
+**Fare model:** Not exercised — this fixture records no fares, so there is no zone,
+transfer window or reduced-fare rule to state. On a real trip this carries the mental
+model: how a fare is computed, and what forfeits a transfer.
+
+**Conventions & etiquette:** Not exercised as destination research. The one movement
+constraint this plan does carry is stated where it binds — the `HC-1` walkability
+requirement in *Daily Navigation* below — rather than duplicated here.
+
+**Primer resources:** Not exercised. The shape a real brief carries is one line per item,
+and **external links are not reproduced** — `README.md` § *Depth* excludes them from the
+tier-2 minimum, so these carry the entry shape and no live URL.
+
+- [Publisher's own "how to ride" page] — [Transit authority] · [web, ~5 min] — [ticket
+  types and the validation rule]
+- [Short system explainer] — [Named publisher] · [video, ~6 min] — [what the lines are
+  and how they interchange]
 
 ### Pass Assessment
 
@@ -126,6 +158,14 @@ leg: leg-9f3c
 May 17 (Sun). Afternoon flight, depart accommodation ~13:00 — which is what leaves
 Sunday a usable morning and lets the riverside walk and the anchor breakfast be placed
 at all.
+
+**Luggage options.** Check-out is 11:00 and the party leaves at ~13:00, so there are two
+hours of Sunday morning in which the bags are out of the room and the group is not yet
+travelling. They go into the property's hold at check-out and are collected on the way
+out; that is what keeps the riverside walk placeable *after* check-out instead of
+forcing it ahead of breakfast. The collection stop and the minutes it takes to get three
+people and their bags moving sit inside the departure buffer, not beside it. No
+forwarding service is priced on this fixture; the airport run is one transfer.
 
 ---
 
