@@ -216,10 +216,12 @@ a `rebuilt-each-synthesis` artifact always carries them, so `0` is a measurement
 is an `A3` violation rather than an ambiguous read. Absence-versus-zero is resolved at the schema
 instead of at every reader.
 
-**Three per-class fields is more than any existing class declares, and it is warranted rather than
-convenient.** C17 and C20 declare one each. Each of these three answers a question the other two
-cannot: M *what could have been read*, N *what was*, `coverage` *whether the pair is a measurement at
-all*. Dropping any one re-creates an ambiguous zero.
+**Three per-class fields is one more than any existing class declares, and it is warranted rather
+than convenient.** Measured across the corpus: C19 `travel-site.md` declares two
+(`coordination-state`, `coordination-since`), C17 and C20 declare one each, and the other seventeen
+declare none. Each of these three answers a question the other two cannot: M *what could have been
+read*, N *what was*, `coverage` *whether the pair is a measurement at all*. Dropping any one
+re-creates an ambiguous zero.
 
 **No money figure reaches frontmatter.** A total fails § 4.2's boundary test on question 2 — two
 correct writers rounding or bounding differently do not produce the same characters — and on question
