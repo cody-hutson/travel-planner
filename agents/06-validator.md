@@ -932,6 +932,7 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Per-event status presence (synthesised plan; Warning only) | | | | |
 | Transit currency on changed days (routing signal re-derived) | | | | |
 | Price-tier preservation on a replacement (food-list only; no Critical tier) | | | | |
+| Booking feasibility at the horizon (items inside their own lead time) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check
@@ -1053,6 +1054,12 @@ Any MISSING or unrendered link is a Critical (also listed under Critical Issues)
 | Venue | Scheduled Day | Reservation Type | Window Status | Action Required |
 |-------|--------------|-----------------|--------------|----------------|
 | [Name] | Day [N] | [Required / Recommended] | [Open / Tight / Closed] | [Book now / Confirm / —] |
+
+- **Booking feasibility at the horizon:** [N inside their own horizon, of which N past a declared deadline / not exercised — name the input that was missing]
+
+This line reads the clock; the `Window Status` column above reads the venue's
+booking window. They answer different questions about the same row, and a
+reading here is never a judgement about that column.
 
 ---
 
