@@ -3,6 +3,110 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.20.0] — 2026-09-01 — Short-horizon replan protocol
+
+A replan had no clock. `ITERATION` reasoned identically three days before a trip and three
+months before it, and the four gaps closed here all sat downstream of that. They were not four
+instances of one defect — a missing behaviour contract, a file nobody had created, a coupling
+table naming the wrong agent, a preference that could be traded away without saying so. What
+they shared was how each presented: the plan changed, something the change had invalidated
+stayed on the page still reading current, and nothing distinguished *not checked* from
+*checked and fine*.
+
+Near the trip's start the question stops being whether a booking window is under pressure and
+becomes whether the thing can still be secured at all, and nothing asked it — no count of the
+days left, and no rule against offering, as the fix for an unbookable item, an alternative whose
+own lead time exceeds the days remaining. Nor could the engine always say what was booked.
+`outputs/event-status.md` is created lazily, by whichever agent first writes it, and that
+ordering is what guarantees no double-create and no wipe; the gap was what happens when neither
+writer has run. `/trip-record event` halted on the absence with the words *there is no repair
+path to name here*, and the status-integrity audit read a trip carrying no per-event status as a
+trip with nothing wrong.
+
+Moving an event to another day made the day's routing stale in a way nothing re-derived: the
+table that says what a change makes stale listed a day move as scheduling's alone, so the hub
+reconciled the receiving day over a route it had never published. And a re-sourced meal slot
+could be quietly refilled at a lower price tier because the cheaper candidate was the one with a
+table free — a trade that is often right, but is the traveller's to make, and that nothing
+required anyone to state.
+
+Four things are true now. A short-horizon replan reads its horizon from the plan, per item,
+against the lead time that item's own row declares — no day count appears in the protocol,
+because a fixed threshold is right for one category and wrong for every other. A synthesised plan
+with no per-event status is reported, and the halt that had no remedy names the repair while
+still creating nothing. A day move and a venue substitution both admit transport, and a changed
+day whose route was never re-published is a Critical rather than an assumption. And a replacement
+is held to the slot's price tier as a floor and says on the entry how its price sits against it —
+a declared trade-down the hub can weigh, where a silent one was not.
+
+### Added
+
+- **`reference/replan-protocol.md`** — the short-horizon behaviour contract, and the home two
+  hooks in `reference/data-model.md` already declared and left unnamed. It defines
+  `days-to-trip-start` and the per-item booking horizon, and is as explicit about what it is not:
+  no field, no dispatch rule, no threshold. The signal is derived at read time and never stored,
+  and is named for the trip's start because the corpus already fixes *departure* as its end.
+- **Four validator checks** — per-event status presence, transit currency on changed days,
+  price-tier preservation on a replacement, and booking feasibility at the horizon. Each says
+  where its population cannot be read, and that an unexercised check is declared rather than
+  passed — a blocked input and an empty population are both not-exercised, and are repaired by
+  opposite things.
+- **An intent-by-reference section in `reference/data-model.md`** — price tier, subgroup and hard
+  constraints are mastered elsewhere and reached through keys an event row already carries.
+  Intent survives a replan because the research lists accumulate and the itinerary is versioned,
+  not because the status model started holding a copy.
+- **Group `PS` in the artifact-schema suite** — the presence check asserted against `examples/`
+  rather than described, with a denominator derived from the tracked tree and a control arm that
+  fails a detector flagging everything.
+
+### Changed
+
+- **A day move admits transport as well as scheduling, and a venue substitution is a new row that
+  admits it too.** The admitted set is a set: a reserved event relocated to another day satisfies
+  two rows and dispatches scheduling once.
+- **`### Advance Booking Priorities` is ordered by what the days remaining no longer cover**, and
+  re-produced on `ITERATION` whatever days changed — a window closing on a day this run did not
+  touch is still closing.
+- **A food replacement is held to the slot's price tier as a floor**, and a `Mixed` overall tier
+  neither excuses the reconciliation statement nor supplies a verdict.
+- **The enrichment setup seed fires on a stated condition** rather than at the agent's discretion,
+  and writing nothing where `## Locked Elements` names no fixed event is explicitly not a finding.
+- **Three of the new checks run on the `DISCOVERY` branch**, where the populations they exist
+  for actually sit — a plan synthesised before this substrate existed stays in that mode
+  precisely because nothing wrote a later one.
+
+### Fixed
+
+- **`/trip-record event` no longer halts with no remedy.** It names the repair the data model
+  states — and which verb is available depends on the trip's mode, because the creation edge
+  does. It still creates nothing: naming a verb is not writing the file.
+- **A synthesised plan with no per-event status is reported rather than silently skipped**, as a
+  Warning — nothing placed is wrong, so the plan is not defective; the engine simply cannot say
+  what is booked.
+- **Both `reference/data-model.md` hooks that deferred to "the replanning capability" now name
+  the file.**
+
+### Note on what this release did not close
+
+Nothing exercises the validator's prose checks against `examples/` in general. The assertions
+were written inside the four existing cards instead, which covers this release's checks and no
+others. That was deliberate — the alternative was adding a fifth work item to a composition
+already locked — and a shared harness is left to a later bundle.
+
+Four facets of the acceptance criteria could not be assessed against the shipped corpus, each
+recorded with which kind of unassessable it is. The near-trip Critical has an empty population
+rather than a missing input: a sweep of 1,096 candidate reading dates found none both before the
+trip starts and after the plan's one booking deadline, which falls the day after it begins. No
+fixture would have closed that, and none of the four was counted as a pass.
+
+And the detector written to police this release's own `tier` vocabulary allowlists `severity
+tier` — a phrase occurring nowhere in the repository at either end of the release, where the
+idiom that ships is `Critical tier`. The predicate holds on all four cards; the instrument does
+not, failing by confident zero. That shape recurred: three of the four designs specified a check
+that could never have fired, each gating its behaviour on a mode its own verb does not admit — a
+signature `CLAUDE.md` already records and no design consulted. A control arm proves an instrument
+is alive, never that it is aimed at the question.
+
 ## [0.19.0] — 2026-09-01 — Nightlife fast-follows
 
 Three gaps shipped alongside the nightlife capability in 0.9.0 and were accepted as named
