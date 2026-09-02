@@ -212,12 +212,12 @@ REASON_ENUM=( 'ADR-007 §2' '#330-disclosure' 'repo-creation' 'argv-secret' 'lig
 EXPECTED_FORMS=(
   'list' 'update' 'unpublish --disable-pages-only'
   'publish' 'publish --opaque' 'publish --plaintext' 'publish --plaintext --opaque'
-  'rotate' 'rotate --passphrase' 'unpublish'
+  'rotate' 'rotate --passphrase' 'unpublish' 'confirm'
 )
 
 # main()'s dispatch arms, excluding the '*)' catch-all. Diffed as a SET in both
 # directions: an arm added AND an arm removed is a membership change a count would miss.
-EXPECTED_ARMS=( 'publish' 'update' 'rotate' 'list|status' 'unpublish' '-h|--help|help|""' )
+EXPECTED_ARMS=( 'publish' 'update' 'confirm' 'rotate' 'list|status' 'unpublish' '-h|--help|help|""' )
 
 # Subcommand tokens a delivered command file may invoke.
 ALLOWED_SUBS=( 'list' 'status' 'update' 'unpublish' )

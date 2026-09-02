@@ -34,24 +34,46 @@ entity this file keys is the Event, not the venue.
 is the cross-run join key, so it must not encode the day — which is exactly what lets
 the Saturday patch below move an event without minting a new identity.
 
+**`Time` is a column here, and `evt-c052` is the row that shows why.** The Saturday patch
+changed that event's time and nothing else — same day, same venue, same role, same status.
+Held in `Notes` as prose the way this table once held it, that shift is invisible to
+anything that compares fields, and `outputs/change-summary.md` compares fields by
+construction: it is derived from keys and forbidden to diff the itinerary's prose. So the
+one cell that moved would have moved unwitnessed, and a re-bake whose only change was that
+move would have published in silence. As a column it is `16:30` beside `May 16 (Sat)`, and
+the difference is one MOVED row. The value is a 24-hour local **start** time; a duration or
+a window stays in `Notes`, and an event the plan leaves deliberately untimed reads `—`.
+Model: `reference/data-model.md` → *`Time` is a column, not a note*.
+
+**Every `Time` cell above is the time the day body of `outputs/final-itinerary.md` places
+that event at** — 15:00 for the timed entry, 17:00 for the Thursday garden placed clear of
+the `HC-2` window, 09:30 for the Sunday walk ahead of the ~13:00 departure. That agreement
+is a coupling this fixture now carries and a reader can check: the itinerary is the prose
+render, this table is the structured record, and a time that disagreed between them would
+have the change summary describe a shift the published plan does not show. `evt-9e34` is
+the one row reading `—`, and that is the declared-absence case rather than a gap: it is the
+Saturday `option`, never placed in a primary slot, so the plan gives it no time to hold. An
+untimed event's placement renders **without** a time in `outputs/change-summary.md` — a
+`—` there would read as a missing value rather than as a deliberate one.
+
 **"Needs booking" is derived, not stored:** `planned` **and** `requires booking? =
 yes`. `firmed`, `locked` and `option` therefore never read as needing a booking, even
 when an `option` carries `requires booking? = yes` as a bookable backup — that flag
 takes effect only on promotion to `planned`.
 
-| Event ID | Venue | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
-|----------|-------|-------|-----|--------|-------------------|-------------------------|-------|
-| `evt-3f9a` | `ven-7b2e` | Livraria Lello timed entry | May 14 (Thu) | `locked` | yes | no — booked | Timed entry held |
-| `evt-8c21` | `ven-c41a` | Jardins do Palácio de Cristal | May 14 (Thu) | `planned` | no | no | Outdoor; `ven-b5e0` is its bailout |
-| `evt-7a05` | `ven-3c17` | Tasca do Bairro — dinner | May 14 (Thu) | `planned` | no | no | Thursday's anchor meal; walk-in |
-| `evt-1d60` | `ven-2f68` | Mercado do Bolhão — market-hall lunch | May 15 (Fri) | `firmed` | no | no | Friday's anchor meal; group-settled, nothing to book |
-| `evt-b47e` | `ven-93d7` | Serralves — contemporary art | May 15 (Fri) | `planned` | yes | **yes** | The one open booking |
-| `evt-6e2b` | `ven-a90d` | Casa de Pasto Central — lunch | May 16 (Sat) | `planned` | no | no | Saturday's anchor meal; walk-in |
-| `evt-c052` | `ven-e05b` | Miradouro da Vitória | May 16 (Sat) | `planned` | no | no | Re-timed by the Saturday patch; same ID |
-| `evt-5ab8` | `ven-8a34` | Base Porto — rooftop at sunset | May 16 (Sat) | `locked` | yes | no — booked | Table held; covers two desire rows |
-| `evt-9e34` | `ven-1d9f` | Casa do Livro — bar | May 16 (Sat) | `option` | yes | no — an alternative, never a primary slot | Backup for `evt-5ab8`; alternative pool |
-| `evt-d1c8` | `ven-5e6b` | Padaria São Bento — breakfast | May 17 (Sun) | `planned` | no | no | Sunday's anchor meal; walk-in |
-| `evt-2f77` | `ven-6c72` | Riverside walk, Ribeira to the bridge | May 17 (Sun) | `planned` | no | no | Ahead of the ~13:00 departure |
+| Event ID | Venue | Event | Day | Time | Status | Requires booking? | Needs booking (derived) | Notes |
+|----------|-------|-------|-----|------|--------|-------------------|-------------------------|-------|
+| `evt-3f9a` | `ven-7b2e` | Livraria Lello timed entry | May 14 (Thu) | 15:00 | `locked` | yes | no — booked | Timed entry held |
+| `evt-8c21` | `ven-c41a` | Jardins do Palácio de Cristal | May 14 (Thu) | 17:00 | `planned` | no | no | Outdoor; `ven-b5e0` is its bailout |
+| `evt-7a05` | `ven-3c17` | Tasca do Bairro — dinner | May 14 (Thu) | 20:00 | `planned` | no | no | Thursday's anchor meal; walk-in |
+| `evt-1d60` | `ven-2f68` | Mercado do Bolhão — market-hall lunch | May 15 (Fri) | 12:30 | `firmed` | no | no | Friday's anchor meal; group-settled, nothing to book |
+| `evt-b47e` | `ven-93d7` | Serralves — contemporary art | May 15 (Fri) | 15:00 | `planned` | yes | **yes** | The one open booking |
+| `evt-6e2b` | `ven-a90d` | Casa de Pasto Central — lunch | May 16 (Sat) | 13:00 | `planned` | no | no | Saturday's anchor meal; walk-in |
+| `evt-c052` | `ven-e05b` | Miradouro da Vitória | May 16 (Sat) | 16:30 | `planned` | no | no | Re-timed by the Saturday patch (14:00 → 16:30); same ID |
+| `evt-5ab8` | `ven-8a34` | Base Porto — rooftop at sunset | May 16 (Sat) | 19:30 | `locked` | yes | no — booked | Table held; covers two desire rows |
+| `evt-9e34` | `ven-1d9f` | Casa do Livro — bar | May 16 (Sat) | — | `option` | yes | no — an alternative, never a primary slot | Backup for `evt-5ab8`; alternative pool |
+| `evt-d1c8` | `ven-5e6b` | Padaria São Bento — breakfast | May 17 (Sun) | 08:30 | `planned` | no | no | Sunday's anchor meal; walk-in |
+| `evt-2f77` | `ven-6c72` | Riverside walk, Ribeira to the bridge | May 17 (Sun) | 09:30 | `planned` | no | no | Ahead of the ~13:00 departure |
 
 **The derived column is a truth table, and every one of the eleven rows is checkable
 against it.** Only `evt-b47e` is `planned` **and** `requires booking? = yes`, so only it
@@ -86,7 +108,13 @@ declared absence.
 
 The change recorded in `trip-context.md` § *Mode notes* moved the Saturday afternoon
 later to make it slower. `evt-c052` kept its ID **and its venue key** across that move —
-the ID is day-independent, so a re-timing is not a re-identification. No row was
+the ID is day-independent, so a re-timing is not a re-identification. **Exactly one cell
+changed**: `Time`, from `14:00` to `16:30`. The `Day` is the same, the `Venue` is the same,
+the `Status` is still `planned`, and the venue matrix still places `ven-e05b` as Saturday's
+`A`. That is what makes this row the fixture's proof rather than its decoration — every
+other field a keyed difference could compare is unchanged, so if `Time` were not compared
+the pass would read as a no-op and `outputs/change-summary.md` § *2026-08-29* would not
+exist. No row was
 deleted: row deletion is the single case `persist-mutable` permits, and it applies
 only when an event leaves the itinerary altogether.
 

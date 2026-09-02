@@ -124,8 +124,8 @@ checkout; asserting the glob itself would have been the easier check and the wro
 | `.claude/commands/*.md` | `.claude/commands/*.md` | § 11 — an upstream schema this repo does not own |
 | `templates/*.template.md` | `templates/*.template.md` | § 11 — emitters, not instances |
 | `examples/*/README.md` | `examples/*/README.md` | § 1.3 — fixture documentation |
-| `**/outputs/.staticrypt.json` | `outputs/.staticrypt.json` | § 1.2 C24 — third-party tool state |
-| `.publish/**` | `.publish/` | § 1.2 C25 — publish staging clone, never traversed |
+| `**/outputs/.staticrypt.json` | `outputs/.staticrypt.json` | § 1.2 C25 — third-party tool state |
+| `.publish/**` | `.publish/` | § 1.2 C26 — publish staging clone, never traversed |
 
 **This directory is not on that list, deliberately.** Excluding `reference/schemas/*.md` would
 need a warrant the corpus does not carry, and it does not need one: no class path-pattern
@@ -170,10 +170,10 @@ repo-consistency findings off the local arm is an open decision, not one this do
 Every schema declares exactly one of them, and the gate reports the split on every run:
 
 ```
-CV: <n> witness / <m> no-witness / 19 total
+CV: <n> witness / <m> no-witness / 20 total
 ```
 
-That line is the coverage answer. It replaces a nineteen-file manual audit with a read, and
+That line is the coverage answer. It replaces a twenty-file manual audit with a read, and
 it lets the gate's teeth grow **with** the migration instead of all at once: as each
 migration slice versions a class's in-repo instance it flips that class's declaration to
 `witness: <path>`, and from that commit forward a stripped or unversioned witness is finding

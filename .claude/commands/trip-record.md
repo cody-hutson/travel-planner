@@ -1197,7 +1197,7 @@ directions are stated.
   **`/trip-record mode`** is its writer — named here, not run. It also does not delete the row:
   deletion is predicated on the event being removed from the itinerary, which this verb neither
   performs nor observes, and a row deleted while its event remains is worse than the ghost row the
-  rule forbids. It touches no `Day`, `Event`, `Requires booking?` or `Notes` cell.
+  rule forbids. It touches no `Day`, `Time`, `Event`, `Requires booking?` or `Notes` cell.
 
 **The one derived cell, and why writing it is not authoring it.** `Status` is the only **authored**
 cell any invocation of this verb writes. The row's needs-booking cell is **recomputed**, by the

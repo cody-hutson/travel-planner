@@ -18,6 +18,7 @@
 # Usage:
 #   publish-trip-site.sh publish   <trip-dir> [--plaintext] [--opaque]
 #   publish-trip-site.sh update    <trip-dir>
+#   publish-trip-site.sh confirm   <trip-dir>   (interactive; records the organizer's approval of an itinerary change)
 #   publish-trip-site.sh rotate    <trip-dir> [--passphrase <new>]
 #   publish-trip-site.sh list                       (read-only inventory of all trips under trips/; gh optional)
 #   publish-trip-site.sh unpublish <trip-dir> [--disable-pages-only] [--yes]
@@ -28,6 +29,13 @@
 #   --passphrase   Supply a specific new passphrase for rotate (else one is generated).
 #   --disable-pages-only   unpublish: take the site offline but KEEP the repo (reversible). Default DELETES the repo.
 #   --yes          unpublish: skip the interactive confirmation (required for a non-interactive delete).
+#
+# Organizer-confirm gate (ADR-003 § Decision 2). update refuses when the itinerary content
+# of the outgoing render differs from what is currently published and no organizer
+# confirmation covers it; rotate republishes through update and inherits the refusal. A
+# republish carrying the SAME itinerary content — a coordination-state marker change, say —
+# is not a plan change and passes. Record the approval with `confirm` (terminal only, no
+# override flag); it binds to that exact itinerary content, so a later edit re-opens the gate.
 #
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
@@ -57,7 +65,18 @@ preflight_ro() {
 }
 
 preflight() {
-  command -v npx >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
+  command -v npx  >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
+  # perl is not optional on the publish paths, and it is probed HERE so that its absence
+  # is an early, named, actionable failure rather than a projection that quietly answers
+  # differently mid-run. Every verdict this file reaches about the CONTENT of a render is
+  # computed from a perl text projection — strip_to_text (verify_ciphertext),
+  # strip_to_published_text (verify_publishable_content) and strip_to_itinerary_text (the
+  # #552 organizer-confirm gate). The last of the three has no equivalent expressible in
+  # sed, so there is nothing to degrade to; see the note above strip_to_itinerary_text.
+  # cmd_update calls this BEFORE it resolves the render and before the gate runs, so on a
+  # machine without perl the operator is told to install perl instead of being told, by
+  # the gate itself, that an itinerary changed which did not.
+  command -v perl >/dev/null 2>&1 || die "perl not found — this script derives every content verdict (the ciphertext guard, the publishable-content guard, and the organizer-confirm gate) from perl text projections. Install perl and re-run."
   preflight_ro
 }
 
@@ -1189,6 +1208,152 @@ EOF
   return 0
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# The markdown sibling of the guard, for an artifact that is never published.
+#
+# ── WHY A SECOND EVALUAND AND NOT A SECOND MECHANISM ─────────────────────────
+# outputs/change-summary.md (C20) is `publish: internal`. It is shared by the
+# organizer out of band and never reaches the render, so verify_publishable_content
+# never sees it: that function is HTML-bound on both of its projections and is called
+# from exactly one site, cmd_publish's plaintext limb, on the file being published.
+# Reusing it here would mean either widening it to a second evaluand class or calling
+# it on a file it was not written for.
+#
+# What IS reused is everything below it, and all three are evaluand-agnostic by
+# construction: nonpublishable_values (the class SOURCE), _norm_words (the shared
+# normalization), and _guard_match (the matcher, which consumes two token files and
+# knows nothing about the class that produced them). This function therefore adds one
+# projection and no membership knowledge — it declares ZERO selectors, no literal
+# field label and no literal member name, exactly as its HTML sibling does. That is
+# the property test-publish-guard.sh case L8 grades, and L8 names its target functions
+# explicitly, so this one is added to that list in the same change.
+
+# The degraded-extraction floor for a markdown summary. DELIBERATELY NOT the 20-word
+# floor verify_publishable_content applies, and copying that number here would be the
+# error rather than the safe default.
+#
+# CALIBRATION. That floor is derived from a rendered multi-day site, where fewer than
+# twenty visible words means the HTML extraction fell over. This artifact's minimum
+# legitimate shape is one rendered change line: `Tuesday dinner moved 19:00 to 20:00`
+# normalizes to SEVEN tokens. A floor of 20 would return 2 — UNDETERMINED, never a
+# pass — on every small summary, and an UNDETERMINED that no correct input can clear
+# is a fail-closed control with no remedy, which ADR-008 argues against twice and which
+# in practice gets worked around rather than satisfied.
+#
+# 4 sits below the seven-token minimum with margin, and above what the cases this floor
+# exists to catch actually produce: an empty, unreadable or truncated file yields 0.
+# Note the asymmetry with the HTML arm and why it is correct — the markdown projection
+# below is NON-LOSSY (it inserts sentinels and drops nothing), so there is no extraction
+# machinery here that can silently degrade. The floor guards the file, not the parser.
+GUARD_SUMMARY_FLOOR=4
+
+# strip_md_to_text_blocks <markdown_file> -> text with block sentinels on stdout
+#
+# The markdown counterpart of strip_to_text_blocks. THE SENTINEL IS THE WHOLE POINT and
+# it is not cosmetic: _guard_match's `conjunctive` rule requires both distinctive tokens
+# of a value inside ONE structural block as well as inside GUARD_WINDOW. With no
+# sentinel every token lands in block 0, blk[pos[right]] == blk[pos[left]] is true for
+# every pair, and the rule degrades to a bare word window — which is verbatim the
+# N-squared day-pairing false abort that ADR-008's first amendment exists to fix, and
+# which measured as a permanent abort from two days onward. A summary accumulates a
+# dated section per re-bake, so it has exactly the recurrence shape that defect needs.
+#
+# The block boundaries are markdown's own: a blank line, an ATX heading, a list item, a
+# table row, a rule or frontmatter fence, a code fence, a block quote. Emitted BEFORE
+# the line's own text, so the line opens the new block rather than closing the old one.
+strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentinels on stdout
+  awk -v B="$_GUARD_BLOCK" '
+    /^[[:space:]]*$/                                  { print B; next }
+    /^[[:space:]]*#{1,6}[[:space:]]/                  { print B }
+    /^[[:space:]]*([-*+]|[0-9]+[.)])[[:space:]]/      { print B }
+    /^[[:space:]]*\|/                                 { print B }
+    /^[[:space:]]*(---|===|___|\*\*\*)/               { print B }
+    /^[[:space:]]*(```|~~~)/                          { print B }
+    /^[[:space:]]*>/                                  { print B }
+    { print }
+  ' "$1"
+}
+
+# verify_summary_content <change_summary_md> <trip_dir>
+#   return 0  no non-publishable value reached the summary
+#          1  HIT          — a non-publishable value is in the summary
+#          2  UNDETERMINED — the class or the summary could not be determined
+#
+# The same three-code contract as verify_publishable_content, for the same reason: a
+# binary contract cannot tell a guard that aborted for the RIGHT reason from one that
+# aborted for the wrong one, and the suite has to.
+#
+# ── THIS IS LAYER 2. LAYER 1 IS THE DERIVATION BOUND AND IT IS THE STRONGER ONE ──
+# agents/05-hub-planner.md constrains the generator to read only `publish: bound`
+# classes — C11, C13 and C1 — and never an `internal-hard` one, so the derived rows
+# carry no more than the site already encrypts. That is a PROVABLE bound: a value never
+# read cannot leak. What Layer 1 does not bound is free text an agent writes into the
+# summary alongside the derived rows, and that residue is what this function grades.
+#
+# It NEVER echoes the matched value, deliberately, for the reason its HTML sibling
+# states: the strings matched here are passport values and third-party health needs,
+# and this runs in a public Actions log.
+#
+# ONE projection, not two. The HTML sibling matches a visible arm and a retrievable arm
+# because publish copies the file rather than the painting of it. There is no such split
+# here: the projection below drops nothing, so the tokens it yields ARE the file's, and a
+# second arm would be the same stream twice.
+verify_summary_content() { # <change_summary_md> <trip_dir>
+  local summary_md="${1:-}" trip_dir="${2:-}"
+  local recs rc work sfile vfile n member field rule value hit=0 undet=0
+
+  if [ -z "$summary_md" ] || [ -z "$trip_dir" ]; then
+    warn "guard: the summary check needs a change summary and a trip dir"; return 2
+  fi
+  if [ ! -r "$summary_md" ]; then
+    warn "guard: the change summary is absent or unreadable — what would be shared cannot be certified"; return 2
+  fi
+
+  work="$(mktemp -d)" || { warn "guard: could not stage the summary check"; return 2; }
+  sfile="$work/summary.words"; vfile="$work/value.words"
+
+  strip_md_to_text_blocks "$summary_md" | _norm_words > "$sfile"
+  # Sentinels are not words and must not count toward the floor — the same subtraction
+  # the HTML arm makes, for the same reason.
+  n="$(awk -v B="$_GUARD_BLOCK" '$0 != B { c++ } END { print c + 0 }' "$sfile")"; n="${n:-0}"
+  if [ "$n" -lt "$GUARD_SUMMARY_FLOOR" ]; then
+    rm -rf "$work"
+    warn "guard: the change summary yielded only $n words — below the $GUARD_SUMMARY_FLOOR-word floor, so a degraded read is not a clean result"
+    return 2
+  fi
+
+  # The class comes from the declaration, through the one function that owns it. The
+  # second argument is the artifact being certified: nonpublishable_values uses it only
+  # for the empty-class-versus-stale-model mtime comparison, which is not HTML-specific,
+  # so passing the summary preserves the semantics exactly — the class read empty but
+  # the model predates the artifact ⇒ 2.
+  recs="$(nonpublishable_values "$trip_dir" "$summary_md")" && rc=0 || rc=$?
+  if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
+  # A parsed-and-empty class is a MEASUREMENT; an unrecognized model is a DEGRADATION,
+  # and nonpublishable_values has already returned 2 for that above. Absence is not zero.
+  if [ -z "$recs" ]; then rm -rf "$work"; return 0; fi
+
+  while IFS="$(printf '\t')" read -r member field rule value; do
+    [ -n "${rule:-}" ] || continue
+    printf '%s' "$value" | _norm_words > "$vfile"
+    _guard_match "$rule" "$vfile" "$sfile"; rc=$?
+    case "$rc" in
+      0) warn "guard: a non-publishable value reached the change summary — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
+      1) ;;
+      3) warn "guard: member '$member', field '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass."; undet=1 ;;
+      4) warn "guard: member '$member', field '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. See ADR-008 § Coverage boundary." ;;
+      *) warn "guard: the match for member '$member', field '$field' could not be run (matcher exit $rc) — undetermined, not clean."; undet=1 ;;
+    esac
+  done <<EOF
+$recs
+EOF
+
+  rm -rf "$work"
+  [ "$hit"   -eq 0 ] || return 1
+  [ "$undet" -eq 0 ] || return 2
+  return 0
+}
+
 # ═════════════════════════════════════════════════════════════════════════════
 # verify_ciphertext — THE PRE-PUSH SAFETY GUARD  ◀── your high-judgment function
 # ═════════════════════════════════════════════════════════════════════════════
@@ -1254,6 +1419,375 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
             | grep -E '[A-Z0-9]' \
             | sort -u | head -80)
   return 0
+}
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ORGANIZER-CONFIRM GATE (#552) — ADR-003 § Decision 2
+# ═════════════════════════════════════════════════════════════════════════════
+# ADR-003 decided a republish gates on the ORGANIZER's confirmation, not on a
+# system-counted quorum. This block is the gate: three pure resolvers, one abort,
+# and one recorder. It is deliberately placed BELOW the ADR-008 guard region and
+# ABOVE every subcommand, so it shares no hunk with either.
+#
+# ── WHAT THE GATE MEASURES, AND WHY IT IS NOT "A PUBLISH IS HAPPENING" ────────
+# The first cut of this design blocked a republish whenever a change was pending.
+# That is wrong here, and the reason is structural rather than stylistic: ADR-002
+# Decision 2 permits only a city-ambient client-side fetch, so ALL coordination
+# state lives inside the published bytes. Showing a traveller that a change is
+# pending therefore REQUIRES a publish — of a site whose itinerary content is the
+# one already published, carrying a coordination marker that says pending. A gate
+# keyed on publish-as-such aborts exactly that act, and the "change pending" state
+# becomes unreachable.
+#
+# So the gate keys on ITINERARY-CONTENT CHANGE:
+#   • itinerary content == what is currently published  -> nothing to confirm
+#   • itinerary content moved, and no confirmation      -> abort
+# A coordination-marker-only republish passes. An unapproved plan change does not.
+#
+# ── THE ITINERARY-CONTENT BOUNDARY, STATED SO A REVIEWER CAN SEE THE BYTES ────
+# "Itinerary content" is the VISIBLE TEXT of the site render, whitespace-collapsed,
+# with the coordination-notice band excised. Three parts, each grounded:
+#
+#   (1) VISIBLE TEXT, not the whole file. This repository already names that
+#       projection as itinerary content: strip_to_text's own contract line is
+#       "so the guard derives leak-tokens from itinerary *content*, not shared
+#       markup." Taking the whole file, or strip_to_published_text, would put the
+#       notice's CSS rule, its script branch, its `is-pending` class token and
+#       every attribute value inside the digest — and a marker-only republish
+#       would then read as an itinerary change, which is the deadlock again.
+#       strip_to_text deletes <script>/<style> bodies wholesale and turns every
+#       tag into a space, so a pure styling or scripting change moves nothing here
+#       by construction. That is the property this boundary needs. This projection
+#       ALSO excises C19's DECLARATION BLOCK as a construct, which strip_to_text
+#       does not — see strip_to_itinerary_text — so on a render carrying that block
+#       the two are deliberately not the same answer.
+#   (2) WHITESPACE-COLLAPSED, so a re-indent or a markup reflow is not a plan
+#       change. The collapse is verify_ciphertext check (c)'s own idiom
+#       (tr -s '[:space:]' ' ' then trim), reused rather than reinvented.
+#   (3) THE NOTICE BAND EXCISED. The band is visible text, so without this it
+#       would sit inside the digest. It is identified by its class token, and the
+#       excision is bounded — see strip_to_itinerary_text.
+#
+# WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, C19's
+# declaration block, attribute values, <script> and <style> bodies. A change confined to one
+# of those does not move the digest and can ride a standing confirmation. That is
+# the same coverage boundary ADR-008 draws between its two projections, and it is
+# the deliberate price of (1): pulling those surfaces in would make every CSS or
+# script edit — including #551's own — read as an itinerary change. THE DECLARATION
+# CLAUSE IS HONOURED BY AN EXCISION OF ITS OWN: the tag strip alone cannot collapse
+# a comment whose body carries a `>`, and C19's declaration block always carries one.
+# THAT EXCISION IS ANCHORED TO THE BLOCK'S DECLARED POSITION, so it is narrower than
+# "comment bodies" and deliberately so: a comment ELSEWHERE in the body is left to the
+# tag strip, and one whose body carries a `>` leaves residue INSIDE the digest, where a
+# change to it fires the gate. Noisier, and the closed direction — the alternative read
+# `<!--` as an opener inside a quoted attribute value and swallowed plan text between it
+# and the next `-->`, which failed OPEN. See strip_to_itinerary_text.
+#
+# ── WHY A PUBLISHED BASELINE EXISTS AT ALL ───────────────────────────────────
+# "Differs from what is currently published" needs a local anchor, and there is
+# none to be had from the published artifact: it is ciphertext by construction,
+# which is the whole point of ADR-002. Recording a fingerprint of the plaintext in
+# the per-trip PUBLIC repo would be a new disclosure surface, so it is not done.
+# The anchor is therefore a git-ignored sidecar in the trip dir, written by the
+# publish paths after a push succeeds. Absent, the gate has no anchor and the trip
+# republishes exactly as it does today — which is also the back-compat property
+# every trip published before this change relies on.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# SEAM S4 (#551) — the coordination notice's identity, and the only line in this
+# file that binds to #551's render. #551 declares the band as `.coord-notice` with
+# variants `.coord-notice.is-pending` / `.coord-notice.is-updated`, and declares
+# NON-EMISSION when coordination-state is absent or `none` — so on a trip with no
+# coordination activity there is nothing here to excise and the projection equals
+# strip_to_text exactly. If that class token changes, this line changes and nothing
+# else does.
+_COORD_NOTICE_CLASS='coord-notice'
+# The excision cap, in source characters. #551 declares the band's content as "a
+# static label string + the coordination-since date. Nothing else." — so a few
+# hundred characters is generous. The cap is what makes the FAIL-OPEN direction
+# unreachable: an unterminated or mis-shaped band matches nothing, the marker text
+# stays in the digest, and a marker-only republish then reads as an itinerary
+# change and ABORTS. Both failure directions land fail-closed; only an excision
+# that ran PAST the band could hide a plan change, and the cap forbids it.
+_COORD_NOTICE_CAP=512
+
+# The itinerary-content projection. A SIBLING of strip_to_text, not an edit to it:
+# verify_ciphertext consumes strip_to_text and #550's AC 5 holds its behaviour
+# fixed, so this file's established pattern is a new projection beside it — the
+# same reason strip_to_text_blocks and strip_to_published_text exist.
+#
+# ONE LIMB, AND WHY (#552 D10). This function shipped with strip_to_text's
+# `perl … 2>/dev/null || sed -E 's/<[^>]*>/ /g'` idiom copied onto it. That idiom
+# is honest THERE — strip_to_text's perl program is a tag-stripper and little else,
+# so the sed limb computes approximately the same answer — and dishonest HERE,
+# because the two limbs compute different things: this perl program also excises
+# the coordination band, and the sed limb does not. A failing or absent perl
+# therefore substituted a DIFFERENT projection into the gate's digest, silently
+# (`||` reads a status, and `2>/dev/null` threw away the only message), a
+# marker-only republish read as an itinerary change, and the gate aborted — which
+# is operator decision D6 conditionally reinstated. Graded by group S11.
+#
+# The limb is REMOVED rather than taught to excise, because sed cannot express this
+# program: it slurps the whole file (-0777), back-references the band's own tag name
+# (\1), and BOUNDS the excision with a lazy quantifier. The bound is the single
+# property that keeps the excision from running past the band into plan content — an
+# over-running excision deletes plan text, the digest then reads "unchanged", and an
+# unapproved change ships behind a marker. An approximate sed limb would put that one
+# FAIL-OPEN direction back on the table, so there is no honest fallback to offer;
+# strip_to_published_text, whose program is likewise inexpressible in sed, already has
+# this shape. perl is asserted in preflight instead of assumed here.
+#
+# stderr is deliberately NOT discarded. The `2>/dev/null` existed to silence perl
+# before falling back; with nothing to fall back to it would silence the one message
+# that explains the failure. The non-zero status now reaches itinerary_digest, which
+# turns it into this file's existing "nothing" answer for a projection it could not
+# take — an answer every caller already handles as "not a match".
+#
+# ── THE DECLARATION BLOCK IS EXCISED BY THE CORPUS'S OWN FRONTMATTER GRAMMAR ──
+# (#552, fourth remediation — AI-012, and the AI-014 wording it corrects)
+#
+# `s/<[^>]+>/ /g` stops at the first `>`, so it cannot collapse a comment whose body
+# contains one — it consumes `<!--` through that inner `>` as if it were a tag and leaves
+# the rest of the comment standing as visible text. C19's declaration rides an
+# `<!-- ... -->` block, and its `artifact:` field — `required` on its own fence, and held
+# equal to the selecting class's declared string by validate-artifacts.sh finding A5 —
+# carries a `>` inside `outputs/<destination>-travel-site.html`. The `>` is therefore
+# mandatory on every CONFORMANT render: this was the normal path, not an edge case.
+# `generated:` sits in that same block and changes on every build, so a next-day republish
+# carrying no itinerary change at all digested differently and the gate asked the organizer
+# to confirm a routine rebuild — decision D6's content-keying collapsing back toward
+# publish-keying. Graded by group S12.
+#
+# THIS RESTORES A BOUNDARY THIS FILE ALREADY DECLARED rather than drawing a new one: the
+# boundary note above lists HTML comment bodies among the surfaces OUTSIDE the digest.
+#
+# WHY THE MATCH IS ANCHORED, AND WHY THE PREVIOUS `s/<!--.*?-->/ /gs` WAS NOT SAFE. That
+# expression was a regex over raw text with no notion of HTML structure, so it read `<!--`
+# as a comment opener WHEREVER it appeared — including inside a QUOTED ATTRIBUTE VALUE,
+# where HTML5 says it is character data and not a comment at all. The lazy match then ran
+# from that attribute to the next genuine `-->` and deleted everything between,
+# reader-visible plan text included. THAT FAILED OPEN: a real itinerary edit inside the
+# swallowed span left the digest unmoved, the gate read "content unchanged", and an
+# unapproved plan change would publish behind a confirmation the organizer never gave.
+# Every other residual on this gate leaves MORE in the digest and therefore ABORTS; that
+# one left less, which is the one direction ADR-003 § Decision 2 cannot tolerate. Graded
+# by group S13.
+#
+# AND THE RENDER THAT REACHED IT WAS WELL-FORMED. The note that stood in this position
+# reasoned about the over-reach as though the offending render were malformed, and called
+# the span taken "exactly the span the comment grammar designates for that opener". An
+# `html.parser` oracle over such a render says otherwise: it reads the attribute-borne
+# `<!--` as an attribute VALUE and reports TWO comments where the regex found three. The
+# comment grammar designates nothing for that opener, because inside a quoted attribute
+# value there is no opener. Reading the case as malformed input under-estimates its
+# reachability, which is why the wording is corrected here rather than left to mislead.
+#
+# WHAT THE EXPRESSION MATCHES NOW: exactly the block `scripts/validate-artifacts.sh` reads.
+# `va_frontmatter` locates C19's declaration with
+# `NR==1 && $0 != "<!--" { exit } ... $0 == "-->" { exit }` — line 1 exactly `<!--`, and a
+# terminator line that is exactly `-->`. `\A<!--\n … \n-->(?=\n|\z)` is that grammar
+# written as a regex. ONE CONTRACT, TWO READERS, AGREEING BY CONSTRUCTION: this projection
+# excises precisely what the validator reads as frontmatter, so the two cannot drift on
+# what the declaration block is.
+#
+# AND THAT IS WHAT REMOVES THE ATTRIBUTE HAZARD — by construction rather than by care. The
+# match can begin only at byte 0. An attribute value sits inside a tag and a tag has a `<`
+# to its left, so an attribute-borne `<!--` is never at byte 0, and there is no unanchored
+# comment matcher left in this program for one to catch on.
+#
+# WHAT IT NO LONGER MATCHES, STATED AS A COST RATHER THAN LEFT TO BE DISCOVERED. A comment
+# in the BODY is no longer excised as a construct. One whose body carries no `>` is still
+# collapsed wholesale by the tag strip below and never reaches the digest. One whose body
+# DOES carry a `>` now leaves residue as visible text, so a change to it moves the digest
+# and fires the gate. That is noisier, and it is the CLOSED direction: the organizer is
+# asked to confirm something that was not a plan change, which ABORTS a republish rather
+# than publishing an unapproved one. The excision is narrowed back to the requirement that
+# produced it, which was never "excise every comment" but "keep C19's declaration out of
+# the digest" — and the over-generalisation from the first to the second is what opened
+# the hazard.
+#
+# EVERY OTHER SHAPE FAILS CLOSED, AND THE ANCHOR IS THE REASON. An unterminated block, a
+# block that is not at line 1, and a CRLF block each fail the match, so the block stays in
+# the digest, a routine republish reads as an itinerary change, and it ABORTS. Each of
+# those is also REJECTED by `va_frontmatter`, so the projection and the validator disagree
+# about no render. A cap is neither needed nor wanted here: the match runs from byte 0 to
+# the first line-anchored `-->`, which is the validator's own terminator, and a frontmatter
+# that grew past a cap would silently stop being excised.
+#
+# ORDER IS NO LONGER LOAD-BEARING FOR THIS LIMB, and it is kept in place rather than moved.
+# The previous expression had to run after the script/style limb because a `<script>` body
+# may legitimately contain the characters `<!--`, and an unanchored match would start
+# there. An anchored match cannot start inside a script body, or anywhere but byte 0, so
+# that ordering constraint is discharged by the anchor rather than by the sequence. The
+# limb stays where it was because moving it would change no answer and cost a reader the
+# diff.
+#
+# THE REPLACEMENT IS A SPACE, not nothing — the tag strip's idiom, and what keeps
+# `foo<!--c-->bar` from digesting as a single token.
+strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, or nothing on failure
+  COORD_CLASS="$_COORD_NOTICE_CLASS" COORD_CAP="$_COORD_NOTICE_CAP" \
+  perl -0777 -pe '
+    my $c = quotemeta($ENV{COORD_CLASS}); my $cap = 0 + $ENV{COORD_CAP};
+    s{<\s*([A-Za-z][-A-Za-z0-9]*)\b[^>]*\bclass\s*=\s*(["\x27])[^"\x27]*(?<![-\w])$c(?![-\w])[^"\x27]*\2[^>]*>.{0,$cap}?<\s*/\s*\1\s*>}{ }gis;
+    s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
+    s/\A<!--\n(?:.*?\n)?-->(?=\n|\z)/ /s;
+    s/<[^>]+>/ /g;
+  ' "$1"
+}
+
+# SEAM (#88) — the digest primitive, reading STDIN. cksum, not shasum/sha256sum:
+# those are the BSD-vs-GNU dialect split this file documents at length above
+# _epoch_of_file, and cksum in the stdin form is the repository's only existing
+# digest idiom (scripts/test-command-taxonomy.sh). The stdin form omits the
+# filename, so the token depends only on content; BOTH emitted fields (checksum and
+# byte length) are combined, so the token binds size as well as CRC.
+# STATED TRADE: cksum is CRC-32 — it detects change, it does not resist forgery.
+# That is the correct property here, because ADR-003 places the trust in the
+# organizer explicitly and there is no adversary in this threat model. Should #88
+# later collect attributable per-traveler approvals, forgery resistance becomes
+# real and the swap is this one function body.
+_digest_of() { # (stdin) -> one stable identity token
+  cksum | awk '{ printf "%s-%s", $1, $2 }'
+}
+
+# The itinerary-content identity of a site render. Nothing on an unreadable file —
+# the caller decides what an unreadable render means, and every caller here treats
+# it as "not a match" rather than as "unchanged".
+#
+# A FAILED PROJECTION TAKES THAT SAME "NOTHING" PATH (#552 D10), and the projection is
+# therefore run and CHECKED before the pipeline rather than inside it. Written as a
+# pipeline, a projection that failed still emitted nothing INTO the pipeline, and
+# `cksum` over nothing is a perfectly well-formed token (`4294967295-0`) that
+# _record_digest's charset test accepts and change_confirmation_state compares. The
+# gate would then be deciding from a digest that identifies no itinerary at all. So
+# the status is read first, and it is the ONLY discriminator: a render whose visible
+# text is legitimately empty still projects successfully and still gets that token,
+# because an empty itinerary is a real identity a trip may hold. Emptiness of the
+# OUTPUT means "empty render"; a non-zero STATUS means "no answer". Graded by S11b/S11d.
+#
+# `local text` is declared on its own line and assigned on the next, then read with an
+# explicit `||` — the combined `local text="$(…)"` form returns the status of `local`
+# and would mask exactly the failure this is here to catch. Same bash trap
+# require_change_confirmation names below, same reason.
+#
+# The output is byte-identical to the pipeline it replaces for every input the
+# projection can take: command substitution strips trailing newlines, which
+# `tr -s '[:space:]' ' '` followed by `sed 's/ *$//'` had already collapsed and
+# trimmed. That claim is about THIS function's shape and is unaffected by the comment
+# excision added to strip_to_itinerary_text afterwards — which does move the token on a
+# comment-bearing render, once. No published trip is exposed to that: the sidecar, the
+# gate and the projection all arrive in the same unreleased milestone, so there is no
+# baseline recorded under the earlier projection anywhere outside this branch. A sidecar
+# written by an earlier commit OF this branch does not match and re-anchors on the next
+# confirmed republish — fail-closed, and the only direction it could go.
+itinerary_digest() { # <html_file> -> identity token, or nothing
+  [ -r "${1:-}" ] || return 0
+  local text
+  text="$(strip_to_itinerary_text "$1")" || return 0
+  printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of
+}
+
+# The three sidecars, one resolver each. All three sit inside the trip dir, which
+# .gitignore excludes (`trips/*`) and which no subcommand ever copies into the
+# per-trip repo — so none of them is a publish surface.
+#
+# SEAM S1 (#550) — DISPLAY ONLY, and deliberately not load-bearing. #550 landed the
+# pending change as outputs/change-summary.md (class C20) carrying a `status`
+# field, not as a presence-marker file. The gate does not read it: keying on it
+# would key on publish-as-such, which is exactly what this design must not do.
+# cmd_confirm prints it so the organizer confirms against a named artifact.
+pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
+# The organizer's recorded approval, digest-bound to the itinerary it approves.
+change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
+# The itinerary content as of the last successful push. Written by cmd_publish and
+# cmd_update; read only here.
+published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
+
+# The `digest=` line of a two-line record, or NOTHING when the file is absent, the
+# line is missing, or the token is not a well-formed digest. Folding those three
+# into one empty answer is what satisfies ADR-007 §2's bound that no command may
+# predicate a branch on a field's ABSENCE where a placeholder makes that field
+# present: every caller branches on the VALUE, and a malformed record is never read
+# as approval. Written as a read loop rather than a pipeline on purpose — a
+# `sed ... | head -1` would be the early-exit-under-pipefail shape this suite's
+# group PF grades against.
+_record_digest() { # <record_file> -> digest token, or nothing
+  local f="${1:-}" line tok=""
+  [ -r "$f" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      digest=*) tok="${line#digest=}"; break ;;
+    esac
+  done < "$f"
+  case "$tok" in
+    ''|*[!A-Za-z0-9-]*) return 0 ;;
+  esac
+  printf '%s' "$tok"
+}
+
+# Records the itinerary content that is now live. Called AFTER a push succeeds, so
+# the sidecar never claims content that was not published. Atomic: written to a
+# temp file in the same directory, then moved into place, so a crash mid-write
+# cannot leave a half-record that _record_digest would read as a digest.
+record_published_itinerary() { # <trip_dir> <site_html>
+  local trip_dir="$1" site_html="$2" out tmp dg
+  out="$(published_itinerary_path "$trip_dir")"
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || return 0
+  tmp="$(mktemp "${out}.XXXXXX")" || return 0
+  printf 'digest=%s\npublished=%s\n' "$dg" "$(_iso_now)" > "$tmp"
+  mv -f "$tmp" "$out"
+}
+
+# SEAM S2 (#88) — the resolver. Pure: reads files, no network, no TTY, no writes.
+# #88 replaces THIS BODY to aggregate per-traveler approvals against its decided
+# threshold; the four-token contract, require_change_confirmation and its call site
+# all survive that replacement unchanged, provided #88 emits from this vocabulary —
+# which the allowlist-proceed case below enforces by aborting on anything else.
+#
+#   none-pending  no published baseline, OR the outgoing itinerary content is
+#                 exactly what is already published        -> proceed
+#   unconfirmed   itinerary content moved, and no parseable confirmation  -> abort
+#   stale         itinerary content moved since it was confirmed          -> abort
+#   confirmed     the confirmation covers this exact itinerary content    -> proceed
+change_confirmation_state() { # <trip_dir> -> one token on stdout
+  local trip_dir="$1" base_dg out_dg rec_dg
+  base_dg="$(_record_digest "$(published_itinerary_path "$trip_dir")")"
+  if [ -z "$base_dg" ]; then printf 'none-pending'; return 0; fi
+  out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
+  if [ "$out_dg" = "$base_dg" ]; then printf 'none-pending'; return 0; fi
+  rec_dg="$(_record_digest "$(change_confirmation_path "$trip_dir")")"
+  if [ -z "$rec_dg" ]; then printf 'unconfirmed'; return 0; fi
+  if [ "$rec_dg" = "$out_dg" ]; then printf 'confirmed'; return 0; fi
+  printf 'stale'
+}
+
+# SEAM S3 (#85) — THE GATE. One argument, no side effects, no TTY, no network, and
+# bound to the site-HTML artifact rather than to any caller's locals — which is why
+# relocating it onto #85's event-driven path is moving this one call line.
+#
+# TWO PROPERTIES ARE LOAD-BEARING AND MUST NOT BE VARIED:
+#
+#  1. `local state` is DECLARED on its own line and ASSIGNED on the next. A combined
+#     `local state="$(…)"` returns the exit status of `local`, masking the command
+#     substitution's status so `set -e` can never fire on it. Known bash trap.
+#  2. The PROCEED SET IS THE ALLOWLIST and `*)` is the abort. Written the other way
+#     round — enumerating the abort cases with a permissive default — an unknown or
+#     empty token would PUBLISH. That inversion is the whole risk this design was
+#     built against: with this ordering there is no value the resolver can emit,
+#     including one no author anticipated and including the empty string, that
+#     reaches a push. It is unreachable rather than merely tested.
+#     Do NOT add a marker-only exemption branch here. Keying the gate on itinerary
+#     content is what makes the marker-only republish pass; an exemption inside a
+#     fail-closed guard is the failure mode this shape exists to remove.
+require_change_confirmation() { # <trip_dir>
+  local trip_dir="$1"
+  local state
+  state="$(change_confirmation_state "$trip_dir")"
+  case "$state" in
+    none-pending|confirmed) return 0 ;;
+    *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
+  esac
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1327,6 +1861,13 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
   gh api -X POST "repos/${owner}/${slug}/pages" -f "source.branch=main" -f "source.path=/" >/dev/null 2>&1 \
     || warn "Pages may already be enabled, or will activate shortly."
 
+  # First publish establishes the baseline the #552 gate compares against. cmd_publish
+  # itself stays UNGATED — it dies above when the per-trip repo already exists, so it
+  # structurally cannot overwrite a published plan — but without this line the gate
+  # would have no anchor on a freshly published trip and the FIRST unapproved change
+  # after a publish would sail through. Recording is not gating.
+  record_published_itinerary "$trip_dir" "$site_html"
+
   ok "Published: https://${owner}.github.io/${slug}/"
   if [ "$plaintext" != "1" ]; then
     printf '\n  Passphrase: \033[1;36m%s\033[0m  (saved to %s/.passphrase — git-ignored)\n' \
@@ -1361,6 +1902,12 @@ cmd_update() { # <trip_dir>
 
   local site_html pub_dir passphrase enc owner slug boiler
   site_html="$(resolve_site_html "$trip_dir")"
+  # THE ORGANIZER-CONFIRM GATE (#552, ADR-003 § Decision 2). Its position is exact
+  # and load-bearing: after the render is resolved (the gate digests it) and BEFORE
+  # ensure_pub_clone, which performs network I/O and can remove the publish dir. On
+  # an abort nothing has been cloned, encrypted, copied or pushed — the same
+  # discipline the plaintext gate states for itself in cmd_publish.
+  require_change_confirmation "$trip_dir"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   passphrase="$(get_passphrase "$trip_dir" 0)"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
@@ -1380,7 +1927,64 @@ cmd_update() { # <trip_dir>
     commit_noreply . "Update trip site"
     git push --quiet origin main
   )
+  # The push succeeded, so this itinerary content IS what is published now. Recorded
+  # here rather than earlier for that reason: a sidecar written before the push would
+  # claim content a failed push never delivered, and the next republish would then
+  # compare against a plan nobody can see.
+  record_published_itinerary "$trip_dir" "$site_html"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
+}
+
+cmd_confirm() { # <trip_dir>
+  local trip_dir="${1:?usage: confirm <trip-dir>}"
+  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+
+  local site_html state pending rec tmp dg ans
+  site_html="$(resolve_site_html "$trip_dir")"
+  state="$(change_confirmation_state "$trip_dir")"
+
+  # Refuse when there is no itinerary change in front of the organizer. A
+  # confirmation recorded now would be a PRE-AUTHORISATION of an unseen future
+  # change, and the gate would then wave through whatever the next bake produces.
+  # Expressed through the resolver rather than through a second definition of
+  # "pending", so there is exactly one answer to "has the plan moved?".
+  [ "$state" != "none-pending" ] \
+    || die "nothing to confirm for $trip_dir — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+
+  # TTY-only, with no override flag, and the absence of the flag is the point.
+  # ADR-007 §2 names the two existing flags that convert a refusal into a silent
+  # pass for a non-interactive caller and states that bound is not negotiable by a
+  # later slice. A third such override would be precisely the class of thing that
+  # bound forbids, so this requirement is hard: no automation can attest a group's
+  # consensus on the group's behalf.
+  [ -t 0 ] || die "confirm requires a terminal — it records a human decision, and there is deliberately no flag to skip it. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
+
+  printf '\n  Confirming the itinerary change for: %s\n' "$trip_dir"
+  printf '  Site render     : %s\n' "$site_html"
+  pending="$(pending_change_path "$trip_dir")"
+  if [ -r "$pending" ]; then
+    printf '  Change summary  : %s\n' "$pending"
+  else
+    warn "no change summary at $pending — confirming from the render alone."
+  fi
+  printf '  Gate state      : %s\n' "$state"
+  printf '  Type CONFIRM to record the group'"'"'s approval of this itinerary: '; read -r ans
+  [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
+
+  dg="$(itinerary_digest "$site_html")"
+  [ -n "$dg" ] || die "could not read the itinerary content of $site_html — nothing was recorded."
+  rec="$(change_confirmation_path "$trip_dir")"
+  tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
+  printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
+  mv -f "$tmp" "$rec"
+
+  # The pending change summary is NOT deleted or promoted here. #551 reads it to
+  # render the "change pending" state, and the writer never promotes its own output
+  # — the promotion IS the organizer's decision, and this record is where that
+  # decision lives. No post-republish cleanup is needed anywhere either: a later
+  # re-bake moves the itinerary content, the digest stops matching, and the state
+  # resolves `stale` on its own.
+  ok "Confirmed. The next  $(basename "$0") update ${trip_dir}  will publish this itinerary; a further edit re-opens the gate."
 }
 
 cmd_rotate() { # <trip_dir> [--passphrase <new>]
@@ -1421,6 +2025,9 @@ _epoch_of_file() { # <file> -> mtime epoch on stdout, or nothing
   printf '%s' "$e"
 }
 _epoch_of_iso()  { date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$1" +%s 2>/dev/null || date -u -d "$1" +%s 2>/dev/null || true; }
+# Now, in the same ISO-8601 UTC shape _epoch_of_iso parses back. One spelling that
+# is identical on BSD and GNU date, so it does not join the dialect split above.
+_iso_now()       { date -u +%Y-%m-%dT%H:%M:%SZ; }
 _ymd_of_epoch()  { # <epoch> -> YYYY-MM-DD, or '-' when empty
   [ -n "${1:-}" ] || { printf '%s' '-'; return; }
   date -r "$1" +%Y-%m-%d 2>/dev/null || date -d "@$1" +%Y-%m-%d 2>/dev/null || printf '%s' '-'
@@ -1560,11 +2167,12 @@ main() {
   case "$sub" in
     publish)     cmd_publish   "$@" ;;
     update)      cmd_update    "$@" ;;
+    confirm)     cmd_confirm   "$@" ;;
     rotate)      cmd_rotate    "$@" ;;
     list|status) cmd_list      "$@" ;;
     unpublish)   cmd_unpublish "$@" ;;
     -h|--help|help|"") usage 0 ;;
-    *) die "unknown subcommand: $sub (try: publish | update | rotate | list | unpublish)" ;;
+    *) die "unknown subcommand: $sub (try: publish | update | confirm | rotate | list | unpublish)" ;;
   esac
 }
 
