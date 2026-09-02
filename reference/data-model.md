@@ -525,7 +525,7 @@ Because each per-traveler file is independently editable, the system gains a cap
 
 The enrichment agent can diff each `travelers/<traveler>.md` against the snapshot it last processed. When a file has changed — a new desire, a revised need, a dropped preference — the agent emits an **update signal**. That signal is a candidate **replanning trigger**: a changed preference can warrant an equity-aware re-plan, alongside the existing missed-booking trigger derived from event status.
 
-This document describes the *capability* and the *data condition* that produces it (an edited source file, detected by diffing against the last-processed snapshot). The replanning behavior the signal triggers — when to re-plan, and how to balance the group fairly — is owned by the replanning capability, not by this substrate. The substrate's job is only to make the signal detectable and to carry it.
+This document describes the *capability* and the *data condition* that produces it (an edited source file, detected by diffing against the last-processed snapshot). The replanning behavior the signal triggers — when to re-plan, and how to balance the group fairly — is owned by the replanning capability — `reference/replan-protocol.md` — not by this substrate. The substrate's job is only to make the signal detectable and to carry it.
 
 ---
 
@@ -692,7 +692,7 @@ To keep the substrate boundary clear:
 - **No optimization or ranking logic.** Nothing in the satisfaction layer optimizes yet. The engines *read* the derived model; this document does not specify what they do with it.
 - **No group destination recommendation *in this layer*.** Per-traveler destination leanings are *captured* (forward-hook (a)); aggregating them into a ranked group shortlist is **realized downstream** in `agents/destination-ideation.md` (which recommends — the group still makes the pick), never in this individual-file substrate.
 - **No side-bar / group-split computation.** Per-traveler people-dynamics, desire-overlap, and interest divergence are *captured* (forward-hook (b)); computing any single / small-group / full-group split from them, bounded by `Whole-group moments`, is left to design and is not computed here. No split is ever stored in an individual file.
-- **No replanning policy.** The update signal is defined as a data condition; the decision to re-plan and the fairness logic live with the replanning capability.
+- **No replanning policy.** The update signal is defined as a data condition; the decision to re-plan and the fairness logic live with the replanning capability — `reference/replan-protocol.md`.
 - **No control-flow / consumption sequencing.** Who runs when, and how the hub consumes these artifacts in a pipeline pass, is governed by the control-flow contract, not this data-architecture document.
 
 This file is the **data** contract. Behavior contracts live with their respective agents and capabilities.
