@@ -23,10 +23,14 @@
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
-# R = the change-summary content guard (#550 AC 5) — verify_summary_content over
-# outputs/change-summary.md, an `internal` artifact verify_publishable_content never
-# sees. Grades the clean/HIT/UNDETERMINED triple, the RE-DERIVED word floor, and the
-# markdown block sentinel that keeps the conjunctive rule scoped.
+# R = the change-summary (#550). R1-R5 grade its CONTENT guard (AC 5) —
+# verify_summary_content over outputs/change-summary.md, an `internal` artifact
+# verify_publishable_content never sees: the clean/HIT/UNDETERMINED triple, the
+# RE-DERIVED word floor, and the markdown block sentinel that keeps the conjunctive
+# rule scoped. R6 grades the MOVED PREDICATE (AC 1 / AC 4, second remediation) — that
+# the placement tuple the emitter spec declares actually detects a same-day time move
+# on the shipped witness, that an unchanged re-bake still detects nothing, and that
+# time is compared WITHIN the matched key rather than folded into it.
 # S = the organizer-confirm gate (#552 AC 5) — the republish path gates on the
 # organizer's confirmation of an ITINERARY-CONTENT change, not on publish-as-such, so a
 # coordination-marker-only republish still reaches the group. Grades both branches
@@ -1537,6 +1541,244 @@ RRECH="$WORK/r_recur_hit.md"; rsections "$RRECH" 6
 printf '\nNote for the group: carry your Irish passport, valid to 2027, on the day.\n' >> "$RRECH"
 verify_summary_content "$RRECH" "$RTD" >/dev/null 2>&1; RRC=$?
 if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the value inside ONE block still aborts (rc=1) — the sentinel narrowed the window, it did not disarm it"; else FAIL "R5c: a real same-block carry-through no longer aborts (rc=$RRC) — the projection over-corrected into a fail-open"; fi
+
+
+# ── Group R, second remediation (#550 AC 1 / AC 4) — MOVED sees a same-day TIME move ──
+#
+# R1–R5 grade what a summary may CARRY (AC 5). R6 grades what decides whether a summary
+# is written at all: the MOVED predicate. Stage 7 found it comparing `(day, role)` — the
+# venue matrix's placement tuple — while the field a re-timed event actually changes, the
+# clock time, sat in no structured source. A dinner moving 19:00 to 20:00 on the same day
+# produced no row; and because the no-op rule (AC 4) suppresses a summary whose difference
+# is empty, a re-bake whose ONLY change was that move published silently. AC 1's "what
+# moved" failed and AC 4 inverted — the rule that exists to suppress noise suppressed the
+# signal.
+#
+# WHY THESE ARMS READ THE CONTRACT RATHER THAN SPELLING IT. This predicate is a document
+# contract, not a shipped function — the hub emits the summary. So R6 reads the placement
+# tuple out of `agents/05-hub-planner.md`, resolves its field names against the C13 table
+# header, and then EXECUTES it over the shipped witness. An arm that spelled `(day, time)`
+# itself would stay green through a spec that had dropped the time back out, which is the
+# one regression it exists to catch.
+#
+# THE DESIGN CONSTRAINT THE ARMS HOLD. Time is an attribute compared WITHIN a matched key
+# and is never part of one. Fold it into the identity and a re-timed event becomes a
+# different key: the diff then reports DROPPED + ADDED, two rows about one thing, which is
+# worse than the silence it replaced. R6e reads that property directly (the key is on both
+# sides of a time move) and R6f is its sensitivity arm — mutate the KEY instead and the
+# same machinery does report DROPPED + ADDED with zero MOVED, so R6e's verdict is a
+# discrimination rather than a shape that cannot fail.
+#
+#   R6a  the Step-2 before-map for event-status HOLDS a time  (control: it holds status)
+#   R6b  the C13 header carries `Time` in BOTH of its homes, and they agree
+#   R6c  REGRESSION — a same-day time-only move yields exactly one MOVED row
+#   R6d  CONTROL for R6c — an unmutated re-bake yields zero (AC 4's no-op rule, intact)
+#   R6e  the moved key is on BOTH sides — MOVED, not DROPPED + ADDED
+#   R6f  SENSITIVITY for R6e — a KEY mutation does report DROPPED + ADDED, 0 MOVED
+#
+# Offline: three tracked files and awk. No network, no gh, no Node, no TTY. This group has
+# no legitimate skip and is deliberately NOT declared in GUARD_EXPECTED_SKIPS.
+echo
+echo "MOVED sees a same-day time move (#550 AC 1 / AC 4, second remediation):"
+
+R6_SPEC="$HERE/../agents/05-hub-planner.md"
+R6_MODEL="$HERE/../reference/data-model.md"
+R6_WITNESS="$HERE/../examples/data-architecture-demo/outputs/event-status.md"
+R6D="$WORK/r550_moved"; mkdir -p "$R6D"
+
+# What the before-map HOLDS for outputs/event-status.md, read from the Step 2 capture
+# table in the emitter spec. Nothing downstream of the overwrite can reconstruct it, so a
+# field absent from this cell is a field no bucket can ever compare.
+r6_held_tuple() { # [<spec>]
+  awk -F'|' '$0 ~ /`outputs\/event-status\.md`/ && $0 ~ /`Event ID`/ {
+               v = $4; gsub(/[`() \t]/, "", v); print v; exit
+             }' "${1:-$R6_SPEC}"
+}
+
+# The placement tuple MOVED compares for an Event ID, read from the bucket table. The
+# limb is located by the key space it is stated for, so the venue limb's `(day, role)`
+# cannot be mistaken for it.
+r6_moved_tuple() { # [<spec>]
+  awk '$0 ~ /^\|[[:space:]]*\*\*MOVED\*\*[[:space:]]*\|/ {
+         p = index($0, "for an `Event ID`")
+         if (p == 0) exit
+         s = substr($0, 1, p - 1); t = ""
+         while (match(s, /`\([^)]*\)`/)) {
+           t = substr(s, RSTART + 2, RLENGTH - 4)
+           s = substr(s, RSTART + RLENGTH)
+         }
+         gsub(/[ \t]/, "", t); print t; exit
+       }' "${1:-$R6_SPEC}"
+}
+
+# The C13 table header, one column per line, from whichever of its two homes is asked.
+r6_c13_cols() { # <file>
+  awk '/^\|[[:space:]]*Event ID[[:space:]]*\|/ {
+         n = split($0, f, "|")
+         for (i = 2; i < n; i++) { c = f[i]; gsub(/^[ \t]+|[ \t]+$/, "", c); print c }
+         exit
+       }' "$1"
+}
+
+# Project the event table to <key TAB placement> using the field names the CONTRACT gave.
+# A field the header does not carry projects as <<ABSENT>> rather than being skipped: a
+# dropped column must not quietly degrade into an equal comparison.
+r6_project() { # <file> <comma-separated field names>
+  awk -v cols="$2" '
+    BEGIN { nc = split(cols, want, ",") }
+    /^\|[[:space:]]*Event ID[[:space:]]*\|/ && !hdr {
+      n = split($0, f, "|")
+      for (i = 2; i < n; i++) { c = f[i]; gsub(/^[ \t]+|[ \t]+$/, "", c); idx[tolower(c)] = i }
+      hdr = 1; next
+    }
+    hdr && /^\|[[:space:]]*`evt-/ {
+      n = split($0, f, "|")
+      k = f[2]; gsub(/[` \t]/, "", k)
+      out = ""
+      for (j = 1; j <= nc; j++) {
+        w = want[j]; gsub(/[ \t]/, "", w)
+        ci = idx[tolower(w)]
+        v = (ci ? f[ci] : "<<ABSENT>>"); gsub(/^[ \t]+|[ \t]+$/, "", v)
+        out = out (j > 1 ? " ~ " : "") v
+      }
+      print k "\t" out
+    }' "$1"
+}
+
+# Rewrite one cell of one row — the re-bake the arms below diff against. A column the
+# header does not carry leaves the row untouched, which is precisely the pre-fix state.
+r6_mutate() { # <file> <key> <column name> <new cell value>
+  awk -v key="$2" -v col="$3" -v nv="$4" '
+    /^\|[[:space:]]*Event ID[[:space:]]*\|/ && !hdr {
+      n = split($0, f, "|")
+      for (i = 2; i < n; i++) { c = f[i]; gsub(/^[ \t]+|[ \t]+$/, "", c); idx[tolower(c)] = i }
+      hdr = 1; print; next
+    }
+    hdr && /^\|[[:space:]]*`evt-/ {
+      n = split($0, f, "|")
+      k = f[2]; gsub(/[` \t]/, "", k)
+      if (k == key) {
+        ci = idx[tolower(col)]
+        if (!ci) { print; next }
+        f[ci] = " " nv " "
+        line = f[1]
+        for (i = 2; i <= n; i++) line = line "|" f[i]
+        print line; next
+      }
+      print; next
+    }
+    { print }' "$1"
+}
+
+# The keyed set difference, computed exactly as the bucket table states it.
+r6_diff() { # <before-projection> <after-projection> <ADDED|DROPPED|MOVED>
+  awk -F'\t' -v want="$3" '
+    NR == FNR { b[$1] = $2; seenb[$1] = 1; next }
+    { a[$1] = $2; seena[$1] = 1 }
+    END {
+      for (k in seena) {
+        if (!(k in seenb)) { if (want == "ADDED") print k; continue }
+        if (b[k] != a[k] && want == "MOVED") print k
+      }
+      if (want == "DROPPED") for (k in seenb) if (!(k in seena)) print k
+    }' "$1" "$2"
+}
+
+r6_n() { printf '%s\n' "$1" | grep -c .; }
+
+R6HELD="$(r6_held_tuple)"
+R6TUP="$(r6_moved_tuple)"
+
+# R6a — the before-map holds a time. Its control is `status`: the cell has held that
+# since the artifact shipped, so a parse that cannot see it is reading the wrong cell and
+# its verdict on `time` would be an artefact of the parse rather than of the contract.
+if [ -z "$R6HELD" ]; then
+  FAIL "R6a: the Step-2 capture table's held value for outputs/event-status.md did not parse at all — every arm below would be reading an empty contract"
+elif ! grep -q 'status' <<<"$R6HELD"; then
+  FAIL "R6a: the held value parsed as '$R6HELD', which does not name the status it has always held — the parse is off the intended cell, so its reading of 'time' proves nothing"
+elif grep -q 'time' <<<"$R6HELD"; then
+  PASS "R6a: the before-map captured at Step 2 holds a time for outputs/event-status.md (held = '$R6HELD') — a re-timed event has a before-value to be compared against"
+else
+  FAIL "R6a: the before-map holds '$R6HELD' — no time. Nothing captured before the overwrite can witness a re-timing, so a same-day time move is unobservable whatever the bucket table says"
+fi
+
+# R6b — the column exists, in both of its homes, spelled the same way. One table shape
+# with two homes that disagree is the drift this arm exists to refuse.
+R6WCOLS="$(r6_c13_cols "$R6_WITNESS")"
+R6MCOLS="$(r6_c13_cols "$R6_MODEL")"
+R6WN="$(r6_n "$R6WCOLS")"; R6MN="$(r6_n "$R6MCOLS")"
+if [ "$R6WN" -eq 0 ] || [ "$R6MN" -eq 0 ]; then
+  FAIL "R6b: the C13 header did not parse in one of its two homes (witness=$R6WN columns, model=$R6MN) — the column verdict would be vacuous"
+elif [ "$R6WCOLS" != "$R6MCOLS" ]; then
+  FAIL "R6b: the C13 header differs between reference/data-model.md and the shipped witness — one table shape, two homes, and they disagree about it"
+elif grep -qx 'Time' <<<"$R6WCOLS"; then
+  PASS "R6b: the C13 table carries a Time column in both of its homes and the two headers agree ($R6WN columns) — the field a re-bake re-times has a structured home"
+else
+  FAIL "R6b: the C13 table carries no Time column (header: $(printf '%s' "$R6WCOLS" | tr '\n' '/')) — the only clock time on a keyed row is free text in Notes, and AC 2 forbids diffing prose"
+fi
+
+# The key is read off the witness rather than spelled here: this group asserts a property
+# of the shipped instance, not of a fixture written to make it true. The first `planned`
+# row is taken, because `planned` is the only status a re-bake may move freely.
+R6KEY="$(awk '
+  /^\|[[:space:]]*Event ID[[:space:]]*\|/ && !hdr {
+    n = split($0, f, "|")
+    for (i = 2; i < n; i++) { c = f[i]; gsub(/^[ \t]+|[ \t]+$/, "", c); idx[tolower(c)] = i }
+    hdr = 1; next
+  }
+  hdr && /^\|[[:space:]]*`evt-/ {
+    si = idx["status"]; if (!si) next
+    n = split($0, f, "|"); s = f[si]; gsub(/[` \t]/, "", s)
+    if (s == "planned") { k = f[2]; gsub(/[` \t]/, "", k); print k; exit }
+  }' "$R6_WITNESS")"
+R6BEFORE="$R6D/before.md"; cp "$R6_WITNESS" "$R6BEFORE"
+R6AFTER="$R6D/after_time.md"; r6_mutate "$R6BEFORE" "$R6KEY" time '18:45' > "$R6AFTER"
+R6PB="$R6D/proj_before.tsv"; r6_project "$R6BEFORE" "$R6TUP" > "$R6PB"
+R6PA="$R6D/proj_after.tsv";  r6_project "$R6AFTER"  "$R6TUP" > "$R6PA"
+R6ROWS="$(grep -c . "$R6PB")"
+R6MOVED="$(r6_diff "$R6PB" "$R6PA" MOVED)"; R6MVN="$(r6_n "$R6MOVED")"
+
+# R6c — THE REGRESSION ARM. Same day, same venue, same role, same status; only the clock
+# moved. If this reports nothing, a real user-visible shift publishes in silence.
+if [ -z "$R6KEY" ] || [ "$R6ROWS" -eq 0 ]; then
+  FAIL "R6c: the witness yielded no planned-status key ('$R6KEY') or projected to 0 event rows under the contract's tuple ('$R6TUP') — the regression verdict below would be measuring an empty table"
+elif [ "$R6MVN" -eq 1 ] && [ "$R6MOVED" = "$R6KEY" ]; then
+  PASS "R6c: a same-day time-only re-bake of the shipped witness ($R6ROWS rows projected over '$R6TUP') yields exactly one MOVED row, keyed $R6KEY — AC 1's \"what moved\" is observable"
+else
+  FAIL "R6c: a same-day time-only re-bake yielded $R6MVN MOVED row(s) ('$R6MOVED') over tuple '$R6TUP' — the field that changed is not in the compared tuple, so the shift is silent and AC 4's no-op rule then suppresses the whole summary"
+fi
+
+# R6d — CONTROL for R6c, and AC 4 read directly. A comparison that fires on an unchanged
+# re-bake would make R6c's single row meaningless and would append an empty section on
+# every synthesis.
+R6NOOP="$(r6_diff "$R6PB" "$R6PB" MOVED)"; R6NN="$(r6_n "$R6NOOP")"
+if [ "$R6NN" -eq 0 ]; then
+  PASS "R6d: an unchanged re-bake yields 0 MOVED rows over the same tuple — AC 4's no-op rule survives the widened predicate, so R6c's single row is the mutation and not a comparison that always fires"
+else
+  FAIL "R6d: an unchanged re-bake yielded $R6NN MOVED row(s) ('$R6NOOP') — the predicate fires on identity, every synthesis would append a section saying nothing, and R6c proves nothing"
+fi
+
+# R6e — the design constraint, read as a property of the two projections.
+R6INB="$(cut -f1 "$R6PB" | grep -cx "$R6KEY")"
+R6INA="$(cut -f1 "$R6PA" | grep -cx "$R6KEY")"
+if [ "$R6INB" -eq 1 ] && [ "$R6INA" -eq 1 ]; then
+  PASS "R6e: $R6KEY is present on both sides of the time move (before=$R6INB, after=$R6INA) — time is compared WITHIN the matched key and is not part of it"
+else
+  FAIL "R6e: $R6KEY is not on both sides of a time move (before=$R6INB, after=$R6INA) — time has joined the identity, so a re-timed event is a different event and the group is told a thing was dropped and an unrelated thing added"
+fi
+
+# R6f — SENSITIVITY for R6e. Without it, R6e is satisfied by any construction in which
+# keys never change at all.
+R6AKEY="$R6D/after_key.md"; r6_mutate "$R6BEFORE" "$R6KEY" 'event id' '`evt-zzzz`' > "$R6AKEY"
+R6PK="$R6D/proj_key.tsv"; r6_project "$R6AKEY" "$R6TUP" > "$R6PK"
+R6KM="$(r6_n "$(r6_diff "$R6PB" "$R6PK" MOVED)")"
+R6KD="$(r6_n "$(r6_diff "$R6PB" "$R6PK" DROPPED)")"
+R6KA="$(r6_n "$(r6_diff "$R6PB" "$R6PK" ADDED)")"
+if [ "$R6KD" -eq 1 ] && [ "$R6KA" -eq 1 ] && [ "$R6KM" -eq 0 ]; then
+  PASS "R6f: mutating the KEY instead of the time reports 1 DROPPED + 1 ADDED and 0 MOVED — the same machinery does produce the two-row shape, so R6e's verdict discriminates rather than being unable to fail"
+else
+  FAIL "R6f: a key mutation reported DROPPED=$R6KD ADDED=$R6KA MOVED=$R6KM, not the 1/1/0 that distinguishes a re-identification from a re-timing — R6e cannot be read as evidence"
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group S (#552 AC 5) — the organizer-confirm gate on the republish path
