@@ -51,15 +51,18 @@
 # document rather than spelled here), its state VOCABULARY (the contract's variants and
 # C19's coordination-state enum, set-diffed both ways), and the NULL CASE: absent a
 # pending change or a recent update the render is byte-identical to a pre-component
-# render and the itinerary projection is byte-identical to strip_to_text. T5 grades the
+# render and the itinerary projection is byte-identical to strip_to_text on the
+# comment-free input this group builds (S12d owns the comment-bearing case, where the two
+# are required to differ). T5 grades the
 # ANCHOR (AC 2, second remediation) — that `coordination-since` for the `updated` state is
 # read from the confirmation's own record rather than re-derived from the run, so the
 # seven-day decay window does not restart on every rebuild. T6/T7 grade the STATE (AC 2 /
 # AC 5, second remediation) — that the record the mapping derives coordination-state from is
 # the record the shipped confirm subcommand writes, so `updated` is reachable and the pending
 # band clears; and that the band is outside the itinerary digest on a render carrying C19's
-# own declaration block, with the residual that block leaves into that digest measured and
-# attributed rather than repaired here.
+# own declaration block. T7c grades the block itself: it once measured the residual that
+# block left in the digest and now asserts its absence, the projection having been repaired
+# by the third remediation graded in S12.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -2713,16 +2716,31 @@ fi
 # so #552's itinerary projection must be byte-for-byte the projection that shipped
 # before it. This is the half of AC 5 that lives in the guard rather than on the page,
 # and it is what makes "renders exactly as it does today" true of the pushed bytes too.
+#
+# SCOPE, NARROWED BY THE THIRD REMEDIATION — READ THIS BEFORE RE-POINTING THE FIXTURE.
+# The identity is claimed on input carrying NO HTML COMMENT, which is what this group's
+# fixtures build. It is not claimed in general, and it must not be: strip_to_itinerary_text
+# now excises the comment construct and strip_to_text — byte-frozen, on
+# verify_ciphertext's path — does not, so on a comment-bearing render the two projections
+# are REQUIRED to differ. S12d owns that difference and asserts both directions in one arm.
+#
+# THE SCOPE IS CHECKED RATHER THAN DESCRIBED. If these fixtures ever grow a declaration
+# block, the first branch below says which assumption moved instead of leaving a reader to
+# reconstruct it from a byte-count mismatch.
+T4_HAS_COMMENT=0
+case "$(cat "$T_DIR/none.html")" in *'<!--'*) T4_HAS_COMMENT=1 ;; esac
 strip_to_itinerary_text "$T_DIR/none.html" > "$T_DIR/proj_new_null.txt"
 strip_to_text            "$T_DIR/none.html" > "$T_DIR/proj_old_null.txt"
 strip_to_itinerary_text "$T_DIR/spec.html" > "$T_DIR/proj_new_mark.txt"
 strip_to_text            "$T_DIR/spec.html" > "$T_DIR/proj_old_mark.txt"
-if [ ! -s "$T_DIR/proj_old_null.txt" ]; then
+if [ "$T4_HAS_COMMENT" -ne 0 ]; then
+  FAIL "T4: the null-case fixture now carries an HTML comment, and the identity this arm asserts does not hold on that input by design — strip_to_itinerary_text excises the comment construct and strip_to_text does not. Re-point this arm at a comment-free render, or retire it in favour of S12d, which asserts the identity and the difference together"
+elif [ ! -s "$T_DIR/proj_old_null.txt" ]; then
   FAIL "T4: strip_to_text produced nothing for the null-case render, so the identity below would be an equality between two empty files"
 elif cmp -s "$T_DIR/proj_new_mark.txt" "$T_DIR/proj_old_mark.txt"; then
   FAIL "T4: the two projections agree on a MARKED render as well, so this comparator cannot tell them apart and its agreement on the null render proves nothing about non-emission"
 elif cmp -s "$T_DIR/proj_new_null.txt" "$T_DIR/proj_old_null.txt"; then
-  PASS "T4: on the null-case render the itinerary projection is byte-identical to strip_to_text ($(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B) — absent a pending change the publish path is exactly what it was before this milestone. The control arm confirms the two projections DIFFER on a marked render, so the identity is a measurement"
+  PASS "T4: on the null-case render — which carries no HTML comment, checked above — the itinerary projection is byte-identical to strip_to_text ($(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B), so absent a pending change the publish path is exactly what it was before this milestone. The control arm confirms the two projections DIFFER on a marked render, so the identity is a measurement. On comment-BEARING input they are required to differ instead; that is S12d"
 else
   FAIL "T4: the itinerary projection and strip_to_text disagree on a render with NO coordination band — $(wc -c < "$T_DIR/proj_new_null.txt" | tr -d ' ')B vs $(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B. Something in the excision is firing with no band present, and every trip with no coordination activity would republish differently than it does today"
 fi
@@ -3260,25 +3278,35 @@ else
   FAIL "T7b: a plan edit under the conformant fixture left the digest at '$T7_PE' against '$T7_BP' — the projection cannot see an itinerary change here, so T7a proves nothing and #552's gate would wave an unapproved plan change through"
 fi
 
-# ── T7c — THE RESIDUAL, MEASURED AND OWNED. The band is excised; C19's DECLARATION BLOCK is
-# not. `s/<[^>]+>/ /g` treats `<!--` … `<destination>` as one tag and stops at that `>`, so
-# the rest of the block — `coordination-state`, `coordination-since` and every other declared
-# field — survives into the visible text and into the digest. A state transition written to
-# the frontmatter therefore moves the token even though the band does not.
+# ── T7c — THE RESIDUAL, CLOSED AND RE-SCOPED. This arm used to MEASURE a defect and pass
+# on its presence: the band was excised and C19's DECLARATION BLOCK was not, because
+# `s/<[^>]+>/ /g` treats `<!--` … `<destination>` as one tag and stops at that `>`, so the
+# block's body — `coordination-state`, `coordination-since` and every other declared field —
+# survived into the digest. Repairing it was out of that card's scope: the projection is
+# strip_to_itinerary_text, another card's surface.
 #
-# THIS ARM DOES NOT REPAIR IT, AND THE BOUNDARY IS DELIBERATE. The projection is
-# strip_to_itinerary_text, #552's surface; the coordination fields are #551's. Adding a
-# comment excision to the projection is one line and it would falsify T4's identity against
-# strip_to_text on any comment-bearing render — so it is a disposition for the milestone,
-# not a change this card may make. What is in scope here is measuring it, and stating that
-# the mover is the declaration block rather than the band.
+# ITS FAILURE BRANCH ANNOUNCED ITS OWN OBSOLESCENCE, and this is that re-scope. The
+# projection now excises HTML comments as a construct, so the premise the old assertion
+# rested on is closed and the arm asserts the INVARIANCE directly. An arm still asserting
+# the old inequality would be asserting something now false, which is worse than no arm.
 #
-# THE FAILURE BRANCH ANNOUNCES ITS OWN OBSOLESCENCE. If the projection later excises comment
-# bodies, this arm goes red and says so rather than passing on a premise that has changed.
-if [ "$T7_FN" != "$T7_BP" ] && [ "$T7_FU" != "$T7_BP" ] && [ "$T7_FN" != "$T7_FU" ]; then
-  PASS "T7c: the residual is C19's DECLARATION BLOCK, not the band — with the band held fixed, varying only the frontmatter's coordination fields moves the digest three ways (none=$T7_FN pending=$T7_BP updated=$T7_FU). \`s/<[^>]+>/ /g\` stops at the '>' inside '$T7_ART', so the block's body survives into the projection. OWNER: strip_to_itinerary_text (#552). CONSEQUENCE: on a conformant render every state transition reads to the gate as an itinerary change and the marker-only republish aborts. Re-priced from minor — the transition is reachable as of T6c"
+# WHY THIS IS NOT A DUPLICATE OF S12a. This arm varies ONLY the frontmatter's coordination
+# fields, with the band held fixed; S12a varies the band and the frontmatter TOGETHER, which
+# is the transition a trip actually undergoes. Held apart on purpose: if the comment excision
+# regressed while the band excision survived, both fail, and this one names the frontmatter
+# as the mover rather than leaving a reader to isolate it.
+#
+# T7b IS THE CONTROL for this equality as well as for T7a's — a plan edit under the same
+# fixture moves the token, so an invariance here is a property of the excision rather than
+# of a projection that drops everything it is given.
+if [ -z "$T7_BP" ]; then
+  FAIL "T7c: itinerary_digest returned nothing for the band-fixed conformant render, so the equality below would be between two empty strings"
+elif cmp -s "$T6_DIR/fm_none.html" "$T6_DIR/band_pending.html" || cmp -s "$T6_DIR/fm_updated.html" "$T6_DIR/band_pending.html"; then
+  FAIL "T7c: two of the three fixtures are byte-identical, so this arm is comparing a render with itself — the frontmatter's coordination fields are not actually varying and the equality measures nothing"
+elif [ "$T7_FN" = "$T7_BP" ] && [ "$T7_FU" = "$T7_BP" ]; then
+  PASS "T7c: C19's DECLARATION BLOCK is outside the itinerary digest — with the band held fixed, varying only the frontmatter's coordination fields leaves the token at $T7_BP for all three states, and the three renders do differ in bytes. The block is excised as a comment CONSTRUCT rather than left to the tag strip, which stops at the '>' inside '$T7_ART'. T7b shows the same projection still moves on a plan edit, so this is a measurement"
 else
-  FAIL "T7c: the frontmatter's coordination fields no longer move the digest (none=$T7_FN pending=$T7_BP updated=$T7_FU) — either the projection has learned to excise comment bodies, in which case this arm's premise is closed and it should be re-scoped to assert the invariance directly, or the declaration block has left this fixture and the measurement is over the wrong render"
+  FAIL "T7c: the frontmatter's coordination fields still move the digest (none=$T7_FN pending=$T7_BP updated=$T7_FU) — the comment excision in strip_to_itinerary_text has regressed or been removed, the declaration block is back inside the digest, and on a conformant render every state transition reads to the gate as an itinerary change"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
