@@ -332,11 +332,14 @@ copes with bags — the bags themselves, on this stream, on this day. Three thin
 **This is the dated, per-stream half of the brief, and the boundary is worth
 holding.** These lines change when the arrival instant or the bag count changes,
 and they are executed on the day. The undated, trip-level orientation a traveler
-reads *before* they are moving — how the fare system works, which app to hold,
-what the signage does — belongs to § *Destination Transport Character*, § *Payment
-& Transit Card Setup* and § *Daily Navigation*, written once for the trip rather
-than repeated per stream. A sentence that would be true for any traveler arriving
-any day this year is not this section's.
+reads *before* they are moving — what kind of transit destination this is, how
+the card is obtained, which app to hold, what the signage does — belongs to
+§ *Destination Transport Character*, § *Payment & Transit Card Setup* and
+§ *Daily Navigation*, written once for the trip rather than repeated per stream.
+The fare model itself — how a fare is computed, what forfeits the transfer
+window, who rides reduced — is § *Pre-Departure Transit Familiarization*'s.
+A sentence that would be true for any traveler arriving any day this year is not
+this section's.
 
 **The entry marker — one fenced block per stream, carrying the leg key and nothing
 else.** Open every stream with it, directly under that stream's own `**Stream — …**`
