@@ -384,6 +384,36 @@ is reading the model, not the test.
 **Mobile wallet compatibility:** [Apple Pay / Google Pay for US visitors]
 **Most common setup mistake:** [What first-timers get wrong]
 
+### Pre-Departure Transit Familiarization
+
+Written to be read **before departure**, not on the platform. This section orients the
+traveler to how the system *works*. It does not restate what the brief already owns:
+the obtain / load / tap procedure is § *Payment & Transit Card Setup*, the app set and
+the in-trip mistakes are § *Daily Navigation*, and day-of movement is § *Arrival
+Transport* and § *Departure Logistics*. Cite them; do not copy them.
+
+**Fare model:** [How fares are computed — flat / zonal / distance-based; tap-in only or
+tap-in-and-out; the transfer window and what forfeits it; who is eligible for a reduced
+fare. Conceptual, 2-3 sentences — the mental model, not the purchase steps.]
+
+**Conventions & etiquette:** [3-5 destination-specific norms a first-timer gets wrong —
+queueing and boarding order, priority seating, eating / drinking, phone and voice,
+escalator side, luggage handling. Behavioural, not procedural. Say what a visitor does
+wrong, not what is merely customary.]
+
+**Primer resources:** 2-4 vetted items, watchable or readable before departure.
+- [Title] — [Publisher] · [format, running length or read time] — [what it teaches that
+  this brief does not]
+
+Name the publisher on every item and prefer the transit authority's own page over a
+third-party explainer where both cover the same ground. A resource whose publisher
+cannot be named does not go in the list.
+
+**This section carries no entry marker, and the omission is deliberate.** `§ 1.1` gives
+this class the primary entities *Leg* and *Signal*; a primer resource is neither, so
+there is no key for a marker to carry. The same reasoning the *Point-to-Point Transit
+Matrix* records below applies here.
+
 ### Pass Assessment
 
 **Position:** [Recommend / Do not recommend / Marginal]
@@ -522,12 +552,18 @@ afterthought"** already names. Three things:
 > **Depth calibration — how `Been here before?` shows up here.** Depth is
 > expressed through **how the sections above are filled**, never by adding or
 > removing sections. A **first-time-weighted** party gets `### Destination
-> Transport Character` and `### Payment & Transit Card Setup` at full
-> orientation depth — the obtain / load / tap sequence written out step by step.
-> An **experienced-weighted** party gets those two compressed to what has
+> Transport Character`, `### Payment & Transit Card Setup` and
+> `### Pre-Departure Transit Familiarization` at full orientation depth — the
+> obtain / load / tap sequence written out step by step, and the fare model and
+> conventions read in full before departure.
+> An **experienced-weighted** party gets those three compressed to what has
 > *changed* — a fare-system revision, a card no longer sold, a line that has
 > opened — and the recovered depth goes to `### Point-to-Point Transit Matrix`
 > and `### Day Trip Logistics`, where a returning traveler's real questions sit.
+> For a returning party the primer's `Primer resources:` list may read a single
+> stated line saying no primer is needed rather than carrying items — the section
+> is still present and still filled, which is what "never by adding or removing
+> sections" requires.
 > `### Arrival Transport` and `### Departure Logistics` are **never** compressed:
 > familiarity does not reduce the stakes of a booked flight, and **"The departure
 > afterthought"** still binds. No traveler's answer, and no attribution of an
