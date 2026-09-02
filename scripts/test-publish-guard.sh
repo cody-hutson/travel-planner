@@ -2614,6 +2614,192 @@ else
   PASS "S12d: the two projections AGREE on a comment-free render ($(wc -c < "$WORK/s12_itin_free.txt" | tr -d ' ')B, T4's identity, still intended and still held) and DIFFER on a comment-bearing one ($(wc -c < "$WORK/s12_itin_bearing.txt" | tr -d ' ')B vs $(wc -c < "$WORK/s12_text_bearing.txt" | tr -d ' ')B). The difference is named rather than assumed: 'provenance' is present in strip_to_text's output and absent from the itinerary projection's, so what was removed is the declaration block. strip_to_text is untouched — CIAC-3 keeps it on verify_ciphertext's path byte-for-byte"
 fi
 
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group S13 (#552, AI-012) — THE FAIL-OPEN, AND THE ONLY RESIDUAL ON THIS RELEASE
+# THAT DOES NOT FAIL CLOSED.
+#
+# S12's excision reads `s/<!--.*?-->/ /gs` — a regex over raw text with no notion of
+# HTML structure. It therefore treats `<!--` as a comment opener WHEREVER it appears,
+# including inside a QUOTED ATTRIBUTE VALUE, where HTML5 says it is character data and
+# not a comment at all. The lazy match then runs from that attribute to the next
+# genuine `-->` and deletes EVERYTHING BETWEEN — markup and reader-visible plan text
+# alike.
+#
+# THE DIRECTION IS WHAT SEPARATES THIS FROM EVERY OTHER RESIDUAL IN THIS FILE. The
+# band's cap, an unterminated comment, a failed projection, a malformed record: each
+# of those leaves MORE in the digest, so the gate demands a confirmation it did not
+# need and the republish ABORTS — noisy, and safe. This one leaves LESS. A real
+# itinerary edit lands inside the swallowed span, the digest does not move, the gate
+# reads "content unchanged", and AN UNAPPROVED PLAN CHANGE PUBLISHES behind a
+# confirmation the organizer never gave. That is the fail-OPEN direction, and making
+# it unreachable is the entire point of ADR-003 § Decision 2.
+#
+# THE RENDER IS WELL-FORMED — this is the normal path, not a malformed-input edge
+# case. An `html.parser` oracle over the subject fixture below sees TWO comments, not
+# three: the attribute-borne `<!--` is an attribute value. The arms make that point
+# WITHOUT a parser, using strip_to_text — the VISIBLE projection, byte-frozen by #550
+# AC 5, carrying no comment limb at all, and therefore the one reference here that
+# cannot have been bent to suit this group. What IT keeps is what a reader sees.
+#
+#   S13a  THE SUBJECT — a real plan edit MUST move the digest on a render whose
+#         attribute value carries a `<!--`                          (the fail-open)
+#   S13b  THE PREMISE — the span the projection loses is reader-VISIBLE text, read off
+#         strip_to_text rather than asserted
+#   S13c  CONTROL — the same edit on the same fixture WITHOUT the attribute opener
+#         moves the digest, so S13a's equality is caused by the opener and by nothing
+#         else the fixture varies
+#   S13d  THE BOUNDARY IN BYTES — subject and control digest the SAME, which is what
+#         this file's "attribute values are outside the digest" claim means measurably
+#   S13e  D12 — `generated:` drift still moves nothing, ON THE HAZARD SHAPE
+#   S13f  AI-013 — #551's build-time prune is still digest-neutral. NAMED and asserted
+#         rather than assumed: the prune is digest-neutral only because this block
+#         leaves the digest, no arm on this release said so, and this is the first
+#         change to this function since that coupling was recorded.
+#
+# S13c AND S13d ARE WHAT MAKE S13a A MEASUREMENT. A projection that dropped its whole
+# input would satisfy no equality here: S13c shows the same projection still moves on
+# a plan edit, and S13d shows the subject and the control are the same itinerary. Each
+# of S13e and S13f carries its OWN discrimination limb for the same reason — a
+# pre-fix projection that swallows everything satisfies both invariances perfectly and
+# neither would mean anything.
+echo "Comment excision — a comment opener inside an attribute value (#552, AI-012):"
+
+# The S12 fixture with one thing added: an attribute value carrying an UNCLOSED `<!--`,
+# and a later ordinary comment to supply the `-->` the lazy match runs to. Both are
+# ordinary things for a template-built render to carry. `<attr-open>` empty builds the
+# control, so subject and control differ in exactly that attribute and nothing else.
+s13_page() { # <file> <fm-state> <fm-since> <band-state> <plan-time> <plan-word> <generated> <attr-open>
+  local f="$1" fs="$2" fc="$3" bs="$4" tm="$5" wd="$6" gen="$7" ao="$8"
+  local band="" rule="" since="" attr=""
+  [ -z "$fc" ] || since="coordination-since: ${fc}
+"
+  [ -z "$ao" ] || attr=" data-tpl=\"${ao}\""
+  if [ "$bs" != "none" ]; then
+    band="<div class=\"coord-notice is-${bs}\"><span>A change is ${bs}</span> <time>2027-06-02</time></div>
+"
+    rule=".coord-notice{background:#eee}"
+  fi
+  cat > "$f" <<HTML
+<!--
+artifact: ${S12_ART}
+schema-version: 1
+trip: porto-2027
+writer: site
+lifecycle: output
+provenance: derived
+publish: output
+generated: ${gen}
+coordination-state: ${fs}
+${since}-->
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>${rule}.hero{color:#333}</style></head><body>
+<section class="hero"${attr}><h1>Porto 2027</h1></section>
+${band}<section class="day"><h2>Saturday</h2>
+<p>Miradouro at ${tm}. Then ${wd} by the river.</p></section>
+<!-- build: ok -->
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+}
+
+S13_OPENER='<!-- slot'
+s13_page "$WORK/s13_sub_a.html" none    ""         none    16:30 breakfast        2027-06-02 "$S13_OPENER"
+s13_page "$WORK/s13_sub_b.html" none    ""         none    21:00 "DINNER instead" 2027-06-02 "$S13_OPENER"
+s13_page "$WORK/s13_ctl_a.html" none    ""         none    16:30 breakfast        2027-06-02 ""
+s13_page "$WORK/s13_ctl_b.html" none    ""         none    21:00 "DINNER instead" 2027-06-02 ""
+s13_page "$WORK/s13_sub_g2.html" none   ""         none    16:30 breakfast        2027-06-03 "$S13_OPENER"
+s13_page "$WORK/s13_pr_upd.html" updated 2027-06-01 updated 16:30 breakfast       2027-06-02 "$S13_OPENER"
+s13_page "$WORK/s13_pr_non.html" none    ""         none    16:30 breakfast       2027-06-02 "$S13_OPENER"
+
+S13_SA="$(itinerary_digest "$WORK/s13_sub_a.html")"
+S13_SB="$(itinerary_digest "$WORK/s13_sub_b.html")"
+S13_CA="$(itinerary_digest "$WORK/s13_ctl_a.html")"
+S13_CB="$(itinerary_digest "$WORK/s13_ctl_b.html")"
+S13_G2="$(itinerary_digest "$WORK/s13_sub_g2.html")"
+S13_PU="$(itinerary_digest "$WORK/s13_pr_upd.html")"
+S13_PN="$(itinerary_digest "$WORK/s13_pr_non.html")"
+
+# strip_to_text is the reader's-eye reference — frozen, comment-limb-free. Read with
+# `case` rather than grep: group PF's rule, and no pipeline to be decided by.
+strip_to_text "$WORK/s13_sub_a.html" > "$WORK/s13_vis_a.txt"
+strip_to_text "$WORK/s13_sub_b.html" > "$WORK/s13_vis_b.txt"
+S13_VIS_A=0; S13_VIS_B=0
+case "$(cat "$WORK/s13_vis_a.txt")" in *"Then breakfast by the river"*)      S13_VIS_A=1 ;; esac
+case "$(cat "$WORK/s13_vis_b.txt")" in *"Then DINNER instead by the river"*) S13_VIS_B=1 ;; esac
+
+# ── S13b — THE PREMISE, graded before the subject that rests on it. If the edit is not
+# reader-visible, S13a is grading a change no traveller could ever see and its verdict
+# means nothing either way.
+if [ "$S13_VIS_A" -ne 1 ] || [ "$S13_VIS_B" -ne 1 ]; then
+  FAIL "S13b: the edited sentence is not in strip_to_text's output for one of the two subject renders (a=$S13_VIS_A b=$S13_VIS_B) — the fixture is not carrying the plan text where a reader would see it, so S13a would grade an invisible change and prove nothing"
+elif cmp -s "$WORK/s13_vis_a.txt" "$WORK/s13_vis_b.txt"; then
+  FAIL "S13b: strip_to_text is byte-identical across the two subject renders, so the 'edit' changes nothing a reader sees and S13a's equality would be correct rather than a defect"
+else
+  PASS "S13b: PREMISE — the edit 16:30/breakfast -> 21:00/DINNER instead is READER-VISIBLE. strip_to_text, the byte-frozen visible projection that carries no comment limb, keeps both sentences and differs across the two renders ($(wc -c < "$WORK/s13_vis_a.txt" | tr -d ' ')B vs $(wc -c < "$WORK/s13_vis_b.txt" | tr -d ' ')B). Whatever the itinerary projection does below, the span in question is text a traveller reads"
+fi
+
+# ── S13a — THE SUBJECT. The fail-open itself.
+if [ -z "$S13_SA" ] || [ -z "$S13_SB" ]; then
+  FAIL "S13a: itinerary_digest returned nothing for a subject render (a='$S13_SA' b='$S13_SB') — the projection is not readable here and no comparison below is a measurement"
+elif [ "$S13_SA" != "$S13_SB" ]; then
+  PASS "S13a: on a render whose attribute value carries a '<!--', a real itinerary edit STILL moves the digest ($S13_SA -> $S13_SB). The comment excision no longer treats an attribute-borne opener as a comment, so the span between it and the next '-->' is no longer deleted, and an unapproved plan change can no longer ride a standing confirmation"
+else
+  FAIL "S13a: FAIL-OPEN — a genuine itinerary edit (16:30/breakfast -> 21:00/DINNER instead, reader-visible per S13b) digested IDENTICALLY at $S13_SA on both sides. \`s/<!--.*?-->/ /gs\` opened a comment at the '<!--' inside data-tpl and ran to the next '-->', deleting the plan text in between. The gate reads 'content unchanged' and publishes an UNAPPROVED CHANGE behind a confirmation the organizer never gave. Every other residual on this release fails closed; this one does not"
+fi
+
+# ── S13c — CONTROL. Without the attribute opener the same edit moves the digest. This
+# depends on no defect and must hold in both directions.
+if [ -n "$S13_CA" ] && [ -n "$S13_CB" ] && [ "$S13_CA" != "$S13_CB" ]; then
+  PASS "S13c: CONTROL — the same edit on the same fixture WITHOUT the attribute-borne opener moves the digest ($S13_CA -> $S13_CB). S13a's verdict is therefore a property of the opener and not of the fixture, the edit or the projection in general"
+else
+  FAIL "S13c: the control render, which carries no attribute-borne '<!--' at all, digested '$S13_CA' and '$S13_CB' across a real plan edit — the fixture or the projection cannot see an itinerary change even with nothing to swallow it, so S13a grades nothing"
+fi
+
+# ── S13d — THE BOUNDARY IN BYTES. This file states that attribute values are OUTSIDE
+# the itinerary digest. Subject and control are the same itinerary differing in exactly
+# one attribute value, so that claim has a measurement: they must digest the SAME.
+if [ -z "$S13_SA" ] || [ -z "$S13_CA" ]; then
+  FAIL "S13d: a digest was empty (subject='$S13_SA' control='$S13_CA'), so the equality below would compare nothing"
+elif [ "$S13_SA" = "$S13_CA" ] && [ "$S13_SB" = "$S13_CB" ]; then
+  PASS "S13d: adding a data-tpl attribute carrying a '<!--' moves the itinerary digest NOT AT ALL — subject and control agree at $S13_SA before the edit and at $S13_SB after it. That is this file's declared boundary ('attribute values' are outside the digest) stated in bytes rather than in prose, and S13c shows the same pair still discriminates a plan change"
+else
+  FAIL "S13d: an attribute value is INSIDE the itinerary digest — subject/control read $S13_SA/$S13_CA before the edit and $S13_SB/$S13_CB after it. A render that merely carries a '<!--' in an attribute digests differently from the identical itinerary without one, so the boundary this file declares is not the boundary it computes"
+fi
+
+# ── S13e — D12, ON THE HAZARD SHAPE. S12b holds this on a clean render; it has to hold
+# on this one too, or the repair bought the fail-open back at the cost of the invariance
+# it was protecting. Carries its own discrimination limb: pre-repair every digest here
+# is the same token and the equality alone would be satisfied by the defect.
+if [ "$S13_SA" = "$S13_SB" ]; then
+  FAIL "S13e: the projection cannot discriminate a plan edit on this fixture (both $S13_SA), so the \`generated:\` equality below is satisfied by a projection that swallowed its input and is not a measurement of D12"
+elif cmp -s "$WORK/s13_sub_a.html" "$WORK/s13_sub_g2.html"; then
+  FAIL "S13e: the two renders are byte-identical, so the equality compares a file with itself and the fixture is not varying \`generated:\`"
+elif [ "$S13_SA" = "$S13_G2" ]; then
+  PASS "S13e: D12 HOLDS ON THE HAZARD SHAPE — rebuilding the same site the next day moves \`generated:\` 2027-06-02 -> 2027-06-03 and the digest not at all ($S13_G2), on a render that also carries the attribute-borne opener. The declaration block still leaves the digest, and it does so while the projection can still see a plan edit ($S13_SA -> $S13_SB)"
+else
+  FAIL "S13e: a one-day \`generated:\` drift moved the digest $S13_SA -> $S13_G2 on the hazard-shaped render — the declaration block is back inside the digest and every routine rebuild asks the organizer to confirm an itinerary change that did not happen"
+fi
+
+# ── S13f — AI-013, THE COUPLING, NAMED. #551's build-time prune rewrites
+# `coordination-state: updated` + `coordination-since:` to `none` in the DECLARATION
+# BLOCK and stops emitting the band and its CSS rule. The band limb covers the band and
+# the style limb covers the rule; the two frontmatter fields are covered by nothing but
+# this excision. The prune is therefore digest-neutral ONLY because the block leaves the
+# digest — and if it stopped being neutral, every trip whose one change was confirmed
+# would deadlock at the gate on the day its seven-day window closes. No arm on this
+# release named that dependency. This one does, and asserts it.
+if [ "$S13_SA" = "$S13_SB" ]; then
+  FAIL "S13f: the projection cannot discriminate a plan edit on this fixture (both $S13_SA), so the prune equality below is satisfied by a projection that swallowed its input and says nothing about AI-013"
+elif [ -z "$S13_PU" ] || [ -z "$S13_PN" ]; then
+  FAIL "S13f: a digest was empty for the prune pair (updated='$S13_PU' none='$S13_PN'), so no equality here is a measurement"
+elif cmp -s "$WORK/s13_pr_upd.html" "$WORK/s13_pr_non.html"; then
+  FAIL "S13f: the pre-prune and post-prune renders are byte-identical — the fixture is not performing the prune transition and the equality compares a file with itself"
+elif [ "$S13_PU" = "$S13_PN" ]; then
+  PASS "S13f: AI-013 HOLDS — #551's build-time prune is still digest-neutral. The whole transition (coordination-state updated -> none, coordination-since dropped, band and CSS rule no longer emitted) leaves the digest at $S13_PN, on a render that also carries the attribute-borne opener, and while the same projection still moves on a plan edit ($S13_SA -> $S13_SB). The coupling recorded against this function survives its first change"
+else
+  FAIL "S13f: AI-013 IS BROKEN — the prune moved the digest $S13_PU -> $S13_PN. #551's prune fires the day a trip's seven-day window closes, so every trip that has ever had a confirmed change would find its next republish reading as an itinerary change and DEADLOCK at the gate on day 8. The declaration block's coordination fields are back inside the digest"
+fi
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T (#551 AC 5) — the coordination notice: its identity, its state vocabulary,
 # and the null case.
