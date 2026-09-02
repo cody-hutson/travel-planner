@@ -128,6 +128,62 @@ Per-day nav pills and overview dots:
 - Stats grid: 4 columns, display sans numbers in gold
 - "Scroll ↓" bounce animation at bottom
 
+### Coordination Notice (`.coord-notice`)
+Trip-level band carrying the coordination state ADR-003 § *Decision 3* makes **pull-based**:
+there is no server and no push channel, so an async traveler learns a change is pending by
+opening the site. The state has to be complete on open, which is what every rule below follows
+from.
+
+- Rendered **only** when the render's `coordination-state` frontmatter is `pending` or `updated`
+- Placement: immediately after the Hero Section, before the Overview Dashboard
+- Two variants: `.coord-notice.is-pending` · `.coord-notice.is-updated`
+- Content: a static label string + the `coordination-since` date. **Nothing else**
+- No link, no expander, no traveler control — the state is complete on open or it is not delivered
+
+**Placement is derived, not chosen.** The Hero is `100svh`, so a band *inside* it competes with
+the hero content; a band below the Overview Dashboard is below the fold on mobile. Directly after
+the Hero is the first position reached by the initial scroll gesture at every §4 breakpoint.
+
+**The `is-updated` variant decays, and the decay is evaluated at open rather than at build.**
+Window **W = 7 days** from `coordination-since`; past it the band is not rendered. Seven is the
+minimum that works rather than a round number: pull-based means a traveler learns of a change
+only by opening the site, so the notice must survive at least one full weekly open cycle or an
+async traveler misses it between opens. Comparing the baked `coordination-since` date against the
+reader's own clock is **local computation over baked bytes, not a fetch**, so ADR-002 §
+*Decision 2* — which governs fetches — is untouched. A window evaluated at build time would
+freeze: a site built six months ago would still announce itself as recently updated.
+
+**Absent a pending change or a recent update, NOTHING IS EMITTED.** Where `coordination-state`
+is absent or `none`, the build emits **no node, no CSS rule and no script branch** for this
+component. Not `display:none`, not an empty container, not a zero-height div — non-emission. On
+this artifact that is a byte-level property rather than a stylistic preference: the site is a
+single self-contained file encrypted wholesale (§8), so a hidden-but-present element changes the
+plaintext, changes the ciphertext, and produces a publish diff on a trip with no coordination
+activity at all. It is also what `scripts/publish-trip-site.sh` relies on — its
+itinerary-content projection excises this band by the `coord-notice` class token, and with no
+band emitted there is nothing to excise and the projection is exactly what it was before this
+component existed.
+
+**The band carries no plan content, and that is a construction rather than a review finding.**
+Its entire data input is `{enum, date}`. There is no slot for a venue, a person, a time or a
+*what moved*, and the label strings are static literals in the build rather than values
+interpolated from plan content — so it cannot emit a member of the ADR-008 non-publishable class,
+and it needs no privacy mechanism of its own. ADR-003 § *Decision 2* has the organizer share the
+proposed change out of band; this band says only that there is one.
+
+**Neither §9 table gains a row.** This component is **site-additive scaffolding**, which §9.2
+permits in terms. §9.2's completeness rule is surjective plan → site, so an element with no
+`final-itinerary.md` source needs no mapping-table row; §9.3's exclusion list is for plan
+elements the site does not render, which this is not. Stated because editing both tables is the
+obvious wrong move, and because the §9.4 completeness walk is unaffected either way.
+
+**The value comes from one place, and this section does not say where.** `coordination-state`
+and `coordination-since` are declared on C19's frontmatter in
+`reference/schemas/travel-site.md`; the build's resolution of them from
+`outputs/change-summary.md` is declared in the `site` verb's read scope in
+`.claude/commands/trip.md`. This section owns what the render *does* with the state and the
+reader-facing label; it holds no second copy of where the state comes from.
+
 ### Overview Dashboard
 - Navy background, 4×2 card grid (responsive: 2-col on mobile, 1-col at 480px)
 - Each card: date pip (colored dot) + day name (display sans) + highlights + booking action tag
