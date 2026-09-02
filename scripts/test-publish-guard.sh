@@ -50,7 +50,12 @@
 # render and the itinerary projection is byte-identical to strip_to_text. T5 grades the
 # ANCHOR (AC 2, second remediation) — that `coordination-since` for the `updated` state is
 # read from the confirmation's own record rather than re-derived from the run, so the
-# seven-day decay window does not restart on every rebuild.
+# seven-day decay window does not restart on every rebuild. T6/T7 grade the STATE (AC 2 /
+# AC 5, second remediation) — that the record the mapping derives coordination-state from is
+# the record the shipped confirm subcommand writes, so `updated` is reachable and the pending
+# band clears; and that the band is outside the itinerary digest on a render carrying C19's
+# own declaration block, with the residual that block leaves into that digest measured and
+# attributed rather than repaired here.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -2687,6 +2692,379 @@ elif [ "$T5_B1" != "$T5_EXPECT_B" ]; then
   FAIL "T5-CTL: the second trip's recorded confirmation is $T5_CONF_B but coordination-since resolved '$T5_B1' — the resolver is not reading the record it was pointed at, so the agreement above is a constant this file produced rather than a measurement of the document's anchor"
 else
   PASS "T5: coordination-since for \`updated\` is anchored to the confirmation, not to the run — one trip whose recorded approval did not move resolved '$T5_A1' at build $T5_BUILD_1 AND at build $T5_BUILD_2, months apart, so § 3's seven-day window decays from the confirmation instead of restarting on every rebuild. The value is neither build date and equals the trip's own recorded confirmation ($T5_CONF_A); the second fixture, differing only in that record, resolved '$T5_B1' — so the invariance is a measurement and not a constant. The (field, path) pair '$T5_FIELD' / '$T5_PATH' was read from $(basename "$T_TRIPMD"), and an injected pair was recovered from a mutated copy, so the anchor is the document's rather than this file's"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group T, second remediation (#551, operator decision D11) — the record the STATE is
+# derived from, and the residual a state transition rides through.
+#
+# WHAT T1-T5 LEFT UNGRADED. T1-T4 grade the BAND: its identity, its state vocabulary and
+# the null case. T5 grades the DATE the band carries, and the first remediation moved that
+# date's anchor onto `trips/<slug>/.change-confirmed`. Nothing graded where the STATE
+# itself comes from, and it was still keyed on C20's artifact-level `status`.
+#
+# WHY THAT IS A DEFECT AND NOT A PREFERENCE. `cmd_confirm` records the organizer's decision
+# by writing `digest=` and `confirmed=` to `trips/<slug>/.change-confirmed`, and it writes
+# nothing else — in particular it does not promote `outputs/change-summary.md`'s `status`,
+# and no other shipped surface promotes it either. On a mapping keyed to that field
+# `confirmed` is a value nothing can produce: `updated` is structurally unreachable,
+# `coordination-state` can only ever be `pending` or `none`, and because § 3 gives the
+# seven-day decay window to `is-updated` ALONE the pending band then LATCHES. A traveller
+# opens the site after the organizer confirmed and the plan republished and still reads
+# "change pending", indefinitely. That is a persistent wrong statement to the reader, which
+# is the behaviour this milestone exists to remove.
+#
+# THE TELL, and it is why T5's fixture is reconciled in the same change: T5 had to
+# MANUFACTURE `status: confirmed` to reach the `updated` limb at all, because no shipped
+# surface can produce it. A fixture that has to invent its subject's precondition is a
+# fixture asserting against a source the implementation cannot reach.
+#
+#   T6a  the STATE's record is the DATE's record             (one event, one record)
+#   T6b  and it is the record a shipped surface WRITES       (reachability at the source)
+#   T6c  that shipped write MOVES the state                  (the latch, removed)
+#   T6d  CONTROL — a later entry re-opens `pending`          (the resolver is not a constant)
+#   T6e  the null case, the no-approval case, the placeholder case
+#   T7a  the band is outside the digest on a CONFORMANT render      (SEAM-2, the subject)
+#   T7b  CONTROL — a plan edit under the same fixture moves it      (discrimination)
+#   T7c  the residual: C19's own declaration block is INSIDE it     (SEAM-2, re-priced)
+#
+# HOW THE RULE IS READ. From the document, as in T5, and for the same reason:
+# reference/site-layout-spec.md § 3 says in terms that it holds no second copy of where the
+# state comes from and names the `site` verb in .claude/commands/trip.md as the one home. So
+# the record is EXTRACTED — the first trip-relative path token after that mapping's own
+# "decides it from" clause — and the resolver below is generic over whatever the extraction
+# yields. What is held here is the rule's SHAPE; its SOURCE is the document's. A document
+# pointing the state at an artifact that carries no `confirmed=` line resolves every entry
+# undecided, which is the latch, which is what T6c measures.
+#
+# STATED BOUND, the same one T3 and T5 carry: there is no site BUILD in this repository. The
+# render is authored by the `site` verb from a spec, so these arms grade the CONTRACT's
+# derivation and a resolution built to it — not a build script's output, and no arm here
+# claims that a given run followed the contract.
+#
+# Every arm is offline: three tracked documents, four sourced shell functions, fixture trip
+# dirs under the suite's own temp dir, awk and bash. No network, no gh, no Node, no TTY, and
+# no `bash -n` of anything. This group has no legitimate skip and is deliberately NOT
+# declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "Coordination state — its record, its reachability, and the digest residual (#551 AC 2 / AC 5):"
+
+T6_DIR="$WORK/t551b"; mkdir -p "$T6_DIR"
+
+# The record the mapping decides the STATE from. The locator is the mapping's own
+# "decides it from" clause; what is taken from it is the first backticked token carrying a
+# path separator. Paragraph-scoped (RS="") for the reason T5's extractor is: a phrase
+# elsewhere in a 1000-line command file must not be mistaken for this one.
+T6_MARK='decides it from'
+t6_state_record() { # <trip-md> -> the record path the mapping names, or nothing
+  awk -v mark="$T6_MARK" '
+    BEGIN { RS = ""; FS = "\n" }
+    {
+      p = $0
+      gsub(/\n/, " ", p)
+      a = index(p, mark)
+      if (a == 0) next
+      p = substr(p, a + length(mark))
+      while ((i = index(p, "`")) > 0) {
+        p = substr(p, i + 1)
+        j = index(p, "`")
+        if (j == 0) break
+        tok = substr(p, 1, j - 1)
+        p = substr(p, j + 1)
+        if (index(tok, "/") > 0) { print tok; exit }
+      }
+      exit
+    }' "$1"
+}
+
+# A declared trip-relative path, reduced to its form inside a trip dir — the same reduction
+# t5_since performs inline, factored out here because three call sites below need it.
+t6_rel() { # <declared-path> -> trip-relative path
+  local rel="$1"
+  case "$rel" in trips/*/*) rel="${rel#trips/}"; rel="${rel#*/}" ;; esac
+  printf '%s' "$rel"
+}
+
+# The newest dated entry of a change summary. C20 is not in § 4.5's entry-bearing set, so
+# its entries carry no key marker and a dated heading is what there is to read.
+t6_newest_entry() { # <change-summary.md> -> newest YYYY-MM-DD, or nothing
+  [ -r "${1:-}" ] || return 0
+  awk '/^## [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ {
+         d = substr($2, 1, 10); if (d > m) m = d }
+       END { if (m != "") print m }' "$1"
+}
+
+# coordination-state, resolved from the record the DOCUMENT names, and generic over it.
+# BOTH declared lines of that record are read: `digest=` decides whether the record counts
+# as an approval at all — through the shipped parser, so a record present but saying nothing
+# is not one (ADR-007 § 2's placeholder bound, the property S5 grades on the gate's side of
+# the same file) — and `confirmed=` supplies the moment every entry is measured against.
+t6_state() { # <trip_dir> <state-record-path> -> none|pending|updated
+  local dir="$1" rel line c="" e=""
+  rel="$(t6_rel "$2")"
+  e="$(t6_newest_entry "$dir/outputs/change-summary.md")"
+  if [ -z "$e" ]; then printf 'none'; return 0; fi
+  if [ -n "$(_record_digest "$dir/$rel")" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in confirmed=*) c="${line#confirmed=}"; c="${c:0:10}"; break ;; esac
+    done < "$dir/$rel"
+  fi
+  if [ -z "$c" ]; then printf 'pending'; return 0; fi
+  if [[ "$e" > "$c" ]]; then printf 'pending'; return 0; fi
+  printf 'updated'
+}
+
+# The bytes the SHIPPED confirm subcommand records with, read out of the script rather than
+# invented here. A record this file made up would demonstrate the document self-consistent
+# and nothing at all about whether any shipped surface can produce the state — which is the
+# whole subject of T6b and T6c. `\047` is awk's single quote; spelling it that way keeps the
+# extractor from needing a quote it cannot carry through this function's own quoting.
+t6_confirm_fmt() { # -> the printf format cmd_confirm writes its record with
+  awk '
+    /^cmd_confirm\(\)/ { inf = 1; next }
+    inf && /^}/        { exit }
+    inf && /printf / && /digest=/ {
+      s = $0
+      a = index(s, "\047"); if (a == 0) next
+      s = substr(s, a + 1)
+      b = index(s, "\047"); if (b == 0) next
+      print substr(s, 1, b - 1); exit
+    }' "$SELF_PUBLISH"
+}
+
+# A fixture trip: a change summary carrying dated entries, and NO approval record. The
+# summary's `status` is deliberately `pending` on every fixture in this group — see T6c.
+t6_trip() { # <dir> <entry-date>...
+  local d="$1"; shift
+  mkdir -p "$d/outputs"
+  {
+    printf -- '---\nartifact: outputs/change-summary.md\nschema-version: 1\ntrip: t6-fixture\n'
+    printf -- 'writer: hub\nlifecycle: accumulate-append\nprovenance: derived\n'
+    printf -- 'publish: internal\ngenerated: %s\nstatus: pending\n---\n\n' "$1"
+    while [ $# -gt 0 ]; do printf -- '## %s — an entry\n\n' "$1"; shift; done
+  } > "$d/outputs/change-summary.md"
+  printf '%s' "$d"
+}
+
+T6_DOCREC="$(t6_state_record "$T_TRIPMD")"
+T6_FMT="$(t6_confirm_fmt)"
+T6_CONF='2027-06-01T09:14:22Z'
+T6_E1='2027-05-30'
+T6_E2='2027-07-04'
+
+# ── T6a — ONE EVENT, ONE RECORD. The record the mapping decides the STATE from is the
+# record it takes the `updated` DATE from. Operator decision D11 in one assertion: the
+# confirmation is a single event, and a design in which one surface writes it while another
+# surface reads somewhere else is the shape that produced this defect.
+#
+# THE CONTROL IS A RUNTIME MUTATION, not a fabricated-token lookup. A fabricated path is
+# injected into a copy of the command file immediately after the locator and the extractor
+# is re-run over the copy; it must come back carrying the injection. Asking whether an
+# invented token appears in the REAL extraction is a question whose answer is `no` whether
+# the extractor works or not — it answers the same over an empty file. Same technique as
+# T2's and T5's controls, and UF-CTL2's in the artifact-schema suite.
+awk -v mark="$T6_MARK" -v inj=' `zzq/fab/.zzq-state-record` and' '
+  { if (!done) {
+      a = index($0, mark)
+      if (a > 0) { $0 = substr($0, 1, a + length(mark) - 1) inj substr($0, a + length(mark)); done = 1 }
+    }
+    print }' "$T_TRIPMD" > "$T6_DIR/tripmd_mut.md"
+T6_CTL_REC="$(t6_state_record "$T6_DIR/tripmd_mut.md")"
+if [ -z "$T6_DOCREC" ]; then
+  FAIL "T6a: no record could be extracted from the '$T6_MARK' clause of $(basename "$T_TRIPMD") — the mapping has moved or been renamed, and every verdict below would be over an empty token rather than a measurement"
+elif [ "$T6_CTL_REC" != 'zzq/fab/.zzq-state-record' ]; then
+  FAIL "T6a-CTL: a record path injected into a copy of $(basename "$T_TRIPMD") was NOT recovered (got '$T6_CTL_REC', expected 'zzq/fab/.zzq-state-record') — the extractor has stopped reading the mapping, so whatever it reports about the real document is this file's answer rather than the document's"
+elif [ -z "$T5_PATH" ]; then
+  FAIL "T6a: T5's limb yielded no path, so there is no date-side record to compare the state-side record against"
+elif [ "$T6_DOCREC" = "$T5_PATH" ]; then
+  PASS "T6a: the mapping derives the coordination STATE and the \`updated\` DATE from the same record — '$T6_DOCREC', extracted from the '$T6_MARK' clause and from the \`updated\` limb independently. One event, one record: the confirmation is a single act and both consumers read it. An injected path was recovered from a mutated copy of the document, so the agreement is the document's rather than this file's"
+else
+  FAIL "T6a: the mapping decides the STATE from '$T6_DOCREC' but takes the \`updated\` DATE from '$T5_PATH' — two records for one event. Whichever of the two no shipped surface writes is a limb of the state model nothing can reach, and the state and its date can disagree about whether a change was decided"
+fi
+
+# ── T6b — REACHABILITY AT THE SOURCE. The record the mapping names must be the record a
+# shipped surface actually writes. The shipped side is the SOURCED resolver, not a literal:
+# `change_confirmation_path` is what cmd_confirm records through, so this compares the
+# document against the running script rather than against a second copy of its path.
+T6_TRIP_P="$(t6_trip "$T6_DIR/tripP" "$T6_E1")"
+T6_SHIPREC_ABS="$(change_confirmation_path "$T6_TRIP_P")"
+T6_SHIPREC="${T6_SHIPREC_ABS#"$T6_TRIP_P"/}"
+T6_DOCREL="$(t6_rel "$T6_DOCREC")"
+if [ -z "$T6_SHIPREC" ] || [ "$T6_SHIPREC" = "$T6_SHIPREC_ABS" ]; then
+  FAIL "T6b: change_confirmation_path returned '$T6_SHIPREC_ABS', which does not resolve inside the trip dir it was given — the shipped side of this comparison is unreadable and the agreement below would mean nothing"
+elif [ -z "$T6_FMT" ] || [ "${T6_FMT#digest=}" = "$T6_FMT" ]; then
+  FAIL "T6b: no record format could be read out of cmd_confirm in $(basename "$SELF_PUBLISH") (got '$T6_FMT') — the shipped write is what T6c applies, and a format this file invented would prove nothing about it"
+elif [ "$T6_DOCREL" = "$T6_SHIPREC" ]; then
+  PASS "T6b: the record the mapping derives the state from ('$T6_DOCREL') is the record the shipped confirm subcommand writes ('$T6_SHIPREC', from the sourced change_confirmation_path), and that write's format is '$(printf '%s' "$T6_FMT" | tr '\n' ' ')' read out of cmd_confirm itself — so the decided state has a producer"
+else
+  FAIL "T6b: the mapping derives the state from '$T6_DOCREL' but the shipped confirm subcommand writes '$T6_SHIPREC'. Nothing in this repository moves the field the mapping keys on, so its decided value is unreachable, coordination-state can only ever be \`pending\` or \`none\`, and — § 3 giving the decay window to \`is-updated\` alone — the pending band never clears"
+fi
+
+# ── T6c — THE LATCH, REMOVED. One trip, one shipped write, two resolutions. Before the
+# write the state is `pending`; after it the state must be `updated`. The write is the
+# format read out of cmd_confirm, applied to the record the sourced resolver names, so what
+# moves the state here is the organizer's own recorded act rather than a fixture edit.
+#
+# THE SUMMARY'S `status` STAYS `pending` ON EVERY FIXTURE IN THIS GROUP, and that is the
+# point rather than an oversight. Under the rule this remediation replaces, `updated` was
+# reached by manufacturing `status: confirmed` — a value no shipped surface writes. A
+# fixture whose summary still says `pending` and which resolves `updated` anyway is the
+# assertion that the implementation has stopped reading that field.
+#
+# The second-build limb is NOT restated here: t6_state is a pure function of the two
+# records and takes no build date at all, and T5 already grades the DATE's invariance
+# across two builds months apart.
+T6_ST_BEFORE="$(t6_state "$T6_TRIP_P" "$T6_DOCREC")"
+# shellcheck disable=SC2059  # the format IS the subject — it is read out of cmd_confirm
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T6_TRIP_P/$T6_SHIPREC"
+T6_ST_AFTER="$(t6_state "$T6_TRIP_P" "$T6_DOCREC")"
+T6_REC_PARSED="$(_record_digest "$T6_TRIP_P/$T6_SHIPREC")"
+if [ -z "$T6_REC_PARSED" ]; then
+  FAIL "T6c: the record written with cmd_confirm's own format did not parse under the shipped _record_digest — the fixture never became an approval, so neither state below is a measurement of the mapping"
+elif [ "$T6_ST_BEFORE" != 'pending' ]; then
+  FAIL "T6c: a trip carrying an undecided entry dated $T6_E1 and NO approval record resolved '$T6_ST_BEFORE' rather than 'pending' — the transition asserted next would start from the wrong state"
+elif [ "$T6_ST_AFTER" = 'updated' ]; then
+  PASS "T6c: the shipped confirm write moves the coordination state — 'pending' before it and 'updated' after, over one trip whose change summary still reads \`status: pending\` throughout. The pending band therefore CLEARS: what clears it is an approval recorded later than the newest entry, an event with its own moment, rather than a field promotion no surface performs"
+else
+  FAIL "T6c: after applying cmd_confirm's own recorded approval ($T6_CONF) the state resolved '$T6_ST_AFTER', not 'updated' — the organizer confirmed, the plan republished, and the site still announces a change pending. § 3 gives the seven-day decay to \`is-updated\` alone, so this state does not decay either: the band latches and a traveller reads a wrong statement indefinitely"
+fi
+
+# ── T6d — CONTROL. A resolver returning a constant satisfies T6c's second half perfectly
+# and measures nothing. A change raised AFTER the recorded approval must re-open `pending`,
+# and its `coordination-since` must be the new entry's date rather than the old one's.
+t6_trip "$T6_DIR/tripQ" "$T6_E1" "$T6_E2" >/dev/null
+# shellcheck disable=SC2059  # as above
+printf "$T6_FMT" '4294967295-1234' "$T6_CONF" > "$T6_DIR/tripQ/$T6_SHIPREC"
+T6_ST_REOPEN="$(t6_state "$T6_DIR/tripQ" "$T6_DOCREC")"
+T6_SINCE_REOPEN="$(t6_newest_entry "$T6_DIR/tripQ/outputs/change-summary.md")"
+if [ "$T6_ST_REOPEN" = 'pending' ] && [ "$T6_SINCE_REOPEN" = "$T6_E2" ]; then
+  PASS "T6d: CONTROL — a trip identical to T6c's but carrying one further entry dated $T6_E2, later than the same recorded approval ($T6_CONF), resolves back to 'pending' with coordination-since $T6_SINCE_REOPEN. So T6c's 'updated' is a measurement rather than a constant, and a new change re-opens the notice on the strength of the entry alone"
+else
+  FAIL "T6d: an entry dated $T6_E2 raised AFTER the approval at $T6_CONF resolved '$T6_ST_REOPEN' with coordination-since '$T6_SINCE_REOPEN' — expected 'pending' at $T6_E2. Either the resolver is returning a constant, in which case T6c proves nothing, or a change raised after a confirmation is never announced at all"
+fi
+
+# ── T6e — THE THREE NEGATIVE CASES, one verdict. `none` must stay reachable or AC 5's null
+# case has nowhere to come from; an entry with no approval must read `pending` or nothing is
+# ever announced; and a record that is present but says nothing must not count as approval,
+# which is ADR-007 § 2's placeholder bound on the read side of the same file S5 grades on
+# the gate side.
+mkdir -p "$T6_DIR/tripN/outputs"
+T6_ST_NONE="$(t6_state "$T6_DIR/tripN" "$T6_DOCREC")"
+t6_trip "$T6_DIR/tripU" "$T6_E1" >/dev/null
+T6_ST_UNCONF="$(t6_state "$T6_DIR/tripU" "$T6_DOCREC")"
+t6_trip "$T6_DIR/tripZ" "$T6_E1" >/dev/null
+printf 'digest=\nconfirmed=%s\n' "$T6_CONF" > "$T6_DIR/tripZ/$T6_SHIPREC"
+T6_ST_PLACEHOLDER="$(t6_state "$T6_DIR/tripZ" "$T6_DOCREC")"
+if [ "$T6_ST_NONE" = 'none' ] && [ "$T6_ST_UNCONF" = 'pending' ] && [ "$T6_ST_PLACEHOLDER" = 'pending' ]; then
+  PASS "T6e: all three negative cases resolve as the mapping declares — a trip with no change summary reads 'none' (so AC 5's null case is reachable and the band is not emitted), a summary with an entry and no approval reads 'pending', and an approval record whose \`digest=\` is empty reads 'pending' rather than being taken as consent"
+else
+  FAIL "T6e: negative cases resolved none-case='$T6_ST_NONE' (expected none), no-approval='$T6_ST_UNCONF' (expected pending), placeholder-record='$T6_ST_PLACEHOLDER' (expected pending). A wrong none-case emits a band on a trip with no coordination activity at all and breaks AC 5's byte claim; a placeholder read as approval is a republish waved through on a record that says nothing"
+fi
+
+# ── T7 — SEAM-2, RE-PRICED. Stage 7 graded this minor because the state transition was
+# UNREACHABLE. T6 makes it reachable, so it is re-measured here against the render C19
+# actually declares rather than against a bare one.
+#
+# WHAT RESTS ON IT. #552's gate keys on itinerary CONTENT, and a coordination-marker-only
+# republish passes only because the band sits OUTSIDE that projection. If a state transition
+# moves the digest, the gate reads the marker change as an unapproved plan change and aborts
+# — operator decision D6's deadlock, reinstated.
+#
+# WHY THE FIXTURE CARRIES A FRONTMATTER COMMENT. T1-T4's fixtures do not, so nothing in this
+# suite has ever graded the projection against a conformant C19 render. C19's declaration
+# rides an `<!-- ... -->` block (§ 4.5), the projection's last limb is `s/<[^>]+>/ /g`, and
+# that collapses a comment only when the comment contains no `>`. The class's own `artifact:`
+# value carries one. It is READ FROM THE SCHEMA below rather than spelled here, so the `>`
+# in this fixture is the corpus's and not this file's invention.
+T7_ART="$(awk -F': ' '/^artifact: / { print $2; exit }' "$T_SCHEMA")"
+t7_page() { # <file> <fm-state> <fm-since> <band-state> <plan-time>
+  local f="$1" fs="$2" fc="$3" bs="$4" tm="$5" band="" rule="" since=""
+  [ -z "$fc" ] || since="coordination-since: ${fc}
+"
+  if [ "$bs" != "none" ]; then
+    band="<div class=\"${T_CLASS} is-${bs}\"><span>A change is ${bs}</span> <time>2027-06-02</time></div>
+"
+    rule=".${T_CLASS}{background:#eee}"
+  fi
+  cat > "$f" <<HTML
+<!--
+artifact: ${T7_ART}
+schema-version: 1
+trip: porto-2027
+writer: site
+lifecycle: output
+provenance: derived
+publish: output
+generated: 2027-06-02
+coordination-state: ${fs}
+${since}-->
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>${rule}.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+${band}<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at ${tm}. Then the riverside walk to the bridge.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+}
+
+# The BAND varies across all three states; the frontmatter is held fixed.
+t7_page "$T6_DIR/band_none.html"    pending 2027-05-30 none    16:30
+t7_page "$T6_DIR/band_pending.html" pending 2027-05-30 pending 16:30
+t7_page "$T6_DIR/band_updated.html" pending 2027-05-30 updated 16:30
+T7_BN="$(itinerary_digest "$T6_DIR/band_none.html")"
+T7_BP="$(itinerary_digest "$T6_DIR/band_pending.html")"
+T7_BU="$(itinerary_digest "$T6_DIR/band_updated.html")"
+# The PLAN TEXT varies; everything else is held fixed.
+t7_page "$T6_DIR/plan_edit.html"    pending 2027-05-30 pending 14:00
+T7_PE="$(itinerary_digest "$T6_DIR/plan_edit.html")"
+# The FRONTMATTER's coordination fields vary; the band is held fixed.
+t7_page "$T6_DIR/fm_none.html"      none    ""         pending 16:30
+t7_page "$T6_DIR/fm_updated.html"   updated 2027-06-01 pending 16:30
+T7_FN="$(itinerary_digest "$T6_DIR/fm_none.html")"
+T7_FU="$(itinerary_digest "$T6_DIR/fm_updated.html")"
+
+# ── T7a — THE SUBJECT. On a render carrying C19's own declaration block, the band is
+# outside the itinerary digest: all three of its states share one token.
+if [ -z "$T7_ART" ] || [ "${T7_ART#*>}" = "$T7_ART" ]; then
+  FAIL "T7a: the artifact string read from $(basename "$T_SCHEMA") is '$T7_ART' and carries no '>' — this fixture is then no different from T1-T4's, the comment collapses, and T7c below would be measuring nothing. The class string has moved, or its placeholder has"
+elif [ -z "$T7_BN" ]; then
+  FAIL "T7a: itinerary_digest returned nothing for the band-free conformant render — the projection is not readable here and no equality below would mean anything"
+elif [ "$T7_BN" = "$T7_BP" ] && [ "$T7_BN" = "$T7_BU" ]; then
+  PASS "T7a: on a render carrying C19's own declaration block the coordination band is outside the itinerary digest — none, pending and updated all read $T7_BN with the frontmatter held fixed. This is the property #552's marker-only republish rests on, measured for the first time against a conformant render rather than a bare one"
+else
+  FAIL "T7a: the band is INSIDE the digest on a conformant render — none=$T7_BN pending=$T7_BP updated=$T7_BU. Every coordination-marker-only republish aborts, and operator decision D6's deadlock is reinstated"
+fi
+
+# ── T7b — CONTROL. A projection that discriminates nothing satisfies T7a perfectly. A plan
+# edit under the same fixture must move the token. This arm depends on no defect: it holds
+# whether or not the residual T7c measures is ever closed.
+if [ -n "$T7_PE" ] && [ "$T7_PE" != "$T7_BP" ]; then
+  PASS "T7b: CONTROL — moving one scheduled time under the same conformant fixture moves the digest ($T7_BP -> $T7_PE), so T7a's three-way equality is a measurement and not a projection that drops everything it is given"
+else
+  FAIL "T7b: a plan edit under the conformant fixture left the digest at '$T7_PE' against '$T7_BP' — the projection cannot see an itinerary change here, so T7a proves nothing and #552's gate would wave an unapproved plan change through"
+fi
+
+# ── T7c — THE RESIDUAL, MEASURED AND OWNED. The band is excised; C19's DECLARATION BLOCK is
+# not. `s/<[^>]+>/ /g` treats `<!--` … `<destination>` as one tag and stops at that `>`, so
+# the rest of the block — `coordination-state`, `coordination-since` and every other declared
+# field — survives into the visible text and into the digest. A state transition written to
+# the frontmatter therefore moves the token even though the band does not.
+#
+# THIS ARM DOES NOT REPAIR IT, AND THE BOUNDARY IS DELIBERATE. The projection is
+# strip_to_itinerary_text, #552's surface; the coordination fields are #551's. Adding a
+# comment excision to the projection is one line and it would falsify T4's identity against
+# strip_to_text on any comment-bearing render — so it is a disposition for the milestone,
+# not a change this card may make. What is in scope here is measuring it, and stating that
+# the mover is the declaration block rather than the band.
+#
+# THE FAILURE BRANCH ANNOUNCES ITS OWN OBSOLESCENCE. If the projection later excises comment
+# bodies, this arm goes red and says so rather than passing on a premise that has changed.
+if [ "$T7_FN" != "$T7_BP" ] && [ "$T7_FU" != "$T7_BP" ] && [ "$T7_FN" != "$T7_FU" ]; then
+  PASS "T7c: the residual is C19's DECLARATION BLOCK, not the band — with the band held fixed, varying only the frontmatter's coordination fields moves the digest three ways (none=$T7_FN pending=$T7_BP updated=$T7_FU). \`s/<[^>]+>/ /g\` stops at the '>' inside '$T7_ART', so the block's body survives into the projection. OWNER: strip_to_itinerary_text (#552). CONSEQUENCE: on a conformant render every state transition reads to the gate as an itinerary change and the marker-only republish aborts. Re-priced from minor — the transition is reachable as of T6c"
+else
+  FAIL "T7c: the frontmatter's coordination fields no longer move the digest (none=$T7_FN pending=$T7_BP updated=$T7_FU) — either the projection has learned to excise comment bodies, in which case this arm's premise is closed and it should be re-scoped to assert the invariance directly, or the declaration block has left this fixture and the measurement is over the wrong render"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
