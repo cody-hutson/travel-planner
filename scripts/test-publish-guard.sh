@@ -37,7 +37,11 @@
 # (confirmed republish, rejected hold), the stale and malformed-record cases, that the
 # abort is the DEFAULT arm rather than an enumerated one, rotate's inheritance and
 # cmd_publish's ungated safety end-to-end against a mock gh, and that neither ADR-002
-# Decision 4 guard was touched.
+# Decision 4 guard was touched. S11 grades the PROJECTION the gate reads (D10, second
+# remediation) — that strip_to_itinerary_text has ONE limb, so a failing or absent perl
+# cannot substitute a second, band-retaining projection into the digest; that the failure
+# is audible and early rather than silent; and that an empty answer means the projection
+# failed rather than that the render had no visible text.
 # T = the coordination notice (#551 AC 5) — the band's IDENTITY (the class token the
 # component contract declares is the one the shipped projection excises, read from the
 # document rather than spelled here), its state VOCABULARY (the contract's variants and
@@ -2122,6 +2126,170 @@ if [ "${#S_BODY_VPC}" -gt 0 ] && [ "${#S_BODY_VC}" -gt 0 ] && [ "$S_SENS" -eq 2 
   PASS "S10: 0 of 12 (6 identifiers x 2 guards) gate identifiers appear inside verify_publishable_content (${#S_BODY_VPC}B) or verify_ciphertext (${#S_BODY_VC}B); the sensitivity arm found both identifiers in cmd_update (2/2) and the specificity arm found a fabricated one in 0 of 4 bodies — the zero is a measurement"
 else
   FAIL "S10: leak=$S_LEAK sensitivity=$S_SENS specificity=$S_SPEC vpc=${#S_BODY_VPC}B vc=${#S_BODY_VC}B — either the gate has reached inside an ADR-002 D4 guard, or this probe cannot see one"
+fi
+
+# ── Group S, second remediation (#552, operator decision D10) — ONE limb ─────
+#
+# S0–S10 grade the GATE. S11 grades the PROJECTION the gate's verdict is computed from.
+# Stage 7 found strip_to_itinerary_text carrying a second limb:
+#
+#     perl -0777 -pe '…excise the band; drop script/style bodies; drop tags…' "$1" \
+#       2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
+#
+# The two limbs do not compute the same thing. The perl limb excises the coordination
+# band AND deletes <script>/<style> bodies; the sed limb only turns tags into spaces, so
+# the band's label and its date, the CSS rule and the script body all survive into the
+# projection. Feed that second projection to itinerary_digest and a marker-only republish
+# — the exact act D6 exists to permit — digests differently from the recorded baseline,
+# resolves `unconfirmed`, and ABORTS. D6 reinstated, conditionally and silently, with the
+# gate's own message telling the organizer the itinerary changed when it did not.
+#
+# THREE THINGS MADE THE SUBSTITUTION SILENT, and the arms below grade all three:
+#   * `2>/dev/null` discarded perl's stderr, so the switch announced nothing;
+#   * `preflight` probed `gh` and `npx` and NOT `perl`, so nothing failed early;
+#   * `||` reads a NON-ZERO STATUS, so the switch is invisible in the exit code too —
+#     the sed limb succeeds and the function returns 0 carrying the wrong answer.
+#
+# WHY THE LIMB IS REMOVED RATHER THAN TAUGHT TO EXCISE THE BAND. A fallback is honest
+# only where the fallback can compute the same answer. strip_to_text's can — its perl
+# program is a tag-stripper and little else — which is why that function legitimately
+# keeps one and is byte-frozen by #550 AC 5. This projection's cannot: it slurps the whole
+# file (-0777), back-references the band's own tag name, and BOUNDS the excision with a
+# lazy quantifier. POSIX sed expresses none of the three, and the bound is the single
+# property that keeps the excision from running past the band into plan content. A sed
+# limb that approximated it would put the one FAIL-OPEN direction this design forbids back
+# on the table — an over-running excision deletes plan text, the digest then reads
+# "unchanged", and an unapproved change ships behind a marker. So the limb goes and perl
+# becomes an asserted dependency instead of an assumed one. That is the shape
+# strip_to_published_text already has: a perl program with no sed equivalent, and no
+# fallback offered.
+#
+#   S11a  DENOMINATOR — with a working perl the marked render digests EQUAL to the
+#         unmarked one and the token is non-empty: the band really is excised, so the
+#         comparisons below have something to compare
+#   S11b  THE REGRESSION — with perl failing, NO second projection reaches the gate
+#   S11c  VISIBILITY — perl's stderr is no longer discarded; control: a working perl
+#         writes 0 bytes there, so the non-zero is the failure surfacing, not chatter
+#   S11d  SPECIFICITY for S11b — a render whose visible text is GENUINELY empty still
+#         yields a well-formed token, so S11b's empty answer is the failure signal and
+#         not "empty input yields nothing"
+#   S11e  the perl stub was withdrawn — the arms after it grade production code
+#   S11f  STRUCTURAL — the parsed projection body carries no second limb at all;
+#         sensitivity: the same detector finds one in strip_to_text, which keeps one
+#   S11g  PREFLIGHT — perl's absence is an EARLY, NAMED failure on the publish paths
+#         rather than a projection that quietly answers differently mid-run
+#
+# Offline: $WORK fixtures, a shell-function stub for perl and for gh/npx (the S8/S9
+# technique), and a PATH with no perl on it. No network, no Node, no TTY, no real gh. This
+# group has no legitimate skip and is deliberately NOT declared in GUARD_EXPECTED_SKIPS.
+echo
+echo "The itinerary projection has one limb (#552 D10, second remediation):"
+
+S11_MARK="$WORK/s11_mark.html";   s_render "$S11_MARK"  "14:00" pending
+S11_PLAIN="$WORK/s11_plain.html"; s_render "$S11_PLAIN" "14:00" none
+# A render carrying markup, a style rule and a script body but NO visible text. Its
+# projection is legitimately empty, and its digest is therefore a legitimate token —
+# S11d's whole point.
+S11_VOID="$WORK/s11_void.html"
+printf '%s' '<!DOCTYPE html><html><head><style>.hero{color:#333}</style></head><body><script>var mapReady=1;</script></body></html>' > "$S11_VOID"
+
+S11_ERR_OK="$WORK/s11_stderr_ok.txt"
+S11_ERR_FAIL="$WORK/s11_stderr_fail.txt"
+
+# ── S11a — THE DENOMINATOR.
+S11_PERL="$(itinerary_digest "$S11_MARK" 2>"$S11_ERR_OK")"
+S11_BARE="$(itinerary_digest "$S11_PLAIN")"
+S11_VOIDDG="$(itinerary_digest "$S11_VOID")"
+S11_ERRLEN_OK="$(wc -c < "$S11_ERR_OK" | tr -d ' ')"
+if [ -n "$S11_PERL" ] && [ "$S11_PERL" = "$S11_BARE" ]; then
+  PASS "S11a: DENOMINATOR — the perl limb reads the marked render as $S11_PERL, the SAME token the unmarked render yields, and it is non-empty; the band is excised rather than the projection being empty, so the arms below compare real values"
+else
+  FAIL "S11a: the marked render digested '$S11_PERL' and the unmarked one '$S11_BARE' — the projection is empty, or the band is not being excised, and every S11 verdict below would be vacuous"
+fi
+
+# ── S11b — THE REGRESSION. perl is stubbed to fail the way a missing or too-old perl
+# fails: non-zero, nothing on stdout. The question is what the gate is then handed. Before
+# this remediation it was handed the sed limb's output — a well-formed token computed from
+# a DIFFERENT projection, one that still carries the band, the CSS rule and the script
+# body. A marker-only republish then reads as an itinerary change and aborts, which is
+# exactly the deadlock D6 resolved. The fix is not a better fallback: it is that there is
+# no second answer to hand over.
+perl() { printf 'perl: simulated failure (S11 stub)\n' >&2; return 127; }
+S11_FALLBACK="$(itinerary_digest "$S11_MARK" 2>"$S11_ERR_FAIL")"
+unset -f perl
+S11_ERRLEN_FAIL="$(wc -c < "$S11_ERR_FAIL" | tr -d ' ')"
+if [ -n "$S11_PERL" ] && [ -z "$S11_FALLBACK" ]; then
+  PASS "S11b: with perl failing, itinerary_digest yields NO token (the working limb yields $S11_PERL) — there is no second projection for the gate to act on, so a coordination-marker republish can never be re-read as an itinerary change by a machine whose perl is missing"
+else
+  FAIL "S11b: a failed perl still produced the token '$S11_FALLBACK' against the perl limb's '$S11_PERL' — a SECOND projection is reaching the gate. It does not excise the coordination band, so a marker-only republish digests as a plan change, resolves unconfirmed and ABORTS: operator decision D6 is silently reinstated on every machine without a working perl"
+fi
+
+# ── S11c — VISIBILITY. The status is only half of it: a projection that fails must also
+# SAY so. `2>/dev/null` was there to silence perl before falling back, and once there is
+# nothing to fall back to it silences the one message that explains the failure. The
+# control is the same call with a working perl, which must write nothing.
+if [ "$S11_ERRLEN_OK" -eq 0 ] && [ "$S11_ERRLEN_FAIL" -gt 0 ]; then
+  PASS "S11c: a failing perl wrote ${S11_ERRLEN_FAIL}B to stderr while a working one wrote ${S11_ERRLEN_OK}B — the projection no longer discards its own diagnostic, and the non-zero is the failure surfacing rather than ordinary chatter"
+else
+  FAIL "S11c: working-perl stderr=${S11_ERRLEN_OK}B, failing-perl stderr=${S11_ERRLEN_FAIL}B — the projection is still swallowing perl's stderr (or is writing on the happy path, which would make this probe meaningless). A failure that announces nothing is the property that made this defect silent"
+fi
+
+# ── S11d — SPECIFICITY for S11b. S11b's verdict is an EMPTY answer, and an empty answer
+# is worthless unless emptiness means one specific thing. It must mean "the projection
+# FAILED", not "the projection was empty": a render with markup, a style rule and a script
+# body but no visible text projects to nothing legitimately, and that is a real itinerary
+# identity a trip may hold. The discriminator is the exit STATUS, not the byte count.
+if [ -n "$S11_VOIDDG" ] && [ "$S11_VOIDDG" != "$S11_PERL" ]; then
+  PASS "S11d: a render whose visible text is genuinely empty still yields the well-formed token $S11_VOIDDG, distinct from $S11_PERL — so S11b's empty answer discriminates a FAILED projection from an empty one, and the failure is read off the status rather than off the output"
+else
+  FAIL "S11d: the empty-visible-text render digested '$S11_VOIDDG' against the marked render's '$S11_PERL' — an empty projection and a failed projection are indistinguishable here, so S11b's zero proves nothing"
+fi
+
+# ── S11e — THE RESTORE. S6c's rule applied to this stub: an injection that outlives its
+# arm turns every later verdict into a grade of the stub.
+S11_RESTORED="$(itinerary_digest "$S11_MARK")"
+if [ "$S11_RESTORED" = "$S11_PERL" ]; then
+  PASS "S11e: the perl stub was withdrawn and the projection reads $S11_RESTORED again — group T and everything after it grade production code"
+else
+  FAIL "S11e: after the restore the projection reads '$S11_RESTORED' rather than '$S11_PERL' — the stub survived its arm and every verdict below is grading it"
+fi
+
+# ── S11f — STRUCTURAL, and the arm that outlives this particular fallback. S11b measures
+# the sed limb specifically; this one asserts the CONTRACT — the projection is a single
+# limb — so a future `|| awk …`, `|| python3 …` or `|| true` is caught by the same arm
+# rather than needing its own. Read from the PARSED body, so a mention inside a comment
+# cannot fake it. Its sensitivity arm is strip_to_text, which legitimately keeps a
+# fallback and is byte-frozen by #550 AC 5: the detector demonstrably fires on the shape
+# it is looking for, so the zero on this projection is a measurement.
+S11_BODY_ITIN="$(declare -f strip_to_itinerary_text)"
+S11_BODY_TEXT="$(declare -f strip_to_text)"
+case "$S11_BODY_ITIN" in *'||'*) S11_ITIN_LIMB=1 ;; *) S11_ITIN_LIMB=0 ;; esac
+case "$S11_BODY_TEXT" in *'||'*) S11_TEXT_LIMB=1 ;; *) S11_TEXT_LIMB=0 ;; esac
+case "$S11_BODY_ITIN" in *zzz_not_a_real_identifier*) S11_ITIN_SPEC=1 ;; *) S11_ITIN_SPEC=0 ;; esac
+if [ "${#S11_BODY_ITIN}" -gt 0 ] && [ "${#S11_BODY_TEXT}" -gt 0 ] \
+   && [ "$S11_ITIN_LIMB" -eq 0 ] && [ "$S11_TEXT_LIMB" -eq 1 ] && [ "$S11_ITIN_SPEC" -eq 0 ]; then
+  PASS "S11f: the parsed body of strip_to_itinerary_text (${#S11_BODY_ITIN}B) carries 0 fallback limbs; the sensitivity arm found 1 in strip_to_text (${#S11_BODY_TEXT}B), which legitimately keeps one, and the specificity arm found a fabricated token in 0 of them — the zero is a measurement, and any future second limb of any kind fails here"
+else
+  FAIL "S11f: itinerary-limb=$S11_ITIN_LIMB text-limb=$S11_TEXT_LIMB specificity=$S11_ITIN_SPEC itin=${#S11_BODY_ITIN}B text=${#S11_BODY_TEXT}B — the itinerary projection carries a second limb (or the detector cannot see the one strip_to_text carries, in which case its zero proves nothing)"
+fi
+
+# ── S11g — PREFLIGHT. S11b/S11c make the failure safe and audible; this one makes it
+# EARLY. cmd_update runs preflight before it resolves the render, so a probe here means
+# the operator is told "install perl" before anything is cloned, encrypted or pushed,
+# instead of meeting the gate's own message claiming an itinerary change that never
+# happened. gh and npx are function-stubbed (the S8/S9 technique) so the ONLY thing the
+# stripped PATH removes is perl, and the control run — same stubs, real PATH — shows
+# preflight still passes when perl is there.
+gh() { case "${1:-} ${2:-}" in "auth status") printf "Token scopes: 'repo'\n" ;; *) return 0 ;; esac; }
+npx() { return 0; }
+S11_MSG_NOPERL="$( ( PATH=/nonexistent/s11-no-perl; preflight ) 2>&1 >/dev/null )"; S11_RC_NOPERL=$?
+S11_MSG_PERL="$( ( preflight ) 2>&1 >/dev/null )";                                  S11_RC_PERL=$?
+unset -f gh npx
+case "$S11_MSG_NOPERL" in *perl*) S11_NAMES_PERL=1 ;; *) S11_NAMES_PERL=0 ;; esac
+if [ "$S11_RC_PERL" -eq 0 ] && [ "$S11_RC_NOPERL" -ne 0 ] && [ "$S11_NAMES_PERL" -eq 1 ]; then
+  PASS "S11g: preflight passes with perl present (rc=$S11_RC_PERL, the control, so the stubs are not refusing everything) and ABORTS naming perl when it is absent (rc=$S11_RC_NOPERL) — the dependency fails early and by name, before any clone, encryption or push"
+else
+  FAIL "S11g: control rc=$S11_RC_PERL, stripped-PATH rc=$S11_RC_NOPERL, message names perl=$S11_NAMES_PERL (message: ${S11_MSG_NOPERL:-none}) — preflight does not probe perl, so its absence is discovered mid-run as a projection that answers differently rather than up front as a missing dependency"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
