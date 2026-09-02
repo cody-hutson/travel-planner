@@ -23,6 +23,10 @@
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
+# R = the change-summary content guard (#550 AC 5) — verify_summary_content over
+# outputs/change-summary.md, an `internal` artifact verify_publishable_content never
+# sees. Grades the clean/HIT/UNDETERMINED triple, the RE-DERIVED word floor, and the
+# markdown block sentinel that keeps the conjunctive rule scoped.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -529,24 +533,41 @@ fi
 # enumerated the selectors to check that nothing enumerates the selectors would be the
 # second home it exists to detect.
 #
+# THE PREDICATE SIDE IS ENUMERATED BY NAME, AND THAT IS THIS CASE'S ONE BLIND SPOT.
+# The SELECTORS are derived; the FUNCTIONS graded against them are a list, so a predicate
+# added to the publish script and not added here is an unguarded second home BY OMISSION
+# -- L8 would stay green while the literal it exists to forbid sat in a function it never
+# looked at. #550's verify_summary_content is the first addition; its projection helper is
+# named too, because a selector could as easily be hardcoded into a stripper as into a
+# matcher. l8absent below is what keeps the list honest: a name that no longer resolves
+# contributes a silent zero, which reads exactly like compliance.
+#
 # NOTE the polarity flip against the pre-re-key form of this case, which required
 # `lsrc > 0` — the class source holding literals was the property it asserted. That form
 # is structurally incapable of passing now, which is why it was rewritten in the same
 # commit as the re-key rather than after it.
 l8sel="$(_guard_declared_selectors)"
 l8n="$(printf '%s\n' "$l8sel" | grep -c .)"
+# Every function that must hold ZERO selectors. Two predicates and one projection.
+L8_PREDICATES='verify_publishable_content verify_summary_content strip_md_to_text_blocks'
+l8absent=""
+for l8f in $L8_PREDICATES; do
+  declare -f "$l8f" >/dev/null 2>&1 || l8absent="$l8absent$l8f "
+done
 l8pred=0; l8src=0
 while IFS= read -r l8s; do
   [ -n "$l8s" ] || continue
-  l8pred=$(( l8pred + $(declare -f verify_publishable_content | grep -cF -- "$l8s") ))
-  l8src=$((  l8src  + $(declare -f nonpublishable_values      | grep -cF -- "$l8s") ))
+  for l8f in $L8_PREDICATES; do
+    l8pred=$(( l8pred + $(declare -f "$l8f" | grep -cF -- "$l8s") ))
+  done
+  l8src=$((  l8src  + $(declare -f nonpublishable_values | grep -cF -- "$l8s") ))
 done <<EOF
 $l8sel
 EOF
-if [ "$l8n" -gt 0 ] && [ "$l8pred" -eq 0 ] && [ "$l8src" -eq 0 ]; then
-  PASS "L8: the class has ONE home — the declaration carries all $l8n selectors while neither the predicate (0) nor the class source (0) holds a copy; the control arm fires"
+if [ "$l8n" -gt 0 ] && [ -z "$l8absent" ] && [ "$l8pred" -eq 0 ] && [ "$l8src" -eq 0 ]; then
+  PASS "L8: the class has ONE home — the declaration carries all $l8n selectors while none of the graded predicates ($L8_PREDICATES) and not the class source holds a copy; every graded name resolves, and the control arm fires"
 else
-  FAIL "L8: the one-home seam is gone or the probe is broken (declaration=$l8n predicate=$l8pred source=$l8src)"
+  FAIL "L8: the one-home seam is gone or the probe is broken (declaration=$l8n predicate=$l8pred source=$l8src unresolved='${l8absent:-none}')"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1356,6 +1377,153 @@ omodel "$O6STD" <<'MD'
 MD
 oguard "$O6SR" "$O6STD"
 if [ "$ORC" -eq 1 ]; then PASS "O6c: a category carrying text beyond the enum still aborts (rc=1) — the enum exclusion is scoped to enum-ONLY values"; else FAIL "O6c: a category with a real captured value did not abort (rc=$ORC) — the enum exclusion dropped the whole field"; fi
+
+# ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
+# outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
+# never reaches the render, so verify_publishable_content -- HTML-bound, and called only
+# from cmd_publish's plaintext limb on the file being published -- never sees it. The
+# predicate for it is verify_summary_content, which reuses the CLASS SOURCE
+# (nonpublishable_values) and the MATCHER (_norm_words + _guard_match) and adds only a
+# markdown projection.
+#
+# Four properties are graded here, each with a control arm, because three of the four
+# verdicts are the kind that a disarmed guard also produces:
+#   R1  a clean summary passes                  (control: the class is really non-empty)
+#   R2  a carried-through value aborts as a HIT (the sensitivity arm for R1)
+#   R3  a degraded read is UNDETERMINED         (control: the same file, above the floor)
+#   R4  the floor was RE-DERIVED, not copied    -- a legitimately short summary passes,
+#       which it could not do under the HTML arm's 20-word floor
+#   R5  the block sentinel is present and scoped, mirroring group N for this evaluand
+echo
+echo "Change-summary content guard (#550 AC 5):"
+
+RTD="$WORK/porto-2026"; mkdir -p "$RTD/outputs"
+cat > "$RTD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2026 [DERIVED]
+
+## Rowan
+- Passport: Irish, valid to 2027
+MD
+
+# The frontmatter every fixture below opens with. Written once: a summary that omitted
+# it would not be an instance of the class, and a per-fixture copy is how the fixtures
+# drift apart from each other.
+rfront() { # <file>
+  cat > "$1" <<'MD'
+---
+artifact: outputs/change-summary.md
+schema-version: 1
+trip: porto-2026
+writer: hub
+lifecycle: accumulate-append
+provenance: derived
+publish: internal
+generated: 2026-05-10
+status: pending
+---
+
+# Change Summary
+MD
+}
+
+# R0 — CONTROL for R1. A clean verdict over an EMPTY class is not a clean verdict; it is
+# a guard with nothing to match. Assert the class is populated before reading R1.
+RRECS="$(nonpublishable_values "$RTD" 2>/dev/null)"; RN="$(printf '%s\n' "$RRECS" | grep -c .)"
+if [ "$RN" -gt 0 ]; then
+  PASS "R0: the fixture's non-publishable class is populated ($RN record(s)) — R1's clean verdict is a measurement rather than an empty scan"
+else
+  FAIL "R0: the fixture's class read empty ($RN records) — every verdict below would be vacuous"
+fi
+
+# R1 — a summary carrying only derived rows is clean.
+RCLEAN="$WORK/r_clean.md"; rfront "$RCLEAN"
+cat >> "$RCLEAN" <<'MD'
+
+## 2026-05-10 — proposed change
+
+**In plain language:** the Saturday viewpoint moved later in the afternoon.
+
+| Bucket | Key | What | Before | After |
+|--------|-----|------|--------|-------|
+| MOVED | `evt-c052` | The viewpoint | May 16 (Sat) 14:00 | May 16 (Sat) 16:30 |
+MD
+verify_summary_content "$RCLEAN" "$RTD" >/dev/null 2>&1; RRC=$?
+if [ "$RRC" -eq 0 ]; then PASS "R1: a summary of derived rows carrying no class value passes (rc=0)"; else FAIL "R1: a clean summary was rejected (rc=$RRC) — the predicate is unusable on correct input"; fi
+
+# R2 — SENSITIVITY for R1. Without this arm R1 is satisfied by a guard that matches
+# nothing at all. The value is carried in ONE block, which is what the conjunctive rule
+# is defined over.
+RHIT="$WORK/r_hit.md"; cp "$RCLEAN" "$RHIT"
+printf '\nNote for the group: carry your Irish passport, valid to 2027, on the day.\n' >> "$RHIT"
+if grep -qF 'Irish passport, valid to 2027' "$RHIT"; then
+  PASS "R2a: the sensitivity fixture carries the passport value inside one block"
+else
+  FAIL "R2a: the sensitivity fixture does not carry the value — R2b would prove nothing"
+fi
+verify_summary_content "$RHIT" "$RTD" >/dev/null 2>&1; RRC=$?
+if [ "$RRC" -eq 1 ]; then PASS "R2b: a non-publishable value carried into the summary aborts as a HIT (rc=1) — free text beside the derived rows is graded"; else FAIL "R2b: a carried-through passport value did not abort (rc=$RRC) — AC 5's bound is not enforced"; fi
+
+# R3 — a degraded read is UNDETERMINED, never a pass. Its control is R4: the same
+# predicate on a file that is short but legitimate must NOT return 2, or "undetermined"
+# would just be this guard's name for "small".
+RSHORT="$WORK/r_degraded.md"
+printf '# Change\n' > "$RSHORT"
+verify_summary_content "$RSHORT" "$RTD" >/dev/null 2>&1; RRC=$?
+if [ "$RRC" -eq 2 ]; then PASS "R3: a summary below the $GUARD_SUMMARY_FLOOR-word floor is UNDETERMINED (rc=2), never a pass"; else FAIL "R3: a degraded read returned rc=$RRC — a guard that cannot read its evaluand must not report clean"; fi
+
+# R4 — THE FLOOR WAS RE-DERIVED. This is the arm that fails if someone "simplifies"
+# verify_summary_content by reusing verify_publishable_content's 20-word visible-text
+# floor. A one-line summary is the class's minimum legitimate shape; under a 20-word
+# floor every one of them is UNDETERMINED forever, with no remedy available to the
+# operator — the unusable fail-closed control ADR-008 argues against twice.
+RTINY="$WORK/r_tiny.md"
+printf '# Change Summary\n\nTuesday dinner moved 19:00 to 20:00.\n' > "$RTINY"
+RTN="$(strip_md_to_text_blocks "$RTINY" | _norm_words | grep -cv "^$_GUARD_BLOCK\$")"
+verify_summary_content "$RTINY" "$RTD" >/dev/null 2>&1; RRC=$?
+if [ "$RRC" -eq 0 ] && [ "$RTN" -lt 20 ] && [ "$RTN" -ge "$GUARD_SUMMARY_FLOOR" ]; then
+  PASS "R4: a legitimate $RTN-word summary passes (rc=0) while sitting BELOW the HTML arm's 20-word floor — the floor is this artifact's, not an inherited one"
+else
+  FAIL "R4: the short-summary arm did not discriminate (rc=$RRC, words=$RTN, floor=$GUARD_SUMMARY_FLOOR) — either the floor was copied from the HTML arm or the fixture no longer sits between the two"
+fi
+
+# R5 — the block sentinel, mirroring group N for this evaluand. A summary accumulates a
+# dated section per re-bake, so both class tokens recur across section boundaries by
+# construction; with no sentinel every token lands in block 0, the conjunctive rule
+# degrades to a bare word window, and the N-squared false abort ADR-008's first
+# amendment fixed comes straight back on a different file type.
+rsections() { # <out_file> <sections>
+  rfront "$1"
+  rs=1
+  while [ "$rs" -le "$2" ]; do
+    printf '\n## 2027-06-0%d — proposed change\n\n' "$rs" >> "$1"
+    printf '| Bucket | Key | What | Before | After |\n|---|---|---|---|---|\n' >> "$1"
+    printf '| MOVED | `evt-c052` | An Irish pub near the water | 19:00 | 20:00 |\n' >> "$1"
+    rs=$((rs+1))
+  done
+}
+RREC="$WORK/r_recur.md"; rsections "$RREC" 6
+rirish="$(grep -c 'Irish' "$RREC")"; ryear="$(grep -c '2027' "$RREC")"
+if [ "$rirish" -ge 2 ] && [ "$ryear" -ge 2 ] && ! grep -qF 'Irish, valid to 2027' "$RREC"; then
+  PASS "R5a: both class tokens recur across dated-section boundaries ($rirish / $ryear lines) and the value itself never appears — the recurrence case is real"
+else
+  FAIL "R5a: the recurrence fixture is not set up as claimed (Irish=$rirish, 2027=$ryear) — R5b would prove nothing"
+fi
+rfalse=0
+for rn in 1 2 3 4 6; do
+  rf="$WORK/r_recur_$rn.md"; rsections "$rf" "$rn"
+  verify_summary_content "$rf" "$RTD" >/dev/null 2>&1 || rfalse=$((rfalse+1))
+done
+if [ "$rfalse" -eq 0 ]; then
+  PASS "R5b: an accumulating summary whose two class tokens recur across section boundaries passes at 1, 2, 3, 4 and 6 sections (0 false aborts) — the markdown projection emits block sentinels"
+else
+  FAIL "R5b: $rfalse of 5 section-counts falsely aborted — strip_md_to_text_blocks is not emitting \$_GUARD_BLOCK at markdown block boundaries, and the conjunctive window is pairing across them"
+fi
+# R5c — SENSITIVITY. Without it R5b is satisfied by a projection that emits a sentinel
+# on EVERY line, which would scope the window so tightly nothing could ever match.
+RRECH="$WORK/r_recur_hit.md"; rsections "$RRECH" 6
+printf '\nNote for the group: carry your Irish passport, valid to 2027, on the day.\n' >> "$RRECH"
+verify_summary_content "$RRECH" "$RTD" >/dev/null 2>&1; RRC=$?
+if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the value inside ONE block still aborts (rc=1) — the sentinel narrowed the window, it did not disarm it"; else FAIL "R5c: a real same-block carry-through no longer aborts (rc=$RRC) — the projection over-corrected into a fail-open"; fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group PF — no verdict in this suite, or in the publish script it guards, is decided by a
