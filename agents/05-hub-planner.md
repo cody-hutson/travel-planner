@@ -139,14 +139,16 @@ is why the key exists.
 last moment at which the *prior* plan still exists on disk: `outputs/venue-matrix.md`
 is `rebuilt-each-synthesis` and is about to be replaced wholesale, and
 `outputs/event-status.md` is `persist-mutable` and is about to be updated in place.
-Read both files **as they stand now** and hold the two keyed maps below. Nothing
+Read both files **as they stand now** and hold the two keyed maps below. Hold the whole
+tuple, not the field you expect to change: a field absent from the before-map is a field no
+bucket can ever compare, and it fails silently rather than loudly. Nothing
 downstream can reconstruct them — a summary derived after the overwrite is derived
 from the new plan twice, and reports no change.
 
 | Read from | Key | Value held |
 |-----------|-----|------------|
 | `outputs/venue-matrix.md` | `ven-<token>` | `(day, role)` |
-| `outputs/event-status.md` | `Event ID` | `status` |
+| `outputs/event-status.md` | `Event ID` | `(day, time, status)` |
 
 Then build the matrix. When it and `outputs/event-status.md` are written, take the
 keyed set difference of the before-maps against the after-maps and emit
@@ -290,6 +292,16 @@ rows on setup). The hub both **reads** and **writes** it:
   key and must **not** encode the day (the `Day` column carries that), because
   resequencing moves events across days. Reuse the same ID for that event on
   every later pass.
+- **Every row carries the time it sits at, and that is a column.** The `Time` cell holds
+  the event's **24-hour local start time** (`19:30`), or `—` when the plan deliberately
+  leaves the event untimed; a duration or a window goes in `Notes`. Time is *placement*,
+  exactly like `Day`: you decide it when you place the event, you preserve it on a
+  `locked` / `firmed` row on the same terms you preserve the day, and you write it back
+  when a patch re-times a `planned` one. It is **not** part of the row's key — `Event ID`
+  is, and a re-timed event keeps its ID. Full model: `reference/data-model.md` →
+  "`Time` is a column, not a note". The reason it is structured rather than a note is
+  downstream of this file: § *Output: outputs/change-summary.md* **compares** it, and a
+  time recorded only in prose is a shift the group is never shown.
 - **Every row carries its venue key, and that is what resolves the map link.**
   The table's `Venue` column holds the venue's `ven-<token>` — the same key
   `links-reference.md` and `venue-matrix.md` carry — and it is **required on
@@ -829,13 +841,31 @@ the two maps captured at Step 2, in four buckets:
 |--------|-----------|
 | **ADDED** | key present in the after-map, absent from the before-map |
 | **DROPPED** | key present in the before-map, absent from the after-map |
-| **MOVED** | key in both, and its `(day, role)` differs |
+| **MOVED** | key in both, and its **placement** differs — `(day, role)` for a `ven-<token>`, `(day, time)` for an `Event ID` |
 | **STATUS-CHANGED** | key in both, and its `Status` differs |
 
-Write each bucket as rows, one per key. The plain-language line a reader sees —
-*"Saturday afternoon: Miradouro da Vitória moved 14:00 → 16:30; the block after it
-dropped"* — is a **rendering of those rows**, not the artifact's content. Render it
-from the row; never write a sentence you did not derive.
+Write each bucket as rows, one per key. **The `Key` column carries the key and the `What`
+column carries the display label** — so a MOVED row keyed `evt-c052` whose `What` reads
+*Miradouro da Vitória* is one row about one **event**, named by the venue a reader
+recognises. That is the whole of the venue-name-versus-`evt-`-key question: the row is
+`evt-`-keyed because the event is what moved, and it reads as a place because a group reads
+places. The plain-language line — *"Saturday afternoon: Miradouro da Vitória moved
+14:00 → 16:30"* — is a **rendering of that row**, not the artifact's content: the label
+comes from `What`, the two clock times from `Before` and `After`, and the thing it is about
+from `Key`. Render from the row; never write a sentence you did not derive.
+
+**Time is compared inside a matched key and never becomes part of one.** The `Event ID` is
+the join and it survives a re-timing — that is precisely what makes a moved event **one**
+MOVED row rather than a DROPPED and an unrelated ADDED. If you find yourself keying on
+`(event, time)`, stop: you have turned every re-timing into a re-identification, and the
+group is shown two changes where one happened. The same holds for the venue key and its
+role.
+
+**One shift, one row.** A change that moves an event to another day moves its venue's
+`(day, role)` with it, so both keys satisfy MOVED. Write the `Event ID` row: it is the finer
+grain, it is the one carrying the time, and it is the row the plain-language line renders. A
+`ven-<token>` MOVED row is written only for a venue-level shift no event row already
+carries — a role change (`A` → `Alt`) on a day that did not move.
 
 **`outputs/final-itinerary.md` is NOT diffed, and must not be.** It carries no
 `Event ID` and no `ven-<token>` by deliberate design (`ADR-009` § *Decision 3*), so
@@ -856,8 +886,11 @@ readings this rules out, both of which look reasonable and are wrong:
 **The derivation bound — what you may read, stated as a constraint on the
 generator.** Every field of every row is sourced from a `publish: bound` class:
 `outputs/venue-matrix.md` (C11), `outputs/event-status.md` (C13), and `trip-context.md`
-(C1) for day and date labels. You read **no `internal-hard` class** into this file —
-never `outputs/traveler-model.md`, never `outputs/satisfaction-metrics.md`. The
+(C1) for day and date labels. **The clock time is inside that bound already** — it is a
+`Time` cell on C13, a class this list has always carried, so comparing it widens what the
+summary *says* without widening what it *reads*. You read **no `internal-hard` class**
+into this file — never `outputs/traveler-model.md`, never
+`outputs/satisfaction-metrics.md`. The
 summary therefore carries no more than the published site already encrypts, which
 is what discharges ADR-003 § *Decision 4*. This is a bound on the derivation, not a
 filter applied afterwards: a value that was never read cannot leak. Any free-text
@@ -882,9 +915,10 @@ provenance, a different lifecycle and a different consumer. One fact, one home.
 
 | Bucket | Key | What | Before | After |
 |--------|-----|------|--------|-------|
-| MOVED | `evt-xxxx` | [event or venue as displayed] | [day / role / status] | [day / role / status] |
+| MOVED | `evt-xxxx` | [the event, by the label a reader knows it by] | [day / time] | [day / time] |
+| MOVED | `ven-xxxx` | [the venue as displayed] | [day / role] | [day / role] |
 | DROPPED | `ven-xxxx` | [as displayed] | [day / role] | — |
-| ADDED | `evt-xxxx` | [as displayed] | — | [day / role / status] |
+| ADDED | `evt-xxxx` | [as displayed] | — | [day / time / status] |
 ```
 
 **The bucket is the first column, deliberately.** A table whose first column is a

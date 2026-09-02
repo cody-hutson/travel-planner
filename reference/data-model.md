@@ -439,16 +439,22 @@ A flat per-event table, one row per event, keyed by a stable **Event ID** plus t
 > Iteration changes only `planned` rows; `locked` / `firmed` are preserved unless the user names them.
 > `option` rows are alternatives/bailouts — never auto-promoted into a primary slot.
 
-| Event ID | Venue | Event | Day | Status | Requires booking? | Needs booking (derived) | Notes |
-|----------|-------|-------|-----|--------|-------------------|-------------------------|-------|
-| evt-01 | ven-04 | Riverside izakaya (anchor dinner) | Day 2 | locked  | yes | no  | Table held 7:30 PM |
-| evt-02 | ven-11 | Hillside museum morning           | Day 3 | firmed  | no  | no  | Group-settled; nothing to book |
-| evt-03 | ven-07 | Market hall lunch                 | Day 3 | planned | yes | yes | Needs a reservation — not yet booked |
-| evt-04 | ven-19 | Old-town self-guided wander       | Day 4 | planned | no  | no  | Walk-up; no booking needed |
-| evt-05 | ven-23 | Noodle counter (Day 3 lunch alt)  | Day 3 | option  | no  | no  | Backup for evt-03; alternative pool |
+| Event ID | Venue | Event | Day | Time | Status | Requires booking? | Needs booking (derived) | Notes |
+|----------|-------|-------|-----|------|--------|-------------------|-------------------------|-------|
+| evt-01 | ven-04 | Riverside izakaya (anchor dinner) | Day 2 | 19:30 | locked  | yes | no  | Table held |
+| evt-02 | ven-11 | Hillside museum morning           | Day 3 | 10:00 | firmed  | no  | no  | Group-settled; nothing to book |
+| evt-03 | ven-07 | Market hall lunch                 | Day 3 | 12:30 | planned | yes | yes | Needs a reservation — not yet booked |
+| evt-04 | ven-19 | Old-town self-guided wander       | Day 4 | 15:00 | planned | no  | no  | Walk-up; no booking needed |
+| evt-05 | ven-23 | Noodle counter (Day 3 lunch alt)  | Day 3 | 12:30 | option  | no  | no  | Backup for evt-03; alternative pool |
 ```
 
 > **Event ID is opaque and day-independent.** The IDs above carry no day (the `Day` column does). `evt-05`'s note references its primary by ID (`evt-03`), not by a day-coded name — so when resequencing moves either event to another day, the join key and the cross-reference both still hold.
+
+**`Time` is a column, not a note.** The clock time an event sits at is **placement** — the same kind of fact as `Day`, decided by the same act, recorded by the same writer, and preserved or moved by exactly the same status rule. It lived in `Notes` as free text until a consumer needed to compare it: a re-bake that moves a dinner from 19:00 to 20:00 on the same day changes nothing else on the row, so a change summary derived from structured artifacts (`agents/05-hub-planner.md` § *Output: outputs/change-summary.md*) could not see the shift at all, and the only surface that carried it — `outputs/final-itinerary.md` — is the prose the summary exists to stop diffing. The value is a **24-hour local clock start time** (`19:30`), or `—` for an event the plan deliberately leaves untimed; a duration or a window belongs in `Notes`, because what makes a re-timing one row rather than two is a comparison over one start.
+
+**This is placement, not intent.** § *Intent is carried by reference, not by copy* holds that the standard an event was *chosen against* — its price tier, its subgroup, the hard constraints it answers — is mastered elsewhere and reached through keys this table already has. A time is on the other side of that line: it is *what has been decided*, which is the half this table was built to hold, and it is mastered here because nothing else masters it.
+
+**And it never joins the key.** `Event ID` remains this table's only key, and `Time` is an attribute compared *within* a matched key. Fold the time into the identity and a re-timed event becomes a *different* event: a keyed difference would then report a drop and an unrelated addition where one move happened — two rows about one thing, which reads worse to a group than the silence it replaced, not better.
 
 The `Needs booking (derived)` column is shown for human scannability but is **computed, not authored**: it is `yes` exactly when `Status = planned` **and** `Requires booking? = yes`. A writer never sets it by hand; the hub recomputes it whenever it touches a row. (The examples use the public Pat / Jordan / Sam persona set.)
 
@@ -481,7 +487,7 @@ So `option` is the bridge between the satisfaction layer's status model and the 
 
 | Free-text precursor (`trip-context.md`) | Structured layer (`outputs/event-status.md`) |
 |------------------------------------------|----------------------------------------------|
-| "Day 4 dinner: Riverside izakaya, 7 PM confirmed reservation" | a row `evt-11 … Day: 4, Status: locked, Requires booking?: yes` |
+| "Day 4 dinner: Riverside izakaya, 7 PM confirmed reservation" | a row `evt-11 … Day: 4, Time: 19:00, Status: locked, Requires booking?: yes` |
 | "Day 2: day trip — tickets purchased" | a row `evt-12 … Day: 2, Status: locked, Requires booking?: yes` |
 | "Hotel confirmed — no alternatives needed" | a row `evt-13 … Day: —, Status: locked, Requires booking?: yes` |
 | "Day 3 museum morning — group settled, nothing to book" | a row `evt-14 … Day: 3, Status: firmed, Requires booking?: no` |

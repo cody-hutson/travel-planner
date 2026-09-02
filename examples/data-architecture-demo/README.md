@@ -36,7 +36,7 @@ way.
 | `outputs/links-reference.md` | C10 | 2 | rebuilt before the itinerary, with `venue-matrix.md` |
 | `outputs/venue-matrix.md` | C11 | 1 | the dedup cap, the anchor/alternative rule it is **not** the same as, and the emitter's full three-role vocabulary `A` / `Alt` / `B` |
 | `outputs/traveler-model.md` | C12 | 1 | `[DERIVED]` projection; the desire-overlap signal |
-| `outputs/event-status.md` | C13 | 1 | all four status values; opaque day-independent Event ID; derived needs-booking |
+| `outputs/event-status.md` | C13 | 1 | all four status values; opaque day-independent Event ID; derived needs-booking; the structured `Time` the change summary compares, including the one declared-absence row |
 | `outputs/satisfaction-metrics.md` | C14 | 1 | the one declared non-scalar (`writer: [hub, validator]`); section ownership; the six dimensions with their types |
 | `outputs/final-itinerary.md` | C15 | 2 | `versioned`, current pass; the hub's own prose day shape, carrying **no** ID or key column — the one-way join § 4.5 records as a cost |
 | `outputs/final-itinerary-v1.md` | C16 | 1 | the frozen sibling as its **own class**, `publish: internal` where C15 is `bound` |

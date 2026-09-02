@@ -31,8 +31,16 @@ overwritten by the pass that produced it.
 **Every row below is derived from a key, and the keys come from two files only** —
 `outputs/event-status.md` (`Event ID`) and `outputs/venue-matrix.md` (`ven-<token>`).
 `outputs/final-itinerary.md` is **not** diffed and carries neither key by design, so
-the day and time text in the *What* column is a label read alongside the key, never
-the thing compared.
+nothing below is read from it.
+
+**The *What* column is a label; the *Before* and *After* columns are the comparison.**
+`What` holds the display name a reader knows the thing by and is never matched on — the
+`Key` column is what joins. `Before` and `After` hold the **placement**, and for an
+`Event ID` that placement is `(day, time)`: both fields come from `outputs/event-status.md`,
+which carries `Day` and `Time` as columns. The `14:00` and the `16:30` in the MOVED row
+below are therefore compared values, not decoration. Read them as prose lifted out of the
+itinerary and the row would be unreproducible, because the itinerary is the one file this
+class is forbidden to diff.
 
 **The bucket is the first column, and that is not cosmetic.** A table opening with a
 `ven-<token>` against a display string is the *declared key column* form
@@ -47,13 +55,13 @@ was no prior plan to compare against, so every key is new.
 
 | Bucket | Key | What | Before | After |
 |--------|-----|------|--------|-------|
-| ADDED | `evt-3f9a` | Livraria Lello timed entry | — | May 14 (Thu) · `locked` |
-| ADDED | `evt-8c21` | Jardins do Palácio de Cristal | — | May 14 (Thu) · `planned` |
-| ADDED | `evt-b47e` | Serralves — contemporary art | — | May 15 (Fri) · `planned` |
+| ADDED | `evt-3f9a` | Livraria Lello timed entry | — | May 14 (Thu) 15:00 · `locked` |
+| ADDED | `evt-8c21` | Jardins do Palácio de Cristal | — | May 14 (Thu) 17:00 · `planned` |
+| ADDED | `evt-b47e` | Serralves — contemporary art | — | May 15 (Fri) 15:00 · `planned` |
 | ADDED | `evt-c052` | Miradouro da Vitória | — | May 16 (Sat) 14:00 · `planned` |
-| ADDED | `evt-5ab8` | Base Porto — rooftop at sunset | — | May 16 (Sat) · `locked` |
+| ADDED | `evt-5ab8` | Base Porto — rooftop at sunset | — | May 16 (Sat) 19:30 · `locked` |
 | ADDED | `evt-9e34` | Casa do Livro — bar | — | May 16 (Sat) · `option` |
-| ADDED | `evt-2f77` | Riverside walk, Ribeira to the bridge | — | May 17 (Sun) · `planned` |
+| ADDED | `evt-2f77` | Riverside walk, Ribeira to the bridge | — | May 17 (Sun) 09:30 · `planned` |
 
 **A first synthesis is not a no-op.** The before-map is empty, so the difference is the
 whole plan and the rule emits. This is worth seeing once: the no-op condition is *the
@@ -67,16 +75,28 @@ to 16:30 — and the activities spoke's second pass put one anchor meal on each 
 | Bucket | Key | What | Before | After |
 |--------|-----|------|--------|-------|
 | MOVED | `evt-c052` | Miradouro da Vitória | May 16 (Sat) 14:00 | May 16 (Sat) 16:30 |
-| ADDED | `evt-7a05` | Tasca do Bairro — dinner | — | May 14 (Thu) · `planned` |
-| ADDED | `evt-1d60` | Mercado do Bolhão — market-hall lunch | — | May 15 (Fri) · `firmed` |
-| ADDED | `evt-6e2b` | Casa de Pasto Central — lunch | — | May 16 (Sat) · `planned` |
-| ADDED | `evt-d1c8` | Padaria São Bento — breakfast | — | May 17 (Sun) · `planned` |
+| ADDED | `evt-7a05` | Tasca do Bairro — dinner | — | May 14 (Thu) 20:00 · `planned` |
+| ADDED | `evt-1d60` | Mercado do Bolhão — market-hall lunch | — | May 15 (Fri) 12:30 · `firmed` |
+| ADDED | `evt-6e2b` | Casa de Pasto Central — lunch | — | May 16 (Sat) 13:00 · `planned` |
+| ADDED | `evt-d1c8` | Padaria São Bento — breakfast | — | May 17 (Sun) 08:30 · `planned` |
 
 **`evt-c052` MOVED rather than DROPPED-and-ADDED, and the Event ID is why.** The hub
 mints the ID on first placement and it is day-independent, so re-timing the event
 leaves the key untouched and the difference reads as one row instead of two. A summary
 built over display titles would have reported a drop and an unrelated addition, and
-the group would have read it as two changes.
+the group would have read it as two changes. The same holds one level down: **time is an
+attribute compared *within* the matched key, never part of it.** Fold `16:30` into the
+identity and `evt-c052` at 14:00 and `evt-c052` at 16:30 are two keys, and this one row
+becomes the same misleading pair by a different route.
+
+**And this row is the only reason the 2026-08-29 section exists at all.** Its `Day` did not
+change, its venue's role in `outputs/venue-matrix.md` did not change, and its `Status` is
+`planned` on both sides — so `ADDED`, `DROPPED` and `STATUS-CHANGED` are all silent about
+it. `MOVED` sees it because the placement it compares for an `Event ID` is `(day, time)`
+and `outputs/event-status.md` carries `Time` as a column. Take that column away and the
+four buckets are empty for this event; the anchor-meal rows are all that remain, and a pass
+that had moved the group's Saturday afternoon by two and a half hours would have said so
+nowhere.
 
 **One removal on this pass is not in the table, and its absence is the artifact's
 coverage boundary rather than an omission.** The supporting block that stood after the
