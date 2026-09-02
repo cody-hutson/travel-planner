@@ -566,6 +566,11 @@ planned to its actual window. Reading the itinerary, you can feel the arc.
   Not the last. It has a real deadline.
 - **Arrival/departure neglect:** Both have hard time constraints. Both are
   planned to their actual windows, not treated as full days with a flight note.
+  The party's bags are part of that window: an arrival day written as though the
+  room is ready on landing, or a departure day written as though the luggage
+  disappears at check-out, is the same neglect wearing different clothes. The
+  transport brief plans those hours — carry them into the day rather than
+  re-deriving or dropping them.
 - **Status drift:** Re-placing or dropping a `locked`/`firmed` event the user
   did not name, or letting the venue matrix contradict the status table (an
   `option` shown as an anchor). `locked`/`firmed` are preserved; the matrix and
@@ -646,7 +651,12 @@ Required inputs:
    is the hub's job under issue #17, not per-engine work done here)
 5. outputs/transport-brief.md (carries the point-to-point transit matrix — the
    door-to-door group times feeding the scheduler's routing signal; reconciling
-   the signal is the hub's job under issue #17, not per-engine work done here)
+   the signal is the hub's job under issue #17, not per-engine work done here.
+   It also carries the **per-stream arrival and departure plans**, including the
+   pre-check-in and post-check-out windows in which the party is holding its
+   luggage with no room to leave it in. That content belongs to the arrival and
+   departure days' **Transit Notes** — it is what those days' movement actually
+   requires. It is not a new element and takes no block of its own)
 6. outputs/traveler-model.md (the `[DERIVED]` per-traveler needs + desires — the
    source for the satisfaction-coverage read: anchors/wishes → covered/not,
    needs → pass/fail. Its desire-overlap signal now also carries the attention
