@@ -42,3 +42,4 @@ options weighed, the decision, and the consequences.
 | [ADR-007](ADR-007-command-entry-point.md) | Command entry point — surface shape, privilege boundary, and taxonomy ownership | Accepted |
 | [ADR-008](ADR-008-publish-content-guard.md) | Publish-path content guard — a value-keyed predicate on the plaintext limb | Accepted |
 | [ADR-009](ADR-009-data-architecture.md) | Data architecture — entity identity, serialization, publishability, topology, schema evolution | Accepted |
+| [ADR-010](ADR-010-per-traveler-approval-collection.md) | Per-traveler approval collection — transport over server, the attestation ceiling, and the unnamed channel | Proposed |
