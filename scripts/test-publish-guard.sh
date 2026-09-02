@@ -34,6 +34,12 @@
 # abort is the DEFAULT arm rather than an enumerated one, rotate's inheritance and
 # cmd_publish's ungated safety end-to-end against a mock gh, and that neither ADR-002
 # Decision 4 guard was touched.
+# T = the coordination notice (#551 AC 5) — the band's IDENTITY (the class token the
+# component contract declares is the one the shipped projection excises, read from the
+# document rather than spelled here), its state VOCABULARY (the contract's variants and
+# C19's coordination-state enum, set-diffed both ways), and the NULL CASE: absent a
+# pending change or a recent update the render is byte-identical to a pre-component
+# render and the itinerary projection is byte-identical to strip_to_text.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -1874,6 +1880,243 @@ if [ "${#S_BODY_VPC}" -gt 0 ] && [ "${#S_BODY_VC}" -gt 0 ] && [ "$S_SENS" -eq 2 
   PASS "S10: 0 of 12 (6 identifiers x 2 guards) gate identifiers appear inside verify_publishable_content (${#S_BODY_VPC}B) or verify_ciphertext (${#S_BODY_VC}B); the sensitivity arm found both identifiers in cmd_update (2/2) and the specificity arm found a fabricated one in 0 of 4 bodies — the zero is a measurement"
 else
   FAIL "S10: leak=$S_LEAK sensitivity=$S_SENS specificity=$S_SPEC vpc=${#S_BODY_VPC}B vc=${#S_BODY_VC}B — either the gate has reached inside an ADR-002 D4 guard, or this probe cannot see one"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group T (#551 AC 5) — the coordination notice: its identity, its state vocabulary,
+# and the null case.
+#
+# GROUP LETTER. `R` was taken by #550 (the change-summary content guard) and `S` by
+# #552 (the organizer-confirm gate). `T` is the next free letter under the rule group
+# S states — the monotonic sequence with `P` skipped for its prefix collision with the
+# existing two-letter group `PF`. Every assertion id in this file was censused before
+# the letter was chosen; `T` appeared in none of them.
+#
+# WHY THIS GROUP IS HERE AND NOT IN THE ARTIFACT-SCHEMA SUITE. Three of its four arms
+# run the SHIPPED publish-script projections — strip_to_itinerary_text, strip_to_text
+# and itinerary_digest — which are in scope only because this suite sources
+# publish-trip-site.sh. And the coupling it holds fails HERE when it breaks: a drifted
+# class token is a marker-only republish that ABORTS.
+#
+#   T1  the band the SPEC declares is the band the SCRIPT excises   (the coupling)
+#   T2  the component's variants and the schema's enum agree        (spec <-> schema)
+#   T3  absent a pending change, the render emits nothing           (AC 5, the render)
+#   T4  absent a pending change, the publish path is what it was    (AC 5, the digest)
+#
+# T1 IS THE ARM THAT HOLDS THE ONE THING #552 ASKED #551 TO HOLD, AND IT IS NOT S7a.
+# publish-trip-site.sh binds the notice's identity at the line marked SEAM S4, and the
+# consequence of drift is stated there in terms: change that line in the same commit or
+# every marker-only republish aborts. S7a already proves a marker-only republish
+# passes — but its fixture spells the class token literally, so it would stay GREEN
+# through a spec that had renamed the band. T1 builds its band from the token the SPEC
+# DOCUMENT declares and asserts the shipped projection actually excises THAT. It is
+# behavioural rather than a string comparison, because two strings can be equal and
+# both wrong; a projection either excises the band or it does not.
+#
+# STATED BOUND, because it is the honest limit of every arm below. There is no site
+# BUILD in this repository — the render is authored by the `site` verb in
+# .claude/commands/trip.md, from a spec. So T3 grades a render built TO the contract,
+# not a build script's output: what it proves is that the contract's null case,
+# followed, emits nothing and disturbs nothing. That a given run followed it is not
+# something any test here reaches, and no arm below claims it.
+#
+# Every arm is offline: two tracked files, three sourced shell functions, no network,
+# no gh, no Node, no TTY. This group has no legitimate skip and is deliberately NOT
+# declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "Coordination notice — identity, vocabulary, and the null case (#551 AC 5):"
+
+T_SPEC="$HERE/../reference/site-layout-spec.md"
+T_SCHEMA="$HERE/../reference/schemas/travel-site.md"
+T_DIR="$WORK/t551"; mkdir -p "$T_DIR"
+
+# The class token the COMPONENT CONTRACT declares, read from the document rather than
+# spelled here. A literal in this file would be a second home for the notice's identity
+# and would make T1 unable to see the drift it exists to see.
+t_spec_class() { # [<spec-file>]
+  awk '/^### Coordination Notice/ {
+         if (match($0, /`\.[a-z][-a-z0-9]*`/)) print substr($0, RSTART + 2, RLENGTH - 3)
+         exit
+       }' "${1:-$T_SPEC}"
+}
+
+# The variant suffixes the contract declares, bound to the class token so a variant
+# hung off some OTHER class is not silently counted as one of this component's.
+t_spec_variants() { # <class-token> [<spec-file>]
+  awk -v c="$1" '
+    /^- Two variants:/ {
+      s = $0
+      while (match(s, "`\\." c "\\.is-[a-z][-a-z0-9]*`")) {
+        tok = substr(s, RSTART, RLENGTH)
+        sub(/.*\.is-/, "", tok); sub(/`$/, "", tok)
+        print tok
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }' "${2:-$T_SPEC}" | sort -u
+}
+
+# coordination-state's enum members, from C19's schema fence and nowhere else.
+t_schema_enum() { # [<schema-file>]
+  awk -F'[][]' '/^field coordination-state:/ { print $2; exit }' "${1:-$T_SCHEMA}" | tr '|' '\n' | sort -u
+}
+
+# Occurrence counter. Pure bash: no pipeline, so nothing here can be decided by an
+# exit status under pipefail (group PF's rule), and no external process to be missing.
+t_count() { # <needle> <file> -> occurrences on stdout
+  local n=0 s
+  s="$(cat "$2")"
+  while [ -n "$s" ]; do
+    case "$s" in
+      *"$1"*) s="${s#*"$1"}"; n=$((n+1)) ;;
+      *)      break ;;
+    esac
+  done
+  printf '%d' "$n"
+}
+
+# The page in two forms, produced by DIFFERENT code on purpose. t_page_pre is the
+# render as it stood BEFORE this card: no coordination construct of any kind. t_page is
+# the render built to the component contract, parameterised by state. Under the
+# contract's null case the two must be the same BYTES — an assertion worth making only
+# because an emitter that leaked an empty container, or a CSS rule, on `none` would
+# come out of the second function and not the first.
+t_page_pre() { # <file>
+  cat > "$1" <<'HTML'
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at 16:30. Then the riverside walk to the bridge.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+}
+
+t_page() { # <file> <none|pending|updated> [<class-token>]
+  local f="$1" st="$2" cls="${3:-$T_CLASS}" band="" rule=""
+  # The contract: rendered ONLY when coordination-state is `pending` or `updated`;
+  # absent or `none` emits no node AND no CSS rule.
+  if [ "$st" != "none" ]; then
+    band="<div class=\"${cls} is-${st}\"><span>A change is ${st}</span> <time>2027-06-02</time></div>
+"
+    rule=".${cls}{background:#eee}"
+  fi
+  cat > "$f" <<HTML
+<!DOCTYPE html><html><head><title>Porto 2027</title>
+<style>${rule}.hero{color:#333}</style></head><body>
+<section class="hero"><h1>Porto 2027</h1></section>
+${band}<section class="day"><h2>Saturday</h2>
+<p>Miradouro da Vitoria at 16:30. Then the riverside walk to the bridge.</p></section>
+<script>var mapReady=1;</script>
+</body></html>
+HTML
+}
+
+T_CLASS="$(t_spec_class)"
+
+# ── T1 — THE COUPLING. The band the component contract declares is the band the
+# shipped projection excises. Behavioural: build one from the DOCUMENT's token, one
+# from a token the script cannot know, and read the digests.
+t_page "$T_DIR/none.html"    none    "$T_CLASS"
+t_page "$T_DIR/spec.html"    pending "$T_CLASS"
+t_page "$T_DIR/fake.html"    pending "zzq-not-a-notice"
+T_D_NONE="$(itinerary_digest "$T_DIR/none.html")"
+T_D_SPEC="$(itinerary_digest "$T_DIR/spec.html")"
+T_D_FAKE="$(itinerary_digest "$T_DIR/fake.html")"
+if [ -z "$T_CLASS" ] || [ ! -r "$T_SPEC" ]; then
+  FAIL "T1: no class token could be read from $T_SPEC — the component contract has moved or been renamed, and every verdict below would be over an empty token rather than a measurement"
+elif [ -z "$T_D_NONE" ]; then
+  FAIL "T1: itinerary_digest returned nothing for the null-case render — the projection is not readable here and no equality below would mean anything"
+elif [ "$T_D_FAKE" = "$T_D_NONE" ]; then
+  FAIL "T1: a band carrying the fabricated class 'zzq-not-a-notice' was excised too ($T_D_FAKE), so this probe cannot tell an excision from a projection that drops everything — the subject equality would prove nothing"
+elif [ "$T_D_SPEC" = "$T_D_NONE" ]; then
+  PASS "T1: the band built from the class token '$T_CLASS' READ FROM $(basename "$T_SPEC") is excised by the shipped projection — marked and unmarked renders share one itinerary digest ($T_D_NONE), while the fabricated-class band is NOT excised ($T_D_FAKE != $T_D_NONE), so the equality is a measurement. This is the SEAM S4 agreement, and unlike S7a's literal fixture it fails when the document renames the band"
+else
+  FAIL "T1: the component contract declares '.$T_CLASS' but the shipped projection does not excise it — marked $T_D_SPEC vs unmarked $T_D_NONE. SEAM S4 in publish-trip-site.sh binds a different token, and EVERY marker-only republish will abort until the two agree"
+fi
+
+# ── T2 — SPEC <-> SCHEMA. The component's two variants are exactly the schema enum's
+# two non-`none` members. Set-diffed in BOTH directions, because a one-way containment
+# check stays green on a schema that has quietly grown a fourth state nothing renders.
+#
+# THE CONTROL ARM IS A RUNTIME MUTATION, NOT A FABRICATED-TOKEN LOOKUP. Asking whether
+# an invented token appears in the extracted sets is a question whose answer is `no`
+# whether the extractors work or not — it would pass over two empty sets just as
+# happily. So both extractors are re-run against copies of their own source documents
+# with a token INJECTED, and each must come back carrying it. An extractor whose regex
+# has stopped matching the document returns the same set from the mutated copy, and
+# this arm is what notices. Same technique as UF-CTL2 in the artifact-schema suite.
+T_VARIANTS="$(t_spec_variants "$T_CLASS")"
+T_ENUM_ALL="$(t_schema_enum)"
+printf '%s\n' "$T_VARIANTS"  | awk 'NF' | sort -u > "$T_DIR/var.txt"
+printf '%s\n' "$T_ENUM_ALL"  | awk 'NF && $0 != "none"' | sort -u > "$T_DIR/enum_active.txt"
+T_NVAR="$(awk 'END { print NR }' "$T_DIR/var.txt")"
+T_NENUM="$(printf '%s\n' "$T_ENUM_ALL" | awk 'NF' | wc -l | tr -d ' ')"
+comm -23 "$T_DIR/var.txt" "$T_DIR/enum_active.txt" > "$T_DIR/only_spec.txt"
+comm -13 "$T_DIR/var.txt" "$T_DIR/enum_active.txt" > "$T_DIR/only_schema.txt"
+
+# CONTROL: inject a variant into the contract and a member into the schema, then re-run
+# the SAME extractors over the mutated copies. Both must pick the injection up.
+T_SPEC_MUT="$T_DIR/spec_mut.md"; T_SCHEMA_MUT="$T_DIR/schema_mut.md"
+awk -v c="$T_CLASS" '
+  /^- Two variants:/ { printf "%s and `.%s.is-zzqfab`\n", $0, c; next }
+  { print }' "$T_SPEC" > "$T_SPEC_MUT"
+awk '/^field coordination-state:/ { sub(/\]$/, "|zzqfab]"); print; next } { print }' "$T_SCHEMA" > "$T_SCHEMA_MUT"
+T_CTL_VAR="$(t_spec_variants "$T_CLASS" "$T_SPEC_MUT")"
+T_CTL_ENUM="$(t_schema_enum "$T_SCHEMA_MUT")"
+T_CTL_VAR_HIT=0; T_CTL_ENUM_HIT=0
+case " $(printf '%s ' $T_CTL_VAR) "  in *' zzqfab '*) T_CTL_VAR_HIT=1 ;;  esac
+case " $(printf '%s ' $T_CTL_ENUM) " in *' zzqfab '*) T_CTL_ENUM_HIT=1 ;; esac
+
+if [ "$T_NVAR" -eq 0 ] || [ "$T_NENUM" -eq 0 ]; then
+  FAIL "T2: extracted $T_NVAR variant(s) from the component contract and $T_NENUM enum member(s) from C19's schema — one side is empty, so the set difference below would be vacuously clean"
+elif [ "$T_CTL_VAR_HIT" -ne 1 ] || [ "$T_CTL_ENUM_HIT" -ne 1 ]; then
+  FAIL "T2-CTL: an injected token was NOT recovered (variant arm=$T_CTL_VAR_HIT, enum arm=$T_CTL_ENUM_HIT of 1 each) — at least one extractor has stopped reading its document, so the agreement below would be between two sets this file computed rather than two the corpus declares"
+elif [ -s "$T_DIR/only_spec.txt" ] || [ -s "$T_DIR/only_schema.txt" ]; then
+  FAIL "T2: the component's variants and coordination-state's enum disagree — only in the contract: [$(tr '\n' ' ' < "$T_DIR/only_spec.txt")]; only in the schema: [$(tr '\n' ' ' < "$T_DIR/only_schema.txt")]. A state the schema admits and the contract cannot render is a render with nowhere to put it; a variant the schema cannot express is a class that never validates"
+else
+  PASS "T2: the component's $T_NVAR variant(s) [$(tr '\n' ' ' < "$T_DIR/var.txt")] are exactly coordination-state's $T_NENUM-member enum less \`none\` — set-diffed in both directions, 0 either way. Both extractors recovered a token injected into a copy of their own source document, so each set is read from the corpus rather than assumed"
+fi
+
+# ── T3 — AC 5, AT THE RENDER. Absent a pending change or a recent update, the site
+# renders exactly as it does today: no node, no CSS rule, no script branch. Asserted as
+# BYTE IDENTITY against a render authored before this component existed, because on a
+# file encrypted wholesale a hidden-but-present element is still a publish diff.
+t_page_pre "$T_DIR/pre.html"
+T_N_CLASS_NULL="$(t_count "$T_CLASS" "$T_DIR/none.html")"
+T_N_CLASS_MARK="$(t_count "$T_CLASS" "$T_DIR/spec.html")"
+T_N_VAR_NULL=0
+for t_v in $T_VARIANTS; do
+  T_N_VAR_NULL=$(( T_N_VAR_NULL + $(t_count "is-$t_v" "$T_DIR/none.html") ))
+done
+T_N_VAR_MARK="$(t_count "is-pending" "$T_DIR/spec.html")"
+if [ "$T_N_CLASS_MARK" -eq 0 ] || [ "$T_N_VAR_MARK" -eq 0 ]; then
+  FAIL "T3: the sensitivity arm did not fire — the MARKED render carries $T_N_CLASS_MARK occurrence(s) of '$T_CLASS' and $T_N_VAR_MARK of 'is-pending', so a zero on the null render would mean the counter is blind rather than that nothing was emitted"
+elif ! cmp -s "$T_DIR/none.html" "$T_DIR/pre.html"; then
+  FAIL "T3: the null-case render is NOT byte-identical to a render authored before this component existed — $(wc -c < "$T_DIR/none.html" | tr -d ' ')B vs $(wc -c < "$T_DIR/pre.html" | tr -d ' ')B. AC 5 is a byte claim on an artifact encrypted wholesale: anything emitted here is a publish diff on a trip with no coordination activity at all"
+elif [ "$T_N_CLASS_NULL" -ne 0 ] || [ "$T_N_VAR_NULL" -ne 0 ]; then
+  FAIL "T3: the null-case render carries $T_N_CLASS_NULL occurrence(s) of '$T_CLASS' and $T_N_VAR_NULL variant token(s) — non-emission means no node AND no CSS rule, not display:none and not an empty container"
+else
+  PASS "T3: the null-case render is byte-identical to a pre-component render and carries 0 occurrences of '$T_CLASS' and 0 of its $T_NVAR variant token(s); the sensitivity arm found $T_N_CLASS_MARK and $T_N_VAR_MARK of them in the marked render built by the same function, so both zeros are measurements"
+fi
+
+# ── T4 — AC 5, AT THE PUBLISH PATH. With nothing emitted there is nothing to excise,
+# so #552's itinerary projection must be byte-for-byte the projection that shipped
+# before it. This is the half of AC 5 that lives in the guard rather than on the page,
+# and it is what makes "renders exactly as it does today" true of the pushed bytes too.
+strip_to_itinerary_text "$T_DIR/none.html" > "$T_DIR/proj_new_null.txt"
+strip_to_text            "$T_DIR/none.html" > "$T_DIR/proj_old_null.txt"
+strip_to_itinerary_text "$T_DIR/spec.html" > "$T_DIR/proj_new_mark.txt"
+strip_to_text            "$T_DIR/spec.html" > "$T_DIR/proj_old_mark.txt"
+if [ ! -s "$T_DIR/proj_old_null.txt" ]; then
+  FAIL "T4: strip_to_text produced nothing for the null-case render, so the identity below would be an equality between two empty files"
+elif cmp -s "$T_DIR/proj_new_mark.txt" "$T_DIR/proj_old_mark.txt"; then
+  FAIL "T4: the two projections agree on a MARKED render as well, so this comparator cannot tell them apart and its agreement on the null render proves nothing about non-emission"
+elif cmp -s "$T_DIR/proj_new_null.txt" "$T_DIR/proj_old_null.txt"; then
+  PASS "T4: on the null-case render the itinerary projection is byte-identical to strip_to_text ($(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B) — absent a pending change the publish path is exactly what it was before this milestone. The control arm confirms the two projections DIFFER on a marked render, so the identity is a measurement"
+else
+  FAIL "T4: the itinerary projection and strip_to_text disagree on a render with NO coordination band — $(wc -c < "$T_DIR/proj_new_null.txt" | tr -d ' ')B vs $(wc -c < "$T_DIR/proj_old_null.txt" | tr -d ' ')B. Something in the excision is firing with no band present, and every trip with no coordination activity would republish differently than it does today"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
