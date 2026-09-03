@@ -1066,7 +1066,7 @@ traveller file in existence.**
 | Reference state | Resolution |
 |---|---|
 | **Absent** | The traveller file is self-contained. **No store read is attempted.** Behaviour is byte-identical to today |
-| **Present, resolves** | Compose per § 4 below. A `merged-into:` stub is followed to **depth 1**; a second hop is `MALFORMED` and never followed |
+| **Present, resolves** | Compose per *Decision* § 4 below. A `merged-into:` stub is followed to **depth 1**; a second hop is `MALFORMED` and never followed |
 | **Present, does not resolve — `DANGLING`** | **`UNDETERMINED`.** Never `NOT-REFERENCING`, never *no constraints*. This inherits `G1`'s shipped canary rule verbatim rather than inventing a posture |
 | **Store absent or unreadable** | **`UNDETERMINED` for every trip carrying a reference; a trip carrying none is unaffected.** The fail-safe must not degrade the no-library case |
 
@@ -1093,7 +1093,7 @@ survives anywhere** to correlate.
 
 **Reach-set consequence.** This record adds **exactly one** location neither sibling set could name —
 the `person:` field on each referencing `travelers/<traveler>.md` — and states its disposition
-(removal). It adds **no** location for a file-less bearer, because § 5 decides there is none.
+(removal). It adds **no** location for a file-less bearer, because *Decision* § 5 decides there is none.
 `people/README.md` is **not** a reach location: it is a tracked signpost carrying no person data, and
 that is a property the store's build must preserve.
 
@@ -1147,7 +1147,7 @@ the blank intake form at zero answers, which would read as a form that asks no q
 by the existing inline `[OPERATOR-PROVIDED]` mark exactly as the derived model carries it today; it is
 **not** a new frontmatter enum member, because § 4.4's `provenance:` key is artifact-scoped. Projection
 into the derived model is unchanged **by identity, not by equivalence** — the same mark, in the same
-place, read by the same guard limb. **The two marks stay orthogonal, and that is the seam § 5 and § 6
+place, read by the same guard limb. **The two marks stay orthogonal, and that is the seam *Decision* § 5 and § 6
 turn on:** `[OPERATOR-PROVIDED]` answers *who supplied this*; `[THIRD-PARTY]` answers *whether the
 person described spoke*. **The durable-storage bar attaches to `[THIRD-PARTY]`, never to
 `[OPERATOR-PROVIDED]` alone.**
@@ -1162,7 +1162,7 @@ filed yet, **and** a party member who will never file one."*
 | Class | Marks | Decision |
 |---|---|---|
 | **A profile not filed yet** (the fixture's `Sam`) | `[OPERATOR-PROVIDED]` **alone** | **No reference bearer.** When the profile arrives it is a `travelers/<traveler>.md` file and bears `person:` normally |
-| **A party member who will never file one** | `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` | **No reference bearer, and no person record.** Their durable record is the trip-scoped one § 6 names |
+| **A party member who will never file one** | `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` | **No reference bearer, and no person record.** Their durable record is the trip-scoped one *Decision* § 6 names |
 
 **Neither file-less class bears a person reference, and neither receives a cross-trip person record.**
 This is the branch that requires the exclusion to be **stated**, because silence here reads as coverage.
@@ -1198,7 +1198,7 @@ reference is **EXCLUDED-BY-DESIGN**, never DANGLING and never TOMBSTONED.
 
 **Reversibility: EXPENSIVE · confidence HIGH.** This narrows the plain reading of the milestone's
 promise that a party member who never authors a profile can still hold a durable record: it is
-**satisfied on the trip-scoped reading** (§ 6) and **refused on the cross-trip one**. Reversing it would
+**satisfied on the trip-scoped reading** (*Decision* § 6) and **refused on the cross-trip one**. Reversing it would
 require a consent mechanism `ADR-006` would admit, and `ADR-006` already measured and rejected the only
 candidate — an unverifiable attestation — on reasoning that holds harder at this scope.
 
@@ -1241,7 +1241,7 @@ and `ADR-006` neither names that record nor gives it a way to be deleted.
    derived model remains that entry's record rather than its authority."*
 2. **Its bound is stated** — **trip-scoped**, resident only in the git-ignored working directory,
    non-publishable, and it **never enters the cross-trip person library**. It does not link that person
-   across trips and acquires no identifier that could. § 5 is what makes this bound true.
+   across trips and acquires no identifier that could. *Decision* § 5 is what makes this bound true.
 3. **It acquires a delete path** — the erasure verb reaches it by **substitution**, never by
    regeneration, because regeneration reproduces it verbatim by design.
 
@@ -1294,7 +1294,7 @@ reads a claim differently, it says so here, plainly.*
   `- **Label:**` pattern silently drops), the population is **10 `PERSON`-class bullets, of which 8 are
   answered and 2 are not** — the two `Passport: —` lines. **The subsection's conclusion is unaffected and
   in fact strengthens**: 8 of 10 answered is more than enough for a naive answered-ness predicate to read
-  the safety class as overridden, which is exactly why § 4 is class-first. The same instrument reproduces
+  the safety class as overridden, which is exactly why *Decision* § 4 is class-first. The same instrument reproduces
   that subsection's other two counts on the same population — 107 labelled body bullets, 45 answered —
   so the divergence is in the `PERSON` subset alone, not in the instrument.
 - **The erasure-reach subsection's gate correction is adopted as it stands.** Its parenthetical already
@@ -1304,7 +1304,7 @@ reads a claim differently, it says so here, plainly.*
   occur.
 - **The erasure-reach subsection's id-reuse rejection stands on its second rationale only**, and this
   record carries it that way (**O14**): the name-leak rationale is **struck**, because the surrogate
-  chosen in § 1 carries no name; what remains and decides it is that a reused id is a stable cross-trip
+  chosen in *Decision* § 1 carries no name; what remains and decides it is that a reused id is a stable cross-trip
   pseudonym for someone who asked to be deleted. **The outcome is unchanged. Do not revisit it.**
 
 ## Consequences
@@ -1316,7 +1316,7 @@ mid-milestone renumbering already demonstrated.
 
 | Surface | Impact | Owner |
 |---|---|---|
-| `reference/adr/ADR-006-third-party-data-capture.md` | **Amended in place** per § 6b — the consent decision is untouched, an unnamed durable record is named and bounded, and a delete path is attached. Recorded as an **amendment, not a supersession**: no decision reverses | **this record** |
+| `reference/adr/ADR-006-third-party-data-capture.md` | **Amended in place** per *Decision* § 6b — the consent decision is untouched, an unnamed durable record is named and bounded, and a delete path is attached. Recorded as an **amendment, not a supersession**: no decision reverses | **this record** |
 | `reference/data-architecture.md` § 1 and the § 1.1 heading | **Two-sentence narrowing.** The *per-trip* qualifier moves off the class set and onto the per-trip rows, so a cross-trip class is not filed under a heading that denies it. Cheaper than a new band, and it preserves the `reference/schemas/` bijection a new band would break | schema-and-store slice |
 | `reference/data-architecture.md` § 1.1 table | **One new row**: `people/<person>.md`, written by the person, `persist-mutable`, `provenance: human`, **`publish: internal-hard`** — not `internal`. It carries `Passport`, which § 5.6 already declares non-publishable in two other scopes, and `internal-hard` is the value § 5.1 reserves for a class whose values *"must not reach a rendered page in any form, including anonymized"* | schema-and-store slice |
 | `reference/data-architecture.md` § 2 | **Eleventh entity row**: Person — surrogate `psn-<token>`; Person 1—N Traveler-reference; Person 0..1—1 Person via `merged-into:`, depth 1 | schema-and-store slice |
@@ -1330,7 +1330,7 @@ mid-milestone renumbering already demonstrated.
 | **A tracked witness fixture** | Required, or an explicit no-witness declaration. **A new worked example carrying the store**, rather than reusing the existing data-architecture example — which would place a cross-trip record inside a trip root and re-teach the scoping this design breaks | schema-and-store slice |
 | `scripts/publish-trip-site.sh` **and** `reference/data-architecture.md` § 5.6 | **COUPLED, and this is the highest-severity item here.** A `Passport` fence row for the person-record scope **and** a third artifact-scope constant in the evaluator must land **in the same change**. The evaluator holds exactly two artifact-scope literals today; § 5.6 states that a row naming any other pair *"is presently a code change"* and that **the guard aborts the publish as UNDETERMINED** rather than guarding less than it declares. **A fence row alone aborts every publish of every trip** | publish-guard slice |
 | `.claude/commands/trip-new.md` | **Refuse a trip slug equal to a reserved sentinel** | command slice |
-| `agents/00-enrichment.md` · `.claude/commands/trip-record.md` | **The absolute phrasing *"no durable artifact of any kind"* is false as written** and both surfaces attribute it to `ADR-006`, which does not say it. Each needs the same descriptive correction § 6b makes: the entry has no *file*, and its durable record is the carried-forward model entry, trip-scoped and now deletable. **No shape or field changes** | enrichment slice · command slice |
+| `agents/00-enrichment.md` · `.claude/commands/trip-record.md` | **The absolute phrasing *"no durable artifact of any kind"* is false as written** and both surfaces attribute it to `ADR-006`, which does not say it. Each needs the same descriptive correction *Decision* § 6b makes: the entry has no *file*, and its durable record is the carried-forward model entry, trip-scoped and now deletable. **No shape or field changes** | enrichment slice · command slice |
 | `trips/README.md` retention table | *"No command deletes a trip folder"* becomes false when the erasure verb ships, and the same table's *"Copy a profile forward"* contradicts one-source-per-fact | **UNOWNED — routed** |
 | `outputs/traveler-model.md`, its schema, and the agents that consume it | **Unchanged.** No field added, no shape changed, projection unchanged by identity | — |
 | `CLAUDE.md` § *Resolving a trip* | **Not touched.** No third evidence block, no new gate, and **no gate that blocks on freshness** — this design adds a relation and no gate | — |
@@ -1355,7 +1355,7 @@ mid-milestone renumbering already demonstrated.
 
 ### Costs and residual risks, stated rather than minimised
 
-- **A party member's needs are re-stated on every trip.** § 5 accepts this explicitly. It falls on the
+- **A party member's needs are re-stated on every trip.** *Decision* § 5 accepts this explicitly. It falls on the
   person least able to advocate for themselves, and it is the cost `ADR-006` already accepted once at a
   narrower scope.
 - **An archived trip's model is a frozen composition over a source that did not stay frozen**, and
