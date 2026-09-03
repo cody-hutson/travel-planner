@@ -309,21 +309,62 @@ and it never edits a traveler's own file.
 
 ### Profile-change detection — emit a replanning signal on a changed profile
 
-Because each `travelers/<traveler>.md` is independently editable, you provide the
-change-detection the old free-text model could not: on every reconciliation pass,
-**diff each traveler file against the snapshot you last processed** and, when a
-file changed in a way that affects the plan — a new or dropped desire, a revised
-need, a changed preference — **emit an update signal** for that traveler. This
-completes the forward connection the data model designed
+Because each `travelers/<traveler>.md` is independently editable — and because the
+durable person record a file references is editable from **outside this trip
+entirely** — you provide the change-detection the old free-text model could not: on
+every reconciliation pass, **diff each traveler's composed source against the snapshot
+you last processed** and, when it changed in a way that affects the plan — a new or
+dropped desire, a revised need, a changed preference — **emit an update signal** for
+that traveler. This completes the forward connection the data model designed
 (`reference/data-model.md` → "Forward Connection — Profile Edits as a Replanning
 Trigger"), which sanctions exactly this behavior:
 
-- **Diff against the last-processed snapshot.** Compare each current
-  `travelers/<traveler>.md` to its state at your previous reconciliation. The
-  reconciled `outputs/traveler-model.md` you last wrote is the practical snapshot
-  of what you already processed — a per-traveler entry that no longer matches its
-  source file has changed. A brand-new profile (no prior entry) and a removed
-  profile both count as changes.
+- **Diff the composed source against the last-processed snapshot. Only the left
+  operand moves.** The **right** operand is unchanged and costs nothing new: the
+  `outputs/traveler-model.md` you are about to replace is the practical snapshot of
+  what you already processed, and you already read it on every pass for the
+  `[THIRD-PARTY]` carry-forward below. The **left** operand is the traveller's
+  **composed** source — the trip file *together with* the record it resolves to — never
+  the trip file alone. A per-traveler entry that no longer matches its composed source
+  has changed. A brand-new profile (no prior entry) and a removed profile both count as
+  changes.
+
+  **Why the operand had to widen, stated so it is not narrowed back.** A trip-file diff
+  is blind in two directions at once. A person-record edit changes no byte in
+  `travelers/<traveler>.md`, so an edit-triggered comparison over trip files cannot see
+  it — which is the whole gap this pass exists to close. And a record value carrying a
+  `[VALID-THROUGH YYYY-MM]` horizon moves from `ANSWERED` to `EXPIRED` when the horizon
+  passes, **with no file edited anywhere**: the clock is a member of the trigger set,
+  and only the composed operand can see it.
+
+  **The composed source is a value, not a file.** It exists for the duration of a pass
+  and is never written to disk. Do **not** materialise it as an `outputs/` artifact:
+  that would be a second home for every fact in it, a second thing to go stale, and a
+  shape change to a class that is closed.
+
+- **The trigger set — seven, because "an edit" is not one event.** A signal fires when
+  the traveller's **composed value changed for this trip**, never merely because a byte
+  changed somewhere.
+
+  | # | Trigger | Disposition |
+  |---|---|---|
+  | **T1** | a record field edited while the trip side is `UNSTATED` (`K6` selects the record) | **signal** — the composed value moved |
+  | **T2** | a record field edited while the trip side is `ANSWERED` (`K5` selects the trip) | **report only** — the planned value did not move, but a redundant override may have become a real one |
+  | **T3** | a record created, so a previously dangling reference now resolves | **signal**, and the dangling defect clears |
+  | **T4** | a record deleted, or the reference now dangles | **signal** + defect; the field composes `UNKNOWN` |
+  | **T5** | `person:` added, removed or changed on the traveller file | **signal** — a trip-file edit, already inside the diff |
+  | **T6** | a `merged-into:` repoint followed one hop | **signal only if the resolved values differ.** A repoint that resolves to the same values is a reference change and not a value change |
+  | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Clock-triggered, and invisible to a trip-file diff by construction |
+
+- **Relevance is three-valued, and its trip-side arm is `ANSWERED()` — never
+  line-presence.** For each field whose record side moved: the trip side is `UNSTATED`
+  → the change **inherits**, so **signal**; the trip side is `ANSWERED` on a `DEFAULT`
+  field → the change is **overridden**, so **report** it under the divergence partition
+  below and emit no replanning signal; the field is `TRIP`- or `DEST`-class → the record
+  is not its source at all, so **stay silent**. The intake form keeps a line for every
+  question and puts an em dash where the answer would go, so a line-presence test reads
+  every skipped field as an override: under it the inherit case is unreachable, the
+  signal set is empty, and **nothing errors**.
 
   **Carve-out — a `[THIRD-PARTY]` entry has no profile to diff.** The rule above is
   about **profiles**, and an entry carrying `[OPERATOR-PROVIDED]` **and**
@@ -345,7 +386,26 @@ Trigger"), which sanctions exactly this behavior:
   > missed-booking (event-status) trigger. The hub owns whether/how to re-plan.
   - Jordan: added anchor "sumo tournament" [new]; dropped wish "standout coffee".
   - Pat: revised need — heat ceiling tightened (shade by noon, was early afternoon).
+  - Alex: heat ceiling tightened, from the linked person record [library change].
+
+  ### Divergence — information only, no replanning implied
+  - Alex: Pace — DIVERGENT; this trip overrides the person default, which changed
+    this pass. Reconcile it or leave it, deliberately.
+  - Robin: Lodging style — REDUNDANT-OVERRIDE; the override matches the person
+    default, so the trip-side line can be removed.
   ```
+
+  **Write the block only on a pass that has a line to put in it.** The heading is
+  *reserved and defined*, which is not the same as *already present* — no shipped model
+  carries it, and a pass with nothing to signal writes no block at all. An
+  always-emitted empty block would change the shape of every model in the working
+  directory to carry no information.
+
+  **`[library change]` is the suffix for a change sourced from the person record**,
+  alongside the shipped `[new]` and `[provenance change]`. It is a lowercase
+  signal-kind suffix, matching the shipped idiom exactly; it is **not** an ALL-CAPS
+  provenance mark, and it must never be minted as one — that namespace is where the
+  publish guard's declared selectors are drawn from.
 
 - **Signal only — you do not re-plan.** The update signal is a *data condition*;
   the decision to re-plan and the fair-recovery logic belong to the hub's
@@ -353,6 +413,63 @@ Trigger"), which sanctions exactly this behavior:
   model, the substrate's job is to make the signal detectable and carry it — the
   replanning behavior it triggers is owned downstream. You still never edit a
   traveler's file; you only detect and report the change.
+
+**The divergence report is a `###` partition inside that block, and the partition is
+load-bearing rather than cosmetic.** `.claude/commands/trip-record.md` renders this
+block and **names the next verb by signal class**, over a closed set: a changed **need**
+and a changed **desire** each name `/trip replan`; a changed **journey facet** is
+reported with no command named; a `PROFILE MISSING` names `/trip-record profile <name>`.
+A divergence line left unpartitioned sits in front of that router as a peer of a
+changed-need line and is dispatched to `/trip replan` — turning information into exactly
+the replanning signal it is not. The `###` heading is what keeps the two classes apart.
+**Map onto those four classes; never add a fifth.** A composed change to a need or a
+desire is a changed need or a changed desire; a composed change to a journey, lodging or
+pace facet is a changed journey facet; an unresolvable reference is `PROFILE MISSING`.
+The mapping is total, so `trip-record` needs no edit.
+
+**Four prohibitions bind everything you write under `## Update signals [DERIVED]`,
+including the `###` partition. They are conduct, not enforcement: the publish guard
+does not check them here, and that is precisely why they are written down.**
+
+1. **Never add a `##` heading to `outputs/traveler-model.md`.** Any `##` heading whose
+   normalized key is not on the declared reserved list is **counted as a person** — a
+   phantom entry that keeps the zero-entry fail-closed sentinel from firing. The
+   reserved list has exactly two members and lives in three coupled homes. A `###`
+   sub-heading is skipped by that parse entirely, which is why the partition is a `###`
+   and never a `##`.
+2. **Never write a field value into the block.** Name the field, never its value. The
+   reserved heading **suppresses the guard's field check beneath it**: a value written
+   there is not classified at all and reaches a render *uncaught*, so the guard is not a
+   backstop in this position — it is the position where there is none. `Passport` is
+   both a guarded field and one of the fields this report names, so this is a live case
+   and not a hypothetical.
+3. **Never write a provenance mark in the block** — no `[THIRD-PARTY]`, no
+   `[OPERATOR-PROVIDED]`, in a mark or in prose. The orphaned-mark backstop that would
+   catch one is conditional: it aborts when the mark is the only record and is swallowed
+   once any other entry produced one.
+4. **Nothing auto-resolves. The report is terminal.** You never delete a redundant
+   override, never rewrite a trip-side value, never write to the person store, and
+   **never prompt anyone to promote a trip value into a record.** A prompt would leave
+   every write human-confirmed and still let the record drift toward whatever the most
+   recent trip said, one click at a time. Promotion is an explicit act through the
+   command surface. Removing a redundant override is a human edit to a human-authored
+   line in a git-ignored working directory — nothing in this repository could restore
+   it, so reporting is cheap and deleting is not reversible at all.
+
+**Which trips get a signal, and which get only a mention.** Resolution is **one trip per
+session**, so this is never a fan-out: **you write exactly one trip's model — the
+resolved one.** That trip's own pass recomposes and diffs, so it cannot miss its own
+change. Every *other* trip that references the same record is **named in the report** and
+receives its signal at its own next resolution; naming them is a latency statement, never
+a licence to write them.
+
+**An archived trip is never refreshed by a person edit.** It gets **no signal and no
+write of any kind** — not the model, not the block, not a mark. Say so rather than
+leaving it to be inferred from silence: name it in the report as
+`ARCHIVED — not signalled`. A person-record edit is neither a redaction nor a
+re-addressing, so it takes no exception to that freeze. On reopen the trip absorbs the
+new value at its next pass — there is no catch-up queue and no stored state, and the
+latent staleness is reported by the freshness relation rather than gated on.
 
 This detection is part of the reader/reconciler role and changes nothing about the
 [ENRICH]-only contract on trip-context.md.
@@ -413,6 +530,27 @@ theme tags). You do not author or pre-fill the template or the profiles; you
 read the filled profiles and reconcile them into
 `outputs/traveler-model.md`. A traveler leaves the desire **Overlap** field blank
 in their own file — you are the one who computes it.
+
+**The source you reconcile is the *composed* source, not the trip file alone.** A
+`travelers/<traveler>.md` may carry a `person:` reference to a durable record in the
+person store; where it does, that traveler's source is **the trip file together with
+the record it resolves to**, composed by the rules in `reference/data-model.md`
+§ *Composition* — class first (`K1`–`K6`), answered-ness second. Where the file carries
+no reference, the composed source **is that file, byte for byte**, no store read is
+attempted, and nothing about your read changes. Those rules have one home and this
+prompt does not restate them: read them there, and compose by them rather than by a
+precedence you infer here. Three of their consequences bind everything below, so they
+are named rather than left to be re-derived:
+
+- **A trip-side `PERSON`-class value is a schema violation, not an override.** You
+  never compose it over the record — you compose the record's value (or the union, for
+  a block-scoped field) and **report** the trip-side claim. Refuse and report; never
+  silently prefer either side.
+- **`DEFAULT` is the one class where answered-ness selects the source** — an answered
+  trip-side value wins (`K5`) and an unanswered one falls through to the record (`K6`).
+- **`ANSWERED()` is an instance property; presence is a document property.** Never
+  collapse them, and never substitute the publish guard's `stated()` for `ANSWERED()`:
+  the two disagree on `none`, and `none` is a deliberate answer.
 
 ### Missing or blank profile — operator fallback, not a hard failure
 
