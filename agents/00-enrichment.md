@@ -604,6 +604,54 @@ fallback, not an error:
   it in the overlap summary too (the traveler simply contributes no desires to
   match yet), and keep it flagged on every refresh until the profile arrives.
 
+  **A reference that cannot be resolved routes here, in two steps, and neither step is
+  skippable.** A `person:` line that resolves to nothing, a value that is not a
+  well-formed token, a duplicated key, a second `merged-into:` hop, or a store that
+  cannot be listed — every one of these is *undetermined*, never *absent*.
+
+  - **Step 1 — the field composes to the literal `UNKNOWN`.** Every field the record
+    would have sourced composes `UNKNOWN`, per the composition rules. **Never an empty
+    need set** — an empty set reads as *no constraints*, which is the reading this whole
+    branch exists to refuse, and it would let a plan grade compliant while a traveller's
+    needs had silently vanished. **Never a hard failure** either: an unresolvable
+    reference must **never** halt the reconciliation, exactly as a missing profile does
+    not. `UNKNOWN` is the only sentinel to use — the publish guard excludes it by name,
+    so any other token enters the publishable value set as a real string and aborts
+    publishes wherever it is rendered.
+  - **Step 2 — the entry routes to the existing flagged-gap branch above**, whose rule
+    is already the one this needs: a marker meaning *unknown*, not *no needs*. Name the
+    defect on the `Source:` line — the reference dangles, is malformed, or the store
+    could not be read — together with its remedy. Do **not** invent a new gap kind: the
+    command that renders these signals routes over a closed four-class set, and a fifth
+    class would edit a command surface for no capability the existing one lacks.
+
+  **Entry-scoped and field-scoped gaps are not the same gap, and conflating them
+  misreports a reconciled traveller.** `PROFILE MISSING` is **entry-scoped**: it means
+  this person has no usable source at all. A traveller whose reference *resolves* but
+  whose record is simply missing one field has a profile and a record — **that field
+  composes `UNKNOWN` and stops there.** Escalating a single unresolved field to the
+  entry-level marker would flag a fully reconciled traveller as unreconciled and send
+  the operator to collect a profile that already exists.
+
+  **An unreadable store must not degrade a trip that references nothing.** A traveller
+  file carrying no `person:` line attempts no store read, so there is nothing for an
+  absent or unlistable store to fail: that traveller is entirely unaffected, on every
+  trip. Without this clause the first unreadable store would break every trip in the
+  working directory rather than the ones that actually reference a record.
+
+  **An erasure and a detached reference are not the same absence, and the discriminator
+  is a conjunction.** A traveller entry is tombstoned only when the reference field is
+  gone **and** the model carries positive erasure evidence — an entry heading re-keyed
+  to the `per-<token>` shape and marked `[ERASED]`. Absence of the reference alone is
+  **necessary but not sufficient**: a trip that never linked anyone has no reference
+  either. Test both conjuncts. Normalising the two absences to one state removes the
+  detection rather than simplifying it, and it does so invisibly — every composed value
+  is byte-identical either way, so nothing goes red. Match the tombstone by that
+  **shape**, never by a bare `per-` substring, which matches hundreds of ordinary
+  English distributives. And **never correlate tombstones across trips**, not even to
+  sharpen an error message: the token is minted per person *per trip* precisely to
+  destroy that link, and re-establishing it undoes what the erasure was for.
+
   **The derived document set follows the same rule.** A first-party traveler with
   no filed profile still carries its line —
   `- **Documents:** unknown — no passport country on file · checked <date>` — so a
@@ -669,13 +717,30 @@ created it — never describe it as current, re-confirmed, or consented to. A pa
 that carries it re-states nothing about that person; it only declines to lose what
 was already recorded.
 
-**Two exits end a carried entry, and only two.** Anything else leaves it in place.
+**Three exits end a carried entry, and only three.** Anything else leaves it in place.
 **Evaluate supersession before carry-forward**, in that order: once the person's own
 profile has superseded the entry, both marks are gone, so there is nothing left for
 the carry-forward rule to match and a superseded entry is **never re-admitted** on a
 later pass. The second exit is a **fresh operator statement** about that person — one
 that revises the needs replaces the carried text (the newer statement wins), one that
 withdraws them drops the entry. Both are real changes, so both emit an update signal.
+
+**The third exit is an erasure substitution, and it is evaluated before carry-forward
+for the same reason supersession is.** An entry the erasure verb has substituted — its
+heading re-keyed to the `per-<token>` shape and marked `[ERASED]` — is **never
+re-admitted** by the carry-forward rule. Evaluate the substitution first, so that by the
+time carry-forward runs there is nothing left for it to match. **Without this exit the
+rule reproduces an erased person's recorded need on every subsequent pass**, because
+carry-forward copies the entry verbatim out of the very model the erasure wrote — the
+person asked to be forgotten and the reconciler keeps restating them, silently, forever.
+
+**Two provenance behaviours are unchanged by all of this, and saying which is which
+matters, because "preserved" reads as one behaviour when it is two.** A `[THIRD-PARTY]`
+entry is still **carried forward verbatim** and still survives regeneration — a
+composition pass adds no reference to it and no path by which one could be added, since
+that entry has no `travelers/<name>.md` on which the reference field could be written.
+An `[OPERATOR-PROVIDED]`-only entry is still **not** carried forward and is still
+dropped by regeneration; composition adds no carry-forward path for it either.
 
 **When that person later files their own profile — supersede, do not merge.**
 Their own file becomes authoritative, and the transition is a replacement:
@@ -694,6 +759,16 @@ stripping the key the publication guard depends on — and it would state, as th
 person's own words, things they never said. Carrying an entry forward changes
 none of that: a carried entry is **never merged** into a later first-party
 profile, and a superseded one is **never resurrected** by a later pass.
+
+**Never word a person record's precedence as a supersession.** When a linked record
+supplies a value the trip file left unanswered, that is composition precedence between
+two **first-party** values with no provenance mark on either side — not a supersession
+of a declared entry class, and not a provenance change. Write what happened: the value
+came from the linked person record. The word is reserved here for the provenance
+transition above, which is the event the publish guard's supersession check is built to
+recognise; borrowing it for an ordinary composed value asks a control built for one
+event to adjudicate another. The fix is to say the right thing, never to phrase around
+the detector.
 
 This fallback is part of the reader/reconciler role only; it changes nothing
 about the [ENRICH]-only contract on trip-context.md.
