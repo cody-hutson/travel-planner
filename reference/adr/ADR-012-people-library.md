@@ -491,6 +491,410 @@ timer runs"* — which is the baseline this design replaces, and which becomes f
 erasure verb ships. The same table also instructs the reader to *"Copy a profile forward"*, which
 contradicts the one-source-per-fact rule this milestone extends. Named, not fixed.
 
+### Reference discovery — what the person-edit discovery spike established
+
+*This subsection records the findings of the spike on how a person edit discovers the trips that
+reference it, **as evidence**. It states no decision. Where it reports a premise "falsified" or a
+mechanism "rejected", that is a measurement against shipped prose and shipped code, never a
+ratification of whatever replaces it; ratification is the Decision section's, below. **One of the
+spike's own readings was corrected after it ran** — its relevance predicate keyed on the *presence*
+of a trip-side line, which the shipped intake template forbids as a discriminator. The correction is
+carried **in place** rather than appended, and the paragraph it changed says so. Artifact classes
+below are named by path, never by ordinal, for the reason the erasure-reach subsection above states.*
+
+**The card's premise contains the cost it fears, and the shipped engine has already paid it.** The
+framing was that a person edit has no way to find its referencing trips *without scanning the whole
+working directory on every pass.* But `CLAUDE.md` § *Resolving a trip* ships `E2` — a `grep` over
+`trips/*/trip-context.md`, a **cross-trip glob executed on every invocation** of the four commands
+declaring `population-role: RESOLVE`. A cross-trip read at marker granularity is not a new cost this
+design introduces; it is the shipped baseline. The open question was never *may we look across
+trips*, it is *how much of each trip must we open* — and under a reference borne on **one frontmatter
+field**, the answer is: the frontmatter and nothing else. Measured on the tracked fixture, that is
+**332 bytes across the 2 bearer files, 3.15% of their own bytes and 1/597 of the 21-file, 198,329-byte
+example trip** a whole-directory walk would open. *(The scope of that measurement is named because a
+ratio measured on an operator's own git-ignored working directory is not reproducible from this repo
+and is therefore not restated here. The tracked figure is the one anyone can re-derive.)*
+
+#### Two directions, and only one carries the guarantee
+
+The card asks for *a defined mechanism for resolving a person record to its referencing trips*. That
+is one direction of a two-direction problem, and naming the other changes what the mechanism has to
+be good at.
+
+| | **PULL** — a trip asks about its people | **PUSH** — a person edit asks about its trips |
+|---|---|---|
+| Trigger | the trip's own enrichment pass (already runs) | the moment a person record is written |
+| Scope | the travellers on **this** trip | the bearer files across the **population** |
+| Session boundary | **inside** the resolved trip | **across** unresolved trips |
+| Can it miss a trip? | **No** — it *is* that trip's own read | Yes: an unreadable store, a bearer it does not know about, an interrupted run |
+| What a miss costs | — | the operator is surprised at that trip's next open |
+| Carries the fan-out risk? | **Yes** | **No** |
+| Existing machinery | the shipped per-trip diff, source set widened | none — this is the new mechanism |
+
+> The milestone's risk register names a fan-out that misses a referencing trip, leaving that trip
+> planning against durable facts that have changed. **That risk is not mitigated by making the scan
+> complete. It is mitigated by making the scan unnecessary for correctness.** A trip cannot plan
+> against stale durable facts, because it recomposes its own source set before it plans. The
+> cross-trip scan exists to *shorten the latency* between a person edit and each affected trip
+> learning about it — never to be the thing that guarantees they learn.
+
+Three consequences fall out of that reclassification, each of which the card would otherwise have to
+solve the hard way:
+
+1. **The fail-safe becomes affordable.** A mechanism on the correctness path cannot fail loudly and
+   proceed; one on the latency path can. Discovery may report `UNDETERMINED` and stop.
+2. **The cost ceiling drops.** PUSH runs **once per person edit**, not *on every pass*. The per-pass
+   cost is PULL's, which is per-trip and already paid.
+3. **The every-referencing-trip criterion becomes satisfiable at all.** `G2` resolves **exactly one**
+   trip per session — *many* → *ask which, never guessing* — and a session's write surface is its
+   resolved trip. So *every active referencing trip receives the signal* is satisfied by the **union**
+   of PUSH (the resolved trip, now) and PULL (every other trip, at its own next resolution), and never
+   by one session writing N trips. Any other reading asks a session to write trips it never resolved,
+   crossing the trip-resolution contract and writing archived ones — breaking the criterion's second
+   half while satisfying its first.
+
+**PULL's one requirement, stated because this design depends on it and does not own it.** The shipped
+per-trip diff compares a derived model entry to *its source file*. PULL works **only if the thing
+diffed is the composed source** — the trip's `travelers/<traveler>.md` **plus** the person record it
+references — not the trip file alone. If the diff stays trip-file-only, a person-record edit is
+invisible to PULL and the fan-out guarantee falls back onto the best-effort scan, which is exactly the
+fragile design this split exists to avoid.
+
+#### The mechanism — a two-stage forward scan over a declared bearer set
+
+`T` = trips, `K` = bearer files per trip, `P` = person records.
+
+| | **A · Forward scan (frontmatter)** ✅ | **B · Index in the store** | **C · Back-reference on the record** | **D · Whole-directory scan** | **E · Content grep for the key** |
+|---|---|---|---|---|---|
+| Mechanism | read the reference field from each bearer | a `person → [trips]` map maintained on link/unlink | each record lists the trips referencing it | walk every trip file, match anywhere | grep the key across every trip file |
+| Bytes read | the frontmatter — **3.15%** of the bearer bytes on the tracked fixture | ~1 KB **plus the scan needed to trust it** | ~1 KB **plus the scan needed to trust it** | every byte under `trips/` | every byte under `trips/` |
+| Complexity | O(Σ K) tiny reads | O(1) read, O(1) write per link | O(P) reads | O(all files) | O(all files) |
+| **Staleness** | **none — no persisted state to go stale** | **fatal and undetectable**: `trips/` is git-ignored and hand-edited, so a hand-deleted trip never updates it, and you cannot tell without running A | same, plus it goes stale when a *trip* changes while the record does not | none | none |
+| One source per fact | ✅ reads the one source | ❌ **a second home for the reference field** | ❌ same, and it **inverts** the reference direction the identity work fixed | ✅ | ✅ |
+| Privacy | ✅ nothing new written | ⚠️ a cross-trip travel map in the durable store | ❌ **a durable plaintext list of the trips a person travelled on** — the cross-trip linkage the erasure work mints per-(person × trip) tokens to destroy, and it **survives erasure of the trip** | ✅ | ✅ |
+| Archived trips | read-only, never written | **a write on link/unlink → writes an archived trip** | same | read-only | read-only |
+| False positives | none — the field **is** the reference | none | none | **high** — a display name in an itinerary is not a reference | **high** — the key in a narrative or a receipt is not a reference |
+| Fails how | loudly | **silently** — a stale index returns a *plausible, wrong, non-empty* set | silently | loudly | silently on a rejected pattern |
+
+**A is chosen. B and C are rejected on three independent grounds each — one source per fact, privacy,
+and the archived write — any one of which is dispositive; cost is not among them and is not the
+argument.** D and E are rejected on cost **and** on false positives: a name or a key appearing in a
+file is not a reference, and *the person key is not a trip-internal join basis* is what makes that
+distinction crisp rather than heuristic.
+
+**The honest cost of A.** It pays O(Σ K) per person edit where B pays O(1). At a household's trips
+and tens of records that comparison is academic — and **A's cost becomes real only at a scale where
+B's staleness is already unmanageable**, because B's correctness assumes every trip mutation went
+through a linking verb, and `trips/` is a git-ignored directory the operator edits by hand. **The
+idiom that would make B safe is the one that makes B pointless: validate the index by running A.**
+
+**Two mechanisms are rejected for reasons that are not cost.** The tempting move is a third
+pre-execution evidence block beside `E1`/`E2`. It is refused by the contract's own text:
+`contract-depth` is an **equality, not a minimum**, the depth→prefix map is fixed, and *a file
+carrying more of the list than its declared depth requires is exactly as non-conforming as one
+carrying less.* A third block would force **all** `G8` consumers to carry it and acquire a wider
+grant, editing a surface this milestone does not otherwise touch, for no gain. **Discovery reads at
+its own point of use, inside the agent that needs it**; `E1`/`E2` are cited as precedent for shape
+and cost, never as a surface to extend. A **persisted result cache** is refused on the same grounds as
+B: it is an index with a shorter half-life and the identical failure mode.
+
+**The scan, specified. Every failure branch is named, and none of them returns an empty set.** The
+input is an edited person id together with the set of field names that changed — the edit knows what
+it wrote.
+
+1. **Closure.** The id set is the edited id plus every record in the store carrying a `merged-into:`
+   pointing at it. **Redirect-chain depth is pinned at exactly 1** by the identity work's
+   refuse-if-either-id-is-already-a-stub rule, so this is a single pass and not a fixpoint; a stub
+   whose target is itself a stub is typed **`MALFORMED`**, reported, and never followed. A store that
+   cannot be listed → **`UNDETERMINED`**, stop.
+2. **Population.** Enumerate the trip directories — the `E1` shape. **`G1`'s canary applies
+   verbatim**: `README.md` must appear as an exact trimmed line, and absent → **`UNDETERMINED`**,
+   naming `trips/` as the directory that could not be listed. **The conclusion "no trip references
+   this person" is forbidden here**, exactly as `G1` already forbids concluding that no trip exists.
+3. **Lifecycle.** Read `**Lifecycle:**` per trip — the `E2` shape — with `G4`'s shipped default,
+   **absent ⇒ `ACTIVE`**. An unreadable `trip-context.md` makes that trip **`UNDETERMINED`**, never
+   silently `ACTIVE` and never silently dropped.
+4. **Reference read — stage 1, cheap.** For each trip, read **frontmatter only** from every member of
+   the declared bearer set and extract the reference field, stopping at the closing `---`. A bearer
+   present but unreadable makes that trip **`UNDETERMINED`**.
+5. **Match.** A trip is **`REFERENCING`** exactly when some bearer carries a reference in the closure.
+6. **Relevance — stage 2, scoped.** For **matched trips only**, read the bearer bodies and decide
+   per-field inheritance by the rule below. **The expensive read is scoped to the answer of the cheap
+   one.** An unreadable body makes relevance **`UNDETERMINED`** for that trip, which **degrades to
+   reference-level signalling** — noisier, never silent.
+7. **Partition and emit.** `ACTIVE` and relevant → **signal**. `ACTIVE` and not relevant → **report
+   only**. `ARCHIVED` → **report only, never written**. Anything `UNDETERMINED` → reported as
+   `UNDETERMINED`, and the run's overall verdict is `UNDETERMINED`.
+
+Delivery honours the one-trip-per-session bound: the **resolved** trip's `## Update signals` block is
+written by this session, and every other trip is named in the report and receives its signal at its
+own next resolution through PULL. That block is **reused, not invented** — it measures **13
+occurrences across 5 files**, including the shipped fixture. The run writes no other state, so it is
+idempotent and re-runnable.
+
+**The result vocabulary, measured against the tracked corpus rather than minted freely.**
+`UNDETERMINED` is reused **verbatim** for every indeterminate branch: it is the corpus's densest
+fail-closed token (**71 occurrences across 9 files** on this branch) and already carries the rule this
+design needs, that an undetermined result is never a pass and *an empty read is not an empty class*.
+Minting a synonym would create a second vocabulary for one posture. Of the tokens this design needs
+beyond it, `REFERENCING`, `NOT-REFERENCING`, `OVERRIDDEN` and `DANGLING` each measure **0** and are
+free; **`TOMBSTONED` is reused from the erasure-reach subsection above**, where it is already an
+outcome token meaning *the row survives, carrying the tombstone* — the write-side and the read-side of
+one state, so discovery adds no synonym; and **`MALFORMED` is reused rather than minted**, because it
+measures **4** occurrences in `scripts/test-command-taxonomy.sh` as a finding token for a row that
+does not parse to its expected shape — the same sense, the same polarity. `INHERITS` measures **1**,
+and that one is English prose in a shell comment (*ROTATE INHERITS THE GATE*), not a status token; the
+namespace is free **as a token** and the distinction is recorded rather than rounded to zero, for the
+same reason the identity work records that a bare `per-` matches hundreds of English distributives.
+
+#### Relevance is decided by answered-ness, never by presence
+
+**This is the spike's own reading, corrected in place.** The spike decided relevance by *presence of a
+trip-side line*, reasoning from the rule that *a trip carries a `DEFAULT` field only when it diverges*
+and concluding that a line's presence therefore signals divergence. **That predicate is falsified by
+the shipped intake template**, which mandates the opposite: *"Skipping a section never removes it from
+the output: every field still ships, each with an em dash where the answer would go … Dropping the
+lines loses the labels the planner parses."* A skipped field keeps its line. **Presence therefore
+discriminates nothing on a real profile**, and the divergence-only rule has to be read as *carries an
+answer*, not as *carries a line*.
+
+**The engine already carries the correct predicate, in three places, and invents none of it.**
+
+| Unanswered form | Where the engine says so |
+|---|---|
+| **blank or em-dashed** | `agents/00-enrichment.md`, twice: *"An absent, blank or em-dashed line is `one-off`"*, and *"A blank or em-dashed field … is **`unknown`, never `never`**"* |
+| **absent** | the same first clause, which folds absence into the same equivalence class — so presence and absence reach one verdict rather than two |
+| **a leftover `[bracketed placeholder]`** | `CLAUDE.md` § *Resolving a trip*: *"A field whose **trimmed value begins with `[` and ends with `]` is a placeholder**, never an answer"*, tested **by value**; and the template's own *"a leftover `[bracketed placeholder]` reads as unanswered, exactly like an empty line"* |
+
+So **`ANSWERED()` is the negation of a union of shipped conditions**, and the shipped fixture states
+the same rule in its own voice: *"Every label ships; the ones this fixture has no fact for carry `—`,
+which the reconciler reads as not answered, never as an answer."*
+
+**Measured, unanswered is the majority case rather than the exception.** Over the three tracked
+bearer-shaped artifacts — the blank form and the two fixture profiles — each carrying the same **38
+distinct labelled fields** the denominator rule derives:
+
+| Population | Labelled body bullets | Answered | **Unanswered** |
+|---|---|---|---|
+| The two filled fixture profiles | 107 | 45 | **62 (58%)** |
+| …restricted to the `DEFAULT` class | 30 | 4 | **26 (87%)** |
+| All three artifacts, `DEFAULT` class | 45 | 4 | **41 (91%)** |
+
+*Instrument: `python3`, an anchored label regex over body bullets, with the three unanswered forms
+above. **Sensitivity** — `Name` and both `Specific` bullets on a fixture return answered, so the
+predicate does fire. **Specificity** — the blank form returns **0 answered of 54 bullets present**, a
+real population with a real known-zero count on the same live instrument that returns 45 answers
+elsewhere, so the arm is neither dead nor tautological; a nonsense label returns 0. **Denominator
+check** — all three artifacts independently yield 38 distinct labels, matching the denominator rule's
+own derivation, so the instrument is aimed at the declared population. **A probe corrected before
+use:** the first pass typed one blank-form bullet as answered — `Priority tier:` opens a **multi-line**
+bracketed placeholder whose closing bracket a single-line anchored pattern cannot see. That was a
+defect in the instrument, not a fact about the corpus; the arm reads 0 once the pattern spans lines,
+and the correction is reported rather than quietly absorbed.*
+
+**Answered-ness alone does not rescue every class, and this is where the corrected reading has to be
+class-first.** On the two fixtures **all 8 `PERSON`-class bullets are present *and answered* on the
+trip side** — the allergy and the heat ceiling are written into the trip's own traveller file today,
+because the intake form has not yet been split. Under *either* a presence predicate or a naive
+answered-ness predicate those bullets read as an override, and the safety class goes **silent** on a
+person edit. The composition rule is what prevents that, and it is not a predicate over the line at
+all: **`PERSON` is not overridable, so a trip-side `PERSON` value is a schema violation rather than an
+override — refuse and report, never silently prefer one.**
+
+| Changed field's class | Trip side | Verdict | What discovery emits |
+|---|---|---|---|
+| **`PERSON`** | *not consulted* — the person record is authoritative unconditionally | **`INHERITS`** | **Always signal.** Additionally, an **answered** trip-side value is reported as a **schema violation**, not as an override |
+| **`DEFAULT`** | **not answered** (absent, blank, em-dashed, or still bracketed) | **`INHERITS`** | **Signal** — the durable value is what this trip plans on |
+| **`DEFAULT`** | **answered** | **`OVERRIDDEN`** | **No replanning signal** — the trip already decided to diverge. **Reported**, for the reason below |
+| **`TRIP`** / **`DEST`** | n/a | **`NOT-INHERITED`** | **No signal, no report** — the person record is not their authoritative source, and no person edit can touch them |
+
+**So the correction replaces presence with answered-ness on exactly one class — `DEFAULT` — and
+changes nothing elsewhere.** `PERSON` is decided by class authority, `TRIP` and `DEST` consult neither
+predicate. And the direction of the change is the safe one: under presence, an em-dashed `DEFAULT`
+line read as `OVERRIDDEN` and the trip **heard nothing** about a durable fact it was actually planning
+on — the very fan-out failure the risk register names, arriving through the relevance rule rather than
+through the scan. Under answered-ness the same line reads as `INHERITS` and signals. **The mistake
+that remains possible is a spurious signal, not a silence.**
+
+**Answered-ness is an instance property. Presence is a document property. They share a word and
+answer different questions, and the correction must not be carried across the seam.** *What the form
+asks* — the denominator of 38 distinct labelled fields plus one unlabelled slot, the four-class
+partition over them, and the starred-pass split of library-sourced against re-asked — is keyed on the
+**presence of a bullet in `templates/traveler-intake.template.md`**, correctly and unchangedly, because
+a form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed on
+`ANSWERED()`. Discovery lives wholly on the instance side. The over-application is measurable rather
+than hypothetical: applying the instance predicate to the document question scores the blank form at
+**0 answered of 54**, which would read as a form that asks no questions and a starred set that is
+entirely re-asked. That absurdity is the tell, and it is why the seam is written down here.
+
+**Why an `OVERRIDDEN` trip is reported and not dropped.** The milestone's risk register names a
+redundant override silently becoming meaningful, and **a person edit is that risk's trigger**: a trip
+that wrote `Pace: relaxed` while the record also said `relaxed` holds a redundant override, and the
+record moving to `packed` converts that line into a live divergence nobody decided on. The trip is
+*correctly* un-signalled for replanning — its planned value did not move — and *incorrectly* silent if
+the operator never learns the line became load-bearing. **Two dispositions, one edit; discovery emits
+both and adjudicates neither.** It deliberately does **not** compute whether an override was
+redundant: that needs the record's pre-edit value, and redundant-override normalization is already
+assigned to enrichment, which holds that value as the model's last-processed composition. Computing it
+here would put a second adjudicator on a rule enrichment owns.
+
+**The card's own warning, answered rather than accepted.** *A design that notifies on reference alone
+is noisy by construction* — quantified: notifying on reference alone signals **every** referencing
+trip on **every** person edit, when 20 of the 38 labelled fields are `TRIP` or `DEST` and cannot be
+touched by a person edit at all. Field-granular relevance signals only trips that inherit the changed
+field. **Reference-level signalling survives only as the declared degradation** when a body read
+fails, chosen deliberately, because noise is recoverable and silence is not.
+
+#### Where the reference lives — a declared set, and one member is missing
+
+**The mechanism is parameterized on a declared reference-bearer set, never on a hardcoded glob.**
+Membership is the ratifying record's to fix; discovery's contract is *read the reference from wherever
+the composition reads it.*
+
+| Bearer | Reference field | Status |
+|---|---|---|
+| `trips/*/travelers/*.md` frontmatter | the person-reference field the identity work adds | **decided above.** The measured cost basis |
+| the person store's own records | `merged-into:` | **decided above.** The closure input, step 1 |
+| a **file-less** `[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` model entry | **none exists** | **a named gap** |
+
+**The gap is measured on the shipped fixture rather than hypothesized.**
+`examples/data-architecture-demo/` holds **2 files under `travelers/` against 3 person entries in
+`outputs/traveler-model.md`** — `Alex`, `Robin`, and `Sam [OPERATOR-PROVIDED]`. Sam has no source file
+**by design**: `ADR-006` chose it, and the enrichment agent states it in terms — that entry *has no
+source file to be refreshed from* and *the derived model remains that entry's record rather than its
+authority.* The milestone gives exactly that person a durable record. Under a reference borne solely
+on `travelers/<traveler>.md` **there is no file to bear it**, so discovery would return
+`NOT-REFERENCING` for a trip that genuinely references the person — a **false negative**, the failure
+the fan-out risk names — and the class it is blind to is the one `ADR-006` restricts to **needs**.
+Sam's single recorded datum is a mobility limit. **The obvious scoping misses precisely the
+safety-critical class.**
+
+Discovery's behaviour is stated under each branch the ratifying record might take, so this reading is
+decided either way: **(1)** a second bearer is declared — a roster reference, or a mark on the model
+entry — and it simply joins the set, with **no mechanism change**, which is why the set is declared
+rather than hardcoded; **(2)** party members are excluded from durable records, in which case the set
+is complete as it stands **and the exclusion must be written down**, because silence here reads as
+coverage; **(3)** undecided at implementation, in which case **discovery reports every file-less entry
+in a candidate trip as `UNDETERMINED`, never as non-referencing** — fail-safe, and it makes the gap
+visible at runtime instead of silently absent.
+
+**One non-goal, stated because it is the tempting fix.** Discovery must **not** fall back to matching
+person **display names** against model entries. That is a name-similarity join, it is the mechanism
+the identity work forbids between naming and identity, and it would resurrect the same-name collision
+the surrogate key exists to prevent.
+
+#### The archived-trip case — no signal, never written, named in the report
+
+| | Disposition | Grounding |
+|---|---|---|
+| Update signal | **none** | *An archived trip receives no derivation — no update signal, no regeneration, no refresh* |
+| Any write to the trip | **none** | An ordinary content edit is neither a redaction nor a re-addressing. Erasure earned its exception because it **removes information**; merge needed none because a redirect **re-addresses** without writing. **An ordinary person edit does neither and qualifies for neither** |
+| Discovery report | **named, and typed archived-and-not-signalled** | absence must be *stated*, never inferred from silence |
+| Its `outputs/traveler-model.md` | unchanged — it holds the pre-edit composition | that is what the freeze protects: the plan as it was planned |
+| On reopen | absorbs the new value at the next enrichment pass | reopening resumes normal refresh, the same shape the tombstone relies on |
+
+**The residual this creates is named rather than left latent.** An archived trip's model is a frozen
+composition over a source that did not stay frozen: the plan embeds person facts that have since
+moved, and reading it you cannot tell. That is correct behaviour, not a defect — but it is invisible.
+
+**It is detectable read-side with no new state and no write.** The shipped `_epoch_of_file` /
+`_is_stale` idiom in `scripts/publish-trip-site.sh` — strict `>`, one-second granularity, its BSD/GNU
+`stat` divergence already solved in-file — compares the referenced record's mtime against the derived
+model's. Reporting that relation is legal precisely because `G8` fixes `trip.freshness` as
+`(relation, verdict)` pairs whose membership is *that consumer's own declaration*, **and forbids a
+gate**: *no gate may be added that blocks on freshness.* **This design adds a relation and no gate.**
+
+**Why not simply signal archived trips and let the operator ignore it.** `G7`'s defaults make an
+archived trip refuse every verb that does not declare otherwise, so a signal written there instructs
+an engine that will refuse to act on it — noise unactionable without a reopen the operator did not ask
+for. **The freeze gains no second exception from this half of the milestone**, which extends the
+negative result the identity work already recorded for merge.
+
+#### Telling a tombstone from a dangling reference, structurally
+
+The erasure-reach subsection assigns the tolerant read a requirement: distinguish a tombstoned
+reference from a dangling one — both `UNKNOWN`, only one a defect. This is discovery's half of it.
+**The distinguisher is the presence of the reference field, not the outcome of resolving it**, which
+is what makes it structural rather than heuristic and needs **no store lookup at all** for the
+tombstone case.
+
+| Observed | Disposition | Defect? | Verdict for that trip |
+|---|---|---|---|
+| A reference in the closure resolving to a live record | resolved | no | **`REFERENCING`** |
+| A reference resolving to a `merged-into:` stub, one hop | redirected | no | **`REFERENCING`** — archived trips resolve through the stub indefinitely |
+| A stub whose target is itself a stub | **`MALFORMED`** | **yes** | **`UNDETERMINED`** — chain depth is pinned at 1; a second hop is a store defect, reported, never followed |
+| A tombstoned entry carrying `[ERASED]` and **no reference field** | **`TOMBSTONED`** | **no** | **`NOT-REFERENCING`, by design** — a declared, intentional absence: erasure removed the record and rewrote the bearer, so **there is no reference left to dangle** |
+| A **well-formed** reference resolving to nothing | **`DANGLING`** | **yes** | **`UNDETERMINED`** — never `NOT-REFERENCING`. The trip may hold needs whose source is gone |
+| The store unlistable, or the trip listing untrustworthy | **`UNDETERMINED`** | maybe | **`UNDETERMINED` for the whole run** — `G1`'s forbidden conclusion |
+
+**The asymmetry that makes it work: a tombstone has no reference field to dangle, and a dangling
+reference has a field that fails to resolve.** They are told apart by *shape*, locally, before any
+store read — strictly stronger than telling them apart by *outcome*, and the same static-disposition
+against dynamic-outcome split the erasure receipt is built on. **A partial erasure surfaces as
+`DANGLING`, and that is correct**: erasure is idempotent and per-file, so an interrupted run can leave
+a bearer still carrying a reference after the record is gone. That state **is** a defect, so reporting
+it as one is right.
+
+**One correlation discovery must never perform, stated as a prohibition rather than a preference.** It
+is tempting to sharpen the diagnostic by correlating tombstone tokens across trips to prove an erasure
+ran. **Do not.** The token is minted per (person × trip) precisely so that no cross-trip edge
+survives, because *a single token reused across trips is a stable cross-trip pseudonym for someone who
+asked to be deleted.* Re-establishing that edge to improve an error message reintroduces the linkage
+erasure exists to destroy. **The diagnostic loss is accepted, and the trade is recorded here so it is
+not silently re-litigated at implementation.**
+
+**Staleness — the question dissolves rather than being answered.** The chosen mechanism holds **no
+persisted state**, so there is nothing that can be out of date relative to the files: every run reads
+the files. What *can* be stale is the composed model, which is a pre-existing condition of every
+derived artifact in this engine and already has a shipped answer in the `_is_stale` relation above.
+**A design whose staleness answer is "there is no cached state" is the strongest available answer, and
+it is the sharpest single reason to prefer the forward scan over an index.**
+
+#### How this set relates to the erasure reach set
+
+The two sets answer the same question — *where does this person appear?* — for different purposes, and
+the difference is **direction**, not scope. Erasure walks the person to every location their **data**
+rests, and needs every byte; discovery walks the person to every trip holding a **reference edge**, and
+needs only the edge. **Neither is a subset of the other.** They coincide on exactly two locations of
+substance — the person record itself, which erasure removes and discovery resolves against, and
+`trips/*/travelers/*.md`, which is simultaneously the densest erasure location and the primary
+reference bearer. They diverge on four in principle: the roster and its `Applies to:` lines carry the
+**name** and no reference field, so discovery does not read them *(unless the roster is later declared
+a bearer)*; the research, itinerary and published surfaces are data-at-rest holding no edge, and
+reading them **is** the whole-directory scan already rejected. And two locations are new here: **a
+merge stub read as a discovery input** — the erasure work added stubs to its reach set in their
+*erasure* role, while the role that a stub is how an archived trip's stale id still resolves is this
+spike's — and **the file-less model entry**, which is in neither set: discovery is blind to it, and
+the reach set's own re-derivation counts it as an entry class **inside** a location rather than a
+location of its own.
+
+#### What this spike did not settle, and one finding it routed rather than fixed
+
+**The design is neutral on the person store's on-disk location and on its artifact-class band, and
+depends on no property of either.** Discovery reads two frontmatter fields and one filename, and
+assumes only that the store is **listable**. It assumes no schema, so an out-of-model disposition
+costs this half of the milestone nothing — unlike the identity work, whose stub form loses its test
+surface under that branch.
+
+**The reference-bearer for a file-less entry is the one open item this spike surfaced that the
+milestone does not already own.** It is a decision rather than a build, and the third branch above
+gives discovery a safe posture until it is made — but until it is made, *every active referencing trip
+receives the signal* is false for party members, and the fan-out risk fires on exactly the class
+`ADR-006` restricts to needs.
+
+**One finding against the erasure-reach subsection above, recorded because it was found here and is
+not this spike's to fix.** That subsection's own correction already types the both-marks entry as
+carried forward verbatim rather than regenerated. This spike reached the same conclusion from the
+other side — the derived model is that entry's **record**, not a projection of it — which is the
+reason the carry-forward exists at all, and it is why the erasure disposition for that entry must be
+substitution rather than regeneration. **The readings agree; only the route differs**, and the route
+matters because it also makes the entry a **source** for discovery's purposes, which is the sense in
+which it is absent from the reach set.
+
+**Reversibility: CHEAP · confidence HIGH.** This spike writes no engine file, creates no state, and
+adds no gate. Its output is this subsection. The tier rises when the mechanism lands in
+`agents/00-enrichment.md`, which is a different card's write.
+
 ## Decision drivers
 
 > **Not yet written.** Authored by the ratifying record once every spike's Context subsection above
@@ -557,3 +961,35 @@ contradicts the one-source-per-fact rule this milestone extends. Named, not fixe
   milestone extends
 - `reference/adr/README.md` — the section spine, the `Proposed` → `Accepted` lifecycle this record is
   mid-way through, and the amendment-versus-supersession boundary
+- `templates/traveler-intake.template.md` — the rule that falsifies a presence-keyed relevance
+  predicate (*Skipping a section never removes it from the output: every field still ships*, each
+  skipped field keeping its line and taking an em dash, because *dropping the lines loses the labels
+  the planner parses*), and the companion statement that a leftover bracketed placeholder *reads as
+  unanswered, exactly like an empty line*
+- `reference/data-model.md` § *Field Scope — person-scoped, trip-scoped* — the four-class partition
+  and its `PERSON` / `DEFAULT` / `TRIP` / `DEST` totals; the denominator rule stated as a derivation
+  from the template rather than a literal; the composition-and-resolution table that makes a
+  trip-side `PERSON` value a **schema violation rather than an override**, and makes a `DEFAULT`
+  field's durable value authoritative unless the trip carries an answer; the redundant-override
+  normalization assigned to enrichment; and the starred-pass split, which is the document-side
+  counterpart this subsection is careful not to re-grade on the instance-side predicate
+- `agents/00-enrichment.md` — the two statements of the unanswered equivalence (*an absent, blank or
+  em-dashed line is `one-off`*; *a blank or em-dashed field … is `unknown`, never `never`*) that
+  ground `ANSWERED()`; the `## Update signals` block this design emits into rather than inventing;
+  and the carry-forward clause read here from the other side — the derived model is the file-less
+  entry's **record**, which is why that entry is a discovery **source** with no bearer to carry a
+  reference
+- `CLAUDE.md` § *Resolving a trip* — the `E1`/`E2` evidence blocks whose shape and cost this design
+  reuses without extending; the `contract-depth` **equality** that refuses a third block; `G1`'s
+  canary and its forbidden conclusion, inherited verbatim by the population step; `G4`'s *absent ⇒
+  `ACTIVE`* default; `G2`'s one-trip-per-session resolution, which is why the every-referencing-trip
+  criterion is satisfied by a union rather than by a multi-trip write; and `G8`'s `trip.freshness`
+  `(relation, verdict)` pairs with the rule that *no gate may be added that blocks on freshness*
+- `examples/data-architecture-demo/` — the shipped fixture on which the answered-ness measurement,
+  its known-zero specificity arm and the file-less-entry gap are all reproducible: two files under
+  `travelers/` against three person entries in `outputs/traveler-model.md`, and profiles whose own
+  prose states that a skipped label ships with an em dash the reconciler reads as *not answered*
+- `scripts/test-command-taxonomy.sh` and `scripts/test-publish-guard.sh` — the measured occupancy of
+  the result vocabulary this design needs: `MALFORMED` already a finding token for a row that does
+  not parse to its expected shape, and the single `INHERITS` that is English prose in a comment
+  rather than a status token
