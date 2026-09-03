@@ -128,6 +128,39 @@ rejected** on the evidence above.
 **Provenance-marking documents that a constraint is second-hand. It does not establish consent, and
 must not be described as though it does.**
 
+**Amendment (2026-09-03, Thursday) — the durable record Option 3 creates is named, bounded, and given
+a delete path.** The decision above is unchanged: Option 3 stands, Option 4 stays rejected, and
+identity capture stays refused. What is corrected is an omission. Option 4 was rejected partly on the
+comparison that *"fewer durable records about a non-consenting person is the better privacy posture"* —
+and **the Option 3 accepted here creates a durable record of its own, which this ADR never named and
+gave no way to delete.** That record is the party member's `## <Name>` entry in that trip's
+`outputs/traveler-model.md`. Because that person has no source file by design, the enrichment agent
+**preserves that entry verbatim across every regeneration** rather than re-deriving it — the model the
+engine last wrote is *"the only surviving record of what the operator stated."* Three corrections
+follow, and **none of them widens the data class or adds a capability**:
+
+1. **The record exists and is named** — that carried-forward entry. It is a *record*, not a
+   projection; the engine's own text says the derived model *"remains that entry's record rather than
+   its authority."*
+2. **Its bound is stated** — **trip-scoped**, resident only in the git-ignored working directory,
+   non-publishable under Q3 below, and **never promoted to a cross-trip record**. A cross-trip person
+   record for a `[THIRD-PARTY]` party member is **Option 4 at a wider scope** — a durable identity
+   artifact for a person who never asked for one, now linking them across trips — and every ground
+   given for rejecting Option 4 is *stronger* at that scope, so it is refused, not permitted.
+3. **It acquires a delete path.** An erasure verb reaches it by **substitution**, never by
+   regeneration, because regeneration reproduces it verbatim by design.
+
+**This strengthens the consent posture rather than relaxing it**: it stops this ADR resting on a
+records-minimization comparison its own accepted option partly defeats, and gives the record it forgot
+a way to be deleted. **The needs-only boundary and the consent language above are untouched.**
+
+**One over-statement, corrected because it is attributed here.** The absolute phrasing *"no durable
+artifact of any kind"* appears in `agents/00-enrichment.md` and `.claude/commands/trip-record.md`, both
+citing this ADR. **This ADR does not say that, and as written the claim is false** — the entry has no
+*file*, and its durable record is the carried-forward model entry above. Those two surfaces are
+corrected on their own cards; the claim is disowned here so it is not re-derived from this record.
+Recorded by `ADR-012`, which ratified the amendment.
+
 ### Identity (a party member's issuing country and validity) — CAPTURE REFUSED
 
 **Q1 — no.** ADR-004's opt-in requirement extends to third-party identity data. It is not captured
@@ -177,6 +210,12 @@ Final, for the decision above.
   Any future permissive answer requires a guard equivalent to ADR-004 § 4's and a superseding ADR.
 - Refusing identity capture means a party member's entry requirements are not determined unless
   they file their own profile. This is the accepted cost of the opt-in boundary.
+- **(Amended 2026-09-03, Thursday.)** Option 3 leaves the party member one durable record — the
+  carried-forward `## <Name>` entry in that trip's `outputs/traveler-model.md`, preserved verbatim
+  because there is no source file to re-derive it from. It is **trip-scoped, git-ignored,
+  non-publishable, never promoted cross-trip, and deletable by substitution**. It was created by the
+  original decision and simply not named; naming it is what makes it reachable by a delete path. See
+  the amendment in § *Decision*.
 
 **Released by this ADR**
 
