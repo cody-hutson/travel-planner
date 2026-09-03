@@ -44,4 +44,4 @@ options weighed, the decision, and the consequences.
 | [ADR-009](ADR-009-data-architecture.md) | Data architecture — entity identity, serialization, publishability, topology, schema evolution | Accepted |
 | [ADR-010](ADR-010-per-traveler-approval-collection.md) | Per-traveler approval collection — transport over server, the attestation ceiling, and the unnamed channel | Accepted |
 | [ADR-011](ADR-011-per-traveler-cost-estimation.md) | Per-traveler cost estimation — a new in-model class, and the one field the entry marker admits | Accepted |
-| [ADR-012](ADR-012-people-library.md) | People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery | Proposed |
+| [ADR-012](ADR-012-people-library.md) | People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery | Accepted |

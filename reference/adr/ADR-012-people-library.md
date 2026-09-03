@@ -1,20 +1,21 @@
 # ADR-012: People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery
 
-- **Status:** Proposed (2026-09-03) — this record is a scaffold mid-authorship; see *Scaffold state*.
+- **Status:** Accepted (2026-09-03)
 - **Deciders:** repo maintainer
 - **Driving work:** the People library milestone. This record is the prerequisite architecture
   decision that milestone's first acceptance criterion requires, and it is the milestone-head
   decision gate for the spikes that feed it.
-- **Scaffold state — this record is deliberately incomplete, and every incomplete section says so.**
-  The milestone's design work is split across several spikes plus one ratifying record. Each spike
-  contributes **one Context subsection** stating what it established, as evidence. The ratifying
-  record runs last, is the first artifact to see every spike's findings together, and writes
-  **Decision drivers**, **Options considered**, **Decision**, **Consequences**, and the flip of the
-  `Status:` line above to `Accepted`. A section below carrying a *Not yet written* block is
-  unwritten, not empty-by-decision: **read it as absent, never as a claim that there is nothing to
-  say.** This two-step — a record landing `Proposed` and ratified by a later commit — is the one
-  `ADR-006`, `ADR-007` and `ADR-010` already used, and `reference/adr/README.md` names it as the
-  status lifecycle's entry state.
+- **How this record was authored — the scaffold is now closed.** The milestone's design work was split
+  across several spikes plus one ratifying record. Each spike contributed **one Context subsection**
+  stating what it established, **as evidence**; those subsections are their authors' record and are
+  not rewritten here. The ratifying record ran last, was the first artifact to see every spike's
+  findings together, and wrote **Decision drivers**, **Options considered**, **Decision** and
+  **Consequences**, and flipped the `Status:` line above to `Accepted`. **No *Not yet written* block
+  remains.** Where ratification read a Context claim differently, the correction is stated in
+  *Decision* § *Ratifier's notes* rather than written back over the subsection that made it. This
+  two-step — a record landing `Proposed` and ratified by a later commit — is the one `ADR-006`,
+  `ADR-007` and `ADR-010` already used, and `reference/adr/README.md` names it as the status
+  lifecycle's entry state.
 
 ## Context
 
@@ -897,24 +898,496 @@ adds no gate. Its output is this subsection. The tier rises when the mechanism l
 
 ## Decision drivers
 
-> **Not yet written.** Authored by the ratifying record once every spike's Context subsection above
-> is in. Read this section as absent, not as an assertion that no drivers apply.
+*Written by the ratifying record, over the three Context subsections above read together. Each driver
+is a force that decided something below; a consideration that decided nothing is not listed.*
+
+- **Apply the shipped identity rule; do not mint a second one.** The risk this milestone names is
+  *inventing a second rule*, never *reaching a different answer than Traveler did*. § 3 is a procedure
+  over entities that already splits its set five surrogate / five natural, so a different answer for an
+  eleventh entity is the rule working rather than the rule being bypassed. Every identity question below
+  is settled by running § 3, and § 3.2 is left byte-unchanged.
+- **A durable join key must not sit where an operator edits prose.** A key the operator retypes is a key
+  a spelling correction re-identifies, orphaning every inbound reference. This is what separates a
+  cross-trip Person from a trip-scoped Traveler, whose key the operator legitimately owns.
+- **Records-minimization about a non-consenting person, as `ADR-006` reasoned it.** `ADR-006` rejected a
+  proxy profile because it *"creates a durable identity artifact for a person who never asked for one"*
+  and because *"fewer durable records about a non-consenting person is the better privacy posture."*
+  That reasoning does not weaken at a wider scope — it strengthens — so it binds this record rather than
+  being amended around.
+- **No cross-trip pseudonym may survive a deletion.** Three findings arrived at this independently: the
+  erasure work mints tombstone tokens per (person × trip); the discovery work rejects a back-reference
+  list because it *survives erasure of the trip*; and the same work prohibits correlating tombstones
+  across trips even to sharpen a diagnostic. A design decision that re-establishes that edge is refused
+  here regardless of what it buys.
+- **Keep the design machine-graded.** The `reference/schemas/` bijection is what makes the composition
+  claims checkable rather than asserted. A disposition that moves the person record outside the corpus
+  that grades it costs assertions this design depends on, and that cost outranks the elegance of the
+  alternative.
+- **Existing trips must not break, and the no-library case must not degrade.** A trip carrying no person
+  reference has to behave byte-identically to today, and an unreadable store must not make a trip that
+  references nothing worse off. Both are load-bearing on the reference field being **optional**.
+- **Unknown, never the empty set.** An unresolvable reference read as *"no constraints"* turns erasure
+  into a path to a compliant-looking unsafe plan. Every indeterminate branch below resolves to
+  `UNDETERMINED`, inheriting the shipped fail-closed posture that *an empty read is not an empty class*.
+- **Bound the blast radius of merge by construction, not by care.** Merge stays a single-field operation
+  only while the person key is kept out of trip-internal joins. That is a constraint this record
+  imposes, not an observation it reports.
+- **State the exclusions.** Where a class is decided to have no record and no reference bearer, silence
+  reads as coverage. Every exclusion below is written down with its ground and its cost.
 
 ## Options considered
 
-> **Not yet written.** Authored by the ratifying record. Options weighed *inside* a single spike are
-> recorded as evidence in that spike's Context subsection above — the rejected natural-keyed Person
-> is one — and are consolidated here at ratification.
+*Consolidated at ratification. Options weighed inside a single spike are recorded as evidence in that
+spike's Context subsection above and are not re-argued here; what follows is the set this record
+decided over, each with the falsifier that removed it. **Cost is nowhere the dispositive falsifier** —
+where cost is the only objection, it is named as a cost and the option survives to be weighed.*
+
+| # | Option | Falsifier |
+|---|---|---|
+| **O1** | **Natural key for Person**, reusing the normalized display name § 3.2 already defines | § 3.2's own mandated collision remedy is that the operator disambiguates the display name, *"which changes the key."* A natural-keyed Person is therefore re-identified by an act the engine requires — **self-falsifying against the rule that would license it**. It additionally puts a durable join key under operator text editing |
+| **O2** | **Store inside `trips/`** | Two independent falsifiers. `G2` derives `trips[]` as the lines of `E1` minus the `README.md` line, so a `trips/people/` directory becomes a phantom trip on every invocation of all five commands — a one-trip working directory resolves as `many`. And `.gitignore`'s own comment states the mechanism that forbids the signpost: *"git cannot re-include a file whose parent dir is excluded"* |
+| **O3** | **Out-of-repo store** (`~/.travel-planner/people/` or `$XDG_DATA_HOME`) | The schema selector is computed from repo-relative `path-pattern:` globs, so an out-of-repo home is unreachable by the path arm: the class is unselectable and the bijection ungradable. It re-enters O5 by a different door. Every engine surface — the resolution contract, the publish guard, the schema gate — is repo-relative |
+| **O4** | **Amend § 4.4 to let the person class *remove* `trip:`** | **Zero precedent.** Both declared narrowings re-type `writer` (`trip-context.md` to the `block-owned` sentinel, `outputs/satisfaction-metrics.md` to a section-owned list) and neither removes a field; `reference/schemas/traveler-profile.md` states the shipped reading in its own fence — *"a class may only narrow one."* It would also force a code change to the schema suite's universal-field group. **Superseded by the sentinel**, which needs neither |
+| **O5** | **Out-of-model disposition** for the person record | Loses the `reference/schemas/` bijection, so the form recount and *the trip form carries zero `PERSON` fields* become ungradable, and the merge-stub shape needs a bespoke guard assertion. Measured by the identity spike: the out-of-model rows carry **zero** files in `reference/schemas/` |
+| **O6** | **A new cross-trip band** whose schema lives outside `reference/schemas/` | Puts the schema outside the corpus that grades it: the band buys a selector arm and loses the assertion it was bought for |
+| **O7** | **Reference borne on the derived model entry** (a mark on the `## <Name>` heading) | The derived model is `rebuilt-each-synthesis`, so the reference would have to survive regeneration. Worse, it places a **cross-trip identifier inside the artifact the erasure design works hardest to keep uncorrelated**. It would also give a file-less party member a bearer, which the exclusion below refuses |
+| **O8** | **A roster reference in `trip-context.md` § *Group*** | Puts a durable cross-trip person identifier in a `publish: bound` artifact — the publish path — and adds a writer to a block-owned table for a fact that already has a home. A publish-surface risk created for no gain |
+| **O9** | **A back-reference list of trips on the person record** | A durable plaintext list of the trips a person travelled on: the exact cross-trip linkage the tombstone design mints per (person × trip) tokens to destroy, and it **survives erasure of the trip**. Rejected on privacy, on one-source-per-fact, and on the archived write it forces — any one dispositive |
+| **O10** | **An index or a persisted result cache in the store**, mapping person → trips | Staleness is **fatal and undetectable**: `trips/` is git-ignored and hand-edited, so a hand-deleted trip never updates it and nothing reveals the drift without running the forward scan anyway. **The idiom that would make it safe is the one that makes it pointless.** It fails silently, returning a plausible, wrong, non-empty set |
+| **O11** | **A whole-directory scan or a content grep for the key** | Rejected on false positives before cost: a display name in an itinerary, or a key in a narrative or a receipt, is not a reference. *The person key is not a trip-internal join basis* is what makes that distinction crisp rather than heuristic |
+| **O12** | **A third pre-execution evidence block** beside `E1`/`E2` for discovery | Refused by the contract's own text: `contract-depth` is an **equality, not a minimum**, so a third block would force **every** `G8` consumer to carry it and acquire a wider grant — editing a surface this milestone does not otherwise touch, for no gain |
+| **O13** | **A person record for a `[THIRD-PARTY]` party member** | `ADR-006`'s Option 4 at a wider scope: a durable identity artifact for a person who never asked for one, now persisting past the trip and linking them across trips. Every ground `ADR-006` gave is stronger at cross-trip scope, not weaker |
+| **O14** | **Reuse the person id as the erasure tombstone token** | Of the two rationales the erasure spike gave, **only the second survives, and it is dispositive**: a reused id is a **stable cross-trip pseudonym for someone who asked to be deleted**, outliving the record it named and disclosing that the same person travelled on those trips. The name-leak rationale is **struck** — under a surrogate the id carries no name — and is recorded as struck rather than quietly dropped |
+| **O15** | **Substitute rather than remove the `person:` field on erasure** | Leaves a per-trip token in a **cross-trip-addressable** position, and defeats the structural tombstoned-versus-dangling discriminator, which keys on the field's *presence* |
+| **O16** | **Erase an archived trip by `reopen` → erase → re-conclude**, rather than by declaring `lifecycle: ANY` | **The path runs; it is rejected for what it mutates, not for being refused.** `reopen` returns the trip to `ACTIVE`, which satisfies the concluding verb's own `lifecycle: ACTIVE` row, so the re-conclude step is admitted by the gate table. What disqualifies it is that the path **flips the lifecycle marker twice and appends a second closing entry to the log of an already-concluded trip** — mutating a trip's concluding record for an operation whose entire point is that it is a redaction. *(An earlier reading of this alternative had it refused at the gate. That sub-claim does not hold against the shipped table and is not carried forward; the erasure Context subsection above already corrects it in place.)* |
+| **O17** | **Signal archived trips on a person edit and let the operator ignore it** | `G7`'s defaults make an archived trip refuse every verb that does not declare otherwise, so a signal written there instructs an engine that will refuse to act on it — noise unactionable without a reopen the operator did not ask for |
+| **O18** | **Decide relevance by *presence* of a trip-side line** | Falsified by the shipped intake template, which mandates the opposite: *"Skipping a section never removes it from the output: every field still ships."* Presence discriminates nothing on a real profile, and the failure direction is the unsafe one — an em-dashed line reads as an override and the trip hears nothing about a durable fact it is actually planning on |
+| **O19** | **Decide relevance by answered-ness alone, uniformly across all four field classes** | Measured false on the shipped fixtures: the `PERSON`-class bullets are present *and answered* trip-side today, so a uniform answered-ness predicate reads them as overrides and the safety class goes **silent** on a person edit. The lattice has to be **class-first**, with answered-ness consulted only where the class admits divergence |
+| **O20** | **Match person display names against model entries** as a discovery fallback for a file-less entry | A name-similarity join — the mechanism § 3 forbids between naming and identity — and it resurrects the same-name collision the surrogate exists to prevent |
+| **O21** | **Widen the person token beyond 4 hex digits** to shrink the collision space | Not falsified; **weighed and set aside.** It would make Person the only entity with a different token width, against a mint-assert-remint loop that is cheap at a store whose realistic size is tens of records. Recorded as a cost accepted, not an option refuted |
 
 ## Decision
 
-> **Not yet written.** Authored by the ratifying record, which runs last and is the first artifact to
-> see every spike's findings together. **Nothing in this record is decided until this section is
-> written and the `Status:` line above reads `Accepted`.**
+**Accepted 2026-09-03 (Thursday).** Person is admitted as an eleventh entity with a cross-trip durable
+record. What follows ratifies the three Context subsections above and settles the items each of them
+left open. Where a spike's own reading needed correcting, the correction is stated here rather than
+written back over their record — see *Ratifier's notes*, last.
+
+**Every artifact class in this section is named by path, never by its ordinal in
+`reference/data-architecture.md` § 1.1.** That enumeration is closed at 27 and its numbering moved
+during this milestone; a path does not move.
+
+### 1. Identity — a surrogate key, filename-borne
+
+**Person takes the surrogate key `psn-[0-9a-f]{4}`, borne in the filename at `people/psn-<token>.md`
+and never restated in frontmatter** (§ 4.3's no-double-home rule). **The display name is the body H1**,
+and its normalized form — reusing § 3.2's existing normalization, not a new one — is what creation
+refusal asserts over. Person is a distinct entity from Traveler: **Traveler's natural key, its filename
+correspondence and its publish-guard normalization are byte-unchanged, and § 3.2 is not reopened.**
+
+Minting **asserts non-existence and re-mints on collision**; at four hex digits and a realistic store
+of tens of records the re-mint loop is cheap, and widening the token is set aside per **O21**.
+
+Three consequences this record states so no later reader reconstructs a misreading:
+
+- **The rename criterion is a *prohibition*, not a natural-key mandate.** *A rename is a new id plus a
+  supersession edge, never an in-place mutation of a join key* — under a surrogate, a rename touches a
+  display-name **body value** only, and mutating a join key in place is **structurally unreachable**.
+  The criterion is satisfied by construction rather than by a rule someone must follow.
+- **The creation-collision criterion resolves against the *normalized display-name key*, never the
+  surrogate.** Read against the surrogate it is vacuously true, because minted ids never collide, and
+  its control evaporates. Refusal fires on **exact equality after § 3.2's normalization** against a live
+  record — **never similarity, never edit distance, never fuzzy matching** — with three operator
+  remedies: **link**, **disambiguate**, or **create anyway with the collision acknowledged**. The third
+  branch exists because co-existence is safe when ids differ, which keeps a same-named couple
+  representable. **No code path runs from a name comparison to a merge.**
+- **`psn-` and `per-` are disjoint namespaces** — the person key and the erasure tombstone token. Any
+  detector over either is **shape-anchored** `<prefix>-[0-9a-f]{4}`; a bare `per-` substring matches
+  hundreds of English distributives (`per-traveler`, `per-trip`, `per-event`).
+
+**Merge** is ratified as the identity spike established it: refuse → survivorship → **stub-first** →
+lazy repoint of active trips only → signal only what was repointed. **Chain depth is pinned at exactly
+1** by the refuse-if-either-id-is-already-a-stub rule; a second hop is typed `MALFORMED` and never
+followed. Self-authored survives across differing provenance, forced by `ADR-006`'s consent boundary
+rather than chosen; unequal field values **refuse** rather than resolve; an expired value loses to a
+live one. **Merge takes no freeze exception**, because it re-addresses rather than rewrites. The stub
+**is** the receipt, which is what makes unmerge a mechanical inverse and what moves an incorrect merge
+from IRREVERSIBLE to MODERATE. **Split is out of scope**, with its reasoning recorded above.
+
+**Reversibility: MODERATE · confidence HIGH.** Ids are minted, not derived; changing the scheme re-keys
+the store.
+
+### 2. Storage home — `people/` at the repo root, in-model, with the `trip:` sentinel
+
+**The store is `people/`**, at the repo root, **contents git-ignored with a tracked
+`people/README.md` signpost**, rooted in `.gitignore` as `/people/*` plus `!/people/README.md`. This is
+the **third instance of a pattern this repo already ships twice** — `trips/*` + `!trips/README.md`, and
+`/analysis/*` + `!/analysis/README.md`, whose own comment reads *"Same shape as trips/ above and for
+the same reason."* Feasibility is not argued; it is demonstrated by two shipped precedents. `O2` and
+`O3` are refused above.
+
+**The person record is an in-model artifact class**, named `people/<person>.md`, **never numbered** —
+the same angle-token shape § 1.1 already uses for `travelers/<traveler>.md`. Its schema file is
+`reference/schemas/person-record.md`. In-model is taken because both alternatives cost the
+machine-grading this design depends on (`O5`, `O6`).
+
+**`trip: cross-trip` is RATIFIED as a narrowing, not a removal.** Both declared § 4.4 exceptions
+re-type `writer` and neither removes a field, and `reference/schemas/traveler-profile.md` states the
+shipped reading in its own fence: *"a class may only narrow one."* `cross-trip` type-checks as the
+required `slug`, exactly as `trip-context.md` narrows `writer` to `block-owned` — a sentinel that *is
+not a writer id and that no tool resolves to one*. **No § 4.4 removal-exception is created and the
+schema suite's universal-field group is unchanged.**
+
+**The sentinel is declared in `reference/data-architecture.md` § 4.4**, as a third narrowing beside the
+existing two — **not** in `reference/data-model.md` § *Reserved keys*, whose own derivation rule scopes
+that list to `##` headings the derived model's shape defines. This corrects the placement the
+composition spike proposed; the sentinel itself is unchanged.
+
+**The reservation is a forward obligation, not a repair.** No tracked file extracts the `trip:`
+frontmatter **value**, so nothing resolves it to a directory today. It carries exactly one binding
+consequence: **`/trip-new` must refuse a trip slug equal to a reserved sentinel**, or a real
+`trips/cross-trip/` would collide with it.
+
+**Reversibility: MODERATE · confidence HIGH.** Reversible on paper until records materialise in
+operators' working directories; a relocation is a migration thereafter.
+
+### 3. Referencing — one optional frontmatter field, on the traveller file alone
+
+**`person: psn-<token>`, typed `optional slug`, on `travelers/<traveler>.md` and on no other class.**
+
+**`optional` is forced, not stylistic.** That class is the one class the engine **never upgrades** —
+version 0 is permanently valid for it — so a required field would make every existing traveller file
+non-conforming the moment the schema ships, breaking both *existing trips do not break* and *the
+mechanism is optional and progressive* in a single edit. **Absence is the pre-existing state of every
+traveller file in existence.**
+
+**Resolution has four branches, and only one is new behaviour:**
+
+| Reference state | Resolution |
+|---|---|
+| **Absent** | The traveller file is self-contained. **No store read is attempted.** Behaviour is byte-identical to today |
+| **Present, resolves** | Compose per § 4 below. A `merged-into:` stub is followed to **depth 1**; a second hop is `MALFORMED` and never followed |
+| **Present, does not resolve — `DANGLING`** | **`UNDETERMINED`.** Never `NOT-REFERENCING`, never *no constraints*. This inherits `G1`'s shipped canary rule verbatim rather than inventing a posture |
+| **Store absent or unreadable** | **`UNDETERMINED` for every trip carrying a reference; a trip carrying none is unaffected.** The fail-safe must not degrade the no-library case |
+
+**The person key is not a trip-internal join basis.** This is a binding constraint rather than a
+description: it is what bounds merge to a single field in a single class, and what keeps discovery's
+cheap stage a frontmatter read. A second in-trip join site re-derives both.
+
+**Discovery is PULL ∪ PUSH, and correctness rides on PULL.** PULL — a trip resolving its own composed
+source at its own next enrichment pass — **cannot miss a trip, because it is that trip's own read**.
+PUSH shortens latency and is best-effort and fail-loud. *Every active referencing trip receives the
+signal* is satisfied by the **union**; it must **not** be implemented as one session writing N trips,
+which the one-trip-per-session bound forbids and which would write archived trips. **PULL's one
+requirement, which this record depends on and does not own:** the per-trip diff must compare the
+**composed** source — the traveller file **plus** the person record it references — not the trip file
+alone.
+
+**Erasure of the reference REMOVES the field; the derived model's entry heading is SUBSTITUTED.** Both
+are erasure; the mechanism differs because the two locations have **opposite absence semantics**.
+Removal is unsafe in the model — a stripped heading yields the empty key and hard-stops the reconciler
+— and safe in the traveller file's frontmatter, because the field is optional and its absence is that
+file's pre-existing normal state. The pairing is what makes the structural tombstoned-versus-dangling
+discriminator work: **the trip still knows a person was erased**, while **no cross-trip identifier
+survives anywhere** to correlate.
+
+**Reach-set consequence.** This record adds **exactly one** location neither sibling set could name —
+the `person:` field on each referencing `travelers/<traveler>.md` — and states its disposition
+(removal). It adds **no** location for a file-less bearer, because § 5 decides there is none.
+`people/README.md` is **not** a reach location: it is a tracked signpost carrying no person data, and
+that is a property the store's build must preserve.
+
+**Reversibility: MODERATE · confidence HIGH**, except the erasure semantics, whose *effects* are
+**IRREVERSIBLE · confidence HIGH**.
+
+### 4. Composition — class-first, then answered-ness, and one-way
+
+**The lattice is decided by field class first. Answered-ness is consulted only where the class admits
+divergence, and it changes the verdict for exactly one class.**
+
+| Changed field's class | Trip side | Verdict | What is emitted |
+|---|---|---|---|
+| **`PERSON`** | *not consulted* — the record is authoritative unconditionally | **`INHERITS`** | **Always signal.** An **answered** trip-side value is additionally reported as a **schema violation** |
+| **`DEFAULT`** | **not answered** (absent, blank, em-dashed, or still bracketed) | **`INHERITS`** | **Signal** — the durable value is what this trip plans on |
+| **`DEFAULT`** | **answered** | **`OVERRIDDEN`** | **No replanning signal**; **reported**, because a redundant override can silently become load-bearing when the record moves |
+| **`TRIP`** / **`DEST`** | n/a | **`NOT-INHERITED`** | **No signal, no report** — the record is not their authoritative source |
+
+**A trip-side `PERSON` value is a schema violation, not an override — REFUSE and REPORT.** Silent
+precedence in either direction is exactly how the class collapses into `DEFAULT`. **Answered-ness does
+not rescue this class**, and the reason is measured rather than argued: on the two shipped fixtures the
+`PERSON`-class bullets are present *and answered* on the trip side **today**, because the intake form
+has not yet been split. Under a presence predicate *or* a naive answered-ness predicate those bullets
+read as overrides and the safety class goes **silent** on a person edit. **`DEFAULT` is the one class
+the answered-ness predicate actually changes.**
+
+**`PERSON` non-overridability is enforced by absence, not by a rule.** Once the intake form is split
+the trip form carries no `PERSON` slots, so there is nothing to police and the class cannot collapse
+via an override that has nowhere to live.
+
+**`ANSWERED()` is an instance property; presence is a document property. They share the word *present*
+and answer different questions, and this record does not collapse them.** *What the form asks* — the
+labelled-field denominator, the four-class partition over it, and the starred-pass split — is keyed on
+the **presence of a bullet in `templates/traveler-intake.template.md`**, correctly and unchangedly,
+because a form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed
+on `ANSWERED()`. **Discovery and composition live wholly on the instance side.** The over-application
+is measurable rather than hypothetical: applying the instance predicate to the document question scores
+the blank intake form at zero answers, which would read as a form that asks no questions.
+
+**Composition is ONE-WAY:**
+
+> **A trip override never writes back to the person record.** Composition reads the record and writes
+> the trip; it never writes the store. The sanctioned promotion of a trip value into the record is an
+> **explicit, confirmed human act** through the command surface — never a side effect of composition,
+> enrichment, or a synthesis pass.
+
+**Unresolvable is always `UNKNOWN`, never an empty set.**
+
+**Provenance is decided with no enum widening.** The record's artifact-level `provenance:` is **`human`**
+— Layer-1 human input. **Self-authored versus operator-provided is entry- and field-scoped**, carried
+by the existing inline `[OPERATOR-PROVIDED]` mark exactly as the derived model carries it today; it is
+**not** a new frontmatter enum member, because § 4.4's `provenance:` key is artifact-scoped. Projection
+into the derived model is unchanged **by identity, not by equivalence** — the same mark, in the same
+place, read by the same guard limb. **The two marks stay orthogonal, and that is the seam § 5 and § 6
+turn on:** `[OPERATOR-PROVIDED]` answers *who supplied this*; `[THIRD-PARTY]` answers *whether the
+person described spoke*. **The durable-storage bar attaches to `[THIRD-PARTY]`, never to
+`[OPERATOR-PROVIDED]` alone.**
+
+**Reversibility: CHEAP · confidence HIGH.**
+
+### 5. The file-less reference-bearer — RESOLVED, and the exclusion is written down
+
+**The population is two classes, not one, and the corpus separates them explicitly** — *"a profile not
+filed yet, **and** a party member who will never file one."*
+
+| Class | Marks | Decision |
+|---|---|---|
+| **A profile not filed yet** (the fixture's `Sam`) | `[OPERATOR-PROVIDED]` **alone** | **No reference bearer.** When the profile arrives it is a `travelers/<traveler>.md` file and bears `person:` normally |
+| **A party member who will never file one** | `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` | **No reference bearer, and no person record.** Their durable record is the trip-scoped one § 6 names |
+
+**Neither file-less class bears a person reference, and neither receives a cross-trip person record.**
+This is the branch that requires the exclusion to be **stated**, because silence here reads as coverage.
+
+**The ground for the both-marks class is dispositive and is `ADR-006`'s own.** A cross-trip person
+record for a `[THIRD-PARTY]` party member **is Option 4 at a wider scope** — a durable identity artifact
+for a person who never asked for one, now persisting past the trip and linking them across trips. Every
+ground `ADR-006` gave strengthens at cross-trip scope. Three siblings agree independently and without
+citing `ADR-006` at all: tombstone tokens are minted per (person × trip) to destroy stable cross-trip
+pseudonyms; a back-reference list is refused because it survives erasure of the trip; and correlating
+tombstones across trips is prohibited even to sharpen a diagnostic. **A cross-trip record for a
+non-consenting person is the linkage all three exist to prevent, granted by the front door.**
+
+**The ground for the not-yet-filed class is weaker, and sufficient.** The library is opt-in and that
+person has opted into nothing; creating a durable cross-trip record on another person's say-so, while
+that person's own act is the thing being waited for, is authoring ahead of consent. **The remedy is the
+profile, which is already what the branch is waiting for.**
+
+**The cost is stated plainly rather than minimised.** A party member's needs are re-stated by the
+operator on every trip. That is a real intake cost falling on the person least able to advocate for
+themselves — the exact asymmetry this milestone set out to reduce. **It is not free and this record does
+not pretend it is.** It is the cost `ADR-006` already accepted once, in terms: *"Refusing identity
+capture means a party member's entry requirements are not determined unless they file their own
+profile. This is the accepted cost of the opt-in boundary."* This record accepts the same cost at the
+same boundary, one scope wider.
+
+**Consequences, all of them favourable and each checkable:** discovery's bearer set is **complete as it
+stands**; a party member is correctly `NOT-REFERENCING`, which is now a *true* answer rather than a
+false negative; a person edit cannot reach a person who has no record to edit; the store's erasure reach
+does not widen to a class that cannot consent to being in it; and the tolerant read gains a third
+structural case, distinguished with **no store read** — a model entry with no source file and no
+reference is **EXCLUDED-BY-DESIGN**, never DANGLING and never TOMBSTONED.
+
+**Reversibility: EXPENSIVE · confidence HIGH.** This narrows the plain reading of the milestone's
+promise that a party member who never authors a profile can still hold a durable record: it is
+**satisfied on the trip-scoped reading** (§ 6) and **refused on the cross-trip one**. Reversing it would
+require a consent mechanism `ADR-006` would admit, and `ADR-006` already measured and rejected the only
+candidate — an unverifiable attestation — on reasoning that holds harder at this scope.
+
+### 6. The `ADR-006` amendment
+
+**Both halves are honoured. The consent boundary is preserved verbatim; the storage claim is amended
+descriptively, in the direction the evidence supports rather than the one the milestone assumed.**
+
+#### 6a. Needs-only consent boundary — PRESERVED, verbatim and unwidened
+
+A `[THIRD-PARTY]` entry carries **needs and nothing else**: no passport, no origin, no lifecycle facets,
+no documents line. **Identity capture stays REFUSED.** Nothing third-party-sourced is published, in
+attributed **or** anonymized form. **The data class a party member carries does not widen by a single
+field.** Consent language is unchanged and restated here: *provenance-marking records that a value is
+second-hand; it does not establish consent and must never be written or described as though it does.*
+**Carrying is not confirming.** Nothing in this amendment can be read as adding consent.
+
+#### 6b. Storage claim — AMENDED, descriptively, and no capability is added
+
+**The milestone proposed this amendment on the premise that `ADR-006`'s no-file claim is "a storage
+consequence of a trip-scoped world, not a consent rule." That premise does not survive `ADR-006`'s own
+Decision text**, which rejects a proxy profile because it *"creates a durable identity artifact for a
+person who never asked for one"* and because *"fewer durable records about a non-consenting person is
+the better privacy posture."* That is a records-minimization rule with a stated privacy rationale.
+**The premise is superseded, not adjusted**, and it is recorded here as a rejected framing so it is not
+re-proposed.
+
+**The real ground is the opposite one, and it is a fact about shipped behaviour.** A durable record for
+a `[THIRD-PARTY]` party member **already exists today, by design**: their `## <Name>` entry in that
+trip's `outputs/traveler-model.md`, preserved **verbatim** across every regeneration by the
+carry-forward rule, because that person has *"no source file by design"* and the model the engine last
+wrote is *"the **only surviving record** of what the operator stated."* `ADR-006` rejected Option 4 on a
+records-minimization comparison **while the Option 3 it accepted creates a durable record of its own**,
+and `ADR-006` neither names that record nor gives it a way to be deleted.
+
+**The amendment therefore says three things and adds no capability:**
+
+1. **The record exists and is named** — the carried-forward `## <Name>` entry in that trip's
+   `outputs/traveler-model.md`. It is a **record**, not a projection: the engine's own text says *"the
+   derived model remains that entry's record rather than its authority."*
+2. **Its bound is stated** — **trip-scoped**, resident only in the git-ignored working directory,
+   non-publishable, and it **never enters the cross-trip person library**. It does not link that person
+   across trips and acquires no identifier that could. § 5 is what makes this bound true.
+3. **It acquires a delete path** — the erasure verb reaches it by **substitution**, never by
+   regeneration, because regeneration reproduces it verbatim by design.
+
+**That change makes the consent posture strictly stronger than the one `ADR-006` accepted.** It does not
+relax a reasoned consent rule; it stops an accepted decision resting on a comparison its own chosen
+option partly defeats, and it gives the record it forgot a way to be deleted.
+
+**Where the false claim actually lives — a citation correction this record makes rather than inherits.**
+The absolute phrasing *"no durable artifact of any kind"* is **not in `ADR-006`.** Measured over the 109
+tracked `.md`/`.sh`/`.yml`/`.html` files, it occurs **twice, in two files** — `agents/00-enrichment.md`
+and `.claude/commands/trip-record.md` — and **both attribute it to `ADR-006`.** `agents/00-enrichment.md`
+carries both halves of the contradiction fourteen lines apart: *"no durable artifact of any kind"*, and
+then the carried-forward entry as *"the only surviving record."* **`ADR-006` is amended for the omission
+that is genuinely its own** — an unnamed, undeletable durable record created by the option it accepted.
+**The over-statement is those two surfaces' own** and is routed to their owning cards in *Consequences*;
+this record does not edit them.
+
+**Reversibility: EXPENSIVE · confidence HIGH.** This is a consent boundary on a live ADR. Reversing it
+would remove a delete path from records about non-consenting people — a privacy regression with
+stakeholder impact, not a rollback.
+
+### 7. What this record does NOT decide
+
+| Not decided here | Decided by |
+|---|---|
+| The person-record **body shape**, its field set, its schema file, and the store README | the schema-and-store slice |
+| The **guard-suite boundary assertion** for the new `.gitignore` group and for the merge-stub shape | the guard-suite slice |
+| The **composition implementation** and the tolerant read's third case | the composition slice |
+| The **enrichment mechanism** — PUSH ∪ PULL, the composed-source diff, redundant-override normalization | the enrichment slice |
+| The **publish-guard freshness walk**, and the § 5.6 fence row **coupled with** the evaluator widening | the publish-guard slice |
+| The **two shipped intake forms** — the trip form and the durable form | the form-split slice |
+| The **command surface**, including the promotion act and `/trip-new`'s sentinel-slug refusal | the command slice |
+| The **archived-trip freeze rule** and its single erasure exception | the freeze slice |
+| The **passport validity horizon** | the passport slice |
+| **Extraction and migration** from existing traveller files | the migration slice |
+| **Reconcile-on-link** | the reconcile slice |
+| **Erasure** — its reach set, its receipt, and its typed confirmation | the erasure slice |
+| The person record's **artifact-class ordinal** in § 1.1 | the schema-and-store slice, at its own commit |
+| The **within-trip Traveler collision** — the intake surface still selects edit-over-create on a bare file-existence probe | **UNOWNED in this milestone.** That is the Traveler entity, which § 3.2 governs and this record deliberately leaves untouched. Restated here so it is not read as covered |
+| `trips/README.md`'s retention posture — *"No command deletes a trip folder"* — which the erasure verb falsifies | **UNOWNED in this milestone.** Named, not fixed |
+
+### Ratifier's notes — Context claims corrected without editing their record
+
+*The three Context subsections above are their authors' record and are not rewritten. Where this record
+reads a claim differently, it says so here, plainly.*
+
+- **The `PERSON`-bullet count in the reference-discovery subsection is understated.** That subsection
+  reads *"all 8 `PERSON`-class bullets are present and answered on the trip side."* Re-measured on the
+  same two fixtures with the star-decorated bullet form handled (`- ⭐ **Specific:**`, which an anchored
+  `- **Label:**` pattern silently drops), the population is **10 `PERSON`-class bullets, of which 8 are
+  answered and 2 are not** — the two `Passport: —` lines. **The subsection's conclusion is unaffected and
+  in fact strengthens**: 8 of 10 answered is more than enough for a naive answered-ness predicate to read
+  the safety class as overridden, which is exactly why § 4 is class-first. The same instrument reproduces
+  that subsection's other two counts on the same population — 107 labelled body bullets, 45 answered —
+  so the divergence is in the `PERSON` subset alone, not in the instrument.
+- **The erasure-reach subsection's gate correction is adopted as it stands.** Its parenthetical already
+  records that the re-conclude step is *not* refused at the gate, because the concluding verb declares
+  `lifecycle: ACTIVE` and a reopened trip satisfies it. **O16** above states the alternative's real
+  disqualifier — the state it mutates — and no part of this record relies on a refusal that does not
+  occur.
+- **The erasure-reach subsection's id-reuse rejection stands on its second rationale only**, and this
+  record carries it that way (**O14**): the name-leak rationale is **struck**, because the surrogate
+  chosen in § 1 carries no name; what remains and decides it is that a reused id is a stable cross-trip
+  pseudonym for someone who asked to be deleted. **The outcome is unchanged. Do not revisit it.**
 
 ## Consequences
 
-> **Not yet written.** Authored by the ratifying record, together with the Decision it follows from.
+Final, for the decision above. **Classes are named by path, never by ordinal**, for the reason § 1.1's
+mid-milestone renumbering already demonstrated.
+
+### Blast radius — what changes, and who owns it
+
+| Surface | Impact | Owner |
+|---|---|---|
+| `reference/adr/ADR-006-third-party-data-capture.md` | **Amended in place** per § 6b — the consent decision is untouched, an unnamed durable record is named and bounded, and a delete path is attached. Recorded as an **amendment, not a supersession**: no decision reverses | **this record** |
+| `reference/data-architecture.md` § 1 and the § 1.1 heading | **Two-sentence narrowing.** The *per-trip* qualifier moves off the class set and onto the per-trip rows, so a cross-trip class is not filed under a heading that denies it. Cheaper than a new band, and it preserves the `reference/schemas/` bijection a new band would break | schema-and-store slice |
+| `reference/data-architecture.md` § 1.1 table | **One new row**: `people/<person>.md`, written by the person, `persist-mutable`, `provenance: human`, **non-publishable at the stricter of the two internal levels** — it carries `Passport`, which § 5.6 already declares non-publishable in two other scopes | schema-and-store slice |
+| `reference/data-architecture.md` § 2 | **Eleventh entity row**: Person — surrogate `psn-<token>`; Person 1—N Traveler-reference; Person 0..1—1 Person via `merged-into:`, depth 1 | schema-and-store slice |
+| `reference/data-architecture.md` § 3.4 | The assignment becomes **six surrogate / five natural**. **§ 3.2 is byte-unchanged** | schema-and-store slice |
+| `reference/data-architecture.md` § 4.4 | **A third declared narrowing**, beside the two existing `writer` narrowings: `trip:` narrowed to the reserved sentinel `cross-trip` | schema-and-store slice |
+| `reference/schemas/person-record.md` (new) | The class schema, with the **two-root** `path-pattern:` shape the traveller class already ships — the store and its worked example. `person-id` is **absent by § 4.3**: it is the filename | schema-and-store slice |
+| `reference/schemas/traveler-profile.md` | **One line**: `field person: optional slug`. `optional` is **forced** by § 7.6's never-upgrade rule, not chosen | schema-and-store / composition slices |
+| `reference/schemas/README.md` | **Narrow** *"Every pattern is anchored at a trip root, and that is load-bearing"* to every **per-trip class's** pattern, and declare the store's two roots | schema-and-store / guard-suite slices |
+| `.gitignore` | **+2 rooted lines**, mirroring `/analysis/*` exactly | schema-and-store / guard-suite slices |
+| `scripts/test-publish-guard.sh` | **A new group** asserting those two lines, as the existing groups do for `trips/` and for `/analysis/` | guard-suite slice |
+| **A tracked witness fixture** | Required, or an explicit no-witness declaration. **A new worked example carrying the store**, rather than reusing the existing data-architecture example — which would place a cross-trip record inside a trip root and re-teach the scoping this design breaks | schema-and-store slice |
+| `scripts/publish-trip-site.sh` **and** `reference/data-architecture.md` § 5.6 | **COUPLED, and this is the highest-severity item here.** A `Passport` fence row for the person-record scope **and** a third artifact-scope constant in the evaluator must land **in the same change**. The evaluator holds exactly two artifact-scope literals today; § 5.6 states that a row naming any other pair *"is presently a code change"* and that **the guard aborts the publish as UNDETERMINED** rather than guarding less than it declares. **A fence row alone aborts every publish of every trip** | publish-guard slice |
+| `.claude/commands/trip-new.md` | **Refuse a trip slug equal to a reserved sentinel** | command slice |
+| `agents/00-enrichment.md` · `.claude/commands/trip-record.md` | **The absolute phrasing *"no durable artifact of any kind"* is false as written** and both surfaces attribute it to `ADR-006`, which does not say it. Each needs the same descriptive correction § 6b makes: the entry has no *file*, and its durable record is the carried-forward model entry, trip-scoped and now deletable. **No shape or field changes** | enrichment slice · command slice |
+| `trips/README.md` retention table | *"No command deletes a trip folder"* becomes false when the erasure verb ships, and the same table's *"Copy a profile forward"* contradicts one-source-per-fact | **UNOWNED — routed** |
+| `outputs/traveler-model.md`, its schema, and the agents that consume it | **Unchanged.** No field added, no shape changed, projection unchanged by identity | — |
+| `CLAUDE.md` § *Resolving a trip* | **Not touched.** No third evidence block, no new gate, and **no gate that blocks on freshness** — this design adds a relation and no gate | — |
+| `trip-context.md` and its write-ownership table · `agents/06-validator.md` and the spokes | **Not touched** | — |
+
+### What becomes true, and what becomes checkable
+
+- **Existing trips are unaffected.** A traveller file with no `person:` field attempts no store read and
+  behaves byte-identically to today. Adoption is per-traveller and progressive.
+- **A merge is a single-field write in a single class**, and it stays that way only while the person key
+  is kept out of trip-internal joins. That constraint is now stated rather than assumed.
+- **The class partition becomes machine-graded** the moment both schemas exist — the trip form emitting
+  zero `PERSON` bullets, and the person record's schema carrying them. That is why a **schema-bearing**
+  home was load-bearing rather than incidental.
+- **No cross-trip pseudonym survives a deletion.** The person record is the only cross-trip edge, and it
+  is the thing being deleted; every other join the tombstone preserves is already trip-scoped.
+- **No indeterminate branch returns an empty set.** Every one resolves to `UNDETERMINED`, and
+  `UNDETERMINED` is never a pass.
+- **The freeze gains no second exception.** Merge re-addresses rather than writes; an ordinary person
+  edit does neither and qualifies for neither. Only erasure — which *removes* information — reaches an
+  archived trip, and it substitutes rather than regenerates.
+
+### Costs and residual risks, stated rather than minimised
+
+- **A party member's needs are re-stated on every trip.** § 5 accepts this explicitly. It falls on the
+  person least able to advocate for themselves, and it is the cost `ADR-006` already accepted once at a
+  narrower scope.
+- **An archived trip's model is a frozen composition over a source that did not stay frozen**, and
+  reading it you cannot tell. That is correct behaviour and it is invisible. It is detectable read-side
+  with no new state and no write, by reporting an mtime relation — legal precisely because `G8` fixes
+  freshness as reported `(relation, verdict)` pairs and **forbids a gate over them**.
+- **The publish-guard coupling is a live trap** with the widest blast radius in this milestone: the
+  wrong half landing alone breaks every publish of every trip, permanently, until the other half lands.
+- **`[ERASED]` must never be added to the publish-contract fence.** Declaring it an entry selector would
+  make the tombstone a non-publishable leak token in a `bound`, rendered artifact, and **every
+  subsequent publish of that trip would abort, permanently.**
+- **Every detector over `psn-` or `per-` must be shape-anchored** `<prefix>-[0-9a-f]{4}`. A bare `per-`
+  matches hundreds of English distributives; a bare-substring detector is a silent false positive
+  generator.
+- **A store at realistic size has a non-trivial birthday-collision probability**, which is why minting
+  asserts non-existence and re-mints rather than trusting the space.
+- **`UNDETERMINED` is chosen over a synonym** for every fail-closed branch, because it is already the
+  corpus's densest fail-closed token and already carries the rule this design needs.
+
+### Reversibility summary
+
+| Decision | Tier | Confidence |
+|---|---|---|
+| Identity — surrogate `psn-<token>`, filename-borne | **MODERATE** | HIGH |
+| `trip: cross-trip` sentinel, declared as a § 4.4 narrowing | **CHEAP** | HIGH |
+| Storage home `people/`, git-ignored, tracked signpost | **MODERATE** | HIGH |
+| Artifact class in-model, named never numbered | **MODERATE** | HIGH |
+| Reference `person:`, `optional slug`, traveller file alone | **MODERATE** | HIGH |
+| Erasure removes the reference; the model heading is substituted | **IRREVERSIBLE** (its effects) | HIGH |
+| Composition class-first and one-way; provenance with no enum widening | **CHEAP** | HIGH |
+| File-less bearer excluded, for both file-less classes | **EXPENSIVE** | HIGH |
+| `ADR-006` amendment | **EXPENSIVE** | HIGH |
 
 ## References
 
