@@ -35,7 +35,7 @@ Keep or clear per folder, because the four parts of a trip do not age the same w
 | `trip-log.md` | **keep** | Small, and the decision history is the part worth rereading when you plan the next one. |
 | `trip-context.md` | **keep** | Small, and it is the trip's shape — where you went, when, and what you booked. |
 | `outputs/` | **clear once archived** | The largest thing in the folder, and rebuildable from the two files above. |
-| `travelers/` | **move what you will reuse, then clear** | The most sensitive bytes in the repo — passport numbers, dates of birth, document expiries. Copy a profile forward into the next trip rather than leaving it in a folder you have stopped opening. |
+| `travelers/` | **clear once archived — durable answers belong in `people/`** | The most sensitive bytes in the repo — passport details, dates of birth, document expiries. **Do not copy a profile forward into the next trip.** A person's durable facts belong in `people/`, held once and referenced by each trip's `person:` line, so a trip folder is never how a person's facts survive. If someone filled a trip form before they had a record, move those durable answers into `people/` — then clear. |
 
 **Nothing here expires on its own.** No command deletes a trip folder, no timer runs,
 and archiving a trip does not shrink it. Clearing is a thing you do, and the point of
