@@ -48,8 +48,8 @@
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
-#   ST   the starred-field count in templates/traveler-intake.template.md agrees across ALL
-#        FOUR of its homes: the banner numeral, the appendix rule-4 numeral, the appendix's
+#   ST   the starred-field count in EACH intake form agrees across ALL FOUR of that form's
+#        homes: the banner numeral, the appendix rule-4 numeral, the appendix's
 #        per-field `(starred)` annotations, and the marked fields themselves — which are the
 #        only home that is not a restatement of another, so they are the reference count.
 #        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
@@ -2131,17 +2131,26 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group ST — the starred-field count is ONE fact with FOUR homes inside one template,
+# Group ST — the starred-field count is ONE fact with FOUR homes inside EACH intake form,
 # and the three homes that merely describe it must agree with the one that IS it.
 #
+# ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
+# This group shipped reading a single hardcoded path. #538 split the intake into a per-trip
+# form and a durable per-person one, and the count is now TWO facts — one per form, 3 and 6
+# — each with the same four homes inside its own file. A guard that had kept its single
+# path would have gone on grading the trip form correctly and said NOTHING about the second,
+# which is the shape of stale coverage this suite exists to refuse. So ST_TEMPLATES is a
+# LIST and every arm below runs once per member, fixtures and all, with each verdict tagged
+# by the form it graded. Adding a third intake form is one line here, not a second group.
+#
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
-# templates/traveler-intake.template.md tells a traveller how many of its fields carry the
+# Each intake form tells its reader how many of its fields carry the
 # star, and it tells them TWICE in prose — in the banner at the top and again in rule 4 of
 # the agent appendix at the bottom — while the appendix ALSO restates the starred set field
 # by field as `**Label** (starred)`. Only one of those four surfaces is not a restatement:
 # the marked fields themselves. The other three are claims about it.
 #
-# Nothing in this repository read that template before this group. So starring an eleventh
+# Nothing in this repository read those templates before this group. So starring one more
 # field and updating the banner alone would have shipped a stale appendix, in two places,
 # with every gate green — and the appendix is the surface an agent reads to run the intake,
 # so the stale copy is the one that drives the conversation. It has not happened yet: all
@@ -2170,21 +2179,28 @@ fi
 # template DIRECTLY with its own text processing and adds NO finding code to the validator,
 # so va_select's output is untouched — the same reason EN, CA and PB stay clear of CTL.
 # ST-AR3 re-reads AR_NTPL in this same run and asserts it is still zero, which makes the
-# constraint an observation rather than a promise in a comment.
+# constraint an observation rather than a promise in a comment. The durable form joins on
+# the same warrant and one further one worth stating, because it is NOT the trip form's:
+# its fence carries `trip: cross-trip`, a real slug rather than a placeholder, so A4 would
+# not have refused it and the selector's DECLARED arm would have claimed it on its
+# `artifact:` key. What keeps it out is the exclusion `templates/*.template.md`, which
+# va_select applies BEFORE both arms — the pattern matches by filename shape, so the
+# exclusion covers a form added later with no edit to it.
 #
 # ── ST HAS NO LEGITIMATE SKIP ───────────────────────────────────────────────────
-# The population is a tracked file, so it exists by construction. A missing or unreadable
+# Every member of the population is a tracked file, so each exists by construction. A missing or unreadable
 # template is a FAILURE here, never a SKIP and never VACUOUS: the file going away is itself
 # drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "ST — the starred-field count agrees across all four of its homes in one template"
+echo "ST — the starred-field count agrees across all four of its homes, in every intake form"
 
-ST_REL="templates/traveler-intake.template.md"
-ST_FILE="$ROOT/$ST_REL"
+# The population, one path per line. Each is graded independently and completely: its own
+# surfaces, its own violations, its own full set of control arms against its own fixtures.
+ST_TEMPLATES="templates/traveler-intake.template.md
+templates/person-intake.template.md"
 ST_STAR='⭐'
-ST_DIR="$WORK/st"
-mkdir -p "$ST_DIR"
+mkdir -p "$WORK/st"
 
 # st_surfaces <file> — one TAB record per discovered assertion site, three surfaces:
 #
@@ -2200,8 +2216,10 @@ mkdir -p "$ST_DIR"
 # already enforces on va_type_ok.
 #
 # PROSE is the hard surface, and it is hard for a specific reason: BOTH prose sites carry a
-# COMPETING cardinal. The banner reads "about 2-3 minutes" before it reads "ten of them",
-# and rule 4 reads "the two-to-three minute pass" after it reads "the ten fields". A reader
+# COMPETING cardinal. The banner reads "about 2-3 minutes" before it reads "three of them"
+# (six, on the durable form), and rule 4 reads "the two-to-three minute pass" after it reads
+# "the three fields". Both decoys are the SAME two on either form and both survived the
+# split unchanged, which is why the window below needed no retuning for the new member. A reader
 # that took the first number on the line would report 2 for the banner, agree with nothing,
 # and be wrong in a way that never announces itself. So a number counts only when it is
 # followed — within at most three intervening words, across whitespace or dashes only — by
@@ -2405,6 +2423,18 @@ st_mustnotfire() {
   fi
 }
 
+while IFS= read -r ST_REL; do
+[ -n "$ST_REL" ] || continue
+ST_FILE="$ROOT/$ST_REL"
+# The tag names the form in every verdict below, so a red says WHICH form drifted, and it
+# gives each member its own fixture directory — a shared one would have the second member
+# overwriting the first's fixtures mid-run.
+ST_TAG="${ST_REL##*/}"; ST_TAG="${ST_TAG%.template.md}"
+ST_DIR="$WORK/st/$ST_TAG"
+mkdir -p "$ST_DIR"
+echo
+echo "  ── $ST_REL"
+
 ST_OK=1
 ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0
 if [ -r "$ST_FILE" ]; then
@@ -2419,12 +2449,12 @@ printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s append
   "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH"
 
 if [ ! -r "$ST_FILE" ]; then
-  FAIL "ST0: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
+  FAIL "ST0[$ST_TAG]: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
   ST_OK=0
 elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; then
-  PASS "ST0: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
+  PASS "ST0[$ST_TAG]: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
 else
-  FAIL "ST0: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
+  FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
   ST_OK=0
 fi
 
@@ -2432,22 +2462,22 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
   ST_NVIOL="$(printf '%s\n' "$ST_VIOL" | grep -c '[^[:space:]]')"
   if [ "$ST_NVIOL" -eq 0 ]; then
-    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface"
+    PASS "ST1[$ST_TAG]: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface"
   else
-    FAIL "ST1: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
+    FAIL "ST1[$ST_TAG]: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
     printf '%s\n' "$ST_VIOL" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
   fi
 
   if [ "$ST_NGLYPH" -gt "$ST_NMARK" ]; then
-    PASS "ST2: the reference count is $ST_NMARK MARKED FIELDS and not the $ST_NGLYPH star glyphs the file contains, and the inequality is observed here rather than assumed. The banner's own mention of the glyph is prose about the convention, excluded by the shape MARKED matches — so a counter that had quietly become a glyph tally would report $ST_NGLYPH and be caught by this arm"
+    PASS "ST2[$ST_TAG]: the reference count is $ST_NMARK MARKED FIELDS and not the $ST_NGLYPH star glyphs the file contains, and the inequality is observed here rather than assumed. The banner's own mention of the glyph is prose about the convention, excluded by the shape MARKED matches — so a counter that had quietly become a glyph tally would report $ST_NGLYPH and be caught by this arm"
   else
-    FAIL "ST2: the marked-field count ($ST_NMARK) is not strictly below the glyph count ($ST_NGLYPH), so the discriminator between counting fields and counting glyphs is UNTESTED on this tree and ST1's agreement proves less than it appears to"
+    FAIL "ST2[$ST_TAG]: the marked-field count ($ST_NMARK) is not strictly below the glyph count ($ST_NGLYPH), so the discriminator between counting fields and counting glyphs is UNTESTED on this tree and ST1's agreement proves less than it appears to"
   fi
 
   if [ "${AR_NTPL:-unset}" = "0" ]; then
-    PASS "ST-AR3: AR3 is re-read in this same run and still reports 0 template(s) reaching the selector. Group ST reads $ST_REL directly and adds no finding code to the validator, so the constraint that this check must not drag a template into va_select is an observation here, not a promise in a comment"
+    PASS "ST-AR3[$ST_TAG]: AR3 is re-read in this same run and still reports 0 template(s) reaching the selector. Group ST reads $ST_REL directly and adds no finding code to the validator, so the constraint that this check must not drag a template into va_select is an observation here, not a promise in a comment"
   else
-    FAIL "ST-AR3: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
+    FAIL "ST-AR3[$ST_TAG]: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
   fi
 fi
 
@@ -2462,25 +2492,25 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_AL1="$(st_field ANNOT 1 2 "$ST_SURF")"
 
   ST_FX="$(st_fixture m1)"; st_bump "$ST_FX" "$ST_PL1" "$ST_PV1"
-  st_mustfire CTL-ST-M1 "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields and the appendix untouched"
+  st_mustfire "CTL-ST-M1[$ST_TAG]" "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields and the appendix untouched"
 
   ST_FX="$(st_fixture m2)"; st_bump "$ST_FX" "$ST_PL2" "$ST_PV2"
-  st_mustfire CTL-ST-M2 "$ST_FX" DISAGREE "the APPENDIX RULE-4 numeral alone is restated as $((ST_PV2 - 1)) at line $ST_PL2, with the banner and the annotations untouched"
+  st_mustfire "CTL-ST-M2[$ST_TAG]" "$ST_FX" DISAGREE "the APPENDIX RULE-4 numeral alone is restated as $((ST_PV2 - 1)) at line $ST_PL2, with the banner and the annotations untouched"
 
   ST_FX="$(st_fixture m3)"; st_line_sub "$ST_FX" "$ST_ML1" "${ST_STAR}[ ]*" ""
-  st_mustfire CTL-ST-M3 "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving every numeral and every annotation as it was"
+  st_mustfire "CTL-ST-M3[$ST_TAG]" "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving every numeral and every annotation as it was"
 
   ST_FX="$(st_fixture m4)"; st_line_sub "$ST_FX" "$ST_AL1" "[ ]*[(]starred[)]" ""
-  st_mustfire CTL-ST-M4 "$ST_FX" DISAGREE "ONE appendix annotation is dropped at line $ST_AL1, leaving both numerals and every marked field as they were"
+  st_mustfire "CTL-ST-M4[$ST_TAG]" "$ST_FX" DISAGREE "ONE appendix annotation is dropped at line $ST_AL1, leaving both numerals and every marked field as they were"
 
   ST_FX="$(st_fixture d1)"; st_line_del "$ST_FX" "$ST_PL1"
-  st_mustfire CTL-ST-D1 "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1) — the case a count-only comparison passes, because the remaining numeral still agrees"
+  st_mustfire "CTL-ST-D1[$ST_TAG]" "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1) — the case a count-only comparison passes, because the remaining numeral still agrees"
 
   ST_FX="$(st_fixture d2)"; st_line_del "$ST_FX" "$ST_PL2"
-  st_mustfire CTL-ST-D2 "$ST_FX" PROSE-POP "the APPENDIX RULE-4 assertion is DELETED outright (line $ST_PL2), the same hole at the other site"
+  st_mustfire "CTL-ST-D2[$ST_TAG]" "$ST_FX" PROSE-POP "the APPENDIX RULE-4 assertion is DELETED outright (line $ST_PL2), the same hole at the other site"
 
   ST_FX="$(st_fixture r1)"; st_line_sub "$ST_FX" "$ST_ML1" "[*][*]$ST_MB1:[*][*]" "**$ST_MB1 (renamed):**"
-  st_mustfire CTL-ST-R1 "$ST_FX" LABELS-SET "ONE marked field is RENAMED ('$ST_MB1', line $ST_ML1) and every count is left equal, so only a label-for-label comparison can see it"
+  st_mustfire "CTL-ST-R1[$ST_TAG]" "$ST_FX" LABELS-SET "ONE marked field is RENAMED ('$ST_MB1', line $ST_ML1) and every count is left equal, so only a label-for-label comparison can see it"
 
   # R2 is the subtle one: the banner keeps its glyph and keeps its numeral, but stops being
   # a countable assertion. It is the failure a count-only comparison cannot see, because
@@ -2489,9 +2519,9 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_R2_KEPT=0
   awk -v ln="$ST_PL1" -v star="$ST_STAR" 'NR == ln && index($0, star) > 0 { f = 1 } END { exit(f ? 0 : 1) }' "$ST_FX" && ST_R2_KEPT=1
   if [ "$ST_R2_KEPT" -eq 1 ]; then
-    st_mustfire CTL-ST-R2 "$ST_FX" PROSE-POP "the BANNER is REWORDED out of the count shape at line $ST_PL1 while KEEPING its star glyph (asserted present on the mutated line) — it still looks like the assertion and no longer is one"
+    st_mustfire "CTL-ST-R2[$ST_TAG]" "$ST_FX" PROSE-POP "the BANNER is REWORDED out of the count shape at line $ST_PL1 while KEEPING its star glyph (asserted present on the mutated line) — it still looks like the assertion and no longer is one"
   else
-    FAIL "CTL-ST-R2: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
+    FAIL "CTL-ST-R2[$ST_TAG]: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
   fi
 
   # ── LABELS-ORDER, MARKED-EMPTY and ANNOT-EMPTY each have a branch in st_violations and,
@@ -2514,9 +2544,9 @@ if [ "$ST_OK" -eq 1 ]; then
     ST_FX="$(st_fixture o1)"
     st_line_sub "$ST_FX" "$ST_AL1" "[*][*]$ST_AB1[*][*]" "**$ST_AB2**"
     st_line_sub "$ST_FX" "$ST_AL2" "[*][*]$ST_AB2[*][*]" "**$ST_AB1**"
-    st_mustfire CTL-ST-O1 "$ST_FX" LABELS-ORDER "the appendix's first two annotations are TRANSPOSED ('$ST_AB1' at line $ST_AL1 with '$ST_AB2' at line $ST_AL2), so both sets stay equal and every count stays put — the one edit only an order-aware comparison can see"
+    st_mustfire "CTL-ST-O1[$ST_TAG]" "$ST_FX" LABELS-ORDER "the appendix's first two annotations are TRANSPOSED ('$ST_AB1' at line $ST_AL1 with '$ST_AB2' at line $ST_AL2), so both sets stay equal and every count stays put — the one edit only an order-aware comparison can see"
   else
-    FAIL "CTL-ST-O1: MUST FIRE — the first two appendix annotations both sit on line $ST_AL1, so transposing them would cancel to no edit and this arm would grade nothing. LABELS-ORDER needs two annotations on distinct lines to be provoked"
+    FAIL "CTL-ST-O1[$ST_TAG]: MUST FIRE — the first two appendix annotations both sit on line $ST_AL1, so transposing them would cancel to no edit and this arm would grade nothing. LABELS-ORDER needs two annotations on distinct lines to be provoked"
   fi
 
   # E1 — the MARKED surface emptied outright. The star is stripped from every marked bullet
@@ -2530,7 +2560,7 @@ if [ "$ST_OK" -eq 1 ]; then
     st_line_sub "$ST_FX" "$(st_field MARKED "$ST_I" 2 "$ST_SURF")" "${ST_STAR}[ ]*" ""
     ST_I=$((ST_I + 1))
   done
-  st_mustfire CTL-ST-E1 "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the three homes that merely describe it describing nothing"
+  st_mustfire "CTL-ST-E1[$ST_TAG]" "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the three homes that merely describe it describing nothing"
 
   # E2 — the ANNOT surface emptied the same way and for the same reason: the appendix's
   # per-field restatement is the home ST1 compares label FOR label, and a zero there would
@@ -2540,14 +2570,17 @@ if [ "$ST_OK" -eq 1 ]; then
     st_line_sub "$ST_FX" "$(st_field ANNOT "$ST_I" 2 "$ST_SURF")" "[ ]*[(]starred[)]" ""
     ST_I=$((ST_I + 1))
   done
-  st_mustfire CTL-ST-E2 "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
+  st_mustfire "CTL-ST-E2[$ST_TAG]" "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
 
   ST_FX="$(st_fixture clean)"
-  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes every must-fire arm above mean something"
+  st_mustnotfire "CTL-ST-CLEAN[$ST_TAG]" "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes every must-fire arm above mean something"
 
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
-  st_mustnotfire CTL-ST-NEUTRAL "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
+  st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
 fi
+done <<EOF
+$ST_TEMPLATES
+EOF
 
 # ─────────────────────────────────────────────────────────────────────────────────
 echo
