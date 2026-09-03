@@ -89,15 +89,25 @@ SELECTED  =  { files matching >=1 path-pattern of >=1 schema here }        (path
 one act: add its schema file. That applies § 1.1's own principle — class source computed,
 never enumerated — to the selector itself.
 
-**Every pattern is anchored at a trip root, and that is load-bearing.** § 1.1 states each
-class's path *trip-relative*, and this repository has exactly two trip roots:
+**Every per-trip class's pattern is anchored at a trip root, and that is load-bearing.** § 1.1
+states each per-trip class's path *trip-relative*, and this repository has exactly two trip roots:
 `trips/<slug>/`, the git-ignored working directory, and `examples/<demo>/`, the worked-example
 stand-in. So each class declares two patterns — `trips/*/outputs/food-list.md` and
 `examples/*/outputs/food-list.md` — rather than one `**/`-prefixed pattern meaning *anywhere*.
+
 An "anywhere" pattern selects any file that merely **shares a basename** with a class, and
 this directory contains two of those: `trip-context.md` and `trip-log.md`. The alternative
 fix was an exclusion for `reference/schemas/`, which the corpus does not declare and should
 not have to — the selector was over-broad, and that is where the defect was.
+
+**The one cross-trip class anchors at the store's two roots instead, on the same principle.**
+C22 `people/<person>.md` belongs to no trip, so a trip-relative anchor has nothing to anchor to;
+it declares `people/*.md` — the store at the repo root — and `examples/*/people/*.md` for its
+tracked witness. The rule that actually generalises is *anchor at the roots the class can occupy
+and never at `**/`*, and the trip-root pair is that rule applied to a per-trip class. Anchoring
+matters more here rather than less: the store's own contents are git-ignored, so the witness under
+`examples/` is the only instance the gate can ever reach, and a widened `**/people/*.md` would
+drop it from the index the moment `.gitignore`'s rooted rule stopped discriminating.
 
 **Two matching patterns are ranked by literal length, longest wins.** That is what lets C18
 (`outputs/<slug>.md`) ship as a genuine residual class without colliding with every named
@@ -124,8 +134,8 @@ checkout; asserting the glob itself would have been the easier check and the wro
 | `.claude/commands/*.md` | `.claude/commands/*.md` | § 11 — an upstream schema this repo does not own |
 | `templates/*.template.md` | `templates/*.template.md` | § 11 — emitters, not instances |
 | `examples/*/README.md` | `examples/*/README.md` | § 1.3 — fixture documentation |
-| `**/outputs/.staticrypt.json` | `outputs/.staticrypt.json` | § 1.2 C26 — third-party tool state |
-| `.publish/**` | `.publish/` | § 1.2 C27 — publish staging clone, never traversed |
+| `**/outputs/.staticrypt.json` | `outputs/.staticrypt.json` | § 1.2 C27 — third-party tool state |
+| `.publish/**` | `.publish/` | § 1.2 C28 — publish staging clone, never traversed |
 
 **This directory is not on that list, deliberately.** Excluding `reference/schemas/*.md` would
 need a warrant the corpus does not carry, and it does not need one: no class path-pattern
@@ -170,10 +180,10 @@ repo-consistency findings off the local arm is an open decision, not one this do
 Every schema declares exactly one of them, and the gate reports the split on every run:
 
 ```
-CV: <n> witness / <m> no-witness / 21 total
+CV: <n> witness / <m> no-witness / 22 total
 ```
 
-That line is the coverage answer. It replaces a twenty-one-file manual audit with a read, and
+That line is the coverage answer. It replaces a twenty-two-file manual audit with a read, and
 it lets the gate's teeth grow **with** the migration instead of all at once: as each
 migration slice versions a class's in-repo instance it flips that class's declaration to
 `witness: <path>`, and from that commit forward a stripped or unversioned witness is finding
@@ -181,15 +191,23 @@ migration slice versions a class's in-repo instance it flips that class's declar
 rule**, because the failing assertion is the class's own coverage declaration and not the
 skip predicate.
 
-The migration is complete and the split reads **20 witness / 1 no-witness / 21 total**.
+The migration is complete and the split reads **21 witness / 1 no-witness / 22 total**.
 It got there in three moves, and only the first was a change to the *corpus* alone. All
 three are worth stating, because the corpus spent a release unable to declare coverage it
 had already earned, and because the third one falsified a prediction this section used to
-make. **Two classes have joined since, each arriving with its own witness rather than
+make. **Three classes have joined since, each arriving with its own witness rather than
 through those moves** — C20 `outputs/change-summary.md` and C21 `outputs/cost-estimate.md`,
-both fixtured in `examples/data-architecture-demo/` on the commit that declared them. That
+both fixtured in `examples/data-architecture-demo/` on the commit that declared them, and
+C22 `people/<person>.md`, fixtured in a **new** root, `examples/people-library-demo/`. That
 is the intended shape for a class added after the migration: **a class ships with a witness
 or with a terminal `no-witness-because:` clause, never with a pending one.**
+
+**C22 needed a new root rather than a row in the existing fixture**, and the reason is the
+same one that makes its patterns exceptional below: `examples/data-architecture-demo/` is a
+**trip** root, and a cross-trip record placed inside one would teach the scoping this class
+exists to break. The fixture ships a `README.md` beside its record, as all six roots before
+it do, and `examples/*/README.md` is a declared selector exclusion — so the fixture's own
+documentation is out of the gate by construction while its record is squarely in.
 
 1. **`examples/data-architecture-demo/` supplies the missing instances.** Seventeen classes
    gained a versioned in-repo artifact to point at — either the fixture's own, or, for C1

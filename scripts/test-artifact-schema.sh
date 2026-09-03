@@ -1633,13 +1633,21 @@ if [ "$PS_OK" -eq 1 ]; then
 
   # PS4 — the partition closes, and the denominator is pinned so a NEW fixture forces
   # this group to be re-read rather than absorbed silently.
+  #
+  # The pin moved 6 -> 7 with examples/people-library-demo/, and the re-read the failing
+  # arm demands was performed rather than assumed. That fixture carries no
+  # outputs/final-itinerary.md — it is the worked instance of the durable person record,
+  # which is not a per-trip artifact at all — so it is outside this predicate's
+  # population entirely: PS1's firing set and PS2's silent set are BOTH unchanged, and
+  # the new root lands in PS3's declared-not-exercised list, which is derived rather than
+  # listed and so names it without an edit. Only the denominator moved.
   if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
     FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
     PS_OK=0
-  elif [ "$PS_NTRIP" -eq 6 ]; then
-    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 6 pinned when this group shipped"
+  elif [ "$PS_NTRIP" -eq 7 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 7 pinned when this group was last re-read"
   else
-    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 6 pinned when this group shipped. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 7 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
     PS_OK=0
   fi
 fi

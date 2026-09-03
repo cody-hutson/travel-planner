@@ -233,7 +233,7 @@ Use the bare `YYYY-MM-DD` form exactly as the `date +%F` call returned it.
 
 **`trip:` is the only fence field this command fills**, and it takes the normalised slug Gate A
 carried forward. Every other field is a fact about the artifact class rather than about this trip —
-`reference/data-architecture.md` § *In-model — per-trip artifact classes* decides them on this
+`reference/data-architecture.md` § *In-model — artifact classes* decides them on this
 class's row, and `reference/schemas/trip-log.md` declares the field set and the enum each value is
 drawn from. Write them exactly as they stand, and cite those two rather than re-deriving one.
 **`generated:` is absent by design** — `reference/data-architecture.md` § *Universal frontmatter*
