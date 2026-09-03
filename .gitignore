@@ -21,7 +21,7 @@ trips/*
 # git cannot re-include a file whose parent dir is excluded. Rooted (leading /) so the
 # store at the repo root is caught and the tracked witness under examples/ is NOT — the
 # class's schema names that witness, so a widened rule would silently drop it from the
-# index. Guarded by scripts/test-publish-guard.sh group U — do not "simplify" these.
+# index. Guarded by scripts/test-publish-guard.sh group U — do not "simplify" these two lines.
 /people/*
 !/people/README.md
 

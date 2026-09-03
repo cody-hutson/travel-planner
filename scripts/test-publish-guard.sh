@@ -9,11 +9,12 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
 # K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
 # Q = analysis/ workspace ignore invariant (same shape as K, lower severity)
+# U = people/ person-store ignore invariant (#534) — same shape as K and Q, highest severity.
 # K4/Q4 are RULE-level, not state-level: they fail on a deleted negation line, which
 # K1/Q1 cannot see because a tracked file bypasses .gitignore altogether.
 # L8-L10 grade the publishability DECLARATION: that the class has exactly one home, that
@@ -354,6 +355,96 @@ if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   fi
 else
   SKIP "Q: not a git work tree"
+fi
+
+echo "Person-store ignore invariant (#534):"
+# Same invariant shape as K and Q, and the highest severity of the three. K guards
+# passport-bearing trip data; Q guards operator working material; U guards the durable
+# person store — one file per person, held across trips rather than copied into each.
+# Kept a separate group rather than folded into K, on Q's stated rule, so a passport-store
+# regression and a person-store regression are not one line of output.
+# Every check-ignore call below takes the same modifiers — -c core.ignorecase=false, -q,
+# and --no-index where the subject is or may be tracked — so a reader comparing two arms
+# is comparing subjects, not spellings. The ignorecase pin is not decoration: it is `true`
+# on a macOS working copy and `false` on the Linux CI runner, and without it a case-altered
+# negation (!/people/readme.md) reads green on the host a human would break it on.
+if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+
+  # U0-CTL (MUST FIRE) — the instrument, before any verdict is read from it.
+  # U4 and U5 both PASS on "not ignored". Nothing in K or Q proves that the
+  # --no-index form is capable of returning "ignored" at all, so a form that
+  # silently answered "not ignored" for every input would show as two green arms.
+  # This arm is the one input that must come back IGNORED.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "people/psn-zzzz-probe.md"; then
+    PASS "U0-CTL: MUST FIRE — the --no-index form returns IGNORED for a synthetic person record, so U4/U5's NOT-IGNORED verdicts below are measurements rather than a form that cannot say otherwise"
+  else
+    FAIL "U0-CTL: MUST FIRE — the --no-index form called a synthetic people/<record> NOT ignored; every U arm reading that form is a broken probe and none of their verdicts can be trusted"
+  fi
+
+  # U1 (positive) — the signpost ships. Trackedness, not ignore-state: a tracked
+  # file bypasses .gitignore entirely, so ls-files is the unambiguous test. (K1/Q1)
+  if git -C "$HERE/.." ls-files --error-unmatch people/README.md >/dev/null 2>&1; then
+    PASS "U1: people/README.md is tracked (the signpost ships in a fresh clone)"
+  else
+    FAIL "U1: people/README.md is NOT tracked — the store's signpost is absent from a fresh clone"
+  fi
+
+  # U2 (negative — the limb that matters). Probes at the DEEPEST shape the store
+  # admits, not the shallowest. check-ignore needs no file on disk, so no synthetic
+  # person record is ever written. -q, NOT -v: verbose exits 0 on a NEGATION match
+  # too, inverting the verdict.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "people/psn-zzzz-probe.md"; then
+    PASS "U2: a synthetic people/psn-<token>.md is still git-ignored"
+  else
+    FAIL "U2: PERSON RECORDS ARE NO LONGER IGNORED — .gitignore stopped guarding people/ contents, and this store holds the most sensitive bytes in the repository"
+  fi
+
+  # U3 (control arm) — a zero whose control also returns zero is a broken probe.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "README.md"; then
+    FAIL "U3: control arm broken — check-ignore calls the tracked root README.md ignored; U2 is unusable"
+  else
+    PASS "U3: control arm fires (root README.md not ignored) — U2's verdict is trustworthy"
+  fi
+
+  # U4 (rule-level, not state-level). U1 proves the file is IN THE INDEX, which
+  # stays true even if the negation line is deleted — a tracked file bypasses
+  # .gitignore altogether, so U1 and U2 both keep passing while the rule rots.
+  # --no-index is LOAD-BEARING (the K4/Q4 falsification). This arm is also the only
+  # one that fails on a "simplification" to /people/ or people/ (the directory form
+  # git cannot re-include through) and on a line-order swap, .gitignore being
+  # last-match-wins.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "people/README.md"; then
+    FAIL "U4: the !/people/README.md negation is gone or unreachable — the store's signpost survives only because it is already tracked"
+  else
+    PASS "U4: the negation pattern re-includes people/README.md (the rule, not just the index, is intact)"
+  fi
+
+  # U5 — the arm neither K nor Q has, in two parts. The witness is READ FROM the
+  # tree rather than spelled here: check-ignore answers for paths that do not
+  # exist, so an arm naming a token this file guessed would return "not ignored"
+  # for an absent file and pass. An empty derivation is a FAILURE, not a clean run.
+  # --no-index is load-bearing HERE TOO, not only on U4: the witness is tracked, so
+  # the default form short-circuits past the rules and returns "not ignored" under
+  # the very widening (**/people/*) this arm exists to catch.
+  U5_WIT="$(git -C "$HERE/.." ls-files 'examples/*/people/*.md')"
+  U5_N="$(printf '%s\n' "$U5_WIT" | grep -c '[^[:space:]]')"
+  U5_BAD=0
+  while IFS= read -r u5p; do
+    [ -n "$u5p" ] || continue
+    git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "$u5p" && U5_BAD=$((U5_BAD+1))
+  done <<EOF
+$U5_WIT
+EOF
+  if [ "$U5_N" -eq 0 ]; then
+    FAIL "U5: no tracked witness matched examples/*/people/*.md — the schema names a witness the selector never reaches, and this arm would otherwise report a clean run over an empty set"
+  elif [ "$U5_BAD" -eq 0 ]; then
+    PASS "U5: all $U5_N tracked example witness record(s) under examples/*/people/ are NOT ignored — the store rule is rooted, so a same-named directory elsewhere in the tree keeps its tracked contents"
+  else
+    FAIL "U5: $U5_BAD of $U5_N tracked example witness record(s) are IGNORED — the people/ rule has been widened (**/people/* or an unrooted people/) and the schema's witness has silently left the index"
+  fi
+
+else
+  SKIP "U: not a git work tree"
 fi
 
 echo "Unpublish / takedown (#7):"
