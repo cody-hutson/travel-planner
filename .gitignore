@@ -15,6 +15,16 @@ trips/*
 /analysis/*
 !/analysis/README.md
 
+# Durable person records — never tracked. The most sensitive bytes in the repo after
+# trips/: one file per person, held across trips rather than copied into each one.
+# Contents, not the directory: `people/` alone would also ignore people/README.md, and
+# git cannot re-include a file whose parent dir is excluded. Rooted (leading /) so the
+# store at the repo root is caught and the tracked witness under examples/ is NOT — the
+# class's schema names that witness, so a widened rule would silently drop it from the
+# index. Guarded by scripts/test-publish-guard.sh group U — do not "simplify" these.
+/people/*
+!/people/README.md
+
 # macOS
 .DS_Store
 
