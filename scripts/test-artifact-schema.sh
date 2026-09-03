@@ -2135,8 +2135,9 @@ fi
 # and the three homes that merely describe it must agree with the one that IS it.
 #
 # ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
-# This group shipped reading a single hardcoded path. #538 split the intake into a per-trip
-# form and a durable per-person one, and the count is now TWO facts — one per form, 3 and 6
+# This group shipped reading a single hardcoded path, at a commit where one intake form was
+# the whole population. The intake has since been split into a per-trip form and a durable
+# per-person one, and the count is now TWO facts — one per form, 3 and 6
 # — each with the same four homes inside its own file. A guard that had kept its single
 # path would have gone on grading the trip form correctly and said NOTHING about the second,
 # which is the shape of stale coverage this suite exists to refuse. So ST_TEMPLATES is a
