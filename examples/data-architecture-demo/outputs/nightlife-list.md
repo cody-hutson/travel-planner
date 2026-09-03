@@ -19,7 +19,10 @@ rewritten, because the hub reads the whole accumulated file and earlier entries 
 useful as alternatives and as the record of what was already considered.
 
 **Entry marker.** C7 is prose-shaped: each entry carries a fenced `artifact-entry`
-block holding the venue key and nothing else, directly under its own heading.
+block holding the venue key — and, since § 4.5.1 amended the rule, one optional
+`cost:` line — and nothing else, directly under its own heading. **Both markers here
+carry the key alone**: no prompt emits the cost field yet, and each entry's own money
+line stays the master either way.
 
 **Both markers below are resolved, and `generated:` is why the file's dates differ.**
 The entries were written on the first pass (2026-08-28) and were born

@@ -22,10 +22,15 @@ above, the per-entry `artifact-entry` marker below, and the accumulation across 
 dated sections. See `README.md` § *Depth*.
 
 **Entry marker.** C5 is prose-shaped, so each entry carries a fenced `artifact-entry`
-block holding the entity key **and nothing else**, directly under that entry's own
-heading. Display name, access, shade and booking posture stay in the entry's prose,
-where the frontmatter/body test already puts them: this class's frontmatter is
-file-scoped, so an entry-level value has no field to become. Only the key does.
+block holding the entity key **and — since § 4.5.1 amended the rule — one optional
+`cost:` line, and nothing else**, directly under that entry's own heading. Display
+name, access, shade and booking posture stay in the entry's prose, where the
+frontmatter/body test already puts them: this class's frontmatter is file-scoped, so
+an entry-level value has no field to become. The key does, and so does that one
+optional line. **Every marker in this file carries the key alone**, because no agent
+prompt emits the cost field yet and this class declares no money label of its own —
+which is what `outputs/cost-estimate.md` here counts as a `priced-items: 0` reading
+over markers that are present and countable.
 
 ## The marker transition — what the two sections below depict
 

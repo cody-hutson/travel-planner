@@ -987,7 +987,7 @@ fi
 #
 # ── `writer` IS DELIBERATELY NOT COMPARED, AND THE OMISSION IS MEASURED ──────────
 # § 1.1 states the writer as PROSE carrying qualifiers, while the frontmatter states a token
-# or an inline list. Two of the nineteen witnessed classes are correct AND unequal by
+# or an inline list. Two of the twenty witnessed classes are correct AND unequal by
 # design: the section-owned class renders as a two-writer prose phrase against a two-value
 # list, and the residual targeted-research class names its writer generically because the
 # writer varies per instance while its witness names the concrete spoke that produced it. A
@@ -995,15 +995,15 @@ fi
 # field is excluded rather than compared badly — and CA7 below reports the excluded count as
 # a measurement so the exclusion is never silent.
 #
-# ── THE WITNESS DENOMINATOR IS 19, NOT 20, AND THAT IS CORRECT ───────────────────
+# ── THE WITNESS DENOMINATOR IS 20, NOT 21, AND THAT IS CORRECT ───────────────────
 # One class — C19 — declares `no-witness-because:` instead of a witness. Its absence from the
 # fourth home is the coverage declaration working, not a gap, so it is excluded from the
 # witness comparison BY ITS OWN DECLARATION (read from CV_NOWITNESS_IDS) rather than by
 # arithmetic. A class that declared NEITHER branch would fall out of both sets, which is why
 # CA6 asserts the two partitions close on the class enumeration. The denominator moved 17 -> 18
-# when C6 gained a tracked witness outside the frozen fixture, and 18 -> 19 when C20 arrived
-# with one; it is read live from the corpus here, so this comment is the only thing that had
-# to move with it.
+# when C6 gained a tracked witness outside the frozen fixture, 18 -> 19 when C20 arrived with
+# one, and 19 -> 20 when C21 did; it is read live from the corpus here, so this comment is the
+# only thing that had to move with it.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "CA — the class-assignment homes agree (§ 1.1 · § 6 · § 9 · the witness frontmatter)"

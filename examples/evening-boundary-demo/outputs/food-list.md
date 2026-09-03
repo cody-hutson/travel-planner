@@ -30,9 +30,11 @@ destination-accurate ones, as that section directs.
 prices, no opening hours, no addresses, no external links and no real bookings.
 
 **Entry marker.** Each entry opens with a fenced `artifact-entry` block carrying the
-venue key and nothing else, and every marker here reads `venue: unminted` — the hub
-mints the token at its first enumeration, which runs after this writer, and this
-fixture runs no hub.
+venue key — and, since `reference/data-architecture.md` § 4.5.1 amended the rule, one
+optional `cost:` line — and nothing else. **No marker here carries that line**, because
+no prompt emits it yet; each entry's own money line stays the master. Every marker here
+reads `venue: unminted` — the hub mints the token at its first enumeration, which runs
+after this writer, and this fixture runs no hub.
 
 ### Destination Food Overview
 

@@ -230,7 +230,7 @@ illustrates, not a new one.
 
 **A replacement carries the slot's price tier as a floor.** Before you nominate,
 read what the slot was: its entry is still in `outputs/food-list.md` — this file
-accumulates and never deletes, so the superseded entry and its `Price range` are
+accumulates and never deletes, so the superseded entry and its `Price` are
 above your new section. Nominate at or above that price tier where the destination
 offers it, and hold the trip's `## Budget Posture` floor (`Overall tier`, and the
 `Meals:` splurge appetite, refined by each traveler's `Splurge appetite`) as the
@@ -351,7 +351,7 @@ Operational context for the hub — not a food essay.
 For each entry:
 - **Name** — neighborhood
 - **Closed:** [Day(s) of week closed — required for every entry]
-- **Price range:** local currency tier + approximate USD per person
+- **Price:** local currency tier + approximate USD per person
   [Source date: approximate month/year or "current general knowledge"]
 - **What to order:** specific dish or item — not the general menu
 - **Reservation:** Yes / No / Recommended — if Yes, lead time and booking method
@@ -411,10 +411,18 @@ created; the frontmatter block you refresh on every pass.
 The marker is what **selects** an entry. It is a fence rather than a heading
 because this file carries more `###` headings than entries, and rather than the
 entry number because an accumulated file's numbering restarts or continues across
-appended sections. **Nothing else goes in the marker** — no name, no
-neighbourhood, no price, no closure day, no judgement. Everything else about the
-entry stays in the labelled lines above, in prose, exactly as they are written
+appended sections. **Nothing else goes in the marker but the declared cost field**
+— no name, no neighbourhood, no closure day, no judgement. Everything else about
+the entry stays in the labelled lines above, in prose, exactly as they are written
 today. Full statement: `reference/schemas/food-list.md` → "The entry marker".
+
+**The cost field, and it is optional.** `reference/data-architecture.md` → "The cost
+field — the one addition rule 2 admits" amended the marker rule to admit one
+`cost: <amount> <currency> <basis>` line below the key. **You do not emit it yet** —
+this prompt is unchanged in what it writes, and a marker with no `cost:` line is the
+correct output today. It is described here so an entry you meet carrying one is read
+rather than treated as out of grammar. **Your `**Price:**` prose line is unaffected
+and stays the master.**
 
 **One entry per place.** Before writing, resolve your own list to distinct places.
 A place you have already entered is **cross-referenced from the earlier entry,

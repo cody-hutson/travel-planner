@@ -3,6 +3,75 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.23.0] — 2026-09-02 — Per-traveler cost estimation
+
+A traveller asked to preload a fare card, or to budget for a week, has had no basis for the
+number. The plan already knows the activities, the meals and the movements; what it has never
+known is where a cost *lives*, and after the artifact model that is not a question a feature is
+allowed to leave open. This release answers it — and stops one step short of producing the
+estimate, deliberately.
+
+The entry marker's rule has said one thing since the model landed: it carries the entity key
+**and nothing else**. The absoluteness was the point, because a marker that admits a second
+field admits a third, and the entry's prose stops being where the entry's content lives.
+Amending it was the more expensive of the two paths on the table, and it is the one taken here,
+because the alternative was reading money out of running sentences. The corpus makes that case
+against itself better than an argument could: within a single fixture the same currency is
+spelled two ways — once with a yen sign, once with a bare ASCII letter — so a reader written
+for one returns a confident nothing on the other. A rule that has to be amended is visible; an
+extractor that quietly misses a file is not.
+
+Rule 2 therefore admits exactly one optional field, in the fenced form only, and the
+declared-key-column classes are untouched. The amendment is one field wide by construction
+rather than by intention, and the classes that inherit it are decided on the form they already
+carry rather than on whether they happen to hold prices today.
+
+The third field on the new class is where the harder decision sits. A count of zero has two
+meanings — *this trip has no priced items*, and *no price could be read* — and a two-field
+artifact cannot separate them, because the zero is the whole of the answer. So coverage is
+**declared rather than inferred**: `measured` says the counts are counts; `unverifiable` says
+the file presented entries and no markers at all, and the denominator was never computable. The
+estimate renders `undetermined` rather than a total of zero, and a partial total always carries
+its own coverage — a partial total that looks whole is worse than none.
+
+Nothing emits the field yet, and that is the shape of the release rather than a gap in it. The
+grammar lands first so that a marker carrying a cost is *read* rather than rejected as out of
+grammar; the writers that put one there arrive with the estimate itself.
+
+### Added
+
+- **`outputs/cost-estimate.md` — a new in-model artifact class (`C21`)** — the per-traveller
+  spend estimate's declared home, written by the **hub** alone, `rebuilt-each-synthesis`,
+  `derived`, and `publish: internal`. The hub is the one agent that already reads every input
+  the estimate needs, so per-traveller attribution required no new read grant on any spoke — in
+  particular the transport agent's `traveler-model.md` read stays narrowed to the depth signal,
+  as its own prohibition intends.
+- **`§ 4.5.1` — the cost field, the one addition rule 2 admits** — an optional
+  `cost: <amount> <currency> <basis>` line beneath the key, in the fenced `artifact-entry` form
+  only. `C8` and `C18` inherit the widened grammar on the form they carry; only `C18` enters the
+  coverage denominator, which is keyed on entity rather than on form.
+- **`reference/schemas/cost-estimate.md`** — three fields, of which the third is the load-bearing
+  one: `cost-bearing-items`, `priced-items`, and `coverage: measured | unverifiable`. The reading
+  rule binds every consumer — *read the pair only when `coverage: measured`*.
+- **A degenerate witness in `examples/data-architecture-demo/`** — an instance whose entries carry
+  markers and no costs, so it exercises the `measured, N = 0` limb rather than a populated one.
+  The branch hardest to get right is the one with a fixture behind it.
+- **`ADR-011`** — the founding decision record: the artifact home with the C14 and C15 rejections
+  argued rather than named, the singular writer, the lifecycle, the publishability call
+  reconciled against `ADR-004` and `ADR-008`, and the rule-2 amendment itself.
+
+### Changed
+
+- **`ADR-009` amended in place** to record that rule 2 now admits one field. The original
+  sentence is retained rather than rewritten — an amendment may narrow what a decision permits
+  going forward, never rewrite what it said.
+- **`agents/02-food.md` declares `**Price:**`**, matching what every realised entry in the corpus
+  already spells. The declaration moved to meet practice rather than the reverse, because the
+  entries it describes sit inside a content-address-pinned tree and cannot be rewritten.
+- **Five agent prompts and six schemas** reconciled against the amended rule. Each prompt states
+  that it does **not** emit the field yet and that an entry carrying one is read rather than
+  treated as out of grammar.
+
 ## [0.22.0] — 2026-09-02 — Pre-departure preparation layer
 
 The itinerary began once the traveller was settled and ended before they left. Three of the

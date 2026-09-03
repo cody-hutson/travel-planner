@@ -501,10 +501,30 @@ continues the numbering, and neither is stable. That is the same reason
 evidence" refuses a file-scoped ordinal as an entry key. Keep `Day [N]` on the line
 where it reads well; the key is the date.
 
-**Nothing else goes in the marker** — no energy level, no day type, no zone, no
-presence or absence list, no signal reading, no flag. Everything else about the
-entry stays in the labelled lines, in prose, exactly as they are written today.
-Full statement: `reference/schemas/scheduling-framework.md` → "The entry marker".
+**Nothing else goes in the marker but the declared cost field** — no energy level,
+no day type, no zone, no presence or absence list, no signal reading, no flag.
+Everything else about the entry stays in the labelled lines, in prose, exactly as
+they are written today. Full statement:
+`reference/schemas/scheduling-framework.md` → "The entry marker".
+
+**The cost field is admitted here, and it is optional.** `reference/data-architecture.md`
+→ "The cost field — the one addition rule 2 admits" amended the marker rule to admit
+one `cost: <amount> <currency> <basis>` line below the key, and it assigns that field
+by marker **form**, so every fenced class admits it — this one included. **You do not
+emit it yet** — this prompt is unchanged in what it writes, so a marker carrying the
+day key alone is the correct output today. It is described here so an entry you meet
+carrying one is read rather than treated as out of grammar.
+
+**And unlike your four sibling spokes, you will not emit it later either — a stated
+non-use, not a deferral.** **A Day has no purchase**, so nothing in this file will
+ever populate the field: the day key alone is this class's marker in full, now and
+after the estimating slice lands. It is named rather than left silent so the
+admission reads as a decided non-use rather than as an omission a later slice
+mistakes for an oversight. **C8 is likewise outside the cost estimate's
+denominator** — that denominator selects classes whose Primary-entities cell names
+`Venue` or `Leg`, and this class's names Day, Block and Signal. The two facts sit on
+different axes and are not in tension: admission is about what a marker **may say**,
+the denominator about what an estimate **ranges over**.
 
 **What never becomes a field.** `Rationale`, `Newness note`, `Arc placement`,
 `Rest floor`, `Needs guardrail`, `Slack allocation`, the `Compared alternative

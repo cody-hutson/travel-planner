@@ -32,7 +32,7 @@ way.
 | `outputs/activities-list.md` | C5 | 2 | migrated shape, and the fixture's **marker-transition witness** — two dated sections, `unminted` resolving to `ven-<token>` across a pass |
 | `outputs/nightlife-list.md` | C7 | 1 | the desire gate resolving *open*; alternatives varying on two axes |
 | `outputs/scheduling-framework.md` | C8 | 2 | a spoke emitting **its own two** signals — routing and experience — and not synthesizing |
-| `outputs/transport-brief.md` | C9 | 2 | migrated shape; the secondary transit table that carries **no** entry marker, by § 4.5's decided case |
+| `outputs/transport-brief.md` | C9 | 2 | migrated shape; the secondary transit table that carries **no** entry marker, by § 4.5's decided case — a disposition § 4.5.1's cost amendment leaves standing, since it widens what a marker may carry and never gives a marker to a surface that has none |
 | `outputs/links-reference.md` | C10 | 2 | rebuilt before the itinerary, with `venue-matrix.md` |
 | `outputs/venue-matrix.md` | C11 | 1 | the dedup cap, the anchor/alternative rule it is **not** the same as, and the emitter's full three-role vocabulary `A` / `Alt` / `B` |
 | `outputs/traveler-model.md` | C12 | 1 | `[DERIVED]` projection; the desire-overlap signal |
@@ -43,6 +43,7 @@ way.
 | `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body; the validator's own seventeen sections and its three-value severity scale; a check that cannot run **declared**, never passed |
 | `outputs/rooftop-sunset-bars.md` | C18 | 2 | the residual class, resolved by longest-literal-pattern-wins |
 | `outputs/change-summary.md` | C20 | 1 | `accumulate-append` keeping a decided entry beside an undecided one; the keyed four-bucket difference and the unkeyed removal it cannot see; the one per-class field, `status` |
+| `outputs/cost-estimate.md` | C21 | 1 | the **degenerate instance** § 4.5 rule 3 requires — every field label present with declared-absent values; the coverage pair `cost-bearing-items` / `priced-items` with N computed independently of M; and `undetermined` rendered rather than a total of zero, which is the branch this fixture is uniquely able to witness because it ships no prices |
 
 ## Depth
 
@@ -121,7 +122,7 @@ declared rather than left to be inferred from a missing file.
   `IDEATION`, before a destination is chosen. This trip has one, so a shortlist here
   would contradict the fixture's own mode.
 
-## Internal consistency (F1–F9)
+## Internal consistency (F1–F10)
 
 **These are the fixture's real acceptance criteria, and no CI check can reach them.**
 The schema gate validates frontmatter; it never reads a body, so a fixture whose
@@ -130,7 +131,7 @@ anyway. They are asserted here so a later editor knows what to preserve.
 
 | # | Invariant | How it is checked |
 |---|---|---|
-| F1 | Every artifact's `trip:` is `data-architecture-demo`. | 17 files, one grep |
+| F1 | Every artifact's `trip:` is `data-architecture-demo`. | 19 files, one grep |
 | F2 | Every `ven-<token>` in `venue-matrix.md`, `event-status.md` and the research lists resolves to exactly one row in `links-reference.md`. A `venue: unminted` marker names no token and is outside the domain; `final-itinerary.md` carries no keys at all (F4). | set difference, both directions |
 | F3 | `links-reference.md` has **one row per venue and one key per row** — no key on two rows, no display name on two rows. | the registry probe |
 | F4 | `final-itinerary.md` carries **no** Event ID and **no** venue key — C15 holds no entries of its own (§ 4.5) — so every event it names on a day or on the booking checklist resolves to exactly one `event-status.md` row **by display title**, which is the one-way join the model records as a cost. Every `event-status.md` row's venue key resolves under F2. | join, by title one way and by key the other |
@@ -139,6 +140,7 @@ anyway. They are asserted here so a later editor knows what to preserve.
 | F7 | Every desire in `satisfaction-metrics.md § Desire-coverage` traces to a desire stated in a `travelers/*.md`, or to a declared-absent entry. | join |
 | F8 | No venue key appears more than **twice** in `venue-matrix.md`, counted over the emitter's three roles `A` / `Alt` / `B`; the one key that appears twice is flagged `!` and holds the **same** role both times, which is what distinguishes the cap from the forbidden anchor/alternative split. | count |
 | F9 | Every day in `final-itinerary.md` carries an anchor event **and** an anchor meal, and no day's anchor event is its nightlife entry. | 4 days, read off the day blocks |
+| F10 | `cost-estimate.md`'s `cost-bearing-items` equals the number of `artifact-entry` markers across the classes § 4.5.1's denominator rule selects — C5 · C7 · C9 · C18 here, C6 absent and C8 excluded by entity — and `priced-items` equals the number of those markers carrying a `cost:` line. `coverage: measured` holds because **every entry-bearing file here carries markers**, so the zero is a measurement rather than the `unverifiable` limb. **The estimate renders `undetermined` because `priced-items` is 0**, never a total. | 10 + 2 + 2 + 3 = 17 markers, 0 priced |
 
 Two further properties are asserted alongside them, because they are the ones a reader
 copying this fixture would most easily get wrong: every `artifact:` is the § 1.1
@@ -350,7 +352,7 @@ inline SVG, so the figure evokes the § 1 *roles* rather than the exact faces.
   declared arm needs an `artifact:` value it does not have — so it resolves
   `UNMATCHED` by construction, exactly as `examples/*/README.md` resolves `EXCLUDED`.
   It is deliberately absent from *What each file is here to demonstrate*, and it does
-  not count toward the 17 files F1 ranges over.
+  not count toward the 19 files F1 ranges over.
 - **Not a witness for C19**, and not a step toward one. C19
   (`outputs/<destination>-travel-site.html`) is a **decided** `no-witness-because:`
   above: the site source stays local and git-ignored per

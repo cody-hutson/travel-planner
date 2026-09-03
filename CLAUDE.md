@@ -521,6 +521,7 @@ travel-planner/
             ├── traveler-model.md      ← [DERIVED] reconciled per-traveler model + desire-overlap (rebuilt from source files)
             ├── event-status.md        ← per-event status — persist-mutable, survives re-runs
             ├── satisfaction-metrics.md ← coverage metrics (validator + hub)
+            ├── cost-estimate.md       ← per-traveler cost projection — declared (C21), not yet produced by any agent
             ├── final-itinerary.md     ← current version (previous versions preserved as v1, v2...)
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated

@@ -1,12 +1,23 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended seven times (three on 2026-08-29, the fourth through
-  the seventh on 2026-08-30)** — citation form, then the `provenance` enum's membership, then four
+- **Status:** Accepted (2026-08-28); **amended eight times (three on 2026-08-29, the fourth through
+  the seventh on 2026-08-30, the eighth on 2026-09-02)** — citation form, then the `provenance` enum's
+  membership, then four
   claims this record made that the release did not ship, then three enforcement warrants this record
   asserted that no file implements, then the `provenance:` key narrowed to its own scope with the
   member that scope was missing, then two claims of byte-identity against `main` that a later commit
   in this same release falsified, then the first of those three warrants falsified in turn by the
-  gate that shipped to close it.
+  gate that shipped to close it, and then Decision 3's entry-marker rule widened by one field.
+  **Eighth amendment** — the entry-marker rule, and it is the only amendment here that records a
+  **superseding decision** rather than a defect in this document. Decision 3 fixed the marker as
+  holding *the entity key and nothing else*. `ADR-011` § 3 amends that rule to admit one optional
+  normalized `cost:` line **in the fenced form only**, leaving the declared-key-column form
+  (C10, C11, C13) untouched and leaving the `artifact-entry` info-string with the venue-identity
+  migration that owns it. **Decision 3's sentence is retained rather than rewritten** — it is what
+  this record decided, and rewriting it would erase the decision the amendment exists to supersede;
+  an inline marker at that sentence points forward. The live rule is
+  `reference/data-architecture.md` § 4.5 rule 2, with the field's grammar, the marker-versus-prose
+  double-home resolution and the C8/C18 inheritance decision in § 4.5.1.
   **First amendment** — citation form only, and the whole population of it. This document cited
   `scripts/publish-trip-site.sh` by line number at **five anchor tokens** across **three citation
   sites** — three naming the file and two written as bare continuations of them. The script was
@@ -526,7 +537,10 @@ meaning *see `CLAUDE.md § Write ownership`* — it is not a writer id and no to
 **Three body rules, and only three, because over-structuring is the named risk.** Every class keeps
 its H1 and its existing body structure — frontmatter is prepended and nothing existing moves.
 Entry-bearing classes carry an explicit entry marker holding the entity key and nothing else, because
-heading level is not a reliable selector. And **the degenerate case is part of every schema**: a class
+heading level is not a reliable selector. **[Amended — `ADR-011` § 3.** The fenced form of that marker
+now also admits one optional normalized `cost:` line; the declared-key-column form does not. The
+sentence above is retained as this record's own decision, not corrected, because it is what was
+decided here — `reference/data-architecture.md` § 4.5 rule 2 and § 4.5.1 carry the live rule.**]** And **the degenerate case is part of every schema**: a class
 defines the shape of an entry with no source, so a profile-less traveler reads as *unknown* with
 declared-absent values rather than as an absent label a consumer must infer from.
 
