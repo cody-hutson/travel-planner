@@ -342,6 +342,18 @@ Trigger"), which sanctions exactly this behavior:
   that would be a second home for every fact in it, a second thing to go stale, and a
   shape change to a class that is closed.
 
+  **Carve-out — a `[THIRD-PARTY]` entry has no profile to diff.** The rule above is
+  about **profiles**, and an entry carrying `[OPERATOR-PROVIDED]` **and**
+  `[THIRD-PARTY]` has none by design. Its lack of a source file is its **normal
+  state** — never a *removed profile*, and never an update signal. A pass that simply
+  carries such an entry forward unchanged (see *A party member who will never file*
+  below) has detected no change and reports none. What still signals is what actually
+  changed: the entry's **admission**, a **revision** or **withdrawal** by a fresh
+  operator statement, and **supersession** by the person's own filed profile.
+  **It has no `person:` reference either, and structurally cannot acquire one** — the
+  reference field lives on a `travelers/<name>.md`, and that entry has no such file — so
+  it never enters composition and none of the seven triggers below can fire for it.
+
 - **The trigger set — seven, because "an edit" is not one event.** A signal fires when
   the traveller's **composed value changed for this trip**, never merely because a byte
   changed somewhere.
@@ -365,15 +377,6 @@ Trigger"), which sanctions exactly this behavior:
   question and puts an em dash where the answer would go, so a line-presence test reads
   every skipped field as an override: under it the inherit case is unreachable, the
   signal set is empty, and **nothing errors**.
-
-  **Carve-out — a `[THIRD-PARTY]` entry has no profile to diff.** The rule above is
-  about **profiles**, and an entry carrying `[OPERATOR-PROVIDED]` **and**
-  `[THIRD-PARTY]` has none by design. Its lack of a source file is its **normal
-  state** — never a *removed profile*, and never an update signal. A pass that simply
-  carries such an entry forward unchanged (see *A party member who will never file*
-  below) has detected no change and reports none. What still signals is what actually
-  changed: the entry's **admission**, a **revision** or **withdrawal** by a fresh
-  operator statement, and **supersession** by the person's own filed profile.
 - **Emit an update signal — a candidate replanning trigger.** For each changed
   traveler, record an **update signal** in the derived model naming *who* changed
   and *what* changed (added anchor, dropped wish, revised need). Surface it plainly
