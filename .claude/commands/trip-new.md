@@ -421,7 +421,7 @@ Tell the user all four of these:
 
 1. **Where a profile goes** — `trips/<slug>/travelers/<name>.md`, with the real resolved slug filled
    in, **one file per person.**
-2. **The three ways to fill one in**, offered in this order:
+2. **The four ways to fill one in**, offered in this order:
    - **Walk through it here** — about two to three minutes for the starred fields.
    - **Fill it in themselves** — copy `templates/traveler-intake.template.md` to the path above and
      work through it.
@@ -429,6 +429,14 @@ Tell the user all four of these:
      it into any assistant with the one line the guide at the bottom gives them, then save the block
      it returns to the path above. On a group trip this is how most travelers will do it, so **never
      drop this option.**
+   - **Reference someone you have travelled with before** — if this person already has a record in
+     your people library, point this trip at that record instead of answering the durable questions
+     again. It is two named steps, in this order: create the profile file by any of the three routes
+     above, then **`/trip-record link <name> <person-id>`**. From then on this trip reads their
+     standing answers from the record and the trip file carries only what is different this time.
+     The record's id comes from the library itself — `people/README.md` is its signpost — and **no
+     command lists the library for you**, which is deliberate: those are the most sensitive bytes in
+     the repository and nothing here reads them.
 3. **Where the profile ends** — only the content **above** the `# END OF PROFILE` line is the
    profile. The guide below that line is instructions for whoever is helping, not content.
 4. **The roster points at the gap on purpose.** With real names written, the roster reads
