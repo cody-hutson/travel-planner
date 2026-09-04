@@ -56,17 +56,31 @@ not get to ask for more than the per-trip form it replaces.
 one trip.** Removing a traveller from a trip leaves their record here untouched, and
 says so. Deleting the person deletes the record **and reaches every trip that
 referenced it**, archived trips included — that reach is the point, and it is the one
-operation allowed to reopen an archived trip.
+operation that writes an archived trip at all. It does not reopen one: the trip stays
+archived, and erasure is the single exception to the rule that nothing touches it.
 
 **It cannot be undone.** Nothing under `people/` is in git, so there is no earlier
 version to restore from. After a deletion, a trip that referenced that person reads
 *unknown* — never *no constraints*, and never a person with nothing on file.
 
-**Until the erasure command ships, the delete path is your own hand:** remove the file.
-That deletes the record and nothing else — the references inside each trip stay behind,
-pointing at a record that is gone, which is precisely the sweep the command exists to
-perform. So delete a record by hand only when you are ready to walk the trips that
-pointed at it, and expect to do that walk yourself.
+**The delete path is `/trip-record erase <person-id>`.** It takes the record's id — never
+a name — shows you every location it is about to reach before it changes anything, and
+asks you to type that id back. There is no flag that skips the prompt and no way to run
+it unattended; that is deliberate, and it is the only operation here that works this way.
+It then removes the record and walks the trips, and it prints one line per location so
+you can see what it reached and what it could not.
+
+**What it cannot reach, said plainly rather than left for you to discover.** Three things
+survive it. A trip you had already **unlinked** this person from keeps their name in its
+own files — unlinking leaves no trace behind, so nothing connects that trip to this record
+any more and nothing can find it by id. The erase report lists such trips as *candidates*,
+by path and count, and changes nothing in them; walking them is yours. Anything already
+**published** is gone from your machine only — a repository, a Pages site and any copy
+anyone took of it are outside every local operation. And a value **promoted** into this
+record from a trip stays in whichever trip it came from.
+
+Deleting a record by hand still works and still does only what it used to: it removes the
+record, and every reference inside every trip stays behind pointing at nothing.
 
 ## What a record does not hold
 
