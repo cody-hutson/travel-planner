@@ -728,8 +728,9 @@ that remains possible is a spurious signal, not a silence.**
 answer different questions, and the correction must not be carried across the seam.** *What the form
 asks* — the denominator of 38 distinct labelled fields plus one unlabelled slot, the four-class
 partition over them, and the starred-pass split of library-sourced against re-asked — is keyed on the
-**presence of a bullet in `templates/traveler-intake.template.md`**, correctly and unchangedly, because
-a form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed on
+**presence of a bullet in the shipped intake forms**, which since the split are
+`templates/traveler-intake.template.md` and `templates/person-intake.template.md` together. The keying
+is unchanged; only the form set it ranges over grew. A form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed on
 `ANSWERED()`. Discovery lives wholly on the instance side. The over-application is measurable rather
 than hypothetical: applying the instance predicate to the document question scores the blank form at
 **0 answered of 54**, which would read as a form that asks no questions and a starred set that is
@@ -1136,8 +1137,9 @@ via an override that has nowhere to live.
 **`ANSWERED()` is an instance property; presence is a document property. They share the word *present*
 and answer different questions, and this record does not collapse them.** *What the form asks* — the
 labelled-field denominator, the four-class partition over it, and the starred-pass split — is keyed on
-the **presence of a bullet in `templates/traveler-intake.template.md`**, correctly and unchangedly,
-because a form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed
+the **presence of a bullet in the shipped intake forms**, which since the split are
+`templates/traveler-intake.template.md` and `templates/person-intake.template.md` together. The keying
+is unchanged; only the form set it ranges over grew. A form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed
 on `ANSWERED()`. **Discovery and composition live wholly on the instance side.** The over-application
 is measurable rather than hypothetical: applying the instance predicate to the document question scores
 the blank intake form at zero answers, which would read as a form that asks no questions.
