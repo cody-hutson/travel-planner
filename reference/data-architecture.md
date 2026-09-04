@@ -219,15 +219,22 @@ A person's identity originates outside the engine (limb 1), and the name is *alr
 > § *Travelers — count and names* already derives the filename from the display name; this rule
 > **cites and closes that derivation in the reverse direction** rather than authoring a second one.
 >
-> **The same-name case is specified as a hard stop at intake, and the intake half has not
-> shipped.** The rule is that the operator disambiguates the display name, which changes the key,
-> and the engine never mints a suffix: a minted suffix is a surrogate key wearing a natural key's
-> clothes, and it would break the correspondence above. **No intake surface enforces this today.**
-> `.claude/commands/trip-record.md` selects edit-over-create on a file-existence probe with no
-> collision check, so two travelers whose display names normalize to one key share a file and the
-> second overwrites the first, silently — in files the model itself describes as carrying real
-> personal detail. That behaviour predates this release and is unchanged by it; what this section
-> adds is the rule the intake half will hold, not a control that holds it now.
+> **The same-name case is a hard stop at intake, and the intake half now ships.** The rule is that
+> the operator disambiguates the display name, which changes the key, and the engine never mints a
+> suffix: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the
+> correspondence above. **`.claude/commands/trip-record.md` § *profile* is the surface that enforces
+> it**: its collision check computes this key over the stems of `trips/<slug>/travelers/*.md` and
+> runs **before** the file-existence probe that used to decide alone, halting on a key already held
+> by a different person rather than writing a second file under it. That check reads this rule live
+> and holds no copy of it, so the trip side and the store side normalize identically by construction
+> rather than by agreement.
+>
+> **The predicate could not have been the filename, and the gap is what the silent overwrite lived
+> in.** The filename derivation replaces a run of out-of-charset characters with a single `-` while
+> this key **removes** every non-`[a-z0-9]` character, so two display names can normalize to one key
+> while producing two distinct filenames. A file-existence probe is structurally blind to that class
+> — it sees two unrelated paths and creates both — so a collision check written on the filename would
+> pass on the very cases this key fails on. The check is written on the key for that reason.
 >
 > **The empty key is a decided case, not an assumed one.** A display name carrying no `[a-z0-9]`
 > character normalizes to the empty string, where the uniqueness assertion above has nothing to

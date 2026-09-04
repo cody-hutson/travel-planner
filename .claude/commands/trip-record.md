@@ -449,7 +449,7 @@ first time a slice appends a row § *The shape of a table row* already admits �
 
 ## profile <name>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, and the outgoing content on the edit route; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, and the outgoing content on the edit route; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it.
 
 The traveler-document verb. It creates a profile that does not exist and edits one that does, and
 the branch is selected by a probe rather than by a tool grant.
@@ -461,28 +461,74 @@ segment by construction, because that charset excludes `/` and `\`. The `Person`
 **verbatim**; only the filename is transformed. **An empty result is refused** — say which name
 needs a filename, and stop.
 
-**Two probes, in this order, and the order is the whole of the control.**
+**Three checks, in this order, and the order is the whole of the control.**
 
 **1 — The directory-presence probe, and it runs first.** `Read` `trips/<slug>/travelers/`. **Absent
 → stop**, say so, and name `/trip-new <slug>`, whose Resume branch is the declared repair path for a
 trip scaffolded before that directory was part of the scaffold. No directory-creating grant is taken
 and this verb creates no directory.
 
-**2 — The file-existence probe, reached only once the directory is observed present.** `Read`
-`trips/<slug>/travelers/<file>.md`. Readable → **edit**. Not readable → **create**. This probe is
-the control that makes standing rule 2 operative, and it is the **whole** of that control: what the
-frontmatter does at runtime is the contested question § *The frontmatter above* records, and nothing
-here rests on it either way.
+**2 — The collision check, and it runs before the file probe because the file probe is what it
+defeats.** The predicate is the **canonical traveler key** of `reference/data-architecture.md`
+§ 3.2, **read live from that section and never re-authored here** — a second implementation of it
+would be a second source of truth for who is who, and the two would drift with nothing arbitrating.
+Compute that key over the stems of `trips/<slug>/travelers/*.md` and over the `<name>` this
+invocation was given; the check fires where a stem's key equals the name's. Reading **stems** rather
+than the files is sound by § 3.2's own filename-correspondence rule, which requires a stem's key to
+equal its entry's key, and it is what keeps this check on paths and out of profile content.
+
+**The predicate is not the filename, and that is the whole reason this check exists.** The filename
+transform above replaces a run of out-of-charset characters with a single `-`; § 3.2's key
+**removes** every non-`[a-z0-9]` character. They are not the same partition. `Alex Smith` and
+`AlexSmith` produce **two different filenames and one key** — so a file-existence probe sees two
+unrelated paths, takes the create branch on both, and § 3.2's *"uniqueness is asserted over this
+key"* is violated with nothing having overwritten anything. A collision check written on the
+filename passes on exactly the cases the publish guard's own key already fails on.
+
+**The remedy is two branches, and the absence of a third is load-bearing.**
+
+| The key already present belongs to | What happens |
+|---|---|
+| **the same traveler** — including a pure casing or punctuation variant of a name already here | continue to the **edit** route on the existing file. Nothing is created, nothing is renamed, and this is not a refusal |
+| **a different person who shares the name** | **stop.** State the collision, name the existing file whose stem holds the key, and ask the operator to disambiguate the display name — which changes the key. **This verb never mints a suffix**, and § 3.2 says why: *"a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the correspondence"* |
+
+**There is no third branch, and it is stated because a reader who knows the store's remedy will look
+for one.** `reference/schemas/person-record.md` admits *create anyway with the collision
+acknowledged* as a third remedy on the durable store, and it can: that store's key is a
+**surrogate**, so two records sharing a display name still carry two ids and co-exist safely. Here
+the key is **natural** — § 3.2 asserts uniqueness over it and types the same-name case as a hard
+stop — so two live travelers under one key is not a state this verb may reach, and the branch that
+would reach it is absent rather than merely unmentioned.
+
+**It never resolves the collision itself and it never silently overwrites.** The verb states the
+collision and stops for the operator. **Similarity is computed nowhere**: the predicate is exact
+equality after § 3.2's normalization, never a distance and never a fuzzy match, and **no near-match
+is offered** — the posture § *When the token is not a verb of this command* already takes, for the
+same reason, on the same shape of guess.
+
+**3 — The file-existence probe, reached only once the directory is observed present and the
+collision check has passed.** `Read` `trips/<slug>/travelers/<file>.md`. Readable → **edit**. Not
+readable → **create**. This probe is the control that makes standing rule 2 operative, and it is the
+**whole** of that control: what the frontmatter does at runtime is the contested question § *The
+frontmatter above* records, and nothing here rests on it either way.
 
 **The precedence, stated rather than left to the order of the paragraphs.** **An absent directory
-wins over whatever the file probe would have said**, and the file probe is not consulted at all
-until the directory is observed present. It is stated because the two conditions are
-**indistinguishable in the file probe's outcome**: a readable directory holding no such file and an
-absent directory both make `trips/<slug>/travelers/<file>.md` unreadable, so a file probe that ran
-first would read a missing scaffold as *not readable*, take the **create** branch, and reach
-`Write` — creating the directory this verb has no grant to create, on the one path the design
+wins over whatever either check below it would have said**, and neither the collision check nor the
+file probe is consulted at all until the directory is observed present. It is stated because the two
+conditions are **indistinguishable in the file probe's outcome**: a readable directory holding no
+such file and an absent directory both make `trips/<slug>/travelers/<file>.md` unreadable, so a file
+probe that ran first would read a missing scaffold as *not readable*, take the **create** branch, and
+reach `Write` — creating the directory this verb has no grant to create, on the one path the design
 rejected. Running the directory probe second, or naming the branch without ordering it, is that
 same defect written in a different order.
+
+**The collision check's precedence has the same shape and the same cause, one layer in.** A key
+already held and a file already present are likewise indistinguishable in the file probe's outcome
+on the case that matters: two display names normalizing to one key produce two different paths, so
+the file probe reports *not readable*, takes the **create** branch, and writes a second file under a
+key § 3.2 permits only one of — the silent overwrite this check exists to stop, reached by the very
+probe that looks like it is guarding against it. Running the collision check after the file probe,
+or naming the branches without ordering them, is that same defect written in a different order.
 
 **Create — three routes, offered in this order. The order is the corpus's and none may be dropped.**
 
