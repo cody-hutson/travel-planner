@@ -141,6 +141,9 @@ Before doing anything, determine what kind of request this is:
 | **Publish slug** | User wants to set or change the published site's repo name | Create or replace `trips/<slug>/.publish-slug`, echoing the outgoing value so the change is reversible. | "Publish it as lisbon-trip", "Change the site name" | `/trip-record .publish-slug` |
 | **Event status** | A placed event is booked, cancelled, or its hold changes | Change one named row's `Status` cell and recompute that row's derived needs-booking cell. Creates no row and no file. | "We booked the Belem tour", "The 8pm table fell through" | `/trip-record event` |
 | **Session log entry** | A session's reasoning, options considered, or context belongs in the record | Append one entry to `trip-log.md`. Never re-opens a prior entry. | "Log what we decided", "Note why we skipped Sintra" | `/trip-record log` |
+| **Person reference** | A traveler on this trip is the same person as a record already in the people library | Point this trip's traveler file at that record — one frontmatter field and nothing else. The record is read to confirm the id resolves and to name who it resolves to. | "Dana is the same Dana as last time", "Link Alex to their record" | `/trip-record link` |
+| **Reference removal** | A traveler's durable record should stop being read for this trip | Remove that one frontmatter field, echoing it first, and state plainly that the person record itself survives. Writes no marker of any kind. | "Stop reading Alex's durable record here", "Take Dana's link off this trip" | `/trip-record unlink` |
+| **Override promotion** | A trip-local answer turns out to be durable and belongs in the person record | Move **one** named field from the traveler's file into the record it references, confirmed against an echoed outgoing → incoming pair. Explicit and typed, never inferred. | "That allergy is permanent — put it on her record", "Make Dana's mobility note durable" | `/trip-record promote` |
 | **Published inventory** | User asks what is published, across trips | Report the published sites the script resolves. Needs no trip resolved. | "What's published?", "Which trips have sites?" | `/trip-publish list` |
 | **Temporary takedown** | User wants the site offline but the trip kept | Disable Pages. The local tree is untouched and no marker is written. | "Take the site down for now", "Hide it temporarily" | `/trip-decommission temporary` |
 | **Trip conclusion** | The trip is over and should be concluded | The takedown, then the lifecycle marker, then a closing log entry — in that order, and the order is load-bearing. | "The trip's done", "Archive Lisbon 2026" | `/trip-decommission archive` |
@@ -163,7 +166,7 @@ Before doing anything, determine what kind of request this is:
 | `/trip site` | that verb's `**Reads:**` line | own |
 | `/trip schema` | that verb's `**Reads:**` line | own |
 | `/trip-record person` · `travelers` | that verb's `**Reads:**` line — the verb reads nothing of its own; the reconciler it dispatches reads | own + attributed-agent |
-| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` | that verb's `**Reads:**` line | own |
+| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` · `link` · `unlink` · `promote` | that verb's `**Reads:**` line | own |
 | `/trip-publish update` | that verb's `**Reads:**` line — a presence-and-readability probe is a read of the **path**, never of the value | own |
 | `/trip-decommission archive` · `reopen` | that verb's `**Reads:**` line | own |
 | `/trip-new` | that verb's `**Reads:**` line — one per branch, Create and Resume | own |

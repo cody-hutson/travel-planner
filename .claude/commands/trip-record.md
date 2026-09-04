@@ -100,6 +100,9 @@ population-role: RESOLVE
 | .publish-slug | ACTIVE | any | any | G8 |
 | event | ACTIVE | any | any | G8 |
 | log | ACTIVE | any | any | G8 |
+| link | ACTIVE | any | any | G8 |
+| unlink | ACTIVE | any | any | G8 |
+| promote | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -354,6 +357,39 @@ only the verbs that existed when it was written.
    **This binds every verb, present and future, which is why it is here.** Naming a sibling command
    is not a class one slice owns: **more than one verb of this revision already names one**, and a
    rule written inside any one of them would leave every other verb free to re-acquire the habit.
+
+9. **A write outside `trips/<slug>/` is bounded by the target's class, derived, and never by a list
+   of verbs. This is a widening of rule 5 and is stated as one.** Rule 5 states this command's bound
+   for **trip content**, and it holds unchanged for every byte under `trips/<slug>/`. As a universal
+   over *all* writes it goes false the moment any verb of this command writes elsewhere, so the
+   out-of-trip bound is stated here as the rule that **derives** the permitted target rather than as
+   the single location rule 5 named.
+
+   **The permitted target class.** A path outside `trips/<slug>/` is a permitted target only where
+   it is **a durable record of one person, selected by an id the operator supplied** — never by a
+   display name, never by a search, and never by any match this command computed. That derivation is
+   the whole of the class. A later slice widens by **satisfying** it, not by editing this rule, which
+   is what keeps the class from becoming an enumeration that every author appends their own verb to.
+
+   **A write to a member of that class is taken on exactly these conditions, all of which must
+   hold:** **(a)** the verb's own section names the exact target path; **(b)** the target was
+   selected by the id rule above and by nothing else; **(c)** the write changes **one named field**
+   and **creates no file, deletes no file, and removes no field**; **(d)** the operator confirmed
+   against an **echoed outgoing → incoming pair** for that one field; and **(e)** the value written
+   already exists in this trip, so the write **moves** a value and authors none.
+
+   **What (c)'s three negatives are for.** They are what makes this narrow rather than rule-6-shaped:
+   rule 6 delegates *whether* to the verb's own section, and this rule delegates only *which path*,
+   fixing the operation class here. Record creation, merge and erasure each fail at least one of
+   them, so **none takes any licence from this rule.** A later slice implementing one appends its
+   own numbered rule under the Extension rule below, deriving its operation class the way this rule
+   derives its target class; **until such a rule exists, no other write outside `trips/<slug>/` is
+   available to any verb of this command.**
+
+   It is here rather than inside one verb section because it binds every verb, present and future,
+   and the prohibition is the half that binds hardest: a bound written inside the one verb that first
+   needed it would protect that verb and leave the next slice to write the store with nothing to
+   satisfy. Rule 7 is the shipped precedent for a widening landing as an append and saying so.
 
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
@@ -1382,3 +1418,226 @@ no agent, runs no script, and **never runs `/trip-record event`** — recording 
 is that verb's act, and this one records why it changed. Neither the mode nor the destination is a
 condition of it: its row reads `any` in both cells, and nothing here reads a mode as evidence or
 infers a destination from which files exist.
+
+## link <name> <person-id>
+
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there; `trips/<slug>/travelers/<file>.md` — the file-existence probe that establishes the target is there, and its frontmatter, read **before** it is written because a reference already present is echoed before it is replaced; `people/<person-id>.md` — the existence probe that establishes the reference **resolves before it is written**, and **the H1 line alone**, read so the confirmation can name the person the id resolves to. **No other line of that record is read and no value of it enters the session.** Does not enumerate the store, and does not read `trip-context.md` in either direction. Dispatches no agent.
+
+The reference verb. It writes the one frontmatter field that points this trip's traveler file at a
+durable person record, and it writes nothing else anywhere.
+
+**Filename.** The `<name>` is put through the same transform `## profile <name>` applies, cited
+rather than restated, and the collision check there is not repeated here: this verb never creates a
+traveler file, so it cannot reach the state that check exists to stop.
+
+**Two probes, in `profile`'s order and for the identical reason.** `Read`
+`trips/<slug>/travelers/` first: **absent → stop**, say so, and name `/trip-new <slug>`. Only then
+`Read` `trips/<slug>/travelers/<file>.md`. The order is stated because the two conditions are
+indistinguishable in the file probe's outcome, exactly as § `profile` sets out; a file probe running
+first would take a create branch this verb does not have.
+
+**This verb never creates the traveler file.** Absent → refuse, and name `/trip-record profile
+<name>`. That verb's route 2 already writes the template unmodified and says in terms that a file of
+unfilled placeholders is a legitimate state, so the create path exists and has exactly one home. A
+`link` that minted a frontmatter-and-heading file would author a second shape of this class that no
+schema check has seen, and would duplicate a write that is already someone's.
+
+**The write is one frontmatter key.** `person: psn-<token>` on
+`trips/<slug>/travelers/<traveler>.md`. **This is standing rule 2's `Edit` condition and not rule
+7's append** — the target exists and only the named field's lines change, the named field being
+`person:` and its line count moving 0 → 1 or 1 → 1. No new standing rule is owed here and none is
+taken. `reference/schemas/traveler-profile.md` declares the field `optional` and it carries no
+placeholder, so standing rule 3 is not engaged: **absence is a real state rather than a gap**, and
+it is every existing traveler file's shipped condition.
+
+**Refusals, in evaluation order.**
+
+| Condition | What happens |
+|---|---|
+| `trips/<slug>/travelers/` absent | stop; name `/trip-new <slug>` |
+| the traveler file absent | refuse and write nothing; name `/trip-record profile <name>` |
+| `<person-id>` resolves to no record | **refuse and write nothing**, naming the store path. Writing it anyway would author a well-formed reference resolving to nothing, which `reference/data-model.md` types as **a defect** — and it would be a defect this command authored rather than found |
+| the file already carries a `person:` naming a **different** id | **echo the outgoing value verbatim**, say that this **repoints** rather than adds, and require confirmation before writing |
+| the file already carries that same id | say so and write nothing |
+
+**Confirmation posture: CHEAP, so a statement rather than a gate.** Name the record the id resolved
+to — the id and its display name — and write. The act is reversible in one step by `/trip-record
+unlink`, and confirmation weight tracks the tier rather than being uniform. **The one branch that
+does confirm is the repoint**, because a repoint replaces a resolved reference whose outgoing value
+is not otherwise recoverable — the same reason `.publish-slug` and `mode` echo before writing.
+
+**What the confirmation also says, once, and never per field.** That this trip's own answers stay
+trip-local, and that `/trip-record promote` is how the operator makes one of them durable. **This is
+the only place in this command where that verb is named as an offer**, and it is named at a moment
+the operator initiated. No rendered report pairs a field with an invitation to promote it — see
+§ `promote` below, where the prohibition is stated and grounded.
+
+**On-disk effect:** exactly one line added or changed inside one frontmatter fence in one file under
+`trips/<slug>/`. **Nothing else.** No roster row, no `- **Total travelers:**`, no byte of
+`trip-context.md`, no byte of the store, and no derived model — the model is the enrichment agent's,
+reached by naming `/trip-record travelers` and **not running it**, exactly as `profile`'s edit route
+does.
+
+**Failure modes.** *(a)* An id taken from a stale note resolves to a **merge stub**. The reference is
+valid and resolves through one redirect hop, so this verb accepts it and the confirmation names the
+**survivor** rather than the stub — otherwise the operator cannot tell they linked through a merge.
+*(b)* A `[THIRD-PARTY]` party member cannot be linked, and the bar is **structural rather than a
+rule**: `## person <name>` creates no file anywhere for that entry class, so there is no
+reference-bearing file to write to. Should a later slice ever declare a second, file-less bearer,
+this stops being a consequence and becomes a rule someone has to write. *(c)* Two travelers on two
+different trips pointing at one record is **not** a collision and is refused nowhere: two trips, one
+person, which is the whole point of the store.
+
+## unlink <name>
+
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**; `trips/<slug>/travelers/<file>.md` — the file-existence probe and its frontmatter, read **before** the write because the outgoing reference is echoed verbatim before it is removed. **Reads no person record and probes no store path at all**, and that negative is deliberate rather than an omission: whether the record still exists is irrelevant to detaching from it, a probe would make this verb's behaviour depend on a state it does not change, and the absence of any store read is what lets this verb be the repair path for a reference that resolves to nothing. Dispatches no agent.
+
+The detach verb. It removes the one frontmatter field `link` wrote, and **the person record is not
+its subject in any sense** — it holds no store write, takes no store read, and has no path that
+reaches one.
+
+**What this verb says, and it is required output rather than a courtesy.** In its own render:
+**the person record is untouched and still exists; every other trip that references it is
+unaffected; and re-running `link` with the same id restores this trip's reference exactly.** It is
+mandatory because the operator's mental model at that moment is *"I am removing this person"*, and
+the corpus already carries the precedent for exactly this shape in `## group [<name>]` — *"**Never
+delete anything under `travelers/`**"* stated in the verb whose act would otherwise read as a
+deletion. **A third act is neither of these two:** taking someone off the trip is `group`'s, which
+edits the roster and never this field; deleting the person is the store's own operation, which is no
+verb of this command.
+
+**What it writes, stated as a prohibition because the tempting move is the opposite one.**
+
+> **This verb removes the `person:` line and writes nothing else. It writes no `per-` token, no
+> `[ERASED]` mark, no marker of any kind, and it never touches the display name, the title line, or
+> the roster. Its post-state is byte-identical to a traveler file that never linked anyone.**
+
+**Why a marker would be a defect rather than a convenience.** `reference/data-model.md` separates a
+trip that never linked from a trip whose record was erased on a **conjunction**, not on this field:
+absence of `person:` is *necessary but not sufficient*, and the second conjunct is positive
+`[ERASED]` evidence that erasure produces by substituting the derived model's entry heading. Both
+operations remove this line; only erasure leaves that witness. **A marker written here moves this
+verb's post-state toward the erased one**, and if the two ever agree, an erasure reads as a trip that
+never linked anyone — with **every composed value byte-identical either way**, so nothing
+value-shaped detects it and the build stays green. The whole discriminator is carried by evidence
+this verb must not write, which is why the rule is a prohibition and not a preference.
+
+**Removal, not blanking, and the reason is sharper than the field being optional.** A `person:`
+present with no value risks reading as **malformed**, which the bearer states type as a **defect** —
+so a deliberate, reversible detach would surface as an error. Removal lands in the not-referencing
+state, which is exactly what it is, and which is the shipped condition of every traveler file
+written before the store existed.
+
+**A second discriminator falls out of the tiers, and its direction is inverted on purpose.** This
+verb **echoes the outgoing `person:` value verbatim** before removing it — the shape `group`, `mode`,
+`destination` and `.publish-slug` all ship so that a change is reversible. An erasure must never echo
+an erased value. **Same absence on disk, opposite interaction contracts**, and each falls out of its
+own reversibility tier rather than being asserted.
+
+**Confirmation posture: CHEAP — echo, then write, no gate.** Reversible in one step by `link` with
+the echoed id.
+
+**One consequence the render must state, because it is real and otherwise silent.** After a detach
+the composed source loses the record's contribution: every field this trip left unstated stops
+falling back to the record's answer, so **a need the record supplied stops reaching the plan**. The
+verb names **how many** fields stop being composed — **a count, never the values**, because no
+person-sourced content belongs in a rendered line — and names `/trip-record travelers` as the
+reconcile step **without running it**.
+
+**Failure modes.** *(a)* No `person:` present → say so and write nothing. This is **not** an error
+state; it is the default condition of the class. *(b)* A malformed or unresolvable `person:` →
+**this verb still succeeds.** It is the repair path for a reference that resolves to nothing, and it
+needs no store read in order to be one. *(c)* Invoked in the belief that it removes the traveler from
+the trip → the survival statement above, plus naming `/trip-record group`, is the whole mitigation,
+and is why that statement is mandatory output rather than optional.
+
+**What it never writes.** No byte of `trip-context.md` — not the roster, not `- **Total
+travelers:**`. No byte under `people/`. No derived model. No file is created and none is deleted;
+`trips/<slug>/travelers/<traveler>.md` is the only path it touches, built from `trip.slug` exactly as
+`E1` spelled it and never from a `--trip` value, which this verb does not consume.
+
+## promote <name> <field-label>
+
+**Reads:** `trips/<slug>/travelers/<file>.md` — the `person:` reference and the named field's outgoing value, read **before** the write because both are echoed; `people/<person-id>.md` — the record that reference resolves to: its H1, so the confirmation names the person, **and the named field's line alone**, read before it is written because the outgoing record value is echoed for the operator to confirm against. **No other field of the record is read.** Does not enumerate the store. Dispatches no agent, and takes no `Bash(date:*)` use — see the timestamp negative below.
+
+The promotion verb, and **the only verb of this command that writes outside `trips/<slug>/`.** It
+moves one value the operator already wrote in this trip into the durable record this trip
+references. **One traveler, one field, one invocation** — never in bulk, because silently choosing
+between two allergy or two mobility values is the identity defect the store exists to prevent,
+reproduced at field granularity, and a bulk promote makes that choice by omission. The echoed
+outgoing → incoming pair also stops being readable at N fields.
+
+**The standing rule this write is taken under is rule 9**, and this section discharges each of its
+conditions by name: **(a)** the target path is `people/<person-id>.md`; **(b)** the record is
+selected by the id already in the traveler file's `person:` field, which the operator supplied when
+they linked — no name is matched and no search is run; **(c)** exactly one named body field changes,
+no file is created or deleted and no field is removed; **(d)** the operator confirms against the
+echoed outgoing → incoming pair below; **(e)** the value written is already in this trip, so this
+verb **moves** a value and authors none.
+
+**It is a distinct operation, not an exception, and writing it as one would be the defect.** Two
+prohibitions bind the store and they bind different things. `reference/data-model.md` § *One-way*
+bounds **what may cause a write** — no value flows trip-side into the record *as a consequence of
+composition* — and this verb's cause is a token the operator typed, not a composition pass. The
+store's own write rule bounds **who may write** — no agent authors a value in a record — and this
+verb is not an agent. The enumeration of permitted **mechanical** writes, none of which authors a
+value, does not reach it either: this verb authors nothing and is outside that enumeration's subject
+matter. **Recording it as an exception would make the store's write rule read as negotiable**, which
+is the property that rule exists to deny.
+
+**What it writes.** Exactly **one body line** in `people/<person-id>.md`. The record's values are
+body fields, so this verb never touches its frontmatter fence, never `merged-into:`, never the title
+line, and never a field the record's own form does not declare.
+
+**Refusals, in evaluation order. Every one of them writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| the traveler file carries no `person:` | refuse; name `/trip-record link` |
+| the `person:` resolves to nothing | refuse; name `/trip-record unlink` as the repair path for a reference that resolves to nothing |
+| the reference resolves to a **merge stub** | refuse and **name the survivor**. Writing through a stub writes a record that is already dead, and resolving the stub first is what keeps redirect depth at one hop |
+| `<field-label>` is not a declared field of the record's own form | refuse, print the fields the form declares, and **offer no near-match**. § *When the token is not a verb of this command* is the shipped posture for this shape: a suggestion is a classification with a reflexive accept |
+| `<field-label>` is the display name or the title line | **refuse, always, with no branch.** The normalized title line is the store's own collision key, so changing it changes the record's identity. That is a **rename**, not a promotion, and a rename is not a verb of this command |
+| the trip-side value is not answered — absent, blank, a single em dash, or a surviving bracketed placeholder | refuse; there is nothing to promote. **`none` is an answer** and *is* promotable: the intake form makes it the one place `none` stands in for the em dash, and a promote that dropped it would turn a stated *"I have none"* into *"not asked yet"* in a durable, cross-trip record |
+| the trip-side value carries `[THIRD-PARTY]` | refuse. Today no such value can reach this verb, because that entry class has no file to bear a reference — the rule is written anyway, because that consequence holds only while the bearer set stays as it is, and because a durable cross-trip record for a person who never asked for one is the exact artifact `ADR-006` refused |
+| the run is non-interactive | refuse. The tier is MODERATE and the effect is durable and cross-trip; a confirmation nobody can give is not a confirmation |
+| the record's value already equals the trip's | say so and write nothing — a redundant override, not a promotion |
+
+**`[OPERATOR-PROVIDED]` is carried, not refused.** The store admits a value the operator relayed from
+the person's own statement, so the mark is not a bar. It **travels with the value** into the record,
+at field granularity, through the inline mark the value already carries — the provenance line
+`profile` and `person` draw is preserved by that mechanism rather than by a second declaration, and
+no record-level field is written to record it.
+
+**On-disk effect:** exactly one body line in one file under `people/`. **The trip file is not
+touched.** There is no fan-out: this session writes one trip's model and no other, and every other
+trip that references the record absorbs the new value at its own next pass.
+
+**A stated consequence, because it is real and silent.** After a promote, this trip's own line and
+the record agree, so that field reports as a **redundant override** on every subsequent pass until
+the operator removes the trip-side line. The verb **says so** and names the equivalence class —
+delete the line, blank it, or write a single em dash — and **does not do it.** The line is
+human-authored in a git-ignored tree, so a wrong deletion is recoverable from nothing, while leaving
+it costs one report line per pass: reporting is CHEAP and deleting is IRREVERSIBLE, and that
+asymmetry decides it.
+
+**Timestamp negative.** This verb writes **no** last-written field and takes no `Bash(date:*)` use.
+The record's dominant write path is a human editing it in an editor, which no command observes, so a
+stamp maintained only here would read as authoritative while being routinely stale.
+
+**Reversibility: MODERATE, confidence HIGH.** The outgoing record value is echoed before the write
+and can be re-entered by hand. It is not CHEAP — the store is git-ignored, so there is no revert, and
+the change is visible to every other trip referencing that record. It is not IRREVERSIBLE — nothing
+is deleted, no record ceases to exist, and no identity is destroyed, which is the line separating
+this verb from an erasure.
+
+**This verb is never reached from a report, and that is a bound on every emission this command
+makes.** No rendered line — in the `## Update signals` block, in any partition of it, or anywhere
+else — pairs a field with an offer to promote it, and no pass suggests running this verb. A prompt
+of the shape *"the record says X, this trip says Y — promote?"* would leave every resulting write
+human-confirmed and would satisfy the store's no-agent-writes rule **literally** while defeating it
+in practice, the record drifting toward whatever the most recent trip said one click at a time. The
+shipped precedent for reporting without naming a command is already in `## travelers`, whose
+changed-journey-facet class reports staleness and **names no command**. **Discovery is handled once,
+non-field-specifically, in `link`'s own confirmation**, at a moment the operator initiated — one
+naming, in one place, is not a solicitation.
