@@ -373,8 +373,10 @@ Trigger"), which sanctions exactly this behavior:
 
   - the field is **`PERSON`**-class and the reference resolves → the record wins
     whatever the trip file says, so the composed value moved: **signal.** Where the
-    trip side is also answered, that claim is *additionally* reported as a class
-    violation — reporting it never changes which value composed.
+    trip side is also answered, that claim is *additionally* reported as a
+    `CLASS-VIOLATION` **under the divergence partition below** — reporting it never
+    changes which value composed, and a report that changes no composed value is
+    information, which is the one thing the partition exists to hold apart.
   - the field is **`DEFAULT`** and the trip side is `UNSTATED` → the change
     **inherits**: **signal.**
   - the field is **`DEFAULT`** and the trip side is `ANSWERED` → the trip's override
@@ -408,7 +410,16 @@ Trigger"), which sanctions exactly this behavior:
     this pass. Reconcile it or leave it, deliberately.
   - Robin: Lodging style — REDUNDANT-OVERRIDE; the override matches the person
     default, so the trip-side line can be removed.
+  - Sam: Specific — CLASS-VIOLATION; a durable need answered on the trip side while
+    the record resolves. The record composed regardless. Move the value into the record.
   ```
+
+  **The third line is the one that shows the partition doing work.** `Pace` and
+  `Lodging style` are journey facets, which the router already reports with no command
+  named — so an example carrying only those two demonstrates the partition exactly where
+  it is not needed. `Specific` is a `PERSON` field inside the `Needs` block: unpartitioned,
+  that line is read as *a changed need* and dispatched to `/trip replan`. Keep a
+  `CLASS-VIOLATION` line in any example of this block for that reason.
 
   **Write the block only on a pass that has a line to put in it.** The heading is
   *reserved and defined*, which is not the same as *already present* — no shipped model
@@ -437,6 +448,32 @@ reported with no command named; a `PROFILE MISSING` names `/trip-record profile 
 A divergence line left unpartitioned sits in front of that router as a peer of a
 changed-need line and is dispatched to `/trip replan` — turning information into exactly
 the replanning signal it is not. The `###` heading is what keeps the two classes apart.
+
+**Every disposition has exactly one of three destinations, and the partition is the
+default.** `reference/data-model.md` § *The report* defines the dispositions; this is
+where each one goes. Route by what the disposition did to the composed value, never by
+matching a name on a list:
+
+1. **The composed value moved** → a signal line in the block body. `EXPIRED` is here —
+   the horizon lapsed, so the value the plan was built on really did change.
+2. **The bearer could not be resolved at all** → the `PROFILE MISSING` branch below, not
+   this block. `DANGLING`, `MALFORMED` and `STORE-UNREADABLE` are here: the entry has no
+   usable source, which is an entry-scoped gap and a different report.
+3. **Everything else** → **under the `###` partition.** A disposition that changed no
+   composed value is information by construction, and information in front of the router
+   is dispatched as a replan. `CLASS-VIOLATION`, `DIVERGENT`, `REDUNDANT-OVERRIDE`,
+   `MALFORMED-SLOT` and `TOMBSTONED` are all here today.
+
+**Exit 3 is the default, and that is the load-bearing half of this rule.** A disposition
+you cannot place in exit 1 or exit 2 goes under the partition — never as a peer line in
+the block body, and never left unrouted because it is not named above. The named list
+will go stale the first time the data model adds a disposition; the predicate will not.
+`CLASS-VIOLATION` is the case that makes this concrete: its `PERSON` class is `Passport`,
+`Category` and `Specific`, and the last two live inside the `Needs` block, so an
+unpartitioned class-violation line naming `Category` or `Specific` is read by the closed
+four-class router as *a changed need* and dispatched to `/trip replan` — the exact
+conversion the partition exists to prevent, on the class least able to afford it.
+
 **Map onto those four classes; never add a fifth.** A composed change to a need or a
 desire is a changed need or a changed desire; a composed change to a journey, lodging or
 pace facet is a changed journey facet; an unresolvable reference is `PROFILE MISSING`.
@@ -450,8 +487,13 @@ does not check them here, and that is precisely why they are written down.**
    normalized key is not on the declared reserved list is **counted as a person** — a
    phantom entry that keeps the zero-entry fail-closed sentinel from firing. The
    reserved list has exactly two members and lives in three coupled homes. A `###`
-   sub-heading is skipped by that parse entirely, which is why the partition is a `###`
-   and never a `##`.
+   sub-heading is **not counted as an entry**, which is why the partition is a `###`
+   and never a `##`. Be precise about what that buys: it is the `###` *heading line*
+   that the entry parse passes over, never the lines beneath it. Those lines are still
+   read — suppression under this block comes from the reserved `##` heading above them,
+   which is prohibition 2's subject, not from the `###`. A field value written under the
+   partition inside an ordinary person entry is classified exactly as it would be
+   anywhere else.
 2. **Never write a field value into the block.** Name the field, never its value. The
    reserved heading **suppresses the guard's field check beneath it**: a value written
    there is not classified at all and reaches a render *uncaught*, so the guard is not a
@@ -482,7 +524,14 @@ a licence to write them.
 write of any kind** — not the model, not the block, not a mark. Say so rather than
 leaving it to be inferred from silence: name it in the report as
 `ARCHIVED — not signalled`. A person-record edit is neither a redaction nor a
-re-addressing, so it takes no exception to that freeze. On reopen the trip absorbs the
+re-addressing, so it takes no exception to that freeze.
+
+**The freeze is not this prompt's rule and this paragraph is not its home.** It is stated
+once, in `CLAUDE.md` § *Archived trips — what the freeze binds*, which also names the one
+operation that reaches through it and the two that were tested against it and refused.
+Read it there. What is written here is the behaviour that rule requires **of you** — a
+consequence, not a second copy — so where the two ever appear to differ, the rule governs
+and this paragraph is the defect. On reopen the trip absorbs the
 new value at its next pass — there is no catch-up queue and no stored state, and the
 latent staleness is reported by the freshness relation rather than gated on.
 
@@ -536,15 +585,25 @@ it does **not** widen your trip-context surface in any way:
 
 Each `travelers/<traveler>.md` is filled by hand from the intake form at
 `templates/traveler-intake.template.md` — one copy per traveler, edited on the
-traveler's own time. The template's sections are the model you reconcile to: its
-**Needs** map to the need categories (heat, mobility, dietary-health, rest,
-budget cap, timing, sensory, other — each with a specific and an "Applies to" link),
-and its **Desires** map to the desire shape (priority tier — anchor / wish /
-nice-to-have — plus an optional recurrence of one-off or daily, and optional
-theme tags). You do not author or pre-fill the template or the profiles; you
+traveler's own time. **The intake is two forms now, and the sections you reconcile to
+are split across them.** The trip form carries the per-trip questions, and its
+**Desires** map to the desire shape (priority tier — anchor / wish / nice-to-have —
+plus an optional recurrence of one-off or daily, and optional theme tags). The
+durable form at `templates/person-intake.template.md` carries the cross-trip ones,
+and its `## Needs — the must-haves` block maps to the need categories (heat,
+mobility, dietary-health, rest, budget cap, timing, sensory, other — each a
+**Category** and a **Specific**). Read the *composed* source, below, rather than
+either form alone: a returning traveller's needs arrive from the linked record.
+You do not author or pre-fill either template or the profiles; you
 read the filled profiles and reconcile them into
 `outputs/traveler-model.md`. A traveler leaves the desire **Overlap** field blank
 in their own file — you are the one who computes it.
+
+**`Applies to:` is not a field on either intake form.** It is the roster on a
+`trip-context.md` constraint under `## Hard Constraints` or `## Dietary & Health`,
+naming the people that constraint covers — the trip-only route for a need that is not a
+durable fact about a person. A need collected on the durable form has no `Applies to:`
+line, because the person it applies to is the record it lives in.
 
 **The source you reconcile is the *composed* source, not the trip file alone.** A
 `travelers/<traveler>.md` may carry a `person:` reference to a durable record in the
@@ -561,6 +620,15 @@ are named rather than left to be re-derived:
   never compose it over the record — you compose the record's value (or the union, for
   a block-scoped field) and **report** the trip-side claim. Refuse and report; never
   silently prefer either side.
+  - **This is the one consequence with an output shape of its own, so it is spelled
+    out.** Where the composed value is `UNKNOWN` **and** a trip-side `PERSON` claim was
+    refused, the composed field carries the field-scoped suffix mark `[CONTESTED]` —
+    `- **Passport:** UNKNOWN [CONTESTED]`. A bare `UNKNOWN` cannot tell *a claim was
+    refused* from *nobody ever answered*, and the two have different remedies. The rule
+    and its corollary prohibition live in `reference/data-model.md` § *Composition*;
+    write the mark by them. It is invisible to the publish guard by construction —
+    `clean()` strips bracketed spans before matching and `stated()` then excludes
+    `unknown` — so it changes the value and never the grammar.
 - **`DEFAULT` is the one class where answered-ness selects the source** — an answered
   trip-side value wins (`K5`) and an unanswered one falls through to the record (`K6`).
 - **`ANSWERED()` is an instance property; presence is a document property.** Never
@@ -634,9 +702,11 @@ fallback, not an error:
     would let a plan grade compliant while a traveller's needs had silently vanished.
     **Never a hard failure** either — an unresolvable reference must **never** halt the
     reconciliation, exactly as a missing profile does not. `UNKNOWN` is the only
-    sentinel to use: the publish guard excludes it by name, so any other token enters
-    the publishable value set as a real string and aborts publishes wherever it is
-    rendered.
+    sentinel to use: the publish guard excludes it by name, so any other token is read
+    as a real stated value, enters the **non-publishable** class, and aborts publishes
+    wherever it is rendered. It is that membership — not publishability — that does the
+    aborting: a token the guard cannot recognise as *unstated* is treated as a person's
+    actual answer, and person answers are what the guard refuses to publish.
   - **Step 2 — the entry routes to the existing flagged-gap branch above**, whose rule
     is already the one this needs: a marker meaning *unknown*, not *no needs*. Name the
     defect on the `Source:` line — the reference dangles, is malformed, or the store

@@ -120,6 +120,18 @@ identifying values from a fixed set of locations; it composes nothing and regene
 **reachable** — by that one operation, by that one mechanism, and by nothing else. A person who asks
 to be erased is erased from archived trips too.
 
+**Erasure must reach every model-entry class, and there are exactly three.** They are distinguished
+by the provenance marks the entry carries, and they behave in three different ways under a
+regeneration — which is why substituting rather than regenerating is the whole of the rule. An entry
+carrying no mark is `first-party` and would be re-derived from its own source file. An entry carrying
+`[OPERATOR-PROVIDED]` alone is `operator-provided-only` and would be **dropped**, having no source to
+re-derive it from. An entry carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` is `both-marks`
+and would be **carried forward verbatim**, name and need intact — the erasure silently undone. The
+two file-less classes fail in **opposite** directions, so no assertion over one of them detects a
+wrong mechanism; only coverage of all three does. **Any fixture standing as the worked example of
+this rule must exercise all three, and dropping one is a change to this rule, not a change to a
+fixture.**
+
 **The freeze binds derivation, not bytes.** `/trip-decommission archive` moves nothing: it takes the
 site offline, sets the marker, and appends a closing entry. An archived trip's files sit at the same
 paths as an active trip's and stay writable by whatever this rule admits. **"Frozen" means
@@ -137,8 +149,15 @@ current values. Reopen dispatches no agent and refreshes nothing itself, and not
 a trip is archived — a reopened trip absorbs current state, never a replay.
 
 > **Why this section is a section, and why it is here rather than three plausible alternatives.**
-> The rule binds the hub, the enrichment agent, the validator and the site build, so it lives where
-> all four already read: `CLAUDE.md` is auto-loaded and costs no per-invocation read. It sits beside
+> The rule binds the hub, the enrichment agent, the validator and the site build — but **not all
+> four are bound the same way, and the difference matters.** The three prompt surfaces read
+> `CLAUDE.md` directly: it is auto-loaded and costs no per-invocation read, so the rule lives where
+> they already are. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
+> shell script and never opens this file. It is bound **structurally instead**, by `G7`: every
+> dispatching verb declares `lifecycle: ACTIVE`, so `/trip-publish update` refuses on an archived
+> trip before any build begins (`.claude/commands/trip-publish.md` states that disposition in
+> terms). Stating the rule here binds the readers; `G7` binds the runners. Do not read this
+> paragraph as a claim that four surfaces parse this section. It sits beside
 > § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
 > sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
 > that section are machine-read by `.claude/commands/trip.md` to derive the `/trip research` agent

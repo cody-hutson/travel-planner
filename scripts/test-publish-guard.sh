@@ -368,6 +368,17 @@ echo "Person-store ignore invariant (#534):"
 # is comparing subjects, not spellings. The ignorecase pin is not decoration: it is `true`
 # on a macOS working copy and `false` on the Linux CI runner, and without it a case-altered
 # negation (!/people/readme.md) reads green on the host a human would break it on.
+#
+# Two probe-design rules this group learned the hard way and states so they are not undone:
+#   (1) THE SUBJECT SET SPANS MORE THAN ONE EXTENSION. An ignore rule can be broken by
+#       narrowing as well as by removal, and a group whose every probe path ends in .md
+#       cannot see a narrowing — /people/* rewritten to /people/*.md left this group green
+#       while making a scanned passport committable. U2 and U2b are that pair.
+#   (2) A CONTROL'S INPUT IS NEVER GOVERNED BY THE RULE UNDER TEST. U0-CTL probes .env and
+#       U3 probes an untracked synthetic, both outside /people/, so a store-rule change
+#       moves the subject arms and leaves the controls alone. A control that reddens with
+#       its own subject still detects, but it can no longer tell "the instrument is broken"
+#       from "the rule is gone" — which is the one property that makes it a control.
 if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 
   # U0-CTL (MUST FIRE) — the instrument, before any verdict is read from it.
@@ -375,10 +386,23 @@ if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   # --no-index form is capable of returning "ignored" at all, so a form that
   # silently answered "not ignored" for every input would show as two green arms.
   # This arm is the one input that must come back IGNORED.
-  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "people/psn-zzzz-probe.md"; then
-    PASS "U0-CTL: MUST FIRE — the --no-index form returns IGNORED for a synthetic person record, so U4/U5's NOT-IGNORED verdicts below are measurements rather than a form that cannot say otherwise"
+  #
+  # ITS INPUT IS DELIBERATELY NOT A people/ PATH, and that is the whole point of the
+  # arm. A control's defining property is independence from its subject. An earlier
+  # form of this arm probed people/psn-zzzz-probe.md — a path that is ignored BY THE
+  # VERY RULE this group tests — so deleting /people/* darkened the control alongside
+  # U2, and the transcript then read "none of their verdicts can be trusted" at the
+  # exact moment U2's verdict was both correct and the only one that mattered. A
+  # reader who takes a control at its word would discount the arm that named the
+  # defect. .env is ignored by the unrelated Environment block at the foot of
+  # .gitignore: it is outside all three guarded stores (trips/, /analysis/, /people/),
+  # so no mutation of any store rule can move it, and it is untracked so --no-index
+  # changes nothing about the answer. Measured under every store mutation in the
+  # group's ladder: IGNORED throughout.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index ".env"; then
+    PASS "U0-CTL: MUST FIRE — the --no-index form returns IGNORED for .env, a path ignored by a rule none of the store groups touch, so U4/U5's NOT-IGNORED verdicts below are measurements rather than a form that cannot say otherwise"
   else
-    FAIL "U0-CTL: MUST FIRE — the --no-index form called a synthetic people/<record> NOT ignored; every U arm reading that form is a broken probe and none of their verdicts can be trusted"
+    FAIL "U0-CTL: MUST FIRE — the --no-index form called .env NOT ignored. .env is ignored by a rule independent of every store guard, so this is the instrument failing and not a store regression; every U arm reading that form is a broken probe and none of their verdicts can be trusted"
   fi
 
   # U1 (positive) — the signpost ships. Trackedness, not ignore-state: a tracked
@@ -399,11 +423,37 @@ if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     FAIL "U2: PERSON RECORDS ARE NO LONGER IGNORED — .gitignore stopped guarding people/ contents, and this store holds the most sensitive bytes in the repository"
   fi
 
-  # U3 (control arm) — a zero whose control also returns zero is a broken probe.
-  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "README.md"; then
-    FAIL "U3: control arm broken — check-ignore calls the tracked root README.md ignored; U2 is unusable"
+  # U2b (negative — the SUFFIX limb). U2 alone cannot see a narrowing, only a removal.
+  # Every other probe path in this group ends in .md — U0-CTL's old input, U2's subject,
+  # U4's signpost, U5's derived witness — so rewriting /people/* to /people/*.md left the
+  # whole group green while making every non-markdown file in the store trackable. That is
+  # not a hypothetical shape: a scanned passport is a .jpg, a .png or a .pdf, and a
+  # narrowing that reads as tidying is exactly the "simplification" the .gitignore comment
+  # warns against. The store rule is a CONTENTS rule and must hold for every extension, so
+  # this arm probes the one thing a suffix pattern excludes: a subject that is not markdown.
+  # It is a second probe path, not a second rule — U2 and U2b fail together on a removal
+  # and only U2b fails on a narrowing, which is what makes the pair discriminating.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "people/psn-zzzz-probe.jpg"; then
+    PASS "U2b: a synthetic NON-markdown people/psn-<token>.jpg is still git-ignored — the rule guards the store's contents by path, not by extension"
   else
-    PASS "U3: control arm fires (root README.md not ignored) — U2's verdict is trustworthy"
+    FAIL "U2b: A NON-MARKDOWN FILE IN THE PERSON STORE IS NOT IGNORED — a scanned passport, a PDF or an export at people/<record>.jpg is committable. Read U2 beside this: U2 green means the rule was NARROWED BY SUFFIX and only non-markdown is exposed; U2 red means the rule is gone entirely"
+  fi
+
+  # U3 (control arm) — a zero whose control also returns zero is a broken probe.
+  # The subject is UNTRACKED and synthetic, which is load-bearing for the same reason
+  # --no-index is on U4. Without --no-index, check-ignore short-circuits on the index and
+  # answers NOT_IGNORED for any tracked path WITHOUT EVALUATING THE RULES. This arm used
+  # to probe the tracked root README.md, so it was reading index state and asserting a
+  # rule-level fact: prepending /README.md to .gitignore makes the rule genuinely ignore
+  # it (--no-index returns IGNORED) while this arm's own form still returns NOT_IGNORED
+  # and still passes. That is the defect U4 exists to close for U1, one arm over. An
+  # untracked path is never short-circuited, so it reaches the same evaluator U2 uses on
+  # the same code path — measured live in both directions: NOT_IGNORED under the shipped
+  # rules, IGNORED as soon as a rule matching it is added.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "zzq-nonesuch-probe.md"; then
+    FAIL "U3: control arm broken — check-ignore calls an untracked, unmatched synthetic path ignored, so it cannot distinguish ignored from not-ignored and U2/U2b are unusable"
+  else
+    PASS "U3: control arm fires (an untracked, rule-unmatched synthetic path is not ignored) — the rule evaluator U2/U2b read can return NOT_IGNORED, so their verdicts are trustworthy"
   fi
 
   # U4 (rule-level, not state-level). U1 proves the file is IN THE INDEX, which

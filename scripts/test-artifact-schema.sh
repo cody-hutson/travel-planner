@@ -3072,9 +3072,21 @@ af_rows() {
   ' "$AF_DOC"
 }
 
-# af_count <file> <awk-condition-program> — a counting probe over one file. ONE counter,
-# driven by both the subject arms and the control arm below, so a control that ran
-# different code from the assertion cannot certify it.
+# af_count <file> <awk-condition-program> — a counting probe over one file: one counting
+# body, parameterised by the match condition, so two arms asking the same question of two
+# files cannot disagree about what counting means. Its call sites are AF1 (the marker line)
+# and AF6 (the stated disposition).
+#
+# WHAT THIS HELPER IS NOT. It is not a shared subject/control instrument. AF1 and AF6 are
+# two subject arms, not a pair; the group's control arm is AF8, and AF8 runs its own inline
+# awk programs against the same files its subjects do rather than routing through here.
+# So "the control ran the same code as the assertion" is NOT a property this group has —
+# AF9 matches an entry heading bearing [ERASED] while AF8 matches a bare heading, and they
+# are deliberately different questions. What makes AF7/AF9's zeros admissible is that AF8
+# must FIND the survivor in the same three location classes on the same files, which is a
+# claim about the fixture being readable, not about the two arms sharing an implementation.
+# The distinction matters: a comment claiming a coupling the code does not implement is a
+# reader's licence to stop checking.
 af_count() { awk "$2 { c++ } END { print c + 0 }" "$1"; }
 
 AF_OK=1
@@ -3269,24 +3281,43 @@ EOF
   # wrapped onto the next one — a false RED on a correct fixture. A same-line-only test is
   # wrong in a corpus that hard-wraps prose, so the continuation is read: a remainder that
   # is empty is only empty if the next line is blank, a new bullet, or a heading.
-  AF_EMPTY="$(awk '
+  #
+  # MARKUP-BLIND NO LONGER. This probe used to match the literal /\*Applies to:\*/ — the
+  # single-italic rendering the fixture happens to use. The label is rendered at least four
+  # ways in this corpus (backticked, bare, **bold**, *italic*), all of them live, so an
+  # emptied roster whose label had been re-rendered was invisible: the arm returned its
+  # usual zero and certified a fixture it had not read. A count-only check cannot catch
+  # that, because the wrong-labelled read returns the right-looking number. The label is
+  # now matched independently of its wrapper and the wrapper characters are stripped from
+  # the remainder before the emptiness test.
+  #
+  # AND THE ZERO CARRIES A DENOMINATOR. A zero over zero rosters is not a clean fixture,
+  # it is an unread one — the same fault AF0 fails closed on and the reason AF8 exists.
+  # AF_SEEN is the count of label sites actually read; at 0 this arm fails rather than
+  # passing quietly, and the PASS message states the population the zero was measured over.
+  AF_APPL="$(awk '
     { line[NR] = $0 }
     END {
       for (i = 1; i <= NR; i++) {
-        if (!match(line[i], /\*Applies to:\*/)) continue
+        if (!match(line[i], /Applies to:/)) continue
+        seen++
         rest = substr(line[i], RSTART + RLENGTH)
-        gsub(/[ \t\r*]+/, "", rest)
+        gsub(/[ \t\r*`]+/, "", rest)
         if (rest != "" && rest != ".") continue
         nxt = (i < NR) ? line[i+1] : ""
         gsub(/^[ \t]+|[ \t\r]+$/, "", nxt)
         if (nxt == "" || nxt ~ /^[-*#>|]/) c++
       }
-      print c + 0
+      print (seen + 0) "\t" (c + 0)
     }' "$AF_CTX")"
-  if [ "$AF_EMPTY" -eq 0 ]; then
-    PASS "AF11: no constraint's \`Applies to:\` roster was emptied by the erasure — the need survives the person's name, which is what keeps a concluded plan from grading compliant while no longer carrying the constraint it was built around"
+  AF_SEEN="$(printf '%s' "$AF_APPL" | cut -f1)"
+  AF_EMPTY="$(printf '%s' "$AF_APPL" | cut -f2)"
+  if [ "$AF_SEEN" -eq 0 ]; then
+    FAIL "AF11: no \`Applies to:\` site was found in $AF_MPATH at all, in any rendering — this arm's zero would be a zero-denominator and certify nothing, so it fails rather than passing quietly"
+  elif [ "$AF_EMPTY" -eq 0 ]; then
+    PASS "AF11: 0 of $AF_SEEN \`Applies to:\` site(s) carry an emptied roster — the need survives the person's name, which is what keeps a concluded plan from grading compliant while no longer carrying the constraint it was built around"
   else
-    FAIL "AF11: $AF_EMPTY constraint(s) carry an empty \`Applies to:\` roster — this is the milestone's named risk, a compliant-looking unsafe plan"
+    FAIL "AF11: $AF_EMPTY of $AF_SEEN \`Applies to:\` site(s) carry an empty roster — this is the milestone's named risk, a compliant-looking unsafe plan"
   fi
 
   # AF12 — THE CENSUS. The assertion that tells substitution from regeneration.
@@ -3318,6 +3349,67 @@ EOF
     PASS "AF14: the reopen verb's own section still states that it SETS the value and never removes the line — the freeze is lifted prospectively rather than by deleting the record that the trip was ever concluded"
   else
     FAIL "AF14: the \`## reopen\` section no longer states that the line is never removed. Removing it reaches the same gate result by G4's default and is a deletion of trip content — same outcome, different legality"
+  fi
+
+  # ── THE DENOMINATOR ARM ────────────────────────────────────────────────────────
+  # AF15 — the fixture declares its own subjects, so every arm above runs over a
+  # population the fixture chose. That is the right design for WHICH files are pinned and
+  # WHO the subjects are; it is the wrong design for HOW MANY CLASSES are covered, because
+  # a declaration that names its own scope can be narrowed without any arm noticing.
+  #
+  # THE ESCAPE THIS CLOSES, EXACTLY. Removing a subject row alone reddens AF12 (the census
+  # disagrees) and removing a pin alone reddens AF3 (the pinned and tracked sets diverge).
+  # But the COHERENT shrink passes: drop the both-marks subject from the fence, drop its
+  # `## per-b70d` entry from the model, re-pin the model — which is precisely what AF4's own
+  # FAIL text tells a maintainer to do ("if the change was deliberate, re-pin those rows …
+  # in this same commit") — and every arm goes green. AF9 then prints its PASS message
+  # "INCLUDING the both-marks class" over a population that no longer contains one, and AF13
+  # passes vacuously over an empty set. A gate whose remediation instructions empty its own
+  # denominator, and which then certifies the emptiness.
+  #
+  # WHY THE FIX IS NOT A LIST IN THIS FILE. Holding the three class names here would be the
+  # second source of truth AF0's design exists to refuse, free to drift from the fixture and
+  # from the rule alike. The class trichotomy is not a fixture detail: it is a property of
+  # the provenance model, and CLAUDE.md § *Archived trips — what the freeze binds* states it
+  # as part of the rule — three classes, distinguished by their marks, failing in opposite
+  # directions under a regeneration, which is why "substitute, never regenerate" is the
+  # whole of the rule. This arm reads the class set from the RULE and requires the fixture's
+  # declaration to cover it exactly.
+  #
+  # WHAT IT DOES NOT CLAIM. This does not make the denominator unshrinkable. It moves the
+  # edit that shrinks it out of the fixture and into the governance rule, where narrowing
+  # the class set is a visible change to a stated rule rather than tidy-up in a worked
+  # example. That is the correct bar, and it is the honest description of it.
+  #
+  # It also gives CLAUDE.md § *Archived trips* its first executable reader. Before this arm
+  # the section could be deleted outright, inverted to say archived data is unreachable, or
+  # replaced with nonsense, and every suite in this repository stayed green.
+  AF_RULEDOC="$ROOT/CLAUDE.md"
+  AF_RULECLS="$(awk '
+    /^## Archived trips/ { insec = 1; next }
+    insec && /^## /      { insec = 0; inpar = 0 }
+    insec && index($0, "Erasure must reach every model-entry class") { inpar = 1 }
+    inpar && $0 ~ /^[ \t]*$/ { inpar = 0; next }
+    inpar {
+      s = $0
+      while (match(s, /`[a-z][a-z0-9-]*`/)) {
+        tok = substr(s, RSTART + 1, RLENGTH - 2)
+        if (!(tok in seen)) { seen[tok] = 1; print tok }
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+  ' "$AF_RULEDOC" | sort)"
+  AF_FENCECLS="$(printf '%s\n' "$AF_SUBJ" | awk -F'\t' 'NF > 1 && $2 != "" { print $2 }' | sort -u)"
+  AF_NRULE="$(printf '%s\n' "$AF_RULECLS" | grep -c '[^[:space:]]')"
+  AF_NFENCE="$(printf '%s\n' "$AF_FENCECLS" | grep -c '[^[:space:]]')"
+  AF_CLS_ONLYRULE="$(comm -23 <(printf '%s\n' "$AF_RULECLS") <(printf '%s\n' "$AF_FENCECLS") | tr '\n' ' ')"
+  AF_CLS_ONLYFENCE="$(comm -13 <(printf '%s\n' "$AF_RULECLS") <(printf '%s\n' "$AF_FENCECLS") | tr '\n' ' ')"
+  if [ "$AF_NRULE" -eq 0 ]; then
+    FAIL "AF15: CLAUDE.md § Archived trips names no model-entry class at all — the rule that declares which classes an erasure must reach is missing, unreadable, or has been rewritten. Every class-coverage verdict below it would be over a set nothing declares, so this fails rather than passing over an empty rule"
+  elif [ -z "$AF_CLS_ONLYRULE" ] && [ -z "$AF_CLS_ONLYFENCE" ]; then
+    PASS "AF15: the fixture's declared class set covers the rule's EXACTLY — $AF_NFENCE class(es) in the \`archived-erasure-witness\` fence against $AF_NRULE named by CLAUDE.md § Archived trips, both directions. AF9's 'INCLUDING the both-marks class' is now a claim about a population something else declares"
+  else
+    FAIL "AF15: the fixture's class coverage and the rule disagree (rule=$AF_NRULE fence=$AF_NFENCE; in the rule but NOT exercised by the fixture: ${AF_CLS_ONLYRULE:-<none>}; in the fixture but not in the rule: ${AF_CLS_ONLYFENCE:-<none>}). A class the rule requires and the fixture no longer carries is the coherent-shrink escape: the arms below still pass, and AF9 certifies a class the population does not contain"
   fi
 fi
 
