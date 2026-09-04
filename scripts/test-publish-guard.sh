@@ -814,6 +814,50 @@ else
   FAIL "L10c: an unqueried declaration row was not fail-closed (unqueried=$l10c, queried=$l9b) — a well-formed row can silently guard nothing"
 fi
 
+# L10d — the SHIPPED declaration is FULLY QUERIED. L10c proves the mechanism fires on a
+# mutated declaration; this asserts the property on the real one, which is a different
+# claim. Today the failure it names is caught only INCIDENTALLY: a shipped row the
+# evaluator does not query aborts everything, so L9b and thirty other arms go red at once
+# and a reader has to work backwards from the wreckage to the cause.
+#
+# THIS IS THE DURABLE GUARD AGAINST A COUPLING RECURRING. Adding an artifact scope to the
+# fence and widening the evaluator that queries it are one indivisible change, and a later
+# release may split them across cards that never read each other's output. When that
+# happens this arm names the defect in one line instead of leaving it to be inferred.
+# Deliberately built from the guard's own accessors, so this file still holds no copy of
+# the fence name, the heading, any row or any artifact-scope literal.
+l10dn="$(_guard_declared_rows | awk 'NF { c++ } END { print c + 0 }')"
+l10dq="$(_guard_declared_rows | awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" \
+                                   -v r="$_GUARD_DECL_ARTIFACT_PERSON" '
+    ($1 == "entry" && $3 == m) || ($1 == "field" && $3 == m) || ($1 == "field" && $3 == p) ||
+    ($1 == "field" && $3 == r) { c++ }
+    END { print c + 0 }')"
+if [ "$l10dn" -gt 0 ] && [ "$l10dq" -eq "$l10dn" ] && [ "$l9b" -eq 0 ]; then
+  PASS "L10d: every one of the $l10dn shipped declaration rows names a (limb, artifact-scope) pair this guard actually queries — the fence and the evaluator have not been separated"
+else
+  FAIL "L10d: the shipped declaration carries $l10dn rows but only $l10dq are queried — a row that guards nothing shipped, and every --plaintext publish now aborts (control l9b=$l9b)"
+fi
+
+# L10e — the erasure tombstone is NOT a declared selector, and never becomes one.
+# The tombstone is the one token in the engine that is mark-shaped, REQUIRED to be present
+# in publish-bound artifacts, and designed to carry no personal information. Declaring it
+# would invert the guard on it: a guarded token guaranteed present in the render is a HIT
+# on every subsequent publish of any trip carrying one, permanently.
+#
+# It is authored while the corpus holds ZERO occurrences of the token, which is the only
+# time it is cheap; and it is graded against the DECLARED SELECTOR SET rather than a text
+# search of the file, because the fence's own reader is what decides whether a row is a
+# selector. The control arm is the must-fire half: the shipped fence really does carry a
+# selector, so an empty selector set cannot pass this as a vacuous zero.
+l10esel="$(_guard_declared_selectors)"
+l10emark="$(grep -cF "ERASED" <<<"$l10esel" || true)"
+l10ectl="$(awk 'NF { c++ } END { print c + 0 }' <<<"$l10esel")"
+if [ "$l10emark" -eq 0 ] && [ "$l10ectl" -gt 0 ]; then
+  PASS "L10e: the erasure tombstone is not among the $l10ectl declared selectors — a privacy mark that must be published is the exact inverse of a non-publishable selector, and it has not been declared as one"
+else
+  FAIL "L10e: the erasure tombstone appears in the declared selector set ($l10emark hit(s) over $l10ectl selectors) — every subsequent publish of any trip carrying a tombstone will abort, permanently"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # L11 — THE RESERVED-HEADING SUPPRESSION, both halves.
 #
@@ -976,6 +1020,9 @@ fi
 #             with an ordinary English word aborted every publish, permanently.
 #   M3  CD-3  the class bound to a [DERIVED] cache with no freshness check, so a
 #             passport that existed only in travelers/*.md read as "genuinely EMPTY".
+#   M4  CD-4  the freshness walk bound to the TRIP's own directory while the class
+#             derives from a cross-trip store, so a durable edit made only in the
+#             library read as fresh — and no fence row put its values in class.
 # Every case carries a fixture-integrity control arm (the K2/K3 idiom): a case whose
 # control arm also returns zero is a BROKEN PROBE, not a pass. Like L, group M runs
 # purely on $WORK fixtures — no gh, no npx, no TTY, no network — so it cannot reach
@@ -1196,6 +1243,163 @@ mrender "$MFRESHC" '<p>Evening: the riverside lantern walk, then back to the gue
 touch -t 202601011100 "$MFRESHC"
 mguard "$MFRESHC" "$MFRESH"
 if [ "$MRC" -eq 0 ]; then PASS "M3e: a fresh model with a first-party passport absent from the render publishes (rc=0) — freshness gating is not a blanket abort"; else FAIL "M3e: a clean, fresh trip was blocked (rc=$MRC) — the freshness gate is unusable, which is fail-open in practice"; fi
+
+# ── M4 (CD-4) — the DURABLE source: the cross-trip person record ─────────────
+# M3 bound the class to the trip's own first-party files. CD-4 is the same defect one
+# scope out: a referenced person record is a durable source living OUTSIDE the trip, so a
+# passport edited only in the library leaves every file under the trip untouched and every
+# M3 comparison reads fresh while the projection is behind its real source set.
+#
+# THE STORE IS AT THE TRIP ROOT, DELIBERATELY. Store-root resolution is trip-root-first,
+# so this fixture is self-contained. A fixture that fell through to the repo-root store
+# would be RESOLVED on an author's machine and DANGLING in CI, because that directory is
+# git-ignored and absent from a clean checkout — a witness whose verdict depends on the
+# operator's private working directory is not a witness. It therefore depends on no
+# tracked example fixture either.
+#
+# M4d IS THE LOAD-BEARING ARM, and it is worth saying which one and why. The partial
+# landing that puts a fence row in without widening the evaluator is the LOUDEST possible
+# failure — it aborts before the model is opened and turns this whole file red, so it
+# cannot reach a merge through a green run. The dangerous partial is the inverse: an
+# evaluator and a store with NO fence row is green, silent, and is the fail-open itself.
+# M4b grades the clock; only M4d grades the CLASS, so only M4d fails on that partial.
+MPPL="$WORK/porto-people"; mkdir -p "$MPPL/outputs" "$MPPL/travelers" "$MPPL/people"
+cat > "$MPPL/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+# The traveller file carries the reference and NO PERSON-scoped field: the durable half of
+# the profile lives in the record, which is the composition this class exists to express.
+cat > "$MPPL/travelers/rowan.md" <<'MD'
+---
+artifact: travelers/<traveler>.md
+schema-version: 1
+trip: porto-2029
+writer: human
+lifecycle: persist-mutable
+provenance: human
+publish: internal
+person: psn-a1b2
+---
+
+# Rowan
+
+## Getting there & back
+- **Leaving from:** Central Station
+MD
+cat > "$MPPL/people/psn-a1b2.md" <<'MD'
+---
+artifact: people/<person>.md
+schema-version: 1
+trip: cross-trip
+writer: human
+lifecycle: persist-mutable
+provenance: human
+publish: internal-hard
+---
+
+# Rowan
+
+## Getting there & back
+- **Passport:** Ruritanian, valid to 2033
+MD
+MPPLR="$WORK/m_people.html"
+mrender "$MPPLR" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+# mtimes with touch -t, never write order — M3's rule, and it governs here verbatim.
+# The TRAVELLER FILE IS PINNED NOT-NEWER THAN THE MODEL, which is what makes an rc=2 in
+# M4b attributable to the record alone and not to the pre-existing profile comparison.
+touch -t 202601010900 "$MPPLR"
+touch -t 202601011000 "$MPPL/outputs/traveler-model.md"
+touch -t 202601011000 "$MPPL/travelers/rowan.md"
+touch -t 202601011100 "$MPPL/people/psn-a1b2.md"
+if grep -qF 'Passport:' "$MPPL/people/psn-a1b2.md" \
+   && ! grep -qF 'Passport' "$MPPL/outputs/traveler-model.md" \
+   && ! grep -qF 'Passport' "$MPPL/travelers/rowan.md" \
+   && grep -qF '## Rowan' "$MPPL/outputs/traveler-model.md" \
+   && grep -qF 'person: psn-a1b2' "$MPPL/travelers/rowan.md" \
+   && ! grep -qF 'Ruritanian' "$MPPLR" && ! grep -qF '2033' "$MPPLR"; then
+  PASS "M4a: the passport exists ONLY in the person record — absent from the model, absent from the traveller file, absent from the render — and the traveller file is not newer than the model"
+else
+  FAIL "M4a: the person-record fixture is not set up as claimed — M4b and M4d would prove nothing"
+fi
+mguard "$MPPLR" "$MPPL"
+if [ "$MRC" -eq 2 ]; then PASS "M4b: a durable edit made ONLY in the person library, with no trip-side change, aborts the publish as UNDETERMINED (rc=2) — the freshness walk follows the reference out of the trip"; else FAIL "M4b: a person record newer than the [DERIVED] model was read as a determinate result (rc=$MRC) — silent fail-open on an irreversible action"; fi
+
+# M4c — SPECIFICITY. Without it M4b is satisfied by a guard that aborts unconditionally on
+# any trip carrying a reference. M3e's role, for the new source.
+touch -t 202601011200 "$MPPL/outputs/traveler-model.md"
+mguard "$MPPLR" "$MPPL"
+if [ "$MRC" -eq 0 ]; then PASS "M4c: the same trip with the model newest publishes (rc=0) — the walk gates on the comparison, it does not blanket-abort a trip that references a record"; else FAIL "M4c: a clean, fresh trip referencing a person record was blocked (rc=$MRC) — the walk is unusable, which is fail-open in practice"; fi
+
+# M4d — THE CLASS, NOT THE CLOCK. THE LOAD-BEARING ARM. The model stays newest so the
+# freshness comparison CANNOT fire; the only way to reach rc=1 is for the record's
+# Passport to be in class (the declaration's row) AND to be read (the evaluator's third
+# parse). This is M3c/M3d's role for the new scope, and it is the one arm that fails if
+# the fence row is ever separated from the evaluator that queries it.
+MPPLH="$WORK/m_people_hit.html"
+mrender "$MPPLH" '<p>Border note: carry your Ruritanian passport, valid to 2033, at all times.</p>'
+touch -t 202601011100 "$MPPLH"
+if grep -qF 'Ruritanian passport, valid to 2033' "$MPPLH" \
+   && ! grep -qF 'Ruritanian' "$MPPL/outputs/traveler-model.md" \
+   && ! grep -qF 'Ruritanian' "$MPPL/travelers/rowan.md"; then
+  PASS "M4d-fix: the render carries the passport value and neither the model nor the traveller file does — a hit here can only come from the person record"
+else
+  FAIL "M4d-fix: the class-arm fixture is not set up as claimed — M4d would prove nothing"
+fi
+mguard "$MPPLH" "$MPPL"
+if [ "$MRC" -eq 1 ]; then PASS "M4d: a passport held ONLY in a person record is matched against the render (rc=1) with the model newest — the class reads durable sources, so the declaration row and the evaluator that queries it are BOTH present"; else FAIL "M4d: a passport held only in a person record did not abort (rc=$MRC) — a durable value sits in no fence row or in no parse, which is the silent fail-open no other arm in this file detects"; fi
+
+# M4e — AC5, THE NO-REFERENCE CONTROL. A trip carrying no reference is unaffected by the
+# store, including when the store does not exist. This is the clause that keeps the first
+# run after the store shipped from aborting every trip in the working directory: the
+# store is read ONLY after a bearer has produced a well-formed key.
+MPNR="$WORK/porto-noref"; mkdir -p "$MPNR/outputs" "$MPNR/travelers"
+cat > "$MPNR/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+cat > "$MPNR/travelers/rowan.md" <<'MD'
+# Rowan — traveler profile
+
+## Getting there & back
+- **Leaving from:** Central Station
+MD
+MPNRR="$WORK/m_noref.html"
+mrender "$MPNRR" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+touch -t 202601010900 "$MPNRR"
+touch -t 202601011000 "$MPNR/travelers/rowan.md"
+touch -t 202601011200 "$MPNR/outputs/traveler-model.md"
+if ! grep -q '^person:' "$MPNR/travelers/rowan.md" && [ ! -d "$MPNR/people" ]; then
+  PASS "M4e-fix: the second trip carries no reference key and no store directory — the AC5 control is real"
+else
+  FAIL "M4e-fix: the no-reference fixture is not set up as claimed — M4e would prove nothing"
+fi
+mguard "$MPNRR" "$MPNR"
+if [ "$MRC" -eq 0 ]; then PASS "M4e: a trip carrying NO reference publishes (rc=0) with no store present — an unreadable store never degrades a trip that references nothing"; else FAIL "M4e: a non-referencing trip was blocked (rc=$MRC) — an absent store is degrading trips it must not reach, which aborts every trip in the working directory"; fi
+
+# M4f — AC3, UNRESOLVABLE IS NOT CLEAN. Paired with M4e, which is its control: the two
+# together separate "unresolvable is undetermined" from "unresolvable is clean". Without
+# the pair, a walk that quietly skipped every reference would satisfy M4e alone.
+MPDG="$WORK/porto-dangling"; mkdir -p "$MPDG/outputs" "$MPDG/travelers" "$MPDG/people"
+cp "$MPPL/outputs/traveler-model.md" "$MPDG/outputs/traveler-model.md"
+sed 's/^person: psn-a1b2$/person: psn-9999/' "$MPPL/travelers/rowan.md" > "$MPDG/travelers/rowan.md"
+MPDGR="$WORK/m_dangling.html"
+mrender "$MPDGR" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+touch -t 202601010900 "$MPDGR"
+touch -t 202601011000 "$MPDG/travelers/rowan.md"
+touch -t 202601011200 "$MPDG/outputs/traveler-model.md"
+if grep -qF 'person: psn-9999' "$MPDG/travelers/rowan.md" && [ -d "$MPDG/people" ] \
+   && [ ! -e "$MPDG/people/psn-9999.md" ]; then
+  PASS "M4f-fix: the third trip names a well-formed id, the store exists, and the record does not — a DANGLING reference, not a malformed one"
+else
+  FAIL "M4f-fix: the dangling fixture is not set up as claimed — M4f would prove nothing"
+fi
+mguard "$MPDGR" "$MPDG"
+if [ "$MRC" -eq 2 ]; then PASS "M4f: a well-formed reference resolving to no record aborts as UNDETERMINED (rc=2) — an unresolvable reference is not an empty class"; else FAIL "M4f: an unresolvable person reference was read as a determinate result (rc=$MRC) — an empty read is not an empty class"; fi
 
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
 # W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real
