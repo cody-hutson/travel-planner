@@ -352,7 +352,10 @@ nothing else. No preamble, no commentary, no summary afterwards.
   adding more blocks if they have more.
 - Leave the `>` guidance quotes as they are.
 - Leave the frontmatter fence as it stands, except `<trip-slug>`, which takes the trip's
-  directory name. Its values are facts about the artifact class, not answers to a question.
+  directory name, and — **only if they gave you a durable person token** — one added
+  `person: psn-<token>` line, exactly as the guidance quote at the top of this form describes.
+  If they have no durable record, add nothing: the line is optional and a profile without it is
+  complete. The fence's other values are facts about the artifact class, not answers to a question.
 - Put their name into the `# Your Travel Profile` title line — the first heading, **not** the
   frontmatter fence above it. A person's name is a body value and never a frontmatter value
   (`reference/data-architecture.md` → "Traveler — natural key").

@@ -100,12 +100,15 @@ hyphenated — `lisbon-2027`, `tokyo-2026`. It is the trip's folder name.
 - **If neither, ask for it.** Never invent a slug, and never create a directory under a placeholder
   name.
 
-**2. Check its shape. Three conjuncts, and all three must hold.** The slug is valid only if it is
+**2. Check its shape. Four conjuncts, and all four must hold.** The slug is valid only if it is
 **non-empty**; **and every** character is a letter, a digit, `.`, `_` or `-`; **and the first**
-character is a letter or a digit.
+character is a letter or a digit; **and it is not a reserved `trip:` sentinel** — the values
+`reference/data-architecture.md` § 4.4 declares as meaning *belongs to no trip*, currently
+`cross-trip`. A sentinel type-checks as a slug, so the three shape conjuncts above do not exclude
+it, and a real `trips/cross-trip/` would collide with the value that means the opposite.
 
 **3. If any conjunct fails → STOP. Create nothing** — no directory, no file. Say plainly **what was
-rejected and why**, state the shape a slug takes (the three conjuncts above), and **ask for a
+rejected and why**, state the shape a slug takes (the four conjuncts above), and **ask for a
 corrected one.** The argument is text, and **a rejected slug is never repaired by guessing** at what
 was meant.
 

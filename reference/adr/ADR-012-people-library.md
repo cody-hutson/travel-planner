@@ -224,7 +224,8 @@ were corrected after it ran, by siblings reading sources it had not. Each correc
 place** rather than appended, and named where it changed the reading.*
 
 **Every artifact class below is named by path, never by its ordinal in `reference/data-architecture.md`
-§ 1.1.** That enumeration is closed at 27 — 21 in-model, 6 declared out of model — and its numbering
+§ 1.1.** That enumeration is closed — § 1.1 bounds the in-model range and declares the out-of-model
+classes — and its numbering
 moved *during this milestone*, when a sibling release inserted a class ahead of the person store. The
 spike's own output cited ordinals; six of those citations came to name the wrong class before the
 milestone that produced them had shipped, one of them across the in-model/out-of-model boundary. A
@@ -974,7 +975,7 @@ left open. Where a spike's own reading needed correcting, the correction is stat
 written back over their record — see *Ratifier's notes*, last.
 
 **Every artifact class in this section is named by path, never by its ordinal in
-`reference/data-architecture.md` § 1.1.** That enumeration is closed at 27 and its numbering moved
+`reference/data-architecture.md` § 1.1.** That enumeration is closed and its numbering moved
 during this milestone; a path does not move.
 
 ### 1. Identity — a surrogate key, filename-borne
@@ -1400,7 +1401,7 @@ mid-milestone renumbering already demonstrated.
   assignment and the `Applies to` invariance) · § 4.1 (kebab-case keys) · § 4.3 (the no-double-home
   rule) · § 4.4 (universal frontmatter, the entry-scoped provenance marks, and the `researched`
   definition — *holds independent state*, *not a regenerable projection* — that forces substitution
-  over regeneration) · § 1.1–1.2 (the enumeration closed at 27, and the out-of-model dispositions the
+  over regeneration) · § 1.1–1.2 (the enumeration's bounds, and the out-of-model dispositions the
   reach set must still name) · § 5.1 and § 5.4 (the `publish:` enum, and the fail-closed *an empty
   read is not an empty class* posture erasure's `UNDETERMINED` outcome inherits) · § 6 (the five
   lifecycle tokens, and the `persist-mutable` deletion clause whose *no ghost row lingers* wording
