@@ -767,21 +767,23 @@ source and the predicate must each carry **zero** declared selectors while this 
 of them.
 
 **Adding a member of the class inside the queried set is one row here and no edit to any shell
-script.** The evaluator asks exactly three `(limb, artifact-scope)` questions — `entry` and `field`
-against `outputs/traveler-model.md`, and `field` against `travelers/<traveler>.md` — so a further
-non-publishable field on either of those two classes, or a further entry mark on the derived model,
-is one row and nothing else. **A row naming any other pair is presently a code change:** it parses,
-it is queried by nothing, and rather than guard less than it declares the guard aborts the publish
-as UNDETERMINED (`scripts/test-publish-guard.sh` case **L10c**). The columns below admit any of
-`limb`'s two values against **any** repo-relative artifact-class path, while the evaluator matches
-three literal pairs, so the distance between what the declaration admits and what the guard asks is
-a **declared gap** — widening the queried set is what closes it, and until then the fail-closed
-abort is what keeps it visible rather than silent. That a member is admitted by the fence and not
-by a shell literal remains the property to test a future change against.
+script.** The evaluator asks exactly four `(limb, artifact-scope)` questions — `entry` and `field`
+against `outputs/traveler-model.md`, and `field` against `travelers/<traveler>.md` and
+`people/<person>.md` — so a further non-publishable field on any of those three classes, or a
+further entry mark on the derived model, is one row and nothing else. **A row naming any other pair
+is presently a code change:** it parses, it is queried by nothing, and rather than guard less than
+it declares the guard aborts the publish as UNDETERMINED (`scripts/test-publish-guard.sh` case
+**L10c**). The columns below admit any of `limb`'s two values against **any** repo-relative
+artifact-class path, while the evaluator matches four literal pairs, so the distance between what
+the declaration admits and what the guard asks is a **declared gap** — widening the queried set is
+what closes it, and until then the fail-closed abort is what keeps it visible rather than silent.
+That a member is admitted by the fence and not by a shell literal remains the property to test a
+future change against.
 
 ```publish-contract-values
 # limb   selector        artifact-scope              rule
 field    Passport        travelers/<traveler>.md     conjunctive
+field    Passport        people/<person>.md          conjunctive
 field    Passport        outputs/traveler-model.md   conjunctive
 entry    [THIRD-PARTY]   outputs/traveler-model.md   by-wordcount
 field    Documents       outputs/traveler-model.md   conjunctive
@@ -794,7 +796,7 @@ comment and is ignored; a blank line is ignored.
 |---|---|---|
 | `limb` | `field` \| `entry` | Which half of § 5.3's union the row contributes to. `field` = *every value of a field declared non-publishable*; `entry` = *every value of an entry whose provenance is third-party*. |
 | `selector` | a field label, or an entry-level mark token | What the parse binds to. A `field` selector is matched case-insensitively as a label prefix followed by `:`, after the existing bullet/emphasis stripping. An `entry` selector is matched as a literal substring of the entry heading **and** of each raw value line — the two granularities compose by union, never by override. |
-| `artifact-scope` | a repo-relative artifact-class path, with `<traveler>` admitted as a glob token | Which artifacts the row is evaluated against. |
+| `artifact-scope` | a repo-relative artifact-class path, with `<traveler>` and `<person>` admitted as glob tokens | Which artifacts the row is evaluated against. |
 | `rule` | `conjunctive` \| `phrase` \| `token` \| `by-wordcount` | The match rule that travels with the record, because membership and matchability are one decision. `by-wordcount` is the declared name of the shipped `n >= GUARD_NGRAM ? phrase : token` choice, so the declaration expresses today's behaviour rather than changing it. |
 
 **The declaration is itself fail-closed, and this is a sixth UNDETERMINED path added to § 5.4's
@@ -809,6 +811,28 @@ vocabulary, and `tp_value()`'s non-member exclusions all *shrink* the guarded se
 making them easy to edit would be a fail-open surface. A reader who concludes that every
 class-shaped constant should follow the membership rule into this fence would weaken the control
 while appearing to finish the job.
+
+**What must never become a row here — recorded while the corpus still holds none.** The erasure
+tombstone `## per-<token> [ERASED]` **must never enter this fence**: not as an `entry` selector, not
+as a `field` selector, at **any** artifact scope. `reference/adr/ADR-012-people-library.md` is
+authoritative for the prohibition and for its consequence — a declared tombstone becomes a
+non-publishable leak token that aborts every subsequent publish of any trip carrying one,
+permanently — and this paragraph cites that reasoning rather than restating it. What belongs here is
+where the trap sits relative to *this* fence, which the ADR does not say: **the fail-closed abort
+above does not catch it.** `entry` against `outputs/traveler-model.md` is a pair the evaluator
+already queries, so such a row parses, is accepted, satisfies the every-row-is-queried check, and is
+evaluated — and a tombstoned entry then contributes not only its own heading but every line beneath
+it, through the entry limb's denylist. The general shape, stated once so it generalizes: the
+tombstone is the one token in the engine that is simultaneously mark-shaped, **required** to be
+present in publish-bound artifacts, and designed to carry no personal information. **A privacy mark
+that must be published is the exact inverse of a non-publishable selector.**
+
+**And the adjacent route is barred for the mirror-image reason.** Reserving the tombstone's key in
+the guard's `_GUARD_RESERVED_KEYS` instead is not the safe version of the same idea: that list is a
+**narrowing** control held in the shell for the reason stated just above, and a tombstoned entry is a
+real entry whose *other* fields must still be guarded — reserving its key would suppress guarding of
+the erased person's remaining values. **The correct action on the tombstone is to take none**, and
+this paragraph is the record of that so a later reader does not rediscover the idea and act on it.
 
 **Composition with per-artifact frontmatter.** This declaration is repo-side and the artifact parse
 is unchanged, so it reaches an artifact carrying no frontmatter at all — which, under § 7.2's
