@@ -360,23 +360,35 @@ Trigger"), which sanctions exactly this behavior:
 
   | # | Trigger | Disposition |
   |---|---|---|
-  | **T1** | a record field edited while the trip side is `UNSTATED` (`K6` selects the record) | **signal** — the composed value moved |
-  | **T2** | a record field edited while the trip side is `ANSWERED` (`K5` selects the trip) | **report only** — the planned value did not move, but a redundant override may have become a real one |
+  | **T1** | a record field edited while the trip side is `UNSTATED` — or on **any** `PERSON`-class field, where the record wins whatever the trip side says | **signal** — the composed value moved |
+  | **T2** | a record edit to a `DEFAULT` field whose trip side is `ANSWERED`, so the trip's override still wins | **report only** — the planned value did not move, but a redundant override may have just become a real one |
   | **T3** | a record created, so a previously dangling reference now resolves | **signal**, and the dangling defect clears |
   | **T4** | a record deleted, or the reference now dangles | **signal** + defect; the field composes `UNKNOWN` |
   | **T5** | `person:` added, removed or changed on the traveller file | **signal** — a trip-file edit, already inside the diff |
   | **T6** | a `merged-into:` repoint followed one hop | **signal only if the resolved values differ.** A repoint that resolves to the same values is a reference change and not a value change |
   | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Clock-triggered, and invisible to a trip-file diff by construction |
 
-- **Relevance is three-valued, and its trip-side arm is `ANSWERED()` — never
-  line-presence.** For each field whose record side moved: the trip side is `UNSTATED`
-  → the change **inherits**, so **signal**; the trip side is `ANSWERED` on a `DEFAULT`
-  field → the change is **overridden**, so **report** it under the divergence partition
-  below and emit no replanning signal; the field is `TRIP`- or `DEST`-class → the record
-  is not its source at all, so **stay silent**. The intake form keeps a line for every
-  question and puts an em dash where the answer would go, so a line-presence test reads
-  every skipped field as an override: under it the inherit case is unreachable, the
-  signal set is empty, and **nothing errors**.
+- **Relevance is class first, then answered-ness — and the answered-ness arm is
+  `ANSWERED()`, never line-presence.** For each field whose record side moved:
+
+  - the field is **`PERSON`**-class and the reference resolves → the record wins
+    whatever the trip file says, so the composed value moved: **signal.** Where the
+    trip side is also answered, that claim is *additionally* reported as a class
+    violation — reporting it never changes which value composed.
+  - the field is **`DEFAULT`** and the trip side is `UNSTATED` → the change
+    **inherits**: **signal.**
+  - the field is **`DEFAULT`** and the trip side is `ANSWERED` → the trip's override
+    still wins, so the planned value did not move: **report** it under the divergence
+    partition below, and emit **no** replanning signal.
+  - the field is **`TRIP`**- or **`DEST`**-class → the record is not its source at all:
+    **stay silent**, and read nothing from the record for it.
+
+  **Answered-ness decides the source for `DEFAULT` and nothing else.** Inside `PERSON`
+  it does a different job — deciding whether there is a claim to *report*, never which
+  source *wins*. The intake form keeps a line for every question and puts an em dash
+  where the answer would go, so a line-presence test reads every skipped field as an
+  override: under it the `DEFAULT` inherit case is unreachable, that signal set empties,
+  and **nothing errors**.
 - **Emit an update signal — a candidate replanning trigger.** For each changed
   traveler, record an **update signal** in the derived model naming *who* changed
   and *what* changed (added anchor, dropped wish, revised need). Surface it plainly
@@ -612,15 +624,19 @@ fallback, not an error:
   well-formed token, a duplicated key, a second `merged-into:` hop, or a store that
   cannot be listed — every one of these is *undetermined*, never *absent*.
 
-  - **Step 1 — the field composes to the literal `UNKNOWN`.** Every field the record
-    would have sourced composes `UNKNOWN`, per the composition rules. **Never an empty
-    need set** — an empty set reads as *no constraints*, which is the reading this whole
-    branch exists to refuse, and it would let a plan grade compliant while a traveller's
-    needs had silently vanished. **Never a hard failure** either: an unresolvable
-    reference must **never** halt the reconciliation, exactly as a missing profile does
-    not. `UNKNOWN` is the only sentinel to use — the publish guard excludes it by name,
-    so any other token enters the publishable value set as a real string and aborts
-    publishes wherever it is rendered.
+  - **Step 1 — the field composes to the literal `UNKNOWN`, and the trip's own answers
+    are kept.** A field the record would have sourced, which the trip file leaves
+    unanswered, composes `UNKNOWN`. A field the trip file **does** answer is
+    **retained** — an unresolved reference means the record side is *undetermined*,
+    never *absent*, so the trip's own needs blocks and values stay in the composed
+    source and the plan still sees them. **Never an empty need set:** an empty set reads
+    as *no constraints*, which is the reading this whole branch exists to refuse, and it
+    would let a plan grade compliant while a traveller's needs had silently vanished.
+    **Never a hard failure** either — an unresolvable reference must **never** halt the
+    reconciliation, exactly as a missing profile does not. `UNKNOWN` is the only
+    sentinel to use: the publish guard excludes it by name, so any other token enters
+    the publishable value set as a real string and aborts publishes wherever it is
+    rendered.
   - **Step 2 — the entry routes to the existing flagged-gap branch above**, whose rule
     is already the one this needs: a marker meaning *unknown*, not *no needs*. Name the
     defect on the `Source:` line — the reference dangles, is malformed, or the store
