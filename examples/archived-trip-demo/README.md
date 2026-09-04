@@ -128,7 +128,7 @@ marker examples/archived-trip-demo/trip-context.md ARCHIVED
 pin 9243b408390a8eea7f31831c682b81d25bff6fa0 examples/archived-trip-demo/outputs/traveler-model.md
 pin 894ea44e7de757c2e19a695fc7f569a1d5114161 examples/archived-trip-demo/travelers/dana.md
 pin f9c8798c2f20c97d6b043cb4babc42c5419341ec examples/archived-trip-demo/travelers/per-4f1c.md
-pin c0b6ee49c868a71938a6383dfc4d7bd3044f4b4a examples/archived-trip-demo/trip-context.md
+pin d3f07a1bc90aa7b447e3e714d3a3aa989433e430 examples/archived-trip-demo/trip-context.md
 pin 8c829bc488357ea4ec216f4d71270b83194ffc56 examples/archived-trip-demo/trip-log.md
 ```
 

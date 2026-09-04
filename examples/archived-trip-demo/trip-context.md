@@ -104,8 +104,7 @@ The **constraint source of truth**. A per-traveler need links here through its
 
 - **HC-1 — No stair-heavy routing on any day.** Lifts, ramps or level approaches only
   where a venue is reached on foot. *Applies to:* per-4f1c.
-- **HC-2 — Any block over two hours carries a named seated rest stop.** *Applies to:*
-  per-9a3e.
+- **HC-2 — Any block over two hours carries a named seated rest stop.** *Applies to:* per-9a3e.
 
 ## Dietary & Health
 
@@ -130,7 +129,15 @@ The **constraint source of truth**. A per-traveler need links here through its
 > Operator-maintained trip-level summary. `outputs/event-status.md` is the structured
 > source of truth for the scheduler, hub and validator.
 
-- The belfry timed entry was booked for Fri Oct 10.
+[Not exercised by this example.] **Deliberately empty, and the reason is a finding rather
+than a convenience.** A trip that names locked elements, has reached synthesis, and
+carries no `outputs/event-status.md` is selected by this suite's seed-trigger arm as a
+trip with an outstanding **seed write** — an enrichment-agent write. On an **archived**
+trip that obligation must not fire at all: a write is a derivation, and this trip
+receives none. The trigger has no lifecycle condition today, so an archived trip with
+bullets here would be reported as owing a write the freeze forbids. This fixture stays
+out of that population rather than resolving the collision, which belongs to whoever owns
+that arm; the observation is recorded here so it is not lost.
 
 ## Current Itinerary Status
 

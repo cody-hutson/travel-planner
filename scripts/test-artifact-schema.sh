@@ -1641,13 +1641,20 @@ if [ "$PS_OK" -eq 1 ]; then
   # population entirely: PS1's firing set and PS2's silent set are BOTH unchanged, and
   # the new root lands in PS3's declared-not-exercised list, which is derived rather than
   # listed and so names it without an edit. Only the denominator moved.
+  #
+  # It moved 7 -> 8 with examples/archived-trip-demo/, and that re-read was performed too,
+  # against the failing run rather than predicted: PS1 still selects examples/tokyo-2026
+  # ALONE and PS2 still names examples/data-architecture-demo ALONE, both observed in the
+  # same run that reported the pin mismatch. The archived trip carries a derived model but
+  # no outputs/final-itinerary.md, so it is outside this predicate as well and lands in
+  # PS3's derived list. The partition closed at 1 + 1 + 6 = 8. Only the denominator moved.
   if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
     FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
     PS_OK=0
-  elif [ "$PS_NTRIP" -eq 7 ]; then
-    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 7 pinned when this group was last re-read"
+  elif [ "$PS_NTRIP" -eq 8 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 8 pinned when this group was last re-read"
   else
-    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 7 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 8 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
     PS_OK=0
   fi
 fi
@@ -2988,6 +2995,330 @@ fi
 
 if [ "$CTL_RAN" -ne 1 ]; then
   FAIL "X1: group CTL did not execute — a run without it is a failure, never a pass"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group AF — the archived-trip freeze, and the one operation that reaches through it.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# CLAUDE.md § *Archived trips — what the freeze binds* states two things that pull in
+# opposite directions: an archived trip receives NO derivation, and erasure reaches it
+# anyway. Read carelessly the first swallows the second — "frozen" heard as untouchable
+# rather than underivable — and a person's data survives a deletion they asked for.
+# Nothing asserted either half. There was not even a subject: no fixture in this
+# repository carried a `**Lifecycle:**` marker, so there was no archived trip for any
+# check to run against.
+#
+# examples/archived-trip-demo/ is that subject, and this group is the assertion over it.
+#
+# ── WHAT IT CAN AND CANNOT ASSERT, STATED SO THE LIMIT IS NOT MISTAKEN FOR COVER ──
+# This engine's agents are prompt files, not executable code, so no suite here can RUN an
+# erasure and watch what it does. What this group grades is the STATE a correct erasure
+# leaves behind — the tombstone in every location that held a name, an entry census a
+# rebuild could not have produced, an untouched marker, constraint rosters that are still
+# non-empty. It does not grade a future implementation's behaviour. That boundary is real
+# and is written into the fixture's README as well, so a reader meeting a green run does
+# not read more into it than it says.
+#
+# ── THE CENSUS IS WHAT TELLS SUBSTITUTION FROM REGENERATION ──────────────────────
+# The obvious assertion — "the erased name is gone" — is satisfied by a regeneration too,
+# and a regeneration is the wrong mechanism: it rewrites the whole file, so the archived
+# plan stops being the plan as it was planned. ADR-012 bounds that with a byte-length
+# delta on free-text classes. The derived model admits a sharper instrument, because the
+# two file-less entry classes fail in OPPOSITE directions under a rebuild: the
+# [OPERATOR-PROVIDED]-alone entry is DROPPED (nothing to re-derive it from) while the
+# both-marks entry is CARRIED FORWARD VERBATIM, name and need intact. So a model still
+# holding every entry, with both file-less ones tombstoned rather than dropped or
+# preserved, could not have been produced by a rebuild. AF12 is that census. A byte pin
+# on a counterfactual pre-erasure size was considered and rejected: on a single shipped
+# state that number can only be DECLARED, and a declared number chosen by the author to
+# make the arm pass is a tautological arm, not an assertion.
+#
+# ── THE CONTROL ARM IS A PERSON ──────────────────────────────────────────────────
+# Every "no identifying value survives" verdict here is a zero, and a zero from an
+# instrument that reads nothing looks the same as a zero from a clean tree. The fixture
+# therefore carries a traveller who was NOT erased, and AF8 requires the same instrument
+# to FIND her in the same three location classes. A run where both arms come back empty
+# has measured nothing and fails rather than passing quietly.
+#
+# ── THE DECLARATION LIVES IN THE FIXTURE, NOT IN THIS FILE ───────────────────────
+# Subjects, survivor, marker and pins are read from the `archived-erasure-witness` fence
+# in the fixture's own README — the same declaration-in-the-corpus mechanism group FW
+# uses for the frozen witness. A list held here would be a second source of truth, free
+# to drift from the fixture it claims to describe. README.md carries the declaration and
+# is therefore not pinned by it; a file cannot hold its own content address.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "AF — the archived-trip freeze, and the erasure that reaches through it"
+
+AF_DIR="examples/archived-trip-demo"
+AF_DOC="$ROOT/$AF_DIR/README.md"
+
+# af_rows <keyword> — the declared rows of one kind. Read from the fence and nowhere else.
+af_rows() {
+  awk -v want="$1" '
+    $0 == "```archived-erasure-witness" { infence = 1; next }
+    infence && $0 == "```" { infence = 0; next }
+    infence {
+      line = $0
+      sub(/^[ \t]+/, "", line); sub(/[ \t]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, f, /[ \t]+/)
+      if (f[1] != want) next
+      out = ""
+      for (i = 2; i <= n; i++) out = out (i > 2 ? "\t" : "") f[i]
+      print out
+    }
+  ' "$AF_DOC"
+}
+
+# af_count <file> <awk-condition-program> — a counting probe over one file. ONE counter,
+# driven by both the subject arms and the control arm below, so a control that ran
+# different code from the assertion cannot certify it.
+af_count() { awk "$2 { c++ } END { print c + 0 }" "$1"; }
+
+AF_OK=1
+if [ ! -r "$AF_DOC" ]; then
+  FAIL "AF0: $AF_DIR/README.md is not readable, so the declaration could not be read. Not a skip and not a pass"
+  AF_OK=0
+else
+  AF_SUBJ="$(af_rows subject)"
+  AF_SURV="$(af_rows survivor)"
+  AF_MARK="$(af_rows marker)"
+  AF_PINS="$(af_rows pin)"
+  AF_NSUBJ="$(printf '%s\n' "$AF_SUBJ" | grep -c '[^[:space:]]')"
+  AF_NPIN="$(printf '%s\n' "$AF_PINS" | grep -c '[^[:space:]]')"
+  AF_NSURV="$(printf '%s\n' "$AF_SURV" | grep -c '[^[:space:]]')"
+  if [ "$AF_NSUBJ" -gt 0 ] && [ "$AF_NPIN" -gt 0 ] && [ "$AF_NSURV" -eq 1 ] && [ -n "$AF_MARK" ]; then
+    PASS "AF0: the fixture declares $AF_NSUBJ erasure subject(s), 1 survivor, a marker requirement and $AF_NPIN pinned file(s); this suite holds no copy of any of them"
+  else
+    FAIL "AF0: the \`archived-erasure-witness\` fence yielded subjects=$AF_NSUBJ survivors=$AF_NSURV pins=$AF_NPIN marker='${AF_MARK:-<none>}'. An incomplete declaration means every verdict below would be over a partial set — this fails rather than passing quietly"
+    AF_OK=0
+  fi
+fi
+
+if [ "$AF_OK" -eq 1 ]; then
+  AF_MPATH="$(printf '%s' "$AF_MARK" | cut -f1)"
+  AF_MWANT="$(printf '%s' "$AF_MARK" | cut -f2)"
+  AF_CTX="$ROOT/$AF_MPATH"
+  AF_MODEL="$ROOT/$AF_DIR/outputs/traveler-model.md"
+  AF_LOG="$ROOT/$AF_DIR/trip-log.md"
+
+  # ── HALF A — an ordinary person edit leaves this trip untouched ────────────────
+
+  # AF1 / AF2 — presence and VALUE are two arms, not one. An implementation that tests
+  # only for the marker's presence survives its removal being caught and still gets the
+  # value wrong; an implementation that tests only the value cannot tell a trip that was
+  # set ACTIVE from one whose line was deleted. Both mis-implementations are real and
+  # they are distinguishable only by asking both questions.
+  AF_MLINE="$(af_count "$AF_CTX" '/^\*\*Lifecycle:\*\* /')"
+  if [ "$AF_MLINE" -eq 1 ]; then
+    PASS "AF1: the fixture carries exactly one \`**Lifecycle:**\` marker line — the presence arm, which is what a removal turns red"
+  else
+    FAIL "AF1: expected exactly one \`**Lifecycle:**\` line in $AF_MPATH, found $AF_MLINE — at 0 the marker was removed, and an absent line defaults to ACTIVE at G4, so the trip silently stops being archived"
+  fi
+
+  AF_MVAL="$(awk '/^\*\*Lifecycle:\*\* / { sub(/^\*\*Lifecycle:\*\* /, ""); gsub(/[ \t\r]+$/, ""); print; exit }' "$AF_CTX")"
+  if [ "$AF_MVAL" = "$AF_MWANT" ]; then
+    PASS "AF2: the marker reads '$AF_MVAL', the declared value — the VALUE arm, which is what setting it to ACTIVE turns red while AF1 stays green"
+  else
+    FAIL "AF2: the marker reads '${AF_MVAL:-<none>}' but the fixture declares '$AF_MWANT' — this fixture is only a subject while it is archived"
+  fi
+
+  # AF3 — the pinned path set and the tracked set are the same set, both directions, so a
+  # file ADDED under the fixture fails as loudly as one whose bytes moved. README.md is
+  # excluded because it carries the declaration being compared.
+  AF_TRACKED="$(cd "$ROOT" && git ls-files "$AF_DIR" 2>/dev/null | grep -v "^$AF_DIR/README.md$" | sort)"
+  AF_DECL="$(printf '%s\n' "$AF_PINS" | awk -F'\t' 'NF>1{print $2}' | sort)"
+  AF_NTRK="$(printf '%s\n' "$AF_TRACKED" | grep -c '[^[:space:]]')"
+  AF_ONLY_TRK="$(comm -23 <(printf '%s\n' "$AF_TRACKED") <(printf '%s\n' "$AF_DECL") | grep -c '[^[:space:]]')"
+  AF_ONLY_DEC="$(comm -13 <(printf '%s\n' "$AF_TRACKED") <(printf '%s\n' "$AF_DECL") | grep -c '[^[:space:]]')"
+  if [ "$AF_NTRK" -gt 0 ] && [ "$AF_ONLY_TRK" -eq 0 ] && [ "$AF_ONLY_DEC" -eq 0 ]; then
+    PASS "AF3: the declaration covers the fixture EXACTLY — $AF_NPIN pinned against $AF_NTRK tracked under '$AF_DIR/' (README.md excluded, it carries the declaration), compared in both directions"
+  else
+    FAIL "AF3: the pinned set and the tracked set differ under '$AF_DIR/' (tracked=$AF_NTRK pinned=$AF_NPIN tracked-but-unpinned=$AF_ONLY_TRK pinned-but-untracked=$AF_ONLY_DEC)"
+  fi
+
+  # AF4 — the freeze itself. This is Half A's assertion: the archived trip's bytes have
+  # not moved. An ordinary person-record edit that reached this trip would land here.
+  AF_BAD=0; AF_MISS=0; AF_DET=""
+  while IFS=$'\t' read -r afd afp; do
+    [ -n "$afp" ] || continue
+    if [ ! -r "$ROOT/$afp" ]; then AF_MISS=$((AF_MISS+1)); AF_DET="$AF_DET $afp(absent)"; continue; fi
+    afa="$(git hash-object -- "$ROOT/$afp" 2>/dev/null)"
+    [ "$afa" = "$afd" ] || { AF_BAD=$((AF_BAD+1)); AF_DET="$AF_DET $afp"; }
+  done <<EOF
+$(printf '%s\n' "$AF_PINS")
+EOF
+  if [ "$AF_NPIN" -gt 0 ] && [ "$AF_BAD" -eq 0 ] && [ "$AF_MISS" -eq 0 ]; then
+    PASS "AF4: all $AF_NPIN file(s) of the archived trip are byte-identical to their pinned content address — the freeze is asserted on every push. This is Half A: an ordinary person edit leaves an archived trip untouched"
+  else
+    FAIL "AF4: the archived trip has MOVED ($AF_BAD of $AF_NPIN mismatched, $AF_MISS absent):$AF_DET — if the change was deliberate, re-pin those rows in $AF_DIR/README.md in this same commit"
+  fi
+
+  # AF5 — no update signal was written. The freeze's first clause, at the one address a
+  # breach would show up: a signal row inside the reserved block.
+  AF_SIG="$(awk '
+    /^## Update signals/ { inblk = 1; next }
+    inblk && /^## / { inblk = 0 }
+    inblk && /^- / { c++ }
+    END { print c + 0 }' "$AF_MODEL")"
+  if [ "$AF_SIG" -eq 0 ]; then
+    PASS "AF5: the derived model's \`## Update signals\` block carries 0 signal rows — an archived trip receives no update signal, and a row here would mean the freeze had failed"
+  else
+    FAIL "AF5: the archived trip's model carries $AF_SIG update-signal row(s); an archived trip receives no derivation, so none should have been written"
+  fi
+
+  # AF6 — the absence is STATED. Without this arm a correctly-frozen trip and a run that
+  # never looked at it are indistinguishable, which is the whole reason the disposition
+  # is typed rather than left silent.
+  AF_NOTSIG="$(af_count "$AF_LOG" '/ARCHIVED — not signalled/')"
+  if [ "$AF_NOTSIG" -ge 1 ]; then
+    PASS "AF6: the trip record names the trip \`ARCHIVED — not signalled\` — the disposition is stated, so silence and correctness are distinguishable"
+  else
+    FAIL "AF6: no \`ARCHIVED — not signalled\` disposition is recorded in $AF_DIR/trip-log.md; an absence inferred from silence is not an absence that was observed"
+  fi
+
+  # ── HALF B — an erasure reached this trip ──────────────────────────────────────
+
+  # The roster is the name authority (agents/00-enrichment.md § Traveler identity), so it
+  # is the location a model-only erasure leaves behind and the one that would re-seed the
+  # name on the first pass after a reopen. Every roster cell that is not the survivor
+  # must be a token.
+  AF_SURVNAME="$(printf '%s' "$AF_SURV" | cut -f1)"
+  AF_ROSTER_BAD="$(awk -v surv="$AF_SURVNAME" '
+    /^## Group/ { ingrp = 1; next }
+    ingrp && /^## / { ingrp = 0 }
+    ingrp && /^\|/ {
+      line = $0
+      split(line, cell, "|")
+      v = cell[2]; gsub(/^[ \t]+|[ \t]+$/, "", v)
+      if (v == "" || v == "Traveler" || v ~ /^-+$/) next
+      if (v == surv) next
+      if (v !~ /^per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) c++
+    }
+    END { print c + 0 }' "$AF_CTX")"
+  if [ "$AF_ROSTER_BAD" -eq 0 ]; then
+    PASS "AF7: every \`## Group\` roster cell other than the survivor's is a \`per-<token>\`, so no erased subject's identifying value survives in the name authority — the location a model-only erasure would leave standing, and from which the name would return by instruction on the first pass after a reopen"
+  else
+    FAIL "AF7: $AF_ROSTER_BAD roster cell(s) still carry a name-shaped value for an erased subject. The roster is the name authority and the model heading and file stem are projections of it, so the name re-enters on reopen — a model-only erasure un-erases itself"
+  fi
+
+  # AF8 — THE CONTROL ARM, MUST FIRE. AF7/AF9's verdicts are zeros; this is what makes
+  # them measurements. The same probes are re-run for a traveller who was NOT erased and
+  # must find her in all three location classes.
+  AF_S_ROSTER="$(awk -v surv="$AF_SURVNAME" '
+    /^## Group/ { ingrp = 1; next }
+    ingrp && /^## / { ingrp = 0 }
+    ingrp && /^\|/ { split($0, cell, "|"); v = cell[2]; gsub(/^[ \t]+|[ \t]+$/, "", v); if (v == surv) c++ }
+    END { print c + 0 }' "$AF_CTX")"
+  AF_S_ENTRY="$(awk -v surv="$AF_SURVNAME" '$0 == "## " surv { c++ } END { print c + 0 }' "$AF_MODEL")"
+  AF_S_APPL="$(awk -v surv="$AF_SURVNAME" 'index($0, "Applies to:") && index($0, surv) { c++ } END { print c + 0 }' "$AF_CTX")"
+  if [ "$AF_S_ROSTER" -ge 1 ] && [ "$AF_S_ENTRY" -ge 1 ] && [ "$AF_S_APPL" -ge 1 ]; then
+    PASS "AF8: MUST FIRE — the survivor '$AF_SURVNAME' is found in all three location classes (roster=$AF_S_ROSTER, model entry=$AF_S_ENTRY, Applies to=$AF_S_APPL), so AF7's and AF9's zeros are measurements over a population this instrument can actually see"
+  else
+    FAIL "AF8: MUST FIRE — the survivor '$AF_SURVNAME' was found roster=$AF_S_ROSTER model=$AF_S_ENTRY applies-to=$AF_S_APPL; with any of these at 0 the instrument reads nothing, and AF7's zero says nothing about whether an erasure ran"
+  fi
+
+  # AF9 / AF10 / AF13 — per declared subject. The three classes converge on an archived
+  # trip: whatever surfaces a subject has, the act is the same one, and the tombstone must
+  # appear on every surface that subject's class declares.
+  AF_T_BAD=""; AF_S_BAD=""; AF_FILELESS_BAD=""
+  while IFS=$'\t' read -r aft afc afroster affile; do
+    [ -n "$aft" ] || continue
+    n="$(awk -v t="$aft" 'index($0, "## " t) == 1 && index($0, "[ERASED]") { c++ } END { print c + 0 }' "$AF_MODEL")"
+    [ "$n" -ge 1 ] || AF_T_BAD="$AF_T_BAD $aft($afc)"
+    if [ "$afroster" = "yes" ]; then
+      n="$(awk -v t="$aft" '/^\|/ && index($0, t) { c++ } END { print c + 0 }' "$AF_CTX")"
+      [ "$n" -ge 1 ] || AF_S_BAD="$AF_S_BAD $aft(roster)"
+    else
+      n="$(awk -v t="$aft" '/^\|/ && index($0, t) { c++ } END { print c + 0 }' "$AF_CTX")"
+      [ "$n" -eq 0 ] || AF_FILELESS_BAD="$AF_FILELESS_BAD $aft(roster-row-present)"
+    fi
+    if [ "$affile" = "yes" ]; then
+      [ -r "$ROOT/$AF_DIR/travelers/$aft.md" ] || AF_S_BAD="$AF_S_BAD $aft(file)"
+    else
+      [ ! -e "$ROOT/$AF_DIR/travelers/$aft.md" ] || AF_FILELESS_BAD="$AF_FILELESS_BAD $aft(file-present)"
+    fi
+  done <<EOF
+$(printf '%s\n' "$AF_SUBJ")
+EOF
+
+  if [ -z "$AF_T_BAD" ]; then
+    PASS "AF9: all $AF_NSUBJ declared subject(s) carry a tombstoned \`## <token>\` entry in the derived model, INCLUDING the both-marks class — the entry a rebuild would have carried forward verbatim, name and need intact, and the one an implementation that substitutes only where a source file exists would miss"
+  else
+    FAIL "AF9: subject(s) with no tombstoned model entry:$AF_T_BAD — an entry left un-substituted survives every subsequent pass, so a person who asked to be deleted keeps their recorded need"
+  fi
+
+  if [ -z "$AF_S_BAD" ]; then
+    PASS "AF10: every subject's token appears on each surface its class declares — the roster cell AND the traveller-file stem, not the derived model alone. This is what the post-reopen guarantee rests on: the model is regenerated from those sources, so a tombstone written only into the model is undone by the first pass after a reopen"
+  else
+    FAIL "AF10: subject surface(s) missing the token:$AF_S_BAD"
+  fi
+
+  if [ -z "$AF_FILELESS_BAD" ]; then
+    PASS "AF13: each subject declared to have no roster row and no traveller file has neither — so the both-marks class has no surface to be re-enumerated from after a reopen, and nothing points at it to dangle. A theorem, conditional on ADR-006 continuing to bar that class from trip-context.md"
+  else
+    FAIL "AF13: subject(s) carrying a surface their class declares absent:$AF_FILELESS_BAD"
+  fi
+
+  # AF11 — an emptied Applies to: is a path to a plan that grades compliant while no
+  # longer carrying the need it was built around. Erasure substitutes; it never empties.
+  # WRAP-AWARE BY MEASUREMENT, NOT BY CAUTION. The first form of this probe read only the
+  # remainder of the matching line and reported a roster empty whose value had simply
+  # wrapped onto the next one — a false RED on a correct fixture. A same-line-only test is
+  # wrong in a corpus that hard-wraps prose, so the continuation is read: a remainder that
+  # is empty is only empty if the next line is blank, a new bullet, or a heading.
+  AF_EMPTY="$(awk '
+    { line[NR] = $0 }
+    END {
+      for (i = 1; i <= NR; i++) {
+        if (!match(line[i], /\*Applies to:\*/)) continue
+        rest = substr(line[i], RSTART + RLENGTH)
+        gsub(/[ \t\r*]+/, "", rest)
+        if (rest != "" && rest != ".") continue
+        nxt = (i < NR) ? line[i+1] : ""
+        gsub(/^[ \t]+|[ \t\r]+$/, "", nxt)
+        if (nxt == "" || nxt ~ /^[-*#>|]/) c++
+      }
+      print c + 0
+    }' "$AF_CTX")"
+  if [ "$AF_EMPTY" -eq 0 ]; then
+    PASS "AF11: no constraint's \`Applies to:\` roster was emptied by the erasure — the need survives the person's name, which is what keeps a concluded plan from grading compliant while no longer carrying the constraint it was built around"
+  else
+    FAIL "AF11: $AF_EMPTY constraint(s) carry an empty \`Applies to:\` roster — this is the milestone's named risk, a compliant-looking unsafe plan"
+  fi
+
+  # AF12 — THE CENSUS. The assertion that tells substitution from regeneration.
+  AF_ENTRIES="$(awk '
+    /^## / {
+      k = tolower($0); gsub(/[^a-z0-9]/, "", k); sub(/^/, "", k)
+      if (k == "updatesignals" || k == "updatesignalsderived" || k == "desireoverlap") next
+      c++
+    }
+    END { print c + 0 }' "$AF_MODEL")"
+  AF_WANT=$(( AF_NSUBJ + AF_NSURV ))
+  if [ "$AF_ENTRIES" -eq "$AF_WANT" ]; then
+    PASS "AF12: the model holds $AF_ENTRIES person entries against $AF_NSUBJ subject(s) + $AF_NSURV survivor — a census a rebuild could not produce. A regeneration DROPS the [OPERATOR-PROVIDED]-alone entry, having no source to re-derive it from, and CARRIES FORWARD the both-marks entry verbatim; the two fail in opposite directions, so neither alone detects the wrong mechanism and only the census does"
+  else
+    FAIL "AF12: the model holds $AF_ENTRIES person entries, expected $AF_WANT ($AF_NSUBJ subjects + $AF_NSURV survivor) — a short count is the regeneration signature (an entry with no source file was dropped), a long one is an entry the declaration does not know about"
+  fi
+
+  # ── HALF C — reopening, and the rule it depends on ─────────────────────────────
+  # AF14 — reopen SETS the value and never removes the line. Same gate result either way
+  # (an absent line defaults to ACTIVE at G4), different legality — removal is a deletion
+  # of trip content. The fixture is a state and cannot execute the verb, so what is graded
+  # is the shipped rule, section-scoped so a sentence that moved elsewhere is not counted.
+  AF_REOPEN="$(awk '
+    $0 == "## reopen" { inblk = 1; next }
+    inblk && /^## / { inblk = 0 }
+    inblk && index($0, "it never removes the line") { c++ }
+    END { print c + 0 }' "$ROOT/.claude/commands/trip-decommission.md")"
+  if [ "$AF_REOPEN" -ge 1 ]; then
+    PASS "AF14: the reopen verb's own section still states that it SETS the value and never removes the line — the freeze is lifted prospectively rather than by deleting the record that the trip was ever concluded"
+  else
+    FAIL "AF14: the \`## reopen\` section no longer states that the line is never removed. Removing it reaches the same gate result by G4's default and is a deletion of trip content — same outcome, different legality"
+  fi
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
