@@ -363,7 +363,7 @@ Trigger"), which sanctions exactly this behavior:
   | **T1** | a record field edited while the trip side is `UNSTATED` — or on **any** `PERSON`-class field, where the record wins whatever the trip side says | **signal** — the composed value moved |
   | **T2** | a record edit to a `DEFAULT` field whose trip side is `ANSWERED`, so the trip's override still wins | **report only** — the planned value did not move, but a redundant override may have just become a real one |
   | **T3** | a record created, so a previously dangling reference now resolves | **signal**, and the dangling defect clears |
-  | **T4** | a record deleted, or the reference now dangles | **signal** + defect; the field composes `UNKNOWN` |
+  | **T4** | a record deleted, or the reference now dangles | **signal** + defect; a field the trip leaves unanswered composes `UNKNOWN`, and a value the trip **does** state is retained |
   | **T5** | `person:` added, removed or changed on the traveller file | **signal** — a trip-file edit, already inside the diff |
   | **T6** | a `merged-into:` repoint followed one hop | **signal only if the resolved values differ.** A repoint that resolves to the same values is a reference change and not a value change |
   | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Clock-triggered, and invisible to a trip-file diff by construction |
