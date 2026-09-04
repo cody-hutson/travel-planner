@@ -260,5 +260,6 @@ reusing one.
   standalone `scripts/*.sh`; `actionlint` lints workflow-embedded shell only.
 - **Not, while the split reads `0 witness`, that any real artifact was validated.** The suite
   renders `VACUOUS` rather than `PASS` in that state and says so out loud. That state is
-  behind this corpus now — the split reads `20 witness` — but the verdict stays, because it
+  behind this corpus now — the live split is stated at the head of this section — but the
+  verdict stays, because it
   is what makes a future regression to zero legible instead of silent.

@@ -902,8 +902,19 @@ fi
 l10esel="$(_guard_declared_selectors)"
 l10emark="$(grep -cF "ERASED" <<<"$l10esel" || true)"
 l10ectl="$(awk 'NF { c++ } END { print c + 0 }' <<<"$l10esel")"
-if [ "$l10emark" -eq 0 ] && [ "$l10ectl" -gt 0 ]; then
-  PASS "L10e: the erasure tombstone is not among the $l10ectl declared selectors — a privacy mark that must be published is the exact inverse of a non-publishable selector, and it has not been declared as one"
+# The must-fire control is a NAMED MEMBER, not a count. A count proves only that the
+# reader returned something; it cannot tell the declared selector set from any other
+# non-empty output. A mis-aimed reader yielding, say, section headings satisfies
+# l10ectl > 0 and reports zero tombstone hits, so this arm would pass green over
+# entirely the wrong population — the same count-is-not-a-set fault this suite has
+# booked elsewhere. Passport is asserted because it is a shipped selector on all three
+# artifact scopes: if the reader is aimed correctly it is present, and if it is aimed
+# anywhere else it is not.
+l10ehit="$(grep -cFx "Passport" <<<"$l10esel" || true)"
+if [ "$l10emark" -eq 0 ] && [ "$l10ectl" -gt 0 ] && [ "$l10ehit" -ge 1 ]; then
+  PASS "L10e: the erasure tombstone is not among the $l10ectl declared selectors, and the reader is aimed (the known selector Passport is present) — a privacy mark that must be published is the exact inverse of a non-publishable selector, and it has not been declared as one"
+elif [ "$l10ehit" -eq 0 ]; then
+  FAIL "L10e: CONTROL DID NOT FIRE — the known selector Passport is absent from the declared set ($l10ectl selector(s) read), so this arm is reading the wrong population and its tombstone verdict means nothing"
 else
   FAIL "L10e: the erasure tombstone appears in the declared selector set ($l10emark hit(s) over $l10ectl selectors) — every subsequent publish of any trip carrying a tombstone will abort, permanently"
 fi

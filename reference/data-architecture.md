@@ -1,9 +1,10 @@
 # Data Architecture — Engine-Wide
 
 The canonical data-architecture document for the **whole engine**. It defines the closed set of
-per-trip artifact classes, the entities behind them, how identity is assigned, what is serialized as
-structure versus what stays as prose, which values may reach a published page, how each artifact
-behaves across re-runs, and how a schema change is versioned and read tolerantly.
+artifact classes — per-trip and cross-trip alike — the entities behind them, how identity is
+assigned, what is serialized as structure versus what stays as prose, which values may reach a
+published page, how each artifact behaves across re-runs, and how a schema change is versioned and
+read tolerantly.
 
 `reference/data-model.md` remains the **satisfaction-layer specialization** of this document — the
 deep model for the four satisfaction artifacts and the reconciliation rules around them. Where the
