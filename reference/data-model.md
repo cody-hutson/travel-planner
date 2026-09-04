@@ -357,7 +357,7 @@ Every field carries exactly one of four classes:
 
 ### The denominator — what counts as a field
 
-A **field** is a distinct `(section, label)` pair rendered as a body bullet of the form `- [⭐ ]**<Label>:**` **above** the `<!-- PROFILE-END -->` sentinel in `templates/traveler-intake.template.md`. Repeated blocks (`Needs` ×3, `Desires` ×3) are **one** field each — the template's own instruction is *"add as many as you like and delete the rest"*, so block count is user data, not schema.
+A **field** is a distinct `(section, label)` pair rendered as a body bullet of the form `- [⭐ ]**<Label>:**` **above** the `<!-- PROFILE-END -->` sentinel of **either** intake form — `templates/traveler-intake.template.md` (the trip form) or `templates/person-intake.template.md` (the durable person form). **Both, because the intake is split and either form alone is half the question set.** The two emit **disjoint** label sets, so their union is a plain sum with nothing double-counted. Repeated blocks (`Needs` ×3, `Desires` ×3) are **one** field each — the form's own instruction is *"add as many as you like and delete the rest"*, so block count is user data, not schema. **A label inside such a repeated block is `block`-scoped; every other label is `slot`-scoped.** That is the `Scope` column below and the axis `K3`/`K4` and `MALFORMED-SLOT` branch on — stated here as a rule rather than left to be inferred from this paragraph two sections later.
 
 | Population | Disposition |
 |---|---|
@@ -365,57 +365,60 @@ A **field** is a distinct `(section, label)` pair rendered as a body bullet of t
 | **Distinct labelled fields** | **The denominator.** Every one classified below |
 | Unlabelled free-text tail (`## Anything else`) | An answerable slot with no label. **Classified** below, so no slot is silently unscoped |
 | Frontmatter keys | **Out of scope, deliberately.** The template: *"The fence above is **not a field you fill in** … Its values are facts about the artifact class, not answers to a question."* |
-| The `# Your Travel Profile — [Name]` H1 | A **rendering** of the `Name` field, not a distinct field |
+| The `# Your Travel Profile — [Name]` H1 | The `Name` field's **only** rendering — post-split it is the title line of the person form and a bullet in neither form. Classified below, and outside the bullet-derived count |
+| `Applies to` — never asked, computed | Removed from the trip form's body as a pointless blank for a computed value. Still a field and still classified below, so the slot is not silently unscoped, and likewise outside the bullet-derived count |
 
-**The denominator is stated as a rule, not as a number.** A literal count in prose goes stale the first time the form gains or drops a line; the rule above does not. At the time of writing the rule measures **38 distinct labelled fields + 1 unlabelled free-text slot = 39 answerable slots**, and that measurement is reproducible from the template rather than asserted here.
+**The denominator is stated as a rule, not as a number.** A literal count in prose goes stale the first time a form gains or drops a line; the rule above does not — **provided it names every form that renders a field**, which is the failure mode the split demonstrated rather than a hypothetical one. Applied to the two shipped forms the rule measures **36 distinct labelled bullets — 19 on the trip form, 17 on the person form, disjoint.** The classification table below carries **39 rows**, and the difference is exactly the two labels that are fields but not bullets: **`Name`**, borne by the H1 title line, and **`Applies to`**, never asked because it is computed. **36 bullets + `Name` + `Applies to` = 38 labelled fields, + 1 unlabelled free-text slot = 39 answerable slots.** Every number here is reproducible from the two forms and the table rather than asserted, and the reconciliation is written out so that a future form change **moves a countable that can be re-derived** instead of silently invalidating one that cannot.
 
 ### The classification — every answerable slot, exactly one class
 
 `Ovr?` = may a trip carry a divergent value? `N` = no (a schema violation). `Y` = yes, and the divergence is reported. `n/a` = there is no durable value beneath it to override.
 
-| # | Field | Section | Class | Ovr? | Rationale |
-|---|---|---|---|---|---|
-| 1 | ⭐ `Name` | About you | **DEFAULT** | Y | The person record holds the canonical name; **`trip-context.md` § Group is the per-trip display-name authority** (see *The display name has one authority* below). A trip legitimately renders "Mom" where the record says "Pat" — that is DEFAULT semantics, not a defect |
-| 2 | `Relationship` | About you | **TRIP** | n/a | *"how you fit in **the group**"* — stated relative to this trip's group; a different group reframes it |
-| 3 | `Party` | About you | **TRIP** | n/a | Who is travelling **on this trip** without their own form. `reference/adr/ADR-006-third-party-data-capture.md` bounds their data to needs-only; that boundary is preserved, not widened |
-| 4 | `Would love` | Destination leanings | **DEFAULT** | Y | A standing wishlist worth carrying; a trip may override for its own shortlist |
-| 5 | `Rather skip` | Destination leanings | **DEFAULT** | Y | As above, the negative half of the same lean |
-| 6 | ⭐ `Trip vibe` | Destination leanings | **TRIP** | n/a | *"The kind of trip **you're after**"* — beach this time, city next |
-| 7 | ⭐ `Can travel` | Dates & availability | **TRIP** | n/a | Windows for this trip |
-| 8 | `Blackout` | Dates & availability | **TRIP** | n/a | Dated to this trip's window |
-| 9 | `Trip length` | Dates & availability | **TRIP** | n/a | *"How long feels right"* **for this trip**; the facet links to trip Logistics once dates are set |
-| 10 | ⭐ `Leaving from` | Getting there & back | **DEFAULT** | Y | A home airport is durable and **does** change (you move; you are already abroad). The trip level owns origins — travelers attach to an origin by roster name |
-| 11 | `Arrive / leave` | Getting there & back | **TRIP** | n/a | This trip's arrival and departure, relative to this trip's group booking |
-| 12 | `Journey comfort` | Getting there & back | **DEFAULT** | Y | A standing transit tolerance. A trip that books a red-eye is a **worse** trip, not a broken one. A medical transit limit is authored as a **Need**, which is `PERSON` |
-| 13 | `Passport` | Getting there & back | **PERSON** | **N** | Issuing country and validity. **Silent per-trip divergence checks entry requirements against the wrong nationality** — an integrity defect. Decay is handled by the record's own validity horizon, never by a per-trip override |
-| 14 | ⭐ `Lodging style` | Where you stay | **DEFAULT** | Y | A durable lean ("rental with a kitchen") that a trip may override. A step-free requirement is a **Need** |
-| 15 | `Rooming` | Where you stay | **TRIP** | n/a | *"happy to share with Sam"* — names this trip's group |
-| 16 | ⭐ `Comfort range` | Budget appetite | **DEFAULT** | Y | A durable spend lean; a trip may legitimately run leaner or richer |
-| 17 | `Splurge appetite` | Budget appetite | **DEFAULT** | Y | As above |
-| 18 | `Category` | Needs | **PERSON** | **N** | Types the need and routes its constraint link. Silent divergence mis-routes a non-negotiable to the wrong trip constraint |
-| 19 | ⭐ `Specific` | Needs | **PERSON** | **N** | The allergy, the heat ceiling, the mobility limit. **The canonical `PERSON` field** |
-| 20 | `Applies to` | Needs | **TRIP** | n/a | **Never asked — computed.** The need→constraint edge, recomputed per trip by enrichment. See *The `Needs` split* below |
-| 21 | ⭐ `Desire` | Desires | **TRIP** | n/a | Anchored to this destination and occasion (*"explore the local markets"*). Its source of truth is the trip's own traveler file; a later trip-history capability may pre-fill it, and the trip file stays authoritative |
-| 22 | `Priority tier` | Desires | **TRIP** | n/a | Ranks a TRIP-class desire; cannot outlive its subject |
-| 23 | `Recurrence` | Desires | **TRIP** | n/a | As above |
-| 24 | `Theme tag(s)` | Desires | **TRIP** | n/a | As above |
-| 25 | `Overlap` | Desires | **TRIP** | n/a | **Never asked — computed.** Who else on **this trip** shares it. Symmetric with `Applies to` |
-| 26 | ⭐ `Pace` | Travel style & pace | **DEFAULT** | Y | A durable lean that a trip may override (a packed city break, then a slow beach week) |
-| 27 | `Day rhythm` | Travel style & pace | **DEFAULT** | Y | Whether they are a morning person — durable, and jet lag makes it legitimately overridable |
-| 28 | `Novelty vs comfort` | Travel style & pace | **DEFAULT** | Y | Durable lean, trip-adjustable |
-| 29 | `Planning style` | Travel style & pace | **DEFAULT** | Y | Durable lean, trip-adjustable |
-| 30 | ⭐ `Interests` | Interests & tastes | **DEFAULT** | Y | Durable ("museums, food & markets") and **not** destination-scoped |
-| 31 | `Cuisine appetite` | Interests & tastes | **DEFAULT** | Y | *"How you eat **when you travel**"* — durable by its own wording. Not destination-scoped |
-| 32 | `Been here before?` | Interests & tastes | **DEST** | n/a | *"How well you already know **this destination**"* — closed enum; unanswered reads **unknown**, never `never` |
-| 33 | `Already done` | Interests & tastes | **DEST** | n/a | *"Anything you've already seen or eaten **here**"*. A later trip-history capability would *supplement* these two, never replace them |
-| 34 | `Group time` | People dynamics | **TRIP** | n/a | How much of **this trip** as a group — the answer depends on who this group is |
-| 35 | `Split off with` | People dynamics | **TRIP** | n/a | Names this trip's group members |
-| 36 | `Solo, I'd` | People dynamics | **DEFAULT** | Y | A personal want with no group referent (*"find a quiet café and read"*) — the one field in this section that survives a change of group |
-| 37 | `Whole-group moments` | People dynamics | **TRIP** | n/a | *"every dinner", "the day trip", "the first night"* — references this trip's itinerary shape |
-| 38 | `Special occasion?` | Anything else | **TRIP** | n/a | *"Is **the trip** marking anything"* — the subject is the trip |
-| 39 | *(unlabelled free-text tail)* | Anything else | **TRIP** | n/a | Unstructured and unparseable. **Fail-safe disposition:** a durable store must not silently carry forward free text that may be trip-specific, and it is the highest-risk copy for privacy. Explicit, not an omission |
+`Scope` = how many times the label may legitimately occur in one file. **`slot`** = at most once, so a second occurrence is `MALFORMED-SLOT`. **`block`** = the label belongs to a repeated block (`Needs`, `Desires`), so repetition is **user data, not a defect** — the same reading the denominator rule above already applies when it counts a repeated block as one field. **Scope is a property of the field, total over all 39 rows, and it is the axis `K3`/`K4` and `MALFORMED-SLOT` branch on.**
 
-**Totals — `PERSON` 3 · `DEFAULT` 15 · `TRIP` 18 · `DEST` 2 across the labelled fields**, plus the free-text slot as `TRIP`. Every slot carries exactly one class; none carries two, and none is unclassified. **Sum the class column and assert equality with the distinct-label count derived from the template — never with a literal restated here.**
+| # | Field | Section | Class | Ovr? | Scope | Rationale |
+|---|---|---|---|---|---|---|
+| 1 | `Name` | About you | **DEFAULT** | Y | `slot` | **Borne by the person form's H1 title line, not by a bullet — and therefore starred in neither form** (see *The starred pass* below). The person record holds the canonical name; **`trip-context.md` § Group is the per-trip display-name authority** (see *The display name has one authority* below). A trip legitimately renders "Mom" where the record says "Pat" — that is DEFAULT semantics, not a defect |
+| 2 | `Relationship` | About you | **TRIP** | n/a | `slot` | *"how you fit in **the group**"* — stated relative to this trip's group; a different group reframes it |
+| 3 | `Party` | About you | **TRIP** | n/a | `slot` | Who is travelling **on this trip** without their own form. `reference/adr/ADR-006-third-party-data-capture.md` bounds their data to needs-only; that boundary is preserved, not widened |
+| 4 | `Would love` | Destination leanings | **DEFAULT** | Y | `slot` | A standing wishlist worth carrying; a trip may override for its own shortlist |
+| 5 | `Rather skip` | Destination leanings | **DEFAULT** | Y | `slot` | As above, the negative half of the same lean |
+| 6 | ⭐ `Trip vibe` | Destination leanings | **TRIP** | n/a | `slot` | *"The kind of trip **you're after**"* — beach this time, city next |
+| 7 | ⭐ `Can travel` | Dates & availability | **TRIP** | n/a | `slot` | Windows for this trip |
+| 8 | `Blackout` | Dates & availability | **TRIP** | n/a | `slot` | Dated to this trip's window |
+| 9 | `Trip length` | Dates & availability | **TRIP** | n/a | `slot` | *"How long feels right"* **for this trip**; the facet links to trip Logistics once dates are set |
+| 10 | ⭐ `Leaving from` | Getting there & back | **DEFAULT** | Y | `slot` | A home airport is durable and **does** change (you move; you are already abroad). The trip level owns origins — travelers attach to an origin by roster name |
+| 11 | `Arrive / leave` | Getting there & back | **TRIP** | n/a | `slot` | This trip's arrival and departure, relative to this trip's group booking |
+| 12 | `Journey comfort` | Getting there & back | **DEFAULT** | Y | `slot` | A standing transit tolerance. A trip that books a red-eye is a **worse** trip, not a broken one. A medical transit limit is authored as a **Need**, which is `PERSON` |
+| 13 | `Passport` | Getting there & back | **PERSON** | **N** | `slot` | Issuing country and validity. **Silent per-trip divergence checks entry requirements against the wrong nationality** — an integrity defect. Decay is handled by the record's own validity horizon, never by a per-trip override |
+| 14 | ⭐ `Lodging style` | Where you stay | **DEFAULT** | Y | `slot` | A durable lean ("rental with a kitchen") that a trip may override. A step-free requirement is a **Need** |
+| 15 | `Rooming` | Where you stay | **TRIP** | n/a | `slot` | *"happy to share with Sam"* — names this trip's group |
+| 16 | ⭐ `Comfort range` | Budget appetite | **DEFAULT** | Y | `slot` | A durable spend lean; a trip may legitimately run leaner or richer |
+| 17 | `Splurge appetite` | Budget appetite | **DEFAULT** | Y | `slot` | As above |
+| 18 | `Category` | Needs | **PERSON** | **N** | `block` | Types the need and routes its constraint link. Silent divergence mis-routes a non-negotiable to the wrong trip constraint |
+| 19 | ⭐ `Specific` | Needs | **PERSON** | **N** | `block` | The allergy, the heat ceiling, the mobility limit. **The canonical `PERSON` field** |
+| 20 | `Applies to` | Needs | **TRIP** | n/a | `block` | **Never asked — computed.** The need→constraint edge, recomputed per trip by enrichment. See *The `Needs` split* below |
+| 21 | ⭐ `Desire` | Desires | **TRIP** | n/a | `block` | Anchored to this destination and occasion (*"explore the local markets"*). Its source of truth is the trip's own traveler file; a later trip-history capability may pre-fill it, and the trip file stays authoritative |
+| 22 | `Priority tier` | Desires | **TRIP** | n/a | `block` | Ranks a TRIP-class desire; cannot outlive its subject |
+| 23 | `Recurrence` | Desires | **TRIP** | n/a | `block` | As above |
+| 24 | `Theme tag(s)` | Desires | **TRIP** | n/a | `block` | As above |
+| 25 | `Overlap` | Desires | **TRIP** | n/a | `block` | **Never asked — computed.** Who else on **this trip** shares it. Symmetric with `Applies to` |
+| 26 | ⭐ `Pace` | Travel style & pace | **DEFAULT** | Y | `slot` | A durable lean that a trip may override (a packed city break, then a slow beach week) |
+| 27 | `Day rhythm` | Travel style & pace | **DEFAULT** | Y | `slot` | Whether they are a morning person — durable, and jet lag makes it legitimately overridable |
+| 28 | `Novelty vs comfort` | Travel style & pace | **DEFAULT** | Y | `slot` | Durable lean, trip-adjustable |
+| 29 | `Planning style` | Travel style & pace | **DEFAULT** | Y | `slot` | Durable lean, trip-adjustable |
+| 30 | ⭐ `Interests` | Interests & tastes | **DEFAULT** | Y | `slot` | Durable ("museums, food & markets") and **not** destination-scoped |
+| 31 | `Cuisine appetite` | Interests & tastes | **DEFAULT** | Y | `slot` | *"How you eat **when you travel**"* — durable by its own wording. Not destination-scoped |
+| 32 | `Been here before?` | Interests & tastes | **DEST** | n/a | `slot` | *"How well you already know **this destination**"* — closed enum; unanswered reads **unknown**, never `never` |
+| 33 | `Already done` | Interests & tastes | **DEST** | n/a | `slot` | *"Anything you've already seen or eaten **here**"*. A later trip-history capability would *supplement* these two, never replace them |
+| 34 | `Group time` | People dynamics | **TRIP** | n/a | `slot` | How much of **this trip** as a group — the answer depends on who this group is |
+| 35 | `Split off with` | People dynamics | **TRIP** | n/a | `slot` | Names this trip's group members |
+| 36 | `Solo, I'd` | People dynamics | **DEFAULT** | Y | `slot` | A personal want with no group referent (*"find a quiet café and read"*) — the one field in this section that survives a change of group |
+| 37 | `Whole-group moments` | People dynamics | **TRIP** | n/a | `slot` | *"every dinner", "the day trip", "the first night"* — references this trip's itinerary shape |
+| 38 | `Special occasion?` | Anything else | **TRIP** | n/a | `slot` | *"Is **the trip** marking anything"* — the subject is the trip |
+| 39 | *(unlabelled free-text tail)* | Anything else | **TRIP** | n/a | `slot` | Unstructured and unparseable. **Fail-safe disposition:** a durable store must not silently carry forward free text that may be trip-specific, and it is the highest-risk copy for privacy. Explicit, not an omission |
+
+**Totals — `PERSON` 3 · `DEFAULT` 15 · `TRIP` 18 · `DEST` 2 across the labelled fields**, plus the free-text slot as `TRIP`. **Scope totals — `slot` 31 · `block` 8**, the eight being the three `Needs` and five `Desires` labels. Every slot carries exactly one class **and exactly one scope**; none carries two of either, and none is unclassified. **Sum the class column and assert equality with the row count the denominator rule above reconciles — never with a literal restated here.**
 
 > **`Passport` acquires a third artifact scope, and the publish guard must follow it.** `Passport` is `PERSON`, so it lives in the durable person record as well as in a trip's traveler file. Per `reference/data-architecture.md` § 5.2 the non-publishable fence *does not inherit* — it is one row per field **per artifact scope** — so the person-record scope needs its **own** non-publishable row. A missing row there is fail-open on a passport.
 
@@ -424,7 +427,7 @@ A **field** is a distinct `(section, label)` pair rendered as a body bullet of t
 Deterministic and re-runnable: apply the tests in order and stop at the first match.
 
 - **T1 — Whose statement is it?** If the value's *subject* is this trip (its dates, its group, its bookings, its occasion) → **TRIP**. If the subject is this destination, and the answer would be unchanged by which trip goes there → **DEST**.
-- **T2 — Is it answered, or computed?** A field the traveler is never asked (`Applies to`, `Overlap` — the template's guide states *"Two fields are never asked about … The planner works both out"*) is an **edge into this trip's graph**, recomputed per trip. It is **TRIP by construction** and can never be DEFAULT: there is no durable value to override.
+- **T2 — Is it answered, or computed?** A field the traveler is never asked is an **edge into this trip's graph**, recomputed per trip. Two fields qualify, and post-split the forms say so in two different ways. `Overlap` is still rendered and still unasked — the trip form's guide states *"**One field is never asked about.** Leave **Overlap** blank. The planner works it out."* — while `Applies to` is no longer rendered at all: the split removed its blank slot as pointless for a computed value, which is the same verdict carried one step further. Both are **TRIP by construction** and neither can be DEFAULT: there is no durable value to override.
 - **T3 — Would silent divergence be a *defect* or a *choice*?** This is the `PERSON`/`DEFAULT` discriminator, and it is a **safety** test:
   - **PERSON** — silent per-trip divergence is a safety or integrity defect. The plan could violate a real boundary or misidentify a legal document.
   - **DEFAULT** — divergence is a legitimate planning choice; being wrong costs a worse trip, not a broken one.
@@ -454,7 +457,9 @@ Deterministic and re-runnable: apply the tests in order and stop at the first ma
 **The mechanism is structural: once the intake form is split, the trip form does not carry `PERSON` fields.** There is no slot to fill, so there is nothing to police. The class cannot collapse via a per-trip need override, because the override has nowhere to live. Two checkable consequences:
 
 1. The trip form emits **zero** `PERSON`-class field bullets.
-2. `reference/schemas/traveler-profile.md` **drops** the three `PERSON` fields from its body-shape rules, and the person record's own schema gains them. The partition becomes machine-graded the moment both schemas exist — which is why a **schema-bearing** home for the person record is load-bearing rather than incidental.
+2. The person form emits **zero** `TRIP`- and `DEST`-class field bullets — the converse assertion, and the one `reference/schemas/person-record.md` actually ships: *"What is owed is the negative assertion, not a rule: the durable form emits zero `TRIP`/`DEST` labels."*
+
+**The grading is done by the forms, not by the schema fences.** Neither schema carries body-shape rules for these labels and neither is meant to: both fences are **frontmatter-only**, deliberately, because — as the person-record schema states — *"a `field Passport:` line here would declare a passport a machine-readable frontmatter key, which is both wrong by the boundary test and a worse privacy shape."* The partition is therefore machine-graded as **two counted zeros over the two shipped forms** — no `PERSON` label on the trip form, no `TRIP` or `DEST` label on the person form — which is a stronger check than a fence rule because it grades the artifact a human actually fills in. A **schema-bearing** home for the person record remains load-bearing for the record's *shape*; it is simply not what enforces this partition.
 
 ### A need that applies to one trip only
 
@@ -480,11 +485,13 @@ The § *Reconciliation Rule* above already assigns that link to the enrichment a
 
 ### The starred pass — what a returning traveler is re-asked
 
-The template stars the highest-value fields, at most one per section. Under this partition the starred set splits **7 library-sourced / 3 re-asked** — the measure of the intake barrier this classification removes.
+The forms star the highest-value fields, at most one per section — **9 stars, 6 on the person form and 3 on the trip form.** Under this partition the starred set splits **6 library-sourced / 3 re-asked**, the measure of the intake barrier this classification removes: a returning traveller's starred pass is **9 → 3**.
 
-| Re-asked each trip (**3**) | Library-sourced (**7**) |
+| Re-asked each trip (**3**) | Library-sourced (**6**) |
 |---|---|
-| ⭐ `Trip vibe` (TRIP) · ⭐ `Can travel` (TRIP) · ⭐ `Desire` (TRIP) | ⭐ `Name` (DEFAULT) · ⭐ `Leaving from` (DEFAULT) · ⭐ `Lodging style` (DEFAULT) · ⭐ `Comfort range` (DEFAULT) · ⭐ `Specific` (PERSON) · ⭐ `Pace` (DEFAULT) · ⭐ `Interests` (DEFAULT) |
+| ⭐ `Trip vibe` (TRIP) · ⭐ `Can travel` (TRIP) · ⭐ `Desire` (TRIP) | ⭐ `Leaving from` (DEFAULT) · ⭐ `Lodging style` (DEFAULT) · ⭐ `Comfort range` (DEFAULT) · ⭐ `Specific` (PERSON) · ⭐ `Pace` (DEFAULT) · ⭐ `Interests` (DEFAULT) |
+
+> **`Name` appears in neither column, and the split is why.** It was starred while the intake was one form; the person form now carries the name as its **H1 title line** rather than as a bullet, so it is starred nowhere and the star total is 9 rather than 10. It remains `DEFAULT` and remains library-sourced — a returning traveller is **not** re-asked it — but it is not part of the *starred* pass, which is what makes that pass 9 → 3 rather than 10 → 3. **`scripts/test-artifact-schema.sh` group `ST` gates the per-form star counts and reads 6 and 3**; this section now agrees with the gate rather than contradicting it.
 
 **The split is graded on `PERSON` ∪ `DEFAULT`, not on class `PERSON`.** Under the narrow reading only one starred field (`Specific`) is `PERSON`, and the intake-barrier claim reads as failed against a correct classification.
 
@@ -543,35 +550,40 @@ The reference is borne by the traveller file alone. **Five of the seven states a
 
 ### The lattice — class first, then answered-ness
 
-**Arguments**, four, each typed and each single-valued:
+**Arguments**, five, each typed and each single-valued:
 
 - `C` — the field's class, from the classification table above.
 - `p` — the trip-side value if `ANSWERED`, else `⊥`.
 - `A` — availability ∈ {`AVAILABLE`, `ABSENT-BY-DESIGN`, `UNRESOLVED`}, the three-valued projection of the bearer state.
 - `r` — the record-side value if `A = AVAILABLE` **and** the record's slot is `ANSWERED`, else `⊥`.
+- `s` — the field's **scope** ∈ {`slot`, `block`}, read from the `Scope` column of the classification table above. It is a property of the field, not of the instance, and is single-valued for every field by construction. `K3`/`K4` and `MALFORMED-SLOT` are the only consumers.
 
 **Six rules. Branch on `C` first; consult answered-ness only where the class admits divergence.**
 
 | # | Guard | Composed value `V(f)` | Winning source |
 |---|---|---|---|
 | **K1** | `C ∈ {TRIP, DEST}` | `p` if `p ≠ ⊥`, else `UNKNOWN` | **the trip, always.** The record is not their authoritative source; `A` and `r` are never read |
-| **K2** | `C = PERSON` ∧ `A ≠ AVAILABLE` | `p` if `p ≠ ⊥`, else `UNKNOWN` | **the trip, as sole source.** There is no second owner. On `ABSENT-BY-DESIGN` nothing is reported; on `UNRESOLVED` the bearer defect is reported and the trip's own value is **retained** |
+| **K2** | `C = PERSON` ∧ `A ≠ AVAILABLE` | `p` if `p ≠ ⊥`, else `UNKNOWN` | **the trip, as sole source.** There is no second owner, and the trip's own value is **retained** — under `UNRESOLVED` because the record side is undetermined rather than empty. **This rule states no report.** A value rule decides a value; the report keys on the un-collapsed bearer state and never on `A` — see § *The discriminator that must not collapse* |
 | **K3** | `C = PERSON` ∧ `A = AVAILABLE` ∧ the field is **slot-scoped** | `r` if `r ≠ ⊥`, else `UNKNOWN` | **the record, unconditionally.** A trip-side value is never composed; where `p ≠ ⊥` it is additionally reported `CLASS-VIOLATION` |
 | **K4** | `C = PERSON` ∧ `A = AVAILABLE` ∧ the field is **block-scoped** | the **union** — see the overlay below | **both, without either overriding.** Every trip-side block is reported `CLASS-VIOLATION` |
 | **K5** | `C = DEFAULT` ∧ `p ≠ ⊥` | `p` | **the trip.** The one sanctioned override; reported `DIVERGENT` or `REDUNDANT-OVERRIDE` |
 | **K6** | `C = DEFAULT` ∧ `p = ⊥` | `r` if `r ≠ ⊥`, else `UNKNOWN` | **the record**, or nothing |
 
-> **A trip-side `PERSON` value is a schema violation, not an override — REFUSE and REPORT.** Silent precedence in either direction is exactly how the class collapses into `DEFAULT`. **Answered-ness does not rescue this class**, and the reason is measured rather than argued: on the two shipped traveller fixtures the `PERSON`-class bullets are present *and answered* on the trip side **today** — **10 bullets, 8 of them answered** — because the intake form has not yet been split. Under a presence predicate *or* a naive answered-ness predicate those bullets read as overrides and the safety class goes silent on a person edit. **`DEFAULT` is the one class the answered-ness predicate actually changes.**
+> **A trip-side `PERSON` value is a schema violation, not an override — REFUSE and REPORT.** Silent precedence in either direction is exactly how the class collapses into `DEFAULT`. **Answered-ness does not rescue this class**, and the reason is measured rather than argued: on the two shipped traveller fixtures the `PERSON`-class bullets are present *and answered* on the trip side **today** — **10 bullets, 8 of them answered**. Both are legacy files authored against the unsplit form, and § 7.6 guarantees such files are never upgraded, so **this population does not shrink when the form splits** — which is precisely why the rule cannot be founded on the split having happened. It has: the shipped trip form emits zero `PERSON`-class bullets, and these fixtures still carry ten. Under a presence predicate *or* a naive answered-ness predicate those bullets read as overrides and the safety class goes silent on a person edit. **`DEFAULT` is the one class the answered-ness predicate actually changes.**
 
 **Answered-ness still does work inside `PERSON`, and it is a different job.** It decides whether there is a **claim to report** (K3's `CLASS-VIOLATION` fires only where `p ≠ ⊥`), never which source **wins** (K3 returns `r` either way). Reading `Passport: —` on a referencing trip is not a violation of anything: an em dash is a skipped field, and skipping is what the form instructs.
 
-**Totality — by construction and by count.** The cell space is `4 classes × 2 trip-side states × 11 library configurations` = **88**, where 11 = the 5 bearer states carrying no record side (L1, L2, L5, L6, L7) + the 2 that do (L3, L4) × the 3 record-side states. `K1` covers `2 × 2 × 11 = 44`; `K2` covers `1 × 2 × 5 = 10` and `K3 ∪ K4` the remaining `1 × 2 × 6 = 12`, partitioned between them by field scope, which every `PERSON` field carries exactly one of; `K5` and `K6` cover `1 × 1 × 11 = 11` each. **44 + 10 + 12 + 11 + 11 = 88.** The guards are mutually exclusive — `K1` takes two classes whole, `K2`/`K3`/`K4` partition `PERSON` first on `A` and then on field scope, `K5`/`K6` partition `DEFAULT` on `p` — and jointly exhaustive, because every slot carries exactly one class. **No cell is unreached and no cell is reached twice.**
+**Why `K3` discards an answered trip-side value where `K2` retains one.** The two rules look asymmetric and are not: they differ on whether the authoritative source was **consulted**. Under `K3` the reference resolved and the record's slot is `UNSTATED` — the authority has been read and holds no value, so `UNKNOWN` *is* that authority's answer, and composing `p` instead would let answered-ness select a source inside `PERSON`, which is the one thing this class forbids. Under `K2` with `A = UNRESOLVED` the record side is **undetermined rather than empty** — nothing was read at all — so discarding the trip's value would let a mistyped `person:` key silently delete a real constraint. The discriminator is *consulted-and-silent* versus *never consulted*, not *answered* versus *unanswered*. **This is also the limit of *"linking a person is never a destructive act"***: that property belongs to the `Needs` union under `K4`, where two needs are two instances and nothing is displaced. On a **slot**-scoped field the record is the sole owner of one fact, so `K3` composes `UNKNOWN` and marks it `[CONTESTED]` — the trip-side claim is preserved *in the report*, which is where a claim the class refuses belongs.
+
+**Totality — by construction and by count.** The cell space is `5 class-and-scope kinds × 2 trip-side states × 11 library configurations` = **110**. The five kinds are `TRIP`, `DEST`, `DEFAULT`, `PERSON` **slot**-scoped and `PERSON` **block**-scoped — **field scope is a declared axis, not a free variable** — and it refines `PERSON` alone because `K3`/`K4` are the only guards that read `s`; the other three kinds are scope-uniform, their rules covering both scope values, so each is one kind rather than two. The 11 library configurations = the 5 bearer states carrying no record side (L1, L2, L5, L6, L7) + the 2 that do (L3, L4) × the 3 record-side states. `K1` covers `2 × 2 × 11 = 44`; `K2` covers `2 × 2 × 5 = 20`; `K3` and `K4` cover `1 × 2 × 6 = 12` each; `K5` and `K6` cover `1 × 1 × 11 = 11` each. **44 + 20 + 12 + 12 + 11 + 11 = 110.** The guards are mutually exclusive — `K1` takes two kinds whole, `K2` takes **both** `PERSON` kinds wherever `A ≠ AVAILABLE`, `K3`/`K4` split the two `PERSON` kinds wherever `A = AVAILABLE`, and `K5`/`K6` partition `DEFAULT` on `p` — and jointly exhaustive, because every slot carries exactly one class **and** exactly one scope. **No cell is unreached and no cell is reached twice.**
+
+> **Every term above is counted at the same granularity, and that is the load-bearing property of the proof.** Counting `K2` over an unrefined `PERSON` while writing `K3 ∪ K4` as a single term collapses — for the length of that one term — precisely the distinction the two rules exist to draw, and the sum then re-adds correctly against a space smaller than the one the rules actually range over. **An arithmetic check passes and the proof does not.** A totality claim whose terms are taken at two granularities establishes nothing about either, which is why scope is carried as an axis here rather than mentioned as a property in the prose of one rule.
 
 **Unresolvable is always the literal `UNKNOWN`, never an empty set**, and the token is sanctioned rather than merely chosen: the publish guard's `stated()` excludes `unknown` **by name**, so a guarded field composed to `UNKNOWN` is already outside the publishable value set. Any other sentinel would enter that set as a real string and abort publishes wherever it appeared in rendered output.
 
 ### Determinism — three obligations, and the third is where a design goes quietly order-dependent
 
-- **O1 — no rule names a sequence.** No guard above refers to a first source, a last writer, file order or mtime. `V` is a pure function of four typed arguments. **This is checkable by reading the table: a rule mentioning a traversal is a defect.**
+- **O1 — no rule names a sequence.** No guard above refers to a first source, a last writer, file order or mtime. `V` is a pure function of five typed arguments. **This is checkable by reading the table: a rule mentioning a traversal is a defect.**
 - **O2 — the arguments are computed independently.** `p` comes from the trip file's parse and `r` from the record's; neither parse consults the other's outcome. `A` depends on the trip file's frontmatter and then the store, in that order, and is single-valued.
 - **O3 — every argument is single-valued.** A **slot-scoped label appearing twice in one file makes `p` a set**, so *"the trip value"* is undefined and any implementation resolves it by position. **Typed `MALFORMED-SLOT` → `UNKNOWN`, and reported. Never first-wins, never last-wins**, both of which are order-dependent by definition. This is a forward guarantee rather than a repair: there are **no** slot-scoped duplicates in the shipped form-shaped files today, and C3 is never upgraded, so a hand-introduced one would persist indefinitely.
 
@@ -633,12 +645,12 @@ The mark is invisible to the publish guard by construction: `clean()` strips bra
 
 > **`L1 NOT-REFERENCING` is the identity of the lattice, and compatibility is discharged by showing that rather than by promising it.**
 
-Substitute `A = ABSENT-BY-DESIGN` — which makes `r = ⊥` by construction — and every rule collapses into today's read:
+Substitute the **bearer state** `L1 NOT-REFERENCING` — which projects to `A = ABSENT-BY-DESIGN` and makes `r = ⊥` by construction — and every rule collapses into today's read. **The substitution is the bearer state, not the projection**, because `L2 TOMBSTONED` shares the projection and does not share the report:
 
-| Rule | Under `A = ABSENT-BY-DESIGN` | Against today |
+| Rule | Under `L1 NOT-REFERENCING` | Against today |
 |---|---|---|
 | K1 | `p` if stated, else `UNKNOWN` | identical |
-| K2 | `p` if stated, else `UNKNOWN`, **no report** | identical — this is the branch every `PERSON` field of every existing trip takes |
+| K2 | `p` if stated, else `UNKNOWN`; **no report — because the bearer state is `L1`**, not because `A` is `ABSENT-BY-DESIGN`. `L2 TOMBSTONED` takes the same row and the same value, and reports `TOMBSTONED`, informational | identical — this is the branch every `PERSON` field of every existing trip takes |
 | K3 · K4 | unreachable — both guards require `A = AVAILABLE` | n/a |
 | K5 | `p` | identical |
 | K6 | `UNKNOWN` | identical — an unanswered field already reads unknown |
