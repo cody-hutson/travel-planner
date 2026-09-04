@@ -71,7 +71,10 @@ recomposed**, and that is checkable rather than promised:
 | Location | Before | After |
 |---|---|---|
 | `trip-context.md` § *Group* — the `Traveler` cell | the display name | the token |
+| `trip-context.md` § *Group* — any **other** cell of that person's row | a free-text description *of the person* | the **whole cell** substituted to `—` |
+| `trip-context.md` § *Group* — the **prose sub-fields** | the display name | the token, swept by **block extent** |
 | `trip-context.md` § *Hard Constraints* — `Applies to:` | the display name | the token, **never emptied** |
+| `travelers/<stem>.md` — a **trip-local override** no schema declares | the operator's divergent copy of a durable field | the form's **not-answered sentinel** |
 | `travelers/<stem>.md` — the filename stem | the display name | the token |
 | `travelers/<stem>.md` — frontmatter `person:` | a record reference | **the line is gone** |
 | `outputs/traveler-model.md` — the `##` entry heading | the display name | the token, marked `[ERASED]` |
@@ -92,6 +95,33 @@ the need it was built around. It did not change `- **Total travelers:** 3` — e
 not reduce the party, because the person travelled. And it did not touch the
 `**Lifecycle:**` marker: the trip was never reopened, never re-concluded, and gained no
 second closing log entry.
+
+## What this fixture could not witness before, and now does
+
+Three of the erasure verb's reach rows had **nothing here to grade**. An implementation could
+have skipped any of them and no assertion in this repository would have moved — the rows were
+not weakly guarded, they were unobservable. Each is now exercised, and each is exercised
+**with a control arm**, because a property whose only evidence is a zero is not evidence.
+
+| Reach row | What was missing | What witnesses it now | Arm |
+|---|---|---|---|
+| *any other cell of that person's row* | the roster carried two columns, so the class had no cell at all | a third, free-text column: the subjects' cells are the sentinel, **Dana's carries a real description** | `ER16` |
+| *the § Group prose sub-fields, whatever they are* | all three sub-fields named nobody | `Subgroup notes` names the party — the subjects as tokens, **the survivor by name** | `ER17` |
+| *the traveller file is rewritten, not field-edited* | zero override constructs anywhere in the fixture | two override fields **no schema declares** — sentinel on the erased bearer, **real values on Dana's** | `ER15` |
+
+**The control half is the easy half to leave out and the worthless half to leave out.** Each
+of these assertions is a zero over the erased subjects: no surviving description, no surviving
+name, no surviving override value. A zero produced by an extractor that reads nothing looks
+exactly like a zero produced by a correct erasure. Dana carries the positive case for all
+three, so every one of those zeros is read against an arm that must come back non-empty in the
+same run — the same discipline `AF8` already applies to the roster, the model entry and the
+constraint roster.
+
+**A narrowing fails here rather than falling silent.** `ER16` fails if the roster is narrowed
+back to two columns, `ER17` fails if the sub-fields stop naming the party, and `ER15` fails if
+the override block is dropped. Each of those edits is precisely how the property became
+ungraded in the first place, and a suite that passes over an absent column has measured
+nothing at all.
 
 ## The `generated:` date is a signature
 
@@ -126,9 +156,9 @@ marker examples/archived-trip-demo/trip-context.md ARCHIVED
 
 # pin <content-address> <path>
 pin 9243b408390a8eea7f31831c682b81d25bff6fa0 examples/archived-trip-demo/outputs/traveler-model.md
-pin 894ea44e7de757c2e19a695fc7f569a1d5114161 examples/archived-trip-demo/travelers/dana.md
-pin f9c8798c2f20c97d6b043cb4babc42c5419341ec examples/archived-trip-demo/travelers/per-4f1c.md
-pin d3f07a1bc90aa7b447e3e714d3a3aa989433e430 examples/archived-trip-demo/trip-context.md
+pin 9ea67a3071eb0419025ca178cc9cd312ca38d5f4 examples/archived-trip-demo/travelers/dana.md
+pin 2a6594c117d1cc2c614640ad8f68fc4aaa557c35 examples/archived-trip-demo/travelers/per-4f1c.md
+pin c4201da97179b02b0128b08e76747bf643f7df85 examples/archived-trip-demo/trip-context.md
 pin 8c829bc488357ea4ec216f4d71270b83194ffc56 examples/archived-trip-demo/trip-log.md
 ```
 

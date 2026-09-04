@@ -114,6 +114,22 @@ distinguishable.
 
 ---
 
+## Trip-local overrides
+
+- **Loyalty number:** Illustrative — 0000-0000
+- **Emergency contact:** Illustrative — a neighbour at home
+
+**Dana's copy of the override block is the control arm for the override sweep.** The erased
+bearer carries these same two fields reading the form's not-answered sentinel; this file
+carries them with values. Without this half, an assertion that every override on an erased
+bearer is a sentinel is satisfied identically by a probe whose extractor found no override
+fields at all — the zero would be an empty scan rather than a clean one. Neither label is
+declared by any schema, which is the point: they are the fields a field-by-field erasure
+cannot enumerate, so they are the fields that show whether the file was rewritten.
+`scripts/test-artifact-schema.sh` arm `ER15` reads both halves in one run.
+
+---
+
 ## Anything else
 
 - **Special occasion?:** —

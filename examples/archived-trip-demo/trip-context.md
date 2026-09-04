@@ -79,15 +79,31 @@ change before the trip began.
 
 ## Group
 
-| Traveler | Profile |
-|----------|---------|
-| Dana | `travelers/dana.md` |
-| per-4f1c | `travelers/per-4f1c.md` |
-| per-9a3e | — no profile filed; needs are operator-provided |
+| Traveler | Profile | Role / relationship |
+|----------|---------|---------------------|
+| Dana | `travelers/dana.md` | Booked the group flight; held the guesthouse reservation |
+| per-4f1c | `travelers/per-4f1c.md` | — |
+| per-9a3e | — no profile filed; needs are operator-provided | — |
 
 - **Total travelers:** 3
 - **Travel mode:** Group moves together
-- **Subgroup notes:** None — single origin, one booking, one window.
+- **Subgroup notes:** Dana and per-4f1c took the early canal walk on the second morning;
+  per-9a3e stayed at the guesthouse and rejoined the group for lunch.
+
+**The third column and the sub-field above are the fixture's witnesses for two reach rows
+that had nothing to grade.** The erasure verb's reach table treats *any other cell of that
+person's row* as a whole-cell substitution — these are free-text descriptions **of the
+person**, not join keys, so replacing only the name inside one would leave a description of
+the erased person standing under a tombstone, which reads as anonymised when it is not. It
+treats the `## Group` **prose sub-fields** as a sweep by **block extent**, deliberately not
+by a field list, because nothing in the corpus enumerates them and any list written down is
+stale the first time an operator adds one. A two-column roster whose sub-fields named nobody
+made both rows unobservable: an implementation could skip either and no arm would move.
+Here the erased subjects' description cells are the em-dash sentinel while **Dana's carries a
+real description**, and the sub-field names the party with the survivor's name standing and
+the subjects' as tokens — so each zero is read against a control that must come back
+non-empty. `scripts/test-artifact-schema.sh` arms `ER16` and `ER17` are the assertions, and a
+roster narrowed back to two columns fails `ER16` rather than passing over an absent column.
 
 **The roster is the name authority, which is why erasure has to reach this table.**
 `agents/00-enrichment.md` § *Traveler identity* makes this `Traveler` cell the

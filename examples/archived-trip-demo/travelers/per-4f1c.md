@@ -121,6 +121,31 @@ was built around, which is the milestone's own named risk.
 
 ---
 
+## Trip-local overrides
+
+- **Loyalty number:** —
+- **Emergency contact:** —
+
+**These two fields are the override witness, and no schema declares either of them.** A
+trip-local override is a divergent copy of a durable field sitting in this file — the
+operator typed it here because this trip diverged from the record. Neither label appears in
+`templates/traveler-intake.template.md`, and `reference/schemas/traveler-profile.md`
+constrains frontmatter only, so **no field enumeration anywhere reaches them.** That is the
+whole of why the erasure verb declares this file *rewritten rather than field-edited*: a
+field-by-field pass can only reach the fields someone listed, and the first unlisted
+override survives the erasure still carrying an identifying value.
+
+**Both now read the form's not-answered sentinel while the need above survives verbatim**,
+and that pairing is what makes the sentinel a measurement. A wholesale rewrite blanks the
+personal values and keeps the needs and their `Applies to:` link; a file blanked outright
+would take the need with it, and an enumerating pass would leave these two standing.
+`travelers/dana.md` carries the same two fields with real values — the control arm, without
+which "every override is a sentinel" is satisfied just as well by a probe that found no
+override at all. `scripts/test-artifact-schema.sh` arm `ER15` is the assertion, and it is
+the first witness the override-sweep half of this milestone's test criterion has had.
+
+---
+
 ## Anything else
 
 - **Special occasion?:** —
