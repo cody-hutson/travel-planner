@@ -656,9 +656,10 @@ disagreement branch with no resolution.
 The operator-provided third-party case: a party member who will never file a profile, whose needs
 the operator supplies.
 
-**Creates no file, anywhere** — no `travelers/<name>.md`, no proxy profile, no consent attestation,
-no durable artifact of any kind. `ADR-006` rejected the proxy profile precisely because it would
-create a durable identity artifact for a person who never asked for one.
+**Creates no file, anywhere** — no `travelers/<name>.md`, no proxy profile, no consent attestation.
+The entry's durable record is the carried-forward model entry, trip-scoped and deletable. `ADR-006`
+rejected the proxy profile precisely because it would create a durable identity artifact for a person
+who never asked for one; it does not claim the entry leaves no trace.
 
 - **Needs only.** The entry carries needs and nothing else. **A desire offered for a third party is
   refused**, and the refusal says why: `ADR-006` grants a party member exactly the needs class, and

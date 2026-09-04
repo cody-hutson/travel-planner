@@ -772,9 +772,11 @@ needs through the same fallback path above, admit them:
   bound the plan — and nothing else. No passport, no origin of their own, no
   lifecycle facets authored on their behalf. Per ADR-006 the identity class is
   **capture refused**, and a party member never becomes an origin.
-- **No file, anywhere.** They get no `travelers/<name>.md`, no proxy profile,
-  no consent attestation, and no durable artifact of any kind. The entry lives
-  only in the derived model inside the git-ignored `trips/` working dir.
+- **No file, anywhere.** They get no `travelers/<name>.md`, no proxy profile
+  and no consent attestation. Their durable record is the carried-forward model
+  entry itself — trip-scoped, living only in the derived model inside the
+  git-ignored `trips/` working dir, and deletable. `ADR-006` refuses the *file*;
+  it does not claim the entry leaves no trace.
 - **Never invented from a `Party:` string.** A `Party:` value with no
   operator-supplied needs yields **no entry** — not a blank one, not a
   `PROFILE MISSING` one. Capture is operator-triggered, always. A nameless

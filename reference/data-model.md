@@ -683,7 +683,7 @@ Three states share the observable *"the composed source has no library value"*, 
 
 **Observe.** `K5` selects it and the report carries `DIVERGENT` or `REDUNDANT-OVERRIDE`. **Composition reports; it does not normalise** — removing a redundant line needs the record's pre-edit value, which composition does not hold.
 
-**Remove.** **Removing an override means moving the trip-side slot from `ANSWERED` to `UNSTATED` — by any member of the equivalence class: deleting the line, blanking it, or writing `—`, which is what the form's own instruction produces.** `V` then falls from `K5` to `K6` and returns the record's value. *With no other effect* is provable rather than asserted: `V(f)` depends only on `(C, p, A, r)`, and changing `p` for one field changes no argument of any other field. No write to the record, no change to the reference, no change to any sibling field. The one observable side effect is that the field's report line disappears — which is the point.
+**Remove.** **Removing an override means moving the trip-side slot from `ANSWERED` to `UNSTATED` — by any member of the equivalence class: deleting the line, blanking it, or writing `—`, which is what the form's own instruction produces.** `V` then falls from `K5` to `K6` and returns the record's value. *With no other effect* is provable rather than asserted: `V(f)` depends only on `(C, p, A, r, s)` — and `s` is field-intrinsic, fixed by the field's own row — so changing `p` for one field changes no argument of any other field. No write to the record, no change to the reference, no change to any sibling field. The one observable side effect is that the field's report line disappears — which is the point.
 
 ### One-way — composition never writes the store
 

@@ -206,13 +206,19 @@ disposition the design still works but **loses its test surface** — measured: 
 carry **zero** files in `reference/schemas/` — and would need a bespoke stub-shape assertion in the
 guard suite. Named, not hand-waved.
 
-**One risk this spike could not discharge, recorded as still open.** The *within-trip* half of the
-collision problem remains unmitigated on the trip side, and this design does not change it: § 3.2
-records that the intake surface selects edit-over-create on a bare file-existence probe with no
-collision check, so a second same-named traveler silently overwrites the first — *"in files the
-model itself describes as carrying real personal detail."* That is the Traveler entity, which § 3.2
-governs and this design deliberately leaves untouched. The person store's own refusal predicate,
-above, covers the **store** side only. The trip-side half has no owner in this milestone.
+**One risk this spike could not discharge — subsequently closed in this milestone.** As written,
+the *within-trip* half of the collision problem was unmitigated on the trip side: § 3.2 recorded that
+the intake surface selected edit-over-create on a bare file-existence probe with no collision check,
+so a second same-named traveler silently overwrote the first — *"in files the model itself describes
+as carrying real personal detail."* The person store's own refusal predicate, above, covers the
+**store** side only, and at ratification the trip-side half had no owner.
+
+> **Superseded by what shipped.** The trip-side half did land in this milestone. The `profile` verb
+> now computes § 3.2's key over the stems of `trips/<slug>/travelers/*.md` and halts on a key already
+> held by a different person, running **before** the file-existence probe that used to decide alone.
+> § 3.2's identity rule is unchanged; the section was extended to record the surface that enforces it.
+> This paragraph is left standing because the risk it names was real at ratification, and the record
+> of a risk being discharged is worth more than a risk quietly deleted.
 
 ### Erasure reach — what the erasure-reach spike established
 
@@ -906,7 +912,8 @@ is a force that decided something below; a consideration that decided nothing is
   *inventing a second rule*, never *reaching a different answer than Traveler did*. § 3 is a procedure
   over entities that already splits its set five surrogate / five natural, so a different answer for an
   eleventh entity is the rule working rather than the rule being bypassed. Every identity question below
-  is settled by running § 3, and § 3.2 is left byte-unchanged.
+  is settled by running § 3. § 3.2's identity rule is left unchanged — the section was later extended
+  to record the intake surface that now enforces it, which adds no rule and changes no answer.
 - **A durable join key must not sit where an operator edits prose.** A key the operator retypes is a key
   a spelling correction re-identifies, orphaning every inbound reference. This is what separates a
   cross-trip Person from a trip-scoped Traveler, whose key the operator legitimately owns.
@@ -984,7 +991,8 @@ during this milestone; a path does not move.
 and never restated in frontmatter** (§ 4.3's no-double-home rule). **The display name is the body H1**,
 and its normalized form — reusing § 3.2's existing normalization, not a new one — is what creation
 refusal asserts over. Person is a distinct entity from Traveler: **Traveler's natural key, its filename
-correspondence and its publish-guard normalization are byte-unchanged, and § 3.2 is not reopened.**
+correspondence and its publish-guard normalization are byte-unchanged, and § 3.2's rule is not
+changed. The section is reopened in this milestone only to record that its intake half now ships.**
 
 Minting **asserts non-existence and re-mints on collision**; at four hex digits and a realistic store
 of tens of records the re-mint loop is cheap, and widening the token is set aside per **O21**.
@@ -1281,7 +1289,7 @@ stakeholder impact, not a rollback.
 | **Reconcile-on-link** | the reconcile slice |
 | **Erasure** — its reach set, its receipt, and its typed confirmation | the erasure slice |
 | The person record's **artifact-class ordinal** in § 1.1 | the schema-and-store slice, at its own commit |
-| The **within-trip Traveler collision** — the intake surface still selects edit-over-create on a bare file-existence probe | **UNOWNED in this milestone.** That is the Traveler entity, which § 3.2 governs and this record deliberately leaves untouched. Restated here so it is not read as covered |
+| The **within-trip Traveler collision** — the intake surface selected edit-over-create on a bare file-existence probe | **UNOWNED at ratification; CLOSED in this milestone.** The `profile` verb now runs § 3.2's key check ahead of the existence probe and halts on a collision. Restated here because the record ratified it as out of scope |
 | `trips/README.md`'s retention posture — *"No command deletes a trip folder"* — which the erasure verb falsifies | **UNOWNED in this milestone.** Named, not fixed |
 
 ### Ratifier's notes — Context claims corrected without editing their record
@@ -1321,7 +1329,7 @@ mid-milestone renumbering already demonstrated.
 | `reference/data-architecture.md` § 1 and the § 1.1 heading | **Two-sentence narrowing.** The *per-trip* qualifier moves off the class set and onto the per-trip rows, so a cross-trip class is not filed under a heading that denies it. Cheaper than a new band, and it preserves the `reference/schemas/` bijection a new band would break | schema-and-store slice |
 | `reference/data-architecture.md` § 1.1 table | **One new row**: `people/<person>.md`, written by the person, `persist-mutable`, `provenance: human`, **`publish: internal-hard`** — not `internal`. It carries `Passport`, which § 5.6 already declares non-publishable in two other scopes, and `internal-hard` is the value § 5.1 reserves for a class whose values *"must not reach a rendered page in any form, including anonymized"* | schema-and-store slice |
 | `reference/data-architecture.md` § 2 | **Eleventh entity row**: Person — surrogate `psn-<token>`; Person 1—N Traveler-reference; Person 0..1—1 Person via `merged-into:`, depth 1 | schema-and-store slice |
-| `reference/data-architecture.md` § 3.4 | The assignment becomes **six surrogate / five natural**. **§ 3.2 is byte-unchanged** | schema-and-store slice |
+| `reference/data-architecture.md` § 3.4 | The assignment becomes **six surrogate / five natural**. **§ 3.2's rule is unchanged**; the section gains the intake-enforcement record | schema-and-store slice |
 | `reference/data-architecture.md` § 4.4 | **A third declared narrowing**, beside the two existing `writer` narrowings: `trip:` narrowed to the reserved sentinel `cross-trip` | schema-and-store slice |
 | `reference/schemas/person-record.md` (new) | The class schema, with the **two-root** `path-pattern:` shape the traveller class already ships — the store and its worked example. `person-id` is **absent by § 4.3**: it is the filename | schema-and-store slice |
 | `reference/schemas/traveler-profile.md` | **One line**: `field person: optional slug`. `optional` is **forced** by § 7.6's never-upgrade rule, not chosen | schema-and-store / composition slices |
