@@ -17,6 +17,8 @@ name: Publish guard
 #   F     slug resolution        H  --opaque repo naming     I  list / date helpers
 #   J2/J3 unpublish decision branches, driven by a mock GitHub CLI (no network)
 #   K     trips/ ignore invariant
+#   Q     analysis/ workspace ignore invariant (same shape as K, lower severity)
+#   U     people/ person-store ignore invariant (#534) — highest severity of the three
 #   L     plaintext content guard (#123) — the new predicate and its class source
 #   M     published-bytes matching, the name-arm stoplist, and class freshness — the
 #         three defects the Phase A6.5 adversarial review confirmed against the first

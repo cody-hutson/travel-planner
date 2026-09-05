@@ -100,12 +100,15 @@ hyphenated — `lisbon-2027`, `tokyo-2026`. It is the trip's folder name.
 - **If neither, ask for it.** Never invent a slug, and never create a directory under a placeholder
   name.
 
-**2. Check its shape. Three conjuncts, and all three must hold.** The slug is valid only if it is
+**2. Check its shape. Four conjuncts, and all four must hold.** The slug is valid only if it is
 **non-empty**; **and every** character is a letter, a digit, `.`, `_` or `-`; **and the first**
-character is a letter or a digit.
+character is a letter or a digit; **and it is not a reserved `trip:` sentinel** — the values
+`reference/data-architecture.md` § 4.4 declares as meaning *belongs to no trip*, currently
+`cross-trip`. A sentinel type-checks as a slug, so the three shape conjuncts above do not exclude
+it, and a real `trips/cross-trip/` would collide with the value that means the opposite.
 
 **3. If any conjunct fails → STOP. Create nothing** — no directory, no file. Say plainly **what was
-rejected and why**, state the shape a slug takes (the three conjuncts above), and **ask for a
+rejected and why**, state the shape a slug takes (the four conjuncts above), and **ask for a
 corrected one.** The argument is text, and **a rejected slug is never repaired by guessing** at what
 was meant.
 
@@ -233,7 +236,7 @@ Use the bare `YYYY-MM-DD` form exactly as the `date +%F` call returned it.
 
 **`trip:` is the only fence field this command fills**, and it takes the normalised slug Gate A
 carried forward. Every other field is a fact about the artifact class rather than about this trip —
-`reference/data-architecture.md` § *In-model — per-trip artifact classes* decides them on this
+`reference/data-architecture.md` § *In-model — artifact classes* decides them on this
 class's row, and `reference/schemas/trip-log.md` declares the field set and the enum each value is
 drawn from. Write them exactly as they stand, and cite those two rather than re-deriving one.
 **`generated:` is absent by design** — `reference/data-architecture.md` § *Universal frontmatter*
@@ -421,7 +424,7 @@ Tell the user all four of these:
 
 1. **Where a profile goes** — `trips/<slug>/travelers/<name>.md`, with the real resolved slug filled
    in, **one file per person.**
-2. **The three ways to fill one in**, offered in this order:
+2. **The four ways to fill one in**, offered in this order:
    - **Walk through it here** — about two to three minutes for the starred fields.
    - **Fill it in themselves** — copy `templates/traveler-intake.template.md` to the path above and
      work through it.
@@ -429,6 +432,14 @@ Tell the user all four of these:
      it into any assistant with the one line the guide at the bottom gives them, then save the block
      it returns to the path above. On a group trip this is how most travelers will do it, so **never
      drop this option.**
+   - **Reference someone you have travelled with before** — if this person already has a record in
+     your people library, point this trip at that record instead of answering the durable questions
+     again. It is two named steps, in this order: create the profile file by any of the three routes
+     above, then **`/trip-record link <name> <person-id>`**. From then on this trip reads their
+     standing answers from the record and the trip file carries only what is different this time.
+     The record's id comes from the library itself — `people/README.md` is its signpost — and **no
+     command lists the library for you**, which is deliberate: those are the most sensitive bytes in
+     the repository and nothing here reads them.
 3. **Where the profile ends** — only the content **above** the `# END OF PROFILE` line is the
    profile. The guide below that line is instructions for whoever is helping, not content.
 4. **The roster points at the gap on purpose.** With real names written, the roster reads

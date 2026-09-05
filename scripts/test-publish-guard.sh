@@ -9,11 +9,12 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
 # K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
 # Q = analysis/ workspace ignore invariant (same shape as K, lower severity)
+# U = people/ person-store ignore invariant (#534) — same shape as K and Q, highest severity.
 # K4/Q4 are RULE-level, not state-level: they fail on a deleted negation line, which
 # K1/Q1 cannot see because a tracked file bypasses .gitignore altogether.
 # L8-L10 grade the publishability DECLARATION: that the class has exactly one home, that
@@ -354,6 +355,146 @@ if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   fi
 else
   SKIP "Q: not a git work tree"
+fi
+
+echo "Person-store ignore invariant (#534):"
+# Same invariant shape as K and Q, and the highest severity of the three. K guards
+# passport-bearing trip data; Q guards operator working material; U guards the durable
+# person store — one file per person, held across trips rather than copied into each.
+# Kept a separate group rather than folded into K, on Q's stated rule, so a passport-store
+# regression and a person-store regression are not one line of output.
+# Every check-ignore call below takes the same modifiers — -c core.ignorecase=false, -q,
+# and --no-index where the subject is or may be tracked — so a reader comparing two arms
+# is comparing subjects, not spellings. The ignorecase pin is not decoration: it is `true`
+# on a macOS working copy and `false` on the Linux CI runner, and without it a case-altered
+# negation (!/people/readme.md) reads green on the host a human would break it on.
+#
+# Two probe-design rules this group learned the hard way and states so they are not undone:
+#   (1) THE SUBJECT SET SPANS MORE THAN ONE EXTENSION. An ignore rule can be broken by
+#       narrowing as well as by removal, and a group whose every probe path ends in .md
+#       cannot see a narrowing — /people/* rewritten to /people/*.md left this group green
+#       while making a scanned passport committable. U2 and U2b are that pair.
+#   (2) A CONTROL'S INPUT IS NEVER GOVERNED BY THE RULE UNDER TEST. U0-CTL probes .env and
+#       U3 probes an untracked synthetic, both outside /people/, so a store-rule change
+#       moves the subject arms and leaves the controls alone. A control that reddens with
+#       its own subject still detects, but it can no longer tell "the instrument is broken"
+#       from "the rule is gone" — which is the one property that makes it a control.
+if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+
+  # U0-CTL (MUST FIRE) — the instrument, before any verdict is read from it.
+  # U4 and U5 both PASS on "not ignored". Nothing in K or Q proves that the
+  # --no-index form is capable of returning "ignored" at all, so a form that
+  # silently answered "not ignored" for every input would show as two green arms.
+  # This arm is the one input that must come back IGNORED.
+  #
+  # ITS INPUT IS DELIBERATELY NOT A people/ PATH, and that is the whole point of the
+  # arm. A control's defining property is independence from its subject. An earlier
+  # form of this arm probed people/psn-zzzz-probe.md — a path that is ignored BY THE
+  # VERY RULE this group tests — so deleting /people/* darkened the control alongside
+  # U2, and the transcript then read "none of their verdicts can be trusted" at the
+  # exact moment U2's verdict was both correct and the only one that mattered. A
+  # reader who takes a control at its word would discount the arm that named the
+  # defect. .env is ignored by the unrelated Environment block at the foot of
+  # .gitignore: it is outside all three guarded stores (trips/, /analysis/, /people/),
+  # so no mutation of any store rule can move it, and it is untracked so --no-index
+  # changes nothing about the answer. Measured under every store mutation in the
+  # group's ladder: IGNORED throughout.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index ".env"; then
+    PASS "U0-CTL: MUST FIRE — the --no-index form returns IGNORED for .env, a path ignored by a rule none of the store groups touch, so U4/U5's NOT-IGNORED verdicts below are measurements rather than a form that cannot say otherwise"
+  else
+    FAIL "U0-CTL: MUST FIRE — the --no-index form called .env NOT ignored. .env is ignored by a rule independent of every store guard, so this is the instrument failing and not a store regression; every U arm reading that form is a broken probe and none of their verdicts can be trusted"
+  fi
+
+  # U1 (positive) — the signpost ships. Trackedness, not ignore-state: a tracked
+  # file bypasses .gitignore entirely, so ls-files is the unambiguous test. (K1/Q1)
+  if git -C "$HERE/.." ls-files --error-unmatch people/README.md >/dev/null 2>&1; then
+    PASS "U1: people/README.md is tracked (the signpost ships in a fresh clone)"
+  else
+    FAIL "U1: people/README.md is NOT tracked — the store's signpost is absent from a fresh clone"
+  fi
+
+  # U2 (negative — the limb that matters). Probes at the DEEPEST shape the store
+  # admits, not the shallowest. check-ignore needs no file on disk, so no synthetic
+  # person record is ever written. -q, NOT -v: verbose exits 0 on a NEGATION match
+  # too, inverting the verdict.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "people/psn-zzzz-probe.md"; then
+    PASS "U2: a synthetic people/psn-<token>.md is still git-ignored"
+  else
+    FAIL "U2: PERSON RECORDS ARE NO LONGER IGNORED — .gitignore stopped guarding people/ contents, and this store holds the most sensitive bytes in the repository"
+  fi
+
+  # U2b (negative — the SUFFIX limb). U2 alone cannot see a narrowing, only a removal.
+  # Every other probe path in this group ends in .md — U0-CTL's old input, U2's subject,
+  # U4's signpost, U5's derived witness — so rewriting /people/* to /people/*.md left the
+  # whole group green while making every non-markdown file in the store trackable. That is
+  # not a hypothetical shape: a scanned passport is a .jpg, a .png or a .pdf, and a
+  # narrowing that reads as tidying is exactly the "simplification" the .gitignore comment
+  # warns against. The store rule is a CONTENTS rule and must hold for every extension, so
+  # this arm probes the one thing a suffix pattern excludes: a subject that is not markdown.
+  # It is a second probe path, not a second rule — U2 and U2b fail together on a removal
+  # and only U2b fails on a narrowing, which is what makes the pair discriminating.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "people/psn-zzzz-probe.jpg"; then
+    PASS "U2b: a synthetic NON-markdown people/psn-<token>.jpg is still git-ignored — the rule guards the store's contents by path, not by extension"
+  else
+    FAIL "U2b: A NON-MARKDOWN FILE IN THE PERSON STORE IS NOT IGNORED — a scanned passport, a PDF or an export at people/<record>.jpg is committable. Read U2 beside this: U2 green means the rule was NARROWED BY SUFFIX and only non-markdown is exposed; U2 red means the rule is gone entirely"
+  fi
+
+  # U3 (control arm) — a zero whose control also returns zero is a broken probe.
+  # The subject is UNTRACKED and synthetic, which is load-bearing for the same reason
+  # --no-index is on U4. Without --no-index, check-ignore short-circuits on the index and
+  # answers NOT_IGNORED for any tracked path WITHOUT EVALUATING THE RULES. This arm used
+  # to probe the tracked root README.md, so it was reading index state and asserting a
+  # rule-level fact: prepending /README.md to .gitignore makes the rule genuinely ignore
+  # it (--no-index returns IGNORED) while this arm's own form still returns NOT_IGNORED
+  # and still passes. That is the defect U4 exists to close for U1, one arm over. An
+  # untracked path is never short-circuited, so it reaches the same evaluator U2 uses on
+  # the same code path — measured live in both directions: NOT_IGNORED under the shipped
+  # rules, IGNORED as soon as a rule matching it is added.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "zzq-nonesuch-probe.md"; then
+    FAIL "U3: control arm broken — check-ignore calls an untracked, unmatched synthetic path ignored, so it cannot distinguish ignored from not-ignored and U2/U2b are unusable"
+  else
+    PASS "U3: control arm fires (an untracked, rule-unmatched synthetic path is not ignored) — the rule evaluator U2/U2b read can return NOT_IGNORED, so their verdicts are trustworthy"
+  fi
+
+  # U4 (rule-level, not state-level). U1 proves the file is IN THE INDEX, which
+  # stays true even if the negation line is deleted — a tracked file bypasses
+  # .gitignore altogether, so U1 and U2 both keep passing while the rule rots.
+  # --no-index is LOAD-BEARING (the K4/Q4 falsification). This arm is also the only
+  # one that fails on a "simplification" to /people/ or people/ (the directory form
+  # git cannot re-include through) and on a line-order swap, .gitignore being
+  # last-match-wins.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "people/README.md"; then
+    FAIL "U4: the !/people/README.md negation is gone or unreachable — the store's signpost survives only because it is already tracked"
+  else
+    PASS "U4: the negation pattern re-includes people/README.md (the rule, not just the index, is intact)"
+  fi
+
+  # U5 — the arm neither K nor Q has, in two parts. The witness is READ FROM the
+  # tree rather than spelled here: check-ignore answers for paths that do not
+  # exist, so an arm naming a token this file guessed would return "not ignored"
+  # for an absent file and pass. An empty derivation is a FAILURE, not a clean run.
+  # --no-index is load-bearing HERE TOO, not only on U4: the witness is tracked, so
+  # the default form short-circuits past the rules and returns "not ignored" under
+  # the very widening (**/people/*) this arm exists to catch.
+  U5_WIT="$(git -C "$HERE/.." ls-files 'examples/*/people/*.md')"
+  U5_N="$(printf '%s\n' "$U5_WIT" | grep -c '[^[:space:]]')"
+  U5_BAD=0
+  while IFS= read -r u5p; do
+    [ -n "$u5p" ] || continue
+    git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "$u5p" && U5_BAD=$((U5_BAD+1))
+  done <<EOF
+$U5_WIT
+EOF
+  if [ "$U5_N" -eq 0 ]; then
+    FAIL "U5: no tracked witness matched examples/*/people/*.md — the schema names a witness the selector never reaches, and this arm would otherwise report a clean run over an empty set"
+  elif [ "$U5_BAD" -eq 0 ]; then
+    PASS "U5: all $U5_N tracked example witness record(s) under examples/*/people/ are NOT ignored — the store rule is rooted, so a same-named directory elsewhere in the tree keeps its tracked contents"
+  else
+    FAIL "U5: $U5_BAD of $U5_N tracked example witness record(s) are IGNORED — the people/ rule has been widened (**/people/* or an unrooted people/) and the schema's witness has silently left the index"
+  fi
+
+else
+  SKIP "U: not a git work tree"
 fi
 
 echo "Unpublish / takedown (#7):"
@@ -723,6 +864,61 @@ else
   FAIL "L10c: an unqueried declaration row was not fail-closed (unqueried=$l10c, queried=$l9b) — a well-formed row can silently guard nothing"
 fi
 
+# L10d — the SHIPPED declaration is FULLY QUERIED. L10c proves the mechanism fires on a
+# mutated declaration; this asserts the property on the real one, which is a different
+# claim. Today the failure it names is caught only INCIDENTALLY: a shipped row the
+# evaluator does not query aborts everything, so L9b and thirty other arms go red at once
+# and a reader has to work backwards from the wreckage to the cause.
+#
+# THIS IS THE DURABLE GUARD AGAINST A COUPLING RECURRING. Adding an artifact scope to the
+# fence and widening the evaluator that queries it are one indivisible change, and a later
+# release may split them across cards that never read each other's output. When that
+# happens this arm names the defect in one line instead of leaving it to be inferred.
+# Deliberately built from the guard's own accessors, so this file still holds no copy of
+# the fence name, the heading, any row or any artifact-scope literal.
+l10dn="$(_guard_declared_rows | awk 'NF { c++ } END { print c + 0 }')"
+l10dq="$(_guard_declared_rows | awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" \
+                                   -v r="$_GUARD_DECL_ARTIFACT_PERSON" '
+    ($1 == "entry" && $3 == m) || ($1 == "field" && $3 == m) || ($1 == "field" && $3 == p) ||
+    ($1 == "field" && $3 == r) { c++ }
+    END { print c + 0 }')"
+if [ "$l10dn" -gt 0 ] && [ "$l10dq" -eq "$l10dn" ] && [ "$l9b" -eq 0 ]; then
+  PASS "L10d: every one of the $l10dn shipped declaration rows names a (limb, artifact-scope) pair this guard actually queries — the fence and the evaluator have not been separated"
+else
+  FAIL "L10d: the shipped declaration carries $l10dn rows but only $l10dq are queried — a row that guards nothing shipped, and every --plaintext publish now aborts (control l9b=$l9b)"
+fi
+
+# L10e — the erasure tombstone is NOT a declared selector, and never becomes one.
+# The tombstone is the one token in the engine that is mark-shaped, REQUIRED to be present
+# in publish-bound artifacts, and designed to carry no personal information. Declaring it
+# would invert the guard on it: a guarded token guaranteed present in the render is a HIT
+# on every subsequent publish of any trip carrying one, permanently.
+#
+# It is authored while the corpus holds ZERO occurrences of the token, which is the only
+# time it is cheap; and it is graded against the DECLARED SELECTOR SET rather than a text
+# search of the file, because the fence's own reader is what decides whether a row is a
+# selector. The control arm is the must-fire half: the shipped fence really does carry a
+# selector, so an empty selector set cannot pass this as a vacuous zero.
+l10esel="$(_guard_declared_selectors)"
+l10emark="$(grep -cF "ERASED" <<<"$l10esel" || true)"
+l10ectl="$(awk 'NF { c++ } END { print c + 0 }' <<<"$l10esel")"
+# The must-fire control is a NAMED MEMBER, not a count. A count proves only that the
+# reader returned something; it cannot tell the declared selector set from any other
+# non-empty output. A mis-aimed reader yielding, say, section headings satisfies
+# l10ectl > 0 and reports zero tombstone hits, so this arm would pass green over
+# entirely the wrong population — the same count-is-not-a-set fault this suite has
+# booked elsewhere. Passport is asserted because it is a shipped selector on all three
+# artifact scopes: if the reader is aimed correctly it is present, and if it is aimed
+# anywhere else it is not.
+l10ehit="$(grep -cFx "Passport" <<<"$l10esel" || true)"
+if [ "$l10emark" -eq 0 ] && [ "$l10ectl" -gt 0 ] && [ "$l10ehit" -ge 1 ]; then
+  PASS "L10e: the erasure tombstone is not among the $l10ectl declared selectors, and the reader is aimed (the known selector Passport is present) — a privacy mark that must be published is the exact inverse of a non-publishable selector, and it has not been declared as one"
+elif [ "$l10ehit" -eq 0 ]; then
+  FAIL "L10e: CONTROL DID NOT FIRE — the known selector Passport is absent from the declared set ($l10ectl selector(s) read), so this arm is reading the wrong population and its tombstone verdict means nothing"
+else
+  FAIL "L10e: the erasure tombstone appears in the declared selector set ($l10emark hit(s) over $l10ectl selectors) — every subsequent publish of any trip carrying a tombstone will abort, permanently"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # L11 — THE RESERVED-HEADING SUPPRESSION, both halves.
 #
@@ -885,6 +1081,9 @@ fi
 #             with an ordinary English word aborted every publish, permanently.
 #   M3  CD-3  the class bound to a [DERIVED] cache with no freshness check, so a
 #             passport that existed only in travelers/*.md read as "genuinely EMPTY".
+#   M4  CD-4  the freshness walk bound to the TRIP's own directory while the class
+#             derives from a cross-trip store, so a durable edit made only in the
+#             library read as fresh — and no fence row put its values in class.
 # Every case carries a fixture-integrity control arm (the K2/K3 idiom): a case whose
 # control arm also returns zero is a BROKEN PROBE, not a pass. Like L, group M runs
 # purely on $WORK fixtures — no gh, no npx, no TTY, no network — so it cannot reach
@@ -1105,6 +1304,163 @@ mrender "$MFRESHC" '<p>Evening: the riverside lantern walk, then back to the gue
 touch -t 202601011100 "$MFRESHC"
 mguard "$MFRESHC" "$MFRESH"
 if [ "$MRC" -eq 0 ]; then PASS "M3e: a fresh model with a first-party passport absent from the render publishes (rc=0) — freshness gating is not a blanket abort"; else FAIL "M3e: a clean, fresh trip was blocked (rc=$MRC) — the freshness gate is unusable, which is fail-open in practice"; fi
+
+# ── M4 (CD-4) — the DURABLE source: the cross-trip person record ─────────────
+# M3 bound the class to the trip's own first-party files. CD-4 is the same defect one
+# scope out: a referenced person record is a durable source living OUTSIDE the trip, so a
+# passport edited only in the library leaves every file under the trip untouched and every
+# M3 comparison reads fresh while the projection is behind its real source set.
+#
+# THE STORE IS AT THE TRIP ROOT, DELIBERATELY. Store-root resolution is trip-root-first,
+# so this fixture is self-contained. A fixture that fell through to the repo-root store
+# would be RESOLVED on an author's machine and DANGLING in CI, because that directory is
+# git-ignored and absent from a clean checkout — a witness whose verdict depends on the
+# operator's private working directory is not a witness. It therefore depends on no
+# tracked example fixture either.
+#
+# M4d IS THE LOAD-BEARING ARM, and it is worth saying which one and why. The partial
+# landing that puts a fence row in without widening the evaluator is the LOUDEST possible
+# failure — it aborts before the model is opened and turns this whole file red, so it
+# cannot reach a merge through a green run. The dangerous partial is the inverse: an
+# evaluator and a store with NO fence row is green, silent, and is the fail-open itself.
+# M4b grades the clock; only M4d grades the CLASS, so only M4d fails on that partial.
+MPPL="$WORK/porto-people"; mkdir -p "$MPPL/outputs" "$MPPL/travelers" "$MPPL/people"
+cat > "$MPPL/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+# The traveller file carries the reference and NO PERSON-scoped field: the durable half of
+# the profile lives in the record, which is the composition this class exists to express.
+cat > "$MPPL/travelers/rowan.md" <<'MD'
+---
+artifact: travelers/<traveler>.md
+schema-version: 1
+trip: porto-2029
+writer: human
+lifecycle: persist-mutable
+provenance: human
+publish: internal
+person: psn-a1b2
+---
+
+# Rowan
+
+## Getting there & back
+- **Leaving from:** Central Station
+MD
+cat > "$MPPL/people/psn-a1b2.md" <<'MD'
+---
+artifact: people/<person>.md
+schema-version: 1
+trip: cross-trip
+writer: human
+lifecycle: persist-mutable
+provenance: human
+publish: internal-hard
+---
+
+# Rowan
+
+## Getting there & back
+- **Passport:** Ruritanian, valid to 2033
+MD
+MPPLR="$WORK/m_people.html"
+mrender "$MPPLR" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+# mtimes with touch -t, never write order — M3's rule, and it governs here verbatim.
+# The TRAVELLER FILE IS PINNED NOT-NEWER THAN THE MODEL, which is what makes an rc=2 in
+# M4b attributable to the record alone and not to the pre-existing profile comparison.
+touch -t 202601010900 "$MPPLR"
+touch -t 202601011000 "$MPPL/outputs/traveler-model.md"
+touch -t 202601011000 "$MPPL/travelers/rowan.md"
+touch -t 202601011100 "$MPPL/people/psn-a1b2.md"
+if grep -qF 'Passport:' "$MPPL/people/psn-a1b2.md" \
+   && ! grep -qF 'Passport' "$MPPL/outputs/traveler-model.md" \
+   && ! grep -qF 'Passport' "$MPPL/travelers/rowan.md" \
+   && grep -qF '## Rowan' "$MPPL/outputs/traveler-model.md" \
+   && grep -qF 'person: psn-a1b2' "$MPPL/travelers/rowan.md" \
+   && ! grep -qF 'Ruritanian' "$MPPLR" && ! grep -qF '2033' "$MPPLR"; then
+  PASS "M4a: the passport exists ONLY in the person record — absent from the model, absent from the traveller file, absent from the render — and the traveller file is not newer than the model"
+else
+  FAIL "M4a: the person-record fixture is not set up as claimed — M4b and M4d would prove nothing"
+fi
+mguard "$MPPLR" "$MPPL"
+if [ "$MRC" -eq 2 ]; then PASS "M4b: a durable edit made ONLY in the person library, with no trip-side change, aborts the publish as UNDETERMINED (rc=2) — the freshness walk follows the reference out of the trip"; else FAIL "M4b: a person record newer than the [DERIVED] model was read as a determinate result (rc=$MRC) — silent fail-open on an irreversible action"; fi
+
+# M4c — SPECIFICITY. Without it M4b is satisfied by a guard that aborts unconditionally on
+# any trip carrying a reference. M3e's role, for the new source.
+touch -t 202601011200 "$MPPL/outputs/traveler-model.md"
+mguard "$MPPLR" "$MPPL"
+if [ "$MRC" -eq 0 ]; then PASS "M4c: the same trip with the model newest publishes (rc=0) — the walk gates on the comparison, it does not blanket-abort a trip that references a record"; else FAIL "M4c: a clean, fresh trip referencing a person record was blocked (rc=$MRC) — the walk is unusable, which is fail-open in practice"; fi
+
+# M4d — THE CLASS, NOT THE CLOCK. THE LOAD-BEARING ARM. The model stays newest so the
+# freshness comparison CANNOT fire; the only way to reach rc=1 is for the record's
+# Passport to be in class (the declaration's row) AND to be read (the evaluator's third
+# parse). This is M3c/M3d's role for the new scope, and it is the one arm that fails if
+# the fence row is ever separated from the evaluator that queries it.
+MPPLH="$WORK/m_people_hit.html"
+mrender "$MPPLH" '<p>Border note: carry your Ruritanian passport, valid to 2033, at all times.</p>'
+touch -t 202601011100 "$MPPLH"
+if grep -qF 'Ruritanian passport, valid to 2033' "$MPPLH" \
+   && ! grep -qF 'Ruritanian' "$MPPL/outputs/traveler-model.md" \
+   && ! grep -qF 'Ruritanian' "$MPPL/travelers/rowan.md"; then
+  PASS "M4d-fix: the render carries the passport value and neither the model nor the traveller file does — a hit here can only come from the person record"
+else
+  FAIL "M4d-fix: the class-arm fixture is not set up as claimed — M4d would prove nothing"
+fi
+mguard "$MPPLH" "$MPPL"
+if [ "$MRC" -eq 1 ]; then PASS "M4d: a passport held ONLY in a person record is matched against the render (rc=1) with the model newest — the class reads durable sources, so the declaration row and the evaluator that queries it are BOTH present"; else FAIL "M4d: a passport held only in a person record did not abort (rc=$MRC) — a durable value sits in no fence row or in no parse, which is the silent fail-open no other arm in this file detects"; fi
+
+# M4e — AC5, THE NO-REFERENCE CONTROL. A trip carrying no reference is unaffected by the
+# store, including when the store does not exist. This is the clause that keeps the first
+# run after the store shipped from aborting every trip in the working directory: the
+# store is read ONLY after a bearer has produced a well-formed key.
+MPNR="$WORK/porto-noref"; mkdir -p "$MPNR/outputs" "$MPNR/travelers"
+cat > "$MPNR/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Porto 2029 [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+cat > "$MPNR/travelers/rowan.md" <<'MD'
+# Rowan — traveler profile
+
+## Getting there & back
+- **Leaving from:** Central Station
+MD
+MPNRR="$WORK/m_noref.html"
+mrender "$MPNRR" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+touch -t 202601010900 "$MPNRR"
+touch -t 202601011000 "$MPNR/travelers/rowan.md"
+touch -t 202601011200 "$MPNR/outputs/traveler-model.md"
+if ! grep -q '^person:' "$MPNR/travelers/rowan.md" && [ ! -d "$MPNR/people" ]; then
+  PASS "M4e-fix: the second trip carries no reference key and no store directory — the AC5 control is real"
+else
+  FAIL "M4e-fix: the no-reference fixture is not set up as claimed — M4e would prove nothing"
+fi
+mguard "$MPNRR" "$MPNR"
+if [ "$MRC" -eq 0 ]; then PASS "M4e: a trip carrying NO reference publishes (rc=0) with no store present — an unreadable store never degrades a trip that references nothing"; else FAIL "M4e: a non-referencing trip was blocked (rc=$MRC) — an absent store is degrading trips it must not reach, which aborts every trip in the working directory"; fi
+
+# M4f — AC3, UNRESOLVABLE IS NOT CLEAN. Paired with M4e, which is its control: the two
+# together separate "unresolvable is undetermined" from "unresolvable is clean". Without
+# the pair, a walk that quietly skipped every reference would satisfy M4e alone.
+MPDG="$WORK/porto-dangling"; mkdir -p "$MPDG/outputs" "$MPDG/travelers" "$MPDG/people"
+cp "$MPPL/outputs/traveler-model.md" "$MPDG/outputs/traveler-model.md"
+sed 's/^person: psn-a1b2$/person: psn-9999/' "$MPPL/travelers/rowan.md" > "$MPDG/travelers/rowan.md"
+MPDGR="$WORK/m_dangling.html"
+mrender "$MPDGR" '<p>Evening: the riverside lantern walk, then back to the guest house.</p>'
+touch -t 202601010900 "$MPDGR"
+touch -t 202601011000 "$MPDG/travelers/rowan.md"
+touch -t 202601011200 "$MPDG/outputs/traveler-model.md"
+if grep -qF 'person: psn-9999' "$MPDG/travelers/rowan.md" && [ -d "$MPDG/people" ] \
+   && [ ! -e "$MPDG/people/psn-9999.md" ]; then
+  PASS "M4f-fix: the third trip names a well-formed id, the store exists, and the record does not — a DANGLING reference, not a malformed one"
+else
+  FAIL "M4f-fix: the dangling fixture is not set up as claimed — M4f would prove nothing"
+fi
+mguard "$MPDGR" "$MPDG"
+if [ "$MRC" -eq 2 ]; then PASS "M4f: a well-formed reference resolving to no record aborts as UNDETERMINED (rc=2) — an unresolvable reference is not an empty class"; else FAIL "M4f: an unresolvable person reference was read as a determinate result (rc=$MRC) — an empty read is not an empty class"; fi
 
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
 # W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real

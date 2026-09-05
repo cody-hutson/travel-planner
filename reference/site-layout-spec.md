@@ -733,12 +733,25 @@ outputs/venue-matrix.md             bound
 outputs/event-status.md             bound
 outputs/traveler-model.md           internal-hard
 outputs/satisfaction-metrics.md     internal-hard
+people/<person>.md                  internal-hard
 ```
 
 The `class` values are the closed four-value enum in `reference/data-architecture.md` § 5.1
-(`bound` | `internal` | `internal-hard` | `output`). `internal-hard` marks the two artifacts § 9.3
-lists as intentional exclusions — never rendered, **and** carrying values that must not reach a
-rendered page in any form, including anonymized.
+(`bound` | `internal` | `internal-hard` | `output`) — never rendered, **and** carrying values that
+must not reach a rendered page in any form, including anonymized.
+
+**Three classes carry `internal-hard`, and only two of them are § 9.3 exclusions.** That is not an
+inconsistency, and the distinction is the reason this fence is asserted in **both** directions rather
+than only against what the build reads. `outputs/traveler-model.md` and
+`outputs/satisfaction-metrics.md` sit inside a trip's `outputs/`, which is the directory the build
+walks — so they must be *named* as exclusions or 9.2's completeness rule would read them as silent
+drops. `people/<person>.md` is **not a per-trip artifact at all**: it is the durable person record,
+held at the repo root outside every trip, and no build input set ever reaches it. Listing it in 9.3
+would assert that the build considered and declined it, which is the opposite of true. **It is here
+because group `PB` compares this fence against § 1.1's publish column in both directions** — a class
+carrying a declared publishability and no fence row is a failure whether or not the site build can
+see it, and that is what keeps this the single home of the assignment rather than a list of what the
+renderer happens to touch.
 
 **The publish guard does not read this fence.** It reads the field/entry declaration in
 `reference/data-architecture.md` § 5.6, which is what decides *which values* are in class. This

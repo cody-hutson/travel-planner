@@ -59,8 +59,10 @@ name: Artifact schema
 #        are stated PER FIELD because the fields do not all have the same number of homes
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row
-#   ST   the starred-field count in templates/traveler-intake.template.md agrees across ALL
-#        FOUR of its homes: the banner numeral, the appendix rule-4 numeral, the appendix's
+#   ST   the starred-field count in EACH intake form — the per-trip
+#        templates/traveler-intake.template.md and the durable
+#        templates/person-intake.template.md — agrees across ALL
+#        FOUR of that form's homes: the banner numeral, the appendix rule-4 numeral, the appendix's
 #        per-field (starred) annotations, and the marked fields themselves — the only home
 #        that is not a restatement of another, and therefore the reference count. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
@@ -110,8 +112,8 @@ name: Artifact schema
 #   markers. It never constrains narrative body content, and a green here still says
 #   nothing about the quality or the accuracy of any artifact's prose. The exception is
 #   group ST, which checks exactly one prose INVARIANT and nothing else: that the
-#   self-referential starred-field count in templates/traveler-intake.template.md agrees
-#   with itself across its four homes. Agreement is not accuracy — ST stays green on four
+#   self-referential starred-field count in each intake form agrees
+#   with itself across that form's four homes. Agreement is not accuracy — ST stays green on four
 #   homes that agree on a wrong number — so this clause is NARROWED here rather than
 #   removed, and no other prose in any artifact is adjudicated by this gate.
 #

@@ -13,10 +13,12 @@ generated: 2026-08-29
 
 > **Illustrative, sanitized example. Not real people.**
 
-Reconciled from the per-traveler source files. Every entry here is a **projection**
-— `travelers/<traveler>.md` is authoritative — so this file is safe to rebuild on
-every synthesis. `publish: internal-hard`: the site build excludes it and the hub
-applies it as a hard bound before any objective.
+Reconciled from the composed per-traveler source — each `travelers/<traveler>.md`
+together with the durable person record it references, which for a file carrying no
+reference is that file alone (`reference/data-model.md` § *Composition*). Every entry
+here is a **projection** — the composed source is authoritative — so this file is safe
+to rebuild on every synthesis. `publish: internal-hard`: the site build excludes it and
+the hub applies it as a hard bound before any objective.
 
 **Every `##` heading in this file is read as a person unless its key is reserved.**
 `scripts/publish-trip-site.sh` parses this class by taking each `## ` heading,

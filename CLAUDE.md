@@ -101,8 +101,79 @@ Example: `food-list.md` after three sessions:
 The satisfaction layer adds three `outputs/*.md` artifacts with their own lifecycles. **The lifecycle classes are defined once**, in `reference/data-architecture.md` § *Lifecycle Classes* — this section assigns, it does not define. Satisfaction-layer rationale: `reference/data-model.md`.
 
 - **`event-status.md` — `persist-mutable`.** Updated **in place** as events change status, and it **survives every re-synthesis** — never appended-with-history, never rebuilt from scratch, never versioned. It is the iteration-protection source of truth: a re-synthesis *reads* existing status, it does not overwrite it. This is the one artifact that must outlive a planning pass. The **hub is the primary writer** and owns it; the file is **created by whichever agent first writes it** — the enrichment agent's setup seed (from `## Locked Elements`), or the hub on the first full synthesis if no seed exists (the validator only reads it). Persist-mutable is not append-only — a row is **deleted** in the one case where its event is removed from the itinerary, so no ghost row lingers.
-- **`traveler-model.md` — `rebuilt-each-synthesis`.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current per-traveler source files (`travelers/<traveler>.md`) whenever those change. Every entry projected from a `travelers/<traveler>.md` file holds no independent state — that source file is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged.
+- **`traveler-model.md` — `rebuilt-each-synthesis`.** A `[DERIVED]` projection. The enrichment agent refreshes it from the current **composed** per-traveler source — each `travelers/<traveler>.md` together with the durable person record it references, which for a file carrying no reference is that file alone (`reference/data-model.md` § *Composition*) — whenever either side changes. Every entry projected that way holds no independent state — the composed source is authoritative — so regeneration is safe. **One stated per-entry exception:** the `[THIRD-PARTY]` entry admitted through the operator fallback has no source file by design, so it is carried forward verbatim rather than re-derived. The classification is unchanged. **This refresh is unconditional only while the trip is `ACTIVE`** — on an archived trip it does not run at all, and the one operation that still reaches the file is named in § *Archived trips — what the freeze binds*.
 - **`satisfaction-metrics.md` — `rebuilt-each-synthesis`.** Recomputed from the current itinerary and traveler model. A coverage snapshot at synthesis time; safe to regenerate because its inputs are authoritative. Two writers, **section-owned** so they never clobber: the **hub** owns the desire-coverage + balance-signal sections, the **validator** owns the needs-compliance + agreement-check sections, each read-merge-writing only its own.
+
+---
+
+## Archived trips — what the freeze binds
+
+**A trip whose `**Lifecycle:**` is `ARCHIVED` receives no derivation.** No update signal is written
+to it, no artifact of it is regenerated, and no refresh pass composes it. `outputs/traveler-model.md`
+holds the composition as it stood when the trip was archived: an edit to any person record it
+references leaves it byte-unchanged and unsignalled. What the freeze protects is the plan **as it was
+planned**.
+
+**Erasure is the one stated exception, and it is the only one.** Erasure removes a person's
+identifying values from a fixed set of locations; it composes nothing and regenerates nothing.
+**On an archived trip, erasure substitutes and never regenerates.** Archived data is therefore
+**reachable** — by that one operation, by that one mechanism, and by nothing else. A person who asks
+to be erased is erased from archived trips too.
+
+**Erasure must reach every model-entry class, and there are exactly three.** They are distinguished
+by the provenance marks the entry carries, and they behave in three different ways under a
+regeneration — which is why substituting rather than regenerating is the whole of the rule. An entry
+carrying no mark is `first-party` and would be re-derived from its own source file. An entry carrying
+`[OPERATOR-PROVIDED]` alone is `operator-provided-only` and would be **dropped**, having no source to
+re-derive it from. An entry carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` is `both-marks`
+and would be **carried forward verbatim**, name and need intact — the erasure silently undone. The
+two file-less classes fail in **opposite** directions, so no assertion over one of them detects a
+wrong mechanism; only coverage of all three does. **Any fixture standing as the worked example of
+this rule must exercise all three, and dropping one is a change to this rule, not a change to a
+fixture.**
+
+**The freeze binds derivation, not bytes.** `/trip-decommission archive` moves nothing: it takes the
+site offline, sets the marker, and appends a closing entry. An archived trip's files sit at the same
+paths as an active trip's and stay writable by whatever this rule admits. **"Frozen" means
+underivable, never untouchable.**
+
+**No other operation takes an exception, and two were tested against this rule and refused.** An
+ordinary person-record edit is neither a redaction nor a re-addressing: it is not signalled, not
+written, and is named in the discovery report as `ARCHIVED — not signalled`. A merge writes no
+archived trip at all — the loser becomes a stub, and archived trips resolve through it. Anything that
+composes, refreshes, regenerates or re-derives is inside the first paragraph and stays there.
+
+**Reopening lifts the freeze prospectively.** `/trip-decommission reopen` sets the marker back to
+`ACTIVE`; from that point the trip is in the ordinary refresh population and its next pass composes
+current values. Reopen dispatches no agent and refreshes nothing itself, and nothing is queued while
+a trip is archived — a reopened trip absorbs current state, never a replay.
+
+> **Why this section is a section, and why it is here rather than three plausible alternatives.**
+> The rule binds the hub, the enrichment agent, the validator and the site build — but **not all
+> four are bound the same way, and the difference matters.** The three prompt surfaces read
+> `CLAUDE.md` directly: it is auto-loaded and costs no per-invocation read, so the rule lives where
+> they already are. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
+> shell script and never opens this file. It is bound **structurally instead**, by `G7`: every
+> dispatching verb declares `lifecycle: ACTIVE`, so `/trip-publish update` refuses on an archived
+> trip before any build begins (`.claude/commands/trip-publish.md` states that disposition in
+> terms). Stating the rule here binds the readers; `G7` binds the runners. Do not read this
+> paragraph as a claim that four surfaces parse this section. It sits beside
+> § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
+> sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
+> that section are machine-read by `.claude/commands/trip.md` to derive the `/trip research` agent
+> key, and **this rule declares no artifact class and must never be read as a file-exception list.**
+> It is **not** in § *Resolving a trip*, which is the gate ladder: the freeze stops no resolution and
+> returns no `trip.stop_gate`, and `G8` is reserved and report-only. It is **not** in
+> `reference/data-architecture.md` § *Lifecycle Classes*, whose `lifecycle` is the **artifact** axis
+> — `accumulate-append` / `rebuilt-each-synthesis` / `versioned` / `persist-mutable` / `output` — a
+> wholly separate axis that happens to share the word. **The two axes are never the same field:** a
+> `trip-context.md` carries `lifecycle: persist-mutable` in its frontmatter *and* a
+> `**Lifecycle:** ARCHIVED` marker in its body, and neither is a rendering of the other.
+> `reference/adr/ADR-012-people-library.md` records the decision; this section is the operative rule.
+
+**The worked example is `examples/archived-trip-demo/`**, which carries an archived trip whose
+erasure has already run, and `scripts/test-artifact-schema.sh` group `AF` asserts both halves against
+it — that an ordinary person edit leaves it untouched, and that erasure reached it.
 
 ---
 
@@ -141,6 +212,10 @@ Before doing anything, determine what kind of request this is:
 | **Publish slug** | User wants to set or change the published site's repo name | Create or replace `trips/<slug>/.publish-slug`, echoing the outgoing value so the change is reversible. | "Publish it as lisbon-trip", "Change the site name" | `/trip-record .publish-slug` |
 | **Event status** | A placed event is booked, cancelled, or its hold changes | Change one named row's `Status` cell and recompute that row's derived needs-booking cell. Creates no row and no file. | "We booked the Belem tour", "The 8pm table fell through" | `/trip-record event` |
 | **Session log entry** | A session's reasoning, options considered, or context belongs in the record | Append one entry to `trip-log.md`. Never re-opens a prior entry. | "Log what we decided", "Note why we skipped Sintra" | `/trip-record log` |
+| **Person reference** | A traveler on this trip is the same person as a record already in the people library | Point this trip's traveler file at that record — one frontmatter field and nothing else. The record is read to confirm the id resolves and to name who it resolves to. | "Dana is the same Dana as last time", "Link Alex to their record" | `/trip-record link` |
+| **Reference removal** | A traveler's durable record should stop being read for this trip | Remove that one frontmatter field, echoing it first, and state plainly that the person record itself survives. Writes no marker of any kind. | "Stop reading Alex's durable record here", "Take Dana's link off this trip" | `/trip-record unlink` |
+| **Override promotion** | A trip-local answer turns out to be durable and belongs in the person record | Move **one** named field from the traveler's file into the record it references, confirmed against an echoed outgoing → incoming pair. Explicit and typed, never inferred. | "That allergy is permanent — put it on her record", "Make Dana's mobility note durable" | `/trip-record promote` |
+| **Person erasure** | A person asked to be deleted, and their data must go from the store and from every trip that copied it | Show the reach before anything changes; the prompt names the record's display name and id, and the operator confirms by typing **the id** at a terminal; then substitute their identifying values everywhere the report named and delete the record. Reaches archived trips; regenerates nothing; echoes the name once at the prompt so a mis-targeted run is visible, and never echoes an erased value afterwards. | "Delete Dana's record entirely", "She's asked to be erased" | `/trip-record erase` |
 | **Published inventory** | User asks what is published, across trips | Report the published sites the script resolves. Needs no trip resolved. | "What's published?", "Which trips have sites?" | `/trip-publish list` |
 | **Temporary takedown** | User wants the site offline but the trip kept | Disable Pages. The local tree is untouched and no marker is written. | "Take the site down for now", "Hide it temporarily" | `/trip-decommission temporary` |
 | **Trip conclusion** | The trip is over and should be concluded | The takedown, then the lifecycle marker, then a closing log entry — in that order, and the order is load-bearing. | "The trip's done", "Archive Lisbon 2026" | `/trip-decommission archive` |
@@ -163,7 +238,8 @@ Before doing anything, determine what kind of request this is:
 | `/trip site` | that verb's `**Reads:**` line | own |
 | `/trip schema` | that verb's `**Reads:**` line | own |
 | `/trip-record person` · `travelers` | that verb's `**Reads:**` line — the verb reads nothing of its own; the reconciler it dispatches reads | own + attributed-agent |
-| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` | that verb's `**Reads:**` line | own |
+| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` · `link` · `unlink` · `promote` | that verb's `**Reads:**` line | own |
+| `/trip-record erase` | that verb's `**Reads:**` line — the widest of any verb on this surface, and the only one that reads across trips: the store, every trip's traveller frontmatter to discover which trips reference the record, and then in full each trip that discovery resolved. Its residual scan reads trip roots it will **not** write | own |
 | `/trip-publish update` | that verb's `**Reads:**` line — a presence-and-readability probe is a read of the **path**, never of the value | own |
 | `/trip-decommission archive` · `reopen` | that verb's `**Reads:**` line | own |
 | `/trip-new` | that verb's `**Reads:**` line — one per branch, Create and Resume | own |
@@ -493,6 +569,7 @@ travel-planner/
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
 ├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo
+├── people/                   ← the durable cross-trip person store — ships README.md only; every record git-ignored
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)

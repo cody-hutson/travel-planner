@@ -48,8 +48,8 @@
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
-#   ST   the starred-field count in templates/traveler-intake.template.md agrees across ALL
-#        FOUR of its homes: the banner numeral, the appendix rule-4 numeral, the appendix's
+#   ST   the starred-field count in EACH intake form agrees across ALL FOUR of that form's
+#        homes: the banner numeral, the appendix rule-4 numeral, the appendix's
 #        per-field `(starred)` annotations, and the marked fields themselves — which are the
 #        only home that is not a restatement of another, so they are the reference count.
 #        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
@@ -1633,13 +1633,28 @@ if [ "$PS_OK" -eq 1 ]; then
 
   # PS4 — the partition closes, and the denominator is pinned so a NEW fixture forces
   # this group to be re-read rather than absorbed silently.
+  #
+  # The pin moved 6 -> 7 with examples/people-library-demo/, and the re-read the failing
+  # arm demands was performed rather than assumed. That fixture carries no
+  # outputs/final-itinerary.md — it is the worked instance of the durable person record,
+  # which is not a per-trip artifact at all — so it is outside this predicate's
+  # population entirely: PS1's firing set and PS2's silent set are BOTH unchanged, and
+  # the new root lands in PS3's declared-not-exercised list, which is derived rather than
+  # listed and so names it without an edit. Only the denominator moved.
+  #
+  # It moved 7 -> 8 with examples/archived-trip-demo/, and that re-read was performed too,
+  # against the failing run rather than predicted: PS1 still selects examples/tokyo-2026
+  # ALONE and PS2 still names examples/data-architecture-demo ALONE, both observed in the
+  # same run that reported the pin mismatch. The archived trip carries a derived model but
+  # no outputs/final-itinerary.md, so it is outside this predicate as well and lands in
+  # PS3's derived list. The partition closed at 1 + 1 + 6 = 8. Only the denominator moved.
   if [ "$((PS_NFIRE + PS_NSIL + PS_NOUT))" -ne "$PS_NTRIP" ]; then
     FAIL "PS4: the partition does not close — $PS_NFIRE + $PS_NSIL + $PS_NOUT != $PS_NTRIP. A denominator that cannot be reconstructed is not a denominator"
     PS_OK=0
-  elif [ "$PS_NTRIP" -eq 6 ]; then
-    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 6 pinned when this group shipped"
+  elif [ "$PS_NTRIP" -eq 8 ]; then
+    PASS "PS4: the partition closes over all $PS_NTRIP trips, and the denominator is the 8 pinned when this group was last re-read"
   else
-    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 6 pinned when this group shipped. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
+    FAIL "PS4: examples/ now carries $PS_NTRIP trip director(ies), not the 8 pinned when this group was last re-read. The partition still closes, so this is not a corruption — it is a NEW FIXTURE, and PS1/PS2's set assertions and PS3's declared-not-exercised list have to be re-read against it and the pin updated in the same commit"
     PS_OK=0
   fi
 fi
@@ -2123,17 +2138,27 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group ST — the starred-field count is ONE fact with FOUR homes inside one template,
+# Group ST — the starred-field count is ONE fact with FOUR homes inside EACH intake form,
 # and the three homes that merely describe it must agree with the one that IS it.
 #
+# ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
+# This group shipped reading a single hardcoded path, at a commit where one intake form was
+# the whole population. The intake has since been split into a per-trip form and a durable
+# per-person one, and the count is now TWO facts — one per form, 3 and 6
+# — each with the same four homes inside its own file. A guard that had kept its single
+# path would have gone on grading the trip form correctly and said NOTHING about the second,
+# which is the shape of stale coverage this suite exists to refuse. So ST_TEMPLATES is a
+# LIST and every arm below runs once per member, fixtures and all, with each verdict tagged
+# by the form it graded. Adding a third intake form is one line here, not a second group.
+#
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
-# templates/traveler-intake.template.md tells a traveller how many of its fields carry the
+# Each intake form tells its reader how many of its fields carry the
 # star, and it tells them TWICE in prose — in the banner at the top and again in rule 4 of
 # the agent appendix at the bottom — while the appendix ALSO restates the starred set field
 # by field as `**Label** (starred)`. Only one of those four surfaces is not a restatement:
 # the marked fields themselves. The other three are claims about it.
 #
-# Nothing in this repository read that template before this group. So starring an eleventh
+# Nothing in this repository read those templates before this group. So starring one more
 # field and updating the banner alone would have shipped a stale appendix, in two places,
 # with every gate green — and the appendix is the surface an agent reads to run the intake,
 # so the stale copy is the one that drives the conversation. It has not happened yet: all
@@ -2162,21 +2187,28 @@ fi
 # template DIRECTLY with its own text processing and adds NO finding code to the validator,
 # so va_select's output is untouched — the same reason EN, CA and PB stay clear of CTL.
 # ST-AR3 re-reads AR_NTPL in this same run and asserts it is still zero, which makes the
-# constraint an observation rather than a promise in a comment.
+# constraint an observation rather than a promise in a comment. The durable form joins on
+# the same warrant and one further one worth stating, because it is NOT the trip form's:
+# its fence carries `trip: cross-trip`, a real slug rather than a placeholder, so A4 would
+# not have refused it and the selector's DECLARED arm would have claimed it on its
+# `artifact:` key. What keeps it out is the exclusion `templates/*.template.md`, which
+# va_select applies BEFORE both arms — the pattern matches by filename shape, so the
+# exclusion covers a form added later with no edit to it.
 #
 # ── ST HAS NO LEGITIMATE SKIP ───────────────────────────────────────────────────
-# The population is a tracked file, so it exists by construction. A missing or unreadable
+# Every member of the population is a tracked file, so each exists by construction. A missing or unreadable
 # template is a FAILURE here, never a SKIP and never VACUOUS: the file going away is itself
 # drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "ST — the starred-field count agrees across all four of its homes in one template"
+echo "ST — the starred-field count agrees across all four of its homes, in every intake form"
 
-ST_REL="templates/traveler-intake.template.md"
-ST_FILE="$ROOT/$ST_REL"
+# The population, one path per line. Each is graded independently and completely: its own
+# surfaces, its own violations, its own full set of control arms against its own fixtures.
+ST_TEMPLATES="templates/traveler-intake.template.md
+templates/person-intake.template.md"
 ST_STAR='⭐'
-ST_DIR="$WORK/st"
-mkdir -p "$ST_DIR"
+mkdir -p "$WORK/st"
 
 # st_surfaces <file> — one TAB record per discovered assertion site, three surfaces:
 #
@@ -2192,8 +2224,10 @@ mkdir -p "$ST_DIR"
 # already enforces on va_type_ok.
 #
 # PROSE is the hard surface, and it is hard for a specific reason: BOTH prose sites carry a
-# COMPETING cardinal. The banner reads "about 2-3 minutes" before it reads "ten of them",
-# and rule 4 reads "the two-to-three minute pass" after it reads "the ten fields". A reader
+# COMPETING cardinal. The banner reads "about 2-3 minutes" before it reads "three of them"
+# (six, on the durable form), and rule 4 reads "the two-to-three minute pass" after it reads
+# "the three fields". Both decoys are the SAME two on either form and both survived the
+# split unchanged, which is why the window below needed no retuning for the new member. A reader
 # that took the first number on the line would report 2 for the banner, agree with nothing,
 # and be wrong in a way that never announces itself. So a number counts only when it is
 # followed — within at most three intervening words, across whitespace or dashes only — by
@@ -2397,6 +2431,18 @@ st_mustnotfire() {
   fi
 }
 
+while IFS= read -r ST_REL; do
+[ -n "$ST_REL" ] || continue
+ST_FILE="$ROOT/$ST_REL"
+# The tag names the form in every verdict below, so a red says WHICH form drifted, and it
+# gives each member its own fixture directory — a shared one would have the second member
+# overwriting the first's fixtures mid-run.
+ST_TAG="${ST_REL##*/}"; ST_TAG="${ST_TAG%.template.md}"
+ST_DIR="$WORK/st/$ST_TAG"
+mkdir -p "$ST_DIR"
+echo
+echo "  ── $ST_REL"
+
 ST_OK=1
 ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0
 if [ -r "$ST_FILE" ]; then
@@ -2411,12 +2457,12 @@ printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s append
   "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH"
 
 if [ ! -r "$ST_FILE" ]; then
-  FAIL "ST0: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
+  FAIL "ST0[$ST_TAG]: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
   ST_OK=0
 elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; then
-  PASS "ST0: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
+  PASS "ST0[$ST_TAG]: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
 else
-  FAIL "ST0: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
+  FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
   ST_OK=0
 fi
 
@@ -2424,22 +2470,22 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
   ST_NVIOL="$(printf '%s\n' "$ST_VIOL" | grep -c '[^[:space:]]')"
   if [ "$ST_NVIOL" -eq 0 ]; then
-    PASS "ST1: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface"
+    PASS "ST1[$ST_TAG]: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface"
   else
-    FAIL "ST1: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
+    FAIL "ST1[$ST_TAG]: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
     printf '%s\n' "$ST_VIOL" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
   fi
 
   if [ "$ST_NGLYPH" -gt "$ST_NMARK" ]; then
-    PASS "ST2: the reference count is $ST_NMARK MARKED FIELDS and not the $ST_NGLYPH star glyphs the file contains, and the inequality is observed here rather than assumed. The banner's own mention of the glyph is prose about the convention, excluded by the shape MARKED matches — so a counter that had quietly become a glyph tally would report $ST_NGLYPH and be caught by this arm"
+    PASS "ST2[$ST_TAG]: the reference count is $ST_NMARK MARKED FIELDS and not the $ST_NGLYPH star glyphs the file contains, and the inequality is observed here rather than assumed. The banner's own mention of the glyph is prose about the convention, excluded by the shape MARKED matches — so a counter that had quietly become a glyph tally would report $ST_NGLYPH and be caught by this arm"
   else
-    FAIL "ST2: the marked-field count ($ST_NMARK) is not strictly below the glyph count ($ST_NGLYPH), so the discriminator between counting fields and counting glyphs is UNTESTED on this tree and ST1's agreement proves less than it appears to"
+    FAIL "ST2[$ST_TAG]: the marked-field count ($ST_NMARK) is not strictly below the glyph count ($ST_NGLYPH), so the discriminator between counting fields and counting glyphs is UNTESTED on this tree and ST1's agreement proves less than it appears to"
   fi
 
   if [ "${AR_NTPL:-unset}" = "0" ]; then
-    PASS "ST-AR3: AR3 is re-read in this same run and still reports 0 template(s) reaching the selector. Group ST reads $ST_REL directly and adds no finding code to the validator, so the constraint that this check must not drag a template into va_select is an observation here, not a promise in a comment"
+    PASS "ST-AR3[$ST_TAG]: AR3 is re-read in this same run and still reports 0 template(s) reaching the selector. Group ST reads $ST_REL directly and adds no finding code to the validator, so the constraint that this check must not drag a template into va_select is an observation here, not a promise in a comment"
   else
-    FAIL "ST-AR3: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
+    FAIL "ST-AR3[$ST_TAG]: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
   fi
 fi
 
@@ -2454,25 +2500,25 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_AL1="$(st_field ANNOT 1 2 "$ST_SURF")"
 
   ST_FX="$(st_fixture m1)"; st_bump "$ST_FX" "$ST_PL1" "$ST_PV1"
-  st_mustfire CTL-ST-M1 "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields and the appendix untouched"
+  st_mustfire "CTL-ST-M1[$ST_TAG]" "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields and the appendix untouched"
 
   ST_FX="$(st_fixture m2)"; st_bump "$ST_FX" "$ST_PL2" "$ST_PV2"
-  st_mustfire CTL-ST-M2 "$ST_FX" DISAGREE "the APPENDIX RULE-4 numeral alone is restated as $((ST_PV2 - 1)) at line $ST_PL2, with the banner and the annotations untouched"
+  st_mustfire "CTL-ST-M2[$ST_TAG]" "$ST_FX" DISAGREE "the APPENDIX RULE-4 numeral alone is restated as $((ST_PV2 - 1)) at line $ST_PL2, with the banner and the annotations untouched"
 
   ST_FX="$(st_fixture m3)"; st_line_sub "$ST_FX" "$ST_ML1" "${ST_STAR}[ ]*" ""
-  st_mustfire CTL-ST-M3 "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving every numeral and every annotation as it was"
+  st_mustfire "CTL-ST-M3[$ST_TAG]" "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving every numeral and every annotation as it was"
 
   ST_FX="$(st_fixture m4)"; st_line_sub "$ST_FX" "$ST_AL1" "[ ]*[(]starred[)]" ""
-  st_mustfire CTL-ST-M4 "$ST_FX" DISAGREE "ONE appendix annotation is dropped at line $ST_AL1, leaving both numerals and every marked field as they were"
+  st_mustfire "CTL-ST-M4[$ST_TAG]" "$ST_FX" DISAGREE "ONE appendix annotation is dropped at line $ST_AL1, leaving both numerals and every marked field as they were"
 
   ST_FX="$(st_fixture d1)"; st_line_del "$ST_FX" "$ST_PL1"
-  st_mustfire CTL-ST-D1 "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1) — the case a count-only comparison passes, because the remaining numeral still agrees"
+  st_mustfire "CTL-ST-D1[$ST_TAG]" "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1) — the case a count-only comparison passes, because the remaining numeral still agrees"
 
   ST_FX="$(st_fixture d2)"; st_line_del "$ST_FX" "$ST_PL2"
-  st_mustfire CTL-ST-D2 "$ST_FX" PROSE-POP "the APPENDIX RULE-4 assertion is DELETED outright (line $ST_PL2), the same hole at the other site"
+  st_mustfire "CTL-ST-D2[$ST_TAG]" "$ST_FX" PROSE-POP "the APPENDIX RULE-4 assertion is DELETED outright (line $ST_PL2), the same hole at the other site"
 
   ST_FX="$(st_fixture r1)"; st_line_sub "$ST_FX" "$ST_ML1" "[*][*]$ST_MB1:[*][*]" "**$ST_MB1 (renamed):**"
-  st_mustfire CTL-ST-R1 "$ST_FX" LABELS-SET "ONE marked field is RENAMED ('$ST_MB1', line $ST_ML1) and every count is left equal, so only a label-for-label comparison can see it"
+  st_mustfire "CTL-ST-R1[$ST_TAG]" "$ST_FX" LABELS-SET "ONE marked field is RENAMED ('$ST_MB1', line $ST_ML1) and every count is left equal, so only a label-for-label comparison can see it"
 
   # R2 is the subtle one: the banner keeps its glyph and keeps its numeral, but stops being
   # a countable assertion. It is the failure a count-only comparison cannot see, because
@@ -2481,9 +2527,9 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_R2_KEPT=0
   awk -v ln="$ST_PL1" -v star="$ST_STAR" 'NR == ln && index($0, star) > 0 { f = 1 } END { exit(f ? 0 : 1) }' "$ST_FX" && ST_R2_KEPT=1
   if [ "$ST_R2_KEPT" -eq 1 ]; then
-    st_mustfire CTL-ST-R2 "$ST_FX" PROSE-POP "the BANNER is REWORDED out of the count shape at line $ST_PL1 while KEEPING its star glyph (asserted present on the mutated line) — it still looks like the assertion and no longer is one"
+    st_mustfire "CTL-ST-R2[$ST_TAG]" "$ST_FX" PROSE-POP "the BANNER is REWORDED out of the count shape at line $ST_PL1 while KEEPING its star glyph (asserted present on the mutated line) — it still looks like the assertion and no longer is one"
   else
-    FAIL "CTL-ST-R2: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
+    FAIL "CTL-ST-R2[$ST_TAG]: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
   fi
 
   # ── LABELS-ORDER, MARKED-EMPTY and ANNOT-EMPTY each have a branch in st_violations and,
@@ -2506,9 +2552,9 @@ if [ "$ST_OK" -eq 1 ]; then
     ST_FX="$(st_fixture o1)"
     st_line_sub "$ST_FX" "$ST_AL1" "[*][*]$ST_AB1[*][*]" "**$ST_AB2**"
     st_line_sub "$ST_FX" "$ST_AL2" "[*][*]$ST_AB2[*][*]" "**$ST_AB1**"
-    st_mustfire CTL-ST-O1 "$ST_FX" LABELS-ORDER "the appendix's first two annotations are TRANSPOSED ('$ST_AB1' at line $ST_AL1 with '$ST_AB2' at line $ST_AL2), so both sets stay equal and every count stays put — the one edit only an order-aware comparison can see"
+    st_mustfire "CTL-ST-O1[$ST_TAG]" "$ST_FX" LABELS-ORDER "the appendix's first two annotations are TRANSPOSED ('$ST_AB1' at line $ST_AL1 with '$ST_AB2' at line $ST_AL2), so both sets stay equal and every count stays put — the one edit only an order-aware comparison can see"
   else
-    FAIL "CTL-ST-O1: MUST FIRE — the first two appendix annotations both sit on line $ST_AL1, so transposing them would cancel to no edit and this arm would grade nothing. LABELS-ORDER needs two annotations on distinct lines to be provoked"
+    FAIL "CTL-ST-O1[$ST_TAG]: MUST FIRE — the first two appendix annotations both sit on line $ST_AL1, so transposing them would cancel to no edit and this arm would grade nothing. LABELS-ORDER needs two annotations on distinct lines to be provoked"
   fi
 
   # E1 — the MARKED surface emptied outright. The star is stripped from every marked bullet
@@ -2522,7 +2568,7 @@ if [ "$ST_OK" -eq 1 ]; then
     st_line_sub "$ST_FX" "$(st_field MARKED "$ST_I" 2 "$ST_SURF")" "${ST_STAR}[ ]*" ""
     ST_I=$((ST_I + 1))
   done
-  st_mustfire CTL-ST-E1 "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the three homes that merely describe it describing nothing"
+  st_mustfire "CTL-ST-E1[$ST_TAG]" "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the three homes that merely describe it describing nothing"
 
   # E2 — the ANNOT surface emptied the same way and for the same reason: the appendix's
   # per-field restatement is the home ST1 compares label FOR label, and a zero there would
@@ -2532,14 +2578,17 @@ if [ "$ST_OK" -eq 1 ]; then
     st_line_sub "$ST_FX" "$(st_field ANNOT "$ST_I" 2 "$ST_SURF")" "[ ]*[(]starred[)]" ""
     ST_I=$((ST_I + 1))
   done
-  st_mustfire CTL-ST-E2 "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
+  st_mustfire "CTL-ST-E2[$ST_TAG]" "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
 
   ST_FX="$(st_fixture clean)"
-  st_mustnotfire CTL-ST-CLEAN "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes every must-fire arm above mean something"
+  st_mustnotfire "CTL-ST-CLEAN[$ST_TAG]" "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes every must-fire arm above mean something"
 
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
-  st_mustnotfire CTL-ST-NEUTRAL "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
+  st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
 fi
+done <<EOF
+$ST_TEMPLATES
+EOF
 
 # ─────────────────────────────────────────────────────────────────────────────────
 echo
@@ -2949,6 +2998,422 @@ if [ "$CTL_RAN" -ne 1 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group AF — the archived-trip freeze, and the one operation that reaches through it.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# CLAUDE.md § *Archived trips — what the freeze binds* states two things that pull in
+# opposite directions: an archived trip receives NO derivation, and erasure reaches it
+# anyway. Read carelessly the first swallows the second — "frozen" heard as untouchable
+# rather than underivable — and a person's data survives a deletion they asked for.
+# Nothing asserted either half. There was not even a subject: no fixture in this
+# repository carried a `**Lifecycle:**` marker, so there was no archived trip for any
+# check to run against.
+#
+# examples/archived-trip-demo/ is that subject, and this group is the assertion over it.
+#
+# ── WHAT IT CAN AND CANNOT ASSERT, STATED SO THE LIMIT IS NOT MISTAKEN FOR COVER ──
+# This engine's agents are prompt files, not executable code, so no suite here can RUN an
+# erasure and watch what it does. What this group grades is the STATE a correct erasure
+# leaves behind — the tombstone in every location that held a name, an entry census a
+# rebuild could not have produced, an untouched marker, constraint rosters that are still
+# non-empty. It does not grade a future implementation's behaviour. That boundary is real
+# and is written into the fixture's README as well, so a reader meeting a green run does
+# not read more into it than it says.
+#
+# ── THE CENSUS IS WHAT TELLS SUBSTITUTION FROM REGENERATION ──────────────────────
+# The obvious assertion — "the erased name is gone" — is satisfied by a regeneration too,
+# and a regeneration is the wrong mechanism: it rewrites the whole file, so the archived
+# plan stops being the plan as it was planned. ADR-012 bounds that with a byte-length
+# delta on free-text classes. The derived model admits a sharper instrument, because the
+# two file-less entry classes fail in OPPOSITE directions under a rebuild: the
+# [OPERATOR-PROVIDED]-alone entry is DROPPED (nothing to re-derive it from) while the
+# both-marks entry is CARRIED FORWARD VERBATIM, name and need intact. So a model still
+# holding every entry, with both file-less ones tombstoned rather than dropped or
+# preserved, could not have been produced by a rebuild. AF12 is that census. A byte pin
+# on a counterfactual pre-erasure size was considered and rejected: on a single shipped
+# state that number can only be DECLARED, and a declared number chosen by the author to
+# make the arm pass is a tautological arm, not an assertion.
+#
+# ── THE CONTROL ARM IS A PERSON ──────────────────────────────────────────────────
+# Every "no identifying value survives" verdict here is a zero, and a zero from an
+# instrument that reads nothing looks the same as a zero from a clean tree. The fixture
+# therefore carries a traveller who was NOT erased, and AF8 requires the same instrument
+# to FIND her in the same three location classes. A run where both arms come back empty
+# has measured nothing and fails rather than passing quietly.
+#
+# ── THE DECLARATION LIVES IN THE FIXTURE, NOT IN THIS FILE ───────────────────────
+# Subjects, survivor, marker and pins are read from the `archived-erasure-witness` fence
+# in the fixture's own README — the same declaration-in-the-corpus mechanism group FW
+# uses for the frozen witness. A list held here would be a second source of truth, free
+# to drift from the fixture it claims to describe. README.md carries the declaration and
+# is therefore not pinned by it; a file cannot hold its own content address.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "AF — the archived-trip freeze, and the erasure that reaches through it"
+
+AF_DIR="examples/archived-trip-demo"
+AF_DOC="$ROOT/$AF_DIR/README.md"
+
+# af_rows <keyword> — the declared rows of one kind. Read from the fence and nowhere else.
+af_rows() {
+  awk -v want="$1" '
+    $0 == "```archived-erasure-witness" { infence = 1; next }
+    infence && $0 == "```" { infence = 0; next }
+    infence {
+      line = $0
+      sub(/^[ \t]+/, "", line); sub(/[ \t]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, f, /[ \t]+/)
+      if (f[1] != want) next
+      out = ""
+      for (i = 2; i <= n; i++) out = out (i > 2 ? "\t" : "") f[i]
+      print out
+    }
+  ' "$AF_DOC"
+}
+
+# af_count <file> <awk-condition-program> — a counting probe over one file: one counting
+# body, parameterised by the match condition, so two arms asking the same question of two
+# files cannot disagree about what counting means. Its call sites are AF1 (the marker line)
+# and AF6 (the stated disposition).
+#
+# WHAT THIS HELPER IS NOT. It is not a shared subject/control instrument. AF1 and AF6 are
+# two subject arms, not a pair; the group's control arm is AF8, and AF8 runs its own inline
+# awk programs against the same files its subjects do rather than routing through here.
+# So "the control ran the same code as the assertion" is NOT a property this group has —
+# AF9 matches an entry heading bearing [ERASED] while AF8 matches a bare heading, and they
+# are deliberately different questions. What makes AF7/AF9's zeros admissible is that AF8
+# must FIND the survivor in the same three location classes on the same files, which is a
+# claim about the fixture being readable, not about the two arms sharing an implementation.
+# The distinction matters: a comment claiming a coupling the code does not implement is a
+# reader's licence to stop checking.
+af_count() { awk "$2 { c++ } END { print c + 0 }" "$1"; }
+
+AF_OK=1
+if [ ! -r "$AF_DOC" ]; then
+  FAIL "AF0: $AF_DIR/README.md is not readable, so the declaration could not be read. Not a skip and not a pass"
+  AF_OK=0
+else
+  AF_SUBJ="$(af_rows subject)"
+  AF_SURV="$(af_rows survivor)"
+  AF_MARK="$(af_rows marker)"
+  AF_PINS="$(af_rows pin)"
+  AF_NSUBJ="$(printf '%s\n' "$AF_SUBJ" | grep -c '[^[:space:]]')"
+  AF_NPIN="$(printf '%s\n' "$AF_PINS" | grep -c '[^[:space:]]')"
+  AF_NSURV="$(printf '%s\n' "$AF_SURV" | grep -c '[^[:space:]]')"
+  if [ "$AF_NSUBJ" -gt 0 ] && [ "$AF_NPIN" -gt 0 ] && [ "$AF_NSURV" -eq 1 ] && [ -n "$AF_MARK" ]; then
+    PASS "AF0: the fixture declares $AF_NSUBJ erasure subject(s), 1 survivor, a marker requirement and $AF_NPIN pinned file(s); this suite holds no copy of any of them"
+  else
+    FAIL "AF0: the \`archived-erasure-witness\` fence yielded subjects=$AF_NSUBJ survivors=$AF_NSURV pins=$AF_NPIN marker='${AF_MARK:-<none>}'. An incomplete declaration means every verdict below would be over a partial set — this fails rather than passing quietly"
+    AF_OK=0
+  fi
+fi
+
+if [ "$AF_OK" -eq 1 ]; then
+  AF_MPATH="$(printf '%s' "$AF_MARK" | cut -f1)"
+  AF_MWANT="$(printf '%s' "$AF_MARK" | cut -f2)"
+  AF_CTX="$ROOT/$AF_MPATH"
+  AF_MODEL="$ROOT/$AF_DIR/outputs/traveler-model.md"
+  AF_LOG="$ROOT/$AF_DIR/trip-log.md"
+
+  # ── HALF A — an ordinary person edit leaves this trip untouched ────────────────
+
+  # AF1 / AF2 — presence and VALUE are two arms, not one. An implementation that tests
+  # only for the marker's presence survives its removal being caught and still gets the
+  # value wrong; an implementation that tests only the value cannot tell a trip that was
+  # set ACTIVE from one whose line was deleted. Both mis-implementations are real and
+  # they are distinguishable only by asking both questions.
+  AF_MLINE="$(af_count "$AF_CTX" '/^\*\*Lifecycle:\*\* /')"
+  if [ "$AF_MLINE" -eq 1 ]; then
+    PASS "AF1: the fixture carries exactly one \`**Lifecycle:**\` marker line — the presence arm, which is what a removal turns red"
+  else
+    FAIL "AF1: expected exactly one \`**Lifecycle:**\` line in $AF_MPATH, found $AF_MLINE — at 0 the marker was removed, and an absent line defaults to ACTIVE at G4, so the trip silently stops being archived"
+  fi
+
+  AF_MVAL="$(awk '/^\*\*Lifecycle:\*\* / { sub(/^\*\*Lifecycle:\*\* /, ""); gsub(/[ \t\r]+$/, ""); print; exit }' "$AF_CTX")"
+  if [ "$AF_MVAL" = "$AF_MWANT" ]; then
+    PASS "AF2: the marker reads '$AF_MVAL', the declared value — the VALUE arm, which is what setting it to ACTIVE turns red while AF1 stays green"
+  else
+    FAIL "AF2: the marker reads '${AF_MVAL:-<none>}' but the fixture declares '$AF_MWANT' — this fixture is only a subject while it is archived"
+  fi
+
+  # AF3 — the pinned path set and the tracked set are the same set, both directions, so a
+  # file ADDED under the fixture fails as loudly as one whose bytes moved. README.md is
+  # excluded because it carries the declaration being compared.
+  AF_TRACKED="$(cd "$ROOT" && git ls-files "$AF_DIR" 2>/dev/null | grep -v "^$AF_DIR/README.md$" | sort)"
+  AF_DECL="$(printf '%s\n' "$AF_PINS" | awk -F'\t' 'NF>1{print $2}' | sort)"
+  AF_NTRK="$(printf '%s\n' "$AF_TRACKED" | grep -c '[^[:space:]]')"
+  AF_ONLY_TRK="$(comm -23 <(printf '%s\n' "$AF_TRACKED") <(printf '%s\n' "$AF_DECL") | grep -c '[^[:space:]]')"
+  AF_ONLY_DEC="$(comm -13 <(printf '%s\n' "$AF_TRACKED") <(printf '%s\n' "$AF_DECL") | grep -c '[^[:space:]]')"
+  if [ "$AF_NTRK" -gt 0 ] && [ "$AF_ONLY_TRK" -eq 0 ] && [ "$AF_ONLY_DEC" -eq 0 ]; then
+    PASS "AF3: the declaration covers the fixture EXACTLY — $AF_NPIN pinned against $AF_NTRK tracked under '$AF_DIR/' (README.md excluded, it carries the declaration), compared in both directions"
+  else
+    FAIL "AF3: the pinned set and the tracked set differ under '$AF_DIR/' (tracked=$AF_NTRK pinned=$AF_NPIN tracked-but-unpinned=$AF_ONLY_TRK pinned-but-untracked=$AF_ONLY_DEC)"
+  fi
+
+  # AF4 — the freeze itself. This is Half A's assertion: the archived trip's bytes have
+  # not moved. An ordinary person-record edit that reached this trip would land here.
+  AF_BAD=0; AF_MISS=0; AF_DET=""
+  while IFS=$'\t' read -r afd afp; do
+    [ -n "$afp" ] || continue
+    if [ ! -r "$ROOT/$afp" ]; then AF_MISS=$((AF_MISS+1)); AF_DET="$AF_DET $afp(absent)"; continue; fi
+    afa="$(git hash-object -- "$ROOT/$afp" 2>/dev/null)"
+    [ "$afa" = "$afd" ] || { AF_BAD=$((AF_BAD+1)); AF_DET="$AF_DET $afp"; }
+  done <<EOF
+$(printf '%s\n' "$AF_PINS")
+EOF
+  if [ "$AF_NPIN" -gt 0 ] && [ "$AF_BAD" -eq 0 ] && [ "$AF_MISS" -eq 0 ]; then
+    PASS "AF4: all $AF_NPIN file(s) of the archived trip are byte-identical to their pinned content address — the freeze is asserted on every push. This is Half A: an ordinary person edit leaves an archived trip untouched"
+  else
+    FAIL "AF4: the archived trip has MOVED ($AF_BAD of $AF_NPIN mismatched, $AF_MISS absent):$AF_DET — if the change was deliberate, re-pin those rows in $AF_DIR/README.md in this same commit"
+  fi
+
+  # AF5 — no update signal was written. The freeze's first clause, at the one address a
+  # breach would show up: a signal row inside the reserved block.
+  AF_SIG="$(awk '
+    /^## Update signals/ { inblk = 1; next }
+    inblk && /^## / { inblk = 0 }
+    inblk && /^- / { c++ }
+    END { print c + 0 }' "$AF_MODEL")"
+  if [ "$AF_SIG" -eq 0 ]; then
+    PASS "AF5: the derived model's \`## Update signals\` block carries 0 signal rows — an archived trip receives no update signal, and a row here would mean the freeze had failed"
+  else
+    FAIL "AF5: the archived trip's model carries $AF_SIG update-signal row(s); an archived trip receives no derivation, so none should have been written"
+  fi
+
+  # AF6 — the absence is STATED. Without this arm a correctly-frozen trip and a run that
+  # never looked at it are indistinguishable, which is the whole reason the disposition
+  # is typed rather than left silent.
+  AF_NOTSIG="$(af_count "$AF_LOG" '/ARCHIVED — not signalled/')"
+  if [ "$AF_NOTSIG" -ge 1 ]; then
+    PASS "AF6: the trip record names the trip \`ARCHIVED — not signalled\` — the disposition is stated, so silence and correctness are distinguishable"
+  else
+    FAIL "AF6: no \`ARCHIVED — not signalled\` disposition is recorded in $AF_DIR/trip-log.md; an absence inferred from silence is not an absence that was observed"
+  fi
+
+  # ── HALF B — an erasure reached this trip ──────────────────────────────────────
+
+  # The roster is the name authority (agents/00-enrichment.md § Traveler identity), so it
+  # is the location a model-only erasure leaves behind and the one that would re-seed the
+  # name on the first pass after a reopen. Every roster cell that is not the survivor
+  # must be a token.
+  AF_SURVNAME="$(printf '%s' "$AF_SURV" | cut -f1)"
+  AF_ROSTER_BAD="$(awk -v surv="$AF_SURVNAME" '
+    /^## Group/ { ingrp = 1; next }
+    ingrp && /^## / { ingrp = 0 }
+    ingrp && /^\|/ {
+      line = $0
+      split(line, cell, "|")
+      v = cell[2]; gsub(/^[ \t]+|[ \t]+$/, "", v)
+      if (v == "" || v == "Traveler" || v ~ /^-+$/) next
+      if (v == surv) next
+      if (v !~ /^per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/) c++
+    }
+    END { print c + 0 }' "$AF_CTX")"
+  if [ "$AF_ROSTER_BAD" -eq 0 ]; then
+    PASS "AF7: every \`## Group\` roster cell other than the survivor's is a \`per-<token>\`, so no erased subject's identifying value survives in the name authority — the location a model-only erasure would leave standing, and from which the name would return by instruction on the first pass after a reopen"
+  else
+    FAIL "AF7: $AF_ROSTER_BAD roster cell(s) still carry a name-shaped value for an erased subject. The roster is the name authority and the model heading and file stem are projections of it, so the name re-enters on reopen — a model-only erasure un-erases itself"
+  fi
+
+  # AF8 — THE CONTROL ARM, MUST FIRE. AF7/AF9's verdicts are zeros; this is what makes
+  # them measurements. The same probes are re-run for a traveller who was NOT erased and
+  # must find her in all three location classes.
+  AF_S_ROSTER="$(awk -v surv="$AF_SURVNAME" '
+    /^## Group/ { ingrp = 1; next }
+    ingrp && /^## / { ingrp = 0 }
+    ingrp && /^\|/ { split($0, cell, "|"); v = cell[2]; gsub(/^[ \t]+|[ \t]+$/, "", v); if (v == surv) c++ }
+    END { print c + 0 }' "$AF_CTX")"
+  AF_S_ENTRY="$(awk -v surv="$AF_SURVNAME" '$0 == "## " surv { c++ } END { print c + 0 }' "$AF_MODEL")"
+  AF_S_APPL="$(awk -v surv="$AF_SURVNAME" 'index($0, "Applies to:") && index($0, surv) { c++ } END { print c + 0 }' "$AF_CTX")"
+  if [ "$AF_S_ROSTER" -ge 1 ] && [ "$AF_S_ENTRY" -ge 1 ] && [ "$AF_S_APPL" -ge 1 ]; then
+    PASS "AF8: MUST FIRE — the survivor '$AF_SURVNAME' is found in all three location classes (roster=$AF_S_ROSTER, model entry=$AF_S_ENTRY, Applies to=$AF_S_APPL), so AF7's and AF9's zeros are measurements over a population this instrument can actually see"
+  else
+    FAIL "AF8: MUST FIRE — the survivor '$AF_SURVNAME' was found roster=$AF_S_ROSTER model=$AF_S_ENTRY applies-to=$AF_S_APPL; with any of these at 0 the instrument reads nothing, and AF7's zero says nothing about whether an erasure ran"
+  fi
+
+  # AF9 / AF10 / AF13 — per declared subject. The three classes converge on an archived
+  # trip: whatever surfaces a subject has, the act is the same one, and the tombstone must
+  # appear on every surface that subject's class declares.
+  AF_T_BAD=""; AF_S_BAD=""; AF_FILELESS_BAD=""
+  while IFS=$'\t' read -r aft afc afroster affile; do
+    [ -n "$aft" ] || continue
+    n="$(awk -v t="$aft" 'index($0, "## " t) == 1 && index($0, "[ERASED]") { c++ } END { print c + 0 }' "$AF_MODEL")"
+    [ "$n" -ge 1 ] || AF_T_BAD="$AF_T_BAD $aft($afc)"
+    if [ "$afroster" = "yes" ]; then
+      n="$(awk -v t="$aft" '/^\|/ && index($0, t) { c++ } END { print c + 0 }' "$AF_CTX")"
+      [ "$n" -ge 1 ] || AF_S_BAD="$AF_S_BAD $aft(roster)"
+    else
+      n="$(awk -v t="$aft" '/^\|/ && index($0, t) { c++ } END { print c + 0 }' "$AF_CTX")"
+      [ "$n" -eq 0 ] || AF_FILELESS_BAD="$AF_FILELESS_BAD $aft(roster-row-present)"
+    fi
+    if [ "$affile" = "yes" ]; then
+      [ -r "$ROOT/$AF_DIR/travelers/$aft.md" ] || AF_S_BAD="$AF_S_BAD $aft(file)"
+    else
+      [ ! -e "$ROOT/$AF_DIR/travelers/$aft.md" ] || AF_FILELESS_BAD="$AF_FILELESS_BAD $aft(file-present)"
+    fi
+  done <<EOF
+$(printf '%s\n' "$AF_SUBJ")
+EOF
+
+  if [ -z "$AF_T_BAD" ]; then
+    PASS "AF9: all $AF_NSUBJ declared subject(s) carry a tombstoned \`## <token>\` entry in the derived model, INCLUDING the both-marks class — the entry a rebuild would have carried forward verbatim, name and need intact, and the one an implementation that substitutes only where a source file exists would miss"
+  else
+    FAIL "AF9: subject(s) with no tombstoned model entry:$AF_T_BAD — an entry left un-substituted survives every subsequent pass, so a person who asked to be deleted keeps their recorded need"
+  fi
+
+  if [ -z "$AF_S_BAD" ]; then
+    PASS "AF10: every subject's token appears on each surface its class declares — the roster cell AND the traveller-file stem, not the derived model alone. This is what the post-reopen guarantee rests on: the model is regenerated from those sources, so a tombstone written only into the model is undone by the first pass after a reopen"
+  else
+    FAIL "AF10: subject surface(s) missing the token:$AF_S_BAD"
+  fi
+
+  if [ -z "$AF_FILELESS_BAD" ]; then
+    PASS "AF13: each subject declared to have no roster row and no traveller file has neither — so the both-marks class has no surface to be re-enumerated from after a reopen, and nothing points at it to dangle. A theorem, conditional on ADR-006 continuing to bar that class from trip-context.md"
+  else
+    FAIL "AF13: subject(s) carrying a surface their class declares absent:$AF_FILELESS_BAD"
+  fi
+
+  # AF11 — an emptied Applies to: is a path to a plan that grades compliant while no
+  # longer carrying the need it was built around. Erasure substitutes; it never empties.
+  # WRAP-AWARE BY MEASUREMENT, NOT BY CAUTION. The first form of this probe read only the
+  # remainder of the matching line and reported a roster empty whose value had simply
+  # wrapped onto the next one — a false RED on a correct fixture. A same-line-only test is
+  # wrong in a corpus that hard-wraps prose, so the continuation is read: a remainder that
+  # is empty is only empty if the next line is blank, a new bullet, or a heading.
+  #
+  # MARKUP-BLIND NO LONGER. This probe used to match the literal /\*Applies to:\*/ — the
+  # single-italic rendering the fixture happens to use. The label is rendered at least four
+  # ways in this corpus (backticked, bare, **bold**, *italic*), all of them live, so an
+  # emptied roster whose label had been re-rendered was invisible: the arm returned its
+  # usual zero and certified a fixture it had not read. A count-only check cannot catch
+  # that, because the wrong-labelled read returns the right-looking number. The label is
+  # now matched independently of its wrapper and the wrapper characters are stripped from
+  # the remainder before the emptiness test.
+  #
+  # AND THE ZERO CARRIES A DENOMINATOR. A zero over zero rosters is not a clean fixture,
+  # it is an unread one — the same fault AF0 fails closed on and the reason AF8 exists.
+  # AF_SEEN is the count of label sites actually read; at 0 this arm fails rather than
+  # passing quietly, and the PASS message states the population the zero was measured over.
+  AF_APPL="$(awk '
+    { line[NR] = $0 }
+    END {
+      for (i = 1; i <= NR; i++) {
+        if (!match(line[i], /Applies to:/)) continue
+        seen++
+        rest = substr(line[i], RSTART + RLENGTH)
+        gsub(/[ \t\r*`]+/, "", rest)
+        if (rest != "" && rest != ".") continue
+        nxt = (i < NR) ? line[i+1] : ""
+        gsub(/^[ \t]+|[ \t\r]+$/, "", nxt)
+        if (nxt == "" || nxt ~ /^[-*#>|]/) c++
+      }
+      print (seen + 0) "\t" (c + 0)
+    }' "$AF_CTX")"
+  AF_SEEN="$(printf '%s' "$AF_APPL" | cut -f1)"
+  AF_EMPTY="$(printf '%s' "$AF_APPL" | cut -f2)"
+  if [ "$AF_SEEN" -eq 0 ]; then
+    FAIL "AF11: no \`Applies to:\` site was found in $AF_MPATH at all, in any rendering — this arm's zero would be a zero-denominator and certify nothing, so it fails rather than passing quietly"
+  elif [ "$AF_EMPTY" -eq 0 ]; then
+    PASS "AF11: 0 of $AF_SEEN \`Applies to:\` site(s) carry an emptied roster — the need survives the person's name, which is what keeps a concluded plan from grading compliant while no longer carrying the constraint it was built around"
+  else
+    FAIL "AF11: $AF_EMPTY of $AF_SEEN \`Applies to:\` site(s) carry an empty roster — this is the milestone's named risk, a compliant-looking unsafe plan"
+  fi
+
+  # AF12 — THE CENSUS. The assertion that tells substitution from regeneration.
+  AF_ENTRIES="$(awk '
+    /^## / {
+      k = tolower($0); gsub(/[^a-z0-9]/, "", k); sub(/^/, "", k)
+      if (k == "updatesignals" || k == "updatesignalsderived" || k == "desireoverlap") next
+      c++
+    }
+    END { print c + 0 }' "$AF_MODEL")"
+  AF_WANT=$(( AF_NSUBJ + AF_NSURV ))
+  if [ "$AF_ENTRIES" -eq "$AF_WANT" ]; then
+    PASS "AF12: the model holds $AF_ENTRIES person entries against $AF_NSUBJ subject(s) + $AF_NSURV survivor — a census a rebuild could not produce. A regeneration DROPS the [OPERATOR-PROVIDED]-alone entry, having no source to re-derive it from, and CARRIES FORWARD the both-marks entry verbatim; the two fail in opposite directions, so neither alone detects the wrong mechanism and only the census does"
+  else
+    FAIL "AF12: the model holds $AF_ENTRIES person entries, expected $AF_WANT ($AF_NSUBJ subjects + $AF_NSURV survivor) — a short count is the regeneration signature (an entry with no source file was dropped), a long one is an entry the declaration does not know about"
+  fi
+
+  # ── HALF C — reopening, and the rule it depends on ─────────────────────────────
+  # AF14 — reopen SETS the value and never removes the line. Same gate result either way
+  # (an absent line defaults to ACTIVE at G4), different legality — removal is a deletion
+  # of trip content. The fixture is a state and cannot execute the verb, so what is graded
+  # is the shipped rule, section-scoped so a sentence that moved elsewhere is not counted.
+  AF_REOPEN="$(awk '
+    $0 == "## reopen" { inblk = 1; next }
+    inblk && /^## / { inblk = 0 }
+    inblk && index($0, "it never removes the line") { c++ }
+    END { print c + 0 }' "$ROOT/.claude/commands/trip-decommission.md")"
+  if [ "$AF_REOPEN" -ge 1 ]; then
+    PASS "AF14: the reopen verb's own section still states that it SETS the value and never removes the line — the freeze is lifted prospectively rather than by deleting the record that the trip was ever concluded"
+  else
+    FAIL "AF14: the \`## reopen\` section no longer states that the line is never removed. Removing it reaches the same gate result by G4's default and is a deletion of trip content — same outcome, different legality"
+  fi
+
+  # ── THE DENOMINATOR ARM ────────────────────────────────────────────────────────
+  # AF15 — the fixture declares its own subjects, so every arm above runs over a
+  # population the fixture chose. That is the right design for WHICH files are pinned and
+  # WHO the subjects are; it is the wrong design for HOW MANY CLASSES are covered, because
+  # a declaration that names its own scope can be narrowed without any arm noticing.
+  #
+  # THE ESCAPE THIS CLOSES, EXACTLY. Removing a subject row alone reddens AF12 (the census
+  # disagrees) and removing a pin alone reddens AF3 (the pinned and tracked sets diverge).
+  # But the COHERENT shrink passes: drop the both-marks subject from the fence, drop its
+  # `## per-b70d` entry from the model, re-pin the model — which is precisely what AF4's own
+  # FAIL text tells a maintainer to do ("if the change was deliberate, re-pin those rows …
+  # in this same commit") — and every arm goes green. AF9 then prints its PASS message
+  # "INCLUDING the both-marks class" over a population that no longer contains one, and AF13
+  # passes vacuously over an empty set. A gate whose remediation instructions empty its own
+  # denominator, and which then certifies the emptiness.
+  #
+  # WHY THE FIX IS NOT A LIST IN THIS FILE. Holding the three class names here would be the
+  # second source of truth AF0's design exists to refuse, free to drift from the fixture and
+  # from the rule alike. The class trichotomy is not a fixture detail: it is a property of
+  # the provenance model, and CLAUDE.md § *Archived trips — what the freeze binds* states it
+  # as part of the rule — three classes, distinguished by their marks, failing in opposite
+  # directions under a regeneration, which is why "substitute, never regenerate" is the
+  # whole of the rule. This arm reads the class set from the RULE and requires the fixture's
+  # declaration to cover it exactly.
+  #
+  # WHAT IT DOES NOT CLAIM. This does not make the denominator unshrinkable. It moves the
+  # edit that shrinks it out of the fixture and into the governance rule, where narrowing
+  # the class set is a visible change to a stated rule rather than tidy-up in a worked
+  # example. That is the correct bar, and it is the honest description of it.
+  #
+  # It also gives CLAUDE.md § *Archived trips* its first executable reader. Before this arm
+  # the section could be deleted outright, inverted to say archived data is unreachable, or
+  # replaced with nonsense, and every suite in this repository stayed green.
+  AF_RULEDOC="$ROOT/CLAUDE.md"
+  AF_RULECLS="$(awk '
+    /^## Archived trips/ { insec = 1; next }
+    insec && /^## /      { insec = 0; inpar = 0 }
+    insec && index($0, "Erasure must reach every model-entry class") { inpar = 1 }
+    inpar && $0 ~ /^[ \t]*$/ { inpar = 0; next }
+    inpar {
+      s = $0
+      while (match(s, /`[a-z][a-z0-9-]*`/)) {
+        tok = substr(s, RSTART + 1, RLENGTH - 2)
+        if (!(tok in seen)) { seen[tok] = 1; print tok }
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+  ' "$AF_RULEDOC" | sort)"
+  AF_FENCECLS="$(printf '%s\n' "$AF_SUBJ" | awk -F'\t' 'NF > 1 && $2 != "" { print $2 }' | sort -u)"
+  AF_NRULE="$(printf '%s\n' "$AF_RULECLS" | grep -c '[^[:space:]]')"
+  AF_NFENCE="$(printf '%s\n' "$AF_FENCECLS" | grep -c '[^[:space:]]')"
+  AF_CLS_ONLYRULE="$(comm -23 <(printf '%s\n' "$AF_RULECLS") <(printf '%s\n' "$AF_FENCECLS") | tr '\n' ' ')"
+  AF_CLS_ONLYFENCE="$(comm -13 <(printf '%s\n' "$AF_RULECLS") <(printf '%s\n' "$AF_FENCECLS") | tr '\n' ' ')"
+  if [ "$AF_NRULE" -eq 0 ]; then
+    FAIL "AF15: CLAUDE.md § Archived trips names no model-entry class at all — the rule that declares which classes an erasure must reach is missing, unreadable, or has been rewritten. Every class-coverage verdict below it would be over a set nothing declares, so this fails rather than passing over an empty rule"
+  elif [ -z "$AF_CLS_ONLYRULE" ] && [ -z "$AF_CLS_ONLYFENCE" ]; then
+    PASS "AF15: the fixture's declared class set covers the rule's EXACTLY — $AF_NFENCE class(es) in the \`archived-erasure-witness\` fence against $AF_NRULE named by CLAUDE.md § Archived trips, both directions. AF9's 'INCLUDING the both-marks class' is now a claim about a population something else declares"
+  else
+    FAIL "AF15: the fixture's class coverage and the rule disagree (rule=$AF_NRULE fence=$AF_NFENCE; in the rule but NOT exercised by the fixture: ${AF_CLS_ONLYRULE:-<none>}; in the fixture but not in the rule: ${AF_CLS_ONLYFENCE:-<none>}). A class the rule requires and the fixture no longer carries is the coherent-shrink escape: the arms below still pass, and AF9 certifies a class the population does not contain"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group PF — no verdict in this suite, or in the validator it sources, is decided by a
 # pipeline's exit status.
 #
@@ -3009,6 +3474,622 @@ elif [ "$PF_BAD" -eq 0 ]; then
   PASS "PF1: ${PF_GOOD} grep -q sites across this suite and the validator it sources, 0 of them pipelines — no verdict here can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
 else
   FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Group ER — the erasure verb's declared contract, and the two fixture
+# properties group AF does not reach.
+#
+# AF grades the fixture's POST-STATE: the marker, the pins, the tombstones, the
+# non-empty constraint rosters. It cannot grade the verb's own contract, because
+# the contract is prose in a command file rather than a property of the trip
+# tree. Four of this milestone's named failure modes live only there — a sweep
+# widened past one trip, a sweep that folds case, a confirmation that acquires a
+# non-interactive escape, and a tombstone token added to the publish fence — and
+# each of them is silent: none changes a composed value, so nothing value-shaped
+# detects it and AF stays green while the design is gone.
+#
+# ER3 is the one whose subject is a file this card must NOT have edited. It is
+# asserted here rather than left as a review convention precisely because the
+# correct action was to do nothing, and a non-action leaves no diff to review.
+# ─────────────────────────────────────────────────────────────────────────────
+echo
+echo "ER — the erasure verb's declared contract, and what it must never acquire"
+
+ER_CMD="$ROOT/.claude/commands/trip-record.md"
+ER_ARCH="$ROOT/reference/data-architecture.md"
+ER_OK=1
+
+# Section extractor: from the verb's own H2 to the next H2 or EOF. `### ` does not
+# match /^## / (position 3 is '#', not a space), so the subsections stay inside.
+er_section() { awk -v h="$2" 'index($0, "## " h) == 1 { on = 1; print; next } on && /^## / { on = 0 } on { print }' "$1"; }
+
+ER_SEC="$(er_section "$ER_CMD" "erase ")"
+ER_CTL="$(er_section "$ER_CMD" "unlink ")"
+ER_N="$(printf '%s\n' "$ER_SEC" | grep -c '[^[:space:]]')"
+ER_NCTL="$(printf '%s\n' "$ER_CTL" | grep -c '[^[:space:]]')"
+
+# ER0 — the denominator gate AND its control. A section extractor that silently
+# returns nothing would make every ER verdict below a plausible zero. The control
+# is a DIFFERENT section of the same file by the same instrument: if the erase
+# section reads empty while unlink reads non-empty, the fault is the section, not
+# the extractor, and the two arms tell those apart.
+if [ ! -r "$ER_CMD" ]; then
+  FAIL "ER0: $ER_CMD is not readable, so every verdict below would be over an empty population. Not a skip and not a pass"
+  ER_OK=0
+elif [ "$ER_N" -gt 0 ] && [ "$ER_NCTL" -gt 0 ]; then
+  PASS "ER0: the verb section reads $ER_N non-blank line(s) and the control section (\`unlink\`) reads $ER_NCTL by the same extractor — so a zero below is a property of the section's content, not of the instrument"
+else
+  FAIL "ER0: the extractor yielded erase=$ER_N unlink=$ER_NCTL non-blank lines. With the control at 0 the instrument is broken and no zero below means anything; with only erase at 0 the verb section is missing"
+  ER_OK=0
+fi
+
+if [ "$ER_OK" -eq 1 ]; then
+
+  # ER1 — the confirmation must have no non-interactive escape. Graded on the
+  # POSITIVE clause rather than on the absence of a flag token: absence is what a
+  # deletion of the whole paragraph also produces, so it cannot tell "no escape"
+  # from "no confirmation".
+  ER_TTY=0
+  case "$ER_SEC" in *'no non-interactive path'*) ER_TTY=$((ER_TTY+1)) ;; esac
+  case "$ER_SEC" in *'no flag to skip it'*)      ER_TTY=$((ER_TTY+1)) ;; esac
+  case "$ER_SEC" in *'typed confirmation'*|*'typing the record'*|*'typed'*) ER_TTY=$((ER_TTY+1)) ;; esac
+  if [ "$ER_TTY" -ge 3 ]; then
+    PASS "ER1: the confirmation declares a typed gate, no non-interactive path and no skip flag — all three limbs present. An irreversible act cannot be laxer than the reversible one the corpus already refuses to let anyone skip"
+  else
+    FAIL "ER1: only $ER_TTY of 3 confirmation limbs are declared. A scripted erasure is the failure this gate exists to prevent, and it is reached by weakening the paragraph rather than by removing it"
+  fi
+
+  # ER9 — the confirmation cannot ACQUIRE an escape. ER1 grades the three positive limbs,
+  # which is what a deletion turns red; it is structurally blind to an ADDITION, and on this
+  # verb addition is the likelier regression — someone wiring CI appends a bypass and leaves
+  # every declared phrase standing, so ER1 stays green while the gate is gone. Measured: an
+  # appended `ERASE_YES=1` beneath the confirmation left the whole suite green.
+  #
+  # Graded as an OCCURRENCE census rather than as the absence of a token. Every escape
+  # construct in the section must sit in a sentence that negates it, and the count of
+  # constructs SEEN is the sensitivity arm, so a zero here is a measurement rather than a
+  # vocabulary that has stopped matching the prose.
+  #
+  # Two token classes, and the split is deliberate. CONSTRUCT tokens — an environment
+  # assignment, a named skip flag — are graded with NO exemption. PHRASE tokens are exempt
+  # when the sentence names another operation as its subject, which is this section's own
+  # contrastive device: it describes the publish script's takedown arm accepting exactly the
+  # flag this verb refuses, and that sentence is affirmative because it is about the
+  # precedent rather than about this verb. The exemption reaches phrases ONLY, so an
+  # environment assignment inside a sentence about the publish script is still a violation
+  # and cannot hide behind it.
+  #
+  # `continue`, not `next`. Measured: with `next`, a negated sentence earlier on the same
+  # line ends the record and an affirmative escape later on that line is never read — the
+  # probe returns a confident zero on the exact input it exists to catch.
+  ER_ESC="$(printf '%s\n' "$ER_SEC" | awk '
+    function neg(s) { return tolower(s) ~ /(^|[^a-z])(no|not|never|cannot|neither|nor|refuse|refuses|refused|deliberately)([^a-z]|$)/ }
+    function other(s) { return tolower(s) ~ /publish script|takedown arm|nearest precedent/ }
+    {
+      n = split($0, S, /(\. +|; )/)
+      for (i = 1; i <= n; i++) {
+        s = S[i]
+        isc = (s ~ /[A-Z][A-Z0-9_]+=/) || (s ~ /--yes|--force|--assume-yes|--no-confirm|--noconfirm/)
+        isp = (tolower(s) ~ /non-?interactive|unattended|bypass|skips? the prompt|prompt is skipped|skip the confirmation|without confirmation|without confirming/)
+        if (isc == 0 && isp == 0) continue
+        seen++
+        if (neg(s)) continue
+        if (isc) { bad++; continue }
+        if (other(s)) { exempt++; continue }
+        bad++
+      }
+    }
+    END { printf "%d\t%d\t%d\n", seen + 0, bad + 0, exempt + 0 }')"
+  ER_ESC_SEEN="$(printf '%s' "$ER_ESC" | cut -f1)"
+  ER_ESC_BAD="$(printf '%s' "$ER_ESC" | cut -f2)"
+  ER_ESC_EX="$(printf '%s' "$ER_ESC" | cut -f3)"
+  if [ "$ER_ESC_SEEN" -eq 0 ]; then
+    FAIL "ER9: the escape census matched 0 construct(s) anywhere in the verb section, so its zero on added escapes proves nothing — the confirmation's vocabulary has moved out from under this probe and neither verdict is trustworthy"
+  elif [ "$ER_ESC_BAD" -eq 0 ]; then
+    PASS "ER9: all $ER_ESC_SEEN escape construct(s) in the verb section sit in a sentence that negates them ($ER_ESC_EX exempted as describing another operation's gate). The sensitivity arm fired ($ER_ESC_SEEN > 0), so this zero is a measurement — and what it measures is ADDITION, the half ER1's positive grading cannot see"
+  else
+    FAIL "ER9: $ER_ESC_BAD of $ER_ESC_SEEN escape construct(s) appear in an affirmative sentence — a non-interactive path has been ADDED to the verb while the three declared phrases stand untouched. A scripted erasure is the failure this gate exists to prevent, and it is reached by addition rather than by weakening"
+  fi
+
+  # ER2 — the free-text pass is bounded on THREE axes, graded on the DEFINITIONAL line.
+  # The previous form tested two of the three by substring over the WHOLE section, where
+  # `one trip directory` occurs at 2 sites and `case-sensitive` at 3 — so rewriting only the
+  # Phase B sentence left a discharge-paragraph copy standing and the arm green. Measured, on
+  # both axes. This anchors to the one line that DEFINES the pass: exactly one `**Phase B`
+  # line, carrying all three bounds. Word-boundary was ungraded entirely and is added here;
+  # the discharge paragraph is graded separately by ER11, so an escape now costs two edits at
+  # two sites rather than one edit at either.
+  ER_PB="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase B") == 1')"
+  ER_NPBL="$(printf '%s\n' "$ER_PB" | grep -c '[^[:space:]]')"
+  ER_SCOPE=0; ER_CASE=0; ER_WB=0
+  case "$ER_PB" in *'one trip directory'*) ER_SCOPE=1 ;; esac
+  case "$ER_PB" in *'case-sensitive'*)     ER_CASE=1 ;; esac
+  case "$ER_PB" in *'ord-boundary'*)       ER_WB=1 ;; esac
+  if [ "$ER_NPBL" -ne 1 ]; then
+    FAIL "ER2: the free-text phase is defined on $ER_NPBL line(s), not 1 — the definitional line could not be located, so every bound below would be graded over the wrong text or over none"
+  elif [ "$ER_SCOPE" -eq 1 ] && [ "$ER_CASE" -eq 1 ] && [ "$ER_WB" -eq 1 ]; then
+    PASS "ER2: the free-text pass declares all three bounds ON ITS DEFINING LINE — word-boundary, case-sensitive, and scoped to one trip directory. A display name is routinely an ordinary English word, so each bound removed corrupts legitimate prose at a different scale, and anchoring here is what stops a restatement elsewhere in the section from carrying the arm"
+  else
+    FAIL "ER2: the Phase B definition declares trip-scope=$ER_SCOPE case-sensitivity=$ER_CASE word-boundary=$ER_WB. All three are required and each fails differently — widened scope reaches other trips and the tracked corpus, folded case multiplies the match set within reach, and a substring match rewrites the inside of longer words"
+  fi
+
+  # ER4 — wholesale rewrite, not field enumeration. The override sweep is total
+  # only because the file is rewritten; an enumerated pass misses the override
+  # field no schema declares, and misses it silently.
+  ER_WHOLE=0
+  case "$ER_SEC" in *'rewritten rather than field-edited'*|*'rewritten rather than'*) ER_WHOLE=1 ;; esac
+  if [ "$ER_WHOLE" -eq 1 ]; then
+    PASS "ER4: the traveller file is declared rewritten rather than field-edited — which is what makes the override sweep total, including the override field nothing enumerates"
+  else
+    FAIL "ER4: the traveller file's disposition no longer declares a wholesale rewrite. A field-by-field pass can only reach the fields someone listed, so the first unlisted override survives the erasure"
+  fi
+
+  # ER5 — idempotency keys on the AUTHORITY. Keyed on the derived model instead, a
+  # re-run re-derives the predicate from a stale projection and mints a second
+  # token, leaving the roster and the model disagreeing about which is current.
+  ER_IDEM=0
+  case "$ER_SEC" in *'keys on the authority'*) ER_IDEM=1 ;; esac
+  if [ "$ER_IDEM" -eq 1 ]; then
+    PASS "ER5: idempotency is declared to key on the roster, the name authority — so a second run is a no-op rather than a second mint"
+  else
+    FAIL "ER5: the idempotency predicate no longer names the authority as its operand. Keyed on the derived model it reads a projection, and a re-run mints a second token onto a trip that already carries one"
+  fi
+
+  # ER6 — the n/a outcome. Not cosmetic: a roster with no traveller-file column has
+  # nothing to repoint, and a location that emits no row is exactly the "silently
+  # partial" the receipt's totality exists to make unrepresentable.
+  ER_NA=0
+  case "$ER_SEC" in *'Never a silent skip'*|*'never a silent skip'*) ER_NA=1 ;; esac
+  if [ "$ER_NA" -eq 1 ]; then
+    PASS "ER6: the conditional roster column declares an explicit \`n/a\` outcome rather than a skip — so the receipt stays total over the reach table even where a location does not apply"
+  else
+    FAIL "ER6: the conditional roster column no longer forbids a silent skip. A location that emits no row is indistinguishable from one that was never in the table, which is the one way a receipt can be partial without saying so"
+  fi
+
+  # ER10 — the sweep is TWO PHASES, and the split is what makes Phase A's positional
+  # addressing exist at all. Collapsing the two into one pass leaves every other bound
+  # standing and is invisible to every arm that reads a bound: measured, the collapse passed
+  # the whole suite. Graded structurally — one Phase A line, one Phase B line, A before B —
+  # rather than by a phrase, because a phrase is what a collapse rewrites first.
+  ER_NPA="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase A") == 1 { c++ } END { print c + 0 }')"
+  ER_NPB="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase B") == 1 { c++ } END { print c + 0 }')"
+  ER_PA_AT="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase A") == 1 { print NR; exit } END { }')"
+  ER_PB_AT="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase B") == 1 { print NR; exit } END { }')"
+  if [ "$ER_NPA" -eq 1 ] && [ "$ER_NPB" -eq 1 ] && [ "${ER_PA_AT:-0}" -lt "${ER_PB_AT:-0}" ]; then
+    PASS "ER10: the sweep declares exactly one structural phase and exactly one free-text phase, in that order — so Phase A's by-position addressing and Phase B's bounded pattern match remain two different mechanisms rather than one pass carrying the weaker discipline of the two"
+  else
+    FAIL "ER10: the two-phase split is gone (Phase A lines=$ER_NPA at ${ER_PA_AT:-none}, Phase B lines=$ER_NPB at ${ER_PB_AT:-none}). Collapsed into one pass the structural loci are reached by pattern, which is exactly the free-text hazard Phase A exists to keep them out of"
+  fi
+
+  # ER11 — the SECOND site. ER2 grades the definitional line; the rule-10 discharge restates
+  # the same three bounds in clause (c), and before these two arms existed a single edit to
+  # either site left the other standing and the suite green — measured on both axes, scope
+  # and case. Two sites, graded separately, is what makes an escape cost two edits; it is
+  # also why they are two arms rather than one over the union, which would go green on
+  # either copy alone.
+  ER_CLC="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**(c)**") > 0')"
+  ER_NCLC="$(printf '%s\n' "$ER_CLC" | grep -c '[^[:space:]]')"
+  ER_C_SCOPE=0; ER_C_CASE=0; ER_C_WB=0
+  case "$ER_CLC" in *'one trip directory'*) ER_C_SCOPE=1 ;; esac
+  case "$ER_CLC" in *'case-sensitive'*)     ER_C_CASE=1 ;; esac
+  case "$ER_CLC" in *'word-boundary'*)      ER_C_WB=1 ;; esac
+  if [ "$ER_NCLC" -ne 1 ]; then
+    FAIL "ER11: the rule-10 discharge names clause (c) on $ER_NCLC line(s), not 1 — the second site the free-text bounds are stated at could not be located, so ER2's verdict is the only one left and a single edit is again enough to remove the bound"
+  elif [ "$ER_C_SCOPE" -eq 1 ] && [ "$ER_C_CASE" -eq 1 ] && [ "$ER_C_WB" -eq 1 ]; then
+    PASS "ER11: the rule-10 discharge restates all three free-text bounds at its own site — trip-scope, case-sensitivity and word-boundary — so widening the pass now requires editing the definition AND its discharge, and either edit alone is red"
+  else
+    FAIL "ER11: the rule-10 discharge declares trip-scope=$ER_C_SCOPE case-sensitivity=$ER_C_CASE word-boundary=$ER_C_WB. The discharge is the clause a reviewer checks the write against; a bound dropped here is a bound the standing rule no longer claims was honoured"
+  fi
+
+  # ER12 — THE WRITE ORDER, GRADED. Stage 6 named this gap and Stage 7 confirmed it by
+  # measurement: inverting the block to model-first / roster-last left the entire build
+  # green. The order is not tidiness. The roster cell is the name AUTHORITY and the model
+  # heading and file stem are projections of it, so a run interrupted after the roster write
+  # is self-healing — the next pass converges the projections onto the tombstone — while a
+  # run interrupted under the reverse order has the next pass restore the name into every
+  # projection it just cleaned. A model-first erasure is not incomplete; it is undone BY
+  # INSTRUCTION.
+  #
+  # Parsed as an ordered sequence rather than matched as a phrase, and the two end
+  # conditions are read from the step's own text rather than from a pinned row number, so
+  # the arm survives the reach table growing a row.
+  ER_ORD="$(printf '%s\n' "$ER_SEC" | awk '
+    index($0, "> **1.**") == 1 {
+      s = $0
+      while (match(s, /\*\*[0-9]+\.\*\*/)) {
+        num = substr(s, RSTART + 2, RLENGTH - 4) + 0
+        s = substr(s, RSTART + RLENGTH)
+        seg = s
+        if (match(seg, /\*\*[0-9]+\.\*\*/)) seg = substr(seg, 1, RSTART - 1)
+        r = -1
+        if (match(seg, /rows? [0-9]+/)) { t = substr(seg, RSTART, RLENGTH); sub(/rows? /, "", t); r = t + 0 }
+        printf "%d\t%d\t%s\n", num, r, tolower(seg)
+      }
+      exit
+    }')"
+  ER_ORD_N="$(printf '%s\n' "$ER_ORD" | grep -c '[^[:space:]]')"
+  ER_ORD_SEQ="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { n++; if ($1 != n) bad++ } END { print bad + 0 }')"
+  ER_ORD_FIRST="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { print $2; exit }')"
+  ER_ORD_FIRSTTXT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { print $3; exit }')"
+  ER_ORD_LASTTXT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { t = $3 } END { print t }')"
+  ER_ORD_ROSTER_AT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 && $2 == 1 { print $1; exit }')"
+  ER_ORD_MODEL_AT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 && $2 == 10 { print $1; exit }')"
+  ER_ORD_AUTH=0; ER_ORD_STORE=0
+  case "$ER_ORD_FIRSTTXT" in *roster*) [ "${ER_ORD_FIRST:-0}" -eq 1 ] && ER_ORD_AUTH=1 ;; esac
+  case "$ER_ORD_LASTTXT"  in *store*)  ER_ORD_STORE=1 ;; esac
+  if [ "$ER_ORD_N" -lt 3 ]; then
+    FAIL "ER12: the write-order block parsed $ER_ORD_N step(s), so every ordering verdict below would be over an empty or truncated sequence. Not a skip and not a pass — the one property this arm exists to grade is the one it could not read"
+  elif [ "$ER_ORD_SEQ" -ne 0 ]; then
+    FAIL "ER12: the write-order steps are not numbered contiguously from 1 ($ER_ORD_SEQ break(s) across $ER_ORD_N step(s)) — a step removed from the middle leaves the remaining order readable and its omission invisible"
+  elif [ "$ER_ORD_AUTH" -eq 1 ] && [ "$ER_ORD_STORE" -eq 1 ] && [ -n "$ER_ORD_MODEL_AT" ] && [ -n "$ER_ORD_ROSTER_AT" ] && [ "$ER_ORD_MODEL_AT" -gt "$ER_ORD_ROSTER_AT" ]; then
+    PASS "ER12: the write order is authority-first and store-last across $ER_ORD_N steps — step 1 writes the roster cell (row 1), the derived model (row 10) is written at step $ER_ORD_MODEL_AT after it, and the final step writes the store. This is the property whose inversion the whole build could not see: reversed, the next pass restores the name into every projection the run just cleaned"
+  else
+    FAIL "ER12: the write order no longer runs authority-first / store-last (step 1 names row ${ER_ORD_FIRST:-none} and reads as roster=$ER_ORD_AUTH; final step reads as store=$ER_ORD_STORE; roster at step ${ER_ORD_ROSTER_AT:-none}, model at step ${ER_ORD_MODEL_AT:-none}). Writing the derived model before the roster is the resurrection bug: the roster is the name authority, so the next pass converges the projections back onto the surviving name and undoes the erasure by instruction"
+  fi
+
+  # ER13 — SUBSTITUTE, NEVER REGENERATE, ON THE ARCHIVED BRANCH. The spec named this as a
+  # mutation that must turn red; measured, rewriting the archived branch to regenerate passed
+  # the whole suite. It is the branch that matters most: regeneration reaches only the
+  # rebuilt-each-synthesis class, so an archived trip rebuilt rather than substituted loses
+  # the plan as it was planned and leaves the display name standing in every other class.
+  # Two arms in opposite directions — the declaration must be PRESENT (a deletion is red) and
+  # no sentence may affirmatively pair the archived branch with regeneration (an inversion is
+  # red). `regenerat` alone is the vocabulary: `rebuil` was measured and rejected, because
+  # reach row 17 legitimately says an active trip's site "is rebuilt from cleaned sources"
+  # and a vocabulary that matched it would have reported a violation on the clean tree.
+  ER_ARCH_DECL="$(printf '%s\n' "$ER_SEC" | awk '
+    index($0, "archived trip") && index($0, "substitute is unconditional") && index($0, "never selected") { c++ }
+    END { print c + 0 }')"
+  ER_ARCH_AFF="$(printf '%s\n' "$ER_SEC" | awk '
+    function neg(s) { return tolower(s) ~ /(^|[^a-z])(no|not|never|cannot|neither|nor)([^a-z]|$)/ }
+    { n = split($0, S, /(\. +|; )/)
+      for (i = 1; i <= n; i++) { s = tolower(S[i])
+        if (s ~ /archiv/ && s ~ /regenerat/) { seen++; if (neg(S[i]) == 0) aff++ } } }
+    END { printf "%d\t%d\n", seen + 0, aff + 0 }')"
+  ER_ARCH_SEEN="$(printf '%s' "$ER_ARCH_AFF" | cut -f1)"
+  ER_ARCH_BAD="$(printf '%s' "$ER_ARCH_AFF" | cut -f2)"
+  if [ "$ER_ARCH_DECL" -lt 1 ]; then
+    FAIL "ER13: the verb no longer declares that substitution is unconditional on an archived trip and that the regenerate branch is never selected. Without that declaration the archived branch is undefined, and the only mechanism that reaches a frozen trip correctly is the one the freeze exception was granted for"
+  elif [ "$ER_ARCH_SEEN" -eq 0 ]; then
+    FAIL "ER13: the archived-branch probe matched 0 sentence(s) pairing the archived trip with regeneration, so its zero proves nothing — the declaration arm passed but this arm's vocabulary no longer reaches the prose it grades"
+  elif [ "$ER_ARCH_BAD" -eq 0 ]; then
+    PASS "ER13: the archived branch declares substitution unconditional and the regenerate branch never selected, and 0 of $ER_ARCH_SEEN sentence(s) pairing an archived trip with regeneration do so affirmatively. Both directions are graded — a deleted declaration and an inverted one are different edits and each is red"
+  else
+    FAIL "ER13: $ER_ARCH_BAD of $ER_ARCH_SEEN archived-branch sentence(s) affirmatively pair an archived trip with regeneration. A rebuild recomposes the plan an archived trip exists to preserve, and it reaches only one artifact class — the display name stays standing in the versioned, accumulate-append and researched classes it never touches"
+  fi
+
+  # ER14 — THE REACH TABLE'S OWN ACCOUNTING, made self-checking. The table is what makes
+  # "silently partial" a property only this table can have: a location can be missing from a
+  # receipt only by being missing from here. That guarantee rests on a row count stated in
+  # prose, and a stated count is exactly the thing that survives while the population moves —
+  # which is what happened, a row added while the numeral beside it did not change. Nothing
+  # anywhere counted the rows. This compares the prose accounting against the table it
+  # describes, in every term, and closes the disposition vocabulary so a row cannot acquire
+  # a fourth outcome class that neither the receipt rule nor this arm knows about.
+  ER_TBL="$(printf '%s\n' "$ER_SEC" | awk '
+    /^\|[ \t]*\*\*[0-9]+\*\*[ \t]*\|/ {
+      split($0, c, "|")
+      n = c[2]; gsub(/[^0-9]/, "", n); n = n + 0
+      d = c[4]; gsub(/[^A-Za-z]/, "", d)
+      tot++
+      if (n != tot) bad++
+      cnt[d]++
+    }
+    END { printf "%d\t%d\t%d\t%d\t%d\t%d\n", tot + 0, bad + 0, cnt["REACH"] + 0, cnt["REPORT"] + 0, cnt["OUT"] + 0,
+          tot - (cnt["REACH"] + cnt["REPORT"] + cnt["OUT"]) }')"
+  ER_T_TOT="$(printf '%s' "$ER_TBL" | cut -f1)"
+  ER_T_GAP="$(printf '%s' "$ER_TBL" | cut -f2)"
+  ER_T_REACH="$(printf '%s' "$ER_TBL" | cut -f3)"
+  ER_T_REPORT="$(printf '%s' "$ER_TBL" | cut -f4)"
+  ER_T_OUT="$(printf '%s' "$ER_TBL" | cut -f5)"
+  ER_T_UNK="$(printf '%s' "$ER_TBL" | cut -f6)"
+  ER_DCL="$(printf '%s\n' "$ER_SEC" | awk '
+    index($0, "The table carries") > 0 {
+      s = $0
+      if (match(s, /carries [0-9]+ rows/))  { t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); a = t + 0 }
+      if (match(s, /[0-9]+ REACH/))         { t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); b = t + 0 }
+      if (match(s, /[0-9]+ REPORT/))        { t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); c = t + 0 }
+      if (match(s, /[0-9]+ OUT/))           { t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); d = t + 0 }
+      printf "%d\t%d\t%d\t%d\n", a + 0, b + 0, c + 0, d + 0
+      exit
+    }')"
+  ER_D_TOT="$(printf '%s' "$ER_DCL" | cut -f1)"
+  ER_D_REACH="$(printf '%s' "$ER_DCL" | cut -f2)"
+  ER_D_REPORT="$(printf '%s' "$ER_DCL" | cut -f3)"
+  ER_D_OUT="$(printf '%s' "$ER_DCL" | cut -f4)"
+  if [ "$ER_T_TOT" -eq 0 ] || [ -z "$ER_DCL" ]; then
+    FAIL "ER14: the reach table parsed $ER_T_TOT row(s) and the prose accounting parsed '${ER_DCL:-<none>}' — with either empty this arm measured nothing, and a zero on a mismatch would be an empty scan rather than agreement"
+  elif [ "$ER_T_UNK" -ne 0 ]; then
+    FAIL "ER14: $ER_T_UNK of $ER_T_TOT reach-table row(s) carry a disposition outside {REACH, REPORT, OUT}. The receipt's totality rule is stated per disposition, so a fourth class is a row the receipt makes no promise about"
+  elif [ "$ER_T_GAP" -ne 0 ]; then
+    FAIL "ER14: the reach table's row numbering is not contiguous from 1 ($ER_T_GAP break(s) over $ER_T_TOT row(s)) — locations are cited by number in the write order and in the two phase lists, and a renumbering silently re-points every one of those citations"
+  elif [ "$ER_T_TOT" -eq "$ER_D_TOT" ] && [ "$ER_T_REACH" -eq "$ER_D_REACH" ] && [ "$ER_T_REPORT" -eq "$ER_D_REPORT" ] && [ "$ER_T_OUT" -eq "$ER_D_OUT" ]; then
+    PASS "ER14: the table's stated accounting matches the table — $ER_T_TOT rows, $ER_T_REACH REACH, $ER_T_REPORT REPORT, $ER_T_OUT OUT, numbered contiguously. The receipt's totality is graded against the population it is total over, so a row added without its accounting is red rather than a numeral that has quietly stopped describing the set"
+  else
+    FAIL "ER14: the reach table's accounting has drifted from the table. Stated: $ER_D_TOT rows / $ER_D_REACH REACH / $ER_D_REPORT REPORT / $ER_D_OUT OUT. Measured: $ER_T_TOT / $ER_T_REACH / $ER_T_REPORT / $ER_T_OUT. A grader checking the stated figure reads a confirmation while the population has moved underneath it — re-state the accounting in the same commit as the row"
+  fi
+
+  # ER18 — the STRUCTURAL half of the discriminator, graded at both of its sites. The corpus
+  # separates a tombstoned bearer from a detached one on a conjunction, and `unlink` removes
+  # the same `person:` line, so field-absence alone discriminates nothing. What separates them
+  # is the pair: the reference field is REMOVED rather than substituted, and the file's stem
+  # is the TOKEN rather than the display name. Measured: rewriting reach row 8 so the bearer
+  # keeps its original stem passed every arm in this suite and in the sibling build — the
+  # fixture's own stem is correct, so nothing fixture-shaped sees a change to the rule.
+  #
+  # Two sites, for the same reason ER2 and ER11 are two arms: the reach table's row and the
+  # § *What the traveller file becomes* declaration each state it, and grading only one leaves
+  # a single edit sufficient.
+  ER_R8="$(printf '%s\n' "$ER_SEC" | awk '/^\|[ \t]*\*\*8\*\*[ \t]*\|/ { split($0, c, "|"); print c[5]; exit }')"
+  ER_R9="$(printf '%s\n' "$ER_SEC" | awk '/^\|[ \t]*\*\*9\*\*[ \t]*\|/ { split($0, c, "|"); print c[5]; exit }')"
+  ER_BEC="$(printf '%s\n' "$ER_SEC" | awk '
+    index($0, "### What the traveller file becomes") == 1 { on = 1; next }
+    on && /^### / { on = 0 }
+    on { print }')"
+  ER_ST_STEM=0; ER_ST_OLD=0; ER_ST_REM=0; ER_ST_DECL=0
+  case "$ER_R8" in *"token's stem"*)              ER_ST_STEM=1 ;; esac
+  case "$ER_R8" in *'old path removed'*)          ER_ST_OLD=1 ;; esac
+  case "$ER_R9" in *'removed, not substituted'*)  ER_ST_REM=1 ;; esac
+  case "$ER_BEC" in *'at stem `per-<token>`'*)    ER_ST_DECL=1 ;; esac
+  if [ -z "$ER_R8" ] || [ -z "$ER_R9" ] || [ -z "$ER_BEC" ]; then
+    FAIL "ER18: reach rows 8 and 9 or the § *What the traveller file becomes* declaration could not be located (row8='${ER_R8:-<none>}' row9='${ER_R9:-<none>}' decl-lines=$(printf '%s\n' "$ER_BEC" | grep -c '[^[:space:]]')). Every limb below would be graded over absent text"
+  elif [ "$ER_ST_STEM" -eq 1 ] && [ "$ER_ST_OLD" -eq 1 ] && [ "$ER_ST_REM" -eq 1 ] && [ "$ER_ST_DECL" -eq 1 ]; then
+    PASS "ER18: the bearer's post-state is declared at both sites — the file takes the token's stem with the old path removed, the \`person:\` field is removed rather than substituted, and § *What the traveller file becomes* states the stem again. That pair is the structural discriminator: \`unlink\` removes the same field, so absence alone tells the two apart in neither direction, and a bearer keeping its display-name stem makes a real erasure read as a trip that never linked anyone"
+  else
+    FAIL "ER18: the bearer's post-state limbs read stem=$ER_ST_STEM old-path-removed=$ER_ST_OLD field-removed=$ER_ST_REM stem-restated=$ER_ST_DECL. A bearer that keeps its display-name stem converges this verb's post-state with the detach's — every composed value is byte-identical either way and nothing value-shaped detects it, so the build stays green while the detection is gone"
+  fi
+
+fi
+
+# ER3 — THE NON-ACTION, ASSERTED. The tombstone must hold no row in the publish
+# fence at any scope. It is required in a rendered, publish-bound artifact, so
+# declaring it non-publishable aborts every later publish of every trip carrying
+# one — permanently, and with no remedy short of un-erasing. The fence's own
+# fail-closed abort does not catch this, because the value is legitimately there.
+# SENSITIVITY ARM FIRST: a fence that parsed zero rows would report a clean zero
+# for the wrong reason.
+ER_FROWS=0; ER_FBAD=0
+if [ -r "$ER_ARCH" ]; then
+  ER_FROWS="$(awk '/^```publish-contract-values/ { on = 1; next } on && /^```/ { on = 0 } on && $0 !~ /^[ \t]*#/ && NF { c++ } END { print c + 0 }' "$ER_ARCH")"
+  ER_FBAD="$(awk '/^```publish-contract-values/ { on = 1; next } on && /^```/ { on = 0 } on && index($0, "[ERASED]") { c++ } END { print c + 0 }' "$ER_ARCH")"
+fi
+if [ "$ER_FROWS" -eq 0 ]; then
+  FAIL "ER3: the \`publish-contract-values\` fence parsed 0 rows, so its zero on the tombstone token proves nothing — the fence or this probe has moved and neither verdict is trustworthy"
+elif [ "$ER_FBAD" -eq 0 ]; then
+  PASS "ER3: the \`publish-contract-values\` fence carries $ER_FROWS row(s) and 0 of them name the erasure tombstone. The sensitivity arm fired ($ER_FROWS > 0), so this zero is a measurement. The correct action for the erasure card was to change this fence in no way, and this asserts the non-action a diff cannot show"
+else
+  FAIL "ER3: $ER_FBAD fence row(s) name the erasure tombstone. The tombstone is required in a publish-bound rendered artifact, so this makes it a leak token that aborts every subsequent publish of any trip carrying one — permanently, and un-remediable short of un-erasing the person"
+fi
+
+# ER7 / ER8 / ER15 / ER16 / ER17 — the fixture properties AF does not reach.
+ER_FIX="$ROOT/examples/archived-trip-demo"
+ER_FCTX="$ER_FIX/trip-context.md"
+ER_FMODEL="$ER_FIX/outputs/traveler-model.md"
+ER_FDOC="$ER_FIX/README.md"
+
+# er_fence <keyword> — the declared rows of one kind, read from the fixture's own
+# `archived-erasure-witness` fence. Deliberately a LOCAL reader rather than a call into
+# group AF's helper: the DECLARATION stays single-sourced in the fixture, which is the
+# property that matters, while this group's arms stop depending on another group's parser
+# keeping the shape they read it through.
+er_fence() {
+  awk -v want="$1" '
+    $0 == "```archived-erasure-witness" { infence = 1; next }
+    infence && $0 == "```" { infence = 0; next }
+    infence {
+      line = $0
+      sub(/^[ \t]+/, "", line); sub(/[ \t]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, f, /[ \t]+/)
+      if (f[1] != want) next
+      out = ""
+      for (i = 2; i <= n; i++) out = out (i > 2 ? "\t" : "") f[i]
+      print out
+    }' "$ER_FDOC"
+}
+
+# er_overrides <file> — the VALUES of the trip-local override block, one per line. The
+# block is addressed by its own heading rather than by a field list, for the same reason
+# the verb sweeps § Group by block extent: nothing enumerates these fields, so any list
+# written here would be stale the first time an operator adds one.
+er_overrides() {
+  awk '
+    index($0, "## Trip-local overrides") == 1 { on = 1; next }
+    on && /^## / { on = 0 }
+    on && /^- \*\*/ {
+      v = $0
+      sub(/^- \*\*[^*]*:\*\*[ \t]*/, "", v)
+      gsub(/^[ \t]+|[ \t\r]+$/, "", v)
+      print v
+    }' "$1"
+}
+
+if [ -r "$ER_FCTX" ] && [ -r "$ER_FMODEL" ] && [ -r "$ER_FDOC" ]; then
+  # ER7 — the party is not decremented, graded as an EQUALITY against the declared
+  # population rather than as an inequality against the survivors. The previous form
+  # asserted `Total travelers > surviving non-token rows` — on this fixture 3 > 1 — which
+  # SATURATES: a party decremented to 2 still reads 2 > 1 and stayed green. Measured, and
+  # the whole build stayed green with it; only AF4's byte pin caught the decrement, and a
+  # byte pin catches any change, so it added no semantic guard for the property this arm
+  # exists to add. The bound that does not saturate is the sum: the declared count of
+  # subjects carrying a roster row, plus the roster rows that survived. Both operands are
+  # read from outside the file under test — the first from the fixture's own declaration,
+  # the second from the roster — so this is a comparison, never a copy of the number itself.
+  ER_TOT="$(awk '/^- \*\*Total travelers:\*\*/ { for (i = 1; i <= NF; i++) if ($i ~ /^[0-9]+$/) { print $i; exit } }' "$ER_FCTX")"
+  ER_SURV_ROWS="$(awk '
+    /^## Group/ { g = 1; next }
+    g && /^## / { g = 0 }
+    g && /^\|/ {
+      split($0, cell, "|"); v = cell[2]; gsub(/^[ \t]+|[ \t]+$/, "", v)
+      if (v == "" || v ~ /^-+$/ || v ~ /^Person$/ || v ~ /^Traveler$/) next
+      if (v ~ /^per-[0-9a-f]+$/) next
+      c++
+    } END { print c + 0 }' "$ER_FCTX")"
+  ER_DECL_ROSTER="$(er_fence subject | awk -F'\t' '$3 == "yes" { c++ } END { print c + 0 }')"
+  if [ -z "$ER_TOT" ]; then
+    FAIL "ER7: no \`- **Total travelers:**\` line with a numeric value was found in the fixture, so the non-decrement property could not be measured at all"
+  elif [ "$ER_SURV_ROWS" -eq 0 ] || [ "$ER_DECL_ROSTER" -eq 0 ]; then
+    FAIL "ER7: the roster yielded $ER_SURV_ROWS surviving (non-token) row(s) and the declaration $ER_DECL_ROSTER roster-bearing subject(s) — with either at 0 the equality below has no denominator and its verdict would be vacuous"
+  elif [ "$ER_TOT" -eq "$((ER_DECL_ROSTER + ER_SURV_ROWS))" ]; then
+    PASS "ER7: \`Total travelers\` reads $ER_TOT and the party reconstructs to exactly that — $ER_DECL_ROSTER declared roster-bearing subject(s) plus $ER_SURV_ROWS surviving row(s). Erasure redacts a person's identifying values; it does not un-travel them. Graded as an equality because the inequality it replaced saturated: a decrement to $((ER_TOT - 1)) satisfied it"
+  else
+    FAIL "ER7: \`Total travelers\` reads $ER_TOT but the party reconstructs to $((ER_DECL_ROSTER + ER_SURV_ROWS)) — $ER_DECL_ROSTER declared roster-bearing subject(s) plus $ER_SURV_ROWS surviving row(s). A short total is the decrement: that is \`group\`'s effect, not this verb's, and the two converging is what AC5 separates them on. A long total means a roster row was removed rather than tombstoned"
+  fi
+
+  # ER8 — THE SUBSTITUTION LOCUS, and the conjunction actually COMPUTED. The mark lives on
+  # the derived model's entry heading and NOWHERE ELSE; the bearer's tombstone-ness is
+  # carried structurally, by the absence of the reference field. The previous form counted
+  # marks in the model in aggregate and violations across the bearers, then claimed "that
+  # pairing IS the tolerant read's conjunction" — but no mark was ever paired to a bearer.
+  # Measured: stripping the mark from the one subject that HAS a bearer file took the model
+  # from 3 marks to 2, and 2 is still greater than 0, so the arm stayed green while the
+  # conjunction it named was broken. The pairing is now per bearer: every tombstoned bearer
+  # must have ITS OWN token carry a marked entry in the model.
+  ER_MODEL_MARK="$(awk 'index($0, "[ERASED]") { c++ } END { print c + 0 }' "$ER_FMODEL")"
+  ER_BEARER_BAD=0; ER_BEARER_N=0; ER_PAIR_BAD=""
+  for f in "$ER_FIX"/travelers/per-*.md; do
+    [ -e "$f" ] || continue
+    ER_BEARER_N=$((ER_BEARER_N+1))
+    b="$(basename "$f" .md)"
+    n="$(awk 'index($0, "[ERASED]") { c++ } END { print c + 0 }' "$f")"
+    [ "$n" -eq 0 ] || ER_BEARER_BAD=$((ER_BEARER_BAD+1))
+    n="$(awk '/^person:/ { c++ } END { print c + 0 }' "$f")"
+    [ "$n" -eq 0 ] || ER_BEARER_BAD=$((ER_BEARER_BAD+1))
+    n="$(awk -v t="$b" 'index($0, "## " t) == 1 && index($0, "[ERASED]") { c++ } END { print c + 0 }' "$ER_FMODEL")"
+    [ "$n" -ge 1 ] || ER_PAIR_BAD="$ER_PAIR_BAD $b"
+  done
+  if [ "$ER_MODEL_MARK" -eq 0 ] || [ "$ER_BEARER_N" -eq 0 ]; then
+    FAIL "ER8: model marks=$ER_MODEL_MARK tombstoned bearer files=$ER_BEARER_N — with either at 0 this probe measured nothing, and its zero on the bearer would be an empty scan rather than a clean one"
+  elif [ -n "$ER_PAIR_BAD" ]; then
+    FAIL "ER8: tombstoned bearer(s) with no marked model entry of their own token:$ER_PAIR_BAD. The conjunction the tolerant read separates a tombstone from a detach on is per subject — the reference field is gone AND that subject's model entry carries the mark — so an aggregate count of marks elsewhere in the file does not discharge it for this one"
+  elif [ "$ER_BEARER_BAD" -eq 0 ]; then
+    PASS "ER8: each of $ER_BEARER_N tombstoned bearer file(s) pairs to a \`[ERASED]\`-marked model entry keyed on its own token, and carries neither the mark nor a \`person:\` key itself ($ER_MODEL_MARK mark(s) in the model overall). That per-subject pairing is the tolerant read's conjunction, computed rather than asserted: the bearer is told from a detached one by shape before any store read, and the positive evidence lives in the model where a stripped heading would otherwise yield the empty key"
+  else
+    FAIL "ER8: $ER_BEARER_BAD violation(s) across $ER_BEARER_N tombstoned bearer file(s) — a bearer carries the mark, a reference key, or both. The reference key makes it read as DANGLING rather than TOMBSTONED; the mark moves the bearer toward the model's role, and the locus stops being single"
+  fi
+
+  # ER15 — THE OVERRIDE SWEEP'S WITNESS. This milestone's test criterion requires a test
+  # proving the archived reach AND the override sweep. Group AF proves the archived reach.
+  # The override limb had NO witness at all: the fixture carried zero override constructs, so
+  # ER4's "rewritten rather than field-edited" protected a property nothing exercised, and a
+  # field-enumerating implementation would have passed every arm in this suite. The fixture
+  # now carries a trip-local override in fields NO schema declares — precisely the fields a
+  # field-by-field pass cannot reach, because reaching them requires having listed them.
+  #
+  # TWO ARMS. The subject arm reads the not-answered sentinel on every erased bearer. The
+  # CONTROL arm reads the survivor's copy of the same block and requires a real value there.
+  # Without the control, "every override is a sentinel" is satisfied identically by an
+  # extractor that found no override fields at all — the zero would be an empty scan.
+  ER_OVR_N=0; ER_OVR_BAD=0
+  for f in "$ER_FIX"/travelers/per-*.md; do
+    [ -e "$f" ] || continue
+    while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      ER_OVR_N=$((ER_OVR_N+1))
+      [ "$v" = "—" ] || ER_OVR_BAD=$((ER_OVR_BAD+1))
+    done <<EOF
+$(er_overrides "$f")
+EOF
+  done
+  ER_OVR_CTL=0
+  for f in "$ER_FIX"/travelers/*.md; do
+    [ -e "$f" ] || continue
+    case "$f" in */per-*.md) continue ;; esac
+    while IFS= read -r v; do
+      [ -n "$v" ] || continue
+      [ "$v" = "—" ] || ER_OVR_CTL=$((ER_OVR_CTL+1))
+    done <<EOF
+$(er_overrides "$f")
+EOF
+  done
+  if [ "$ER_OVR_N" -eq 0 ]; then
+    FAIL "ER15: no trip-local override field was found on any tombstoned bearer, so the override sweep has no witness and the property ER4 declares is never exercised. A field-by-field implementation passes every other arm in this group — this is the one that would have caught it"
+  elif [ "$ER_OVR_CTL" -eq 0 ]; then
+    FAIL "ER15: MUST FIRE — the survivor's override block yielded 0 value(s) that are not the sentinel, so the subject arm's zero below is an empty scan rather than a clean one. The control is what tells a wholesale rewrite from an extractor that reads nothing"
+  elif [ "$ER_OVR_BAD" -eq 0 ]; then
+    PASS "ER15: all $ER_OVR_N override value(s) across the tombstoned bearers read the form's not-answered sentinel, while the survivor's copy of the same undeclared fields still carries $ER_OVR_CTL real value(s) — the control fired, so the zero is a measurement. These fields are declared by no schema, which is exactly why a field-by-field pass leaves them standing and a wholesale rewrite does not"
+  else
+    FAIL "ER15: $ER_OVR_BAD of $ER_OVR_N override value(s) on a tombstoned bearer still carry a value. The override sweep is total only because the file is REWRITTEN; an enumerated pass reaches only the fields someone listed, and these are the fields nothing lists"
+  fi
+
+  # ER16 — reach row 3: any OTHER cell of the erased person's roster row is substituted
+  # WHOLE. These are free-text descriptions of the person rather than join keys, so replacing
+  # only the name inside one leaves a description of the erased person standing under a
+  # tombstone — anonymised-looking and not anonymised. The fixture's roster carried two
+  # columns, so this class had no cell and the property was unobservable; a third column now
+  # exists. The header arm is not decoration: a roster narrowed back to two columns must FAIL
+  # here rather than pass over an absent column, which is how this row became ungraded in the
+  # first place.
+  #
+  # The counter is `ncell` and not the obvious name: `sub` is an awk BUILT-IN, and using it as
+  # a variable made this whole probe emit nothing. The arm still went red — the empty operands
+  # failed the numeric tests — but it went red with blanks in its message rather than with a
+  # verdict, which is the shape a broken probe has and a failing property does not.
+  ER_RC="$(awk '
+    /^## Group/ { g = 1; next }
+    g && /^## / { g = 0 }
+    g && /^\|/ {
+      n = split($0, cell, "|")
+      v = cell[2]; gsub(/^[ \t]+|[ \t]+$/, "", v)
+      if (v ~ /^-+$/) next
+      if (v == "Person" || v == "Traveler") { cols = n - 2; next }
+      for (i = 4; i < n; i++) {
+        w = cell[i]; gsub(/^[ \t]+|[ \t]+$/, "", w)
+        if (v ~ /^per-[0-9a-f]+$/) { ncell++; if (w != "—") bad++ }
+        else if (w != "—" && w != "") ctl++
+      }
+    }
+    END { printf "%d\t%d\t%d\t%d\n", cols + 0, ncell + 0, bad + 0, ctl + 0 }' "$ER_FCTX")"
+  ER_RC_COLS="$(printf '%s' "$ER_RC" | cut -f1)"
+  ER_RC_N="$(printf '%s' "$ER_RC" | cut -f2)"
+  ER_RC_BAD="$(printf '%s' "$ER_RC" | cut -f3)"
+  ER_RC_CTL="$(printf '%s' "$ER_RC" | cut -f4)"
+  if [ "$ER_RC_COLS" -lt 3 ] || [ "$ER_RC_N" -eq 0 ]; then
+    FAIL "ER16: the § Group roster declares $ER_RC_COLS column(s) and yielded $ER_RC_N free-text cell(s) on tombstoned rows — below three columns there is no free-text cell for reach row 3 to have substituted, and this arm would pass over an absent column rather than over a clean one"
+  elif [ "$ER_RC_CTL" -eq 0 ]; then
+    FAIL "ER16: MUST FIRE — the survivor's roster row carries 0 free-text cell(s) with a real description, so the subject zero below is an empty scan. The control is a person: without a row this instrument can read a description from, its silence on the erased rows says nothing"
+  elif [ "$ER_RC_BAD" -eq 0 ]; then
+    PASS "ER16: all $ER_RC_N free-text roster cell(s) on tombstoned rows are the whole-cell sentinel, across $ER_RC_COLS columns, while the survivor's row carries $ER_RC_CTL real description(s) — the control fired. A cell substituted only where the name appeared would leave a description OF the erased person under the tombstone, which reads as anonymised and is not"
+  else
+    FAIL "ER16: $ER_RC_BAD of $ER_RC_N free-text roster cell(s) on tombstoned rows still carry content. Reach row 3 substitutes the WHOLE cell for exactly this reason: these describe the person rather than key them, so a partial edit leaves the description standing beside a token"
+  fi
+
+  # ER17 — reach row 4: the § Group PROSE sub-fields are swept by block extent, not by a
+  # field list, because nothing in the corpus enumerates them and any list written down is
+  # stale the first time an operator adds one. The fixture's three sub-fields named no
+  # traveller at all, so the block-extent sweep had nothing to grade and an implementation
+  # that swept only the table would have passed. A sub-field now names the party.
+  #
+  # Scoped to the sub-field BULLETS and their continuation lines — never the whole non-table
+  # block. The surrounding rationale prose in this fixture names both a token and the
+  # survivor, so a probe reading the block at large would be satisfied by the commentary
+  # ABOUT the assertion rather than by the sub-fields the assertion is about.
+  ER_SURVNAME="$(er_fence survivor | cut -f1)"
+  ER_SF="$(awk -v surv="$ER_SURVNAME" '
+    function emit() {
+      if (buf ~ /per-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]/) tok++
+      if (surv != "" && index(buf, surv)) sv++
+      buf = ""
+    }
+    /^## Group/ { g = 1; next }
+    g && /^## / { if (inf) { emit(); inf = 0 } g = 0 }
+    g == 0 { next }
+    /^- \*\*/ { if (inf) emit(); inf = 1; buf = $0; next }
+    inf && /^[ \t]+[^ \t]/ { buf = buf " " $0; next }
+    inf { emit(); inf = 0 }
+    END { if (inf) emit(); printf "%d\t%d\n", tok + 0, sv + 0 }' "$ER_FCTX")"
+  ER_SF_TOK="$(printf '%s' "$ER_SF" | cut -f1)"
+  ER_SF_SURV="$(printf '%s' "$ER_SF" | cut -f2)"
+  if [ "$ER_SF_TOK" -eq 0 ]; then
+    FAIL "ER17: no § Group prose sub-field names a tombstoned token, so reach row 4's block-extent sweep has no witness — an implementation that swept the roster table and skipped the prose passes every other arm in this group"
+  elif [ "$ER_SF_SURV" -eq 0 ]; then
+    FAIL "ER17: MUST FIRE — the survivor's display name appears in 0 § Group prose sub-field(s), so this probe has not shown it can read a name in this region at all and its verdict on the tokens is an empty scan"
+  else
+    PASS "ER17: the § Group prose sub-fields name $ER_SF_TOK tombstoned token(s) and the survivor $ER_SF_SURV time(s) — the block-extent sweep reached prose, and the control fired so that is a measurement. Row 4 is defined by block extent rather than by a field list precisely because nothing enumerates these sub-fields"
+  fi
+else
+  FAIL "ER7/ER8/ER15/ER16/ER17: the archived fixture's trip-context, derived model or declaration is unreadable, so none of these properties could be measured"
 fi
 
 echo

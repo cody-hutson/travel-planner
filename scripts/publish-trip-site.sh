@@ -766,6 +766,30 @@ _GUARD_DECL_FENCE='publish-contract-values'
 _GUARD_DECL_HEADING='### 5.6 The declaration'
 _GUARD_DECL_ARTIFACT_MODEL='outputs/traveler-model.md'
 _GUARD_DECL_ARTIFACT_PROFILE='travelers/<traveler>.md'
+_GUARD_DECL_ARTIFACT_PERSON='people/<person>.md'
+
+# The reference grammar the walk below resolves against. Consumed from
+# reference/data-model.md § Composition and reference/schemas/traveler-profile.md; declared
+# NOWHERE ELSE in this file, so this is a consumption of that grammar and not a second home
+# for it.
+#
+# THESE STAY IN CODE, and it is the same asymmetry stated above rather than a second rule.
+# Every constant here is a NARROWING control: mistyping the reference key, the merge key or
+# the surrogate pattern makes a bearer read as NOT-REFERENCING, and a record that is never
+# resolved is a record whose values are never guarded. Getting one wrong REMOVES files from
+# the walk, silently, in the fail-open direction. The store directory name is the same shape
+# — a wrong name resolves no store, and with no bearer key present that is indistinguishable
+# from a trip that references nothing. A reader who moves these into the fence to "finish
+# the job" weakens the control while appearing to complete it, exactly as the paragraph
+# above says of _GUARD_NEED_ENUM.
+#
+# The surrogate pattern is a shell glob, matched with `case`, and its class is spelled out
+# rather than written `[0-9a-f]`: a range in a bracket expression is resolved by the
+# locale's collation order, and this control must not vary with LC_COLLATE.
+_GUARD_REF_KEY='person'
+_GUARD_MERGE_KEY='merged-into'
+_GUARD_PERSON_STORE='people'
+_GUARD_PERSON_KEY_GLOB='psn-[0-9abcdef][0-9abcdef][0-9abcdef][0-9abcdef]'
 
 # Lines of the first fenced block carrying <info> inside the section headed <heading>.
 # Emitted verbatim — nothing is trimmed here, because the row parse below owns that.
@@ -849,10 +873,38 @@ _guard_limb_rules() { # <limb> <artifact-scope>
   return 0
 }
 
+# Every occurrence of <key> in a file's LEADING frontmatter block, one value per line.
+# Four properties, and each of them is the specification rather than an implementation
+# detail:
+#
+#   1. LEADING BLOCK ONLY. `inb` is set only when line 1 is `---`, so a `---` appearing
+#      later in the body is never entered. A file with NO frontmatter emits NOTHING, which
+#      is the NOT-REFERENCING disposition — and that is the pre-existing and permanent
+#      state of every traveler file written before the person store existed
+#      (reference/schemas/traveler-profile.md: the reference field is permanently optional
+#      and no upgrade pass will ever add it).
+#   2. ONE LINE PER OCCURRENCE, never "last one wins". The caller counts and refuses more
+#      than one, so the single-valuedness rule is ENFORCED here rather than restated.
+#   3. index() == 1 rather than a regex, for the same reason field_hit is index-based: a
+#      key is corpus text and must not silently become a pattern. It also makes the match
+#      exact rather than prefixed — `person:` does not match a `personal:` line.
+#   4. An explicit `return 0`, the same `set -e` adaptation fence_block documents above.
+_guard_frontmatter_key() { # <file> <key> -> one line per occurrence
+  awk -v K="$2" '
+    NR == 1  { if ($0 != "---") exit 0; inb = 1; next }
+    inb && $0 == "---" { exit 0 }
+    inb && index($0, K ":") == 1 {
+      v = substr($0, length(K) + 2); sub(/^[ \t]+/, "", v); sub(/[ \t]+$/, "", v); print v
+    }
+  ' "$1"
+  return 0
+}
+
 nonpublishable_values() { # <trip_dir> [site_html]
   local trip_dir="${1:-}" site_html="${2:-}" model out rc
   local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
   local decl_rows decl_n decl_cand decl_eval esel erule mfields mrules pfields prules
+  local rfields rrules rout rrc recs="" rtab refs rkey rstore rfile rmerge rtarget record_epoch
   if [ -z "$trip_dir" ]; then
     warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
   fi
@@ -878,15 +930,17 @@ nonpublishable_values() { # <trip_dir> [site_html]
     warn "guard: the publishability declaration at $_GUARD_DECLARATION offers ${decl_cand:-0} rows but only $decl_n parse as four whitespace-separated fields — a partial read is UNDETERMINED, not a narrower class"; return 2
   fi
   # And the same path once more, for a row that PARSES but is never QUERIED. This
-  # evaluator asks exactly three (limb, artifact-scope) questions; a row naming any
+  # evaluator asks exactly four (limb, artifact-scope) questions; a row naming any
   # other pair is well-formed, accepted, selected by nothing, and observed by nobody —
   # so it reads as a member of the class while guarding none of it. That is the shape
   # fail-open above, one column over: there the row is dropped by the reader, here it
   # survives the reader and dies at the query. § 5.6 advertises both columns as open
   # domains, so a row outside the queried set is the documented extension path, not a
   # hypothetical.
-  decl_eval="$(awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" '
-      ($1 == "entry" && $3 == m) || ($1 == "field" && $3 == m) || ($1 == "field" && $3 == p) { c++ }
+  decl_eval="$(awk -v m="$_GUARD_DECL_ARTIFACT_MODEL" -v p="$_GUARD_DECL_ARTIFACT_PROFILE" \
+                   -v r="$_GUARD_DECL_ARTIFACT_PERSON" '
+      ($1 == "entry" && $3 == m) || ($1 == "field" && $3 == m) || ($1 == "field" && $3 == p) ||
+      ($1 == "field" && $3 == r) { c++ }
       END { print c + 0 }' <<<"$decl_rows")"
   if [ "${decl_eval:-0}" -ne "$decl_n" ]; then
     warn "guard: the publishability declaration at $_GUARD_DECLARATION parses $decl_n rows but this guard evaluates only ${decl_eval:-0} of them — a row naming a limb or artifact-scope the guard never queries guards nothing, and a class that silently guards less than it declares is UNDETERMINED"; return 2
@@ -897,6 +951,8 @@ nonpublishable_values() { # <trip_dir> [site_html]
   mrules="$(_guard_limb_rules     field "$_GUARD_DECL_ARTIFACT_MODEL")"
   pfields="$(_guard_limb_selectors field "$_GUARD_DECL_ARTIFACT_PROFILE")"
   prules="$(_guard_limb_rules     field "$_GUARD_DECL_ARTIFACT_PROFILE")"
+  rfields="$(_guard_limb_selectors field "$_GUARD_DECL_ARTIFACT_PERSON")"
+  rrules="$(_guard_limb_rules     field "$_GUARD_DECL_ARTIFACT_PERSON")"
 
   model="$trip_dir/outputs/traveler-model.md"
   if [ ! -e "$model" ]; then
@@ -933,7 +989,108 @@ nonpublishable_values() { # <trip_dir> [site_html]
       if _is_stale "$profile_epoch" "$model_epoch"; then
         warn "guard: a per-traveler profile is newer than $model — the [DERIVED] projection has not absorbed it, so the class is UNDETERMINED, not empty"; return 2
       fi
+
+      # ── the transitive half of the freshness gate (CD-4) ────────────────────
+      # The gate above compares the projection against the sources INSIDE this trip. A
+      # referenced person record is a durable source OUTSIDE it: a passport edited only in
+      # the library leaves every file under this trip untouched, so every comparison above
+      # reads fresh while the projection is behind its actual source set. Widening the
+      # SOURCE SET of a block that already exists — never a new blocking predicate, and
+      # never during trip resolution: this runs from cmd_publish, after resolution has
+      # already returned.
+      #
+      # The walk is a TWO-STEP KEY LOOKUP, not a graph traversal, and every bound below is
+      # structural rather than defensive:
+      #   • resolution is by key, never a directory scan, so an unbounded store cannot
+      #     produce an unbounded walk;
+      #   • the chain grammar has depth 1 — a second merge hop is MALFORMED — so a cycle
+      #     A->B->A is refused at the third-edge branch and NO VISITED-SET IS NEEDED. The
+      #     absence of a cycle guard is a consequence of the grammar; do not "fix" it;
+      #   • every branch either continues the loop or returns 2. No branch here returns 0,
+      #     which is the one-line proof that no ordering of the source set can turn an
+      #     UNDETERMINED verdict into a clean one.
+      refs="$(_guard_frontmatter_key "$pf" "$_GUARD_REF_KEY")"
+      # NOT-REFERENCING / TOMBSTONED: NO STORE READ IS ATTEMPTED. This `continue` is what
+      # keeps an absent store from degrading a trip that references nothing — the store is
+      # git-ignored and does not exist on a clean checkout, so without it the first CI run
+      # after the store shipped would abort every trip in the working directory.
+      [ -n "$refs" ] || continue
+      if [ "$(awk 'NF { c++ } END { print c + 0 }' <<<"$refs")" -ne 1 ]; then
+        warn "guard: a per-traveler profile carries more than one '$_GUARD_REF_KEY:' key — the reference is not single-valued, so the class is UNDETERMINED, not empty"; return 2
+      fi
+      rkey="$refs"
+      # The value domain, and the reason the locator below is safe to print. A key that is
+      # not a minted opaque surrogate is MALFORMED and never resolves, so the only token
+      # this function can ever echo is one that is named for nobody.
+      case "$rkey" in
+        $_GUARD_PERSON_KEY_GLOB) ;;
+        *) warn "guard: a per-traveler profile's '$_GUARD_REF_KEY:' value is not a minted person-record id — the reference is MALFORMED, so the class is UNDETERMINED, not empty"; return 2 ;;
+      esac
+      # Store root: trip-root first, then the repo root. TWO STEPS, no upward search — an
+      # upward search is non-deterministic when both roots exist.
+      if [ -d "$trip_dir/$_GUARD_PERSON_STORE" ]; then
+        rstore="$trip_dir/$_GUARD_PERSON_STORE"
+      else
+        rstore="$_GUARD_REPO_ROOT/$_GUARD_PERSON_STORE"
+      fi
+      if [ ! -d "$rstore" ] || [ ! -r "$rstore" ]; then
+        warn "guard: person record $rkey is referenced but the person store at $rstore is not a readable directory — the class cannot be determined"; return 2
+      fi
+      rfile="$rstore/$rkey.md"
+      if [ ! -e "$rfile" ]; then
+        warn "guard: person record $rkey is referenced but resolves to no file under $rstore — an unresolvable reference is UNDETERMINED, not an empty class"; return 2
+      fi
+      if [ ! -f "$rfile" ] || [ ! -r "$rfile" ]; then
+        warn "guard: person record $rkey is not a readable regular file — the class cannot be determined"; return 2
+      fi
+      recs="${recs:+$recs
+}$rkey	$rfile"
+      # THE STUB IS A SOURCE, NOT A POINTER. A merge stub's own bytes decide which record
+      # answers, so an edit to the stub changes the class; stat-ing only the target would
+      # leave a re-point invisible. Both join the source set.
+      rmerge="$(_guard_frontmatter_key "$rfile" "$_GUARD_MERGE_KEY")"
+      if [ -n "$rmerge" ]; then
+        if [ "$(awk 'NF { c++ } END { print c + 0 }' <<<"$rmerge")" -ne 1 ]; then
+          warn "guard: person record $rkey carries more than one '$_GUARD_MERGE_KEY:' key — the chain is MALFORMED, so the class is UNDETERMINED, not empty"; return 2
+        fi
+        case "$rmerge" in
+          $_GUARD_PERSON_KEY_GLOB) ;;
+          *) warn "guard: person record $rkey names a '$_GUARD_MERGE_KEY:' target that is not a minted person-record id — the chain is MALFORMED, so the class is UNDETERMINED, not empty"; return 2 ;;
+        esac
+        rtarget="$rstore/$rmerge.md"
+        if [ ! -f "$rtarget" ] || [ ! -r "$rtarget" ]; then
+          warn "guard: person record $rkey redirects to $rmerge, which does not resolve to a readable regular file — the class is UNDETERMINED, not empty"; return 2
+        fi
+        # The THIRD EDGE. The chain grammar stops at depth 1, so a target that itself
+        # redirects is MALFORMED rather than a hop to follow. This branch is also what
+        # refuses a cycle, which is why no visited-set appears above.
+        if [ -n "$(_guard_frontmatter_key "$rtarget" "$_GUARD_MERGE_KEY")" ]; then
+          warn "guard: person record $rmerge is itself a redirect — a second '$_GUARD_MERGE_KEY:' hop is MALFORMED, so the class is UNDETERMINED, not empty"; return 2
+        fi
+        recs="$recs
+$rmerge	$rtarget"
+      fi
     done
+
+    # The resolved records, de-duplicated by resolved path, join the SAME comparison the
+    # per-traveler files above are held to: newer than the projection is UNDETERMINED.
+    # Iterated with a here-string rather than `for r in $(...)`, deliberately: both
+    # $_GUARD_REPO_ROOT and $trip_dir can contain whitespace, and the suite's own mktemp
+    # paths are the first place that would bite.
+    if [ -n "$recs" ]; then
+      recs="$(awk -F'\t' '!seen[$2]++' <<<"$recs")"
+      rtab="$(printf '\t')"
+      while IFS="$rtab" read -r rkey rfile; do
+        [ -n "$rfile" ] || continue
+        record_epoch="$(_epoch_of_file "$rfile")"
+        if [ -z "$record_epoch" ]; then
+          warn "guard: the mtime of person record $rkey could not be read — its freshness is undetermined, and an undetermined result is never a pass"; return 2
+        fi
+        if _is_stale "$record_epoch" "$model_epoch"; then
+          warn "guard: person record $rkey is newer than $model — the [DERIVED] projection has not absorbed it, so the class is UNDETERMINED, not empty"; return 2
+        fi
+      done <<<"$recs"
+    fi
   fi
 
   out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" -v RESERVED="$_GUARD_RESERVED_KEYS" \
@@ -1096,6 +1253,54 @@ nonpublishable_values() { # <trip_dir> [site_html]
     fi
     [ -z "$pout" ] || out="${out:+$out
 }$pout"
+  fi
+
+  # ── durable sources (CD-4) ─────────────────────────────────────────────────
+  # The FIELD limb read from the referenced person records. Same shape as the profile
+  # parse above and deliberately so: it binds the same label handling and the same shared
+  # helpers, because a durable field and its per-trip twin carry byte-identical labels and
+  # a second reading of them would be a second definition of what counts as stated.
+  #
+  # THE LOCATOR IS `record <key>`, AND THAT IS A DIVERGENCE FROM THE PROFILE LIMB WITH A
+  # REASON. The profile limb is positional — "profile N", never the file name — because a
+  # file under travelers/ is NAMED FOR THE TRAVELER, so naming it would leak on the same
+  # axis this guard protects. That reason does not hold here: a record's filename is a
+  # minted opaque surrogate that is named for nobody, and the walk above refuses any key
+  # that is not one, so the safety is by CONSTRUCTION rather than by care. What is gained
+  # is diagnosability — with a positional locator an operator cannot tell which record is
+  # stale without re-deriving the set. The value itself is still never echoed.
+  #
+  # Only the FIELD limb is read, and that is the declaration's property rather than this
+  # code's: an entry-limb subject has no durable record anywhere — a cross-trip record
+  # about someone who never spoke is refused by the class outright — so no row scopes that
+  # limb to this artifact class.
+  if [ -n "$recs" ]; then
+    rtab="$(printf '\t')"
+    while IFS="$rtab" read -r rkey rfile; do
+      [ -n "$rfile" ] || continue
+      rout="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" -v RKEY="$rkey" \
+                  -v RFIELDS="$rfields" -v RFRULES="$rrules" "$_GUARD_AWK_HELPERS"'
+        BEGIN { rfn = split(RFIELDS, rf, " "); rfr = split(RFRULES, rr, " ") }
+        {
+          lab = $0
+          sub(/^[ \t]*[-*+][ \t]+/, "", lab)
+          gsub(/\*\*/, "", lab)
+          sub(/^[ \t]+/, "", lab)
+          for (i = 1; i <= rfn; i++) {
+            if (field_hit(lab, rf[i])) {
+              val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+              if (stated(val)) printf "field\trecord %s / %s\t%s\t%s\n", RKEY, rf[i], rule_for(rr[i], val), val
+              break
+            }
+          }
+        }
+      ' "$rfile" 2>/dev/null)" && rrc=0 || rrc=$?
+      if [ "${rrc:-0}" -ne 0 ]; then
+        warn "guard: person record $rkey could not be parsed (exit $rrc) — the class is undetermined"; return 2
+      fi
+      [ -z "$rout" ] || out="${out:+$out
+}$rout"
+    done <<<"$recs"
   fi
 
   # An EMPTY class is a MEASUREMENT only if the projection is at least as new as the
