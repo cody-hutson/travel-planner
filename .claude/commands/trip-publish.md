@@ -1,6 +1,6 @@
 ---
-description: The publish surface. Re-publishes an already-public trip site after edits, and lists what is published. Never creates a repo, never rotates, never takes a site down, never publishes plaintext.
-argument-hint: <verb> [--trip <slug>]
+description: Re-publish an already-public trip site after edits, or list what is published. The publish surface — never creates a repo, never rotates, never takes a site down, never publishes plaintext.
+argument-hint: update|list [--trip <slug>]
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(scripts/publish-trip-site.sh update:*), Bash(scripts/publish-trip-site.sh list:*)
 disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/publish-trip-site.sh rotate:*), Bash(scripts/publish-trip-site.sh unpublish:*), Bash(scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Read, Write, Edit, NotebookEdit]

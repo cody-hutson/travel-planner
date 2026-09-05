@@ -1,5 +1,6 @@
 ---
-description: The trip entry point. Resolves the trip, then runs the verb you typed.
+description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, report where it stands. The entry point — resolves the trip, then runs the verb you typed.
+argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Bash(scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
 disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
