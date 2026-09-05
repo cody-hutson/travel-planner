@@ -4356,13 +4356,20 @@ EOF
   # were added by the reconcile slice and neither has a behavioural witness in a tree of
   # prompt files. The boundary is stated rather than implied: this arm grades that the
   # section still SAYS them, never that an implementation obeys them.
+  # The section is collapsed to one whitespace-normalised line BEFORE it is matched.
+  # A line-anchored probe would grade the paragraph's WRAP rather than its content: both
+  # sentences below sit on one line today by accident of reflow, and a later editor
+  # rewrapping the paragraph would turn this arm red without changing what the section
+  # says. That is the failure shape that gets a test edited instead of trusted.
   RL_SEC="$WORK/rl-link-section.md"
+  RL_SEC1="$WORK/rl-link-section.oneline"
   awk '/^## link / { inl = 1; next } inl && /^## / { exit } inl { print }' "$RL_CMD" > "$RL_SEC"
   RL_SECN="$(grep -c '[^[:space:]]' "$RL_SEC" || true)"
+  tr '\n' ' ' < "$RL_SEC" | tr -s '[:space:]' ' ' > "$RL_SEC1"
   RL_TWOWAY=0
-  grep -qF 'does not perform the trip-side removal either' "$RL_SEC" && RL_TWOWAY=1
+  grep -qF 'does not perform the trip-side removal either' "$RL_SEC1" && RL_TWOWAY=1
   RL_READBACK=0
-  grep -qF 're-reads the frontmatter' "$RL_SEC" && RL_READBACK=1
+  grep -qF 're-reads the frontmatter' "$RL_SEC1" && RL_READBACK=1
   if [ "$RL_SECN" -eq 0 ]; then
     FAIL "RL7: the \`## link\` section extracted to 0 lines — the region probe found nothing, so both verdicts below would be a failed parse reported as a missing rule"
   elif [ "$RL_TWOWAY" -eq 1 ] && [ "$RL_READBACK" -eq 1 ]; then
