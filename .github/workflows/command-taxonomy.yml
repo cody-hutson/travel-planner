@@ -40,9 +40,21 @@ name: Command taxonomy
 # the surface is covered by exactly one cell; the charter's two enumerations of the verb
 # set agree as a set difference in both directions; the publish-form disposition table is
 # complete, sentinel-current and cross-linked to the live surface with no command map
-# held anywhere; no command file reaches an excluded publish form; and the guard
-# demonstrated ON THIS COMMIT that it is still capable of failing — including the
-# mutation pair, which shows the verb population is DERIVED and not remembered.
+# held anywhere; no command file reaches an excluded publish form; every RESOLVE-role
+# command file declares an argument-hint whose verb list names only verbs that file
+# declares, and either carries that file's whole verb set or points at the command
+# reference from its description; the command reference's derived region equals the
+# derivation from the live requirement tables; and the guard demonstrated ON THIS COMMIT
+# that it is still capable of failing — including the mutation pair, which shows the verb
+# population is DERIVED and not remembered.
+#
+#   NOT THE PICKER'S RENDERING. Group H grades verb-set agreement and the totality of the
+#   reference's derived region. It does NOT grade the LENGTH of a description or a hint,
+#   and no length constant exists in the guard to grade one with: the rendering budget is
+#   a property of the CLI, which this repository does not own, does not version and cannot
+#   pin. A hint whose verb set is right and whose ORDER has rotted — so that the useful
+#   verbs truncate away first — passes. Front-loading is an authoring rule carried in the
+#   reference document, not an assertion made here.
 #
 # OUT OF SCOPE — deliberately, and by name:
 #   RUNTIME PRIVILEGE. This suite asserts that the command files DECLARE what ADR-007
