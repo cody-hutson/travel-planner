@@ -79,7 +79,7 @@ Conversation is not the only way in. The files in `.claude/commands/` give the e
 | `/trip-publish` | `update` re-publishes an already-public site after edits; `list` reports what is published |
 | `/trip-decommission` | `temporary` takes a site offline, `archive` concludes a finished trip, `reopen` brings an archived one back |
 
-Each file states its own verbs and what each one needs, so the list above is a starting point rather than the whole surface. Once `trips/` holds more than one trip, every command takes `--trip <slug>` to say which.
+Each file states its own verbs and what each one needs, so the list above is a starting point rather than the whole surface — [`reference/command-reference.md`](reference/command-reference.md) is that surface in one table, every verb with the arguments it takes and the trip state it needs. Once `trips/` holds more than one trip, every command takes `--trip <slug>` to say which.
 
 Three publish actions stay deliberately outside this surface and remain terminal commands you run yourself: creating the published repo in the first place, rotating its passphrase, and deleting it. `/trip-publish` does none of the three — [`reference/adr/ADR-007-command-entry-point.md`](reference/adr/ADR-007-command-entry-point.md) records the reasoning and dispositions every publish form one way or the other.
 
