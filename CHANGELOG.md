@@ -3,6 +3,104 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.24.0] — 2026-09-05 — People library
+
+A traveller who has been on three trips has answered the same 38 intake questions three times.
+Their passport does not change between trips; their dietary needs do not; the name they go by
+does not. The engine has never had anywhere to put a fact that outlives the trip it was captured
+in, so it re-asked — and the only reuse path the docs offered was an instruction to copy a
+profile forward by hand, which contradicts the data model's own `link, don't copy` rule in the
+same repository that states it.
+
+This release gives a person a durable record, and gives every trip a reference to it instead of a
+copy. A returning traveller's starred pass goes from ten fields to three.
+
+The store holds the highest-sensitivity data in the system — passports, dates of birth, document
+expiries, medical and dietary needs — so it is git-ignored, and the boundary that keeps it out of
+a public repository is two lines whose shape is load-bearing rather than incidental. The rule is
+rooted (`/people/*`) and not bare, because a bare form would also swallow the tracked example
+witness the class schema names, and git cannot re-include a file whose parent directory is
+excluded. Both properties were established by construction in a scratch repository across four
+pattern variants before either was written down, and the obvious simplification really does break
+both of the things the comment warns it breaks.
+
+The harder decision was what happens when a trip and a store disagree. A trip-side value that
+contradicts a durable one is not a merge conflict to be resolved by recency — it is either an
+override the traveller meant for this trip, a stale copy nobody updated, or a schema violation.
+Composition therefore decides on **class first, then answered-ness**, over a lattice enumerated
+rather than asserted: 110 cells, no cell uncovered, no cell covered twice. Relevance is decided
+by whether a field was *answered*, never by whether its line is *present*, because the intake form
+keeps a line with an em dash for every question skipped — a presence test would read a deliberate
+skip as an answer.
+
+Erasure is the one operation here that cannot be undone, and it is deliberately inside this
+release rather than deferred to a later one. A person who asks to be deleted should not have to
+wait for a milestone. The verb walks a fixed reach set of 29 enumerated locations, substituting
+values in place rather than regenerating, because a rebuild would leave standing every copy in a
+class the schema declares holds independent state. Every location is either reached or reports
+itself unreachable: a partial run is a run that says it was partial.
+
+Its confirmation prompt changed at the last gate, and the change is worth recording because the
+first design was wrong for a good reason. It withheld the person's name and asked the operator to
+type the record's id, so that no erased value entered a transcript and no habit formed of typing
+people's names at prompts. That reasoning is sound and it is preserved — the typed token is still
+the id. But an id is opaque, and where two co-travellers each hold a record nothing at the prompt
+distinguished them, so an operator who transposed two ids would have confirmed the wrong
+irreversible erasure with no second signal. The prompt now names the record it is about to erase
+before it accepts anything. The old design was not wrong about the cost; it was wrong about who
+should bear it.
+
+Archived trips receive no derivation at all, and erasure is the single stated exception — a
+person's right to be forgotten does not stop at a trip that has ended.
+
+### Added
+
+- **`people/<person>.md` — a new cross-trip artifact class** — one durable record per person,
+  held outside any trip, with a surrogate key borne by the filename. Its `trip:` universal field
+  is *narrowed* to a cross-trip sentinel rather than removed, so the rule that no class removes a
+  universal field holds unchanged. The store ships with a tracked README signpost and a guard
+  group asserting the ignore pair in both directions.
+- **A durable intake form**, split from the trip form. The trip form keeps trip-scoped questions
+  plus the reference; the durable form carries the person-scoped ones. Every field in the model is
+  classified into exactly one of four scopes, and the two forms' label sets are disjoint by
+  measurement rather than by intention.
+- **Four verbs** — link a trip to a record, detach it, promote a trip-side value into the store,
+  and erase. Each declares its own read and write grants, and the detach verb holds no store write
+  at all, so it is structurally incapable of erasure rather than merely forbidden from it.
+- **A person-store collision check.** Two travellers whose display names normalise to one key used
+  to share a file, and the second silently overwrote the first — in files the model itself
+  describes as carrying real personal detail. The write path decided on a bare file-existence
+  probe, which is structurally blind to that case: the filename derivation collapses out-of-charset
+  runs to a single dash while the identity key removes them entirely, so two names can produce one
+  key and two different filenames. The key check now runs *before* the existence probe.
+- **A decision record** for the person entity — identity, storage home, referencing, and an
+  additive amendment to the third-party-capture record it inherits from.
+
+### Changed
+
+- **The publish guard's freshness walk now covers referenced person records**, and the
+  non-publishable fence gained a row plus the evaluator widening required to read it. Those two
+  landed in one commit deliberately: a fence row naming a scope the evaluator cannot read aborts
+  every publish as undetermined, and the *other* partial landing is silent — which is precisely
+  the leak the fence exists to prevent.
+- **The enrichment agent resolves references and composes the model with its shape unchanged.**
+  The hub, the engines and the validator require no modification and do not learn that a library
+  exists. Divergence between a trip value and a durable one is reported inside the existing
+  signals block as information, never as a replanning signal.
+- **`/trip-new` refuses a trip slug equal to a reserved `trip:` sentinel**, which a shape check
+  cannot exclude because the sentinel is itself a valid slug.
+
+### Known gaps, carried rather than hidden
+
+- **The documents that govern behaviour are largely ungated.** The composition rules can be
+  mutated to nonsense and every suite stays green; the paragraph stating the archived-trip freeze
+  can be deleted with the same result. A verifier exists and is tracked, unshipped, pending an
+  owner. This is the release's own largest finding about itself.
+- **There is no executable erasure** — a command specification and a post-state witness fixture
+  ship, so the receipt half of the erasure contract has nothing grading it.
+- **An assertion that checks a rule is *present* cannot see a clause that is *added*.** Two
+  acceptance criteria here say "removed or altered", and an addition is neither.
+
 ## [0.23.0] — 2026-09-02 — Per-traveler cost estimation
 
 A traveller asked to preload a fare card, or to budget for a week, has had no basis for the
