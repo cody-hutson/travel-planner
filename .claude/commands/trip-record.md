@@ -1465,7 +1465,7 @@ infers a destination from which files exist.
 
 ## link <name> <person-id>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there; `trips/<slug>/travelers/<file>.md` — the file-existence probe that establishes the target is there, and its frontmatter, read **before** it is written because a reference already present is echoed before it is replaced; `people/<person-id>.md` — the existence probe that establishes the reference **resolves before it is written**, and **the H1 line alone**, read so the confirmation can name the person the id resolves to. **No other line of that record is read and no value of it enters the session.** Does not enumerate the store, and does not read `trip-context.md` in either direction. Dispatches no agent.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there; `trips/<slug>/travelers/<file>.md` — the file-existence probe that establishes the target is there, its frontmatter, read **before** it is written because a reference already present is echoed before it is replaced, and **its declared body fields**, read for the survey below and read before the write because the survey precedes it; `people/<person-id>.md` — the existence probe that establishes the reference **resolves before it is written**, the H1 line, read so the confirmation can name the person the id resolves to, and **its declared body fields**, read for that same survey; the **outgoing** record on the one branch where the file already carries a resolving `person:` naming a different id — its declared body fields alone, because the survey's pre-link side is composed against the record this trip references **now** rather than against an assumed absence; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**, the same live-read `## profile <name>`'s collision check already takes for its own predicate. **The minimality the widened surface replaces is preserved in the one form that survives a survey: no value read here is written anywhere, on either side, by this verb.** Does not enumerate the store, and does not read `trip-context.md` in either direction. Dispatches no agent.
 
 The reference verb. It writes the one frontmatter field that points this trip's traveler file at a
 durable person record, and it writes nothing else anywhere.
@@ -1504,11 +1504,133 @@ it is every existing traveler file's shipped condition.
 | the file already carries a `person:` naming a **different** id | **echo the outgoing value verbatim**, say that this **repoints** rather than adds, and require confirmation before writing |
 | the file already carries that same id | say so and write nothing |
 
-**Confirmation posture: CHEAP, so a statement rather than a gate.** Name the record the id resolved
-to — the id and its display name — and write. The act is reversible in one step by `/trip-record
-unlink`, and confirmation weight tracks the tier rather than being uniform. **The one branch that
-does confirm is the repoint**, because a repoint replaces a resolved reference whose outgoing value
-is not otherwise recoverable — the same reason `.publish-slug` and `mode` echo before writing.
+**The survey — run before the write, and derived from the lattice rather than enumerated.**
+`reference/data-model.md` already computes, totally and deterministically, what the file and the
+record each contribute to a composed field. This verb adds no rule to that computation. It runs it
+**twice** — once for the state the file is in, once for the state the write would create — and
+reports the difference, at a moment when nothing has been written.
+
+- **The pre-link side is composed against the bearer state the file is actually in**, one of the
+  seven that section declares, read from this file's own frontmatter and, where that frontmatter
+  already carries a resolving reference, from the record it names. **It is not assumed to be the
+  no-reference case.** A file carrying no `person:` key genuinely is that case, and its pre-link
+  side is the traveller file field for field; a file being **repointed** already draws on the
+  outgoing record, and so does its pre-link side.
+- **The post-link side is composed with this invocation's record available**, which is the state
+  the write would create and nothing else.
+
+**A field enters the survey where either its composed value changes or its disposition changes, and
+both limbs are load-bearing.** The data model defines two functions over a field, and they take
+different arguments: the value function consumes the field's class, the trip-side value,
+availability, the record-side value and the field's scope, while the report function consumes the
+**un-collapsed** bearer state rather than the three-valued projection of it. Neither limb subsumes
+the other. A sanctioned `DEFAULT` override composes to the trip's own value on **both** sides, so
+it moves no value at all and is reached only by the disposition limb — and that population is the
+one this card's first acceptance criterion is mostly about. A field this trip leaves unstated
+carries no disposition, and on a repoint changes hands silently, so it is reached only by the value
+limb.
+
+**Deriving the survey this way is what makes it total over the repoint**, and the repoint is the
+branch a fixed row set keyed to *"no reference, then one"* is silent on. The fourth refusal row
+above ships that branch explicitly: both the outgoing and the incoming record are real, every field
+this trip leaves unstated changes hands, and the needs union **loses every block the outgoing record
+supplied**. *"Linking a person is never a destructive act"* is a property of arriving from **no**
+reference; it is not a property of replacing one, and reading it as though it were is how that loss
+stays invisible. Composing the pre-link side from the bearer state the file is actually in costs no
+new rule and covers, without one: the repoint, a reference followed through a single merge hop, a
+re-link of the same id — which changes nothing on either side and so surveys empty — and a
+reference that today resolves to nothing, where this trip's own answers are being retained only
+because the record side was never read.
+
+**The adjudicable set is the part of that difference the operator can resolve either way**, and it
+is selected by the field's own class rather than by a list kept in this section: a **slot**-scoped
+person-class field this trip answers, whose claim the record's answer displaces; and a `DEFAULT`
+override that differs from the record's value. **Everything else the survey reports is reported and
+not adjudicated**, and the omission is deliberate rather than an oversight — a **block**-scoped
+person-class field composes to a union and a union cannot contradict itself, an override equal to
+the record's value costs one report line and nothing else, and a field this trip never answered is
+inheriting rather than losing. Manufacturing a decision that has no losing branch is not thoroughness.
+
+**One count is mandatory output rather than a courtesy.** Where this invocation replaces a resolving
+reference, the survey names **how many** fields stop drawing on the outgoing record — **a count,
+never the values**. This is `## unlink <name>`'s rule arriving at the other end of the same edge:
+that verb must name how many fields stop being composed when a reference is removed, and a repoint
+removes one in the same breath as it adds another.
+
+**Three render rules, and they are what keep the survey a survey.** `reference/data-model.md`
+§ *One-way* forbids not only a write to the store but a **solicitation** of one, and names the
+prohibited shape verbatim: a prompt of the form *"the record says X, this trip says Y — promote?"*
+emitted per diverging field, which leaves every resulting write human-confirmed while the record
+drifts toward whatever the most recent trip said. This survey sits inside the one path that section
+sanctions — an explicit act the operator initiated at the command surface — and these three are
+what keep it there.
+
+1. **No row carries a verb, an offer, or a suggested action.** The resolution verb is named once for
+   the whole set, in this verb's own confirmation, and the paragraph below that names it is
+   unchanged by the survey rather than repeated inside it.
+2. **The survey names fields and dispositions; it does not restate the record's values.** What this
+   gate asks is whether to link, not which of two values to keep, so a field label and its
+   disposition are what the decision needs and the values are not. Where two values genuinely have
+   to be read against each other, `## promote <name> <field-label>` echoes the outgoing → incoming
+   pair for **that one field** at the moment of that one write — which is where standing rule 9(d)
+   requires the echo, and the only place it is bounded to a pair a reader can check. Restating
+   record values here would put a new copy of person data in a new location for a decision this gate
+   does not make.
+3. **Nothing schedules this.** It runs once, on a token the operator typed. No pass, no synthesis
+   and no enrichment emits it, and the drift § *One-way* describes needs a repeating prompt this
+   verb does not have.
+
+**What this verb's reconciliation writes, stated as a prohibition in both directions, because the
+tempting move is the opposite one on each side.**
+
+> **This verb's reconciliation reads both records and writes neither, and it performs no resolution
+> of its own in either direction.** It takes no licence from standing rule 9, names no path under
+> `people/`, and has no branch that reaches one: every record-side resolution it surfaces is
+> executed by `## promote <name> <field-label>`, one field per invocation, as a separate act the
+> operator types. **And it does not perform the trip-side removal either.** Where the record's
+> answer is the one to keep, the survey names the equivalence class — delete the line, blank it,
+> or write a single em dash — **and does not do it**, which is the posture `promote` already ships
+> for the identical act one field at a time. **A batched apply is not a convenience this verb
+> withholds.** Store-ward it is a write with no sanctioned tool shape, because standing rule 9's
+> conditions are conjunctive and fix the granularity at one named field with one echoed pair, and
+> widening that is an amendment to the standing clause under the Extension rule rather than a
+> feature of this section. Trip-ward the rule 9 argument does not reach at all — that rule bounds
+> only writes outside `trips/<slug>/` — and the bar is the sharper one instead: a multi-field
+> deletion in a human-authored, git-ignored tree, where a wrong deletion is recoverable from
+> nothing while leaving a line costs one report line per pass.
+
+**The property this protects, cited as what was ratified rather than as a mechanism.**
+`reference/adr/ADR-006-third-party-data-capture.md` ratifies **attribution correctness** — a
+constraint must reach the planner *once*, attached to the right person, and **must not duplicate
+when that person later files their own profile**. That is a property of the outcome. **The record
+prescribes no merge-and-drop mechanism, and no rule of it names one**, so a design that cited one
+would be resting on a sentence that is not there. This verb satisfies the property the way the rest
+of this command already does: by performing no merge at all, in either direction, and by leaving
+every resolution a separately typed, individually confirmed act.
+
+**Confirmation posture: CHEAP where the survey is empty, and a gate where it is not.** Where the
+survey finds nothing, name the record the id resolved to — the id and its display name — and
+write, exactly as this verb has always done. The act is reversible in one step by `/trip-record
+unlink`, and confirmation weight tracks the tier rather than being uniform. **Two branches confirm,
+and they confirm for different reasons.** The **repoint** confirms because it replaces a resolved
+reference whose outgoing value is not otherwise recoverable — the same reason `.publish-slug` and
+`mode` echo before writing. **A non-empty survey confirms because the gate is what makes abandoning
+free**: it is placed **before** the write rather than after it, so declining writes nothing, on
+either side, and both files are byte-identical to what they were. The reason is not reversibility,
+which `unlink` already supplies — it is that a resolving reference changes which source a field
+composes from, and a verb that wrote first would have moved that before the operator saw it.
+
+**The gated branch refuses a non-interactive run**, on `promote`'s stated ground that a confirmation
+nobody can give is not a confirmation. **The clean branch does not refuse**, and that split is the
+whole of the compatibility guarantee: a traveller file that surveys empty takes the posture this
+verb shipped, so nothing that runs today acquires a gate.
+
+**After a confirmed write, this verb re-reads the frontmatter and says whether `person:` landed.**
+It is one read the verb already holds, and it costs no rule. The gate moved consent in front of the
+write, which leaves exactly one step that can still fail after the operator has agreed to it — and
+without the read-back a failed write is indistinguishable from a successful one, since the survey
+this verb just rendered describes the state it was **going** to create. Report the observed
+post-state, never the intended one.
 
 **What the confirmation also says, once, and never per field.** That this trip's own answers stay
 trip-local, and that `/trip-record promote` is how the operator makes one of them durable. **This is
