@@ -76,6 +76,33 @@
 #   S   the charter's two enumerations of the verb set agree               (group S)
 #     S1 a key in one enumeration and not the other · S2 SINGLE-SOURCE
 #
+#   H   the PICKER SURFACE — what a reader is shown before they read a file (group H)
+#     H1 a RESOLVE-role file declares no argument-hint · H2 a hint names a token the
+#     file does not declare (a bare placeholder is the degenerate case) · H3 a hint
+#     omits a declared verb AND the description points at no reference · H4 the command
+#     reference is absent, unreadable, or its derived-region markers are not unique ·
+#     H5 the derived region disagrees with the live requirement tables
+#
+#     WHAT THIS GROUP GRADES, AND WHAT IT DELIBERATELY DOES NOT. It grades VERB-SET
+#     AGREEMENT between a hint and its file, and the TOTALITY of the reference doc's
+#     derived region. It does NOT grade LENGTH. The rendering budget is a property of a
+#     CLI this repository does not own, does not version and cannot pin, so a committed
+#     length constant would be an assertion about someone else's release with no owner
+#     here — it would go stale silently and fail for a reason no contributor could act
+#     on. Front-loading a hint so its visible prefix is the useful part is therefore an
+#     AUTHORING rule, carried in the reference doc, and not an assertion. The residual
+#     is named rather than closed: a hint whose SET is right and whose ORDER has rotted
+#     passes this group.
+#
+#     H1/H2/H3 are scoped by the ROLE record the charter already emits, never by a
+#     filename test. A CREATE-role file's "verb" is a branch label rather than a typed
+#     token, so verb-enumeration rules do not apply to it and the discriminator is the
+#     repo's own declaration rather than one invented here.
+#
+#     H4 and H5 have NO SKIP PATH. An absent reference doc is an A0-class FAIL, not a
+#     vacuous pass: GUARD_EXPECTED_SKIPS is empty by design, and declaring this group as
+#     an expected skip would convert a red into a silent pass over an unshipped surface.
+#
 #   G   controls: must-NOT-fire arms first, the two live differential arms, one must-fire
 #       arm per emittable id, the grammar control, the derivation mutation pair, and GZV —
 #       the ZERO-VERB world, which exercises the collapse argument above and is the only
@@ -254,13 +281,26 @@ READONLY_ADJUDICATED=( 'status' 'plan' 'replan' 'reorder' 'research' 'check' 'id
 
 SCRIPT_REL='scripts/publish-trip-site.sh'
 
+# ── The command reference, and the two markers that delimit its DERIVED region.
+# The document is hand-written prose around one region this guard recomputes from the
+# live requirement tables and compares. The markers are held as literals here and
+# registered as needles below, so a rendering that would not survive the normalisation
+# applied to the haystack is a build error rather than a silent non-match; group H
+# additionally asserts each is UNIQUE in the document, because a duplicated opener would
+# make "the region" ambiguous and a partial match would grade the wrong bytes.
+DOC_REL='reference/command-reference.md'
+DOC_MARK_OPEN='<!-- command-surface: derived — regenerate by running scripts/test-command-taxonomy.sh -->'
+DOC_MARK_CLOSE='<!-- /command-surface -->'
+
 # ── The needle registry. Every literal this parser holds is asserted to round-trip its
 # own normalisation — norm(needle) == needle — before it is used. A needle that fails and
 # is not registered UNTRIMMED is a build error, not a runtime one, because a needle that
 # does not survive the normalisation applied to the haystack cannot match what it names.
 # The HAYSTACK is whitespace-collapsed where a scan needs it; the NEEDLE never is.
 NEEDLES=( '### Step 1:' '### Step 2:' '**Reads:**' 'trip-contract-header'
-          'population-role:' 'main()' 'allowed-tools:' 'disallowed-tools:' )
+          'population-role:' 'main()' 'allowed-tools:' 'disallowed-tools:'
+          'argument-hint:' 'description:'
+          "$DOC_MARK_OPEN" "$DOC_MARK_CLOSE" )
 NEEDLES_UNTRIMMED=( 'EXCLUDED: ' '## ' '### 4. ' )
 
 # ── The five column names of the requirement table, fixed by the charter's G7. These are
@@ -522,6 +562,14 @@ parse_command_file() {
     # channel carried the VALUE and not merely the right number of records
     printf 'DECL %s %s\n' "$cmd" "$ident"
     printf 'KEY %s:%s\n' "$cmd" "$ident"
+    # The ROW record carries the four REMAINING requirement-table columns, so the
+    # command reference is derived from THIS parser rather than from a second one. A
+    # second verb extractor is a second place for the silent plausible zero the banner
+    # describes to be reborn, which is why the columns are emitted here instead. The
+    # fields cannot contain a pipe: they were produced by splitting on one.
+    printf 'ROW %s|%s|%s|%s|%s|%s\n' "$cmd" "$ident" \
+      "$(trim "${F[2]//$BT/}")" "$(trim "${F[3]//$BT/}")" \
+      "$(trim "${F[4]//$BT/}")" "$(trim "${F[5]//$BT/}")"
     j=$((j+1))
   done
 
@@ -551,6 +599,11 @@ parse_command_file() {
       ft_n=$((ft_n+1))
       RV+=( "$first" ); RS+=( "${SS[$i]}" ); RE_+=( "${SE[$i]}" )
       printf 'REGION %s %s %d %d\n' "$cmd" "$first" "${SS[$i]}" "${SE[$i]}"
+      # The ARGUMENT SIGNATURE, which is the remainder of the heading the first-token
+      # matcher just split. It is emitted from the SAME split that resolves the region,
+      # so the signature and the region can never disagree about where the verb ends.
+      # This is the column G-D4's differential already measures the existence of.
+      printf 'SIG %s|%s|%s\n' "$cmd" "$first" "$(trim "${SH[$i]#"$first"}")"
     fi
     if in_list "$whole" "${DECL[@]+"${DECL[@]}"}"; then
       wh_n=$((wh_n+1))
@@ -1335,6 +1388,231 @@ readonly_check() {
   return "$rc"
 }
 
+# ─────────────────────────────────────────────────────────────────────────────────
+# derive_surface_block <records>
+#
+# The command reference's DERIVED region, recomputed from the record stream. This is the
+# single producer: group H compares the committed region against it, and the fixture
+# generator writes its document from it, so a fixture can never be "correct" by a rule
+# the live check does not apply.
+#
+# ORDERING IS PART OF THE VALUE and is fixed here rather than inherited: commands in
+# LC_ALL=C order, rows in the order their file declares them. A glob's order is the
+# runner's collation, which is not a property of this repository — deriving the order
+# from one would make the same tree pass on one machine and fail on another.
+#
+# Only the FOUR non-verb requirement columns come from ROW; the argument signature comes
+# from SIG, and a verb with no signature renders an em dash rather than an empty cell, so
+# "takes no argument" is stated rather than left as whitespace a reader must interpret.
+# ─────────────────────────────────────────────────────────────────────────────────
+derive_surface_block() {
+  local recs="$1"
+  local line t c v s i
+  local -a RC=() RV=() R1=() R2=() R3=() R4=() SC=() SV=() SS_=()
+  local -a F=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'ROW '*)
+        IFS='|' read -r -a F <<< "${line#ROW }"
+        [ "${#F[@]}" -eq 6 ] || continue
+        RC+=( "${F[0]}" ); RV+=( "${F[1]}" )
+        R1+=( "${F[2]}" ); R2+=( "${F[3]}" ); R3+=( "${F[4]}" ); R4+=( "${F[5]}" )
+        ;;
+      'SIG '*)
+        # Parsed by prefix rather than by a field split, so a signature that itself
+        # contains a pipe survives transport intact.
+        t="${line#SIG }"
+        c="${t%%|*}"; t="${t#*|}"
+        v="${t%%|*}"; s="${t#*|}"
+        SC+=( "$c" ); SV+=( "$v" ); SS_+=( "$s" )
+        ;;
+    esac
+  done <<< "$recs"
+
+  printf '| Command | Verb | Arguments | Lifecycle | Mode | Destination | Depth |\n'
+  printf '|---|---|---|---|---|---|---|\n'
+
+  local -a ORDER=()
+  local cn
+  while IFS= read -r cn || [ -n "$cn" ]; do
+    [ -n "$cn" ] && ORDER+=( "$cn" )
+  done <<< "$(printf '%s\n' "${RC[@]+"${RC[@]}"}" | LC_ALL=C sort -u)"
+
+  local args k
+  for cn in "${ORDER[@]+"${ORDER[@]}"}"; do
+    for (( i=0; i<${#RC[@]}; i++ )); do
+      [ "${RC[$i]}" = "$cn" ] || continue
+      s=''
+      for (( k=0; k<${#SC[@]}; k++ )); do
+        if [ "${SC[$k]}" = "$cn" ] && [ "${SV[$k]}" = "${RV[$i]}" ]; then s="${SS_[$k]}"; break; fi
+      done
+      if [ -n "$s" ]; then args="${BT}${s}${BT}"; else args="$EMDASH"; fi
+      printf '| %s%s%s | %s%s%s | %s | %s | %s | %s | %s |\n' \
+        "$BT" "$cn" "$BT" "$BT" "${RV[$i]}" "$BT" "$args" \
+        "${R1[$i]}" "${R2[$i]}" "${R3[$i]}" "${R4[$i]}"
+    done
+  done
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# picker_check <records> <doc-path> <command-dir>
+#
+# Group H's producer. Two independent limbs:
+#
+#   H1/H2/H3 — the per-file PICKER DECLARATION. `parse_command_file` reads no frontmatter
+#   at all, which is exactly why the taxonomy suite never saw this defect: a file could
+#   declare a bare placeholder hint, or none, and every existing assertion stayed green.
+#   These three read the frontmatter and nothing else from it.
+#
+#   H4/H5 — the command reference's DERIVED REGION, compared against derive_surface_block.
+#
+# WHAT A HINT IS TAKEN TO ENUMERATE, stated because a looser rule would silently pass the
+# defect this group exists to catch. The verb list is the hint's FIRST whitespace-
+# delimited word, split on '|'. Everything after the first space is argument syntax
+# (`[--trip <slug>]`, a continuation marker) and is not read as a verb claim. That rule is
+# what makes a bare `<verb>` fail rather than pass: it is the first word, it splits to one
+# token, and that token is not a declared verb — the degenerate case of H2 rather than a
+# special case beside it.
+#
+# H1/H2/H3 fire only on a RESOLVE-role file. The role comes from the ROLE record the
+# charter emits, read LIVE, so the carve-out moves when the charter moves; it is never a
+# filename test. A file with no ROLE record defaults to RESOLVE, which is the same default
+# the record-collection path already applies.
+# ─────────────────────────────────────────────────────────────────────────────────
+picker_check() {
+  local recs="$1" doc="$2" cdir="$3"
+  local rc=0 line t f base cmd role hint desc word tok v i
+  local n_res=0 n_verbs=0 n_rows=0
+  local -a DECLV=() ROLEC=() ROLER=()
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'ROLE '*) t="${line#ROLE }"; ROLEC+=( "${t%% *}" ); ROLER+=( "${t##* }" ) ;;
+    esac
+  done <<< "$recs"
+
+  for f in "$cdir"/*.md; do
+    [ -e "$f" ] || continue
+    base="$(basename "$f" .md)"; cmd="/$base"
+    role='RESOLVE'
+    for (( i=0; i<${#ROLEC[@]}; i++ )); do
+      [ "${ROLEC[$i]}" = "$cmd" ] && { role="${ROLER[$i]}"; break; }
+    done
+    [ "$role" = 'RESOLVE' ] || continue
+
+    DECLV=()
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in "DECL $cmd "*) DECLV+=( "${line##* }" ) ;; esac
+    done <<< "$recs"
+    # A file with no declared verb is already reported by V0/V1; quantifying the hint
+    # rules over an empty declared set would turn that into a second, misleading finding.
+    [ "${#DECLV[@]}" -gt 0 ] || continue
+    n_res=$((n_res+1)); n_verbs=$(( n_verbs + ${#DECLV[@]} ))
+
+    hint=''; desc=''
+    local infm=0 nfence=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      if [ "$line" = '---' ]; then
+        nfence=$((nfence+1))
+        if [ "$nfence" -eq 1 ]; then infm=1; continue; fi
+        break
+      fi
+      [ "$infm" -eq 1 ] || continue
+      case "$line" in
+        'argument-hint:'*) hint="$(trim "${line#argument-hint:}")" ;;
+        'description:'*)   desc="$(trim "${line#description:}")" ;;
+      esac
+    done < "$f"
+
+    if [ -z "$hint" ]; then
+      printf 'FINDING H1 %s declares no argument-hint — the one surface that renders at the moment a verb is chosen names nothing\n' "$cmd"
+      rc=1
+      continue
+    fi
+
+    word="${hint%% *}"
+    local -a TOKS=()
+    local rest="$word"
+    while :; do
+      tok="${rest%%|*}"
+      TOKS+=( "$tok" )
+      [ "$rest" = "$tok" ] && break
+      rest="${rest#*|}"
+    done
+
+    local missing='' ghost=''
+    for tok in "${TOKS[@]}"; do
+      if [ -z "$tok" ]; then
+        printf 'FINDING H2 %s argument-hint carries an empty verb token — the pipe-joined list is malformed: "%s"\n' "$cmd" "$hint"
+        rc=1
+        continue
+      fi
+      in_list "$tok" "${DECLV[@]+"${DECLV[@]}"}" || ghost="$ghost$tok "
+    done
+    if [ -n "$ghost" ]; then
+      printf 'FINDING H2 %s argument-hint names token(s) the file declares no verb for: %s— outward drift, and a bare placeholder is its degenerate case\n' "$cmd" "$ghost"
+      rc=1
+    fi
+
+    for v in "${DECLV[@]}"; do
+      in_list "$v" "${TOKS[@]+"${TOKS[@]}"}" || missing="$missing$v "
+    done
+    if [ -n "$missing" ]; then
+      case "$desc" in
+        *"$DOC_REL"*) ;;
+        *)
+          printf 'FINDING H3 %s argument-hint omits declared verb(s) %s and its description points at no reference — overflow is permitted, silence is not\n' "$cmd" "$missing"
+          rc=1
+          ;;
+      esac
+    fi
+  done
+
+  printf 'COUNT HRESOLVE %d\n' "$n_res"
+  printf 'COUNT HVERBS %d\n' "$n_verbs"
+
+  # ── H4/H5: the reference document.
+  if [ ! -f "$doc" ] || [ ! -r "$doc" ]; then
+    printf 'FINDING H4 the command reference is absent or unreadable: %s\n' "$DOC_REL"
+    return 1
+  fi
+  local nopen=0 nclose=0 iopen=-1 iclose=-1 n=0
+  local -a DL=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    DL+=( "$line" )
+    if [ "$line" = "$DOC_MARK_OPEN" ];  then nopen=$((nopen+1));  [ "$iopen"  -lt 0 ] && iopen=$n;  fi
+    if [ "$line" = "$DOC_MARK_CLOSE" ]; then nclose=$((nclose+1)); [ "$iclose" -lt 0 ] && iclose=$n; fi
+    n=$((n+1))
+  done < "$doc"
+  if [ "$nopen" -ne 1 ] || [ "$nclose" -ne 1 ]; then
+    printf 'FINDING H4 %s carries %d opening and %d closing derived-region marker(s), expected exactly 1 of each — the derived region has no unambiguous bounds\n' "$DOC_REL" "$nopen" "$nclose"
+    return 1
+  fi
+  if [ "$iclose" -le "$iopen" ]; then
+    printf 'FINDING H4 %s closes its derived region before it opens it\n' "$DOC_REL"
+    return 1
+  fi
+
+  local got='' want=''
+  for (( i=iopen+1; i<iclose; i++ )); do got="$got${DL[$i]}"$'\n'; done
+  want="$(derive_surface_block "$recs")"
+  want="$want"$'\n'
+  local wl
+  while IFS= read -r wl || [ -n "$wl" ]; do
+    case "$wl" in '| '*) n_rows=$((n_rows+1)) ;; esac
+  done <<< "$want"
+  # minus the header row; the separator does not match the '| ' prefix
+  printf 'COUNT HROWS %d\n' "$(( n_rows - 1 ))"
+  if [ "$got" != "$want" ]; then
+    printf 'FINDING H5 %s derived region disagrees with the live requirement tables — the committed block is stale\n' "$DOC_REL"
+    while IFS= read -r line || [ -n "$line" ]; do
+      printf 'H5EXPECT %s\n' "$line"
+    done <<< "$want"
+    rc=1
+  fi
+  return "$rc"
+}
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # The fixture world. DATA, not code: one generator emits a tree from a table of tuples,
 # so a change to the surface's shape changes the tuples and not the generator. Fixtures
@@ -1392,8 +1670,31 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
   done
   n=${#IDS[@]}
 
+  # The conforming hint: the file's own DISTINCT verb identities, pipe-joined. Built from
+  # the same IDS the requirement table is emitted from, so the fixture cannot drift from
+  # itself. A CREATE-role file takes an argument rather than a verb, which is why its hint
+  # is a placeholder and why H1/H2/H3 do not quantify over it.
+  local hint='' hid seen
+  local -a HSEEN=()
+  for (( i=0; i<n; i++ )); do
+    hid="${IDS[$i]}"
+    in_list "$hid" "${HSEEN[@]+"${HSEEN[@]}"}" && continue
+    HSEEN+=( "$hid" )
+    hint="${hint:+$hint|}$hid"
+  done
+  if [ "$role" = 'CREATE' ]; then hint='[fixture-argument]'; fi
+  # hintshort drops the LAST verb, so the hint omits a declared verb while every token it
+  # does carry stays valid — H3 without tripping H2, which is what makes the arm specific.
+  if [ "$defect" = 'hintshort' ] && [ "$role" != 'CREATE' ] && [ "${#HSEEN[@]}" -gt 1 ]; then
+    hint="${hint%|*}"
+  fi
+  if [ "$defect" = 'hintghost' ] && [ "$role" != 'CREATE' ]; then hint="$hint|ghostverb"; fi
+
   {
     printf -- '---\ndescription: fixture %s\n' "$name"
+    if [ "$defect" != 'nohint' ] || [ "$role" = 'CREATE' ]; then
+      printf -- 'argument-hint: %s\n' "$hint"
+    fi
     printf -- 'allowed-tools: Bash(ls:*), Bash(%s update:*)\n' "$SCRIPT_REL"
     printf -- 'disallowed-tools: [Bash(%s publish:*)]\n' "$SCRIPT_REL"
     printf -- '---\n\n# /%s\n\n' "$name"
@@ -1569,6 +1870,31 @@ gen_script() {  # gen_script <path> [extra-arm]
   } > "$p"
 }
 
+# gen_doc <dir> <defect> — the fixture command reference.
+#
+# Its derived region is COMPUTED from the fixture's own record stream by the same
+# producer the live check compares against, never hand-written here. A hand-written
+# fixture region would be a second statement of the derivation rule, and the fixture
+# would then pass or fail on whether the two statements agreed rather than on whether the
+# guard works.
+gen_doc() {  # gen_doc <dir> <defect>
+  local d="$1" defect="${2:-}"
+  mkdir -p "$d/reference"
+  local doc="$d/reference/command-reference.md"
+  if [ "$defect" = 'nodoc' ]; then rm -f "$doc"; return 0; fi
+  local block
+  block="$(derive_surface_block "$(collect_records "$d")")"
+  # docdrift mutates ONE cell of the committed region, leaving the command files intact:
+  # the divergence is in the document, which is the direction H5 exists to catch.
+  if [ "$defect" = 'docdrift' ]; then block="${block/| ACTIVE |/| ARCHIVED |}"; fi
+  {
+    printf '# Fixture command reference\n\n'
+    printf '%s\n' "$DOC_MARK_OPEN"
+    printf '%s\n' "$block"
+    printf '%s\n' "$DOC_MARK_CLOSE"
+  } > "$doc"
+}
+
 gen_tree() {  # gen_tree <dir> <charter-defect> <cmd-defect> [world...]
   local d="$1" cdd="$2" mdd="$3"; shift 3
   local -a W=( "$@" )
@@ -1578,11 +1904,15 @@ gen_tree() {  # gen_tree <dir> <charter-defect> <cmd-defect> [world...]
   if [ "$mdd" = 'nocmds' ]; then return 0; fi
   local t
   for t in "${W[@]}"; do gen_cmd "$d" "$t" "$mdd"; done
+  # The document is generated LAST and from the finished tree, so a command-file defect
+  # is reflected in the derivation rather than contradicted by a stale fixture document.
+  gen_doc "$d" "$mdd"
 }
 
-# run_tree <dir> — drives the whole checker chain over a fixture tree and prints the
-# concatenated record/finding stream. Used by every control arm.
-run_tree() {
+# collect_records <dir> — the charter roll plus one parse per command file. Factored out
+# of run_tree because gen_doc needs the identical stream: the fixture document and the
+# assertion that grades it must be derived from one collection, not two.
+collect_records() {
   local d="$1"
   local recs="" f base cmd role l2 croll
   croll="$(charter_check "$d/CLAUDE.md")"
@@ -1598,10 +1928,20 @@ run_tree() {
 FILE $cmd
 $(parse_command_file "$f" "$cmd" "$role")"
   done
+  printf '%s\n' "$recs"
+}
+
+# run_tree <dir> — drives the whole checker chain over a fixture tree and prints the
+# concatenated record/finding stream. Used by every control arm.
+run_tree() {
+  local d="$1"
+  local recs
+  recs="$(collect_records "$d")"
   recs="$recs
 $(coverage_check "$recs")
 $(enum_agree_check "$recs")
-$(invocation_check "$d/commands" "$recs")"
+$(invocation_check "$d/commands" "$recs")
+$(picker_check "$recs" "$d/reference/command-reference.md" "$d/commands")"
   printf '%s\n' "$recs"
 }
 
@@ -1613,14 +1953,16 @@ CDIR="$ROOT/.claude/commands"
 ADR="$ROOT/reference/adr/ADR-007-command-entry-point.md"
 PUB="$ROOT/$SCRIPT_REL"
 WF="$ROOT/.github/workflows/command-taxonomy.yml"
+DOC="$ROOT/$DOC_REL"
 
-# The Z-group watch set: every surface this guard READS, plus the workflow that runs it —
+# The Z-group watch set: every surface this guard READS — the command reference included,
+# since group H reads it — plus the workflow that runs it —
 # that last one because a guard editing its own trigger is the one mutation a reader would
 # least expect this group to miss. The set is those inputs and NOT the whole tree; the Z1
 # line states that scope rather than claiming a tree-wide property this does not establish.
 tree_state() {
   local p
-  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF"; do [ -f "$p" ] && cksum < "$p"; done
+  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC"; do [ -f "$p" ] && cksum < "$p"; done
   for p in "$CDIR"/*.md; do [ -e "$p" ] && { printf '%s ' "$(basename "$p")"; cksum < "$p"; }; done
 }
 STATE_BEFORE="$(tree_state)"
@@ -1657,12 +1999,14 @@ ENUM_OUT="$(enum_agree_check "$RECS")"
 E_OUT="$(adr4_check "$ADR" "$PUB" "$RECS")"
 F_OUT="$(invocation_check "$CDIR" "$RECS")"
 R_OUT="$(readonly_check "$RECS" "${READONLY_KEYS[@]}" -- "${READONLY_ADJUDICATED[@]}")"
+H_OUT="$(picker_check "$RECS" "$DOC" "$CDIR")"
 ALL="$RECS
 $COV_OUT
 $ENUM_OUT
 $E_OUT
 $F_OUT
-$R_OUT"
+$R_OUT
+$H_OUT"
 
 echo
 echo "── Group A — populations non-empty. FAIL, never SKIP."
@@ -1761,6 +2105,27 @@ elif [ "${RO_CINV:-0}" -eq 0 ]; then
 else PASS "R1: each of $(getcount "$R_OUT" ROKEYS) declared read-only regions carries no fenced invocation line and no pre-execution block of its own, quantified over ${RO_CINV} invocation and ${RO_CBANG} pre-execution record(s) attributed to ${READONLY_OF_COMMAND}'s regions"; fi
 if has_finding "$ALL" "$(surface R2)"; then FAIL "R2: the MEMBERSHIP-DELTA SENTINEL fired — the read-only set needs re-adjudication"; show "$ALL" 'R2'
 else PASS "R2: sentinel — ${READONLY_OF_COMMAND}'s $(getcount "$R_OUT" ROLIVE) live declared verbs match the adjudicated set as a SET, in both directions. A count would hold while membership churned"; fi
+
+echo
+echo "── Group H — the picker surface: what a reader is shown before they open a file."
+if has_finding "$ALL" "$(surface H1)"; then FAIL "H1: a RESOLVE-role command file declares no argument-hint"; show "$ALL" 'H1'
+else PASS "H1: all $(getcount "$H_OUT" HRESOLVE) RESOLVE-role command files declare an argument-hint — the one surface that renders at the moment a verb is chosen names something on every one of them. The role comes from the charter's ROLE record, never from a filename"; fi
+if has_finding "$ALL" "$(surface H2)"; then FAIL "H2: an argument-hint names a token its own file declares no verb for"; show "$ALL" 'H2'
+else PASS "H2: OUTWARD DRIFT EMPTY — every token of every hint's verb list is a declared verb of its own file, quantified over $(getcount "$H_OUT" HVERBS) declared verbs. A bare placeholder is caught here as the degenerate case of this assertion rather than by a rule of its own"; fi
+if has_finding "$ALL" "$(surface H3)"; then FAIL "H3: a hint omits a declared verb and its description points at no reference"; show "$ALL" 'H3'
+else PASS "H3: OVERFLOW IS DECLARED — every hint either carries its file's whole declared verb set or its description points at ${DOC_REL}. SCOPE: this grades VERB-SET AGREEMENT and never LENGTH. No length constant is held anywhere in this file: the rendering budget belongs to a CLI this repository does not own, does not version and cannot pin, so front-loading is an authoring rule and the ORDER of a hint is a named residual this group does not close"; fi
+H_ROWS="$(getcount "$H_OUT" HROWS)"
+if has_finding "$ALL" "$(surface H4)"; then FAIL "H4: the command reference is absent, unreadable, or its derived-region markers are not unique"; show "$ALL" 'H4'
+else PASS "H4: ${DOC_REL} is readable and carries exactly one opening and one closing derived-region marker, in that order — the region has unambiguous bounds"; fi
+if has_finding "$ALL" "$(surface H5)"; then
+  FAIL "H5: the committed derived region disagrees with the live requirement tables"; show "$ALL" 'H5'
+  printf '       the block the guard expected — replace the region with this:\n'
+  printf '%s\n' "$H_OUT" | sed -n 's/^H5EXPECT /       /p'
+elif [ -z "${H_ROWS:-}" ]; then
+  FAIL "H5: the derivation never ran — the derived region could not be located, so a green here would report a comparison that did not happen. Resolve H4 first"
+else
+  PASS "H5: TOTALITY — the committed region equals the ${H_ROWS}-row derivation from the live requirement tables, recomputed on this commit. The eighth in-repo enumeration of the verb set is DERIVED and asserted, not remembered; on a divergence the guard prints the block it expected, so the remediation is a paste rather than a hunt"
+fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group G — controls. Fixture-driven: every fixture path below is rooted at $WORK, so no
@@ -1929,6 +2294,15 @@ ctl GF3  F3 "a forbidden flag passed on a publish-script invocation"           o
 ctl GF4  F4 "a command file that SETS the plaintext override, not merely names it" ok    allowplain  'grep -qF "ALLOW_PLAINTEXT=1" "$WORK/GF4/commands/trip.md"'
 ctl GF5  F5 "a script mention reached through a variable — unresolved, not silently clean" ok varmention 'grep -q "^SCRIPT=scripts" "$WORK/GF5/commands/trip.md"'
 ctl GF6  F6 "a fenced invocation in no verb region — a finding that could name only a FILE" ok orphaninv 'grep -q "^## Not a verb$" "$WORK/GF6/commands/trip.md"'
+# ── H-group arms. The first three defect the FRONTMATTER, which parse_command_file reads
+# nothing of — which is exactly why this class went undetected until group H existed. The
+# last two defect the DOCUMENT while leaving the command files correct, so the divergence
+# is in the direction H5 is aimed at.
+ctl GH1  H1 "a RESOLVE-role command file declaring no argument-hint"           ok        nohint     '! grep -q "^argument-hint:" "$WORK/GH1/commands/trip.md"'
+ctl GH2  H2 "a hint naming a token the file declares no verb for"              ok        hintghost  'grep -q "^argument-hint:.*ghostverb" "$WORK/GH2/commands/trip.md"'
+ctl GH3  H3 "a hint omitting a declared verb with no reference in the description" ok    hintshort  '[ "$(sed -n "s/^argument-hint: //p" "$WORK/GH3/commands/trip.md")" = "status" ]'
+ctl GH4  H4 "an absent command reference — a FAIL, not a vacuous pass"         ok        nodoc      '[ ! -f "$WORK/GH4/reference/command-reference.md" ]'
+ctl GH5  H5 "a derived region that disagrees with the live requirement tables" ok        docdrift   'grep -q "^| .*| ARCHIVED |" "$WORK/GH5/reference/command-reference.md"'
 
 # ── X-group: the key channel, driven with a synthetic record stream. Feeding the
 # consumer directly is what makes these ids reachable without a debug backdoor and
@@ -2251,7 +2625,7 @@ echo
 echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow and each command file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference and each command file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi
