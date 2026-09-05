@@ -1830,13 +1830,23 @@ It scans the trip roots discovery did **not** resolve for the subject's display 
 
 ### The confirmation
 
-> **`erase <person-id>` → the dry-run reach report → a typed confirmation of the id at a terminal → execute.**
+> **`erase <person-id>` → the dry-run reach report → the prompt names the record's display name and id → a typed confirmation of **the id** at a terminal → execute.**
 >
 > **There is no `--yes`. There is no non-interactive path. There is deliberately no flag to skip it.**
 
-**The typed token is the record's id, never the person's name.** The id is subject-specific, so typing it still catches a mis-targeted run — and it carries no personal data, so the confirmation does not put an erased value into the transcript or build the habit of typing erased names at prompts. **This verb never echoes the display name, at the prompt or anywhere else.** `unlink` echoes its outgoing reference because it is reversible and the operator may want to re-link; this verb does the opposite, and the inversion falls out of the reversibility tiers rather than being asserted.
+**The prompt echoes the display name; the typed token is the id.** Those are two separate halves and they answer two different failures.
 
-**What the typed id does not catch, stated rather than left to be discovered.** The id is subject-specific, so the prompt catches a run aimed at the wrong **id**. It does not catch a run aimed at the wrong **person**: where two co-travellers on the same trips each hold a record, nothing at the prompt distinguishes which of them this id belongs to, because no name is echoed. The dry-run reach report above the prompt is the only surface that narrows it, and it names paths and occurrence counts rather than people. That residual is the cost of keeping an erased value out of the transcript, and it is recorded here because it is the one mis-targeting this gate does not stop — on the only irreversible operation on this surface.
+**Echoing the name closes the mis-target.** An id is opaque: where two co-travellers on the same trips each hold a record, nothing in `psn-3c7e` distinguishes them, and an operator who transposed two ids at the shell would confirm the wrong erasure with no second signal. The prompt therefore names the record it is about to erase — display name **and** id — before it will accept anything. This is the standard shape for an irreversible operation: **show what is about to be destroyed, and require a token to proceed.**
+
+**Typing the id, never the name, closes the other one.** The operator never types an erased value, so the confirmation does not build the habit of typing people's names at prompts, and no personal data enters the shell's history. That was the original objection to naming the subject here and it is preserved intact — what changed is that it was being answered by *withholding the name from the operator*, which pays for it with the one mis-targeting this gate cannot otherwise stop.
+
+**On the transcript.** The name appears once, in the prompt, at a moment when the operator has just read a dry-run reach report for that person and has their record open. It is not new information at that point. Erasure substitutes the display name **in artifacts**; a terminal prompt is not an artifact, and treating it as one bought secrecy the operator did not need at a cost the person being erased would not have chosen.
+
+`unlink` echoes its outgoing reference because it is reversible and the operator may want to re-link. This verb echoes its subject for the opposite reason — because it is not.
+
+**What the gate catches, and what it still does not.** The echoed name catches a run aimed at the wrong **person** — the failure an id alone cannot see. The typed id catches a run aimed at the wrong **record** where two people share a display name, which a name alone cannot see. The two halves are complementary, and each covers the other's blind spot.
+
+**What remains uncaught:** an operator who reads the echoed name, recognises it, and confirms anyway — a deliberate erasure of the intended person, which is the operation working. Beyond that, a record whose display name is itself wrong will echo the wrong name and confirm against a correct id; the reach report above the prompt is what narrows that, and it names paths and occurrence counts rather than people.
 
 **Why the gate is stronger than the nearest precedent's.** The publish script's takedown arm types the *subject identifier* and accepts a flag to skip the prompt, because a deleted repository can be re-published. Its typed identifier would here be the person's name, and its escape hatch would be a scripted irreversible erasure. This verb takes instead the shape the script reserves for the confirmation it will not let anyone skip.
 

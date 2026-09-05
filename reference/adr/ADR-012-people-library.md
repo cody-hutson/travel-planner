@@ -462,8 +462,13 @@ corpus already gates behind a typed confirmation at a terminal.
 the erasure verb, which is a sequencing fact rather than an implementation detail: a dry-run reach
 report, confirmed **against** the write, showing locations and counts and **never values**; a typed
 confirmation, refusing a non-interactive run without an explicit flag; a standing rule that the
-operation **never echoes an erased value**, deliberately inverting the echo-the-row-verbatim rule the
-roster-edit verb carries, because echoing here is what would put the value into a transcript; the
+operation **never echoes an erased value once it is erased**, deliberately inverting the
+echo-the-row-verbatim rule the roster-edit verb carries, because echoing *after* the write is what would
+put a removed value back into a transcript. *(Amended at Stage 12: the rule as first written withheld the
+name at the confirmation prompt too, which paid for transcript hygiene with the one mis-targeting the gate
+could not otherwise stop — two co-travellers are indistinguishable behind opaque ids. The prompt now names
+the subject before the write; the typed token remains the id, so no operator types an erased value and none
+enters shell history. The post-write rule is unchanged.)* the
 person store's own README naming the erasure verb **at record-creation time**, so a user learns the
 exit exists when they create the first record rather than when they need it; a tolerant read that
 distinguishes a **tombstoned** reference from a **dangling** one — both resolve to UNKNOWN, only one
