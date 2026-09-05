@@ -297,15 +297,24 @@ the `researched`-class assertion bounds the **byte-length delta** by (occurrence
 delta): zero subject hits proves the name went, and the length bound proves *nothing else moved* —
 the property a substitution into an independent-state artifact must carry and a regeneration cannot.
 
-**The set's size, and why the number moved.** The spike enumerated **22** locations. It re-derives to
-**28** against the current tracked corpus: **+2** for two name-bearing surfaces inside the `## Group`
-block that the spike's roster locators did not name; **+1** for the person-reference field the
-identity work above added *after* the spike ran; **+2** for the two merge-stub directions, counted as
-a single location by the first reconciliation; and **−1** for the file-less model entry, which is an
-entry **class inside** an existing location rather than a location of its own. The derivation is
-recorded alongside the number because a receipt's row count is graded against the spec table: the two
-must agree, and a count carried forward without its derivation is a count that silently stops
-agreeing.
+**The set's size, and why the number moved.** The spike enumerated **22** locations. Four adjustments
+followed: **+2** for two name-bearing surfaces inside the `## Group` block that the spike's roster
+locators did not name; **+1** for the person-reference field the identity work above added *after* the
+spike ran; **+2** for the two merge-stub directions, counted as a single location by the first
+reconciliation; and **−1** for the file-less model entry, which is an entry **class inside** an existing
+location rather than a location of its own.
+
+> **This derivation does not reconcile, and the authority is the spec table, not this passage.** The
+> terms above sum to **26**; an earlier revision of this paragraph asserted **28**; the shipped reach
+> table enumerates **29** rows — 20 reached, 5 reported, 4 out of scope, with rows 1–28 the locations a
+> copy can reach and row 29 the record itself. The stated total is removed rather than replaced, because
+> the table is graded executably in both directions by the erasure suite's reach arm, and this record
+> restating a total it cannot derive is a second source that can only drift from the first. The missing
+> terms are not invented here.
+>
+> The paragraph's own closing standard is the reason this is called out rather than quietly corrected:
+> *a count carried forward without its derivation is a count that silently stops agreeing.* It stopped
+> agreeing here, in its own sentence, twice.
 
 #### Two entry classes, failing in opposite directions
 
