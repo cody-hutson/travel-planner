@@ -1064,7 +1064,7 @@ composition spike proposed; the sentinel itself is unchanged.
 
 **The reservation is a forward obligation, not a repair.** No tracked file extracts the `trip:`
 frontmatter **value**, so nothing resolves it to a directory today. It carries exactly one binding
-consequence: **`/trip-new` must refuse a trip slug equal to a reserved sentinel**, or a real
+consequence: **`/trip-new` must refuse a trip slug equal to a reserved `trip:` sentinel**, or a real
 `trips/cross-trip/` would collide with it.
 
 **Reversibility: MODERATE · confidence HIGH.** Reversible on paper until records materialise in
@@ -1349,7 +1349,7 @@ mid-milestone renumbering already demonstrated.
 | `scripts/test-publish-guard.sh` | **A new group** asserting those two lines, as the existing groups do for `trips/` and for `/analysis/` | guard-suite slice |
 | **A tracked witness fixture** | Required, or an explicit no-witness declaration. **A new worked example carrying the store**, rather than reusing the existing data-architecture example — which would place a cross-trip record inside a trip root and re-teach the scoping this design breaks | schema-and-store slice |
 | `scripts/publish-trip-site.sh` **and** `reference/data-architecture.md` § 5.6 | **COUPLED, and this is the highest-severity item here.** A `Passport` fence row for the person-record scope **and** a third artifact-scope constant in the evaluator must land **in the same change**. The evaluator holds exactly two artifact-scope literals today; § 5.6 states that a row naming any other pair *"is presently a code change"* and that **the guard aborts the publish as UNDETERMINED** rather than guarding less than it declares. **A fence row alone aborts every publish of every trip** | publish-guard slice |
-| `.claude/commands/trip-new.md` | **Refuse a trip slug equal to a reserved sentinel** | command slice |
+| `.claude/commands/trip-new.md` | **Refuse a trip slug equal to a reserved `trip:` sentinel** | command slice |
 | `agents/00-enrichment.md` · `.claude/commands/trip-record.md` | **The absolute phrasing *"no durable artifact of any kind"* is false as written** and both surfaces attribute it to `ADR-006`, which does not say it. Each needs the same descriptive correction *Decision* § 6b makes: the entry has no *file*, and its durable record is the carried-forward model entry, trip-scoped and now deletable. **No shape or field changes** | enrichment slice · command slice |
 | `trips/README.md` retention table | *"No command deletes a trip folder"* becomes false when the erasure verb ships, and the same table's *"Copy a profile forward"* contradicts one-source-per-fact | **UNOWNED — routed** |
 | `outputs/traveler-model.md`, its schema, and the agents that consume it | **Unchanged.** No field added, no shape changed, projection unchanged by identity | — |

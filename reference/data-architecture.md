@@ -428,7 +428,7 @@ declared exception, and all three are **narrowings of a value domain** rather th
   is not a writer id, **it is not a trip slug and no tool resolves it to a trip directory.** This is a
   narrowing of a universal field's value domain, not the removal of one, and it is the only reason a
   cross-trip class can sit inside a model whose universal block requires `trip`. **One binding
-  consequence:** `/trip-new` must refuse a trip slug equal to a reserved sentinel, or a real
+  consequence:** `/trip-new` must refuse a trip slug equal to a reserved `trip:` sentinel, or a real
   `trips/cross-trip/` would collide with it.
 
 **The `W` cell is a bare writer-id wherever the class has exactly one, and prose wherever it names
