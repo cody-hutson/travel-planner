@@ -59,6 +59,12 @@
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
 #        A code with no arm is a check indistinguishable from one that CANNOT fire.
+#   RL   reconcile-on-link: the state of the two tracked witnesses the `link` survey is
+#        graded on. Totality over the one resolving pair — every label classified, no
+#        label claimed twice, adjudicable set empty — and the negative over the unlinked
+#        fixture, which carries no reference and no reachable store so a correct survey
+#        reads the store zero times. Carries its own MUST-FIRE arms, including the
+#        star-decorated-bullet miss reproduced on demand. Nothing in it is pinned.
 #
 # ── WHY EN, CA, PB AND ST RUN AGAINST THE REAL TREE AND NOT INSIDE A FIXTURE ─────
 # Each is a statement about THIS COMMIT'S corpus — how many homes an enum has, whether four
@@ -4090,6 +4096,284 @@ EOF
   fi
 else
   FAIL "ER7/ER8/ER15/ER16/ER17: the archived fixture's trip-context, derived model or declaration is unreadable, so none of these properties could be measured"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RL — reconcile-on-link: the survey's two witnesses, on the tracked tree.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# `/trip-record link` gained a pre-write survey: before it writes `person:` it composes
+# the traveller file twice — once for the bearer state the file is in, once for the state
+# the write would create — and reports the difference. Nothing gated that verb. A search
+# of this directory for assertions over it returned the publish guard's `links-reference`
+# artifact and prose, and no assertion of any kind over the verb or over the composition
+# it now performs. This group is the first.
+#
+# ── WHAT IT CAN AND CANNOT ASSERT, STATED SO THE LIMIT IS NOT MISTAKEN FOR COVER ──
+# This engine's agents are prompt files, not executable code, so no suite here can RUN a
+# link and watch what the survey renders. What this group grades is the STATE the two
+# tracked witnesses are in — which is what fixes the survey's verdict on them — plus the
+# parse-layer property whose failure is MEASURED rather than hypothetical. It does not
+# grade a future implementation's behaviour. Group AF states the same boundary for the
+# erasure fixture and this is the same boundary, not a weaker one.
+#
+# ── WHY THIS PAIR AND NOT THE PAIR THE DESIGN FIRST PROPOSED ────────────────────
+# The design proposed asserting a hand-computed verdict over
+# examples/data-architecture-demo/travelers/alex.md against the people-library record.
+# That assertion cannot be built and would grade a CORRECT implementation red, for two
+# independent reasons. alex.md carries no `person:` key, so availability is
+# ABSENT-BY-DESIGN and a correct survey reports NOTHING on it — the proposed sensitivity
+# arm graded silence as failure. And the two files live in different trip roots:
+# examples/data-architecture-demo/people/ does not exist, and the store-root rule takes
+# <trip-root>/people/ then <repo-root>/people/ with NO upward search, so the second step
+# lands in a git-ignored directory that does not exist in a fresh checkout. That is the
+# trap the data model names by name — a witness whose verdict depends on the operator's
+# private working directory is not a witness. RL6 asserts BOTH halves of that, so the
+# reason the pairing is impossible is itself under test rather than remembered.
+#
+# ── THE TWO ARMS, AND WHY EACH NEEDS THE OTHER ──────────────────────────────────
+# Arm (i) is TOTALITY over the repo's only tracked resolving pair. Every label either
+# side carries is classified by the live table (RL1); no label is claimed by both sides
+# (RL3); and the adjudicable set is therefore EMPTY (RL4) — which is the compatibility
+# claim the fixture already makes in prose, converted into an assertion.
+#
+# Arm (ii) is the NEGATIVE over the unlinked file (RL6): no reference, no reachable
+# store, so zero store reads. This is the real regression risk of moving a store read in
+# front of the write — a survey that fires on a file carrying no reference would read the
+# store on every legacy trip in the tree.
+#
+# RL4's verdict is a zero, and a zero from an instrument that reads nothing looks exactly
+# like a zero from a clean fixture. RL5 is therefore a MUST-FIRE arm: the SAME extractor,
+# on alex.md, has to find person-class answered bullets. It does — those files are legacy,
+# authored against the unsplit form — so RL4's zero is a measurement.
+#
+# ── RL2 IS THE ONE ARM WHOSE FAILURE HAS ALREADY HAPPENED ───────────────────────
+# The person-class population was once understated 8 -> 10 by an anchored `- **Label:**`
+# pattern that silently dropped every star-decorated bullet. RL2 runs the extractor twice
+# over the same file, once star-blind, and requires the star-honouring pass to find
+# STRICTLY MORE. It is not a claim that some number is right; it is the miss itself,
+# reproduced on demand. The canonical person-class field is star-decorated in both intake
+# forms, so a star-blind resolver loses it and every downstream verdict in this group
+# still passes — which is precisely what makes this arm load-bearing rather than tidy.
+#
+# ── NOTHING HERE IS PINNED ──────────────────────────────────────────────────────
+# The classification is read live from reference/data-model.md and never re-authored, the
+# same live-read the command file's own collision check takes. The fixtures are read from
+# the tree. No count in this group is written down: every one is derived on the run, and
+# the only literals are the two paths the milestone shipped and the two labels the
+# classification's own rationale declares bullet-less.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "RL — reconcile-on-link: the survey's two witnesses"
+
+RL_RAN=0
+RL_DM="$ROOT/reference/data-model.md"
+RL_CMD="$ROOT/.claude/commands/trip-record.md"
+RL_PAIR_T="$ROOT/examples/people-library-demo/travelers/noor.md"
+RL_PAIR_R="$ROOT/examples/people-library-demo/people/psn-3c7e.md"
+RL_UNLINKED="$ROOT/examples/data-architecture-demo/travelers/alex.md"
+RL_STAR='⭐'
+
+# rl_class — the classification table, read LIVE. Emits "label<TAB>class<TAB>scope".
+# Fields are taken BY INDEX, never row-wide: a row-wide match would read the class token
+# out of the rationale column, which discusses other classes by name in several rows.
+rl_class() {
+  awk -F'|' '
+    NF < 8 { next }
+    {
+      num = $2; gsub(/[ \t]/, "", num)
+      if (num !~ /^[0-9]+$/) next
+      fld = $3
+      # the label is a code span; a row without one is the unlabelled free-text tail,
+      # which has no bullet form and so cannot appear in any file this group reads
+      if (!match(fld, /`[^`]+`/)) next
+      lbl = substr(fld, RSTART + 1, RLENGTH - 2)
+      cls = $5; gsub(/[ \t*]/, "", cls)
+      scp = $7; gsub(/[ \t`]/, "", scp)
+      print lbl "\t" cls "\t" scp
+    }' "$1"
+}
+
+# rl_bullets <file> <honour_star> — emits "label<TAB>value" for every intake bullet.
+# honour_star=0 reproduces the MEASURED miss: the star-decorated bullets vanish.
+# The star prefix is removed with a dynamic sub() rather than by arithmetic on length(),
+# because length() counts characters or bytes depending on the awk and the locale, and
+# group LC exists because this suite has already been bitten by exactly that.
+rl_bullets() {
+  awk -v star="$RL_STAR" -v honour="$2" '
+    /^- / {
+      rest = substr($0, 3)
+      starred = 0
+      if (sub("^" star "[ \t]*", "", rest)) starred = 1
+      if (starred && honour == 0) next
+      if (!match(rest, /^\*\*[^:*]+:\*\*/)) next
+      lbl = substr(rest, 3, RLENGTH - 5)
+      val = substr(rest, RLENGTH + 1)
+      sub(/^[ \t]+/, "", val); sub(/[ \t\r]+$/, "", val)
+      print lbl "\t" val
+    }' "$1"
+}
+
+# ANSWERED() is the data model's own predicate and is applied inline at each site below:
+# blank, a lone em dash and a surviving bracketed placeholder are all unanswered, while
+# `none` IS an answer — the one place the form makes a word stand in for the em dash.
+
+RL_OK=1
+for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED"; do
+  [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
+done
+
+RL_CLASSFILE="$WORK/rl-class.tsv"
+if [ "$RL_OK" -eq 1 ]; then
+  rl_class "$RL_DM" > "$RL_CLASSFILE"
+  RL_NCLASS="$(grep -c '[^[:space:]]' "$RL_CLASSFILE" || true)"
+  RL_NPERSON="$(awk -F'\t' '$2 == "PERSON"' "$RL_CLASSFILE" | grep -c '[^[:space:]]' || true)"
+  if [ "$RL_NCLASS" -gt 0 ] && [ "$RL_NPERSON" -gt 0 ]; then
+    PASS "RL0: the classification was read live from reference/data-model.md — $RL_NCLASS labelled slot(s), $RL_NPERSON of them person-class. This suite holds no copy of that table, and the sensitivity arm fired: a run that parsed the document into an empty set would fail here rather than passing every arm below over nothing"
+    RL_RAN=1
+  else
+    FAIL "RL0: the classification parsed to $RL_NCLASS labelled row(s) / $RL_NPERSON person-class. Every verdict below would be over an empty or class-blind table, so this fails rather than passing quietly"
+    RL_OK=0
+  fi
+else
+  FAIL "RL0: required surface(s) unreadable:$RL_MISSING — not a skip and not a pass"
+fi
+
+if [ "$RL_OK" -eq 1 ]; then
+  # ── RL1 — TOTALITY of the class argument over both sides of the pair ───────────
+  # The survey's value function takes the field's class and scope as two of its five
+  # arguments. A label the table does not classify has no class to take, so the survey
+  # is undefined on it — which is a hole in the mechanism, not a missing test.
+  RL_UNCL=""
+  RL_SEEN=0
+  for rl_f in "$RL_PAIR_T" "$RL_PAIR_R"; do
+    while IFS="$(printf '\t')" read -r rl_l _; do
+      [ -n "$rl_l" ] || continue
+      RL_SEEN=$((RL_SEEN + 1))
+      if ! awk -F'\t' -v l="$rl_l" '$1 == l { f = 1 } END { exit f ? 0 : 1 }' "$RL_CLASSFILE"; then
+        case " $RL_UNCL " in *" $rl_l "*) ;; *) RL_UNCL="$RL_UNCL $rl_l" ;; esac
+      fi
+    done <<EOF
+$(rl_bullets "$rl_f" 1)
+EOF
+  done
+  if [ "$RL_SEEN" -eq 0 ]; then
+    FAIL "RL1: the extractor found 0 bullets across both sides of the resolving pair — the denominator is empty, so a clean verdict here would certify nothing"
+  elif [ -n "$RL_UNCL" ]; then
+    FAIL "RL1: label(s) the live classification does not cover:$RL_UNCL — the survey composes a field from its class and its scope, so an unclassified label is a field the mechanism has no rule for"
+  else
+    PASS "RL1: all $RL_SEEN bullet(s) across both sides of the resolving pair resolve to a class and a scope in the live table — the survey's class argument is total over this pair, and the denominator is non-zero so the verdict is a measurement"
+  fi
+
+  # ── RL2 — the parse-layer sensitivity arm. MUST FIRE. ─────────────────────────
+  RL_WITH="$(rl_bullets "$RL_UNLINKED" 1 | wc -l | tr -d ' ')"
+  RL_BLIND="$(rl_bullets "$RL_UNLINKED" 0 | wc -l | tr -d ' ')"
+  if [ "$RL_WITH" -gt "$RL_BLIND" ]; then
+    PASS "RL2: MUST FIRE — the star-honouring extractor reads $RL_WITH bullet(s) where the star-blind one reads $RL_BLIND on the legacy fixture. That gap IS the miss that once understated the person-class population 8 -> 10: the canonical person-class field is star-decorated, so a resolver anchored on a bare bullet loses it and every other arm in this group still passes"
+  else
+    FAIL "RL2: MUST FIRE — star-honouring read $RL_WITH and star-blind read $RL_BLIND. With no gap this arm has not shown it can tell the two apart, so RL1 and RL5's verdicts rest on an extractor of unknown coverage"
+  fi
+
+  # ── RL3 — arm (i): no field is claimed twice across the resolving pair ─────────
+  # The fixture states this in prose. This is the same claim, asserted.
+  RL_BOTH="$(awk -F'\t' 'NR == FNR { a[$1]; next } ($1 in a) { print $1 }' \
+    <(rl_bullets "$RL_PAIR_T" 1) <(rl_bullets "$RL_PAIR_R" 1) | sort -u | tr '\n' ' ')"
+  # The only classified labels legitimately absent from BOTH sides are the two the
+  # classification's own rationale declares carry no bullet: one is never asked and is
+  # computed per trip, the other is borne by the title line in both forms. They are read
+  # from the table's rationale column rather than listed here.
+  RL_NOBULLET="$(awk -F'|' '
+      NF < 8 { next }
+      { num = $2; gsub(/[ \t]/, "", num); if (num !~ /^[0-9]+$/) next
+        if (!match($3, /`[^`]+`/)) next
+        lbl = substr($3, RSTART + 1, RLENGTH - 2)
+        if ($8 ~ /Never asked/ || $8 ~ /not by a bullet/) print lbl }' "$RL_DM" | sort -u)"
+  RL_ABSENT="$(awk -F'\t' 'NR == FNR { seen[$1]; next } !($1 in seen) { print $1 }' \
+    <(cat <(rl_bullets "$RL_PAIR_T" 1) <(rl_bullets "$RL_PAIR_R" 1)) "$RL_CLASSFILE" | sort -u)"
+  RL_UNEXPLAINED="$(comm -23 <(printf '%s\n' "$RL_ABSENT" | grep '[^[:space:]]' | sort -u) \
+                             <(printf '%s\n' "$RL_NOBULLET" | grep '[^[:space:]]' | sort -u) | tr '\n' ' ')"
+  RL_NNB="$(printf '%s\n' "$RL_NOBULLET" | grep -c '[^[:space:]]' || true)"
+  if [ "$RL_NNB" -eq 0 ]; then
+    FAIL "RL3: the classification declares no bullet-less field at all, so the exemption set this arm subtracts is empty and its verdict would be an artefact of a failed parse rather than a property of the pair"
+  elif [ -n "$RL_BOTH" ]; then
+    FAIL "RL3: label(s) claimed by BOTH sides of the resolving pair: $RL_BOTH — this is the clean witness, and a field claimed twice makes it a contested one"
+  elif [ -n "$RL_UNEXPLAINED" ]; then
+    FAIL "RL3: classified label(s) carried by neither side and not declared bullet-less: $RL_UNEXPLAINED — the pair no longer partitions the form, so RL4's empty verdict would be silence about a gap rather than agreement"
+  else
+    PASS "RL3: the two sides of the resolving pair claim no label in common, and every classified label absent from both is one the table's own rationale declares carries no bullet ($RL_NNB of them). The pair partitions the form, which is what makes the next arm's zero meaningful"
+  fi
+
+  # ── RL4 — arm (i): the adjudicable set over the resolving pair is EMPTY ────────
+  # Adjudicable = a slot-scoped person-class field the trip answers, or a DEFAULT
+  # override that differs from the record. Both are trip-side answers, so both are zero
+  # exactly when the trip side answers no durable label at all — which is what this
+  # witness is for.
+  RL_TP="$(rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '
+      NR == FNR { cls[$1] = $2; next }
+      (cls[$1] == "PERSON") && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
+      END { print n + 0 }' "$RL_CLASSFILE" -)"
+  RL_TD="$(rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '
+      NR == FNR { cls[$1] = $2; next }
+      (cls[$1] == "DEFAULT") && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
+      END { print n + 0 }' "$RL_CLASSFILE" -)"
+  RL_TANS="$(rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '
+      $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ } END { print n + 0 }')"
+  if [ "$RL_TANS" -eq 0 ]; then
+    FAIL "RL4: the trip side of the resolving pair carries 0 answered bullets, so its empty adjudicable set is a property of an empty file rather than of a clean composition"
+  elif [ "$RL_TP" -eq 0 ] && [ "$RL_TD" -eq 0 ]; then
+    PASS "RL4: the adjudicable set over the resolving pair is EMPTY — 0 person-class and 0 DEFAULT answers on the trip side, measured over $RL_TANS answered bullet(s). A link here surveys clean and keeps the cheap statement posture, which is the compatibility guarantee this fixture asserts in prose and now asserts as a check"
+  else
+    FAIL "RL4: the trip side of the resolving pair answers $RL_TP person-class and $RL_TD DEFAULT label(s) — the clean witness now reports an adjudicable field, so either the fixture drifted or the classification moved beneath it"
+  fi
+
+  # ── RL5 — RL4's control. MUST FIRE, on the same instrument. ───────────────────
+  RL_AP="$(rl_bullets "$RL_UNLINKED" 1 | awk -F'\t' '
+      NR == FNR { cls[$1] = $2; next }
+      (cls[$1] == "PERSON") && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
+      END { print n + 0 }' "$RL_CLASSFILE" -)"
+  if [ "$RL_AP" -gt 0 ]; then
+    PASS "RL5: MUST FIRE — the SAME extractor and the SAME classification read $RL_AP answered person-class bullet(s) on the legacy fixture. RL4's zero is therefore a measurement and not an empty scan. These are files authored against the unsplit form, which is why the population exists to be found"
+  else
+    FAIL "RL5: MUST FIRE — the instrument read 0 answered person-class bullet(s) on a legacy fixture that carries them. It is reading nothing, so RL4's zero certifies nothing"
+  fi
+
+  # ── RL6 — arm (ii): the negative over the unlinked file, BOTH halves ──────────
+  RL_UREF="$(awk '/^person:[ \t]/ { n++ } END { print n + 0 }' "$RL_UNLINKED")"
+  RL_PREF="$(awk '/^person:[ \t]/ { n++ } END { print n + 0 }' "$RL_PAIR_T")"
+  RL_USTORE=0; [ -d "$ROOT/examples/data-architecture-demo/people" ] && RL_USTORE=1
+  RL_PSTORE=0; [ -d "$ROOT/examples/people-library-demo/people" ] && RL_PSTORE=1
+  if [ "$RL_PREF" -eq 0 ] || [ "$RL_PSTORE" -eq 0 ]; then
+    FAIL "RL6: MUST FIRE — the resolving pair's trip file carries $RL_PREF reference(s) and its trip root carries $RL_PSTORE store(s). With either at 0 the same two probes cannot tell a referencing trip from a non-referencing one, so the verdict on the unlinked file below would be vacuous"
+  elif [ "$RL_UREF" -eq 0 ] && [ "$RL_USTORE" -eq 0 ]; then
+    PASS "RL6: the unlinked fixture carries no \`person:\` key AND its trip root carries no store, while the same two probes read 1 and 1 on the resolving pair. Availability is ABSENT-BY-DESIGN there, so a correct survey performs ZERO store reads on it — the regression this closes is a survey that fires on a file carrying no reference, which would read the store on every legacy trip in the tree. It is also why that fixture cannot be paired with the people-library record: no store-root step reaches it"
+  else
+    FAIL "RL6: the unlinked fixture carries $RL_UREF \`person:\` key(s) and $RL_USTORE trip-root store(s) — at either non-zero it has stopped being the no-reference witness, and the identity case has no witness left in this tree"
+  fi
+
+  # ── RL7 — the two normative statements with no other witness ─────────────────
+  # AF14 is the precedent: a prose rule whose REMOVAL reaches the same outcome by a
+  # default is asserted where nothing else would notice it going. Both statements below
+  # were added by the reconcile slice and neither has a behavioural witness in a tree of
+  # prompt files. The boundary is stated rather than implied: this arm grades that the
+  # section still SAYS them, never that an implementation obeys them.
+  RL_SEC="$WORK/rl-link-section.md"
+  awk '/^## link / { inl = 1; next } inl && /^## / { exit } inl { print }' "$RL_CMD" > "$RL_SEC"
+  RL_SECN="$(grep -c '[^[:space:]]' "$RL_SEC" || true)"
+  RL_TWOWAY=0
+  grep -qF 'does not perform the trip-side removal either' "$RL_SEC" && RL_TWOWAY=1
+  RL_READBACK=0
+  grep -qF 're-reads the frontmatter' "$RL_SEC" && RL_READBACK=1
+  if [ "$RL_SECN" -eq 0 ]; then
+    FAIL "RL7: the \`## link\` section extracted to 0 lines — the region probe found nothing, so both verdicts below would be a failed parse reported as a missing rule"
+  elif [ "$RL_TWOWAY" -eq 1 ] && [ "$RL_READBACK" -eq 1 ]; then
+    PASS "RL7: over $RL_SECN line(s) of the \`## link\` section, the reconciliation's prohibition is still stated in BOTH directions and the post-write read-back is still required. The first matters because the standing rule that bounds a bulk store write does not reach a trip-side deletion at all, and a trip-side deletion in a git-ignored tree is recoverable from nothing; the second because the gate moved consent in front of the one step that can still fail"
+  else
+    FAIL "RL7: the \`## link\` section no longer states the two-directional prohibition (found=$RL_TWOWAY) or the post-write read-back (found=$RL_READBACK). Removing either reaches a worse outcome silently — an unbounded trip-ward apply, or a failed write indistinguishable from a successful one"
+  fi
+fi
+
+if [ "$RL_RAN" -ne 1 ]; then
+  FAIL "RL-integrity: group RL did not execute — a run without it is a failure, never a pass"
 fi
 
 echo
