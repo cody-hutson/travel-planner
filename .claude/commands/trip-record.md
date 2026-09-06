@@ -1546,8 +1546,10 @@ because the record side was never read.
 is selected by the field's own class rather than by a list kept in this section: a **slot**-scoped
 person-class field this trip answers, whose claim the record's answer displaces; and a `DEFAULT`
 override that differs from the record's value. **Everything else the survey reports is reported and
-not adjudicated**, and the omission is deliberate rather than an oversight — a **block**-scoped
-person-class field composes to a union and a union cannot contradict itself, an override equal to
+not adjudicated** — reported **with its values**, under render rule 2 below, whose population is the
+whole survey and not this subset — and the omission is deliberate rather than an oversight: a
+**block**-scoped person-class field composes to a union and a union cannot contradict itself, an
+override equal to
 the record's value costs one report line and nothing else, and a field this trip never answered is
 inheriting rather than losing. Manufacturing a decision that has no losing branch is not thoroughness.
 
@@ -1556,10 +1558,10 @@ reference, the survey names **how many** fields stop drawing on the outgoing rec
 never the values**. This is `## unlink <name>`'s rule arriving at the other end of the same edge:
 that verb must name how many fields stop being composed when a reference is removed, and a repoint
 removes one in the same breath as it adds another. **The count line stays a magnitude, and render
-rule 2 below does not widen it** — the two outputs have different subjects. The count is an
-aggregate over every field losing the outgoing record, most of which this trip never answered and
-so cannot adjudicate; the pair is rendered per **adjudicable** row. Where one field is in both
-populations it takes its pair as a survey row, and the count line still carries no value.
+rule 2 below does not widen it** — the two outputs differ in **granularity**, not in population. The
+count is one aggregate over every field losing the outgoing record, stated as a number and nothing
+else; the pair is rendered per **survey** row. Where one field is in both outputs it takes its pair
+as a survey row, and **the count line itself still carries no value.**
 
 **Three render rules, and they are what keep the survey a survey.** `reference/data-model.md`
 § *One-way* forbids not only a write to the store but a **solicitation** of one, and names the
@@ -1572,26 +1574,61 @@ what keep it there.
 1. **No row carries a verb, an offer, or a suggested action.** The resolution verb is named once for
    the whole set, in this verb's own confirmation, and the paragraph below that names it is
    unchanged by the survey rather than repeated inside it.
-2. **The survey renders the pair of values in disagreement, for each adjudicable field, and that
+2. **The survey renders the pair of values in disagreement, for every row of the survey, and that
    pair reaches the operator and nothing else.** What the gate asks is whether to link, and a field
    label alone does not answer it: *Passport* says **where** the two sources disagree without saying
    **what** the disagreement is, and the two branches of this decision differ precisely in which
-   value the trip ends up planning on. **The pair is the pre-link composed value and the post-link
-   composed value**, taken from the two compositions this survey already runs rather than from the
-   file and the record directly. On a file carrying no reference those are exactly the file's value
-   and the record's value; on a repoint they are the outgoing record's and the incoming record's,
-   which is what keeps the pair total over the same branch the adjudicable set is derived to cover.
-   A side that is unstated renders as the model's own `UNKNOWN` rather than as a blank or a second
-   minted sentinel.
+   value the trip ends up planning on. **Every row the survey reports carries its pair — not the
+   adjudicable subset alone.** The gate keys on the survey, so the survey is the population the
+   operator is being stopped for, and those are the rows they have to see; scoping the values to the
+   adjudicable subset leaves the ordinary case — a record answering fields this trip left unstated —
+   stopping the operator with a list of field names and nothing beside them. Where a side genuinely
+   holds no value it **says so and is still rendered**, because an omitted row is a field counted in
+   the survey and absent from the screen.
+
+   **Each side of the pair is read from the file that holds it, never from the composition.** The
+   record side is the incoming record's own slot. The trip side is this trip's own answer where it
+   has one, and, where this trip is silent and a resolving reference is being replaced, the outgoing
+   record's slot — because that is where the value this trip draws on today actually lives, which is
+   what keeps the pair total over the repoint branch. **Composition still decides membership**, and
+   that is the part which must not change: which fields the survey holds, and which of those are
+   adjudicable, remains the pre/post delta over both functions, which is what makes the set total
+   over the repoint. What composition is **not** is a source for the displayed values. On the one
+   sanctioned `DEFAULT` override `K5` composes the trip's own value on **both** sides, so a pair
+   taken from the two compositions renders the operator's own answer twice and never shows the
+   record's — and the record's value is the thing `DIVERGENT` was computed from and the only thing
+   that makes the row a disagreement at all. The record's pre-edit value is not something
+   composition holds; the record is.
+
+   **A side that holds no value renders as the model's own `UNKNOWN`** rather than as a blank or a
+   second minted sentinel — **and a record value that has lapsed renders as neither.** The record
+   side is three-valued: `UNSTATED`, `ANSWERED`, `EXPIRED`. Collapsing the third into the first is
+   the ambiguity `reference/data-model.md` § *The report* already mints a field-scoped mark to
+   prevent one layer up: a bare `UNKNOWN` would mean either *the record is silent on this field* or
+   *the record's answer has lapsed*, and the disposition table gives those opposite remedies. So a
+   lapsed value renders **carrying the record's own `[VALID-THROUGH <YYYY-MM>]` mark**, which is the
+   token that section reuses rather than minting a second one for this condition. **The mark is a
+   discriminator and not an offer** — no row names a remedy, and rule 1 is unchanged. **It must
+   never be declared in `reference/data-architecture.md` § 5.6's `publish-contract-values` fence**,
+   which is the trap `[CONTESTED]` and `[ERASED]` both carry: an `entry` selector is matched as a
+   literal substring of every raw value line, so declaring it would make every value in that
+   traveller's entry non-publishable and abort that trip's publishes permanently. It is invisible to
+   the guard as written, because `clean()` strips bracketed spans before matching.
 
    **The pair is never written into the persisted report.** `reference/data-model.md` § *The report
    — where it lands, and what it never says* forbids restating conflicting values, and its subject
    is **the report**, which that same section lands in the `## Update signals [DERIVED]` block of
-   `outputs/traveler-model.md`. Each of its three grounds is a property of that persisted artifact:
-   the publish guard matches a label prefix against files, an erasure reaches a copy by address, and
-   *link, don't copy* is about a value acquiring a second durable home. **A rendered confirmation
-   acquires no address, is scanned by no guard, and is a copy of nothing** — and this verb writes no
-   report at all, its whole on-disk effect being one frontmatter line. That report goes on naming
+   `outputs/traveler-model.md`. **Two of its three grounds are properties of that persisted artifact
+   and do not reach a rendered line**: the publish guard matches a label prefix **against files**,
+   and an erasure reaches a copy **by address**. **A rendered confirmation acquires no address and is
+   scanned by no guard** — and this verb writes no report at all, its whole on-disk effect being one
+   frontmatter line. **The third ground is narrower than those two, and the residual is stated
+   rather than denied.** *Link, don't copy* is about a value acquiring a second **durable** home, and
+   a render acquires none — but § `erase` row 24 types **the session transcript** as a location a
+   copy of a person's data reaches, `REPORT` rather than `REACH`: named and not swept. A rendered
+   pair is the act that puts one there. It is disclosure into this trip's own session, it survives
+   the operator declining, and it is carried as a stated residual of rendering the values at all —
+   not a cost this paragraph may claim is zero. That report goes on naming
    fields without their values, and nothing here changes what the enrichment agent writes into it.
    Standing rule 9(d) requires the echoed outgoing → incoming pair at exactly this surface, and
    `## promote <name> <field-label>` echoes the same pair for one field at the moment of that one

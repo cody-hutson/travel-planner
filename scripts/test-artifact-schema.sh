@@ -4134,8 +4134,12 @@ fi
 # ── THE TWO ARMS, AND WHY EACH NEEDS THE OTHER ──────────────────────────────────
 # Arm (i) is TOTALITY over the repo's only tracked resolving pair. Every label either
 # side carries is classified by the live table (RL1); no label is claimed by both sides
-# (RL3); and the adjudicable set is therefore EMPTY (RL4) — which is the compatibility
-# claim the fixture already makes in prose, converted into an assertion.
+# (RL3); and the adjudicable set is therefore EMPTY (RL4) — meaning no field on this pair
+# is resolvable from the gate, which is a property of the TRIP side alone. It is NOT the
+# fixture's prose compatibility claim: that claim is about the SURVEY, the survey is a
+# two-sided delta, and on this same pair the record answers labels the trip leaves
+# unstated — so the survey is non-empty here and the gate fires. Nothing in this group
+# measures the survey, and RL4's message says so rather than borrowing the wider claim.
 #
 # Arm (ii) is the NEGATIVE over the unlinked file (RL6): no reference, no reachable
 # store, so zero store reads. This is the real regression risk of moving a store read in
@@ -4321,7 +4325,7 @@ EOF
   if [ "$RL_TANS" -eq 0 ]; then
     FAIL "RL4: the trip side of the resolving pair carries 0 answered bullets, so its empty adjudicable set is a property of an empty file rather than of a clean composition"
   elif [ "$RL_TP" -eq 0 ] && [ "$RL_TD" -eq 0 ]; then
-    PASS "RL4: the adjudicable set over the resolving pair is EMPTY — 0 person-class and 0 DEFAULT answers on the trip side, measured over $RL_TANS answered bullet(s). A link here surveys clean and keeps the cheap statement posture, which is the compatibility guarantee this fixture asserts in prose and now asserts as a check"
+    PASS "RL4: the adjudicable set over the resolving pair is EMPTY — 0 person-class and 0 DEFAULT answers on the trip side, measured over $RL_TANS answered bullet(s). What that establishes is bounded by what this arm reads: BOTH adjudicable limbs are trip-side answers, so a trip side answering no durable label has an empty adjudicable set and nothing here is resolvable from the gate. It is NOT a statement about the survey and NOT one about the confirmation posture — the survey is a two-sided delta and this arm reads one side, and on this same fixture the record answers labels the trip leaves unstated, so the survey is non-empty and the gate does fire"
   else
     FAIL "RL4: the trip side of the resolving pair answers $RL_TP person-class and $RL_TD DEFAULT label(s) — the clean witness now reports an adjudicable field, so either the fixture drifted or the classification moved beneath it"
   fi
@@ -4361,11 +4365,26 @@ EOF
   # sentences below sit on one line today by accident of reflow, and a later editor
   # rewrapping the paragraph would turn this arm red without changing what the section
   # says. That is the failure shape that gets a test edited instead of trusted.
+  #
+  # BLOCKQUOTE MARKERS ARE STRIPPED BEFORE THE COLLAPSE, and that is the same rule taken
+  # one step further rather than a separate concern. Squeezing whitespace while leaving
+  # `>` standing normalises only half of the wrap: RL7's two-directional limb sits INSIDE
+  # a blockquote, so a re-wrap of that paragraph lands a marker mid-sentence and the
+  # collapsed buffer reads `... trip-side > removal either`. The arm then reddens on a
+  # pure formatting change with zero content difference — a false RED, which is the
+  # failure shape that gets a guard disabled by the next person who trips it rather than
+  # investigated. Markers are removed with the one space that may follow, repeatedly, so
+  # a nested quote normalises too; the newline still becomes a space, so no two lines are
+  # ever glued into a phrase neither of them carried. RL8 reads the SAME buffer and
+  # inherits this, which is why the strip lives here and is not duplicated below.
   RL_SEC="$WORK/rl-link-section.md"
   RL_SEC1="$WORK/rl-link-section.oneline"
   awk '/^## link / { inl = 1; next } inl && /^## / { exit } inl { print }' "$RL_CMD" > "$RL_SEC"
   RL_SECN="$(grep -c '[^[:space:]]' "$RL_SEC" || true)"
-  tr '\n' ' ' < "$RL_SEC" | tr -s '[:space:]' ' ' > "$RL_SEC1"
+  awk '{ ln = $0
+         sub(/^[[:space:]]+/, "", ln)
+         while (sub(/^>[[:space:]]?/, "", ln)) { }
+         print ln }' "$RL_SEC" | tr '\n' ' ' | tr -s '[:space:]' ' ' > "$RL_SEC1"
   RL_TWOWAY=0
   grep -qF 'does not perform the trip-side removal either' "$RL_SEC1" && RL_TWOWAY=1
   RL_READBACK=0
@@ -4378,41 +4397,83 @@ EOF
     FAIL "RL7: the \`## link\` section no longer states the two-directional prohibition (found=$RL_TWOWAY) or the post-write read-back (found=$RL_READBACK). Removing either reaches a worse outcome silently — an unbounded trip-ward apply, or a failed write indistinguishable from a successful one"
   fi
 
-  # ── RL8 — the value render, and the surface it is bounded to ─────────────────
+  # ── RL8 — the value render: its source, its population, and its bound ────────
   # AC1 requires the operator to see WHAT the file and the record disagree about,
   # not merely THAT they disagree, so the survey renders the pair. The rule that
   # forbids restating conflicting values binds THE REPORT — which lands in the
-  # `## Update signals [DERIVED]` block of a file — and each of its three grounds
-  # is a property of that persisted artifact: the publish guard matches against
-  # files, an erasure reaches a copy by address, and link-don't-copy is about a
-  # second durable home. A rendered confirmation has none of those. The render and
-  # the bound are therefore ONE rule and are graded as one: a build that rendered
-  # the values without stating the bound would be the leak the report rule exists
-  # to stop, and a build that stated the bound while withholding the values would
-  # not satisfy AC1. Same boundary as RL7 — this grades what the section SAYS, in
-  # a tree of prompt files where no suite can run a link and watch it render.
+  # `## Update signals [DERIVED]` block of a file — and two of its three grounds
+  # are properties of that persisted artifact: the publish guard matches against
+  # files, and an erasure reaches a copy by address. A rendered confirmation has
+  # neither. The render and the bound are therefore ONE rule and are graded as
+  # one: a build that rendered the values without stating the bound would be the
+  # leak the report rule exists to stop, and a build that stated the bound while
+  # withholding the values would not satisfy AC1. Same boundary as RL7 — this
+  # grades what the section SAYS, in a tree of prompt files where no suite can run
+  # a link and watch it render.
   #
-  # The fourth limb is a NEGATIVE and is what makes this arm bidirectional. The
-  # superseded sentence — the survey does not restate the record's values — must
-  # be GONE, not merely outvoted by a newer paragraph. An editor who appends the
-  # new rule and leaves the old one standing ships a section that states both, and
-  # a presence-only probe would grade that self-contradiction green.
+  # SIX LIMBS, and each is a rule with no other witness in this tree.
+  #
+  #   renders          — the pair is rendered at all.
+  #   every-row        — over the WHOLE survey, not the adjudicable subset, and a
+  #                      side holding nothing SAYS so instead of dropping the row.
+  #                      Scoped to the adjudicable subset, the canonical use of
+  #                      this feature stops the operator on a survey that is
+  #                      non-empty while the adjudicable set is empty, names the
+  #                      fields and shows nothing — measured on this repo's only
+  #                      tracked resolving pair, where those two counts are 14
+  #                      and 0. That is the exact experience the render exists to
+  #                      remove, reached by scoping alone.
+  #   direct-read      — each side is read from the FILE that holds it. Derived
+  #                      from the two compositions instead, the sanctioned
+  #                      `DEFAULT` override renders the operator's own value on
+  #                      BOTH sides — `K5` composes `p` either way — so the
+  #                      record's value, which is the only thing that makes the
+  #                      row a disagreement, never reaches the surface. The
+  #                      membership half is deliberately NOT loosened by this
+  #                      limb: composition still decides which fields the survey
+  #                      holds, which is what keeps it total over the repoint.
+  #   two-unknowns     — a bare `UNKNOWN` collapses *the record is silent* and
+  #                      *the record's answer has lapsed*, whose remedies are
+  #                      opposite. The data model mints a field-scoped mark to
+  #                      prevent exactly this one layer up; the render carries the
+  #                      record's own `[VALID-THROUGH]` rather than reproducing
+  #                      the ambiguity unmarked.
+  #   report-bound     — the pair never reaches the persisted report, and the two
+  #                      rules are named as governing different surfaces.
+  #
+  # TWO OF THE LIMBS ARE NEGATIVES, and they are what make this arm bidirectional.
+  # A superseded sentence must be GONE, not merely outvoted by a newer paragraph:
+  # an editor who appends the new rule and leaves the old one standing ships a
+  # section that states both, and a presence-only probe grades that
+  # self-contradiction green. The first negative is the original no-restatement
+  # sentence. The second is the overreaching justification `is a copy of nothing`
+  # — false as written, because the erasure reach table names the session
+  # transcript as a location a copy of a person's data reaches and a rendered pair
+  # is the act that puts one there. The narrowing is asserted by that clause's
+  # ABSENCE rather than by the presence of its replacement, because a residual can
+  # be worded many ways and an overreach has exactly one shape worth forbidding.
   RL_VALPAIR=0
   grep -qF 'renders the pair of values in disagreement' "$RL_SEC1" && RL_VALPAIR=1
-  RL_ADJONLY=0
-  grep -qF 'for each adjudicable field' "$RL_SEC1" && RL_ADJONLY=1
+  RL_EVERYROW=0
+  if grep -qF 'for every row of the survey' "$RL_SEC1" && grep -qF 'says so and is still rendered' "$RL_SEC1"; then RL_EVERYROW=1; fi
+  RL_DIRECT=0
+  grep -qF 'read from the file that holds it, never from the composition' "$RL_SEC1" && RL_DIRECT=1
+  RL_TWOUNK=0
+  if grep -qF 'the record is silent on this field' "$RL_SEC1" && grep -qF 'VALID-THROUGH' "$RL_SEC1"; then RL_TWOUNK=1; fi
   RL_NOPERSIST=0
   grep -qF 'never written into the persisted report' "$RL_SEC1" && RL_NOPERSIST=1
   RL_SURFACES=0
   grep -qF 'govern different surfaces' "$RL_SEC1" && RL_SURFACES=1
   RL_OLDRULE=0
   grep -qF 'does not restate the record' "$RL_SEC1" && RL_OLDRULE=1
+  RL_OVERREACH=0
+  grep -qF 'is a copy of nothing' "$RL_SEC1" && RL_OVERREACH=1
   if [ "$RL_SECN" -eq 0 ]; then
     FAIL "RL8: the \`## link\` section extracted to 0 lines — every verdict below would be a failed parse reported as a missing rule"
-  elif [ "$RL_VALPAIR" -eq 1 ] && [ "$RL_ADJONLY" -eq 1 ] && [ "$RL_NOPERSIST" -eq 1 ] && [ "$RL_SURFACES" -eq 1 ] && [ "$RL_OLDRULE" -eq 0 ]; then
-    PASS "RL8: over $RL_SECN line(s) of the \`## link\` section, the survey renders the disagreeing pair, scopes it to the adjudicable set, bounds it to the command surface by stating the pair is never written into the persisted report, and names the two rules as governing different surfaces — and the superseded no-restatement sentence is GONE rather than left standing beside its replacement. The bound is graded with the render because rendering without it is the leak the report rule exists to stop"
+  elif [ "$RL_VALPAIR" -eq 1 ] && [ "$RL_EVERYROW" -eq 1 ] && [ "$RL_DIRECT" -eq 1 ] && [ "$RL_TWOUNK" -eq 1 ] && [ "$RL_NOPERSIST" -eq 1 ] && [ "$RL_SURFACES" -eq 1 ] && [ "$RL_OLDRULE" -eq 0 ] && [ "$RL_OVERREACH" -eq 0 ]; then
+    PASS "RL8: over $RL_SECN line(s) of the \`## link\` section, the survey renders the disagreeing pair; renders it for EVERY survey row rather than the adjudicable subset, saying so where a side holds nothing; reads each side from the file that holds it rather than from the two compositions, which is what keeps the sanctioned DEFAULT override from rendering the operator's own value twice; distinguishes a silent record from a lapsed one by carrying the record's own VALID-THROUGH mark; and bounds the whole of it to the command surface, stating the pair is never written into the persisted report and naming the two rules as governing different surfaces. Both superseded sentences are GONE rather than left standing beside their replacements — the original no-restatement rule, and the justification clause that claimed a rendered pair is a copy of nothing"
   else
-    FAIL "RL8: the \`## link\` section renders=$RL_VALPAIR adjudicable-scoped=$RL_ADJONLY report-bound=$RL_NOPERSIST surfaces-named=$RL_SURFACES superseded-sentence-still-present=$RL_OLDRULE. A missing render leaves the operator adjudicating on field labels alone; a missing bound is a value reaching a persisted artifact by a route the report rule never sanctioned; a surviving superseded sentence leaves the section stating both rules at once"
+    FAIL "RL8: the \`## link\` section renders=$RL_VALPAIR every-survey-row=$RL_EVERYROW direct-read=$RL_DIRECT two-unknowns-distinguished=$RL_TWOUNK report-bound=$RL_NOPERSIST surfaces-named=$RL_SURFACES superseded-no-restatement-still-present=$RL_OLDRULE overreaching-justification-still-present=$RL_OVERREACH. A missing render leaves the operator adjudicating on field labels alone; a render scoped to the adjudicable subset stops them on a survey it shows no values for; a pair derived from the compositions renders their own value twice on the DEFAULT limb and never the record's; an undistinguished UNKNOWN gives two conditions with opposite remedies one appearance; a missing bound is a value reaching a persisted artifact by a route the report rule never sanctioned; and a surviving superseded sentence leaves the section stating both rules at once"
   fi
 fi
 
