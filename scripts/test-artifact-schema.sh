@@ -4401,17 +4401,21 @@ EOF
   # AC1 requires the operator to see WHAT the file and the record disagree about,
   # not merely THAT they disagree, so the survey renders the pair. The rule that
   # forbids restating conflicting values binds THE REPORT — which lands in the
-  # `## Update signals [DERIVED]` block of a file — and two of its three grounds
-  # are properties of that persisted artifact: the publish guard matches against
-  # files, and an erasure reaches a copy by address. A rendered confirmation has
-  # neither. The render and the bound are therefore ONE rule and are graded as
+  # `## Update signals [DERIVED]` block of a file — and TWO of its three grounds
+  # are disposed of on a rendered line: (1) publishability matches a label prefix
+  # against FILES, and (3) link-don't-copy is about a second DURABLE home. A
+  # rendered confirmation is in no file and acquires no durable home. The THIRD,
+  # (2) erasure reach, is NOT disposed of, and the residual is filed under it:
+  # that ground names the widening as reaching BY CONTENT RATHER THAN BY ADDRESS,
+  # so a render's lack of an address is the harm the ground names and never a
+  # defence against it. The render and the bound are therefore ONE rule and are graded as
   # one: a build that rendered the values without stating the bound would be the
   # leak the report rule exists to stop, and a build that stated the bound while
   # withholding the values would not satisfy AC1. Same boundary as RL7 — this
   # grades what the section SAYS, in a tree of prompt files where no suite can run
   # a link and watch it render.
   #
-  # SIX LIMBS, and each is a rule with no other witness in this tree.
+  # EIGHT LIMBS, and each is a rule with no other witness in this tree.
   #
   #   renders          — the pair is rendered at all.
   #   every-row        — over the WHOLE survey, not the adjudicable subset, and a
@@ -4432,6 +4436,21 @@ EOF
   #                      membership half is deliberately NOT loosened by this
   #                      limb: composition still decides which fields the survey
   #                      holds, which is what keeps it total over the repoint.
+  #   block-scope      — a BLOCK-scoped field renders every block that side holds,
+  #                      one line per block, never the union. Sourcing the pair
+  #                      from every survey row admitted block-scoped rows into the
+  #                      render population for the first time: the adjudicable set
+  #                      can never hold one, because its person-class limb is
+  #                      slot-scoped and the `DEFAULT` x `block` population is
+  #                      empty, so this rule's population was slot-only BY
+  #                      CONSTRUCTION until that change. The pair spec was written
+  #                      slot-shaped and said nothing about a field with N blocks,
+  #                      leaving one line, N lines, the union and the record's
+  #                      blocks verbatim all equally readable — the same
+  #                      underdetermination the `direct-read` limb exists to close,
+  #                      re-arriving at the rows `every-row` newly created. The
+  #                      union is what composition RETURNS, which `direct-read` has
+  #                      already refused as a source.
   #   two-unknowns     — a bare `UNKNOWN` collapses *the record is silent* and
   #                      *the record's answer has lapsed*, whose remedies are
   #                      opposite. The data model mints a field-scoped mark to
@@ -4440,8 +4459,14 @@ EOF
   #                      the ambiguity unmarked.
   #   report-bound     — the pair never reaches the persisted report, and the two
   #                      rules are named as governing different surfaces.
+  #   ground-attrib    — the surviving residual is filed under ground (2) ERASURE
+  #                      REACH, which is the ground `erase` row 24 belongs to:
+  #                      rows 1-28 of that table are the locations a copy of the
+  #                      person's data can reach. Filed under (3) instead, the
+  #                      next reader reconciling this paragraph against the data
+  #                      model meets the contradiction rather than the rule.
   #
-  # TWO OF THE LIMBS ARE NEGATIVES, and they are what make this arm bidirectional.
+  # THREE OF THE LIMBS ARE NEGATIVES, and they are what make this arm bidirectional.
   # A superseded sentence must be GONE, not merely outvoted by a newer paragraph:
   # an editor who appends the new rule and leaves the old one standing ships a
   # section that states both, and a presence-only probe grades that
@@ -4452,28 +4477,40 @@ EOF
   # is the act that puts one there. The narrowing is asserted by that clause's
   # ABSENCE rather than by the presence of its replacement, because a residual can
   # be worded many ways and an overreach has exactly one shape worth forbidding.
+  # The third negative is the INVERTED DISPOSAL of ground (2). A paragraph that
+  # answers erasure reach with *an erasure reaches a copy by address* defends
+  # itself with the very property that ground calls inadequate — it names the
+  # widening as reaching BY CONTENT RATHER THAN BY ADDRESS, so having no address
+  # is the harm and not an exemption from it. Asserted by absence like the other
+  # two: the correct attribution has many wordings, the inverted one has a shape.
   RL_VALPAIR=0
   grep -qF 'renders the pair of values in disagreement' "$RL_SEC1" && RL_VALPAIR=1
   RL_EVERYROW=0
   if grep -qF 'for every row of the survey' "$RL_SEC1" && grep -qF 'says so and is still rendered' "$RL_SEC1"; then RL_EVERYROW=1; fi
   RL_DIRECT=0
   grep -qF 'read from the file that holds it, never from the composition' "$RL_SEC1" && RL_DIRECT=1
+  RL_BLOCKSCOPE=0
+  grep -qF 'is every block that file holds, rendered one line per block, and never the union' "$RL_SEC1" && RL_BLOCKSCOPE=1
   RL_TWOUNK=0
   if grep -qF 'the record is silent on this field' "$RL_SEC1" && grep -qF 'VALID-THROUGH' "$RL_SEC1"; then RL_TWOUNK=1; fi
   RL_NOPERSIST=0
   grep -qF 'never written into the persisted report' "$RL_SEC1" && RL_NOPERSIST=1
   RL_SURFACES=0
   grep -qF 'govern different surfaces' "$RL_SEC1" && RL_SURFACES=1
+  RL_GROUND=0
+  grep -qF 'The ground that survives is (2) Erasure reach' "$RL_SEC1" && RL_GROUND=1
   RL_OLDRULE=0
   grep -qF 'does not restate the record' "$RL_SEC1" && RL_OLDRULE=1
   RL_OVERREACH=0
   grep -qF 'is a copy of nothing' "$RL_SEC1" && RL_OVERREACH=1
+  RL_ADDRDISP=0
+  grep -qF 'an erasure reaches a copy' "$RL_SEC1" && RL_ADDRDISP=1
   if [ "$RL_SECN" -eq 0 ]; then
     FAIL "RL8: the \`## link\` section extracted to 0 lines — every verdict below would be a failed parse reported as a missing rule"
-  elif [ "$RL_VALPAIR" -eq 1 ] && [ "$RL_EVERYROW" -eq 1 ] && [ "$RL_DIRECT" -eq 1 ] && [ "$RL_TWOUNK" -eq 1 ] && [ "$RL_NOPERSIST" -eq 1 ] && [ "$RL_SURFACES" -eq 1 ] && [ "$RL_OLDRULE" -eq 0 ] && [ "$RL_OVERREACH" -eq 0 ]; then
-    PASS "RL8: over $RL_SECN line(s) of the \`## link\` section, the survey renders the disagreeing pair; renders it for EVERY survey row rather than the adjudicable subset, saying so where a side holds nothing; reads each side from the file that holds it rather than from the two compositions, which is what keeps the sanctioned DEFAULT override from rendering the operator's own value twice; distinguishes a silent record from a lapsed one by carrying the record's own VALID-THROUGH mark; and bounds the whole of it to the command surface, stating the pair is never written into the persisted report and naming the two rules as governing different surfaces. Both superseded sentences are GONE rather than left standing beside their replacements — the original no-restatement rule, and the justification clause that claimed a rendered pair is a copy of nothing"
+  elif [ "$RL_VALPAIR" -eq 1 ] && [ "$RL_EVERYROW" -eq 1 ] && [ "$RL_DIRECT" -eq 1 ] && [ "$RL_BLOCKSCOPE" -eq 1 ] && [ "$RL_TWOUNK" -eq 1 ] && [ "$RL_NOPERSIST" -eq 1 ] && [ "$RL_SURFACES" -eq 1 ] && [ "$RL_GROUND" -eq 1 ] && [ "$RL_OLDRULE" -eq 0 ] && [ "$RL_OVERREACH" -eq 0 ] && [ "$RL_ADDRDISP" -eq 0 ]; then
+    PASS "RL8: over $RL_SECN line(s) of the \`## link\` section, the survey renders the disagreeing pair; renders it for EVERY survey row rather than the adjudicable subset, saying so where a side holds nothing; reads each side from the file that holds it rather than from the two compositions, which is what keeps the sanctioned DEFAULT override from rendering the operator's own value twice; says how a BLOCK-scoped field renders — every block that side holds, one line per block, never the union — which is the one shape the slot-shaped pair spec left undetermined once every-row admitted those rows; distinguishes a silent record from a lapsed one by carrying the record's own VALID-THROUGH mark; bounds the whole of it to the command surface, stating the pair is never written into the persisted report and naming the two rules as governing different surfaces; and files the surviving residual under ground (2) ERASURE REACH, the ground erase row 24 belongs to. All three superseded sentences are GONE rather than left standing beside their replacements — the original no-restatement rule, the justification clause that claimed a rendered pair is a copy of nothing, and the inverted disposal that answered erasure reach with by-address reach"
   else
-    FAIL "RL8: the \`## link\` section renders=$RL_VALPAIR every-survey-row=$RL_EVERYROW direct-read=$RL_DIRECT two-unknowns-distinguished=$RL_TWOUNK report-bound=$RL_NOPERSIST surfaces-named=$RL_SURFACES superseded-no-restatement-still-present=$RL_OLDRULE overreaching-justification-still-present=$RL_OVERREACH. A missing render leaves the operator adjudicating on field labels alone; a render scoped to the adjudicable subset stops them on a survey it shows no values for; a pair derived from the compositions renders their own value twice on the DEFAULT limb and never the record's; an undistinguished UNKNOWN gives two conditions with opposite remedies one appearance; a missing bound is a value reaching a persisted artifact by a route the report rule never sanctioned; and a surviving superseded sentence leaves the section stating both rules at once"
+    FAIL "RL8: the \`## link\` section renders=$RL_VALPAIR every-survey-row=$RL_EVERYROW direct-read=$RL_DIRECT block-scoped-render=$RL_BLOCKSCOPE two-unknowns-distinguished=$RL_TWOUNK report-bound=$RL_NOPERSIST surfaces-named=$RL_SURFACES residual-filed-under-erasure-reach=$RL_GROUND superseded-no-restatement-still-present=$RL_OLDRULE overreaching-justification-still-present=$RL_OVERREACH inverted-by-address-disposal-still-present=$RL_ADDRDISP. A missing render leaves the operator adjudicating on field labels alone; a render scoped to the adjudicable subset stops them on a survey it shows no values for; a pair derived from the compositions renders their own value twice on the DEFAULT limb and never the record's; an unstated block rule leaves a Needs row rendering one line, N lines or the union depending on who reads it; an undistinguished UNKNOWN gives two conditions with opposite remedies one appearance; a missing bound is a value reaching a persisted artifact by a route the report rule never sanctioned; a residual filed under the wrong ground hands the next reader a contradiction against the data model; and a surviving superseded sentence leaves the section stating both rules at once"
   fi
 fi
 
