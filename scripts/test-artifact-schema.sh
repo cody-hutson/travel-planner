@@ -55,6 +55,9 @@
 #        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
 #        carries control arms covering every violation code it can emit, each mutating ONE
 #        surface alone and each required to turn it red, and two edits that must not.
+#        That COVERAGE is itself asserted rather than maintained: the code set is read from
+#        st_violations' own body on every run and compared, in both directions, against the
+#        arms that ran — so a code added with no arm behind it is RED rather than latent.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
@@ -2371,6 +2374,46 @@ st_n() { printf '%s\n' "$2" | awk -F'\t' -v k="$1" '$1 == k { n++ } END { print 
 # mutation below aims at a site the probe FOUND rather than at a line this file names.
 st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o) { print $c; exit } }'; }
 
+# st_codes <text> — the violation codes a text can EMIT, one per line, first-occurrence order,
+# deduplicated. A code is exactly what st_has looks one up BY: the first TAB-DELIMITED FIELD of an
+# emitted record. So the shape read here is a double-quoted format string whose content up to its
+# first tab escape is an upper-case token — the reader and the consumer agree on what a code IS,
+# rather than agreeing by coincidence.
+#
+# Pointed at `declare -f st_violations`: the PARSED function as this shell holds it, never this
+# file's source text. Two consequences, and each is the reason. The header's spelling, the
+# function's position in the file and the indentation of its shell commands are all normalised
+# away, so a reformat that would blind a source-text reader is a non-event here. And the reader
+# cannot see its own body — the character after the quote in the pattern below is a bracket, not an
+# upper-case letter — so it cannot match the shape it is looking for and report a defect it had
+# just introduced. That is group PF's hazard, avoided by SCOPE rather than by scrubbing a needle.
+#
+# The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT records in the
+# same shape, and this reader returns those three if it is pointed at that function. Scoping it to
+# st_violations is what makes it a code reader; do not reuse it unscoped.
+st_codes() {
+  awk '
+    {
+      s = $0
+      while (match(s, /"[A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
+        c = substr(s, RSTART + 1, RLENGTH - 3)
+        if (!seen[c]++) print c
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+  ' <<<"$1"
+}
+
+# st_setdiff <a> <b> — the members of A that are not in B, first-occurrence order. Membership by
+# containment in a space-delimited haystack rather than by `comm`, which requires both sides
+# lexically sorted and answers wrongly under any other sort order. Blank lines are dropped, so an
+# accumulator that opens with one is read as the empty set rather than as a member.
+st_setdiff() {
+  awk -v hay=" $(printf '%s' "$2" | tr '\n' ' ') " '
+    $0 != "" && index(hay, " " $0 " ") == 0 && !seen[$0]++ { print }
+  ' <<<"$1"
+}
+
 # st_fixture <name> — a fresh copy of the real template under the run's temp dir. Never
 # $ROOT: CTLe grades, last of all, that this suite never wrote into the tree it measures.
 st_fixture() { cp "$ST_FILE" "$ST_DIR/$1.md" && printf '%s\n' "$ST_DIR/$1.md"; }
@@ -2406,6 +2449,15 @@ st_bump() {
 # silence meaningless, which is the C1-integrity and VI2 discipline one level down.
 st_mustfire() {
   local id="$1" fx="$2" want="$3" what="$4" landed=0 v n
+  # Coverage is recorded HERE, on the CALL, so ST-COV's second input is the set of arms that
+  # ACTUALLY RAN in this member's pass rather than a reading of the call sites: an arm whose own
+  # precondition skipped it correctly leaves its code uncovered. Recorded before the verdict,
+  # because coverage asks whether an arm EXISTS for the code — whether that arm passes is this
+  # function's own answer, three lines down. The newline is a literal continuation because this
+  # file uses no $'…' quoting anywhere and ST_TEMPLATES is spelled the same way; the leading blank
+  # line that leaves in the accumulator is dropped by st_setdiff.
+  ST_ARMED="$ST_ARMED
+$want"
   cmp -s "$ST_FILE" "$fx" || landed=1
   v="$(st_violations "$(st_surfaces "$fx")")"
   n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
@@ -2431,6 +2483,15 @@ st_mustnotfire() {
   fi
 }
 
+# The code set st_violations can emit, read from the function's own body ONCE: it is a property of
+# the EVALUATOR, not of any one template, so it is derived here and compared per member below.
+# Neither the codes nor their number is spelled in this file — a seventh code arrives in ST_CODES
+# by being written into the function, and nothing here has to be told about it.
+ST_CODES="$(st_codes "$(declare -f st_violations)")"
+ST_NCODES="$(printf '%s\n' "$ST_CODES" | grep -c '[^[:space:]]')"
+ST_COV_PROBE='ZZ-ST-COVERAGE-PROBE'
+ST_COV_PHANTOM='ZZ-ST-PHANTOM-ARM'
+
 while IFS= read -r ST_REL; do
 [ -n "$ST_REL" ] || continue
 ST_FILE="$ROOT/$ST_REL"
@@ -2444,6 +2505,9 @@ echo
 echo "  ── $ST_REL"
 
 ST_OK=1
+# Per MEMBER, not per run: every arm runs once for each template, so a set carried over from the
+# first member would report the second as covered by arms that never ran in its pass.
+ST_ARMED=""
 ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0
 if [ -r "$ST_FILE" ]; then
   ST_SURF="$(st_surfaces "$ST_FILE")"
@@ -2585,6 +2649,73 @@ if [ "$ST_OK" -eq 1 ]; then
 
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
   st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
+
+  # ── ST-COV — the invariant this group had been holding BY HAND. Every code st_violations can
+  # emit has a must-fire arm, and every must-fire arm names a code it can emit. BOTH directions,
+  # because containment alone cannot tell a covered set from a reader that returned nothing: one
+  # that had gone quiet would report "0 uncovered" and be believed. The reverse difference is what
+  # makes the zero a measurement, and the emptiness gate below is what names the cause instead of
+  # blaming the arms.
+  #
+  # Graded here, LAST, because its second input is the set of arms that ran.
+  ST_UNARMED="$(st_setdiff "$ST_CODES" "$ST_ARMED")"
+  ST_PHANTOM="$(st_setdiff "$ST_ARMED" "$ST_CODES")"
+  ST_NUNARMED="$(printf '%s\n' "$ST_UNARMED" | grep -c '[^[:space:]]')"
+  ST_NPHANTOM="$(printf '%s\n' "$ST_PHANTOM" | grep -c '[^[:space:]]')"
+  ST_NARMED="$(printf '%s\n' "$ST_ARMED" | awk 'NF && !seen[$0]++' | grep -c '.')"
+  if [ "$ST_NCODES" -eq 0 ]; then
+    FAIL "ST-COV[$ST_TAG]: the code reader returned 0 codes from st_violations' own body, so the coverage verdict would be a statement over the empty set — either the function is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
+  elif [ "$ST_NUNARMED" -ne 0 ]; then
+    FAIL "ST-COV[$ST_TAG]: $ST_NUNARMED of the $ST_NCODES code(s) st_violations can emit have NO must-fire arm in this run — $(printf '%s' "$ST_UNARMED" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
+  elif [ "$ST_NPHANTOM" -ne 0 ]; then
+    FAIL "ST-COV[$ST_TAG]: $ST_NPHANTOM must-fire arm(s) name a code st_violations cannot emit — $(printf '%s' "$ST_PHANTOM" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
+  else
+    PASS "ST-COV[$ST_TAG]: all $ST_NCODES code(s) st_violations can emit [$(printf '%s' "$ST_CODES" | tr '\n' ' ')] have a must-fire arm, and all $ST_NARMED armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the function's own body on this run, so a seventh code arrives uncovered and RED rather than covered by a numeral in this file. CTL-ST-COV1 and COV2 below show this same comparison failing in each direction"
+  fi
+
+  # CTL-ST-COV1 — MUST FIRE, and this arm IS the card's proof-by-mutation. A synthetic emission is
+  # appended to a COPY OF THE FUNCTION TEXT — a string in this shell, never this file and never the
+  # tree — so there is nothing to restore and no checkout can be asked to undo it. The SAME
+  # st_codes and the SAME st_setdiff read it, so what is graded is the shipping comparison with one
+  # input changed: the CTL-ST arms' own discipline one level up, which mutates a copy of the
+  # template and keeps the evaluator.
+  #
+  # Graded as a DELTA against ST-COV's own measurement rather than against a literal 1: on a tree
+  # that already carries an uncovered code this arm must still be honest instead of inheriting that
+  # state and accusing itself.
+  if [ "$ST_NCODES" -gt 0 ]; then
+    ST_COV_FN="$(declare -f st_violations)"
+    ST_COV_MUT="$ST_COV_FN
+        printf \"${ST_COV_PROBE}\\t a synthetic emission that no arm covers\\n\""
+    ST_COV_LANDED=0; [ "$ST_COV_MUT" != "$ST_COV_FN" ] && ST_COV_LANDED=1
+    ST_COV_MU="$(st_setdiff "$(st_codes "$ST_COV_MUT")" "$ST_ARMED")"
+    ST_COV_MN="$(printf '%s\n' "$ST_COV_MU" | grep -c '[^[:space:]]')"
+    ST_COV_HIT="$(printf '%s\n' "$ST_COV_MU" | grep -c "^${ST_COV_PROBE}$")"
+    if [ "$ST_COV_LANDED" -eq 1 ] && [ "$ST_COV_MN" -eq $((ST_NUNARMED + 1)) ] && [ "$ST_COV_HIT" -eq 1 ]; then
+      PASS "CTL-ST-COV1[$ST_TAG]: MUST FIRE — one unarmed code appended to a COPY of st_violations' body takes the uncovered set from $ST_NUNARMED to $ST_COV_MN and the new member IS that code. A seventh code added to the real function with no arm behind it turns ST-COV red, which is the property this group could previously only state. The mutation is asserted to have landed before the verdict is read"
+    else
+      FAIL "CTL-ST-COV1[$ST_TAG]: MUST FIRE — an unarmed code appended to a copy of the function body was not reported (mutation-landed=$ST_COV_LANDED, uncovered=$ST_COV_MN against $((ST_NUNARMED + 1)) expected, probe-found=$ST_COV_HIT). ST-COV's zero above does not respond to a known hole and therefore proves nothing"
+    fi
+  fi
+
+  # CTL-ST-COV2 — MUST FIRE on the OTHER direction, the one that keeps ST-COV's zero from resting
+  # on a reader that has gone quiet. A code no emission carries is added to a COPY of the armed
+  # set; the same comparison must name it. Without this arm an st_codes that returned nothing would
+  # leave the uncovered set empty and ST-COV would read GREEN over a group with no coverage at all
+  # — the exact shape of confidence-without-evidence this whole assertion exists to refuse.
+  if [ "$ST_NCODES" -gt 0 ]; then
+    ST_COV_MA="$ST_ARMED
+$ST_COV_PHANTOM"
+    ST_COV_ALANDED=0; [ "$ST_COV_MA" != "$ST_ARMED" ] && ST_COV_ALANDED=1
+    ST_COV_MP="$(st_setdiff "$ST_COV_MA" "$ST_CODES")"
+    ST_COV_PN="$(printf '%s\n' "$ST_COV_MP" | grep -c '[^[:space:]]')"
+    ST_COV_PH="$(printf '%s\n' "$ST_COV_MP" | grep -c "^${ST_COV_PHANTOM}$")"
+    if [ "$ST_COV_ALANDED" -eq 1 ] && [ "$ST_COV_PN" -eq $((ST_NPHANTOM + 1)) ] && [ "$ST_COV_PH" -eq 1 ]; then
+      PASS "CTL-ST-COV2[$ST_TAG]: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $ST_NPHANTOM to $ST_COV_PN and the new member IS that code. So ST-COV's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
+    else
+      FAIL "CTL-ST-COV2[$ST_TAG]: MUST FIRE — a phantom arm was not reported (mutation-landed=$ST_COV_ALANDED, phantom=$ST_COV_PN against $((ST_NPHANTOM + 1)) expected, probe-found=$ST_COV_PH). ST-COV cannot distinguish a covered group from a reader that returned nothing"
+    fi
+  fi
 fi
 done <<EOF
 $ST_TEMPLATES
