@@ -1555,7 +1555,11 @@ inheriting rather than losing. Manufacturing a decision that has no losing branc
 reference, the survey names **how many** fields stop drawing on the outgoing record — **a count,
 never the values**. This is `## unlink <name>`'s rule arriving at the other end of the same edge:
 that verb must name how many fields stop being composed when a reference is removed, and a repoint
-removes one in the same breath as it adds another.
+removes one in the same breath as it adds another. **The count line stays a magnitude, and render
+rule 2 below does not widen it** — the two outputs have different subjects. The count is an
+aggregate over every field losing the outgoing record, most of which this trip never answered and
+so cannot adjudicate; the pair is rendered per **adjudicable** row. Where one field is in both
+populations it takes its pair as a survey row, and the count line still carries no value.
 
 **Three render rules, and they are what keep the survey a survey.** `reference/data-model.md`
 § *One-way* forbids not only a write to the store but a **solicitation** of one, and names the
@@ -1568,14 +1572,40 @@ what keep it there.
 1. **No row carries a verb, an offer, or a suggested action.** The resolution verb is named once for
    the whole set, in this verb's own confirmation, and the paragraph below that names it is
    unchanged by the survey rather than repeated inside it.
-2. **The survey names fields and dispositions; it does not restate the record's values.** What this
-   gate asks is whether to link, not which of two values to keep, so a field label and its
-   disposition are what the decision needs and the values are not. Where two values genuinely have
-   to be read against each other, `## promote <name> <field-label>` echoes the outgoing → incoming
-   pair for **that one field** at the moment of that one write — which is where standing rule 9(d)
-   requires the echo, and the only place it is bounded to a pair a reader can check. Restating
-   record values here would put a new copy of person data in a new location for a decision this gate
-   does not make.
+2. **The survey renders the pair of values in disagreement, for each adjudicable field, and that
+   pair reaches the operator and nothing else.** What the gate asks is whether to link, and a field
+   label alone does not answer it: *Passport* says **where** the two sources disagree without saying
+   **what** the disagreement is, and the two branches of this decision differ precisely in which
+   value the trip ends up planning on. **The pair is the pre-link composed value and the post-link
+   composed value**, taken from the two compositions this survey already runs rather than from the
+   file and the record directly. On a file carrying no reference those are exactly the file's value
+   and the record's value; on a repoint they are the outgoing record's and the incoming record's,
+   which is what keeps the pair total over the same branch the adjudicable set is derived to cover.
+   A side that is unstated renders as the model's own `UNKNOWN` rather than as a blank or a second
+   minted sentinel.
+
+   **The pair is never written into the persisted report.** `reference/data-model.md` § *The report
+   — where it lands, and what it never says* forbids restating conflicting values, and its subject
+   is **the report**, which that same section lands in the `## Update signals [DERIVED]` block of
+   `outputs/traveler-model.md`. Each of its three grounds is a property of that persisted artifact:
+   the publish guard matches a label prefix against files, an erasure reaches a copy by address, and
+   *link, don't copy* is about a value acquiring a second durable home. **A rendered confirmation
+   acquires no address, is scanned by no guard, and is a copy of nothing** — and this verb writes no
+   report at all, its whole on-disk effect being one frontmatter line. That report goes on naming
+   fields without their values, and nothing here changes what the enrichment agent writes into it.
+   Standing rule 9(d) requires the echoed outgoing → incoming pair at exactly this surface, and
+   `## promote <name> <field-label>` echoes the same pair for one field at the moment of that one
+   write. **The two rules govern different surfaces, and both hold as written.**
+
+   **Rendering the values does not make this a solicitation, and rule 1 is what keeps it from
+   becoming one.** The shape § *One-way* names is the value pair **carrying an offer** — the form
+   *"the record says X, this trip says Y; promote?"* — emitted per diverging field by a composition
+   pass. The offer is the load-bearing half of that prohibition; rule 1 forbids it and is unchanged,
+   rule 3 denies the repetition, and § *One-way* names the command surface as the one place a
+   promotion is legitimately initiated. **The field label is separated from its values by a dash
+   rather than a colon**, so no rendered line mints the `Passport:` shape the publish selector
+   matches — which costs nothing here, and keeps a line pasted elsewhere from arriving as a value
+   that selector was built to catch.
 3. **Nothing schedules this.** It runs once, on a token the operator typed. No pass, no synthesis
    and no enrichment emits it, and the drift § *One-way* describes needs a repeating prompt this
    verb does not have.
