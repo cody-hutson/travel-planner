@@ -8,9 +8,18 @@ Not a real trip. Placeholder people, a placeholder destination, illustrative dat
 no real bookings, and no external links.
 
 **Single-origin**, and deliberately so: `examples/two-origin-demo/` is the fixture
-where the window and origin axes diverge, and this one is the degenerate case where
+where the window and origin axes diverge, and this one is a degenerate case where
 they cannot. Companion to `examples/ideation-demo/`, which is minimal in the same
 way.
+
+**Deliberate non-collapse — do not copy this fixture's per-traveler block.** Its
+`### Per-Traveler Planning Days [DERIVED]` section meets the single-origin collapse
+precondition in `templates/trip-context.template.md` and renders the per-traveler
+table anyway, on purpose, to expose the basis values the collapse hides. Under that
+rule a conforming trip context deletes the table and keeps only the
+`- **All travelers:**` line. `examples/single-origin-demo/` is the worked instance of
+the collapse: copy that one for this block's rendering, and this one for the artifact
+shape. The same exemption is stated in place, directly beneath that table.
 
 ## The trip
 
@@ -26,7 +35,7 @@ way.
 
 | File | Class | Tier | What it exercises |
 |---|---|---|---|
-| `trip-context.md` | C1 | 2 | block-owned writer; the single-origin degenerate case |
+| `trip-context.md` | C1 | 2 | block-owned writer; the single-origin degenerate case, rendered as a **deliberate non-collapse** — `examples/single-origin-demo/` renders the collapse the rule asks for |
 | `trip-log.md` | C2 | 2 | `accumulate-append`; why `generated:` is optional on C1–C3 |
 | `travelers/alex.md` · `travelers/robin.md` | C3 | 1 | the **template's own section and field surface**, which is what `agents/00-enrichment.md` parses; needs vs desires; tier and recurrence orthogonal; `Applies to:` links rather than copies; the traveller's name in the **title line**, never in frontmatter. Two files for three roster members — Sam's absence is the operator-fallback branch |
 | `outputs/activities-list.md` | C5 | 2 | migrated shape, and the fixture's **marker-transition witness** — two dated sections, `unminted` resolving to `ven-<token>` across a pass |

@@ -63,8 +63,8 @@ re-plan would have had to preserve.
 
 > Derived block. Not manually edited — see `CLAUDE.md` § *Write ownership*.
 
-Single origin, one booking, no independent legs, so every traveler's window and
-origin basis is `ASSERTED-SAME` and each per-traveler day set equals the trip-level
+Single origin, one booking, no independent legs, so no traveler pins a window or
+an origin of their own and each per-traveler day set equals the trip-level
 one. This is the degenerate case `examples/two-origin-demo/` exists to contrast:
 there the two axes diverge, here they cannot.
 
