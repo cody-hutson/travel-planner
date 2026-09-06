@@ -3,6 +3,137 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.26.0] — 2026-09-06 — People library adoption
+
+The previous release gave a person a durable record and gave every trip a reference to it instead of
+a copy. It helped exactly one user: the one starting fresh. Everybody already using the engine had a
+folder of filled traveller profiles holding precisely the facts a record wants — a passport's
+issuing country, a standing allergy, how they like to travel — and no way across. They got the new
+intake cost with none of the saving, and the only route the documentation offered was an instruction
+to move the durable answers by hand into a store they had never opened.
+
+This release is the crossing, and it goes both ways. A traveller profile already written inside a
+trip can become a durable person record: offered one file at a time, confirmed against a preview,
+and **copied rather than moved**, so the profile it came from keeps planning exactly as it did
+before. And where a record already exists and a trip holds a separate profile for that same human,
+linking the two now surfaces **every field where they disagree, with both values, before anything is
+written** — the operator decides each one, and abandoning leaves both sides byte-identical.
+
+**Taking the offer turns a quiet file into a permanently noisy one, and that is disclosed here
+rather than discovered.** It is the unavoidable consequence of copying instead of moving: afterwards
+both sources carry the same values, and a resolving reference is the last thing the divergence rule
+needed to start firing on a file that had nothing to diverge from before. So the next enrichment
+pass reports every field the extraction moved — each standing field as a redundant override, each
+person-scoped need block as a class violation whose rendered advice is *move the value into the
+record*, advice the run has already carried out and which therefore cannot be acted on as written.
+**Nothing is unsafe, nothing is lost and nothing is deleted.** The reports are information, no
+replanning is implied, every composed value stays correct, and a file can carry them indefinitely
+and plan correctly — which is what makes this a disclosure rather than a defect. An operator who
+wants them gone removes the now-redundant trip-side lines by hand. No command here will do it for
+them, and the one that creates the record is specifically forbidden to.
+
+**The reconciliation survey puts record values on the screen, and that is a cost rather than a free
+choice.** What the gate asks is whether to link, and a field label alone does not answer it:
+*Passport* says where the two sources disagree without saying what the disagreement is, and the two
+branches of the decision differ precisely in which value the trip ends up planning on. So every row
+carries its pair — not the adjudicable subset alone, because scoping the values down leaves the
+ordinary case stopping the operator with a list of field names and nothing beside them. The residual
+is filed rather than denied: the erasure reach table already types the session transcript as a
+location it *reports* and does not sweep, and a rendered pair is exactly the echo that puts a value
+there. It survives the operator declining. The alternative — revealing values one field at a time on
+request — was refused because it reconstructs the same residue by a route that looks harmless at
+each step.
+
+**An architecture record was amended, and it is the first amendment to a ratified decision in this
+corpus.** Three sites in the people-library record assigned *redundant-override normalization* to
+enrichment — the reasoning about why an override is reported rather than dropped, the enrichment row
+of the record's own *what this does not decide* section, and a citation pointing at the data model
+as the rule's source. The rule had been resolved the other way while this milestone was still in
+build: composition **reports** a redundant override and does not normalise it, the trip-side line
+stays where it is, and removing it is a human act. The third site had quietly become a citation to a
+rule its target no longer carried. All three now read *reporting*, corrected in place rather than
+softened, and the record's status line says it was amended and when. **No decision changed.** The
+record had already recorded the enrichment mechanism as *not decided here*, so what it held about
+that mechanism was a description, and a description that has gone wrong is corrected rather than
+superseded.
+
+The measurement that shaped the extraction verb contradicted the rule the work started from. That
+rule was drafted as *every value it copies is single-valued* — read against the two fixtures the
+design nominates as its own witnesses, it refuses the extraction on **both**. Each carries
+`Category` twice and `Specific` twice, and both labels are block-scoped, where the classification's
+own rule says repetition is user data rather than a defect: a second dietary need is a second need,
+not a duplicate to resolve. The clause is now scoped to the slot-shaped fields it was actually
+reaching for, and the assertion that caught it grades the fixture property that makes the two
+readings differ, so the wider reading cannot return silently.
+
+Two parse-layer misses were reproduced rather than reasoned about, and both are the same shape: a
+plausible pattern that finds most of the population and loses the part that matters. Anchoring on a
+plain bulleted label silently drops every starred field — and the canonical person-class field is
+starred in both intake forms, so a star-blind reader understated the person-class population from
+ten fields to eight while every other check stayed green. Matching a section heading by exact
+equality misses every repeated block, because the corpus identifies a field by its section *and* its
+label and those headings carry trailing prose. Each is graded by running two readings of the same
+instrument and requiring the correct one to find strictly more, which is a control arm rather than
+an assertion about a number.
+
+### Added
+
+- **`/trip-record extract <name>`** — builds a durable record from one traveller profile's own
+  answered standing fields and points that file at it. One file per run: there is no bulk pass, no
+  `--all` and no upgrade sweep, because a durable cross-trip record about a person is not something
+  to create in a batch nobody reviewed. The preview names fields and shows no value but the display
+  name, and the record is written before the reference, so a failure leaves an unreferenced record —
+  an ordinary state — rather than a reference resolving to nothing, which the data model types a
+  defect.
+- **A pre-write survey on `/trip-record link`** — the verb composes the traveller twice, once for
+  the state the file is in and once for the state the write would create, and reports the
+  difference. It reports and does not merge: no row carries a verb, an offer or a suggested action,
+  nothing schedules it, and it writes no value into the record in either direction. Where the survey
+  is empty the link is a cheap write; where it is not, it is a gate, and the gate sits before the
+  write so declining costs nothing.
+- **Two guard groups over the new surface**, where previously a search of the suite returned no
+  assertion of any kind over the link verb or the composition it now performs.
+- **A store README that documents adoption rather than only structure** — what linking costs when
+  you leave a redundant line in place, why repointing an existing link is the branch worth reading
+  twice, and what an erasure cannot reach, each said plainly instead of left to be discovered.
+
+### Changed
+
+- **The retention posture in the trips signpost stops asking for handwork.** It had told users to
+  move a pre-store profile's durable answers into the library themselves; it now names the verb that
+  does it. Its standing instruction not to copy a profile forward into the next trip is unchanged —
+  that advice was always right, and until this release nothing implemented the alternative it
+  pointed at.
+- **The first-run path carries the three commands that connect the two halves of intake**,
+  explicitly marked as *not* first-run steps. They are described where the profiles are described
+  because that is where a reader meets them, and none of the three is required to plan a trip.
+- **The data model's rule for a standing field both sides answer.** A trip value equal to the
+  record's used to be documented as normalized away at enrichment; it is reported and left in place,
+  and the line goes only when a human takes it out.
+- **The per-traveller source is described as composed rather than as a single file** — the facet set
+  spans both intake forms since the split, and the section that enumerates facets now says so
+  instead of implying a traveller's answers all live in the trip.
+
+### Known gaps, carried rather than hidden
+
+- **Nothing runs either verb.** This engine's agents are prompt files rather than executable code,
+  so no suite here can perform an extraction, or a link, and watch what it writes. Both new groups
+  grade the state of the tracked witnesses — which is what fixes the verdict a correct
+  implementation would reach on them — plus the parse-layer properties whose failure is measured
+  rather than hypothetical. That is the same boundary the erasure fixture already stands on, and it
+  is stated so the limit is not mistaken for cover.
+- **The reconciliation is adjudicated one field at a time, and a batched apply is not a convenience
+  being withheld.** Toward the record, the standing write rule fixes the granularity at one named
+  field with one echoed pair, so widening it is an amendment to that rule rather than a feature of
+  this verb. Toward the trip, the bar is sharper still: a multi-field deletion in a human-authored,
+  git-ignored tree is recoverable from nothing, while leaving a line costs one report line per pass.
+  It is a real cost on a wide survey, and it is charged where the survey is widest.
+- **The transcript residue has no remedy, only a disclosure.** The values a survey renders are in
+  the session, the erasure reach table names that location as one it reports rather than sweeps, and
+  nothing in this release changes that. Under-showing costs a keystroke; over-showing is permanent —
+  the trade was made toward the cheap error, and what remains of it is written down here rather than
+  argued away.
+
 ## [0.25.0] — 2026-09-05 — Command verb discoverability
 
 The trip commands take verbs, and until this release you had to already know the verb in order to
