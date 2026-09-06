@@ -71,7 +71,11 @@
 #        misses reproduced on demand (the star-decorated bullet, and the exact-equality
 #        section key), the identity source over the whole tracked population, and the
 #        normative statements no behavioural witness in a tree of prompt files can
-#        reach. Carries its own MUST-FIRE arms. Nothing in it is pinned.
+#        reach — including the STATED parse rule and key those two misses are the ground
+#        for, the refusal table's evaluation order read by ROW INDEX rather than by the
+#        sentence that describes it, and the `## profile` offer, which is the one
+#        non-refusal discovery surface the command has and the one region no arm reached
+#        before. Carries its own MUST-FIRE arms. Nothing in it is pinned.
 #
 # ── WHY EN, CA, PB AND ST RUN AGAINST THE REAL TREE AND NOT INSIDE A FIXTURE ─────
 # Each is a statement about THIS COMMIT'S corpus — how many homes an enum has, whether four
@@ -4544,6 +4548,16 @@ fi
 # normative statements in the verb section that no behavioural witness can reach.
 # Groups AF and RL state the same boundary; this is that boundary, not a weaker one.
 #
+# ── WHY FOUR ARMS GRADE TEXT THAT WAS ALREADY CORRECT ────────────────────────────
+# XT9-XT12 were added after acceptance measured four criteria that were MET in the
+# delivered text and reddened NO arm when reverted. In a tree of prompt files that
+# gap is not academic: a regression compiles nothing and breaks nothing, it changes
+# what the agent does, quietly, and this suite is the only instrument that would
+# notice. Each of the four grades a DIFFERENT object from the arm nearest it — XT10
+# reads the table where XT7 reads the sentence about the table; XT11 and XT12 read
+# the stated rule where XT2 and XT4 measure its consequences on the fixtures; XT9
+# reaches a second region of the command file entirely.
+#
 # ── XT3 IS THE ARM THAT CAUGHT A REAL DEFECT, AND IT IS WHY THIS GROUP IS SHAPED SO
 # Rule 11(f) was drafted as "every value it copies is single-valued". Measured against
 # the two fixtures the design nominates as its OWN witness, that clause refuses the
@@ -4841,6 +4855,108 @@ EOF
     PASS "XT8: over $XT_RULEN line(s), rule 11's single-value condition is scoped to \`slot\` with the unscoped drafting GONE rather than left standing beside it, and the rule still admits NO deletion with no compensating-delete clause surviving. XT3 measures why the first matters on the fixtures; the second matters because a second record-deleting write falsifies rule 10's shipped sentence that an erasure is the one write that may delete a record, which the repair extension point would then oblige this slice to repair"
   else
     FAIL "XT8: rule 11 reads scoped=$XT_SCOPED unscoped-drafting-still-present=$XT_UNSCOPED no-deletion=$XT_NODEL compensating-delete-present=$XT_COMPDEL. An unscoped condition refuses extraction on both nominated fixtures; a compensating delete falsifies rule 10 and reopens a Zone A repair this slice would then owe"
+  fi
+
+  # ── XT9 — the `## profile` offer, and the screen the operator ruling put behind it
+  # THE CARD'S HEADLINE MECHANISM, AND UNTIL THIS ARM NOTHING REFERENCED IT. Every
+  # other render of this verb in this command fires on a REFUSAL branch — the bare
+  # invocation, the unrecognised token — so the `## profile` edit-route naming is the
+  # only NON-REFUSAL discovery surface the command has. No XT region probe reached it:
+  # XT7 is scoped to `## extract` and XT8 to standing rule 11, so deleting the
+  # paragraph passed every assertion in this suite and silently removed the offer half
+  # of the card's first acceptance criterion.
+  # BIDIRECTIONAL, and the second limb is the behaviour change: the screened drafting
+  # must be PRESENT and the frontmatter-only drafting GONE rather than left standing
+  # beside it. A frontmatter-only screen fires on exactly the population where the verb
+  # always refuses — the post-split trip form asks no durable-class question, so MOVES
+  # is empty by construction on every file made from it, and such a file carries no
+  # `person:` key until it is linked.
+  XT_PROF="$WORK/xt-profile-section.md"
+  XT_PROF1="$WORK/xt-profile-section.oneline"
+  awk '/^## profile / { inp = 1; next } inp && /^## / { exit } inp { print }' "$XT_CMD" > "$XT_PROF"
+  XT_PROFN="$(grep -c '[^[:space:]]' "$XT_PROF" || true)"
+  tr '\n' ' ' < "$XT_PROF" | tr -s '[:space:]' ' ' > "$XT_PROF1"
+  XT_OFFER=0
+  grep -qF 'name `/trip-record extract` here too' "$XT_PROF1" && XT_OFFER=1
+  XT_SCREEN=0
+  grep -qF 'carries no `person:` key AND its MOVES set is non-empty' "$XT_PROF1" && XT_SCREEN=1
+  XT_UNSCREENED=0
+  grep -qF 'does not count extractable fields' "$XT_PROF1" && XT_UNSCREENED=1
+  XT_SOLE=0
+  grep -qF 'the only place in this command where that verb is named as an offer' "$XT_PROF1" && XT_SOLE=1
+  if [ "$XT_PROFN" -eq 0 ]; then
+    FAIL "XT9: the \`## profile\` section extracted to 0 lines — the region probe found nothing, so every verdict below would be a failed parse reported as a missing clause"
+  elif [ "$XT_OFFER" -eq 1 ] && [ "$XT_SCREEN" -eq 1 ] && [ "$XT_UNSCREENED" -eq 0 ] && [ "$XT_SOLE" -eq 1 ]; then
+    PASS "XT9: over $XT_PROFN line(s) of the \`## profile\` section, the extraction offer is still named on the edit route, still screened on BOTH limbs — no \`person:\` key AND a non-empty MOVES set — with the frontmatter-only drafting GONE rather than surviving beside it, and it is still declared the sole offer site in this command. This is the only non-refusal discovery surface the command has: every other render of the verb fires on a refusal branch, so a silent deletion here leaves the capability reachable only by an operator who already knows to ask for it"
+  else
+    FAIL "XT9: the \`## profile\` section reads offer-named=$XT_OFFER screened-on-both-limbs=$XT_SCREEN frontmatter-only-drafting-still-present=$XT_UNSCREENED sole-offer-site-declared=$XT_SOLE. A lost offer removes the command's only non-refusal discovery surface; a frontmatter-only screen fires the offer on exactly the population where the verb always refuses, which is the modal file of every trip that has adopted the library"
+  fi
+
+  # ── XT10 — the refusal table's evaluation ORDER, by row index ────────────────
+  # XT7 grades the SENTENCE that states this ordering; this arm grades the TABLE the
+  # ordering actually lives in, and they are different objects. Moving the MOVES-empty
+  # row back below the `Name` rows leaves that sentence standing untouched and passes
+  # XT7 — which is precisely the regression that reddened no arm before this one. The
+  # comparison is on row index in file order, so no position is written down here.
+  XT_ROWS="$WORK/xt-refusal-rows.txt"
+  awk '/^### Refusals, in evaluation order/ { inr = 1; next }
+       inr && /^### / { exit }
+       inr && /^\| / { print }' "$XT_CMD" > "$XT_ROWS"
+  XT_NROWS="$(grep -c '[^[:space:]]' "$XT_ROWS" || true)"
+  XT_MOVESIDX="$(awk '/the MOVES set is empty/ { print NR; exit }' "$XT_ROWS")"
+  XT_NAMEIDX="$(awk '/`Name`/ { print NR; exit }' "$XT_ROWS")"
+  XT_NAMEROWS="$(grep -c '`Name`' "$XT_ROWS" || true)"
+  if [ "$XT_NROWS" -eq 0 ] || [ -z "$XT_MOVESIDX" ] || [ -z "$XT_NAMEIDX" ]; then
+    FAIL "XT10: the refusal table parsed to $XT_NROWS row(s), the MOVES-empty row resolving to '${XT_MOVESIDX:-none}' and the first \`Name\` row to '${XT_NAMEIDX:-none}'. A missing row on either side makes the ordering unmeasurable, so this fails rather than reporting a clean verdict over an empty scan"
+  elif [ "$XT_NAMEROWS" -lt 2 ]; then
+    FAIL "XT10: only $XT_NAMEROWS \`Name\` row(s) were found in the refusal table. The claim is that the emptiness check precedes EVERY \`Name\` row, so a population of one is not the population the claim ranges over and this verdict would be weaker than it looks"
+  elif [ "$XT_MOVESIDX" -lt "$XT_NAMEIDX" ]; then
+    PASS "XT10: over $XT_NROWS refusal row(s) the MOVES-empty refusal stands at row $XT_MOVESIDX and the first of $XT_NAMEROWS \`Name\` row(s) at row $XT_NAMEIDX, so the emptiness check is ordered ahead of every one of them IN THE TABLE — which is the object the agent evaluates, and the one XT7's sentence probe cannot see. What the ordering protects is measured elsewhere in this group: XT5 reads 0 answered \`Name\` bullet(s) on the post-split fixture, so a \`Name\` refusal reached first hands the modal file a remedy it cannot perform"
+  else
+    FAIL "XT10: the MOVES-empty refusal stands at row $XT_MOVESIDX and the first \`Name\` row at row $XT_NAMEIDX, so a \`Name\` row is evaluated first. The post-split file carries no \`Name\` bullet at all — XT5 measures that — so in table order it is refused for a missing \`Name\` and told to edit a line that does not exist, instead of being told the true thing: there is nothing here to extract"
+  fi
+
+  # ── XT11 — the parse rule the agent executes, star-admitting ─────────────────
+  # XT2 and XT5 reproduce the star miss ON THE FIXTURES; neither reads the RULE. A
+  # star-blind rewrite of the stated parse reddened no arm before this one, while
+  # measurably leaving 9-10 table-named labels unreached per legacy fixture — `Name`
+  # included — which trips the verb's own totality refusal on every shipped file. So
+  # the miss is loud at runtime and silent at review time, and this closes the second.
+  XT_PSTAR=0
+  grep -qF 'followed by an **optional** `⭐ ` decoration' "$XT_SEC1" && XT_PSTAR=1
+  XT_PSTARWHY=0
+  grep -qF 'silently drops every starred field' "$XT_SEC1" && XT_PSTARWHY=1
+  XT_PANCHOR=0
+  grep -qF 'A labelled bullet is matched line-initially' "$XT_SEC1" && XT_PANCHOR=1
+  if [ "$XT_SECN" -eq 0 ]; then
+    FAIL "XT11: the \`## extract\` section extracted to 0 lines, so the stated parse rule could not be read at all"
+  elif [ "$XT_PSTAR" -eq 1 ] && [ "$XT_PANCHOR" -eq 1 ] && [ "$XT_PSTARWHY" -eq 1 ]; then
+    PASS "XT11: over $XT_SECN line(s) the stated parse is still line-anchored AND still admits the optional star decoration, and it still carries the reason it must — that an anchored pattern refusing the star drops every starred field. XT2 measures that miss on the fixtures and XT5 measures it at \`Name\`, the one field the verb cannot proceed without; this arm grades the rule those two measurements are the ground for, which nothing read before"
+  else
+    FAIL "XT11: the stated parse reads line-anchored=$XT_PANCHOR star-admitting=$XT_PSTAR reason-stated=$XT_PSTARWHY. A star-blind rule loses the canonical person-class field — starred in both intake forms — and \`Name\` with it, so every downstream count still looks plausible while the verb refuses on its own totality check"
+  fi
+
+  # ── XT12 — the key the parse matches on: `(section, label)`, leading-segment ──
+  # XT4 measures that the two candidate section keys DIFFER on the shipped headings;
+  # this arm grades that the section still SAYS which one it takes. The arity is
+  # reported live rather than asserted, because that is the honest statement: label
+  # and pair are extensionally equal on today's table, so a wrong key resolves
+  # identically and lands as-built — which is why the stated key is the only surface
+  # on which it can be caught at all.
+  XT_KEYLBL="$(cut -f1 "$XT_CLASSFILE" | sort -u | grep -c '[^[:space:]]' || true)"
+  XT_KEYPAIR="$(cut -f1,4 "$XT_CLASSFILE" | sort -u | grep -c '[^[:space:]]' || true)"
+  XT_KEYSTATED=0
+  grep -qF 'The key is `(section, label)`, not the label alone' "$XT_SEC1" && XT_KEYSTATED=1
+  XT_KEYLEAD=0
+  grep -qF 'read as a leading segment' "$XT_SEC1" && XT_KEYLEAD=1
+  XT_KEYWHY=0
+  grep -qF 'Exact equality on the section would miss every repeated block' "$XT_SEC1" && XT_KEYWHY=1
+  if [ "$XT_SECN" -eq 0 ] || [ "$XT_KEYLBL" -eq 0 ]; then
+    FAIL "XT12: the \`## extract\` section read $XT_SECN line(s) and the live table $XT_KEYLBL distinct label(s) — with either at zero this arm would be grading an empty scan"
+  elif [ "$XT_KEYSTATED" -eq 1 ] && [ "$XT_KEYLEAD" -eq 1 ] && [ "$XT_KEYWHY" -eq 1 ]; then
+    PASS "XT12: the section still states the key as \`(section, label)\` rather than the label alone, still resolves the section as a LEADING SEGMENT of the enclosing heading, and still carries the reason — exact equality drops every repeated block, which is where this verb's whole \`block\`-scoped population lives. Measured live on the same table: $XT_KEYLBL distinct label(s) against $XT_KEYPAIR distinct (section, label) pair(s). At equality the two keys resolve identically TODAY, which is exactly why a wrong key would land as-built and stay invisible — the stated key is the only surface that can catch it, and until this arm nothing read it"
+  else
+    FAIL "XT12: the section reads key-stated=$XT_KEYSTATED leading-segment=$XT_KEYLEAD reason-stated=$XT_KEYWHY, over $XT_KEYLBL distinct label(s) and $XT_KEYPAIR distinct pair(s). Label-only keying mis-resolves the first time two rows share a label — the corpus already warns of two \`Applies to\` fields sharing one — and exact-equality section matching drops every repeated block outright"
   fi
 fi
 
