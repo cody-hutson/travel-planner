@@ -2163,8 +2163,11 @@ file's own answers and points the file at it.
 **It copies. It never moves.** No byte of the source file's **body** changes — not on a taken run,
 not on a declined one, not on a failed one. The only source-side change is one frontmatter line, and
 that field is `optional` by the traveller-profile class's own declaration, so a file that is
-extracted from keeps working exactly as a file that never was. That is a property of the mechanism
-rather than a promise about it.
+extracted from keeps working: every value it composes stays correct, and no planning behaviour
+changes. That is a property of the mechanism rather than a promise about it. **It is not the same
+claim as being indistinguishable from a file that never was** — what changes is not what the file
+does but what the next pass over it **reports**, and that is disclosed in full in § *What the next
+enrichment pass will say about the source file* below.
 
 **One file per invocation.** No glob, no `--all`, no directory walk, no upgrade pass. The bound is
 the argument grammar rather than a policy: there is nowhere to type a set.
@@ -2356,6 +2359,31 @@ falsify standing rule 10's sentence that an erasure is *the one write that may d
 had made untrue. The cost is one manual step on a branch that requires a write to have failed after
 another succeeded; the alternative is a second deletion path on a command surface whose deletion
 story is currently one verb long. **Rule 11 admits no deletion, and this is where that shows.**
+
+### What the next enrichment pass will say about the source file
+
+**Taking this offer turns a quiet traveller file into a permanently noisy one, and that is disclosed
+here rather than discovered.** It is the unavoidable consequence of copy-never-move: after a taken
+run **both sources carry every extracted value**, and a resolving reference is the *third conjunct*
+of `reference/data-model.md`'s `CLASS-VIOLATION` predicate — the conjunct this file did not satisfy
+before, because with no reference there is no second owner, nothing to override and nothing to
+report. **This verb is precisely the act that supplies it**, which is why the state is named here and
+not left to be met.
+
+So on the next enrichment pass **every field this run moved becomes a divergence report, on a file
+that produced none before**: each `DEFAULT` field as a `REDUNDANT-OVERRIDE`, and each `PERSON` need
+block as a `CLASS-VIOLATION` whose rendered advice is *move the value into the record* — advice this
+verb has already carried out, so it cannot be acted on as written.
+
+**Nothing is unsafe, nothing is lost and nothing is deleted.** The reports are information only, no
+replanning is implied, every composed value stays correct, and no line is removed from any file
+automatically. **What to do about it, if anything:** nothing is required — a file may carry these
+reports indefinitely and plan correctly, which is what makes this a disclosure rather than a defect.
+An operator who wants them gone removes the now-redundant trip-side lines **by hand**, which is the
+move to `UNSTATED` that `reference/data-model.md` § *Remove* already specifies and whose only
+observable effect is that the report line disappears. **This verb will not do it and must not** — that
+is a body write rule 11(e) forbids and a deletion rule 11 admits none of, and keeping the two sources
+reconciled is the reconciliation route's subject rather than this one's.
 
 ### The four mechanical writes, and which one this is
 
