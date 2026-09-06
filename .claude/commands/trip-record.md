@@ -2231,6 +2231,12 @@ answered fields** — every answered field lands in exactly one row.
 | **NOT-MOVED** | class is `PERSON` or `DEFAULT`, and not `ANSWERED()` | the record's slot keeps the template's placeholder. A skipped field is a skipped field |
 | **REFUSED** | any value carrying `[THIRD-PARTY]` | refused, always |
 
+**`REFUSED` is tested first, and it overrides.** A value carrying `[THIRD-PARTY]` is `REFUSED`
+whatever its class, so an answered `PERSON`-class value that also carries the mark lands in that row
+and in no other. The precedence is stated rather than left to be inferred because the predicates are
+keyed on different things — `REFUSED` on the mark, the other three on `(class, scope, ANSWERED)` — and
+without an order between them *exactly one row* is asserted rather than established.
+
 Three labels are handled specially and each has its own reason. **`Name`** is the H1, per the
 carve-out above. **`Applies to`** is `TRIP` and is never asked — it is computed, and enrichment
 recomputes the need-to-constraint edge per trip — so it stays. **The unlabelled free-text tail** is
@@ -2334,7 +2340,13 @@ No timestamp. **No marker of any kind in the source file**, on the precedent `un
 
 ### The receipt
 
-**Derived from a read-back of disk, never from the plan**, and total over this fixed table.
+**Derived from a read-back of disk, never from the plan**, and total over this fixed table — **except
+row 4, which is discharged by construction rather than by read-back.** Rows 1, 2 and 3 name paths this
+verb has already opened or written, so disk is there to ground them; row 4 names the one path the
+**Reads:** line and § *What this verb does not write* both forbid it to touch, and reading it to
+confirm it was untouched would perform the very read the row asserts did not happen. The prohibition
+is the ground, and it is the stronger of the two: a read-back reports this run, the prohibition holds
+on every run.
 
 | # | Location | Disp. | Outcome tokens |
 |---|---|---|---|
