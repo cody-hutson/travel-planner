@@ -230,7 +230,7 @@ and zero ambiguous at every reader, re-creating the problem one field over rathe
 at the schema. `reference/schemas/cost-estimate.md` carries the convention in full.
 
 **Three per-class fields is one more than any existing class declares, and it is warranted rather
-than convenient.** Measured across the corpus: C19 `travel-site.md` declares two
+than convenient.** Measured across the corpus: C19 `reference/schemas/travel-site.md` declares two
 (`coordination-state`, `coordination-since`), C17 and C20 declare one each, and the other seventeen
 declare none. Each of these three answers a question the other two cannot: M *what could have been
 read*, N *what was*, `coverage` *whether the pair is a measurement at all*. Dropping any one

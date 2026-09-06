@@ -249,14 +249,14 @@ was scored. Two carried a single forced approach and are recorded as such rather
 
 | Option | Mover-set | Line-anchor cost | Coherence | Verdict |
 |---|---|---|---|---|
-| **(a) New `reference/data-architecture.md` above a narrowed-in-place `reference/data-model.md`** | **empty** | The insertion point is a *new file*; `data-model.md` takes one bounded edit that can be confined below its last cited anchor | Layer-coherent — the satisfaction layer keeps its own document and its own boundary section | **CHOSEN** |
-| (b) Expand `data-model.md` to engine-wide scope | empty | **Necessarily rewrites the scope declaration at lines 3–5, shifting all four anchors** cited 14 times across 3 files, 2 of them CI-guarded | Produces a single ~1400-line document mixing engine-wide contract with satisfaction-layer detail | Rejected |
-| (c) Relocate `data-model.md` under a new `reference/data/` subtree | **16 files / 75 references, 2 CI-guarded scripts** | The same anchor problem *plus* a whole-corpus path sweep | — | Rejected |
+| **(a) New `reference/data-architecture.md` above a narrowed-in-place `reference/data-model.md`** | **empty** | The insertion point is a *new file*; `reference/data-model.md` takes one bounded edit that can be confined below its last cited anchor | Layer-coherent — the satisfaction layer keeps its own document and its own boundary section | **CHOSEN** |
+| (b) Expand `reference/data-model.md` to engine-wide scope | empty | **Necessarily rewrites the scope declaration at lines 3–5, shifting all four anchors** cited 14 times across 3 files, 2 of them CI-guarded | Produces a single ~1400-line document mixing engine-wide contract with satisfaction-layer detail | Rejected |
+| (c) Relocate `reference/data-model.md` under a new `reference/data/` subtree | **16 files / 75 references, 2 CI-guarded scripts** | The same anchor problem *plus* a whole-corpus path sweep | — | Rejected |
 | (d) Split into per-artifact schema files only, no prose spec | empty | — | Discards the reconciliation and lineage prose that is the document's actual value | Rejected |
 
 **(b) is rejected on arithmetic, not taste.** Engine-wide scope requires rewriting the scope
 declaration at lines 3–5. There is no edit that both achieves engine-wide scope and leaves line 139 at
-line 139. Option (a) is the only option whose `data-model.md` edit can be confined below the last
+line 139. Option (a) is the only option whose `reference/data-model.md` edit can be confined below the last
 cited anchor.
 
 **(c) is priced explicitly rather than dropped.** Relocation converts a currently-empty mover-set into
@@ -328,7 +328,7 @@ contract — for all 19 in-model artifact classes.
 **`reference/data-model.md` is narrowed in place.** It is not moved, not renamed, not deleted and not
 expanded. It remains the **satisfaction-layer specialization** of the engine-wide model and keeps its
 own `§ What This Document Does Not Define` boundary. Where the two overlap, the engine-wide document
-is authoritative for the shape and `data-model.md` for the satisfaction layer's own content.
+is authoritative for the shape and `reference/data-model.md` for the satisfaction layer's own content.
 
 **The canonical lifecycle-class tokens and their definitions have exactly one home:
 `reference/data-architecture.md § Lifecycle classes`.** `reference/data-model.md` cites it and
