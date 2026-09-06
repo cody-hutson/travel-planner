@@ -427,11 +427,14 @@ Tell the user all four of these:
 2. **The four ways to fill one in**, offered in this order:
    - **Walk through it here** — about two to three minutes for the starred fields.
    - **Fill it in themselves** — copy `templates/traveler-intake.template.md` to the path above and
-     work through it.
+     work through it. Point them at `examples/people-library-demo/travelers/noor.md` as well: it is
+     the same form with answers written into it, which is the comparison a blank one cannot give.
    - **Send it to someone who is not here** — hand them the whole template file and have them paste
      it into any assistant with the one line the guide at the bottom gives them, then save the block
-     it returns to the path above. On a group trip this is how most travelers will do it, so **never
-     drop this option.**
+     it returns to the path above. **Send `examples/people-library-demo/travelers/noor.md` with
+     it** — they have no repository to open, so a filled-in profile travelling beside the form is
+     the only comparison they will get. On a group trip this is how most travelers will do it, so
+     **never drop this option.**
    - **Reference someone you have travelled with before** — if this person already has a record in
      your people library, point this trip at that record instead of answering the durable questions
      again. It is two named steps, in this order: create the profile file by any of the three routes
