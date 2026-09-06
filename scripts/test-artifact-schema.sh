@@ -4377,6 +4377,43 @@ EOF
   else
     FAIL "RL7: the \`## link\` section no longer states the two-directional prohibition (found=$RL_TWOWAY) or the post-write read-back (found=$RL_READBACK). Removing either reaches a worse outcome silently — an unbounded trip-ward apply, or a failed write indistinguishable from a successful one"
   fi
+
+  # ── RL8 — the value render, and the surface it is bounded to ─────────────────
+  # AC1 requires the operator to see WHAT the file and the record disagree about,
+  # not merely THAT they disagree, so the survey renders the pair. The rule that
+  # forbids restating conflicting values binds THE REPORT — which lands in the
+  # `## Update signals [DERIVED]` block of a file — and each of its three grounds
+  # is a property of that persisted artifact: the publish guard matches against
+  # files, an erasure reaches a copy by address, and link-don't-copy is about a
+  # second durable home. A rendered confirmation has none of those. The render and
+  # the bound are therefore ONE rule and are graded as one: a build that rendered
+  # the values without stating the bound would be the leak the report rule exists
+  # to stop, and a build that stated the bound while withholding the values would
+  # not satisfy AC1. Same boundary as RL7 — this grades what the section SAYS, in
+  # a tree of prompt files where no suite can run a link and watch it render.
+  #
+  # The fourth limb is a NEGATIVE and is what makes this arm bidirectional. The
+  # superseded sentence — the survey does not restate the record's values — must
+  # be GONE, not merely outvoted by a newer paragraph. An editor who appends the
+  # new rule and leaves the old one standing ships a section that states both, and
+  # a presence-only probe would grade that self-contradiction green.
+  RL_VALPAIR=0
+  grep -qF 'renders the pair of values in disagreement' "$RL_SEC1" && RL_VALPAIR=1
+  RL_ADJONLY=0
+  grep -qF 'for each adjudicable field' "$RL_SEC1" && RL_ADJONLY=1
+  RL_NOPERSIST=0
+  grep -qF 'never written into the persisted report' "$RL_SEC1" && RL_NOPERSIST=1
+  RL_SURFACES=0
+  grep -qF 'govern different surfaces' "$RL_SEC1" && RL_SURFACES=1
+  RL_OLDRULE=0
+  grep -qF 'does not restate the record' "$RL_SEC1" && RL_OLDRULE=1
+  if [ "$RL_SECN" -eq 0 ]; then
+    FAIL "RL8: the \`## link\` section extracted to 0 lines — every verdict below would be a failed parse reported as a missing rule"
+  elif [ "$RL_VALPAIR" -eq 1 ] && [ "$RL_ADJONLY" -eq 1 ] && [ "$RL_NOPERSIST" -eq 1 ] && [ "$RL_SURFACES" -eq 1 ] && [ "$RL_OLDRULE" -eq 0 ]; then
+    PASS "RL8: over $RL_SECN line(s) of the \`## link\` section, the survey renders the disagreeing pair, scopes it to the adjudicable set, bounds it to the command surface by stating the pair is never written into the persisted report, and names the two rules as governing different surfaces — and the superseded no-restatement sentence is GONE rather than left standing beside its replacement. The bound is graded with the render because rendering without it is the leak the report rule exists to stop"
+  else
+    FAIL "RL8: the \`## link\` section renders=$RL_VALPAIR adjudicable-scoped=$RL_ADJONLY report-bound=$RL_NOPERSIST surfaces-named=$RL_SURFACES superseded-sentence-still-present=$RL_OLDRULE. A missing render leaves the operator adjudicating on field labels alone; a missing bound is a value reaching a persisted artifact by a route the report rule never sanctioned; a surviving superseded sentence leaves the section stating both rules at once"
+  fi
 fi
 
 if [ "$RL_RAN" -ne 1 ]; then
