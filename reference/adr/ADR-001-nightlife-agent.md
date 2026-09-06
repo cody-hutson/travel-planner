@@ -49,7 +49,7 @@ Add `agents/07-nightlife.md` as a **research/curation spoke** that produces
 `outputs/nightlife-list.md` and does **not** schedule. It dispatches in the **research
 phase**, alongside Activities (01) and Food (02), and before Scheduling (03) and Hub
 synthesis (05). The numeric prefix `07` is a registry identifier, **not** a strict
-dispatch rank — the roster already carries an unnumbered `destination-ideation.md`, and
+dispatch rank — the roster already carries an unnumbered `agents/destination-ideation.md`, and
 the hub dispatches spokes by role.
 
 ### 2. Producer/consumer boundary with Food & Activities
