@@ -124,6 +124,73 @@ traveller; the trip simply answers everything itself, exactly as it did before t
 store existed. Nothing requires a person to have a record, and a first trip never
 needs one.
 
+**`/trip-record link <name> <person-id>` writes that line, and it shows you the
+consequence first.** Adding a reference changes which source a field is planned from,
+so before it writes anything the command surveys the difference: every field whose
+value or whose disposition the link would change, each with **both** values side by
+side — what this trip says now, and what the record says. Where the survey finds
+something it stops and asks; where it finds nothing it just writes and names who the
+id resolved to. Declining costs nothing: the gate sits **before** the write, so both
+files are left byte-identical.
+
+**It reconciles nothing on its own, in either direction.** The survey reports; it does
+not merge. It writes no value into the record — making a trip answer durable is
+`/trip-record promote`, one named field at a time — and it does not delete the trip's
+own line either, even where the record's answer is the one you mean to keep. Removing
+that line is yours to do, and doing nothing is a valid choice — but what it costs
+depends on something outside this trip. **While the record still says what the trip
+says**, a redundant line costs one report line per pass and nothing else. **Once the
+record changes, that same line is a live override**: a `DEFAULT` field takes the trip's
+answer for this trip, so the edit you just made to the record does not reach here, and
+the pass reports the line the way it reports an override somebody chose — which is what
+makes the two indistinguishable afterwards. **So make it a decision rather than a
+leftover.** Keep the line to pin this trip to today's answer; remove it — delete it,
+blank it, or write `—` — to let the record's later answers reach this trip. With no
+reason to pin it, remove it: the record is the copy you will keep editing. Nothing on
+this surface merges two people's answers together silently, and that is the property the
+whole design is built to hold.
+
+**Repointing an existing link is the branch worth reading twice.** Where the file
+already names a *different* record, the command echoes the outgoing id, says plainly
+that this replaces rather than adds, and counts how many fields stop drawing on the
+record being replaced. Linking from nothing is additive; replacing a link is not, and
+the count is there because that loss is otherwise invisible.
+
+## Creating a record from a profile someone already filled
+
+Most people meet this store with a folder of trip profiles and no records. **`/trip-record
+extract <name>`** is the way across: it reads one traveller's filled trip profile, builds
+a record from the durable answers already in it, and points that file at the new record.
+
+**It copies. It never moves.** Not a byte of the profile's body changes — the file keeps
+planning exactly as it did, whether you take the offer, decline it, or it fails partway.
+The only change on the trip side is the one `person:` line.
+
+**One file per run.** There is no bulk pass, no `--all`, and no upgrade sweep, deliberately:
+a durable cross-trip record about a person is not something to create in a batch nobody
+reviewed.
+
+**You confirm against a preview, and the preview names fields rather than showing values.**
+It lists what would move, what stays behind as trip-local, what has no answer to move, and
+what is refused — by field name, with the display name as the only value on screen. That is
+not coyness: a value echoed into a transcript is a new copy of someone's personal data in a
+new place, and one an erasure cannot reach. To see the answers themselves, open the profile
+— it is yours and it is untouched.
+
+**What it will not do.** It creates nothing where the profile has no durable answers to
+move — the ordinary state of a profile filled after the split, and not an error. It refuses
+where the file already points at a record, rather than repointing it or minting a second.
+It refuses a name that is a leftover placeholder, and it refuses where the name matches a
+record already in the store, offering you the choice rather than guessing. And it never
+runs unattended.
+
+**Afterwards, expect the profile to get noisier, and nothing to be wrong.** Both files now
+hold the extracted answers, so the next enrichment pass reports each one as a divergence on
+a file that reported none before. Nothing is unsafe and nothing is lost: the reports are
+information, every value still composes correctly, and no line is removed from anything
+automatically. If you want them gone, delete the now-redundant lines from the trip profile
+yourself. Nothing on this surface will do it for you.
+
 ## Retention
 
 **Nothing here expires on its own.** No command sweeps this folder, no timer runs, and
