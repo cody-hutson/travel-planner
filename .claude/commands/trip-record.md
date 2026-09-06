@@ -104,6 +104,7 @@ population-role: RESOLVE
 | unlink | ACTIVE | any | any | G8 |
 | promote | ACTIVE | any | any | G8 |
 | erase | ANY | any | any | G8 |
+| extract | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -434,6 +435,70 @@ only the verbs that existed when it was written.
     already does.** A bound written inside `erase` would leave the next slice free to reach the same
     bytes by another route.
 
+11. **A record creation is the one write that may bring a durable person record into existence, and
+    it is bounded by a preview that is total over the source file's own answered set — never by a
+    list of the fields someone remembered. This is a third widening of rule 5, taken under the
+    Extension rule below, and rules 9 and 10 are left exactly as they stand.** Rule 9 derives a
+    *target class* — one durable record, selected by an operator-supplied id — and fixes an
+    *operation class* that creation fails on two counts: it creates a file, and it moves more than
+    one field. Rule 9 says so by name and reserves this append for it. **This rule derives
+    creation's operation class**, and it necessarily **replaces** rule 9's target derivation rather
+    than taking it, because **a record that does not yet exist has no id for the operator to
+    supply**: the target is a path that does not exist, under the resolved store root, whose stem is
+    an id this run minted and rejection-sampled against that store's own listing. **What rule 9's
+    derivation was protecting is preserved rather than dropped** — a minted id for a non-existent
+    path cannot select the wrong person's record, which is the hazard *"never by a display name,
+    never by a search, and never by any match this command computed"* exists to prevent. The one
+    place this rule compares a name is a **refusal**, and its bound is
+    `reference/schemas/person-record.md`'s own: the comparison refuses a *creation*, and no code
+    path runs from it to a write on the matched record.
+
+    **A write under this rule is taken on exactly these conditions, all of which must hold:**
+    **(a)** the target path does not exist, and the operation creates exactly one file and edits
+    exactly one existing line elsewhere; **(b)** the record's display name is the source file's own
+    answered `Name` field, read by the same parse and the same answered-ness predicate as every
+    other value this write copies — **never a title line, never a filename stem, never a roster row,
+    never an argument, never a search, and never any match this command computed**; **(c)** every
+    value written already exists in the source file, so the write **copies** values and authors
+    none; **(d)** the operator confirmed against a **preview total over the source's answered
+    fields** — every answered field appears in exactly one of MOVES / STAYS / NOT-MOVED / REFUSED,
+    and a field absent from the preview is not unmoved by omission, it is **unreachable**;
+    **(e)** **no byte of the source file's body changes**, so the operation is recoverable by
+    discarding what it created; and **(f)** every **`slot`-scoped** value it copies is
+    **single-valued** — a `slot`-scoped label occurring twice makes the value a set, which
+    `reference/data-model.md` § *Determinism* **O3** types `MALFORMED-SLOT` and forbids resolving
+    *"never first-wins, never last-wins"*.
+
+    **What (c) through (f) are for.** **(c)** says **copies**, deliberately and not by inheritance:
+    rule 9(e) says *moves* because there the trip value genuinely leaves as the record's is
+    overwritten, and borrowing that word here would put one word of this rule arguing for the branch
+    this rule exists to forbid. **(d)** replaces rule 9's per-field echo, which is unreadable at N
+    fields — totality over the source's own answered set is the only confirmation shape available to
+    an operation that copies a set rather than a field, and it is rule 10(e)'s principle at the other
+    end of the operation. **(e)** is what separates this from every prior widening: rule 9's write is
+    one field and rule 10's is a substitution, and neither could offer a recovery. **(f)** is
+    **scoped to `slot` and the scope is the whole of it**: `reference/data-model.md` § *Field Scope*
+    states that a `block`-scoped label belongs to a repeated block and *"repetition is user data, not
+    a defect"*, and its `MALFORMED-SLOT` row names a **slot-scoped** label occurring twice. An
+    unscoped version of this clause reads a person's second need as a malformed value and refuses the
+    extraction — which is the population this verb exists to serve, not an edge of it.
+
+    **This rule admits no deletion, and the omission is stated because a reader will look for one.**
+    Rule 10's sentence that an erasure is *the one write that may delete a record* is a property of
+    this command rather than of that verb, so a second record-deleting write here would falsify it —
+    and § *The repair extension point* would then oblige this slice to repair a Zone A sentence its
+    own edit had made untrue. **A creation that writes its record and then cannot write the
+    reference leaves that record behind**, and the remedy is the receipt plus the operator's hand:
+    the receipt names the orphan by path and by id, and the undo is stated in order — the
+    reference-bearing line first where one was written, then the record. **The order is the whole of
+    the remedy**: reversed, the trip holds a well-formed reference resolving to nothing, which
+    `reference/data-model.md` types a defect and which no verb of this command may author.
+
+    It is here rather than inside one verb section because the prohibition half binds every verb:
+    **no other verb of this command may create a file under the store**, on the ground that a
+    creation verb already does. A bound written inside the one verb that first needed it would
+    protect that verb and leave the next slice to create a second record with nothing to satisfy.
+
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
 rule that binds only that slice's own verbs goes inside those verb sections. Both failure modes are
@@ -637,7 +702,16 @@ or naming the branches without ordering them, is that same defect written in a d
 4. Confirm the write.
 5. **Name `/trip-record travelers`** as the reconcile step. Name it; **do not run it** — an agent
    dispatch on a one-line change is heavier than the change, and both verbs live in this one command
-   rather than at the ends of a chain.
+   rather than at the ends of a chain. **Where the file this route just edited carries no `person:`
+   key, name `/trip-record extract` here too, in the same shape** — name the capability and stop.
+   The condition is read from the frontmatter this route already has open, so it costs no new read,
+   and it is what makes the naming **state-appropriate**: a file that already references a record has
+   nothing to extract and that verb would refuse, and a capability named where it refuses teaches the
+   operator to ignore the naming. **The naming is otherwise unconditional** — it does not probe the
+   body, does not count extractable fields, names no field and echoes no value. Discovery is handled
+   once, non-field-specifically, at a moment the operator initiated, which is the shape this file
+   already sanctions by name; **this is the only place in this command where that verb is named as an
+   offer.**
 
 An unanswered field keeps its bracketed placeholder; a field the user says does not apply takes a
 single em dash. **Never write a bracketed placeholder as though it were an answer.**
@@ -2068,3 +2142,260 @@ This section discharges each of its conditions by name. **(a)** every location w
 **Only this verb writes the second conjunct.** If this verb's post-state ever converges with the detach's — by dropping the roster tombstone, by removing the roster row, or by not marking the model entry — then a real erasure reads as a trip that never linked anyone, **every composed value is byte-identical either way, and nothing value-shaped detects it.** The build stays green while the detection is gone. The three properties that keep them apart are each checkable: the roster row **survives here and is removed by `group`**; the traveller-file stem is **the token here and the display name there**; and the model entry carries a mark that no other operation writes.
 
 **Reversibility: IRREVERSIBLE, confidence HIGH.** `trips/` and `people/` are git-ignored, so there is no earlier version to restore from; the `researched` artifacts hold independent state nothing upstream reconstructs; and the published surface is beyond every local act. Rollback is not merely expensive here — it does not exist, and the confirmation is shaped around that rather than around the size of the change.
+
+## extract <name>
+
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/<file>.md` — the file-existence probe that gates every branch below, this file's frontmatter for the `person:` key, and its body's labelled bullets, which are both the value set this verb copies and the source of the display name; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class, scope, section and answered-ness, read live at invocation and **never re-authored here**, the same live read `## profile`'s collision check takes, because a second implementation of either predicate would be a second source of truth for what a field is; `reference/data-model.md` § *Determinism* — **O3**, for the duplicate-slot disposition the refusal below names; `<store-root>/people/` — the store listing, which is both the rejection set the minted id is sampled against and the denominator of the display-name collision check; `<store-root>/people/*.md` — **the H1 line alone**, for that collision check, and no other line of any record is read; `templates/person-intake.template.md` — the copy source for the record this verb creates, and a template read in order to copy from it is a read. **Does not read `trip-context.md`, in either direction** — the reason is stated below and it is the reason the negative exists rather than a courtesy. **Dispatches no agent. Takes no `Bash(ls:*)` use** and creates no directory.
+
+The extraction verb. A traveller already has a filled profile on this trip, and the durable half of
+what it says belongs in a person record they do not yet have. This creates that record from the
+file's own answers and points the file at it.
+
+**It copies. It never moves.** No byte of the source file's **body** changes — not on a taken run,
+not on a declined one, not on a failed one. The only source-side change is one frontmatter line, and
+that field is `optional` by the traveller-profile class's own declaration, so a file that is
+extracted from keeps working exactly as a file that never was. That is a property of the mechanism
+rather than a promise about it.
+
+**One file per invocation.** No glob, no `--all`, no directory walk, no upgrade pass. The bound is
+the argument grammar rather than a policy: there is nowhere to type a set.
+
+**Store root** resolves by `reference/data-model.md`'s two-step rule — the trip root's own store
+where that directory exists, otherwise the repo root's — read from that section and never restated
+here, because a second copy of a resolution rule is a second source that goes stale silently.
+
+### Identity — the display name is this file's own answered `Name`
+
+The record's display name is the **source file's own answered `Name` field**, read by the same parse
+and the same answered-ness predicate as every other value this write copies. It is not the H1 title
+line, not the filename stem, not a roster cell, and not an argument this verb takes.
+
+**Why that source and no other, stated as the negative it is.** The title line and the filename stem
+are **projections** of the name, and the corpus's own rule for a divergent stem is *report, never
+rename* — founding a permanent cross-trip identity on a known projection converts a reported defect
+into a durable one. The `## Group` roster is a **second source** for something this file already
+states, and it carries a disagreement branch with no resolution, which is why `## profile` rejected
+reading the roster and said so. An operator-typed name would make this verb **author** the one value
+the record cannot do without, at the one field where rule 11(c) matters most, and would put a
+person's name on a command line to do it. **There is exactly one display-name source, so there is no
+disagreement branch to leave unresolved.**
+
+`Name` needs no separate read: it is a row of the classification table, `DEFAULT` and `slot`-scoped,
+so it is already a member of the MOVES set the partition below computes. What it takes is a
+**destination** carve-out — it lands in the record's **H1**, never in a body bullet, because the
+person-record class puts the display name there and bars restating it in frontmatter.
+
+### The parse, and the key it matches on
+
+**A labelled bullet is matched line-initially** as `- ` followed by an **optional** `⭐ `
+decoration, then `**<Label>:**`. The star is admitted deliberately: an anchored bullet pattern that
+does not admit it silently drops every starred field, and that miss is measured rather than
+hypothetical — the canonical person-class field is starred in both intake forms, so a star-blind
+parse loses it and every downstream count still looks plausible.
+
+**The key is `(section, label)`, not the label alone.** `reference/data-model.md` defines a field as
+a distinct `(section, label)` pair in those terms, and this verb matches on that pair: the `label` is
+the bullet's own label, and the `section` is the classification table's `Section` value for which the
+enclosing `## ` heading's text is that value **read as a leading segment** — the forms render
+`## Needs — the must-haves` where the table says `Needs`. **Exact equality on the section would miss
+every repeated block**, which is where this verb's whole `block`-scoped population lives, and
+matching the label alone is sound only for as long as no two rows share one. A bullet under a heading
+the table names no section for — a trip-local override block is the shipped instance — carries no
+classified field and is not a candidate for anything below.
+
+**Refuse and write nothing where a label the classification table names occurs in the source and the
+parse did not reach it.** The totality claim below is only worth what its denominator is worth, and a
+denominator that is the parser's own output guarantees nothing.
+
+### What moves and what stays
+
+The partition is `(class, scope, ANSWERED)`, all three read live, and it is **total over the source's
+answered fields** — every answered field lands in exactly one row.
+
+| Set | Predicate | Disposition |
+|---|---|---|
+| **MOVES** | class is `PERSON` or `DEFAULT`, and `ANSWERED()` | copied verbatim into the record's like-labelled bullet — **except `Name`**, which is borne by the H1 |
+| **STAYS** | class is `TRIP` or `DEST` | untouched, and named in the preview **without its value** |
+| **NOT-MOVED** | class is `PERSON` or `DEFAULT`, and not `ANSWERED()` | the record's slot keeps the template's placeholder. A skipped field is a skipped field |
+| **REFUSED** | any value carrying `[THIRD-PARTY]` | refused, always |
+
+Three labels are handled specially and each has its own reason. **`Name`** is the H1, per the
+carve-out above. **`Applies to`** is `TRIP` and is never asked — it is computed, and enrichment
+recomputes the need-to-constraint edge per trip — so it stays. **The unlabelled free-text tail** is
+`TRIP` by the classification's own fail-safe default, on the ground that a durable store must not
+silently carry forward free text that may be trip-specific; it stays, and the preview **names** it
+rather than passing over it in silence.
+
+**A `none` answer moves.** It is `ANSWERED()`, and a copy that dropped it would turn a stated *I have
+none* into *not asked yet*, which are two different states this command never collapses.
+**`[OPERATOR-PROVIDED]` travels with its value** at field granularity through the inline mark, bounded
+to the record's `## Needs` section by that class's own rule.
+
+**The record is scaffolded from the person form, never composed freehand.** Copy
+`templates/person-intake.template.md`, replace its `[Name]` placeholder with the source's `Name`
+value, and fill the MOVES set into like-labelled bullets. **Labels stay byte-identical.** Only
+content **above the line-initial `# END OF PROFILE` heading** is written — matched line-initially,
+because that same string appears as inline code further down the template and a substring match takes
+the wrong one — and the guide below that heading is not carried into the record.
+
+### Refusals, in evaluation order. Every one writes nothing.
+
+**The order is the whole of the control, and the first four rows are ordered against a real
+population rather than against the shipped fixtures.** A post-split traveller file — the modal file
+on any trip that has already adopted the library — carries no `Name` bullet at all, because the trip
+form does not ask for one. Evaluating a `Name` refusal ahead of the emptiness check hands that
+operator a remedy they cannot perform: the named edit route changes existing field lines, and there
+is no `Name` line there to change. **`MOVES` is empty is checked before every `Name` row**, so that
+file is told the true thing — there is nothing here to extract — rather than a false one.
+
+| Condition | What happens |
+|---|---|
+| `trips/<slug>/travelers/` is absent | stop; name `/trip-new <slug>`. **First**, because an absent directory and an absent file are indistinguishable in the file probe's outcome, so a file probe that ran first would take the create branch on a missing scaffold |
+| the traveller file is absent | refuse; name `/trip-record profile <name>` |
+| the file already carries a `person:` key | refuse. **This is a reconciliation, not an extraction.** Name the reconcile route and stop. Never repoint it, never create a second record |
+| the store root does not exist | refuse. This command creates no directory |
+| a label the classification table names is present in the source and the parse did not reach it | refuse. The denominator is not the parser's own output |
+| a **`slot`-scoped** label in the MOVES set occurs more than once | refuse, naming the label and `MALFORMED-SLOT`. `reference/data-model.md` § *Determinism* forbids resolving it *"never first-wins, never last-wins"* and records that such a duplicate would persist indefinitely; this verb must not be the mechanism that makes one durable and cross-trip. **`block`-scoped repetition is not this case** — a second need is user data, and refusing on it would refuse the population this verb exists to serve |
+| **the MOVES set is empty** | refuse — **there is nothing to extract**. The normal state of every post-split traveller file, and **not an error**: say so plainly and name nothing to repair |
+| the source carries no answered `Name` field | refuse; name `/trip-record profile <name>` as the field-scoped edit route, so the operator answers it in the source and re-runs |
+| the `Name` value is a surviving `[bracketed]` placeholder | refuse — standing rule 4, tested **by value**, on the field-general predicate that a trimmed value opening with `[` and closing with `]` is a placeholder and never a name |
+| the normalized `Name` is the empty string | hard stop, naming the value quoted |
+| the `Name` value matches `per-[0-9a-f]{4}` | refuse — that is an **erasure tombstone token**, not a name. Minting a durable cross-trip record named after a tombstone re-creates the identity an erasure destroyed, and the shape is present on a shipped fixture rather than hypothetical |
+| the normalized `Name` equals a live record's normalized H1 | refuse, and offer the **three** remedies the person-record class declares — link to the existing record, disambiguate the display name, or create anyway with the collision acknowledged. **Exact equality after the store's own normalization only**: no similarity, no edit distance, no near-match, and **never a minted suffix**. The third branch is available here, and it is not in `## profile`, because this store's key is a **surrogate** while the trip side's is natural |
+| any value carries `[THIRD-PARTY]` | refuse that value, always |
+| the run is non-interactive | refuse. No flag skips the gate |
+| the operator does not confirm at the preview | write nothing, say so, and **record nothing anywhere** |
+
+### The preview, and it is name-only
+
+**The preview echoes no value.** The erasure reach table's transcript row is an operative
+prohibition and not merely an accounting of residue — *never echo a subject value, which is the act
+that would put one there* — and a quoted value is a **new copy of person data in a new location**,
+widening what an erasure must reach by content rather than by address. **Totality is a property of
+the partition, not of the values**, so rule 11(d)'s confirmation is satisfied name-only.
+
+```
+extract — <traveller file>  ->  NEW record  <store-root>/people/psn-<token>.md
+display name  "<Name>"   (this file's own answered `Name` field)   [nothing written yet]
+
+MOVES      — N fields  | Field | Section | Class | Scope |     <- named, no values
+STAYS      — M fields  | Field | Section | Class | Why   |     <- named, no values
+NOT-MOVED  — P person-scoped fields with no answer             <- named, no values
+REFUSED    — any [THIRD-PARTY] value                           <- named, no values
+```
+
+**One value is rendered anywhere: the display name, once, in the confirmation line.** It is
+unavoidable — a creation whose subject the operator cannot see is a creation they cannot target — and
+it is the bound `erase` already ships, which echoes the name once at its prompt so a mis-targeted run
+is visible and never echoes a value afterwards.
+
+**No other value is available on request, and the omission is deliberate.** A per-field reveal with
+no cap reconstructs the value-echoing preview exactly, one request at a time, and arrives at the
+residue this section is shaped to avoid by a route that looks harmless at each step. **The operator
+opens the source file instead**, which is untouched by rule 11(e) and already theirs — that moves the
+residue off the transcript entirely rather than rationing it. The corpus settles the direction: *the
+cheap error is the safe one*. Under-showing costs a keystroke; over-showing is permanent.
+
+**Confirmation is an explicit gate and a non-interactive run refuses.** No flag skips it.
+
+### The writes — exactly two locations, in this order
+
+| # | Location | Tool | Why this tool |
+|---|---|---|---|
+| 1 | `<store-root>/people/psn-<token>.md` — a new file | `Write` | standing rule 2's `Write` condition: the target path does not exist, established by the probe above |
+| 2 | `trips/<slug>/travelers/<file>.md` frontmatter `person: psn-<token>` | `Edit` | standing rule 2's `Edit` condition: the target exists and only the named field's lines change |
+
+**Record first, and the order is load-bearing.** Link-first that then fails on the record write
+leaves a well-formed `person:` key resolving to nothing — a dangling reference, which the data model
+types a defect and which `## link` refuses to author. Record-first that fails on the link leaves an
+**unreferenced record**, which is an ordinary and non-defective state on the trip side: a trip that
+references nothing is exactly a trip that never extracted.
+
+**The id.** `psn-` followed by four lowercase hex digits, rejection-sampled against the store listing.
+Minting a surrogate is already shipped on this surface. Standing rule 3 is not engaged, because a
+surrogate answers no question. **No ledger of retired or reserved ids is written** — a durable artifact
+recording people who asked to be deleted is the linkage an erasure exists to destroy.
+
+**What this verb does not write.** No byte of `trip-context.md`. No byte of the source file's body. No
+derived model — `/trip-record travelers` is **named, never run**. No roster row and no traveller total.
+No timestamp. **No marker of any kind in the source file**, on the precedent `unlink` already sets.
+
+### The receipt
+
+**Derived from a read-back of disk, never from the plan**, and total over this fixed table.
+
+| # | Location | Disp. | Outcome tokens |
+|---|---|---|---|
+| 1 | `<store-root>/people/psn-<token>.md` | WRITE | `CREATED` · `NOT-CREATED` |
+| 2 | `travelers/<file>.md` frontmatter `person:` | WRITE | `LINKED` · `NOT-LINKED` |
+| 3 | `travelers/<file>.md` **body** | ASSERT | `UNCHANGED` |
+| 4 | `trip-context.md` | ASSERT | `UNCHANGED` — neither read nor written |
+
+plus the MOVES / STAYS / NOT-MOVED / REFUSED **counts**. **A partial run is a run that says it was
+partial.** **The receipt names fields and outcomes and echoes no value, the display name included** —
+the confirmation already happened and the receipt is not a second place to hold it.
+
+**`CREATED` beside `NOT-LINKED` is the orphan, and the receipt names it rather than repairing it.**
+Emit the record's **path and its id** on row 1 and the undo **in order**: remove the `person:` line
+first where one was written, then delete the record. **The order is the whole of the remedy** —
+reversed, the trip is left holding a well-formed reference resolving to nothing, which is the defect
+this verb's write order exists to avoid, authored by the repair instead of by the run.
+
+**Why the undo is by hand and not a compensating delete.** A second record-deleting write here would
+falsify standing rule 10's sentence that an erasure is *the one write that may delete a record* — and
+§ *The repair extension point* would then oblige this slice to repair a Zone A sentence its own edit
+had made untrue. The cost is one manual step on a branch that requires a write to have failed after
+another succeeded; the alternative is a second deletion path on a command surface whose deletion
+story is currently one verb long. **Rule 11 admits no deletion, and this is where that shows.**
+
+### The four mechanical writes, and which one this is
+
+The person-record class permits **exactly four mechanical writes, all operator-initiated and none
+authoring a value: the creation scaffold, the merge-stub rewrite, merge absorption into the survivor,
+and erasure.** **This verb is the creation scaffold** — the first member of that enumeration, and this
+is its first mechanical instance. **The enumeration does not grow and that class's schema is not
+edited.**
+
+**Operator-causation is not what places it there, and saying so matters** — every member of that
+enumeration is operator-initiated, so causation cannot discriminate between being inside it and being
+outside it. What places this verb inside it is the qualifier: **none authoring a value.** Rule 11(c)
+makes copying a *condition of the write* rather than a description of it, so every value this verb
+puts in the record already exists in the source file and none is authored. The value-bearing half of
+the operation therefore needs no carve-out and takes none — it satisfies the enumeration's own
+qualifier rather than being excepted from it.
+
+### The standing rule this write is taken under is rule 11
+
+This section discharges each of its conditions by name. **(a)** the record's path does not exist,
+established by the store listing this verb already reads, and the run creates exactly one file and
+edits exactly one existing line elsewhere. **(b)** the display name is the source file's own answered
+`Name` field, read by the parse above — never a title line, a stem, a roster row, an argument or a
+search. **(c)** every value written already exists in the source file. **(d)** the operator confirmed
+against a preview total over the source's answered set, with every answered field in exactly one of
+MOVES / STAYS / NOT-MOVED / REFUSED, and a field the preview does not name is unreachable rather than
+merely unmoved. **(e)** no byte of the source body changes, so discarding the record is a complete
+rollback. **(f)** a duplicated **`slot`**-scoped label in the MOVES set is refused rather than
+resolved, and `block`-scoped repetition is not that case.
+
+**Rules 9 and 10 are untouched.** Rule 9's operation class fails here on two counts — this creates a
+file and it copies more than one field — which is why rule 11 exists rather than an exception inside
+rule 9, and rule 9 reserved the append in those terms. Rule 10 is not reached at all: nothing here
+deletes anything.
+
+**What consent this establishes, stated exactly and not overclaimed.** Rule 11(d) delivers the
+**operator's confirmation**, which is not the subject's consent, and this section does not call it
+one. What answers the relocation risk structurally is the **precondition**: the subject of an
+extraction is a person who **already has a filed profile**, and this verb copies only what that file
+already states. There is no path from *no file* to *a record*, so the case the store's own README
+forbids — a record for a person who did not ask for one — is unreachable here by construction rather
+than by prohibition. **That is a bound, not a consent claim.**
+
+**Everything this verb names, it names and does not run** — `/trip-record travelers`,
+`/trip-record profile`, `/trip-new`, and the reconcile route. Whether each is available is a property
+of its own file, observed there, and standing rule 8 is why this section does not state it.
+
+**Reversibility: MODERATE, confidence HIGH.** Not CHEAP — the store is git-ignored, so there is no
+revert, and the record is visible to every trip that later links it. Not IRREVERSIBLE — nothing is
+deleted, no source value is lost, and a completed extraction is undone by removing the `person:` line
+and discarding the record. That tier is a **property of the copy-never-move decision**: were this verb
+to remove the extracted bullets from the source, the tier would move with it.
