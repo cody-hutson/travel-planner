@@ -1,6 +1,17 @@
 # ADR-012: People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery
 
-- **Status:** Accepted (2026-09-03)
+- **Status:** Accepted (2026-09-03); **amended once (2026-09-06)**.
+  **First amendment** — three sites in this record assigned *redundant-override normalization* to
+  enrichment: the reasoning in *Why an `OVERRIDDEN` trip is reported and not dropped*, the enrichment
+  row of § 7 *What this record does NOT decide*, and the `reference/data-model.md` entry under
+  *References*, which cited that file as the rule's source. The rule was resolved the other way while
+  this milestone was still in build: composition **reports** a redundant override and does **not**
+  normalise it, the trip-side line is left in place, and removing it is a human act
+  (`reference/data-model.md` § *Field Scope* → the `DEFAULT` row, and § *The override lifecycle*). The
+  third site had become a citation to a rule its target no longer carries. All three now read
+  *reporting*, corrected in place rather than softened. **No decision changes:** § 7 records the
+  enrichment mechanism as *not decided here*, so this record described that mechanism rather than
+  deciding it.
 - **Deciders:** repo maintainer
 - **Driving work:** the People library milestone. This record is the prerequisite architecture
   decision that milestone's first acceptance criterion requires, and it is the milestone-head
@@ -757,9 +768,10 @@ record moving to `packed` converts that line into a live divergence nobody decid
 *correctly* un-signalled for replanning — its planned value did not move — and *incorrectly* silent if
 the operator never learns the line became load-bearing. **Two dispositions, one edit; discovery emits
 both and adjudicates neither.** It deliberately does **not** compute whether an override was
-redundant: that needs the record's pre-edit value, and redundant-override normalization is already
+redundant: that needs the record's pre-edit value, and redundant-override **reporting** is already
 assigned to enrichment, which holds that value as the model's last-processed composition. Computing it
-here would put a second adjudicator on a rule enrichment owns.
+here would put a second adjudicator on a rule enrichment owns. **Nothing normalises the line away** —
+composition reports and does not normalise, and the trip-side line goes only when a human removes it.
 
 **The card's own warning, answered rather than accepted.** *A design that notifies on reference alone
 is noisy by construction* — quantified: notifying on reference alone signals **every** referencing
@@ -1295,7 +1307,7 @@ stakeholder impact, not a rollback.
 | The person-record **body shape**, its field set, its schema file, and the store README | the schema-and-store slice |
 | The **guard-suite boundary assertion** for the new `.gitignore` group and for the merge-stub shape | the guard-suite slice |
 | The **composition implementation** and the tolerant read's third case | the composition slice |
-| The **enrichment mechanism** — PUSH ∪ PULL, the composed-source diff, redundant-override normalization | the enrichment slice |
+| The **enrichment mechanism** — PUSH ∪ PULL, the composed-source diff, redundant-override reporting | the enrichment slice |
 | The **publish-guard freshness walk**, and the § 5.6 fence row **coupled with** the evaluator widening | the publish-guard slice |
 | The **two shipped intake forms** — the trip form and the durable form | the form-split slice |
 | The **command surface**, including the promotion act and `/trip-new`'s sentinel-slug refusal | the command slice |
@@ -1469,7 +1481,8 @@ mid-milestone renumbering already demonstrated.
   from the template rather than a literal; the composition-and-resolution table that makes a
   trip-side `PERSON` value a **schema violation rather than an override**, and makes a `DEFAULT`
   field's durable value authoritative unless the trip carries an answer; the redundant-override
-  normalization assigned to enrichment; and the starred-pass split, which is the document-side
+  **reporting** assigned to enrichment, the trip-side line being reported and left in place for a
+  human to remove; and the starred-pass split, which is the document-side
   counterpart this subsection is careful not to re-grade on the instance-side predicate
 - `agents/00-enrichment.md` — the two statements of the unanswered equivalence (*an absent, blank or
   em-dashed line is `one-off`*; *a blank or em-dashed field … is `unknown`, never `never`*) that
