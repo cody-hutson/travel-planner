@@ -59,7 +59,9 @@ content is generated here.
 
 > One block per **origin**, never one per traveler. Name travelers by their
 > `## Group` roster entry — the name only. Their `Leaving from:`, journey comfort
-> and passport stay in `travelers/<traveler>.md` and are never copied here.
+> and passport are asked on the person form and read from that traveler's own
+> composed source — the durable record where they have one, their trip profile
+> otherwise. Either way they are never copied here.
 
 #### Origin B — Manchester, United Kingdom (MAN)
 - **Departing travelers:** Pat
