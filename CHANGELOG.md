@@ -3,6 +3,128 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.25.0] — 2026-09-05 — Command verb discoverability
+
+The trip commands take verbs, and until this release you had to already know the verb in order to
+type it. `/trip`, the primary entry point, declared no `argument-hint` at all — commit to it and the
+line went quiet. Three of its siblings did declare one, and each rendered `<verb>`: the argument's
+*shape*, never its domain, which tells a reader that a verb belongs there and nothing whatever about
+which. There was no complete list to fall back on either. `reference/` carried ADRs, schemas and
+specs but no command reference, and the README's first-run table was partial by design and said
+so — an honest disclaimer pointing at nothing.
+
+This release gives each command a description that names what its verbs are *for*, a hint that
+enumerates them, and a `reference/command-reference.md` carrying the whole surface: every verb, its
+argument signature, and the trip state it requires before it will run.
+
+The decision that shaped every other one was a measurement that contradicted the premise the work
+started from. The card assumed `argument-hint` is what the command picker shows. It is not. Read
+against the installed CLI's own renderer, the field draws as dim ghost text on the input line, and
+only once a `/`-prefixed value has been typed — the moment at which the picker's suggestions have
+already been cleared. The picker row renders `description`. The hub re-verified this independently,
+with a differently-shaped probe, and reached the same conclusion. So the design stopped asking one
+key to do three jobs and gave each of the surface's three moments one job apiece: `description`
+names the verb domain while you are browsing, `argument-hint` enumerates the verbs at the instant
+you are choosing one, and the reference carries the set for when you want all of it. The work did
+not change; the claim the release made about which surface delivers it was wrong, and correcting
+that before shipping belongs in this record rather than out of it.
+
+No length constant entered the repository, and its absence is a decision rather than an oversight.
+The rendering budget is the terminal's, mediated by a CLI this repository does not own, does not
+version and cannot pin — committing a number would assert a fact about someone else's release that
+nothing here could keep true, and would one day fail for a reason no contributor could act on. The
+check therefore grades verb-set agreement and never length. `/trip-record` is the one command whose
+list does not fit inline at the 80-column floor: it carries what fits, marks the truncation with a
+token the verb rule ignores by construction, and its description points at the document. That
+*pairing* is what is mechanically graded, rather than the size of either half.
+
+The magnitude the work was scoped against had gone stale, and it mattered more than a magnitude
+usually does. The milestone's own graded success indicator named a verb total the previous release
+had already moved — the people library added verbs to `/trip-record` after this card was written. A
+reference built to the old figure would have shipped short **while the indicator read green**: the
+failure where the artifact and the measurement are wrong in the same direction and each confirms
+the other. Both were corrected at the planning gate, and the correction is recorded as a re-scope
+rather than a resolution, because the defect still reproduced — only its size had moved.
+
+One consequence of that staleness was visible to every user and nobody had noticed it.
+`/trip-record`'s description still covered the verbs the command had when the sentence was written:
+`link`, `unlink` and `promote` had acquired no phrase, and `erase` — the one irreversible act
+anywhere on this surface — was absent entirely from what a user sees. A description is not a
+changelog and does not owe an entry per verb, but the verb that erases a person is not the one the
+picker should forget to mention.
+
+The reference is derived rather than remembered. The repository already stated the verb set in seven
+places and machine-cross-checked every one, so an eighth statement that nothing graded would have
+been a regression wearing a feature's clothes — the first uncomputed enumeration in a corpus whose
+discipline is that enumerations are computed. The document instead carries a marker-delimited region
+that the existing taxonomy guard recomputes from the command files' own requirement tables and
+compares on every run, printing the block it expected when the two disagree, so a divergence is
+repaired by a paste rather than a hunt. That the region comes from the guard's existing extractor
+rather than a second one is the whole reason this form was chosen over a generator.
+
+A check that still passes once deleted is not a check, so the new guard group's deletion-sensitivity
+was demonstrated rather than asserted. Removing the reporting group fails the assertion inventory in
+one direction and removing the control arms fails it in the other — but there is a third mode that
+neither direction can see, in which the checker is quietly unwired from the real command tree while
+every assertion id stays emittable, surfaced and armed, and every fixture still passes. That mode is
+caught by a vacuity guard, which refuses to report a comparison that did not happen.
+
+One thing changed at the last gate. `/trip`'s new description named a domain for every verb the
+command declares but one: `schema` mapped to no phrase. The obvious repair is to append a clause,
+and appending was the wrong move — truncation is tail-first, so a longer sentence would have pushed
+text that was already earning its place past the cut in order to rescue text that was not there
+yet. The sentence was re-read instead, and its trailing restatement of mechanism gave way: saying
+that the command resolves the trip and then runs what you typed does not name a verb domain, and the
+body below already states it normatively. The description ended up **shorter than it started while
+gaining a domain** — an outcome an append could not have reached.
+
+No verb count appears in anything this release authors, here or in the reference. The set grows, and
+a number standing beside it reads its own growth as drift.
+
+### Added
+
+- **`reference/command-reference.md`** — the whole command surface in one table: every verb, the
+  argument signature its own section heading states, and the lifecycle, mode, destination and depth
+  it requires. The table sits inside a marker-delimited region recomputed from each command file's
+  requirement table on every guard run; the prose around it explains how to *read* the table and
+  deliberately names no verb and no total, because a second statement of the set is a second thing
+  to keep true.
+- **An `argument-hint` that enumerates verbs on every trip command that takes one.** `/trip` had no
+  such key at all and now carries its full list; `/trip-decommission` and `/trip-publish` replace
+  `<verb>` with theirs, the slug flag still fitting beside it. `/trip-new` takes a destination and
+  year rather than a verb, so its hint was already correct and is left alone.
+- **Group `H` in the command-taxonomy guard** — five assertions, five control arms, five fixture
+  defect modes, and no SKIP path: an absent reference document is a hard failure rather than an
+  expected skip, because declaring the group skippable would convert a red into a silent pass over
+  an unshipped surface.
+
+### Changed
+
+- **Every trip command's `description` now leads with its verb domain rather than its role.**
+  Truncation is tail-first, so the visible prefix is the scarce resource and a label spends it
+  saying nothing. `/trip-record` gains the domains the people library left it without, `erase`
+  among them, plus the pointer at the reference its own list overflows into.
+- **The README's first-run table has something to point at.** It has always described itself as a
+  starting point rather than the whole surface; that sentence was true and unactionable, and is now
+  one clause away from the document that completes it.
+- **The taxonomy workflow's coverage-boundary comment**, which would otherwise have carried a stale
+  coverage claim on the very surface whose purpose is to be honest about coverage. Comment only —
+  the `env:` block is byte-unchanged, and it stays that way precisely because group `H` needs no
+  skip declaration.
+
+### Known gaps, carried rather than hidden
+
+- **Order is not graded.** The check asserts that a hint's verb set agrees with the command's own
+  table; a hint whose set is right and whose ordering has rotted passes. Front-loading the verbs a
+  reader is likeliest to want remains an authoring rule, stated in the reference and enforced by
+  nothing.
+- **Nothing grades the rendering budget**, by construction and not by omission. A hint can grow past
+  what any given terminal will show and no check here will say so, because the number that would
+  decide it belongs to software this repository does not version.
+- **Desktop-app renderer parity is unmeasured.** The whole design is calibrated against the CLI's
+  renderer; whether the desktop picker draws the hint is recorded as assumed and unverified, exactly
+  as the governing decision record already admitted. If it does render it, this only improves.
+
 ## [0.24.0] — 2026-09-05 — People library
 
 A traveller who has been on three trips has answered the same 38 intake questions three times.
