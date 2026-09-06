@@ -15,10 +15,16 @@ creates the folder for you. The shape it creates:
 trips/<destination>-<year>/
 ├── trip-context.md     source of truth for the trip
 ├── trip-log.md         decision history; bridges planning sessions
-├── travelers/          one profile per person, copied from
-│                       templates/traveler-intake.template.md
+├── travelers/          one profile per person for THIS trip, copied from
+│                       templates/traveler-intake.template.md — each may carry a
+│                       person: line pointing at that person's durable record
 └── outputs/            agent artifacts, including the built travel site
 ```
+
+Intake is split, and only the trip half lands here. The answers that stay the same
+from one trip to the next are asked on `templates/person-intake.template.md` and
+held once in [`../people/`](../people/README.md), outside every trip — so a second
+trip with the same people re-asks only what is genuinely new.
 
 ## After a trip
 
@@ -35,7 +41,7 @@ Keep or clear per folder, because the four parts of a trip do not age the same w
 | `trip-log.md` | **keep** | Small, and the decision history is the part worth rereading when you plan the next one. |
 | `trip-context.md` | **keep** | Small, and it is the trip's shape — where you went, when, and what you booked. |
 | `outputs/` | **clear once archived** | The largest thing in the folder, and rebuildable from the two files above. |
-| `travelers/` | **clear once archived — durable answers belong in `people/`** | The most sensitive bytes in the repo — passport details, dates of birth, document expiries. **Do not copy a profile forward into the next trip.** A person's durable facts belong in `people/`, held once and referenced by each trip's `person:` line, so a trip folder is never how a person's facts survive. If someone filled a trip form before they had a record, move those durable answers into `people/` — then clear. |
+| `travelers/` | **clear once archived — durable answers belong in `people/`** | The most sensitive bytes in the repo — passport details, dates of birth, document expiries. **Do not copy a profile forward into the next trip.** A person's durable facts belong in `people/`, held once and referenced by each trip's `person:` line, so a trip folder is never how a person's facts survive. If someone filled a trip form before they had a record, `/trip-record extract <name>` builds the record from that profile's own answers and points the file at it — then clear. |
 
 **Nothing here expires on its own.** No command deletes a trip folder, no timer runs,
 and archiving a trip does not shrink it. Clearing is a thing you do, and the point of
