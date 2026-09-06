@@ -1590,15 +1590,19 @@ what keep it there.
    record side is the incoming record's own slot. The trip side is this trip's own answer where it
    has one, and, where this trip is silent and a resolving reference is being replaced, the outgoing
    record's slot — because that is where the value this trip draws on today actually lives, which is
-   what keeps the pair total over the repoint branch. **Composition still decides membership**, and
-   that is the part which must not change: which fields the survey holds, and which of those are
-   adjudicable, remains the pre/post delta over both functions, which is what makes the set total
-   over the repoint. What composition is **not** is a source for the displayed values. On the one
-   sanctioned `DEFAULT` override `K5` composes the trip's own value on **both** sides, so a pair
-   taken from the two compositions renders the operator's own answer twice and never shows the
-   record's — and the record's value is the thing `DIVERGENT` was computed from and the only thing
-   that makes the row a disagreement at all. The record's pre-edit value is not something
-   composition holds; the record is.
+   what keeps the pair total over the repoint branch. **Where the field is block-scoped, that side
+   is every block that file holds, rendered one line per block, and never the union** — the union is
+   what composition returns and this paragraph has just refused composition as a source, and
+   `Category` and `Specific` are two **instances** rather than two claimants on one slot, so a side
+   holding no block renders `UNKNOWN` and a side holding three renders three. **Composition still
+   decides membership**, and that is the part which must not change: which fields the survey holds,
+   and which of those are adjudicable, remains the pre/post delta over both functions, which is what
+   makes the set total over the repoint. What composition is **not** is a source for the displayed
+   values. On the one sanctioned `DEFAULT` override `K5` composes the trip's own value on **both**
+   sides, so a pair taken from the two compositions renders the operator's own answer twice and
+   never shows the record's — and the record's value is the thing `DIVERGENT` was computed from and
+   the only thing that makes the row a disagreement at all. The record's pre-edit value is not
+   something composition holds; the record is.
 
    **A side that holds no value renders as the model's own `UNKNOWN`** rather than as a blank or a
    second minted sentinel — **and a record value that has lapsed renders as neither.** The record
@@ -1619,19 +1623,23 @@ what keep it there.
    — where it lands, and what it never says* forbids restating conflicting values, and its subject
    is **the report**, which that same section lands in the `## Update signals [DERIVED]` block of
    `outputs/traveler-model.md`. **Two of its three grounds are properties of that persisted artifact
-   and do not reach a rendered line**: the publish guard matches a label prefix **against files**,
-   and an erasure reaches a copy **by address**. **A rendered confirmation acquires no address and is
-   scanned by no guard** — and this verb writes no report at all, its whole on-disk effect being one
-   frontmatter line. **The third ground is narrower than those two, and the residual is stated
-   rather than denied.** *Link, don't copy* is about a value acquiring a second **durable** home, and
-   a render acquires none — but § `erase` row 24 types **the session transcript** as a location a
-   copy of a person's data reaches, `REPORT` rather than `REACH`: named and not swept. A rendered
-   pair is the act that puts one there. It is disclosure into this trip's own session, it survives
-   the operator declining, and it is carried as a stated residual of rendering the values at all —
-   not a cost this paragraph may claim is zero. That report goes on naming
-   fields without their values, and nothing here changes what the enrichment agent writes into it.
-   Standing rule 9(d) requires the echoed outgoing → incoming pair at exactly this surface, and
-   `## promote <name> <field-label>` echoes the same pair for one field at the moment of that one
+   and do not reach a rendered line**: ground **(1) Publishability** matches a label prefix against
+   **files**, and a rendered confirmation sits in none and is scanned by no guard; ground **(3) Link,
+   don't copy** is about a value acquiring a second **durable** home, and a render acquires none.
+   And this verb writes no report at all, its whole on-disk effect being one frontmatter line.
+   **The ground that survives is (2) Erasure reach, and the residual is filed under it and stated
+   rather than denied.** That ground names a quoted value as a new copy widening the set an erasure
+   must reach **by content rather than by address** — so a rendered pair having no address is not an
+   exemption from it. Unreachable-by-address is precisely the harm it names, never the defence, and
+   citing address-reach here would answer the ground with the property the ground calls inadequate.
+   § `erase` row 24 types **the session transcript** as one of those locations — its rows 1–28 are
+   the erasure-reach table — `REPORT` rather than `REACH`: named and not swept, its remedy *never
+   echo a subject value*, which is exactly what a rendered pair does. It is disclosure into this
+   trip's own session, it survives the operator declining, and it is carried as a stated residual of
+   rendering the values at all — not a cost this paragraph may claim is zero. That report goes on
+   naming fields without their values, and nothing here changes what the enrichment agent writes
+   into it. Standing rule 9(d) requires the echoed outgoing → incoming pair at exactly this surface,
+   and `## promote <name> <field-label>` echoes the same pair for one field at the moment of that one
    write. **The two rules govern different surfaces, and both hold as written.**
 
    **Rendering the values does not make this a solicitation, and rule 1 is what keeps it from
