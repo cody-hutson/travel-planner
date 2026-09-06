@@ -137,9 +137,18 @@ files are left byte-identical.
 not merge. It writes no value into the record — making a trip answer durable is
 `/trip-record promote`, one named field at a time — and it does not delete the trip's
 own line either, even where the record's answer is the one you mean to keep. Removing
-that line is yours to do, and doing nothing is a valid choice: a redundant line costs
-one report line per pass and nothing else. Nothing on this surface merges two people's
-answers together silently, and that is the property the whole design is built to hold.
+that line is yours to do, and doing nothing is a valid choice — but what it costs
+depends on something outside this trip. **While the record still says what the trip
+says**, a redundant line costs one report line per pass and nothing else. **Once the
+record changes, that same line is a live override**: a `DEFAULT` field takes the trip's
+answer for this trip, so the edit you just made to the record does not reach here, and
+the pass reports the line the way it reports an override somebody chose — which is what
+makes the two indistinguishable afterwards. **So make it a decision rather than a
+leftover.** Keep the line to pin this trip to today's answer; remove it — delete it,
+blank it, or write `—` — to let the record's later answers reach this trip. With no
+reason to pin it, remove it: the record is the copy you will keep editing. Nothing on
+this surface merges two people's answers together silently, and that is the property the
+whole design is built to hold.
 
 **Repointing an existing link is the branch worth reading twice.** Where the file
 already names a *different* record, the command echoes the outgoing id, says plainly
