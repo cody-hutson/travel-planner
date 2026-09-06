@@ -1333,6 +1333,116 @@ migrated only at its **emitter** — the agent prompt that writes it, and the sc
 shape — so a class carrying no witness is graded there and never against a repository artifact. That
 is a statement about where a class can exist, not a relaxation of any criterion.
 
+#### The count-assertion declaration
+
+**A second declaring fence, on the same mechanism as the freeze above and for a different
+property.** `reference/adr/ADR-013-count-assertion-basis.md` ratifies the authoring convention
+this fence pins: a count asserted about a countable population carries a re-derivable basis —
+an anchored measurement, a derived-and-asserted region, a reconciled rule written out inline,
+or a population several homes agree on. A count in none of those forms is a defect, because
+nobody who doubts it can check it without redoing the measurement.
+
+The residual — every count assertion the corpus carried when that convention became enforced —
+is **declared here per path** rather than forgiven. `scripts/test-corpus-hygiene.sh` group **C**
+reads this fence, re-derives the observed population from the tracked markdown tree, and
+compares. **The comparison runs in both directions, and that is what makes this a pin rather
+than an allowlist:** a path whose observed population rises above its row fails, a path that
+falls below its row without the row being updated fails, an undeclared path carrying an
+assertion fails, and a row naming a path that no longer exists fails. An allowlist entry
+blinds a document permanently; this catches the *next* assertion in a document that already
+has one, which is where the defect this fence exists for actually recurred.
+
+Two columns, both required, whitespace-separated — the same shape as the freeze declaration
+above. A line whose first non-blank character is `#` is a comment; a blank line is ignored.
+The left column is the number of sites observed in the file named on the right, and a file
+with no site carries no row.
+
+<!-- count-assertion-basis: this fence is DATA, and the numerals in it are the declared
+     population itself rather than assertions about one. It is fenced, so the detector that
+     reads it does not also scan it. -->
+
+```count-assertion-digest
+# sites  path
+4       .claude/commands/trip-decommission.md
+6       .claude/commands/trip-new.md
+10      .claude/commands/trip-record.md
+6       .claude/commands/trip.md
+28      CHANGELOG.md
+8       CLAUDE.md
+1       CONTRIBUTING.md
+4       README.md
+4       SECURITY.md
+3       agents/00-enrichment.md
+5       agents/01-activities.md
+1       agents/03-scheduling.md
+6       agents/05-hub-planner.md
+4       agents/06-validator.md
+2       agents/07-nightlife.md
+1       agents/destination-ideation.md
+2       examples/archived-trip-demo/README.md
+4       examples/archived-trip-demo/outputs/traveler-model.md
+1       examples/archived-trip-demo/travelers/dana.md
+2       examples/archived-trip-demo/travelers/per-4f1c.md
+2       examples/archived-trip-demo/trip-context.md
+13      examples/data-architecture-demo/README.md
+5       examples/data-architecture-demo/outputs/activities-list.md
+2       examples/data-architecture-demo/outputs/change-summary.md
+2       examples/data-architecture-demo/outputs/cost-estimate.md
+2       examples/data-architecture-demo/outputs/event-status.md
+3       examples/data-architecture-demo/outputs/final-itinerary.md
+1       examples/data-architecture-demo/outputs/links-reference.md
+1       examples/data-architecture-demo/outputs/nightlife-list.md
+1       examples/data-architecture-demo/outputs/rooftop-sunset-bars.md
+2       examples/data-architecture-demo/outputs/satisfaction-metrics.md
+1       examples/data-architecture-demo/outputs/scheduling-framework.md
+1       examples/data-architecture-demo/outputs/transport-brief.md
+2       examples/data-architecture-demo/outputs/traveler-model.md
+7       examples/data-architecture-demo/outputs/validation-report.md
+1       examples/data-architecture-demo/outputs/venue-matrix.md
+1       examples/data-architecture-demo/travelers/alex.md
+7       examples/evening-boundary-demo/README.md
+1       examples/evening-boundary-demo/outputs/activities-list.md
+1       examples/evening-boundary-demo/outputs/food-list.md
+1       examples/ideation-demo/traveler-leanings.md
+3       examples/people-library-demo/README.md
+4       examples/people-library-demo/people/psn-3c7e.md
+6       examples/people-library-demo/travelers/noor.md
+1       examples/single-origin-demo/README.md
+1       examples/single-origin-demo/trip-context.md
+2       examples/tokyo-2026/outputs/activities-list.md
+2       reference/adr/ADR-006-third-party-data-capture.md
+4       reference/adr/ADR-007-command-entry-point.md
+20      reference/adr/ADR-008-publish-content-guard.md
+36      reference/adr/ADR-009-data-architecture.md
+1       reference/adr/ADR-010-per-traveler-approval-collection.md
+10      reference/adr/ADR-011-per-traveler-cost-estimation.md
+29      reference/adr/ADR-012-people-library.md
+1       reference/command-reference.md
+19      reference/data-architecture.md
+13      reference/data-model.md
+1       reference/replan-protocol.md
+1       reference/schemas/README.md
+1       reference/schemas/cost-estimate.md
+2       reference/schemas/food-list.md
+1       reference/schemas/scheduling-framework.md
+1       reference/schemas/travel-site.md
+1       reference/schemas/trip-context.md
+1       reference/site-layout-spec.md
+1       templates/person-intake.template.md
+1       templates/traveler-intake.template.md
+1       trips/README.md
+```
+
+**What to do when this fence legitimately has to change.** Exactly what the freeze declaration
+above says, and for the same reason. If you add a count assertion deliberately, or remove one,
+update that path's row **in the same commit** — the diff then carries the edit and the re-pin
+side by side, and a reviewer sees the decision rather than inferring it. Prefer giving the
+count a basis over declaring it: a row here records that a sentence cannot be re-derived, which
+is a cost the document keeps paying. **Do not regenerate the whole fence to make a red go
+away.** Re-pin only the rows you meant to change, or the assertion stops being a pin and
+becomes a rubber stamp. The suite can emit a fresh census to compare against, and that is a
+diagnostic rather than a repair.
+
 ---
 
 ## 11. What This Document Does Not Define

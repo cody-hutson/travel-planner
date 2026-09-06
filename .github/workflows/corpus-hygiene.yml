@@ -1,0 +1,146 @@
+name: Corpus hygiene
+
+# Runs scripts/test-corpus-hygiene.sh on every push and every pull request, so three defect
+# classes that survive a reorganisation are machine-graded rather than caught by whoever
+# happens to read the paragraph.
+#
+# SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
+# particular in no run: step — every value below is a repo-static literal. The property is
+# stated without writing the token itself, so it stays mechanically checkable: a scan for
+# the interpolation syntax over this file must return exactly zero. There is no path for
+# attacker-controlled event data (issue titles, PR bodies, commit messages, head_ref) to
+# reach a shell.
+#
+# ── WHY A SEPARATE WORKFLOW RATHER THAN A STEP IN AN EXISTING JOB ────────────────
+# The three reasons the sibling workflows already record, each checked against this suite
+# rather than inherited:
+#
+#   1. SHARED FATE. test-publish-guard.sh sources publish-trip-site.sh. A hygiene suite
+#      added to that job would inherit a failure mode with nothing to do with hygiene.
+#   2. FAILURE ATTRIBUTION. This suite goes red when someone writes a count with no basis,
+#      cites a document by bare basename, or leaves a line-number locator behind. Routing
+#      that contributor to a check named "Artifact schema suite" is a legibility trap.
+#   3. CHECKOUT DEPTH. This is the only suite in the repository that reads a blob from
+#      history, and it is therefore the only one that needs fetch-depth: 0. Adding it to an
+#      existing job would impose that cost on a job that does not need it — or, worse, would
+#      leave the depth at the default and silently disarm the arm that needs it.
+#
+# ── THE CHECKOUT DEPTH IS LOAD-BEARING, NOT A DEFAULT NOBODY CHANGED ─────────────
+# Arm CTL-RETRO replays a defect this repository actually shipped, against the revision that
+# carried it. Every other arm in the suite grades a fixture the suite's own author wrote,
+# which proves the detector does what its author expected; CTL-RETRO is the only one that
+# proves it catches what the repository actually got wrong. It needs history, so the checkout
+# below sets fetch-depth to the full history and the suite FAILS rather than skipping when
+# the blob is unreachable. Lowering the depth here disarms that arm, and the suite will say
+# so loudly rather than quietly passing without it.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# What a green check here does and does not prove.
+#
+# IN SCOPE — these groups run on every invocation and their verdicts are real:
+#   A    CITATION FORM. A markdown basename written bare, where that basename resolves to
+#        exactly one tracked file whose home is directory-qualified and is neither a worked
+#        example nor a per-trip artifact class. A SIBLING reference is excluded by
+#        construction: inside its own directory the bare name IS the correct relative path,
+#        and "qualifying" it would break a link that works. The home map is derived from the
+#        tracked tree on every run and is held nowhere
+#   B    LINE-NUMBER LOCATORS. A path:line reference in tracked markdown. The tracked
+#        population is empty and is meant to stay empty, so this group renders VACUOUS
+#        rather than a bare PASS and rests openly on its control arm
+#   C    BASIS-FREE COUNT ASSERTIONS. A count asserted about a countable population with no
+#        re-derivable basis behind it. The admitted basis forms, their in-corpus exemplars,
+#        and the reason the numeral is not the unit of the defect are ratified in
+#        reference/adr/ADR-013-count-assertion-basis.md and are not restated here. The
+#        residual population is DECLARED per path in the count-assertion-digest fence in
+#        reference/data-architecture.md and asserted in both directions
+#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus one arm that
+#        replays a real historical defect. One MUST-FIRE arm per finding code the suite can
+#        emit, alongside the specificity arms that tell a correct implementation from a
+#        lookalike. THE ARM INVENTORY IS NOT RESTATED HERE, deliberately — it lives in the
+#        CTL section of the suite, which is also where the invariant binding it is stated
+#   Y    the inventory itself: every emittable code has an arm, every arm names an emittable
+#        code, checked in both directions. The code set is READ FROM the suite on every run
+#
+# NO POPULATION, ARM COUNT OR CODE COUNT IS WRITTEN INTO THIS FILE. Every figure the gate
+# knows is emitted at run time on its own summary lines — CITATION, LOCATOR and
+# COUNT-ASSERTION — and a numeral copied here would be a copy with no assertion behind it.
+# That is not a stylistic preference: one of the recurrences that motivated this whole gate
+# was a stale count in a workflow comment, in a block that twice forbade exactly this.
+#
+# OUT OF SCOPE — deliberately, and by name:
+#   WHETHER A COUNT IS CORRECT. Group C grades whether a count is RE-DERIVABLE, which is a
+#   much weaker property. A sentence can carry a sound anchor and a wrong number and stay
+#   green. What the gate removes is the claim nobody can check without redoing the work.
+#
+#   NON-MARKDOWN SURFACES. The suite reads tracked markdown. Shell scripts, workflow files
+#   and issue templates are not graded, and one of the motivating recurrences lived in a
+#   workflow comment. That gap is real and is left to review; stating it is what keeps a
+#   green from being read as more than it is.
+#
+#   A USER'S trips/ DIRECTORY. .gitignore keeps it out of a CI checkout, so those artifacts
+#   are unreachable by construction rather than by choice.
+#
+#   THE SUITE'S OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so no CI
+#   job shellchecks a standalone scripts/*.sh. This workflow adds one more file to that
+#   unlinted set. Stated so a green is not read as more than it is.
+#
+# ── ROLLING THIS GATE BACK IS TWO ORDERED STEPS, AND THE ORDER IS NOT OPTIONAL ───
+# Once the check below is registered as a required status check, a plain revert of the pull
+# request that introduced it is NOT a rollback and will wedge the repository. Branch
+# protection would go on demanding a context that no workflow produces, and every subsequent
+# pull request — including the one trying to fix it — would block on a check that can never
+# report.
+#
+#   STEP 1, FIRST. De-register the required status check. Remove the exact string
+#           Corpus hygiene suite (test-corpus-hygiene.sh)
+#           from the branch protection rule's required-contexts list, and read the protection
+#           settings back to confirm it is gone BEFORE going on to step 2.
+#   STEP 2. Revert the pull request that added this workflow, the suite, and the
+#           count-assertion-digest fence.
+#   VERIFY. The protection rule no longer names the string above; neither
+#           .github/workflows/corpus-hygiene.yml nor scripts/test-corpus-hygiene.sh is
+#           tracked; and the remaining required checks report on the revert itself.
+#
+# PREFER THE PARTIAL ROLLBACK where only one group is at fault. Land a change that removes
+# that group and its fence, keeping this workflow and its job name. The context keeps
+# reporting throughout, so nothing blocks and step 1 is never needed. The groups share no
+# state beyond the harness precisely so that this path stays available.
+#
+# ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
+# GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it is pure bash
+# and awk with no Node, no gh and no network, so it has no dependency-gated group and
+# therefore no legitimate skip. An empty declaration here is the correct value, not an
+# omission. VACUOUS is a separate verdict and is not a skip — group B renders it, because an
+# empty POPULATION is a measurement of the tree while a skipped GROUP is a hole in the suite.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  corpus-hygiene:
+    name: Corpus hygiene suite (test-corpus-hygiene.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Load-bearing. Arm CTL-RETRO reads a blob from this repository's history; at the
+          # default depth of a single commit that blob is unreachable and the arm hard-fails.
+          # See the checkout-depth note above before lowering this.
+          fetch-depth: 0
+
+      # No Node setup step: this suite is pure bash and POSIX text processing. It needs no
+      # Node, no gh and no network, which is exactly why its expected-skip set is empty.
+      - name: Run the corpus-hygiene suite
+        env:
+          # A SKIP is a FAILURE unless its group is declared below.
+          GUARD_STRICT_SKIPS: '1'
+          # Empty by design — this suite has no dependency-gated group to declare.
+          GUARD_EXPECTED_SKIPS: ''
+        run: ./scripts/test-corpus-hygiene.sh
