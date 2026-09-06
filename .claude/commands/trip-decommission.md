@@ -1,6 +1,6 @@
 ---
 description: Take a trip's site offline, archive a concluded trip, or reopen an archived one. Never deletes trip content.
-argument-hint: <verb> [--trip <slug>]
+argument-hint: temporary|archive|reopen [--trip <slug>]
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Bash(scripts/publish-trip-site.sh unpublish:*), Read, Edit
 disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/publish-trip-site.sh update:*), Bash(scripts/publish-trip-site.sh rotate:*), Bash(scripts/publish-trip-site.sh list:*), Bash(scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Write, NotebookEdit]

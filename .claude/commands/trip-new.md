@@ -1,5 +1,5 @@
 ---
-description: Start a new trip — scaffolds the folder, context, log and traveler intake. Creates only; never overwrites an existing trip.
+description: Start a new trip for a destination and year — scaffolds the folder, context, log and traveler intake. Creates only; never overwrites an existing trip.
 argument-hint: [destination-year]
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(date:*), Bash(mkdir:*), Read, Write

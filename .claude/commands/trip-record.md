@@ -1,6 +1,6 @@
 ---
-description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile; the destination and the mode, the party, trip facts, constraints and bookings, and the per-trip publish repo name; per-event status and the session log. Writes the trip's own files; never publishes.
-argument-hint: <verb> [--trip <slug>] [args...]
+description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile; the destination and the mode, the party, trip facts, constraints and bookings, and the per-trip publish repo name; per-event status and the session log; link or unlink a traveler to a durable person record, promote one of their fields into it, or erase a person outright. Writes the trip's own files; never publishes. Full verb list in reference/command-reference.md
+argument-hint: profile|person|travelers|destination|mode|group|fact ...
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Read, Write, Edit, Task
 disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
