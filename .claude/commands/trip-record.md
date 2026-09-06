@@ -593,7 +593,7 @@ first time a slice appends a row § *The shape of a table row* already admits �
 
 ## profile <name>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, and the outgoing content on the edit route; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, the outgoing content on the edit route, **this file's frontmatter for the `person:` key** and **its body's labelled bullets**, the last two for the edit route's step-5 screen and for nothing else — named separately because purpose is the granularity this ceiling is stated at, and because `## extract` declares those same two reads of this same path; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class and answered-ness, read live at invocation and **never re-authored here**, for the **cardinality alone** of the edit route's step-5 extraction set; it is the same live read `## extract` declares and it is declared for the same reason, that a second implementation of either predicate would be a second source of truth for what a field is. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it.
 
 The traveler-document verb. It creates a profile that does not exist and edits one that does, and
 the branch is selected by a probe rather than by a tool grant.
@@ -703,15 +703,24 @@ or naming the branches without ordering them, is that same defect written in a d
 5. **Name `/trip-record travelers`** as the reconcile step. Name it; **do not run it** — an agent
    dispatch on a one-line change is heavier than the change, and both verbs live in this one command
    rather than at the ends of a chain. **Where the file this route just edited carries no `person:`
-   key, name `/trip-record extract` here too, in the same shape** — name the capability and stop.
-   The condition is read from the frontmatter this route already has open, so it costs no new read,
-   and it is what makes the naming **state-appropriate**: a file that already references a record has
-   nothing to extract and that verb would refuse, and a capability named where it refuses teaches the
-   operator to ignore the naming. **The naming is otherwise unconditional** — it does not probe the
-   body, does not count extractable fields, names no field and echoes no value. Discovery is handled
-   once, non-field-specifically, at a moment the operator initiated, which is the shape this file
-   already sanctions by name; **this is the only place in this command where that verb is named as an
-   offer.**
+   key AND its MOVES set is non-empty, name `/trip-record extract` here too, in the same shape** —
+   name the capability and stop. **Both limbs are required, and the second is the one that costs
+   something.** The frontmatter limb is free — this route already has the file open — but it is not
+   sufficient, and its insufficiency is measured rather than argued: the post-split trip form asks
+   no `PERSON`- or `DEFAULT`-class question at all, so the MOVES set is empty **by construction** on
+   every file created from it, and such a file carries no `person:` key until it is linked. On the
+   frontmatter limb alone the naming therefore fires on exactly the population where the verb always
+   refuses — the modal file of every trip that has adopted the library — and its precision falls as
+   adoption grows. The second limb is `## extract`'s own partition, computed here for its
+   **cardinality alone**: class `PERSON` or `DEFAULT` and `ANSWERED()`, read live from
+   `reference/data-model.md` and **never re-authored here**. Together they are what make the naming
+   **state-appropriate**: a file that already references a record, and a file with nothing durable to
+   carry, both make that verb refuse, and a capability named where it refuses teaches the operator to
+   ignore the naming. **The naming is otherwise unconditional** — it names no field, echoes no value
+   and reports no count; the test is `> 0` and the cardinality is discarded, never rendered.
+   Discovery is handled once, non-field-specifically, at a moment the operator initiated, which is
+   the shape this file already sanctions by name; **this is the only place in this command where that
+   verb is named as an offer.**
 
 An unanswered field keeps its bracketed placeholder; a field the user says does not apply takes a
 single em dash. **Never write a bracketed placeholder as though it were an answer.**
