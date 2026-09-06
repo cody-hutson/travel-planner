@@ -624,8 +624,10 @@ or naming the branches without ordering them, is that same defect written in a d
 3. **Send it to someone who is not here.** Hand them the whole template file plus the one line the
    guide at the bottom of it gives them; they paste it into any assistant and return a block, which
    is saved to the path. **No file is created at hand-off** — the file appears when the block
-   returns, and that return is a create if the path is absent and an edit if it is not. On a group
-   trip this is how most travelers will do it, so **this route is never dropped.**
+   returns, and that return is a create if the path is absent and an edit if it is not. **Send
+   `examples/people-library-demo/travelers/noor.md` with the form** — they have no repository to
+   open, so a filled-in profile travelling beside the form is the only comparison they will get. On
+   a group trip this is how most travelers will do it, so **this route is never dropped.**
 
 **Edit — an existing profile, field-scoped.**
 
