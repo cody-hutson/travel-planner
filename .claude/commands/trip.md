@@ -1,5 +1,5 @@
 ---
-description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, report where it stands. The entry point — resolves the trip, then runs the verb you typed.
+description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Bash(scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
