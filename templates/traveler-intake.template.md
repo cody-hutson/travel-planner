@@ -222,6 +222,19 @@ publish: internal
 > **Filling this in by hand? You're finished — everything above is your profile.** You can
 > stop here. Delete this guide or leave it; the planner ignores anything below this line.
 
+### What a filled-in one looks like
+
+A worked profile ships with this engine at
+[`examples/people-library-demo/travelers/noor.md`](../examples/people-library-demo/travelers/noor.md).
+It carries this form's own sections and labels — the same ones, in the same order — with real
+answers written into them, an em dash on every question its traveller skipped, and `Overlap` left
+blank. Read it beside this form to see how long an answer needs to be, which is the one thing a
+blank form cannot show you. It is an invented example person and carries no real personal detail.
+
+**If this file reached you on its own, that path will not open** — it lives in the repository this
+form came from. Ask whoever sent you this form to send that profile too: it reads on its own, and
+nothing else from the repository is needed to use it.
+
 ### Filling this out with an assistant
 
 Upload or paste **this whole file** into any assistant — Claude, ChatGPT, Gemini,
