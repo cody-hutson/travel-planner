@@ -1,6 +1,6 @@
 # ADR-012: People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery
 
-- **Status:** Accepted (2026-09-03); **amended once (2026-09-06)**.
+- **Status:** Accepted (2026-09-03); **amended twice (2026-09-06, 2026-09-07)**.
   **First amendment** — three sites in this record assigned *redundant-override normalization* to
   enrichment: the reasoning in *Why an `OVERRIDDEN` trip is reported and not dropped*, the enrichment
   row of § 7 *What this record does NOT decide*, and the `reference/data-model.md` entry under
@@ -12,6 +12,11 @@
   *reporting*, corrected in place rather than softened. **No decision changes:** § 7 records the
   enrichment mechanism as *not decided here*, so this record described that mechanism rather than
   deciding it.
+  **Second amendment** — recorded as a dated paragraph in *Decision* § 5, beside the claim it
+  corrects rather than here. That section's reversibility clause described the candidate space as
+  holding a single member; the space was later enumerated and holds more than one. **No decision
+  changes:** the exclusion, its tier and its reasoning are untouched, and the reversal condition's
+  changed standing is decided by `ADR-014` rather than by this edit.
 - **Deciders:** repo maintainer
 - **Driving work:** the People library milestone. This record is the prerequisite architecture
   decision that milestone's first acceptance criterion requires, and it is the milestone-head
@@ -1236,8 +1241,24 @@ reference is **EXCLUDED-BY-DESIGN**, never DANGLING and never TOMBSTONED.
 **Reversibility: EXPENSIVE · confidence HIGH.** This narrows the plain reading of the milestone's
 promise that a party member who never authors a profile can still hold a durable record: it is
 **satisfied on the trip-scoped reading** (*Decision* § 6) and **refused on the cross-trip one**. Reversing it would
-require a consent mechanism `ADR-006` would admit, and `ADR-006` already measured and rejected the only
-candidate — an unverifiable attestation — on reasoning that holds harder at this scope.
+require a consent mechanism `ADR-006` would admit, and `ADR-006` already measured and rejected the
+candidate nearest to admission — an unverifiable attestation — on reasoning that holds harder at this
+scope.
+
+**Amendment (2026-09-07, Monday) — the candidate space is larger than this section said, and naming
+that makes the refusal stronger rather than weaker.** The reversibility clause above described what
+`ADR-006` had rejected as *"the only candidate."* It was not: the space was enumerated afterwards and
+holds several distinct mechanisms, of which the unverifiable attestation is merely the one nearest to
+admission. The clause now says so in place. **The correction does not soften the exclusion — it
+removes the reading under which the exclusion rested on an unexamined space.** Every enumerated
+mechanism either terminates in the artifact `ADR-006` refuses, or is the already-shipped opt-in path
+and is therefore not an extension, or cannot be built at all for want of an admissible cross-trip join
+key — this class having no reference bearer, as the discovery subsection above types it.
+`reference/adr/ADR-014-cross-trip-consent-refusal.md` carries that enumeration, applies `ADR-010`
+§ 2's attestation ceiling to consent, and **decides** the reversal condition this section named and
+left open. **No decision changes here.** The exclusion, its EXPENSIVE tier and its reasoning stand as
+written; what changed is the standing of the condition under which they would reverse, and that is
+`ADR-014`'s to decide rather than this amendment's.
 
 ### 6. The `ADR-006` amendment
 
@@ -1471,6 +1492,12 @@ mid-milestone renumbering already demonstrated.
   milestone extends
 - `reference/adr/README.md` — the section spine, the `Proposed` → `Accepted` lifecycle this record is
   mid-way through, and the amendment-versus-supersession boundary
+- `reference/adr/ADR-014-cross-trip-consent-refusal.md` — the record that decides the reversal
+  condition *Decision* § 5 named and left open. It enumerates the consent-mechanism space this record
+  described as holding a single candidate, applies `ADR-010` § 2's unforgeability-and-detectability
+  ceiling to consent for the first time, and closes the cross-trip reading permanently rather than
+  deferring it. Cited here because § 5's exclusion is the thing it closes; § 5's own decision is
+  unchanged by it
 - `templates/traveler-intake.template.md` — the rule that falsifies a presence-keyed relevance
   predicate (*Skipping a section never removes it from the output: every field still ships*, each
   skipped field keeping its line and taking an em dash, because *dropping the lines loses the labels

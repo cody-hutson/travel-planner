@@ -160,6 +160,11 @@ citing this ADR. **This ADR does not say that, and as written the claim is false
 *file*, and its durable record is the carried-forward model entry above. Those two surfaces are
 corrected on their own cards; the claim is disowned here so it is not re-derived from this record.
 Recorded by `ADR-012`, which ratified the amendment.
+`ADR-014` later asked whether any consent mechanism could admit the cross-trip record this amendment
+refuses, enumerated the space, and concluded that none can — because the objection above attaches to
+the artifact rather than to the attestation beside it, which is what *"notwithstanding its more
+explicit consent story"* already said. The refusal is closed there rather than deferred; **no decision
+in this record changes.**
 
 ### Identity (a party member's issuing country and validity) — CAPTURE REFUSED
 
