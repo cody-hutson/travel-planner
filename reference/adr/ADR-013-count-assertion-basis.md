@@ -50,8 +50,11 @@ defect trains contributors to reach for the exemption marker, which is how a gat
 decorative.
 
 **What separates the sound sentence from the rotting one is whether a reader can re-derive
-the number without trusting the author.** That property is machine-checkable. The count is
-not the problem; the missing basis is.
+the number without trusting the author.** That property is not itself machine-checkable — a
+machine would have to follow every route to know it leads anywhere. What is checkable is a
+proxy for it: whether the sentence *names* a route at all. The count is not the problem; the
+missing basis is. A machine can settle whether a basis was offered, never whether the offered
+basis holds.
 
 ## Decision drivers
 
@@ -101,14 +104,28 @@ re-derivable basis. Four forms are admitted, each already demonstrated here.**
 
 | Form | What makes it sound | Demonstrated at |
 |---|---|---|
-| **F1 — anchored measurement** | The sentence names the commit, revision or date the count was probed at, so it is frozen to a point in history and cannot go stale. A past-tense or superseded claim is the same form: it describes a state that was. | `reference/adr/ADR-010-per-traveler-approval-collection.md`, whose crypto-primitive probe names its anchor commit and remains correct against a tree that has since grown |
+| **F1 — anchored measurement** | The sentence names the commit, revision or date the count was probed at, so it is frozen to a point in history and cannot go stale. A past-tense or superseded claim is the same form: it describes a state that was. *Recognised by shape only, and the date half is not recognised at all — see the recogniser-coverage note below.* | `reference/adr/ADR-010-per-traveler-approval-collection.md`, whose crypto-primitive probe names its anchor commit and remains correct against a tree that has since grown |
 | **F2 — derived-and-asserted region** | The count sits inside a region regenerated from its own source on every run, so nothing about it is maintained by hand. | the `command-surface: derived` region in `reference/command-reference.md`, regenerated and graded by `scripts/test-command-taxonomy.sh` |
 | **F3 — reconciled rule** | The sentence writes out the arithmetic that produces the number, so a change moves a countable a reader can re-derive rather than silently invalidating one they cannot. | `reference/data-model.md`, which reconciles its labelled-field denominator inline and states this convention in the same section |
-| **F4 — agreement-pinned population** | Several homes assert the same count and a marked population is the reference, so disagreement is what fails rather than any single home being trusted. | the starred-field and class-assignment agreement groups in `scripts/test-artifact-schema.sh` |
+| **F4 — agreement-pinned population** | Several homes assert the same count and a marked population is the reference, so disagreement is what fails rather than any single home being trusted. *The sentence grader has no recogniser for this form and cannot see it — see the recogniser-coverage note below.* | the starred-field and class-assignment agreement groups in `scripts/test-artifact-schema.sh` |
 
 **A count in none of those forms is a defect.** The remedy is any of: remove the assertion,
-state the rule instead of the number, or give it one of the four bases. Which one is an
+state the rule instead of the number, or give it one of the admitted bases. Which one is an
 authoring judgement and this record does not rank them.
+
+**Recogniser coverage — the admitted forms the gate cannot see.** The table states the
+authoring convention, which is broader than the implementation that grades it, and the
+difference is recorded here rather than left for a contributor to hit by surprise. **F4 has
+no recogniser at all.** Agreement-pinning is a property of several homes agreeing, which no
+single sentence carries, so the grader cannot detect it; an F4 sentence still registers as a
+residual site and is carried by its fence row. **F1's date half has no recogniser either** —
+the implemented arm reads a commit-shaped token and the phrases `probed at`, `as of` and
+`baseline`, and nothing in it reads a date as the moment a count was probed. F2 and F3 are
+implemented as the table describes, subject to the shape-only caveat below: the derived
+region is recognised by its opening marker rather than by confirming a generator writes it,
+and the arithmetic arm reads the arithmetic without evaluating it. **Authoring to a form the
+gate cannot see is still sound authoring** — it will register a site, and the fence is where
+that is carried, which is the fence's job and not a defect in the sentence.
 
 **Three shapes are not counts and this convention does not reach them.** A **locator** is an
 address — a section, row, step or wave number names a position, not a population. A
@@ -128,11 +145,32 @@ allowlist entry blinds a document permanently; the recurrences this record was w
 were mostly *second* instances inside documents that already had one, which is the case a
 pin catches and an allowlist does not.
 
-**The non-goal, stated so a green is not read as more than it is.** The gate does not verify
-that a count is *correct*. It verifies that a count is *re-derivable*, which is a different
-and much weaker property — a sentence can carry a perfectly good anchor and a wrong number,
-and this convention will not notice. What it removes is the class of claim that nobody,
-including its author, can check without redoing the measurement from scratch.
+**The non-goal, stated so a green is not read as more than it is.** The gate verifies that a
+recognised **basis form is present** in the sentence. It does not verify that the count is
+*correct* — a sentence can carry a perfectly good anchor and a wrong number, and this
+convention will not notice. Nor, and this is the weaker guarantee worth being explicit about,
+does it verify that the named basis **resolves to anything**. Nothing is dereferenced: a
+commit-shaped token is never looked up, a derived-region marker is never matched against a
+generator, and the word `baseline` is taken at face value.
+
+**A fabricated basis therefore passes, and a reader of this record should expect that.**
+`deadbee1` is not a commit in this repository and never has been, yet a sentence carrying it
+is exempted purely on the shape of the token. A comment that merely looks like a
+derived-region opener suppresses everything beneath it whether or not anything regenerates
+it. The bare word `baseline`, standing alone in a sentence that anchors nothing, is enough.
+None of that is a bug in the implementation; it is the boundary of what a text-shaped probe
+can establish without resolving every reference it reads.
+
+**So what the gate is for, stated positively, because the property is real and worth having.**
+It stops **accidental drift** — the count written in good faith that silently goes stale when
+the population moves, which is the failure this record was opened about and the one that
+recurred in every kind of surface this repository has. It does **not** stop an author who
+deliberately writes a false basis, and it could not be made to without dereferencing every
+anchor a sentence names. The asymmetry is the point rather than an embarrassment: drift is
+unintentional, so a check that merely obliges an author to *name* a route to the number
+catches it, because an author made to name a route has been made to look at the number. What
+the gate removes is the claim nobody can check without redoing the measurement from scratch.
+What it leaves to review is the claim whose route is stated but wrong.
 
 **Supersession: none.** This record generalizes the scope of a statement `reference/data-model.md`
 already makes about its own denominator. That statement stays where it is and stays
@@ -140,7 +178,8 @@ authoritative for that document; nothing in it is reversed, narrowed or re-opene
 
 ## Consequences
 
-- **`scripts/test-corpus-hygiene.sh` enforces the convention**, alongside two citation-form
+- **`scripts/test-corpus-hygiene.sh` enforces the convention as a basis-form-presence check**
+  — not as a re-derivability check, per the non-goal above — alongside two citation-form
   rules that share its motivation: a bare basename cited where the document has a unique
   directory-qualified home, and a `path.ext:NNN` line-number locator. Its finding codes are
   derived from its own emission sites and each carries a must-fire control arm.
