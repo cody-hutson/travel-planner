@@ -3,6 +3,89 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.27.0] — 2026-09-07 — Corpus hygiene fast-follows
+
+The previous hygiene release closed its own record with an admission. It existed to remove a class
+of defect — a count asserted in prose that goes stale when its subject moves — and that class came
+back again and again inside the work of removing it, including in prose that passed every required
+check green. Every instance was caught by somebody reading. None by a gate. The note ended by saying
+that the gap which remained, that nothing detects the next one, was tracked rather than closed. This
+release closes it, and closes it at the level of the class rather than the instance.
+
+A required check now reads the tracked markdown corpus and fails when the repository makes a claim
+about itself that nobody can check. It looks for a count asserted about a countable population while
+carrying no re-derivable basis; for a document cited by bare filename where that document has a
+directory-qualified home somewhere else in the tree; and for a `path:line` locator, which is the
+least durable reference form there is — it rots on the next insertion above it, silently, and then
+points at whatever moved into its place. A count is not a defect for being a count. It is a defect
+for being unreproducible, and what separates the sound sentence from the rotting one is whether a
+reader who does not trust the number can re-derive it without redoing the measurement. So a count
+that names the commit it was probed at is admitted, and so is one sitting inside a region
+regenerated from its source, one that writes out its own arithmetic, and one pinned to a population
+that several homes agree on. Each of those forms was already in use somewhere in this corpus before
+the convention was written down, and the decision record ratifying it names an existing example for
+each rather than inventing a rule.
+
+The unit of the defect is the sentence, and that was measured rather than preferred. A basis usually
+sits a line away from the count it grounds, so a line-anchored reading splits the two and reports a
+sound count as unfounded. Flattening to the paragraph fails the other way, and worse: a single
+exemption token blinds every sentence around it, and a paragraph-flattened probe returned clean on a
+historical revision that provably carries this work's own motivating defect. A probe that reports a
+known defect clean is broken, not reassuring. The suite therefore grades sentences, and it carries
+an arm that replays that real revision out of history — the only arm here graded against something
+the repository actually shipped rather than against a fixture its own author wrote.
+
+The corpus was not clean on the day the rule started being enforced, and the residual is declared
+rather than forgiven. Every file still carrying an ungrounded assertion is listed with its own
+population in a fence, and the check compares the tree against that fence in both directions. A file
+that gains an assertion turns red; so does a file that loses one without its row being updated; so
+does a row naming a file that no longer exists. Comparing in both directions is what makes this a
+pin instead of an allowlist. An allowlist entry blinds a document permanently, and the place this
+defect actually recurred was the next assertion inside a document that already had one.
+
+What the check does not do is written down too, because it was measured at the review gate and the
+decision record had overclaimed it. The check confirms that a recognised basis form is present
+beside the count. It never follows what that form names: a commit-shaped token that is not a commit
+in this repository still reads as an anchor, and the bare word "baseline" still exempts a sentence.
+So it stops drift, and it does not stop an author who deliberately writes a false basis. That is a
+real property and a useful one, and it is now stated as what it is rather than as something larger.
+Hardening those recognisers was considered at the same gate and deliberately left for later.
+
+The artifact-schema suite gained the same shape of assertion in the group that guards the intake
+template's starred fields. That group could already emit a set of violation codes, and whether each
+code had an arm proving it could fire was held by hand — which is how codes shipped unarmed the
+first time, with their branches live and the suite green either way. The suite now reads the code
+set out of the emitting function's own body on every run and compares it, in both directions,
+against the arms that actually ran. A code added without an arm turns the suite red instead of
+sitting latent, and neither the codes nor their number is written down anywhere for somebody to keep
+current.
+
+Away from the gates, the release fixed what a reader actually meets. Somebody handed the traveller
+intake form is now pointed at a worked profile, including the reader this repository could not
+previously reach at all. The form is long, and a person filling one in had nothing to compare it
+against — the only link to a filled-in example lived in the README, which is not a document that
+travels with the form. On a group trip the common case is that the file is handed to someone with no
+checkout of this repository whatsoever. The template's own guide now names a worked profile, says
+plainly that the link will not open if the form arrived on its own, and tells the reader to ask
+whoever sent it for that file as well; and the command that hands the form out now says to send the
+worked profile alongside it.
+
+The data-architecture demo agrees with itself again. Its derived planning-days section opened by
+asserting that every traveller's window and origin basis was the trip's own — a universal the table
+directly beneath it falsified, because one traveller's basis reads as unknown there. The earlier
+release had added a correct restatement below the wrong sentence without touching it, since its
+authorisation covered insertions only. The sentence now says what the table says. The fixture's
+README also tells a reader at the entry point what the fixture is: it renders a per-traveller table
+that the single-origin collapse rule would delete, on purpose, to expose the basis values the
+collapse hides, and it points at the fixture that does render the collapse. The exemption had been
+marked inside the governed section, which reaches the reader who reads the label and not the reader
+who copies the structure.
+
+Nothing here changes how a trip is planned. No command gained a verb, no artifact changed shape, and
+no output reads differently. This is the repository's own quality, and it is the class-level
+completion of a release that closed the same defects one instance at a time. What it buys is that
+the next instance fails a check instead of waiting for somebody to read the paragraph.
+
 ## [0.26.0] — 2026-09-06 — People library adoption
 
 The previous release gave a person a durable record and gave every trip a reference to it instead of
