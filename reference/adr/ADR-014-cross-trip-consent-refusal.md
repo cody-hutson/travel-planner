@@ -127,10 +127,14 @@ consent mechanism can discharge an objection to the thing the mechanism authoris
 above bears this out: every candidate either terminates in the refused artifact, or is already
 shipped and is not an extension, or cannot be constructed for want of an admissible key.
 
-This **corrects** `ADR-012` § *Decision* § 5, which reports that `ADR-006` *"already measured and
-rejected the only candidate — an unverifiable attestation."* The space is larger than that sentence
-allows. The conclusion is **stronger** once the space is enumerated rather than weaker: the space is
-not merely exhausted, it is closed, because the objection is to the output and not to the apparatus.
+This **corrects** `ADR-012` § *Decision* § 5, and the correction has already landed in that record.
+As § 5's reversibility clause stood when this enumeration was drafted, it said `ADR-006` had
+*"already measured and rejected the only candidate — an unverifiable attestation"*. The space is
+larger than that sentence allowed, and § 5 has since been **amended in place** to say so: its
+clause now calls an unverifiable attestation *"the candidate nearest to admission"* rather than the
+sole one, and the amendment dated 2026-09-07 beneath it records what changed. The conclusion is
+**stronger** once the space is enumerated rather than weaker: the space is not merely exhausted, it
+is closed, because the objection is to the output and not to the apparatus.
 
 ### 3. `ADR-010`'s attestation ceiling applies to consent, and consent falls below it
 
