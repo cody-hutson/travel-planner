@@ -5297,6 +5297,479 @@ EOF
   else
     PASS "HZ4: FAIL-CLOSED — no tracked file carries a \`Passport:\` bullet with a real value, measured over the whole tracked markdown tree rather than over the fixtures alone. The control arm reached $HZ_DASHED such bullet(s) and classified every one as not-a-value, so the zero is a measurement. Not-a-value is exempted per VALUE and never per file, so this arm still fails on a real value appearing in a file that also carries an exempt one. This is what lets the horizon ship exercised: the mark is field-general, so it is demonstrated on fields that are not \`Passport\` and no passport value enters a tracked file to make that possible"
   fi
+
+  # ── HZ5 — the mark's PAYLOAD GRAMMAR, not merely its presence. ─────────────────
+  # `hz_marked` above matches the mark with index(), a SUBSTRING test, which is what admits
+  # a payload like `later`: compared as a raw string against a YYYY-MM reference month,
+  # "later" > "2026-09" is lexicographically TRUE, so the value composed ANSWERED and was
+  # used. The grammar `[VALID-THROUGH <YYYY-MM>]` was DECLARED in the record schema and
+  # enforced NOWHERE. This arm enforces it.
+  #
+  # THE POPULATION IS VALUE BULLETS, and that scoping is load-bearing rather than
+  # convenient. The token also appears in the corpus as a GRAMMAR DECLARATION (`<YYYY-MM>`),
+  # in spec prose (`H`, `…`) and in this suite's own strings. Those are the corpus
+  # describing the mark, not an instance carrying one, and asserting a month shape over
+  # them would turn correct documentation red. A value bullet — `- **Label:** value` — is
+  # exactly the shape the state predicate reads, so it is exactly the population the
+  # grammar binds.
+  #
+  # THE AXIS IS NOT CONSULTED HERE, DELIBERATELY. `admissible` governs whether a mark is
+  # OWED, never whether a present one may be ignored, so a malformed payload is a finding
+  # on any field. Gating this arm on `required` would rebuild the hole it exists to close.
+  #
+  # The grammar, as a bash predicate rather than a pipe into `grep -q`. A pipe into a
+  # reader that stops early returns the WRITER's broken-pipe status under `pipefail`, so a
+  # successful match would report failure and invert the test.
+  hz_wellformed() { [[ "$1" =~ ^[0-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])$ ]]; }
+
+  # hz_payloads <file> — emits one payload per mark carried by a VALUE BULLET. One
+  # extractor, driven by the real arm and by the control arm below; a control running
+  # different code from the assertion would prove nothing about the assertion.
+  hz_payloads() {
+    awk -v star="$HZ_STAR" '
+      /^- / {
+        rest = substr($0, 3)
+        sub("^" star "[ \t]*", "", rest)
+        if (!match(rest, /^\*\*[^:*]+:\*\*/)) next
+        val = substr(rest, RLENGTH + 1)
+        while (match(val, /\[VALID-THROUGH[^]]*\]/)) {
+          pay = substr(val, RSTART + 14, RLENGTH - 15)
+          gsub(/^[ \t]+/, "", pay); gsub(/[ \t]+$/, "", pay)
+          print pay
+          val = substr(val, RSTART + RLENGTH)
+        }
+      }' "$1"
+  }
+
+  HZ_PAYCOUNT=0
+  HZ_BADPAY=""
+  while IFS= read -r hz_tf; do
+    [ -n "$hz_tf" ] || continue
+    while IFS= read -r hz_pay; do
+      [ -n "$hz_pay" ] || continue
+      HZ_PAYCOUNT=$((HZ_PAYCOUNT + 1))
+      hz_wellformed "$hz_pay" || HZ_BADPAY="$HZ_BADPAY ${hz_tf}:[$hz_pay]"
+    done <<EOF
+$(hz_payloads "$ROOT/$hz_tf")
+EOF
+  done <<EOF
+$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null)
+EOF
+
+  # Must-fire control: the SAME shape test against a synthetic malformed payload, and a
+  # synthetic well-formed one. Without both, a green HZ5 could be a comparator that says
+  # yes to everything or a walk that reached nothing.
+  HZ_CTL_BAD=0
+  HZ_CTL_GOOD=0
+  hz_wellformed 'later' || HZ_CTL_BAD=1
+  hz_wellformed '2024-11' && HZ_CTL_GOOD=1
+  if [ "$HZ_PAYCOUNT" -eq 0 ] || [ "$HZ_CTL_BAD" -ne 1 ] || [ "$HZ_CTL_GOOD" -ne 1 ]; then
+    FAIL "HZ5: the probe did not establish itself — it reached $HZ_PAYCOUNT marked value bullet(s) (must be > 0), the malformed-payload control returned caught=$HZ_CTL_BAD (must be 1) and the well-formed control returned accepted=$HZ_CTL_GOOD (must be 1). A clean verdict from any of those is a scan that never ran or a comparator that says yes to everything"
+  elif [ -n "$HZ_BADPAY" ]; then
+    FAIL "HZ5: \`[VALID-THROUGH …]\` mark(s) whose payload is not a well-formed \`YYYY-MM\`:$HZ_BADPAY — a raw string comparison against the reference month returns TRUE on payloads like \`later\`, \`TBD\` or a bare year, so an unparseable mark composes ANSWERED and is USED. The grammar is \`^[0-9]{4}-(0[1-9]|1[0-2])\$\`; \`2026-13\`, \`2026-00\` and \`2026-1\` are rejected because each breaks the lexicographic-equals-chronological property the whole comparison rests on"
+  else
+    PASS "HZ5: every \`[VALID-THROUGH …]\` payload carried by a value bullet in the tracked tree is a well-formed \`YYYY-MM\` — $HZ_PAYCOUNT mark(s) checked, with the malformed-payload control caught and the well-formed control accepted, so the zero is a measurement. The population is value bullets rather than every occurrence of the token: the corpus also DECLARES the grammar and discusses it in prose, and asserting a month shape over a declaration would turn correct documentation red. The axis is deliberately not consulted — \`admissible\` governs whether a mark is owed, never whether a present one may be ignored"
+  fi
+
+  # ── HZ6..HZ11 — the PREDICATE itself, graded against a declared case table. ─────
+  #
+  # WHY A DECLARED TABLE AND NOT A FIXTURE. No tracked tree pairs a person reference with a
+  # trip window: the one tree carrying a `person:` key has no trip-context.md, and every
+  # tree with a trip-context.md carries no reference. So no end-to-end witness for this
+  # mechanism exists, and the existing horizon fixture cannot help either — both its marks
+  # are in the past, so its verdict is identical under the clock predicate and under the
+  # trip predicate and it distinguishes NOTHING. That is precisely how a card whose whole
+  # subject is trip-relative-versus-clock-relative shipped once as a no-op with this suite
+  # green.
+  #
+  # ── THE DECLARATION LIVES IN THE DOCUMENT, NOT IN THIS FILE ──────────────────────
+  # The cases are read from the `horizon-verdict-cases` fence in reference/data-model.md,
+  # the same mechanism the FW group takes with the freeze declaration and § 5.6 takes with
+  # the publishability class. A case list held HERE would be a second source of truth: the
+  # document would state a rule this file graded against its own copy, free to drift.
+  #
+  # ── WHAT MAKES THIS GRADE A SPECIFICATION AT ALL ─────────────────────────────────
+  # HZ9 RECOMPUTES every row from its own columns. That is deliberately a SECOND, INDEPENDENT
+  # encoding of the rule: the fence is the oracle and this is the implementation, and the
+  # arm's value is that two encodings written from the same prose must agree. On a
+  # corpus-not-runtime target that is the only available form of the assertion.
+  HZ_HVFILE="$WORK/hz-verdicts.tsv"
+
+  # hv_rows <file> — the declared cases. Read from the fence and nowhere else.
+  hv_rows() {
+    awk '
+      $0 == "```horizon-verdict-cases" { infence = 1; next }
+      infence && $0 == "```" { infence = 0; next }
+      infence {
+        line = $0
+        sub(/^[ \t]+/, "", line); sub(/[ \t]+$/, "", line)
+        if (line == "" || substr(line, 1, 1) == "#") next
+        n = split(line, f, /[ \t]+/)
+        if (n >= 8) printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", f[1], f[2], f[3], f[4], f[5], f[6], f[7], f[8]
+      }
+    ' "$1"
+  }
+
+  hv_rows "$HZ_DM" > "$HZ_HVFILE"
+  HZ_NCASE="$(grep -c '[^[:space:]]' "$HZ_HVFILE" || true)"
+
+  # HZ6 — the fence is READ LIVE, is non-empty, and every column parses into its closed
+  # vocabulary. The empty-fence posture is FW0's, for FW0's reason: an empty declaration is
+  # an assertion about nothing, and every arm below would then be green over the empty set.
+  HZ_VOCAB_BAD="$(awk -F'\t' '
+    function ok_month(v) { return v == "—" || v ~ /^[0-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])$/ }
+    function ok_verdict(v) { return v == "ANSWERED" || v == "EXPIRED" || v == "HORIZON-UNCONFIRMED" }
+    {
+      bad = ""
+      if ($1 !~ /^C[0-9]+$/)                        bad = bad " id"
+      if ($2 !~ /^[0-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])$/) bad = bad " clock"
+      if (!ok_month($3))                            bad = bad " trip-term"
+      if (!ok_month($4))                            bad = bad " wrap-term"
+      if ($5 == "")                                 bad = bad " H"
+      if ($6 != "required" && $6 != "admissible")   bad = bad " axis"
+      if (!ok_verdict($7))                          bad = bad " verdict-clock"
+      if (!ok_verdict($8))                          bad = bad " verdict-trip"
+      if (bad != "") printf "%s(%s)", $1, substr(bad, 2)
+    }' "$HZ_HVFILE")"
+  # The H column is deliberately NOT constrained to a month shape: rows C8..C10 declare
+  # MALFORMED payloads on purpose, and a vocabulary check that rejected them would delete
+  # the cases that grade the unparseable limb.
+  if [ "$HZ_NCASE" -eq 0 ]; then
+    FAIL "HZ6: the \`horizon-verdict-cases\` fence in reference/data-model.md yielded ZERO rows. An empty declaration is a specification that asserts nothing, and every arm below would be green over the empty set — this fails rather than passing quietly, exactly as FW0 does for the freeze declaration"
+    HZ_OK=0
+  elif [ -n "$HZ_VOCAB_BAD" ]; then
+    FAIL "HZ6: case row(s) whose column(s) fall outside the declared vocabulary: $HZ_VOCAB_BAD — a column this suite cannot parse is a case it cannot grade. \`trip-term\` and \`wrap-term\` take a \`YYYY-MM\` or an em dash for 'does not resolve'; the verdict columns take ANSWERED, EXPIRED or HORIZON-UNCONFIRMED"
+    HZ_OK=0
+  else
+    PASS "HZ6: the \`horizon-verdict-cases\` fence was read LIVE from reference/data-model.md and yielded $HZ_NCASE case(s), every column inside its closed vocabulary. This suite holds no copy of the table. A zero-row fence FAILS here rather than making every arm below vacuous"
+  fi
+fi
+
+if [ "$HZ_OK" -eq 1 ] && [ "${HZ_NCASE:-0}" -gt 0 ]; then
+  # hz_grade <rows-file> — THE ONE COMPARATOR. Emits, tab-separated:
+  #   <rows> <differing> <monotonicity-violations> <recompute-mismatches> <detail>
+  # Driven by the real arms AND by every control arm below, for FW3's reason: a control
+  # running different code from the assertion proves nothing about the assertion.
+  #
+  # The predicate, recomputed from each row's own columns:
+  #   R = clock                      under the clock control, ALWAYS
+  #   R = max(clock, trip-term)      under the trip predicate, or the clock where no term
+  #   (iii) no mark  + axis required                     -> third state
+  #   (ii)  malformed payload, ANY axis                  -> third state
+  #   (i)   well-formed and not H > R                    -> third state
+  #                                                         H < R reports EXPIRED,
+  #                                                         H == R reports the boundary
+  #   (iv)  would pass + term unresolved + axis required -> third state   [trip only]
+  #   (v)   would pass + W defined + H <= W + required   -> third state   [trip only]
+  # Clauses (iv) and (v) are the TRIP-TERM clauses and are not in force under the control,
+  # which is what makes the two columns differ in exactly ONE variable — the reference
+  # month. Defining the control as "what main shipped" instead would conflate the
+  # payload-shape change with the reference-month change in the same column.
+  hz_grade() {
+    awk -F'\t' '
+      function wf(h) { return h ~ /^[0-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])$/ }
+      function refmonth(ck, tm) {
+        if (tm == "—" || tm == "") return ck
+        return ((tm "") > (ck "")) ? tm : ck
+      }
+      function verdict(ck, tm, wp, h, ax, trip,   R) {
+        R = trip ? refmonth(ck, tm) : ck
+        if (h == "—" || h == "")   return (ax == "required") ? "HORIZON-UNCONFIRMED" : "ANSWERED"
+        if (!wf(h))                return "HORIZON-UNCONFIRMED"
+        if (!((h "") > (R "")))    return ((h "") < (R "")) ? "EXPIRED" : "HORIZON-UNCONFIRMED"
+        if (trip) {
+          if ((tm == "—" || tm == "") && ax == "required")                       return "HORIZON-UNCONFIRMED"
+          if (wp != "—" && wp != "" && ax == "required" && (h "") <= (wp ""))     return "HORIZON-UNCONFIRMED"
+        }
+        return "ANSWERED"
+      }
+      {
+        n++
+        gc = verdict($2, $3, $4, $5, $6, 0)
+        gt = verdict($2, $3, $4, $5, $6, 1)
+        if (gc != $7) { mism++; det = det " " $1 "(clock decl=" $7 " calc=" gc ")" }
+        if (gt != $8) { mism++; det = det " " $1 "(trip decl=" $8 " calc=" gt ")" }
+        if ($7 != $8) diff++
+        if ($7 != "ANSWERED" && $8 == "ANSWERED") { mono++; det = det " " $1 "(non-monotone)" }
+      }
+      END { printf "%d\t%d\t%d\t%d\t%s\n", n+0, diff+0, mono+0, mism+0, det }
+    ' "$1"
+  }
+
+  HZ_G="$(hz_grade "$HZ_HVFILE")"
+  HZ_GN="$(printf '%s' "$HZ_G" | cut -f1)"
+  HZ_GDIFF="$(printf '%s' "$HZ_G" | cut -f2)"
+  HZ_GMONO="$(printf '%s' "$HZ_G" | cut -f3)"
+  HZ_GMISM="$(printf '%s' "$HZ_G" | cut -f4)"
+  HZ_GDET="$(printf '%s' "$HZ_G" | cut -f5)"
+
+  # ── HZ7 — THE ARM WHOSE ABSENCE WAS THE ESCAPE. ────────────────────────────────
+  # At least one case must have DIFFERENT verdicts under the clock and under the trip
+  # predicate. A table on which the two columns agree everywhere is a table that cannot
+  # tell the pre-change predicate from the post-change one — which is exactly the state
+  # this card shipped in once, with every other arm green. This arm FAILS when every row
+  # agrees, and that failure is the point of it.
+  if [ "$HZ_GDIFF" -ge 1 ]; then
+    PASS "HZ7: $HZ_GDIFF of $HZ_GN declared case(s) receive DIFFERENT verdicts under the clock predicate and under the trip predicate — so the case table can distinguish the two, and a change that silently reverted the reference month to the clock would turn a verdict here. This arm FAILS when every row agrees; its absence is how a no-op once reached review with this suite green"
+  else
+    FAIL "HZ7: NO declared case receives a different verdict under the clock predicate than under the trip predicate — the table distinguishes nothing, so every other arm here is green over cases that cannot detect the behaviour this mechanism exists to add. Either the reference month has reverted to the clock, or the cases no longer exercise a trip-relative horizon"
+  fi
+
+  # ── HZ8 — MONOTONICITY. ────────────────────────────────────────────────────────
+  # The whole shippability argument is that the predicate can only move a value from usable
+  # to NOT usable. A row that is non-ANSWERED under the clock and ANSWERED under the trip
+  # would falsify that, and would mean records already on disk need auditing.
+  HZ_MONOCTL="$(printf 'CX\t2026-09\t2027-04\t—\t2026-08\trequired\tEXPIRED\tANSWERED\n' | hz_grade /dev/stdin | cut -f3)"
+  if [ "$HZ_MONOCTL" -ne 1 ]; then
+    FAIL "HZ8: the must-fire control did not behave — a synthetic INVERTED row (non-ANSWERED under the clock, ANSWERED under the trip) was scored $HZ_MONOCTL monotonicity violation(s), expected exactly 1. A zero from the real arm would then be a detector that cannot see the violation rather than a corpus without one"
+  elif [ "$HZ_GMONO" -eq 0 ]; then
+    PASS "HZ8: MONOTONE over all $HZ_GN declared case(s) — no case is non-ANSWERED under the clock and ANSWERED under the trip, so the predicate can only move a value from usable to not-usable and never the reverse. The control arm scored a synthetic inverted row as exactly 1 violation, so this zero is a measurement. This is the property that makes the change shippable without auditing the records already on disk"
+  else
+    FAIL "HZ8: $HZ_GMONO monotonicity violation(s) — a case is non-ANSWERED under the clock and ANSWERED under the trip:$HZ_GDET. The trip predicate has UN-expired a value the clock alone rejected, which withdraws a guarantee this corpus already ships and would require re-reading every record on disk"
+  fi
+
+  # ── HZ9 — the second independent encoding agrees with the oracle, row by row. ───
+  # Every declared verdict is recomputed from that row's own columns against the five-clause
+  # predicate: the ordering comparison, the H == R boundary, the payload shape, the absent
+  # mark, the unresolvable term, and the disputed New-Year window.
+  HZ_RECTL="$(printf 'CX\t2026-09\t2027-04\t—\t2027-05\trequired\tANSWERED\tEXPIRED\n' | hz_grade /dev/stdin | cut -f4)"
+  if [ "$HZ_RECTL" -lt 1 ]; then
+    FAIL "HZ9: the must-fire control did not behave — a synthetic row carrying a WRONG declared verdict was scored $HZ_RECTL mismatch(es), expected at least 1. A zero from the real arm would then be a recomputation that agrees with anything"
+  elif [ "$HZ_GMISM" -eq 0 ]; then
+    PASS "HZ9: all $HZ_GN declared case(s) recompute EXACTLY, on both columns, from their own inputs against the five-clause predicate — ordering, the \`H == R\` boundary, the payload shape, the absent mark, the unresolvable term and the disputed New-Year window. This recomputation is deliberately a SECOND encoding of the rule and the fence is the oracle: the assertion is that two independent encodings of the same prose agree, which is the only available form of the assertion on a corpus-not-runtime target. The control scored a synthetic wrong verdict as a mismatch"
+  else
+    FAIL "HZ9: $HZ_GMISM declared verdict(s) disagree with the recomputation:$HZ_GDET — the fence and this suite encode the rule differently, so at least one of them is wrong. Read the disagreement rather than re-pinning the fence to match: the fence is the oracle and this arm is the implementation"
+  fi
+
+  # ── HZ11 — the DISPUTED-WINDOW discriminator. ──────────────────────────────────
+  # HZ7 cannot grade the New-Year rule. HZ7 is FENCE-WIDE and is already satisfied by cases
+  # that have nothing to do with a year boundary, so ADDING New-Year rows can never make it
+  # red — a rule graded only by HZ7 could be deleted entirely and this suite would stay
+  # green. That is the same escape shape as the one HZ7 itself closes, one level up.
+  #
+  # This arm is EXISTENTIAL and PAIR-shaped: there must exist two cases agreeing on clock,
+  # trip-term, wrap-term and axis, differing ONLY in H — one inside the disputed window
+  # (R < H <= W) and one above it (H > W) — whose trip verdicts DIFFER. One variable, two
+  # outcomes, which is what makes the difference attributable.
+  #
+  # IT ASSERTS "AT LEAST ONE" AND NEVER "EVERY STRADDLING PAIR", deliberately. A case
+  # straddling the window from BELOW (H == R) agrees with the inside case, because a horizon
+  # AT the reference month is already the boundary case on its own account. The universal
+  # form would go red on a correct corpus.
+  #
+  # AN EMPTY NEW-YEAR SUBSET FAILS, on FW0's posture: a subset that asserts nothing is not
+  # a pass. Failure mode 1 (no row carries a wrap-term at all) is the shape "clause (v) was
+  # never built", and it is reported distinctly from the other two.
+  hz_pairs() {
+    awk -F'\t' '
+      function refmonth(ck, tm) {
+        if (tm == "—" || tm == "") return ck
+        return ((tm "") > (ck "")) ? tm : ck
+      }
+      { n++; id[n]=$1; ck[n]=$2; tm[n]=$3; wp[n]=$4; h[n]=$5; ax[n]=$6; vt[n]=$8
+        if (wp[n] != "—" && wp[n] != "") nwrap++ }
+      END {
+        for (i = 1; i <= n; i++) {
+          if (wp[i] == "—" || wp[i] == "") continue
+          R = refmonth(ck[i], tm[i])
+          if (!((h[i] "") > (R "")))  continue
+          if (!((h[i] "") <= (wp[i] ""))) continue
+          ninside++
+          for (j = 1; j <= n; j++) {
+            if (j == i) continue
+            if (ck[j] != ck[i] || tm[j] != tm[i] || wp[j] != wp[i] || ax[j] != ax[i]) continue
+            if (h[j] == h[i]) continue
+            if (!((h[j] "") > (wp[j] ""))) continue
+            npair++
+            if (vt[i] != vt[j]) { nfound++; if (first == "") first = id[i] "/" id[j] }
+          }
+        }
+        printf "%d\t%d\t%d\t%d\t%s\n", nwrap+0, ninside+0, npair+0, nfound+0, first
+      }
+    ' "$1"
+  }
+
+  HZ_P="$(hz_pairs "$HZ_HVFILE")"
+  HZ_PWRAP="$(printf '%s' "$HZ_P" | cut -f1)"
+  HZ_PIN="$(printf '%s' "$HZ_P" | cut -f2)"
+  HZ_PPAIR="$(printf '%s' "$HZ_P" | cut -f3)"
+  HZ_PFOUND="$(printf '%s' "$HZ_P" | cut -f4)"
+  HZ_PFIRST="$(printf '%s' "$HZ_P" | cut -f5)"
+
+  # Three must-fire mutants, each run through the SAME comparator. A green that was never
+  # made red proves nothing, and the middle mutant is the exact shape of the escape this
+  # card already suffered once.
+  HZ_M1="$WORK/hz-mut-nowrap.tsv"   # clause (v) was never built
+  HZ_M2="$WORK/hz-mut-dropped.tsv"  # the inside case is gone
+  HZ_M3="$WORK/hz-mut-above.tsv"    # the inside case moved above the window
+  awk -F'\t' 'BEGIN{OFS="\t"} { $4 = "—"; print }' "$HZ_HVFILE" > "$HZ_M1"
+  awk -F'\t' -v drop="$HZ_PFIRST" 'BEGIN{ split(drop, d, "/") } $1 != d[1]' "$HZ_HVFILE" > "$HZ_M2"
+  awk -F'\t' -v drop="$HZ_PFIRST" 'BEGIN{ OFS="\t"; split(drop, d, "/") }
+       { if ($1 == d[1]) $5 = "9999-12"; print }' "$HZ_HVFILE" > "$HZ_M3"
+  HZ_MF1="$(hz_pairs "$HZ_M1" | cut -f4)"
+  HZ_MF2="$(hz_pairs "$HZ_M2" | cut -f4)"
+  HZ_MF3="$(hz_pairs "$HZ_M3" | cut -f4)"
+
+  if [ "$HZ_PWRAP" -eq 0 ]; then
+    FAIL "HZ11: NO declared case carries a \`wrap-term\` — the New-Year clause is graded by nothing at all, which is indistinguishable from the clause never having been built. An empty subset is an assertion about nothing and fails here, on the same posture FW0 takes toward an empty freeze declaration"
+  elif [ "$HZ_PPAIR" -eq 0 ]; then
+    FAIL "HZ11: $HZ_PWRAP case(s) carry a \`wrap-term\` and $HZ_PIN of them fall inside the disputed window, but NO pair exists that agrees on clock, trip-term, wrap-term and axis while differing only in H with one inside the window and one above it. Without such a pair the rule's effect is not isolated to one variable and a difference between rows is not attributable to the window"
+  elif [ "$HZ_PFOUND" -eq 0 ]; then
+    FAIL "HZ11: $HZ_PPAIR inside/above pair(s) exist and EVERY ONE agrees on its trip verdict — so the disputed window changes no outcome anywhere in the table, and the clause could be deleted without reddening this suite. That is the escape shape HZ7 closes, one level up"
+  elif [ "$HZ_MF1" -ne 0 ] || [ "$HZ_MF2" -ne 0 ] || [ "$HZ_MF3" -ne 0 ]; then
+    FAIL "HZ11: the must-fire mutants did not behave — blanking every \`wrap-term\` scored $HZ_MF1 discriminating pair(s), dropping the inside case scored $HZ_MF2, and moving that case above the window scored $HZ_MF3; all three must score 0. The real arm's verdict has no control behind it and cannot be read as evidence that this table grades the New-Year clause"
+  else
+    PASS "HZ11: the disputed-window rule is DISCRIMINATED — $HZ_PFOUND pair(s) (first: $HZ_PFIRST) agree on clock, trip-term, wrap-term and axis, differ ONLY in H with one inside the window and one above it, and receive DIFFERENT trip verdicts. One variable, two outcomes. Three mutants were each run through this same comparator and each scored 0: blanking every \`wrap-term\` (the shape of 'the clause was never built'), dropping the inside case, and moving it above the window. This arm exists because HZ7 CANNOT grade this rule — HZ7 is fence-wide and already satisfied, so adding New-Year rows can never make it red"
+  fi
+
+  # ── HZ10 — THE RESOLVER, over the real tracked instances. ──────────────────────
+  # The arms above grade the predicate against declared cases. This one grades the thing
+  # that feeds it: whether a real trip-context.md actually yields a trip term.
+  #
+  # THE POPULATION IS DERIVED, NEVER LISTED. Members are the tracked files selected by the
+  # class's own `path-pattern:` lines, MINUS the files pinned in the `frozen-witness-digest`
+  # fence. Frozen membership is read from that fence rather than named literally here, so
+  # the exemption is derived: a path leaving or joining the freeze moves this population
+  # with it, and no path in this suite has to be kept in step by hand.
+  #
+  # IT IS COUNT-FREE AND TOTAL. It asserts a property of EVERY non-frozen instance rather
+  # than a cardinality, so a new non-conforming example turns it red instead of silently
+  # widening an exempt set.
+  #
+  # THE EQUALITY LIMB IS `max(M_title, M_dep)`, NOT `M_dep`. Stating it as "the resolved
+  # month equals the departure month" would be FALSE on exactly the configuration the
+  # New-Year clause governs — a December-titled, January-departing trip resolves December —
+  # so a legitimate year-spanning example would turn this suite red. It reads correct today
+  # only because no evaluable tracked instance is in that configuration, which is the worst
+  # way for an assertion to be green.
+  hz_term() {
+    awk '
+      function mnum(s,   i, full) {
+        s = tolower(s)
+        split("january february march april may june july august september october november december", full, " ")
+        for (i = 1; i <= 12; i++)
+          if (s == full[i] || s == substr(full[i], 1, 3)) return i
+        return 0
+      }
+      /^#[ \t]+Trip Context/ {
+        if (tseen) next
+        tseen = 1; rest = $0
+        while (match(rest, /[A-Za-z]+[ \t]+(19|20)[0-9][0-9]/)) {
+          seg = substr(rest, RSTART, RLENGTH)
+          split(seg, p, /[ \t]+/)
+          m = mnum(p[1])
+          if (m > 0) { Y = p[2]; MT = m }
+          rest = substr(rest, RSTART + RLENGTH)
+        }
+      }
+      /Departure day/ {
+        if (dseen) next
+        if (match($0, /^-[ \t]+\*\*[A-Za-z]+[ \t]+[0-9][0-9]?/)) {
+          seg = substr($0, RSTART, RLENGTH)
+          sub(/^-[ \t]+\*\*/, "", seg)
+          split(seg, q, /[ \t]+/)
+          d = mnum(q[1])
+          if (d > 0) { MD = d; dseen = 1 }
+        }
+      }
+      END {
+        T = "—"; W = "—"
+        if (Y != "" && MT != "") {
+          m = (MD != "" && MD > MT) ? MD : MT
+          T = sprintf("%s-%02d", Y, m)
+          if (MD != "" && MD < MT) W = sprintf("%04d-%02d", Y + 1, MD)
+        }
+        printf "%s\t%s\t%s\t%s\t%s\n", (Y == "" ? "—" : Y), \
+               (MT == "" ? "—" : sprintf("%02d", MT)), \
+               (MD == "" ? "—" : sprintf("%02d", MD)), T, W
+      }
+    ' "$1"
+  }
+
+  # hz_frozen — the pinned paths, read from the freeze declaration in the architecture
+  # document. Path column only; this suite holds no copy of the set.
+  hz_frozen() {
+    awk '
+      $0 == "```frozen-witness-digest" { infence = 1; next }
+      infence && $0 == "```" { infence = 0; next }
+      infence {
+        line = $0
+        sub(/^[ \t]+/, "", line); sub(/[ \t]+$/, "", line)
+        if (line == "" || substr(line, 1, 1) == "#") next
+        n = split(line, f, /[ \t]+/)
+        if (n >= 2) print f[2]
+      }
+    ' "$ROOT/$VA_ARCH_DOC"
+  }
+
+  # hz_selected — tracked files matching the class's own `path-pattern:` lines, minus the
+  # frozen set. The globs are read live from the schema; neither list is written here.
+  HZ_TC_SCHEMA="$ROOT/reference/schemas/trip-context.md"
+  HZ_FROZENF="$WORK/hz-frozen.txt"
+  HZ_PATF="$WORK/hz-patterns.txt"
+  hz_frozen | sort -u > "$HZ_FROZENF"
+  awk '/^path-pattern:/ { sub(/^path-pattern:[ \t]*/, ""); print }' "$HZ_TC_SCHEMA" | sort -u > "$HZ_PATF"
+  HZ_NFROZEN="$(grep -c '[^[:space:]]' "$HZ_FROZENF" || true)"
+  HZ_NPAT="$(grep -c '[^[:space:]]' "$HZ_PATF" || true)"
+  HZ_SELF="$WORK/hz-selected.txt"
+  : > "$HZ_SELF"
+  while IFS= read -r hz_tk; do
+    [ -n "$hz_tk" ] || continue
+    hz_hit=0
+    while IFS= read -r hz_pat; do
+      [ -n "$hz_pat" ] || continue
+      # shellcheck disable=SC2254
+      case "$hz_tk" in $hz_pat) hz_hit=1 ;; esac
+    done < "$HZ_PATF"
+    [ "$hz_hit" -eq 1 ] || continue
+    grep -Fxq "$hz_tk" "$HZ_FROZENF" && continue
+    printf '%s\n' "$hz_tk" >> "$HZ_SELF"
+  done <<EOF
+$(cd "$ROOT" && git ls-files 2>/dev/null)
+EOF
+  HZ_NSEL="$(grep -c '[^[:space:]]' "$HZ_SELF" || true)"
+
+  HZ_NOTERM=""
+  HZ_BADEQ=""
+  HZ_NEQ=0
+  while IFS= read -r hz_tc; do
+    [ -n "$hz_tc" ] || continue
+    hz_r="$(hz_term "$ROOT/$hz_tc")"
+    hz_mt="$(printf '%s' "$hz_r" | cut -f2)"
+    hz_md="$(printf '%s' "$hz_r" | cut -f3)"
+    hz_T="$(printf '%s' "$hz_r" | cut -f4)"
+    [ "$hz_T" = "—" ] && { HZ_NOTERM="$HZ_NOTERM $hz_tc"; continue; }
+    [ "$hz_md" = "—" ] && continue
+    HZ_NEQ=$((HZ_NEQ + 1))
+    hz_exp="$hz_mt"
+    [[ "$hz_md" > "$hz_mt" ]] && hz_exp="$hz_md"
+    [ "${hz_T#*-}" = "$hz_exp" ] || HZ_BADEQ="$HZ_BADEQ ${hz_tc}(T=$hz_T title=$hz_mt dep=$hz_md)"
+  done < "$HZ_SELF"
+
+  # Detector arms, run against SYNTHETIC instances in the work dir. These grade the
+  # RESOLVER rather than the population, which is what lets a legitimate year-spanning trip
+  # exist in this corpus without failing the suite.
+  HZ_SYN_NY="$WORK/hz-syn-newyear.md"
+  HZ_SYN_NORM="$WORK/hz-syn-normal.md"
+  HZ_SYN_NOYR="$WORK/hz-syn-noyear.md"
+  printf '# Trip Context — Somewhere December 2026\n\n- **Jan 3 (Sun):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NY"
+  printf '# Trip Context — Somewhere April 2026\n\n- **Apr 15 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NORM"
+  printf '# Trip Context — Somewhere (Illustrative Example)\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NOYR"
+  HZ_SNY_T="$(hz_term "$HZ_SYN_NY" | cut -f4)";    HZ_SNY_W="$(hz_term "$HZ_SYN_NY" | cut -f5)"
+  HZ_SNO_T="$(hz_term "$HZ_SYN_NORM" | cut -f4)";  HZ_SNO_W="$(hz_term "$HZ_SYN_NORM" | cut -f5)"
+  HZ_SNY_NOYR="$(hz_term "$HZ_SYN_NOYR" | cut -f4)"
+
+  if [ "$HZ_NFROZEN" -eq 0 ] || [ "$HZ_NPAT" -eq 0 ] || [ "$HZ_NSEL" -eq 0 ]; then
+    FAIL "HZ10: the population did not derive — the freeze declaration yielded $HZ_NFROZEN pinned path(s), the class yielded $HZ_NPAT \`path-pattern:\` line(s), and the selection yielded $HZ_NSEL non-frozen instance(s). Any of those at zero means this arm graded nothing, which is not a pass"
+  elif [ "$HZ_SNY_T" != "2026-12" ] || [ "$HZ_SNY_W" != "2027-01" ] || [ "$HZ_SNO_W" != "—" ] || [ "$HZ_SNY_NOYR" != "—" ]; then
+    FAIL "HZ10: the resolver's own control arms did not behave — a synthetic December-titled / January-departing instance resolved term=$HZ_SNY_T wrap=$HZ_SNY_W (expected 2026-12 and 2027-01), a synthetic same-month instance resolved wrap=$HZ_SNO_W (expected an em dash), and a synthetic title carrying NO year resolved term=$HZ_SNY_NOYR (expected an em dash). With the detector wrong, every verdict below is an artefact of a broken probe"
+  elif [ -n "$HZ_NOTERM" ]; then
+    FAIL "HZ10: non-frozen trip-context instance(s) from which NO trip term resolves:$HZ_NOTERM — the reference month falls back to the clock for these trips, which is the failure the trip-relative predicate exists to remove. The remedy is the title line: state the trip's month and year on \`# Trip Context — …\`"
+  elif [ -n "$HZ_BADEQ" ]; then
+    FAIL "HZ10: instance(s) whose resolved term is not \`max(title month, departure month)\`:$HZ_BADEQ — the resolver and the rule disagree"
+  else
+    PASS "HZ10: the resolver is TOTAL over every non-frozen tracked trip-context instance — all $HZ_NSEL of them resolve a trip term, and on the $HZ_NEQ carrying a derived departure day the resolved month equals \`max(title month, departure month)\`. The population is DERIVED: selected by the class's own $HZ_NPAT \`path-pattern:\` line(s) and minus the $HZ_NFROZEN path(s) pinned in the freeze declaration, so the frozen exemption is read from that fence rather than named here. The equality limb is stated as the \`max\` and not as the departure month, because the latter is FALSE on exactly the New-Year configuration and would redden this suite on a legitimate instance. Three detector controls fired: a synthetic December/January instance resolved a wrapped term, a same-month instance resolved none, and a title carrying no year resolved no term at all"
+  fi
 fi
 
 if [ "$HZ_RAN" -ne 1 ]; then
