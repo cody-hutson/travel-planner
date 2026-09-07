@@ -197,8 +197,9 @@ yourself. Nothing on this surface will do it for you.
 a record does not go stale because it is old. Clearing is a thing you do.
 
 A validity horizon on a field — the month a passport is good through — marks **that
-value** stale when the month passes. It does not mark the record stale and it deletes
-nothing: the field simply stops being usable, is reported as unknown rather than
+value** stale once the month no longer covers the trip it is being used for: the later
+of today and that trip's own travel window. It does not mark the record stale and it
+deletes nothing: the field simply stops being usable, is reported as unknown rather than
 quietly used or quietly dropped, and stays that way until someone updates it.
 
 The folder you have stopped opening is exactly the one you stop noticing, and this one

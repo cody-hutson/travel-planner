@@ -337,10 +337,19 @@ Trigger"), which sanctions exactly this behavior:
   passes, **with no file edited anywhere**: the clock is a member of the trigger set,
   and only the composed operand can see it.
 
+  **The composed value also depends on the reference month.** A horizon is compared
+  against `R = max(clock month, window-end month)`, not against the clock alone, so the
+  composed value of a horizon-bearing field is a function of **this trip's** travel
+  window as well as of the record. The window is derived from
+  `trips/<slug>/trip-context.md`, which this role already names on its `Reads:` line, so
+  this needs **no new read** — the resolution ladder is normative in
+  `reference/data-model.md` § *The reference month — what a horizon is compared against*.
+
   **The composed source is a value, not a file.** It exists for the duration of a pass
   and is never written to disk. Do **not** materialise it as an `outputs/` artifact:
   that would be a second home for every fact in it, a second thing to go stale, and a
-  shape change to a class that is closed.
+  shape change to a class that is closed. The reference month is likewise a value: it is
+  resolved during the pass and never written anywhere.
 
   **Carve-out — a `[THIRD-PARTY]` entry has no profile to diff.** The rule above is
   about **profiles**, and an entry carrying `[OPERATOR-PROVIDED]` **and**
@@ -366,7 +375,7 @@ Trigger"), which sanctions exactly this behavior:
   | **T4** | a record deleted, or the reference now dangles | **signal** + defect; a field the trip leaves unanswered composes `UNKNOWN`, and a value the trip **does** state is retained |
   | **T5** | `person:` added, removed or changed on the traveller file | **signal** — a trip-file edit, already inside the diff |
   | **T6** | a `merged-into:` repoint followed one hop | **signal only if the resolved values differ.** A repoint that resolves to the same values is a reference change and not a value change |
-  | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Clock-triggered, and invisible to a trip-file diff by construction |
+  | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Reference-month-triggered: the clock or this trip's own travel window, whichever is later. Invisible to a trip-file diff by construction |
 
 - **Relevance is class first, then answered-ness — and the answered-ness arm is
   `ANSWERED()`, never line-presence.** For each field whose record side moved:
@@ -454,8 +463,10 @@ default.** `reference/data-model.md` § *The report* defines the dispositions; t
 where each one goes. Route by what the disposition did to the composed value, never by
 matching a name on a list:
 
-1. **The composed value moved** → a signal line in the block body. `EXPIRED` is here —
-   the horizon lapsed, so the value the plan was built on really did change.
+1. **The composed value moved** → a signal line in the block body. `EXPIRED` and
+   `HORIZON-UNCONFIRMED` are here — the value the plan was built on really did stop being
+   usable, whether because the horizon lapsed or because it cannot be shown to cover this
+   trip at the precision the form collects.
 2. **The bearer could not be resolved at all** → the `PROFILE MISSING` branch below, not
    this block. `DANGLING`, `MALFORMED` and `STORE-UNREADABLE` are here: the entry has no
    usable source, which is an entry-scoped gap and a different report.
