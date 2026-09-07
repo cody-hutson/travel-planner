@@ -376,49 +376,61 @@ A **field** is a distinct `(section, label)` pair rendered as a body bullet of t
 
 `Scope` = how many times the label may legitimately occur in one file. **`slot`** = at most once, so a second occurrence is `MALFORMED-SLOT`. **`block`** = the label belongs to a repeated block (`Needs`, `Desires`), so repetition is **user data, not a defect** — the same reading the denominator rule above already applies when it counts a repeated block as one field. **Scope is a property of the field, total over all 39 rows, and it is the axis `K3`/`K4` and `MALFORMED-SLOT` branch on.**
 
-| # | Field | Section | Class | Ovr? | Scope | Rationale |
-|---|---|---|---|---|---|---|
-| 1 | `Name` | About you | **DEFAULT** | Y | `slot` | **Borne by the person form's H1 title line, not by a bullet — and therefore starred in neither form** (see *The starred pass* below). The person record holds the canonical name; **`trip-context.md` § Group is the per-trip display-name authority** (see *The display name has one authority* below). A trip legitimately renders "Mom" where the record says "Pat" — that is DEFAULT semantics, not a defect |
-| 2 | `Relationship` | About you | **TRIP** | n/a | `slot` | *"how you fit in **the group**"* — stated relative to this trip's group; a different group reframes it |
-| 3 | `Party` | About you | **TRIP** | n/a | `slot` | Who is travelling **on this trip** without their own form. `reference/adr/ADR-006-third-party-data-capture.md` bounds their data to needs-only; that boundary is preserved, not widened |
-| 4 | `Would love` | Destination leanings | **DEFAULT** | Y | `slot` | A standing wishlist worth carrying; a trip may override for its own shortlist |
-| 5 | `Rather skip` | Destination leanings | **DEFAULT** | Y | `slot` | As above, the negative half of the same lean |
-| 6 | ⭐ `Trip vibe` | Destination leanings | **TRIP** | n/a | `slot` | *"The kind of trip **you're after**"* — beach this time, city next |
-| 7 | ⭐ `Can travel` | Dates & availability | **TRIP** | n/a | `slot` | Windows for this trip |
-| 8 | `Blackout` | Dates & availability | **TRIP** | n/a | `slot` | Dated to this trip's window |
-| 9 | `Trip length` | Dates & availability | **TRIP** | n/a | `slot` | *"How long feels right"* **for this trip**; the facet links to trip Logistics once dates are set |
-| 10 | ⭐ `Leaving from` | Getting there & back | **DEFAULT** | Y | `slot` | A home airport is durable and **does** change (you move; you are already abroad). The trip level owns origins — travelers attach to an origin by roster name |
-| 11 | `Arrive / leave` | Getting there & back | **TRIP** | n/a | `slot` | This trip's arrival and departure, relative to this trip's group booking |
-| 12 | `Journey comfort` | Getting there & back | **DEFAULT** | Y | `slot` | A standing transit tolerance. A trip that books a red-eye is a **worse** trip, not a broken one. A medical transit limit is authored as a **Need**, which is `PERSON` |
-| 13 | `Passport` | Getting there & back | **PERSON** | **N** | `slot` | Issuing country and validity. **Silent per-trip divergence checks entry requirements against the wrong nationality** — an integrity defect. Decay is handled by the record's own validity horizon, never by a per-trip override |
-| 14 | ⭐ `Lodging style` | Where you stay | **DEFAULT** | Y | `slot` | A durable lean ("rental with a kitchen") that a trip may override. A step-free requirement is a **Need** |
-| 15 | `Rooming` | Where you stay | **TRIP** | n/a | `slot` | *"happy to share with Sam"* — names this trip's group |
-| 16 | ⭐ `Comfort range` | Budget appetite | **DEFAULT** | Y | `slot` | A durable spend lean; a trip may legitimately run leaner or richer |
-| 17 | `Splurge appetite` | Budget appetite | **DEFAULT** | Y | `slot` | As above |
-| 18 | `Category` | Needs | **PERSON** | **N** | `block` | Types the need and routes its constraint link. Silent divergence mis-routes a non-negotiable to the wrong trip constraint |
-| 19 | ⭐ `Specific` | Needs | **PERSON** | **N** | `block` | The allergy, the heat ceiling, the mobility limit. **The canonical `PERSON` field** |
-| 20 | `Applies to` | Needs | **TRIP** | n/a | `block` | **Never asked — computed.** The need→constraint edge, recomputed per trip by enrichment. See *The `Needs` split* below |
-| 21 | ⭐ `Desire` | Desires | **TRIP** | n/a | `block` | Anchored to this destination and occasion (*"explore the local markets"*). Its source of truth is the trip's own traveler file; a later trip-history capability may pre-fill it, and the trip file stays authoritative |
-| 22 | `Priority tier` | Desires | **TRIP** | n/a | `block` | Ranks a TRIP-class desire; cannot outlive its subject |
-| 23 | `Recurrence` | Desires | **TRIP** | n/a | `block` | As above |
-| 24 | `Theme tag(s)` | Desires | **TRIP** | n/a | `block` | As above |
-| 25 | `Overlap` | Desires | **TRIP** | n/a | `block` | **Never asked — computed.** Who else on **this trip** shares it. Symmetric with `Applies to` |
-| 26 | ⭐ `Pace` | Travel style & pace | **DEFAULT** | Y | `slot` | A durable lean that a trip may override (a packed city break, then a slow beach week) |
-| 27 | `Day rhythm` | Travel style & pace | **DEFAULT** | Y | `slot` | Whether they are a morning person — durable, and jet lag makes it legitimately overridable |
-| 28 | `Novelty vs comfort` | Travel style & pace | **DEFAULT** | Y | `slot` | Durable lean, trip-adjustable |
-| 29 | `Planning style` | Travel style & pace | **DEFAULT** | Y | `slot` | Durable lean, trip-adjustable |
-| 30 | ⭐ `Interests` | Interests & tastes | **DEFAULT** | Y | `slot` | Durable ("museums, food & markets") and **not** destination-scoped |
-| 31 | `Cuisine appetite` | Interests & tastes | **DEFAULT** | Y | `slot` | *"How you eat **when you travel**"* — durable by its own wording. Not destination-scoped |
-| 32 | `Been here before?` | Interests & tastes | **DEST** | n/a | `slot` | *"How well you already know **this destination**"* — closed enum; unanswered reads **unknown**, never `never` |
-| 33 | `Already done` | Interests & tastes | **DEST** | n/a | `slot` | *"Anything you've already seen or eaten **here**"*. A later trip-history capability would *supplement* these two, never replace them |
-| 34 | `Group time` | People dynamics | **TRIP** | n/a | `slot` | How much of **this trip** as a group — the answer depends on who this group is |
-| 35 | `Split off with` | People dynamics | **TRIP** | n/a | `slot` | Names this trip's group members |
-| 36 | `Solo, I'd` | People dynamics | **DEFAULT** | Y | `slot` | A personal want with no group referent (*"find a quiet café and read"*) — the one field in this section that survives a change of group |
-| 37 | `Whole-group moments` | People dynamics | **TRIP** | n/a | `slot` | *"every dinner", "the day trip", "the first night"* — references this trip's itinerary shape |
-| 38 | `Special occasion?` | Anything else | **TRIP** | n/a | `slot` | *"Is **the trip** marking anything"* — the subject is the trip |
-| 39 | *(unlabelled free-text tail)* | Anything else | **TRIP** | n/a | `slot` | Unstructured and unparseable. **Fail-safe disposition:** a durable store must not silently carry forward free text that may be trip-specific, and it is the highest-risk copy for privacy. Explicit, not an omission |
+`Horizon` = does this field **declare** a validity horizon? **`required`** = a `[VALID-THROUGH H]` mark is expected on the record's value, and its absence or unparseability is a defect, reported as `HORIZON-UNCONFIRMED`. **`admissible`** = a mark is honoured where it is present and its absence is not a finding — the disposition every field carries by default, and the one `reference/schemas/person-record.md` already describes when it calls the mark *admissible on any field bullet*. **Horizon is a property of the field, total over every row of the table below and single-valued, exactly as `Class` and `Scope` are.** It is what makes the horizon *declared* rather than merely *permitted*: an instance may always carry a mark, and this column is where a field says one is owed.
 
-**Totals — `PERSON` 3 · `DEFAULT` 15 · `TRIP` 18 · `DEST` 2 across the labelled fields**, plus the free-text slot as `TRIP`. **Scope totals — `slot` 31 · `block` 8**, the eight being the three `Needs` and five `Desires` labels. Every slot carries exactly one class **and exactly one scope**; none carries two of either, and none is unclassified. **Sum the class column and assert equality with the row count the denominator rule above reconciles — never with a literal restated here.**
+> **The generality is a procedure, not a promise.** To admit a second horizon-bearing field, set that field's `Horizon` cell to `required`. No rule changes, no script changes, no agent prompt changes, and no fixture outside that member's own. A `Passport`-shaped implementation could not make that claim; a field-level axis can, which is what keeps the mechanism from collapsing into a special case for one field.
+
+<!-- Column position is load-bearing, not cosmetic. `scripts/test-artifact-schema.sh` parses
+     the rows below with `awk -F'|'` BY INDEX in both of its extractor groups, reading `$2`,
+     `$3`, `$4`, `$5` and `$7`. `Horizon` sits immediately after `Scope` so every one of those
+     indices is preserved; `Rationale` moves from `$8` to `$9`, and the one arm that reads the
+     rationale column moves with it. Placed anywhere earlier the column shifts `Class` or
+     `Scope`, and both groups then grade a class-blind table WHILE THE SUITE REPORTS GREEN.
+     Do not reorder these columns. -->
+
+| # | Field | Section | Class | Ovr? | Scope | Horizon | Rationale |
+|---|---|---|---|---|---|---|---|
+| 1 | `Name` | About you | **DEFAULT** | Y | `slot` | `admissible` | **Borne by the person form's H1 title line, not by a bullet — and therefore starred in neither form** (see *The starred pass* below). The person record holds the canonical name; **`trip-context.md` § Group is the per-trip display-name authority** (see *The display name has one authority* below). A trip legitimately renders "Mom" where the record says "Pat" — that is DEFAULT semantics, not a defect |
+| 2 | `Relationship` | About you | **TRIP** | n/a | `slot` | `admissible` | *"how you fit in **the group**"* — stated relative to this trip's group; a different group reframes it |
+| 3 | `Party` | About you | **TRIP** | n/a | `slot` | `admissible` | Who is travelling **on this trip** without their own form. `reference/adr/ADR-006-third-party-data-capture.md` bounds their data to needs-only; that boundary is preserved, not widened |
+| 4 | `Would love` | Destination leanings | **DEFAULT** | Y | `slot` | `admissible` | A standing wishlist worth carrying; a trip may override for its own shortlist |
+| 5 | `Rather skip` | Destination leanings | **DEFAULT** | Y | `slot` | `admissible` | As above, the negative half of the same lean |
+| 6 | ⭐ `Trip vibe` | Destination leanings | **TRIP** | n/a | `slot` | `admissible` | *"The kind of trip **you're after**"* — beach this time, city next |
+| 7 | ⭐ `Can travel` | Dates & availability | **TRIP** | n/a | `slot` | `admissible` | Windows for this trip |
+| 8 | `Blackout` | Dates & availability | **TRIP** | n/a | `slot` | `admissible` | Dated to this trip's window |
+| 9 | `Trip length` | Dates & availability | **TRIP** | n/a | `slot` | `admissible` | *"How long feels right"* **for this trip**; the facet links to trip Logistics once dates are set |
+| 10 | ⭐ `Leaving from` | Getting there & back | **DEFAULT** | Y | `slot` | `admissible` | A home airport is durable and **does** change (you move; you are already abroad). The trip level owns origins — travelers attach to an origin by roster name |
+| 11 | `Arrive / leave` | Getting there & back | **TRIP** | n/a | `slot` | `admissible` | This trip's arrival and departure, relative to this trip's group booking |
+| 12 | `Journey comfort` | Getting there & back | **DEFAULT** | Y | `slot` | `admissible` | A standing transit tolerance. A trip that books a red-eye is a **worse** trip, not a broken one. A medical transit limit is authored as a **Need**, which is `PERSON` |
+| 13 | `Passport` | Getting there & back | **PERSON** | **N** | `slot` | `required` | Issuing country and validity. **Silent per-trip divergence checks entry requirements against the wrong nationality** — an integrity defect. Decay is handled by the record's own validity horizon, never by a per-trip override |
+| 14 | ⭐ `Lodging style` | Where you stay | **DEFAULT** | Y | `slot` | `admissible` | A durable lean ("rental with a kitchen") that a trip may override. A step-free requirement is a **Need** |
+| 15 | `Rooming` | Where you stay | **TRIP** | n/a | `slot` | `admissible` | *"happy to share with Sam"* — names this trip's group |
+| 16 | ⭐ `Comfort range` | Budget appetite | **DEFAULT** | Y | `slot` | `admissible` | A durable spend lean; a trip may legitimately run leaner or richer |
+| 17 | `Splurge appetite` | Budget appetite | **DEFAULT** | Y | `slot` | `admissible` | As above |
+| 18 | `Category` | Needs | **PERSON** | **N** | `block` | `admissible` | Types the need and routes its constraint link. Silent divergence mis-routes a non-negotiable to the wrong trip constraint |
+| 19 | ⭐ `Specific` | Needs | **PERSON** | **N** | `block` | `admissible` | The allergy, the heat ceiling, the mobility limit. **The canonical `PERSON` field** |
+| 20 | `Applies to` | Needs | **TRIP** | n/a | `block` | `admissible` | **Never asked — computed.** The need→constraint edge, recomputed per trip by enrichment. See *The `Needs` split* below |
+| 21 | ⭐ `Desire` | Desires | **TRIP** | n/a | `block` | `admissible` | Anchored to this destination and occasion (*"explore the local markets"*). Its source of truth is the trip's own traveler file; a later trip-history capability may pre-fill it, and the trip file stays authoritative |
+| 22 | `Priority tier` | Desires | **TRIP** | n/a | `block` | `admissible` | Ranks a TRIP-class desire; cannot outlive its subject |
+| 23 | `Recurrence` | Desires | **TRIP** | n/a | `block` | `admissible` | As above |
+| 24 | `Theme tag(s)` | Desires | **TRIP** | n/a | `block` | `admissible` | As above |
+| 25 | `Overlap` | Desires | **TRIP** | n/a | `block` | `admissible` | **Never asked — computed.** Who else on **this trip** shares it. Symmetric with `Applies to` |
+| 26 | ⭐ `Pace` | Travel style & pace | **DEFAULT** | Y | `slot` | `admissible` | A durable lean that a trip may override (a packed city break, then a slow beach week) |
+| 27 | `Day rhythm` | Travel style & pace | **DEFAULT** | Y | `slot` | `admissible` | Whether they are a morning person — durable, and jet lag makes it legitimately overridable |
+| 28 | `Novelty vs comfort` | Travel style & pace | **DEFAULT** | Y | `slot` | `admissible` | Durable lean, trip-adjustable |
+| 29 | `Planning style` | Travel style & pace | **DEFAULT** | Y | `slot` | `admissible` | Durable lean, trip-adjustable |
+| 30 | ⭐ `Interests` | Interests & tastes | **DEFAULT** | Y | `slot` | `admissible` | Durable ("museums, food & markets") and **not** destination-scoped |
+| 31 | `Cuisine appetite` | Interests & tastes | **DEFAULT** | Y | `slot` | `admissible` | *"How you eat **when you travel**"* — durable by its own wording. Not destination-scoped |
+| 32 | `Been here before?` | Interests & tastes | **DEST** | n/a | `slot` | `admissible` | *"How well you already know **this destination**"* — closed enum; unanswered reads **unknown**, never `never` |
+| 33 | `Already done` | Interests & tastes | **DEST** | n/a | `slot` | `admissible` | *"Anything you've already seen or eaten **here**"*. A later trip-history capability would *supplement* these two, never replace them |
+| 34 | `Group time` | People dynamics | **TRIP** | n/a | `slot` | `admissible` | How much of **this trip** as a group — the answer depends on who this group is |
+| 35 | `Split off with` | People dynamics | **TRIP** | n/a | `slot` | `admissible` | Names this trip's group members |
+| 36 | `Solo, I'd` | People dynamics | **DEFAULT** | Y | `slot` | `admissible` | A personal want with no group referent (*"find a quiet café and read"*) — the one field in this section that survives a change of group |
+| 37 | `Whole-group moments` | People dynamics | **TRIP** | n/a | `slot` | `admissible` | *"every dinner", "the day trip", "the first night"* — references this trip's itinerary shape |
+| 38 | `Special occasion?` | Anything else | **TRIP** | n/a | `slot` | `admissible` | *"Is **the trip** marking anything"* — the subject is the trip |
+| 39 | *(unlabelled free-text tail)* | Anything else | **TRIP** | n/a | `slot` | `admissible` | Unstructured and unparseable. **Fail-safe disposition:** a durable store must not silently carry forward free text that may be trip-specific, and it is the highest-risk copy for privacy. Explicit, not an omission |
+
+**Totals — `PERSON` 3 · `DEFAULT` 15 · `TRIP` 18 · `DEST` 2 across the labelled fields**, plus the free-text slot as `TRIP`. **Scope totals — `slot` 31 · `block` 8**, the eight being the three `Needs` and five `Desires` labels. **Horizon totals — `required` 1 · `admissible` 38, and 1 + 38 = 39**, reconciling against the same row count the denominator rule above derives; `Passport` is the sole `required` member. Every slot carries exactly one class, **exactly one scope and exactly one horizon**; none carries two of any, and none is unclassified. **Sum each axis's column and assert equality with the row count the denominator rule above reconciles — never with a literal restated here.**
 
 > **`Passport` acquires a third artifact scope, and the publish guard must follow it.** `Passport` is `PERSON`, so it lives in the durable person record as well as in a trip's traveler file. Per `reference/data-architecture.md` § 5.2 the non-publishable fence *does not inherit* — it is one row per field **per artifact scope** — so the person-record scope needs its **own** non-publishable row. A missing row there is fail-open on a passport.
 
@@ -524,9 +536,27 @@ Every member is the engine's own shipped equivalence rather than a new one:
 
 **`ANSWERED()` is an instance property; presence is a document property. They share the word *present* and answer different questions.** *What the form asks* — the labelled-field denominator above, its four-class partition and the starred-pass split — is keyed on the **presence of a bullet in the template**, correctly and unchangedly, because a form asks a question by carrying its line. *Whether this traveller supplied a value* is keyed on `ANSWERED()`. **Composition lives wholly on the instance side.** Applying the instance predicate to the document question scores the blank intake form at zero answers, which would read as a form that asks no questions — so the over-application is measurable rather than hypothetical.
 
-**The record side is three-valued, because a horizon is a third state:** `UNSTATED` · `ANSWERED` · `EXPIRED` (a `[VALID-THROUGH YYYY-MM]` mark whose horizon is earlier than `strftime('%Y-%m')`).
+**The record side is three-valued, because a horizon is a third state:** `UNSTATED` · `ANSWERED` · `EXPIRED`. **The third state is decided against a reference month `R`, not against the clock alone.** A value is `EXPIRED` when it carries a `[VALID-THROUGH H]` mark and **not** `H > R`, or when it sits on a field whose `Horizon` axis is `required` and carries no parseable mark. Zero-padded `YYYY-MM` compares lexicographically **and** chronologically, so `>` stays a string comparison with no date library — which is what keeps the predicate available on a pure-bash guard surface. § *The reference month* below is normative for `R`; § *Field Scope → The classification* is normative for the axis.
+
+> **`H == R` is not covered, and the strictness is deliberate.** The boundary month is the month the document lapses **in**, and the form asks for the month and never the day — *"the month it's valid through — never the number"* — so **a design cannot manufacture precision the form declined to ask for.** Under an inclusive reading a passport lapsing on the fifth and a trip running to the twentieth of the same month pass silently, which is the failure this mechanism exists to close, arriving at day granularity. *The cheap error is the safe one*: a prompt inside a one-month window, weighed against a traveller turned away at a border.
 
 > **Conflict detection keys on *statedness*; composition keys on *usability*.** An `EXPIRED` value is **stated** — so it is a real second owner and contests a trip-side value — and **not usable**, so it composes to `UNKNOWN` and is reported. It is never silently used, because a plan would then check entry requirements against a lapsed document, and never silently dropped, because a vanished constraint reads as compliance.
+
+### The reference month — what a horizon is compared against
+
+> **`R = max(clock month, window-end month)`.** Both terms are `YYYY-MM`. On a future trip `R` is that trip's own window end; on a past-dated or date-less one it falls back to the clock; and it is never earlier than the clock.
+
+**Why `max` rather than the window alone.** The window alone would *un-expire* a lapsed document for a past-dated `ACTIVE` trip, withdrawing a guarantee this document already ships — a value is never silently used, *because a plan would then check entry requirements against a lapsed document*. `max` withdraws nothing: it can only move a value from usable to not-usable and never the reverse, so **the change is monotone** and no value that is `EXPIRED` today becomes `ANSWERED`. That is what makes it shippable without auditing the records already on disk.
+
+**The ladder — deterministic, terminating, and no search.** Resolve the window-end month from the trip's own `trips/<slug>/trip-context.md`, in this order, stopping at the first that yields a value:
+
+1. The traveller's own **`Effective window (local)`** end date in § *Per-Traveler Planning Days [DERIVED]*, truncated to `YYYY-MM`. Where that block has collapsed to its `- **All travelers:**` line, that line states the trip-level window applies and so delegates to the step below.
+2. The **departure day** in § *Effective Planning Days [DERIVED]*, truncated to `YYYY-MM`.
+3. Neither present, or neither parseable → **the clock alone**, and `R` is the clock month.
+
+**The end, not the start.** A passport that lapses mid-trip is a passport the plan may not rely on, and a start-date comparison would let it pass. **The traveller's own window, not the group's** — the trip-level block says so in its own words, *"On a multi-origin trip this is **not** a group-wide guarantee"* — which is why the traveller's block is consulted before the trip's rather than after it. The trip-level step is exercised in practice rather than decorative: `examples/tokyo-2026/trip-context.md` carries the trip-level block and no per-traveller block.
+
+**No cycle, and no new read.** The ladder reads two `[DERIVED]` blocks of `trip-context.md`; neither is derived from a person record, and composition writes neither. `agents/00-enrichment.md` already names that file on the `Reads:` line of the roles that compose, so the reference month is available to every consumer that needs it without widening any read scope. **`.claude/commands/trip-record.md` § `## link` is deliberately not such a consumer** — that verb answers *which record*, not *is this record usable for this trip*, and it passes the clock; the divergence is designed and is stated at both surfaces.
 
 ### The bearer states — seven, and five need no store read
 
@@ -584,7 +614,7 @@ The reference is borne by the traveller file alone. **Five of the seven states a
 ### Determinism — three obligations, and the third is where a design goes quietly order-dependent
 
 - **O1 — no rule names a sequence.** No guard above refers to a first source, a last writer, file order or mtime. `V` is a pure function of five typed arguments. **This is checkable by reading the table: a rule mentioning a traversal is a defect.**
-- **O2 — the arguments are computed independently.** `p` comes from the trip file's parse and `r` from the record's; neither parse consults the other's outcome. `A` depends on the trip file's frontmatter and then the store, in that order, and is single-valued.
+- **O2 — the arguments are computed independently.** `p` comes from the trip file's parse and `r` from the record's parse **together with the reference month `R`, resolved from `trip-context.md` by the ladder in § *The reference month*** — a third file, so neither parse consults the other's outcome and the independence O2 asserts is unaffected. `A` depends on the trip file's frontmatter and then the store, in that order, and is single-valued.
 - **O3 — every argument is single-valued.** A **slot-scoped label appearing twice in one file makes `p` a set**, so *"the trip value"* is undefined and any implementation resolves it by position. **Typed `MALFORMED-SLOT` → `UNKNOWN`, and reported. Never first-wins, never last-wins**, both of which are order-dependent by definition. This is a forward guarantee rather than a repair: there are **no** slot-scoped duplicates in the shipped form-shaped files today, and C3 is never upgraded, so a hand-introduced one would persist indefinitely.
 
 ### The `Needs` overlay — union, because two needs never contradict
@@ -596,6 +626,8 @@ The reference is borne by the traveller file alone. **Five of the seven states a
 **Union rather than record-wins, and record-wins is the unsafe branch.** A legacy trip whose traveller file carries a tree-nut allergy, then given a reference by hand or by a partial migration, would have that allergy **deleted from the composed source** under record-wins — and the plan would then grade compliant. That is the failure this whole mechanism exists to prevent, arriving through its front door. **Union is the only branch under which linking a person is never a destructive act**, and it is what makes a later reconcile-on-link pass a remedy rather than a precondition. The record still governs unconditionally in the sense that matters: every record need is in the composed set, no record need is ever displaced, and a record edit always reaches the trip.
 
 **Under `K2` with `A = UNRESOLVED` the trip's own blocks are likewise retained.** A dangling reference means the record side is *undetermined*, never *absent*: composing the empty set there would read a typo as **no constraints**, which is precisely the reading the reference states are typed to forbid.
+
+> **A lapsed horizon behaves differently by scope, and the asymmetry is forced rather than chosen.** On a **slot**-scoped field the record is the sole owner of one fact, so an `EXPIRED` or `HORIZON-UNCONFIRMED` value makes `r = ⊥`: `K3`/`K6` compose `UNKNOWN` and the report carries the disposition. On a **block**-scoped field the block is **retained in the union and reported** — never dropped from it. Dropping it would delete a constraint, and `K4`'s two invariants are that no record need is ever displaced and that linking a person is never a destructive act; a vanished constraint reads as compliance, which is the failure the whole mechanism exists to prevent. So the generality is **total over both scopes** rather than nominal: `refuse-and-report` where one fact has one owner, `retain-and-report` where two needs are two instances.
 
 ### Class enforcement — the report predicate, and why it does not break the tolerant read
 
@@ -622,10 +654,15 @@ One line per (traveller × field), in the block that already exists:
 | `CLASS-VIOLATION` | a `PERSON` field is answered trip-side while the reference resolves | yes — remedy: move the value into the record |
 | `DIVERGENT` | a `DEFAULT` override differs from the record's value | no — the sanctioned override, surfaced |
 | `REDUNDANT-OVERRIDE` | a `DEFAULT` override equals the record's value | no — the line can be removed |
-| `EXPIRED` | the record's value carries a lapsed `[VALID-THROUGH]` horizon | yes — remedy: refresh the record |
+| `EXPIRED` | the record's value carries a `[VALID-THROUGH]` horizon **earlier than the reference month** | yes — remedy: refresh the record |
+| `HORIZON-UNCONFIRMED` | the horizon's own month **is** the reference month, so month precision cannot settle whether it covers the trip; **or** a field whose `Horizon` axis is `required` carries no parseable mark | yes — remedy: state the horizon on the record |
 | `MALFORMED-SLOT` | a slot-scoped label occurs twice in one traveller file | yes |
 | `DANGLING` · `MALFORMED` · `STORE-UNREADABLE` | the corresponding bearer state | yes / yes / maybe |
 | `TOMBSTONED` | the bearer's record was erased | no — informational |
+
+> **Two dispositions rather than one, because the remedies differ by weeks of lead time.** `EXPIRED` and `HORIZON-UNCONFIRMED` project onto the same composition state — both compose to `UNKNOWN` — and that projection is exactly why they must stay distinct **in the report**, which is a different function over a different input (§ *The discriminator that must not collapse*). A traveller who never recorded a validity month and a traveller whose passport has already lapsed read identically under one disposition, and the mechanism exists to surface the lead time between them. **The report never consumes the projection.**
+>
+> **A horizon disposition is a prompt, and a prompt is not a solicitation. Do not trim this bound.** § *One-way* below forbids composition from soliciting a write to the store, and the harm it names is **promotion** — a record drifting toward whatever the most recent trip said, one confirmed click at a time. A horizon line moves nothing that way, and the reason is structural rather than a carve-out: `Passport` is `PERSON`-class, a trip-side `PERSON` value is a `CLASS-VIOLATION` that is refused and never composed, so **there is no promotable candidate for such a line to offer.** What the line names is the record's own answer and the document behind it. The bound, stated so it cannot widen: **a report line may name a field and a remedy; it may never carry, quote, or offer a candidate value** — the rule this section already gives three independent grounds for. Under it the `DEFAULT`-divergence prompt § *One-way* forbids stays forbidden, because it necessarily carries the trip's value as its candidate; the horizon line is admitted, carrying none. **No command is named**, on the shipped precedent of the changed-journey-facet class, and no verb is added.
 
 **Equality for `REDUNDANT-OVERRIDE` is trim-only and byte-exact:** two values are equal iff identical after stripping leading and trailing whitespace. No case folding, no punctuation normalisation, no similarity. The identity normalizer above is wrong by domain — it is built for keys, and folding prose with it would equate *"no red-eyes"* with *"no red eyes"*. The choice is settled by error asymmetry: a **narrower** equality under-reports redundancy, costing one un-normalised line that is still reported as `DIVERGENT` and still visible, while a **wider** one authorises deleting a line that was a real override, which is silent data loss in a human-authored Layer-1 file. **The cheap error is the safe one**, and trim-only is the only relation a reviewer can verify by eye — which matters for a rule whose output authorises a deletion. **`REDUNDANT-OVERRIDE` never fires against an `EXPIRED` record value**: equality with a lapsed value would authorise removing a live trip-side line in favour of one already known to be unusable.
 
