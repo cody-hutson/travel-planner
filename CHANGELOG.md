@@ -86,6 +86,87 @@ no output reads differently. This is the repository's own quality, and it is the
 completion of a release that closed the same defects one instance at a time. What it buys is that
 the next instance fails a check instead of waiting for somebody to read the paragraph.
 
+### Added
+
+- **`scripts/test-corpus-hygiene.sh`, and the workflow that runs it as a required check** — it
+  grades the tracked markdown tree for a count asserted about a countable population while carrying
+  no re-derivable basis, for a document cited by bare basename where that basename has a
+  directory-qualified home, and for a `path:line` locator. The unit is the sentence, chosen after
+  the line and the paragraph were each measured against this corpus and each failed in its own
+  direction. Its control group builds a synthetic tree on every run, and carries an arm that replays
+  a defect this repository actually shipped, read out of history — which is why the workflow checks
+  out full history and why that arm fails rather than skipping when the blob is unreachable.
+- **`reference/adr/ADR-013-count-assertion-basis.md`** — ratifies the authoring convention the gate
+  enforces, so the rule is written down before it is enforced rather than after somebody argues with
+  it. Each admitted basis form names an example already in use in this corpus rather than an
+  invented one, and the record states what the gate cannot see beside what it can.
+- **The `count-assertion-digest` fence in `reference/data-architecture.md`** — the residual the
+  corpus carried on the day the rule began to be enforced, declared per path rather than forgiven.
+  The comparison runs in both directions: a declared file that gains an assertion fails, one that
+  loses an assertion without its row moving fails, an undeclared file carrying one fails, and a row
+  naming a file that no longer exists fails. That is what makes it a pin rather than an allowlist,
+  which would blind a document permanently at exactly the place this defect recurred.
+- **A code-set-to-arm bijection over the starred-field group in `scripts/test-artifact-schema.sh`**
+  — the codes that group can emit are read out of the emitting function's own body on every run and
+  compared, in both directions, against the arms that actually ran. Neither the codes nor their
+  number is written down anywhere for somebody to keep current.
+- **A worked profile named in the intake template's own guide** —
+  `examples/people-library-demo/travelers/noor.md`, described there as this same form with real
+  answers written into it. The guide says plainly that the link will not open if the form arrived on
+  its own, and tells the reader to ask whoever sent it for that file as well.
+
+### Changed
+
+- **Both commands that hand the intake form out now say to send the worked profile beside it.** The
+  only pointer to a filled-in example lived in the README, which is not a document that travels with
+  the form, and on a group trip the common case is that the form reaches somebody with no checkout
+  of this repository at all. `/trip-new` and `/trip-record` each name that file on the hand-off
+  route.
+- **The data-architecture demo's derived planning-days section agrees with its own table again.** It
+  had opened by asserting that every traveller's window and origin basis was the trip's own — a
+  universal the table directly beneath it falsified, since one traveller's basis reads as unknown
+  there. An earlier release added a correct restatement below the wrong sentence without touching
+  it, because its authorisation covered insertions only. The sentence now says what the table says.
+- **That fixture's README says at the entry point what the fixture is.** It renders a per-traveller
+  table the single-origin collapse rule would delete, on purpose, to expose the basis values the
+  collapse hides, and it now points at the fixture that does render the collapse. The exemption had
+  been marked inside the governed section, which reaches the reader who reads the label and not the
+  reader who copies the structure.
+- **Bare-basename citations in the decision records are directory-qualified.** ADR-001, ADR-009 and
+  ADR-011 each named a document by filename alone where that document has a durable qualified home,
+  which is the citation-form class the new gate grades. Qualifying them is the same edit the gate
+  now asks of anybody who adds one.
+
+### Known gaps, carried rather than hidden
+
+- **The gate confirms that a recognised basis form is present, and dereferences nothing it names.**
+  A commit-shaped token is never looked up, a derived-region marker is never matched against a
+  generator that writes it, and the bare word `baseline` is taken at face value — so a fabricated
+  anchor passes on shape alone. What the gate stops is accidental drift, the count written in good
+  faith that goes quietly stale when its population moves; it does not stop an author who
+  deliberately writes a false basis, and it could not be made to without resolving every anchor a
+  sentence names. The decision record states that boundary now. It had overclaimed the property when
+  first drafted, and was corrected at the review gate rather than after a reader trusted the
+  stronger reading.
+- **An admitted basis form the sentence grader cannot recognise is carried by the fence rather than
+  by the sentence.** Agreement-pinning is a property of several homes agreeing, which no single
+  sentence carries, so nothing in the grader detects it. The date half of the anchored-measurement
+  form has no recogniser either: the implemented arm reads a commit-shaped token and the phrases
+  `probed at`, `as of` and `baseline`, and nothing in it reads a date as the moment a count was
+  probed. Authoring to either form is still sound authoring — the sentence registers as a residual
+  site, and its fence row is where that is carried.
+- **Branch protection does not require a branch to be current with its base before it merges.** So a
+  pull request can merge on a check result computed against an older base, and this gate — required
+  though it now is — can report green over a tree that is not the tree the merge produces. Nothing
+  here changes that setting; it is recorded because a required check reads as a stronger guarantee
+  than it is, and the gap it leaves is silent.
+- **The suite does not execute its own uncovered-code failure branch.** Its coverage verdict carries
+  a red path for a violation code that no arm exercises, and no run reaches that path, because no
+  code in the tree is uncovered. What the control arm establishes is the comparison sitting behind
+  the verdict: an unarmed code appended to a copy of the emitting function's body moves the
+  uncovered set, and the new member is that code. The branch that would report it is grounded on
+  that, outside the suite's own verdict rather than by running it.
+
 ## [0.26.0] — 2026-09-06 — People library adoption
 
 The previous release gave a person a durable record and gave every trip a reference to it instead of
