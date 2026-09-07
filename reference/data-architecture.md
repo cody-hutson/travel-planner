@@ -1365,12 +1365,12 @@ with no site carries no row.
 # sites  path
 4       .claude/commands/trip-decommission.md
 6       .claude/commands/trip-new.md
-10      .claude/commands/trip-record.md
+13      .claude/commands/trip-record.md
 6       .claude/commands/trip.md
-28      CHANGELOG.md
+32      CHANGELOG.md
 8       CLAUDE.md
 1       CONTRIBUTING.md
-4       README.md
+5       README.md
 4       SECURITY.md
 3       agents/00-enrichment.md
 5       agents/01-activities.md

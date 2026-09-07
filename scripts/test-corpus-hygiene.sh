@@ -82,11 +82,26 @@
 #   SENTENCE   the only unit measured both wrap-insensitive and tight enough to keep an
 #              exemption scoped to the claim it grounds.
 #
-# WRAP-INSENSITIVITY IS THE POINT, not a nicety. The motivating instance —
-# "…names that file one way in all / twelve places" — has its cardinal and its noun on
-# opposite sides of a line break, and a naive line-anchored substring probe reports it
-# clean. Arm CTL-C-WRAP is that exact sentence, and arm CTL-RETRO is the real historical
-# blob. A line-anchored implementation passes neither.
+# WRAP-INSENSITIVITY IS THE POINT, not a nicety — and no single arm asserts it, because a
+# line break falls on either side of the cardinal-noun pair it separates and only one of
+# those positions is load-bearing.
+#
+#   BREAK BEFORE THE CARDINAL. The motivating instance — "…names that file one way in all /
+#   twelve places" — breaks between `all` and `twelve`, so the cardinal and its noun land
+#   TOGETHER on the second line. Arm CTL-C-WRAP is that exact sentence and arm CTL-RETRO is
+#   the real historical blob that carried it. Both are worth keeping: they hold the shape
+#   the defect actually took, and CTL-RETRO is the only arm here graded against a document
+#   this repository shipped. Neither DISCRIMINATES on the unit, and this comment previously
+#   claimed both did — a line-anchored reader finds `twelve places` intact on one line and
+#   passes them, so a green from these two says nothing about whether the unit is wrapped.
+#   BREAK BETWEEN THE CARDINAL AND ITS NOUN. Arm CTL-C-WRAP-PAIR breaks between `twelve` and
+#   `places`. The pair now spans the break, so a line-anchored reader sees a cardinal with
+#   nothing after it and a noun with nothing before it, and reports the document clean. This
+#   is the arm a line-anchored implementation FAILS, and it is why the unit is not the line.
+#
+# Both shapes together are the assertion; either alone is a hole. The discrimination is
+# measured rather than asserted — replacing the accumulation below with a per-line flush
+# drops CTL-C-WRAP-PAIR to zero sites while leaving CTL-C-WRAP firing.
 #
 # ── WHY THIS FILE ASSERTS NO COUNT OF ITS OWN ────────────────────────────────────
 # Every population this suite reports is EMITTED at run time from the tree it just read.
@@ -785,7 +800,11 @@ O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
 ctl_mustfire "CTL-C0" C0 "$O" "the fence is present and carries ZERO rows — an empty declaration asserts nothing, and every comparison behind it would be vacuously green" 1
 
 # CTL-C-WRAP — the motivating defect, wrapped across a line break exactly as it shipped.
-# A line-anchored implementation passes every other arm in this group and fails this one.
+# The break falls BEFORE the cardinal, between `all` and `twelve`, so `twelve places` lands
+# intact on the second line. That is the shape the defect took, which is why the fixture is
+# kept verbatim — but it does NOT discriminate on the unit: a line-anchored reader grades
+# the second line on its own, finds the pair adjacent there, and fires too. The arm that
+# discriminates is CTL-C-WRAP-PAIR below; this one holds the historical shape.
 D="$(ctl_mk cwrap)"
 mkdir -p "$D/docs"
 { printf '# Fixture\n\n'
@@ -794,7 +813,23 @@ mkdir -p "$D/docs"
 } > "$D/docs/notes.md"
 ctl_fence "$D" '0  docs/notes.md'
 O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
-ctl_mustfire "CTL-C-WRAP" C1 "$O" "the cardinal and its noun sit on OPPOSITE SIDES of a line break — the wrap-insensitivity assertion, and the arm a naive substring probe fails while passing all the rest" 1
+ctl_mustfire "CTL-C-WRAP" C1 "$O" "the sentence is WRAPPED, with the break before the cardinal exactly as the motivating defect shipped it — the historical shape, graded whole; the pair lands together on the second line, so the unit-discrimination is CTL-C-WRAP-PAIR's assertion and not this one's" 1
+
+# CTL-C-WRAP-PAIR — the same defect with the break moved BETWEEN the cardinal and its noun,
+# which is the position that makes the unit observable. `twelve` ends one line and `places`
+# begins the next, so a line-anchored reader grades a cardinal governing nothing and a noun
+# governed by nothing, and returns clean. The shipped reader joins the continuation before
+# grading and fires. Nothing else about the two implementations differs, so this arm's
+# verdict is a measurement OF THE UNIT rather than of the exemption ladder around it.
+D="$(ctl_mk cwrappair)"
+mkdir -p "$D/docs"
+{ printf '# Fixture\n\n'
+  printf '  This document now names that same file one way in all twelve\n'
+  printf '  places. No decision is changed.\n'
+} > "$D/docs/notes.md"
+ctl_fence "$D" '0  docs/notes.md'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-C-WRAP-PAIR" C1 "$O" "the cardinal and its noun sit on OPPOSITE SIDES of a line break — a line-anchored reading of this identical rule reports this fixture clean, so this is the arm that tells the sentence unit from the line" 1
 
 D="$(ctl_mk cf1)"
 ctl_c_doc "$D" docs/notes.md 'Probed at `326a2a1`, the commit this record sits on: across all 121 tracked files, 0 occurrences.'
