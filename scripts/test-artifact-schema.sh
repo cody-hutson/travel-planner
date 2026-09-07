@@ -4428,12 +4428,16 @@ EOF
   # classification's own rationale declares carry no bullet: one is never asked and is
   # computed per trip, the other is borne by the title line in both forms. They are read
   # from the table's rationale column rather than listed here.
+  # The rationale column is $9: the table carries a `Horizon` axis between `Scope` and
+  # `Rationale`, so this index moved with it. It is the ONLY arm in this file that reads
+  # the rationale column, and a stale index here empties RL_NOBULLET rather than reading
+  # the wrong cell quietly — RL3's own RL_NNB guard below is what turns that into a FAIL.
   RL_NOBULLET="$(awk -F'|' '
-      NF < 8 { next }
+      NF < 9 { next }
       { num = $2; gsub(/[ \t]/, "", num); if (num !~ /^[0-9]+$/) next
         if (!match($3, /`[^`]+`/)) next
         lbl = substr($3, RSTART + 1, RLENGTH - 2)
-        if ($8 ~ /Never asked/ || $8 ~ /not by a bullet/) print lbl }' "$RL_DM" | sort -u)"
+        if ($9 ~ /Never asked/ || $9 ~ /not by a bullet/) print lbl }' "$RL_DM" | sort -u)"
   RL_ABSENT="$(awk -F'\t' 'NR == FNR { seen[$1]; next } !($1 in seen) { print $1 }' \
     <(cat <(rl_bullets "$RL_PAIR_T" 1) <(rl_bullets "$RL_PAIR_R" 1)) "$RL_CLASSFILE" | sort -u)"
   RL_UNEXPLAINED="$(comm -23 <(printf '%s\n' "$RL_ABSENT" | grep '[^[:space:]]' | sort -u) \
@@ -5093,6 +5097,210 @@ fi
 
 if [ "$XT_RAN" -ne 1 ]; then
   FAIL "XT-integrity: group XT did not execute — a run without it is a failure, never a pass"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# HZ — the validity-horizon axis, and the tracked instance that exercises the mark
+#
+# WHAT THIS GROUP IS FOR. The `[VALID-THROUGH <YYYY-MM>]` mark shipped admissible on any
+# field bullet and required on none, and was exercised in NO tracked instance: the real
+# person store is git-ignored, so the tracked fixtures are the only instances this gate
+# can ever reach, and the original witness records the mark as "not exercised here" in its
+# own prose. A mark nothing carries is a grammar nothing grades.
+#
+# The classification now carries a per-field `Horizon` axis, so membership is DATA rather
+# than code: admitting a second horizon-bearing field is one cell of one table. This group
+# reads that axis LIVE and holds no copy of it, the same live-read RL0 and XT0 take.
+#
+# ── THE COLUMN POSITION IS THE HAZARD ───────────────────────────────────────────
+# `rl_class` and `xt_class` take their fields BY INDEX, reading $2 $3 $4 $5 $7. `Horizon`
+# sits immediately after `Scope` so all four are preserved and the rationale column moves
+# from $8 to $9 — which RL3's own extractor reads, and which moved with it. Placed anywhere
+# EARLIER the column shifts the class or scope field and both of those groups grade a
+# class-blind table WHILE THE SUITE REPORTS GREEN. HZ0's arms are aimed at that: a run that
+# parsed the axis into an empty or single-valued set fails here rather than passing every
+# arm below over nothing.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "HZ — the validity-horizon axis, and the tracked instance that exercises the mark"
+
+HZ_RAN=0
+HZ_DM="$ROOT/reference/data-model.md"
+HZ_FIX="$ROOT/examples/people-library-demo/people/psn-9d42.md"
+HZ_STAR='⭐'
+HZ_MARK='VALID-THROUGH'
+
+# hz_class — the classification, read LIVE. Emits "label<TAB>horizon<TAB>scope".
+# Fields are taken BY INDEX, in the style of its two siblings and with the same numeric-row
+# and code-span guards; the NF guard is 9 because the row must reach the horizon column.
+hz_class() {
+  awk -F'|' '
+    NF < 9 { next }
+    {
+      num = $2; gsub(/[ \t]/, "", num)
+      if (num !~ /^[0-9]+$/) next
+      if (!match($3, /`[^`]+`/)) next
+      lbl = substr($3, RSTART + 1, RLENGTH - 2)
+      scp = $7; gsub(/[ \t`]/, "", scp)
+      hor = $8; gsub(/[ \t`*]/, "", hor)
+      print lbl "\t" hor "\t" scp
+    }' "$1"
+}
+
+# hz_marked <file> — emits "label<TAB>scope-of-that-label" for every bullet carrying the
+# mark. The star prefix is stripped with a dynamic sub() rather than by arithmetic on
+# length(), for the reason group LC exists.
+hz_marked() {
+  awk -v star="$HZ_STAR" -v mark="$HZ_MARK" '
+    /^- / {
+      rest = substr($0, 3)
+      sub("^" star "[ \t]*", "", rest)
+      if (!match(rest, /^\*\*[^:*]+:\*\*/)) next
+      lbl = substr(rest, 3, RLENGTH - 5)
+      val = substr(rest, RLENGTH + 1)
+      if (index(val, mark) == 0) next
+      print lbl
+    }' "$1"
+}
+
+HZ_OK=1
+HZ_MISSING=""
+for hz_f in "$HZ_DM" "$HZ_FIX"; do
+  [ -r "$hz_f" ] || { HZ_OK=0; HZ_MISSING="$HZ_MISSING ${hz_f#"$ROOT/"}"; }
+done
+
+HZ_CLASSFILE="$WORK/hz-class.tsv"
+if [ "$HZ_OK" -eq 1 ]; then
+  hz_class "$HZ_DM" > "$HZ_CLASSFILE"
+  HZ_NAXIS="$(grep -c '[^[:space:]]' "$HZ_CLASSFILE" || true)"
+  HZ_NREQ="$(awk -F'\t' '$2 == "required"' "$HZ_CLASSFILE" | grep -c '[^[:space:]]' || true)"
+  HZ_NADM="$(awk -F'\t' '$2 == "admissible"' "$HZ_CLASSFILE" | grep -c '[^[:space:]]' || true)"
+  if [ "$HZ_NAXIS" -gt 0 ] && [ "$HZ_NREQ" -gt 0 ] && [ "$HZ_NADM" -gt 0 ]; then
+    PASS "HZ0: MUST FIRE — the \`Horizon\` axis was read live from reference/data-model.md at column index 8: $HZ_NAXIS labelled slot(s), $HZ_NREQ of them \`required\` and $HZ_NADM \`admissible\`. This suite holds no copy of that column, and all three limbs fired: a run that parsed the axis into an empty set, or into one carrying no \`required\` member, or into one carrying no \`admissible\` member, fails HERE rather than passing every arm below over nothing. A column inserted before \`Scope\` would leave this arm reading scope tokens and this is where that lands"
+    HZ_RAN=1
+  else
+    FAIL "HZ0: MUST FIRE — the axis parsed to $HZ_NAXIS labelled row(s) / $HZ_NREQ required / $HZ_NADM admissible. Every verdict below would be over an empty or horizon-blind table. The likeliest cause is a reordered classification column: this arm reads the horizon by INDEX, so a column inserted before it is read as some other axis"
+    HZ_OK=0
+  fi
+else
+  FAIL "HZ0: required surface(s) unreadable:$HZ_MISSING — not a skip and not a pass"
+fi
+
+if [ "$HZ_OK" -eq 1 ]; then
+  # ── HZ1 — TOTALITY. Every classified label carries a horizon value. ────────────
+  # The axis is a property of the field, exactly as class and scope are. A label with no
+  # horizon value has no rule for whether a mark is owed, which is a hole in the mechanism
+  # rather than a missing test.
+  HZ_BADVAL="$(awk -F'\t' '$2 != "required" && $2 != "admissible" { print $1 }' \
+    "$HZ_CLASSFILE" | sort -u | tr '\n' ' ')"
+  if [ -n "$HZ_BADVAL" ]; then
+    FAIL "HZ1: label(s) whose \`Horizon\` cell is neither \`required\` nor \`admissible\`: $HZ_BADVAL — the axis is not total, so the fail-safe rule has no verdict for those fields and an absent mark on one of them reads as a non-event by default"
+  else
+    PASS "HZ1: the axis is TOTAL and single-valued over all $HZ_NAXIS classified label(s) — every one reads exactly one of \`required\` or \`admissible\`, so the fail-safe rule has a verdict for every field rather than only for the ones somebody remembered"
+  fi
+
+  # ── HZ2 — the `required` membership is exactly one field, and it is the one the
+  # class exists to protect. Read from the table, never asserted against a literal set.
+  HZ_REQLIST="$(awk -F'\t' '$2 == "required" { print $1 }' "$HZ_CLASSFILE" | sort -u | tr '\n' ' ')"
+  if [ "$HZ_NREQ" -eq 1 ] && [ "$HZ_REQLIST" = "Passport " ]; then
+    PASS "HZ2: exactly one field declares \`Horizon: required\`, and it is \`Passport\` — the one durable field that becomes wrong on its own, and the one whose silent staleness is checked against rather than merely stored. The remaining $HZ_NADM are \`admissible\`: a mark is honoured where present and its absence is not a finding"
+  else
+    FAIL "HZ2: the \`required\` membership reads $HZ_NREQ member(s): $HZ_REQLIST — expected exactly \`Passport\`. Admitting a second member is a deliberate one-cell edit and this arm is where it must be re-read; a member that arrived by accident is a field now demanding a mark nobody knows it owes"
+  fi
+
+  # ── HZ3 — the mark is EXERCISED, on BOTH scopes, in a tracked instance. ────────
+  # This is the assertion the original witness could not carry: it demonstrates the
+  # horizon's home field by leaving it EMPTY, so the mark had no tracked instance at all.
+  HZ_MARKED="$(hz_marked "$HZ_FIX" | sort -u)"
+  HZ_NMARKED="$(printf '%s\n' "$HZ_MARKED" | grep -c '[^[:space:]]' || true)"
+  HZ_SLOT=0
+  HZ_BLOCK=0
+  HZ_UNCLASSED=""
+  while IFS= read -r hz_l; do
+    [ -n "$hz_l" ] || continue
+    hz_s="$(awk -F'\t' -v l="$hz_l" '$1 == l { print $3; exit }' "$HZ_CLASSFILE")"
+    case "$hz_s" in
+      slot)  HZ_SLOT=$((HZ_SLOT + 1)) ;;
+      block) HZ_BLOCK=$((HZ_BLOCK + 1)) ;;
+      *)     HZ_UNCLASSED="$HZ_UNCLASSED $hz_l" ;;
+    esac
+  done <<EOF
+$HZ_MARKED
+EOF
+  # Control arm, MUST FIRE: the same extractor over the SAME fixture with the mark token
+  # replaced by one no bullet carries. A run where this returns non-zero is matching on
+  # something other than the mark, and HZ3's counts would be an artefact of that.
+  HZ_CTL="$(awk -v star="$HZ_STAR" -v mark='ZQXJ-NO-SUCH-MARK' '
+    /^- / { rest = substr($0, 3); sub("^" star "[ \t]*", "", rest)
+            if (!match(rest, /^\*\*[^:*]+:\*\*/)) next
+            if (index(substr(rest, RLENGTH + 1), mark) == 0) next
+            n++ } END { print n+0 }' "$HZ_FIX")"
+  if [ "$HZ_NMARKED" -eq 0 ] || [ "$HZ_CTL" -ne 0 ]; then
+    FAIL "HZ3: the extractor read $HZ_NMARKED marked bullet(s) and its specificity arm read $HZ_CTL (expected 0) — with either wrong, the scope coverage below is an artefact of a broken probe rather than a property of the fixture"
+  elif [ -n "$HZ_UNCLASSED" ]; then
+    FAIL "HZ3: marked bullet(s) whose label the live classification does not scope:$HZ_UNCLASSED — a mark on a field with no scope has no rule for what a lapsed value does to the composed source"
+  elif [ "$HZ_SLOT" -ge 1 ] && [ "$HZ_BLOCK" -ge 1 ]; then
+    PASS "HZ3: the mark is exercised in a TRACKED instance across BOTH field scopes — $HZ_SLOT slot-scoped and $HZ_BLOCK block-scoped marked bullet(s) over $HZ_NMARKED total, each scoped from the live table rather than from a list here. Both are needed because a lapsed value behaves differently on each: slot-scoped composes UNKNOWN and reports, block-scoped is RETAINED in the union and reports. The specificity arm read $HZ_CTL, so these counts are a measurement"
+  else
+    FAIL "HZ3: the tracked fixture exercises $HZ_SLOT slot-scoped and $HZ_BLOCK block-scoped marked bullet(s) — both must be non-zero. Dropping either leaves one half of the scope rule graded by nothing, and the two halves fail in OPPOSITE directions: a wrongly-dropped slot value reads as never-answered, a wrongly-dropped block value deletes a constraint and the plan then grades compliant"
+  fi
+
+  # ── HZ4 — FAIL-CLOSED: no tracked file carries a real passport value. ──────────
+  # The mark's home field is the class's most sensitive, and this fixture set exists in a
+  # world-readable repository. The assertion is over the WHOLE tracked tree rather than over
+  # the fixtures, because the population that must stay empty is every tracked file.
+  #
+  # WHAT COUNTS AS NOT-A-VALUE, and why each limb is the corpus's own vocabulary rather than
+  # a path allowlist. An allowlist would exempt a whole FILE and so would blind this arm to a
+  # real value appearing in that same file; these limbs exempt a VALUE and nothing else.
+  #   - empty, or a lone em dash / hyphen — the declared-absence convention the intake form
+  #     instructs: keep the line and put a single em dash where the answer would go.
+  #   - a surviving [bracketed placeholder] — ANSWERED() is false on it by the data model's
+  #     own predicate, which is what a BLANK FORM's prompt text is. The person-intake
+  #     template's own bullet is exactly this: the form asking the question, illustrative
+  #     example and all, never a person answering it.
+  #   - the composed sentinel UNKNOWN, alone or carrying a trailing bracketed mark. That is
+  #     the value COMPOSITION writes when there is no usable one, so by construction it is
+  #     not a passport value; the publish guard already excludes `unknown` by name. The data
+  #     model's worked example of a contested report line is this case.
+  # Anything else — a country, a date, a document string — fails, which is the point.
+  HZ_NOTVAL='val == "" || val == "—" || val == "-" || val ~ /^\[.*\]$/ || val == "UNKNOWN" || val ~ /^UNKNOWN[ \t]+\[[^]]*\]$/'
+  HZ_VALUED="$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null | while IFS= read -r hz_t; do
+      awk -v star="$HZ_STAR" -v f="$hz_t" '
+        /^- / {
+          rest = substr($0, 3); sub("^" star "[ \t]*", "", rest)
+          if (!match(rest, /^\*\*Passport:\*\*/)) next
+          val = substr(rest, RLENGTH + 1)
+          sub(/^[ \t]+/, "", val); sub(/[ \t\r]+$/, "", val)
+          if ('"$HZ_NOTVAL"') next
+          print f
+        }' "$hz_t"
+    done | sort -u | tr '\n' ' ')"
+  # Control arm, MUST FIRE: the same walk counting the bullets it DID reach and classify as
+  # not-a-value. A zero here means the walk matched no Passport bullet at all, and HZ4's
+  # clean verdict would be a scan that never reached the population rather than a population
+  # that is clean.
+  HZ_DASHED="$(cd "$ROOT" && git ls-files '*.md' 2>/dev/null | while IFS= read -r hz_t; do
+      awk -v star="$HZ_STAR" '
+        /^- / {
+          rest = substr($0, 3); sub("^" star "[ \t]*", "", rest)
+          if (!match(rest, /^\*\*Passport:\*\*/)) next
+          val = substr(rest, RLENGTH + 1)
+          sub(/^[ \t]+/, "", val); sub(/[ \t\r]+$/, "", val)
+          if ('"$HZ_NOTVAL"') print "x"
+        }' "$hz_t"
+    done | grep -c '[^[:space:]]' || true)"
+  if [ "$HZ_DASHED" -eq 0 ]; then
+    FAIL "HZ4: the control arm reached 0 \`Passport:\` bullet(s) across the tracked tree — the walk matched no such bullet at all, so a clean verdict here would certify a scan that never ran rather than a tree that is clean"
+  elif [ -n "$HZ_VALUED" ]; then
+    FAIL "HZ4: tracked file(s) carrying a \`Passport:\` bullet with a real value: $HZ_VALUED — this class is publish: internal-hard and every real instance of it is git-ignored. A tracked passport value is a disclosure, and adding a horizon fixture is not a reason to introduce one. Not-a-value is the corpus's own vocabulary and nothing wider: empty, a lone em dash, a surviving bracketed placeholder (a blank form's prompt, ANSWERED()-false by the data model's predicate), or the composed sentinel UNKNOWN"
+  else
+    PASS "HZ4: FAIL-CLOSED — no tracked file carries a \`Passport:\` bullet with a real value, measured over the whole tracked markdown tree rather than over the fixtures alone. The control arm reached $HZ_DASHED such bullet(s) and classified every one as not-a-value, so the zero is a measurement. Not-a-value is exempted per VALUE and never per file, so this arm still fails on a real value appearing in a file that also carries an exempt one. This is what lets the horizon ship exercised: the mark is field-general, so it is demonstrated on fields that are not \`Passport\` and no passport value enters a tracked file to make that possible"
+  fi
+fi
+
+if [ "$HZ_RAN" -ne 1 ]; then
+  FAIL "HZ-integrity: group HZ did not execute — a run without it is a failure, never a pass"
 fi
 
 echo
