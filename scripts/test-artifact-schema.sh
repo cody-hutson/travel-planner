@@ -5749,26 +5749,48 @@ EOF
   # Detector arms, run against SYNTHETIC instances in the work dir. These grade the
   # RESOLVER rather than the population, which is what lets a legitimate year-spanning trip
   # exist in this corpus without failing the suite.
+  #
+  # THE BARE-YEAR INSTANCE IS THE ONE THAT GRADES THE MONTH-NAME GUARD, and it is a
+  # different case from the no-year instance beside it rather than a second helping of it.
+  # A no-year title carries no four-digit year at all, so the title matcher never fires on
+  # it and it resolves nothing whether or not the guard is in force — it is blind to that
+  # guard by construction, and so is every other control here and every tracked instance.
+  # A title carrying a YEAR that no month name precedes is the only shape that separates
+  # the two, and § *The reference month* step 3 is written in exactly those terms: "The
+  # non-resolving condition is the pair's absence, not the year's: a title line carrying a
+  # bare year that no month name precedes yields no term either, because step 1 never
+  # selects it." Drop the `m > 0` guard from `hz_term` and this instance alone begins
+  # fabricating a term out of its destination word, so without it that whole class of
+  # regression lands green with every arm in this group still passing.
+  #
+  # THE DEPARTURE BULLET ON IT IS DELIBERATE. It makes the fabricated term a WELL-FORMED
+  # `YYYY-MM` rather than an obviously broken one, which is the dangerous shape and not
+  # merely the tidier one: a well-formed term is accepted by HZ5's payload grammar and by
+  # the ordering comparison, so it would compose ANSWERED and be USED. Nothing downstream
+  # is positioned to catch it, which is why the catch has to be here.
   HZ_SYN_NY="$WORK/hz-syn-newyear.md"
   HZ_SYN_NORM="$WORK/hz-syn-normal.md"
   HZ_SYN_NOYR="$WORK/hz-syn-noyear.md"
+  HZ_SYN_BARE="$WORK/hz-syn-bareyear.md"
   printf '# Trip Context — Somewhere December 2026\n\n- **Jan 3 (Sun):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NY"
   printf '# Trip Context — Somewhere April 2026\n\n- **Apr 15 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NORM"
   printf '# Trip Context — Somewhere (Illustrative Example)\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_NOYR"
+  printf '# Trip Context — Somewhere 2026\n\n- **Jul 22 (Wed):** Departure day — depart by ~9:00 AM\n' > "$HZ_SYN_BARE"
   HZ_SNY_T="$(hz_term "$HZ_SYN_NY" | cut -f4)";    HZ_SNY_W="$(hz_term "$HZ_SYN_NY" | cut -f5)"
   HZ_SNO_T="$(hz_term "$HZ_SYN_NORM" | cut -f4)";  HZ_SNO_W="$(hz_term "$HZ_SYN_NORM" | cut -f5)"
   HZ_SNY_NOYR="$(hz_term "$HZ_SYN_NOYR" | cut -f4)"
+  HZ_SBARE_T="$(hz_term "$HZ_SYN_BARE" | cut -f4)"
 
   if [ "$HZ_NFROZEN" -eq 0 ] || [ "$HZ_NPAT" -eq 0 ] || [ "$HZ_NSEL" -eq 0 ]; then
     FAIL "HZ10: the population did not derive — the freeze declaration yielded $HZ_NFROZEN pinned path(s), the class yielded $HZ_NPAT \`path-pattern:\` line(s), and the selection yielded $HZ_NSEL non-frozen instance(s). Any of those at zero means this arm graded nothing, which is not a pass"
-  elif [ "$HZ_SNY_T" != "2026-12" ] || [ "$HZ_SNY_W" != "2027-01" ] || [ "$HZ_SNO_W" != "—" ] || [ "$HZ_SNY_NOYR" != "—" ]; then
-    FAIL "HZ10: the resolver's own control arms did not behave — a synthetic December-titled / January-departing instance resolved term=$HZ_SNY_T wrap=$HZ_SNY_W (expected 2026-12 and 2027-01), a synthetic same-month instance resolved wrap=$HZ_SNO_W (expected an em dash), and a synthetic title carrying NO year resolved term=$HZ_SNY_NOYR (expected an em dash). With the detector wrong, every verdict below is an artefact of a broken probe"
+  elif [ "$HZ_SNY_T" != "2026-12" ] || [ "$HZ_SNY_W" != "2027-01" ] || [ "$HZ_SNO_W" != "—" ] || [ "$HZ_SNY_NOYR" != "—" ] || [ "$HZ_SBARE_T" != "—" ]; then
+    FAIL "HZ10: the resolver's own control arms did not behave — a synthetic December-titled / January-departing instance resolved term=$HZ_SNY_T wrap=$HZ_SNY_W (expected 2026-12 and 2027-01), a synthetic same-month instance resolved wrap=$HZ_SNO_W (expected an em dash), a synthetic title carrying NO year resolved term=$HZ_SNY_NOYR (expected an em dash), and a synthetic title carrying a BARE YEAR that no month name precedes resolved term=$HZ_SBARE_T (expected an em dash). With the detector wrong, every verdict below is an artefact of a broken probe. The bare-year limb is the one that fails when the title matcher stops requiring a month name beside the year: the term it then composes out of a destination word is well-formed, so the payload grammar and the ordering comparison both accept it and a value that was never covered reads as ANSWERED"
   elif [ -n "$HZ_NOTERM" ]; then
     FAIL "HZ10: non-frozen trip-context instance(s) from which NO trip term resolves:$HZ_NOTERM — the reference month falls back to the clock for these trips, which is the failure the trip-relative predicate exists to remove. The remedy is the title line: state the trip's month and year on \`# Trip Context — …\`"
   elif [ -n "$HZ_BADEQ" ]; then
     FAIL "HZ10: instance(s) whose resolved term is not \`max(title month, departure month)\`:$HZ_BADEQ — the resolver and the rule disagree"
   else
-    PASS "HZ10: the resolver is TOTAL over every non-frozen tracked trip-context instance — all $HZ_NSEL of them resolve a trip term, and on the $HZ_NEQ carrying a derived departure day the resolved month equals \`max(title month, departure month)\`. The population is DERIVED: selected by the class's own $HZ_NPAT \`path-pattern:\` line(s) and minus the $HZ_NFROZEN path(s) pinned in the freeze declaration, so the frozen exemption is read from that fence rather than named here. The equality limb is stated as the \`max\` and not as the departure month, because the latter is FALSE on exactly the New-Year configuration and would redden this suite on a legitimate instance. Three detector controls fired: a synthetic December/January instance resolved a wrapped term, a same-month instance resolved none, and a title carrying no year resolved no term at all"
+    PASS "HZ10: the resolver is TOTAL over every non-frozen tracked trip-context instance — all $HZ_NSEL of them resolve a trip term, and on the $HZ_NEQ carrying a derived departure day the resolved month equals \`max(title month, departure month)\`. The population is DERIVED: selected by the class's own $HZ_NPAT \`path-pattern:\` line(s) and minus the $HZ_NFROZEN path(s) pinned in the freeze declaration, so the frozen exemption is read from that fence rather than named here. The equality limb is stated as the \`max\` and not as the departure month, because the latter is FALSE on exactly the New-Year configuration and would redden this suite on a legitimate instance. Four detector controls fired: a synthetic December/January instance resolved a wrapped term, a same-month instance resolved none, a title carrying no year resolved no term at all, and a title carrying a bare year that no month name precedes resolved no term either. The last two are different cases and the group needs both: a no-year title never reaches the year matcher, so it reads identically whether or not the month-name guard is in force, while the bare-year title is the ONLY shape in this group — and the only shape among the tracked instances — that changes verdict when that guard is dropped"
   fi
 fi
 
