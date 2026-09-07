@@ -338,12 +338,17 @@ Trigger"), which sanctions exactly this behavior:
   and only the composed operand can see it.
 
   **The composed value also depends on the reference month.** A horizon is compared
-  against `R = max(clock month, window-end month)`, not against the clock alone, so the
-  composed value of a horizon-bearing field is a function of **this trip's** travel
-  window as well as of the record. The window is derived from
-  `trips/<slug>/trip-context.md`, which this role already names on its `Reads:` line, so
-  this needs **no new read** — the resolution ladder is normative in
-  `reference/data-model.md` § *The reference month — what a horizon is compared against*.
+  against `R = max(clock month, the trip term)`, not against the clock alone, so the
+  composed value of a horizon-bearing field is a function of **this trip's** own term as
+  well as of the record. The term is resolved from the title line of
+  `trips/<slug>/trip-context.md` — refined upward by that file's derived departure month
+  where one is later in the same year — and this needs **no new read**: the reads are
+  declared by the verbs that dispatch this role, `.claude/commands/trip-record.md`
+  §§ `## person <name>` and `## travelers`, each naming that path among the reconciler's
+  reads, the whole file and no block restriction. Reading a further line of an
+  already-declared read widens nothing. `reference/data-model.md` § *The reference month
+  — what a horizon is compared against* is normative for the resolution, for the
+  unresolvable case, and for the New-Year wrapped term.
 
   **The composed source is a value, not a file.** It exists for the duration of a pass
   and is never written to disk. Do **not** materialise it as an `outputs/` artifact:
@@ -375,7 +380,7 @@ Trigger"), which sanctions exactly this behavior:
   | **T4** | a record deleted, or the reference now dangles | **signal** + defect; a field the trip leaves unanswered composes `UNKNOWN`, and a value the trip **does** state is retained |
   | **T5** | `person:` added, removed or changed on the traveller file | **signal** — a trip-file edit, already inside the diff |
   | **T6** | a `merged-into:` repoint followed one hop | **signal only if the resolved values differ.** A repoint that resolves to the same values is a reference change and not a value change |
-  | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Reference-month-triggered: the clock or this trip's own travel window, whichever is later. Invisible to a trip-file diff by construction |
+  | **T7** | a `[VALID-THROUGH]` horizon crossed — **no file edited** | **signal.** Reference-month-triggered: the clock or this trip's own term, whichever is later. Invisible to a trip-file diff by construction |
 
 - **Relevance is class first, then answered-ness — and the answered-ness arm is
   `ANSWERED()`, never line-presence.** For each field whose record side moved:
