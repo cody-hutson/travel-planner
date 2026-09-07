@@ -162,11 +162,12 @@ none of them.
    first-match ladder was replaced by an expression: a ladder's wrong first step is decisive, an
    expression's is not. The resolution consults one file, scans no directory and terminates.
 
-   **Where no year is on the title line, `T` does not resolve and `R` is the clock.** A value the
-   clock alone would already have expired stays `EXPIRED`; a value the clock would have passed
-   composes the third state on a `required` field and is reported, with the remedy naming the title
-   line. **The degraded case prompts; it never passes silently** — which is the acceptance criterion
-   the earlier ladder failed by falling back quietly.
+   **Where no month-and-year pair is on the title line, `T` does not resolve and `R` is the clock —
+   the condition is the pair's absence, not the year's, because a bare year that no month name
+   precedes is never selected.** A value the clock alone would already have expired stays `EXPIRED`;
+   a value the clock would have passed composes the third state on a `required` field and is
+   reported, with the remedy naming the title line. **The degraded case prompts; it never passes
+   silently** — which is the acceptance criterion the earlier ladder failed by falling back quietly.
 
 2. **`COVERS(H, R)` iff `H > R`.** The boundary month does not cover. Comparison stays a
    zero-padded string comparison, lexicographic and chronological at once, with no date library.
