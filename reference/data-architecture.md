@@ -1405,7 +1405,7 @@ with no site carries no row.
 # sites  path
 4       .claude/commands/trip-decommission.md
 6       .claude/commands/trip-new.md
-13      .claude/commands/trip-record.md
+12      .claude/commands/trip-record.md
 6       .claude/commands/trip.md
 32      CHANGELOG.md
 8       CLAUDE.md

@@ -102,6 +102,15 @@ And **no record for a person who did not ask for one.** A durable, cross-trip fi
 about someone who never spoke to you is a different thing from a note in one trip's
 folder, and this store does not hold it.
 
+**A reusable group is a separate store, and it does not put group composition back into a
+record here.** [`../groups/README.md`](../groups/README.md) holds a named set of people —
+a display name and a list of person ids — so that a party you travel with often can be
+referenced as a unit. **The link runs one way, from the group to the person, and there is
+no line here that names a group.** That is what keeps the exclusion above true rather than
+merely observed: a group record can be edited or deleted and nothing in this store changes,
+because nothing in this store points at it. Reading which groups someone is in means
+looking through the group store, which is what `/trip-record group-list` does.
+
 ## A relayed value is not an agreed one
 
 When you write down what someone else told you, that value is marked as relayed, so a
