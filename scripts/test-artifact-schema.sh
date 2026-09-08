@@ -5798,6 +5798,156 @@ if [ "$HZ_RAN" -ne 1 ]; then
   FAIL "HZ-integrity: group HZ did not execute — a run without it is a failure, never a pass"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# DH — derived trip history: the exclusion the capability rests on, mechanised
+#
+# WHAT THIS GROUP IS FOR. reference/schemas/person-record.md ends its strictly-one-person
+# bullet with a sentence naming its own debt: "What is owed is the NEGATIVE ASSERTION, not
+# a rule: the durable form emits zero TRIP/DEST labels." Nothing asserted it. The exclusion
+# held because the classification closes it by construction and because every author so far
+# has read the bullet — which is exactly the shape of property that holds until something
+# changes it and nothing notices.
+#
+# It stopped being cheap to leave unasserted when trip history became RESOLVABLE. A reader
+# who learns that a person's trips can be worked out is one edit away from concluding that
+# the answer may as well be kept on the record, and the whole of what stands against that is
+# a bullet and a sentence. So the two halves are graded here: the SCHEMA half (the class
+# declares no field beyond the merge pointer) and the FORM half (the durable intake form
+# asks for nothing the classification types as trip- or destination-scoped).
+#
+# ── EVERY POPULATION IS DERIVED, AND DH0 IS WHY THE ZEROES MEAN ANYTHING ────────
+# The universal key set is read from the architecture document's § 4.4 block by
+# uf_univ_keys, the class's declared fields through the validator's own schema reader, and
+# the TRIP/DEST label set live from the classification with rl_class — no set is written
+# down here. Two of the three assertions below are ZEROES, and a zero over an empty
+# extraction is indistinguishable from a clean one, so DH0 requires every input population
+# to be non-empty before any of them runs, and DH2 carries a live SENSITIVITY ARM: the same
+# intersection over the TRIP form, which must come back NON-ZERO on the same run. A green
+# DH2 whose control also returned zero would be a broken probe reporting a clean corpus.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT GRADE ────────────────────────────────
+# It does not grade the RESOLUTION — whether a scan finds the right trips is behaviour, and
+# nothing in a tree of prompt files exhibits it. It grades the STRUCTURAL claims the
+# capability is built on, which are the ones a later edit can quietly take away.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "DH — derived trip history: the durable form's exclusion, mechanised"
+
+DH_RAN=0
+DH_SCHEMA_REL="reference/schemas/person-record.md"
+DH_PERSON_FORM="$ROOT/templates/person-intake.template.md"
+DH_TRIP_FORM="$ROOT/templates/traveler-intake.template.md"
+DH_PEOPLE="$ROOT/people/README.md"
+DH_CMD="$ROOT/.claude/commands/trip-record.md"
+DH_HEADING="What a record does not hold"
+DH_VERB="history"
+
+# dh_class_labels <doc> <class> — the labels the classification types as <class>, read
+# LIVE and by INDEX. rl_class already emits "label<TAB>class<TAB>scope" from that table and
+# is reused rather than re-derived: a second extractor over the same columns would be a
+# second thing to keep aligned with a table whose column order is load-bearing.
+dh_class_labels() { rl_class "$1" | awk -F'\t' -v c="$2" '$2 == c { print $1 }' | sort -u; }
+
+# dh_form_labels <form> — the field labels a shipped intake form asks for. rl_bullets is
+# reused in its star-HONOURING mode; group RL2 exists because the star-blind read silently
+# dropped the person-class bullets, and a form scan that repeated that miss would report a
+# clean form by failing to see half of it.
+dh_form_labels() { rl_bullets "$1" 1 | cut -f1 | sort -u; }
+
+DH_OK=1
+DH_MISSING=""
+for dh_f in "$DH_PERSON_FORM" "$DH_TRIP_FORM" "$DH_PEOPLE" "$DH_CMD" "$ROOT/$DH_SCHEMA_REL" "$RL_DM"; do
+  [ -r "$dh_f" ] || { DH_OK=0; DH_MISSING="$DH_MISSING ${dh_f#"$ROOT/"}"; }
+done
+
+if [ "$DH_OK" -eq 1 ]; then
+  DH_UKEYS="$(uf_univ_keys)"
+  DH_NUKEYS="$(printf '%s\n' "$DH_UKEYS" | grep -c '[^[:space:]]' || true)"
+  DH_SL="$(va_schema_lines "$ROOT" "$DH_SCHEMA_REL" 2>/dev/null | grep -v '^FINDING ')"
+  DH_DECL="$(va_schema_all "$DH_SL" field | awk '{ print $1 }' | sort -u)"
+  DH_NDECL="$(printf '%s\n' "$DH_DECL" | grep -c '[^[:space:]]' || true)"
+  DH_SCOPED="$( { dh_class_labels "$RL_DM" TRIP; dh_class_labels "$RL_DM" DEST; } | sort -u)"
+  DH_NSCOPED="$(printf '%s\n' "$DH_SCOPED" | grep -c '[^[:space:]]' || true)"
+  DH_PLBL="$(dh_form_labels "$DH_PERSON_FORM")"
+  DH_NPLBL="$(printf '%s\n' "$DH_PLBL" | grep -c '[^[:space:]]' || true)"
+  DH_TLBL="$(dh_form_labels "$DH_TRIP_FORM")"
+  DH_NTLBL="$(printf '%s\n' "$DH_TLBL" | grep -c '[^[:space:]]' || true)"
+
+  if [ "$DH_NUKEYS" -gt 0 ] && [ "$DH_NDECL" -gt 0 ] && [ "$DH_NSCOPED" -gt 0 ] \
+     && [ "$DH_NPLBL" -gt 0 ] && [ "$DH_NTLBL" -gt 0 ]; then
+    PASS "DH0: every population below is DERIVED and every one came back non-empty — $DH_NUKEYS universal key(s) from the architecture document's § 4.4 block, $DH_NDECL declared field(s) in $DH_SCHEMA_REL read through the validator's own schema reader, $DH_NSCOPED trip- or destination-scoped label(s) from the live classification, and $DH_NPLBL / $DH_NTLBL field label(s) on the durable and trip intake forms. This gate exists because two of the three arms below are ZEROES: over an empty extraction a zero is not a measurement, and a run that parsed one of these into nothing would otherwise report the corpus clean"
+    DH_RAN=1
+  else
+    FAIL "DH0: a required population is EMPTY — universal keys $DH_NUKEYS, declared fields $DH_NDECL, trip/dest labels $DH_NSCOPED, durable-form labels $DH_NPLBL, trip-form labels $DH_NTLBL. Not a skip and not a pass: every arm below would be a statement over the empty set, and the two that are zeroes would read as clean. The likeliest causes are a reordered classification column, which this group reads by index through rl_class, and a renamed fence in § 4.4"
+    DH_OK=0
+  fi
+else
+  FAIL "DH0: required surface(s) unreadable:$DH_MISSING — not a skip and not a pass"
+fi
+
+if [ "$DH_OK" -eq 1 ]; then
+  # ── DH1 — THE SCHEMA HALF. The class's own fields, beyond the universal block, are
+  # exactly the merge pointer. This is the mechanised form of "the durable person record
+  # gains no field": a trip-history field added to the fence is red HERE, and there is no
+  # other arm in this suite that would say so — group UF asserts that no schema DROPS a
+  # universal key and is silent on what a class ADDS.
+  DH_CLASSFIELDS="$(comm -23 <(printf '%s\n' "$DH_DECL") <(printf '%s\n' "$DH_UKEYS" | sort -u))"
+  DH_NCLASS="$(printf '%s\n' "$DH_CLASSFIELDS" | grep -c '[^[:space:]]' || true)"
+  DH_CLASSLIST="$(printf '%s\n' "$DH_CLASSFIELDS" | tr '\n' ' ')"
+  if [ "$DH_NCLASS" -eq 1 ] && [ "$DH_CLASSLIST" = "merged-into " ]; then
+    PASS "DH1: the durable person class declares exactly one field beyond the universal block, and it is \`merged-into\` — the merge pointer, which is a reference to another record's key rather than an answer about anybody. The set is a DIFFERENCE, computed against the $DH_NUKEYS universal key(s) read from the architecture document rather than against a list held here, so a universal key added upstream does not read as a class field. This is where a stored trip history would land, and it is the assertion \`$DH_SCHEMA_REL\` names as owed"
+  else
+    FAIL "DH1: the durable person class declares $DH_NCLASS field(s) beyond the universal block: $DH_CLASSLIST — expected exactly \`merged-into\`. A second class field is a durable, cross-trip slot on a record whose whole design is that it holds one person's own answers, and if it is trip- or destination-scoped it is the exclusion this milestone rests on being reopened. Adding one is a deliberate act and this arm is where it must be re-read"
+  fi
+
+  # ── DH2 — THE FORM HALF, WITH ITS CONTROL. The durable intake form asks for nothing the
+  # classification types TRIP or DEST. This is the sentence person-record.md calls owed,
+  # and the reason it is graded on the FORM rather than on the fence is that the fence
+  # constrains frontmatter while the record's answers are body bullets: a trip-scoped
+  # question could be added to the durable form without touching a schema at all.
+  DH_LEAK="$(comm -12 <(printf '%s\n' "$DH_PLBL") <(printf '%s\n' "$DH_SCOPED"))"
+  DH_NLEAK="$(printf '%s\n' "$DH_LEAK" | grep -c '[^[:space:]]' || true)"
+  DH_CTL="$(comm -12 <(printf '%s\n' "$DH_TLBL") <(printf '%s\n' "$DH_SCOPED"))"
+  DH_NCTL="$(printf '%s\n' "$DH_CTL" | grep -c '[^[:space:]]' || true)"
+  if [ "$DH_NCTL" -eq 0 ]; then
+    FAIL "DH2: MUST FIRE — the SENSITIVITY arm returned zero. The same intersection over the trip intake form found none of the $DH_NSCOPED trip/dest label(s) among its $DH_NTLBL field label(s), which cannot be true of a form whose whole subject is one trip. The subject arm's zero is therefore an empty scan rather than a clean form, and this group reports the probe UNUSABLE rather than the corpus clean. The likeliest cause is a label-text divergence between the classification and the forms, which would make BOTH intersections empty"
+  elif [ "$DH_NLEAK" -eq 0 ]; then
+    PASS "DH2: the durable intake form emits ZERO trip- or destination-scoped labels — none of its $DH_NPLBL field label(s) is among the $DH_NSCOPED the classification types TRIP or DEST. The zero is a measurement: the SENSITIVITY arm, the identical intersection over the trip intake form, returned $DH_NCTL on the same run. This is the negative assertion \`$DH_SCHEMA_REL\` says is owed, and it is what makes trip history structurally absent from the durable form rather than absent because successive authors remembered the bullet"
+  else
+    FAIL "DH2: $DH_NLEAK label(s) on the durable intake form are typed TRIP or DEST by the classification: $(printf '%s' "$DH_LEAK" | tr '\n' ' ')— the durable form is asking a question that is only meaningful relative to one trip or one destination, so its answer has no correct value to carry across trips. The sensitivity arm returned $DH_NCTL on the same run, so this is a real finding rather than a broken probe. Either the label belongs on the trip form, or its row in the classification is wrong; the two cannot both stand"
+  fi
+
+  # ── DH3 — THE READER-FACING HALF, at both of its homes. A structural property nobody can
+  # read is one a later author re-derives from scratch, so the exclusion is stated for a
+  # human in people/README.md and the verb that resolves history declares in its own section
+  # that it writes nothing. Both are positive membership assertions with their extraction
+  # denominators reported, so neither can pass over a section that failed to extract.
+  DH_SECT="$(er_section "$DH_PEOPLE" "$DH_HEADING")"
+  DH_NSECT="$(printf '%s\n' "$DH_SECT" | grep -c '[^[:space:]]' || true)"
+  DH_HAS_HIST=0
+  # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
+  # reports failure on a SUCCESSFUL match under pipefail. PF1 caught both of these sites.
+  grep -qi 'trip history' <<<"$DH_SECT" && DH_HAS_HIST=1
+  DH_VSECT="$(awk -v v="$DH_VERB" '
+    index($0, "## " v " ") == 1 { on = 1; print; next }
+    on && /^## / { on = 0 }
+    on { print }' "$DH_CMD")"
+  DH_NVSECT="$(printf '%s\n' "$DH_VSECT" | grep -c '[^[:space:]]' || true)"
+  DH_HAS_NOWRITE=0
+  grep -q 'Writes nothing' <<<"$DH_VSECT" && DH_HAS_NOWRITE=1
+  if [ "$DH_NSECT" -eq 0 ] || [ "$DH_NVSECT" -eq 0 ]; then
+    FAIL "DH3: an extraction came back EMPTY — people/README.md § *$DH_HEADING* yielded $DH_NSECT line(s) and the \`$DH_VERB\` verb section in .claude/commands/trip-record.md yielded $DH_NVSECT. Both limbs below would be graded over absent text, and a membership test over nothing reports absence rather than a missing section. A renamed heading is the likeliest cause and is a finding in its own right"
+  elif [ "$DH_HAS_HIST" -eq 1 ] && [ "$DH_HAS_NOWRITE" -eq 1 ]; then
+    PASS "DH3: the exclusion is stated at both of its reader-facing homes — people/README.md § *$DH_HEADING* still enumerates trip history across $DH_NSECT extracted line(s), and the \`$DH_VERB\` verb section declares across $DH_NVSECT line(s) that it writes nothing. The pair is the point: the store says the record has no slot, and the verb that resolves the answer says it puts none back. Either one alone leaves the other's reader free to conclude the opposite"
+  else
+    FAIL "DH3: enumerated-in-README=$DH_HAS_HIST writes-nothing-declared-in-verb=$DH_HAS_NOWRITE, over $DH_NSECT and $DH_NVSECT extracted line(s). Trip history dropping out of the no-slot enumeration would make a durable slot for it read as merely unimplemented; the verb dropping its no-write declaration would leave the one path that resolves history free to persist it, which is the whole of what the derived model is instead of"
+  fi
+fi
+
+if [ "$DH_RAN" -ne 1 ]; then
+  FAIL "DH-integrity: group DH did not execute — a run without it is a failure, never a pass"
+fi
+
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
   "$pass" "$fail" "$skip" "$vacuous"
