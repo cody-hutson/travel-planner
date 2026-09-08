@@ -3,6 +3,216 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.28.0] — 2026-09-07 — Person data lifecycle
+
+A person's durable record was given two properties it did not have: a settled answer to who may hold
+one, and a way for a field on one to say when it stops being trustworthy. Both questions had been
+left open on purpose in earlier records, each carrying a note saying it would be answered in a later
+slice. This release is that slice for both, and one of the two answers is that the question cannot
+be answered the way the capability statement had assumed it could.
+
+**A party member's durable record does not extend across trips, and that is now closed rather than
+deferred.** The class is precise, and its precision is what makes it hard. It is a person the
+organizer added to a trip and whose needs the organizer supplied — someone who authors nothing, who
+has no source file by design, and who does not know a record about them exists. Everyone else
+holding a durable record here put themselves there. The exclusion already shipped, but it shipped as
+a preference awaiting a better idea: both of the records that stated it named a condition under
+which it would reverse, which was that a consent mechanism turn up that the third-party-data record
+would admit. Nobody had enumerated what such a mechanism could look like, so the door stayed ajar by
+default rather than by decision.
+
+Enumerating it closed it. The mechanisms considered were an organizer attestation on the record,
+direct consent by the subject, a deferred or countersigned consent that mints the record
+quarantined, a pseudonymous continuity that carries needs forward without a stable key, and an
+organizer-mediated carry-forward that offers the prior trip's values at intake and mints nothing.
+Each either terminates in the artifact the earlier objection refused, or is the opt-in path that
+already ships and reaches a different population entirely, or cannot be built at all for want of an
+admissible join key — the one remaining candidate key being the display name, which the
+person-library record forbids in terms because it resurrects the same-name collision the surrogate
+key exists to prevent. The reason the space is empty is structural rather than a failure of
+invention. The original objection rejected a proxy profile *"notwithstanding its more explicit
+consent story"* — that is, in spite of the best consent apparatus on offer — so the objection
+attaches to the artifact and not to the paperwork standing beside it, and no property of a consent
+mechanism discharges an objection to the thing the mechanism authorises.
+
+Where the question actually fails is revocation, and that limb is worth stating on its own because
+it is the one a reader will want to argue with. Erasure in this engine is total over its declared
+reach and follows a record into archived trips. It is also organizer-initiated and addressed by the
+record's opaque key: somebody types that key at a terminal. A person who never asked for the record
+does not know it exists, does not hold its key, and has no channel to that machine. Consent whose
+withdrawal only a third party can perform is not consent. The approval record's attestation ceiling
+says the same thing from the other side, and this is its first application to consent rather than to
+approvals: unforgeability requires the verifier to hold strictly less than the signer, and here the
+organizer both signs and verifies; detectability requires a surface on which the subject can notice
+a discrepancy, and this record is git-ignored and non-publishable by the rule that permits it at
+all. Neither floor property is reachable. That is what converts *we choose not to* into *the
+architecture cannot mean it*.
+
+The cost is real and is written down rather than minimised. A party member's needs are re-stated by
+the organizer on every trip, and that cost falls on the person least able to advocate for themselves
+— the exact asymmetry the person-library work set out to reduce. What it buys is that the person
+least able to consent does not acquire a cross-trip identity artifact they cannot ask to have
+deleted. Nothing executable changed for this: no schema field, no command verb, no agent prompt and
+no fixture. There is nothing to guard, because the refused artifact has no creation path today.
+
+**The other half of the release gives a durable field a way to expire against the trip it is being
+used for, rather than against today.** The record already admitted a suffix mark saying a field is
+valid through a given month, and a lapsed value already composed to unknown and was reported rather
+than used. What was missing is what the horizon was compared against. Expiry was defined as a month
+earlier than the current one, and every surface that described it described it that way. So a
+passport valid today and lapsed before a trip eight months out passed silently — and it is checked
+against, not merely stored, because that field exists so entry requirements can be tested against a
+traveller's nationality and document dates. A record correct in one year is wrong in another, and
+nothing asked. Trip-scoped capture had hidden this, because the value used to be re-entered on every
+form; making the field durable is what creates the decay, so the mechanism is owed by the durability
+decision itself rather than bolted on beside it.
+
+A horizon is now compared against a reference month, which is the later of the clock month and the
+trip's own term. Taking the later of the two is what keeps the change monotone: it can only move a
+value from usable to not usable, never the other way, so nothing already written to disk needed
+auditing and no value that reads expired today quietly becomes acceptable. The boundary month
+prompts instead of passing. The intake form asks for the month a document is valid through and
+deliberately never asks for the day, so a passport expiring on the fifth and a trip running to the
+twentieth of the same month cannot be told apart at the precision the form collects — and when a
+design can only choose which way to fail, the cheap error is the safe one. That is the single
+behaviour change beyond the clock-to-trip swap: a document lapsing in the current month now prompts
+where it used to pass.
+
+Which fields owe a horizon became data rather than code. The classification table gained a per-field
+axis whose values are `required` and `admissible`, lifted from the schema's own sentence about the
+mark, with the passport field its sole `required` member. Admitting a second member is a table cell
+and a matching guard expectation — no rule, no extractor, no agent prompt and no fixture outside
+that member's own — and nothing anywhere branches on a field's name. Reporting split in two, because
+a traveller who never recorded a validity month reads identically to one whose passport has already
+lapsed while their remedies differ by weeks of lead time. The existing disposition narrowed to a
+horizon genuinely earlier than the reference month; a new one carries every other way a value fails
+to be shown usable — the boundary month, a present but unparseable mark on any field whatever its
+axis, a `required` field carrying no mark, a trip term that will not resolve, and a trip whose title
+month and departure month disagree about which year it ends in. Each selects its own remedy on the
+same line. Both compose to unknown, so the projection is shared and only the report differs.
+
+Re-confirmation adds no write. The acceptance criterion looked like it forced one, and the finding
+is that it forces none: the store's permitted mechanical writes are qualified as authoring no value,
+and a re-confirmation authors one, which places it outside that enumeration's subject matter rather
+than making it an exception to it. The path already exists and the corpus already names it — the
+record's dominant write path is a human editing it in an editor, and the retention rule already said
+a lapsed field stays lapsed until someone updates it. So no verb was added and the schema was not
+edited. A report line may name a field and a remedy; it may never carry, quote or offer a candidate
+value, which is the bound that keeps a horizon prompt from becoming the solicitation that
+composition is forbidden to make.
+
+**That mechanism shipped only because Dev Testing failed it, and the failure is worth recording
+because of what it says about the tests rather than about the code.** The first implementation read
+the trip term from the derived planning-day blocks by a first-match ladder. It was written
+faithfully and it could not resolve a month at all: neither block carries a year in any shipped
+instance or in the template, so the fallback fired universally and the predicate reverted silently
+to the clock. The change was a no-op against its own acceptance criterion. Nothing anywhere graded
+the difference — the suite asserted the axis, the fixture and the fail-closed scan over passport
+bullets, and graded the predicate itself with nothing, while the tracked fixture's own marks both
+sit in the past, so its verdict is identical under the clock predicate and under the trip predicate
+and distinguishes neither from the other. The suite was green whether the feature was present or
+absent.
+
+The term now comes from the trip's title line, whose shape the template declares and whose month and
+year a command verb owns, refined upward within the same year by the derived departure month where
+that falls later. The derived blocks were rejected on evidence rather than on cost: they have no
+writer at all, so emitting a year from them is unreachable rather than expensive, and every existing
+file would have predated the format change permanently. And the release added arms that go red when
+the feature is deleted. The verdicts are declared per case in the document itself, each case
+carrying its verdict under the trip predicate and under a clock-forced control side by side, and the
+arm that matters most fails when every case's two verdicts agree. A table that distinguishes nothing
+is exactly what let the first implementation ship green, so that failure mode is now an assertion
+rather than a hope. Each added arm was demonstrated red before it was demonstrated green, against
+mutants of the shipped resolver rather than against an argument about it — including one control
+added after a mutation showed the existing controls were blind to the resolver's month-name guard,
+which a bare year on a title line would otherwise have slipped past as a well-formed term.
+
+What a user meets is small and worth knowing. A passport lapsing in the current month now prompts. A
+horizon lapsing after today but before a future trip ends now prompts, which is the defect the work
+exists to close. A mark nobody can parse now prompts on any field. A trip whose term will not
+resolve prompts on a field that owes a horizon, rather than degrading quietly to the clock. And a
+party member's needs are still re-stated on every trip, deliberately, for the reason written above.
+
+### Added
+
+- **`reference/adr/ADR-014-cross-trip-consent-refusal.md`** — enumerates the consent-mechanism space
+  for a party member's cross-trip record and closes it permanently rather than deferring it. It
+  states the consent question in full — who consents, to what, at what moment, how it is recorded
+  and how it is revoked — and the last two limbs are the finding: no recording surface exists, and
+  the subject cannot exercise revocation. Grounds are given so that each stands alone.
+- **`reference/adr/ADR-015-durable-field-validity-horizon.md`** — settles what a horizon is compared
+  against, which fields owe one, how a lapsed value is reported, and why re-confirming one adds no
+  write to the person store. It records the rejected candidates for the trip term with the evidence
+  that rejected each, including the one that shipped first and did not work.
+- **The reference-month section and the `Horizon` axis in `reference/data-model.md`** — the axis
+  sits immediately after `Scope` because both class extractors in the schema suite read fields by
+  positional index, and a column inserted earlier would leave them grading a class-blind table while
+  the suite reported green. That coupling is recorded in a comment beside the table, where an editor
+  reordering columns will meet it.
+- **A horizon-verdict-cases fence in the same document, read live by the suite** — each case
+  declares its verdict under the trip predicate beside its verdict under a clock-forced control, so
+  the two columns differ in exactly one variable. It exists because no tracked tree pairs a person
+  reference with a trip window: the tree carrying a reference has no trip-context file, and every
+  tree with one carries no reference, so no end-to-end witness for this mechanism exists or can
+  cheaply be made to.
+- **The `HZ` group in `scripts/test-artifact-schema.sh`** — grades the axis, the membership, the
+  mark on both field scopes, a fail-closed scan for a real passport value anywhere in the tracked
+  tree, the payload grammar, the fence's own vocabulary, monotonicity, the resolver's totality over
+  tracked instances, the New-Year window, and the discrimination arm that fails when the case table
+  stops distinguishing the two predicates.
+- **`examples/people-library-demo/people/psn-9d42.md`** — the first tracked instance of the validity
+  mark in this repository, carrying it on a slot-scoped field, on a block-scoped needs block, and
+  beside an unmarked block in the same section so the mark reads as a property of the block rather
+  than of the section or the file.
+
+### Changed
+
+- **The record side's third state is decided against the reference month rather than the clock.**
+  The state count did not move, so the totality proof and the class and scope totals are
+  arithmetically untouched — the third state was re-parameterised rather than joined by a fourth.
+- **Every surface that described expiry against the clock now names the reference month and cites
+  its normative home** rather than restating the resolution rule: the record schema, the enrichment
+  agent's trigger table, and the retention section of the people library's own README.
+- **The person-library record's exclusion clause was amended in place**, and the third-party-data
+  record now points at the closure. The clause had called an unverifiable attestation the only
+  candidate the objection had measured; it now calls it the candidate nearest to admission, which is
+  what the enumeration showed. The conclusion gets stronger rather than weaker: the space is not
+  merely exhausted, it is closed.
+- **The reference-month prose now states the rule the resolver actually runs.** It had described
+  taking the last four-digit year on the title line and the month name before it; the resolver takes
+  the last year *that a month name precedes*, which is a different rule and the better one, and the
+  non-resolving condition is the absence of that pair rather than the absence of a year. The same
+  two-clause correction was applied to the decision record that had inherited it.
+- **The rationale column of the classification table moved one position right**, and the single arm
+  that reads it moved with it. Running the suite with the column added and that arm unmoved
+  reproduced the break loudly rather than silently, which is that arm's own guard working.
+
+### Known gaps, carried rather than hidden
+
+- **The passport slot has no tracked witness carrying a real horizon, and never will.** The class
+  forbids a tracked file to carry a passport value at all, so the only demonstrable instance is one
+  the repository may not hold. The fixture demonstrates the mechanism on other fields instead, which
+  is possible only because the mechanism is field-general — a passport-shaped implementation would
+  have had no safe witness whatsoever. This is a permanent residual by design.
+- **The trip term rests on a title line a human writes.** A trip whose title is never restated
+  resolves a stale term. That is a self-inconsistent trip file either way, and one edit to the title
+  line clears every prompt on that trip at once, but nothing here repairs it.
+- **The New-Year clause has residuals of its own.** A year-spanning trip carrying no derived
+  departure month is undetectable at month precision, so the clause is silent on it. And where the
+  title month and the departure month are far apart, the disputed window is correspondingly wide and
+  a stale title on a past trip can prompt. That tail was taken deliberately: capping the window
+  leaves a genuine multi-month year-spanner silently uncovered, which is the gap the clause exists
+  to close.
+- **The reference verb still passes the clock while composition uses the reference month.** It
+  answers *which record* rather than *is this record usable for this trip*, so the divergence is
+  designed rather than accidental — but it is documented at both surfaces rather than resolved.
+- **A file-less party-member entry still has no reference bearer**, which the person-library record
+  types as a named gap. Under the refusal it stops being a coverage hole, because the class it would
+  serve holds no cross-trip record to discover; it does not stop being a gap.
+- **The retention posture stated in the trips directory's own README is still falsified by the
+  shipped erasure verb.** It is adjacent to this work and was deliberately not fixed inside it; it
+  is tracked on its own card.
+
 ## [0.27.0] — 2026-09-07 — Corpus hygiene fast-follows
 
 The previous hygiene release closed its own record with an admission. It existed to remove a class
