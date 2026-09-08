@@ -25,6 +25,17 @@ trips/*
 /people/*
 !/people/README.md
 
+# Reusable group records — never tracked. One file per named set of people, holding
+# person ids and nothing else; a set of ids is the cross-trip join key, so this store
+# concentrates the same risk people/ does at one remove. Contents, not the directory:
+# `groups/` alone would also ignore groups/README.md, and git cannot re-include a file
+# whose parent dir is excluded. Rooted (leading /) so the store at the repo root is
+# caught and the tracked witness under examples/ is NOT — the class's schema names that
+# witness, so a widened rule would silently drop it from the index. Guarded by
+# scripts/test-publish-guard.sh group V — do not "simplify" these two lines.
+/groups/*
+!/groups/README.md
+
 # macOS
 .DS_Store
 

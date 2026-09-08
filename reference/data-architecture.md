@@ -35,22 +35,23 @@ optimization, and no control flow — see *What This Document Does Not Define*.
 
 ## 1. The Artifact Classes
 
-The enumeration is **closed at 28**: 22 in-model artifact classes, and 6 classes explicitly
+The enumeration is **closed at 29**: 23 in-model artifact classes, and 6 classes explicitly
 declared out of the model. Every class has a target state **or** a stated out-of-model disposition.
 Declaring a class out is a valid outcome; leaving one unmentioned is not.
 
-**Every in-model class but one is per-trip**, and the exception is stated here rather than carried in
-a column: C22 `people/<person>.md` is **cross-trip** — one record per person, held outside any trip
-and referenced from many. That is why § 1.1's heading no longer says *per-trip*. A `Scope` column was
+**Every in-model class but two is per-trip**, and the exceptions are stated here rather than carried
+in a column: C22 `people/<person>.md` is **cross-trip** — one record per person, held outside any trip
+and referenced from many — and C23 `groups/<group>.md` is cross-trip for the same reason, one record
+per named set of people. That is why § 1.1's heading no longer says *per-trip*. A `Scope` column was
 the alternative and it is refused: `va_class_rows` splits a row on `|` and reads the assignment cells
 only when the split yields exactly nine fields, so an eighth column empties `W`, `L`, `Prov` and `P`
 for **every** row while the extraction still succeeds — a silent widening of the wrong kind.
 
-**Class identifiers are written `C1` … `C28`** and are used throughout this document to refer to a
+**Class identifiers are written `C1` … `C29`** and are used throughout this document to refer to a
 row of the enumeration below. `W` = the single writer · `L` = lifecycle class (§ 6) ·
 `Prov` = provenance (§ 4.4) · `P` = publishability class (§ 5.1).
 
-### 1.1 In-model — artifact classes (22)
+### 1.1 In-model — artifact classes (23)
 
 | C | Class | W (exactly one) | L | Prov | P | Primary entities |
 |---|---|---|---|---|---|---|
@@ -76,6 +77,7 @@ row of the enumeration below. `W` = the single writer · `L` = lifecycle class (
 | 20 | `outputs/change-summary.md` | hub | `accumulate-append` | `derived` | `internal` | Venue, Event, Day |
 | 21 | `outputs/cost-estimate.md` | hub | `rebuilt-each-synthesis` | `derived` | `internal` | Traveler, Venue, Leg |
 | 22 | `people/<person>.md` | human (the person) | `persist-mutable` | `human` | **`internal-hard`** | Person, Need |
+| 23 | `groups/<group>.md` | operator, via `/trip-record group-*` | `persist-mutable` | `human` | **`internal-hard`** | Group, Person |
 
 **C22 is the first class in the enumeration that is not per-trip, and that is the whole of what is
 new about it.** `people/<person>.md` is the durable person record —
@@ -96,6 +98,25 @@ the durable subset of the most sensitive values in the repository — a passport
 validity, standing health-adjacent needs — held across trips rather than for the length of one. C3 is
 `internal` because a trip's own guard walk reaches it; nothing renders a person record in any form,
 including anonymized, and § 5.1 is where that is declared.
+
+**C23 is the second class that is not per-trip, and it reuses C22's whole arrangement rather than
+inventing beside it.** `groups/<group>.md` is the reusable-group record — a named set of person
+references and nothing else. `reference/adr/ADR-016-reusable-groups.md` is authoritative for the
+decision and this row is its shape. **Its `trip:` field carries the same reserved sentinel
+`cross-trip` C22 already declares at § 4.4, reused rather than extended**, so the narrowing there
+gains a second member and `/trip-new`'s refusal covers this class with no edit.
+
+**Its `W` cell is prose rather than a writer id, and it reads the way C2's does.** The record is
+written by the operator through named verbs of `/trip-record`, so the cell names the verb family the
+way C2's names `/trip-record log`. **`writer: operator`, not `human`** — `human` is C3's and C22's
+slug, reserved for a class whose *subject* authors it; an operator selecting references through a
+command is `operator`. `generated:` is omitted, as C2 omits it.
+
+**`internal-hard` rather than `internal`, and the class is the fourth member.** A group record holds
+person ids, which are the cross-trip join key, and § 5.1's own reason applies unchanged: rendering a
+group in any form publishes that these people travel together, and stripping the names does not strip
+the identification. **Its primary entities are Group and Person** — the record names members and
+holds nothing about them, so it carries no Need instance and no Desire instance at all.
 
 **C21 is added here, and two nearer homes were rejected rather than not considered.**
 `outputs/cost-estimate.md` is the per-traveler cost projection; `reference/adr/ADR-011-per-traveler-cost-estimation.md`
@@ -120,12 +141,12 @@ this document no in-model class is.
 
 | C | Class | Disposition |
 |---|---|---|
-| 23 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
-| 24 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
-| 25 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
-| 26 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
-| 27 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
-| 28 | `.publish/` | **OUT — publish staging clone** (it contains its own `.git`). Never traversed by any selector. |
+| 24 | `engine-learnings.md` (trip root) | **OUT — ungoverned, and that is the finding.** A real per-trip file with no writer, no lifecycle and no schema, and no reference in any tracked file but this row. Declared out of the artifact model; it warrants its own intake — either governed or deliberately declared engine-external. |
+| 25 | `outputs/<destination>-<topic>.html` — secondary generated render | **OUT — a second generated render**, with no corpus reference but this row. It obeys the same rule as C19 (a render is a sink, never a source) but it is not the publish target. |
+| 26 | `.passphrase` | **OUT — secret material.** Never schema-bearing, never published, never read by an agent. |
+| 27 | `.publish-slug` | **OUT — publish control file.** Governed by the publish surface, not by the artifact model. |
+| 28 | `outputs/.staticrypt.json` | **OUT — third-party tool state**, created by the encryption step; the engine neither writes nor reads it. **The schema selector must exclude it** — it is the one non-`.md` file that lands inside `outputs/`. |
+| 29 | `.publish/` | **OUT — publish staging clone** (it contains its own `.git`). Never traversed by any selector. |
 
 ### 1.3 In-repo files carrying no per-trip class
 
@@ -150,7 +171,7 @@ structure-over-judgment failure this architecture exists to prevent.
 
 ## 2. The Entity Model
 
-Eleven entities. The attributes listed are the identity-bearing and relationship-bearing ones; the full
+Twelve entities. The attributes listed are the identity-bearing and relationship-bearing ones; the full
 field set per class lives in that class's own schema.
 
 | Entity | Identity | Key attributes | Relationships (with cardinality) |
@@ -158,6 +179,7 @@ field set per class lives in that class's own schema.
 | **Trip** | natural — the directory slug | `slug`, `destination`, `mode`, `lifecycle`, window | Trip 1—N Traveler · 1—N Day · 1—N Constraint · 1—N Origin |
 | **Traveler** | **natural — normalized name** (§ 3.2) | `name`, `window-basis`, presence facets | Traveler 1—N Need · 1—N Desire · N—1 Origin · N—M Day (presence) |
 | **Person** | **surrogate — `psn-<token>`, opaque, borne in the filename** (§ 3.2 note) | `display-name` (the H1), the durable `PERSON` and `DEFAULT` facets, `merged-into` | Person N—M Trip (through Traveler) · 1—N Need · **N—0..1 Person** (`merged-into`, a merge stub; depth pinned at 1) |
+| **Group** | **surrogate — `grp-<token>`, opaque, borne in the filename** (§ 3.4) | `display-name` (the H1) | **Group N—M Person** (membership, one-directional — no back-reference on Person) |
 | **Need** | surrogate, traveler- or person-scoped | `category` (closed enum), `specific`, `applies-to` | Need N—1 (Traveler \| Person) · **N—1 Constraint** (the `Applies to` link) |
 | **Desire** | surrogate, traveler-scoped | `priority-tier`, `recurrence`, `theme-tags` | Desire N—1 Traveler · N—M Desire (overlap signal) |
 | **Constraint** | **natural — the constraint name** | `name`, `description`, `applies-to[]`, `time-blocks` | Constraint 1—N Need · N—M Traveler |
@@ -334,10 +356,10 @@ entry.
 
 ### 3.4 The full assignment
 
-**Surrogate:** Event, Venue, Need, Desire, Leg, Person (`psn-<token>`).
+**Surrogate:** Event, Venue, Need, Desire, Leg, Person (`psn-<token>`), Group (`grp-<token>`).
 **Natural:** Trip (slug), Traveler (normalized name), Constraint (name), Day (ISO date), Origin (letter).
 
-The rule splits the entity set **six surrogate / five natural**. It does not rubber-stamp one answer,
+The rule splits the entity set **seven surrogate / five natural**. It does not rubber-stamp one answer,
 and it reproduces every precedent the engine already runs on.
 
 **Person takes the surrogate branch and Traveler keeps the natural one, from the same rule.** The
@@ -348,6 +370,14 @@ surrogate. Traveler is the opposite reading on both limbs and is unchanged
 (`reference/adr/ADR-012-people-library.md` § 1). One consequence is worth stating because it is what
 makes the two coexist: a rename under a surrogate touches a **body value** only, so mutating a join
 key in place is structurally unreachable rather than merely prohibited.
+
+**Group takes the surrogate branch by the same rule, not by analogy to Person.** The engine creates
+the group *record* — it does not exist until the store is asked for one — so limb 1 holds for the
+engine-created branch; and every natural candidate is a mutable display string that is not already the
+token the operator types, because the record's own filename is the surrogate. A group's display name
+is **more** volatile than a person's, so the consequence stated above is worth more here than there:
+a rename touches a body value only, and mutating the join key in place is structurally unreachable.
+`reference/adr/ADR-016-reusable-groups.md` § 1 records it.
 
 **Constraint keeps its natural key, which preserves the `Applies to` link syntax.**
 `<Section> → "<Constraint name>"` is already the link form, and the constraint name is already the
@@ -393,7 +423,7 @@ rule keys on — **is not copied into frontmatter.** This is `reference/data-mod
 copy — one source per fact* rule extended to the serialization axis, and it is what keeps a migrated
 artifact from acquiring two owners for one fact.
 
-### 4.4 Universal frontmatter — every in-model class (C1–C22)
+### 4.4 Universal frontmatter — every in-model class (C1–C23)
 
 ```yaml
 ---
@@ -423,13 +453,16 @@ declared exception, and all three are **narrowings of a value domain** rather th
   which is the reading it exists to close.
 - **C1 `trip-context.md`** — `writer` is `block-owned`, a sentinel meaning *see `CLAUDE.md`
   § Write ownership*. It is not a writer id and no tool resolves it to one.
-- **C22 `people/<person>.md`** — `trip` is `cross-trip`, a sentinel meaning *this artifact belongs to
-  no trip*. It type-checks as the required `slug` (`[a-z0-9][a-z0-9-]*`) and, exactly as `block-owned`
-  is not a writer id, **it is not a trip slug and no tool resolves it to a trip directory.** This is a
-  narrowing of a universal field's value domain, not the removal of one, and it is the only reason a
-  cross-trip class can sit inside a model whose universal block requires `trip`. **One binding
-  consequence:** `/trip-new` must refuse a trip slug equal to a reserved `trip:` sentinel, or a real
-  `trips/cross-trip/` would collide with it.
+- **C22 `people/<person>.md` and C23 `groups/<group>.md`** — `trip` is `cross-trip`, a sentinel
+  meaning *this artifact belongs to no trip*. It type-checks as the required `slug`
+  (`[a-z0-9][a-z0-9-]*`) and, exactly as `block-owned` is not a writer id, **it is not a trip slug and
+  no tool resolves it to a trip directory.** This is a narrowing of a universal field's value domain,
+  not the removal of one, and it is the only reason a cross-trip class can sit inside a model whose
+  universal block requires `trip`. **The narrowing has two member classes and one value**, which is
+  what makes the consequence below a single obligation rather than one per class: **`/trip-new` must
+  refuse a trip slug equal to a reserved `trip:` sentinel**, or a real `trips/cross-trip/` would
+  collide with it. **C23 reuses the sentinel rather than declaring a second**, so that refusal covers
+  it unchanged and this class adds no forward obligation to that command.
 
 **The `W` cell is a bare writer-id wherever the class has exactly one, and prose wherever it names
 an ownership arrangement no single id can carry** — a sentinel, a verb, a human author, or several
@@ -716,13 +749,13 @@ distinction § 5.4 protects one layer down, met again here.
   layers check different things and neither stands in for the other.
 - **`internal`** — never rendered.
 - **`internal-hard`** — never rendered **and** carrying values that must not reach a rendered page
-  **in any form, including anonymized**. Exactly C12, C14 and C22.
+  **in any form, including anonymized**. Exactly C12, C14, C22 and C23.
 - **`output`** — the render itself: a sink, never a source.
 
 ### 5.2 Field classification
 
 A field is `publishable` (the default) or `non-publishable`. **The schema half is a declared gap:**
-the token `non-publishable` occurs zero times across the twenty-three files in `reference/schemas/`, that
+the token `non-publishable` occurs zero times across the twenty-four files in `reference/schemas/`, that
 directory's fence grammar is explicitly closed so a schema cannot express the marking, and no
 enforcement file reads it. What shipped is the repo-side fence at § 5.6, and it does **not**
 inherit — it carries one row per field *per artifact scope*, so a passport value is non-publishable
@@ -864,7 +897,7 @@ statement is a **live input**, not a leftover: this section's own absence rule b
 roster rows it leaves in the accumulating default. Where the two overlap, the tokens and
 definitions above govern.
 
-**What is not a restatement, and what is.** The twenty-two per-class schemas in `reference/schemas/`
+**What is not a restatement, and what is.** The twenty-three per-class schemas in `reference/schemas/`
 each carry `field lifecycle: required enum [accumulate-append|rebuilt-each-synthesis|versioned|persist-mutable|output]`
 — the identical five-value **value domain**, a vocabulary constraint rather than a per-class
 assignment, so no schema restates this section (each says the same of `writer:` in terms: *typed,
@@ -878,7 +911,7 @@ membership disclaimer § 7.6 already carries.
 | `accumulate-append` | Each re-run **appends** a new dated section; nothing is deleted. The full accumulated file is what downstream reads. | C2, C5, C6, C7, C8, C9, C18, C20 |
 | `rebuilt-each-synthesis` | Regenerated from scratch each synthesis pass from authoritative inputs. Safe to regenerate because it holds no independent state. | C4, C10, C11, C12, C14, C17, C21 |
 | `versioned` | Each synthesis produces a new numbered version; prior versions are preserved as sibling files. | C15, C16 |
-| `persist-mutable` | A single file, updated **in place**, that survives every re-run. Synthesis *reads* it and never regenerates it. Not append-only: a row is deleted in the one case where its subject is removed, so no ghost row lingers. | C1, C3, C13, C22 |
+| `persist-mutable` | A single file, updated **in place**, that survives every re-run. Synthesis *reads* it and never regenerates it. Not append-only: a row is deleted in the one case where its subject is removed, so no ghost row lingers. | C1, C3, C13, C22, C23 |
 | `output` | A render, not a lifecycle-managed source. Rebuilt from the artifacts it renders; never read back as a source. | C19 |
 
 **Legacy spellings — a closed record, not an open instruction.** Two legacy forms existed in the
@@ -1012,17 +1045,23 @@ working directory, after it is already done.
 
 **Most of this requirement is already discharged by § 6, and the residue is smaller than it looks.**
 An artifact does not need a migration pass to reach the current version if its own lifecycle
-regenerates it. Partitioning the 22 in-model classes by § 6 membership:
+regenerates it. Partitioning the 23 in-model classes by § 6 membership:
 
 | Upgrade burden | Which lifecycle classes | Count | Mechanism |
 |---|---|---|---|
 | **None — self-upgrading by construction** | `rebuilt-each-synthesis` · `versioned` · `output` | **10** | All three rebuild wholesale from authoritative inputs on the next run, emitting the current version. There is no older instance to migrate, because the next pass does not preserve one. |
-| **Writer-upgraded, in place** | `persist-mutable` · `accumulate-append` — **less the five classes named in the two rows below** | **7** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
+| **Writer-upgraded, in place** | `persist-mutable` · `accumulate-append` — **less the five classes named in the two rows below** | **8** | The owning writer upgrades the block on its next write. A `persist-mutable` class is read-then-written by its writer, which populates newly-required fields from the body it just parsed and reports the upgrade. An `accumulate-append` class upgrades its frontmatter block in place on the next append; **body entries are never rewritten**, because rewriting accumulated history to satisfy a schema would destroy the record the lifecycle exists to keep. |
 | **Permanently tolerated at version 0** | C3 `travelers/<traveler>.md` · C22 `people/<person>.md` — the two human-authored `persist-mutable` classes | **2** | **Never engine-upgraded. This is a rule, not an omission.** |
 | **No emitting writer — the upgrade has nobody to perform it** | C1 `trip-context.md` · C2 `trip-log.md` · C18 `outputs/<slug>.md` | **3** | **A declared gap, not a mechanism.** The writer-upgraded row assigns the upgrade to *the owning writer*; these three have no writer surface that emits their frontmatter block at all, so there is no next write for the upgrade to ride. Stated per class below. |
 
-**10 + 7 + 2 + 3 = 22.** No class is unaccounted for. **C22 lands in the third row, and AC5 puts it
-there rather than a preference.** An upgrade pass that rewrote a person record to add a required field
+**10 + 8 + 2 + 3 = 23.** No class is unaccounted for. **C23 joins the second row — writer-upgraded, in
+place — and it does not join the third.** It is `persist-mutable` with a real emitting writer: the
+creation verb writes its frontmatter block at creation, so there is a next write for an upgrade to
+ride. The third row's members are *the two human-authored `persist-mutable` classes*, excepted because
+an upgrade pass would be **an agent write to a file whose whole declaration is that no agent writes
+it** — an argument that does not reach a class whose own commands already write it. **The third row's
+label and membership are unchanged, and so is the fourth.** **C22 lands in the third row, and AC5 puts
+it there rather than a preference.** An upgrade pass that rewrote a person record to add a required field
 would be an **agent write to a file whose whole declaration is that no agent writes it**, which is C3's
 argument reaching one entity further out. Guarantee 1 discharges the requirement for both: version 0 is
 permanently valid, so neither file ever needs upgrading. **C21 lands in the first row and adds nothing to
@@ -1032,7 +1071,7 @@ to migrate. **No surface writes one today** — the class is declared and unprod
 — but the fourth row is for a class whose instances exist and have no emitter, and C21 has no
 instances at all outside its own witness. Its gap is a producer, not an upgrade. **The upgrade is not
 free of the operator across
-all twenty-two:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
+all twenty-three:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
 it is the only path for an instance that predates the surface that now emits each one's block at
 creation. The fourth row is where that is stated rather than assumed away.
 
@@ -1234,8 +1273,9 @@ this document the assignment appears.
 | 20 | n/a — post-migration class | n/a — declared `accumulate-append` at creation |
 | 21 | n/a — post-migration class | n/a — declared `rebuilt-each-synthesis` at creation |
 | 22 | n/a — post-migration class | n/a — declared `persist-mutable` at creation |
+| 23 | n/a — post-migration class | n/a — declared `persist-mutable` at creation |
 
-**Out-of-model classes C23–C28** carry no target state by construction; their delta is the explicit
+**Out-of-model classes C24–C29** carry no target state by construction; their delta is the explicit
 disposition in § 1.2, which is what makes them non-silent.
 
 ---
@@ -1470,7 +1510,7 @@ that document has held up.
   moves into frontmatter.
 - **Not the publish path's completeness.** Paraphrase remains out of reach (§ 5.5).
 - **No migration.** This document specifies; the migration slices migrate.
-- **Out-of-model classes C23–C28** are named and excluded, not modelled.
+- **Out-of-model classes C24–C29** are named and excluded, not modelled.
 
 ---
 
