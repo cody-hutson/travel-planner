@@ -76,6 +76,7 @@ Once `trips/` holds more than one trip, every command also takes `--trip <slug>`
 | `/trip-record` | `group-add` | `<group-id> <person-id>` | ANY | any | any | G8 |
 | `/trip-record` | `group-drop` | `<group-id> <person-id>` | ANY | any | any | G8 |
 | `/trip-record` | `group-delete` | `<group-id>` | ANY | any | any | G8 |
+| `/trip-record` | `group-expand` | `<group-id>` | ACTIVE | any | any | G8 |
 <!-- /command-surface -->
 
 ## Where this fits

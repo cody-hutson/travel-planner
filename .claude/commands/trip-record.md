@@ -110,6 +110,7 @@ population-role: RESOLVE
 | group-add | ANY | any | any | G8 |
 | group-drop | ANY | any | any | G8 |
 | group-delete | ANY | any | any | G8 |
+| group-expand | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -2638,3 +2639,58 @@ The group-deletion verb. **It deletes exactly one file under `groups/` and nothi
 **The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied; **(c)** vacuous — this write adds no value; **(d)** the whole record is confirmed against its display name and member count, which is the shape (d) names for a record-removing write; **(e)** exactly one file is removed and no path under any person store is touched.
 
 **Reversibility: MODERATE, confidence HIGH.** Not CHEAP — the file is gone and there is no revert. Not IRREVERSIBLE — every id it held still resolves, so the record is rebuildable from the receipt. That tier is a **property of the no-personal-data decision**: were a group record ever to hold a value about a member, that value would be unrecoverable and the tier would move with it.
+
+## group-expand <group-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 for the render, and its `## Members` bullets, which are the whole of the member set and are read **in the file's own order** because the write order below is that order; `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, in `## link`'s order and for `## link`'s reason; `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one and because the table's own header row fixes the shape a new row is written in, which is `## group`'s read and is cited rather than re-derived; and, **per member**, exactly what `## link <name> <person-id>` declares for one member — that member's `travelers/<file>.md` existence probe, frontmatter and declared body fields; that member's `people/<person-id>.md` existence probe, H1 and declared body fields; the outgoing record on the branch where the file already names a different one; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**. **The per-member read set is `link`'s and is not widened by being run N times** — this verb re-implements neither the survey nor the predicate it rests on, and a second implementation of either would be a second source of truth for what a field is. **No value read on any side is written anywhere by the survey**, which is `link`'s own minimality clause, preserved. Dispatches no agent.
+
+The expansion verb. It puts a group's members onto the resolved trip, each linked to their own record exactly as `link` would have linked them one at a time. **It is the only one of the six that requires a trip, and its requirement-table row reads `lifecycle: ACTIVE` for that reason** — it writes trip content, so rule 5's bound applies to it unchanged and the contract's declared default is the correct cell.
+
+### What expansion writes into the trip, and what it does not
+
+**What is copied: the member's display name, and nothing else.** It lands where the shipped path already puts it and nowhere else — the `## Group` roster row in `trip-context.md`, and the `travelers/<file>.md` stem via `/trip-new`'s transform, reused verbatim and attributed to it exactly as `## group` reuses it. **Expansion introduces no newly-copied value**: every byte it writes is a byte one of the shipped verbs already writes, N times over.
+
+**What is referenced: everything durable.** Passport, needs, preferences, travel style — all reached through the one `person:` field at composition time. Composition reads the record and writes the trip, never the reverse.
+
+**What is recorded nowhere: the group id.** No trip artifact receives a byte naming the group — not `trip-context.md`, not the traveller file, not the derived model, not `trip-log.md`. **This is the whole of the point-in-time property**, and it is stated as an absence because that is what it is: membership is editable without disturbing a trip that already expanded the group, not because a binding is ignored but because **there is no binding**. Not a weak one, not a stale one, none.
+
+> **The edge this verb writes is byte-identical to the edge `link` writes, and that identity is load-bearing beyond this verb.** A traveller file this verb produced and one an operator produced with `link` are indistinguishable — same field, same value, same position, and nothing anywhere marking which act wrote it. **Any surface that reads a person's history by inverting the `person:` edge therefore needs no group-awareness at all**, and gets the same answer for both. **Nothing tests this property.** It holds by construction, and a change to what this verb writes — a provenance mark, a group id, a differently-shaped field — would cost it silently. It is written down here, and in `reference/adr/ADR-016-reusable-groups.md` § 4, so that a later author meets it rather than discovering it afterwards.
+
+**The group id is deliberately not persisted as provenance, and the reason is the reach set.** *This roster came from group G* is a true and useful fact, and the **expansion receipt names it** — in the transcript, at the moment of the act. Persisting it would put a second cross-trip identifier inside a trip artifact, re-opening the one-location question the person library closed at exactly one location, and every erasure would then have to walk it.
+
+### The preview — bulk presentation, per-member survey
+
+**`link`'s per-member consequence survey runs, once per member, and is not suppressed.** Suppression would regress a deliberate safety property: adding a reference changes which source a field is planned from, and the operator is entitled to know before a write. **What is bulk is the presentation, never the survey.**
+
+1. **Run the shipped survey once per member, writing nothing.** Every member, in `## Members` order, before any write is reached.
+2. **Emit one consolidated preview**, one line per member, each carrying a verdict from a **closed three-token set**:
+
+| Verdict | Condition | What expansion will do |
+|---|---|---|
+| **`NEW`** | no traveller file exists for that member | create it and write `person:` |
+| **`CLEAN`** | a traveller file exists and the survey found no field whose value or disposition the link changes | write `person:` |
+| **`DIVERGES`** | the survey found at least one | **excluded by default**, and named |
+
+3. **One confirmation, covering `NEW` and `CLEAN` together.** Per-member confirmation would put a gate on every member of a group, on the setup convenience this capability exists to remove.
+
+**A `DIVERGES` member is named by field label only, never by value.** Echoing a value into a transcript is a new copy of someone's personal data in a place erasure cannot reach — the identical reasoning `## extract`'s name-only preview already ships on. **The per-member path is named and is not performed here:** `/trip-record link <name> <person-id>` is where the field-by-field side-by-side lives, and a bulk verb that tried to render N of those would be unreadable at the size this verb exists to serve.
+
+**The three tokens are the whole set, and a member that resolves to none of them is not silently written.** A member id that **does not resolve** to a person record, or resolves only through a **second** stub hop, renders `UNDETERMINED` in the preview and is **excluded**, exactly as `group-list` renders it — never *no such person*, never dropped from the list, and never expanded. A member resolving through **one** stub hop is followed to depth 1 and surveyed against the survivor, with the redirect named in the preview line.
+
+**Declining leaves every file byte-identical.** The gate sits before the first write, which is `link`'s own property and is preserved rather than re-derived.
+
+### The order of writes, and partial failure
+
+> **Per member, in `## Members` order: the roster row first, then the traveller file and its `person:` field.**
+
+**The roster is written first because it is the name authority**, which is the reason `## erase`'s own ordering states at length and is cited here rather than restated: the roster cell is the authoritative display name and the traveller-file stem is a projection of it, so a run interrupted between the two leaves the authority written and the projection to be converged, rather than the reverse.
+
+**Partial failure is reported and never rolled back.** On a failure at member *k*, **stop** and report which members were written and which were not. A rollback would itself be writes, on a verb whose whole safety argument is that it writes only what the operator confirmed; and the state is recoverable, because **`unlink` is the cheap inverse** and `## group`'s no-argument branch is the path to a roster row. **A partial run is a run that says it was partial**, which is rule 10(e)'s principle applied to an operation that is not an erasure.
+
+**Re-expansion is idempotent by delegation, not by new logic.** A member already on the roster meets `## group`'s shipped presence probe — present → edit, absent → add. A traveller file already naming a **different** record meets `link`'s repoint branch, which echoes the outgoing id and counts the fields that stop drawing on it; that branch is not suppressed here, and a member on it surveys as `DIVERGES`. **This verb re-implements neither.**
+
+**The receipt names the group by id and by H1, the count expanded, and each excluded member with its verdict.** It is the one place the group id and the trip meet, and it is a transcript rather than an artifact.
+
+**The standing rule this write is taken under is rule 5**, unwidened, and **not rule 12**. Every byte this verb writes lands under `trips/<slug>/`, so no widening is reached for and none is needed: rule 12 governs writes to a reference store, and this verb **reads** the group store and writes none of it. **Rule 2's two conditions and rule 7's append shape carry the trip-side writes**, exactly as they carry `## group`'s roster row and `## link`'s field today. Saying so is what keeps the widening ladder honest — a verb that named a rule it did not need would make the next author reach for one too.
+
+**Reversibility: CHEAP, confidence HIGH.** Per member, `unlink` removes the field and `## group` removes the roster row; both are shipped and both are reversible. The tier is per member rather than per run because a partial run leaves a partial state, and that state is the same shape as any other partially-linked trip.
