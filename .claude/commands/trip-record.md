@@ -105,6 +105,11 @@ population-role: RESOLVE
 | promote | ACTIVE | any | any | G8 |
 | erase | ANY | any | any | G8 |
 | extract | ACTIVE | any | any | G8 |
+| group-new | ANY | any | any | G8 |
+| group-list | ANY | any | any | G8 |
+| group-add | ANY | any | any | G8 |
+| group-drop | ANY | any | any | G8 |
+| group-delete | ANY | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -393,8 +398,9 @@ only the verbs that existed when it was written.
    needed it would protect that verb and leave the next slice to write the store with nothing to
    satisfy. Rule 7 is the shipped precedent for a widening landing as an append and saying so.
 
-10. **An erasure is the one write that may delete a record and rewrite a trip, and it is bounded by
-    a receipt that is total over a fixed table — never by a list of the locations someone remembered.
+10. **An erasure is the one write that may delete a durable person record and rewrite a trip, and it
+    is bounded by a receipt that is total over a fixed table — never by a list of the locations
+    someone remembered.
     This is a second widening of rule 5, taken under the Extension rule below, and rule 9 is left
     exactly as it stands.** Rule 9 derives a *target class* — one durable record, selected by an
     operator-supplied id — and then fixes an *operation class* narrow enough that erasure fails it on
@@ -484,9 +490,9 @@ only the verbs that existed when it was written.
     extraction — which is the population this verb exists to serve, not an edge of it.
 
     **This rule admits no deletion, and the omission is stated because a reader will look for one.**
-    Rule 10's sentence that an erasure is *the one write that may delete a record* is a property of
-    this command rather than of that verb, so a second record-deleting write here would falsify it —
-    and § *The repair extension point* would then oblige this slice to repair a Zone A sentence its
+    Rule 10's sentence that an erasure is *the one write that may delete a durable person record* is
+    a property of this command rather than of that verb, so a second such write here would falsify it
+    — and § *The repair extension point* would then oblige this slice to repair a Zone A sentence its
     own edit had made untrue. **A creation that writes its record and then cannot write the
     reference leaves that record behind**, and the remedy is the receipt plus the operator's hand:
     the receipt names the orphan by path and by id, and the undo is stated in order — the
@@ -495,9 +501,56 @@ only the verbs that existed when it was written.
     `reference/data-model.md` types a defect and which no verb of this command may author.
 
     It is here rather than inside one verb section because the prohibition half binds every verb:
-    **no other verb of this command may create a file under the store**, on the ground that a
-    creation verb already does. A bound written inside the one verb that first needed it would
+    **no other verb of this command may create a file under the durable person store**, on the ground
+    that a creation verb already does. A bound written inside the one verb that first needed it would
     protect that verb and leave the next slice to create a second record with nothing to satisfy.
+
+12. **A write to a store of references is bounded by the target's class and by the emptiness of what
+    it may hold, and never by a list of verbs. This is a fourth widening of rule 5, taken under the
+    Extension rule below, and rules 9, 10 and 11 are left exactly as they stand.** Rule 9 derives a
+    target class — **one durable record of one person** — and every verb reaching a store whose
+    records are about no single person fails that derivation at its first clause, whatever its
+    operation. Rule 9 says so in terms: *until such a rule exists, no other write outside
+    `trips/<slug>/` is available to any verb of this command.* This rule is that one.
+
+    **The target class.** A path outside `trips/<slug>/` is a permitted target under this rule only
+    where it is **a record whose entire content is a display name and a set of ids referring to
+    records of the classes above** — never a record holding a value about any person, and never a
+    path selected by a display name, a search, or any match this command computed. **The emptiness is
+    the whole of the class**: a store whose records could hold a person-scoped value is not reached
+    by this rule, because the confirmation shapes below are calibrated to a set of references and
+    would be the wrong gate for a set of answers.
+
+    **The operation class.** Creation, membership change and deletion of one such record, and
+    nothing else. **A write under this rule is taken on exactly these conditions, all of which must
+    hold:** **(a)** the verb's own section names the exact target path, and that path is under the
+    resolved store root for a class § 1.1 declares; **(b)** the record is selected by an id the
+    operator supplied, or — on the creation branch alone, where no id can yet exist — is a path that
+    does not exist whose stem is an id this run minted and rejection-sampled against that store's own
+    listing; **(c)** every value written is **either an id the operator supplied or the name they
+    typed**, so the write **authors nothing about anybody** — this is what replaces rule 9(e)'s
+    *moves a value* and rule 11(c)'s *copies values*, neither of which describes a write that carries
+    no person's answer at all; **(d)** an entry the write **removes is echoed verbatim before it
+    goes**, and a whole record the write removes is confirmed against **its display name and its
+    member count** — never against a typed-back id, for the reason stated below; and **(e)** the
+    write reaches **exactly one file**, and it reaches **no path under any store of durable person
+    records** — a verb of this class may **read** such a record to resolve a name for display, and
+    may write none.
+
+    **What (d)'s asymmetry with rule 10 is for, because a reader will ask why deletion here is
+    cheaper.** Rule 10's typed-back id guards an operation that destroys **a person's durable record
+    and cannot be undone**. This rule's deletion destroys **a set of references the operator can
+    rebuild** — a name and a list of ids, every one of which still exists. Flattening the two would
+    erode the distinction erase works to preserve, which is that *the render says which one is
+    running before anything is written*; giving this operation erase's ceremony would teach the
+    operator that the two are the same weight, which is the misreading the ceremony exists to
+    prevent. **Irreversible is not irrecoverable, and (d) is where this rule says so.**
+
+    **What (e)'s second half is for.** It is the prohibition half, and it is why this rule is here
+    rather than inside one verb section: **no verb reaching a reference store may write a durable
+    person record, on the ground that this rule reaches neither.** A bound written inside the first
+    verb that needed it would leave the next slice's verbs free to reach the person store by another
+    route, which is the failure rules 9, 10 and 11 each name in their own closing paragraph.
 
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
@@ -1972,9 +2025,11 @@ naming, in one place, is not a solicitation.
 
 **Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/` and `outputs/` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent.
 
-The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only irreversible operation on this command surface, and the only one that writes an archived trip.**
+The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only operation on this command surface that destroys personal data irrecoverably, and the only one that writes an archived trip.**
 
-**What this verb is not.** It is not `unlink`, which detaches one trip from a record and leaves both intact. It is not `group`, which takes someone off a trip and never touches `travelers/`. Those two are reversible and this is not, and the render says which one is running before anything is written.
+**Irreversible and irrecoverable are two words and this verb is the only one that needs both.** `group-delete` is irreversible in the narrow sense — nothing under `groups/` is in git, so there is no earlier version to restore from — and it is nonetheless **reconstructible**: a group record is a display name and a list of ids, every one of which still exists, so the operator can make it again from what survives. Nothing this verb destroys can be made again from anything. The distinction is what the confirmation shapes are calibrated to, and it is why this verb takes a typed-back id where `group-delete` takes an echoed name and count.
+
+**What this verb is not.** It is not `unlink`, which detaches one trip from a record and leaves both intact. It is not `group`, which takes someone off a trip and never touches `travelers/`. It is not `group-delete`, which removes one file under `groups/` and reaches no person record at all — its own render says so in terms, and the negative is asserted rather than assumed. Those three are recoverable and this is not, and the render says which one is running before anything is written.
 
 ### Erasure substitutes; it never regenerates
 
@@ -2132,7 +2187,7 @@ It scans the trip roots discovery did **not** resolve for the subject's display 
 
 **Why the gate is stronger than the nearest precedent's.** The publish script's takedown arm types the *subject identifier* and accepts a flag to skip the prompt, because a deleted repository can be re-published. Its typed identifier would here be the person's name, and its escape hatch would be a scripted irreversible erasure. This verb takes instead the shape the script reserves for the confirmation it will not let anyone skip.
 
-**The cost, stated rather than buried: erasure cannot be scripted, batched, or run in CI.** That is the correct trade for the one irreversible operation on this surface, and it is the trade the corpus already made for a reversible one.
+**The cost, stated rather than buried: erasure cannot be scripted, batched, or run in CI.** That is the correct trade for the one irrecoverable operation on this surface, and it is the trade the corpus already made for a reversible one.
 
 ### The receipt
 
@@ -2367,8 +2422,8 @@ first where one was written, then delete the record. **The order is the whole of
 reversed, the trip is left holding a well-formed reference resolving to nothing, which is the defect
 this verb's write order exists to avoid, authored by the repair instead of by the run.
 
-**Why the undo is by hand and not a compensating delete.** A second record-deleting write here would
-falsify standing rule 10's sentence that an erasure is *the one write that may delete a record* — and
+**Why the undo is by hand and not a compensating delete.** A second such write here would
+falsify standing rule 10's sentence that an erasure is *the one write that may delete a durable person record* — and
 § *The repair extension point* would then oblige this slice to repair a Zone A sentence its own edit
 had made untrue. The cost is one manual step on a branch that requires a write to have failed after
 another succeeded; the alternative is a second deletion path on a command surface whose deletion
@@ -2450,3 +2505,136 @@ revert, and the record is visible to every trip that later links it. Not IRREVER
 deleted, no source value is lost, and a completed extraction is undone by removing the `person:` line
 and discarding the record. That tier is a **property of the copy-never-move decision**: were this verb
 to remove the extracted bullets from the source, the tier would move with it.
+
+## group-new <name>
+
+**Reads:** `<store-root>/groups/` — the store listing, which is both the rejection set the minted id is sampled against and the denominator of the display-name collision check; `<store-root>/groups/*.md` — **the H1 line alone**, for that collision check, and no other line of any record is read; `<store-root>/groups/grp-<token>.md` — the file-existence probe on the minted path, which is the control standing rule 2 turns on and is declared because an undeclared probe hides it. **Reads nothing under any store of person records, and nothing under `trips/<slug>/`** — the negatives are stated because a reader will expect the first (this verb creates a set of person references and never resolves one) and because the second is what makes the `lifecycle` cell below honest. **Dispatches no agent. Takes no `Bash(ls:*)` use** — the store listing is read the way `## extract` reads its own, and this verb creates no directory.
+
+The group-creation verb. It mints a record holding a display name and an empty member list, and it is the only verb of the six that brings a file into existence.
+
+**Why the requirement-table row reads `lifecycle: ANY`, stated here because § *The shape of a table row* requires the reason to live in the verb's own section.** This verb writes one file under `groups/` and writes nothing under `trips/<slug>/`, so **no trip lifecycle bears on it at all** — an archived trip is neither served nor obstructed, because the trip is not the subject. That is `erase`'s reason at one remove: `erase` declares `ANY` because its subject is a durable record rather than a trip, and so does this. **The resolved trip is not used by this verb**, and saying so is what keeps the row from reading as a claim that it serves archived trips specially.
+
+**Identity — the id is minted, the name is typed, and neither is derived from the other.**
+
+- **The id** is `grp-<token>` where `<token>` is four lowercase hex digits. **Minting asserts non-existence and re-mints on collision**, sampled against the store's own listing — the same rejection-sampling `## extract` performs for a person id, and the same reason it terminates: four hex digits give 65,536 values against a store of tens of records.
+- **The display name is the argument, written as the body H1 and nowhere else.** § 4.3 bars restating a value that already lives in a structural position, and the H1 is the position the identity rule keys on, so **the name never enters frontmatter and the id never enters the body.**
+
+**Creation refuses on a name collision, and the refusal is a refusal rather than a merge.** Normalize the argument with **§ 3.2's existing normalization** — the one the publish guard already executes, read live and never re-implemented, because a second implementation would be a second source of truth for identity — and compare it for **exact equality** against the normalized H1 of every record in the store. Never similarity, never edit distance, never fuzzy matching. On a match, write nothing and offer three remedies, the person store's own: **use the existing group** (name its id), **disambiguate the name**, or **create anyway with the collision acknowledged**. The third branch exists because co-existence is safe when ids differ. **No code path runs from this comparison to a write on the matched record.**
+
+**Two refusals before the collision check, both writing nothing.** An **absent or empty** `<name>` — print the shape and stop. A `<name>` that is **a leftover placeholder** by the field-general predicate — a trimmed value beginning with `[` and ending with `]` — refuse and say which, because a group named `[Group name]` is the shape a later reader cannot distinguish from an unanswered field.
+
+**What is written.** One file at `<store-root>/groups/grp-<token>.md`, carrying the eight universal keys `reference/schemas/group-record.md` declares, the H1, and a `## Members` heading with **no bullets under it**. **An empty member list is a valid record and not a partial one** — a group is created before it has members, and the alternative would be a verb that refuses to create the thing it exists to create.
+
+**The receipt names the id, the name as normalized, and the member count, which is zero.** It names no person and reads no person record, because at creation there is nobody in the group.
+
+**The standing rule this write is taken under is rule 12.** This section discharges each condition by name. **(a)** the target path is named above and sits under the resolved store root for a class § 1.1 declares; **(b)** the creation branch's own clause applies — the path does not exist and its stem is an id this run minted and rejection-sampled against the store's listing; **(c)** the only values written are the operator's typed name and the class's own declared constants, so the write authors nothing about anybody; **(d)** vacuous — this write removes nothing; **(e)** exactly one file is written and no path under any person store is touched, read or written.
+
+**Reversibility: CHEAP, confidence HIGH.** The record holds no person's data and nothing references it yet; discarding it costs a `group-delete`.
+
+## group-list [<group-id>]
+
+**Reads:** `<store-root>/groups/` — the store listing, on the no-argument branch, and the existence probe on the argument branch; `<store-root>/groups/*.md` or `<store-root>/groups/<group-id>.md` — the H1 and the `## Members` bullets, which are the whole of what either branch renders; `<store-root>/people/*.md` — **the H1 line alone**, on the argument branch only, to resolve each member id to a display name, and **no other line of any person record is read**. **Writes nothing on either branch. Dispatches no agent.**
+
+The read verb, and the only one of the six that writes nothing at all. **Its optional argument mirrors the incumbent `group [<name>]` idiom** — no argument renders the population, an argument renders one member of it — deliberately, so the two verbs that share a stem also share a shape.
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged: this verb reads the group store and writes nothing anywhere, so no trip lifecycle bears on it.
+
+**No argument — the store.** One row per record: **id, display name, member count**. Sorted by display name. **No member id is printed on this branch and no person record is opened**, which is what keeps a store listing from being a roster of who travels with whom. **An empty store is rendered as an empty store** — say the store holds no groups and name `group-new`, and never as an error.
+
+**An argument — one group's members.** Resolve `<group-id>` first; **an id that resolves to nothing is a refusal**, naming the shape and **offering no near-match** — a "did you mean" over a store of real groups is a disclosure, which is the reason `erase` gives for the same refusal and it holds here for the same reason. Then render the H1, the member count, and one row per member bullet **in the file's own order**, each carrying the id and the name its record's H1 resolves to.
+
+**Three resolution outcomes per member, and they are three different renders.** They are `ADR-012` § 3's branches, inherited verbatim rather than restated as new posture:
+
+| The member id | Renders as |
+|---|---|
+| resolves to a live record | the id and that record's H1 |
+| resolves to a **merge stub** | the id, **followed to depth 1**, and the survivor's H1 — with the redirect named, so the operator sees that the entry is now reaching someone else's record |
+| resolves to nothing, or through a **second** stub hop | **`UNDETERMINED`** |
+
+**`UNDETERMINED` is never rendered as *no such person* and the row is never dropped.** A dropped row makes a group of four read as a group of three, and the member count above it would then disagree with the rows below — the two are printed together precisely so that disagreement is impossible. A second stub hop is `MALFORMED` under the shipped resolution rule and takes the same render, because a chain this command follows past depth 1 is a chain it cannot bound.
+
+**This verb suggests nothing.** It does not offer to remove a `UNDETERMINED` member, does not offer to repoint one, and names no verb in either case. The operator reads the store and decides; a read verb that proposes a write is a classification with a reflexive accept, on the one branch of this command that was safe.
+
+**Reversibility: n/a — this verb writes nothing.**
+
+## group-add <group-id> <person-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates every branch, and the whole of `## Members`, read before it is written because the duplicate check runs over the existing bullets and because an append needs the section's own extent; `<store-root>/people/<person-id>.md` — **the file-existence probe alone**, to establish that the id resolves, plus its frontmatter for a `merged-into:` key, and **no body line of any person record is read** — the verb needs to know that the record exists and whether it is a stub, and nothing else about the person. **Dispatches no agent.**
+
+The membership-addition verb. It appends one bullet and changes nothing else.
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged.
+
+**Both ids are arguments and neither is searched for.** A display name is never accepted on either position, and no name is matched, searched for or computed against either store. That is rule 12(b) discharged, and it is the same bound `erase` states for its own single argument.
+
+**Refusals, in evaluation order. Every one writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| either argument is absent, or is not of its id's declared shape | refuse; print both shapes and **offer no near-match** |
+| `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| `<person-id>` resolves to nothing | refuse; say the person record does not exist, and **never mint one** — see below |
+| `<person-id>` resolves to a **merge stub** | refuse and **name the survivor's id**. Adding through a stub records an entry that is already dead, and the operator can add the survivor directly |
+| the bullet is already present | refuse; say the person is already a member and name the group's member count. **Not an error and not a second bullet** |
+
+**Never minting a person record is a boundary rather than an omission, and it is worth stating because the alternative is superficially helpful.** A verb that created a durable cross-trip record for an id that did not resolve would be authoring a record about someone who never asked for one, which is the consent boundary `reference/adr/ADR-014-cross-trip-consent-refusal.md` closes rather than defers. **Record creation is `## extract`'s, under standing rule 11, from a profile that person filled.** This verb names that path and stops.
+
+**What is written — the append shape standing rule 7 admits**, reached once the read above has established the file and the duplicate check has selected this branch. **One bullet, `- psn-<token>`, appended at the end of `## Members`.** No existing line changes. **Nothing else is written**: not a name, not a date, not a count, not a note. The bullet is the entry, and the anchored form is the whole of what this class admits.
+
+**The receipt names the group, the person's display name resolved live from their record's H1, and the new member count.** The name is read for the render and is not written into the file — which is the one place this verb touches a person record at all, and it reads.
+
+**The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied and by nothing else; **(c)** the only value written is an id the operator supplied; **(d)** vacuous — this write removes nothing; **(e)** exactly one file is written, and the person record is read and never written.
+
+**Reversibility: CHEAP, confidence HIGH.** `group-drop` is the exact inverse and the entry carries no state to lose.
+
+## group-drop <group-id> <person-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates every branch, and the whole of `## Members`, read before it is written because the presence probe selects refusing from removing, **because the bullet being removed is echoed verbatim before it goes**, and because the member count in the receipt is derived from the section rather than remembered. **Reads no person record on any branch** — the negative is stated because `group-add`'s counterpart does read one: this verb removes an id it was given and never needs to know whose it is, and opening a record to name someone at the moment they are removed would put a person's name in a transcript for no operational purpose. **Dispatches no agent.**
+
+The membership-removal verb. It removes one bullet and changes nothing else.
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged.
+
+**Refusals, in evaluation order. Every one writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| either argument is absent, or is not of its id's declared shape | refuse; print both shapes and **offer no near-match** |
+| `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| no bullet in `## Members` carries `<person-id>` | refuse; say the person is not a member of this group. **The person record is not opened to check whether they exist** — this verb's question is about the group's contents, and answering it does not require knowing whether the id resolves |
+
+**The removal is echoed verbatim before it goes.** Standing rule 2's bound on a write that does not preserve what it replaces, and standing rule 12(d) states it as a condition. **The echo is the bullet's own bytes — the id — and never a name resolved for the occasion.**
+
+**What is written.** The one bullet is removed. **No existing line changes and no other bullet moves**, and the section's remaining order is the file's own. **A removal that empties `## Members` leaves the heading standing and the record in place** — an empty member list is a valid record, exactly as it is at creation, and deleting the group because its last member left would be a second operation the operator did not ask for.
+
+**The receipt names the group, the id removed, and the new member count**, and where that count is zero or one it says so plainly rather than treating either as an error.
+
+**The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied; **(c)** vacuous — this write adds no value; **(d)** the removed entry is echoed verbatim before it goes; **(e)** exactly one file is written and no person record is opened at all.
+
+**Reversibility: CHEAP, confidence HIGH.** `group-add` is the exact inverse, and the echoed bullet is the receipt that makes it typeable.
+
+## group-delete <group-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 and its `## Members` bullet count, the last two **read before the file is removed** because the confirmation is echoed against them and cannot be recovered afterwards. **Reads no person record, and reads nothing under `trips/<slug>/`** — both negatives are load-bearing rather than courtesies, and the section below says why. **Dispatches no agent.**
+
+The group-deletion verb. **It deletes exactly one file under `groups/` and nothing else, anywhere.**
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged.
+
+**What this verb does not do, stated as a negative because the word *delete* invites the wrong guess.** It **deletes no person record**, and no code path from this verb reaches one: the `Reads:` line above names no path under any person store, so there is nothing to write and nothing to remove there. It **changes no trip**: a trip that expanded this group carries no byte naming it, so there is nothing in any trip for a deletion to reach — which is not this verb being careful, it is `group-expand`'s no-residue property leaving nothing to be careful about. **The render says both, in terms, before it asks.**
+
+**The confirmation is an echoed name and count, not a typed-back id, and that is a decision rather than a shortcut.** Print the group's **display name** and its **member count**, say plainly that this deletes the group and no person record, and ask. **Flattening this into `erase`'s typed-back ceremony would erode the distinction that verb works to preserve** — that the render says which one is running before anything is written — by teaching the operator the two are the same weight. Standing rule 12(d) carries the rule and its reason; this section is where the verb discharges it.
+
+**Refusals, in evaluation order. Every one writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| `<group-id>` is absent, or is not of the id's declared shape | refuse; print the shape and **offer no near-match** |
+| `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| the operator declines the confirmation | write nothing; **the file is left byte-identical** |
+
+**It is irreversible and it is reconstructible, and both words are needed.** Nothing under `groups/` is in git, so there is no earlier version to restore from. But a group record is **a display name and a list of ids, every one of which still exists**, so the operator can make it again — `group-new` then `group-add`, from the member list the confirmation just showed them. **The receipt therefore prints the member ids it is about to destroy**, which is the one place this verb echoes them: they are the whole of what is being lost, and a receipt that withheld them would make the operation unreconstructible in fact while calling it reconstructible in principle.
+
+**The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied; **(c)** vacuous — this write adds no value; **(d)** the whole record is confirmed against its display name and member count, which is the shape (d) names for a record-removing write; **(e)** exactly one file is removed and no path under any person store is touched.
+
+**Reversibility: MODERATE, confidence HIGH.** Not CHEAP — the file is gone and there is no revert. Not IRREVERSIBLE — every id it held still resolves, so the record is rebuildable from the receipt. That tier is a **property of the no-personal-data decision**: were a group record ever to hold a value about a member, that value would be unrecoverable and the tier would move with it.
