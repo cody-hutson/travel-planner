@@ -111,6 +111,20 @@ merely observed: a group record can be edited or deleted and nothing in this sto
 because nothing in this store points at it. Reading which groups someone is in means
 looking through the group store, which is what `/trip-record group-list` does.
 
+**Trip history is resolvable without being stored, and the exclusion above is unchanged
+rather than merely still true.** A trip points at a person; a person points at no trip. So
+where someone has already been can be worked out by looking through the trips for the ones
+that reference them — which is what `/trip-record history` does — while this store gains no
+field, no file and no index, and nothing about the result is written back here. The link
+runs one way again, and it is the same direction: **there is no line here that names a
+trip.** Two things follow that are worth saying plainly. What that lookup can see is the
+trips that *currently* reference someone, which is not the same as everywhere they have
+been — a trip they were unlinked from is invisible to it, and it never reads that
+invisibility as *has not been there*. And an erasure needs no extra step for any of it:
+deleting the references is deleting the history, because the references are all it was.
+[`../reference/adr/ADR-017-derived-trip-history.md`](../reference/adr/ADR-017-derived-trip-history.md)
+records the decision.
+
 ## A relayed value is not an agreed one
 
 When you write down what someone else told you, that value is marked as relayed, so a
