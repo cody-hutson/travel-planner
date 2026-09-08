@@ -49,16 +49,49 @@ coverage it is structurally unable to check. The invariant is asserted — see g
 | **The needs-only consent boundary** | that the relayed mark appears **only** inside `## Needs`, and nowhere else in the file |
 | **The declared-absence convention** | the em-dashed fields — a skipped field keeps its line and takes an em dash, so a reader sees *not answered* rather than inferring from a missing label |
 
+## The horizon record — what the second record witnesses that the first cannot
+
+[`people/psn-9d42.md`](people/psn-9d42.md) is an ordinary instance of the same class, added
+for one reason: **the validity horizon needed an instance the schema gate can reach.** The
+real store is git-ignored, so an untracked record cannot witness anything; and the record
+above cannot witness this particular mark, because it demonstrates the horizon's *home*
+field, `Passport`, precisely by leaving it empty.
+
+| Property | Where to look |
+|---|---|
+| **A `[VALID-THROUGH]` mark actually written** | `## Where you stay` and `## Needs` — the first tracked instance of the mark in this repository |
+| **The mark on a `slot`-scoped field** | `Lodging style` — one owner for one fact, so a lapsed value composes `UNKNOWN` and is reported |
+| **The mark on a `block`-scoped field** | the first `## Needs` block — one instance among several, so a lapsed block is **retained in the union** and reported, never dropped |
+| **A marked and an un-marked block side by side** | `## Needs` — which is what makes the mark visibly a property of the *block* rather than of the section or the file |
+| **Still no passport value** | `Passport:` — em-dashed here for exactly the reason it is em-dashed above |
+
+**The horizon is demonstrated on a field that is not `Passport`, and that is a property of
+the mechanism rather than a compromise.**
+[`../../reference/data-model.md`](../../reference/data-model.md) § *Field Scope → The
+classification* carries a per-field `Horizon` axis, so the mark is owed by *fields* rather
+than by one field. A passport-specific mechanism would have had **no safe witness at all**:
+the only demonstrable instance would have been one this class forbids a tracked file to
+carry. A field-general one can be exercised in a tracked file without a passport value ever
+entering one.
+
+**`witness:` still names the record above.** The schema's declared witness is unchanged, so
+the coverage assertions that key on it are untouched; this record is graded as an ordinary
+instance under the same path pattern.
+
 ## What it deliberately does not exercise, and why
 
 Named rather than left to be inferred from an absent line:
 
 - **No passport value, and therefore no validity horizon on one.** `Passport:` ships as a
-  label with an em dash. The field is the class's most sensitive, the form asks only for an
-  issuing country and a validity *month*, and a tracked worked example is the one place even
-  that must not appear. The horizon mark's grammar and expiry semantics are declared in
-  [`../../reference/schemas/person-record.md`](../../reference/schemas/person-record.md),
-  which is their home; a fixture cannot demonstrate a mark on a value it must not carry.
+  label with an em dash **in both records**. The field is the class's most sensitive, the
+  form asks only for an issuing country and a validity *month*, and a tracked worked example
+  is the one place even that must not appear. The horizon mark's grammar is declared in
+  [`../../reference/schemas/person-record.md`](../../reference/schemas/person-record.md) and
+  its expiry semantics in [`../../reference/data-model.md`](../../reference/data-model.md);
+  a fixture cannot demonstrate a mark on a value it must not carry. **This is a permanent
+  residual by design, not a gap to close later** — `Passport` is the sole field whose
+  `Horizon` axis reads `required`, so its slot path has no tracked witness carrying a real
+  horizon and never can.
   [`../data-architecture-demo/travelers/alex.md`](../data-architecture-demo/travelers/alex.md)
   makes the same choice on the same field, for the same reason.
 - **No `merged-into:` line, so no merge stub.** The field is optional and this record is a
