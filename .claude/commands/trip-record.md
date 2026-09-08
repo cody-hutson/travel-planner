@@ -111,6 +111,7 @@ population-role: RESOLVE
 | group-drop | ANY | any | any | G8 |
 | group-delete | ANY | any | any | G8 |
 | group-expand | ACTIVE | any | any | G8 |
+| history | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -195,7 +196,7 @@ and it takes exactly this shape:
 | Cell | Rule |
 |---|---|
 | `verb` | the **bare token**, exactly as a user types it, single whitespace-delimited, ASCII-case-foldable — the token alone, never the token followed by an argument placeholder. § *Selecting the verb* matches the typed token against this column by exact string equality, so a placeholder in the cell makes the verb unmatchable |
-| `lifecycle` | the value admitting exactly the trip lifecycles the verb's **own section** states a reason to serve. `ANY` or `ARCHIVED` only where that section states the reason; where it states none the cell takes the contract's declared default, and **every verb of this command writes**, so no verb of it has that reason. The rule is written rather than its output because the output is what goes stale |
+| `lifecycle` | the value admitting exactly the trip lifecycles the verb's **own section** states a reason to serve. `ANY` or `ARCHIVED` only where that section states the reason; where it states none the cell takes the contract's declared default. The rule is written rather than its output because the output is what goes stale |
 | `mode` | `any` unless the verb's own section states a mode it does not serve, in which case the cell names the modes it does. A verb that must not run without a decided mode says so **in its own row**, naming what it serves, rather than by a halt at the gate that yielded the state |
 | `destination` | the `mode` rule again, with one bound that is not derived and does not move: **no row of this file may gate on a decided destination.** A freshly scaffolded trip has no decided destination whatever its mode, so a destination-gated verb would refuse on a trip the taxonomy says runs the full pipeline |
 | `depth` | **the value the header block's `contract-depth` line declares, read from that line.** The header fixes it, the guard grades the equality in both directions, and a value restated here would be a second declaration that can disagree with the first. Rendered **bare**, and left that way by the revision that moved this table outside the fence: a depth cell tolerates either rendering, and the guard strips a code span from the cell before it matches, so the value it reads is the same under both. **The value is never written into this table's own rule text** — hazard 3 below counts any five-column row whose fifth field normalises to a depth as a verb row, and hazard 3 forbids every other table the token outright, so this is the only table in this file that would otherwise carry it at all |
@@ -2758,3 +2759,62 @@ The expansion verb. It puts a group's members onto the resolved trip, each linke
 **The standing rule this write is taken under is rule 5**, unwidened, and **not rule 12**. Every byte this verb writes lands under `trips/<slug>/`, so no widening is reached for and none is needed: rule 12 governs writes to a reference store, and this verb **reads** the group store and writes none of it. **Rule 2's two conditions and rule 7's append shape carry the trip-side writes**, exactly as they carry `## group`'s roster row and `## link`'s field today. Saying so is what keeps the widening ladder honest — a verb that named a rule it did not need would make the next author reach for one too.
 
 **Reversibility: CHEAP, confidence HIGH.** Per member, `unlink` removes the field and `## group` removes the roster row; both are shipped and both are reversible. The tier is per member rather than per run because a partial run leaves a partial state, and that state is the same shape as any other partially-linked trip.
+
+## history <name>
+
+**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, and **its frontmatter alone, for the `person:` key**, which is the reference this verb inverts; **no body line of that file is read**, because nothing in a traveller's own answers bears on where they have already been; `people/<person-id>.md` — the file-existence probe and **its frontmatter alone**, to establish that the reference resolves and whether it is a `merged-into:` stub, and **no body line of any person record is read**; `people/` — the store listing, for the stubs that redirect to that record, which is the closure step and the only reason this verb reads the store as a whole; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; and `trips/*/travelers/*.md` — **the frontmatter of every traveller file on every trip, read to the closing `---` and no further**, which is the resolution step and the only way another trip enters this verb's scope. **It opens no trip's `trip-context.md`, in either direction, its own included** — each trip's destination and lifecycle arrive by value in the record block above, which has already run, so a per-trip open would re-derive what that block already carries. **Writes nothing, anywhere, on every branch. Dispatches no agent. Takes no `Bash(ls:*)` use** — the listing block holds that grant by name, and this verb consumes its output rather than taking a listing of its own.
+
+The prior-visit verb. It answers *has this traveller been to this destination before* from the references the trips already carry, and **it answers by offering rather than by writing**: what it produces is a suggestion the traveller may take, and the answer that lands in their file is theirs.
+
+**Nothing about this is stored, and that is the decision rather than an implementation detail.** `reference/adr/ADR-017-derived-trip-history.md` is authoritative for it. The durable person record gains no field, `people/` gains no file and no index, and no result of this verb is persisted anywhere — the resolution runs here, on demand, and is gone when the render is. `people/README.md` § *What a record does not hold* still lists **trip history**, unchanged and still true: this verb resolves history *about* a person without anything being stored *on* them.
+
+**The requirement-table row takes the contract's declared default, and the archived trips are a property of the scan rather than of the gate.** The **resolved** trip is the one being planned, so the row states no reason to serve an archived one. That is a separate question from what the resolution *reads*: a past trip is exactly what history is made of, so **archived trips are in the population and are read there, read-only**. Reading is not derivation, and `CLAUDE.md` § *Archived trips — what the freeze binds* freezes derivation; this verb composes nothing and writes nothing, so the freeze has nothing here to forbid.
+
+### The resolution — the shipped discovery scan, reused
+
+**Nothing below is a new scan, a second identity predicate or a second resolution vocabulary.** `reference/adr/ADR-012-people-library.md` § *Reference discovery* already chose a forward scan over a declared bearer set and scored it against the alternatives; this verb runs that scan's steps and skips the ones it does not need.
+
+1. **Resolve `<name>`.** An absent argument, or a name with no traveller file on the resolved trip, is a refusal that names the shape and **offers no near-match** — a suggestion here is a classification with a reflexive accept, and § `## profile <name>`'s collision check already states why similarity is computed nowhere on this surface. A traveller file carrying **no `person:` key** is not a refusal and not an empty history: say plainly that this traveller references no durable record, name nothing else, and stop. There is no edge to invert, so there is nothing to resolve.
+2. **Closure over `merged-into:`, at one hop.** The subject is the referenced record plus every stub redirecting to it, so a merge does not split a person's history. A stub reached through a second stub is `MALFORMED`, reported, and **never followed** — the redirect depth is pinned at one hop and this verb does not widen it.
+3. **Population.** The trip listing, minus the `README.md` line, exactly as the contract's own gates derive it. `G1`'s canary and its **forbidden conclusion** are inherited verbatim: an unreadable listing never yields *no trip references this person*.
+4. **Reference read.** Each bearer's frontmatter, stopping at the closing `---`. A trip is in the set where a bearer carries `person: q` for some `q` in the closure.
+5. **Exclude the resolved trip.** A trip cannot be its own prior visit.
+
+**The relevance and signalling steps of that scan are not run.** Relevance is a per-field inheritance question, and this verb inherits no field; there is no update signal because there is nothing to signal about.
+
+### Three outcomes, and the two absences are not the same one
+
+| Outcome | What it means | What is offered |
+|---|---|---|
+| `RESOLVED` | the scan completed and the closure is carried by at least one other trip | the candidates below |
+| `NO-EDGE-FOUND` | the scan completed and no other trip carries the closure | **nothing** |
+| `UNDETERMINED` | the store could not be listed, a bearer was present but unreadable, the reference dangled, or a stub was `MALFORMED` | **nothing**, and the indeterminacy is stated |
+
+**`NO-EDGE-FOUND` and `UNDETERMINED` are reported as different things and behave as the same thing.** Neither yields a value, neither is ever rendered as *this person has not been here*, and under both the field stays **unknown**. That is `reference/data-model.md`'s own rule for these fields — an unanswered value reads unknown, never `never` — preserved at this layer rather than restated as a new one. **An unlinked trip is invisible to this verb**, and the render says so rather than implying the set is everywhere the traveller has been.
+
+### The candidates, and the operator makes the match
+
+**This verb never decides that two trips share a destination.** There is no Destination entity and no destination key — `reference/data-architecture.md` § 3.4 assigns the model's entities and Destination is not among them — so an automatic match would be a name-similarity join over a free-prose string, which is the mechanism the identity work forbids. **Similarity is computed nowhere here**, exactly as it is computed nowhere in the collision checks on this surface.
+
+So `RESOLVED` renders **one row per candidate trip: its slug, and its `- **Primary destination:**` string as the record block already carries it.** The operator or the traveller says which of those are this destination, and that confirmation — and only that confirmation — yields the count the offer below is derived from. **Partial and ambiguous matching is the ordinary case rather than an exception branch**, which is why this verb carries no ambiguity rule and no threshold.
+
+**The render carries trip slugs and a count, and nothing else.** No person's display name, no field value from any trip, and no line of any record body. The reach table in `## erase <person-id>` types the session transcript `REPORT` and `UNREACHABLE`, and `## extract <name>`'s preview already sets the convention this follows: a value echoed into a transcript is a new copy of someone's data in a place an erasure cannot reach.
+
+### The offer, and the two values it refuses
+
+Where the target field is **unanswered** by the traveller, and only there:
+
+| Field | Offered | Refused, and why |
+|---|---|---|
+| `Been here before?` | **`once`** at a single confirmed prior trip; **`a few times`** above that | **`know it well` — never.** It is a claim about familiarity depth, and a visit count cannot ground one: a person may go five times on business and not know a place, or once for a year and know it well. Offering it would be inventing a value. **`never` — never.** See the outcome table above |
+| `Already done` | **a pointer only** — that prior trips to this destination are on file, and which | **any authored prose.** The field is the traveller's own statement of what they need not repeat, and no derivation supplies one |
+
+**Where the field is already answered, nothing is offered at all.** `agents/00-enrichment.md` binds the carry-through — an answer is carried verbatim and never normalized to a neighbouring value — and an offer over an answered field is the first step of exactly that normalization.
+
+**And this verb writes neither field, on any branch.** That is the load-bearing prohibition and it is not a stylistic preference: `Been here before?` is not consumed per traveller. It feeds a **party-level** depth weighting in `agents/01-activities.md`, `agents/02-food.md` and `agents/04-transport.md`, where an unanswered value is an **abstention** rather than a neutral member. Writing a suggestion into `travelers/<traveler>.md` converts that abstention into a member, changes the distribution the weighting reads, and changes which candidate sections carry more candidates — with nothing having asked the traveller. **A written suggestion is not advisory at the aggregate, whatever it is called at the point it was written**, which is why the offer is made where the answer is given and nowhere else.
+
+**This verb suggests no verb, either.** It does not offer to link a traveller, to repoint a reference, or to resolve an `UNDETERMINED`; a read verb that proposes a write is a classification with a reflexive accept.
+
+**The standing clause is taken unwidened, and no rule is appended for this verb.** Every widening in that clause — rules 9 through 13 — derives a permitted **write** target or operation, and a verb that writes nothing anywhere has nothing to derive and reaches for nothing. Saying so is what keeps the widening ladder honest: a verb naming a rule it did not need would make the next author reach for one too. **`## profile <name>`'s declared read-scope ceiling is left exactly as it stands** — this verb declares its own rather than widening that one, which is what the per-verb `**Reads:**` line is for.
+
+**Reversibility: n/a — this verb writes nothing.**

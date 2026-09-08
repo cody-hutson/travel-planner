@@ -170,17 +170,22 @@ word for one state is a second thing to keep true.
 
 ### 3. The destination match is the operator's, and the engine never computes one
 
-Resolution produces candidates and stops. Each is presented as its trip slug, that trip's
-own `- **Primary destination:**` string, and its travel window; the operator or the
-traveller says which candidates are the same destination, and that confirmation yields the
-count `n`. **The engine offers no default selection, computes no similarity, and applies no
-threshold.** Constraint one above is the whole of the reason: with no Destination key, any
-automatic match is a name-similarity join over a mutable display string.
+Resolution produces candidates and stops. Each is presented as its trip slug and that
+trip's own `- **Primary destination:**` string; the operator or the traveller says which
+candidates are the same destination, and that confirmation yields the count `n`. **The
+engine offers no default selection, computes no similarity, and applies no threshold.**
+Constraint one above is the whole of the reason: with no Destination key, any automatic
+match is a name-similarity join over a mutable display string.
 
-The travel window is included deliberately — it is what makes a match decidable when a
-destination string is ambiguous, and it is trip metadata rather than person data. It widens
-what a transcript carries, which § 9 records as a named residual rather than leaving it to
-be discovered.
+**The candidate row carries the slug and the destination string, and stops there.** A
+travel window was considered, on the ground that it makes a match decidable when a
+destination string is ambiguous. It is not carried, for two reasons that agree. The
+destination string and the lifecycle already arrive **by value** in the command file's
+pre-executed record block, so both are free; a travel window is in no block and would cost
+an open of every candidate trip's `trip-context.md`, widening the resolution's read scope
+from frontmatter-only to a per-trip body read for a convenience. And the trip slug already
+carries the year by naming convention, which is the temporal cue the window was wanted for.
+The narrower render is also the one that keeps § 6's transcript residual smallest.
 
 ### 4. The suggestion is presented and never written, and the derivation refuses two values
 
