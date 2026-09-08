@@ -49,3 +49,4 @@ options weighed, the decision, and the consequences.
 | [ADR-014](ADR-014-cross-trip-consent-refusal.md) | Cross-trip consent for a party member — the mechanism space, and why the refusal closes rather than defers | Accepted |
 | [ADR-015](ADR-015-durable-field-validity-horizon.md) | The durable-field validity horizon — a trip-relative predicate, a declared axis, and no fifth write | Accepted |
 | [ADR-016](ADR-016-reusable-groups.md) | Reusable groups — a second cross-trip store, a one-directional membership edge, and an expansion that leaves no residue | Accepted |
+| [ADR-017](ADR-017-derived-trip-history.md) | Derived trip history — a resolution rather than a record, a match the operator makes, and a suggestion that is never written | Accepted |
