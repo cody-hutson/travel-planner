@@ -52,7 +52,7 @@ shape. The same exemption is stated in place, directly beneath that table.
 | `outputs/validation-report.md` | C17 | 1 | the one per-class field, `critical-count`, agreeing with the body; the validator's own seventeen sections and its three-value severity scale; a check that cannot run **declared**, never passed |
 | `outputs/rooftop-sunset-bars.md` | C18 | 2 | the residual class, resolved by longest-literal-pattern-wins |
 | `outputs/change-summary.md` | C20 | 1 | `accumulate-append` keeping a decided entry beside an undecided one; the keyed four-bucket difference and the unkeyed removal it cannot see; the one per-class field, `status` |
-| `outputs/cost-estimate.md` | C21 | 1 | the **degenerate instance** § 4.5 rule 3 requires — every field label present with declared-absent values; the coverage pair `cost-bearing-items` / `priced-items` with N computed independently of M; and `undetermined` rendered rather than a total of zero, which is the branch this fixture is uniquely able to witness because it ships no prices |
+| `outputs/cost-estimate.md` | C21 | 1 | the **`0 < N < M`** rendering limb — a total carrying its own `N of M` coverage, never presented as complete; the coverage pair `cost-bearing-items` / `priced-items` with N computed independently of M; the per-traveller `P of Q` that measures a **plan** where the frontmatter pair measures the **corpus**, and the two cases where they disagree; the commitment split drawn on `locked` versus the rest, with the two legs named as sitting outside C13's reach entirely; and `undetermined` rendered rather than a total of zero, on the one category nothing priced |
 
 ## Depth
 
@@ -90,11 +90,33 @@ names, with a stated *not exercised* where this fixture has no fact to put in on
 eleven; `outputs/validation-report.md` carries its seventeen.
 
 **A check or a field that cannot be exercised here is declared, never passed.** This
-example ships no external URLs, no opening hours, no prices, no real bookings and a
-placeholder destination. Several validator checks therefore have no input. Reporting
-those as passes is how the earlier version of this fixture came to certify a plan that
-placed no meal on any day while omitting the one check that would have caught it — so
-the rule is stated here as a fixture rule rather than left to each file.
+example ships no external URLs, no opening hours, **no sourced prices**, no real
+bookings and a placeholder destination. Several validator checks therefore have no
+input. Reporting those as passes is how the earlier version of this fixture came to
+certify a plan that placed no meal on any day while omitting the one check that would
+have caught it — so the rule is stated here as a fixture rule rather than left to each
+file.
+
+**The prices clause is narrowed to *sourced* prices, and the narrowing is stated here
+rather than in the files it licenses.** The rule reads: **no sourced prices — synthetic
+currency values only, where a class's own rule cannot be exercised without one.**
+
+*Why this is a narrowing and not an exception.* The clause's three neighbours — external
+URLs, opening hours, real bookings — are all **real-world facts** that go stale or
+mislead in a sanitized fixture, and a rate or a ticket price on a placeholder venue in a
+placeholder destination is not one of those. It is synthetic, exactly like the
+placeholder times, Event IDs and venue names this fixture already ships, and like the
+`**Price tier:**` values `outputs/nightlife-list.md` has carried from the start. What
+the clause withholds is a **researched** figure, not the concept of a figure.
+
+*Why it is needed.* C21 is a **tier-1** class here, and tier 1's own clause is *enough
+content to exercise the class's own rule, because nothing else in the repository does*.
+C21's rule is a coverage-and-rendering rule with four limbs, and every limb but the empty
+one needs a price to exist. Under the unnarrowed clause this class would witness the
+`N = 0` branch forever, and the two clauses would be in standing conflict on the one class
+that most needs the tier-1 half. The narrowing resolves it in the direction tier 1 points,
+and **it is the whole licence**: nothing here permits a sourced price, and nothing permits
+a synthetic one in a class whose rule does not require it.
 
 ### What is absent, and why
 
@@ -131,12 +153,19 @@ declared rather than left to be inferred from a missing file.
   `IDEATION`, before a destination is chosen. This trip has one, so a shortlist here
   would contradict the fixture's own mode.
 
-## Internal consistency (F1–F10)
+## Internal consistency (F1–F11)
 
-**These are the fixture's real acceptance criteria, and no CI check can reach them.**
-The schema gate validates frontmatter; it never reads a body, so a fixture whose
-artifacts disagree with each other passes every check and teaches a wrong shape
+**These are the fixture's real acceptance criteria, and almost none of them is reachable
+by a check.** The schema gate validates frontmatter; it never reads a body, so a fixture
+whose artifacts disagree with each other passes every check and teaches a wrong shape
 anyway. They are asserted here so a later editor knows what to preserve.
+
+**F10 is the exception, and it is a recent one.** `scripts/test-artifact-schema.sh` group
+`CE` re-derives both halves of it from the tracked tree — the marker count, with the class
+set read from § 1.1's Primary-entities column rather than listed, and the priced count
+from the markers themselves — so F10 is graded rather than merely asserted. It stays in
+this list because this list is what a later editor reads, and because `CE` grades the
+counts and not the reasoning beside them.
 
 | # | Invariant | How it is checked |
 |---|---|---|
@@ -149,7 +178,8 @@ anyway. They are asserted here so a later editor knows what to preserve.
 | F7 | Every desire in `satisfaction-metrics.md § Desire-coverage` traces to a desire stated in a `travelers/*.md`, or to a declared-absent entry. | join |
 | F8 | No venue key appears more than **twice** in `venue-matrix.md`, counted over the emitter's three roles `A` / `Alt` / `B`; the one key that appears twice is flagged `!` and holds the **same** role both times, which is what distinguishes the cap from the forbidden anchor/alternative split. | count |
 | F9 | Every day in `final-itinerary.md` carries an anchor event **and** an anchor meal, and no day's anchor event is its nightlife entry. | 4 days, read off the day blocks |
-| F10 | `cost-estimate.md`'s `cost-bearing-items` equals the number of `artifact-entry` markers across the classes § 4.5.1's denominator rule selects — C5 · C7 · C9 · C18 here, C6 absent and C8 excluded by entity — and `priced-items` equals the number of those markers carrying a `cost:` line. `coverage: measured` holds because **every entry-bearing file here carries markers**, so the zero is a measurement rather than the `unverifiable` limb. **The estimate renders `undetermined` because `priced-items` is 0**, never a total. | 10 + 2 + 2 + 3 = 17 markers, 0 priced |
+| F10 | `cost-estimate.md`'s `cost-bearing-items` equals the number of `artifact-entry` markers across the classes § 4.5.1's denominator rule selects — C5 · C7 · C9 · C18 here, C6 absent and C8 excluded by entity — and `priced-items` equals the number of those markers carrying a **readable** `cost:` line, a marker reading `cost: undetermined` counting toward neither. `coverage: measured` holds because **every entry-bearing file here carries markers**. The estimate renders the **`0 < N < M`** limb: a total, carrying its own `N of M` coverage and never presented as complete. | 10 + 2 + 2 + 3 = 17 markers; 7 + 1 + 2 + 1 = 11 priced. Both re-derived by `scripts/test-artifact-schema.sh` group `CE` |
+| F11 | Every traveller row in `cost-estimate.md` carries its own `P of Q`, and that pair is **not** the frontmatter pair. `Q` counts cost-bearing **placed** items — the events `event-status.md` holds at a status other than `option`, plus the two legs — and `P` those whose marker carries a readable cost. The pairs disagree here, for reasons each entry states on itself: `ven-b5e0` is priced and never placed, and `ven-8a34` carries a marker in both research files against a single placement. | 11 event rows less 1 `option` = 10 placed; 10 + 2 legs = 12 charged; 12 − 3 `undetermined` = 9 readable |
 
 Two further properties are asserted alongside them, because they are the ones a reader
 copying this fixture would most easily get wrong: every `artifact:` is the § 1.1

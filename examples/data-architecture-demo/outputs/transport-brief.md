@@ -22,7 +22,17 @@ and under its names.
 
 **Entry marker.** C9 is prose-shaped and its entity is the **Leg**, so its marker key
 is `leg: leg-<token>` — a third entity key across the entry-bearing set, alongside C5
-/ C7 / C18's `venue:` and C8's `day:`.
+/ C7 / C18's `venue:` and C8's `day:`. Both markers also carry a `cost:` line, because
+`agents/04-transport.md` emits the field from this release.
+
+**This class is the one that needs a basis selection rule, and both streams below show
+why.** Its `**Cost:**` label writes **both** bases on one line, and the marker grammar
+admits one `cost:` line — so `reference/adr/ADR-018-cost-estimation-method.md`
+§ *Decision 4* fixes it: `per-person` where the line states a per-person figure,
+`group-total` only where it does not. The arrival stream's label states both, so its
+marker carries `per-person`; the departure stream's label declares only a group total,
+so its marker carries `group-total`. **One class, two bases, and the difference is read
+off the prose rather than chosen.**
 
 ## This file hosts no optimizer signal, and that is the correction
 
@@ -52,7 +62,11 @@ and no day requires a cross-city transfer.
 
 ```artifact-entry
 leg: leg-04a1
+cost: 25 EUR per-person
 ```
+
+**Passengers:** Alex, Robin, Sam
+**Cost:** €25 / ~$28 per person, €75 / ~$83 group total
 
 May 14 (Thu). Arrival ~13:00; accommodation from 14:00, which is what makes the arrival
 day a half day rather than a full one.
@@ -67,8 +81,14 @@ nothing to save.
 
 ### Payment & Transit Card Setup
 
-Not exercised — this fixture records no fares, so there is no payment product to
-compare. On a real trip this section carries the card or app the group buys and where.
+**Recommended:** the rechargeable city transit card, bought and topped up at any station
+machine. Single fares are loaded onto it rather than bought as paper tickets.
+
+**This section names an instrument and not an amount, which is the split the estimate
+depends on.** `outputs/cost-estimate.md` takes its preload *figure* from § *Pass
+Assessment* above and the *card it goes on* from here, so a recommendation that names a
+number would give one value a second home. The card is a synthetic product, like every
+other value this fixture carries.
 
 ### Pre-Departure Transit Familiarization
 
@@ -77,9 +97,11 @@ traveler reads *before* leaving: § *Payment & Transit Card Setup* above holds t
 purchase procedure and § *Daily Navigation* below holds the apps and the in-trip
 mistakes, so nothing here restates either.
 
-**Fare model:** Not exercised — this fixture records no fares, so there is no zone,
-transfer window or reduced-fare rule to state. On a real trip this carries the mental
-model: how a fare is computed, and what forfeits a transfer.
+**Fare model:** Partly exercised. This fixture now records a synthetic per-journey fare
+and a card price, because § *Pass Assessment* below cannot be assessed without them —
+but it states **no zone, transfer window or reduced-fare rule**, and those are what a
+fare model actually is. On a real trip this carries the mental model: how a fare is
+computed, and what forfeits a transfer.
 
 **Conventions & etiquette:** Not exercised as destination research. The one movement
 constraint this plan does carry is stated where it binds — the `HC-1` walkability
@@ -96,9 +118,22 @@ tier-2 minimum, so these carry the entry shape and no live URL.
 
 ### Pass Assessment
 
-Not exercised, and correctly so rather than by omission: a multi-day transit pass is
-assessed against expected ride volume, and this trip's ride volume is zero. Everything
-is walked.
+- Estimated journeys: 2 over 4 days — the one lift-served hop to the museum, out and
+  back. Everything else this plan places is walked.
+- Per-journey cost: €2 / ~$2.20
+- Pass cost: €18 / ~$20 for the 4-day card
+- Break-even: 9 journeys
+- **Verdict: no pass.** Two journeys at €2 is €4 against an €18 card, so single fares
+  win by a wide margin — this is not a close call the traveller has to weigh.
+
+**This section is filled so `outputs/cost-estimate.md` has a preload source, and the
+verdict it gives is the one that exercises the harder limb.** Where a verdict recommends
+the pass, preload simply *is* the pass cost. Where it does not — as here — preload is
+apportioned journeys times per-journey cost, which is the arithmetic above and is what
+the estimate's *Preload* line carries. **A previous revision of this section declared
+this trip's ride volume zero**, which the *Point-to-Point Transit Matrix* below has always
+contradicted: it carries a lift-served hop as *the trip's one longer hop*. The count is
+corrected here rather than left standing.
 
 ### Hotel-Area Transit Reference
 
@@ -153,11 +188,24 @@ days has no day trip in it.
 
 ```artifact-entry
 leg: leg-9f3c
+cost: 75 EUR group-total
 ```
+
+**Passengers:** Alex, Robin, Sam
+**Cost:** €75 / ~$83, group total
 
 May 17 (Sun). Afternoon flight, depart accommodation ~13:00 — which is what leaves
 Sunday a usable morning and lets the riverside walk and the anchor breakfast be placed
 at all.
+
+**This marker is the fixture's `group-total`, and the `**Passengers:**` line above is
+what makes it allocable.** The departure label declares only a group total, so the
+selection rule gives the marker `group-total`; the estimate then divides it across
+**this stream's own participant set**, which that line names. Had the set not been
+resolvable, the rule is that the figure is **not** divided by the roster — it lands on a
+named `unallocated group-total` line instead. Single origin and one booking is why that
+line is empty on this trip; `examples/two-origin-demo/` is the shape where it would not
+be.
 
 **Luggage options.** Check-out is 11:00 and the party leaves at ~13:00, so there are two
 hours of Sunday morning in which the bags are out of the room and the group is not yet

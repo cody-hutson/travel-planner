@@ -1387,7 +1387,7 @@ with no site carries no row.
 13      examples/data-architecture-demo/README.md
 5       examples/data-architecture-demo/outputs/activities-list.md
 2       examples/data-architecture-demo/outputs/change-summary.md
-2       examples/data-architecture-demo/outputs/cost-estimate.md
+1       examples/data-architecture-demo/outputs/cost-estimate.md
 2       examples/data-architecture-demo/outputs/event-status.md
 3       examples/data-architecture-demo/outputs/final-itinerary.md
 1       examples/data-architecture-demo/outputs/links-reference.md

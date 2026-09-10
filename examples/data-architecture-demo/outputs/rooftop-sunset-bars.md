@@ -46,9 +46,19 @@ section header carries the earlier one. The third is the case below.
 
 ```artifact-entry
 venue: ven-8a34
+cost: 12 EUR per-person
 ```
 
+- **Price range:** €12–18 per person, including any cover charge or minimum
 - **Location:** Rua do Miradouro 12, Centro
+
+**This marker and the `ven-8a34` marker in `outputs/nightlife-list.md` carry the same
+figure, and the estimate charges it once.** They are two **mentions** of one venue —
+the merge the rung-2 evidence below warrants — and the thing a traveller is charged for
+is the **placement**, which `outputs/venue-matrix.md` holds once. Both mentions count
+toward `cost-bearing-items` and `priced-items`, because that pair measures the entry
+population; only the placement counts toward a traveller's `P of Q`. A fixture where the
+two pairs could not disagree would not show that they measure different things.
 
 Carried forward into `outputs/nightlife-list.md` and placed by the hub. **The key here
 is the token the hub minted at its enumeration**, resolved into this marker by this
@@ -71,8 +81,11 @@ undeclared merge.
 
 ```artifact-entry
 venue: ven-1d9f
+cost: undetermined
 ```
 
+- **Price range:** *not exercised* — this fixture carries a tier for this venue and no
+  numeral, so the marker has nothing to normalize
 - **Location:** Rua do Miradouro 40, Centro
 
 Carried forward as the alternative, and resolved the same way on the same pass. Its
@@ -84,7 +97,17 @@ and a fixture showing only the merge would leave a reader to guess at the other.
 
 ```artifact-entry
 venue: unminted
+cost: undetermined
 ```
+
+- **Price range:** *not exercised* — a candidate nobody carried forward was never
+  researched to a price
+
+**This marker declares two absences of different kinds at once**, which is worth reading
+carefully: `venue: unminted` says *the entity exists and holds no token*, and
+`cost: undetermined` says *this writer looked for a money value and found nothing
+normalizable*. They are independent — an entry can carry a resolved key and an
+undetermined cost, as `ven-1d9f` above does.
 
 **This is the degenerate case, and it is here deliberately.** A candidate this spoke
 looked at and did not carry forward is **not in the venue set the hub enumerates**, so
