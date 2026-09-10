@@ -659,8 +659,10 @@ Frozen. `/trip-record` on its own is **not** a default; it is a refusal. Say tha
 print the verbs of this command read live from this file's own requirement table, and stop. Select
 no verb, and do not fall back to one.
 
-`/trip` defaults a bare invocation to `status` because `status` is read-only. **Every verb of this
-command writes, and a write command never picks a write for you.**
+`/trip` defaults a bare invocation to `status` because `status` is read-only. **This command declares
+no default at all, and the ground for that is a rule rather than a property of its verb set: which of
+its verbs write is read from each verb's own section and never enumerated here, so a bare invocation
+names nothing this refusal could safely select — and a write command never picks a write for you.**
 
 This refusal happens before the gate ladder runs, so it sets no `trip.resolution` and no
 `trip.stop_gate`, and it asserts nothing about whether a trip exists, which trip is active, or what

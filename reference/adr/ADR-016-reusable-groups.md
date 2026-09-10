@@ -360,6 +360,29 @@ Each is **narrowed to the person store rather than softened** — erase remains 
 this surface that destroys personal data irrecoverably, which is the property those sentences were
 protecting.
 
+**A further sentence is falsified, it sits in Zone A rather than in a verb section, and its
+disposition is therefore a different one.** § *When no verb was typed* gives the ground for refusing
+a bare invocation as *every verb of this command writes* — a universal over the verb set — and
+`group-list` falsifies it by declaring in its own section that it writes nothing on either branch.
+(`ADR-017-derived-trip-history.md`'s `history` verb falsifies the same sentence independently, which
+is why it is recorded in this cross-cutting record rather than in either slice's.) The same sentence
+also stood in § *The shape of a table row*, and **that site was already converted** when this
+milestone's earlier work landed — so **the surviving site is the part that conversion did not reach**.
+§ *The repair extension point* clause 3 governs and is explicit that finishing such a conversion is
+*that same conversion reaching the part it missed, not a second one*, and is available. So the
+survivor is **converted rather than repaired**: the universal comes out, and the rule that derives it
+goes in — *which of this command's verbs write is read from each verb's own section and never
+enumerated here*. The refusal is unchanged, and so is the clause beside it that no permitted edit
+falsified.
+
+**The conversion is also made executable, because prose is what failed here.** The sentence shipped
+false at one site with every guard green, having been repaired at the other in the same milestone —
+the same enumeration going stale at the site nobody re-read. A repair that leaves the next author the
+same silence is not a repair. `scripts/test-command-taxonomy.sh` group `UW` asserts it: for each
+command file it splits Zone A from Zone B by that file's own zone rule, derives the read-only verb
+set from each verb region's own no-write declaration, and fails when a Zone A universal over the verb
+set stands beside one.
+
 **Reversibility: CHEAP · confidence HIGH.**
 
 ### 7. What this record does NOT decide

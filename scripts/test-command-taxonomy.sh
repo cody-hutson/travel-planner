@@ -2128,6 +2128,127 @@ else
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group UW — a Zone A universal over the verb set, checked against the verb set.
+#
+# WHAT THIS GROUP IS FOR, AND THE DEFECT THAT PAID FOR IT. `.claude/commands/trip-record.md`
+# gave the ground for refusing a bare invocation as "every verb of this command writes" — a
+# universal quantified over its own verb set, stated in Zone A, where nothing derives it. A
+# later slice added a verb that declares it writes nothing, and the sentence became false.
+# It had been written at TWO sites; one was converted when the verb landed and the other was
+# missed, so the corpus shipped a false universal at the surviving site with five suites and
+# every required check green. That is the whole argument for this group: the failure mode is
+# not that the rule is unknown, it is that a prose universal has no reader, and a repair that
+# leaves the next author the same silence is not a repair.
+#
+# ── THE ORACLE IS SOUND AND DELIBERATELY INCOMPLETE ────────────────────────────
+# A verb counts as read-only IFF its own region's column-0 `**Reads:**` line carries an
+# explicit no-write clause, which is the corpus's own declaration form. That is a LOWER
+# bound on the read-only set: a verb that writes nothing and does not say so is not counted.
+# Incompleteness is safe HERE and would not be safe in a group asserting the converse —
+# this group fails only when a read-only verb is FOUND beside a universal, so under-counting
+# can only miss a finding and can never manufacture one. `/trip`'s own adjudicated read-only
+# keys are the worked case: they are declared read-only in this file's held set and are NOT
+# matched by this oracle, because their sections use a different form of words.
+#
+# ── THE MATCHER IS FLATTENED, AND THAT IS THE POINT ────────────────────────────
+# Zone A is normalised — lowercased, markdown emphasis and code ticks removed, whitespace
+# collapsed to one line — before the pattern is applied, because the site that shipped false
+# was HARD-WRAPPED between "this" and "command" and a line-anchored scan reports it absent.
+# The pattern is likewise a SOUND, INCOMPLETE enumeration of shapes: it reads the two forms
+# the corpus actually writes and no others, so a paraphrase is a false negative. Both bounds
+# are stated here rather than left for a reader to infer from a green.
+#
+# ── WHY THE POPULATION GATE IS SHAPED THE WAY IT IS ────────────────────────────
+# The subject arm is a ZERO, so UW0 asserts every input non-empty first — and it asserts
+# COMPLETE region coverage rather than mere non-emptiness, because a Zone A/Zone B split that
+# derived a fraction of the verb set would issue a confident vacuous pass. Group V3 already
+# asserts one region per declared verb; UW0 asserts the count this group actually walked
+# equals the count that file declares, so the two cannot disagree silently. The matcher
+# carries a SENSITIVITY arm (a planted universal, which must be found) and TWO SPECIFICITY
+# arms (a scoped non-universal and a whole-file quantifier, neither of which is a claim about
+# what every verb does) — both of those were live false positives in an earlier attempt at
+# this detector, and they are kept as arms rather than as a comment.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group UW — a Zone A universal over the verb set, checked against the verb set."
+
+# The two shapes the corpus writes. Held as one string so every arm below — subject,
+# sensitivity and both specificity arms — is demonstrably the SAME matcher.
+UW_RE='((every|each|all) verbs? of this command [^.]*writes?)|((every|each|all) of this commands verbs? [^.]*writes?)'
+
+# uw_norm <text> — lowercase, strip markdown emphasis / code ticks / apostrophes, collapse
+# every run of whitespace to one space. A hard wrap must not hide a sentence from a scan.
+uw_norm() { printf '%s' "$(lower "$(printf '%s' "$1" | tr -d '*`'"'")")" | tr -s '[:space:]' ' '; }
+
+# uw_hits <normalised text> — how many universal-over-the-verb-set claims it carries.
+uw_hits() { printf '%s\n' "$1" | awk -v re="$UW_RE" '{ n += gsub(re, "") } END { print n + 0 }'; }
+
+UW_FILES=0; UW_UNIV=0; UW_RO=0; UW_BOTH=""; UW_ZA_LINES=0; UW_COVER_BAD=""
+for uwf in "$CDIR"/*.md; do
+  [ -e "$uwf" ] || continue
+  UW_FILES=$((UW_FILES+1))
+  uwbase="$(basename "$uwf" .md)"; uwcmd="/$uwbase"
+  # Zone B's regions, from the SAME parser the rest of this guard runs on. Zone A is
+  # everything above the first of them, which IS the file's own stated zone rule.
+  # REGION records read "REGION <cmd> <verb> <start> <end>"; re-emitted here as
+  # start / end / verb so the loop below reads positions first and never re-parses.
+  uwregions="$(printf '%s\n' "$ALL" | awk -v c="$uwcmd" '$1 == "REGION" && $2 == c { print $4 "\t" $5 "\t" $3 }')"
+  uwn="$(printf '%s\n' "$uwregions" | grep -c '[^[:space:]]' || true)"
+  uwdecl="$(getcount "$ALL" "DECL_$uwbase")"
+  if [ "$uwn" -eq 0 ] || [ "${uwdecl:-0}" -eq 0 ] || [ "$uwn" -ne "${uwdecl:-0}" ]; then
+    UW_COVER_BAD="$UW_COVER_BAD$uwcmd(walked=$uwn declared=${uwdecl:-0}) "
+    continue
+  fi
+  uwfirst="$(printf '%s\n' "$uwregions" | awk -F'\t' 'NR == 1 { m = $1 } $1 < m { m = $1 } END { print m + 0 }')"
+  uwza="$(awk -v k="$uwfirst" 'NR <= k { print }' "$uwf")"
+  UW_ZA_LINES=$((UW_ZA_LINES + $(printf '%s\n' "$uwza" | grep -c '[^[:space:]]' || true)))
+  uwu="$(uw_hits "$(uw_norm "$uwza")")"
+  # The read-only set: a region whose own column-0 read declaration states no write.
+  uwro=0; uwrolist=""
+  while IFS="$(printf '\t')" read -r uws uwe uwverb; do
+    [ -n "${uws:-}" ] || continue
+    # The region's own bounds, in the SAME attribution the parser uses to assign a read
+    # declaration to a verb: strictly inside the heading and up to the next one.
+    if [ "$(awk -v s="$uws" -v e="$uwe" 'NR > s+1 && NR <= e { if (index($0, "**Reads:**") == 1 && index($0, "Writes nothing") > 0) f = 1 } END { print f + 0 }' "$uwf")" -eq 1 ]; then
+      uwro=$((uwro+1)); uwrolist="$uwrolist${uwverb:-?} "
+    fi
+  done <<UWEOF
+$uwregions
+UWEOF
+  UW_UNIV=$((UW_UNIV + uwu)); UW_RO=$((UW_RO + uwro))
+  if [ "$uwu" -gt 0 ] && [ "$uwro" -gt 0 ]; then
+    UW_BOTH="$UW_BOTH$uwcmd: $uwu universal(s) beside read-only verb(s) [ ${uwrolist}]; "
+  fi
+done
+
+UW_SENS="$(uw_hits "$(uw_norm 'and stop. **Every verb of this
+command writes, and a write command never picks a write for you.**')")"
+UW_SPEC1="$(uw_hits "$(uw_norm 'no verb reaching a reference store may write outside it.')")"
+UW_SPEC2="$(uw_hits "$(uw_norm 'the guard reads every verb section on purpose, and writes nothing.')")"
+
+if [ "$UW_FILES" -eq 0 ] || [ "$UW_ZA_LINES" -eq 0 ]; then
+  FAIL "UW0: the walk read ${UW_FILES} command file(s) and ${UW_ZA_LINES} non-blank Zone A line(s) — one of those populations is empty, so the zero below would cover nothing"
+elif [ -n "$UW_COVER_BAD" ]; then
+  FAIL "UW0: COVERAGE IS INCOMPLETE, and this is a failure rather than a partial pass — $UW_COVER_BAD. Zone A is defined as everything above the FIRST verb region, so a file whose regions were partly derived yields a Zone A of the wrong extent and a confident verdict over the wrong bytes. The walked count is asserted equal to the count each file declares, which group V3 independently grades one-region-per-verb"
+elif [ "$UW_SENS" -eq 0 ]; then
+  FAIL "UW0: MUST FIRE — the SENSITIVITY arm returned zero. The identical matcher was run over a planted, HARD-WRAPPED universal of the exact shape that shipped false, and did not find it. The subject zero below is therefore an empty scan rather than a clean corpus, and this group reports the probe UNUSABLE"
+elif [ "$UW_SPEC1" -ne 0 ] || [ "$UW_SPEC2" -ne 0 ]; then
+  FAIL "UW0: the SPECIFICITY arms fired — a scoped non-universal returned $UW_SPEC1 and a whole-file quantifier returned $UW_SPEC2, expected zero from both. Neither is a claim about what every verb does, and a matcher that reads them as one turns green corpora red; both were live false positives in an earlier attempt at this detector"
+else
+  PASS "UW0: the walk covered ${UW_FILES} command file(s) and ${UW_ZA_LINES} non-blank Zone A line(s), with every file's walked region count EQUAL to the verb count it declares — coverage is total rather than merely non-empty, which is what stops a partial Zone A/Zone B split from issuing a confident vacuous pass. The matcher is a measurement: the SENSITIVITY arm found ${UW_SENS} planted hard-wrapped universal, and both SPECIFICITY arms returned zero on sentences shaped like one"
+fi
+
+if [ -n "$UW_BOTH" ]; then
+  FAIL "UW1: a Zone A universal quantified over the verb set stands beside a verb that declares it writes nothing — ${UW_BOTH}. The universal is false as written. Convert it to the rule that derives the set rather than repairing the enumeration, per that file's own repair extension point, and check EVERY site: this defect shipped once already because the sentence stood at two sites and only one was converted"
+elif [ "$UW_UNIV" -eq 0 ] && [ "$UW_RO" -gt 0 ]; then
+  PASS "UW1: ZERO Zone A universals of this shape survive across ${UW_FILES} command file(s), and the oracle found ${UW_RO} verb(s) that declare in their own read line that they write nothing. Both halves matter: the subject is the zero, and the ${UW_RO} is what makes it a measurement — a run where the oracle found none would pass this assertion while establishing nothing about it"
+elif [ "$UW_UNIV" -eq 0 ]; then
+  PASS "UW1: VACUOUS ON THE ORACLE — READ THIS AS VACUOUS, NOT AS PASSING. Zero Zone A universals were found, but the read-only oracle also found zero verbs declaring no write, so this run establishes nothing about the conjunction it exists to forbid. The oracle is deliberately a lower bound: it counts only a verb whose own read declaration states the negative in the corpus's declaration form"
+else
+  PASS "UW1: ${UW_UNIV} Zone A universal(s) over the verb set stand across ${UW_FILES} file(s), and the oracle found NO verb declaring that it writes nothing — so each universal is unfalsified on the evidence this guard can reach. The oracle is a lower bound by construction, so this is not a proof that every such sentence is true; it is a statement that none is contradicted by a declaration"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group G — controls. Fixture-driven: every fixture path below is rooted at $WORK, so no
 # arm writes a surface this guard grades, and group Z grades that claim over the watched
 # set. Every arm re-proves on each push instead of decaying into a one-time demonstration.
