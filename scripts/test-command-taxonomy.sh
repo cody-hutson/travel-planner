@@ -103,6 +103,14 @@
 #     vacuous pass: GUARD_EXPECTED_SKIPS is empty by design, and declaring this group as
 #     an expected skip would convert a red into a silent pass over an unshipped surface.
 #
+#   TD  a verb declaring the roster block as a read disposes of the count in it
+#                                                                          (group TD)
+#     TD0 population, region coverage, and BOTH matchers' sensitivity + specificity arms
+#     TD1 a verb declares `## Group` in its own read line and never says what it does
+#         with `- **Total travelers:**`. Graded OUTSIDE the read declaration, because
+#         naming a field among a cited read's purposes is not discharging it — which is
+#         the defect that paid for the group. It grades that the question is ANSWERED,
+#         never which answer is taken.
 #   G   controls: must-NOT-fire arms first, the two live differential arms, one must-fire
 #       arm per emittable id, the grammar control, the derivation mutation pair, and GZV —
 #       the ZERO-VERB world, which exercises the collapse argument above and is the only
@@ -2262,6 +2270,139 @@ elif [ "$UW_UNIV" -eq 0 ]; then
   PASS "UW1: VACUOUS ON THE ORACLE — READ THIS AS VACUOUS, NOT AS PASSING. Zero Zone A universals were found, but the read-only oracle also found zero verbs declaring no write, so this run establishes nothing about the conjunction it exists to forbid. The oracle is deliberately a lower bound: it counts only a verb whose own read declaration states the negative in the corpus's declaration form"
 else
   PASS "UW1: ${UW_UNIV} Zone A universal(s) over the verb set stand across ${UW_FILES} file(s), and the oracle found NO verb declaring that it writes nothing — so each universal is unfalsified on the evidence this guard can reach. The oracle is a lower bound by construction, so this is not a proof that every such sentence is true; it is a statement that none is contradicted by a declaration"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group TD — a verb that declares the roster block as a read disposes of the count in it.
+#
+# WHAT THIS GROUP IS FOR, AND THE DEFECT THAT PAID FOR IT. `## group [<name>]` declares its
+# read of `## Group` for four stated purposes, one of which is that the disposition for
+# `- **Total travelers:**` is chosen from that field's current value. `## group-expand`
+# CITED that read — "which is `## group`'s read and is cited rather than re-derived" — and
+# named two of the four, while its write clause named only the roster row. The citation
+# therefore imported a purpose the citing verb never discharged, and two faithful readers
+# got different bytes in `trip-context.md` on the verb's own headline path: a freshly
+# scaffolded trip, where the template ships the field bracketed and every member surveys
+# `NEW`, ends with a populated roster beside a placeholder total. No AC graded it and five
+# suites were green. That is the whole argument for this group — a cited read has no reader,
+# and the half of a block that carries a reconciliation table is the half that goes stale
+# in silence.
+#
+# ── THE ORACLE IS THE READ DECLARATION, NOT THE BODY ───────────────────────────
+# A verb is IN the population iff its own column-0 `**Reads:**` line names the block. That
+# is the corpus's own declaration form, and it is what makes this a rule rather than an
+# enumeration: a verb added later that declares the same read lands in the population with
+# no edit here. Body mentions are deliberately NOT the oracle — `## fact`, `## erase`,
+# `## extract` and `## profile` each name the block in prose without declaring it as a read,
+# and sweeping them in would grade verbs that never took the read whose purposes are at issue.
+#
+# ── THE SUBJECT EXCLUDES THE READ LINE, AND THAT IS THE POINT ──────────────────
+# The field must be disposed of in the verb's OWN PROSE, not merely named in the read
+# declaration that raised the question. Naming a purpose is what `group-expand` failed to
+# do; saying what the verb does about it is what settles the ambiguity, and only the second
+# is graded here. TD0's second specificity arm is that distinction, executed: the identical
+# field matcher is run over a `**Reads:**` line CARRYING the field and must return zero.
+#
+# ── WHY THE POPULATION GATE IS SHAPED THE WAY IT IS ────────────────────────────
+# The subject arm is a ZERO, so TD0 asserts the population non-empty first, and asserts
+# COMPLETE region coverage rather than mere non-emptiness for the reason group UW states at
+# length: a split that derived a fraction of the verb set issues a confident vacuous pass.
+# Both matchers carry a SENSITIVITY arm and a SPECIFICITY arm, and all four run the
+# identical functions the subject runs. Every matcher is `index()` over a literal rather
+# than a pattern, so none can be silently rejected into a plausible zero.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT GRADE ────────────────────────────────
+# It grades that the field is DISPOSED OF, never HOW. A verb stating in terms that it does
+# not touch the field passes here, and correctly: the defect was the silence, not the
+# disposition. Which disposition `group-expand` takes is decided in
+# `reference/adr/ADR-016-reusable-groups.md` § 4 and stated in that verb's own section; this
+# group holds the question answered, not the answer.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group TD — a verb that declares the roster block as a read disposes of the count in it."
+
+# The block and the field, held as strings so every arm below — subject, both sensitivity
+# arms and both specificity arms — is demonstrably the SAME matcher. Literal substrings,
+# never patterns: a rejected pattern yields a plausible zero, which is the failure this
+# group exists to make impossible.
+TD_BLOCK='`## Group`'
+TD_FIELD='- **Total travelers:**'
+
+# td_declares <text> — 1 if a column-0 `**Reads:**` line in the text names the block.
+td_declares() {
+  printf '%s\n' "$1" | awk -v b="$TD_BLOCK" '
+    index($0, "**Reads:**") == 1 && index($0, b) > 0 { f = 1 }
+    END { print f + 0 }'
+}
+
+# td_disposes <text> — how many NON-read-declaration lines name the field. The read line is
+# dropped here rather than by the caller, because a caller that forgot would count a cited
+# purpose as a discharged one, which is the exact defect.
+td_disposes() {
+  printf '%s\n' "$1" | awk -v f="$TD_FIELD" '
+    index($0, "**Reads:**") == 1 { next }
+    index($0, f) > 0             { n++ }
+    END { print n + 0 }'
+}
+
+TD_FILES=0; TD_POP=0; TD_POPLIST=""; TD_BAD=""; TD_COVER_BAD=""
+for tdf in "$CDIR"/*.md; do
+  [ -e "$tdf" ] || continue
+  TD_FILES=$((TD_FILES+1))
+  tdbase="$(basename "$tdf" .md)"; tdcmd="/$tdbase"
+  tdregions="$(printf '%s\n' "$ALL" | awk -v c="$tdcmd" '$1 == "REGION" && $2 == c { print $4 "\t" $5 "\t" $3 }')"
+  tdn="$(printf '%s\n' "$tdregions" | grep -c '[^[:space:]]' || true)"
+  tddecl="$(getcount "$ALL" "DECL_$tdbase")"
+  if [ "$tdn" -eq 0 ] || [ "${tddecl:-0}" -eq 0 ] || [ "$tdn" -ne "${tddecl:-0}" ]; then
+    TD_COVER_BAD="$TD_COVER_BAD$tdcmd(walked=$tdn declared=${tddecl:-0}) "
+    continue
+  fi
+  while IFS="$(printf '\t')" read -r tds tde tdverb; do
+    [ -n "${tds:-}" ] || continue
+    # The region's own bounds, in the SAME attribution the parser uses to assign a read
+    # declaration to a verb: strictly inside the heading and up to the next one.
+    tdtext="$(awk -v s="$tds" -v e="$tde" 'NR > s && NR <= e { print }' "$tdf")"
+    [ "$(td_declares "$tdtext")" -eq 1 ] || continue
+    TD_POP=$((TD_POP+1)); TD_POPLIST="$TD_POPLIST$tdcmd ${tdverb:-?}; "
+    if [ "$(td_disposes "$tdtext")" -eq 0 ]; then
+      TD_BAD="$TD_BAD$tdcmd ${tdverb:-?}; "
+    fi
+  done <<TDEOF
+$tdregions
+TDEOF
+done
+
+TD_SENS="$(td_declares '**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written.')"
+TD_SPEC="$(td_declares '**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Mode`, read before it is written.')"
+TD_FSENS="$(td_disposes 'the disposition for `- **Total travelers:**` is chosen from that value.')"
+TD_FSPEC="$(td_disposes '**Reads:** `## Group`, because the disposition for `- **Total travelers:**` is chosen from it.')"
+
+TD_OK=1
+if [ "$TD_FILES" -eq 0 ]; then
+  TD_OK=0
+  FAIL "TD0: the walk read ${TD_FILES} command file(s) — the population below would cover nothing"
+elif [ -n "$TD_COVER_BAD" ]; then
+  TD_OK=0
+  FAIL "TD0: COVERAGE IS INCOMPLETE, and this is a failure rather than a partial pass — $TD_COVER_BAD. Every verdict below is computed from the region extents this gate grades, so a file whose regions were partly derived yields a population of the wrong shape and a confident verdict over the wrong bytes. The walked count is asserted equal to the count each file declares, which group V3 independently grades one-region-per-verb"
+elif [ "$TD_POP" -eq 0 ]; then
+  TD_OK=0
+  FAIL "TD0: NO verb across ${TD_FILES} command file(s) declares \`## Group\` in its own \`**Reads:**\` line, so the subject arm would be a statement over the empty set. Two verbs declare it in the tree this group was written against; a zero here means the read declaration changed shape or the oracle stopped matching it, and either is a coverage regression rather than a clean corpus"
+elif [ "$TD_SENS" -ne 1 ] || [ "$TD_FSENS" -ne 1 ]; then
+  TD_OK=0
+  FAIL "TD0: MUST FIRE — a SENSITIVITY arm returned the wrong value. The read oracle returned $TD_SENS over a planted declaration naming the block (expected 1), and the field matcher returned $TD_FSENS over a planted body line naming the field (expected 1). A matcher that cannot find what it is looking for reports nothing about the real regions, so this group reports the probe UNUSABLE rather than the corpus clean"
+elif [ "$TD_SPEC" -ne 0 ] || [ "$TD_FSPEC" -ne 0 ]; then
+  TD_OK=0
+  FAIL "TD0: a SPECIFICITY arm fired — the read oracle returned $TD_SPEC over a declaration naming a DIFFERENT block (expected 0), and the field matcher returned $TD_FSPEC over a \`**Reads:**\` line CARRYING the field (expected 0). The second is the distinction this whole group turns on: naming a field among a cited read's purposes is not discharging it, and a matcher that counted the read line would have passed the defect that paid for this group"
+else
+  PASS "TD0: the walk covered ${TD_FILES} command file(s) with every file's walked region count EQUAL to the verb count it declares, and found ${TD_POP} verb(s) declaring \`## Group\` in their own read line — ${TD_POPLIST}a population rather than an enumeration held here, so a verb added later that takes the same read is graded with no edit. Both matchers are measurements: the SENSITIVITY arms returned $TD_SENS and $TD_FSENS on planted text, and both SPECIFICITY arms returned zero — including the identical field matcher run over a \`**Reads:**\` line that CARRIES the field"
+fi
+
+if [ "$TD_OK" -eq 0 ]; then
+  FAIL "TD1: VERDICT WITHHELD — TD0 did not pass, and every figure this arm would report is computed from the same population TD0 grades. A verdict here would be a confident statement over the wrong bytes rather than a weaker statement over the right ones. Resolve TD0 first; this arm has nothing trustworthy to say until then"
+elif [ -n "$TD_BAD" ]; then
+  FAIL "TD1: a verb declares \`## Group\` in its own read line and never says what it does with \`- **Total travelers:**\` — ${TD_BAD}. That block's scope is the roster table, this field, \`- **Travel mode:**\` and \`- **Subgroup notes:**\`; a verb reading the whole block and writing part of it leaves the rest undisposed, and this is the field carrying a reconciliation table, so it is the one that goes stale in silence. Say what the verb does with it — reconcile it by \`## group\`'s table, or state that it does not touch it and why. Naming it among a cited read's purposes is not enough, and this arm excludes the read line for that reason"
+else
+  PASS "TD1: all ${TD_POP} verb(s) declaring \`## Group\` as a read dispose of \`- **Total travelers:**\` in their OWN prose, outside the read declaration that raises the question. The zero is a measurement: on the same run the field matcher found the field on planted text ($TD_FSENS) and returned zero over a read line carrying it ($TD_FSPEC). This grades that the question is ANSWERED, never which answer is taken — a verb declining the field in terms passes here, and correctly"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
