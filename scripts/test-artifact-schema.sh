@@ -2408,11 +2408,27 @@ st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 =
 # The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT records in the
 # same shape, and this reader returns those three if it is pointed at that function. Scoping it to
 # st_violations is what makes it a code reader; do not reuse it unscoped.
+#
+# ── THE OPENING DELIMITER IS A CLASS, AND THE SINGLE-QUOTE LIMB IS LOAD-BEARING ──
+# An evaluator written in awk carries its emissions inside an awk `printf "..."`, so its codes open
+# on a DOUBLE quote. An evaluator written in bash carries them inside a shell `printf '...'`, where
+# a double-quoted format would expand `$` and a backtick — so single quotes are the correct idiom
+# there and its codes open on a SINGLE quote. A reader accepting only the first shape returns the
+# EMPTY SET over the second and its caller reports a covered group, which is exactly the failure
+# this class closes: group CE's evaluator is bash-side and read as ZERO codes until `\047` was
+# admitted. The quote character is incidental to the shape — what identifies a code is that it
+# HEADS a format string and is followed by the tab separating it from its detail. Broadening cannot
+# lose a match, and it was asserted not to move st_violations' own reading: both spellings return
+# the identical six codes there.
+#
+# Self-blindness survives by the same argument the narrow form used — the character following the
+# delimiter in the pattern below is a bracket, not an upper-case letter, so the reader cannot match
+# its own body and report a defect it had just introduced.
 st_codes() {
   awk '
     {
       s = $0
-      while (match(s, /"[A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
+      while (match(s, /["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
         c = substr(s, RSTART + 1, RLENGTH - 3)
         if (!seen[c]++) print c
         s = substr(s, RSTART + RLENGTH)
@@ -5796,6 +5812,452 @@ fi
 
 if [ "$HZ_RAN" -ne 1 ]; then
   FAIL "HZ-integrity: group HZ did not execute — a run without it is a failure, never a pass"
+fi
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "CE — the cost-estimate coverage pair agrees with the entries it counts"
+# ═════════════════════════════════════════════════════════════════════════════════
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# C21 `outputs/cost-estimate.md` carries two counts and a verdict in frontmatter, and
+# until this group nothing compared any of the three against the corpus they describe.
+# `scripts/validate-artifacts.sh` grades `cost-bearing-items` and `priced-items` as
+# INTEGERS — a value of 4000 over a tree holding seventeen markers is a clean A-pass —
+# and `reference/schemas/cost-estimate.md` said so in terms, in a paragraph that opened
+# *Declared here, validated by nothing in this release.*
+#
+# ── WHY IT ADDS NO FINDING CODE TO THE VALIDATOR ─────────────────────────────────
+# The same reason EN, CA, PB and ST add none, stated in this file's own header: an
+# assertion added to the validator's finding set runs inside mk_root's synthetic tree,
+# which carries the architecture document, the schema corpus and the declared witnesses
+# and NOTHING ELSE — no research lists, no venue matrix, no event status. Every arm of
+# this group would fail there by construction. `scripts/validate-artifacts.sh` also
+# declares PROSE out of scope by name, and three of the five assertions below read a
+# body. So CE reads $ROOT directly and carries its own control arms, which is the shape
+# this suite already uses four times over.
+#
+# ── THE DENOMINATOR IS READ FROM THE DOCUMENT, NEVER SPELLED HERE ────────────────
+# `reference/data-architecture.md` § 4.5.1 fixes the estimate's denominator as *the
+# entries of every class whose § 1.1 Primary entities cell names `Venue` or `Leg`*, and
+# § 5.3's *computed, never enumerated* is why. A class list written into this script
+# would be the second home § 4.3 forbids, and it would go silently wrong the moment a
+# sibling release adds a priced class — which is a live condition rather than a
+# hypothetical one. ce_denominator reads that column, keyed on the SAME
+# $VA_CLASS_HEADING the validator holds, so HC already asserts the heading has one home.
+#
+# ── CLASS MEMBERSHIP COMES FROM va_select, NOT FROM A SECOND SELECTOR ────────────
+# Which class a given instance belongs to is `va_select`'s answer — the
+# longest-literal-pattern-wins rule that lets C18 ship as a genuine residual. This group
+# derives a basename -> class-id map from that one call and carries it onto the copied
+# fixtures, whose basenames are identical by construction. Re-deriving membership here
+# would be a second selector that can disagree with the shipping one, and a guard that
+# disagrees with the thing it guards reports on a corpus nobody has.
+CE_RAN=0
+CE_PROBE='CE-SYNTHETIC-PROBE'
+CE_PHANTOM='CE-PHANTOM-ARM'
+CE_ARMED=""
+CE_DIR="$WORK/ce"; mkdir -p "$CE_DIR"
+
+# ce_denominator <root> — the class-ids whose § 1.1 Primary-entities cell names Venue or
+# Leg, one per line. The 9-field split is the same guard va_class_rows documents: a row of
+# any other width yields an EMPTY entities cell rather than a cell read out of the wrong
+# column, so a changed table width surfaces as an empty denominator — which CE0 fails on —
+# instead of as a plausible set built from the wrong data.
+#
+# ── IT EMITS `C<n>`, NOT `<n>`, AND THAT IS THE JOIN KEY ─────────────────────────
+# § 1.1's first column is headed `C` and holds a bare numeral; the class-id every other
+# surface in this repository uses — the schemas' own `class-id:`, and therefore va_select's
+# first field — is that numeral behind a `C`. Emitting the bare numeral leaves the
+# membership test in ce_violations comparing `|5|` against `|C5|`, which matches NOTHING:
+# every file falls out of the denominator, the marker census reads zero, and a TRUTHFUL
+# estimate is reported as declaring a pair its corpus does not support. That is worse than
+# a red — it is a red pointing at the wrong file.
+#
+# The class SET stays derived: it is read from the § 1.1 column on every run and no member
+# is named here. What is spelled is the identifier GRAMMAR — the table's own column header,
+# already spelled the same way inside validate-artifacts.sh's S8 message. And it is no
+# longer spelled without a net: CE0's fourth limb asserts the join is non-empty, so a
+# grammar that ever moved turns this group RED rather than silently emptying it.
+ce_denominator() {
+  awk -v heading="$VA_CLASS_HEADING" '
+    function cell(s) {
+      gsub(/\*\*/, "", s); gsub(/`/, "", s)
+      sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s)
+      return s
+    }
+    index($0, heading) == 1 { inside = 1; next }
+    inside && (/^### / || /^## /) { inside = 0 }
+    inside && /^\|[[:space:]]*[0-9]+[[:space:]]*\|/ {
+      if (split($0, F, "|") != 9) next
+      n = cell(F[2]); ent = cell(F[8])
+      if (n !~ /^[0-9]+$/) next
+      if (ent ~ /Venue/ || ent ~ /Leg/) print "C" n
+    }
+  ' "$1/$VA_ARCH_DOC"
+}
+
+# ce_markers <file> — one record per `artifact-entry` fence in the file:
+#
+#   "<state>\t<raw cost value or the empty string>"
+#
+# state is READABLE (a cost line the grammar accepts as a value), UNDETERMINED (the exact
+# declared-absence token), NOLINE (no cost line at all — the field being optional, which
+# from the estimating slice is true only of markers written before it), or MALFORMED.
+#
+# The grammar is `reference/data-architecture.md` § 4.5.1's: a non-negative integer, an
+# ISO 4217 alpha-3 code, and `per-person` or `group-total`. It is spelled here because a
+# grammar is what this arm asserts; the CLASS SET is what must not be spelled, and is not.
+ce_markers() {
+  awk '
+    $0 ~ /^```artifact-entry[ \t]*$/ { infence = 1; cost = ""; seen = 0; next }
+    infence && $0 ~ /^```[ \t]*$/ {
+      infence = 0
+      if (!seen) { print "NOLINE\t"; next }
+      if (cost == "undetermined") { print "UNDETERMINED\t" cost; next }
+      if (cost ~ /^[0-9]+ [A-Z][A-Z][A-Z] (per-person|group-total)$/) { print "READABLE\t" cost; next }
+      print "MALFORMED\t" cost
+      next
+    }
+    infence && $0 ~ /^[ \t]*cost:/ {
+      seen = 1
+      c = $0; sub(/^[ \t]*cost:[ \t]*/, "", c); sub(/[ \t]+$/, "", c); cost = c
+    }
+  ' "$1"
+}
+
+# ce_fm <file> <key> — one frontmatter scalar, read from the leading block only.
+ce_fm() {
+  awk -v k="$2" '
+    NR == 1 && $0 != "---" { exit }
+    NR == 1 { infm = 1; next }
+    infm && $0 == "---" { exit }
+    infm && index($0, k ":") == 1 { v = substr($0, length(k) + 2); sub(/^[ \t]+/, "", v); sub(/[ \t]+$/, "", v); print v; exit }
+  ' "$1"
+}
+
+# ce_violations <treeroot> <trip-rel> <basename-to-class map> <denominator set> — one line
+# per violation, "<CODE>\t<detail>". The SAME evaluator drives the real arm and every
+# control arm below; that is what makes a mutated fixture a proof rather than a second
+# implementation agreeing with itself.
+ce_violations() {
+  local tree="$1" trip="$2" map="$3" den="$4"
+  local est="$tree/$trip/outputs/cost-estimate.md"
+  local f base cls m n mal state val
+  [ -r "$est" ] || { printf 'CE-NO-INSTANCE\tthe estimate is absent or unreadable at %s\n' "$trip"; return 0; }
+  m=0; n=0; mal=""
+  for f in "$tree/$trip"/outputs/*.md; do
+    [ -e "$f" ] || continue
+    base="${f##*/}"
+    cls="$(printf '%s\n' "$map" | awk -F'\t' -v b="$base" '$1 == b { print $2; exit }')"
+    [ -n "$cls" ] || continue
+    case "$den" in *"|$cls|"*) ;; *) continue ;; esac
+    while IFS=$'\t' read -r state val; do
+      [ -n "$state" ] || continue
+      case "$state" in
+        READABLE)  m=$((m + 1)); n=$((n + 1)) ;;
+        UNDETERMINED|NOLINE) m=$((m + 1)) ;;
+        MALFORMED) m=$((m + 1)); mal="$mal $base:${val:-<empty>}" ;;
+      esac
+    done <<EOF
+$(ce_markers "$f")
+EOF
+  done
+  local decM decN cov body hastotal hasundet haspair
+  decM="$(ce_fm "$est" cost-bearing-items)"
+  decN="$(ce_fm "$est" priced-items)"
+  cov="$(ce_fm "$est" coverage)"
+  [ "$decM" = "$m" ] || printf 'CE-M-MISMATCH\tcost-bearing-items declares %s against %s marker(s) observed over the denominator classes\n' "${decM:-<absent>}" "$m"
+  [ "$decN" = "$n" ] || printf 'CE-N-MISMATCH\tpriced-items declares %s against %s marker(s) carrying a readable cost line\n' "${decN:-<absent>}" "$n"
+  [ -z "$mal" ] || printf 'CE-GRAMMAR\tcost line(s) outside the § 4.5.1 grammar:%s\n' "$mal"
+  body="$(awk 'NR > 1 && $0 == "---" { on = 1; next } on' "$est")"
+  hastotal=0; grep -qE '(^|[^[:alnum:]])Total:[^0-9]*[0-9]' <<<"$body" && hastotal=1
+  hasundet=0; grep -qF 'undetermined' <<<"$body" && hasundet=1
+  haspair=0
+  if [ -n "$decN" ] && [ -n "$decM" ]; then
+    grep -qE "(^|[^0-9])$decN( of (the )?| against | priced against )($decM|.*cost-bearing-items:[[:space:]]*$decM)" <<<"$body" && haspair=1
+    grep -qE "priced-items:[[:space:]]*$decN" <<<"$body" && grep -qE "cost-bearing-items:[[:space:]]*$decM" <<<"$body" && haspair=1
+  fi
+  if [ "$cov" = "unverifiable" ] || [ "$decN" = "0" ]; then
+    [ "$hastotal" -eq 0 ] || printf 'CE-TOTAL-UNDER-ZERO\tthe body renders a numeric total while coverage=%s and priced-items=%s — a zero reading must render undetermined, never a total\n' "$cov" "$decN"
+    [ "$hasundet" -eq 1 ] || printf 'CE-NO-UNDETERMINED\tthe body renders no undetermined under coverage=%s priced-items=%s, so the condition is neither computed nor named\n' "$cov" "$decN"
+  else
+    [ "$haspair" -eq 1 ] || printf 'CE-NO-COVERAGE-STRING\tthe body carries a total but no coverage reading agreeing with priced-items=%s against cost-bearing-items=%s — a partial total that looks whole is worse than none\n' "$decN" "$decM"
+  fi
+}
+
+# ce_mustfire / ce_mustnotfire — the arm shapes ST already uses: the mutation is asserted
+# to have LANDED before the verdict is read, so an edit that silently did nothing cannot
+# be reported as a check that fired.
+ce_mustfire() {
+  local id="$1" tree="$2" trip="$3" map="$4" den="$5" want="$6" what="$7" landed="$8"
+  local v n
+  CE_ARMED="$CE_ARMED$want
+"
+  v="$(ce_violations "$tree" "$trip" "$map" "$den")"
+  n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  if [ "$landed" -eq 1 ] && grep -q "^$want$(printf '\t')" <<<"$v"; then
+    PASS "$id: MUST FIRE — $what, and the same evaluator reports $want ($n violation(s) in all). The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$id: MUST FIRE — $what, but the evaluator did not report $want (mutation-landed=$landed violations=$n). CE's clean reading has no control behind it for this surface"
+  fi
+}
+ce_mustnotfire() {
+  local id="$1" tree="$2" trip="$3" map="$4" den="$5" what="$6" landed="$7"
+  local v n
+  v="$(ce_violations "$tree" "$trip" "$map" "$den")"
+  n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  if [ "$n" -eq 0 ] && [ "$landed" -eq 1 ]; then
+    PASS "$id: MUST NOT FIRE — $what, and the evaluator reports 0 violations"
+  else
+    FAIL "$id: MUST NOT FIRE — $what, but the evaluator reports $n violation(s) (edit-landed=$landed):$(printf '%s\n' "$v" | awk -F'\t' 'NF > 1 { printf " %s", $1 }')"
+  fi
+}
+
+CE_DEN_IDS="$(ce_denominator "$ROOT")"
+CE_NDEN="$(printf '%s\n' "$CE_DEN_IDS" | grep -c '[^[:space:]]')"
+CE_DEN="|$(printf '%s' "$CE_DEN_IDS" | tr '\n' '|')|"
+CE_SEL="$(va_select "$ROOT" tracked)"
+CE_INSTANCES="$(printf '%s\n' "$CE_SEL" | awk -F'\t' '$1 == "C21" { print $3 }')"
+CE_NINST="$(printf '%s\n' "$CE_INSTANCES" | grep -c '[^[:space:]]')"
+
+# CE0 — the surfaces, before any verdict rests on them. FOUR zeros are each a broken
+# probe wearing a pass: an empty denominator (the § 1.1 column moved or the table width
+# changed), an empty selection (no C21 instance is tracked), an empty marker population
+# (the fence shape moved), and an empty JOIN between the first and the file-to-class map.
+# AR's own denominator is re-read here rather than assumed, for the same reason ST re-reads
+# AR3.
+#
+# ── THE FOURTH LIMB IS THE ONE THAT WAS MISSING, AND ITS ABSENCE COST A BUILD ────
+# The denominator is a set of class-ids; the file-to-class map is another. Key the two
+# differently — a bare `5` against a `C5` — and NEITHER is empty, so the three limbs above
+# all read green while their INTERSECTION is empty. Every file then falls out of the
+# denominator, the marker census reads zero, and ce_violations reports CE-M-MISMATCH and
+# CE-N-MISMATCH against an estimate that is telling the exact truth. That is the worst
+# shape a check can take: not a silent pass, but a confident red naming the wrong file, and
+# the corpus was edited toward the checker rather than the checker toward the corpus.
+# A zero here is therefore a defect in THIS SCRIPT and says so, instead of being laundered
+# into a verdict about the fixture.
+CE_NMARK_ALL=0
+while IFS= read -r ce_f; do
+  [ -n "$ce_f" ] || continue
+  CE_NMARK_ALL=$((CE_NMARK_ALL + $(ce_markers "$ROOT/$ce_f" | grep -c '[^[:space:]]')))
+done <<EOF
+$(printf '%s\n' "$CE_SEL" | awk -F'\t' '$1 ~ /^C[0-9]+$/ { print $3 }')
+EOF
+
+# The JOIN, measured rather than assumed: how many selected files resolve INTO a
+# denominator class, and how many markers they carry between them.
+CE_NJOIN=0; CE_NMARK_DEN=0
+while IFS=$'\t' read -r ce_jc ce_jp; do
+  [ -n "$ce_jc" ] && [ -n "$ce_jp" ] || continue
+  case "$CE_DEN" in *"|$ce_jc|"*) ;; *) continue ;; esac
+  CE_NJOIN=$((CE_NJOIN + 1))
+  CE_NMARK_DEN=$((CE_NMARK_DEN + $(ce_markers "$ROOT/$ce_jp" | grep -c '[^[:space:]]')))
+done <<EOF
+$(printf '%s\n' "$CE_SEL" | awk -F'\t' '$1 ~ /^C[0-9]+$/ { print $1 "\t" $3 }')
+EOF
+
+if [ "$CE_NDEN" -eq 0 ] || [ "$CE_NINST" -eq 0 ] || [ "$CE_NMARK_ALL" -eq 0 ] || [ "$CE_NJOIN" -eq 0 ] || [ "$CE_NMARK_DEN" -eq 0 ]; then
+  FAIL "CE0: a surface came back EMPTY — $CE_NDEN denominator class(es) read from § 1.1's Primary-entities column, $CE_NINST tracked C21 instance(s), $CE_NMARK_ALL \`artifact-entry\` marker(s) over the selected tree, $CE_NJOIN selected file(s) joining INTO the denominator carrying $CE_NMARK_DEN marker(s) between them. Any of those at zero makes every verdict below a statement over the empty set. The class-set read is the one most likely to have moved — the column is read by the 9-field split, so a table that gained a column empties it silently — and the JOIN is the one most likely to be wrong while every other limb reads green, because two non-empty sets keyed differently intersect in nothing and the marker census then reads zero against a corpus that plainly carries markers"
+else
+  CE_RAN=1
+  PASS "CE0: the surfaces are non-empty and DERIVED — $CE_NDEN class(es) whose § 1.1 Primary-entities cell names \`Venue\` or \`Leg\` [$(printf '%s' "$CE_DEN_IDS" | tr '\n' ' ')], $CE_NINST tracked C21 instance(s), $CE_NMARK_ALL marker(s) over the selected tree, and the JOIN between the denominator and the file-to-class map is non-empty: $CE_NJOIN selected file(s) resolve into it carrying $CE_NMARK_DEN marker(s). This script holds NO copy of that class set — § 4.5.1 states the rule and § 5.3 says why, so a class that later gains a priced entity enters this denominator with no edit here. The join limb is what stops the two derived sets from being keyed differently and reporting an empty intersection as a corpus defect"
+fi
+
+if [ "$CE_RAN" -eq 1 ]; then
+  CE_NMEASURED=0; CE_NPOPULATED=0; CE_NUNVERIF=0; CE_BAD=""
+  while IFS= read -r CE_EST; do
+    [ -n "$CE_EST" ] || continue
+    CE_TRIP="${CE_EST%/outputs/cost-estimate.md}"
+    CE_MAP="$(printf '%s\n' "$CE_SEL" | awk -F'\t' -v p="$CE_TRIP/outputs/" '
+      $1 ~ /^C[0-9]+$/ && index($3, p) == 1 { b = $3; sub(/^.*\//, "", b); print b "\t" $1 }')"
+    CE_V="$(ce_violations "$ROOT" "$CE_TRIP" "$CE_MAP" "$CE_DEN")"
+    CE_NV="$(printf '%s\n' "$CE_V" | grep -c '[^[:space:]]')"
+    CE_COV="$(ce_fm "$ROOT/$CE_EST" coverage)"
+    CE_DN="$(ce_fm "$ROOT/$CE_EST" priced-items)"
+    CE_DM="$(ce_fm "$ROOT/$CE_EST" cost-bearing-items)"
+    [ "$CE_COV" = "measured" ] && CE_NMEASURED=$((CE_NMEASURED + 1))
+    [ "$CE_COV" = "unverifiable" ] && CE_NUNVERIF=$((CE_NUNVERIF + 1))
+    [ "$CE_COV" = "measured" ] && [ "${CE_DN:-0}" -gt 0 ] && CE_NPOPULATED=$((CE_NPOPULATED + 1))
+    if [ "$CE_NV" -ne 0 ]; then
+      CE_BAD="$CE_BAD
+  $CE_EST:$(printf '%s\n' "$CE_V" | awk -F'\t' 'NF > 1 { printf " %s (%s)", $1, $2 }')"
+    fi
+    if [ "$CE_NV" -eq 0 ]; then
+      PASS "CE1/CE2/CE3/CE4[$CE_EST]: the declared pair AGREES with the population it counts — \`cost-bearing-items: $CE_DM\` against the markers observed over the denominator classes in this trip, \`priced-items: $CE_DN\` against those carrying a cost line the § 4.5.1 grammar accepts as a value, every cost line in the trip inside that grammar, and the body's rendering consistent with \`coverage: $CE_COV\`. The class set was read from the document and the file-to-class map from va_select, so neither is pinned here"
+    fi
+  done <<EOF
+$CE_INSTANCES
+EOF
+  if [ -n "$CE_BAD" ]; then
+    FAIL "CE1/CE2/CE3/CE4: $(printf '%s' "$CE_BAD" | grep -c '  ') tracked C21 instance(s) disagree with the corpus they describe:$CE_BAD"
+  fi
+
+  # CE5 — REPORTED, never asserted. Which limbs the tracked corpus actually instantiates is
+  # a property of the fixtures and not a rule, so a green here would claim more than it
+  # knows. This is the AR/CV posture: the split is printed, and it renders VACUOUS rather
+  # than PASS when no tracked instance carries a populated reading — because on such a tree
+  # CE4's positive branch is a statement over the empty set and says so.
+  if [ "$CE_NPOPULATED" -eq 0 ]; then
+    VACUOUS "CE5: no tracked C21 instance carries \`coverage: measured\` with \`priced-items\` above zero, so CE4's populated branch — a total together with its own coverage reading — graded NOTHING on this tree. The split over $CE_NINST instance(s): $CE_NMEASURED measured, $CE_NUNVERIF unverifiable, $CE_NPOPULATED populated. The control arms below still exercise that branch on a copied tree, which is what keeps this from being a silent green"
+  else
+    PASS "CE5: the coverage split over $CE_NINST tracked C21 instance(s) — $CE_NMEASURED \`measured\`, $CE_NUNVERIF \`unverifiable\`, $CE_NPOPULATED carrying a populated reading. Reported rather than asserted: which limb a fixture instantiates is a property of the corpus, not a rule, so this line is a measurement and never a verdict"
+  fi
+
+  # ── The control arms. One MUST-FIRE per code ce_violations can emit, each mutating
+  # exactly ONE surface of a COPIED trip, plus two edits that MUST NOT fire. Every fixture
+  # is built by copying the real tree at run time — never a literal here — so an arm cannot
+  # drift away from the corpus it is meant to model.
+  CE_SRC="$(printf '%s\n' "$CE_INSTANCES" | head -1)"
+  CE_STRIP="${CE_SRC%/outputs/cost-estimate.md}"
+  CE_SMAP="$(printf '%s\n' "$CE_SEL" | awk -F'\t' -v p="$CE_STRIP/outputs/" '
+    $1 ~ /^C[0-9]+$/ && index($3, p) == 1 { b = $3; sub(/^.*\//, "", b); print b "\t" $1 }')"
+
+  ce_fixture() {
+    local name="$1" d="$CE_DIR/$1"
+    rm -rf "$d"; mkdir -p "$d/$CE_STRIP"
+    cp -R "$ROOT/$CE_STRIP/outputs" "$d/$CE_STRIP/outputs"
+    printf '%s\n' "$d"
+  }
+  # ce_sub <file> <ere> <replacement> [guard-ere] — ONE substitution, on the FIRST record
+  # matching the guard. The guard defaults to the substitution pattern, which is what every
+  # caller but the grammar arm wants.
+  #
+  # ── WHY A SEPARATE GUARD EXISTS AT ALL ─────────────────────────────────────────
+  # awk's sub() has NO capture-group backreference: `\1` in a replacement is a literal, not
+  # the first group. So a mutation that means *change this token and keep the rest* cannot
+  # be written as one match-and-rebuild — `cost: ([0-9]+) [A-Z][A-Z][A-Z] ` replaced by
+  # `cost: \1 Euros ` yields the LITERAL `cost: \1 Euros per-person`, destroying the amount
+  # alongside the currency. That still trips the grammar arm, which is why it went unnoticed;
+  # it is wrong anyway, because the arm then grades a two-surface mutation while claiming a
+  # one-surface one, and a control arm that misstates its own mutation cannot be read as
+  # evidence for the surface it names. Splitting guard from substitution lets the guard
+  # select the whole `cost:` line and the substitution touch only the currency token.
+  ce_sub() {
+    local f="$1" a="$2" b="$3" g="${4:-$2}" before after
+    before="$(cat "$f")"
+    awk -v a="$a" -v b="$b" -v g="$g" '!done && $0 ~ g { sub(a, b); done = 1 } { print }' "$f" > "$f.new" && mv "$f.new" "$f"
+    after="$(cat "$f")"
+    [ "$before" != "$after" ] && return 0 || return 1
+  }
+
+  # A1 — the declared M moved off the marker count. This is the arm that makes CE1 a
+  # measurement: without it, an estimate could declare any integer and pass as an A-check.
+  CE_FX="$(ce_fixture m)"; CE_L=0
+  ce_sub "$CE_FX/$CE_SRC" '^cost-bearing-items: [0-9]+$' 'cost-bearing-items: 4000' && CE_L=1
+  ce_mustfire "CTL-CE-M" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-M-MISMATCH "the declared \`cost-bearing-items\` is moved off the observed marker count while every marker stays where it was" "$CE_L"
+
+  # A2 — a cost line dropped from a marker. The declared N is untouched, so the mismatch is
+  # the corpus moving beneath a number nobody updated — the direction this defect takes in
+  # practice, since an edit to a research list is far commoner than an edit to the estimate.
+  CE_FX="$(ce_fixture n)"; CE_L=0
+  for ce_f in "$CE_FX/$CE_STRIP"/outputs/*.md; do
+    [ -e "$ce_f" ] || continue
+    ce_sub "$ce_f" '^cost: [0-9]+ [A-Z][A-Z][A-Z] (per-person|group-total)$' 'cost: undetermined' && { CE_L=1; break; }
+  done
+  ce_mustfire "CTL-CE-N" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-N-MISMATCH "one readable \`cost:\` line is demoted to \`undetermined\`, leaving \`priced-items\` asserting a count the entries no longer support" "$CE_L"
+
+  # A3 — a currency code broken. The grammar arm, and it is deliberately a SHAPE mutation
+  # rather than a value one: a wrong amount is a corpus question no script can adjudicate,
+  # while a code outside ISO 4217's alpha-3 shape is a grammar question and is exactly what
+  # § 4.5.1 fixes.
+  CE_FX="$(ce_fixture g)"; CE_L=0
+  for ce_f in "$CE_FX/$CE_STRIP"/outputs/*.md; do
+    [ -e "$ce_f" ] || continue
+    ce_sub "$ce_f" ' [A-Z][A-Z][A-Z] ' ' Euros ' '^cost: [0-9]+ [A-Z][A-Z][A-Z] (per-person|group-total)$' && { CE_L=1; break; }
+  done
+  ce_mustfire "CTL-CE-G" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-GRAMMAR "one \`cost:\` line's currency is written as a word rather than an ISO 4217 alpha-3 code" "$CE_L"
+
+  # A4 — a total rendered under a zero reading. THE arm this class exists for: § 5.4's
+  # parsed-and-empty versus could-not-be-computed distinction, one layer up. The fixture is
+  # driven to the zero reading by moving `priced-items` to 0, which is also what makes the
+  # arm honest about which branch it is grading.
+  CE_FX="$(ce_fixture t)"; CE_L=0
+  ce_sub "$CE_FX/$CE_SRC" '^priced-items: [0-9]+$' 'priced-items: 0' && CE_L=1
+  ce_mustfire "CTL-CE-T" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-TOTAL-UNDER-ZERO "the declared \`priced-items\` is driven to zero while the body keeps rendering a numeric total — the shape that reports \*this trip costs nothing\* where the truth is \*nothing was readable\*" "$CE_L"
+
+  # A5 — the coverage reading stripped from a populated body. A partial total that looks
+  # whole is worse than none, and this is the only arm that grades that sentence.
+  CE_FX="$(ce_fixture c)"; CE_L=0
+  ce_sub "$CE_FX/$CE_SRC" 'priced-items: [0-9]+\` against \`cost-bearing-items: [0-9]+' 'the coverage reading has been removed from this sentence' && CE_L=1
+  ce_mustfire "CTL-CE-C" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-NO-COVERAGE-STRING "the body's restatement of the pair is removed while the total stays, so the estimate presents a partial reading as a whole one" "$CE_L"
+
+  # A6 — the instance itself removed. Without it a relocated or deleted estimate would take
+  # every arm above out of the population and this group would report nothing at all.
+  CE_FX="$(ce_fixture x)"; CE_L=0
+  rm -f "$CE_FX/$CE_SRC" && CE_L=1
+  ce_mustfire "CTL-CE-X" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-NO-INSTANCE "the estimate is removed from the copied trip, which is what a relocation looks like from here" "$CE_L"
+
+  # A7 — the declared-absence limb, which has no arm of its own above because no mutation
+  # produces it from a populated fixture: an estimate whose body never says `undetermined`
+  # under a zero reading. Built by driving the reading to zero AND stripping the token.
+  CE_FX="$(ce_fixture u)"; CE_L=0
+  ce_sub "$CE_FX/$CE_SRC" '^priced-items: [0-9]+$' 'priced-items: 0' && CE_L=1
+  awk '{ gsub(/undetermined/, "not applicable"); print }' "$CE_FX/$CE_SRC" > "$CE_FX/$CE_SRC.new" && mv "$CE_FX/$CE_SRC.new" "$CE_FX/$CE_SRC"
+  awk '!done && /Total:/ { next } { print }' "$CE_FX/$CE_SRC" > "$CE_FX/$CE_SRC.new" && mv "$CE_FX/$CE_SRC.new" "$CE_FX/$CE_SRC"
+  ce_mustfire "CTL-CE-U" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-NO-UNDETERMINED "the reading is driven to zero, the total is removed and so is every \`undetermined\` — a zero reading that names no condition at all" "$CE_L"
+
+  # The two MUST-NOT-FIRE arms. Without them every arm above is satisfied by an evaluator
+  # that simply always fires.
+  CE_FX="$(ce_fixture clean)"
+  ce_mustnotfire "CTL-CE-CLEAN" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" "an UNMUTATED copy of the real trip is put through the same evaluator — the baseline that makes every must-fire arm above mean something" 1
+
+  CE_FX="$(ce_fixture neutral)"; CE_L=0
+  ce_sub "$CE_FX/$CE_SRC" '^# Cost Estimate$' '# Cost Estimate — reworded heading' && CE_L=1
+  ce_mustnotfire "CTL-CE-NEUTRAL" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" "the body's H1 is reworded — the file changes, and no surface this group reads does" "$CE_L"
+
+  # ── CE-COV — the arm inventory, read from ce_violations' own body and compared in BOTH
+  # directions, on the ST precedent. Containment alone cannot tell a covered set from a
+  # reader that returned nothing, so the reverse difference is what makes the zero a
+  # measurement. A code added with no arm behind it is RED here rather than latent.
+  CE_CODES="$(st_codes "$(declare -f ce_violations)")"
+  CE_NCODES="$(printf '%s\n' "$CE_CODES" | grep -c '[^[:space:]]')"
+  CE_UNARMED="$(st_setdiff "$CE_CODES" "$CE_ARMED")"
+  CE_PHANTOMS="$(st_setdiff "$CE_ARMED" "$CE_CODES")"
+  CE_NUNARMED="$(printf '%s\n' "$CE_UNARMED" | grep -c '[^[:space:]]')"
+  CE_NPHANTOM="$(printf '%s\n' "$CE_PHANTOMS" | grep -c '[^[:space:]]')"
+  CE_NARMED="$(printf '%s\n' "$CE_ARMED" | awk 'NF && !seen[$0]++' | grep -c '.')"
+  if [ "$CE_NCODES" -eq 0 ]; then
+    FAIL "CE-COV: the code reader returned 0 codes from ce_violations' own body, so the coverage verdict would be a statement over the empty set — either the function is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
+  elif [ "$CE_NUNARMED" -ne 0 ]; then
+    FAIL "CE-COV: $CE_NUNARMED of the $CE_NCODES code(s) ce_violations can emit have NO must-fire arm in this run — $(printf '%s' "$CE_UNARMED" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
+  elif [ "$CE_NPHANTOM" -ne 0 ]; then
+    FAIL "CE-COV: $CE_NPHANTOM must-fire arm(s) name a code ce_violations cannot emit — $(printf '%s' "$CE_PHANTOMS" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
+  else
+    PASS "CE-COV: all $CE_NCODES code(s) ce_violations can emit [$(printf '%s' "$CE_CODES" | tr '\n' ' ')] have a must-fire arm, and all $CE_NARMED armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the function's own body on this run, so a code added later arrives uncovered and RED rather than covered by a numeral in this file"
+  fi
+
+  # CTL-CE-COV1 / COV2 — the same proof-by-mutation ST carries, on this group's own reader.
+  # Both mutate a COPY of a string in this shell, never this file and never the tree, and
+  # both are graded as a DELTA rather than against a literal.
+  if [ "$CE_NCODES" -gt 0 ]; then
+    CE_COV_FN="$(declare -f ce_violations)"
+    CE_COV_MUT="$CE_COV_FN
+      printf \"${CE_PROBE}\\ta synthetic emission that no arm covers\\n\""
+    CE_COV_LANDED=0; [ "$CE_COV_MUT" != "$CE_COV_FN" ] && CE_COV_LANDED=1
+    CE_COV_MU="$(st_setdiff "$(st_codes "$CE_COV_MUT")" "$CE_ARMED")"
+    CE_COV_MN="$(printf '%s\n' "$CE_COV_MU" | grep -c '[^[:space:]]')"
+    CE_COV_HIT="$(printf '%s\n' "$CE_COV_MU" | grep -c "^${CE_PROBE}$")"
+    if [ "$CE_COV_LANDED" -eq 1 ] && [ "$CE_COV_MN" -eq $((CE_NUNARMED + 1)) ] && [ "$CE_COV_HIT" -eq 1 ]; then
+      PASS "CTL-CE-COV1: MUST FIRE — one unarmed code appended to a COPY of ce_violations' body takes the uncovered set from $CE_NUNARMED to $CE_COV_MN and the new member IS that code. A code added to the real function with no arm behind it turns CE-COV red, which is the property this group could otherwise only state"
+    else
+      FAIL "CTL-CE-COV1: MUST FIRE — an unarmed code appended to a copy of the function body was not reported (mutation-landed=$CE_COV_LANDED, uncovered=$CE_COV_MN against $((CE_NUNARMED + 1)) expected, probe-found=$CE_COV_HIT). CE-COV's zero does not respond to a known hole and therefore proves nothing"
+    fi
+    CE_COV_MA="$CE_ARMED
+$CE_PHANTOM"
+    CE_COV_ALANDED=0; [ "$CE_COV_MA" != "$CE_ARMED" ] && CE_COV_ALANDED=1
+    CE_COV_MP="$(st_setdiff "$CE_COV_MA" "$CE_CODES")"
+    CE_COV_PN="$(printf '%s\n' "$CE_COV_MP" | grep -c '[^[:space:]]')"
+    CE_COV_PH="$(printf '%s\n' "$CE_COV_MP" | grep -c "^${CE_PHANTOM}$")"
+    if [ "$CE_COV_ALANDED" -eq 1 ] && [ "$CE_COV_PN" -eq $((CE_NPHANTOM + 1)) ] && [ "$CE_COV_PH" -eq 1 ]; then
+      PASS "CTL-CE-COV2: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $CE_NPHANTOM to $CE_COV_PN and the new member IS that code. So CE-COV's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
+    else
+      FAIL "CTL-CE-COV2: MUST FIRE — a phantom arm was not reported (mutation-landed=$CE_COV_ALANDED, phantom=$CE_COV_PN against $((CE_NPHANTOM + 1)) expected, probe-found=$CE_COV_PH). CE-COV cannot distinguish a covered group from a reader that returned nothing"
+    fi
+  fi
+fi
+
+if [ "$CE_RAN" -ne 1 ]; then
+  FAIL "CE-integrity: group CE did not execute — a run without it is a failure, never a pass"
 fi
 
 echo
