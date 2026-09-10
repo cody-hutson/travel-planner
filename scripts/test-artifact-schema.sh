@@ -5948,6 +5948,180 @@ if [ "$DH_RAN" -ne 1 ]; then
   FAIL "DH-integrity: group DH did not execute — a run without it is a failure, never a pass"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# GM — reusable groups: the membership boundary, mechanised
+#
+# WHAT THIS GROUP IS FOR. reference/schemas/group-record.md makes two claims about the
+# C23 form and, until this group, NEITHER was executed by anything: "that one anchored
+# regex is the whole of this class's membership enforcement", and "the group form emits
+# zero PERSON-class labels". The second is the exact twin of the sentence group DH was
+# written for on the durable PERSON form — and the twin was left as prose while DH shipped.
+#
+# UNASSERTED IS NOT THE SAME AS TRUE, AND THE DIFFERENCE WAS MEASURED. The tracked witness
+# was mutated to carry a member's name and role on a bullet, an allergy in a `## Notes`
+# section, and a `description:` frontmatter key. Every suite in this repository produced
+# BYTE-IDENTICAL output to the clean run, while a control mutation on the same file — a
+# falsified `artifact:` value — fired finding A5. So the silence was a measurement of a
+# missing rule rather than a clean corpus, and the three arms below are the three places
+# that mutation landed: the frontmatter (GM1), the entries and the section holding them
+# (GM2), and the section set (GM3).
+#
+# ── EVERY POPULATION IS DERIVED, AND GM0 IS WHY THE ZEROES MEAN ANYTHING ────────
+# The universal key set comes from the architecture document through uf_univ_keys, the
+# class's declared fields and ITS OWN WITNESS PATH through the validator's schema reader,
+# and the witness's frontmatter keys through the validator's own frontmatter parser — no
+# set and no path is written down here. Two of the arms are ZEROES, so GM0 requires every
+# input population to be non-empty first, GM1 carries a LIVE sensitivity arm (the identical
+# difference over C22, which must come back with exactly the merge pointer), and GM2 carries
+# a SYNTHETIC one (the identical matcher over a line set that carries known-bad lines, which
+# must come back non-zero). A green zero whose control also returned zero is a broken probe.
+#
+# ── WHAT IS HELD RATHER THAN DERIVED, AND WHY ──────────────────────────────────
+# The member-entry FORM is held here, exactly as DH1 holds `merged-into`: the schema states
+# it as a sentence in prose, and an extractor that recovered a regex from prose would be a
+# parser project whose failure mode is a permissive pattern that matches everything. The
+# four hex digits are spelled out rather than written as an interval `{4}`, because interval
+# expressions are not universally supported in awk and a rejected pattern yields a plausible
+# zero — the failure this whole group exists to make impossible.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT GRADE ────────────────────────────────
+# It grades the FORM, never the behaviour: whether a verb writes a conforming record is
+# executable against a fixture and belongs in one, not in a structural arm. And its reach
+# is the TRACKED WITNESS, because `.gitignore` carries `/groups/*` rooted, so the witness
+# under examples/ is the only instance of this class any gate can ever see. That is a bound
+# on the population, stated here rather than left to be read as tree-wide coverage.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "GM — reusable groups: the membership boundary, mechanised"
+
+GM_RAN=0
+GM_SCHEMA_REL="reference/schemas/group-record.md"
+GM_SIB_REL="reference/schemas/person-record.md"
+GM_SECTION="Members"
+
+# gm_nonblank <text> — the non-blank lines of a block. Used for every denominator below,
+# so a count and the lines it counts can never come from two different readings.
+gm_nonblank() { printf '%s\n' "$1" | awk 'NF { print }'; }
+
+# gm_nonconforming <text> — the lines of a member block that are NOT a bare member entry.
+# The heading line is dropped here rather than by the caller, because the section extractor
+# emits it and a caller that forgot would report the heading as a violation.
+gm_nonconforming() {
+  printf '%s\n' "$1" | awk '
+    NF == 0                                          { next }
+    index($0, "## ") == 1                            { next }
+    $0 ~ /^- psn-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/  { next }
+                                                     { print }'
+}
+
+GM_OK=1
+GM_MISSING=""
+for gm_f in "$ROOT/$GM_SCHEMA_REL" "$ROOT/$GM_SIB_REL" "$EN_DOC"; do
+  [ -r "$gm_f" ] || { GM_OK=0; GM_MISSING="$GM_MISSING ${gm_f#"$ROOT/"}"; }
+done
+
+GM_WITNESS_REL=""
+if [ "$GM_OK" -eq 1 ]; then
+  GM_UKEYS="$(uf_univ_keys)"
+  GM_NUKEYS="$(printf '%s\n' "$GM_UKEYS" | grep -c '[^[:space:]]' || true)"
+  GM_SL="$(va_schema_lines "$ROOT" "$GM_SCHEMA_REL" 2>/dev/null | grep -v '^FINDING ')"
+  GM_DECL="$(va_schema_all "$GM_SL" field | awk '{ print $1 }' | sort -u)"
+  GM_NDECL="$(printf '%s\n' "$GM_DECL" | grep -c '[^[:space:]]' || true)"
+  GM_WITNESS_REL="$(va_schema_all "$GM_SL" witness | awk 'NR == 1 { print }')"
+  [ -n "$GM_WITNESS_REL" ] && [ -r "$ROOT/$GM_WITNESS_REL" ] || GM_OK=0
+fi
+
+if [ "$GM_OK" -eq 1 ]; then
+  GM_FMKEYS="$(va_fm_pairs "$ROOT" "$GM_WITNESS_REL" 2>/dev/null | grep -v '^FINDING ' | cut -f1 | sort -u)"
+  GM_NFM="$(printf '%s\n' "$GM_FMKEYS" | grep -c '[^[:space:]]' || true)"
+  GM_SECT="$(er_section "$ROOT/$GM_WITNESS_REL" "$GM_SECTION")"
+  GM_ENTRIES="$(gm_nonblank "$GM_SECT")"
+  GM_NSECT="$(printf '%s\n' "$GM_ENTRIES" | grep -c '[^[:space:]]' || true)"
+  GM_HEADS="$(awk 'index($0, "## ") == 1 { print }' "$ROOT/$GM_WITNESS_REL")"
+  GM_NHEADS="$(printf '%s\n' "$GM_HEADS" | grep -c '[^[:space:]]' || true)"
+
+  if [ "$GM_NUKEYS" -gt 0 ] && [ "$GM_NDECL" -gt 0 ] && [ "$GM_NFM" -gt 0 ] \
+     && [ "$GM_NSECT" -gt 0 ] && [ "$GM_NHEADS" -gt 0 ]; then
+    PASS "GM0: every population below is DERIVED — including the witness PATH, read from \`$GM_SCHEMA_REL\`'s own fence rather than written here — and every one came back non-empty: $GM_NUKEYS universal key(s) from the architecture document's § 4.4 block, $GM_NDECL declared field(s) through the validator's schema reader, $GM_NFM frontmatter key(s) and $GM_NHEADS body section heading(s) on the witness \`$GM_WITNESS_REL\`, and $GM_NSECT non-blank line(s) in its \`## $GM_SECTION\` section. This gate exists because two arms below are ZEROES: over an empty extraction a zero is indistinguishable from a clean form, and a run that parsed one of these into nothing would report the corpus clean"
+    GM_RAN=1
+  else
+    FAIL "GM0: a required population is EMPTY — universal keys $GM_NUKEYS, declared fields $GM_NDECL, witness frontmatter keys $GM_NFM, witness body sections $GM_NHEADS, member-section lines $GM_NSECT. Not a skip and not a pass: every arm below would be a statement over the empty set. The likeliest causes are a renamed \`## $GM_SECTION\` heading and a witness that no longer parses"
+    GM_OK=0
+  fi
+else
+  if [ -n "$GM_MISSING" ]; then
+    FAIL "GM0: required surface(s) unreadable:$GM_MISSING — not a skip and not a pass"
+  else
+    FAIL "GM0: \`$GM_SCHEMA_REL\` declares no reachable \`witness:\` — every arm below grades one file, named by that line, and there is nothing to grade. A class whose witness has moved is a fail-closed coverage regression, which is finding S6's own posture applied at this group's entry"
+  fi
+fi
+
+if [ "$GM_OK" -eq 1 ]; then
+  # ── GM1 — THE FRONTMATTER HALF, at both of its ends. The class declares ZERO fields
+  # beyond the universal block, and the witness carries no key the class does not declare.
+  # Both ends are needed and neither implies the other: the fence constrains what MAY be
+  # declared, the file constrains what IS written, and the mutation that motivated this
+  # group added a `description:` key to the FILE while the fence stayed correct.
+  GM_CLASSFIELDS="$(comm -23 <(printf '%s\n' "$GM_DECL") <(printf '%s\n' "$GM_UKEYS" | sort -u))"
+  GM_NCLASS="$(printf '%s\n' "$GM_CLASSFIELDS" | grep -c '[^[:space:]]' || true)"
+  GM_UNDECL="$(comm -23 <(printf '%s\n' "$GM_FMKEYS") <(printf '%s\n' "$GM_DECL"))"
+  GM_NUNDECL="$(printf '%s\n' "$GM_UNDECL" | grep -c '[^[:space:]]' || true)"
+  # The SENSITIVITY arm is LIVE and is the identical difference over the sibling class,
+  # which declares exactly one field beyond the universal block. A run where this returned
+  # zero would mean the difference is computing nothing on either class.
+  GM_SIBSL="$(va_schema_lines "$ROOT" "$GM_SIB_REL" 2>/dev/null | grep -v '^FINDING ')"
+  GM_SIBDECL="$(va_schema_all "$GM_SIBSL" field | awk '{ print $1 }' | sort -u)"
+  GM_SIBEXTRA="$(comm -23 <(printf '%s\n' "$GM_SIBDECL") <(printf '%s\n' "$GM_UKEYS" | sort -u))"
+  GM_NSIB="$(printf '%s\n' "$GM_SIBEXTRA" | grep -c '[^[:space:]]' || true)"
+  if [ "$GM_NSIB" -eq 0 ]; then
+    FAIL "GM1: MUST FIRE — the SENSITIVITY arm returned zero. The identical difference over \`$GM_SIB_REL\` found no field beyond the universal block, which cannot be true of a class that declares a merge pointer. The subject zero is therefore an empty computation rather than a class with no fields, and this group reports the probe UNUSABLE rather than the corpus clean"
+  elif [ "$GM_NCLASS" -eq 0 ] && [ "$GM_NUNDECL" -eq 0 ]; then
+    PASS "GM1: the group class declares ZERO fields beyond the $GM_NUKEYS universal key(s), and its witness carries no frontmatter key the class does not declare — $GM_NFM key(s) checked, 0 undeclared. Both are DIFFERENCES against a derived universal set rather than against a list held here. The zero is a measurement: the SENSITIVITY arm, the identical difference over \`$GM_SIB_REL\`, returned $GM_NSIB on the same run. This is where a description slot, a note field, or any other durable home for a person-scoped fact would land"
+  elif [ "$GM_NCLASS" -ne 0 ]; then
+    FAIL "GM1: the group class declares $GM_NCLASS field(s) beyond the universal block: $(printf '%s' "$GM_CLASSFIELDS" | tr '\n' ' ')— expected none. \`$GM_SCHEMA_REL\` states that the membership list is body-scoped and that the class carries no class field at all; a frontmatter field here is a durable, cross-trip slot on a record whose whole claim is that it holds a set of references and nothing else. The sensitivity arm returned $GM_NSIB on the same run, so this is a real finding rather than a broken probe"
+  else
+    FAIL "GM1: the witness \`$GM_WITNESS_REL\` carries $GM_NUNDECL frontmatter key(s) the class does not declare: $(printf '%s' "$GM_UNDECL" | tr '\n' ' ')— an undeclared key type-checks nowhere, so it is a free-text slot that reached the record without passing a schema. This is the exact shape of the mutation this group was written for: a person-scoped fact given a home in the header while the fence stayed correct. The sensitivity arm returned $GM_NSIB on the same run"
+  fi
+
+  # ── GM2 — THE SECTION HALF, WITH ITS CONTROL. Every non-blank line of `## Members` is a
+  # bare member entry. This is the anchored regex the schema calls "the whole of this
+  # class's membership enforcement", executed — and it is graded over the SECTION rather
+  # than over the bullets, deliberately. A bullets-only reading passes a bare prose line:
+  # it is not a member entry, so the regex never sees it, and it is not a heading, so the
+  # closed-at-one rule never sees it. That line was an admitted home for a person-scoped
+  # fact on a class that claims to have none, and reach row 30 — which removes BULLETS —
+  # could not reach it either.
+  GM_BAD="$(gm_nonconforming "$GM_SECT")"
+  GM_NBAD="$(printf '%s\n' "$GM_BAD" | grep -c '[^[:space:]]' || true)"
+  GM_CTLIN="- psn-3c7e (Noor) — organiser, tree-nut allergy
+Ada has the allergy.
+- psn-9d42"
+  GM_CTLOUT="$(gm_nonconforming "$GM_CTLIN")"
+  GM_NCTL="$(printf '%s\n' "$GM_CTLOUT" | grep -c '[^[:space:]]' || true)"
+  if [ "$GM_NCTL" -ne 2 ]; then
+    FAIL "GM2: MUST FIRE — the SENSITIVITY arm returned $GM_NCTL, expected 2. The identical matcher was run over a three-line control carrying one annotated bullet, one bare prose line and one conforming entry; a matcher that does not separate those three cannot report anything about the real section, so this group reports the probe UNUSABLE rather than the corpus clean"
+  elif [ "$GM_NBAD" -eq 0 ]; then
+    PASS "GM2: every one of the $GM_NSECT non-blank line(s) in the witness's \`## $GM_SECTION\` section is a bare member entry — an id on a bullet, no trailing text, no name, no role, no note, and no prose line between them. Graded over the SECTION and not merely over the bullets, so a non-bullet line is a violation rather than something both rules pass between them. The zero is a measurement: the SENSITIVITY arm returned $GM_NCTL of 3 control lines on the same run"
+  else
+    FAIL "GM2: $GM_NBAD line(s) in the witness's \`## $GM_SECTION\` section are not bare member entries: $(printf '%s' "$GM_BAD" | tr '\n' ' | ')— the section admits member bullets and blank lines and nothing else. A trailing name or role beside an id is a second home for that person record's H1 and goes stale on a rename; a prose line is a free-text slot on a class whose whole claim is that it has none, and erasure's remove-the-bullet disposition has no meaning for one. The sensitivity arm returned $GM_NCTL on the same run, so this is a real finding rather than a broken probe"
+  fi
+
+  # ── GM3 — THE SECTION SET, CLOSED AT ONE. The body carries exactly one `##` heading and
+  # it is the member section. This is the arm a `## Notes` section lands on — the cheapest
+  # place to put a person-scoped fact on this form, and the one GM2 cannot see, because a
+  # second section's lines are outside the section GM2 extracts.
+  GM_HEADTXT="$(printf '%s\n' "$GM_HEADS" | awk 'NR == 1 { print }')"
+  if [ "$GM_NHEADS" -eq 1 ] && [ "$GM_HEADTXT" = "## $GM_SECTION" ]; then
+    PASS "GM3: the witness body carries exactly ONE \`##\` section and it is \`## $GM_SECTION\` — the set is closed at one, so there is no free-text section, no description slot and no second heading for a person-scoped fact to be filed under. This is a POSITIVE assertion over $GM_NHEADS extracted heading(s), not a zero, so it cannot pass over an empty read"
+  else
+    FAIL "GM3: the witness body carries $GM_NHEADS \`##\` section(s), first \"$GM_HEADTXT\" — expected exactly one, \`## $GM_SECTION\`. \`$GM_SCHEMA_REL\` closes the section set at one because a second section is a free-text home on a class declared to hold a set of references and nothing else, and because every location erasure reaches on this class is inside the member section. A section added here is reachable by nothing and is graded by nothing else"
+  fi
+fi
+
+if [ "$GM_RAN" -ne 1 ]; then
+  FAIL "GM-integrity: group GM did not execute — a run without it is a failure, never a pass"
+fi
+
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
   "$pass" "$fail" "$skip" "$vacuous"

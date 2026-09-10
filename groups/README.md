@@ -24,6 +24,11 @@ description. A member entry is one id on one bullet:
 - psn-9d42
 ```
 
+**Under `## Members` there are bullets and blank lines and nothing else** — not a sentence, not a
+note, not a heading. That is the whole shape, and it is what makes the promise below structural
+rather than a habit: a line that is not a bullet is not a member entry, so a fact written on one
+would sit in a record that has no place to hold it and that erasure removes bullets from.
+
 Names are looked up from each person's own record when a group is shown to you, so a person who is
 renamed reads correctly here the moment their record changes — there is nothing to keep in step.
 
