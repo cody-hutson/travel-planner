@@ -638,7 +638,7 @@ when one ships, reaches only the entries that carry both.
 
 **Which classes admit the field, and it is decided by form and not by a roster.** Every class in the
 **fenced** row of the table above — C5, C6, C7, C8, C9, C18 — admits it. The alternative was to admit
-it only in the four classes whose prompts declare a money label today (C5's does not; C6's, C7's and
+it only in the classes whose prompts declared a money label at the time (C5's did not; C6's, C7's and
 C9's do), and that was rejected: § 4.5 assigns a marker form **per class shape**, and a cost carve-out
 keyed on which classes happen to be priced would be the first per-class exception in a rule whose
 whole construction is form-scoped. It would also need a maintained roster of the priced set — a
@@ -648,10 +648,18 @@ named class claims a schema to resolve against, so a residual admitting *less* t
 stands in for would put a targeted re-run of the food agent — writing exactly the shape C6 writes —
 out of grammar at the one moment the residual exists to catch it.
 
-**Admission is not obligation, and no prompt gains a cost line in this change.** `agents/03-scheduling.md`
-and the targeted-research spokes are untouched; a Day has no purchase, so C8's field is admitted and
-unexercised. That is the intended state: the grammar is uniform, and what a writer emits is the
-writer's own declaration.
+**Admission is not obligation, and no prompt gained a cost line in the change that added this
+section.** That sentence used to read in the present tense and is re-stated as history rather than
+softened: the estimating slice that followed gave the emit rule to `agents/01-activities.md`,
+`agents/02-food.md`, `agents/04-transport.md` and `agents/07-nightlife.md`, decided in
+`reference/adr/ADR-018-cost-estimation-method.md`.
+
+**`agents/03-scheduling.md` still does not emit one, and that is the same decision holding rather
+than an omission.** A Day has no purchase, so C8's field stays admitted and unexercised, and that
+prompt records the non-use as decided rather than deferred. The targeted-research spokes inherit
+whichever emitter produced them. **That is the intended state: the grammar is uniform, and what a
+writer emits is the writer's own declaration** — which is exactly why one class admitting the field
+and writing nothing is not a gap.
 
 **The estimate's denominator is computed, never enumerated.** C21 ranges over the entries of every
 class whose § 1.1 **Primary entities** cell names `Venue` or `Leg` — which resolves today to C5, C6,
@@ -1028,9 +1036,11 @@ argument reaching one entity further out. Guarantee 1 discharges the requirement
 permanently valid, so neither file ever needs upgrading. **C21 lands in the first row and adds nothing to
 the residue, and its position is C18's rather than C1's.** It is `rebuilt-each-synthesis`, so on the
 first pass that writes one the instance is born at the current version and no older one is preserved
-to migrate. **No surface writes one today** — the class is declared and unproduced, exactly as C18 is
-— but the fourth row is for a class whose instances exist and have no emitter, and C21 has no
-instances at all outside its own witness. Its gap is a producer, not an upgrade. **The upgrade is not
+to migrate. **The class was declared and unproduced when this row was written**, exactly as C18 is;
+`agents/05-hub-planner.md` gained its producer in the estimating slice, and the row's reasoning is
+unchanged by that — the fourth row is for a class whose instances exist and have no emitter, and C21
+has no instances at all outside its own witness. Its gap was a producer, not an upgrade, and the
+producer is what closed it. **The upgrade is not
 free of the operator across
 all twenty-two:** for C18 a hand edit is today the only path to a versioned instance, and for C1 and C2
 it is the only path for an instance that predates the surface that now emits each one's block at
