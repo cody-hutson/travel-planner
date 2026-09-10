@@ -87,8 +87,13 @@ the migration, and § 10 pins it — so an estimate over *that* trip would read
 
 **The total is a range and not a figure**, because § 4.5.1 fixes the marker's `amount`
 as a **low bound**: the floor is summed from the markers, and the ceiling is read from
-each priced entry's own prose money line. Only `ven-93d7` Serralves carries a range on
-this trip, so the whole €30 of spread above the floor comes from that one entry.
+each priced entry's own prose money line. Two entries carry a range on this trip, and the
+€30 of spread above the floor is split between them rather than owed to either:
+`ven-93d7` Serralves runs €20–24 and supplies €12 of it, and `ven-8a34` Base Porto runs
+€12–18 and supplies the larger €18. Every other priced entry carries a point value, so it
+contributes to the floor and nothing above it. The split is checkable without leaving this
+file: the category table below runs Activities / admission €84 → €96 and Nightlife
+€36 → €54, and an €18 spread cannot originate in an Activities entry.
 
 | Traveler | Committed | On-the-ground | Estimate | Coverage | Basis |
 |----------|-----------|---------------|----------|----------|-------|

@@ -5934,6 +5934,74 @@ ce_fm() {
   ' "$1"
 }
 
+# ce_ranges <file> — one record per entry whose marker carries a READABLE cost line AND whose
+# own prose money line states a range above it:
+#
+#   "<entity key>\t<floor>\t<ceiling>"
+#
+# The floor is the marker amount; the ceiling is the upper value of the range the entry own
+# prose master states. § 4.5.1 fixes `amount` as *the low bound where the entry prose carries a
+# range*, so the range is LOCATED BY ITS OWN LOW BOUND rather than by a roster of money labels:
+# the scan looks for that exact amount followed by a range dash and a larger number, on a bolded
+# `**Label:**` line belonging to this entry. A label list here would be the maintained roster
+# § 4.5.1 refuses for the priced set, and it would go wrong the moment a class gains a label.
+#
+# ── WHAT THIS IS NOT ─────────────────────────────────────────────────────────────
+# It is NOT the correspondence assertion § 4.5.1 declares absent. Nothing here asserts that a
+# prose money line and a `cost:` value AGREE, and nothing below fails on a disagreement: an
+# entry whose prose never carries its marker amount yields no record at all, which is the same
+# silence a point value yields. It reads the master for the one thing only the master holds —
+# the range upper value — exactly as the hub does when it computes the ceiling.
+#
+# ── AND IT FAILS CLOSED ──────────────────────────────────────────────────────────
+# The scan stops at the next fence or the next heading and reads only bolded-label lines. A
+# range written where this does not reach yields NO record rather than a wrong one, so the
+# failure direction is a missed finding and never a false one — which is what keeps
+# CTL-CE-CLEAN zero honest.
+ce_ranges() {
+  awk '
+    $0 ~ /^```artifact-entry[ \t]*$/ { infence = 1; pend = 0; key = ""; cost = ""; seen = 0; next }
+    infence && $0 ~ /^```[ \t]*$/ {
+      infence = 0
+      if (seen && key != "" && key != "unminted" && cost ~ /^[0-9]+ [A-Z][A-Z][A-Z] (per-person|group-total)$/) {
+        split(cost, P, " "); amt = P[1] + 0; pend = 1
+      }
+      next
+    }
+    infence {
+      if ($0 ~ /^[ \t]*(venue|leg):[ \t]*[^ \t]/) { k = $0; sub(/^[ \t]*(venue|leg):[ \t]*/, "", k); sub(/[ \t]+$/, "", k); key = k }
+      else if ($0 ~ /^[ \t]*cost:/) { seen = 1; c = $0; sub(/^[ \t]*cost:[ \t]*/, "", c); sub(/[ \t]+$/, "", c); cost = c }
+      next
+    }
+    pend && $0 ~ /^#/ { pend = 0; next }
+    pend && $0 ~ /\*\*[^*]+:\*\*/ {
+      if (match($0, "(^|[^0-9])" amt "[ \t]*(-|\342\200\223|\342\200\224)[ \t]*[0-9]+")) {
+        seg = substr($0, RSTART, RLENGTH); gsub(/[^0-9]/, " ", seg)
+        nn = split(seg, D, " ")
+        if (nn >= 2 && D[nn] + 0 > amt) print key "\t" amt "\t" (D[nn] + 0)
+        pend = 0
+      }
+    }
+  ' "$1"
+}
+
+# ce_spreads <treeroot> <trip-rel> <basename-to-class map> <denominator set> — the entries of
+# THIS trip that contribute spread, deduplicated by entity key in first-seen order. It selects
+# files exactly as ce_violations does, from the same two derived sets, so a spread claim is
+# graded against the same population the counts are graded against and not a second one.
+ce_spreads() {
+  local tree="$1" trip="$2" map="$3" den="$4"
+  local f base cls
+  for f in "$tree/$trip"/outputs/*.md; do
+    [ -e "$f" ] || continue
+    base="${f##*/}"
+    cls="$(printf '%s\n' "$map" | awk -F'\t' -v b="$base" '$1 == b { print $2; exit }')"
+    [ -n "$cls" ] || continue
+    case "$den" in *"|$cls|"*) ;; *) continue ;; esac
+    ce_ranges "$f"
+  done | awk -F'\t' 'NF == 3 && !seen[$1]++ { print }'
+}
+
 # ce_violations <treeroot> <trip-rel> <basename-to-class map> <denominator set> — one line
 # per violation, "<CODE>\t<detail>". The SAME evaluator drives the real arm and every
 # control arm below; that is what makes a mutated fixture a proof rather than a second
@@ -5981,6 +6049,38 @@ EOF
     [ "$hasundet" -eq 1 ] || printf 'CE-NO-UNDETERMINED\tthe body renders no undetermined under coverage=%s priced-items=%s, so the condition is neither computed nor named\n' "$cov" "$decN"
   else
     [ "$haspair" -eq 1 ] || printf 'CE-NO-COVERAGE-STRING\tthe body carries a total but no coverage reading agreeing with priced-items=%s against cost-bearing-items=%s — a partial total that looks whole is worse than none\n' "$decN" "$decM"
+    # ── The body spread attribution, graded against the contribution computed per entry ──
+    # The six codes above read markers and declared scalars. None of them can see a SENTENCE
+    # that contradicts the numbers in its own file, which is how a witness came to credit one
+    # entry with a spread that two entries supply, and passed every arm in this group doing it.
+    #
+    # The claim is located rather than parsed. The body paragraphs that mention the spread are
+    # the ones making the attribution; the entity keys they name are the set the body attributes
+    # it to. A NAMED set that is a PROPER SUBSET of the computed carriers is the defect — the
+    # sentence reads as exclusive and the corpus beneath it disagrees.
+    #
+    # Deliberately one-directional and narrow at both ends. A body naming NO carrier there makes
+    # no attribution and is passed over rather than failed; a body naming a SUPERSET is passed
+    # over too, because naming a point-value entry for contrast is legitimate prose. What is left
+    # is exactly the shape that escaped: an attribution omitting a carrier the corpus holds.
+    local ce_sp ce_para ce_named ce_missing ce_k ce_kf ce_kc
+    ce_sp="$(ce_spreads "$tree" "$trip" "$map" "$den")"
+    if [ -n "$ce_sp" ]; then
+      ce_para="$(awk 'BEGIN { RS = "" } tolower($0) ~ /spread/ { print }' <<<"$body")"
+      ce_named=""; ce_missing=""
+      while IFS=$'\t' read -r ce_k ce_kf ce_kc; do
+        [ -n "$ce_k" ] || continue
+        case "$ce_para" in
+          *"$ce_k"*) ce_named="$ce_named $ce_k" ;;
+          *) ce_missing="$ce_missing $ce_k (floor $ce_kf, ceiling $ce_kc)" ;;
+        esac
+      done <<EOF
+$ce_sp
+EOF
+      if [ -n "$ce_named" ] && [ -n "$ce_missing" ]; then
+        printf 'CE-SPREAD-ATTRIBUTION\tthe body credits the spread above the floor to%s, while the corpus computes a range for%s as well — an attribution naming a proper subset of the entries that carry one reads as exclusive and is false against the corpus it describes\n' "$ce_named" "$ce_missing"
+      fi
+    fi
   fi
 }
 
@@ -6195,6 +6295,27 @@ EOF
   awk '{ gsub(/undetermined/, "not applicable"); print }' "$CE_FX/$CE_SRC" > "$CE_FX/$CE_SRC.new" && mv "$CE_FX/$CE_SRC.new" "$CE_FX/$CE_SRC"
   awk '!done && /Total:/ { next } { print }' "$CE_FX/$CE_SRC" > "$CE_FX/$CE_SRC.new" && mv "$CE_FX/$CE_SRC.new" "$CE_FX/$CE_SRC"
   ce_mustfire "CTL-CE-U" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-NO-UNDETERMINED "the reading is driven to zero, the total is removed and so is every \`undetermined\` — a zero reading that names no condition at all" "$CE_L"
+
+  # A8 — the body attribution mutated into a false one. This arm NAMES NO ENTITY KEY: it derives
+  # the carrier set from the copied tree with the same function the evaluator uses, takes the
+  # last member, and removes that key LAST occurrence in the body — the mention inside the
+  # attribution, because that is the section that names carriers. Deriving the key is what keeps
+  # the arm from drifting away from a repriced fixture, and the arm is self-checking either way:
+  # a removal landing anywhere but the attribution does not fire the code, and this goes RED
+  # rather than quietly grading nothing. The mutation it models is the one that actually
+  # happened — a second entry gained a range and the sentence beside it was not moved.
+  CE_FX="$(ce_fixture s)"; CE_L=0
+  CE_SKEY="$(ce_spreads "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" | awk -F'\t' 'NF == 3 { k = $1 } END { if (k != "") print k }')"
+  if [ -n "$CE_SKEY" ]; then
+    CE_SBEFORE="$(cat "$CE_FX/$CE_SRC")"
+    awk -v k="$CE_SKEY" '
+      NR == FNR { if (index($0, k) > 0) last = FNR; next }
+      FNR == last { gsub(k, "the other range-carrying entry") }
+      { print }
+    ' "$CE_FX/$CE_SRC" "$CE_FX/$CE_SRC" > "$CE_FX/$CE_SRC.new" && mv "$CE_FX/$CE_SRC.new" "$CE_FX/$CE_SRC"
+    [ "$CE_SBEFORE" != "$(cat "$CE_FX/$CE_SRC")" ] && CE_L=1
+  fi
+  ce_mustfire "CTL-CE-S" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" CE-SPREAD-ATTRIBUTION "one range-carrying entry stops being named where the body attributes the spread, while the corpus still shows it carrying a range — a repricing landing without the sentence beside it moving" "$CE_L"
 
   # The two MUST-NOT-FIRE arms. Without them every arm above is satisfied by an evaluator
   # that simply always fires.

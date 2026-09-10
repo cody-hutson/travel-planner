@@ -135,8 +135,10 @@ cost: 20 EUR per-person
 Booking: advance, **not yet held** — this is the one needs-booking event left open.
 Access: lift. Indoor. Serves Robin's *contemporary art* anchor.
 
-**This is the entry whose floor and ceiling differ**, and it is the only one on this
-trip that does. The marker carries the **low bound** — § 4.5.1 fixes `amount` that way,
+**This entry's floor and ceiling differ, and it is not the only one on this trip that
+does** — `ven-8a34` in `outputs/nightlife-list.md` and `outputs/rooftop-sunset-bars.md`
+carries a range as well, and `outputs/cost-estimate.md` splits the spread between the
+pair. The marker carries the **low bound** — § 4.5.1 fixes `amount` that way,
 which is what makes a sum over markers a true floor by construction — and the range's
 upper value stays in the prose line above, where `outputs/cost-estimate.md` reads it for
 the ceiling. Neither file asserts that the two agree, and nothing fails if they do not.
