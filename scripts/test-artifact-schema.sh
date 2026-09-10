@@ -5811,9 +5811,11 @@ fi
 # It stopped being cheap to leave unasserted when trip history became RESOLVABLE. A reader
 # who learns that a person's trips can be worked out is one edit away from concluding that
 # the answer may as well be kept on the record, and the whole of what stands against that is
-# a bullet and a sentence. So the two halves are graded here: the SCHEMA half (the class
-# declares no field beyond the merge pointer) and the FORM half (the durable intake form
-# asks for nothing the classification types as trip- or destination-scoped).
+# a bullet and a sentence. So the structural claims are graded here, arm by arm rather than
+# by a count of them: the SCHEMA half (the class declares no field beyond the merge pointer),
+# the FORM half (the durable intake form asks for nothing the classification types as trip-
+# or destination-scoped), the READER-FACING half (both homes still say so), and the verb's
+# own OUTCOME ENUMERATION (every terminal state the resolution reaches has a row).
 #
 # ── EVERY POPULATION IS DERIVED, AND DH0 IS WHY THE ZEROES MEAN ANYTHING ────────
 # The universal key set is read from the architecture document's § 4.4 block by
@@ -5941,6 +5943,60 @@ if [ "$DH_OK" -eq 1 ]; then
     PASS "DH3: the exclusion is stated at both of its reader-facing homes — people/README.md § *$DH_HEADING* still enumerates trip history across $DH_NSECT extracted line(s), and the \`$DH_VERB\` verb section declares across $DH_NVSECT line(s) that it writes nothing. The pair is the point: the store says the record has no slot, and the verb that resolves the answer says it puts none back. Either one alone leaves the other's reader free to conclude the opposite"
   else
     FAIL "DH3: enumerated-in-README=$DH_HAS_HIST writes-nothing-declared-in-verb=$DH_HAS_NOWRITE, over $DH_NSECT and $DH_NVSECT extracted line(s). Trip history dropping out of the no-slot enumeration would make a durable slot for it read as merely unimplemented; the verb dropping its no-write declaration would leave the one path that resolves history free to persist it, which is the whole of what the derived model is instead of"
+  fi
+
+  # ── DH4 — THE OUTCOME ENUMERATION, ASSERTED AGAINST THE BRANCH THAT REACHES IT. The
+  # verb's outcome table said THREE states while the resolution's own step 1 carried a
+  # FOURTH terminal branch — a traveller file with no reference, which that step describes
+  # as "not a refusal and not an empty history". The behaviour was authored correctly; the
+  # enumeration was falsified and nothing said so. The specific risk is not the missing row:
+  # it is that a later reader with three tokens and a fourth branch folds it into
+  # NO-EDGE-FOUND, which asserts THE SCAN COMPLETED — a completed-scan claim where no scan
+  # ran, reproducing one level up the exact absence-of-evidence failure the outcome table
+  # exists to prevent between the other two.
+  #
+  # So this arm grades the table and the prose AGAINST EACH OTHER rather than either alone.
+  # Both limbs are POSITIVE membership assertions with their extraction denominators
+  # reported, so neither can pass over a section that failed to extract, and the token set
+  # the table yields is printed on the pass line — the enumeration is reported rather than
+  # counted, because a cardinal is the part of an enumeration that goes stale silently and
+  # this is the arm that exists because one did.
+  dh_outcome_tokens() {
+    printf '%s\n' "$1" | awk -F'|' '
+      index($0, "| Outcome |") == 1 { on = 1; next }
+      on && index($0, "|") != 1     { on = 0 }
+      on {
+        t = $2
+        gsub(/[`*]/, "", t)
+        gsub(/^[ \t]+/, "", t); gsub(/[ \t]+$/, "", t)
+        if (t == "")          next
+        if (t ~ /^[-: ]+$/)   next
+        print t
+      }'
+  }
+  DH_NOREF="NO-REFERENCE"
+  DH_TOK="$(dh_outcome_tokens "$DH_VSECT")"
+  DH_NTOK="$(printf '%s\n' "$DH_TOK" | grep -c '[^[:space:]]' || true)"
+  DH_ROWHIT=0
+  grep -qx -- "$DH_NOREF" <<<"$DH_TOK" && DH_ROWHIT=1
+  # The prose limb reads only NON-TABLE lines, so the row cannot satisfy both limbs by itself.
+  DH_PROSEHIT="$(printf '%s\n' "$DH_VSECT" | awk -v tok="$DH_NOREF" 'index($0, "|") != 1 && index($0, tok) > 0 { n++ } END { print n + 0 }')"
+  # The extractor's own control: a synthetic table of known shape must yield its two tokens.
+  DH_CTLTAB="| Outcome | What it means | What is offered |
+|---|---|---|
+| \`ALPHA\` | a thing | nothing |
+| \`BETA\` | another thing | nothing |
+
+not a table line"
+  DH_NCTLTOK="$(dh_outcome_tokens "$DH_CTLTAB" | grep -c '[^[:space:]]' || true)"
+  if [ "$DH_NCTLTOK" -ne 2 ]; then
+    FAIL "DH4: MUST FIRE — the extractor's CONTROL returned $DH_NCTLTOK token(s) from a synthetic outcome table carrying exactly two, so it cannot be trusted to report what the real table holds. This group reports the probe UNUSABLE rather than the enumeration complete"
+  elif [ "$DH_NTOK" -eq 0 ] || [ "$DH_NVSECT" -eq 0 ]; then
+    FAIL "DH4: an extraction came back EMPTY — the \`$DH_VERB\` verb section yielded $DH_NVSECT line(s) and its outcome table yielded $DH_NTOK token(s). A membership test over nothing reports absence rather than a missing table, and the likeliest cause is a renamed header row, which is a finding in its own right"
+  elif [ "$DH_ROWHIT" -eq 1 ] && [ "$DH_PROSEHIT" -gt 0 ]; then
+    PASS "DH4: the outcome enumeration and the branch that reaches it AGREE — the \`$DH_VERB\` table declares { $(printf '%s' "$DH_TOK" | tr '\n' ' ')} over $DH_NTOK token(s), \`$DH_NOREF\` is among them, and the resolution names that same token on $DH_PROSEHIT non-table line(s) of the section. The extractor's control returned $DH_NCTLTOK on the same run. Both limbs are needed: a row nothing reaches is decoration, and a branch no row names is the state this arm was written for — a fourth terminal outcome outside a table headed with three"
+  else
+    FAIL "DH4: row-present=$DH_ROWHIT prose-mentions=$DH_PROSEHIT for \`$DH_NOREF\`, over $DH_NTOK outcome token(s) { $(printf '%s' "$DH_TOK" | tr '\n' ' ')} and $DH_NVSECT section line(s). A terminal branch the resolution reaches but the table does not name is the defect this arm exists for — the next reader folds it into \`NO-EDGE-FOUND\`, which asserts that the scan COMPLETED, and a completed-scan claim where no scan ran is absence of evidence reported as evidence of absence. Add the row, or remove the branch; do not leave them disagreeing"
   fi
 fi
 

@@ -210,23 +210,37 @@ that reaches `travelers/<traveler>.md`. This is a requirement derived from the a
 rule rather than a preference: written, the value stops being advisory at the aggregate and
 the plan changes with nothing having asked.
 
-### 5. Three states, and the two absences never collapse
+### 5. The terminal states, and the absences never collapse
 
-Derivation creates a second kind of absence where the corpus had one, and conflating them
+Derivation creates further kinds of absence where the corpus had one, and conflating them
 is the failure mode this section exists to close.
 
 | State | Meaning | Offers a suggestion? |
 |---|---|---|
 | `RESOLVED(n ≥ 1)` | `n` operator-confirmed matching prior trips | **yes**, per § 4 |
 | `NO-EDGE-FOUND` | the scan completed and no trip carries the edge | **no — never** |
+| `NO-REFERENCE` | the traveller file carries no reference at all, so there is no edge to invert and **no scan runs** | **no — never**, and that the traveller references no durable record is stated |
 | `UNDETERMINED` | the store or the trip population could not be read, a bearer was present but unreadable, a reference dangled, or a stub was malformed | **no — never**, and the indeterminacy is stated |
 
-**`NO-EDGE-FOUND` and `UNDETERMINED` are reported differently and behave identically:**
-neither yields a value, neither is ever rendered as *this person has not been here*, and
-under both the field stays **unknown**. This is `reference/data-model.md`'s own rule —
-*unanswered reads unknown, never `never`* — preserved at the new layer rather than restated
-as a new one. The scan's population canary is inherited with it, so *no trip references this
-person* can never be concluded from a directory that could not be listed.
+**Every absence here is reported differently and behaves identically:** none yields a value,
+none is ever rendered as *this person has not been here*, and under each the field stays
+**unknown**. This is `reference/data-model.md`'s own rule — *unanswered reads unknown, never
+`never`* — preserved at the new layer rather than restated as a new one. The scan's
+population canary is inherited with it, so *no trip references this person* can never be
+concluded from a directory that could not be listed.
+
+**`NO-REFERENCE` was a terminal branch of the resolution before it was a row in this table,
+and the gap is recorded rather than quietly closed.** The behaviour was authored correctly
+and deliberately — a traveller with no reference is *not a refusal and not an empty history*
+— but this table said *three states* and the acceptance criterion said *exactly one of*, so
+the enumeration was falsified while nothing about the behaviour was. The heading no longer
+carries a cardinal, for the reason the gap demonstrates. **The risk the row removes is
+specific**: a later reader with three tokens and a fourth branch folds it into
+`NO-EDGE-FOUND`, which asserts *the scan completed* — a completed-scan claim where no scan
+ran, which is the very absence-of-evidence failure this section exists to prevent, reproduced
+one level up. `scripts/test-artifact-schema.sh` arm `DH4` asserts the row and the branch that
+reaches it against each other, so the next reader meets the distinction rather than deciding
+it.
 
 ### 6. Erasure — zero new reach rows, and the coverage is structural
 

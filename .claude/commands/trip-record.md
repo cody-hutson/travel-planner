@@ -2788,7 +2788,7 @@ The prior-visit verb. It answers *has this traveller been to this destination be
 
 **Nothing below is a new scan, a second identity predicate or a second resolution vocabulary.** `reference/adr/ADR-012-people-library.md` § *Reference discovery* already chose a forward scan over a declared bearer set and scored it against the alternatives; this verb runs that scan's steps and skips the ones it does not need.
 
-1. **Resolve `<name>`.** An absent argument, or a name with no traveller file on the resolved trip, is a refusal that names the shape and **offers no near-match** — a suggestion here is a classification with a reflexive accept, and § `## profile <name>`'s collision check already states why similarity is computed nowhere on this surface. A traveller file carrying **no `person:` key** is not a refusal and not an empty history: say plainly that this traveller references no durable record, name nothing else, and stop. There is no edge to invert, so there is nothing to resolve.
+1. **Resolve `<name>`.** An absent argument, or a name with no traveller file on the resolved trip, is a refusal that names the shape and **offers no near-match** — a suggestion here is a classification with a reflexive accept, and § `## profile <name>`'s collision check already states why similarity is computed nowhere on this surface. A traveller file carrying **no `person:` key** is not a refusal and not an empty history: it is **`NO-REFERENCE`**, the outcome table's own row for this branch — say plainly that this traveller references no durable record, name nothing else, and stop. There is no edge to invert, so nothing is resolved and **no scan runs**, which is what keeps this out of `NO-EDGE-FOUND`.
 2. **Closure over `merged-into:`, at one hop.** The subject is the referenced record plus every stub redirecting to it, so a merge does not split a person's history. A stub reached through a second stub is `MALFORMED`, reported, and **never followed** — the redirect depth is pinned at one hop and this verb does not widen it.
 3. **Population.** The trip listing, minus the `README.md` line, exactly as the contract's own gates derive it. `G1`'s canary and its **forbidden conclusion** are inherited verbatim: an unreadable listing never yields *no trip references this person*.
 4. **Reference read.** Each bearer's frontmatter, stopping at the closing `---`. A trip is in the set where a bearer carries `person: q` for some `q` in the closure.
@@ -2796,15 +2796,20 @@ The prior-visit verb. It answers *has this traveller been to this destination be
 
 **The relevance and signalling steps of that scan are not run.** Relevance is a per-field inheritance question, and this verb inherits no field; there is no update signal because there is nothing to signal about.
 
-### Three outcomes, and the two absences are not the same one
+### The outcomes, and the absences are not the same one
+
+**This verb terminates in exactly one of the tokens below on every branch, and the table is the whole set.** The heading carries no cardinal, deliberately: a count in a heading is the part of an enumeration that goes stale silently, and this one did — `NO-REFERENCE` was already a terminal branch of the resolution, described in step 1 as *"not a refusal and not an empty history"*, while this table named three states and nothing reconciled them. `scripts/test-artifact-schema.sh` arm `DH4` now asserts the row and the branch that reaches it against each other.
 
 | Outcome | What it means | What is offered |
 |---|---|---|
 | `RESOLVED` | the scan completed and the closure is carried by at least one other trip | the candidates below |
 | `NO-EDGE-FOUND` | the scan completed and no other trip carries the closure | **nothing** |
+| `NO-REFERENCE` | the traveller file carries no `person:` key, so there is no edge to invert and **no scan is run** — step 1 terminates before the store is read | **nothing**, and that this traveller references no durable record is stated plainly |
 | `UNDETERMINED` | the store could not be listed, a bearer was present but unreadable, the reference dangled, or a stub was `MALFORMED` | **nothing**, and the indeterminacy is stated |
 
-**`NO-EDGE-FOUND` and `UNDETERMINED` are reported as different things and behave as the same thing.** Neither yields a value, neither is ever rendered as *this person has not been here*, and under both the field stays **unknown**. That is `reference/data-model.md`'s own rule for these fields — an unanswered value reads unknown, never `never` — preserved at this layer rather than restated as a new one. **An unlinked trip is invisible to this verb**, and the render says so rather than implying the set is everywhere the traveller has been.
+**Every absence here is reported as a different thing and behaves as the same thing.** None yields a value, none is ever rendered as *this person has not been here*, and under each the field stays **unknown**. That is `reference/data-model.md`'s own rule for these fields — an unanswered value reads unknown, never `never` — preserved at this layer rather than restated as a new one. **An unlinked trip is invisible to this verb**, and the render says so rather than implying the set is everywhere the traveller has been.
+
+**`NO-REFERENCE` is not a narrow `NO-EDGE-FOUND`, and keeping them apart is what this table is for.** `NO-EDGE-FOUND` asserts that **the scan completed** and carried nothing; `NO-REFERENCE` asserts that **no scan ran at all**, because there was no edge to invert. Reporting the second as the first would claim a completed scan where none happened — absence of evidence rendered as evidence of absence, which is the failure the rule above closes between the other two, one level up. **Nothing about the behaviour changes by naming this state**: step 1 terminated there before this table carried the row, and it terminates there now. What changes is that a later reader meets the distinction instead of re-deriving it.
 
 ### The candidates, and the operator makes the match
 
