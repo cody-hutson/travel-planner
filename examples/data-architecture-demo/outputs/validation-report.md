@@ -37,8 +37,9 @@ the prompt's 17 and settles nothing. The claim is set-equality against the promp
 list, in its order — never a tally.
 
 **Where a check is declared *not exercised*, that is a property of this fixture and
-never a pass.** This example ships no external URLs, no opening hours, no prices, no
-real bookings and a placeholder destination — all declared in `README.md` § *Depth* —
+never a pass.** This example ships no external URLs, no opening hours, no **sourced**
+prices, no real bookings and a placeholder destination — all declared in `README.md`
+§ *Depth* —
 so several checks have no input to run against. **Recording that as a pass would be
 the exact failure this report exists to prevent**, and it is the failure the earlier
 version of this file committed: it reported a clean bill on a plan with no meal on any
@@ -70,7 +71,7 @@ named escape is a Critical.
 | Hours / closure matrix | not exercised — no opening hours in this fixture | 0 | 0 | 0 |
 | Holiday closure cascades | not exercised — placeholder destination, no calendar | 0 | 0 | 0 |
 | Reservation availability | not exercised — no real bookings | 0 | 0 | 0 |
-| Price staleness | not exercised — no prices in this fixture | 0 | 0 | 0 |
+| Price staleness | not exercised — the fixture's prices are synthetic and carry no source or date to age | 0 | 0 | 0 |
 | Travel restrictions | not exercised — placeholder origin and destination | 0 | 0 | 0 |
 | Local happenings | not exercised — illustrative dates | 0 | 0 | 0 |
 | Business status | not exercised — venues are illustrative | 0 | 0 | 0 |
@@ -342,8 +343,10 @@ booking?` set, and no other status may appear:
 
 ## Price Flags
 
-**Not exercised.** This fixture records no prices beyond the two-axis tier labels the
-alternatives rule needs, so there is no listed price to age.
+**Not exercised.** Every currency value this fixture carries is **synthetic**, minted for
+the cost-estimate class to exercise its own rule against — see `README.md` § *Depth*. A
+synthetic value has no source and no capture date, so there is nothing to age it against.
+This check reads a **sourced** listed price, and the fixture ships none.
 
 ---
 
