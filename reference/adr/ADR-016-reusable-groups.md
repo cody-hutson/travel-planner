@@ -265,6 +265,24 @@ needs no group-awareness at all. `ADR-017-derived-trip-history.md` is the record
 **Nothing tests this property**, and *Consequences* carries it as a named residual rather than a
 claim.
 
+**A `NEW` member's file is created from `## profile <name>`'s route 2, and the delegation is decided
+here rather than left to be inferred.** `NEW` means *no traveller file exists for that member*, and on
+a freshly scaffolded trip — where `travelers/` ships empty — it is **every** member, so this is the
+primary path of the whole capability rather than an edge. Two candidates were weighed. **Narrowing
+`NEW` to refuse and route to `profile`, the way `link` does, was rejected**: it makes the verb refuse
+on every member of exactly the trip it exists to set up, leaving *expands to its members*
+unsatisfiable on the only branch a new trip reaches. **Declaring the source was taken instead** —
+`Read` `templates/traveler-intake.template.md`, `Write` it to the path unmodified, which is the one
+create path this class has. `link`'s refusal is honoured by that choice rather than overridden: its
+stated ground is that a `link` minting a file *would author a second shape of this class that no
+schema check has seen, and would duplicate a write that is already someone's*, and copying the
+shipped template mints no shape and opens no second home. `profile`'s create-side **collision check**
+comes with the route, because its predicate is the coarser canonical traveller key and a
+file-existence probe alone cannot see the two-names-one-key case that check exists to stop; a member
+reaching it renders `UNDETERMINED` and is excluded. **The residual cost, stated: `group-expand` now
+cites two verbs' read sets rather than one**, and a change to `profile`'s create route reaches this
+verb.
+
 **Expansion runs `link`'s per-member consequence survey and does not suppress it.** Suppression would
 regress a deliberate safety property. The presentation is bulk; the survey is not: run the shipped
 survey once per member writing nothing, emit **one consolidated preview** — one line per member, a
