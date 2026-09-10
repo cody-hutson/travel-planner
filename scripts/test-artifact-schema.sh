@@ -3988,6 +3988,65 @@ if [ "$ER_OK" -eq 1 ]; then
     FAIL "ER18: the bearer's post-state limbs read stem=$ER_ST_STEM old-path-removed=$ER_ST_OLD field-removed=$ER_ST_REM stem-restated=$ER_ST_DECL. A bearer that keeps its display-name stem converges this verb's post-state with the detach's — every composed value is byte-identical either way and nothing value-shaped detects it, so the build stays green while the detection is gone"
   fi
 
+  # ── ER19 — THE GROUP STORE'S REACH IS BULLETS-ONLY, AND THE README SAYS SO. Exactly one row
+  # of this table names `groups/`, and its Location cell scopes it to the `## Members` bullets.
+  # Nothing reaches a group record's `# <H1>` display name. That is correct — the name has to be
+  # free text for a group to have a usable one, and a sweep that rewrote free text would take the
+  # name with it — but it is a cost a reader has to be TOLD, because `groups/README.md`
+  # § *What a record does not hold* deliberately routes a group's only free text INTO its name
+  # ("The name is where that meaning goes"), and a name is exactly where a person's name lands in
+  # practice. Erase that person and the group goes on naming them.
+  #
+  # The behaviour is right; the DISCLOSURE is the half a later edit can take away in silence,
+  # because the reach table would read the same afterwards and nothing else in the corpus states
+  # it. This pins both halves so they move together: widen the group-store reach and the pins
+  # break, sending the author back to a disclosure that has become false rather than leaving it
+  # to be believed.
+  #
+  # THE MATCHER IS FLATTENED BEFORE IT MATCHES, and that is not a detail. The README is
+  # hard-wrapped, so a line-shaped probe over a multi-word phrase returns a confident zero
+  # whenever a wrap falls inside it — this milestone shipped two such zeros. Blockquote markers
+  # are stripped for the same reason. The control phrase below is chosen BECAUSE it spans a wrap
+  # in that section today: it can only match through the flattened stream, so a regression to a
+  # line-shaped matcher turns this arm red instead of quietly passing. A sensitivity arm proves
+  # the EXTRACTION; this one is what proves the MATCHER'S SHAPE, and they are not the same claim.
+  #
+  # RESIDUAL, named rather than implied: a widening written into row 30's DISPOSITION cell while
+  # its Location cell still reads `## Members` keeps both pins intact, and this arm would pass
+  # over a stale disclosure. That edit contradicts `reference/schemas/group-record.md`, which
+  # closes the section rather than widening reach, and group GM grades that closure — but this
+  # arm does not see it, and a reader should not think it does.
+  ER_GRP="$(printf '%s\n' "$ER_SEC" | awk '
+    /^\|[ \t]*\*\*[0-9]+\*\*[ \t]*\|/ {
+      split($0, c, "|")
+      if (index(c[3], "groups/") > 0) { g++; if (index(c[3], "## Members") > 0) s++ }
+      if (index(c[3], "outputs/") > 0) ctl++
+    }
+    END { printf "%d\t%d\t%d\n", g + 0, s + 0, ctl + 0 }')"
+  ER_GRP_N="$(printf '%s' "$ER_GRP" | cut -f1)"
+  ER_GRP_SCOPED="$(printf '%s' "$ER_GRP" | cut -f2)"
+  ER_GRP_CTL="$(printf '%s' "$ER_GRP" | cut -f3)"
+  ER_GDOC="$ROOT/groups/README.md"
+  ER_GHEAD="What a record does not hold"
+  ER_GSEC=""
+  [ -r "$ER_GDOC" ] && ER_GSEC="$(er_section "$ER_GDOC" "$ER_GHEAD")"
+  ER_GNSEC="$(printf '%s\n' "$ER_GSEC" | grep -c '[^[:space:]]' || true)"
+  ER_GFLAT="$(printf '%s\n' "$ER_GSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
+  ER_GDISC=0; ER_GWRAP=0
+  # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
+  # reports failure on a SUCCESSFUL match under pipefail.
+  grep -q "outside erasure's reach" <<<"$ER_GFLAT" && ER_GDISC=1
+  grep -q 'there is nowhere here to write a note about a group' <<<"$ER_GFLAT" && ER_GWRAP=1
+  if [ "$ER_GRP_CTL" -eq 0 ] || [ "$ER_GNSEC" -eq 0 ] || [ "$ER_GWRAP" -eq 0 ]; then
+    FAIL "ER19: an extraction or the matcher itself came back EMPTY — the Location-cell control (\`outputs/\`) matched $ER_GRP_CTL row(s), groups/README.md § *$ER_GHEAD* yielded $ER_GNSEC non-blank line(s), and the wrap-spanning control phrase matched=$ER_GWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. Not a skip and not a pass"
+  elif [ "$ER_GRP_N" -ne 1 ] || [ "$ER_GRP_SCOPED" -ne 1 ]; then
+    FAIL "ER19: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\` and $ER_GRP_SCOPED of them are scoped to \`## Members\` (expected 1 and 1, against a control of $ER_GRP_CTL). groups/README.md § *$ER_GHEAD* tells the reader that a group's \`# <H1>\` display name is outside this verb's reach, and that sentence is true only while the reach stops at the member bullets. Re-read the disclosure against the new reach in the SAME commit: a widened sweep leaves a reader being told a name survives that no longer does, and that is the failure direction nothing else here checks"
+  elif [ "$ER_GDISC" -eq 1 ]; then
+    PASS "ER19: the group-store reach is exactly ONE row scoped to \`## Members\` (control $ER_GRP_CTL row(s)), so a group record's \`# <H1>\` display name is unreached — and groups/README.md § *$ER_GHEAD* discloses it, matched over $ER_GNSEC extracted line(s) through the flattened stream the wrap-spanning control validated. That section routes a group's only free text into its name, which is where a person's name actually lands, so the cost is stated where the routing is and the two now move together"
+  else
+    FAIL "ER19: the group-store reach is bullets-only ($ER_GRP_N row scoped to \`## Members\`, control $ER_GRP_CTL row(s)) but groups/README.md § *$ER_GHEAD* no longer discloses it — $ER_GNSEC line(s) extracted, the flattening confirmed by the wrap-spanning control, and nothing in them states the name is outside erasure's reach. That section tells the reader the name is where a group's meaning goes; without this sentence it never tells them that erasing a person leaves a group still named after them, which reads as anonymised when it is not"
+  fi
+
 fi
 
 # ER3 — THE NON-ACTION, ASSERTED. The tombstone must hold no row in the publish
