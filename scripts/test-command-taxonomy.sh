@@ -2226,19 +2226,35 @@ command writes, and a write command never picks a write for you.**')")"
 UW_SPEC1="$(uw_hits "$(uw_norm 'no verb reaching a reference store may write outside it.')")"
 UW_SPEC2="$(uw_hits "$(uw_norm 'the guard reads every verb section on purpose, and writes nothing.')")"
 
+# UW0 GATES UW1, AND THAT IS NOT DEFENSIVENESS — IT WAS MEASURED. Every number UW1
+# reports is computed from the SAME region extents UW0 validates, so a failed gate does not
+# merely weaken UW1's verdict, it makes UW1's verdict a statement about the wrong bytes.
+# Under a deliberate regression that corrupted those extents, UW0 failed correctly AND UW1
+# printed a PASS naming five read-only verbs where the tree has two — a confidently wrong
+# denominator on a green line, which is the exact shape of defect this whole group exists to
+# catch, reproduced inside the group itself. The gate is therefore fail-closed: on a bad
+# population UW1 reports a WITHHELD verdict rather than a computed one, because a group that
+# went quiet would be an undeclared skip under this suite's strict-skip contract.
+UW_OK=1
 if [ "$UW_FILES" -eq 0 ] || [ "$UW_ZA_LINES" -eq 0 ]; then
+  UW_OK=0
   FAIL "UW0: the walk read ${UW_FILES} command file(s) and ${UW_ZA_LINES} non-blank Zone A line(s) — one of those populations is empty, so the zero below would cover nothing"
 elif [ -n "$UW_COVER_BAD" ]; then
+  UW_OK=0
   FAIL "UW0: COVERAGE IS INCOMPLETE, and this is a failure rather than a partial pass — $UW_COVER_BAD. Zone A is defined as everything above the FIRST verb region, so a file whose regions were partly derived yields a Zone A of the wrong extent and a confident verdict over the wrong bytes. The walked count is asserted equal to the count each file declares, which group V3 independently grades one-region-per-verb"
 elif [ "$UW_SENS" -eq 0 ]; then
+  UW_OK=0
   FAIL "UW0: MUST FIRE — the SENSITIVITY arm returned zero. The identical matcher was run over a planted, HARD-WRAPPED universal of the exact shape that shipped false, and did not find it. The subject zero below is therefore an empty scan rather than a clean corpus, and this group reports the probe UNUSABLE"
 elif [ "$UW_SPEC1" -ne 0 ] || [ "$UW_SPEC2" -ne 0 ]; then
+  UW_OK=0
   FAIL "UW0: the SPECIFICITY arms fired — a scoped non-universal returned $UW_SPEC1 and a whole-file quantifier returned $UW_SPEC2, expected zero from both. Neither is a claim about what every verb does, and a matcher that reads them as one turns green corpora red; both were live false positives in an earlier attempt at this detector"
 else
   PASS "UW0: the walk covered ${UW_FILES} command file(s) and ${UW_ZA_LINES} non-blank Zone A line(s), with every file's walked region count EQUAL to the verb count it declares — coverage is total rather than merely non-empty, which is what stops a partial Zone A/Zone B split from issuing a confident vacuous pass. The matcher is a measurement: the SENSITIVITY arm found ${UW_SENS} planted hard-wrapped universal, and both SPECIFICITY arms returned zero on sentences shaped like one"
 fi
 
-if [ -n "$UW_BOTH" ]; then
+if [ "$UW_OK" -eq 0 ]; then
+  FAIL "UW1: VERDICT WITHHELD — UW0 did not pass, and every figure this arm would report is computed from the same region extents UW0 grades. A verdict here would be a confident statement over the wrong bytes rather than a weaker statement over the right ones. Resolve UW0 first; this arm has nothing trustworthy to say until then"
+elif [ -n "$UW_BOTH" ]; then
   FAIL "UW1: a Zone A universal quantified over the verb set stands beside a verb that declares it writes nothing — ${UW_BOTH}. The universal is false as written. Convert it to the rule that derives the set rather than repairing the enumeration, per that file's own repair extension point, and check EVERY site: this defect shipped once already because the sentence stood at two sites and only one was converted"
 elif [ "$UW_UNIV" -eq 0 ] && [ "$UW_RO" -gt 0 ]; then
   PASS "UW1: ZERO Zone A universals of this shape survive across ${UW_FILES} command file(s), and the oracle found ${UW_RO} verb(s) that declare in their own read line that they write nothing. Both halves matter: the subject is the zero, and the ${UW_RO} is what makes it a measurement — a run where the oracle found none would pass this assertion while establishing nothing about it"
