@@ -5837,12 +5837,25 @@ echo "CE — the cost-estimate coverage pair agrees with the entries it counts"
 #
 # ── THE DENOMINATOR IS READ FROM THE DOCUMENT, NEVER SPELLED HERE ────────────────
 # `reference/data-architecture.md` § 4.5.1 fixes the estimate's denominator as *the
-# entries of every class whose § 1.1 Primary entities cell names `Venue` or `Leg`*, and
-# § 5.3's *computed, never enumerated* is why. A class list written into this script
-# would be the second home § 4.3 forbids, and it would go silently wrong the moment a
-# sibling release adds a priced class — which is a live condition rather than a
-# hypothetical one. ce_denominator reads that column, keyed on the SAME
-# $VA_CLASS_HEADING the validator holds, so HC already asserts the heading has one home.
+# entries of every class that carries the fenced marker form in § 4.5's table AND whose
+# § 1.1 Primary entities cell names `Venue` or `Leg`*, and § 5.3's *computed, never
+# enumerated* is why. A class list written into this script would be the second home
+# § 4.3 forbids, and it would go silently wrong the moment a sibling release adds a
+# priced class — which is a live condition rather than a hypothetical one.
+# ce_denominator reads the § 1.1 column, keyed on the SAME $VA_CLASS_HEADING the
+# validator holds so HC already asserts that heading has one home, and intersects it with
+# ce_fenced's read of the marker-form row. BOTH surfaces are read; neither is spelled.
+#
+# ── BOTH CONJUNCTS DO WORK, AND THE RULE IS WRONG WITHOUT EITHER ─────────────────
+# The entities cell ALONE resolves to ten classes, not the five § 4.5.1 names: C10, C11,
+# C15, C20 and C21 itself each name a Venue or a Leg among their entities. None of them
+# carries the fenced marker form — C10 and C11 are table-shaped and take the declared-
+# key-column form instead, and C15, C20 and C21 are not in the entry-bearing set at all —
+# so none can hold a `cost:` line for an estimate to range over. Dropping the conjunct is
+# inert only while those classes carry no marker, and goes live the moment one gains one:
+# it enters M with no cost signal possible, coverage silently degrades, and the guard
+# reports a mismatch against a fixture that is telling the truth. That is the exact shape
+# this group already paid for once, one surface up.
 #
 # ── CLASS MEMBERSHIP COMES FROM va_select, NOT FROM A SECOND SELECTOR ────────────
 # Which class a given instance belongs to is `va_select`'s answer — the
@@ -5857,8 +5870,43 @@ CE_PHANTOM='CE-PHANTOM-ARM'
 CE_ARMED=""
 CE_DIR="$WORK/ce"; mkdir -p "$CE_DIR"
 
-# ce_denominator <root> — the class-ids whose § 1.1 Primary-entities cell names Venue or
-# Leg, one per line. The 9-field split is the same guard va_class_rows documents: a row of
+# ce_fenced <root> — the class-ids in the FENCED row of § 4.5's marker-form table, one per
+# line. § 4.5 assigns a marker form per class SHAPE, and § 4.5.1 says which form admits the
+# cost field at all: *every class in the fenced row of the table above*. That row is the
+# second derivation surface the denominator needs, and it is read rather than spelled for
+# the same reason the first one is.
+#
+# The row is found BY WHAT IT DECLARES rather than by a heading offset or a row ordinal: the
+# only 5-field table row in the document whose FIRST cell names a fenced `artifact-entry`
+# marker. Its sibling — the declared-key-column form — mentions a fence in its RATIONALE
+# cell and is correctly not matched, because only the first cell is tested.
+#
+# It fails closed in both directions. A row of any other width is skipped; a match count
+# other than exactly one yields the EMPTY set rather than a plausible one. An empty set
+# empties the denominator, which CE0's first limb fails on loudly.
+ce_fenced() {
+  awk '
+    function cell(s) {
+      gsub(/\*\*/, "", s); gsub(/`/, "", s)
+      sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s)
+      return s
+    }
+    /^\|/ {
+      if (split($0, F, "|") != 5) next
+      form = cell(F[2])
+      if (form !~ /fenced/ || form !~ /artifact-entry/) next
+      nrow++; ids = cell(F[3])
+    }
+    END {
+      if (nrow != 1) exit 0
+      n = split(ids, A, /[^A-Za-z0-9]+/)
+      for (i = 1; i <= n; i++) if (A[i] ~ /^C[0-9]+$/) print A[i]
+    }
+  ' "$1/$VA_ARCH_DOC"
+}
+
+# ce_denominator <root> — the class-ids that carry § 4.5's fenced marker form AND whose
+# § 1.1 Primary-entities cell names Venue or Leg, one per line. The 9-field split is the same guard va_class_rows documents: a row of
 # any other width yields an EMPTY entities cell rather than a cell read out of the wrong
 # column, so a changed table width surfaces as an empty denominator — which CE0 fails on —
 # instead of as a plausible set built from the wrong data.
@@ -5878,7 +5926,10 @@ CE_DIR="$WORK/ce"; mkdir -p "$CE_DIR"
 # longer spelled without a net: CE0's fourth limb asserts the join is non-empty, so a
 # grammar that ever moved turns this group RED rather than silently emptying it.
 ce_denominator() {
-  awk -v heading="$VA_CLASS_HEADING" '
+  local fenced
+  fenced="|$(ce_fenced "$1" | tr '\n' '|')|"
+  [ "$fenced" != "||" ] || return 0
+  awk -v heading="$VA_CLASS_HEADING" -v fenced="$fenced" '
     function cell(s) {
       gsub(/\*\*/, "", s); gsub(/`/, "", s)
       sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s)
@@ -5890,7 +5941,9 @@ ce_denominator() {
       if (split($0, F, "|") != 9) next
       n = cell(F[2]); ent = cell(F[8])
       if (n !~ /^[0-9]+$/) next
-      if (ent ~ /Venue/ || ent ~ /Leg/) print "C" n
+      if (ent !~ /Venue/ && ent !~ /Leg/) next
+      if (index(fenced, "|C" n "|") == 0) next
+      print "C" n
     }
   ' "$1/$VA_ARCH_DOC"
 }
@@ -6157,10 +6210,10 @@ $(printf '%s\n' "$CE_SEL" | awk -F'\t' '$1 ~ /^C[0-9]+$/ { print $1 "\t" $3 }')
 EOF
 
 if [ "$CE_NDEN" -eq 0 ] || [ "$CE_NINST" -eq 0 ] || [ "$CE_NMARK_ALL" -eq 0 ] || [ "$CE_NJOIN" -eq 0 ] || [ "$CE_NMARK_DEN" -eq 0 ]; then
-  FAIL "CE0: a surface came back EMPTY — $CE_NDEN denominator class(es) read from § 1.1's Primary-entities column, $CE_NINST tracked C21 instance(s), $CE_NMARK_ALL \`artifact-entry\` marker(s) over the selected tree, $CE_NJOIN selected file(s) joining INTO the denominator carrying $CE_NMARK_DEN marker(s) between them. Any of those at zero makes every verdict below a statement over the empty set. The class-set read is the one most likely to have moved — the column is read by the 9-field split, so a table that gained a column empties it silently — and the JOIN is the one most likely to be wrong while every other limb reads green, because two non-empty sets keyed differently intersect in nothing and the marker census then reads zero against a corpus that plainly carries markers"
+  FAIL "CE0: a surface came back EMPTY — $CE_NDEN denominator class(es) read from § 4.5's fenced marker-form row intersected with § 1.1's Primary-entities column, $CE_NINST tracked C21 instance(s), $CE_NMARK_ALL \`artifact-entry\` marker(s) over the selected tree, $CE_NJOIN selected file(s) joining INTO the denominator carrying $CE_NMARK_DEN marker(s) between them. Any of those at zero makes every verdict below a statement over the empty set. The class-set read is the one most likely to have moved, and it now has two surfaces that can move independently — § 1.1's column is read by a 9-field split and § 4.5's marker-form row by a 5-field one, so either table gaining a column empties this set silently, as does a marker-form row that stops being the only one its shape matches — and the JOIN is the one most likely to be wrong while every other limb reads green, because two non-empty sets keyed differently intersect in nothing and the marker census then reads zero against a corpus that plainly carries markers"
 else
   CE_RAN=1
-  PASS "CE0: the surfaces are non-empty and DERIVED — $CE_NDEN class(es) whose § 1.1 Primary-entities cell names \`Venue\` or \`Leg\` [$(printf '%s' "$CE_DEN_IDS" | tr '\n' ' ')], $CE_NINST tracked C21 instance(s), $CE_NMARK_ALL marker(s) over the selected tree, and the JOIN between the denominator and the file-to-class map is non-empty: $CE_NJOIN selected file(s) resolve into it carrying $CE_NMARK_DEN marker(s). This script holds NO copy of that class set — § 4.5.1 states the rule and § 5.3 says why, so a class that later gains a priced entity enters this denominator with no edit here. The join limb is what stops the two derived sets from being keyed differently and reporting an empty intersection as a corpus defect"
+  PASS "CE0: the surfaces are non-empty and DERIVED — $CE_NDEN class(es) carrying § 4.5's fenced marker form AND naming \`Venue\` or \`Leg\` in their § 1.1 Primary-entities cell [$(printf '%s' "$CE_DEN_IDS" | tr '\n' ' ')], $CE_NINST tracked C21 instance(s), $CE_NMARK_ALL marker(s) over the selected tree, and the JOIN between the denominator and the file-to-class map is non-empty: $CE_NJOIN selected file(s) resolve into it carrying $CE_NMARK_DEN marker(s). This script holds NO copy of that class set — § 4.5.1 states the rule and § 5.3 says why, so a class that later gains a priced entity enters this denominator with no edit here. The join limb is what stops the two derived sets from being keyed differently and reporting an empty intersection as a corpus defect"
 fi
 
 if [ "$CE_RAN" -eq 1 ]; then

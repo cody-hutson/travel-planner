@@ -662,11 +662,21 @@ writer emits is the writer's own declaration** — which is exactly why one clas
 and writing nothing is not a gap.
 
 **The estimate's denominator is computed, never enumerated.** C21 ranges over the entries of every
-class whose § 1.1 **Primary entities** cell names `Venue` or `Leg` — which resolves today to C5, C6,
-C7, C9 and C18, and excludes C8, whose entities are Day, Block and Signal. Reading the set out of the
-column that already holds it is the same move § 5.3 makes for the non-publishable class and the
-schema README makes for the selector: a class that later gains a priced entity enters the denominator
-without an edit here, and one that loses it leaves.
+class that carries the **fenced** marker form in § 4.5's table above **and** whose § 1.1 **Primary
+entities** cell names `Venue` or `Leg` — which resolves today to C5, C6, C7, C9 and C18.
+
+**Both conjuncts do work, and the rule is wrong without either.** The entities cell excludes C8,
+whose entities are Day, Block and Signal. The marker form excludes C10, C11, C15, C20 and C21 itself,
+each of which names a Venue or a Leg among its entities: C10 and C11 are table-shaped and carry the
+declared-key-column form instead, and C15, C20 and C21 are not in the entry-bearing set at all — so
+none of them can hold a `cost:` line for an estimate to range over. Stating the entities half alone
+would resolve to ten classes rather than the five above: harmless while those classes carry no marker,
+and wrong the moment one gains one, because it would enter M with no cost signal possible and degrade
+the coverage reading against a corpus that is telling the truth.
+
+Reading both sets out of the surfaces that already hold them is the same move § 5.3 makes for the
+non-publishable class and the schema README makes for the selector: a class that later gains a priced
+entity enters the denominator without an edit here, and one that loses it leaves.
 
 **The denominator is defined independently of whether a cost line is present, and that is the whole
 point.** If M were *the entries carrying a `cost:` line*, then N = M by construction and the coverage

@@ -44,13 +44,14 @@ to both, so neither number is asserted here without a basis beside it: the marke
 | C18 `outputs/rooftop-sunset-bars.md` | 3 | 1 | The residual class. The carried-forward rooftop is priced; the alternative and the never-carried candidate declare `undetermined` |
 
 **The denominator is computed, not counted by hand.** `reference/data-architecture.md`
-§ 4.5.1 fixes it: M ranges over the entries of every class whose § 1.1 Primary-entities
-cell names `Venue` or `Leg`. C8 `outputs/scheduling-framework.md` is excluded by that
-rule — its six day entries are Days, and a Day has no purchase — which is why its
-markers are absent from the table above rather than listed with a zero. Its markers
-correctly carry **no `cost:` line at all**, which from this release is the shape that
-means *this writer does not yet emit cost*, and `agents/03-scheduling.md` records that
-as a stated non-use rather than a deferral.
+§ 4.5.1 fixes it: M ranges over the entries of every class carrying the fenced marker
+form § 4.5 assigns **and** naming `Venue` or `Leg` in its § 1.1 Primary-entities cell.
+C8 `outputs/scheduling-framework.md` is excluded by that rule — its six day entries are
+Days, and a Day has no purchase — which is why its markers are absent from the table
+above rather than listed with a zero. Its markers correctly carry **no `cost:` line at
+all**, which from this release is the shape that means *this writer does not yet emit
+cost*, and `agents/03-scheduling.md` records that as a stated non-use rather than a
+deferral.
 
 **An entry is a marker, and this fixture already fixes what that means.** M counts
 `artifact-entry` blocks, not `###` headings — the same rule `agents/06-validator.md`

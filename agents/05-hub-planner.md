@@ -1051,12 +1051,15 @@ do not produce the same characters. Every figure lives in the body, where the pr
 carry the caveats a scalar cannot.
 
 **The denominator is computed, never enumerated — do not write a list of classes here or
-in the file.** Resolve the class set by reading `reference/data-architecture.md` § 1.1's
-**Primary entities** column and selecting every class whose cell names `Venue` or `Leg`.
-A hardcoded roster would be a second home for a fact that column already holds, and it
-would go silently wrong the moment a sibling adds a class: read from the column, a class
-that later gains a priced entity enters the denominator with no edit anywhere, and one
-that loses it leaves.
+in the file.** Resolve the class set by reading `reference/data-architecture.md` § 4.5's
+marker-form table and taking the classes in its **fenced** row, then keeping those whose
+cell in § 1.1's **Primary entities** column names `Venue` or `Leg`. **Both conjuncts do
+work.** The entities column alone also names table-shaped and entry-less classes that
+carry no `cost:` line at all, so on its own it resolves wider than the rule and would put
+classes into `M` that structurally cannot be priced. A hardcoded roster would be a second
+home for a fact the document already holds, and it would go silently wrong the moment a
+sibling adds a class: read from the document, a class that later gains a priced entity
+enters the denominator with no edit anywhere, and one that loses it leaves.
 
 **What `M` and `N` count, because getting this backwards produces a plausible wrong
 answer.** They are properties of the **entry population**, not of your consumption of it.
@@ -1117,7 +1120,9 @@ a measurement**, not an absence: render the real zero and say so.
 
 **The order you work in.**
 
-1. Resolve the denominator class set from § 1.1's Primary-entities column.
+1. Resolve the denominator class set per the computed-never-enumerated rule above — the
+   classes in § 4.5's **fenced** marker-form row, kept to those whose § 1.1
+   Primary-entities cell names `Venue` or `Leg`.
 2. Enumerate `artifact-entry` markers across those classes' instances ⇒ `M`. An instance
    carrying entries and no markers ⇒ `coverage: unverifiable`; stop and render the
    `undetermined` limb with the condition named.
