@@ -248,6 +248,14 @@ it and nowhere else — the `## Group` roster row in `trip-context.md`, and the
 `travelers/<file>.md` stem via `/trip-new`'s transform. **Expansion introduces no newly-copied
 value; it is N invocations of a shipped path.**
 
+**That equivalence is load-bearing rather than descriptive, and it settles one question the command
+file would otherwise leave to the reader.** `group` reconciles `- **Total travelers:**` on every
+invocation that changes the roster, so N of them reconcile it N times; an expansion that left the
+field alone would therefore not be N invocations of anything, and would end a successful run with a
+populated roster beside the bracketed total that `/trip-new` records three downstream contracts as
+being broken by. **Expansion reconciles that field once, after the last member, by `group`'s own
+table** — a delegation, on a verb whose every other step is one.
+
 **What is referenced: everything durable.** Passport, needs, preferences, travel style — all read
 through `person:` at composition time. Composition reads the record and writes the trip, never the
 reverse.
