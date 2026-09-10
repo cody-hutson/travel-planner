@@ -374,12 +374,13 @@ For each entry:
   byte-exactly — the hub matches it verbatim.]
 - **Honest caveat:** when this recommendation would be wrong for this group
 
-**The entry marker — one fenced block per entry, carrying the venue key and
-nothing else.** Open every entry with it, directly under that entry's heading and
-above the labelled lines:
+**The entry marker — one fenced block per entry, carrying the venue key and the
+declared cost field, and nothing else.** Open every entry with it, directly under
+that entry's heading and above the labelled lines:
 
 ```artifact-entry
 venue: ven-<token>
+cost: <amount> <currency> per-person
 ```
 
 `ven-<token>` is the canonical venue key, and **the hub mints it at its first
@@ -416,13 +417,39 @@ appended sections. **Nothing else goes in the marker but the declared cost field
 the entry stays in the labelled lines above, in prose, exactly as they are written
 today. Full statement: `reference/schemas/food-list.md` → "The entry marker".
 
-**The cost field, and it is optional.** `reference/data-architecture.md` → "The cost
+**The cost field, and you emit it.** `reference/data-architecture.md` → "The cost
 field — the one addition rule 2 admits" amended the marker rule to admit one
-`cost: <amount> <currency> <basis>` line below the key. **You do not emit it yet** —
-this prompt is unchanged in what it writes, and a marker with no `cost:` line is the
-correct output today. It is described here so an entry you meet carrying one is read
-rather than treated as out of grammar. **Your `**Price:**` prose line is unaffected
-and stays the master.**
+`cost: <amount> <currency> <basis>` line below the key, and
+`reference/adr/ADR-018-cost-estimation-method.md` is where the emit rule is decided.
+Five clauses govern what you write:
+
+1. **One `cost:` line inside the fence, directly below the key line** — never above
+   it, never outside the fence, and never a second one. **The fence's opening token
+   is unchanged**: § 4.5.1 changes no info-string, and a cost line sits *inside* the
+   fence the venue-identity migration owns.
+2. **`amount` is the low bound of that entry's own `**Price:**` line, floored to the
+   whole major unit.** A point value is its own low bound. Minor units are not
+   carried — a price of `12.50` emits `12`.
+3. **`currency` is the ISO 4217 alpha-3 code of the currency your prose states,
+   never a conversion.** Your label writes a local figure and a USD approximation;
+   the **local** code is what the marker carries.
+4. **`basis` is `per-person`**, because your label declares *per person* in its own
+   text. Nothing on this class is group-priced by construction, so a `group-total`
+   here would be a claim your prose does not make.
+5. **No normalizable value ⇒ `cost: undetermined`.** Write the line and declare the
+   absence; do not omit it. **A tier carrying no numeral is exactly this case** — a
+   price written as a band with no figure gives the marker nothing to normalize, and
+   `undetermined` is the honest answer rather than a guessed midpoint.
+
+**Your own no-line state is now historical.** § 4.5.1 distinguishes the two: a marker
+carrying **no `cost:` line** means *this writer does not yet emit cost*, and from this
+change that is true only of markers written before it. `undetermined` means *this
+writer looked and found nothing normalizable*. Both shapes are readable; only the
+second is one you may now write.
+
+**Your `**Price:**` prose line is unaffected and stays the master** — § 4.5 rule 1
+forbids moving it, and it keeps the source date, the tier language and any caveat the
+marker's single scalar cannot carry.
 
 **One entry per place.** Before writing, resolve your own list to distinct places.
 A place you have already entered is **cross-referenced from the earlier entry,

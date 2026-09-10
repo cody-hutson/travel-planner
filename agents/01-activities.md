@@ -283,6 +283,9 @@ For each entry:
 - **Name** — neighborhood / zone / distance from hotel
 - **Best time:** specific window
 - **Duration:** estimated hours including transit for a group of [N]
+- **Entry cost:** local currency + approximate USD per person; `free` where there
+  is none
+  [Source date: approximate month/year or "current general knowledge"]
 - **Why it's worth it:** one specific, honest sentence
 - **Group fit:** how this works across the energy/interest range
 - **Desires served:** which traveler desire(s) this entry addresses (drawn from
@@ -295,12 +298,13 @@ For each entry:
 - **Proximity cap note:** [If hotel-neighborhood venue — flag appearance count]
 - **Honest caveat:** the condition under which this recommendation is wrong
 
-**The entry marker — one fenced block per entry, carrying the venue key and
-nothing else.** Open every entry with it, directly under that entry's heading and
-above the labelled lines:
+**The entry marker — one fenced block per entry, carrying the venue key and the
+declared cost field, and nothing else.** Open every entry with it, directly under
+that entry's heading and above the labelled lines:
 
 ```artifact-entry
 venue: ven-<token>
+cost: <amount> <currency> per-person
 ```
 
 `ven-<token>` is the canonical venue key, and **the hub mints it at its first
@@ -338,13 +342,41 @@ zone, no duration, no bailout venue, no judgement. Everything else about the ent
 stays in the labelled lines above, in prose, exactly as they are written today.
 Full statement: `reference/schemas/activities-list.md` → "The entry marker".
 
-**The cost field, and it is optional.** `reference/data-architecture.md` → "The cost
+**The cost field, and you emit it.** `reference/data-architecture.md` → "The cost
 field — the one addition rule 2 admits" amended the marker rule to admit one
-`cost: <amount> <currency> <basis>` line below the key. **You do not emit it yet** —
-this prompt is unchanged in what it writes, and it declares no money label in the
-entry surface above, so a marker with no `cost:` line is the correct output today.
-It is described here so an entry you meet carrying one is read rather than treated
-as out of grammar.
+`cost: <amount> <currency> <basis>` line below the key, and
+`reference/adr/ADR-018-cost-estimation-method.md` is where this class's money label
+and this rule are decided. Five clauses govern what you write:
+
+1. **One `cost:` line inside the fence, directly below the key line** — never above
+   it, never outside the fence, and never a second one. **The fence's opening token
+   is unchanged**: § 4.5.1 changes no info-string, and a cost line sits *inside* the
+   fence the venue-identity migration owns.
+2. **`amount` is the low bound of that entry's own `**Entry cost:**` line, floored
+   to the whole major unit.** A point value is its own low bound. Minor units are
+   not carried — a price of `12.50` emits `12`.
+3. **`currency` is the ISO 4217 alpha-3 code of the currency your prose states,
+   never a conversion.** Where the line carries a local figure and a USD
+   approximation, the **local** code is what the marker carries; the USD figure is
+   the reader's convenience and stays in the prose.
+4. **`basis` is `per-person`**, because your label declares per person. A
+   genuinely group-priced entry — a private guide, a boat hire, a fee charged once
+   for the party however many attend — emits `group-total` instead, and the prose
+   says which it is.
+5. **No normalizable value ⇒ `cost: undetermined`.** Write the line and declare the
+   absence; do not omit it. `free` is a **value**, not an absence: it emits
+   `cost: 0 <CUR> per-person`.
+
+**Your own no-line state is now historical.** § 4.5.1 distinguishes the two: a marker
+carrying **no `cost:` line** means *this writer does not yet emit cost*, and from this
+change that is true only of markers written before it. `undetermined` means *this
+writer looked and found nothing normalizable*. Both shapes are readable; only the
+second is one you may now write.
+
+**Your `**Entry cost:**` prose line is the master.** § 4.5 rule 1 forbids moving it,
+the marker's scalar is a projection of it, and the two carry different things — the
+prose carries a range in a local currency with any caveat you attached, the marker
+carries one normalized scalar with a declared basis.
 
 **One entry per place.** Before writing, resolve your own list to distinct places.
 A place you have already entered is **cross-referenced from the earlier entry,
