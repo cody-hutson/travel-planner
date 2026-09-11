@@ -70,14 +70,25 @@ it unattended; that is deliberate, and it is the only operation here that works 
 It then removes the record and walks the trips, and it prints one line per location so
 you can see what it reached and what it could not.
 
-**What it cannot reach, said plainly rather than left for you to discover.** Three things
-survive it. A trip you had already **unlinked** this person from keeps their name in its
-own files — unlinking leaves no trace behind, so nothing connects that trip to this record
-any more and nothing can find it by id. The erase report lists such trips as *candidates*,
-by path and count, and changes nothing in them; walking them is yours. Anything already
+**What it cannot reach, said plainly rather than left for you to discover.** Four things
+survive it, and the fourth survives for a different reason than the other three. A trip
+you had already **unlinked** this person from keeps their name in its own files —
+unlinking leaves no trace behind, so nothing connects that trip to this record any more
+and nothing can find it by id. The erase report lists such trips as *candidates*, by path
+and count, and changes nothing in them; walking them is yours. Anything already
 **published** is gone from your machine only — a repository, a Pages site and any copy
 anyone took of it are outside every local operation. And a value **promoted** into this
 record from a trip stays in whichever trip it came from.
+
+**The fourth is a reusable group's name.** The other three are outside the operation — a
+trip it cannot find, a copy that is not on your machine, an answer belonging to the trip
+it came from. A group record erasure *does* reach: it removes this person's id from every
+group they were in, and then stops at the title line on purpose. The name has to be free
+text for a group to have a usable one, and a sweep that rewrote free text would take the
+name with it — so a group called `# Priya's crew` goes on saying so after Priya has been
+erased, and clearing that is a thing you do.
+[`../groups/README.md`](../groups/README.md) § *What a record does not hold* states the
+same reach from the group's side.
 
 Deleting a record by hand still works and still does only what it used to: it removes the
 record, and every reference inside every trip stays behind pointing at nothing.
@@ -101,6 +112,29 @@ in the durable form at all:
 And **no record for a person who did not ask for one.** A durable, cross-trip file
 about someone who never spoke to you is a different thing from a note in one trip's
 folder, and this store does not hold it.
+
+**A reusable group is a separate store, and it does not put group composition back into a
+record here.** [`../groups/README.md`](../groups/README.md) holds a named set of people —
+a display name and a list of person ids — so that a party you travel with often can be
+referenced as a unit. **The link runs one way, from the group to the person, and there is
+no line here that names a group.** That is what keeps the exclusion above true rather than
+merely observed: a group record can be edited or deleted and nothing in this store changes,
+because nothing in this store points at it. Reading which groups someone is in means
+looking through the group store, which is what `/trip-record group-list` does.
+
+**Trip history is resolvable without being stored, and the exclusion above is unchanged
+rather than merely still true.** A trip points at a person; a person points at no trip. So
+where someone has already been can be worked out by looking through the trips for the ones
+that reference them — which is what `/trip-record history` does — while this store gains no
+field, no file and no index, and nothing about the result is written back here. The link
+runs one way again, and it is the same direction: **there is no line here that names a
+trip.** Two things follow that are worth saying plainly. What that lookup can see is the
+trips that *currently* reference someone, which is not the same as everywhere they have
+been — a trip they were unlinked from is invisible to it, and it never reads that
+invisibility as *has not been there*. And an erasure needs no extra step for any of it:
+deleting the references is deleting the history, because the references are all it was.
+[`../reference/adr/ADR-017-derived-trip-history.md`](../reference/adr/ADR-017-derived-trip-history.md)
+records the decision.
 
 ## A relayed value is not an agreed one
 

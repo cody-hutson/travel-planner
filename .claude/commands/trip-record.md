@@ -105,6 +105,13 @@ population-role: RESOLVE
 | promote | ACTIVE | any | any | G8 |
 | erase | ANY | any | any | G8 |
 | extract | ACTIVE | any | any | G8 |
+| group-new | ANY | any | any | G8 |
+| group-list | ANY | any | any | G8 |
+| group-add | ANY | any | any | G8 |
+| group-drop | ANY | any | any | G8 |
+| group-delete | ANY | any | any | G8 |
+| group-expand | ACTIVE | any | any | G8 |
+| history | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -189,7 +196,7 @@ and it takes exactly this shape:
 | Cell | Rule |
 |---|---|
 | `verb` | the **bare token**, exactly as a user types it, single whitespace-delimited, ASCII-case-foldable — the token alone, never the token followed by an argument placeholder. § *Selecting the verb* matches the typed token against this column by exact string equality, so a placeholder in the cell makes the verb unmatchable |
-| `lifecycle` | the value admitting exactly the trip lifecycles the verb's **own section** states a reason to serve. `ANY` or `ARCHIVED` only where that section states the reason; where it states none the cell takes the contract's declared default, and **every verb of this command writes**, so no verb of it has that reason. The rule is written rather than its output because the output is what goes stale |
+| `lifecycle` | the value admitting exactly the trip lifecycles the verb's **own section** states a reason to serve. `ANY` or `ARCHIVED` only where that section states the reason; where it states none the cell takes the contract's declared default. The rule is written rather than its output because the output is what goes stale |
 | `mode` | `any` unless the verb's own section states a mode it does not serve, in which case the cell names the modes it does. A verb that must not run without a decided mode says so **in its own row**, naming what it serves, rather than by a halt at the gate that yielded the state |
 | `destination` | the `mode` rule again, with one bound that is not derived and does not move: **no row of this file may gate on a decided destination.** A freshly scaffolded trip has no decided destination whatever its mode, so a destination-gated verb would refuse on a trip the taxonomy says runs the full pipeline |
 | `depth` | **the value the header block's `contract-depth` line declares, read from that line.** The header fixes it, the guard grades the equality in both directions, and a value restated here would be a second declaration that can disagree with the first. Rendered **bare**, and left that way by the revision that moved this table outside the fence: a depth cell tolerates either rendering, and the guard strips a code span from the cell before it matches, so the value it reads is the same under both. **The value is never written into this table's own rule text** — hazard 3 below counts any five-column row whose fifth field normalises to a depth as a verb row, and hazard 3 forbids every other table the token outright, so this is the only table in this file that would otherwise carry it at all |
@@ -393,8 +400,9 @@ only the verbs that existed when it was written.
    needed it would protect that verb and leave the next slice to write the store with nothing to
    satisfy. Rule 7 is the shipped precedent for a widening landing as an append and saying so.
 
-10. **An erasure is the one write that may delete a record and rewrite a trip, and it is bounded by
-    a receipt that is total over a fixed table — never by a list of the locations someone remembered.
+10. **An erasure is the one write that may delete a durable person record and rewrite a trip, and it
+    is bounded by a receipt that is total over a fixed table — never by a list of the locations
+    someone remembered.
     This is a second widening of rule 5, taken under the Extension rule below, and rule 9 is left
     exactly as it stands.** Rule 9 derives a *target class* — one durable record, selected by an
     operator-supplied id — and then fixes an *operation class* narrow enough that erasure fails it on
@@ -431,9 +439,19 @@ only the verbs that existed when it was written.
     it removed.**
 
     It is here rather than inside the verb section because the prohibition half binds every verb:
-    **no other verb of this command may write a location this table names, on the ground that erasure
-    already does.** A bound written inside `erase` would leave the next slice free to reach the same
-    bytes by another route.
+    **no other verb of this command may write a location this table names on the ground that erasure
+    already reaches it** — a warrant is a rule of this clause deriving that verb's own target and
+    operation class, and erasure's reach is never one. A bound written inside `erase` would leave the
+    next slice free to reach the same bytes by another route.
+
+    **The clause above was narrowed, in place, by the slice that added a reach row for a store five
+    other verbs already write.** As first written it read *no other verb of this command may write a
+    location this table names*, full stop, which was true while every row of the table named trip
+    content or the person store — the two surfaces no other verb reaches. It stopped being true the
+    moment the table named a store whose own verbs write it under a rule of their own, and § *The
+    repair extension point* obliges the falsifying slice to repair the clause in the same act. **What
+    it was protecting is preserved and is the half that matters:** erasure's reach is not a warrant
+    anyone else may borrow.
 
 11. **A record creation is the one write that may bring a durable person record into existence, and
     it is bounded by a preview that is total over the source file's own answered set — never by a
@@ -484,9 +502,9 @@ only the verbs that existed when it was written.
     extraction — which is the population this verb exists to serve, not an edge of it.
 
     **This rule admits no deletion, and the omission is stated because a reader will look for one.**
-    Rule 10's sentence that an erasure is *the one write that may delete a record* is a property of
-    this command rather than of that verb, so a second record-deleting write here would falsify it —
-    and § *The repair extension point* would then oblige this slice to repair a Zone A sentence its
+    Rule 10's sentence that an erasure is *the one write that may delete a durable person record* is
+    a property of this command rather than of that verb, so a second such write here would falsify it
+    — and § *The repair extension point* would then oblige this slice to repair a Zone A sentence its
     own edit had made untrue. **A creation that writes its record and then cannot write the
     reference leaves that record behind**, and the remedy is the receipt plus the operator's hand:
     the receipt names the orphan by path and by id, and the undo is stated in order — the
@@ -495,9 +513,103 @@ only the verbs that existed when it was written.
     `reference/data-model.md` types a defect and which no verb of this command may author.
 
     It is here rather than inside one verb section because the prohibition half binds every verb:
-    **no other verb of this command may create a file under the store**, on the ground that a
-    creation verb already does. A bound written inside the one verb that first needed it would
+    **no other verb of this command may create a file under the durable person store**, on the ground
+    that a creation verb already does. A bound written inside the one verb that first needed it would
     protect that verb and leave the next slice to create a second record with nothing to satisfy.
+
+12. **A write to a store of references is bounded by the target's class and by the emptiness of what
+    it may hold, and never by a list of verbs. This is a fourth widening of rule 5, taken under the
+    Extension rule below, and rules 9, 10 and 11 are left exactly as they stand.** Rule 9 derives a
+    target class — **one durable record of one person** — and every verb reaching a store whose
+    records are about no single person fails that derivation at its first clause, whatever its
+    operation. Rule 9 says so in terms: *until such a rule exists, no other write outside
+    `trips/<slug>/` is available to any verb of this command.* This rule is that one.
+
+    **The target class.** A path outside `trips/<slug>/` is a permitted target under this rule only
+    where it is **a record whose entire content is a display name and a set of ids referring to
+    records of the classes above** — never a record holding a value about any person, and never a
+    path selected by a display name, a search, or any match this command computed. **The emptiness is
+    the whole of the class**: a store whose records could hold a person-scoped value is not reached
+    by this rule, because the confirmation shapes below are calibrated to a set of references and
+    would be the wrong gate for a set of answers.
+
+    **The operation class.** Creation, membership change and deletion of one such record, and
+    nothing else. **A write under this rule is taken on exactly these conditions, all of which must
+    hold:** **(a)** the verb's own section names the exact target path, and that path is under the
+    resolved store root for a class § 1.1 declares; **(b)** the record is selected by an id the
+    operator supplied, or — on the creation branch alone, where no id can yet exist — is a path that
+    does not exist whose stem is an id this run minted and rejection-sampled against that store's own
+    listing; **(c)** every value written is **either an id the operator supplied or the name they
+    typed**, so the write **authors nothing about anybody** — this is what replaces rule 9(e)'s
+    *moves a value* and rule 11(c)'s *copies values*, neither of which describes a write that carries
+    no person's answer at all; **(d)** an entry the write **removes is echoed verbatim before it
+    goes**, and a whole record the write removes is confirmed against **its display name and its
+    member count** — never against a typed-back id, for the reason stated below; and **(e)** the
+    write reaches **exactly one file**, and it reaches **no path under any store of durable person
+    records** — a verb of this class may **read** such a record to resolve a name for display, and
+    may write none.
+
+    **What (d)'s asymmetry with rule 10 is for, because a reader will ask why deletion here is
+    cheaper.** Rule 10's typed-back id guards an operation that destroys **a person's durable record
+    and cannot be undone**. This rule's deletion destroys **a set of references the operator can
+    rebuild** — a name and a list of ids, every one of which still exists. Flattening the two would
+    erode the distinction erase works to preserve, which is that *the render says which one is
+    running before anything is written*; giving this operation erase's ceremony would teach the
+    operator that the two are the same weight, which is the misreading the ceremony exists to
+    prevent. **Irreversible is not irrecoverable, and (d) is where this rule says so.**
+
+    **What (e)'s second half is for.** It is the prohibition half, and it is why this rule is here
+    rather than inside one verb section: **no verb reaching a reference store may write a durable
+    person record, on the ground that this rule reaches neither.** A bound written inside the first
+    verb that needed it would leave the next slice's verbs free to reach the person store by another
+    route, which is the failure rules 9, 10 and 11 each name in their own closing paragraph.
+
+13. **An erasure's reach into a store of references is the removal of an entry, never a substitution,
+    and it is bounded by the same receipt rule 10 is bounded by. This is a fifth widening of rule 5,
+    taken under the Extension rule below, and rules 9, 10, 11 and 12 are left exactly as they stand.**
+    It exists because **rule 10 and rule 12 each fail this write on their own terms**, and saying
+    which terms is what keeps this from reading as a rule invented to license a verb.
+
+    **Why rule 10 does not carry it.** Rule 10's operation class is *the substitution of one person's
+    identifying values with a minted per-trip token*, and its condition **(b)** requires every
+    rewritten value to become that token or a declared non-value with **no location emptied**. This
+    write is a **removal**, and a per-trip token written into a cross-trip store would be the stable
+    cross-trip pseudonym the mint exists to prevent — so the one shape (b) admits is the one shape
+    this write must not take.
+
+    **Why rule 12 does not carry it.** Rule 12(b) requires the record to be selected by an id the
+    operator supplied; here the records are found by **scanning the store for the subject's id**, and
+    the operator supplied a person id rather than a group one. Rule 12(e) requires the write to reach
+    exactly one file; an erasure may reach every record the subject belongs to.
+
+    **The target class.** An entry in a record of the class rule 12 derives — a display name and a set
+    of ids — **where the entry is one of those ids and the id is the subject of an erasure this run
+    resolved**, or a `merged-into:` stub id that redirects to it, taken from the set the verb's own
+    discovery step already computed. **The subject is never selected by a display name, never by a
+    search over names, and never by any match this command computed.**
+
+    **The operation class.** Removal of that entry, and nothing else: **no value is written, no record
+    is created, and no record is deleted** — a record left holding no entries is left standing.
+
+    **A write under this rule is taken on exactly these conditions, all of which must hold:**
+    **(a)** the location is a row of the reach table in `## erase <person-id>`, and the receipt is
+    total over that table exactly as rule 10 requires — this rule adds a **row**, never a second
+    receipt; **(b)** the entry removed is matched **whole, against an anchored line, by id**, never by
+    a display name and never as a substring; **(c)** **no location is emptied** is **replaced** here
+    by *no location is destroyed* — a set whose length is variable by construction has an empty
+    member as a **valid state**, which is precisely what a constraint roster does not, and that
+    difference is the whole of why rule 10(b)'s clause cannot simply be inherited; **(d)** a removal
+    that leaves a record with no entries or with one **is reported with the record's id and its new
+    count**, so the operator learns of a state they did not choose rather than discovering it later;
+    and **(e)** **no record of this class is deleted by this rule at any count, including zero** —
+    deleting a group because its last member was erased would destroy a name and a structure the
+    operator authored, as a side effect of an unrelated person's request.
+
+    **What (e) is for, because a reader will think zero is a special case.** It is the prohibition
+    half, and it binds every verb: **no verb of this command may delete a record of this class on the
+    ground that an erasure emptied it.** Deletion of such a record is rule 12's, on an operator's
+    explicit act, confirmed against a name and a count. A bound written inside `erase` would leave the
+    next slice free to add the tidy-up nobody asked for.
 
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
@@ -547,8 +659,10 @@ Frozen. `/trip-record` on its own is **not** a default; it is a refusal. Say tha
 print the verbs of this command read live from this file's own requirement table, and stop. Select
 no verb, and do not fall back to one.
 
-`/trip` defaults a bare invocation to `status` because `status` is read-only. **Every verb of this
-command writes, and a write command never picks a write for you.**
+`/trip` defaults a bare invocation to `status` because `status` is read-only. **This command declares
+no default at all, and the ground for that is a rule rather than a property of its verb set: which of
+its verbs write is read from each verb's own section and never enumerated here, so a bare invocation
+names nothing this refusal could safely select — and a write command never picks a write for you.**
 
 This refusal happens before the gate ladder runs, so it sets no `trip.resolution` and no
 `trip.stop_gate`, and it asserts nothing about whether a trip exists, which trip is active, or what
@@ -1970,11 +2084,13 @@ naming, in one place, is not a solicitation.
 
 ## erase <person-id>
 
-**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/` and `outputs/` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent.
+**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/` and `outputs/` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent.
 
-The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only irreversible operation on this command surface, and the only one that writes an archived trip.**
+The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only operation on this command surface that destroys personal data irrecoverably, and the only one that writes an archived trip.**
 
-**What this verb is not.** It is not `unlink`, which detaches one trip from a record and leaves both intact. It is not `group`, which takes someone off a trip and never touches `travelers/`. Those two are reversible and this is not, and the render says which one is running before anything is written.
+**Irreversible and irrecoverable are two words and this verb is the only one that needs both.** `group-delete` is irreversible in the narrow sense — nothing under `groups/` is in git, so there is no earlier version to restore from — and it is nonetheless **reconstructible**: a group record is a display name and a list of ids, every one of which still exists, so the operator can make it again from what survives. Nothing this verb destroys can be made again from anything. The distinction is what the confirmation shapes are calibrated to, and it is why this verb takes a typed-back id where `group-delete` takes an echoed name and count.
+
+**What this verb is not.** It is not `unlink`, which detaches one trip from a record and leaves both intact. It is not `group`, which takes someone off a trip and never touches `travelers/`. It is not `group-delete`, which removes one file under `groups/` and reaches no person record at all — its own render says so in terms, and the negative is asserted rather than assumed. Those three are recoverable and this is not, and the render says which one is running before anything is written.
 
 ### Erasure substitutes; it never regenerates
 
@@ -2063,8 +2179,11 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 | **27** | **merge stub, subject as survivor** — a stub filed under *another* person's id | REACH | **redact the subject's pre-merge values from that stub**, preserving its redirect and the other person's data. **Never delete it** |
 | **28** | **merge stub whose `merged-into:` names the deleted record** | REACH | repoint the redirect at the tombstone. **Never delete it** — redirect depth is pinned at one hop, so a deleted stub strands every referrer as `MALFORMED` rather than resolving |
 | **29** | `people/<person-id>.md` — the record | REACH | **delete the file.** No stub is left in the store |
+| **30** | `groups/*.md` — the `## Members` bullets naming the subject id, **and any bullet naming a `merged-into:` stub id that redirects to it** | REACH | **remove the bullet. No tombstone.** A `per-<token>` written here would be a stable **cross-trip** pseudonym surviving in a **cross-trip** store — the exact correlation the per-(person × trip) mint exists to destroy. Removal is safe because a member set is variable-length **by construction**, so a smaller set is a valid one rather than an emptied location. Where removal empties a group or leaves a single member, **the group is not deleted** — emit its id and its new count. The stub half needs no new machinery: step 2's discovery already computes the stubs that redirect to this record, and this sweep consumes that set. **This row's reach over the section is total by construction rather than by enumeration**: `reference/schemas/group-record.md` closes `## Members` to member bullets and blank lines, so the only thing the section can contain is the thing this row removes, and there is no residue of another shape for it to miss |
 
-**The table carries 29 rows — 20 REACH, 5 REPORT and 4 OUT — numbered contiguously.** Rows 1–28 are the locations a copy of the person's data can reach; row 29 is the record itself and is written last. **That accounting is graded against the table by `scripts/test-artifact-schema.sh` arm `ER14`**, in every term and in both directions, because the receipt's totality rests on this table being the whole population and a bare numeral is the one part of that claim nothing was checking: a row can be added while the figure beside it stays, and a reader checking the figure then reads a confirmation where a widening happened. Re-state the accounting in the same commit as the row. `people/README.md` is **not** a location: it is a tracked signpost carrying no person data, and keeping it that way is a property of the store rather than a thing this verb checks.
+**The table carries 30 rows — 21 REACH, 5 REPORT and 4 OUT — numbered contiguously.** Rows 1–28 and row 30 are the locations a copy of the person's data can reach; row 29 is the person's own record.
+
+**Row 30 is numbered after the record and written before it, and the two orders are separate on purpose.** The numbering is **append-only**, because every citation by number in the write order and in the two phase lists re-points silently under a renumbering — which is the property `ER14` grades as contiguity. The write order is stated in its own block below, where each position carries its reason; **the store is still written last, and row 30 is part of the store step rather than after it.** Deleting the record before the group sweep would strand a partial run with a member bullet naming an id nothing resolves and no record to re-derive the sweep from, which is the same argument that put row 29 last in the first place. **That accounting is graded against the table by `scripts/test-artifact-schema.sh` arm `ER14`**, in every term and in both directions, because the receipt's totality rests on this table being the whole population and a bare numeral is the one part of that claim nothing was checking: a row can be added while the figure beside it stays, and a reader checking the figure then reads a confirmation where a widening happened. Re-state the accounting in the same commit as the row. `people/README.md` is **not** a location: it is a tracked signpost carrying no person data, and keeping it that way is a property of the store rather than a thing this verb checks.
 
 ### What the traveller file becomes
 
@@ -2082,7 +2201,7 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 
 ### The order of writes, and why it is not tidiness
 
-> **1.** row 1 — the roster cell. **2.** rows 2–4 — the rest of § *Group*. **3.** rows 8–9 — the traveller file and its reference field. **4.** row 6 — `Applies to:`. **5.** row 10 — the derived model. **6.** rows 11–15, 17 — the remaining derived and accumulated artifacts. **7.** row 18 — the publish staging clone. **8.** rows 26–29 — the store.
+> **1.** row 1 — the roster cell. **2.** rows 2–4 — the rest of § *Group*. **3.** rows 8–9 — the traveller file and its reference field. **4.** row 6 — `Applies to:`. **5.** row 10 — the derived model. **6.** rows 11–15, 17 — the remaining derived and accumulated artifacts. **7.** row 18 — the publish staging clone. **8.** rows 26–28 and row 30 — the merge stubs and the group store. **9.** row 29 — the person's own record, and the last write of the store.
 
 **The roster is written first because it is the name authority.** `agents/00-enrichment.md` § *Traveler identity* states it: the roster cell is the authoritative display name, the model heading and the traveller-file stem are **projections** of it, and where a projection disagrees *"the roster is right and the projection is the defect"* — the reconciler converges the projection onto the roster and is forbidden to repair by rewriting the roster.
 
@@ -2090,11 +2209,11 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 
 **This is also what closes the reopen path.** `/trip-decommission reopen` returns the marker to `ACTIVE` and the next pass re-enumerates the party **from the roster**. The entry class with no traveller file — a party member whose needs the operator supplied — has no source-side substitution to carry it, so a roster left un-swept resurrects them on the first pass after a reopen. **The roster write is what makes the archived erasure hold.**
 
-**The store is written last, for the same reason inverted.** While `people/<person-id>.md` exists a re-run can re-derive the whole sweep from it. Deleting it first strands a partial run with no source of truth for what it was erasing.
+**The store is written last, for the same reason inverted.** While `people/<person-id>.md` exists a re-run can re-derive the whole sweep from it. Deleting it first strands a partial run with no source of truth for what it was erasing. **That argument reaches the group store too, and is why row 30 sits inside step 8 rather than after step 9**: the group sweep is located by the subject id and by the stub set step 2 computed, and both stop being re-derivable the moment the record is gone.
 
 ### The two-phase sweep, and why a name is not a safe pattern
 
-**Phase A — structural loci.** Rows 1, 2, 3, 5, 6, 8, 9, 10, 26–29. Each is a named cell, heading, field or path, addressed **by position**. Phase A never pattern-matches a name; it rewrites a located slot.
+**Phase A — structural loci.** Rows 1, 2, 3, 5, 6, 8, 9, 10, 26–30. Each is a named cell, heading, field or path, addressed **by position**. Phase A never pattern-matches a name; it rewrites a located slot. **Row 30 belongs here and not in Phase B, and the distinction is exact rather than incidental:** a member bullet is located by an **id**, matched whole against an anchored line, never by a display name — so the free-text hazards Phase B's bounds exist for do not arise, and the group store is outside Phase B's one-trip-directory scope in any case.
 
 **Phase B — bounded free-text.** Rows 4, 6, 11–15, 17. **Word-boundary, case-sensitive, and scoped to one trip directory per pass.**
 
@@ -2132,19 +2251,23 @@ It scans the trip roots discovery did **not** resolve for the subject's display 
 
 **Why the gate is stronger than the nearest precedent's.** The publish script's takedown arm types the *subject identifier* and accepts a flag to skip the prompt, because a deleted repository can be re-published. Its typed identifier would here be the person's name, and its escape hatch would be a scripted irreversible erasure. This verb takes instead the shape the script reserves for the confirmation it will not let anyone skip.
 
-**The cost, stated rather than buried: erasure cannot be scripted, batched, or run in CI.** That is the correct trade for the one irreversible operation on this surface, and it is the trade the corpus already made for a reversible one.
+**The cost, stated rather than buried: erasure cannot be scripted, batched, or run in CI.** That is the correct trade for the one irrecoverable operation on this surface, and it is the trade the corpus already made for a reversible one.
 
 ### The receipt
 
 One row per **REACH** and per **REPORT** location, every run: **location · disposition · outcome · occurrence count**, and for `UNREACHABLE` the concrete path or URL. **No row carries a value.** Then the `CANDIDATES` block, then the hand-off for row 19.
 
+**Row 30's receipt row carries the group ids it reached and their new member counts, and that is not a value in the sense the rule above forbids.** A group id is this run's own act made auditable — it names which records changed, so an operator can see that a group they curated is now smaller — and it is neither the subject's data nor anybody else's. A row naming only an occurrence count would leave the operator unable to tell which of their groups moved, on the one location in the table whose contents they authored themselves. **The member ids that stayed are never printed**, and no display name is resolved for this row at all.
+
 **A second run emits `ALREADY-ERASED` on every row and changes zero bytes.**
 
-### The standing rule this write is taken under is rule 10
+### The standing rules this verb writes under are rules 10 and 13
 
-This section discharges each of its conditions by name. **(a)** every location written is a row of the table above, and the receipt is total over it; **(b)** every rewritten value becomes the minted token or the form's declared not-answered sentinel, and **no location is emptied** — rows 5 and 6 are the two that would otherwise be, and both are pinned; **(c)** Phase B is scoped to one trip directory, word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator types the record's id at a terminal, with no flag and no non-interactive path; **(e)** every location emits exactly one receipt row, including `n/a` for the absent roster column and `UNREACHABLE` for the four locations nothing local reaches.
+**Rule 10 carries every row but one.** This section discharges each of its conditions by name. **(a)** every location written is a row of the table above, and the receipt is total over it; **(b)** every rewritten value becomes the minted token or the form's declared not-answered sentinel, and **no location is emptied** — rows 5 and 6 are the two that would otherwise be, and both are pinned; **(c)** Phase B is scoped to one trip directory, word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator types the record's id at a terminal, with no flag and no non-interactive path; **(e)** every location emits exactly one receipt row, including `n/a` for the absent roster column and `UNREACHABLE` for the four locations nothing local reaches.
 
-**Rule 9 is untouched.** Its target derivation is taken unchanged and its operation class is not widened — erasure fails it on three counts, which is why rule 10 exists rather than an exception inside rule 9.
+**Row 30 is rule 13's, and it is stated separately rather than folded in because rule 10 cannot carry it.** Rule 10(b) admits a rewritten value that becomes the minted token, and the minted token is the one thing that must never be written into a cross-trip store; and its *no location is emptied* clause is calibrated to a constraint roster, where empty grades as compliant, rather than to a member set whose length is variable by construction. Rule 13's five conditions are discharged here, named by letter rather than in the bracketed form rule 10's own discharge uses — that form is anchored by an arm of the schema suite at exactly one site in this section, and a second instance of it would leave the arm unable to locate the site it grades. Clause **a**: the location is row 30 of the table above and emits its receipt row like every other. Clause **b**: the bullet is matched whole, against an anchored line, by id. Clause **c**: removal leaves the record standing. Clause **d**: a group left with no members or with one is reported by id and count. Clause **e**: no group record is deleted at any count.
+
+**Rules 9 and 12 are untouched.** Rule 9's target derivation is taken unchanged and its operation class is not widened — erasure fails it on three counts, which is why rule 10 exists rather than an exception inside rule 9. Rule 12 is likewise not stretched: it derives an **operator-driven** write to a reference store, selected by an id the operator supplied and reaching one file, and an erasure satisfies neither clause — which is why rule 13 exists rather than a carve-out inside rule 12.
 
 ### What this verb must never converge with
 
@@ -2367,8 +2490,8 @@ first where one was written, then delete the record. **The order is the whole of
 reversed, the trip is left holding a well-formed reference resolving to nothing, which is the defect
 this verb's write order exists to avoid, authored by the repair instead of by the run.
 
-**Why the undo is by hand and not a compensating delete.** A second record-deleting write here would
-falsify standing rule 10's sentence that an erasure is *the one write that may delete a record* — and
+**Why the undo is by hand and not a compensating delete.** A second such write here would
+falsify standing rule 10's sentence that an erasure is *the one write that may delete a durable person record* — and
 § *The repair extension point* would then oblige this slice to repair a Zone A sentence its own edit
 had made untrue. The cost is one manual step on a branch that requires a write to have failed after
 another succeeded; the alternative is a second deletion path on a command surface whose deletion
@@ -2450,3 +2573,294 @@ revert, and the record is visible to every trip that later links it. Not IRREVER
 deleted, no source value is lost, and a completed extraction is undone by removing the `person:` line
 and discarding the record. That tier is a **property of the copy-never-move decision**: were this verb
 to remove the extracted bullets from the source, the tier would move with it.
+
+## group-new <name>
+
+**Reads:** `<store-root>/groups/` — the store listing, which is both the rejection set the minted id is sampled against and the denominator of the display-name collision check; `<store-root>/groups/*.md` — **the H1 line alone**, for that collision check, and no other line of any record is read; `<store-root>/groups/grp-<token>.md` — the file-existence probe on the minted path, which is the control standing rule 2 turns on and is declared because an undeclared probe hides it. **Reads nothing under any store of person records, and nothing under `trips/<slug>/`** — the negatives are stated because a reader will expect the first (this verb creates a set of person references and never resolves one) and because the second is what makes the `lifecycle` cell below honest. **Dispatches no agent. Takes no `Bash(ls:*)` use** — the store listing is read the way `## extract` reads its own, and this verb creates no directory.
+
+The group-creation verb. It mints a record holding a display name and an empty member list, and it is the only verb of the six that brings a file into existence.
+
+**Why the requirement-table row reads `lifecycle: ANY`, stated here because § *The shape of a table row* requires the reason to live in the verb's own section.** This verb writes one file under `groups/` and writes nothing under `trips/<slug>/`, so **no trip lifecycle bears on it at all** — an archived trip is neither served nor obstructed, because the trip is not the subject. That is `erase`'s reason at one remove: `erase` declares `ANY` because its subject is a durable record rather than a trip, and so does this. **The resolved trip is not used by this verb**, and saying so is what keeps the row from reading as a claim that it serves archived trips specially.
+
+**Identity — the id is minted, the name is typed, and neither is derived from the other.**
+
+- **The id** is `grp-<token>` where `<token>` is four lowercase hex digits. **Minting asserts non-existence and re-mints on collision**, sampled against the store's own listing — the same rejection-sampling `## extract` performs for a person id, and the same reason it terminates: four hex digits give 65,536 values against a store of tens of records.
+- **The display name is the argument, written as the body H1 and nowhere else.** § 4.3 bars restating a value that already lives in a structural position, and the H1 is the position the identity rule keys on, so **the name never enters frontmatter and the id never enters the body.**
+
+**Creation refuses on a name collision, and the refusal is a refusal rather than a merge.** Normalize the argument with **§ 3.2's existing normalization** — the one the publish guard already executes, read live and never re-implemented, because a second implementation would be a second source of truth for identity — and compare it for **exact equality** against the normalized H1 of every record in the store. Never similarity, never edit distance, never fuzzy matching. On a match, write nothing and offer three remedies, the person store's own: **use the existing group** (name its id), **disambiguate the name**, or **create anyway with the collision acknowledged**. The third branch exists because co-existence is safe when ids differ. **No code path runs from this comparison to a write on the matched record.**
+
+**Two refusals before the collision check, both writing nothing.** An **absent or empty** `<name>` — print the shape and stop. A `<name>` that is **a leftover placeholder** by the field-general predicate — a trimmed value beginning with `[` and ending with `]` — refuse and say which, because a group named `[Group name]` is the shape a later reader cannot distinguish from an unanswered field.
+
+**What is written.** One file at `<store-root>/groups/grp-<token>.md`, carrying the eight universal keys `reference/schemas/group-record.md` declares, the H1, and a `## Members` heading with **no bullets under it**. **An empty member list is a valid record and not a partial one** — a group is created before it has members, and the alternative would be a verb that refuses to create the thing it exists to create.
+
+**The receipt names the id, the name as normalized, and the member count, which is zero.** It names no person and reads no person record, because at creation there is nobody in the group.
+
+**The standing rule this write is taken under is rule 12.** This section discharges each condition by name. **(a)** the target path is named above and sits under the resolved store root for a class § 1.1 declares; **(b)** the creation branch's own clause applies — the path does not exist and its stem is an id this run minted and rejection-sampled against the store's listing; **(c)** the only values written are the operator's typed name and the class's own declared constants, so the write authors nothing about anybody; **(d)** vacuous — this write removes nothing; **(e)** exactly one file is written and no path under any person store is touched, read or written.
+
+**Reversibility: CHEAP, confidence HIGH.** The record holds no person's data and nothing references it yet; discarding it costs a `group-delete`.
+
+## group-list [<group-id>]
+
+**Reads:** `<store-root>/groups/` — the store listing, on the no-argument branch, and the existence probe on the argument branch; `<store-root>/groups/*.md` or `<store-root>/groups/<group-id>.md` — the H1 and the `## Members` bullets, which are the whole of what either branch renders; `<store-root>/people/*.md` — **the H1 line alone**, on the argument branch only, to resolve each member id to a display name, and **no other line of any person record is read**. **Writes nothing on either branch. Dispatches no agent.**
+
+The read verb, and the only one of the six that writes nothing at all. **Its optional argument mirrors the incumbent `group [<name>]` idiom** — no argument renders the population, an argument renders one member of it — deliberately, so the two verbs that share a stem also share a shape.
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged: this verb reads the group store and writes nothing anywhere, so no trip lifecycle bears on it.
+
+**No argument — the store.** One row per record: **id, display name, member count**. Sorted by display name. **No member id is printed on this branch and no person record is opened**, which is what keeps a store listing from being a roster of who travels with whom. **An empty store is rendered as an empty store** — say the store holds no groups and name `group-new`, and never as an error.
+
+**An argument — one group's members.** Resolve `<group-id>` first; **an id that resolves to nothing is a refusal**, naming the shape and **offering no near-match** — a "did you mean" over a store of real groups is a disclosure, which is the reason `erase` gives for the same refusal and it holds here for the same reason. Then render the H1, the member count, and one row per member bullet **in the file's own order**, each carrying the id and the name its record's H1 resolves to.
+
+**Three resolution outcomes per member, and they are three different renders.** They are `ADR-012` § 3's branches, inherited verbatim rather than restated as new posture:
+
+| The member id | Renders as |
+|---|---|
+| resolves to a live record | the id and that record's H1 |
+| resolves to a **merge stub** | the id, **followed to depth 1**, and the survivor's H1 — with the redirect named, so the operator sees that the entry is now reaching someone else's record |
+| resolves to nothing, or through a **second** stub hop | **`UNDETERMINED`** |
+
+**`UNDETERMINED` is never rendered as *no such person* and the row is never dropped.** A dropped row makes a group of four read as a group of three, and the member count above it would then disagree with the rows below — the two are printed together precisely so that disagreement is impossible. A second stub hop is `MALFORMED` under the shipped resolution rule and takes the same render, because a chain this command follows past depth 1 is a chain it cannot bound.
+
+**This verb suggests nothing.** It does not offer to remove a `UNDETERMINED` member, does not offer to repoint one, and names no verb in either case. The operator reads the store and decides; a read verb that proposes a write is a classification with a reflexive accept, on the one branch of this command that was safe.
+
+**Reversibility: n/a — this verb writes nothing.**
+
+## group-add <group-id> <person-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates every branch, and the whole of `## Members`, read before it is written because the duplicate check runs over the existing bullets and because an append needs the section's own extent; `<store-root>/people/<person-id>.md` — **the file-existence probe alone**, to establish that the id resolves, plus its frontmatter for a `merged-into:` key, and **no body line of any person record is read** — the verb needs to know that the record exists and whether it is a stub, and nothing else about the person. **Dispatches no agent.**
+
+The membership-addition verb. It appends one bullet and changes nothing else.
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged.
+
+**Both ids are arguments and neither is searched for.** A display name is never accepted on either position, and no name is matched, searched for or computed against either store. That is rule 12(b) discharged, and it is the same bound `erase` states for its own single argument.
+
+**Refusals, in evaluation order. Every one writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| either argument is absent, or is not of its id's declared shape | refuse; print both shapes and **offer no near-match** |
+| `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| `<person-id>` resolves to nothing | refuse; say the person record does not exist, and **never mint one** — see below |
+| `<person-id>` resolves to a **merge stub** | refuse and **name the survivor's id**. Adding through a stub records an entry that is already dead, and the operator can add the survivor directly |
+| the bullet is already present | refuse; say the person is already a member and name the group's member count. **Not an error and not a second bullet** |
+
+**Never minting a person record is a boundary rather than an omission, and it is worth stating because the alternative is superficially helpful.** A verb that created a durable cross-trip record for an id that did not resolve would be authoring a record about someone who never asked for one, which is the consent boundary `reference/adr/ADR-014-cross-trip-consent-refusal.md` closes rather than defers. **Record creation is `## extract`'s, under standing rule 11, from a profile that person filled.** This verb names that path and stops.
+
+**What is written — the append shape standing rule 7 admits**, reached once the read above has established the file and the duplicate check has selected this branch. **One bullet, `- psn-<token>`, appended at the end of `## Members`.** No existing line changes. **Nothing else is written**: not a name, not a date, not a count, not a note. The bullet is the entry, and the anchored form is the whole of what this class admits.
+
+**The receipt names the group, the person's display name resolved live from their record's H1, and the new member count.** The name is read for the render and is not written into the file — which is the one place this verb touches a person record at all, and it reads.
+
+**The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied and by nothing else; **(c)** the only value written is an id the operator supplied; **(d)** vacuous — this write removes nothing; **(e)** exactly one file is written, and the person record is read and never written.
+
+**Reversibility: CHEAP, confidence HIGH.** `group-drop` is the exact inverse and the entry carries no state to lose.
+
+## group-drop <group-id> <person-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates every branch, and the whole of `## Members`, read before it is written because the presence probe selects refusing from removing, **because the bullet being removed is echoed verbatim before it goes**, and because the member count in the receipt is derived from the section rather than remembered. **Reads no person record on any branch** — the negative is stated because `group-add`'s counterpart does read one: this verb removes an id it was given and never needs to know whose it is, and opening a record to name someone at the moment they are removed would put a person's name in a transcript for no operational purpose. **Dispatches no agent.**
+
+The membership-removal verb. It removes one bullet and changes nothing else.
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged.
+
+**Refusals, in evaluation order. Every one writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| either argument is absent, or is not of its id's declared shape | refuse; print both shapes and **offer no near-match** |
+| `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| no bullet in `## Members` carries `<person-id>` | refuse; say the person is not a member of this group. **The person record is not opened to check whether they exist** — this verb's question is about the group's contents, and answering it does not require knowing whether the id resolves |
+
+**The removal is echoed verbatim before it goes.** Standing rule 2's bound on a write that does not preserve what it replaces, and standing rule 12(d) states it as a condition. **The echo is the bullet's own bytes — the id — and never a name resolved for the occasion.**
+
+**What is written.** The one bullet is removed. **No existing line changes and no other bullet moves**, and the section's remaining order is the file's own. **A removal that empties `## Members` leaves the heading standing and the record in place** — an empty member list is a valid record, exactly as it is at creation, and deleting the group because its last member left would be a second operation the operator did not ask for.
+
+**The receipt names the group, the id removed, and the new member count**, and where that count is zero or one it says so plainly rather than treating either as an error.
+
+**The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied; **(c)** vacuous — this write adds no value; **(d)** the removed entry is echoed verbatim before it goes; **(e)** exactly one file is written and no person record is opened at all.
+
+**Reversibility: CHEAP, confidence HIGH.** `group-add` is the exact inverse, and the echoed bullet is the receipt that makes it typeable.
+
+## group-delete <group-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 and its `## Members` bullet count, the last two **read before the file is removed** because the confirmation is echoed against them and cannot be recovered afterwards. **Reads no person record, and reads nothing under `trips/<slug>/`** — both negatives are load-bearing rather than courtesies, and the section below says why. **Dispatches no agent.**
+
+The group-deletion verb. **It deletes exactly one file under `groups/` and nothing else, anywhere.**
+
+**Why the requirement-table row reads `lifecycle: ANY`.** The reason `group-new` states, unchanged.
+
+**What this verb does not do, stated as a negative because the word *delete* invites the wrong guess.** It **deletes no person record**, and no code path from this verb reaches one: the `Reads:` line above names no path under any person store, so there is nothing to write and nothing to remove there. It **changes no trip**: a trip that expanded this group carries no byte naming it, so there is nothing in any trip for a deletion to reach — which is not this verb being careful, it is `group-expand`'s no-residue property leaving nothing to be careful about. **The render says both, in terms, before it asks.**
+
+**The confirmation is an echoed name and count, not a typed-back id, and that is a decision rather than a shortcut.** Print the group's **display name** and its **member count**, say plainly that this deletes the group and no person record, and ask. **Flattening this into `erase`'s typed-back ceremony would erode the distinction that verb works to preserve** — that the render says which one is running before anything is written — by teaching the operator the two are the same weight. Standing rule 12(d) carries the rule and its reason; this section is where the verb discharges it.
+
+**Refusals, in evaluation order. Every one writes nothing.**
+
+| Condition | What happens |
+|---|---|
+| `<group-id>` is absent, or is not of the id's declared shape | refuse; print the shape and **offer no near-match** |
+| `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| the operator declines the confirmation | write nothing; **the file is left byte-identical** |
+
+**It is irreversible and it is reconstructible, and both words are needed.** Nothing under `groups/` is in git, so there is no earlier version to restore from. But a group record is **a display name and a list of ids, every one of which still exists**, so the operator can make it again — `group-new` then `group-add`, from the member list the confirmation just showed them. **The receipt therefore prints the member ids it is about to destroy**, which is the one place this verb echoes them: they are the whole of what is being lost, and a receipt that withheld them would make the operation unreconstructible in fact while calling it reconstructible in principle.
+
+**The standing rule this write is taken under is rule 12.** **(a)** the target path is named above; **(b)** the record is selected by an id the operator supplied; **(c)** vacuous — this write adds no value; **(d)** the whole record is confirmed against its display name and member count, which is the shape (d) names for a record-removing write; **(e)** exactly one file is removed and no path under any person store is touched.
+
+**Reversibility: MODERATE, confidence HIGH.** Not CHEAP — the file is gone and there is no revert. Not IRREVERSIBLE — every id it held still resolves, so the record is rebuildable from the receipt. That tier is a **property of the no-personal-data decision**: were a group record ever to hold a value about a member, that value would be unrecoverable and the tier would move with it.
+
+## group-expand <group-id>
+
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 for the render, and its `## Members` bullets, which are the whole of the member set and are read **in the file's own order** because the write order below is that order; `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, in `## link`'s order and for `## link`'s reason; `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, because the table's own header row fixes the shape a new row is written in, and because the disposition for `- **Total travelers:**` is chosen from that field's current value, which is `## group`'s read and is cited rather than re-derived; and, **per member**, exactly what `## link <name> <person-id>` declares for one member — that member's `travelers/<file>.md` existence probe, frontmatter and declared body fields; that member's `people/<person-id>.md` existence probe, H1 and declared body fields; the outgoing record on the branch where the file already names a different one; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**; and, **on the `NEW` branch alone**, exactly what `## profile <name>` declares for its create route — `templates/traveler-intake.template.md`, the copy source; `trips/<slug>/travelers/*.md`, **the entry names alone, no file opened**, which is that verb's collision-check denominator; and `reference/data-architecture.md` § 3.2, read live for the canonical traveller key that check normalizes with and **never re-authored here**. **Both per-member read sets are cited rather than re-derived, and neither is widened by being run N times** — `link`'s on every branch, `profile`'s create-route reads on `NEW` — because this verb re-implements neither the survey nor either predicate it rests on, and a second implementation of any of them would be a second source of truth for what a field is or for who is who. **No value read on any side is written anywhere by the survey**, which is `link`'s own minimality clause, preserved. Dispatches no agent.
+
+The expansion verb. It puts a group's members onto the resolved trip, each linked to their own record exactly as `link` would have linked them one at a time. **It is the only one of the six that requires a trip, and its requirement-table row reads `lifecycle: ACTIVE` for that reason** — it writes trip content, so rule 5's bound applies to it unchanged and the contract's declared default is the correct cell.
+
+### What expansion writes into the trip, and what it does not
+
+**What is copied: the member's display name, and nothing else.** It lands where the shipped path already puts it and nowhere else — the `## Group` roster row in `trip-context.md`, and the `travelers/<file>.md` stem via `/trip-new`'s transform, reused verbatim and attributed to it exactly as `## group` reuses it. **Expansion introduces no newly-copied value**: every byte it writes is a byte one of the shipped verbs already writes, N times over.
+
+**What is reconciled: `- **Total travelers:**`, once, by `## group`'s own table.** The cited read is
+taken for **every one of its purposes that applies here**, not two of them: the disposition for that
+field is chosen from that field's current value, and `## group [<name>]`'s reconciliation table for
+it is **applied rather than restated**. The one purpose that does not apply is named rather than
+dropped — echoing a row that is being removed, which expansion never does. **Reconciling is not an
+extra write this verb reaches for; it is what makes the sentence above true.** `## group` run once
+per member reconciles the field on every one of those runs, so an expansion that left it alone would
+produce a state *N invocations of a shipped path* does not produce — and that equivalence is stated
+unqualified in `reference/adr/ADR-016-reusable-groups.md` § 4, which is the record this verb is
+built from. It is also the denominator half: `## group` names this field **and** the roster as the
+traveler denominator that `agents/00-enrichment.md`'s `PROFILE MISSING` branch and `### Per-Traveler
+Planning Days [DERIVED]` read, and the headline path of this verb — a freshly scaffolded trip, where
+the template ships the field bracketed and **every** member surveys `NEW` — ends with a populated
+roster beside a placeholder total. `/trip-new` states in terms why that pairing is not harmless,
+naming three downstream contracts specified as if the number already existed; a verb that populated
+the roster and left the placeholder standing would be the act that hands them the state. **The
+table's own rows carry the bulk case unchanged**, its asking row included: a total below the
+named-traveler count is reported and **left unwritten** until the operator settles it, which lands on
+the receipt rather than as a second gate.
+
+**What is referenced: everything durable.** Passport, needs, preferences, travel style — all reached through the one `person:` field at composition time. Composition reads the record and writes the trip, never the reverse.
+
+**What is recorded nowhere: the group id.** No trip artifact receives a byte naming the group — not `trip-context.md`, not the traveller file, not the derived model, not `trip-log.md`. **This is the whole of the point-in-time property**, and it is stated as an absence because that is what it is: membership is editable without disturbing a trip that already expanded the group, not because a binding is ignored but because **there is no binding**. Not a weak one, not a stale one, none.
+
+> **The edge this verb writes is byte-identical to the edge `link` writes, and that identity is load-bearing beyond this verb.** A traveller file this verb produced and one an operator produced with `link` are indistinguishable — same field, same value, same position, and nothing anywhere marking which act wrote it. **Any surface that reads a person's history by inverting the `person:` edge therefore needs no group-awareness at all**, and gets the same answer for both. **Nothing tests this property.** It holds by construction, and a change to what this verb writes — a provenance mark, a group id, a differently-shaped field — would cost it silently. It is written down here, and in `reference/adr/ADR-016-reusable-groups.md` § 4, so that a later author meets it rather than discovering it afterwards.
+
+**The group id is deliberately not persisted as provenance, and the reason is the reach set.** *This roster came from group G* is a true and useful fact, and the **expansion receipt names it** — in the transcript, at the moment of the act. Persisting it would put a second cross-trip identifier inside a trip artifact, re-opening the one-location question the person library closed at exactly one location, and every erasure would then have to walk it.
+
+### The preview — bulk presentation, per-member survey
+
+**`link`'s per-member consequence survey runs, once per member, and is not suppressed.** Suppression would regress a deliberate safety property: adding a reference changes which source a field is planned from, and the operator is entitled to know before a write. **What is bulk is the presentation, never the survey.**
+
+1. **Run the shipped survey once per member, writing nothing.** Every member, in `## Members` order, before any write is reached.
+2. **Emit one consolidated preview**, one line per member, each carrying a verdict from a **closed three-token set**:
+
+| Verdict | Condition | What expansion will do |
+|---|---|---|
+| **`NEW`** | no traveller file exists for that member | create it **from `## profile <name>`'s route 2** — see § *Where a `NEW` member's file comes from* — then write `person:` |
+| **`CLEAN`** | a traveller file exists and the survey found no field whose value or disposition the link changes | write `person:` |
+| **`DIVERGES`** | the survey found at least one | **excluded by default**, and named |
+
+3. **One confirmation, covering `NEW` and `CLEAN` together.** Per-member confirmation would put a gate on every member of a group, on the setup convenience this capability exists to remove.
+
+**A `DIVERGES` member is named by field label only, never by value.** Echoing a value into a transcript is a new copy of someone's personal data in a place erasure cannot reach — the identical reasoning `## extract`'s name-only preview already ships on. **The per-member path is named and is not performed here:** `/trip-record link <name> <person-id>` is where the field-by-field side-by-side lives, and a bulk verb that tried to render N of those would be unreadable at the size this verb exists to serve.
+
+**The three tokens are the whole set, and a member none of them describes is not silently written.** The rule is written rather than its output, because the output is what goes stale: **any member this verb cannot survey to one of the three tokens renders `UNDETERMINED` in the preview and is excluded**, exactly as `group-list` renders it — never *no such person*, never dropped from the list, and never expanded. Three conditions reach it today and the rule is not a list of them: a member id that **does not resolve** to a person record; one that resolves only through a **second** stub hop; and one whose display name meets `## profile <name>`'s collision check against a **different** person already on the trip, per § *Where a `NEW` member's file comes from*. A member resolving through **one** stub hop is followed to depth 1 and surveyed against the survivor, with the redirect named in the preview line.
+
+**Declining leaves every file byte-identical.** The gate sits before the first write, which is `link`'s own property and is preserved rather than re-derived.
+
+### Where a `NEW` member's file comes from
+
+**`NEW` is the headline path, not an edge**, so its source is declared rather than left to be inferred. `## group [<name>]` states that `travelers/` *ships empty and stays empty until a profile is filled*, so on a freshly scaffolded trip **every** member surveys `NEW` — which is exactly the setup case this verb exists to serve.
+
+> **The file is created from `## profile <name>`'s route 2, delegated whole: `Read` `templates/traveler-intake.template.md`, `Write` it to `trips/<slug>/travelers/<file>.md` unmodified.** Nothing is authored, nothing is filled in, and no answer is invented. That route's own sentence — *a file of unfilled placeholders is a legitimate state* — is the warrant, and the enrichment agent's blank-profile branch already handles the result.
+
+**This is not `## link <name> <person-id>` creating a file, and the difference is the whole of the reconciliation.** `link` states that it **never** creates the traveller file and refuses when one is absent, and the ground it gives is precise: *a `link` that minted a frontmatter-and-heading file would author a second shape of this class that no schema check has seen, and would duplicate a write that is already someone's*. Both halves are honoured here rather than overridden. **No shape is minted** — the bytes written are the shipped template's, which is the one shape every schema check already sees. **No write is duplicated** — the create path still has exactly one home, and this verb reaches that home instead of opening a second one. What `link` refuses is *inventing* a file; what this verb does is *copy* the one file `profile` already copies.
+
+**`profile`'s create-side controls come with the route, in `profile`'s own order, and the collision check is the one that matters.** The directory-presence probe is already this verb's — declared above, in `link`'s order and for `link`'s reason. The **collision check** is not, and it cannot be dropped: its predicate is `reference/data-architecture.md` § 3.2's **canonical traveller key**, a coarser partition than the filename transform, so two display names can produce two paths and one key — and a file-existence probe alone reports `NEW` on both, which is the silent second-file-under-one-key state that check exists to stop. A member reaching it is **`UNDETERMINED` in the preview and excluded**, naming the existing file whose stem holds the key; the branches are `profile`'s, taken unchanged. The same-traveler branch is not a `NEW` at all — the key is already present, so the member surveys against the existing file as `CLEAN` or `DIVERGES`, which is `profile`'s *continue to the edit route* reached through this verb's own verdicts.
+
+**A member excluded this way is reported, never dropped**, and the remedy is `profile`'s: the operator disambiguates the display name, which changes the key. **This verb mints no suffix and resolves no collision itself**, for § 3.2's stated reason, and it never widens the create path beyond the one route named above — routes 1 and 3 are interviews and hand-offs, which are conversations with a person rather than acts a bulk verb performs.
+
+### The order of writes, and partial failure
+
+> **Per member, in `## Members` order: the roster row first, then the traveller file and its `person:` field. Then once, after the last member: `- **Total travelers:**`.**
+
+**The roster is written first because it is the name authority**, which is the reason `## erase`'s own ordering states at length and is cited here rather than restated: the roster cell is the authoritative display name and the traveller-file stem is a projection of it, so a run interrupted between the two leaves the authority written and the projection to be converged, rather than the reverse.
+
+**Partial failure is reported and never rolled back.** On a failure at member *k*, **stop** and report which members were written and which were not. A rollback would itself be writes, on a verb whose whole safety argument is that it writes only what the operator confirmed; and the state is recoverable, because **`unlink` is the cheap inverse** and `## group`'s no-argument branch is the path to a roster row. **A partial run is a run that says it was partial**, which is rule 10(e)'s principle applied to an operation that is not an erasure.
+
+**The reconciliation is last for the reason the roster row is first**: it is arithmetic over the
+roster, so it can only be right once the roster is. **A run that stopped does not reach it** — stop
+means stop, and a write taken after a failure is the shape the no-rollback sentence above refuses. A
+partial run therefore reports that the field was **not** reconciled, alongside the members it did and
+did not write; `## group`'s no-argument branch, already named above as the path to a roster row,
+renders that field and the roster together and is where the reconcile is finished by hand.
+
+**Re-expansion is idempotent by delegation, not by new logic.** A member already on the roster meets `## group`'s shipped presence probe — present → edit, absent → add. A traveller file already naming a **different** record meets `link`'s repoint branch, which echoes the outgoing id and counts the fields that stop drawing on it; that branch is not suppressed here, and a member on it surveys as `DIVERGES`. **This verb re-implements neither.**
+
+**The receipt names the group by id and by H1, the count expanded, and each excluded member with its verdict.** It is the one place the group id and the trip meet, and it is a transcript rather than an artifact.
+
+**The standing rule this write is taken under is rule 5**, unwidened, and **not rule 12**. Every byte this verb writes lands under `trips/<slug>/`, so no widening is reached for and none is needed: rule 12 governs writes to a reference store, and this verb **reads** the group store and writes none of it. **Rule 2's two conditions and rule 7's append shape carry the trip-side writes**, exactly as they carry `## group`'s roster row, that verb's own edit of this same count — a field whose named lines change, which is rule 2's `Edit` condition unstretched — and `## link`'s field today. Saying so is what keeps the widening ladder honest — a verb that named a rule it did not need would make the next author reach for one too.
+
+**Reversibility: CHEAP, confidence HIGH.** Per member, `unlink` removes the field and `## group` removes the roster row; both are shipped and both are reversible. The tier is per member rather than per run because a partial run leaves a partial state, and that state is the same shape as any other partially-linked trip.
+
+## history <name>
+
+**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, and **its frontmatter alone, for the `person:` key**, which is the reference this verb inverts; **no body line of that file is read**, because nothing in a traveller's own answers bears on where they have already been; `people/<person-id>.md` — the file-existence probe and **its frontmatter alone**, to establish that the reference resolves and whether it is a `merged-into:` stub, and **no body line of any person record is read**; `people/` — the store listing, for the stubs that redirect to that record, which is the closure step and the only reason this verb reads the store as a whole; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; and `trips/*/travelers/*.md` — **the frontmatter of every traveller file on every trip, read to the closing `---` and no further**, which is the resolution step and the only way another trip enters this verb's scope. **It opens no trip's `trip-context.md`, in either direction, its own included** — each trip's destination and lifecycle arrive by value in the record block above, which has already run, so a per-trip open would re-derive what that block already carries. **Writes nothing, anywhere, on every branch. Dispatches no agent. Takes no `Bash(ls:*)` use** — the listing block holds that grant by name, and this verb consumes its output rather than taking a listing of its own.
+
+The prior-visit verb. It answers *has this traveller been to this destination before* from the references the trips already carry, and **it answers by offering rather than by writing**: what it produces is a suggestion the traveller may take, and the answer that lands in their file is theirs.
+
+**Nothing about this is stored, and that is the decision rather than an implementation detail.** `reference/adr/ADR-017-derived-trip-history.md` is authoritative for it. The durable person record gains no field, `people/` gains no file and no index, and no result of this verb is persisted anywhere — the resolution runs here, on demand, and is gone when the render is. `people/README.md` § *What a record does not hold* still lists **trip history**, unchanged and still true: this verb resolves history *about* a person without anything being stored *on* them.
+
+**The requirement-table row takes the contract's declared default, and the archived trips are a property of the scan rather than of the gate.** The **resolved** trip is the one being planned, so the row states no reason to serve an archived one. That is a separate question from what the resolution *reads*: a past trip is exactly what history is made of, so **archived trips are in the population and are read there, read-only**. Reading is not derivation, and `CLAUDE.md` § *Archived trips — what the freeze binds* freezes derivation; this verb composes nothing and writes nothing, so the freeze has nothing here to forbid.
+
+### The resolution — the shipped discovery scan, reused
+
+**Nothing below is a new scan, a second identity predicate or a second resolution vocabulary.** `reference/adr/ADR-012-people-library.md` § *Reference discovery* already chose a forward scan over a declared bearer set and scored it against the alternatives; this verb runs that scan's steps and skips the ones it does not need.
+
+1. **Resolve `<name>`.** An absent argument, or a name with no traveller file on the resolved trip, is a refusal that names the shape and **offers no near-match** — a suggestion here is a classification with a reflexive accept, and § `## profile <name>`'s collision check already states why similarity is computed nowhere on this surface. A traveller file carrying **no `person:` key** is not a refusal and not an empty history: it is **`NO-REFERENCE`**, the outcome table's own row for this branch — say plainly that this traveller references no durable record, name nothing else, and stop. There is no edge to invert, so nothing is resolved and **no scan runs**, which is what keeps this out of `NO-EDGE-FOUND`.
+2. **Closure over `merged-into:`, at one hop.** The subject is the referenced record plus every stub redirecting to it, so a merge does not split a person's history. A stub reached through a second stub is `MALFORMED`, reported, and **never followed** — the redirect depth is pinned at one hop and this verb does not widen it.
+3. **Population.** The trip listing, minus the `README.md` line, exactly as the contract's own gates derive it. `G1`'s canary and its **forbidden conclusion** are inherited verbatim: an unreadable listing never yields *no trip references this person*.
+4. **Reference read.** Each bearer's frontmatter, stopping at the closing `---`. A trip is in the set where a bearer carries `person: q` for some `q` in the closure.
+5. **Exclude the resolved trip.** A trip cannot be its own prior visit.
+
+**The relevance and signalling steps of that scan are not run.** Relevance is a per-field inheritance question, and this verb inherits no field; there is no update signal because there is nothing to signal about.
+
+### The outcomes, and the absences are not the same one
+
+**This verb terminates in exactly one of the tokens below on every branch, and the table is the whole set.** The heading carries no cardinal, deliberately: a count in a heading is the part of an enumeration that goes stale silently, and this one did — `NO-REFERENCE` was already a terminal branch of the resolution, described in step 1 as *"not a refusal and not an empty history"*, while this table named three states and nothing reconciled them. `scripts/test-artifact-schema.sh` arm `DH4` now asserts the row and the branch that reaches it against each other.
+
+| Outcome | What it means | What is offered |
+|---|---|---|
+| `RESOLVED` | the scan completed and the closure is carried by at least one other trip | the candidates below |
+| `NO-EDGE-FOUND` | the scan completed and no other trip carries the closure | **nothing** |
+| `NO-REFERENCE` | the traveller file carries no `person:` key, so there is no edge to invert and **no scan is run** — step 1 terminates before the store is read | **nothing**, and that this traveller references no durable record is stated plainly |
+| `UNDETERMINED` | the store could not be listed, a bearer was present but unreadable, the reference dangled, or a stub was `MALFORMED` | **nothing**, and the indeterminacy is stated |
+
+**Every absence here is reported as a different thing and behaves as the same thing.** None yields a value, none is ever rendered as *this person has not been here*, and under each the field stays **unknown**. That is `reference/data-model.md`'s own rule for these fields — an unanswered value reads unknown, never `never` — preserved at this layer rather than restated as a new one. **An unlinked trip is invisible to this verb**, and the render says so rather than implying the set is everywhere the traveller has been.
+
+**`NO-REFERENCE` is not a narrow `NO-EDGE-FOUND`, and keeping them apart is what this table is for.** `NO-EDGE-FOUND` asserts that **the scan completed** and carried nothing; `NO-REFERENCE` asserts that **no scan ran at all**, because there was no edge to invert. Reporting the second as the first would claim a completed scan where none happened — absence of evidence rendered as evidence of absence, which is the failure the rule above closes between the other two, one level up. **Nothing about the behaviour changes by naming this state**: step 1 terminated there before this table carried the row, and it terminates there now. What changes is that a later reader meets the distinction instead of re-deriving it.
+
+### The candidates, and the operator makes the match
+
+**This verb never decides that two trips share a destination.** There is no Destination entity and no destination key — `reference/data-architecture.md` § 3.4 assigns the model's entities and Destination is not among them — so an automatic match would be a name-similarity join over a free-prose string, which is the mechanism the identity work forbids. **Similarity is computed nowhere here**, exactly as it is computed nowhere in the collision checks on this surface.
+
+So `RESOLVED` renders **one row per candidate trip: its slug, and its `- **Primary destination:**` string as the record block already carries it.** The operator or the traveller says which of those are this destination, and that confirmation — and only that confirmation — yields the count the offer below is derived from. **Partial and ambiguous matching is the ordinary case rather than an exception branch**, which is why this verb carries no ambiguity rule and no threshold.
+
+**The render carries trip slugs and a count, and nothing else.** No person's display name, no field value from any trip, and no line of any record body. The reach table in `## erase <person-id>` types the session transcript `REPORT` and `UNREACHABLE`, and `## extract <name>`'s preview already sets the convention this follows: a value echoed into a transcript is a new copy of someone's data in a place an erasure cannot reach.
+
+### The offer, and the two values it refuses
+
+Where the target field is **unanswered** by the traveller, and only there:
+
+| Field | Offered | Refused, and why |
+|---|---|---|
+| `Been here before?` | **`once`** at a single confirmed prior trip; **`a few times`** above that | **`know it well` — never.** It is a claim about familiarity depth, and a visit count cannot ground one: a person may go five times on business and not know a place, or once for a year and know it well. Offering it would be inventing a value. **`never` — never.** See the outcome table above |
+| `Already done` | **a pointer only** — that prior trips to this destination are on file, and which | **any authored prose.** The field is the traveller's own statement of what they need not repeat, and no derivation supplies one |
+
+**Where the field is already answered, nothing is offered at all.** `agents/00-enrichment.md` binds the carry-through — an answer is carried verbatim and never normalized to a neighbouring value — and an offer over an answered field is the first step of exactly that normalization.
+
+**And this verb writes neither field, on any branch.** That is the load-bearing prohibition and it is not a stylistic preference: `Been here before?` is not consumed per traveller. It feeds a **party-level** depth weighting in `agents/01-activities.md`, `agents/02-food.md` and `agents/04-transport.md`, where an unanswered value is an **abstention** rather than a neutral member. Writing a suggestion into `travelers/<traveler>.md` converts that abstention into a member, changes the distribution the weighting reads, and changes which candidate sections carry more candidates — with nothing having asked the traveller. **A written suggestion is not advisory at the aggregate, whatever it is called at the point it was written**, which is why the offer is made where the answer is given and nowhere else.
+
+**This verb suggests no verb, either.** It does not offer to link a traveller, to repoint a reference, or to resolve an `UNDETERMINED`; a read verb that proposes a write is a classification with a reflexive accept.
+
+**The standing clause is taken unwidened, and no rule is appended for this verb.** Every widening in that clause — rules 9 through 13 — derives a permitted **write** target or operation, and a verb that writes nothing anywhere has nothing to derive and reaches for nothing. Saying so is what keeps the widening ladder honest: a verb naming a rule it did not need would make the next author reach for one too. **`## profile <name>`'s declared read-scope ceiling is left exactly as it stands** — this verb declares its own rather than widening that one, which is what the per-verb `**Reads:**` line is for.
+
+**Reversibility: n/a — this verb writes nothing.**

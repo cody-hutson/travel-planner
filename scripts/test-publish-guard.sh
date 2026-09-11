@@ -497,6 +497,131 @@ else
   SKIP "U: not a git work tree"
 fi
 
+echo "Group-store ignore invariant (#546):"
+# The fourth store guard, and the same invariant shape as K, Q and U. K guards
+# passport-bearing trip data; Q guards operator working material; U guards the durable
+# person store; V guards the reusable-group store — one file per named set of people,
+# holding person ids and nothing else. Kept a separate group rather than folded into U,
+# on the rule Q stated and U repeated, so a person-store regression and a group-store
+# regression are not one line of output.
+#
+# WHY THIS STORE EARNS ITS OWN GROUP AT ALL, stated because "it only holds ids" invites
+# the opposite conclusion. A single person id discloses nothing on its own; a group record
+# is a SET of them, and a set says that these particular people travel together — a fact
+# about all of its members at once that no member's own record carries. That is why the
+# class is `publish: internal-hard` alongside the person store rather than `internal`, and
+# it is why this group's severity is read beside U's rather than below it.
+#
+# Every check-ignore call below takes the same modifiers as U's — -c core.ignorecase=false,
+# -q, and --no-index where the subject is or may be tracked — so a reader comparing an arm
+# here against its U counterpart is comparing subjects, not spellings. The ignorecase pin
+# is not decoration: it is `true` on a macOS working copy and `false` on the Linux CI
+# runner, and without it a case-altered negation (!/groups/readme.md) reads green on the
+# host a human would break it on.
+#
+# The two probe-design rules U learned the hard way are INHERITED HERE RATHER THAN
+# REDISCOVERED, and both shape the arms below:
+#   (1) THE SUBJECT SET SPANS MORE THAN ONE EXTENSION. An ignore rule can be broken by
+#       narrowing as well as by removal, and a group whose every probe path ends in .md
+#       cannot see a narrowing. V2 and V2b are that pair.
+#   (2) A CONTROL'S INPUT IS NEVER GOVERNED BY THE RULE UNDER TEST. V0-CTL probes .env and
+#       V3 probes an untracked synthetic, both outside /groups/, so a store-rule change
+#       moves the subject arms and leaves the controls alone.
+if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+
+  # V0-CTL (MUST FIRE) — the instrument, before any verdict is read from it. V4 and V5
+  # both PASS on "not ignored", so a form that silently answered "not ignored" for every
+  # input would show as two green arms. This is the one input that must come back IGNORED,
+  # and its subject is deliberately NOT a groups/ path: .env is ignored by the unrelated
+  # Environment block at the foot of the ignore file, outside all four guarded stores, so
+  # no mutation of any store rule can move it.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index ".env"; then
+    PASS "V0-CTL: MUST FIRE — the --no-index form returns IGNORED for .env, a path ignored by a rule none of the store groups touch, so V4/V5's NOT-IGNORED verdicts below are measurements rather than a form that cannot say otherwise"
+  else
+    FAIL "V0-CTL: MUST FIRE — the --no-index form called .env NOT ignored. .env is ignored by a rule independent of every store guard, so this is the instrument failing and not a store regression; every V arm reading that form is a broken probe and none of their verdicts can be trusted"
+  fi
+
+  # V1 (positive) — the signpost ships. Trackedness, not ignore-state: a tracked file
+  # bypasses the ignore rules entirely, so ls-files is the unambiguous test. (K1/Q1/U1)
+  if git -C "$HERE/.." ls-files --error-unmatch groups/README.md >/dev/null 2>&1; then
+    PASS "V1: groups/README.md is tracked (the signpost ships in a fresh clone)"
+  else
+    FAIL "V1: groups/README.md is NOT tracked — the store's signpost is absent from a fresh clone"
+  fi
+
+  # V2 (negative — the limb that matters). Probes at the DEEPEST shape the store admits.
+  # check-ignore needs no file on disk, so no synthetic group record is ever written.
+  # -q, NOT -v: verbose exits 0 on a NEGATION match too, inverting the verdict.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "groups/grp-zzzz-probe.md"; then
+    PASS "V2: a synthetic groups/grp-<token>.md is still git-ignored"
+  else
+    FAIL "V2: GROUP RECORDS ARE NO LONGER IGNORED — the ignore file stopped guarding groups/ contents, and a group record names which people travel together"
+  fi
+
+  # V2b (negative — the SUFFIX limb). V2 alone cannot see a narrowing, only a removal.
+  # Every other probe path in this group ends in .md — V4's signpost and V5's derived
+  # witness — so rewriting /groups/* to /groups/*.md would leave the whole group green
+  # while making every non-markdown file in the store trackable. A group store is a
+  # plausible home for an exported roster or a scanned list, and a narrowing that reads as
+  # tidying is exactly the "simplification" the ignore-file comment warns against. It is a
+  # second probe path, not a second rule — V2 and V2b fail together on a removal and only
+  # V2b fails on a narrowing, which is what makes the pair discriminating.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "groups/grp-zzzz-probe.csv"; then
+    PASS "V2b: a synthetic NON-markdown groups/grp-<token>.csv is still git-ignored — the rule guards the store's contents by path, not by extension"
+  else
+    FAIL "V2b: A NON-MARKDOWN FILE IN THE GROUP STORE IS NOT IGNORED — an exported roster or a list at groups/<record>.csv is committable. Read V2 beside this: V2 green means the rule was NARROWED BY SUFFIX and only non-markdown is exposed; V2 red means the rule is gone entirely"
+  fi
+
+  # V3 (control arm) — a zero whose control also returns zero is a broken probe. The
+  # subject is UNTRACKED and synthetic, which is load-bearing for the same reason
+  # --no-index is on V4: without it, check-ignore short-circuits on the index and answers
+  # NOT_IGNORED for any tracked path WITHOUT EVALUATING THE RULES. An untracked path is
+  # never short-circuited, so it reaches the same evaluator V2 and V2b use.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q "zzv-nonesuch-probe.md"; then
+    FAIL "V3: control arm broken — check-ignore calls an untracked, unmatched synthetic path ignored, so it cannot distinguish ignored from not-ignored and V2/V2b are unusable"
+  else
+    PASS "V3: control arm fires (an untracked, rule-unmatched synthetic path is not ignored) — the rule evaluator V2/V2b read can return NOT_IGNORED, so their verdicts are trustworthy"
+  fi
+
+  # V4 (rule-level, not state-level). V1 proves the file is IN THE INDEX, which stays true
+  # even if the negation line is deleted — a tracked file bypasses the ignore rules
+  # altogether, so V1 and V2 both keep passing while the rule rots. --no-index is
+  # LOAD-BEARING (the K4/Q4/U4 falsification). This arm is also the only one that fails on
+  # a "simplification" to /groups/ or groups/ (the directory form git cannot re-include
+  # through) and on a line-order swap, the ignore file being last-match-wins.
+  if git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "groups/README.md"; then
+    FAIL "V4: the !/groups/README.md negation is gone or unreachable — the store's signpost survives only because it is already tracked"
+  else
+    PASS "V4: the negation pattern re-includes groups/README.md (the rule, not just the index, is intact)"
+  fi
+
+  # V5 — U5's shape, on this store's witness. The witness is READ FROM the tree rather
+  # than spelled here: check-ignore answers for paths that do not exist, so an arm naming
+  # a token this file guessed would return "not ignored" for an absent file and pass. AN
+  # EMPTY DERIVATION IS A FAILURE, NOT A CLEAN RUN. --no-index is load-bearing here too:
+  # the witness is tracked, so the default form short-circuits past the rules and returns
+  # "not ignored" under the very widening (**/groups/*) this arm exists to catch.
+  V5_WIT="$(git -C "$HERE/.." ls-files 'examples/*/groups/*.md')"
+  V5_N="$(printf '%s\n' "$V5_WIT" | grep -c '[^[:space:]]')"
+  V5_BAD=0
+  while IFS= read -r v5p; do
+    [ -n "$v5p" ] || continue
+    git -C "$HERE/.." -c core.ignorecase=false check-ignore -q --no-index "$v5p" && V5_BAD=$((V5_BAD+1))
+  done <<EOF
+$V5_WIT
+EOF
+  if [ "$V5_N" -eq 0 ]; then
+    FAIL "V5: no tracked witness matched examples/*/groups/*.md — the schema names a witness the selector never reaches, and this arm would otherwise report a clean run over an empty set"
+  elif [ "$V5_BAD" -eq 0 ]; then
+    PASS "V5: all $V5_N tracked example witness record(s) under examples/*/groups/ are NOT ignored — the store rule is rooted, so a same-named directory elsewhere in the tree keeps its tracked contents"
+  else
+    FAIL "V5: $V5_BAD of $V5_N tracked example witness record(s) are IGNORED — the groups/ rule has been widened (**/groups/* or an unrooted groups/) and the schema's witness has silently left the index"
+  fi
+
+else
+  SKIP "V: not a git work tree"
+fi
+
 echo "Unpublish / takedown (#7):"
 # J1 — idempotent no-op on an absent repo (real gh; the repo-view short-circuit).
 if gh auth status >/dev/null 2>&1; then
