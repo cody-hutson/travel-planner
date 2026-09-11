@@ -146,9 +146,17 @@ The **constraint source of truth**. A per-traveler need links here through its
 
 ## Budget Posture
 
-- **Overall tier:** [Not exercised by this example]
-- **Meals:** [Not exercised by this example]
-- **Experiences:** [Not exercised by this example]
+- **Overall tier:** mid
+- **Meals:** comfortable rather than cheap; no splurge appetite stated
+- **Experiences:** one paid museum is expected; everything else free or low
+
+**This block is filled so that `outputs/cost-estimate.md` can exercise the one rule
+attached to it, which is a rule of refusal.** `reference/adr/ADR-018-cost-estimation-method.md`
+§ *Decision 8* fixes it: Budget Posture is declared **willingness to spend**, not observed
+price, so the estimate may render it as a labelled comparison and **never sums it into any
+total**. Filling an unreadable item from it would hand the operator their own number back
+as an estimate. A fixture that left this block unexercised could not show that refusal
+happening.
 
 ## Locked Elements
 
@@ -175,4 +183,23 @@ are placed: two are `locked`, one is `firmed`, one is an `option`, and the rest 
 
 ## Destination Baseline [ENRICH]
 
-[Not exercised by this example — the enrichment agent owns this block.]
+- **Language:** [Not exercised by this example]
+- **Currency:** Euro, EUR — approximately €1 ≈ $1.10. **A synthetic rate for this
+  example**, not a researched one; it is the rate used for all agent cost estimates.
+- **Payment norms:** card at restaurants, museums and the transit machines; cash usual
+  at the market-hall stalls and for small counter orders
+- **Tipping culture:** restaurants — rounding up, or about 5–10% for table service;
+  taxis — round up; hotels and guides — small notes
+- **Key etiquette:** [Not exercised by this example]
+- **Visa / entry:** [Not exercised by this example]
+- **Pre-arrival apps:** [Not exercised by this example]
+- **Connectivity:** [Not exercised by this example]
+
+**Three of these eight are filled and the rest are not, which is the fixture's Depth
+rule rather than an uneven edit.** `README.md` § *Depth* narrows the no-prices clause to
+*no sourced prices — synthetic currency values only, where a class's own rule cannot be
+exercised without one*, and `outputs/cost-estimate.md` cannot exercise its currency rule
+without a declared rate, its cash rule without a payment norm, or its tipping allowance
+without a tipping line. The other five are read by nothing this fixture demonstrates, so
+they stay declared and unexercised. The sibling `[ENRICH]` blocks below stay unexercised
+for the same reason: nothing here reads them.

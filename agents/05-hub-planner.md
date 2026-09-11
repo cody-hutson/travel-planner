@@ -973,6 +973,236 @@ validator owns). Reported, not scored — full model in
 
 ---
 
+### Output: outputs/cost-estimate.md
+
+The per-traveler cost projection — C21, and **you are its only writer**. It answers one
+question for each traveller: *given the plan as it now stands, what is this trip likely to
+cost me?* `reference/schemas/cost-estimate.md` is the class's shape and
+`reference/adr/ADR-018-cost-estimation-method.md` is where every read rule below is
+decided; neither is restated here beyond what you need in order to write the file.
+
+`rebuilt-each-synthesis`, because it holds no independent state — every figure in it is
+derived from a cost signal another class masters, so regenerating it is safe and
+preserving it would only let it drift away from the entries it projects.
+
+**Write ordering, and it is what makes the commitment split answerable at all.** You write
+`outputs/cost-estimate.md` **after** `outputs/event-status.md`, in every mode — after the
+create-and-seed step on DISCOVERY and ENRICHMENT, after the read-and-update-in-place step
+on ITERATION and RESEQUENCING. That ordering is the whole of the C13 edge: on a first
+synthesis you are C13's *creator*, seeding `locked` rows from `trip-context.md`
+§ *Locked Elements*, so when you write the estimate you are **holding** a commitment
+signal rather than reading one as an input. Nothing is added to your § *Input* contract,
+and item 10 keeps its conditional wording — the estimate reads the state you have, at a
+declared point, and the ordering sentence is where that is recorded.
+
+**The write-stop binds this file too.** Before you write it, check whether a
+`cost-estimate.md` already on disk declares a `schema-version` higher than the one below.
+If it does, **report and decline the write** — and do not then assert a reading of it
+either. This class is `rebuilt-each-synthesis`, so a rebuild replaces the file without
+ever reading it, which is exactly the case the stop has to fire ahead of.
+
+**What you read.** The markers of the denominator classes' instances — their `cost:`
+values and their keys, which are the join. Those same entries' prose money lines, for the
+ceiling. `outputs/venue-matrix.md` and `outputs/final-itinerary.md`, for placement. The
+in-pass `outputs/event-status.md`, for commitment. From `trip-context.md`: § *Group* for
+roster names, § *Per-Traveler Planning Days [DERIVED]* for presence, § *Destination
+Baseline* for currency, rate, payment norms and tipping, and § *Budget Posture* as a
+comparison only. From `outputs/transport-brief.md`: § *Pass Assessment* and § *Payment &
+Transit Card Setup*, for preload.
+
+**Bounds on the derivation — a constraint on what you read, not a filter applied
+afterwards.** A value that was never read cannot leak.
+
+- **`outputs/traveler-model.md` is not read into this artifact.** It is
+  `publish: internal-hard`. The estimate takes a `## Group` roster name and a money figure
+  and nothing else from any per-traveler source.
+- **No value is copied out of a `[THIRD-PARTY]` entry** — not attributed, not anonymized,
+  not paraphrased into a justification. That entry class exists for a person who did not
+  supply their own data and cannot consent to it.
+- **The escalation tripwire, so you meet it rather than trip it.** A roster name beside a
+  number is `internal`. A roster name beside a number beside a **reason** — any text saying
+  which need or which desire a figure serves — is `internal-hard`, and it moves this whole
+  class there and earns it a row in `reference/site-layout-spec.md` § 9.1. Never write the
+  reason.
+
+**Artifact frontmatter — the first bytes of the file:**
+
+```yaml
+---
+artifact: outputs/cost-estimate.md
+schema-version: 1
+trip: <trip-slug>
+writer: hub
+lifecycle: rebuilt-each-synthesis
+provenance: derived
+publish: internal
+generated: <YYYY-MM-DD>
+cost-bearing-items: <M>
+priced-items: <N>
+coverage: measured|unverifiable
+---
+```
+
+Those are the fields `reference/schemas/cost-estimate.md` declares and no others. **You add
+none**, and in particular **no money figure ever reaches frontmatter** — no total, no
+per-traveller scalar, no range. A total fails the frontmatter/body boundary test on its
+second question: two correct writers rounding, converting or bounding a range differently
+do not produce the same characters. Every figure lives in the body, where the prose can
+carry the caveats a scalar cannot.
+
+**The denominator is computed, never enumerated — do not write a list of classes here or
+in the file.** Resolve the class set by reading `reference/data-architecture.md` § 4.5's
+marker-form table and taking the classes in its **fenced** row, then keeping those whose
+cell in § 1.1's **Primary entities** column names `Venue` or `Leg`. **Both conjuncts do
+work.** The entities column alone also names table-shaped and entry-less classes that
+carry no `cost:` line at all, so on its own it resolves wider than the rule and would put
+classes into `M` that structurally cannot be priced. A hardcoded roster would be a second
+home for a fact the document already holds, and it would go silently wrong the moment a
+sibling adds a class: read from the document, a class that later gains a priced entity
+enters the denominator with no edit anywhere, and one that loses it leaves.
+
+**What `M` and `N` count, because getting this backwards produces a plausible wrong
+answer.** They are properties of the **entry population**, not of your consumption of it.
+`M` is the count of `artifact-entry` markers across those classes' instances. `N` is the
+count of those markers carrying a readable `cost:` line — **whether or not the entry is
+placed**. A marker with no line and a marker reading `cost: undetermined` both fail to
+count toward `N`, and the body distinguishes them: no line means *that writer does not yet
+emit cost*, `undetermined` means *that writer looked and found nothing normalizable*.
+
+Counting `N` over placed entries only would make the ratio placement-dependent, and it
+would read poor forever on any trip that researches more than it places — which is every
+trip, since `agents/01-activities.md` alone is required to produce far more entries than a
+plan can hold. An entry is a **marker**, never a `###` heading and never an ordinal, which
+is the same rule `agents/06-validator.md` § *Marker coverage* applies to its own `E of T`.
+
+**Where an instance carries entries and no markers at all**, `M` is not measurable: write
+`coverage: unverifiable`, `cost-bearing-items: 0`, `priced-items: 0`, render `undetermined`
+in the body and **name the condition** — which instance the selector could not see. Never
+read a marker-less file as `0 of 0`.
+
+**Per-traveller coverage is its own pair, and it lives in the body.** Each traveller row
+carries `P of Q`: `Q` is that traveller's cost-bearing **placed** items, `P` those whose
+marker carries a readable `cost:` line. The rendering limbs apply per row keyed on `P`
+exactly as they apply at trip scope keyed on `N`. Without a per-traveller denominator a
+per-traveller `undetermined` is indistinguishable from a per-traveller zero — the
+absence-versus-zero collapse this class exists to prevent, one scope down. It is **not** a
+fourth frontmatter field: a per-traveller pair is a vector and the per-class frontmatter
+grammar is scalar-only.
+
+**The frontmatter pair and the per-traveller pair measure different things and neither is
+inferred from the other.** `N of M` measures how much of the trip's cost-bearing corpus is
+machine-readable; `P of Q` measures how much of one traveller's own plan was readable. Say
+so in the body, once.
+
+**The estimation rules.** Each names the surface it reads. Where that surface is absent or
+unexercised, the answer is `undetermined` **with the condition named** — never a default,
+never a padded guess.
+
+| What | Where it comes from | The refusal |
+|---|---|---|
+| **Currency** | § *Destination Baseline* → `**Currency:**`, which declares the rate *used for all agent cost estimates* | Totals are per-currency, one per ISO 4217 code, and **never summed across currencies**. A USD projection is rendered beside the local total **only** where a rate is declared, naming the rate and the enrichment date; otherwise it is omitted rather than computed from an invented rate |
+| **Range** | Floor from the markers — § 4.5.1 fixes `amount` as the low bound, so a marker sum is a true floor by construction. Ceiling from each joined entry's own prose money line | A point value or a non-numeric tier gives that entry a ceiling equal to its floor. Where marker and prose disagree, the marker governs the floor and the prose governs only the spread above it. **You never assert that the two correspond and never fail on a disagreement** |
+| **Allocation** | A `group-total` divides equally across **that item's own participant set** — C9's `**Passengers:**` line, or the party the plan places at a Venue item. `per-person` needs no allocation | An undeterminable participant set is **never divided by the roster**. The entry lands on a named `unallocated group-total` line |
+| **Presence** | § *Per-Traveler Planning Days [DERIVED]* — **read, never re-derived** | A traveller is charged for an item iff the plan places it inside their own derived window and no subgroup note excludes them. Where the window's granularity leaves that undecidable on a partial arrival or departure day, the item goes to the `unallocated` line and is **named** |
+| **Preload** | § *Pass Assessment* — where its verdict recommends the pass, preload **is** the pass cost; otherwise apportioned journeys times per-journey cost, plus that traveller's share of any `cost:`-bearing fare-card-payable stream. `**Recommended:**` from § *Payment & Transit Card Setup* names the instrument | Absent or unexercised ⇒ `undetermined`, condition named. State the bound: the figure covers the legs the brief prices and the pass model, and the *Point-to-Point Transit Matrix* carries no key, so unkeyed hops are not in it |
+| **Cash** | § *Destination Baseline* → `**Payment norms:**` crossed with that traveller's category spend, plus a tipping allowance where `**Tipping culture:**` states one | No default cash figure exists. Report the **unpriced remainder** (`Q − P`) beside it as the contingency driver, **in item count** — never converted to a currency amount |
+| **Budget Posture** | § *Budget Posture* | A **comparison line only**, and **never summed into any total**. It is declared willingness to spend, not observed price; filling an unreadable item from it hands the operator their own number back as an estimate |
+
+**The commitment split is about booking, not payment.** Partition the placements by their
+C13 status: `locked` is **committed**, `firmed` and `planned` are **on-the-ground**, and
+`option` is **excluded** — never a primary placement, and named in the body as an excluded
+alternative pool rather than silently dropped. Carry the standing sentence with the split:
+*a committed item may still be paid at the venue; this records what is booked, not what is
+paid.* C13 holds no payment state, so anything stronger over-claims. Where you do not hold
+a readable C13 — the write-stop fired, or a tolerant read left it unresolved — the
+committed limb renders `undetermined` and names which. **A C13 carrying no `locked` row is
+a measurement**, not an absence: render the real zero and say so.
+
+**The order you work in.**
+
+1. Resolve the denominator class set per the computed-never-enumerated rule above — the
+   classes in § 4.5's **fenced** marker-form row, kept to those whose § 1.1
+   Primary-entities cell names `Venue` or `Leg`.
+2. Enumerate `artifact-entry` markers across those classes' instances ⇒ `M`. An instance
+   carrying entries and no markers ⇒ `coverage: unverifiable`; stop and render the
+   `undetermined` limb with the condition named.
+3. Read each marker's `cost:` line ⇒ `N`.
+4. Read commitment from the in-pass C13; partition placements into committed /
+   on-the-ground / excluded-`option`.
+5. Read presence from § *Per-Traveler Planning Days [DERIVED]*.
+6. Per traveller, resolve the charged item set — placement ∩ presence ∩ participant set —
+   then compute `Q`, `P`, the floor and the ceiling. Undeterminable participants ⇒
+   `unallocated`.
+7. Read currency and rate, payment norms and tipping; read § *Pass Assessment* and
+   § *Payment & Transit Card Setup* for preload.
+8. Render the body. Apply the limbs at trip scope on `N` and at traveller scope on `P`.
+9. Write, then read the file back.
+
+```markdown
+---
+<frontmatter as above>
+---
+
+# Cost Estimate
+
+## Coverage
+
+[the N of M sentence, and what the pair does and does not measure]
+
+| Class | Entries | Priced | Why |
+|---|---|---|---|
+
+## Estimate
+
+**Total: <floor> – <ceiling> <CUR>**  [+ USD projection where a rate is declared]
+
+| Traveler | Committed | On-the-ground | Estimate | Coverage | Basis |
+|---|---|---|---|---|---|
+
+| Category | Floor | Ceiling | Priced items | Basis |
+|---|---|---|---|---|
+
+[the unallocated line, where non-empty]
+[the excluded-`option` line, where non-empty]
+
+## Commitment split
+
+**Committed:** <figure or `undetermined`> — from C13 `locked`
+**On-the-ground:** <figure or `undetermined`>
+
+[the standing sentence: a committed item may still be paid at the venue]
+
+## Pre-trip recommendation
+
+**Budget** ≈ <range> per traveler
+**Preload** ≈ <figure> on <the card § Payment & Transit Card Setup names>
+**Carry** ≈ <figure> in cash
+
+[assumptions: one line each, each named]
+```
+
+**Anti-patterns — do NOT do X when Y, because Z.**
+
+- **Do NOT render a total of `0` when `N` is `0` or `coverage` is `unverifiable`** —
+  render `undetermined` and name the condition. A `0` reports *this trip costs nothing*
+  where the truth is *nothing was readable*, and a reader cannot tell the two apart from
+  the number alone.
+- **Do NOT present a total as complete when `N = M`** — still state `N of M`. A reader
+  cannot otherwise distinguish full coverage from a denominator that was never computed. A
+  partial total is useful; a partial total that looks whole is worse than none.
+- **Do NOT divide a `group-total` by the roster when the item's participant set cannot be
+  resolved** — put it on the `unallocated` line. Dividing by the roster because the roster
+  is the number to hand is invention with a decimal point on it.
+- **Do NOT write a reason beside a figure**, ever — see the escalation tripwire above.
+- **Do NOT invent a rate, a payment norm or a cash figure** when the trip context does not
+  declare one. `undetermined` with the condition named is the answer.
+- **Do NOT fold this into `outputs/final-itinerary.md` or `outputs/satisfaction-metrics.md`.**
+  Both were rejected by name as homes for it — one is `publish: bound` and `versioned`, the
+  other `internal-hard` — and **you write all three**, so you are the one actor positioned
+  to make that mistake.
+
+---
+
 ### File: outputs/final-itinerary.md
 
 **Artifact frontmatter — the first bytes of the file**, above everything below

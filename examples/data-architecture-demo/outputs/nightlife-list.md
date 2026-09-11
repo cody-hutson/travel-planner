@@ -20,9 +20,21 @@ useful as alternatives and as the record of what was already considered.
 
 **Entry marker.** C7 is prose-shaped: each entry carries a fenced `artifact-entry`
 block holding the venue key — and, since § 4.5.1 amended the rule, one optional
-`cost:` line — and nothing else, directly under its own heading. **Both markers here
-carry the key alone**: no prompt emits the cost field yet, and each entry's own money
-line stays the master either way.
+`cost:` line — and nothing else, directly under its own heading. **Both markers here now
+carry both**, because `agents/07-nightlife.md` emits the cost field from this release.
+One carries a value and one declares `undetermined`, and each entry's own
+`**Price range:**` line stays the master either way.
+
+**`**Price range:**` is declared on both entries below, and until this release it was
+declared on neither.** That was a real drift and it is corrected here rather than
+annotated: `agents/07-nightlife.md` § *Output Format* declares the label, this fixture
+wrote `**Price tier:**` instead, and `outputs/cost-estimate.md` asserted that
+`**Price range:**` was *declared … unpopulated here* — an assertion about a label that
+did not appear in this file at all. `examples/evening-boundary-demo/` already showed the
+correct declared-but-unexercised form, and the two fixtures now agree.
+`**Price tier:**` is **kept** beside it: it is what the alternatives-vary-on-two-axes
+note below reads, and removing it to make room would break a property this fixture
+exists to show.
 
 **Both markers below are resolved, and `generated:` is why the file's dates differ.**
 The entries were written on the first pass (2026-08-28) and were born
@@ -46,8 +58,10 @@ stub.
 
 ```artifact-entry
 venue: ven-8a34
+cost: 12 EUR per-person
 ```
 
+- **Price range:** €12–18 per person, including any cover charge or minimum
 - **Location:** Rua do Miradouro 12, Centro — the same address the targeted-research
   entry carries, which is what joined the two mentions
 - **Night type:** low-key drink, at sunset
@@ -59,12 +73,20 @@ venue: ven-8a34
 - **Price tier:** mid · **Effort:** low
 - **Next-morning cost:** an early-evening sitting; nothing it costs the next start
 
+**The cover charge is inside the low bound, not beside it.** The label declares the
+range as *including any cover charge or minimum*, so the €12 the marker carries already
+holds it. A marker that added the cover on top would double it, and one that stripped
+the cover out would fall below the figure a traveller actually pays at the door.
+
 ### Casa do Livro — bar
 
 ```artifact-entry
 venue: ven-1d9f
+cost: undetermined
 ```
 
+- **Price range:** *not exercised* — the tier below is what this fixture carries for
+  this entry, and a tier holding no numeral gives the marker nothing to normalize
 - **Location:** Rua do Miradouro 40, Centro — a different address on the same street,
   which is what keeps it a **second** venue rather than a second name for the first
 - **Night type:** low-key drink, indoor

@@ -27,10 +27,24 @@ block holding the entity key **and — since § 4.5.1 amended the rule — one o
 name, access, shade and booking posture stay in the entry's prose, where the
 frontmatter/body test already puts them: this class's frontmatter is file-scoped, so
 an entry-level value has no field to become. The key does, and so does that one
-optional line. **Every marker in this file carries the key alone**, because no agent
-prompt emits the cost field yet and this class declares no money label of its own —
-which is what `outputs/cost-estimate.md` here counts as a `priced-items: 0` reading
-over markers that are present and countable.
+optional line. **Every marker in this file now carries both**, because
+`agents/01-activities.md` emits the cost field and this class declares
+`**Entry cost:**` as its money label — the label
+`reference/adr/ADR-018-cost-estimation-method.md` § *Decision 9* adds, and the one this
+class went without while its prompt already mandated researching a price.
+
+**Seven of the ten carry a value and three declare `undetermined`, which is what makes
+this fixture's estimate a partial reading rather than a complete or an empty one.** The
+three are the anchor-meal entries in § *Targeted Update* below, and their reason is
+stated on each: an anchor meal has no admission, so a writer looking for an *entry cost*
+finds nothing normalizable. `undetermined` is the honest answer there rather than `free`,
+which would be literally true of the door and would hide the meal. **`free` is a value
+and it is used here**, on the entries that genuinely have no admission — it contributes
+`cost: 0 EUR per-person` and counts toward `priced-items`.
+
+**The synthetic prices are the § *Depth* narrowing landing.** `README.md` § *Depth* reads
+*no **sourced** prices — synthetic currency values only, where a class's own rule cannot
+be exercised without one*, and this class's rule cannot be exercised without one.
 
 ## The marker transition — what the two sections below depict
 
@@ -81,7 +95,11 @@ the engine cannot reach on a first pass.
 
 ```artifact-entry
 venue: ven-7b2e
+cost: 8 EUR per-person
 ```
+
+- **Entry cost:** €8 / ~$9 per person
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: advance. Access: level — clears `HC-1`. Indoor, so `HC-2` does not reach it.
 Serves Alex's *good bookshop* wish.
@@ -90,25 +108,51 @@ Serves Alex's *good bookshop* wish.
 
 ```artifact-entry
 venue: ven-c41a
+cost: 0 EUR per-person
 ```
+
+- **Entry cost:** free
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: open. Access: level paths — clears `HC-1`. Outdoor, so its placement has to
 clear the `HC-2` window; Café Majestic is the named indoor bailout within reach.
+
+**`free` is a value, not an absence** — it emits `cost: 0 EUR per-person` and counts
+toward `priced-items`. An entry the spoke could not price would carry
+`cost: undetermined` instead, and the two are read differently.
 
 ### Serralves
 
 ```artifact-entry
 venue: ven-93d7
+cost: 20 EUR per-person
 ```
+
+- **Entry cost:** €20–24 / ~$22–26 per person — general admission at the lower figure,
+  the combined ticket at the higher
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: advance, **not yet held** — this is the one needs-booking event left open.
 Access: lift. Indoor. Serves Robin's *contemporary art* anchor.
+
+**This entry's floor and ceiling differ, and it is not the only one on this trip that
+does** — `ven-8a34` in `outputs/nightlife-list.md` and `outputs/rooftop-sunset-bars.md`
+carries a range as well, and `outputs/cost-estimate.md` splits the spread between the
+pair. The marker carries the **low bound** — § 4.5.1 fixes `amount` that way,
+which is what makes a sum over markers a true floor by construction — and the range's
+upper value stays in the prose line above, where `outputs/cost-estimate.md` reads it for
+the ceiling. Neither file asserts that the two agree, and nothing fails if they do not.
 
 ### Mercado do Bolhão
 
 ```artifact-entry
 venue: ven-2f68
+cost: 0 EUR per-person
 ```
+
+- **Entry cost:** free — the hall is open to walk into. What a counter costs is a meal
+  price, which is C6's `**Price:**` master and not this label
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: walk-up. Access: level. Covered. Serves Alex's *working food market*
 nice-to-have, and the hall's own counters make it a usable anchor meal rather than a
@@ -118,7 +162,11 @@ sight alone.
 
 ```artifact-entry
 venue: ven-e05b
+cost: 0 EUR per-person
 ```
+
+- **Entry cost:** free
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: open. Access: level approach. Outdoor, so its placement has to clear the
 `HC-2` window.
@@ -127,7 +175,11 @@ Booking: open. Access: level approach. Outdoor, so its placement has to clear th
 
 ```artifact-entry
 venue: ven-6c72
+cost: 0 EUR per-person
 ```
+
+- **Entry cost:** free
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: open. Access: level. Outdoor, morning. Serves Robin's *walk along the river*
 wish.
@@ -136,11 +188,22 @@ wish.
 
 ```artifact-entry
 venue: ven-b5e0
+cost: 0 EUR per-person
 ```
+
+- **Entry cost:** free
+  [Source date: synthetic — this fixture carries no sourced price]
 
 Booking: walk-up. Access: level. Indoor. **Proposed as a standing bailout rather than
 as an anchor** — the AC escape for both outdoor blocks, which is the
 *Pre-Planned Bailout Options* role this class carries.
+
+**This entry is priced and is charged to nobody**, which is the difference between the
+two coverage readings the estimate carries. It counts toward `priced-items` because that
+pair measures the **entry population** — what the corpus made machine-readable — and it
+is outside every traveller's `P of Q` because that pair measures a **placement**, and
+`outputs/event-status.md` records in terms that this venue is never placed and has no
+event.
 
 **No entry above names another venue's key, and that is deliberate.** A research
 entry holds exactly one key — its own, in its marker — and speaks of every other
@@ -169,7 +232,11 @@ Every entry here is a walk-in, so none of them changes the needs-booking set.
 
 ```artifact-entry
 venue: unminted
+cost: undetermined
 ```
+
+- **Entry cost:** [Not exercised — a tavern has no admission, and what this meal costs
+  is a `**Price:**` figure belonging to C6, which this fixture does not carry]
 
 Booking: walk-up — no reservation to hold. Access: street level — clears `HC-1`.
 Indoor. A neighbourhood tavern for Thursday's anchor meal, a short walk from the
@@ -180,7 +247,11 @@ gardens block. Shellfish-free plates are the house default rather than a request
 
 ```artifact-entry
 venue: unminted
+cost: undetermined
 ```
+
+- **Entry cost:** [Not exercised — as above, a dining room's money value is a
+  `**Price:**` figure and not an entry cost]
 
 Booking: walk-up. Access: level entrance — clears `HC-1`. Indoor, which is what lets
 it sit inside the 13:00–16:00 window without touching `HC-2` — the constraint bounds
@@ -191,11 +262,23 @@ inside it. `DH-1` is honoured from the menu as written.
 
 ```artifact-entry
 venue: unminted
+cost: undetermined
 ```
+
+- **Entry cost:** [Not exercised — as above, a bakery counter's money value is a
+  `**Price:**` figure and not an entry cost]
 
 Booking: walk-up. Access: level. Indoor. A bakery counter for Sunday's anchor meal,
 early enough to leave the riverside walk and the ~13:00 departure intact. No shellfish
 on the counter at all, so `DH-1` is trivially honoured.
+
+**These three markers carry a `cost:` line and an `unminted` key at once, and both are
+declared absences of different kinds.** `venue: unminted` says *this venue exists and its
+token has not been minted into this marker yet*; `cost: undetermined` says *this writer
+looked for a money value and found nothing normalizable*. Neither is a default and
+neither is the other. What would be wrong is a marker with **no** `cost:` line at all —
+from this release that shape means *this writer does not yet emit cost*, which is no
+longer true of any entry in this file.
 
 ---
 

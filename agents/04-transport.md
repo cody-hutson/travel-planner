@@ -296,6 +296,7 @@ pricing them as one is the error this section exists to prevent.
 
 ```artifact-entry
 leg: leg-<token>
+cost: <amount> <currency> <basis>
 ```
 
 **Passengers:** [Travelers by their `## Group` roster name]
@@ -341,10 +342,11 @@ window, who rides reduced — is § *Pre-Departure Transit Familiarization*'s.
 A sentence that would be true for any traveler arriving any day this year is not
 this section's.
 
-**The entry marker — one fenced block per stream, carrying the leg key and nothing
-else.** Open every stream with it, directly under that stream's own `**Stream — …**`
-line and above the labelled lines. It binds **both** stream surfaces in this file —
-the arrival streams here and the departure streams below.
+**The entry marker — one fenced block per stream, carrying the leg key and the
+declared cost field, and nothing else.** Open every stream with it, directly under
+that stream's own `**Stream — …**` line and above the labelled lines. It binds
+**both** stream surfaces in this file — the arrival streams here and the departure
+streams below.
 
 `leg-<token>` is opaque and day-independent, the same opacity guarantee the Event ID
 and `ven-<token>` already carry (`reference/data-architecture.md` → "Why the Event
@@ -367,15 +369,50 @@ no airport code, no mode, no duration, no passenger list. Everything else about 
 stream stays in the labelled lines, in prose, exactly as they are written today. Full
 statement: `reference/schemas/transport-brief.md` → "The entry marker".
 
-**The cost field, and it is optional.** `reference/data-architecture.md` → "The cost
+**The cost field, and you emit it.** `reference/data-architecture.md` → "The cost
 field — the one addition rule 2 admits" amended the marker rule to admit one
 `cost: <amount> <currency> <basis>` line below the key, where `basis` is
-`per-person` or `group-total`. **You do not emit it yet** — this prompt is unchanged
-in what it writes, and a marker with no `cost:` line is the correct output today.
-The line is described here so that a stream you meet carrying one is read rather
-than treated as out of grammar. **Your `**Cost:**` prose line is unaffected and stays
-the master**: it carries both bases with whatever caveat the estimate needs, and the
-marker's scalar would be a low-bound projection of it, never a replacement.
+`per-person` or `group-total`, and
+`reference/adr/ADR-018-cost-estimation-method.md` is where the emit rule is decided.
+Five clauses govern what you write:
+
+1. **One `cost:` line inside the fence, directly below the key line** — never above
+   it, never outside the fence, and never a second one. **The fence's opening token
+   is unchanged**: § 4.5.1 changes no info-string, and a cost line sits *inside* the
+   fence the venue-identity migration owns.
+2. **`amount` is the low bound of that stream's own `**Cost:**` line, floored to the
+   whole major unit.** A point value is its own low bound; minor units are not
+   carried.
+3. **`currency` is the ISO 4217 alpha-3 code of the currency your prose states,
+   never a conversion.** Your label writes `[Local] / [USD]`; the **local** code is
+   what the marker carries.
+4. **`basis` — yours is the one class whose master states both, so yours is the one
+   that needs a selection rule. Emit `per-person` where your line states a
+   per-person figure; emit `group-total` only where it does not.** The grammar
+   admits one `cost:` line per marker, so a stream priced both ways carries the
+   per-person basis in the marker and keeps both in the prose. Prefer per-person
+   because it needs no allocation: a `group-total` has to be divided across that
+   stream's own participant set downstream, and a stream whose set cannot be
+   resolved lands on an `unallocated` line rather than being divided by the roster.
+5. **No normalizable value ⇒ `cost: undetermined`.** Write the line and declare the
+   absence; do not omit it. **A stream flagged `VERIFY` is not automatically this
+   case** — an unbooked stream may still carry a researched fare, and what is absent
+   is the booking rather than the price.
+
+**Your own no-line state is now historical.** § 4.5.1 distinguishes the two: a marker
+carrying **no `cost:` line** means *this writer does not yet emit cost*, and from this
+change that is true only of markers written before it. `undetermined` means *this
+writer looked and found nothing normalizable*. Both shapes are readable; only the
+second is one you may now write.
+
+**Your `**Cost:**` prose line is unaffected and stays the master**: it carries both
+bases with whatever caveat the estimate needs, and the marker's scalar is a low-bound
+projection of one of them, never a replacement.
+
+**§ *Point-to-Point Transit Matrix* gains nothing from this rule.** That table carries
+no entry marker at all — `reference/data-architecture.md` § 4.5 rules on it by name as
+a secondary table inside a fence-form class — so it has nowhere to put a `cost:` line
+and does not acquire one here. Its rows stay exactly as they are written today.
 
 **What never becomes a field.** `Rationale`, `What goes wrong if wrong choice made`,
 `Buffer rationale`, `Luggage handling`, `Group suitability`, the `Alternative`'s
@@ -524,6 +561,7 @@ together, this is one stream and reads as it always has.
 
 ```artifact-entry
 leg: leg-<token>
+cost: <amount> <currency> <basis>
 ```
 
 **Passengers:** [Travelers by their `## Group` roster name]
