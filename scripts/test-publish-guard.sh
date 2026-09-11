@@ -2271,6 +2271,53 @@ else
   FAIL "N2g: the connective-limb escape did not behave as declared (over-block rc=$n2_esc_ob want 1, carry-through rc=$n2_esc_tp want 1) — either the escape has widened into a fail-open or the over-block bound in the matcher comment is now wrong"
 fi
 
+# N2h — THE OTHER `conjunctive` ROW. The declaration assigns `conjunctive` to FOUR rows,
+# and three of them are the `Passport` field at its three artifact scopes. The fourth is
+# `Documents` in the derived model — a different selector, a different value shape, and
+# the same rule — and no assertion in this suite had ever exercised it. Every fixture in
+# group N and every over-block measurement behind the SLACK calibration is Passport-shaped,
+# so the rule was calibrated on one of the two members it governs. This arm grades the
+# other one in both directions, so a future change to the conjunctive rule is measured
+# against the whole of what it binds rather than against the half that had fixtures.
+N2DTD="$WORK/galway-documents"; mkdir -p "$N2DTD/outputs"
+cat > "$N2DTD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Galway 2027 [DERIVED]
+
+## Rowan
+
+**Derived**
+
+- **Documents:** Schengen visa, valid to 2028
+MD
+n2_doc_recs="$(nonpublishable_values "$N2DTD" 2>/dev/null | grep -c 'conjunctive')"
+# A six-day render mentioning the two class tokens in SEPARATE blocks, then the same
+# render with the value carried through inside one block. The pair differs only in the
+# final element, so a verdict difference is caused by that element and nothing else.
+n2doc() { # <out_file> <raw final markup>
+  {
+    printf '<!DOCTYPE html><html><head><title>Galway Trip</title></head><body>\n<h1>Itinerary</h1>\n'
+    n2dd=1
+    while [ "$n2dd" -le 6 ]; do
+      printf '<h2>Day %d — the 2028 season opener</h2>\n' "$n2dd"
+      printf '<p>Morning at the covered market, then a long lunch by the water and an\n'
+      printf 'afternoon walk before an evening at a bar near the Schengen visa office on\n'
+      printf 'the square, with music from about nine and a late walk back.</p>\n'
+      n2dd=$((n2dd+1))
+    done
+    [ -n "${2:-}" ] && printf '%s\n' "$2"
+    printf '</body></html>\n'
+  } > "$1"
+}
+n2doc "$WORK/n2_doc_clean.html" ''
+n2doc "$WORK/n2_doc_hit.html" '<p>Border note: the Schengen visa is valid to 2028 for everyone travelling.</p>'
+verify_publishable_content "$WORK/n2_doc_clean.html" "$N2DTD" >/dev/null 2>&1; n2_doc_c=$?
+verify_publishable_content "$WORK/n2_doc_hit.html"   "$N2DTD" >/dev/null 2>&1; n2_doc_h=$?
+if [ "$n2_doc_recs" -ge 1 ] && [ "$n2_doc_c" -eq 0 ] && [ "$n2_doc_h" -eq 1 ]; then
+  PASS "N2h: the OTHER conjunctive row is graded in both directions — the Documents selector yields $n2_doc_recs conjunctive record(s), a render whose two class tokens recur in SEPARATE blocks publishes (rc=0), and the same render carrying the value in ONE block aborts (rc=1). The rule was calibrated on Passport-shaped values; this is the member that had no fixture"
+else
+  FAIL "N2h: the Documents row did not grade in both directions (conjunctive records=$n2_doc_recs, cross-block render rc=$n2_doc_c want 0, same-block render rc=$n2_doc_h want 1) — a zero record count makes both verdicts vacuous rather than clean"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Group O (#123 AC 3, second remediation) — the [THIRD-PARTY] member of the class.
 # AC 3 says the class covers "every [THIRD-PARTY]-marked value in
