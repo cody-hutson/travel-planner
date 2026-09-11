@@ -1,6 +1,6 @@
 # ADR-018: Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions
 
-- **Status:** Proposed (2026-09-10)
+- **Status:** Accepted (2026-09-11)
 - **Deciders:** repo maintainer
 - **Driving work:** the estimating slice of the per-traveler cost-estimation milestone — the work
   `reference/adr/ADR-011-per-traveler-cost-estimation.md` opened and handed forward.
