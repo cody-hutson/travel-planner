@@ -2650,6 +2650,107 @@ MD
 oguard "$O6SR" "$O6STD"
 if [ "$ORC" -eq 1 ]; then PASS "O6c: a category carrying text beyond the enum still aborts (rc=1) — the enum exclusion is scoped to enum-ONLY values"; else FAIL "O6c: a category with a real captured value did not abort (rc=$ORC) — the enum exclusion dropped the whole field"; fi
 
+# ── O7 — an entry's STRUCTURAL SUB-HEADINGS are not captured values ──────────
+# The entry denylist emitted every line of a marked entry, INCLUDING the bold sub-headings
+# the derived model writes its entry body under. Two of the three shipped ones became
+# distinctive match keys, so a render carrying the ordinary English word `derived` or
+# `desires` aborted a publish — measured live on examples/archived-trip-demo, against a
+# control render that published.
+#
+# `**Needs**` was already a non-member, but only by the accident that `needs` is a member
+# of the closed need-category enum; its two siblings had no such accident. That asymmetry
+# is the finding: the exclusion was vocabulary-shaped where the thing being excluded is
+# SHAPE-shaped.
+#
+# Graded on the SHIPPED fixture rather than a synthetic one, deliberately: this was a live
+# false positive on the wired publish path of a public repository, and a synthetic model
+# would let the fixture drift away from the shape that actually failed.
+O7R="$WORK/o7_sub.html"
+orender "$O7R" 'Build note: this page was derived from the current plan, and the desires list was checked.'
+O7CR="$WORK/o7_clean.html"
+orender "$O7CR" 'Build note: this page was rebuilt from the current plan, and the wish list was checked.'
+O7SHIP="$HERE/../examples/archived-trip-demo"
+# O7a — fixture integrity, and it is the arm that keeps O7b from passing vacuously. The
+# shipped model must exist, must carry a [THIRD-PARTY] entry, must still enumerate a
+# NON-EMPTY class, and the render must really carry both words.
+o7recs="$(nonpublishable_values "$O7SHIP" 2>/dev/null | awk 'NF { c++ } END { print c + 0 }')"
+if [ -f "$O7SHIP/outputs/traveler-model.md" ] \
+   && grep -qF '[THIRD-PARTY]' "$O7SHIP/outputs/traveler-model.md" \
+   && grep -qF '**Derived**' "$O7SHIP/outputs/traveler-model.md" \
+   && grep -qF '**Desires**' "$O7SHIP/outputs/traveler-model.md" \
+   && [ "$o7recs" -gt 0 ] \
+   && grep -qF 'derived' "$O7R" && grep -qF 'desires' "$O7R"; then
+  PASS "O7a: the shipped archived-trip-demo carries a [THIRD-PARTY] entry with both bold sub-headings, still enumerates $o7recs class record(s), and the render carries both words — O7b is graded against a live fixture and a non-degenerate class"
+else
+  FAIL "O7a: the O7 fixture is not the shipped shape (records=$o7recs) — O7b would prove nothing"
+fi
+oguard "$O7R" "$O7SHIP"
+o7hit="$ORC"
+oguard "$O7CR" "$O7SHIP"
+o7ctl="$ORC"
+# O7b — both arms graded together. Without the control arm a clean verdict on the first
+# render is indistinguishable from a guard that stopped matching this model at all.
+if [ "$o7hit" -eq 0 ] && [ "$o7ctl" -eq 0 ]; then
+  PASS "O7b: a render whose only offence is the words 'derived' and 'desires' PUBLISHES (rc=$o7hit), as does the same render without them (rc=$o7ctl) — a bold-only sub-heading of an entry states no traveler value and is no longer a match key"
+else
+  FAIL "O7b: the structural sub-heading exclusion is not in the measured shape (with-the-words=$o7hit without=$o7ctl) — a value-free section name is keying a publish abort"
+fi
+# O7c — SENSITIVITY, and the reason O7b is a narrowing rather than a hole. Every value the
+# same entry really states must still abort: the NAME arm and the need value. Two arms,
+# because the exclusion could plausibly have swallowed either. This is the arm that
+# CONVICTS a removed class source, which is why it carries the MD registration and O7b
+# does not: with nonpublishable_values gone nothing aborts, so O7b would pass on a guard
+# that had stopped reading the model at all.
+O7N="$WORK/o7_name.html";  orender "$O7N"  'Rooming note: per-b70d will share with the group on the first night.'
+O7V="$WORK/o7_value.html"; orender "$O7V"  'Pacing note: one of us tires quickly; long standing is not manageable on day two.'
+o7c_assert() {
+  local n v
+  oguard "$O7N" "$O7SHIP"; n="$ORC"
+  oguard "$O7V" "$O7SHIP"; v="$ORC"
+  if [ "$n" -eq 1 ] && [ "$v" -eq 1 ]; then
+    PASS "O7c: the same entry still aborts on its NAME (rc=$n) and on its need VALUE (rc=$v) — the sub-heading exclusion removed the section names and nothing the entry states"
+  else
+    FAIL "O7c: a real third-party value stopped aborting (name=$n value=$v) — the sub-heading exclusion is wider than a section name, or the class source is not running"
+  fi
+}
+o7c_assert
+# O7d — the exclusion is SHAPE-bounded, not a list of the three shipped literals. A bold
+# span with ANY text beside it stays in class; a bold-only line does not. Both directions,
+# because a one-directional check cannot tell a shape test from a literal match.
+O7BTD="$WORK/o7_bounded"
+omodel "$O7BTD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+**Derived**
+
+**Source:** relayed by the operator at the request of the party lead
+MD
+o7d_assert() {
+  local out bold text
+  out="$(nonpublishable_values "$O7BTD" 2>/dev/null)"
+  bold="$(grep -cF 'Derived' <<<"$out")"
+  text="$(grep -cF 'relayed by the operator' <<<"$out")"
+  if [ "$bold" -eq 0 ] && [ "$text" -eq 1 ]; then
+    PASS "O7d: a bold-only line emits no record ($bold) while a bold LABEL carrying text still emits one ($text) — the exclusion is the line shape, not a list of the three sub-headings this model happens to ship"
+  else
+    FAIL "O7d: the exclusion is not shape-bounded (bold-only=$bold bold-label-with-text=$text) — either it is matching literals, or it is swallowing labelled values, or the class source is not running"
+  fi
+}
+o7d_assert
+# O7e — the residual, asserted rather than left in prose. A markdown TABLE HEADER ROW is
+# still emitted as a class record, so the entry's column names are still match keys. It
+# takes all four of them in one render to abort, which is why no single ordinary word
+# trips it — but it is the same class-source over-capture one shape over, and naming it
+# here means the claim fails the day it stops being true.
+o7tab="$(nonpublishable_values "$O7SHIP" 2>/dev/null | awk -F'\t' '$3 == "token" && $4 ~ /Governing constraint/ { c++ } END { print c + 0 }')"
+if [ "$o7tab" -eq 1 ]; then
+  PASS "O7e: the table HEADER row of the entry is still emitted as one token-rule record ($o7tab) — a stated residual of this narrowing, not a closed case, and it is pinned so the next change to the class source has to decide about it"
+else
+  FAIL "O7e: the table-header residual changed shape (records=$o7tab) — re-derive the class-source over-capture measurement before trusting O7b"
+fi
+
 # ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
 # outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
 # never reaches the render, so verify_publishable_content -- HTML-bound, and called only
@@ -5423,6 +5524,22 @@ md_flips verify_publishable_content "N2d" n2_clean_assert
 md_flips _decode_entities           "M5b" m5_assert
 md_flips strip_to_joined_text       "M5b-join" m5_assert
 md_flips verify_publishable_content "M5c" m5_clean_assert
+
+# #325's subjects. The pairing follows the same rule: register the arm that CONVICTS a
+# removed subject, never the arm an absent subject also satisfies.
+#   nonpublishable_values → O7c, the sensitivity arm of the sub-heading exclusion. O7b is
+#                           the publish arm and an absent class source publishes too, so
+#                           registering O7b would certify a guard that reads nothing.
+#   nonpublishable_values → O7d, which calls the class source directly and grades both
+#                           directions of the shape test on one model.
+#   nonpublishable_values → O4e, the mark-strip oracle: the whole verdict is the class
+#                           source refusing to accept an uncorroborated zero.
+#   nonpublishable_values → O8a, the parse sensitivity arm, whose subject is the guard's
+#                           own zero rather than any fixture.
+#   verify_publishable_content → O9b, the field-limb continuation arm, whose subject is
+#                           the guard rather than the parse inside it.
+md_flips nonpublishable_values      "O7c" o7c_assert
+md_flips nonpublishable_values      "O7d" o7d_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates

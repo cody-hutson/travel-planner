@@ -879,10 +879,35 @@ _GUARD_AWK_HELPERS='
     #     The test is FIELD-BLIND: enum_only takes only the value text and is passed no
     #     field, so it applies under ANY label, not only Category. That is deliberate,
     #     and narrowing it to Category is the wrong fix — see ADR-008 coverage boundary.
+    #   - a STRUCTURAL SUB-HEADING of the entry: a line whose ENTIRE content is one
+    #     markdown strong-emphasis span and nothing else. The derived model writes an
+    #     entry body under such sub-headings — `**Needs**`, `**Desires**`, `**Derived**`
+    #     — and they name a section rather than stating a traveler value. This is the
+    #     same structural exclusion the enum already makes, one shape over: `**Needs**`
+    #     was ALREADY a non-member, but only by the accident that `needs` happens to be
+    #     a member of the need-category enum, while its two siblings were emitted as
+    #     class values. Both were measured aborting a publish on the word alone
+    #     (`derived`, `desires`) against a control render that published, on the
+    #     shipped archived-trip-demo in this repository.
+    #     The shape is the whole predicate, and it is deliberately NOT a list of the
+    #     three literals: a literal list would be a second home for the class, which is
+    #     the defect the declaration block below exists to prevent. It is also
+    #     deliberately NARROW — any text at all accompanying the span leaves the line in
+    #     class, so `**Source:** none — …` and `**Documents:** unknown` are untouched.
+    #     It is tested on the RAW line, which is why the raw line is now a parameter:
+    #     the caller strips `**` before this function sees the label, so the shape is
+    #     gone by then.
     # Everything else under the entry is IN. reference/data-model.md § Lifecycle facets —
     # "The bound is the entry class, not a list of fields ... there is no default-allow
     # outside it."
-    function tp_value(s,   t, c, nxt) {
+    function bold_only(raw,   t) {
+      t = raw
+      sub(/^[ \t]*[-*+][ \t]+/, "", t)
+      sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+      return (t ~ /^\*\*[^*]+\*\*$/)
+    }
+    function tp_value(s, raw,   t, c, nxt) {
+      if (bold_only(raw)) return ""
       t = s
       sub(/^[Nn]eed[^"]*"[^"]*"[ \t]*/, "", t)                       # derived link head
       gsub(/\([ \t]*[Aa]pplies[ \t]+to[ \t]*:[^)]*\)/, " ", t)       # parenthesized link
@@ -1364,7 +1389,7 @@ $rmerge	$rtarget"
       # so a selector consulted after it has already been erased.
       vi = esel_in(raw)
       if (tp || vi > 0) {
-        val = tp_value(lab)
+        val = tp_value(lab, raw)
         if (stated(val)) {
           # Membership and matchability are still one decision — but both halves now come
           # from the row that put this value in class, not from a literal here. The rule
