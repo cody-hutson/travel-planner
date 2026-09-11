@@ -2864,6 +2864,87 @@ o8a_assert() {
 }
 o8a_assert
 
+# ── O9 — the FIELD limb reads a wrapped value line by line (PR-6 / P2) ──────
+# The two limbs of this class treated a wrapped value differently and only one of them
+# was right. On the entry limb every line of a marked entry is its own record; on the
+# field limb the value was whatever followed the colon on the FIRST line, so the
+# continuation matched no field label, sat under no marked entry and fell through to
+# nothing. A render carrying ONLY the continuation half of a wrapped `Passport:`
+# PUBLISHED while the first line and the whole value both aborted.
+#
+# That is an under-block on the member #123 narrowed AC 3 to, which is what makes it a
+# fix rather than a documentation correction. Both declared conjunctive rows are graded,
+# because the calibration that shipped had only ever been exercised against one of them.
+O9TD="$WORK/o9_passport"; mkdir -p "$O9TD/outputs"
+O9DTD="$WORK/o9_documents"; mkdir -p "$O9DTD/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Passport:** Ruritanian, valid to 2033\n  renewed at the Vilnius consulate in the spring of last year\n' > "$O9TD/outputs/traveler-model.md"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Documents:** Ruritanian, valid to 2033\n  renewed at the Vilnius consulate in the spring of last year\n' > "$O9DTD/outputs/traveler-model.md"
+O9F="$WORK/o9_first.html";  orender "$O9F" 'Border note: carry your Ruritanian passport, valid to 2033, at all times.'
+O9C="$WORK/o9_cont.html";   orender "$O9C" 'Border note: it was renewed at the Vilnius consulate in the spring of last year.'
+O9W="$WORK/o9_whole.html";  orender "$O9W" 'Border note: Ruritanian, valid to 2033, renewed at the Vilnius consulate in the spring of last year.'
+O9K="$WORK/o9_clean.html";  orender "$O9K" 'Border note: bring comfortable shoes and a light jacket for the evenings.'
+# O9a — fixture integrity, graded first. The model must really wrap the value, and the
+# continuation render must carry ONLY the continuation half — no token of the first line —
+# or O9b measures a render that would have aborted anyway.
+o9recs="$(nonpublishable_values "$O9TD" 2>/dev/null | awk 'NF { c++ } END { print c + 0 }')"
+if [ "$o9recs" -eq 2 ] \
+   && grep -qF 'renewed at the Vilnius consulate' "$O9C" \
+   && ! grep -qF 'Ruritanian' "$O9C" && ! grep -qF '2033' "$O9C"; then
+  PASS "O9a: the wrapped Passport value emits $o9recs records (the first line and one sibling) and the continuation render carries no token of the first line — O9b grades the continuation and nothing else"
+else
+  FAIL "O9a: the O9 fixture is not the wrapped shape (records=$o9recs) — O9b would prove nothing"
+fi
+o9b_assert() {
+  local f c w k dc dk
+  oguard "$O9F" "$O9TD"; f="$ORC"
+  oguard "$O9C" "$O9TD"; c="$ORC"
+  oguard "$O9W" "$O9TD"; w="$ORC"
+  oguard "$O9K" "$O9TD"; k="$ORC"
+  oguard "$O9C" "$O9DTD"; dc="$ORC"
+  oguard "$O9K" "$O9DTD"; dk="$ORC"
+  if [ "$c" -eq 1 ] && [ "$dc" -eq 1 ] && [ "$f" -eq 1 ] && [ "$w" -eq 1 ] && [ "$k" -eq 0 ] && [ "$dk" -eq 0 ]; then
+    PASS "O9b: a render carrying ONLY the continuation half of a wrapped value now aborts on both declared conjunctive rows (Passport rc=$c, Documents rc=$dc), while the first line (rc=$f) and the whole value (rc=$w) still abort and a clean render still publishes (rc=$k / rc=$dk) — the field limb reads a wrapped value line by line, as the entry limb already did"
+  else
+    FAIL "O9b: the field-limb continuation is not in the measured shape (Passport cont=$c first=$f whole=$w clean=$k / Documents cont=$dc clean=$dk) — a continuation reading 0 is the under-block returning; a clean reading 1 is the sibling record over-blocking"
+  fi
+}
+o9b_assert
+# O9c — the REWORDING LIMIT, measured on BOTH rules, because it is not one number and the
+# coverage boundary used to state it as though it were. The sweep is the assertion: a
+# prose claim about a bound is a claim nothing re-checks.
+o9c_assert() {
+  local n k j w val rew rc phrase_flip=0 conj_missed=0 nn=0 stopctl=-1
+  local -a WD=(alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima)
+  local T="$WORK/o9c"; mkdir -p "$T/outputs" "$T/conj/outputs"
+  for n in 5 6 7 8 9 10 11 12; do
+    val=""; for ((j=0;j<n;j++)); do val="$val ${WD[$j]}"; done; val="${val# }"
+    k=$(( (n+1)/2 )); rew=""; j=0
+    for w in $val; do j=$((j+1)); if [ "$j" -eq "$k" ]; then rew="$rew zulu"; else rew="$rew $w"; fi; done
+    rew="${rew# }"
+    nn=$((nn+1))
+    local R="$WORK/o9c_r.html"; orender "$R" "Note: $rew is recorded."
+    printf '# Traveler Model [DERIVED]\n\n## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]\n- Specific: %s\n' "$val" > "$T/outputs/traveler-model.md"
+    oguard "$R" "$T"; rc="$ORC"
+    if [ "$n" -ge 10 ] && [ "$rc" -eq 1 ]; then phrase_flip=$((phrase_flip+1)); fi
+    if [ "$n" -le 9 ] && [ "$rc" -eq 0 ]; then phrase_flip=$((phrase_flip+1)); fi
+    printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Passport:** %s\n' "$val" > "$T/conj/outputs/traveler-model.md"
+    oguard "$R" "$T/conj"; rc="$ORC"
+    if [ "$rc" -eq 0 ]; then conj_missed=$((conj_missed+1)); fi
+  done
+  # The control on the conjunctive claim: substituting a STOPLISTED word instead of a
+  # distinctive one must still be caught, or "any length" is fragility rather than the
+  # distinctive-token requirement.
+  printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Passport:** Ruritanian issued at Vilnius in the spring\n' > "$T/conj/outputs/traveler-model.md"
+  local S="$WORK/o9c_s.html"; orender "$S" 'Note: Ruritanian issued at Vilnius during the spring is recorded.'
+  oguard "$S" "$T/conj"; stopctl="$ORC"
+  if [ "$phrase_flip" -eq "$nn" ] && [ "$conj_missed" -eq "$nn" ] && [ "$stopctl" -eq 1 ]; then
+    PASS "O9c: over $nn value lengths (n=5..12) a single worst-case reword defeats the PHRASE rule at n<=9 and is caught at n>=10, the derivable n>=2F boundary; it defeats the CONJUNCTIVE rule at EVERY length ($conj_missed/$nn), because that rule requires every distinctive token. Control: substituting a STOPLISTED word instead is still caught (rc=$stopctl), so the conjunctive limit is the distinctive-token requirement and not fragility in general"
+  else
+    FAIL "O9c: the rewording limit is not in the measured shape (phrase boundary held on $phrase_flip/$nn lengths, conjunctive missed $conj_missed/$nn, stopword control rc=$stopctl) — the coverage boundary states these numbers, so re-derive them before trusting either"
+  fi
+}
+o9c_assert
+
 # ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
 # outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
 # never reaches the render, so verify_publishable_content -- HTML-bound, and called only
@@ -5654,6 +5735,8 @@ md_flips verify_publishable_content "M5c" m5_clean_assert
 md_flips nonpublishable_values      "O7c" o7c_assert
 md_flips nonpublishable_values      "O7d" o7d_assert
 md_flips nonpublishable_values      "O8a" o8a_assert
+md_flips verify_publishable_content "O9b" o9b_assert
+md_flips nonpublishable_values      "O9c" o9c_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates

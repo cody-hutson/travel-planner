@@ -376,7 +376,40 @@ make_boilerplate() { # -> echoes temp dir (boilerplate = <dir>/index.html)
 # DE-ATTRIBUTED — the traveler name stripped — is caught, by construction: the name
 # was never the join key, so removing it changes nothing. A value the hub REWORDED on
 # its way into the render is NOT caught; detecting a paraphrase is a judgement no
-# string match can make. This layer does not subsume the validator profile-privacy
+# string match can make.
+#
+# THE REWORDING LIMIT IS MEASURED, AND IT IS NOT ONE NUMBER — it differs by RULE, and
+# the earlier phrasing ("a REWORDED value is not caught") understated it on both rules
+# by leaving a reader to assume a rewrite was needed.
+#   • `phrase` (the entry limb, and any value of GUARD_NGRAM tokens or more): ONE
+#     substituted word defeats any value of NINE TOKENS OR FEWER. Derivable rather
+#     than arbitrary — a substitution at position k leaves surviving runs of k-1 and
+#     n-k, so the value survives only when one of those still reaches F, i.e. when
+#     n >= 2F. Measured n=5..12, flipping at exactly 10.
+#   • `conjunctive` (the Passport and Documents rows): ONE substituted DISTINCTIVE
+#     word defeats the match AT ANY LENGTH. The rule requires every distinctive token
+#     of the value to occur, so removing one ends it — n=5..12 all missed. Control:
+#     substituting a STOPLISTED word instead leaves the match intact, so the limit is
+#     the distinctive-token requirement and not fragility in general. This is the
+#     member #123 narrowed AC 3 to, so it is the sharper of the two limits and it
+#     applies to the row the narrowing kept.
+#
+# THE TWO LIMBS ALSO DIFFER ON A WRAPPED VALUE, and one of them used to be wrong. On
+# the ENTRY limb every line of a marked entry is its own record. On the FIELD limb the
+# value was whatever followed the colon on the FIRST line, so a render carrying only
+# the continuation half of a wrapped `Passport:` published while the first line and
+# the whole value both aborted. The field limb now emits each continuation line as a
+# sibling record, so both limbs read a wrapped value line by line.
+#
+# That closure is deliberately a SIBLING RECORD rather than a JOINED VALUE. Joining
+# the lines into one value would catch a run that SPANS the wrap — which a sibling
+# record still misses, and which is this boundary's remaining limit here — but it
+# lengthens the value fed to `conjunctive` and so widens the very window the slack
+# calibration below narrowed. Measured neutral: with and without the continuation
+# line, the over-block candidate, the carry-through and the clean render all return
+# the same verdict.
+#
+# This layer does not subsume the validator profile-privacy
 # audit, which reads the five publish-bound SOURCES and judges; this guard reads the
 # RENDER and matches. Both are needed. Full rationale + rejected alternatives:
 # reference/adr/ADR-008-publish-content-guard.md.
@@ -962,7 +995,7 @@ _GUARD_MODEL_AWK='
       efn = split(EFIELDS, ef, " ");  efr = split(EFRULES, ers, " ")
       for (i = 1; i <= esn; i++) { ebare[i] = tolower(es[i]); gsub(/[][]/, "", ebare[i]) }
       entries = 0; idx = 0; tp = 0; ei = 0; live = 0; tprecs = 0; sawmark = 0; supersede = 0
-      premark = 0; orph = 0; mline = 0
+      premark = 0; orph = 0; mline = 0; cont = 0; cn = 0
     }
     # The raw text is inspected for a declared entry selector BEFORE any per-line
     # handling, so the orphaned-mark backstop in END sees marks the parse may fail to
@@ -988,6 +1021,7 @@ _GUARD_MODEL_AWK='
       # A mark ON a reserved heading is a class declaration the reserved-key suppression
       # swallows. It can never resolve, because nothing under a reserved heading is ever
       # read as class — that is what reserving the key MEANS.
+      cont = 0
       if (index(RESERVED, " " key " ") > 0) { live = 0; tp = 0; ei = 0; if (mline) orph++; next }   # structural section, not a person
       entries++; idx = entries; live = 1
       ei = esel_in(head); tp = (ei > 0)
@@ -1000,8 +1034,8 @@ _GUARD_MODEL_AWK='
     }
     # A deeper heading stays INSIDE the entry, so a mark on one belongs to that entry.
     # A heading cannot be a list item, so outside a live entry it is a mention.
-    /^###/    { if (mline) { if (live == 1) emark[idx] = 1; else premark++ } next }
-    /^#[ \t]/ { if (mline) premark++
+    /^###/    { cont = 0; if (mline) { if (live == 1) emark[idx] = 1; else premark++ } next }
+    /^#[ \t]/ { cont = 0; if (mline) premark++
                 live = 0; tp = 0; ei = 0; next } # the file title ends any entry
     # An APPLIED mark on a line the parse never reads as class — outside any live entry,
     # which is to say under a reserved heading — is the same suppressed declaration a mark
@@ -1023,6 +1057,10 @@ _GUARD_MODEL_AWK='
           val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
           if (stated(val)) printf "field\tentry %d / %s\t%s\t%s\n", idx, ef[i], rule_for(ers[i], val), val
           fh = 1
+          # Arm the continuation limb below. A wrapped field value is the ONE shape where
+          # the two limbs of this class behave differently, and the difference was an
+          # under-block: see the limb note on that rule.
+          cont = 1; csel = ef[i]; crule = ers[i]; cn = 0
           break
         }
       }
@@ -1051,8 +1089,36 @@ _GUARD_MODEL_AWK='
                  rule_for(er[ri], val), val
           tprecs++; erecs[idx]++
         }
+        cont = 0
         next
       }
+      # ── the FIELD limb, CONTINUED: the later lines of a wrapped value ────────
+      # THE TWO LIMBS OF THIS CLASS TREAT A WRAPPED VALUE DIFFERENTLY, and until now only
+      # one of them was right. On the ENTRY limb every line of a marked entry becomes its
+      # own record, so a wrapped value is matchable line by line. On the FIELD limb the
+      # value was whatever followed the colon ON THE FIRST LINE, and the continuation
+      # matched no field label, sat under no marked entry, and fell through to nothing —
+      # so a render carrying ONLY the continuation half of a wrapped `Passport:` published,
+      # while the first line and the whole value both aborted. Measured end to end.
+      #
+      # That is an under-block on the very member the class was narrowed to, so it is
+      # raised rather than documented. Each continuation line becomes a SIBLING record
+      # under the same declared rule — entry-limb parity, and the shape already shipped
+      # and tested over there. It is purely additive: no existing record changes, so no
+      # current verdict can flip, and the only new verdicts are aborts on content that
+      # previously published.
+      #
+      # A continuation is an INDENTED, non-blank line that opens no new list item and no
+      # heading. The contiguity is the whole predicate — a blank line, a new bullet, a new
+      # field or a new entry all end the value, and each clears the flag below.
+      if (cont && raw ~ /^[ \t]+[^ \t]/ && raw !~ /^[ \t]*[-*+][ \t]/ \
+                && raw !~ /^[ \t]*[0-9]+[.)][ \t]/ && raw !~ /^[ \t]*#/) {
+        val = clean(lab)
+        if (stated(val)) printf "field\tentry %d / %s cont %d\t%s\t%s\n", idx, csel, ++cn, \
+                                rule_for(crule, val), val
+        next
+      }
+      cont = 0
     }
     END {
       if (entries == 0) exit 3
