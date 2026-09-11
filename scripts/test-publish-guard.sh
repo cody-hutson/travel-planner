@@ -1207,8 +1207,26 @@ else
   FAIL "L11a: the reserved-heading field suppression changed shape (suppressed=$l11sup control=$l11ctl) — re-read the heading branch before trusting either verdict"
 fi
 
-# L11b — the ENTRY limb IS backstopped by the orphaned-mark check, but only while no
-# other entry produced a record. Two fixtures differing in exactly that.
+# L11b — THE ENTRY-LIMB BACKSTOP, NOW UNCONDITIONAL. RE-AUTHORED: THIS ARM WAS INVERTED.
+#
+# It used to pin the opposite verdict, and that was correct of the code it measured. The
+# orphaned-mark backstop asked `sawmark && tprecs == 0`, and `tprecs` is a FILE-WIDE
+# counter, so one entry producing one record absolved every other mark in the file: the
+# suppressed mark aborted when it was alone (rc=2) and was SWALLOWED (rc=0) the moment any
+# unrelated entry parsed. This arm recorded that as the shipped shape — "the backstop is
+# conditional, and this pins the condition" — with the note that a slice closing it would
+# need a failing target to flip. This is that slice, and this is that flip.
+#
+# The backstop now asks the question per mark rather than per file: a mark resolves when
+# the entry it sits in produced a class record, and a mark sitting in no entry — here,
+# under a reserved heading — resolves never. So BOTH arms are now rc=2 and the second one
+# is the closure. Graded together and differently: the first arm alone would pass on a
+# guard that aborts everything, and the second alone cannot tell a closure from an
+# always-abort. The control is L11c/L11d plus group O5b, which still publish.
+#
+# READ THIS AS A CLOSURE, NOT AS A NEW MEASUREMENT. The two fixtures still differ in
+# exactly one thing — whether another entry produced a record — and the point of the pair
+# is now that the difference no longer changes the verdict.
 LSUPE="$WORK/l_sup_entry"; mkdir -p "$LSUPE/outputs"
 LSUPER="$WORK/l_sup_entry.html"
 lrender "$LSUPER" "One member of the party cannot manage more than one flight of stairs in a single stretch."
@@ -1219,10 +1237,10 @@ LSUPE2="$WORK/l_sup_entry2"; mkdir -p "$LSUPE2/outputs"
 printf '# Traveler Model [DERIVED]\n\n## Marlow [OPERATOR-PROVIDED] [THIRD-PARTY]\n\n### Needs\n- Category: rest\n  Specific: an early night on the first evening after the long flight\n\n## Update signals [DERIVED]\n- Relayed [THIRD-PARTY]: cannot manage more than one flight of stairs in a single stretch\n' > "$LSUPE2/outputs/traveler-model.md"
 lguard "$LSUPER" "$LSUPE2"
 l11e2="$LRC"
-if [ "$l11e1" -eq 2 ] && [ "$l11e2" -eq 0 ]; then
-  PASS "L11b: a suppressed ENTRY mark aborts as UNDETERMINED (rc=2) when it is the only one, and is swallowed (rc=0) once another entry produced a record — the backstop is conditional, and this pins the condition"
+if [ "$l11e1" -eq 2 ] && [ "$l11e2" -eq 2 ]; then
+  PASS "L11b: a suppressed ENTRY mark aborts as UNDETERMINED (rc=$l11e1) when it is the only one AND (rc=$l11e2) alongside another entry that produced records — the backstop is no longer conditional on what the REST of the file parsed, and an orphaned mark can no longer be swallowed by an unrelated entry"
 else
-  FAIL "L11b: the orphaned-mark backstop changed shape (alone=$l11e1 with-other-record=$l11e2) — re-read the END block before trusting either verdict"
+  FAIL "L11b: the orphaned-mark backstop is not in the closed shape (alone=$l11e1 with-other-record=$l11e2) — a second arm reading 0 is the file-wide tprecs fail-open returning; re-read the END block before trusting either verdict"
 fi
 
 # L11c — THE RESERVED-KEY LIST HAS TWO MEMBERS, AND THE BRANCH READS BOTH.
@@ -2552,8 +2570,71 @@ if [ "$o4marks" -eq 0 ] && [ "$o4vals" -ge 1 ] \
 else
   FAIL "O4a: the O4 fixture is not the bad-merge shape (marks=$o4marks values=$o4vals) — O4b would prove nothing"
 fi
+# O4b — SPLIT, AND ITS MESSAGE CORRECTED. IT NEVER TESTED THE STRIP.
+#
+# O4's fixture carries TWO things — the stripped marks AND a recorded supersession — and
+# this arm grades only the final rc. That rc is decided entirely by the supersession path:
+# remove the supersession line and hold everything else constant, and the same fixture
+# goes rc=2 -> rc=0. So the arm passed, its FAIL text claimed it guarded "stripping the
+# marks silently empties the class", and it would have gone on passing if the strip hole
+# had been made WORSE — its PASS requires no evidence about the strip at all.
+#
+# That is the compound-fixture shape: a verdict gated on two conditions where no arm
+# isolates the named variable. ADR-019's Discriminating-Evidence Rule is the governing
+# discipline; this is an instance its Class-1 scan shapes cannot find, because the PASS is
+# reachable neither by an absent subject nor by an empty haystack.
+#
+# The message now names the supersession, which is what this arm really grades. O4e below
+# is the arm it was missing.
 oguard "$O4R" "$O4TD"
-if [ "$ORC" -eq 2 ]; then PASS "O4b: a recorded third-party supersession with no profile to support it is UNDETERMINED (rc=2) — never a clean publish"; else FAIL "O4b: a bad-merge model did not abort (rc=$ORC) — stripping the marks silently empties the class"; fi
+o4sup="$ORC"
+if [ "$o4sup" -eq 2 ]; then PASS "O4b: a recorded third-party supersession with no profile to support it is UNDETERMINED (rc=$o4sup) — never a clean publish. This arm grades the SUPERSESSION path and nothing else: O4e holds the same fixture constant and removes only the supersession line"; else FAIL "O4b: an unsupported supersession did not abort (rc=$o4sup) — the provenance-change check is not firing"; fi
+# O4e — THE ARM O4b WAS MISSING, and it is a MEASUREMENT, not an endorsement. Read it the
+# way L11a asks to be read.
+#
+# The same fixture with the supersession line removed still satisfies every condition O4a
+# enumerates — zero uppercase marks, the value retained, no profile anywhere — and it is
+# therefore the bad merge O4b's old message named. It PUBLISHES. A fully silent strip
+# leaves no residue in the only source the class has, so the parse enumerates zero records
+# and a zero is accepted.
+#
+# THIS ARM PINS THE GAP AND MUST BE INVERTED, NOT DELETED, BY THE SLICE THAT CLOSES IT.
+# The closure needs a WITNESS rather than a better parse, and the witness has to come from
+# outside the model: this card measured that every out-of-model witness available today
+# (a per-traveler profile, a provenance mark, a recorded gap) is absent from this fixture
+# AND from nine of the guard's own must-publish controls, so a witness-based closure
+# converts `absence is not zero` — L6a/L6b, the guard's founding distinction — into an
+# abort. The closure is a model-side census attestation, which is a change to the
+# enrichment contract and the model schema rather than to this predicate.
+#
+# Single-variable by construction: O4f asserts that the two fixtures differ in exactly the
+# supersession line, so the rc flip is attributable to it and to nothing else.
+O4NSTD="$WORK/o4_nosupersede"
+omodel "$O4NSTD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill
+- Specific: cannot manage more than one flight of stairs in a single stretch
+MD
+# O4f — fixture integrity for O4e, graded FIRST. Both fixtures must satisfy O4a's stated
+# bad-merge shape, and they must differ ONLY in the supersession line; otherwise O4e is
+# measuring something other than the variable it names.
+o4nmarks="$(grep -c 'THIRD-PARTY' "$O4NSTD/outputs/traveler-model.md" || true)"
+o4nvals="$(grep -c 'flight of stairs' "$O4NSTD/outputs/traveler-model.md" || true)"
+o4ndiff="$(diff "$O4TD/outputs/traveler-model.md" "$O4NSTD/outputs/traveler-model.md" | grep -c '^<' || true)"
+if [ "$o4nmarks" -eq 0 ] && [ "$o4nvals" -ge 1 ] && [ ! -d "$O4NSTD/travelers" ] \
+   && ! grep -qF 'supersedes third-party-sourced entry' "$O4NSTD/outputs/traveler-model.md"; then
+  PASS "O4f: the O4e fixture is O4a's bad-merge shape with the supersession removed — marks=$o4nmarks, value survived ($o4nvals), no profile, no supersession, and it differs from O4's model in $o4ndiff removed line(s) — so O4e grades ONE variable"
+else
+  FAIL "O4f: the O4e fixture is not O4a's shape minus the supersession (marks=$o4nmarks values=$o4nvals) — O4e would not isolate the strip"
+fi
+oguard "$O4R" "$O4NSTD"
+o4strip="$ORC"
+if [ "$o4strip" -eq 0 ] && [ "$o4sup" -eq 2 ]; then
+  PASS "O4e: a bad merge that strips BOTH marks and records no supersession PUBLISHES (rc=$o4strip) while the same fixture WITH the supersession aborts (rc=$o4sup) — measured, not assumed. O4b's verdict rests entirely on the supersession, so the strip is UNGUARDED, and ADR-008's coverage claim for it is corrected in this change. Invert this arm when a model-side attestation closes it"
+else
+  FAIL "O4e: the mark-strip gap is not in the measured shape (stripped=$o4strip with-supersession=$o4sup) — if the strip now aborts, this arm has been CLOSED and must be inverted rather than left pinning a gap that no longer exists; if the supersession stopped aborting, O4b is broken"
+fi
 # O4c — the ORPHANED-MARK backstop. The file says outright that it holds third-party
 # content and the parse resolves it to nothing. That is the silent fail-open in its
 # purest form: absence is not zero, and an unresolved PRESENCE is not zero either.
@@ -2750,6 +2831,38 @@ if [ "$o7tab" -eq 1 ]; then
 else
   FAIL "O7e: the table-header residual changed shape (records=$o7tab) — re-derive the class-source over-capture measurement before trusting O7b"
 fi
+
+# ── O8 — the guard's OWN zero carries a control arm (fix 5c) ────────────────
+# nonpublishable_values reports "no class content" on the same branch a genuinely empty
+# model reaches, so a BROKEN PARSE and an empty class were indistinguishable in every
+# observable. That is the degenerate-PASS shape ADR-019 exists to eliminate, sitting
+# inside the production predicate rather than inside an assertion: the rule is stated over
+# suite assertions, and applying it to a predicate whose own verdict is a zero-population
+# claim is a faithful extension of it.
+#
+# The guard now runs the SAME model-parse program over a known-marked control fixture
+# built from the DECLARED selector before it accepts any zero, and refuses the zero when
+# the control also reads zero.
+O8TD="$WORK/o8_clean"
+omodel "$O8TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+o8a_assert() {
+  local broken clean
+  # The mutation: the model-parse program emptied, which is what a parse that has stopped
+  # enumerating looks like from inside. A subshell, so the live definition is untouched.
+  broken="$( _GUARD_MODEL_AWK=''; nonpublishable_values "$O8TD" >/dev/null 2>&1; printf '%s' "$?" )"
+  nonpublishable_values "$O8TD" >/dev/null 2>&1; clean=$?
+  if [ "$broken" -eq 2 ] && [ "$clean" -eq 0 ]; then
+    PASS "O8a: with the model parse emptied the guard reports UNDETERMINED (rc=$broken) instead of a clean empty class, while the SAME model on the intact parse publishes (rc=$clean) — the guard's own zero now carries a control arm, and a zero whose control also reads zero is refused as a broken probe rather than published"
+  else
+    FAIL "O8a: the parse sensitivity arm is not in the measured shape (broken-parse=$broken intact=$clean) — a broken=0 means a guard that enumerates nothing still publishes; an intact=2 means the control fixture stopped enumerating and every empty class now aborts"
+  fi
+}
+o8a_assert
 
 # ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
 # outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
@@ -5540,6 +5653,7 @@ md_flips verify_publishable_content "M5c" m5_clean_assert
 #                           the guard rather than the parse inside it.
 md_flips nonpublishable_values      "O7c" o7c_assert
 md_flips nonpublishable_values      "O7d" o7d_assert
+md_flips nonpublishable_values      "O8a" o8a_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates

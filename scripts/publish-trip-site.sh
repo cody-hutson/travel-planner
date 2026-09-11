@@ -925,6 +925,168 @@ _GUARD_AWK_HELPERS='
     }
 '
 
+# The MODEL-PARSE program, held in a variable rather than inline because it now has TWO
+# callers: the live parse of the trip model, and the in-process PARSE SENSITIVITY ARM the
+# zero-record path runs before it accepts a zero (fix 5c). Inlining it twice is exactly how
+# a control arm drifts away from the thing it is controlling, so there is one copy and both
+# callers pass the same -v assignments to it.
+_GUARD_MODEL_AWK='
+    # Index of the first declared entry selector occurring in s, or 0. The selectors and
+    # their rules arrive as parallel space-joined lists — the declaration grammar makes a
+    # selector whitespace-free, so joining on a space is lossless and both lists are built
+    # from the same filtered rows in the same order.
+    function esel_in(s,   i) { for (i = 1; i <= esn; i++) if (index(s, es[i]) > 0) return i; return 0 }
+    # The same selectors with bracketing stripped and case folded — how the token reads
+    # once it is prose rather than a mark. Used ONLY by the supersession detector below.
+    function ebare_in(s,   i) { for (i = 1; i <= esn; i++) if (ebare[i] != "" && index(s, ebare[i]) > 0) return i; return 0 }
+    # A mark is APPLIED rather than merely NAMED when it sits in the LABEL of a model
+    # value line: a list item whose label ends at a colon, with the selector inside that
+    # label. That is the shape agents/00-enrichment.md § Missing or blank profile requires
+    # the mark on — "every value sourced this way" — and it is the same bulleted
+    # label-colon-value shape the field limb binds to.
+    #
+    # The distinction is load-bearing and was forced by measurement, not anticipated.
+    # Without it, prose that NAMES the token counts as a declaration, and the shipped
+    # examples/data-architecture-demo — whose own body explains the token four times,
+    # once of them under a reserved heading — stopped publishing. A corpus document that
+    # documents the guard must not be refused by it.
+    function applied_mark(raw,   t, c) {
+      if (raw !~ /^[ \t]*[-*+][ \t]+/) return 0
+      t = raw; sub(/^[ \t]*[-*+][ \t]+/, "", t)
+      c = index(t, ":")
+      if (c < 2) return 0
+      return (esel_in(substr(t, 1, c)) > 0)
+    }
+    BEGIN {
+      esn = split(ESEL,    es, " ");  ern = split(ERULE,   er, " ")
+      efn = split(EFIELDS, ef, " ");  efr = split(EFRULES, ers, " ")
+      for (i = 1; i <= esn; i++) { ebare[i] = tolower(es[i]); gsub(/[][]/, "", ebare[i]) }
+      entries = 0; idx = 0; tp = 0; ei = 0; live = 0; tprecs = 0; sawmark = 0; supersede = 0
+      premark = 0; orph = 0; mline = 0
+    }
+    # The raw text is inspected for a declared entry selector BEFORE any per-line
+    # handling, so the orphaned-mark backstop in END sees marks the parse may fail to
+    # resolve.
+    #
+    # mline carries that observation into the per-line rules below so each mark can be
+    # ATTRIBUTED to a position rather than only counted file-wide. It is cleared first, on
+    # every line, so it can never leak from the line above it.
+    { mline = 0 }
+    esel_in($0) { sawmark = 1; mline = 1 }
+    # A supersession removes the provenance mark by design (agents/00-enrichment.md
+    # § Missing or blank profile, "supersede, do not merge"). Recording that it happened is what separates a sanctioned
+    # provenance change from the bad merge the same passage forbids; the shell limb below
+    # verifies it is supported. It cannot key on the mark — a supersession is exactly the
+    # state in which the mark is gone — so it keys on the DECLARED selector read as prose.
+    tolower($0) ~ /supersed/ { if (ebare_in(tolower($0))) supersede = 1 }
+    /^##[ \t]/ {
+      head = $0; sub(/^##[ \t]+/, "", head)
+      nm = clean(head)
+      key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
+      # Every member of the declared reserved-key list, not one literal. Space-padded on
+      # both sides so a key is matched whole and never as a substring of another.
+      # A mark ON a reserved heading is a class declaration the reserved-key suppression
+      # swallows. It can never resolve, because nothing under a reserved heading is ever
+      # read as class — that is what reserving the key MEANS.
+      if (index(RESERVED, " " key " ") > 0) { live = 0; tp = 0; ei = 0; if (mline) orph++; next }   # structural section, not a person
+      entries++; idx = entries; live = 1
+      ei = esel_in(head); tp = (ei > 0)
+      if (mline) emark[idx] = 1
+      # The NAME record keeps the token rule as a property of the PARSE, not of the row:
+      # an entry heading is a proper noun, and a proper noun is matched as a token
+      # whatever match rule the row declares for the values beneath it.
+      if (tp && stated(nm)) { printf "entry\tentry %d / Name\ttoken\t%s\n", idx, nm; tprecs++; erecs[idx]++ }
+      next
+    }
+    # A deeper heading stays INSIDE the entry, so a mark on one belongs to that entry.
+    # A heading cannot be a list item, so outside a live entry it is a mention.
+    /^###/    { if (mline) { if (live == 1) emark[idx] = 1; else premark++ } next }
+    /^#[ \t]/ { if (mline) premark++
+                live = 0; tp = 0; ei = 0; next } # the file title ends any entry
+    # An APPLIED mark on a line the parse never reads as class — outside any live entry,
+    # which is to say under a reserved heading — is the same suppressed declaration a mark
+    # on the reserved heading itself is, and can never resolve. A mark merely NAMED there
+    # is a mention and joins the file-wide class below. This rule sits BEFORE the
+    # live-entry rule so it can only see lines that rule will not handle.
+    mline && live != 1 { if (applied_mark($0)) orph++; else premark++ }
+    live == 1 {
+      if (mline) emark[idx] = 1
+      raw = $0
+      lab = $0
+      sub(/^[ \t]*[-*+][ \t]+/, "", lab)
+      gsub(/\*\*/, "", lab)
+      sub(/^[ \t]+/, "", lab)
+      # ── the FIELD limb: every declared field selector scoped to this artifact ──
+      fh = 0
+      for (i = 1; i <= efn; i++) {
+        if (field_hit(lab, ef[i])) {
+          val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
+          if (stated(val)) printf "field\tentry %d / %s\t%s\t%s\n", idx, ef[i], rule_for(ers[i], val), val
+          fh = 1
+          break
+        }
+      }
+      if (fh) next
+      # ── the ENTRY limb: a DENYLIST over the entry, not a field allowlist ───────
+      # The declared selector is read at BOTH granularities and the two are a UNION. The
+      # heading limb alone was the shipped defect: agents/00-enrichment.md § Missing or
+      # blank profile, which requires the mark on "every value sourced this way" and names
+      # mark-stripping as a KNOWN agent error which "silently strip[s] the key the
+      # publication guard depends on" — the exact state in which a heading-only read
+      # enumerates zero records for this limb and publishes.
+      #
+      # ORDERING IS LOAD-BEARING: the value-level selector is read off the RAW line,
+      # before clean() runs. clean() deletes every bracketed provenance mark as metadata,
+      # so a selector consulted after it has already been erased.
+      vi = esel_in(raw)
+      if (tp || vi > 0) {
+        val = tp_value(lab, raw)
+        if (stated(val)) {
+          # Membership and matchability are still one decision — but both halves now come
+          # from the row that put this value in class, not from a literal here. The rule
+          # keys off the VALUE and never off a field label: the label shape of an
+          # entry-limb value is precisely what the corpus does not specify.
+          ri = (vi > 0 ? vi : ei); if (ri < 1) ri = 1
+          printf "entry\tentry %d / field %d\t%s\t%s\n", idx, ++fno[idx], \
+                 rule_for(er[ri], val), val
+          tprecs++; erecs[idx]++
+        }
+        next
+      }
+    }
+    END {
+      if (entries == 0) exit 3
+      # ORPHANED-MARK BACKSTOP, PER MARK. The file carries the non-publication key but the
+      # parse resolved it to nothing. That is not an empty class — it is the parse failing
+      # on a file that says outright it has third-party content, which is the silent
+      # fail-open this guard exists to refuse. Absence is not zero; an unresolved PRESENCE
+      # is not zero either.
+      #
+      # The check used to ask whether ANYTHING parsed: `sawmark && tprecs == 0`. tprecs is
+      # a FILE-WIDE counter, so one entry producing one record absolved every other mark in
+      # the file — an orphaned mark was swallowed the moment any unrelated entry parsed.
+      # test-publish-guard.sh L11b measured that and pinned it as the shipped behaviour.
+      # The question is now asked per mark, in one sentence:
+      #
+      #   a mark resolves when the entry it sits in produced a class record; a mark sitting
+      #   in NO entry — on a reserved heading, under one, or after the file title past the
+      #   first entry — resolves never; and a mark in the file PREAMBLE, before any entry
+      #   exists to sit in, resolves when the file produced a class record.
+      #
+      # The preamble clause is the old rule, unchanged, applied to the one class of mark it
+      # was ever right for: prose above the first entry describes the file rather than
+      # declaring an entry, and the shipped examples/archived-trip-demo carries exactly
+      # that — a summary table naming the mark three times above the entries it describes.
+      # Every other clause is strictly stronger than what it replaces, so nothing that
+      # aborted before publishes now: when tprecs is 0 every erecs is 0 too, so any mark in
+      # any class still orphans.
+      for (k in emark) if (erecs[k] + 0 == 0) orph++
+      if (premark > 0 && tprecs == 0) orph++
+      if (orph > 0) exit 4
+      if (supersede) exit 5
+    }
+'
+
 # The closed need-category enum (agents/00-enrichment.md § Where the source files come
 # from) plus the schema words a
 # need line is written with. This is SCHEMA vocabulary — it is not a list of names and it
@@ -1123,10 +1285,11 @@ _guard_frontmatter_key() { # <file> <key> -> one line per occurrence
 }
 
 nonpublishable_values() { # <trip_dir> [site_html]
-  local trip_dir="${1:-}" site_html="${2:-}" model out rc
+  local trip_dir="${1:-}" site_html="${2:-}" model out rc zprobe zout zn zwit ztab zkey zw zfound zb
   local model_epoch profile_epoch render_epoch pf pout prc had_profiles=0
   local decl_rows decl_n decl_cand decl_eval esel erule mfields mrules pfields prules
   local rfields rrules rout rrc recs="" rtab refs rkey rstore rfile rmerge rtarget record_epoch
+  local zprobe zout zn
   if [ -z "$trip_dir" ]; then
     warn "guard: the non-publishable class needs a trip dir and none was given"; return 2
   fi
@@ -1317,103 +1480,7 @@ $rmerge	$rtarget"
 
   out="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" -v RESERVED="$_GUARD_RESERVED_KEYS" \
             -v ESEL="$esel" -v ERULE="$erule" -v EFIELDS="$mfields" -v EFRULES="$mrules" \
-            "$_GUARD_AWK_HELPERS"'
-    # Index of the first declared entry selector occurring in s, or 0. The selectors and
-    # their rules arrive as parallel space-joined lists — the declaration grammar makes a
-    # selector whitespace-free, so joining on a space is lossless and both lists are built
-    # from the same filtered rows in the same order.
-    function esel_in(s,   i) { for (i = 1; i <= esn; i++) if (index(s, es[i]) > 0) return i; return 0 }
-    # The same selectors with bracketing stripped and case folded — how the token reads
-    # once it is prose rather than a mark. Used ONLY by the supersession detector below.
-    function ebare_in(s,   i) { for (i = 1; i <= esn; i++) if (ebare[i] != "" && index(s, ebare[i]) > 0) return i; return 0 }
-    BEGIN {
-      esn = split(ESEL,    es, " ");  ern = split(ERULE,   er, " ")
-      efn = split(EFIELDS, ef, " ");  efr = split(EFRULES, ers, " ")
-      for (i = 1; i <= esn; i++) { ebare[i] = tolower(es[i]); gsub(/[][]/, "", ebare[i]) }
-      entries = 0; idx = 0; tp = 0; ei = 0; live = 0; tprecs = 0; sawmark = 0; supersede = 0
-    }
-    # The raw text is inspected for a declared entry selector BEFORE any per-line
-    # handling, so the orphaned-mark backstop in END sees marks the parse may fail to
-    # resolve.
-    esel_in($0) { sawmark = 1 }
-    # A supersession removes the provenance mark by design (agents/00-enrichment.md
-    # § Missing or blank profile, "supersede, do not merge"). Recording that it happened is what separates a sanctioned
-    # provenance change from the bad merge the same passage forbids; the shell limb below
-    # verifies it is supported. It cannot key on the mark — a supersession is exactly the
-    # state in which the mark is gone — so it keys on the DECLARED selector read as prose.
-    tolower($0) ~ /supersed/ { if (ebare_in(tolower($0))) supersede = 1 }
-    /^##[ \t]/ {
-      head = $0; sub(/^##[ \t]+/, "", head)
-      nm = clean(head)
-      key = tolower(nm); gsub(/[^a-z0-9]/, "", key)
-      # Every member of the declared reserved-key list, not one literal. Space-padded on
-      # both sides so a key is matched whole and never as a substring of another.
-      if (index(RESERVED, " " key " ") > 0) { live = 0; tp = 0; ei = 0; next }   # structural section, not a person
-      entries++; idx = entries; live = 1
-      ei = esel_in(head); tp = (ei > 0)
-      # The NAME record keeps the token rule as a property of the PARSE, not of the row:
-      # an entry heading is a proper noun, and a proper noun is matched as a token
-      # whatever match rule the row declares for the values beneath it.
-      if (tp && stated(nm)) { printf "entry\tentry %d / Name\ttoken\t%s\n", idx, nm; tprecs++ }
-      next
-    }
-    /^###/    { next }                          # deeper headings stay INSIDE the entry
-    /^#[ \t]/ { live = 0; tp = 0; ei = 0; next } # the file title ends any entry
-    live == 1 {
-      raw = $0
-      lab = $0
-      sub(/^[ \t]*[-*+][ \t]+/, "", lab)
-      gsub(/\*\*/, "", lab)
-      sub(/^[ \t]+/, "", lab)
-      # ── the FIELD limb: every declared field selector scoped to this artifact ──
-      fh = 0
-      for (i = 1; i <= efn; i++) {
-        if (field_hit(lab, ef[i])) {
-          val = lab; sub(/^[^:]*:[ \t]*/, "", val); val = clean(val)
-          if (stated(val)) printf "field\tentry %d / %s\t%s\t%s\n", idx, ef[i], rule_for(ers[i], val), val
-          fh = 1
-          break
-        }
-      }
-      if (fh) next
-      # ── the ENTRY limb: a DENYLIST over the entry, not a field allowlist ───────
-      # The declared selector is read at BOTH granularities and the two are a UNION. The
-      # heading limb alone was the shipped defect: agents/00-enrichment.md § Missing or
-      # blank profile, which requires the mark on "every value sourced this way" and names
-      # mark-stripping as a KNOWN agent error which "silently strip[s] the key the
-      # publication guard depends on" — the exact state in which a heading-only read
-      # enumerates zero records for this limb and publishes.
-      #
-      # ORDERING IS LOAD-BEARING: the value-level selector is read off the RAW line,
-      # before clean() runs. clean() deletes every bracketed provenance mark as metadata,
-      # so a selector consulted after it has already been erased.
-      vi = esel_in(raw)
-      if (tp || vi > 0) {
-        val = tp_value(lab, raw)
-        if (stated(val)) {
-          # Membership and matchability are still one decision — but both halves now come
-          # from the row that put this value in class, not from a literal here. The rule
-          # keys off the VALUE and never off a field label: the label shape of an
-          # entry-limb value is precisely what the corpus does not specify.
-          ri = (vi > 0 ? vi : ei); if (ri < 1) ri = 1
-          printf "entry\tentry %d / field %d\t%s\t%s\n", idx, ++fno[idx], \
-                 rule_for(er[ri], val), val
-          tprecs++
-        }
-        next
-      }
-    }
-    END {
-      if (entries == 0) exit 3
-      # ORPHANED-MARK BACKSTOP. The file carries the non-publication key but the parse
-      # resolved it to nothing. That is not an empty class — it is the parse failing on
-      # a file that says outright it has third-party content, which is the silent
-      # fail-open this guard exists to refuse. Absence is not zero; an unresolved
-      # PRESENCE is not zero either.
-      if (sawmark && tprecs == 0) exit 4
-      if (supersede) exit 5
-    }
-  ' "$model" 2>/dev/null)" && rc=0 || rc=$?
+            "$_GUARD_AWK_HELPERS$_GUARD_MODEL_AWK" "$model" 2>/dev/null)" && rc=0 || rc=$?
   case "$rc" in
     0) ;;
     3) warn "guard: no '## <Name>' entry was recognized in $model — the derived-model format has drifted, so the class is UNDETERMINED, not empty"; return 2 ;;
@@ -1542,6 +1609,30 @@ $rmerge	$rtarget"
     if [ -n "$render_epoch" ] && _is_stale "$render_epoch" "$model_epoch"; then
       warn "guard: the class read EMPTY but $model predates the rendered site — an empty read from a projection older than the render is UNDETERMINED, not an empty class"; return 2
     fi
+  fi
+
+  if [ -z "$out" ]; then
+    # ── the PARSE SENSITIVITY ARM (fix 5c) — the EIGHTH fail-closed path ──────
+    # A zero whose control arm also returns zero is a broken probe, not a clean result.
+    # This guard reports "no class content" on the same branch a genuinely empty model
+    # reaches, so the two are indistinguishable in every observable — which is the
+    # degenerate-PASS shape ADR-019 exists to eliminate, sitting inside the PRODUCTION
+    # predicate rather than inside a suite assertion. The rule is stated over suite
+    # assertions; applying it to the guard is a faithful extension, because the guard's
+    # own zero IS a zero-population claim.
+    #
+    # The fixture is built from the DECLARED selector rather than a literal, so it
+    # exercises the class the declaration actually names and cannot rot away from it, and
+    # it runs the SAME awk program the live parse ran — one copy, two callers.
+    zprobe="$(printf '# Traveler Model [DERIVED]\n\n## Wren %s\n- Specific: a control value of five words\n' "${esel%% *}")"
+    zout="$(awk -v F="$GUARD_NGRAM" -v ENUM="$_GUARD_NEED_ENUM" -v RESERVED="$_GUARD_RESERVED_KEYS" \
+                -v ESEL="$esel" -v ERULE="$erule" -v EFIELDS="$mfields" -v EFRULES="$mrules" \
+                "$_GUARD_AWK_HELPERS$_GUARD_MODEL_AWK" <<<"$zprobe" 2>/dev/null)" || zout=""
+    zn="$(awk 'NF { c++ } END { print c + 0 }' <<<"$zout")"
+    if [ "${zn:-0}" -eq 0 ]; then
+      warn "guard: the class read EMPTY, and so did the parse's own control fixture — the model parse is not enumerating anything, so this zero is a broken probe rather than an empty class, and it is UNDETERMINED"; return 2
+    fi
+
   fi
 
   [ -z "$out" ] || printf '%s\n' "$out"
