@@ -1873,6 +1873,150 @@ fi
 mguard "$MPDGR" "$MPDG"
 if [ "$MRC" -eq 2 ]; then PASS "M4f: a well-formed reference resolving to no record aborts as UNDETERMINED (rc=2) — an unresolvable reference is not an empty class"; else FAIL "M4f: an unresolvable person reference was read as a determinate result (rc=$MRC) — an empty read is not an empty class"; fi
 
+# ── M5 (#328 F4) — an ENCODING TRANSFORM must not carry a class value past the guard ──
+#
+# ADR-008 named three transforms it does not catch. Two of them are mechanical and a
+# normalizer closes them; this is that normalizer, asserted. Measured on the shipped
+# guard, against a verbatim control that aborted:
+#   • `&#82;uritanian` — a numeric character reference. Every projection substitutes a
+#     space for a tag but none decodes a reference, so _norm_words yields the two tokens
+#     `82` and `uritanian` and the value is never matched. Published at rc=0.
+#   • `Rurit<b>anian</b>` — an inline tag SPLITTING A WORD. Every projection substitutes
+#     a SPACE for that tag, so the value normalizes to `rurit` + `anian`. Published at
+#     rc=0.
+# The remedies are different mechanisms because the two fail differently and carry
+# opposite risks: _decode_entities is a filter on every arm, and strip_to_joined_text is
+# a THIRD arm rather than an edit to an existing one — closing an inline tag up on the
+# arm that carries the verdict would fuse two legitimate adjacent links into one false
+# token, so the join happens on a stream nothing else reads and can only ADD matches.
+#
+# Every arm below grades an EXACT code and treats anything outside {0,1} as a probe
+# failure rather than folding it into a verdict — with _decode_entities removed the
+# visible arm empties and the guard returns 2, which is a DIFFERENT claim from "aborted".
+M5V='Ruritanian'
+m5render() { # <out_file> <final paragraph markup>
+  cat > "$1" <<HTML
+<!DOCTYPE html><html><head><title>Porto Trip</title></head><body>
+<h1>Itinerary</h1>
+<p>Day 1: arrive at the river station, drop bags at the guest house, then walk the
+covered market for an hour before an early dinner at the counter two streets over.</p>
+<p>Day 2: the harbour museum in the morning, a long lunch by the water, and the hill
+gardens in the late afternoon when the light is best and the crowds have thinned.</p>
+<p>$2</p>
+</body></html>
+HTML
+}
+M5VERB="$WORK/m5_verbatim.html"; m5render "$M5VERB" 'Border note: carry your Ruritanian passport, valid to 2033.'
+M5DEC="$WORK/m5_dec.html";       m5render "$M5DEC"  'Border note: carry your &#82;uritanian passport, valid to 2033.'
+M5HEX="$WORK/m5_hex.html";       m5render "$M5HEX"  'Border note: carry your &#x52;uritanian passport, valid to 2033.'
+M5TAG="$WORK/m5_tag.html";       m5render "$M5TAG"  'Border note: carry your Rurit<b>anian</b> passport, valid to 2033.'
+M5CLEAN="$WORK/m5_clean.html";   m5render "$M5CLEAN" 'Evening: the riverside lantern walk, then back to the guest house before ten.'
+M5GLUE="$WORK/m5_glue.html";     m5render "$M5GLUE" 'We walked from <em>Dublin</em><em>Galway</em> road down to the river and back.'
+
+# M5a — FIXTURE INTEGRITY, graded FIRST. Each encoded fixture must carry its encoded form
+# and ZERO literal occurrences of the value: a fixture that still spelled the value
+# outright would be re-testing the verbatim case under a new name. The verbatim control
+# is graded in the same arm and must be non-zero, so the three zeros are measurements.
+m5_bad=0; m5_detail=""
+for m5pair in "dec:$M5DEC:&#82;uritanian" "hex:$M5HEX:&#x52;uritanian" "tag:$M5TAG:Rurit<b>anian</b>"; do
+  m5n="${m5pair%%:*}"; m5rest="${m5pair#*:}"; m5f="${m5rest%%:*}"; m5needle="${m5rest#*:}"
+  m5lit="$(grep -c "$M5V" "$m5f")"
+  grep -qF "$m5needle" "$m5f" && m5has=1 || m5has=0
+  [ "$m5lit" -eq 0 ] && [ "$m5has" -eq 1 ] || { m5_bad=$((m5_bad+1)); m5_detail="$m5_detail $m5n(lit=$m5lit,enc=$m5has)"; }
+done
+m5ctl="$(grep -c "$M5V" "$M5VERB")"
+if [ "$m5_bad" -eq 0 ] && [ "$m5ctl" -ge 1 ]; then
+  PASS "M5a: all 3 encoded fixtures carry their encoded form and ZERO literal occurrences of the class value, while the verbatim control carries it $m5ctl time(s) — the zeros are measurements and M5b is a real probe"
+else
+  FAIL "M5a: the encoding fixtures are not set up as claimed (bad:$m5_detail; verbatim control literal count=$m5ctl) — M5b would prove nothing"
+fi
+
+# M5b — THE SUBJECT. All four forms of the same value must abort. The verbatim arm is
+# inside the same count deliberately: it is the shape that already aborted, so a run in
+# which it stops aborting is a regression this arm sees rather than one it attributes to
+# the encoding work.
+m5_assert() {
+  local f rc n=0 abort=0 bad=""
+  for f in "$M5VERB" "$M5DEC" "$M5HEX" "$M5TAG"; do
+    n=$((n+1)); verify_publishable_content "$f" "$MTD" >/dev/null 2>&1; rc=$?
+    case "$rc" in 1) abort=$((abort+1)) ;; 0) bad="$bad $(basename "$f")=published" ;; *) bad="$bad $(basename "$f")=rc$rc" ;; esac
+  done
+  if [ "$abort" -eq "$n" ]; then
+    PASS "M5b: all $n encodings of one class value abort as a HIT (rc=1) — verbatim, decimal reference, hex reference and a mid-word tag split. A character reference is decoded before tokenization and an inline tag is closed up on the joined arm"
+  else
+    FAIL "M5b: only $abort/$n encodings aborted —$bad. A value that reaches the published page in an encoded form reaches it just as completely as one spelled out"
+  fi
+}
+m5_assert
+
+# M5c — SPECIFICITY, and the second arm is the one the third projection makes necessary.
+# A clean render must still publish, and so must a render whose only unusual feature is
+# two ADJACENT inline elements: `<em>Dublin</em><em>Galway</em>` is the same markup shape
+# as a split word, and a joined arm that could not tell them apart would turn two
+# legitimate links into one false token. This is the standing control on that risk.
+m5_clean_assert() {
+  local rc1 rc2
+  verify_publishable_content "$M5CLEAN" "$MTD" >/dev/null 2>&1; rc1=$?
+  verify_publishable_content "$M5GLUE"  "$MTD" >/dev/null 2>&1; rc2=$?
+  if [ "$rc1" -eq 0 ] && [ "$rc2" -eq 0 ]; then
+    PASS "M5c: the same render without the value publishes (rc=0), and so does one carrying two ADJACENT inline elements — the joined arm adds match opportunities without gluing legitimate neighbours into a false token"
+  else
+    FAIL "M5c: a clean render was blocked (clean rc=$rc1, adjacent-inline rc=$rc2) — the new projection over-matches ordinary markup"
+  fi
+}
+m5_clean_assert
+
+# M5d — THE LINE MAP, which is #326's L6 clause discharged at the point it binds. Every
+# transform added to a projection must be line-count-preserving, or it shifts every
+# reported line downstream of it while the token stream stays valid and the suite stays
+# green. _decode_entities is one character away from violating it: `&#10;` and `&#13;`
+# decode to newlines. The range restriction to printable ASCII is what makes that
+# impossible, and this arm is what keeps the restriction from being quietly widened.
+M5LINES="$WORK/m5_lines.html"
+cat > "$M5LINES" <<'HTML'
+<!DOCTYPE html><html><head><title>T</title></head><body>
+<p>Filler line two here with several ordinary words in it.</p>
+<script>
+var a = "decoy line inside the script body";
+var b = "another decoy line inside the script body";
+</script>
+<div
+   class="multi
+   line tag">
+<p>Filler line nine with a Rurit<b>anian</b> split word and a &#82;ho entity.</p>
+<p>Filler line ten.</p>
+</div>
+<p>Filler twelve.</p>
+</body></html>
+HTML
+m5src="$(wc -l < "$M5LINES" | tr -d ' ')"
+m5lj="$(strip_to_joined_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lv="$(strip_to_text_blocks "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lp="$(strip_to_published_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+printf 'alpha &#10; beta &#13; gamma &#32; delta &#38; epsilon &#82;ho\n' > "$WORK/m5_adv.txt"
+m5adv="$(_decode_entities < "$WORK/m5_adv.txt" | wc -l | tr -d ' ')"
+if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5adv" = "1" ]; then
+  PASS "M5d: all three projections are line-count-preserving THROUGH the decoder — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
+else
+  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
+fi
+
+# M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, which is NOT the same for the two and is
+# the reason this arm asserts presence rather than only effect. Removing _decode_entities
+# is fail-CLOSED and audible: the visible arm empties, the 20-word floor fires, and the
+# verdict is rc=2 UNDETERMINED. Removing strip_to_joined_text is fail-OPEN and SILENT:
+# `[ -s "$jfile" ]` is simply false, rcj stays 1, and the tag-split case returns to rc=0.
+# A new arm inherits the posture of the guard it sits behind, not the posture of its
+# siblings, and this arm is what makes the difference observable.
+m5_dec_rc=0; m5_join_rc=0
+m5_dec_rc="$( unset -f _decode_entities;    verify_publishable_content "$M5DEC" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+m5_join_rc="$( unset -f strip_to_joined_text; verify_publishable_content "$M5TAG" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 0 ]; then
+  PASS "M5e: the two new subjects fail in OPPOSITE directions and both are measured — without _decode_entities the entity case is rc=2 UNDETERMINED (fail-closed, audible), and without strip_to_joined_text the tag-split case is rc=0 (fail-OPEN, silent). The second is why the arm's PRESENCE is asserted and not only its effect"
+else
+  FAIL "M5e: a removal did not produce its measured direction (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 0) — if the joined arm now fails closed that is an improvement to record, and if the decoder now fails open that is a hole"
+fi
+
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
 # W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real
 # itinerary repeats both, so an N-day trip offers N-squared candidate pairings and a
@@ -1936,6 +2080,196 @@ else
 fi
 verify_publishable_content "$NHIT" "$NTD" >/dev/null 2>&1; nrc=$?
 if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block still aborts (rc=1) — block scoping narrowed the window, it did not disarm it"; else FAIL "N1d: a real same-block passport carry-through no longer aborts (rc=$nrc) — PR-7 over-corrected into a fail-open"; fi
+
+# ── N2 (#328 F1) — the conjunctive window is derived from the VALUE, not from a flat 25 ──
+#
+# N1 closed the cross-block pairing. What survived it is the WITHIN-block false abort: on
+# a trip to the country in the passport's own year, ordinary destination guidance carries
+# both class tokens in one legitimate sentence. Measured on the shipped guard, 3 of 3
+# such lines aborted while 2 of 2 controls published — a permanent, unremediable abort on
+# correct content, which this file argues three times is fail-open in practice.
+#
+# WHY A 17-FIXTURE MATRIX AND NOT THE 3 THE DEFECT NAMED. Two degenerate outcomes reach a
+# PASS on an over-block-only criterion, and both were measured: a matcher stubbed to
+# never match passes every over-block arm, and a one-limb fix passes exactly the three
+# lines the defect named while still aborting 4 of 4 destination-guidance lines written
+# afterwards. So the over-block arms are TWINNED with carry-through arms over the same
+# render family, and the two are graded together rather than apart.
+#
+# The matrix: 7 over-block candidates · 6 true carry-throughs · 3 clean · 1 paraphrase.
+# Every arm below grades an EXACT code and treats anything outside {0,1} as a probe
+# failure rather than folding it into a count — with _guard_match removed the guard
+# returns 127, which is a different claim from "aborted".
+N2OB1='<h1>Galway 2027 — an Irish adventure</h1>'
+N2OB2='<p>Visa / entry: Irish passport holders need no visa; check that validity runs beyond 2027.</p>'
+N2OB3='<p>Booking note: the Irish ferry crossing must be reserved before the 2027 summer timetable opens.</p>'
+N2OB4='<p>Booking note: the Irish ferry to the islands runs until 2027 on the summer timetable.</p>'
+N2OB5='<p>Getting there: Irish Rail runs hourly from Dublin Heuston; the 2027 timetable is published each December.</p>'
+N2OB6='<p>Money: cards are accepted almost everywhere in Irish cafes and bars, and the 2027 bank holidays fall on the first Monday of each month.</p>'
+N2OB7='<p>Weather: the Irish west coast is wet in every season, so the packing list below holds for the whole 2027 trip.</p>'
+N2TP1='<p>Border note: carry your Irish passport, valid to 2027, at all times.</p>'
+N2TP2='<p>Border note: valid to 2027 — that is the Irish passport you should be carrying.</p>'
+N2TP3='<p>Document check: Irish, valid to 2027.</p>'
+N2TP4='<p>Passport check: Irish and valid to 2027 for everyone travelling.</p>'
+N2TP5='<p>Carry the Irish one, valid to 2027, in your day bag.</p>'
+N2TP6='<p>Border note: the Irish one you carry is valid to 2027.</p>'
+N2CL2='<h1>Galway 2027 — a west coast week</h1>'
+N2CL3='<p>Visa / entry: no visa required for stays under ninety days; carry a passport valid for six months beyond arrival.</p>'
+N2PP1='<p>Border note: the Irish passport you carry expires in 2027.</p>'
+
+# nrender wraps its third argument in <p>; these fixtures supply their own element,
+# because one of them is a HEADING and the heading case is the tightest span in the set.
+n2render() { # <out_file> <raw final markup>
+  {
+    printf '<!DOCTYPE html><html><head><title>Galway Trip</title></head><body>\n<h1>Itinerary</h1>\n'
+    n2d=1
+    while [ "$n2d" -le 6 ]; do
+      printf '<h2>Day %d — Friday 12 June 2027</h2>\n' "$n2d"
+      printf '<p>Morning at the covered market, then a long lunch by the water and an\n'
+      printf 'afternoon walk through the old town before an evening at a traditional Irish\n'
+      printf 'pub with music from about nine, back to the guest house before midnight.</p>\n'
+      n2d=$((n2d+1))
+    done
+    [ -n "${2:-}" ] && printf '%s\n' "$2"
+    printf '</body></html>\n'
+  } > "$1"
+}
+# The minimal within-block distance between the two class tokens, read off the visible
+# projection the rule itself matches. It is what the proportional limb is compared
+# against, so N2e can assert the residual as an OBSERVATION rather than as a claim.
+n2span() { # <html_file> -> minimal same-block key window, or '-'
+  strip_to_text_blocks "$1" | _line_sentinels | _norm_words | awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '
+    $0==L { next } $0==B { blk++; next } { n++; t[n]=$0; b[n]=blk }
+    END { best=-1
+      for (i=1;i<=n;i++) for (j=1;j<=n;j++) {
+        if (b[i]!=b[j]) continue
+        if ((t[i]=="irish"&&t[j]=="2027")||(t[i]=="2027"&&t[j]=="irish")) { d=(i>j?i-j:j-i); if (best<0||d<best) best=d }
+      }
+      print (best<0 ? "-" : best) }'
+}
+n2rc() { # <raw final markup> -> the guard's exact status
+  n2render "$WORK/n2_probe.html" "$1"
+  verify_publishable_content "$WORK/n2_probe.html" "$NTD" >/dev/null 2>&1; printf '%s' "$?"
+}
+
+# N2a — FIXTURE INTEGRITY + THE DENOMINATOR, graded FIRST. Every over-block candidate must
+# really carry both class tokens in one block and must NEVER carry the value as a
+# contiguous run; every carry-through must carry the value's two facts in one block. A
+# fixture set failing either half makes every verdict below vacuous rather than passing.
+n2_bad=""; n2_ob=0; n2_tp=0
+for n2x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB4" "$N2OB5" "$N2OB6" "$N2OB7"; do
+  n2_ob=$((n2_ob+1)); n2render "$WORK/n2_fi.html" "$n2x"
+  n2s="$(n2span "$WORK/n2_fi.html")"
+  { [ "$n2s" != "-" ] && ! grep -qF 'Irish, valid to 2027' "$WORK/n2_fi.html"; } || n2_bad="$n2_bad OB$n2_ob(span=$n2s)"
+done
+for n2x in "$N2TP1" "$N2TP2" "$N2TP3" "$N2TP4" "$N2TP5" "$N2TP6"; do
+  n2_tp=$((n2_tp+1)); n2render "$WORK/n2_fi.html" "$n2x"
+  n2s="$(n2span "$WORK/n2_fi.html")"
+  [ "$n2s" != "-" ] || n2_bad="$n2_bad TP$n2_tp(no-pair)"
+done
+if [ -z "$n2_bad" ] && [ "$n2_ob" -eq 7 ] && [ "$n2_tp" -eq 6 ]; then
+  PASS "N2a: the discrimination matrix is real — $n2_ob over-block candidates each carry both class tokens inside ONE block and none carries the value as a run, and $n2_tp carry-throughs each pair the two facts in one block. Denominator for every verdict below: 7 over-block / 6 carry-through / 3 clean / 1 paraphrase"
+else
+  FAIL "N2a: the matrix is not set up as claimed (ob=$n2_ob tp=$n2_tp; bad:$n2_bad) — the arms below would be vacuous rather than passing"
+fi
+
+# N2b — THE SUBJECT. The over-block candidates must publish. ONE is expected to survive
+# and is named rather than hidden: N2e asserts why it is irreducible.
+n2_over_assert() {
+  local x rc pub=0 n=0 bad="" aborted=""
+  for x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB5" "$N2OB6" "$N2OB7"; do
+    n=$((n+1)); rc="$(n2rc "$x")"
+    case "$rc" in 0) pub=$((pub+1)) ;; 1) aborted="$aborted OB$n" ;; *) bad="$bad OB$n=rc$rc" ;; esac
+  done
+  if [ "$pub" -eq "$n" ]; then
+    PASS "N2b: all $n non-residual over-block candidates publish (rc=0) — legitimate destination guidance that mentions the nationality adjective and the trip year no longer aborts. The window is now derived from the value's own span and the match additionally requires the value's own connective vocabulary"
+  else
+    FAIL "N2b: only $pub/$n over-block candidates published — still aborting:$aborted$bad. A fail-closed control that refuses correct content is worked around rather than satisfied"
+  fi
+}
+n2_over_assert
+
+# N2c — SENSITIVITY, and it is the arm that makes N2b evidence rather than a green light.
+# Without it N2b is satisfied by a matcher that stopped matching passports at all — which
+# was measured: a stub returning "no match" passes every over-block arm in this group.
+n2_carry_assert() {
+  local x rc ab=0 n=0 bad=""
+  for x in "$N2TP1" "$N2TP2" "$N2TP3" "$N2TP4" "$N2TP5" "$N2TP6"; do
+    n=$((n+1)); rc="$(n2rc "$x")"
+    case "$rc" in 1) ab=$((ab+1)) ;; 0) bad="$bad TP$n=published" ;; *) bad="$bad TP$n=rc$rc" ;; esac
+  done
+  if [ "$ab" -eq "$n" ]; then
+    PASS "N2c: all $n real carry-throughs still abort (rc=1) — verbatim, order-swapped, de-attributed and three rewordings, including one whose two facts sit 7 tokens apart. The narrowing removed false aborts without disarming the rule"
+  else
+    FAIL "N2c: only $ab/$n carry-throughs aborted —$bad. This is the arm that distinguishes a fix from a disabled matcher, and it has stopped firing"
+  fi
+}
+n2_carry_assert
+
+# N2d — SPECIFICITY over the clean set, and the arm the whole group's PASS rests on being
+# a property of the render rather than of the guard being off.
+n2_clean_assert() {
+  local x rc pub=0 n=0 bad=""
+  for x in "" "$N2CL2" "$N2CL3"; do
+    n=$((n+1)); rc="$(n2rc "$x")"
+    case "$rc" in 0) pub=$((pub+1)) ;; *) bad="$bad CL$n=rc$rc" ;; esac
+  done
+  if [ "$pub" -eq "$n" ]; then
+    PASS "N2d: all $n clean fixtures publish (rc=0) — the six-day render with no final paragraph, one whose heading carries only the year, and one whose visa line carries neither class token"
+  else
+    FAIL "N2d: only $pub/$n clean fixtures published —$bad. A clean render aborting is the defect this group exists to close, arriving from the other direction"
+  fi
+}
+n2_clean_assert
+
+# N2e — THE RESIDUAL, ASSERTED AS AN OBSERVATION RATHER THAN CLAIMED IN PROSE. One
+# over-block candidate still aborts, and it is irreducible rather than mis-tuned: it and
+# one of the carry-throughs have the SAME within-block span and both carry the value's
+# connective token `to`, so no setting of GUARD_CONJ_SLACK and no connective test can
+# separate them. Asserting the equality is what keeps the residual honest — if a later
+# change makes the two spans differ, this arm fails and the residual must be restated.
+n2render "$WORK/n2_res_ob.html" "$N2OB4"; n2_res_obs="$(n2span "$WORK/n2_res_ob.html")"
+n2render "$WORK/n2_res_tp.html" "$N2TP6"; n2_res_tps="$(n2span "$WORK/n2_res_tp.html")"
+n2_res_obrc="$(n2rc "$N2OB4")"; n2_res_tprc="$(n2rc "$N2TP6")"
+if [ "$n2_res_obs" = "$n2_res_tps" ] && [ "$n2_res_obrc" -eq 1 ] && [ "$n2_res_tprc" -eq 1 ]; then
+  PASS "N2e: the surviving over-block is IRREDUCIBLE, measured rather than asserted — it and a real carry-through have the same within-block span ($n2_res_obs) and both carry the value's connective token, so both abort and no value-derived rule can tell them apart. The residual is declared in ADR-008 rather than tuned away"
+else
+  FAIL "N2e: the residual's premise no longer holds (over-block span=$n2_res_obs rc=$n2_res_obrc; carry-through span=$n2_res_tps rc=$n2_res_tprc). If the spans now differ the residual is reducible and the declared coverage boundary is wrong"
+fi
+
+# N2f — THE PARAPHRASE, AND THE COST THIS CARD ACCEPTS. A carry-through that drops the
+# value's own connective vocabulary entirely is no longer matched. It is stated as an
+# assertion rather than left in prose because it is a NARROWING of a security control:
+# the arm fails the day the paraphrase starts aborting again, which would mean the
+# connective limb had been weakened, and it fails if someone reads this residual as a
+# defect and "fixes" it without re-deriving the over-block measurements above.
+n2_pp_rc="$(n2rc "$N2PP1")"
+if [ "$n2_pp_rc" -eq 0 ]; then
+  PASS "N2f: the declared cost is exactly what was declared — a paraphrase of the validity predicate ('the Irish passport you carry expires in 2027') carries no connective token of the value and is NOT matched (rc=0). This narrows coverage, it sits inside the paraphrase class ADR-008 already disclaims, and it is carried there as its own residual"
+else
+  FAIL "N2f: the paraphrase returned rc=$n2_pp_rc rather than 0 — the connective limb is behaving differently from the way the coverage boundary and the SLACK calibration were both derived, so both need re-deriving before this reads as an improvement"
+fi
+
+# N2g — THE DECLARED ESCAPE. A value with no stoplisted tokens of its own has no
+# connective tissue to require, so limb B is vacuously satisfied and limb A alone applies.
+# The consequence is stated in the matcher and measured here: on such a value the heading
+# over-block PERSISTS while a real carry-through is still caught. The fix is proportional
+# to how much connective tissue the value carries, and that bound is asserted rather than
+# discovered by whoever next reads a bug report about it.
+N2ETD="$WORK/galway-escape"; mkdir -p "$N2ETD/outputs"
+cat > "$N2ETD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Galway 2027 [DERIVED]
+
+## Rowan
+- Passport: Irish 2027
+MD
+n2render "$WORK/n2_esc_ob.html" "$N2OB1"; verify_publishable_content "$WORK/n2_esc_ob.html" "$N2ETD" >/dev/null 2>&1; n2_esc_ob=$?
+n2render "$WORK/n2_esc_tp.html" "$N2TP1"; verify_publishable_content "$WORK/n2_esc_tp.html" "$N2ETD" >/dev/null 2>&1; n2_esc_tp=$?
+if [ "$n2_esc_ob" -eq 1 ] && [ "$n2_esc_tp" -eq 1 ]; then
+  PASS "N2g: the ncon==0 escape behaves as declared — against the value 'Irish 2027', which carries no stoplisted token of its own, the connective limb is vacuous, the heading over-block still aborts (rc=1) and a real carry-through is still caught (rc=1). The remedy is proportional to the value, and that bound is measured here rather than assumed"
+else
+  FAIL "N2g: the connective-limb escape did not behave as declared (over-block rc=$n2_esc_ob want 1, carry-through rc=$n2_esc_tp want 1) — either the escape has widened into a fail-open or the over-block bound in the matcher comment is now wrong"
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Group O (#123 AC 3, second remediation) — the [THIRD-PARTY] member of the class.
@@ -4991,6 +5325,24 @@ md_flips verify_ciphertext "A"  a_assert
 md_flips verify_ciphertext "C"  c_assert
 md_flips verify_ciphertext "C2" c2_assert
 md_flips cmd_list          "I5" i5_assert
+
+# #328's four subjects. Each arm above grades an EXACT status and treats anything outside
+# {0,1} as a probe failure, which is what makes the flip specific rather than incidental:
+# with its subject removed each one reports the removal as a broken probe rather than
+# silently re-classifying a 127 or a 2 as "aborted". The pairing is deliberate —
+#   _guard_match          → the OVER-BLOCK arm, because a stubbed matcher passes it
+#                           (measured) and the carry-through arm is what convicts that;
+#   _guard_match          → the CARRY-THROUGH arm, which is that convicting arm itself;
+#   verify_publishable_content → the CLEAN arm, the one whose subject is the guard rather
+#                           than the matcher inside it;
+#   _decode_entities and strip_to_joined_text → the ENCODING arm, the only arm both
+#                           reach, and they reach it in opposite directions (M5e).
+md_flips _guard_match               "N2b" n2_over_assert
+md_flips _guard_match               "N2c" n2_carry_assert
+md_flips verify_publishable_content "N2d" n2_clean_assert
+md_flips _decode_entities           "M5b" m5_assert
+md_flips strip_to_joined_text       "M5b-join" m5_assert
+md_flips verify_publishable_content "M5c" m5_clean_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates
