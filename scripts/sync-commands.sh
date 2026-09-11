@@ -11,7 +11,7 @@
 # repo's pattern and it points one way — a suite sources a production script, never the
 # reverse.
 #
-#   ./scripts/sync-commands.sh [--root <dir>] [--dest <dir>] [--check | --apply]
+#   ./scripts/sync-commands.sh [--root <dir>] [--dest <dir>] [--backup <dir>] [--check | --apply]
 #
 # ── WHY THIS SCRIPT EXISTS AT ALL, WHICH IS NOT THE OBVIOUS REASON ───────────────
 # It is not primarily a convenience. A user-scope copy is a SECOND COPY of a file whose
@@ -133,8 +133,18 @@ sc_file_state() {  # <root> <dest> <basename>
 
 # The export line a user adds to their shell profile. One home for the string, because it
 # is printed by two arms and shown in a third place.
+#
+# SINGLE-QUOTED, and that is not decoration. This line is pasted into a shell profile and
+# read back by a shell, so it has to survive that round trip: unquoted, a checkout under a
+# path containing a space becomes an assignment plus a stray command. Single rather than
+# double quotes because double quotes would still let $, ` and \ through, and a checkout
+# path is not a string this script gets to assume anything about. An embedded single quote
+# is closed, escaped and reopened the POSIX way ('\'') so the round trip holds for that
+# too — a path may legitimately contain one.
 sc_export_line() {  # <root>
-  printf 'export %s=%s' "$SC_ROOT_VAR" "$1"
+  local q="'" esc
+  esc="${1//$q/$q\\$q$q}"
+  printf 'export %s=%s%s%s' "$SC_ROOT_VAR" "$q" "$esc" "$q"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -238,12 +248,18 @@ EOF
 # ─────────────────────────────────────────────────────────────────────────────────
 sc_usage() {
   cat <<'USAGE'
-usage: sync-commands.sh [--root <dir>] [--dest <dir>] [--check | --apply]
+usage: sync-commands.sh [--root <dir>] [--dest <dir>] [--backup <dir>] [--check | --apply]
 
   --root <dir>   the travel-planner checkout to copy FROM
                  (default: this script's parent directory)
   --dest <dir>   the commands directory to copy TO
                  (default: $HOME/.claude/commands)
+  --backup <dir> where --apply keeps the version it is about to replace
+                 (default: $HOME/.claude/trip-command-backups)
+                 Listed because --apply's own error names it: with HOME unset there
+                 is no default to resolve and the run stops until you pass one. It is
+                 also how the guard suite points backups at a temp dir instead of a
+                 real home.
   --check        report per-file state and write nothing (DEFAULT)
   --apply        preserve each file being replaced, then copy
 

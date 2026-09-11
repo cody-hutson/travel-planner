@@ -113,6 +113,14 @@ mk_source() {  # <dir>
   printf 'not a trip command\n'   > "$d/.claude/commands/other.md"
 }
 
+# The script's DEFAULT destination is a real user's commands directory, and this suite's
+# claim about it is that no arm ever drove the script there. Snapshotted HERE, before the
+# first arm runs, so group RT can report what happened to it as a measurement spanning the
+# whole run rather than as the author's recollection. See RT2 for what the comparison does
+# and does not establish.
+RT_HOME_DEST="$(sc_default_dest)"
+RT_HOME_BEFORE="$(tree_digest "$RT_HOME_DEST")"
+
 echo "── Group FX — fixture integrity. Every arm below rests on these."
 
 FX_SRC="$WORK/src"
@@ -316,11 +324,26 @@ if [ "$RT_N" -gt 0 ]; then
 else
   VACUOUS "RT: the repository's own commands directory yields no command file. Every arm above rests on the injected fixture, which is exactly why the fixture is injected"
 fi
-RT_HOME_DEST="$(sc_default_dest)"
-case "$RT_HOME_DEST" in
-  "$WORK"*) FAIL "RT2: the default destination resolved inside this suite's temp dir, which would mean the fixture leaked into the script's defaults" ;;
-  *)        PASS "RT2: no arm in this suite drove the script at its default destination — every one passed an injected --dest, so a real user's commands directory was never a subject of this run" ;;
-esac
+# ── RT2 — the real destination, before and after.
+#
+# This arm previously tested only that sc_default_dest() does not resolve inside this
+# suite's temp dir, while its PASS text claimed that no arm drove the script at its default
+# destination. The predicate never measured that, and it also INVERTED against the safest
+# hardening available here: sandboxing HOME into the fixture — the obvious move for a
+# maintainer who wants the default to be harmless — made the arm report a leak. So the
+# comparison is the measurement now, and the message says only what the comparison shows.
+#
+# What it establishes: the default destination is byte-identical to its state before the
+# first arm ran. What it does NOT establish, and therefore no longer claims: that nothing
+# READ it. A read leaves nothing behind for an arm here to observe.
+RT_HOME_AFTER="$(tree_digest "$RT_HOME_DEST")"
+if [ -z "$RT_HOME_DEST" ]; then
+  PASS "RT2: HOME is unset in this environment, so the script resolves no default destination at all — there was none for an arm to drive the script at, and the property holds by construction rather than by measurement"
+elif [ "$RT_HOME_AFTER" = "$RT_HOME_BEFORE" ]; then
+  PASS "RT2: the script's default destination ($RT_HOME_DEST) is byte-identical to its state before the first arm of this suite ran — digested at both ends, so a write there would have shown up whether the directory existed beforehand or not. Every arm passed an injected --dest and none of them wrote to a real user's commands directory"
+else
+  FAIL "RT2: the script's default destination ($RT_HOME_DEST) changed across this run — an arm drove the script without an injected --dest and wrote into a real user's commands directory"
+fi
 
 echo
 echo "── Group PF — no verdict in this file is decided by a pipeline's exit status."

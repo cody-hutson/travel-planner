@@ -1089,6 +1089,27 @@ else
     fi
   }
 
+  # The repository's OWN trips/ tree, as a file count and a content-and-layout digest.
+  # EVrepo compares this across the whole group, so the "nothing was written to the
+  # repository" half of its claim is measured rather than asserted. The count travels
+  # with the digest because an unchanged digest over an EMPTY surface is a watch that
+  # measured nothing, and this suite grades that as broken rather than clean — the same
+  # ordering PF1 uses, where a detector finding no instance of the CORRECT form is
+  # reported broken before its zero on the incorrect one is believed.
+  ev_trips_state() {  # -> "<file-count> <digest>"
+    local n d
+    if [ ! -d "$ROOT/trips" ]; then
+      printf '0 absent'
+      return
+    fi
+    n="$(find "$ROOT/trips" -type f | wc -l | tr -d ' ')"
+    d="$(find "$ROOT/trips" -type f -exec cksum {} + | LC_ALL=C sort | cksum)"
+    printf '%s %s' "$n" "$d"
+  }
+  # Taken HERE, before the first ev_run below, so the comparison in EVrepo spans exactly
+  # the arms that executed a command.
+  EV_TRIPS_BEFORE="$(ev_trips_state)"
+
   EV_E1_RAW="$(sed -n '1p' "$CANON_FILE")"
   EV_E1="$(ev_unwrap "$EV_E1_RAW")"
   EV_E2_RAW=""; EV_E2=""
@@ -1197,12 +1218,53 @@ else
     fi
   fi
 
-  # ── EVrepo — this group executed commands, so it says explicitly that it ran them
-  # against the fixture and not against the repository it is measuring. Graded last.
-  if [ ! -e "$EV_REPO/trips/README.md" ] || [ -d "$EV_DIR" ]; then
-    PASS "EVrepo: every command in this group ran against the two-root fixture under the temp dir; no arm read or wrote the repository's own trips/ directory"
+  # ── EVrepo — what this group's commands ran against, stated as things it can measure.
+  # Graded last, after every executing arm above.
+  #
+  # ── WHY THIS ARM WAS REWRITTEN, KEPT HERE SO IT IS NOT REINTRODUCED ──────────────
+  # It previously read `if [ ! -e "$EV_REPO/trips/README.md" ] || [ -d "$EV_DIR" ]`. Since
+  # EV_REPO is EV_DIR/repo, the canary existing IMPLIES EV_DIR is a directory, so the two
+  # FAIL conjuncts were mutually exclusive and the FAIL branch was unreachable: PASS in
+  # every fixture state, including the absent-fixture state its own FAIL text named. A
+  # check indistinguishable from one that CANNOT fire is the precise defect this suite's
+  # banner says it exists to prevent, and it may not live inside the anti-drift guard.
+  #
+  # It also claimed more than any predicate here observes: "no arm read or wrote the
+  # repository's own trips/". A read leaves nothing behind, so no arm in this file can
+  # assert one did not happen, and a message claiming a property its predicate never
+  # measures is the same defect in prose. Three observable things are asserted instead,
+  # and the message says only those:
+  #   1. the two-root fixture the arms above executed against is intact, so those arms
+  #      measured something;
+  #   2. every root this group handed to a command lies under the temp dir, so no arm was
+  #      POINTED at the repository's own trip store — which is the reachable form of the
+  #      read claim, and is stated as that rather than as "nothing read it"; and
+  #   3. the repository's own trips/ tree is byte-unchanged across this group, which is
+  #      the write half, measured.
+  EV_TRIPS_AFTER="$(ev_trips_state)"
+  EV_TRIPS_N="${EV_TRIPS_BEFORE%% *}"
+  # A root is acceptable only if it lies under the temp dir, and the temp dir itself must
+  # not lie under the repository — otherwise "under WORK" would not imply "away from ROOT".
+  EV_ROOTS_SANE=1
+  case "$WORK" in
+    "$ROOT"|"$ROOT"/*) EV_ROOTS_SANE=0 ;;
+  esac
+  for ev_root in "$EV_REPO" "$EV_FOREIGN"; do
+    case "$ev_root" in
+      "$WORK"/*) ;;
+      *) EV_ROOTS_SANE=0 ;;
+    esac
+  done
+  if [ ! -d "$EV_DIR" ] || [ ! -f "$EV_REPO/trips/README.md" ] || [ ! -d "$EV_FOREIGN" ]; then
+    FAIL "EVrepo: the two-root fixture is not intact at the end of this group — $EV_DIR, its repo-shaped canary and its foreign root are what every executing arm above was pointed at, and without them this group cannot say what it measured"
+  elif [ "$EV_ROOTS_SANE" -ne 1 ]; then
+    FAIL "EVrepo: a root handed to a command in this group does not lie under the temp dir ($WORK), or the temp dir lies inside the repository — either way this group cannot say it kept away from the repository's own trip store"
+  elif [ "$EV_TRIPS_N" -eq 0 ]; then
+    FAIL "EVrepo: the repository's own trips/ tree held 0 files when this group started, so comparing it before and after watched an empty surface and its no-change result would prove nothing"
+  elif [ "$EV_TRIPS_AFTER" != "$EV_TRIPS_BEFORE" ]; then
+    FAIL "EVrepo: the repository's own trips/ tree changed across this group (was '$EV_TRIPS_BEFORE', now '$EV_TRIPS_AFTER') — an arm wrote into the tree this suite is measuring"
   else
-    FAIL "EVrepo: the fixture directory is missing, so it is unclear what the arms above were executed against"
+    PASS "EVrepo: every root this group handed to a command lies under the temp dir ($EV_DIR), the two-root fixture is intact, and the repository's own trips/ tree — $EV_TRIPS_N file(s), digested before the first executing arm and again after the last — is byte-unchanged. No arm was pointed at the repository's trip store and none wrote to it; a READ is not claimed, because a read leaves nothing here could observe"
   fi
 fi
 
