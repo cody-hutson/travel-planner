@@ -9,7 +9,7 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, RS) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, MD, RS) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # That parenthesis is a reading aid and has never been complete — the AUTHORITATIVE roster
 # of groups that run is the coverage boundary in .github/workflows/publish-guard.yml, and
@@ -68,6 +68,13 @@
 # own declaration block. T7c grades the block itself: it once measured the residual that
 # block left in the digest and now asserts its absence, the projection having been repaired
 # by the third remediation graded in S12.
+# MD = the Discriminating-Evidence Rule, asserted against this file. Every assertion's
+# PASS must require evidence its subject could only have produced by RUNNING. MD re-runs
+# each REGISTERED assertion with its subject removed and requires that assertion to flip
+# — per assertion, because the suite as a whole already went red under the mutation that
+# left A, C, C2, G2 and I5 all PASSing, so a suite-level red/green oracle would certify a
+# fix that changed nothing — and statically scans this file for the polarity-negative
+# shape, so an assertion ADDED in that shape is caught even when nobody registers it.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -105,6 +112,72 @@ FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); SEEN="$SE
 # Records the skipped group's id — the token before the first colon of the message — so
 # the aggregate verdict at the bottom can refuse a run in which a group vanished.
 SKIP() { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
+
+# ── THE DISCRIMINATING-EVIDENCE RULE (DER) — two helpers, asserted by group MD ─────
+#
+# THE RULE. An assertion is MUTATION-DETECTABLE iff every path to its PASS requires
+# evidence the subject could only have produced by RUNNING. Equivalently: PASS may never
+# be reached on a branch a DEGENERATE outcome also reaches — an absent subject, an empty
+# haystack, an unreadable input, an empty population.
+#
+# expect_rc replaces bare truthiness with an exact expected status. `if f …; then FAIL;
+# else PASS` puts the PASS on EVERY non-zero status, so rc=127 — "the function does not
+# exist" — is graded identically to rc=1 — "the guard correctly rejected". That is not a
+# hypothetical: deleting verify_ciphertext outright from the publish script left A, C, C2
+# and G2 all reporting PASS, and deleting cmd_list entirely left I5 reporting PASS while
+# the suite exited 0. The status is the evidence, so the status is what is asserted.
+#
+# An exact code is available here rather than merely stricter: verify_ciphertext returns
+# exactly 0 or 1 (six `return` statements, five of them 1), `git check-ignore -q` returns
+# 1 for not-ignored and 128 for an error, `grep -q` returns 1 for no-match and 2 for an
+# unreadable input, and slug_for's rejection path exits 1. Each was read before the code
+# it expects was written.
+expect_rc() {   # expect_rc <want> <id> <prose> -- <cmd…>
+  local want="$1" id="$2" prose="$3"; shift 3
+  [ "${1:-}" = "--" ] && shift
+  local subject="${1:-<no-command>}" got
+  "$@" >/dev/null 2>&1; got=$?
+  if [ "$got" -eq 127 ] && [ "$want" -ne 127 ]; then
+    FAIL "$id: $prose -- rc=127: '$subject' is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
+  elif [ "$got" -eq "$want" ]; then
+    PASS "$id: $prose [rc=$got, expected $want]"
+  else
+    FAIL "$id: $prose -- expected rc=$want, got rc=$got"
+  fi
+}
+
+# md_probe re-runs an assertion in a subshell with its SUBJECT removed and reports the
+# verdict counts it produced. It is the card's criterion made executable: for assertion X
+# over subject S, removing S must flip X — and it must flip X SPECIFICALLY, not flip some
+# other assertion that happens to point the other way. Group MD at the bottom grades it.
+# PASS/FAIL are rebound to silent counters inside the subshell, so nothing a probe emits
+# reaches the run's counters, the SEEN roster, or the output.
+md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail>" on stdout
+  local victim="$1"; shift
+  ( unset -f "$victim" 2>/dev/null
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+
+md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
+  local victim="$1" id="$2"; shift 2
+  local out p f
+  out="$(md_probe "$victim" "$@")"
+  if ! [[ "$out" =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
+    FAIL "MD[$id]: the oracle subshell returned '$out' rather than a '<pass> <fail>' pair — the probe itself failed, so this arm is not a measurement"
+    return 0
+  fi
+  p="${out%% *}"; f="${out##* }"
+  if [ "$f" -eq 1 ] && [ "$p" -eq 0 ]; then
+    PASS "MD[$id]: with '$victim' removed the assertion reports exactly one FAIL and no PASS — it is mutation-detectable, so its verdict above required '$victim' to have RUN"
+  else
+    FAIL "MD[$id]: with '$victim' removed the assertion still reports pass=$p fail=$f — it is BLIND to its subject's absence, so its verdict above proves nothing about '$victim'"
+  fi
+  return 0
+}
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
@@ -155,14 +228,24 @@ day three: a day trip to the coast and back before the evening train home.</p>
 HTML
 
 echo "Guard behavior:"
+# A, C and C2 are each a NEGATIVE-polarity assertion — the guard is required to REJECT —
+# and each is wrapped in its own function so group MD can re-run the identical argv with
+# verify_ciphertext removed. The wrapper is not decoration: an assertion the oracle cannot
+# re-invoke cannot be registered, and an unregistered assertion is graded by the static
+# arm's shape rule alone.
+#
 # A — never certify the source as its own ciphertext (self-check).
-if verify_ciphertext "$SRC" "$SRC"; then FAIL "A: guard certified the plaintext source as ciphertext"; else PASS "A: guard rejects source-as-output (self-check)"; fi
-# B — passes clean ciphertext.
+a_assert() { expect_rc 1 "A" "guard rejects source-as-output (self-check)" -- verify_ciphertext "$SRC" "$SRC"; }
+a_assert
+# B — passes clean ciphertext. POSITIVE polarity: an absent subject exits 127, which lands
+# on the FAIL limb, so this shape was already sound and is deliberately left alone.
 if verify_ciphertext "$ENC_OK" "$SRC"; then PASS "B: guard passes clean ciphertext"; else FAIL "B: guard rejected clean ciphertext"; fi
 # C — catches a plaintext token leaked into otherwise-encrypted output.
-if verify_ciphertext "$ENC_LEAK" "$SRC"; then FAIL "C: guard missed a leaked plaintext token"; else PASS "C: guard catches leaked plaintext token"; fi
+c_assert() { expect_rc 1 "C" "guard catches leaked plaintext token" -- verify_ciphertext "$ENC_LEAK" "$SRC"; }
+c_assert
 # C2 — REGRESSION: all-lowercase plaintext with sentinel strings must be caught structurally.
-if verify_ciphertext "$PLAIN_LOWER" "$TINY"; then FAIL "C2: guard PASSED all-lowercase plaintext (fail-open!)"; else PASS "C2: guard catches all-lowercase plaintext via visible-body check"; fi
+c2_assert() { expect_rc 1 "C2" "guard catches all-lowercase plaintext via visible-body check" -- verify_ciphertext "$PLAIN_LOWER" "$TINY"; }
+c2_assert
 
 echo "Slug resolution:"
 # F — slug_for: default convention, .publish-slug override (whitespace-trimmed), invalid rejection.
@@ -234,7 +317,14 @@ HTML
   BOIL="$(make_boilerplate 2>/dev/null || true)"
   if [ -n "${ENC_CMN:-}" ] && [ -n "${BOIL:-}" ] && [ -f "$ENC_CMN/index.html" ] && [ -f "$BOIL/index.html" ]; then
     if verify_ciphertext "$ENC_CMN/index.html" "$CMN" "$BOIL/index.html"; then PASS "G1: common itinerary words pass once StatiCrypt boilerplate is subtracted"; else FAIL "G1: false positive on common words persists even with boilerplate ref"; fi
-    if verify_ciphertext "$ENC_CMN/index.html" "$CMN"; then FAIL "G2: expected pre-fix false positive not reproduced"; else PASS "G2: without boilerplate ref the false positive still fires (subtraction is the fix)"; fi
+    g2_assert() { expect_rc 1 "G2" "without boilerplate ref the false positive still fires (subtraction is the fix)" -- verify_ciphertext "$ENC_CMN/index.html" "$CMN"; }
+    g2_assert
+    # G2's MD registration is emitted HERE rather than with the rest of group MD at the
+    # bottom, because its two fixtures are encrypted trees outside $WORK that the next
+    # line deletes. Re-running the assertion after that point would fail on a missing
+    # input rather than on a missing subject, which is a different claim. Everything the
+    # registration asserts is the same; only its position in the output moves.
+    md_flips verify_ciphertext "G2" g2_assert
     rm -rf "$ENC_CMN" "$BOIL"
   else
     SKIP "G: staticrypt could not run (offline or npx blocked)"
@@ -276,11 +366,34 @@ IE="$(_epoch_of_iso '2026-06-28T14:36:00Z')"
 [ "$(_ymd_of_epoch "$IE")" = "2026-06-28" ] && PASS "I2: _epoch_of_iso + _ymd_of_epoch round-trip an ISO date" || FAIL "I2: ISO round-trip wrong ($IE -> $(_ymd_of_epoch "$IE"))"
 [ "$(_ymd_of_epoch '')" = "-" ] && PASS "I3: _ymd_of_epoch renders empty as '-'" || FAIL "I3: empty epoch not '-'"
 if _is_stale 200 100 && ! _is_stale 100 200 && ! _is_stale "" 100; then PASS "I4: stale iff local build newer than deployment (empty-safe)"; else FAIL "I4: stale rule wrong"; fi
-if grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$(declare -f cmd_list)"; then
-  FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
-else
-  PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs)"
-fi
+# I5 — an INTROSPECTION assertion, and the emptiness conflation is its own defect class.
+# `grep -q <verbs> <<<"$(declare -f cmd_list)"` on an absent cmd_list scans an EMPTY
+# haystack, matches nothing, and reports the subcommand read-only. Measured: deleting
+# cmd_list outright left this arm PASSing and the whole suite exiting 0.
+#
+# Three preconditions therefore run before the content is graded, and each is the
+# discriminating evidence for a different degenerate input: the subject is DEFINED, its
+# body is NON-DEGENERATE (a floor far below the 2,231-byte shipped body, so it catches a
+# gutted subcommand without churning as the subcommand grows), and the verb probe itself
+# actually RAN — grep exits 2 on an unreadable input, which is neither match nor no-match,
+# and a clean verdict on an rc=2 would be an empty scan wearing a pass.
+i5_assert() {
+  local body mrc
+  body="$(declare -f cmd_list 2>/dev/null)"
+  grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$body" >/dev/null 2>&1; mrc=$?
+  if ! declare -f cmd_list >/dev/null 2>&1; then
+    FAIL "I5: cmd_list is NOT DEFINED — the read-only verdict below would have no subject, so it would certify a subcommand that does not exist"
+  elif [ "${#body}" -lt 200 ]; then
+    FAIL "I5: cmd_list's body is only ${#body}B — too small to be the shipped subcommand, so a clean scan of it proves nothing"
+  elif [ "$mrc" -eq 0 ]; then
+    FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
+  elif [ "$mrc" -ne 1 ]; then
+    FAIL "I5: the mutating-verb probe exited rc=$mrc — neither match (0) nor no-match (1), so the scan did not run and a clean verdict would be an empty scan"
+  else
+    PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs) — subject present, body ${#body}B and non-degenerate, verb probe ran and returned no-match"
+  fi
+}
+i5_assert
 
 echo "Trip-data ignore invariant (#254):"
 if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -4604,6 +4717,280 @@ elif [ "$PF_BAD" -eq 0 ]; then
 else
   FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
 fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group MD — the Discriminating-Evidence Rule, asserted against this file.
+#
+# THE RULE. An assertion is MUTATION-DETECTABLE iff every path to its PASS requires
+# evidence the subject could only have produced by RUNNING. Equivalently: PASS may never
+# be reached on a branch a DEGENERATE outcome also reaches — an absent subject, an empty
+# haystack, an unreadable input, an empty population.
+#
+# WHY A GROUP AND NOT A CONVENTION. Deleting verify_ciphertext outright from the publish
+# script left A, C, C2 and G2 all reporting PASS, and deleting cmd_list entirely left I5
+# reporting PASS with the suite exiting 0. The suite DID go red under the first of those
+# mutations — through B, E4, G1 and S10, assertions that happen to point the other way and
+# have nothing to do with the defect. So a suite-level red/green oracle certifies a fix
+# that changed nothing, and two of those four collateral assertions live in the
+# real-StatiCrypt group, which skips without npx: the redness was accidental AND
+# environment-dependent. This group therefore grades PER ASSERTION.
+#
+# TWO ARMS, closing different halves.
+#   The DYNAMIC arm re-runs a REGISTERED assertion in a subshell with its subject
+#   `unset -f` and requires exactly one FAIL and no PASS. It is the criterion made
+#   executable: for assertion X over subject S, removing S must flip X specifically.
+#   The STATIC arm scans this file for the polarity-negative SHAPE, so an assertion ADDED
+#   later in that shape is caught even though nobody registered it. Registration alone
+#   would close today's five and leave the growth surface open, and the growth is real:
+#   two sibling suites gained +499 and +278 lines in a single prior release.
+#
+# THE VACUITY GUARD RUNS FIRST, for the same reason PF1's and RS0's do. A scan that cannot
+# read its input, or that finds no instance of the REMEDIATED form, has a zero on the
+# defective form that proves nothing. MD0 fails loud on each degenerate input before any
+# count renders a verdict.
+#
+# THE CONTROLS ARE STANDING ARMS rather than a check performed once at authoring time.
+# MD1 proves the SCANNER can tell the defective shape from the sound one, over a fixture
+# built here; MD4 proves the ORACLE convicts a legacy-shaped assertion; MD5 proves the same
+# oracle certifies a remediated one. Without all three, a green MD proves only that MD ran.
+#
+# WHAT THIS GROUP DELIBERATELY DOES NOT DO. It does not grade a Class-2 (zero-population)
+# verdict as a defect. `[ "$n" -eq 0 ] && PASS` is CONDITIONAL, not broken: it is sound
+# when it states its denominator and carries a sensitivity arm, and many here already do.
+# MD3 reports that population with its denominator so the residual is carried on every run
+# rather than in a comment; it is remediated on touch, not in bulk.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group MD — every PASS here must require evidence its subject could only have produced by running."
+
+# ── The three shapes the STATIC arm decides. Written down, because what it matches is an
+# ENUMERATION WITH A STATED BOUNDARY and not a closed class.
+#
+#   Form 1  one line:   if <cond>; then FAIL "<id>: …"; else PASS "<id>: …"; fi
+#   Form 2  block:      if|elif <cond>; then / FAIL "<id>: …" / else / PASS "<id>: …"
+#   Form 3  trailing:   if|elif <cond>; then FAIL "<id>: …"; <more statements>
+#                       else PASS "<id>: …"
+#
+# in each case ONLY when <cond> is LIVE — a command invocation, a here-string probe or an
+# external tool, i.e. something that can exit 127 ("absent") or 2 ("could not read"). A
+# condition opening with `[`, `[[`, `test` or `((` is a shell test: it cannot report an
+# absent subject, so a PASS on its else limb is not this defect and is NOT flagged. Form 3
+# is the one that matters most and is the easiest to miss — it was found by measurement
+# rather than by reading, and it carries 36 of the 59 sites across the five suites.
+#
+# The condition is read up to the FIRST `;`. What is OUTSIDE this scan, so the next vector
+# is a documented exclusion rather than a surprise: a condition carrying an embedded `;`,
+# a verdict reached through a `case` arm, a verdict whose id is only known at call time, a
+# limb separated from its opener by a non-comment statement, and any verdict inside a
+# here-document. It fails open on each. The DYNAMIC arm covers a registered assertion
+# regardless of shape; the static arm is the net under the ones nobody registers.
+MD_RE_OPENF='^(if|elif)[[:space:]]+([^;]+);[[:space:]]*then[[:space:]]+FAIL[[:space:]]+"'
+MD_RE_OPENB='^(if|elif)[[:space:]]+([^;]+);[[:space:]]*then[[:space:]]*$'
+MD_RE_INLE=';[[:space:]]*else[[:space:]]+PASS[[:space:]]+"([^":]*):'
+MD_RE_ELSEP='^else[[:space:]]+PASS[[:space:]]+"([^":]*):'
+MD_RE_FAILV='^FAIL[[:space:]]+"'
+MD_RE_PASSV='^PASS[[:space:]]+"([^":]*):'
+MD_RE_ZERO='(-eq|-le|-lt)[[:space:]]+0([[:space:]]|\]|$)|-z[[:space:]]+"'
+
+MD_L=(); MD_N=0; MD_J=-1
+MD_C1_IDS=""; MD_C1_N=0; MD_C2_N=0; MD_PASS_N=0; MD_RC_N=0; MD_UNREAD=0
+md_reset() { MD_C1_IDS=""; MD_C1_N=0; MD_C2_N=0; MD_PASS_N=0; MD_RC_N=0; MD_UNREAD=0; }
+
+md_live() {   # md_live <condition> -> 0 when the condition can report an ABSENT subject
+  local c="$1"
+  c="${c#"${c%%[![:space:]]*}"}"
+  case "$c" in '!'*) c="${c#!}"; c="${c#"${c%%[![:space:]]*}"}" ;; esac
+  case "$c" in ''|'['*|'test '*|'(('*) return 1 ;; esac
+  return 0
+}
+
+md_next() {   # md_next <index> -> MD_J = next non-blank, non-comment index STRICTLY after it
+  local j=$(( $1 + 1 )) t
+  while [ "$j" -lt "$MD_N" ]; do
+    t="${MD_L[$j]}"; t="${t#"${t%%[![:space:]]*}"}"
+    case "$t" in ''|'#'*) j=$((j+1)); continue ;; esac
+    MD_J=$j; return 0
+  done
+  MD_J=-1; return 1
+}
+
+md_scan() {   # md_scan <file> -> accumulates MD_C1_IDS MD_C1_N MD_C2_N MD_PASS_N MD_RC_N MD_UNREAD
+  local f="$1"
+  if [ ! -r "$f" ]; then MD_UNREAD=$((MD_UNREAD+1)); return 0; fi
+  MD_L=(); local ln
+  while IFS= read -r ln || [ -n "$ln" ]; do MD_L+=("$ln"); done < "$f"
+  MD_N=${#MD_L[@]}
+  local i s t u c id
+  for (( i=0; i<MD_N; i++ )); do
+    s="${MD_L[$i]}"; s="${s#"${s%%[![:space:]]*}"}"
+    case "$s" in *'PASS "'*)     MD_PASS_N=$((MD_PASS_N+1)) ;; esac
+    case "$s" in *'expect_rc '*) MD_RC_N=$((MD_RC_N+1)) ;; esac
+    # ── Class 2 — a PASS gated on an empty population. Counted, never failed.
+    if [[ "$s" =~ $MD_RE_ZERO ]]; then
+      case "$s" in
+        *'PASS "'*) MD_C2_N=$((MD_C2_N+1)) ;;
+        *) if [[ "$s" =~ $MD_RE_OPENB ]] && md_next "$i"; then
+             t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+             [[ "$t" =~ $MD_RE_PASSV ]] && MD_C2_N=$((MD_C2_N+1))
+           fi ;;
+      esac
+    fi
+    # ── Class 1 — the polarity-negative shape over a live condition. BASH_REMATCH is
+    # clobbered by every [[ =~ ]], so each capture is taken on the line that produced it.
+    c=""; id=""
+    if [[ "$s" =~ $MD_RE_OPENF ]]; then
+      c="${BASH_REMATCH[2]}"
+      if [[ "$s" =~ $MD_RE_INLE ]]; then
+        id="${BASH_REMATCH[1]}"
+      elif md_next "$i"; then
+        t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+        if [[ "$t" =~ $MD_RE_ELSEP ]]; then
+          id="${BASH_REMATCH[1]}"
+        elif [ "$t" = "else" ] && md_next "$MD_J"; then
+          u="${MD_L[$MD_J]}"; u="${u#"${u%%[![:space:]]*}"}"
+          [[ "$u" =~ $MD_RE_PASSV ]] && id="${BASH_REMATCH[1]}"
+        fi
+      fi
+    elif [[ "$s" =~ $MD_RE_OPENB ]]; then
+      c="${BASH_REMATCH[2]}"
+      if md_next "$i"; then
+        t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+        if [[ "$t" =~ $MD_RE_FAILV ]] && md_next "$MD_J"; then
+          t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+          if [[ "$t" =~ $MD_RE_ELSEP ]]; then
+            id="${BASH_REMATCH[1]}"
+          elif [ "$t" = "else" ] && md_next "$MD_J"; then
+            u="${MD_L[$MD_J]}"; u="${u#"${u%%[![:space:]]*}"}"
+            [[ "$u" =~ $MD_RE_PASSV ]] && id="${BASH_REMATCH[1]}"
+          fi
+        fi
+      fi
+    fi
+    if [ -n "$id" ] && md_live "$c"; then
+      MD_C1_N=$((MD_C1_N+1)); MD_C1_IDS="$MD_C1_IDS$id "
+    fi
+  done
+  return 0
+}
+
+md_diff() {   # md_diff <a-set> <b-set> -> members of a absent from b, deduped
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  printf '%s' "${out# }"
+}
+md_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# ── The control fixture, built here from PIECES. This scan reads its own source, so a
+# literal verdict token in the writer below would be read as a real site and the detector
+# would convict the fixture it had just written — the same self-matching problem group PF
+# solves with a two-piece needle. The fixture carries one site per defective form (ZMDA,
+# ZMDB, ZMDF), one shell-test site that must NOT be flagged (ZMDT), one zero-population
+# site (ZMDZ), and one remediated site (ZMDR). Sensitivity and specificity in one input.
+MD_FIX="$WORK/md-control-fixture.sh"
+MD_VP='PASS'; MD_VF='FAIL'
+{
+  printf 'if zzq_md_subject a; then %s "ZMDA: rejected"; else %s "ZMDA: accepted"; fi\n' "$MD_VF" "$MD_VP"
+  printf 'if zzq_md_subject b; then\n  %s "ZMDB: rejected"\nelse\n  %s "ZMDB: accepted"\nfi\n' "$MD_VF" "$MD_VP"
+  printf 'if zzq_md_subject c; then %s "ZMDF: rejected"; show zzq\nelse %s "ZMDF: accepted"; fi\n' "$MD_VF" "$MD_VP"
+  printf 'if [ "$zzn" -eq 0 ]; then\n  %s "ZMDT: rejected"\nelse\n  %s "ZMDT: accepted"\nfi\n' "$MD_VF" "$MD_VP"
+  printf 'if [ "$zzn" -eq 0 ]; then %s "ZMDZ: the population is empty"; else %s "ZMDZ: not empty"; fi\n' "$MD_VP" "$MD_VF"
+  printf 'expect_rc 1 "ZMDR" "the remediated form grades an exact status" -- zzq_md_subject d\n'
+} > "$MD_FIX"
+
+md_reset; md_scan "$MD_FIX"
+MD_FX_C1="${MD_C1_IDS% }"; MD_FX_C2="$MD_C2_N"; MD_FX_RC="$MD_RC_N"; MD_FX_UNREAD="$MD_UNREAD"
+md_reset; md_scan "$SELF"
+MD_SELF_C1="${MD_C1_IDS% }"
+
+# ── The DECLARED residual. These sites carry the polarity-negative shape and are NOT
+# remediated by this change: #327's locked scope is the five named assertions (A, C, C2,
+# G2, I5) plus this oracle, and a 59-site sweep across five suites is exactly the blind
+# bulk edit this repository's own discipline forbids. They are declared here rather than
+# left silent, and the diff below runs in BOTH directions — an undeclared site FAILS, and
+# a declared site that no longer scans FAILS too, so remediating one obliges removing its
+# line. The list can only shrink; it cannot quietly absorb a new defect.
+#   F3 E3 H2 L3b S13b — live probes whose else limb is reached by rc=2 (unreadable input)
+#                       or rc=127, not only by the no-match the assertion means
+#   K3 K4 Q3 Q4 U3 U4 V3 V4 — `git check-ignore -q`, whose rc=128 (git error) lands on the
+#                       PASS limb exactly as rc=1 (not ignored) does
+MD_LEGACY='F3 E3 H2 K3 K4 Q3 Q4 U3 U4 V3 V4 L3b S13b'
+
+if [ "$MD_UNREAD" -ne 0 ]; then
+  FAIL "MD0: this file is unreadable at $SELF, so the scan below would cover nothing while reporting a zero — an unreadable scan set is a finding, never a clean file"
+elif [ "$MD_PASS_N" -eq 0 ]; then
+  FAIL "MD0: the scan found 0 verdict lines in this file, so its count on the polarity-negative shape proves nothing — either the PASS/FAIL grammar moved or the scan did, and no verdict below is trustworthy"
+elif [ "$MD_RC_N" -eq 0 ]; then
+  FAIL "MD0: the scan found 0 expect_rc sites — no assertion here is written in the REMEDIATED form, so a clean reading of the defective form is an empty scan rather than a clean file"
+else
+  PASS "MD0: the scan set is readable and non-degenerate — ${MD_PASS_N} verdict line(s) and ${MD_RC_N} expect_rc site(s) read from this file. Every count below is a measurement rather than an empty scan"
+
+  # MD1 — CONTROL on the scanner, both directions, before any count it produces is read.
+  if [ "$MD_FX_UNREAD" -ne 0 ]; then
+    FAIL "MD1: CONTROL — the fixture at $MD_FIX was unreadable, so the scanner was never exercised and MD2's count is not a measurement"
+  elif [ "$MD_FX_C1" != "ZMDA ZMDB ZMDF" ]; then
+    FAIL "MD1: CONTROL on the scanner — over a fixture carrying one site per defective form (ZMDA one-line, ZMDB block, ZMDF trailing-statement), one shell-test site (ZMDT) and one remediated site (ZMDR), the scanner reported '$MD_FX_C1' rather than 'ZMDA ZMDB ZMDF'. MD2's verdict proves nothing until this control fires"
+  elif [ "$MD_FX_C2" -ne 1 ]; then
+    FAIL "MD1: CONTROL on the Class-2 detector — the fixture carries exactly one zero-population site (ZMDZ) and the detector found $MD_FX_C2, so MD3's inventory is not a measurement"
+  elif [ "$MD_FX_RC" -eq 0 ]; then
+    FAIL "MD1: CONTROL — the fixture carries one expect_rc site (ZMDR) and the scanner found none, so MD0's non-degeneracy arm is reading something other than what it claims"
+  else
+    PASS "MD1: CONTROL on the scanner — SENSITIVITY and SPECIFICITY over one fixture: all three defective forms are found (ZMDA, ZMDB, ZMDF), and neither the shell-test site (ZMDT, whose condition cannot report an absent subject) nor the remediated site (ZMDR) is flagged. A detector that flagged everything would be as useless as one that flagged nothing; both arms fired"
+
+    MD_NEW="$(md_diff "$MD_SELF_C1" "$MD_LEGACY")"
+    MD_STALE="$(md_diff "$MD_LEGACY" "$MD_SELF_C1")"
+    MD_NDEC="$(md_count "$MD_LEGACY")"
+    if [ -n "$MD_NEW" ]; then
+      FAIL "MD2: assertion(s) carry the polarity-negative shape and are not in the declared residual: ${MD_NEW% } — their PASS limb is reached by rc=127 (the subject is absent) exactly as it is by the rejection they mean to assert. Either grade an exact status with expect_rc, or declare the site in MD_LEGACY above with the reason it stays"
+    elif [ -n "$MD_STALE" ]; then
+      FAIL "MD2: declared residual site(s) no longer carry the shape: ${MD_STALE% } — the remediation landed but its MD_LEGACY line did not come out. A declaration that outlives its defect is a standing exemption for whatever next takes that id"
+    else
+      PASS "MD2: every polarity-negative site in this file is accounted for — ${MD_C1_N} found, all ${MD_NDEC} declared, none undeclared and none stale, over a denominator of ${MD_PASS_N} verdict line(s). The five this card remediated (A, C, C2, G2, I5) have left the population; MD1's control is what makes that a measurement"
+    fi
+
+    PASS "MD3: INVENTORY — ${MD_C2_N} of ${MD_PASS_N} verdict line(s) gate a PASS on an empty population ('-eq 0' / '-le 0' / '-z'). That shape is CONDITIONAL rather than defective: it is sound when it states its denominator and carries a sensitivity arm, which many here already do, so it is counted on every run and remediated on touch rather than swept in bulk. The count is a measurement — MD1's Class-2 arm found the one planted site in the fixture"
+  fi
+fi
+
+# ── MD4 / MD5: the controls on the ORACLE. They do not depend on the static scan, so they
+# run outside MD0's guard: a broken scanner must not suppress the oracle's own evidence.
+#
+# zzq_md_subject exists and returns 1, so BOTH probes below pass while it is present. The
+# question each control asks is what happens when it is removed. md_legacy_probe is written
+# as a single-line function definition on purpose: the static arm scans THIS file, and a
+# bare legacy shape here would be a real finding in its own ledger. Its job is to be
+# legacy-shaped for the oracle, not to be a site in the corpus, so it is kept out of the
+# scanner's reach by form — and the scanner's own sensitivity is proven on the fixture in
+# MD1 instead, where a planted site is exactly what is wanted.
+zzq_md_subject()  { return 1; }
+md_legacy_probe() { if zzq_md_subject; then FAIL "ZMDL: subject accepted"; else PASS "ZMDL: subject rejected"; fi; }
+md_sound_probe()  { expect_rc 1 "ZMDS" "the remediated form grades an exact status" -- zzq_md_subject; }
+
+MD_CL="$(md_probe zzq_md_subject md_legacy_probe)"
+if [ "$MD_CL" = "1 0" ]; then
+  PASS "MD4: CONTROL on the oracle — a deliberately legacy-shaped assertion still reports pass=1 fail=0 with its subject removed, so the oracle CONVICTS the shape this group exists for. Every MD[...] verdict is therefore a measurement rather than a statement that the oracle ran"
+else
+  FAIL "MD4: CONTROL on the oracle did not fire — the planted legacy-shaped assertion returned '$MD_CL' rather than '1 0' with its subject removed. Until the oracle convicts a known-blind assertion, an MD[...] pass proves only that md_probe executed"
+fi
+
+MD_CS="$(md_probe zzq_md_subject md_sound_probe)"
+if [ "$MD_CS" = "0 1" ]; then
+  PASS "MD5: CONTROL on the oracle — a remediated assertion over the same subject returns pass=0 fail=1 with that subject removed, so the oracle CERTIFIES the sound shape as well as convicting the defective one. Both directions fired on the same subject in the same process"
+else
+  FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
+fi
+
+# ── The registrations. Each re-runs the SAME argv the live arm above ran, with the named
+# subject removed. G2's registration is emitted earlier, inside group G, because its
+# fixtures are deleted there; the other four are here.
+md_flips verify_ciphertext "A"  a_assert
+md_flips verify_ciphertext "C"  c_assert
+md_flips verify_ciphertext "C2" c2_assert
+md_flips cmd_list          "I5" i5_assert
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates

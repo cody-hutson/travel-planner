@@ -63,6 +63,13 @@ name: Publish guard
 #         records, rotate's inheritance, and the itinerary projection the gate reads
 #   T     the coordination notice (#551) — the band's identity, its state vocabulary
 #         set-diffed both ways, and the null case
+#   MD    the Discriminating-Evidence Rule: every assertion's PASS must require evidence
+#         its subject could only have produced by RUNNING. MD re-runs each registered
+#         assertion with its subject removed and requires it to flip, and statically
+#         scans the suite for the polarity-negative shape whose else limb a missing
+#         subject reaches. Like RS it is pure bash with no external dependency, so it has
+#         no legitimate skip and MUST NOT be named in GUARD_EXPECTED_SKIPS — a skipped
+#         meta-assertion is precisely the vanishing group the strict mode exists to catch
 #   PF    no verdict in this suite, or in the publish script it guards, is decided by
 #         a pipeline's exit status
 #   RS    this boundary itself. RS parses the two blocks and set-diffs them against the
