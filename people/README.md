@@ -70,14 +70,25 @@ it unattended; that is deliberate, and it is the only operation here that works 
 It then removes the record and walks the trips, and it prints one line per location so
 you can see what it reached and what it could not.
 
-**What it cannot reach, said plainly rather than left for you to discover.** Three things
-survive it. A trip you had already **unlinked** this person from keeps their name in its
-own files — unlinking leaves no trace behind, so nothing connects that trip to this record
-any more and nothing can find it by id. The erase report lists such trips as *candidates*,
-by path and count, and changes nothing in them; walking them is yours. Anything already
+**What it cannot reach, said plainly rather than left for you to discover.** Four things
+survive it, and the fourth survives for a different reason than the other three. A trip
+you had already **unlinked** this person from keeps their name in its own files —
+unlinking leaves no trace behind, so nothing connects that trip to this record any more
+and nothing can find it by id. The erase report lists such trips as *candidates*, by path
+and count, and changes nothing in them; walking them is yours. Anything already
 **published** is gone from your machine only — a repository, a Pages site and any copy
 anyone took of it are outside every local operation. And a value **promoted** into this
 record from a trip stays in whichever trip it came from.
+
+**The fourth is a reusable group's name.** The other three are outside the operation — a
+trip it cannot find, a copy that is not on your machine, an answer belonging to the trip
+it came from. A group record erasure *does* reach: it removes this person's id from every
+group they were in, and then stops at the title line on purpose. The name has to be free
+text for a group to have a usable one, and a sweep that rewrote free text would take the
+name with it — so a group called `# Priya's crew` goes on saying so after Priya has been
+erased, and clearing that is a thing you do.
+[`../groups/README.md`](../groups/README.md) § *What a record does not hold* states the
+same reach from the group's side.
 
 Deleting a record by hand still works and still does only what it used to: it removes the
 record, and every reference inside every trip stays behind pointing at nothing.
