@@ -222,7 +222,9 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # strip_to_text above is the VISIBLE projection and is deliberately left byte-for-byte as
 # it was — verify_ciphertext consumes it, and AC 5 holds that function's behaviour fixed.
 #
-# Why a second projection exists at all: cmd_publish copies the WHOLE FILE, so the whole
+# Why a second projection exists at all (a third, strip_to_joined_text, is defined below
+# and exists for a different reason — an inline tag that splits a WORD, which every
+# space-substituting projection including this one hides): cmd_publish copies the WHOLE FILE, so the whole
 # file is the evaluand, and strip_to_text is not it. strip_to_text deletes script/style
 # bodies wholesale and turns every tag into a space, which discards comments and every
 # attribute value. Measured on the shipped guard, a class value carried ONLY in an HTML
@@ -279,6 +281,69 @@ strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on s
   " "$1" 2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
 }
 
+# The THIRD projection, and it exists because a tag can split a WORD. `Rurit<b>anian</b>`
+# is the value with three characters of markup inserted mid-token; both projections above
+# substitute a SPACE for that tag, so _norm_words yields `rurit` and `anian` and the value
+# is never matched. Measured on the shipped guard: that render, and the numeric-entity form
+# `&#82;uritanian`, both published at rc=0 against a verbatim control that aborted.
+#
+# WHY A SEPARATE ARM AND NOT A ONE-LINE CHANGE TO THE VISIBLE PROJECTION. The rejoin
+# cannot be made conditional on anything the markup offers: `Rurit<b>anian</b>` and
+# `Dublin</a><a href="y">Galway` are the same shape — an inline tag with word characters
+# on both sides. Making the primary visible projection join them would fuse two legitimate
+# adjacent links into one false token ON THE ARM THAT CARRIES THE VERDICT, in the same
+# change that removes a false abort. As a separate arm OR-ed into the verdict it can only
+# ADD match opportunities to a stream nothing else reads, and the two existing arms stay
+# byte-unchanged. This is the shipped composition — verify_publishable_content already ORs
+# two arms — extended by one, not a new mechanism.
+#
+# THE THIRD AND FOURTH SUBSTITUTIONS ARE SEPARATE, and that is the line-map rule above
+# applied at its sharpest point. `<[^>\n]+>` removes a single-line inline tag with NO
+# space and, by its own character class, can consume no newline — so the join is safe.
+# A tag that SPANS lines cannot be joined without destroying the line map, so it falls to
+# the fourth substitution and keeps the space-substituting, newline-re-emitting behaviour.
+strip_to_joined_text() { # <html_file> -> visible text with INLINE tags removed, NO space
+  perl -0777 -pe "
+    s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<[^>\n]+>}{}g;
+    s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
+  " "$1" 2>/dev/null
+}
+
+# Character-reference decoding, applied to every arm AFTER its strip. `&#82;uritanian`
+# reaches the published page as the value and normalizes to the two tokens `82` and
+# `uritanian` undecoded — so the value is not matched and the render publishes. Three
+# properties are load-bearing and none is cosmetic:
+#
+#   1. IT RUNS AFTER THE STRIP, NEVER BEFORE. Decoding `&lt;` ahead of tag removal would
+#      manufacture tags out of CONTENT and hand the stripper an attacker-chosen parse.
+#      Every call site is `strip_* | _decode_entities | _line_sentinels | _norm_words`,
+#      which also keeps the line sentinel injected LAST — after every transform that
+#      could eat a line, which is the ordering rule _line_sentinels states for itself.
+#
+#   2. IT DECODES ONLY TO PRINTABLE ASCII [33..126]; EVERYTHING ELSE BECOMES ONE SPACE.
+#      This is the line-count-preservation rule at its sharpest point: `&#10;` and
+#      `&#13;` decode to newlines, and a decoder that emitted them would silently shift
+#      every reported line downstream of the first encoded value while the token stream
+#      stayed valid and the suite stayed green. Range-restricting is what makes that
+#      impossible by construction rather than by care. Mapping a non-ASCII reference to a
+#      space is symmetric with _norm_words, whose [a-z0-9] reduction already splits on
+#      the decoded character.
+#
+#   3. NO FALLBACK LIMB. strip_to_published_text already ships with `2>/dev/null` and no
+#      sed fallback; adding one here would be a SECOND projection semantics, which is the
+#      defect S11 exists to pin. On a perl-less host the visible stream empties, the
+#      20-word floor fires, and the verdict is rc=2 UNDETERMINED — fail-closed and
+#      audible, which is measured rather than assumed.
+_decode_entities() { # stdin -> stdin, character references resolved to printable ASCII
+  perl -pe '
+    s/&#x([0-9A-Fa-f]+);/ my $c = hex($1); ($c > 32 && $c < 127) ? chr($c) : " " /ge;
+    s/&#([0-9]+);/ my $c = $1;            ($c > 32 && $c < 127) ? chr($c) : " " /ge;
+    s/&(amp|lt|gt|quot|apos|nbsp);/ /g;
+  ' 2>/dev/null
+}
+
 # StatiCrypt boilerplate reference — encrypt a token-LESS decoy so the guard can tell
 # StatiCrypt's fixed shell vocabulary (already, center, click, password…) apart from a
 # genuine itinerary leak. The readable boilerplate is passphrase-independent; only the tiny
@@ -317,16 +382,40 @@ make_boilerplate() { # -> echoes temp dir (boilerplate = <dir>/index.html)
 # reference/adr/ADR-008-publish-content-guard.md.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Match parameters. Both are load-bearing and were chosen on a measured sweep rather
-# than by taste (design record: sub-task #315):
+# Match parameters. All three are load-bearing and were chosen on a measured sweep
+# rather than by taste (design record: sub-task #315, extended by #328):
 #   GUARD_NGRAM  = 5  — at 3 an incidental three-word run aborts a clean render; at 6
 #                       and above a real five-word carry-through is missed. 4 and 5
 #                       both discriminate; 5 is the tighter of the two.
 #   GUARD_WINDOW = 25 — unbounded (or 200+) an innocent render that mentions one token
 #                       early and the other late FLIPS to a false abort; 50 and below
-#                       does not. The window is what makes the conjunctive rule safe.
+#                       does not. It is now the OUTER BOUND rather than the operative
+#                       limit: the conjunctive rule derives its window from the value
+#                       and caps it here, so for a 2-5 word passport value W never
+#                       binds. Its calibration record above stays true and is the
+#                       ceiling a long value would reach.
+#   GUARD_CONJ_SLACK  — the conjunctive rule's proportional slack, added to the span
+#               = 4     the value's OWN distinctive tokens occupy. Measured over a
+#                       17-fixture discrimination matrix (7 over-block candidates /
+#                       6 true carry-throughs / 3 clean / 1 paraphrase) built on the
+#                       group-N render: at 0, only 1 of 6 real carry-throughs is still
+#                       caught; at 2 and 3, 5 of 6 — the reworded form whose two facts
+#                       sit 7 tokens apart is lost; at 4, all 6. No clean fixture aborts
+#                       at any setting. 4 is the KNEE — the smallest slack at which no
+#                       measured carry-through is lost — and every value above it buys
+#                       nothing: 5, 8 and 25 all read TP 6/6 · FP 1/7 identically.
+#                       A FLAT window cannot separate the two classes at all: a real
+#                       carry-through spans 3-7 tokens and a false one spans 2, so
+#                       every flat value admitting the first admits the second.
+#                       ONE over-block survives at 4 and is irreducible rather than
+#                       mis-tuned: `the Irish ferry to the islands runs until 2027` and
+#                       the carry-through `the Irish one you carry is valid to 2027`
+#                       have the SAME span (7) and both carry `to`, so no setting of
+#                       this parameter and no connective test separates them. It is
+#                       carried as a residual in ADR-008, not tuned away.
 GUARD_NGRAM=5
 GUARD_WINDOW=25
+GUARD_CONJ_SLACK=4
 
 # The conjunctive window is scoped to ONE STRUCTURAL BLOCK as well as to W words.
 # W=25 alone was calibrated on a fixture carrying one occurrence of each token, and a
@@ -450,7 +539,7 @@ _norm_words() {
 # forever. The rule travels with the record; this function only applies it, and knows
 # nothing about which class member produced it.
 _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
-  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" -v BLOCK="$_GUARD_BLOCK" -v LINE="$_GUARD_LINE" '
+  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v SLACK="$GUARD_CONJ_SLACK" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" -v BLOCK="$_GUARD_BLOCK" -v LINE="$_GUARD_LINE" '
     function is_stop(t) { return index(STOP, " " t " ") > 0 }
     # Reports the SOURCE LINE of the winning render position and exits 0. Every path to a
     # HIT goes through here, so a hit always carries a position and a non-hit never
@@ -476,32 +565,84 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
       if (rn == 0) exit 3
       if (rule == "conjunctive") {
         # Every distinctive token of the value must appear, and the occurrences must
-        # fall inside one W-word window. This is a direct encoding of the class
-        # definition ("issuing country AND validity" — two facts), and it is strictly
-        # more sensitive here than n-gram containment: it catches a reworded or
+        # fall inside one window derived FROM THE VALUE. This is a direct encoding of
+        # the class definition ("issuing country AND validity" — two facts), and it is
+        # strictly more sensitive here than n-gram containment: it catches a reworded or
         # order-swapped carry-through that no contiguous run would match.
-        k = 0
+        #
+        # TWO LIMBS, both derived from the value rather than from a flat constant, and
+        # both required. The flat W read "both facts within 25 words", which on a trip
+        # TO the country in the passport year is satisfied by ordinary destination
+        # guidance: `Visa / entry: Irish passport holders need no visa; check that
+        # validity runs beyond 2027` carries both class tokens legitimately and aborted
+        # every publish of that trip. Measured: 3 of 3 such lines aborted.
+        #   LIMB A, the proportional window. lim = the span the value own distinctive
+        #     tokens occupy, plus SLACK, capped at W. The rule comment above says it
+        #     encodes "both facts in one sentence"; a flat 25-word window does not.
+        #   LIMB B, connective evidence. At least one of the value OWN stoplisted
+        #     tokens must occur in the matched block. A carry-through copies the value
+        #     connective tissue (`valid`, `to`) along with its facts; an ambient
+        #     co-occurrence of a nationality adjective and the trip year does not.
+        # Neither limb alone suffices, and one fixture each proves it: a heading
+        # `Galway 2027 - an Irish adventure` has a render span of 2 and is rejected only
+        # by limb B; `the Irish ferry to the islands runs until 2027` contains `to` and
+        # is rejected only by limb A.
+        #
+        # THE COST, stated rather than discovered. This NARROWS what the rule catches:
+        # a carry-through that drops the value own connective vocabulary entirely — a
+        # paraphrase of the validity predicate, `the Irish passport you carry expires in
+        # 2027` — is no longer matched. That falls inside the paraphrase class ADR-008
+        # already declares out of coverage, and it is carried there as its own residual
+        # rather than folded into the existing one. The alternative is the status quo: a
+        # fail-closed control that aborts correct content forever, which this file argues
+        # three separate times is fail-open in practice because it gets worked around.
+        # (No apostrophes in this block: it lives inside a single-quoted awk program.)
+        k = 0; vlo = 0; vhi = 0; ncon = 0
         for (i = 1; i <= vn; i++) {
           t = v[i]
-          if (is_stop(t)) continue
+          if (is_stop(t)) { if (!(t in conn)) { conn[t] = 1; ncon++ } ; continue }
           if (t in seen) continue
           seen[t] = 1; k++; key[k] = t; kidx[t] = k
+          if (vlo == 0) vlo = i
+          vhi = i
         }
         if (k < 2) exit 3
+        lim = (vhi - vlo) + SLACK
+        if (lim > W) lim = W
         m = 0
-        for (p = 1; p <= rn; p++) if (r[p] in kidx) { m++; pos[m] = p; who[m] = kidx[r[p]] }
+        # cblk[] mirrors blk[] exactly as blk[] already mirrors r[], and is filled on
+        # the SAME single pass that builds the occurrence list — no second scan.
+        for (p = 1; p <= rn; p++) {
+          if (r[p] in conn) cblk[blk[p]] = 1
+          if (r[p] in kidx) { m++; pos[m] = p; who[m] = kidx[r[p]] }
+        }
         if (m < k) exit 1
         left = 1; covered = 0
         for (right = 1; right <= m; right++) {
           cnt[who[right]]++
           if (cnt[who[right]] == 1) covered++
           while (covered == k) {
-            # Same block AND inside W. blk[] is non-decreasing, so equal endpoints mean
-            # every token between them is in that block too. This is what separates
-            # "both facts in one sentence" from "one fact per day, N days apart".
+            # Same block AND inside lim AND carrying the value own connective tissue.
+            # blk[] is non-decreasing, so equal endpoints mean every token between them
+            # is in that block too. This is what separates "both facts in one sentence"
+            # from "one fact per day, N days apart", and the two added conjuncts are
+            # what separate it from "both facts in one sentence ABOUT SOMETHING ELSE".
             # The window LEFT edge is the reported position: it is where the
             # carry-through starts, which is the line an operator opens to fix it.
-            if (pos[right] - pos[left] <= W && blk[pos[right]] == blk[pos[left]]) _loc(pos[left])
+            #
+            # ncon == 0 is a DECLARED ESCAPE, not an oversight. A value with no
+            # stoplisted tokens of its own (`Passport: Irish 2027`) has no connective
+            # tissue to require, so limb B is vacuously satisfied and limb A alone
+            # applies. Measured on that value: the heading over-block persists and a
+            # real carry-through is still caught. The fix is proportional to how much
+            # connective tissue the value carries, and that is stated here rather than
+            # found later.
+            #
+            # A window failing either new conjunct does not exit: the enclosing loop
+            # advances left and keeps scanning, exactly as it already does when the
+            # span or the block test fails. NO NEW exit-0 PATH IS CREATED and none is
+            # moved, so every HIT still routes through _loc and carries a position.
+            if (pos[right] - pos[left] <= lim && blk[pos[right]] == blk[pos[left]] && (ncon == 0 || (blk[pos[left]] in cblk))) _loc(pos[left])
             cnt[who[left]]--
             if (cnt[who[left]] == 0) covered--
             left++
@@ -1397,8 +1538,8 @@ $rmerge	$rtarget"
 # field only. Stage 8: this is a decision, not an inconsistency to fix.
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
-  local recs rc rcv rcp work rfile pfile vfile n member field rule value hit=0 undet=0
-  local locv="" locp="" loc="" proj=""
+  local recs rc rcv rcp rcj work rfile pfile jfile vfile n member field rule value hit=0 undet=0
+  local locv="" locp="" locj="" loc="" proj=""
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
     warn "guard: content check needs a rendered site and a trip dir"; return 2
@@ -1408,13 +1549,16 @@ verify_publishable_content() { # <site_html> <trip_dir>
   fi
 
   work="$(mktemp -d)" || { warn "guard: could not stage the content check"; return 2; }
-  rfile="$work/render.words"; pfile="$work/published.words"; vfile="$work/value.words"
+  rfile="$work/render.words"; pfile="$work/published.words"; jfile="$work/joined.words"; vfile="$work/value.words"
 
-  # TWO projections of the same file, matched independently, because publish copies the
+  # THREE projections of the same file, matched independently, because publish copies the
   # file and not the painting of it. The visible arm is what a reader sees; the published
-  # arm is what a reader can retrieve. Both use the SAME _norm_words on both sides of the
-  # comparison — one normalization, four streams, no chance of the sides drifting.
-  strip_to_text_blocks "$site_html" | _line_sentinels | _norm_words > "$rfile"
+  # arm is what a reader can retrieve; the joined arm is what a reader sees once an inline
+  # tag that SPLIT A WORD is closed up. All three use the SAME _norm_words on both sides
+  # of the comparison — one normalization, six streams, no chance of the sides drifting —
+  # and all three run their strip through _decode_entities, so a character reference is
+  # resolved before tokenization on every arm rather than on whichever one was remembered.
+  strip_to_text_blocks "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$rfile"
   # NEITHER sentinel is a word, and both must be subtracted from the degraded-extraction
   # floor. The line sentinel matters more than the block one here: there is one per source
   # line, so counting them would let a render of 20 near-empty lines clear a 20-word floor
@@ -1429,7 +1573,11 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # yields little here and that is normal, not degraded. An EMPTY published stream is
   # simply not matched against — _guard_match reads an empty render as UNDETERMINED, and
   # a file with no markup to inspect is not an undetermined result.
-  strip_to_published_text "$site_html" | _line_sentinels | _norm_words > "$pfile"
+  strip_to_published_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$pfile"
+  # No word floor on the joined arm either, and for the same reason as the published arm:
+  # its emptiness is a property of the file, not a degraded read. An empty joined stream
+  # is simply not matched against.
+  strip_to_joined_text "$site_html" | _decode_entities | _line_sentinels | _norm_words > "$jfile"
 
   recs="$(nonpublishable_values "$trip_dir" "$site_html")" && rc=0 || rc=$?
   if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
@@ -1449,11 +1597,15 @@ verify_publishable_content() { # <site_html> <trip_dir>
     locv="$(_guard_match "$rule" "$vfile" "$rfile")"; rcv=$?
     rcp=1; locp=""
     [ -s "$pfile" ] && { locp="$(_guard_match "$rule" "$vfile" "$pfile")"; rcp=$?; }
-    # Combine the two arms. A hit on EITHER projection is a hit — the value is in the
+    rcj=1; locj=""
+    [ -s "$jfile" ] && { locj="$(_guard_match "$rule" "$vfile" "$jfile")"; rcj=$?; }
+    # Combine the three arms. A hit on ANY projection is a hit — the value is in the
     # file either way. Otherwise the visible arm carries the verdict, because every
     # non-hit code is a property of the VALUE (its keyability floor, its distinctiveness)
-    # rather than of the projection, so the arms agree on it by construction.
-    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ]; then rc=0
+    # rather than of the projection, so the arms agree on it by construction. The
+    # elif/else limbs are therefore unchanged by the third arm: it can only turn a
+    # non-hit into a hit, never change WHICH non-hit code is reported.
+    if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ] || [ "$rcj" -eq 0 ]; then rc=0
     elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
     else rc="$rcv"; fi
     # The HIT arm reports a position in the EVALUAND — the file the guard was asked to
@@ -1463,13 +1615,21 @@ verify_publishable_content() { # <site_html> <trip_dir>
     # `member` column is gone: it only ever carried the declaring parse limb (`entry` or
     # `field`), never a member name, so it named nothing an operator could act on.
     #
-    # Only the two HIT arms carry a locator. The other three fire when NOTHING matched,
+    # Only the three HIT arms carry a locator. The other three fire when NOTHING matched,
     # so no render position exists and none may be synthesised; their finding is genuinely
     # about the record, so the model coordinate is the right one and each says which
     # surface its remedy is on.
+    #
+    # INT-1 — THE PROJECTION ENUM IS CLOSED AND NOW CARRIES THREE VALUES. It shipped as a
+    # closed TWO-value enum; the joined arm requires a third, and the selection order is
+    # the arms' own order so the attribution names the WEAKEST projection that saw it —
+    # visible text first, because that is the one the operator can read on the page. The
+    # tag stays a structural fact carrying no class content: a path, an integer and one
+    # enum value, never the matched text.
     case "$rc" in
-      0) if [ "$rcv" -eq 0 ]; then loc="$locv"; proj="visible text"
-         else loc="$locp"; proj="retrievable markup (comment, attribute or script body)"; fi
+      0) if   [ "$rcv" -eq 0 ]; then loc="$locv"; proj="visible text"
+         elif [ "$rcp" -eq 0 ]; then loc="$locp"; proj="retrievable markup (comment, attribute or script body)"
+         else loc="$locj"; proj="joined markup (an inline tag split a word)"; fi
          [ -n "${loc:-}" ] && [ "$loc" != "0" ] || loc="?"
          warn "guard: a non-publishable value reached the published file at $site_html:$loc ($proj)."
          warn "guard: fix the RENDER at that line — deleting the model record clears this abort WITHOUT clearing the leak."
@@ -1533,7 +1693,8 @@ GUARD_SUMMARY_FLOOR=4
 #
 # The markdown counterpart of strip_to_text_blocks. THE SENTINEL IS THE WHOLE POINT and
 # it is not cosmetic: _guard_match's `conjunctive` rule requires both distinctive tokens
-# of a value inside ONE structural block as well as inside GUARD_WINDOW. With no
+# of a value inside ONE structural block as well as inside its value-derived window
+# (GUARD_CONJ_SLACK, capped at GUARD_WINDOW). With no
 # sentinel every token lands in block 0, blk[pos[right]] == blk[pos[left]] is true for
 # every pair, and the rule degrades to a bare word window — which is verbatim the
 # N-squared day-pairing false abort that ADR-008's first amendment exists to fix, and
@@ -1773,7 +1934,9 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 # WHAT IS OUTSIDE THE BOUNDARY, stated rather than implied: markup, C19's
 # declaration block, attribute values, <script> and <style> bodies. A change confined to one
 # of those does not move the digest and can ride a standing confirmation. That is
-# the same coverage boundary ADR-008 draws between its two projections, and it is
+# the same coverage boundary ADR-008 draws between the visible and the retrievable
+# projections of the guard (which now carries a third, joined, for a word an inline tag
+# split — a distinction this digest deliberately does not make), and it is
 # the deliberate price of (1): pulling those surfaces in would make every CSS or
 # script edit — including #551's own — read as an itinerary change. THE DECLARATION
 # CLAUSE IS HONOURED BY AN EXCISION OF ITS OWN: the tag strip alone cannot collapse
