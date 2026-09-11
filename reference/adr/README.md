@@ -51,3 +51,4 @@ options weighed, the decision, and the consequences.
 | [ADR-016](ADR-016-reusable-groups.md) | Reusable groups — a second cross-trip store, a one-directional membership edge, and an expansion that leaves no residue | Accepted |
 | [ADR-017](ADR-017-derived-trip-history.md) | Derived trip history — a resolution rather than a record, a match the operator makes, and a suggestion that is never written | Accepted |
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Proposed |
+| [ADR-020](ADR-020-trip-store-root-resolution.md) | Trip-store root resolution — a named environment variable, and the user-scope surface it implies | Accepted |

@@ -84,6 +84,29 @@ Each file states its own verbs and what each one needs, so the list above is a s
 
 Three publish actions stay deliberately outside this surface and remain terminal commands you run yourself: creating the published repo in the first place, rotating its passphrase, and deleting it. `/trip-publish` does none of the three — [`reference/adr/ADR-007-command-entry-point.md`](reference/adr/ADR-007-command-entry-point.md) records the reasoning and dispositions every publish form one way or the other.
 
+### Using the commands outside the repo
+
+Everything above assumes you opened the `travel-planner` folder itself, and that remains the supported path — nothing here is required to plan a trip. Claude Code also reads a **user-scope** commands directory, though, and a copy of these files placed there offers itself at the prompt from any project you have open. If that is how you want to reach them, two things have to be true, and this repository gives you a command for each.
+
+**Tell the commands where your checkout is.** A trip command resolves the trip store through `TRAVEL_PLANNER_ROOT`, falling back to whichever project you launched from when that variable is unset. Inside the checkout the fallback is right and you need set nothing. From anywhere else it names the wrong folder, so export the variable in your shell profile:
+
+```bash
+export TRAVEL_PLANNER_ROOT=/path/to/your/travel-planner
+```
+
+You do not have to work the path out. `scripts/sync-commands.sh` prints that line, filled in with the checkout it was run from, on every run.
+
+**Keep the copies current.** A user-scope copy is a second copy of a file this repository keeps changing, and it sits outside the working tree where nothing here can see it drift. So check it:
+
+```bash
+scripts/sync-commands.sh            # report only -- the default
+scripts/sync-commands.sh --apply    # copy, preserving what it replaces
+```
+
+`--check` writes nothing and reports each command file as identical, diverged or absent. `--apply` copies, and before it overwrites anything it keeps the version it is replacing under `~/.claude/trip-command-backups/`, naming what it kept and where. Running it twice changes nothing the second time. **Re-run it after you pull** — that is the whole reason it exists, since a stale copy behaves like an older version of this repository and gives you no way to notice.
+
+One boundary worth knowing before you rely on this. Resolving the **trip store** works from any working directory. The verbs that shell out to the publish script need the repository's own working tree — its templates, its git state — and pointing a variable at a folder does not hand them one, so from outside the checkout those verbs resolve the trip and then stop at the script boundary. Run them from the checkout. [`reference/adr/ADR-020-trip-store-root-resolution.md`](reference/adr/ADR-020-trip-store-root-resolution.md) records the decision and that boundary.
+
 ### Traveler profiles
 
 Each person travelling gets their own profile, copied from `templates/traveler-intake.template.md` into `trips/<destination>-<year>/travelers/`. It captures what someone **needs** (the constraints a plan has to stay inside — heat, mobility, diet, rest) separately from what they **want** (desires the plan tries to land within those bounds), plus their leanings, dates, budget, journey, lodging and party.
