@@ -1,7 +1,8 @@
 # ADR-008: Publish-path content guard — a value-keyed predicate on the plaintext limb
 
 - **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **three times** the same
-  day; **citation form amended a fourth time (2026-08-28)**, **a fifth time (2026-08-29)** and **a sixth time (2026-08-30)**.
+  day; **citation form amended a fourth time (2026-08-28)**, **a fifth time (2026-08-29)** and **a sixth time (2026-08-30)**;
+  **Decision, Coverage boundary and residual list amended a seventh time (2026-09-11)**.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
@@ -62,8 +63,38 @@
   third-party exception. The fourth amendment replaced their line anchors and left the path form as
   it found it. All three now carry `reference/`, so this document names that file one way throughout.
   **No decision, rule, residual, coverage claim or exit code is changed, and none is re-opened.**
+  **Seventh amendment (2026-09-11)** — the privacy-control-integrity release, consolidated. Four
+  cards changed behaviour this document describes and a fifth recommends a separate record; rather
+  than four parallel edits to one Accepted ADR, **one card is the single editor** and this is that
+  amendment. It reconciles rather than concatenates: where two cards handed conflicting text for the
+  same sentence — a projection tag declared a closed **two**-value enum, and a third projection
+  requiring a third value — the later measurement supersedes, and the **three**-value form is what
+  ships.
+
+  **Two claims in this document were verified FALSE and are corrected in place, not softened.**
+  (i) The record declaration in decision 1 named `<member>` as `passport` or `third-party`. Column 1
+  of the record stream is only ever `entry` or `field`, measured over all six emitters with a control
+  arm firing; the two named values are never produced, and the abort no longer prints that column.
+  (ii) *What is caught* claimed a bad merge stripping **both** marks was caught as UNDETERMINED,
+  citing a suite arm. That arm's fixture carries the stripped marks **and** a recorded supersession,
+  and its verdict rests entirely on the second — remove only the supersession line and the same
+  fixture publishes. The arm passed while the thing its own message named was unguarded. The coverage
+  claim is retracted, the arm is split, and the gap is carried as residual 9.
+
+  **What else changed.** The guard matches three projections rather than two, and character
+  references are resolved on every arm. The abort names a position in the **evaluand** with the model
+  coordinate demoted to provenance, and the line map it rests on is stated as a precondition. The
+  orphaned-mark backstop is asked **per mark** rather than per file. An enumerated zero now carries a
+  control arm inside the predicate. The field limb reads a wrapped value line by line, as the entry
+  limb already did. The entry's structural sub-headings are no longer class values — two of them were
+  aborting publishes on ordinary English words. The rewording limit is stated as two measured numbers
+  rather than one qualitative sentence. The residual list goes from eight to **eleven**: residual 5
+  narrows to nothing but paraphrase, residual 6 is dispositioned FIXED with one survivor, and three
+  are new — the connective-vocabulary narrowing this release accepts, the silent mark strip, and the
+  class-source over-capture that remains one shape over.
+
   The architecture below — value-keying, the class-source seam, the 0/1/2 contract — is unchanged
-  through all six. Its **scope** is corrected, and the coverage boundary states the measured
+  through all seven. Its **scope** is corrected, and the coverage boundary states the measured
   boundary rather than the intended one. Where any amendment disagreed with an earlier claim in this
   document, the claim is **corrected in place**, not softened.
 - **Deciders:** repo maintainer
@@ -134,6 +165,13 @@ never a clean pass — which is the rule `agents/06-validator.md` already states
 - **It must not print what it matches.** #123's AC 8 routes the regression suite into a GitHub Actions
   log on a public repository, and the strings this guard matches are passport values and third-party
   health needs.
+- **An unusable fail-closed control is fail-open in practice.** This is the fourth place in this
+  record where the same driver decides a call: a control that aborts correct content with no remedy
+  available to the operator gets worked around rather than satisfied. It is why a bounded, declared
+  and asserted narrowing was preferred to an accepted permanent abort at residual 6 and residual 11,
+  why the short-value branch takes the fail-open side at residual 2, and why the witness proposed for
+  residual 9 was rejected on the false aborts it would have introduced rather than accepted for the
+  fail-open it would have closed.
 
 ## Options considered
 
@@ -173,10 +211,16 @@ strip the name from a rest floor and the value is unchanged, so the match is unc
 Four parts, all in `scripts/publish-trip-site.sh`:
 
 **1. `nonpublishable_values <trip_dir> [site_html]` — the single home of the class.** It emits one
-record per non-publishable value: `<member>` (`passport` or `third-party`), `<field>` (a locator),
-`<rule>`, and the value. It returns `0` when the class is enumerated — *possibly empty* — and `2`
-when the class cannot be determined. This function is the seam #278 re-keys: swapping the membership
-rule for a declared attribute is a change to this body alone.
+record per non-publishable value: `<limb>` (`entry` or `field` — the declaring parse limb of the row
+that put the value in class, never a member name), `<field>` (a de-identified model locator),
+`<rule>`, and the value. **An earlier revision of this sentence read `<member>` (`passport` or
+`third-party`), and that was wrong from the first implementation.** Every record emitter writes one
+of those two literals in column 1 and `passport` and `third-party` are never produced — measured over
+all six emitters, with the control arm firing (`entry` and `field` present, the two named values
+absent) — so the abort's leading coordinate was never a model coordinate at all, it was a parser
+internal. The abort no longer prints that column. It returns `0` when the class is enumerated —
+*possibly empty* — and `2` when the class cannot be determined. This function is the seam #278
+re-keys: swapping the membership rule for a declared attribute is a change to this body alone.
 
 **The `[THIRD-PARTY]` member is an entry denylist, not a field allowlist**, and the polarity is the
 correction that matters most here — because it is the polarity #278 inherits. Under a
@@ -300,7 +344,7 @@ than by taste, and both discriminate: at a floor of 3 an incidental run aborts a
 unbounded window an innocent render that mentions one token early and the other late flips to a false
 abort.
 
-**3. `verify_publishable_content <site_html> <trip_dir>` — a pure consumer, matching two projections.**
+**3. `verify_publishable_content <site_html> <trip_dir>` — a pure consumer, matching three projections.**
 It returns `0` (nothing non-publishable reached the published file), `1` (a hit), or `2`
 (undetermined). Three codes where the sibling guard has two, because the regression suite has to tell
 a *hit* from an *undetermined*: under a binary contract a guard that aborted for the wrong reason
@@ -308,12 +352,13 @@ would still pass its own tests. The call site collapses both non-zero codes into
 command's behaviour stays binary.
 
 **The evaluand is the published file, not the painted page.** `cmd_publish` copies the whole file, so
-each record is matched against *two* projections of it and a hit on either is a hit:
+each record is matched against *three* projections of it and a hit on any is a hit:
 
 | Arm | Projection | Covers |
 |---|---|---|
 | visible | `strip_to_text_blocks` | text nodes — what a reader sees |
 | published | `strip_to_published_text` | HTML comment bodies, every attribute value, `<script>`/`<style>` bodies |
+| joined | `strip_to_joined_text` | visible text with single-line INLINE tags removed and no space inserted, so a tag that splits a word cannot hide the value. A separate arm rather than a change to the visible projection: the rejoin cannot be made conditional on anything the markup offers, and applying it to the arm that carries the verdict would fuse two legitimate adjacent links into one false token. Character references are resolved on **every** arm before tokenization. |
 
 Together these cover every content-bearing byte; what neither covers is tag names and attribute
 names, which are machinery and carry no trip content. Matching only the visible projection was
@@ -338,11 +383,67 @@ load-bearing: a parsed-and-empty class is a *measurement*, an unrecognized or st
 *degradation*, and collapsing them would make a broken parser indistinguishable from a trip that has
 nothing to hide.
 
-**4. The abort names the member and a locator, and never echoes the value.** This deliberately diverges
-from `verify_ciphertext`, which prints the token it matched. Under AC 8 this suite runs in a public
-Actions log, so echoing would make the guard leak exactly what it exists to protect. The report does
-not name the traveler either — a `[THIRD-PARTY]` entry's *name* is itself a member of this class, so
-naming the person would be the same leak by another route.
+**4. The abort names a position in the EVALUAND, keeps the model coordinate as provenance, and never
+echoes the value.**
+
+A locator names a position in the artifact the guard was asked to certify — `<site.html>:<line>` for
+the published file, `<change-summary.md>:<line>` for the summary — followed for the HTML guard by a
+projection tag from a closed **three**-value enum: `visible text`,
+`retrievable markup (comment, attribute or script body)`, or `joined markup (an inline tag split a
+word)`. The order is the arms' own order, so a hit is attributed to the weakest projection that saw
+it — the one the operator can read on the page before opening the source. The model coordinate is
+retained under `provenance`, because the operator still needs to know *what* leaked in order to judge
+the render edit, but it is no longer the leading, actionable coordinate.
+
+The reason is a user consequence, not a presentation preference. The model and the render are
+independent artifacts and the guard re-reads both, so an abort naming only the model makes "delete
+the record" the discoverable fix — and that clears the abort while leaving the value in the published
+file. Every HIT arm therefore states the direction in terms: *fix the RENDER at that line; deleting
+the model record clears this abort WITHOUT clearing the leak.*
+
+Direction is stated **both** ways. An abort about the **model** — a value below its keyability floor,
+a declared non-key, a matcher failure, an orphaned mark, a parse whose own control fixture read empty
+— carries **no** render locator, because it fires when nothing matched and no render position exists;
+synthesising one would be inventing a coordinate. Each names its own remedy surface instead: the
+record for the floor and the non-key, the matcher for a matcher failure, the model for an orphaned
+mark.
+
+The locator is **computed and emitted, never stored**, and never written into tracked markdown. That
+constraint is load-bearing rather than stylistic: this repository forbids a `path:line` reference in
+tracked markdown because a line citation into a living document goes stale, and its own suites state
+the reconciling rule — a line number is legitimate as the **output** of a probe and illegitimate as a
+stored **input**.
+
+The locator carries no class content: a path, an integer, and a closed-enum tag, and nothing else.
+Never the matched value, never a member or traveler name, never heading text, never surrounding
+words. This preserves the "never echoes the value" half of the original decision unchanged, and
+replaces only its "names the member" half — which never named a member in the first place, per
+decision 1 above.
+
+The original divergence stands: `verify_ciphertext` prints the token it matched and this guard does
+not. Under AC 8 this suite runs in a public Actions log, so echoing would make the guard leak exactly
+what it exists to protect. The report does not name the traveler either — a `[THIRD-PARTY]` entry's
+*name* is itself a member of this class, so naming the person would be the same leak by another
+route.
+
+**The line map is a precondition, not an assumption.** The render-side locator is computed by
+extending the block-sentinel idiom from block boundaries to line boundaries: a line sentinel is
+injected once per line **after** the strip, counted by the matcher, and dropped from the token stream
+exactly as the block sentinel is. The ordering is load-bearing — injecting before the strip lets a
+multi-line tag and a `<script>` deletion swallow the sentinels inside them, producing a line number
+that is consistently, plausibly, silently too small.
+
+**Any transform applied to a projection must therefore be line-count-preserving**: a transform that
+consumes newlines re-emits them. Without that rule, an added transform shifts every locator
+downstream of it while the suite stays green, because the token stream remains valid while the line
+map rots. That clause is what binds the character-reference decoder: it resolves references **only**
+to printable ASCII and maps everything else to a space, because a reference decoding to a newline
+would shift every reported line after it.
+
+Residual, beside the block sentinel's: a render containing the literal line-sentinel token would
+split one source line into two and shift reported lines after it. Unlike the block sentinel's
+residual this cannot affect **matching** at all — the token stream is identical either way — so its
+only effect is a misreported position.
 
 The guard is called once, in the plaintext limb, **before** the typed-`PUBLISH` confirmation and
 before anything is copied to the publish directory. Before the prompt rather than after: either
@@ -370,8 +471,11 @@ the encrypted limb of `publish` and all of `update`.
   non-publication* → *What is not a finding* names as *"correct content [that] is never flagged"*.
   It is fail-**closed**, so it leaks nothing; it is a false abort on protected content, and this
   document's own argument at the name-arm note — *an unusable fail-closed control is
-  fail-open in practice, because it gets worked around* — applies to it unchanged. It is **open and
-  undispositioned**, carried as residual 6 below rather than claimed as solved.
+  fail-open in practice, because it gets worked around* — applies to it unchanged. **It has since
+  been dispositioned: FIXED, with one irreducible survivor**, and residual 6 below carries the
+  measurement. The correction to the outcome half of the original claim stands unchanged — it was
+  the matcher that re-introduced the over-block the membership design prevents, and that remained
+  true for three revisions of this document.
 - The class has one home with a stable contract, so #278 re-keys it in a single function body — the
   predicate, the call site and every test assertion are untouched.
 - `verify_ciphertext` is not read, called or edited by any of this, so the encrypted limb's behaviour
@@ -438,14 +542,36 @@ fail-**closed** (false aborts); the last two are fail-**open**.
 any attribute value, a `<script>` or `<style>` body — on any of the 8 surfaces measured (group M1). A
 value that reaches the render **de-attributed**, with the traveler name stripped, by construction:
 the name was never the join key, so removing it changes nothing (L3). **Any** stated field of a
-`[THIRD-PARTY]` entry, not a nominated subset of them (O1). A third-party value whose entry-heading
-mark has been stripped but whose value-level mark survives (O2). A third-party need written in the
-**real derived-model shape** rather than the profile shape (O3). A bad merge that strips both marks
-while retaining the values, and a `[THIRD-PARTY]` mark that resolves to no record — both as
-UNDETERMINED (O4b, O4c). A passport value that is reworded or order-swapped **within one block**
-(N1d). A passport that exists only in `travelers/<traveler>.md` and has not reached the projection
-yet (M3d). A projection that is stale against its first-party sources, or that reads empty while
-predating the render (M3b).
+`[THIRD-PARTY]` entry, not a nominated subset of them (O1) — excluding the entry's own structural
+sub-headings, which name a section rather than stating a value (O7). A third-party value whose
+entry-heading mark has been stripped but whose value-level mark survives (O2). A third-party need
+written in the **real derived-model shape** rather than the profile shape (O3). A **recorded
+supersession with no profile to support it**, as UNDETERMINED (O4b), and a `[THIRD-PARTY]` mark that
+resolves to no record, as UNDETERMINED — now asked **per mark**, so an orphaned mark is no longer
+absolved by an unrelated entry having parsed (O4c, L11b). A passport value that is reworded or
+order-swapped **within one block** (N1d). Either line of a **wrapped** field value, matched as
+siblings, so a render carrying only the continuation half no longer publishes (O9b). A passport that
+exists only in `travelers/<traveler>.md` and has not reached the projection yet (M3d). A projection
+that is stale against its first-party sources, or that reads empty while predating the render (M3b).
+An enumerated zero whose own parse control fixture also read zero, as UNDETERMINED rather than as a
+clean empty class (O8a).
+
+A class value is also caught when it reaches the file **encoded** rather than spelled out: a numeric
+or hexadecimal character reference is decoded before tokenization, and a value split by an inline tag
+is rejoined on a dedicated projection. The decoder resolves references **only** to printable ASCII
+and maps everything else to a space, which is not a convenience — a reference decoding to a newline
+would shift every reported line downstream of it while the token stream stayed valid and the suite
+stayed green.
+
+**A bad merge that strips BOTH marks while retaining the values is NOT caught, and an earlier
+revision of this list said it was.** It named O4b for that coverage. O4b's fixture carries two things
+— the stripped marks *and* a recorded supersession — and its verdict rests entirely on the second:
+hold everything else constant, remove only the supersession line, and the same fixture goes
+`rc=2` → `rc=0` and publishes. So O4b passed while the thing its own failure message named was
+unguarded, and it would have gone on passing if the strip hole had widened. The claim is retracted
+here rather than softened; O4b's message now names the supersession, and the arm it was missing ships
+as O4e, which pins the gap as a measurement rather than asserting a coverage that does not exist. The
+gap itself is residual 9 below.
 
 **What is deliberately NOT in class**, each pinned by a control arm that must publish: a first-party
 `[OPERATOR-PROVIDED]` need, whose escalation to `trip-context.md` is the designed path (O5b, O3c); a
@@ -471,14 +597,36 @@ is the worse of the two by this document's own argument. The real problem is tha
 from common English vocabulary is not safely keyable by string matching at all. That is a
 class-definition problem, not a guard defect, and it belongs to #278.
 
-**What is not caught, and why. Eight residuals — four deliberate, three that are open defects
-stated rather than claimed solved, and one that is a scope decision taken at the Stage 9 re-gate:**
+**What is not caught, and why. Eleven residuals — five deliberate, three that are open defects stated
+rather than claimed solved, two now dispositioned as fixed with a stated survivor, and one that is a
+scope decision taken at the Stage 9 re-gate:**
 
-1. **Paraphrase.** A value the hub **reworded** on its way into `final-itinerary.md` breaks every
-   n-gram and is **missed**; a paraphrase is a judgement no string match can make. #278 states the
-   same limit in its own words, and that is the reason #278 exists. **Paraphrase is not the only
-   missed transform** — an earlier revision of this section implied it was. There are **three**
-   transform classes that defeat matching, and the other two are residual 5 below.
+1. **Paraphrase — and the limit is measured, per rule, rather than qualitative.** A value the hub
+   **reworded** on its way into `final-itinerary.md` breaks the match and is **missed**; a paraphrase
+   is a judgement no string match can make. #278 states the same limit in its own words, and that is
+   the reason #278 exists.
+
+   **An earlier revision stated this as though a rewrite were needed. It is not, and the threshold
+   differs by rule**, so the boundary is stated as two numbers rather than one:
+   - `phrase` — the entry limb, and any value of `GUARD_NGRAM` tokens or more. **One** substituted
+     word defeats any value of **nine tokens or fewer**, and is caught at ten and above. Derivable
+     rather than arbitrary: a substitution at position *k* leaves surviving runs of *k−1* and *n−k*,
+     so the value survives only when one of those still reaches *F*, i.e. when *n ≥ 2F*. Measured
+     over n = 5…12, flipping at exactly 10.
+   - `conjunctive` — the `Passport` and `Documents` rows. **One** substituted **distinctive** word
+     defeats the match **at any length**, because the rule requires every distinctive token of the
+     value to occur, so removing one ends it. Measured over the same n = 5…12, missed at all eight.
+     Control: substituting a **stoplisted** word instead leaves the match intact, so this is the
+     distinctive-token requirement and not fragility in general.
+
+   The conjunctive row is the member residual 8 records AC 3 as narrowed to, so the sharper of the
+   two limits applies to the row the narrowing kept — which is precisely why the earlier qualitative
+   phrasing understated the exposure. A suite arm grades the sweep, so these numbers fail the day
+   they stop being true.
+
+   **Paraphrase is not the only missed transform** — an earlier revision of this section implied it
+   was. It later named **three** transform classes; two of those have since been closed, and
+   residual 5 below records what is left.
 2. **The exit-4 declared non-key — a stopword-only third-party name, OR a stopword-only short
    third-party value.** `is_stop` applies to the name arm as it always did to the other two, so a
    member named **Will** is a *declared non-key* and their name reaching the render is not caught
@@ -515,31 +663,50 @@ stated rather than claimed solved, and one that is a scope decision taken at the
    subtraction, and it is what stops the published-bytes arm aborting on ordinary CSS and script
    (M1d). A render containing the literal sentinel `zzguardblockzz` would split a block that should
    not have split — a missed match, never a false abort.
-5. **Encoding transforms — a second and third missed class, previously unstated.** `_norm_words`
-   lowercases and reduces to `[a-z0-9]`; it does not decode HTML entities and does not rejoin a word
-   split by a tag. Measured: a class value carried with a **numeric character entity** in place of a
-   letter, and one **split mid-word by a tag**, both reach `rc=0` against a verbatim control at
-   `rc=1`. So the missed-transform set is **three classes — paraphrase, entity encoding, and
-   mid-word tag splitting — not one.** These are **open**, not accepted: unlike paraphrase they are
-   mechanical and a normalizer could close them. They are stated here because the previous revision
-   of this section named only paraphrase and therefore over-claimed.
-6. **The same-block over-block, on content the class definition explicitly protects — an OPEN
-   DEFECT.** Scoping the conjunctive window to a structural block fixed a permanent false abort
-   across day boundaries and introduced a narrower one inside a block: 3 of 3 renders carrying both
-   Passport tokens in one legitimate block falsely abort, against 2 of 2 controls that publish. One
-   of the three is a `Visa / entry` line — the exact class `agents/06-validator.md`
-   § *What You Audit* → *Profile-privacy non-publication* → *What is not a finding* names as
-   *"correct content [that] is never flagged"*. It is fail-**closed** and leaks nothing, and no
-   acceptance criterion forbids a false abort, so it does not block. It is nonetheless a false abort
-   on protected content, it is **undispositioned**, and the Consequences section above corrects the
-   claim that construction alone prevented it.
-7. **The coverage floor is LINE-based, and "the value" over-states it.** The model parse reads one
-   line at a time with no continuation handling, so a **wrapped** field value contributes each of its
-   lines as a separate record rather than as one value. Each line is matched on its own: a contiguous
+5. **Paraphrase, and it is the only transform class left.** This residual used to name three classes
+   — paraphrase, entity encoding and mid-word tag splitting — and stated that the latter two were
+   *"open, not accepted: unlike paraphrase they are mechanical and a normalizer could close them."*
+   They are closed. A numeric or hexadecimal character reference is now resolved before tokenization
+   on every projection, and an inline tag splitting a word is closed up on a third projection; both
+   were measured publishing at `rc=0` against a verbatim control at `rc=1` before the change, and
+   aborting after it. What remains is residual 1 above, and nothing else.
+6. **The same-block over-block, dispositioned: FIXED, with one irreducible survivor.** The
+   conjunctive rule paired both class tokens inside a flat word window, so on a trip to the country
+   named in the passport, in the passport's own year, ordinary destination guidance aborted the
+   publish. The window is now derived from the value's own key span rather than from a flat constant,
+   and a match additionally requires one of the value's own non-distinctive tokens in the matched
+   block. Measured over a nineteen-fixture discrimination matrix built for this purpose — nine
+   over-block candidates, six true carry-throughs, three clean renders and one paraphrase — every
+   over-block candidate aborted before the change and **one** does after, while **all six**
+   carry-throughs still abort and no clean render aborts at any calibration setting.
+
+   The survivor is irreducible rather than mis-tuned, and that is asserted rather than argued: it and
+   one of the carry-throughs have the **same** measured within-block span and both carry the same
+   connective token of the value, so no setting of the window and no connective test can separate
+   them. A suite assertion grades the equality, so the claim fails the day it stops being true.
+7. **The coverage floor is LINE-based, and a run that SPANS the wrap is still missed.** The model
+   parse reads one line at a time, so a **wrapped** field value contributes each of its lines as a
+   separate record rather than as one value, and each line is matched on its own: a contiguous
    5-word run of any *single line* is caught, a run that **spans the wrap point** is not, and a
-   continuation line under five words falls to the short-value rule. The entry denylist improved this
-   — the previous revision matched the **first line only**, because only the labelled line was ever
-   read — but it did not eliminate it. Read "what is caught" above with this floor in mind.
+   continuation line under five words falls to the short-value rule.
+
+   **An earlier revision described this as one floor, and it was two.** It said the entry denylist
+   *"improved this … but did not eliminate it"*, which was true of the **entry** limb and said
+   nothing about the **field** limb — where the improvement had not happened at all. On the field
+   limb the value was whatever followed the colon on the **first line**, and the continuation matched
+   no field label, sat under no marked entry, and fell through to **no record at all**: a render
+   carrying only the continuation half of a wrapped `Passport:` published, while the first line and
+   the whole value both aborted. That is an under-block on the member AC 3 was narrowed to, so it was
+   raised rather than documented, and the field limb now emits each continuation line as a sibling
+   record. Both limbs read a wrapped value line by line.
+
+   The closure is a **sibling record** and deliberately not a **joined value**. Joining the lines
+   would also catch the spanning run — the limit stated at the top of this residual — but it
+   lengthens the value fed to `conjunctive` and so widens the window residual 6 just narrowed;
+   landing both in one release would make neither measurable. Measured neutral in the shipped form:
+   with and without the continuation line, the over-block candidate, the carry-through and the clean
+   render all return the same verdict. The join is the follow-on, once residual 6's calibration has
+   settled.
 8. **The `[THIRD-PARTY]` member is not claimed as completely covered — a SCOPE DECISION, not a
    defect statement.** #123's AC 3 originally required this class to cover *"every `[THIRD-PARTY]`-
    marked value"*. At the Stage 9 re-gate the operator **narrowed AC 3 to the Passport member**, and
@@ -566,6 +733,76 @@ stated rather than claimed solved, and one that is a scope decision taken at the
    third-party entry shape structural is what resolves (b). Neither is reachable from inside
    `nonpublishable_values`. Read residual 2 and the enum-exclusion note above as the two measured
    instances of this one residual.
+9. **A FULLY SILENT mark strip publishes — an OPEN DEFECT, and the one this document previously
+   claimed was caught.** Two models differing only in whether the provenance marks survived, matched
+   against one render: marked → `rc=1`, fully stripped → `rc=0`, and the stripped model is
+   byte-identical in every observable to a model that genuinely has no third-party content. That is a
+   zero-population verdict reached on a branch an empty population also reaches, which is exactly the
+   shape ADR-019's Discriminating-Evidence Rule exists to eliminate.
+
+   **No parse improvement can reach it**, and that is a property of the class rather than of the
+   code: a `[THIRD-PARTY]` subject has no file anywhere by construction, so the model is the sole
+   source and a full strip leaves no residue in it. Closing it needs a **witness** from outside the
+   model.
+
+   **The two witnesses available today were built and measured, and both were rejected on evidence.**
+   Requiring an unbacked entry to carry a provenance mark rests on the enrichment contract admitting
+   an unbacked entry only through the operator fallback — but its **flagged-gap** branch writes an
+   entry with no file and no bracketed mark, so that premise is false as stated and the rule would
+   refuse every trip carrying a `PROFILE MISSING` entry. Exempting the gap marker does not rescue it:
+   measured against this guard's own suite at the release baseline, the rule still aborts thirteen of
+   its assertions, nine of them the must-publish controls that prove the guard is not an
+   always-abort — including the pair carrying this document's founding distinction, that a
+   parsed-and-empty class is a measurement and publishes. A witness drawn from the same source cannot
+   separate the two, because in that source they are the same file.
+
+   **The closure is a model-side census attestation** — the enrichment agent emitting the count of
+   third-party entries it wrote, which the guard compares against the records it enumerated. That is a
+   change to the agent contract and to the model schema, not to this predicate, and every existing
+   model would have to migrate. It is carried as the follow-on rather than attempted here. The gap is
+   pinned by a suite arm that measures the publish and names its own inversion, so it cannot quietly
+   stop being true.
+
+   **What did close, and is not this residual:** the *orphaned* mark — a mark the parse resolves to no
+   record — is now refused **per mark** rather than per file, so it is no longer absolved by an
+   unrelated entry having parsed; and an enumerated zero whose own parse control fixture also reads
+   zero is refused as a broken probe. Both are fail-closed paths this residual does not cover.
+10. **An entry's structural scaffolding was in class, and one shape of it still is.** The entry
+   denylist takes what a line states, which is correct for a value line and wrong for the markdown
+   scaffolding the derived model writes an entry body in. Two bold sub-headings — the ordinary
+   English words `derived` and `desires` — became distinctive match keys, and a render carrying
+   either aborted the publish on this repository's own shipped worked example. It is a false
+   positive from class-source over-capture, never a leak: the matched record is a section name, not
+   third-party data.
+
+   `**Needs**` had always been excluded, but only by the accident that `needs` is a member of the
+   closed need-category enum; its two siblings had no such accident. The exclusion was vocabulary-
+   shaped where the thing being excluded is shape-shaped, so the fix is a shape: a line whose entire
+   content is one strong-emphasis span states a section name and is a non-member. It is deliberately
+   narrow — any text at all beside the span leaves the line in class.
+
+   **The stoplist remedy was measured and rejected**, rather than passed over. Adding the offending
+   token to the normalization vocabulary clears one word and leaves the other aborting: it fixes an
+   instance of the mechanism and not the mechanism, and it weakens the matcher for every value in the
+   class rather than for the lines that are not values.
+
+   **What remains open is one shape over.** A markdown **table header row** inside a marked entry is
+   still emitted as a class record, so the entry's column names are still keys. It takes all of them
+   in one render to abort, which is why no single ordinary word trips it, and it is pinned by a suite
+   arm rather than left in prose. Distinguishing a header row from a data row needs lookahead the
+   line-at-a-time parse does not have, so it is stated rather than guessed at.
+11. **A carry-through that drops the value's own connective vocabulary.** The conjunctive rule now
+   requires one of the value's non-distinctive tokens in the matched block, so a carry-through that
+   keeps both facts and discards the words joining them — a paraphrase of the validity predicate — is
+   not matched. This is a **narrowing of what the guard catches**, stated as its own residual rather
+   than folded into the paraphrase residual above, so the boundary stays measured rather than argued.
+   It is bounded by how much connective tissue the value carries: a value with none has nothing to
+   require, the condition is vacuously satisfied, and only the proportional window applies. Both
+   directions are asserted.
+
+   The trade is stated because it is a real loss. The alternative was leaving a fail-closed control
+   that refuses correct content forever — which this document argues three separate times is
+   fail-open in practice, because an unusable control gets worked around rather than satisfied.
 
 **This layer does not subsume the validator's audit.** Three layers hold this invariant and they are
 not interchangeable:
@@ -573,13 +810,13 @@ not interchangeable:
 | Layer | Surface | Artifact audited | When | Catches paraphrase? |
 |---|---|---|---|---|
 | 1 — agent judgement | `agents/06-validator.md` | the five § 9.1 publish-bound sources | at validation | yes, judged |
-| 2 — **this guard** | `verify_publishable_content` | the **published file**, both projections | at every publish | **no** |
+| 2 — **this guard** | `verify_publishable_content` | the **published file**, all three projections | at every publish | **no** |
 | 3 — structural (#278) | a declared field attribute | the build's field selection | by construction | n/a — prevented, not detected |
 
 The validator's dynamic-set clause — *"if the site build ever reads a new source, that source joins
 this audit set"* — governs the **sources**; this guard governs the **published file**. Shipping layer
 2 does not discharge layer 1, and a future reader should not conclude that it does — least of all for
-residuals 1 to 3 above, where layers 1 and 3 are the only cover.
+residuals 1 to 3 and 9 to 10 above, where layers 1 and 3 are the only cover.
 
 ## References
 
