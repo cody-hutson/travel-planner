@@ -40,6 +40,11 @@
 #        arm runs the command EXTRACTED from CLAUDE.md and unwrapped, never a command
 #        spelled here -- see the PIN5 constraint below, which binds this group as hard as
 #        it binds the fixtures.
+#   Two further groups assert properties of THIS FILE rather than of the contract, and each
+#   carries its full reasoning at the group rather than here: PF, that no verdict in this
+#   file is decided by a pipeline's exit status; and FZ, that no verdict arm in this file
+#   reaches PASS through a disjunction — the shape both of this suite's shipped
+#   unable-to-fail arms had.
 #
 # ── WHY CTL IS NOT OPTIONAL DECORATION ───────────────────────────────────────────
 # This contract ships in Wave 0, BEFORE any of the five command files exists. At that
@@ -337,6 +342,28 @@ has_finding() { grep -qE "^FINDING ($2) " <<<"$1"; }
 # not a pipeline.
 show()        { printf '%s\n' "$1" | grep -E "^FINDING ($2) " | sed 's/^/      /'; }
 
+# A directory's content-and-layout state, as a file count plus a digest of every file
+# under it. Group CTL snapshots the repository's OWN consumer directory with this before
+# it builds its first fixture and again after its last, so CTLe's "nothing was written
+# into the repository" half is a measured comparison rather than an assertion. An absent
+# directory is reported as a distinct state rather than as an empty one, because a write
+# that CREATES the directory must register as a change.
+#
+# This is a SECOND helper rather than a shared one, deliberately. Group EV carries its own
+# `ev_trips_state`, which is a dependency of an arm this pass is fenced from reworking;
+# folding the two together would edit that arm. The duplication is one function, and it is
+# recorded here so it reads as a choice rather than as an oversight.
+tree_state() {  # <dir> -> "<file-count> <digest>"
+  local n d
+  if [ ! -d "$1" ]; then
+    printf '0 absent'
+    return
+  fi
+  n="$(find "$1" -type f | wc -l | tr -d ' ')"
+  d="$(find "$1" -type f -exec cksum {} + | LC_ALL=C sort | cksum)"
+  printf '%s %s' "$n" "$d"
+}
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group PIN — the canonical literals, read from CLAUDE.md. The guard holds no copy.
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -494,8 +521,8 @@ fi
 #   dm D1 (max computation)    dd D1 (field-index read)    dc D1 (CREATE)
 #   cs code-span depth cells, MUST NOT FIRE      cx D2 (code-span specificity)
 #   hs H2 (code-span HEADER depth — fires, while the same rendering in the CELL passes)
-# and CTL-e is graded LAST, so its "the repo was never written to" claim covers every
-# fixture above it rather than a prefix of them.
+# and CTL-e is graded LAST, so the before/after comparison it makes covers every fixture
+# above it rather than a prefix of them.
 #
 # THE COUNT OF ARMS IS DELIBERATELY NOT RESTATED ANYWHERE ELSE. The keys above are the
 # inventory; a number copied into a second file is a copy with no assertion behind it,
@@ -508,6 +535,16 @@ echo "── Group CTL — control case: the checker shown PASSING on a correct 
 if [ "$PIN_OK" -ne 1 ]; then
   FAIL "CTL0: the canonical could not be extracted, so no fixture can be built from it — the control case did not run, which is a failure and not a pass"
 else
+  # Every directory mk_tree is asked to build into is RECORDED here, at the point of
+  # construction, and CTLe grades the recorded paths. A glob of what happens to exist
+  # under the temp dir could not see a fixture built somewhere ELSE, which is the one
+  # thing that arm needs to detect — so the list is built from the arguments actually
+  # passed rather than discovered afterwards.
+  CTL_FIXTURE_DIRS=""
+  # The repository's own consumer directory, snapshotted BEFORE the first fixture is
+  # built. CTLe compares it against the same measurement taken after the last one.
+  CTL_CMD_BEFORE="$(tree_state "$CMD_DIR")"
+
   # Fixtures are BUILT from the extracted canonical, never sed-patched and never
   # literal: a literal here would be the very second source PIN5 forbids.
   mk_consumer() {  # <dir> <basename> <depth> <role> <variant>
@@ -614,6 +651,8 @@ else
   # one, and it has no reason to.
   mk_tree() {  # <dir> <variant>
     local d="$1" v="$2"
+    CTL_FIXTURE_DIRS="$CTL_FIXTURE_DIRS$d
+"
     mkdir -p "$d"
     # Three variants must land on the G2/CREATE consumer rather than on `trip`.
     # `overprefix` because at depth G8 the required prefix is already the WHOLE list, so
@@ -1017,12 +1056,67 @@ else
     FAIL "CTLhs3: D2 fired on a table whose depth cells are code spans, so the two surfaces no longer differ in the direction the contract states: $(printf '%s' "$HS_OUT" | head -2 | tr '\n' ' ')"
   fi
 
-  # ── CTL-e: the repo was never mutated. A control that writes into the tree it is
-  # meant to be measuring is not a control. Graded LAST, after every fixture above.
-  if [ ! -e "$ROOT/.claude/commands/trip-decommission.md" ] || [ "$RP_POP" -gt 0 ]; then
-    PASS "CTLe: the control case built its five-file population in a temp dir; the repository tree was never written to"
+  # ── CTL-e: where this group built, and what it left behind — stated as things it can
+  # measure. A control that writes into the tree it is meant to be measuring is not a
+  # control. Graded LAST, after every fixture above.
+  #
+  # ── WHY THIS ARM WAS REWRITTEN, KEPT HERE SO IT IS NOT REINTRODUCED ──────────────
+  # It previously read:
+  #     if [ ! -e "$ROOT/.claude/commands/trip-decommission.md" ] OR [ "$RP_POP" -gt 0 ]
+  # RP_POP counts the *.md files in the very directory the existence test probes. On any
+  # tree whose consumer population is non-empty — which is every tree from Wave 1 onwards
+  # — the second disjunct is true, so the arm PASSed whatever the first one said. Truth
+  # table, executed rather than read: healthy tree PASS; the commands directory moved
+  # aside entirely PASS; and a fixture genuinely written into the commands directory
+  # PASS — the exact state its own failure text named. A check indistinguishable from one
+  # that CANNOT fire is the defect this file's own banner says it exists to prevent, and
+  # this was its SECOND instance here. Group FZ at the foot of this file is what makes a
+  # third one a red check rather than something a reader has to notice by eye.
+  #
+  # The message overclaimed in the same way the old EVrepo one did: "the repository tree
+  # was never written to" was asserted over the whole tree while nothing was watched at
+  # all. Three observable things are asserted instead, and the message says only those:
+  #   1. this group actually built fixtures, so the path check below has a population;
+  #   2. every directory it built into lies under the temp dir, and the temp dir is not
+  #      inside the repository — so "under WORK" really does imply "away from ROOT"; and
+  #   3. the repository's own .claude/commands/ tree is byte-unchanged across the group,
+  #      which is the write half, measured.
+  # A READ is not claimed. A read leaves nothing behind for any predicate here to observe,
+  # so claiming one did not happen would be the same overclaim in new words.
+  #
+  # ── WHY AN EMPTY WATCHED SURFACE IS NOT GRADED BROKEN HERE, UNLIKE EVrepo ────────
+  # EVrepo fails when the tree it watches held 0 files at snapshot time, because trips/
+  # carries a tracked file and a zero there means something is wrong. This surface is
+  # different: at Wave 0 the consumer directory is legitimately empty, which is exactly
+  # why RP renders VACUOUS rather than FAIL for it. And an empty surface does not blind
+  # this comparison — tree_state reports "absent" and a count, so a write that creates the
+  # directory, or adds the first file to it, changes the state string either way. The
+  # count is carried into the message so a reader sees what was watched.
+  CTL_CMD_AFTER="$(tree_state "$CMD_DIR")"
+  CTL_CMD_N="${CTL_CMD_BEFORE%% *}"
+  CTL_FIXTURE_N=0; CTL_FIXTURE_STRAY=""
+  while IFS= read -r ctl_dir || [ -n "$ctl_dir" ]; do
+    [ -n "$ctl_dir" ] || continue
+    CTL_FIXTURE_N=$((CTL_FIXTURE_N+1))
+    case "$ctl_dir" in
+      "$WORK"/*) ;;
+      *) CTL_FIXTURE_STRAY="$CTL_FIXTURE_STRAY$ctl_dir " ;;
+    esac
+  done <<<"$CTL_FIXTURE_DIRS"
+  CTL_WORK_SANE=1
+  case "$WORK" in
+    "$ROOT"|"$ROOT"/*) CTL_WORK_SANE=0 ;;
+  esac
+  if [ "$CTL_FIXTURE_N" -eq 0 ]; then
+    FAIL "CTLe: no fixture tree was recorded as built by this group, so the path check below would iterate an empty list and its silence would prove nothing — either the fixtures were not constructed or they were constructed by some route that does not record itself"
+  elif [ "$CTL_WORK_SANE" -ne 1 ]; then
+    FAIL "CTLe: the temp dir ($WORK) lies inside the repository ($ROOT), so 'this fixture is under the temp dir' would not imply 'this fixture is away from the repository' and the path check below could not say what it claims"
+  elif [ -n "$CTL_FIXTURE_STRAY" ]; then
+    FAIL "CTLe: a fixture tree this group built does not lie under the temp dir ($WORK) — $CTL_FIXTURE_STRAY— so this group cannot say it kept its fixtures out of the repository"
+  elif [ "$CTL_CMD_AFTER" != "$CTL_CMD_BEFORE" ]; then
+    FAIL "CTLe: the repository's own .claude/commands/ tree changed across this group (was '$CTL_CMD_BEFORE', now '$CTL_CMD_AFTER') — a fixture was written into the tree this suite is measuring"
   else
-    FAIL "CTLe: a fixture appears to have been written into the repository tree"
+    PASS "CTLe: all $CTL_FIXTURE_N fixture tree(s) this group built lie under the temp dir ($WORK), which is not inside the repository, and the repository's own .claude/commands/ tree — $CTL_CMD_N file(s), digested before the first fixture was built and again after the last — is byte-unchanged. No fixture was written into the tree this suite measures; a READ is not claimed, because a read leaves nothing here could observe"
   fi
 fi
 
@@ -1325,6 +1419,251 @@ else
   else
     FAIL "PF1: ${PF_BAD} verdict site(s) in this file pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
   fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group FZ — every verdict arm in this file must be able to FAIL.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# This suite's own banner says an unexercised check is indistinguishable from one that
+# CANNOT fire, and that leaving one inside the anti-drift guard would be that defect at
+# its own root. Two arms in this file were nevertheless shipped unable to fail — EVrepo
+# and CTLe — and both were found by a human reading predicates at Stage 7, not by a check.
+# Two instances of one defect in one file is a missing control, not two bugs. This group
+# is the control.
+#
+# ── THE RULE IT ENFORCES, AND WHY THAT RULE ──────────────────────────────────────
+# Reachability is not decidable in general, so this group does not claim to decide it. It
+# enforces a SHAPE, and the shape is the one both instances had:
+#
+#     a verdict guard that reaches PASS through a DISJUNCTION.
+#
+# Written `if A or B; then PASS ... else FAIL`, the failure branch requires `not A and
+# not B` — a CONJUNCTION the author never wrote down and therefore never checked. That is
+# where unsatisfiability hides. Both instances were exactly this, and in both the second
+# disjunct was implied by the first's negation:
+#   EVrepo  the canary existing implied its parent directory existed;
+#   CTLe    the consumer file existing implied the consumer population was non-zero.
+# The same disjunction reaching FAIL is the opposite case and is not flagged: `if A or B;
+# then FAIL` fires whenever either holds, which is the shape the corrected EVrepo uses.
+#
+# The shape is not merely suspicious, it is never NECESSARY here. Every arm written that
+# way can be written as a chain — one `elif` per condition, one message per branch — which
+# is strictly better for a second reason this file already argues elsewhere: a branch that
+# can fire for several reasons proves that something was wrong, not WHICH thing. And where
+# a disjunct exists to excuse an empty population, this suite already has a verdict for
+# that case and it is not PASS: it is VACUOUS. So the rule costs nothing it should keep.
+#
+# ── COVERAGE BOUNDARY — WHAT THIS GROUP DOES NOT GRADE ───────────────────────────
+# Stated plainly, because an overclaiming meta-arm is the same defect one level up.
+#   *  It decides a SHAPE, never reachability. A tautological guard — `[ "$n" -ge 0 ]`,
+#      or a comparison between two values the suite itself constructs to be equal —
+#      reaches PASS without a disjunction and is INVISIBLE here. This group would not
+#      have caught such an arm, and does not claim it would.
+#   *  It grades the guards whose taken branch BEGINS with a verdict — the first statement
+#      after `then`, on that line or on the next non-blank non-comment line. A verdict
+#      buried deeper inside a branch is counted as a non-verdict guard and is not graded.
+#      The counts are printed, so the ungraded remainder is visible rather than implied.
+#   *  The walk is line-oriented and does not track nesting, so it attributes a verdict to
+#      the guard it most recently completed. Both controls below run on synthetic sources
+#      of known shape precisely because the parser's own correctness cannot be assumed.
+#   *  Its scan set is THIS FILE, for the same reason group PF's is: this suite sources
+#      nothing, so its own source is the whole of what it can speak for. The sibling guard
+#      suites are not scanned and are not covered.
+#
+# ── THE CONTROLS ARE PERMANENT, NOT A ONE-TIME DEMONSTRATION ─────────────────────
+# FZ1 plants an arm carrying the banned shape and requires the detector to flag it; FZ2
+# plants the same arm rewritten as the conforming chain and requires silence over a
+# non-empty population. They are built and run on EVERY invocation, the way group CTL
+# rebuilds its fixtures, so a detector that stops detecting is caught by the next run
+# rather than by the next reader. FZ1 is graded FIRST: a zero from FZ3 whose sensitivity
+# arm did not fire is a broken probe, not a clean file.
+#
+# The operator token is assembled from two pieces, and the comments above spell it `or`
+# rather than literally, for the reason group PF assembles its own needle: a detector that
+# spells the shape it hunts would match itself.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group FZ — every verdict arm in this file must be able to FAIL."
+
+FZ_OR='|'"|"
+FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0
+
+# Resolve one located guard against the first statement of its taken branch. Split out so
+# the two call sites — the same-line form `if X; then PASS …` and the next-line form —
+# classify identically; `fz_rest` and `fz_guard` are the walker's cursor.
+fz_resolve() {
+  case "$fz_rest" in
+    *'PASS "'*)
+      FZ_ARMS=$((FZ_ARMS+1)); FZ_PASSARMS=$((FZ_PASSARMS+1))
+      case "$fz_guard" in
+        *"$FZ_OR"*) FZ_BAD=$((FZ_BAD+1)); FZ_BAD_AT="$FZ_BAD_AT$fz_gline " ;;
+      esac ;;
+    *'FAIL "'*)
+      FZ_ARMS=$((FZ_ARMS+1)); FZ_FAILARMS=$((FZ_FAILARMS+1)) ;;
+    *)
+      FZ_NONVERDICT=$((FZ_NONVERDICT+1)) ;;
+  esac
+}
+
+# Walk a shell source and grade every verdict guard it can locate. Sets the FZ_ globals.
+fz_scan() {  # <file>
+  local f="$1" line t pend=0 want=0
+  FZ_GUARDS=0; FZ_ARMS=0; FZ_PASSARMS=0; FZ_FAILARMS=0; FZ_NONVERDICT=0; FZ_UNRESOLVED=0
+  FZ_BAD=0; FZ_BAD_AT=""; FZ_LINES=0
+  fz_guard=""; fz_gline=0; fz_rest=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    FZ_LINES=$((FZ_LINES+1))
+    t="${line#"${line%%[![:space:]]*}"}"
+    case "$t" in ''|'#'*) continue ;; esac
+    if [ "$pend" -eq 1 ]; then
+      # A continuation of a multi-line guard. Accumulated so a disjunction written on a
+      # later line is seen; a guard is a single logical expression however it is wrapped.
+      fz_guard="$fz_guard $t"
+      case "$t" in
+        *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+        *) continue ;;
+      esac
+    else
+      case "$t" in
+        'if '*|'elif '*|'if	'*|'elif	'*)
+          # A guard opening while the previous one is still waiting for its branch means
+          # that previous branch did not begin with a verdict. Counted, not dropped, so
+          # guards = arms + non-verdict + unresolved is an identity a reader can check.
+          [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+          want=0
+          fz_guard="$t"; fz_gline="$FZ_LINES"
+          case "$t" in
+            *' then'*|*';then'*) pend=0; FZ_GUARDS=$((FZ_GUARDS+1)); fz_rest="${t#*then}"; want=1 ;;
+            *) pend=1; continue ;;
+          esac ;;
+        *)
+          if [ "$want" -eq 1 ]; then
+            fz_rest="$t"; want=0
+            case "$t" in 'else'*|'fi'*) FZ_NONVERDICT=$((FZ_NONVERDICT+1)); continue ;; esac
+            fz_resolve
+          fi
+          continue ;;
+      esac
+    fi
+    # A guard completed on this line. When anything follows `then` on the same line, the
+    # branch body is there and the arm resolves from it; otherwise the next non-blank,
+    # non-comment line is the branch's first statement.
+    fz_rest="${fz_rest#"${fz_rest%%[![:space:]]*}"}"
+    if [ -n "$fz_rest" ]; then want=0; fz_resolve; fi
+  done < "$f"
+  [ "$want" -eq 1 ] && FZ_UNRESOLVED=$((FZ_UNRESOLVED+1))
+  return 0
+}
+
+# The two synthetic sources. Both are written by the SAME emitter differing in one
+# argument, so the pair differs in the guard's shape and in nothing else — the property
+# that makes FZ2's silence a statement about the shape rather than about the file.
+#
+# ── THE PLANT SPELLS THE OPERATOR LITERALLY, AND THAT IS LOAD-BEARING ────────────
+# It was first written using $FZ_OR, the detector's own needle. That version was probed by
+# neutering the needle to a string that matches nothing real — and FZ1 stayed GREEN, because
+# the plant had been rebuilt out of the same neutered token and the pair still agreed. A
+# control assembled from the thing it validates cannot detect that thing drifting; it is the
+# self-referential validation this platform's review discipline names by that word. So the
+# specimen is written out in full here, independently of the needle, and the needle stays
+# assembled for the reason group PF assembles its own. The literal is safe on this line
+# because the walker examines only lines that OPEN a guard, and this one opens a printf.
+fz_plant() {  # <path> <banned|conforming>
+  local p="$1"
+  mkdir -p "${p%/*}"
+  {
+    printf '%s\n' '#!/usr/bin/env bash'
+    printf '%s\n' 'p="$1"; n="$2"'
+    if [ "$2" = banned ]; then
+      printf '%s\n' 'if [ ! -e "$p/canary" ] || [ "$n" -gt 0 ]; then'
+      printf '%s\n' '  PASS "PLANT: nothing was written"'
+      printf '%s\n' 'else'
+      printf '%s\n' '  FAIL "PLANT: something was written"'
+      printf '%s\n' 'fi'
+    else
+      # The same arm as a chain: one condition per branch, one message per branch.
+      printf '%s\n' 'if [ ! -e "$p/canary" ]; then'
+      printf '%s\n' '  FAIL "PLANT: the canary is absent"'
+      printf '%s\n' 'elif [ "$n" -eq 0 ]; then'
+      printf '%s\n' '  FAIL "PLANT: the watched surface was empty"'
+      printf '%s\n' 'else'
+      printf '%s\n' '  PASS "PLANT: measured"'
+      printf '%s\n' 'fi'
+      # And a plain CONJUNCTIVE guard that reaches PASS. This one carries the whole weight
+      # of FZ2: the chain above reaches PASS only through an `else`, which has no guard for
+      # a needle to over-match, so a detector widened until it flagged every test in sight
+      # would have left the chain untouched and FZ2 would have passed while the detector
+      # was useless — measured, and it did exactly that before this arm was added. A
+      # conforming PASS-reaching guard is the only specimen an over-match can be seen on.
+      printf '%s\n' 'if [ -e "$p/canary" ] && [ "$n" -gt 0 ]; then'
+      printf '%s\n' '  PASS "PLANT: the surface was watched and is unchanged"'
+      printf '%s\n' 'else'
+      printf '%s\n' '  FAIL "PLANT: the surface changed"'
+      printf '%s\n' 'fi'
+    fi
+  } > "$p"
+}
+
+FZ_BANNED="$WORK/fz/banned.sh"
+FZ_CLEAN="$WORK/fz/conforming.sh"
+fz_plant "$FZ_BANNED" banned
+fz_plant "$FZ_CLEAN" conforming
+
+# ── FZ1 — SENSITIVITY, graded FIRST. A planted arm carrying the banned shape must be
+# flagged, and flagged at its own guard line. Without this, FZ3's zero is a probe that
+# never fired rather than a file that carries nothing.
+fz_scan "$FZ_BANNED"
+FZ1_BAD="$FZ_BAD"; FZ1_AT="$FZ_BAD_AT"; FZ1_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ1_BAD" -eq 1 ] && [ "$FZ1_PASSARMS" -eq 1 ]; then
+  PASS "FZ1: SENSITIVITY — a planted arm whose PASS is guarded by a disjunction is detected (1 finding, at line ${FZ1_AT% } of the plant), so the detector fires on the shape both shipped instances had"
+else
+  FAIL "FZ1: SENSITIVITY — the planted unfirable arm was NOT detected as expected (findings=$FZ1_BAD, PASS-reaching arms located=$FZ1_PASSARMS, expected 1 and 1). Every verdict below rests on this arm, so none of them is trustworthy"
+fi
+
+# ── FZ2 — SPECIFICITY. The conforming source must be silent, over a population the walker
+# actually located AND one that includes a PASS-reaching guard. A detector that flags
+# everything is as useless as one that flags nothing; the PASS-reaching arm is the only
+# specimen on which over-matching is observable, so its presence is asserted rather than
+# assumed — a zero measured over a population with nothing to over-match on is not a
+# specificity result.
+fz_scan "$FZ_CLEAN"
+FZ2_BAD="$FZ_BAD"; FZ2_ARMS="$FZ_ARMS"; FZ2_FAILARMS="$FZ_FAILARMS"; FZ2_PASSARMS="$FZ_PASSARMS"
+if [ "$FZ2_BAD" -eq 0 ] && [ "$FZ2_ARMS" -ge 3 ] && [ "$FZ2_FAILARMS" -ge 2 ] && [ "$FZ2_PASSARMS" -ge 1 ]; then
+  PASS "FZ2: SPECIFICITY — the conforming source is NOT flagged, over $FZ2_ARMS located verdict arm(s): $FZ2_FAILARMS reaching FAIL and $FZ2_PASSARMS reaching PASS through a conjunction, which is the specimen a widened detector would over-match. The detector discriminates the shape rather than rejecting every guard"
+else
+  FAIL "FZ2: SPECIFICITY — the conforming source was flagged, or the walker located too little of it to say (findings=$FZ2_BAD, arms=$FZ2_ARMS, FAIL-reaching=$FZ2_FAILARMS, PASS-reaching=$FZ2_PASSARMS; want 0 findings over >=3 arms with >=2 FAIL-reaching and >=1 PASS-reaching). The detector cannot tell the shapes apart, or there is nothing in the sample for an over-match to show on, and FZ3's verdict means nothing either way"
+fi
+
+# ── FZ3 — THIS FILE. The claim, and its denominator with it.
+#
+# Graded in the order that makes the zero mean something, the same ordering PF1 uses. The
+# sensitivity result is READ here rather than merely reported above it: a clean verdict on
+# this file whose own control arm did not fire is a probe failure wearing a pass, and a
+# message that says "the sensitivity arm fired" while nothing checked whether it did would
+# be the overclaim this whole group exists to catch, one level up. FZ2 needs no such gate —
+# a detector that flags everything cannot produce a zero here to begin with.
+fz_scan "$SELF"
+FZ_WC="$(wc -l < "$SELF" | tr -d ' ')"
+if [ "$FZ1_BAD" -ne 1 ]; then
+  FAIL "FZ3: the sensitivity arm did not fire on the plant (FZ1 above), so whatever this scan found or did not find in this file is untrustworthy — a zero from a detector never shown to detect anything is a broken probe, not a clean result"
+elif [ "$FZ_ARMS" -eq 0 ]; then
+  FAIL "FZ3: the walker located 0 verdict arms in this file, so its zero on the banned shape is an empty scan and not a clean result — the file's shape or this walker has moved"
+elif [ "$FZ_BAD" -eq 0 ]; then
+  PASS "FZ3: $FZ_GUARDS guard(s) in this file — $FZ_ARMS located verdict arm(s) ($FZ_PASSARMS reaching PASS, $FZ_FAILARMS reaching FAIL), $FZ_NONVERDICT non-verdict, $FZ_UNRESOLVED unresolved — and 0 of the $FZ_PASSARMS PASS-reaching guards is a disjunction. The sensitivity arm fired on the plant, so this zero is a measurement. It grades a shape, not reachability: see this group's coverage boundary for what it cannot see"
+else
+  FAIL "FZ3: $FZ_BAD verdict arm(s) in this file reach PASS through a disjunction, at line(s) ${FZ_BAD_AT% }. The failure branch then needs every disjunct false at once — a conjunction nobody wrote down — which is how both previously shipped arms became unable to fail. Rewrite as a chain: one condition per branch, one message per branch"
+fi
+
+# ── FZ4 — the walk covered the file, measured by a differently-shaped counter. A state
+# machine that stopped early would report a small, clean population and look identical to
+# a clean file. `wc -l` counts newlines, so the walker's count is that or one more when a
+# final line carries no newline; anything outside that window means the walk was partial.
+if [ "$FZ_LINES" -ge "$FZ_WC" ] && [ "$FZ_LINES" -le "$((FZ_WC+1))" ] && [ "$FZ_WC" -gt 0 ]; then
+  PASS "FZ4: the walker read $FZ_LINES line(s) of this file against $FZ_WC counted independently — the scan covered the whole source, so FZ3's population is the file's and not a prefix of it"
+else
+  FAIL "FZ4: the walker read $FZ_LINES line(s) of this file while an independent count reads $FZ_WC — the walk did not cover the source, so FZ3 graded a prefix and its verdict does not describe this file"
 fi
 
 echo
