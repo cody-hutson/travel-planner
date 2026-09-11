@@ -1,0 +1,89 @@
+name: Command sync
+
+# Runs scripts/test-command-sync.sh on every push and every pull request, so the script
+# that copies the trip commands to a user-scope commands directory is machine-graded
+# rather than trusted.
+#
+# SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
+# particular in no run: step — every value below is a repo-static literal. The property is
+# stated without writing the token itself, so it stays mechanically checkable: a scan for
+# the interpolation syntax over this file must return exactly zero. There is no path for
+# attacker-controlled event data (issue titles, PR bodies, commit messages, head_ref) to
+# reach a shell.
+#
+# ── WHY A SEPARATE WORKFLOW RATHER THAN A STEP IN AN EXISTING JOB ────────────────
+# The same three concrete reasons the sibling workflows already record:
+#
+#   1. SHARED FATE. test-publish-guard.sh sources publish-trip-site.sh. A sync suite added
+#      to that job would inherit a failure mode with nothing to do with the sync path.
+#   2. FAILURE ATTRIBUTION. This suite goes red when a contributor changes how the
+#      commands are copied or what a copy's state is reported as. Routing that contributor
+#      to a check named after the publish path or the contract is a legibility trap.
+#   3. INHERITED ENV. publish-guard.yml declares its own two expected skips. A step added
+#      to that job would inherit them. This suite declares NO expected skips, so it needs
+#      its own env block, below.
+#
+# ── THE VACUITY DOOR THIS SUITE IS BUILT AROUND, AND WHY IT MATTERS HERE ─────────
+# The script's default destination is the user-scope commands directory. On a clean runner
+# that directory is empty or absent, so a suite that let the default stand would measure an
+# empty population: every assertion universally quantified over the empty set, vacuously
+# true, never skipped, silently green — worse than no check, because it reads as proof.
+# Every arm in this suite therefore drives the script through an INJECTED --root and
+# --dest into a fixture tree built under a temp dir on each invocation, so the population
+# is non-zero by construction on this very commit. That is also why --dest is a contract
+# requirement of the script rather than a convenience flag: without it the script would be
+# ungradable except against whatever machine happened to run it.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# IN SCOPE — the copy mechanics: which files are selected, what state each is reported in,
+# what --check writes (nothing, measured by digesting the whole destination tree before and
+# after), what --apply preserves and in which order, where the backup lands, and what a
+# second --apply does. The arm inventory is NOT restated here, deliberately: it lives in
+# the suite's own banner, and a count copied into this file would be a copy with no
+# assertion behind it — which is the failure mode the sibling workflows record having
+# already suffered.
+#
+# OUT OF SCOPE — deliberately, and by name:
+#   WHETHER A RUNTIME READS THE DESTINATION. This suite asserts that files arrive at a
+#   directory. That a command picker reads that directory is a property of the runtime, and
+#   a green here is not evidence of it.
+#
+#   THE CONTENT OF THE COMMAND FILES. Contract conformance belongs to the trip-resolution
+#   contract suite and taxonomy bijection to the command-taxonomy suite. Three guards,
+#   three invariants, no overlap.
+#
+#   A REAL USER'S COMMANDS DIRECTORY. Nothing here touches one, by construction, and the
+#   suite carries an arm asserting exactly that.
+#
+# ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
+# GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it is pure
+# bash with no Node, no gh and no network, so it has no dependency-gated group and
+# therefore no legitimate skip. An empty declaration here is the correct value, not an
+# omission.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  command-sync:
+    name: Command sync suite (test-command-sync.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # No Node setup step: this suite is pure bash and POSIX text processing. It needs no
+      # Node, no gh and no network, which is exactly why its expected-skip set is empty.
+      - name: Run the command-sync suite
+        env:
+          # A SKIP is a FAILURE unless its group is declared below.
+          GUARD_STRICT_SKIPS: '1'
+          # Empty by design — this suite has no dependency-gated group to declare.
+          GUARD_EXPECTED_SKIPS: ''
+        run: ./scripts/test-command-sync.sh
