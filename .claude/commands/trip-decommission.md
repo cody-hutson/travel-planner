@@ -61,8 +61,9 @@ typed confirmation.
 - **What an entry carries is a name, and for the script entries the path sits inside that name — so
   the spelling is load-bearing, and here is the residual.** All five denials, and the `unpublish`
   grant, spell the script **repo-relative**. This file addresses repo paths in its two pre-execution
-  blocks in the **absolute** form, through `${CLAUDE_PROJECT_DIR}` — so both spellings of a repo path
-  live in this file. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
+  blocks in the **absolute** form, through `${TRAVEL_PLANNER_ROOT:-${CLAUDE_PROJECT_DIR}}` — a
+  two-arm expansion that resolves to an absolute root on either arm — so both spellings of a repo
+  path live in this file. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
   names the binary, so the form does not matter there; for the script entries the path is part of
   what is named. **Whether the runtime's matching reaches a second spelling of the same path is not
   established anywhere in this repository, and nothing that reads these entries as declarations can
@@ -121,11 +122,11 @@ grant is present.**
 
 ## Trips in this repo
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+!`ls -1 "${TRAVEL_PLANNER_ROOT:-${CLAUDE_PROJECT_DIR}}/trips" 2>&1`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${TRAVEL_PLANNER_ROOT:-${CLAUDE_PROJECT_DIR}}/trips"/*/trip-context.md 2>&1`
 
 ## Contract header
 

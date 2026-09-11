@@ -62,7 +62,7 @@ and **disagree, say so and ask which was meant.** Do not pick one.
 
 ## Existing trips
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+!`ls -1 "${TRAVEL_PLANNER_ROOT:-${CLAUDE_PROJECT_DIR}}/trips" 2>&1`
 
 ```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip

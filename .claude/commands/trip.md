@@ -16,11 +16,11 @@ the request to decide one.
 
 ## Trips in this repo
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+!`ls -1 "${TRAVEL_PLANNER_ROOT:-${CLAUDE_PROJECT_DIR}}/trips" 2>&1`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${TRAVEL_PLANNER_ROOT:-${CLAUDE_PROJECT_DIR}}/trips"/*/trip-context.md 2>&1`
 
 ## Contract header
 
