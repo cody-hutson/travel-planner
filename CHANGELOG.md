@@ -3,6 +3,263 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.29.0] — 2026-09-10 — Groups and trip history
+
+Two capabilities land together and turn out to be one idea seen from two sides: **a person's durable
+record can be referenced by more things without holding more things.** A group is a set of references
+pointing at people; a trip history is the set of references pointing at a person from the trips. In
+neither case does the record at the centre gain a field, a file or an index. Both were designed
+against the same shipped sentence — the list in `people/README.md` of what the durable form has no
+slot for — and neither reopened it. The milestone's head decisions are recorded in `ADR-016` and
+`ADR-017` rather than in a single document, each landing before its feature slice and each stating in
+terms what it does not decide; the accepted cost of that split is that a reader wanting the whole
+design reads both.
+
+**A named set of people is now something you hold once rather than assemble on every trip.** The
+person library removed per-*person* re-entry; it did not touch per-*group* re-entry, so the same four
+people travelling together for the third time were still four separate link operations every time.
+A group record fixes that, and it is deliberately the thinnest artifact in the engine: a display name
+on the title line, a list of person ids under `## Members`, and nothing else. Under that heading
+there are bullets and blank lines and nothing else — not a sentence, not a note, not a sub-heading.
+That shape is not minimalism for its own sake. A record that says *why* a group exists becomes a
+record about the people in it the moment it says anything specific, so the absence of a free-text
+slot is the privacy property rather than a stylistic preference. **The cost is stated rather than
+hidden: there is nowhere to write a note about a group.** The name is where that meaning goes —
+`# Tahoe regulars — 2024 crew` is a name, and it is the whole of what a record says about itself.
+
+**A member entry is a bare id, and the edge runs one way only.** No display name sits beside the id,
+because a name there would be a second home for the person record's own title line and would go stale
+the instant somebody is renamed — names are looked up at render time from each person's own record
+instead. And nothing on the *person* side records which groups they are in. That direction was forced
+rather than chosen: a back-reference is *group or party composition*, the first entry of the durable
+form's no-slot list, and it would outlive deletion of the group it names. One consequence falls out
+free — a person may be in any number of groups, because N group records each carry the id and the
+person record records no multiplicity at all. Reading which groups someone belongs to means looking
+through the group store, which is what `/trip-record group-list` does.
+
+**Expanding a group onto a trip is a point-in-time act, not a live binding, and that is the whole of
+the design.** The expansion puts every member on the trip, each linked to their own record exactly as
+a hand-made link would do it — and writes **zero bytes naming the group id** into any trip artifact.
+Not `trip-context.md`, not the traveller file, not the derived model, not the trip log. So editing
+the group later leaves an already-expanded trip byte-identical; there is nothing pointing at the
+group to go stale, and nothing to re-sync. A reader will look for a re-sync command and not find one:
+its absence is the criterion, not a gap in the build. What the expansion actually copies is the
+member's display name, into the places the shipped path already puts it — the roster row and the
+traveller filename — and everything durable, passport and needs and preferences and travel style
+alike, stays referenced rather than copied. The consequence
+survey that a single link runs is **not** suppressed for the bulk case: it runs once per member
+writing nothing, and a member whose link would change something is **named by field label, never by
+value**, and left out, with the per-member command given as the way to handle them. Echoing a value
+into a transcript would be a new copy of personal data in a place erasure cannot reach.
+
+**One property of that absence is load-bearing well beyond groups, and it is what the second half of
+the release stands on.** Because expansion writes the same reference field, with the same value, in
+the same position as a hand-made link, a group-expanded traveller file is byte-identical to a
+hand-linked one. Anything deriving a person's history by inverting that field therefore needs no
+group-awareness whatsoever. The property holds by construction — and **nothing tests it**, which is
+recorded in both decision records and again below rather than left for a later reader to rediscover.
+
+**Erasure reaches the new store, and it stops at the title line on purpose.** A group record holds
+person ids, so it is a location the erase verb must walk: one new reach row, scoped to the member
+bullets, removing the subject's bullet and any bullet naming a stub that redirects to it. No
+tombstone is written there, and the reason is the tombstone's own: the per-trip token exists to
+destroy correlation, and writing one into a cross-trip store would create the stable cross-trip
+pseudonym it was minted to prevent. Removal is safe because a member set is variable-length by
+construction and a shorter one is still valid. Where removal empties a group or leaves it with a
+single member, the group is **reported, never deleted for you**.
+
+**And what the sweep does not reach is now disclosed on both sides rather than discovered.** A
+group's *name* is free text, and a sweep that rewrote free text would take the name with it — so a
+group called `# Priya's crew` goes on saying so after Priya has been erased. The group store's own
+README states it, and the person store's survivor list moved from three to **four** to match. The
+fourth is given its own paragraph because it survives for a different reason than the other three:
+those are outside the operation entirely — a trip it cannot find, a copy that is not on your machine,
+an answer belonging to the trip it came from — whereas this one is a place erasure *does* reach and
+deliberately stops short inside. Clearing it is a thing you do.
+
+**The other half of the release answers a question from what the trips already say, and stores
+nothing at all.** `/trip-record history` resolves a person's prior trips by inverting the reference
+each trip carries, presents them as candidates, and writes nothing anywhere. The person record gains
+no field, the store gains no file and no index, and no result is persisted. Four properties follow
+and each is checkable rather than asserted: an erasure that removes the references *is* the deletion
+of the history, because the references were all it ever was; a merge does not split someone's history,
+because the closure follows a redirect at exactly one hop and a stub of a stub is reported as
+malformed rather than followed; a party member admitted through the operator fallback has no
+reference-bearing file, so no edge and no history, which preserves the consent boundary without a
+rule being written for it; and the set is *trips that currently carry the edge*, which is not the same
+thing as everywhere a person has been.
+
+**The premise was corrected at the planning gate, and the correction is the part worth recording.**
+The criterion as written said a person record could carry the trips that person had taken. Shipped
+corpus said it could not — the durable form's no-slot list already named trip history, and the schema
+already gave the mechanism, which is that anything trip- or destination-scoped has no slot in a
+cross-trip form. So the premise was re-scoped rather than the exclusion widened: **trip history is
+resolvable for a person and never stored on the person.** The capability survived intact; the
+mechanism it named did not. The two alternatives were each refused on their own prior record — a
+back-reference list on the person record is a shape this engine already rejected once, and a cached
+index fails the way every cache here fails, silently, returning a plausible and wrong non-empty set.
+Resolving on demand is the exact complement of the back-reference: the same information carried with
+nothing left behind, so the grounds for refusing the stored form are not mitigated but structurally
+absent.
+
+**The engine will not tell you which prior trip is the same destination, and that is deliberate.**
+There is no Destination entity in this model and therefore no destination key. The two available
+proxies are a free-prose field and a directory-naming convention, and matching on either is a
+name-similarity join over a mutable display string — the mechanism this engine already refuses by
+name for finding people, and worse here because there is no surrogate to fall back on. So resolution
+produces candidates and stops: each is shown as its trip slug and that trip's own destination string,
+and a human says which of them count. The robustness argument is worth stating plainly. Under any
+automatic-match design, a partial or ambiguous match is an exception branch, and an exception branch
+is where a wrong rule hides. Here partial and ambiguous matching is the **general case** — every
+candidate is presented and every match is confirmed — so there is no threshold anybody has to defend.
+
+**Where a field is unanswered, the resolution offers a value; it never writes one, and it refuses the
+two values a count cannot ground.** One confirmed prior trip offers `once`, two or more offers
+`a few times`, and `know it well` is never offered at all, because that is a familiarity claim and a
+visit count is not one — somebody may go five times on business and not know a place. `never` is
+never offered either, for the reason the whole terminal-state design exists. Where the field is
+already answered, nothing is offered: an offer over an answered value is the first step of the
+normalisation the carry-through rule forbids. **And no engine path writes either field.** That is a
+requirement derived from how the answer is consumed rather than a preference — the depth signal is
+read as a party-level aggregate, and a traveller who has not answered abstains from it, so a written
+value is indistinguishable from the traveller's own and moves the distribution the plan is built
+from. A value that changes the plan is not advisory, whatever its own field says.
+
+**The verb terminates in exactly one of four states, and none of them ever reads as *has not been
+here*.** A completed scan that found no edge, a traveller referencing no durable record at all, an
+indeterminate read, and a resolution with matches are four different things reported four different
+ways, and the three absences behave identically: none yields a value and each leaves the field
+unknown. The fourth state was a terminal branch of the resolution before it was a row in its own
+table — the behaviour was authored correctly and the table said *three states*, so the enumeration
+was false while nothing about the code was. The specific risk that fixing it removes is a later
+reader with three tokens and a fourth branch folding it into *the scan completed and found nothing*,
+which asserts a completed scan where no scan ran — the absence-of-evidence failure the section exists
+to prevent, reproduced one level up. It is now asserted by a guard arm rather than by care.
+
+**Five new guard arms ship, and each one pins a claim the corpus previously made in prose alone.**
+The one worth telling is `UW`. A command file's opening region carried a universal — *every verb of
+this command writes* — that two of this release's verbs falsify. That sentence stood at two sites; an
+earlier commit in this same milestone had already converted one of them, and the survivor shipped
+false with every guard green, because it was the site nobody re-read. Repairing the survivor and
+leaving the next author the same silence is not a repair, so the conversion was made executable: the
+arm splits each command file into its two regions by that file's own rule, derives the read-only verb
+set from each verb's own declaration rather than from a list, and fails when a universal over the
+verb set stands beside a verb that contradicts it. The other four pin the membership boundary
+(`GM`), the outcome enumeration against the branch that reaches it (`DH4`), the roster-count
+reconciliation an expansion owes (`TD`), and the erasure reach read from both sides at once —
+bullets-only from the group's side (`ER19`) and a four-item survivor list from the person's side
+(`ER20`), pinned to one fact rather than to each other.
+
+### Added
+
+- **`groups/`, the second cross-trip store** — contents git-ignored behind a rooted pair, with a
+  tracked `groups/README.md` signpost. This is the fourth instance of an arrangement this repo
+  already ships three times, so feasibility is demonstrated rather than argued; the leading `/` is
+  load-bearing, catching the store at the repo root while leaving the tracked witness under
+  `examples/` in the index, and the ignore pair carries a comment saying so.
+- **`reference/schemas/group-record.md` and the `C23` class** — in-model, `publish: internal-hard`,
+  `writer: operator`, reusing the existing cross-trip sentinel rather than declaring a second. The
+  publish posture is the same one a person record takes and for the same reason: anonymisation does
+  not help, because in a small named party stripping the names does not strip the identification. A
+  group is the twelfth entity in the model.
+- **The `group-*` verbs** — `group-new`, `group-list`, `group-add`, `group-drop`, `group-delete` and
+  `group-expand`. Every one but the last needs no trip at all and declares so; only expansion
+  requires one.
+  `group-add` refuses an id that does not resolve and **never mints a person record**, which is a
+  different act with its own consent boundary. `group-delete` deliberately does **not** take the
+  typed-back confirmation that erasing a person takes: flattening the two would erode a distinction
+  worth keeping, since a deleted group is a set of references you can rebuild and an erased person is
+  not.
+- **`/trip-record history`** — the one read-only verb on a command surface where every other verb
+  writes. It reads across trips and is much the narrower of the two that do, opening no trip's
+  context file at all and taking each trip's destination and lifecycle from a record block that has
+  already run.
+- **`reference/adr/ADR-016-reusable-groups.md`** — the milestone's head decision gate: identity,
+  store home, membership direction, expansion semantics, erasure reach and the command surface,
+  each with the option it refused and the ground for refusing it. Group merge and group split are
+  declared **out of scope rather than deferred**, because silence there would read as coverage.
+- **`reference/adr/ADR-017-derived-trip-history.md`** — the sibling record: why history is a
+  resolution rather than a record, why the destination match is the operator's, why the suggestion is
+  never written, and the four terminal states. It carries the coupling between the two records,
+  recorded on the side that depends rather than the side depended on.
+- **`examples/people-library-demo/groups/grp-4a81.md`** — the tracked witness for the new class, and
+  the reason the ignore rule had to be rooted rather than widened.
+- **New guard arms** — `UW` and `TD` in the command-taxonomy suite, `GM`, `DH4` and the `ER19`/`ER20`
+  pair in the schema suite.
+
+### Changed
+
+- **A new standing rule admits the group-store writes, and a second admits erasure's reach into it.**
+  The command's standing clause forbids any write outside a trip's own directory until a rule admits
+  it, so the group verbs append one deriving their target and operation classes the way the existing
+  rules derive theirs, and erasure's sweep appends another rather than stretching either neighbour —
+  the person-store rules fail this write on their own terms, and saying which terms is what the new
+  rule is for.
+- **Three shipped sentences were narrowed rather than softened.** Erasure's claim to be the only
+  irreversible operation on its command surface, and two rules' claims about the one write that may
+  delete a record and the one verb that may create one, are each now scoped to the person store.
+  Erasure remains the only operation here that destroys personal data irrecoverably, which is the
+  property those sentences were protecting.
+- **The person store's README gained sections and lost none.** One states that a reusable group is
+  a separate store that does not put group composition back into a person record — the link runs one
+  way, and there is no line in the person store naming a group. The other states that trip history is
+  resolvable without being stored, and that the same one-way direction is what keeps the exclusion
+  true rather than merely still true.
+- **The class enumeration was renumbered rather than appended past.** Taking the next contiguous
+  ordinal cost a short run of mechanical citation edits and keeps the in-model / out-of-model
+  partition readable as a range; appending past the closed set would have left a permanent scar that every
+  future class widens. A prior record of an earlier renumber was **preserved rather than edited** —
+  it records a past act, not a claim about the present numbering.
+- **The trip intake form now points at the history verb** where a traveller is already linked to a
+  durable record, and says in the same breath that it is an offer and not an answer: ask them anyway,
+  record what they say, and leave the field unanswered where they would rather not say.
+- **The incumbent trip-roster `group` verb was not renamed.** The verb selector specifies exact
+  string equality, so `group` and `group-new` are disjoint tokens with no collision risk, and a
+  rename would have been a four-surface cascade performed to make room for a newcomer that does not
+  need it.
+
+### Known gaps, carried rather than hidden
+
+- **The guard arm this design owed for its own criterion never shipped.** The solutioning output
+  promised a taxonomy arm asserting that no `group-*` verb declares the person store as a write or
+  delete target. Measured across every guard suite in the repository: **zero** such arms, against
+  controls of 433 and 49 that both fired. The criterion itself is met — deleting a group was driven
+  and measured, and it
+  left the person store and the trip unchanged — but its negative is prose-only, one release after
+  its twin was mechanised. It is a residual, not an acceptance failure, and it is the one item where
+  the shipped build is measurably short of what its own design promised.
+- **The candidate render omits a prior trip's travel window, and that was decided rather than
+  forgotten.** It was carried as an open question and closed on two grounds that agree: the
+  destination string and the lifecycle already arrive by value in a block the command file runs
+  anyway, so both are free, whereas a travel window would cost opening every candidate trip's context
+  file and widen the resolution's read scope from frontmatter-only to a per-trip body read for a
+  convenience — and the trip slug already carries the year, which is the temporal cue the window was
+  wanted for. The narrower render is also the one that keeps the transcript residual smallest.
+- **A group's name is outside erasure's reach.** Now disclosed on both sides rather than closed. The
+  name has to be free text for a group to have a usable one; a sweep that rewrote free text would
+  take the name with it.
+- **The byte-identity property the second slice rests on is ungraded.** A group-expanded traveller
+  edge is byte-identical to a hand-linked one, and a criterion covering it was offered and declined,
+  so it holds by construction and nothing tests it. If the two ever diverge, a person's history
+  under-reports for every group-assembled trip, silently. An ungraded structural property holds until
+  something changes it and nothing notices; that is the accepted residual and this is its fourth
+  written home.
+- **Every arm the history slice ships is structural.** They grade what the corpus *says*, never what
+  a resolution *does* — whether a scan finds the right trips is not observable in a tree of prompt
+  files, and nothing here pretends otherwise.
+- **A partial expansion is reported and never rolled back.** A rollback would itself be writes, and
+  the state is recoverable because unlinking is the cheap inverse. No criterion grades this.
+- **Relocating the group store stops being cheap the moment real records exist.** Revert does not
+  reach a git-ignored tree, so once operators hold group records a path change is a migration rather
+  than an edit. That is why the path was settled at the decision record, before the first group was
+  ever minted.
+- **The class-count literal in the validation script will break again.** It is pinned as a whole
+  literal including its count, so this release moved it and the next in-model class moves it again.
+  Making the extractor read the count rather than match it is a later card, and it is unowned.
+- **The amended four-state criterion lives in a comment, not in a corpus file.** The original text
+  above it still reads *three-valued*, so a reader working top-down meets the false version first.
+  The corpus itself is correct and now guarded; the ticket history is not.
+
 ## [0.28.0] — 2026-09-07 — Person data lifecycle
 
 A person's durable record was given two properties it did not have: a settled answer to who may hold
