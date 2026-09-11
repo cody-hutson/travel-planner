@@ -1340,6 +1340,7 @@ stakeholder impact, not a rollback.
 | The person record's **artifact-class ordinal** in § 1.1 | the schema-and-store slice, at its own commit |
 | The **within-trip Traveler collision** — the intake surface selected edit-over-create on a bare file-existence probe | **UNOWNED at ratification; CLOSED in this milestone.** The `profile` verb now runs § 3.2's key check ahead of the existence probe and halts on a collision. Restated here because the record ratified it as out of scope |
 | `trips/README.md`'s retention posture — *"No command deletes a trip folder"* — which the erasure verb falsifies | **UNOWNED in this milestone.** Named, not fixed |
+| The **reusable-group store** — a second cross-trip store holding sets of person ids, its identity scheme, its membership direction, and the erasure-reach row it adds | `reference/adr/ADR-016-reusable-groups.md`. It builds beside this record and reopens none of its decisions: the `person:` edge stays on the traveller file alone, the no-slot enumeration is untouched, and the membership edge runs group → person with no back-reference |
 
 ### Ratifier's notes — Context claims corrected without editing their record
 

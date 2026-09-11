@@ -1,6 +1,6 @@
-# People-Library Demo — the durable person record, and a trip that references it
+# People-Library Demo — the durable person record, a group that references two, and a trip that references one
 
-**Illustrative, sanitized example. Not a real person.** One placeholder person, no real
+**Illustrative, sanitized example. Not a real person.** Two placeholder people, no real
 personal detail, and — deliberately — no passport value of any kind.
 
 A minimal worked example for class **C22 `people/<person>.md`**, the durable person record.
@@ -11,6 +11,11 @@ It carries a second file for a second reason: [`travelers/noor.md`](travelers/no
 traveller file bearing `person: psn-3c7e`. That is the **composition witness** — the pair
 of files across which a composed read can actually be traced — and § *The composition
 witness* below says why it lands here rather than in a trip fixture.
+
+**It now carries a third class for a third reason.** [`groups/grp-4a81.md`](groups/grp-4a81.md)
+is the witness for **C23 `groups/<group>.md`**, the reusable-group record — a second
+cross-trip class whose real store is ignored in exactly the same way. § *The group witness*
+below says why it lands in this root rather than opening one of its own.
 
 ## Why this is a new fixture root rather than a file in an existing one
 
@@ -142,6 +147,45 @@ the record claims, so composition reports **nothing** for it. It is the clean ca
 purpose. A contested field, a redundant override, a dangling reference and a tombstone are
 each defined in § *Composition — the trip-side read of a durable record*, and none has a
 fixture here — stated so the absence reads as scope rather than as coverage.
+
+## The group witness
+
+[`groups/grp-4a81.md`](groups/grp-4a81.md) is a reusable group naming both records above as
+its members. It lands **in this root rather than in a new one**, and the reason is the
+opposite of the one that sent the person record out of a trip fixture: **a group's members
+have to resolve.** A group is a list of person ids and nothing else, so a fixture for it in
+any other root would either duplicate the two records it points at or name records the gate
+cannot reach — and a witness whose references dangle demonstrates the failure state rather
+than the class.
+
+The ignore rule carries `/groups/*` with `!/groups/README.md`, **rooted**, on the same
+arrangement and for the same reason as `/people/*` above: it catches the store at the repo
+root and does not reach `examples/*/groups/`, so a real group record can never be committed
+while this one can. Widening it to `groups/` or `**/groups/` would drop this file from the
+index and leave the schema's `witness:` line naming a file the selector never reaches. The
+invariant is asserted — see group `V` in
+[`../../scripts/test-publish-guard.sh`](../../scripts/test-publish-guard.sh).
+
+| Property | Where to look |
+|---|---|
+| **The cross-trip sentinel, reused rather than extended** | `trip: cross-trip` in the frontmatter — the same value C22 declares, so § 4.4's narrowing has two member classes and one value |
+| **`writer: operator`, not `human`** | the frontmatter — `human` is reserved for a class whose *subject* authors it, and nobody is the subject of a group record |
+| **`publish: internal-hard`** | the frontmatter — never rendered, in any form, including anonymized. A set of ids says these people travel together, which no anonymization removes |
+| **Identity in the filename, display name in the H1** | `grp-4a81.md` and `# Ski crew`. The id appears nowhere inside the file, because the H1 is the position the identity rule keys on |
+| **A member entry is a bare id** | `## Members` — two bullets, each `- psn-<token>` and nothing else. No name beside the id, no role, no note |
+| **The closed section set** | the body — one `##` heading and no second one. There is no description slot, and that is the enforcement of *a group holds no personal data of its own* |
+| **The membership edge is one-directional** | the two person records — **neither names this group**, and neither changed when it was added |
+
+**What it deliberately does not exercise.** No dangling member and no merge-stub member. Both
+are defined branches — a member id resolving to nothing renders `UNDETERMINED`, and one
+resolving through a stub is followed to depth 1 — and neither has a fixture here, because a
+tracked witness carrying a deliberately broken reference would be graded as the defect it
+imitates. Stated so the absence reads as scope rather than as coverage.
+
+**And the property it exists to hold is not one a check can see.** The two person records
+above are **byte-unchanged** by this file's arrival, which is the whole of the
+one-directional edge: adding a group touches nothing on the person side. A diff that changes
+either of them is a regression rather than an improvement.
 
 ## What no check reads
 

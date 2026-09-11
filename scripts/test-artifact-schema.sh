@@ -4004,6 +4004,125 @@ if [ "$ER_OK" -eq 1 ]; then
     FAIL "ER18: the bearer's post-state limbs read stem=$ER_ST_STEM old-path-removed=$ER_ST_OLD field-removed=$ER_ST_REM stem-restated=$ER_ST_DECL. A bearer that keeps its display-name stem converges this verb's post-state with the detach's — every composed value is byte-identical either way and nothing value-shaped detects it, so the build stays green while the detection is gone"
   fi
 
+  # ── ER19 — THE GROUP STORE'S REACH IS BULLETS-ONLY, AND THE README SAYS SO. Exactly one row
+  # of this table names `groups/`, and its Location cell scopes it to the `## Members` bullets.
+  # Nothing reaches a group record's `# <H1>` display name. That is correct — the name has to be
+  # free text for a group to have a usable one, and a sweep that rewrote free text would take the
+  # name with it — but it is a cost a reader has to be TOLD, because `groups/README.md`
+  # § *What a record does not hold* deliberately routes a group's only free text INTO its name
+  # ("The name is where that meaning goes"), and a name is exactly where a person's name lands in
+  # practice. Erase that person and the group goes on naming them.
+  #
+  # The behaviour is right; the DISCLOSURE is the half a later edit can take away in silence,
+  # because the reach table would read the same afterwards and nothing else in the corpus states
+  # it. This pins both halves so they move together: widen the group-store reach and the pins
+  # break, sending the author back to a disclosure that has become false rather than leaving it
+  # to be believed.
+  #
+  # THE MATCHER IS FLATTENED BEFORE IT MATCHES, and that is not a detail. The README is
+  # hard-wrapped, so a line-shaped probe over a multi-word phrase returns a confident zero
+  # whenever a wrap falls inside it — this milestone shipped two such zeros. Blockquote markers
+  # are stripped for the same reason. The control phrase below is chosen BECAUSE it spans a wrap
+  # in that section today: it can only match through the flattened stream, so a regression to a
+  # line-shaped matcher turns this arm red instead of quietly passing. A sensitivity arm proves
+  # the EXTRACTION; this one is what proves the MATCHER'S SHAPE, and they are not the same claim.
+  #
+  # RESIDUAL, named rather than implied: a widening written into row 30's DISPOSITION cell while
+  # its Location cell still reads `## Members` keeps both pins intact, and this arm would pass
+  # over a stale disclosure. That edit contradicts `reference/schemas/group-record.md`, which
+  # closes the section rather than widening reach, and group GM grades that closure — but this
+  # arm does not see it, and a reader should not think it does.
+  ER_GRP="$(printf '%s\n' "$ER_SEC" | awk '
+    /^\|[ \t]*\*\*[0-9]+\*\*[ \t]*\|/ {
+      split($0, c, "|")
+      if (index(c[3], "groups/") > 0) { g++; if (index(c[3], "## Members") > 0) s++ }
+      if (index(c[3], "outputs/") > 0) ctl++
+    }
+    END { printf "%d\t%d\t%d\n", g + 0, s + 0, ctl + 0 }')"
+  ER_GRP_N="$(printf '%s' "$ER_GRP" | cut -f1)"
+  ER_GRP_SCOPED="$(printf '%s' "$ER_GRP" | cut -f2)"
+  ER_GRP_CTL="$(printf '%s' "$ER_GRP" | cut -f3)"
+  ER_GDOC="$ROOT/groups/README.md"
+  ER_GHEAD="What a record does not hold"
+  ER_GSEC=""
+  [ -r "$ER_GDOC" ] && ER_GSEC="$(er_section "$ER_GDOC" "$ER_GHEAD")"
+  ER_GNSEC="$(printf '%s\n' "$ER_GSEC" | grep -c '[^[:space:]]' || true)"
+  ER_GFLAT="$(printf '%s\n' "$ER_GSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
+  ER_GDISC=0; ER_GWRAP=0
+  # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
+  # reports failure on a SUCCESSFUL match under pipefail.
+  grep -q "outside erasure's reach" <<<"$ER_GFLAT" && ER_GDISC=1
+  grep -q 'there is nowhere here to write a note about a group' <<<"$ER_GFLAT" && ER_GWRAP=1
+  if [ "$ER_GRP_CTL" -eq 0 ] || [ "$ER_GNSEC" -eq 0 ] || [ "$ER_GWRAP" -eq 0 ]; then
+    FAIL "ER19: an extraction or the matcher itself came back EMPTY — the Location-cell control (\`outputs/\`) matched $ER_GRP_CTL row(s), groups/README.md § *$ER_GHEAD* yielded $ER_GNSEC non-blank line(s), and the wrap-spanning control phrase matched=$ER_GWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. Not a skip and not a pass"
+  elif [ "$ER_GRP_N" -ne 1 ] || [ "$ER_GRP_SCOPED" -ne 1 ]; then
+    FAIL "ER19: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\` and $ER_GRP_SCOPED of them are scoped to \`## Members\` (expected 1 and 1, against a control of $ER_GRP_CTL). groups/README.md § *$ER_GHEAD* tells the reader that a group's \`# <H1>\` display name is outside this verb's reach, and that sentence is true only while the reach stops at the member bullets. Re-read the disclosure against the new reach in the SAME commit: a widened sweep leaves a reader being told a name survives that no longer does, and that is the failure direction nothing else here checks"
+  elif [ "$ER_GDISC" -eq 1 ]; then
+    PASS "ER19: the group-store reach is exactly ONE row scoped to \`## Members\` (control $ER_GRP_CTL row(s)), so a group record's \`# <H1>\` display name is unreached — and groups/README.md § *$ER_GHEAD* discloses it, matched over $ER_GNSEC extracted line(s) through the flattened stream the wrap-spanning control validated. That section routes a group's only free text into its name, which is where a person's name actually lands, so the cost is stated where the routing is and the two now move together"
+  else
+    FAIL "ER19: the group-store reach is bullets-only ($ER_GRP_N row scoped to \`## Members\`, control $ER_GRP_CTL row(s)) but groups/README.md § *$ER_GHEAD* no longer discloses it — $ER_GNSEC line(s) extracted, the flattening confirmed by the wrap-spanning control, and nothing in them states the name is outside erasure's reach. That section tells the reader the name is where a group's meaning goes; without this sentence it never tells them that erasing a person leaves a group still named after them, which reads as anonymised when it is not"
+  fi
+
+  # ── ER20 — THE PERSON-SIDE SURVIVOR LIST SAYS FOUR, AND THE FOURTH IS THE GROUP NAME.
+  # The same fact as ER19, read from the other side. `people/README.md` § *Deleting a person*
+  # introduces its survivor list as "said plainly rather than left for you to discover" — a
+  # promise to ENUMERATE what erasure cannot reach — and then states a cardinal. A group's
+  # display name is one of those survivors, and it is the one this milestone created: the
+  # reciprocal disclosure landed in `groups/README.md` while this side's cardinal stayed at
+  # three, so the section falsified its own promise inside the release that made the promise
+  # true. No reader caught it. A promise to enumerate is exactly the shape a check can hold.
+  #
+  # THE TWO SIDES ARE PINNED TO ONE FACT, NOT TO EACH OTHER. ER19 establishes the reach from
+  # the table above — exactly one row naming `groups/`, scoped to `## Members` — and grades
+  # the group-side disclosure against it. This arm re-reads that same measurement rather than
+  # assuming it, and grades the person-side count against it, so a widened reach turns BOTH
+  # arms red instead of leaving one side quietly describing behaviour that has changed. Two
+  # disclosures grading each other would agree just as happily while both were wrong.
+  #
+  # WHY THE CARDINAL IS A PINNED LITERAL rather than a tally taken from the prose. The four
+  # survivors are not uniformly marked — three are bold verbs inside one paragraph and the
+  # fourth is a paragraph of its own, because it survives for a different reason — so any
+  # structural count would be a heuristic over formatting, and a heuristic that miscounts is
+  # worse than no arm at all. The literal is a PIN on the `count-assertion-digest` model: a
+  # fifth survivor is a deliberate edit, and re-pinning this line in the same commit is the
+  # mechanism working rather than a cost it imposes.
+  #
+  # THE MATCHER IS FLATTENED, for the reason ER19 states and this milestone paid for four
+  # times: the README is hard-wrapped, so a line-shaped probe over a multi-word phrase
+  # returns a confident zero whenever a wrap falls inside it. The cardinal pin spans a wrap
+  # in the file today and can only match through the flattened stream — but that is a
+  # property of today's wrapping, not an assertion, so the wrap control below is a SEPARATE
+  # phrase in prose this card did not write. A sensitivity arm proves the EXTRACTION; the
+  # wrap control is what proves the MATCHER'S SHAPE, and they are not the same claim.
+  ER_PDOC="$ROOT/people/README.md"
+  ER_PHEAD="Deleting a person"
+  ER_PCTLH="Retention"
+  ER_PSEC=""; ER_PCSEC=""
+  if [ -r "$ER_PDOC" ]; then
+    ER_PSEC="$(er_section "$ER_PDOC" "$ER_PHEAD")"
+    ER_PCSEC="$(er_section "$ER_PDOC" "$ER_PCTLH")"
+  fi
+  ER_PNSEC="$(printf '%s\n' "$ER_PSEC" | grep -c '[^[:space:]]' || true)"
+  ER_PNCTL="$(printf '%s\n' "$ER_PCSEC" | grep -c '[^[:space:]]' || true)"
+  ER_PFLAT="$(printf '%s\n' "$ER_PSEC" | sed 's/^[[:space:]]*>[[:space:]]*//' | tr '\n\t' '  ' | tr -s ' ')"
+  ER_PWRAP=0; ER_PCARD=0; ER_PID=0; ER_PSTOP=0; ER_PXREF=0
+  # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
+  # reports failure on a SUCCESSFUL match under pipefail.
+  grep -qF 'there is no earlier version to restore from' <<<"$ER_PFLAT" && ER_PWRAP=1
+  grep -qF 'Four things survive it' <<<"$ER_PFLAT" && ER_PCARD=1
+  grep -qF "The fourth is a reusable group's name" <<<"$ER_PFLAT" && ER_PID=1
+  grep -qF 'stops at the title line on purpose' <<<"$ER_PFLAT" && ER_PSTOP=1
+  grep -qF '../groups/README.md' <<<"$ER_PFLAT" && ER_PXREF=1
+  if [ "$ER_PNSEC" -eq 0 ] || [ "$ER_PNCTL" -eq 0 ] || [ "$ER_PWRAP" -eq 0 ]; then
+    FAIL "ER20: an extraction or the matcher itself came back EMPTY — people/README.md § *$ER_PHEAD* yielded $ER_PNSEC non-blank line(s), the control section § *$ER_PCTLH* read by the SAME extractor yielded $ER_PNCTL, and the wrap-spanning control phrase matched=$ER_PWRAP. That phrase spans a hard wrap in this section, so a zero on it means the flattening is gone and every prose verdict here would be a line-shaped zero over a hard-wrapped file. With the control section at 0 the extractor is broken; with only the subject at 0 the section has moved. Not a skip and not a pass"
+  elif [ "$ER_GRP_N" -ne 1 ] || [ "$ER_GRP_SCOPED" -ne 1 ]; then
+    FAIL "ER20: the group-store reach has MOVED — $ER_GRP_N reach row(s) name \`groups/\` and $ER_GRP_SCOPED of them are scoped to \`## Members\` (expected 1 and 1). The person-side survivor count rests on that reach: a group's name is a survivor only while the sweep stops at the member bullets, so the cardinal in people/README.md § *$ER_PHEAD* must be re-derived against the new reach in the SAME commit, alongside the group-side disclosure ER19 grades. A count that outlives the fact it counts is the defect this arm exists for"
+  elif [ "$ER_PCARD" -eq 1 ] && [ "$ER_PID" -eq 1 ] && [ "$ER_PSTOP" -eq 1 ] && [ "$ER_PXREF" -eq 1 ]; then
+    PASS "ER20: people/README.md § *$ER_PHEAD* enumerates FOUR survivors over $ER_PNSEC extracted line(s) (control section $ER_PNCTL line(s), flattening validated by the wrap-spanning control) — it states the cardinal, names a reusable group's name as the fourth, discloses that erasure reaches the group record and stops at its title line on purpose, and cites ../groups/README.md so a reader meeting either side reaches the other. The two disclosures now move with the one reach measurement instead of with each other"
+  else
+    FAIL "ER20: people/README.md § *$ER_PHEAD* no longer enumerates the group name as a survivor — cardinal 'Four things survive it' matched=$ER_PCARD, the fourth named as a reusable group's name=$ER_PID, the stops-at-the-title-line disclosure=$ER_PSTOP, the cross-reference to ../groups/README.md=$ER_PXREF, over $ER_PNSEC extracted line(s) with the flattening confirmed. This section PROMISES to say plainly what erasure cannot reach, so a survivor missing from it is a false enumeration rather than an omission — and a stale cardinal is the half a reader cannot detect, because the list still reads complete. groups/README.md discloses the same reach from the other side; a release that changes one side changes both"
+  fi
+
 fi
 
 # ER3 — THE NON-ACTION, ASSERTED. The tombstone must hold no row in the publish
@@ -6432,6 +6551,386 @@ fi
 
 if [ "$CE_RAN" -ne 1 ]; then
   FAIL "CE-integrity: group CE did not execute — a run without it is a failure, never a pass"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# DH — derived trip history: the exclusion the capability rests on, mechanised
+#
+# WHAT THIS GROUP IS FOR. reference/schemas/person-record.md ends its strictly-one-person
+# bullet with a sentence naming its own debt: "What is owed is the NEGATIVE ASSERTION, not
+# a rule: the durable form emits zero TRIP/DEST labels." Nothing asserted it. The exclusion
+# held because the classification closes it by construction and because every author so far
+# has read the bullet — which is exactly the shape of property that holds until something
+# changes it and nothing notices.
+#
+# It stopped being cheap to leave unasserted when trip history became RESOLVABLE. A reader
+# who learns that a person's trips can be worked out is one edit away from concluding that
+# the answer may as well be kept on the record, and the whole of what stands against that is
+# a bullet and a sentence. So the structural claims are graded here, arm by arm rather than
+# by a count of them: the SCHEMA half (the class declares no field beyond the merge pointer),
+# the FORM half (the durable intake form asks for nothing the classification types as trip-
+# or destination-scoped), the READER-FACING half (both homes still say so), and the verb's
+# own OUTCOME ENUMERATION (every terminal state the resolution reaches has a row).
+#
+# ── EVERY POPULATION IS DERIVED, AND DH0 IS WHY THE ZEROES MEAN ANYTHING ────────
+# The universal key set is read from the architecture document's § 4.4 block by
+# uf_univ_keys, the class's declared fields through the validator's own schema reader, and
+# the TRIP/DEST label set live from the classification with rl_class — no set is written
+# down here. Two of the three assertions below are ZEROES, and a zero over an empty
+# extraction is indistinguishable from a clean one, so DH0 requires every input population
+# to be non-empty before any of them runs, and DH2 carries a live SENSITIVITY ARM: the same
+# intersection over the TRIP form, which must come back NON-ZERO on the same run. A green
+# DH2 whose control also returned zero would be a broken probe reporting a clean corpus.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT GRADE ────────────────────────────────
+# It does not grade the RESOLUTION — whether a scan finds the right trips is behaviour, and
+# nothing in a tree of prompt files exhibits it. It grades the STRUCTURAL claims the
+# capability is built on, which are the ones a later edit can quietly take away.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "DH — derived trip history: the durable form's exclusion, mechanised"
+
+DH_RAN=0
+DH_SCHEMA_REL="reference/schemas/person-record.md"
+DH_PERSON_FORM="$ROOT/templates/person-intake.template.md"
+DH_TRIP_FORM="$ROOT/templates/traveler-intake.template.md"
+DH_PEOPLE="$ROOT/people/README.md"
+DH_CMD="$ROOT/.claude/commands/trip-record.md"
+DH_HEADING="What a record does not hold"
+DH_VERB="history"
+
+# dh_class_labels <doc> <class> — the labels the classification types as <class>, read
+# LIVE and by INDEX. rl_class already emits "label<TAB>class<TAB>scope" from that table and
+# is reused rather than re-derived: a second extractor over the same columns would be a
+# second thing to keep aligned with a table whose column order is load-bearing.
+dh_class_labels() { rl_class "$1" | awk -F'\t' -v c="$2" '$2 == c { print $1 }' | sort -u; }
+
+# dh_form_labels <form> — the field labels a shipped intake form asks for. rl_bullets is
+# reused in its star-HONOURING mode; group RL2 exists because the star-blind read silently
+# dropped the person-class bullets, and a form scan that repeated that miss would report a
+# clean form by failing to see half of it.
+dh_form_labels() { rl_bullets "$1" 1 | cut -f1 | sort -u; }
+
+DH_OK=1
+DH_MISSING=""
+for dh_f in "$DH_PERSON_FORM" "$DH_TRIP_FORM" "$DH_PEOPLE" "$DH_CMD" "$ROOT/$DH_SCHEMA_REL" "$RL_DM"; do
+  [ -r "$dh_f" ] || { DH_OK=0; DH_MISSING="$DH_MISSING ${dh_f#"$ROOT/"}"; }
+done
+
+if [ "$DH_OK" -eq 1 ]; then
+  DH_UKEYS="$(uf_univ_keys)"
+  DH_NUKEYS="$(printf '%s\n' "$DH_UKEYS" | grep -c '[^[:space:]]' || true)"
+  DH_SL="$(va_schema_lines "$ROOT" "$DH_SCHEMA_REL" 2>/dev/null | grep -v '^FINDING ')"
+  DH_DECL="$(va_schema_all "$DH_SL" field | awk '{ print $1 }' | sort -u)"
+  DH_NDECL="$(printf '%s\n' "$DH_DECL" | grep -c '[^[:space:]]' || true)"
+  DH_SCOPED="$( { dh_class_labels "$RL_DM" TRIP; dh_class_labels "$RL_DM" DEST; } | sort -u)"
+  DH_NSCOPED="$(printf '%s\n' "$DH_SCOPED" | grep -c '[^[:space:]]' || true)"
+  DH_PLBL="$(dh_form_labels "$DH_PERSON_FORM")"
+  DH_NPLBL="$(printf '%s\n' "$DH_PLBL" | grep -c '[^[:space:]]' || true)"
+  DH_TLBL="$(dh_form_labels "$DH_TRIP_FORM")"
+  DH_NTLBL="$(printf '%s\n' "$DH_TLBL" | grep -c '[^[:space:]]' || true)"
+
+  if [ "$DH_NUKEYS" -gt 0 ] && [ "$DH_NDECL" -gt 0 ] && [ "$DH_NSCOPED" -gt 0 ] \
+     && [ "$DH_NPLBL" -gt 0 ] && [ "$DH_NTLBL" -gt 0 ]; then
+    PASS "DH0: every population below is DERIVED and every one came back non-empty — $DH_NUKEYS universal key(s) from the architecture document's § 4.4 block, $DH_NDECL declared field(s) in $DH_SCHEMA_REL read through the validator's own schema reader, $DH_NSCOPED trip- or destination-scoped label(s) from the live classification, and $DH_NPLBL / $DH_NTLBL field label(s) on the durable and trip intake forms. This gate exists because two of the three arms below are ZEROES: over an empty extraction a zero is not a measurement, and a run that parsed one of these into nothing would otherwise report the corpus clean"
+    DH_RAN=1
+  else
+    FAIL "DH0: a required population is EMPTY — universal keys $DH_NUKEYS, declared fields $DH_NDECL, trip/dest labels $DH_NSCOPED, durable-form labels $DH_NPLBL, trip-form labels $DH_NTLBL. Not a skip and not a pass: every arm below would be a statement over the empty set, and the two that are zeroes would read as clean. The likeliest causes are a reordered classification column, which this group reads by index through rl_class, and a renamed fence in § 4.4"
+    DH_OK=0
+  fi
+else
+  FAIL "DH0: required surface(s) unreadable:$DH_MISSING — not a skip and not a pass"
+fi
+
+if [ "$DH_OK" -eq 1 ]; then
+  # ── DH1 — THE SCHEMA HALF. The class's own fields, beyond the universal block, are
+  # exactly the merge pointer. This is the mechanised form of "the durable person record
+  # gains no field": a trip-history field added to the fence is red HERE, and there is no
+  # other arm in this suite that would say so — group UF asserts that no schema DROPS a
+  # universal key and is silent on what a class ADDS.
+  DH_CLASSFIELDS="$(comm -23 <(printf '%s\n' "$DH_DECL") <(printf '%s\n' "$DH_UKEYS" | sort -u))"
+  DH_NCLASS="$(printf '%s\n' "$DH_CLASSFIELDS" | grep -c '[^[:space:]]' || true)"
+  DH_CLASSLIST="$(printf '%s\n' "$DH_CLASSFIELDS" | tr '\n' ' ')"
+  if [ "$DH_NCLASS" -eq 1 ] && [ "$DH_CLASSLIST" = "merged-into " ]; then
+    PASS "DH1: the durable person class declares exactly one field beyond the universal block, and it is \`merged-into\` — the merge pointer, which is a reference to another record's key rather than an answer about anybody. The set is a DIFFERENCE, computed against the $DH_NUKEYS universal key(s) read from the architecture document rather than against a list held here, so a universal key added upstream does not read as a class field. This is where a stored trip history would land, and it is the assertion \`$DH_SCHEMA_REL\` names as owed"
+  else
+    FAIL "DH1: the durable person class declares $DH_NCLASS field(s) beyond the universal block: $DH_CLASSLIST — expected exactly \`merged-into\`. A second class field is a durable, cross-trip slot on a record whose whole design is that it holds one person's own answers, and if it is trip- or destination-scoped it is the exclusion this milestone rests on being reopened. Adding one is a deliberate act and this arm is where it must be re-read"
+  fi
+
+  # ── DH2 — THE FORM HALF, WITH ITS CONTROL. The durable intake form asks for nothing the
+  # classification types TRIP or DEST. This is the sentence person-record.md calls owed,
+  # and the reason it is graded on the FORM rather than on the fence is that the fence
+  # constrains frontmatter while the record's answers are body bullets: a trip-scoped
+  # question could be added to the durable form without touching a schema at all.
+  DH_LEAK="$(comm -12 <(printf '%s\n' "$DH_PLBL") <(printf '%s\n' "$DH_SCOPED"))"
+  DH_NLEAK="$(printf '%s\n' "$DH_LEAK" | grep -c '[^[:space:]]' || true)"
+  DH_CTL="$(comm -12 <(printf '%s\n' "$DH_TLBL") <(printf '%s\n' "$DH_SCOPED"))"
+  DH_NCTL="$(printf '%s\n' "$DH_CTL" | grep -c '[^[:space:]]' || true)"
+  if [ "$DH_NCTL" -eq 0 ]; then
+    FAIL "DH2: MUST FIRE — the SENSITIVITY arm returned zero. The same intersection over the trip intake form found none of the $DH_NSCOPED trip/dest label(s) among its $DH_NTLBL field label(s), which cannot be true of a form whose whole subject is one trip. The subject arm's zero is therefore an empty scan rather than a clean form, and this group reports the probe UNUSABLE rather than the corpus clean. The likeliest cause is a label-text divergence between the classification and the forms, which would make BOTH intersections empty"
+  elif [ "$DH_NLEAK" -eq 0 ]; then
+    PASS "DH2: the durable intake form emits ZERO trip- or destination-scoped labels — none of its $DH_NPLBL field label(s) is among the $DH_NSCOPED the classification types TRIP or DEST. The zero is a measurement: the SENSITIVITY arm, the identical intersection over the trip intake form, returned $DH_NCTL on the same run. This is the negative assertion \`$DH_SCHEMA_REL\` says is owed, and it is what makes trip history structurally absent from the durable form rather than absent because successive authors remembered the bullet"
+  else
+    FAIL "DH2: $DH_NLEAK label(s) on the durable intake form are typed TRIP or DEST by the classification: $(printf '%s' "$DH_LEAK" | tr '\n' ' ')— the durable form is asking a question that is only meaningful relative to one trip or one destination, so its answer has no correct value to carry across trips. The sensitivity arm returned $DH_NCTL on the same run, so this is a real finding rather than a broken probe. Either the label belongs on the trip form, or its row in the classification is wrong; the two cannot both stand"
+  fi
+
+  # ── DH3 — THE READER-FACING HALF, at both of its homes. A structural property nobody can
+  # read is one a later author re-derives from scratch, so the exclusion is stated for a
+  # human in people/README.md and the verb that resolves history declares in its own section
+  # that it writes nothing. Both are positive membership assertions with their extraction
+  # denominators reported, so neither can pass over a section that failed to extract.
+  DH_SECT="$(er_section "$DH_PEOPLE" "$DH_HEADING")"
+  DH_NSECT="$(printf '%s\n' "$DH_SECT" | grep -c '[^[:space:]]' || true)"
+  DH_HAS_HIST=0
+  # Here-strings rather than pipes, per group PF: a pipe into an early-exiting `grep -q`
+  # reports failure on a SUCCESSFUL match under pipefail. PF1 caught both of these sites.
+  grep -qi 'trip history' <<<"$DH_SECT" && DH_HAS_HIST=1
+  DH_VSECT="$(awk -v v="$DH_VERB" '
+    index($0, "## " v " ") == 1 { on = 1; print; next }
+    on && /^## / { on = 0 }
+    on { print }' "$DH_CMD")"
+  DH_NVSECT="$(printf '%s\n' "$DH_VSECT" | grep -c '[^[:space:]]' || true)"
+  DH_HAS_NOWRITE=0
+  grep -q 'Writes nothing' <<<"$DH_VSECT" && DH_HAS_NOWRITE=1
+  if [ "$DH_NSECT" -eq 0 ] || [ "$DH_NVSECT" -eq 0 ]; then
+    FAIL "DH3: an extraction came back EMPTY — people/README.md § *$DH_HEADING* yielded $DH_NSECT line(s) and the \`$DH_VERB\` verb section in .claude/commands/trip-record.md yielded $DH_NVSECT. Both limbs below would be graded over absent text, and a membership test over nothing reports absence rather than a missing section. A renamed heading is the likeliest cause and is a finding in its own right"
+  elif [ "$DH_HAS_HIST" -eq 1 ] && [ "$DH_HAS_NOWRITE" -eq 1 ]; then
+    PASS "DH3: the exclusion is stated at both of its reader-facing homes — people/README.md § *$DH_HEADING* still enumerates trip history across $DH_NSECT extracted line(s), and the \`$DH_VERB\` verb section declares across $DH_NVSECT line(s) that it writes nothing. The pair is the point: the store says the record has no slot, and the verb that resolves the answer says it puts none back. Either one alone leaves the other's reader free to conclude the opposite"
+  else
+    FAIL "DH3: enumerated-in-README=$DH_HAS_HIST writes-nothing-declared-in-verb=$DH_HAS_NOWRITE, over $DH_NSECT and $DH_NVSECT extracted line(s). Trip history dropping out of the no-slot enumeration would make a durable slot for it read as merely unimplemented; the verb dropping its no-write declaration would leave the one path that resolves history free to persist it, which is the whole of what the derived model is instead of"
+  fi
+
+  # ── DH4 — THE OUTCOME ENUMERATION, ASSERTED AGAINST THE BRANCH THAT REACHES IT. The
+  # verb's outcome table said THREE states while the resolution's own step 1 carried a
+  # FOURTH terminal branch — a traveller file with no reference, which that step describes
+  # as "not a refusal and not an empty history". The behaviour was authored correctly; the
+  # enumeration was falsified and nothing said so. The specific risk is not the missing row:
+  # it is that a later reader with three tokens and a fourth branch folds it into
+  # NO-EDGE-FOUND, which asserts THE SCAN COMPLETED — a completed-scan claim where no scan
+  # ran, reproducing one level up the exact absence-of-evidence failure the outcome table
+  # exists to prevent between the other two.
+  #
+  # So this arm grades the table and the prose AGAINST EACH OTHER rather than either alone.
+  # Both limbs are POSITIVE membership assertions with their extraction denominators
+  # reported, so neither can pass over a section that failed to extract, and the token set
+  # the table yields is printed on the pass line — the enumeration is reported rather than
+  # counted, because a cardinal is the part of an enumeration that goes stale silently and
+  # this is the arm that exists because one did.
+  dh_outcome_tokens() {
+    printf '%s\n' "$1" | awk -F'|' '
+      index($0, "| Outcome |") == 1 { on = 1; next }
+      on && index($0, "|") != 1     { on = 0 }
+      on {
+        t = $2
+        gsub(/[`*]/, "", t)
+        gsub(/^[ \t]+/, "", t); gsub(/[ \t]+$/, "", t)
+        if (t == "")          next
+        if (t ~ /^[-: ]+$/)   next
+        print t
+      }'
+  }
+  DH_NOREF="NO-REFERENCE"
+  DH_TOK="$(dh_outcome_tokens "$DH_VSECT")"
+  DH_NTOK="$(printf '%s\n' "$DH_TOK" | grep -c '[^[:space:]]' || true)"
+  DH_ROWHIT=0
+  grep -qx -- "$DH_NOREF" <<<"$DH_TOK" && DH_ROWHIT=1
+  # The prose limb reads only NON-TABLE lines, so the row cannot satisfy both limbs by itself.
+  DH_PROSEHIT="$(printf '%s\n' "$DH_VSECT" | awk -v tok="$DH_NOREF" 'index($0, "|") != 1 && index($0, tok) > 0 { n++ } END { print n + 0 }')"
+  # The extractor's own control: a synthetic table of known shape must yield its two tokens.
+  DH_CTLTAB="| Outcome | What it means | What is offered |
+|---|---|---|
+| \`ALPHA\` | a thing | nothing |
+| \`BETA\` | another thing | nothing |
+
+not a table line"
+  DH_NCTLTOK="$(dh_outcome_tokens "$DH_CTLTAB" | grep -c '[^[:space:]]' || true)"
+  if [ "$DH_NCTLTOK" -ne 2 ]; then
+    FAIL "DH4: MUST FIRE — the extractor's CONTROL returned $DH_NCTLTOK token(s) from a synthetic outcome table carrying exactly two, so it cannot be trusted to report what the real table holds. This group reports the probe UNUSABLE rather than the enumeration complete"
+  elif [ "$DH_NTOK" -eq 0 ] || [ "$DH_NVSECT" -eq 0 ]; then
+    FAIL "DH4: an extraction came back EMPTY — the \`$DH_VERB\` verb section yielded $DH_NVSECT line(s) and its outcome table yielded $DH_NTOK token(s). A membership test over nothing reports absence rather than a missing table, and the likeliest cause is a renamed header row, which is a finding in its own right"
+  elif [ "$DH_ROWHIT" -eq 1 ] && [ "$DH_PROSEHIT" -gt 0 ]; then
+    PASS "DH4: the outcome enumeration and the branch that reaches it AGREE — the \`$DH_VERB\` table declares { $(printf '%s' "$DH_TOK" | tr '\n' ' ')} over $DH_NTOK token(s), \`$DH_NOREF\` is among them, and the resolution names that same token on $DH_PROSEHIT non-table line(s) of the section. The extractor's control returned $DH_NCTLTOK on the same run. Both limbs are needed: a row nothing reaches is decoration, and a branch no row names is the state this arm was written for — a fourth terminal outcome outside a table headed with three"
+  else
+    FAIL "DH4: row-present=$DH_ROWHIT prose-mentions=$DH_PROSEHIT for \`$DH_NOREF\`, over $DH_NTOK outcome token(s) { $(printf '%s' "$DH_TOK" | tr '\n' ' ')} and $DH_NVSECT section line(s). A terminal branch the resolution reaches but the table does not name is the defect this arm exists for — the next reader folds it into \`NO-EDGE-FOUND\`, which asserts that the scan COMPLETED, and a completed-scan claim where no scan ran is absence of evidence reported as evidence of absence. Add the row, or remove the branch; do not leave them disagreeing"
+  fi
+fi
+
+if [ "$DH_RAN" -ne 1 ]; then
+  FAIL "DH-integrity: group DH did not execute — a run without it is a failure, never a pass"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# GM — reusable groups: the membership boundary, mechanised
+#
+# WHAT THIS GROUP IS FOR. reference/schemas/group-record.md makes two claims about the
+# C23 form and, until this group, NEITHER was executed by anything: "that one anchored
+# regex is the whole of this class's membership enforcement", and "the group form emits
+# zero PERSON-class labels". The second is the exact twin of the sentence group DH was
+# written for on the durable PERSON form — and the twin was left as prose while DH shipped.
+#
+# UNASSERTED IS NOT THE SAME AS TRUE, AND THE DIFFERENCE WAS MEASURED. The tracked witness
+# was mutated to carry a member's name and role on a bullet, an allergy in a `## Notes`
+# section, and a `description:` frontmatter key. Every suite in this repository produced
+# BYTE-IDENTICAL output to the clean run, while a control mutation on the same file — a
+# falsified `artifact:` value — fired finding A5. So the silence was a measurement of a
+# missing rule rather than a clean corpus, and the three arms below are the three places
+# that mutation landed: the frontmatter (GM1), the entries and the section holding them
+# (GM2), and the section set (GM3).
+#
+# ── EVERY POPULATION IS DERIVED, AND GM0 IS WHY THE ZEROES MEAN ANYTHING ────────
+# The universal key set comes from the architecture document through uf_univ_keys, the
+# class's declared fields and ITS OWN WITNESS PATH through the validator's schema reader,
+# and the witness's frontmatter keys through the validator's own frontmatter parser — no
+# set and no path is written down here. Two of the arms are ZEROES, so GM0 requires every
+# input population to be non-empty first, GM1 carries a LIVE sensitivity arm (the identical
+# difference over C22, which must come back with exactly the merge pointer), and GM2 carries
+# a SYNTHETIC one (the identical matcher over a line set that carries known-bad lines, which
+# must come back non-zero). A green zero whose control also returned zero is a broken probe.
+#
+# ── WHAT IS HELD RATHER THAN DERIVED, AND WHY ──────────────────────────────────
+# The member-entry FORM is held here, exactly as DH1 holds `merged-into`: the schema states
+# it as a sentence in prose, and an extractor that recovered a regex from prose would be a
+# parser project whose failure mode is a permissive pattern that matches everything. The
+# four hex digits are spelled out rather than written as an interval `{4}`, because interval
+# expressions are not universally supported in awk and a rejected pattern yields a plausible
+# zero — the failure this whole group exists to make impossible.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT GRADE ────────────────────────────────
+# It grades the FORM, never the behaviour: whether a verb writes a conforming record is
+# executable against a fixture and belongs in one, not in a structural arm. And its reach
+# is the TRACKED WITNESS, because `.gitignore` carries `/groups/*` rooted, so the witness
+# under examples/ is the only instance of this class any gate can ever see. That is a bound
+# on the population, stated here rather than left to be read as tree-wide coverage.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "GM — reusable groups: the membership boundary, mechanised"
+
+GM_RAN=0
+GM_SCHEMA_REL="reference/schemas/group-record.md"
+GM_SIB_REL="reference/schemas/person-record.md"
+GM_SECTION="Members"
+
+# gm_nonblank <text> — the non-blank lines of a block. Used for every denominator below,
+# so a count and the lines it counts can never come from two different readings.
+gm_nonblank() { printf '%s\n' "$1" | awk 'NF { print }'; }
+
+# gm_nonconforming <text> — the lines of a member block that are NOT a bare member entry.
+# The heading line is dropped here rather than by the caller, because the section extractor
+# emits it and a caller that forgot would report the heading as a violation.
+gm_nonconforming() {
+  printf '%s\n' "$1" | awk '
+    NF == 0                                          { next }
+    index($0, "## ") == 1                            { next }
+    $0 ~ /^- psn-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/  { next }
+                                                     { print }'
+}
+
+GM_OK=1
+GM_MISSING=""
+for gm_f in "$ROOT/$GM_SCHEMA_REL" "$ROOT/$GM_SIB_REL" "$EN_DOC"; do
+  [ -r "$gm_f" ] || { GM_OK=0; GM_MISSING="$GM_MISSING ${gm_f#"$ROOT/"}"; }
+done
+
+GM_WITNESS_REL=""
+if [ "$GM_OK" -eq 1 ]; then
+  GM_UKEYS="$(uf_univ_keys)"
+  GM_NUKEYS="$(printf '%s\n' "$GM_UKEYS" | grep -c '[^[:space:]]' || true)"
+  GM_SL="$(va_schema_lines "$ROOT" "$GM_SCHEMA_REL" 2>/dev/null | grep -v '^FINDING ')"
+  GM_DECL="$(va_schema_all "$GM_SL" field | awk '{ print $1 }' | sort -u)"
+  GM_NDECL="$(printf '%s\n' "$GM_DECL" | grep -c '[^[:space:]]' || true)"
+  GM_WITNESS_REL="$(va_schema_all "$GM_SL" witness | awk 'NR == 1 { print }')"
+  [ -n "$GM_WITNESS_REL" ] && [ -r "$ROOT/$GM_WITNESS_REL" ] || GM_OK=0
+fi
+
+if [ "$GM_OK" -eq 1 ]; then
+  GM_FMKEYS="$(va_fm_pairs "$ROOT" "$GM_WITNESS_REL" 2>/dev/null | grep -v '^FINDING ' | cut -f1 | sort -u)"
+  GM_NFM="$(printf '%s\n' "$GM_FMKEYS" | grep -c '[^[:space:]]' || true)"
+  GM_SECT="$(er_section "$ROOT/$GM_WITNESS_REL" "$GM_SECTION")"
+  GM_ENTRIES="$(gm_nonblank "$GM_SECT")"
+  GM_NSECT="$(printf '%s\n' "$GM_ENTRIES" | grep -c '[^[:space:]]' || true)"
+  GM_HEADS="$(awk 'index($0, "## ") == 1 { print }' "$ROOT/$GM_WITNESS_REL")"
+  GM_NHEADS="$(printf '%s\n' "$GM_HEADS" | grep -c '[^[:space:]]' || true)"
+
+  if [ "$GM_NUKEYS" -gt 0 ] && [ "$GM_NDECL" -gt 0 ] && [ "$GM_NFM" -gt 0 ] \
+     && [ "$GM_NSECT" -gt 0 ] && [ "$GM_NHEADS" -gt 0 ]; then
+    PASS "GM0: every population below is DERIVED — including the witness PATH, read from \`$GM_SCHEMA_REL\`'s own fence rather than written here — and every one came back non-empty: $GM_NUKEYS universal key(s) from the architecture document's § 4.4 block, $GM_NDECL declared field(s) through the validator's schema reader, $GM_NFM frontmatter key(s) and $GM_NHEADS body section heading(s) on the witness \`$GM_WITNESS_REL\`, and $GM_NSECT non-blank line(s) in its \`## $GM_SECTION\` section. This gate exists because two arms below are ZEROES: over an empty extraction a zero is indistinguishable from a clean form, and a run that parsed one of these into nothing would report the corpus clean"
+    GM_RAN=1
+  else
+    FAIL "GM0: a required population is EMPTY — universal keys $GM_NUKEYS, declared fields $GM_NDECL, witness frontmatter keys $GM_NFM, witness body sections $GM_NHEADS, member-section lines $GM_NSECT. Not a skip and not a pass: every arm below would be a statement over the empty set. The likeliest causes are a renamed \`## $GM_SECTION\` heading and a witness that no longer parses"
+    GM_OK=0
+  fi
+else
+  if [ -n "$GM_MISSING" ]; then
+    FAIL "GM0: required surface(s) unreadable:$GM_MISSING — not a skip and not a pass"
+  else
+    FAIL "GM0: \`$GM_SCHEMA_REL\` declares no reachable \`witness:\` — every arm below grades one file, named by that line, and there is nothing to grade. A class whose witness has moved is a fail-closed coverage regression, which is finding S6's own posture applied at this group's entry"
+  fi
+fi
+
+if [ "$GM_OK" -eq 1 ]; then
+  # ── GM1 — THE FRONTMATTER HALF, at both of its ends. The class declares ZERO fields
+  # beyond the universal block, and the witness carries no key the class does not declare.
+  # Both ends are needed and neither implies the other: the fence constrains what MAY be
+  # declared, the file constrains what IS written, and the mutation that motivated this
+  # group added a `description:` key to the FILE while the fence stayed correct.
+  GM_CLASSFIELDS="$(comm -23 <(printf '%s\n' "$GM_DECL") <(printf '%s\n' "$GM_UKEYS" | sort -u))"
+  GM_NCLASS="$(printf '%s\n' "$GM_CLASSFIELDS" | grep -c '[^[:space:]]' || true)"
+  GM_UNDECL="$(comm -23 <(printf '%s\n' "$GM_FMKEYS") <(printf '%s\n' "$GM_DECL"))"
+  GM_NUNDECL="$(printf '%s\n' "$GM_UNDECL" | grep -c '[^[:space:]]' || true)"
+  # The SENSITIVITY arm is LIVE and is the identical difference over the sibling class,
+  # which declares exactly one field beyond the universal block. A run where this returned
+  # zero would mean the difference is computing nothing on either class.
+  GM_SIBSL="$(va_schema_lines "$ROOT" "$GM_SIB_REL" 2>/dev/null | grep -v '^FINDING ')"
+  GM_SIBDECL="$(va_schema_all "$GM_SIBSL" field | awk '{ print $1 }' | sort -u)"
+  GM_SIBEXTRA="$(comm -23 <(printf '%s\n' "$GM_SIBDECL") <(printf '%s\n' "$GM_UKEYS" | sort -u))"
+  GM_NSIB="$(printf '%s\n' "$GM_SIBEXTRA" | grep -c '[^[:space:]]' || true)"
+  if [ "$GM_NSIB" -eq 0 ]; then
+    FAIL "GM1: MUST FIRE — the SENSITIVITY arm returned zero. The identical difference over \`$GM_SIB_REL\` found no field beyond the universal block, which cannot be true of a class that declares a merge pointer. The subject zero is therefore an empty computation rather than a class with no fields, and this group reports the probe UNUSABLE rather than the corpus clean"
+  elif [ "$GM_NCLASS" -eq 0 ] && [ "$GM_NUNDECL" -eq 0 ]; then
+    PASS "GM1: the group class declares ZERO fields beyond the $GM_NUKEYS universal key(s), and its witness carries no frontmatter key the class does not declare — $GM_NFM key(s) checked, 0 undeclared. Both are DIFFERENCES against a derived universal set rather than against a list held here. The zero is a measurement: the SENSITIVITY arm, the identical difference over \`$GM_SIB_REL\`, returned $GM_NSIB on the same run. This is where a description slot, a note field, or any other durable home for a person-scoped fact would land"
+  elif [ "$GM_NCLASS" -ne 0 ]; then
+    FAIL "GM1: the group class declares $GM_NCLASS field(s) beyond the universal block: $(printf '%s' "$GM_CLASSFIELDS" | tr '\n' ' ')— expected none. \`$GM_SCHEMA_REL\` states that the membership list is body-scoped and that the class carries no class field at all; a frontmatter field here is a durable, cross-trip slot on a record whose whole claim is that it holds a set of references and nothing else. The sensitivity arm returned $GM_NSIB on the same run, so this is a real finding rather than a broken probe"
+  else
+    FAIL "GM1: the witness \`$GM_WITNESS_REL\` carries $GM_NUNDECL frontmatter key(s) the class does not declare: $(printf '%s' "$GM_UNDECL" | tr '\n' ' ')— an undeclared key type-checks nowhere, so it is a free-text slot that reached the record without passing a schema. This is the exact shape of the mutation this group was written for: a person-scoped fact given a home in the header while the fence stayed correct. The sensitivity arm returned $GM_NSIB on the same run"
+  fi
+
+  # ── GM2 — THE SECTION HALF, WITH ITS CONTROL. Every non-blank line of `## Members` is a
+  # bare member entry. This is the anchored regex the schema calls "the whole of this
+  # class's membership enforcement", executed — and it is graded over the SECTION rather
+  # than over the bullets, deliberately. A bullets-only reading passes a bare prose line:
+  # it is not a member entry, so the regex never sees it, and it is not a heading, so the
+  # closed-at-one rule never sees it. That line was an admitted home for a person-scoped
+  # fact on a class that claims to have none, and reach row 30 — which removes BULLETS —
+  # could not reach it either.
+  GM_BAD="$(gm_nonconforming "$GM_SECT")"
+  GM_NBAD="$(printf '%s\n' "$GM_BAD" | grep -c '[^[:space:]]' || true)"
+  GM_CTLIN="- psn-3c7e (Noor) — organiser, tree-nut allergy
+Ada has the allergy.
+- psn-9d42"
+  GM_CTLOUT="$(gm_nonconforming "$GM_CTLIN")"
+  GM_NCTL="$(printf '%s\n' "$GM_CTLOUT" | grep -c '[^[:space:]]' || true)"
+  if [ "$GM_NCTL" -ne 2 ]; then
+    FAIL "GM2: MUST FIRE — the SENSITIVITY arm returned $GM_NCTL, expected 2. The identical matcher was run over a three-line control carrying one annotated bullet, one bare prose line and one conforming entry; a matcher that does not separate those three cannot report anything about the real section, so this group reports the probe UNUSABLE rather than the corpus clean"
+  elif [ "$GM_NBAD" -eq 0 ]; then
+    PASS "GM2: every one of the $GM_NSECT non-blank line(s) in the witness's \`## $GM_SECTION\` section is a bare member entry — an id on a bullet, no trailing text, no name, no role, no note, and no prose line between them. Graded over the SECTION and not merely over the bullets, so a non-bullet line is a violation rather than something both rules pass between them. The zero is a measurement: the SENSITIVITY arm returned $GM_NCTL of 3 control lines on the same run"
+  else
+    FAIL "GM2: $GM_NBAD line(s) in the witness's \`## $GM_SECTION\` section are not bare member entries: $(printf '%s' "$GM_BAD" | tr '\n' ' | ')— the section admits member bullets and blank lines and nothing else. A trailing name or role beside an id is a second home for that person record's H1 and goes stale on a rename; a prose line is a free-text slot on a class whose whole claim is that it has none, and erasure's remove-the-bullet disposition has no meaning for one. The sensitivity arm returned $GM_NCTL on the same run, so this is a real finding rather than a broken probe"
+  fi
+
+  # ── GM3 — THE SECTION SET, CLOSED AT ONE. The body carries exactly one `##` heading and
+  # it is the member section. This is the arm a `## Notes` section lands on — the cheapest
+  # place to put a person-scoped fact on this form, and the one GM2 cannot see, because a
+  # second section's lines are outside the section GM2 extracts.
+  GM_HEADTXT="$(printf '%s\n' "$GM_HEADS" | awk 'NR == 1 { print }')"
+  if [ "$GM_NHEADS" -eq 1 ] && [ "$GM_HEADTXT" = "## $GM_SECTION" ]; then
+    PASS "GM3: the witness body carries exactly ONE \`##\` section and it is \`## $GM_SECTION\` — the set is closed at one, so there is no free-text section, no description slot and no second heading for a person-scoped fact to be filed under. This is a POSITIVE assertion over $GM_NHEADS extracted heading(s), not a zero, so it cannot pass over an empty read"
+  else
+    FAIL "GM3: the witness body carries $GM_NHEADS \`##\` section(s), first \"$GM_HEADTXT\" — expected exactly one, \`## $GM_SECTION\`. \`$GM_SCHEMA_REL\` closes the section set at one because a second section is a free-text home on a class declared to hold a set of references and nothing else, and because every location erasure reaches on this class is inside the member section. A section added here is reachable by nothing and is graded by nothing else"
+  fi
+fi
+
+if [ "$GM_RAN" -ne 1 ]; then
+  FAIL "GM-integrity: group GM did not execute — a run without it is a failure, never a pass"
 fi
 
 echo

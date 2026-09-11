@@ -336,6 +336,13 @@ to repeat. Skip both if the destination is not decided yet. What they are drawn 
 general, and how they eat when they travel, are durable answers and live in the person
 profile.
 
+Where this traveler is already linked to a person record, `/trip-record history` will look
+through the other trips for ones that reference them, show you the candidates, and — once
+you say which of those are this same destination — offer `once` or `a few times` from what
+that comes to. **It is an offer, not an answer.** Ask them anyway, record what they say,
+and leave the field unanswered where they would rather not say — an unanswered field reads
+as *unknown*, which is a different thing from `never` and is treated as one.
+
 ### Step 8 — People dynamics & togetherness
 Fields: **Group time**, **Split off with**, **Whole-group moments**.
 Offer mostly together, some solo or sub-group time, or lots of independent time. Then who
