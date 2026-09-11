@@ -55,12 +55,14 @@ name: Publish guard
 #         directions
 #   N     the conjunctive window scoped to a structural block, both directions: token
 #         recurrence across day boundaries must not abort, a same-block carry-through must.
-#         N2 adds the WITHIN-block direction over a 17-fixture discrimination matrix —
-#         7 over-block candidates, 6 carry-throughs, 3 clean, 1 paraphrase — because an
+#         N2 adds the WITHIN-block direction over a 19-fixture discrimination matrix —
+#         9 over-block candidates, 6 carry-throughs, 3 clean, 1 paraphrase — because an
 #         over-block-only criterion is reached by a matcher that matches nothing. The
 #         window is now derived from the value's own span and the match additionally
-#         requires the value's own connective vocabulary; the one irreducible survivor
-#         and the paraphrase this narrows away are each asserted rather than left in prose
+#         requires the value's own connective vocabulary; each limb is graded separately
+#         against a fixture the other admits, and the one irreducible survivor and the
+#         paraphrase this narrows away are each asserted rather than left in prose. N2h
+#         grades the OTHER conjunctive row, the Documents selector, which had no fixture
 #   O     the [THIRD-PARTY] member of the class (#123 AC 3, second remediation): the arm
 #         inverted from a field allowlist to an ENTRY DENYLIST, the mark read at value
 #         granularity as well as heading granularity, and the parse bound to the real

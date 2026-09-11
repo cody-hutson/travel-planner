@@ -395,15 +395,20 @@ make_boilerplate() { # -> echoes temp dir (boilerplate = <dir>/index.html)
 #                       binds. Its calibration record above stays true and is the
 #                       ceiling a long value would reach.
 #   GUARD_CONJ_SLACK  — the conjunctive rule's proportional slack, added to the span
-#               = 4     the value's OWN distinctive tokens occupy. Measured over a
-#                       17-fixture discrimination matrix (7 over-block candidates /
+#               = 4     the value's OWN distinctive tokens occupy. Swept over a
+#                       19-fixture discrimination matrix (9 over-block candidates /
 #                       6 true carry-throughs / 3 clean / 1 paraphrase) built on the
-#                       group-N render: at 0, only 1 of 6 real carry-throughs is still
-#                       caught; at 2 and 3, 5 of 6 — the reworded form whose two facts
-#                       sit 7 tokens apart is lost; at 4, all 6. No clean fixture aborts
-#                       at any setting. 4 is the KNEE — the smallest slack at which no
-#                       measured carry-through is lost — and every value above it buys
-#                       nothing: 5, 8 and 25 all read TP 6/6 · FP 1/7 identically.
+#                       group-N render, counting carry-throughs still CAUGHT and
+#                       over-blocks still ABORTING:
+#                             0 -> TP 1/6 · FP 0/9      5 -> TP 6/6 · FP 2/9
+#                             2 -> TP 5/6 · FP 0/9      8 -> TP 6/6 · FP 2/9
+#                             3 -> TP 5/6 · FP 0/9     25 -> TP 6/6 · FP 3/9
+#                             4 -> TP 6/6 · FP 1/9
+#                       No clean fixture aborts at any setting, and the paraphrase
+#                       publishes at every setting. 4 is the KNEE — the smallest slack
+#                       at which no measured carry-through is lost — and every value
+#                       above it costs over-blocks for nothing. 25 is the flat window
+#                       that shipped, i.e. this limb made non-binding.
 #                       A FLAT window cannot separate the two classes at all: a real
 #                       carry-through spans 3-7 tokens and a false one spans 2, so
 #                       every flat value admitting the first admits the second.

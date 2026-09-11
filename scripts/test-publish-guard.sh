@@ -2096,7 +2096,7 @@ if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block
 # afterwards. So the over-block arms are TWINNED with carry-through arms over the same
 # render family, and the two are graded together rather than apart.
 #
-# The matrix: 7 over-block candidates · 6 true carry-throughs · 3 clean · 1 paraphrase.
+# The matrix: 9 over-block candidates · 6 true carry-throughs · 3 clean · 1 paraphrase.
 # Every arm below grades an EXACT code and treats anything outside {0,1} as a probe
 # failure rather than folding it into a count — with _guard_match removed the guard
 # returns 127, which is a different claim from "aborted".
@@ -2107,6 +2107,15 @@ N2OB4='<p>Booking note: the Irish ferry to the islands runs until 2027 on the su
 N2OB5='<p>Getting there: Irish Rail runs hourly from Dublin Heuston; the 2027 timetable is published each December.</p>'
 N2OB6='<p>Money: cards are accepted almost everywhere in Irish cafes and bars, and the 2027 bank holidays fall on the first Monday of each month.</p>'
 N2OB7='<p>Weather: the Irish west coast is wet in every season, so the packing list below holds for the whole 2027 trip.</p>'
+# OB8 and OB9 exist because the first seven under-sampled the space in one direction: NONE
+# of them carries the value's own connective vocabulary, so limb B alone rejected six of
+# the seven and a sweep over that set showed limb A removing nothing. These two carry
+# `to` and `valid` respectively — limb B admits them — and are rejected by limb A alone.
+# Without them the matrix would have read "limb A is not load-bearing", which is a fact
+# about the fixtures rather than about the rule. N2i is the arm that grades the
+# difference.
+N2OB8='<p>Visa / entry: an Irish passport is enough to enter, and no separate permit is required before 2027.</p>'
+N2OB9='<p>Tickets: the festival pass is valid for the whole week, and an Irish student card gets a discount on the 2027 programme.</p>'
 N2TP1='<p>Border note: carry your Irish passport, valid to 2027, at all times.</p>'
 N2TP2='<p>Border note: valid to 2027 — that is the Irish passport you should be carrying.</p>'
 N2TP3='<p>Document check: Irish, valid to 2027.</p>'
@@ -2157,7 +2166,7 @@ n2rc() { # <raw final markup> -> the guard's exact status
 # contiguous run; every carry-through must carry the value's two facts in one block. A
 # fixture set failing either half makes every verdict below vacuous rather than passing.
 n2_bad=""; n2_ob=0; n2_tp=0
-for n2x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB4" "$N2OB5" "$N2OB6" "$N2OB7"; do
+for n2x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB4" "$N2OB5" "$N2OB6" "$N2OB7" "$N2OB8" "$N2OB9"; do
   n2_ob=$((n2_ob+1)); n2render "$WORK/n2_fi.html" "$n2x"
   n2s="$(n2span "$WORK/n2_fi.html")"
   { [ "$n2s" != "-" ] && ! grep -qF 'Irish, valid to 2027' "$WORK/n2_fi.html"; } || n2_bad="$n2_bad OB$n2_ob(span=$n2s)"
@@ -2167,8 +2176,8 @@ for n2x in "$N2TP1" "$N2TP2" "$N2TP3" "$N2TP4" "$N2TP5" "$N2TP6"; do
   n2s="$(n2span "$WORK/n2_fi.html")"
   [ "$n2s" != "-" ] || n2_bad="$n2_bad TP$n2_tp(no-pair)"
 done
-if [ -z "$n2_bad" ] && [ "$n2_ob" -eq 7 ] && [ "$n2_tp" -eq 6 ]; then
-  PASS "N2a: the discrimination matrix is real — $n2_ob over-block candidates each carry both class tokens inside ONE block and none carries the value as a run, and $n2_tp carry-throughs each pair the two facts in one block. Denominator for every verdict below: 7 over-block / 6 carry-through / 3 clean / 1 paraphrase"
+if [ -z "$n2_bad" ] && [ "$n2_ob" -eq 9 ] && [ "$n2_tp" -eq 6 ]; then
+  PASS "N2a: the discrimination matrix is real — $n2_ob over-block candidates each carry both class tokens inside ONE block and none carries the value as a run, and $n2_tp carry-throughs each pair the two facts in one block. Denominator for every verdict below: 9 over-block / 6 carry-through / 3 clean / 1 paraphrase"
 else
   FAIL "N2a: the matrix is not set up as claimed (ob=$n2_ob tp=$n2_tp; bad:$n2_bad) — the arms below would be vacuous rather than passing"
 fi
@@ -2177,12 +2186,12 @@ fi
 # and is named rather than hidden: N2e asserts why it is irreducible.
 n2_over_assert() {
   local x rc pub=0 n=0 bad="" aborted=""
-  for x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB5" "$N2OB6" "$N2OB7"; do
+  for x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB5" "$N2OB6" "$N2OB7" "$N2OB8" "$N2OB9"; do
     n=$((n+1)); rc="$(n2rc "$x")"
     case "$rc" in 0) pub=$((pub+1)) ;; 1) aborted="$aborted OB$n" ;; *) bad="$bad OB$n=rc$rc" ;; esac
   done
   if [ "$pub" -eq "$n" ]; then
-    PASS "N2b: all $n non-residual over-block candidates publish (rc=0) — legitimate destination guidance that mentions the nationality adjective and the trip year no longer aborts. The window is now derived from the value's own span and the match additionally requires the value's own connective vocabulary"
+    PASS "N2b: all $n non-residual over-block candidates publish (rc=0) — legitimate destination guidance, booking, visa, transport, money, weather and ticketing lines that mention the nationality adjective and the trip year no longer abort. The window is now derived from the value's own span and the match additionally requires the value's own connective vocabulary"
   else
     FAIL "N2b: only $pub/$n over-block candidates published — still aborting:$aborted$bad. A fail-closed control that refuses correct content is worked around rather than satisfied"
   fi
@@ -2269,6 +2278,30 @@ if [ "$n2_esc_ob" -eq 1 ] && [ "$n2_esc_tp" -eq 1 ]; then
   PASS "N2g: the ncon==0 escape behaves as declared — against the value 'Irish 2027', which carries no stoplisted token of its own, the connective limb is vacuous, the heading over-block still aborts (rc=1) and a real carry-through is still caught (rc=1). The remedy is proportional to the value, and that bound is measured here rather than assumed"
 else
   FAIL "N2g: the connective-limb escape did not behave as declared (over-block rc=$n2_esc_ob want 1, carry-through rc=$n2_esc_tp want 1) — either the escape has widened into a fail-open or the over-block bound in the matcher comment is now wrong"
+fi
+
+# N2i — BOTH LIMBS ARE LOAD-BEARING, graded one limb at a time rather than argued in
+# prose. The fix has two conjuncts and a reader is entitled to ask whether either is
+# decoration. Each is answered by a fixture the OTHER limb admits:
+#   • limb B is load-bearing — N2g already shows it: against a value carrying no
+#     stoplisted tokens of its own the connective test goes vacuous and the heading
+#     over-block, whose span is 2, aborts again. Limb A admits it at every setting.
+#   • limb A is load-bearing — this arm. OB8 and OB9 both CARRY the value's connective
+#     vocabulary in their own block, so limb B admits them; they are rejected by the
+#     proportional window alone. Raising GUARD_CONJ_SLACK to GUARD_WINDOW makes limb A
+#     non-binding — it is then exactly the flat window that shipped — and both abort.
+# The second half is the one that matters, because the first seven over-block fixtures
+# carried no connective token at all and a sweep over that set alone showed limb A
+# removing nothing. That was a property of the fixtures. This arm is what keeps it from
+# reading as a property of the rule.
+n2_limbA_shipped_8="$(n2rc "$N2OB8")"; n2_limbA_shipped_9="$(n2rc "$N2OB9")"
+n2_limbA_flat_8="$( GUARD_CONJ_SLACK="$GUARD_WINDOW"; n2rc "$N2OB8" )"
+n2_limbA_flat_9="$( GUARD_CONJ_SLACK="$GUARD_WINDOW"; n2rc "$N2OB9" )"
+if [ "$n2_limbA_shipped_8" -eq 0 ] && [ "$n2_limbA_shipped_9" -eq 0 ] \
+   && [ "$n2_limbA_flat_8" -eq 1 ] && [ "$n2_limbA_flat_9" -eq 1 ]; then
+  PASS "N2i: the proportional window is load-bearing on its own — two over-block candidates that DO carry the value's connective vocabulary (so the connective limb admits them) publish at the shipped GUARD_CONJ_SLACK and both abort when it is raised to GUARD_WINDOW, which is the flat window that shipped. Neither limb is decoration: N2g is the mirror arm for the other one"
+else
+  FAIL "N2i: the two limbs are no longer separable on these fixtures (shipped slack: OB8 rc=$n2_limbA_shipped_8 OB9 rc=$n2_limbA_shipped_9, want 0; flat window: OB8 rc=$n2_limbA_flat_8 OB9 rc=$n2_limbA_flat_9, want 1). If the proportional window now removes nothing these fixtures can see, either it is redundant or the matrix has stopped sampling the class it protects"
 fi
 
 # N2h — THE OTHER `conjunctive` ROW. The declaration assigns `conjunctive` to FOUR rows,
