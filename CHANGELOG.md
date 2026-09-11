@@ -3,6 +3,224 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.30.0] — 2026-09-11 — Per-traveler cost forecast
+
+A declared class that had a schema, a witness and a coverage pair — and no producer — acquires one.
+`ADR-011` shipped `outputs/cost-estimate.md` as a class and said in terms that it specified no
+estimation **method**: the money field was admitted in the entry marker, nothing emitted it, and the
+one tracked estimate therefore read a true zero and rendered `undetermined` on every run. That is the
+state the corpus has been in since, and it is the state this release ends. `ADR-018` is the method.
+It answers each question `ADR-011` named as inherited — how a `group-total` figure allocates across
+travellers, whether a range's low bound is the right normalization once real ranges are read, and
+whether a converted figure ever earns a home — and adds one contract reading `ADR-011` did not reach.
+**No decision of `ADR-011`'s is reversed, narrowed or re-opened.**
+
+**Every rule the method states is a read rule, and that is the whole of its discipline.** Each names
+the file and the section a figure comes off, and says what the writer does when that surface holds
+nothing. No scoring formula ships and no weighting ships: `reference/data-architecture.md` § 11 keeps
+metric formulas out of the model and this release does not lean on that boundary. Nor is a new home
+minted for a rate, a norm or a cash figure — every surface read here was already declared, and a
+second home for a value the trip context already states is the failure the model names by name. What
+is genuinely new is what the method does when a surface is unreadable, and the answer is never a
+default.
+
+**A `group-total` divides across the item's own participant set, and refuses otherwise — the refusal
+is the load-bearing half.** Where that set is not determinable the figure is **not** divided by the
+roster; it lands on a named `unallocated group-total` line and no traveller's estimate carries it.
+The transport prompt writes a `**Passengers:**` line on every stream and that line *is* the
+participant set, for the reason the prompt already gives: people landing at 06:00 from one city are
+not a party of six, and pricing them as one is the error that section exists to prevent. Dividing by
+the roster because the roster is the number to hand is invention wearing arithmetic's clothes, and it
+is the specific way a per-traveller figure acquires precision nobody measured.
+
+**Presence is read, never re-derived, and that closes the arrival-day question by refusal rather than
+by adjudication.** A traveller is charged for an item where the plan places it inside that
+traveller's own window, and the window comes off `trip-context.md` § *Per-Traveler Planning Days
+[DERIVED]* — a block that is already derived, already per-traveller, and whose sibling states the
+rule in terms. The estimate does not classify a partial arrival or departure day at all. Where the
+window's granularity leaves presence undecidable, the item goes to the unallocated line **and is
+named there**. Under-determination becomes a visible row instead of a silent choice.
+
+**The range has a floor from the marker and a ceiling from the prose, and no correspondence between
+them is asserted.** § 4.5.1 fixes the marker's `amount` as the low bound where the prose carries a
+range, so a sum over markers is a true floor by construction; for an entry **already joined by its
+marker**, the writer reads that entry's own prose money line for the upper value. The option
+`ADR-011` rejected was reading prose money lines with no marker at all, and its stated ground was the
+join — there was no key to attach the answer to. With the marker present the key exists, which is why
+this is not the rejected option wearing a new name. What is deliberately **not** added is an
+agreement check: where marker and prose disagree, the marker governs the floor and the prose governs
+only the spread above it, and nothing fails.
+
+**The activities class gained a money label, spelled `**Entry cost:**`, because a class that
+researches a price and has nowhere to write it down emits `undetermined` forever.** That prompt
+already mandated researching price — its filler-rigor clause names price among the facts an
+alternative owes, and its anchor clause requires alternatives to vary on price tier — while its entry
+surface declared no money label at all. `**Admission:**` was the first recommendation and was
+overridden: *admission* reads as the act of entry as readily as its price, and this label's whole job
+is to tell an emitter what to write. **`free` is a value and not an absence** — it contributes a zero
+and counts toward the priced reading, which is a different thing from a price nobody could establish.
+
+**The food, nightlife, transport and activities prompts now emit the keyed `cost:` field under the
+§ 4.5.1 fenced grammar, and each states that its own no-line state is historical.** The distinction
+that grammar draws goes live with them: **no line** means *this writer does not yet emit cost* and is
+from here true only of markers written before this change, while `undetermined` means *this writer
+looked and found nothing normalizable*. `agents/03-scheduling.md` deliberately does not emit, and
+that is a decision being honoured rather than an omission — a Day has no purchase, the day key alone
+is that class's marker in full, and its entity puts it outside the denominator regardless.
+
+**`agents/05-hub-planner.md` gained an output section built from nothing.** It was the declared
+writer of `outputs/cost-estimate.md` and referenced that artifact **zero times** — measured against
+the same prompt's references to `outputs/event-status.md`, a file it genuinely does write, which
+returned a healthy non-zero on the identical probe. The new section is the largest single edit the
+record drives, and it is where each read rule above stops being a decision in a document and becomes
+an instruction to a writer. It also carries the write ordering the commitment split depends on, and
+it restates the derivation bound that `ADR-011` had put in a schema the writer does not read.
+
+**The estimate reports its own coverage rather than quietly presenting a partial total as whole.**
+Frontmatter carries the entry population — markers over the denominator classes, and those carrying a
+readable cost signal — and each traveller row carries its own `P of Q` pair besides. The per-traveller
+pair is the point: without a denominator of its own, a per-traveller `undetermined` is
+indistinguishable from a per-traveller zero, which is the absence-versus-zero collapse the class
+exists to prevent, reproduced one scope down. A zero reading renders `undetermined` and never a total
+of zero. The unpriced remainder is reported beside the cash line **in item count and never converted
+to a currency amount** — a money figure standing in for something nobody read would be invention with
+a decimal point on it.
+
+**The tracked witness stopped being degenerate.** `ADR-011` recorded coverage on the tracked corpus as
+zero priced and said it stays there. The half of that about the frozen tree stands; the half about the
+demo fixture is what this release narrows. `examples/data-architecture-demo/` now witnesses the limb
+where a total and its coverage caveat must be rendered **together** — the shipping behaviour of any
+real trip, and strictly more of the rendering rule than the alternatives. Its priced reading moves off
+zero while its marker population does not move at all: no marker is added and none is removed. The
+fixture's *no prices* clause was narrowed in the fixture's own § *Depth* rather than around it, to
+*no sourced prices — synthetic currency values only, where a class's own rule cannot be exercised
+without one*. What that clause withholds is a **sourced** figure, and a synthetic price on a
+placeholder venue in a placeholder destination is not one.
+
+**The split is committed versus on-the-ground, and it is emphatically not prepaid versus not.** The
+milestone framing carried the prepaid axis and `outputs/event-status.md` cannot support it: that file
+records **commitment**, not payment. A held restaurant table is `locked` and paid at the venue; a
+purchased timed entry is `locked` and paid in advance; nothing in the corpus separates them, so a
+prepaid label would over-claim on every run. One standing sentence therefore travels with the split —
+*a committed item may still be paid at the venue; this records what is booked, not what is paid.* An
+`option` row is named in the body as an excluded alternative pool rather than silently dropped.
+
+**A premise the driving work carried was false, and the prompt that falsifies it is the hub's own.**
+The framing said the booked-versus-not split has no source on a first synthesis pass, because
+`outputs/event-status.md` is a conditional input read only in later modes. But the hub is that file's
+**primary writer** and creates it if it does not yet exist, seeding known `locked` rows from
+`trip-context.md` § *Locked Elements* — whose own template examples are *confirmed reservation* and
+*tickets purchased*. The signal is not absent on a first pass; it is written by the same actor, in the
+same pass, minutes earlier. So the estimate reads the state its own writer is already holding at a
+declared ordering point, and **the hub's input contract is unchanged**: nothing is added to the
+unconditional list and the conditional item keeps its wording. The degenerate limb survives under its
+true condition — a write-stop that fired, or a pre-migration file the tolerant read left unresolved.
+A status file carrying no `locked` row is a **measurement**, and renders a real zero that says so.
+
+**Two guard additions ship, and each pins something the release would otherwise have asserted in prose
+alone.** `CE-SPREAD-ATTRIBUTION` grades body arithmetic that the marker-and-scalar codes structurally
+cannot see: a sentence that credits a spread to a set of entries the corpus beneath it disagrees with.
+It is deliberately one-directional and narrow at both ends — a body naming no carrier makes no
+attribution and is passed over, a body naming a superset is passed over too, because naming a
+point-value entry for contrast is legitimate prose. What is left is exactly the shape that escaped: an
+attribution omitting a carrier the corpus holds, which is how a witness came to credit one entry with
+a spread that more than one supplies, and passed every arm in its group doing it. The other addition
+is a new limb on `CE0` asserting the **join** between the derived class set and the file-to-class map.
+Key those two differently — a bare numeral against a `C`-prefixed id — and **neither set is empty**,
+so every other limb reads green while their intersection is nothing: every file falls out of the
+denominator, the marker census reads zero, and the group reports a confident mismatch against a
+fixture that is telling the exact truth. A red naming the wrong file is worse than a silent pass,
+because the corpus gets edited toward the checker instead of the checker toward the corpus.
+
+**The shipped category breakdown is not the one the story named, and the difference is stated rather
+than smoothed over.** The story asked for local transport, food, activities / admission and
+**incidentals**. What ships is Transport, Activities / admission, Nightlife and Food. `Nightlife` is a
+real cost class in this engine with its own emitter and its own priced entries, so it earns a row on
+the evidence. `incidentals` has **no marker surface anywhere in the corpus** — there is no class whose
+entries could carry one, so a row bearing that name would read `undetermined` forever while implying
+something had been looked for. It is dropped and said so here. This release's whole thesis is
+reporting what could not be filled instead of quietly filling it, and an entry that hid its own
+shortfall would do to itself precisely what the artifact refuses to do.
+
+### Added
+
+- **`reference/adr/ADR-018-cost-estimation-method.md`** — the method record: the commitment axis, the
+  read edge onto the event-status file, and the questions `ADR-011` handed forward. It states what it
+  is still **not** — no scoring formula, no weighting — and carries its refused options with the
+  ground for refusing each, including the branch that would have declared the committed limb
+  degenerate on a first pass and the one that would have built a second general fixture.
+- **`**Entry cost:**` on the activities entry surface** — local currency plus an approximate USD
+  figure per person, `free` where there is none, and a `[Source date: …]` bracket copied from the food
+  class's `**Price:**` rather than invented. That bracket is what brings the price-staleness rule
+  within reach of the activities class for the first time.
+- **The keyed `cost:` line in the food, nightlife, transport and activities prompts** — under the
+  § 4.5.1 fenced grammar, with the normalized scalar in the currency the prose states and no
+  conversion at the marker.
+- **An output section in `agents/05-hub-planner.md`** — covering the artifact's coverage reading, the
+  estimate and its category table, the commitment split and the pre-trip recommendation, plus the
+  write ordering the split rests on and the derivation-bound tripwire restated where a writer meets
+  it.
+- **A USD projection beside the local-currency total, rendered only where the trip declares a rate** —
+  naming the rate and the date the baseline was enriched. Where no rate is declared the projection is
+  **omitted**, never computed from an invented one, and **no total is ever summed across currencies**.
+- **Preload and cash lines sourced from surfaces that already compute them** — the fare-card figure
+  from the transport brief's pass assessment, apportioned to the traveller's present days, and cash
+  from the destination baseline's payment norms crossed with category spend. Where either source block
+  is absent or unexercised the line renders `undetermined` **with the condition named**, and there is
+  no default figure behind it.
+- **A per-traveller coverage pair in the body** — its own `P of Q` per row, not a fourth frontmatter
+  field. No schema bump: nothing here adds, removes or retypes a field.
+- **`CE-SPREAD-ATTRIBUTION` and the join limb on `CE0`** in the artifact-schema suite, grading the
+  tracked tree directly and adding no finding code to the validator. The validator declares prose out
+  of scope by name and its finding set is frontmatter-only, so a body arm there would cross a declared
+  boundary.
+
+### Changed
+
+- **The commitment split reads committed versus on-the-ground.** A payment-state signal does not exist
+  anywhere in the corpus, and adding one is a schema change to a class with instances already on disk.
+- **The tracked estimate fixture is populated rather than degenerate**, with the narrowed § *Depth*
+  clause stated in the fixture's own rule file so it keeps one home for it.
+- **Four schema mirrors move with their prompts.** Each restated the decline its prompt carried, and a
+  mirror declining while its prompt emits would be the two-home contradiction `ADR-011` already paid
+  for once. The activities schema also carried a sentence this release falsifies — that its class was
+  the one cost-bearing member with no money label of its own — and it moves in the same change.
+- **The estimate schema's closing claim that the class is validated by nothing** is now false for the
+  mechanical limbs, so it is rewritten and narrowed to what genuinely stays unreached: the prose
+  caveats, the prose-derived ceiling, and the derivation bound.
+- **Budget posture may be rendered as a labelled comparison and is never summed into any total.** It
+  declares willingness to spend rather than observed price; filling an unreadable item from it hands
+  the operator their own number back as an estimate.
+
+### Known gaps, carried rather than hidden
+
+- **The ceiling is prose-derived and therefore not machine-checkable.** The new guard group grades the
+  marker population and the rendering limbs, and no arm can grade a range's upper value against the
+  sentence it was read from. That is why the ceiling lives in the body and why the coverage counts
+  stay marker-only — and § 4.5.1's declared gap, that nothing in this repository reads a prose money
+  line against a marker value, is **not** closed here. This release adds no correspondence assertion
+  and fails on no disagreement.
+- **The grading reaches the tracked tree only.** A user's git-ignored trip directory is unreachable by
+  any check in this repository, so a real trip's estimate is never graded. That is the same posture
+  the validator already takes over the same population, which makes it a bound on what a green means
+  rather than a regression.
+- **The rendering limbs that stay unwitnessed are declared with their reasons.** A fully-priced
+  estimate is a strictly smaller rendering than the partial one now witnessed, and buying it costs a
+  second general fixture for one boolean; the `unverifiable` limb is already unwitnessed and this
+  release does not regress it, because the only tracked tree that would read it is pinned in both
+  directions by a freeze declaration and can never gain an instance of this class.
+- **`incidentals` ships as a dropped category rather than an empty one**, for want of any marker
+  surface that could carry it. Re-admitting it is a new entry class, not a row.
+- **Separating paid from payable needs a field the event-status class does not have.** It is filed as
+  intake rather than taken here, because adding one is a schema change to a class whose instances are
+  already on disk.
+- **No command verb surfaces the estimate.** The command reference carries none and the estimate is a
+  synthesis product, so none is owed by the method record; a verb that surfaces it is a slice of its
+  own.
+- **The coverage-report capability the validator agent could own is new capability, not a gap.** That
+  agent already owns the coverage idiom both the field grammar and the class schema cite by name and
+  could audit this class's pair as it audits its own; the mechanical assertion is already covered.
+
 ## [0.29.0] — 2026-09-10 — Groups and trip history
 
 Two capabilities land together and turn out to be one idea seen from two sides: **a person's durable
