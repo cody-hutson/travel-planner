@@ -51,6 +51,16 @@ name: Trip resolution contract
 #        by a later slice adds its arm in the same change. A count copied into this file
 #        is a copy with no assertion behind it, and it has already gone stale once, which
 #        is precisely the failure mode this whole suite exists to catch
+#   EV   the canonical entries' ROOT RESOLUTION, executed rather than inspected. The
+#        entries are unwrapped out of their pre-execution wrapper and run against a
+#        two-root fixture built in a temp dir on every invocation — one root shaped like
+#        the checkout, one not — so the group measures what the block actually resolves
+#        to under each condition, and what it prints when it resolves to nothing. The
+#        fixture is injected rather than ambient for the reason stated in the guard: an
+#        arm run against the runner's own environment would measure an empty tree and go
+#        vacuously green. As everywhere else here, no command is spelled in the guard —
+#        each is read from the canonical extracted on that run, which is what keeps the
+#        one-home seam intact while the group executes it
 #
 # ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
 # GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo,

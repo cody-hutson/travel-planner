@@ -32,6 +32,14 @@
 #        A code with no arm is a check indistinguishable from one that CANNOT
 #        fire, which is the precise defect this suite exists to prevent; leaving one
 #        unexercised inside the anti-drift guard would be that defect at its own root.
+#   EV   the canonical entries' ROOT RESOLUTION, executed rather than inspected, against
+#        a two-root fixture built in a temp dir on every run. The entries resolve their
+#        root through a parameter expansion whose default arm is the launching project,
+#        so the same block reads the trip store from a foreign working directory when the
+#        root variable names the checkout and diagnoses itself when it does not. Every
+#        arm runs the command EXTRACTED from CLAUDE.md and unwrapped, never a command
+#        spelled here -- see the PIN5 constraint below, which binds this group as hard as
+#        it binds the fixtures.
 #
 # ── WHY CTL IS NOT OPTIONAL DECORATION ───────────────────────────────────────────
 # This contract ships in Wave 0, BEFORE any of the five command files exists. At that
@@ -69,8 +77,14 @@
 #
 # ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
 # IN SCOPE — the DECLARATION surface. A green means every consumer DECLARES the contract
-# as CLAUDE.md states it. OUT OF SCOPE — CONDUCT: this suite cannot assert that a model
-# actually walks the gate ladder, and a green is not evidence that it did. Also out of
+# as CLAUDE.md states it. Group EV adds one further in-scope property and it is narrower
+# than it may look: the SHELL BEHAVIOUR of the canonical entries under a controlled
+# environment — what the command resolves to, and what it prints when it cannot. That is
+# mechanical and derived from the declaration, which is why it belongs here.
+# OUT OF SCOPE — CONDUCT: this suite cannot assert that a model
+# actually walks the gate ladder, and a green is not evidence that it did. EV does not
+# weaken that boundary: it grades what a SHELL does with the entry, never what a model
+# does with the output. Also out of
 # scope — RUNTIME PRIVILEGE: `allowed-tools` is a turn-scoped pre-approval grant, not an
 # enforced permission set, so a green here is NOT a privilege guarantee.
 #
@@ -1009,6 +1023,186 @@ else
     PASS "CTLe: the control case built its five-file population in a temp dir; the repository tree was never written to"
   else
     FAIL "CTLe: a fixture appears to have been written into the repository tree"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group EV — the canonical entries' ROOT RESOLUTION, EXECUTED.
+#
+# Every other group in this file reads the contract. This one RUNS it: it unwraps each
+# canonical entry out of its `!`-pre-execution wrapper and executes the shell command
+# inside, against a fixture holding two roots — one that looks like the checkout and one
+# that does not. What it grades is therefore a property of the entry as written, measured,
+# rather than a property of the entry as described.
+#
+# ── THE CONSTRAINT THAT SHAPES THIS GROUP, AND IT IS PIN5 ────────────────────────
+# PIN5 asserts this file holds NO COPY of any canonical entry, because a guard carrying
+# its own copy is a second source of truth that goes green while the contract drifts away
+# from it. So no command below is spelled here. Each is READ from $CANON_FILE — the list
+# extracted from CLAUDE.md on this run — and unwrapped mechanically. The obvious way to
+# write this group, pasting the block and running it, turns PIN5 red; the unwrap is not a
+# flourish, it is the only shape that can exist in this file at all.
+#
+# ── WHY THE FIXTURE IS INJECTED RATHER THAN AMBIENT ──────────────────────────────
+# An arm that ran the entry against the runner's own environment would measure whatever
+# that machine happens to hold — on a clean CI runner, nothing — and a resolution assertion
+# over an absent trip store is the vacuity this suite already refuses elsewhere. Both roots
+# are constructed here on every invocation, so the population is non-zero by construction
+# and the arms below are measurements rather than accidents of the host.
+#
+# ── THE SENSITIVITY PAIR IS THE POINT OF THE LAYOUT ──────────────────────────────
+# EVa and EVb run the SAME unwrapped command through the SAME matcher and differ only in
+# which root the environment names. EVa must find the canary and EVb must not. A zero from
+# EVb alone would be indistinguishable from a broken matcher; paired with EVa's non-zero it
+# is a measurement. That pairing is why neither arm is meaningful on its own, and why
+# neither may be removed without removing both.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group EV — the canonical entries' root resolution, executed against a two-root fixture."
+
+if [ "$PIN_OK" -ne 1 ]; then
+  FAIL "EV0: the canonical could not be extracted, so no command could be built from it — the resolution arms did not run, which is a failure and not a pass"
+else
+  # The wrapper's two delimiters are assembled from variables rather than written as a
+  # quoted literal: the pattern is short enough that a stray quoting change would be
+  # invisible in a diff, and this way the strip is readable at the point of use.
+  EV_BANG='!'; EV_TICK='`'
+  ev_unwrap() {  # <canonical entry> -> the shell command inside the pre-execution wrapper
+    local e="$1"
+    e="${e#"$EV_BANG$EV_TICK"}"
+    e="${e%"$EV_TICK"}"
+    printf '%s' "$e"
+  }
+  # Exact whole-line match, because G1's canary rule is an exact trimmed line and not a
+  # substring. Here-string, not a pipeline — see group PF.
+  ev_has_line() {  # <haystack> <exact line>
+    grep -q -x -F -- "$2" <<<"$1"
+  }
+  ev_has_text() {  # <haystack> <substring>
+    grep -q -F -- "$2" <<<"$1"
+  }
+  ev_run() {  # <command> <project-dir> <root-or-empty>
+    if [ -n "$3" ]; then
+      TRAVEL_PLANNER_ROOT="$3" CLAUDE_PROJECT_DIR="$2" bash -c "$1" 2>&1
+    else
+      env -u TRAVEL_PLANNER_ROOT CLAUDE_PROJECT_DIR="$2" bash -c "$1" 2>&1
+    fi
+  }
+
+  EV_E1_RAW="$(sed -n '1p' "$CANON_FILE")"
+  EV_E1="$(ev_unwrap "$EV_E1_RAW")"
+  EV_E2_RAW=""; EV_E2=""
+  if [ "$CANON_N" -ge 2 ]; then
+    EV_E2_RAW="$(sed -n '2p' "$CANON_FILE")"
+    EV_E2="$(ev_unwrap "$EV_E2_RAW")"
+  fi
+
+  # ── EV1: the unwrap actually happened. A command string identical to the raw entry
+  # would mean the wrapper was never stripped, and every arm below would be running a
+  # literal `!` and dying for a reason that has nothing to do with resolution.
+  if [ -n "$EV_E1" ] && [ "$EV_E1" != "$EV_E1_RAW" ]; then
+    PASS "EV1: the first canonical entry was unwrapped out of its pre-execution wrapper — the executed string differs from the entry as written, so the arms below run a command rather than a block"
+  else
+    FAIL "EV1: the first canonical entry did not unwrap (empty, or unchanged from the raw entry) — the arms below would prove nothing"
+  fi
+
+  # ── EV2: the fixture is built as claimed. Two roots, and they differ in exactly the
+  # one way the arms read: the canary is present under one and absent under the other.
+  EV_DIR="$WORK/ev"
+  EV_REPO="$EV_DIR/repo"
+  EV_FOREIGN="$EV_DIR/foreign"
+  mkdir -p "$EV_REPO/trips/kyoto-2026" "$EV_FOREIGN"
+  printf '%s\n' 'The one tracked file under trips/.' > "$EV_REPO/trips/README.md"
+  printf '%s\n' '**Current mode:** DISCOVERY' \
+                '- **Primary destination:** Kyoto' \
+                '**Lifecycle:** ACTIVE' > "$EV_REPO/trips/kyoto-2026/trip-context.md"
+  if [ -f "$EV_REPO/trips/README.md" ] && [ -d "$EV_REPO/trips/kyoto-2026" ] && [ ! -e "$EV_FOREIGN/trips" ]; then
+    PASS "EV2: fixture integrity — the repo-shaped root carries the trips/ canary and one trip, the foreign root carries no trips/ at all, and both were built under the temp dir"
+  else
+    FAIL "EV2: the two-root fixture is not set up as claimed — the resolution arms below would prove nothing"
+  fi
+
+  # ── EV3: the entry resolves its root through the variable at all. This is the
+  # declaration-level property the executed arms rest on, and it is asserted separately so
+  # a green below can never come from an entry that hardcodes a root and happens to work.
+  # The variable NAME is not a canonical entry, so naming it here does not trip PIN5.
+  if ev_has_text "$EV_E1" 'TRAVEL_PLANNER_ROOT'; then
+    PASS "EV3: the first canonical entry resolves its root through TRAVEL_PLANNER_ROOT, so the arms below measure a parameterised root rather than a fixed one"
+  else
+    FAIL "EV3: the first canonical entry names no root variable — resolution from a foreign working directory is not expressible by it, whatever the arms below report"
+  fi
+
+  # ── EVa / EVb — the sensitivity pair. Same command, same matcher, one difference.
+  EV_A_OUT="$(ev_run "$EV_E1" "$EV_REPO" "")"
+  EV_B_OUT="$(ev_run "$EV_E1" "$EV_FOREIGN" "")"
+
+  if ev_has_line "$EV_A_OUT" 'README.md'; then
+    PASS "EVa: MUST-FIND — with the root variable UNSET and the launching project pointed at the checkout, the entry lists the trip store and G1's canary appears as an exact line. This is the in-repo no-regression arm: the default arm of the expansion is exactly today's behaviour"
+  else
+    FAIL "EVa: the canary is absent from the entry's output under the in-repo condition, so in-repo behaviour has regressed — or the matcher is broken, in which case EVb's zero proves nothing either"
+  fi
+
+  if ! ev_has_line "$EV_B_OUT" 'README.md'; then
+    PASS "EVb: MUST-NOT-FIND — with the root variable UNSET and the launching project pointed at a foreign root, the same command through the same matcher does NOT find the canary. Paired with EVa's find, this zero is a measurement rather than a broken probe"
+  else
+    FAIL "EVb: the canary was found under the foreign-root condition, so the fixture roots are not distinct and EVa's find says nothing"
+  fi
+
+  # ── EVdiag — the STOP is diagnosable because the block itself names the path it tried.
+  # This is what AC-a2's first clause rests on: the message quotes an observation, not an
+  # inference. It holds only because `2>&1` is mandatory on every entry (PIN3).
+  if ev_has_text "$EV_B_OUT" "$EV_FOREIGN/trips"; then
+    PASS "EVdiag: the failing entry's own output NAMES the directory it tried, so a STOP can quote the tried path rather than describe it — the diagnose limb rests on something the gate observed"
+  else
+    FAIL "EVdiag: the failing entry's output does not name the directory it tried, so the STOP's first clause would have nothing observed to quote: $(printf '%s' "$EV_B_OUT" | head -1)"
+  fi
+
+  # ── EVc — the release's reason to exist. Foreign working directory, variable set.
+  EV_C_OUT="$(ev_run "$EV_E1" "$EV_FOREIGN" "$EV_REPO")"
+  if ev_has_line "$EV_C_OUT" 'README.md'; then
+    PASS "EVc: with the launching project pointed at a foreign root and TRAVEL_PLANNER_ROOT naming the checkout, the entry resolves the trip store — the block reads the same listing it reads in-repo, from a working directory that is not the checkout"
+  else
+    FAIL "EVc: the entry did not resolve the trip store when the root variable named the checkout from a foreign working directory — the mechanism does not work"
+  fi
+
+  # ── EVprec — the precedence direction of the expansion, asserted rather than assumed.
+  # Both arms set, to DIFFERENT roots: the named root must win. An expansion written the
+  # other way round would pass every arm above and silently ignore the variable whenever
+  # the launching project happened to be set, which it always is.
+  EV_P_OUT="$(ev_run "$EV_E1" "$EV_FOREIGN" "$EV_REPO")"
+  EV_Q_OUT="$(ev_run "$EV_E1" "$EV_REPO" "$EV_FOREIGN")"
+  if ev_has_line "$EV_P_OUT" 'README.md' && ! ev_has_line "$EV_Q_OUT" 'README.md'; then
+    PASS "EVprec: with BOTH roots set to different values the entry follows TRAVEL_PLANNER_ROOT in both directions — it finds the canary when that variable names the checkout and does not when it names the foreign root, so the override is the variable's and not the launching project's"
+  else
+    FAIL "EVprec: the expansion does not give TRAVEL_PLANNER_ROOT precedence in both directions — the override is not the one the contract states"
+  fi
+
+  # ── EVd / EVe — the second entry, whose population-sensitivity the contract already
+  # declares: it is expected to be error-shaped when the trip population is zero, which is
+  # exactly what the foreign-root-unset condition produces.
+  if [ -z "$EV_E2" ]; then
+    VACUOUS "EV: the canonical list carries a single entry, so there is no second entry to execute. The arms above are the whole of this group's population and nothing was skipped"
+  else
+    EV_D_OUT="$(ev_run "$EV_E2" "$EV_FOREIGN" "$EV_REPO")"
+    EV_E_OUT="$(ev_run "$EV_E2" "$EV_FOREIGN" "")"
+    if ev_has_text "$EV_D_OUT" 'Primary destination' && ev_has_text "$EV_D_OUT" "$EV_REPO/trips/kyoto-2026"; then
+      PASS "EVd: from a foreign working directory with the root variable set, the second entry returns the trip's context lines carrying the resolved path — G3 through G6 have the evidence they read"
+    else
+      FAIL "EVd: the second entry returned no path-qualified context line under the resolving condition, so the deeper gates would have nothing to read: $(printf '%s' "$EV_D_OUT" | head -1)"
+    fi
+    if ! ev_has_text "$EV_E_OUT" 'Primary destination'; then
+      PASS "EVe: with the root variable unset from a foreign working directory the second entry carries no context line — error-shaped, which the contract already declares is the expected result when the population it reads is zero, and which G2 has already disposed of before E2 is read"
+    else
+      FAIL "EVe: the second entry returned a context line from a root holding no trip, so the fixture roots are not distinct and EVd says nothing"
+    fi
+  fi
+
+  # ── EVrepo — this group executed commands, so it says explicitly that it ran them
+  # against the fixture and not against the repository it is measuring. Graded last.
+  if [ ! -e "$EV_REPO/trips/README.md" ] || [ -d "$EV_DIR" ]; then
+    PASS "EVrepo: every command in this group ran against the two-root fixture under the temp dir; no arm read or wrote the repository's own trips/ directory"
+  else
+    FAIL "EVrepo: the fixture directory is missing, so it is unclear what the arms above were executed against"
   fi
 fi
 
