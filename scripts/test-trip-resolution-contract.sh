@@ -1472,16 +1472,20 @@ fi
 #      suites are not scanned and are not covered.
 #
 # ── THE CONTROLS ARE PERMANENT, NOT A ONE-TIME DEMONSTRATION ─────────────────────
-# FZ1 plants an arm carrying the banned shape and requires the detector to flag it; FZ2
-# plants the same arm rewritten as the conforming chain and requires silence over a
-# non-empty population. They are built and run on EVERY invocation, the way group CTL
-# rebuilds its fixtures, so a detector that stops detecting is caught by the next run
-# rather than by the next reader. FZ1 is graded FIRST: a zero from FZ3 whose sensitivity
-# arm did not fire is a broken probe, not a clean file.
+# FZ1 plants an arm carrying the banned shape and requires the detector to flag it. FZ2
+# plants the conforming source — the same arm rewritten as a chain, PLUS a conjunctive
+# PASS-reaching guard — and requires silence over it; that second guard is not decoration,
+# it is the only specimen an over-matching detector can be seen on, and FZ2 asserts its
+# presence rather than assuming it. Both sources are built and run on EVERY invocation, the
+# way group CTL rebuilds its fixtures, so a detector that stops detecting is caught by the
+# next run rather than by the next reader. FZ1 is graded FIRST, and FZ3 reads its result: a
+# zero whose sensitivity arm did not fire is a broken probe, not a clean file.
 #
-# The operator token is assembled from two pieces, and the comments above spell it `or`
-# rather than literally, for the reason group PF assembles its own needle: a detector that
-# spells the shape it hunts would match itself.
+# The needle is assembled from two pieces, and the comments above spell it `or` rather than
+# literally, for the reason group PF assembles its own: a detector that spells the shape it
+# hunts would match itself. The ONE deliberate exception is the plant, which spells the
+# operator in full so that it is not built out of the needle it is meant to test — see the
+# note at fz_plant, and the probe that forced it.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "── Group FZ — every verdict arm in this file must be able to FAIL."
