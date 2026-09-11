@@ -9,8 +9,12 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q, U) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, RS) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
+# That parenthesis is a reading aid and has never been complete — the AUTHORITATIVE roster
+# of groups that run is the coverage boundary in .github/workflows/publish-guard.yml, and
+# group RS below parses it and set-diffs it against this run in both directions. Read the
+# boundary, not this line: it is asserted and this line is not.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
 # K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
 # Q = analysis/ workspace ignore invariant (same shape as K, lower severity)
@@ -79,13 +83,25 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # but the ordering is not left to be re-derived by a later reader.
 SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
 SELF_PUBLISH="$HERE/publish-trip-site.sh"
+# Group RS reads the workflow that runs this suite. Same idiom, and same reason, as the
+# taxonomy suite binding its own trigger into group Z's watch set: a guard that cannot
+# see the file declaring its own coverage is the one thing a reader would least expect
+# it to miss.
+ROOT="$(dirname "$HERE")"
 # shellcheck source=publish-trip-site.sh
 source "$HERE/publish-trip-site.sh"      # BASH_SOURCE guard prevents dispatch
 set +e
 
-pass=0; fail=0; skip=0; SKIPPED=""
-PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
-FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); }
+pass=0; fail=0; skip=0; SKIPPED=""; SEEN=""
+# Every verdict records its assertion id — the token before the first colon of the
+# message — so group RS at the bottom can ask which GROUPS actually emitted. SKIP has
+# always done this; PASS and FAIL did not, and that asymmetry IS the gap RS closes. A
+# group that is deleted, renamed or made unreachable emits nothing at all: it never
+# skips, so it never reaches the strict-skip comparison below and vanishes silently.
+# The two controls stay orthogonal — RS asks "did the group run", strict-skip asks "was
+# the skip declared" — and a group that only ever skips is present to both.
+PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); SEEN="$SEEN${*%%:*} "; }
+FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); SEEN="$SEEN${*%%:*} "; }
 # Records the skipped group's id — the token before the first colon of the message — so
 # the aggregate verdict at the bottom can refuse a run in which a group vanished.
 SKIP() { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
@@ -4430,6 +4446,211 @@ elif [ "$PF_BAD" -eq 0 ]; then
   PASS "PF1: ${PF_GOOD} grep -q sites across this suite and the publish script it guards, 0 of them pipelines — no verdict here can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
 else
   FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates
+# the groups that run here, and that workflow's closing sentence QUANTIFIES over the
+# enumeration: "every in-scope group above ran and passed". Nothing asserted it.
+#
+# GUARD_STRICT_SKIPS below is a real control and it covers exactly one vanishing mode:
+# a group that SKIPS without being declared. A group that is deleted, renamed, or made
+# unreachable emits nothing at all — it never skips, so it never reaches that
+# comparison. PASS and FAIL did not record their ids until this group needed them;
+# only SKIP did. That asymmetry is the defect.
+#
+# It is not hypothetical. Before this group existed, five always-run groups — PF, R, S,
+# T and V — were absent from the boundary: 72 of 177 verdicts, 40.7% of the suite,
+# running outside a boundary that claimed to enumerate them. Each of R, S and T arrived
+# with a release that could have added its line by hand and did not, which is the
+# measurement that says hand-maintenance is the cause rather than the cure.
+#
+# So the enumeration is PARSED and SET-DIFFED BOTH WAYS rather than read and believed.
+# RS1 catches a declared group that stopped emitting; RS2 catches an emitted group that
+# was never declared. A one-way check catches one of those and reads green on the other.
+#
+# The roster deliberately does NOT live in this file. A roster the suite derives from
+# itself is the self-referential-validation defect: deleting a group and its roster line
+# is then one edit, and the check can never fire. It lives in the workflow, which is
+# also where #123 AC 8 requires the coverage boundary to be stated.
+#
+# RS is pure bash reading a tracked file. It has no legitimate skip, and it must never
+# be added to GUARD_EXPECTED_SKIPS — an RS that skipped would be indistinguishable from
+# the drift it exists to detect.
+#
+# What RS deliberately does NOT do: assert a per-group MINIMUM verdict count. That would
+# catch a group gutted from 35 assertions to 1, which the roster does not. It is declined
+# rather than omitted: the failure modes this group exists for — deletion, rename,
+# unreachability — are all zero-verdict conditions the roster already covers, and a
+# declared per-group floor churns on every assertion added and, unraised, silently stops
+# binding. That is a copy with a decaying assertion behind it — the same defect one level
+# down. The only floor that ships is RS0's vacuity guard, which cannot rot.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group RS — the workflow's stated coverage boundary, asserted against the run."
+
+RS_WF="$ROOT/.github/workflows/publish-guard.yml"
+
+# ONE grammar, stated here and stated in the file it reads. Inside a boundary block, a
+# roster line carries the group id as its leading field at exactly THREE spaces after
+# the comment marker; an explanation continues at nine and therefore cannot match. A
+# block opens at `# IN SCOPE` or `# OUT OF SCOPE` and closes at the next `# ──` section
+# rule, so a roster-shaped line elsewhere in the file is not read as a declaration.
+# A group id may be declared in both blocks — J is, because J2/J3 run and J1 does not —
+# so the parse dedupes rather than treating the second mention as a new group.
+rs_parse() { # <workflow_file> -> space-delimited declared GROUP ids on stdout
+  local line inb=0 out=" "
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      '# IN SCOPE'*|'# OUT OF SCOPE'*) inb=1; continue ;;
+      '# ──'*)                         inb=0 ;;
+    esac
+    [ "$inb" -eq 1 ] || continue
+    [[ "$line" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)([[:space:]]|$) ]] || continue
+    case "$out" in *" ${BASH_REMATCH[1]} "*) ;; *) out="$out${BASH_REMATCH[1]} " ;; esac
+  done < "$1"
+  printf '%s' "${out# }"
+}
+
+# An assertion id reduced to its GROUP id — the leading run of capitals. This is the id
+# grammar SKIP has always used, taken one step further: `${*%%:*}` yields `PF1`, `C2`,
+# `V0-CTL`; the groups are `PF`, `C`, `V`. No second grammar is introduced, because two
+# id namespaces that can disagree is exactly the failure this group is about.
+rs_group() { [[ "$1" =~ ^([A-Z]+) ]] && printf '%s' "${BASH_REMATCH[1]}"; }
+
+# Set difference: members of <a> absent from <b>, deduped. Used in BOTH directions.
+rs_diff() { # <a-set> <b-set> -> space-delimited members of a not in b
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  printf '%s' "${out# }"
+}
+
+rs_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# The ids this run actually emitted, reduced to groups: SEEN ∪ SKIPPED. The union is
+# load-bearing — a group whose only emission is a declared skip still RAN as far as this
+# question is concerned, and asking otherwise would duplicate the strict-skip control
+# instead of complementing it.
+RS_EMITTED=" "
+# shellcheck disable=SC2086
+for rsid in $SEEN $SKIPPED; do
+  rsg="$(rs_group "$rsid")"
+  [ -n "$rsg" ] || continue
+  case "$RS_EMITTED" in *" $rsg "*) ;; *) RS_EMITTED="$RS_EMITTED$rsg " ;; esac
+done
+# RS is emitting its own verdicts on the next lines, so it is a member of the emitted set
+# by construction — SEEN cannot yet hold a verdict this group has not printed. Added
+# explicitly rather than left implicit, because this is what makes RS2 require RS's OWN
+# declaration in the roster exactly as it requires every other live group's.
+case "$RS_EMITTED" in *" RS "*) ;; *) RS_EMITTED="${RS_EMITTED}RS " ;; esac
+RS_EMITTED="${RS_EMITTED# }"
+
+RS_DECLARED=""; RS_READABLE=0
+if [ -r "$RS_WF" ]; then RS_READABLE=1; RS_DECLARED="$(rs_parse "$RS_WF")"; fi
+RS_NDEC="$(rs_count "$RS_DECLARED")"
+RS_NEMIT="$(rs_count "$RS_EMITTED")"
+
+# RS0 runs FIRST and the ordering is what makes every zero below mean something. A parse
+# that reads zero ids makes both set-diffs empty and RS1/RS2 pass against nothing — a
+# probe failure wearing a pass. Unreadable, zero-parsed and zero-emitted are each a
+# FAIL, and only then may the diffs render a verdict. Same rule, same reason, as PF1.
+if [ "$RS_READABLE" -ne 1 ]; then
+  FAIL "RS0: the coverage boundary at .github/workflows/publish-guard.yml is unreadable, so the verdicts below would cover nothing — a roster that cannot be read is a finding, never a clean scan"
+elif [ "$RS_NDEC" -eq 0 ]; then
+  FAIL "RS0: the coverage boundary parsed to 0 group ids, so both set-diffs would be empty and would pass against nothing. The grammar is one id per line at three spaces after the comment marker, inside the IN SCOPE / OUT OF SCOPE blocks — either the block moved or the grammar did, and neither verdict below is trustworthy"
+elif [ "$RS_NEMIT" -eq 0 ]; then
+  FAIL "RS0: this run emitted 0 group ids, so the roster would be compared against an empty run. PASS/FAIL/SKIP record the token before the first colon; if that grammar moved, the comparison is vacuous"
+else
+  PASS "RS0: the boundary is readable and non-degenerate — ${RS_NDEC} declared group id(s) parsed from .github/workflows/publish-guard.yml, ${RS_NEMIT} emitted by this run. Both arms below are therefore measurements rather than empty scans"
+
+  RS_MISSING="$(rs_diff "$RS_DECLARED" "$RS_EMITTED")"
+  if [ -n "$RS_MISSING" ]; then
+    FAIL "RS1: declared group(s) emitted no verdict in this run: ${RS_MISSING% } — deleted, renamed or unreachable. A vanished group emits nothing at all, so it never skips and GUARD_STRICT_SKIPS never sees it. Either restore the group or remove its line from the coverage boundary"
+  else
+    PASS "RS1: all ${RS_NDEC} declared group(s) emitted at least one verdict — no declared group vanished from the run (denominator: ${RS_NEMIT} emitted group ids)"
+  fi
+
+  RS_EXTRA="$(rs_diff "$RS_EMITTED" "$RS_DECLARED")"
+  if [ -n "$RS_EXTRA" ]; then
+    FAIL "RS2: group(s) emitted verdicts but are not declared in the coverage boundary: ${RS_EXTRA% } — they run outside the boundary the workflow's closing sentence quantifies over, so a green check there claims more than it proves. Add one line per id to the IN SCOPE block of .github/workflows/publish-guard.yml, id first at three spaces"
+  else
+    PASS "RS2: all ${RS_NEMIT} emitted group(s) are declared in the coverage boundary — nothing ran outside it, so the workflow's \"every in-scope group above ran and passed\" is true of this run rather than merely stated"
+  fi
+
+  RS_INTER=0
+  # shellcheck disable=SC2086
+  for rsid in $RS_EMITTED; do
+    case " $RS_DECLARED " in *" $rsid "*) RS_INTER=$((RS_INTER+1)) ;; esac
+  done
+  PASS "RS3: |declared| = ${RS_NDEC}, |emitted| = ${RS_NEMIT}, |declared ∩ emitted| = ${RS_INTER} — the two zeros above are stated against those denominators, not against an unstated one"
+
+  # ── RS4 / RS5 / RS6: the controls on the controls ───────────────────────────────
+  # An arm that reports "no difference" is worth exactly as much as the evidence that
+  # it CAN report a difference. RS4 and RS5 mutate the two inputs one at a time and
+  # require the corresponding arm's predicate to name the mutation; RS6 mutates the
+  # FILE and re-parses it, which is the only one of the three that proves the roster is
+  # genuinely read from the workflow rather than computed from something already here.
+  # Every victim is chosen from live data, so no id is hardcoded and none can rot.
+  #
+  # Each control grades the DELTA its own mutation caused — the predicate's output over
+  # the mutated input, MINUS its output over the real one — never the raw output. The
+  # difference matters on exactly the run that matters: when RS1 or RS2 has a genuine
+  # finding, a control written as an exact-equality test fails too, and three cascading
+  # control failures bury the one real finding the operator needs to read. A control
+  # must stay valid whether or not the arm it controls is currently clean.
+
+  RS_V1=""; for rsid in $RS_EMITTED; do RS_V1="$rsid"; break; done
+  RS_E4="$(rs_diff "$RS_EMITTED" "$RS_V1")"      # the emitted set with one real group gone
+  RS_M4="$(rs_diff "$RS_DECLARED" "$RS_E4")"     # RS1's own predicate, over that
+  RS_D4="$(rs_diff "$RS_M4" "$RS_MISSING")"      # what the mutation ADDED to RS1's finding
+  if [ "${RS_D4% }" = "$RS_V1" ]; then
+    PASS "RS4: CONTROL on RS1 — removing group '${RS_V1}' from the emitted set adds exactly '${RS_V1}' to RS1's finding and nothing else. RS1's verdict above is a measurement: the arm fires when a declared group stops emitting"
+  else
+    FAIL "RS4: CONTROL on RS1 did not fire as specified — removing '${RS_V1}' from the emitted set added '${RS_D4% }' to RS1's finding rather than '${RS_V1}'. RS1's clean verdict proves nothing until this control fires"
+  fi
+
+  RS_X5="$(rs_diff "$RS_EMITTED ZZQ" "$RS_DECLARED")"   # RS2's predicate, with a synthetic id
+  RS_D5="$(rs_diff "$RS_X5" "$RS_EXTRA")"               # what the mutation ADDED
+  if [ "${RS_D5% }" = "ZZQ" ]; then
+    PASS "RS5: CONTROL on RS2 — a synthetic group id 'ZZQ' in the emitted set adds exactly 'ZZQ' to RS2's finding and nothing else. RS2's verdict above is a measurement: the arm fires on an undeclared group"
+  else
+    FAIL "RS5: CONTROL on RS2 did not fire as specified — a synthetic 'ZZQ' in the emitted set added '${RS_D5% }' to RS2's finding rather than 'ZZQ'. RS2's clean verdict proves nothing until this control fires"
+  fi
+
+  # RS6 mutates the workflow FILE. Victim: the first declared id that this run also
+  # emitted, so removing its declaration produces a genuine emitted-but-undeclared
+  # finding rather than a vacuous one.
+  RS_V2=""
+  # shellcheck disable=SC2086
+  for rsid in $RS_DECLARED; do
+    case " $RS_EMITTED " in *" $rsid "*) RS_V2="$rsid"; break ;; esac
+  done
+  RS_COPY="$WORK/rs-roster-minus-one.yml"
+  : > "$RS_COPY"
+  while IFS= read -r rsline || [ -n "$rsline" ]; do
+    if [[ "$rsline" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)([[:space:]]|$) ]] && [ "${BASH_REMATCH[1]}" = "$RS_V2" ]; then
+      continue
+    fi
+    printf '%s\n' "$rsline" >> "$RS_COPY"
+  done < "$RS_WF"
+  RS_DEC2="$(rs_parse "$RS_COPY")"
+  RS_N2="$(rs_count "$RS_DEC2")"
+  RS_X6="$(rs_diff "$RS_EMITTED" "$RS_DEC2")"    # RS2's predicate against the mutated roster
+  RS_D6="$(rs_diff "$RS_X6" "$RS_EXTRA")"        # what deleting that one line ADDED
+  if [ -z "$RS_V2" ]; then
+    FAIL "RS6: CONTROL on the parser could not run — no declared group id was also emitted, which contradicts RS1/RS2 above and means the two sets are not being read from what they claim"
+  elif [ "$RS_N2" -ne $((RS_NDEC - 1)) ]; then
+    FAIL "RS6: CONTROL on the parser — deleting group '${RS_V2}'s roster line from a copy of the workflow changed the parsed count from ${RS_NDEC} to ${RS_N2}, not to $((RS_NDEC - 1)). The parse is not tracking the file line-for-line, so the declared set above is not the file's"
+  elif [ "${RS_D6% }" = "$RS_V2" ]; then
+    PASS "RS6: CONTROL on the parser — deleting group '${RS_V2}'s roster line from a COPY of the workflow drops the parsed count ${RS_NDEC} → ${RS_N2} and adds exactly '${RS_V2}' to RS2's finding. The roster is read from the workflow on every run, not derived from this file, so deleting a group and its declaration in one edit cannot pass"
+  else
+    FAIL "RS6: CONTROL on the parser did not fire as specified — deleting '${RS_V2}'s roster line from a copy of the workflow added '${RS_D6% }' to RS2's finding rather than '${RS_V2}'"
+  fi
 fi
 
 echo
