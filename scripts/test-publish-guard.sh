@@ -1214,6 +1214,163 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# L13 — THE ABORT NAMES A POSITION IN THE ARTIFACT THE OPERATOR HAS TO EDIT.
+#
+# The shipped abort named a coordinate in the MODEL. The model and the render are two
+# independent artifacts and the guard re-reads both, so the discoverable fix — delete the
+# record the abort names — clears the abort and leaves the value in the published file.
+# The operator resolves the finding by deleting the evidence for it. L13e asserts that
+# consequence directly rather than inferring it from the message text.
+#
+# L13a is the case that makes the rest mean anything. "The message contains a colon and a
+# number" passes against a hardcoded string; a locator is only a locator if it MOVES with
+# what it locates, so the value is planted at three distinct source lines and each must be
+# reported. A constant emitter passes a presence arm and fails this one.
+#
+# L13b is the case that rejected the obvious implementation. Injecting line sentinels into
+# the raw file and stripping afterwards is the natural design and it under-counts: a
+# multi-line tag swallows the sentinels inside it, a <script> deletion swallows every
+# sentinel in the block, and the reported line comes out plausibly, consistently, silently
+# too small. A line that is merely CLOSE is a FAIL here.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Plants a paragraph on an EXACT source line. Line 1 opens the document; lines 2..N-1 are
+# filler; line N carries the plant; the trailing lines keep every render above the
+# 20-word degraded-extraction floor, so no case here can abort for the wrong reason.
+lplant() { # <out_file> <target_line> <paragraph text>
+  local out="$1" want="$2" i=2
+  printf '%s\n' '<!DOCTYPE html><html><head><title>Lisbon Trip</title></head><body>' > "$out"
+  while [ "$i" -lt "$want" ]; do
+    printf '<p>Filler %d: the covered market, the harbour museum, the hill gardens.</p>\n' "$i" >> "$out"
+    i=$((i+1))
+  done
+  printf '<p>%s</p>\n' "$3" >> "$out"
+  printf '%s\n' '<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>' >> "$out"
+  printf '%s\n' '<p>Pacing: a slow start and no fixed plan before ten in the morning on any day.</p>' >> "$out"
+  printf '%s\n' '</body></html>' >> "$out"
+}
+
+# The three readers of the captured abort. Each returns non-zero when the shape it reads
+# is absent, and that absence is itself asserted below rather than defaulted away.
+lline() { local ln; while IFS= read -r ln; do
+  if [[ "$ln" =~ reached\ the\ published\ file\ at\ .*:([0-9?]+)\ \( ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+done < "$LOUT"; return 1; }
+lprj() { local ln; while IFS= read -r ln; do
+  if [[ "$ln" =~ reached\ the\ published\ file\ at\ .*:[0-9?]+\ \((.*)\)\. ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+done < "$LOUT"; return 1; }
+# Any <file>.html:<digits> or <file>.md:<digits> shape anywhere in the captured stderr.
+# Read in BOTH directions: a HIT must produce one, a non-HIT must not.
+lhasloc() { local ln; while IFS= read -r ln; do
+  [[ "$ln" =~ [^[:space:]]+\.(html|md):[0-9]+ ]] && return 0
+done < "$LOUT"; return 1; }
+
+l13val="Border note: carry your Ruritanian passport, valid to 2033, at all times."
+
+# L13a — the locator TRACKS (three distinct positions, so a constant fails).
+l13ok=1; l13seen=""
+for l13n in 3 7 11; do
+  lplant "$WORK/l13_$l13n.html" "$l13n" "$l13val"
+  lguard "$WORK/l13_$l13n.html"
+  l13got="$(lline)" || l13got="NONE"
+  l13seen="$l13seen ${l13n}->${l13got}"
+  { [ "$LRC" -eq 1 ] && [ "$l13got" = "$l13n" ]; } || l13ok=0
+done
+if [ "$l13ok" -eq 1 ]; then
+  PASS "L13a: the render-side locator TRACKS the planted line (planted->reported:${l13seen}), rc=1 at each. Three distinct positions, so a constant emitter fails this case — a locator that does not move is not locating"
+else
+  FAIL "L13a: the reported line did not track the planted line (planted->reported:${l13seen}, last rc=$LRC). A locator that is merely PRESENT proves nothing; this is the arm that distinguishes the two"
+fi
+
+# L13b — the line map survives the two transforms that destroy lines. Exact, not close.
+L13MT="$WORK/l13_multiline.html"
+cat > "$L13MT" <<HTML
+<!DOCTYPE html><html><head><title>Lisbon Trip</title></head><body>
+<p>Filler 2: the covered market, the harbour museum, the hill gardens.</p>
+<div
+   class="multi
+   line tag">
+<p>Filler 6: a long lunch by the water and the gardens in the late afternoon.</p>
+<p>$l13val</p>
+</div>
+<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>
+</body></html>
+HTML
+lguard "$L13MT"; l13mrc="$LRC"; l13mline="$(lline)" || l13mline="NONE"
+L13SC="$WORK/l13_script.html"
+cat > "$L13SC" <<HTML
+<!DOCTYPE html><html><head><title>Lisbon Trip</title></head><body>
+<p>Filler 2: the covered market, the harbour museum, the hill gardens.</p>
+<script>
+var a = "a decoy line inside the script body";
+var b = "another decoy line inside the script body";
+</script>
+<p>$l13val</p>
+<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>
+</body></html>
+HTML
+lguard "$L13SC"; l13src="$LRC"; l13sline="$(lline)" || l13sline="NONE"
+if [ "$l13mrc" -eq 1 ] && [ "$l13mline" = "7" ] && [ "$l13src" -eq 1 ] && [ "$l13sline" = "7" ]; then
+  PASS "L13b: the line map is lossless on both destroying transforms — a plant at true line 7 behind a multi-line tag reports 7, and behind a <script> block reports 7. The projections re-emit the newlines they consume, so neither a tag spanning lines nor a deleted block shifts the count"
+else
+  FAIL "L13b: the line map is not lossless (multi-line-tag: rc=$l13mrc reported=$l13mline, want 7; script-block: rc=$l13src reported=$l13sline, want 7). A reported line that is merely CLOSE is the pre-fix behaviour — plausible, consistent, and wrong"
+fi
+
+# L13c — both projections are located AND correctly attributed. A value only in a
+# comment or only in an attribute value is invisible to the visible arm by construction,
+# so the projection tag is what tells the operator whether to look at prose or at markup.
+L13CM="$WORK/l13_comment.html"
+lplant "$L13CM" 5 "nothing of interest on this line at all"
+# rewrite line 5 as a comment carrying the value
+{ head -4 "$L13CM"; printf '<!-- %s -->\n' "$l13val"; tail -n +6 "$L13CM"; } > "$L13CM.tmp" && mv "$L13CM.tmp" "$L13CM"
+lguard "$L13CM"; l13crc="$LRC"; l13cline="$(lline)" || l13cline="NONE"; l13cprj="$(lprj)" || l13cprj="NONE"
+L13AL="$WORK/l13_alt.html"
+lplant "$L13AL" 5 "nothing of interest on this line at all"
+{ head -4 "$L13AL"; printf '<img src="x.png" alt="%s">\n' "$l13val"; tail -n +6 "$L13AL"; } > "$L13AL.tmp" && mv "$L13AL.tmp" "$L13AL"
+lguard "$L13AL"; l13arc="$LRC"; l13aline="$(lline)" || l13aline="NONE"; l13aprj="$(lprj)" || l13aprj="NONE"
+lplant "$WORK/l13_vis.html" 5 "$l13val"; lguard "$WORK/l13_vis.html"
+l13vrc="$LRC"; l13vprj="$(lprj)" || l13vprj="NONE"
+if [ "$l13crc" -eq 1 ] && [ "$l13cline" = "5" ] && [ "$l13cprj" != "visible text" ] && [ "$l13cprj" != "NONE" ] \
+   && [ "$l13arc" -eq 1 ] && [ "$l13aline" = "5" ] && [ "$l13aprj" != "visible text" ] && [ "$l13aprj" != "NONE" ] \
+   && [ "$l13vrc" -eq 1 ] && [ "$l13vprj" = "visible text" ]; then
+  PASS "L13c: both projections are located and attributed — an HTML comment at line 5 reports 5 as '$l13cprj', an img alt at line 5 reports 5 as '$l13aprj', and a visible-text plant reports 'visible text'. The tag is a structural fact carrying no class content, and it tells the operator whether to look at prose or at markup"
+else
+  FAIL "L13c: a projection was mislocated or misattributed (comment: rc=$l13crc line=$l13cline proj='$l13cprj'; alt: rc=$l13arc line=$l13aline proj='$l13aprj'; visible: rc=$l13vrc proj='$l13vprj')"
+fi
+
+# L13d — the non-HIT arms synthesise NOTHING, graded by absence. Six of the eight arms
+# fire when nothing matched: there is no render position and none may be invented. The
+# HIT arm is the control — without it, "no locator found" would pass against a guard that
+# had stopped emitting locators entirely.
+lguard "$WORK/l13_7.html";  lhasloc && l13hit_loc=1 || l13hit_loc=0     # HIT — must have one
+lguard "$LCLEAN";           l13cln_rc="$LRC"; lhasloc && l13cln_loc=1 || l13cln_loc=0
+lguard "$LCLEAN" "$LSUB";   l13sub_rc="$LRC"; lhasloc && l13sub_loc=1 || l13sub_loc=0
+if [ "$l13hit_loc" -eq 1 ] && [ "$l13cln_rc" -eq 0 ] && [ "$l13cln_loc" -eq 0 ] \
+   && [ "$l13sub_rc" -eq 2 ] && [ "$l13sub_loc" -eq 0 ]; then
+  PASS "L13d: no non-HIT arm synthesises a position — a clean pass (rc=0) and a below-the-floor UNDETERMINED (rc=2) each emit no <path>:<line>, while the HIT arm on the same fixture set does. The zero is a measurement: the control arm fired"
+else
+  FAIL "L13d: a position was synthesised where none exists, or the control did not fire (hit_has_locator=$l13hit_loc clean rc=$l13cln_rc locator=$l13cln_loc subfloor rc=$l13sub_rc locator=$l13sub_loc)"
+fi
+
+# L13e — THE USER CONSEQUENCE, ASSERTED AS AN OBSERVATION RATHER THAN READ OFF THE
+# MESSAGE. Delete the model record the abort points at, re-run: the guard now passes, and
+# the render is byte-identical and still carries the value. That is the whole reason the
+# leading coordinate had to move to the render.
+L13TD="$WORK/l13-nopass"; mkdir -p "$L13TD/outputs"
+sed '/^- Passport: Ruritanian, valid to 2033$/d' "$LTD/outputs/traveler-model.md" > "$L13TD/outputs/traveler-model.md"
+L13H="$WORK/l13_ac3.html"; lplant "$L13H" 7 "$l13val"
+l13sum1="$(cksum < "$L13H")"
+lguard "$L13H";          l13rc1="$LRC"
+lguard "$L13H" "$L13TD"; l13rc2="$LRC"
+l13sum2="$(cksum < "$L13H")"
+l13still=0; case "$(cat "$L13H")" in *Ruritanian*) l13still=1 ;; esac
+l13del=0; case "$(cat "$L13TD/outputs/traveler-model.md")" in *"valid to 2033"*) ;; *) l13del=1 ;; esac
+if [ "$l13del" -eq 1 ] && [ "$l13rc1" -eq 1 ] && [ "$l13rc2" -eq 0 ] && [ "$l13sum1" = "$l13sum2" ] && [ "$l13still" -eq 1 ]; then
+  PASS "L13e: deleting the model record CLEARS THE ABORT WITHOUT CLEARING THE LEAK — rc goes 1 to 0 while the render is byte-identical and still carries the value. This is the consequence the abort now names in words, asserted here as an observation rather than inferred from the message text"
+else
+  FAIL "L13e: the AC-3 consequence did not reproduce (record deleted=$l13del rc before=$l13rc1 after=$l13rc2 render unchanged=$([ "$l13sum1" = "$l13sum2" ] && echo yes || echo no) value still present=$l13still)"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
 # review of the shipped guard (#316). One regression case per counter-design:
 #   M1  CD-1  the guard matched the visible-text PROJECTION while publish copies

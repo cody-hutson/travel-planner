@@ -242,13 +242,21 @@ strip_to_text() { # <html_file> -> visible text on stdout
 # and the only part of the file guaranteed to carry no trip content, so they are dropped
 # at extraction rather than differenced away afterwards. Same mitigation, same reason,
 # obtained without a decoy that cannot be built here.
+# NEWLINE-PRESERVING, and that is a precondition rather than a nicety. Every destructive
+# substitution below can span a line — [^>] and \s both match a newline — so each one
+# re-emits the newlines it consumes: `\$& =~ tr/\n//cdr` deletes every character that is
+# NOT a newline and returns the rest, i.e. exactly the match's own newlines. A newline and
+# a space are the same thing to _norm_words, so THE TOKEN STREAM IS UNCHANGED; only the
+# line structure of the intermediate is preserved, which is what makes a reported line
+# number the source's line number. Any transform added here later must do the same, or it
+# will silently shift every locator downstream of it while the suite stays green.
 strip_to_published_text() { # <html_file> -> retrievable non-machinery content on stdout
   perl -0777 -pe "
-    s/<!DOCTYPE[^>]*>/ /gi;                            # the doctype is machinery
+    s{<!DOCTYPE[^>]*>}{ ' ' . (\$& =~ tr/\n//cdr) }gie;      # the doctype is machinery
     s/<!--/ /g; s/-->/ /g;                             # drop the delimiters, KEEP the body
-    s/<\s*\/?\s*($_GUARD_BLOCK_TAGS)\b/ $_GUARD_BLOCK /gi;   # block boundary, before tag names go
-    s/<\s*\/?\s*([A-Za-z][-A-Za-z0-9]*)/ /g;           # the tag NAME (with its \"<\") is machinery
-    s/([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*/ /g;        # the attribute NAME is machinery; its VALUE stays
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;   # block boundary, before tag names go
+    s{<\s*/?\s*([A-Za-z][-A-Za-z0-9]*)}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the tag NAME (with its \"<\") is machinery
+    s{([-A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*}{ ' ' . (\$& =~ tr/\n//cdr) }ge;   # the attribute NAME is machinery; its VALUE stays
   " "$1" 2>/dev/null
 }
 
@@ -257,11 +265,17 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
 # drops the sentinel from the token stream — so the visible arm sees exactly the tokens it
 # always saw, plus the knowledge of where one block ended. strip_to_text itself is NOT
 # touched: verify_ciphertext consumes it and AC 5 fixes that behaviour.
+# Newline-preserving, for the reason stated on strip_to_published_text above. The
+# <script>/<style> deletion is the worst offender — it removes a whole multi-line block —
+# and it is also the one the fallback cannot do at all. The `|| sed` fallback is line
+# oriented, so it IS line-preserving for the tag case by construction; what the two paths
+# disagree about is WHAT they strip, not where the lines are, and that divergence predates
+# this change.
 strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
   perl -0777 -pe "
-    s/<(script|style)\b[^>]*>.*?<\/\1>//gis;
-    s/<\s*\/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>/ $_GUARD_BLOCK /gi;
-    s/<[^>]+>/ /g;
+    s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
+    s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
+    s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
   " "$1" 2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
 }
 
@@ -330,6 +344,33 @@ GUARD_WINDOW=25
 # match, not a false abort. Both are stated in ADR-008.
 _GUARD_BLOCK='zzguardblockzz'
 _GUARD_BLOCK_TAGS='p|div|h[1-6]|li|tr|td|th|dt|dd|section|article|header|footer|aside|nav|main|ul|ol|dl|table|blockquote|figure|figcaption|br|hr|form|fieldset|pre'
+
+# The LINE sentinel — the block sentinel's idiom carried from block boundaries to line
+# boundaries, for the same reason and with the same properties. It is injected once per
+# line of a projection, counted by the matcher, and DROPPED from the token stream, so
+# every rule sees exactly the stream it saw before this existed plus the knowledge of
+# which source line each token came from. That is what lets an abort name a position in
+# the ARTIFACT the operator has to edit instead of a coordinate in the model.
+#
+# Lowercase alnum for the same reason as _GUARD_BLOCK: _norm_words keeps only [a-z0-9],
+# so anything else would be filtered out before the matcher saw it. The same residual
+# applies too — a render containing this literal string would split one source line into
+# two, shifting reported lines after it. That narrows nothing about MATCHING (the token
+# stream is unchanged either way); it can only misreport a position, and the direction is
+# stated rather than discovered.
+_GUARD_LINE='zzguardlinezz'
+
+# Injects a line sentinel before every line of a projection, on stdin. It runs AFTER the
+# strip, not before, and the ordering is the whole design. Injecting into the raw file
+# first is the obvious implementation and it is measurably wrong: a multi-line tag
+# swallows the sentinels inside it and a <script> deletion swallows every sentinel in the
+# block, so a true line 8 reports as 6 and a true line 9 as 6 — always too small, always
+# plausible, and no assertion notices. A confidently wrong line number is the exact
+# failure class this guard exists to close, so the projections were made lossless instead
+# and the sentinel is injected where nothing can eat it.
+_line_sentinels() { # stdin -> stdin with one line sentinel before each line
+  awk -v S="$_GUARD_LINE" '{ print S; print }'
+}
 
 # Non-distinctive vocabulary, subtracted before a value is used as a key: articles,
 # prepositions, auxiliaries, and the structural words a document-field value is written
@@ -409,20 +450,28 @@ _norm_words() {
 # forever. The rule travels with the record; this function only applies it, and knows
 # nothing about which class member produced it.
 _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
-  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" -v BLOCK="$_GUARD_BLOCK" '
+  awk -v rule="$1" -v vfname="$2" -v W="$GUARD_WINDOW" -v F="$GUARD_NGRAM" -v STOP="$_GUARD_STOP" -v BLOCK="$_GUARD_BLOCK" -v LINE="$_GUARD_LINE" '
     function is_stop(t) { return index(STOP, " " t " ") > 0 }
+    # Reports the SOURCE LINE of the winning render position and exits 0. Every path to a
+    # HIT goes through here, so a hit always carries a position and a non-hit never
+    # fabricates one — the exit-1/3/4 paths print nothing at all and the caller gets an
+    # empty locator. A position with no recorded line (only possible if a projection
+    # stopped preserving its line map) reports 0, which the caller renders as unknown
+    # rather than as line zero.
+    function _loc(p) { printf "%d\n", (p in lin ? lin[p] : 0); exit 0 }
     BEGIN {
       gsub(/[ \t\n\r]+/, " ", STOP)
       if (substr(STOP, 1, 1) != " ") STOP = " " STOP
       if (substr(STOP, length(STOP), 1) != " ") STOP = STOP " "
-      blkid = 0
+      blkid = 0; linid = 0
     }
     FILENAME == vfname { v[++vn] = $0; next }
-    # Block sentinels advance the block counter and are DROPPED from the token stream, so
-    # rn, the phrase rule and the token rule see exactly the stream they saw before this
-    # existed. Only the conjunctive rule reads blk[].
+    # Line and block sentinels advance their counters and are DROPPED from the token
+    # stream, so rn, the phrase rule and the token rule see exactly the stream they saw
+    # before either existed. Only the conjunctive rule reads blk[]; only _loc reads lin[].
+    $0 == LINE         { linid++; next }
     $0 == BLOCK        { blkid++; next }
-                       { r[++rn] = $0; blk[rn] = blkid }
+                       { r[++rn] = $0; blk[rn] = blkid; lin[rn] = linid }
     END {
       if (rn == 0) exit 3
       if (rule == "conjunctive") {
@@ -450,7 +499,9 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
             # Same block AND inside W. blk[] is non-decreasing, so equal endpoints mean
             # every token between them is in that block too. This is what separates
             # "both facts in one sentence" from "one fact per day, N days apart".
-            if (pos[right] - pos[left] <= W && blk[pos[right]] == blk[pos[left]]) exit 0
+            # The window LEFT edge is the reported position: it is where the
+            # carry-through starts, which is the line an operator opens to fix it.
+            if (pos[right] - pos[left] <= W && blk[pos[right]] == blk[pos[left]]) _loc(pos[left])
             cnt[who[left]]--
             if (cnt[who[left]] == 0) covered--
             left++
@@ -470,7 +521,7 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
           for (p = 1; p + F - 1 <= rn; p++) {
             ok = 1
             for (j = 0; j < F; j++) if (r[p + j] != v[s + j]) { ok = 0; break }
-            if (ok) exit 0
+            if (ok) _loc(p)
           }
         }
         exit 1
@@ -492,7 +543,7 @@ _guard_match() { # <rule> <value_tokens_file> <render_tokens_file>
         for (p = 1; p + vn - 1 <= rn; p++) {
           ok = 1
           for (j = 0; j < vn; j++) if (r[p + j] != v[j + 1]) { ok = 0; break }
-          if (ok) exit 0
+          if (ok) _loc(p)
         }
         exit 1
       }
@@ -1347,6 +1398,7 @@ $rmerge	$rtarget"
 verify_publishable_content() { # <site_html> <trip_dir>
   local site_html="${1:-}" trip_dir="${2:-}"
   local recs rc rcv rcp work rfile pfile vfile n member field rule value hit=0 undet=0
+  local locv="" locp="" loc="" proj=""
 
   if [ -z "$site_html" ] || [ -z "$trip_dir" ]; then
     warn "guard: content check needs a rendered site and a trip dir"; return 2
@@ -1362,9 +1414,12 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # file and not the painting of it. The visible arm is what a reader sees; the published
   # arm is what a reader can retrieve. Both use the SAME _norm_words on both sides of the
   # comparison — one normalization, four streams, no chance of the sides drifting.
-  strip_to_text_blocks "$site_html" | _norm_words > "$rfile"
-  # Sentinels are not words and must not count toward the degraded-extraction floor.
-  n="$(awk -v B="$_GUARD_BLOCK" '$0 != B { c++ } END { print c + 0 }' "$rfile")"; n="${n:-0}"
+  strip_to_text_blocks "$site_html" | _line_sentinels | _norm_words > "$rfile"
+  # NEITHER sentinel is a word, and both must be subtracted from the degraded-extraction
+  # floor. The line sentinel matters more than the block one here: there is one per source
+  # line, so counting them would let a render of 20 near-empty lines clear a 20-word floor
+  # that exists precisely to catch an extraction that yielded nothing.
+  n="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$rfile")"; n="${n:-0}"
   if [ "$n" -lt 20 ]; then
     rm -rf "$work"
     warn "guard: the rendered site yielded only $n words of visible text — a degraded extraction is not a clean result"
@@ -1374,7 +1429,7 @@ verify_publishable_content() { # <site_html> <trip_dir>
   # yields little here and that is normal, not degraded. An EMPTY published stream is
   # simply not matched against — _guard_match reads an empty render as UNDETERMINED, and
   # a file with no markup to inspect is not an undetermined result.
-  strip_to_published_text "$site_html" | _norm_words > "$pfile"
+  strip_to_published_text "$site_html" | _line_sentinels | _norm_words > "$pfile"
 
   recs="$(nonpublishable_values "$trip_dir" "$site_html")" && rc=0 || rc=$?
   if [ "$rc" -ne 0 ]; then rm -rf "$work"; return 2; fi
@@ -1386,9 +1441,14 @@ verify_publishable_content() { # <site_html> <trip_dir>
   while IFS="$(printf '\t')" read -r member field rule value; do
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
-    _guard_match "$rule" "$vfile" "$rfile"; rcv=$?
-    rcp=1
-    [ -s "$pfile" ] && { _guard_match "$rule" "$vfile" "$pfile"; rcp=$?; }
+    # _guard_match now writes the winning render position to stdout on a HIT and nothing
+    # at all otherwise, so both arms are captured. The exit-status contract is unchanged,
+    # and so is the errexit behaviour: this function already runs as the left operand of
+    # `||` at its call site, which suspends errexit through the whole body — the same
+    # property the `rcv=$?` idiom depended on before.
+    locv="$(_guard_match "$rule" "$vfile" "$rfile")"; rcv=$?
+    rcp=1; locp=""
+    [ -s "$pfile" ] && { locp="$(_guard_match "$rule" "$vfile" "$pfile")"; rcp=$?; }
     # Combine the two arms. A hit on EITHER projection is a hit — the value is in the
     # file either way. Otherwise the visible arm carries the verdict, because every
     # non-hit code is a property of the VALUE (its keyability floor, its distinctiveness)
@@ -1396,12 +1456,29 @@ verify_publishable_content() { # <site_html> <trip_dir>
     if   [ "$rcv" -eq 0 ] || [ "$rcp" -eq 0 ]; then rc=0
     elif [ "$rcv" -eq 1 ] && [ "$rcp" -ne 1 ]; then rc="$rcp"
     else rc="$rcv"; fi
+    # The HIT arm reports a position in the EVALUAND — the file the guard was asked to
+    # certify — because that is the artifact the operator has to edit. The model
+    # coordinate is retained as PROVENANCE: it still says WHAT leaked, which is needed to
+    # judge the render edit, but it is no longer the leading, actionable coordinate. The
+    # `member` column is gone: it only ever carried the declaring parse limb (`entry` or
+    # `field`), never a member name, so it named nothing an operator could act on.
+    #
+    # Only the two HIT arms carry a locator. The other three fire when NOTHING matched,
+    # so no render position exists and none may be synthesised; their finding is genuinely
+    # about the record, so the model coordinate is the right one and each says which
+    # surface its remedy is on.
     case "$rc" in
-      0) warn "guard: a non-publishable value reached the published file — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
+      0) if [ "$rcv" -eq 0 ]; then loc="$locv"; proj="visible text"
+         else loc="$locp"; proj="retrievable markup (comment, attribute or script body)"; fi
+         [ -n "${loc:-}" ] && [ "$loc" != "0" ] || loc="?"
+         warn "guard: a non-publishable value reached the published file at $site_html:$loc ($proj)."
+         warn "guard: fix the RENDER at that line — deleting the model record clears this abort WITHOUT clearing the leak."
+         warn "guard: provenance — the model record at '$field'. The value is deliberately not echoed."
+         hit=1 ;;
       1) ;;
-      3) warn "guard: member '$member', field '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass."; undet=1 ;;
-      4) warn "guard: member '$member', field '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. See ADR-008 § Coverage boundary." ;;
-      *) warn "guard: the match for member '$member', field '$field' could not be run (matcher exit $rc) — undetermined, not clean."; undet=1 ;;
+      3) warn "guard: the model record at '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass. The RECORD is the subject here, not the render: deleting it clears this abort without establishing that the render is clean."; undet=1 ;;
+      4) warn "guard: the model record at '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. This is advisory and aborts nothing; the record is the subject. See ADR-008 § Coverage boundary." ;;
+      *) warn "guard: the match for the model record at '$field' could not be run (matcher exit $rc) — undetermined, not clean. The MATCHER is the subject here, not the value: deleting the record hides a broken matcher instead of fixing it."; undet=1 ;;
     esac
   done <<EOF
 $recs
@@ -1466,16 +1543,29 @@ GUARD_SUMMARY_FLOOR=4
 # The block boundaries are markdown's own: a blank line, an ATX heading, a list item, a
 # table row, a rule or frontmatter fence, a code fence, a block quote. Emitted BEFORE
 # the line's own text, so the line opens the new block rather than closing the old one.
+#
+# ONE OUTPUT LINE PER SOURCE LINE, which is the markdown counterpart of the
+# newline-preservation the two HTML projections now carry. The sentinel used to be
+# printed on a line of its own AHEAD of the line that opened the block, so a source line
+# opening a block produced two output lines and the line map ran ahead of the file. It is
+# emitted as a PREFIX on the line instead. The token stream is unchanged: _norm_words
+# splits on every non-alphanumeric, so `B` on its own line and `B ` ahead of the text
+# yield the same tokens in the same order — and a line matching two boundary rules still
+# emits two sentinels, because the prefix accumulates exactly as the old rules stacked.
+# A blank line already emitted exactly one line and is left alone.
 strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentinels on stdout
   awk -v B="$_GUARD_BLOCK" '
     /^[[:space:]]*$/                                  { print B; next }
-    /^[[:space:]]*#{1,6}[[:space:]]/                  { print B }
-    /^[[:space:]]*([-*+]|[0-9]+[.)])[[:space:]]/      { print B }
-    /^[[:space:]]*\|/                                 { print B }
-    /^[[:space:]]*(---|===|___|\*\*\*)/               { print B }
-    /^[[:space:]]*(```|~~~)/                          { print B }
-    /^[[:space:]]*>/                                  { print B }
-    { print }
+    {
+      pfx = ""
+      if ($0 ~ /^[[:space:]]*#{1,6}[[:space:]]/)             pfx = pfx B " "
+      if ($0 ~ /^[[:space:]]*([-*+]|[0-9]+[.)])[[:space:]]/) pfx = pfx B " "
+      if ($0 ~ /^[[:space:]]*\|/)                            pfx = pfx B " "
+      if ($0 ~ /^[[:space:]]*(---|===|___|\*\*\*)/)          pfx = pfx B " "
+      if ($0 ~ /^[[:space:]]*(```|~~~)/)                     pfx = pfx B " "
+      if ($0 ~ /^[[:space:]]*>/)                             pfx = pfx B " "
+      print pfx $0
+    }
   ' "$1"
 }
 
@@ -1506,6 +1596,7 @@ strip_md_to_text_blocks() { # <markdown_file> -> visible text with block sentine
 verify_summary_content() { # <change_summary_md> <trip_dir>
   local summary_md="${1:-}" trip_dir="${2:-}"
   local recs rc work sfile vfile n member field rule value hit=0 undet=0
+  local loc=""
 
   if [ -z "$summary_md" ] || [ -z "$trip_dir" ]; then
     warn "guard: the summary check needs a change summary and a trip dir"; return 2
@@ -1517,10 +1608,10 @@ verify_summary_content() { # <change_summary_md> <trip_dir>
   work="$(mktemp -d)" || { warn "guard: could not stage the summary check"; return 2; }
   sfile="$work/summary.words"; vfile="$work/value.words"
 
-  strip_md_to_text_blocks "$summary_md" | _norm_words > "$sfile"
-  # Sentinels are not words and must not count toward the floor — the same subtraction
-  # the HTML arm makes, for the same reason.
-  n="$(awk -v B="$_GUARD_BLOCK" '$0 != B { c++ } END { print c + 0 }' "$sfile")"; n="${n:-0}"
+  strip_md_to_text_blocks "$summary_md" | _line_sentinels | _norm_words > "$sfile"
+  # Neither sentinel is a word and neither may count toward the floor — the same
+  # subtraction the HTML arm makes, for the same reason, now over both.
+  n="$(awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '$0 != B && $0 != L { c++ } END { print c + 0 }' "$sfile")"; n="${n:-0}"
   if [ "$n" -lt "$GUARD_SUMMARY_FLOOR" ]; then
     rm -rf "$work"
     warn "guard: the change summary yielded only $n words — below the $GUARD_SUMMARY_FLOOR-word floor, so a degraded read is not a clean result"
@@ -1541,13 +1632,19 @@ verify_summary_content() { # <change_summary_md> <trip_dir>
   while IFS="$(printf '\t')" read -r member field rule value; do
     [ -n "${rule:-}" ] || continue
     printf '%s' "$value" | _norm_words > "$vfile"
-    _guard_match "$rule" "$vfile" "$sfile"; rc=$?
+    loc="$(_guard_match "$rule" "$vfile" "$sfile")"; rc=$?
+    # Same shape as the HTML sibling, minus the projection tag: this guard has ONE
+    # projection by design, so there is no second arm to attribute a hit to.
     case "$rc" in
-      0) warn "guard: a non-publishable value reached the change summary — member '$member', field '$field'. The value is deliberately not echoed."; hit=1 ;;
+      0) [ -n "${loc:-}" ] && [ "$loc" != "0" ] || loc="?"
+         warn "guard: a non-publishable value reached the change summary at $summary_md:$loc."
+         warn "guard: fix the SUMMARY at that line — deleting the model record clears this abort WITHOUT clearing the leak."
+         warn "guard: provenance — the model record at '$field'. The value is deliberately not echoed."
+         hit=1 ;;
       1) ;;
-      3) warn "guard: member '$member', field '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass."; undet=1 ;;
-      4) warn "guard: member '$member', field '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. See ADR-008 § Coverage boundary." ;;
-      *) warn "guard: the match for member '$member', field '$field' could not be run (matcher exit $rc) — undetermined, not clean."; undet=1 ;;
+      3) warn "guard: the model record at '$field' is below the keyability floor for rule '$rule' — its carry-through cannot be determined, and an undetermined result is a failure, never a clean pass. The RECORD is the subject here, not the summary: deleting it clears this abort without establishing that the summary is clean."; undet=1 ;;
+      4) warn "guard: the model record at '$field' carries no distinctive token and is a DECLARED NON-KEY — it is not matched, by design. This is advisory and aborts nothing; the record is the subject. See ADR-008 § Coverage boundary." ;;
+      *) warn "guard: the match for the model record at '$field' could not be run (matcher exit $rc) — undetermined, not clean. The MATCHER is the subject here, not the value: deleting the record hides a broken matcher instead of fixing it."; undet=1 ;;
     esac
   done <<EOF
 $recs
