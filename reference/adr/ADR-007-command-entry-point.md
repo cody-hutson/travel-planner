@@ -137,6 +137,71 @@ This amendment asserts nothing about what `disallowed-tools` does at runtime. Th
 more than one account of that and nothing in it arbitrates them, so no sentence above rests on any:
 each is read from the `allowed-tools` grant or from a verb section instead.
 
+**Amendment (2026-09-11, Friday) — the tool-list arbitration is discharged.** The paragraph
+immediately above declines to arbitrate the tool-list keys, because nothing available to it when it
+was written could. The published Claude
+Code contract now does, and it reaches this surface by name: a Markdown file in `.claude/commands/`
+is documented as the older format of the same mechanism, carrying the same frontmatter but for `name`
+and `paths`. Nothing above is rewritten — not that paragraph, not the amendment it closes, not
+§ *Context*'s account of the same keys. **The subject is a risk this record declined to take a
+position on, not a decision**, so the status line is untouched: a discharged risk is not a superseded
+decision.
+
+**The contract is quoted rather than summarised**, because a summary would be one more account and
+carrying more than one is the whole of the defect. On the grant:
+
+> The `allowed-tools` field grants permission for the listed tools during the turn that invokes the
+> skill, so Claude can use them without prompting you for approval. The grant clears when you send
+> your next message, even though the skill content stays in context; invoking the skill again
+> re-applies it for that turn. It does not restrict which tools are available: every tool remains
+> callable, and your permission settings still govern tools that are not listed.
+
+On the removal, and on what to reach for when a restriction has to outlive the turn:
+
+> To remove tools from Claude's available pool while a skill is active, list them in
+> `disallowed-tools` in the skill's frontmatter. The restriction clears when you send your next
+> message.
+
+> To block tools across all skills and prompts, add deny rules in your permission settings instead.
+
+**The account § *Context* already gave is the one the contract confirms, clause for clause** — which
+is why the arbitration lands on it rather than splitting the difference between the readings this
+repository carries. `allowed-tools` is turn-scoped **pre-approval and not restriction**: every tool
+stays callable, a tool left off the list falls through to the permission settings rather than being
+forbidden, and the grant clears at the next message. `disallowed-tools` is turn-scoped **removal**,
+the only real restriction of the pair. § *Context*'s conclusion is confirmed with its premises:
+**durable blocking needs a permission-settings deny rule**, which the contract names as the remedy in
+terms. The conclusion was reached here by reasoning about what a turn-scoped grant can and cannot do,
+and it now rests on the contract instead. The wording it grounds does not move; the ground under it
+does, and that is the change this amendment records.
+
+**What the discharge removes is a standing caveat, not a claim.** No sentence above rested on either
+account — each is read from the `allowed-tools` grant or from a verb section — so nothing above needs
+restating now that the accounts are settled. § 2's bounds are untouched.
+
+**The same source settles the per-file question the 2026-08-28 amendment reached by reasoning.**
+`disable-model-invocation` is a **per-file boolean, and no per-verb key exists**. The published
+invocation-control table is an **enumeration of the available states** rather than an illustration of
+some of them, so the absence of a per-verb form is a documented negative and not documentation
+silence — a distinction worth keeping, because the two warrant different confidence and this record
+should not trade one for the other. It confirms against the contract what that amendment's closing
+consequence concluded from the shape of the surface alone: the privilege property is per-verb, the
+frontmatter field is per-file, and no arrangement of the frontmatter expresses it. **Splitting the
+file is the only mechanism that does** — which is the shape § 1 chose for the tool grants, arrived at
+there from the privilege union rather than from this key.
+
+**That flag's documented effect is wider than its name, and belongs beside it.** The
+invocation-control table's row for it reads *"Description not in context"* — so it does not merely
+withhold the file from the model, it withholds any awareness that the file exists. Nothing on this
+surface is discoverable unless a verb is typed, which is a property of the entry point this record
+authorises and is stated here rather than left to be met.
+
+**Two adjacent questions are not settled by this text, and are named so the discharge is not read
+wider than it is.** Whether a `PreToolUse` hook fires at all for an injected `!` pre-execution block
+is **unestablished** — nothing consulted here says either way. The refusal predicate for an unresolved
+expansion inside such a block is **undocumented** — the abort path is described, the trigger that
+reaches it is not. Both stay open, and no sentence in this record rests on either.
+
 ### 2. The privilege boundary
 
 Six bounds hold on every command in this surface:
@@ -388,4 +453,10 @@ and softer invocation path is introduced.
   `scripts/test-command-taxonomy.sh`, run by `.github/workflows/command-taxonomy.yml`. It follows the
   pattern `scripts/test-publish-guard.sh` established.
 - First-run onboarding path: `README.md` → Install, First run, Verify.
+- The arbitrating source for the tool-list keys and for `disable-model-invocation`, cited by § 1's
+  2026-09-11 amendment: the published Claude Code documentation for slash commands and skills —
+  § *Where skills live*, § *Control who invokes a skill*, and the frontmatter reference — read
+  2026-09-11. It is an upstream contract this repository does not own and cannot change, which is why
+  the sentences that amendment rests on are quoted there in full rather than pointed at: the record
+  stands on its own if the page moves.
 - Epic: #252.
