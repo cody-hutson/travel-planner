@@ -2837,6 +2837,85 @@ if [ "$o7tab" -eq 1 ]; then
 else
   FAIL "O7e: the table-header residual changed shape (records=$o7tab) — re-derive the class-source over-capture measurement before trusting O7b"
 fi
+# ── O7f/g/h — the arm O7d COULD NOT BE: a third-party VALUE wearing the section shape ──
+# O7d grades the shape boundary in both directions and is correct about the shape. But
+# BOTH of its inputs are SECTION-NAME-shaped — a bold-only line, and a bold label carrying
+# text — so it asks "does the shape test work" and never "does the shape discriminate a
+# section NAME from a VALUE". It did not. A third-party value written as a whole-line
+# emphasis span was dropped from the class before the matcher saw it, and a render
+# carrying that value verbatim went rc=1 at origin/main to rc=0 at the narrowing commit:
+# a value that aborted before the release published after it. The enumeration was complete
+# over the inputs it imagined and blind to the one that mattered.
+#
+# These three arms are the input class O7d cannot express, so the control can see it going
+# forward. THREE renderings of ONE value, because the three failed for three different
+# reasons — the list marker, the label-colon, and the bare line — and a single rendering
+# would let two of them come back silently. The three shipped sub-headings sit in the SAME
+# model, so a fix that merely reverts the narrowing fails here rather than passing: this is
+# a discrimination assertion, not a shape assertion.
+O7VAL='cannot manage more than one flight of stairs in a single stretch'
+O7VTD="$WORK/o7_value_shape"
+omodel "$O7VTD" <<MD
+# Traveler Model [DERIVED]
+
+## Quill \`[OPERATOR-PROVIDED]\` \`[THIRD-PARTY]\`
+
+**Needs**
+
+- **Trigger: $O7VAL**
+- **$O7VAL**
+
+**$O7VAL**
+
+**Desires**
+
+*None recorded.*
+
+**Derived**
+
+- **Documents:** unknown — no passport country on file
+MD
+O7VR="$WORK/o7_value.html";  orender "$O7VR"  "Pacing note: one of us $O7VAL, so day two stays flat."
+O7VCR="$WORK/o7_value_ctl.html"; orender "$O7VCR" 'Pacing note: day two stays flat, with the hill gardens kept for the late light.'
+# O7f — FIXTURE INTEGRITY, graded before the two verdicts it protects. The model must
+# really carry all three renderings of the one value AND all three shipped sub-headings,
+# and the render must really carry the value — otherwise O7g grades an absence and O7h
+# grades a render that could not have aborted for this reason.
+o7vsrc="$O7VTD/outputs/traveler-model.md"
+if grep -qF -e "- **Trigger: $O7VAL**" "$o7vsrc" \
+   && grep -qF -e "- **$O7VAL**" "$o7vsrc" \
+   && grep -qxF "**$O7VAL**" "$o7vsrc" \
+   && grep -qxF '**Needs**' "$o7vsrc" && grep -qxF '**Desires**' "$o7vsrc" \
+   && grep -qxF '**Derived**' "$o7vsrc" \
+   && grep -qF "$O7VAL" "$O7VR" && ! grep -qF "$O7VAL" "$O7VCR"; then
+  PASS "O7f: the fixture carries one third-party value in all three whole-line-emphasis renderings (bulleted label, bulleted bare, unbulleted) beside all three shipped sub-headings, the render carries the value and the control render does not — O7g and O7h are graded against the discrimination, not against the shape"
+else
+  FAIL "O7f: the O7f/g/h fixture is not the shape claimed — O7g and O7h would prove nothing"
+fi
+# O7g — the CLASS SOURCE, both directions in one verdict. Reading the record stream rather
+# than asking the predicate about itself: the model is short and every record is printed,
+# so "is this value in class" is answered by the emitted rows and never by the detector.
+o7g_assert() {
+  local vals subs
+  vals="$(nonpublishable_values "$O7VTD" 2>/dev/null | awk -F'\t' -v v="$O7VAL" '$4 == v { c++ } END { print c + 0 }')"
+  subs="$(nonpublishable_values "$O7VTD" 2>/dev/null | awk -F'\t' '$4 == "Needs" || $4 == "Desires" || $4 == "Derived" { c++ } END { print c + 0 }')"
+  if [ "$vals" -eq 3 ] && [ "$subs" -eq 0 ]; then
+    PASS "O7g: all 3 whole-line-emphasis renderings of the third-party value are IN class ($vals) while all 3 structural sub-headings are OUT ($subs) — the exclusion discriminates a section NAME from a VALUE, and is not satisfied by either a revert or a bare shape test"
+  else
+    FAIL "O7g: the exclusion does not discriminate (value-renderings in class=$vals of 3, sub-headings in class=$subs of 0) — vals<3 is the fail-open this arm exists for, subs>0 is the false positive it must not reintroduce"
+  fi
+}
+o7g_assert
+# O7h — END TO END, with the control render that makes the abort a measurement. The record
+# stream above proves membership; this proves the membership still reaches the publish
+# verdict, which is where the regression was observable and where it mattered.
+oguard "$O7VR"  "$O7VTD"; o7vhit="$ORC"
+oguard "$O7VCR" "$O7VTD"; o7vctl="$ORC"
+if [ "$o7vhit" -eq 1 ] && [ "$o7vctl" -eq 0 ]; then
+  PASS "O7h: a render carrying the emphasis-wrapped third-party value verbatim ABORTS (rc=$o7vhit) while the same render without it PUBLISHES (rc=$o7vctl) — the class membership reaches the publish verdict, and the clean arm is what makes the abort a measurement rather than a guard that refuses everything"
+else
+  FAIL "O7h: the emphasis-wrapped value did not key the publish verdict (with-the-value=$o7vhit without=$o7vctl) — rc=0 on the first arm is the shipped fail-open; rc!=0 on the second is a guard refusing correct content"
+fi
 
 # ── O8 — the guard's OWN zero carries a control arm (fix 5c) ────────────────
 # nonpublishable_values reports "no class content" on the same branch a genuinely empty
@@ -5732,6 +5811,11 @@ md_flips verify_publishable_content "M5c" m5_clean_assert
 #                           registering O7b would certify a guard that reads nothing.
 #   nonpublishable_values → O7d, which calls the class source directly and grades both
 #                           directions of the shape test on one model.
+#   nonpublishable_values → O7g, the DISCRIMINATION arm beside it: same subject, but its
+#                           two directions are a value and a section name rather than two
+#                           section-name shapes. O7f is fixture integrity and O7h grades
+#                           the publish verdict, so neither is registered — O7g is the one
+#                           whose whole verdict is what the class source emitted.
 #   nonpublishable_values → O4e, the mark-strip oracle: the whole verdict is the class
 #                           source refusing to accept an uncorroborated zero.
 #   nonpublishable_values → O8a, the parse sensitivity arm, whose subject is the guard's
@@ -5740,6 +5824,7 @@ md_flips verify_publishable_content "M5c" m5_clean_assert
 #                           the guard rather than the parse inside it.
 md_flips nonpublishable_values      "O7c" o7c_assert
 md_flips nonpublishable_values      "O7d" o7d_assert
+md_flips nonpublishable_values      "O7g" o7g_assert
 md_flips nonpublishable_values      "O8a" o8a_assert
 md_flips verify_publishable_content "O9b" o9b_assert
 md_flips nonpublishable_values      "O9c" o9c_assert

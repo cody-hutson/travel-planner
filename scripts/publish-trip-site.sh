@@ -949,35 +949,97 @@ _GUARD_AWK_HELPERS='
     #     The test is FIELD-BLIND: enum_only takes only the value text and is passed no
     #     field, so it applies under ANY label, not only Category. That is deliberate,
     #     and narrowing it to Category is the wrong fix — see ADR-008 coverage boundary.
-    #   - a STRUCTURAL SUB-HEADING of the entry: a line whose ENTIRE content is one
-    #     markdown strong-emphasis span and nothing else. The derived model writes an
-    #     entry body under such sub-headings — `**Needs**`, `**Desires**`, `**Derived**`
-    #     — and they name a section rather than stating a traveler value. This is the
-    #     same structural exclusion the enum already makes, one shape over: `**Needs**`
-    #     was ALREADY a non-member, but only by the accident that `needs` happens to be
-    #     a member of the need-category enum, while its two siblings were emitted as
-    #     class values. Both were measured aborting a publish on the word alone
-    #     (`derived`, `desires`) against a control render that published, on the
-    #     shipped archived-trip-demo in this repository.
-    #     The shape is the whole predicate, and it is deliberately NOT a list of the
-    #     three literals: a literal list would be a second home for the class, which is
-    #     the defect the declaration block below exists to prevent. It is also
-    #     deliberately NARROW — any text at all accompanying the span leaves the line in
-    #     class, so `**Source:** none — …` and `**Documents:** unknown` are untouched.
-    #     It is tested on the RAW line, which is why the raw line is now a parameter:
-    #     the caller strips `**` before this function sees the label, so the shape is
-    #     gone by then.
+    #   - a STRUCTURAL SUB-HEADING of the entry. The derived model writes an entry body
+    #     under such sub-headings — `**Needs**`, `**Desires**`, `**Derived**` — and they
+    #     name a section rather than stating a traveler value. This is the same
+    #     structural exclusion the enum already makes, one shape over: `**Needs**` was
+    #     ALREADY a non-member, but only by the accident that `needs` happens to be a
+    #     member of the need-category enum, while its two siblings were emitted as class
+    #     values. Both were measured aborting a publish on the word alone (`derived`,
+    #     `desires`) against a control render that published, on the shipped
+    #     archived-trip-demo in this repository.
+    #
+    #     WHOLE-LINE EMPHASIS IS NOT THE PREDICATE, and shipping it as the predicate was
+    #     a FAIL-OPEN. Emphasis is typography; "this line names a section" is semantics,
+    #     and one does not imply the other. A third-party VALUE written as a bare bold
+    #     line — `- **Trigger: <value>**`, `- **<value>**`, `**<value>**` — was excluded
+    #     from the class exactly as a section name was, and a render carrying that value
+    #     verbatim went from ABORT to PUBLISH against the baseline of that same revision.
+    #     Measured end to end, one variable, on three renderings of one value.
+    #
+    #     The predicate is now the shape AND two bounds it has to clear, and each bound
+    #     is a property of the LINE rather than a name on a list:
+    #       1. NOT A LIST ITEM. A list item STATES something; a section name is a bare
+    #          line. The corpus is one-sided here: 21 of 21 in-entry whole-line emphasis
+    #          spans across both shipped models are bare lines, 0 are list items — while
+    #          the ONLY entry-body line shape the corpus specifies at all, the derived
+    #          `- **Documents:**` line (agents/00-enrichment.md § Output), IS a list item
+    #          and IS a value. So the list marker is a divider the corpus itself draws.
+    #       2. A BARE LABEL, not a statement: no sentence punctuation (`. , ; : ! ?`)
+    #          anywhere in the span, at most three words, at most 40 characters. Both
+    #          bounds are borrowed, not invented — 40 is the same "a label prefix is a
+    #          SHORT run" bound tp_value already applies below, and three words sits one
+    #          word above the longest structural section name the corpus declares
+    #          (`Update signals`, `Desire overlap`, reference/data-model.md § Reserved
+    #          keys) and strictly below GUARD_NGRAM, the word count at which this
+    #          rule selection in this guard calls a value PROSE. The exclusion therefore
+    #          can never reach a value this file itself classifies as prose.
+    #
+    #     Still deliberately NOT a list of the three literals, for the reason first
+    #     given: a literal list would be a second home for the class, and — sharper —
+    #     it would be a home with no corpus original, because nothing in the schema or
+    #     the enrichment contract names those three sub-headings at all. Still
+    #     deliberately NARROW — any text beside the span leaves the line in class, so
+    #     `**Source:** none — …` and `**Documents:** unknown` are untouched.
+    #     It is tested on the RAW line, which is why the raw line is a parameter: the
+    #     caller strips `**` before this function sees the label, so the shape is gone
+    #     by then.
+    #
+    #     THE RESIDUAL THIS LEAVES, stated rather than claimed closed: a third-party
+    #     value that is itself bare, unpunctuated, three words or fewer and under 40
+    #     characters — `**Vertigo**` on a line of its own — is still excluded. A shape
+    #     test cannot separate that from a section name, because at that point the two
+    #     are the same object. Two alternatives were measured and rejected rather than
+    #     assumed: STRUCTURAL POSITION (blank line before, blank line after, content
+    #     following) returns an IDENTICAL signature on all 21 shipped sub-headings and
+    #     on a bolded value planted in the same position, so it discriminates nothing
+    #     here; and a VALUE-VOCABULARY test collapses into the literal list above, since
+    #     the only vocabulary that separates `Derived` from a value is the list of
+    #     section names itself — and that list could not be READ from the corpus either,
+    #     because this is a NARROWING control and the declaration block below states
+    #     that narrowing controls stay in code, behind a diff. ADR-008 residual 10.
     # Everything else under the entry is IN. reference/data-model.md § Lifecycle facets —
     # "The bound is the entry class, not a list of fields ... there is no default-allow
     # outside it."
+    #
+    # TYPOGRAPHY ONLY, and the name says so. This function answers "is the whole line one
+    # strong-emphasis span?" and nothing else. It is kept separate from the exclusion that
+    # consumes it precisely because conflating the two is the defect corrected above: a
+    # reader who needs the shape can have the shape, and cannot mistake it for a verdict.
     function bold_only(raw,   t) {
       t = raw
       sub(/^[ \t]*[-*+][ \t]+/, "", t)
       sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
       return (t ~ /^\*\*[^*]+\*\*$/)
     }
+    # The EXCLUSION: true only for a line that is a structural sub-heading on all three
+    # counts above. Every conjunct narrows the exclusion, which is to say every one of
+    # them WIDENS the guarded class — the fail-closed direction. A future edit that drops
+    # one is removing values from the guarded set, whatever it says it is doing.
+    function structural_subheading(raw,   t, inner, a, n) {
+      if (!bold_only(raw)) return 0
+      if (raw ~ /^[ \t]*[-*+][ \t]+/) return 0            # a list item states something
+      t = raw; sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+      inner = substr(t, 3, length(t) - 4)                 # the text inside the span
+      sub(/^[ \t]+/, "", inner); sub(/[ \t]+$/, "", inner)
+      if (inner ~ /[.,;:!?]/) return 0                    # a label carries no sentence
+      if (length(inner) > 40) return 0                    # the SHORT-run bound below
+      n = split(inner, a, " ")
+      if (n < 1 || n > 3) return 0                        # below GUARD_NGRAM by construction
+      return 1
+    }
     function tp_value(s, raw,   t, c, nxt) {
-      if (bold_only(raw)) return ""
+      if (structural_subheading(raw)) return ""
       t = s
       sub(/^[Nn]eed[^"]*"[^"]*"[ \t]*/, "", t)                       # derived link head
       gsub(/\([ \t]*[Aa]pplies[ \t]+to[ \t]*:[^)]*\)/, " ", t)       # parenthesized link

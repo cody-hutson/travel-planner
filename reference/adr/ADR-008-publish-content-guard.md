@@ -767,30 +767,70 @@ scope decision taken at the Stage 9 re-gate:**
    record — is now refused **per mark** rather than per file, so it is no longer absolved by an
    unrelated entry having parsed; and an enumerated zero whose own parse control fixture also reads
    zero is refused as a broken probe. Both are fail-closed paths this residual does not cover.
-10. **An entry's structural scaffolding was in class, and one shape of it still is.** The entry
-   denylist takes what a line states, which is correct for a value line and wrong for the markdown
-   scaffolding the derived model writes an entry body in. Two bold sub-headings — the ordinary
-   English words `derived` and `desires` — became distinctive match keys, and a render carrying
-   either aborted the publish on this repository's own shipped worked example. It is a false
-   positive from class-source over-capture, never a leak: the matched record is a section name, not
-   third-party data.
+10. **An entry's structural scaffolding was in class; narrowing it by TYPOGRAPHY ALONE was a
+   fail-open, and the corrected predicate still leaves shapes over.** The entry denylist takes what
+   a line states, which is correct for a value line and wrong for the markdown scaffolding the
+   derived model writes an entry body in. Two bold sub-headings — the ordinary English words
+   `derived` and `desires` — became distinctive match keys, and a render carrying either aborted the
+   publish on this repository's own shipped worked example.
+
+   **An earlier revision of this residual called that narrowing "a false positive from class-source
+   over-capture, never a leak". That sentence was false as shipped, and it is retracted here rather
+   than softened.** The first narrowing excluded any line whose entire content was one
+   strong-emphasis span. That reads TYPOGRAPHY and infers SEMANTICS, and the two do not imply each
+   other: a third-party **value** written as a whole-line emphasis span was excluded exactly as a
+   section name was, and was dropped from the class before the matcher ever saw it. Measured end to
+   end on one value in three renderings — `- **Trigger: <value>**`, `- **<value>**`, and `**<value>**`
+   on a line of its own — against a render carrying that value verbatim: **`rc=1` ABORT at the
+   pre-narrowing baseline, `rc=0` PUBLISH after it.** A value that aborted before the narrowing
+   published after it. The direction is what makes it a leak rather than a false positive:
+   over-capture refuses correct content, while this released the content the class exists to
+   withhold.
 
    `**Needs**` had always been excluded, but only by the accident that `needs` is a member of the
    closed need-category enum; its two siblings had no such accident. The exclusion was vocabulary-
-   shaped where the thing being excluded is shape-shaped, so the fix is a shape: a line whose entire
-   content is one strong-emphasis span states a section name and is a non-member. It is deliberately
-   narrow — any text at all beside the span leaves the line in class.
+   shaped where the thing being excluded is a section heading — but whole-line emphasis is not what a
+   section heading **is**, only what one looks like. **The corrected predicate is that shape plus two
+   bounds, and all three must hold.** The line is **not a list item**: a list item states something,
+   and the only entry-body line shape the corpus specifies at all — the derived `- **Documents:**`
+   line — is a list item carrying a value. And the span is a **bare label**: no sentence punctuation
+   anywhere inside it, at most three words, at most 40 characters. Both bounds are borrowed rather
+   than invented — 40 is the same short-run bound the label-prefix rule in the same function already
+   applies, and three words sits one word above the longest structural section name the corpus
+   declares and strictly below the word count at which this guard's own rule selection calls a value
+   prose, so the exclusion cannot reach a value this guard itself classifies as prose. Both
+   directions are asserted together, on one model carrying one value in all three renderings beside
+   all three shipped sub-headings, so neither a revert nor a bare shape test passes it.
 
    **The stoplist remedy was measured and rejected**, rather than passed over. Adding the offending
    token to the normalization vocabulary clears one word and leaves the other aborting: it fixes an
    instance of the mechanism and not the mechanism, and it weakens the matcher for every value in the
    class rather than for the lines that are not values.
 
-   **What remains open is one shape over.** A markdown **table header row** inside a marked entry is
-   still emitted as a class record, so the entry's column names are still keys. It takes all of them
-   in one render to abort, which is why no single ordinary word trips it, and it is pinned by a suite
-   arm rather than left in prose. Distinguishing a header row from a data row needs lookahead the
-   line-at-a-time parse does not have, so it is stated rather than guessed at.
+   **Two remedies wider than a shape test were measured and rejected as well.** STRUCTURAL POSITION
+   — is the line preceded by a blank, followed by a blank, and then by content? — returns an
+   **identical** signature on all 21 in-entry whole-line emphasis spans across both shipped models
+   and on a third-party value planted in the same position, so it discriminates nothing here; the
+   probe itself fires, on a no-blank-line variant, so that is a measurement and not a dead arm. A
+   VALUE-VOCABULARY test collapses into a literal list of the three sub-heading names — which would
+   be a second home for a class that has no corpus original, since nothing in the schema or the
+   enrichment contract names those sub-headings at all, and which could not be read from the corpus
+   either, because this is a NARROWING control and narrowing controls stay in code behind a diff.
+
+   **What remains open, and it is three things rather than one.** First, the irreducible remainder
+   of any shape test: a third-party value that is itself a bare, unpunctuated span of at most three
+   words and under 40 characters — `**Vertigo**` alone on a line — is **still excluded**, because at
+   that point a value and a section name are the same object. Second, a markdown **table header
+   row** inside a marked entry is still emitted as a class record, so the entry's column names are
+   still keys. It takes all of them in one render to abort, which is why no single ordinary word
+   trips it, and it is pinned by a suite arm rather than left in prose. Distinguishing a header row
+   from a data row needs lookahead the line-at-a-time parse does not have, so it is stated rather
+   than guessed at. Third, the exclusion closes **one of five equivalent renderings**: `__X__`,
+   `***X***`, `*X*` and `_X_` render the same emphasis and all remain **in** class, so an author who
+   switches spelling re-opens the false positive. That third one is the fail-closed direction and is
+   left as it is deliberately — widening the exclusion to cover them would widen the first residual
+   above by four more shapes, and nothing in the corpus reserves any of these renderings for a
+   section name.
 11. **A carry-through that drops the value's own connective vocabulary.** The conjunctive rule now
    requires one of the value's non-distinctive tokens in the matched block, so a carry-through that
    keeps both facts and discards the words joining them — a paraphrase of the validity predicate — is
