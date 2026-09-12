@@ -2804,23 +2804,37 @@ o7c_assert
 # O7d — the exclusion is SHAPE-bounded, not a list of the three shipped literals. A bold
 # span with ANY text beside it stays in class; a bold-only line does not. Both directions,
 # because a one-directional check cannot tell a shape test from a literal match.
+#
+# The fixture word is deliberately NOT one of the three sub-headings this model ships. It
+# was `Derived` — a member of that very list — which left this arm structurally unable to
+# test the property its own verdict text asserts: a predicate rewritten AS the literal list
+# would have excluded `Derived` and passed here, while being the second home for the class
+# the declaration block rules out. `Update signals` is a section name the corpus declares
+# (reference/data-model.md § Reserved keys) and this model does not ship, so that rewrite
+# now FAILS this arm instead of passing it. Both fixture lines carry the SAME words and
+# differ only in shape, which is what makes the verdict a reading of the shape rather than
+# of the vocabulary — an exclusion keyed on these words in ANY shape fails the second arm.
 O7BTD="$WORK/o7_bounded"
-omodel "$O7BTD" <<'MD'
+O7DNAME='Update signals'
+omodel "$O7BTD" <<MD
 # Traveler Model [DERIVED]
 
 ## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
 
-**Derived**
+**${O7DNAME}**
 
-**Source:** relayed by the operator at the request of the party lead
+**${O7DNAME}:** relayed by the operator at the request of the party lead
 MD
 o7d_assert() {
   local out bold text
   out="$(nonpublishable_values "$O7BTD" 2>/dev/null)"
-  bold="$(grep -cF 'Derived' <<<"$out")"
+  # Exact VALUE-field equality, not a substring scan: the question is whether the bold-only
+  # line emitted a record of its own, and a substring would also answer yes to the label
+  # line if the label prefix ever stopped being stripped — a FAIL for an unrelated reason.
+  bold="$(awk -F'\t' -v v="$O7DNAME" '$4 == v { c++ } END { print c + 0 }' <<<"$out")"
   text="$(grep -cF 'relayed by the operator' <<<"$out")"
   if [ "$bold" -eq 0 ] && [ "$text" -eq 1 ]; then
-    PASS "O7d: a bold-only line emits no record ($bold) while a bold LABEL carrying text still emits one ($text) — the exclusion is the line shape, not a list of the three sub-headings this model happens to ship"
+    PASS "O7d: a bold-only line whose words are NOT one of the three sub-headings this model ships emits no record ($bold), while the SAME words carrying text as a bold LABEL still emit one ($text) — the exclusion reads the line shape, so a literal list of the three, or any rule keyed on this vocabulary, fails one of these two arms"
   else
     FAIL "O7d: the exclusion is not shape-bounded (bold-only=$bold bold-label-with-text=$text) — either it is matching literals, or it is swallowing labelled values, or the class source is not running"
   fi
@@ -2915,6 +2929,140 @@ if [ "$o7vhit" -eq 1 ] && [ "$o7vctl" -eq 0 ]; then
   PASS "O7h: a render carrying the emphasis-wrapped third-party value verbatim ABORTS (rc=$o7vhit) while the same render without it PUBLISHES (rc=$o7vctl) — the class membership reaches the publish verdict, and the clean arm is what makes the abort a measurement rather than a guard that refuses everything"
 else
   FAIL "O7h: the emphasis-wrapped value did not key the publish verdict (with-the-value=$o7vhit without=$o7vctl) — rc=0 on the first arm is the shipped fail-open; rc!=0 on the second is a guard refusing correct content"
+fi
+# ── O7i–O7m — ONE FIXTURE PER CONJUNCT, because a fixture that trips several ──
+# certifies none of them. O7f/g/h above are honest about what they assert, but the value
+# behind them is 64 characters and 12 words, so each of its three renderings is rejected
+# by two to four of the predicate's conjuncts at once. Remove any single conjunct and the
+# survivors still hold that value in class: the suite stays green at full count while the
+# guarded set silently shrinks. It is the direction structural_subheading's own comment
+# warns a future editor about — a change that drops one conjunct is removing values from
+# the guarded set, whatever it says it is doing — and nothing here could see it happen.
+#
+# The predicate is a CONJUNCTION of four line properties, each of them a reason to keep a
+# line IN class:
+#   C1  the line is a list item                 — a list item states something
+#   C2  the span carries sentence punctuation   — a label carries no sentence
+#   C3  the span runs over 40 characters        — the short-run bound
+#   C4  the span runs to more than three words  — below GUARD_NGRAM by construction
+# A conjunct is load-bearing only where some fixture depends on it ALONE, so each arm
+# below is built from a MINIMAL PAIR: two lines differing by exactly that one property,
+# one in class and one out. The pair is what makes a single count two-directional — drop
+# the conjunct and the in-class member leaves, delete the exclusion and the out-of-class
+# member arrives — so neither failure mode needs an arm of its own to become visible.
+#
+# C3 and C4 are pinned AT the boundary rather than far from it: 41 characters against 40,
+# four words against three. A bound RELAXED by one is caught, not only a bound removed.
+#
+# Deliberately NOT registered with md_flips, for the reason the registration block below
+# gives: O7g is the one arm registered against nonpublishable_values for this subject, and
+# five more registrations would re-grade the same removal five times over.
+#
+# The four line properties, measured on the FIXTURE. This grades the fixture and never the
+# predicate: it answers whether a line carries exactly one of the four, which is what makes
+# O7j–O7m single-conjunct arms. Whether the predicate still HONOURS a property is read off
+# the class record stream in those arms. The two questions are kept apart deliberately —
+# an arm that asked the predicate about itself would be worth nothing.
+o7_props() { # <raw line> -> four digits, 1 = the line carries that property
+  awk -v raw="$1" '
+    BEGIN {
+      t = raw
+      c1 = (t ~ /^[ \t]*[-*+][ \t]+/) ? 1 : 0
+      sub(/^[ \t]*[-*+][ \t]+/, "", t)
+      sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+      inner = substr(t, 3, length(t) - 4)
+      sub(/^[ \t]+/, "", inner); sub(/[ \t]+$/, "", inner)
+      c2 = (inner ~ /[.,;:!?]/) ? 1 : 0
+      c3 = (length(inner) > 40) ? 1 : 0
+      n  = split(inner, a, " ")
+      c4 = (n < 1 || n > 3) ? 1 : 0
+      printf "%d%d%d%d", c1, c2, c3, c4
+    }'
+}
+O7IC1='peanut anaphylaxis'                        # C1 pair — the SAME span, bulleted and bare
+O7IC2='epilepsy, photosensitive'                  # C2 pair — one comma apart …
+O7IC2B='epilepsy photosensitive'                  #           … from this one
+O7IC3='wheelchair-accessible step-free bathrooms' # C3 pair — 41 characters …
+O7IC3B='wheelchair-accessible step-free bathroom' #           … against 40, one letter apart
+O7IC4='allergic to tree nuts'                     # C4 pair — four words …
+O7IC4B='allergic to nuts'                         #           … against three, one word apart
+O7ITD="$WORK/o7_isolation"
+omodel "$O7ITD" <<MD
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+- **${O7IC1}**
+
+**${O7IC1}**
+
+**${O7IC2}**
+
+**${O7IC2B}**
+
+**${O7IC3}**
+
+**${O7IC3B}**
+
+**${O7IC4}**
+
+**${O7IC4B}**
+MD
+# One read of the record stream, counted by exact VALUE-field equality. Membership is read
+# off the emitted rows and never from the predicate, the same way O7g reads it.
+o7i_stream="$(nonpublishable_values "$O7ITD" 2>/dev/null)"
+o7icount() { awk -F'\t' -v v="$1" '$4 == v { c++ } END { print c + 0 }' <<<"$o7i_stream"; }
+# O7i — ISOLATION INTEGRITY, graded before the four verdicts it protects, in the same
+# construction O7f uses for O7g/O7h. A fixture that silently gained a second property
+# would leave its arm below passing while proving less — which is F6 one level up.
+o7iA="$(o7_props "- **${O7IC1}**")"; o7iAp="$(o7_props "**${O7IC1}**")"
+o7iB="$(o7_props "**${O7IC2}**")";   o7iBp="$(o7_props "**${O7IC2B}**")"
+o7iC="$(o7_props "**${O7IC3}**")";   o7iCp="$(o7_props "**${O7IC3B}**")"
+o7iD="$(o7_props "**${O7IC4}**")";   o7iDp="$(o7_props "**${O7IC4B}**")"
+o7isrc="$O7ITD/outputs/traveler-model.md"
+if [ "$o7iA" = "1000" ] && [ "$o7iB" = "0100" ] && [ "$o7iC" = "0010" ] && [ "$o7iD" = "0001" ] \
+   && [ "$o7iAp" = "0000" ] && [ "$o7iBp" = "0000" ] \
+   && [ "$o7iCp" = "0000" ] && [ "$o7iDp" = "0000" ] \
+   && grep -qF -e "- **${O7IC1}**" "$o7isrc" \
+   && grep -qxF "**${O7IC1}**"  "$o7isrc" && grep -qxF "**${O7IC2}**"  "$o7isrc" \
+   && grep -qxF "**${O7IC2B}**" "$o7isrc" && grep -qxF "**${O7IC3}**"  "$o7isrc" \
+   && grep -qxF "**${O7IC3B}**" "$o7isrc" && grep -qxF "**${O7IC4}**"  "$o7isrc" \
+   && grep -qxF "**${O7IC4B}**" "$o7isrc"; then
+  PASS "O7i: each of the four isolation fixtures carries EXACTLY ONE of the four line properties ($o7iA $o7iB $o7iC $o7iD, one digit per conjunct in C1 C2 C3 C4 order) and each minimal-pair partner carries none ($o7iAp $o7iBp $o7iCp $o7iDp), with both numeric pairs pinned at the boundary — 41 characters against 40, four words against three. A verdict in O7j–O7m therefore cannot be earned by a second conjunct"
+else
+  FAIL "O7i: the isolation fixtures are not one-property-each ($o7iA $o7iB $o7iC $o7iD, partners $o7iAp $o7iBp $o7iCp $o7iDp) or a fixture line is missing from the model — O7j–O7m would each prove less than they state"
+fi
+# O7j — C1, not a list item. Both lines carry the SAME span, so the list marker is the
+# only difference between them and the count is the whole verdict.
+o7jc="$(o7icount "$O7IC1")"
+if [ "$o7jc" -eq 1 ]; then
+  PASS "O7j: C1 (a list item states something, so it is not a section name) is LOAD-BEARING — the same span appears twice, bulleted and bare, and exactly 1 of the 2 lines is in class ($o7jc). Dropping that conjunct takes the bulleted value out of the guarded set"
+else
+  FAIL "O7j: C1 is not load-bearing (in class=$o7jc of the 2 lines carrying the span) — 0 is the bulleted value having LEFT the class, whether because the conjunct was dropped or because the exclusion widened back to a bare shape test; 2 is the exclusion no longer firing at all"
+fi
+# O7k — C2, no sentence punctuation in the span. One comma is the entire difference
+# between the two spans, and it decides membership.
+o7kin="$(o7icount "$O7IC2")"; o7kout="$(o7icount "$O7IC2B")"
+if [ "$o7kin" -eq 1 ] && [ "$o7kout" -eq 0 ]; then
+  PASS "O7k: C2 (a label carries no sentence punctuation) is LOAD-BEARING — one comma separates the two spans and decides class membership (punctuated in class=$o7kin, unpunctuated=$o7kout). The zero is stated against a paired non-empty arm rather than on its own"
+else
+  FAIL "O7k: C2 is not load-bearing (punctuated=$o7kin unpunctuated=$o7kout) — punctuated=0 is the conjunct dropped and a punctuated value gone from the guarded set; unpunctuated=1 is the exclusion no longer firing"
+fi
+# O7l — C3, the 40-character bound, pinned AT the boundary: 41 against 40, both of them
+# three words and neither punctuated, so a bound relaxed by ONE character fails here.
+o7lin="$(o7icount "$O7IC3")"; o7lout="$(o7icount "$O7IC3B")"
+if [ "$o7lin" -eq 1 ] && [ "$o7lout" -eq 0 ]; then
+  PASS "O7l: C3 (the span runs to at most 40 characters) is LOAD-BEARING AT THE BOUNDARY — 41 characters is in class and 40 is out ($o7lin / $o7lout), the two differing by one letter, so relaxing the bound by one is caught and not only removing it"
+else
+  FAIL "O7l: C3 is not load-bearing (41-character=$o7lin 40-character=$o7lout) — 41=0 is the bound dropped or relaxed past 41; 40=1 is the exclusion no longer firing"
+fi
+# O7m — C4, the three-word bound, pinned the same way: four words against three, both far
+# under the character bound, so a bound relaxed by ONE word fails here.
+o7min="$(o7icount "$O7IC4")"; o7mout="$(o7icount "$O7IC4B")"
+if [ "$o7min" -eq 1 ] && [ "$o7mout" -eq 0 ]; then
+  PASS "O7m: C4 (the span runs to at most three words) is LOAD-BEARING AT THE BOUNDARY — four words is in class and three is out ($o7min / $o7mout), the two differing by one word and both far under the character bound, so relaxing the word bound by one is caught and not only removing it"
+else
+  FAIL "O7m: C4 is not load-bearing (4-word=$o7min 3-word=$o7mout) — 4=0 is the bound dropped or relaxed past four; 3=1 is the exclusion no longer firing"
 fi
 
 # ── O8 — the guard's OWN zero carries a control arm (fix 5c) ────────────────
@@ -5815,7 +5963,11 @@ md_flips verify_publishable_content "M5c" m5_clean_assert
 #                           two directions are a value and a section name rather than two
 #                           section-name shapes. O7f is fixture integrity and O7h grades
 #                           the publish verdict, so neither is registered — O7g is the one
-#                           whose whole verdict is what the class source emitted.
+#                           whose whole verdict is what the class source emitted. O7j–O7m
+#                           read the same stream one conjunct at a time and O7i grades
+#                           their fixture, so they are not registered either: five more
+#                           registrations would re-grade this one removal five times over
+#                           and say nothing O7g does not already say about it.
 #   nonpublishable_values → O4e, the mark-strip oracle: the whole verdict is the class
 #                           source refusing to accept an uncorroborated zero.
 #   nonpublishable_values → O8a, the parse sensitivity arm, whose subject is the guard's
