@@ -9,7 +9,7 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, MD, RS) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, MD, PP, RS) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # That parenthesis is a reading aid and has never been complete — the AUTHORITATIVE roster
 # of groups that run is the coverage boundary in .github/workflows/publish-guard.yml, and
@@ -68,6 +68,12 @@
 # own declaration block. T7c grades the block itself: it once measured the residual that
 # block left in the digest and now asserts its absence, the projection having been repaired
 # by the third remediation graded in S12.
+# PP = the site passphrase never reaches standard output (#330). publish and rotate are
+# each run end-to-end offline and their captured standard output is graded COMPOUND: it
+# must carry the passphrase FILE PATH and must not carry the value, because a plain
+# value-absence test is satisfied by an announcer that never ran. PP7 restores the pre-fix
+# value-emitting announcer on every run and requires the same arm to convict it; PP8 grades
+# the env-supplied limb, where the shipped message claimed a file it had not written.
 # MD = the Discriminating-Evidence Rule, asserted against this file. Every assertion's
 # PASS must require evidence its subject could only have produced by RUNNING. MD re-runs
 # each REGISTERED assertion with its subject removed and requires that assertion to flip
@@ -5737,6 +5743,358 @@ md_flips nonpublishable_values      "O7d" o7d_assert
 md_flips nonpublishable_values      "O8a" o8a_assert
 md_flips verify_publishable_content "O9b" o9b_assert
 md_flips nonpublishable_values      "O9c" o9c_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PP — the site passphrase never reaches standard output (#330).
+#
+# THE DEFECT, measured end-to-end before this group existed: a publish run to completion
+# with its standard output captured carried the resolved passphrase VALUE — 667 bytes of
+# capture, a 49-character value — and a rotate carried its own, 448 bytes and 41
+# characters. Standard output is what a command file's bash pre-execution injects into a
+# session transcript, so the disclosure was never confined to a human's scrollback.
+#
+# WHAT IS GRADED IS A SHAPE, NOT A POLICY. announce_passphrase_file takes the passphrase
+# FILE PATH and never the value, so the emission site is INCAPABLE of disclosing rather
+# than declining to. There is no terminal test, no flag and no environment probe to take
+# wrongly, because the secret never arrives at the site that prints.
+#
+# WHY EVERY CAPTURE ARM HERE IS COMPOUND. The obvious assertion — "the capture does not
+# contain the passphrase" — is the emptiness conflation group MD exists for: delete the
+# announcer and the capture satisfies it trivially, so the assertion passes against a
+# subject that never ran. Every capture arm below therefore grades a POSITIVE limb FIRST
+# — the capture must carry the passphrase file PATH, evidence only a running announcer,
+# handed the right path, could produce — and only then the negative one. A capture missing
+# the pointer is FAIL — verdict withheld, never a pass. The path is computed here from the
+# fixture directory this group created, so the script cannot supply it by accident.
+#
+# THE DENOMINATOR of a string-absence verdict is not a population count, because there is
+# no population to count. It is stated as the triple (capture bytes, value length, pointer
+# found) — the three numbers that decide whether the absence was measured or merely empty.
+#
+# NO ANSI STRIPPING, deliberately: every arm is a substring test over the value and over
+# the path, and a colour escape sits outside both. The pre-fix emitter wrapped the value in
+# escapes and the value still read as a contiguous substring, which is how the measurement
+# above was taken and how PP7's restored mutant is convicted.
+#
+# PP IS PURE BASH PLUS GIT. gh and npx are shell functions here, encrypt_to_tmp is shimmed
+# to the known-good ciphertext fixture this suite already builds, make_boilerplate declines
+# exactly as it does without npx, and rotate pushes to a bare repository created under
+# $WORK. No network, no Node, no authenticated CLI, no terminal — and this group creates
+# its own repositories, so unlike K/Q/U/V it does not require the suite to be running
+# inside a git work tree. It has no legitimate skip and is deliberately NOT declared in
+# GUARD_EXPECTED_SKIPS.
+#
+# SHIMMING encrypt_to_tmp IS BOUNDED AND DELIBERATE. This group's subject is the
+# announcement channel, which is strictly downstream of encryption; groups E and G own real
+# StatiCrypt and skip without it. An arm here that depended on StatiCrypt would have to be
+# skippable, and a skippable privacy control is the green that proves less than it appears
+# to. The shimmed originals are restored at the end of the group rather than unset, so a
+# group added after this one inherits the production functions and not these stand-ins.
+#
+# THE MD REGISTRATIONS ARE EMITTED HERE rather than in group MD, for the reason G2's are
+# emitted inside group G: they need this group's mocks and fixtures, which are torn down at
+# the end of it. MD's own controls (MD4/MD5) have already run by this point, so every
+# MD[PP…] verdict below stands on an oracle whose sensitivity and specificity are measured.
+#
+# TWO ARMS ARE DECLARED MD OPT-OUTS rather than silently left unregistered, because
+# `unset -f` is inapplicable to their subjects: PP0's subject is a synthetic string and the
+# substring test over it, and PP9's is a filesystem mode. Neither is a shell function, so
+# there is nothing for the oracle to remove; registering them would grade the oracle rather
+# than the assertion. Every other arm here is registered.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PP — the passphrase VALUE never reaches standard output; the PATH does."
+
+PPW="$WORK/pp"; mkdir -p "$PPW"
+
+# The originals, saved before the shims below replace them, and re-defined at the end of
+# the group. `unset -f` would remove the production function rather than the stand-in.
+PP_ORIG_ENC="$(declare -f encrypt_to_tmp)"
+PP_ORIG_BOIL="$(declare -f make_boilerplate)"
+
+# Commit signing is pinned OFF for the throwaway repositories this group creates, so the
+# fixture does not depend on the operator's global git configuration — measured: a global
+# commit.gpgsign=true reads as false under these entries. GIT_CONFIG_* overrides
+# configuration files, and `commit_noreply` passes only user.name/user.email with -c, so
+# nothing here contests them. Undone at the end of the group.
+export GIT_CONFIG_COUNT=3 \
+  GIT_CONFIG_KEY_0=commit.gpgsign     GIT_CONFIG_VALUE_0=false \
+  GIT_CONFIG_KEY_1=tag.gpgsign        GIT_CONFIG_VALUE_1=false \
+  GIT_CONFIG_KEY_2=init.defaultBranch GIT_CONFIG_VALUE_2=main
+
+gh() {   # mock: answer the read-only probes; create, clone and push nothing real
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 1 ;;          # no per-trip repo yet, so publish proceeds
+    "auth status") printf "Token scopes: 'repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+npx() { return 0; }
+encrypt_to_tmp() { local e; e="$(mktemp -d)"; cp "$ENC_OK" "$e/index.html"; printf '%s' "$e"; }
+make_boilerplate() { return 1; }
+
+# $SRC is this suite's synthetic plaintext itinerary and $ENC_OK the ciphertext group A
+# already proves clean against it, so the real verify_ciphertext runs on a pair it has
+# graded rather than on a fixture invented here.
+pp_fixture() { # <name> -> trip dir on stdout
+  local d="$PPW/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  cp "$SRC" "$d/outputs/$1-travel-site.html"
+  printf '%s' "$d"
+}
+
+# Occurrence count with no pipeline anywhere in it — group PF forbids a verdict decided by
+# a pipeline's exit status, and this feeds verdicts.
+pp_count() { # <haystack> <needle> -> count on stdout
+  local h="$1" n="$2" c=0
+  while [ -n "$h" ]; do
+    case "$h" in *"$n"*) c=$((c+1)); h="${h#*"$n"}" ;; *) break ;; esac
+  done
+  printf '%s' "$c"
+}
+
+# The captures are taken INSIDE the registered assertions' own call chain, which is a
+# factoring requirement rather than a convenience: an assertion handed a capture computed
+# elsewhere would be unaffected by `unset -f` and group MD would correctly convict it as
+# blind. stdin is /dev/null and stderr is discarded, so what is graded is standard output
+# and nothing else.
+pp_capture_publish() { # <trip_dir> [env_passphrase] -> the run's captured STANDARD OUTPUT
+  if [ -n "${2:-}" ]; then
+    ( STATICRYPT_PASSWORD="$2" cmd_publish "$1" ) </dev/null 2>/dev/null
+  else
+    ( cmd_publish "$1" ) </dev/null 2>/dev/null
+  fi
+}
+pp_capture_rotate() { # <trip_dir> -> the run's captured STANDARD OUTPUT
+  ( cmd_rotate "$1" ) </dev/null 2>/dev/null
+}
+
+# ── PP0 — the leak detector's own sensitivity, graded FIRST and MD-opt-out (its subject is
+# a synthetic string, not a shell function). Every verdict below is a substring test; if
+# that test cannot tell a capture carrying the value from one that does not, every PP
+# verdict is vacuous and its zero proves nothing.
+PP_SYN='zzq-synthetic-passphrase-value'
+PP_D_HIT=0; PP_D_MISS=0
+case "prefix $PP_SYN suffix"        in *"$PP_SYN"*) PP_D_HIT=1 ;; esac
+case "prefix (value absent) suffix" in *"$PP_SYN"*) PP_D_MISS=1 ;; esac
+if [ "$PP_D_HIT" -eq 1 ] && [ "$PP_D_MISS" -eq 0 ]; then
+  PASS "PP0: CONTROL on the leak detector — over 2 synthetic captures it fires on the one carrying the value and stays silent on the one that does not, so both arms fired. Every absence asserted below is a measurement rather than a detector that matches nothing"
+else
+  FAIL "PP0: the leak detector is broken over 2 of 2 synthetic captures — hit arm=$PP_D_HIT (want 1), miss arm=$PP_D_MISS (want 0). Every PP verdict below would be vacuous, so none of them is trustworthy"
+fi
+
+# ── PP1 — the publish path, executed end-to-end and offline. Compound: pointer present
+# (positive, non-degenerate haystack) AND value absent.
+pp_publish_assert() { # <id> <trip_dir>
+  local id="$1" d="$2" pf="$2/.passphrase" cap val="" hasp=0 hasv=0
+  cap="$(pp_capture_publish "$d")"
+  [ -r "$pf" ] && val="$(cat "$pf")"
+  case "$cap" in *"$pf"*) hasp=1 ;; esac
+  [ -n "$val" ] && case "$cap" in *"$val"*) hasv=1 ;; esac
+  if [ "$hasp" -eq 0 ]; then
+    FAIL "$id: the capture carries no '$pf' pointer — DEGENERATE HAYSTACK, VERDICT WITHHELD. An absent announcer produces a capture with no passphrase in it, which is not evidence that the announcer withheld one (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  elif [ "$hasv" -eq 1 ]; then
+    FAIL "$id: the passphrase VALUE reached standard output on the publish path — a captured or transcript-injected publish discloses the secret (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  else
+    PASS "$id: publish ran end-to-end and its captured standard output carries the passphrase FILE PATH and not the ${#val}-character value (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  fi
+}
+PP1D="$(pp_fixture pp1)"
+pp_publish_assert "PP1" "$PP1D"
+
+# ── PP2 — the rotate path, same shape, pushing to a bare repository created here so the
+# push is offline. ensure_pub_clone reuses .publish when its origin resolves to this trip's
+# slug, which is why the remote's basename is <slug>.git.
+pp_rotate_assert() { # <id> <trip_dir>
+  local id="$1" d="$2" pf="$2/.passphrase" cap val="" hasp=0 hasv=0
+  cap="$(pp_capture_rotate "$d")"
+  [ -r "$pf" ] && val="$(cat "$pf")"
+  case "$cap" in *"$pf"*) hasp=1 ;; esac
+  [ -n "$val" ] && case "$cap" in *"$val"*) hasv=1 ;; esac
+  if [ "$hasp" -eq 0 ]; then
+    FAIL "$id: the capture carries no '$pf' pointer — DEGENERATE HAYSTACK, VERDICT WITHHELD (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  elif [ "$hasv" -eq 1 ]; then
+    FAIL "$id: the NEW passphrase VALUE reached standard output on the rotate path — rotation is exactly the moment a fresh secret is disclosed to a capture (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  else
+    PASS "$id: rotate ran end-to-end and its captured standard output carries the passphrase FILE PATH and not the ${#val}-character new value (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  fi
+}
+PP2D="$(pp_fixture pp2)"
+PP2SLUG="$(basename "$PP2D")-trip"
+PP2BARE="$PPW/origin/$PP2SLUG.git"; mkdir -p "$PP2BARE"; git init -q --bare "$PP2BARE"
+PP2PUB="$PP2D/.publish"; mkdir -p "$PP2PUB"
+git init -q "$PP2PUB"
+git -C "$PP2PUB" remote add origin "$PP2BARE"
+cp "$ENC_OK" "$PP2PUB/index.html"
+git -C "$PP2PUB" add index.html
+git -C "$PP2PUB" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
+git -C "$PP2PUB" branch -M main
+git -C "$PP2PUB" push -q origin main
+pp_rotate_assert "PP2" "$PP2D"
+
+# ── PP3 — the announcer's own exit status, graded EXACTLY rather than truthily, so a 127
+# is diagnosed as an ABSENT SUBJECT and never as a rejection.
+pp_rc_assert() { # <id>
+  expect_rc 0 "$1" "the announcer returns cleanly against a path it can read" -- announce_passphrase_file "Passphrase" "$PP1D/.passphrase"
+}
+pp_rc_assert "PP3"
+
+# ── PP4 — the announcer CANNOT disclose: the value is not a parameter and the body holds
+# no construct that could fetch it. The complement arm requires the printf sites fed from
+# the path parameter, so a body that merely lacks the bad constructs — an empty one, or a
+# stub — cannot satisfy this.
+pp_cannot_disclose_assert() { # <id>
+  local id="$1" body="" nd n_bad=0 n_pf=0 n_pr=0
+  body="$(declare -f announce_passphrase_file 2>/dev/null)"
+  for nd in 'get_passphrase' 'STATICRYPT_PASSWORD' '$(cat' '$passphrase'; do
+    n_bad=$(( n_bad + $(pp_count "$body" "$nd") ))
+  done
+  n_pf="$(pp_count "$body" '"$pf"')"
+  n_pr="$(pp_count "$body" 'printf')"
+  if [ "${#body}" -lt 300 ]; then
+    FAIL "$id: announce_passphrase_file's parsed body is ${#body} bytes, below the 300-byte floor — the subject is absent or a stub, so a clean reading of it would be an empty scan rather than a clean function"
+  elif [ "$n_pr" -lt 2 ] || [ "$n_pf" -lt 2 ]; then
+    FAIL "$id: COMPLEMENT ARM — the body holds $n_pr printf site(s) and $n_pf reference(s) to the path parameter, below the 2 each a two-limbed announcer must have. The absence asserted next would be an absence in something that does not announce"
+  elif [ "$n_bad" -ne 0 ]; then
+    FAIL "$id: the announcer body carries $n_bad value-obtaining construct(s) (get_passphrase / STATICRYPT_PASSWORD / \$(cat / \$passphrase) — it can reach the secret, so withholding it is a branch that can be taken wrongly rather than a shape"
+  else
+    PASS "$id: the announcer is INCAPABLE of disclosing — 0 value-obtaining constructs over a ${#body}-byte parsed body, and the complement arm fired ($n_pr printf sites, $n_pf path-parameter references). The value is not a parameter, so there is no branch that could print it"
+  fi
+}
+pp_cannot_disclose_assert "PP4"
+
+# ── PP5 — single-limb: the announcement is not conditional on the CALLER. This is the arm
+# that fails the day a `[ -t 1 ]` gate is reintroduced. Its sensitivity arm runs the
+# identical scan over cmd_confirm, which does gate on a terminal, so the zero here is a
+# measurement rather than a scan that matches nothing.
+pp_single_limb_assert() { # <id>
+  local id="$1" body="" ctl="" nd n_gate=0 n_ctl=0
+  body="$(declare -f announce_passphrase_file 2>/dev/null)"
+  ctl="$(declare -f cmd_confirm 2>/dev/null)"
+  for nd in '-t 0' '-t 1' '/dev/tty'; do
+    n_gate=$(( n_gate + $(pp_count "$body" "$nd") ))
+  done
+  n_ctl="$(pp_count "$ctl" '-t 0')"
+  if [ "${#body}" -lt 300 ]; then
+    FAIL "$id: announce_passphrase_file's parsed body is ${#body} bytes, below the 300-byte floor — the subject is absent or a stub and the terminal-gate zero below would be an empty scan"
+  elif [ "$n_ctl" -lt 1 ]; then
+    FAIL "$id: SENSITIVITY ARM DID NOT FIRE — the identical scan over cmd_confirm, which does gate on a terminal, found $n_ctl '-t 0' site(s). The detector is not reading what it claims, so the zero over the announcer proves nothing"
+  elif [ "$n_gate" -ne 0 ]; then
+    FAIL "$id: the announcer branches on the CALLER — $n_gate terminal-or-tty construct(s) in its body. A privacy property that depends on how the script was invoked takes its disclosing limb on any host that allocates a pseudo-terminal, and no test harness can enter that limb to grade it"
+  else
+    PASS "$id: the announcement is UNCONDITIONAL on the caller — 0 '-t 0' / '-t 1' / '/dev/tty' constructs over a ${#body}-byte parsed body, while the identical scan over cmd_confirm found $n_ctl, so the zero is a measurement"
+  fi
+}
+pp_single_limb_assert "PP5"
+
+# ── PP6 — the wiring, read from the PARSED function bodies rather than from source text:
+# bash discards comments, so a mention of the identifier in a comment cannot fake a call
+# site. The get_passphrase count is exact at 1 because cmd_publish resolved the passphrase
+# TWICE before this change — once for encryption and once, redundantly, to print.
+pp_wiring_assert() { # <id>
+  local id="$1" pub="" rot="" n_pub=0 n_rot=0 n_get=0 n_cat=0
+  pub="$(declare -f cmd_publish 2>/dev/null)"
+  rot="$(declare -f cmd_rotate 2>/dev/null)"
+  n_pub="$(pp_count "$pub" 'announce_passphrase_file')"
+  n_rot="$(pp_count "$rot" 'announce_passphrase_file')"
+  n_get="$(pp_count "$pub" 'get_passphrase')"
+  n_cat="$(pp_count "$rot" 'cat "$pf"')"
+  if [ "${#pub}" -lt 1000 ] || [ "${#rot}" -lt 300 ]; then
+    FAIL "$id: parsed bodies are ${#pub} bytes (cmd_publish) and ${#rot} bytes (cmd_rotate), below the 1000/300 floors — a subject is absent or a stub, so the counts below would be read off an empty haystack"
+  elif [ "$n_pub" -lt 1 ] || [ "$n_rot" -lt 1 ]; then
+    FAIL "$id: cmd_publish calls announce_passphrase_file $n_pub time(s) and cmd_rotate $n_rot — a path that announces without it prints whatever its own printf interpolates, which is where the disclosure lived"
+  elif [ "$n_get" -ne 1 ] || [ "$n_cat" -ne 0 ]; then
+    FAIL "$id: cmd_publish holds $n_get get_passphrase call(s) (want exactly 1, the encryption resolution) and cmd_rotate $n_cat 'cat \"\$pf\"' construct(s) (want 0) — a second resolution at the announcement site is the value arriving where it must not"
+  else
+    PASS "$id: both paths announce through the helper — cmd_publish $n_pub call, cmd_rotate $n_rot call, over ${#pub}/${#rot}-byte parsed bodies; cmd_publish resolves the passphrase exactly $n_get time (for encryption) and cmd_rotate carries $n_cat reads of the passphrase file"
+  fi
+}
+pp_wiring_assert "PP6"
+
+# ── PP7 — the control case the card requires, EXECUTED on every run rather than performed
+# once by hand: restore the pre-fix emitter, which interpolates the value it reads from the
+# path, re-run PP1's own argv, and require exactly one FAIL and no PASS. Without this, a
+# green PP1 proves only that PP1 ran.
+pp_mutant_probe() { # <assertion-fn> [args…] -> "<pass> <fail>" on stdout
+  ( announce_passphrase_file() {   # the PRE-FIX emitter, restored in shape
+      printf '\n  %s: \033[1;36m%s\033[0m  (saved to %s)\n' "$1" "$(cat "$2")" "$2"
+    }
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+PP_MUT="$(pp_mutant_probe pp_publish_assert "PP7-inner" "$PP1D")"
+if [ "$PP_MUT" = "0 1" ]; then
+  PASS "PP7: CONTROL on the capture arm — with the pre-fix value-emitting announcer restored, PP1's own argv reports pass=0 fail=1, diagnosed as the VALUE reaching standard output. The arm convicts the defect this card removed, so its green above is a measurement"
+else
+  FAIL "PP7: CONTROL did not fire — with the pre-fix value-emitting announcer restored, PP1's argv returned '$PP_MUT' rather than '0 1'. Until the arm convicts a known-disclosing announcer, PP1's pass proves only that the assertion executed"
+fi
+
+# ── PP8 — the env-override limb, and it is a defect in its own right. With
+# $STATICRYPT_PASSWORD set, get_passphrase returns the environment value and writes NO
+# file, while the message this change replaced announced it as "saved to …/.passphrase"
+# unconditionally. Measured before the fix: 653 capture bytes, env value present, the
+# saved-to claim present, the file absent. The helper branches on the DESTINATION's state,
+# so both limbs stay value-free and neither makes a claim about a file that is not there.
+pp_env_assert() { # <id> <trip_dir> <env_value>
+  local id="$1" d="$2" v="$3" pf="$2/.passphrase" cap hasp=0 hasv=0 claims=0 exists=0
+  rm -f "$pf"
+  cap="$(pp_capture_publish "$d" "$v")"
+  [ -e "$pf" ] && exists=1
+  case "$cap" in *"$pf"*) hasp=1 ;; esac
+  case "$cap" in *"$v"*)  hasv=1 ;; esac
+  case "$cap" in *"saved to"*) claims=1 ;; esac
+  if [ "$exists" -eq 1 ]; then
+    FAIL "$id: the fixture is broken — a .passphrase file exists at $pf after an env-supplied publish, so this arm is not exercising the branch it names and its verdict would be about a different path"
+  elif [ "$hasp" -eq 0 ]; then
+    FAIL "$id: the capture carries no '$pf' pointer — DEGENERATE HAYSTACK, VERDICT WITHHELD (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  elif [ "$hasv" -eq 1 ]; then
+    FAIL "$id: the environment-supplied passphrase VALUE reached standard output (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  elif [ "$claims" -eq 1 ]; then
+    FAIL "$id: the capture says the passphrase was 'saved to' a file that does not exist — the announcement branched on the CALLER rather than on the destination, and a pointer at nothing is worse than the message it replaced (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  else
+    PASS "$id: with the passphrase supplied from the environment and no file written, the capture names the path, carries neither the ${#v}-character value nor a claim that it was saved, and says plainly that this run stored no copy (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  fi
+}
+PP8D="$(pp_fixture pp8)"
+PP_ENVVAL='zzq-env-supplied-passphrase-for-pp8'
+pp_env_assert "PP8" "$PP8D" "$PP_ENVVAL"
+
+# ── PP9 — the delivery path is INTACT, and MD-opt-out (its subject is a filesystem mode).
+# Without this arm PP1 could be satisfied by a build in which the passphrase stopped
+# existing at all: the pointer must point at something real, mode 600, holding a value that
+# clears get_passphrase's own 12-character floor.
+PP_MODE="$(ls -l "$PP1D/.passphrase" 2>/dev/null)"; PP_MODE="${PP_MODE:0:10}"
+PP_VAL=""; [ -r "$PP1D/.passphrase" ] && PP_VAL="$(cat "$PP1D/.passphrase")"
+if [ "$PP_MODE" = "-rw-------" ] && [ "${#PP_VAL}" -ge 12 ]; then
+  PASS "PP9: the delivery path survives the fix — $PP1D/.passphrase exists at mode $PP_MODE and holds a ${#PP_VAL}-character value, so the pointer PP1 asserted points at a real, private, usable passphrase"
+else
+  FAIL "PP9: the passphrase file reads mode '$PP_MODE' (want -rw-------) with a ${#PP_VAL}-character value (want >= 12) — either the persistence broke or the file is world-readable, and PP1's pointer-only verdict would be satisfied by a build that delivers no passphrase at all"
+fi
+
+# ── The MD registrations. Each re-runs the SAME argv its live arm ran, with the named
+# subject removed. announce_passphrase_file is the subject of every capture arm and of both
+# introspection arms; PP6 is registered twice, once per call site, because an absent
+# cmd_publish and an absent cmd_rotate are different removals of the same claim.
+md_flips announce_passphrase_file "PP1"     pp_publish_assert        "PP1" "$PP1D"
+md_flips announce_passphrase_file "PP2"     pp_rotate_assert         "PP2" "$PP2D"
+md_flips announce_passphrase_file "PP3"     pp_rc_assert             "PP3"
+md_flips announce_passphrase_file "PP4"     pp_cannot_disclose_assert "PP4"
+md_flips announce_passphrase_file "PP5"     pp_single_limb_assert    "PP5"
+md_flips announce_passphrase_file "PP8"     pp_env_assert            "PP8" "$PP8D" "$PP_ENVVAL"
+md_flips cmd_publish              "PP6"     pp_wiring_assert         "PP6"
+md_flips cmd_rotate               "PP6-rot" pp_wiring_assert         "PP6"
+
+# Teardown: the mocks go, and the two shimmed production functions are RE-DEFINED from the
+# definitions saved above rather than unset — `unset -f` here would delete the real ones.
+unset -f gh npx
+eval "$PP_ORIG_ENC"
+eval "$PP_ORIG_BOIL"
+unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
+      GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1 GIT_CONFIG_KEY_2 GIT_CONFIG_VALUE_2
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates

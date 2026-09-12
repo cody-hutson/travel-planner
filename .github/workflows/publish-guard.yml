@@ -76,6 +76,17 @@ name: Publish guard
 #         records, rotate's inheritance, and the itinerary projection the gate reads
 #   T     the coordination notice (#551) — the band's identity, its state vocabulary
 #         set-diffed both ways, and the null case
+#   PP    the site passphrase never reaches standard output. Publish and rotate are each
+#         run end-to-end offline and their captured standard output is graded compound —
+#         it must carry the passphrase FILE PATH and must not carry the value, because a
+#         value-absence test on its own is satisfied by an announcer that never ran. The
+#         control case executes on every run: the pre-fix value-emitting announcer is
+#         restored and the same arm is required to convict it. The env-supplied limb is
+#         graded too, where the message used to claim a file it had not written. Pure
+#         bash plus git with mocked gh/npx and no network, Node, authenticated CLI or
+#         terminal, so it has no legitimate skip and MUST NOT be named in
+#         GUARD_EXPECTED_SKIPS — a skipped privacy control is a green that proves less
+#         than it appears to
 #   MD    the Discriminating-Evidence Rule: every assertion's PASS must require evidence
 #         its subject could only have produced by RUNNING. MD re-runs each registered
 #         assertion with its subject removed and requires it to flip, and statically

@@ -148,6 +148,43 @@ get_passphrase() { # <trip_dir> <force_new:0|1>
   printf '%s' "$p"
 }
 
+# Announce WHERE the site passphrase is, never WHAT it is. Both publish and rotate
+# announce through here, and neither writes a passphrase to standard output itself.
+#
+# Two properties are load-bearing, and neither is a style choice.
+#
+# (1) THE VALUE IS NOT A PARAMETER. This function is INCAPABLE of disclosing the
+#     passphrase; it does not decline to. There is no branch, descriptor or environment
+#     here that could withhold it wrongly, because the secret never arrives. An edit that
+#     wanted to print the value would have to change both call sites too, which is a
+#     visible change rather than a one-character one.
+# (2) THERE IS NO BRANCH ON THE CALLER. No terminal test, no flag, no environment probe.
+#     A conditional on any of those makes a privacy property depend on HOW the script was
+#     invoked, and the caller this bound exists for — bash pre-execution inside a command
+#     file, whose standard output is injected into the session transcript — is precisely
+#     the one that would take the disclosing limb on a host that allocates a
+#     pseudo-terminal. A `[ -t 1 ]` gate fails a second way that matters more: no test
+#     harness gives this script a terminal, so its secret-printing limb would ship
+#     permanently ungraded. A control whose disclosing limb no test can enter is the shape
+#     this guard exists to remove.
+#
+# The branch below is on the DESTINATION's state, not the caller's, and BOTH limbs are
+# value-free — it selects which true sentence to print, never whether to disclose. The
+# second limb exists because get_passphrase writes no file when STATICRYPT_PASSWORD
+# supplies the value, while the message this replaces announced it as saved there
+# unconditionally: that claim was already false on that path, and a pointer-only rewrite
+# that ignored it would have inherited the falsehood as a dangling pointer.
+announce_passphrase_file() { # <label> <passphrase_file>
+  local label="$1" pf="$2"
+  if [ -r "$pf" ]; then
+    printf '\n  %s saved to: %s\n' "$label" "$pf"
+    printf '  It is git-ignored. Read it when you are ready to share it, over a private channel:  cat %s\n' "$pf"
+  else
+    printf '\n  %s: no file exists at %s, so this run stored no copy of it.\n' "$label" "$pf"
+    printf '  The value you supplied is the only copy — keep it, and share it over a private channel.\n'
+  fi
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Locate the trip's generated site HTML and derive the per-trip repo slug.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2522,9 +2559,11 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
 
   ok "Published: https://${owner}.github.io/${slug}/"
   if [ "$plaintext" != "1" ]; then
-    printf '\n  Passphrase: \033[1;36m%s\033[0m  (saved to %s/.passphrase — git-ignored)\n' \
-      "$(get_passphrase "$trip_dir" 0)" "$trip_dir"
-    printf '  Share it over a private channel. To change it later: rotate %s\n\n' "$trip_dir"
+    # The announcement carries the passphrase FILE, never the passphrase. The second
+    # get_passphrase call this replaces was redundant as well — $passphrase is already
+    # resolved above, in this function's own scope.
+    announce_passphrase_file "Passphrase" "$trip_dir/.passphrase"
+    printf '  To change it later: rotate %s\n\n' "$trip_dir"
   fi
 }
 
@@ -2652,7 +2691,8 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # "rotated" confirmation below is only reached once the new ciphertext is actually live.
   cmd_update "$trip_dir"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one."
-  printf '\n  New passphrase: \033[1;36m%s\033[0m  (saved to %s)\n\n' "$(cat "$pf")" "$pf"
+  announce_passphrase_file "New passphrase" "$pf"
+  printf '\n'
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
