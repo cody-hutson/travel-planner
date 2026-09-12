@@ -139,13 +139,12 @@ each is read from the `allowed-tools` grant or from a verb section instead.
 
 **Amendment (2026-09-11, Friday) — the tool-list arbitration is discharged.** The paragraph
 immediately above declines to arbitrate the tool-list keys, because nothing available to it when it
-was written could. The published Claude
-Code contract now does, and it reaches this surface by name: a Markdown file in `.claude/commands/`
-is documented as the older format of the same mechanism, carrying the same frontmatter but for `name`
-and `paths`. Nothing above is rewritten — not that paragraph, not the amendment it closes, not
-§ *Context*'s account of the same keys. **The subject is a risk this record declined to take a
-position on, not a decision**, so the status line is untouched: a discharged risk is not a superseded
-decision.
+was written could. The published Claude Code contract now does, and it reaches this surface by name:
+a Markdown file in `.claude/commands/` is documented as the older format of the same mechanism,
+carrying the same frontmatter but for `name` and `paths`. Nothing above is rewritten — not that
+paragraph, not the amendment it closes, not § *Context*'s account of the same keys. **The subject is
+a risk this record declined to take a position on, not a decision**, so the status line is untouched:
+a discharged risk is not a superseded decision.
 
 **The contract is quoted rather than summarised**, because a summary would be one more account and
 carrying more than one is the whole of the defect. On the grant:
