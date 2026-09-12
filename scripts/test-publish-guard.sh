@@ -9,8 +9,12 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q, U) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, MD, PP, RS) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
+# That parenthesis is a reading aid and has never been complete — the AUTHORITATIVE roster
+# of groups that run is the coverage boundary in .github/workflows/publish-guard.yml, and
+# group RS below parses it and set-diffs it against this run in both directions. Read the
+# boundary, not this line: it is asserted and this line is not.
 # H = --opaque naming (#6) · I = list / date helpers (#25) · J = unpublish / takedown (#7)
 # K = trips/ ignore invariant (#254) · L = plaintext content guard (#123)
 # Q = analysis/ workspace ignore invariant (same shape as K, lower severity)
@@ -64,6 +68,19 @@
 # own declaration block. T7c grades the block itself: it once measured the residual that
 # block left in the digest and now asserts its absence, the projection having been repaired
 # by the third remediation graded in S12.
+# PP = the site passphrase never reaches standard output (#330). publish and rotate are
+# each run end-to-end offline and their captured standard output is graded COMPOUND: it
+# must carry the passphrase FILE PATH and must not carry the value, because a plain
+# value-absence test is satisfied by an announcer that never ran. PP7 restores the pre-fix
+# value-emitting announcer on every run and requires the same arm to convict it; PP8 grades
+# the env-supplied limb, where the shipped message claimed a file it had not written.
+# MD = the Discriminating-Evidence Rule, asserted against this file. Every assertion's
+# PASS must require evidence its subject could only have produced by RUNNING. MD re-runs
+# each REGISTERED assertion with its subject removed and requires that assertion to flip
+# — per assertion, because the suite as a whole already went red under the mutation that
+# left A, C, C2, G2 and I5 all PASSing, so a suite-level red/green oracle would certify a
+# fix that changed nothing — and statically scans this file for the polarity-negative
+# shape, so an assertion ADDED in that shape is caught even when nobody registers it.
 #
 # STRICT SKIP MODE (set by CI — .github/workflows/publish-guard.yml, per #123 AC 8).
 #   GUARD_STRICT_SKIPS=1   a SKIP fails the run unless its group is declared below.
@@ -79,16 +96,94 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # but the ordering is not left to be re-derived by a later reader.
 SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
 SELF_PUBLISH="$HERE/publish-trip-site.sh"
+# Group RS reads the workflow that runs this suite. Same idiom, and same reason, as the
+# taxonomy suite binding its own trigger into group Z's watch set: a guard that cannot
+# see the file declaring its own coverage is the one thing a reader would least expect
+# it to miss.
+ROOT="$(dirname "$HERE")"
 # shellcheck source=publish-trip-site.sh
 source "$HERE/publish-trip-site.sh"      # BASH_SOURCE guard prevents dispatch
 set +e
 
-pass=0; fail=0; skip=0; SKIPPED=""
-PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
-FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); }
+pass=0; fail=0; skip=0; SKIPPED=""; SEEN=""
+# Every verdict records its assertion id — the token before the first colon of the
+# message — so group RS at the bottom can ask which GROUPS actually emitted. SKIP has
+# always done this; PASS and FAIL did not, and that asymmetry IS the gap RS closes. A
+# group that is deleted, renamed or made unreachable emits nothing at all: it never
+# skips, so it never reaches the strict-skip comparison below and vanishes silently.
+# The two controls stay orthogonal — RS asks "did the group run", strict-skip asks "was
+# the skip declared" — and a group that only ever skips is present to both.
+PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); SEEN="$SEEN${*%%:*} "; }
+FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); SEEN="$SEEN${*%%:*} "; }
 # Records the skipped group's id — the token before the first colon of the message — so
 # the aggregate verdict at the bottom can refuse a run in which a group vanished.
 SKIP() { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
+
+# ── THE DISCRIMINATING-EVIDENCE RULE (DER) — two helpers, asserted by group MD ─────
+#
+# THE RULE. An assertion is MUTATION-DETECTABLE iff every path to its PASS requires
+# evidence the subject could only have produced by RUNNING. Equivalently: PASS may never
+# be reached on a branch a DEGENERATE outcome also reaches — an absent subject, an empty
+# haystack, an unreadable input, an empty population.
+#
+# expect_rc replaces bare truthiness with an exact expected status. `if f …; then FAIL;
+# else PASS` puts the PASS on EVERY non-zero status, so rc=127 — "the function does not
+# exist" — is graded identically to rc=1 — "the guard correctly rejected". That is not a
+# hypothetical: deleting verify_ciphertext outright from the publish script left A, C, C2
+# and G2 all reporting PASS, and deleting cmd_list entirely left I5 reporting PASS while
+# the suite exited 0. The status is the evidence, so the status is what is asserted.
+#
+# An exact code is available here rather than merely stricter: verify_ciphertext returns
+# exactly 0 or 1 (six `return` statements, five of them 1), `git check-ignore -q` returns
+# 1 for not-ignored and 128 for an error, `grep -q` returns 1 for no-match and 2 for an
+# unreadable input, and slug_for's rejection path exits 1. Each was read before the code
+# it expects was written.
+expect_rc() {   # expect_rc <want> <id> <prose> -- <cmd…>
+  local want="$1" id="$2" prose="$3"; shift 3
+  [ "${1:-}" = "--" ] && shift
+  local subject="${1:-<no-command>}" got
+  "$@" >/dev/null 2>&1; got=$?
+  if [ "$got" -eq 127 ] && [ "$want" -ne 127 ]; then
+    FAIL "$id: $prose -- rc=127: '$subject' is NOT DEFINED. The subject is ABSENT, not rejecting, so this assertion has no subject to grade"
+  elif [ "$got" -eq "$want" ]; then
+    PASS "$id: $prose [rc=$got, expected $want]"
+  else
+    FAIL "$id: $prose -- expected rc=$want, got rc=$got"
+  fi
+}
+
+# md_probe re-runs an assertion in a subshell with its SUBJECT removed and reports the
+# verdict counts it produced. It is the card's criterion made executable: for assertion X
+# over subject S, removing S must flip X — and it must flip X SPECIFICALLY, not flip some
+# other assertion that happens to point the other way. Group MD at the bottom grades it.
+# PASS/FAIL are rebound to silent counters inside the subshell, so nothing a probe emits
+# reaches the run's counters, the SEEN roster, or the output.
+md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail>" on stdout
+  local victim="$1"; shift
+  ( unset -f "$victim" 2>/dev/null
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+
+md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
+  local victim="$1" id="$2"; shift 2
+  local out p f
+  out="$(md_probe "$victim" "$@")"
+  if ! [[ "$out" =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
+    FAIL "MD[$id]: the oracle subshell returned '$out' rather than a '<pass> <fail>' pair — the probe itself failed, so this arm is not a measurement"
+    return 0
+  fi
+  p="${out%% *}"; f="${out##* }"
+  if [ "$f" -eq 1 ] && [ "$p" -eq 0 ]; then
+    PASS "MD[$id]: with '$victim' removed the assertion reports exactly one FAIL and no PASS — it is mutation-detectable, so its verdict above required '$victim' to have RUN"
+  else
+    FAIL "MD[$id]: with '$victim' removed the assertion still reports pass=$p fail=$f — it is BLIND to its subject's absence, so its verdict above proves nothing about '$victim'"
+  fi
+  return 0
+}
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
@@ -139,14 +234,24 @@ day three: a day trip to the coast and back before the evening train home.</p>
 HTML
 
 echo "Guard behavior:"
+# A, C and C2 are each a NEGATIVE-polarity assertion — the guard is required to REJECT —
+# and each is wrapped in its own function so group MD can re-run the identical argv with
+# verify_ciphertext removed. The wrapper is not decoration: an assertion the oracle cannot
+# re-invoke cannot be registered, and an unregistered assertion is graded by the static
+# arm's shape rule alone.
+#
 # A — never certify the source as its own ciphertext (self-check).
-if verify_ciphertext "$SRC" "$SRC"; then FAIL "A: guard certified the plaintext source as ciphertext"; else PASS "A: guard rejects source-as-output (self-check)"; fi
-# B — passes clean ciphertext.
+a_assert() { expect_rc 1 "A" "guard rejects source-as-output (self-check)" -- verify_ciphertext "$SRC" "$SRC"; }
+a_assert
+# B — passes clean ciphertext. POSITIVE polarity: an absent subject exits 127, which lands
+# on the FAIL limb, so this shape was already sound and is deliberately left alone.
 if verify_ciphertext "$ENC_OK" "$SRC"; then PASS "B: guard passes clean ciphertext"; else FAIL "B: guard rejected clean ciphertext"; fi
 # C — catches a plaintext token leaked into otherwise-encrypted output.
-if verify_ciphertext "$ENC_LEAK" "$SRC"; then FAIL "C: guard missed a leaked plaintext token"; else PASS "C: guard catches leaked plaintext token"; fi
+c_assert() { expect_rc 1 "C" "guard catches leaked plaintext token" -- verify_ciphertext "$ENC_LEAK" "$SRC"; }
+c_assert
 # C2 — REGRESSION: all-lowercase plaintext with sentinel strings must be caught structurally.
-if verify_ciphertext "$PLAIN_LOWER" "$TINY"; then FAIL "C2: guard PASSED all-lowercase plaintext (fail-open!)"; else PASS "C2: guard catches all-lowercase plaintext via visible-body check"; fi
+c2_assert() { expect_rc 1 "C2" "guard catches all-lowercase plaintext via visible-body check" -- verify_ciphertext "$PLAIN_LOWER" "$TINY"; }
+c2_assert
 
 echo "Slug resolution:"
 # F — slug_for: default convention, .publish-slug override (whitespace-trimmed), invalid rejection.
@@ -218,7 +323,14 @@ HTML
   BOIL="$(make_boilerplate 2>/dev/null || true)"
   if [ -n "${ENC_CMN:-}" ] && [ -n "${BOIL:-}" ] && [ -f "$ENC_CMN/index.html" ] && [ -f "$BOIL/index.html" ]; then
     if verify_ciphertext "$ENC_CMN/index.html" "$CMN" "$BOIL/index.html"; then PASS "G1: common itinerary words pass once StatiCrypt boilerplate is subtracted"; else FAIL "G1: false positive on common words persists even with boilerplate ref"; fi
-    if verify_ciphertext "$ENC_CMN/index.html" "$CMN"; then FAIL "G2: expected pre-fix false positive not reproduced"; else PASS "G2: without boilerplate ref the false positive still fires (subtraction is the fix)"; fi
+    g2_assert() { expect_rc 1 "G2" "without boilerplate ref the false positive still fires (subtraction is the fix)" -- verify_ciphertext "$ENC_CMN/index.html" "$CMN"; }
+    g2_assert
+    # G2's MD registration is emitted HERE rather than with the rest of group MD at the
+    # bottom, because its two fixtures are encrypted trees outside $WORK that the next
+    # line deletes. Re-running the assertion after that point would fail on a missing
+    # input rather than on a missing subject, which is a different claim. Everything the
+    # registration asserts is the same; only its position in the output moves.
+    md_flips verify_ciphertext "G2" g2_assert
     rm -rf "$ENC_CMN" "$BOIL"
   else
     SKIP "G: staticrypt could not run (offline or npx blocked)"
@@ -260,11 +372,34 @@ IE="$(_epoch_of_iso '2026-06-28T14:36:00Z')"
 [ "$(_ymd_of_epoch "$IE")" = "2026-06-28" ] && PASS "I2: _epoch_of_iso + _ymd_of_epoch round-trip an ISO date" || FAIL "I2: ISO round-trip wrong ($IE -> $(_ymd_of_epoch "$IE"))"
 [ "$(_ymd_of_epoch '')" = "-" ] && PASS "I3: _ymd_of_epoch renders empty as '-'" || FAIL "I3: empty epoch not '-'"
 if _is_stale 200 100 && ! _is_stale 100 200 && ! _is_stale "" 100; then PASS "I4: stale iff local build newer than deployment (empty-safe)"; else FAIL "I4: stale rule wrong"; fi
-if grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$(declare -f cmd_list)"; then
-  FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
-else
-  PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs)"
-fi
+# I5 — an INTROSPECTION assertion, and the emptiness conflation is its own defect class.
+# `grep -q <verbs> <<<"$(declare -f cmd_list)"` on an absent cmd_list scans an EMPTY
+# haystack, matches nothing, and reports the subcommand read-only. Measured: deleting
+# cmd_list outright left this arm PASSing and the whole suite exiting 0.
+#
+# Three preconditions therefore run before the content is graded, and each is the
+# discriminating evidence for a different degenerate input: the subject is DEFINED, its
+# body is NON-DEGENERATE (a floor far below the 2,231-byte shipped body, so it catches a
+# gutted subcommand without churning as the subcommand grows), and the verb probe itself
+# actually RAN — grep exits 2 on an unreadable input, which is neither match nor no-match,
+# and a clean verdict on an rc=2 would be an empty scan wearing a pass.
+i5_assert() {
+  local body mrc
+  body="$(declare -f cmd_list 2>/dev/null)"
+  grep -qE 'git |commit_noreply|staticrypt|repo create|repo delete|api -X|rm -' <<<"$body" >/dev/null 2>&1; mrc=$?
+  if ! declare -f cmd_list >/dev/null 2>&1; then
+    FAIL "I5: cmd_list is NOT DEFINED — the read-only verdict below would have no subject, so it would certify a subcommand that does not exist"
+  elif [ "${#body}" -lt 200 ]; then
+    FAIL "I5: cmd_list's body is only ${#body}B — too small to be the shipped subcommand, so a clean scan of it proves nothing"
+  elif [ "$mrc" -eq 0 ]; then
+    FAIL "I5: cmd_list contains a mutating operation (must be read-only)"
+  elif [ "$mrc" -ne 1 ]; then
+    FAIL "I5: the mutating-verb probe exited rc=$mrc — neither match (0) nor no-match (1), so the scan did not run and a clean verdict would be an empty scan"
+  else
+    PASS "I5: cmd_list is read-only (no git/push/encrypt/create/delete/write verbs) — subject present, body ${#body}B and non-degenerate, verb probe ran and returned no-match"
+  fi
+}
+i5_assert
 
 echo "Trip-data ignore invariant (#254):"
 if git -C "$HERE/.." rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -1078,8 +1213,26 @@ else
   FAIL "L11a: the reserved-heading field suppression changed shape (suppressed=$l11sup control=$l11ctl) — re-read the heading branch before trusting either verdict"
 fi
 
-# L11b — the ENTRY limb IS backstopped by the orphaned-mark check, but only while no
-# other entry produced a record. Two fixtures differing in exactly that.
+# L11b — THE ENTRY-LIMB BACKSTOP, NOW UNCONDITIONAL. RE-AUTHORED: THIS ARM WAS INVERTED.
+#
+# It used to pin the opposite verdict, and that was correct of the code it measured. The
+# orphaned-mark backstop asked `sawmark && tprecs == 0`, and `tprecs` is a FILE-WIDE
+# counter, so one entry producing one record absolved every other mark in the file: the
+# suppressed mark aborted when it was alone (rc=2) and was SWALLOWED (rc=0) the moment any
+# unrelated entry parsed. This arm recorded that as the shipped shape — "the backstop is
+# conditional, and this pins the condition" — with the note that a slice closing it would
+# need a failing target to flip. This is that slice, and this is that flip.
+#
+# The backstop now asks the question per mark rather than per file: a mark resolves when
+# the entry it sits in produced a class record, and a mark sitting in no entry — here,
+# under a reserved heading — resolves never. So BOTH arms are now rc=2 and the second one
+# is the closure. Graded together and differently: the first arm alone would pass on a
+# guard that aborts everything, and the second alone cannot tell a closure from an
+# always-abort. The control is L11c/L11d plus group O5b, which still publish.
+#
+# READ THIS AS A CLOSURE, NOT AS A NEW MEASUREMENT. The two fixtures still differ in
+# exactly one thing — whether another entry produced a record — and the point of the pair
+# is now that the difference no longer changes the verdict.
 LSUPE="$WORK/l_sup_entry"; mkdir -p "$LSUPE/outputs"
 LSUPER="$WORK/l_sup_entry.html"
 lrender "$LSUPER" "One member of the party cannot manage more than one flight of stairs in a single stretch."
@@ -1090,10 +1243,10 @@ LSUPE2="$WORK/l_sup_entry2"; mkdir -p "$LSUPE2/outputs"
 printf '# Traveler Model [DERIVED]\n\n## Marlow [OPERATOR-PROVIDED] [THIRD-PARTY]\n\n### Needs\n- Category: rest\n  Specific: an early night on the first evening after the long flight\n\n## Update signals [DERIVED]\n- Relayed [THIRD-PARTY]: cannot manage more than one flight of stairs in a single stretch\n' > "$LSUPE2/outputs/traveler-model.md"
 lguard "$LSUPER" "$LSUPE2"
 l11e2="$LRC"
-if [ "$l11e1" -eq 2 ] && [ "$l11e2" -eq 0 ]; then
-  PASS "L11b: a suppressed ENTRY mark aborts as UNDETERMINED (rc=2) when it is the only one, and is swallowed (rc=0) once another entry produced a record — the backstop is conditional, and this pins the condition"
+if [ "$l11e1" -eq 2 ] && [ "$l11e2" -eq 2 ]; then
+  PASS "L11b: a suppressed ENTRY mark aborts as UNDETERMINED (rc=$l11e1) when it is the only one AND (rc=$l11e2) alongside another entry that produced records — the backstop is no longer conditional on what the REST of the file parsed, and an orphaned mark can no longer be swallowed by an unrelated entry"
 else
-  FAIL "L11b: the orphaned-mark backstop changed shape (alone=$l11e1 with-other-record=$l11e2) — re-read the END block before trusting either verdict"
+  FAIL "L11b: the orphaned-mark backstop is not in the closed shape (alone=$l11e1 with-other-record=$l11e2) — a second arm reading 0 is the file-wide tprecs fail-open returning; re-read the END block before trusting either verdict"
 fi
 
 # L11c — THE RESERVED-KEY LIST HAS TWO MEMBERS, AND THE BRANCH READS BOTH.
@@ -1195,6 +1348,163 @@ if [ "$l12n" -ge 2 ] && [ "$l12open" -eq "$l12n" ]; then
   PASS "L12b: for all $l12n selectors, the identical value under a label that merely BEGINS with the selector publishes (rc=0) — field_hit is prefix-then-colon, so a longer label is UNGUARDED. Measured, and the reason a new requirement set owes its own declared selector rather than a longer label over an existing one"
 else
   FAIL "L12b: the prefix-then-colon shape changed (selectors=$l12n published=$l12open) — re-read field_hit before trusting L12's verdict or any claim that a longer label is covered"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L13 — THE ABORT NAMES A POSITION IN THE ARTIFACT THE OPERATOR HAS TO EDIT.
+#
+# The shipped abort named a coordinate in the MODEL. The model and the render are two
+# independent artifacts and the guard re-reads both, so the discoverable fix — delete the
+# record the abort names — clears the abort and leaves the value in the published file.
+# The operator resolves the finding by deleting the evidence for it. L13e asserts that
+# consequence directly rather than inferring it from the message text.
+#
+# L13a is the case that makes the rest mean anything. "The message contains a colon and a
+# number" passes against a hardcoded string; a locator is only a locator if it MOVES with
+# what it locates, so the value is planted at three distinct source lines and each must be
+# reported. A constant emitter passes a presence arm and fails this one.
+#
+# L13b is the case that rejected the obvious implementation. Injecting line sentinels into
+# the raw file and stripping afterwards is the natural design and it under-counts: a
+# multi-line tag swallows the sentinels inside it, a <script> deletion swallows every
+# sentinel in the block, and the reported line comes out plausibly, consistently, silently
+# too small. A line that is merely CLOSE is a FAIL here.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Plants a paragraph on an EXACT source line. Line 1 opens the document; lines 2..N-1 are
+# filler; line N carries the plant; the trailing lines keep every render above the
+# 20-word degraded-extraction floor, so no case here can abort for the wrong reason.
+lplant() { # <out_file> <target_line> <paragraph text>
+  local out="$1" want="$2" i=2
+  printf '%s\n' '<!DOCTYPE html><html><head><title>Lisbon Trip</title></head><body>' > "$out"
+  while [ "$i" -lt "$want" ]; do
+    printf '<p>Filler %d: the covered market, the harbour museum, the hill gardens.</p>\n' "$i" >> "$out"
+    i=$((i+1))
+  done
+  printf '<p>%s</p>\n' "$3" >> "$out"
+  printf '%s\n' '<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>' >> "$out"
+  printf '%s\n' '<p>Pacing: a slow start and no fixed plan before ten in the morning on any day.</p>' >> "$out"
+  printf '%s\n' '</body></html>' >> "$out"
+}
+
+# The three readers of the captured abort. Each returns non-zero when the shape it reads
+# is absent, and that absence is itself asserted below rather than defaulted away.
+lline() { local ln; while IFS= read -r ln; do
+  if [[ "$ln" =~ reached\ the\ published\ file\ at\ .*:([0-9?]+)\ \( ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+done < "$LOUT"; return 1; }
+lprj() { local ln; while IFS= read -r ln; do
+  if [[ "$ln" =~ reached\ the\ published\ file\ at\ .*:[0-9?]+\ \((.*)\)\. ]]; then printf '%s' "${BASH_REMATCH[1]}"; return 0; fi
+done < "$LOUT"; return 1; }
+# Any <file>.html:<digits> or <file>.md:<digits> shape anywhere in the captured stderr.
+# Read in BOTH directions: a HIT must produce one, a non-HIT must not.
+lhasloc() { local ln; while IFS= read -r ln; do
+  [[ "$ln" =~ [^[:space:]]+\.(html|md):[0-9]+ ]] && return 0
+done < "$LOUT"; return 1; }
+
+l13val="Border note: carry your Ruritanian passport, valid to 2033, at all times."
+
+# L13a — the locator TRACKS (three distinct positions, so a constant fails).
+l13ok=1; l13seen=""
+for l13n in 3 7 11; do
+  lplant "$WORK/l13_$l13n.html" "$l13n" "$l13val"
+  lguard "$WORK/l13_$l13n.html"
+  l13got="$(lline)" || l13got="NONE"
+  l13seen="$l13seen ${l13n}->${l13got}"
+  { [ "$LRC" -eq 1 ] && [ "$l13got" = "$l13n" ]; } || l13ok=0
+done
+if [ "$l13ok" -eq 1 ]; then
+  PASS "L13a: the render-side locator TRACKS the planted line (planted->reported:${l13seen}), rc=1 at each. Three distinct positions, so a constant emitter fails this case — a locator that does not move is not locating"
+else
+  FAIL "L13a: the reported line did not track the planted line (planted->reported:${l13seen}, last rc=$LRC). A locator that is merely PRESENT proves nothing; this is the arm that distinguishes the two"
+fi
+
+# L13b — the line map survives the two transforms that destroy lines. Exact, not close.
+L13MT="$WORK/l13_multiline.html"
+cat > "$L13MT" <<HTML
+<!DOCTYPE html><html><head><title>Lisbon Trip</title></head><body>
+<p>Filler 2: the covered market, the harbour museum, the hill gardens.</p>
+<div
+   class="multi
+   line tag">
+<p>Filler 6: a long lunch by the water and the gardens in the late afternoon.</p>
+<p>$l13val</p>
+</div>
+<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>
+</body></html>
+HTML
+lguard "$L13MT"; l13mrc="$LRC"; l13mline="$(lline)" || l13mline="NONE"
+L13SC="$WORK/l13_script.html"
+cat > "$L13SC" <<HTML
+<!DOCTYPE html><html><head><title>Lisbon Trip</title></head><body>
+<p>Filler 2: the covered market, the harbour museum, the hill gardens.</p>
+<script>
+var a = "a decoy line inside the script body";
+var b = "another decoy line inside the script body";
+</script>
+<p>$l13val</p>
+<p>Packing list: passport, adapter, light rain shell, comfortable shoes for cobbles.</p>
+</body></html>
+HTML
+lguard "$L13SC"; l13src="$LRC"; l13sline="$(lline)" || l13sline="NONE"
+if [ "$l13mrc" -eq 1 ] && [ "$l13mline" = "7" ] && [ "$l13src" -eq 1 ] && [ "$l13sline" = "7" ]; then
+  PASS "L13b: the line map is lossless on both destroying transforms — a plant at true line 7 behind a multi-line tag reports 7, and behind a <script> block reports 7. The projections re-emit the newlines they consume, so neither a tag spanning lines nor a deleted block shifts the count"
+else
+  FAIL "L13b: the line map is not lossless (multi-line-tag: rc=$l13mrc reported=$l13mline, want 7; script-block: rc=$l13src reported=$l13sline, want 7). A reported line that is merely CLOSE is the pre-fix behaviour — plausible, consistent, and wrong"
+fi
+
+# L13c — both projections are located AND correctly attributed. A value only in a
+# comment or only in an attribute value is invisible to the visible arm by construction,
+# so the projection tag is what tells the operator whether to look at prose or at markup.
+L13CM="$WORK/l13_comment.html"
+lplant "$L13CM" 5 "nothing of interest on this line at all"
+# rewrite line 5 as a comment carrying the value
+{ head -4 "$L13CM"; printf '<!-- %s -->\n' "$l13val"; tail -n +6 "$L13CM"; } > "$L13CM.tmp" && mv "$L13CM.tmp" "$L13CM"
+lguard "$L13CM"; l13crc="$LRC"; l13cline="$(lline)" || l13cline="NONE"; l13cprj="$(lprj)" || l13cprj="NONE"
+L13AL="$WORK/l13_alt.html"
+lplant "$L13AL" 5 "nothing of interest on this line at all"
+{ head -4 "$L13AL"; printf '<img src="x.png" alt="%s">\n' "$l13val"; tail -n +6 "$L13AL"; } > "$L13AL.tmp" && mv "$L13AL.tmp" "$L13AL"
+lguard "$L13AL"; l13arc="$LRC"; l13aline="$(lline)" || l13aline="NONE"; l13aprj="$(lprj)" || l13aprj="NONE"
+lplant "$WORK/l13_vis.html" 5 "$l13val"; lguard "$WORK/l13_vis.html"
+l13vrc="$LRC"; l13vprj="$(lprj)" || l13vprj="NONE"
+if [ "$l13crc" -eq 1 ] && [ "$l13cline" = "5" ] && [ "$l13cprj" != "visible text" ] && [ "$l13cprj" != "NONE" ] \
+   && [ "$l13arc" -eq 1 ] && [ "$l13aline" = "5" ] && [ "$l13aprj" != "visible text" ] && [ "$l13aprj" != "NONE" ] \
+   && [ "$l13vrc" -eq 1 ] && [ "$l13vprj" = "visible text" ]; then
+  PASS "L13c: both projections are located and attributed — an HTML comment at line 5 reports 5 as '$l13cprj', an img alt at line 5 reports 5 as '$l13aprj', and a visible-text plant reports 'visible text'. The tag is a structural fact carrying no class content, and it tells the operator whether to look at prose or at markup"
+else
+  FAIL "L13c: a projection was mislocated or misattributed (comment: rc=$l13crc line=$l13cline proj='$l13cprj'; alt: rc=$l13arc line=$l13aline proj='$l13aprj'; visible: rc=$l13vrc proj='$l13vprj')"
+fi
+
+# L13d — the non-HIT arms synthesise NOTHING, graded by absence. Six of the eight arms
+# fire when nothing matched: there is no render position and none may be invented. The
+# HIT arm is the control — without it, "no locator found" would pass against a guard that
+# had stopped emitting locators entirely.
+lguard "$WORK/l13_7.html";  lhasloc && l13hit_loc=1 || l13hit_loc=0     # HIT — must have one
+lguard "$LCLEAN";           l13cln_rc="$LRC"; lhasloc && l13cln_loc=1 || l13cln_loc=0
+lguard "$LCLEAN" "$LSUB";   l13sub_rc="$LRC"; lhasloc && l13sub_loc=1 || l13sub_loc=0
+if [ "$l13hit_loc" -eq 1 ] && [ "$l13cln_rc" -eq 0 ] && [ "$l13cln_loc" -eq 0 ] \
+   && [ "$l13sub_rc" -eq 2 ] && [ "$l13sub_loc" -eq 0 ]; then
+  PASS "L13d: no non-HIT arm synthesises a position — a clean pass (rc=0) and a below-the-floor UNDETERMINED (rc=2) each emit no <path>:<line>, while the HIT arm on the same fixture set does. The zero is a measurement: the control arm fired"
+else
+  FAIL "L13d: a position was synthesised where none exists, or the control did not fire (hit_has_locator=$l13hit_loc clean rc=$l13cln_rc locator=$l13cln_loc subfloor rc=$l13sub_rc locator=$l13sub_loc)"
+fi
+
+# L13e — THE USER CONSEQUENCE, ASSERTED AS AN OBSERVATION RATHER THAN READ OFF THE
+# MESSAGE. Delete the model record the abort points at, re-run: the guard now passes, and
+# the render is byte-identical and still carries the value. That is the whole reason the
+# leading coordinate had to move to the render.
+L13TD="$WORK/l13-nopass"; mkdir -p "$L13TD/outputs"
+sed '/^- Passport: Ruritanian, valid to 2033$/d' "$LTD/outputs/traveler-model.md" > "$L13TD/outputs/traveler-model.md"
+L13H="$WORK/l13_ac3.html"; lplant "$L13H" 7 "$l13val"
+l13sum1="$(cksum < "$L13H")"
+lguard "$L13H";          l13rc1="$LRC"
+lguard "$L13H" "$L13TD"; l13rc2="$LRC"
+l13sum2="$(cksum < "$L13H")"
+l13still=0; case "$(cat "$L13H")" in *Ruritanian*) l13still=1 ;; esac
+l13del=0; case "$(cat "$L13TD/outputs/traveler-model.md")" in *"valid to 2033"*) ;; *) l13del=1 ;; esac
+if [ "$l13del" -eq 1 ] && [ "$l13rc1" -eq 1 ] && [ "$l13rc2" -eq 0 ] && [ "$l13sum1" = "$l13sum2" ] && [ "$l13still" -eq 1 ]; then
+  PASS "L13e: deleting the model record CLEARS THE ABORT WITHOUT CLEARING THE LEAK — rc goes 1 to 0 while the render is byte-identical and still carries the value. This is the consequence the abort now names in words, asserted here as an observation rather than inferred from the message text"
+else
+  FAIL "L13e: the AC-3 consequence did not reproduce (record deleted=$l13del rc before=$l13rc1 after=$l13rc2 render unchanged=$([ "$l13sum1" = "$l13sum2" ] && echo yes || echo no) value still present=$l13still)"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1587,6 +1897,150 @@ fi
 mguard "$MPDGR" "$MPDG"
 if [ "$MRC" -eq 2 ]; then PASS "M4f: a well-formed reference resolving to no record aborts as UNDETERMINED (rc=2) — an unresolvable reference is not an empty class"; else FAIL "M4f: an unresolvable person reference was read as a determinate result (rc=$MRC) — an empty read is not an empty class"; fi
 
+# ── M5 (#328 F4) — an ENCODING TRANSFORM must not carry a class value past the guard ──
+#
+# ADR-008 named three transforms it does not catch. Two of them are mechanical and a
+# normalizer closes them; this is that normalizer, asserted. Measured on the shipped
+# guard, against a verbatim control that aborted:
+#   • `&#82;uritanian` — a numeric character reference. Every projection substitutes a
+#     space for a tag but none decodes a reference, so _norm_words yields the two tokens
+#     `82` and `uritanian` and the value is never matched. Published at rc=0.
+#   • `Rurit<b>anian</b>` — an inline tag SPLITTING A WORD. Every projection substitutes
+#     a SPACE for that tag, so the value normalizes to `rurit` + `anian`. Published at
+#     rc=0.
+# The remedies are different mechanisms because the two fail differently and carry
+# opposite risks: _decode_entities is a filter on every arm, and strip_to_joined_text is
+# a THIRD arm rather than an edit to an existing one — closing an inline tag up on the
+# arm that carries the verdict would fuse two legitimate adjacent links into one false
+# token, so the join happens on a stream nothing else reads and can only ADD matches.
+#
+# Every arm below grades an EXACT code and treats anything outside {0,1} as a probe
+# failure rather than folding it into a verdict — with _decode_entities removed the
+# visible arm empties and the guard returns 2, which is a DIFFERENT claim from "aborted".
+M5V='Ruritanian'
+m5render() { # <out_file> <final paragraph markup>
+  cat > "$1" <<HTML
+<!DOCTYPE html><html><head><title>Porto Trip</title></head><body>
+<h1>Itinerary</h1>
+<p>Day 1: arrive at the river station, drop bags at the guest house, then walk the
+covered market for an hour before an early dinner at the counter two streets over.</p>
+<p>Day 2: the harbour museum in the morning, a long lunch by the water, and the hill
+gardens in the late afternoon when the light is best and the crowds have thinned.</p>
+<p>$2</p>
+</body></html>
+HTML
+}
+M5VERB="$WORK/m5_verbatim.html"; m5render "$M5VERB" 'Border note: carry your Ruritanian passport, valid to 2033.'
+M5DEC="$WORK/m5_dec.html";       m5render "$M5DEC"  'Border note: carry your &#82;uritanian passport, valid to 2033.'
+M5HEX="$WORK/m5_hex.html";       m5render "$M5HEX"  'Border note: carry your &#x52;uritanian passport, valid to 2033.'
+M5TAG="$WORK/m5_tag.html";       m5render "$M5TAG"  'Border note: carry your Rurit<b>anian</b> passport, valid to 2033.'
+M5CLEAN="$WORK/m5_clean.html";   m5render "$M5CLEAN" 'Evening: the riverside lantern walk, then back to the guest house before ten.'
+M5GLUE="$WORK/m5_glue.html";     m5render "$M5GLUE" 'We walked from <em>Dublin</em><em>Galway</em> road down to the river and back.'
+
+# M5a — FIXTURE INTEGRITY, graded FIRST. Each encoded fixture must carry its encoded form
+# and ZERO literal occurrences of the value: a fixture that still spelled the value
+# outright would be re-testing the verbatim case under a new name. The verbatim control
+# is graded in the same arm and must be non-zero, so the three zeros are measurements.
+m5_bad=0; m5_detail=""
+for m5pair in "dec:$M5DEC:&#82;uritanian" "hex:$M5HEX:&#x52;uritanian" "tag:$M5TAG:Rurit<b>anian</b>"; do
+  m5n="${m5pair%%:*}"; m5rest="${m5pair#*:}"; m5f="${m5rest%%:*}"; m5needle="${m5rest#*:}"
+  m5lit="$(grep -c "$M5V" "$m5f")"
+  grep -qF "$m5needle" "$m5f" && m5has=1 || m5has=0
+  [ "$m5lit" -eq 0 ] && [ "$m5has" -eq 1 ] || { m5_bad=$((m5_bad+1)); m5_detail="$m5_detail $m5n(lit=$m5lit,enc=$m5has)"; }
+done
+m5ctl="$(grep -c "$M5V" "$M5VERB")"
+if [ "$m5_bad" -eq 0 ] && [ "$m5ctl" -ge 1 ]; then
+  PASS "M5a: all 3 encoded fixtures carry their encoded form and ZERO literal occurrences of the class value, while the verbatim control carries it $m5ctl time(s) — the zeros are measurements and M5b is a real probe"
+else
+  FAIL "M5a: the encoding fixtures are not set up as claimed (bad:$m5_detail; verbatim control literal count=$m5ctl) — M5b would prove nothing"
+fi
+
+# M5b — THE SUBJECT. All four forms of the same value must abort. The verbatim arm is
+# inside the same count deliberately: it is the shape that already aborted, so a run in
+# which it stops aborting is a regression this arm sees rather than one it attributes to
+# the encoding work.
+m5_assert() {
+  local f rc n=0 abort=0 bad=""
+  for f in "$M5VERB" "$M5DEC" "$M5HEX" "$M5TAG"; do
+    n=$((n+1)); verify_publishable_content "$f" "$MTD" >/dev/null 2>&1; rc=$?
+    case "$rc" in 1) abort=$((abort+1)) ;; 0) bad="$bad $(basename "$f")=published" ;; *) bad="$bad $(basename "$f")=rc$rc" ;; esac
+  done
+  if [ "$abort" -eq "$n" ]; then
+    PASS "M5b: all $n encodings of one class value abort as a HIT (rc=1) — verbatim, decimal reference, hex reference and a mid-word tag split. A character reference is decoded before tokenization and an inline tag is closed up on the joined arm"
+  else
+    FAIL "M5b: only $abort/$n encodings aborted —$bad. A value that reaches the published page in an encoded form reaches it just as completely as one spelled out"
+  fi
+}
+m5_assert
+
+# M5c — SPECIFICITY, and the second arm is the one the third projection makes necessary.
+# A clean render must still publish, and so must a render whose only unusual feature is
+# two ADJACENT inline elements: `<em>Dublin</em><em>Galway</em>` is the same markup shape
+# as a split word, and a joined arm that could not tell them apart would turn two
+# legitimate links into one false token. This is the standing control on that risk.
+m5_clean_assert() {
+  local rc1 rc2
+  verify_publishable_content "$M5CLEAN" "$MTD" >/dev/null 2>&1; rc1=$?
+  verify_publishable_content "$M5GLUE"  "$MTD" >/dev/null 2>&1; rc2=$?
+  if [ "$rc1" -eq 0 ] && [ "$rc2" -eq 0 ]; then
+    PASS "M5c: the same render without the value publishes (rc=0), and so does one carrying two ADJACENT inline elements — the joined arm adds match opportunities without gluing legitimate neighbours into a false token"
+  else
+    FAIL "M5c: a clean render was blocked (clean rc=$rc1, adjacent-inline rc=$rc2) — the new projection over-matches ordinary markup"
+  fi
+}
+m5_clean_assert
+
+# M5d — THE LINE MAP, which is #326's L6 clause discharged at the point it binds. Every
+# transform added to a projection must be line-count-preserving, or it shifts every
+# reported line downstream of it while the token stream stays valid and the suite stays
+# green. _decode_entities is one character away from violating it: `&#10;` and `&#13;`
+# decode to newlines. The range restriction to printable ASCII is what makes that
+# impossible, and this arm is what keeps the restriction from being quietly widened.
+M5LINES="$WORK/m5_lines.html"
+cat > "$M5LINES" <<'HTML'
+<!DOCTYPE html><html><head><title>T</title></head><body>
+<p>Filler line two here with several ordinary words in it.</p>
+<script>
+var a = "decoy line inside the script body";
+var b = "another decoy line inside the script body";
+</script>
+<div
+   class="multi
+   line tag">
+<p>Filler line nine with a Rurit<b>anian</b> split word and a &#82;ho entity.</p>
+<p>Filler line ten.</p>
+</div>
+<p>Filler twelve.</p>
+</body></html>
+HTML
+m5src="$(wc -l < "$M5LINES" | tr -d ' ')"
+m5lj="$(strip_to_joined_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lv="$(strip_to_text_blocks "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+m5lp="$(strip_to_published_text "$M5LINES" | _decode_entities | wc -l | tr -d ' ')"
+printf 'alpha &#10; beta &#13; gamma &#32; delta &#38; epsilon &#82;ho\n' > "$WORK/m5_adv.txt"
+m5adv="$(_decode_entities < "$WORK/m5_adv.txt" | wc -l | tr -d ' ')"
+if [ "$m5src" -ge 13 ] && [ "$m5lj" = "$m5src" ] && [ "$m5lv" = "$m5src" ] && [ "$m5lp" = "$m5src" ] && [ "$m5adv" = "1" ]; then
+  PASS "M5d: all three projections are line-count-preserving THROUGH the decoder — a $m5src-line render carrying a <script> block, a tag spanning three lines, a split word and a character reference yields $m5lj / $m5lv / $m5lp lines. The adversarial arm fires too: a single line of newline-yielding references (&#10;, &#13;) decodes to $m5adv line, so no locator downstream of an encoded value can shift"
+else
+  FAIL "M5d: a projection is no longer line-count-preserving (source=$m5src joined=$m5lj visible=$m5lv published=$m5lp; newline-reference arm=$m5adv, want 1). A transform that consumes a newline shifts every reported line after it while the token stream stays valid — the suite would not notice"
+fi
+
+# M5e — THE FAIL DIRECTION OF EACH NEW SUBJECT, which is NOT the same for the two and is
+# the reason this arm asserts presence rather than only effect. Removing _decode_entities
+# is fail-CLOSED and audible: the visible arm empties, the 20-word floor fires, and the
+# verdict is rc=2 UNDETERMINED. Removing strip_to_joined_text is fail-OPEN and SILENT:
+# `[ -s "$jfile" ]` is simply false, rcj stays 1, and the tag-split case returns to rc=0.
+# A new arm inherits the posture of the guard it sits behind, not the posture of its
+# siblings, and this arm is what makes the difference observable.
+m5_dec_rc=0; m5_join_rc=0
+m5_dec_rc="$( unset -f _decode_entities;    verify_publishable_content "$M5DEC" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+m5_join_rc="$( unset -f strip_to_joined_text; verify_publishable_content "$M5TAG" "$MTD" >/dev/null 2>&1; printf '%s' "$?" )"
+if [ "$m5_dec_rc" -eq 2 ] && [ "$m5_join_rc" -eq 0 ]; then
+  PASS "M5e: the two new subjects fail in OPPOSITE directions and both are measured — without _decode_entities the entity case is rc=2 UNDETERMINED (fail-closed, audible), and without strip_to_joined_text the tag-split case is rc=0 (fail-OPEN, silent). The second is why the arm's PRESENCE is asserted and not only its effect"
+else
+  FAIL "M5e: a removal did not produce its measured direction (no decoder: rc=$m5_dec_rc want 2; no joined arm: rc=$m5_join_rc want 0) — if the joined arm now fails closed that is an improvement to record, and if the decoder now fails open that is a hole"
+fi
+
 # ── Group N (PR-7 / OB-1) — the conjunctive window is scoped to one block ────
 # W=25 was calibrated on a fixture carrying ONE occurrence of each token. A real
 # itinerary repeats both, so an N-day trip offers N-squared candidate pairings and a
@@ -1650,6 +2104,276 @@ else
 fi
 verify_publishable_content "$NHIT" "$NTD" >/dev/null 2>&1; nrc=$?
 if [ "$nrc" -eq 1 ]; then PASS "N1d: the same render with the value in ONE block still aborts (rc=1) — block scoping narrowed the window, it did not disarm it"; else FAIL "N1d: a real same-block passport carry-through no longer aborts (rc=$nrc) — PR-7 over-corrected into a fail-open"; fi
+
+# ── N2 (#328 F1) — the conjunctive window is derived from the VALUE, not from a flat 25 ──
+#
+# N1 closed the cross-block pairing. What survived it is the WITHIN-block false abort: on
+# a trip to the country in the passport's own year, ordinary destination guidance carries
+# both class tokens in one legitimate sentence. Measured on the shipped guard, 3 of 3
+# such lines aborted while 2 of 2 controls published — a permanent, unremediable abort on
+# correct content, which this file argues three times is fail-open in practice.
+#
+# WHY A 17-FIXTURE MATRIX AND NOT THE 3 THE DEFECT NAMED. Two degenerate outcomes reach a
+# PASS on an over-block-only criterion, and both were measured: a matcher stubbed to
+# never match passes every over-block arm, and a one-limb fix passes exactly the three
+# lines the defect named while still aborting 4 of 4 destination-guidance lines written
+# afterwards. So the over-block arms are TWINNED with carry-through arms over the same
+# render family, and the two are graded together rather than apart.
+#
+# The matrix: 9 over-block candidates · 6 true carry-throughs · 3 clean · 1 paraphrase.
+# Every arm below grades an EXACT code and treats anything outside {0,1} as a probe
+# failure rather than folding it into a count — with _guard_match removed the guard
+# returns 127, which is a different claim from "aborted".
+N2OB1='<h1>Galway 2027 — an Irish adventure</h1>'
+N2OB2='<p>Visa / entry: Irish passport holders need no visa; check that validity runs beyond 2027.</p>'
+N2OB3='<p>Booking note: the Irish ferry crossing must be reserved before the 2027 summer timetable opens.</p>'
+N2OB4='<p>Booking note: the Irish ferry to the islands runs until 2027 on the summer timetable.</p>'
+N2OB5='<p>Getting there: Irish Rail runs hourly from Dublin Heuston; the 2027 timetable is published each December.</p>'
+N2OB6='<p>Money: cards are accepted almost everywhere in Irish cafes and bars, and the 2027 bank holidays fall on the first Monday of each month.</p>'
+N2OB7='<p>Weather: the Irish west coast is wet in every season, so the packing list below holds for the whole 2027 trip.</p>'
+# OB8 and OB9 exist because the first seven under-sampled the space in one direction: NONE
+# of them carries the value's own connective vocabulary, so limb B alone rejected six of
+# the seven and a sweep over that set showed limb A removing nothing. These two carry
+# `to` and `valid` respectively — limb B admits them — and are rejected by limb A alone.
+# Without them the matrix would have read "limb A is not load-bearing", which is a fact
+# about the fixtures rather than about the rule. N2i is the arm that grades the
+# difference.
+N2OB8='<p>Visa / entry: an Irish passport is enough to enter, and no separate permit is required before 2027.</p>'
+N2OB9='<p>Tickets: the festival pass is valid for the whole week, and an Irish student card gets a discount on the 2027 programme.</p>'
+N2TP1='<p>Border note: carry your Irish passport, valid to 2027, at all times.</p>'
+N2TP2='<p>Border note: valid to 2027 — that is the Irish passport you should be carrying.</p>'
+N2TP3='<p>Document check: Irish, valid to 2027.</p>'
+N2TP4='<p>Passport check: Irish and valid to 2027 for everyone travelling.</p>'
+N2TP5='<p>Carry the Irish one, valid to 2027, in your day bag.</p>'
+N2TP6='<p>Border note: the Irish one you carry is valid to 2027.</p>'
+N2CL2='<h1>Galway 2027 — a west coast week</h1>'
+N2CL3='<p>Visa / entry: no visa required for stays under ninety days; carry a passport valid for six months beyond arrival.</p>'
+N2PP1='<p>Border note: the Irish passport you carry expires in 2027.</p>'
+
+# nrender wraps its third argument in <p>; these fixtures supply their own element,
+# because one of them is a HEADING and the heading case is the tightest span in the set.
+n2render() { # <out_file> <raw final markup>
+  {
+    printf '<!DOCTYPE html><html><head><title>Galway Trip</title></head><body>\n<h1>Itinerary</h1>\n'
+    n2d=1
+    while [ "$n2d" -le 6 ]; do
+      printf '<h2>Day %d — Friday 12 June 2027</h2>\n' "$n2d"
+      printf '<p>Morning at the covered market, then a long lunch by the water and an\n'
+      printf 'afternoon walk through the old town before an evening at a traditional Irish\n'
+      printf 'pub with music from about nine, back to the guest house before midnight.</p>\n'
+      n2d=$((n2d+1))
+    done
+    [ -n "${2:-}" ] && printf '%s\n' "$2"
+    printf '</body></html>\n'
+  } > "$1"
+}
+# The minimal within-block distance between the two class tokens, read off the visible
+# projection the rule itself matches. It is what the proportional limb is compared
+# against, so N2e can assert the residual as an OBSERVATION rather than as a claim.
+n2span() { # <html_file> -> minimal same-block key window, or '-'
+  strip_to_text_blocks "$1" | _line_sentinels | _norm_words | awk -v B="$_GUARD_BLOCK" -v L="$_GUARD_LINE" '
+    $0==L { next } $0==B { blk++; next } { n++; t[n]=$0; b[n]=blk }
+    END { best=-1
+      for (i=1;i<=n;i++) for (j=1;j<=n;j++) {
+        if (b[i]!=b[j]) continue
+        if ((t[i]=="irish"&&t[j]=="2027")||(t[i]=="2027"&&t[j]=="irish")) { d=(i>j?i-j:j-i); if (best<0||d<best) best=d }
+      }
+      print (best<0 ? "-" : best) }'
+}
+n2rc() { # <raw final markup> -> the guard's exact status
+  n2render "$WORK/n2_probe.html" "$1"
+  verify_publishable_content "$WORK/n2_probe.html" "$NTD" >/dev/null 2>&1; printf '%s' "$?"
+}
+
+# N2a — FIXTURE INTEGRITY + THE DENOMINATOR, graded FIRST. Every over-block candidate must
+# really carry both class tokens in one block and must NEVER carry the value as a
+# contiguous run; every carry-through must carry the value's two facts in one block. A
+# fixture set failing either half makes every verdict below vacuous rather than passing.
+n2_bad=""; n2_ob=0; n2_tp=0
+for n2x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB4" "$N2OB5" "$N2OB6" "$N2OB7" "$N2OB8" "$N2OB9"; do
+  n2_ob=$((n2_ob+1)); n2render "$WORK/n2_fi.html" "$n2x"
+  n2s="$(n2span "$WORK/n2_fi.html")"
+  { [ "$n2s" != "-" ] && ! grep -qF 'Irish, valid to 2027' "$WORK/n2_fi.html"; } || n2_bad="$n2_bad OB$n2_ob(span=$n2s)"
+done
+for n2x in "$N2TP1" "$N2TP2" "$N2TP3" "$N2TP4" "$N2TP5" "$N2TP6"; do
+  n2_tp=$((n2_tp+1)); n2render "$WORK/n2_fi.html" "$n2x"
+  n2s="$(n2span "$WORK/n2_fi.html")"
+  [ "$n2s" != "-" ] || n2_bad="$n2_bad TP$n2_tp(no-pair)"
+done
+if [ -z "$n2_bad" ] && [ "$n2_ob" -eq 9 ] && [ "$n2_tp" -eq 6 ]; then
+  PASS "N2a: the discrimination matrix is real — $n2_ob over-block candidates each carry both class tokens inside ONE block and none carries the value as a run, and $n2_tp carry-throughs each pair the two facts in one block. Denominator for every verdict below: 9 over-block / 6 carry-through / 3 clean / 1 paraphrase"
+else
+  FAIL "N2a: the matrix is not set up as claimed (ob=$n2_ob tp=$n2_tp; bad:$n2_bad) — the arms below would be vacuous rather than passing"
+fi
+
+# N2b — THE SUBJECT. The over-block candidates must publish. ONE is expected to survive
+# and is named rather than hidden: N2e asserts why it is irreducible.
+n2_over_assert() {
+  local x rc pub=0 n=0 bad="" aborted=""
+  for x in "$N2OB1" "$N2OB2" "$N2OB3" "$N2OB5" "$N2OB6" "$N2OB7" "$N2OB8" "$N2OB9"; do
+    n=$((n+1)); rc="$(n2rc "$x")"
+    case "$rc" in 0) pub=$((pub+1)) ;; 1) aborted="$aborted OB$n" ;; *) bad="$bad OB$n=rc$rc" ;; esac
+  done
+  if [ "$pub" -eq "$n" ]; then
+    PASS "N2b: all $n non-residual over-block candidates publish (rc=0) — legitimate destination guidance, booking, visa, transport, money, weather and ticketing lines that mention the nationality adjective and the trip year no longer abort. The window is now derived from the value's own span and the match additionally requires the value's own connective vocabulary"
+  else
+    FAIL "N2b: only $pub/$n over-block candidates published — still aborting:$aborted$bad. A fail-closed control that refuses correct content is worked around rather than satisfied"
+  fi
+}
+n2_over_assert
+
+# N2c — SENSITIVITY, and it is the arm that makes N2b evidence rather than a green light.
+# Without it N2b is satisfied by a matcher that stopped matching passports at all — which
+# was measured: a stub returning "no match" passes every over-block arm in this group.
+n2_carry_assert() {
+  local x rc ab=0 n=0 bad=""
+  for x in "$N2TP1" "$N2TP2" "$N2TP3" "$N2TP4" "$N2TP5" "$N2TP6"; do
+    n=$((n+1)); rc="$(n2rc "$x")"
+    case "$rc" in 1) ab=$((ab+1)) ;; 0) bad="$bad TP$n=published" ;; *) bad="$bad TP$n=rc$rc" ;; esac
+  done
+  if [ "$ab" -eq "$n" ]; then
+    PASS "N2c: all $n real carry-throughs still abort (rc=1) — verbatim, order-swapped, de-attributed and three rewordings, including one whose two facts sit 7 tokens apart. The narrowing removed false aborts without disarming the rule"
+  else
+    FAIL "N2c: only $ab/$n carry-throughs aborted —$bad. This is the arm that distinguishes a fix from a disabled matcher, and it has stopped firing"
+  fi
+}
+n2_carry_assert
+
+# N2d — SPECIFICITY over the clean set, and the arm the whole group's PASS rests on being
+# a property of the render rather than of the guard being off.
+n2_clean_assert() {
+  local x rc pub=0 n=0 bad=""
+  for x in "" "$N2CL2" "$N2CL3"; do
+    n=$((n+1)); rc="$(n2rc "$x")"
+    case "$rc" in 0) pub=$((pub+1)) ;; *) bad="$bad CL$n=rc$rc" ;; esac
+  done
+  if [ "$pub" -eq "$n" ]; then
+    PASS "N2d: all $n clean fixtures publish (rc=0) — the six-day render with no final paragraph, one whose heading carries only the year, and one whose visa line carries neither class token"
+  else
+    FAIL "N2d: only $pub/$n clean fixtures published —$bad. A clean render aborting is the defect this group exists to close, arriving from the other direction"
+  fi
+}
+n2_clean_assert
+
+# N2e — THE RESIDUAL, ASSERTED AS AN OBSERVATION RATHER THAN CLAIMED IN PROSE. One
+# over-block candidate still aborts, and it is irreducible rather than mis-tuned: it and
+# one of the carry-throughs have the SAME within-block span and both carry the value's
+# connective token `to`, so no setting of GUARD_CONJ_SLACK and no connective test can
+# separate them. Asserting the equality is what keeps the residual honest — if a later
+# change makes the two spans differ, this arm fails and the residual must be restated.
+n2render "$WORK/n2_res_ob.html" "$N2OB4"; n2_res_obs="$(n2span "$WORK/n2_res_ob.html")"
+n2render "$WORK/n2_res_tp.html" "$N2TP6"; n2_res_tps="$(n2span "$WORK/n2_res_tp.html")"
+n2_res_obrc="$(n2rc "$N2OB4")"; n2_res_tprc="$(n2rc "$N2TP6")"
+if [ "$n2_res_obs" = "$n2_res_tps" ] && [ "$n2_res_obrc" -eq 1 ] && [ "$n2_res_tprc" -eq 1 ]; then
+  PASS "N2e: the surviving over-block is IRREDUCIBLE, measured rather than asserted — it and a real carry-through have the same within-block span ($n2_res_obs) and both carry the value's connective token, so both abort and no value-derived rule can tell them apart. The residual is declared in ADR-008 rather than tuned away"
+else
+  FAIL "N2e: the residual's premise no longer holds (over-block span=$n2_res_obs rc=$n2_res_obrc; carry-through span=$n2_res_tps rc=$n2_res_tprc). If the spans now differ the residual is reducible and the declared coverage boundary is wrong"
+fi
+
+# N2f — THE PARAPHRASE, AND THE COST THIS CARD ACCEPTS. A carry-through that drops the
+# value's own connective vocabulary entirely is no longer matched. It is stated as an
+# assertion rather than left in prose because it is a NARROWING of a security control:
+# the arm fails the day the paraphrase starts aborting again, which would mean the
+# connective limb had been weakened, and it fails if someone reads this residual as a
+# defect and "fixes" it without re-deriving the over-block measurements above.
+n2_pp_rc="$(n2rc "$N2PP1")"
+if [ "$n2_pp_rc" -eq 0 ]; then
+  PASS "N2f: the declared cost is exactly what was declared — a paraphrase of the validity predicate ('the Irish passport you carry expires in 2027') carries no connective token of the value and is NOT matched (rc=0). This narrows coverage, it sits inside the paraphrase class ADR-008 already disclaims, and it is carried there as its own residual"
+else
+  FAIL "N2f: the paraphrase returned rc=$n2_pp_rc rather than 0 — the connective limb is behaving differently from the way the coverage boundary and the SLACK calibration were both derived, so both need re-deriving before this reads as an improvement"
+fi
+
+# N2g — THE DECLARED ESCAPE. A value with no stoplisted tokens of its own has no
+# connective tissue to require, so limb B is vacuously satisfied and limb A alone applies.
+# The consequence is stated in the matcher and measured here: on such a value the heading
+# over-block PERSISTS while a real carry-through is still caught. The fix is proportional
+# to how much connective tissue the value carries, and that bound is asserted rather than
+# discovered by whoever next reads a bug report about it.
+N2ETD="$WORK/galway-escape"; mkdir -p "$N2ETD/outputs"
+cat > "$N2ETD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Galway 2027 [DERIVED]
+
+## Rowan
+- Passport: Irish 2027
+MD
+n2render "$WORK/n2_esc_ob.html" "$N2OB1"; verify_publishable_content "$WORK/n2_esc_ob.html" "$N2ETD" >/dev/null 2>&1; n2_esc_ob=$?
+n2render "$WORK/n2_esc_tp.html" "$N2TP1"; verify_publishable_content "$WORK/n2_esc_tp.html" "$N2ETD" >/dev/null 2>&1; n2_esc_tp=$?
+if [ "$n2_esc_ob" -eq 1 ] && [ "$n2_esc_tp" -eq 1 ]; then
+  PASS "N2g: the ncon==0 escape behaves as declared — against the value 'Irish 2027', which carries no stoplisted token of its own, the connective limb is vacuous, the heading over-block still aborts (rc=1) and a real carry-through is still caught (rc=1). The remedy is proportional to the value, and that bound is measured here rather than assumed"
+else
+  FAIL "N2g: the connective-limb escape did not behave as declared (over-block rc=$n2_esc_ob want 1, carry-through rc=$n2_esc_tp want 1) — either the escape has widened into a fail-open or the over-block bound in the matcher comment is now wrong"
+fi
+
+# N2i — BOTH LIMBS ARE LOAD-BEARING, graded one limb at a time rather than argued in
+# prose. The fix has two conjuncts and a reader is entitled to ask whether either is
+# decoration. Each is answered by a fixture the OTHER limb admits:
+#   • limb B is load-bearing — N2g already shows it: against a value carrying no
+#     stoplisted tokens of its own the connective test goes vacuous and the heading
+#     over-block, whose span is 2, aborts again. Limb A admits it at every setting.
+#   • limb A is load-bearing — this arm. OB8 and OB9 both CARRY the value's connective
+#     vocabulary in their own block, so limb B admits them; they are rejected by the
+#     proportional window alone. Raising GUARD_CONJ_SLACK to GUARD_WINDOW makes limb A
+#     non-binding — it is then exactly the flat window that shipped — and both abort.
+# The second half is the one that matters, because the first seven over-block fixtures
+# carried no connective token at all and a sweep over that set alone showed limb A
+# removing nothing. That was a property of the fixtures. This arm is what keeps it from
+# reading as a property of the rule.
+n2_limbA_shipped_8="$(n2rc "$N2OB8")"; n2_limbA_shipped_9="$(n2rc "$N2OB9")"
+n2_limbA_flat_8="$( GUARD_CONJ_SLACK="$GUARD_WINDOW"; n2rc "$N2OB8" )"
+n2_limbA_flat_9="$( GUARD_CONJ_SLACK="$GUARD_WINDOW"; n2rc "$N2OB9" )"
+if [ "$n2_limbA_shipped_8" -eq 0 ] && [ "$n2_limbA_shipped_9" -eq 0 ] \
+   && [ "$n2_limbA_flat_8" -eq 1 ] && [ "$n2_limbA_flat_9" -eq 1 ]; then
+  PASS "N2i: the proportional window is load-bearing on its own — two over-block candidates that DO carry the value's connective vocabulary (so the connective limb admits them) publish at the shipped GUARD_CONJ_SLACK and both abort when it is raised to GUARD_WINDOW, which is the flat window that shipped. Neither limb is decoration: N2g is the mirror arm for the other one"
+else
+  FAIL "N2i: the two limbs are no longer separable on these fixtures (shipped slack: OB8 rc=$n2_limbA_shipped_8 OB9 rc=$n2_limbA_shipped_9, want 0; flat window: OB8 rc=$n2_limbA_flat_8 OB9 rc=$n2_limbA_flat_9, want 1). If the proportional window now removes nothing these fixtures can see, either it is redundant or the matrix has stopped sampling the class it protects"
+fi
+
+# N2h — THE OTHER `conjunctive` ROW. The declaration assigns `conjunctive` to FOUR rows,
+# and three of them are the `Passport` field at its three artifact scopes. The fourth is
+# `Documents` in the derived model — a different selector, a different value shape, and
+# the same rule — and no assertion in this suite had ever exercised it. Every fixture in
+# group N and every over-block measurement behind the SLACK calibration is Passport-shaped,
+# so the rule was calibrated on one of the two members it governs. This arm grades the
+# other one in both directions, so a future change to the conjunctive rule is measured
+# against the whole of what it binds rather than against the half that had fixtures.
+N2DTD="$WORK/galway-documents"; mkdir -p "$N2DTD/outputs"
+cat > "$N2DTD/outputs/traveler-model.md" <<'MD'
+# Traveler Model — Galway 2027 [DERIVED]
+
+## Rowan
+
+**Derived**
+
+- **Documents:** Schengen visa, valid to 2028
+MD
+n2_doc_recs="$(nonpublishable_values "$N2DTD" 2>/dev/null | grep -c 'conjunctive')"
+# A six-day render mentioning the two class tokens in SEPARATE blocks, then the same
+# render with the value carried through inside one block. The pair differs only in the
+# final element, so a verdict difference is caused by that element and nothing else.
+n2doc() { # <out_file> <raw final markup>
+  {
+    printf '<!DOCTYPE html><html><head><title>Galway Trip</title></head><body>\n<h1>Itinerary</h1>\n'
+    n2dd=1
+    while [ "$n2dd" -le 6 ]; do
+      printf '<h2>Day %d — the 2028 season opener</h2>\n' "$n2dd"
+      printf '<p>Morning at the covered market, then a long lunch by the water and an\n'
+      printf 'afternoon walk before an evening at a bar near the Schengen visa office on\n'
+      printf 'the square, with music from about nine and a late walk back.</p>\n'
+      n2dd=$((n2dd+1))
+    done
+    [ -n "${2:-}" ] && printf '%s\n' "$2"
+    printf '</body></html>\n'
+  } > "$1"
+}
+n2doc "$WORK/n2_doc_clean.html" ''
+n2doc "$WORK/n2_doc_hit.html" '<p>Border note: the Schengen visa is valid to 2028 for everyone travelling.</p>'
+verify_publishable_content "$WORK/n2_doc_clean.html" "$N2DTD" >/dev/null 2>&1; n2_doc_c=$?
+verify_publishable_content "$WORK/n2_doc_hit.html"   "$N2DTD" >/dev/null 2>&1; n2_doc_h=$?
+if [ "$n2_doc_recs" -ge 1 ] && [ "$n2_doc_c" -eq 0 ] && [ "$n2_doc_h" -eq 1 ]; then
+  PASS "N2h: the OTHER conjunctive row is graded in both directions — the Documents selector yields $n2_doc_recs conjunctive record(s), a render whose two class tokens recur in SEPARATE blocks publishes (rc=0), and the same render carrying the value in ONE block aborts (rc=1). The rule was calibrated on Passport-shaped values; this is the member that had no fixture"
+else
+  FAIL "N2h: the Documents row did not grade in both directions (conjunctive records=$n2_doc_recs, cross-block render rc=$n2_doc_c want 0, same-block render rc=$n2_doc_h want 1) — a zero record count makes both verdicts vacuous rather than clean"
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Group O (#123 AC 3, second remediation) — the [THIRD-PARTY] member of the class.
@@ -1852,8 +2576,71 @@ if [ "$o4marks" -eq 0 ] && [ "$o4vals" -ge 1 ] \
 else
   FAIL "O4a: the O4 fixture is not the bad-merge shape (marks=$o4marks values=$o4vals) — O4b would prove nothing"
 fi
+# O4b — SPLIT, AND ITS MESSAGE CORRECTED. IT NEVER TESTED THE STRIP.
+#
+# O4's fixture carries TWO things — the stripped marks AND a recorded supersession — and
+# this arm grades only the final rc. That rc is decided entirely by the supersession path:
+# remove the supersession line and hold everything else constant, and the same fixture
+# goes rc=2 -> rc=0. So the arm passed, its FAIL text claimed it guarded "stripping the
+# marks silently empties the class", and it would have gone on passing if the strip hole
+# had been made WORSE — its PASS requires no evidence about the strip at all.
+#
+# That is the compound-fixture shape: a verdict gated on two conditions where no arm
+# isolates the named variable. ADR-019's Discriminating-Evidence Rule is the governing
+# discipline; this is an instance its Class-1 scan shapes cannot find, because the PASS is
+# reachable neither by an absent subject nor by an empty haystack.
+#
+# The message now names the supersession, which is what this arm really grades. O4e below
+# is the arm it was missing.
 oguard "$O4R" "$O4TD"
-if [ "$ORC" -eq 2 ]; then PASS "O4b: a recorded third-party supersession with no profile to support it is UNDETERMINED (rc=2) — never a clean publish"; else FAIL "O4b: a bad-merge model did not abort (rc=$ORC) — stripping the marks silently empties the class"; fi
+o4sup="$ORC"
+if [ "$o4sup" -eq 2 ]; then PASS "O4b: a recorded third-party supersession with no profile to support it is UNDETERMINED (rc=$o4sup) — never a clean publish. This arm grades the SUPERSESSION path and nothing else: O4e holds the same fixture constant and removes only the supersession line"; else FAIL "O4b: an unsupported supersession did not abort (rc=$o4sup) — the provenance-change check is not firing"; fi
+# O4e — THE ARM O4b WAS MISSING, and it is a MEASUREMENT, not an endorsement. Read it the
+# way L11a asks to be read.
+#
+# The same fixture with the supersession line removed still satisfies every condition O4a
+# enumerates — zero uppercase marks, the value retained, no profile anywhere — and it is
+# therefore the bad merge O4b's old message named. It PUBLISHES. A fully silent strip
+# leaves no residue in the only source the class has, so the parse enumerates zero records
+# and a zero is accepted.
+#
+# THIS ARM PINS THE GAP AND MUST BE INVERTED, NOT DELETED, BY THE SLICE THAT CLOSES IT.
+# The closure needs a WITNESS rather than a better parse, and the witness has to come from
+# outside the model: this card measured that every out-of-model witness available today
+# (a per-traveler profile, a provenance mark, a recorded gap) is absent from this fixture
+# AND from nine of the guard's own must-publish controls, so a witness-based closure
+# converts `absence is not zero` — L6a/L6b, the guard's founding distinction — into an
+# abort. The closure is a model-side census attestation, which is a change to the
+# enrichment contract and the model schema rather than to this predicate.
+#
+# Single-variable by construction: O4f asserts that the two fixtures differ in exactly the
+# supersession line, so the rc flip is attributable to it and to nothing else.
+O4NSTD="$WORK/o4_nosupersede"
+omodel "$O4NSTD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Quill
+- Specific: cannot manage more than one flight of stairs in a single stretch
+MD
+# O4f — fixture integrity for O4e, graded FIRST. Both fixtures must satisfy O4a's stated
+# bad-merge shape, and they must differ ONLY in the supersession line; otherwise O4e is
+# measuring something other than the variable it names.
+o4nmarks="$(grep -c 'THIRD-PARTY' "$O4NSTD/outputs/traveler-model.md" || true)"
+o4nvals="$(grep -c 'flight of stairs' "$O4NSTD/outputs/traveler-model.md" || true)"
+o4ndiff="$(diff "$O4TD/outputs/traveler-model.md" "$O4NSTD/outputs/traveler-model.md" | grep -c '^<' || true)"
+if [ "$o4nmarks" -eq 0 ] && [ "$o4nvals" -ge 1 ] && [ ! -d "$O4NSTD/travelers" ] \
+   && ! grep -qF 'supersedes third-party-sourced entry' "$O4NSTD/outputs/traveler-model.md"; then
+  PASS "O4f: the O4e fixture is O4a's bad-merge shape with the supersession removed — marks=$o4nmarks, value survived ($o4nvals), no profile, no supersession, and it differs from O4's model in $o4ndiff removed line(s) — so O4e grades ONE variable"
+else
+  FAIL "O4f: the O4e fixture is not O4a's shape minus the supersession (marks=$o4nmarks values=$o4nvals) — O4e would not isolate the strip"
+fi
+oguard "$O4R" "$O4NSTD"
+o4strip="$ORC"
+if [ "$o4strip" -eq 0 ] && [ "$o4sup" -eq 2 ]; then
+  PASS "O4e: a bad merge that strips BOTH marks and records no supersession PUBLISHES (rc=$o4strip) while the same fixture WITH the supersession aborts (rc=$o4sup) — measured, not assumed. O4b's verdict rests entirely on the supersession, so the strip is UNGUARDED, and ADR-008's coverage claim for it is corrected in this change. Invert this arm when a model-side attestation closes it"
+else
+  FAIL "O4e: the mark-strip gap is not in the measured shape (stripped=$o4strip with-supersession=$o4sup) — if the strip now aborts, this arm has been CLOSED and must be inverted rather than left pinning a gap that no longer exists; if the supersession stopped aborting, O4b is broken"
+fi
 # O4c — the ORPHANED-MARK backstop. The file says outright that it holds third-party
 # content and the parse resolves it to nothing. That is the silent fail-open in its
 # purest form: absence is not zero, and an unresolved PRESENCE is not zero either.
@@ -1949,6 +2736,447 @@ omodel "$O6STD" <<'MD'
 MD
 oguard "$O6SR" "$O6STD"
 if [ "$ORC" -eq 1 ]; then PASS "O6c: a category carrying text beyond the enum still aborts (rc=1) — the enum exclusion is scoped to enum-ONLY values"; else FAIL "O6c: a category with a real captured value did not abort (rc=$ORC) — the enum exclusion dropped the whole field"; fi
+
+# ── O7 — an entry's STRUCTURAL SUB-HEADINGS are not captured values ──────────
+# The entry denylist emitted every line of a marked entry, INCLUDING the bold sub-headings
+# the derived model writes its entry body under. Two of the three shipped ones became
+# distinctive match keys, so a render carrying the ordinary English word `derived` or
+# `desires` aborted a publish — measured live on examples/archived-trip-demo, against a
+# control render that published.
+#
+# `**Needs**` was already a non-member, but only by the accident that `needs` is a member
+# of the closed need-category enum; its two siblings had no such accident. That asymmetry
+# is the finding: the exclusion was vocabulary-shaped where the thing being excluded is
+# SHAPE-shaped.
+#
+# Graded on the SHIPPED fixture rather than a synthetic one, deliberately: this was a live
+# false positive on the wired publish path of a public repository, and a synthetic model
+# would let the fixture drift away from the shape that actually failed.
+O7R="$WORK/o7_sub.html"
+orender "$O7R" 'Build note: this page was derived from the current plan, and the desires list was checked.'
+O7CR="$WORK/o7_clean.html"
+orender "$O7CR" 'Build note: this page was rebuilt from the current plan, and the wish list was checked.'
+O7SHIP="$HERE/../examples/archived-trip-demo"
+# O7a — fixture integrity, and it is the arm that keeps O7b from passing vacuously. The
+# shipped model must exist, must carry a [THIRD-PARTY] entry, must still enumerate a
+# NON-EMPTY class, and the render must really carry both words.
+o7recs="$(nonpublishable_values "$O7SHIP" 2>/dev/null | awk 'NF { c++ } END { print c + 0 }')"
+if [ -f "$O7SHIP/outputs/traveler-model.md" ] \
+   && grep -qF '[THIRD-PARTY]' "$O7SHIP/outputs/traveler-model.md" \
+   && grep -qF '**Derived**' "$O7SHIP/outputs/traveler-model.md" \
+   && grep -qF '**Desires**' "$O7SHIP/outputs/traveler-model.md" \
+   && [ "$o7recs" -gt 0 ] \
+   && grep -qF 'derived' "$O7R" && grep -qF 'desires' "$O7R"; then
+  PASS "O7a: the shipped archived-trip-demo carries a [THIRD-PARTY] entry with both bold sub-headings, still enumerates $o7recs class record(s), and the render carries both words — O7b is graded against a live fixture and a non-degenerate class"
+else
+  FAIL "O7a: the O7 fixture is not the shipped shape (records=$o7recs) — O7b would prove nothing"
+fi
+oguard "$O7R" "$O7SHIP"
+o7hit="$ORC"
+oguard "$O7CR" "$O7SHIP"
+o7ctl="$ORC"
+# O7b — both arms graded together. Without the control arm a clean verdict on the first
+# render is indistinguishable from a guard that stopped matching this model at all.
+if [ "$o7hit" -eq 0 ] && [ "$o7ctl" -eq 0 ]; then
+  PASS "O7b: a render whose only offence is the words 'derived' and 'desires' PUBLISHES (rc=$o7hit), as does the same render without them (rc=$o7ctl) — a bold-only sub-heading of an entry states no traveler value and is no longer a match key"
+else
+  FAIL "O7b: the structural sub-heading exclusion is not in the measured shape (with-the-words=$o7hit without=$o7ctl) — a value-free section name is keying a publish abort"
+fi
+# O7c — SENSITIVITY, and the reason O7b is a narrowing rather than a hole. Every value the
+# same entry really states must still abort: the NAME arm and the need value. Two arms,
+# because the exclusion could plausibly have swallowed either. This is the arm that
+# CONVICTS a removed class source, which is why it carries the MD registration and O7b
+# does not: with nonpublishable_values gone nothing aborts, so O7b would pass on a guard
+# that had stopped reading the model at all.
+O7N="$WORK/o7_name.html";  orender "$O7N"  'Rooming note: per-b70d will share with the group on the first night.'
+O7V="$WORK/o7_value.html"; orender "$O7V"  'Pacing note: one of us tires quickly; long standing is not manageable on day two.'
+o7c_assert() {
+  local n v
+  oguard "$O7N" "$O7SHIP"; n="$ORC"
+  oguard "$O7V" "$O7SHIP"; v="$ORC"
+  if [ "$n" -eq 1 ] && [ "$v" -eq 1 ]; then
+    PASS "O7c: the same entry still aborts on its NAME (rc=$n) and on its need VALUE (rc=$v) — the sub-heading exclusion removed the section names and nothing the entry states"
+  else
+    FAIL "O7c: a real third-party value stopped aborting (name=$n value=$v) — the sub-heading exclusion is wider than a section name, or the class source is not running"
+  fi
+}
+o7c_assert
+# O7d — the exclusion is SHAPE-bounded, not a list of the three shipped literals. A bold
+# span with ANY text beside it stays in class; a bold-only line does not. Both directions,
+# because a one-directional check cannot tell a shape test from a literal match.
+#
+# The fixture word is deliberately NOT one of the three sub-headings this model ships. It
+# was `Derived` — a member of that very list — which left this arm structurally unable to
+# test the property its own verdict text asserts: a predicate rewritten AS the literal list
+# would have excluded `Derived` and passed here, while being the second home for the class
+# the declaration block rules out. `Update signals` is a section name the corpus declares
+# (reference/data-model.md § Reserved keys) and this model does not ship, so that rewrite
+# now FAILS this arm instead of passing it. Both fixture lines carry the SAME words and
+# differ only in shape, which is what makes the verdict a reading of the shape rather than
+# of the vocabulary — an exclusion keyed on these words in ANY shape fails the second arm.
+O7BTD="$WORK/o7_bounded"
+O7DNAME='Update signals'
+omodel "$O7BTD" <<MD
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+**${O7DNAME}**
+
+**${O7DNAME}:** relayed by the operator at the request of the party lead
+MD
+o7d_assert() {
+  local out bold text
+  out="$(nonpublishable_values "$O7BTD" 2>/dev/null)"
+  # Exact VALUE-field equality, not a substring scan: the question is whether the bold-only
+  # line emitted a record of its own, and a substring would also answer yes to the label
+  # line if the label prefix ever stopped being stripped — a FAIL for an unrelated reason.
+  bold="$(awk -F'\t' -v v="$O7DNAME" '$4 == v { c++ } END { print c + 0 }' <<<"$out")"
+  text="$(grep -cF 'relayed by the operator' <<<"$out")"
+  if [ "$bold" -eq 0 ] && [ "$text" -eq 1 ]; then
+    PASS "O7d: a bold-only line whose words are NOT one of the three sub-headings this model ships emits no record ($bold), while the SAME words carrying text as a bold LABEL still emit one ($text) — the exclusion reads the line shape, so a literal list of the three, or any rule keyed on this vocabulary, fails one of these two arms"
+  else
+    FAIL "O7d: the exclusion is not shape-bounded (bold-only=$bold bold-label-with-text=$text) — either it is matching literals, or it is swallowing labelled values, or the class source is not running"
+  fi
+}
+o7d_assert
+# O7e — the residual, asserted rather than left in prose. A markdown TABLE HEADER ROW is
+# still emitted as a class record, so the entry's column names are still match keys. It
+# takes all four of them in one render to abort, which is why no single ordinary word
+# trips it — but it is the same class-source over-capture one shape over, and naming it
+# here means the claim fails the day it stops being true.
+o7tab="$(nonpublishable_values "$O7SHIP" 2>/dev/null | awk -F'\t' '$3 == "token" && $4 ~ /Governing constraint/ { c++ } END { print c + 0 }')"
+if [ "$o7tab" -eq 1 ]; then
+  PASS "O7e: the table HEADER row of the entry is still emitted as one token-rule record ($o7tab) — a stated residual of this narrowing, not a closed case, and it is pinned so the next change to the class source has to decide about it"
+else
+  FAIL "O7e: the table-header residual changed shape (records=$o7tab) — re-derive the class-source over-capture measurement before trusting O7b"
+fi
+# ── O7f/g/h — the arm O7d COULD NOT BE: a third-party VALUE wearing the section shape ──
+# O7d grades the shape boundary in both directions and is correct about the shape. But
+# BOTH of its inputs are SECTION-NAME-shaped — a bold-only line, and a bold label carrying
+# text — so it asks "does the shape test work" and never "does the shape discriminate a
+# section NAME from a VALUE". It did not. A third-party value written as a whole-line
+# emphasis span was dropped from the class before the matcher saw it, and a render
+# carrying that value verbatim went rc=1 at origin/main to rc=0 at the narrowing commit:
+# a value that aborted before the release published after it. The enumeration was complete
+# over the inputs it imagined and blind to the one that mattered.
+#
+# These three arms are the input class O7d cannot express, so the control can see it going
+# forward. THREE renderings of ONE value, because the three failed for three different
+# reasons — the list marker, the label-colon, and the bare line — and a single rendering
+# would let two of them come back silently. The three shipped sub-headings sit in the SAME
+# model, so a fix that merely reverts the narrowing fails here rather than passing: this is
+# a discrimination assertion, not a shape assertion.
+O7VAL='cannot manage more than one flight of stairs in a single stretch'
+O7VTD="$WORK/o7_value_shape"
+omodel "$O7VTD" <<MD
+# Traveler Model [DERIVED]
+
+## Quill \`[OPERATOR-PROVIDED]\` \`[THIRD-PARTY]\`
+
+**Needs**
+
+- **Trigger: $O7VAL**
+- **$O7VAL**
+
+**$O7VAL**
+
+**Desires**
+
+*None recorded.*
+
+**Derived**
+
+- **Documents:** unknown — no passport country on file
+MD
+O7VR="$WORK/o7_value.html";  orender "$O7VR"  "Pacing note: one of us $O7VAL, so day two stays flat."
+O7VCR="$WORK/o7_value_ctl.html"; orender "$O7VCR" 'Pacing note: day two stays flat, with the hill gardens kept for the late light.'
+# O7f — FIXTURE INTEGRITY, graded before the two verdicts it protects. The model must
+# really carry all three renderings of the one value AND all three shipped sub-headings,
+# and the render must really carry the value — otherwise O7g grades an absence and O7h
+# grades a render that could not have aborted for this reason.
+o7vsrc="$O7VTD/outputs/traveler-model.md"
+if grep -qF -e "- **Trigger: $O7VAL**" "$o7vsrc" \
+   && grep -qF -e "- **$O7VAL**" "$o7vsrc" \
+   && grep -qxF "**$O7VAL**" "$o7vsrc" \
+   && grep -qxF '**Needs**' "$o7vsrc" && grep -qxF '**Desires**' "$o7vsrc" \
+   && grep -qxF '**Derived**' "$o7vsrc" \
+   && grep -qF "$O7VAL" "$O7VR" && ! grep -qF "$O7VAL" "$O7VCR"; then
+  PASS "O7f: the fixture carries one third-party value in all three whole-line-emphasis renderings (bulleted label, bulleted bare, unbulleted) beside all three shipped sub-headings, the render carries the value and the control render does not — O7g and O7h are graded against the discrimination, not against the shape"
+else
+  FAIL "O7f: the O7f/g/h fixture is not the shape claimed — O7g and O7h would prove nothing"
+fi
+# O7g — the CLASS SOURCE, both directions in one verdict. Reading the record stream rather
+# than asking the predicate about itself: the model is short and every record is printed,
+# so "is this value in class" is answered by the emitted rows and never by the detector.
+o7g_assert() {
+  local vals subs
+  vals="$(nonpublishable_values "$O7VTD" 2>/dev/null | awk -F'\t' -v v="$O7VAL" '$4 == v { c++ } END { print c + 0 }')"
+  subs="$(nonpublishable_values "$O7VTD" 2>/dev/null | awk -F'\t' '$4 == "Needs" || $4 == "Desires" || $4 == "Derived" { c++ } END { print c + 0 }')"
+  if [ "$vals" -eq 3 ] && [ "$subs" -eq 0 ]; then
+    PASS "O7g: all 3 whole-line-emphasis renderings of the third-party value are IN class ($vals) while all 3 structural sub-headings are OUT ($subs) — the exclusion discriminates a section NAME from a VALUE, and is not satisfied by either a revert or a bare shape test"
+  else
+    FAIL "O7g: the exclusion does not discriminate (value-renderings in class=$vals of 3, sub-headings in class=$subs of 0) — vals<3 is the fail-open this arm exists for, subs>0 is the false positive it must not reintroduce"
+  fi
+}
+o7g_assert
+# O7h — END TO END, with the control render that makes the abort a measurement. The record
+# stream above proves membership; this proves the membership still reaches the publish
+# verdict, which is where the regression was observable and where it mattered.
+oguard "$O7VR"  "$O7VTD"; o7vhit="$ORC"
+oguard "$O7VCR" "$O7VTD"; o7vctl="$ORC"
+if [ "$o7vhit" -eq 1 ] && [ "$o7vctl" -eq 0 ]; then
+  PASS "O7h: a render carrying the emphasis-wrapped third-party value verbatim ABORTS (rc=$o7vhit) while the same render without it PUBLISHES (rc=$o7vctl) — the class membership reaches the publish verdict, and the clean arm is what makes the abort a measurement rather than a guard that refuses everything"
+else
+  FAIL "O7h: the emphasis-wrapped value did not key the publish verdict (with-the-value=$o7vhit without=$o7vctl) — rc=0 on the first arm is the shipped fail-open; rc!=0 on the second is a guard refusing correct content"
+fi
+# ── O7i–O7m — ONE FIXTURE PER CONJUNCT, because a fixture that trips several ──
+# certifies none of them. O7f/g/h above are honest about what they assert, but the value
+# behind them is 64 characters and 12 words, so each of its three renderings is rejected
+# by two to four of the predicate's conjuncts at once. Remove any single conjunct and the
+# survivors still hold that value in class: the suite stays green at full count while the
+# guarded set silently shrinks. It is the direction structural_subheading's own comment
+# warns a future editor about — a change that drops one conjunct is removing values from
+# the guarded set, whatever it says it is doing — and nothing here could see it happen.
+#
+# The predicate is a CONJUNCTION of four line properties, each of them a reason to keep a
+# line IN class:
+#   C1  the line is a list item                 — a list item states something
+#   C2  the span carries sentence punctuation   — a label carries no sentence
+#   C3  the span runs over 40 characters        — the short-run bound
+#   C4  the span runs to more than three words  — below GUARD_NGRAM by construction
+# A conjunct is load-bearing only where some fixture depends on it ALONE, so each arm
+# below is built from a MINIMAL PAIR: two lines differing by exactly that one property,
+# one in class and one out. The pair is what makes a single count two-directional — drop
+# the conjunct and the in-class member leaves, delete the exclusion and the out-of-class
+# member arrives — so neither failure mode needs an arm of its own to become visible.
+#
+# C3 and C4 are pinned AT the boundary rather than far from it: 41 characters against 40,
+# four words against three. A bound RELAXED by one is caught, not only a bound removed.
+#
+# Deliberately NOT registered with md_flips, for the reason the registration block below
+# gives: O7g is the one arm registered against nonpublishable_values for this subject, and
+# five more registrations would re-grade the same removal five times over.
+#
+# The four line properties, measured on the FIXTURE. This grades the fixture and never the
+# predicate: it answers whether a line carries exactly one of the four, which is what makes
+# O7j–O7m single-conjunct arms. Whether the predicate still HONOURS a property is read off
+# the class record stream in those arms. The two questions are kept apart deliberately —
+# an arm that asked the predicate about itself would be worth nothing.
+o7_props() { # <raw line> -> four digits, 1 = the line carries that property
+  awk -v raw="$1" '
+    BEGIN {
+      t = raw
+      c1 = (t ~ /^[ \t]*[-*+][ \t]+/) ? 1 : 0
+      sub(/^[ \t]*[-*+][ \t]+/, "", t)
+      sub(/^[ \t]+/, "", t); sub(/[ \t]+$/, "", t)
+      inner = substr(t, 3, length(t) - 4)
+      sub(/^[ \t]+/, "", inner); sub(/[ \t]+$/, "", inner)
+      c2 = (inner ~ /[.,;:!?]/) ? 1 : 0
+      c3 = (length(inner) > 40) ? 1 : 0
+      n  = split(inner, a, " ")
+      c4 = (n < 1 || n > 3) ? 1 : 0
+      printf "%d%d%d%d", c1, c2, c3, c4
+    }'
+}
+O7IC1='peanut anaphylaxis'                        # C1 pair — the SAME span, bulleted and bare
+O7IC2='epilepsy, photosensitive'                  # C2 pair — one comma apart …
+O7IC2B='epilepsy photosensitive'                  #           … from this one
+O7IC3='wheelchair-accessible step-free bathrooms' # C3 pair — 41 characters …
+O7IC3B='wheelchair-accessible step-free bathroom' #           … against 40, one letter apart
+O7IC4='allergic to tree nuts'                     # C4 pair — four words …
+O7IC4B='allergic to nuts'                         #           … against three, one word apart
+O7ITD="$WORK/o7_isolation"
+omodel "$O7ITD" <<MD
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+- **${O7IC1}**
+
+**${O7IC1}**
+
+**${O7IC2}**
+
+**${O7IC2B}**
+
+**${O7IC3}**
+
+**${O7IC3B}**
+
+**${O7IC4}**
+
+**${O7IC4B}**
+MD
+# One read of the record stream, counted by exact VALUE-field equality. Membership is read
+# off the emitted rows and never from the predicate, the same way O7g reads it.
+o7i_stream="$(nonpublishable_values "$O7ITD" 2>/dev/null)"
+o7icount() { awk -F'\t' -v v="$1" '$4 == v { c++ } END { print c + 0 }' <<<"$o7i_stream"; }
+# O7i — ISOLATION INTEGRITY, graded before the four verdicts it protects, in the same
+# construction O7f uses for O7g/O7h. A fixture that silently gained a second property
+# would leave its arm below passing while proving less — which is F6 one level up.
+o7iA="$(o7_props "- **${O7IC1}**")"; o7iAp="$(o7_props "**${O7IC1}**")"
+o7iB="$(o7_props "**${O7IC2}**")";   o7iBp="$(o7_props "**${O7IC2B}**")"
+o7iC="$(o7_props "**${O7IC3}**")";   o7iCp="$(o7_props "**${O7IC3B}**")"
+o7iD="$(o7_props "**${O7IC4}**")";   o7iDp="$(o7_props "**${O7IC4B}**")"
+o7isrc="$O7ITD/outputs/traveler-model.md"
+if [ "$o7iA" = "1000" ] && [ "$o7iB" = "0100" ] && [ "$o7iC" = "0010" ] && [ "$o7iD" = "0001" ] \
+   && [ "$o7iAp" = "0000" ] && [ "$o7iBp" = "0000" ] \
+   && [ "$o7iCp" = "0000" ] && [ "$o7iDp" = "0000" ] \
+   && grep -qF -e "- **${O7IC1}**" "$o7isrc" \
+   && grep -qxF "**${O7IC1}**"  "$o7isrc" && grep -qxF "**${O7IC2}**"  "$o7isrc" \
+   && grep -qxF "**${O7IC2B}**" "$o7isrc" && grep -qxF "**${O7IC3}**"  "$o7isrc" \
+   && grep -qxF "**${O7IC3B}**" "$o7isrc" && grep -qxF "**${O7IC4}**"  "$o7isrc" \
+   && grep -qxF "**${O7IC4B}**" "$o7isrc"; then
+  PASS "O7i: each of the four isolation fixtures carries EXACTLY ONE of the four line properties ($o7iA $o7iB $o7iC $o7iD, one digit per conjunct in C1 C2 C3 C4 order) and each minimal-pair partner carries none ($o7iAp $o7iBp $o7iCp $o7iDp), with both numeric pairs pinned at the boundary — 41 characters against 40, four words against three. A verdict in O7j–O7m therefore cannot be earned by a second conjunct"
+else
+  FAIL "O7i: the isolation fixtures are not one-property-each ($o7iA $o7iB $o7iC $o7iD, partners $o7iAp $o7iBp $o7iCp $o7iDp) or a fixture line is missing from the model — O7j–O7m would each prove less than they state"
+fi
+# O7j — C1, not a list item. Both lines carry the SAME span, so the list marker is the
+# only difference between them and the count is the whole verdict.
+o7jc="$(o7icount "$O7IC1")"
+if [ "$o7jc" -eq 1 ]; then
+  PASS "O7j: C1 (a list item states something, so it is not a section name) is LOAD-BEARING — the same span appears twice, bulleted and bare, and exactly 1 of the 2 lines is in class ($o7jc). Dropping that conjunct takes the bulleted value out of the guarded set"
+else
+  FAIL "O7j: C1 is not load-bearing (in class=$o7jc of the 2 lines carrying the span) — 0 is the bulleted value having LEFT the class, whether because the conjunct was dropped or because the exclusion widened back to a bare shape test; 2 is the exclusion no longer firing at all"
+fi
+# O7k — C2, no sentence punctuation in the span. One comma is the entire difference
+# between the two spans, and it decides membership.
+o7kin="$(o7icount "$O7IC2")"; o7kout="$(o7icount "$O7IC2B")"
+if [ "$o7kin" -eq 1 ] && [ "$o7kout" -eq 0 ]; then
+  PASS "O7k: C2 (a label carries no sentence punctuation) is LOAD-BEARING — one comma separates the two spans and decides class membership (punctuated in class=$o7kin, unpunctuated=$o7kout). The zero is stated against a paired non-empty arm rather than on its own"
+else
+  FAIL "O7k: C2 is not load-bearing (punctuated=$o7kin unpunctuated=$o7kout) — punctuated=0 is the conjunct dropped and a punctuated value gone from the guarded set; unpunctuated=1 is the exclusion no longer firing"
+fi
+# O7l — C3, the 40-character bound, pinned AT the boundary: 41 against 40, both of them
+# three words and neither punctuated, so a bound relaxed by ONE character fails here.
+o7lin="$(o7icount "$O7IC3")"; o7lout="$(o7icount "$O7IC3B")"
+if [ "$o7lin" -eq 1 ] && [ "$o7lout" -eq 0 ]; then
+  PASS "O7l: C3 (the span runs to at most 40 characters) is LOAD-BEARING AT THE BOUNDARY — 41 characters is in class and 40 is out ($o7lin / $o7lout), the two differing by one letter, so relaxing the bound by one is caught and not only removing it"
+else
+  FAIL "O7l: C3 is not load-bearing (41-character=$o7lin 40-character=$o7lout) — 41=0 is the bound dropped or relaxed past 41; 40=1 is the exclusion no longer firing"
+fi
+# O7m — C4, the three-word bound, pinned the same way: four words against three, both far
+# under the character bound, so a bound relaxed by ONE word fails here.
+o7min="$(o7icount "$O7IC4")"; o7mout="$(o7icount "$O7IC4B")"
+if [ "$o7min" -eq 1 ] && [ "$o7mout" -eq 0 ]; then
+  PASS "O7m: C4 (the span runs to at most three words) is LOAD-BEARING AT THE BOUNDARY — four words is in class and three is out ($o7min / $o7mout), the two differing by one word and both far under the character bound, so relaxing the word bound by one is caught and not only removing it"
+else
+  FAIL "O7m: C4 is not load-bearing (4-word=$o7min 3-word=$o7mout) — 4=0 is the bound dropped or relaxed past four; 3=1 is the exclusion no longer firing"
+fi
+
+# ── O8 — the guard's OWN zero carries a control arm (fix 5c) ────────────────
+# nonpublishable_values reports "no class content" on the same branch a genuinely empty
+# model reaches, so a BROKEN PARSE and an empty class were indistinguishable in every
+# observable. That is the degenerate-PASS shape ADR-019 exists to eliminate, sitting
+# inside the production predicate rather than inside an assertion: the rule is stated over
+# suite assertions, and applying it to a predicate whose own verdict is a zero-population
+# claim is a faithful extension of it.
+#
+# The guard now runs the SAME model-parse program over a known-marked control fixture
+# built from the DECLARED selector before it accepts any zero, and refuses the zero when
+# the control also reads zero.
+O8TD="$WORK/o8_clean"
+omodel "$O8TD" <<'MD'
+# Traveler Model [DERIVED]
+
+## Rowan
+- Interests: markets, museums
+MD
+o8a_assert() {
+  local broken clean
+  # The mutation: the model-parse program emptied, which is what a parse that has stopped
+  # enumerating looks like from inside. A subshell, so the live definition is untouched.
+  broken="$( _GUARD_MODEL_AWK=''; nonpublishable_values "$O8TD" >/dev/null 2>&1; printf '%s' "$?" )"
+  nonpublishable_values "$O8TD" >/dev/null 2>&1; clean=$?
+  if [ "$broken" -eq 2 ] && [ "$clean" -eq 0 ]; then
+    PASS "O8a: with the model parse emptied the guard reports UNDETERMINED (rc=$broken) instead of a clean empty class, while the SAME model on the intact parse publishes (rc=$clean) — the guard's own zero now carries a control arm, and a zero whose control also reads zero is refused as a broken probe rather than published"
+  else
+    FAIL "O8a: the parse sensitivity arm is not in the measured shape (broken-parse=$broken intact=$clean) — a broken=0 means a guard that enumerates nothing still publishes; an intact=2 means the control fixture stopped enumerating and every empty class now aborts"
+  fi
+}
+o8a_assert
+
+# ── O9 — the FIELD limb reads a wrapped value line by line (PR-6 / P2) ──────
+# The two limbs of this class treated a wrapped value differently and only one of them
+# was right. On the entry limb every line of a marked entry is its own record; on the
+# field limb the value was whatever followed the colon on the FIRST line, so the
+# continuation matched no field label, sat under no marked entry and fell through to
+# nothing. A render carrying ONLY the continuation half of a wrapped `Passport:`
+# PUBLISHED while the first line and the whole value both aborted.
+#
+# That is an under-block on the member #123 narrowed AC 3 to, which is what makes it a
+# fix rather than a documentation correction. Both declared conjunctive rows are graded,
+# because the calibration that shipped had only ever been exercised against one of them.
+O9TD="$WORK/o9_passport"; mkdir -p "$O9TD/outputs"
+O9DTD="$WORK/o9_documents"; mkdir -p "$O9DTD/outputs"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Passport:** Ruritanian, valid to 2033\n  renewed at the Vilnius consulate in the spring of last year\n' > "$O9TD/outputs/traveler-model.md"
+printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Documents:** Ruritanian, valid to 2033\n  renewed at the Vilnius consulate in the spring of last year\n' > "$O9DTD/outputs/traveler-model.md"
+O9F="$WORK/o9_first.html";  orender "$O9F" 'Border note: carry your Ruritanian passport, valid to 2033, at all times.'
+O9C="$WORK/o9_cont.html";   orender "$O9C" 'Border note: it was renewed at the Vilnius consulate in the spring of last year.'
+O9W="$WORK/o9_whole.html";  orender "$O9W" 'Border note: Ruritanian, valid to 2033, renewed at the Vilnius consulate in the spring of last year.'
+O9K="$WORK/o9_clean.html";  orender "$O9K" 'Border note: bring comfortable shoes and a light jacket for the evenings.'
+# O9a — fixture integrity, graded first. The model must really wrap the value, and the
+# continuation render must carry ONLY the continuation half — no token of the first line —
+# or O9b measures a render that would have aborted anyway.
+o9recs="$(nonpublishable_values "$O9TD" 2>/dev/null | awk 'NF { c++ } END { print c + 0 }')"
+if [ "$o9recs" -eq 2 ] \
+   && grep -qF 'renewed at the Vilnius consulate' "$O9C" \
+   && ! grep -qF 'Ruritanian' "$O9C" && ! grep -qF '2033' "$O9C"; then
+  PASS "O9a: the wrapped Passport value emits $o9recs records (the first line and one sibling) and the continuation render carries no token of the first line — O9b grades the continuation and nothing else"
+else
+  FAIL "O9a: the O9 fixture is not the wrapped shape (records=$o9recs) — O9b would prove nothing"
+fi
+o9b_assert() {
+  local f c w k dc dk
+  oguard "$O9F" "$O9TD"; f="$ORC"
+  oguard "$O9C" "$O9TD"; c="$ORC"
+  oguard "$O9W" "$O9TD"; w="$ORC"
+  oguard "$O9K" "$O9TD"; k="$ORC"
+  oguard "$O9C" "$O9DTD"; dc="$ORC"
+  oguard "$O9K" "$O9DTD"; dk="$ORC"
+  if [ "$c" -eq 1 ] && [ "$dc" -eq 1 ] && [ "$f" -eq 1 ] && [ "$w" -eq 1 ] && [ "$k" -eq 0 ] && [ "$dk" -eq 0 ]; then
+    PASS "O9b: a render carrying ONLY the continuation half of a wrapped value now aborts on both declared conjunctive rows (Passport rc=$c, Documents rc=$dc), while the first line (rc=$f) and the whole value (rc=$w) still abort and a clean render still publishes (rc=$k / rc=$dk) — the field limb reads a wrapped value line by line, as the entry limb already did"
+  else
+    FAIL "O9b: the field-limb continuation is not in the measured shape (Passport cont=$c first=$f whole=$w clean=$k / Documents cont=$dc clean=$dk) — a continuation reading 0 is the under-block returning; a clean reading 1 is the sibling record over-blocking"
+  fi
+}
+o9b_assert
+# O9c — the REWORDING LIMIT, measured on BOTH rules, because it is not one number and the
+# coverage boundary used to state it as though it were. The sweep is the assertion: a
+# prose claim about a bound is a claim nothing re-checks.
+o9c_assert() {
+  local n k j w val rew rc phrase_flip=0 conj_missed=0 nn=0 stopctl=-1
+  local -a WD=(alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima)
+  local T="$WORK/o9c"; mkdir -p "$T/outputs" "$T/conj/outputs"
+  for n in 5 6 7 8 9 10 11 12; do
+    val=""; for ((j=0;j<n;j++)); do val="$val ${WD[$j]}"; done; val="${val# }"
+    k=$(( (n+1)/2 )); rew=""; j=0
+    for w in $val; do j=$((j+1)); if [ "$j" -eq "$k" ]; then rew="$rew zulu"; else rew="$rew $w"; fi; done
+    rew="${rew# }"
+    nn=$((nn+1))
+    local R="$WORK/o9c_r.html"; orender "$R" "Note: $rew is recorded."
+    printf '# Traveler Model [DERIVED]\n\n## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]\n- Specific: %s\n' "$val" > "$T/outputs/traveler-model.md"
+    oguard "$R" "$T"; rc="$ORC"
+    if [ "$n" -ge 10 ] && [ "$rc" -eq 1 ]; then phrase_flip=$((phrase_flip+1)); fi
+    if [ "$n" -le 9 ] && [ "$rc" -eq 0 ]; then phrase_flip=$((phrase_flip+1)); fi
+    printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Passport:** %s\n' "$val" > "$T/conj/outputs/traveler-model.md"
+    oguard "$R" "$T/conj"; rc="$ORC"
+    if [ "$rc" -eq 0 ]; then conj_missed=$((conj_missed+1)); fi
+  done
+  # The control on the conjunctive claim: substituting a STOPLISTED word instead of a
+  # distinctive one must still be caught, or "any length" is fragility rather than the
+  # distinctive-token requirement.
+  printf '# Traveler Model [DERIVED]\n\n## Rowan\n- **Passport:** Ruritanian issued at Vilnius in the spring\n' > "$T/conj/outputs/traveler-model.md"
+  local S="$WORK/o9c_s.html"; orender "$S" 'Note: Ruritanian issued at Vilnius during the spring is recorded.'
+  oguard "$S" "$T/conj"; stopctl="$ORC"
+  if [ "$phrase_flip" -eq "$nn" ] && [ "$conj_missed" -eq "$nn" ] && [ "$stopctl" -eq 1 ]; then
+    PASS "O9c: over $nn value lengths (n=5..12) a single worst-case reword defeats the PHRASE rule at n<=9 and is caught at n>=10, the derivable n>=2F boundary; it defeats the CONJUNCTIVE rule at EVERY length ($conj_missed/$nn), because that rule requires every distinctive token. Control: substituting a STOPLISTED word instead is still caught (rc=$stopctl), so the conjunctive limit is the distinctive-token requirement and not fragility in general"
+  else
+    FAIL "O9c: the rewording limit is not in the measured shape (phrase boundary held on $phrase_flip/$nn lengths, conjunctive missed $conj_missed/$nn, stopword control rc=$stopctl) — the coverage boundary states these numbers, so re-derive them before trusting either"
+  fi
+}
+o9c_assert
 
 # ── Group R (#550 AC 5) — the change-summary content guard ───────────────────
 # outputs/change-summary.md (C20) is `publish: internal`: it is shared out of band and
@@ -4430,6 +5658,884 @@ elif [ "$PF_BAD" -eq 0 ]; then
   PASS "PF1: ${PF_GOOD} grep -q sites across this suite and the publish script it guards, 0 of them pipelines — no verdict here can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
 else
   FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group MD — the Discriminating-Evidence Rule, asserted against this file.
+#
+# THE RULE. An assertion is MUTATION-DETECTABLE iff every path to its PASS requires
+# evidence the subject could only have produced by RUNNING. Equivalently: PASS may never
+# be reached on a branch a DEGENERATE outcome also reaches — an absent subject, an empty
+# haystack, an unreadable input, an empty population.
+#
+# WHY A GROUP AND NOT A CONVENTION. Deleting verify_ciphertext outright from the publish
+# script left A, C, C2 and G2 all reporting PASS, and deleting cmd_list entirely left I5
+# reporting PASS with the suite exiting 0. The suite DID go red under the first of those
+# mutations — through B, E4, G1 and S10, assertions that happen to point the other way and
+# have nothing to do with the defect. So a suite-level red/green oracle certifies a fix
+# that changed nothing, and two of those four collateral assertions live in the
+# real-StatiCrypt group, which skips without npx: the redness was accidental AND
+# environment-dependent. This group therefore grades PER ASSERTION.
+#
+# TWO ARMS, closing different halves.
+#   The DYNAMIC arm re-runs a REGISTERED assertion in a subshell with its subject
+#   `unset -f` and requires exactly one FAIL and no PASS. It is the criterion made
+#   executable: for assertion X over subject S, removing S must flip X specifically.
+#   The STATIC arm scans this file for the polarity-negative SHAPE, so an assertion ADDED
+#   later in that shape is caught even though nobody registered it. Registration alone
+#   would close today's five and leave the growth surface open, and the growth is real:
+#   two sibling suites gained +499 and +278 lines in a single prior release.
+#
+# THE VACUITY GUARD RUNS FIRST, for the same reason PF1's and RS0's do. A scan that cannot
+# read its input, or that finds no instance of the REMEDIATED form, has a zero on the
+# defective form that proves nothing. MD0 fails loud on each degenerate input before any
+# count renders a verdict.
+#
+# THE CONTROLS ARE STANDING ARMS rather than a check performed once at authoring time.
+# MD1 proves the SCANNER can tell the defective shape from the sound one, over a fixture
+# built here; MD4 proves the ORACLE convicts a legacy-shaped assertion; MD5 proves the same
+# oracle certifies a remediated one. Without all three, a green MD proves only that MD ran.
+#
+# WHAT THIS GROUP DELIBERATELY DOES NOT DO. It does not grade a Class-2 (zero-population)
+# verdict as a defect. `[ "$n" -eq 0 ] && PASS` is CONDITIONAL, not broken: it is sound
+# when it states its denominator and carries a sensitivity arm, and many here already do.
+# MD3 reports that population with its denominator so the residual is carried on every run
+# rather than in a comment; it is remediated on touch, not in bulk.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group MD — every PASS here must require evidence its subject could only have produced by running."
+
+# ── The three shapes the STATIC arm decides. Written down, because what it matches is an
+# ENUMERATION WITH A STATED BOUNDARY and not a closed class.
+#
+#   Form 1  one line:   if <cond>; then FAIL "<id>: …"; else PASS "<id>: …"; fi
+#   Form 2  block:      if|elif <cond>; then / FAIL "<id>: …" / else / PASS "<id>: …"
+#   Form 3  trailing:   if|elif <cond>; then FAIL "<id>: …"; <more statements>
+#                       else PASS "<id>: …"
+#
+# in each case ONLY when <cond> is LIVE — a command invocation, a here-string probe or an
+# external tool, i.e. something that can exit 127 ("absent") or 2 ("could not read"). A
+# condition opening with `[`, `[[`, `test` or `((` is a shell test: it cannot report an
+# absent subject, so a PASS on its else limb is not this defect and is NOT flagged. Form 3
+# is the one that matters most and is the easiest to miss — it was found by measurement
+# rather than by reading, and it carries 36 of the 59 sites across the five suites.
+#
+# The condition is read up to the FIRST `;`. What is OUTSIDE this scan, so the next vector
+# is a documented exclusion rather than a surprise: a condition carrying an embedded `;`,
+# a verdict reached through a `case` arm, a verdict whose id is only known at call time, a
+# limb separated from its opener by a non-comment statement, and any verdict inside a
+# here-document. It fails open on each. The DYNAMIC arm covers a registered assertion
+# regardless of shape; the static arm is the net under the ones nobody registers.
+MD_RE_OPENF='^(if|elif)[[:space:]]+([^;]+);[[:space:]]*then[[:space:]]+FAIL[[:space:]]+"'
+MD_RE_OPENB='^(if|elif)[[:space:]]+([^;]+);[[:space:]]*then[[:space:]]*$'
+MD_RE_INLE=';[[:space:]]*else[[:space:]]+PASS[[:space:]]+"([^":]*):'
+MD_RE_ELSEP='^else[[:space:]]+PASS[[:space:]]+"([^":]*):'
+MD_RE_FAILV='^FAIL[[:space:]]+"'
+MD_RE_PASSV='^PASS[[:space:]]+"([^":]*):'
+MD_RE_ZERO='(-eq|-le|-lt)[[:space:]]+0([[:space:]]|\]|$)|-z[[:space:]]+"'
+
+MD_L=(); MD_N=0; MD_J=-1
+MD_C1_IDS=""; MD_C1_N=0; MD_C2_N=0; MD_PASS_N=0; MD_RC_N=0; MD_UNREAD=0
+md_reset() { MD_C1_IDS=""; MD_C1_N=0; MD_C2_N=0; MD_PASS_N=0; MD_RC_N=0; MD_UNREAD=0; }
+
+md_live() {   # md_live <condition> -> 0 when the condition can report an ABSENT subject
+  local c="$1"
+  c="${c#"${c%%[![:space:]]*}"}"
+  case "$c" in '!'*) c="${c#!}"; c="${c#"${c%%[![:space:]]*}"}" ;; esac
+  case "$c" in ''|'['*|'test '*|'(('*) return 1 ;; esac
+  return 0
+}
+
+md_next() {   # md_next <index> -> MD_J = next non-blank, non-comment index STRICTLY after it
+  local j=$(( $1 + 1 )) t
+  while [ "$j" -lt "$MD_N" ]; do
+    t="${MD_L[$j]}"; t="${t#"${t%%[![:space:]]*}"}"
+    case "$t" in ''|'#'*) j=$((j+1)); continue ;; esac
+    MD_J=$j; return 0
+  done
+  MD_J=-1; return 1
+}
+
+md_scan() {   # md_scan <file> -> accumulates MD_C1_IDS MD_C1_N MD_C2_N MD_PASS_N MD_RC_N MD_UNREAD
+  local f="$1"
+  if [ ! -r "$f" ]; then MD_UNREAD=$((MD_UNREAD+1)); return 0; fi
+  MD_L=(); local ln
+  while IFS= read -r ln || [ -n "$ln" ]; do MD_L+=("$ln"); done < "$f"
+  MD_N=${#MD_L[@]}
+  local i s t u c id
+  for (( i=0; i<MD_N; i++ )); do
+    s="${MD_L[$i]}"; s="${s#"${s%%[![:space:]]*}"}"
+    case "$s" in *'PASS "'*)     MD_PASS_N=$((MD_PASS_N+1)) ;; esac
+    case "$s" in *'expect_rc '*) MD_RC_N=$((MD_RC_N+1)) ;; esac
+    # ── Class 2 — a PASS gated on an empty population. Counted, never failed.
+    if [[ "$s" =~ $MD_RE_ZERO ]]; then
+      case "$s" in
+        *'PASS "'*) MD_C2_N=$((MD_C2_N+1)) ;;
+        *) if [[ "$s" =~ $MD_RE_OPENB ]] && md_next "$i"; then
+             t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+             [[ "$t" =~ $MD_RE_PASSV ]] && MD_C2_N=$((MD_C2_N+1))
+           fi ;;
+      esac
+    fi
+    # ── Class 1 — the polarity-negative shape over a live condition. BASH_REMATCH is
+    # clobbered by every [[ =~ ]], so each capture is taken on the line that produced it.
+    c=""; id=""
+    if [[ "$s" =~ $MD_RE_OPENF ]]; then
+      c="${BASH_REMATCH[2]}"
+      if [[ "$s" =~ $MD_RE_INLE ]]; then
+        id="${BASH_REMATCH[1]}"
+      elif md_next "$i"; then
+        t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+        if [[ "$t" =~ $MD_RE_ELSEP ]]; then
+          id="${BASH_REMATCH[1]}"
+        elif [ "$t" = "else" ] && md_next "$MD_J"; then
+          u="${MD_L[$MD_J]}"; u="${u#"${u%%[![:space:]]*}"}"
+          [[ "$u" =~ $MD_RE_PASSV ]] && id="${BASH_REMATCH[1]}"
+        fi
+      fi
+    elif [[ "$s" =~ $MD_RE_OPENB ]]; then
+      c="${BASH_REMATCH[2]}"
+      if md_next "$i"; then
+        t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+        if [[ "$t" =~ $MD_RE_FAILV ]] && md_next "$MD_J"; then
+          t="${MD_L[$MD_J]}"; t="${t#"${t%%[![:space:]]*}"}"
+          if [[ "$t" =~ $MD_RE_ELSEP ]]; then
+            id="${BASH_REMATCH[1]}"
+          elif [ "$t" = "else" ] && md_next "$MD_J"; then
+            u="${MD_L[$MD_J]}"; u="${u#"${u%%[![:space:]]*}"}"
+            [[ "$u" =~ $MD_RE_PASSV ]] && id="${BASH_REMATCH[1]}"
+          fi
+        fi
+      fi
+    fi
+    if [ -n "$id" ] && md_live "$c"; then
+      MD_C1_N=$((MD_C1_N+1)); MD_C1_IDS="$MD_C1_IDS$id "
+    fi
+  done
+  return 0
+}
+
+md_diff() {   # md_diff <a-set> <b-set> -> members of a absent from b, deduped
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  printf '%s' "${out# }"
+}
+md_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# ── The control fixture, built here from PIECES. This scan reads its own source, so a
+# literal verdict token in the writer below would be read as a real site and the detector
+# would convict the fixture it had just written — the same self-matching problem group PF
+# solves with a two-piece needle. The fixture carries one site per defective form (ZMDA,
+# ZMDB, ZMDF), one shell-test site that must NOT be flagged (ZMDT), one zero-population
+# site (ZMDZ), and one remediated site (ZMDR). Sensitivity and specificity in one input.
+MD_FIX="$WORK/md-control-fixture.sh"
+MD_VP='PASS'; MD_VF='FAIL'
+{
+  printf 'if zzq_md_subject a; then %s "ZMDA: rejected"; else %s "ZMDA: accepted"; fi\n' "$MD_VF" "$MD_VP"
+  printf 'if zzq_md_subject b; then\n  %s "ZMDB: rejected"\nelse\n  %s "ZMDB: accepted"\nfi\n' "$MD_VF" "$MD_VP"
+  printf 'if zzq_md_subject c; then %s "ZMDF: rejected"; show zzq\nelse %s "ZMDF: accepted"; fi\n' "$MD_VF" "$MD_VP"
+  printf 'if [ "$zzn" -eq 0 ]; then\n  %s "ZMDT: rejected"\nelse\n  %s "ZMDT: accepted"\nfi\n' "$MD_VF" "$MD_VP"
+  printf 'if [ "$zzn" -eq 0 ]; then %s "ZMDZ: the population is empty"; else %s "ZMDZ: not empty"; fi\n' "$MD_VP" "$MD_VF"
+  printf 'expect_rc 1 "ZMDR" "the remediated form grades an exact status" -- zzq_md_subject d\n'
+} > "$MD_FIX"
+
+md_reset; md_scan "$MD_FIX"
+MD_FX_C1="${MD_C1_IDS% }"; MD_FX_C2="$MD_C2_N"; MD_FX_RC="$MD_RC_N"; MD_FX_UNREAD="$MD_UNREAD"
+md_reset; md_scan "$SELF"
+MD_SELF_C1="${MD_C1_IDS% }"
+
+# ── The DECLARED residual. These sites carry the polarity-negative shape and are NOT
+# remediated by this change: #327's locked scope is the five named assertions (A, C, C2,
+# G2, I5) plus this oracle, and a 59-site sweep across five suites is exactly the blind
+# bulk edit this repository's own discipline forbids. They are declared here rather than
+# left silent, and the diff below runs in BOTH directions — an undeclared site FAILS, and
+# a declared site that no longer scans FAILS too, so remediating one obliges removing its
+# line. The list can only shrink; it cannot quietly absorb a new defect.
+#   F3 E3 H2 L3b S13b — live probes whose else limb is reached by rc=2 (unreadable input)
+#                       or rc=127, not only by the no-match the assertion means
+#   K3 K4 Q3 Q4 U3 U4 V3 V4 — `git check-ignore -q`, whose rc=128 (git error) lands on the
+#                       PASS limb exactly as rc=1 (not ignored) does
+MD_LEGACY='F3 E3 H2 K3 K4 Q3 Q4 U3 U4 V3 V4 L3b S13b'
+
+if [ "$MD_UNREAD" -ne 0 ]; then
+  FAIL "MD0: this file is unreadable at $SELF, so the scan below would cover nothing while reporting a zero — an unreadable scan set is a finding, never a clean file"
+elif [ "$MD_PASS_N" -eq 0 ]; then
+  FAIL "MD0: the scan found 0 verdict lines in this file, so its count on the polarity-negative shape proves nothing — either the PASS/FAIL grammar moved or the scan did, and no verdict below is trustworthy"
+elif [ "$MD_RC_N" -eq 0 ]; then
+  FAIL "MD0: the scan found 0 expect_rc sites — no assertion here is written in the REMEDIATED form, so a clean reading of the defective form is an empty scan rather than a clean file"
+else
+  PASS "MD0: the scan set is readable and non-degenerate — ${MD_PASS_N} verdict line(s) and ${MD_RC_N} expect_rc site(s) read from this file. Every count below is a measurement rather than an empty scan"
+
+  # MD1 — CONTROL on the scanner, both directions, before any count it produces is read.
+  if [ "$MD_FX_UNREAD" -ne 0 ]; then
+    FAIL "MD1: CONTROL — the fixture at $MD_FIX was unreadable, so the scanner was never exercised and MD2's count is not a measurement"
+  elif [ "$MD_FX_C1" != "ZMDA ZMDB ZMDF" ]; then
+    FAIL "MD1: CONTROL on the scanner — over a fixture carrying one site per defective form (ZMDA one-line, ZMDB block, ZMDF trailing-statement), one shell-test site (ZMDT) and one remediated site (ZMDR), the scanner reported '$MD_FX_C1' rather than 'ZMDA ZMDB ZMDF'. MD2's verdict proves nothing until this control fires"
+  elif [ "$MD_FX_C2" -ne 1 ]; then
+    FAIL "MD1: CONTROL on the Class-2 detector — the fixture carries exactly one zero-population site (ZMDZ) and the detector found $MD_FX_C2, so MD3's inventory is not a measurement"
+  elif [ "$MD_FX_RC" -eq 0 ]; then
+    FAIL "MD1: CONTROL — the fixture carries one expect_rc site (ZMDR) and the scanner found none, so MD0's non-degeneracy arm is reading something other than what it claims"
+  else
+    PASS "MD1: CONTROL on the scanner — SENSITIVITY and SPECIFICITY over one fixture: all three defective forms are found (ZMDA, ZMDB, ZMDF), and neither the shell-test site (ZMDT, whose condition cannot report an absent subject) nor the remediated site (ZMDR) is flagged. A detector that flagged everything would be as useless as one that flagged nothing; both arms fired"
+
+    MD_NEW="$(md_diff "$MD_SELF_C1" "$MD_LEGACY")"
+    MD_STALE="$(md_diff "$MD_LEGACY" "$MD_SELF_C1")"
+    MD_NDEC="$(md_count "$MD_LEGACY")"
+    if [ -n "$MD_NEW" ]; then
+      FAIL "MD2: assertion(s) carry the polarity-negative shape and are not in the declared residual: ${MD_NEW% } — their PASS limb is reached by rc=127 (the subject is absent) exactly as it is by the rejection they mean to assert. Either grade an exact status with expect_rc, or declare the site in MD_LEGACY above with the reason it stays"
+    elif [ -n "$MD_STALE" ]; then
+      FAIL "MD2: declared residual site(s) no longer carry the shape: ${MD_STALE% } — the remediation landed but its MD_LEGACY line did not come out. A declaration that outlives its defect is a standing exemption for whatever next takes that id"
+    else
+      PASS "MD2: every polarity-negative site in this file is accounted for — ${MD_C1_N} found, all ${MD_NDEC} declared, none undeclared and none stale, over a denominator of ${MD_PASS_N} verdict line(s). The five this card remediated (A, C, C2, G2, I5) have left the population; MD1's control is what makes that a measurement"
+    fi
+
+    PASS "MD3: INVENTORY — ${MD_C2_N} of ${MD_PASS_N} verdict line(s) gate a PASS on an empty population ('-eq 0' / '-le 0' / '-z'). That shape is CONDITIONAL rather than defective: it is sound when it states its denominator and carries a sensitivity arm, which many here already do, so it is counted on every run and remediated on touch rather than swept in bulk. The count is a measurement — MD1's Class-2 arm found the one planted site in the fixture"
+  fi
+fi
+
+# ── MD4 / MD5: the controls on the ORACLE. They do not depend on the static scan, so they
+# run outside MD0's guard: a broken scanner must not suppress the oracle's own evidence.
+#
+# zzq_md_subject exists and returns 1, so BOTH probes below pass while it is present. The
+# question each control asks is what happens when it is removed. md_legacy_probe is written
+# as a single-line function definition on purpose: the static arm scans THIS file, and a
+# bare legacy shape here would be a real finding in its own ledger. Its job is to be
+# legacy-shaped for the oracle, not to be a site in the corpus, so it is kept out of the
+# scanner's reach by form — and the scanner's own sensitivity is proven on the fixture in
+# MD1 instead, where a planted site is exactly what is wanted.
+zzq_md_subject()  { return 1; }
+md_legacy_probe() { if zzq_md_subject; then FAIL "ZMDL: subject accepted"; else PASS "ZMDL: subject rejected"; fi; }
+md_sound_probe()  { expect_rc 1 "ZMDS" "the remediated form grades an exact status" -- zzq_md_subject; }
+
+MD_CL="$(md_probe zzq_md_subject md_legacy_probe)"
+if [ "$MD_CL" = "1 0" ]; then
+  PASS "MD4: CONTROL on the oracle — a deliberately legacy-shaped assertion still reports pass=1 fail=0 with its subject removed, so the oracle CONVICTS the shape this group exists for. Every MD[...] verdict is therefore a measurement rather than a statement that the oracle ran"
+else
+  FAIL "MD4: CONTROL on the oracle did not fire — the planted legacy-shaped assertion returned '$MD_CL' rather than '1 0' with its subject removed. Until the oracle convicts a known-blind assertion, an MD[...] pass proves only that md_probe executed"
+fi
+
+MD_CS="$(md_probe zzq_md_subject md_sound_probe)"
+if [ "$MD_CS" = "0 1" ]; then
+  PASS "MD5: CONTROL on the oracle — a remediated assertion over the same subject returns pass=0 fail=1 with that subject removed, so the oracle CERTIFIES the sound shape as well as convicting the defective one. Both directions fired on the same subject in the same process"
+else
+  FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
+fi
+
+# ── The registrations. Each re-runs the SAME argv the live arm above ran, with the named
+# subject removed. G2's registration is emitted earlier, inside group G, because its
+# fixtures are deleted there; the other four are here.
+md_flips verify_ciphertext "A"  a_assert
+md_flips verify_ciphertext "C"  c_assert
+md_flips verify_ciphertext "C2" c2_assert
+md_flips cmd_list          "I5" i5_assert
+
+# #328's four subjects. Each arm above grades an EXACT status and treats anything outside
+# {0,1} as a probe failure, which is what makes the flip specific rather than incidental:
+# with its subject removed each one reports the removal as a broken probe rather than
+# silently re-classifying a 127 or a 2 as "aborted". The pairing is deliberate —
+#   _guard_match          → the OVER-BLOCK arm, because a stubbed matcher passes it
+#                           (measured) and the carry-through arm is what convicts that;
+#   _guard_match          → the CARRY-THROUGH arm, which is that convicting arm itself;
+#   verify_publishable_content → the CLEAN arm, the one whose subject is the guard rather
+#                           than the matcher inside it;
+#   _decode_entities and strip_to_joined_text → the ENCODING arm, the only arm both
+#                           reach, and they reach it in opposite directions (M5e).
+md_flips _guard_match               "N2b" n2_over_assert
+md_flips _guard_match               "N2c" n2_carry_assert
+md_flips verify_publishable_content "N2d" n2_clean_assert
+md_flips _decode_entities           "M5b" m5_assert
+md_flips strip_to_joined_text       "M5b-join" m5_assert
+md_flips verify_publishable_content "M5c" m5_clean_assert
+
+# #325's subjects. The pairing follows the same rule: register the arm that CONVICTS a
+# removed subject, never the arm an absent subject also satisfies.
+#   nonpublishable_values → O7c, the sensitivity arm of the sub-heading exclusion. O7b is
+#                           the publish arm and an absent class source publishes too, so
+#                           registering O7b would certify a guard that reads nothing.
+#   nonpublishable_values → O7d, which calls the class source directly and grades both
+#                           directions of the shape test on one model.
+#   nonpublishable_values → O7g, the DISCRIMINATION arm beside it: same subject, but its
+#                           two directions are a value and a section name rather than two
+#                           section-name shapes. O7f is fixture integrity and O7h grades
+#                           the publish verdict, so neither is registered — O7g is the one
+#                           whose whole verdict is what the class source emitted. O7j–O7m
+#                           read the same stream one conjunct at a time and O7i grades
+#                           their fixture, so they are not registered either: five more
+#                           registrations would re-grade this one removal five times over
+#                           and say nothing O7g does not already say about it.
+#   nonpublishable_values → O4e, the mark-strip oracle: the whole verdict is the class
+#                           source refusing to accept an uncorroborated zero.
+#   nonpublishable_values → O8a, the parse sensitivity arm, whose subject is the guard's
+#                           own zero rather than any fixture.
+#   verify_publishable_content → O9b, the field-limb continuation arm, whose subject is
+#                           the guard rather than the parse inside it.
+md_flips nonpublishable_values      "O7c" o7c_assert
+md_flips nonpublishable_values      "O7d" o7d_assert
+md_flips nonpublishable_values      "O7g" o7g_assert
+md_flips nonpublishable_values      "O8a" o8a_assert
+md_flips verify_publishable_content "O9b" o9b_assert
+md_flips nonpublishable_values      "O9c" o9c_assert
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group PP — the site passphrase never reaches standard output (#330).
+#
+# THE DEFECT, measured end-to-end before this group existed: a publish run to completion
+# with its standard output captured carried the resolved passphrase VALUE — 667 bytes of
+# capture, a 49-character value — and a rotate carried its own, 448 bytes and 41
+# characters. Standard output is what a command file's bash pre-execution injects into a
+# session transcript, so the disclosure was never confined to a human's scrollback.
+#
+# WHAT IS GRADED IS A SHAPE, NOT A POLICY. announce_passphrase_file takes the passphrase
+# FILE PATH and never the value, so the emission site is INCAPABLE of disclosing rather
+# than declining to. There is no terminal test, no flag and no environment probe to take
+# wrongly, because the secret never arrives at the site that prints.
+#
+# WHY EVERY CAPTURE ARM HERE IS COMPOUND. The obvious assertion — "the capture does not
+# contain the passphrase" — is the emptiness conflation group MD exists for: delete the
+# announcer and the capture satisfies it trivially, so the assertion passes against a
+# subject that never ran. Every capture arm below therefore grades a POSITIVE limb FIRST
+# — the capture must carry the passphrase file PATH, evidence only a running announcer,
+# handed the right path, could produce — and only then the negative one. A capture missing
+# the pointer is FAIL — verdict withheld, never a pass. The path is computed here from the
+# fixture directory this group created, so the script cannot supply it by accident.
+#
+# THE DENOMINATOR of a string-absence verdict is not a population count, because there is
+# no population to count. It is stated as the triple (capture bytes, value length, pointer
+# found) — the three numbers that decide whether the absence was measured or merely empty.
+#
+# NO ANSI STRIPPING, deliberately: every arm is a substring test over the value and over
+# the path, and a colour escape sits outside both. The pre-fix emitter wrapped the value in
+# escapes and the value still read as a contiguous substring, which is how the measurement
+# above was taken and how PP7's restored mutant is convicted.
+#
+# PP IS PURE BASH PLUS GIT. gh and npx are shell functions here, encrypt_to_tmp is shimmed
+# to the known-good ciphertext fixture this suite already builds, make_boilerplate declines
+# exactly as it does without npx, and rotate pushes to a bare repository created under
+# $WORK. No network, no Node, no authenticated CLI, no terminal — and this group creates
+# its own repositories, so unlike K/Q/U/V it does not require the suite to be running
+# inside a git work tree. It has no legitimate skip and is deliberately NOT declared in
+# GUARD_EXPECTED_SKIPS.
+#
+# SHIMMING encrypt_to_tmp IS BOUNDED AND DELIBERATE. This group's subject is the
+# announcement channel, which is strictly downstream of encryption; groups E and G own real
+# StatiCrypt and skip without it. An arm here that depended on StatiCrypt would have to be
+# skippable, and a skippable privacy control is the green that proves less than it appears
+# to. The shimmed originals are restored at the end of the group rather than unset, so a
+# group added after this one inherits the production functions and not these stand-ins.
+#
+# THE MD REGISTRATIONS ARE EMITTED HERE rather than in group MD, for the reason G2's are
+# emitted inside group G: they need this group's mocks and fixtures, which are torn down at
+# the end of it. MD's own controls (MD4/MD5) have already run by this point, so every
+# MD[PP…] verdict below stands on an oracle whose sensitivity and specificity are measured.
+#
+# TWO ARMS ARE DECLARED MD OPT-OUTS rather than silently left unregistered, because
+# `unset -f` is inapplicable to their subjects: PP0's subject is a synthetic string and the
+# substring test over it, and PP9's is a filesystem mode. Neither is a shell function, so
+# there is nothing for the oracle to remove; registering them would grade the oracle rather
+# than the assertion. Every other arm here is registered.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group PP — the passphrase VALUE never reaches standard output; the PATH does."
+
+PPW="$WORK/pp"; mkdir -p "$PPW"
+
+# The originals, saved before the shims below replace them, and re-defined at the end of
+# the group. `unset -f` would remove the production function rather than the stand-in.
+PP_ORIG_ENC="$(declare -f encrypt_to_tmp)"
+PP_ORIG_BOIL="$(declare -f make_boilerplate)"
+
+# Commit signing is pinned OFF for the throwaway repositories this group creates, so the
+# fixture does not depend on the operator's global git configuration — measured: a global
+# commit.gpgsign=true reads as false under these entries. GIT_CONFIG_* overrides
+# configuration files, and `commit_noreply` passes only user.name/user.email with -c, so
+# nothing here contests them. Undone at the end of the group.
+export GIT_CONFIG_COUNT=3 \
+  GIT_CONFIG_KEY_0=commit.gpgsign     GIT_CONFIG_VALUE_0=false \
+  GIT_CONFIG_KEY_1=tag.gpgsign        GIT_CONFIG_VALUE_1=false \
+  GIT_CONFIG_KEY_2=init.defaultBranch GIT_CONFIG_VALUE_2=main
+
+gh() {   # mock: answer the read-only probes; create, clone and push nothing real
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 1 ;;          # no per-trip repo yet, so publish proceeds
+    "auth status") printf "Token scopes: 'repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+npx() { return 0; }
+encrypt_to_tmp() { local e; e="$(mktemp -d)"; cp "$ENC_OK" "$e/index.html"; printf '%s' "$e"; }
+make_boilerplate() { return 1; }
+
+# $SRC is this suite's synthetic plaintext itinerary and $ENC_OK the ciphertext group A
+# already proves clean against it, so the real verify_ciphertext runs on a pair it has
+# graded rather than on a fixture invented here.
+pp_fixture() { # <name> -> trip dir on stdout
+  local d="$PPW/$1"
+  rm -rf "$d"; mkdir -p "$d/outputs"
+  cp "$SRC" "$d/outputs/$1-travel-site.html"
+  printf '%s' "$d"
+}
+
+# Occurrence count with no pipeline anywhere in it — group PF forbids a verdict decided by
+# a pipeline's exit status, and this feeds verdicts.
+pp_count() { # <haystack> <needle> -> count on stdout
+  local h="$1" n="$2" c=0
+  while [ -n "$h" ]; do
+    case "$h" in *"$n"*) c=$((c+1)); h="${h#*"$n"}" ;; *) break ;; esac
+  done
+  printf '%s' "$c"
+}
+
+# The captures are taken INSIDE the registered assertions' own call chain, which is a
+# factoring requirement rather than a convenience: an assertion handed a capture computed
+# elsewhere would be unaffected by `unset -f` and group MD would correctly convict it as
+# blind. stdin is /dev/null and stderr is discarded, so what is graded is standard output
+# and nothing else.
+pp_capture_publish() { # <trip_dir> [env_passphrase] -> the run's captured STANDARD OUTPUT
+  if [ -n "${2:-}" ]; then
+    ( STATICRYPT_PASSWORD="$2" cmd_publish "$1" ) </dev/null 2>/dev/null
+  else
+    ( cmd_publish "$1" ) </dev/null 2>/dev/null
+  fi
+}
+pp_capture_rotate() { # <trip_dir> -> the run's captured STANDARD OUTPUT
+  ( cmd_rotate "$1" ) </dev/null 2>/dev/null
+}
+
+# ── PP0 — the leak detector's own sensitivity, graded FIRST and MD-opt-out (its subject is
+# a synthetic string, not a shell function). Every verdict below is a substring test; if
+# that test cannot tell a capture carrying the value from one that does not, every PP
+# verdict is vacuous and its zero proves nothing.
+PP_SYN='zzq-synthetic-passphrase-value'
+PP_D_HIT=0; PP_D_MISS=0
+case "prefix $PP_SYN suffix"        in *"$PP_SYN"*) PP_D_HIT=1 ;; esac
+case "prefix (value absent) suffix" in *"$PP_SYN"*) PP_D_MISS=1 ;; esac
+if [ "$PP_D_HIT" -eq 1 ] && [ "$PP_D_MISS" -eq 0 ]; then
+  PASS "PP0: CONTROL on the leak detector — over 2 synthetic captures it fires on the one carrying the value and stays silent on the one that does not, so both arms fired. Every absence asserted below is a measurement rather than a detector that matches nothing"
+else
+  FAIL "PP0: the leak detector is broken over 2 of 2 synthetic captures — hit arm=$PP_D_HIT (want 1), miss arm=$PP_D_MISS (want 0). Every PP verdict below would be vacuous, so none of them is trustworthy"
+fi
+
+# ── PP1 — the publish path, executed end-to-end and offline. Compound: pointer present
+# (positive, non-degenerate haystack) AND value absent.
+pp_publish_assert() { # <id> <trip_dir>
+  local id="$1" d="$2" pf="$2/.passphrase" cap val="" hasp=0 hasv=0
+  cap="$(pp_capture_publish "$d")"
+  [ -r "$pf" ] && val="$(cat "$pf")"
+  case "$cap" in *"$pf"*) hasp=1 ;; esac
+  [ -n "$val" ] && case "$cap" in *"$val"*) hasv=1 ;; esac
+  if [ "$hasp" -eq 0 ]; then
+    FAIL "$id: the capture carries no '$pf' pointer — DEGENERATE HAYSTACK, VERDICT WITHHELD. An absent announcer produces a capture with no passphrase in it, which is not evidence that the announcer withheld one (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  elif [ "$hasv" -eq 1 ]; then
+    FAIL "$id: the passphrase VALUE reached standard output on the publish path — a captured or transcript-injected publish discloses the secret (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  else
+    PASS "$id: publish ran end-to-end and its captured standard output carries the passphrase FILE PATH and not the ${#val}-character value (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  fi
+}
+PP1D="$(pp_fixture pp1)"
+pp_publish_assert "PP1" "$PP1D"
+
+# ── PP2 — the rotate path, same shape, pushing to a bare repository created here so the
+# push is offline. ensure_pub_clone reuses .publish when its origin resolves to this trip's
+# slug, which is why the remote's basename is <slug>.git.
+pp_rotate_assert() { # <id> <trip_dir>
+  local id="$1" d="$2" pf="$2/.passphrase" cap val="" hasp=0 hasv=0
+  cap="$(pp_capture_rotate "$d")"
+  [ -r "$pf" ] && val="$(cat "$pf")"
+  case "$cap" in *"$pf"*) hasp=1 ;; esac
+  [ -n "$val" ] && case "$cap" in *"$val"*) hasv=1 ;; esac
+  if [ "$hasp" -eq 0 ]; then
+    FAIL "$id: the capture carries no '$pf' pointer — DEGENERATE HAYSTACK, VERDICT WITHHELD (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  elif [ "$hasv" -eq 1 ]; then
+    FAIL "$id: the NEW passphrase VALUE reached standard output on the rotate path — rotation is exactly the moment a fresh secret is disclosed to a capture (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  else
+    PASS "$id: rotate ran end-to-end and its captured standard output carries the passphrase FILE PATH and not the ${#val}-character new value (denominator: ${#cap} capture bytes, ${#val}-char value, pointer found=$hasp)"
+  fi
+}
+PP2D="$(pp_fixture pp2)"
+PP2SLUG="$(basename "$PP2D")-trip"
+PP2BARE="$PPW/origin/$PP2SLUG.git"; mkdir -p "$PP2BARE"; git init -q --bare "$PP2BARE"
+PP2PUB="$PP2D/.publish"; mkdir -p "$PP2PUB"
+git init -q "$PP2PUB"
+git -C "$PP2PUB" remote add origin "$PP2BARE"
+cp "$ENC_OK" "$PP2PUB/index.html"
+git -C "$PP2PUB" add index.html
+git -C "$PP2PUB" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
+git -C "$PP2PUB" branch -M main
+git -C "$PP2PUB" push -q origin main
+pp_rotate_assert "PP2" "$PP2D"
+
+# ── PP3 — the announcer's own exit status, graded EXACTLY rather than truthily, so a 127
+# is diagnosed as an ABSENT SUBJECT and never as a rejection.
+pp_rc_assert() { # <id>
+  expect_rc 0 "$1" "the announcer returns cleanly against a path it can read" -- announce_passphrase_file "Passphrase" "$PP1D/.passphrase"
+}
+pp_rc_assert "PP3"
+
+# ── PP4 — the announcer CANNOT disclose: the value is not a parameter and the body holds
+# no construct that could fetch it. The complement arm requires the printf sites fed from
+# the path parameter, so a body that merely lacks the bad constructs — an empty one, or a
+# stub — cannot satisfy this.
+pp_cannot_disclose_assert() { # <id>
+  local id="$1" body="" nd n_bad=0 n_pf=0 n_pr=0
+  body="$(declare -f announce_passphrase_file 2>/dev/null)"
+  for nd in 'get_passphrase' 'STATICRYPT_PASSWORD' '$(cat' '$passphrase'; do
+    n_bad=$(( n_bad + $(pp_count "$body" "$nd") ))
+  done
+  n_pf="$(pp_count "$body" '"$pf"')"
+  n_pr="$(pp_count "$body" 'printf')"
+  if [ "${#body}" -lt 300 ]; then
+    FAIL "$id: announce_passphrase_file's parsed body is ${#body} bytes, below the 300-byte floor — the subject is absent or a stub, so a clean reading of it would be an empty scan rather than a clean function"
+  elif [ "$n_pr" -lt 2 ] || [ "$n_pf" -lt 2 ]; then
+    FAIL "$id: COMPLEMENT ARM — the body holds $n_pr printf site(s) and $n_pf reference(s) to the path parameter, below the 2 each a two-limbed announcer must have. The absence asserted next would be an absence in something that does not announce"
+  elif [ "$n_bad" -ne 0 ]; then
+    FAIL "$id: the announcer body carries $n_bad value-obtaining construct(s) (get_passphrase / STATICRYPT_PASSWORD / \$(cat / \$passphrase) — it can reach the secret, so withholding it is a branch that can be taken wrongly rather than a shape"
+  else
+    PASS "$id: the announcer is INCAPABLE of disclosing — 0 value-obtaining constructs over a ${#body}-byte parsed body, and the complement arm fired ($n_pr printf sites, $n_pf path-parameter references). The value is not a parameter, so there is no branch that could print it"
+  fi
+}
+pp_cannot_disclose_assert "PP4"
+
+# ── PP5 — single-limb: the announcement is not conditional on the CALLER. This is the arm
+# that fails the day a `[ -t 1 ]` gate is reintroduced. Its sensitivity arm runs the
+# identical scan over cmd_confirm, which does gate on a terminal, so the zero here is a
+# measurement rather than a scan that matches nothing.
+pp_single_limb_assert() { # <id>
+  local id="$1" body="" ctl="" nd n_gate=0 n_ctl=0
+  body="$(declare -f announce_passphrase_file 2>/dev/null)"
+  ctl="$(declare -f cmd_confirm 2>/dev/null)"
+  for nd in '-t 0' '-t 1' '/dev/tty'; do
+    n_gate=$(( n_gate + $(pp_count "$body" "$nd") ))
+  done
+  n_ctl="$(pp_count "$ctl" '-t 0')"
+  if [ "${#body}" -lt 300 ]; then
+    FAIL "$id: announce_passphrase_file's parsed body is ${#body} bytes, below the 300-byte floor — the subject is absent or a stub and the terminal-gate zero below would be an empty scan"
+  elif [ "$n_ctl" -lt 1 ]; then
+    FAIL "$id: SENSITIVITY ARM DID NOT FIRE — the identical scan over cmd_confirm, which does gate on a terminal, found $n_ctl '-t 0' site(s). The detector is not reading what it claims, so the zero over the announcer proves nothing"
+  elif [ "$n_gate" -ne 0 ]; then
+    FAIL "$id: the announcer branches on the CALLER — $n_gate terminal-or-tty construct(s) in its body. A privacy property that depends on how the script was invoked takes its disclosing limb on any host that allocates a pseudo-terminal, and no test harness can enter that limb to grade it"
+  else
+    PASS "$id: the announcement is UNCONDITIONAL on the caller — 0 '-t 0' / '-t 1' / '/dev/tty' constructs over a ${#body}-byte parsed body, while the identical scan over cmd_confirm found $n_ctl, so the zero is a measurement"
+  fi
+}
+pp_single_limb_assert "PP5"
+
+# ── PP6 — the wiring, read from the PARSED function bodies rather than from source text:
+# bash discards comments, so a mention of the identifier in a comment cannot fake a call
+# site. The get_passphrase count is exact at 1 because cmd_publish resolved the passphrase
+# TWICE before this change — once for encryption and once, redundantly, to print.
+pp_wiring_assert() { # <id>
+  local id="$1" pub="" rot="" n_pub=0 n_rot=0 n_get=0 n_cat=0
+  pub="$(declare -f cmd_publish 2>/dev/null)"
+  rot="$(declare -f cmd_rotate 2>/dev/null)"
+  n_pub="$(pp_count "$pub" 'announce_passphrase_file')"
+  n_rot="$(pp_count "$rot" 'announce_passphrase_file')"
+  n_get="$(pp_count "$pub" 'get_passphrase')"
+  n_cat="$(pp_count "$rot" 'cat "$pf"')"
+  if [ "${#pub}" -lt 1000 ] || [ "${#rot}" -lt 300 ]; then
+    FAIL "$id: parsed bodies are ${#pub} bytes (cmd_publish) and ${#rot} bytes (cmd_rotate), below the 1000/300 floors — a subject is absent or a stub, so the counts below would be read off an empty haystack"
+  elif [ "$n_pub" -lt 1 ] || [ "$n_rot" -lt 1 ]; then
+    FAIL "$id: cmd_publish calls announce_passphrase_file $n_pub time(s) and cmd_rotate $n_rot — a path that announces without it prints whatever its own printf interpolates, which is where the disclosure lived"
+  elif [ "$n_get" -ne 1 ] || [ "$n_cat" -ne 0 ]; then
+    FAIL "$id: cmd_publish holds $n_get get_passphrase call(s) (want exactly 1, the encryption resolution) and cmd_rotate $n_cat 'cat \"\$pf\"' construct(s) (want 0) — a second resolution at the announcement site is the value arriving where it must not"
+  else
+    PASS "$id: both paths announce through the helper — cmd_publish $n_pub call, cmd_rotate $n_rot call, over ${#pub}/${#rot}-byte parsed bodies; cmd_publish resolves the passphrase exactly $n_get time (for encryption) and cmd_rotate carries $n_cat reads of the passphrase file"
+  fi
+}
+pp_wiring_assert "PP6"
+
+# ── PP7 — the control case the card requires, EXECUTED on every run rather than performed
+# once by hand: restore the pre-fix emitter, which interpolates the value it reads from the
+# path, re-run PP1's own argv, and require exactly one FAIL and no PASS. Without this, a
+# green PP1 proves only that PP1 ran.
+pp_mutant_probe() { # <assertion-fn> [args…] -> "<pass> <fail>" on stdout
+  ( announce_passphrase_file() {   # the PRE-FIX emitter, restored in shape
+      printf '\n  %s: \033[1;36m%s\033[0m  (saved to %s)\n' "$1" "$(cat "$2")" "$2"
+    }
+    pass=0; fail=0
+    PASS() { pass=$((pass+1)); }
+    FAIL() { fail=$((fail+1)); }
+    "$@" >/dev/null 2>&1
+    printf '%d %d' "$pass" "$fail" )
+}
+PP_MUT="$(pp_mutant_probe pp_publish_assert "PP7-inner" "$PP1D")"
+if [ "$PP_MUT" = "0 1" ]; then
+  PASS "PP7: CONTROL on the capture arm — with the pre-fix value-emitting announcer restored, PP1's own argv reports pass=0 fail=1, diagnosed as the VALUE reaching standard output. The arm convicts the defect this card removed, so its green above is a measurement"
+else
+  FAIL "PP7: CONTROL did not fire — with the pre-fix value-emitting announcer restored, PP1's argv returned '$PP_MUT' rather than '0 1'. Until the arm convicts a known-disclosing announcer, PP1's pass proves only that the assertion executed"
+fi
+
+# ── PP8 — the env-override limb, and it is a defect in its own right. With
+# $STATICRYPT_PASSWORD set, get_passphrase returns the environment value and writes NO
+# file, while the message this change replaced announced it as "saved to …/.passphrase"
+# unconditionally. Measured before the fix: 653 capture bytes, env value present, the
+# saved-to claim present, the file absent. The helper branches on the DESTINATION's state,
+# so both limbs stay value-free and neither makes a claim about a file that is not there.
+pp_env_assert() { # <id> <trip_dir> <env_value>
+  local id="$1" d="$2" v="$3" pf="$2/.passphrase" cap hasp=0 hasv=0 claims=0 exists=0
+  rm -f "$pf"
+  cap="$(pp_capture_publish "$d" "$v")"
+  [ -e "$pf" ] && exists=1
+  case "$cap" in *"$pf"*) hasp=1 ;; esac
+  case "$cap" in *"$v"*)  hasv=1 ;; esac
+  case "$cap" in *"saved to"*) claims=1 ;; esac
+  if [ "$exists" -eq 1 ]; then
+    FAIL "$id: the fixture is broken — a .passphrase file exists at $pf after an env-supplied publish, so this arm is not exercising the branch it names and its verdict would be about a different path"
+  elif [ "$hasp" -eq 0 ]; then
+    FAIL "$id: the capture carries no '$pf' pointer — DEGENERATE HAYSTACK, VERDICT WITHHELD (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  elif [ "$hasv" -eq 1 ]; then
+    FAIL "$id: the environment-supplied passphrase VALUE reached standard output (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  elif [ "$claims" -eq 1 ]; then
+    FAIL "$id: the capture says the passphrase was 'saved to' a file that does not exist — the announcement branched on the CALLER rather than on the destination, and a pointer at nothing is worse than the message it replaced (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  else
+    PASS "$id: with the passphrase supplied from the environment and no file written, the capture names the path, carries neither the ${#v}-character value nor a claim that it was saved, and says plainly that this run stored no copy (denominator: ${#cap} capture bytes, ${#v}-char env value, pointer found=$hasp)"
+  fi
+}
+PP8D="$(pp_fixture pp8)"
+PP_ENVVAL='zzq-env-supplied-passphrase-for-pp8'
+pp_env_assert "PP8" "$PP8D" "$PP_ENVVAL"
+
+# ── PP9 — the delivery path is INTACT, and MD-opt-out (its subject is a filesystem mode).
+# Without this arm PP1 could be satisfied by a build in which the passphrase stopped
+# existing at all: the pointer must point at something real, mode 600, holding a value that
+# clears get_passphrase's own 12-character floor.
+PP_MODE="$(ls -l "$PP1D/.passphrase" 2>/dev/null)"; PP_MODE="${PP_MODE:0:10}"
+PP_VAL=""; [ -r "$PP1D/.passphrase" ] && PP_VAL="$(cat "$PP1D/.passphrase")"
+if [ "$PP_MODE" = "-rw-------" ] && [ "${#PP_VAL}" -ge 12 ]; then
+  PASS "PP9: the delivery path survives the fix — $PP1D/.passphrase exists at mode $PP_MODE and holds a ${#PP_VAL}-character value, so the pointer PP1 asserted points at a real, private, usable passphrase"
+else
+  FAIL "PP9: the passphrase file reads mode '$PP_MODE' (want -rw-------) with a ${#PP_VAL}-character value (want >= 12) — either the persistence broke or the file is world-readable, and PP1's pointer-only verdict would be satisfied by a build that delivers no passphrase at all"
+fi
+
+# ── The MD registrations. Each re-runs the SAME argv its live arm ran, with the named
+# subject removed. announce_passphrase_file is the subject of every capture arm and of both
+# introspection arms; PP6 is registered twice, once per call site, because an absent
+# cmd_publish and an absent cmd_rotate are different removals of the same claim.
+md_flips announce_passphrase_file "PP1"     pp_publish_assert        "PP1" "$PP1D"
+md_flips announce_passphrase_file "PP2"     pp_rotate_assert         "PP2" "$PP2D"
+md_flips announce_passphrase_file "PP3"     pp_rc_assert             "PP3"
+md_flips announce_passphrase_file "PP4"     pp_cannot_disclose_assert "PP4"
+md_flips announce_passphrase_file "PP5"     pp_single_limb_assert    "PP5"
+md_flips announce_passphrase_file "PP8"     pp_env_assert            "PP8" "$PP8D" "$PP_ENVVAL"
+md_flips cmd_publish              "PP6"     pp_wiring_assert         "PP6"
+md_flips cmd_rotate               "PP6-rot" pp_wiring_assert         "PP6"
+
+# Teardown: the mocks go, and the two shimmed production functions are RE-DEFINED from the
+# definitions saved above rather than unset — `unset -f` here would delete the real ones.
+unset -f gh npx
+eval "$PP_ORIG_ENC"
+eval "$PP_ORIG_BOIL"
+unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
+      GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1 GIT_CONFIG_KEY_2 GIT_CONFIG_VALUE_2
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RS — the coverage boundary in .github/workflows/publish-guard.yml enumerates
+# the groups that run here, and that workflow's closing sentence QUANTIFIES over the
+# enumeration: "every in-scope group above ran and passed". Nothing asserted it.
+#
+# GUARD_STRICT_SKIPS below is a real control and it covers exactly one vanishing mode:
+# a group that SKIPS without being declared. A group that is deleted, renamed, or made
+# unreachable emits nothing at all — it never skips, so it never reaches that
+# comparison. PASS and FAIL did not record their ids until this group needed them;
+# only SKIP did. That asymmetry is the defect.
+#
+# It is not hypothetical. Before this group existed, five always-run groups — PF, R, S,
+# T and V — were absent from the boundary: 72 of 177 verdicts, 40.7% of the suite,
+# running outside a boundary that claimed to enumerate them. Each of R, S and T arrived
+# with a release that could have added its line by hand and did not, which is the
+# measurement that says hand-maintenance is the cause rather than the cure.
+#
+# So the enumeration is PARSED and SET-DIFFED BOTH WAYS rather than read and believed.
+# RS1 catches a declared group that stopped emitting; RS2 catches an emitted group that
+# was never declared. A one-way check catches one of those and reads green on the other.
+#
+# The roster deliberately does NOT live in this file. A roster the suite derives from
+# itself is the self-referential-validation defect: deleting a group and its roster line
+# is then one edit, and the check can never fire. It lives in the workflow, which is
+# also where #123 AC 8 requires the coverage boundary to be stated.
+#
+# RS is pure bash reading a tracked file. It has no legitimate skip, and it must never
+# be added to GUARD_EXPECTED_SKIPS — an RS that skipped would be indistinguishable from
+# the drift it exists to detect.
+#
+# What RS deliberately does NOT do: assert a per-group MINIMUM verdict count. That would
+# catch a group gutted from 35 assertions to 1, which the roster does not. It is declined
+# rather than omitted: the failure modes this group exists for — deletion, rename,
+# unreachability — are all zero-verdict conditions the roster already covers, and a
+# declared per-group floor churns on every assertion added and, unraised, silently stops
+# binding. That is a copy with a decaying assertion behind it — the same defect one level
+# down. The only floor that ships is RS0's vacuity guard, which cannot rot.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group RS — the workflow's stated coverage boundary, asserted against the run."
+
+RS_WF="$ROOT/.github/workflows/publish-guard.yml"
+
+# ONE grammar, stated here and stated in the file it reads. Inside a boundary block, a
+# roster line carries the group id as its leading field at exactly THREE spaces after
+# the comment marker; an explanation continues at nine and therefore cannot match. A
+# block opens at `# IN SCOPE` or `# OUT OF SCOPE` and closes at the next `# ──` section
+# rule, so a roster-shaped line elsewhere in the file is not read as a declaration.
+# A group id may be declared in both blocks — J is, because J2/J3 run and J1 does not —
+# so the parse dedupes rather than treating the second mention as a new group.
+rs_parse() { # <workflow_file> -> space-delimited declared GROUP ids on stdout
+  local line inb=0 out=" "
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      '# IN SCOPE'*|'# OUT OF SCOPE'*) inb=1; continue ;;
+      '# ──'*)                         inb=0 ;;
+    esac
+    [ "$inb" -eq 1 ] || continue
+    [[ "$line" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)([[:space:]]|$) ]] || continue
+    case "$out" in *" ${BASH_REMATCH[1]} "*) ;; *) out="$out${BASH_REMATCH[1]} " ;; esac
+  done < "$1"
+  printf '%s' "${out# }"
+}
+
+# An assertion id reduced to its GROUP id — the leading run of capitals. This is the id
+# grammar SKIP has always used, taken one step further: `${*%%:*}` yields `PF1`, `C2`,
+# `V0-CTL`; the groups are `PF`, `C`, `V`. No second grammar is introduced, because two
+# id namespaces that can disagree is exactly the failure this group is about.
+rs_group() { [[ "$1" =~ ^([A-Z]+) ]] && printf '%s' "${BASH_REMATCH[1]}"; }
+
+# Set difference: members of <a> absent from <b>, deduped. Used in BOTH directions.
+rs_diff() { # <a-set> <b-set> -> space-delimited members of a not in b
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  printf '%s' "${out# }"
+}
+
+rs_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# The ids this run actually emitted, reduced to groups: SEEN ∪ SKIPPED. The union is
+# load-bearing — a group whose only emission is a declared skip still RAN as far as this
+# question is concerned, and asking otherwise would duplicate the strict-skip control
+# instead of complementing it.
+RS_EMITTED=" "
+# shellcheck disable=SC2086
+for rsid in $SEEN $SKIPPED; do
+  rsg="$(rs_group "$rsid")"
+  [ -n "$rsg" ] || continue
+  case "$RS_EMITTED" in *" $rsg "*) ;; *) RS_EMITTED="$RS_EMITTED$rsg " ;; esac
+done
+# RS is emitting its own verdicts on the next lines, so it is a member of the emitted set
+# by construction — SEEN cannot yet hold a verdict this group has not printed. Added
+# explicitly rather than left implicit, because this is what makes RS2 require RS's OWN
+# declaration in the roster exactly as it requires every other live group's.
+case "$RS_EMITTED" in *" RS "*) ;; *) RS_EMITTED="${RS_EMITTED}RS " ;; esac
+RS_EMITTED="${RS_EMITTED# }"
+
+RS_DECLARED=""; RS_READABLE=0
+if [ -r "$RS_WF" ]; then RS_READABLE=1; RS_DECLARED="$(rs_parse "$RS_WF")"; fi
+RS_NDEC="$(rs_count "$RS_DECLARED")"
+RS_NEMIT="$(rs_count "$RS_EMITTED")"
+
+# RS0 runs FIRST and the ordering is what makes every zero below mean something. A parse
+# that reads zero ids makes both set-diffs empty and RS1/RS2 pass against nothing — a
+# probe failure wearing a pass. Unreadable, zero-parsed and zero-emitted are each a
+# FAIL, and only then may the diffs render a verdict. Same rule, same reason, as PF1.
+if [ "$RS_READABLE" -ne 1 ]; then
+  FAIL "RS0: the coverage boundary at .github/workflows/publish-guard.yml is unreadable, so the verdicts below would cover nothing — a roster that cannot be read is a finding, never a clean scan"
+elif [ "$RS_NDEC" -eq 0 ]; then
+  FAIL "RS0: the coverage boundary parsed to 0 group ids, so both set-diffs would be empty and would pass against nothing. The grammar is one id per line at three spaces after the comment marker, inside the IN SCOPE / OUT OF SCOPE blocks — either the block moved or the grammar did, and neither verdict below is trustworthy"
+elif [ "$RS_NEMIT" -eq 0 ]; then
+  FAIL "RS0: this run emitted 0 group ids, so the roster would be compared against an empty run. PASS/FAIL/SKIP record the token before the first colon; if that grammar moved, the comparison is vacuous"
+else
+  PASS "RS0: the boundary is readable and non-degenerate — ${RS_NDEC} declared group id(s) parsed from .github/workflows/publish-guard.yml, ${RS_NEMIT} emitted by this run. Both arms below are therefore measurements rather than empty scans"
+
+  RS_MISSING="$(rs_diff "$RS_DECLARED" "$RS_EMITTED")"
+  if [ -n "$RS_MISSING" ]; then
+    FAIL "RS1: declared group(s) emitted no verdict in this run: ${RS_MISSING% } — deleted, renamed or unreachable. A vanished group emits nothing at all, so it never skips and GUARD_STRICT_SKIPS never sees it. Either restore the group or remove its line from the coverage boundary"
+  else
+    PASS "RS1: all ${RS_NDEC} declared group(s) emitted at least one verdict — no declared group vanished from the run (denominator: ${RS_NEMIT} emitted group ids)"
+  fi
+
+  RS_EXTRA="$(rs_diff "$RS_EMITTED" "$RS_DECLARED")"
+  if [ -n "$RS_EXTRA" ]; then
+    FAIL "RS2: group(s) emitted verdicts but are not declared in the coverage boundary: ${RS_EXTRA% } — they run outside the boundary the workflow's closing sentence quantifies over, so a green check there claims more than it proves. Add one line per id to the IN SCOPE block of .github/workflows/publish-guard.yml, id first at three spaces"
+  else
+    PASS "RS2: all ${RS_NEMIT} emitted group(s) are declared in the coverage boundary — nothing ran outside it, so the workflow's \"every in-scope group above ran and passed\" is true of this run rather than merely stated"
+  fi
+
+  RS_INTER=0
+  # shellcheck disable=SC2086
+  for rsid in $RS_EMITTED; do
+    case " $RS_DECLARED " in *" $rsid "*) RS_INTER=$((RS_INTER+1)) ;; esac
+  done
+  PASS "RS3: |declared| = ${RS_NDEC}, |emitted| = ${RS_NEMIT}, |declared ∩ emitted| = ${RS_INTER} — the two zeros above are stated against those denominators, not against an unstated one"
+
+  # ── RS4 / RS5 / RS6: the controls on the controls ───────────────────────────────
+  # An arm that reports "no difference" is worth exactly as much as the evidence that
+  # it CAN report a difference. RS4 and RS5 mutate the two inputs one at a time and
+  # require the corresponding arm's predicate to name the mutation; RS6 mutates the
+  # FILE and re-parses it, which is the only one of the three that proves the roster is
+  # genuinely read from the workflow rather than computed from something already here.
+  # Every victim is chosen from live data, so no id is hardcoded and none can rot.
+  #
+  # Each control grades the DELTA its own mutation caused — the predicate's output over
+  # the mutated input, MINUS its output over the real one — never the raw output. The
+  # difference matters on exactly the run that matters: when RS1 or RS2 has a genuine
+  # finding, a control written as an exact-equality test fails too, and three cascading
+  # control failures bury the one real finding the operator needs to read. A control
+  # must stay valid whether or not the arm it controls is currently clean.
+
+  RS_V1=""; for rsid in $RS_EMITTED; do RS_V1="$rsid"; break; done
+  RS_E4="$(rs_diff "$RS_EMITTED" "$RS_V1")"      # the emitted set with one real group gone
+  RS_M4="$(rs_diff "$RS_DECLARED" "$RS_E4")"     # RS1's own predicate, over that
+  RS_D4="$(rs_diff "$RS_M4" "$RS_MISSING")"      # what the mutation ADDED to RS1's finding
+  if [ "${RS_D4% }" = "$RS_V1" ]; then
+    PASS "RS4: CONTROL on RS1 — removing group '${RS_V1}' from the emitted set adds exactly '${RS_V1}' to RS1's finding and nothing else. RS1's verdict above is a measurement: the arm fires when a declared group stops emitting"
+  else
+    FAIL "RS4: CONTROL on RS1 did not fire as specified — removing '${RS_V1}' from the emitted set added '${RS_D4% }' to RS1's finding rather than '${RS_V1}'. RS1's clean verdict proves nothing until this control fires"
+  fi
+
+  RS_X5="$(rs_diff "$RS_EMITTED ZZQ" "$RS_DECLARED")"   # RS2's predicate, with a synthetic id
+  RS_D5="$(rs_diff "$RS_X5" "$RS_EXTRA")"               # what the mutation ADDED
+  if [ "${RS_D5% }" = "ZZQ" ]; then
+    PASS "RS5: CONTROL on RS2 — a synthetic group id 'ZZQ' in the emitted set adds exactly 'ZZQ' to RS2's finding and nothing else. RS2's verdict above is a measurement: the arm fires on an undeclared group"
+  else
+    FAIL "RS5: CONTROL on RS2 did not fire as specified — a synthetic 'ZZQ' in the emitted set added '${RS_D5% }' to RS2's finding rather than 'ZZQ'. RS2's clean verdict proves nothing until this control fires"
+  fi
+
+  # RS6 mutates the workflow FILE. Victim: the first declared id that this run also
+  # emitted, so removing its declaration produces a genuine emitted-but-undeclared
+  # finding rather than a vacuous one.
+  RS_V2=""
+  # shellcheck disable=SC2086
+  for rsid in $RS_DECLARED; do
+    case " $RS_EMITTED " in *" $rsid "*) RS_V2="$rsid"; break ;; esac
+  done
+  RS_COPY="$WORK/rs-roster-minus-one.yml"
+  : > "$RS_COPY"
+  while IFS= read -r rsline || [ -n "$rsline" ]; do
+    if [[ "$rsline" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)([[:space:]]|$) ]] && [ "${BASH_REMATCH[1]}" = "$RS_V2" ]; then
+      continue
+    fi
+    printf '%s\n' "$rsline" >> "$RS_COPY"
+  done < "$RS_WF"
+  RS_DEC2="$(rs_parse "$RS_COPY")"
+  RS_N2="$(rs_count "$RS_DEC2")"
+  RS_X6="$(rs_diff "$RS_EMITTED" "$RS_DEC2")"    # RS2's predicate against the mutated roster
+  RS_D6="$(rs_diff "$RS_X6" "$RS_EXTRA")"        # what deleting that one line ADDED
+  if [ -z "$RS_V2" ]; then
+    FAIL "RS6: CONTROL on the parser could not run — no declared group id was also emitted, which contradicts RS1/RS2 above and means the two sets are not being read from what they claim"
+  elif [ "$RS_N2" -ne $((RS_NDEC - 1)) ]; then
+    FAIL "RS6: CONTROL on the parser — deleting group '${RS_V2}'s roster line from a copy of the workflow changed the parsed count from ${RS_NDEC} to ${RS_N2}, not to $((RS_NDEC - 1)). The parse is not tracking the file line-for-line, so the declared set above is not the file's"
+  elif [ "${RS_D6% }" = "$RS_V2" ]; then
+    PASS "RS6: CONTROL on the parser — deleting group '${RS_V2}'s roster line from a COPY of the workflow drops the parsed count ${RS_NDEC} → ${RS_N2} and adds exactly '${RS_V2}' to RS2's finding. The roster is read from the workflow on every run, not derived from this file, so deleting a group and its declaration in one edit cannot pass"
+  else
+    FAIL "RS6: CONTROL on the parser did not fire as specified — deleting '${RS_V2}'s roster line from a copy of the workflow added '${RS_D6% }' to RS2's finding rather than '${RS_V2}'"
+  fi
 fi
 
 echo

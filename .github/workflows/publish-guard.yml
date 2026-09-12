@@ -11,20 +11,58 @@ name: Publish guard
 # ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
 # What a green check here does and does not prove.
 #
+# ONE GROUP ID PER LINE, as the leading field of its own line, at exactly three spaces
+# after the comment marker; an explanation continues at nine. That shape is not
+# cosmetic. Group RS in the suite PARSES the two blocks below and set-diffs the ids it
+# reads against the ids the run actually emits, in BOTH directions, behind a vacuity
+# guard — so this boundary is an ASSERTED declaration rather than a comment that drifts.
+# A group added to the suite and not declared here FAILS RS2; a declared group that
+# stops emitting FAILS RS1. The declaration is made by the gate, not by a reviewer
+# remembering to make it.
+#
+# It is written this way because the previous narrative form had already failed. Five
+# always-run groups — PF, R, S, T and V — ran outside this boundary while the closing
+# sentence below quantified over it: 72 of 177 verdicts, 40.7% of the suite. The range
+# and multi-id-per-line shapes it used (`A-C2`, three ids on one line, `J2/J3`) are
+# precisely the shapes no parser could read. A sibling workflow already forbids writing
+# an unasserted population into a workflow comment, citing the same recurrence. Every
+# word of the original explanations is preserved below; only the layout moved.
+#
 # IN SCOPE — these groups run on every invocation and their verdicts are real:
-#   A-C2  verify_ciphertext fail-closed behaviour, including the all-lowercase
-#         plaintext attack that once passed a token-only scan
-#   F     slug resolution        H  --opaque repo naming     I  list / date helpers
-#   J2/J3 unpublish decision branches, driven by a mock GitHub CLI (no network)
+#   A     verify_ciphertext fail-closed behaviour, including the all-lowercase
+#         plaintext attack that once passed a token-only scan. A, B and C are the
+#         three group ids that arm spans — it was written here as the range `A-C2`
+#   B     the same arm as A: the clean-ciphertext limb
+#   C     the same arm as A: the leaked-token and all-lowercase limbs (C2 included)
+#   F     slug resolution
+#   H     --opaque repo naming
+#   I     list / date helpers
+#   J     unpublish decision branches, driven by a mock GitHub CLI (no network). J2/J3
+#         only; J1 needs an authenticated CLI and is OUT OF SCOPE below, which is why
+#         this group id is declared in both blocks
 #   K     trips/ ignore invariant
 #   Q     analysis/ workspace ignore invariant (same shape as K, lower severity)
 #   U     people/ person-store ignore invariant (#534) — highest severity of the three
+#   V     groups/ reusable-group store ignore invariant — the fourth of that shape
 #   L     plaintext content guard (#123) — the new predicate and its class source
 #   M     published-bytes matching, the name-arm stoplist, and class freshness — the
 #         three defects the Phase A6.5 adversarial review confirmed against the first
-#         cut of L. M1 pins all eight markup surfaces a value can ride out on
+#         cut of L. M1 pins all eight markup surfaces a value can ride out on. M5 pins
+#         the two ENCODING transforms ADR-008 had recorded as missed and mechanical — a
+#         numeric or hex character reference, and an inline tag splitting a word — with
+#         the line-count-preservation arm that keeps the decoder from shifting every
+#         reported line, and an arm measuring that its two new subjects fail in opposite
+#         directions
 #   N     the conjunctive window scoped to a structural block, both directions: token
-#         recurrence across day boundaries must not abort, a same-block carry-through must
+#         recurrence across day boundaries must not abort, a same-block carry-through must.
+#         N2 adds the WITHIN-block direction over a 19-fixture discrimination matrix —
+#         9 over-block candidates, 6 carry-throughs, 3 clean, 1 paraphrase — because an
+#         over-block-only criterion is reached by a matcher that matches nothing. The
+#         window is now derived from the value's own span and the match additionally
+#         requires the value's own connective vocabulary; each limb is graded separately
+#         against a fixture the other admits, and the one irreducible survivor and the
+#         paraphrase this narrows away are each asserted rather than left in prose. N2h
+#         grades the OTHER conjunctive row, the Documents selector, which had no fixture
 #   O     the [THIRD-PARTY] member of the class (#123 AC 3, second remediation): the arm
 #         inverted from a field allowlist to an ENTRY DENYLIST, the mark read at value
 #         granularity as well as heading granularity, and the parse bound to the real
@@ -32,21 +70,58 @@ name: Publish guard
 #         the bad-merge state, the orphaned-mark backstop, and — as controls — that a
 #         first-party operator-relayed need still publishes and that a closed-enum
 #         category value is neither a hit nor a permanent UNDETERMINED abort
-#   E, G  real StatiCrypt encryption and boilerplate subtraction, which run because
-#         the Node setup step below provisions them
+#   R     the change-summary (#550): its content guard over an `internal` artifact
+#         verify_publishable_content never sees, and the moved placement predicate
+#   S     the organizer-confirm gate (#552) — both branches, the stale and malformed
+#         records, rotate's inheritance, and the itinerary projection the gate reads
+#   T     the coordination notice (#551) — the band's identity, its state vocabulary
+#         set-diffed both ways, and the null case
+#   PP    the site passphrase never reaches standard output. Publish and rotate are each
+#         run end-to-end offline and their captured standard output is graded compound —
+#         it must carry the passphrase FILE PATH and must not carry the value, because a
+#         value-absence test on its own is satisfied by an announcer that never ran. The
+#         control case executes on every run: the pre-fix value-emitting announcer is
+#         restored and the same arm is required to convict it. The env-supplied limb is
+#         graded too, where the message used to claim a file it had not written. Pure
+#         bash plus git with mocked gh/npx and no network, Node, authenticated CLI or
+#         terminal, so it has no legitimate skip and MUST NOT be named in
+#         GUARD_EXPECTED_SKIPS — a skipped privacy control is a green that proves less
+#         than it appears to
+#   MD    the Discriminating-Evidence Rule: every assertion's PASS must require evidence
+#         its subject could only have produced by RUNNING. MD re-runs each registered
+#         assertion with its subject removed and requires it to flip, and statically
+#         scans the suite for the polarity-negative shape whose else limb a missing
+#         subject reaches. Like RS it is pure bash with no external dependency, so it has
+#         no legitimate skip and MUST NOT be named in GUARD_EXPECTED_SKIPS — a skipped
+#         meta-assertion is precisely the vanishing group the strict mode exists to catch
+#   PF    no verdict in this suite, or in the publish script it guards, is decided by
+#         a pipeline's exit status
+#   RS    this boundary itself. RS parses the two blocks and set-diffs them against the
+#         emitted ids, both ways, behind a vacuity guard that fails loud when the
+#         workflow is unreadable, when the parse yields zero ids, or when the run
+#         emitted zero. RS is pure bash reading a tracked file, so it has no legitimate
+#         skip and MUST NOT be named in GUARD_EXPECTED_SKIPS — an RS that skipped would
+#         be indistinguishable from the drift it exists to detect
+#   E     real StatiCrypt encryption, which runs because the Node setup step below
+#         provisions it
+#   G     boilerplate subtraction, which runs for the same reason
 #
 # OUT OF SCOPE — deliberately, by name, and declared to the suite below:
-#   D, J1 The two groups that need an AUTHENTICATED GitHub CLI. The CLI is not
-#         authenticated here. The workflow token is an installation token with no
-#         user context, so `gh api user` — which both groups reach — returns 403
-#         rather than a login; wiring it in would turn those groups red for a reason
-#         that has nothing to do with the behaviour they test. They stay operator-run.
-#         Naming them in GUARD_EXPECTED_SKIPS is what keeps their absence STATED
-#         rather than silent: any other skip fails this job.
+#   D     no-reply commit identity — the first of the two groups that need an
+#         AUTHENTICATED GitHub CLI
+#   J     live unpublish idempotency, J1 ONLY (J2/J3 are IN SCOPE above) — the second.
+#         The CLI is not authenticated here. The workflow token is an installation
+#         token with no user context, so `gh api user` — which both groups reach —
+#         returns 403 rather than a login; wiring it in would turn those groups red
+#         for a reason that has nothing to do with the behaviour they test. They stay
+#         operator-run. Naming them in GUARD_EXPECTED_SKIPS is what keeps their
+#         absence STATED rather than silent: any other skip fails this job.
 #
 # So a green check means: every in-scope group above ran and passed, and no group
 # outside {D, J1} vanished from the run. It does NOT mean the no-reply commit
 # identity (D) or live unpublish idempotency (J1) were exercised on this commit.
+# That sentence quantifies over the list above — which is the reason RS asserts the
+# list rather than leaving it to be read and believed.
 #
 # ── WHY THE STRICT MODE (AC 8 part ii) ───────────────────────────────────────────
 # The suite's skip helper used to increment nothing, and the aggregate verdict tested
