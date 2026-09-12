@@ -1159,7 +1159,7 @@ else
   elif [ "$CTL_WORK_SANE" -ne 1 ]; then
     FAIL "CTLe: the temp dir ($WORK) lies inside the repository ($ROOT), so 'this fixture is under the temp dir' would not imply 'this fixture is away from the repository' and the path check below could not say what it claims"
   elif [ -n "$CTL_FIXTURE_STRAY" ]; then
-    FAIL "CTLe: a fixture tree this group built does not lie under the temp dir ($WORK) — $CTL_FIXTURE_STRAY— so this group cannot say it kept its fixtures out of the repository"
+    FAIL "CTLe: a fixture tree this group built does not lie under the temp dir ($WORK) — ${CTL_FIXTURE_STRAY}— so this group cannot say it kept its fixtures out of the repository"
   elif [ "$CTL_CMD_AFTER" != "$CTL_CMD_BEFORE" ]; then
     FAIL "CTLe: the repository's own .claude/commands/ tree changed across this group (was '$CTL_CMD_BEFORE', now '$CTL_CMD_AFTER') — a fixture was written into the tree this suite is measuring"
   else
