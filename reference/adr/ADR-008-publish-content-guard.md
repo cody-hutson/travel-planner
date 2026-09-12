@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **three times** the same
   day; **citation form amended a fourth time (2026-08-28)**, **a fifth time (2026-08-29)** and **a sixth time (2026-08-30)**;
-  **Decision, Coverage boundary and residual list amended a seventh time (2026-09-11)**.
+  **Decision, Coverage boundary and residual list amended a seventh time (2026-09-11)**; **residual 10 retracted and the class-source narrowing re-derived, an eighth time (2026-09-12)**.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
