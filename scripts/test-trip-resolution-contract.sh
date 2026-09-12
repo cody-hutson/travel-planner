@@ -1056,7 +1056,8 @@ else
   # foot of this file is that control: it makes a third one a red check rather than
   # something a reader has to notice by eye.
   #
-  # The message overclaimed too: "the repository tree was never written to" was asserted
+  # The message overclaimed in the same way the old EVrepo one did: "the repository tree
+  # was never written to" was asserted
   # over the whole tree while nothing was watched at all. Three observable things are
   # asserted instead, and the message says only those:
   #   1. this group actually built fixtures, so the path check below has a population;
@@ -1067,10 +1068,10 @@ else
   # A READ is not claimed. A read leaves nothing behind for any predicate here to observe,
   # so claiming one did not happen would be the same overclaim in new words.
   #
-  # ── WHY AN EMPTY WATCHED SURFACE IS NOT GRADED BROKEN HERE ───────────────────────
-  # A watched surface reading 0 files at snapshot time is elsewhere a reason to grade the
-  # comparison broken: where the surface is known to carry a tracked file, a zero means the
-  # snapshot missed rather than that nothing is there. This surface is not one of those:
+  # ── WHY AN EMPTY WATCHED SURFACE IS NOT GRADED BROKEN HERE, UNLIKE EVrepo ────────
+  # EVrepo fails when the tree it watches held 0 files at snapshot time, because trips/
+  # carries a tracked file and a zero there means something is wrong. This surface is
+  # different:
   # at Wave 0 the consumer directory is legitimately empty, which is exactly
   # why RP renders VACUOUS rather than FAIL for it. And an empty surface does not blind
   # this comparison — tree_state reports "absent" and a count, so a write that creates the
@@ -1169,10 +1170,10 @@ fi
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
 # This suite's own banner says an unexercised check is indistinguishable from one that
 # CANNOT fire, and that leaving one inside the anti-drift guard would be that defect at
-# its own root. This suite nevertheless shipped two verdict arms unable to fail: CTLe,
-# corrected in group CTL above, and a second arm of the identical shape. Both were found
-# by a human reading predicates at Stage 7, not by a check. Two instances of one defect is
-# a missing control, not two bugs. This group is the control.
+# its own root. This suite nevertheless shipped two verdict arms unable to fail — EVrepo,
+# corrected on the release branch where that arm lives, and CTLe, corrected in group CTL
+# above — and both were found by a human reading predicates at Stage 7, not by a check.
+# Two instances of one defect is a missing control, not two bugs. This group is the control.
 #
 # ── THE RULE IT ENFORCES, AND WHY THAT RULE ──────────────────────────────────────
 # Reachability is not decidable in general, so this group does not claim to decide it. It
@@ -1184,11 +1185,10 @@ fi
 # not B` — a CONJUNCTION the author never wrote down and therefore never checked. That is
 # where unsatisfiability hides. Both instances were exactly this, and in both the second
 # disjunct was implied by the first's negation:
-#   CTLe           the consumer file existing implied the consumer population was non-zero;
-#   the other arm  the canary existing implied its parent directory existed.
+#   EVrepo  the canary existing implied its parent directory existed;
+#   CTLe    the consumer file existing implied the consumer population was non-zero.
 # The same disjunction reaching FAIL is the opposite case and is not flagged: `if A or B;
-# then FAIL` fires whenever either holds, so its failure branch needs no unwritten
-# conjunction and the rule correctly leaves it alone.
+# then FAIL` fires whenever either holds, which is the shape the corrected EVrepo uses.
 #
 # The shape is not merely suspicious, it is never NECESSARY here. Every arm written that
 # way can be written as a chain — one `elif` per condition, one message per branch — which
