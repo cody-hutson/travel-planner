@@ -1431,7 +1431,7 @@ with no site carries no row.
 8       CLAUDE.md
 1       CONTRIBUTING.md
 5       README.md
-4       SECURITY.md
+5       SECURITY.md
 3       agents/00-enrichment.md
 5       agents/01-activities.md
 1       agents/03-scheduling.md

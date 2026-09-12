@@ -63,17 +63,17 @@ above bind the person most likely to touch the branch.
 | Setting | Value | What it means |
 |---------|-------|---------------|
 | Require a pull request before merging | On | A non-administrator cannot push to `main` at all. |
-| Required status checks | 4 — Workflow SAST (actionlint), Markdown link integrity (markdown-link-check), Secret scanning (gitleaks), Personal-data gate | A merge is blocked until all four pass. |
+| Required status checks | 9 — Workflow SAST (actionlint), Markdown link integrity (markdown-link-check), Secret scanning (gitleaks), Personal-data gate, Publish guard suite (test-publish-guard.sh), Artifact schema suite (test-artifact-schema.sh), Command taxonomy suite (test-command-taxonomy.sh), Trip resolution contract suite (test-trip-resolution-contract.sh), Corpus hygiene suite (test-corpus-hygiene.sh) | A merge is blocked until all nine pass. All nine are pinned to the GitHub Actions app, so only that app's check runs satisfy them. |
 | Required approving reviews | 0 | Single-maintainer repository; there is no second reviewer to require. |
-| Include administrators (`enforce_admins`) | **false** | The maintainer can push directly to `main`, bypassing the pull-request requirement and all four required checks in one step. |
+| Include administrators (`enforce_admins`) | **false** | The maintainer can push directly to `main`, bypassing the pull-request requirement and all nine required checks in one step. |
 
-**One of the four is not app-pinned.** The other three required contexts are pinned
-to the GitHub Actions app; `Personal-data gate` is not, so a check run reporting that
-context name from any integration satisfies it. That asymmetry predates this record
-and is tracked separately — a weaker binding on one required check, not a known
-bypass, and no evidence it has been exercised.
+**All nine are app-pinned.** Each required context is bound to the GitHub Actions
+app, so only a check run produced by that app satisfies it; a check run of the same
+name from any other integration does not count. `Personal-data gate` was the one
+exception until it was pinned — a weaker binding on one required check, never a
+known bypass, and no evidence it was exercised.
 
-**The consequence, stated plainly.** With `enforce_admins: false` the four required
+**The consequence, stated plainly.** With `enforce_admins: false` the nine required
 checks are a *merge* gate, not a *branch* gate. An administrator pushing directly to
 `main` does not fail them — they are simply never required, so the result reads as a
 clean `main` rather than as a bypass. GitHub reports the bypass in the response to
@@ -92,15 +92,16 @@ timestamped settings change instead of a silent per-push bypass. `enforce_admins
 false` therefore buys convenience rather than capability, and it costs the only
 automated guarantee this public repository has that nothing reaches `main` unscanned.
 
-**The decision, and its mitigation.** The setting stays `false` for now. Both
-workflows that guard `main` — `.github/workflows/security.yml` and
-`.github/workflows/depersonalization.yml` — trigger on pushes to `main` as well as on
-pull requests, so all four checks *run* against a direct push and a failure is
-recorded against the commit. **Running is not blocking.** The residual risk is
-therefore detection after the fact, not prevention: a direct push that carries
-personal data still lands on `main`, and the gate reports it afterwards rather than
-refusing it. Nothing here makes a direct push impossible; only `enforce_admins: true`
-would do that.
+**The decision, and its mitigation.** The setting stays `false` for now. All seven
+workflows that carry a required check — `.github/workflows/security.yml`,
+`depersonalization.yml`, `publish-guard.yml`, `artifact-schema.yml`,
+`command-taxonomy.yml`, `trip-resolution-contract.yml` and `corpus-hygiene.yml` —
+trigger on pushes to `main` as well as on pull requests, so all nine checks *run*
+against a direct push and a failure is recorded against the commit. **Running is
+not blocking.** The residual risk is therefore detection after the fact, not
+prevention: a direct push that carries personal data still lands on `main`, and
+the gate reports it afterwards rather than refusing it. Nothing here makes a
+direct push impossible; only `enforce_admins: true` would do that.
 
 **What should reopen this.** A second direct push to `main` outside a genuine
 break-glass event, or any direct push whose personal-data gate run fails. Either one
