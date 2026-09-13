@@ -15,7 +15,8 @@ attestation claiming more than the control covers.**
 announcer now takes the passphrase *file path* as its parameter, never the value. The emission site is
 structurally incapable of disclosing rather than declining to — a stronger property than any assertion
 about what it prints, because it holds without being checked. A static taint read over the whole script
-finds exactly one write of the value, and its three live call sites either capture it or discard it.
+found the value written to standard output in exactly one place — its own return — and every live call
+site either captured it or discarded it.
 
 **Encoded values abort.** A class value written as a decimal character reference, a hex reference, or
 split across an inline tag — `Rurit<b>&#97;nian</b>` — is decoded before tokenization and the inline
@@ -39,12 +40,13 @@ running — so an assertion that keeps passing when its subject is deleted has n
 anything. Group `MD` makes that a standing in-suite check: a registered assertion must flip when its
 subject is removed, or the suite says so.
 
-**`SECURITY.md` now describes the repository that exists.** Seven live-state claims were corrected,
-and all nine required status checks are pinned to the GitHub Actions app, so a check run of the same
-name from another integration cannot satisfy one. `Personal-data gate` was the last exception; the
-pinning write landed before this release reached `main`, deliberately, so the document was never true
-only in the future tense. What remains disclosed rather than fixed: administrators are not included in
-branch protection, which makes the nine checks a *merge* gate and not a *branch* gate.
+**`SECURITY.md` was corrected to describe the repository that exists.** Seven live-state claims were
+rewritten, and the nine required status checks were brought under the GitHub Actions app, so a check
+run of the same name from another integration no longer satisfied one. `Personal-data gate` was the
+last exception; its pinning write landed before this release reached `main`, deliberately, so the
+document was never true only in the future tense. What the document discloses rather than fixes:
+administrators were not included in branch protection, which left those checks a *merge* gate and not
+a *branch* gate.
 
 **What this release learned about itself.** The recurring shape was not carelessness. In the two
 sharpest cases the code's own comments state, correctly and in detail, the reasoning that defeats the
