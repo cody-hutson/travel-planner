@@ -3065,6 +3065,105 @@ else
   FAIL "O7m: C4 is not load-bearing (4-word=$o7min 3-word=$o7mout) — 4=0 is the bound dropped or relaxed past four; 3=1 is the exclusion no longer firing"
 fi
 
+# ── O7n–O7q — the exclusion is spelled `**`, and the OTHER FOUR renderings of ──
+# the same emphasis stay IN class. ADR-008 residual 10 names them — `__X__`, `***X***`,
+# `*X*`, `_X_` — records that all four remain in class, and DECLINES to widen the
+# exclusion to cover them, because widening it would extend the first residual (a bare,
+# unpunctuated, short span that a shape test cannot tell from a section name) over four
+# more spellings, and nothing in the corpus reserves any of these renderings for a
+# section name. That decline is the fail-CLOSED direction and it is not being reversed
+# here.
+#
+# WHAT WAS MISSING IS THE CONVICTION, NOT THE DECISION. Measured before these arms
+# existed: widen bold_only() to accept the four renderings and every O7 arm above stays
+# green, because not one of them carries a fixture in any spelling but `**` — the
+# fail-open re-opens with the suite at full count and nothing says so. A reasoned decline
+# that no arm can catch being reversed is indistinguishable from a decline nobody made,
+# which is the shape ADR-019 exists to remove. These arms make the decline enforced
+# rather than merely intended.
+#
+# Each arm is the MINIMAL PAIR O7j uses, one spelling at a time: the SAME span written
+# twice, once in the alternative rendering and once in `**`, so ONE count carries every
+# direction that matters —
+#   1  the shipped state — the alternative rendering is in class, the `**` twin is out
+#   0  bold_only widened to that rendering — the value has LEFT the guarded set, which is
+#      exactly the fail-open residual 10 declines, now visible
+#   2  the exclusion not firing at all — the `**` twin is back in class
+# Each pair carries its OWN span, so the four counts cannot borrow evidence from one
+# another, and each arm greps its own two fixture lines so a vanished line reads as a
+# broken fixture rather than as a verdict. Membership is read off the emitted record
+# stream by exact VALUE-field equality, the way O7g and O7i–O7m read it, never from the
+# predicate — an arm that asked the predicate about itself would be worth nothing.
+#
+# Deliberately NOT registered with md_flips, for the reason the O7i–O7m block gives: O7g
+# is the one arm registered against nonpublishable_values for this subject, and four more
+# registrations would re-grade that one removal four times over.
+O7EU='vertigo'            # O7n — the `__X__` pair
+O7ES='tinnitus'           # O7o — the `***X***` pair
+O7EA='sleepwalks'         # O7p — the `*X*` pair
+O7EL='claustrophobia'     # O7q — the `_X_` pair
+O7ETD="$WORK/o7_emphasis"
+omodel "$O7ETD" <<MD
+# Traveler Model [DERIVED]
+
+## Quill [OPERATOR-PROVIDED] [THIRD-PARTY]
+
+__${O7EU}__
+
+**${O7EU}**
+
+***${O7ES}***
+
+**${O7ES}**
+
+*${O7EA}*
+
+**${O7EA}**
+
+_${O7EL}_
+
+**${O7EL}**
+MD
+# One read of the record stream, counted per span by exact VALUE-field equality. Every
+# span here is bare, unpunctuated, one word and far under 40 characters, so all four of
+# structural_subheading's conjuncts are already satisfied on both members of each pair:
+# the ONLY thing holding the alternative rendering in class is bold_only's `**` spelling,
+# which is what makes each count a single-variable measurement of that spelling.
+o7e_stream="$(nonpublishable_values "$O7ETD" 2>/dev/null)"
+o7ecount() { awk -F'\t' -v v="$1" '$4 == v { c++ } END { print c + 0 }' <<<"$o7e_stream"; }
+o7esrc="$O7ETD/outputs/traveler-model.md"
+o7efx() { # <alt-rendering line> <bold twin line> -> 1 when both are in the model
+  if grep -qxF "$1" "$o7esrc" && grep -qxF "$2" "$o7esrc"; then printf '1'; else printf '0'; fi
+}
+# O7n — `__X__`, the underscore spelling of strong emphasis.
+o7n="$(o7ecount "$O7EU")"; o7nfx="$(o7efx "__${O7EU}__" "**${O7EU}**")"
+if [ "$o7nfx" -eq 1 ] && [ "$o7n" -eq 1 ]; then
+  PASS "O7n: \`__X__\` is IN class — the same span appears twice, once as \`__${O7EU}__\` and once as \`**${O7EU}**\`, and exactly 1 of those 2 lines is emitted ($o7n). The exclusion is spelled \`**\` and reaches no further, which is the decline ADR-008 residual 10 records: 0 is bold_only widened to this rendering and the value gone from the guarded set, 2 is the exclusion no longer firing at all"
+else
+  FAIL "O7n: the \`__X__\` pair is not in the measured shape (in class=$o7n of the 2 lines carrying the span, fixture=$o7nfx) — 0 is the FAIL-OPEN residual 10 declines to open: bold_only now accepts \`__X__\`, so a bare third-party value written that way has left the class. 2 is the exclusion no longer firing. fixture=0 is a missing model line, and this arm would have proven nothing"
+fi
+# O7o — `***X***`, triple-asterisk (strong + emphasis on one span).
+o7o="$(o7ecount "$O7ES")"; o7ofx="$(o7efx "***${O7ES}***" "**${O7ES}**")"
+if [ "$o7ofx" -eq 1 ] && [ "$o7o" -eq 1 ]; then
+  PASS "O7o: \`***X***\` is IN class — the same span appears twice, once as \`***${O7ES}***\` and once as \`**${O7ES}**\`, and exactly 1 of those 2 lines is emitted ($o7o). The shape test is anchored on a span of exactly two asterisks a side, so a third asterisk leaves the line in class: 0 is bold_only widened to this rendering, 2 is the exclusion no longer firing at all"
+else
+  FAIL "O7o: the \`***X***\` pair is not in the measured shape (in class=$o7o of the 2 lines carrying the span, fixture=$o7ofx) — 0 is the FAIL-OPEN residual 10 declines to open: bold_only now accepts \`***X***\`, so a bare third-party value written that way has left the class. 2 is the exclusion no longer firing. fixture=0 is a missing model line, and this arm would have proven nothing"
+fi
+# O7p — `*X*`, single-asterisk emphasis.
+o7p="$(o7ecount "$O7EA")"; o7pfx="$(o7efx "*${O7EA}*" "**${O7EA}**")"
+if [ "$o7pfx" -eq 1 ] && [ "$o7p" -eq 1 ]; then
+  PASS "O7p: \`*X*\` is IN class — the same span appears twice, once as \`*${O7EA}*\` and once as \`**${O7EA}**\`, and exactly 1 of those 2 lines is emitted ($o7p). A single-asterisk span is emphasis and not the strong-emphasis shape the exclusion tests, so it states a value as far as the class is concerned: 0 is bold_only widened to this rendering, 2 is the exclusion no longer firing at all"
+else
+  FAIL "O7p: the \`*X*\` pair is not in the measured shape (in class=$o7p of the 2 lines carrying the span, fixture=$o7pfx) — 0 is the FAIL-OPEN residual 10 declines to open: bold_only now accepts \`*X*\`, so a bare third-party value written that way has left the class. 2 is the exclusion no longer firing. fixture=0 is a missing model line, and this arm would have proven nothing"
+fi
+# O7q — `_X_`, single-underscore emphasis.
+o7q="$(o7ecount "$O7EL")"; o7qfx="$(o7efx "_${O7EL}_" "**${O7EL}**")"
+if [ "$o7qfx" -eq 1 ] && [ "$o7q" -eq 1 ]; then
+  PASS "O7q: \`_X_\` is IN class — the same span appears twice, once as \`_${O7EL}_\` and once as \`**${O7EL}**\`, and exactly 1 of those 2 lines is emitted ($o7q). All four renderings this group pins are pinned the same way and separately, so widening the exclusion to any ONE of them reddens its own arm rather than hiding behind the other three: 0 is bold_only widened to this rendering, 2 is the exclusion no longer firing at all"
+else
+  FAIL "O7q: the \`_X_\` pair is not in the measured shape (in class=$o7q of the 2 lines carrying the span, fixture=$o7qfx) — 0 is the FAIL-OPEN residual 10 declines to open: bold_only now accepts \`_X_\`, so a bare third-party value written that way has left the class. 2 is the exclusion no longer firing. fixture=0 is a missing model line, and this arm would have proven nothing"
+fi
+
 # ── O8 — the guard's OWN zero carries a control arm (fix 5c) ────────────────
 # nonpublishable_values reports "no class content" on the same branch a genuinely empty
 # model reaches, so a BROKEN PARSE and an empty class were indistinguishable in every
