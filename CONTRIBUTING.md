@@ -59,7 +59,7 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
-four required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
+nine required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
 Protection Posture*, for why that is possible and what it costs. The personal-data
 gate also runs on pushes to `main`, so such a push is scanned and reported — but
 after it has landed, not before.

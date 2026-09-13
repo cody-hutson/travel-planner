@@ -856,7 +856,7 @@ comment and is ignored; a blank line is ignored.
 | `limb` | `field` \| `entry` | Which half of § 5.3's union the row contributes to. `field` = *every value of a field declared non-publishable*; `entry` = *every value of an entry whose provenance is third-party*. |
 | `selector` | a field label, or an entry-level mark token | What the parse binds to. A `field` selector is matched case-insensitively as a label prefix followed by `:`, after the existing bullet/emphasis stripping. An `entry` selector is matched as a literal substring of the entry heading **and** of each raw value line — the two granularities compose by union, never by override. |
 | `artifact-scope` | a repo-relative artifact-class path, with `<traveler>` and `<person>` admitted as glob tokens | Which artifacts the row is evaluated against. |
-| `rule` | `conjunctive` \| `phrase` \| `token` \| `by-wordcount` | The match rule that travels with the record, because membership and matchability are one decision. `by-wordcount` is the declared name of the shipped `n >= GUARD_NGRAM ? phrase : token` choice, so the declaration expresses today's behaviour rather than changing it. |
+| `rule` | `conjunctive` \| `phrase` \| `token` \| `by-wordcount` | The match rule that travels with the record, because membership and matchability are one decision. `conjunctive` requires every distinctive token of the value inside **one structural block**, inside a window **derived from the value's own key span** rather than a flat word count, **and** accompanied by at least one of the value's own non-distinctive tokens — a carry-through copies the value's connective tissue along with its facts, an ambient co-occurrence of the same two tokens does not. The last two conditions narrow the rule to what its own definition says it encodes, two facts in one sentence; the cost is that a paraphrase dropping the value's connective vocabulary is not matched, which falls inside the paraphrase class the guard's coverage boundary already disclaims. `by-wordcount` is the declared name of the shipped `n >= GUARD_NGRAM ? phrase : token` choice, so the declaration expresses today's behaviour rather than changing it. |
 
 **The declaration is itself fail-closed, and this is a sixth UNDETERMINED path added to § 5.4's
 five.** If this file is absent or unreadable, or the fence yields zero rows, `nonpublishable_values`
@@ -1431,7 +1431,7 @@ with no site carries no row.
 8       CLAUDE.md
 1       CONTRIBUTING.md
 5       README.md
-4       SECURITY.md
+5       SECURITY.md
 3       agents/00-enrichment.md
 5       agents/01-activities.md
 1       agents/03-scheduling.md
