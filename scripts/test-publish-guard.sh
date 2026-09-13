@@ -1914,6 +1914,15 @@ if [ "$MRC" -eq 2 ]; then PASS "M4f: a well-formed reference resolving to no rec
 # arm that carries the verdict would fuse two legitimate adjacent links into one false
 # token, so the join happens on a stream nothing else reads and can only ADD matches.
 #
+# WHAT THIS GROUP ATTESTS IS ITS ENUMERATION, NOT THE MECHANISM BEHIND IT. The fixtures
+# carry one class value in four renderings — verbatim, decimal reference, hex reference
+# and a mid-word tag split — and each encoded one applies a SINGLE transform. A green M5b
+# therefore says those four renderings abort. It does NOT say the decoder is wired to
+# every arm, and it reaches no value COMPOSING two transforms in one word, because no
+# fixture here builds one. The boundary is written down rather than left implied, so the
+# attestation claims the control rather than the remedy the control was built for;
+# widening it is a change to the fixture matrix and not to this wording.
+#
 # Every arm below grades an EXACT code and treats anything outside {0,1} as a probe
 # failure rather than folding it into a verdict — with _decode_entities removed the
 # visible arm empties and the guard returns 2, which is a DIFFERENT claim from "aborted".
@@ -1966,7 +1975,7 @@ m5_assert() {
     case "$rc" in 1) abort=$((abort+1)) ;; 0) bad="$bad $(basename "$f")=published" ;; *) bad="$bad $(basename "$f")=rc$rc" ;; esac
   done
   if [ "$abort" -eq "$n" ]; then
-    PASS "M5b: all $n encodings of one class value abort as a HIT (rc=1) — verbatim, decimal reference, hex reference and a mid-word tag split. A character reference is decoded before tokenization and an inline tag is closed up on the joined arm"
+    PASS "M5b: the $n ENUMERATED renderings of one class value abort as a HIT (rc=1) — verbatim, decimal reference, hex reference and a mid-word tag split, a SINGLE transform in each encoded one. The claim is bounded by that enumeration and states nothing past it: it does not establish that the decoder is wired to every arm, and it does not reach a value composing two transforms in one word, because no fixture here builds one"
   else
     FAIL "M5b: only $abort/$n encodings aborted —$bad. A value that reaches the published page in an encoded form reaches it just as completely as one spelled out"
   fi
