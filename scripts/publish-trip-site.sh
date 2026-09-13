@@ -163,10 +163,12 @@ get_passphrase() { # <trip_dir> <force_new:0|1>
 #     invoked, and the caller this bound exists for — bash pre-execution inside a command
 #     file, whose standard output is injected into the session transcript — is precisely
 #     the one that would take the disclosing limb on a host that allocates a
-#     pseudo-terminal. A `[ -t 1 ]` gate fails a second way that matters more: no test
-#     harness gives this script a terminal, so its secret-printing limb would ship
-#     permanently ungraded. A control whose disclosing limb no test can enter is the shape
-#     this guard exists to remove.
+#     pseudo-terminal. That is the whole objection to a `[ -t 1 ]` gate, and it stands on
+#     the SHAPE alone: such a gate makes disclosure a property of the INVOCATION rather
+#     than of the code, so the same script withholds or discloses according to how it was
+#     run. That is true whether or not a harness can reach the disclosing limb, which is
+#     why the bound is stated as "there is no branch" rather than as "the branch is
+#     tested" — a property the caller decides is not a property this guard holds.
 #
 # The branch below is on the DESTINATION's state, not the caller's, and BOTH limbs are
 # value-free — it selects which true sentence to print, never whether to disclose. The
