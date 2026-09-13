@@ -830,7 +830,10 @@ scope decision taken at the Stage 9 re-gate:**
    switches spelling re-opens the false positive. That third one is the fail-closed direction and is
    left as it is deliberately — widening the exclusion to cover them would widen the first residual
    above by four more shapes, and nothing in the corpus reserves any of these renderings for a
-   section name.
+   section name. That decline is **pinned by suite arms `O7n`–`O7q`**, one per rendering, rather
+   than left in prose: each holds its own span in the alternative spelling beside its `**` twin, so
+   widening `bold_only` to any one rendering reddens that rendering's own arm rather than passing
+   behind the rest.
 11. **A carry-through that drops the value's own connective vocabulary.** The conjunctive rule now
    requires one of the value's non-distinctive tokens in the matched block, so a carry-through that
    keeps both facts and discards the words joining them — a paraphrase of the validity predicate — is
