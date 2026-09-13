@@ -3,6 +3,59 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.31.0] — 2026-09-13 — Privacy control integrity
+
+A guard that aborts on a leak is worth exactly what its weakest arm covers, and this release is about
+the distance between that and what the guard *says* it covers. Six cards hardened the publish path;
+the finding that runs through all of them is one shape, found twelve times before the release shipped
+and a thirteenth time on the tooling that shipped it: **a control that works, attached to an
+attestation claiming more than the control covers.**
+
+**The passphrase no longer reaches standard output.** On the encrypted publish and rotate paths the
+announcer now takes the passphrase *file path* as its parameter, never the value. The emission site is
+structurally incapable of disclosing rather than declining to — a stronger property than any assertion
+about what it prints, because it holds without being checked. A static taint read over the whole script
+finds exactly one write of the value, and its three live call sites either capture it or discard it.
+
+**Encoded values abort.** A class value written as a decimal character reference, a hex reference, or
+split across an inline tag — `Rurit<b>&#97;nian</b>` — is decoded before tokenization and the inline
+tag closed up, so all four renderings of the same value reach the same verdict. Destination-guidance
+lines that previously aborted for no reason mostly stopped: false aborts fell from nine of nine to one
+of nine, with carry-through detection unchanged at six of six.
+
+**An abort now tells you where.** Aborts name a render-side locator — the position in the rendered
+output, not a model coordinate — and the locator is *actionable*, not merely exact: editing the render
+at the reported line takes the guard from abort to publish and removes the value. Eleven plants at
+positions the harness never uses were all located exactly.
+
+**The coverage boundary is a gate, not a convention.** A test group that is deleted, renamed, or made
+unreachable now fails the suite rather than silently vanishing from the run, and the roster is read
+from the workflow on every run rather than derived from the file asserting it. Five always-run groups
+were already undeclared when it landed.
+
+**`ADR-019` names the rule the rest of this release is measured against.** An assertion is
+mutation-detectable only if every path to `PASS` requires evidence the subject could produce solely by
+running — so an assertion that keeps passing when its subject is deleted has not been demonstrating
+anything. Group `MD` makes that a standing in-suite check: a registered assertion must flip when its
+subject is removed, or the suite says so.
+
+**`SECURITY.md` now describes the repository that exists.** Seven live-state claims were corrected,
+and all nine required status checks are pinned to the GitHub Actions app, so a check run of the same
+name from another integration cannot satisfy one. `Personal-data gate` was the last exception; the
+pinning write landed before this release reached `main`, deliberately, so the document was never true
+only in the future tense. What remains disclosed rather than fixed: administrators are not included in
+branch protection, which makes the nine checks a *merge* gate and not a *branch* gate.
+
+**What this release learned about itself.** The recurring shape was not carelessness. In the two
+sharpest cases the code's own comments state, correctly and in detail, the reasoning that defeats the
+claim sitting a few lines away — the hazard was identified, written down, and then attested past.
+Twice more, an attestation described a state the program's structure cannot reach, so no widening of
+the control could ever have covered it. The release's own required-checks tool passed a self-test of
+eleven degenerate arms under a conjunct-removal matrix and still could not run, because the self-test
+graded assertion logic and stubbed the one thing that was wrong. Each time, what caught it was a check
+built on evidence the subject could only produce by running, or a guard reading live state rather than
+a summary of it. That is the whole of what `ADR-019` asks for.
+
 ## [0.30.0] — 2026-09-11 — Per-traveler cost forecast
 
 A declared class that had a schema, a witness and a coverage pair — and no producer — acquires one.
