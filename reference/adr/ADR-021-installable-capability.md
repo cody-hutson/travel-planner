@@ -380,12 +380,33 @@ Driver 3's property is a **consequence of being installed at all**, not of any c
 
 ### Amendment slot — the selected data-store mechanism's teardown behaviour
 
-**Reserved deliberately, and empty on purpose.** The operator-data resolution slice records the
+**Reserved deliberately, and filled by amendment below.** The operator-data resolution slice records the
 teardown behaviour of whatever per-store mechanism it selects, as a dated amendment paragraph
 in this subsection. That is an **amendment and not a supersession**: it adds a statement about a
 mechanism this record declines to choose, and it reverses, narrows and re-opens nothing
 decided above. Naming the slot here means that edit is an in-place addition rather than a
 structural change to a merged record.
+
+**Amendment, 2026-09-13 — the selected mechanism and what removing the engine does to operator data.**
+The operator-data resolution slice selected **one data root shared by all three stores, named by one
+operator-config pointer** — a single-line file at `${HOME}/.travel-planner/data-root` holding one
+absolute path — **resolved by the agent** at gate `G0-root` of `CLAUDE.md` § *Resolving a trip*. One
+mechanism rather than three, because the three stores are already three children of one root and the
+store-root rule in `reference/data-model.md` already makes the person store's fallback the trip
+store's root; separate pointers would buy nothing and cost three drift axes. No store moved.
+
+Teardown, stated in the terms an operator needs before they uninstall anything:
+
+> **Removing the engine removes the engine directory and nothing else.** The pointer lives outside
+> it and survives. The data lives outside it, at the path the pointer names, and survives — removing
+> the data means deleting that directory yourself, deliberately. **An engine update replaces the
+> engine directory and touches neither.** The engine's own `trips/`, `people/` and `groups/` are a
+> tracked, record-free skeleton; they are not an operator store and nothing writes an operator record
+> into them, which is what gate `G0-root` exists to guarantee.
+
+This amendment reverses, narrows and re-opens nothing above, and it amends neither storage-home
+decision: each of those fixes its store at the root of the tree that holds it, which stays literally
+true — a resolution change is not a relocation.
 
 ### Costs and residual risks, stated rather than minimised
 

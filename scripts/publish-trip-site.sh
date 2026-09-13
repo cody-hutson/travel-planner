@@ -1312,6 +1312,31 @@ _GUARD_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 #   • NOT readonly. test-publish-guard.sh SOURCES this file and re-points the variable
 #     inside its own process, which is how L9a/L9b/L10 prove the guard's verdict really
 #     does follow the declaration rather than merely being described as following it.
+# _GUARD_DATA_ROOT — the OPERATOR DATA root, which is a different thing from the engine
+# root above and is the whole reason this variable exists. `_GUARD_REPO_ROOT` is derived
+# from BASH_SOURCE and locates this engine's own assets — correctly, because the
+# declaration below IS an engine asset and must follow the script wherever it is
+# installed. The person store is not: it is operator data that lives wherever the
+# operator keeps it, and after an install the engine's own `people/` is a record-free
+# skeleton of one tracked README. Resolving step 2 of the store-root rule against the
+# engine therefore returns RESOLVED on the directory and UNDETERMINED on every record,
+# which L387 of this file calls aborting every publish of that trip forever.
+#
+# It defaults to the engine root, so a run that passes no flag behaves exactly as it did
+# before this seam existed, and it is set ONLY by an explicit `--data-root` argument —
+# NEVER from the environment, for the reason stated two blocks above about the
+# declaration: an environment-defaulted path on a fail-closed control is a fail-open
+# surface, and a caller could point this guard at a store with fewer records and narrow
+# the class from outside the repository. An argument is visible in the invocation the
+# grant admits; an inherited variable is not.
+#
+# The flag is `--data-root` and deliberately NOT `--root`, even though
+# validate-artifacts.sh spells its equivalent `--root`. That script has one root to name.
+# This one has two, and they diverge the moment the engine is installed — a `--root` here
+# would read as "the root of everything this script uses" and is exactly the invitation
+# to point the declaration at operator-supplied ground.
+_GUARD_DATA_ROOT="$_GUARD_REPO_ROOT"
+_GUARD_DATA_ROOT_EXPLICIT=0
 _GUARD_DECLARATION="$_GUARD_REPO_ROOT/reference/data-architecture.md"
 _GUARD_DECL_FENCE='publish-contract-values'
 _GUARD_DECL_HEADING='### 5.6 The declaration'
@@ -1578,19 +1603,21 @@ nonpublishable_values() { # <trip_dir> [site_html]
         $_GUARD_PERSON_KEY_GLOB) ;;
         *) warn "guard: a per-traveler profile's '$_GUARD_REF_KEY:' value is not a minted person-record id — the reference is MALFORMED, so the class is UNDETERMINED, not empty"; return 2 ;;
       esac
-      # Store root: trip-root first, then the repo root. TWO STEPS, no upward search — an
-      # upward search is non-deterministic when both roots exist.
+      # Store root: trip-root first, then the DATA root. TWO STEPS, no upward search — an
+      # upward search is non-deterministic when both roots exist. Step 2 resolves against
+      # $_GUARD_DATA_ROOT, never against the engine root: see that variable's own block
+      # above for why the two are not the same thing once this engine is installed.
       if [ -d "$trip_dir/$_GUARD_PERSON_STORE" ]; then
         rstore="$trip_dir/$_GUARD_PERSON_STORE"
       else
-        rstore="$_GUARD_REPO_ROOT/$_GUARD_PERSON_STORE"
+        rstore="$_GUARD_DATA_ROOT/$_GUARD_PERSON_STORE"
       fi
       if [ ! -d "$rstore" ] || [ ! -r "$rstore" ]; then
-        warn "guard: person record $rkey is referenced but the person store at $rstore is not a readable directory — the class cannot be determined"; return 2
+        warn "guard: person record $rkey is referenced but the person store at $rstore is not a readable directory — the class cannot be determined. Step 2 of the store-root rule resolves against the data root; pass --data-root <dir> to name the directory holding your people/ store."; return 2
       fi
       rfile="$rstore/$rkey.md"
       if [ ! -e "$rfile" ]; then
-        warn "guard: person record $rkey is referenced but resolves to no file under $rstore — an unresolvable reference is UNDETERMINED, not an empty class"; return 2
+        warn "guard: person record $rkey is referenced but resolves to no file under $rstore — an unresolvable reference is UNDETERMINED, not an empty class. If $rstore is the engine's own record-free people/ skeleton rather than your store, pass --data-root <dir>."; return 2
       fi
       if [ ! -f "$rfile" ] || [ ! -r "$rfile" ]; then
         warn "guard: person record $rkey is not a readable regular file — the class cannot be determined"; return 2
@@ -2794,10 +2821,19 @@ _is_stale() { [ -n "${1:-}" ] && [ -n "${2:-}" ] && [ "$1" -gt "$2" ]; }
 # ─────────────────────────────────────────────────────────────────────────────
 # list — read-only inventory of every trip under ./trips/. Never writes/encrypts/pushes.
 # ─────────────────────────────────────────────────────────────────────────────
-cmd_list() { # (no args)
-  [ -z "${1:-}" ] || die "list takes no arguments — run it from the repo root; it scans ./trips/."
-  # Local first: scanning ./trips/ needs no GitHub. Only the publish-state columns do.
-  [ -d trips ] || die "no ./trips/ directory here — trips/ ships with the repo, so this is probably not the repo root. cd there and re-run."
+cmd_list() { # (no args, beyond the shared --data-root seam main strips)
+  [ -z "${1:-}" ] || die "list takes no arguments beyond --data-root — run it from the repo root, or pass --data-root <dir>; it scans <root>/trips/."
+  # THE SCAN ROOT, and why the default is still the working directory. Without
+  # --data-root this scans ./trips/ exactly as it always has, and dies loudly from a
+  # directory that has none. It deliberately does NOT fall back to the engine root: the
+  # engine ships trips/README.md tracked, so an engine-rooted scan finds a directory that
+  # exists, lists zero trips, and reports that there are none — a clean, confident, wrong
+  # answer, and a worse outcome than the die. A caller that knows the operator data home
+  # passes it; a caller that does not is told where to stand.
+  local _lroot="."
+  [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ] && _lroot="$_GUARD_DATA_ROOT"
+  # Local first: scanning <root>/trips/ needs no GitHub. Only the publish-state columns do.
+  [ -d "$_lroot/trips" ] || die "no trips/ directory under $_lroot — trips/ ships with the repo, so this is probably not the repo root. cd there and re-run, or pass --data-root <dir>."
   # Publish state (STATUS/PUBLISHED/STALE) needs gh; the local inventory does not.
   # Degrade instead of dying, so list still works on a fresh clone with no gh.
   local owner="" online=0
@@ -2810,7 +2846,7 @@ cmd_list() { # (no args)
   printf '\n\033[1m%-22s %-24s %-14s %-12s %-12s %s\033[0m\n' \
     "TRIP" "REPO" "STATUS" "PUBLISHED" "EDITED" "STALE"
   local any=0 trip_dir base slug site edited_epoch pub_iso pub_epoch status stale
-  for trip_dir in trips/*/; do
+  for trip_dir in "$_lroot"/trips/*/; do
     [ -d "$trip_dir" ] || continue
     trip_dir="${trip_dir%/}"; base="$(basename "$trip_dir")"; any=1
     slug="$(slug_for "$trip_dir" 2>/dev/null || printf '?')"
@@ -2835,7 +2871,7 @@ cmd_list() { # (no args)
     printf '%-22s %-24s %-14s %-12s %-12s %s\n' \
       "$base" "$slug" "$status" "$(_ymd_of_epoch "$pub_epoch")" "$(_ymd_of_epoch "$edited_epoch")" "$stale"
   done
-  [ "$any" = "1" ] || info "No trips yet — see trips/README.md to start one."
+  [ "$any" = "1" ] || info "No trips under $_lroot/trips/ — see trips/README.md to start one."
   printf '\n'
 }
 
@@ -2920,6 +2956,34 @@ usage() {
 
 main() {
   local sub="${1:-}"; shift || true
+  # --data-root is stripped HERE rather than in each cmd_* argument loop, and it sits
+  # AFTER the subcommand rather than before it. Both are forced by the grant surface: a
+  # verb's `allowed-tools` entry names `.../publish-trip-site.sh <sub>:*`, so the
+  # subcommand has to be the first word after the path or the invocation is not the one
+  # that was granted. Stripping centrally is what lets every arm that can reach the
+  # person-store walk honour the same seam without five separate parsers to drift apart.
+  local -a rest=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --data-root)
+        [ $# -ge 2 ] || die "--data-root needs a path (the directory holding trips/, people/ and groups/)."
+        _GUARD_DATA_ROOT="$2"; _GUARD_DATA_ROOT_EXPLICIT=1; shift 2 ;;
+      --data-root=*)
+        _GUARD_DATA_ROOT="${1#--data-root=}"; _GUARD_DATA_ROOT_EXPLICIT=1; shift ;;
+      *) rest+=("$1"); shift ;;
+    esac
+  done
+  if [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ]; then
+    # Validated once, loudly, at the seam - never silently fallen back from. A
+    # --data-root that does not resolve is an operator error with a remedy; silently
+    # reverting to the engine root would turn it into a record-free skeleton read, which
+    # is the failure this seam exists to remove.
+    [ -n "$_GUARD_DATA_ROOT" ] || die "--data-root was given an empty path."
+    [ -d "$_GUARD_DATA_ROOT" ] && [ -r "$_GUARD_DATA_ROOT" ] \
+      || die "--data-root is not a readable directory: $_GUARD_DATA_ROOT"
+    _GUARD_DATA_ROOT="$(cd "$_GUARD_DATA_ROOT" && pwd)"
+  fi
+  set -- ${rest[@]+"${rest[@]}"}
   case "$sub" in
     publish)     cmd_publish   "$@" ;;
     update)      cmd_update    "$@" ;;

@@ -64,6 +64,32 @@ Then open the folder in Claude Code:
 - **Desktop app** — open the `travel-planner` folder
 - **CLI** — run `claude` from inside the `travel-planner` directory
 
+### Tell the engine where your trips live
+
+The verbs read and write your own trip data, and they find it through **one pointer file** rather than
+through whatever directory you happen to be working in. Create it once:
+
+```bash
+mkdir -p ~/.travel-planner
+printf '%s\n' "$(pwd)" > ~/.travel-planner/data-root
+```
+
+Run that from the checkout you just cloned and the pointer names that checkout, which is where
+`trips/`, `people/` and `groups/` already are — so nothing moves and nothing is copied. If you keep
+your trips somewhere else, put that absolute path in the file instead. The file holds **one absolute
+path and nothing else**.
+
+Until it exists, every verb stops and says so, naming the file and this step. That is deliberate: the
+alternative is a verb that resolves *something*, finds a directory that happens to exist, and reports
+that you have no trips while your real ones sit elsewhere.
+
+**What uninstalling does to your data.** Removing the engine removes the engine's own directory and
+nothing else. This pointer lives outside it and survives. Your data lives outside it, at the path the
+pointer names, and survives — removing your trips means deleting that directory yourself, on purpose.
+Updating the engine replaces the engine's directory and touches neither. The `trips/`, `people/` and
+`groups/` directories that ship inside the engine are an empty skeleton carrying only a `README.md`
+each; they are not your store, and nothing ever writes one of your records into them.
+
 Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person for this trip — each optionally pointing at that person's durable record in `people/`, which sits outside every trip and is read alongside the profile — and `outputs/` holds the agent artifacts — some accumulating across sessions, others rebuilt, versioned or persisted in place, each per its declared lifecycle class.
 
 ### First run
