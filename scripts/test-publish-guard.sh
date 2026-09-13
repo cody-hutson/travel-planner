@@ -6073,9 +6073,12 @@ md_flips verify_publishable_content "M5c" m5_clean_assert
 #                           the publish verdict, so neither is registered — O7g is the one
 #                           whose whole verdict is what the class source emitted. O7j–O7m
 #                           read the same stream one conjunct at a time and O7i grades
-#                           their fixture, so they are not registered either: five more
-#                           registrations would re-grade this one removal five times over
-#                           and say nothing O7g does not already say about it.
+#                           their fixture, and O7n–O7q read it one emphasis rendering at a
+#                           time, so none of them is registered either: a registration per
+#                           arm would re-grade this one removal once for every arm and say
+#                           nothing O7g does not already say about it. The rule, rather
+#                           than the roster: an arm reading this stream is registered only
+#                           where its verdict is not already carried by O7g.
 #   nonpublishable_values → O4e, the mark-strip oracle: the whole verdict is the class
 #                           source refusing to accept an uncorroborated zero.
 #   nonpublishable_values → O8a, the parse sensitivity arm, whose subject is the guard's
