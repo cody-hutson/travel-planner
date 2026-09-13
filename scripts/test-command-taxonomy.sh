@@ -350,6 +350,23 @@ READONLY_ADJUDICATED=( 'status' 'plan' 'replan' 'reorder' 'research' 'check' 'id
 
 SCRIPT_REL='scripts/publish-trip-site.sh'
 
+# ── The engine root, held as ONE literal, spelled once.
+#
+# Under the installable layout a verb file sits at <engine-root>/skills/<verb>/SKILL.md, so the
+# engine root is the skill directory's grandparent and every engine path a verb hands to a tool
+# is this token followed by the repository-relative path. The harness substitutes the variable
+# before the permission check and also inside the prose body, so what a grant pattern and a
+# fenced invocation carry is the same string after substitution — which is exactly why ONE
+# spelling is asserted rather than assumed. A permission pattern is matched as a string: a
+# second spelling of the same directory is a second string, and a rooted permit beside a bare
+# prohibition is an escalation no existing check could see. Group P asserts the uniformity.
+#
+# It is deliberately NOT registered in NEEDLES below. That registry asserts norm(needle) ==
+# needle because its needles are matched against a whitespace-COLLAPSED haystack; this token is
+# only ever compared against a TRIMMED line, so the property the registry buys does not apply
+# to it and registering it would assert something that is not the reason it is safe.
+ENGINE_ROOT_TOK='${CLAUDE_SKILL_DIR}/../../'
+
 # ── The command reference, and the two markers that delimit its DERIVED region.
 # The document is hand-written prose around one region this guard recomputes from the
 # live requirement tables and compares. The markers are held as literals here and
@@ -393,6 +410,23 @@ lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 # one — which is why the derivation is a named function with one definition rather than an
 # expression repeated at each site. A later slice adding a verb inherits it by calling it.
 verb_id() { local d="${1%/*}"; printf '%s' "${d##*/}"; }
+
+# strip_engine_root <trimmed-line> — removes the sanctioned engine-root prefix, and ONLY that
+# prefix, spelled character-for-character.
+#
+# It is called at the TWO sites that decide whether a fenced line is an invocation of the publish
+# script — the region-attribution emitter and the classifier — so a rooted invocation is parsed by
+# the same code that parses a bare one and keeps reaching F1/F2/F3 over its argv. Patching one site
+# and not the other is a silent F6: the classifier would resolve the invocation while the emitter
+# produced no record to attribute it to.
+#
+# The narrowness IS the anti-widening property, and it is what keeps the admission from becoming
+# "any variable resolves". Any other prefix — a second spelling of the same directory, a local
+# assignment, an alias — survives this function unchanged, fails both the invocation test and the
+# prose test, and lands on F5, which this guard treats as a failure rather than a skip. Arm GF5r
+# is the must-fire proof of that, and arm GF1r is its converse: a SANCTIONED root still reaches the
+# privilege grading, so the admission cannot have been implemented by skipping rooted lines.
+strip_engine_root() { local s="$1"; printf '%s' "${s#"$ENGINE_ROOT_TOK"}"; }
 
 # Membership is tested ELEMENT BY ELEMENT against a haystack passed as separate arguments
 # — never by joining the population into one string and matching a substring, which fails
@@ -747,7 +781,7 @@ parse_command_file() {
       printf 'BANG %s %s %d\n' "$cmd" "$owner" $((i+1))
     fi
     [ "${FD[$i]}" -eq 1 ] || continue
-    t="$(trim "${L[$i]}")"; t="${t#\$ }"; t="${t#./}"
+    t="$(trim "${L[$i]}")"; t="${t#\$ }"; t="${t#./}"; t="$(strip_engine_root "$t")"
     if [ "$t" = "$SCRIPT_REL" ] || [[ "$t" == "$SCRIPT_REL "* ]]; then
       printf 'INV %s %s %d %s\n' "$cmd" "$owner" $((i+1)) "$(trim "${t#"$SCRIPT_REL"}")"
     fi
@@ -1283,7 +1317,15 @@ adr4_check() {
 # RED-LIGHTS CORRECT CODE, and the predictable repair under time pressure is to weaken
 # the check until it passes — which is how a guard becomes a document. The classes:
 #
-#   INVOCATION  the line sits INSIDE a fence and BEGINS with the script path
+#   INVOCATION  the line sits INSIDE a fence and BEGINS with the script path, optionally
+#               prefixed by the ONE sanctioned engine-root token (see ENGINE_ROOT_TOK). The
+#               admission is a single literal and not a class of variables: the rooted form is
+#               stripped to the bare form and then parsed by the SAME code, so F1/F2/F3 still
+#               grade its subcommand and its argv. That is the whole of the narrowing — a
+#               rooted EXCLUDED form is still an F1, which arm GF1r proves, and any OTHER
+#               variable-bearing prefix still reaches F5, which arm GF5r proves. Widening this
+#               to "a variable" would retire the privilege grading on every rooted line at once
+#               and the suite would stay green while doing it
 #   TOOL-GRANT  the mention is enclosed in a Bash(...) grant token — on a frontmatter
 #               grant line, OR rendered as a code span in a grant-inventory table. This
 #               class is defined by the GRANT TOKEN and not by the frontmatter region,
@@ -1347,7 +1389,7 @@ invocation_check() {
       if [[ "$line" == *"Bash($SCRIPT_REL"* ]]; then n_grant=$((n_grant+1)); continue; fi
       if [[ "$t" == 'allowed-tools:'* ]] || [[ "$t" == 'disallowed-tools:'* ]]; then n_grant=$((n_grant+1)); continue; fi
 
-      bare="$t"; bare="${bare#\$ }"; bare="${bare#./}"
+      bare="$t"; bare="${bare#\$ }"; bare="${bare#./}"; bare="$(strip_engine_root "$bare")"
       if [ "$fd" -eq 1 ] && { [ "$bare" = "$SCRIPT_REL" ] || [[ "$bare" == "$SCRIPT_REL "* ]]; }; then
         n_inv=$((n_inv+1))
         rest="$(trim "${bare#"$SCRIPT_REL"}")"
@@ -1822,6 +1864,13 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
           rotate)      printf -- '```\n%s rotate trips/x\n```\n\n' "$SCRIPT_REL" ;;
           nounpubflag) printf -- '```\n%s unpublish trips/x\n```\n\n' "$SCRIPT_REL" ;;
           badflag)     printf -- '```\n%s update trips/x --passphrase secret\n```\n\n' "$SCRIPT_REL" ;;
+          # rootrotate — a SANCTIONED-root invocation of an EXCLUDED form. It must still be an
+          # F1: if the admission had been implemented by skipping rooted lines rather than by
+          # stripping the prefix, this fixture would go quiet and nothing else would notice.
+          rootrotate)  printf -- '```\n%s%s rotate trips/x\n```\n\n' "$ENGINE_ROOT_TOK" "$SCRIPT_REL" ;;
+          # wrongroot — a DIFFERENT variable-bearing root. It must still be an F5: the admission
+          # is one literal, not the class of things that look like a rooted path.
+          wrongroot)   printf -- '```\n${ZZ_OTHER_ROOT}/%s update trips/x\n```\n\n' "$SCRIPT_REL" ;;
           *)           printf -- '```\n%s update trips/x\n```\n\n' "$SCRIPT_REL" ;;
         esac
       fi
@@ -2645,6 +2694,14 @@ ctl GF3  F3 "a forbidden flag passed on a publish-script invocation"           o
 ctl GF4  F4 "a command file that SETS the plaintext override, not merely names it" ok    allowplain  'grep -qF "ALLOW_PLAINTEXT=1" "$WORK/GF4/skills/trip/SKILL.md"'
 ctl GF5  F5 "a script mention reached through a variable — unresolved, not silently clean" ok varmention 'grep -q "^SCRIPT=scripts" "$WORK/GF5/skills/trip/SKILL.md"'
 ctl GF6  F6 "a fenced invocation in no verb region — a finding that could name only a FILE" ok orphaninv 'grep -q "^## Not a verb$" "$WORK/GF6/skills/trip/SKILL.md"'
+# ── The two arms that bound the engine-root admission, in both directions. Without the first,
+# the admission could have been implemented as "skip a rooted line" and every privilege finding
+# on a rooted invocation would have gone silent under a green suite. Without the second, it
+# could have been implemented as "accept any variable" and F5 would have stopped meaning
+# anything. Each is a MUST-FIRE arm on an id this guard already emits, so neither adds a finding
+# id and group Y's mapping is unchanged.
+ctl GF1r F1 "a SANCTIONED-root invocation of the EXCLUDED form rotate — rooting a path does not retire the privilege grading over it" ok rootrotate 'grep -qF "CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate trips/x" "$WORK/GF1r/skills/trip-publish/SKILL.md"'
+ctl GF5r F5 "a fenced invocation rooted through a DIFFERENT variable — the admission is ONE literal, not the class of rooted-looking paths" ok wrongroot 'grep -qF "ZZ_OTHER_ROOT}/scripts/publish-trip-site.sh update trips/x" "$WORK/GF5r/skills/trip-publish/SKILL.md"'
 # ── H-group arms. The first three defect the FRONTMATTER, which parse_command_file reads
 # nothing of — which is exactly why this class went undetected until group H existed. The
 # last two defect the DOCUMENT while leaving the command files correct, so the divergence
