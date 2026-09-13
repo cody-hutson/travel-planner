@@ -3,8 +3,8 @@ name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
-disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
 # /trip
@@ -14,6 +14,26 @@ disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*
 The verb is the one the user typed, or — on an empty argument string — the `status` default
 step 3 declares, which is the one verb this file supplies. Nothing in it reads the wording of
 the request to decide one.
+
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
+
+**A script's own data reads are a different question from where the script is, and rooting its
+path does not answer it.** Where a verb's invocation section tells you where to stand when you run
+it, that instruction is about the working directory the script resolves its own store against, and
+it stands unchanged.
+
+**The bare spelling of a path inside prose is deliberate and is not a defect to repair.** A path in
+a document the agent reads is returned as text — there is no include directive at either surface —
+so rooting it there would buy no mechanism while putting an unexpanded variable in front of every
+human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
+grants and the fenced invocations.
 
 ## Trips in this repo
 
@@ -1078,7 +1098,7 @@ and nothing anywhere else.
 **What it runs** — a single invocation:
 
 ```
-scripts/validate-artifacts.sh --scope dir trips/<slug>
+${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh --scope dir trips/<slug>
 ```
 
 **`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
