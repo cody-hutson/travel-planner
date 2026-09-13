@@ -500,8 +500,8 @@ script where your data is, and the two are different questions. Without the flag
 back to the working directory, which is exactly the dependence this contract removes. **This
 instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
 in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
-concern stays attributable to one change. See this file's own *"run it from the repo root"*
-sentences for the same pattern already ratified on this surface.
+concern stays attributable to one change. The retained where-to-stand sentences on this
+surface are the same pattern, already ratified.
 
 **When the trip was never published**, the script refuses before the passphrase is
 touched: it resolves the per-trip clone before it resolves the passphrase, so it creates no
@@ -560,8 +560,8 @@ script where your data is, and the two are different questions. Without the flag
 back to the working directory, which is exactly the dependence this contract removes. **This
 instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
 in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
-concern stays attributable to one change. See this file's own *"run it from the repo root"*
-sentences for the same pattern already ratified on this surface.
+concern stays attributable to one change. The retained where-to-stand sentences on this
+surface are the same pattern, already ratified.
 
 **Freshness is report-only.** Render the stale column as the script emits it, including
 its indeterminate value. No verb of this file branches on it, and `update` does not
