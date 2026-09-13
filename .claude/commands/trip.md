@@ -16,11 +16,11 @@ the request to decide one.
 
 ## Trips in this repo
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+!`{ ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+!`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
