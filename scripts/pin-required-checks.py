@@ -678,7 +678,7 @@ def run_apply(repo, branch, staging, confirm, fetch=gh_fetch_json,
             return 5
 
     prot_path = "repos/{}/branches/{}/protection".format(repo, branch)
-    rsc_path = prot_path + SUBRESOURCE_SUFFIX
+    rsc_path = "repos/{}/branches/{}{}".format(repo, branch, SUBRESOURCE_SUFFIX)
     pre_full_f = os.path.join(staging, "prot-PRE.json")
     pre_rsc_f = os.path.join(staging, "rsc-PRE.json")
     patch_f = os.path.join(staging, "rsc-PATCH.json")
