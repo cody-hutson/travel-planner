@@ -1,0 +1,7 @@
+{
+  "name": "travel-planner",
+  "description": "Plan a trip end to end: research a destination, build and audit an itinerary, record what the party needs, and publish an encrypted trip site. Provides the trip, trip-new, trip-record, trip-publish and trip-decommission verbs.",
+  "author": {
+    "name": "cody-hutson"
+  }
+}
