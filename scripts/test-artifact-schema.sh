@@ -3263,7 +3263,7 @@ DR_A_OUT=""; DR_A_RC=0; DR_A_SEL=0; DR_A_VAL=0; DR_A_SKP=0; DR_A_FIND=0; DR_A_VA
 DR_B_OUT=""; DR_B_RC=0; DR_B_SEL=0; DR_B_A2=0; DR_B_X2SCOPE=0
 DR_C_OUT=""; DR_C_RC=0; DR_C_SEL=0; DR_C_A2=0; DR_C_X2DOC=0; DR_C_X2SCOPE=0
 DR_D_OUT=""; DR_D_RC=0; DR_D_SEL=0; DR_D_MSG=0
-DR_E_OUT=""; DR_E_RC=0
+DR_E_OUT=""; DR_E_RC=0; DR_E_SAME=0; DR_E_ANCHOR=0; DR_C_SHAPE=0; DR_C_ANCHOR=0
 
 # dr_declares <file> — rc 0 when the file opens with a frontmatter block carrying an
 # `artifact:` key before the block closes. A read of the fixture's own bytes, independent of
@@ -3404,11 +3404,20 @@ DR_C_SEL="$(dr_field "$DR_C_OUT" POPULATION selected)"
 DR_C_A2="$(printf '%s\n' "$DR_C_OUT" | grep -c '^FINDING A2 ')"
 grep -q "^FINDING X2 $VA_ARCH_DOC " <<<"$DR_C_OUT" && DR_C_X2DOC=1
 grep -q "^FINDING X2 $DR_TRIP the --scope dir target" <<<"$DR_C_OUT" && DR_C_X2SCOPE=1
-if [ "$DR_C_RC" -ne 0 ] && [ "$DR_C_X2DOC" -eq 1 ] && [ "$DR_C_X2SCOPE" -eq 0 ] && [ "$DR_C_SEL" -eq "$DR_N" ] \
-   && [ "$DR_A_VAL" -ge 1 ] && [ "$DR_C_A2" -eq "$DR_A_VAL" ] && [ "$DR_B_A2" -eq 0 ]; then
+# Two limbs, graded separately so the FAIL names the true cause: the conflation's OWN shape
+# (what --root alone does), and the CROSS-ANCHOR to the seam run above (one spurious A2 per
+# artifact the seam validated clean, and none from the skeleton). When the seam's own run is
+# degenerate the anchor fails while the shape holds — and that FAIL must send the reader to
+# CTL-DATAROOT2 rather than blame a conflation that reproduced perfectly.
+DR_C_SHAPE=0; DR_C_ANCHOR=0
+[ "$DR_C_RC" -ne 0 ] && [ "$DR_C_X2DOC" -eq 1 ] && [ "$DR_C_X2SCOPE" -eq 0 ] && [ "$DR_C_SEL" -eq "$DR_N" ] && DR_C_SHAPE=1
+[ "$DR_A_VAL" -ge 1 ] && [ "$DR_C_A2" -eq "$DR_A_VAL" ] && [ "$DR_B_A2" -eq 0 ] && DR_C_ANCHOR=1
+if [ "$DR_C_SHAPE" -eq 1 ] && [ "$DR_C_ANCHOR" -eq 1 ]; then
   PASS "CTL-DATAROOT4: MUST FIRE — the pre-fix composition (--root at the data root, no --data-root) still reproduces the defect in its common shape: X2 naming the architecture document, the whole trip selected ($DR_C_SEL, because --root alone moves the population too), and $DR_C_A2 spurious A2 — one per artifact the seam validated clean — rc=$DR_C_RC. Conflation and no-data are now two shapes with two verdicts, and a later change that folds the roots back into one flag turns CTL-DATAROOT2 red instead of shipping green"
+elif [ "$DR_C_SHAPE" -ne 1 ]; then
+  FAIL "CTL-DATAROOT4: the pre-fix composition did not reproduce the defect's common shape (rc=$DR_C_RC x2-on-architecture-doc=$DR_C_X2DOC x2-on-scope=$DR_C_X2SCOPE selected=$DR_C_SEL of $DR_N a2=$DR_C_A2) — either --root no longer moves the population, or the corpus is no longer read beneath --root, and in both cases CTL-DATAROOT3 can no longer be told apart from a conflation"
 else
-  FAIL "CTL-DATAROOT4: the pre-fix composition did not reproduce the defect's common shape (rc=$DR_C_RC x2-on-architecture-doc=$DR_C_X2DOC x2-on-scope=$DR_C_X2SCOPE selected=$DR_C_SEL of $DR_N a2=$DR_C_A2 against $DR_A_VAL validated clean through the seam; skeleton a2=$DR_B_A2) — either --root no longer moves the population, or A2 no longer fires on an UNKNOWN class, and in both cases CTL-DATAROOT3 can no longer be told apart from a conflation"
+  FAIL "CTL-DATAROOT4: the conflation reproduced in shape (rc=$DR_C_RC x2-on-architecture-doc=$DR_C_X2DOC selected=$DR_C_SEL of $DR_N) but the cross-anchor to the seam did not hold (a2=$DR_C_A2 against $DR_A_VAL validated clean through the seam; skeleton a2=$DR_B_A2) — one spurious A2 per healthy artifact can only be pinned when the seam's own run is non-degenerate, so CTL-DATAROOT2 is the arm to read"
 fi
 
 # CTL-DATAROOT5 — the seam is validated once, loudly, and never silently fallen back from.
@@ -3424,10 +3433,18 @@ fi
 # CTL-DATAROOT6 — the second spelling. The seam is taught once and typed on two scripts,
 # so `--data-root=<dir>` must be the same seam and not a second, unknown flag.
 DR_E_OUT="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_E_RC=$?
-if [ "$DR_E_RC" -eq 0 ] && [ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && [ "$DR_E_OUT" = "$DR_A_OUT" ]; then
+# Agreement is only evidence over a NON-DEGENERATE subject: two spellings that agree on a
+# broken seam prove nothing about the spelling, so the anchor to CTL-DATAROOT2 is graded as
+# its own limb and named in the FAIL.
+DR_E_SAME=0; DR_E_ANCHOR=0
+[ "$DR_E_RC" -eq "$DR_A_RC" ] && [ "$DR_E_OUT" = "$DR_A_OUT" ] && DR_E_SAME=1
+[ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && DR_E_ANCHOR=1
+if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
   PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0) — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts"
+elif [ "$DR_E_SAME" -ne 1 ]; then
+  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form (rc=$DR_E_RC vs $DR_A_RC, outputs differ) — an operator who learned the seam on the sibling script types it here and is refused or misread"
 else
-  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form (rc=$DR_E_RC vs $DR_A_RC, outputs $([ "$DR_E_OUT" = "$DR_A_OUT" ] && echo identical || echo differ)) — an operator who learned the seam on the sibling script types it here and is refused or misread"
+  FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
 fi
 
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
