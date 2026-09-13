@@ -28,14 +28,14 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 
 ## Install
 
-This is a [Claude Code](https://claude.com/claude-code) project — there's nothing to build or install into your system. You clone it and open it in Claude Code, which drives the planning flow per [`CLAUDE.md`](CLAUDE.md). It works the same in the **desktop app** and the **CLI**.
+The engine installs into [Claude Code](https://claude.com/claude-code) as a plugin. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the repository root carries a plugin manifest, and installing it is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and [`CLAUDE.md`](CLAUDE.md) drives the planning flow from wherever you are. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
 
 ### Prerequisites
 
 **To plan a trip:**
 
 - [Claude Code](https://claude.com/claude-code) — desktop app or CLI
-- `git` — to clone this repo
+- `git` — to acquire the engine. Cloning is how you **get** it and not how you **use** it, so the install step below is not optional
 
 **To publish a trip site** (optional — only when you want to share a finished itinerary):
 
@@ -54,15 +54,65 @@ The gap is deliberate: the operating instructions make the lightest action that 
 
 ### Install steps
 
+**Acquire it.**
+
 ```bash
 git clone https://github.com/cody-hutson/travel-planner
 cd travel-planner
 ```
 
-Then open the folder in Claude Code:
+**Install it into Claude Code.** The checkout you just made *is* the installable unit: its root
+carries the plugin manifest at `.claude-plugin/plugin.json`, and each verb lives at
+`skills/<verb>/` beside the asset tree it reads, so nothing is copied and nothing is rearranged.
+Add that directory to Claude Code through its plugin surface. Claude Code's own plugin
+documentation carries the current form of the command; it is upstream-owned and deliberately not
+pinned here, because a command string copied into this file would be wrong the first time it
+moved. **Installing is placing the directory, and updating is replacing it** — a `git pull` in
+the checkout you installed from is the whole update path.
 
-- **Desktop app** — open the `travel-planner` folder
-- **CLI** — run `claude` from inside the `travel-planner` directory
+Then, wherever you work:
+
+- **Desktop app** — you no longer open the `travel-planner` folder. Open whatever project you are
+  in; the verbs are there because the engine is installed, not because its folder is open.
+- **CLI** — the same. Run `claude` wherever you work. The verbs do not depend on your working
+  directory, and neither does your trip data — that is the next section.
+
+That is the whole of what installing buys. A verb used to resolve your trips through whichever
+folder happened to be open, so it appeared in every project and worked only in the checkout.
+Installed, the engine has a location of its own and finds your data through the pointer below.
+
+### Upgrading from the pre-plugin layout
+
+Skip this on a fresh install. It applies if you ran an earlier version and copied the verb files
+into Claude Code's user-scope command directory so they would be available outside the checkout —
+the workaround this release removes the need for. Those copies still answer, and they answer with
+the old resolution behaviour, so remove them.
+
+**Remove them one path at a time, never the directory.** That directory is shared: it commonly
+holds unrelated commands of your own, and nothing here should touch them.
+
+```bash
+rm ~/.claude/commands/trip.md
+rm ~/.claude/commands/trip-new.md
+rm ~/.claude/commands/trip-record.md
+rm ~/.claude/commands/trip-publish.md
+rm ~/.claude/commands/trip-decommission.md
+```
+
+**Nothing is lost by doing this.** Every one of those copies is byte-for-byte a revision of the
+same verb that this repository already tracks, so the content lives in git history and not only
+in the file you are deleting:
+
+```bash
+git log --all --oneline --name-only --diff-filter=D -- '*/trip*.md'   # the paths and revisions
+git show <commit>:<path>                                             # print any one of them
+```
+
+If you ever hand-edited one of those copies, `diff` it against the installed
+`skills/<verb>/SKILL.md` before removing it, so you keep whatever you changed on purpose.
+
+Afterwards: those paths are gone, every other command in that directory is untouched, and `/trip`
+resolves to the installed engine rather than to a stale copy.
 
 ### Tell the engine where your trips live
 
@@ -126,7 +176,15 @@ Your own profiles carry real personal detail, so they never leave your machine a
 
 ### Verify
 
-Confirm the engine cloned intact:
+**Confirm the engine is installed and reachable.** This is the check that matters, because
+reaching a verb from outside the engine's folder is the property installing it buys. From any
+directory that is not the checkout, start Claude Code and type `/`: the trip verbs offer
+themselves with tab-completion, and `/trip` with no verb reports where your trip stands. On a
+fresh install it says there are no trips yet and names `/trip-new`. If the verbs do not offer
+themselves at all, the engine is not installed; if they offer themselves but cannot find your
+trips, the data-root pointer above is what to check, and the verb names that file for you.
+
+**Confirm the checkout is intact.** A different question, and one to run inside the checkout:
 
 ```bash
 ls agents/        # 9 agent definitions
