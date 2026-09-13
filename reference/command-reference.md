@@ -18,7 +18,7 @@ it.
 
 | Column | What it carries | Where it comes from |
 |---|---|---|
-| **Command** | The slash command the verb belongs to | the command file's own name |
+| **Command** | The slash command the verb belongs to | the verb's own directory name under `skills/` |
 | **Verb** | The token you type after the command | field 1 of that file's requirement table |
 | **Arguments** | The argument signature the verb expects, as its own section heading states it. `—` where the verb takes none | the verb's `## <verb> <signature>` heading |
 | **Lifecycle** | The trip lifecycle state the verb requires — a verb declaring `ACTIVE` refuses on an archived trip | the requirement table |

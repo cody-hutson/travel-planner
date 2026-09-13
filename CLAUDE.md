@@ -622,3 +622,31 @@ travel-planner/
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated
 ```
+
+### Verb body size — the threshold, its source, and the recorded overages
+
+**The budget is at most 500 lines of body, and the number is not this repository's.** It comes from the
+published skill-authoring guidance that the `SKILL.md` format belongs to — an external source this
+repo does not own and cannot change — and it is written down here because an acceptance criterion
+graded against a figure no reader can find in the corpus is not gradeable. Nothing in this
+repository enforces it; it is a budget, recorded so an overage is a decision rather than an
+accident.
+
+**Four of the five verbs exceed it and one does not, so the overage is a property of the four that
+exceed rather than of the format.** Each is recorded with its reason. *Body lines* excludes the
+frontmatter block, which is what the budget is about; every figure is measured at `b89b367`:
+
+| Verb | Body lines | Over the budget by | Why it is retained at this size |
+|---|---|---|---|
+| `trip-record` | 2,859 | ~5.7× | measured at `b89b367`. The widest verb surface in the engine — the person, group, traveller, fact, event and log verbs all live here. A reduction at this ratio is a rewrite, not a trim |
+| `trip` | 1,120 | ~2.2× | measured at `b89b367`. The entry point, carrying every dispatching verb and the agent roster each one reads |
+| `trip-decommission` | 653 | ~1.3× | measured at `b89b367`. Three lifecycle verbs whose ordering is load-bearing and stated in full |
+| `trip-publish` | 553 | ~1.1× | measured at `b89b367`. The publish surface, whose refusals and their reasons are the bulk of it |
+| `trip-new` | 468 | — | measured at `b89b367`. Inside the budget, untouched |
+
+**No body content is reduced in the format conversion, deliberately.** Two constraints make the
+reduction a separate change rather than a cheap one to fold in here. A verb must behave identically
+to its pre-conversion form, demonstrated per verb — and a rewrite of the largest body makes that
+demonstration unfalsifiable, because a behavioural difference could no longer be attributed to the
+format change. And the prose-tone rewrite of these same files is separately scoped, so reducing
+them here would duplicate that scope and guarantee the collision it was sequenced to avoid.
