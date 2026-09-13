@@ -16,10 +16,12 @@
 # ── WHAT IT ASSERTS ──────────────────────────────────────────────────────────────
 #   PIN  the canonical literals, read FROM CLAUDE.md: the section exists and is
 #        uniquely named; the evidence list is a fenced literal whose entries are
-#        contiguous from E1, `!`-prefixed and stderr-capturing; the header block
-#        yields a citation line. Plus the self-check that gives this suite its
+#        contiguous from E1, stderr-capturing, NOT `!`-prefixed (that carrier is
+#        retired), naming `<data-root>` and never CLAUDE_PROJECT_DIR; the header block
+#        yields a citation line and a data-root-pointer line. Plus the self-check that gives this suite its
 #        reason to exist — THIS SCRIPT HOLDS NO COPY of any canonical entry.
-#   RP   the real consumer population under skills/: citation line present,
+#   RP   the real consumer population under skills/: citation line present, the
+#        data-root-pointer line byte-identical to the charter's,
 #        evidence blocks byte-identical to the canonical at their index, the prefix
 #        contiguous from index 1 and EXACTLY the length the declared `contract-depth`
 #        requires — no fewer blocks and no more — and `contract-depth` equal to the
@@ -27,7 +29,7 @@
 #   CTL  a synthetic five-file fixture tree, built in a temp dir ON EVERY RUN. Two arms
 #        MUST NOT fire — a clean tree, and a table whose depth cells are rendered as
 #        code spans; the rest are deliberate defects that MUST, ONE PER FAILURE CODE the
-#        checker can emit — H1 H2 H3 P1 P2 P3 D1 D2 — plus the specificity arms, proving
+#        checker can emit — H1 H2 H3 H4 P1 P2 P3 D1 D2 — plus the specificity arms, proving
 #        the verb-table depth is read by FIELD INDEX and not by a row-wide match, and
 #        that normalising the depth cell did not widen it into "any token is a depth".
 #        A code with no arm is a check indistinguishable from one that CANNOT
@@ -216,12 +218,12 @@ fence_block() {  # <file> <info> <heading>
 # drives it against fixtures — the SAME code path, which is what makes CTL's arms
 # evidence about RP's verdict rather than about a parallel implementation.
 #
-#   conformance_check <commands_dir> <canon_file> <citation_line> <canon_count>
+#   conformance_check <commands_dir> <canon_file> <citation_line> <canon_count> <pointer_line>
 #
 # Emits `FINDING <id> <file> <detail>` lines; returns 1 if any finding was emitted.
 # ─────────────────────────────────────────────────────────────────────────────────
 conformance_check() {
-  local dir="$1" canon_file="$2" citation="$3" n="$4"
+  local dir="$1" canon_file="$2" citation="$3" n="$4" pointer="$5"
   local found=0 f base line i
   local -a canon
   i=0
@@ -240,6 +242,24 @@ conformance_check() {
     done < "$f"
     if [ "$has_cite" -eq 0 ]; then
       printf 'FINDING H1 %s contract header block absent (no citation line)\n' "$base"; found=1
+    fi
+
+    # -- the data-root pointer line, byte-identical across every consumer ----------
+    # This is the one literal a consumer must hold BEFORE it can read anything: the
+    # evidence entries name `<data-root>`, and the value behind that placeholder is
+    # read from the pointer this line names. It is asserted byte-identical for the
+    # same reason the citation line is — five files quietly naming four pointer paths
+    # is four data roots, which is the drift surface this ladder exists to close. It
+    # is compared against the line the CHARTER declares, never against a literal held
+    # here, so the charter stays the single home.
+    local has_ptr=0
+    if [ -n "$pointer" ]; then
+      while IFS= read -r line || [ -n "$line" ]; do
+        [ "$line" = "$pointer" ] && { has_ptr=1; break; }
+      done < "$f"
+      if [ "$has_ptr" -eq 0 ]; then
+        printf 'FINDING H4 %s contract header carries no data-root-pointer line byte-identical to the charter'"'"'s\n' "$base"; found=1
+      fi
     fi
 
     # -- contract-depth ------------------------------------------------------------
@@ -290,7 +310,7 @@ conformance_check() {
     local m=0
     while IFS= read -r line || [ -n "$line" ]; do
       case "$line" in
-        '!`'*) m=$((m+1)); blocks[$m]="$line" ;;
+        "$EVID_MARK"*) m=$((m+1)); blocks[$m]="$line" ;;
       esac
     done < "$f"
     if [ "$depth_known" -eq 1 ] && [ "$m" -lt "$need" ]; then
@@ -464,17 +484,37 @@ EOF
     PIN_OK=0
   fi
 
-  # PIN3 — every entry is a `!`-prefixed pre-execution block that captures stderr.
-  bad=0; i=0
+  # PIN3 — the entries' SHAPE, and it changed with the carrier. The list used to be a
+  # set of `!`-prefixed pre-execution blocks; it is now a set of commands the AGENT runs
+  # as tool calls, because a pre-execution block is expanded by the harness and the
+  # harness substitutes no name for an operator data root. So the `!` prefix is now a
+  # DEFECT rather than a requirement, and this arm grades it in that direction.
+  #
+  # Four limbs, and the last two are the ones that make the defect unreachable rather
+  # than merely fixed: `CLAUDE_PROJECT_DIR` is the launching-workspace root whose use
+  # IS the defect, and `<data-root>` is the placeholder the ladder resolves. An entry
+  # naming the first, or failing to name the second, is the original bug re-entering
+  # through the one surface every consumer copies byte-identically.
+  #
+  # EVID_MARK is derived here rather than written down. A hard-coded marker is the same
+  # drift surface one size smaller: it would go on matching `!`-prefixed lines after the
+  # charter retired that carrier, the consumer detector would find ZERO blocks in every
+  # file, and the suite would report five short prefixes instead of one changed marker.
+  bad=0; i=0; nomark=0
+  EVID_MARK=""
   while IFS= read -r e || [ -n "$e" ]; do
     i=$((i+1))
-    case "$e" in '!`'*) ;; *) bad=$((bad+1)) ;; esac
+    [ "$i" -eq 1 ] && EVID_MARK="${e:0:2}"
+    case "$e" in '!'*) bad=$((bad+1)) ;; esac
     case "$e" in *'2>&1'*) ;; *) bad=$((bad+1)) ;; esac
+    case "$e" in *'CLAUDE_PROJECT_DIR'*) bad=$((bad+1)) ;; esac
+    case "$e" in *'<data-root>'*) ;; *) bad=$((bad+1)) ;; esac
+    case "$e" in "$EVID_MARK"*) ;; *) nomark=$((nomark+1)) ;; esac
   done < "$CANON_FILE"
-  if [ "$CANON_N" -ge 1 ] && [ "$bad" -eq 0 ]; then
-    PASS "PIN3: all $CANON_N canonical entries are \`!\`-prefixed pre-execution blocks and every one captures stderr"
+  if [ "$CANON_N" -ge 1 ] && [ "$bad" -eq 0 ] && [ "$nomark" -eq 0 ] && [ -n "$EVID_MARK" ]; then
+    PASS "PIN3: all $CANON_N canonical entries are agent-run reads — none carries the retired \`!\` pre-execution prefix, every one captures stderr, every one resolves against the \`<data-root>\` placeholder, none names CLAUDE_PROJECT_DIR, and all share the leading marker \"$EVID_MARK\" the consumer detector derives from them"
   else
-    FAIL "PIN3: $bad canonical entr(y/ies) are not \`!\`-prefixed or do not capture stderr"
+    FAIL "PIN3: $bad canonical entr(y/ies) are \`!\`-prefixed, do not capture stderr, name CLAUDE_PROJECT_DIR, or do not name <data-root>; $nomark do not share the leading marker \"$EVID_MARK\""
     PIN_OK=0
   fi
 
@@ -484,6 +524,31 @@ EOF
     PASS "PIN4: contract header citation line extracted — \"$CITATION\""
   else
     FAIL "PIN4: could not extract a citation line from the \`$HEADER_FENCE\` fence"
+    PIN_OK=0
+  fi
+
+  # PIN6 — the data-root pointer line. The evidence entries name `<data-root>`; this is
+  # the line that says where the value behind that placeholder is read from, and it is
+  # the ONE literal a consumer needs before it can open anything. Extracted from the
+  # charter's own header fence so the charter remains its single home — a literal here
+  # would be the second source PIN5 exists to forbid, one field over.
+  #
+  # Read with a while-loop, NOT `fence_block … | grep -m1 …`. A pipe into a reader that
+  # stops at its first match kills the writer with SIGPIPE, and `pipefail` — set at the
+  # top of this file — then reports the pipeline failed even though the match succeeded.
+  # Group PF exists because that defect was found here before; this is the same shape.
+  POINTER_LINE=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'data-root-pointer: '*) [ -z "$POINTER_LINE" ] && POINTER_LINE="$line" ;;
+    esac
+  done <<EOF
+$(fence_block "$CLAUDE_MD" "$HEADER_FENCE" "$SECTION_HEADING")
+EOF
+  if [ -n "$POINTER_LINE" ] && [ "$POINTER_LINE" != 'data-root-pointer: ' ]; then
+    PASS "PIN6: contract header data-root pointer line extracted — \"$POINTER_LINE\""
+  else
+    FAIL "PIN6: the \`$HEADER_FENCE\` fence declares no non-empty \"data-root-pointer: \" line — the evidence entries name <data-root> and nothing says where its value is read from"
     PIN_OK=0
   fi
 fi
@@ -610,12 +675,20 @@ elif [ "$RP_POP" -eq 0 ]; then
   if [ -d "$CMD_DIR" ]; then why="the directory exists and holds no <verb>/SKILL.md"; else why="the directory does not exist"; fi
   VACUOUS "RP: observed consumer population = 0 ($why). Every RP assertion is vacuously true and proves NOTHING about conformance. Group CTL below is what makes this run meaningful."
 else
-  RP_OUT="$(conformance_check "$CMD_DIR" "$CANON_FILE" "$CITATION" "$CANON_N")"; RP_RC=$?
+  RP_OUT="$(conformance_check "$CMD_DIR" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; RP_RC=$?
   echo "  observed consumer population = $RP_POP file(s)"
   if has_finding "$RP_OUT" 'H1'; then FAIL "RP1: a consumer is missing the contract header block"; show "$RP_OUT" 'H1'
   else PASS "RP1: all $RP_POP consumer(s) carry the contract header citation line, byte-identical"; fi
   if has_finding "$RP_OUT" 'H2|H3'; then FAIL "RP2: a consumer's contract-depth or population-role is absent or malformed"; show "$RP_OUT" 'H2|H3'
   else PASS "RP2: all $RP_POP consumer(s) declare a well-formed contract-depth and population-role"; fi
+  # RP8 is written in the REMEDIATED form rather than the polarity-negative one its RP
+  # siblings carry. Those five are a declared residual; a NEW site joining a residual is
+  # how a residual stops draining. `expect_rc 1` grades an exact status, so an absent or
+  # renamed `has_finding` reports rc=127 as a FAIL naming the missing subject instead of
+  # reaching this arm's PASS limb the way a genuine no-finding does. `show` prints only
+  # when an H4 finding exists, so the detail is silent on a pass.
+  expect_rc 1 "RP8" "all $RP_POP consumer(s) carry the charter's data-root-pointer line byte-identical — \"$POINTER_LINE\" — so every consumer resolves <data-root> from one declared source rather than from the directory the session happens to be in" -- has_finding "$RP_OUT" 'H4'
+  show "$RP_OUT" 'H4'
   if has_finding "$RP_OUT" 'P1'; then FAIL "RP3: a consumer's evidence block diverges from the canonical"; show "$RP_OUT" 'P1'
   else PASS "RP3: every evidence block in all $RP_POP consumer(s) is byte-identical to the canonical at its index"; fi
   # P2 and P3 are the two directions of ONE rule, so they are surfaced together and the
@@ -628,7 +701,7 @@ else
   # Self-consistency: every finding the checker emitted must have been surfaced above.
   if [ "$RP_RC" -eq 0 ]; then PASS "RP6: the checker returned 0 — no finding of any id went unsurfaced"
   else
-    if has_finding "$RP_OUT" 'H1|H2|H3|P1|P2|P3|D1|D2'; then PASS "RP6: the checker returned $RP_RC and every finding it emitted is accounted for above"
+    if has_finding "$RP_OUT" 'H1|H2|H3|H4|P1|P2|P3|D1|D2'; then PASS "RP6: the checker returned $RP_RC and every finding it emitted is accounted for above"
     else FAIL "RP6: the checker returned $RP_RC but emitted no finding the assertions above recognise"; fi
   fi
 fi
@@ -729,6 +802,10 @@ else
       else                                    printf 'contract-depth: G%s\n' "$depth"
       fi
       [ "$variant" = "norole" ]   || printf 'population-role: %s\n' "$role"
+      # The data-root pointer line, taken from the CHARTER's own header fence — never a
+      # literal here, for PIN5's reason. `nopointer` withholds it from the RESOLVE
+      # consumer so CTLnp has a fixture that changes exactly one field.
+      [ "$variant" = "nopointer" ] || printf '%s\n' "$POINTER_LINE"
       printf '\n'
       # The table is built for EVERY role, not only RESOLVE. Building it only for
       # RESOLVE was the second half of D2's asymmetry: the clean tree's CREATE consumer
@@ -852,7 +929,7 @@ else
   else
     FAIL "CTLa3: the clean tree's CREATE consumer carries no readable verb table (depth cells=$a_new_cells) — CTLa2 would be silent for the old reason and the role widening would be untested"
   fi
-  A_OUT="$(conformance_check "$A" "$CANON_FILE" "$CITATION" "$CANON_N")"; A_RC=$?
+  A_OUT="$(conformance_check "$A" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; A_RC=$?
   if [ "$A_RC" -eq 0 ]; then
     PASS "CTLa2: MUST-NOT-FIRE — a conformant five-file tree returns 0; the checker is not hard-wired red"
   else
@@ -871,7 +948,7 @@ else
   else
     FAIL "CTLb2: the defective fixture does not carry the mutation — CTLb3 would prove nothing"
   fi
-  B_OUT="$(conformance_check "$B" "$CANON_FILE" "$CITATION" "$CANON_N")"; B_RC=$?
+  B_OUT="$(conformance_check "$B" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; B_RC=$?
   if [ "$B_RC" -ne 0 ] && has_finding "$B_OUT" 'P1'; then
     PASS "CTLb3: MUST-FIRE — a consumer whose evidence block dropped the stderr redirect is caught as a byte-identity divergence (P1)"
   else
@@ -885,7 +962,7 @@ else
   else
     FAIL "CTLc1: the header-removal fixture is not set up as claimed — CTLc2 would prove nothing"
   fi
-  C_OUT="$(conformance_check "$C" "$CANON_FILE" "$CITATION" "$CANON_N")"; C_RC=$?
+  C_OUT="$(conformance_check "$C" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; C_RC=$?
   if [ "$C_RC" -ne 0 ] && has_finding "$C_OUT" 'H1'; then
     PASS "CTLc2: MUST-FIRE — a consumer with no contract header block is caught (H1)"
   else
@@ -896,14 +973,14 @@ else
   D="$WORK/ctl_d"; mk_tree "$D" shortprefix
   d_blocks=0
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in '!`'*) d_blocks=$((d_blocks+1)) ;; esac
+    case "$line" in "$EVID_MARK"*) d_blocks=$((d_blocks+1)) ;; esac
   done < "$D/trip/SKILL.md"
   if [ "$d_blocks" -lt "$CANON_N" ] && grep -q -x -F -- 'contract-depth: G8' "$D/trip/SKILL.md"; then
     PASS "CTLd1: fixture integrity — the defective consumer declares depth G8 while carrying only $d_blocks of $CANON_N evidence block(s)"
   else
     FAIL "CTLd1: the short-prefix fixture is not set up as claimed (blocks=$d_blocks of $CANON_N) — CTLd2 would prove nothing"
   fi
-  D_OUT="$(conformance_check "$D" "$CANON_FILE" "$CITATION" "$CANON_N")"; D_RC=$?
+  D_OUT="$(conformance_check "$D" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; D_RC=$?
   if [ "$D_RC" -ne 0 ] && has_finding "$D_OUT" 'P2'; then
     PASS "CTLd2: MUST-FIRE — a consumer declaring a depth deeper than its evidence prefix is caught (P2)"
   else
@@ -922,7 +999,7 @@ else
   else
     FAIL "CTLnd1: the depth-removal fixture is not set up as claimed — CTLnd2 would prove nothing"
   fi
-  ND_OUT="$(conformance_check "$ND" "$CANON_FILE" "$CITATION" "$CANON_N")"; ND_RC=$?
+  ND_OUT="$(conformance_check "$ND" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; ND_RC=$?
   if [ "$ND_RC" -ne 0 ] && has_finding "$ND_OUT" 'H2'; then
     PASS "CTLnd2: MUST-FIRE — a consumer that declares no contract-depth is caught (H2)"
   else
@@ -938,11 +1015,31 @@ else
   else
     FAIL "CTLnr1: the role-removal fixture is not set up as claimed — CTLnr2 would prove nothing"
   fi
-  NR_OUT="$(conformance_check "$NR" "$CANON_FILE" "$CITATION" "$CANON_N")"; NR_RC=$?
+  NR_OUT="$(conformance_check "$NR" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; NR_RC=$?
   if [ "$NR_RC" -ne 0 ] && has_finding "$NR_OUT" 'H3'; then
     PASS "CTLnr2: MUST-FIRE — a consumer that declares no population-role is caught (H3)"
   else
     FAIL "CTLnr2: MUST-FIRE — a consumer with no population-role passed (rc=$NR_RC); G2's per-command disposition would be improvised per file with nothing to catch it"
+  fi
+
+  # ── CTL-np: a consumer carrying no data-root-pointer line MUST fire H4. Without this
+  # arm H4's silence on the real tree would be indistinguishable from an assertion that
+  # never runs — and the failure it guards is the quiet one: a consumer with no pointer
+  # line has no way to resolve <data-root> and would fall back to whatever directory the
+  # session happens to be in, which is precisely the defect the ladder removes.
+  NP="$WORK/ctl_nopointer"; mk_tree "$NP" nopointer
+  if ! grep -q -x -F -- "$POINTER_LINE" "$NP/trip/SKILL.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$NP/trip/SKILL.md" \
+     && grep -q -x -F -- "$POINTER_LINE" "$NP/trip-record/SKILL.md"; then
+    PASS "CTLnp1: fixture integrity — the data-root-pointer line is absent from exactly the defective consumer, its contract-depth is untouched, and the same probe finds the line in the sibling"
+  else
+    FAIL "CTLnp1: the pointer-removal fixture is not set up as claimed — CTLnp2 would prove nothing"
+  fi
+  NP_OUT="$(conformance_check "$NP" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; NP_RC=$?
+  if [ "$NP_RC" -ne 0 ] && has_finding "$NP_OUT" 'H4'; then
+    PASS "CTLnp2: MUST-FIRE — a consumer carrying no data-root-pointer line is caught (H4); <data-root> would have no declared source in that file"
+  else
+    FAIL "CTLnp2: MUST-FIRE — a consumer with no data-root-pointer line passed (rc=$NP_RC); the placeholder every evidence entry names would have no source and the read would follow the session's working directory"
   fi
 
   # ── CTL-nt: a RESOLVE consumer carrying no per-verb requirement table MUST fire D2.
@@ -962,7 +1059,7 @@ else
   else
     FAIL "CTLnt1: the missing-table fixture is not set up as claimed (rows=$nt_rows sibling=$nt_sib) — CTLnt2 would prove nothing"
   fi
-  NT_OUT="$(conformance_check "$NT" "$CANON_FILE" "$CITATION" "$CANON_N")"; NT_RC=$?
+  NT_OUT="$(conformance_check "$NT" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; NT_RC=$?
   if [ "$NT_RC" -ne 0 ] && has_finding "$NT_OUT" 'D2'; then
     PASS "CTLnt2: MUST-FIRE — a RESOLVE consumer with no per-verb requirement table is caught (D2); G7's closed-set default has a table to look in"
   else
@@ -993,7 +1090,7 @@ else
   else
     FAIL "CTLnc1: the CREATE missing-table fixture is not set up as claimed (rows=$nc_rows sibling=$nc_sib clean=$nc_clean) — CTLnc2 would prove nothing"
   fi
-  NC_OUT="$(conformance_check "$NC" "$CANON_FILE" "$CITATION" "$CANON_N")"; NC_RC=$?
+  NC_OUT="$(conformance_check "$NC" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; NC_RC=$?
   if [ "$NC_RC" -ne 0 ] && has_finding "$NC_OUT" 'D2'; then
     PASS "CTLnc2: MUST-FIRE — a CREATE consumer with no per-verb requirement table is caught (D2); the table requirement is role-neutral, which is how the contract states it"
   else
@@ -1013,7 +1110,7 @@ else
   else
     FAIL "CTLdm1: the depth-mismatch fixture is not set up as claimed — CTLdm2 would prove nothing"
   fi
-  DM_OUT="$(conformance_check "$DM" "$CANON_FILE" "$CITATION" "$CANON_N")"; DM_RC=$?
+  DM_OUT="$(conformance_check "$DM" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; DM_RC=$?
   if [ "$DM_RC" -ne 0 ] && has_finding "$DM_OUT" 'D1'; then
     PASS "CTLdm2: MUST-FIRE — a consumer whose contract-depth disagrees with the maximum depth in its own verb table is caught (D1)"
   else
@@ -1037,7 +1134,7 @@ else
   else
     FAIL "CTLdd1: the decoy fixture is not set up as claimed — CTLdd2 would prove nothing"
   fi
-  DD_OUT="$(conformance_check "$DD" "$CANON_FILE" "$CITATION" "$CANON_N")"; DD_RC=$?
+  DD_OUT="$(conformance_check "$DD" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; DD_RC=$?
   if [ "$DD_RC" -ne 0 ] && has_finding "$DD_OUT" 'D1'; then
     PASS "CTLdd2: MUST-FIRE — a G8 outside the depth column does not satisfy the declared depth; the disagreement is still caught (D1)"
   else
@@ -1065,7 +1162,7 @@ else
   else
     FAIL "CTLdc1: the CREATE depth-mismatch fixture is not set up as claimed — CTLdc2 would prove nothing"
   fi
-  DC_OUT="$(conformance_check "$DC" "$CANON_FILE" "$CITATION" "$CANON_N")"; DC_RC=$?
+  DC_OUT="$(conformance_check "$DC" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; DC_RC=$?
   if [ "$DC_RC" -ne 0 ] && has_finding "$DC_OUT" 'D1'; then
     PASS "CTLdc2: MUST-FIRE — a CREATE consumer whose contract-depth disagrees with its own verb table is caught (D1); the depth equality now reaches the one role that carries a narrower tool grant because of it"
   else
@@ -1088,10 +1185,10 @@ else
   OP="$WORK/ctl_overprefix"; mk_tree "$OP" overprefix
   op_blocks=0; op_clean=0
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in '!`'*) op_blocks=$((op_blocks+1)) ;; esac
+    case "$line" in "$EVID_MARK"*) op_blocks=$((op_blocks+1)) ;; esac
   done < "$OP/trip-new/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in '!`'*) op_clean=$((op_clean+1)) ;; esac
+    case "$line" in "$EVID_MARK"*) op_clean=$((op_clean+1)) ;; esac
   done < "$A/trip-new/SKILL.md"
   if [ "$CANON_N" -gt 1 ] && [ "$op_blocks" -eq "$CANON_N" ] && [ "$op_clean" -eq 1 ] \
      && grep -q -x -F -- 'contract-depth: G2' "$OP/trip-new/SKILL.md"; then
@@ -1099,7 +1196,7 @@ else
   else
     FAIL "CTLop1: the over-prefix fixture is not set up as claimed (defective=$op_blocks clean=$op_clean canonical=$CANON_N) — CTLop2 would prove nothing"
   fi
-  OP_OUT="$(conformance_check "$OP" "$CANON_FILE" "$CITATION" "$CANON_N")"; OP_RC=$?
+  OP_OUT="$(conformance_check "$OP" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; OP_RC=$?
   if [ "$OP_RC" -ne 0 ] && has_finding "$OP_OUT" 'P3'; then
     PASS "CTLop2: MUST-FIRE — a consumer carrying more of the canonical list than its declared depth requires is caught (P3); the prefix rule is an equality, not a minimum, and an over-provisioned command can no longer ship green with a widened tool grant"
   else
@@ -1129,7 +1226,7 @@ else
   else
     FAIL "CTLcs1: the code-span fixture is not set up as claimed (span=$cs_span bare_here=$cs_bare_def bare_clean=$cs_bare_clean) — CTLcs2 would prove nothing"
   fi
-  CS_OUT="$(conformance_check "$CS" "$CANON_FILE" "$CITATION" "$CANON_N")"; CS_RC=$?
+  CS_OUT="$(conformance_check "$CS" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; CS_RC=$?
   if [ "$CS_RC" -eq 0 ] && ! has_finding "$CS_OUT" 'D1|D2'; then
     PASS "CTLcs2: MUST-NOT-FIRE — a table whose depth cells are code spans is read as present and its maximum is read correctly; the cell is normalised before it is matched, so the contract's own typography no longer produces a finding that names the wrong defect"
   else
@@ -1165,7 +1262,7 @@ else
   else
     FAIL "CTLcx1: the code-span specificity fixture is not set up as claimed (rows=$cx_rows depths=$cx_depth sibling=$cx_sib_depth) — CTLcx2 would prove nothing"
   fi
-  CX_OUT="$(conformance_check "$CX" "$CANON_FILE" "$CITATION" "$CANON_N")"; CX_RC=$?
+  CX_OUT="$(conformance_check "$CX" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; CX_RC=$?
   if [ "$CX_RC" -ne 0 ] && has_finding "$CX_OUT" 'D2'; then
     PASS "CTLcx2: MUST-FIRE — a backticked token that is not a depth is still not a depth, so a table declaring none is still caught (D2); normalising the cell did not widen what counts as a depth"
   else
@@ -1191,7 +1288,7 @@ else
   else
     FAIL "CTLhs1: the code-span header fixture is not set up as claimed — CTLhs2 would prove nothing"
   fi
-  HS_OUT="$(conformance_check "$HS" "$CANON_FILE" "$CITATION" "$CANON_N")"; HS_RC=$?
+  HS_OUT="$(conformance_check "$HS" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; HS_RC=$?
   if [ "$HS_RC" -ne 0 ] && has_finding "$HS_OUT" 'H2'; then
     PASS "CTLhs2: MUST-FIRE — a code-span rendering of the HEADER's contract-depth is not a depth declaration and is graded as an absent one (H2)"
   else

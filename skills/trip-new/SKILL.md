@@ -81,14 +81,20 @@ creates rather than selects, **a `--trip` naming a slug no existing trip carries
 here: neither a conflict nor a stop.** Where `--trip` and the positional argument are both supplied
 and **disagree, say so and ask which was meant.** Do not pick one.
 
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
+
 ## Existing trips
 
-!`{ ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G2
 population-role: CREATE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |

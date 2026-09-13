@@ -81,9 +81,10 @@ typed confirmation.
   while a `disallowed-tools` entry is addressed to the runtime — subject in full to the caveat above.
 - **What an entry carries is a name, and for the script entries the path sits inside that name — so
   the spelling is load-bearing, and here is the residual.** All five denials, and the `unpublish`
-  grant, spell the script **repo-relative**. This file addresses repo paths in its two pre-execution
-  blocks in the **absolute** form, through `${CLAUDE_PROJECT_DIR}` — so both spellings of a repo path
-  live in this file. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
+  grant, spell the script **repo-relative**. This file's two evidence entries address no repo path at
+  all: they name the operator data root through the `<data-root>` placeholder the agent resolves at
+  read time, so the absolute `${CLAUDE_PROJECT_DIR}` spelling that used to sit beside these entries
+  is gone and the residual below is about the script entries alone. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
   names the binary, so the form does not matter there; for the script entries the path is part of
   what is named. **Whether the runtime's matching reaches a second spelling of the same path is not
   established anywhere in this repository, and nothing that reads these entries as declarations can
@@ -140,13 +141,18 @@ the command follows, never as a property its frontmatter guarantees. **Nothing i
 that this command cannot do something because a grant is absent, and nothing argues it may because a
 grant is present.**
 
-## Trips in this repo
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
 
-!`{ ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+## Trips in your data home
+
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
+`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
@@ -154,6 +160,7 @@ grant is present.**
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |

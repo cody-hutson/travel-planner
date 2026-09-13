@@ -93,13 +93,18 @@ it is named in the adding slice's own design, and the addition is a union: no en
 no entry is narrowed. `description` may be widened to name a later slice's verb class; it may not
 be narrowed.
 
-## Trips in this repo
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
 
-!`{ ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+## Trips in your data home
+
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
+`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
@@ -107,6 +112,7 @@ be narrowed.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |
@@ -225,11 +231,14 @@ and it takes exactly this shape:
 **Three hazards, and each is a silent failure rather than a loud one.** They come from how the
 conformance guard reads this file, not from taste.
 
-1. **The evidence-block counter counts every line in the whole file that begins with the
-   pre-execution marker `` !` ``, and grades that count as an equality against the declared depth
-   — in both directions.** No slice adds a pre-execution block, and **no slice writes a line
-   beginning with that marker anywhere in this file**, including inside a fenced example. A surplus
-   block is a tool grant with no function and an unconditional red check on push.
+1. **The evidence-entry counter counts every line in the whole file that begins with the
+   canonical entries' own leading marker — today `` `{ ``, derived by the guard from the charter
+   rather than written into it — and grades that count as an equality against the declared depth,
+   in both directions.** No slice adds an evidence entry, and **no slice writes a line beginning
+   with that marker anywhere in this file**, including inside a fenced example. A surplus entry is
+   a tool grant with no function and an unconditional red check on push. The marker moved when the
+   `!` pre-execution carrier was retired for these reads; it is derived, so it will move again the
+   same way if the charter changes it.
 2. **The depth cell is read at field index 5 of a pipe-split row.** A sixth column moves it, the
    guard then finds no row carrying a depth and reports the requirement table **absent**, and with
    no rows found `contract-depth` goes unchecked in both directions. **The table stays exactly five
