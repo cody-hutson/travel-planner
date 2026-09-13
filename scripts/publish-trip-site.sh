@@ -2954,36 +2954,46 @@ usage() {
   exit "${1:-0}"
 }
 
+# --data-root is parsed HERE, once, for every subcommand, and it sits AFTER the
+# subcommand in an invocation rather than before it. Both are forced by the grant
+# surface: a verb's `allowed-tools` entry names `.../publish-trip-site.sh <sub>:*`, so
+# the subcommand has to be the first word after the path or the invocation is not the
+# one that was granted. Parsing centrally is what lets every arm that can reach the
+# person-store walk honour the same seam without several parsers to drift apart.
+#
+# IT LIVES OUTSIDE main() DELIBERATELY. main()'s `case` is the dispatch table, and
+# test-command-taxonomy.sh's staleness sentinel reads the first `case` inside main() as
+# that table; a second one in there makes the real arms unreadable and the sentinel
+# fires — correctly — on a surface it can no longer see. Measured, by putting it there
+# first and watching E4 go red.
+_GUARD_ARGV=()
+parse_data_root() {  # <args…>  -> _GUARD_ARGV holds the args with --data-root removed
+  _GUARD_ARGV=()
+  while [ $# -gt 0 ]; do
+    if [ "$1" = "--data-root" ]; then
+      [ $# -ge 2 ] || die "--data-root needs a path (the directory holding trips/, people/ and groups/)."
+      _GUARD_DATA_ROOT="$2"; _GUARD_DATA_ROOT_EXPLICIT=1; shift 2
+    elif [ "${1#--data-root=}" != "$1" ]; then
+      _GUARD_DATA_ROOT="${1#--data-root=}"; _GUARD_DATA_ROOT_EXPLICIT=1; shift
+    else
+      _GUARD_ARGV+=("$1"); shift
+    fi
+  done
+  [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ] || return 0
+  # Validated once, loudly, at the seam - never silently fallen back from. A --data-root
+  # that does not resolve is an operator error with a remedy; silently reverting to the
+  # engine root would turn it into a record-free skeleton read, which is the failure
+  # this seam exists to remove.
+  [ -n "$_GUARD_DATA_ROOT" ] || die "--data-root was given an empty path."
+  [ -d "$_GUARD_DATA_ROOT" ] && [ -r "$_GUARD_DATA_ROOT" ] \
+    || die "--data-root is not a readable directory: $_GUARD_DATA_ROOT"
+  _GUARD_DATA_ROOT="$(cd "$_GUARD_DATA_ROOT" && pwd)"
+}
+
 main() {
   local sub="${1:-}"; shift || true
-  # --data-root is stripped HERE rather than in each cmd_* argument loop, and it sits
-  # AFTER the subcommand rather than before it. Both are forced by the grant surface: a
-  # verb's `allowed-tools` entry names `.../publish-trip-site.sh <sub>:*`, so the
-  # subcommand has to be the first word after the path or the invocation is not the one
-  # that was granted. Stripping centrally is what lets every arm that can reach the
-  # person-store walk honour the same seam without five separate parsers to drift apart.
-  local -a rest=()
-  while [ $# -gt 0 ]; do
-    case "$1" in
-      --data-root)
-        [ $# -ge 2 ] || die "--data-root needs a path (the directory holding trips/, people/ and groups/)."
-        _GUARD_DATA_ROOT="$2"; _GUARD_DATA_ROOT_EXPLICIT=1; shift 2 ;;
-      --data-root=*)
-        _GUARD_DATA_ROOT="${1#--data-root=}"; _GUARD_DATA_ROOT_EXPLICIT=1; shift ;;
-      *) rest+=("$1"); shift ;;
-    esac
-  done
-  if [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ]; then
-    # Validated once, loudly, at the seam - never silently fallen back from. A
-    # --data-root that does not resolve is an operator error with a remedy; silently
-    # reverting to the engine root would turn it into a record-free skeleton read, which
-    # is the failure this seam exists to remove.
-    [ -n "$_GUARD_DATA_ROOT" ] || die "--data-root was given an empty path."
-    [ -d "$_GUARD_DATA_ROOT" ] && [ -r "$_GUARD_DATA_ROOT" ] \
-      || die "--data-root is not a readable directory: $_GUARD_DATA_ROOT"
-    _GUARD_DATA_ROOT="$(cd "$_GUARD_DATA_ROOT" && pwd)"
-  fi
-  set -- ${rest[@]+"${rest[@]}"}
+  parse_data_root "$@"
+  set -- ${_GUARD_ARGV[@]+"${_GUARD_ARGV[@]}"}
   case "$sub" in
     publish)     cmd_publish   "$@" ;;
     update)      cmd_update    "$@" ;;

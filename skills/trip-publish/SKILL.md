@@ -494,6 +494,15 @@ ${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update trips/<slug>
 
 with `<slug>` replaced by `trip.slug`. Run it from the repo root.
 
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. Without the flag the script falls
+back to the working directory, which is exactly the dependence this contract removes. **This
+instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
+in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
+concern stays attributable to one change. See this file's own *"run it from the repo root"*
+sentences for the same pattern already ratified on this surface.
+
 **When the trip was never published**, the script refuses before the passphrase is
 touched: it resolves the per-trip clone before it resolves the passphrase, so it creates no
 repository, pushes nothing, mints no passphrase, and its own message names the remedy — a
@@ -543,7 +552,16 @@ ${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list
 ```
 
 Run it from the repo root: the script scans `./trips/` and refuses elsewhere, and it takes
-no argument.
+no argument beyond the data-root seam below.
+
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. Without the flag the script falls
+back to the working directory, which is exactly the dependence this contract removes. **This
+instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
+in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
+concern stays attributable to one change. See this file's own *"run it from the repo root"*
+sentences for the same pattern already ratified on this surface.
 
 **Freshness is report-only.** Render the stale column as the script emits it, including
 its indeterminate value. No verb of this file branches on it, and `update` does not

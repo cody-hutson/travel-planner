@@ -1110,6 +1110,20 @@ ${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh --scope dir trips/<slug>
 **`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
 value — the standing clause's rule, applied.
 
+**Append `--root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. Without the flag the script resolves `trips/<slug>` against its own parent directory —
+the engine, whose store skeleton holds no trip, which is exactly the dependence this contract removes. **This
+instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
+in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
+concern stays attributable to one change. See this file's own *"run it from the repo root"*
+sentences for the same pattern already ratified on this surface.
+
+**Keep `--scope dir trips/<slug>` relative.** The scope is a repository-relative glob and an
+absolute path there yields absolute paths into a relative matcher — measured equal in count and
+different in spelling, which is the shape that reads as agreement while measuring two different
+things. The root goes in `--root`; the scope stays as written.
+
 **Why that script and not the guard suite.** `scripts/test-artifact-schema.sh` is the CI suite:
 it takes no arguments and grades the tracked tree, which is the half CI already reaches.
 The gap this verb closes is the other half — a trip under `trips/`, git-ignored, that no CI
