@@ -1110,19 +1110,26 @@ ${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh --scope dir trips/<slug>
 **`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
 value — the standing clause's rule, applied.
 
-**Append `--root <trip.data_root>` to the line above**, using the absolute path gate
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
 script where your data is, and the two are different questions. Without the flag the script resolves `trips/<slug>` against its own parent directory —
-the engine, whose store skeleton holds no trip, which is exactly the dependence this contract removes. **This
+the engine, whose store skeleton holds no trip, which is exactly the dependence this contract removes. **The
+flag is `--data-root` and deliberately not `--root`**, for the reason `scripts/publish-trip-site.sh`
+already states of its own seam: that script has two roots to name, and so does this one. `--root`
+is the **engine** root, and it carries the schema corpus the validator grades against —
+`reference/data-architecture.md` and `reference/schemas/`, which are engine assets and follow the
+script wherever it is installed. Pointing `--root` at your data home moves the corpus to a
+directory that has none, and the validator then reports on its own missing corpus rather than on
+your trip. **This
 instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
 in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
 concern stays attributable to one change. The retained where-to-stand sentences on this
 surface are the same pattern, already ratified.
 
-**Keep `--scope dir trips/<slug>` relative.** The scope is a repository-relative glob and an
-absolute path there yields absolute paths into a relative matcher — measured equal in count and
-different in spelling, which is the shape that reads as agreement while measuring two different
-things. The root goes in `--root`; the scope stays as written.
+**Keep `--scope dir trips/<slug>` relative.** The scope is a root-relative glob — resolved
+against `--data-root` — and an absolute path there yields absolute paths into a relative matcher
+— measured equal in count and different in spelling, which is the shape that reads as agreement
+while measuring two different things. The root goes in `--data-root`; the scope stays as written.
 
 **Why that script and not the guard suite.** `scripts/test-artifact-schema.sh` is the CI suite:
 it takes no arguments and grades the tracked tree, which is the half CI already reaches.

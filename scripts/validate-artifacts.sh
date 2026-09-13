@@ -9,7 +9,22 @@
 # test-publish-guard.sh — the repo's only instance of that relation, and it points this
 # way (a suite sources a production script, never the reverse).
 #
-#   ./scripts/validate-artifacts.sh [--root <dir>] [--scope tracked|dir <path>]
+#   ./scripts/validate-artifacts.sh [--root <dir>] [--data-root <dir>] [--scope tracked|dir <path>]
+#
+# ── TWO ROOTS, AND WHY ONE FLAG CANNOT CARRY BOTH ────────────────────────────────
+# `--root` roots the SCHEMA CORPUS — reference/data-architecture.md and
+# reference/schemas/ — which are ENGINE assets and must follow this script wherever it is
+# installed. `--data-root` roots the POPULATION: the tree that is walked and the artifact
+# content that is read. They are the same directory in this checkout and they diverge the
+# moment the engine is installed, because operator trips live wherever the operator keeps
+# them and the installed engine ships trips/README.md and nothing else under trips/.
+#
+# Before the seam existed there was one flag for both, and the local-trip arm the /trip
+# schema verb composes pointed it at the operator's data home — a directory that by
+# construction holds no reference/schemas/. Measured outcome: X2 on the architecture
+# document, then either every artifact graded UNKNOWN with a spurious A2 (when the trip's
+# files declare `artifact:`, as every example trip's do) or nothing selected at all and a
+# VACUOUS verdict (when they do not). Both are the same conflation reported twice.
 #
 # ── THE RULE THIS GATE EVALUATES, AND THE ONE IT DOES NOT AUTHOR ─────────────────
 # The skip predicate is NOT this script's rule. It is stated once, in
@@ -611,21 +626,35 @@ EOF
   printf '%s\n' "$VA_CACHE_PATTERNS"
 }
 
-# va_population <root> <scope> [dir] — the candidate file list, before exclusion.
+# va_population <data-root> <scope> [dir] — the candidate file list, before exclusion.
+#
+# The root here is the DATA root, not the corpus root — every path this emits is relative
+# to it, so it is also the root va_select and va_check_artifact must read the files back
+# against. ONE population root, used by both arms, so no arm can walk one tree and read
+# its content from another. Without --data-root the two roots are the same directory and
+# this is the behaviour it has always had.
 va_population() {
-  local root="$1" scope="${2:-tracked}" dir="${3:-}"
+  local data_root="$1" scope="${2:-tracked}" dir="${3:-}"
   case "$scope" in
-    tracked) ( cd "$root" && git ls-files 2>/dev/null ) ;;
-    dir)     ( cd "$root" && find "$dir" -type f 2>/dev/null | sed 's|^\./||' | LC_ALL=C sort ) ;;
+    tracked) ( cd "$data_root" && git ls-files 2>/dev/null ) ;;
+    dir)     ( cd "$data_root" && find "$dir" -type f 2>/dev/null | sed 's|^\./||' | LC_ALL=C sort ) ;;
     *)       return 1 ;;
   esac
 }
 
-# va_select <root> <scope> [dir] — "<class-id>\t<artifact>\t<path>\t<arm>" for every
-# selected file, plus "EXCLUDED\t<path>" and "UNMATCHED\t<path>" so the whole population
-# is accounted for. A denominator you cannot reconstruct is not a denominator.
+# va_select <root> <scope> [dir] [data-root] — "<class-id>\t<artifact>\t<path>\t<arm>" for
+# every selected file, plus "EXCLUDED\t<path>" and "UNMATCHED\t<path>" so the whole
+# population is accounted for. A denominator you cannot reconstruct is not a denominator.
+#
+# TWO ROOTS, and the fourth argument is why. <root> is the CORPUS root: the patterns this
+# selector ranks against are read from reference/schemas/ beneath it. <data-root> is the
+# POPULATION root: the tree walked, and the tree the declared arm reads frontmatter back
+# from. It is OPTIONAL and DEFAULTS TO <root>, so every caller written before the seam
+# existed — including scripts/test-artifact-schema.sh, which sources this file and calls
+# this function directly with two and with three arguments — keeps the behaviour it had.
+# Appending rather than inserting is deliberate for the same reason.
 va_select() {
-  local root="$1" scope="${2:-tracked}" dir="${3:-}"
+  local root="$1" scope="${2:-tracked}" dir="${3:-}" data_root="${4:-$1}"
   local pats f best_len best_cid best_art cid art p len plit declared
   pats="$(va_corpus_patterns "$root")"
   while IFS= read -r f; do
@@ -656,7 +685,7 @@ EOF
     fi
     # DECLARED ARM — see the header. A file the path arm did not claim, which declares a
     # class of its own, is resolved anyway rather than leaving the gate unobserved.
-    declared="$(va_fm_pairs "$root" "$f" 2>/dev/null | awk -F'\t' '$1 == "artifact" { print $2; exit }')"
+    declared="$(va_fm_pairs "$data_root" "$f" 2>/dev/null | awk -F'\t' '$1 == "artifact" { print $2; exit }')"
     if [ -n "$declared" ]; then
       cid="$(printf '%s\n' "$pats" | awk -F'\t' -v a="$declared" '$2 == a { print $1; exit }')"
       printf '%s\t%s\t%s\tdeclared\n' "${cid:-UNKNOWN}" "$declared" "$f"
@@ -664,7 +693,7 @@ EOF
     fi
     printf 'UNMATCHED\t%s\n' "$f"
   done <<EOF
-$(va_population "$root" "$scope" "$dir")
+$(va_population "$data_root" "$scope" "$dir")
 EOF
 }
 
@@ -672,18 +701,24 @@ EOF
 # Artifact checks — A1..A6
 # ─────────────────────────────────────────────────────────────────────────────────
 
-# va_check_artifact <root> <path> <class-id> <artifact> — findings on stdout; rc 1 on any.
-# Prints "SKIP <path> <class>" and returns 0 for the pre-migration case, so the skip is
-# reported by path AND by resolved class rather than merely counted.
+# va_check_artifact <root> <path> <class-id> <artifact> [data-root] — findings on stdout;
+# rc 1 on any. Prints "SKIP <path> <class>" and returns 0 for the pre-migration case, so
+# the skip is reported by path AND by resolved class rather than merely counted.
+#
+# TWO ROOTS, the same split va_select carries: <path> is relative to <data-root> and the
+# ARTIFACT is read there; the SCHEMA it is graded against is read beneath <root>. This is
+# the one function where both reads happen in the same body, which is why conflating them
+# was invisible until an install put the two roots in different places. <data-root> is
+# OPTIONAL and DEFAULTS TO <root>, so a pre-seam caller is unchanged.
 va_check_artifact() {
-  local root="$1" rel="$2" cid="$3" art="$4"
+  local root="$1" rel="$2" cid="$3" art="$4" data_root="${5:-$1}"
   local pairs ver declared rc=0
 
-  if [ ! -r "$root/$rel" ]; then
+  if [ ! -r "$data_root/$rel" ]; then
     printf 'FINDING X2 %s file is unreadable\n' "$rel"; return 1
   fi
 
-  pairs="$(va_fm_pairs "$root" "$rel")" || rc=1
+  pairs="$(va_fm_pairs "$data_root" "$rel")" || rc=1
   printf '%s\n' "$pairs" | grep '^FINDING ' 2>/dev/null
   pairs="$(printf '%s\n' "$pairs" | grep -v '^FINDING ' 2>/dev/null)"
 
@@ -778,11 +813,20 @@ va_schema_for() {
 # ─────────────────────────────────────────────────────────────────────────────────
 va_usage() {
   cat <<'USAGE'
-usage: validate-artifacts.sh [--root <dir>] [--scope tracked|dir <path>]
+usage: validate-artifacts.sh [--root <dir>] [--data-root <dir>] [--scope tracked|dir <path>]
 
-  --root <dir>          repository root (default: this script's parent directory)
+  --root <dir>          ENGINE root -- roots the schema corpus, reference/data-architecture.md
+                        and reference/schemas/ (default: this script's parent directory)
+  --data-root <dir>     OPERATOR DATA root -- roots the scanned population and every artifact
+                        read (default: whatever --root resolved to, so a run that passes no
+                        flag behaves exactly as it did before this seam existed)
   --scope tracked       every git-tracked file (default) -- the CI arm
   --scope dir <path>    every file beneath <path> -- the local-trip arm
+
+<path> under --scope dir is relative to --data-root. The two roots are the same directory in
+a checkout and diverge once the engine is installed: the engine carries the schema corpus, the
+operator carries the trips. Passing --root at an operator data home points the corpus at a
+directory that has none -- which is the whole reason --data-root is spelled separately.
 
 Exit 0 when no finding fired; 1 otherwise. Every finding names the artifact and, where
 the finding is field-scoped, the field.
@@ -790,10 +834,14 @@ USAGE
 }
 
 va_main() {
-  local root="" scope="tracked" dir=""
+  local root="" scope="tracked" dir="" data_root="" data_root_explicit=0
   while [ $# -gt 0 ]; do
     case "$1" in
       --root)  root="${2:-}"; shift 2 ;;
+      # Both spellings, matching publish-trip-site.sh's parse_data_root, so an operator
+      # who learned the seam on one granted script types it the same way on the other.
+      --data-root)  data_root="${2:-}"; data_root_explicit=1; shift 2 ;;
+      --data-root=*) data_root="${1#--data-root=}"; data_root_explicit=1; shift ;;
       --scope) scope="${2:-}"; shift 2
                if [ "$scope" = "dir" ]; then dir="${1:-}"; shift; fi ;;
       -h|--help) va_usage; return 0 ;;
@@ -802,6 +850,36 @@ va_main() {
   done
   if [ -z "$root" ]; then
     root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  fi
+
+  # ── THE DATA ROOT. An ARGUMENT and never an environment variable, for the reason
+  # publish-trip-site.sh's _GUARD_DATA_ROOT block states about its own declaration: an
+  # environment-defaulted path on a fail-closed control is a fail-open surface, and an
+  # argument is visible in the invocation a verb's grant admits while an inherited
+  # variable is not. There is no ${VA_DATA_ROOT:-} read anywhere in this file, and that
+  # absence is the control.
+  #
+  # It defaults to whatever --root resolved to rather than to the engine root, because
+  # --root alone has always moved the population as well as the corpus. Defaulting to the
+  # engine would silently change that arm, which is a regression wearing a fix's clothes.
+  if [ "$data_root_explicit" = "1" ]; then
+    # Validated once, loudly, at the seam — never silently fallen back from. A --data-root
+    # that does not resolve is an operator error with a remedy; reverting to the engine
+    # root would turn it into a read of the record-free store skeleton, which is exactly
+    # the clean, confident, wrong answer this seam exists to remove.
+    if [ -z "$data_root" ]; then
+      # `printf --` is load-bearing on BOTH of these, not decoration: the format string
+      # begins with `--`, which bash's printf otherwise parses as an option terminator and
+      # then rejects as an invalid one. Measured — the message rendered as
+      # "printf: --: invalid option" before the terminator was added here.
+      printf -- '--data-root was given an empty path.\n' >&2; return 2
+    fi
+    if [ ! -d "$data_root" ] || [ ! -r "$data_root" ]; then
+      printf -- '--data-root is not a readable directory: %s\n' "$data_root" >&2; return 2
+    fi
+    data_root="$(cd "$data_root" && pwd)"
+  else
+    data_root="$root"
   fi
 
   # ── THE SCOPE MUST RESOLVE BEFORE ANYTHING IS COUNTED (X2) ─────────────────────
@@ -823,7 +901,10 @@ va_main() {
     case "$dir" in
       '') printf 'FINDING X2 <none> --scope dir requires a path\n'; return 1 ;;
       /*) target="$dir" ;;
-      *)  target="$root/$dir" ;;
+      # Against the DATA root, because this is the same path va_population will walk and
+      # a resolution probe that resolved against a different root than the walk would
+      # green-light a scope the walk then finds empty.
+      *)  target="$data_root/$dir" ;;
     esac
     if [ ! -d "$target" ]; then
       printf 'FINDING X2 %s the --scope dir target does not exist or is not a directory\n' "$dir"
@@ -835,7 +916,7 @@ va_main() {
   out="$(va_check_corpus "$root")" || rc=1
   [ -n "$out" ] && printf '%s\n' "$out"
 
-  sel="$(va_select "$root" "$scope" "$dir")"
+  sel="$(va_select "$root" "$scope" "$dir" "$data_root")"
   local nsel nexc nunm nskip=0 nver=0
   # Counted with awk on the TAB-delimited field, never with a shell pattern carrying a
   # literal tab: a tab inside shell quoting is invisible in a diff and one editor pass
@@ -851,7 +932,7 @@ va_main() {
     art="$(printf '%s\n' "$line" | cut -f2)"
     path="$(printf '%s\n' "$line" | cut -f3)"
     arm="$(printf '%s\n' "$line" | cut -f4)"
-    res="$(va_check_artifact "$root" "$path" "$cid" "$art")" || rc=1
+    res="$(va_check_artifact "$root" "$path" "$cid" "$art" "$data_root")" || rc=1
     case "$res" in
       'SKIP '*) nskip=$((nskip+1)); printf '%s (arm: %s)\n' "$res" "$arm" ;;
       *) nver=$((nver+1)); [ -n "$res" ] && printf '%s\n' "$res" ;;

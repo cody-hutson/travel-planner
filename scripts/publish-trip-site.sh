@@ -1330,11 +1330,18 @@ _GUARD_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # the class from outside the repository. An argument is visible in the invocation the
 # grant admits; an inherited variable is not.
 #
-# The flag is `--data-root` and deliberately NOT `--root`, even though
-# validate-artifacts.sh spells its equivalent `--root`. That script has one root to name.
-# This one has two, and they diverge the moment the engine is installed — a `--root` here
-# would read as "the root of everything this script uses" and is exactly the invitation
-# to point the declaration at operator-supplied ground.
+# The flag is `--data-root` and deliberately NOT `--root`. This script has TWO roots to
+# name and they diverge the moment the engine is installed — a `--root` here would read as
+# "the root of everything this script uses" and is exactly the invitation to point the
+# declaration at operator-supplied ground.
+#
+# This block once read that validate-artifacts.sh "has one root to name" and so could
+# spell its equivalent `--root`. That was wrong, and the error was this seam's own: that
+# script also has two — a corpus root (reference/data-architecture.md, reference/schemas/)
+# and a population root — and the single `--root` conflated them, so pointing it at an
+# operator data home aimed the corpus at a directory holding none. It now carries the same
+# `--data-root` seam, spelled and validated the same way, and the reasoning above is the
+# reasoning for both.
 _GUARD_DATA_ROOT="$_GUARD_REPO_ROOT"
 _GUARD_DATA_ROOT_EXPLICIT=0
 _GUARD_DECLARATION="$_GUARD_REPO_ROOT/reference/data-architecture.md"
