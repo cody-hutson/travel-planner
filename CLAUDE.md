@@ -459,7 +459,7 @@ That one command:
 1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
 2. Runs a fail-closed **pre-push guard** that refuses to push unless the output is verified ciphertext with no plaintext itinerary tokens.
 3. Creates the per-trip **public** repo and pushes **only the ciphertext**, using a no-reply commit identity (never the user's email).
-4. Enables Pages and prints the live URL plus the passphrase.
+4. Enables Pages and prints the live URL plus **where the passphrase is saved** — the path, never the value. The passphrase itself never reaches standard output on any path, so a captured or transcript-injected publish cannot disclose it; read it yourself with `cat trips/<destination>-<year>/.passphrase`.
 
 If the pre-push guard aborts, **nothing was published** — the error names what failed; rebuild the site and re-run.
 
