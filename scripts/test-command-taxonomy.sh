@@ -384,6 +384,16 @@ trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]
 collapse() { printf '%s' "$1" | tr -s '[:space:]' ' '; }
 lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
+# verb_id <path-to-a-verb-file> — the verb's identity, derived in ONE place.
+#
+# Under the skill layout the identity is the verb DIRECTORY's name, never the file's: every
+# verb file is named SKILL.md, so a file-basename identity resolves all five verbs to the
+# single name "SKILL" and every per-verb assertion in this suite silently collapses onto one
+# key. That is a PASSING failure — the joins still find a match, they just all find the same
+# one — which is why the derivation is a named function with one definition rather than an
+# expression repeated at each site. A later slice adding a verb inherits it by calling it.
+verb_id() { local d="${1%/*}"; printf '%s' "${d##*/}"; }
+
 # Membership is tested ELEMENT BY ELEMENT against a haystack passed as separate arguments
 # — never by joining the population into one string and matching a substring, which fails
 # in BOTH directions once a key can carry a space. The call convention is to pass the
@@ -1317,10 +1327,10 @@ invocation_check() {
 
   local f base cmd fd lno t bare rest sub tok found=0 i owner
   local -a ARGV=()
-  for f in "$cdir"/*.md; do
+  for f in "$cdir"/*/SKILL.md; do
     [ -e "$f" ] || continue
     found=1
-    base="$(basename "$f" .md)"; cmd="/$base"
+    base="$(verb_id "$f")"; cmd="/$base"
     lno=0; fd=0
     while IFS= read -r line || [ -n "$line" ]; do
       lno=$((lno+1))
@@ -1560,9 +1570,9 @@ picker_check() {
     esac
   done <<< "$recs"
 
-  for f in "$cdir"/*.md; do
+  for f in "$cdir"/*/SKILL.md; do
     [ -e "$f" ] || continue
-    base="$(basename "$f" .md)"; cmd="/$base"
+    base="$(verb_id "$f")"; cmd="/$base"
     role='RESOLVE'
     for (( i=0; i<${#ROLEC[@]}; i++ )); do
       [ "${ROLEC[$i]}" = "$cmd" ] && { role="${ROLER[$i]}"; break; }
@@ -1720,8 +1730,8 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
   local d="$1" tup="$2" defect="${3:-}"
   local name="${tup%%|*}"; local restt="${tup#*|}"
   local role="${restt%%|*}"; local vspec="${restt#*|}"
-  local f="$d/commands/$name.md"
-  mkdir -p "$d/commands"
+  local f="$d/skills/$name/SKILL.md"
+  mkdir -p "$d/skills/$name"
   local -a IDS=() HEADS=() PARENS=() INVS=()
   local v head paren inv i n
   local IFSSAVE="$IFS"
@@ -1968,7 +1978,9 @@ gen_tree() {  # gen_tree <dir> <charter-defect> <cmd-defect> [world...]
   local d="$1" cdd="$2" mdd="$3"; shift 3
   local -a W=( "$@" )
   if [ "${#W[@]}" -eq 0 ]; then W=( "${WORLD_OK[@]}" ); fi
-  mkdir -p "$d/commands"
+  # The skills ROOT, not a per-verb directory: this is also the `nocmds` fixture's whole
+  # job — an empty verb root that group A must FAIL on rather than pass vacuously.
+  mkdir -p "$d/skills"
   gen_charter "$d" "$cdd"
   if [ "$mdd" = 'nocmds' ]; then return 0; fi
   local t
@@ -1986,9 +1998,9 @@ collect_records() {
   local recs="" f base cmd role l2 croll
   croll="$(charter_check "$d/CLAUDE.md")"
   recs="$croll"
-  for f in "$d/commands"/*.md; do
+  for f in "$d/skills"/*/SKILL.md; do
     [ -e "$f" ] || continue
-    base="$(basename "$f" .md)"; cmd="/$base"
+    base="$(verb_id "$f")"; cmd="/$base"
     role='RESOLVE'
     while IFS= read -r l2; do
       case "$l2" in "ROLE $cmd "*) role="${l2##* }" ;; esac
@@ -2009,8 +2021,8 @@ run_tree() {
   recs="$recs
 $(coverage_check "$recs")
 $(enum_agree_check "$recs")
-$(invocation_check "$d/commands" "$recs")
-$(picker_check "$recs" "$d/reference/command-reference.md" "$d/commands")"
+$(invocation_check "$d/skills" "$recs")
+$(picker_check "$recs" "$d/reference/command-reference.md" "$d/skills")"
   printf '%s\n' "$recs"
 }
 
@@ -2018,7 +2030,7 @@ $(picker_check "$recs" "$d/reference/command-reference.md" "$d/commands")"
 # Groups N–S — the real tree
 # ═════════════════════════════════════════════════════════════════════════════════
 MD="$ROOT/CLAUDE.md"
-CDIR="$ROOT/.claude/commands"
+CDIR="$ROOT/skills"
 ADR="$ROOT/reference/adr/ADR-007-command-entry-point.md"
 PUB="$ROOT/$SCRIPT_REL"
 WF="$ROOT/.github/workflows/command-taxonomy.yml"
@@ -2032,7 +2044,7 @@ DOC="$ROOT/$DOC_REL"
 tree_state() {
   local p
   for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC"; do [ -f "$p" ] && cksum < "$p"; done
-  for p in "$CDIR"/*.md; do [ -e "$p" ] && { printf '%s ' "$(basename "$p")"; cksum < "$p"; }; done
+  for p in "$CDIR"/*/SKILL.md; do [ -e "$p" ] && { printf '%s ' "$(verb_id "$p")"; cksum < "$p"; }; done
 }
 STATE_BEFORE="$(tree_state)"
 WATCHED="$(printf '%s\n' "$STATE_BEFORE" | grep -c .)"
@@ -2050,10 +2062,10 @@ DOTTED="$(getcount "$CH_OUT" DOTTED)"; UNWID="$(getcount "$CH_OUT" UNWIDENED_FAI
 
 RECS="$CH_OUT"
 NFILES=0
-for gf in "$CDIR"/*.md; do
+for gf in "$CDIR"/*/SKILL.md; do
   [ -e "$gf" ] || continue
   NFILES=$((NFILES+1))
-  gbase="$(basename "$gf" .md)"; gcmd="/$gbase"
+  gbase="$(verb_id "$gf")"; gcmd="/$gbase"
   grole='RESOLVE'
   while IFS= read -r gl; do
     case "$gl" in "ROLE $gcmd "*) grole="${gl##* }" ;; esac
@@ -2080,7 +2092,7 @@ $H_OUT"
 echo
 echo "── Group A — populations non-empty. FAIL, never SKIP."
 if has_finding "$ALL" "$(surface A0)"; then FAIL "A1: a population or surface is empty"; show "$ALL" 'A0'
-else PASS "A1: Step-1 slice ${S1_ROWS} rows; command directory ${NFILES} files; coverage-unit enumeration $(getcount "$COV_OUT" UNITS) units — each derived, each non-empty, none skipped"; fi
+else PASS "A1: Step-1 slice ${S1_ROWS} rows; skills directory ${NFILES} verb file(s); coverage-unit enumeration $(getcount "$COV_OUT" UNITS) units — each derived, each non-empty, none skipped"; fi
 
 echo
 echo "── Group V — the per-file bijection: declaration <-> implementation."
@@ -2199,7 +2211,7 @@ fi
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group UW — a Zone A universal over the verb set, checked against the verb set.
 #
-# WHAT THIS GROUP IS FOR, AND THE DEFECT THAT PAID FOR IT. `.claude/commands/trip-record.md`
+# WHAT THIS GROUP IS FOR, AND THE DEFECT THAT PAID FOR IT. `.claude/skills/trip-record/SKILL.md`
 # gave the ground for refusing a bare invocation as "every verb of this command writes" — a
 # universal quantified over its own verb set, stated in Zone A, where nothing derives it. A
 # later slice added a verb that declares it writes nothing, and the sentence became false.
@@ -2253,10 +2265,10 @@ uw_norm() { printf '%s' "$(lower "$(printf '%s' "$1" | tr -d '*`'"'")")" | tr -s
 uw_hits() { printf '%s\n' "$1" | awk -v re="$UW_RE" '{ n += gsub(re, "") } END { print n + 0 }'; }
 
 UW_FILES=0; UW_UNIV=0; UW_RO=0; UW_BOTH=""; UW_ZA_LINES=0; UW_COVER_BAD=""
-for uwf in "$CDIR"/*.md; do
+for uwf in "$CDIR"/*/SKILL.md; do
   [ -e "$uwf" ] || continue
   UW_FILES=$((UW_FILES+1))
-  uwbase="$(basename "$uwf" .md)"; uwcmd="/$uwbase"
+  uwbase="$(verb_id "$uwf")"; uwcmd="/$uwbase"
   # Zone B's regions, from the SAME parser the rest of this guard runs on. Zone A is
   # everything above the first of them, which IS the file's own stated zone rule.
   # REGION records read "REGION <cmd> <verb> <start> <end>"; re-emitted here as
@@ -2407,10 +2419,10 @@ td_disposes() {
 }
 
 TD_FILES=0; TD_POP=0; TD_POPLIST=""; TD_BAD=""; TD_COVER_BAD=""
-for tdf in "$CDIR"/*.md; do
+for tdf in "$CDIR"/*/SKILL.md; do
   [ -e "$tdf" ] || continue
   TD_FILES=$((TD_FILES+1))
-  tdbase="$(basename "$tdf" .md)"; tdcmd="/$tdbase"
+  tdbase="$(verb_id "$tdf")"; tdcmd="/$tdbase"
   tdregions="$(printf '%s\n' "$ALL" | awk -v c="$tdcmd" '$1 == "REGION" && $2 == c { print $4 "\t" $5 "\t" $3 }')"
   tdn="$(printf '%s\n' "$tdregions" | grep -c '[^[:space:]]' || true)"
   tddecl="$(getcount "$ALL" "DECL_$tdbase")"
@@ -2479,7 +2491,7 @@ echo
 echo "── Group G — controls: the guard shown FAILING on deliberate defects, PASSING on a correct tree, and DERIVING rather than remembering."
 
 G0="$WORK/g0"; gen_tree "$G0" ok ok
-if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/commands/trip.md" ] && [ -f "$G0/commands/trip-new.md" ] && [ -f "$G0/commands/trip-record.md" ] && [ -f "$G0/commands/trip-publish.md" ]; then
+if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/skills/trip/SKILL.md" ] && [ -f "$G0/skills/trip-new/SKILL.md" ] && [ -f "$G0/skills/trip-record/SKILL.md" ] && [ -f "$G0/skills/trip-publish/SKILL.md" ]; then
   PASS "G0a: fixture integrity — the conforming tree was constructed"
   G0OUT="$(run_tree "$G0")"
   if grep -q '^FINDING ' <<<"$G0OUT"; then
@@ -2497,32 +2509,32 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/commands/trip.md" ] && [ -f "$G0/commands
       else FAIL "$2: fixture integrity — the shape this arm names is absent from the conforming tree, so its green would prove nothing: $3"; fi
     }
     G0S=1
-    grep -qF '## profile <name>' "$G0/commands/trip-record.md" || G0S=0
-    grep -qF '| .publish-slug | ACTIVE' "$G0/commands/trip-record.md" || G0S=0
-    grep -qF '| new (create) | ACTIVE' "$G0/commands/trip-new.md" || G0S=0
-    grep -qF '| new (resume) | ACTIVE' "$G0/commands/trip-new.md" || G0S=0
+    grep -qF '## profile <name>' "$G0/skills/trip-record/SKILL.md" || G0S=0
+    grep -qF '| .publish-slug | ACTIVE' "$G0/skills/trip-record/SKILL.md" || G0S=0
+    grep -qF '| new (create) | ACTIVE' "$G0/skills/trip-new/SKILL.md" || G0S=0
+    grep -qF '| new (resume) | ACTIVE' "$G0/skills/trip-new/SKILL.md" || G0S=0
     g0claim "$G0S" G0c "an argument-signature heading, a leading-dot verb and a parenthetical disposition pair all resolve"
     G0S=1
-    grep -qF '    **Reads:** nothing beyond the blocks above.' "$G0/commands/trip.md" || G0S=0
-    grep -qF '**Reads:** an example read line.' "$G0/commands/trip.md" || G0S=0
+    grep -qF '    **Reads:** nothing beyond the blocks above.' "$G0/skills/trip/SKILL.md" || G0S=0
+    grep -qF '**Reads:** an example read line.' "$G0/skills/trip/SKILL.md" || G0S=0
     g0claim "$G0S" G0d "four-space-indented read-declaration EXEMPLARS in a non-verb section produce no undeclared-verb finding (the column-0 rule), and a read-declaration line inside a fenced example produces none either (fence depth)"
     G0S=1
-    grep -qF '## ghostverb' "$G0/commands/trip.md" || G0S=0
+    grep -qF '## ghostverb' "$G0/skills/trip/SKILL.md" || G0S=0
     g0claim "$G0S" G0e "a verb-shaped heading inside a fenced example produces no section, so the file with no real verb sections is not given an invented one"
     G0S=1
-    grep -qF 'never passes' "$G0/commands/trip.md" || G0S=0
-    grep -qF "| ${BT}Bash(${SCRIPT_REL} update:*)${BT} | the single invocation |" "$G0/commands/trip.md" || G0S=0
+    grep -qF 'never passes' "$G0/skills/trip/SKILL.md" || G0S=0
+    grep -qF "| ${BT}Bash(${SCRIPT_REL} update:*)${BT} | the single invocation |" "$G0/skills/trip/SKILL.md" || G0S=0
     grep -qF "act, and see ${BT}/trip status${BT} for the current state" "$G0/CLAUDE.md" || G0S=0
     g0claim "$G0S" G0f "a negating sentence naming a forbidden flag INSIDE a verb region, a grant token rendered as a code span in a body table, and a decoy command span in the Action column all PASS: the test is USE and FIELD-INDEXED, not MENTION and row-wide"
     G0S=1
-    grep -qF 'population-role: CREATE' "$G0/commands/trip-new.md" || G0S=0
-    grep -qF '## Create' "$G0/commands/trip-new.md" || G0S=0
-    grep -qF '**Reads:** the template it copies from.' "$G0/commands/trip-new.md" || G0S=0
+    grep -qF 'population-role: CREATE' "$G0/skills/trip-new/SKILL.md" || G0S=0
+    grep -qF '## Create' "$G0/skills/trip-new/SKILL.md" || G0S=0
+    grep -qF '**Reads:** the template it copies from.' "$G0/skills/trip-new/SKILL.md" || G0S=0
     g0claim "$G0S" G0g "a CREATE-role file implementing no verb section resolves through the charter-declared carve-out, and a read declaration in its body is claimed"
     G0S=1
     grep -qF "${SCRIPT_REL} publish trips/x" "$G0/CLAUDE.md" || G0S=0
     grep -qF "${SCRIPT_REL} rotate trips/x" "$G0/CLAUDE.md" || G0S=0
-    g0claim "$G0S" G0h "the fixture charter carries literal EXCLUDED invocations in a fenced block and the invocation limb reports zero: its input set is the command directory and nothing else"
+    g0claim "$G0S" G0h "the fixture charter carries literal EXCLUDED invocations in a fenced block and the invocation limb reports zero: its input set is the skills directory and nothing else"
   fi
 else
   FAIL "G0a: fixture integrity — the conforming tree was not constructed; G0b-h would prove nothing"
@@ -2530,7 +2542,7 @@ fi
 
 # ── the two live differential arms. Drawn from the UNFILTERED live population.
 D1_FENCE=0
-for gf in "$CDIR"/*.md; do
+for gf in "$CDIR"/*/SKILL.md; do
   [ -e "$gf" ] || continue
   D1_FENCE=$(( D1_FENCE + $(fence_scoped_declared "$gf") ))
 done
@@ -2544,9 +2556,9 @@ else
 fi
 
 D2_COL0=0; D2_TRIM=0
-for gf in "$CDIR"/*.md; do
+for gf in "$CDIR"/*/SKILL.md; do
   [ -e "$gf" ] || continue
-  gb="$(basename "$gf" .md)"
+  gb="$(verb_id "$gf")"
   gcnt="$(getcount "$RECS" "READS_$gb")"
   D2_COL0=$(( D2_COL0 + ${gcnt:-0} ))
   D2_TRIM=$(( D2_TRIM + $(trimfirst_reads "$gf") ))
@@ -2576,9 +2588,9 @@ fi
 # heading it resolves that the split misses is a hard failure (V6); the differential
 # below is what shows the split is doing work rather than agreeing by accident.
 D4_FT=0; D4_WH=0
-for gf in "$CDIR"/*.md; do
+for gf in "$CDIR"/*/SKILL.md; do
   [ -e "$gf" ] || continue
-  gb="$(basename "$gf" .md)"
+  gb="$(verb_id "$gf")"
   gft="$(getcount "$RECS" "FT_$gb")"; gwh="$(getcount "$RECS" "WH_$gb")"
   D4_FT=$(( D4_FT + ${gft:-0} )); D4_WH=$(( D4_WH + ${gwh:-0} ))
 done
@@ -2603,17 +2615,17 @@ ctl() {  # ctl <id> <want> <label> <charter-defect> <cmd-defect> <integrity-prob
   else FAIL "${id}b: flagged but not as $want ($label): $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
 }
 
-ctl GA0  A0 "an empty command directory — a FAIL, not a vacuous pass"          ok        nocmds  '[ -d "$WORK/GA0/commands" ] && [ -z "$(ls -A "$WORK/GA0/commands")" ]'
+ctl GA0  A0 "an empty skills directory — a FAIL, not a vacuous pass"          ok        nocmds  '[ -d "$WORK/GA0/skills" ] && [ -z "$(ls -A "$WORK/GA0/skills")" ]'
 ctl GA0b A0 "an absent Step-1 slice — a FAIL, not a vacuous pass"              nostep1   ok      '! grep -q "^### Step 1:" "$WORK/GA0b/CLAUDE.md"'
-ctl GV0  V0 "a command file whose requirement table is absent"                 ok        notable    '! grep -q "^| verb | lifecycle" "$WORK/GV0/commands/trip.md"'
-ctl GV0b V0 "a command file carrying TWO requirement-table header rows"        ok        twotables  '[ "$(grep -c "^| verb | lifecycle" "$WORK/GV0b/commands/trip.md")" = "2" ]'
-ctl GV1  V1 "a requirement-table row that does not parse at five columns"      ok        badrow     'grep -qF "| broken | ACTIVE | any |" "$WORK/GV1/commands/trip.md"'
-ctl GV2  V2 "one verb identity declared twice with no parenthetical"           ok        dupident   '[ "$(grep -c "^| status | ACTIVE" "$WORK/GV2/commands/trip.md")" = "2" ]'
-ctl GV3  V3 "a declared verb with no implementing region"                      ok        nosection  '! grep -q "^## status$" "$WORK/GV3/commands/trip.md"'
-ctl GV3b V3 "a declared verb with TWO implementing regions"                    ok        twosections 'grep -qF "## status <other>" "$WORK/GV3b/commands/trip.md"'
-ctl GV4  V4 "a column-0 read declaration in a NON-verb section"                ok        strayreads 'grep -qF "**Reads:** something undeclared." "$WORK/GV4/commands/trip.md"'
-ctl GV5  V5 "a command file with no contract-header block"                     ok        noheader   '! grep -q "trip-contract-header" "$WORK/GV5/commands/trip.md"'
-ctl GV5b V5 "a command file carrying TWO contract-header blocks"               ok        twoheader  '[ "$(grep -c "trip-contract-header" "$WORK/GV5b/commands/trip.md")" = "2" ]'
+ctl GV0  V0 "a command file whose requirement table is absent"                 ok        notable    '! grep -q "^| verb | lifecycle" "$WORK/GV0/skills/trip/SKILL.md"'
+ctl GV0b V0 "a command file carrying TWO requirement-table header rows"        ok        twotables  '[ "$(grep -c "^| verb | lifecycle" "$WORK/GV0b/skills/trip/SKILL.md")" = "2" ]'
+ctl GV1  V1 "a requirement-table row that does not parse at five columns"      ok        badrow     'grep -qF "| broken | ACTIVE | any |" "$WORK/GV1/skills/trip/SKILL.md"'
+ctl GV2  V2 "one verb identity declared twice with no parenthetical"           ok        dupident   '[ "$(grep -c "^| status | ACTIVE" "$WORK/GV2/skills/trip/SKILL.md")" = "2" ]'
+ctl GV3  V3 "a declared verb with no implementing region"                      ok        nosection  '! grep -q "^## status$" "$WORK/GV3/skills/trip/SKILL.md"'
+ctl GV3b V3 "a declared verb with TWO implementing regions"                    ok        twosections 'grep -qF "## status <other>" "$WORK/GV3b/skills/trip/SKILL.md"'
+ctl GV4  V4 "a column-0 read declaration in a NON-verb section"                ok        strayreads 'grep -qF "**Reads:** something undeclared." "$WORK/GV4/skills/trip/SKILL.md"'
+ctl GV5  V5 "a command file with no contract-header block"                     ok        noheader   '! grep -q "trip-contract-header" "$WORK/GV5/skills/trip/SKILL.md"'
+ctl GV5b V5 "a command file carrying TWO contract-header blocks"               ok        twoheader  '[ "$(grep -c "trip-contract-header" "$WORK/GV5b/skills/trip/SKILL.md")" = "2" ]'
 ctl GV6  V6 "a Step-1 cell whose code-span strip changes the VALUE while the row count holds" badspan ok 'grep -qF "st${BT}atus" "$WORK/GV6/CLAUDE.md"'
 ctl GB1  B1 "a Step-1 row with neither a code span nor an exclusion"           badcell   ok  'grep -qF "| ex | neither |" "$WORK/GB1/CLAUDE.md"'
 ctl GB4  B4 "the same row seen as an exhaustiveness gap — it is counted as neither" badcell ok 'grep -qF "| ex | neither |" "$WORK/GB4/CLAUDE.md"'
@@ -2627,19 +2639,19 @@ ctl GK3  K3 "a command carrying both a verbless and a verbed ADDRESSED cell"   d
 ctl GS1  S1 "a key present in Step 1 and absent from Step 2"                   step2drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1/CLAUDE.md")" = "1" ]'
 ctl GS1b S1 "the same divergence in the OTHER direction — present in Step 2, absent from Step 1" step1drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1b/CLAUDE.md")" = "1" ]'
 ctl GS2  S2 "only ONE enumeration derivable — SINGLE-SOURCE, not agreement"    nostep2   ok  '! grep -q "^### Step 2:" "$WORK/GS2/CLAUDE.md"'
-ctl GF1  F1 "a verb region invoking the EXCLUDED form rotate"                  ok        rotate      'grep -qF "publish-trip-site.sh rotate" "$WORK/GF1/commands/trip-publish.md"'
-ctl GF2  F2 "an unpublish invocation lacking the pages-only flag"              ok        nounpubflag 'grep -qF "unpublish trips/x" "$WORK/GF2/commands/trip-publish.md"'
-ctl GF3  F3 "a forbidden flag passed on a publish-script invocation"           ok        badflag     'grep -qF -- "--passphrase secret" "$WORK/GF3/commands/trip-publish.md"'
-ctl GF4  F4 "a command file that SETS the plaintext override, not merely names it" ok    allowplain  'grep -qF "ALLOW_PLAINTEXT=1" "$WORK/GF4/commands/trip.md"'
-ctl GF5  F5 "a script mention reached through a variable — unresolved, not silently clean" ok varmention 'grep -q "^SCRIPT=scripts" "$WORK/GF5/commands/trip.md"'
-ctl GF6  F6 "a fenced invocation in no verb region — a finding that could name only a FILE" ok orphaninv 'grep -q "^## Not a verb$" "$WORK/GF6/commands/trip.md"'
+ctl GF1  F1 "a verb region invoking the EXCLUDED form rotate"                  ok        rotate      'grep -qF "publish-trip-site.sh rotate" "$WORK/GF1/skills/trip-publish/SKILL.md"'
+ctl GF2  F2 "an unpublish invocation lacking the pages-only flag"              ok        nounpubflag 'grep -qF "unpublish trips/x" "$WORK/GF2/skills/trip-publish/SKILL.md"'
+ctl GF3  F3 "a forbidden flag passed on a publish-script invocation"           ok        badflag     'grep -qF -- "--passphrase secret" "$WORK/GF3/skills/trip-publish/SKILL.md"'
+ctl GF4  F4 "a command file that SETS the plaintext override, not merely names it" ok    allowplain  'grep -qF "ALLOW_PLAINTEXT=1" "$WORK/GF4/skills/trip/SKILL.md"'
+ctl GF5  F5 "a script mention reached through a variable — unresolved, not silently clean" ok varmention 'grep -q "^SCRIPT=scripts" "$WORK/GF5/skills/trip/SKILL.md"'
+ctl GF6  F6 "a fenced invocation in no verb region — a finding that could name only a FILE" ok orphaninv 'grep -q "^## Not a verb$" "$WORK/GF6/skills/trip/SKILL.md"'
 # ── H-group arms. The first three defect the FRONTMATTER, which parse_command_file reads
 # nothing of — which is exactly why this class went undetected until group H existed. The
 # last two defect the DOCUMENT while leaving the command files correct, so the divergence
 # is in the direction H5 is aimed at.
-ctl GH1  H1 "a RESOLVE-role command file declaring no argument-hint"           ok        nohint     '! grep -q "^argument-hint:" "$WORK/GH1/commands/trip.md"'
-ctl GH2  H2 "a hint naming a token the file declares no verb for"              ok        hintghost  'grep -q "^argument-hint:.*ghostverb" "$WORK/GH2/commands/trip.md"'
-ctl GH3  H3 "a hint omitting a declared verb with no reference in the description" ok    hintshort  '[ "$(sed -n "s/^argument-hint: //p" "$WORK/GH3/commands/trip.md")" = "status" ]'
+ctl GH1  H1 "a RESOLVE-role command file declaring no argument-hint"           ok        nohint     '! grep -q "^argument-hint:" "$WORK/GH1/skills/trip/SKILL.md"'
+ctl GH2  H2 "a hint naming a token the file declares no verb for"              ok        hintghost  'grep -q "^argument-hint:.*ghostverb" "$WORK/GH2/skills/trip/SKILL.md"'
+ctl GH3  H3 "a hint omitting a declared verb with no reference in the description" ok    hintshort  '[ "$(sed -n "s/^argument-hint: //p" "$WORK/GH3/skills/trip/SKILL.md")" = "status" ]'
 ctl GH4  H4 "an absent command reference — a FAIL, not a vacuous pass"         ok        nodoc      '[ ! -f "$WORK/GH4/reference/command-reference.md" ]'
 ctl GH5  H5 "a derived region that disagrees with the live requirement tables" ok        docdrift   'grep -q "^| .*| ARCHIVED |" "$WORK/GH5/reference/command-reference.md"'
 
@@ -2750,8 +2762,8 @@ fi
 # tuples — the rename is a different tuple table, never a patch over a generated file.
 GM1="$WORK/gm1"; gen_tree "$GM1" ok  ok "${WORLD_MUT[@]}"
 GM2="$WORK/gm2"; gen_tree "$GM2" mut ok "${WORLD_MUT[@]}"
-if grep -q "checkx" "$GM1/commands/trip.md" && ! grep -q "checkx" "$GM1/CLAUDE.md" \
-   && grep -q "checkx" "$GM2/commands/trip.md" && grep -q "checkx" "$GM2/CLAUDE.md"; then
+if grep -q "checkx" "$GM1/skills/trip/SKILL.md" && ! grep -q "checkx" "$GM1/CLAUDE.md" \
+   && grep -q "checkx" "$GM2/skills/trip/SKILL.md" && grep -q "checkx" "$GM2/CLAUDE.md"; then
   PASS "GM-a: fixture integrity — one tree carries the rename in the command file ONLY; the other carries the same rename on BOTH surfaces"
   M1="$(run_tree "$GM1")"; M2="$(run_tree "$GM2")"
   if grep -q '^FINDING ' <<<"$M1" && grep -q 'checkx' <<<"$M1"; then
@@ -2780,7 +2792,7 @@ fi
 GZV="$WORK/gzv"; gen_tree "$GZV" verbless norows
 arm V0
 ZV_FILES=0; ZV_OK=1
-for gf in "$GZV/commands"/*.md; do
+for gf in "$GZV/skills"/*/SKILL.md; do
   [ -e "$gf" ] || continue
   ZV_FILES=$((ZV_FILES+1))
   grep -qF '| verb | lifecycle | mode | destination | depth |' "$gf" || ZV_OK=0
@@ -2818,7 +2830,7 @@ TOKHITS=0
 for gp in "$MD" "$ADR" "$PUB" "$SELF"; do
   [ -f "$gp" ] && grep -qF "$TOKEN" "$gp" && TOKHITS=$((TOKHITS+1))
 done
-for gp in "$CDIR"/*.md; do
+for gp in "$CDIR"/*/SKILL.md; do
   [ -e "$gp" ] && grep -qF "$TOKEN" "$gp" && TOKHITS=$((TOKHITS+1))
 done
 CTLHITS=0
@@ -3227,7 +3239,7 @@ echo
 echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference and each command file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference and each verb file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi

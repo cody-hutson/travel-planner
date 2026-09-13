@@ -1,4 +1,5 @@
 ---
+name: trip-new
 description: Start a new trip for a destination and year — scaffolds the folder, context, log and traveler intake. Creates only; never overwrites an existing trip.
 argument-hint: [destination-year]
 disable-model-invocation: true

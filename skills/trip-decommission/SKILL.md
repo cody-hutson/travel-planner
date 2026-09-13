@@ -1,4 +1,5 @@
 ---
+name: trip-decommission
 description: Take a trip's site offline, archive a concluded trip, or reopen an archived one. Never deletes trip content.
 argument-hint: temporary|archive|reopen [--trip <slug>]
 disable-model-invocation: true

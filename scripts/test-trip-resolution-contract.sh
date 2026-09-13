@@ -3,8 +3,9 @@
 # test-trip-resolution-contract.sh — the trip-resolution CONTRACT-CONFORMANCE guard.
 #
 # The trip-resolution contract has one normative home: CLAUDE.md § "Resolving a trip".
-# The `!` pre-execution mechanism fires only inside a command file's own body and there
-# is no include directive, so every consuming command file must physically carry the
+# The `!` pre-execution mechanism fires inside a consuming file's own body — measured in a
+# SKILL.md body, not only in the retired command form — and there is no include directive
+# at either, so every consuming file must physically carry the
 # evidence blocks. That duplication is forced by the platform, not chosen — and this
 # suite is what makes it safe: it EXTRACTS the canonical list from CLAUDE.md and asserts
 # every consumer's copy is byte-identical. Copy plus assertion is not the same thing as
@@ -18,7 +19,7 @@
 #        contiguous from E1, `!`-prefixed and stderr-capturing; the header block
 #        yields a citation line. Plus the self-check that gives this suite its
 #        reason to exist — THIS SCRIPT HOLDS NO COPY of any canonical entry.
-#   RP   the real consumer population under .claude/commands/: citation line present,
+#   RP   the real consumer population under skills/: citation line present,
 #        evidence blocks byte-identical to the canonical at their index, the prefix
 #        contiguous from index 1 and EXACTLY the length the declared `contract-depth`
 #        requires — no fewer blocks and no more — and `contract-depth` equal to the
@@ -170,6 +171,12 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # say anything, and it must not read as one that did.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); }
 
+# verb_id <path-to-a-consumer-file> — the consumer's identity, derived in ONE place.
+# Every consumer file is named SKILL.md, so a file-basename identity names all five the
+# same thing and a FINDING could not say WHICH consumer diverged. The verb directory is
+# the identity; this is the only expression in this file that knows that.
+verb_id() { local d="${1%/*}"; printf '%s' "${d##*/}"; }
+
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
 CLAUDE_MD="$ROOT/CLAUDE.md"
@@ -222,9 +229,9 @@ conformance_check() {
     i=$((i+1)); canon[$i]="$line"
   done < "$canon_file"
 
-  for f in "$dir"/*.md; do
+  for f in "$dir"/*/SKILL.md; do
     [ -e "$f" ] || continue
-    base="${f##*/}"
+    base="$(verb_id "$f")"
 
     # -- header block: the citation line, byte-identical across every consumer -----
     local has_cite=0
@@ -384,6 +391,7 @@ EOF
 # in the taxonomy suite, which were all `if <test>; then PASS` sites. Group PF keeps it
 # closed.
 has_finding() { grep -qE "^FINDING ($2) " <<<"$1"; }
+popstat()     { printf '%s\n' "$1" | sed -n "s/^POPSTAT $2 //p" | head -1; }
 # `show` keeps its pipeline deliberately. It also ends in a command that need not read to
 # EOF, but its exit status is never consulted — it is called for its OUTPUT, so there is no
 # verdict for a spurious status to corrupt. The defect is a pipeline whose STATUS is read,
@@ -500,16 +508,96 @@ if [ "$PIN_OK" -eq 1 ]; then
   fi
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────────
+# THE POPULATION EQUALITY — why a green RP is not, on its own, evidence.
+#
+# Every RP assertion below is universally quantified over the consumer files it finds. A
+# zero population therefore satisfies all of them, and the VACUOUS verdict exists to say
+# so — but VACUOUS increments a counter and nothing more, so before this slice the suite
+# could exit 0 while grading no consumer at all. An empty population is not a hypothetical
+# here: it is what a directory move produces, and this surface was moved.
+#
+# Two things close it, and they are different in kind. The exit rule at the foot of this
+# file now reads `vacuous` as well as `fail`, so a vacuous group cannot report green. And
+# the arms below assert the observed consumer set EQUALS the set the charter declares, in
+# both directions — which is strictly stronger than a floor, because it also catches a
+# consumer file that exists while the charter declares no row for it.
+#
+# NO FROZEN DENOMINATOR. The declared side is derived from the charter's own consumer
+# table, by the table's own definition of what a consumer row is — its population-role
+# cell reads RESOLVE or CREATE — so adding a sixth verb to the charter turns this red
+# until the file lands, and adding the file turns it red until the charter declares it.
+# No numeral appears on either side of the comparison.
+# ─────────────────────────────────────────────────────────────────────────────────
+
+# declared_consumers <claude.md> — the consumer verbs the charter itself declares, one per
+# line. The first cell carries the invocation, which may be rendered with an argument
+# signature (`/trip <verb>`), so the verb is its first whitespace-delimited token.
+declared_consumers() {
+  local f="$1" line c1 c3 rest v in_sec=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ "$in_sec" -eq 0 ]; then
+      [ "$line" = "$SECTION_HEADING" ] && in_sec=1
+      continue
+    fi
+    case "$line" in '# '*|'## '*|'### '*) break ;; esac
+    case "$line" in '|'*) ;; *) continue ;; esac
+    IFS='|' read -r _ c1 _ c3 rest <<EOF
+$line
+EOF
+    c3="${c3// /}"; c3="${c3//\`/}"
+    case "$c3" in RESOLVE|CREATE) ;; *) continue ;; esac
+    v="${c1//\`/}"; v="${v// /}"; v="${v#/}"; v="${v%%<*}"
+    [ -n "$v" ] && printf '%s\n' "$v"
+  done < "$f"
+}
+
+# pop_check <consumer-root> <declared-file> — the observed consumer set against the
+# declared one, BOTH directions. Emits FINDING lines plus one POPSTAT line carrying the
+# matched / declared / surplus counts, so the caller asserts a positive equality over two
+# non-empty derived sets rather than the absence of a finding.
+pop_check() {
+  local dir="$1" decl="$2" f v d obs="" matched=0 declared=0 extra=0
+  for f in "$dir"/*/SKILL.md; do
+    [ -e "$f" ] || continue
+    obs="$obs$(verb_id "$f")
+"
+  done
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    declared=$((declared+1))
+    case "
+$obs" in
+      *"
+$d
+"*) matched=$((matched+1)) ;;
+      *)  printf 'FINDING Q1 %s the charter declares this consumer and no %s/SKILL.md answers to it\n' "$d" "$d" ;;
+    esac
+  done < "$decl"
+  while IFS= read -r v; do
+    [ -n "$v" ] || continue
+    if ! grep -qxF -- "$v" "$decl"; then
+      extra=$((extra+1))
+      printf 'FINDING Q2 %s a consumer file exists that the charter declares no row for\n' "$v"
+    fi
+  done <<EOF
+$obs
+EOF
+  printf 'POPSTAT MATCHED %s\n' "$matched"
+  printf 'POPSTAT DECLARED %s\n' "$declared"
+  printf 'POPSTAT EXTRA %s\n' "$extra"
+}
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RP — the real consumer population.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "── Group RP — the real consumer population under .claude/commands/."
+echo "── Group RP — the real consumer population under skills/."
 
-CMD_DIR="$ROOT/.claude/commands"
+CMD_DIR="$ROOT/skills"
 RP_POP=0
 if [ -d "$CMD_DIR" ]; then
-  for f in "$CMD_DIR"/*.md; do [ -e "$f" ] && RP_POP=$((RP_POP+1)); done
+  for f in "$CMD_DIR"/*/SKILL.md; do [ -e "$f" ] && RP_POP=$((RP_POP+1)); done
 fi
 
 if [ "$PIN_OK" -ne 1 ]; then
@@ -519,7 +607,7 @@ elif [ "$RP_POP" -eq 0 ]; then
   # they are vacuously true and prove nothing whatsoever about conformance. Saying so
   # is the whole point of this branch — the count is printed so the transition to a
   # real population is visible in the log rather than inferred.
-  if [ -d "$CMD_DIR" ]; then why="the directory exists and holds no .md file"; else why="the directory does not exist"; fi
+  if [ -d "$CMD_DIR" ]; then why="the directory exists and holds no <verb>/SKILL.md"; else why="the directory does not exist"; fi
   VACUOUS "RP: observed consumer population = 0 ($why). Every RP assertion is vacuously true and proves NOTHING about conformance. Group CTL below is what makes this run meaningful."
 else
   RP_OUT="$(conformance_check "$CMD_DIR" "$CANON_FILE" "$CITATION" "$CANON_N")"; RP_RC=$?
@@ -543,6 +631,22 @@ else
     if has_finding "$RP_OUT" 'H1|H2|H3|P1|P2|P3|D1|D2'; then PASS "RP6: the checker returned $RP_RC and every finding it emitted is accounted for above"
     else FAIL "RP6: the checker returned $RP_RC but emitted no finding the assertions above recognise"; fi
   fi
+fi
+
+# RP7 is graded OUTSIDE the population branch above, deliberately. Every other RP arm is
+# quantified over the population, so a zero population satisfies it; this one is an
+# assertion ABOUT the population and must therefore still run — and fail — when it is zero.
+DECL_FILE="$WORK/declared-consumers"
+declared_consumers "$CLAUDE_MD" > "$DECL_FILE"
+POP_OUT="$(pop_check "$CMD_DIR" "$DECL_FILE")"
+POP_MATCHED="$(popstat "$POP_OUT" MATCHED)"; POP_DECLARED="$(popstat "$POP_OUT" DECLARED)"
+POP_EXTRA="$(popstat "$POP_OUT" EXTRA)"
+if [ "${POP_DECLARED:-0}" -ge 1 ] && [ "$RP_POP" -ge 1 ] \
+   && [ "${POP_MATCHED:-0}" -eq "${POP_DECLARED:-0}" ] && [ "${POP_EXTRA:-0}" -eq 0 ]; then
+  PASS "RP7: the observed consumer set EQUALS the set the charter declares — $POP_MATCHED of $POP_DECLARED declared row(s) answered by a <verb>/SKILL.md, and $POP_EXTRA consumer file(s) the charter declares no row for. Both sides are derived (the declared side from the consumer table's own RESOLVE/CREATE role cell) and both are non-empty, so this is a measured equality and not a floor a vanished population would satisfy"
+else
+  FAIL "RP7: the observed consumer set does not equal the charter's declared set — matched=${POP_MATCHED:-?} declared=${POP_DECLARED:-?} surplus=${POP_EXTRA:-?} observed_files=$RP_POP. A zero on either side is itself the finding: the assertions above are quantified over the population and would pass over an empty one"
+  show "$POP_OUT" 'Q1|Q2'
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -593,7 +697,7 @@ else
   mk_consumer() {  # <dir> <basename> <depth> <role> <variant>
     local d="$1" name="$2" depth="$3" role="$4" variant="$5"
     local i lim
-    mkdir -p "$d"
+    mkdir -p "$d/$name"
     {
       printf -- '---\ndescription: fixture\n---\n\n# %s\n\n' "$name"
       # evidence prefix
@@ -682,7 +786,7 @@ else
         esac
       fi
       printf '\nVerb-specific text follows here.\n'
-    } > "$d/$name.md"
+    } > "$d/$name/SKILL.md"
   }
 
   # The one mutation the defect arms need, derived from the extracted canonical.
@@ -724,8 +828,8 @@ else
   # ── CTL-a: the MUST-NOT-FIRE arm. It is graded FIRST because without it every
   # negative arm below is satisfied by a checker hard-wired to return 1.
   A="$WORK/ctl_a"; mk_tree "$A" ok
-  a_pop=0; for f in "$A"/*.md; do [ -e "$f" ] && a_pop=$((a_pop+1)); done
-  if [ "$a_pop" -eq 5 ] && [ -f "$A/trip.md" ] && [ -f "$A/trip-new.md" ]; then
+  a_pop=0; for f in "$A"/*/SKILL.md; do [ -e "$f" ] && a_pop=$((a_pop+1)); done
+  if [ "$a_pop" -eq 5 ] && [ -f "$A/trip/SKILL.md" ] && [ -f "$A/trip-new/SKILL.md" ]; then
     PASS "CTLa1: fixture integrity — a clean five-file consumer tree was constructed (population $a_pop, built from the extracted canonical)"
   else
     FAIL "CTLa1: the clean fixture tree was not constructed (population $a_pop) — every arm below would prove nothing"
@@ -739,11 +843,11 @@ else
   a_new_cells=0
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in *'| G'[0-8]' |'*) a_new_cells=$((a_new_cells+1)) ;; esac
-  done < "$A/trip-new.md"
+  done < "$A/trip-new/SKILL.md"
   if [ "$a_new_cells" -gt 0 ] \
-     && grep -q -x -F -- 'population-role: CREATE' "$A/trip-new.md" \
-     && grep -q -x -F -- 'contract-depth: G2' "$A/trip-new.md" \
-     && grep -q -F -- '| G2 |' "$A/trip-new.md"; then
+     && grep -q -x -F -- 'population-role: CREATE' "$A/trip-new/SKILL.md" \
+     && grep -q -x -F -- 'contract-depth: G2' "$A/trip-new/SKILL.md" \
+     && grep -q -F -- '| G2 |' "$A/trip-new/SKILL.md"; then
     PASS "CTLa3: fixture integrity — the clean tree's CREATE consumer declares contract-depth G2 and carries $a_new_cells readable depth cell(s) topping out at G2, so CTLa2's silence about it is a verdict on the role-neutral D2 and not the role exemption it used to be"
   else
     FAIL "CTLa3: the clean tree's CREATE consumer carries no readable verb table (depth cells=$a_new_cells) — CTLa2 would be silent for the old reason and the role widening would be untested"
@@ -762,7 +866,7 @@ else
     FAIL "CTLb1: the mutation did not change the canonical entry — CTLb2 would be testing an identical string and prove nothing"
   fi
   B="$WORK/ctl_b"; mk_tree "$B" nostderr
-  if grep -q -F -- "$MUTATED" "$B/trip.md" && ! grep -q -F -- "$CANON1" "$B/trip.md"; then
+  if grep -q -F -- "$MUTATED" "$B/trip/SKILL.md" && ! grep -q -F -- "$CANON1" "$B/trip/SKILL.md"; then
     PASS "CTLb2: fixture integrity — the defective consumer carries the mutated block and not the canonical one"
   else
     FAIL "CTLb2: the defective fixture does not carry the mutation — CTLb3 would prove nothing"
@@ -776,7 +880,7 @@ else
 
   # ── CTL-c: a removed contract header block MUST fire.
   C="$WORK/ctl_c"; mk_tree "$C" noheader
-  if ! grep -q -F -- "$CITATION" "$C/trip.md" && grep -q -F -- "$CITATION" "$C/trip-record.md"; then
+  if ! grep -q -F -- "$CITATION" "$C/trip/SKILL.md" && grep -q -F -- "$CITATION" "$C/trip-record/SKILL.md"; then
     PASS "CTLc1: fixture integrity — the header block is absent from exactly the defective consumer and present in its siblings"
   else
     FAIL "CTLc1: the header-removal fixture is not set up as claimed — CTLc2 would prove nothing"
@@ -793,8 +897,8 @@ else
   d_blocks=0
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '!`'*) d_blocks=$((d_blocks+1)) ;; esac
-  done < "$D/trip.md"
-  if [ "$d_blocks" -lt "$CANON_N" ] && grep -q -x -F -- 'contract-depth: G8' "$D/trip.md"; then
+  done < "$D/trip/SKILL.md"
+  if [ "$d_blocks" -lt "$CANON_N" ] && grep -q -x -F -- 'contract-depth: G8' "$D/trip/SKILL.md"; then
     PASS "CTLd1: fixture integrity — the defective consumer declares depth G8 while carrying only $d_blocks of $CANON_N evidence block(s)"
   else
     FAIL "CTLd1: the short-prefix fixture is not set up as claimed (blocks=$d_blocks of $CANON_N) — CTLd2 would prove nothing"
@@ -811,9 +915,9 @@ else
   # An absent depth line also collapses the derived prefix requirement to zero, so this
   # fixture reaches H2 and leaves the prefix assertions untouched.
   ND="$WORK/ctl_nodepth"; mk_tree "$ND" nodepth
-  if ! grep -q -x -F -- 'contract-depth: G8' "$ND/trip.md" \
-     && grep -q -x -F -- 'population-role: RESOLVE' "$ND/trip.md" \
-     && grep -q -x -F -- 'contract-depth: G8' "$ND/trip-record.md"; then
+  if ! grep -q -x -F -- 'contract-depth: G8' "$ND/trip/SKILL.md" \
+     && grep -q -x -F -- 'population-role: RESOLVE' "$ND/trip/SKILL.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$ND/trip-record/SKILL.md"; then
     PASS "CTLnd1: fixture integrity — the contract-depth line is absent from exactly the defective consumer, its population-role is untouched, and the SAME probe finds the line in the sibling — so the zero is a measurement, not a broken probe"
   else
     FAIL "CTLnd1: the depth-removal fixture is not set up as claimed — CTLnd2 would prove nothing"
@@ -827,9 +931,9 @@ else
 
   # ── CTL-nr: a consumer with no `population-role` line MUST fire H3.
   NR="$WORK/ctl_norole"; mk_tree "$NR" norole
-  if ! grep -q -x -F -- 'population-role: RESOLVE' "$NR/trip.md" \
-     && grep -q -x -F -- 'contract-depth: G8' "$NR/trip.md" \
-     && grep -q -x -F -- 'population-role: RESOLVE' "$NR/trip-record.md"; then
+  if ! grep -q -x -F -- 'population-role: RESOLVE' "$NR/trip/SKILL.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$NR/trip/SKILL.md" \
+     && grep -q -x -F -- 'population-role: RESOLVE' "$NR/trip-record/SKILL.md"; then
     PASS "CTLnr1: fixture integrity — the population-role line is absent from exactly the defective consumer, its contract-depth is untouched, and the same probe finds the line in the sibling"
   else
     FAIL "CTLnr1: the role-removal fixture is not set up as claimed — CTLnr2 would prove nothing"
@@ -848,12 +952,12 @@ else
   nt_rows=0; nt_sib=0
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '|'*) nt_rows=$((nt_rows+1)) ;; esac
-  done < "$NT/trip.md"
+  done < "$NT/trip/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '|'*) nt_sib=$((nt_sib+1)) ;; esac
-  done < "$NT/trip-record.md"
+  done < "$NT/trip-record/SKILL.md"
   if [ "$nt_rows" -eq 0 ] && [ "$nt_sib" -gt 0 ] \
-     && grep -q -x -F -- 'population-role: RESOLVE' "$NT/trip.md"; then
+     && grep -q -x -F -- 'population-role: RESOLVE' "$NT/trip/SKILL.md"; then
     PASS "CTLnt1: fixture integrity — the defective consumer declares population-role RESOLVE and carries $nt_rows table line(s), while the identical counter reads $nt_sib next door — a zero with a non-zero control arm"
   else
     FAIL "CTLnt1: the missing-table fixture is not set up as claimed (rows=$nt_rows sibling=$nt_sib) — CTLnt2 would prove nothing"
@@ -876,15 +980,15 @@ else
   nc_rows=0; nc_sib=0; nc_clean=0
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '|'*) nc_rows=$((nc_rows+1)) ;; esac
-  done < "$NC/trip-new.md"
+  done < "$NC/trip-new/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '|'*) nc_sib=$((nc_sib+1)) ;; esac
-  done < "$NC/trip.md"
+  done < "$NC/trip/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '|'*) nc_clean=$((nc_clean+1)) ;; esac
-  done < "$A/trip-new.md"
+  done < "$A/trip-new/SKILL.md"
   if [ "$nc_rows" -eq 0 ] && [ "$nc_sib" -gt 0 ] && [ "$nc_clean" -gt 0 ] \
-     && grep -q -x -F -- 'population-role: CREATE' "$NC/trip-new.md"; then
+     && grep -q -x -F -- 'population-role: CREATE' "$NC/trip-new/SKILL.md"; then
     PASS "CTLnc1: fixture integrity — the defective consumer declares population-role CREATE and carries $nc_rows table line(s), while the identical counter reads $nc_sib on its RESOLVE sibling and $nc_clean on the CLEAN tree's own CREATE consumer — two non-zero control arms, so the zero is a measurement and not the builder declining to make a CREATE table"
   else
     FAIL "CTLnc1: the CREATE missing-table fixture is not set up as claimed (rows=$nc_rows sibling=$nc_sib clean=$nc_clean) — CTLnc2 would prove nothing"
@@ -901,10 +1005,10 @@ else
   # until the command files land, so before this arm it had never been observed to fire
   # at any wave, and "inert" and "never exercised" were the same observation.
   DM="$WORK/ctl_depthmismatch"; mk_tree "$DM" depthmismatch
-  if grep -q -x -F -- 'contract-depth: G8' "$DM/trip.md" \
-     && grep -q -x -F -- '| act | ACTIVE | resolved | decided | G2 |' "$DM/trip.md" \
-     && ! grep -q -x -F -- '| act | ACTIVE | resolved | decided | G8 |' "$DM/trip.md" \
-     && grep -q -x -F -- '| act | ACTIVE | resolved | decided | G8 |' "$DM/trip-record.md"; then
+  if grep -q -x -F -- 'contract-depth: G8' "$DM/trip/SKILL.md" \
+     && grep -q -x -F -- '| act | ACTIVE | resolved | decided | G2 |' "$DM/trip/SKILL.md" \
+     && ! grep -q -x -F -- '| act | ACTIVE | resolved | decided | G8 |' "$DM/trip/SKILL.md" \
+     && grep -q -x -F -- '| act | ACTIVE | resolved | decided | G8 |' "$DM/trip-record/SKILL.md"; then
     PASS "CTLdm1: fixture integrity — the defective consumer declares contract-depth G8 while its verb table tops out at G2; the sibling still carries the matching G8 row, so the absence is observed rather than assumed"
   else
     FAIL "CTLdm1: the depth-mismatch fixture is not set up as claimed — CTLdm2 would prove nothing"
@@ -926,9 +1030,9 @@ else
   # not silently satisfy a declared G8. That reasoning was recorded beside the code and
   # asserted by nothing: a row-wide matcher would have passed every arm above.
   DD="$WORK/ctl_depthdecoy"; mk_tree "$DD" depthdecoy
-  if grep -q -x -F -- 'contract-depth: G8' "$DD/trip.md" \
-     && grep -q -x -F -- '| status | ACTIVE | G8 | any | G1 |' "$DD/trip.md" \
-     && grep -q -x -F -- '| act | G8 | resolved | decided | G1 |' "$DD/trip.md"; then
+  if grep -q -x -F -- 'contract-depth: G8' "$DD/trip/SKILL.md" \
+     && grep -q -x -F -- '| status | ACTIVE | G8 | any | G1 |' "$DD/trip/SKILL.md" \
+     && grep -q -x -F -- '| act | G8 | resolved | decided | G1 |' "$DD/trip/SKILL.md"; then
     PASS "CTLdd1: fixture integrity — the defective consumer declares G8 and plants a decoy G8 in one row's mode cell and the other's lifecycle cell, while EVERY depth cell reads G1"
   else
     FAIL "CTLdd1: the decoy fixture is not set up as claimed — CTLdd2 would prove nothing"
@@ -952,11 +1056,11 @@ else
   # `Bash(ls:*)` grant is only true while its prefix is E1 and nothing else (ADR-007 §2,
   # bound 2). Before this, /trip-new could declare any depth it liked.
   DC="$WORK/ctl_depthmismatchcreate"; mk_tree "$DC" depthmismatchcreate
-  if grep -q -x -F -- 'contract-depth: G2' "$DC/trip-new.md" \
-     && grep -q -x -F -- 'population-role: CREATE' "$DC/trip-new.md" \
-     && grep -q -x -F -- '| new-from | ACTIVE | any | any | G1 |' "$DC/trip-new.md" \
-     && ! grep -q -F -- '| G2 |' "$DC/trip-new.md" \
-     && grep -q -F -- '| G2 |' "$A/trip-new.md"; then
+  if grep -q -x -F -- 'contract-depth: G2' "$DC/trip-new/SKILL.md" \
+     && grep -q -x -F -- 'population-role: CREATE' "$DC/trip-new/SKILL.md" \
+     && grep -q -x -F -- '| new-from | ACTIVE | any | any | G1 |' "$DC/trip-new/SKILL.md" \
+     && ! grep -q -F -- '| G2 |' "$DC/trip-new/SKILL.md" \
+     && grep -q -F -- '| G2 |' "$A/trip-new/SKILL.md"; then
     PASS "CTLdc1: fixture integrity — the defective CREATE consumer declares contract-depth G2 while its verb table tops out at G1, and the SAME probe finds a G2 depth cell on the clean tree's CREATE consumer, so the absence is observed rather than assumed"
   else
     FAIL "CTLdc1: the CREATE depth-mismatch fixture is not set up as claimed — CTLdc2 would prove nothing"
@@ -985,12 +1089,12 @@ else
   op_blocks=0; op_clean=0
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '!`'*) op_blocks=$((op_blocks+1)) ;; esac
-  done < "$OP/trip-new.md"
+  done < "$OP/trip-new/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '!`'*) op_clean=$((op_clean+1)) ;; esac
-  done < "$A/trip-new.md"
+  done < "$A/trip-new/SKILL.md"
   if [ "$CANON_N" -gt 1 ] && [ "$op_blocks" -eq "$CANON_N" ] && [ "$op_clean" -eq 1 ] \
-     && grep -q -x -F -- 'contract-depth: G2' "$OP/trip-new.md"; then
+     && grep -q -x -F -- 'contract-depth: G2' "$OP/trip-new/SKILL.md"; then
     PASS "CTLop1: fixture integrity — the defective consumer declares depth G2 (which needs E1 alone) while carrying $op_blocks of $CANON_N block(s); the SAME counter reads $op_clean on the clean tree's trip-new, so the surplus is a measured difference and not an assumed one"
   else
     FAIL "CTLop1: the over-prefix fixture is not set up as claimed (defective=$op_blocks clean=$op_clean canonical=$CANON_N) — CTLop2 would prove nothing"
@@ -1015,12 +1119,12 @@ else
       *'| `G'*'` |'*)   cs_span=$((cs_span+1)) ;;
       *'| G'[0-8]' |'*) cs_bare_def=$((cs_bare_def+1)) ;;
     esac
-  done < "$CS/trip.md"
+  done < "$CS/trip/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in *'| G'[0-8]' |'*) cs_bare_clean=$((cs_bare_clean+1)) ;; esac
-  done < "$A/trip.md"
+  done < "$A/trip/SKILL.md"
   if [ "$cs_span" -gt 0 ] && [ "$cs_bare_def" -eq 0 ] && [ "$cs_bare_clean" -gt 0 ] \
-     && grep -q -x -F -- 'contract-depth: G8' "$CS/trip.md"; then
+     && grep -q -x -F -- 'contract-depth: G8' "$CS/trip/SKILL.md"; then
     PASS "CTLcs1: fixture integrity — the defective consumer's table carries $cs_span code-span depth cell(s) and $cs_bare_def bare ones, while the identical bare-cell counter reads $cs_bare_clean on the clean tree — so the rendering is the only thing that differs, and the zero is a measurement"
   else
     FAIL "CTLcs1: the code-span fixture is not set up as claimed (span=$cs_span bare_here=$cs_bare_def bare_clean=$cs_bare_clean) — CTLcs2 would prove nothing"
@@ -1042,21 +1146,21 @@ else
   cx_rows=0; cx_depth=0; cx_sib_depth=0
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in '|'*) cx_rows=$((cx_rows+1)) ;; esac
-  done < "$CX/trip.md"
+  done < "$CX/trip/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       *'| `G'*'` |'*)   cx_depth=$((cx_depth+1)) ;;
       *'| G'[0-8]' |'*) cx_depth=$((cx_depth+1)) ;;
     esac
-  done < "$CX/trip.md"
+  done < "$CX/trip/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
       *'| `G'*'` |'*)   cx_sib_depth=$((cx_sib_depth+1)) ;;
       *'| G'[0-8]' |'*) cx_sib_depth=$((cx_sib_depth+1)) ;;
     esac
-  done < "$CS/trip.md"
+  done < "$CS/trip/SKILL.md"
   if [ "$cx_rows" -gt 0 ] && [ "$cx_depth" -eq 0 ] && [ "$cx_sib_depth" -gt 0 ] \
-     && grep -q -x -F -- 'population-role: RESOLVE' "$CX/trip.md"; then
+     && grep -q -x -F -- 'population-role: RESOLVE' "$CX/trip/SKILL.md"; then
     PASS "CTLcx1: fixture integrity — the defective consumer carries $cx_rows table line(s) and declares population-role RESOLVE, yet $cx_depth of its cells are a depth in EITHER rendering, while the same two-rendering counter reads $cx_sib_depth on the code-span fixture next door"
   else
     FAIL "CTLcx1: the code-span specificity fixture is not set up as claimed (rows=$cx_rows depths=$cx_depth sibling=$cx_sib_depth) — CTLcx2 would prove nothing"
@@ -1080,9 +1184,9 @@ else
   # RESOLVE or CREATE and no other rendering, so tolerating a second rendering of one
   # field alone would make that block's discipline field-dependent for no gain.
   HS="$WORK/ctl_spandepth"; mk_tree "$HS" spandepth
-  if grep -q -x -F -- 'contract-depth: `G8`' "$HS/trip.md" \
-     && ! grep -q -x -F -- 'contract-depth: G8' "$HS/trip.md" \
-     && grep -q -x -F -- 'contract-depth: G8' "$HS/trip-record.md"; then
+  if grep -q -x -F -- 'contract-depth: `G8`' "$HS/trip/SKILL.md" \
+     && ! grep -q -x -F -- 'contract-depth: G8' "$HS/trip/SKILL.md" \
+     && grep -q -x -F -- 'contract-depth: G8' "$HS/trip-record/SKILL.md"; then
     PASS "CTLhs1: fixture integrity — the defective consumer's contract-depth line is PRESENT and code-span rendered, and the same whole-line probe finds the bare form in its sibling, so the zero here is a rendering difference and not a missing line"
   else
     FAIL "CTLhs1: the code-span header fixture is not set up as claimed — CTLhs2 would prove nothing"
@@ -1099,14 +1203,75 @@ else
     FAIL "CTLhs3: D2 fired on a table whose depth cells are code spans, so the two surfaces no longer differ in the direction the contract states: $(printf '%s' "$HS_OUT" | head -2 | tr '\n' ' ')"
   fi
 
+  # ── CTL-pz / CTL-ps: the two arms that give RP7 its meaning. RP7 asserts a population
+  # equality, and the one thing a population assertion must be shown to do is FIRE on the
+  # two shapes a quantified-over-the-population assertion cannot see: an EMPTY consumer
+  # root, and a root one consumer short. Without both observed firing, RP7's green does not
+  # distinguish "graded and passing" from "graded nothing" — which is the defect it exists
+  # to close, reproduced one level up.
+  CTL_DECL="$WORK/ctl_declared"
+  declared_consumers "$CLAUDE_MD" > "$CTL_DECL"
+  CTL_DECL_N="$(grep -c . "$CTL_DECL" || true)"
+  if [ "${CTL_DECL_N:-0}" -ge 1 ]; then
+    PASS "CTLpz0: fixture integrity — the declared side is non-empty ($CTL_DECL_N row(s) derived from the charter's consumer table), so the two arms below grade against a real declared set"
+  else
+    FAIL "CTLpz0: the charter yielded NO declared consumer row, so both arms below would fire for the wrong reason"
+  fi
+
+  PZ="$WORK/ctl_pz"
+  CTL_FIXTURE_DIRS="$CTL_FIXTURE_DIRS$PZ
+"
+  mkdir -p "$PZ"
+  pz_pop=0; for f in "$PZ"/*/SKILL.md; do [ -e "$f" ] && pz_pop=$((pz_pop+1)); done
+  if [ -d "$PZ" ] && [ "$pz_pop" -eq 0 ]; then
+    PASS "CTLpz1: fixture integrity — an EMPTY consumer root exists (population $pz_pop), which is exactly the state a directory move leaves behind"
+  else
+    FAIL "CTLpz1: the empty-root fixture is not set up as claimed (population $pz_pop) — CTLpz2 would prove nothing"
+  fi
+  PZ_OUT="$(pop_check "$PZ" "$CTL_DECL")"
+  pz_q1="$(grep -c '^FINDING Q1 ' <<<"$PZ_OUT" || true)"
+  if [ "${pz_q1:-0}" -eq "${CTL_DECL_N:-0}" ] && [ "${CTL_DECL_N:-0}" -ge 1 ]; then
+    PASS "CTLpz2: MUST-FIRE — an empty consumer root yields one Q1 finding per declared row ($pz_q1 of $CTL_DECL_N). The quantified arms RP1-RP6 are all vacuously true over this tree; RP7 is not"
+  else
+    FAIL "CTLpz2: an empty consumer root produced $pz_q1 Q1 finding(s) against $CTL_DECL_N declared row(s) — RP7 does not fire on the shape it exists for"
+  fi
+
+  PS="$WORK/ctl_ps"
+  CTL_FIXTURE_DIRS="$CTL_FIXTURE_DIRS$PS
+"
+  mkdir -p "$PS"
+  # One consumer short, and the omitted one is named here rather than derived, because the
+  # arm asserts WHICH row goes unanswered and not merely that some count disagreed.
+  mk_consumer "$PS" "trip-new"      2 CREATE  ok
+  mk_consumer "$PS" "trip"          8 RESOLVE ok
+  mk_consumer "$PS" "trip-record"   8 RESOLVE ok
+  mk_consumer "$PS" "trip-publish"  8 RESOLVE ok
+  ps_pop=0; for f in "$PS"/*/SKILL.md; do [ -e "$f" ] && ps_pop=$((ps_pop+1)); done
+  if [ "$ps_pop" -eq $((CTL_DECL_N - 1)) ] && [ ! -e "$PS/trip-decommission/SKILL.md" ]; then
+    PASS "CTLps1: fixture integrity — a tree ONE consumer short was constructed (population $ps_pop against $CTL_DECL_N declared), with trip-decommission absent and its siblings present"
+  else
+    FAIL "CTLps1: the one-short fixture is not set up as claimed (population $ps_pop against $CTL_DECL_N declared) — CTLps2 would prove nothing"
+  fi
+  PS_OUT="$(pop_check "$PS" "$CTL_DECL")"
+  if has_finding "$PS_OUT" 'Q1' && grep -qF 'FINDING Q1 trip-decommission ' <<<"$PS_OUT"; then
+    PASS "CTLps2: MUST-FIRE — a tree one consumer short is caught, and the finding NAMES the unanswered row (trip-decommission) rather than reporting a count disagreement"
+  else
+    FAIL "CTLps2: a tree one consumer short was not caught, or the finding did not name the missing consumer: $(printf '%s' "$PS_OUT" | head -3 | tr '\n' ' ')"
+  fi
+  if ! has_finding "$PS_OUT" 'Q2'; then
+    PASS "CTLps3: SPECIFICITY — the same run emits NO Q2 on the one-short tree: every consumer file present is a row the charter declares, so Q1 and Q2 are distinguishable rather than one finding under two names"
+  else
+    FAIL "CTLps3: Q2 fired on a tree whose every file answers a declared row — the two directions of the equality are not separable"
+  fi
+
   # ── CTL-e: where this group built, and what it left behind — stated as things it can
   # measure. A control that writes into the tree it is meant to be measuring is not a
   # control. Graded LAST, after every fixture above.
   #
   # ── WHY THIS ARM WAS REWRITTEN, KEPT HERE SO IT IS NOT REINTRODUCED ──────────────
   # It previously read:
-  #     if [ ! -e "$ROOT/.claude/commands/trip-decommission.md" ] OR [ "$RP_POP" -gt 0 ]
-  # RP_POP counts the *.md files in the very directory the existence test probes. On any
+  #     if [ ! -e "$ROOT/skills/trip-decommission/SKILL.md" ] OR [ "$RP_POP" -gt 0 ]
+  # RP_POP counts the <verb>/SKILL.md files in the very tree the existence test probes. On any
   # tree whose consumer population is non-empty — which is every tree from Wave 1 onwards
   # — the second disjunct is true, so the arm PASSed whatever the first one said. Truth
   # table, executed rather than read: healthy tree PASS; the commands directory moved
@@ -1125,7 +1290,7 @@ else
   #   1. this group actually built fixtures, so the path check below has a population;
   #   2. every directory it built into lies under the temp dir, and the temp dir is not
   #      inside the repository — so "under WORK" really does imply "away from ROOT"; and
-  #   3. the repository's own .claude/commands/ tree is byte-unchanged across the group,
+  #   3. the repository's own skills/ tree is byte-unchanged across the group,
   #      which is the write half, measured.
   # A READ is not claimed. A read leaves nothing behind for any predicate here to observe,
   # so claiming one did not happen would be the same overclaim in new words.
@@ -1161,9 +1326,9 @@ else
   elif [ -n "$CTL_FIXTURE_STRAY" ]; then
     FAIL "CTLe: a fixture tree this group built does not lie under the temp dir ($WORK) — ${CTL_FIXTURE_STRAY}— so this group cannot say it kept its fixtures out of the repository"
   elif [ "$CTL_CMD_AFTER" != "$CTL_CMD_BEFORE" ]; then
-    FAIL "CTLe: the repository's own .claude/commands/ tree changed across this group (was '$CTL_CMD_BEFORE', now '$CTL_CMD_AFTER') — a fixture was written into the tree this suite is measuring"
+    FAIL "CTLe: the repository's own skills/ tree changed across this group (was '$CTL_CMD_BEFORE', now '$CTL_CMD_AFTER') — a fixture was written into the tree this suite is measuring"
   else
-    PASS "CTLe: all $CTL_FIXTURE_N fixture tree(s) this group built lie under the temp dir ($WORK), which is not inside the repository, and the repository's own .claude/commands/ tree — $CTL_CMD_N file(s), digested before the first fixture was built and again after the last — is byte-unchanged. No fixture was written into the tree this suite measures; a READ is not claimed, because a read leaves nothing here could observe"
+    PASS "CTLe: all $CTL_FIXTURE_N fixture tree(s) this group built lie under the temp dir ($WORK), which is not inside the repository, and the repository's own skills/ tree — $CTL_CMD_N file(s), digested before the first fixture was built and again after the last — is byte-unchanged. No fixture was written into the tree this suite measures; a READ is not claimed, because a read leaves nothing here could observe"
   fi
 fi
 
@@ -1745,6 +1910,18 @@ if [ "$vacuous" -gt 0 ]; then
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
+# A VACUOUS GROUP CANNOT REPORT GREEN. Before this rule the exit status read `fail` alone,
+# so a group whose population had vanished printed its NOTE and exited 0 — and the strict-
+# skip pass below could not see it either, because VACUOUS() does not append to $SKIPPED the
+# way SKIP() does. The member escaped BOTH aggregation rules, not one.
+#
+# The strengthening costs nothing on a healthy tree, and that is measured rather than
+# argued: `vacuous` reads 0 on this repository, and VACUOUS has exactly one call site — the
+# RP empty-population branch — so the new rule can fire from nowhere else. No escape hatch
+# ships with it: a declared-empty-population mechanism would be an unused door, and the one
+# legitimate empty population this release has is group RP's, which is precisely the one
+# that must not be allowed to pass.
+[ "$vacuous" -eq 0 ] || rc=1
 # STRICT SKIP MODE — a skipped group is a failure unless it is declared. This suite has
 # no dependency-gated group, so its declared set is correctly EMPTY and every skip fails.
 if [ "${GUARD_STRICT_SKIPS:-0}" = "1" ]; then

@@ -1,4 +1,5 @@
 ---
+name: trip-publish
 description: Re-publish an already-public trip site after edits, or list what is published. The publish surface — never creates a repo, never rotates, never takes a site down, never publishes plaintext.
 argument-hint: update|list [--trip <slug>]
 disable-model-invocation: true
