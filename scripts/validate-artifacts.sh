@@ -59,7 +59,7 @@
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
 #   CI checkout contains no trip and this gate cannot reach one. Local trip validation is
 #   a separate call site that drives these same functions with --scope dir.
-#   .claude/commands/*.md. An upstream schema this repo does not own (§ 11).
+#   skills/*/SKILL.md. An upstream schema this repo does not own (§ 11).
 #   THIS SCRIPT'S OWN SHELL QUALITY. No CI job shellchecks a standalone scripts/*.sh;
 #   actionlint lints workflow-embedded shell only. Stated so a green is not read as more.
 #
@@ -93,7 +93,7 @@ set -uo pipefail
 # it segment-anywhere, matching the form the .staticrypt.json exclusion above already uses.
 # The WARRANT LITERAL is unchanged, so this is not a new exclusion and S9's provenance
 # assertion grades the same string against the same section.
-VA_EXCLUSIONS='.claude/commands/*.md|.claude/commands/*.md|## 11. What This Document Does Not Define
+VA_EXCLUSIONS='skills/*/SKILL.md|skills/*/SKILL.md|## 11. What This Document Does Not Define
 templates/*.template.md|templates/*.template.md|## 11. What This Document Does Not Define
 examples/*/README.md|examples/*/README.md|### 1.3 In-repo files carrying no per-trip class
 **/outputs/.staticrypt.json|outputs/.staticrypt.json|### 1.2 Out of model — explicit dispositions (6)

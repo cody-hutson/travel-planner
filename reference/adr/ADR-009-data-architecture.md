@@ -28,7 +28,7 @@
   **function name plus verbatim quotation**, naming `nonpublishable_values`, its reserved-key branch,
   the `CD-4` declaration comment and the top-level `_GUARD_RESERVED_KEYS` list. Two quotations that
   the rewrite had silently falsified are corrected to the text the source now carries. This document's
-  two citations of the filename-derivation section of `.claude/commands/trip-new.md` named a heading
+  two citations of the filename-derivation section of `skills/trip-new/SKILL.md` named a heading
   that does not exist there; both now name the one that does,
   § *Travelers — count and names*. **No decision, rule, residual, coverage claim or key derivation is
   changed, and none is re-opened.** Recorded here rather than by supersession because an Accepted ADR
@@ -58,7 +58,7 @@
   the degenerate point; the case is now cited to where it is decided, **C2** in that document.
   **(3) The Consequences ledger over-reported a discharge.** It stated that *a fail-open in a
   fail-closed guard is closed* and that the list makes it *a hard stop at intake* — false on both
-  limbs. `.claude/commands/trip-new.md` carries no reserved-key check, so no intake rejection
+  limbs. `skills/trip-new/SKILL.md` carries no reserved-key check, so no intake rejection
   shipped; `reference/data-model.md` records the intake half as *declared and currently unowned*;
   and cases `L11a`, `L11b` and `L11d` pin the guard-side suppression open. **This amendment read
   that file's byte-identity with `main` as the evidence for the first of those three**; a later
@@ -71,7 +71,7 @@
   cites, and that this ADR's classification *supersedes it as the single home*. That section
   correctly still stands: its default-and-exception model is a **live input**, read by
   `reference/data-architecture.md § Lifecycle Classes`' own absence rule and by
-  `.claude/commands/trip.md`'s `/trip research` agent-key derivation. Both claims are narrowed to
+  `skills/trip/SKILL.md`'s `/trip research` agent-key derivation. Both claims are narrowed to
   the class tokens and their definitions. **No decision, rule, residual, coverage claim or key
   derivation is changed, and none is re-opened** — each correction states what the release shipped
   in place of what this record asserted it had.
@@ -120,7 +120,7 @@
   claim or key derivation is changed, and none is re-opened.**
   **Sixth amendment** — two claims of byte-identity against `main`, falsified by a later commit in
   this same release, and the point each carried re-grounded rather than dropped. This record
-  asserted at two sites that `.claude/commands/trip-new.md` was **byte-identical to `main`** and
+  asserted at two sites that `skills/trip-new/SKILL.md` was **byte-identical to `main`** and
   **unchanged by this release**. It is neither: a later commit gave that file a `trip-log.md`
   frontmatter emitter, so its blob differs from `main`'s across **30 insertions and 2 deletions**.
   **The conclusion both claims were evidence for survives, and it is now measured directly rather
@@ -336,7 +336,7 @@ restates none of them. `CLAUDE.md § Output Versioning` cites it too, and its sa
 subsection assigns without defining — but the rest of that section **states the engine's
 default-and-exception model in its own words and is retained deliberately**, because it is a live
 input rather than a leftover: the lifecycle section's own absence rule reads it, and
-`.claude/commands/trip.md` derives the `/trip research` agent key from it. Where the two overlap,
+`skills/trip/SKILL.md` derives the `/trip research` agent key from it. Where the two overlap,
 the engine-wide tokens and definitions govern.
 
 **The ordering rule — normative, and binding on every slice that edits `reference/data-model.md`.**
@@ -397,7 +397,7 @@ person's identity originates outside the engine, and the name is *already* the f
 > over this key**, never over the display name.
 >
 > **Filename correspondence.** The stem of `travelers/<file>.md`, put through the same normalization,
-> MUST equal the entry's traveler key. `.claude/commands/trip-new.md` § *Travelers — count and names*
+> MUST equal the entry's traveler key. `skills/trip-new/SKILL.md` § *Travelers — count and names*
 > already derives the filename in the forward direction; this rule **closes that derivation in the
 > reverse direction and does not author a second one.**
 >
@@ -726,7 +726,7 @@ fail-closed paths are non-negotiable.
   is closed by that.** A traveler whose normalized name lands on a reserved key is still silently
   dropped from the non-publishable class: the suppression under a reserved heading has no backstop
   on the field limb and only a conditional one on the entry limb, pinned as open by cases `L11a`,
-  `L11b` and `L11d`. And it is **not a hard stop at intake** — `.claude/commands/trip-new.md`
+  `L11b` and `L11d`. And it is **not a hard stop at intake** — `skills/trip-new/SKILL.md`
   carries no reserved-key check at any spelling, and `reference/data-model.md` § *Reserved keys*
   records the intake obligation as *declared and currently unowned*, with the reachable half of the
   enforcement placed at the reconciler. **This release does edit that file** — to emit the
@@ -759,7 +759,7 @@ fail-closed paths are non-negotiable.
   `reference/data-model.md`; this ADR does not relax that boundary.
 - **No control flow.** Who runs when, and in what order, belongs to the control-flow contract. This is
   the data contract.
-- **No claim over `.claude/commands/*.md` frontmatter.** Those files carry an upstream schema this
+- **No claim over `skills/*/SKILL.md` frontmatter.** Those files carry an upstream schema this
   repository does not own and cannot change. The artifact schema set does not claim them and the CI
   gate does not validate them.
 - **No prose validation**, and no change to the `Applies to` link syntax, the Event ID format, the four
@@ -805,7 +805,7 @@ fail-closed paths are non-negotiable.
 - The command-surface bound on the plaintext publish limb: `reference/adr/ADR-007-command-entry-point.md` § 2.
 - Identity conventions adopted verbatim from running code: the traveler-name normalization and the
   reserved-key branch in `scripts/publish-trip-site.sh`; the filename derivation in
-  `.claude/commands/trip-new.md` § *Travelers — count and names*; the opaque day-independent Event ID in
+  `skills/trip-new/SKILL.md` § *Travelers — count and names*; the opaque day-independent Event ID in
   `CLAUDE.md § Key Rules`; the reference-file build order that fixes the venue-key mint point in
   `agents/05-hub-planner.md` § *Pre-Work: Build Reference Artifacts First* — § *Step 1 —
   links-reference.md*, then § *Step 2 — venue-matrix.md*.

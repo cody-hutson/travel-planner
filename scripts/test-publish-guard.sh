@@ -4706,7 +4706,7 @@ fi
 #
 # STATED BOUND, because it is the honest limit of every arm below. There is no site
 # BUILD in this repository — the render is authored by the `site` verb in
-# .claude/commands/trip.md, from a spec. So T3 grades a render built TO the contract,
+# skills/trip/SKILL.md, from a spec. So T3 grades a render built TO the contract,
 # not a build script's output: what it proves is that the contract's null case,
 # followed, emits nothing and disturbs nothing. That a given run followed it is not
 # something any test here reaches, and no arm below claims it.
@@ -4936,7 +4936,7 @@ fi
 # THE RULE IS READ FROM THE DOCUMENT, NOT SPELLED HERE — the same reason T1 reads the
 # class token from the component contract rather than holding a literal.
 # reference/site-layout-spec.md § 3 says in terms that it keeps no second copy of where
-# the state comes from and names the `site` verb in .claude/commands/trip.md as the one
+# the state comes from and names the `site` verb in skills/trip/SKILL.md as the one
 # home. A literal here would be that second copy, and it would leave this arm green
 # through a document that had moved the anchor back to the build.
 #
@@ -4949,7 +4949,7 @@ fi
 # STATED BOUND, the same one T3 carries: there is no site BUILD in this repository. T5
 # grades the CONTRACT's anchor and a resolution built to it — not a build script's output,
 # and it does not claim that a given run followed the contract.
-T_TRIPMD="$HERE/../.claude/commands/trip.md"
+T_TRIPMD="$HERE/../skills/trip/SKILL.md"
 # RECONCILED with the mapping this remediation replaced (D11). The limb is no longer keyed
 # to a `status` VALUE, so `\`confirmed\` → \`updated\`` is not the marker any more and
 # `\`rejected\`` is not a limb at all: the arrow into `updated` is what locates it, and the
@@ -5146,7 +5146,7 @@ fi
 #
 # HOW THE RULE IS READ. From the document, as in T5, and for the same reason:
 # reference/site-layout-spec.md § 3 says in terms that it holds no second copy of where the
-# state comes from and names the `site` verb in .claude/commands/trip.md as the one home. So
+# state comes from and names the `site` verb in skills/trip/SKILL.md as the one home. So
 # the record is EXTRACTED — the first trip-relative path token after that mapping's own
 # "decides it from" clause — and the resolver below is generic over whatever the extraction
 # yields. What is held here is the rule's SHAPE; its SOURCE is the document's. A document
@@ -5508,7 +5508,7 @@ fi
 # WHY THAT MATTERS TO AC 5. T3 asserts the null-case render is BYTE-IDENTICAL to a
 # pre-component render, and § 3 makes non-emission a byte-level property because the site
 # is encrypted wholesale. But T3 grades what `none` DOES; nothing graded how a trip that
-# has coordinated once ever REACHES it again. .claude/commands/trip.md answers that in
+# has coordinated once ever REACHES it again. skills/trip/SKILL.md answers that in
 # one clause: "the `updated` limb is pruned at the build where its window has already
 # closed ... this build writes `none` and emits no band". Without the prune, a trip whose
 # one change was confirmed a year ago carries an `updated` frontmatter, a band node, a

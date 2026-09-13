@@ -1,6 +1,6 @@
 # Command Reference
 
-The whole command surface in one table: every verb each command in `.claude/commands/` takes, the
+The whole command surface in one table: every verb each command in `skills/` takes, the
 arguments it expects, and the trip state it requires. It exists because the two surfaces a reader
 meets first are both deliberately partial — the picker row names a command's verb *domain*, and the
 inline hint enumerates as much of the verb list as the terminal will show. Neither is the surface.

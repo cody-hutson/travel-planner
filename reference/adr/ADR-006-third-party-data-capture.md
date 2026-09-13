@@ -155,7 +155,7 @@ records-minimization comparison its own accepted option partly defeats, and give
 a way to be deleted. **The needs-only boundary and the consent language above are untouched.**
 
 **One over-statement, corrected because it is attributed here.** The absolute phrasing *"no durable
-artifact of any kind"* appears in `agents/00-enrichment.md` and `.claude/commands/trip-record.md`, both
+artifact of any kind"* appears in `agents/00-enrichment.md` and `skills/trip-record/SKILL.md`, both
 citing this ADR. **This ADR does not say that, and as written the claim is false** — the entry has no
 *file*, and its durable record is the carried-forward model entry above. Those two surfaces are
 corrected on their own cards; the claim is disowned here so it is not re-derived from this record.

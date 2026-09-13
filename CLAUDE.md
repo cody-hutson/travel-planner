@@ -66,7 +66,7 @@ This file is the primary session bridge. It captures what trip-context.md does n
 > below cites it rather than defining anything. **The default-and-exception model in the rest of
 > this section is not a duplicate of that home — it is a live input read back by the engine**, in
 > two places: that section's own absence rule derives a class for an artifact its exception set
-> does not name, and `.claude/commands/trip.md` derives the `/trip research` agent key by filtering
+> does not name, and `skills/trip/SKILL.md` derives the `/trip research` agent key by filtering
 > the roster to the rows this section leaves in the accumulating default. Deleting or collapsing
 > this prose would break both reads. Where the two overlap, the engine-wide tokens and definitions
 > govern; **editing the exception set below changes what that command dispatches.**
@@ -155,12 +155,12 @@ a trip is archived — a reopened trip absorbs current state, never a replay.
 > they already are. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
 > shell script and never opens this file. It is bound **structurally instead**, by `G7`: every
 > dispatching verb declares `lifecycle: ACTIVE`, so `/trip-publish update` refuses on an archived
-> trip before any build begins (`.claude/commands/trip-publish.md` states that disposition in
+> trip before any build begins (`skills/trip-publish/SKILL.md` states that disposition in
 > terms). Stating the rule here binds the readers; `G7` binds the runners. Do not read this
 > paragraph as a claim that four surfaces parse this section. It sits beside
 > § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
 > sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
-> that section are machine-read by `.claude/commands/trip.md` to derive the `/trip research` agent
+> that section are machine-read by `skills/trip/SKILL.md` to derive the `/trip research` agent
 > key, and **this rule declares no artifact class and must never be read as a file-exception list.**
 > It is **not** in § *Resolving a trip*, which is the gate ladder: the freeze stops no resolution and
 > returns no `trip.stop_gate`, and `G8` is reserved and report-only. It is **not** in
@@ -289,7 +289,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 | Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md`, `outputs/event-status.md` (primary writer), `outputs/satisfaction-metrics.md` (desire-coverage + balance sections) | Full synthesis or itinerary restructuring — **runs and reconciles the three optimizer engines** (routing vs. desire-coverage vs. experiential arc) into one itinerary, needs applied as hard constraints first (R1–R4) |
 | Validator | `agents/06-validator.md` | `outputs/validation-report.md`, `outputs/satisfaction-metrics.md` (needs-compliance + agreement-check sections; reads `event-status.md`, never writes it) | After hub produces/updates itinerary |
 
-**Pipeline flow (full pipeline only):** Enrichment → Spokes → Hub → Validator → Remediation (if criticals found). **The spokes run in parallel with one exception: transport precedes scheduling, always.** Scheduling reads transport's output file, `outputs/transport-brief.md`, and the routing signal it emits is arithmetic over that file's leg matrix — so a scheduling-first run has no matrix at all on a first pass, and a stale one on a re-run. `.claude/commands/trip.md` § *reorder* carries that constraint and its consequence in full and is cited here rather than restated; the same dependency binds every verb that dispatches both spokes, not only that one. Every other pair of spokes is independent. The Hub step is where the three optimizer-engine signals are **reconciled** into one itinerary — needs first as hard constraints, then routing / desire-coverage / experiential arc resolved by a documented policy (R3); the spokes only emit signals, they do not synthesize.
+**Pipeline flow (full pipeline only):** Enrichment → Spokes → Hub → Validator → Remediation (if criticals found). **The spokes run in parallel with one exception: transport precedes scheduling, always.** Scheduling reads transport's output file, `outputs/transport-brief.md`, and the routing signal it emits is arithmetic over that file's leg matrix — so a scheduling-first run has no matrix at all on a first pass, and a stale one on a re-run. `skills/trip/SKILL.md` § *reorder* carries that constraint and its consequence in full and is cited here rather than restated; the same dependency binds every verb that dispatches both spokes, not only that one. Every other pair of spokes is independent. The Hub step is where the three optimizer-engine signals are **reconciled** into one itinerary — needs first as hard constraints, then routing / desire-coverage / experiential arc resolved by a documented policy (R3); the spokes only emit signals, they do not synthesize.
 
 **For Agent tool calls:** Pass the agent's prompt file content as the agent's instructions. Include the trip-context.md, trip-log.md (for decision context), and any required input files as context. Write the output to the correct file path, following the output versioning rules.
 
@@ -373,7 +373,7 @@ population-role: <RESOLVE or CREATE>
 | `/trip-publish` | `G8` | `RESOLVE` | `E1 E2` | its repo-wide listing verb declares depth `G0` on its own row — that verb needs no trip |
 | `/trip-decommission` | `G8` | `RESOLVE` | `E1 E2` | its reopen verb declares `lifecycle: ARCHIVED` |
 
-Duplicating the evidence blocks and the citation line is **forced by the platform** — the `!` mechanism fires only in a command file's own body and there is no include directive — so it is made safe by assertion rather than avoided. **No normative text is duplicated anywhere**, and the bytes that are duplicated are machine-asserted byte-identical on every push.
+Duplicating the evidence blocks and the citation line is **forced by the platform** — the `!` mechanism fires in a consuming file's own body, measured in a `SKILL.md` body and not only in the retired command form, and there is no include directive at either — so it is made safe by assertion rather than avoided. **No normative text is duplicated anywhere**, and the bytes that are duplicated are machine-asserted byte-identical on every push.
 
 ---
 
@@ -574,7 +574,8 @@ One writer per block. A writer not named for a block does not write it — not "
 ```
 travel-planner/
 ├── CLAUDE.md                 ← you are here
-├── .claude/commands/         ← the slash commands — the addressable surface (ADR-007)
+├── skills/                   ← the five trip verbs — the addressable surface (ADR-007)
+│   └── <verb>/SKILL.md            ← one directory per verb; the directory name IS the verb
 ├── agents/                   ← agent behavioral definitions (the knowledge base)
 │   ├── 00-enrichment.md
 │   ├── 01-activities.md

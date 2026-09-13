@@ -9,7 +9,7 @@ fewer days left than an item needs. It owns that and nothing else.
 It **defines no data.** Every field, status value and predicate named below is
 declared in `reference/data-model.md`, and this document cites them rather than
 restating them. It **dispatches nothing.** Which agent runs on which verb belongs
-to the control-flow contract — `.claude/commands/trip.md` § *replan* and
+to the control-flow contract — `skills/trip/SKILL.md` § *replan* and
 `CLAUDE.md` § *Dispatching agents* — and a second statement of a dispatch
 decision is a second place for it to go stale.
 
@@ -98,7 +98,7 @@ unbookable item into two, and reports the plan as repaired.
 **Date-moves are first-class levers.** Moving an event to a later day **buys lead
 time**, and near the trip's start it is often the only remedy that fits inside the
 horizon at all. What a day move makes stale, and which agent it admits, is already
-settled in `.claude/commands/trip.md` § *replan*'s coupling table — **cite that
+settled in `skills/trip/SKILL.md` § *replan*'s coupling table — **cite that
 table; no row of it is restated here.** A second statement of it is a second thing
 to keep in step with it.
 
@@ -122,7 +122,7 @@ This table is the consumer index. A later consumer is added to it here.
 To keep the boundary clear:
 
 - **No dispatch rule.** Which verb dispatches which agent, and what a change makes
-  stale, live in `.claude/commands/trip.md` and `CLAUDE.md`. Both are cited above
+  stale, live in `skills/trip/SKILL.md` and `CLAUDE.md`. Both are cited above
   and neither is restated.
 - **No preservation floor.** What a replan must hold of the group's stated intent
   and its price posture belongs to the individual mechanics of a replan, which are

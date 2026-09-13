@@ -124,7 +124,7 @@ the present numbering.
 
 ### Whether the incumbent `group` verb is renamed
 
-**It is not.** § *Selecting the verb* in `.claude/commands/trip-record.md` is frozen and specifies
+**It is not.** § *Selecting the verb* in `skills/trip-record/SKILL.md` is frozen and specifies
 **exact string equality** — *"Not a prefix match, not a nearest match, not a fuzzy match, not a
 substring match."* Under that selector `group` and `group-new` are disjoint tokens with no collision
 risk, so a rename would be a four-surface cascade performed to make room for a newcomer that does not
@@ -309,7 +309,7 @@ is recoverable because `unlink` is the cheap inverse.
 ### 5. Erasure reach — one new row, remove-the-bullet, no tombstone
 
 **A group record holds person ids, so it is a location `/trip-record erase` must reach.** The reach
-table in `.claude/commands/trip-record.md` gains one row for `groups/*.md`, disposition **REACH**:
+table in `skills/trip-record/SKILL.md` gains one row for `groups/*.md`, disposition **REACH**:
 remove the member bullet naming the subject id, **and** any bullet naming a `merged-into:` stub id
 that redirects to it.
 
@@ -470,7 +470,7 @@ set stands beside one.
 - `people/README.md` — § *What a record does not hold*, whose five bullets this record does not
   touch, and § *Why this file is tracked and nothing beside it is*, whose arrangement `groups/`
   reuses.
-- `.claude/commands/trip-record.md` — § *Selecting the verb* (frozen; exact string equality), the
+- `skills/trip-record/SKILL.md` — § *Selecting the verb* (frozen; exact string equality), the
   standing clause whose Extension rule admits rule 12, the incumbent `group` verb, and the erase
   reach table § 5 above extends.
 - `.gitignore` — the three shipped store-guard pairs and the comment stating why a signpost under an

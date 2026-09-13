@@ -414,9 +414,9 @@ fi
 
 # INT-4 — CIAC-7, observable in one run: no command file is selected, and the count that
 # makes that meaningful is non-zero (asserted at AR1 above, not assumed here).
-AR_NCMD="$(printf '%s\n' "$AR_SEL" | awk -F'\t' 'NF>1 && $1!="EXCLUDED" && $1!="UNMATCHED" {print $3}' | grep -c '^\.claude/commands/')"
+AR_NCMD="$(printf '%s\n' "$AR_SEL" | awk -F'\t' 'NF>1 && $1!="EXCLUDED" && $1!="UNMATCHED" {print $3}' | grep -c '^skills/')"
 if [ "$AR_NCMD" -eq 0 ]; then
-  PASS "AR2: 0 of the $AR_NSEL selected files are .claude/commands/*.md — an upstream schema this repo does not own is out of the gate's selection set, and the selector still selected $AR_NSEL other files"
+  PASS "AR2: 0 of the $AR_NSEL selected files are skills/*/SKILL.md — an upstream schema this repo does not own is out of the gate's selection set, and the selector still selected $AR_NSEL other files"
 else
   FAIL "AR2: $AR_NCMD command file(s) reached the selector"
 fi
@@ -1630,7 +1630,7 @@ fi
 # Without it the naive `bullets >= 1` trigger selects two trips whose Locked Elements
 # name booked FLIGHTS and traveler dates rather than placed itinerary events — seeding
 # either would mint a status row for an event the itinerary never placed, which
-# .claude/commands/trip-record.md probe 2 names as the inverse of the ghost row the
+# skills/trip-record/SKILL.md probe 2 names as the inverse of the ghost row the
 # model forbids. PS-N below asserts that those two false positives are real rather than
 # asserted, so the limb is measured rather than trusted.
 #
@@ -1995,7 +1995,7 @@ else
   fi
 
   while IFS= read -r t; do
-    [ -n "$t" ] && ps_dne "LS3: $t names Locked Elements and has reached no synthesis at all, so it sits outside this group's observable population. Its bullets name booked flights and traveler dates rather than placed itinerary events, and a status row for an event the itinerary never placed is the inverse of the ghost row .claude/commands/trip-record.md forbids. That bound is SEMANTIC and belongs to the seed's own text; this path-shaped selector does not decide it and does not claim to"
+    [ -n "$t" ] && ps_dne "LS3: $t names Locked Elements and has reached no synthesis at all, so it sits outside this group's observable population. Its bullets name booked flights and traveler dates rather than placed itinerary events, and a status row for an event the itinerary never placed is the inverse of the ghost row skills/trip-record/SKILL.md forbids. That bound is SEMANTIC and belongs to the seed's own text; this path-shaped selector does not decide it and does not claim to"
   done <<EOF
 $(printf '%s\n' $PS_PRE)
 EOF
@@ -3569,7 +3569,7 @@ EOF
     $0 == "## reopen" { inblk = 1; next }
     inblk && /^## / { inblk = 0 }
     inblk && index($0, "it never removes the line") { c++ }
-    END { print c + 0 }' "$ROOT/.claude/commands/trip-decommission.md")"
+    END { print c + 0 }' "$ROOT/skills/trip-decommission/SKILL.md")"
   if [ "$AF_REOPEN" -ge 1 ]; then
     PASS "AF14: the reopen verb's own section still states that it SETS the value and never removes the line — the freeze is lifted prospectively rather than by deleting the record that the trip was ever concluded"
   else
@@ -3721,7 +3721,7 @@ fi
 echo
 echo "ER — the erasure verb's declared contract, and what it must never acquire"
 
-ER_CMD="$ROOT/.claude/commands/trip-record.md"
+ER_CMD="$ROOT/skills/trip-record/SKILL.md"
 ER_ARCH="$ROOT/reference/data-architecture.md"
 ER_OK=1
 
@@ -4510,7 +4510,7 @@ echo "RL — reconcile-on-link: the survey's two witnesses"
 
 RL_RAN=0
 RL_DM="$ROOT/reference/data-model.md"
-RL_CMD="$ROOT/.claude/commands/trip-record.md"
+RL_CMD="$ROOT/skills/trip-record/SKILL.md"
 RL_PAIR_T="$ROOT/examples/people-library-demo/travelers/noor.md"
 RL_PAIR_R="$ROOT/examples/people-library-demo/people/psn-3c7e.md"
 RL_UNLINKED="$ROOT/examples/data-architecture-demo/travelers/alex.md"
@@ -4921,7 +4921,7 @@ echo "XT — extract: the fixture state the extraction verb is graded on"
 
 XT_RAN=0
 XT_DM="$ROOT/reference/data-model.md"
-XT_CMD="$ROOT/.claude/commands/trip-record.md"
+XT_CMD="$ROOT/skills/trip-record/SKILL.md"
 XT_A="$ROOT/examples/data-architecture-demo/travelers/alex.md"
 XT_B="$ROOT/examples/data-architecture-demo/travelers/robin.md"
 XT_DANA="$ROOT/examples/archived-trip-demo/travelers/dana.md"
@@ -6656,7 +6656,7 @@ DH_SCHEMA_REL="reference/schemas/person-record.md"
 DH_PERSON_FORM="$ROOT/templates/person-intake.template.md"
 DH_TRIP_FORM="$ROOT/templates/traveler-intake.template.md"
 DH_PEOPLE="$ROOT/people/README.md"
-DH_CMD="$ROOT/.claude/commands/trip-record.md"
+DH_CMD="$ROOT/skills/trip-record/SKILL.md"
 DH_HEADING="What a record does not hold"
 DH_VERB="history"
 
@@ -6754,7 +6754,7 @@ if [ "$DH_OK" -eq 1 ]; then
   DH_HAS_NOWRITE=0
   grep -q 'Writes nothing' <<<"$DH_VSECT" && DH_HAS_NOWRITE=1
   if [ "$DH_NSECT" -eq 0 ] || [ "$DH_NVSECT" -eq 0 ]; then
-    FAIL "DH3: an extraction came back EMPTY — people/README.md § *$DH_HEADING* yielded $DH_NSECT line(s) and the \`$DH_VERB\` verb section in .claude/commands/trip-record.md yielded $DH_NVSECT. Both limbs below would be graded over absent text, and a membership test over nothing reports absence rather than a missing section. A renamed heading is the likeliest cause and is a finding in its own right"
+    FAIL "DH3: an extraction came back EMPTY — people/README.md § *$DH_HEADING* yielded $DH_NSECT line(s) and the \`$DH_VERB\` verb section in skills/trip-record/SKILL.md yielded $DH_NVSECT. Both limbs below would be graded over absent text, and a membership test over nothing reports absence rather than a missing section. A renamed heading is the likeliest cause and is a finding in its own right"
   elif [ "$DH_HAS_HIST" -eq 1 ] && [ "$DH_HAS_NOWRITE" -eq 1 ]; then
     PASS "DH3: the exclusion is stated at both of its reader-facing homes — people/README.md § *$DH_HEADING* still enumerates trip history across $DH_NSECT extracted line(s), and the \`$DH_VERB\` verb section declares across $DH_NVSECT line(s) that it writes nothing. The pair is the point: the store says the record has no slot, and the verb that resolves the answer says it puts none back. Either one alone leaves the other's reader free to conclude the opposite"
   else

@@ -131,7 +131,7 @@ checkout; asserting the glob itself would have been the easier check and the wro
 
 | Exclusion (the gate's glob) | Warrant in the document | Declared at |
 |---|---|---|
-| `.claude/commands/*.md` | `.claude/commands/*.md` | § 11 — an upstream schema this repo does not own |
+| `skills/*/SKILL.md` | `skills/*/SKILL.md` | § 11 — an upstream schema this repo does not own |
 | `templates/*.template.md` | `templates/*.template.md` | § 11 — emitters, not instances |
 | `examples/*/README.md` | `examples/*/README.md` | § 1.3 — fixture documentation |
 | `**/outputs/.staticrypt.json` | `outputs/.staticrypt.json` | § 1.2 C28 — third-party tool state |

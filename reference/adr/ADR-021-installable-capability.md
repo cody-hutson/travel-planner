@@ -192,7 +192,7 @@ breadth**: a verb stays reachable by being typed, and stays absent from the mode
 until it is. `ADR-007-command-entry-point.md` § 1 decides that `/trip` is the single entry
 point for addressing, and that decision survives a format change — an installed verb is still
 addressed, by the same typed form. Its own amendment already records that a Markdown file
-under `.claude/commands/` is *the older format of the same mechanism*, carrying the same
+under `skills/` is *the older format of the same mechanism*, carrying the same
 frontmatter but for two keys, so moving to the current format is continuous with that record
 rather than in tension with it. What this record changes on that surface is its **location and
 format**, and nothing else.

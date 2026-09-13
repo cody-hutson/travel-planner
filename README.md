@@ -17,7 +17,7 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 | Path | Purpose |
 |---|---|
 | `CLAUDE.md` | Operating instructions for Claude Code |
-| `.claude/commands/` | The slash commands — the addressable way in (see [First run](#first-run)) |
+| `skills/` | The slash commands — the addressable way in (see [First run](#first-run)) |
 | `agents/` | Behavioral definitions for the 9 agents (destination-ideation, enrichment, activities, food, nightlife, scheduling, transport, hub-planner, validator) |
 | `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler per trip; the trip half of intake. `person-intake.template.md` — one per person, ever; the durable half |
 | `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
@@ -68,7 +68,7 @@ Tell Claude you want to plan a trip and the conversation takes over. Each trip l
 
 ### First run
 
-Conversation is not the only way in. The files in `.claude/commands/` give the engine an address: type `/` in Claude Code and they offer themselves with tab-completion, so the request types [`CLAUDE.md`](CLAUDE.md) routes are visible at the prompt instead of being something you have to know to ask for.
+Conversation is not the only way in. The files in `skills/` give the engine an address: type `/` in Claude Code and they offer themselves with tab-completion, so the request types [`CLAUDE.md`](CLAUDE.md) routes are visible at the prompt instead of being something you have to know to ask for.
 
 **Start with `/trip`.** With no verb it runs `status`, whose own rule is that it writes nothing and runs no script: it reads what is in `trips/`, resolves the trip and its mode, and states what is available and what comes next. On a fresh clone there are no trips yet — `/trip` says so, and names `/trip-new` as the way to make one.
 

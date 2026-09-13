@@ -204,8 +204,8 @@ under the caveat above on what a declaration establishes.
 ### What counts as a read here
 
 **This file uses the surface's definition of a read, not a second one.** That definition is
-stated in `.claude/commands/trip-record.md` § *What the blocks above are*, a section that
-marks itself frozen, and it is applied by `.claude/commands/trip.md` in the same terms: **a
+stated in `skills/trip-record/SKILL.md` § *What the blocks above are*, a section that
+marks itself frozen, and it is applied by `skills/trip/SKILL.md` in the same terms: **a
 path read only to test whether it exists — or whether it is readable — is a read, and is
 declared.** The reason is the one that section gives: the probe selecting a branch is the
 control the rule on that branch turns on, and an undeclared probe hides the one read the
