@@ -192,7 +192,7 @@ breadth**: a verb stays reachable by being typed, and stays absent from the mode
 until it is. `ADR-007-command-entry-point.md` § 1 decides that `/trip` is the single entry
 point for addressing, and that decision survives a format change — an installed verb is still
 addressed, by the same typed form. Its own amendment already records that a Markdown file
-under `skills/` is *the older format of the same mechanism*, carrying the same
+under `.claude/commands/` is *the older format of the same mechanism*, carrying the same
 frontmatter but for two keys, so moving to the current format is continuous with that record
 rather than in tension with it. What this record changes on that surface is its **location and
 format**, and nothing else.
@@ -387,7 +387,7 @@ mechanism this record declines to choose, and it reverses, narrows and re-opens 
 decided above. Naming the slot here means that edit is an in-place addition rather than a
 structural change to a merged record.
 
-**Amendment, 2026-09-13 — the selected mechanism and what removing the engine does to operator data.**
+**Amendment (2026-09-13, Sunday) — the selected mechanism and what removing the engine does to operator data.**
 The operator-data resolution slice selected **one data root shared by all three stores, named by one
 operator-config pointer** — a single-line file at `${HOME}/.travel-planner/data-root` holding one
 absolute path — **resolved by the agent** at gate `G0-root` of `CLAUDE.md` § *Resolving a trip*. One

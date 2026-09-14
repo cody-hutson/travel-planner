@@ -2328,7 +2328,7 @@ enrichment pass will say about the source file* below.
 the argument grammar rather than a policy: there is nowhere to type a set.
 
 **Store root** resolves by `reference/data-model.md`'s two-step rule — the trip root's own store
-where that directory exists, otherwise the repo root's — read from that section and never restated
+where that directory exists, otherwise the data root's — read from that section and never restated
 here, because a second copy of a resolution rule is a second source that goes stale silently.
 
 ### Identity — the display name is this file's own answered `Name`
