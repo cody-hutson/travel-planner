@@ -413,8 +413,8 @@ true — a resolution change is not a relocation.
 - **The number `ADR-020` is never used.** The record this one supersedes was assigned that
   number on a branch that has since been swept, and no blob of it is reachable from any ref.
   The index convention forbids reuse and renumbering, and a number whose freeness cannot be
-  established is not free — so the sequence carries a permanent gap between this record and the
-  one before the in-flight sibling. Nothing in this repository grades record-number contiguity,
+  established is not free — so the sequence carries a permanent gap at `ADR-020`, between this
+  record and `ADR-019`. Nothing in this repository grades record-number contiguity,
   which is worth saying plainly: the gap is non-blocking **because nothing measures it**, not
   because something measured it and passed.
 - **An index/file status divergence class exists and is ungraded.** This record's own index edit
@@ -453,6 +453,47 @@ its cause and its fix, and a listing canary is required to protect the ladder. A
 satisfies neither — the body carrying the message is never reached, and the canary covers the
 first evidence block and not the second. Whichever treatment is selected has to answer that,
 and this record's contribution is to say so before the slice starts rather than after.
+
+**Amendment (2026-09-13, Sunday) — where each selection lives, as built.** The slices have run, and
+the sentence above stays true: none of these questions is answered *here*. This paragraph records
+**where** each answer lives in the tracked corpus, so the reader § *Decision* 3 sends to the slices
+finds a location rather than a search, and it re-frames the one row that would otherwise mislead.
+
+- **Q-1 / S-A** — the second candidate, *state the root once, in prose, in each verb body*: the
+  **Engine root** paragraph that opens every `skills/<verb>/SKILL.md`, naming `${CLAUDE_SKILL_DIR}/../..`
+  as the directory every engine path in that file and in any document opened from it resolves
+  against. The first candidate was rejected on the cost stated above — a rewrite of the asset tree is
+  inert under this repository's resolution contract. The third was the solutioning pass's original
+  headline, *documents resolve by position*, and driver 2 is its falsification: a bare reference
+  follows the session's directory, not the base the runtime names, so the prose contract was
+  selected on measurement rather than by comparison of costs.
+- **Q-2 / S-B** — the rooted spelling `${CLAUDE_SKILL_DIR}/../../scripts/<name>` in every grant, permit
+  and deny alike, one spelling per file **asserted** by the command-taxonomy guard, which grades the
+  permit set, the deny set and their vacuity. The rationale — the alternatives compared and why the
+  harness-substituted variable won — is recorded in that slice's solutioning record and in the
+  message of the commit that rooted the grants; this record carries the outcome, not the comparison.
+- **Q-3 / S-C** — the second candidate, *retire the blocks*: all nine pre-execution blocks are gone.
+  The evidence they gathered is now gathered by ordinary tool calls under the grants a verb already
+  holds, after the data root is resolved; `CLAUDE.md` § *Resolving a trip* states the entries and the
+  reason each terminates in an unconditional-success construct. The collision recorded above is
+  discharged by the same retirement: a failure now names its cause because it runs as a tool call
+  whose output the verb reads, rather than as a block whose failure is fatal to the load.
+- **Q-4 / S-D** — answered by the amendment in § *Amendment slot* above; the same paragraph carries
+  the teardown statement.
+- **Q-5 — settled for this release, and the row above is read accordingly.** The packaged form *is*
+  the distribution and update path: the repository root carries the plugin manifest, the engine is
+  installed by placing the checkout under the harness's plugin directory, where it is auto-loaded,
+  and an update is a `git pull` in place. `README.md` § *Install* is the operator-facing statement;
+  the install-documentation slice owns it. "Not read as settled" described the state before the
+  slices ran, and describes nothing now.
+
+One consequence of Q-1 and Q-3 together is stated here because no slice owns it alone. `CLAUDE.md`
+§ *Resolving a trip* is loaded with the workspace, not with an installed engine, so a verb that
+consults it from an installed engine opens it at the engine root — **one read per invocation that
+the workspace form never made.** ADR-007 § 2's first bound, *no per-invocation read*, is read as
+binding the workspace form, which it still does; the installed form's single read is the cost of
+driver 3 and is accepted with it. The verb bodies and `CLAUDE.md` state the two cases wherever they
+say what is in context.
 
 ## Follow-on build slices
 

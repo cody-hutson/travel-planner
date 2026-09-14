@@ -16,7 +16,7 @@ Trip planning spans multiple chats over days or weeks. Files are the memory. Eve
 
 ### Starting a session (any chat that touches a trip)
 
-1. Read this `CLAUDE.md` (auto-loaded)
+1. Read this `CLAUDE.md` (auto-loaded when this repository is the workspace; an installed engine's verbs open it at the engine root — § *Resolving a trip*)
 2. Read `trips/<destination>-<year>/trip-context.md` — the source of truth for what's planned
 3. Read `trips/<destination>-<year>/trip-log.md` — the decision history and session bridge
 4. Scan `trips/<destination>-<year>/outputs/` — know what exists and what's been produced
@@ -151,8 +151,9 @@ a trip is archived — a reopened trip absorbs current state, never a replay.
 > **Why this section is a section, and why it is here rather than three plausible alternatives.**
 > The rule binds the hub, the enrichment agent, the validator and the site build — but **not all
 > four are bound the same way, and the difference matters.** The three prompt surfaces read
-> `CLAUDE.md` directly: it is auto-loaded and costs no per-invocation read, so the rule lives where
-> they already are. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
+> `CLAUDE.md` directly: it is auto-loaded when this repository is the workspace, and an installed
+> engine's verbs open it at the engine root (§ *Resolving a trip*), so the rule lives where they
+> already are or one read away. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
 > shell script and never opens this file. It is bound **structurally instead**, by `G7`: every
 > dispatching verb declares `lifecycle: ACTIVE`, so `/trip-publish update` refuses on an archived
 > trip before any build begins (`skills/trip-publish/SKILL.md` states that disposition in

@@ -429,7 +429,9 @@ terminal else-branch, which is what separates a lookup from a classification.
    token remains, the verb is `status`.
 4. Match that token by **exact string equality** against the recognition set: the verbs of
    this command named in `CLAUDE.md` → Step 1, in the `Command` column, whose cells render
-   as `` `/trip <token>` ``. Read that column now, from the table already in context. Not a
+   as `` `/trip <token>` ``. Read that column now — from context when this repository is the
+   workspace, otherwise from `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` (its § *Resolving a trip* states why an
+   installed engine cannot assume it is loaded). Not a
    prefix match, not a nearest match, not a fuzzy match, not a substring match.
 5. Everything after the verb token is that verb's argument string. Do not interpret it
    here.
@@ -498,9 +500,10 @@ second source of fields the ladder has already resolved, free to disagree with i
 no **content** under `trips/<slug>/outputs/` and opens no artifact there. It
 does not read `agents/<name>.md`, having no agent to supply a prompt to.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
-requirement table are taken from what is already in context — `CLAUDE.md` is auto-loaded,
-and this file's body is the body being run — so *live* there names a read of context and
-adds no per-invocation read of either path. **Dispatches no agent**, so it attributes no
+requirement table are taken from what is in context — this file's body is the body being run,
+and `CLAUDE.md` is loaded beside it when this repository is the workspace; an installed engine
+opens `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` for that column instead, the one read the installed
+form adds — so *live* there names a read of context, or of that one file. **Dispatches no agent**, so it attributes no
 agent read either: `trips/<slug>/trip-log.md` is read on neither side of that attribution,
 there being no second side.
 

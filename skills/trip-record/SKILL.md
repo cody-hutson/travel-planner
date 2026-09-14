@@ -1029,11 +1029,11 @@ would be a different request type with its own command and its own permissions.
 
 ## mode <MODE>
 
-**Reads:** `trips/<slug>/trip-context.md` — the `## Mode` block, read before it is written because `Current mode` and `Mode notes` are replaced in one act, standing rule 2 confines the `Edit` to those lines, and the outgoing `Mode notes` is echoed before it is overwritten. It does **not** re-read that file to learn the trip's mode or its destination: the record block above already carries both by value, and re-deriving them is what § *What the blocks above are* forbids. It performs no read to obtain the mode value set — `CLAUDE.md` § *Modes* is auto-loaded and already in context, so consulting it is not a read this verb makes. Dispatches no agent.
+**Reads:** `trips/<slug>/trip-context.md` — the `## Mode` block, read before it is written because `Current mode` and `Mode notes` are replaced in one act, standing rule 2 confines the `Edit` to those lines, and the outgoing `Mode notes` is echoed before it is overwritten. It does **not** re-read that file to learn the trip's mode or its destination: the record block above already carries both by value, and re-deriving them is what § *What the blocks above are* forbids. It performs no read to obtain the mode value set — `CLAUDE.md` § *Modes* is in context when this repository is the workspace and is opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` when the engine is installed elsewhere — the one read the installed form adds (`CLAUDE.md` § *Resolving a trip*). Dispatches no agent.
 
 **Argument.** One whitespace-delimited token, ASCII-case-folded, matched by **exact string
-equality** against the mode values in the first column of `CLAUDE.md` § *Modes*, read live from the
-table already in context. That set is **not written into this file** and **not counted** — the same
+equality** against the mode values in the first column of `CLAUDE.md` § *Modes*, read live from that
+table — in context when this repository is the workspace, otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`. That set is **not written into this file** and **not counted** — the same
 discipline § *Selecting the verb* applies to this command's own verb set, and it is what keeps a
 mode a later release adds from needing an edit here. A token matching nothing is **this verb's own
 refusal**: render the token verbatim, render the set read live, and stop. **No near-match, no *"did
@@ -1410,7 +1410,7 @@ what they want, name `/trip-decommission` and stop.
 
 ## event <id> <state>
 
-**Reads:** `trips/<slug>/outputs/event-status.md` — the row `<id>` names, read **before** it is written because that file is persist-mutable: the read is what locates the one row, supplies its outgoing `Status` for the echo, and makes the never-regenerate shape below checkable rather than merely asserted; `reference/data-model.md` — § *The Per-Event Status Model*, read at invocation for the transitions it names and for the table shape this section cites instead of rendering. Reads `trips/<slug>/trip-context.md` not at all — `## Locked Elements` is the trip-level human summary and `/trip-record fact`'s, and reading it here would give an event's status a second source. It performs no read to obtain the status vocabulary: `CLAUDE.md` § *Key Rules* is auto-loaded and already in context, so consulting it is not a read this verb makes. Dispatches no agent.
+**Reads:** `trips/<slug>/outputs/event-status.md` — the row `<id>` names, read **before** it is written because that file is persist-mutable: the read is what locates the one row, supplies its outgoing `Status` for the echo, and makes the never-regenerate shape below checkable rather than merely asserted; `reference/data-model.md` — § *The Per-Event Status Model*, read at invocation for the transitions it names and for the table shape this section cites instead of rendering. Reads `trips/<slug>/trip-context.md` not at all — `## Locked Elements` is the trip-level human summary and `/trip-record fact`'s, and reading it here would give an event's status a second source. It performs no read to obtain the status vocabulary: `CLAUDE.md` § *Key Rules* is in context when this repository is the workspace and is opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` when the engine is installed elsewhere — the one read the installed form adds (`CLAUDE.md` § *Resolving a trip*). Dispatches no agent.
 
 The per-event status verb. It changes the `Status` cell of one named row of
 `trips/<slug>/outputs/event-status.md` and recomputes that row's derived needs-booking cell. It
@@ -1447,7 +1447,8 @@ ID is declared **opaque**, so folding it could collide two distinct keys. Being 
 the day, and this verb does not touch that column.
 
 **`<state>` is ASCII-case-folded and matched by exact string equality against the per-event status
-vocabulary `CLAUDE.md` § *Key Rules* fixes**, read live from the text already in context. That
+vocabulary `CLAUDE.md` § *Key Rules* fixes**, read live from that text — in context when this
+repository is the workspace, otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`. That
 vocabulary is **not written into this file** and **not counted** — the same discipline § *Selecting
 the verb* applies to this command's own verb set, and it is what keeps a status a later release adds
 from needing an edit here. A token matching nothing is **this verb's own refusal**: render the token
@@ -1591,7 +1592,7 @@ and whose destination is undecided reaches it and runs.
 
 ## log
 
-**Reads:** `trips/<slug>/trip-log.md` — read **before** it is written, to confirm the target is the trip's log and to locate the append point at its end; the read never decides the entry's content, which comes from the session, and it never re-opens a prior entry. Reads `trips/<slug>/trip-context.md` not at all — a constraint the session surfaced belongs to that file and is `/trip-record fact`'s, and reading it here would let the log become a second source for a fact whose reasoning is the only part it carries. Reads `trips/<slug>/outputs/event-status.md` not at all — an event's status is `/trip-record event`'s. It performs no read to obtain the entry's structure or its scale: `CLAUDE.md` § *trip-log.md* and § *Ending a session* are auto-loaded and already in context, so consulting them is not a read this verb makes. Dispatches no agent.
+**Reads:** `trips/<slug>/trip-log.md` — read **before** it is written, to confirm the target is the trip's log and to locate the append point at its end; the read never decides the entry's content, which comes from the session, and it never re-opens a prior entry. Reads `trips/<slug>/trip-context.md` not at all — a constraint the session surfaced belongs to that file and is `/trip-record fact`'s, and reading it here would let the log become a second source for a fact whose reasoning is the only part it carries. Reads `trips/<slug>/outputs/event-status.md` not at all — an event's status is `/trip-record event`'s. It performs no read to obtain the entry's structure or its scale: `CLAUDE.md` § *trip-log.md* and § *Ending a session* are in context when this repository is the workspace and are opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` when the engine is installed elsewhere — the one read the installed form adds (`CLAUDE.md` § *Resolving a trip*). Dispatches no agent.
 
 The session-entry verb. It appends one entry to `trips/<slug>/trip-log.md` — the file § *Session
 Protocol* makes the session bridge — and does nothing else.
@@ -1638,7 +1639,8 @@ widening is stated in the standing clause where it binds every verb, not asserte
 
 - **The entry structure is `CLAUDE.md` § *trip-log.md*'s and is not restated here** — the same
   discipline `profile` applies to the intake template's questions. That section is the authority on
-  its own fields, read live from the text already in context.
+  its own fields, read live from that text — in context when this repository is the workspace,
+  otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`.
 - **The entry's scale is § *Ending a session*'s:** a quick edit gets a one-liner, a planning session
   gets the full register. That section's remaining disposition — skipping the log — **is not
   reachable here**, because the verb was typed and the decision to log is therefore already made.

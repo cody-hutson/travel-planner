@@ -528,7 +528,8 @@ it runs before `Edit`, and on its absent branch this verb stops rather than fall
 create.
 
 - **The entry's structure is `CLAUDE.md` § *trip-log.md*'s and is not restated here.** That section
-  is the authority on its own fields, read live from the text already in context.
+  is the authority on its own fields, read live from that text — in context when this repository is
+  the workspace, otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`.
 - **The entry's scale is § *Ending a session*'s.** That section's remaining disposition — skipping
   the log — is not reachable here, because the verb was typed and the decision to record is therefore
   already made.

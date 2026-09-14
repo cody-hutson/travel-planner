@@ -23,8 +23,8 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 | `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `adr/` — architecture decision records |
 | `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
 | `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus five purpose-built demo fixtures |
-| `trips/` | Per-trip working directories — contents git-ignored, never published; only its `README.md` signpost is tracked |
-| `people/` | The durable cross-trip person store — one record per person, read alongside a trip profile rather than copied into it; contents git-ignored, never published, only its `README.md` signpost is tracked |
+| `trips/` | Inside the engine, an empty skeleton — only its `README.md` signpost is tracked, and nothing writes a record here. Your trips live at `<data-root>/trips/`, the directory the pointer in [Install](#install) names: per-trip working directories, never published |
+| `people/` | Inside the engine, the same empty skeleton (a tracked `README.md` signpost). Your durable cross-trip person store lives at `<data-root>/people/` — one record per person, read alongside a trip profile rather than copied into it, never published |
 
 ## Install
 
