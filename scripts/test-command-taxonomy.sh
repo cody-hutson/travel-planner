@@ -352,20 +352,23 @@ SCRIPT_REL='scripts/publish-trip-site.sh'
 
 # ── The engine root, held as ONE literal, spelled once.
 #
-# Under the installable layout a verb file sits at <engine-root>/skills/<verb>/SKILL.md, so the
-# engine root is the skill directory's grandparent and every engine path a verb hands to a tool
-# is this token followed by the repository-relative path. The harness substitutes the variable
-# before the permission check and also inside the prose body, so what a grant pattern and a
-# fenced invocation carry is the same string after substitution — which is exactly why ONE
-# spelling is asserted rather than assumed. A permission pattern is matched as a string: a
-# second spelling of the same directory is a second string, and a rooted permit beside a bare
-# prohibition is an escalation no existing check could see. Group P asserts the uniformity.
+# Under the installed layout the engine is a plain directory named travel-planner under the
+# harness's skills directory, and each verb is reached through a link placed beside it under the
+# verb's own name. The harness substitutes the variable with the LINK's path, not the target's —
+# measured from session transcripts, not inferred from the filesystem — so the engine root is the
+# link's SIBLING, and every engine path a verb hands to a tool is this token followed by the
+# repository-relative path. The harness substitutes the variable before the permission check and
+# also inside the prose body, so what a grant pattern and a fenced invocation carry is the same
+# string after substitution — which is exactly why ONE spelling is asserted rather than assumed.
+# A permission pattern is matched as a string: a second spelling of the same directory is a
+# second string, and a rooted permit beside a bare prohibition is an escalation no existing check
+# could see. Group P asserts the uniformity.
 #
 # It is deliberately NOT registered in NEEDLES below. That registry asserts norm(needle) ==
 # needle because its needles are matched against a whitespace-COLLAPSED haystack; this token is
 # only ever compared against a TRIMMED line, so the property the registry buys does not apply
 # to it and registering it would assert something that is not the reason it is safe.
-ENGINE_ROOT_TOK='${CLAUDE_SKILL_DIR}/../../'
+ENGINE_ROOT_TOK='${CLAUDE_SKILL_DIR}/../travel-planner/'
 
 # ── The command reference, and the two markers that delimit its DERIVED region.
 # The document is hand-written prose around one region this guard recomputes from the
@@ -2939,7 +2942,7 @@ ctl GF6  F6 "a fenced invocation in no verb region — a finding that could name
 # could have been implemented as "accept any variable" and F5 would have stopped meaning
 # anything. Each is a MUST-FIRE arm on an id this guard already emits, so neither adds a finding
 # id and group Y's mapping is unchanged.
-ctl GF1r F1 "a SANCTIONED-root invocation of the EXCLUDED form rotate — rooting a path does not retire the privilege grading over it" ok rootrotate 'grep -qF "CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate trips/x" "$WORK/GF1r/skills/trip-publish/SKILL.md"'
+ctl GF1r F1 "a SANCTIONED-root invocation of the EXCLUDED form rotate — rooting a path does not retire the privilege grading over it" ok rootrotate 'grep -qF "${ENGINE_ROOT_TOK}${SCRIPT_REL} rotate trips/x" "$WORK/GF1r/skills/trip-publish/SKILL.md"'
 # ── The P-group arms. Each defects the FRONTMATTER, which is the surface group P reads and
 # which parse_command_file reads nothing of — the same blind spot the H-group arms below were
 # written for. All three are MUST-FIRE, and group Y asserts the mapping in both directions, so

@@ -3,8 +3,8 @@ name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
-disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
 # /trip
@@ -15,14 +15,16 @@ The verb is the one the user typed, or — on an empty argument string — the `
 step 3 declares, which is the one verb this file supplies. Nothing in it reads the wording of
 the request to decide one.
 
-**Engine root — where every path in this file resolves from.** This engine's own assets — the
-agent prompts, the reference documents, the templates and the shell entry points — live under
-`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
-were invoked from. **Every engine path named anywhere in this file, its frontmatter included, and
-every engine path named inside any engine document you open from it, is repository-relative to
-that root and never to your working directory.** Resolve it against the root before you hand it to
-a tool: a bare relative path follows the session's working directory, and that directory is
-arbitrary. Operator trip data is a separate root and is named where it is used.
+**Engine root — where every path in this file resolves from.** This verb's directory is a link,
+placed beside the engine under the harness's skills directory, and the engine is its sibling — the
+directory named `travel-planner`. This engine's own assets — the agent prompts, the reference
+documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../travel-planner`, which is the directory holding them whatever working
+directory you were invoked from. **Every engine path named anywhere in this file, its frontmatter
+included, and every engine path named inside any engine document you open from it, is
+repository-relative to that root and never to your working directory.** Resolve it against the root
+before you hand it to a tool: a bare relative path follows the session's working directory, and
+that directory is arbitrary. Operator trip data is a separate root and is named where it is used.
 
 **A script's own data reads are a different question from where the script is, and rooting its
 path does not answer it.** Where a verb's invocation section tells you where to stand when you run
@@ -430,7 +432,7 @@ terminal else-branch, which is what separates a lookup from a classification.
 4. Match that token by **exact string equality** against the recognition set: the verbs of
    this command named in `CLAUDE.md` → Step 1, in the `Command` column, whose cells render
    as `` `/trip <token>` ``. Read that column now — from context when this repository is the
-   workspace, otherwise from `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` (its § *Resolving a trip* states why an
+   workspace, otherwise from `${CLAUDE_SKILL_DIR}/../travel-planner/CLAUDE.md` (its § *Resolving a trip* states why an
    installed engine cannot assume it is loaded). Not a
    prefix match, not a nearest match, not a fuzzy match, not a substring match.
 5. Everything after the verb token is that verb's argument string. Do not interpret it
@@ -502,7 +504,7 @@ does not read `agents/<name>.md`, having no agent to supply a prompt to.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
 requirement table are taken from what is in context — this file's body is the body being run,
 and `CLAUDE.md` is loaded beside it when this repository is the workspace; an installed engine
-opens `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` for that column instead, the one read the installed
+opens `${CLAUDE_SKILL_DIR}/../travel-planner/CLAUDE.md` for that column instead, the one read the installed
 form adds — so *live* there names a read of context, or of that one file. **Dispatches no agent**, so it attributes no
 agent read either: `trips/<slug>/trip-log.md` is read on neither side of that attribution,
 there being no second side.
@@ -1107,7 +1109,7 @@ and nothing anywhere else.
 **What it runs** — a single invocation:
 
 ```
-${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh --scope dir trips/<slug>
+${CLAUDE_SKILL_DIR}/../travel-planner/scripts/validate-artifacts.sh --scope dir trips/<slug>
 ```
 
 **`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
