@@ -1,9 +1,10 @@
 ---
+name: trip-decommission
 description: Take a trip's site offline, archive a concluded trip, or reopen an archived one. Never deletes trip content.
 argument-hint: temporary|archive|reopen [--trip <slug>]
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Bash(scripts/publish-trip-site.sh unpublish:*), Read, Edit
-disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/publish-trip-site.sh update:*), Bash(scripts/publish-trip-site.sh rotate:*), Bash(scripts/publish-trip-site.sh list:*), Bash(scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Write, NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh unpublish:*), Read, Edit
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh publish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Write, NotebookEdit]
 ---
 
 # /trip-decommission
@@ -12,6 +13,28 @@ disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/pu
 
 The verb is the one the user typed. Nothing in this file supplies a verb they did not type, and
 nothing in it reads the wording of the request to decide one.
+
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. That holds when this verb's directory is a link placed beside the engine: the
+harness names the link, and `..` is resolved after the link is followed, so the path still lands
+in the engine — read it as the kernel does, never by collapsing the text. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
+
+**A script's own data reads are a different question from where the script is, and rooting its
+path does not answer it.** Where a verb's invocation section tells you where to stand when you run
+it, that instruction is about the working directory the script resolves its own store against, and
+it stands unchanged.
+
+**The bare spelling of a path inside prose is deliberate and is not a defect to repair.** A path in
+a document the agent reads is returned as text — there is no include directive at either surface —
+so rooting it there would buy no mechanism while putting an unexpanded variable in front of every
+human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
+grants and the fenced invocations.
 
 **The frontmatter above, and what each grant is held for.** Every grant is held for a use a section
 below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
@@ -60,9 +83,10 @@ typed confirmation.
   while a `disallowed-tools` entry is addressed to the runtime — subject in full to the caveat above.
 - **What an entry carries is a name, and for the script entries the path sits inside that name — so
   the spelling is load-bearing, and here is the residual.** All five denials, and the `unpublish`
-  grant, spell the script **repo-relative**. This file addresses repo paths in its two pre-execution
-  blocks in the **absolute** form, through `${CLAUDE_PROJECT_DIR}` — so both spellings of a repo path
-  live in this file. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
+  grant, spell the script **repo-relative**. This file's two evidence entries address no repo path at
+  all: they name the operator data root through the `<data-root>` placeholder the agent resolves at
+  read time, so the absolute `${CLAUDE_PROJECT_DIR}` spelling that used to sit beside these entries
+  is gone and the residual below is about the script entries alone. For `Bash(ls:*)` and `Bash(grep:*)` the path is only an argument and the entry
   names the binary, so the form does not matter there; for the script entries the path is part of
   what is named. **Whether the runtime's matching reaches a second spelling of the same path is not
   established anywhere in this repository, and nothing that reads these entries as declarations can
@@ -119,13 +143,18 @@ the command follows, never as a property its frontmatter guarantees. **Nothing i
 that this command cannot do something because a grant is absent, and nothing argues it may because a
 grant is present.**
 
-## Trips in this repo
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+## Trips in your data home
+
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
@@ -133,6 +162,7 @@ grant is present.**
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |
@@ -500,7 +530,8 @@ it runs before `Edit`, and on its absent branch this verb stops rather than fall
 create.
 
 - **The entry's structure is `CLAUDE.md` § *trip-log.md*'s and is not restated here.** That section
-  is the authority on its own fields, read live from the text already in context.
+  is the authority on its own fields, read live from that text — in context when this repository is
+  the workspace, otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`.
 - **The entry's scale is § *Ending a session*'s.** That section's remaining disposition — skipping
   the log — is not reachable here, because the verb was typed and the decision to record is therefore
   already made.

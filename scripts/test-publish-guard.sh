@@ -1508,6 +1508,68 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# L14 — THE DATA-ROOT SEAM ON STEP 2 OF THE STORE-ROOT RULE.
+#
+# Step 1 of the rule resolves a per-trip people/ store; step 2 falls back to a root-level
+# one. That fallback used to resolve against $_GUARD_REPO_ROOT, which is BASH_SOURCE-
+# derived and correct for engine assets and WRONG for operator data: once this engine is
+# installed, its own people/ is a record-free skeleton of one tracked README, so step 2
+# found a directory that exists and a record that does not — `return 2`, UNDETERMINED,
+# which this script's own header calls aborting every publish of that trip forever.
+#
+# The seam is $_GUARD_DATA_ROOT, set only by an explicit --data-root argument and never
+# from the environment, for the reason the declaration block states: an environment
+# default on a fail-closed control is a fail-open surface.
+#
+# THE TWO ARMS ARE THE SAME TRIP, THE SAME RENDER AND THE SAME REFERENCE, differing only
+# in the root. That is what makes a verdict change attributable to the root and to
+# nothing else — the L9a/L9b idiom, applied to the other global this file re-points.
+L14SAVE="$_GUARD_DATA_ROOT"
+L14T="$WORK/l14_trip"; mkdir -p "$L14T/outputs" "$L14T/travelers"
+L14R="$WORK/l14.html"
+L14REAL="$WORK/l14_data";     mkdir -p "$L14REAL/people"
+L14SKEL="$WORK/l14_skeleton"; mkdir -p "$L14SKEL/people"
+L14KEY="psn-ab12"
+# Written in dependency order so the freshness gates read the projection as at least as
+# new as every source it projects: render, then the referenced record, then the profile,
+# then the model last. Ties do not fire (_is_stale is a strict >).
+lrender "$L14R" "Meeting point: the fountain by the south gate at nine, bags already dropped."
+printf -- '---\ntitle: Rowan\n---\n\n# Rowan\n\n- **Diet:** no shellfish\n' > "$L14REAL/people/$L14KEY.md"
+printf -- '# The person store\n\nOne file per person. This README is the only tracked file here.\n' > "$L14SKEL/people/README.md"
+printf -- '---\nperson: %s\n---\n\n# Rowan\n' "$L14KEY" > "$L14T/travelers/rowan.md"
+printf -- '# Traveler Model [DERIVED]\n\n## Rowan\n- **Diet:** no shellfish\n' > "$L14T/outputs/traveler-model.md"
+
+# L14c — fixture integrity, graded FIRST. Without it the arms below prove nothing: a 2
+# from the skeleton root is only about the ROOT if the record is genuinely present under
+# the other one and genuinely absent under this one, and if the trip carries no per-trip
+# store that would let step 1 answer before step 2 is reached at all.
+if [ -f "$L14REAL/people/$L14KEY.md" ] && [ ! -e "$L14SKEL/people/$L14KEY.md" ] \
+   && [ -d "$L14SKEL/people" ] && [ ! -d "$L14T/people" ]; then
+  PASS "L14c: fixture integrity — the referenced record exists under one data root and not the other, the skeleton root's people/ is a real readable directory holding no record (which is exactly the installed engine's shape), and the trip carries no per-trip store, so step 2 is the step under test"
+else
+  FAIL "L14c: the data-root fixture is not set up as claimed — L14a and L14b would prove nothing"
+fi
+
+_GUARD_DATA_ROOT="$L14REAL"
+lguard "$L14R" "$L14T"
+l14a="$LRC"
+_GUARD_DATA_ROOT="$L14SKEL"
+lguard "$L14R" "$L14T"
+l14b="$LRC"
+_GUARD_DATA_ROOT="$L14SAVE"
+
+if [ "$l14a" -eq 0 ]; then
+  PASS "L14a: with the data root naming a store that HOLDS the referenced record, the publish proceeds (rc=0) — step 2 resolves through the seam"
+else
+  FAIL "L14a: a resolvable person reference did not publish (rc=$l14a) — either the seam is not wired to step 2 or the fixture carries an unrelated finding, and L14b's 2 would then be unattributable"
+fi
+if [ "$l14b" -eq 2 ] && [ "$l14a" -eq 0 ]; then
+  PASS "L14b: MUST-FIRE — the SAME trip and the SAME render, with the data root pointed at a record-free store skeleton, aborts UNDETERMINED (rc=2) while the identical run against the real store returns 0. The verdict follows the data root, so the seam is delivered rather than described — and this is the exact state an installed engine is in before it is told where the operator store lives"
+else
+  FAIL "L14b: the verdict did not follow the data root (real=$l14a skeleton=$l14b) — a step-2 fallback that ignores the seam reads the engine's own skeleton after install, which returns 2 on every referencing trip"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Group M — the three confirmed defects from the Phase A6.5 adversarial design
 # review of the shipped guard (#316). One regression case per counter-design:
 #   M1  CD-1  the guard matched the visible-text PROJECTION while publish copies
@@ -4706,7 +4768,7 @@ fi
 #
 # STATED BOUND, because it is the honest limit of every arm below. There is no site
 # BUILD in this repository — the render is authored by the `site` verb in
-# .claude/commands/trip.md, from a spec. So T3 grades a render built TO the contract,
+# skills/trip/SKILL.md, from a spec. So T3 grades a render built TO the contract,
 # not a build script's output: what it proves is that the contract's null case,
 # followed, emits nothing and disturbs nothing. That a given run followed it is not
 # something any test here reaches, and no arm below claims it.
@@ -4936,7 +4998,7 @@ fi
 # THE RULE IS READ FROM THE DOCUMENT, NOT SPELLED HERE — the same reason T1 reads the
 # class token from the component contract rather than holding a literal.
 # reference/site-layout-spec.md § 3 says in terms that it keeps no second copy of where
-# the state comes from and names the `site` verb in .claude/commands/trip.md as the one
+# the state comes from and names the `site` verb in skills/trip/SKILL.md as the one
 # home. A literal here would be that second copy, and it would leave this arm green
 # through a document that had moved the anchor back to the build.
 #
@@ -4949,7 +5011,7 @@ fi
 # STATED BOUND, the same one T3 carries: there is no site BUILD in this repository. T5
 # grades the CONTRACT's anchor and a resolution built to it — not a build script's output,
 # and it does not claim that a given run followed the contract.
-T_TRIPMD="$HERE/../.claude/commands/trip.md"
+T_TRIPMD="$HERE/../skills/trip/SKILL.md"
 # RECONCILED with the mapping this remediation replaced (D11). The limb is no longer keyed
 # to a `status` VALUE, so `\`confirmed\` → \`updated\`` is not the marker any more and
 # `\`rejected\`` is not a limb at all: the arrow into `updated` is what locates it, and the
@@ -5146,7 +5208,7 @@ fi
 #
 # HOW THE RULE IS READ. From the document, as in T5, and for the same reason:
 # reference/site-layout-spec.md § 3 says in terms that it holds no second copy of where the
-# state comes from and names the `site` verb in .claude/commands/trip.md as the one home. So
+# state comes from and names the `site` verb in skills/trip/SKILL.md as the one home. So
 # the record is EXTRACTED — the first trip-relative path token after that mapping's own
 # "decides it from" clause — and the resolver below is generic over whatever the extraction
 # yields. What is held here is the rule's SHAPE; its SOURCE is the document's. A document
@@ -5508,7 +5570,7 @@ fi
 # WHY THAT MATTERS TO AC 5. T3 asserts the null-case render is BYTE-IDENTICAL to a
 # pre-component render, and § 3 makes non-emission a byte-level property because the site
 # is encrypted wholesale. But T3 grades what `none` DOES; nothing graded how a trip that
-# has coordinated once ever REACHES it again. .claude/commands/trip.md answers that in
+# has coordinated once ever REACHES it again. skills/trip/SKILL.md answers that in
 # one clause: "the `updated` limb is pruned at the build where its window has already
 # closed ... this build writes `none` and emits no band". Without the prune, a trip whose
 # one change was confirmed a year ago carries an `updated` frontmatter, a band node, a

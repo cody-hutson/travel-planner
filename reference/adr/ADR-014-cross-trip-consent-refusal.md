@@ -224,7 +224,7 @@ here; it is tracked on its own card (#906).
   one of the two supersession-path acts a reversal of this record would require
 - `reference/adr/README.md` — the section spine this record follows, and the decision-versus-amendment
   boundary that makes this output a new record rather than an in-place edit
-- `.claude/commands/trip-record.md` — the erasure verb's organizer-initiated, key-addressed interface
+- `skills/trip-record/SKILL.md` — the erasure verb's organizer-initiated, key-addressed interface
   on which the revocation limb fails, its declared reach and the residues it names as out of reach,
   and the promotion verb that already refuses a `[THIRD-PARTY]` trip-side value
 - `agents/00-enrichment.md` — the carry-forward rule whose predicate is **both** marks, which is what

@@ -1,9 +1,10 @@
 ---
+name: trip-publish
 description: Re-publish an already-public trip site after edits, or list what is published. The publish surface — never creates a repo, never rotates, never takes a site down, never publishes plaintext.
 argument-hint: update|list [--trip <slug>]
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(scripts/publish-trip-site.sh update:*), Bash(scripts/publish-trip-site.sh list:*)
-disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/publish-trip-site.sh rotate:*), Bash(scripts/publish-trip-site.sh unpublish:*), Bash(scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Read, Write, Edit, NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list:*)
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh publish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh unpublish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Read, Write, Edit, NotebookEdit]
 ---
 
 # /trip-publish
@@ -12,6 +13,28 @@ disallowed-tools: [Bash(scripts/publish-trip-site.sh publish:*), Bash(scripts/pu
 
 The verb is the one the user typed. Nothing in this file supplies a verb they did not
 type, and nothing in it reads the wording of the request to decide one.
+
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. That holds when this verb's directory is a link placed beside the engine: the
+harness names the link, and `..` is resolved after the link is followed, so the path still lands
+in the engine — read it as the kernel does, never by collapsing the text. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
+
+**A script's own data reads are a different question from where the script is, and rooting its
+path does not answer it.** Where a verb's invocation section tells you where to stand when you run
+it, that instruction is about the working directory the script resolves its own store against, and
+it stands unchanged.
+
+**The bare spelling of a path inside prose is deliberate and is not a defect to repair.** A path in
+a document the agent reads is returned as text — there is no include directive at either surface —
+so rooting it there would buy no mechanism while putting an unexpanded variable in front of every
+human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
+grants and the fenced invocations.
 
 ## Why this is its own file
 
@@ -147,13 +170,18 @@ its declared depth, is structurally capable of emitting a file's contents. That 
 bounded by a rule rather than by a denial — no construct in this file directs a
 content-emitting primitive at a passphrase path.
 
-## Trips in this repo
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+## Trips in your data home
+
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
@@ -161,6 +189,7 @@ content-emitting primitive at a passphrase path.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |
@@ -203,8 +232,8 @@ under the caveat above on what a declaration establishes.
 ### What counts as a read here
 
 **This file uses the surface's definition of a read, not a second one.** That definition is
-stated in `.claude/commands/trip-record.md` § *What the blocks above are*, a section that
-marks itself frozen, and it is applied by `.claude/commands/trip.md` in the same terms: **a
+stated in `skills/trip-record/SKILL.md` § *What the blocks above are*, a section that
+marks itself frozen, and it is applied by `skills/trip/SKILL.md` in the same terms: **a
 path read only to test whether it exists — or whether it is readable — is a read, and is
 declared.** The reason is the one that section gives: the probe selecting a branch is the
 control the rule on that branch turns on, and an undeclared probe hides the one read the
@@ -462,10 +491,19 @@ Precondition → invocation → report. Nothing is invoked before every limb pas
 ### Invocation
 
 ```
-scripts/publish-trip-site.sh update trips/<slug>
+${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update trips/<slug>
 ```
 
 with `<slug>` replaced by `trip.slug`. Run it from the repo root.
+
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. Without the flag the script falls
+back to the working directory, which is exactly the dependence this contract removes. **This
+instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
+in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
+concern stays attributable to one change. The retained where-to-stand sentences on this
+surface are the same pattern, already ratified.
 
 **When the trip was never published**, the script refuses before the passphrase is
 touched: it resolves the per-trip clone before it resolves the passphrase, so it creates no
@@ -512,11 +550,20 @@ script emits them.
 ### Invocation
 
 ```
-scripts/publish-trip-site.sh list
+${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list
 ```
 
 Run it from the repo root: the script scans `./trips/` and refuses elsewhere, and it takes
-no argument.
+no argument beyond the data-root seam below.
+
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. Without the flag the script falls
+back to the working directory, which is exactly the dependence this contract removes. **This
+instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
+in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
+concern stays attributable to one change. The retained where-to-stand sentences on this
+surface are the same pattern, already ratified.
 
 **Freshness is report-only.** Render the stale column as the script emits it, including
 its indeterminate value. No verb of this file branches on it, and `update` does not

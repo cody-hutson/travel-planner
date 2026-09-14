@@ -238,14 +238,14 @@ A person's identity originates outside the engine (limb 1), and the name is *alr
 > character removed. **Uniqueness is asserted over this key**, never over the display name.
 >
 > **Filename correspondence.** The stem of `travelers/<file>.md`, put through the same
-> normalization, MUST equal the entry's traveler key. `.claude/commands/trip-new.md`
+> normalization, MUST equal the entry's traveler key. `skills/trip-new/SKILL.md`
 > § *Travelers — count and names* already derives the filename from the display name; this rule
 > **cites and closes that derivation in the reverse direction** rather than authoring a second one.
 >
 > **The same-name case is a hard stop at intake, and the intake half now ships.** The rule is that
 > the operator disambiguates the display name, which changes the key, and the engine never mints a
 > suffix: a minted suffix is a surrogate key wearing a natural key's clothes, and it would break the
-> correspondence above. **`.claude/commands/trip-record.md` § *profile* is the surface that enforces
+> correspondence above. **`skills/trip-record/SKILL.md` § *profile* is the surface that enforces
 > it**: its collision check computes this key over the stems of `trips/<slug>/travelers/*.md` and
 > runs **before** the file-existence probe that used to decide alone, halting on a key already held
 > by a different person rather than writing a second file under it. That check reads this rule live
@@ -911,7 +911,7 @@ second home by being migrated.
 says in terms that it assigns and does not define — but the rest of that section **still states the
 engine's default-and-exception model in its own words, and is retained deliberately for it.** That
 statement is a **live input**, not a leftover: this section's own absence rule below reads it, and
-`.claude/commands/trip.md` derives the `/trip research` agent key from it, admitting exactly the
+`skills/trip/SKILL.md` derives the `/trip research` agent key from it, admitting exactly the
 roster rows it leaves in the accumulating default. Where the two overlap, the tokens and
 definitions above govern.
 
@@ -1423,10 +1423,6 @@ with no site carries no row.
 
 ```count-assertion-digest
 # sites  path
-4       .claude/commands/trip-decommission.md
-6       .claude/commands/trip-new.md
-12      .claude/commands/trip-record.md
-6       .claude/commands/trip.md
 32      CHANGELOG.md
 8       CLAUDE.md
 1       CONTRIBUTING.md
@@ -1488,6 +1484,10 @@ with no site carries no row.
 1       reference/schemas/travel-site.md
 1       reference/schemas/trip-context.md
 1       reference/site-layout-spec.md
+4       skills/trip-decommission/SKILL.md
+6       skills/trip-new/SKILL.md
+12      skills/trip-record/SKILL.md
+6       skills/trip/SKILL.md
 1       templates/person-intake.template.md
 1       templates/traveler-intake.template.md
 1       trips/README.md
@@ -1514,7 +1514,7 @@ that document has held up.
   boundary from `reference/data-model.md` and does not relax it.
 - **No control flow.** Who runs when, and in what order, belongs to the control-flow contract. This
   is the data contract.
-- **`.claude/commands/*.md` frontmatter is out of scope and out of the gate's selection set.** Those
+- **`skills/*/SKILL.md` frontmatter is out of scope and out of the gate's selection set.** Those
   files carry an **upstream schema** this repo does not own and cannot change. The artifact schema
   set does not claim them, and the validating gate does not check them.
 - **`templates/*.template.md` are out of the gate's selection set too.** § 1.3 already disposes of

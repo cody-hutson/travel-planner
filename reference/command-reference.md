@@ -1,6 +1,6 @@
 # Command Reference
 
-The whole command surface in one table: every verb each command in `.claude/commands/` takes, the
+The whole command surface in one table: every verb each command in `skills/` takes, the
 arguments it expects, and the trip state it requires. It exists because the two surfaces a reader
 meets first are both deliberately partial — the picker row names a command's verb *domain*, and the
 inline hint enumerates as much of the verb list as the terminal will show. Neither is the surface.
@@ -18,7 +18,7 @@ it.
 
 | Column | What it carries | Where it comes from |
 |---|---|---|
-| **Command** | The slash command the verb belongs to | the command file's own name |
+| **Command** | The slash command the verb belongs to | the verb's own directory name under `skills/` |
 | **Verb** | The token you type after the command | field 1 of that file's requirement table |
 | **Arguments** | The argument signature the verb expects, as its own section heading states it. `—` where the verb takes none | the verb's `## <verb> <signature>` heading |
 | **Lifecycle** | The trip lifecycle state the verb requires — a verb declaring `ACTIVE` refuses on an archived trip | the requirement table |

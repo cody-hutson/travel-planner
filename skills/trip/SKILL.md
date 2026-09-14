@@ -1,9 +1,10 @@
 ---
+name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
-disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
 # /trip
@@ -14,13 +15,40 @@ The verb is the one the user typed, or — on an empty argument string — the `
 step 3 declares, which is the one verb this file supplies. Nothing in it reads the wording of
 the request to decide one.
 
-## Trips in this repo
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. That holds when this verb's directory is a link placed beside the engine: the
+harness names the link, and `..` is resolved after the link is followed, so the path still lands
+in the engine — read it as the kernel does, never by collapsing the text. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+**A script's own data reads are a different question from where the script is, and rooting its
+path does not answer it.** Where a verb's invocation section tells you where to stand when you run
+it, that instruction is about the working directory the script resolves its own store against, and
+it stands unchanged.
+
+**The bare spelling of a path inside prose is deliberate and is not a defect to repair.** A path in
+a document the agent reads is returned as text — there is no include directive at either surface —
+so rooting it there would buy no mechanism while putting an unexpanded variable in front of every
+human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
+grants and the fenced invocations.
+
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
+
+## Trips in your data home
+
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
@@ -28,6 +56,7 @@ the request to decide one.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |
@@ -402,7 +431,9 @@ terminal else-branch, which is what separates a lookup from a classification.
    token remains, the verb is `status`.
 4. Match that token by **exact string equality** against the recognition set: the verbs of
    this command named in `CLAUDE.md` → Step 1, in the `Command` column, whose cells render
-   as `` `/trip <token>` ``. Read that column now, from the table already in context. Not a
+   as `` `/trip <token>` ``. Read that column now — from context when this repository is the
+   workspace, otherwise from `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` (its § *Resolving a trip* states why an
+   installed engine cannot assume it is loaded). Not a
    prefix match, not a nearest match, not a fuzzy match, not a substring match.
 5. Everything after the verb token is that verb's argument string. Do not interpret it
    here.
@@ -471,9 +502,10 @@ second source of fields the ladder has already resolved, free to disagree with i
 no **content** under `trips/<slug>/outputs/` and opens no artifact there. It
 does not read `agents/<name>.md`, having no agent to supply a prompt to.
 **Reading a column live is not reading a file.** Step 1's `Command` column and this file's
-requirement table are taken from what is already in context — `CLAUDE.md` is auto-loaded,
-and this file's body is the body being run — so *live* there names a read of context and
-adds no per-invocation read of either path. **Dispatches no agent**, so it attributes no
+requirement table are taken from what is in context — this file's body is the body being run,
+and `CLAUDE.md` is loaded beside it when this repository is the workspace; an installed engine
+opens `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` for that column instead, the one read the installed
+form adds — so *live* there names a read of context, or of that one file. **Dispatches no agent**, so it attributes no
 agent read either: `trips/<slug>/trip-log.md` is read on neither side of that attribution,
 there being no second side.
 
@@ -1077,11 +1109,32 @@ and nothing anywhere else.
 **What it runs** — a single invocation:
 
 ```
-scripts/validate-artifacts.sh --scope dir trips/<slug>
+${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh --scope dir trips/<slug>
 ```
 
 **`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
 value — the standing clause's rule, applied.
+
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. Without the flag the script resolves `trips/<slug>` against its own parent directory —
+the engine, whose store skeleton holds no trip, which is exactly the dependence this contract removes. **The
+flag is `--data-root` and deliberately not `--root`**, for the reason `scripts/publish-trip-site.sh`
+already states of its own seam: that script has two roots to name, and so does this one. `--root`
+is the **engine** root, and it carries the schema corpus the validator grades against —
+`reference/data-architecture.md` and `reference/schemas/`, which are engine assets and follow the
+script wherever it is installed. Pointing `--root` at your data home moves the corpus to a
+directory that has none, and the validator then reports on its own missing corpus rather than on
+your trip. **This
+instruction is prose beside the fence rather than a longer fenced line, deliberately:** the line
+in the fence is the asset-resolution slice's and is left byte-identical, so a regression in either
+concern stays attributable to one change. The retained where-to-stand sentences on this
+surface are the same pattern, already ratified.
+
+**Keep `--scope dir trips/<slug>` relative.** The scope is a root-relative glob — resolved
+against `--data-root` — and an absolute path there yields absolute paths into a relative matcher
+— measured equal in count and different in spelling, which is the shape that reads as agreement
+while measuring two different things. The root goes in `--data-root`; the scope stays as written.
 
 **Why that script and not the guard suite.** `scripts/test-artifact-schema.sh` is the CI suite:
 it takes no arguments and grades the tracked tree, which is the half CI already reaches.

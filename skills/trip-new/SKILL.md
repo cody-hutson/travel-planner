@@ -1,9 +1,10 @@
 ---
+name: trip-new
 description: Start a new trip for a destination and year — scaffolds the folder, context, log and traveler intake. Creates only; never overwrites an existing trip.
 argument-hint: [destination-year]
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(date:*), Bash(mkdir:*), Read, Write
-disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), Edit, NotebookEdit]
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), Edit, NotebookEdit]
 ---
 
 # New trip setup
@@ -11,6 +12,28 @@ disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*
 Scaffolds a new trip: the trip directory, `outputs/`, `travelers/`, `trip-context.md` from the
 template, and `trip-log.md` with its first session entry. Sets the starting mode from what the user
 has actually stated, records who is going, and hands off to traveler intake.
+
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. That holds when this verb's directory is a link placed beside the engine: the
+harness names the link, and `..` is resolved after the link is followed, so the path still lands
+in the engine — read it as the kernel does, never by collapsing the text. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
+
+**A script's own data reads are a different question from where the script is, and rooting its
+path does not answer it.** Where a verb's invocation section tells you where to stand when you run
+it, that instruction is about the working directory the script resolves its own store against, and
+it stands unchanged.
+
+**The bare spelling of a path inside prose is deliberate and is not a defect to repair.** A path in
+a document the agent reads is returned as text — there is no include directive at either surface —
+so rooting it there would buy no mechanism while putting an unexpanded variable in front of every
+human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
+grants and the fenced invocations.
 
 **This command creates. It never overwrites.** Re-running it against a trip that already exists adds
 only the members that are missing and leaves every existing file exactly as it is. `trips/` is
@@ -60,14 +83,20 @@ creates rather than selects, **a `--trip` naming a slug no existing trip carries
 here: neither a conflict nor a stop.** Where `--trip` and the positional argument are both supplied
 and **disagree, say so and ask which was meant.** Do not pick one.
 
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
+
 ## Existing trips
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G2
 population-role: CREATE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |

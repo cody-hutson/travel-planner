@@ -31,11 +31,13 @@ name: Trip resolution contract
 # IN SCOPE — these groups run on every invocation and their verdicts are real:
 #   PIN  the canonical literals are read FROM CLAUDE.md: the contract section exists and
 #        is uniquely named, its evidence list is a fenced literal indexed contiguously
-#        from E1 with every entry `!`-prefixed and stderr-capturing, and its header block
-#        yields a citation line. PIN also self-checks that the guard script holds NO COPY
+#        from E1 with every entry stderr-capturing, NOT `!`-prefixed (the pre-execution
+#        carrier is retired — the entries are commands the agent runs), resolving against
+#        the `<data-root>` placeholder and never against CLAUDE_PROJECT_DIR, and its header
+#        block yields both a citation line and a data-root-pointer line. PIN also self-checks that the guard script holds NO COPY
 #        of any canonical entry — a guard with its own copy is a second source of truth
 #        and would go green while the documented contract drifted away from it
-#   RP   the real consumer population under .claude/commands/: header block present,
+#   RP   the real consumer population under skills/: header block present,
 #        evidence blocks byte-identical to the canonical at their index, prefix contiguous
 #        from index 1 and EXACTLY the length the declared contract-depth requires — no
 #        fewer blocks and no more — and contract-depth equal to the maximum depth in the

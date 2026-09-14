@@ -16,7 +16,7 @@ Trip planning spans multiple chats over days or weeks. Files are the memory. Eve
 
 ### Starting a session (any chat that touches a trip)
 
-1. Read this `CLAUDE.md` (auto-loaded)
+1. Read this `CLAUDE.md` (auto-loaded when this repository is the workspace; an installed engine's verbs open it at the engine root — § *Resolving a trip*)
 2. Read `trips/<destination>-<year>/trip-context.md` — the source of truth for what's planned
 3. Read `trips/<destination>-<year>/trip-log.md` — the decision history and session bridge
 4. Scan `trips/<destination>-<year>/outputs/` — know what exists and what's been produced
@@ -66,7 +66,7 @@ This file is the primary session bridge. It captures what trip-context.md does n
 > below cites it rather than defining anything. **The default-and-exception model in the rest of
 > this section is not a duplicate of that home — it is a live input read back by the engine**, in
 > two places: that section's own absence rule derives a class for an artifact its exception set
-> does not name, and `.claude/commands/trip.md` derives the `/trip research` agent key by filtering
+> does not name, and `skills/trip/SKILL.md` derives the `/trip research` agent key by filtering
 > the roster to the rows this section leaves in the accumulating default. Deleting or collapsing
 > this prose would break both reads. Where the two overlap, the engine-wide tokens and definitions
 > govern; **editing the exception set below changes what that command dispatches.**
@@ -151,16 +151,17 @@ a trip is archived — a reopened trip absorbs current state, never a replay.
 > **Why this section is a section, and why it is here rather than three plausible alternatives.**
 > The rule binds the hub, the enrichment agent, the validator and the site build — but **not all
 > four are bound the same way, and the difference matters.** The three prompt surfaces read
-> `CLAUDE.md` directly: it is auto-loaded and costs no per-invocation read, so the rule lives where
-> they already are. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
+> `CLAUDE.md` directly: it is auto-loaded when this repository is the workspace, and an installed
+> engine's verbs open it at the engine root (§ *Resolving a trip*), so the rule lives where they
+> already are or one read away. The site build does not read it at all — `scripts/publish-trip-site.sh` is a
 > shell script and never opens this file. It is bound **structurally instead**, by `G7`: every
 > dispatching verb declares `lifecycle: ACTIVE`, so `/trip-publish update` refuses on an archived
-> trip before any build begins (`.claude/commands/trip-publish.md` states that disposition in
+> trip before any build begins (`skills/trip-publish/SKILL.md` states that disposition in
 > terms). Stating the rule here binds the readers; `G7` binds the runners. Do not read this
 > paragraph as a claim that four surfaces parse this section. It sits beside
 > § *Output Versioning* because that section is the corpus's derivation-policy home and carries the
 > sentence this rule qualifies — but **deliberately outside it**, because the exception sets inside
-> that section are machine-read by `.claude/commands/trip.md` to derive the `/trip research` agent
+> that section are machine-read by `skills/trip/SKILL.md` to derive the `/trip research` agent
 > key, and **this rule declares no artifact class and must never be read as a file-exception list.**
 > It is **not** in § *Resolving a trip*, which is the gate ladder: the freeze stops no resolution and
 > returns no `trip.stop_gate`, and `G8` is reserved and report-only. It is **not** in
@@ -289,7 +290,7 @@ Read the relevant agent prompt from `agents/<name>.md` (see the roster below) an
 | Hub Planner | `agents/05-hub-planner.md` | `outputs/links-reference.md`, `outputs/venue-matrix.md`, `outputs/final-itinerary.md`, `outputs/event-status.md` (primary writer), `outputs/satisfaction-metrics.md` (desire-coverage + balance sections) | Full synthesis or itinerary restructuring — **runs and reconciles the three optimizer engines** (routing vs. desire-coverage vs. experiential arc) into one itinerary, needs applied as hard constraints first (R1–R4) |
 | Validator | `agents/06-validator.md` | `outputs/validation-report.md`, `outputs/satisfaction-metrics.md` (needs-compliance + agreement-check sections; reads `event-status.md`, never writes it) | After hub produces/updates itinerary |
 
-**Pipeline flow (full pipeline only):** Enrichment → Spokes → Hub → Validator → Remediation (if criticals found). **The spokes run in parallel with one exception: transport precedes scheduling, always.** Scheduling reads transport's output file, `outputs/transport-brief.md`, and the routing signal it emits is arithmetic over that file's leg matrix — so a scheduling-first run has no matrix at all on a first pass, and a stale one on a re-run. `.claude/commands/trip.md` § *reorder* carries that constraint and its consequence in full and is cited here rather than restated; the same dependency binds every verb that dispatches both spokes, not only that one. Every other pair of spokes is independent. The Hub step is where the three optimizer-engine signals are **reconciled** into one itinerary — needs first as hard constraints, then routing / desire-coverage / experiential arc resolved by a documented policy (R3); the spokes only emit signals, they do not synthesize.
+**Pipeline flow (full pipeline only):** Enrichment → Spokes → Hub → Validator → Remediation (if criticals found). **The spokes run in parallel with one exception: transport precedes scheduling, always.** Scheduling reads transport's output file, `outputs/transport-brief.md`, and the routing signal it emits is arithmetic over that file's leg matrix — so a scheduling-first run has no matrix at all on a first pass, and a stale one on a re-run. `skills/trip/SKILL.md` § *reorder* carries that constraint and its consequence in full and is cited here rather than restated; the same dependency binds every verb that dispatches both spokes, not only that one. Every other pair of spokes is independent. The Hub step is where the three optimizer-engine signals are **reconciled** into one itinerary — needs first as hard constraints, then routing / desire-coverage / experiential arc resolved by a documented policy (R3); the spokes only emit signals, they do not synthesize.
 
 **For Agent tool calls:** Pass the agent's prompt file content as the agent's instructions. Include the trip-context.md, trip-log.md (for decision context), and any required input files as context. Write the output to the correct file path, following the output versioning rules.
 
@@ -309,22 +310,35 @@ Read `trip-context.md` → Mode section to determine what's in scope.
 
 ### Resolving a trip
 
-Every invocation that operates on a trip — a command, or a free-form request in chat — resolves it here, through one ordered gate ladder. **This section is the single normative statement of that ladder.** No command file, agent prompt or reference doc restates it; a consuming command file carries only the evidence blocks below plus a header block citing this section. `CLAUDE.md` is auto-loaded, so this text is already in context when a command body runs: it adds **no per-invocation read** (`ADR-007` §2, bound 1) and cannot be silently skipped.
+Every invocation that operates on a trip — a command, or a free-form request in chat — resolves it here, through one ordered gate ladder. **This section is the single normative statement of that ladder.** No command file, agent prompt or reference doc restates it; a consuming command file carries only the evidence blocks below plus a header block citing this section. `CLAUDE.md` is auto-loaded, so this text is already in context when a command body runs: it adds **no per-invocation read** (`ADR-007` §2, bound 1) and cannot be silently skipped. **That auto-load is a property of a workspace holding this file, not of an installed engine** — an installed engine — its verbs linked as personal skills — is loaded from its own directory while some other directory is the workspace, so a consumer cannot assume this section is in context. It is reachable either way: every consumer names this section on its citation line and can open it at `<engine-root>/CLAUDE.md`, and the one literal a consumer needs *before* it can read anything — the data-root pointer's own path — rides in the header block rather than only here, for exactly that reason.
 
-**The canonical evidence list — declared once, here.** A consumer carries a **contiguous prefix** of it, byte-identical, from `E1` — and **exactly** the prefix its declared `contract-depth` requires, never a longer one; the exactness rule is stated with its reason below. `scripts/test-trip-resolution-contract.sh` extracts this list from this section, holds no copy of it, and asserts every consumer against it, so a divergent copy is a red check rather than a latent defect.
+**The canonical evidence list — declared once, here.** Each entry is a command the **agent runs as a tool call**, under the grants the consuming file already holds, after the data root has been resolved by `G0-root` below. It is **not** a `!` pre-execution block: a pre-execution block is expanded by the harness, which substitutes a closed set of variables that contains no name for an operator data root — so a block can only ever name the launching workspace (the defect this ladder exists to remove) or the engine's own directory (disqualified by `G0-root`), and any other expression survives into the block as a live shell expansion and is refused before the block runs. A consumer carries a **contiguous prefix** of the list, byte-identical, from `E1` — and **exactly** the prefix its declared `contract-depth` requires, never a longer one; the exactness rule is stated with its reason below. `scripts/test-trip-resolution-contract.sh` extracts this list from this section, holds no copy of it, and asserts every consumer against it, so a divergent copy is a red check rather than a latent defect.
 
 ```trip-contract-evidence
-E1  !`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
-E2  !`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+E1  `{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+E2  `{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 ```
 
-`2>&1` is **mandatory** on every entry, for a stated reason rather than an assumed one. It is **not** what makes G1's canary work — the canary fires on an empty block too, because `README.md` is not a line of an empty block. It is what makes a STOP **diagnosable**, and what removes any dependence on whether `!` pre-execution captures stderr by default, which this repo has not established. **E2 is expected to be error-shaped when the trip population is zero** — the glob does not expand and `grep` errors — so **when G2 resolves a zero population, E2 carries no information and is never read.** Grants are `Bash(ls:*)` for E1 and `Bash(grep:*)` for E2 and nothing wider (`ADR-007` §2, bound 2); `/trip-new` carries the E1-only prefix and correctly stays at `Bash(ls:*)`.
+`2>&1` is **mandatory** on every entry, for a stated reason rather than an assumed one. It is **not** what makes G1's canary work — the canary fires on an empty block too, because `README.md` is not a line of an empty block. It is what makes a STOP **diagnosable**: the entry's failure text arrives on the same stream as its result, so the agent reading the tool result holds the diagnosis rather than a bare non-zero status. Grants are `Bash(ls:*)` for E1 and `Bash(grep:*)` for E2 and nothing wider (`ADR-007` §2, bound 2); `/trip-new` carries the E1-only prefix and correctly stays at `Bash(ls:*)`.
+
+**E2 is expected to be error-shaped when the trip population is zero** — the glob does not expand and `grep` errors — so **when G2 resolves a zero population, E2 carries no information and is never read.** That declaration is about E2's **output**, and it stands unchanged. What follows is about its **exit status**, which is a separate property of the same entry and was conflated with the first here until the distinction was measured.
+
+**Every entry terminates in an unconditional-success construct, and it is retained deliberately rather than carried over.** Under the retired `!` carrier it was load-bearing in the strongest sense: a non-zero exit in a pre-execution block is **fatal to the load**, aborting the consuming file before any instruction in it is reached, so a consumer whose block could fail was a consumer that could cease to exist. **Retiring the carrier removes that hazard entirely** — there is no pre-execution status left to abort anything, which is what makes every STOP below reachable as ordinary body text. What the construct still buys is stated in the next paragraph and is not the same thing. **E2's failing states are ordinary, not exceptional** — measured: with a zero trip population `grep` exits **2**; with a trip present whose `trip-context.md` matches none of the alternation arms above, it exits **1**. Both are states a healthy data home is in every day; neither is now capable of removing a verb.
+
+The construct has two halves and each does a different job. `|| printf '<sentinel>\n'` makes the failure **visible**, because a `grep` that matches nothing exits non-zero while writing nothing at all to stderr: without the sentinel that state renders as an **empty result**, indistinguishable from a read that never ran. `; true` makes the status **unconditional**, so a tool result carrying a non-zero status can never be mistaken for a read that did not happen — the same distinction the sentinel draws, at the other end of the same entry. **Neither half substitutes for the other**, and the sentinels are chosen so they cannot be mistaken for data: `TRIPS-DIR-UNREADABLE` is not a trip directory name and is not `README.md`, so G1's canary cannot be spoofed by it and G2 never admits it to `trips[]`.
+
+**`<data-root>` — what the entries resolve against, and where its value comes from.** Every entry above names `<data-root>`, and the agent substitutes one resolved absolute path for it before issuing the call. **The three operator stores are `<data-root>/trips/`, `<data-root>/people/` and `<data-root>/groups/`** — three children of one root, which is what they already are. **The only thing that changes here is how that root is named: no store moves, and nothing in this section relocates, copies or deletes operator data.**
+
+The root's value is held in one **operator-config pointer**: a single-line file at `${HOME}/.travel-planner/data-root` holding one absolute path and nothing else. It sits **outside the engine directory**, so an engine update cannot destroy it, and **outside any workspace**, so it is not per-project. Its path is carried literally on the `data-root-pointer:` line of every consumer's header block, byte-identical in every consumer, so a consumer can resolve the root without this file being in context.
+
+**Reading the pointer costs no new grant, and its spelling follows the grants a file already holds** rather than being fixed at one tool. Use the `Read` tool wherever the consuming file grants it — `/trip`, `/trip-new`, `/trip-record` and `/trip-decommission` all do. `/trip-publish` **denies `Read`** deliberately, being the narrow publish surface, and grants `Bash(grep:*)`; there the spelling is `grep -h '' "${HOME}/.travel-planner/data-root"`. **No verb's grants widen for this** (`ADR-007` §2, bound 2). One spelling for all five is not available and the reason is `/trip-new`, which grants `Read` and no `grep` at all — so a `grep`-everywhere rule would have to widen it, and a rule that reads with what each file already holds does not.
 
 **The placeholder predicate — stated once, field-general.** A field whose **trimmed value begins with `[` and ends with `]` is a placeholder**, never an answer. It is applied by name to `**Current mode:**`, to `- **Primary destination:**`, and to any field a later slice adds. A placeholder is tested **by value**. **A missing line is a different condition — malformed — and is never the same branch** (`ADR-007` §2, bound 6, both halves).
 
-**The gate ladder**, strictly ordered. **G1 and G2 bind all five commands** — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish` and `/trip-decommission`. G3 and G4 bind any invocation operating on an **existing** trip. G5–G7 are per-verb. G8 is post-resolution.
+**The gate ladder**, strictly ordered. **`G0-root` runs before everything else and binds every command unconditionally**, the one verb declaring depth `G0` included. It is deliberately **not** a numbered depth: `G0` already means *this verb needs no trip*, and folding root resolution into that scale would collide with that meaning and break the `contract-depth` equality below. **G1 and G2 bind all five commands** — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish` and `/trip-decommission`. G3 and G4 bind any invocation operating on an **existing** trip. G5–G7 are per-verb. G8 is post-resolution.
 
-- **G1 — listing trustworthiness.** `trips/README.md` is the only tracked file under `trips/`, so a healthy repo always lists it. **`README.md` must appear as an exact trimmed line of E1** — an exact line, not a substring, because a substring test also matches a trip directory whose name contains `README.md`. Absent → **STOP**: say plainly that the trip listing could not be read, name `trips/` as the directory that could not be listed, and **do not conclude that no trip exists — that conclusion is forbidden here.** An empty or error-shaped block is not evidence of an empty `trips/`. The `.gitignore` invariant the canary rests on (`trips/*` plus `!trips/README.md`) is itself guarded by `scripts/test-publish-guard.sh` **group K**.
+- **`G0-root` — resolve the data root, and establish that it is not the engine.** Read the pointer at `${HOME}/.travel-planner/data-root` by the rule above. Every terminal arm below is a **STOP** that names what could not be established and the remedy, and none of them asserts anything about trip content: **the pointer file is absent** → STOP naming that literal path and saying the engine is installed but not yet configured, the fix being to write the absolute path of the trip data home into it; **the pointer is empty, or holds more than one non-blank line, or holds a path that is not absolute** → STOP naming the path of the pointer and the single-absolute-path shape it requires; **the value is not a readable directory** → STOP naming **both** the value read **and** the pointer file it was read from, because either one of the two can be the thing that is wrong and a message naming one of them sends half the operators to the wrong file; **the value is the engine's own directory, or any path inside it** → STOP naming both paths and the pointer, and saying that the engine ships an empty store skeleton rather than an operator store. The engine's own directory is `${CLAUDE_SKILL_DIR}/../..`, which substitutes in a consumer's body and is therefore available as a value to compare against. **This last arm is the one that cannot be delegated to a canary, and the reason is measured:** `trips/README.md`, `people/README.md` and `groups/README.md` are **tracked**, so every installed copy of the engine carries all three store directories holding exactly one file — against which E1 succeeds, G1's canary **passes**, and G2 reads a population of `0` and takes its `0` branch. The ladder then tells the operator, cleanly and with every gate green behind it, that they have no trips. **A canary can only discriminate a listing; it cannot discriminate a root** — so the root is asserted here, by comparing it, and nowhere else. Where no arm above stops, resolution proceeds to G1 and `trip.data_root` carries the resolved path.
+- **G1 — listing trustworthiness.** A data home carries `trips/README.md` as its **listing canary**, so a healthy one always lists it. **`README.md` must appear as an exact trimmed line of E1** — an exact line, not a substring, because a substring test also matches a trip directory whose name contains `README.md`. Absent → **STOP**: say plainly that the trip listing could not be read, name `<data-root>/trips/` as the directory that could not be listed **and `<data-root>/trips/README.md` as the canary the data home must carry**, give copying the engine's own `trips/README.md` into place as the fix, and **do not conclude that no trip exists — that conclusion is forbidden here.** An empty or error-shaped result is not evidence of an empty `trips/`. The canary's origin is the engine's own tracked skeleton, and the `.gitignore` invariant that keeps it tracked there (`trips/*` plus `!trips/README.md`) is itself guarded by `scripts/test-publish-guard.sh` **group K**. **The canary establishes that the listing is trustworthy and nothing else** — it is present in the engine's skeleton too, so it cannot tell one root from another; that is `G0-root`'s job and it has already run.
 - **G2 — trip population.** `trips[]` is **the lines of E1 minus the `README.md` line** — derived from E1, never from E2. Three terminal branches: **`0`** → name `/trip-new` as the way to create one, and **STOP**; **`1`** → that trip resolves; **`many`** → list each with its destination and mode from E2 and **ask which**, never guessing and never picking the most recently modified. **Where `--trip <slug>` was supplied it constrains the outcome rather than hinting at it: no member resolves unless it is the one named.** That rule is stated once, here, rather than inside each branch — the same constraint holds at every population, so no branch carries a copy of it to drift out of agreement with the others. Three outcomes: **exactly one member matches, case-folded** → that member resolves without asking, whatever the population; **more than one matches** → **STOP**, naming the supplied value and the members it matched; **none matches** → **STOP**, naming the supplied value and listing the members observed — unless `trips[]` is empty, where the **`0`** branch's own message and remedy already say everything a listing could. **Falling through to a branch is forbidden here**, and preventing it is what the rule is for: on a population of **`1`** the fall-through resolves the trip that is present while the user named a different one — the user named a trip and was silently given another, with no gate observing the conflict — and on **`many`** it re-asks a question the user has already answered. A `--trip` that cannot be honoured is a conflict the gate **did** observe, so it is typed as a STOP rather than reconciled into a resolution. `--trip <slug>` is a **contract-level token every command accepts and no verb may consume**, reserved here so adding it later is not an edit to five files. G2's dispositions are **declared per command, not improvised per file**, by `population-role`: **`RESOLVE`** is the default and the role of four commands, taking the three branches and the `--trip` rule exactly as written; **`CREATE`** is **`/trip-new` alone, the single declared exception** — it takes **no disposition from G2**, neither a branch nor the `--trip` rule, because `trips[]` is a collision set, `0` is its normal path, `many` is not an ask, and a `--trip` naming a slug no member carries is its ordinary input rather than a conflict. **That exception is bounded to G2's dispositions and reaches nothing else in this section:** a `CREATE` consumer carries the same header block, the same per-verb requirement table and the same `contract-depth` equality as every other consumer.
 - **G3 — context integrity.** The resolved trip's path prefix must appear in E2. Absent → **STOP**: say that the trip's `trip-context.md` is missing or unreadable, and name the path. **This is the malformed condition, and it is never the same branch as any placeholder condition** (`ADR-007` §2, bound 6, second half).
 - **G4 — lifecycle.** The `**Lifecycle:**` value for the resolved prefix, carried by E2's third alternation arm as a line in `trip-context.md`. Yields **`trip.lifecycle` ∈ {`ACTIVE`, `ARCHIVED`}**, and **an absent `**Lifecycle:**` line defaults to `ACTIVE`.** G4 does not itself stop: **an `ARCHIVED` trip does not resolve as active for any verb that does not declare `lifecycle: ARCHIVED` or `lifecycle: ANY`** in G7's table, and the disposition comes from that table. **Binding constraint: `templates/trip-context.template.md` must never ship a `Lifecycle:` placeholder.** The moment the field ships bracketed, bound 6 binds it and this default inverts from *absent ⇒ ACTIVE* to *absent ⇒ malformed*; absence is a legitimate default here only because no placeholder masks it.
@@ -340,7 +354,8 @@ E2  !`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Li
 | `trip.resolution` | `RESOLVED` \| `STOPPED` |
 | `trip.stop_gate` | the gate id that stopped, when `STOPPED` |
 | `trip.slug` | the directory name **exactly as E1 spelled it** |
-| `trip.path` | `trips/<slug>` |
+| `trip.data_root` | the absolute path `G0-root` resolved from the pointer |
+| `trip.path` | `<data-root>/trips/<slug>` |
 | `trip.lifecycle` | `ACTIVE` \| `ARCHIVED` |
 | `trip.mode` | one of the five \| `UNSET` — never a guess |
 | `trip.destination` | the value \| `UNDECIDED` |
@@ -348,12 +363,13 @@ E2  !`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Li
 
 **Every STOP is typed** with the gate id that produced it, in `trip.stop_gate`. **The stop-message rule:** a STOP **names what could not be established and the remedy**, and **never asserts a conclusion about trip state that the gate did not observe.** "Nothing is published, so there is nothing to take offline" is the shape this rule forbids — a conclusion about publication state derived from a directory listing that may have failed.
 
-**How a command consumes this.** A command file carries the evidence prefix, then a fixed contract header block, then its verb-specific text. The header block's first line is the **citation line**, byte-identical across all five files:
+**How a command consumes this.** A command file carries the evidence prefix, then a fixed contract header block, then its verb-specific text. The header block's first line is the **citation line**, byte-identical across all five files, and its `data-root-pointer:` line is byte-identical across all five for the same reason: it is the one literal a consumer must hold before it can read anything at all, so it cannot be left to a file the consumer has not yet resolved a way to open:
 
 ```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: <G0-G8, the deepest gate this file runs>
 population-role: <RESOLVE or CREATE>
+data-root-pointer: ${HOME}/.travel-planner/data-root
 <the per-verb requirement table: verb · lifecycle · mode · destination · depth>
 ```
 
@@ -367,7 +383,7 @@ population-role: <RESOLVE or CREATE>
 | `/trip-publish` | `G8` | `RESOLVE` | `E1 E2` | its repo-wide listing verb declares depth `G0` on its own row — that verb needs no trip |
 | `/trip-decommission` | `G8` | `RESOLVE` | `E1 E2` | its reopen verb declares `lifecycle: ARCHIVED` |
 
-Duplicating the evidence blocks and the citation line is **forced by the platform** — the `!` mechanism fires only in a command file's own body and there is no include directive — so it is made safe by assertion rather than avoided. **No normative text is duplicated anywhere**, and the bytes that are duplicated are machine-asserted byte-identical on every push.
+Duplicating the evidence entries, the citation line and the `data-root-pointer:` line is **forced by the platform** — there is no include directive at either surface, so a consumer cannot reference this list and must carry it — so it is made safe by assertion rather than avoided. That was true when the entries were `!` pre-execution blocks and it is true now that they are agent-run reads: what changed is the carrier, not the absence of an include. **No normative text is duplicated anywhere**, and the bytes that are duplicated are machine-asserted byte-identical on every push.
 
 ---
 
@@ -568,7 +584,8 @@ One writer per block. A writer not named for a block does not write it — not "
 ```
 travel-planner/
 ├── CLAUDE.md                 ← you are here
-├── .claude/commands/         ← the slash commands — the addressable surface (ADR-007)
+├── skills/                   ← the five trip verbs — the addressable surface (ADR-007)
+│   └── <verb>/SKILL.md            ← one directory per verb; the directory name IS the verb
 ├── agents/                   ← agent behavioral definitions (the knowledge base)
 │   ├── 00-enrichment.md
 │   ├── 01-activities.md
@@ -615,3 +632,31 @@ travel-planner/
             ├── validation-report.md
             └── [destination]-travel-site.html   ← bespoke, Claude-generated
 ```
+
+### Verb body size — the threshold, its source, and the recorded overages
+
+**The budget is at most 500 lines of body, and the number is not this repository's.** It comes from the
+published skill-authoring guidance that the `SKILL.md` format belongs to — an external source this
+repo does not own and cannot change — and it is written down here because an acceptance criterion
+graded against a figure no reader can find in the corpus is not gradeable. Nothing in this
+repository enforces it; it is a budget, recorded so an overage is a decision rather than an
+accident.
+
+**Four of the five verbs exceed it and one does not, so the overage is a property of the four that
+exceed rather than of the format.** Each is recorded with its reason. *Body lines* excludes the
+frontmatter block, which is what the budget is about; every figure is measured at `b89b367`:
+
+| Verb | Body lines | Over the budget by | Why it is retained at this size |
+|---|---|---|---|
+| `trip-record` | 2,859 | ~5.7× | measured at `b89b367`. The widest verb surface in the engine — the person, group, traveller, fact, event and log verbs all live here. A reduction at this ratio is a rewrite, not a trim |
+| `trip` | 1,120 | ~2.2× | measured at `b89b367`. The entry point, carrying every dispatching verb and the agent roster each one reads |
+| `trip-decommission` | 653 | ~1.3× | measured at `b89b367`. Three lifecycle verbs whose ordering is load-bearing and stated in full |
+| `trip-publish` | 553 | ~1.1× | measured at `b89b367`. The publish surface, whose refusals and their reasons are the bulk of it |
+| `trip-new` | 468 | — | measured at `b89b367`. Inside the budget, untouched |
+
+**No body content is reduced in the format conversion, deliberately.** Two constraints make the
+reduction a separate change rather than a cheap one to fold in here. A verb must behave identically
+to its pre-conversion form, demonstrated per verb — and a rewrite of the largest body makes that
+demonstration unfalsifiable, because a behavioural difference could no longer be attributed to the
+format change. And the prose-tone rewrite of these same files is separately scoped, so reducing
+them here would duplicate that scope and guarantee the collision it was sequenced to avoid.

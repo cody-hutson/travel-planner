@@ -1,9 +1,10 @@
 ---
+name: trip-record
 description: Record what you know about a trip — traveler profiles, third-party needs, and the enrichment reconcile; the destination and the mode, the party, trip facts, constraints and bookings, and the per-trip publish repo name; per-event status and the session log; link or unlink a traveler to a durable person record, promote one of their fields into it, or erase a person outright. Writes the trip's own files; never publishes. Full verb list in reference/command-reference.md
 argument-hint: profile|person|travelers|destination|mode|group|fact ...
 disable-model-invocation: true
 allowed-tools: Bash(ls:*), Bash(grep:*), Bash(date:*), Read, Write, Edit, Task
-disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
 # /trip-record
@@ -12,6 +13,28 @@ disallowed-tools: [Bash(scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*
 
 The verb is the one the user typed. Nothing in this file supplies a verb they did not type, and
 nothing in it reads the wording of the request to decide one.
+
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. That holds when this verb's directory is a link placed beside the engine: the
+harness names the link, and `..` is resolved after the link is followed, so the path still lands
+in the engine — read it as the kernel does, never by collapsing the text. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
+
+**A script's own data reads are a different question from where the script is, and rooting its
+path does not answer it.** Where a verb's invocation section tells you where to stand when you run
+it, that instruction is about the working directory the script resolves its own store against, and
+it stands unchanged.
+
+**The bare spelling of a path inside prose is deliberate and is not a defect to repair.** A path in
+a document the agent reads is returned as text — there is no include directive at either surface —
+so rooting it there would buy no mechanism while putting an unexpanded variable in front of every
+human reader. The rooted spelling belongs where a path reaches a tool as written: the frontmatter
+grants and the fenced invocations.
 
 **The frontmatter above, and what it is held for.** Each grant is held for a use a section below
 names, per `ADR-007` §2 bound 2. **Two of them are the file's own**, and their set is closed by the
@@ -72,13 +95,18 @@ it is named in the adding slice's own design, and the addition is a union: no en
 no entry is narrowed. `description` may be widened to name a later slice's verb class; it may not
 be narrowed.
 
-## Trips in this repo
+**Resolve the data root before you read anything.** `CLAUDE.md` § *Resolving a trip*, gate `G0-root`,
+using the `data-root-pointer:` path carried in this file's contract header below. Then **run each entry
+below as a tool call**, substituting the resolved root for `<data-root>`. They are not pre-execution
+blocks and nothing has run ahead of you: an entry yields no evidence until you issue it.
 
-!`ls -1 "${CLAUDE_PROJECT_DIR}/trips" 2>&1`
+## Trips in your data home
+
+`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
 
 ## Trip records
 
-!`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "${CLAUDE_PROJECT_DIR}/trips"/*/trip-context.md 2>&1`
+`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
 
 ## Contract header
 
@@ -86,6 +114,7 @@ be narrowed.
 Contract: CLAUDE.md § Resolving a trip
 contract-depth: G8
 population-role: RESOLVE
+data-root-pointer: ${HOME}/.travel-planner/data-root
 ```
 
 | verb | lifecycle | mode | destination | depth |
@@ -204,11 +233,14 @@ and it takes exactly this shape:
 **Three hazards, and each is a silent failure rather than a loud one.** They come from how the
 conformance guard reads this file, not from taste.
 
-1. **The evidence-block counter counts every line in the whole file that begins with the
-   pre-execution marker `` !` ``, and grades that count as an equality against the declared depth
-   — in both directions.** No slice adds a pre-execution block, and **no slice writes a line
-   beginning with that marker anywhere in this file**, including inside a fenced example. A surplus
-   block is a tool grant with no function and an unconditional red check on push.
+1. **The evidence-entry counter counts every line in the whole file that begins with the
+   canonical entries' own leading marker — today `` `{ ``, derived by the guard from the charter
+   rather than written into it — and grades that count as an equality against the declared depth,
+   in both directions.** No slice adds an evidence entry, and **no slice writes a line beginning
+   with that marker anywhere in this file**, including inside a fenced example. A surplus entry is
+   a tool grant with no function and an unconditional red check on push. The marker moved when the
+   `!` pre-execution carrier was retired for these reads; it is derived, so it will move again the
+   same way if the charter changes it.
 2. **The depth cell is read at field index 5 of a pipe-split row.** A sixth column moves it, the
    guard then finds no row carrying a depth and reports the requirement table **absent**, and with
    no rows found `contract-depth` goes unchecked in both directions. **The table stays exactly five
@@ -999,11 +1031,11 @@ would be a different request type with its own command and its own permissions.
 
 ## mode <MODE>
 
-**Reads:** `trips/<slug>/trip-context.md` — the `## Mode` block, read before it is written because `Current mode` and `Mode notes` are replaced in one act, standing rule 2 confines the `Edit` to those lines, and the outgoing `Mode notes` is echoed before it is overwritten. It does **not** re-read that file to learn the trip's mode or its destination: the record block above already carries both by value, and re-deriving them is what § *What the blocks above are* forbids. It performs no read to obtain the mode value set — `CLAUDE.md` § *Modes* is auto-loaded and already in context, so consulting it is not a read this verb makes. Dispatches no agent.
+**Reads:** `trips/<slug>/trip-context.md` — the `## Mode` block, read before it is written because `Current mode` and `Mode notes` are replaced in one act, standing rule 2 confines the `Edit` to those lines, and the outgoing `Mode notes` is echoed before it is overwritten. It does **not** re-read that file to learn the trip's mode or its destination: the record block above already carries both by value, and re-deriving them is what § *What the blocks above are* forbids. It performs no read to obtain the mode value set — `CLAUDE.md` § *Modes* is in context when this repository is the workspace and is opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` when the engine is installed elsewhere — the one read the installed form adds (`CLAUDE.md` § *Resolving a trip*). Dispatches no agent.
 
 **Argument.** One whitespace-delimited token, ASCII-case-folded, matched by **exact string
-equality** against the mode values in the first column of `CLAUDE.md` § *Modes*, read live from the
-table already in context. That set is **not written into this file** and **not counted** — the same
+equality** against the mode values in the first column of `CLAUDE.md` § *Modes*, read live from that
+table — in context when this repository is the workspace, otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`. That set is **not written into this file** and **not counted** — the same
 discipline § *Selecting the verb* applies to this command's own verb set, and it is what keeps a
 mode a later release adds from needing an edit here. A token matching nothing is **this verb's own
 refusal**: render the token verbatim, render the set read live, and stop. **No near-match, no *"did
@@ -1380,7 +1412,7 @@ what they want, name `/trip-decommission` and stop.
 
 ## event <id> <state>
 
-**Reads:** `trips/<slug>/outputs/event-status.md` — the row `<id>` names, read **before** it is written because that file is persist-mutable: the read is what locates the one row, supplies its outgoing `Status` for the echo, and makes the never-regenerate shape below checkable rather than merely asserted; `reference/data-model.md` — § *The Per-Event Status Model*, read at invocation for the transitions it names and for the table shape this section cites instead of rendering. Reads `trips/<slug>/trip-context.md` not at all — `## Locked Elements` is the trip-level human summary and `/trip-record fact`'s, and reading it here would give an event's status a second source. It performs no read to obtain the status vocabulary: `CLAUDE.md` § *Key Rules* is auto-loaded and already in context, so consulting it is not a read this verb makes. Dispatches no agent.
+**Reads:** `trips/<slug>/outputs/event-status.md` — the row `<id>` names, read **before** it is written because that file is persist-mutable: the read is what locates the one row, supplies its outgoing `Status` for the echo, and makes the never-regenerate shape below checkable rather than merely asserted; `reference/data-model.md` — § *The Per-Event Status Model*, read at invocation for the transitions it names and for the table shape this section cites instead of rendering. Reads `trips/<slug>/trip-context.md` not at all — `## Locked Elements` is the trip-level human summary and `/trip-record fact`'s, and reading it here would give an event's status a second source. It performs no read to obtain the status vocabulary: `CLAUDE.md` § *Key Rules* is in context when this repository is the workspace and is opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` when the engine is installed elsewhere — the one read the installed form adds (`CLAUDE.md` § *Resolving a trip*). Dispatches no agent.
 
 The per-event status verb. It changes the `Status` cell of one named row of
 `trips/<slug>/outputs/event-status.md` and recomputes that row's derived needs-booking cell. It
@@ -1417,7 +1449,8 @@ ID is declared **opaque**, so folding it could collide two distinct keys. Being 
 the day, and this verb does not touch that column.
 
 **`<state>` is ASCII-case-folded and matched by exact string equality against the per-event status
-vocabulary `CLAUDE.md` § *Key Rules* fixes**, read live from the text already in context. That
+vocabulary `CLAUDE.md` § *Key Rules* fixes**, read live from that text — in context when this
+repository is the workspace, otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`. That
 vocabulary is **not written into this file** and **not counted** — the same discipline § *Selecting
 the verb* applies to this command's own verb set, and it is what keeps a status a later release adds
 from needing an edit here. A token matching nothing is **this verb's own refusal**: render the token
@@ -1561,7 +1594,7 @@ and whose destination is undecided reaches it and runs.
 
 ## log
 
-**Reads:** `trips/<slug>/trip-log.md` — read **before** it is written, to confirm the target is the trip's log and to locate the append point at its end; the read never decides the entry's content, which comes from the session, and it never re-opens a prior entry. Reads `trips/<slug>/trip-context.md` not at all — a constraint the session surfaced belongs to that file and is `/trip-record fact`'s, and reading it here would let the log become a second source for a fact whose reasoning is the only part it carries. Reads `trips/<slug>/outputs/event-status.md` not at all — an event's status is `/trip-record event`'s. It performs no read to obtain the entry's structure or its scale: `CLAUDE.md` § *trip-log.md* and § *Ending a session* are auto-loaded and already in context, so consulting them is not a read this verb makes. Dispatches no agent.
+**Reads:** `trips/<slug>/trip-log.md` — read **before** it is written, to confirm the target is the trip's log and to locate the append point at its end; the read never decides the entry's content, which comes from the session, and it never re-opens a prior entry. Reads `trips/<slug>/trip-context.md` not at all — a constraint the session surfaced belongs to that file and is `/trip-record fact`'s, and reading it here would let the log become a second source for a fact whose reasoning is the only part it carries. Reads `trips/<slug>/outputs/event-status.md` not at all — an event's status is `/trip-record event`'s. It performs no read to obtain the entry's structure or its scale: `CLAUDE.md` § *trip-log.md* and § *Ending a session* are in context when this repository is the workspace and are opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` when the engine is installed elsewhere — the one read the installed form adds (`CLAUDE.md` § *Resolving a trip*). Dispatches no agent.
 
 The session-entry verb. It appends one entry to `trips/<slug>/trip-log.md` — the file § *Session
 Protocol* makes the session bridge — and does nothing else.
@@ -1608,7 +1641,8 @@ widening is stated in the standing clause where it binds every verb, not asserte
 
 - **The entry structure is `CLAUDE.md` § *trip-log.md*'s and is not restated here** — the same
   discipline `profile` applies to the intake template's questions. That section is the authority on
-  its own fields, read live from the text already in context.
+  its own fields, read live from that text — in context when this repository is the workspace,
+  otherwise opened at `${CLAUDE_SKILL_DIR}/../../CLAUDE.md`.
 - **The entry's scale is § *Ending a session*'s:** a quick edit gets a one-liner, a planning session
   gets the full register. That section's remaining disposition — skipping the log — **is not
   reachable here**, because the verb was typed and the decision to log is therefore already made.
@@ -2298,7 +2332,7 @@ enrichment pass will say about the source file* below.
 the argument grammar rather than a policy: there is nowhere to type a set.
 
 **Store root** resolves by `reference/data-model.md`'s two-step rule — the trip root's own store
-where that directory exists, otherwise the repo root's — read from that section and never restated
+where that directory exists, otherwise the data root's — read from that section and never restated
 here, because a second copy of a resolution rule is a second source that goes stale silently.
 
 ### Identity — the display name is this file's own answered `Name`

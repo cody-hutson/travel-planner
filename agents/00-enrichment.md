@@ -343,7 +343,7 @@ Trigger"), which sanctions exactly this behavior:
   well as of the record. The term is resolved from the title line of
   `trips/<slug>/trip-context.md` — refined upward by that file's derived departure month
   where one is later in the same year — and this needs **no new read**: the reads are
-  declared by the verbs that dispatch this role, `.claude/commands/trip-record.md`
+  declared by the verbs that dispatch this role, `skills/trip-record/SKILL.md`
   §§ `## person <name>` and `## travelers`, each naming that path among the reconciler's
   reads, the whole file and no block restriction. Reading a further line of an
   already-declared read widens nothing. `reference/data-model.md` § *The reference month
@@ -455,7 +455,7 @@ Trigger"), which sanctions exactly this behavior:
   traveler's file; you only detect and report the change.
 
 **The divergence report is a `###` partition inside that block, and the partition is
-load-bearing rather than cosmetic.** `.claude/commands/trip-record.md` renders this
+load-bearing rather than cosmetic.** `skills/trip-record/SKILL.md` renders this
 block and **names the next verb by signal class**, over a closed set: a changed **need**
 and a changed **desire** each name `/trip replan`; a changed **journey facet** is
 reported with no command named; a `PROFILE MISSING` names `/trip-record profile <name>`.

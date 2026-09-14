@@ -414,9 +414,9 @@ fi
 
 # INT-4 — CIAC-7, observable in one run: no command file is selected, and the count that
 # makes that meaningful is non-zero (asserted at AR1 above, not assumed here).
-AR_NCMD="$(printf '%s\n' "$AR_SEL" | awk -F'\t' 'NF>1 && $1!="EXCLUDED" && $1!="UNMATCHED" {print $3}' | grep -c '^\.claude/commands/')"
+AR_NCMD="$(printf '%s\n' "$AR_SEL" | awk -F'\t' 'NF>1 && $1!="EXCLUDED" && $1!="UNMATCHED" {print $3}' | grep -c '^skills/')"
 if [ "$AR_NCMD" -eq 0 ]; then
-  PASS "AR2: 0 of the $AR_NSEL selected files are .claude/commands/*.md — an upstream schema this repo does not own is out of the gate's selection set, and the selector still selected $AR_NSEL other files"
+  PASS "AR2: 0 of the $AR_NSEL selected files are skills/*/SKILL.md — an upstream schema this repo does not own is out of the gate's selection set, and the selector still selected $AR_NSEL other files"
 else
   FAIL "AR2: $AR_NCMD command file(s) reached the selector"
 fi
@@ -1630,7 +1630,7 @@ fi
 # Without it the naive `bullets >= 1` trigger selects two trips whose Locked Elements
 # name booked FLIGHTS and traveler dates rather than placed itinerary events — seeding
 # either would mint a status row for an event the itinerary never placed, which
-# .claude/commands/trip-record.md probe 2 names as the inverse of the ghost row the
+# skills/trip-record/SKILL.md probe 2 names as the inverse of the ghost row the
 # model forbids. PS-N below asserts that those two false positives are real rather than
 # asserted, so the limb is measured rather than trusted.
 #
@@ -1995,7 +1995,7 @@ else
   fi
 
   while IFS= read -r t; do
-    [ -n "$t" ] && ps_dne "LS3: $t names Locked Elements and has reached no synthesis at all, so it sits outside this group's observable population. Its bullets name booked flights and traveler dates rather than placed itinerary events, and a status row for an event the itinerary never placed is the inverse of the ghost row .claude/commands/trip-record.md forbids. That bound is SEMANTIC and belongs to the seed's own text; this path-shaped selector does not decide it and does not claim to"
+    [ -n "$t" ] && ps_dne "LS3: $t names Locked Elements and has reached no synthesis at all, so it sits outside this group's observable population. Its bullets name booked flights and traveler dates rather than placed itinerary events, and a status row for an event the itinerary never placed is the inverse of the ghost row skills/trip-record/SKILL.md forbids. That bound is SEMANTIC and belongs to the seed's own text; this path-shaped selector does not decide it and does not claim to"
   done <<EOF
 $(printf '%s\n' $PS_PRE)
 EOF
@@ -3209,6 +3209,244 @@ else
   FAIL "CTL-PUB2: the exclusion probe matched a file outside .publish/ ($PUB_NEG) — the exclusion is over-broad and CTL-PUB1 proves nothing"
 fi
 
+# ── The data-root seam: --root keeps the corpus, --data-root takes the population.
+#
+# WHY THESE ARMS EXIST. `/trip schema` composes `validate-artifacts.sh --scope dir
+# trips/<slug>` and, before the seam, appended `--root <trip.data_root>` — and `--root`
+# also rooted the schema corpus, which an operator's data home by construction does not
+# hold. Measured on a healthy trip: X2 on the architecture document, then every artifact
+# graded UNKNOWN with a spurious A2 apiece — nineteen false findings on a trip with nothing
+# wrong with it, rc=1 — while every required check stayed green, because nothing here ever
+# ran the validator with its two roots in two places. The seam that fixed it (`--data-root`,
+# mirroring publish-trip-site.sh's) then shipped graded by nothing: the blind spot that let
+# the defect through covered the remedy too. These arms close that loop.
+#
+# THE SHAPE IS test-publish-guard.sh's L14, applied to this script's seam: fixture integrity
+# graded FIRST, then the SAME trip, the SAME corpus and the SAME invocation, differing ONLY
+# in the data root — so a verdict change is attributable to the root and to nothing else.
+# Beyond L14's pair, three arms this seam owes that L14's does not: the PRE-FIX composition
+# is re-run on the same fixture and must STILL reproduce the defect, so the skeleton arm's
+# failure can be told apart from the conflation's; an unresolvable data root must be refused
+# loudly rather than fallen back from; and the second spelling must be the same seam. No
+# data and two roots in one flag are different facts, and each has its own shape here: the
+# skeleton is X2 naming the SCOPE with nothing selected; the conflation is X2 naming the
+# ARCHITECTURE DOCUMENT with the whole trip selected and one spurious A2 per healthy
+# artifact — the common shape, the one an operator actually hits, because every example
+# trip's files declare `artifact:`.
+#
+# THREE ROOTS, and what each carries:
+#   DR_ENGINE  mk_root's corpus and witnesses — the installed engine — PLUS a one-file DECOY
+#              at the trip's own path. Without the decoy an engine-root fallback would find
+#              the same nothing the skeleton holds, and the skeleton arm could not tell a
+#              fallback from a correct refusal; with it, any read that resolves the
+#              population against the engine reports selected=1 and goes red.
+#   DR_DATA    the operator's home: trips/README.md and the trip — this commit's own
+#              examples/data-architecture-demo copied in, the trip the defect was measured
+#              on — plus ONE declared-arm WITNESS: a byte-identical copy of one of its
+#              artifacts at a path no schema pattern claims. The path arm selects the rest
+#              by pattern alone; only the declared arm can select the witness, and only by
+#              reading its frontmatter FROM THE DATA ROOT. It is the one of the four reads
+#              the seam re-pointed that a faithful trips/<slug> fixture would otherwise
+#              leave ungraded.
+#   DR_SKEL    trips/README.md and nothing else — exactly what the installed engine ships
+#              under trips/, and exactly the state an installed engine is in before it is
+#              told where the operator's data lives.
+#
+# Neither data root carries a corpus. That is the installed shape, not an omission.
+DR_SRC="examples/data-architecture-demo"
+DR_TRIP="trips/ctl-dataroot"
+DR_ENGINE="$WORK/dr_engine"; DR_DATA="$WORK/dr_data"; DR_SKEL="$WORK/dr_skeleton"
+DR_NOROOT="$WORK/dr_no_such_root"
+DR_SRC_OK=0; DR_ART1=""; DR_WITNESS=""; DR_N=0; DR_DECOY_N=0; DR_SKEL_N=0
+DR_PAT_WIT=0; DR_PAT_ART=0; DR_FX_OK=1; DR_FX_WHY=""
+DR_A_OUT=""; DR_A_RC=0; DR_A_SEL=0; DR_A_VAL=0; DR_A_SKP=0; DR_A_FIND=0; DR_A_VAC=0; DR_A_DECL=0; DR_A_PATH=0
+DR_B_OUT=""; DR_B_RC=0; DR_B_SEL=0; DR_B_A2=0; DR_B_X2SCOPE=0
+DR_C_OUT=""; DR_C_RC=0; DR_C_SEL=0; DR_C_A2=0; DR_C_X2DOC=0; DR_C_X2SCOPE=0
+DR_D_OUT=""; DR_D_RC=0; DR_D_SEL=0; DR_D_MSG=0
+DR_E_OUT=""; DR_E_RC=0; DR_E_SAME=0; DR_E_ANCHOR=0; DR_C_SHAPE=0; DR_C_ANCHOR=0
+
+# dr_declares <file> — rc 0 when the file opens with a frontmatter block carrying an
+# `artifact:` key before the block closes. A read of the fixture's own bytes, independent of
+# the selector under test, so the count built on it is a denominator the arms are graded
+# AGAINST rather than one the subject produced.
+dr_declares() {
+  awk 'NR == 1 && $0 != "---" { exit 1 }
+       NR > 1 && $0 == "---"  { exit 1 }
+       NR > 1 && /^artifact:/ { found = 1; exit }
+       END { exit found ? 0 : 1 }' "$1"
+}
+dr_count_declaring() {   # dr_count_declaring <root> <dir> -> count on stdout
+  local n=0 f
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    dr_declares "$1/$f" && n=$((n+1))
+  done <<EOF
+$(cd "$1" && find "$2" -type f 2>/dev/null | LC_ALL=C sort)
+EOF
+  printf '%s' "$n"
+}
+dr_first_declaring() {   # dr_first_declaring <root> <dir> -> the first such path in C order
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if dr_declares "$1/$f"; then printf '%s' "$f"; return 0; fi
+  done <<EOF
+$(cd "$1" && find "$2" -type f 2>/dev/null | LC_ALL=C sort)
+EOF
+  return 1
+}
+dr_pattern_hits() {   # dr_pattern_hits <path> -> how many corpus path-patterns claim it
+  local n=0 cid art p _
+  while IFS="$VA_TAB" read -r cid art p _; do
+    [ -n "$p" ] || continue
+    va_glob_match "$1" "$p" && n=$((n+1))
+  done <<EOF
+$(va_corpus_patterns "$DR_ENGINE")
+EOF
+  printf '%s' "$n"
+}
+dr_field() {   # dr_field <output> <line-key> <field> -> the integer, or 0 when the line is absent
+  local v
+  v="$(awk -v k="$2" -v f="$3" '$1 == k { for (i = 2; i <= NF; i++) if (index($i, f "=") == 1) { print substr($i, length(f) + 2); exit } }' <<<"$1")"
+  printf '%s' "${v:-0}"
+}
+
+mk_root "$DR_ENGINE"
+mkdir -p "$DR_DATA/trips" "$DR_SKEL/trips"
+cp "$ROOT/trips/README.md" "$DR_DATA/trips/README.md"
+cp "$ROOT/trips/README.md" "$DR_SKEL/trips/README.md"
+if [ -d "$ROOT/$DR_SRC" ]; then
+  DR_SRC_OK=1
+  cp -R "$ROOT/$DR_SRC" "$DR_DATA/$DR_TRIP"
+  DR_ART1="$(dr_first_declaring "$DR_DATA" "$DR_TRIP")"
+fi
+if [ -n "$DR_ART1" ]; then
+  # The witness: the same bytes at a path no pattern claims, so selection can only come
+  # from the declared arm's read. The decoy: the same bytes at the same relative path under
+  # the ENGINE root, so an engine-resolving fallback finds one file rather than none.
+  DR_WITNESS="$DR_TRIP/drafts/${DR_ART1##*/}"
+  mkdir -p "$DR_DATA/$DR_TRIP/drafts" "$DR_ENGINE/${DR_ART1%/*}"
+  cp "$DR_DATA/$DR_ART1" "$DR_DATA/$DR_WITNESS"
+  cp "$DR_DATA/$DR_ART1" "$DR_ENGINE/$DR_ART1"
+  DR_PAT_WIT="$(dr_pattern_hits "$DR_WITNESS")"
+  DR_PAT_ART="$(dr_pattern_hits "$DR_ART1")"
+fi
+DR_N="$(dr_count_declaring "$DR_DATA" "$DR_TRIP")"
+DR_DECOY_N="$(cd "$DR_ENGINE" && find "$DR_TRIP" -type f 2>/dev/null | wc -l | tr -d ' ')"
+DR_SKEL_N="$(cd "$DR_SKEL" && find trips -type f 2>/dev/null | wc -l | tr -d ' ')"
+
+# CTL-DATAROOT1 — fixture integrity, graded FIRST. Without it the arms below prove nothing:
+# a clean run through the seam is only about the SEAM if the corpus is genuinely absent
+# under the data root and present under the engine; a refusal from the skeleton is only
+# about the ROOT if the trip is genuinely present under one data root and absent under the
+# other; and the witness only grades the declared arm if no pattern could have claimed it.
+# Each limb is named in the FAIL so a broken fixture says which claim it broke.
+[ "$DR_SRC_OK" -eq 1 ]                                    || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY source-trip-absent($DR_SRC)"; }
+[ -n "$DR_ART1" ]                                         || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY no-artifact-declaring-file-in-source"; }
+[ "$DR_N" -ge 2 ]                                         || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY declaring-count=$DR_N(need>=2)"; }
+[ -f "$DR_ENGINE/$VA_ARCH_DOC" ] && [ -d "$DR_ENGINE/$VA_SCHEMA_DIR" ] \
+                                                          || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY engine-lacks-corpus"; }
+[ ! -e "$DR_DATA/reference" ] && [ ! -e "$DR_SKEL/reference" ] \
+                                                          || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY a-data-root-carries-a-corpus"; }
+[ -d "$DR_DATA/$DR_TRIP" ]                                || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY trip-absent-under-data-root"; }
+[ ! -e "$DR_SKEL/$DR_TRIP" ] && [ -d "$DR_SKEL/trips" ] && [ -f "$DR_SKEL/trips/README.md" ] && [ "$DR_SKEL_N" -eq 1 ] \
+                                                          || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY skeleton-not-README-only(files=$DR_SKEL_N)"; }
+[ -n "$DR_ART1" ] && [ -f "$DR_ENGINE/$DR_ART1" ] && [ "$DR_DECOY_N" -eq 1 ] \
+                                                          || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY engine-decoy-not-one-file(files=$DR_DECOY_N)"; }
+[ -n "$DR_WITNESS" ] && [ -f "$DR_DATA/$DR_WITNESS" ] && dr_declares "$DR_DATA/$DR_WITNESS" \
+                                                          || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY witness-absent-or-not-declaring"; }
+[ "$DR_PAT_WIT" -eq 0 ] && [ "$DR_PAT_ART" -ge 1 ]      || { DR_FX_OK=0; DR_FX_WHY="$DR_FX_WHY witness-pattern-hits=$DR_PAT_WIT(need 0) source-pattern-hits=$DR_PAT_ART(need>=1)"; }
+if [ "$DR_FX_OK" -eq 1 ]; then
+  PASS "CTL-DATAROOT1: fixture integrity — the corpus exists under the engine root and under neither data root; the trip ($DR_N files declaring artifact:, counted from the bytes) exists under one data root and not the other; the skeleton's trips/ is a real readable directory holding README.md alone, which is exactly the installed engine's shape; the engine root carries a one-file decoy at the trip's own path so a fallback has something to find; and the witness ${DR_WITNESS##*/} is claimed by $DR_PAT_WIT pattern(s) while its source ${DR_ART1##*/} is claimed by $DR_PAT_ART, so the declared arm is the only arm that can select it"
+else
+  FAIL "CTL-DATAROOT1: the data-root fixture is not set up as claimed —$DR_FX_WHY. CTL-DATAROOT2 through CTL-DATAROOT6 below would prove nothing"
+fi
+
+# The subject run, once; the arms read it. The same trip path, the same corpus root, the
+# same scope for every run below — only the data root moves.
+DR_A_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_A_RC=$?
+DR_A_SEL="$(dr_field "$DR_A_OUT" POPULATION selected)"
+DR_A_VAL="$(dr_field "$DR_A_OUT" PREDICATE validated)"
+DR_A_SKP="$(dr_field "$DR_A_OUT" PREDICATE skipped)"
+DR_A_FIND="$(printf '%s\n' "$DR_A_OUT" | grep -c '^FINDING ')"
+DR_A_VAC="$(printf '%s\n' "$DR_A_OUT" | grep -c '^VACUOUS ')"
+# The arm column of the selection under the seam — the fourth argument is the seam — read
+# so the witness's selection is attributed to the declared arm and not merely counted.
+DR_A_SELN="$(va_select "$DR_ENGINE" dir "$DR_TRIP" "$DR_DATA")"
+DR_A_DECL="$(awk -F'\t' -v w="$DR_WITNESS" '$4 == "declared" && $3 == w { n++ } END { print n + 0 }' <<<"$DR_A_SELN")"
+DR_A_PATH="$(awk -F'\t' '$4 == "path" { n++ } END { print n + 0 }' <<<"$DR_A_SELN")"
+if [ "$DR_A_RC" -eq 0 ] && [ "$DR_A_FIND" -eq 0 ] && [ "$DR_A_VAC" -eq 0 ] \
+   && [ "$DR_A_SEL" -eq "$DR_N" ] && [ "$DR_A_VAL" -ge 1 ] && [ $((DR_A_VAL + DR_A_SKP)) -eq "$DR_A_SEL" ] \
+   && [ "$DR_A_DECL" -eq 1 ]; then
+  PASS "CTL-DATAROOT2: MUST NOT FIRE — with the corpus under --root and the trip under --data-root, validation selects the whole trip ($DR_A_SEL of $DR_N declaring files: $DR_A_PATH by pattern, the witness by its own declaration read from the data root), validates $DR_A_VAL, skips $DR_A_SKP, emits no finding and returns rc=0. This is the invocation /trip schema now composes, and it is clean on the trip the defect was measured on"
+else
+  FAIL "CTL-DATAROOT2: MUST NOT FIRE — the seam did not deliver the trip clean (rc=$DR_A_RC findings=$DR_A_FIND vacuous=$DR_A_VAC selected=$DR_A_SEL of $DR_N validated=$DR_A_VAL skipped=$DR_A_SKP witness-by-declared-arm=$DR_A_DECL). Either the population, the scope, the content read or the declared arm's read is not following --data-root, and every other arm's verdict is then unattributable: $(printf '%s' "$DR_A_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
+fi
+
+# CTL-DATAROOT3 — MUST FIRE. The SAME engine root, the SAME trip path, the SAME scope, with
+# the data root pointed at the record-free skeleton.
+DR_B_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_SKEL" --scope dir "$DR_TRIP" 2>&1)"; DR_B_RC=$?
+DR_B_SEL="$(dr_field "$DR_B_OUT" POPULATION selected)"
+DR_B_A2="$(printf '%s\n' "$DR_B_OUT" | grep -c '^FINDING A2 ')"
+grep -q "^FINDING X2 $DR_TRIP the --scope dir target" <<<"$DR_B_OUT" && DR_B_X2SCOPE=1
+if [ "$DR_B_RC" -ne 0 ] && [ "$DR_B_X2SCOPE" -eq 1 ] && [ "$DR_B_SEL" -eq 0 ] && [ "$DR_B_A2" -eq 0 ] && [ "$DR_A_RC" -eq 0 ]; then
+  PASS "CTL-DATAROOT3: MUST FIRE — the SAME trip path, corpus and scope, with the data root pointed at a skeleton holding trips/README.md alone, fails closed (rc=$DR_B_RC) with X2 naming the SCOPE and selects nothing, while the identical run against the data root that holds the trip selected $DR_A_SEL and returned 0. The verdict follows the data root, so the seam is delivered rather than described — and this is the exact state an installed engine is in before it is told where the operator's trips live"
+else
+  FAIL "CTL-DATAROOT3: the verdict did not follow the data root (real rc=$DR_A_RC, skeleton rc=$DR_B_RC selected=$DR_B_SEL x2-on-scope=$DR_B_X2SCOPE a2=$DR_B_A2) — a fallback that ignores the seam reads the engine's own trips/ after install, here the one-file decoy, and reports a trip the operator's data root does not hold as validated"
+fi
+
+# CTL-DATAROOT4 — MUST FIRE. The PRE-FIX composition on the same fixture: --root aimed at
+# the data root and no --data-root at all. It must STILL reproduce the defect, in the
+# common shape — which is what lets CTL-DATAROOT3's refusal be read as 'no data' and not
+# as a second instance of this.
+DR_C_OUT="$(va_main --root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_C_RC=$?
+DR_C_SEL="$(dr_field "$DR_C_OUT" POPULATION selected)"
+DR_C_A2="$(printf '%s\n' "$DR_C_OUT" | grep -c '^FINDING A2 ')"
+grep -q "^FINDING X2 $VA_ARCH_DOC " <<<"$DR_C_OUT" && DR_C_X2DOC=1
+grep -q "^FINDING X2 $DR_TRIP the --scope dir target" <<<"$DR_C_OUT" && DR_C_X2SCOPE=1
+# Two limbs, graded separately so the FAIL names the true cause: the conflation's OWN shape
+# (what --root alone does), and the CROSS-ANCHOR to the seam run above (one spurious A2 per
+# artifact the seam validated clean, and none from the skeleton). When the seam's own run is
+# degenerate the anchor fails while the shape holds — and that FAIL must send the reader to
+# CTL-DATAROOT2 rather than blame a conflation that reproduced perfectly.
+DR_C_SHAPE=0; DR_C_ANCHOR=0
+[ "$DR_C_RC" -ne 0 ] && [ "$DR_C_X2DOC" -eq 1 ] && [ "$DR_C_X2SCOPE" -eq 0 ] && [ "$DR_C_SEL" -eq "$DR_N" ] && DR_C_SHAPE=1
+[ "$DR_A_VAL" -ge 1 ] && [ "$DR_C_A2" -eq "$DR_A_VAL" ] && [ "$DR_B_A2" -eq 0 ] && DR_C_ANCHOR=1
+if [ "$DR_C_SHAPE" -eq 1 ] && [ "$DR_C_ANCHOR" -eq 1 ]; then
+  PASS "CTL-DATAROOT4: MUST FIRE — the pre-fix composition (--root at the data root, no --data-root) still reproduces the defect in its common shape: X2 naming the architecture document, the whole trip selected ($DR_C_SEL, because --root alone moves the population too), and $DR_C_A2 spurious A2 — one per artifact the seam validated clean — rc=$DR_C_RC. Conflation and no-data are now two shapes with two verdicts, and a later change that folds the roots back into one flag turns CTL-DATAROOT2 red instead of shipping green"
+elif [ "$DR_C_SHAPE" -ne 1 ]; then
+  FAIL "CTL-DATAROOT4: the pre-fix composition did not reproduce the defect's common shape (rc=$DR_C_RC x2-on-architecture-doc=$DR_C_X2DOC x2-on-scope=$DR_C_X2SCOPE selected=$DR_C_SEL of $DR_N a2=$DR_C_A2) — either --root no longer moves the population, or the corpus is no longer read beneath --root, and in both cases CTL-DATAROOT3 can no longer be told apart from a conflation"
+else
+  FAIL "CTL-DATAROOT4: the conflation reproduced in shape (rc=$DR_C_RC x2-on-architecture-doc=$DR_C_X2DOC selected=$DR_C_SEL of $DR_N) but the cross-anchor to the seam did not hold (a2=$DR_C_A2 against $DR_A_VAL validated clean through the seam; skeleton a2=$DR_B_A2) — one spurious A2 per healthy artifact can only be pinned when the seam's own run is non-degenerate, so CTL-DATAROOT2 is the arm to read"
+fi
+
+# CTL-DATAROOT5 — the seam is validated once, loudly, and never silently fallen back from.
+DR_D_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_NOROOT" --scope dir "$DR_TRIP" 2>&1)"; DR_D_RC=$?
+DR_D_SEL="$(dr_field "$DR_D_OUT" POPULATION selected)"
+grep -q -- '--data-root is not a readable directory' <<<"$DR_D_OUT" && DR_D_MSG=1
+if [ ! -e "$DR_NOROOT" ] && [ "$DR_D_RC" -eq 2 ] && [ "$DR_D_MSG" -eq 1 ] && [ "$DR_D_SEL" -eq 0 ]; then
+  PASS "CTL-DATAROOT5: an unresolvable --data-root is refused at the seam (rc=2, the message naming the flag) with nothing selected. With the decoy standing in the engine root, a silent fall-back to --root would have reported selected=1 and rc=0 — the clean, confident, wrong answer the seam exists to remove — and this arm would be red"
+else
+  FAIL "CTL-DATAROOT5: a --data-root that does not resolve was not refused at the seam (path-absent=$([ ! -e "$DR_NOROOT" ] && echo yes || echo no) rc=$DR_D_RC message=$DR_D_MSG selected=$DR_D_SEL) — an operator error with a remedy has become a read of whatever the engine root holds"
+fi
+
+# CTL-DATAROOT6 — the second spelling. The seam is taught once and typed on two scripts,
+# so `--data-root=<dir>` must be the same seam and not a second, unknown flag.
+DR_E_OUT="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_E_RC=$?
+# Agreement is only evidence over a NON-DEGENERATE subject: two spellings that agree on a
+# broken seam prove nothing about the spelling, so the anchor to CTL-DATAROOT2 is graded as
+# its own limb and named in the FAIL.
+DR_E_SAME=0; DR_E_ANCHOR=0
+[ "$DR_E_RC" -eq "$DR_A_RC" ] && [ "$DR_E_OUT" = "$DR_A_OUT" ] && DR_E_SAME=1
+[ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && DR_E_ANCHOR=1
+if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
+  PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0) — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts"
+elif [ "$DR_E_SAME" -ne 1 ]; then
+  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form (rc=$DR_E_RC vs $DR_A_RC, outputs differ) — an operator who learned the seam on the sibling script types it here and is refused or misread"
+else
+  FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
+fi
+
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
 # measuring is not a control. Graded LAST, after every fixture above.
 if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-copy.md" ] \
@@ -3569,7 +3807,7 @@ EOF
     $0 == "## reopen" { inblk = 1; next }
     inblk && /^## / { inblk = 0 }
     inblk && index($0, "it never removes the line") { c++ }
-    END { print c + 0 }' "$ROOT/.claude/commands/trip-decommission.md")"
+    END { print c + 0 }' "$ROOT/skills/trip-decommission/SKILL.md")"
   if [ "$AF_REOPEN" -ge 1 ]; then
     PASS "AF14: the reopen verb's own section still states that it SETS the value and never removes the line — the freeze is lifted prospectively rather than by deleting the record that the trip was ever concluded"
   else
@@ -3721,7 +3959,7 @@ fi
 echo
 echo "ER — the erasure verb's declared contract, and what it must never acquire"
 
-ER_CMD="$ROOT/.claude/commands/trip-record.md"
+ER_CMD="$ROOT/skills/trip-record/SKILL.md"
 ER_ARCH="$ROOT/reference/data-architecture.md"
 ER_OK=1
 
@@ -4510,7 +4748,7 @@ echo "RL — reconcile-on-link: the survey's two witnesses"
 
 RL_RAN=0
 RL_DM="$ROOT/reference/data-model.md"
-RL_CMD="$ROOT/.claude/commands/trip-record.md"
+RL_CMD="$ROOT/skills/trip-record/SKILL.md"
 RL_PAIR_T="$ROOT/examples/people-library-demo/travelers/noor.md"
 RL_PAIR_R="$ROOT/examples/people-library-demo/people/psn-3c7e.md"
 RL_UNLINKED="$ROOT/examples/data-architecture-demo/travelers/alex.md"
@@ -4921,7 +5159,7 @@ echo "XT — extract: the fixture state the extraction verb is graded on"
 
 XT_RAN=0
 XT_DM="$ROOT/reference/data-model.md"
-XT_CMD="$ROOT/.claude/commands/trip-record.md"
+XT_CMD="$ROOT/skills/trip-record/SKILL.md"
 XT_A="$ROOT/examples/data-architecture-demo/travelers/alex.md"
 XT_B="$ROOT/examples/data-architecture-demo/travelers/robin.md"
 XT_DANA="$ROOT/examples/archived-trip-demo/travelers/dana.md"
@@ -6656,7 +6894,7 @@ DH_SCHEMA_REL="reference/schemas/person-record.md"
 DH_PERSON_FORM="$ROOT/templates/person-intake.template.md"
 DH_TRIP_FORM="$ROOT/templates/traveler-intake.template.md"
 DH_PEOPLE="$ROOT/people/README.md"
-DH_CMD="$ROOT/.claude/commands/trip-record.md"
+DH_CMD="$ROOT/skills/trip-record/SKILL.md"
 DH_HEADING="What a record does not hold"
 DH_VERB="history"
 
@@ -6754,7 +6992,7 @@ if [ "$DH_OK" -eq 1 ]; then
   DH_HAS_NOWRITE=0
   grep -q 'Writes nothing' <<<"$DH_VSECT" && DH_HAS_NOWRITE=1
   if [ "$DH_NSECT" -eq 0 ] || [ "$DH_NVSECT" -eq 0 ]; then
-    FAIL "DH3: an extraction came back EMPTY — people/README.md § *$DH_HEADING* yielded $DH_NSECT line(s) and the \`$DH_VERB\` verb section in .claude/commands/trip-record.md yielded $DH_NVSECT. Both limbs below would be graded over absent text, and a membership test over nothing reports absence rather than a missing section. A renamed heading is the likeliest cause and is a finding in its own right"
+    FAIL "DH3: an extraction came back EMPTY — people/README.md § *$DH_HEADING* yielded $DH_NSECT line(s) and the \`$DH_VERB\` verb section in skills/trip-record/SKILL.md yielded $DH_NVSECT. Both limbs below would be graded over absent text, and a membership test over nothing reports absence rather than a missing section. A renamed heading is the likeliest cause and is a finding in its own right"
   elif [ "$DH_HAS_HIST" -eq 1 ] && [ "$DH_HAS_NOWRITE" -eq 1 ]; then
     PASS "DH3: the exclusion is stated at both of its reader-facing homes — people/README.md § *$DH_HEADING* still enumerates trip history across $DH_NSECT extracted line(s), and the \`$DH_VERB\` verb section declares across $DH_NVSECT line(s) that it writes nothing. The pair is the point: the store says the record has no slot, and the verb that resolves the answer says it puts none back. Either one alone leaves the other's reader free to conclude the opposite"
   else

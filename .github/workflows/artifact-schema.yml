@@ -121,7 +121,7 @@ name: Artifact schema
 #   CI checkout contains no trip. Those artifacts are unreachable by construction, not by
 #   choice, and validating them is a separate local call site driving the same functions.
 #
-#   .claude/commands/*.md. Those files carry an upstream schema this repo does not own and
+#   skills/*/SKILL.md. Those files carry an upstream schema this repo does not own and
 #   cannot change. The artifact schema set does not claim them and this gate does not check
 #   them.
 #

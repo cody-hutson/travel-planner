@@ -22,7 +22,7 @@ type into the same free-form chat rather than anything the repo made addressable
 **Three of those four record the state this decision was taken against, not the state now, and they
 are left in that tense rather than reversed.** The first, third and fourth describe the repo as it
 then was, with no command file in it. The surface this decision authorises has since shipped: the
-commands live in `.claude/commands/`, and `CLAUDE.md`'s Step-1 table carries a Command cell on every
+commands live in `skills/`, and `CLAUDE.md`'s Step-1 table carries a Command cell on every
 row — naming a command or a declared exclusion — which is the coverage invariant §3 below makes
 checkable and
 which `scripts/test-command-taxonomy.sh` grades on every push. The second consequence is the standing
@@ -362,7 +362,7 @@ behalf. Excluding it means an agent-triggered `update` on an unconfirmed itinera
 bound requires a command's tool grant to be *"the minimum for its function"*: a command
 carrying the confirm capability exceeds the minimum for every function the surface has.
 The consequence is a constraint on the command surface rather than an omission from it —
-`.claude/commands/trip-publish.md` **must not** gain this invocation, because an EXCLUDED
+`skills/trip-publish/SKILL.md` **must not** gain this invocation, because an EXCLUDED
 row that names a command is a finding.
 
 The reason vocabulary is closed at five values — `ADR-007 §2`, `#330-disclosure`, `repo-creation`,

@@ -99,7 +99,7 @@ corpus rather than by reasoning about it, decided the replacement:
 | The trip-directory slug | **Rejected.** The slug form names a year by convention, but the creating verb's slug gate validates neither a year nor a shape that implies one, so a design resting on it rests on an unenforced convention — and extracting the year would be a scan of a free string. |
 | A logistics date bullet | **Rejected.** Carried by a minority of instances, in a shape the template does not declare and nothing governs. |
 | A frontmatter date key | **Rejected.** Absent by design rather than by oversight — the one date-shaped frontmatter key is optional and narrowed away from human-authored classes. |
-| **The title line's month and year** | **Selected.** `templates/trip-context.template.md` declares the slot, `CLAUDE.md` § *Write ownership* assigns the line to the trip-creating verb and then to `/trip-record`, and `.claude/commands/trip-record.md` § `## destination` states in its own words that a destination, a month and a year are the line's only variable content. It is the one candidate that is both **governed** and **has a writer**. |
+| **The title line's month and year** | **Selected.** `templates/trip-context.template.md` declares the slot, `CLAUDE.md` § *Write ownership* assigns the line to the trip-creating verb and then to `/trip-record`, and `skills/trip-record/SKILL.md` § `## destination` states in its own words that a destination, a month and a year are the line's only variable content. It is the one candidate that is both **governed** and **has a writer**. |
 
 ### The boundary month
 
@@ -338,7 +338,7 @@ written, the store git-ignored, and reverting the release merge restores prior b
 - `templates/trip-context.template.md` — declares the title line's shape, including the month and
   year slot the trip term is read from, and the ordering of the derived planning-day bullets that
   makes the departure day the trip's last.
-- `.claude/commands/trip-record.md` — § `## destination` states the title line's content model; the
+- `skills/trip-record/SKILL.md` — § `## destination` states the title line's content model; the
   person and travellers verbs declare the reads the reconciler performs, which is where the
   no-new-read claim in clause 1 is grounded. **This file is not edited by this record.**
 - `reference/data-architecture.md` — § 10's freeze declaration, which is why the frozen example tree

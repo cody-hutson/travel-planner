@@ -564,7 +564,7 @@ A mark's payload is **well-formed** iff it matches `^[0-9]{4}-(0[1-9]|1[0-2])$`.
 
 > **`T = Y_title-max(M_title, M_dep)`.**
 >
-> 1. **The title line.** Take the last four-digit year on `# Trip Context — …` **that a month name immediately precedes**, in full or three-letter form, together with that month. That pair is `Y_title-M_title`. The qualifier is the whole of the selection rule rather than a gloss on it: a later year on the line that no month name precedes — a parenthesised revision year, say — is passed over rather than taken, so a term is only ever composed from a month and a year that were written as a unit. The line's shape is declared by `templates/trip-context.template.md`, and `.claude/commands/trip-record.md` § `## destination` states that a destination, a month and a year are its only variable parts — so the month and the year are an owned, governed part of that line rather than incidental rendering.
+> 1. **The title line.** Take the last four-digit year on `# Trip Context — …` **that a month name immediately precedes**, in full or three-letter form, together with that month. That pair is `Y_title-M_title`. The qualifier is the whole of the selection rule rather than a gloss on it: a later year on the line that no month name precedes — a parenthesised revision year, say — is passed over rather than taken, so a term is only ever composed from a month and a year that were written as a unit. The line's shape is declared by `templates/trip-context.template.md`, and `skills/trip-record/SKILL.md` § `## destination` states that a destination, a month and a year are its only variable parts — so the month and the year are an owned, governed part of that line rather than incidental rendering.
 > 2. **Refine the month upward, within that same year only.** Where § *Effective Planning Days [DERIVED]* states a departure day whose month `M_dep` falls later in the year than `M_title`, the term takes `M_dep`.
 > 3. **No such pair on the title line → `T` does not resolve.** The non-resolving condition is the pair's absence, not the year's: a title line carrying a bare year that no month name precedes yields no term either, because step 1 never selects it. `R` is the clock. A value the clock alone would already have expired is still `EXPIRED` — that verdict needs no trip term. A value the clock would have **passed** composes the third state and is reported `HORIZON-UNCONFIRMED` where the field's `Horizon` axis is `required`: *a horizon that cannot be compared against the trip has not been shown to cover it.* **The degraded case prompts; it never passes silently.**
 
@@ -623,7 +623,7 @@ C21    2026-09  2026-12    —          2027-01    required    ANSWERED         
 
 **What the discriminating cases show.** `C1` is the card in one line — a passport valid through `2026-12`, a trip in `2027-04`, today `2026-09`: silent under the clock, expired against the trip. `C2` is the boundary month. `C7` shows the ordering comparison is not gated by the axis. `C11` is the unresolvable-term case failing closed. `C15` against `C16` is the disputed-window pair, agreeing on every column but `H` — one inside the window, one above it — and disagreeing on the verdict; `C17` straddles the window from below and **agrees** with `C15`, because a horizon *at* the reference month is already the boundary case, which is why the arm that grades this rule asserts *at least one* inside-versus-above pair rather than every straddling pair. `C19` is the overtaken clock, `C20` the clock landing inside the window, and `C21` the missing-departure-month residual. The rows that agree earn their place too: `C5` is the past-dated trip where `max` keeps the clock guarantee the window alone would have withdrawn, and `C8`–`C10`, `C13` and `C14` agree by construction because they are decided by the payload-shape and absent-mark clauses rather than by the reference month — which is itself the assertion that those clauses are orthogonal to the trip term.
 
-**No cycle, and no new read.** The resolution reads the title line and one `[DERIVED]` block of `trip-context.md`; neither is derived from a person record, and composition writes neither. The reads are already declared by the verbs that dispatch the reconciler — `.claude/commands/trip-record.md` §§ `## person <name>` and `## travelers`, each naming `trips/<slug>/trip-context.md` among its reads, the whole file and no block restriction — so reading a further line of an already-declared read widens nothing. **`.claude/commands/trip-record.md` § `## link` is deliberately not such a consumer** — that verb answers *which record*, not *is this record usable for this trip*, and it passes the clock; the divergence is designed and is stated at both surfaces.
+**No cycle, and no new read.** The resolution reads the title line and one `[DERIVED]` block of `trip-context.md`; neither is derived from a person record, and composition writes neither. The reads are already declared by the verbs that dispatch the reconciler — `skills/trip-record/SKILL.md` §§ `## person <name>` and `## travelers`, each naming `trips/<slug>/trip-context.md` among its reads, the whole file and no block restriction — so reading a further line of an already-declared read widens nothing. **`skills/trip-record/SKILL.md` § `## link` is deliberately not such a consumer** — that verb answers *which record*, not *is this record usable for this trip*, and it passes the clock; the divergence is designed and is stated at both surfaces.
 
 ### The bearer states — seven, and five need no store read
 
@@ -641,7 +641,13 @@ The reference is borne by the traveller file alone. **Five of the seven states a
 
 **L7 must not degrade L1.** An unreadable store leaves a trip carrying **no** reference entirely unaffected — no read is attempted, so there is nothing to fail. Without that clause the first unreadable store would break every trip in the working directory rather than the ones that reference a record.
 
-**Store-root resolution: `<trip-root>/people/` when that directory exists, otherwise `<repo-root>/people/`. Two steps, deterministic, terminating; no upward search.** The rule is forced by the store's own ignore boundary rather than chosen on style. `.gitignore` carries `/people/*` **rooted**, so the repo-root store does not exist in a fresh checkout: a fixture that fell through to it would resolve `RESOLVED` on an author's machine, where an operator store exists, and `DANGLING` in CI — **a witness whose verdict depends on the operator's private working directory is not a witness**, and a CI run would read operator data if any happened to be present. An upward search is rejected for a second reason: it is non-deterministic when both roots exist, which reintroduces exactly the order-dependence the next-but-one subsection forbids.
+**Store-root resolution: `<trip-root>/people/` when that directory exists, otherwise `<data-root>/people/`. Two steps, deterministic, terminating; no upward search.** Step 1 is unchanged and needs nothing new: `<trip-root>` is the resolution contract's own `trip.path`, which is `<data-root>/trips/<slug>`, so a per-trip store resolves off the same root transitively. Step 2 names the **data root** — the directory the operator's three stores are children of, resolved by `CLAUDE.md` § *Resolving a trip* gate `G0-root` — and **never the engine root**.
+
+The rule is forced rather than chosen on style, and its former justification was measurably wrong. It used to read: *`.gitignore` carries `/people/*` rooted, so the repo-root store does not exist in a fresh checkout.* Measured: `people/README.md` is **tracked** and re-included by `!/people/README.md`, so the directory **does** exist in a fresh checkout, holding exactly one file. The correct reason is stronger than the one it replaces, and it is the whole argument for naming the data root here:
+
+> The engine ships an **empty store skeleton** — one tracked `README.md` per store — which satisfies every presence and readability predicate a fallback can test while holding zero records. A step-2 fallback rooted at the engine therefore returns `RESOLVED` on the directory and `DANGLING` on every record, and for the publish guard it returns `UNDETERMINED`, which aborts the publish. **A witness whose verdict depends on which copy of the engine is on the path is not a witness** — and the original concern survives inside this one: a verdict that differs between an author's machine and CI is the same defect seen from one angle.
+
+An upward search is rejected for a second reason, unchanged: it is non-deterministic when both roots exist, which reintroduces exactly the order-dependence the next-but-one subsection forbids.
 
 **The eighth case has no bearer at all.** A derived-model entry with **no source file and no reference** is `EXCLUDED-BY-DESIGN` — neither file-less class receives a record or a bearer — decided with no store read, and it **must never be reported as `DANGLING`**: there is no reference to dangle. It is a row of the *entry* disposition table, not a cell of the lattice, and that placement is the point.
 
@@ -832,7 +838,7 @@ The chain in one line: **intake template → per-traveler source file (human) �
 
 **The lifecycle classes are defined once, in `reference/data-architecture.md` § *Lifecycle Classes*.** That document is the engine-wide home for the class set — `accumulate-append`, `rebuilt-each-synthesis`, `versioned`, `persist-mutable`, `output` — and for what each class means. **This section does not restate those definitions.** It records the two things the engine-wide document defers to this one: the **satisfaction layer's own class assignments**, and the derivation that produced `persist-mutable`.
 
-`CLAUDE.md` § *Output Versioning* cites the same home for the same set, in its § *Satisfaction-layer artifacts* subsection — which says in terms that it assigns and does not define. **The rest of that section still states the engine's default-and-exception model in its own words, and correctly so:** it is a live input, read by `reference/data-architecture.md` § *Lifecycle Classes*' own absence rule and by `.claude/commands/trip.md`'s `/trip research` agent-key derivation. One definition; this document cites it and restates nothing, and `CLAUDE.md` both cites it and states behaviour the engine reads back.
+`CLAUDE.md` § *Output Versioning* cites the same home for the same set, in its § *Satisfaction-layer artifacts* subsection — which says in terms that it assigns and does not define. **The rest of that section still states the engine's default-and-exception model in its own words, and correctly so:** it is a live input, read by `reference/data-architecture.md` § *Lifecycle Classes*' own absence rule and by `skills/trip/SKILL.md`'s `/trip research` agent-key derivation. One definition; this document cites it and restates nothing, and `CLAUDE.md` both cites it and states behaviour the engine reads back.
 
 The satisfaction artifacts take these classes:
 
@@ -1267,9 +1273,9 @@ silently, and nothing in CI resolves one.
 
 ### Filename correspondence is a theorem, not a rule to enforce
 
-The filename transform is stated once, in `.claude/commands/trip-new.md` § *Travelers — count and names* (the
+The filename transform is stated once, in `skills/trip-new/SKILL.md` § *Travelers — count and names* (the
 roster's `Traveler file` cell), and reused verbatim and attributed by
-`.claude/commands/trip-record.md` on both its profile-create and its roster-append paths:
+`skills/trip-record/SKILL.md` on both its profile-create and its roster-append paths:
 
 > lowercase the name, replace every run of characters outside `A-Za-z0-9._-` with a single `-`,
 > then trim leading and trailing `-`.
@@ -1279,7 +1285,7 @@ routes hand the saving to a person rather than to a command — the self-serve c
 hand-off — so `templates/traveler-intake.template.md` states the transform to the human executing
 each of them, once per route, in the *"How to use it"* block and in the assistant hand-off at the
 foot of the form. Those two are guidance for a human keystroke, not a second normative home: a
-change to the rule is an edit to `.claude/commands/trip-new.md` § *Travelers — count and names* and then to the four
+change to the rule is an edit to `skills/trip-new/SKILL.md` § *Travelers — count and names* and then to the four
 sites listed in this paragraph.
 
 Write `derive(P)` for that transform and `normalize(P)` for the two-step key above. Then for every
@@ -1304,9 +1310,9 @@ enforcement.** What needs stating is the complement — the four cases the equal
 > defect**: the reconciler reports the divergence and never repairs it by rewriting the roster.
 
 This records an authority the command surface already asserts rather than deciding a new one.
-`.claude/commands/trip-record.md` states that *"the denominator is the roster, never the
+`skills/trip-record/SKILL.md` states that *"the denominator is the roster, never the
 directory"* and that enrichment takes the `## Group` roster and `- **Total travelers:**` from
-`trip-context.md` as the party; `.claude/commands/trip-new.md` calls the roster *"the
+`trip-context.md` as the party; `skills/trip-new/SKILL.md` calls the roster *"the
 **denominator** for profile-gap detection"* with *"no second source for it"*.
 
 Two properties make it the only candidate that works, and neither is convenience. It is **total
@@ -1374,7 +1380,7 @@ intake to reject a reserved-key collision. Both intake commands are read-only in
 rather than editors of it, so C2 and C3 are enforced at the reconciler and the intake obligation is
 recorded here rather than dropped. **No intake command was changed by the release that landed this
 list** — the reserved-key hard stop at intake has not shipped, and a claim that it has should be
-read against `.claude/commands/trip-new.md` itself.
+read against `skills/trip-new/SKILL.md` itself.
 
 ---
 
