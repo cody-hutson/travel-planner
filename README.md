@@ -28,14 +28,14 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 
 ## Install
 
-The engine installs into [Claude Code](https://claude.com/claude-code) as a plugin. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the repository root carries a plugin manifest, and installing it is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and the verbs carry the planning flow with them: each names the engine's own [`CLAUDE.md`](CLAUDE.md) and opens it from where the engine is installed, so the flow does not depend on which folder is open. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
+The engine installs into [Claude Code](https://claude.com/claude-code) as five personal skills — one per trip verb — linked from a single engine directory. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the engine is cloned into Claude Code's own skills directory, and each verb is linked beside it under its own name, which is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and the verbs carry the planning flow with them: each names the engine's own [`CLAUDE.md`](CLAUDE.md) and opens it from where the engine is installed, so the flow does not depend on which folder is open. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
 
 ### Prerequisites
 
 **To plan a trip:**
 
 - [Claude Code](https://claude.com/claude-code) — desktop app or CLI
-- `git` — to acquire the engine. The clone below lands in the directory Claude Code loads plugins from, so acquiring it and installing it are one step
+- `git` — to acquire the engine. The clone below lands in the directory Claude Code reads personal skills from, so acquiring the engine and placing it are one step; linking the verbs is the other, and it is one line
 
 **To publish a trip site** (optional — only when you want to share a finished itinerary):
 
@@ -60,16 +60,37 @@ The gap is deliberate: the operating instructions make the lightest action that 
 git clone https://github.com/cody-hutson/travel-planner ~/.claude/skills/travel-planner
 ```
 
-**That clone is the install.** The checkout you just made *is* the installable unit: its root
-carries the plugin manifest at `.claude-plugin/plugin.json`, and each verb lives at
-`skills/<verb>/` beside the asset tree it reads, so nothing is copied and nothing is rearranged.
-Claude Code loads every plugin placed under `~/.claude/skills/` — one directory per plugin, the
-manifest at its root — when it next starts, and lists this one as `travel-planner@skills-dir`
-(`claude plugin list` shows it under *Skills-directory plugins*). That location is the harness's
-own: its `claude plugin init` scaffolds new plugins there and says so, which is why the clone
-above lands there directly rather than somewhere else first. **Installing is placing the
-directory, and updating is replacing it** — a `git pull` in that directory is the whole update
-path, and there is no separate install command to run.
+**Link the verbs.** The checkout you just made is the engine, and each verb lives inside it at
+`skills/<verb>/`, beside the asset tree it reads. What makes a verb reachable is a link to that
+directory placed beside the engine, under the verb's own name — one per verb, five in all.
+
+**macOS / Linux:**
+
+```bash
+for v in trip trip-new trip-record trip-publish trip-decommission; do ln -s ~/.claude/skills/travel-planner/skills/$v ~/.claude/skills/$v; done
+```
+
+**Windows** (`cmd`, no elevation needed):
+
+```bat
+for %v in (trip trip-new trip-record trip-publish trip-decommission) do mklink /J "%USERPROFILE%\.claude\skills\%v" "%USERPROFILE%\.claude\skills\travel-planner\skills\%v"
+```
+
+The Windows line is the documented-equivalent form — a directory junction where the line above
+makes a symbolic link — and **it has not yet been verified by a Windows user**. If it does not
+behave as the next paragraph describes, that report is the measurement this release is missing.
+
+**What the runtime does with those.** Claude Code treats each entry directly under
+`~/.claude/skills/` that holds a `SKILL.md` as a personal skill, named by the entry, and its Skills
+documentation states that such an entry may be a symlink to a directory elsewhere on disk: Claude
+Code reads `SKILL.md` from the link's target. So when it next starts, each verb appears under its
+own bare name — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish`, `/trip-decommission` — and
+runs from its real directory inside the engine, where every asset it names resolves beside it. The
+engine directory itself is **not** a skill: it carries no `SKILL.md` at its root, so the runtime
+ignores it, and it is there only to be linked into. Nothing is copied and nothing is rearranged.
+**Installing is placing the directory and linking the verbs; updating is a `git pull`** in the
+engine directory — the links name it by path and follow whatever it holds — and there is no
+separate install command to run.
 
 Then, wherever you work:
 
@@ -82,7 +103,7 @@ That is the whole of what installing buys. A verb used to resolve your trips thr
 folder happened to be open, so it appeared in every project and worked only in the checkout.
 Installed, the engine has a location of its own and finds your data through the pointer below.
 
-### Upgrading from the pre-plugin layout
+### Upgrading from the copied-command layout
 
 Skip this on a fresh install. It applies if you ran an earlier version and copied the verb files
 into Claude Code's user-scope command directory so they would be available outside the checkout —
@@ -136,12 +157,19 @@ Until it exists, every verb stops and says so, naming the file and this step. Th
 alternative is a verb that resolves *something*, finds a directory that happens to exist, and reports
 that you have no trips while your real ones sit elsewhere.
 
-**What uninstalling does to your data.** Removing the engine removes the engine's own directory and
-nothing else. This pointer lives outside it and survives. Your data lives outside it, at the path the
-pointer names, and survives — removing your trips means deleting that directory yourself, on purpose.
-Updating the engine replaces the engine's directory and touches neither. The `trips/`, `people/` and
-`groups/` directories that ship inside the engine are an empty skeleton carrying only a `README.md`
-each; they are not your store, and nothing ever writes one of your records into them.
+**What uninstalling does to your data.** Uninstalling is the install in reverse: remove the five
+verb links from `~/.claude/skills/` — each is a link, so removing it leaves the engine untouched —
+and then delete the engine directory, `~/.claude/skills/travel-planner`. Nothing else is involved.
+
+```bash
+for v in trip trip-new trip-record trip-publish trip-decommission; do rm ~/.claude/skills/$v; done   # the five links; on Windows, rmdir each junction
+```
+
+This pointer lives outside both and survives. Your data lives outside both, at the path the pointer
+names, and survives — removing your trips means deleting that directory yourself, on purpose.
+Updating the engine is a `git pull` in its directory and touches neither. The `trips/`, `people/`
+and `groups/` directories that ship inside the engine are an empty skeleton carrying only a
+`README.md` each; they are not your store, and nothing ever writes one of your records into them.
 
 Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person for this trip — each optionally pointing at that person's durable record in `people/`, which sits outside every trip and is read alongside the profile — and `outputs/` holds the agent artifacts — some accumulating across sessions, others rebuilt, versioned or persisted in place, each per its declared lifecycle class.
 
@@ -181,13 +209,15 @@ Your own profiles carry real personal detail, so they never leave your machine a
 
 **Confirm the engine is installed and reachable.** This is the check that matters, because
 reaching a verb from outside the engine's folder is the property installing it buys. From any
-directory that is not the checkout, start Claude Code and type `/`: the trip verbs offer
-themselves with tab-completion, and `/trip` with no verb reports where your trip stands. On a
-fresh install it says there are no trips yet and names `/trip-new`. If the verbs do not offer
-themselves at all, the engine is not installed; if they offer themselves but cannot find your
-trips, the data-root pointer above is what to check, and the verb names that file for you.
+directory that is not the engine's, start Claude Code and type `/`: the trip verbs offer
+themselves with tab-completion under their own names, and `/trip` with no verb reports where your
+trip stands. On a fresh install it says there are no trips yet and names `/trip-new`. If the verbs
+do not offer themselves at all, the links are missing or point at nothing — `ls -l ~/.claude/skills/`
+should list the five of them, each resolving into the engine; if they offer themselves but cannot
+find your trips, the data-root pointer above is what to check, and the verb names that file for you.
 
-**Confirm the checkout is intact.** A different question, and one to run inside the checkout:
+**Confirm the engine is intact.** A different question, and one to run inside the engine directory,
+`~/.claude/skills/travel-planner`:
 
 ```bash
 ls agents/        # 9 agent definitions

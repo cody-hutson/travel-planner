@@ -177,14 +177,17 @@ folder. Three things follow, and each is a decision rather than a restatement of
 3. **The checkout stops being the invocation surface.** Cloning remains how the engine is
    acquired; it stops being how the engine is used.
 
-**The home the conversion lands, named.** Verbs are discovered at
-`<plugin-root>/skills/<verb>/`. A nested `.claude/skills/<verb>/` form is **not discovered** by
-the runtime: both arms were placed on disk and verified present, and only the control appeared
-in the runtime's component inventory, so the absence is a measurement rather than a failed
-install. Under this engine's layout the plugin root is the **repository root**, so each
-converted verb's home is `skills/<verb>/` beside the asset tree it reads, and the asset tree
-does not move at all. An earlier planning document named the nested form; that path is
-**superseded by the measurement**, and this sentence is the record of it.
+**The home the conversion lands, named.** Verbs are discovered at `skills/<verb>/` beside the
+asset tree each one reads, and the asset tree does not move at all. A nested `.claude/skills/<verb>/`
+form is **not discovered** by the runtime — measured under the packaged form this record first
+shipped: both arms were placed on disk and verified present, and only the control appeared in the
+runtime's component inventory, so the absence is a measurement rather than a failed install.
+Discovery is by a **personal-skill link**: each verb's directory is linked into the harness's own
+skills directory under the verb's bare name, and the runtime resolves the link to its target — so
+`${CLAUDE_SKILL_DIR}` names the verb's real directory under the engine, and the engine root is the
+directory two levels above it. The engine directory itself carries no skill file at its root and is
+not a skill; it is the thing the links point into. An earlier planning document named the nested
+form; that path is **superseded by the measurement**, and this sentence is the record of it.
 
 **The invocation posture the conversion preserves.** Every verb carries
 `disable-model-invocation: true` today, and the conversion preserves it **unchanged in
@@ -397,12 +400,14 @@ store's root; separate pointers would buy nothing and cost three drift axes. No 
 
 Teardown, stated in the terms an operator needs before they uninstall anything:
 
-> **Removing the engine removes the engine directory and nothing else.** The pointer lives outside
-> it and survives. The data lives outside it, at the path the pointer names, and survives — removing
-> the data means deleting that directory yourself, deliberately. **An engine update replaces the
-> engine directory and touches neither.** The engine's own `trips/`, `people/` and `groups/` are a
-> tracked, record-free skeleton; they are not an operator store and nothing writes an operator record
-> into them, which is what gate `G0-root` exists to guarantee.
+> **Removing the engine removes the engine directory and the five verb links that point into it,
+> and nothing else.** The pointer lives outside both and survives. The data lives outside both, at
+> the path the pointer names, and survives — removing the data means deleting that directory
+> yourself, deliberately. **An engine update replaces the engine directory and touches neither**;
+> the links name that directory by path, so they resolve unchanged across an update. The engine's
+> own `trips/`, `people/` and `groups/` are a tracked, record-free skeleton; they are not an operator
+> store and nothing writes an operator record into them, which is what gate `G0-root` exists to
+> guarantee.
 
 This amendment reverses, narrows and re-opens nothing above, and it amends neither storage-home
 decision: each of those fixes its store at the root of the tree that holds it, which stays literally
@@ -480,12 +485,18 @@ finds a location rather than a search, and it re-frames the one row that would o
   whose output the verb reads, rather than as a block whose failure is fatal to the load.
 - **Q-4 / S-D** — answered by the amendment in § *Amendment slot* above; the same paragraph carries
   the teardown statement.
-- **Q-5 — settled for this release, and the row above is read accordingly.** The packaged form *is*
-  the distribution and update path: the repository root carries the plugin manifest, the engine is
-  installed by placing the checkout under the harness's plugin directory, where it is auto-loaded,
-  and an update is a `git pull` in place. `README.md` § *Install* is the operator-facing statement;
-  the install-documentation slice owns it. "Not read as settled" described the state before the
-  slices ran, and describes nothing now.
+- **Q-5 — settled for this release, and the row above is read accordingly.** The packaged form was
+  built first, and was found at the release gate to install every verb under a **namespaced** name:
+  the runtime prefixes each skill a package carries with the package's own name, and neither the
+  package declaration nor a verb's frontmatter removes the prefix — so the operator's requirement,
+  a bare `/trip` that works from any folder, was not met by it. On the operator's ruling it was
+  replaced by the **clone-and-link form**: the engine is cloned into the harness's skills directory
+  as a plain directory, and each verb's `skills/<verb>/` is linked beside it under the verb's own
+  name, so the verbs appear bare and nothing inside them changes. Distribution is that clone plus
+  the link step; an update is a `git pull` in the engine directory, which the links follow by path.
+  The packaged form is preserved here as a measured and rejected candidate, not deleted. `README.md`
+  § *Install* is the operator-facing statement; the install-documentation slice owns it. "Not read
+  as settled" described the state before the slices ran, and describes nothing now.
 
 One consequence of Q-1 and Q-3 together is stated here because no slice owns it alone. `CLAUDE.md`
 § *Resolving a trip* is loaded with the workspace, not with an installed engine, so a verb that
