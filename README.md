@@ -28,14 +28,14 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 
 ## Install
 
-The engine installs into [Claude Code](https://claude.com/claude-code) as a plugin. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the repository root carries a plugin manifest, and installing it is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and [`CLAUDE.md`](CLAUDE.md) drives the planning flow from wherever you are. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
+The engine installs into [Claude Code](https://claude.com/claude-code) as a plugin. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the repository root carries a plugin manifest, and installing it is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and the verbs carry the planning flow with them: each names the engine's own [`CLAUDE.md`](CLAUDE.md) and opens it from where the engine is installed, so the flow does not depend on which folder is open. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
 
 ### Prerequisites
 
 **To plan a trip:**
 
 - [Claude Code](https://claude.com/claude-code) — desktop app or CLI
-- `git` — to acquire the engine. Cloning is how you **get** it and not how you **use** it, so the install step below is not optional
+- `git` — to acquire the engine. The clone below lands in the directory Claude Code loads plugins from, so acquiring it and installing it are one step
 
 **To publish a trip site** (optional — only when you want to share a finished itinerary):
 
@@ -57,18 +57,19 @@ The gap is deliberate: the operating instructions make the lightest action that 
 **Acquire it.**
 
 ```bash
-git clone https://github.com/cody-hutson/travel-planner
-cd travel-planner
+git clone https://github.com/cody-hutson/travel-planner ~/.claude/skills/travel-planner
 ```
 
-**Install it into Claude Code.** The checkout you just made *is* the installable unit: its root
+**That clone is the install.** The checkout you just made *is* the installable unit: its root
 carries the plugin manifest at `.claude-plugin/plugin.json`, and each verb lives at
 `skills/<verb>/` beside the asset tree it reads, so nothing is copied and nothing is rearranged.
-Add that directory to Claude Code through its plugin surface. Claude Code's own plugin
-documentation carries the current form of the command; it is upstream-owned and deliberately not
-pinned here, because a command string copied into this file would be wrong the first time it
-moved. **Installing is placing the directory, and updating is replacing it** — a `git pull` in
-the checkout you installed from is the whole update path.
+Claude Code loads every plugin placed under `~/.claude/skills/` — one directory per plugin, the
+manifest at its root — when it next starts, and lists this one as `travel-planner@skills-dir`
+(`claude plugin list` shows it under *Skills-directory plugins*). That location is the harness's
+own: its `claude plugin init` scaffolds new plugins there and says so, which is why the clone
+above lands there directly rather than somewhere else first. **Installing is placing the
+directory, and updating is replacing it** — a `git pull` in that directory is the whole update
+path, and there is no separate install command to run.
 
 Then, wherever you work:
 
@@ -104,7 +105,7 @@ same verb that this repository already tracks, so the content lives in git histo
 in the file you are deleting:
 
 ```bash
-git log --all --oneline --name-only --diff-filter=D -- '*/trip*.md'   # the paths and revisions
+git log --all --oneline --name-only --no-renames --diff-filter=D -- '*/trip*.md'   # the paths and revisions
 git show <commit>:<path>                                             # print any one of them
 ```
 
@@ -124,9 +125,11 @@ mkdir -p ~/.travel-planner
 printf '%s\n' "$(pwd)" > ~/.travel-planner/data-root
 ```
 
-Run that from the checkout you just cloned and the pointer names that checkout, which is where
-`trips/`, `people/` and `groups/` already are — so nothing moves and nothing is copied. If you keep
-your trips somewhere else, put that absolute path in the file instead. The file holds **one absolute
+Run that from the directory that holds your trips. If you used an earlier version, that is the
+checkout you had before — `trips/`, `people/` and `groups/` are already there, so nothing moves and
+nothing is copied. If you are starting fresh, make a directory for them anywhere you like and run it
+there. Either way it is **not** the engine directory you just installed: removing or replacing the
+engine must never touch your data, which is the point of the pointer. The file holds **one absolute
 path and nothing else**.
 
 Until it exists, every verb stops and says so, naming the file and this step. That is deliberate: the
