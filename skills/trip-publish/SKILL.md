@@ -3,8 +3,8 @@ name: trip-publish
 description: Re-publish an already-public trip site after edits, or list what is published. The publish surface — never creates a repo, never rotates, never takes a site down, never publishes plaintext.
 argument-hint: update|list [--trip <slug>]
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh update:*), Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh list:*)
-disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh publish:*), Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh rotate:*), Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh unpublish:*), Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Read, Write, Edit, NotebookEdit]
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(test:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list:*)
+disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh publish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh rotate:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh unpublish:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh status:*), Bash(bash:*), Bash(sh:*), Read, Write, Edit, NotebookEdit]
 ---
 
 # /trip-publish
@@ -14,16 +14,14 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-tr
 The verb is the one the user typed. Nothing in this file supplies a verb they did not
 type, and nothing in it reads the wording of the request to decide one.
 
-**Engine root — where every path in this file resolves from.** This verb's directory is a link,
-placed beside the engine under the harness's skills directory, and the engine is its sibling — the
-directory named `travel-planner`. This engine's own assets — the agent prompts, the reference
-documents, the templates and the shell entry points — live under
-`${CLAUDE_SKILL_DIR}/../travel-planner`, which is the directory holding them whatever working
-directory you were invoked from. **Every engine path named anywhere in this file, its frontmatter
-included, and every engine path named inside any engine document you open from it, is
-repository-relative to that root and never to your working directory.** Resolve it against the root
-before you hand it to a tool: a bare relative path follows the session's working directory, and
-that directory is arbitrary. Operator trip data is a separate root and is named where it is used.
+**Engine root — where every path in this file resolves from.** This engine's own assets — the
+agent prompts, the reference documents, the templates and the shell entry points — live under
+`${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
+were invoked from. **Every engine path named anywhere in this file, its frontmatter included, and
+every engine path named inside any engine document you open from it, is repository-relative to
+that root and never to your working directory.** Resolve it against the root before you hand it to
+a tool: a bare relative path follows the session's working directory, and that directory is
+arbitrary. Operator trip data is a separate root and is named where it is used.
 
 **A script's own data reads are a different question from where the script is, and rooting its
 path does not answer it.** Where a verb's invocation section tells you where to stand when you run
@@ -491,7 +489,7 @@ Precondition → invocation → report. Nothing is invoked before every limb pas
 ### Invocation
 
 ```
-${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh update trips/<slug>
+${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update trips/<slug>
 ```
 
 with `<slug>` replaced by `trip.slug`. Run it from the repo root.
@@ -550,7 +548,7 @@ script emits them.
 ### Invocation
 
 ```
-${CLAUDE_SKILL_DIR}/../travel-planner/scripts/publish-trip-site.sh list
+${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list
 ```
 
 Run it from the repo root: the script scans `./trips/` and refuses elsewhere, and it takes

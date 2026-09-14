@@ -183,11 +183,9 @@ form is **not discovered** by the runtime — measured under the packaged form t
 shipped: both arms were placed on disk and verified present, and only the control appeared in the
 runtime's component inventory, so the absence is a measurement rather than a failed install.
 Discovery is by a **personal-skill link**: each verb's directory is linked into the harness's own
-skills directory under the verb's bare name, and the runtime reads `SKILL.md` through the link — but
-it substitutes `${CLAUDE_SKILL_DIR}` with the **link's** path, not the target's, measured from the
-operator's session transcripts, so the engine root is the link's sibling directory named
-`travel-planner`, spelled `${CLAUDE_SKILL_DIR}/../travel-planner`, and the engine directory's name is
-load-bearing. The engine directory itself carries no skill file at its root and is
+skills directory under the verb's bare name, and the runtime resolves the link to its target — so
+`${CLAUDE_SKILL_DIR}` names the verb's real directory under the engine, and the engine root is the
+directory two levels above it. The engine directory itself carries no skill file at its root and is
 not a skill; it is the thing the links point into. An earlier planning document named the nested
 form; that path is **superseded by the measurement**, and this sentence is the record of it.
 
@@ -467,26 +465,16 @@ the sentence above stays true: none of these questions is answered *here*. This 
 finds a location rather than a search, and it re-frames the one row that would otherwise mislead.
 
 - **Q-1 / S-A** — the second candidate, *state the root once, in prose, in each verb body*: the
-  **Engine root** paragraph that opens every `skills/<verb>/SKILL.md`, naming `${CLAUDE_SKILL_DIR}/../travel-planner`
+  **Engine root** paragraph that opens every `skills/<verb>/SKILL.md`, naming `${CLAUDE_SKILL_DIR}/../..`
   as the directory every engine path in that file and in any document opened from it resolves
-  against. The spelling is the link's **sibling**, not two levels above the verb, because the harness
-  substitutes `${CLAUDE_SKILL_DIR}` with the **link's** path under its skills directory rather than
-  the target's — measured from the operator's own session transcripts, where the substituted
-  paragraph resolved `../..` to the home directory — so under the documented install the engine is
-  always the directory named `travel-planner` beside the link, and that name is load-bearing.
-  The first candidate was rejected on the cost stated above — a rewrite of the asset tree is
+  against. The first candidate was rejected on the cost stated above — a rewrite of the asset tree is
   inert under this repository's resolution contract. The third was the solutioning pass's original
   headline, *documents resolve by position*, and driver 2 is its falsification: a bare reference
   follows the session's directory, not the base the runtime names, so the prose contract was
   selected on measurement rather than by comparison of costs.
-- **Q-2 / S-B** — the rooted spelling `${CLAUDE_SKILL_DIR}/../travel-planner/scripts/<name>` in every grant, permit
+- **Q-2 / S-B** — the rooted spelling `${CLAUDE_SKILL_DIR}/../../scripts/<name>` in every grant, permit
   and deny alike, one spelling per file **asserted** by the command-taxonomy guard, which grades the
-  permit set, the deny set and their vacuity. The engine-root segment takes the sibling spelling for
-  the reason the Q-1 bullet records: with the substituted value being the link's path, `../..` named
-  a directory holding no script, so every permit pointed at a missing path and every deny missed the
-  real one — the hub's headless arm on the shipped tip resolved every gate and was then refused by the
-  permission layer in every spelling — while `../travel-planner` is deterministic under the
-  documented install. The rationale — the alternatives compared and why the
+  permit set, the deny set and their vacuity. The rationale — the alternatives compared and why the
   harness-substituted variable won — is recorded in that slice's solutioning record and in the
   message of the commit that rooted the grants; this record carries the outcome, not the comparison.
 - **Q-3 / S-C** — the second candidate, *retire the blocks*: all nine pre-execution blocks are gone.

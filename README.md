@@ -62,10 +62,7 @@ git clone https://github.com/cody-hutson/travel-planner ~/.claude/skills/travel-
 
 **Link the verbs.** The checkout you just made is the engine, and each verb lives inside it at
 `skills/<verb>/`, beside the asset tree it reads. What makes a verb reachable is a link to that
-directory placed beside the engine, under the verb's own name — one per verb, five in all. **The
-engine directory's name is load-bearing:** each verb finds the engine from its own link as
-`../travel-planner`, so keep the clone at exactly that name — the command above already does —
-and do not rename the directory.
+directory placed beside the engine, under the verb's own name — one per verb, five in all.
 
 **macOS / Linux:**
 
@@ -88,11 +85,9 @@ behave as the next paragraph describes, that report is the measurement this rele
 documentation states that such an entry may be a symlink to a directory elsewhere on disk: Claude
 Code reads `SKILL.md` from the link's target. So when it next starts, each verb appears under its
 own bare name — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish`, `/trip-decommission` — and
-runs from the link: the runtime names the link's path as the verb's directory, not the target's,
-and the verb reaches every asset it names through the engine beside it, `../travel-planner` —
-which is why that directory name matters. The engine directory itself is **not** a skill: it
-carries no `SKILL.md` at its root, so the runtime ignores it, and it is there only to be linked
-into. Nothing is copied and nothing is rearranged.
+runs from its real directory inside the engine, where every asset it names resolves beside it. The
+engine directory itself is **not** a skill: it carries no `SKILL.md` at its root, so the runtime
+ignores it, and it is there only to be linked into. Nothing is copied and nothing is rearranged.
 **Installing is placing the directory and linking the verbs; updating is a `git pull`** in the
 engine directory — the links name it by path and follow whatever it holds — and there is no
 separate install command to run.
