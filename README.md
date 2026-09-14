@@ -85,7 +85,8 @@ behave as the next paragraph describes, that report is the measurement this rele
 documentation states that such an entry may be a symlink to a directory elsewhere on disk: Claude
 Code reads `SKILL.md` from the link's target. So when it next starts, each verb appears under its
 own bare name — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish`, `/trip-decommission` — and
-runs from its real directory inside the engine, where every asset it names resolves beside it. The
+finds every asset it names two levels above its link — the link is followed before `..` is
+resolved, so that path is the engine directory. The
 engine directory itself is **not** a skill: it carries no `SKILL.md` at its root, so the runtime
 ignores it, and it is there only to be linked into. Nothing is copied and nothing is rearranged.
 **Installing is placing the directory and linking the verbs; updating is a `git pull`** in the

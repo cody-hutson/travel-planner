@@ -52,4 +52,4 @@ options weighed, the decision, and the consequences.
 | [ADR-017](ADR-017-derived-trip-history.md) | Derived trip history — a resolution rather than a record, a match the operator makes, and a suggestion that is never written | Accepted |
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Accepted |
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Proposed |
-| [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Proposed |
+| [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |

@@ -3,6 +3,66 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.32.0] — 2026-09-14 — Trip engine ships as an installable capability
+
+The engine is installed, not opened. Until this release the five trip verbs were files in the
+checkout's own command directory, resolving their trip store through whichever project happened to
+be open; copied to user scope they appeared in every project and worked in none, and the README said
+there was nothing to install. Now each verb is a personal skill linked from one engine directory:
+clone the repository under Claude Code's skills directory, link the five verb directories beside it,
+and `/trip`, `/trip-new`, `/trip-record`, `/trip-publish` and `/trip-decommission` are reachable
+from any working directory under their own names. Updating is a `git pull` in that directory;
+uninstalling removes the links and the directory and touches nothing of yours.
+
+**Engine assets resolve from wherever the engine is installed.** Every tool grant a verb carries is
+rooted through the harness-substituted skill directory — sixteen patterns, four permitting and twelve
+denying, one spelling per file and asserted by the command-taxonomy guard, which now grades the deny
+half of a declaration as well as the permit half. Documents the agent reads follow an engine-root
+contract stated once in each verb body. The nine pre-execution blocks are gone: a non-zero exit in
+one of them aborts the skill load, and on a fresh clone with zero trips the second evidence block
+exits non-zero by design, so four of the five verbs were dead on a fresh install until the blocks
+were retired and their evidence moved into ordinary tool calls after the data root is resolved.
+
+**Operator data resolves through one pointer, and nothing moved.** A single-line file at
+`~/.travel-planner/data-root` names the directory that holds `trips/`, `people/` and `groups/`;
+the resolution ladder's first gate reads it, refuses a pointer that names the engine itself, and
+stops with the file's path and the fix when it is absent. Both granted scripts gained a
+`--data-root` seam. The one the schema verb calls conflated the data root with the repository root
+and reported nineteen spurious findings on a healthy trip — every per-card review and every required
+check passed it green, because the guard that would have caught it walks one script. The fix is
+graded by six new arms, each shown to go red under a one-line mutation of the seam before it was
+trusted. The three data stores keep their homes; the release diff touches zero paths under them.
+
+**The architecture is recorded, with what was falsified.** A decision record states that the engine
+is an installable capability and carries the evidence that killed the previous attempt: the harness
+substitutes a closed set of variables a project cannot extend, so an introduced one survives into the
+command text as a live expansion and the block is refused. It also records that a bare relative
+reference follows the session's directory rather than the file that contains it, and — measured at
+this release's own gate — that a plugin's skills are always namespaced, which is why the packaged
+form was built, installed, found to name the verbs `travel-planner:trip`, and replaced by the
+linked-skill form before merge. The record names where each mechanism's selection lives, and one
+cost no slice owns alone: a verb that consults the engine's `CLAUDE.md` from an installed engine
+opens it at the engine root, one read per invocation the workspace form never made.
+
+**The legacy surface is retired.** The command directory is gone from the repository; the README
+carries a per-file removal step for user-scope copies and a recovery recipe that finds them in
+history (with rename detection off, without which it found nothing). The sweep found, as of this
+release's head, twelve references to the old directory still standing, every one of them documentary.
+
+**Known gaps, carried rather than hidden.** The Windows link line (`mklink /J`) is the documented
+equivalent of the macOS/Linux one and has not been verified by a Windows user. The corpus-hygiene
+suite's exit rule ignores its vacuous counter, the same class fixed in the resolution suite this
+release. The artifact-schema suite has a latent unreachable branch under `set -u`. None is a verb
+defect; each is logged.
+
+**What this release learned about itself.** Nine times, a control was pointed at a population that
+did not contain the thing at risk: a consumer group that empties without failing, a guard that walks
+one of two scripts, a link check over references none of which were links, a git listing blind to an
+unstaged file. Each read green. And the one property that decided the install form — the name a
+verb is typed under — was the one thing no probe measured, through four stages of review, until the
+operator typed it. The passes that caught the rest were the ones built on evidence the subject could
+only produce by running; the sitting that caught the last was the operator running it.
+
 ## [0.31.0] — 2026-09-13 — Privacy control integrity
 
 A guard that aborts on a leak is worth exactly what its weakest arm covers, and this release is about

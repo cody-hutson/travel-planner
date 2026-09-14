@@ -1,6 +1,6 @@
 # ADR-021: The trip engine is an installable capability, not a folder you open
 
-- **Status:** Proposed (2026-09-12)
+- **Status:** Accepted (2026-09-14)
 - **Deciders:** repo maintainer
 - **Driving work:** the architecture slice of the *trip engine ships as an installable
   capability* milestone. This record is that milestone's **head decision gate**, in the shape
@@ -183,9 +183,11 @@ form is **not discovered** by the runtime — measured under the packaged form t
 shipped: both arms were placed on disk and verified present, and only the control appeared in the
 runtime's component inventory, so the absence is a measurement rather than a failed install.
 Discovery is by a **personal-skill link**: each verb's directory is linked into the harness's own
-skills directory under the verb's bare name, and the runtime resolves the link to its target — so
-`${CLAUDE_SKILL_DIR}` names the verb's real directory under the engine, and the engine root is the
-directory two levels above it. The engine directory itself carries no skill file at its root and is
+skills directory under the verb's bare name, and the runtime reads the skill from the link's target
+while naming the **link** as `${CLAUDE_SKILL_DIR}` — measured across every linked invocation. The
+engine root is still the directory two levels above it, because the kernel resolves `..` after it
+has followed the link: `<link>/../..` names the engine, and a lexical collapse of the same text
+names the home directory, which is why the verbs say to read it as the kernel does. The engine directory itself carries no skill file at its root and is
 not a skill; it is the thing the links point into. An earlier planning document named the nested
 form; that path is **superseded by the measurement**, and this sentence is the record of it.
 
