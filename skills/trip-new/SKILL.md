@@ -16,7 +16,9 @@ has actually stated, records who is going, and hands off to traveler intake.
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
 `${CLAUDE_SKILL_DIR}/../..`, which is the directory holding them whatever working directory you
-were invoked from. **Every engine path named anywhere in this file, its frontmatter included, and
+were invoked from. That holds when this verb's directory is a link placed beside the engine: the
+harness names the link, and `..` is resolved after the link is followed, so the path still lands
+in the engine — read it as the kernel does, never by collapsing the text. **Every engine path named anywhere in this file, its frontmatter included, and
 every engine path named inside any engine document you open from it, is repository-relative to
 that root and never to your working directory.** Resolve it against the root before you hand it to
 a tool: a bare relative path follows the session's working directory, and that directory is
