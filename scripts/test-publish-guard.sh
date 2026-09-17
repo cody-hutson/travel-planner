@@ -3603,7 +3603,9 @@ r6_c13_cols() { # <file>
        }' "$1"
 }
 
-# Project the event table to <key TAB placement> using the field names the CONTRACT gave.
+# Project the event table to <key TAB the named fields>, using the field names the CONTRACT
+# gave. The fields are whatever the caller asks for — the placement tuple is one caller's
+# choice and not this function's subject, which is what lets a second bucket reuse it whole.
 # A field the header does not carry projects as <<ABSENT>> rather than being skipped: a
 # dropped column must not quietly degrade into an equal comparison.
 r6_project() { # <file> <comma-separated field names>
@@ -3653,15 +3655,20 @@ r6_mutate() { # <file> <key> <column name> <new cell value>
     { print }' "$1"
 }
 
-# The keyed set difference, computed exactly as the bucket table states it.
-r6_diff() { # <before-projection> <after-projection> <ADDED|DROPPED|MOVED>
+# The keyed set difference, computed exactly as the bucket table states it. MOVED and
+# CHANGED select the same condition — key on both sides, projected value differs — because
+# the table states them as two disjoint TUPLES over one key rather than as two algorithms.
+# The caller names the bucket it is asserting, so a call site reads as the bucket it grades
+# instead of asserting STATUS-CHANGED under the word MOVED, which is the conflation the arms
+# below exist to refute.
+r6_diff() { # <before-projection> <after-projection> <ADDED|DROPPED|MOVED|CHANGED>
   awk -F'\t' -v want="$3" '
     NR == FNR { b[$1] = $2; seenb[$1] = 1; next }
     { a[$1] = $2; seena[$1] = 1 }
     END {
       for (k in seena) {
         if (!(k in seenb)) { if (want == "ADDED") print k; continue }
-        if (b[k] != a[k] && want == "MOVED") print k
+        if (b[k] != a[k] && (want == "MOVED" || want == "CHANGED")) print k
       }
       if (want == "DROPPED") for (k in seenb) if (!(k in seena)) print k
     }' "$1" "$2"
