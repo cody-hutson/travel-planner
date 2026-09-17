@@ -34,14 +34,25 @@ by invitation only.
 
 A release is a change like any other: it follows *Making a change* above, start to
 finish. The one part worth writing down is where the CHANGELOG entry goes, because
-the obvious place — a quick commit to `main` once the release has merged — is the one
-place the gates cannot see it.
+the obvious alternatives to the release branch both fail — for different reasons, and
+only one of them is about the gates.
+
+**A commit pushed straight to `main` after the release merges is not gate-covered.**
+The required checks are a *merge* gate, not a *branch* gate — see
+[SECURITY.md](SECURITY.md), *Branch Protection Posture* — so a direct push does not
+fail them; they are simply never required, and the result reads as a clean `main`
+rather than as a bypass. That argument rules out the direct push, and only the direct
+push. A follow-up pull request that carries the entry is gate-covered like any other
+pull request, so this reason does not rule that one out — step 6 gives the reason that
+does.
 
 **The `## [X.Y.Z]` CHANGELOG entry is a release-branch artifact.** Write it on the
 release branch so it lands through the release PR with everything else. The entry
 carries no merge SHA and no tag, so nothing in it has to wait for the merge.
 
-1. Branch from `main` — `release/vX.Y.Z-<short-slug>`.
+1. Branch from `main` — `release/<short-slug>`, with no version in the name. The
+   version is claimed when the release merges, so a branch cut days earlier cannot hold
+   one: a name that asserts a version goes stale on its way to the merge.
 2. Do the work of the release on that branch.
 3. Add the `## [X.Y.Z]` CHANGELOG entry **on the same branch**, at any point before the PR merges — including after step 4, when a draft PR is opened early and extended.
    **Date the entry the day you write it** — not the merge day, not the tag day: the entry is
@@ -49,13 +60,20 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    and re-dating at merge time would put back the post-merge touch this section exists to remove.
    An entry's date can therefore be a day or two earlier than its tag; entries before `0.12.0`
    predate this rule.
+   **Stamp the version last.** Draft the entry's prose whenever it suits the work, but write
+   the `## [X.Y.Z]` heading itself in the last commit before the merge, with the version
+   checked unclaimed at that moment. Until the merge the entry is an ordinary branch
+   artifact: if another release claims that version first, edit the heading and push again.
+   Nothing is tagged yet, so nothing that would have to be undone has happened.
 4. Open the release PR and fill in the template, per *Making a change* step 3.
 5. Wait for CI, per *Making a change* step 4. The personal-data gate reads the PR's
    diff and the PR's commit messages and author identities — so the CHANGELOG entry
    is covered by it only if the entry is in the PR.
 6. Merge the PR. Tag `vX.Y.Z` on the resulting merge commit and publish the release
    from that tag. The tag then carries its own changelog entry, which it does not if
-   the entry lands afterwards.
+   the entry lands afterwards. The tag is also the step with nothing after it — which is
+   why every mutable part of this procedure, the branch name and the prose and the
+   version heading alike, is ordered before it.
 
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
@@ -63,6 +81,32 @@ nine required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
 Protection Posture*, for why that is possible and what it costs. The personal-data
 gate also runs on pushes to `main`, so such a push is scanned and reported — but
 after it has landed, not before.
+
+### Why earlier tags look different
+
+A reader comparing recent tags will find shapes this section does not describe. Both
+came from the same cause: the `## [X.Y.Z]` entry was written *after* the release
+merged, in a separate `chore` close-out pull request, rather than on the release
+branch. What differed between them was only where the tag went.
+
+- **`0.17.0` through `0.22.0` — tagged on the close-out merge.** The entry had landed by
+  the time the tag was cut, so those tags do carry their own entry. The outcome this
+  section wants was reached by a different route.
+- **`0.24.0` through `0.31.0` — tagged on the release merge.** By then the release merge
+  was where the version got claimed, but the entry was still written afterwards, so each
+  of these tags points at a tree carrying no entry for its own version — the tree
+  describes the release before it. That is the outcome step 6 exists to prevent, and it
+  is why step 6's reason survives while the gate argument above was re-aimed.
+
+`0.23.0` and `0.32.0` were cut the way this section describes. `0.32.0` executed it end
+to end: the entry landed on the release branch shortly before the merge, the tag went on
+the merge commit, and the entry in the tagged tree was what the published release used
+as its body.
+
+The branch name has the same root. A version chosen when the branch is cut is a guess; a
+version claimed when the branch merges is a fact — which is why step 1 leaves the version
+out of the name and step 3 stamps it last. Practice reached that answer first: no release
+branch cut since `0.23.0` has carried a version in its name.
 
 ## Reporting security issues
 
