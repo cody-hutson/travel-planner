@@ -28,7 +28,7 @@ by invitation only.
 1. Branch from `main`.
 2. Make the change. If it changes agent behavior, exercise it in Claude Code and sanity-check the output.
 3. Open a PR and fill in the template. Put any `Closes #N` **only** in the *Issue References* block at the bottom of the PR body (the auto-close parser is lexical).
-4. CI must be green: workflow lint, markdown link integrity, secret scan, and the personal-data gate.
+4. CI must be green — the required status checks are listed in [SECURITY.md](SECURITY.md), *Branch Protection Posture*.
 
 ## Cutting a release
 

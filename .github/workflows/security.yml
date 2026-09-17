@@ -17,16 +17,25 @@ permissions:
 #   2. markdown-link-check  — integrity of cross-references in the agent prompts / docs
 #   3. gitleaks            — secret scanning (universal; full history)
 #
-# Branch-protection required checks MUST match these 3 job name: fields exactly,
-# case-sensitive: "Workflow SAST (actionlint)", "Markdown link integrity (markdown-link-check)",
-# "Secret scanning (gitleaks)".
+# Whether a job here binds a merge is declared BY THAT JOB, on the
+# `# gate-efficacy: posture=` line above its key, and graded against the committed
+# context list by the registration census step in the actionlint job below.
 
 jobs:
+  # gate-efficacy: posture=required
   actionlint:
     name: Workflow SAST (actionlint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      # Same subject matter as actionlint — a property of the workflow YAML — so it
+      # rides this job rather than adding a new check name (which would need a
+      # branch-protection change). Runs BEFORE the actionlint install so a transient
+      # network failure there cannot mask a real registration finding.
+      - name: Required-check registration census
+        run: ./scripts/pin-required-checks.py --census
+
       - name: Install actionlint
         run: |
           # actionlint binary installer (upstream-recommended path)
@@ -44,6 +53,7 @@ jobs:
         run: |
           ./actionlint -color -ignore 'shellcheck reported issue in this script: SC2016:.+'
 
+  # gate-efficacy: posture=required
   markdown-link-check:
     name: Markdown link integrity (markdown-link-check)
     runs-on: ubuntu-latest
@@ -73,6 +83,7 @@ jobs:
           fi
           echo "All local markdown links resolve."
 
+  # gate-efficacy: posture=required
   gitleaks:
     name: Secret scanning (gitleaks)
     runs-on: ubuntu-latest

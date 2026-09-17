@@ -124,6 +124,7 @@ permissions:
   contents: read
 
 jobs:
+  # gate-efficacy: posture=required
   corpus-hygiene:
     name: Corpus hygiene suite (test-corpus-hygiene.sh)
     runs-on: ubuntu-latest

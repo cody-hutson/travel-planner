@@ -8,6 +8,12 @@ permissions:
   contents: read
 
 jobs:
+  # gate-efficacy: posture=advisory
+  #   Advisory by decision, and deliberately absent from the required contexts.
+  #   Its subject is the pull-request BODY rather than the tree: it reads
+  #   `github.event.pull_request.body`, triggers on `pull_request` only, and honours
+  #   an in-body override marker the author controls — so it has no verdict at all on
+  #   a direct push to `main`. Recorded here so the omission reads as a decision.
   parser-clean:
     name: Close-keyword leak detection
     runs-on: ubuntu-latest
