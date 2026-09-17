@@ -32,10 +32,11 @@
 # verify_summary_content over outputs/change-summary.md, an `internal` artifact
 # verify_publishable_content never sees: the clean/HIT/UNDETERMINED triple, the
 # RE-DERIVED word floor, and the markdown block sentinel that keeps the conjunctive
-# rule scoped. R6 grades the MOVED PREDICATE (AC 1 / AC 4, second remediation) — that
+# rule scoped. R6 grades the BUCKET PREDICATES (AC 1 / AC 4, second remediation) — that
 # the placement tuple the emitter spec declares actually detects a same-day time move
-# on the shipped witness, that an unchanged re-bake still detects nothing, and that
-# time is compared WITHIN the matched key rather than folded into it.
+# on the shipped witness, that an unchanged re-bake still detects nothing, that
+# time is compared WITHIN the matched key rather than folded into it, and that a
+# status-only change reaches STATUS-CHANGED instead of being re-reported as MOVED.
 # S = the organizer-confirm gate (#552 AC 5) — the republish path gates on the
 # organizer's confirmation of an ITINERARY-CONTENT change, not on publish-as-such, so a
 # coordination-marker-only republish still reaches the group. Grades both branches
@@ -3496,7 +3497,7 @@ verify_summary_content "$RRECH" "$RTD" >/dev/null 2>&1; RRC=$?
 if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the value inside ONE block still aborts (rc=1) — the sentinel narrowed the window, it did not disarm it"; else FAIL "R5c: a real same-block carry-through no longer aborts (rc=$RRC) — the projection over-corrected into a fail-open"; fi
 
 
-# ── Group R, second remediation (#550 AC 1 / AC 4) — MOVED sees a same-day TIME move ──
+# ── Group R, second remediation (#550 AC 1 / AC 4) — the bucket predicates ──
 #
 # R1–R5 grade what a summary may CARRY (AC 5). R6 grades what decides whether a summary
 # is written at all: the MOVED predicate. Stage 7 found it comparing `(day, role)` — the
@@ -3522,17 +3523,30 @@ if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the valu
 # same machinery does report DROPPED + ADDED with zero MOVED, so R6e's verdict is a
 # discrimination rather than a shape that cannot fail.
 #
+# THE FOURTH BUCKET, AND WHY IT IS THE SAME MACHINERY. The bucket table declares MOVED and
+# STATUS-CHANGED as two disjoint TUPLES over one key — `(day, time)` against `Status` — not
+# as two algorithms. So the status arms choose their bucket by the tuple they project, and
+# the set difference underneath is the one every other arm here already uses. R6g asserts a
+# status-only re-bake is observable at all; R6h is the discrimination and is the reason the
+# bucket is worth grading — an arm that fires on a status change while the machinery
+# re-reports it as MOVED grades nothing, so R6h asserts BOTH directions of the separation
+# and the disjointness of the two tuples as the contract declares them.
+#
 #   R6a  the Step-2 before-map for event-status HOLDS a time  (control: it holds status)
 #   R6b  the C13 header carries `Time` in BOTH of its homes, and they agree
 #   R6c  REGRESSION — a same-day time-only move yields exactly one MOVED row
 #   R6d  CONTROL for R6c — an unmutated re-bake yields zero (AC 4's no-op rule, intact)
 #   R6e  the moved key is on BOTH sides — MOVED, not DROPPED + ADDED
 #   R6f  SENSITIVITY for R6e — a KEY mutation does report DROPPED + ADDED, 0 MOVED
+#   R6g  THE ARM — a status-only re-bake yields exactly one STATUS-CHANGED row
+#   R6h  DISCRIMINATION for R6g — status-only is not MOVED, time-only is not
+#        STATUS-CHANGED, and the two tuples the contract states are disjoint
+#   R6i  CONTROL for R6g, R6d's sibling — an unmutated re-bake yields zero STATUS-CHANGED
 #
 # Offline: three tracked files and awk. No network, no gh, no Node, no TTY. This group has
 # no legitimate skip and is deliberately NOT declared in GUARD_EXPECTED_SKIPS.
 echo
-echo "MOVED sees a same-day time move (#550 AC 1 / AC 4, second remediation):"
+echo "The bucket predicates see a same-day time move and a status-only move (#550 AC 1 / AC 4, second remediation):"
 
 R6_SPEC="$HERE/../agents/05-hub-planner.md"
 R6_MODEL="$HERE/../reference/data-model.md"
@@ -3561,6 +3575,22 @@ r6_moved_tuple() { # [<spec>]
            s = substr(s, RSTART + RLENGTH)
          }
          gsub(/[ \t]/, "", t); print t; exit
+       }' "${1:-$R6_SPEC}"
+}
+
+# The field STATUS-CHANGED compares, read from ITS OWN row of the same bucket table — the
+# sibling of r6_moved_tuple and read for the same reason. Spelling `Status` here would let
+# the arm stay green through a contract that had renamed the field or dropped the bucket,
+# which is the one regression it exists to catch. The row is located by its bucket name, so
+# MOVED's own `differs` clause cannot be mistaken for it. The contract's capitalisation is
+# preserved: r6_project case-folds on lookup, so a failure message naming `Status` names the
+# field the way the contract writes it.
+r6_status_tuple() { # [<spec>]
+  awk '$0 ~ /^\|[[:space:]]*\*\*STATUS-CHANGED\*\*[[:space:]]*\|/ {
+         if (match($0, /`[^`]+`[[:space:]]*differs/)) {
+           t = substr($0, RSTART + 1, RLENGTH - 1)
+           sub(/`.*$/, "", t); gsub(/[ \t]/, "", t); print t; exit
+         }
        }' "${1:-$R6_SPEC}"
 }
 
@@ -3731,6 +3761,56 @@ if [ "$R6KD" -eq 1 ] && [ "$R6KA" -eq 1 ] && [ "$R6KM" -eq 0 ]; then
   PASS "R6f: mutating the KEY instead of the time reports 1 DROPPED + 1 ADDED and 0 MOVED — the same machinery does produce the two-row shape, so R6e's verdict discriminates rather than being unable to fail"
 else
   FAIL "R6f: a key mutation reported DROPPED=$R6KD ADDED=$R6KA MOVED=$R6KM, not the 1/1/0 that distinguishes a re-identification from a re-timing — R6e cannot be read as evidence"
+fi
+
+# The status limb. Same witness, same key, same set difference — a different projected
+# tuple, which is the whole of what makes it a different bucket. `firmed` is chosen because
+# the model declares it a legal forward move from `planned`, so the fixture asserts a state
+# the model permits; it carries the same backtick markup the column's other cells carry, so
+# the diff fires on the status and not on the formatting.
+R6STUP="$(r6_status_tuple)"
+R6SAFT="$R6D/after_status.md"; r6_mutate "$R6BEFORE" "$R6KEY" status '`firmed`' > "$R6SAFT"
+R6PSB="$R6D/proj_status_before.tsv"; r6_project "$R6BEFORE" "$R6STUP" > "$R6PSB"
+R6PSA="$R6D/proj_status_after.tsv";  r6_project "$R6SAFT"   "$R6STUP" > "$R6PSA"
+R6PSX="$R6D/proj_place_status.tsv";  r6_project "$R6SAFT"   "$R6TUP"  > "$R6PSX"
+R6PTS="$R6D/proj_status_time.tsv";   r6_project "$R6AFTER"  "$R6STUP" > "$R6PTS"
+R6SROWS="$(grep -c . "$R6PSB")"
+R6SC="$(r6_diff "$R6PSB" "$R6PSA" CHANGED)"; R6SCN="$(r6_n "$R6SC")"
+
+# R6g — THE ARM. The fourth declared bucket, which shipped with nothing asserting it. If
+# this reports nothing, a booking that fell through publishes in silence exactly the way a
+# re-timed dinner used to.
+if [ -z "$R6STUP" ] || [ "$R6SROWS" -eq 0 ]; then
+  FAIL "R6g: the bucket table's STATUS-CHANGED row yielded no field name ('$R6STUP') or the witness projected to 0 event rows under it — the verdict below would be measuring an empty table, so re-read the STATUS-CHANGED row of the bucket table in agents/05-hub-planner.md"
+elif [ "$R6SCN" -eq 1 ] && [ "$R6SC" = "$R6KEY" ]; then
+  PASS "R6g: a status-only re-bake of the shipped witness ($R6SROWS rows projected over '$R6STUP') yields exactly one STATUS-CHANGED row, keyed $R6KEY — the fourth bucket is observable and no longer ships ungraded"
+else
+  FAIL "R6g: a status-only re-bake yielded $R6SCN STATUS-CHANGED row(s) ('$R6SC') over tuple '$R6STUP', not the single row keyed $R6KEY — either the field the contract names is absent from the compared tuple, or the set difference does not answer to this bucket at all"
+fi
+
+# R6h — DISCRIMINATION, and the reason the bucket is worth grading. One direction proves
+# nothing: an arm that fires on a status change while the machinery re-reports that same
+# change as MOVED has graded a re-timing twice and the status bucket not at all. So both
+# directions are asserted, and so is the disjointness of the two tuples AS THE CONTRACT
+# DECLARES THEM — the separation is then a property of the declaration rather than of the
+# fixture. Each zero below is a real mutation that the OTHER projection does report (R6c
+# and R6g are those two reports), which is what keeps it from being a zero that cannot move.
+R6HXM="$(r6_n "$(r6_diff "$R6PB" "$R6PSX" MOVED)")"
+R6HTS="$(r6_n "$(r6_diff "$R6PSB" "$R6PTS" CHANGED)")"
+if [ "$R6HXM" -eq 0 ] && [ "$R6HTS" -eq 0 ] && [ "$R6STUP" != "$R6TUP" ]; then
+  PASS "R6h: the buckets discriminate in both directions — a status-only move reports 0 MOVED over '$R6TUP', a time-only move reports 0 STATUS-CHANGED over '$R6STUP', and the two tuples the contract states are disjoint. A status change is not re-reported as a placement change, nor the reverse"
+else
+  FAIL "R6h: the buckets do not separate (status-only under placement=$R6HXM, expected 0; time-only under status=$R6HTS, expected 0; placement tuple '$R6TUP' vs status tuple '$R6STUP'). Fold one tuple into the other and both buckets report the same event twice while one of them reports nothing of its own"
+fi
+
+# R6i — CONTROL for R6g, and R6d's sibling one bucket over. Without it R6g's single row is
+# satisfied by a comparison that fires on identity, and AC 4's no-op rule would append an
+# empty status section on every synthesis.
+R6SNN="$(r6_n "$(r6_diff "$R6PSB" "$R6PSB" CHANGED)")"
+if [ "$R6SNN" -eq 0 ]; then
+  PASS "R6i: an unchanged re-bake yields 0 STATUS-CHANGED rows over '$R6STUP' — AC 4's no-op rule survives the fourth bucket, so R6g's single row is the mutation and not a comparison that always fires"
+else
+  FAIL "R6i: an unchanged re-bake yielded $R6SNN STATUS-CHANGED row(s) over '$R6STUP' — the predicate fires on identity, every synthesis would append a status section saying nothing, and R6g proves nothing"
 fi
 
 # ── Group R, Stage 9 pre-merge (#550 AC 5) — the OTHER member of the class ───
