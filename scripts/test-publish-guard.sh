@@ -4420,7 +4420,7 @@ elif [ "$S11I_SENS" -ne 1 ] || [ "$S11I_SPEC" -ne 0 ]; then
 elif [ "${#S11I_AT_CALL}" -lt "${#S11I_AT_STATE}" ]; then
   PASS "S11i: cmd_confirm calls require_perl at byte ${#S11I_AT_CALL} of its parsed body and change_confirmation_state at byte ${#S11I_AT_STATE} — the dependency is asserted BEFORE the gate state is resolved, so a perl-less host meets a named failure instead of a fabricated 'stale'. Sensitivity: the same scan finds the call in preflight; specificity: it finds none in cmd_rotate"
 else
-  FAIL "S11i: cmd_confirm CALLS require_perl TOO LATE — at byte ${#S11I_AT_CALL} of its parsed body, after change_confirmation_state at byte ${#S11I_AT_STATE}. This is the failure that reproduces the harm: the state is resolved from an empty digest and printed as `stale` before the probe is ever reached, so the organizer is still asked to confirm a change the render may not carry"
+  FAIL "S11i: cmd_confirm CALLS require_perl TOO LATE — at byte ${#S11I_AT_CALL} of its parsed body, after change_confirmation_state at byte ${#S11I_AT_STATE}. This is the failure that reproduces the harm: the state is resolved from an empty digest and printed as 'stale' before the probe is ever reached, so the organizer is still asked to confirm a change the render may not carry"
 fi
 
 # ── Group S, third remediation (#552, SEAM-2) — C19's DECLARATION BLOCK ──────
