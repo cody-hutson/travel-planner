@@ -34,7 +34,16 @@ jobs:
           fi
 
           # 1. Override-marker detection (whole-body, requires HTML-comment wrapper)
-          if printf '%s\n' "$PR_BODY" | grep -qE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->'; then
+          #
+          # `grep -c` + a count test, NOT `grep -q`: `-q` exits on the FIRST match and
+          # closes the pipe, so on a large body the producing `printf` takes EPIPE and
+          # `pipefail` makes the pipeline report 141 — the `if` would then read FALSE
+          # even though the marker was found, silently ignoring a present override.
+          # Same root cause as step 4 below; `-c` reads to EOF. `|| true` absorbs
+          # grep's exit 1 on zero matches (the idiom already used for ANCHOR_COUNT).
+          OVERRIDE_HITS=$(printf '%s\n' "$PR_BODY" \
+            | grep -cE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->' || true)
+          if [ "${OVERRIDE_HITS:-0}" -gt 0 ]; then
             {
               echo "## Override active"
               echo ""
@@ -63,10 +72,22 @@ jobs:
           fi
 
           # 4. Extract content OUTSIDE the Issue References block
+          #
+          # `awk 'NR < n'`, NOT `head -n $((n-1))`. Both emit lines 1..n-1 — the
+          # detection semantics are identical — but `head` STOPS READING once it has
+          # its n-1 lines and closes the pipe. The producing `printf` then takes
+          # EPIPE and exits 141, and under `set -o pipefail` + `set -e` that kills
+          # the whole step BEFORE the scan below ever runs: the check reports a red
+          # X with no scan block and no findings, which reads as a detection but is
+          # an abort. It only trips once a PR body is long enough for `head` to
+          # finish while `printf` is still writing, so it lay dormant for seven runs
+          # and then fired on a ~42 KB body. `awk` drains its input to EOF, so the
+          # producer is never signalled and the pipeline exit status is honest —
+          # a genuine failure here still fails the step (no `|| true` fail-open).
           if [ -z "${ANCHOR_LINE:-}" ]; then
             OUTSIDE_BLOCK="$PR_BODY"
           else
-            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | head -n $((ANCHOR_LINE - 1)))
+            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | awk -v n="$ANCHOR_LINE" 'NR < n')
           fi
 
           # 5. Canonical close-keyword scan (close-family verb immediately followed by #N)
