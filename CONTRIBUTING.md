@@ -75,6 +75,15 @@ carries no merge SHA and no tag, so nothing in it has to wait for the merge.
    why every mutable part of this procedure, the branch name and the prose and the
    version heading alike, is ordered before it.
 
+**The release PR body is a summary plus links, not a second copy of the work.**
+Each stage of a release records its own detail durably, in a comment on that
+stage's sub-task, so the body's job is to say what the release does and point at
+those records. Write it when the PR opens and leave it that way: a later slice, a
+remediation round or a re-review belongs where the rest of its stage's detail
+already lives, or in a comment on the PR — not appended to the body. Appending
+makes the body a moving target for whoever is reviewing it, and stores a second
+copy of something that was never at risk of being lost.
+
 **Nothing in a release is committed to `main` directly** — not the CHANGELOG, not
 anything else. A direct push to `main` skips the pull-request requirement and all
 nine required checks in a single step; see [SECURITY.md](SECURITY.md), *Branch
