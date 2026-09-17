@@ -44,10 +44,11 @@ jobs:
       - name: Run actionlint
         # The -ignore flag suppresses shellcheck SC2016 propagation out of
         # pr-body-parser-clean.yml. The justification is structural rather than
-        # provenance: that workflow's embedded shell carries single-quoted regex
-        # literals whose `$` is a regex end-anchor and must not expand at
-        # shellcheck time — two of them, both the `Issue References` anchor
-        # regex in its step 2. The suppression stays load-bearing while they do.
+        # provenance: that workflow echoes the override marker into the step
+        # summary wrapped in markdown backticks, inside single quotes so the
+        # backticks are not read as command substitution — two such strings,
+        # both in report-only blocks. SC2016 flags exactly that shape, so the
+        # suppression stays load-bearing while they do.
         # actionlint v1.7.1 does NOT support the `paths` config schema, so the
         # config-file approach (.github/actionlint.yaml) is forward-compatible
         # documentation only; the runtime -ignore flag is the load-bearing
