@@ -1304,7 +1304,8 @@ fi
 # the declaration through the guard's own accessor and its own constants, so it grades
 # whatever § 5.6 says at the moment it runs rather than whatever it said when it was
 # written. A row added to the fence is graded by this case on the next run with no edit
-# here; a row removed shrinks the denominator instead of silently passing.
+# here; a row removed leaves the rows that remain graded, and a declaration that yields
+# no selectors at all is refused rather than passed.
 #
 # Two arms per selector, and the second is the point:
 #   subject — the value under the declared label aborts (rc=1) and the record names
@@ -1316,8 +1317,12 @@ fi
 #             declared selector rather than being hung off an existing one under a
 #             longer label. Pinned as measured behaviour, not endorsed.
 #
-# The denominator is asserted at two or more so a collapsed selector list cannot pass
-# this case vacuously — a zero-length loop would otherwise satisfy every equality below.
+# The selector count is asserted at one or more — a zero-population assertion, and not a
+# claim about how large the class is. At zero selectors the loop never runs and every
+# equality below is satisfied by 0 == 0, so a collapsed or unreadable selector list would
+# otherwise pass this case having graded nothing. One is the whole of what that rationale
+# needs: a higher floor re-encodes whatever the class happens to hold today, and fails
+# both arms outright the moment the declaration legitimately narrows.
 L12SEL="$(_guard_limb_selectors field "$_GUARD_DECL_ARTIFACT_MODEL")"
 l12n=0; l12hit=0; l12named=0; l12open=0
 for l12s in $L12SEL; do
@@ -1340,12 +1345,12 @@ for l12s in $L12SEL; do
   lguard "$L12R" "$L12T"
   [ "$LRC" -eq 0 ] && l12open=$((l12open + 1))
 done
-if [ "$l12n" -ge 2 ] && [ "$l12hit" -eq "$l12n" ] && [ "$l12named" -eq "$l12n" ]; then
+if [ "$l12n" -ge 1 ] && [ "$l12hit" -eq "$l12n" ] && [ "$l12named" -eq "$l12n" ]; then
   PASS "L12: all $l12n declared field selectors on the model class abort the publish (rc=1) and name member + selector without echoing the value — the case reads the selectors off the declaration and hardcodes none"
 else
   FAIL "L12: a declared field selector was not guarded (selectors=$l12n aborted=$l12hit named=$l12named) — either the class is narrower than the declaration or the probe read no selectors at all"
 fi
-if [ "$l12n" -ge 2 ] && [ "$l12open" -eq "$l12n" ]; then
+if [ "$l12n" -ge 1 ] && [ "$l12open" -eq "$l12n" ]; then
   PASS "L12b: for all $l12n selectors, the identical value under a label that merely BEGINS with the selector publishes (rc=0) — field_hit is prefix-then-colon, so a longer label is UNGUARDED. Measured, and the reason a new requirement set owes its own declared selector rather than a longer label over an existing one"
 else
   FAIL "L12b: the prefix-then-colon shape changed (selectors=$l12n published=$l12open) — re-read field_hit before trusting L12's verdict or any claim that a longer label is covered"
