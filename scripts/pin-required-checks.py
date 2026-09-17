@@ -50,6 +50,23 @@ MODES
         This is the arm that makes the tool trustworthy before it is ever pointed
         at a live branch, and it is the arm to run in CI.
 
+    --census [--root DIR]
+        Offline. Set equality, in both directions, between the workflow jobs
+        that declare `# gate-efficacy: posture=required` and the CONTEXT_ORDER
+        declaration below. It answers the question a new suite's author is
+        never asked -- does this job bind? -- at pull-request time, on the
+        author's own pull request.
+
+        WHAT A CLEAN CENSUS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the
+        branch protection API, so no check running in this repository's CI can
+        confirm that a context is REGISTERED. A clean census means the
+        workflows and the committed declaration agree with each other.
+        Registration remains an operator act outside any pull request -- it is
+        what --apply below performs. The census makes an omission visible; it
+        cannot make one impossible.
+
+        Exit 0 clean / 1 finding(s) / 2 no jobs found.
+
     --assert --stdin | --assert --file PATH
         The four-conjunct assertion alone, over a protection object or over a
         `required_status_checks` sub-resource. Exit 0 PASS / 1 FAIL / 2 malformed.
@@ -72,7 +89,8 @@ MODES
 EXIT CODES
     0  the mode's assertion held
     1  an assertion failed
-    2  input was malformed (a read that returned a shape with no checks array)
+    2  input was malformed (a read that returned a shape with no checks array;
+       for --census, a workflow population with no jobs in it)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
     5  the self-test did not pass, so no live mode may run
@@ -92,6 +110,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -227,6 +246,218 @@ def evaluate(raw, disabled=frozenset()):
         "PASS {n}/{n} contexts, set-equal to the expected {n}, no duplicates, "
         "0 null, every app_id == int {a}".format(n=EXPECTED_COUNT, a=APP_ID))
     return (0, [], lines)
+
+
+# ==========================================================================
+# The registration census
+#
+# A second, independent assertion over the same expected set -- and the only
+# one that runs with no token at all.
+#
+# It answers the question a new suite's author never gets asked: "does this
+# job bind?" A job declares its own answer in place, on the line above its
+# key, and the census set-compares the jobs claiming `required` against
+# CONTEXT_ORDER in both directions. The declaration is the census's only
+# input; there is no inference from triggers, filenames or membership, because
+# each of those is either false by construction or vacuous -- a set derived
+# from CONTEXT_ORDER can never disagree with it.
+#
+# WHAT A GREEN CENSUS DOES NOT MEAN. `GITHUB_TOKEN` cannot read the branch
+# protection API, so no check running in this repository's CI can confirm that
+# a context is REGISTERED. A clean census means the workflows and the committed
+# declaration agree with each other. Registration remains an operator act
+# outside any pull request, performed by --apply above. The census makes an
+# omission visible at pull-request time; it cannot make one impossible.
+# ==========================================================================
+
+POSTURE_VALUES = ("required", "advisory")
+
+# The census's own emittable set. The self-test asserts a bijection between it
+# and the codes the arms name, in both directions, on the same principle as
+# EMITTABLE above: a code added later arrives uncovered and red.
+CENSUS_CODES = ("UNREGISTERED", "ABSENT", "UNDECLARED")
+
+_RE_MARKER = re.compile(r"^\s*#\s*gate-efficacy:\s*posture\s*=\s*(\S+)")
+_RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
+_RE_JOBKEY = re.compile(r"^  ([A-Za-z0-9_][A-Za-z0-9_.-]*):\s*(#.*)?$")
+_RE_NAME = re.compile(r"^    name:\s*(.+?)\s*$")
+_RE_COMMENT = re.compile(r"^\s*#")
+
+
+def _is_dedent(line):
+    """A line that closes the `jobs:` block. Blanks and comments do not."""
+    return bool(line.strip()) and not _RE_COMMENT.match(line) and not line[:1].isspace()
+
+
+def repo_root():
+    """The repository this file lives in, derived from the file's own location.
+
+    Not the caller's working directory: a census that graded whatever tree the
+    shell happened to be sitting in could report clean against the wrong repo.
+    """
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def workflow_files(root):
+    """(repo-relative, absolute) for every workflow file, sorted."""
+    rel_dir = os.path.join(".github", "workflows")
+    abs_dir = os.path.join(root, rel_dir)
+    if not os.path.isdir(abs_dir):
+        return []
+    out = []
+    for nm in sorted(os.listdir(abs_dir)):
+        if nm.endswith(".yml") or nm.endswith(".yaml"):
+            out.append((os.path.join(rel_dir, nm), os.path.join(abs_dir, nm)))
+    return out
+
+
+def census_scan(root):
+    """Every job in every workflow, with the posture it declares.
+
+    Line-oriented and stdlib-only: this module imports no YAML parser, and a
+    census that needed one would not run on a runner that has not installed it.
+
+    The context name is the job's `name:` when it has one and the job KEY when
+    it does not, because that is what GitHub reports as the check's context in
+    each case. `posture` is None when no marker sits in the contiguous comment
+    block directly above the job key, and also when the marker's value is not
+    one this tool recognises -- an answer it cannot read is not an answer, so
+    the unreadable case fails closed into the same finding as the absent one.
+    """
+    jobs = []
+    for rel, path in workflow_files(root):
+        try:
+            with open(path, encoding="utf-8") as fh:
+                lines = fh.read().splitlines()
+        except OSError:
+            continue
+        in_jobs = False
+        for i, line in enumerate(lines):
+            if _RE_JOBS.match(line):
+                in_jobs = True
+                continue
+            if in_jobs and _is_dedent(line):
+                in_jobs = False
+            if not in_jobs:
+                continue
+            m = _RE_JOBKEY.match(line)
+            if not m:
+                continue
+            key = m.group(1)
+
+            name = None
+            for j in range(i + 1, len(lines)):
+                nxt = lines[j]
+                if _RE_JOBKEY.match(nxt) or _is_dedent(nxt):
+                    break
+                got = _RE_NAME.match(nxt)
+                if got:
+                    name = got.group(1).strip().strip('"').strip("'")
+                    break
+
+            posture, raw = None, None
+            j = i - 1
+            while j >= 0 and _RE_COMMENT.match(lines[j]):
+                got = _RE_MARKER.match(lines[j])
+                if got:
+                    raw = got.group(1)
+                    posture = raw if raw in POSTURE_VALUES else None
+                    break
+                j -= 1
+
+            jobs.append({"file": rel, "key": key, "name": name or key,
+                         "posture": posture, "raw": raw})
+    return jobs
+
+
+def census_findings(jobs):
+    """(code, file, context, why) for every disagreement. Empty is clean."""
+    findings = []
+    claimed = {}
+    for job in jobs:
+        if job["posture"] == "required":
+            claimed.setdefault(job["name"], []).append(job)
+
+    for job in sorted(jobs, key=lambda j: (j["file"], j["key"])):
+        if job["posture"] is not None:
+            continue
+        why = ("no `# gate-efficacy: posture=` marker on the line above the job key"
+               if job["raw"] is None else
+               "posture value {!r} is not one of {}".format(
+                   job["raw"], "|".join(POSTURE_VALUES)))
+        findings.append(("UNDECLARED", job["file"], job["name"], why))
+
+    for ctx in sorted(set(claimed) - EXPECTED_CONTEXTS):
+        findings.append(("UNREGISTERED", claimed[ctx][0]["file"], ctx,
+                         "claims posture=required, but no such context is declared "
+                         "in CONTEXT_ORDER"))
+
+    for ctx in sorted(EXPECTED_CONTEXTS - set(claimed)):
+        findings.append(("ABSENT", "-", ctx,
+                         "declared in CONTEXT_ORDER, but no job claims "
+                         "posture=required under that name"))
+
+    return findings
+
+
+def run_census(root, stream=sys.stdout):
+    """Grade the workflows against CONTEXT_ORDER. 0 clean / 1 findings / 2 malformed."""
+    def out(msg):
+        stream.write(msg + "\n")
+
+    jobs = census_scan(root)
+    files = workflow_files(root)
+
+    out("=" * 78)
+    out("REGISTRATION CENSUS -- offline. No network, no gh, no token.")
+    out("=" * 78)
+
+    # The empty-population refusal, on the same principle as C0 in evaluate():
+    # a scan that found nothing to grade has proved nothing about this tree, and
+    # must never reach a clean exit.
+    if not jobs:
+        out("MALFORMED: {} workflow file(s) walked under {}, 0 job(s) found.".format(
+            len(files), os.path.join(root, ".github", "workflows")))
+        out("A census over an empty population asserts nothing. Nothing was graded.")
+        return 2
+
+    declared_required = [j for j in jobs if j["posture"] == "required"]
+    declared_advisory = [j for j in jobs if j["posture"] == "advisory"]
+    out("scanned {} workflow file(s), {} job(s): {} claiming required, {} advisory, "
+        "{} undeclared".format(
+            len(files), len(jobs), len(declared_required), len(declared_advisory),
+            len(jobs) - len(declared_required) - len(declared_advisory)))
+    out("graded against CONTEXT_ORDER: {} declared context(s)".format(EXPECTED_COUNT))
+
+    findings = census_findings(jobs)
+    out("")
+    if findings:
+        for code, where, ctx, why in findings:
+            out("FINDING {:<12} {:<42} [{}]".format(code, ctx, where))
+            out("        {}".format(why))
+        out("")
+        out("-" * 78)
+        out("CENSUS FAILED -- {} finding(s).".format(len(findings)))
+        out("  UNREGISTERED  a job claims to bind and the declaration does not carry it.")
+        out("                Add the context to CONTEXT_ORDER in this file AND ask the")
+        out("                operator to register it in branch protection -- or declare")
+        out("                the job `posture=advisory` and say why in the line beneath.")
+        out("  ABSENT        the declaration carries a context no job claims. The job was")
+        out("                renamed or removed; protection now waits on a check that")
+        out("                can never report.")
+        out("  UNDECLARED    a job has not answered the question. Put")
+        out("                `# gate-efficacy: posture=required` or `=advisory` on the")
+        out("                line directly above its job key.")
+    else:
+        out("CENSUS CLEAN -- every job declares a posture, and the set of jobs claiming")
+        out("required is set-equal to CONTEXT_ORDER in both directions.")
+
+    out("")
+    out("WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection")
+    out("API, so this census cannot confirm that any context is REGISTERED. A clean")
+    out("result means the workflows and the committed declaration agree with each other.")
+    out("Registration remains an operator act outside any pull request.")
+    return 1 if findings else 0
 
 
 # ==========================================================================
@@ -526,6 +757,110 @@ def guard_arms():
     ]
 
 
+def _synth_workflow(jobs):
+    """Render a minimal workflow file. `jobs` is [(key, name|None, posture|None)]."""
+    out = ["name: Synthetic", "", "on:", "  pull_request:", "", "jobs:"]
+    for key, name, posture in jobs:
+        if posture is not None:
+            out.append("  # gate-efficacy: posture={}".format(posture))
+        out.append("  {}:".format(key))
+        if name is not None:
+            out.append("    name: {}".format(name))
+        out.extend(["    runs-on: ubuntu-latest", "    steps:",
+                    "      - run: 'true'", ""])
+    return "\n".join(out) + "\n"
+
+
+def _census_baseline():
+    """A synthetic tree that is clean by construction: one job per declared
+    context, all markered required, plus one job that is legitimately advisory.
+
+    Synthetic ON PURPOSE. Arms built from the live `.github/workflows/` tree
+    would change verdict whenever a workflow is added, so the self-test would
+    stop being a property of this file and start being a property of the
+    repository around it. The live tree is what `--census` grades; these arms
+    grade `--census`.
+    """
+    files = {}
+    for i, ctx in enumerate(CONTEXT_ORDER):
+        files[".github/workflows/synth-{:02d}.yml".format(i)] = _synth_workflow(
+            [("job{:02d}".format(i), ctx, "required")])
+    files[".github/workflows/synth-advisory.yml"] = _synth_workflow(
+        [("advisory-job", "Synthetic advisory job", "advisory")])
+    return files
+
+
+def census_arms():
+    """Inputs the census must grade a stated way, in the `assertion_arms` shape.
+
+    Each arm is (id, what it models, {relative path: content}, want_rc, want_codes).
+    X0 is the CONTROL: without an arm that reaches rc 0 over a non-empty
+    population, every failing arm below is equally satisfied by a census that
+    rejects everything.
+    """
+    base = _census_baseline()
+    tenth = CONTEXT_ORDER[-1]
+
+    unregistered = dict(base)
+    unregistered[".github/workflows/synth-new.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", "required")])
+
+    renamed = dict(base)
+    renamed[".github/workflows/synth-{:02d}.yml".format(len(CONTEXT_ORDER) - 1)] = \
+        _synth_workflow([("job{:02d}".format(len(CONTEXT_ORDER) - 1),
+                          tenth + " RENAMED", "required")])
+
+    unmarked_new = dict(base)
+    unmarked_new[".github/workflows/synth-new.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", None)])
+
+    advisory_new = dict(base)
+    advisory_new[".github/workflows/synth-new.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", "advisory")])
+
+    marker_stripped = dict(base)
+    marker_stripped[".github/workflows/synth-{:02d}.yml".format(len(CONTEXT_ORDER) - 1)] = \
+        _synth_workflow([("job{:02d}".format(len(CONTEXT_ORDER) - 1), tenth, None)])
+
+    bad_value = dict(base)
+    bad_value[".github/workflows/synth-new.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", "REQUIRED")])
+
+    keyed = dict(base)
+    keyed[".github/workflows/synth-new.yml"] = _synth_workflow(
+        [("new-suite", None, "required")])
+
+    return [
+        # id,  what it models,                                    files,        rc, codes
+        ("X0", "the clean tree: every job declares, and the required set is "
+               "set-equal to the declaration", base, 0, set()),
+        ("X1", "a new suite that claims to bind and was never declared -- the "
+               "AC3 defect itself", unregistered, 1, {"UNREGISTERED"}),
+        ("X2", "a declared job renamed: TWO findings, because the remedies differ",
+         renamed, 1, {"UNREGISTERED", "ABSENT"}),
+        ("X3", "a new job that has not answered the question", unmarked_new, 1,
+         {"UNDECLARED"}),
+        ("X4", "SPECIFICITY: a new suite that declares itself advisory is "
+               "legitimately unregistered", advisory_new, 0, set()),
+        ("X5", "a declared job whose marker was deleted -- unanswered AND missing "
+               "from the claimed set", marker_stripped, 1, {"UNDECLARED", "ABSENT"}),
+        ("X6", "a marker whose value this tool does not recognise -- fails closed "
+               "rather than reading as advisory", bad_value, 1, {"UNDECLARED"}),
+        ("X7", "a job with no `name:`, whose KEY is therefore its context",
+         keyed, 1, {"UNREGISTERED"}),
+        ("X8", "STRUCTURAL: no workflow files at all -- an empty population must "
+               "never reach a clean exit", {}, 2, set()),
+    ]
+
+
+def _materialise(files, root):
+    for rel, text in files.items():
+        dest = os.path.join(root, rel)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "w", encoding="utf-8") as fh:
+            fh.write(text)
+
+
 def self_test(stream=sys.stdout):
     def out(msg):
         stream.write(msg + "\n")
@@ -644,6 +979,68 @@ def self_test(stream=sys.stdout):
             out("  PASS {}: rc {} and {} write(s) attempted -- {}".format(
                 gid, rc, len(log), what))
 
+    # -- E: the registration census ---------------------------------------
+    out("")
+    out("E -- the registration census: the second assertion over the same expected "
+        "set, and the only one that runs with no token at all")
+    c_arms = census_arms()
+
+    armed_codes = set()
+    for arm in c_arms:
+        armed_codes |= arm[4]
+    census_emittable = set(CENSUS_CODES)
+    if armed_codes != census_emittable:
+        failures.append("E0: census code coverage is not a bijection -- "
+                        "unexercised={} unemittable={}".format(
+                            sorted(census_emittable - armed_codes),
+                            sorted(armed_codes - census_emittable)))
+        out("  FAIL E0")
+    else:
+        out("  PASS E0: every code the census can emit {} is named by at least one "
+            "arm, and every code an arm names is one the census can emit -- a "
+            "bijection, asserted both ways".format(sorted(census_emittable)))
+
+    controls = [a for a in c_arms if a[3] == 0]
+    if not controls:
+        failures.append("E1: no census arm reaches rc 0 -- every failing arm is "
+                        "equally satisfied by a census that rejects everything")
+        out("  FAIL E1")
+    else:
+        out("  PASS E1: {} arm(s) reach rc 0, so the failing arms below are "
+            "measurements rather than the output of an always-fail census".format(
+                len(controls)))
+
+    baseline_jobs = None
+    for aid, what, files, want_rc, want_codes in c_arms:
+        with tempfile.TemporaryDirectory(prefix="prc-census-") as root:
+            _materialise(files, root)
+            jobs = census_scan(root)
+            if aid == "X0":
+                baseline_jobs = len(jobs)
+            with open(os.devnull, "w") as sink:
+                rc = run_census(root, stream=sink)
+            got = set(f[0] for f in census_findings(jobs)) if rc == 1 else set()
+        if rc != want_rc or got != want_codes:
+            failures.append("{}: rc {} codes {} -- want rc {} codes {}".format(
+                aid, rc, sorted(got), want_rc, sorted(want_codes)))
+            out("  FAIL {}: rc {} on {} -- want rc {} on {} -- {}".format(
+                aid, rc, sorted(got), want_rc, sorted(want_codes), what))
+        else:
+            out("  PASS {}: rc {} on exactly {} -- {}".format(
+                aid, rc, ",".join(sorted(want_codes)) or "no findings", what))
+
+    want_jobs = EXPECTED_COUNT + 1
+    if baseline_jobs != want_jobs:
+        failures.append("E2: the control arm graded {} job(s), want {} -- a control "
+                        "over a degenerate population proves nothing".format(
+                            baseline_jobs, want_jobs))
+        out("  FAIL E2")
+    else:
+        out("  PASS E2: the control arm grades {} job(s) -- {} declared contexts plus "
+            "one deliberately advisory job. That tenth job is the whole reason the "
+            "census reads a declaration instead of enumerating every job name".format(
+                baseline_jobs, EXPECTED_COUNT))
+
     out("")
     out("-" * 78)
     if failures:
@@ -653,7 +1050,8 @@ def self_test(stream=sys.stdout):
         return 1
     out("SELF-TEST PASSED -- 11 degenerate arms all failed on exactly their named "
         "conjuncts, the positive arm passed, every named conjunct is individually "
-        "load-bearing, and every capture failure refused the write.")
+        "load-bearing, every capture failure refused the write, and the registration "
+        "census graded every arm the stated way with a control that reached rc 0.")
     return 0
 
 
@@ -839,6 +1237,8 @@ def main(argv):
     mode = ap.add_mutually_exclusive_group(required=True)
     mode.add_argument("--self-test", action="store_true",
                       help="offline validation of the assertion and the guards")
+    mode.add_argument("--census", action="store_true",
+                      help="offline: grade the workflows against CONTEXT_ORDER")
     mode.add_argument("--assert", dest="do_assert", action="store_true",
                       help="grade a read against the four conjuncts")
     mode.add_argument("--plan", action="store_true",
@@ -849,6 +1249,8 @@ def main(argv):
                       help="re-apply the captured pre-change sub-resource")
     ap.add_argument("--stdin", action="store_true", help="--assert reads stdin")
     ap.add_argument("--file", help="--assert reads this file")
+    ap.add_argument("--root", help="--census grades this tree; default: the "
+                                   "repository this file lives in")
     ap.add_argument("--staging", help="directory for the capture artifacts")
     ap.add_argument("--repo", help="OWNER/NAME; default: the origin remote")
     ap.add_argument("--branch", default="main")
@@ -858,6 +1260,9 @@ def main(argv):
 
     if args.self_test:
         return self_test()
+
+    if args.census:
+        return run_census(args.root or repo_root())
 
     if args.do_assert:
         if args.stdin:
