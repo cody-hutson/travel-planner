@@ -4249,6 +4249,11 @@ fi
 #         sensitivity: the same detector finds one in strip_to_text, which keeps one
 #   S11g  PREFLIGHT — perl's absence is an EARLY, NAMED failure on the publish paths
 #         rather than a projection that quietly answers differently mid-run
+#   S11h  THE SAME PROBE WITHOUT preflight (#749) — the assertion is reachable as
+#         require_perl by a command that needs neither gh nor npx. No stubs are set for
+#         it, and that absence IS the evidence
+#   S11i  REACHABILITY AT THE SOURCE, AND THE ORDER (#749) — cmd_confirm calls it, and
+#         calls it BEFORE it resolves the gate state, so no fabricated state is printed
 #
 # Offline: $WORK fixtures, a shell-function stub for perl and for gh/npx (the S8/S9
 # technique), and a PATH with no perl on it. No network, no Node, no TTY, no real gh. This
@@ -4361,6 +4366,61 @@ if [ "$S11_RC_PERL" -eq 0 ] && [ "$S11_RC_NOPERL" -ne 0 ] && [ "$S11_NAMES_PERL"
   PASS "S11g: preflight passes with perl present (rc=$S11_RC_PERL, the control, so the stubs are not refusing everything) and ABORTS naming perl when it is absent (rc=$S11_RC_NOPERL) — the dependency fails early and by name, before any clone, encryption or push"
 else
   FAIL "S11g: control rc=$S11_RC_PERL, stripped-PATH rc=$S11_RC_NOPERL, message names perl=$S11_NAMES_PERL (message: ${S11_MSG_NOPERL:-none}) — preflight does not probe perl, so its absence is discovered mid-run as a projection that answers differently rather than up front as a missing dependency"
+fi
+
+# ── S11h — THE SAME PROBE, REACHABLE WITHOUT preflight (#749). S11g grades the probe where
+# it has always sat, INSIDE preflight — and preflight is the wrong caller for a local
+# command, because it also demands npx and an authenticated gh. cmd_confirm needs neither:
+# it reads a file, prompts a terminal and writes a sidecar. Calling preflight from it would
+# break a working command on every host without Node or a logged-in gh. So the one
+# assertion cmd_confirm does need is extracted into require_perl — one message, one
+# definition, two callers — and graded here on its own.
+#
+# NO gh OR npx STUB IS SET FOR THIS ARM, and that absence is not an oversight: it is the
+# evidence. require_perl uses only `command -v`, `printf` and `exit`, all builtins, so it
+# reaches both verdicts under a PATH carrying nothing at all. A helper that needed a stub
+# here would be a helper that had handed cmd_confirm a network dependency.
+S11H_MSG_OK="$( ( require_perl ) 2>&1 >/dev/null )";                              S11H_RC_OK=$?
+S11H_MSG="$( ( PATH=/nonexistent/s11h-no-perl; require_perl ) 2>&1 >/dev/null )"; S11H_RC=$?
+case "$S11H_MSG" in *perl*) S11H_NAMES=1 ;; *) S11H_NAMES=0 ;; esac
+if [ "$S11H_RC_OK" -eq 0 ] && [ "$S11H_RC" -ne 0 ] && [ "$S11H_NAMES" -eq 1 ]; then
+  PASS "S11h: require_perl passes with perl present (rc=$S11H_RC_OK — the control, so the helper is not refusing everything) and ABORTS naming perl under a stripped PATH (rc=$S11H_RC), with NO gh or npx stub in scope. The dependency cmd_confirm actually has is assertable on its own, without dragging in the two external services it does not use"
+else
+  FAIL "S11h: control rc=$S11H_RC_OK (message: ${S11H_MSG_OK:-none}), stripped-PATH rc=$S11H_RC, message names perl=$S11H_NAMES (message: ${S11H_MSG:-none}) — either require_perl does not exist, or it does not die by name without perl, or it needs something the stripped PATH removed. A control rc of 127 with a 'command not found' message is the first case, and note that such a message contains the substring 'perl' too, which is why the CONTROL rather than the name is what convicts it"
+fi
+
+# ── S11i — REACHABILITY AT THE SOURCE, AND THE ORDER (#749). S11h proves the helper
+# aborts; this proves cmd_confirm reaches it, and reaches it EARLY ENOUGH. The order is the
+# substance, not a detail: placing the call merely "before the prompt" is still wrong.
+# change_confirmation_state runs one step earlier, and on a perl-less host its
+# itinerary_digest call returns EMPTY, an empty value can never equal the recorded
+# baseline, and the resolver falls through to `unconfirmed` or `stale`. The organizer is
+# then shown `Gate state      : stale` — the itinerary moved since you confirmed it — for a
+# plan that may not have moved at all, asked to type CONFIRM against that fabricated state,
+# and only THEN met by the death. The probe therefore belongs before the state resolution.
+#
+# Read from the PARSED bodies, so a mention inside a comment cannot fake any of it. The
+# sensitivity arm is preflight, which calls the same helper, so the detector demonstrably
+# fires; the specificity arm is cmd_rotate, which must not.
+S11I_CONF="$(declare -f cmd_confirm)"
+S11I_PRE="$(declare -f preflight)"
+S11I_ROT="$(declare -f cmd_rotate)"
+case "$S11I_CONF" in *require_perl*)              S11I_CALLS=1 ;; *) S11I_CALLS=0 ;; esac
+case "$S11I_CONF" in *change_confirmation_state*) S11I_STATE=1 ;; *) S11I_STATE=0 ;; esac
+case "$S11I_PRE"  in *require_perl*)              S11I_SENS=1  ;; *) S11I_SENS=0  ;; esac
+case "$S11I_ROT"  in *require_perl*)              S11I_SPEC=1  ;; *) S11I_SPEC=0  ;; esac
+S11I_AT_CALL="${S11I_CONF%%require_perl*}"
+S11I_AT_STATE="${S11I_CONF%%change_confirmation_state*}"
+if [ "$S11I_CALLS" -ne 1 ]; then
+  FAIL "S11i: cmd_confirm's parsed body (${#S11I_CONF}B) DOES NOT CALL require_perl at all. On a host without perl it runs change_confirmation_state first, is handed an empty digest, prints a gate state that perl's absence fabricated, asks the organizer to type CONFIRM against it, and only then dies"
+elif [ "$S11I_STATE" -ne 1 ]; then
+  FAIL "S11i: cmd_confirm's parsed body carries no change_confirmation_state call, so the ordering comparison below has no right-hand side — the resolver was renamed or the gate was restructured, and this arm is no longer reading what it claims"
+elif [ "$S11I_SENS" -ne 1 ] || [ "$S11I_SPEC" -ne 0 ]; then
+  FAIL "S11i: the detector's own arms did not fire — sensitivity (require_perl in preflight, ${#S11I_PRE}B) = $S11I_SENS, specificity (require_perl in cmd_rotate, ${#S11I_ROT}B) = $S11I_SPEC. Until both fire, a hit in cmd_confirm proves nothing about what this scan can see"
+elif [ "${#S11I_AT_CALL}" -lt "${#S11I_AT_STATE}" ]; then
+  PASS "S11i: cmd_confirm calls require_perl at byte ${#S11I_AT_CALL} of its parsed body and change_confirmation_state at byte ${#S11I_AT_STATE} — the dependency is asserted BEFORE the gate state is resolved, so a perl-less host meets a named failure instead of a fabricated 'stale'. Sensitivity: the same scan finds the call in preflight; specificity: it finds none in cmd_rotate"
+else
+  FAIL "S11i: cmd_confirm CALLS require_perl TOO LATE — at byte ${#S11I_AT_CALL} of its parsed body, after change_confirmation_state at byte ${#S11I_AT_STATE}. This is the failure that reproduces the harm: the state is resolved from an empty digest and printed as `stale` before the probe is ever reached, so the organizer is still asked to confirm a change the render may not carry"
 fi
 
 # ── Group S, third remediation (#552, SEAM-2) — C19's DECLARATION BLOCK ──────
@@ -4733,6 +4793,202 @@ elif [ "$S13_PU" = "$S13_PN" ]; then
   PASS "S13f: AI-013 HOLDS — #551's build-time prune is still digest-neutral. The whole transition (coordination-state updated -> none, coordination-since dropped, band and CSS rule no longer emitted) leaves the digest at $S13_PN, on a render that also carries the attribute-borne opener, and while the same projection still moves on a plan edit ($S13_SA -> $S13_SB). The coupling recorded against this function survives its first change"
 else
   FAIL "S13f: AI-013 IS BROKEN — the prune moved the digest $S13_PU -> $S13_PN. #551's prune fires the day a trip's seven-day window closes, so every trip that has ever had a confirmed change would find its next republish reading as an itinerary change and DEADLOCK at the gate on day 8. The declaration block's coordination fields are back inside the digest"
+fi
+
+# ── Group S14 (#749) — THE OTHER PROJECTION'S SECOND LIMB ────────────────────
+#
+# S11 removed the fallback from strip_to_itinerary_text and stated, in its own preamble,
+# the criterion that decided it: A FALLBACK IS HONEST ONLY WHERE THE FALLBACK CAN COMPUTE
+# THE SAME ANSWER. strip_to_text's can — its perl program is a tag-stripper and little
+# else — which is why that function legitimately keeps one. S14 applies the SAME criterion
+# to the one remaining site, strip_to_text_blocks, and the criterion decides against it:
+# three perl substitutions against one sed expression.
+#
+#   1  script/style BODIES deleted      needs a -0777 slurp, a back-reference to the
+#                                       opening tag name and a lazy bound     sed: NO
+#   2  the BLOCK SENTINEL emitted       needs the block-tag class and an emission
+#                                                                             sed: NO
+#   3  tag -> space                                                           sed: yes
+#
+# SUBSTITUTION 2 IS THE ENTIRE REASON THIS FUNCTION EXISTS APART FROM strip_to_text, and
+# losing it is not cosmetic. _guard_match's conjunctive rule requires both distinctive
+# tokens of a value inside ONE structural block. With no sentinel every token lands in
+# block 0, the same-block conjunct is vacuously true for every pair, and the rule degrades
+# to a bare word window — which is verbatim the N-squared day-pairing false abort that
+# ADR-008's first amendment exists to fix, and which measured as a permanent abort from two
+# days onward. Substitution 1's absence compounds it: script and style bodies survive into
+# the token stream on the arm that carries the verdict, adding machinery vocabulary to it
+# and inflating the word count that the degraded-extraction floor is supposed to catch.
+#
+# REACHABILITY, STATED PRECISELY, because it is what makes this card correctly low-priority
+# and also what stops it being nothing. strip_to_text_blocks's sole caller is
+# verify_publishable_content, reached from cmd_publish and cmd_update, both of which
+# preflight first — so a perl-ABSENT host never reaches the limb at all. Two windows
+# remain. perl PRESENT but this program failing: `||` reads a non-zero STATUS, not an
+# absence, so a perl too old for a construct, a memory limit on the -0777 slurp of a large
+# render, or a locale abort all switch the projection silently. And a future caller that
+# does not preflight — verify_publishable_content is the natural predicate for any later
+# non-interactive publish path, and today it is safe only by caller discipline. Removing
+# the limb makes it safe BY CONSTRUCTION. Both windows are fail-CLOSED directions — a
+# false abort — which is exactly why nothing ever caught this: a false abort looks like
+# the guard working.
+#
+#   S14a  DENOMINATOR — with a working perl the projection is non-empty, carries a block
+#         sentinel, has dropped the script body, and clears the 20-word floor. Without
+#         this every verdict below is vacuous
+#   S14b  THE REGRESSION — with perl failing, NO second projection is produced: no output
+#         AND a non-zero status. Both halves invert, so the arm cannot pass by accident
+#   S14c  VISIBILITY — a failing perl writes to stderr; control: a working one writes 0B
+#   S14d  SPECIFICITY for S14b — a render whose visible text is GENUINELY empty still
+#         SUCCEEDS, so S14b's discriminator is the STATUS and not the byte count
+#   S14e  the perl stub was withdrawn — everything after it grades production code
+#   S14f  STRUCTURAL — the parsed body carries 0 fallback limbs of ANY kind, so a future
+#         `|| awk`, `|| python3` or `|| true` fails here too; sensitivity: the same
+#         detector finds the one strip_to_text legitimately keeps
+#   S14g  THE ANSWER, KEPT EXECUTABLE — the removed limb is run over the same fixture and
+#         its output compared against the real one. The card asked whether the two limbs
+#         compute the same answer; this arm is that question standing in the suite with
+#         its input, its comparison and its difference, rather than settled once in prose
+#
+# THE SECOND IDENTICAL SHAPE IS DELIBERATELY NOT TOUCHED, and the reason is mechanical
+# rather than cautious. strip_to_text keeps its `|| sed` limb because S11f AND S14f both
+# use it as their SENSITIVITY arm: remove it and both zeroes stop being measurements, and
+# two required arms turn red for a reason unrelated to their subject. It is byte-frozen by
+# #550 AC 5 besides. Any future change extending there must re-point both arms in the same
+# commit.
+#
+# Offline: $WORK fixtures and a shell-function stub for perl. No network, no Node, no TTY,
+# no gh. This group has no legitimate skip and is deliberately NOT declared in
+# GUARD_EXPECTED_SKIPS.
+echo
+echo "The visible block projection has one limb (#749, D-5(A) as extended by D-14):"
+
+# A render carrying (i) a script body whose distinctive token appears nowhere in the
+# visible text, (ii) two block-level elements from the block-tag class, and (iii) enough
+# visible words that the degraded-extraction floor is cleared on the working path.
+S14_FIX="$WORK/s14_fix.html"
+printf '%s' '<!DOCTYPE html><html><head><style>.hero{color:#333}</style><script>var s14Machinery="zzs14scriptonlyzz";</script></head><body><h2>Day Three</h2><p>Breakfast at the harbour bakery, then a slow walk along the old aqueduct before lunch.</p><div>Dinner is booked for eight at the tiled tavern near the castle gate.</div></body></html>' > "$S14_FIX"
+# The strip_to_text_blocks counterpart of S11_VOID: markup, a style rule and a script body
+# but NO visible text. Its projection is legitimately empty and its STATUS is still 0.
+S14_VOID="$WORK/s14_void.html"
+printf '%s' '<!DOCTYPE html><html><head><style>.hero{color:#333}</style></head><body><script>var mapReady=1;</script></body></html>' > "$S14_VOID"
+S14_TOKEN='zzs14scriptonlyzz'
+S14_ERR_OK="$WORK/s14_stderr_ok.txt"
+S14_ERR_FAIL="$WORK/s14_stderr_fail.txt"
+S14_ERR_VOID="$WORK/s14_stderr_void.txt"
+
+# ── S14a — THE DENOMINATOR. Taken BEFORE the stub, as S11a is, so the values every arm
+# below compares against are readings of production code.
+S14_OK="$(strip_to_text_blocks "$S14_FIX" 2>"$S14_ERR_OK")";      S14_RC_OK=$?
+S14_VOID_OUT="$(strip_to_text_blocks "$S14_VOID" 2>"$S14_ERR_VOID")"; S14_RC_VOID=$?
+S14_ERRLEN_OK="$(wc -c < "$S14_ERR_OK" | tr -d ' ')"
+S14_WORDS_OK="$(printf '%s' "$S14_OK" | _norm_words | wc -l | tr -d ' ')"
+S14_WORDS_VOID="$(printf '%s' "$S14_VOID_OUT" | _norm_words | wc -l | tr -d ' ')"
+case "$S14_OK" in *"$_GUARD_BLOCK"*) S14_SENT_OK=1 ;; *) S14_SENT_OK=0 ;; esac
+case "$S14_OK" in *"$S14_TOKEN"*)    S14_SCRIPT_OK=1 ;; *) S14_SCRIPT_OK=0 ;; esac
+if [ "$S14_RC_OK" -eq 0 ] && [ -n "$S14_OK" ] && [ "$S14_SENT_OK" -eq 1 ] \
+   && [ "$S14_SCRIPT_OK" -eq 0 ] && [ "$S14_WORDS_OK" -ge 20 ]; then
+  PASS "S14a: DENOMINATOR — with a working perl the projection of the fixture is ${#S14_OK}B carrying at least one block sentinel, the script body's token is gone, and ${S14_WORDS_OK} visible words clear the 20-word degraded-extraction floor. The projection is doing all three of its jobs, so the arms below compare real values"
+else
+  FAIL "S14a: rc=$S14_RC_OK len=${#S14_OK}B sentinel=$S14_SENT_OK script-token-survived=$S14_SCRIPT_OK words=$S14_WORDS_OK — the projection is empty, is emitting no block sentinel, is leaking the script body, or falls under the 20-word floor. Every S14 verdict below would be vacuous"
+fi
+
+# ── S14b — THE REGRESSION. perl is stubbed to fail the way a missing or too-old perl
+# fails: non-zero, nothing on stdout. The question is what verify_publishable_content is
+# then handed. With the fallback in place it is handed the sed limb's output — a
+# well-formed, plausible, NON-EMPTY stream carrying no sentinels at all, at status 0. Both
+# halves of this arm invert across the fix, which is what stops it passing by accident.
+perl() { printf 'perl: simulated failure (S14 stub)\n' >&2; return 127; }
+S14_FALLBACK="$(strip_to_text_blocks "$S14_FIX" 2>"$S14_ERR_FAIL")"; S14_RC_FAIL=$?
+unset -f perl
+S14_ERRLEN_FAIL="$(wc -c < "$S14_ERR_FAIL" | tr -d ' ')"
+case "$S14_FALLBACK" in *"$_GUARD_BLOCK"*) S14_SENT_FB=1 ;; *) S14_SENT_FB=0 ;; esac
+if [ -n "$S14_OK" ] && [ -z "$S14_FALLBACK" ] && [ "$S14_RC_FAIL" -ne 0 ]; then
+  PASS "S14b: with perl failing, strip_to_text_blocks yields NO output and a non-zero status (rc=$S14_RC_FAIL), against the working limb's ${#S14_OK}B — there is no second projection for the content guard to act on, so it cannot be handed a sentinel-free stream that collapses the conjunctive rule to a bare word window"
+else
+  FAIL "S14b: a failed perl still produced ${#S14_FALLBACK}B at rc=$S14_RC_FAIL (working limb: ${#S14_OK}B), block sentinels in it = $S14_SENT_FB — a SECOND projection is reaching verify_publishable_content. It emits no block sentinel, so every token lands in block 0, the same-block conjunct is true for every pair, and the visible arm reverts to the N-squared day-pairing false abort ADR-008's first amendment removed"
+fi
+
+# ── S14c — VISIBILITY. The status is only half of it: a projection that fails must also
+# SAY so. The `2>/dev/null` existed to silence perl before falling back, and with nothing
+# to fall back to it silences the one message that explains the failure — leaving the
+# consumer's own wording ("the rendered site yielded only 0 words of visible text") naming
+# the symptom and never the cause. The control is the same call with a working perl, which
+# must write nothing at all.
+if [ "$S14_ERRLEN_OK" -eq 0 ] && [ "$S14_ERRLEN_FAIL" -gt 0 ]; then
+  PASS "S14c: a failing perl wrote ${S14_ERRLEN_FAIL}B to stderr while a working one wrote ${S14_ERRLEN_OK}B — the projection no longer discards its own diagnostic, and the working-perl zero is what makes the non-zero the failure surfacing rather than ordinary chatter"
+else
+  FAIL "S14c: working-perl stderr=${S14_ERRLEN_OK}B, failing-perl stderr=${S14_ERRLEN_FAIL}B — the projection is still swallowing perl's stderr, or it is writing on the happy path, which would make this probe meaningless. A failure that announces nothing is the first of the three properties that made this defect silent"
+fi
+
+# ── S14d — SPECIFICITY for S14b. S14b's verdict is an EMPTY answer, and an empty answer is
+# worthless unless emptiness means one specific thing. A render with markup, a style rule
+# and a script body but no visible text projects to nothing LEGITIMATELY — that is a real
+# identity a render may hold — and it still SUCCEEDS. The discriminator is therefore the
+# exit status, not the byte count.
+#
+# THIS ARM IS A CONTROL AND IT HOLDS IN BOTH DIRECTIONS, which is why it gates on the
+# near-miss ALONE and not on S14b's subject. Its being green before the fix as well as
+# after is what makes S14b's red a measurement rather than a pair of arms agreeing with
+# each other; folding S14_RC_FAIL into the condition here would make the control a second
+# reading of the thing it is supposed to be independent of. The failed-projection status is
+# REPORTED in both messages for the contrast, and decides neither of them.
+if [ "$S14_RC_VOID" -eq 0 ] && [ "$S14_WORDS_VOID" -eq 0 ]; then
+  PASS "S14d: a render whose visible text is genuinely empty projects to ${S14_WORDS_VOID} words and still SUCCEEDS (rc=$S14_RC_VOID) — so an empty output is a legitimate answer here and S14b's discriminator has to be the STATUS, which S14b reads (failed projection, for contrast: rc=$S14_RC_FAIL)"
+else
+  FAIL "S14d: the empty-visible-text render returned rc=$S14_RC_VOID with $S14_WORDS_VOID word(s) — a legitimately empty render is either failing or is not projecting to nothing, so S14b's empty answer no longer discriminates a failed projection from an empty one and its zero proves nothing (failed projection, for contrast: rc=$S14_RC_FAIL)"
+fi
+
+# ── S14e — THE RESTORE. S6c's rule applied to this stub: an injection that outlives its
+# arm turns every later verdict into a grade of the stub.
+S14_RESTORED="$(strip_to_text_blocks "$S14_FIX" 2>/dev/null)"
+if [ -n "$S14_OK" ] && [ "$S14_RESTORED" = "$S14_OK" ]; then
+  PASS "S14e: the perl stub was withdrawn and the projection reads its ${#S14_RESTORED}B denominator again — group T and everything after it grade production code"
+else
+  FAIL "S14e: after the restore the projection reads ${#S14_RESTORED}B rather than the ${#S14_OK}B S14a measured — the stub survived its arm and every verdict below is grading it"
+fi
+
+# ── S14f — STRUCTURAL, and the arm that outlives this particular fallback. S14b measures
+# the sed limb specifically; this one asserts the CONTRACT — the projection is a single
+# limb — so a future `|| awk …`, `|| python3 …` or `|| true` is caught by the same arm
+# rather than needing its own. Read from the PARSED body, so a mention inside a comment
+# cannot fake it. Its sensitivity arm is strip_to_text, which legitimately keeps a fallback
+# and is byte-frozen by #550 AC 5: the detector demonstrably fires on the shape it is
+# looking for, so the zero on this projection is a measurement. This is S11f's shape with
+# a second subject, and the two share that one control.
+S14_BODY_BLK="$(declare -f strip_to_text_blocks)"
+S14_BODY_TEXT="$(declare -f strip_to_text)"
+case "$S14_BODY_BLK"  in *'||'*) S14_BLK_LIMB=1 ;; *) S14_BLK_LIMB=0 ;; esac
+case "$S14_BODY_TEXT" in *'||'*) S14_TEXT_LIMB=1 ;; *) S14_TEXT_LIMB=0 ;; esac
+case "$S14_BODY_BLK"  in *zzz_not_a_real_identifier*) S14_BLK_SPEC=1 ;; *) S14_BLK_SPEC=0 ;; esac
+if [ "${#S14_BODY_BLK}" -gt 0 ] && [ "${#S14_BODY_TEXT}" -gt 0 ] \
+   && [ "$S14_BLK_LIMB" -eq 0 ] && [ "$S14_TEXT_LIMB" -eq 1 ] && [ "$S14_BLK_SPEC" -eq 0 ]; then
+  PASS "S14f: the parsed body of strip_to_text_blocks (${#S14_BODY_BLK}B) carries 0 fallback limbs; the sensitivity arm found 1 in strip_to_text (${#S14_BODY_TEXT}B), which legitimately keeps one and is byte-frozen, and the specificity arm found a fabricated token in 0 of them — the zero is a measurement, and a second limb of ANY kind fails here"
+else
+  FAIL "S14f: blocks-limb=$S14_BLK_LIMB text-limb=$S14_TEXT_LIMB specificity=$S14_BLK_SPEC blocks=${#S14_BODY_BLK}B text=${#S14_BODY_TEXT}B — the visible block projection carries a second limb, or the detector cannot see the one strip_to_text carries, in which case its zero proves nothing"
+fi
+
+# ── S14g — THE ANSWER, KEPT EXECUTABLE. The card asks whether the two limbs compute the
+# same answer. Settling that in a comment makes it true on the day it was written; running
+# it makes it true on every push. The removed limb is restored under the projection's own
+# name, run over the SAME fixture, and withdrawn again — and the withdrawal is graded here
+# rather than assumed, because a shadow that outlived this arm would silently turn every
+# later reader of this function into a reader of a sed expression.
+S14_PROD_DEF="$(declare -f strip_to_text_blocks)"
+strip_to_text_blocks() { sed -E 's/<[^>]*>/ /g' "$1"; }   # the removed limb, verbatim
+S14_SHADOW="$(strip_to_text_blocks "$S14_FIX" 2>/dev/null)"
+eval "$S14_PROD_DEF"                                      # the shadow is withdrawn HERE
+S14_AFTER="$(strip_to_text_blocks "$S14_FIX" 2>/dev/null)"
+case "$S14_SHADOW" in *"$_GUARD_BLOCK"*) S14_SENT_SH=1 ;; *) S14_SENT_SH=0 ;; esac
+case "$S14_SHADOW" in *"$S14_TOKEN"*)    S14_SCRIPT_SH=1 ;; *) S14_SCRIPT_SH=0 ;; esac
+if [ -z "$S14_SHADOW" ] || [ -z "$S14_OK" ]; then
+  FAIL "S14g: one of the two projections produced nothing (shadow=${#S14_SHADOW}B real=${#S14_OK}B), so the comparison below would be between empty streams and would say nothing about whether the limbs agree"
+elif [ "$S14_AFTER" != "$S14_OK" ]; then
+  FAIL "S14g: THE SHADOW WAS NOT WITHDRAWN — after the restore the projection reads ${#S14_AFTER}B rather than S14a's ${#S14_OK}B. Every later caller of strip_to_text_blocks in this process is reading a sed expression, and the comparison this arm makes is worth less than the damage it left behind"
+elif [ "$S14_SENT_SH" -eq 0 ] && [ "$S14_SENT_OK" -eq 1 ] && [ "$S14_SCRIPT_SH" -eq 1 ] && [ "$S14_SCRIPT_OK" -eq 0 ]; then
+  PASS "S14g: THE TWO LIMBS DO NOT COMPUTE THE SAME ANSWER, measured rather than asserted — over one fixture the removed sed limb yields ${#S14_SHADOW}B carrying ZERO block sentinels and the script body's token INTACT, while the perl limb yields ${#S14_OK}B carrying sentinels and no script token. That is the card's question with its input, its comparison and its difference standing in the suite; the shadow was withdrawn and the projection reads its denominator again"
+else
+  FAIL "S14g: the comparison did not separate the limbs — shadow sentinels=$S14_SENT_SH real sentinels=$S14_SENT_OK, shadow script-token=$S14_SCRIPT_SH real script-token=$S14_SCRIPT_OK. Either the fixture stopped carrying a block tag or a script body, or the two limbs now agree, in which case the premise of this whole group has changed and the removal needs re-deciding rather than re-asserting"
 fi
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T (#551 AC 5) — the coordination notice: its identity, its state vocabulary,
