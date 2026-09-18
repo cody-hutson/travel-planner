@@ -67,11 +67,11 @@ MODES
 
         WHICH FORMS IT CAN READ is a separate limit from the one above, and it
         is stated in full in the limit block the census prints on EVERY exit
-        path -- including the one shape that escapes both the reader and its
-        own refusal. It is not restated here.
+        path -- including the class that escapes both the reader and its own
+        refusal. It is not restated here.
 
         Exit 0 clean / 1 finding(s) / 2 REFUSED -- no jobs at all, or a
-        workflow file that was walked and yielded no job record.
+        workflow file that was walked and yielded no record read from a job key.
 
     --assert --stdin | --assert --file PATH
         The four-conjunct assertion alone, over a protection object or over a
@@ -97,8 +97,9 @@ EXIT CODES
     1  an assertion failed
     2  input was malformed (a read that returned a shape with no checks array;
        for --census, a workflow population with no jobs in it, or a workflow
-       file that was walked and yielded no job record -- "I could not read this
-       file" is a refusal, never a finding, so it never shares exit 1)
+       file that was walked and yielded no record read off a job key -- "I could
+       not read this file" is a refusal, never a finding, so it never shares
+       exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
     5  the self-test did not pass, so no live mode may run
@@ -287,12 +288,19 @@ CENSUS_CODES = ("UNREGISTERED", "ABSENT", "UNDECLARED")
 
 _RE_MARKER = re.compile(r"^(\s*)#\s*gate-efficacy:\s*posture\s*=\s*(\S+)")
 _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
-# An OPTIONALLY-QUOTED key, with a matched-quote backreference. GitHub restricts
-# a job ID to [A-Za-z0-9_-] beginning with a letter or `_`, so no legal job ID
-# can contain a quoting escape -- which makes this form EXHAUSTIVE over the legal
-# domain rather than a patch for the two examples that were reported. A
-# mismatched-quote line is not valid YAML and is rejected upstream by
-# `Workflow SAST (actionlint)`, which runs in this same job.
+# An OPTIONALLY-QUOTED key, with a matched-quote backreference. It covers the
+# forms this repository writes and it is NOT exhaustive over the legal domain --
+# a claim that stood here until it was measured and fell. The charset argument
+# behind it (a job ID is [A-Za-z0-9_-], so no legal ID carries a quoting escape)
+# is true about the VALUE and says nothing about its PRESENTATION: a YAML
+# double-quoted scalar may escape any character whether or not it needs to, and
+# YAML permits whitespace between a key scalar and its `:` indicator. Six
+# presentations of the one legal ID `new-suite` sit outside this pattern,
+# measured, and are armed as X20-X25; no bounded pattern closes that class.
+#
+# What DOES close it is not this pattern. A key this reader misses is caught by
+# the per-file assertion in `run_census`, which is why that assertion rests on
+# where a record was read from rather than on how a key is spelled.
 #
 # The groups are NAMED deliberately: adding a group shifts every positional
 # index, and two call sites read them.
@@ -335,6 +343,36 @@ def _block_indent(lines, start, end):
         if m:
             return len(m.group("ind"))
     return None
+
+
+def _block_child_indent(lines, start, end):
+    """The shallowest indentation any line in the block carries, key or not.
+
+    YAML puts a mapping's children at ONE indentation and everything deeper
+    inside one of them, so the shallowest line in the `jobs:` block sits at the
+    job keys' own indentation -- whether or not this reader can recognise what
+    is written there. That is the whole of its job: it is the comparator for
+    `_block_indent`, which answers with the first indentation it RECOGNISED.
+
+    The two agree on a file this reader can read. They disagree exactly when a
+    job key went unrecognised and the scan carried on into that job's own
+    properties, which is the moment a phantom record is made -- so the knowledge
+    that a record is synthesised exists at the point it is synthesised, and does
+    not have to be inferred afterwards from the record itself.
+
+    Blanks and comments are skipped because neither is a child; comments in
+    particular sit at the marker indentation and would answer for the block.
+    Returns None when the block holds no such line.
+    """
+    found = None
+    for i in range(start, end):
+        line = lines[i]
+        if not line.strip() or _RE_COMMENT.match(line):
+            continue
+        ind = _indent_of(line)
+        if found is None or ind < found:
+            found = ind
+    return found
 
 
 def _comment_block_top(lines, i):
@@ -457,6 +495,15 @@ def census_scan(root):
     file is written in. A reader that assumed one style would report CLEAN over
     a tree carrying an unregistered job in another -- the very defect this mode
     exists to surface, arriving through the mode's own parser.
+
+    `synthesised` records where a record CAME FROM, and it is the one field no
+    consumer may ignore. A key presentation this reader does not recognise does
+    not stop the scan: it carries on to the next line it DOES recognise, which
+    is one of that job's own properties, and records a job off it. Such a record
+    is evidence of nothing -- its key is a property name, its `name:` is
+    whatever sits under that property, and any marker it binds was written for
+    the job whose key was missed. It is marked at the moment it is made so the
+    per-file assertion can refuse to accept it as evidence the file was read.
     """
     jobs = []
     for rel, path in workflow_files(root):
@@ -483,6 +530,18 @@ def census_scan(root):
         job_indent = _block_indent(lines, start, end)
         if job_indent is None:
             continue
+
+        # Whether these records are read off job KEYS or off a job's own
+        # PROPERTIES, decided here rather than guessed later. See
+        # `_block_child_indent`: the two answers diverge only when a key at the
+        # block's own indentation went unrecognised, which is the one condition
+        # under which the scan reaches a job's properties and records them.
+        # It is per FILE because `job_indent` is, so a file's records are all
+        # synthesised or none of them are -- there is no mixed case to reason
+        # about, and after `run_census`'s refusal no synthesised record survives
+        # into grading at all.
+        child_indent = _block_child_indent(lines, start, end)
+        synthesised = child_indent is not None and job_indent > child_indent
 
         keys = [i for i in range(start, end)
                 if _RE_KEY.match(lines[i])
@@ -513,7 +572,8 @@ def census_scan(root):
             posture = raw if raw in POSTURE_VALUES else None
 
             jobs.append({"file": rel, "key": key, "name": name or key,
-                         "posture": posture, "raw": raw, "note": note})
+                         "posture": posture, "raw": raw, "note": note,
+                         "synthesised": synthesised})
     return jobs
 
 
@@ -555,8 +615,16 @@ def census_findings(jobs):
 # census MEANS; the second is about which inputs it could read at all. A widened
 # reader that implies it now handles everything is more dangerous than the narrow
 # one it replaced, because the next author trusts it further -- so the second
-# limit names the one shape that escapes both the reader and its own refusal, and
-# names it here rather than in a commit message nobody will read again.
+# limit names what escapes both the reader and its own refusal, and names it here
+# rather than in a commit message nobody will read again.
+#
+# It says a CLASS and no longer a count, and that is a correction rather than a
+# hedge. The previous text said ONE SHAPE and named an example; six presentations
+# of one legal job ID were then measured outside the reader, three of them with
+# no quoting trick at all. A limit block that understates its own residual is the
+# defect this whole mode exists to remove, sitting inside the instrument that
+# removes it -- so the residual is stated as the condition that produces it, and
+# the arms that hold it honest (X20-X26) are named for whoever comes next.
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
     "API, so this census cannot confirm that any context is REGISTERED. A clean",
@@ -564,13 +632,21 @@ _CENSUS_LIMIT = (
     "Registration remains an operator act outside any pull request.",
     "",
     "WHICH FORMS IT READS: a block `jobs:` mapping at column zero whose job keys are",
-    "`key:` lines, optionally quoted. A clean result holds for those forms and no",
-    "others; a file outside them is REFUSED BY NAME rather than skipped in silence.",
-    "ONE SHAPE ESCAPES BOTH: a job in YAML explicit-key form (`? key` / `: value`)",
-    "sharing a file with a readable job. That file yields a record, so the per-file",
-    "refusal cannot fire, and the census reaches CLEAN over a job it never graded.",
+    "`key:` lines, optionally quoted. That set is not exhaustive over the ways YAML",
+    "lets a legal job ID be written, and no bounded pattern would be. A file that",
+    "yields no record READ OFF A JOB KEY is REFUSED BY NAME rather than skipped in",
+    "silence -- including one whose only records were read off a job's own",
+    "properties after that job's key went unrecognised.",
+    "ONE CLASS ESCAPES BOTH, stated as its condition and not as an example: a job",
+    "key this reader does not recognise, in a file where it DOES recognise some",
+    "other job's key. That file yields a genuine record, the per-file refusal has",
+    "nothing to fire on, and the census reaches CLEAN over a job it never graded.",
+    "Six presentations of one legal job ID are measured members -- the explicit-key",
+    "form (`? key` / `: value`), a key spelled with a `\\u` or `\\x` escape, and a key",
+    "carrying whitespace before its `:` in each of its bare, double- and",
+    "single-quoted spellings -- and the class is NOT closed.",
     "No backstop stands behind it: `Workflow SAST (actionlint)`, in this same job,",
-    "exits 0 on that form -- measured. It rejects INVALID YAML; this form is valid.",
+    "exits 0 on all six -- measured. It rejects INVALID YAML; these are valid.",
 )
 
 
@@ -578,10 +654,10 @@ _RE_JOBS_ISH = re.compile(r"^(['\"]?)jobs\1:")
 
 
 def _unread_reason(path):
-    """Why `census_scan` recorded no job for this file. A DIAGNOSIS, not the guarantee.
+    """Why this file yielded no record read from a job key. A DIAGNOSIS, not the guarantee.
 
     THE GUARANTEE IS THE SET DIFFERENCE IN `run_census`, NOT THIS LIST. That
-    refusal fires whenever a walked file contributed no job record, whatever the
+    refusal fires whenever a walked file contributed no such record, whatever the
     cause -- so a shape this helper cannot name still fails closed, and a fourth
     silent skip added to `census_scan` later degrades the diagnostic without
     weakening the check. That asymmetry is the whole reason the guard is a set
@@ -616,9 +692,18 @@ def _unread_reason(path):
             end = i
             break
 
-    if _block_indent(lines, start, end) is None:
+    job_indent = _block_indent(lines, start, end)
+    if job_indent is None:
         return ("its `jobs:` block holds no `key:` line this reader recognises -- a "
                 "job key carrying a flow mapping on its own line is not one")
+
+    child_indent = _block_child_indent(lines, start, end)
+    if child_indent is not None and job_indent > child_indent:
+        return ("its `jobs:` block carries a line at indentation {}, where the job "
+                "keys sit, that this reader does not recognise as a `key:` line. "
+                "Every record it took from this file was read off a job's own "
+                "properties at indentation {} instead, so the file was walked but "
+                "no job key in it was read".format(child_indent, job_indent))
 
     return "the reader walked it and recorded no job"
 
@@ -673,11 +758,22 @@ def run_census(root, stream=sys.stdout):
     # It exits 2 rather than joining the findings at exit 1, because it is not a
     # finding. "The workflows and the declaration disagree" and "I could not read
     # this file" are different claims and must not collapse into one.
-    read = set(j["file"] for j in jobs)
+    #
+    # WHAT THE ASSERTION ASSERTS, in the words it is worth being exact about:
+    # every workflow file walked yielded at least one record READ OFF A LINE THIS
+    # READER RECOGNISED AS A JOB KEY -- not merely at least one record. The
+    # weaker form is the one that shipped and it was satisfied by a PHANTOM: a
+    # file whose only job key went unrecognised still yields a record, read off
+    # that job's own `steps:` line, and six measured key presentations reached
+    # CLEAN at exit 0 through exactly that gap (X20-X25). A record whose
+    # provenance is a property rather than a key is not evidence that the file
+    # was read, so it does not discharge the assertion, and `census_scan` marks
+    # it where the knowledge exists rather than leaving it to be inferred here.
+    read = set(j["file"] for j in jobs if not j["synthesised"])
     silent = [(rel, path) for rel, path in files if rel not in read]
     if silent:
-        out("MALFORMED: {} of {} workflow file(s) yielded no job record.".format(
-            len(silent), len(files)))
+        out("MALFORMED: {} of {} workflow file(s) yielded no record read from a "
+            "job key.".format(len(silent), len(files)))
         for rel, path in silent:
             out("    {} -- {}".format(rel, _unread_reason(path)))
         out("A file this reader could not read is a file it cannot grade, and "
@@ -1176,11 +1272,13 @@ def census_arms():
     # MEASURED against the reader that shipped: five reached CENSUS CLEAN at exit
     # 0, and the other two were graded under a name no line of the file carries.
     #
-    # X13-X16 are one family. The legal job-ID charset is [A-Za-z0-9_-], so no
-    # legal job ID can carry a quoting escape -- which makes an optionally-quoted
-    # key EXHAUSTIVE over the legal domain rather than a patch for two examples.
-    # X17-X19 are the other: three different causes, one signature -- the file
-    # contributed zero job records and nothing said so.
+    # X13-X16 are one family: the two quoting characters a key may carry, each an
+    # independent alternative of one pattern. They were once argued to exhaust the
+    # legal domain, on the ground that no legal job ID carries a quoting escape.
+    # That ground is true of the VALUE and irrelevant to its PRESENTATION, and
+    # X20-X25 are the six presentations that falsified it. X17-X19 are the other
+    # family: three different causes, one signature -- the file contributed zero
+    # job records and nothing said so.
     quoted_key = dict(base)
     quoted_key[".github/workflows/synth-quoted.yml"] = _synth_workflow(
         [('"new-suite"', "New suite (test-new-suite.sh)", "required")])
