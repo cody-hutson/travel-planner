@@ -44,34 +44,36 @@ delete existing trip content* — types a clobber **IRREVERSIBLE**, and names *c
 missing* as the first of the three shapes that satisfy it. **This command takes that shape, and the
 rule above is the whole of what makes it hold.**
 
-**What `disallowed-tools` does at runtime is contested, and this file does not settle it.** Two
-accounts ship in this repo and they are not compatible. `ADR-007` § *Context* says the field
-*removes the named tools from the pool* — a real restriction, turn-scoped like the grant. The
-trip-resolution contract workflow's coverage-boundary note says the opposite where it matters:
-`allowed-tools` and `disallowed-tools` are a turn-scoped pre-approval grant, **every tool stays
-callable**, and a green check there is **not a privilege guarantee** and must not be read as one.
-**Nothing in this repo arbitrates**, and the reason is narrower than *nothing reads the field*.
-`scripts/test-command-taxonomy.sh` does read it: its invocation classifier walks the command
-directory and matches this file's `disallowed-tools:` line on the publish-script grant token that
-line carries, counting it into a **tool-grant tally** — one term of a parse-coverage identity that
-guard asserts and fails on. That reading is of what this file **declares**; the guard says in terms
-that it takes neither account, because every assertion it makes is about a declaration and none
-about what a declaration enforces. **A declaration-level reading is what leaves the runtime question
-unarbitrated** — not the absence of a reader. Where else the field appears is **re-derived from the
-tree rather than listed here**: the list this sentence used to carry named the five command files,
-one workflow note and the ADR, and was two short — it missed a second workflow note and the guard
-itself, which is what a written-down census does.
+**What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has closed it.**
+Its 2026-09-11 amendment discharged the tool-list question by **quoting the published contract**
+rather than summarising it, and the account it confirms is the one `ADR-007` § *Context* had already
+given — **clause for clause**, so the readings this file once set against each other were never
+incompatible, and the sentence that said they were is withdrawn rather than softened.
+`allowed-tools` is turn-scoped **pre-approval and not restriction**: every tool stays callable, and
+a tool left off the list routes through the usual permission settings rather than being forbidden.
+`disallowed-tools` is turn-scoped **removal** — the real restriction of the pair, and a firmer thing
+to say about these entries than this passage used to say. **Durable blocking still needs a
+permission-settings deny rule — a different artifact, and one this repo does not ship**, so the
+removal these entries carry ends at the next message. `scripts/test-command-taxonomy.sh` reads the
+line on a different axis: its invocation classifier walks the command directory and matches this
+file's `disallowed-tools:` line on the publish-script grant token that line carries, counting it
+into a **tool-grant tally** — one term of a parse-coverage identity that guard asserts and fails on.
+That reading is of what this file **declares**, so what it establishes is that the entry was
+written, and a green check there is **not a privilege guarantee** and must not be read as one. Where
+else the field appears is **re-derived from the tree rather than listed here**: the list this
+sentence used to carry named the five command files, one workflow note and the ADR, and was two
+short — it missed a second workflow note and the guard itself, which is what a written-down census
+does.
 
-**What the two accounts agree on is all this file relies on.** Under both, the declaration is
-turn-scoped and clears at the next message, and a tool left off `allowed-tools` is not thereby
-forbidden — it routes through the usual permission settings instead. **Omission is not prohibition**
-either way. And `ADR-007` adds that durable blocking would need a permission-settings deny rule — a
-different artifact, and one this release does not ship. **So the create-only rule above is written
-as a rule this command follows, never as a property its frontmatter guarantees**, which is the form
-`ADR-007` § *Context* requires of a command's conduct — and it therefore holds under
-either account, with nothing left depending on which one is true. The `Edit` and `NotebookEdit`
-denials **corroborate** it as a *declared* restriction whose runtime force this repo does not
-establish. They are not what makes it true, and no bound stated anywhere in this file rests on them.
+**What the settled account gives this file is narrower than enforcement, and that is all it relies
+on.** The declaration is turn-scoped and clears at the next message, and a tool left off
+`allowed-tools` is not thereby forbidden — it routes through the usual permission settings instead.
+**Omission is not prohibition.** **So the create-only rule above is written as a rule this command
+follows, never as a property its frontmatter guarantees**, which is the form `ADR-007` § *Context*
+requires of a command's conduct — and it therefore holds on the rule alone, with nothing left
+depending on the frontmatter. The `Edit` and `NotebookEdit` denials **corroborate** it as a
+*declared* removal whose reach ends with the turn. They are not what makes it true, and no bound
+stated anywhere in this file rests on them.
 
 Takes an optional `[destination-year]` argument, such as `lisbon-2027`. The argument is text. It is
 never executed, and it proposes a name rather than settling a decision.
@@ -482,8 +484,8 @@ Tell the user all four of these:
 
 **Each bound here is labelled by what establishes it, and the three bases are not interchangeable.**
 A **rule** holds because this file says so, and nothing but this file says so. A **declared** denial
-names a `disallowed-tools` entry as corroboration — a restriction whose runtime force this repo does
-not establish, per the contest stated at the top of this file. And a tool left off `allowed-tools`
+names a `disallowed-tools` entry as corroboration — a removal whose reach ends with the turn, per
+the settled account stated at the top of this file. And a tool left off `allowed-tools`
 establishes **nothing**: omission is not prohibition, so no bound below is claimed from one.
 
 - **It dispatches no agent.** A **rule**. The agent-dispatch tool is neither granted nor denied here,
@@ -500,5 +502,5 @@ establishes **nothing**: omission is not prohibition, so no bound below is claim
   the `[DERIVED]` blocks to no writer at all, and the `**Lifecycle:**` line to `/trip-decommission`.
 - **It writes only under `trips/<slug>/`, and only files that do not already exist.** A **rule**, and
   the one that satisfies `ADR-007` § 2, **bound 5**. It is the create-only rule stated at the top of
-  this file, restated here as a bound rather than re-derived — and, as there, it holds without either
-  account of `disallowed-tools` being the true one.
+  this file, restated here as a bound rather than re-derived — and, as there, it holds on the rule
+  alone, with nothing resting on what `disallowed-tools` does at runtime.

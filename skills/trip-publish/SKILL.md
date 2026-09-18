@@ -38,41 +38,43 @@ grants and the fenced invocations.
 
 ## Why this is its own file
 
-**What `disallowed-tools` does at runtime is contested, and this file does not settle it.**
-Two accounts ship in this repo and they are not compatible.
-`reference/adr/ADR-007-command-entry-point.md` § Context says the field *removes the named
-tools from the pool* — a real restriction. The trip-resolution contract workflow's
-scope note says the opposite where it matters: `allowed-tools` and `disallowed-tools` are a
-turn-scoped pre-approval grant and **every tool stays callable**, adding that a green check
-there is not a privilege guarantee and must not be read as one. **Nothing in this repo
-arbitrates**, and the reason is narrower than *nothing reads the field*.
-`scripts/test-command-taxonomy.sh` does read it: its invocation classifier walks the
-command directory and matches this file's `disallowed-tools:` line on the publish-script
-grant token that line carries, counting it into a **tool-grant tally** — one term of a
-parse-coverage identity that guard asserts and fails on. That reading is of what this file
-**declares**; the guard says in terms that it takes neither account, because every
-assertion it makes is about a declaration and none about what a declaration enforces. **A
-declaration-level reading is what leaves the runtime question unarbitrated** — not the
-absence of a reader. Where else the field appears is **re-derived from the tree rather than
-listed here**: the list this sentence used to carry named the five command files, one
-workflow comment and the ADR, and was two short — it missed a second workflow comment and
-the guard itself, which is what a written-down census does.
+**What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has
+closed it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the
+published contract** rather than summarising it, and the account it confirms is the one
+`reference/adr/ADR-007-command-entry-point.md` § Context had already given — **clause for
+clause**, so the readings this file once set against each other were never incompatible,
+and the sentence that said they were is withdrawn rather than softened. `allowed-tools` is
+turn-scoped **pre-approval and not restriction**: every tool stays callable, and a tool
+left off the list routes through the usual permission settings rather than being forbidden.
+`disallowed-tools` is turn-scoped **removal** — the real restriction of the pair, and a
+firmer thing to say about these entries than this passage used to say. **Durable blocking
+still needs a permission-settings deny rule — a different artifact, and one this repo does
+not ship**, so the removal these entries carry ends at the next message.
+`scripts/test-command-taxonomy.sh` reads the line on a different axis: its invocation
+classifier walks the command directory and matches this file's `disallowed-tools:` line on
+the publish-script grant token that line carries, counting it into a **tool-grant tally** —
+one term of a parse-coverage identity that guard asserts and fails on. That reading is of
+what this file **declares**, so what it establishes is that the entry was written, and a
+green check there is not a privilege guarantee and must not be read as one. Where else the
+field appears is **re-derived from the tree rather than listed here**: the list this
+sentence used to carry named the five command files, one workflow comment and the ADR, and
+was two short — it missed a second workflow comment and the guard itself, which is what a
+written-down census does.
 
-What the two accounts **agree** on is all this file relies on. The declaration is
-turn-scoped and clears at the next message; a tool left off `allowed-tools` is not thereby
-forbidden, it routes through the usual permission settings instead. **Omission is not
-prohibition** under either account. And durable blocking would need a permission-settings
-deny rule — a different artifact, and one this release does not ship.
+What the settled account gives this file is narrower than enforcement, and that is all it
+relies on. The declaration is turn-scoped and clears at the next message; a tool left off
+`allowed-tools` is not thereby forbidden, it routes through the usual permission settings
+instead. **Omission is not prohibition.**
 
 **So this file's conduct is written as rules it follows, never as a property its
-frontmatter guarantees**, and that is what keeps it sound under either account: every claim
-below holds without the disputed one being true.
+frontmatter guarantees**, and that is what keeps it sound on the rule alone: every claim
+below holds without the frontmatter being what makes it true.
 
 **Each claim here about what this command will not do is labelled by what establishes it,
 and the two bases are not interchangeable.** A claim resting on a **rule this file
 follows** holds because the file says so, and nothing but the file says so. A claim that
 *also* has a `disallowed-tools` entry behind it names that entry as a **declared**
-restriction — one whose runtime force this repo does not establish, and which is therefore
+removal — one whose reach ends with the turn, and which is therefore
 offered as corroboration rather than as the thing that makes the claim true. What is never
 claimed is the third thing: a prohibition inferred from a grant left out. Where this file's
 reach is bounded by omission alone, it says *unlisted*, not *denied*.
@@ -80,7 +82,7 @@ reach is bounded by omission alone, it says *unlisted*, not *denied*.
 That is why the publish surface is a separate file rather than a rule written inside
 `/trip`. A rule written inside one file cannot partition anything **across** files — only
 the per-file declarations can, because they are the only per-file thing there is to differ.
-What a runtime does with those declarations is the contested question above; the partition
+What a runtime does with those declarations is the settled question above; the partition
 is a property of the declarations either way, which is why it is stated as one. **This file
 holds the publish half of it, and that half is observable right here:** it reaches the
 publish script and names every content-mutating tool in its `disallowed-tools`. The editing
@@ -541,7 +543,9 @@ pushed and name what the script named — a guard abort is not a partial publish
 what it needs and reports it, and a read here would give this command its own view of
 publication state, which § *Never assert a publication state that was not observed*
 forbids. Its depth cell is `G0`, so it reads no trip record either. Runs
-`scripts/publish-trip-site.sh list` and dispatches no agent.
+`scripts/publish-trip-site.sh list` and dispatches no agent. **It writes nothing, here or
+anywhere: the subcommand it runs resolves and reports and never writes, encrypts or
+pushes — so it performs no act whose effect lands outside the trip's own files.**
 
 Repo-wide, read-only, no trip, no arguments, depth `G0` on its own row. It reports each
 trip with its repo, status, published and edited dates, and the stale flag, exactly as the

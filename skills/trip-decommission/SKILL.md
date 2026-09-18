@@ -48,27 +48,31 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
 
-**The denials, and what each one establishes — which is narrower than "enforced", and narrower than
-anything here can verify.** `allowed-tools` is a turn-scoped pre-approval grant and enforces nothing.
-What `disallowed-tools` does at runtime is **contested, and this file does not settle it**, so
-nothing below is asserted about what a runtime makes of these entries: `ADR-007`'s Context records
-that it removes the named tools from the pool for the turn, while the contract workflow's own scope
-note records that every tool stays callable and that unlisted tools route through the usual
-permission settings. **Those two statements differ, and nothing in this repository settles them.**
-That is not because the line goes unread. `scripts/test-command-taxonomy.sh` reads it: its
+**The denials, and what each one establishes — which is narrower than "enforced", and is bounded by
+the turn.** `allowed-tools` is a turn-scoped pre-approval grant and restricts nothing: every tool
+stays callable, and an unlisted tool routes through the usual permission settings rather than being
+forbidden. What `disallowed-tools` does at runtime **was an open question here, and `ADR-007` has
+closed it**: its 2026-09-11 amendment discharged the tool-list question by **quoting the published
+contract** rather than summarising it, and the account it confirms is the one `ADR-007`'s Context
+had already given — **clause for clause**, so the records this file once set against each other were
+never incompatible, and the sentence that said nothing settled them is withdrawn rather than
+softened. `disallowed-tools` is turn-scoped **removal** — the real restriction of the pair, and a
+firmer thing to say about these entries than this passage used to say. `ADR-007` adds that durable
+blocking would still need a permission-settings deny rule, which this repo does not ship, so the
+removal these entries carry ends at the next message.
+The line is read here too, on a different axis. `scripts/test-command-taxonomy.sh` reads it: its
 invocation classifier matches this file's `disallowed-tools:` line on the publish-script grant token
 the line carries and counts it into a **tool-grant tally**, one term of a parse-coverage identity
-that guard asserts and fails on. It reads the line as a **declaration**, and says in terms that it
-takes neither account — so what it establishes is that the entry was written, never that a runtime
-honours it. **Declared, and read as a declaration, is the whole of what these entries are
-established to be here** — not enforced, and not observed. `ADR-007` adds that durable blocking
-would need a permission-settings deny rule, which this repo does not ship.
+that guard asserts and fails on. It reads the line as a **declaration** — so what it establishes is
+that the entry was written, never that a runtime honours it. **Declared, and read as a declaration,
+is the whole of what an in-repo check establishes about these entries** — not enforced, and not
+observed.
 
 **Two consequences, and they govern every denial below.** Each is a claim about what an entry
 **names**, never about what it has been observed to do; and **no claim here about what an entry
 *does* is repaired by pointing at an in-repo check.** A check that reads these lines as
-declarations — the one named above does — corroborates that an entry was written and establishes
-nothing about what a runtime does with it, so it repairs no claim of that kind. These entries are
+declarations — the one named above does — corroborates that an entry was written and observes
+nothing of what a runtime does with it, so it repairs no claim of that kind. These entries are
 still the strongest control this file has — their strength is simply not established here, and this
 file does
 not rely on them alone: § *The closing entry* and § *Deleting the trip's public repo* rest on the
@@ -424,7 +428,7 @@ That is what could not be established, and the remedy. It is not a report that t
 ## temporary
 
 **Reads:** nothing beyond the blocks above. It reads no `trip-context.md`, no `trip-log.md`, no
-`trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`**.
+`trips/<slug>/.publish-slug` and **no `trips/<slug>/.passphrase`**. **Dispatches no agent.**
 
 Takes the trip's site offline and leaves the local tree untouched.
 

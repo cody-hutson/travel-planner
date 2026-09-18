@@ -660,3 +660,20 @@ to its pre-conversion form, demonstrated per verb — and a rewrite of the large
 demonstration unfalsifiable, because a behavioural difference could no longer be attributed to the
 format change. And the prose-tone rewrite of these same files is separately scoped, so reducing
 them here would duplicate that scope and guarantee the collision it was sequenced to avoid.
+
+**Nor does that prose-tone rewrite remove the overage, and declining it there is a decision rather
+than an omission.** The rewrite is graded on a preservation criterion — every conduct rule a verb
+section carries survives it, demonstrated by enumerating the bound set before and after and finding
+the difference empty in both directions. A reduction at `trip-record`'s ratio is a rewrite rather
+than a trim, and a rewrite destroys that demonstration by construction: a census cannot show that a
+bound survived a passage which no longer exists. The remediation has a home already — the
+consolidation work that merges these verbs into a router plus its references performs the reduction
+**structurally**, dissolving the over-budget bodies rather than trimming them, so doing it here as
+well would be doing it twice, the second time by somebody else.
+
+**The claim above about how many verbs exceed the budget is re-derivable, and is meant to be
+re-derived rather than carried.** The per-row figures are anchored to the commit they were measured
+at and are correct as history. The sentence introducing them carries no anchor, and every one of
+these bodies has grown since that commit — `trip-new` now sits inside the budget by a margin an
+ordinary addition would close. Measure the body lines at the commit you are reading before relying
+on it.
