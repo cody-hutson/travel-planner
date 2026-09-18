@@ -2013,6 +2013,23 @@ def census_arms():
         "    steps:\n"
         "      - run: 'true'\n")
 
+    # X47 is the one input that never reached any exit at all. `census_scan`
+    # caught `OSError` and let `UnicodeDecodeError` through, so a workflow file
+    # that is not UTF-8 killed the process before `run_census` reached any
+    # `return`: no census, no verdict, no limit block, just a traceback. It failed
+    # closed -- a non-zero status is red in CI -- but a reader that cannot say
+    # WHICH file it choked on has told the author nothing. The bytes below are
+    # Latin-1, so the file is not valid UTF-8 at all rather than merely unusual.
+    not_utf8 = dict(base)
+    not_utf8[".github/workflows/synth-latin1.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: Café suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n").encode("latin-1")
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -2167,6 +2184,13 @@ def census_arms():
                 "closed at column zero. Not a quoting trick at all, which is why "
                 "pinning the class rather than a spelling of it is what these three "
                 "arms are for", trunc_seq, 0, set()),
+        ("X47", "a workflow file that is not UTF-8 at all. Every other refusal in "
+                "this list reaches an exit and prints why; this one killed the "
+                "process on an uncaught decode error before `run_census` reached any "
+                "`return` -- no census, no verdict, no limit block, and no word about "
+                "which file. It must refuse like the rest, and `_unread_reason`'s "
+                "first branch, written for exactly this and unreachable until now, is "
+                "what names it", not_utf8, 2, set()),
     ]
 
 
@@ -2174,7 +2198,12 @@ def _materialise(files, root):
     for rel, text in files.items():
         dest = os.path.join(root, rel)
         os.makedirs(os.path.dirname(dest), exist_ok=True)
-        with open(dest, "w", encoding="utf-8") as fh:
+        # `bytes` so an arm can plant a file that is not UTF-8 at all. Written
+        # through the same helper as every other arm deliberately: an arm that
+        # needed its own materialiser would be testing that materialiser.
+        mode, kw = (("wb", {}) if isinstance(text, bytes)
+                    else ("w", {"encoding": "utf-8"}))
+        with open(dest, mode, **kw) as fh:
             fh.write(text)
 
 
