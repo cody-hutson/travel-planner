@@ -3492,6 +3492,40 @@ else
   FAIL "CTL-VA-DEGRADE: MUST FIRE — a degraded frontmatter read did not fail closed (target=${VD_TARGET:-<none>} shadow-invoked=$VD_HITS rc=$VD_RC x2-on-target=$VD_X2 skip-on-target=$VD_SKIP unshadowed-anchor=$VD_ANCHOR). Read the limbs in order: no target or shadow-invoked=0 means the injection never landed and this arm measured nothing; unshadowed-anchor=0 means CTL-DATAROOT2 is the arm to read, because agreement over a degenerate subject proves nothing; otherwise the validator converted an incomplete read into a quieter verdict at rc=0 — the artifact left the gate unchecked and the run reported success"
 fi
 
+# ── CTL-VA-MEMO — the corpus is parsed ONCE per invocation, which is what va_corpus_patterns'
+# memo has always claimed and did not deliver. Every call site reaches that function from
+# inside a command substitution or a pipeline, so each cache write died with its subshell and
+# the 23-file schema corpus was re-parsed once per selected artifact.
+#
+# THIS IS GRADED HERE RATHER THAN LEFT AS A PERFORMANCE NOTE because the cost is not only
+# time. Each re-parse is a fork, and a fork is where a transient subprocess failure lands:
+# the exposure window CTL-DATAROOT6 has been catching is roughly the number of cold parses,
+# so removing them removes most of the window at source. The arm asserts the PROPERTY (at
+# most one cold parse) rather than a duration, which no CI runner can promise.
+#
+# The instrument is a shadow that counts, never one that answers: it records whether the
+# inherited cache would hit and then calls the renamed original, so the cache semantics under
+# measurement are the shipped ones. Its own neutrality is the third limb.
+VM_MARK="$WORK/vm_parses"; VM_ERRF="$WORK/vm_stderr"; VM_OUT=""; VM_RC=0
+VM_CALLS=0; VM_COLD=0; VM_SAME=0
+: > "$VM_MARK"
+VM_OUT="$(
+  eval "$(declare -f va_corpus_patterns | sed '1s/^va_corpus_patterns/va_corpus_patterns_unshadowed/')"
+  va_corpus_patterns() {
+    if [ "$VA_CACHE_ROOT" = "${1:-}" ]; then printf 'warm\n' >> "$VM_MARK"; else printf 'cold\n' >> "$VM_MARK"; fi
+    va_corpus_patterns_unshadowed "$@"
+  }
+  va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>"$VM_ERRF"
+)"; VM_RC=$?
+VM_CALLS="$(awk 'END { print NR + 0 }' "$VM_MARK")"
+VM_COLD="$(awk '/^cold$/ { n++ } END { print n + 0 }' "$VM_MARK")"
+[ "$VM_OUT" = "$DR_A_OUT" ] && [ "$VM_RC" -eq "$DR_A_RC" ] && [ ! -s "$VM_ERRF" ] && VM_SAME=1
+if [ "$VM_CALLS" -ge 2 ] && [ "$VM_COLD" -le 1 ] && [ "$VM_SAME" -eq 1 ]; then
+  PASS "CTL-VA-MEMO: the corpus is parsed at most once per va_main invocation — $VM_COLD cold parse(s) across $VM_CALLS calls to the pattern builder, with the instrumented run's stdout and rc identical to the unshadowed run above and its stderr empty. The memo now holds because va_main warms it in its own shell; before that every one of those calls was cold, and each was a fork the transient failure CTL-DATAROOT6 detects could land in"
+else
+  FAIL "CTL-VA-MEMO: the corpus cache is not holding for the invocation (calls=$VM_CALLS cold=$VM_COLD neutral=$VM_SAME rc=$VM_RC). calls<2 means the pattern builder was reached at most once, so 'one cold parse' would be a statement about a run that never consulted the cache rather than about the cache; cold>1 means the warm is not reaching the subshells and the corpus is being re-parsed per artifact; neutral=0 means the counting shadow changed the answer, so the count above measures the instrument"
+fi
+
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
 # measuring is not a control. Graded LAST, after every fixture above.
 if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-copy.md" ] \

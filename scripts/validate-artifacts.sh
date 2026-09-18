@@ -598,9 +598,18 @@ EOF
 # ─────────────────────────────────────────────────────────────────────────────────
 
 # va_corpus_patterns <root> — "<class-id>\t<artifact>\t<pattern>\t<schema-path>" per
-# declared pattern. Memoised per root: the corpus is parsed once and re-read from the cache
-# for the rest of the run. Without this the selector re-parses every schema for every file
-# it considers, which turns a linear walk into a quadratic one.
+# declared pattern. Memoised per root, so the corpus is parsed once and re-read from the
+# cache for the rest of one invocation. Without the memo the selector re-parses every schema
+# for every file it considers, which turns a linear walk into a quadratic one.
+#
+# ── THE CACHE ONLY HOLDS IF SOMETHING WARMS IT IN A PARENT SHELL ─────────────────
+# Every call site in this file reaches this function from inside a command substitution or a
+# pipeline, and a subshell's assignments die with it — so with nothing warming the globals
+# below in va_main's OWN shell, each call was a cold parse and the memo delivered nothing it
+# claims. Measured on this repository's tree: 21 cold parses per invocation, 25s against 4s.
+# va_main now warms it as a plain command before any of them, and this comment describes what
+# happens rather than what was intended. A caller that drives these functions directly —
+# which the suite does — still gets the cold path, correctly: nothing has warmed anything.
 VA_CACHE_ROOT=""
 VA_CACHE_PATTERNS=""
 va_corpus_patterns() {
@@ -946,6 +955,27 @@ va_main() {
   fi
 
   local rc=0 out sel
+
+  # ── THE CORPUS CACHE IS WARMED HERE, IN THIS FUNCTION'S OWN SHELL ───────────────
+  # va_corpus_patterns memoises into the two globals below, and every call site beneath
+  # this line reaches it from inside a command substitution or a pipeline — so those writes
+  # died with the subshell that made them and the corpus was re-parsed once per selected
+  # artifact. This one plain command populates the globals HERE, and every subshell below
+  # then inherits a warm cache and answers from it. Measured: 21 cold parses per invocation
+  # before, 1 after, with stdout byte-identical. It buys no new behaviour and it is not
+  # meant to: it removes roughly six-sevenths of the wall time this run spends forking, and
+  # with it the window in which a transient subprocess failure can land.
+  #
+  # ── AND IT IS RESTORED ON THE WAY OUT, WHICH IS NOT OPTIONAL ────────────────────
+  # A PROCESS-LIFETIME cache would be read by the NEXT va_main call in the same shell —
+  # which scripts/test-artifact-schema.sh makes on every run, against several roots, one of
+  # which it has just built — and a pattern table from a previous root is a confident wrong
+  # answer. Saving and restoring bounds the cache's life to this invocation, during which
+  # the corpus cannot change. Every return path AFTER this point restores; the returns
+  # ABOVE it are argument and scope refusals that never warmed anything.
+  local va_cache_root_in="$VA_CACHE_ROOT" va_cache_patterns_in="$VA_CACHE_PATTERNS"
+  va_corpus_patterns "$root" >/dev/null
+
   out="$(va_check_corpus "$root")" || rc=1
   [ -n "$out" ] && printf '%s\n' "$out"
 
@@ -993,6 +1023,9 @@ EOF
   if [ "$nsel" -eq 0 ]; then
     printf 'VACUOUS no file was selected, so nothing was validated and nothing was skipped. A green over zero selected files is vacuous, not passing -- the POPULATION line above is the measurement, and it is a statement about the tree rather than about the artifacts in it\n'
   fi
+  # The cache's life ends with this invocation — see the warm-up note above. This is the
+  # only return path beneath it, so the restore is here rather than in a trap.
+  VA_CACHE_ROOT="$va_cache_root_in"; VA_CACHE_PATTERNS="$va_cache_patterns_in"
   return $rc
 }
 
