@@ -1670,6 +1670,169 @@ def census_arms():
         "    steps:\n"
         "      - run: 'true'\n")
 
+    # X37-X42 are the FALSE-REFUSAL class, and they are the specificity
+    # direction of the whole X26-X34 family: does the unread-key limb refuse
+    # anything it should NOT? In every file below, each job key IS a `key:` line
+    # this reader reads. What lands at the job-key indentation is the
+    # CONTINUATION of a value that a job's own PROPERTY began on an earlier line
+    # -- a multi-line quoted scalar, or a flow collection still open. Such a line
+    # is neither a job key nor part of one, so a refusal naming it states
+    # something false about the file, and prints a remedy its author already
+    # satisfied. The correct verdict is the one the second job earns: rc 1
+    # UNREGISTERED, which is what the reader gave before the limb shipped.
+    #
+    # Five members and one paired control, because the two constructions are
+    # independent: a quoted scalar continues by not having closed, a flow
+    # collection by not having been bracketed shut, and a remedy aimed at one
+    # leaves the other standing. X41 drops the second job entirely, so the class
+    # is not read as a property of files holding two.
+    cont_double = dict(base)
+    cont_double[".github/workflows/synth-cont-double.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        '    name: "Readable\n'
+        '  job"\n'
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    cont_single = dict(base)
+    cont_single[".github/workflows/synth-cont-single.yml"] = \
+        cont_double[".github/workflows/synth-cont-double.yml"].replace(
+            'name: "Readable', "name: 'Readable").replace('  job"', "  job'")
+
+    cont_seq = dict(base)
+    cont_seq[".github/workflows/synth-cont-seq.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    name: Readable job\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps: [\n"
+        "  {run: 'true'}]\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    cont_map = dict(base)
+    cont_map[".github/workflows/synth-cont-map.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    name: Readable job\n"
+        "    runs-on: ubuntu-latest\n"
+        "    env: {\n"
+        "  A: 1}\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    cont_alone = dict(base)
+    cont_alone[".github/workflows/synth-cont-alone.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    env: {\n"
+        "  A: 1}\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    cont_deeper = dict(base)
+    cont_deeper[".github/workflows/synth-cont-deeper.yml"] = \
+        cont_double[".github/workflows/synth-cont-double.yml"].replace(
+            '  job"', '   job"')
+
+    # X43 is the arm that keeps the fix from re-opening what this card closed,
+    # and it is the one to read first if a later author widens the skip. ONE
+    # file carries BOTH shapes: a property continuation at the job-key
+    # indentation AND, below it, a genuine key presentation this reader cannot
+    # read. A skip that swallowed the second along with the first would reach rc
+    # 1 here and look like a pass everywhere else in this list.
+    cont_and_unread = dict(base)
+    cont_and_unread[".github/workflows/synth-cont-unread.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        '    name: "Readable\n'
+        '  job"\n'
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite :\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    # X44 asks the same question of the OTHER site that reads key lines. A flow
+    # collection's continuation can be shaped exactly like a key -- `  A:` is a
+    # mapping entry INSIDE the flow, not a job -- and the scan recorded a job
+    # off it, graded it, and emitted an UNDECLARED finding naming a line of the
+    # file that is not a job. One predicate must answer at both sites or the
+    # reader says a line is not a key while recording a job off it.
+    cont_keyish = dict(base)
+    cont_keyish[".github/workflows/synth-cont-keyish.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    name: Readable job\n"
+        "    runs-on: ubuntu-latest\n"
+        "    env: {\n"
+        "  A:\n"
+        "    1}\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    # X45-X46 pin the two further members of X36's class. X36 alone pins ONE
+    # point in it, so an author who closes that point turns X36 green with these
+    # two still open -- the opposite of what a tripwire is for. Both are valid to
+    # both parsers and both reach a CLEAN census, exactly as X36 does.
+    trunc_single = dict(base)
+    trunc_single[".github/workflows/synth-trunc-single.yml"] = \
+        truncated[".github/workflows/synth-truncated.yml"].replace(
+            'name: "Readable', "name: 'Readable").replace('job"', "job'")
+
+    trunc_seq = dict(base)
+    trunc_seq[".github/workflows/synth-trunc-seq.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    env: [\n"
+        "1]\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -1777,6 +1940,53 @@ def census_arms():
                 "block, and the census reaches CLEAN over a job claiming required "
                 "under an undeclared name. The limit block states this; an arm going "
                 "red here is an author who has closed it", truncated, 0, set()),
+        ("X37", "FALSE REFUSAL: a job `name:` whose double-quoted scalar CONTINUES "
+                "onto a line landing at the job-key indentation. Every job key here "
+                "is a `key:` line this reader reads; that line is the tail of a "
+                "string. Refusing this file says something false about it and prints "
+                "a remedy its author already satisfied -- the verdict it earns is the "
+                "second job's, at rc 1", cont_double, 1, {"UNREGISTERED"}),
+        ("X38", "FALSE REFUSAL: the same, SINGLE-quoted. The two quoting characters "
+                "are independent alternatives and an assertion over one establishes "
+                "nothing about the other -- the same reason X13 and X14 are two arms",
+         cont_single, 1, {"UNREGISTERED"}),
+        ("X39", "FALSE REFUSAL: a `steps:` FLOW SEQUENCE left open at the end of its "
+                "line and closed at the job-key indentation. A different construction "
+                "from the two above -- it continues by not having been bracketed shut "
+                "rather than by not having closed a quote", cont_seq, 1,
+         {"UNREGISTERED"}),
+        ("X40", "FALSE REFUSAL: an `env:` FLOW MAPPING, the other bracket pair",
+         cont_map, 1, {"UNREGISTERED"}),
+        ("X41", "FALSE REFUSAL: the same in a file holding ONE job, so the class is "
+                "not read as a property of files holding two. Nothing about this "
+                "depends on a neighbour", cont_alone, 1, {"UNREGISTERED"}),
+        ("X42", "SPECIFICITY for X37-X41: the X37 file with its continuation ONE "
+                "column deeper. It was never refused and must not become so. The only "
+                "difference between this arm and X37 is the landing column, so a "
+                "reader that stopped refusing anything at all would pass X37 and this "
+                "one together -- and a reader whose discriminator is a CONSTANT rather "
+                "than the file's own key indentation would part them wrongly",
+         cont_deeper, 1, {"UNREGISTERED"}),
+        ("X43", "THE ONE THAT KEEPS X26-X34 CLOSED: one file carrying BOTH shapes -- "
+                "a property continuation at the job-key indentation AND, below it, a "
+                "key presentation this reader cannot read. The refusal must still "
+                "fire. A skip that swallowed the unread key along with the "
+                "continuation reaches rc 1 here and passes every other arm in this "
+                "list", cont_and_unread, 2, set()),
+        ("X44", "the same predicate at the OTHER site that reads key lines: a flow "
+                "mapping whose continuation is shaped exactly like a key (`  A:`). "
+                "The scan recorded a job off it and graded it, so the census emitted "
+                "an UNDECLARED naming a line of the file that is not a job. "
+                "UNREGISTERED is the only finding this file earns",
+         cont_keyish, 1, {"UNREGISTERED"}),
+        ("X45", "RESIDUAL, pinned and NOT closed -- the second member of X36's class: "
+                "a SINGLE-quoted scalar continued at column zero. X36 pins one point "
+                "in this class; an author who closes that point turns X36 green with "
+                "this still open", trunc_single, 0, set()),
+        ("X46", "RESIDUAL, pinned and NOT closed -- the third member: a FLOW SEQUENCE "
+                "closed at column zero. Not a quoting trick at all, which is why "
+                "pinning the class rather than a spelling of it is what these three "
+                "arms are for", trunc_seq, 0, set()),
     ]
 
 
