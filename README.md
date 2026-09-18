@@ -28,7 +28,7 @@ The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](
 
 ## Install
 
-The engine installs into [Claude Code](https://claude.com/claude-code) as five personal skills — one per trip verb — linked from a single engine directory. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the engine is cloned into Claude Code's own skills directory, and each verb is linked beside it under its own name, which is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and the verbs carry the planning flow with them: each names the engine's own [`CLAUDE.md`](CLAUDE.md) and opens it from where the engine is installed, so the flow does not depend on which folder is open. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
+The engine installs into [Claude Code](https://claude.com/claude-code) as six personal skills: five verb skills — one per trip verb — each linked from a single engine directory, and that engine directory itself, which needs no link because it is not a verb but the surface you reach by describing what you want in ordinary words. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the engine is cloned into Claude Code's own skills directory, and each verb is linked beside it under its own name, which is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and the verbs carry the planning flow with them: each names the engine's own [`CLAUDE.md`](CLAUDE.md) and opens it from where the engine is installed, so the flow does not depend on which folder is open. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
 
 ### Prerequisites
 
@@ -87,8 +87,10 @@ Code reads `SKILL.md` from the link's target. So when it next starts, each verb 
 own bare name — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish`, `/trip-decommission` — and
 finds every asset it names two levels above its link — the link is followed before `..` is
 resolved, so that path is the engine directory. The
-engine directory itself is **not** a skill: it carries no `SKILL.md` at its root, so the runtime
-ignores it, and it is there only to be linked into. Nothing is copied and nothing is rearranged.
+engine directory itself is a skill too: it carries a `SKILL.md` at its root, so the runtime indexes
+it under its own name alongside the verbs — and that is what makes conversational entry reachable,
+because a request in ordinary words reaches that surface and it names the verb to type. Nothing is
+copied and nothing is rearranged.
 **Installing is placing the directory and linking the verbs; updating is a `git pull`** in the
 engine directory — the links name it by path and follow whatever it holds — and there is no
 separate install command to run.
@@ -214,7 +216,9 @@ directory that is not the engine's, start Claude Code and type `/`: the trip ver
 themselves with tab-completion under their own names, and `/trip` with no verb reports where your
 trip stands. On a fresh install it says there are no trips yet and names `/trip-new`. If the verbs
 do not offer themselves at all, the links are missing or point at nothing — `ls -l ~/.claude/skills/`
-should list the five of them, each resolving into the engine; if they offer themselves but cannot
+should list the five verb links, each resolving into the engine, and the engine directory beside
+them. That last entry is a real directory rather than a link, so it resolves into nothing and that
+is correct — it is the engine, not a pointer to it. If they offer themselves but cannot
 find your trips, the data-root pointer above is what to check, and the verb names that file for you.
 
 **Confirm the engine is intact.** A different question, and one to run inside the engine directory,
