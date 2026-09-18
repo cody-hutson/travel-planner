@@ -3856,6 +3856,128 @@ else
   FAIL "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — a degraded read of the frontmatter block ITSELF did not fail closed (target=$FD_TARGET shadow-invoked=$FD_HITS rc=$FD_RC x2-on-target=$FD_X2 skip-on-target=$FD_SKIP). rc=0 with skip=1 is the original CI signature: va_fm_pairs reaches the file through va_frontmatter, so emptying va_frontmatter empties the pairs read AND the presence probe together, the presence limb goes false, and the artifact leaves the gate unchecked with the run reporting success. CTL-VA-DEGRADE passes on the same fixture because it shadows the INNER function only"
 fi
 
+# ── CTL-VA-FILTER-AGREEMENT[<fence>] — the two line filters that MUST stay in step, asserted
+# instead of commented. The degraded-read limb asks va_fm_declares_no_field whether a field was
+# expected; the pairs it adjudicates come from va_fm_pairs. Each carries its OWN copy of the
+# skip rules — trimmed-empty, and `#` — one written in awk and one in bash, and until this arm
+# nothing checked that the two copies say the same thing.
+#
+# THE DRIFT IS ONE EDIT CHEAP AND IT IS SILENT. Add a skip class to va_fm_pairs and not to the
+# probe, and a healthy artifact carrying that class fails closed with a false X2 — the exact
+# regression this card already paid for once — while the whole suite stays green, because no
+# arm reads the two filters against each other. The other direction is as bad and quieter: a
+# class the probe skips and va_fm_pairs does not leaves the limb silent at the moment it is
+# needed. So what is asserted is a BICONDITIONAL — va_fm_declares_no_field reports "no field"
+# for exactly the lines va_fm_pairs says nothing about — and not the implication alone.
+#
+# PARAMETERISED OVER BOTH FENCES, deliberately. The grammar has two copies as well: `---` for
+# markdown and `<!--` / `-->` for C19, whose declaration rides an HTML comment. A second
+# hand-written copy of this arm would inherit exactly the weakness the arm exists to close, so
+# the fence is an input and the comparator is written once.
+#
+# SCOPE, stated rather than left to be discovered. The subject is the LINE filter, so every
+# case is a well-formed TERMINATED block carrying exactly one content line. The block-level
+# branches — an unterminated fence, an absent block — are not line-filter questions and are
+# adjudicated elsewhere: each yields an A1 at status 1, which the degraded-read limb's own
+# `rc -eq 0` test excludes before this predicate is ever consulted.
+#
+# NON-VACUITY IS GRADED FIRST, in four limbs, because "the two filters agree" is a ZERO and a
+# zero from a comparator that cannot disagree is worth nothing. The case table must exercise
+# BOTH sides of the filter; the injection anchor must occur exactly once in va_fm_pairs' source
+# so the mutation is the edit it claims to be; the mutation must be shown to have applied; and
+# under it the comparator must report exactly the disagreements the injected class accounts
+# for — fewer means it cannot see drift, more means it is reporting something else. The
+# injection is a real source mutation of va_fm_pairs, one added skip class the probe does not
+# mirror, evaluated in a SUBSHELL so it cannot reach the arms below.
+FA_CASETABLE="$(cat <<'FA_EOF'
+empty|
+spaces-only|\040\040\040
+tab-only|\t
+formfeed-only|\f
+vtab-only|\v
+comment|# a note about this file
+comment-indented|\040\040\040# a note about this file
+comment-bare|#
+comment-with-colon|# note: this is not a field
+semicolon|; a note
+field|schema-version: 1
+field-empty-value|key:
+field-hash-in-key|a#b: v
+field-hash-in-value|x: # not a comment
+out-of-grammar|notakeyline
+not-kebab|Key: v
+dash-only|-
+colon-leading|: value
+FA_EOF
+)"
+FA_ANCHOR="'#'*)"
+FA_REPL="'#'* | ';'*)"
+FA_SRC="$(declare -f va_fm_pairs)"
+FA_ANCHOR_N="$(awk -v a="$FA_ANCHOR" 'BEGIN { n = 0 } { s = $0; while ((i = index(s, a)) > 0) { n++; s = substr(s, i + length(a)) } } END { print n + 0 }' <<<"$FA_SRC")"
+FA_MUT_SRC="${FA_SRC/"$FA_ANCHOR"/$FA_REPL}"
+FA_MUTOK=0; [ "$FA_MUT_SRC" != "$FA_SRC" ] && FA_MUTOK=1
+
+# fa_compare <dir> <ext> <open> <close> — writes one single-line fixture per case and prints
+# "<cases> <agreed-skips> <agreed-fields> <disagreements> <semicolon-cases> <report>".
+fa_compare() {
+  local dir="$1" ext="$2" open="$3" close="$4"
+  local lbl pay f prc pout trimmed
+  local cases=0 skips=0 fields=0 dis=0 semi=0 report=""
+  while IFS='|' read -r lbl pay; do
+    [ -n "$lbl" ] || continue
+    cases=$((cases + 1))
+    f="$lbl.$ext"
+    { printf '%s\n' "$open"; printf '%b\n' "$pay"; printf '%s\n' "$close"; printf '\n# body\n'; } > "$dir/$f"
+    trimmed="$(va_trim "$(printf '%b' "$pay")")"
+    case "$trimmed" in ';'*) semi=$((semi + 1)) ;; esac
+    va_fm_declares_no_field "$dir/$f"; prc=$?
+    pout="$(va_fm_pairs "$dir" "$f" 2>&1)"
+    if [ "$prc" -eq 0 ] && [ -z "$pout" ]; then
+      skips=$((skips + 1))
+    elif [ "$prc" -ne 0 ] && [ -n "$pout" ]; then
+      fields=$((fields + 1))
+    elif [ "$prc" -ne 0 ]; then
+      dis=$((dis + 1)); report="$report $lbl:false-x2[probe-expected-a-field,va_fm_pairs-said-nothing]"
+    else
+      dis=$((dis + 1)); report="$report $lbl:silent-limb[probe-expected-nothing,va_fm_pairs-parsed-it]"
+    fi
+  done <<EOF
+$FA_CASETABLE
+EOF
+  printf '%s %s %s %s %s %s\n' "$cases" "$skips" "$fields" "$dis" "$semi" "${report:- none}"
+}
+
+while IFS='|' read -r fa_fence fa_ext fa_open fa_close; do
+  [ -n "$fa_fence" ] || continue
+  fa_dir="$WORK/fa_$fa_fence"; mkdir -p "$fa_dir"
+  FA_C=0; FA_S=0; FA_F=0; FA_D=0; FA_M=0; FA_R="none"
+  fa_line="$(fa_compare "$fa_dir" "$fa_ext" "$fa_open" "$fa_close")"
+  [ -n "$fa_line" ] && read -r FA_C FA_S FA_F FA_D FA_M FA_R <<<"$fa_line"
+  FA_MUTD=-1
+  if [ "$FA_MUTOK" -eq 1 ]; then
+    fa_mdir="$WORK/fa_mut_$fa_fence"; mkdir -p "$fa_mdir"
+    FA_MUTD="$( eval "$FA_MUT_SRC"; fa_compare "$fa_mdir" "$fa_ext" "$fa_open" "$fa_close" | awk '{ print $4 + 0 }' )"
+  fi
+  if [ "$FA_C" -lt 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the case table yielded $FA_C case(s), so 'the two line filters agree' would be a statement over the empty set"
+  elif [ "$FA_ANCHOR_N" -ne 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: SPECIFICITY — the injection anchor occurs $FA_ANCHOR_N time(s) in va_fm_pairs' source rather than once, so the mutation below is not the single edit it claims to be and nothing it produces is attributable to one added skip class"
+  elif [ "$FA_MUTOK" -ne 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the injected skip class did not apply to va_fm_pairs' source, so the sensitivity arm ran against UNMUTATED code and its result says nothing about this comparator. The arm reports itself unusable rather than reporting the filters in step"
+  elif [ "$FA_S" -lt 1 ] || [ "$FA_F" -lt 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the case table exercises only one side of the filter (agreed-skip=$FA_S agreed-field=$FA_F, both must be >= 1). A comparator shown only lines both filters skip agrees trivially"
+  elif [ "$FA_M" -lt 1 ] || [ "$FA_MUTD" -ne "$FA_M" ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: SENSITIVITY — with one unmirrored skip class added to va_fm_pairs' own source the comparator reported $FA_MUTD disagreement(s) where the injected class accounts for exactly $FA_M. Below that figure the comparator cannot see the drift it exists to see, and its zero on the shipped filters is a BROKEN PROBE rather than agreement; above it the injection moved a case it does not account for, so the comparator is reporting something other than the drift"
+  elif [ "$FA_D" -eq 0 ]; then
+    PASS "CTL-VA-FILTER-AGREEMENT[$fa_fence]: va_fm_pairs' skip rules and va_fm_declares_no_field's agree on all $FA_C line shape(s) over the $fa_fence fence — $FA_S agreed skip(s) and $FA_F agreed field-declaration(s), no disagreement in either direction. The sensitivity arm fired on the same comparator: one unmirrored skip class added to va_fm_pairs' source turns this arm red on exactly $FA_M case(s), in a subshell that does not reach the arms below"
+  else
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the two line filters have DRIFTED on $FA_D of $FA_C shape(s) over the $fa_fence fence:$FA_R. false-x2 is the dangerous direction — va_fm_pairs skips the line as legal content while the probe reports a field was expected, so a healthy artifact carrying that shape fails closed with a finding that names a read which did not fail. silent-limb is the quiet one — the probe reports nothing was expected where va_fm_pairs did parse the line, so the degraded-read limb stays silent on exactly the input it exists to catch. Either way the fix is to change BOTH filters in one edit: they are one grammar with two implementations"
+  fi
+done <<EOF
+md|md|---|---
+html|html|<!--|-->
+EOF
+
 # ── CTL-VA-MEMO — the corpus is parsed ONCE per invocation, which is what va_corpus_patterns'
 # memo has always claimed and did not deliver. Every call site reaches that function from
 # inside a command substitution or a pipeline, so each cache write died with its subshell and
