@@ -458,6 +458,17 @@ va_fm_terminated() {
 # to remove. A discriminator that shares a failure mode with its subject is not one. This
 # probe opens the file itself and returns a STATUS, so it has no capture to be emptied.
 #
+# THE `2>/dev/null` IS THE FIRST SENTENCE, ENFORCED — not noise to tidy away. awk writes its
+# own diagnostic to stderr when it cannot open the file, so without the redirect that sentence
+# is false on exactly the inputs this probe exists to survive. Nothing diagnostic is lost: the
+# status is untouched and non-zero, the caller fails closed on it, and the gate reports an
+# unreadable input in its own vocabulary rather than in awk's. Leaving it unredirected would
+# be worse than untidy, because the validator's stderr is a GRADED surface — CTL-DATAROOT6
+# asserts both of its invocations wrote nothing to it — so a stray line here would surface as
+# a data-root spelling difference rather than as a named finding about a read. va_frontmatter
+# and va_fm_terminated share the behaviour and are deliberately untouched: neither claims
+# silence, so neither is made false by it.
+#
 # The line filter is va_fm_pairs' own, deliberately: a trimmed-empty line and a `#` line are
 # what that function skips as legal content, so "a field was expected" here means exactly
 # "va_fm_pairs had something to parse". KEEP THE TWO IN STEP — a grammar change there is a
@@ -472,11 +483,11 @@ va_fm_declares_no_field() {
     *.html) awk 'NR==1 && $0 != "<!--" { exit } NR==1 { next } $0 == "-->" { exit }
                  { sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, "")
                    if ($0 != "" && substr($0, 1, 1) != "#") { found = 1; exit } }
-                 END { exit (found ? 1 : 0) }' "$f" ;;
+                 END { exit (found ? 1 : 0) }' "$f" 2>/dev/null ;;
     *)      awk 'NR==1 && $0 != "---"  { exit } NR==1 { next } $0 == "---"  { exit }
                  { sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, "")
                    if ($0 != "" && substr($0, 1, 1) != "#") { found = 1; exit } }
-                 END { exit (found ? 1 : 0) }' "$f" ;;
+                 END { exit (found ? 1 : 0) }' "$f" 2>/dev/null ;;
   esac
 }
 
