@@ -551,11 +551,26 @@ def census_findings(jobs):
     return findings
 
 
+# Two limits, and they are different in kind. The first is about what a clean
+# census MEANS; the second is about which inputs it could read at all. A widened
+# reader that implies it now handles everything is more dangerous than the narrow
+# one it replaced, because the next author trusts it further -- so the second
+# limit names the one shape that escapes both the reader and its own refusal, and
+# names it here rather than in a commit message nobody will read again.
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
     "API, so this census cannot confirm that any context is REGISTERED. A clean",
     "result means the workflows and the committed declaration agree with each other.",
     "Registration remains an operator act outside any pull request.",
+    "",
+    "WHICH FORMS IT READS: a block `jobs:` mapping at column zero whose job keys are",
+    "`key:` lines, optionally quoted. A clean result holds for those forms and no",
+    "others; a file outside them is REFUSED BY NAME rather than skipped in silence.",
+    "ONE SHAPE ESCAPES BOTH: a job in YAML explicit-key form (`? key` / `: value`)",
+    "sharing a file with a readable job. That file yields a record, so the per-file",
+    "refusal cannot fire, and the census reaches CLEAN over a job it never graded.",
+    "No backstop stands behind it: `Workflow SAST (actionlint)`, in this same job,",
+    "exits 0 on that form -- measured. It rejects INVALID YAML; this form is valid.",
 )
 
 
