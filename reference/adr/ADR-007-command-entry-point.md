@@ -315,13 +315,16 @@ Six bounds hold on every command in this surface:
   are the two flags that convert a refusal into a silent pass on a non-interactive caller. This bound
   is not negotiable by a later slice.
 - Every Step-1 row maps to exactly one command, **or** to a declared exclusion, **or** to a declared
-  ambiguity set, each of whose members maps to one command on its own row. Silent gaps are not
-  permitted; an unaddressed request type is a stated one, and a request type that reaches more than
-  one command is a stated **choice** rather than a silent pick. *(Amended 2026-09-18, Friday: the
-  third limb is added in the change that authors the first set, so the bound is never false. It was
-  true of a Command column in which a row could only address a verb or declare an exclusion, and § 3
-  above admits the same class over the same rows — this limb and that identity are one statement
-  seen from the bound and from the guard.)*
+  ambiguity set. A set's members are of two kinds: a member naming a verb maps to one command on its
+  own row, and a member naming a **declared disposition** names one reason from the closed vocabulary
+  and maps to no command at all. Every set names at least one verb. Silent gaps are not permitted; an
+  unaddressed request type is a stated one, and a request type that reaches more than one command is a
+  stated **choice** rather than a silent pick. *(Amended 2026-09-18, Friday: the third limb is added in
+  the change that authors the first set, so the bound is never false. It was true of a Command column
+  in which a row could only address a verb or declare an exclusion, and § 3 below admits the same class
+  over the same rows — this limb and that identity are one statement seen from the bound and from the
+  guard. Amended again in the change that admits a disposition as a set member: the two member kinds
+  are named here because a bound stating only the first would be false at the first such member.)*
 - **No command may overwrite or delete existing trip content.** A trip's working tree is git-ignored
   and carries no history, and `trip-log.md` **is** the rationale record rather than a copy of one —
   so a clobber is recoverable from nothing: not from a revert, not from the repo, not from the log.
@@ -375,9 +378,20 @@ restatement.
   the finding it always was, reached through the same predicate over the same records. What is
   new is only this: a unit named in a declared set **beside** its own addressed row is a choice,
   not a double cover.
-- **A set carries obligations of its own.** Every member resolves to exactly one coverage unit — a
-  member naming a whole command is refused, because a command is itself a choice — no unit is
-  named twice inside one set, and no two sets denote the same units.
+- **A set carries obligations of its own.** Its members are of two kinds. A member naming a **verb**
+  resolves to exactly one coverage unit — a member naming a whole command is refused, because a command
+  is itself a choice. A member naming a **declared disposition** carries the exclusion marker and exactly
+  one reason from the closed vocabulary § 4 states; it resolves to no coverage unit, because a
+  disposition is not one, and a set whose members are all dispositions is refused, because a row that
+  routes to no command is an exclusion rather than a choice. Across both kinds: nothing is named twice
+  inside one set, and no two sets denote the same options.
+
+*(Amended in the change that admits a disposition as a member. The bullet is edited in place rather
+than corrected beneath, because a reader who stops at the bullet would otherwise carry away a rule that
+is false — the same disposition taken in § 2's bound above, for the same shape. What did not change:
+totality and exclusivity above, whose predicates and whose records are untouched. A disposition mints no
+coverage unit and contributes no cover, so the identity is total over exactly the population it was
+total over before.)*
 
 What this amendment does **not** reach: the guard still does not grade whether the taxonomy the
 table documents is the right one, and §4's disposition table is untouched, its cells still parsing

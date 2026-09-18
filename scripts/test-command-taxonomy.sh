@@ -25,6 +25,7 @@
 #   B   Step-1 cell shape                                                  (group B)
 #     B1 malformed cell · B2 reason enum · B3 cell grammar · B4 exhaustiveness
 #     B5 the command component fails N1 · B6 ambiguity-set well-formedness
+#     B8 a disposition member's reason, or a set offering no verb at all
 #
 #   K   the coverage bijection, which REPLACES forward/reverse/injectivity (group K)
 #     K1  RESOLVABILITY — every ADDRESSED cell covers a non-empty set and every member
@@ -34,21 +35,33 @@
 #         both a verbless and a verbed ADDRESSED cell
 #     K4  SET RESOLVABILITY — every member of a declared ambiguity set covers exactly one
 #         coverage unit
-#     K5  SET EXCLUSIVITY   — no unit named twice inside one set, and no two sets denoting
-#         the same units
+#     K5  SET EXCLUSIVITY   — nothing named twice inside one set, and no two sets denoting
+#         the same options. Its quantifier is BOTH member kinds: a unit member by the
+#         coverage unit it resolves to, a disposition member by its reason. K4's is not —
+#         a disposition never reaches AMBPARTS, so K4 cannot see one.
 #
 #     THE THREE CELL CLASSES, and why admitting the third weakens neither K2 nor K3.
 #     A Step-1 Command cell takes exactly one of three forms. ADDRESSED — a single code
 #     span naming a command and at most one verb. EXCLUDED — the marker, then reasons from
-#     the closed enum. AMBIGUOUS — the marker, then two or more FULL-KEY code spans joined
-#     by the set separator, each matching the UNCHANGED cell grammar. A set is DECLARED by
-#     its marker and is never inferred from a parse failure: two code spans in one cell with
-#     no marker is a hard failure (B6), so the accident and the intent are different
-#     outcomes rather than the same one.
+#     the closed enum. AMBIGUOUS — the marker, then two or more MEMBERS joined by the set
+#     separator. A set is DECLARED by its marker and is never inferred from a parse failure:
+#     two code spans in one cell with no marker is a hard failure (B6), so the accident and
+#     the intent are different outcomes rather than the same one.
+#
+#     A MEMBER is one of two kinds, dispatched in that order and disjoint by construction.
+#     A DISPOSITION member carries the exclusion marker and exactly one reason from the same
+#     closed enum; a UNIT member is a FULL-KEY code span matching the UNCHANGED cell grammar.
+#     The dispatch tests the disposition marker FIRST, on a marker the member carries, so a
+#     disposition is DECLARED rather than read off a failed CELL_RE match — the same "declared,
+#     never inferred" property the set itself has. The two kinds cannot overlap: a CELL_RE
+#     match opens with a backtick and the disposition marker opens with 'E'. A set whose
+#     members are ALL dispositions is refused (B8): a row that routes to no command is an
+#     exclusion with prose, not a choice.
 #
 #     The identity is restated by NARROWING ITS QUANTIFIER, not by weakening its predicate.
-#     K2 and K3 read ADDRPARTS records only and their code is untouched: a set's members
-#     travel on AMBPARTS. So a unit covered twice BY ADDRESSED CELLS is still K3, byte for
+#     K2 and K3 read ADDRPARTS records only and their code is untouched: a set's unit
+#     members travel on AMBPARTS and its disposition members on a third channel, DISPPARTS,
+#     which neither K2's nor K3's `case` arm reads. So a unit covered twice BY ADDRESSED CELLS is still K3, byte for
 #     byte the detector that shipped before the class existed; a unit reachable ONLY through
 #     a set is still K2, because set membership never satisfies totality; and a unit named
 #     in a declared set BESIDE its own ADDRESSED cell is a CHOICE, not a double cover. The
@@ -544,6 +557,28 @@ AMB_SEP=' · '
 # naming an unset variable under `set -u` is an error. needle_check runs long after both.
 NEEDLES_UNTRIMMED+=( "$AMB_MARK" "$AMB_SEP" )
 
+# ── The DISPOSITION-MEMBER marker. The SAME literal the cell-level classifier routes an
+# EXCLUDED cell on, named here so the member-level test and the cell-level test are the
+# identical string comparison and cannot disagree about what the token means. One
+# vocabulary for one concept in two positions: a new spelling ('NONE: ', '!') would be a
+# second name for a disposition this corpus already names, and the member's reason is
+# graded against REASON_ENUM rather than against a literal for the same reason — ADR-007
+# §4 states the vocabulary is shared across both surfaces, so a sixth value participates
+# with no grammar edit and no drift seam.
+#
+# DELIBERATELY NOT re-registered as a needle: 'EXCLUDED: ' is already a member of
+# NEEDLES_UNTRIMMED above, so the normalisation assertion already covers this exact string
+# and a second registration would assert the same fact twice under two names.
+#
+# ACCEPTED COST, named rather than discovered: a rendered cell reads
+# 'AMBIGUOUS: EXCLUDED: <reason> · `/verb`', which is two markers in one cell and is
+# genuinely awkward to read. The readability is traded for the single vocabulary.
+DISP_MARK='EXCLUDED: '
+# Reasons are conjoined on a row by ' + ' — independent GROUNDS for one exclusion. As a
+# MEMBER the token names WHICH OPTION the reader is picking, and a conjunction of grounds
+# is not a distinguishable option, so a member carrying this separator is B8.
+DISP_CONJ=' + '
+
 # ── The ENTRY-CLASS marker. A RENDERING, not a third vocabulary: the two tokens are
 # uppercase spellings of ADR-007 § 1's own `inference-admitted` and of its declared-intent side,
 # and the charter records the class rather than deciding it. What B7 grades is that an ADDRESSED
@@ -929,7 +964,12 @@ charter_check() {
   # `local` builtin is expanded BEFORE the builtin runs, so a same-statement back-reference
   # takes the OUTER value or trips `set -u`. The convention this file already follows.
   local amb_rest amb_m amb_bad act_cell
-  local -a F=() SEEN=() AMBM=()
+  # The disposition-member accumulator is its OWN variable rather than a second use of
+  # amb_bad, because its findings carry a different id: B6 is "this is not a member", B8
+  # is "this IS a disposition member and its reason is wrong". Folding them would make the
+  # id depend on which predicate happened to append last.
+  local disp_bad disp_r n_unit_m n_disp_m
+  local -a F=() SEEN=() AMBM=() AMBU=() AMBD=()
   for row in "${R1[@]+"${R1[@]}"}"; do
     IFS='|' read -r -a F <<< "$row"
     if [ "${#F[@]}" -ne 6 ]; then
@@ -952,20 +992,66 @@ charter_check() {
           AMBM+=( "${amb_rest%%"$AMB_SEP"*}" ); amb_rest="${amb_rest#*"$AMB_SEP"}"
         else AMBM+=( "$amb_rest" ); break; fi
       done
-      amb_bad=""
+      amb_bad=""; disp_bad=""; n_unit_m=0; n_disp_m=0; AMBU=(); AMBD=()
       [ "${#AMBM[@]}" -ge 2 ] || amb_bad="it declares ${#AMBM[@]} member(s); a set names two or more, because a choice between one thing and nothing is not a choice"
+      # ── MEMBER DISPATCH. The disposition test comes FIRST and keys on a marker the member
+      # CARRIES, so a disposition is declared rather than inferred from a CELL_RE failure —
+      # the same property the set itself has. The two kinds are disjoint by construction: a
+      # CELL_RE match opens with a backtick, this marker opens with 'E'. A member reaching
+      # neither arm is B6, exactly as it was before this branch existed.
       for amb_m in "${AMBM[@]}"; do
-        [[ "$amb_m" =~ $CELL_RE ]] && continue
-        amb_bad="${amb_bad:+$amb_bad; }member \"$amb_m\" is not a single-target cell under the cell grammar"
+        if [[ "$amb_m" == "$DISP_MARK"* ]]; then
+          n_disp_m=$((n_disp_m+1))
+          disp_r="$(trim "${amb_m#"$DISP_MARK"}")"
+          AMBD+=( "$disp_r" )
+          if [ -z "$disp_r" ]; then
+            disp_bad="${disp_bad:+$disp_bad; }a disposition member carries the marker and no reason"
+          elif [[ "$disp_r" == *"$DISP_CONJ"* ]]; then
+            disp_bad="${disp_bad:+$disp_bad; }disposition member \"$disp_r\" conjoins reasons; on a ROW conjoined reasons are independent grounds, but as an OPTION a member names which one the reader is picking and a conjunction is not a distinguishable option"
+          elif ! in_list "$disp_r" "${REASON_ENUM[@]}"; then
+            disp_bad="${disp_bad:+$disp_bad; }disposition member reason \"$disp_r\" is not in the closed five-value enum"
+          fi
+          continue
+        fi
+        if [[ "$amb_m" =~ $CELL_RE ]]; then
+          n_unit_m=$((n_unit_m+1)); AMBU+=( "$amb_m" ); continue
+        fi
+        amb_bad="${amb_bad:+$amb_bad; }member \"$amb_m\" is neither a single-target cell under the cell grammar nor a declared disposition"
       done
-      if [ -n "$amb_bad" ]; then
-        printf 'FINDING B6 MALFORMED ambiguity set — %s: "%s"\n' "$amb_bad" "$cell"; rc=1; continue
+      # A set offering no verb at all routes nowhere. That is an EXCLUDED row with prose
+      # rather than a choice, and refusing it closes the one hole this widening could
+      # otherwise open: a row that passes every check and dispatches nothing. Conservative
+      # on purpose — a later slice can relax this far more cheaply than it could tighten it.
+      if [ "$n_disp_m" -gt 0 ] && [ "$n_unit_m" -eq 0 ]; then
+        disp_bad="${disp_bad:+$disp_bad; }every member is a disposition, so the row offers no command at all; a choice that routes nowhere is an exclusion rather than a set"
       fi
-      for amb_m in "${AMBM[@]}"; do
+      if [ -n "$amb_bad" ]; then
+        printf 'FINDING B6 MALFORMED ambiguity set — %s: "%s"\n' "$amb_bad" "$cell"; rc=1
+      fi
+      if [ -n "$disp_bad" ]; then
+        printf 'FINDING B8 MALFORMED disposition member — %s: "%s"\n' "$disp_bad" "$cell"; rc=1
+      fi
+      # The `continue` is what keeps K4 and K5 out of a set whose members did not parse —
+      # neither AMBPARTS nor DISPPARTS is emitted below it. Unchanged in force; it now
+      # guards two ids rather than one.
+      if [ -n "$amb_bad" ] || [ -n "$disp_bad" ]; then continue; fi
+      for amb_m in "${AMBU[@]+"${AMBU[@]}"}"; do
         inner="${amb_m//$BT/}"
         cmdpart="${inner%% *}"; cmdpart="${cmdpart#/}"
         if [ "$inner" = "${inner%% *}" ]; then verbpart=""; else verbpart="${inner#* }"; fi
         printf 'AMBPARTS %d /%s %s\n' "$n_amb" "$cmdpart" "${verbpart:--}"
+      done
+      # ── DISPPARTS — a THIRD channel beside ADDRPARTS and AMBPARTS, not a flag on either.
+      # That separation IS the K2/K3 tolerance: widening it later means adding DISPPARTS to
+      # K2's or K3's `case` arm, which is a visible act, rather than relaxing a boolean.
+      #
+      # Two fields, read into two variables downstream, and the LAST one absorbing the
+      # remainder is REQUIRED here rather than tolerated: one enum reason carries an
+      # internal space, so a reason read into a non-final variable would arrive truncated.
+      # The inverse of the transport warning this file states at invocation_check, for the
+      # inverse reason — there the remainder would silently widen a field, here it IS one.
+      for disp_r in "${AMBD[@]+"${AMBD[@]}"}"; do
+        printf 'DISPPARTS %d %s\n' "$n_amb" "$disp_r"
       done
       continue
     fi
@@ -1124,6 +1210,11 @@ coverage_check() {
   # predicate. Bash 3.2 has no associative arrays and a silent degradation to an empty map
   # is the shape this suite exists to refuse.
   local -a MS=() MC=() MV=()
+  # The DISPOSITION channel: set ordinal · reason. A THIRD transport, for the same reason
+  # AMBPARTS is a second one — K2 and K3 never read it, so a disposition can neither
+  # satisfy totality nor look like a double cover, and that is a property of the reader
+  # rather than of a condition inside a predicate. It is read by K5 alone.
+  local -a DS=() DR=()
 
   # KEY is read into TWO variables deliberately: the last one absorbs the remainder, so a
   # key that carries whitespace arrives whole and X2 can see it. Every other record is
@@ -1141,6 +1232,10 @@ coverage_check() {
       # invocation_check: the LAST read variable absorbs the remainder, so a record read
       # into fewer variables than it has fields silently widens the last one it names.
       'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
+      # THREE fields read into THREE variables, and here the last one absorbing the
+      # remainder is the requirement rather than the hazard: a reason may carry an internal
+      # space, so the reason field is the remainder by design.
+      'DISPPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; DS+=( "$t2" ); DR+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
@@ -1277,17 +1372,36 @@ coverage_check() {
     fi
   done
 
-  # K5 limb 1 — a unit named twice INSIDE one set.
+  # ── The K5 QUANTIFIER WIDENING, and it is load-bearing in the PERMISSIVE direction.
+  #
+  # K4's quantifier is AMBPARTS and stays there: a disposition never reaches that channel,
+  # so K4's predicate needs no edit and gets none. K5's is the set's OPTIONS, and a
+  # disposition IS one — so its identities join SETU/SETQ under a namespace-disjoint key,
+  # 'DISP:<reason>', which no coverage unit can collide with because a unit key opens '/'.
+  #
+  # Omitting them is the naive implementation and it FAILS OPEN INTO A FALSE POSITIVE, not
+  # into silence: two sets whose unit members coincide and whose dispositions differ would
+  # compare equal — equal cardinality plus mutual membership — and limb 2 would report two
+  # distinct rows as one. Arm GK5e is the must-NOT-fire arm over exactly that shape.
+  #
+  # The PREDICATES below are unchanged; only the domain they range over grows.
+  local di
+  for (( di=0; di<${#DR[@]}; di++ )); do
+    in_list "${DS[$di]}" "${ALLSETS[@]+"${ALLSETS[@]}"}" || ALLSETS+=( "${DS[$di]}" )
+    SETU+=( "DISP:${DR[$di]}" ); SETQ+=( "${DS[$di]}" )
+  done
+
+  # K5 limb 1 — an option named twice INSIDE one set.
   local -a K5SEEN=()
   for (( i=0; i<${#SETU[@]}; i++ )); do
     if in_list "${SETQ[$i]}:${SETU[$i]}" "${K5SEEN[@]+"${K5SEEN[@]}"}"; then
-      printf 'FINDING K5 the declared ambiguity set %s names the coverage unit %s more than once — a choice between a thing and itself is not a choice\n' "${SETQ[$i]}" "${SETU[$i]}"; rc=1
+      printf 'FINDING K5 the declared ambiguity set %s names the option %s more than once — a choice between a thing and itself is not a choice\n' "${SETQ[$i]}" "${SETU[$i]}"; rc=1
     else
       K5SEEN+=( "${SETQ[$i]}:${SETU[$i]}" )
     fi
   done
 
-  # K5 limb 2 — two sets denoting the SAME units. Compared AS SETS — equal cardinality plus
+  # K5 limb 2 — two sets denoting the SAME options. Compared AS SETS — equal cardinality plus
   # mutual membership through in_list — never by string equality, so member ORDER is not
   # graded here. Rendering order is a different surface's question.
   local sa sb same
@@ -1309,7 +1423,7 @@ coverage_check() {
       for (( k=0; k<${#LA[@]}; k++ )); do in_list "${LA[$k]}" "${LB[@]+"${LB[@]}"}" || same=0; done
       for (( k=0; k<${#LB[@]}; k++ )); do in_list "${LB[$k]}" "${LA[@]+"${LA[@]}"}" || same=0; done
       if [ "$same" -eq 1 ]; then
-        printf 'FINDING K5 the declared ambiguity set %s denotes the same coverage units as set %s — two rows offering the same options are one row; fold the intents together rather than stating the choice twice\n' "$sb" "$sa"; rc=1
+        printf 'FINDING K5 the declared ambiguity set %s denotes the same options as set %s — two rows offering the same options are one row; fold the intents together rather than stating the choice twice\n' "$sb" "$sa"; rc=1
       fi
     done
   done
@@ -1317,6 +1431,10 @@ coverage_check() {
   printf 'COUNT ADDRCELLS %d\n' "${#AK[@]}"
   printf 'COUNT AMBCELLS %d\n' "${#ALLSETS[@]}"
   printf 'COUNT AMBMEMBERS %d\n' "${#MC[@]}"
+  # Counted SEPARATELY from AMBMEMBERS, and that separation is the vacuity guard: AMBCELLS
+  # is non-zero whether or not any disposition member exists, so a note keyed on it would
+  # print "quantified over LIVE data" on a line whose disposition limb had nothing at all.
+  printf 'COUNT DISPMEMBERS %d\n' "${#DR[@]}"
   printf 'COUNT DBLCOVER %d\n' "$dbl"
   printf 'COUNT CMDKEYED %d\n' "$cmdkeyed"
   return "$rc"
@@ -2306,6 +2424,7 @@ gen_charter() {  # gen_charter <dir> <defect>
     for k in "${KEYS[@]}"; do
       if [ "$defect" = 'uncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
       if [ "$defect" = 'ambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
+      if [ "$defect" = 'dispambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
       if [ "$defect" = 'step1drift' ] && [ "$k" = '/trip-record log' ]; then continue; fi
       # ── The UNGRADED row, planted by REPLACING a conforming row rather than by adding one.
       # An added ADDRESSED row necessarily carries a SECOND finding — a key already covered is
@@ -2330,7 +2449,40 @@ gen_charter() {  # gen_charter <dir> <defect>
     if [ "$defect" != 'verbless' ]; then
       printf '| Ambiguous intent | sig | act | ex | %s%s/trip status%s%s%s/trip-publish list%s |\n' \
         "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"
+      # ── The CONFORMING DISPOSITION-BEARING set — a SECOND set rather than a disposition
+      # added to the one above, and the reason is measured rather than stylistic. GK5b's
+      # world plants a set whose UNIT members are exactly the first set's; adding a
+      # disposition to the first set would make the two differ in cardinality under the
+      # widened K5 identity, and GK5b — an arm this change must leave firing — would go
+      # silent. A second set keeps that arm on its original subject.
+      #
+      # Its units are deliberately `/trip-record profile` and `/trip-publish update`: both
+      # cross-command like the set above, both keeping their own ADDRESSED row (which is
+      # what makes G0j a CHOICE rather than a double cover), and neither touched by any
+      # defect world here — `check` is removed by uncovered/ambuncovered and reserved by
+      # the GM mutation pair, and `trip-record log` is removed by the two drift defects.
+      printf '| Ambiguous disposition | sig | act | ex | %s%s%s%s%s/trip-record profile%s%s%s/trip-publish update%s |\n' \
+        "$AMB_MARK" "$DISP_MARK" 'lightest-weight-action' "$AMB_SEP" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"
     fi
+    # ── The disposition defect rows. Each plants ONE defect beside the two conforming sets
+    # every world above already carries, so its arm grades the new predicate rather than the
+    # fixture. dispdiff is the ONLY must-NOT-fire world here and is read by GK5e.
+    if [ "$defect" = 'dispoffenum' ];   then printf '| X | sig | act | ex | %s%sbecause I said so%s%s/trip status%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'dispconj' ];      then printf '| X | sig | act | ex | %s%srepo-creation + argv-secret%s%s/trip status%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'dispnounit' ];    then printf '| X | sig | act | ex | %s%slightest-weight-action%s%srepo-creation |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$DISP_MARK"; fi
+    if [ "$defect" = 'dispbadmarker' ]; then printf '| X | sig | act | ex | %sEXCLUDED lightest-weight-action%s%s/trip status%s |\n' "$AMB_MARK" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'dispdup' ];       then printf '| X | sig | act | ex | %s%slightest-weight-action%s%slightest-weight-action%s%s/trip status%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT"; fi
+    # Members REORDERED against the conforming disposition set AND carrying the SAME
+    # disposition, so the collision is a genuine set-identity match rather than a string one.
+    if [ "$defect" = 'dispsame' ];      then printf '| X | sig | act | ex | %s%s/trip-publish update%s%s%slightest-weight-action%s%s/trip-record profile%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT"; fi
+    # dispdiff — the SPECIFICITY world. Unit members identical to the conforming disposition
+    # set, disposition member DIFFERENT. Under the shipped K5 these are two sets; under the
+    # naive implementation that drops dispositions from the identity they compare equal and
+    # a spurious K5 is emitted. GK5e is the arm.
+    if [ "$defect" = 'dispdiff' ];      then printf '| X | sig | act | ex | %s%srepo-creation%s%s/trip-record profile%s%s%s/trip-publish update%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    # The TOTALITY sensitivity arm's world, the ambuncovered shape with a disposition beside
+    # the unit members: the verb is reachable ONLY as an option and must still be a K2.
+    if [ "$defect" = 'dispambuncovered' ]; then printf '| X | sig | act | ex | %s%slightest-weight-action%s%s/trip check%s%s%s/trip status%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'ambone' ];       then printf '| X | sig | act | ex | %s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT"; fi
     if [ "$defect" = 'ambbadmember' ]; then printf '| X | sig | act | ex | %s%s/trip status%s%s%s/trip --.x%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'ambnomarker' ];  then printf '| X | sig | act | ex | %s/trip status%s%s%s/trip check%s |\n' "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
@@ -2367,6 +2519,7 @@ gen_charter() {  # gen_charter <dir> <defect>
         # the subject is K2's totality, and leaving it in Step 2 alone would fire S1 instead
         # and grade a different assertion.
         if [ "$defect" = 'ambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
+        if [ "$defect" = 'dispambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
         if [ "$defect" = 'step2drift' ] && [ "$k" = '/trip-record log' ]; then continue; fi
         printf '| %s%s%s | that verb%ss own read line | own |\n' "$BT" "$k" "$BT" "$Q"
       done
@@ -2607,7 +2760,7 @@ if has_finding "$ALL" "$(surface B1)"; then FAIL "B1: a Step-1 Command cell is m
 else PASS "B1: no malformed Command cell across ${S1_ROWS} rows"; fi
 if has_finding "$ALL" "$(surface B2)"; then FAIL "B2: a reason is off-enum, absent or duplicated"; show "$ALL" 'B2'
 else PASS "B2: every reason on all ${S1_EXCL} EXCLUDED cells is in the closed five-value enum, none duplicated"; fi
-if has_finding "$ALL" "$(surface B3 B5 B6 B7)"; then FAIL "B3: an ADDRESSED cell fails the widened cell grammar or N1, an ambiguity set is malformed, or an ADDRESSED row carries no well-formed entry-class marker"; show "$ALL" 'B3|B5|B6|B7'
+if has_finding "$ALL" "$(surface B3 B5 B6 B7 B8)"; then FAIL "B3: an ADDRESSED cell fails the widened cell grammar or N1, an ambiguity set is malformed, a disposition member's reason is not a single value of the closed enum or the set offers no verb at all, or an ADDRESSED row carries no well-formed entry-class marker"; show "$ALL" 'B3|B5|B6|B7|B8'
 else PASS "B3: all ${S1_ADDR} ADDRESSED cells match the widened (alternation) cell grammar, command component under N1; and every member of the ${S1_AMB} AMBIGUOUS cell(s) matches that SAME grammar, UNCHANGED — the third class reuses the single-target form rather than widening it, and an undeclared two-span cell stays a hard failure so a set is DECLARED and never inferred. ENTRY CLASS: ${S1_GRADED} of ${S1_ADDR} ADDRESSED row(s) open their Action cell with a well-formed marker, ${S1_ADMITTED} of them on the inference-admitted side — both figures are read off this run rather than held here, and the AMBIGUOUS and EXCLUDED rows are outside the quantifier by construction, never by an exemption"; fi
 if has_finding "$ALL" "$(surface B4)"; then FAIL "B4: exhaustiveness broken"; show "$ALL" 'B4'
 else PASS "B4: ${S1_ADDR} ADDRESSED + ${S1_AMB} AMBIGUOUS + ${S1_EXCL} EXCLUDED accounts for ${S1_ROWS} rows, no silent gap"; fi
@@ -2636,14 +2789,24 @@ if [ "${AMBCELLS:-0}" -eq 0 ]; then
 else
   AMB_NOTE="The set limbs quantified over LIVE data on this commit, not over fixtures alone"
 fi
+# The DISPOSITION population is its OWN counter with its OWN note, never a clause inside
+# AMB_NOTE. Borrowing AMB_NOTE would read "quantified over LIVE data" off a set population
+# that is non-zero regardless of whether a single disposition member exists — the R1 shape
+# this suite exists to refuse, one level down. Also an assignment, not a verdict: no site.
+DISPMEMBERS="$(getcount "$COV_OUT" DISPMEMBERS)"
+if [ "${DISPMEMBERS:-0}" -eq 0 ]; then
+  DISP_NOTE="LIVE DISPOSITION-MEMBER POPULATION 0 — the disposition limb of this line quantified over nothing on this commit and establishes nothing about live data. This run's evidence for it is arms GB8 / GB8b / GB8c / GB6d / GK5c / GK5d / GK2c, each of which plants its defect and FAILS if the defect is not flagged, and the must-NOT-fire pair G0j / GK5e beside them"
+else
+  DISP_NOTE="The disposition limb quantified over ${DISPMEMBERS} LIVE disposition member(s) on this commit, not over fixtures alone"
+fi
 if has_finding "$ALL" "$(surface X1 X2)"; then FAIL "K0: the key channel is lossy"; show "$ALL" 'X1|X2'
 else PASS "K0: every emitted key round-trips byte-identical through the record channel, and no key is empty or carries whitespace. SCOPE: X1 and X2 grade the KEY CHANNEL. How this guard's own membership tests quote their haystacks is a property of this file that no assertion here reads, so it is not claimed on this line — see the note at in_list()"; fi
 if has_finding "$ALL" "$(surface K1 K4)"; then FAIL "K1: an ADDRESSED cell covers nothing, a covered member does not resolve, or an ambiguity-set member does not resolve to exactly one unit"; show "$ALL" 'K1|K4'
-else PASS "K1: RESOLVABILITY — each of $(getcount "$COV_OUT" ADDRCELLS) ADDRESSED cells covers a non-empty set and every member resolves (file AND declaration AND region); and each of ${AMBMEMBERS} member(s) across ${AMBCELLS} declared ambiguity set(s) resolves to exactly one coverage unit, computed by the same rule K1 computes an ADDRESSED cell's cover. ${AMB_NOTE}"; fi
+else PASS "K1: RESOLVABILITY — each of $(getcount "$COV_OUT" ADDRCELLS) ADDRESSED cells covers a non-empty set and every member resolves (file AND declaration AND region); and each of ${AMBMEMBERS} UNIT member(s) across ${AMBCELLS} declared ambiguity set(s) resolves to exactly one coverage unit, computed by the same rule K1 computes an ADDRESSED cell's cover. SCOPE: a set's members are of two kinds and K4's quantifier is the UNIT kind alone — a DISPOSITION member names a reason rather than a verb, mints no coverage unit and contributes no cover, so it is graded for its reason by B8 and for its distinctness by K5, and is not in the ${AMBMEMBERS} above. ${AMB_NOTE} ${DISP_NOTE}"; fi
 if has_finding "$ALL" "$(surface K2)"; then FAIL "K2: a coverage unit is covered by no ADDRESSED cell"; show "$ALL" 'K2'
 else PASS "K2: TOTALITY — all $(getcount "$COV_OUT" UNITS) coverage units are covered by an ADDRESSED cell; the uncovered set is empty, graded as a set difference and reported member by member. TOTALITY DOES NOT WEAKEN: set membership never satisfies it, so a verb reachable ONLY as an option inside a declared ambiguity set is still a K2 finding, and this line's quantifier is the one that ships today"; fi
 if has_finding "$ALL" "$(surface K3 K5)"; then FAIL "K3: exclusivity violated, within the ADDRESSED cells or across the declared sets"; show "$ALL" 'K3|K5'
-else PASS "K3: EXCLUSIVITY — no unit covered twice BY ADDRESSED CELLS; no command carrying both a verbless and a verbed ADDRESSED cell. K2 AND K3 give exactly one ADDRESSED cell per unit. Across ${AMBCELLS} declared set(s): no unit named twice inside one set, and no two sets denoting the same units. A unit named in a declared set BESIDE its own ADDRESSED cell is a CHOICE, not a double cover — and the accidental double cover is caught by the same predicate as before, because K3 reads ADDRESSED records only. ${AMB_NOTE}"; fi
+else PASS "K3: EXCLUSIVITY — no unit covered twice BY ADDRESSED CELLS; no command carrying both a verbless and a verbed ADDRESSED cell. K2 AND K3 give exactly one ADDRESSED cell per unit. Across ${AMBCELLS} declared set(s): no option named twice inside one set, and no two sets denoting the same options — quantified over BOTH member kinds, a unit member by the coverage unit it resolves to and each of ${DISPMEMBERS} disposition member(s) by its reason, so two sets differing only by a disposition are two sets. A unit named in a declared set BESIDE its own ADDRESSED cell is a CHOICE, not a double cover — and the accidental double cover is caught by the same predicate as before, because K3 reads ADDRESSED records only and reads neither of the set channels. ${AMB_NOTE} ${DISP_NOTE}"; fi
 
 echo
 echo "── Group S — the charter's two enumerations of the verb set agree."
@@ -3084,6 +3247,11 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/skills/trip/SKILL.md" ] && [ -f "$G0/skil
     G0S=1
     grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip-publish list${BT}" "$G0/CLAUDE.md" || G0S=0
     g0claim "$G0S" G0i "a DECLARED, CROSS-COMMAND ambiguity set whose members each keep their own ADDRESSED row produces no finding of any id — the declared choice is TOLERATED while the accidental double cover beside it (arm GK3b) is still K3. This is the MUST-NOT-FIRE half of the tolerance; without it the set arms would only show the guard refusing things"
+    G0S=1
+    grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}/trip-record profile${BT}${AMB_SEP}${BT}/trip-publish update${BT}" "$G0/CLAUDE.md" || G0S=0
+    grep -qF "| /trip-record profile | sig | ${GRADE_RETAIN}${GRADE_SEP}act | ex | ${BT}/trip-record profile${BT} |" "$G0/CLAUDE.md" || G0S=0
+    grep -qF "| /trip-publish update | sig | ${GRADE_RETAIN}${GRADE_SEP}act | ex | ${BT}/trip-publish update${BT} |" "$G0/CLAUDE.md" || G0S=0
+    g0claim "$G0S" G0j "a set carrying ONE DISPOSITION member beside unit members that each keep their own ADDRESSED row produces no finding of any id — the G0i analogue for the second member kind. The probe asserts all three shapes, so the green cannot rest on a set that was never generated or on unit members that never had their own rows"
   fi
 else
   FAIL "G0a: fixture integrity — the conforming tree was not constructed; G0b-i would prove nothing"
@@ -3218,6 +3386,56 @@ ctl GK5  K5 "one declared set naming the same coverage unit twice"             a
 # Members REORDERED against the conforming set, so a passing arm proves the comparison is
 # over SETS rather than over strings — order is not graded, membership is.
 ctl GK5b K5 "two declared sets denoting the same units, members reordered"     ambsame      ok 'grep -qF "${AMB_MARK}${BT}/trip-publish list${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK5b/CLAUDE.md"'
+# ── The DISPOSITION-MEMBER arms. B8's charter is crisp: every predicate below is one that
+# could not fire before this change. A new id rather than more sites under B6, because group
+# Y arms by ID and not by SITE — a sub-predicate added under an existing id can ship unarmed
+# beneath a green Y2, which is the hole GZV was written to close. A new id forces Y1 and Y2
+# to demand a registration and an arm on the same commit.
+#
+# GB6d is deliberately a B6 and not a B8: a member missing the marker's colon is not a
+# disposition member whose reason is wrong, it is a member of NEITHER kind — the id follows
+# which question the member failed, not which feature introduced it.
+#
+# Read every one of these with G0j and GK5e, the must-NOT-fire pair: without them these arms
+# would only show the guard refusing things, which is the half a hard-wired red also passes.
+ctl GB8  B8 "a disposition member whose reason is outside the closed five-value enum"        dispoffenum   ok 'grep -qF "${AMB_MARK}${DISP_MARK}because I said so" "$WORK/GB8/CLAUDE.md"'
+ctl GB8b B8 "a disposition member CONJOINING two enum reasons — independent grounds on a row, but not one distinguishable option in a choice" dispconj ok 'grep -qF "${AMB_MARK}${DISP_MARK}repo-creation + argv-secret" "$WORK/GB8b/CLAUDE.md"'
+ctl GB8c B8 "a set whose members are ALL dispositions — a row that routes to no command is an exclusion with prose, not a choice" dispnounit ok 'grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${DISP_MARK}repo-creation" "$WORK/GB8c/CLAUDE.md"'
+ctl GB6d B6 "a member spelling the exclusion marker WITHOUT its colon — neither a cell under the grammar nor a declared disposition, so it stays B6 and never reaches the reason grading" dispbadmarker ok 'grep -qF "${AMB_MARK}EXCLUDED lightest-weight-action" "$WORK/GB6d/CLAUDE.md"'
+ctl GK5c K5 "one declared set naming the SAME disposition twice — limb 1 over the disposition kind, the analogue of GK5 over the unit kind" dispdup ok 'grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${DISP_MARK}lightest-weight-action" "$WORK/GK5c/CLAUDE.md"'
+ctl GK5d K5 "two declared sets denoting the same options INCLUDING the same disposition, members reordered — limb 2 still fires when the disposition matches too" dispsame ok 'grep -qF "${AMB_MARK}${BT}/trip-publish update${BT}${AMB_SEP}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}/trip-record profile${BT}" "$WORK/GK5d/CLAUDE.md"'
+# GK2c is GK2b with a disposition member standing beside the unit members. It is the arm that
+# proves the widening did not open a totality hole: the one shape by which a disposition could
+# have satisfied K2 is a disposition standing in for the missing ADDRESSED cell, and this world
+# builds exactly that and requires it to stay a K2.
+ctl GK2c K2 "a verb reachable ONLY as a unit member of a set that ALSO carries a disposition member — admitting the disposition did not make set membership satisfy totality" dispambuncovered ok 'grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}/trip check${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK2c/CLAUDE.md"'
+
+# ── GK5e — the arm that fails against the NAIVE implementation, and the only must-NOT-fire
+# arm on the K5 widening. Its world carries a set whose UNIT members are identical to the
+# conforming disposition set's and whose DISPOSITION member differs. Drop disposition members
+# from K5's set identity — the obvious implementation, and the one a reader who took K4 as the
+# model would write — and the two compare equal, limb 2 emits a spurious K5, and this arm goes
+# red while every must-fire arm above still passes. That is the whole of its job.
+#
+# It is NOT a ctl arm: ctl's contract is MUST-FIRE. It is written in GPV's shape rather than
+# GB7b's — fixture integrity folded into the same verdict rather than asserted beside it — so
+# it contributes exactly one PASS/FAIL site, and a world that was never built reports as a
+# fixture failure rather than as a quiet green.
+GK5E="$WORK/GK5e"; gen_tree "$GK5E" dispdiff ok
+arm K5
+GK5E_OUT=""; GK5E_HITS=""
+if ! grep -qF "${AMB_MARK}${DISP_MARK}repo-creation${AMB_SEP}${BT}/trip-record profile${BT}${AMB_SEP}${BT}/trip-publish update${BT}" "$GK5E/CLAUDE.md" \
+   || ! grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}/trip-record profile${BT}${AMB_SEP}${BT}/trip-publish update${BT}" "$GK5E/CLAUDE.md"; then
+  FAIL "GK5e: fixture integrity — the world must carry BOTH sets, same two unit members and DIFFERENT dispositions; one of them is absent, so a zero here would prove nothing"
+else
+  GK5E_OUT="$(run_tree "$GK5E")"
+  GK5E_HITS="$(printf '%s\n' "$GK5E_OUT" | grep '^FINDING K5 ' | head -3 | tr '\n' ' ')"
+  if [ -z "$GK5E_HITS" ]; then
+    PASS "GK5e: MUST-NOT-FIRE — two sets sharing both unit members and differing ONLY in their disposition member are TWO sets, and no K5 is emitted over $(getcount "$GK5E_OUT" DISPMEMBERS) live disposition member(s) in that world. The zero is a measurement: GK5d is the sensitivity arm on the same limb, over the same fixture shape with the disposition MATCHING, and fires on the same run. This arm is what makes the K5 quantifier widening evidence rather than an argument — an implementation that omits disposition members from the set identity emits a spurious K5 here while passing every must-fire arm above"
+  else
+    FAIL "GK5e: a SPURIOUS K5 — two sets differing only in their disposition member compared EQUAL, so disposition members are missing from K5's set identity: ${GK5E_HITS}"
+  fi
+fi
 # GB7b is not a ctl arm: ctl's contract is MUST-FIRE, and what this asserts is an ABSENCE
 # together with the shapes that absence has to survive. It is written in the remediated polarity
 # — the PASS on the `then` limb — so it does not join group MD's declared residual, and it states
