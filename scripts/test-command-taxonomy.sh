@@ -544,6 +544,21 @@ AMB_SEP=' · '
 # naming an unset variable under `set -u` is an error. needle_check runs long after both.
 NEEDLES_UNTRIMMED+=( "$AMB_MARK" "$AMB_SEP" )
 
+# ── The ENTRY-CLASS marker. A RENDERING, not a third vocabulary: the two tokens are
+# uppercase spellings of ADR-007 § 1's own `inference-admitted` and of its declared-intent side,
+# and the charter records the class rather than deciding it. What B7 grades is that an ADDRESSED
+# row CARRIES one — never that the token equals the derivation over the verb sections, which is a
+# later slice's join and is claimed nowhere here.
+#
+# It is read from FIELD 3, the Action cell, and the field index is the whole of the test: arm GB7
+# plants a correctly-spelled marker in the EXAMPLE cell of an ungraded row, so a row-wide scan
+# passes that arm and a field-indexed one fails it. Registered UNTRIMMED for the same reason the
+# exclusion marker is — each prefix ends in a space and cannot round-trip its own normalisation.
+GRADE_ADMIT='**INFERENCE-ADMITTED**'
+GRADE_RETAIN='**DECLARED-INTENT**'
+GRADE_SEP=" ${EMDASH} "
+NEEDLES_UNTRIMMED+=( "${GRADE_ADMIT}${GRADE_SEP}" "${GRADE_RETAIN}${GRADE_SEP}" )
+
 # Is this row the requirement table's own header row? Structural, on the five column
 # names — never on a fence, and never on one byte rendering of the row.
 is_req_header() {
@@ -880,7 +895,7 @@ charter_check() {
   local rc=0
   if [ ! -f "$md" ]; then
     printf 'FINDING A0 the charter path does not exist\n'
-    printf 'COUNT S1_ROWS 0\nCOUNT S1_ADDR 0\nCOUNT S1_AMB 0\nCOUNT S1_EXCL 0\nCOUNT S2_KEYS 0\nCOUNT CONS_ROWS 0\nCOUNT DOTTED 0\nCOUNT UNWIDENED_FAIL 0\n'
+    printf 'COUNT S1_ROWS 0\nCOUNT S1_ADDR 0\nCOUNT S1_AMB 0\nCOUNT S1_EXCL 0\nCOUNT S1_GRADED 0\nCOUNT S1_ADMITTED 0\nCOUNT S2_KEYS 0\nCOUNT CONS_ROWS 0\nCOUNT DOTTED 0\nCOUNT UNWIDENED_FAIL 0\n'
     return 1
   fi
 
@@ -904,7 +919,7 @@ charter_check() {
     if [ "$incons" -eq 1 ] && [[ "$line" == '| '"$BT"'/'* ]]; then CONS+=( "$line" ); fi
   done < "$md"
 
-  local n_rows=${#R1[@]} n_addr=0 n_excl=0 n_amb=0 n_dot=0 n_unwid=0
+  local n_rows=${#R1[@]} n_addr=0 n_excl=0 n_amb=0 n_dot=0 n_unwid=0 n_graded=0 n_admit=0
   if [ "$n_rows" -eq 0 ]; then
     printf 'FINDING A0 the Step-1 slice is empty or absent — no data rows extracted\n'; rc=1
   fi
@@ -913,7 +928,7 @@ charter_check() {
   # Declared in their own statement, never beside a name they reference: every word of a
   # `local` builtin is expanded BEFORE the builtin runs, so a same-statement back-reference
   # takes the OUTER value or trips `set -u`. The convention this file already follows.
-  local amb_rest amb_m amb_bad
+  local amb_rest amb_m amb_bad act_cell
   local -a F=() SEEN=() AMBM=()
   for row in "${R1[@]+"${R1[@]}"}"; do
     IFS='|' read -r -a F <<< "$row"
@@ -1019,6 +1034,22 @@ charter_check() {
     fi
     printf 'ADDRKEY %s\n' "$key"
     printf 'ADDRPARTS %s %s\n' "/${cmdpart}" "${verbpart:--}"
+
+    # ── B7 — the ENTRY-CLASS grade, read from FIELD 3 and from nowhere else in the row.
+    # ADDRESSED rows ONLY: an EXCLUDED or an AMBIGUOUS row reached its own `continue` far above
+    # this line, which is the quantifier D-5 fixed — a set is a choice BETWEEN arms and is not
+    # itself one, so it carries no class and is not graded for the absence of one. Arm GB7b is
+    # the must-NOT-fire half of exactly that claim.
+    #
+    # The marker has to OPEN the cell. A cell merely CONTAINING one is not graded: the class is
+    # a property of the row, so it leads, the way every other classification token in this
+    # corpus's table cells leads.
+    act_cell="$(trim "${F[3]}")"
+    case "$act_cell" in
+      "${GRADE_ADMIT}${GRADE_SEP}"*)  n_graded=$((n_graded+1)); n_admit=$((n_admit+1)) ;;
+      "${GRADE_RETAIN}${GRADE_SEP}"*) n_graded=$((n_graded+1)) ;;
+      *) printf 'FINDING B7 UNGRADED ADDRESSED row — the Action cell must OPEN with "%s" or "%s", and this one opens "%.40s": %s\n' "${GRADE_ADMIT}${GRADE_SEP}" "${GRADE_RETAIN}${GRADE_SEP}" "$act_cell" "$key"; rc=1 ;;
+    esac
   done
 
   if [ $((n_addr + n_amb + n_excl)) -ne "$n_rows" ]; then
@@ -1067,6 +1098,8 @@ charter_check() {
   printf 'COUNT S1_ADDR %d\n' "$n_addr"
   printf 'COUNT S1_AMB %d\n' "$n_amb"
   printf 'COUNT S1_EXCL %d\n' "$n_excl"
+  printf 'COUNT S1_GRADED %d\n' "$n_graded"
+  printf 'COUNT S1_ADMITTED %d\n' "$n_admit"
   printf 'COUNT S2_KEYS %d\n' "$n_s2"
   printf 'COUNT CONS_ROWS %d\n' "$n_cons"
   printf 'COUNT DOTTED %d\n' "$n_dot"
@@ -2263,7 +2296,7 @@ gen_charter() {  # gen_charter <dir> <defect>
   if [ "$defect" = 'verbless' ]; then
     KEYS=( '/trip' '/trip-record' '/trip-publish' '/trip-new' )
   fi
-  local k
+  local k gmark
   {
     if [ "$defect" = 'nostep1' ]; then printf '### Some other heading\n\n'
     else printf '### Step 1: Classify the request\n\n'; fi
@@ -2274,7 +2307,19 @@ gen_charter() {  # gen_charter <dir> <defect>
       if [ "$defect" = 'uncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
       if [ "$defect" = 'ambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
       if [ "$defect" = 'step1drift' ] && [ "$k" = '/trip-record log' ]; then continue; fi
-      printf '| %s | sig | act | ex | %s%s%s |\n' "$k" "$BT" "$k" "$BT"
+      # ── The UNGRADED row, planted by REPLACING a conforming row rather than by adding one.
+      # An added ADDRESSED row necessarily carries a SECOND finding — a key already covered is
+      # K3, a key nothing declares is K1 — so the arm could not say which predicate it reached.
+      # Replacing one leaves B7 as the only defect in the world. The correctly-spelled marker
+      # goes in the EXAMPLE cell: that is what makes the arm discriminate a FIELD-INDEXED read
+      # from a row-wide one, which a bare absent-marker row cannot do.
+      if [ "$defect" = 'b7none' ] && [ "$k" = '/trip check' ]; then
+        printf '| X | sig | act | %sex | %s%s%s |\n' "${GRADE_RETAIN}${GRADE_SEP}" "$BT" "$k" "$BT"; continue
+      fi
+      # The conforming world grades EVERY addressed row and renders BOTH tokens. A world that
+      # only ever wrote one of them would leave the other's branch unexercised under a green G0b.
+      if [ "$k" = '/trip status' ]; then gmark="${GRADE_ADMIT}${GRADE_SEP}"; else gmark="${GRADE_RETAIN}${GRADE_SEP}"; fi
+      printf '| %s | sig | %sact | ex | %s%s%s |\n' "$k" "$gmark" "$BT" "$k" "$BT"
     done
     # ── The CONFORMING ambiguity set, carried by every world except the zero-verb one.
     # Deliberately CROSS-COMMAND, which is the shape a factored in-span grammar could not
@@ -2294,15 +2339,24 @@ gen_charter() {  # gen_charter <dir> <defect>
     if [ "$defect" = 'ambuncovered' ]; then printf '| X | sig | act | ex | %s%s/trip check%s%s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'ambdup' ];       then printf '| X | sig | act | ex | %s%s/trip status%s%s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'ambsame' ];      then printf '| X | sig | act | ex | %s%s/trip-publish list%s%s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
-    if [ "$defect" = 'dblcover2' ];    then printf '| X | sig | act | ex | %s/trip status%s |\n' "$BT" "$BT"; fi
+    if [ "$defect" = 'dblcover2' ];    then printf '| X | sig | %sact | ex | %s/trip status%s |\n' "${GRADE_RETAIN}${GRADE_SEP}" "$BT" "$BT"; fi
+    # ── The B7 SPECIFICITY world. Every row it adds is NON-ADDRESSED, and the marker is present
+    # on some and absent on others, so the arm over it fails under a B7 that grades every row's
+    # Action cell AND under one that objects to a marker where no class is owed.
+    if [ "$defect" = 'b7excl' ]; then
+      printf '| X | sig | %sact | ex | EXCLUDED: lightest-weight-action |\n' "${GRADE_ADMIT}${GRADE_SEP}"
+      printf '| X | sig | act | ex | EXCLUDED: lightest-weight-action |\n'
+      printf '| X | sig | %sact | ex | %s%s/trip check%s%s%s/trip-record log%s |\n' \
+        "${GRADE_RETAIN}${GRADE_SEP}" "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"
+    fi
     if [ "$defect" = 'badcell' ];    then printf '| X | sig | act | ex | neither |\n'; fi
     if [ "$defect" = 'offenum' ];    then printf '| X | sig | act | ex | EXCLUDED: because I said so |\n'; fi
     if [ "$defect" = 'dupreason' ];  then printf '| X | sig | act | ex | EXCLUDED: repo-creation + repo-creation |\n'; fi
     if [ "$defect" = 'badgrammar' ]; then printf '| X | sig | act | ex | %s/trip --.x%s |\n' "$BT" "$BT"; fi
     if [ "$defect" = 'badn1' ];      then printf '| X | sig | act | ex | %s/Trip status%s |\n' "$BT" "$BT"; fi
     if [ "$defect" = 'badspan' ];    then printf '| X | sig | act | ex | %s/trip st%satus%s |\n' "$BT" "$BT" "$BT"; fi
-    if [ "$defect" = 'ghostkey' ];   then printf '| X | sig | act | ex | %s/trip nosuchverb%s |\n' "$BT" "$BT"; fi
-    if [ "$defect" = 'dblcover' ];   then printf '| X | sig | act | ex | %s/trip%s |\n' "$BT" "$BT"; fi
+    if [ "$defect" = 'ghostkey' ];   then printf '| X | sig | %sact | ex | %s/trip nosuchverb%s |\n' "${GRADE_RETAIN}${GRADE_SEP}" "$BT" "$BT"; fi
+    if [ "$defect" = 'dblcover' ];   then printf '| X | sig | %sact | ex | %s/trip%s |\n' "${GRADE_RETAIN}${GRADE_SEP}" "$BT" "$BT"; fi
     printf '\n'
     if [ "$defect" != 'nostep2' ]; then
       printf '### Step 2: Read context (scaled to the request)\n\n'
@@ -2496,6 +2550,7 @@ CH_OUT="$(charter_check "$MD")"
 S1_ROWS="$(getcount "$CH_OUT" S1_ROWS)"; S1_ADDR="$(getcount "$CH_OUT" S1_ADDR)"
 S1_EXCL="$(getcount "$CH_OUT" S1_EXCL)"; S1_AMB="$(getcount "$CH_OUT" S1_AMB)"
 DOTTED="$(getcount "$CH_OUT" DOTTED)"; UNWID="$(getcount "$CH_OUT" UNWIDENED_FAIL)"
+S1_GRADED="$(getcount "$CH_OUT" S1_GRADED)"; S1_ADMITTED="$(getcount "$CH_OUT" S1_ADMITTED)"
 
 RECS="$CH_OUT"
 NFILES=0
@@ -2552,8 +2607,8 @@ if has_finding "$ALL" "$(surface B1)"; then FAIL "B1: a Step-1 Command cell is m
 else PASS "B1: no malformed Command cell across ${S1_ROWS} rows"; fi
 if has_finding "$ALL" "$(surface B2)"; then FAIL "B2: a reason is off-enum, absent or duplicated"; show "$ALL" 'B2'
 else PASS "B2: every reason on all ${S1_EXCL} EXCLUDED cells is in the closed five-value enum, none duplicated"; fi
-if has_finding "$ALL" "$(surface B3 B5 B6)"; then FAIL "B3: an ADDRESSED cell fails the widened cell grammar or N1, or an ambiguity set is malformed"; show "$ALL" 'B3|B5|B6'
-else PASS "B3: all ${S1_ADDR} ADDRESSED cells match the widened (alternation) cell grammar, command component under N1; and every member of the ${S1_AMB} AMBIGUOUS cell(s) matches that SAME grammar, UNCHANGED — the third class reuses the single-target form rather than widening it, and an undeclared two-span cell stays a hard failure so a set is DECLARED and never inferred"; fi
+if has_finding "$ALL" "$(surface B3 B5 B6 B7)"; then FAIL "B3: an ADDRESSED cell fails the widened cell grammar or N1, an ambiguity set is malformed, or an ADDRESSED row carries no well-formed entry-class marker"; show "$ALL" 'B3|B5|B6|B7'
+else PASS "B3: all ${S1_ADDR} ADDRESSED cells match the widened (alternation) cell grammar, command component under N1; and every member of the ${S1_AMB} AMBIGUOUS cell(s) matches that SAME grammar, UNCHANGED — the third class reuses the single-target form rather than widening it, and an undeclared two-span cell stays a hard failure so a set is DECLARED and never inferred. ENTRY CLASS: ${S1_GRADED} of ${S1_ADDR} ADDRESSED row(s) open their Action cell with a well-formed marker, ${S1_ADMITTED} of them on the inference-admitted side — both figures are read off this run rather than held here, and the AMBIGUOUS and EXCLUDED rows are outside the quantifier by construction, never by an exemption"; fi
 if has_finding "$ALL" "$(surface B4)"; then FAIL "B4: exhaustiveness broken"; show "$ALL" 'B4'
 else PASS "B4: ${S1_ADDR} ADDRESSED + ${S1_AMB} AMBIGUOUS + ${S1_EXCL} EXCLUDED accounts for ${S1_ROWS} rows, no silent gap"; fi
 if [ "${DOTTED:-0}" -gt 0 ]; then
@@ -3135,6 +3190,17 @@ ctl GB5  B5 "an ADDRESSED cell whose COMMAND component fails N1"               b
 ctl GB6  B6 "an ambiguity set declaring ONE member — a choice needs two"       ambone       ok 'grep -qF "| ex | ${AMB_MARK}${BT}/trip status${BT} |" "$WORK/GB6/CLAUDE.md"'
 ctl GB6b B6 "an ambiguity-set member that fails the UNCHANGED cell grammar"    ambbadmember ok 'grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip --.x${BT}" "$WORK/GB6b/CLAUDE.md"'
 ctl GB6c B6 "two code spans joined by the separator with NO marker — the UNDECLARED set, which must stay a hard failure so a set is declared and never inferred from a parse failure" ambnomarker ok 'grep -qF "| ex | ${BT}/trip status${BT}${AMB_SEP}${BT}/trip check${BT} |" "$WORK/GB6c/CLAUDE.md"'
+# ── The ENTRY-CLASS arms. GB7 is MUST-FIRE and GB7b is the MUST-NOT-FIRE half beside it; read
+# them as a pair, because each closes a direction the other cannot. GB7 closes the FIELD INDEX:
+# its world carries a correctly-spelled marker in the Example cell of an ungraded row, so a
+# row-wide scan of the row reads green and only a read of field 3 goes red. GB7b closes the
+# QUANTIFIER: B7 grades ADDRESSED rows and nothing else, in both directions.
+#
+# The spec's third defect row — a MISSPELLED marker — is deliberately NOT generated. A
+# misspelling and an absence reach the same `case` limb by the same route, so an arm over it
+# would add an assertion that cannot fail while GB7 passes, and a fixture world no arm drives is
+# the dead green this group exists to refuse. The field-index property was bought instead.
+ctl GB7  B7 "an ADDRESSED row whose ACTION cell carries no entry-class marker while a correctly-spelled one sits in its EXAMPLE cell — a row-wide read of the row passes this arm and only a FIELD-INDEXED read of field 3 fails it" b7none ok 'grep -qF "| X | sig | act | ${GRADE_RETAIN}${GRADE_SEP}ex | ${BT}/trip check${BT} |" "$WORK/GB7/CLAUDE.md"'
 ctl GK1  K1 "an ADDRESSED cell naming a verb no requirement table declares"    ghostkey  ok  'grep -qF "nosuchverb" "$WORK/GK1/CLAUDE.md"'
 ctl GK2  K2 "a declared verb covered by no ADDRESSED cell"                     uncovered ok  '! grep -qF "| /trip check |" "$WORK/GK2/CLAUDE.md"'
 # GK2b is the arm that proves TOTALITY DID NOT WEAKEN: the verb is named as an OPTION in a
@@ -3145,13 +3211,36 @@ ctl GK3  K3 "a command carrying both a verbless and a verbed ADDRESSED cell"   d
 # GK3b drives K3's FIRST limb alone — the accidental double cover — on a tree that also
 # carries a declared set. GK3 above reaches limbs 1 and 2 together, so neither arm on its
 # own shows that the accident is still caught while the declared choice beside it is not.
-ctl GK3b K3 "a second ADDRESSED cell for a unit already covered — the ACCIDENTAL double cover, still a finding on a tree that also carries a declared set" dblcover2 ok 'grep -qF "| X | sig | act | ex | ${BT}/trip status${BT} |" "$WORK/GK3b/CLAUDE.md"'
+ctl GK3b K3 "a second ADDRESSED cell for a unit already covered — the ACCIDENTAL double cover, still a finding on a tree that also carries a declared set" dblcover2 ok 'grep -qF "| X | sig | ${GRADE_RETAIN}${GRADE_SEP}act | ex | ${BT}/trip status${BT} |" "$WORK/GK3b/CLAUDE.md"'
 ctl GK4  K4 "an ambiguity-set member resolving to no coverage unit"            ambghost     ok 'grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip nosuchverb${BT}" "$WORK/GK4/CLAUDE.md"'
 ctl GK4b K4 "an ambiguity-set member naming a WHOLE COMMAND, which covers more than one unit — a command is itself a choice" ambwholecmd ok 'grep -qF "${AMB_MARK}${BT}/trip${BT}${AMB_SEP}${BT}/trip-publish list${BT}" "$WORK/GK4b/CLAUDE.md"'
 ctl GK5  K5 "one declared set naming the same coverage unit twice"             ambdup       ok 'grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK5/CLAUDE.md"'
 # Members REORDERED against the conforming set, so a passing arm proves the comparison is
 # over SETS rather than over strings — order is not graded, membership is.
 ctl GK5b K5 "two declared sets denoting the same units, members reordered"     ambsame      ok 'grep -qF "${AMB_MARK}${BT}/trip-publish list${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK5b/CLAUDE.md"'
+# GB7b is not a ctl arm: ctl's contract is MUST-FIRE, and what this asserts is an ABSENCE
+# together with the shapes that absence has to survive. It is written in the remediated polarity
+# — the PASS on the `then` limb — so it does not join group MD's declared residual, and it states
+# its denominator because a zero over an unbuilt world proves nothing.
+GB7B="$WORK/GB7b"; gen_tree "$GB7B" b7excl ok
+arm B7
+GB7B_S=1
+grep -qF "| X | sig | ${GRADE_ADMIT}${GRADE_SEP}act | ex | EXCLUDED: lightest-weight-action |" "$GB7B/CLAUDE.md" || GB7B_S=0
+grep -qF "| X | sig | act | ex | EXCLUDED: lightest-weight-action |" "$GB7B/CLAUDE.md" || GB7B_S=0
+grep -qF "| X | sig | ${GRADE_RETAIN}${GRADE_SEP}act | ex | ${AMB_MARK}${BT}/trip check${BT}${AMB_SEP}${BT}/trip-record log${BT} |" "$GB7B/CLAUDE.md" || GB7B_S=0
+if [ "$GB7B_S" -eq 1 ]; then
+  PASS "GB7ba: fixture integrity — the world carries a MARKED excluded row, an UNMARKED excluded row and a MARKED ambiguity set, so GB7bb grades all three shapes rather than one"
+  GB7B_OUT="$(run_tree "$GB7B")"
+  GB7B_ADDR="$(getcount "$GB7B_OUT" S1_ADDR)"; GB7B_GRD="$(getcount "$GB7B_OUT" S1_GRADED)"
+  GB7B_HITS="$(printf '%s\n' "$GB7B_OUT" | grep '^FINDING B7 ' | head -3 | tr '\n' ' ')"
+  if [ -z "$GB7B_HITS" ]; then
+    PASS "GB7bb: MUST-NOT-FIRE — B7's quantifier is the ADDRESSED class and nothing else: over a world carrying ${GB7B_ADDR} ADDRESSED row(s), all ${GB7B_GRD} graded, plus an EXCLUDED row and an ambiguity set that CARRY a marker and an EXCLUDED row that does not, no B7 is emitted. The zero is a measurement and not an empty scan — GB7 is the sensitivity arm on the same predicate and fires on the same run"
+  else
+    FAIL "GB7bb: a NON-ADDRESSED row was graded for its entry class — B7 is quantifying over rows it must not reach, or objecting to a marker where no class is owed: ${GB7B_HITS}"
+  fi
+else
+  FAIL "GB7ba: fixture integrity — the specificity world was not constructed, so GB7bb's zero would prove nothing"
+fi
 ctl GS1  S1 "a key present in Step 1 and absent from Step 2"                   step2drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1/CLAUDE.md")" = "1" ]'
 ctl GS1b S1 "the same divergence in the OTHER direction — present in Step 2, absent from Step 1" step1drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1b/CLAUDE.md")" = "1" ]'
 ctl GS2  S2 "only ONE enumeration derivable — SINGLE-SOURCE, not agreement"    nostep2   ok  '! grep -q "^### Step 2:" "$WORK/GS2/CLAUDE.md"'

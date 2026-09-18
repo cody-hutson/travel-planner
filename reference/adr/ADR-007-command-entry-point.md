@@ -314,8 +314,14 @@ Six bounds hold on every command in this surface:
 - **No command may set `ALLOW_PLAINTEXT`, and no command may pass `--yes` to `unpublish`.** These
   are the two flags that convert a refusal into a silent pass on a non-interactive caller. This bound
   is not negotiable by a later slice.
-- Every Step-1 row maps to exactly one command **or** to a declared exclusion. Silent gaps are not
-  permitted; an unaddressed request type is a stated one.
+- Every Step-1 row maps to exactly one command, **or** to a declared exclusion, **or** to a declared
+  ambiguity set, each of whose members maps to one command on its own row. Silent gaps are not
+  permitted; an unaddressed request type is a stated one, and a request type that reaches more than
+  one command is a stated **choice** rather than a silent pick. *(Amended 2026-09-18, Friday: the
+  third limb is added in the change that authors the first set, so the bound is never false. It was
+  true of a Command column in which a row could only address a verb or declare an exclusion, and § 3
+  above admits the same class over the same rows — this limb and that identity are one statement
+  seen from the bound and from the guard.)*
 - **No command may overwrite or delete existing trip content.** A trip's working tree is git-ignored
   and carries no history, and `trip-log.md` **is** the rationale record rather than a copy of one —
   so a clobber is recoverable from nothing: not from a revert, not from the repo, not from the log.
