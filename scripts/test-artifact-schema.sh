@@ -2965,6 +2965,102 @@ else
   FAIL "CTL-A2neg: MUST NOT FIRE — an UNVERSIONED artifact naming an unknown class failed (rc=$R); A2 has escaped the version gate and the gate is now inventing a rule § 7.3 does not state"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# CTL-NOSCHEMA1..3 — the schema lookup, and the class of failure NOTHING here could see.
+#
+# ── WHAT THESE THREE ARMS ARE FOR ────────────────────────────────────────────────
+# A2 above states the condition "declares schema-version N but no schema in
+# reference/schemas/ covers that class", and the gate emits it only when the class-id
+# SPELLS the literal UNKNOWN — the sentinel va_select's declared arm writes. A class-id that
+# reached va_check_artifact from the PATH arm can never spell it, so the identical condition
+# produced the opposite verdict depending on how the id happened to be written: rc 1 with a
+# finding under UNKNOWN, and rc 0 with ZERO BYTES under a well-formed one.
+#
+# Zero bytes is the whole difficulty. The degraded run's output was BYTE-IDENTICAL to a
+# healthy one, so no byte-comparison arm, no count arm and no finding arm in this suite could
+# reach it — and the artifact was reported `validated` against a schema that was never read.
+# Worse than unchecked: an artifact carrying five genuine A3 violations returned rc 1 with
+# 400 bytes of findings normally, and rc 0 with nothing at all under the degradation.
+#
+# ── THE SUBJECT IS DERIVED, NEVER SPELLED ────────────────────────────────────────
+# The class, its schema and its artifact come from the corpus's own declarations, read
+# through the validator's own functions. Nothing below hardcodes a class-id or a path, so a
+# corpus change moves the subject rather than silently un-testing these arms.
+NS_CID=""; NS_ART=""; NS_SCHEMA=""; NS_WITNESS=""
+while IFS= read -r NS_F; do
+  [ -n "$NS_F" ] || continue
+  NS_L="$(va_schema_lines "$ROOT" "$NS_F" 2>/dev/null | grep -v '^FINDING ')"
+  NS_W="$(va_schema_get "$NS_L" witness)"
+  [ -n "$NS_W" ] && [ -r "$ROOT/$NS_W" ] || continue
+  [ -n "$(va_schema_all "$NS_L" field)" ] || continue
+  grep -q '^schema-version:' "$ROOT/$NS_W" || continue
+  NS_CID="$(va_schema_get "$NS_L" class-id)"; NS_ART="$(va_schema_get "$NS_L" artifact)"
+  NS_SCHEMA="$NS_F"; NS_WITNESS="$NS_W"; break
+done <<EOF
+$(va_schema_files "$ROOT")
+EOF
+# A well-formed class-id the corpus provably does not cover, found by SEARCHING rather than
+# by assertion: a literal chosen once could silently become a real class later, and the arm
+# would then grade a covered class while claiming to grade an uncovered one.
+NS_UNCOVERED=""; NS_N=99
+while [ "$NS_N" -lt 400 ]; do
+  if ! va_schema_for "$ROOT" "C$NS_N" >/dev/null 2>&1; then NS_UNCOVERED="C$NS_N"; break; fi
+  NS_N=$((NS_N + 1))
+done
+
+# ── CTL-NOSCHEMA1 — MUST FIRE. The identical condition A2 already names, reached through a
+# well-formed class-id instead of the UNKNOWN sentinel.
+NS1_RC=0; NS1_OUT=""; NS1_REAL_RC=0; NS1_REAL_OUT=""; NS1_LOOKUP_BAD=0; NS1_LOOKUP_OK=0
+if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ]; then
+  NS1_OUT="$(va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_UNCOVERED" "$NS_ART" 2>&1)"; NS1_RC=$?
+  NS1_REAL_OUT="$(va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_CID" "$NS_ART" 2>&1)"; NS1_REAL_RC=$?
+  # The sensitivity/specificity pair on the LOOKUP itself, so "uncovered" is measured here
+  # rather than assumed from the arm's own verdict.
+  va_schema_for "$ROOT" "$NS_UNCOVERED" >/dev/null 2>&1 || NS1_LOOKUP_BAD=1
+  [ -n "$(va_schema_for "$ROOT" "$NS_CID" 2>/dev/null)" ] && va_schema_for "$ROOT" "$NS_CID" >/dev/null 2>&1 && NS1_LOOKUP_OK=1
+fi
+if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ] && [ "$NS1_LOOKUP_BAD" -eq 1 ] && [ "$NS1_LOOKUP_OK" -eq 1 ] \
+   && [ "$NS1_REAL_RC" -eq 0 ] && [ -z "$(printf '%s\n' "$NS1_REAL_OUT" | grep '^FINDING ')" ] \
+   && [ "$NS1_RC" -ne 0 ] && has_finding "$NS1_OUT" 'A2'; then
+  PASS "CTL-NOSCHEMA1: MUST FIRE — a versioned artifact (${NS_WITNESS##*/}) whose class resolves to NO SCHEMA fails closed at rc=$NS1_RC with A2, and it does so for a well-formed class-id ($NS_UNCOVERED) rather than only for the literal UNKNOWN. The lookup pair is measured, not assumed: va_schema_for returns non-zero for $NS_UNCOVERED and a path for $NS_CID; and the SAME artifact under its real class returns rc=$NS1_REAL_RC with no finding, so this arm grades the class-id and not the artifact"
+else
+  FAIL "CTL-NOSCHEMA1: MUST FIRE — a class the corpus does not cover was reported validated (subject=${NS_CID:-<none>} uncovered-id=${NS_UNCOVERED:-<none>} lookup-bad=$NS1_LOOKUP_BAD lookup-ok=$NS1_LOOKUP_OK degraded-rc=$NS1_RC real-rc=$NS1_REAL_RC). subject or uncovered-id empty means the derivation found no subject and this arm measured nothing; lookup-bad=0 or lookup-ok=0 means the class-id pair is not the pair this arm claims; real-rc non-zero means the artifact itself is failing and the comparison says nothing; otherwise the gate returned rc=$NS1_RC over an artifact it graded against no schema at all — $(printf '%s' "$NS1_OUT" | head -c 120)"
+fi
+
+# ── CTL-NOSCHEMA2 — MUST FIRE. The schema RESOLVES and then will not read.
+#
+# The corpus table is warmed in this shell FIRST, deliberately. With a cold table the shadow
+# below runs inside va_corpus_patterns too, the class drops out of the pattern table, and the
+# run takes the A2 branch — a real verdict, but not this one. Warming pins the branch under
+# test. #1149's memo fix makes warm the normal state inside va_main; this arm does not depend
+# on that, because it warms explicitly.
+NS2_MARK="$WORK/ns2_invoked"; NS2_OUT=""; NS2_RC=0; NS2_HITS=0; NS2_NAMES=0
+NS2_CTRL_RC=0; NS2_CTRL_FIND=1
+: > "$NS2_MARK"
+if [ -n "$NS_CID" ]; then
+  va_corpus_patterns "$ROOT" >/dev/null 2>&1
+  NS2_OUT="$(
+    eval "$(declare -f va_schema_lines | sed '1s/^va_schema_lines/va_schema_lines_unshadowed/')"
+    va_schema_lines() {
+      if [ "${2:-}" = "$NS_SCHEMA" ]; then printf 'x\n' >> "$NS2_MARK"; return 1; fi
+      va_schema_lines_unshadowed "$@"
+    }
+    va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_CID" "$NS_ART" 2>&1
+  )"; NS2_RC=$?
+  NS2_HITS="$(awk 'END { print NR + 0 }' "$NS2_MARK")"
+  # Prefix-free literal match on the schema path: it carries `/` and `.`, and `.` in a regex
+  # matches anything, so a regex arm would report a naming it did not observe.
+  NS2_NAMES="$(awk -v p="$NS_SCHEMA" 'index($0, p) > 0 { n++ } END { print n + 0 }' <<<"$NS2_OUT")"
+  NS2_CTRL_OUT="$(va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_CID" "$NS_ART" 2>&1)"; NS2_CTRL_RC=$?
+  [ -z "$(printf '%s\n' "$NS2_CTRL_OUT" | grep '^FINDING ')" ] && NS2_CTRL_FIND=0
+fi
+if [ -n "$NS_CID" ] && [ "$NS2_HITS" -ge 1 ] && [ "$NS2_CTRL_RC" -eq 0 ] && [ "$NS2_CTRL_FIND" -eq 0 ] \
+   && [ "$NS2_RC" -ne 0 ] && has_finding "$NS2_OUT" 'X2' && [ "$NS2_NAMES" -ge 1 ]; then
+  PASS "CTL-NOSCHEMA2: MUST FIRE — with the read of $NS_SCHEMA shadowed to fail (injected $NS2_HITS time(s)) against a WARM pattern table, so the class still resolves and only its schema will not read, the gate FAILS CLOSED at rc=$NS2_RC with X2 naming that schema file. The identical call with the shadow removed returns rc=$NS2_CTRL_RC with no finding, so the verdict change is attributable to the one shadowed read"
+else
+  FAIL "CTL-NOSCHEMA2: MUST FIRE — a schema that resolved and then would not read did not fail closed (subject=${NS_CID:-<none>} shadow-invoked=$NS2_HITS rc=$NS2_RC names-schema=$NS2_NAMES control-rc=$NS2_CTRL_RC control-findings=$NS2_CTRL_FIND). shadow-invoked=0 means the injection never landed and this arm measured nothing; control-rc non-zero or control-findings=1 means the unshadowed subject was already failing, so the comparison proves nothing; rc=0 means the gate reported success over an artifact it never graded; names-schema=0 means it failed without saying WHICH read failed, which is the half of AC2 a bare non-zero does not satisfy"
+fi
+
 # ── A5 — the file's own declaration disagreeing with the class that selected it.
 FX="$WORK/a5"; mk_root "$FX"
 printf -- '---\nartifact: outputs/activities-list.md\nschema-version: 1\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
