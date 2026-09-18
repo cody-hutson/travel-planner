@@ -2032,7 +2032,7 @@ def census_arms():
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
         "  # gate-efficacy: posture=required\n"
         "  new-suite:\n"
-        "    name: Café suite (test-new-suite.sh)\n"
+        "    name: Caf\u00e9 suite (test-new-suite.sh)\n"
         "    runs-on: ubuntu-latest\n"
         "    steps:\n"
         "      - run: 'true'\n").encode("latin-1")
