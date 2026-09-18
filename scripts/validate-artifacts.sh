@@ -442,6 +442,44 @@ va_fm_terminated() {
   esac
 }
 
+# va_fm_declares_no_field <file> — STATUS ONLY. It writes nothing at all, on either stream.
+# Exit 0 when the frontmatter block declares no field: no block, an empty block, blank lines
+# only, comment lines only, or any mixture of those. Exit NON-ZERO when the block carries at
+# least one line va_fm_pairs would turn into a pair or into an A1 — and non-zero as well
+# whenever the question cannot be answered at all, so a caller that fails closed on non-zero
+# fails closed on this probe's own failure too. That direction is deliberate: under a broken
+# fork the honest verdict is that the read did not complete, not that the block was empty.
+#
+# WHY IT CARRIES NO OUTPUT, WHICH IS THE WHOLE POINT. The degraded-read limb in
+# va_check_artifact exists to tell "the read failed" from "nothing was declared", and it used
+# to ask that question of the SAME read it was adjudicating: va_fm_pairs reaches the file
+# through va_frontmatter, so one transient emptied the pairs AND the probe meant to notice,
+# the limb went quiet, and the artifact skipped at rc 0 — the exact signature this gate exists
+# to remove. A discriminator that shares a failure mode with its subject is not one. This
+# probe opens the file itself and returns a STATUS, so it has no capture to be emptied.
+#
+# The line filter is va_fm_pairs' own, deliberately: a trimmed-empty line and a `#` line are
+# what that function skips as legal content, so "a field was expected" here means exactly
+# "va_fm_pairs had something to parse". KEEP THE TWO IN STEP — a grammar change there is a
+# change here, and a drift between them re-opens the comment-only false positive.
+#
+# END computes the answer from a flag rather than each rule carrying its own status, because
+# awk runs END on `exit` and an `exit <n>` there would override the rule's — the shape
+# va_fm_terminated above already uses, for the same reason.
+va_fm_declares_no_field() {
+  local f="$1"
+  case "$f" in
+    *.html) awk 'NR==1 && $0 != "<!--" { exit } NR==1 { next } $0 == "-->" { exit }
+                 { sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, "")
+                   if ($0 != "" && substr($0, 1, 1) != "#") { found = 1; exit } }
+                 END { exit (found ? 1 : 0) }' "$f" ;;
+    *)      awk 'NR==1 && $0 != "---"  { exit } NR==1 { next } $0 == "---"  { exit }
+                 { sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, "")
+                   if ($0 != "" && substr($0, 1, 1) != "#") { found = 1; exit } }
+                 END { exit (found ? 1 : 0) }' "$f" ;;
+  esac
+}
+
 # va_fm_pairs <root> <rel> — normalises frontmatter to "<key>\t<value>", emitting A1 for
 # a malformed block. Duplicate keys are A1 too: two values for one key is two homes for
 # one fact, and picking either silently is the wrong answer to a question the file asks.
@@ -818,14 +856,26 @@ va_check_artifact() {
     printf 'FINDING X2 %s file is unreadable\n' "$rel"; return 1
   fi
 
-  # ── WHY THE FRONTMATTER BLOCK IS READ TWICE ──────────────────────────────────────
+  # ── WHY THE FRONTMATTER BLOCK IS READ MORE THAN ONCE ─────────────────────────────
   # An empty `pairs` is AMBIGUOUS on its own, and nothing downstream can disambiguate it.
   # The file may carry no frontmatter block at all — the pre-migration state the tolerant
   # read exists for — or the read that should have produced the pairs may simply not have
   # completed. Those are two different facts and they deserve two different verdicts, but
-  # the skip predicate below sees only `ver`, and `ver` is empty in BOTH. This read
-  # establishes which one it was: a file that HAS a block and yields NO pairs did not
-  # answer the question, it failed to answer it.
+  # the skip predicate below sees only `ver`, and `ver` is empty in BOTH.
+  #
+  # TWO READS ANSWER TWO DIFFERENT QUESTIONS AND NEITHER SUBSUMES THE OTHER:
+  #
+  #   this capture             -> DID va_frontmatter COMPLETE? Adjudicated on STATUS by the
+  #                               va_read_ok below, which fails closed when that producer
+  #                               exits non-zero.
+  #   va_fm_declares_no_field  -> WAS A FIELD EXPECTED? Asked of the file directly, by a
+  #                               probe that returns a status and captures nothing.
+  #
+  # The second is deliberately NOT derived from this capture, and that independence is the
+  # correction rather than a refinement of it. Deriving it here was the hole: va_fm_pairs
+  # reaches the file's bytes through va_frontmatter too, so a single transient emptied the
+  # pairs read and the probe meant to notice it, together, and the limb below went silent at
+  # exactly the moment it was needed.
   #
   # It is a second read of bytes va_fm_pairs also reads, and that cost is the price of the
   # distinction. The alternative — widening va_fm_pairs' contract to report the block's
@@ -850,18 +900,37 @@ va_check_artifact() {
   #    the predicate at all. It is evaluated in the limb immediately below, and the sentence
   #    above used to omit it because nothing here could tell the two states apart.
   if [ -z "$ver" ]; then
-    # ── THE DEGRADED-READ LIMB. A block that is PRESENT and yielded NOTHING, with no
-    # finding of its own to account for it, is an incomplete read rather than an artifact
-    # declaring no version. X2 is the code this gate already uses for a required input it
-    # could not read, and this fails closed instead of reporting a skip — because a SKIP is
-    # a claim about the artifact, and nothing was learned about the artifact here.
+    # ── THE DEGRADED-READ LIMB. A block that DECLARED AT LEAST ONE FIELD and yielded NO
+    # pair, with no finding of its own to account for it, is an incomplete read rather than
+    # an artifact declaring no version. X2 is the code this gate already uses for a required
+    # input it could not read, and this fails closed instead of reporting a skip — because a
+    # SKIP is a claim about the artifact, and nothing was learned about the artifact here.
+    #
+    # THE FIRST LIMB ASKS WHETHER A FIELD WAS EXPECTED. It used to ask whether `fm_body` was
+    # non-empty, and that was wrong in both directions at once.
+    #
+    #   TOO BROAD — a block of COMMENT lines is non-empty and yields no pair BY THE GRAMMAR'S
+    #   OWN DESIGN, va_fm_pairs skipping `#` as legal content. So `---` / `# TODO: add
+    #   schema-version` / `---` — a part-migrated artifact, which is precisely the state the
+    #   tolerant read exists to protect — failed closed on a repository with nothing wrong
+    #   with it, and the message told the operator a read had failed when it had not.
+    #
+    #   TOO NARROW — `fm_body` comes from va_frontmatter, and va_fm_pairs reaches the file
+    #   through va_frontmatter too. One transient empties both, the limb goes false, and the
+    #   artifact skips at rc 0 with the run green: the signature this gate exists to remove,
+    #   surviving inside the check written to remove it.
+    #
+    # Both are closed by asking the file rather than the capture. The invariant the limb now
+    # rests on is exact: every line va_fm_pairs does not skip either prints a pair or sets a
+    # non-zero status, so "a field was declared" AND "no pair arrived" AND "nothing was
+    # reported" is unreachable by any complete read.
     #
     # `rc` is part of the predicate rather than decoration. Where va_fm_pairs already
     # returned non-zero it has emitted its own A1 naming the malformation, and the block DID
     # answer — wrongly. Adding X2 on top of that would report one defect twice and name the
     # wrong cause for it.
-    if [ -n "$fm_body" ] && [ -z "$pairs" ] && [ "$rc" -eq 0 ]; then
-      printf 'FINDING X2 %s frontmatter block is present and the read of it returned nothing -- the read did not complete\n' "$rel"
+    if ! va_fm_declares_no_field "$data_root/$rel" && [ -z "$pairs" ] && [ "$rc" -eq 0 ]; then
+      printf 'FINDING X2 %s frontmatter block declares at least one field and the read of it returned none\n' "$rel"
       return 1
     fi
     printf 'SKIP %s %s\n' "$rel" "${cid}"
