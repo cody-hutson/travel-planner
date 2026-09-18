@@ -277,16 +277,92 @@ POSTURE_VALUES = ("required", "advisory")
 # EMITTABLE above: a code added later arrives uncovered and red.
 CENSUS_CODES = ("UNREGISTERED", "ABSENT", "UNDECLARED")
 
-_RE_MARKER = re.compile(r"^\s*#\s*gate-efficacy:\s*posture\s*=\s*(\S+)")
+_RE_MARKER = re.compile(r"^(\s*)#\s*gate-efficacy:\s*posture\s*=\s*(\S+)")
 _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
-_RE_JOBKEY = re.compile(r"^  ([A-Za-z0-9_][A-Za-z0-9_.-]*):\s*(#.*)?$")
-_RE_NAME = re.compile(r"^    name:\s*(.+?)\s*$")
+_RE_KEY = re.compile(r"^(\s+)([A-Za-z0-9_][A-Za-z0-9_.-]*):\s*(#.*)?$")
+_RE_NAME = re.compile(r"^(\s+)name:\s*(.+?)\s*$")
 _RE_COMMENT = re.compile(r"^\s*#")
 
 
 def _is_dedent(line):
     """A line that closes the `jobs:` block. Blanks and comments do not."""
     return bool(line.strip()) and not _RE_COMMENT.match(line) and not line[:1].isspace()
+
+
+def _indent_of(line):
+    return len(line) - len(line.lstrip(" "))
+
+
+def _block_indent(lines, start, end):
+    """The indentation shared by the `jobs:` mapping's children, read from the file.
+
+    YAML requires every child of a mapping to sit at one indentation, so the
+    FIRST key line in the block answers for all of them -- and reading it is
+    what keeps a job a job whatever the file's style. Assuming a number instead
+    makes any other valid style invisible, and an invisible job is one that
+    ships unregistered under a CLEAN verdict.
+
+    Returns None when the block holds no key line at all.
+    """
+    for i in range(start, end):
+        m = _RE_KEY.match(lines[i])
+        if m:
+            return len(m.group(1))
+    return None
+
+
+def _comment_block_top(lines, i):
+    """Index of the FIRST line of the contiguous comment block ending at i-1.
+
+    None when the line above `i` is not a comment. A blank line or any
+    non-comment line terminates the block, which is what binds a marker to one
+    job rather than to whichever job happens to follow it.
+    """
+    j = i - 1
+    if j < 0 or not _RE_COMMENT.match(lines[j]):
+        return None
+    while j - 1 >= 0 and _RE_COMMENT.match(lines[j - 1]):
+        j -= 1
+    return j
+
+
+def _bind_marker(lines, i, job_indent):
+    """(raw, note) for the job key at `i`. `raw` is set only by a BOUND marker.
+
+    A marker binds when it is the FIRST line of the contiguous comment block
+    directly above the job key AND its `#` sits at the job key's own
+    indentation. Proximity alone is not enough and the reason is measured: under
+    a walk that merely climbs the block looking for a marker, a comment that
+    DOCUMENTS the grammar answers for a job that never did, and `UNDECLARED`
+    -- the whole mechanism by which a future author is stopped -- silently
+    becomes `advisory`.
+
+    `note` explains a marker that is present and did not bind, so that case
+    reads differently from a job with no marker at all. Both are UNDECLARED;
+    only one of them is a contributor who tried.
+    """
+    top = _comment_block_top(lines, i)
+    if top is None:
+        return (None, None)
+
+    first = _RE_MARKER.match(lines[top])
+    if first and len(first.group(1)) == job_indent:
+        return (first.group(2), None)
+
+    for k in range(top, i):
+        found = _RE_MARKER.match(lines[k])
+        if not found:
+            continue
+        if k != top:
+            return (None, "a `# gate-efficacy: posture=` line sits inside the comment "
+                          "block above this job but is not that block's first line. A "
+                          "marker binds only as the FIRST line of the contiguous "
+                          "comment block directly above the job key, so this one "
+                          "answers for no job")
+        return (None, "the marker above this job is indented {} space(s); it binds "
+                      "only at the job key's own indentation of {}".format(
+                          len(found.group(1)), job_indent))
+    return (None, None)
 
 
 def repo_root():
@@ -319,10 +395,17 @@ def census_scan(root):
 
     The context name is the job's `name:` when it has one and the job KEY when
     it does not, because that is what GitHub reports as the check's context in
-    each case. `posture` is None when no marker sits in the contiguous comment
-    block directly above the job key, and also when the marker's value is not
-    one this tool recognises -- an answer it cannot read is not an answer, so
-    the unreadable case fails closed into the same finding as the absent one.
+    each case. `posture` is None when no marker BINDS to the job key (see
+    `_bind_marker` for what binding requires and why proximity is not it), and
+    also when the bound marker's value is not one this tool recognises -- an
+    answer it cannot read is not an answer, so the unreadable case fails closed
+    into the same finding as the absent one.
+
+    Both the job indentation and each job's property indentation are read from
+    the file rather than assumed, so the census sees a job whatever style the
+    file is written in. A reader that assumed one style would report CLEAN over
+    a tree carrying an unregistered job in another -- the very defect this mode
+    exists to surface, arriving through the mode's own parser.
     """
     jobs = []
     for rel, path in workflow_files(root):
@@ -331,42 +414,55 @@ def census_scan(root):
                 lines = fh.read().splitlines()
         except OSError:
             continue
-        in_jobs = False
+
+        start = None
         for i, line in enumerate(lines):
             if _RE_JOBS.match(line):
-                in_jobs = True
-                continue
-            if in_jobs and _is_dedent(line):
-                in_jobs = False
-            if not in_jobs:
-                continue
-            m = _RE_JOBKEY.match(line)
-            if not m:
-                continue
-            key = m.group(1)
+                start = i + 1
+                break
+        if start is None:
+            continue
+
+        end = len(lines)
+        for i in range(start, len(lines)):
+            if _is_dedent(lines[i]):
+                end = i
+                break
+
+        job_indent = _block_indent(lines, start, end)
+        if job_indent is None:
+            continue
+
+        keys = [i for i in range(start, end)
+                if _RE_KEY.match(lines[i])
+                and _indent_of(lines[i]) == job_indent]
+
+        for n, i in enumerate(keys):
+            key = _RE_KEY.match(lines[i]).group(2)
+            stop = keys[n + 1] if n + 1 < len(keys) else end
+
+            # The job's own properties share one indentation too, and `name:` is
+            # read at exactly that one. Matching any deeper `name:` would read a
+            # STEP's name as the job's, which is not the context GitHub reports.
+            prop_indent = None
+            for j in range(i + 1, stop):
+                if lines[j].strip() and not _RE_COMMENT.match(lines[j]):
+                    prop_indent = _indent_of(lines[j])
+                    break
 
             name = None
-            for j in range(i + 1, len(lines)):
-                nxt = lines[j]
-                if _RE_JOBKEY.match(nxt) or _is_dedent(nxt):
-                    break
-                got = _RE_NAME.match(nxt)
-                if got:
-                    name = got.group(1).strip().strip('"').strip("'")
-                    break
+            if prop_indent is not None and prop_indent > job_indent:
+                for j in range(i + 1, stop):
+                    got = _RE_NAME.match(lines[j])
+                    if got and len(got.group(1)) == prop_indent:
+                        name = got.group(2).strip().strip('"').strip("'")
+                        break
 
-            posture, raw = None, None
-            j = i - 1
-            while j >= 0 and _RE_COMMENT.match(lines[j]):
-                got = _RE_MARKER.match(lines[j])
-                if got:
-                    raw = got.group(1)
-                    posture = raw if raw in POSTURE_VALUES else None
-                    break
-                j -= 1
+            raw, note = _bind_marker(lines, i, job_indent)
+            posture = raw if raw in POSTURE_VALUES else None
 
             jobs.append({"file": rel, "key": key, "name": name or key,
-                         "posture": posture, "raw": raw})
+                         "posture": posture, "raw": raw, "note": note})
     return jobs
 
 
@@ -381,10 +477,14 @@ def census_findings(jobs):
     for job in sorted(jobs, key=lambda j: (j["file"], j["key"])):
         if job["posture"] is not None:
             continue
-        why = ("no `# gate-efficacy: posture=` marker on the line above the job key"
-               if job["raw"] is None else
-               "posture value {!r} is not one of {}".format(
-                   job["raw"], "|".join(POSTURE_VALUES)))
+        if job["raw"] is not None:
+            why = "posture value {!r} is not one of {}".format(
+                job["raw"], "|".join(POSTURE_VALUES))
+        elif job.get("note"):
+            why = job["note"]
+        else:
+            why = ("no `# gate-efficacy: posture=` marker as the first line of the "
+                   "comment block directly above the job key")
         findings.append(("UNDECLARED", job["file"], job["name"], why))
 
     for ctx in sorted(set(claimed) - EXPECTED_CONTEXTS):
@@ -400,10 +500,27 @@ def census_findings(jobs):
     return findings
 
 
+_CENSUS_LIMIT = (
+    "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
+    "API, so this census cannot confirm that any context is REGISTERED. A clean",
+    "result means the workflows and the committed declaration agree with each other.",
+    "Registration remains an operator act outside any pull request.",
+)
+
+
 def run_census(root, stream=sys.stdout):
     """Grade the workflows against CONTEXT_ORDER. 0 clean / 1 findings / 2 malformed."""
     def out(msg):
         stream.write(msg + "\n")
+
+    def limit():
+        # On EVERY exit, the refusal included. The sentence is a standing
+        # property of the instrument rather than a gloss on a green result, and
+        # a reader who only ever meets the tool on its refusal path should still
+        # meet its boundary.
+        out("")
+        for line in _CENSUS_LIMIT:
+            out(line)
 
     jobs = census_scan(root)
     files = workflow_files(root)
@@ -419,6 +536,7 @@ def run_census(root, stream=sys.stdout):
         out("MALFORMED: {} workflow file(s) walked under {}, 0 job(s) found.".format(
             len(files), os.path.join(root, ".github", "workflows")))
         out("A census over an empty population asserts nothing. Nothing was graded.")
+        limit()
         return 2
 
     declared_required = [j for j in jobs if j["posture"] == "required"]
@@ -446,17 +564,16 @@ def run_census(root, stream=sys.stdout):
         out("                renamed or removed; protection now waits on a check that")
         out("                can never report.")
         out("  UNDECLARED    a job has not answered the question. Put")
-        out("                `# gate-efficacy: posture=required` or `=advisory` on the")
-        out("                line directly above its job key.")
+        out("                `# gate-efficacy: posture=required` or `=advisory` as the")
+        out("                FIRST line of the comment block directly above its job")
+        out("                key, indented to match the key. A marker anywhere else in")
+        out("                that block answers for no job -- otherwise a comment that")
+        out("                merely documents this grammar would answer for one.")
     else:
         out("CENSUS CLEAN -- every job declares a posture, and the set of jobs claiming")
         out("required is set-equal to CONTEXT_ORDER in both directions.")
 
-    out("")
-    out("WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection")
-    out("API, so this census cannot confirm that any context is REGISTERED. A clean")
-    out("result means the workflows and the committed declaration agree with each other.")
-    out("Registration remains an operator act outside any pull request.")
+    limit()
     return 1 if findings else 0
 
 
