@@ -74,7 +74,7 @@ MODES
         Exit 0 clean / 1 finding(s) / 2 REFUSED -- no jobs at all, or a workflow
         file that was not read in full: it yielded no record read off a job key,
         or it carries a line where its job keys sit that this reader could not
-        read.
+        read, a value's continuation from a deeper line aside.
 
     --assert --stdin | --assert --file PATH
         The four-conjunct assertion alone, over a protection object or over a
@@ -102,8 +102,8 @@ EXIT CODES
        for --census, a workflow population with no jobs in it, or a workflow
        file that was not read in full -- it yielded no record read off a job
        key, or it carries a line where its job keys sit that this reader could
-       not read. "I could not read this file" is a refusal, never a finding, so
-       it never shares exit 1)
+       not read, a value's continuation from a deeper line aside. "I could not
+       read this file" is a refusal, never a finding, so it never shares exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
     5  the self-test did not pass, so no live mode may run
@@ -310,9 +310,16 @@ _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
 # reader reads. That second clause is the whole of it: an earlier form of this
 # same sentence was true only of a file yielding NO genuine record, which is why
 # the assertion now rests on what the FILE left unread as well as on where its
-# records came from. What the refusal does NOT reach is a key on a line it never
-# walks -- see the limit block the census prints, which states that residual as
-# its condition and names the arm that pins it.
+# records came from.
+#
+# Read that sentence in the direction it is written, and not backwards. Every
+# key this reader misses is such a line; NOT every such line is a key this
+# reader missed. The converse was asserted here, and acted on, and it is false:
+# the continuation of a value a job's own property began on a deeper line lands
+# there too and is no kind of key. `_unread_key_lines` carries the distinction
+# and `_value_continuation_lines` draws it. What the refusal does NOT reach is a
+# key on a line it never walks -- see the limit block the census prints, which
+# states that residual as its condition and names the three arms that pin it.
 #
 # The groups are NAMED deliberately: adding a group shifts every positional
 # index, and two call sites read them.
@@ -387,22 +394,165 @@ def _block_child_indent(lines, start, end):
     return found
 
 
+# A `|` or `>` block-scalar indicator, with its optional chomping and explicit
+# indent indicators, ending the line. What follows such a line is arbitrary TEXT
+# rather than YAML -- a shell script, most often -- so `_value_continuation_lines`
+# stops reading at one instead of letting an apostrophe in a shell snippet open a
+# scalar that never closes.
+_RE_BLOCK_SCALAR = re.compile(r"^[|>][0-9]*[+-]?[0-9]*\s*(#.*)?$")
+
+
+def _scan_line(line, quote, depth):
+    """(quote, depth, block_scalar) after reading `line` as YAML flow syntax.
+
+    A LEXER over four constructions -- the two quote characters and the two
+    bracket pairs -- and deliberately NOT a parser: it resolves no node, no
+    anchor, no tag, no alias and no document, and it keeps no indentation stack.
+    It answers exactly one question, asked at the start of the NEXT line: is a
+    value still open here?
+
+    A quote opens only where a NODE may begin -- at the start of the line, after
+    a `:` or `-` separator, or after `[`, `{` or `,`. That restriction is the
+    load-bearing part. Without it an apostrophe inside a plain scalar (`run: don't`)
+    opens a scalar that never closes, every line below it reads as continuation
+    text, and a job key really would slip through. A `#` preceded by whitespace
+    ends the line; inside an open quote it is content, not a comment.
+    """
+    n, i = len(line), 0
+    expect = True                       # the next non-space character begins a node
+    while i < n:
+        c = line[i]
+        if quote == '"':
+            if c == "\\":               # any escaped character, `\"` included
+                i += 2
+                continue
+            if c == '"':
+                quote, expect = None, False
+            i += 1
+            continue
+        if quote == "'":
+            if c == "'":
+                if i + 1 < n and line[i + 1] == "'":     # `''` is an escaped quote
+                    i += 2
+                    continue
+                quote, expect = None, False
+            i += 1
+            continue
+        if c in " \t":
+            i += 1
+            continue
+        if c == "#" and (i == 0 or line[i - 1] in " \t"):
+            break
+        if c in "\"'":
+            if expect:
+                quote = c
+            i += 1
+            continue
+        # A flow indicator is structural only where a node may begin, or once
+        # already inside a flow -- where YAML forbids a plain scalar to carry
+        # one. In BLOCK context a plain scalar may carry all three freely, so
+        # `name: Don't [bracket` opens nothing. Without that restriction it
+        # opened a collection that never closed, and every line below it read as
+        # continuation text: the fail-open this whole predicate must not have.
+        if c in "[{" and (expect or depth):
+            depth, expect = depth + 1, True
+            i += 1
+            continue
+        if c in "]}" and depth:
+            depth, expect = depth - 1, False
+            i += 1
+            continue
+        if c == "," and depth:
+            expect = True
+            i += 1
+            continue
+        if c == ":" and (i + 1 >= n or line[i + 1] in " \t" or depth):
+            expect = True
+            i += 1
+            continue
+        if c == "-" and expect and (i + 1 >= n or line[i + 1] in " \t"):
+            i += 1              # a sequence entry indicator: a node still follows
+            continue
+        if c in "|>" and expect and depth == 0 and _RE_BLOCK_SCALAR.match(line[i:]):
+            return (quote, depth, True)
+        expect = False
+        i += 1
+    return (quote, depth, False)
+
+
+def _value_continuation_lines(lines, start, end, child_indent):
+    """Indices in the block that CONTINUE a value begun by a job's own property.
+
+    The discriminator `_unread_key_lines` needs and cannot get from the line
+    itself: a property continuation and an unread job key sit at the SAME
+    indentation and look alike, so what separates them is not the column but what
+    is OPEN at that point in the file. A line is a continuation when a quoted
+    scalar or a flow collection is still open at its start, and when the line that
+    opened it sits DEEPER than the job keys -- which is what makes it a property's
+    value rather than a key's own presentation. A multi-line quoted KEY is
+    therefore still refused, correctly: it opens at the key indentation, not below
+    it, so nothing here spares it.
+
+    Conservative in one direction on purpose. Where the lexer cannot tell, it
+    reports nothing open, the line stays a candidate, and the file is refused --
+    the behaviour that shipped. So a defect here is a refusal that stands rather
+    than a job key that slips through, and X43 is the arm that holds it to that.
+
+    Content of a `|` or `>` block scalar is skipped rather than lexed. It is text
+    and not YAML, and its indentation is always deeper than the property that
+    introduced it, so it can never land at the job-key indentation anyway.
+    """
+    if child_indent is None:
+        return set()
+    cont = set()
+    quote, depth, opened_at, literal = None, 0, None, None
+    for i in range(start, end):
+        line = lines[i]
+        if literal is not None:
+            if not line.strip() or _indent_of(line) > literal:
+                continue
+            literal = None
+        was_open = quote is not None or depth > 0
+        if was_open and opened_at is not None and opened_at > child_indent:
+            cont.add(i)
+        quote, depth, block = _scan_line(line, quote, depth)
+        if quote is not None or depth > 0:
+            if not was_open:
+                opened_at = _indent_of(line)
+        else:
+            opened_at = None
+            if block:
+                literal = _indent_of(line)
+    return cont
+
+
 def _unread_key_lines(lines, start, end, child_indent):
-    """Indices of lines WHERE THE JOB KEYS SIT that are not `key:` lines to this reader.
+    """Indices of lines WHERE THE JOB KEYS SIT that this reader cannot read as keys.
 
     The second limb of the file-level refusal, and the one that closes the key
     PRESENTATION class rather than describing it. `_block_child_indent` gives the
-    indentation the job keys sit at whatever is written there; every non-comment
-    line at that indentation is therefore a job key or part of one, so a line
-    there that `_RE_KEY` does not match is a job this reader did not read.
+    indentation the job keys sit at whatever is written there, so a line there
+    that `_RE_KEY` does not match is a job this reader did not read -- unless it
+    is not a line in its own right at all.
 
-    That is the whole argument, and it is why no pattern had to be widened: the
-    pattern decides what the reader CAN read, and this decides whether anything
-    at the key indentation was left unread. Six measured key presentations, an
-    anchored key and a record read off scalar content all reached a CLEAN census
-    while the refusal rested only on where a record came from -- because each
-    file also held a job the reader read, which satisfied that limb honestly.
-    None of them presents a job key that is not a line at this indentation.
+    That exception is a correction, and it was measured rather than foreseen. An
+    earlier form of this docstring claimed that every non-comment line at that
+    indentation IS a job key or part of one, and the limb was built on it. It is
+    false: a multi-line quoted scalar, or a flow collection left open, belonging
+    to a job's own PROPERTY continues onto later lines, and an author may land one
+    of them at exactly the job-key indentation. Five such workflows -- each valid
+    to two independent parsers, each with every job key a line this reader reads
+    -- were refused by this limb, with a diagnosis false about the file and a
+    printed remedy the author had already satisfied.
+
+    `_value_continuation_lines` is what tells the two apart, and what it consults
+    is what is OPEN at that point in the file rather than anything visible on the
+    line. The rest of the argument is unchanged, and it is still why no pattern
+    had to be widened: the pattern decides what the reader CAN read, and this
+    decides whether anything at the key indentation was left unread. Six measured
+    key presentations, an anchored key and a record read off scalar content all
+    reached a CLEAN census while the refusal rested only on where a record came
+    from, because each file also held a job the reader read.
 
     Returned as INDICES rather than a boolean so the refusal can name the lines.
     `census_scan` and `_unread_reason` both call this, deliberately: two copies
@@ -411,11 +561,13 @@ def _unread_key_lines(lines, start, end, child_indent):
     """
     if child_indent is None:
         return []
+    cont = _value_continuation_lines(lines, start, end, child_indent)
     return [i for i in range(start, end)
             if lines[i].strip()
             and not _RE_COMMENT.match(lines[i])
             and _indent_of(lines[i]) == child_indent
-            and not _RE_KEY.match(lines[i])]
+            and not _RE_KEY.match(lines[i])
+            and i not in cont]
 
 
 def _comment_block_top(lines, i):
@@ -552,12 +704,15 @@ def census_scan(root):
     at the moment it is made so the assertion can refuse to accept it as
     evidence the file was read.
 
-    `unread_key` records whether anything WHERE THE JOB KEYS SIT was left
-    unread. It exists because provenance alone cannot reach the shape that
-    matters most: put one readable job in the same file and the file yields a
-    genuine, unmarked record, the provenance limb is satisfied honestly, and the
-    unread job sails to a CLEAN verdict it was never graded for. Nine measured
-    shapes did exactly that. See `_unread_key_lines`.
+    `unread_key` records whether a line WHERE THE JOB KEYS SIT was left unread.
+    It exists because provenance alone cannot reach the shape that matters most:
+    put one readable job in the same file and the file yields a genuine, unmarked
+    record, the provenance limb is satisfied honestly, and the unread job sails to
+    a CLEAN verdict it was never graded for. Nine measured shapes did exactly
+    that. It does NOT mark the continuation of a value a job's own property began
+    on a deeper line, which lands at that indentation without being a key: five
+    valid workflows were refused before that exclusion existed. See
+    `_unread_key_lines` and `_value_continuation_lines`.
     """
     jobs = []
     for rel, path in workflow_files(root):
@@ -610,9 +765,18 @@ def census_scan(root):
         # never re-reads the file.
         unread_key = bool(_unread_key_lines(lines, start, end, child_indent))
 
+        # One predicate, asked at both sites that read key lines. A flow
+        # collection's continuation can be shaped exactly like a key -- `  A:`
+        # inside a `{...}` spanning lines is a mapping entry in the flow, not a
+        # job -- and recording a job off it emits a finding naming a line of the
+        # file that is not a job. Saying "this line is not a key" in the refusal
+        # while recording a job off it here is the drift `_unread_key_lines`
+        # warns about, one function further out.
+        cont = _value_continuation_lines(lines, start, end, child_indent)
         keys = [i for i in range(start, end)
                 if _RE_KEY.match(lines[i])
-                and _indent_of(lines[i]) == job_indent]
+                and _indent_of(lines[i]) == job_indent
+                and i not in cont]
 
         for n, i in enumerate(keys):
             key = _RE_KEY.match(lines[i]).group("key")
@@ -714,19 +878,31 @@ _CENSUS_LIMIT = (
     "lets a legal job ID be written, and no bounded pattern would be -- but do not",
     "read that as the class being unclosable. It is closed, and NOT by the pattern.",
     "A file is REFUSED BY NAME unless it yields a record read off a line recognised",
-    "as a job key AND leaves nothing unread where its own job keys sit. So a key",
-    "this reader cannot read is refused in EVERY position, including beside a job it",
-    "reads perfectly well, which is where six presentations of one legal job ID used",
-    "to reach CLEAN. Those six, an anchored key (`key: &a`), and a record taken off",
-    "the CONTENT of a quoted scalar are all refused now -- measured (X20-X34).",
+    "as a job key AND leaves no line it cannot read where its own job keys sit. So a",
+    "key this reader cannot read is refused in EVERY position, including beside a job",
+    "it reads perfectly well, which is where six presentations of one legal job ID",
+    "used to reach CLEAN. Those six, an anchored key (`key: &a`), and a record taken",
+    "off the CONTENT of a quoted scalar are all refused now -- measured (X20-X34).",
+    "",
+    "ONE KIND OF LINE THERE IS NOT COUNTED, and the exclusion is narrow: the",
+    "continuation of a value a job's own PROPERTY began on a deeper line -- a quoted",
+    "scalar, or a flow collection still open. Such a line is neither a job key nor",
+    "part of one, and counting it refused five valid workflows whose every job key",
+    "this reader reads, each with a diagnosis false about the file and a printed",
+    "remedy its author had already satisfied (X37-X42). A line is spared only where a",
+    "value is demonstrably still open, so an ambiguous one is still refused; X43",
+    "carries a continuation AND an unread key in one file and is refused.",
     "",
     "WHAT REMAINS OPEN is a different class, not a remnant of that one: a job this",
     "reader never WALKS. The `jobs:` block ends at the first non-comment line at",
     "column zero, so a quoted scalar continued at column zero ends it early and",
-    "every job below that point is neither read nor refused. Measured on a file two",
-    "parsers read as two jobs: CLEAN at exit 0 over the second, which claims",
-    "required under a name this declaration does not carry (X36). It is unchanged by",
-    "the widening above and it is NOT closed.",
+    "every job below that point is neither read nor refused. Measured on files two",
+    "parsers read as two jobs: CLEAN at exit 0 over the second, which claims required",
+    "under a name this declaration does not carry. THREE members are pinned, not one",
+    "-- a double-quoted scalar, a single-quoted one, and a flow sequence closed at",
+    "column zero (X36, X45, X46) -- because an author who closes one of them turns a",
+    "single arm green with the others still open. Unchanged by the widening above and",
+    "by the exclusion above, and NOT closed.",
     "No backstop stands behind it: `Workflow SAST (actionlint)`, in this same job,",
     "exits 0 on it -- measured. It rejects INVALID YAML; that file is valid.",
 )
@@ -866,8 +1042,11 @@ def run_census(root, stream=sys.stdout):
     # WHAT THE ASSERTION ASSERTS, in the words it is worth being exact about:
     # every workflow file walked yielded at least one record READ OFF A LINE THIS
     # READER RECOGNISED AS A JOB KEY, and carries NO LINE WHERE ITS JOB KEYS SIT
-    # that this reader failed to recognise as one. Two limbs, and each was
-    # arrived at by a measurement rather than by design.
+    # that this reader failed to recognise as one -- counting, as such a line,
+    # only a line that stands on its own. The continuation of a value a job's own
+    # PROPERTY began deeper up lands at that indentation without being a key, and
+    # counting it refused five valid workflows (X37-X42). Two limbs, and each was
+    # arrived at by a measurement rather than by design; so was that exclusion.
     #
     # The first limb replaced "at least one record", which was satisfied by a
     # PHANTOM: a file whose only job key went unrecognised still yields a record,
@@ -895,10 +1074,12 @@ def run_census(root, stream=sys.stdout):
         for rel, path in silent:
             out("    {} -- {}".format(rel, _unread_reason(path)))
         out("A file is read in full when it yielded at least one record read off a "
-            "line this reader recognised as a job key, AND nothing where its job "
-            "keys sit was left unread. A file failing either is a file this reader "
-            "cannot grade, and grading the rest would issue a verdict over a tree "
-            "that was only partly read. No verdict is issued.")
+            "line this reader recognised as a job key, AND carries no line it "
+            "cannot read where its job keys sit -- the continuation of a value a "
+            "property began on a deeper line not counting as one. A file failing "
+            "either is a file this reader cannot grade, and grading the rest would "
+            "issue a verdict over a tree that was only partly read. No verdict is "
+            "issued.")
         out("Remedy: write the file's `jobs:` mapping as a block mapping at column "
             "zero, EVERY one of whose job keys is a `key:` line -- optionally "
             "quoted, with no space before the colon and nothing after it -- or, "
@@ -1821,11 +2002,10 @@ def census_arms():
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
         "  # gate-efficacy: posture=advisory\n"
         "  readable:\n"
-        "    env: [\n"
-        "1]\n"
+        "    name: Readable job\n"
         "    runs-on: ubuntu-latest\n"
-        "    steps:\n"
-        "      - run: 'true'\n"
+        "    steps: [\n"
+        "{run: 'true'}]\n"
         "  # gate-efficacy: posture=required\n"
         "  new-suite:\n"
         "    name: New suite (test-new-suite.sh)\n"
