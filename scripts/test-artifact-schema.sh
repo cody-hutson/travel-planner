@@ -3762,6 +3762,88 @@ else
   PASS "CTL-VA-CAPTURE-CENSUS: all $VC_SITES capture site(s) across $VC_MLINES marked line(s) in the validator are accounted for, in both directions — every site carries a classification, every classification names a site, and every declared count matches its line's detected count. Both control arms fired on a copy of the source: an unmarked capture is reported, and the same line with a marker is not"
 fi
 
+# ── CTL-VA-FAILCLOSED-MATRIX — every adjudicated capture site FAILS CLOSED when its producer
+# does not complete. One row per site, and the injection is a STATUS failure rather than an
+# empty return, deliberately: a non-zero status is what a real transient subprocess failure
+# produces, it is uniform across sites so one shadow generator covers all of them, and it
+# needs no per-site knowledge of what "empty" would mean there.
+#
+# WHAT THIS ARM DOES NOT COVER, said plainly rather than left to be discovered. Status
+# injection is not empty injection: a site whose empty-at-rc-0 path differs from its non-zero
+# path is untested here, and empty-at-rc-0 is the harder case — it is the one CTL-VA-DEGRADE
+# reproduces, at one site. The arm also cannot reach the 21 tolerant sites at all, by
+# construction: there is nothing there to fail closed on.
+FC_MARK="$WORK/fc_invoked"
+FC_TABLE='fn|va_population|va_select/population
+fn|va_select|va_main/select
+fn|va_frontmatter|va_check_artifact/frontmatter-presence
+cut|1|va_check_corpus/s8-class-number,va_main/row-class-id
+cut|2|va_check_corpus/s8-class-name,va_main/row-artifact
+cut|3|va_main/row-path
+cut|4|va_main/row-arm'
+# fc_run <kind> <arg> — one va_main over the CTL-DATAROOT fixture with a single producer
+# shadowed to exit 7. The shadow records each invocation, so "the injection landed" is read
+# rather than assumed. Its rc is va_main's, because va_main is the subshell's last command.
+fc_run() {
+  local kind="$1" arg="$2"
+  (
+    case "$kind" in
+      fn)  eval "$arg() { printf 'x\n' >> \"\$FC_MARK\"; return 7; }" ;;
+      cut) eval "cut() { case \" \$* \" in *\" -f$arg \"*) printf 'x\n' >> \"\$FC_MARK\"; return 7 ;; esac; command cut \"\$@\"; }" ;;
+    esac
+    va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1
+  )
+}
+FC_BASE_X3="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"$DR_A_OUT")"
+if [ "$DR_A_RC" -ne 0 ] || [ "$FC_BASE_X3" -ne 0 ]; then
+  FAIL "CTL-VA-FAILCLOSED-MATRIX: the UNSHADOWED run over this fixture is not clean (rc=$DR_A_RC, X3=$FC_BASE_X3), so every row below would be measuring a fixture that was already failing rather than the injection. CTL-DATAROOT2 is the arm to read"
+else
+  while IFS='|' read -r FC_KIND FC_ARG FC_LABELS; do
+    [ -n "${FC_KIND:-}" ] || continue
+    : > "$FC_MARK"
+    FC_OUT="$(fc_run "$FC_KIND" "$FC_ARG")"; FC_RC=$?
+    FC_HITS="$(awk 'END { print NR + 0 }' "$FC_MARK")"
+    while IFS= read -r FC_LABEL; do
+      [ -n "${FC_LABEL:-}" ] || continue
+      FC_SEEN="$(awk -v p="FINDING X3 $FC_LABEL" 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FC_OUT")"
+      if [ "$FC_HITS" -ge 1 ] && [ "$FC_RC" -ne 0 ] && [ "$FC_SEEN" -ge 1 ]; then
+        PASS "CTL-VA-FAILCLOSED-MATRIX[$FC_LABEL]: with its producer shadowed to exit 7 (injected $FC_HITS time(s)) the run FAILS CLOSED at rc=$FC_RC and emits X3 naming this site, where the unshadowed run over the same fixture is rc=0 with no X3 at all"
+      else
+        FAIL "CTL-VA-FAILCLOSED-MATRIX[$FC_LABEL]: a producer that did not complete did not fail this site closed (shadow-invoked=$FC_HITS rc=$FC_RC x3-at-this-label=$FC_SEEN). shadow-invoked=0 means the injection never reached the site and this row measured nothing; rc=0 means the run reported success over a read that failed; x3=0 with rc non-zero means the failure is being attributed to something other than the read that caused it"
+      fi
+    done <<INNER
+$(printf '%s\n' "$FC_LABELS" | tr ',' '\n')
+INNER
+  done <<EOF
+$FC_TABLE
+EOF
+fi
+
+# ── CTL-VA-TOLERANCE-PRESERVED — the counter-arm, and the one this design most needs. Every
+# adjudication above ADDS a failure condition and removes none, so the risk the sweep carries
+# is not that it grades too little but that it grades a healthy repository red: one site
+# mis-sorted out of the tolerant class and the gate fails on a tree with nothing wrong with it.
+#
+# It is stated as INVARIANTS rather than as the literals 45 / 16 / 94 / 34 / 11 deliberately.
+# Those numbers drift as the repository gains artifacts, and an arm that must be re-baselined
+# on every content change teaches re-baselining. The literals are REPORTED by the suite's own
+# SELECTOR line, where a reader can see them; what is ASSERTED here is that the partition
+# closes and that the healthy run emits no degraded-read finding at all.
+TP_X3="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"$AR_OUT")"
+TP_CTRL="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"FINDING X3 zzq/control degraded read -- producer exited 7")"
+TP_CLOSES=0; TP_PARTITION=0
+[ "$AR_NSEL" -eq $((AR_NVER + AR_NSKIP)) ] && TP_CLOSES=1
+[ $((AR_NSEL + AR_NEXC + AR_NUNM)) -eq "$AR_NPOP" ] && TP_PARTITION=1
+if [ "$TP_CTRL" -ne 1 ]; then
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the X3 detector returned $TP_CTRL on a string that carries exactly one X3 finding, so its zero on the real run would be a broken probe rather than a clean tree"
+elif [ "$AR_NSEL" -lt 1 ]; then
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the tracked run selected $AR_NSEL files, so 'no X3 on a healthy tree' would be a statement over the empty set"
+elif [ "$AR_RC" -eq 0 ] && [ "$TP_X3" -eq 0 ] && [ "$TP_CLOSES" -eq 1 ] && [ "$TP_PARTITION" -eq 1 ]; then
+  PASS "CTL-VA-TOLERANCE-PRESERVED: the healthy tracked run is unmoved by the sweep — rc=0, ZERO X3 findings over $AR_NSEL selected files, selected = validated + skipped ($AR_NSEL = $AR_NVER + $AR_NSKIP), and selected + excluded + unmatched = the population ($AR_NSEL + $AR_NEXC + $AR_NUNM = $AR_NPOP). The 21 tolerant sites are annotated and not adjudicated, and the 1,393 empty reads a clean tree produces at them stay empty and stay green"
+else
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the sweep has moved the healthy tracked run (rc=$AR_RC x3=$TP_X3 selected=$AR_NSEL validated=$AR_NVER skipped=$AR_NSKIP excluded=$AR_NEXC unmatched=$AR_NUNM population=$AR_NPOP). An X3 on a tree with nothing wrong with it is a capture site mis-sorted out of the tolerant class — the one failure mode this design names for itself — and the finding's own label says which: $(printf '%s\n' "$AR_OUT" | awk 'index($0, "FINDING X3 ") == 1' | head -3 | tr '\n' ' ')"
+fi
+
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
 # measuring is not a control. Graded LAST, after every fixture above.
 if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-copy.md" ] \

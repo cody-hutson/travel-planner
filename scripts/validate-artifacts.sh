@@ -38,6 +38,26 @@
 # past the literal predicate it says so in terms, at the two boundary notes below (A2 and
 # A6), so a reader finds the extension stated rather than discovering it.
 #
+# ── FINDING X3 — A DEGRADED READ, AND WHY IT IS NOT X2 ───────────────────────────
+# X3 says: the read of an input that should be there DID NOT COMPLETE. It is stated here,
+# beside the A2 and A6 notes, rather than in a tracked document, because the corpus carries
+# no registry of this script's finding codes and inventing one would be a second source of
+# truth for a vocabulary that lives here.
+#
+# It is deliberately NOT X2, which this file already uses and keeps. X2 says the input IS
+# NOT THERE — a property of the repository, reproducible on the next run, fixable by
+# editing the tree. X3 says the input is there and the READ of it failed — a property of
+# the environment, not reproducible, and fixable by nothing in the tree. Those are two
+# different facts with two different remedies, and collapsing them into one code is the
+# exact conflation this gate was converting into a quieter verdict at rc 0: a capture that
+# came back empty read as an absent input, an absent input read as a legitimate answer, and
+# the run went green over an artifact nothing had checked.
+#
+# Every X3 is emitted by va_read_ok below, which is the adjudication half of a captured
+# read. The classification of WHICH captures are adjudicated, which are legitimately
+# tolerant, and which are already guarded by a named finding is carried inline at each site
+# as a `# va-capture:` marker, and the suite asserts that no capture is left without one.
+#
 # ── HOW A FILE IS SELECTED, AND WHY IT IS COMPUTED RATHER THAN LISTED ────────────
 # The selector has two arms, and the second one exists because the first cannot see the
 # failure it is for.
@@ -161,6 +181,38 @@ va_trim() {
   s="${s#"${s%%[![:space:]]*}"}"
   s="${s%"${s##*[![:space:]]}"}"
   printf '%s' "$s"
+}
+
+# va_read_ok <label> <status> <captured> <empty-policy: allow|deny>
+#
+# The ADJUDICATION half of a captured read. The capture stays exactly where it is — `set -o
+# pipefail` is on at the top of this file, so after `x="$(producer)"`, including a pipeline,
+# `$?` already IS the producer's status — and this says what that status and that content
+# mean HERE. Two limbs, and the census decides the second one per site:
+#
+#   status non-zero            => the read did not complete                 => X3, fail closed
+#   empty AND policy is `deny` => the read completed and produced nothing
+#                                 where content is structurally required    => X3, fail closed
+#
+# `allow` is not laxity. It is the recorded claim that emptiness is a REAL ANSWER at this
+# site, and it carries its reason on the call line beside it. Adjudicating the STATUS and
+# leaving the emptiness to the census is what keeps a 58-site sweep from turning a healthy
+# repository red: empty is the correct answer at 21 of those sites, 1,393 times on a clean
+# tree, and a rule that failed on emptiness would emit 94 findings at one of them alone.
+#
+# It is written as a post-hoc adjudicator rather than as a wrapper (`x="$(va_read producer
+# args…)"`) because a wrapper cannot take a PIPELINE as its argument list, and several of
+# the adjudicated sites are pipelines. This shape works identically for a plain capture, a
+# pipeline and a function, and it keeps the diff to one appended line per site.
+va_read_ok() {
+  local label="$1" st="$2" body="$3" policy="$4"
+  if [ "$st" -ne 0 ]; then
+    printf 'FINDING X3 %s degraded read -- producer exited %s\n' "$label" "$st"; return 1
+  fi
+  if [ "$policy" = deny ] && [ -z "$body" ]; then
+    printf 'FINDING X3 %s degraded read -- no output where output is structurally required\n' "$label"; return 1
+  fi
+  return 0
 }
 
 # va_seg_match <segment> <pattern-segment> — single path segment, `*` cannot cross `/`
@@ -582,7 +634,9 @@ EOF
   while IFS= read -r row; do
     [ -n "$row" ] || continue
     n="$(printf '%s\n' "$row" | cut -f1)"   # va-capture: adjudicated — deny: every row is written by va_class_rows' own printf with six tab fields, so an empty field one means cut did not run
+    va_read_ok 'va_check_corpus/s8-class-number' "$?" "$n" deny || return 1
     cname="$(printf '%s\n' "$row" | cut -f2)"   # va-capture: adjudicated — deny: an empty class name degenerates the S8 membership test below into a match on the boundary double space
+    va_read_ok 'va_check_corpus/s8-class-name' "$?" "$cname" deny || return 1
     case " $corpus_ids " in
       *" $n "*) : ;;
       *) printf 'FINDING S8 %s/ class C%s (%s) has no schema in the corpus\n' "$VA_SCHEMA_DIR" "$n" "$cname"; rc=1 ;;
@@ -664,8 +718,15 @@ va_population() {
 # Appending rather than inserting is deliberate for the same reason.
 va_select() {
   local root="$1" scope="${2:-tracked}" dir="${3:-}" data_root="${4:-$1}"
-  local pats f best_len best_cid best_art cid art p len plit declared
+  local pats pop f best_len best_cid best_art cid art p len plit declared
   pats="$(va_corpus_patterns "$root")"   # va-capture: adjudicated — deny: an empty pattern table selects nothing by the path arm and every file falls to the declared arm
+  # ── THE POPULATION IS CAPTURED HERE RATHER THAN INSIDE THE HERE-DOCUMENT BELOW ──
+  # A `$(…)` inside a here-document body is expanded during redirection: there is no
+  # statement for a status test to attach to and the producer's status is lost entirely —
+  # measured, not inferred. Capturing first and feeding the body from the variable is a
+  # shape this file already uses twice, and it is what makes the read adjudicable at all.
+  pop="$(va_population "$data_root" "$scope" "$dir")"   # va-capture: adjudicated — allow: an empty population is a real measurement the VACUOUS verdict already reports, and the local-trip arm over an empty directory is exactly that
+  va_read_ok 'va_select/population' "$?" "$pop" allow || return 1
   while IFS= read -r f; do
     [ -n "$f" ] || continue
     if va_is_excluded "$f"; then printf 'EXCLUDED\t%s\n' "$f"; continue; fi
@@ -701,8 +762,8 @@ EOF
       continue
     fi
     printf 'UNMATCHED\t%s\n' "$f"
-  done <<EOF   # va-capture: adjudicated — allow: an empty population is a real measurement the VACUOUS verdict already reports; heredoc-embedded, marker on the opener
-$(va_population "$data_root" "$scope" "$dir")
+  done <<EOF
+$pop
 EOF
 }
 
@@ -741,6 +802,7 @@ va_check_artifact() {
   # presence alongside its pairs — changes a function four other call sites depend on for
   # a fact only this one needs.
   fm_body="$(va_frontmatter "$data_root/$rel")"   # va-capture: adjudicated — allow: a file with no frontmatter block is the tolerant read's own subject, so only the status is adjudicated
+  va_read_ok "va_check_artifact/frontmatter-presence $rel" "$?" "$fm_body" allow || return 1
 
   pairs="$(va_fm_pairs "$data_root" "$rel")" || rc=1   # va-capture: tolerant(1) — 11 of 45 on this tree; the degraded-read limb below is what separates an absent block from a failed read, so this site is adjudicated there rather than here
   printf '%s\n' "$pairs" | grep '^FINDING ' 2>/dev/null   # va-capture: tolerant(1) — the finding-reporting pipeline; a clean artifact reports nothing
@@ -875,6 +937,17 @@ the finding is field-scoped, the field.
 USAGE
 }
 
+# va_main_unwind — restore the invocation-scoped corpus cache, and nothing else.
+#
+# It is called on every return path of va_main BELOW the warm-up, which the adjudications
+# added there made more than one. Bash scopes function locals DYNAMICALLY, so va_main's own
+# saved values are visible here; the `-` defaults mean a call from anywhere else clears the
+# cache rather than aborting under `set -u`, which is the safe direction for a helper whose
+# only job is to stop a stale pattern table outliving the run that built it.
+va_main_unwind() {
+  VA_CACHE_ROOT="${va_cache_root_in-}"; VA_CACHE_PATTERNS="${va_cache_patterns_in-}"
+}
+
 va_main() {
   local root="" scope="tracked" dir="" data_root="" data_root_explicit=0
   while [ $# -gt 0 ]; do
@@ -980,6 +1053,10 @@ va_main() {
   [ -n "$out" ] && printf '%s\n' "$out"
 
   sel="$(va_select "$root" "$scope" "$dir" "$data_root")"   # va-capture: adjudicated — allow: an empty selection is a real measurement the VACUOUS verdict reports, and the local-trip arm over an empty directory is exactly that
+  # The captured body is printed before returning, following va_class_rows' exemplar above:
+  # a selector that failed has already said why, and swallowing that leaves the X3 as the
+  # only thing a reader sees.
+  va_read_ok 'va_main/select' "$?" "$sel" allow || { printf '%s\n' "$sel"; va_main_unwind; return 1; }
   local nsel nexc nunm nskip=0 nver=0
   # Counted with awk on the TAB-delimited field, never with a shell pattern carrying a
   # literal tab: a tab inside shell quoting is invisible in a diff and one editor pass
@@ -990,11 +1067,23 @@ va_main() {
 
   local line cid art path arm res
   while IFS= read -r line; do
+    # ── THE EMPTY-LINE GUARD IS WHAT MAKES `deny` SAFE TWO LINES DOWN ──────────────
+    # An empty `sel` still feeds this loop one empty line, because the here-document body
+    # below is `$sel` and a `printf '%s\n' ""` is one newline. That line's field one is
+    # legitimately empty, and without this guard the `deny` adjudication would fire on it —
+    # turning the VACUOUS case, which is a real and correct measurement of an empty tree,
+    # into a failure. The `case` below already skipped that line, so this guard changes
+    # nothing about what runs; it changes what the adjudication is allowed to conclude.
+    [ -n "$line" ] || continue
     cid="$(printf '%s\n' "$line" | cut -f1)"   # va-capture: adjudicated — deny: field one of a row va_select wrote unconditionally; empty means cut did not run, and the case below then skips the artifact while the POPULATION line still reads correct
+    va_read_ok 'va_main/row-class-id' "$?" "$cid" deny || { va_main_unwind; return 1; }
     case "$cid" in ''|EXCLUDED|UNMATCHED) continue ;; esac
     art="$(printf '%s\n' "$line" | cut -f2)"   # va-capture: adjudicated — allow: the artifact name is carried into messages only
+    va_read_ok 'va_main/row-artifact' "$?" "$art" allow || { va_main_unwind; return 1; }
     path="$(printf '%s\n' "$line" | cut -f3)"   # va-capture: adjudicated — deny: this is the path the artifact is read from; empty means the wrong file, or none, is checked
+    va_read_ok 'va_main/row-path' "$?" "$path" deny || { va_main_unwind; return 1; }
     arm="$(printf '%s\n' "$line" | cut -f4)"   # va-capture: adjudicated — allow: the arm is carried into the SKIP line only
+    va_read_ok 'va_main/row-arm' "$?" "$arm" allow || { va_main_unwind; return 1; }
     res="$(va_check_artifact "$root" "$path" "$cid" "$art" "$data_root")" || rc=1   # va-capture: tolerant(1) — a clean artifact emits nothing; 34 of 45 on this tree, and the status is already carried into rc
     case "$res" in
       'SKIP '*) nskip=$((nskip+1)); printf '%s (arm: %s)\n' "$res" "$arm" ;;
@@ -1023,9 +1112,8 @@ EOF
   if [ "$nsel" -eq 0 ]; then
     printf 'VACUOUS no file was selected, so nothing was validated and nothing was skipped. A green over zero selected files is vacuous, not passing -- the POPULATION line above is the measurement, and it is a statement about the tree rather than about the artifacts in it\n'
   fi
-  # The cache's life ends with this invocation — see the warm-up note above. This is the
-  # only return path beneath it, so the restore is here rather than in a trap.
-  VA_CACHE_ROOT="$va_cache_root_in"; VA_CACHE_PATTERNS="$va_cache_patterns_in"
+  # The cache's life ends with this invocation — see the warm-up note above.
+  va_main_unwind
   return $rc
 }
 
