@@ -874,7 +874,17 @@ va_check_artifact() {
   # this exact moment. The gate treats it as a broken REPOSITORY rather than a broken
   # artifact — it is an assertion about this repo's internal consistency — and it is
   # deliberately gated behind the version check so an UNVERSIONED artifact naming an
-  # unknown class still skips. This note once read that the finding could not fire on a
+  # unknown class still skips.
+  #
+  # THE PREDICATE IS "THE CLASS RESOLVES TO NO SCHEMA", NOT "THE CLASS-ID SPELLS UNKNOWN".
+  # It is evaluated in TWO places and this is the first of them: the test below is the
+  # SENTINEL arm, catching the id va_select's declared arm writes when it cannot resolve a
+  # declared class. The second is the lookup's own status, at the schema resolution further
+  # down, which catches a class-id that came from the PATH arm and therefore can never spell
+  # the sentinel. Both emit this same finding because it is one condition; that it read as
+  # two was the defect. No third boundary note is added — this note and A6 are still the two
+  # the header enumerates.
+  # This note once read that the finding could not fire on a
   # user's trip because the gate could not see one. That warrant no longer holds: the
   # --scope dir arm reaches a trip under trips/, and this finding is not scoped off that
   # arm, so it can fire there and exit non-zero. Whether the repo-consistency findings
@@ -885,9 +895,59 @@ va_check_artifact() {
     return 1
   fi
 
-  local lines sver
-  lines="$(va_schema_lines "$root" "$(va_schema_for "$root" "$cid")" 2>/dev/null | grep -v '^FINDING ')"   # va-capture: deferred(2):#1154 — the nested schema lookup and the capture wrapping it; a nested substitution's status is unrecoverable, so the fix is to un-nest rather than to adjudicate
-  sver="$(va_schema_get "$lines" schema-version)"   # va-capture: deferred:#1154 — read from the same lines capture
+  # ── THE SCHEMA RESOLUTION, STAGED SO EACH OUTCOME GETS ITS OWN VERDICT ───────────
+  # This was ONE line — va_schema_lines wrapping a NESTED va_schema_for, with 2>/dev/null
+  # outside it and `grep -v '^FINDING '` after it — and every signal that would have named a
+  # failure died on it: the lookup's status died in the nested substitution, the parser's
+  # status died in the outer one, its stderr died in the redirect, and the FINDING S2 it does
+  # emit died in the filter. Four conditions then arrived at the same empty `lines`:
+  #
+  #   1  the pattern table came back empty        -> a read failure
+  #   2  the table is fine; no row covers $cid    -> S8 already calls this a broken corpus
+  #   3  a row exists; the schema will not parse  -> a read failure
+  #   4  the schema resolves, parses, declares no field -> LEGITIMATE
+  #
+  # All four were byte-identical to a full clean validation, so the artifact was reported
+  # `validated` against a schema nothing had read. Worse than unchecked: findings the gate
+  # had ALREADY produced were erased — an artifact carrying five A3 violations returns rc 1
+  # with 400 bytes normally and rc 0 with nothing at all under the degradation.
+  #
+  # Rows 1-3 are intercepted below, each with the finding that names what actually happened.
+  # ROW 4 IS PRESERVED BY NOT BEING TOUCHED: once 1-3 return, `lines` is non-empty by
+  # construction and the field loop below runs over a legitimately empty field list exactly
+  # as it always has — same bytes, same rc, no new branch. Preservation by absence of code is
+  # stronger than preservation by a carve-out, because there is no carve-out to get wrong.
+  local schema sfrc lines sver
+  schema="$(va_schema_for "$root" "$cid")"; sfrc=$?   # va-capture: guarded:A2/X3 — the three-status lookup, each status rendered by the branch immediately below; va_read_ok's two-valued adjudication would report status 1, a class the corpus does not cover, as a degraded read
+  if [ "$sfrc" -eq 2 ]; then
+    printf '%s\n' "$schema" | grep '^FINDING '   # va-capture: tolerant(1) — re-emits the pattern builder's own X3, which names WHICH read failed; the finding below names the artifact it cost
+    printf 'FINDING X3 %s the schema corpus under %s/ could not be read, so class %s resolved to nothing -- the artifact is ungraded\n' \
+      "$rel" "$VA_SCHEMA_DIR" "$cid"
+    return 1
+  fi
+  if [ "$sfrc" -ne 0 ] || [ -z "$schema" ]; then
+    # The SAME finding the UNKNOWN branch above emits, for the same condition. The defect it
+    # replaces was that the guard tested how the class-id was SPELLED: a class-id reaching
+    # here from the PATH arm can never spell UNKNOWN, so the identical condition produced
+    # opposite verdicts depending on which arm selected the file.
+    printf 'FINDING A2 %s field artifact value %s declares schema-version %s but no schema in %s/ covers that class\n' \
+      "$rel" "${declared:-<absent>}" "$ver" "$VA_SCHEMA_DIR"
+    return 1
+  fi
+  # Re-emit, then strip — the shape this file already uses at the va_fm_pairs capture above
+  # and in va_check_corpus. The parser's status is NOT adjudicated by va_read_ok, for the
+  # reason va_corpus_patterns states at its own schema-lines capture: a non-zero here IS the
+  # corpus-defect signal, and reporting S2's fact as X3 is the conflation X3 exists to remove
+  # pointed the other way. The emptiness is what is tested, and it is tested explicitly.
+  lines="$(va_schema_lines "$root" "$schema")"   # va-capture: guarded:S2 — a schema that will not parse emits S2, re-emitted on the next line before being stripped, and the emptiness limb below fails closed on it
+  printf '%s\n' "$lines" | grep '^FINDING '   # va-capture: tolerant(1) — the finding-reporting pipeline; a well-formed schema reports nothing
+  lines="$(printf '%s\n' "$lines" | grep -v '^FINDING ')"   # va-capture: tolerant(1) — the filter feeding the reads below; a schema that is all findings filters to nothing, which is the limb immediately below
+  if [ -z "$lines" ]; then
+    printf 'FINDING X2 %s the schema %s declaring class %s could not be read\n' "$rel" "$schema" "$cid"
+    return 1
+  fi
+  sver="$(va_schema_get "$lines" schema-version)"   # va-capture: adjudicated — allow: a schema declaring no schema-version is a real state the A6 limb below already tolerates through its own [ -n ] guard; the STATUS is what is adjudicated
+  va_read_ok "va_check_artifact/schema-version $rel" "$?" "$sver" allow || return 1
 
   # A5 — the file's own declaration must agree with the class that selected it.
   if [ -n "$declared" ] && [ "$declared" != "$art" ]; then
@@ -906,7 +966,16 @@ va_check_artifact() {
   fi
 
   # A3/A4 — the class's declared fields.
-  local fl name req typ enum val
+  #
+  # Captured first and fed to the loop from the variable, the shape va_corpus_patterns and
+  # va_select already use: a `$(…)` inside a here-document BODY is expanded during
+  # redirection, so there is no statement for a status test to attach to and the producer's
+  # status is lost entirely. Adjudicated `allow`, which is what preserves the legitimate
+  # zero-field schema — a schema that parses and declares no field is empty AT STATUS 0, the
+  # loop runs zero times, and the artifact validates clean exactly as it does today.
+  local fl name req typ enum val fields
+  fields="$(va_schema_all "$lines" field)"   # va-capture: adjudicated — allow: a schema declaring no field is the legitimate zero-field case and is empty at status 0; the STATUS is what is adjudicated
+  va_read_ok "va_check_artifact/field-list $rel" "$?" "$fields" allow || return 1
   while IFS= read -r fl; do
     [ -n "$fl" ] || continue
     name="${fl%% *}"; fl="${fl#* }"
@@ -927,17 +996,49 @@ va_check_artifact() {
         printf 'FINDING A4 %s field %s value %s is not a valid %s\n' "$rel" "$name" "$val" "$typ"; rc=1
       fi
     fi
-  done <<EOF   # va-capture: deferred:#1154 — the field list consumed from the same lines capture; heredoc-embedded, marker on the opener
-$(va_schema_all "$lines" field)
+  done <<EOF
+$fields
 EOF
   return $rc
 }
 
 # va_schema_for <root> <class-id> — the schema file declaring that class. Answered from
 # the memoised pattern table rather than by re-walking the corpus per artifact.
+#
+# ── THREE STATUSES, BECAUSE TWO CANNOT SAY WHAT HAPPENED ─────────────────────────
+# This returned a bare non-zero for BOTH "the table was read and no row covers this class"
+# and "the table could not be read at all", and its one caller wrapped it in a NESTED
+# substitution where even that bare status was lost. Three independent failures and one
+# legitimate condition therefore arrived at the same empty value, and the caller reported
+# every one of them as a clean validation at rc 0.
+#
+# The status is widened HERE rather than tested downstream because only this function knows
+# which of the two happened; a caller holding an empty string cannot recover it, and a
+# caller that merely tests for emptiness re-creates the same conflation one level up.
+#
+#   0  resolved — the schema path is on stdout, exactly as before
+#   1  the table WAS read and no row covers this class — the caller's A2, which is the
+#      finding this gate already carries for precisely this condition
+#   2  the pattern table could not be READ — the caller's X3. The finding naming WHICH read
+#      failed is left on stdout for the caller to re-emit, following va_select's exemplar
+#
+# `1` keeps the meaning it already had, so the contract is purely ADDITIVE: nothing reading
+# a bare non-zero changes verdict. `2` is the next free value and matches va_main's own use
+# of 2 for an input that is wrong. A sentinel string on stdout was rejected — stdout carries
+# the schema PATH, so a caller that forgot to test it would read the sentinel as a path,
+# which is the same fail-open shape this change exists to close.
+#
+# An EMPTY table is deliberately status 1 and not status 2. A root carrying no
+# reference/schemas/ is a real state, named as such at va_corpus_patterns' own capture
+# markers and reported by X2 on the corpus; and a table with no rows genuinely covers no
+# class, which is what A2 says in terms. Both fail closed, so nothing is admitted either way
+# — what differs is whether the finding names a condition that is true.
 va_schema_for() {
-  local root="$1" cid="$2" rel
-  rel="$(va_corpus_patterns "$root" | awk -F'\t' -v c="$cid" '$1 == c { print $4; exit }')"   # va-capture: deferred:#1154 — va_schema_for's own body capture, the head of that chain
+  local root="$1" cid="$2" rel pats
+  pats="$(va_corpus_patterns "$root")"   # va-capture: adjudicated — allow: an empty table is a root carrying no corpus, a real state whose answer is "no row covers this class" at status 1 below, so only the STATUS is adjudicated here
+  va_read_ok "va_schema_for/pattern-table $cid" "$?" "$pats" allow || { printf '%s\n' "$pats"; return 2; }
+  rel="$(printf '%s\n' "$pats" | awk -F'\t' -v c="$cid" '$1 == c { print $4; exit }')"   # va-capture: adjudicated — allow: no row for this class is the real answer status 1 reports below, so only the STATUS is adjudicated
+  va_read_ok "va_schema_for/class-lookup $cid" "$?" "$rel" allow || return 2
   [ -n "$rel" ] || return 1
   printf '%s' "$rel"
 }
