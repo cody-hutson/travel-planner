@@ -3473,16 +3473,55 @@ fi
 # could not be attributed from its own log — the failure said the two differed and threw
 # away the only record of how. It now prints both rcs, both stdouts, both stderrs and the
 # line-level difference, so the next occurrence is diagnosable from the run that produced it.
-DR_E_OUT="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>"$DR_E_ERRF")"; DR_E_RC=$?
-DR_E_ERR="$(cat "$DR_E_ERRF")"
-# Three limbs, each named in its own FAIL. SAME is the comparison itself; QUIET is the limb
-# the stream split buys, and it is strictly stricter than what the merged capture graded;
-# ANCHOR is the non-degeneracy tie to CTL-DATAROOT2, because two spellings that agree on a
-# broken seam prove nothing about the spelling.
-DR_E_SAME=0; DR_E_QUIET=0; DR_E_ANCHOR=0
-[ "$DR_E_RC" -eq "$DR_A_RC" ] && [ "$DR_E_OUT" = "$DR_A_OUT" ] && DR_E_SAME=1
-[ ! -s "$DR_A_ERRF" ] && [ ! -s "$DR_E_ERRF" ] && DR_E_QUIET=1
-[ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && DR_E_ANCHOR=1
+#
+# ── AND IT IS A FUNCTION, so CTL-DATAROOT6-MUT below can RE-RUN it under a mutation. An arm
+# that can only be asserted to notice a divergence is an arm nobody has watched notice one.
+#
+# dr6_no_mutation — the SENTINEL md_probe removes. While it is defined the predicate runs the
+# shipped va_main; with it gone the predicate installs a mutant shadow instead. It exists
+# because the probe primitive's mechanism is REMOVAL while the mutation this arm needs is a
+# behavioural DIVERGENCE: removing va_main itself would leave the predicate with no subject,
+# which a blind assertion survives just as visibly as a sound one. What is graded here is a
+# seam that still runs and answers differently for one spelling.
+dr6_no_mutation() { return 0; }
+# zzq_dr6_inert — the control's victim. The predicate never calls it, so removing it changes
+# nothing; it is what lets the unmutated control run through the SAME probe harness as the
+# mutated one, leaving the mutation as the only difference between the two measurements.
+zzq_dr6_inert() { return 0; }
+DR6_MARK="$WORK/dr6_mutated"
+dr6_predicate() {
+  local e_out e_err e_rc same=0 quiet=0 anchor=0
+  if ! declare -F dr6_no_mutation >/dev/null 2>&1; then
+    # THE MUTANT. va_main is shadowed so a `--data-root=<dir>` argument resolves to the
+    # SKELETON root — trips/README.md and nothing else. Every other argument passes through
+    # and the two-argument spelling is untouched, so what diverges is the second spelling and
+    # only the second spelling: exactly the defect this arm claims it would catch. The shadow
+    # records each rewrite, so "the mutation landed" is measured rather than assumed.
+    eval "$(declare -f va_main | sed '1s/^va_main/va_main_unshadowed/')"
+    va_main() {
+      local a; local -a args=()
+      for a in "$@"; do
+        case "$a" in --data-root=*) a="--data-root=$DR_SKEL"; printf 'x\n' >> "$DR6_MARK" ;; esac
+        args+=("$a")
+      done
+      va_main_unshadowed "${args[@]}"
+    }
+  fi
+  e_out="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>"$DR_E_ERRF")"; e_rc=$?
+  e_err="$(cat "$DR_E_ERRF")"
+  DR_E_OUT="$e_out"; DR_E_ERR="$e_err"; DR_E_RC="$e_rc"
+  # Three limbs, each named in its own FAIL. SAME is the comparison itself; QUIET is the limb
+  # the stream split buys, and it is strictly stricter than what the merged capture graded;
+  # ANCHOR is the non-degeneracy tie to CTL-DATAROOT2, because two spellings that agree on a
+  # broken seam prove nothing about the spelling.
+  [ "$e_rc" -eq "$DR_A_RC" ] && [ "$e_out" = "$DR_A_OUT" ] && same=1
+  [ ! -s "$DR_A_ERRF" ] && [ ! -s "$DR_E_ERRF" ] && quiet=1
+  [ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && anchor=1
+  DR_E_SAME="$same"; DR_E_QUIET="$quiet"; DR_E_ANCHOR="$anchor"
+  dr6_verdict
+  return 0
+}
+dr6_verdict() {
 if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_QUIET" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
   PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0), and BOTH runs wrote nothing to stderr — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts. The streams are compared separately, so two identical non-empty stderr blobs can no longer agree their way past this arm"
 elif [ "$DR_E_SAME" -ne 1 ]; then
@@ -3494,6 +3533,40 @@ elif [ "$DR_E_QUIET" -ne 1 ]; then
   FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but one or both wrote to stderr on a path that must be silent — two-argument [${DR_A_ERR:-<empty>}], --data-root= [${DR_E_ERR:-<empty>}]. A clean run over this fixture emits nothing there, so this is a subprocess complaining where the merged capture used to hide it behind an equal comparison"
 else
   FAIL "CTL-DATAROOT6: the two spellings agree on stdout, rc and an empty stderr, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
+fi
+}
+dr6_predicate
+
+# ── CTL-DATAROOT6-MUT — the card's third acceptance criterion, satisfied by MUTATION rather
+# than by assertion: the arm above must still FAIL when the two spellings genuinely diverge,
+# and here it is watched doing so. The mutation is a genuine divergence and not a removed
+# subject — the seam runs, both spellings run, and only the `--data-root=` form is pointed at
+# the skeleton — so an arm that passed under it would be passing over a real defect.
+#
+# It is a ROLE-BEARING SIBLING of the DATAROOT family rather than a seventh numbered member:
+# the numbered series makes independent claims about the seam and this one makes none, it
+# grades DATAROOT6's own mutation-detectability. That is the relation CTL-ST-COV1/2 already
+# bear to group ST.
+#
+# NON-VACUITY IS GRADED FIRST, and it is graded here because md_flips cannot see it. The
+# oracle reads the mutated run's verdict counts; it cannot tell a predicate that survived a
+# mutation from one that was never mutated, and it cannot tell either from a predicate that
+# reports nothing at all. So the unmutated control runs through the same harness first and
+# must report exactly one PASS and no FAIL, and the shadow's own rewrite count is read after.
+DR6_CTRL="$(md_probe zzq_dr6_inert dr6_predicate)"
+: > "$DR6_MARK"
+if [ "$DR6_CTRL" != "1 0" ]; then
+  FAIL "CTL-DATAROOT6-MUT: the UNMUTATED control through the same probe harness returned '$DR6_CTRL' rather than '1 0' — the predicate does not report exactly one PASS and no FAIL when nothing is wrong, so a FAIL under mutation would say nothing about the mutation. Read CTL-DATAROOT6 above for what the predicate is actually reporting"
+else
+  # Registered with md_flips — the primitive shipped for exactly this and unused until now.
+  # It re-runs the predicate with the sentinel removed and asserts exactly one FAIL, no PASS.
+  md_flips dr6_no_mutation 'CTL-DATAROOT6-MUT' dr6_predicate
+  DR6_LANDED="$(awk 'END { print NR + 0 }' "$DR6_MARK")"
+  if [ "$DR6_LANDED" -ge 1 ]; then
+    PASS "CTL-DATAROOT6-MUT: the mutation landed — the shadow rewrote $DR6_LANDED --data-root= argument(s) to the skeleton root during the probe above, and the unmutated control through the same harness reported '$DR6_CTRL'. So the MD[CTL-DATAROOT6-MUT] verdict beside this line is a measurement of the arm under a genuine divergence of the second spelling, not of a probe that changed nothing"
+  else
+    FAIL "CTL-DATAROOT6-MUT: the mutation NEVER LANDED — the shadow rewrote 0 --data-root= arguments, so whatever MD[CTL-DATAROOT6-MUT] reported above was measured on an unmutated run. Either the predicate stopped using the --data-root=<dir> spelling or the sentinel is no longer what gates the shadow, and in both cases the third acceptance criterion is unproven"
+  fi
 fi
 
 # ── CTL-VA-DEGRADE — MUST FIRE. A captured subprocess read that comes back EMPTY is a
@@ -7615,11 +7688,17 @@ else
   FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
 fi
 
-# ── No assertion in this suite is REGISTERED with md_flips yet, and that is a consequence
-# rather than an omission: registration requires the assertion to be remediated first,
-# because an oracle asked to certify a still-blind assertion turns the suite red for a
-# defect it is reporting rather than causing. The declared residual in MD2 is this suite's
-# registration queue, and every entry that leaves it gains an MD[...] arm in the same edit.
+# ── ONE assertion in this suite is now REGISTERED with md_flips: CTL-DATAROOT6, registered by
+# CTL-DATAROOT6-MUT in group CTL. Registration requires the assertion to be remediated first,
+# because an oracle asked to certify a still-blind assertion turns the suite red for a defect
+# it is reporting rather than causing — which is why the count was zero until an arm had been
+# through that. The declared residual in MD2 is still this suite's registration queue, and
+# every entry that leaves it gains an MD[...] arm in the same edit.
+#
+# CTL-DATAROOT6's registration reads its subject as the SENTINEL rather than as va_main, and
+# the reason is stated at that arm: md_flips removes its subject, while the divergence being
+# graded there has to leave the seam running and answering differently for one spelling. The
+# sentinel is the seam between the primitive's mechanism and that requirement.
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
