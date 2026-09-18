@@ -3061,6 +3061,51 @@ else
   FAIL "CTL-NOSCHEMA2: MUST FIRE — a schema that resolved and then would not read did not fail closed (subject=${NS_CID:-<none>} shadow-invoked=$NS2_HITS rc=$NS2_RC names-schema=$NS2_NAMES control-rc=$NS2_CTRL_RC control-findings=$NS2_CTRL_FIND). shadow-invoked=0 means the injection never landed and this arm measured nothing; control-rc non-zero or control-findings=1 means the unshadowed subject was already failing, so the comparison proves nothing; rc=0 means the gate reported success over an artifact it never graded; names-schema=0 means it failed without saying WHICH read failed, which is the half of AC2 a bare non-zero does not satisfy"
 fi
 
+# ── CTL-NOSCHEMA3 — MUST NOT FIRE. The case this change is deliberately NOT about, and the
+# counter-arm the two above most need.
+#
+# A schema that resolves, parses, and declares NO FIELD is a real verdict about a real
+# schema: the artifact is validated against a declared field set that happens to be empty.
+# It is empty AT STATUS 0, and it must stay silent at rc 0. *Nothing was checked* and *there
+# was nothing to check* are different answers, and the gate must not render them alike in
+# either direction — the arms above close the first, this one keeps the second open.
+#
+# It is green before and after the change by design. Its value is the day someone decides an
+# empty field list should be an error too: that is the one remedy which satisfies every other
+# criterion here while silently making a legitimate schema fail, and this is what catches it.
+#
+# Zero schemas in the shipped corpus declare no field (the minimum is 8), so the subject is
+# CONSTRUCTED rather than found, and the construction is asserted before anything is read
+# into the result — a fixture that did not strip would make this arm pass over the wrong tree.
+ns3_clean() {   # ns3_clean <root> <path> <cid> <artifact> — true when rc is 0 AND no finding
+  local o rc
+  o="$(va_check_artifact "$1" "$2" "$3" "$4" 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] && [ -z "$(printf '%s\n' "$o" | grep '^FINDING ')" ]
+}
+NS3_FX="$WORK/noschema3"; NS3_SUBJ=0; NS3_STRIPPED=0; NS3_CIDOK=0; NS3_CLEAN=0; NS3_DISCRIM=0
+if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ]; then
+  mk_root "$NS3_FX"
+  if [ -r "$NS3_FX/$NS_WITNESS" ] && [ -r "$NS3_FX/$NS_SCHEMA" ]; then
+    NS3_SUBJ=1
+    awk '{ t = $0; sub(/^[ \t]+/, "", t); if (t !~ /^field /) print }' \
+      "$NS3_FX/$NS_SCHEMA" > "$NS3_FX/ns3.tmp" && mv "$NS3_FX/ns3.tmp" "$NS3_FX/$NS_SCHEMA"
+    NS3_L="$(va_schema_lines "$NS3_FX" "$NS_SCHEMA" 2>/dev/null | grep -v '^FINDING ')"
+    [ -z "$(va_schema_all "$NS3_L" field)" ] && NS3_STRIPPED=1
+    [ "$(va_schema_get "$NS3_L" class-id)" = "$NS_CID" ] && NS3_CIDOK=1
+    ns3_clean "$NS3_FX" "$NS_WITNESS" "$NS_CID" "$NS_ART" && NS3_CLEAN=1
+    # DISCRIMINATION. The same predicate over the uncovered-class input must report a
+    # failure. Without this limb a predicate that can never fail would pass this arm, and a
+    # MUST-NOT-FIRE arm that cannot fire proves nothing about what it claims to protect.
+    ns3_clean "$NS3_FX" "$NS_WITNESS" "$NS_UNCOVERED" "$NS_ART" || NS3_DISCRIM=1
+  fi
+fi
+if [ "$NS3_SUBJ" -eq 1 ] && [ "$NS3_STRIPPED" -eq 1 ] && [ "$NS3_CIDOK" -eq 1 ] \
+   && [ "$NS3_DISCRIM" -eq 1 ] && [ "$NS3_CLEAN" -eq 1 ]; then
+  PASS "CTL-NOSCHEMA3: MUST NOT FIRE — a schema that resolves, parses and declares NO FIELD still validates its artifact CLEAN at rc 0 with no finding. The fixture is asserted first: every 'field ' line was stripped from ${NS_SCHEMA##*/} (its field list reads empty) while its class-id still parses as $NS_CID, so the empty field set is real. And the same predicate over the uncovered-class input DOES report a failure, so this arm can fire and is reporting that it should not"
+else
+  FAIL "CTL-NOSCHEMA3: MUST NOT FIRE — the legitimate zero-field schema did not survive (subject=$NS3_SUBJ stripped=$NS3_STRIPPED class-id-parses=$NS3_CIDOK discriminates=$NS3_DISCRIM clean=$NS3_CLEAN). subject=0 means the fixture was never built; stripped=0 or class-id-parses=0 means the fixture is not the zero-field schema this arm claims, so its verdict is about some other tree; discriminates=0 means the predicate cannot report a failure at all and this arm is vacuous; clean=0 is the real finding — an empty DECLARED field set is now being treated as a failed read, which is the one remedy that breaks a schema with nothing wrong with it"
+fi
+
 # ── A5 — the file's own declaration disagreeing with the class that selected it.
 FX="$WORK/a5"; mk_root "$FX"
 printf -- '---\nartifact: outputs/activities-list.md\nschema-version: 1\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
