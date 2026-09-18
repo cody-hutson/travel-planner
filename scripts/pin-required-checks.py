@@ -881,8 +881,9 @@ def _synth_workflow(jobs, indent=2, lead=()):
     convention here, and four in the arm that asserts the census reads the
     file's own indentation instead of assuming one. `lead` is raw comment lines
     emitted verbatim directly above the first job key, so an arm can model a
-    comment block whose marker is not the block's first line, or one whose
-    marker sits at an indentation that is not the job's.
+    comment block whose marker is not the block's first line, one whose marker
+    sits at an indentation that is not the job's, or -- where `lead` carries a
+    marker and `posture` is set too -- one carrying two contradictory markers.
     """
     pad, prop, item = " " * indent, " " * (indent * 2), " " * (indent * 3)
     out = ["name: Synthetic", "", "on:", "  pull_request:", "", "jobs:"]
@@ -979,6 +980,19 @@ def census_arms():
         [("new-suite", "New suite (test-new-suite.sh)", None)],
         lead=["# gate-efficacy: posture=advisory"])
 
+    # X12 grades the binding rule where the block gives TWO answers. The order
+    # below is the one an editing accident actually produces: a contributor
+    # ADDING a marker writes it against the job key, so the new line lands at
+    # the BOTTOM and the stale one is left on top. Whichever end a rule binds,
+    # it discards the other silently -- and this end is the dangerous one,
+    # because binding the superseded `advisory` lets a job that claims to bind
+    # ship under a CLEAN verdict at exit 0. The arm asserts the census declines
+    # to choose instead.
+    two_markers = dict(base)
+    two_markers[".github/workflows/synth-two-markers.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", "required")],
+        lead=["  # gate-efficacy: posture=advisory"])
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -1010,6 +1024,12 @@ def census_arms():
         ("X11", "READER: a marker at column zero -- a file-level note, not this "
                 "job's answer. A marker binds at the job key's own indentation "
                 "or it does not bind", stray_col0, 1, {"UNDECLARED"}),
+        ("X12", "READER: TWO markers in one block, stale on top and the newly "
+                "added one against the job key -- the shape an edit produces. A "
+                "rule that binds either end discards the other in silence, and "
+                "binding the stale `advisory` returns CLEAN over a job that "
+                "claims to bind. Two answers is not an answer",
+         two_markers, 1, {"UNDECLARED"}),
     ]
 
 
