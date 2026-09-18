@@ -757,17 +757,28 @@ def guard_arms():
     ]
 
 
-def _synth_workflow(jobs):
-    """Render a minimal workflow file. `jobs` is [(key, name|None, posture|None)]."""
+def _synth_workflow(jobs, indent=2, lead=()):
+    """Render a minimal workflow file. `jobs` is [(key, name|None, posture|None)].
+
+    `indent` is the indentation of the `jobs:` block's children -- two by
+    convention here, and four in the arm that asserts the census reads the
+    file's own indentation instead of assuming one. `lead` is raw comment lines
+    emitted verbatim directly above the first job key, so an arm can model a
+    comment block whose marker is not the block's first line, or one whose
+    marker sits at an indentation that is not the job's.
+    """
+    pad, prop, item = " " * indent, " " * (indent * 2), " " * (indent * 3)
     out = ["name: Synthetic", "", "on:", "  pull_request:", "", "jobs:"]
+    out.extend(lead)
     for key, name, posture in jobs:
         if posture is not None:
-            out.append("  # gate-efficacy: posture={}".format(posture))
-        out.append("  {}:".format(key))
+            out.append("{}# gate-efficacy: posture={}".format(pad, posture))
+        out.append("{}{}:".format(pad, key))
         if name is not None:
-            out.append("    name: {}".format(name))
-        out.extend(["    runs-on: ubuntu-latest", "    steps:",
-                    "      - run: 'true'", ""])
+            out.append("{}name: {}".format(prop, name))
+        out.extend(["{}runs-on: ubuntu-latest".format(prop),
+                    "{}steps:".format(prop),
+                    "{}- run: 'true'".format(item), ""])
     return "\n".join(out) + "\n"
 
 
@@ -830,6 +841,27 @@ def census_arms():
     keyed[".github/workflows/synth-new.yml"] = _synth_workflow(
         [("new-suite", None, "required")])
 
+    # X9-X11 grade the READER rather than the comparison. Each input below is
+    # valid YAML and a real job, and each was invisible-or-misread by the census
+    # that shipped -- so each of the three is a way a suite could ship
+    # unregistered while the census reported CLEAN at exit 0, which is the exact
+    # defect this mode exists to end, recurring through the mode's own parser.
+    indent4 = dict(base)
+    indent4[".github/workflows/synth-indent4.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", "required")], indent=4)
+
+    doc_leak = dict(base)
+    doc_leak[".github/workflows/synth-doc-leak.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", None)],
+        lead=["  # Declare each job's gate posture with a marker line. The grammar is:",
+              "  # gate-efficacy: posture=advisory",
+              "  # ...as the FIRST line of the comment block above the job key."])
+
+    stray_col0 = dict(base)
+    stray_col0[".github/workflows/synth-col0.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", None)],
+        lead=["# gate-efficacy: posture=advisory"])
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -850,6 +882,17 @@ def census_arms():
          keyed, 1, {"UNREGISTERED"}),
         ("X8", "STRUCTURAL: no workflow files at all -- an empty population must "
                "never reach a clean exit", {}, 2, set()),
+        ("X9", "READER: a job indented four spaces. Valid YAML, a real job, and a "
+               "census that assumes two cannot see it -- so it ships unregistered "
+               "under a CLEAN verdict", indent4, 1, {"UNREGISTERED"}),
+        ("X10", "DISCRIMINATOR: a job that never answered, under a comment block "
+                "that merely DOCUMENTS the marker grammar. Read against X4, which "
+                "is a job that DECLARED advisory: X4 is clean and this is not, and "
+                "a census that cannot tell them apart has lost UNDECLARED",
+         doc_leak, 1, {"UNDECLARED"}),
+        ("X11", "READER: a marker at column zero -- a file-level note, not this "
+                "job's answer. A marker binds at the job key's own indentation "
+                "or it does not bind", stray_col0, 1, {"UNDECLARED"}),
     ]
 
 
@@ -1011,10 +1054,12 @@ def self_test(stream=sys.stdout):
                 len(controls)))
 
     baseline_jobs = None
+    seen = {}
     for aid, what, files, want_rc, want_codes in c_arms:
         with tempfile.TemporaryDirectory(prefix="prc-census-") as root:
             _materialise(files, root)
             jobs = census_scan(root)
+            seen[aid] = len(jobs)
             if aid == "X0":
                 baseline_jobs = len(jobs)
             with open(os.devnull, "w") as sink:
@@ -1040,6 +1085,22 @@ def self_test(stream=sys.stdout):
             "one deliberately advisory job. That tenth job is the whole reason the "
             "census reads a declaration instead of enumerating every job name".format(
                 baseline_jobs, EXPECTED_COUNT))
+
+    # E3 asserts the POPULATION of the indentation arm, not its verdict. X9's rc
+    # already implies the job was read -- UNREGISTERED cannot be emitted for a
+    # job the scan never saw -- but an exit code is an inference and a count is a
+    # measurement, and "a job is a job whatever its indentation" is a claim about
+    # what the reader SEES. This guard is what makes it one.
+    want_seen = EXPECTED_COUNT + 2
+    if seen.get("X9") != want_seen:
+        failures.append("E3: the four-space arm was scanned as {} job(s), want {} -- "
+                        "the census is not reading the file's own indentation".format(
+                            seen.get("X9"), want_seen))
+        out("  FAIL E3")
+    else:
+        out("  PASS E3: the four-space arm scans {} job(s) -- the baseline's {} plus "
+            "the one indented four spaces. The reader takes the indentation from "
+            "the file rather than assuming it".format(want_seen, baseline_jobs))
 
     out("")
     out("-" * 78)
