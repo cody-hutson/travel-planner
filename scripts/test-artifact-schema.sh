@@ -3773,6 +3773,11 @@ fi
 # path is untested here, and empty-at-rc-0 is the harder case — it is the one CTL-VA-DEGRADE
 # reproduces, at one site. The arm also cannot reach the 21 tolerant sites at all, by
 # construction: there is nothing there to fail closed on.
+#
+# Fifteen of the validator's SIXTEEN adjudicated sites have a row. The sixteenth is the inner
+# substitution of the engine-root resolution, and it is unreachable rather than unrostered: a
+# nested capture's status is lost to the outer one, so there is no status to inject and
+# nothing in the file can adjudicate it. The outer read of that same line IS rostered.
 FC_MARK="$WORK/fc_invoked"
 FC_TABLE='fn|va_population|va_select/population
 fn|va_select|va_main/select
@@ -3780,7 +3785,13 @@ fn|va_frontmatter|va_check_artifact/frontmatter-presence
 cut|1|va_check_corpus/s8-class-number,va_main/row-class-id
 cut|2|va_check_corpus/s8-class-name,va_main/row-artifact
 cut|3|va_main/row-path
-cut|4|va_main/row-arm'
+cut|4|va_main/row-arm
+fn|va_schema_files|va_corpus_patterns/schema-files
+fn|va_schema_get|va_corpus_patterns/class-id
+fn|va_schema_all|va_corpus_patterns/path-patterns
+fn|va_corpus_patterns|va_select/pattern-table
+fnarg|va_schema_get:artifact|va_corpus_patterns/artifact
+noroot|pwd|va_main/engine-root'
 # fc_run <kind> <arg> — one va_main over the CTL-DATAROOT fixture with a single producer
 # shadowed to exit 7. The shadow records each invocation, so "the injection landed" is read
 # rather than assumed. Its rc is va_main's, because va_main is the subshell's last command.
@@ -3788,10 +3799,22 @@ fc_run() {
   local kind="$1" arg="$2"
   (
     case "$kind" in
-      fn)  eval "$arg() { printf 'x\n' >> \"\$FC_MARK\"; return 7; }" ;;
-      cut) eval "cut() { case \" \$* \" in *\" -f$arg \"*) printf 'x\n' >> \"\$FC_MARK\"; return 7 ;; esac; command cut \"\$@\"; }" ;;
+      fn|noroot) eval "$arg() { printf 'x\n' >> \"\$FC_MARK\"; return 7; }" ;;
+      cut)       eval "cut() { case \" \$* \" in *\" -f$arg \"*) printf 'x\n' >> \"\$FC_MARK\"; return 7 ;; esac; command cut \"\$@\"; }" ;;
+      # `fnarg` is `<function>:<second-argument>` — it fails that function for ONE argument
+      # and defers to the renamed original otherwise. It exists for a site whose producer is
+      # shared with an earlier adjudicated site: shadowing the whole function would fail the
+      # earlier one first and this label would never be reached.
+      fnarg)     eval "$(declare -f "${arg%%:*}" | sed "1s/^${arg%%:*}/${arg%%:*}_unshadowed/")"
+                 eval "${arg%%:*}() { if [ \"\${2:-}\" = \"${arg#*:}\" ]; then printf 'x\n' >> \"\$FC_MARK\"; return 7; fi; ${arg%%:*}_unshadowed \"\$@\"; }" ;;
     esac
-    va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1
+    # `noroot` omits --root, because the engine-root resolution is the one adjudicated site
+    # that only runs when no root was given. Every other row keeps the standard invocation,
+    # so the fixture is the same one CTL-DATAROOT2 graded clean.
+    case "$kind" in
+      noroot) va_main --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1 ;;
+      *)      va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1 ;;
+    esac
   )
 }
 FC_BASE_X3="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"$DR_A_OUT")"

@@ -666,23 +666,48 @@ EOF
 # which the suite does — still gets the cold path, correctly: nothing has warmed anything.
 VA_CACHE_ROOT=""
 VA_CACHE_PATTERNS=""
+# ── THE POLICY IN THIS FUNCTION IS `allow` THROUGHOUT, AND THAT IS A MEASURED CHOICE ──
+# The design that reached here specified `deny` at each of these reads. Every one of them
+# was measured against the states this repository's own arms construct, and `deny` is wrong
+# at all of them for one reason: what is empty here is empty because of a REPOSITORY
+# condition that another finding already names, never because a read failed.
+#
+#   a root carrying no reference/schemas/  => the schema list is empty at status 0. That is
+#   the state the pre-seam conflation arm builds on purpose; X2 on the architecture document
+#   reports it, and denying here would replace that finding with a degraded-read one.
+#   a schema declaring no path-pattern     => the pattern list is empty at status 0. S4.
+#   a malformed schema                     => its lines are empty, at status 1. S2.
+#
+# The last of those is why the schema-lines read below is NOT adjudicated at all rather than
+# adjudicated with a softer policy: its non-zero status IS the corpus-defect signal, and
+# va_read_ok cannot tell that apart from a read that did not complete. Reporting S2's fact
+# as X3 is the same conflation X3 was introduced to remove, pointed the other way.
 va_corpus_patterns() {
-  local root="$1" rel lines cid art p
+  local root="$1" rel lines cid art p files pats
   if [ "$VA_CACHE_ROOT" = "$root" ]; then printf '%s\n' "$VA_CACHE_PATTERNS"; return 0; fi
   local acc=""
+  # Captured first and fed to the loop from the variable: a `$(…)` inside a here-document
+  # body is expanded during redirection, so its status is lost and there is no statement to
+  # attach a test to. This is the same restructure va_select's population feed takes.
+  files="$(va_schema_files "$root")"   # va-capture: adjudicated — allow: a root carrying no reference/schemas/ is a real state, reported by X2 on the corpus rather than here
+  va_read_ok 'va_corpus_patterns/schema-files' "$?" "$files" allow || return 1
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    lines="$(va_schema_lines "$root" "$rel" 2>/dev/null | grep -v '^FINDING ')"   # va-capture: adjudicated — deny: a schema that yields no lines contributes no pattern, and that silently shrinks the selector
-    cid="$(va_schema_get "$lines" class-id)"   # va-capture: adjudicated — deny: a pattern row with no class-id is unusable
-    art="$(va_schema_get "$lines" artifact)"   # va-capture: adjudicated — deny: a pattern row with no artifact is unusable
+    lines="$(va_schema_lines "$root" "$rel" 2>/dev/null | grep -v '^FINDING ')"   # va-capture: guarded:S2 — a malformed schema makes this empty AT STATUS 1, and va_check_corpus reads the same schema and reports S2 for it. Adjudicating the status here would report that corpus defect as a degraded read
+    cid="$(va_schema_get "$lines" class-id)"   # va-capture: adjudicated — allow: empty follows an empty lines capture, which S1 and S2 already name; the status is what is adjudicated
+    va_read_ok "va_corpus_patterns/class-id $rel" "$?" "$cid" allow || return 1
+    art="$(va_schema_get "$lines" artifact)"   # va-capture: adjudicated — allow: as the class-id beside it
+    va_read_ok "va_corpus_patterns/artifact $rel" "$?" "$art" allow || return 1
+    pats="$(va_schema_all "$lines" path-pattern)"   # va-capture: adjudicated — allow: a schema declaring no path-pattern is S4's subject, and it is empty here at status 0
+    va_read_ok "va_corpus_patterns/path-patterns $rel" "$?" "$pats" allow || return 1
     while IFS= read -r p; do
       [ -n "$p" ] || continue
       acc="${acc}${cid}${VA_TAB}${art}${VA_TAB}${p}${VA_TAB}${rel}${VA_NL}"
-    done <<EOF   # va-capture: adjudicated — deny: a schema contributing no pattern leaves its class unselectable; heredoc-embedded, so the marker is on the opener and the capture is restructured when it is adjudicated
-$(va_schema_all "$lines" path-pattern)
+    done <<EOF
+$pats
 EOF
-  done <<EOF   # va-capture: adjudicated — deny: an empty schema list builds an empty pattern table and selects nothing; heredoc-embedded, marker on the opener
-$(va_schema_files "$root")
+  done <<EOF
+$files
 EOF
   VA_CACHE_ROOT="$root"
   VA_CACHE_PATTERNS="${acc%"$VA_NL"}"
@@ -719,7 +744,12 @@ va_population() {
 va_select() {
   local root="$1" scope="${2:-tracked}" dir="${3:-}" data_root="${4:-$1}"
   local pats pop f best_len best_cid best_art cid art p len plit declared
-  pats="$(va_corpus_patterns "$root")"   # va-capture: adjudicated — deny: an empty pattern table selects nothing by the path arm and every file falls to the declared arm
+  pats="$(va_corpus_patterns "$root")"   # va-capture: adjudicated — allow: an empty pattern table is what a root carrying no corpus produces, and the declared arm then resolves every file — the measured shape of the pre-seam conflation, reported by X2 rather than here
+  # The captured body is printed before returning, following va_class_rows' exemplar: the
+  # pattern builder's own X3 names WHICH read failed, and it lands in this capture rather
+  # than on stdout. Swallowing it would leave only the outer finding, which names the seam
+  # instead of the cause.
+  va_read_ok 'va_select/pattern-table' "$?" "$pats" allow || { printf '%s\n' "$pats"; return 1; }
   # ── THE POPULATION IS CAPTURED HERE RATHER THAN INSIDE THE HERE-DOCUMENT BELOW ──
   # A `$(…)` inside a here-document body is expanded during redirection: there is no
   # statement for a status test to attach to and the producer's status is lost entirely —
@@ -965,6 +995,11 @@ va_main() {
   done
   if [ -z "$root" ]; then
     root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # va-capture: adjudicated(2) — deny: a root that does not resolve makes every read below relative to the wrong tree
+    # The nested capture's own status is unrecoverable — an inner substitution's failure is
+    # lost to the outer one, verified — so this adjudicates the OUTER read. That is the whole
+    # of what is reachable here, and it is enough: an unresolvable engine root yields an
+    # empty root and every read beneath it would then be relative to the filesystem root.
+    va_read_ok 'va_main/engine-root' "$?" "$root" deny || return 1
   fi
 
   # ── THE DATA ROOT. An ARGUMENT and never an environment variable, for the reason
@@ -1037,7 +1072,9 @@ va_main() {
   # then inherits a warm cache and answers from it. Measured: 21 cold parses per invocation
   # before, 1 after, with stdout byte-identical. It buys no new behaviour and it is not
   # meant to: it removes roughly six-sevenths of the wall time this run spends forking, and
-  # with it the window in which a transient subprocess failure can land.
+  # with it the window in which a transient subprocess failure can land. Its own output and
+  # status are discarded on purpose: this is a warm-up, and a builder that cannot build is
+  # met again — and reported — at the real call site inside va_select.
   #
   # ── AND IT IS RESTORED ON THE WAY OUT, WHICH IS NOT OPTIONAL ────────────────────
   # A PROCESS-LIFETIME cache would be read by the NEXT va_main call in the same shell —
