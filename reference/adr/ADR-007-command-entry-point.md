@@ -201,6 +201,107 @@ is **unestablished** — nothing consulted here says either way. The refusal pre
 expansion inside such a block is **undocumented** — the abort path is described, the trigger that
 reaches it is not. Both stay open, and no sentence in this record rests on either.
 
+**Amendment (2026-09-18, Friday) — where inference is permitted, and where
+declared intent is retained.** The decision above rests on *declared intent beats inferred intent*,
+which the first decision driver states and which § *Context* calls the property that removes
+misrouting by construction. A later initiative buys approachability by spending part of it. **This
+amendment states which part may be spent, on which arms, and what is left standing after the
+spending.** Nothing above is rewritten: § 2's bounds are untouched, the 2026-08-28 narrowing stands,
+and the 2026-09-11 discharge stands. What follows is stated beside them.
+
+**Inference can enter at more than one place, and only the first of them is enforced. They are kept
+apart here, because a rule that runs them together claims a strength it does not hold.**
+
+| Where inference can enter | What governs it | What that governance is |
+|---|---|---|
+| **Invocation** — whether a request in prose reaches this surface at all, with no verb typed | `disable-model-invocation`, declared per file | **Enforced.** The runtime declines the invocation, and while the flag is set it withholds the file's description from context as well |
+| **Selection** — which verb an invocation runs, once the surface has been reached | the lookup each file states in its own § *Selecting the verb* | **Declared.** No frontmatter field expresses it |
+| **Execution** — whether an act runs on a selection nobody declared | the confirmation the verb's own section states | **Declared.** No frontmatter field expresses it |
+
+**Nothing in the frontmatter expresses a boundary finer than the file, and that was re-established
+rather than carried over.** The 2026-09-11 amendment settled the model-invocation flag against the
+published enumeration. Read again at the date above, the same reference carries no key of narrower
+scope for the tool lists either; the permission-rule form that gates a model's use of a skill matches
+the skill by name rather than by what follows it; and a hook declared in frontmatter registers when
+the skill is first invoked, runs for the rest of the session, and receives nothing that names a verb
+— so it can gate a tool call and cannot attribute one to the verb that made it. **Splitting the
+surface remains the only mechanism that expresses the boundary**, which is the shape § 1 chose for the
+tool grants and the shape the 2026-09-11 amendment recorded for this flag.
+
+**The runtime does tell a typed invocation from a model's, and it tells the file nothing.** No field,
+no substitution and no marker carries it. A file that is model-invocable therefore cannot establish
+who supplied its argument string, and *"the verb is the one the user typed"* is a sentence whose truth
+is held by the flag rather than by the file that states it. **That is the property being spent, named
+exactly.**
+
+**The line, by arm class, derived from what each verb's own section declares.** An arm is
+**inference-admitted** where its own section declares each of these: that it **writes nothing**; that
+it **dispatches no agent**; and that it **performs no act whose effect lands outside the trip's own
+files**. Every other arm **retains declared intent** — including an arm whose section declares none of
+them, because a property nobody has declared is not a property this line may assume. **The derivation
+is the whole of the line: this amendment fixes no verb list and no count, and a verb a later slice
+adds takes its side from its own section with no edit here.**
+
+**Where in the section to read, fixed here rather than left to the reader.** Those declarations are
+read from the section's own `**Reads:**` block and from nowhere else in it — the block every verb
+section carries, and the one the taxonomy guard already parses. A statement made elsewhere in the
+section does not count toward admission, and a block that does not carry all of them leaves its arm
+on the retained side. **The boundary is fail-closed by construction**, so it can over-protect an arm
+and can never under-protect one: where the block is silent, the arm retains declared intent.
+
+**Why the admitted side is narrower than read-only — a different question, which the 2026-08-28
+amendment already answers for its own purpose.** A verb that writes nothing may still dispatch an
+agent, and a dispatch is spent whether or not it was wanted: no revert returns it. The failure
+`CLAUDE.md` names by example is the dispatch nobody asked for, so a dispatching verb sits on the
+retained side however little it writes.
+
+**What retaining declared intent requires.** An act runs only on a declaration made in the same
+exchange: the verb token typed by the operator, **or** a confirmation naming the verb and its target
+which the operator answers before the act. Inference may reach a retained arm, may name it and may
+prepare it; it may not execute on its own selection. Where a verb's section already states a
+confirmation shape — an echoed outgoing-to-incoming pair, a preview total over a source's own
+answered set, a typed identifier, a display name beside a member count — that shape stands unchanged
+and this rule is added to it, never substituted for it.
+
+**The confirmation is declared and not enforced, which is the half a later slice must not
+overstate.** The tool lists are turn-scoped and they gate tools rather than acts, so no arrangement of
+them makes a confirmation happen. The typed confirmations a non-interactive caller structurally
+cannot answer belong to `scripts/publish-trip-site.sh`, and § 4 excludes every form they guard, so no
+addressed form rests on one. A confirmation on this surface is a rule a verb follows — the form
+§ *Context* requires of a command's conduct — and its strength is the strength of that rule.
+**Saying so is the requirement; a slice that implemented it as though the frontmatter held it would
+be claiming a control this record says is not there.**
+
+**What the line costs on the mechanism this surface actually has.** The admitted side is a property
+of arms and the enforced surface is a property of files, so the two meet in a single test: **a file
+may declare `disable-model-invocation: false` only where every verb it declares is
+inference-admitted.** A file carrying arms of both kinds cannot be relaxed for the cheap ones without
+exposing the rest in the same act — the privilege union § 1 refused for the tool grants, arriving by
+the other key. Where no file satisfies the test, the enforced posture does not move, and guided entry
+is reached another way.
+
+**A surface that only proposes satisfies the same test, and is named here rather than left to be
+discovered.** A file that declares no verb of its own, writes nothing, dispatches nothing and acts
+nowhere outside the trip's own files is inference-admitted by the test above; reaching a verb from it
+is the operator typing what it named. **That is how prose can reach this surface with no verb file
+relaxed at all**, and it spends none of the property named above.
+
+**Consolidation, stated because it is in flight and is not decided here.** The line is a property of
+arms, so it survives a change in how many files carry them. The enforced test is a property of files,
+so under a single file it is evaluated over the union of every verb that file declares, and that union
+holds retained arms. A consolidated surface that is model-invocable therefore exposes every arm it
+carries, and one that is not carries this line as a declared rule alone. **The same asymmetry reaches
+the tool grants:** a single file declares the union of every grant and can keep only the denials every
+verb shares, so a denial that today holds for the turn of one verb is not expressible there. Which of
+those to accept belongs to the record that decides a consolidated surface's privilege model; this
+amendment states the consequence and takes no position on it.
+
+**§ 2 is untouched, and what is not negotiable by a later slice is not negotiable by this one.** No
+confirmation admits `ALLOW_PLAINTEXT`, none admits `--yes` to `unpublish`, and none makes an overwrite
+or a deletion of existing trip content available: that bound's class is IRREVERSIBLE, and a
+confirmation does not change a class. A confirmation is what an inferred selection needs **before** an
+act the bounds already permit. It is never what makes an act they forbid available.
+
 ### 2. The privilege boundary
 
 Six bounds hold on every command in this surface:
@@ -303,12 +404,12 @@ still runs on the encrypted branch only. **The TTY leg is structurally permanent
 pre-execution has no terminal; nothing in this release changes that, and nothing proposes to.
 
 **The TTY leg's determination: nothing replaces the human gates, because no addressed form reaches
-one.** The script holds exactly two stdin-terminal gates and no stdout-terminal test at all. One
-guards the plaintext publish; the other guards the repo delete. Every other reachable form passes
-through no human gate whatsoever. The leg therefore does not bar the lifecycle — it bars two forms,
-and §2 independently bars the same two by forbidding the only two flags that reach their
-non-interactive limbs. **For those two forms the leg and the bound are co-extensive, and the bound is
-the firmer basis**, because a review that "solved" the leg by inventing a non-interactive
+one.** The script holds exactly three stdin-terminal gates and no stdout-terminal test at all. One
+guards the plaintext publish, one guards the repo delete, and one guards `confirm`. Every other
+reachable form passes through no human gate whatsoever. The leg therefore does not bar the lifecycle
+— it bars three forms, and §2 independently bars two of them by forbidding the only two flags that
+reach their non-interactive limbs. **For those two forms the leg and the bound are co-extensive, and
+the bound is the firmer basis**, because a review that "solved" the leg by inventing a non-interactive
 confirmation substitute would still be stopped by a bound it cannot negotiate. The correct output is
 therefore not a substitute mechanism. It is the recorded finding that no substitute is needed,
 because the surface declines the forms rather than standing in for the gates.
@@ -459,3 +560,11 @@ and softer invocation path is introduced.
   the sentences that amendment rests on are quoted there in full rather than pointed at: the record
   stands on its own if the page moves.
 - Epic: #252.
+- The references behind § 1's 2026-09-18 amendment: the published Claude Code
+  documentation for skills — its frontmatter reference, § *Control who invokes a skill*,
+  § *Pass arguments to skills* and § *Restricting Claude's skill access* — together with the
+  hooks reference § *Hooks in skills and agents* and its common-input-field table, and the
+  permissions reference, all read 2026-09-18. The 2026-09-11 amendment quotes the
+  sentences it had to arbitrate between competing in-repo accounts; these are **named rather than
+  quoted**, because nothing in this repository carries a competing account of them and a quotation
+  would be a second copy to keep current.
