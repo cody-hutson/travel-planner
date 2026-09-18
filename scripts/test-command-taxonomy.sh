@@ -106,7 +106,26 @@
 #     only a FILE and not a (command, verb) pair — the measure that must fall to zero
 #
 #   R   the DECLARED read-only key set and its membership-delta sentinel   (group R)
-#     R1 an executable instruction in a read-only region · R2 sentinel fired
+#     R1 a fenced invocation of ANY engine script in a read-only region · R2 sentinel fired
+#        R1 carried a second, pre-execution limb until the carrier it tested was retired
+#        corpus-wide, leaving it quantifying over a permanently empty population. It was
+#        retired rather than kept as a green establishing nothing; a reintroduced block is
+#        caught by test-trip-resolution-contract.sh, which counts such a line as evidence.
+#
+#   C   THE INFERENCE LINE — the entry-class marker joined to the source it states (group C)
+#     C0 population, the three component counts, and the recogniser's own two arms
+#     C1 THE JOIN — side(unit) derived from the verb's own read-declaration block must equal
+#        the marker § Step 1 renders, as a set difference empty in BOTH directions
+#     C2 a retained arm standing behind neither the confirm gate nor the typed-only posture
+#     C3 the PER-LIMB REPORT — never fails on its counts; it is what keeps C2 readable, by
+#        naming a limb VACUOUS when it carried zero arms
+#     C4 TOTALITY — every coverage unit resolves to exactly one side
+#
+#   L   the LANDING SURFACE — the guided-entry carrier at the engine root      (group L)
+#     L1 the carrier names a verb token · L2 it carries disable-model-invocation
+#     L3 it does not declare all three negatives
+#     The carrier sits OUTSIDE the verb directory every other per-file group globs, which is
+#     why these are net-new rather than an extension of an existing group's quantifier.
 #
 #   S   the charter's two enumerations of the verb set agree               (group S)
 #     S1 a key in one enumeration and not the other · S2 SINGLE-SOURCE
@@ -582,8 +601,13 @@ DISP_CONJ=' + '
 # ── The ENTRY-CLASS marker. A RENDERING, not a third vocabulary: the two tokens are
 # uppercase spellings of ADR-007 § 1's own `inference-admitted` and of its declared-intent side,
 # and the charter records the class rather than deciding it. What B7 grades is that an ADDRESSED
-# row CARRIES one — never that the token equals the derivation over the verb sections, which is a
-# later slice's join and is claimed nowhere here.
+# row CARRIES one — never that the token equals the derivation over the verb sections.
+#
+# THAT SECOND CLAIM IS NOW MADE, by C1, and the division of labour between the two is the point:
+# B7 grades that a marker is THERE and in the right field, C1 grades that it is RIGHT. Between
+# them there is no gap — a row with no marker is B7, a row whose marker contradicts its source is
+# C1 — and neither subsumes the other, because a correct marker in the wrong field still fails B7
+# and a well-formed marker on the wrong side still fails C1.
 #
 # It is read from FIELD 3, the Action cell, and the field index is the whole of the test: arm GB7
 # plants a correctly-spelled marker in the EXAMPLE cell of an ungraded row, so a row-wide scan
@@ -593,6 +617,43 @@ GRADE_ADMIT='**INFERENCE-ADMITTED**'
 GRADE_RETAIN='**DECLARED-INTENT**'
 GRADE_SEP=" ${EMDASH} "
 NEEDLES_UNTRIMMED+=( "${GRADE_ADMIT}${GRADE_SEP}" "${GRADE_RETAIN}${GRADE_SEP}" )
+
+# ── THE THREE NEGATIVES — the SOURCE side of the join group C performs.
+#
+# ADR-007 § 1's rule is fail-closed and is quoted here as it is written: all three declared
+# admits the arm; anything else, INCLUDING an arm that declares none of them, retains declared
+# intent. A property nobody has declared is not one this rule may assume, so the third limb is
+# STRICT — it must be declared — and is never read as absent-unless-contradicted.
+#
+# THE THIRD LIMB IS AN EFFECT PREDICATE, NOT A RUNS-NO-SCRIPT ONE, and that distinction decides
+# the admitted set rather than decorating it. § 1 states it as "performs no act whose effect
+# lands outside the trip's own files". Measured over the live blocks both ways: the effect
+# formulation admits FIVE arms, the runs-no-script reading admits ONE. A guard built on the
+# narrow reading would grade a corpus that declares its negatives in the record's own words and
+# call four of them undeclared. Both spellings are carried because the corpus uses both.
+#
+# The alternation is a RECOGNISER for declarations the corpus actually writes, and it is a lower
+# bound by construction: a negative spelled some sixth way reads as undeclared and RETAINS the
+# arm, which is the safe direction under a fail-closed rule. C0 prints all three component counts
+# so a reader re-derives the admitted set without trusting this recogniser.
+NEG_W_RE='writes? (nothing|no byte|no line)'
+NEG_D_RE='dispatch(es)? no agent'
+NEG_O_RE='(runs? no script|invokes? no script|reaches no network|acts? nowhere outside|no effect (that lands )?outside|performs no act whose effect lands outside)'
+
+# ── The CONFIRM needle — the arm-scoped limb of C2's obligation. It is the corpus's own
+# spelling of the gate that stands before a destructive act, matched NORMALISED and at fence
+# depth 0 inside the arm's own region. It is deliberately ONE declared spelling rather than a
+# loose match on the word "confirm": that word appears on more than sixty lines across these
+# files, nearly all of them describing a read taken to confirm a file exists, and a limb that
+# counted those would report a confirm gate on every arm that reads anything. C3 reports what
+# this limb actually carries, so its emptiness is a measurement rather than a hidden default.
+CONFIRM_NEEDLE='typed confirmation'
+
+# neg_norm <text> — the normalisation both the block scan and its control arms apply.
+# Emphasis markers, code-span backticks and underscores are stripped and whitespace is collapsed
+# BEFORE matching, because the corpus carries inline emphasis inside these sentences: a declaration
+# rendered "**writes nothing**" and one rendered "writes nothing" are the same declaration.
+neg_norm() { local s="$1"; s="${s//\*/}"; s="${s//$BT/}"; s="${s//_/}"; lower "$(collapse "$s")"; }
 
 # Is this row the requirement table's own header row? Structural, on the five column
 # names — never on a fence, and never on one byte rendering of the row.
@@ -678,6 +739,29 @@ parse_command_file() {
     L+=( "$line" )
     if [[ "$line" == '```'* ]]; then FD+=( 1 ); fd=$((1-fd)); else FD+=( "$fd" ); fi
   done < "$f"
+
+  # --- the TYPED-ONLY posture, the file-scoped half of C2's obligation.
+  # BOTH limbs are required and the conjunction is the point: the frontmatter flag withholds the
+  # file from the model, and the standing clause says the verb is the one the user typed. Either
+  # alone is a weaker claim than the posture C2 accepts — a flag with no clause leaves the file
+  # silent on where a verb comes from, and a clause with no flag is a sentence the runtime never
+  # reads. A CREATE-role file takes an argument rather than a verb, so it carries no such clause
+  # and is expected to fail this test; C2 quantifies over the DECLARED-INTENT side, and C3 reports
+  # which limb carried each arm, so a file resting on neither is visible rather than assumed.
+  local posture='-' has_flag=0 has_clause=0 pnorm i
+  for (( i=0; i<n; i++ )); do
+    [ "$(trim "${L[$i]}")" = 'disable-model-invocation: true' ] && has_flag=1
+    [ "${FD[$i]}" -eq 0 ] || continue
+    pnorm="$(neg_norm "${L[$i]}")"
+    case "$pnorm" in *'the verb is the one the user typed'*) has_clause=1 ;; esac
+  done
+  # Three values rather than two: TYPED is both halves; FLAG is the frontmatter flag with no
+  # clause, which is the whole posture for a CREATE-role file and half of it for any other; '-'
+  # is neither. inference_check applies the role scope, so this record states what the file
+  # carries and leaves the question of what suffices to the one function that knows the role.
+  if [ "$has_flag" -eq 1 ] && [ "$has_clause" -eq 1 ]; then posture='TYPED'
+  elif [ "$has_flag" -eq 1 ]; then posture='FLAG'; fi
+  printf 'POSTURE %s %s\n' "$cmd" "$posture"
 
   # --- the contract-header block, located by its fence info string. This is a PARSER
   # PRECONDITION, not a restatement of the contract guard's invariant: without a unique
@@ -842,37 +926,89 @@ parse_command_file() {
   done
 
   # --- V4: a COLUMN-0, fence-depth-0 `**Reads:**` line outside every declared region ---
-  local owner reads_n=0 unclaimed_n=0
+  #
+  # The same walk emits the NEG record — the per-arm SOURCE side of group C's join. The block
+  # boundary is the one #614 pinned: the read-declaration line through to the next blank line.
+  #
+  # ONE BLOCK PER REGION, AND THE FIRST, which is a correctness requirement rather than a
+  # convenience. A region may carry the read-declaration token at column 0 more than once, and the
+  # second occurrence is not always a second declaration: one live region opens a SENTENCE with the
+  # token, referring to its own declaration in prose. Counting every occurrence conflates a USE with
+  # a MENTION — it inflates the denominator by one and adds a phantom arm that declares no negative.
+  # Taking the first per region is what makes the population the ARMS rather than the occurrences.
+  # READS_<short> below still counts every occurrence, because V4's question is about occurrences.
+  local owner reads_n=0 unclaimed_n=0 bi bend blk ridx cfm rnorm
+  local -a NEGSEEN=()
   for (( i=0; i<n; i++ )); do
     [ "${FD[$i]}" -eq 0 ] || continue
     [[ "${L[$i]}" == '**Reads:**'* ]] || continue
     reads_n=$((reads_n+1))
-    owner=''
+    owner=''; ridx=-1
     for (( j=0; j<${#RV[@]}; j++ )); do
-      if [ "$i" -gt "${RS[$j]}" ] && [ "$i" -lt "${RE_[$j]}" ]; then owner="${RV[$j]}"; break; fi
+      if [ "$i" -gt "${RS[$j]}" ] && [ "$i" -lt "${RE_[$j]}" ]; then owner="${RV[$j]}"; ridx=$j; break; fi
     done
     if [ -z "$owner" ]; then
       unclaimed_n=$((unclaimed_n+1))
       printf 'FINDING V4 %s:%d a read declaration sits outside every declared verb region — implemented but undeclared\n' "$cmd" $((i+1)); rc=1
+      continue
     fi
+    in_list "$owner" "${NEGSEEN[@]+"${NEGSEEN[@]}"}" && continue
+    NEGSEEN+=( "$owner" )
+    blk=""; bend=$i
+    while [ "$bend" -lt "$n" ] && [ -n "$(trim "${L[$bend]}")" ]; do
+      blk="$blk ${L[$bend]}"; bend=$((bend+1))
+    done
+    blk="$(neg_norm "$blk")"
+    bi=0
+    [[ "$blk" =~ $NEG_W_RE ]] && bi=$((bi+4))
+    [[ "$blk" =~ $NEG_D_RE ]] && bi=$((bi+2))
+    [[ "$blk" =~ $NEG_O_RE ]] && bi=$((bi+1))
+    printf 'NEG %s %s %d\n' "$cmd" "$owner" "$bi"
+    # The CONFIRM record — the ARM-scoped half of C2's obligation, scanned over the arm's OWN
+    # region rather than over the file. A file-scoped confirm test would let one destructive arm
+    # inherit a neighbour's gate, which is precisely the per-arm claim criterion 4(d) asks for.
+    cfm=0
+    if [ "$ridx" -ge 0 ]; then
+      for (( j=RS[ridx]; j<RE_[ridx] && j<n; j++ )); do
+        [ "${FD[$j]}" -eq 0 ] || continue
+        rnorm="$(neg_norm "${L[$j]}")"
+        case "$rnorm" in *"$CONFIRM_NEEDLE"*) cfm=1; break ;; esac
+      done
+    fi
+    [ "$cfm" -eq 1 ] && printf 'CONFIRM %s %s\n' "$cmd" "$owner"
   done
   printf 'COUNT READS_%s %d\n' "$short" "$reads_n"
   printf 'COUNT UNCLAIMED_%s %d\n' "$short" "$unclaimed_n"
 
-  # --- invocation and pre-execution records, attributed to the containing region ---
+  # --- invocation records, attributed to the containing region ---
+  #
+  # TWO RECORD TYPES, deliberately not one widened type. INV is the publish script's invocation
+  # and nothing else: group F consumes it for owner lookup and F1/F2/F3 grade its subcommands, so
+  # a record naming any other script would put non-publish invocations into a population three
+  # assertions read. ANYINV is ANY engine script invoked on a fenced line, and it is read by the
+  # read-only limb alone — a region declared read-only runs no script at all, not merely not the
+  # publish one. A publish invocation therefore emits both, which is correct: it is both.
+  #
+  # THE PRE-EXECUTION RECORD IS RETIRED, NOT RELOCATED. This loop used to emit one for a line
+  # opening with a bang and a backtick at fence depth 0. That carrier was retired corpus-wide —
+  # the charter states there is no pre-execution status left to abort anything — and measured
+  # across every tracked markdown file the population is zero and stays zero. Its only consumer
+  # was a limb that quantified over it, so that limb could establish nothing. A reintroduced block
+  # is still caught, by the guard that owns the contract rather than here:
+  # scripts/test-trip-resolution-contract.sh counts such a line as an evidence block.
   local t
   for (( i=0; i<n; i++ )); do
     owner='-'
     for (( j=0; j<${#RV[@]}; j++ )); do
       if [ "$i" -gt "${RS[$j]}" ] && [ "$i" -lt "${RE_[$j]}" ]; then owner="${RV[$j]}"; break; fi
     done
-    if [ "${FD[$i]}" -eq 0 ] && [[ "${L[$i]}" == '!'"$BT"* ]]; then
-      printf 'BANG %s %s %d\n' "$cmd" "$owner" $((i+1))
-    fi
     [ "${FD[$i]}" -eq 1 ] || continue
     t="$(trim "${L[$i]}")"; t="${t#\$ }"; t="${t#./}"; t="$(strip_engine_root "$t")"
     if [ "$t" = "$SCRIPT_REL" ] || [[ "$t" == "$SCRIPT_REL "* ]]; then
       printf 'INV %s %s %d %s\n' "$cmd" "$owner" $((i+1)) "$(trim "${t#"$SCRIPT_REL"}")"
+    fi
+    if [[ "$t" =~ ^scripts/[A-Za-z0-9_.-]+\.sh([[:space:]]|$) ]]; then
+      printf 'ANYINV %s %s %d %s\n' "$cmd" "$owner" $((i+1)) "${t%%[[:space:]]*}"
     fi
   done
 
@@ -1131,9 +1267,15 @@ charter_check() {
     # a property of the row, so it leads, the way every other classification token in this
     # corpus's table cells leads.
     act_cell="$(trim "${F[3]}")"
+    # The GRADE record is the MARKER side of group C's join, and it is emitted from THIS read —
+    # the field-indexed one — rather than from a second scan of the row. One extraction, so the
+    # marker C1 joins against is byte-for-byte the marker B7 graded: a second reader could
+    # disagree with this one and the join would grade a marker B7 never saw.
     case "$act_cell" in
-      "${GRADE_ADMIT}${GRADE_SEP}"*)  n_graded=$((n_graded+1)); n_admit=$((n_admit+1)) ;;
-      "${GRADE_RETAIN}${GRADE_SEP}"*) n_graded=$((n_graded+1)) ;;
+      "${GRADE_ADMIT}${GRADE_SEP}"*)  n_graded=$((n_graded+1)); n_admit=$((n_admit+1))
+                                      printf 'GRADE %s %s ADMIT\n' "/${cmdpart}" "${verbpart:--}" ;;
+      "${GRADE_RETAIN}${GRADE_SEP}"*) n_graded=$((n_graded+1))
+                                      printf 'GRADE %s %s RETAIN\n' "/${cmdpart}" "${verbpart:--}" ;;
       *) printf 'FINDING B7 UNGRADED ADDRESSED row — the Action cell must OPEN with "%s" or "%s", and this one opens "%.40s": %s\n' "${GRADE_ADMIT}${GRADE_SEP}" "${GRADE_RETAIN}${GRADE_SEP}" "$act_cell" "$key"; rc=1 ;;
     esac
   done
@@ -1955,24 +2097,25 @@ readonly_check() {
   done
 
   local rc=0 line k v t1 t2 t3 t4 t5
-  local -a INVK=() BANGK=() LIVE=()
+  local -a INVK=() LIVE=()
   # See the note in invocation_check: the last read variable absorbs the remainder, so an
-  # INV or BANG record must be read into one variable PER FIELD, or the owner field holds
-  # the owner plus everything after it. DECL has exactly three fields.
+  # invocation record must be read into one variable PER FIELD, or the owner field holds the
+  # owner plus everything after it. DECL has exactly three fields.
+  #
+  # The limb reads ANYINV — ANY engine script on a fenced line — not INV, which is the publish
+  # script alone. A region declared read-only runs no script at all, so an invocation of any of
+  # them in one is the finding; narrowing the population to one script would let every other
+  # script through the very region this limb exists to keep clean.
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
-      'INV '*)  IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
-      'BANG '*) IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; [ "$t3" != '-' ] && BANGK+=( "$t2:$t3" ) ;;
-      'DECL '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
+      'ANYINV '*) IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; [ "$t3" != '-' ] && INVK+=( "$t2:$t3" ) ;;
+      'DECL '*)   IFS=' ' read -r t1 t2 t3 <<< "$line"; [ "$t2" = "$READONLY_OF_COMMAND" ] && LIVE+=( "$t3" ) ;;
     esac
   done <<< "$recs"
 
   for k in "${KEYS[@]+"${KEYS[@]}"}"; do
     if in_list "$k" "${INVK[@]+"${INVK[@]}"}"; then
-      printf 'FINDING R1 the declared read-only key %s carries a fenced invocation line in its own region\n' "$k"; rc=1
-    fi
-    if in_list "$k" "${BANGK[@]+"${BANGK[@]}"}"; then
-      printf 'FINDING R1 the declared read-only key %s carries a pre-execution block in its own region\n' "$k"; rc=1
+      printf 'FINDING R1 the declared read-only key %s carries a fenced script invocation in its own region\n' "$k"; rc=1
     fi
   done
 
@@ -1983,24 +2126,229 @@ readonly_check() {
     in_list "$v" "${LIVE[@]+"${LIVE[@]}"}" || { printf 'FINDING R2 MEMBERSHIP-DELTA SENTINEL — the verb "%s" was present when the read-only set was adjudicated and %s no longer declares it. Required action: re-adjudicate the read-only set.\n' "$v" "$READONLY_OF_COMMAND"; rc=1; }
   done
 
-  # --- the CANDIDATE populations, so R1's non-vacuity is DERIVED rather than assumed.
+  # --- the CANDIDATE population, so R1's non-vacuity is DERIVED rather than assumed.
   # A limb can only fire where a region-attributed record shares its command with the
   # declared read-only key set; records of any other command are not near-misses, they are
   # outside the quantifier. Counting all records instead would report a limb as live while
   # nothing it could match exists — which is how this arm read as covered while both of
   # its limbs were vacuous on committed state.
-  local rocinv=0 rocbang=0
+  local rocinv=0
   for k in "${INVK[@]+"${INVK[@]}"}"; do
     case "$k" in "$READONLY_OF_COMMAND":*) rocinv=$((rocinv+1)) ;; esac
-  done
-  for k in "${BANGK[@]+"${BANGK[@]}"}"; do
-    case "$k" in "$READONLY_OF_COMMAND":*) rocbang=$((rocbang+1)) ;; esac
   done
 
   printf 'COUNT ROKEYS %d\n' "${#KEYS[@]}"
   printf 'COUNT ROLIVE %d\n' "${#LIVE[@]}"
   printf 'COUNT ROCINV %d\n' "$rocinv"
-  printf 'COUNT ROCBANG %d\n' "$rocbang"
+  return "$rc"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# inference_check <records> <carrier-path>
+#
+# GROUP C — THE JOIN. Three surfaces in this repository each state an arm's side, and until
+# this function existed NO assertion bound any pair of them: the verb's own read-declaration
+# block states the three declared negatives (the SOURCE); the charter's Step-1 Action cell
+# renders the entry-class marker; and B7 grades that a marker is THERE without grading that it
+# is RIGHT. C1 closes that gap — for every coverage unit, the side derived from the source must
+# equal the marker rendered in the routing map, as a set difference empty in BOTH directions.
+#
+# NO LIST ON EITHER SIDE. Both sides are read live from the record stream. A held membership
+# list on either side would make the join agree with whatever it was handed, which is the exact
+# failure this assertion exists to detect, and it would break under verb growth.
+#
+# GROUP CE — THE CARRIER. The guided-entry surface sits at the ENGINE ROOT, outside the verb
+# directory both suites glob, so no pre-existing group reads it at all. Its assertions are
+# net-new rather than an extension of an existing group's quantifier.
+# ─────────────────────────────────────────────────────────────────────────────────
+inference_check() {
+  local recs="$1" carrier="$2"
+  local rc=0 line t1 t2 t3 t4
+  local -a NK=() NB=() GK=() GC=() PC=() PV=() CFK=() DK=() DKC=() FILES=() RLC=() RLV=()
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      'NEG '*)     IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; NK+=( "$t2:$t3" ); NB+=( "$t4" ) ;;
+      'GRADE '*)   IFS=' ' read -r t1 t2 t3 t4 <<< "$line"
+                   if [ "$t3" = '-' ]; then GK+=( "$t2" ); else GK+=( "$t2:$t3" ); fi; GC+=( "$t4" ) ;;
+      'POSTURE '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; PC+=( "$t2" ); PV+=( "$t3" ) ;;
+      'CONFIRM '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; CFK+=( "$t2:$t3" ) ;;
+      'DECL '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
+      'FILE '*)    IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
+      'ROLE '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; RLC+=( "$t2" ); RLV+=( "$t3" ) ;;
+    esac
+  done <<< "$recs"
+
+  # --- the coverage-unit enumeration, derived by the SAME rule coverage_check applies:
+  # a command declaring no verb is itself a unit, and every declared verb is one.
+  local -a UNITS=()
+  local f has i j k
+  for f in "${FILES[@]+"${FILES[@]}"}"; do
+    has=0
+    for (( i=0; i<${#DKC[@]}; i++ )); do [ "${DKC[$i]}" = "$f" ] && has=1; done
+    [ "$has" -eq 0 ] && UNITS+=( "$f" )
+  done
+  for k in "${DK[@]+"${DK[@]}"}"; do UNITS+=( "$k" ); done
+
+  # ── C0 — the population, the three component counts, and BOTH control arms.
+  # This is the denominator every later assertion reports against, so it is computed and
+  # printed BEFORE anything branches on the side function.
+  local nblocks="${#NK[@]}" nw=0 nd=0 no=0 nadm=0 nret=0
+  for (( i=0; i<nblocks; i++ )); do
+    [ $(( NB[i] & 4 )) -ne 0 ] && nw=$((nw+1))
+    [ $(( NB[i] & 2 )) -ne 0 ] && nd=$((nd+1))
+    [ $(( NB[i] & 1 )) -ne 0 ] && no=$((no+1))
+    if [ "${NB[$i]}" -eq 7 ]; then nadm=$((nadm+1)); else nret=$((nret+1)); fi
+  done
+
+  # The ARMS. The recogniser is run over a synthetic block that declares all three, and over a
+  # near-miss that declares the POSITIVE of each, in the same process and through the same
+  # normalisation the live scan uses. A sensitivity arm that does not fire makes every count
+  # above unusable — the group reports the probe broken rather than the corpus clean.
+  local sens_blk sens_bi=0 spec_blk spec_bi=0 nb
+  sens_blk="$(neg_norm '**Reads:** nothing. It **writes nothing**, **dispatches no agent**, and performs no act whose effect lands outside the trip own files.')"
+  [[ "$sens_blk" =~ $NEG_W_RE ]] && sens_bi=$((sens_bi+4))
+  [[ "$sens_blk" =~ $NEG_D_RE ]] && sens_bi=$((sens_bi+2))
+  [[ "$sens_blk" =~ $NEG_O_RE ]] && sens_bi=$((sens_bi+1))
+  spec_blk="$(neg_norm '**Reads:** the log. It writes the file, dispatches an agent, and reaches the network.')"
+  [[ "$spec_blk" =~ $NEG_W_RE ]] && spec_bi=$((spec_bi+4))
+  [[ "$spec_blk" =~ $NEG_D_RE ]] && spec_bi=$((spec_bi+2))
+  [[ "$spec_blk" =~ $NEG_O_RE ]] && spec_bi=$((spec_bi+1))
+
+  if [ "$nblocks" -eq 0 ]; then
+    printf 'FINDING C0 the per-arm read-declaration population is EMPTY — the side function has nothing to quantify over and every later assertion in this group would be vacuously true\n'; rc=1
+  fi
+  if [ "$sens_bi" -ne 7 ]; then
+    printf 'FINDING C0 BROKEN PROBE — the sensitivity arm ran the three-negative recogniser over a block declaring all three and derived %d of 7. The recogniser does not recognise its own subject, so the admitted set below is unusable and is NOT a statement that the corpus declares nothing\n' "$sens_bi"; rc=1
+  fi
+  if [ "$spec_bi" -ne 0 ]; then
+    printf 'FINDING C0 BROKEN PROBE — the specificity arm ran the recogniser over a block declaring the POSITIVE of each negative and derived %d rather than 0. A recogniser that matches the affirmation as well as the denial cannot separate an admitted arm from a writing one\n' "$spec_bi"; rc=1
+  fi
+
+  printf 'COUNT CBLOCKS %d\n' "$nblocks"
+  printf 'COUNT CNEGW %d\n' "$nw"
+  printf 'COUNT CNEGD %d\n' "$nd"
+  printf 'COUNT CNEGO %d\n' "$no"
+  printf 'COUNT CADMIT %d\n' "$nadm"
+  printf 'COUNT CRETAIN %d\n' "$nret"
+  printf 'COUNT CSENS %d\n' "$sens_bi"
+  printf 'COUNT CSPEC %d\n' "$spec_bi"
+  printf 'COUNT CUNITS %d\n' "${#UNITS[@]}"
+
+  # ── C4 — TOTALITY. Every coverage unit must resolve to exactly one side, which requires the
+  # side function to be DEFINED on it: a unit carrying no read-declaration block has no source
+  # to derive a side from, and a unit carrying more than one record would resolve to two.
+  local n_nosrc=0 hits
+  for k in "${UNITS[@]+"${UNITS[@]}"}"; do
+    hits=0
+    for (( i=0; i<nblocks; i++ )); do [ "${NK[$i]}" = "$k" ] && hits=$((hits+1)); done
+    if [ "$hits" -eq 0 ]; then
+      n_nosrc=$((n_nosrc+1))
+      printf 'FINDING C4 the coverage unit "%s" carries no read-declaration block, so the side function is UNDEFINED on it — it resolves to neither side rather than to exactly one\n' "$k"; rc=1
+    elif [ "$hits" -gt 1 ]; then
+      printf 'FINDING C4 the coverage unit "%s" carries %d read-declaration records — it resolves to more than one side\n' "$k" "$hits"; rc=1
+    fi
+  done
+  printf 'COUNT CNOSRC %d\n' "$n_nosrc"
+
+  # ── C1 — THE JOIN, as a set difference in BOTH directions.
+  local n_j1=0 n_j2=0 gi src
+  for (( i=0; i<${#GK[@]}; i++ )); do
+    src=''
+    for (( j=0; j<nblocks; j++ )); do
+      if [ "${NK[$j]}" = "${GK[$i]}" ]; then
+        if [ "${NB[$j]}" -eq 7 ]; then src='ADMIT'; else src='RETAIN'; fi
+        break
+      fi
+    done
+    [ -n "$src" ] || continue
+    if [ "$src" = 'ADMIT' ] && [ "${GC[$i]}" != 'ADMIT' ]; then
+      n_j1=$((n_j1+1))
+      printf 'FINDING C1 "%s" declares all three negatives in its own block, so the rule ADMITS it — and the routing map renders it %s. The marker disagrees with its source\n' "${GK[$i]}" "${GC[$i]}"; rc=1
+    elif [ "$src" = 'RETAIN' ] && [ "${GC[$i]}" = 'ADMIT' ]; then
+      n_j2=$((n_j2+1))
+      printf 'FINDING C1 the routing map renders "%s" INFERENCE-ADMITTED, and its own block does NOT declare all three negatives. A property nobody has declared is not one this rule may assume\n' "${GK[$i]}"; rc=1
+    fi
+  done
+  printf 'COUNT CJ1 %d\n' "$n_j1"
+  printf 'COUNT CJ2 %d\n' "$n_j2"
+
+  # ── C2 / C3 — the per-arm confirm obligation, and the per-limb report that makes it readable.
+  # C2 quantifies over the DECLARED-INTENT side derived from the source, not over the marker:
+  # the obligation is a property of an arm that retains declared intent, and deriving the side
+  # here keeps C2 answerable even on a tree where the marker and the source disagree.
+  #
+  # THE TYPED-ONLY LIMB IS SCOPED BY ROLE, and the scope is the charter's, not this guard's. The
+  # posture's second half is a clause saying the verb is the one the user typed. A CREATE-role
+  # file takes an ARGUMENT rather than a verb — its "verb" is a branch label, never a typed token —
+  # so that clause would be a false declaration there, and requiring it would ask a file to state
+  # something untrue in order to pass. For a CREATE-role file the frontmatter flag alone is the
+  # posture. The discriminator is the ROLE record the charter already emits, exactly as group H
+  # scopes H1/H2/H3; no filename test and no list is introduced to make the distinction.
+  local n_conf=0 n_typed=0 n_neither=0 cmdof postr rolr
+  for (( i=0; i<nblocks; i++ )); do
+    [ "${NB[$i]}" -eq 7 ] && continue
+    cmdof="${NK[$i]%%:*}"
+    postr='-'
+    for (( j=0; j<${#PC[@]}; j++ )); do [ "${PC[$j]}" = "$cmdof" ] && postr="${PV[$j]}"; done
+    rolr='RESOLVE'
+    for (( j=0; j<${#RLC[@]}; j++ )); do [ "${RLC[$j]}" = "$cmdof" ] && rolr="${RLV[$j]}"; done
+    if [ "$rolr" = 'CREATE' ] && [ "$postr" = 'FLAG' ]; then postr='TYPED'; fi
+    if in_list "${NK[$i]}" "${CFK[@]+"${CFK[@]}"}"; then
+      n_conf=$((n_conf+1))
+    elif [ "$postr" = 'TYPED' ]; then
+      n_typed=$((n_typed+1))
+    else
+      n_neither=$((n_neither+1))
+      printf 'FINDING C2 "%s" retains declared intent and carries NEITHER limb — no confirm gate in its own region, and its file does not carry both halves of the typed-only posture. An arm on this side must stand behind one of them\n' "${NK[$i]}"; rc=1
+    fi
+  done
+  printf 'COUNT CLIMBCONF %d\n' "$n_conf"
+  printf 'COUNT CLIMBTYPED %d\n' "$n_typed"
+  printf 'COUNT CLIMBNONE %d\n' "$n_neither"
+
+  # ── CE1/CE2/CE3 — the carrier at the engine root.
+  if [ ! -f "$carrier" ]; then
+    printf 'FINDING L1 the guided-entry carrier is absent or unreadable at the engine root — the surface every other assertion in this group assumes is not there\n'; rc=1
+    printf 'COUNT LVERBS -1\n'
+    return "$rc"
+  fi
+  local cline cfd=0 cnorm cverbs=0 cflag=0 cw=0 cd=0 co=0 vtok
+  local -a CL=()
+  while IFS= read -r cline || [ -n "$cline" ]; do CL+=( "$cline" ); done < "$carrier"
+  local whole=''
+  for (( i=0; i<${#CL[@]}; i++ )); do
+    cline="${CL[$i]}"
+    [ "$(trim "$cline")" = 'disable-model-invocation: true' ] && cflag=1
+    case "$(trim "$cline")" in 'disable-model-invocation:'*) cflag=1 ;; esac
+    whole="$whole $cline"
+  done
+  cnorm="$(neg_norm "$whole")"
+  [[ "$cnorm" =~ $NEG_W_RE ]] && cw=1
+  [[ "$cnorm" =~ $NEG_D_RE ]] && cd=1
+  [[ "$cnorm" =~ $NEG_O_RE ]] && co=1
+
+  # CE1 — the carrier holds no verb token of any command. The population is the live declared
+  # verb set, read from the record stream; no list is held here in either direction.
+  for k in "${DK[@]+"${DK[@]}"}"; do
+    vtok="${k#*:}"
+    [ "$vtok" = "$k" ] && continue
+    [ -n "$vtok" ] || continue
+    case "$cnorm" in
+      *" ${k%%:*} $vtok"*)
+        cverbs=$((cverbs+1))
+        printf 'FINDING L1 the carrier names the verb token "%s %s". It is specified to hold no verb list: a second enumeration of the verb set on the one page a new reader meets first is the drift surface the inverted dependency exists to remove\n' "${k%%:*}" "$vtok"; rc=1 ;;
+    esac
+  done
+  printf 'COUNT LVERBS %d\n' "$cverbs"
+
+  if [ "$cflag" -eq 1 ]; then
+    printf 'FINDING L2 the carrier carries a disable-model-invocation key. Its ABSENCE is the whole mechanism — setting it would withhold this surface from the model and silently disable guided entry while every other assertion in this suite stayed green\n'; rc=1
+  fi
+  if [ "$cw" -ne 1 ] || [ "$cd" -ne 1 ] || [ "$co" -ne 1 ]; then
+    printf 'FINDING L3 the carrier does not declare all three negatives (writes=%d dispatch=%d outside-effect=%d). It is the one surface in this engine that is NOT withheld from the model, so what it may do is required to be written down rather than assumed\n' "$cw" "$cd" "$co"; rc=1
+  fi
+  printf 'COUNT LNEG %d\n' $(( cw*4 + cd*2 + co ))
   return "$rc"
 }
 
@@ -2371,7 +2719,32 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
       if [ "$role" = 'CREATE' ]; then continue; fi
       if [ "$defect" = 'nosection' ] && [ "$i" -eq 0 ]; then continue; fi
       printf -- '## %s%s\n\n' "${IDS[$i]}" "${HEADS[$i]}"
-      printf -- '**Reads:** nothing beyond the blocks above.\n\n'
+      # ── The read declaration, and the three-negative source group C joins against.
+      # The conforming world declares all three on EXACTLY the key the charter marks admitted,
+      # and on no other, so marker and source agree on every unit. Three defects live here, one
+      # per direction the join must detect plus the totality hole:
+      #   c1undeclared  — the admitted key declares NONE. Marker says admitted, source does not.
+      #   c1source      — a RETAINED key declares ALL THREE. Source admits, marker does not.
+      #                   The opposite direction, and without it half of C1 could be deleted
+      #                   while every other arm stayed green.
+      #   c4nosrc       — one region carries no read declaration at all, so the side function
+      #                   is undefined on that unit.
+      if [ "$defect" = 'c0empty' ]; then
+        :
+      elif [ "$defect" = 'c4nosrc' ] && [ "${IDS[$i]}" = 'check' ]; then
+        :
+      elif [ "/$name ${IDS[$i]}" = "$FIXTURE_ADMIT_KEY" ] && [ "$defect" != 'c1undeclared' ]; then
+        printf -- '**Reads:** nothing beyond the blocks above. It writes nothing, dispatches no agent, and performs no act whose effect lands outside this trip.\n\n'
+      elif [ "$defect" = 'c1source' ] && [ "$name" = 'trip-publish' ] && [ "${IDS[$i]}" = 'list' ]; then
+        printf -- '**Reads:** nothing beyond the blocks above. It writes nothing, dispatches no agent, and performs no act whose effect lands outside this trip.\n\n'
+      else
+        printf -- '**Reads:** nothing beyond the blocks above.\n\n'
+      fi
+      # The arm-scoped confirm gate. Present in the conforming world so every RETAINED arm
+      # stands behind a limb; `noconfirm` strips it, which is what drives the C2 arm.
+      if [ "$defect" != 'noconfirm' ]; then
+        printf -- 'Destructive work in this region stands behind a typed confirmation.\n\n'
+      fi
       printf -- 'This region never passes %s--yes%s and never sets ALLOW_PLAINTEXT; it mentions %s%s%s and does not run it.\n\n' "$BT" "$BT" "$BT" "$SCRIPT_REL" "$BT"
       if [ "${INVS[$i]}" -eq 1 ]; then
         case "$defect" in
@@ -2394,12 +2767,47 @@ gen_cmd() {  # gen_cmd <dir> <tuple> <defect>
     done
     if [ "$role" = 'CREATE' ]; then
       printf -- '## Create\n\nThe body of this file is the region.\n\n'
-      printf -- '**Reads:** the template it copies from.\n\n'
+      [ "$defect" = 'c0empty' ] || printf -- '**Reads:** the template it copies from.\n\n'
+      # A CREATE-role unit is on the retained side like any other, so it carries a limb too.
+      if [ "$defect" != 'noconfirm' ]; then
+        printf -- 'Destructive work in this region stands behind a typed confirmation.\n\n'
+      fi
     fi
     if [ "$defect" = 'orphaninv' ]; then printf -- '## Not a verb\n\n```\n%s update trips/x\n```\n\n' "$SCRIPT_REL"; fi
     if [ "$defect" = 'allowplain' ]; then printf -- '```\nALLOW_PLAINTEXT=1 x\n```\n\n'; fi
     if [ "$defect" = 'varmention' ]; then printf -- 'SCRIPT=%s\n\n' "$SCRIPT_REL"; fi
   } > "$f"
+}
+
+# The ONE key the fixture charter marks inference-admitted, held here because gen_charter renders
+# the marker and gen_cmd declares the matching three negatives — group C's join grades precisely
+# whether those two agree, so they read one literal rather than two.
+FIXTURE_ADMIT_KEY='/trip status'
+
+# gen_carrier <path> <defect> — the guided-entry carrier at a fixture engine root.
+#
+# Group L is the only reader of this surface, and no other generator produces it: the carrier sits
+# OUTSIDE the verb directory every other fixture writes into, which is the whole point of it.
+#
+#   ok        — names no verb, carries no flag, declares all three negatives
+#   verbtoken — names a live verb token, which is the second enumeration the design forbids
+#   flag      — carries the frontmatter key whose presence would disable guided entry silently
+#   noneg     — declares none of the three negatives
+gen_carrier() {
+  local p="$1" defect="${2:-ok}"
+  mkdir -p "${p%/*}"
+  {
+    printf -- '---\nname: fixture-engine\ndescription: fixture landing surface for the guided-entry carrier.\n'
+    [ "$defect" = 'flag' ] && printf -- 'disable-model-invocation: true\n'
+    printf -- '---\n\n# The way in\n\n'
+    printf -- 'Somebody has said in their own words what they want to do. This surface names the verb and hands over the command to type.\n\n'
+    if [ "$defect" != 'noneg' ]; then
+      printf -- '## What this surface declares\n\n- it writes nothing;\n- it dispatches no agent;\n- it performs no act whose effect lands outside this trip.\n\n'
+    fi
+    printf -- '## Where the answer comes from\n\nRead the charter live at invocation. This file holds no verb list and no classification of its own.\n\n'
+    [ "$defect" = 'verbtoken' ] && printf -- 'For orientation, type /trip status and read what it says.\n\n'
+    printf -- '## Reaching the verb\n\nWork out which state the request lands in, then render only what that row says.\n\n'
+  } > "$p"
 }
 
 gen_charter() {  # gen_charter <dir> <defect>
@@ -2437,7 +2845,13 @@ gen_charter() {  # gen_charter <dir> <defect>
       fi
       # The conforming world grades EVERY addressed row and renders BOTH tokens. A world that
       # only ever wrote one of them would leave the other's branch unexercised under a green G0b.
-      if [ "$k" = '/trip status' ]; then gmark="${GRADE_ADMIT}${GRADE_SEP}"; else gmark="${GRADE_RETAIN}${GRADE_SEP}"; fi
+      #
+      # WHICH key is admitted is held in ONE place, FIXTURE_ADMIT_KEY, because gen_cmd has to
+      # agree with it: the charter renders the marker here and the command file declares the
+      # three negatives there, and group C's join grades exactly whether those two agree. Two
+      # literals would let the fixture drift into a state where the conforming world is not
+      # conforming — and the arm that would catch it is the one being built on top of it.
+      if [ "$k" = "$FIXTURE_ADMIT_KEY" ]; then gmark="${GRADE_ADMIT}${GRADE_SEP}"; else gmark="${GRADE_RETAIN}${GRADE_SEP}"; fi
       printf '| %s | sig | %sact | ex | %s%s%s |\n' "$k" "$gmark" "$BT" "$k" "$BT"
     done
     # ── The CONFORMING ambiguity set, carried by every world except the zero-verb one.
@@ -2679,6 +3093,11 @@ ADR="$ROOT/reference/adr/ADR-007-command-entry-point.md"
 PUB="$ROOT/$SCRIPT_REL"
 WF="$ROOT/.github/workflows/command-taxonomy.yml"
 DOC="$ROOT/$DOC_REL"
+# The guided-entry carrier. It sits at the ENGINE ROOT, deliberately OUTSIDE the verb directory
+# every other per-file group globs — that is what makes it reachable by the model when every verb
+# file withholds itself. Group CE is the only reader of it, which is also why it has to join the
+# Z watch set below: a surface this guard reads and does not watch is an unwatched write path.
+CARRIER="$ROOT/SKILL.md"
 
 # The Z-group watch set: every surface this guard READS — the command reference included,
 # since group H reads it — plus the workflow that runs it —
@@ -2687,7 +3106,7 @@ DOC="$ROOT/$DOC_REL"
 # line states that scope rather than claiming a tree-wide property this does not establish.
 tree_state() {
   local p
-  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC"; do [ -f "$p" ] && cksum < "$p"; done
+  for p in "$MD" "$ADR" "$PUB" "$SELF" "$WF" "$DOC" "$CARRIER"; do [ -f "$p" ] && cksum < "$p"; done
   for p in "$CDIR"/*/SKILL.md; do [ -e "$p" ] && { printf '%s ' "$(verb_id "$p")"; cksum < "$p"; }; done
 }
 STATE_BEFORE="$(tree_state)"
@@ -2727,6 +3146,7 @@ F_OUT="$(invocation_check "$CDIR" "$RECS")"
 P_OUT="$(parity_check "$CDIR")"
 R_OUT="$(readonly_check "$RECS" "${READONLY_KEYS[@]}" -- "${READONLY_ADJUDICATED[@]}")"
 H_OUT="$(picker_check "$RECS" "$DOC" "$CDIR")"
+C_OUT="$(inference_check "$RECS" "$CARRIER")"
 ALL="$RECS
 $COV_OUT
 $ENUM_OUT
@@ -2734,7 +3154,8 @@ $E_OUT
 $F_OUT
 $P_OUT
 $R_OUT
-$H_OUT"
+$H_OUT
+$C_OUT"
 
 echo
 echo "── Group A — populations non-empty. FAIL, never SKIP."
@@ -2884,17 +3305,66 @@ fi
 
 echo
 echo "── Group R — the DECLARED read-only key set and its membership-delta sentinel."
-RO_CINV="$(getcount "$R_OUT" ROCINV)"; RO_CBANG="$(getcount "$R_OUT" ROCBANG)"
-if has_finding "$ALL" "$(surface R1)"; then FAIL "R1: a read-only region carries an executable instruction"; show "$ALL" 'R1'
-elif [ "${RO_CINV:-0}" -eq 0 ] && [ "${RO_CBANG:-0}" -eq 0 ]; then
-  PASS "R1: VACUOUS ON BOTH LIMBS — READ THIS AS VACUOUS, NOT AS PASSING. The $(getcount "$R_OUT" ROKEYS) declared read-only keys were quantified over 0 region-attributed invocation records and 0 region-attributed pre-execution records OF ${READONLY_OF_COMMAND}, so neither limb had anything it could match. A green here is evidence about arm GR1's fixture only. Two structural reasons, both live: every fenced invocation on this surface is attributed to a DIFFERENT command, and every pre-execution block sits in the shared contract preamble AHEAD of the first verb section, so the contract's own prefix rule attributes it to no region at all"
-elif [ "${RO_CBANG:-0}" -eq 0 ]; then
-  PASS "R1: PRE-EXECUTION LIMB VACUOUS — the invocation limb quantified $(getcount "$R_OUT" ROKEYS) declared read-only keys over ${RO_CINV} region-attributed invocation record(s) of ${READONLY_OF_COMMAND} and found none in a read-only region; the pre-execution limb had 0 to match and so establishes nothing"
-elif [ "${RO_CINV:-0}" -eq 0 ]; then
-  PASS "R1: INVOCATION LIMB VACUOUS — the pre-execution limb quantified over ${RO_CBANG} region-attributed record(s) of ${READONLY_OF_COMMAND}; the invocation limb had 0 to match and so establishes nothing"
-else PASS "R1: each of $(getcount "$R_OUT" ROKEYS) declared read-only regions carries no fenced invocation line and no pre-execution block of its own, quantified over ${RO_CINV} invocation and ${RO_CBANG} pre-execution record(s) attributed to ${READONLY_OF_COMMAND}'s regions"; fi
+RO_CINV="$(getcount "$R_OUT" ROCINV)"
+# ONE LIMB, and a zero on it is a FAILURE rather than a vacuous pass. This group previously
+# carried a second, pre-execution limb whose population is permanently empty — the carrier it
+# tested was retired corpus-wide — so it was retired rather than kept as a green establishing
+# nothing; its successor is named at the record emitter. The surviving limb is re-grounded on
+# ANY engine script, not the publish script alone, which is what gives it a real population. If
+# that population ever falls back to zero the limb is vacuous again, and the disposition is to
+# retire it too — so a zero fails loud here instead of reading as coverage.
+if has_finding "$ALL" "$(surface R1)"; then FAIL "R1: a read-only region carries a fenced script invocation"; show "$ALL" 'R1'
+elif [ -z "$RO_CINV" ]; then FAIL "R1: NO SUBJECT — readonly_check emitted no candidate count, so the limb was never evaluated"
+elif [ "$RO_CINV" -eq 0 ]; then FAIL "R1: VACUOUS — the $(getcount "$R_OUT" ROKEYS) declared read-only keys were quantified over 0 fenced script invocations of ${READONLY_OF_COMMAND}, so the limb had nothing it could match and a pass here would establish nothing. This limb was kept only because its candidate population was non-zero; with that gone, retire it rather than let it read as coverage"
+else PASS "R1: each of the $(getcount "$R_OUT" ROKEYS) declared read-only regions carries no fenced invocation of any engine script, quantified NON-VACUOUSLY over ${RO_CINV} fenced script invocation(s) attributed to ${READONLY_OF_COMMAND}'s other regions — invocations exist on this command's surface, so the limb has something it could catch and caught none of it in a read-only region"; fi
 if has_finding "$ALL" "$(surface R2)"; then FAIL "R2: the MEMBERSHIP-DELTA SENTINEL fired — the read-only set needs re-adjudication"; show "$ALL" 'R2'
 else PASS "R2: sentinel — ${READONLY_OF_COMMAND}'s $(getcount "$R_OUT" ROLIVE) live declared verbs match the adjudicated set as a SET, in both directions. A count would hold while membership churned"; fi
+
+echo
+echo "── Group C — the inference line: the marker in the routing map joined to its source."
+# ── THE SHAPE OF EVERY VERDICT IN THIS GROUP AND IN GROUP L, and why it has three limbs.
+# A finding FAILS. Then a MISSING COUNT FAILS — the count is what the subject emits only by
+# running, so an absent or unhooked inference_check reaches that limb and never the PASS. Only
+# then does the PASS fire. A two-limb `finding -> FAIL, else PASS` would pass on a subject that
+# never ran, because an absent subject emits no finding either; that is the shape group MD
+# exists to refuse, and this group's residual contribution to it is zero.
+C_BLOCKS="$(getcount "$C_OUT" CBLOCKS)"; C_ADMIT="$(getcount "$C_OUT" CADMIT)"
+C_RETAIN="$(getcount "$C_OUT" CRETAIN)"; C_SENS="$(getcount "$C_OUT" CSENS)"
+C_SPEC="$(getcount "$C_OUT" CSPEC)"; C_UNITS="$(getcount "$C_OUT" CUNITS)"
+C_LCONF="$(getcount "$C_OUT" CLIMBCONF)"; C_LTYPED="$(getcount "$C_OUT" CLIMBTYPED)"
+C_NOSRC="$(getcount "$C_OUT" CNOSRC)"; C_LNONE="$(getcount "$C_OUT" CLIMBNONE)"
+C_J1="$(getcount "$C_OUT" CJ1)"; C_J2="$(getcount "$C_OUT" CJ2)"
+if has_finding "$ALL" "$(surface C0)"; then FAIL "C0: the population is empty, or a control arm did not fire — the admitted set below is unusable"; show "$ALL" 'C0'
+elif [ -z "$C_BLOCKS" ] || [ -z "$C_SENS" ]; then FAIL "C0: NO SUBJECT — inference_check emitted no population count, so it did not run and nothing below it was measured"
+else PASS "C0: population ${C_BLOCKS} per-arm read-declaration blocks over ${C_UNITS} coverage units, ONE per arm and the FIRST in its region — the token also opens a prose sentence on this surface, and counting occurrences rather than arms would add a phantom arm declaring nothing. Components, each derived at grade time: writes-nothing $(getcount "$C_OUT" CNEGW) · dispatches-no-agent $(getcount "$C_OUT" CNEGD) · no-effect-outside $(getcount "$C_OUT" CNEGO). Strict fail-closed intersection ADMITS ${C_ADMIT} and RETAINS ${C_RETAIN}. Both arms fired in this process: sensitivity ${C_SENS} of 7 on a block declaring all three, specificity ${C_SPEC} of 7 on a block declaring the positive of each"; fi
+if has_finding "$ALL" "$(surface C4)"; then FAIL "C4: a coverage unit resolves to neither side or to both — the side function is not total"; show "$ALL" 'C4'
+elif [ -z "$C_NOSRC" ]; then FAIL "C4: NO SUBJECT — the totality count was not emitted, so the side function was never evaluated"
+else PASS "C4: TOTALITY — each of the ${C_UNITS} coverage units carries exactly one read-declaration block (${C_NOSRC} carry none), so the side function is total over the surface and every later assertion branches on a defined value"; fi
+if has_finding "$ALL" "$(surface C2)"; then FAIL "C2: an arm retaining declared intent stands behind neither the confirm gate nor the typed-only posture"; show "$ALL" 'C2'
+elif [ -z "$C_LNONE" ]; then FAIL "C2: NO SUBJECT — the per-limb counts were not emitted, so no arm was graded"
+else PASS "C2: each of the ${C_RETAIN} arms retaining declared intent carries the confirm gate in its own region, or its file carries the typed-only posture (${C_LNONE} carry neither) — the per-arm obligation, graded per arm rather than per file. The posture is role-scoped by the charter's own ROLE record: a CREATE-role file takes an argument rather than a verb, so the flag alone is its posture"; fi
+if [ -z "$C_LCONF" ] || [ -z "$C_LTYPED" ]; then FAIL "C3: NO SUBJECT — the per-limb report has no counts to report, so C2's green above is unreadable"
+else PASS "C3: PER-LIMB REPORT — of ${C_RETAIN} retained arms, the confirm limb carries ${C_LCONF} and the typed-only limb carries ${C_LTYPED}.$( [ "${C_LCONF}" -eq 0 ] && printf ' %s' 'The CONFIRM LIMB IS VACUOUS: it carried zero arms on this run, so C2 above establishes nothing about it and its green rests entirely on the typed-only limb.' )$( [ "${C_LTYPED}" -eq 0 ] && printf ' %s' 'The TYPED-ONLY LIMB IS VACUOUS: it carried zero arms on this run.' ) Its verdict never depends on either count; it is the measurement that keeps C2 from reading as coverage it does not have"; fi
+if has_finding "$ALL" "$(surface C1)"; then FAIL "C1: THE JOIN — a rendered marker disagrees with the source it is supposed to state"; show "$ALL" 'C1'
+elif [ -z "$C_J1" ] || [ -z "$C_J2" ]; then FAIL "C1: NO SUBJECT — the join emitted no difference counts, so no marker was joined to anything"
+else PASS "C1: THE JOIN — for every graded coverage unit the side derived from its own read-declaration block equals the entry-class marker the routing map renders, as a set difference EMPTY IN BOTH DIRECTIONS (${C_J1} admitted-at-source-but-not-marked, ${C_J2} marked-but-not-admitted-at-source). Neither side holds a list: the source is read from the blocks and the marker from field 3 of the row B7 graded"; fi
+
+echo
+echo "── Group L — the landing surface: the guided-entry carrier at the engine root."
+# A single-letter group, and the letter is load-bearing: group Y derives the emittable ids with a
+# ONE-letter, ONE-digit pattern, so a two-letter id would be surfaced here and invisible there —
+# graded by this group and armed by nothing Y could see. L is free, and is neither a prefix nor a
+# suffix of any multi-letter group banner in this file.
+L_VERBS="$(getcount "$C_OUT" LVERBS)"; L_NEG="$(getcount "$C_OUT" LNEG)"
+if has_finding "$ALL" "$(surface L1)"; then FAIL "L1: the carrier names a verb token, or is absent"; show "$ALL" 'L1'
+elif [ -z "$L_VERBS" ]; then FAIL "L1: NO SUBJECT — the carrier's verb-token count was not emitted"
+else PASS "L1: the carrier holds NO verb token of any command (${L_VERBS} found), quantified over the ${C_UNITS}-unit live declared verb set read from the record stream — no list on either side. A verb added to the charter is reachable from the carrier with no edit to it"; fi
+if has_finding "$ALL" "$(surface L2)"; then FAIL "L2: the carrier carries a disable-model-invocation key — guided entry is silently disabled"; show "$ALL" 'L2'
+elif [ -z "$L_NEG" ]; then FAIL "L2: NO SUBJECT — the carrier was never read, so the absence of the key was not established"
+else PASS "L2: the carrier carries NO disable-model-invocation key. Its absence is the mechanism: every verb file withholds itself from the model and this one deliberately does not"; fi
+if has_finding "$ALL" "$(surface L3)"; then FAIL "L3: the carrier does not declare all three negatives"; show "$ALL" 'L3'
+elif [ -z "$L_NEG" ]; then FAIL "L3: NO SUBJECT — the carrier's declarations were never read"
+else PASS "L3: the carrier declares all three negatives in its own body (${L_NEG} of 7 by the same recogniser C0 applies to the verb blocks) — writes nothing, dispatches no agent, and performs no act whose effect lands outside the trip's own files. It is the one surface here the model can see, so what it may do is written down"; fi
 
 echo
 echo "── Group H — the picker surface: what a reader is shown before they open a file."
@@ -3585,6 +4055,94 @@ if grep -q '^FINDING R2 ' <<<"$(readonly_check "$RECS" "${READONLY_KEYS[@]}" -- 
   PASS "GR2: flagged, naming R2 — the MEMBERSHIP-DELTA SENTINEL fires on a set difference in either direction, and the message names the required action. Diffed as a SET: a verb removed and another added holds the count while membership churns"
 else FAIL "GR2: the membership-delta sentinel did not fire on a deliberate set difference"; fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# C-group and L-group arms — the inference-line join, the confirm obligation, the carrier.
+#
+# These drive inference_check DIRECTLY rather than through run_tree, and that is deliberate
+# rather than incidental: run_tree is the input to some fifty existing arms, and adding a new
+# checker to it would put this group's findings into every one of their outputs. The arms below
+# build the same fixture trees and call the one function they grade.
+#
+# EVERY MUST-FIRE ARM IS PAIRED WITH A MUST-NOT-FIRE ONE over a world differing in exactly the
+# graded property. A group of must-fire arms alone is satisfied by a checker hard-wired to
+# report a finding, which is the failure mode this card exists to retire.
+# ═════════════════════════════════════════════════════════════════════════════════
+cfix() {  # cfix <id> <charter-defect> <cmd-defect> <carrier-defect> -> prints the finding stream
+  local d="$WORK/$1"; gen_tree "$d" "$2" "$3"; gen_carrier "$d/SKILL.md" "$4"
+  inference_check "$(collect_records "$d")" "$d/SKILL.md"
+}
+cctl() {  # cctl <id> <want> <label> <charter-defect> <cmd-defect> <carrier-defect>
+  local id="$1" want="$2" label="$3"; shift 3
+  arm "$want"
+  local out; out="$(cfix "$id" "$1" "$2" "$3")"
+  if grep -q "^FINDING $want " <<<"$out"; then PASS "${id}: flagged, naming $want — $label"
+  else FAIL "${id}: the deliberate defect was NOT flagged as $want ($label). First finding, if any: $(printf '%s' "$out" | grep '^FINDING ' | head -1)"; fi
+}
+
+echo
+echo "── Group GC/GL — control arms for the inference line, the confirm obligation and the carrier."
+
+# The CONFORMING world, built once and read by every must-NOT-fire arm below. Marker and source
+# agree on every unit, every retained arm carries the confirm limb, every unit has a read
+# declaration, and the carrier names no verb. A finding of ANY C or L id here is a false positive.
+GCOK="$(cfix GCok ok ok ok)"
+if grep -q '^FINDING ' <<<"$GCOK"; then
+  FAIL "GC0b: the CONFORMING world produced a finding — every must-not-fire arm below is reading a world that is already defective, so none of them establishes specificity: $(printf '%s' "$GCOK" | grep '^FINDING ' | head -2)"
+elif [ -z "$(getcount "$GCOK" CBLOCKS)" ]; then
+  FAIL "GC0b: NO SUBJECT — the conforming world produced no population count, so inference_check did not run over it"
+else
+  PASS "GC0b: MUST-NOT-FIRE — the conforming world yields no C or L finding at all, over $(getcount "$GCOK" CBLOCKS) arms and $(getcount "$GCOK" CUNITS) coverage units, with $(getcount "$GCOK" CADMIT) admitted at BOTH marker and source. Read every must-fire arm below against this one"
+fi
+
+# ── C0 — the population and its arms.
+cctl GC0 C0 "a world whose every region carries no read declaration — the population the side function quantifies over is EMPTY, which is a failure and not a vacuous pass" ok c0empty ok
+arm C0
+if [ -z "$(getcount "$GCOK" CSENS)" ]; then FAIL "GC0c: NO SUBJECT — the conforming world reported no sensitivity result"
+elif [ "$(getcount "$GCOK" CSENS)" -ne 7 ] || [ "$(getcount "$GCOK" CSPEC)" -ne 0 ]; then
+  FAIL "GC0c: the recogniser's own arms did not both fire — sensitivity $(getcount "$GCOK" CSENS) of 7 (must be 7) and specificity $(getcount "$GCOK" CSPEC) of 7 (must be 0)"
+else PASS "GC0c: the three-negative recogniser is a MEASUREMENT — it derived 7 of 7 on a block declaring all three and 0 of 7 on a block declaring the positive of each, in this process. A recogniser that matched neither, or both, would report the same admitted set and mean nothing"; fi
+
+# ── C4 — totality.
+cctl GC4 C4 "a coverage unit whose region carries no read declaration while every other does — the side function is UNDEFINED on it, so it resolves to neither side" ok c4nosrc ok
+
+# ── C1 — THE JOIN, armed in BOTH directions. One direction alone would leave the other's
+# half of the comparison deletable beneath a green suite.
+cctl GC1 C1 "a unit the routing map marks INFERENCE-ADMITTED whose own block declares NONE of the three negatives — the marker asserts a property nobody declared" ok c1undeclared ok
+cctl GC1c C1 "the OPPOSITE direction — a unit whose block declares all three while the routing map still marks it DECLARED-INTENT. The set difference must be empty both ways, and this is the way the first arm cannot reach" ok c1source ok
+arm C1
+if grep -q '^FINDING C1 ' <<<"$GCOK"; then FAIL "GC1b: MUST-NOT-FIRE — the join fired on a world where marker and source agree on every unit"
+elif [ -z "$(getcount "$GCOK" CJ1)" ]; then FAIL "GC1b: NO SUBJECT — the conforming world emitted no join difference counts"
+else PASS "GC1b: MUST-NOT-FIRE — the join is silent on the conforming world ($(getcount "$GCOK" CJ1) and $(getcount "$GCOK" CJ2) in the two directions), so GC1 and GC1c above grade a disagreement rather than a checker that always fires"; fi
+
+# ── C2 / C3 — the confirm obligation and the per-limb report.
+cctl GC2 C2 "a retained arm whose region carries no confirm gate and whose file carries neither half of the typed-only posture — it stands behind nothing" ok noconfirm ok
+arm C2
+if grep -q '^FINDING C2 ' <<<"$GCOK"; then FAIL "GC2b: MUST-NOT-FIRE — the confirm obligation fired on a world where every retained arm carries the gate"
+elif [ -z "$(getcount "$GCOK" CLIMBNONE)" ]; then FAIL "GC2b: NO SUBJECT — the conforming world emitted no limb counts"
+else PASS "GC2b: MUST-NOT-FIRE — the same world as GC2 with the confirm gate PRESENT yields no C2, so the arm above grades the gate's absence rather than the fixture"; fi
+
+GCNC="$(cfix GCnc ok noconfirm ok)"
+if [ -z "$(getcount "$GCOK" CLIMBCONF)" ] || [ -z "$(getcount "$GCNC" CLIMBCONF)" ]; then
+  FAIL "GC3: NO SUBJECT — one of the two worlds emitted no confirm-limb count"
+elif [ "$(getcount "$GCOK" CLIMBCONF)" -le 0 ]; then
+  FAIL "GC3: the confirm limb read ZERO on a world where every retained arm carries the gate — the limb is not reading what it claims to read, and C3's report is a constant rather than a measurement"
+elif [ "$(getcount "$GCNC" CLIMBCONF)" -ne 0 ]; then
+  FAIL "GC3: the confirm limb read $(getcount "$GCNC" CLIMBCONF) on a world carrying NO confirm gate — it is counting something other than the gate"
+else
+  PASS "GC3: the per-limb report is a MEASUREMENT — the confirm limb reads $(getcount "$GCOK" CLIMBCONF) on a world where every retained arm carries the gate and 0 on the same world with it stripped. A limb hardcoded to either value fails one of those two"
+fi
+
+# ── L — the carrier.
+cctl GL1 L1 "a carrier naming a live verb token — the second enumeration of the verb set that the inverted dependency exists to remove" ok ok verbtoken
+cctl GL2 L2 "a carrier carrying disable-model-invocation — the one key whose presence disables guided entry while every other assertion stays green" ok ok flag
+cctl GL3 L3 "a carrier declaring none of the three negatives — the one surface here the model can see, silent on what it may do" ok ok noneg
+arm L1
+arm L2
+arm L3
+if grep -qE '^FINDING L[123] ' <<<"$GCOK"; then FAIL "GL1b: MUST-NOT-FIRE — a carrier assertion fired on a conforming carrier"
+elif [ -z "$(getcount "$GCOK" LNEG)" ]; then FAIL "GL1b: NO SUBJECT — the conforming carrier was never read"
+else PASS "GL1b: MUST-NOT-FIRE — a conforming carrier yields no L finding: it names $(getcount "$GCOK" LVERBS) verb tokens, carries no flag, and declares $(getcount "$GCOK" LNEG) of 7 negatives. The three arms above grade the defects rather than the surface"; fi
+
 arm N1
 NEEDLES_SAVE=( "${NEEDLES[@]}" )
 NEEDLES+=( 'trailing ' )
@@ -4103,7 +4661,7 @@ echo
 echo "── Group Z — non-mutation over the watched surfaces."
 STATE_AFTER="$(tree_state)"
 if [ "$STATE_BEFORE" = "$STATE_AFTER" ]; then
-  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference and each verb file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
+  PASS "Z1: the ${WATCHED} watched surfaces are byte-identical before and after this run — the charter, ADR-007, the publish script, this guard, this slice's workflow, the command reference, the guided-entry carrier at the engine root and each verb file — so every fixture was built under the temporary directory. SCOPE: the watch set is the surfaces this guard reads plus its own workflow, derived from the paths above; it is not the whole tree, and a write outside it is not observed here"
 else
   FAIL "Z1: the working tree changed during this run; a guard that mutates what it grades is not a guard"
 fi
