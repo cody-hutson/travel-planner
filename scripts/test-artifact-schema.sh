@@ -3755,6 +3755,107 @@ else
   FAIL "CTL-VA-DEGRADE: MUST FIRE — a degraded frontmatter read did not fail closed (target=${VD_TARGET:-<none>} shadow-invoked=$VD_HITS rc=$VD_RC x2-on-target=$VD_X2 skip-on-target=$VD_SKIP unshadowed-anchor=$VD_ANCHOR). Read the limbs in order: no target or shadow-invoked=0 means the injection never landed and this arm measured nothing; unshadowed-anchor=0 means CTL-DATAROOT2 is the arm to read, because agreement over a degenerate subject proves nothing; otherwise the validator converted an incomplete read into a quieter verdict at rc=0 — the artifact left the gate unchecked and the run reported success"
 fi
 
+# ── CTL-VA-COMMENT-ONLY-SKIPS — MUST NOT FIRE. A frontmatter block whose body is entirely
+# comment lines is a HEALTHY input, and the degraded-read limb has to leave it alone.
+#
+# va_fm_pairs skips `#` lines as legal frontmatter content — the validator's own grammar,
+# not an accident — so a comment-only block is PRESENT, PARSES, and yields ZERO pairs at
+# status 0. Keyed on the block's raw body being non-empty, that is byte-for-byte the
+# degraded-read signature, and the gate turned a healthy repository RED on it. The most
+# likely real instance is the very state the tolerant read exists to protect: a part-migrated
+# artifact carrying `---` / `# TODO: add schema-version` / `---`.
+#
+# THE LIMB MUST ASK WHETHER A FIELD WAS EXPECTED, not whether the body was non-empty. Three
+# shapes are graded as ONE boundary because that is what they are: comment-only and
+# comment-plus-blank must SKIP, and blank-only must SKIP as it already did — the near-miss
+# that stops this arm from being satisfied by a validator that simply skips everything.
+#
+# The fixture is the DATAROOT data root COPIED and its declaring artifact rewritten, so the
+# artifact is selected by the same path arm, through the same corpus, as the anchor run above.
+# Nothing is hardcoded about which class it is.
+FC_CTRL=0; FC_SCTRL=0; FC_BAD=0; FC_SELMIN=-1; FC_REPORT=""; FC_CASES=0
+if [ -n "$DR_ART1" ]; then
+  # Detector controls FIRST. A zero from either extraction below is only evidence that the
+  # subject is clean if the extraction is shown to respond to the thing it looks for.
+  FC_CTRL="$(awk -v p="FINDING X2 $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"FINDING X2 $DR_ART1 a synthetic control line")"
+  FC_SCTRL="$(awk -v p="SKIP $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"SKIP $DR_ART1 C0 (arm: control)")"
+  while IFS= read -r fc; do
+    [ -n "$fc" ] || continue
+    FC_CASES=$((FC_CASES + 1))
+    fc_dir="$WORK/fc_$fc"
+    cp -R "$DR_DATA" "$fc_dir" 2>/dev/null || { FC_BAD=$((FC_BAD + 1)); FC_REPORT="$FC_REPORT $fc:fixture-failed"; continue; }
+    case "$fc" in
+      comment-only)       printf '%s\n' '---' '# a note about this file' '---' '' '# body' > "$fc_dir/$DR_ART1" ;;
+      comment-plus-blank) printf '%s\n' '---' '' '# a note about this file' '' '---' '' '# body' > "$fc_dir/$DR_ART1" ;;
+      blank-only)         printf '%s\n' '---' '' '---' '' '# body' > "$fc_dir/$DR_ART1" ;;
+    esac
+    fc_out="$(va_main --root "$DR_ENGINE" --data-root "$fc_dir" --scope dir "$DR_TRIP" 2>&1)"; fc_rc=$?
+    fc_x2="$(awk -v p="FINDING X2 $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$fc_out")"
+    fc_skip="$(awk -v p="SKIP $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$fc_out")"
+    fc_sel="$(dr_field "$fc_out" POPULATION selected)"
+    if [ "$FC_SELMIN" -lt 0 ] || [ "$fc_sel" -lt "$FC_SELMIN" ]; then FC_SELMIN="$fc_sel"; fi
+    if [ "$fc_rc" -ne 0 ] || [ "$fc_x2" -ne 0 ] || [ "$fc_skip" -ne 1 ]; then
+      FC_BAD=$((FC_BAD + 1))
+      FC_REPORT="$FC_REPORT $fc:rc=$fc_rc,x2=$fc_x2,skip=$fc_skip,selected=$fc_sel"
+    fi
+  done <<EOF
+comment-only
+comment-plus-blank
+blank-only
+EOF
+fi
+if [ -z "$DR_ART1" ]; then
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: no declaring artifact was resolved in the DATAROOT fixture, so there is nothing to rewrite a frontmatter block onto and this arm measured nothing. CTL-DATAROOT1 is the arm to read"
+elif [ "$FC_CTRL" -ne 1 ] || [ "$FC_SCTRL" -ne 1 ]; then
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: the detectors are not live (x2-on-a-string-carrying-one-X2=$FC_CTRL, skip-on-a-string-carrying-one-SKIP=$FC_SCTRL, both must be 1). A zero from a detector that does not respond is a broken probe, not a healthy input"
+elif [ "$FC_SELMIN" -lt 1 ]; then
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: the smallest run selected $FC_SELMIN files, so 'the comment-only artifact skipped' would be a statement over the empty set"
+elif [ "$FC_BAD" -eq 0 ]; then
+  PASS "CTL-VA-COMMENT-ONLY-SKIPS: MUST NOT FIRE — all $FC_CASES frontmatter shapes that declare no field (comment-only, comment-plus-blank, blank-only) SKIP at rc 0 with no X2 against them, over runs selecting at least $FC_SELMIN file(s), with both detectors shown live. A block that parses and carries no schema-version still skips, which is the tolerant read's own stated invariant"
+else
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: MUST NOT FIRE — $FC_BAD of $FC_CASES healthy frontmatter shapes did not skip cleanly:$FC_REPORT (each expects rc=0, x2=0, skip=1). A comment line is legal frontmatter content that va_fm_pairs skips by design, so a block of them PARSES and yields no pairs at status 0 — and a degraded-read limb keyed on the raw body being non-empty cannot tell that from a read that failed. The limb must key on whether a FIELD was expected"
+fi
+
+# ── CTL-VA-DEGRADE-DISCRIMINATOR — MUST FIRE, and it is the arm CTL-VA-DEGRADE cannot be.
+# CTL-VA-DEGRADE shadows `va_fm_pairs`. The discriminator that separates "the read failed"
+# from "nothing was declared" reads the block through `va_frontmatter` — and va_fm_pairs
+# reaches the file's bytes THROUGH THAT SAME FUNCTION. So a transient that empties the
+# underlying read empties BOTH the pairs read and the probe meant to notice: the presence
+# limb goes false, the artifact skips, and the run returns 0 with its output moved. That is
+# the original CI signature, reachable at the head that exists to remove it.
+#
+# A discriminator that shares a failure mode with the thing it discriminates is not one. The
+# remedy this arm grades is that the expectation is established by a read that DOES NOT GO
+# THROUGH va_frontmatter and carries no output to be emptied.
+#
+# The injection is the same shape as CTL-VA-DEGRADE's — the renamed original, deferring for
+# every path but one — so a verdict difference between the two arms is attributable to WHICH
+# function was shadowed and to nothing else.
+FD_TARGET="$DR_ART1"; FD_MARK="$WORK/fd_invoked"; FD_OUT=""; FD_RC=0
+FD_HITS=0; FD_X2=0; FD_SKIP=0; FD_CTRL=0
+: > "$FD_MARK"
+if [ -n "$FD_TARGET" ]; then
+  FD_CTRL="$(awk -v p="FINDING X2 $FD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"FINDING X2 $FD_TARGET a synthetic control line")"
+  FD_OUT="$(
+    eval "$(declare -f va_frontmatter | sed '1s/^va_frontmatter/va_frontmatter_unshadowed/')"
+    va_frontmatter() {
+      if [ "${1:-}" = "$DR_DATA/$FD_TARGET" ]; then printf 'x\n' >> "$FD_MARK"; return 0; fi
+      va_frontmatter_unshadowed "$@"
+    }
+    va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1
+  )"; FD_RC=$?
+  FD_HITS="$(awk 'END { print NR + 0 }' "$FD_MARK")"
+  FD_X2="$(awk -v p="FINDING X2 $FD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FD_OUT")"
+  FD_SKIP="$(awk -v p="SKIP $FD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FD_OUT")"
+fi
+if [ -z "$FD_TARGET" ] || [ "$FD_HITS" -lt 1 ] || [ "$VD_ANCHOR" -ne 1 ] || [ "$FD_CTRL" -ne 1 ]; then
+  FAIL "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — the arm measured nothing (target=${FD_TARGET:-<none>} shadow-invoked=$FD_HITS unshadowed-anchor=$VD_ANCHOR x2-detector-on-control=$FD_CTRL). shadow-invoked=0 means the injection never landed; unshadowed-anchor=0 means the same fixture is not clean unshadowed, so a change under injection is not attributable to it; detector-on-control!=1 means the extraction does not respond to the finding it looks for"
+elif [ "$FD_RC" -ne 0 ] && [ "$FD_X2" -eq 1 ] && [ "$FD_SKIP" -eq 0 ]; then
+  PASS "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — with va_frontmatter itself shadowed to return empty at rc 0 for ${FD_TARGET##*/} (injected $FD_HITS time(s) — it is reached from BOTH the pairs read and the presence probe), the run still FAILS CLOSED (rc=$FD_RC) with one X2 naming that path and no SKIP for it. The expectation that a field was declared no longer travels through the read it is meant to adjudicate"
+else
+  FAIL "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — a degraded read of the frontmatter block ITSELF did not fail closed (target=$FD_TARGET shadow-invoked=$FD_HITS rc=$FD_RC x2-on-target=$FD_X2 skip-on-target=$FD_SKIP). rc=0 with skip=1 is the original CI signature: va_fm_pairs reaches the file through va_frontmatter, so emptying va_frontmatter empties the pairs read AND the presence probe together, the presence limb goes false, and the artifact leaves the gate unchecked with the run reporting success. CTL-VA-DEGRADE passes on the same fixture because it shadows the INNER function only"
+fi
+
 # ── CTL-VA-MEMO — the corpus is parsed ONCE per invocation, which is what va_corpus_patterns'
 # memo has always claimed and did not deliver. Every call site reaches that function from
 # inside a command substitution or a pipeline, so each cache write died with its subshell and
