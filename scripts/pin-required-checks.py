@@ -1054,6 +1054,30 @@ def _synth_workflow(jobs, indent=2, lead=()):
     return "\n".join(out) + "\n"
 
 
+def _synth_unreadable_key(key_lines):
+    """A workflow whose ONLY job carries a key presentation this reader misses.
+
+    `key_lines` is emitted VERBATIM in place of the job key line, so an arm
+    models a presentation by passing the presentation and nothing here needs to
+    know how any of them is spelled.
+
+    The job's real answer -- `posture=required` -- sits above its key, where a
+    contributor writes it. A SECOND marker sits directly above the job's own
+    `steps:` line, at the property indentation, and that placement is the whole
+    point of these arms: a record read off `steps:` binds a marker at `steps:`'s
+    own indentation, so this is the shape in which a missed key reaches a
+    POSTURE rather than reading UNDECLARED. The loud variant is not the
+    dangerous one and is not what these arms model.
+    """
+    return ("name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+            "  # gate-efficacy: posture=required\n"
+            + key_lines +
+            "    runs-on: ubuntu-latest\n"
+            "    # gate-efficacy: posture=advisory\n"
+            "    steps:\n"
+            "      - run: 'true'\n")
+
+
 def _census_baseline():
     """A synthetic tree that is clean by construction: one job per declared
     context, all markered required, plus one job that is legitimately advisory.
@@ -1203,6 +1227,70 @@ def census_arms():
         "  new-suite: {name: New suite (test-new-suite.sh), "
         "runs-on: ubuntu-latest, steps: [{run: 'true'}]}\n")
 
+    # X20-X25 are six presentations of ONE legal job ID, each ALONE in its file.
+    # Each is valid YAML, each is read by an independent parser and by actionlint
+    # as the job `new-suite`, and none matches `_RE_KEY`. They are here because
+    # the per-file assertion does not catch them on its own: when the key goes
+    # unrecognised the reader keeps scanning, finds the job's own `steps:`, and
+    # records a job off it -- so the file DOES yield a record, the assertion is
+    # satisfied by that record, and the census reaches CLEAN at exit 0 over a job
+    # declaring `posture=required` under a name CONTEXT_ORDER does not carry.
+    #
+    # The presentations divide on two axes and both are exercised, because a
+    # remedy aimed at one axis leaves the other standing: quoting (the `\u` and
+    # `\x` escapes, which no bounded key pattern can enumerate) and spacing (a
+    # space before the `:`, in each of the three spellings a key may take). The
+    # explicit-key form is the sixth and is neither. The list is NOT the class --
+    # no pattern is exhaustive over YAML key presentation, which is why the
+    # remedy these arms grade is a property of the RECORD rather than of the key.
+    unread_keys = (
+        ("X20", "the YAML explicit-key form",
+         "  ? new-suite\n  : name: New suite (test-new-suite.sh)\n"),
+        ("X21", "a key spelled with a `\\u` escape",
+         '  "new\\u002Dsuite":\n    name: New suite (test-new-suite.sh)\n'),
+        ("X22", "a key spelled with a `\\x` escape",
+         '  "new\\x2Dsuite":\n    name: New suite (test-new-suite.sh)\n'),
+        ("X23", "a bare key carrying a space before its `:`",
+         "  new-suite :\n    name: New suite (test-new-suite.sh)\n"),
+        ("X24", "a double-quoted key carrying a space before its `:`",
+         '  "new-suite" :\n    name: New suite (test-new-suite.sh)\n'),
+        ("X25", "a single-quoted key carrying a space before its `:`",
+         "  'new-suite' :\n    name: New suite (test-new-suite.sh)\n"),
+    )
+    unread_arms = []
+    for aid, what, key_lines in unread_keys:
+        tree = dict(base)
+        tree[".github/workflows/synth-unread.yml"] = _synth_unreadable_key(key_lines)
+        unread_arms.append((
+            aid,
+            "PHANTOM: {} -- alone in its file. The reader misses the key, records "
+            "a job off the `steps:` line instead, and that record satisfies the "
+            "per-file assertion. A record read off a job's own properties is not "
+            "evidence the file was read".format(what),
+            tree, 2, set()))
+
+    # X26 pins what the fix does NOT close, so the residual is executable rather
+    # than only described. The same unreadable key, beside a job the reader DOES
+    # read: that file yields a GENUINE record, the per-file assertion is honestly
+    # satisfied, and the census reaches CLEAN over the job it never graded. The
+    # limit block states this in terms. An arm that goes red here is an author
+    # who has narrowed the residual -- read the limit block before changing it.
+    residual = dict(base)
+    residual[".github/workflows/synth-residual.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    name: Readable job\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite :\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -1274,6 +1362,13 @@ def census_arms():
                 "third of the three silent skips in `census_scan`, and the one the "
                 "quoted-key widening does NOT reach",
          no_key, 2, set()),
+    ] + unread_arms + [
+        ("X26", "RESIDUAL, pinned deliberately: the same unreadable key BESIDE a job "
+                "the reader does read. That file yields a GENUINE record, so the "
+                "per-file assertion is honestly satisfied and the census reaches "
+                "CLEAN over a job it never graded. This is the class the limit block "
+                "names; it is not closed and this arm says so out loud",
+         residual, 0, set()),
     ]
 
 
@@ -1524,6 +1619,45 @@ def self_test(stream=sys.stdout):
         else:
             out("  PASS E5/{}: refuses over {} job(s) it had already read -- a "
                 "partly-read tree, not X8's empty one".format(aid, want_partial))
+
+    # E6 asserts WHY X20-X25 refuse, and it is the only thing that distinguishes
+    # the remedy that was built from a cheaper one that would pass every arm
+    # above: a reader that simply stopped recording anything from those files
+    # would also reach rc 2, and would have thrown away the diagnosis with the
+    # record. So the file must still CONTRIBUTE its record, and the record must
+    # carry the mark. Both limbs are asserted, because either alone is vacuous --
+    # a mark that is always set refuses every legitimate file (X0 would fall, but
+    # only on its verdict, which is an inference), and a mark that is never set
+    # refuses none. `.get` rather than `[...]`, deliberately: a refactor that
+    # drops the field reads as UNMARKED and fails this guard, rather than raising
+    # out of the self-test and taking every arm below it down as collateral.
+    for aid, rel, want_marked, want_total in (
+            ("X0", None, 0, EXPECTED_COUNT + 1),
+            ("X23", ".github/workflows/synth-unread.yml", 1, EXPECTED_COUNT + 2)):
+        with tempfile.TemporaryDirectory(prefix="prc-census-") as root:
+            _materialise(by_id[aid], root)
+            scanned = census_scan(root)
+        marked = [j for j in scanned if j.get("synthesised")]
+        bad = len(scanned) != want_total or len(marked) != want_marked or (
+            rel is not None and sorted(j["file"] for j in marked) != [rel])
+        if bad:
+            failures.append("E6/{}: scanned {} record(s) of which {} marked "
+                            "synthesised {} -- want {} of {} from {}. The per-file "
+                            "assertion is not resting on the record's provenance".format(
+                                aid, len(scanned), len(marked),
+                                sorted(j["file"] for j in marked),
+                                want_marked, want_total, rel or "no file"))
+            out("  FAIL E6/{}: {} of {} record(s) marked synthesised, want {}".format(
+                aid, len(marked), len(scanned), want_marked))
+        elif want_marked:
+            out("  PASS E6/{}: the file CONTRIBUTED its record and that record is "
+                "marked synthesised ({} of {}) -- so the refusal is the record's "
+                "provenance, not its absence".format(aid, want_marked, want_total))
+        else:
+            out("  PASS E6/{}: {} of {} record(s) marked synthesised -- the control "
+                "arm's records are all read off real job keys, so the mark is a "
+                "measurement and not a reader that refuses everything".format(
+                    aid, want_marked, want_total))
 
     out("")
     out("-" * 78)
