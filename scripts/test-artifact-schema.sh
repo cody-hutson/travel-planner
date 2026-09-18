@@ -3447,6 +3447,51 @@ else
   FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
 fi
 
+# ── CTL-VA-DEGRADE — MUST FIRE. A captured subprocess read that comes back EMPTY is a
+# DIFFERENT FACT from a frontmatter block that legitimately declares no schema-version, and
+# va_check_artifact collapses the two: its skip predicate keys on `ver` being empty, which
+# is what BOTH states produce. So a transient failure of the frontmatter read turns a graded
+# artifact into a quiet SKIP at rc=0 and the run stays green over an artifact nothing
+# checked. That is the mechanism CTL-DATAROOT6 has been reporting without a vocabulary to
+# name it: the two spellings run the same fixture twice, and one capture coming back empty
+# in one of them is enough to make the byte comparison differ while both return 0.
+#
+# THE INJECTION IS THE TRANSIENT READ ITSELF, not a malformed fixture. va_fm_pairs is
+# shadowed to return EMPTY AT RC 0 for exactly one selected artifact and to defer to the
+# real function for every other call — the renamed original, not a hand-written stand-in,
+# because an arm that grades a stand-in grades the stand-in. Every other input is the
+# CTL-DATAROOT fixture unchanged, so a verdict change is attributable to the one shadowed
+# read and to nothing else.
+#
+# The target is DR_ART1, which the PATH arm selects (CTL-DATAROOT1 grades that: its pattern
+# hits are >= 1), so the shadow is reached from va_check_artifact and not from va_select's
+# declared arm. The witness is left alone for the same reason.
+VD_TARGET="$DR_ART1"; VD_MARK="$WORK/vd_invoked"; VD_OUT=""; VD_RC=0
+VD_HITS=0; VD_X2=0; VD_SKIP=0; VD_ANCHOR=0
+: > "$VD_MARK"
+if [ -n "$VD_TARGET" ]; then
+  VD_OUT="$(
+    eval "$(declare -f va_fm_pairs | sed '1s/^va_fm_pairs/va_fm_pairs_unshadowed/')"
+    va_fm_pairs() {
+      if [ "${2:-}" = "$VD_TARGET" ]; then printf 'x\n' >> "$VD_MARK"; return 0; fi
+      va_fm_pairs_unshadowed "$@"
+    }
+    va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1
+  )"; VD_RC=$?
+  VD_HITS="$(awk 'END { print NR + 0 }' "$VD_MARK")"
+  # Prefix match on the literal path rather than a regex: the path carries `/` and `.`, and
+  # `.` in a regex matches anything, so a regex arm would report a hit it did not observe.
+  VD_X2="$(awk -v p="FINDING X2 $VD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$VD_OUT")"
+  VD_SKIP="$(awk -v p="SKIP $VD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$VD_OUT")"
+fi
+[ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && VD_ANCHOR=1
+if [ -n "$VD_TARGET" ] && [ "$VD_HITS" -ge 1 ] && [ "$VD_ANCHOR" -eq 1 ] \
+   && [ "$VD_RC" -ne 0 ] && [ "$VD_X2" -eq 1 ] && [ "$VD_SKIP" -eq 0 ]; then
+  PASS "CTL-VA-DEGRADE: MUST FIRE — with the frontmatter read for ${VD_TARGET##*/} shadowed to return empty at rc 0 (the transient-read signature, injected $VD_HITS time(s)), the run FAILS CLOSED (rc=$VD_RC) with one X2 naming that path and no SKIP for it, while the identical unshadowed run over the same fixture returned rc=0 with $DR_A_SEL of $DR_N selected. A read that did not complete and a frontmatter that declares no version are now two facts with two verdicts"
+else
+  FAIL "CTL-VA-DEGRADE: MUST FIRE — a degraded frontmatter read did not fail closed (target=${VD_TARGET:-<none>} shadow-invoked=$VD_HITS rc=$VD_RC x2-on-target=$VD_X2 skip-on-target=$VD_SKIP unshadowed-anchor=$VD_ANCHOR). Read the limbs in order: no target or shadow-invoked=0 means the injection never landed and this arm measured nothing; unshadowed-anchor=0 means CTL-DATAROOT2 is the arm to read, because agreement over a degenerate subject proves nothing; otherwise the validator converted an incomplete read into a quieter verdict at rc=0 — the artifact left the gate unchecked and the run reported success"
+fi
+
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
 # measuring is not a control. Graded LAST, after every fixture above.
 if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-copy.md" ] \
