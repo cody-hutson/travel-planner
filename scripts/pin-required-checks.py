@@ -910,6 +910,9 @@ def _synth_workflow(jobs, indent=2, lead=()):
     comment block whose marker is not the block's first line, one whose marker
     sits at an indentation that is not the job's, or -- where `lead` carries a
     marker and `posture` is set too -- one carrying two contradictory markers.
+
+    `key` is interpolated VERBATIM, so an arm models a quoted job key by passing
+    the quotes inside the key string. Nothing here needs to know about quoting.
     """
     pad, prop, item = " " * indent, " " * (indent * 2), " " * (indent * 3)
     out = ["name: Synthetic", "", "on:", "  pull_request:", "", "jobs:"]
@@ -1019,6 +1022,62 @@ def census_arms():
         [("new-suite", "New suite (test-new-suite.sh)", "required")],
         lead=["  # gate-efficacy: posture=advisory"])
 
+    # X13-X19 grade the reader's KEY-level and FILE-level contracts. Every input
+    # below is valid YAML and a real job, and all seven were constructed and then
+    # MEASURED against the reader that shipped: five reached CENSUS CLEAN at exit
+    # 0, and the other two were graded under a name no line of the file carries.
+    #
+    # X13-X16 are one family. The legal job-ID charset is [A-Za-z0-9_-], so no
+    # legal job ID can carry a quoting escape -- which makes an optionally-quoted
+    # key EXHAUSTIVE over the legal domain rather than a patch for two examples.
+    # X17-X19 are the other: three different causes, one signature -- the file
+    # contributed zero job records and nothing said so.
+    quoted_key = dict(base)
+    quoted_key[".github/workflows/synth-quoted.yml"] = _synth_workflow(
+        [('"new-suite"', "New suite (test-new-suite.sh)", "required")])
+
+    single_quoted = dict(base)
+    single_quoted[".github/workflows/synth-squoted.yml"] = _synth_workflow(
+        [("'new-suite'", "New suite (test-new-suite.sh)", "required")])
+
+    phantom_marker = dict(base)
+    phantom_marker[".github/workflows/synth-phantom.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        '  "new-suite":\n'
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    # gate-efficacy: posture=advisory\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    flow_steps = dict(base)
+    flow_steps[".github/workflows/synth-flowsteps.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        '  "new-suite":\n'
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps: [{run: 'true'}]\n")
+
+    flow_jobs = dict(base)
+    flow_jobs[".github/workflows/synth-flowjobs.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\n"
+        "jobs: {new-suite: {name: New suite (test-new-suite.sh), "
+        "runs-on: ubuntu-latest, steps: [{run: 'true'}]}}\n")
+
+    quoted_jobs = dict(base)
+    quoted_jobs[".github/workflows/synth-quotedjobs.yml"] = _synth_workflow(
+        [("new-suite", "New suite (test-new-suite.sh)", "required")]).replace(
+            "\njobs:\n", '\n"jobs":\n')
+
+    no_key = dict(base)
+    no_key[".github/workflows/synth-nokey.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite: {name: New suite (test-new-suite.sh), "
+        "runs-on: ubuntu-latest, steps: [{run: 'true'}]}\n")
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -1056,6 +1115,40 @@ def census_arms():
                 "binding the stale `advisory` returns CLEAN over a job that "
                 "claims to bind. Two answers is not an answer",
          two_markers, 1, {"UNDECLARED"}),
+        ("X13", "READER: a DOUBLE-QUOTED job key. A reader that requires a bare key "
+                "does not merely miss it -- it keeps scanning for the block's key "
+                "indentation, finds the job's own `steps:`, and records a PHANTOM job "
+                "named `steps` which it then grades. The real job ships unregistered "
+                "under a finding that names a line of the file that is not a job",
+         quoted_key, 1, {"UNREGISTERED"}),
+        ("X14", "READER: a SINGLE-QUOTED job key -- the other alternative of the "
+                "matched-quote form. Without its own arm that alternative is "
+                "unexercised, and a pattern admitting only the double quote would "
+                "pass every other arm in this list",
+         single_quoted, 1, {"UNREGISTERED"}),
+        ("X15", "FAIL-OPEN: a quoted key whose phantom `steps:` carries a comment "
+                "directly above it. The phantom BINDS that marker at its own "
+                "indentation, reads `advisory`, and the census reaches CLEAN at exit "
+                "0 over a job claiming to bind -- measured, not supposed",
+         phantom_marker, 1, {"UNREGISTERED"}),
+        ("X16", "FAIL-OPEN: a quoted key whose `steps:` is a flow sequence, so the "
+                "block holds no bare `key:` line at all and the whole file is dropped "
+                "in silence. One ordinary formatting choice reaches it",
+         flow_steps, 1, {"UNREGISTERED"}),
+        ("X17", "FILE-LEVEL: a flow-style `jobs: {...}` mapping. Nothing is quoted "
+                "and no key is hidden -- the file simply carries no line this reader "
+                "can start from, so it contributed zero records under a summary that "
+                "reports a file count and a job count and never their correspondence",
+         flow_jobs, 2, set()),
+        ("X18", "FILE-LEVEL: a quoted `\"jobs\":` key. Same signature, different "
+                "cause -- which is why the guard is a set difference over files "
+                "rather than a list of the shapes anyone has thought of",
+         quoted_jobs, 2, set()),
+        ("X19", "FILE-LEVEL: a bare `jobs:` whose job key carries a flow mapping on "
+                "its own line, so no `key:` line exists for the reader to find. The "
+                "third of the three silent skips in `census_scan`, and the one the "
+                "quoted-key widening does NOT reach",
+         no_key, 2, set()),
     ]
 
 
@@ -1264,6 +1357,48 @@ def self_test(stream=sys.stdout):
         out("  PASS E3: the four-space arm scans {} job(s) -- the baseline's {} plus "
             "the one indented four spaces. The reader takes the indentation from "
             "the file rather than assuming it".format(want_seen, baseline_jobs))
+
+    by_id = {a[0]: a[2] for a in c_arms}
+
+    # E4 asserts the KEY the reader recorded, not how many keys it recorded, and
+    # that difference IS the guard. Under the reader that shipped, X13 also scans
+    # EXPECTED_COUNT + 2 records -- the phantom `steps` counts as one -- so an
+    # E3-style population guard PASSES on the defect. The name is what separates
+    # them: `steps` is a line of the file that is not a job; `new-suite` is the
+    # job. Both quoting characters are asserted, because they are two independent
+    # alternatives of one pattern and an assertion over one establishes nothing
+    # about the other.
+    for aid, rel in (("X13", ".github/workflows/synth-quoted.yml"),
+                     ("X14", ".github/workflows/synth-squoted.yml")):
+        with tempfile.TemporaryDirectory(prefix="prc-census-") as root:
+            _materialise(by_id[aid], root)
+            got_keys = sorted(j["key"] for j in census_scan(root) if j["file"] == rel)
+        if got_keys != ["new-suite"]:
+            failures.append("E4/{}: scanned key(s) {} -- want ['new-suite']. A quoted "
+                            "key was not read as the job it is".format(aid, got_keys))
+            out("  FAIL E4/{}: scanned key(s) {} -- want ['new-suite']".format(
+                aid, got_keys))
+        else:
+            out("  PASS E4/{}: the quoted-key file scans as exactly ['new-suite'] -- "
+                "the job the file declares, under the name the file gives it".format(
+                    aid))
+
+    # E5 discriminates the per-file refusal from X8's empty-population refusal.
+    # Both exit 2, so without this an arm asserting rc 2 could be satisfied by
+    # either. Each of these arms must refuse a population it DID partly read --
+    # the baseline's own jobs, entire, with the added file contributing nothing.
+    want_partial = EXPECTED_COUNT + 1
+    for aid in ("X17", "X18", "X19"):
+        if seen.get(aid) != want_partial:
+            failures.append("E5/{}: scanned {} job(s), want {} -- the refusal is not "
+                            "over a partly-read tree, so it re-measures X8's "
+                            "empty-population refusal rather than this guard".format(
+                                aid, seen.get(aid), want_partial))
+            out("  FAIL E5/{}: scanned {} job(s), want {}".format(
+                aid, seen.get(aid), want_partial))
+        else:
+            out("  PASS E5/{}: refuses over {} job(s) it had already read -- a "
+                "partly-read tree, not X8's empty one".format(aid, want_partial))
 
     out("")
     out("-" * 78)
