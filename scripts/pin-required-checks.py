@@ -337,6 +337,17 @@ def _bind_marker(lines, i, job_indent):
     -- the whole mechanism by which a future author is stopped -- silently
     becomes `advisory`.
 
+    More than one marker line inside that block is AMBIGUOUS, and ambiguity is
+    tested before binding rather than after. Whichever end a rule binds it
+    discards the other end in silence, so the tool declines to choose -- and
+    the order an editing accident produces is what makes declining the safe
+    answer rather than the cautious one. A contributor ADDING a marker writes
+    it against the job key, which puts the new line at the BOTTOM of the block
+    and leaves the stale one on top: a first-line rule then binds the line the
+    author just superseded and reports it as a confident answer. Where the
+    superseded line reads `advisory`, that answer is a CLEAN verdict over a job
+    that claims to bind -- the exact failure this whole mode exists to end.
+
     `note` explains a marker that is present and did not bind, so that case
     reads differently from a job with no marker at all. Both are UNDECLARED;
     only one of them is a contributor who tried.
@@ -345,14 +356,28 @@ def _bind_marker(lines, i, job_indent):
     if top is None:
         return (None, None)
 
+    markers = [k for k in range(top, i) if _RE_MARKER.match(lines[k])]
+
+    if len(markers) > 1:
+        return (None, "the comment block above this job carries {} `# gate-efficacy: "
+                      "posture=` lines ({}). Two answers is not an answer, so neither "
+                      "binds -- leave exactly one, and delete the line it replaces "
+                      "rather than writing a second beneath it".format(
+                          len(markers),
+                          ", ".join(
+                              "{!r} {}".format(
+                                  _RE_MARKER.match(lines[k]).group(2),
+                                  "on the block's first line" if k == top
+                                  else "{} line(s) below it".format(k - top))
+                              for k in markers)))
+
     first = _RE_MARKER.match(lines[top])
     if first and len(first.group(1)) == job_indent:
         return (first.group(2), None)
 
-    for k in range(top, i):
+    if markers:
+        k = markers[0]
         found = _RE_MARKER.match(lines[k])
-        if not found:
-            continue
         if k != top:
             return (None, "a `# gate-efficacy: posture=` line sits inside the comment "
                           "block above this job but is not that block's first line. A "
@@ -563,12 +588,13 @@ def run_census(root, stream=sys.stdout):
         out("  ABSENT        the declaration carries a context no job claims. The job was")
         out("                renamed or removed; protection now waits on a check that")
         out("                can never report.")
-        out("  UNDECLARED    a job has not answered the question. Put")
+        out("  UNDECLARED    a job has not answered the question. Put exactly ONE")
         out("                `# gate-efficacy: posture=required` or `=advisory` as the")
         out("                FIRST line of the comment block directly above its job")
         out("                key, indented to match the key. A marker anywhere else in")
         out("                that block answers for no job -- otherwise a comment that")
-        out("                merely documents this grammar would answer for one.")
+        out("                merely documents this grammar would answer for one -- and")
+        out("                a SECOND marker is two answers, so it is read as none.")
     else:
         out("CENSUS CLEAN -- every job declares a posture, and the set of jobs claiming")
         out("required is set-equal to CONTEXT_ORDER in both directions.")
