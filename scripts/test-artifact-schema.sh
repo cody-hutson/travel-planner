@@ -3264,6 +3264,15 @@ DR_B_OUT=""; DR_B_RC=0; DR_B_SEL=0; DR_B_A2=0; DR_B_X2SCOPE=0
 DR_C_OUT=""; DR_C_RC=0; DR_C_SEL=0; DR_C_A2=0; DR_C_X2DOC=0; DR_C_X2SCOPE=0
 DR_D_OUT=""; DR_D_RC=0; DR_D_SEL=0; DR_D_MSG=0
 DR_E_OUT=""; DR_E_RC=0; DR_E_SAME=0; DR_E_ANCHOR=0; DR_C_SHAPE=0; DR_C_ANCHOR=0
+# ── THE A AND E CAPTURES SEPARATE THE TWO STREAMS, and that is STRICTER rather than looser.
+# Both were `2>&1`, so two IDENTICAL non-empty stderr blobs compared equal and passed
+# unnoticed — the comparison could not tell a clean run from a run that complained twice in
+# the same words. Split, stdout keeps the meaning CTL-DATAROOT2/3/4 already parse (stderr is
+# empty on the clean path, so those arms are unmoved), and emptiness of stderr becomes a
+# limb in its own right. B, C and D keep their merged captures deliberately: CTL-DATAROOT5's
+# subject IS a message this script writes to stderr.
+DR_A_ERRF="$WORK/dr_a_stderr"; DR_E_ERRF="$WORK/dr_e_stderr"
+DR_A_ERR=""; DR_E_ERR=""; DR_E_QUIET=0
 
 # dr_declares <file> — rc 0 when the file opens with a frontmatter block carrying an
 # `artifact:` key before the block closes. A read of the fixture's own bytes, independent of
@@ -3304,6 +3313,25 @@ dr_pattern_hits() {   # dr_pattern_hits <path> -> how many corpus path-patterns 
 $(va_corpus_patterns "$DR_ENGINE")
 EOF
   printf '%s' "$n"
+}
+# dr_linediff <a> <b> — the lines on which two captures differ, each side shown, capped.
+# Written here rather than shelled out to diff(1): this suite declares itself pure bash and
+# POSIX text processing, the captures it compares are a handful of lines each, and a
+# dependency added for a FAIL path is a dependency that first fails on the day it is needed.
+dr_linediff() {
+  awk -v a="$1" -v b="$2" '
+    BEGIN {
+      na = split(a, A, "\n"); nb = split(b, B, "\n")
+      n = (na > nb ? na : nb)
+      for (i = 1; i <= n && shown < 12; i++) {
+        if (A[i] != B[i]) {
+          shown++
+          printf "\n        line %d  two-argument form: %s", i, (i <= na ? A[i] : "<absent>")
+          printf "\n        line %d  --data-root= form: %s", i, (i <= nb ? B[i] : "<absent>")
+        }
+      }
+      if (shown == 0) printf "\n        (the two agree line for line; they differ in trailing bytes)"
+    }'
 }
 dr_field() {   # dr_field <output> <line-key> <field> -> the integer, or 0 when the line is absent
   local v
@@ -3364,7 +3392,8 @@ fi
 
 # The subject run, once; the arms read it. The same trip path, the same corpus root, the
 # same scope for every run below — only the data root moves.
-DR_A_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_A_RC=$?
+DR_A_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>"$DR_A_ERRF")"; DR_A_RC=$?
+DR_A_ERR="$(cat "$DR_A_ERRF")"
 DR_A_SEL="$(dr_field "$DR_A_OUT" POPULATION selected)"
 DR_A_VAL="$(dr_field "$DR_A_OUT" PREDICATE validated)"
 DR_A_SKP="$(dr_field "$DR_A_OUT" PREDICATE skipped)"
@@ -3432,19 +3461,39 @@ fi
 
 # CTL-DATAROOT6 — the second spelling. The seam is taught once and typed on two scripts,
 # so `--data-root=<dir>` must be the same seam and not a second, unknown flag.
-DR_E_OUT="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_E_RC=$?
-# Agreement is only evidence over a NON-DEGENERATE subject: two spellings that agree on a
-# broken seam prove nothing about the spelling, so the anchor to CTL-DATAROOT2 is graded as
-# its own limb and named in the FAIL.
-DR_E_SAME=0; DR_E_ANCHOR=0
+#
+# ── THIS IS THE SUITE'S ONLY BYTE COMPARISON OF TWO WHOLE RUNS, AND ITS FAIL MUST SAY SO ──
+# Every other assertion here grades a PROPERTY — a count, an rc, a finding code. This one
+# compares two complete invocations, which makes it the only arm that can notice a run
+# degrading in a way no property names: a capture that comes back empty changes a count no
+# other arm reads, inside an invocation no other arm repeats. That sensitivity is the point
+# and it is kept.
+#
+# What was missing was the EVIDENCE. Its FAIL printed neither capture, so an occurrence
+# could not be attributed from its own log — the failure said the two differed and threw
+# away the only record of how. It now prints both rcs, both stdouts, both stderrs and the
+# line-level difference, so the next occurrence is diagnosable from the run that produced it.
+DR_E_OUT="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>"$DR_E_ERRF")"; DR_E_RC=$?
+DR_E_ERR="$(cat "$DR_E_ERRF")"
+# Three limbs, each named in its own FAIL. SAME is the comparison itself; QUIET is the limb
+# the stream split buys, and it is strictly stricter than what the merged capture graded;
+# ANCHOR is the non-degeneracy tie to CTL-DATAROOT2, because two spellings that agree on a
+# broken seam prove nothing about the spelling.
+DR_E_SAME=0; DR_E_QUIET=0; DR_E_ANCHOR=0
 [ "$DR_E_RC" -eq "$DR_A_RC" ] && [ "$DR_E_OUT" = "$DR_A_OUT" ] && DR_E_SAME=1
+[ ! -s "$DR_A_ERRF" ] && [ ! -s "$DR_E_ERRF" ] && DR_E_QUIET=1
 [ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && DR_E_ANCHOR=1
-if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
-  PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0) — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts"
+if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_QUIET" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
+  PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0), and BOTH runs wrote nothing to stderr — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts. The streams are compared separately, so two identical non-empty stderr blobs can no longer agree their way past this arm"
 elif [ "$DR_E_SAME" -ne 1 ]; then
-  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form (rc=$DR_E_RC vs $DR_A_RC, outputs differ) — an operator who learned the seam on the sibling script types it here and is refused or misread"
+  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form. rc: two-argument=$DR_A_RC, --data-root==$DR_E_RC. stdout bytes: $(printf '%s' "$DR_A_OUT" | wc -c | tr -d ' ') against $(printf '%s' "$DR_E_OUT" | wc -c | tr -d ' ').$(dr_linediff "$DR_A_OUT" "$DR_E_OUT")
+        two-argument stderr: [${DR_A_ERR:-<empty>}]
+        --data-root= stderr: [${DR_E_ERR:-<empty>}]
+        Both at rc=0 with the stdouts differing is the transient-degradation signature: some capture inside ONE of these two invocations came back empty and the run reported a quieter verdict instead of a failure. Read the differing line above — a moved count names the read that failed. An operator who learned the seam on the sibling script types it here and is refused or misread"
+elif [ "$DR_E_QUIET" -ne 1 ]; then
+  FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but one or both wrote to stderr on a path that must be silent — two-argument [${DR_A_ERR:-<empty>}], --data-root= [${DR_E_ERR:-<empty>}]. A clean run over this fixture emits nothing there, so this is a subprocess complaining where the merged capture used to hide it behind an equal comparison"
 else
-  FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
+  FAIL "CTL-DATAROOT6: the two spellings agree on stdout, rc and an empty stderr, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
 fi
 
 # ── CTL-VA-DEGRADE — MUST FIRE. A captured subprocess read that comes back EMPTY is a
