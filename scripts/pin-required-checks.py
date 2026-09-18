@@ -719,7 +719,14 @@ def census_scan(root):
         try:
             with open(path, encoding="utf-8") as fh:
                 lines = fh.read().splitlines()
-        except OSError:
+        except (OSError, UnicodeDecodeError):
+            # A file that is not UTF-8 is a file this reader cannot read, which
+            # is the same thing as one it cannot open: it contributes no record,
+            # the per-file assertion below refuses the tree by name, and
+            # `_unread_reason` says which file and why. Letting the exception
+            # escape instead killed the process before any exit path, so the one
+            # input that produced NO output at all was the one a reader could do
+            # least about.
             continue
 
         start = None
