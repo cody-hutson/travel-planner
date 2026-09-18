@@ -712,11 +712,26 @@ EOF
 # OPTIONAL and DEFAULTS TO <root>, so a pre-seam caller is unchanged.
 va_check_artifact() {
   local root="$1" rel="$2" cid="$3" art="$4" data_root="${5:-$1}"
-  local pairs ver declared rc=0
+  local pairs ver declared fm_body rc=0
 
   if [ ! -r "$data_root/$rel" ]; then
     printf 'FINDING X2 %s file is unreadable\n' "$rel"; return 1
   fi
+
+  # ── WHY THE FRONTMATTER BLOCK IS READ TWICE ──────────────────────────────────────
+  # An empty `pairs` is AMBIGUOUS on its own, and nothing downstream can disambiguate it.
+  # The file may carry no frontmatter block at all — the pre-migration state the tolerant
+  # read exists for — or the read that should have produced the pairs may simply not have
+  # completed. Those are two different facts and they deserve two different verdicts, but
+  # the skip predicate below sees only `ver`, and `ver` is empty in BOTH. This read
+  # establishes which one it was: a file that HAS a block and yields NO pairs did not
+  # answer the question, it failed to answer it.
+  #
+  # It is a second read of bytes va_fm_pairs also reads, and that cost is the price of the
+  # distinction. The alternative — widening va_fm_pairs' contract to report the block's
+  # presence alongside its pairs — changes a function four other call sites depend on for
+  # a fact only this one needs.
+  fm_body="$(va_frontmatter "$data_root/$rel")"
 
   pairs="$(va_fm_pairs "$data_root" "$rel")" || rc=1
   printf '%s\n' "$pairs" | grep '^FINDING ' 2>/dev/null
@@ -727,9 +742,27 @@ va_check_artifact() {
 
   # ── THE SKIP PREDICATE. Cited, not restated:
   #    reference/data-architecture.md -> "Tolerant read" / "The gate's skip predicate".
-  #    absent schema-version => version 0 => SKIP. This is the WHOLE predicate, and the
-  #    gate keys on the absence of that one key and on nothing else.
+  #    absent schema-version => version 0 => SKIP. That is the WHOLE predicate, and the
+  #    gate keys on the absence of that one key GIVEN A SUCCESSFUL READ and on nothing
+  #    else. The qualification is not a second rule: the document's predicate is about what
+  #    an artifact DECLARES, so a read that never delivered the declaration has not reached
+  #    the predicate at all. It is evaluated in the limb immediately below, and the sentence
+  #    above used to omit it because nothing here could tell the two states apart.
   if [ -z "$ver" ]; then
+    # ── THE DEGRADED-READ LIMB. A block that is PRESENT and yielded NOTHING, with no
+    # finding of its own to account for it, is an incomplete read rather than an artifact
+    # declaring no version. X2 is the code this gate already uses for a required input it
+    # could not read, and this fails closed instead of reporting a skip — because a SKIP is
+    # a claim about the artifact, and nothing was learned about the artifact here.
+    #
+    # `rc` is part of the predicate rather than decoration. Where va_fm_pairs already
+    # returned non-zero it has emitted its own A1 naming the malformation, and the block DID
+    # answer — wrongly. Adding X2 on top of that would report one defect twice and name the
+    # wrong cause for it.
+    if [ -n "$fm_body" ] && [ -z "$pairs" ] && [ "$rc" -eq 0 ]; then
+      printf 'FINDING X2 %s frontmatter block is present and the read of it returned nothing -- the read did not complete\n' "$rel"
+      return 1
+    fi
     printf 'SKIP %s %s\n' "$rel" "${cid}"
     return 0
   fi
