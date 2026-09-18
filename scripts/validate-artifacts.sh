@@ -325,18 +325,18 @@ va_fence() {
 # is what makes a hand-written extractor safe here — the extractor's reach IS the contract.
 va_schema_lines() {
   local root="$1" rel="$2" body line key val
-  body="$(va_fence "$root/$rel" 'artifact-schema')"
+  body="$(va_fence "$root/$rel" 'artifact-schema')"   # va-capture: guarded:S2 — an empty fence body is S2 immediately below, on both status and content
   if [ -z "$body" ]; then
     printf 'FINDING S2 %s no artifact-schema fence, or the fence is empty\n' "$rel"
     return 1
   fi
   local rc=0
   while IFS= read -r line; do
-    line="$(va_trim "$line")"
+    line="$(va_trim "$line")"   # va-capture: tolerant(1) — a blank or comment-only schema line trims to nothing; 1,125 such trims on this tree, and no process runs here to fail
     [ -n "$line" ] || continue
     case "$line" in '#'*) continue ;; esac
     case "$line" in
-      *:*) key="$(va_trim "${line%%:*}")"; val="$(va_trim "${line#*:}")" ;;
+      *:*) key="$(va_trim "${line%%:*}")"; val="$(va_trim "${line#*:}")" ;;   # va-capture: tolerant(2) — an empty key or value half is a real schema value; pure parameter expansion, so nothing here can fail to complete
       *)   printf 'FINDING S2 %s line is not <key>: <value> -- %s\n' "$rel" "$line"; rc=1; continue ;;
     esac
     case "$key" in
@@ -395,7 +395,7 @@ va_fm_terminated() {
 # one fact, and picking either silently is the wrong answer to a question the file asks.
 va_fm_pairs() {
   local root="$1" rel="$2" body line key val seen=""
-  body="$(va_frontmatter "$root/$rel")"
+  body="$(va_frontmatter "$root/$rel")"   # va-capture: tolerant(1) — a file carrying no frontmatter block is the pre-migration state the tolerant read exists for; 105 of 161 reads on this tree
   [ -n "$body" ] || return 0
   if ! va_fm_terminated "$root/$rel"; then
     printf 'FINDING A1 %s frontmatter block is not terminated\n' "$rel"
@@ -403,11 +403,11 @@ va_fm_pairs() {
   fi
   local rc=0
   while IFS= read -r line; do
-    line="$(va_trim "$line")"
+    line="$(va_trim "$line")"   # va-capture: tolerant(1) — as the schema-side trim above: blank and comment lines trim to nothing
     [ -n "$line" ] || continue
     case "$line" in '#'*) continue ;; esac
     case "$line" in
-      *:*) key="$(va_trim "${line%%:*}")"; val="$(va_trim "${line#*:}")" ;;
+      *:*) key="$(va_trim "${line%%:*}")"; val="$(va_trim "${line#*:}")" ;;   # va-capture: tolerant(2) — an empty key or value half is a real frontmatter value; pure parameter expansion, nothing to fail
       *)   printf 'FINDING A1 %s field <none> out-of-grammar line -- %s\n' "$rel" "$line"; rc=1; continue ;;
     esac
     # Spelled sets, not ranges — see the VA_LOWER block above. This predicate carried the
@@ -465,7 +465,7 @@ va_type_ok() {
       local inner="${v#[}"; inner="${inner%]}"
       local IFS=','; local item
       for item in $inner; do
-        item="$(va_trim "$item")"
+        item="$(va_trim "$item")"   # va-capture: tolerant(1) — an empty list item is adjudicated by the slug type check below, not by this trim
         va_type_ok slug "$item" || return 1
       done
       return 0 ;;
@@ -484,7 +484,7 @@ va_check_corpus() {
   local root="$1" rc=0
   local classes rel lines cid art ver pats p wit nowit seen_cid="" seen_art="" corpus_ids=""
 
-  classes="$(va_class_rows "$root")" || { printf '%s\n' "$classes"; return 1; }
+  classes="$(va_class_rows "$root")" || { printf '%s\n' "$classes"; return 1; }   # va-capture: guarded:X2 — the file's own worked exemplar: the status is carried AND the emptiness is tested, each with its own X2
   if [ -z "$classes" ]; then
     printf 'FINDING X2 %s no in-model class rows extracted from the class enumeration\n' "$VA_ARCH_DOC"
     return 1
@@ -497,19 +497,19 @@ va_check_corpus() {
 
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    lines="$(va_schema_lines "$root" "$rel")" || rc=1
-    printf '%s\n' "$lines" | grep '^FINDING ' 2>/dev/null
-    lines="$(printf '%s\n' "$lines" | grep -v '^FINDING ' 2>/dev/null)"
+    lines="$(va_schema_lines "$root" "$rel")" || rc=1   # va-capture: guarded:S2 — the status is carried into rc and va_schema_lines names the cause as S2
+    printf '%s\n' "$lines" | grep '^FINDING ' 2>/dev/null   # va-capture: tolerant(1) — the finding-reporting pipeline; a clean schema reports nothing, which is the normal case
+    lines="$(printf '%s\n' "$lines" | grep -v '^FINDING ' 2>/dev/null)"   # va-capture: guarded:S2 — the filter feeding the guarded reads below; a schema that is all findings filters to nothing and S2 has already fired
 
-    cid="$(va_schema_get "$lines" class-id)"
-    art="$(va_schema_get "$lines" artifact)"
-    ver="$(va_schema_get "$lines" schema-version)"
+    cid="$(va_schema_get "$lines" class-id)"   # va-capture: guarded:S1 — an absent class-id is S1 below
+    art="$(va_schema_get "$lines" artifact)"   # va-capture: guarded:S1 — an absent artifact is S1 below
+    ver="$(va_schema_get "$lines" schema-version)"   # va-capture: guarded:S1 — an absent or non-integer schema-version is S1 below
 
     # S1 — the schema's declared identity must agree with § 1.1's row for its class-id.
     local want=""
     case "$cid" in
       C[0-9]|C[0-9][0-9])
-        want="$(printf '%s\n' "$classes" | awk -F'\t' -v n="${cid#C}" '$1 == n { print $2; exit }')" ;;
+        want="$(printf '%s\n' "$classes" | awk -F'\t' -v n="${cid#C}" '$1 == n { print $2; exit }')" ;;   # va-capture: guarded:S1 — an empty want is S1 below; the case arm only assigns for a well-formed class-id
     esac
     if [ -z "$want" ]; then
       printf 'FINDING S1 %s class-id %s names no in-model row of the class enumeration\n' "$rel" "${cid:-<absent>}"; rc=1
@@ -529,7 +529,7 @@ va_check_corpus() {
     fi
 
     # S4 — path-pattern present and inside the declared glob subset.
-    pats="$(va_schema_all "$lines" path-pattern)"
+    pats="$(va_schema_all "$lines" path-pattern)"   # va-capture: guarded:S4 — no path-pattern declared is S4 below
     if [ -z "$pats" ]; then
       printf 'FINDING S4 %s no path-pattern declared\n' "$rel"; rc=1
     else
@@ -555,8 +555,8 @@ EOF
     fi
 
     # S5/S6/S7 — the coverage declaration.
-    wit="$(va_schema_get "$lines" witness)"
-    nowit="$(va_schema_get "$lines" no-witness-because)"
+    wit="$(va_schema_get "$lines" witness)"   # va-capture: tolerant(1) — witness and no-witness-because are mutually exclusive by S7, so exactly one of this pair IS empty for every schema: 1 of 23 here
+    nowit="$(va_schema_get "$lines" no-witness-because)"   # va-capture: tolerant(1) — the complement of the witness read above: 22 of 23 here
     if [ -n "$wit" ] && [ -n "$nowit" ]; then
       printf 'FINDING S7 %s declares both witness and no-witness-because; they are mutually exclusive\n' "$rel"; rc=1
     elif [ -z "$wit" ] && [ -z "$nowit" ]; then
@@ -566,13 +566,13 @@ EOF
         printf 'FINDING S5 %s declared witness %s does not exist\n' "$rel" "$wit"; rc=1
       else
         local wfm
-        wfm="$(va_fm_pairs "$root" "$wit" 2>/dev/null | awk -F'\t' '$1 == "schema-version" { print $2 }')"
+        wfm="$(va_fm_pairs "$root" "$wit" 2>/dev/null | awk -F'\t' '$1 == "schema-version" { print $2 }')"   # va-capture: guarded:S6 — a declared witness carrying no schema-version is S6 below
         if [ -z "$wfm" ]; then
           printf 'FINDING S6 %s declared witness %s carries no schema-version -- coverage regression\n' "$rel" "$wit"; rc=1
         fi
       fi
     fi
-  done <<EOF
+  done <<EOF   # va-capture: guarded:S8 — an empty schema list leaves corpus_ids empty, and every class then has no schema, which is S8 for all of them
 $(va_schema_files "$root")
 EOF
 
@@ -581,8 +581,8 @@ EOF
   local row n cname
   while IFS= read -r row; do
     [ -n "$row" ] || continue
-    n="$(printf '%s\n' "$row" | cut -f1)"
-    cname="$(printf '%s\n' "$row" | cut -f2)"
+    n="$(printf '%s\n' "$row" | cut -f1)"   # va-capture: adjudicated — deny: every row is written by va_class_rows' own printf with six tab fields, so an empty field one means cut did not run
+    cname="$(printf '%s\n' "$row" | cut -f2)"   # va-capture: adjudicated — deny: an empty class name degenerates the S8 membership test below into a match on the boundary double space
     case " $corpus_ids " in
       *" $n "*) : ;;
       *) printf 'FINDING S8 %s/ class C%s (%s) has no schema in the corpus\n' "$VA_SCHEMA_DIR" "$n" "$cname"; rc=1 ;;
@@ -618,16 +618,16 @@ va_corpus_patterns() {
   local acc=""
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    lines="$(va_schema_lines "$root" "$rel" 2>/dev/null | grep -v '^FINDING ')"
-    cid="$(va_schema_get "$lines" class-id)"
-    art="$(va_schema_get "$lines" artifact)"
+    lines="$(va_schema_lines "$root" "$rel" 2>/dev/null | grep -v '^FINDING ')"   # va-capture: adjudicated — deny: a schema that yields no lines contributes no pattern, and that silently shrinks the selector
+    cid="$(va_schema_get "$lines" class-id)"   # va-capture: adjudicated — deny: a pattern row with no class-id is unusable
+    art="$(va_schema_get "$lines" artifact)"   # va-capture: adjudicated — deny: a pattern row with no artifact is unusable
     while IFS= read -r p; do
       [ -n "$p" ] || continue
       acc="${acc}${cid}${VA_TAB}${art}${VA_TAB}${p}${VA_TAB}${rel}${VA_NL}"
-    done <<EOF
+    done <<EOF   # va-capture: adjudicated — deny: a schema contributing no pattern leaves its class unselectable; heredoc-embedded, so the marker is on the opener and the capture is restructured when it is adjudicated
 $(va_schema_all "$lines" path-pattern)
 EOF
-  done <<EOF
+  done <<EOF   # va-capture: adjudicated — deny: an empty schema list builds an empty pattern table and selects nothing; heredoc-embedded, marker on the opener
 $(va_schema_files "$root")
 EOF
   VA_CACHE_ROOT="$root"
@@ -665,7 +665,7 @@ va_population() {
 va_select() {
   local root="$1" scope="${2:-tracked}" dir="${3:-}" data_root="${4:-$1}"
   local pats f best_len best_cid best_art cid art p len plit declared
-  pats="$(va_corpus_patterns "$root")"
+  pats="$(va_corpus_patterns "$root")"   # va-capture: adjudicated — deny: an empty pattern table selects nothing by the path arm and every file falls to the declared arm
   while IFS= read -r f; do
     [ -n "$f" ] || continue
     if va_is_excluded "$f"; then printf 'EXCLUDED\t%s\n' "$f"; continue; fi
@@ -694,14 +694,14 @@ EOF
     fi
     # DECLARED ARM — see the header. A file the path arm did not claim, which declares a
     # class of its own, is resolved anyway rather than leaving the gate unobserved.
-    declared="$(va_fm_pairs "$data_root" "$f" 2>/dev/null | awk -F'\t' '$1 == "artifact" { print $2; exit }')"
+    declared="$(va_fm_pairs "$data_root" "$f" 2>/dev/null | awk -F'\t' '$1 == "artifact" { print $2; exit }')"   # va-capture: tolerant(1) — the declared-arm probe reads every file the path arm did not claim; 94 of 94 come back empty on this tree and each is an UNMATCHED row. Empty is the answer this arm exists to get
     if [ -n "$declared" ]; then
-      cid="$(printf '%s\n' "$pats" | awk -F'\t' -v a="$declared" '$2 == a { print $1; exit }')"
+      cid="$(printf '%s\n' "$pats" | awk -F'\t' -v a="$declared" '$2 == a { print $1; exit }')"   # va-capture: tolerant(1) — an unresolvable class falls back to UNKNOWN by design, which is what raises A2 downstream
       printf '%s\t%s\t%s\tdeclared\n' "${cid:-UNKNOWN}" "$declared" "$f"
       continue
     fi
     printf 'UNMATCHED\t%s\n' "$f"
-  done <<EOF
+  done <<EOF   # va-capture: adjudicated — allow: an empty population is a real measurement the VACUOUS verdict already reports; heredoc-embedded, marker on the opener
 $(va_population "$data_root" "$scope" "$dir")
 EOF
 }
@@ -740,14 +740,14 @@ va_check_artifact() {
   # distinction. The alternative — widening va_fm_pairs' contract to report the block's
   # presence alongside its pairs — changes a function four other call sites depend on for
   # a fact only this one needs.
-  fm_body="$(va_frontmatter "$data_root/$rel")"
+  fm_body="$(va_frontmatter "$data_root/$rel")"   # va-capture: adjudicated — allow: a file with no frontmatter block is the tolerant read's own subject, so only the status is adjudicated
 
-  pairs="$(va_fm_pairs "$data_root" "$rel")" || rc=1
-  printf '%s\n' "$pairs" | grep '^FINDING ' 2>/dev/null
-  pairs="$(printf '%s\n' "$pairs" | grep -v '^FINDING ' 2>/dev/null)"
+  pairs="$(va_fm_pairs "$data_root" "$rel")" || rc=1   # va-capture: tolerant(1) — 11 of 45 on this tree; the degraded-read limb below is what separates an absent block from a failed read, so this site is adjudicated there rather than here
+  printf '%s\n' "$pairs" | grep '^FINDING ' 2>/dev/null   # va-capture: tolerant(1) — the finding-reporting pipeline; a clean artifact reports nothing
+  pairs="$(printf '%s\n' "$pairs" | grep -v '^FINDING ' 2>/dev/null)"   # va-capture: tolerant(1) — the filter feeding the reads below; an artifact whose frontmatter is all findings filters to nothing
 
-  ver="$(printf '%s\n' "$pairs" | awk -F'\t' '$1 == "schema-version" { print $2; exit }')"
-  declared="$(printf '%s\n' "$pairs" | awk -F'\t' '$1 == "artifact" { print $2; exit }')"
+  ver="$(printf '%s\n' "$pairs" | awk -F'\t' '$1 == "schema-version" { print $2; exit }')"   # va-capture: tolerant(1) — an absent schema-version is the whole subject of the tolerant read
+  declared="$(printf '%s\n' "$pairs" | awk -F'\t' '$1 == "artifact" { print $2; exit }')"   # va-capture: tolerant(1) — a file need not declare artifact:; the path arm has already resolved its class
 
   # ── THE SKIP PREDICATE. Cited, not restated:
   #    reference/data-architecture.md -> "Tolerant read" / "The gate's skip predicate".
@@ -794,8 +794,8 @@ va_check_artifact() {
   fi
 
   local lines sver
-  lines="$(va_schema_lines "$root" "$(va_schema_for "$root" "$cid")" 2>/dev/null | grep -v '^FINDING ')"
-  sver="$(va_schema_get "$lines" schema-version)"
+  lines="$(va_schema_lines "$root" "$(va_schema_for "$root" "$cid")" 2>/dev/null | grep -v '^FINDING ')"   # va-capture: deferred(2):#1154 — the nested schema lookup and the capture wrapping it; a nested substitution's status is unrecoverable, so the fix is to un-nest rather than to adjudicate
+  sver="$(va_schema_get "$lines" schema-version)"   # va-capture: deferred:#1154 — read from the same lines capture
 
   # A5 — the file's own declaration must agree with the class that selected it.
   if [ -n "$declared" ] && [ "$declared" != "$art" ]; then
@@ -821,7 +821,7 @@ va_check_artifact() {
     req="${fl%% *}"; fl="${fl#* }"
     typ="${fl%% *}"; enum=""
     case "$fl" in *'['*']'*) enum="${fl#*[}"; enum="${enum%]*}" ;; esac
-    val="$(printf '%s\n' "$pairs" | awk -F'\t' -v k="$name" '$1 == k { print $2; exit }')"
+    val="$(printf '%s\n' "$pairs" | awk -F'\t' -v k="$name" '$1 == k { print $2; exit }')"   # va-capture: tolerant(1) — an optional field that is absent has no value; 20 of 284 field reads on this tree, and A3 below grades a REQUIRED one
     if [ -z "$val" ]; then
       if [ "$req" = "required" ]; then
         printf 'FINDING A3 %s field %s is required by %s and is absent\n' "$rel" "$name" "$art"; rc=1
@@ -835,7 +835,7 @@ va_check_artifact() {
         printf 'FINDING A4 %s field %s value %s is not a valid %s\n' "$rel" "$name" "$val" "$typ"; rc=1
       fi
     fi
-  done <<EOF
+  done <<EOF   # va-capture: deferred:#1154 — the field list consumed from the same lines capture; heredoc-embedded, marker on the opener
 $(va_schema_all "$lines" field)
 EOF
   return $rc
@@ -845,7 +845,7 @@ EOF
 # the memoised pattern table rather than by re-walking the corpus per artifact.
 va_schema_for() {
   local root="$1" cid="$2" rel
-  rel="$(va_corpus_patterns "$root" | awk -F'\t' -v c="$cid" '$1 == c { print $4; exit }')"
+  rel="$(va_corpus_patterns "$root" | awk -F'\t' -v c="$cid" '$1 == c { print $4; exit }')"   # va-capture: deferred:#1154 — va_schema_for's own body capture, the head of that chain
   [ -n "$rel" ] || return 1
   printf '%s' "$rel"
 }
@@ -891,7 +891,7 @@ va_main() {
     esac
   done
   if [ -z "$root" ]; then
-    root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # va-capture: adjudicated(2) — deny: a root that does not resolve makes every read below relative to the wrong tree
   fi
 
   # ── THE DATA ROOT. An ARGUMENT and never an environment variable, for the reason
@@ -919,7 +919,7 @@ va_main() {
     if [ ! -d "$data_root" ] || [ ! -r "$data_root" ]; then
       printf -- '--data-root is not a readable directory: %s\n' "$data_root" >&2; return 2
     fi
-    data_root="$(cd "$data_root" && pwd)"
+    data_root="$(cd "$data_root" && pwd)"   # va-capture: guarded:X2 — preceded by the -d and -r tests immediately above, which refuse at rc 2 before this runs
   else
     data_root="$root"
   fi
@@ -976,26 +976,26 @@ va_main() {
   local va_cache_root_in="$VA_CACHE_ROOT" va_cache_patterns_in="$VA_CACHE_PATTERNS"
   va_corpus_patterns "$root" >/dev/null
 
-  out="$(va_check_corpus "$root")" || rc=1
+  out="$(va_check_corpus "$root")" || rc=1   # va-capture: tolerant(1) — a clean corpus emits nothing; 1 of 1 on this tree, and the status is already carried into rc
   [ -n "$out" ] && printf '%s\n' "$out"
 
-  sel="$(va_select "$root" "$scope" "$dir" "$data_root")"
+  sel="$(va_select "$root" "$scope" "$dir" "$data_root")"   # va-capture: adjudicated — allow: an empty selection is a real measurement the VACUOUS verdict reports, and the local-trip arm over an empty directory is exactly that
   local nsel nexc nunm nskip=0 nver=0
   # Counted with awk on the TAB-delimited field, never with a shell pattern carrying a
   # literal tab: a tab inside shell quoting is invisible in a diff and one editor pass
   # that converts it to spaces would silently zero this denominator.
-  nsel="$(printf '%s\n' "$sel" | awk -F'\t' 'NF>1 && $1!="EXCLUDED" && $1!="UNMATCHED" {n++} END{print n+0}')"
-  nexc="$(printf '%s\n' "$sel" | awk -F'\t' '$1=="EXCLUDED" {n++} END{print n+0}')"
-  nunm="$(printf '%s\n' "$sel" | awk -F'\t' '$1=="UNMATCHED" {n++} END{print n+0}')"
+  nsel="$(printf '%s\n' "$sel" | awk -F'\t' 'NF>1 && $1!="EXCLUDED" && $1!="UNMATCHED" {n++} END{print n+0}')"   # va-capture: impossible(1) — awk's END{print n+0} always emits; empty here would mean awk did not run at all
+  nexc="$(printf '%s\n' "$sel" | awk -F'\t' '$1=="EXCLUDED" {n++} END{print n+0}')"   # va-capture: impossible(1) — as the selected count above
+  nunm="$(printf '%s\n' "$sel" | awk -F'\t' '$1=="UNMATCHED" {n++} END{print n+0}')"   # va-capture: impossible(1) — as the selected count above
 
   local line cid art path arm res
   while IFS= read -r line; do
-    cid="$(printf '%s\n' "$line" | cut -f1)"
+    cid="$(printf '%s\n' "$line" | cut -f1)"   # va-capture: adjudicated — deny: field one of a row va_select wrote unconditionally; empty means cut did not run, and the case below then skips the artifact while the POPULATION line still reads correct
     case "$cid" in ''|EXCLUDED|UNMATCHED) continue ;; esac
-    art="$(printf '%s\n' "$line" | cut -f2)"
-    path="$(printf '%s\n' "$line" | cut -f3)"
-    arm="$(printf '%s\n' "$line" | cut -f4)"
-    res="$(va_check_artifact "$root" "$path" "$cid" "$art" "$data_root")" || rc=1
+    art="$(printf '%s\n' "$line" | cut -f2)"   # va-capture: adjudicated — allow: the artifact name is carried into messages only
+    path="$(printf '%s\n' "$line" | cut -f3)"   # va-capture: adjudicated — deny: this is the path the artifact is read from; empty means the wrong file, or none, is checked
+    arm="$(printf '%s\n' "$line" | cut -f4)"   # va-capture: adjudicated — allow: the arm is carried into the SKIP line only
+    res="$(va_check_artifact "$root" "$path" "$cid" "$art" "$data_root")" || rc=1   # va-capture: tolerant(1) — a clean artifact emits nothing; 34 of 45 on this tree, and the status is already carried into rc
     case "$res" in
       'SKIP '*) nskip=$((nskip+1)); printf '%s (arm: %s)\n' "$res" "$arm" ;;
       *) nver=$((nver+1)); [ -n "$res" ] && printf '%s\n' "$res" ;;

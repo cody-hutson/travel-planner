@@ -3648,6 +3648,120 @@ else
   FAIL "CTL-VA-MEMO: the corpus cache is not holding for the invocation (calls=$VM_CALLS cold=$VM_COLD neutral=$VM_SAME rc=$VM_RC). calls<2 means the pattern builder was reached at most once, so 'one cold parse' would be a statement about a run that never consulted the cache rather than about the cache; cold>1 means the warm is not reaching the subshells and the corpus is being re-parsed per artifact; neutral=0 means the counting shadow changed the answer, so the count above measures the instrument"
 fi
 
+# ── CTL-VA-CAPTURE-CENSUS — every captured subprocess read in the validator is ACCOUNTED FOR,
+# in both directions: a site with no classification fails, and a classification naming no site
+# fails too.
+#
+# ── WHY A CENSUS AND NOT A SWEEP ─────────────────────────────────────────────────
+# The validator captures subprocess output into variables at 58 sites, and `set -o pipefail`
+# already makes `$?` the producer's status at every one of them — so the status is available
+# and nobody reads it. The obvious remedy, fail whenever a capture comes back empty, is the
+# WRONG one and the measurement says so: empty is a LEGITIMATE answer at 21 of those sites,
+# 1,393 times on a clean tree. A naive empty-implies-failure sweep emits 94 findings at the
+# declared-arm probe alone. So the classification comes first and the remedy follows it.
+#
+# What this arm grades is the classification's COMPLETENESS, never its correctness. A
+# confidently-wrong marker passes here; that is what CTL-VA-TOLERANCE-PRESERVED and the
+# fail-closed arms are for. What it makes impossible is a capture added later with no
+# classification at all — which is how a census stops being a one-time cleanup that rots.
+#
+# THE MARKER SITS ON THE LINE IT CLASSIFIES, with one stated exception: a capture inside a
+# here-document BODY cannot carry a trailing `#`, because there it would be data rather than a
+# comment. Those are attributed to the line that OPENED the body, which is the line directly
+# above them and is unambiguous.
+VC_SQ="'"
+VC_PIPE="| grep '^FINDING '"
+# va_census_report <source-text> — "TOTAL <sites> <marker-lines>" first, then one row per
+# finding. The site detector is the one the census was taken with: a `$(` that is not `$((`,
+# on a line that is not a comment, with here-document bodies attributed to their opener.
+va_census_report() {
+  awk -v SQ="$VC_SQ" -v PIPE="$VC_PIPE" '
+    function subs(s,   n, i) {
+      n = 0
+      while ((i = index(s, "$(")) > 0) {
+        if (substr(s, i + 2, 1) == "(") { s = substr(s, i + 3) } else { n++; s = substr(s, i + 2) }
+      }
+      return n
+    }
+    function opener(s,   tail) {
+      if (match(s, /<<-?[^<]*$/) == 0) return ""
+      tail = substr(s, RSTART + 2)
+      sub(/^-/, "", tail)
+      sub(/[ \t]*#.*$/, "", tail)
+      gsub(/[ \t"]/, "", tail)
+      gsub(SQ, "", tail)
+      if (tail ~ /^[A-Za-z_][A-Za-z0-9_]*$/) return tail
+      return ""
+    }
+    {
+      line = $0
+      if (hd != "") {
+        if (line == hd) { hd = ""; next }
+        n = subs(line); if (n > 0) { sites[hdline] += n; total += n }
+        next
+      }
+      s = line; sub(/^[ \t]+/, "", s)
+      if (substr(s, 1, 1) != "#") {
+        n = subs(line)
+        if (n == 0 && index(line, PIPE) > 0) n = 1
+        if (n > 0) { sites[NR] += n; total += n }
+        i = index(line, "# va-capture:")
+        if (i > 0) {
+          markers[NR] = 1; mlines++
+          rest = substr(line, i + 13)
+          sub(/^[ \t]+/, "", rest)
+          split(rest, F, /[ \t]+/); tok = F[1]
+          cnt = 1
+          if (match(tok, /\([0-9]+\)/)) cnt = substr(tok, RSTART + 1, RLENGTH - 2) + 0
+          cls = tok; sub(/[(:].*$/, "", cls)
+          declared[NR] = cnt; klass[NR] = cls
+          reason[NR] = (length(rest) > length(tok) + 4)
+          text[NR] = tok
+        }
+        t = opener(line)
+        if (t != "") { hd = t; hdline = NR }
+      }
+      keep[NR] = line
+    }
+    END {
+      printf "TOTAL\t%d\t%d\n", total + 0, mlines + 0
+      for (i = 1; i <= NR; i++) {
+        if (sites[i] > 0 && !markers[i]) printf "UNMARKED\t%d\t%s\n", i, substr(keep[i], 1, 90)
+        if (markers[i] && !(sites[i] > 0)) printf "UNCOUNTED\t%d\t%s\n", i, text[i]
+        if (sites[i] > 0 && markers[i] && declared[i] != sites[i]) printf "MISCOUNT\t%d\tdeclared=%d detected=%d\n", i, declared[i], sites[i]
+        if (markers[i] && klass[i] != "adjudicated" && klass[i] != "tolerant" && klass[i] != "impossible" && klass[i] != "guarded" && klass[i] != "deferred") printf "BADCLASS\t%d\t%s\n", i, text[i]
+        if (markers[i] && !reason[i]) printf "NOREASON\t%d\t%s\n", i, text[i]
+      }
+    }' <<<"$1"
+}
+VC_SRC="$(cat "$SELF_VALIDATOR" 2>/dev/null)"
+VC_PROBE='zzq_census_probe="$(printf %s x)"'
+VC_RPT="$(va_census_report "$VC_SRC")"
+VC_SITES="$(awk -F'\t' '$1 == "TOTAL" { print $2; exit }' <<<"$VC_RPT")"
+VC_MLINES="$(awk -F'\t' '$1 == "TOTAL" { print $3; exit }' <<<"$VC_RPT")"
+VC_BAD="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { n++ } END { print n + 0 }' <<<"$VC_RPT")"
+# The two control arms, on a COPY of the source text — a string in this shell, never the file
+# and never the tree, the same discipline CTL-ST-COV1 uses. Sensitivity: an unmarked capture
+# must be reported. Specificity: the SAME line carrying a marker must not be.
+VC_MUT_BAD="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { n++ } END { print n + 0 }' <<<"$(va_census_report "$VC_SRC
+$VC_PROBE")")"
+VC_OK_BAD="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { n++ } END { print n + 0 }' <<<"$(va_census_report "$VC_SRC
+$VC_PROBE   # va-capture: tolerant(1) — a synthetic probe line, marked, for the specificity arm")")"
+if [ -z "$VC_SRC" ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: the validator source read back empty, so the census below would be a statement over nothing"
+elif [ "$VC_SITES" -lt 1 ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: the site detector found 0 captures in a $(printf '%s' "$VC_SRC" | wc -l | tr -d ' ')-line file — the detector has stopped seeing the construct it counts, so its accounting proves nothing"
+elif [ "$VC_MUT_BAD" -ne $((VC_BAD + 1)) ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: SENSITIVITY — an unmarked capture appended to a copy of the source took the finding count from $VC_BAD to $VC_MUT_BAD rather than to $((VC_BAD + 1)). The census does not respond to a known hole, so its own zero says nothing"
+elif [ "$VC_OK_BAD" -ne "$VC_BAD" ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: SPECIFICITY — the SAME appended line carrying a marker took the finding count from $VC_BAD to $VC_OK_BAD. The census is reporting the line rather than its classification, so its findings are not measurements"
+elif [ "$VC_BAD" -ne 0 ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: $VC_BAD capture site(s) or marker(s) are unaccounted for. UNMARKED is a capture with no classification; UNCOUNTED is a classification naming no capture; MISCOUNT is a line whose declared count and detected count disagree; BADCLASS is a class outside the five; NOREASON is a marker with no reason on it —
+$(printf '%s\n' "$VC_RPT" | awk -F'\t' '$1 != "TOTAL" { printf "        %s line %s: %s\n", $1, $2, $3 }')"
+else
+  PASS "CTL-VA-CAPTURE-CENSUS: all $VC_SITES capture site(s) across $VC_MLINES marked line(s) in the validator are accounted for, in both directions — every site carries a classification, every classification names a site, and every declared count matches its line's detected count. Both control arms fired on a copy of the source: an unmarked capture is reported, and the same line with a marker is not"
+fi
+
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
 # measuring is not a control. Graded LAST, after every fixture above.
 if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-copy.md" ] \
