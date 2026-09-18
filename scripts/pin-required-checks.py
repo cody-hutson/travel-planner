@@ -65,7 +65,13 @@ MODES
         what --apply below performs. The census makes an omission visible; it
         cannot make one impossible.
 
-        Exit 0 clean / 1 finding(s) / 2 no jobs found.
+        WHICH FORMS IT CAN READ is a separate limit from the one above, and it
+        is stated in full in the limit block the census prints on EVERY exit
+        path -- including the one shape that escapes both the reader and its
+        own refusal. It is not restated here.
+
+        Exit 0 clean / 1 finding(s) / 2 REFUSED -- no jobs at all, or a
+        workflow file that was walked and yielded no job record.
 
     --assert --stdin | --assert --file PATH
         The four-conjunct assertion alone, over a protection object or over a
@@ -90,7 +96,9 @@ EXIT CODES
     0  the mode's assertion held
     1  an assertion failed
     2  input was malformed (a read that returned a shape with no checks array;
-       for --census, a workflow population with no jobs in it)
+       for --census, a workflow population with no jobs in it, or a workflow
+       file that was walked and yielded no job record -- "I could not read this
+       file" is a refusal, never a finding, so it never shares exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
     5  the self-test did not pass, so no live mode may run
@@ -279,7 +287,18 @@ CENSUS_CODES = ("UNREGISTERED", "ABSENT", "UNDECLARED")
 
 _RE_MARKER = re.compile(r"^(\s*)#\s*gate-efficacy:\s*posture\s*=\s*(\S+)")
 _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
-_RE_KEY = re.compile(r"^(\s+)([A-Za-z0-9_][A-Za-z0-9_.-]*):\s*(#.*)?$")
+# An OPTIONALLY-QUOTED key, with a matched-quote backreference. GitHub restricts
+# a job ID to [A-Za-z0-9_-] beginning with a letter or `_`, so no legal job ID
+# can contain a quoting escape -- which makes this form EXHAUSTIVE over the legal
+# domain rather than a patch for the two examples that were reported. A
+# mismatched-quote line is not valid YAML and is rejected upstream by
+# `Workflow SAST (actionlint)`, which runs in this same job.
+#
+# The groups are NAMED deliberately: adding a group shifts every positional
+# index, and two call sites read them.
+_RE_KEY = re.compile(
+    r"""^(?P<ind>\s+)(?P<q>['"]?)(?P<key>[A-Za-z0-9_][A-Za-z0-9_.-]*)(?P=q):"""
+    r"""\s*(#.*)?$""")
 _RE_NAME = re.compile(r"^(\s+)name:\s*(.+?)\s*$")
 _RE_COMMENT = re.compile(r"^\s*#")
 
@@ -302,12 +321,19 @@ def _block_indent(lines, start, end):
     makes any other valid style invisible, and an invisible job is one that
     ships unregistered under a CLEAN verdict.
 
+    Quoting is the same assumption on a different axis, and getting it wrong
+    here is worse than missing the job: a reader that does not recognise a
+    quoted key does not stop at it, it keeps scanning -- and the next line it
+    DOES recognise is one of that job's own properties. The block's indentation
+    then reads as the property indentation, and the census records a phantom job
+    named after a property, which it goes on to grade instead of the job.
+
     Returns None when the block holds no key line at all.
     """
     for i in range(start, end):
         m = _RE_KEY.match(lines[i])
         if m:
-            return len(m.group(1))
+            return len(m.group("ind"))
     return None
 
 
@@ -463,7 +489,7 @@ def census_scan(root):
                 and _indent_of(lines[i]) == job_indent]
 
         for n, i in enumerate(keys):
-            key = _RE_KEY.match(lines[i]).group(2)
+            key = _RE_KEY.match(lines[i]).group("key")
             stop = keys[n + 1] if n + 1 < len(keys) else end
 
             # The job's own properties share one indentation too, and `name:` is
@@ -533,6 +559,55 @@ _CENSUS_LIMIT = (
 )
 
 
+_RE_JOBS_ISH = re.compile(r"^(['\"]?)jobs\1:")
+
+
+def _unread_reason(path):
+    """Why `census_scan` recorded no job for this file. A DIAGNOSIS, not the guarantee.
+
+    THE GUARANTEE IS THE SET DIFFERENCE IN `run_census`, NOT THIS LIST. That
+    refusal fires whenever a walked file contributed no job record, whatever the
+    cause -- so a shape this helper cannot name still fails closed, and a fourth
+    silent skip added to `census_scan` later degrades the diagnostic without
+    weakening the check. That asymmetry is the whole reason the guard is a set
+    relation over files rather than an enumeration of known-bad shapes: three
+    different shapes already produced this one signature, so a shape list would
+    have been written three times over and still missed the fourth.
+
+    The final branch is therefore not a fallback that should never be reached.
+    It is the honest answer for a cause this helper does not model.
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except (OSError, UnicodeDecodeError):
+        return "it could not be opened and read as UTF-8 text"
+
+    start = None
+    for i, line in enumerate(lines):
+        if _RE_JOBS.match(line):
+            start = i + 1
+            break
+
+    if start is None:
+        if any(_RE_JOBS_ISH.match(line) for line in lines):
+            return ("its `jobs:` line is quoted, or carries a flow mapping on the "
+                    "same line; this reader begins at a bare `jobs:` at column zero")
+        return "it carries no `jobs:` line at column zero"
+
+    end = len(lines)
+    for i in range(start, len(lines)):
+        if _is_dedent(lines[i]):
+            end = i
+            break
+
+    if _block_indent(lines, start, end) is None:
+        return ("its `jobs:` block holds no `key:` line this reader recognises -- a "
+                "job key carrying a flow mapping on its own line is not one")
+
+    return "the reader walked it and recorded no job"
+
+
 def run_census(root, stream=sys.stdout):
     """Grade the workflows against CONTEXT_ORDER. 0 clean / 1 findings / 2 malformed."""
     def out(msg):
@@ -561,6 +636,41 @@ def run_census(root, stream=sys.stdout):
         out("MALFORMED: {} workflow file(s) walked under {}, 0 job(s) found.".format(
             len(files), os.path.join(root, ".github", "workflows")))
         out("A census over an empty population asserts nothing. Nothing was graded.")
+        limit()
+        return 2
+
+    # Per-file accountability -- the same principle as the refusal above, applied
+    # at the granularity the fail-opens actually arrived through. The refusal
+    # above asks whether ANYTHING was graded; this asks it of every file, which
+    # is where the answer differs: `census_scan` drops a file it cannot read and
+    # says nothing, and the summary line below reports a file count and a job
+    # count but never their correspondence, so a reader cannot tell from it that
+    # the eighth file contributed none.
+    #
+    # It is a SET DIFFERENCE, not a list of known-bad shapes. Three separate
+    # shapes reached a clean census through this one signature, so a shape list
+    # would have been written three times and still missed the fourth; a set
+    # relation costs no new code per shape and closes the ones nobody has written
+    # yet. Placement is load-bearing: a census that grades seven of eight files
+    # and reports CLEAN has reported on a tree it did not read, so the refusal
+    # precedes grading rather than annotating it.
+    #
+    # It exits 2 rather than joining the findings at exit 1, because it is not a
+    # finding. "The workflows and the declaration disagree" and "I could not read
+    # this file" are different claims and must not collapse into one.
+    read = set(j["file"] for j in jobs)
+    silent = [(rel, path) for rel, path in files if rel not in read]
+    if silent:
+        out("MALFORMED: {} of {} workflow file(s) yielded no job record.".format(
+            len(silent), len(files)))
+        for rel, path in silent:
+            out("    {} -- {}".format(rel, _unread_reason(path)))
+        out("A file this reader could not read is a file it cannot grade, and "
+            "grading the rest would issue a verdict over a tree that was only "
+            "partly read. No verdict is issued.")
+        out("Remedy: write the file's `jobs:` mapping as a block mapping at column "
+            "zero whose job keys are `key:` lines -- optionally quoted -- or, where "
+            "the file is not a workflow, move it out of .github/workflows/.")
         limit()
         return 2
 
