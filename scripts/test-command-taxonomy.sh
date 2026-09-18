@@ -24,14 +24,36 @@
 #
 #   B   Step-1 cell shape                                                  (group B)
 #     B1 malformed cell · B2 reason enum · B3 cell grammar · B4 exhaustiveness
-#     B5 the command component fails N1
+#     B5 the command component fails N1 · B6 ambiguity-set well-formedness
 #
 #   K   the coverage bijection, which REPLACES forward/reverse/injectivity (group K)
 #     K1  RESOLVABILITY — every ADDRESSED cell covers a non-empty set and every member
 #         resolves (file AND declaration AND region)
-#     K2  TOTALITY      — every coverage unit of the surface is covered
-#     K3  EXCLUSIVITY   — no unit covered twice; no command carrying both a verbless
-#         and a verbed cell
+#     K2  TOTALITY      — every coverage unit of the surface is covered by an ADDRESSED cell
+#     K3  EXCLUSIVITY   — no unit covered twice BY ADDRESSED CELLS; no command carrying
+#         both a verbless and a verbed ADDRESSED cell
+#     K4  SET RESOLVABILITY — every member of a declared ambiguity set covers exactly one
+#         coverage unit
+#     K5  SET EXCLUSIVITY   — no unit named twice inside one set, and no two sets denoting
+#         the same units
+#
+#     THE THREE CELL CLASSES, and why admitting the third weakens neither K2 nor K3.
+#     A Step-1 Command cell takes exactly one of three forms. ADDRESSED — a single code
+#     span naming a command and at most one verb. EXCLUDED — the marker, then reasons from
+#     the closed enum. AMBIGUOUS — the marker, then two or more FULL-KEY code spans joined
+#     by the set separator, each matching the UNCHANGED cell grammar. A set is DECLARED by
+#     its marker and is never inferred from a parse failure: two code spans in one cell with
+#     no marker is a hard failure (B6), so the accident and the intent are different
+#     outcomes rather than the same one.
+#
+#     The identity is restated by NARROWING ITS QUANTIFIER, not by weakening its predicate.
+#     K2 and K3 read ADDRPARTS records only and their code is untouched: a set's members
+#     travel on AMBPARTS. So a unit covered twice BY ADDRESSED CELLS is still K3, byte for
+#     byte the detector that shipped before the class existed; a unit reachable ONLY through
+#     a set is still K2, because set membership never satisfies totality; and a unit named
+#     in a declared set BESIDE its own ADDRESSED cell is a CHOICE, not a double cover. The
+#     tolerance is therefore STRUCTURAL — it lives in which record a member travels on —
+#     rather than a branch inside K3 that a later slice could widen.
 #
 #     COVERAGE, and why this CONTAINS the retired assertion rather than weakening it.
 #     A verbed cell covers exactly the pair it names. A verbless cell covers every
@@ -505,6 +527,23 @@ CELL_RE_UNWIDENED="^${BT}/${CMD_RE}( (--)?[a-z0-9]+(-[a-z0-9]+)*)?${BT}$"
 # does.
 N1_RE="^${CMD_RE}$"
 
+# ── The ambiguity-set cell class. A set is DECLARED by its marker, exactly as an exclusion
+# is, never inferred from a parse failure: two code spans in one cell with no marker is a
+# hard failure (B6). Members are FULL KEYS matching CELL_RE UNCHANGED — the single-target
+# grammar is not widened, so ADR-007 §4's "parses under the same cell grammar" statement and
+# E8 are untouched, and arm G-GR asserts both set-shaped cells are still rejected by it.
+#
+# The separator is the one this corpus already uses for a pure list of code spans in a table
+# cell. ' + ' was declined because it already serves CONJUNCTIVE reason lists in this very
+# column, and an escaped pipe was declined on a measured ground: charter_check splits rows
+# with IFS='|', so a pipe inside a cell changes the field count and the row reads as B1.
+AMB_MARK='AMBIGUOUS: '
+AMB_SEP=' · '
+# Registered as needles here rather than in the array literal above, and the ordering is
+# forced rather than stylistic: the registry is declared before these constants exist, and
+# naming an unset variable under `set -u` is an error. needle_check runs long after both.
+NEEDLES_UNTRIMMED+=( "$AMB_MARK" "$AMB_SEP" )
+
 # Is this row the requirement table's own header row? Structural, on the five column
 # names — never on a fence, and never on one byte rendering of the row.
 is_req_header() {
@@ -841,7 +880,7 @@ charter_check() {
   local rc=0
   if [ ! -f "$md" ]; then
     printf 'FINDING A0 the charter path does not exist\n'
-    printf 'COUNT S1_ROWS 0\nCOUNT S1_ADDR 0\nCOUNT S1_EXCL 0\nCOUNT S2_KEYS 0\nCOUNT CONS_ROWS 0\nCOUNT DOTTED 0\nCOUNT UNWIDENED_FAIL 0\n'
+    printf 'COUNT S1_ROWS 0\nCOUNT S1_ADDR 0\nCOUNT S1_AMB 0\nCOUNT S1_EXCL 0\nCOUNT S2_KEYS 0\nCOUNT CONS_ROWS 0\nCOUNT DOTTED 0\nCOUNT UNWIDENED_FAIL 0\n'
     return 1
   fi
 
@@ -865,19 +904,56 @@ charter_check() {
     if [ "$incons" -eq 1 ] && [[ "$line" == '| '"$BT"'/'* ]]; then CONS+=( "$line" ); fi
   done < "$md"
 
-  local n_rows=${#R1[@]} n_addr=0 n_excl=0 n_dot=0 n_unwid=0
+  local n_rows=${#R1[@]} n_addr=0 n_excl=0 n_amb=0 n_dot=0 n_unwid=0
   if [ "$n_rows" -eq 0 ]; then
     printf 'FINDING A0 the Step-1 slice is empty or absent — no data rows extracted\n'; rc=1
   fi
 
   local row cell inner rt cmdpart verbpart key rest r
-  local -a F=() SEEN=()
+  # Declared in their own statement, never beside a name they reference: every word of a
+  # `local` builtin is expanded BEFORE the builtin runs, so a same-statement back-reference
+  # takes the OUTER value or trips `set -u`. The convention this file already follows.
+  local amb_rest amb_m amb_bad
+  local -a F=() SEEN=() AMBM=()
   for row in "${R1[@]+"${R1[@]}"}"; do
     IFS='|' read -r -a F <<< "$row"
     if [ "${#F[@]}" -ne 6 ]; then
       printf 'FINDING B1 MALFORMED Step-1 row — expected 5 columns (6 pipe fields), got %d: %.60s\n' "${#F[@]}" "$row"; rc=1; continue
     fi
     cell="$(trim "${F[5]}")"
+
+    # ── The AMBIGUITY-SET class, routed on its marker exactly as the exclusion below is.
+    # Members are graded by the UNCHANGED cell grammar, one per member, so the third class
+    # reuses the single-target form rather than widening it. A malformed set is B6 and
+    # `continue`s WITHOUT emitting AMBPARTS, so K4/K5 never quantify over a cell whose
+    # members did not parse — but n_amb is already incremented, so B4's arithmetic still
+    # accounts for the row rather than reporting a silent gap beside a named failure.
+    if [[ "$cell" == "$AMB_MARK"* ]]; then
+      n_amb=$((n_amb+1))
+      AMBM=()
+      amb_rest="${cell#"$AMB_MARK"}"
+      while : ; do
+        if [[ "$amb_rest" == *"$AMB_SEP"* ]]; then
+          AMBM+=( "${amb_rest%%"$AMB_SEP"*}" ); amb_rest="${amb_rest#*"$AMB_SEP"}"
+        else AMBM+=( "$amb_rest" ); break; fi
+      done
+      amb_bad=""
+      [ "${#AMBM[@]}" -ge 2 ] || amb_bad="it declares ${#AMBM[@]} member(s); a set names two or more, because a choice between one thing and nothing is not a choice"
+      for amb_m in "${AMBM[@]}"; do
+        [[ "$amb_m" =~ $CELL_RE ]] && continue
+        amb_bad="${amb_bad:+$amb_bad; }member \"$amb_m\" is not a single-target cell under the cell grammar"
+      done
+      if [ -n "$amb_bad" ]; then
+        printf 'FINDING B6 MALFORMED ambiguity set — %s: "%s"\n' "$amb_bad" "$cell"; rc=1; continue
+      fi
+      for amb_m in "${AMBM[@]}"; do
+        inner="${amb_m//$BT/}"
+        cmdpart="${inner%% *}"; cmdpart="${cmdpart#/}"
+        if [ "$inner" = "${inner%% *}" ]; then verbpart=""; else verbpart="${inner#* }"; fi
+        printf 'AMBPARTS %d /%s %s\n' "$n_amb" "$cmdpart" "${verbpart:--}"
+      done
+      continue
+    fi
 
     if [[ "$cell" == 'EXCLUDED: '* ]]; then
       n_excl=$((n_excl+1))
@@ -900,14 +976,22 @@ charter_check() {
       continue
     fi
 
-    if [[ "$cell" == 'EXCLUDED'* ]]; then
-      printf 'FINDING B1 MALFORMED Command cell — exclusion marker malformed, expected the marker then a colon and a space: "%s"\n' "$cell"; rc=1; continue
+    if [[ "$cell" == 'EXCLUDED'* ]] || [[ "$cell" == 'AMBIGUOUS'* ]]; then
+      printf 'FINDING B1 MALFORMED Command cell — a classification marker is malformed, expected the marker then a colon and a space: "%s"\n' "$cell"; rc=1; continue
     fi
     if [[ "$cell" != "$BT"* ]]; then
-      printf 'FINDING B1 MALFORMED Command cell — neither a code span nor an exclusion marker: "%s"\n' "$cell"; rc=1; continue
+      printf 'FINDING B1 MALFORMED Command cell — none of the three cell classes: neither a code span, nor an exclusion marker, nor an ambiguity-set marker: "%s"\n' "$cell"; rc=1; continue
     fi
 
     n_addr=$((n_addr+1))
+    # ── The UNDECLARED-SET guard. This shape reaches V6 without it — "the code-span strip
+    # did not round-trip" — which is TRUE and misdirects the author, because the defect is
+    # not a broken span but an undeclared set. Naming it here is what makes "declared, not
+    # inferred" legible at the point of failure: the accident and the intent take different
+    # branches, and the accident stays a hard failure.
+    if [[ "$cell" == *"${BT}${AMB_SEP}${BT}"* ]]; then
+      printf 'FINDING B6 UNDECLARED ambiguity set — the cell joins two or more code spans with the set separator and carries no "%s" marker; declare the set or split the row: "%s"\n' "$AMB_MARK" "$cell"; rc=1; continue
+    fi
     inner="${cell//$BT/}"
     rt="${BT}${inner}${BT}"
     if [ "$rt" != "$cell" ]; then
@@ -937,8 +1021,8 @@ charter_check() {
     printf 'ADDRPARTS %s %s\n' "/${cmdpart}" "${verbpart:--}"
   done
 
-  if [ $((n_addr + n_excl)) -ne "$n_rows" ]; then
-    printf 'FINDING B4 exhaustiveness — %d ADDRESSED + %d EXCLUDED does not account for %d rows; a row reached neither classification\n' "$n_addr" "$n_excl" "$n_rows"; rc=1
+  if [ $((n_addr + n_amb + n_excl)) -ne "$n_rows" ]; then
+    printf 'FINDING B4 exhaustiveness — %d ADDRESSED + %d AMBIGUOUS + %d EXCLUDED does not account for %d rows; a row reached none of the three classifications\n' "$n_addr" "$n_amb" "$n_excl" "$n_rows"; rc=1
   fi
 
   # --- Step 2: the second enumeration of the same set, in the same file ---
@@ -981,6 +1065,7 @@ charter_check() {
 
   printf 'COUNT S1_ROWS %d\n' "$n_rows"
   printf 'COUNT S1_ADDR %d\n' "$n_addr"
+  printf 'COUNT S1_AMB %d\n' "$n_amb"
   printf 'COUNT S1_EXCL %d\n' "$n_excl"
   printf 'COUNT S2_KEYS %d\n' "$n_s2"
   printf 'COUNT CONS_ROWS %d\n' "$n_cons"
@@ -1000,6 +1085,12 @@ coverage_check() {
   local recs="$1"
   local rc=0 line t1 t2 t3 t4 t5
   local -a DK=() DKC=() FILES=() AK=() AKC=() AKV=() RG=() KEYS=()
+  # The ambiguity-set channel, parallel-indexed like every other transport here: set
+  # ordinal · command · verb-or-'-'. It is a SEPARATE channel from ADDRPARTS on purpose —
+  # that separation IS the K2/K3 tolerance, so it cannot later be widened by editing a
+  # predicate. Bash 3.2 has no associative arrays and a silent degradation to an empty map
+  # is the shape this suite exists to refuse.
+  local -a MS=() MC=() MV=()
 
   # KEY is read into TWO variables deliberately: the last one absorbs the remainder, so a
   # key that carries whitespace arrives whole and X2 can see it. Every other record is
@@ -1013,6 +1104,10 @@ coverage_check() {
       'REGION '*)    IFS=' ' read -r t1 t2 t3 t4 t5 <<< "$line"; RG+=( "$t2:$t3" ) ;;
       'ADDRPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; AKC+=( "$t2" ); AKV+=( "$t3" )
                      if [ "$t3" = '-' ]; then AK+=( "$t2" ); else AK+=( "$t2:$t3" ); fi ;;
+      # Four fields, read into four variables — the transport rule this file states at
+      # invocation_check: the LAST read variable absorbs the remainder, so a record read
+      # into fewer variables than it has fields silently widens the last one it names.
+      'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
     esac
   done <<< "$recs"
 
@@ -1114,7 +1209,81 @@ coverage_check() {
     fi
   done
 
+  # --- K4 / K5: the DECLARED ambiguity sets.
+  #
+  # NOTHING ABOVE THIS LINE CHANGED, and that is the design rather than an accident of
+  # editing. K1, K2, K3 and the CMDKEYED/DBLCOVER differential read ADDRPARTS only; a set's
+  # members arrive on AMBPARTS. So the tolerance for a declared choice is a property of
+  # WHICH CHANNEL A MEMBER TRAVELS ON, not a branch inside an identity predicate — which is
+  # what makes "K3 still catches the accident" checkable rather than promised.
+  #
+  # K4 computes a member's cover exactly as K1 computes an ADDRESSED cell's, so the two
+  # cannot disagree about what a cell covers. No region clause is needed: K2 forces every
+  # member's unit to carry its own ADDRESSED cell, and K1 already grades that cell's region.
+  local mdisp mkey
+  local -a SETU=() SETQ=() ALLSETS=()
+  for (( i=0; i<${#MC[@]}; i++ )); do
+    ncov=0; mkey=''
+    in_list "${MS[$i]}" "${ALLSETS[@]+"${ALLSETS[@]}"}" || ALLSETS+=( "${MS[$i]}" )
+    if [ "${MV[$i]}" = '-' ]; then
+      mdisp="${MC[$i]}"
+      for u in "${UNITS[@]+"${UNITS[@]}"}"; do
+        case "$u" in "${MC[$i]}"|"${MC[$i]}":*) ncov=$((ncov+1)); mkey="$u" ;; esac
+      done
+    else
+      mdisp="${MC[$i]} ${MV[$i]}"
+      mkey="${MC[$i]}:${MV[$i]}"
+      for u in "${UNITS[@]+"${UNITS[@]}"}"; do [ "$u" = "$mkey" ] && ncov=$((ncov+1)); done
+    fi
+    if [ "$ncov" -eq 0 ]; then
+      printf 'FINDING K4 the ambiguity-set member %s of set %s resolves to no coverage unit — an option offered to a reader must be a verb that exists\n' "$mdisp" "${MS[$i]}"; rc=1
+    elif [ "$ncov" -gt 1 ]; then
+      printf 'FINDING K4 the ambiguity-set member %s of set %s covers %d coverage units; a member names exactly one verb, because a whole command is ITSELF a choice and nesting one inside another leaves the set with no readable options\n' "$mdisp" "${MS[$i]}" "$ncov"; rc=1
+    else
+      SETU+=( "$mkey" ); SETQ+=( "${MS[$i]}" )
+    fi
+  done
+
+  # K5 limb 1 — a unit named twice INSIDE one set.
+  local -a K5SEEN=()
+  for (( i=0; i<${#SETU[@]}; i++ )); do
+    if in_list "${SETQ[$i]}:${SETU[$i]}" "${K5SEEN[@]+"${K5SEEN[@]}"}"; then
+      printf 'FINDING K5 the declared ambiguity set %s names the coverage unit %s more than once — a choice between a thing and itself is not a choice\n' "${SETQ[$i]}" "${SETU[$i]}"; rc=1
+    else
+      K5SEEN+=( "${SETQ[$i]}:${SETU[$i]}" )
+    fi
+  done
+
+  # K5 limb 2 — two sets denoting the SAME units. Compared AS SETS — equal cardinality plus
+  # mutual membership through in_list — never by string equality, so member ORDER is not
+  # graded here. Rendering order is a different surface's question.
+  local sa sb same
+  local -a SETIDS=() LA=() LB=()
+  for (( i=0; i<${#SETQ[@]}; i++ )); do
+    in_list "${SETQ[$i]}" "${SETIDS[@]+"${SETIDS[@]}"}" || SETIDS+=( "${SETQ[$i]}" )
+  done
+  for (( i=0; i<${#SETIDS[@]}; i++ )); do
+    for (( j=i+1; j<${#SETIDS[@]}; j++ )); do
+      sa="${SETIDS[$i]}"; sb="${SETIDS[$j]}"
+      LA=(); LB=()
+      for (( k=0; k<${#SETU[@]}; k++ )); do
+        [ "${SETQ[$k]}" = "$sa" ] && { in_list "${SETU[$k]}" "${LA[@]+"${LA[@]}"}" || LA+=( "${SETU[$k]}" ); }
+        [ "${SETQ[$k]}" = "$sb" ] && { in_list "${SETU[$k]}" "${LB[@]+"${LB[@]}"}" || LB+=( "${SETU[$k]}" ); }
+      done
+      [ "${#LA[@]}" -gt 0 ] || continue
+      [ "${#LA[@]}" -eq "${#LB[@]}" ] || continue
+      same=1
+      for (( k=0; k<${#LA[@]}; k++ )); do in_list "${LA[$k]}" "${LB[@]+"${LB[@]}"}" || same=0; done
+      for (( k=0; k<${#LB[@]}; k++ )); do in_list "${LB[$k]}" "${LA[@]+"${LA[@]}"}" || same=0; done
+      if [ "$same" -eq 1 ]; then
+        printf 'FINDING K5 the declared ambiguity set %s denotes the same coverage units as set %s — two rows offering the same options are one row; fold the intents together rather than stating the choice twice\n' "$sb" "$sa"; rc=1
+      fi
+    done
+  done
+
   printf 'COUNT ADDRCELLS %d\n' "${#AK[@]}"
+  printf 'COUNT AMBCELLS %d\n' "${#ALLSETS[@]}"
+  printf 'COUNT AMBMEMBERS %d\n' "${#MC[@]}"
   printf 'COUNT DBLCOVER %d\n' "$dbl"
   printf 'COUNT CMDKEYED %d\n' "$cmdkeyed"
   return "$rc"
@@ -2103,9 +2272,29 @@ gen_charter() {  # gen_charter <dir> <defect>
     printf '| Direct edit | sig | act, and see %s/trip status%s for the current state | ex | EXCLUDED: lightest-weight-action |\n' "$BT" "$BT"
     for k in "${KEYS[@]}"; do
       if [ "$defect" = 'uncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
+      if [ "$defect" = 'ambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
       if [ "$defect" = 'step1drift' ] && [ "$k" = '/trip-record log' ]; then continue; fi
       printf '| %s | sig | act | ex | %s%s%s |\n' "$k" "$BT" "$k" "$BT"
     done
+    # ── The CONFORMING ambiguity set, carried by every world except the zero-verb one.
+    # Deliberately CROSS-COMMAND, which is the shape a factored in-span grammar could not
+    # express; and deliberately avoiding `check`, so the GM mutation pair is untouched.
+    # Both members keep their own ADDRESSED row above, which is what makes this a CHOICE
+    # rather than a double cover — the claim G0i grades. It is also the second set every
+    # two-set K5 arm needs, so those arms plant one row rather than two.
+    if [ "$defect" != 'verbless' ]; then
+      printf '| Ambiguous intent | sig | act | ex | %s%s/trip status%s%s%s/trip-publish list%s |\n' \
+        "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"
+    fi
+    if [ "$defect" = 'ambone' ];       then printf '| X | sig | act | ex | %s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambbadmember' ]; then printf '| X | sig | act | ex | %s%s/trip status%s%s%s/trip --.x%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambnomarker' ];  then printf '| X | sig | act | ex | %s/trip status%s%s%s/trip check%s |\n' "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambghost' ];     then printf '| X | sig | act | ex | %s%s/trip status%s%s%s/trip nosuchverb%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambwholecmd' ];  then printf '| X | sig | act | ex | %s%s/trip%s%s%s/trip-publish list%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambuncovered' ]; then printf '| X | sig | act | ex | %s%s/trip check%s%s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambdup' ];       then printf '| X | sig | act | ex | %s%s/trip status%s%s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'ambsame' ];      then printf '| X | sig | act | ex | %s%s/trip-publish list%s%s%s/trip status%s |\n' "$AMB_MARK" "$BT" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
+    if [ "$defect" = 'dblcover2' ];    then printf '| X | sig | act | ex | %s/trip status%s |\n' "$BT" "$BT"; fi
     if [ "$defect" = 'badcell' ];    then printf '| X | sig | act | ex | neither |\n'; fi
     if [ "$defect" = 'offenum' ];    then printf '| X | sig | act | ex | EXCLUDED: because I said so |\n'; fi
     if [ "$defect" = 'dupreason' ];  then printf '| X | sig | act | ex | EXCLUDED: repo-creation + repo-creation |\n'; fi
@@ -2120,6 +2309,10 @@ gen_charter() {  # gen_charter <dir> <defect>
       printf '| Request | Read scope | Class |\n|---|---|---|\n'
       for k in "${KEYS[@]}"; do
         if [ "$defect" = 'uncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
+        # ambuncovered removes the key from BOTH enumerations, exactly as `uncovered` does:
+        # the subject is K2's totality, and leaving it in Step 2 alone would fire S1 instead
+        # and grade a different assertion.
+        if [ "$defect" = 'ambuncovered' ] && [ "$k" = '/trip check' ]; then continue; fi
         if [ "$defect" = 'step2drift' ] && [ "$k" = '/trip-record log' ]; then continue; fi
         printf '| %s%s%s | that verb%ss own read line | own |\n' "$BT" "$k" "$BT" "$Q"
       done
@@ -2301,7 +2494,7 @@ else PASS "N1: all $(getcount "$N_OUT" NEEDLES) needles round-trip, or are regis
 
 CH_OUT="$(charter_check "$MD")"
 S1_ROWS="$(getcount "$CH_OUT" S1_ROWS)"; S1_ADDR="$(getcount "$CH_OUT" S1_ADDR)"
-S1_EXCL="$(getcount "$CH_OUT" S1_EXCL)"
+S1_EXCL="$(getcount "$CH_OUT" S1_EXCL)"; S1_AMB="$(getcount "$CH_OUT" S1_AMB)"
 DOTTED="$(getcount "$CH_OUT" DOTTED)"; UNWID="$(getcount "$CH_OUT" UNWIDENED_FAIL)"
 
 RECS="$CH_OUT"
@@ -2359,10 +2552,10 @@ if has_finding "$ALL" "$(surface B1)"; then FAIL "B1: a Step-1 Command cell is m
 else PASS "B1: no malformed Command cell across ${S1_ROWS} rows"; fi
 if has_finding "$ALL" "$(surface B2)"; then FAIL "B2: a reason is off-enum, absent or duplicated"; show "$ALL" 'B2'
 else PASS "B2: every reason on all ${S1_EXCL} EXCLUDED cells is in the closed five-value enum, none duplicated"; fi
-if has_finding "$ALL" "$(surface B3 B5)"; then FAIL "B3: an ADDRESSED cell fails the widened cell grammar or N1"; show "$ALL" 'B3|B5'
-else PASS "B3: all ${S1_ADDR} ADDRESSED cells match the widened (alternation) cell grammar, command component under N1"; fi
+if has_finding "$ALL" "$(surface B3 B5 B6)"; then FAIL "B3: an ADDRESSED cell fails the widened cell grammar or N1, or an ambiguity set is malformed"; show "$ALL" 'B3|B5|B6'
+else PASS "B3: all ${S1_ADDR} ADDRESSED cells match the widened (alternation) cell grammar, command component under N1; and every member of the ${S1_AMB} AMBIGUOUS cell(s) matches that SAME grammar, UNCHANGED — the third class reuses the single-target form rather than widening it, and an undeclared two-span cell stays a hard failure so a set is DECLARED and never inferred"; fi
 if has_finding "$ALL" "$(surface B4)"; then FAIL "B4: exhaustiveness broken"; show "$ALL" 'B4'
-else PASS "B4: ${S1_ADDR} ADDRESSED + ${S1_EXCL} EXCLUDED accounts for ${S1_ROWS} rows, no silent gap"; fi
+else PASS "B4: ${S1_ADDR} ADDRESSED + ${S1_AMB} AMBIGUOUS + ${S1_EXCL} EXCLUDED accounts for ${S1_ROWS} rows, no silent gap"; fi
 if [ "${DOTTED:-0}" -gt 0 ]; then
   PASS "B5: DOTTED-CELL COUNT ${DOTTED:-0} — the leading-dot widening is exercised by LIVE data; ${UNWID:-0} live cell(s) fail the un-widened grammar, so the widened and un-widened forms are DISTINGUISHABLE on this population"
 else
@@ -2377,15 +2570,25 @@ else
 fi
 
 echo
-echo "── Group K — the coverage bijection. K1 resolvability, K2 totality, K3 exclusivity."
+echo "── Group K — the coverage bijection. K1 resolvability, K2 totality, K3 exclusivity, K4/K5 the declared sets."
+AMBCELLS="$(getcount "$COV_OUT" AMBCELLS)"; AMBMEMBERS="$(getcount "$COV_OUT" AMBMEMBERS)"
+# The live ambiguity population is PRINTED on the K1 and K3 lines rather than implied,
+# because a limb quantified over nothing must say so on the line a reader trusts. This is
+# an assignment, not a verdict: it adds no PASS/FAIL site, so group MD's declared residual
+# is unchanged by it.
+if [ "${AMBCELLS:-0}" -eq 0 ]; then
+  AMB_NOTE="LIVE AMBIGUITY POPULATION 0 — the set limbs of this line quantified over nothing on this commit and establish nothing about live data. This run's evidence for them is arms GB6 / GB6b / GB6c / GK4 / GK4b / GK5 / GK5b, each of which plants its defect and FAILS if the defect is not flagged, on every push. This is not the R1 shape: R1's population is empty for two structural reasons of the surface, while this one is empty only until the first set is authored, after which these same lines quantify over it with no edit"
+else
+  AMB_NOTE="The set limbs quantified over LIVE data on this commit, not over fixtures alone"
+fi
 if has_finding "$ALL" "$(surface X1 X2)"; then FAIL "K0: the key channel is lossy"; show "$ALL" 'X1|X2'
 else PASS "K0: every emitted key round-trips byte-identical through the record channel, and no key is empty or carries whitespace. SCOPE: X1 and X2 grade the KEY CHANNEL. How this guard's own membership tests quote their haystacks is a property of this file that no assertion here reads, so it is not claimed on this line — see the note at in_list()"; fi
-if has_finding "$ALL" "$(surface K1)"; then FAIL "K1: an ADDRESSED cell covers nothing, or a covered member does not resolve"; show "$ALL" 'K1'
-else PASS "K1: RESOLVABILITY — each of $(getcount "$COV_OUT" ADDRCELLS) ADDRESSED cells covers a non-empty set and every member resolves (file AND declaration AND region)"; fi
+if has_finding "$ALL" "$(surface K1 K4)"; then FAIL "K1: an ADDRESSED cell covers nothing, a covered member does not resolve, or an ambiguity-set member does not resolve to exactly one unit"; show "$ALL" 'K1|K4'
+else PASS "K1: RESOLVABILITY — each of $(getcount "$COV_OUT" ADDRCELLS) ADDRESSED cells covers a non-empty set and every member resolves (file AND declaration AND region); and each of ${AMBMEMBERS} member(s) across ${AMBCELLS} declared ambiguity set(s) resolves to exactly one coverage unit, computed by the same rule K1 computes an ADDRESSED cell's cover. ${AMB_NOTE}"; fi
 if has_finding "$ALL" "$(surface K2)"; then FAIL "K2: a coverage unit is covered by no ADDRESSED cell"; show "$ALL" 'K2'
-else PASS "K2: TOTALITY — all $(getcount "$COV_OUT" UNITS) coverage units are covered; the uncovered set is empty, graded as a set difference and reported member by member"; fi
-if has_finding "$ALL" "$(surface K3)"; then FAIL "K3: exclusivity violated"; show "$ALL" 'K3'
-else PASS "K3: EXCLUSIVITY — no unit covered twice; no command carrying both a verbless and a verbed cell. K2 AND K3 give exactly one"; fi
+else PASS "K2: TOTALITY — all $(getcount "$COV_OUT" UNITS) coverage units are covered by an ADDRESSED cell; the uncovered set is empty, graded as a set difference and reported member by member. TOTALITY DOES NOT WEAKEN: set membership never satisfies it, so a verb reachable ONLY as an option inside a declared ambiguity set is still a K2 finding, and this line's quantifier is the one that ships today"; fi
+if has_finding "$ALL" "$(surface K3 K5)"; then FAIL "K3: exclusivity violated, within the ADDRESSED cells or across the declared sets"; show "$ALL" 'K3|K5'
+else PASS "K3: EXCLUSIVITY — no unit covered twice BY ADDRESSED CELLS; no command carrying both a verbless and a verbed ADDRESSED cell. K2 AND K3 give exactly one ADDRESSED cell per unit. Across ${AMBCELLS} declared set(s): no unit named twice inside one set, and no two sets denoting the same units. A unit named in a declared set BESIDE its own ADDRESSED cell is a CHOICE, not a double cover — and the accidental double cover is caught by the same predicate as before, because K3 reads ADDRESSED records only. ${AMB_NOTE}"; fi
 
 echo
 echo "── Group S — the charter's two enumerations of the verb set agree."
@@ -2823,9 +3026,12 @@ if [ -f "$G0/CLAUDE.md" ] && [ -f "$G0/skills/trip/SKILL.md" ] && [ -f "$G0/skil
     grep -qF "${SCRIPT_REL} publish trips/x" "$G0/CLAUDE.md" || G0S=0
     grep -qF "${SCRIPT_REL} rotate trips/x" "$G0/CLAUDE.md" || G0S=0
     g0claim "$G0S" G0h "the fixture charter carries literal EXCLUDED invocations in a fenced block and the invocation limb reports zero: its input set is the skills directory and nothing else"
+    G0S=1
+    grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip-publish list${BT}" "$G0/CLAUDE.md" || G0S=0
+    g0claim "$G0S" G0i "a DECLARED, CROSS-COMMAND ambiguity set whose members each keep their own ADDRESSED row produces no finding of any id — the declared choice is TOLERATED while the accidental double cover beside it (arm GK3b) is still K3. This is the MUST-NOT-FIRE half of the tolerance; without it the set arms would only show the guard refusing things"
   fi
 else
-  FAIL "G0a: fixture integrity — the conforming tree was not constructed; G0b-h would prove nothing"
+  FAIL "G0a: fixture integrity — the conforming tree was not constructed; G0b-i would prove nothing"
 fi
 
 # ── the two live differential arms. Drawn from the UNFILTERED live population.
@@ -2915,15 +3121,37 @@ ctl GV4  V4 "a column-0 read declaration in a NON-verb section"                o
 ctl GV5  V5 "a command file with no contract-header block"                     ok        noheader   '! grep -q "trip-contract-header" "$WORK/GV5/skills/trip/SKILL.md"'
 ctl GV5b V5 "a command file carrying TWO contract-header blocks"               ok        twoheader  '[ "$(grep -c "trip-contract-header" "$WORK/GV5b/skills/trip/SKILL.md")" = "2" ]'
 ctl GV6  V6 "a Step-1 cell whose code-span strip changes the VALUE while the row count holds" badspan ok 'grep -qF "st${BT}atus" "$WORK/GV6/CLAUDE.md"'
-ctl GB1  B1 "a Step-1 row with neither a code span nor an exclusion"           badcell   ok  'grep -qF "| ex | neither |" "$WORK/GB1/CLAUDE.md"'
+ctl GB1  B1 "a Step-1 row matching none of the three cell classes"             badcell   ok  'grep -qF "| ex | neither |" "$WORK/GB1/CLAUDE.md"'
 ctl GB4  B4 "the same row seen as an exhaustiveness gap — it is counted as neither" badcell ok 'grep -qF "| ex | neither |" "$WORK/GB4/CLAUDE.md"'
 ctl GB2  B2 "an EXCLUDED reason outside the closed five-value enum"            offenum   ok  'grep -qF "because I said so" "$WORK/GB2/CLAUDE.md"'
 ctl GB2b B2 "an EXCLUDED cell carrying the same reason twice"                  dupreason ok  'grep -qF "repo-creation + repo-creation" "$WORK/GB2b/CLAUDE.md"'
 ctl GB3  B3 "a cell the MINIMAL widening would admit and the alternation rejects" badgrammar ok 'grep -qF -- "/trip --.x" "$WORK/GB3/CLAUDE.md"'
 ctl GB5  B5 "an ADDRESSED cell whose COMMAND component fails N1"               badn1     ok  'grep -qF "/Trip status" "$WORK/GB5/CLAUDE.md"'
+# ── The ambiguity-set arms. Each plants ONE defect beside the conforming set every fixture
+# world already carries, so the arms grade the new predicates rather than the fixture. Every
+# one is MUST-FIRE: a run where the planted defect goes unflagged FAILS, which is what makes
+# the set leg gate on every push while the LIVE ambiguity population is still zero. Read
+# them with G0i, which is the must-NOT-fire half of the same claim.
+ctl GB6  B6 "an ambiguity set declaring ONE member — a choice needs two"       ambone       ok 'grep -qF "| ex | ${AMB_MARK}${BT}/trip status${BT} |" "$WORK/GB6/CLAUDE.md"'
+ctl GB6b B6 "an ambiguity-set member that fails the UNCHANGED cell grammar"    ambbadmember ok 'grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip --.x${BT}" "$WORK/GB6b/CLAUDE.md"'
+ctl GB6c B6 "two code spans joined by the separator with NO marker — the UNDECLARED set, which must stay a hard failure so a set is declared and never inferred from a parse failure" ambnomarker ok 'grep -qF "| ex | ${BT}/trip status${BT}${AMB_SEP}${BT}/trip check${BT} |" "$WORK/GB6c/CLAUDE.md"'
 ctl GK1  K1 "an ADDRESSED cell naming a verb no requirement table declares"    ghostkey  ok  'grep -qF "nosuchverb" "$WORK/GK1/CLAUDE.md"'
 ctl GK2  K2 "a declared verb covered by no ADDRESSED cell"                     uncovered ok  '! grep -qF "| /trip check |" "$WORK/GK2/CLAUDE.md"'
+# GK2b is the arm that proves TOTALITY DID NOT WEAKEN: the verb is named as an OPTION in a
+# well-formed declared set and nowhere else, and it is still a K2. Without it, "set
+# membership never satisfies totality" would be a sentence in a banner rather than a check.
+ctl GK2b K2 "a verb reachable ONLY as an option inside a well-formed declared set — set membership never satisfies totality" ambuncovered ok 'grep -qF "${AMB_MARK}${BT}/trip check${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK2b/CLAUDE.md"'
 ctl GK3  K3 "a command carrying both a verbless and a verbed ADDRESSED cell"   dblcover  ok  'grep -qF "| ex | ${BT}/trip${BT} |" "$WORK/GK3/CLAUDE.md"'
+# GK3b drives K3's FIRST limb alone — the accidental double cover — on a tree that also
+# carries a declared set. GK3 above reaches limbs 1 and 2 together, so neither arm on its
+# own shows that the accident is still caught while the declared choice beside it is not.
+ctl GK3b K3 "a second ADDRESSED cell for a unit already covered — the ACCIDENTAL double cover, still a finding on a tree that also carries a declared set" dblcover2 ok 'grep -qF "| X | sig | act | ex | ${BT}/trip status${BT} |" "$WORK/GK3b/CLAUDE.md"'
+ctl GK4  K4 "an ambiguity-set member resolving to no coverage unit"            ambghost     ok 'grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip nosuchverb${BT}" "$WORK/GK4/CLAUDE.md"'
+ctl GK4b K4 "an ambiguity-set member naming a WHOLE COMMAND, which covers more than one unit — a command is itself a choice" ambwholecmd ok 'grep -qF "${AMB_MARK}${BT}/trip${BT}${AMB_SEP}${BT}/trip-publish list${BT}" "$WORK/GK4b/CLAUDE.md"'
+ctl GK5  K5 "one declared set naming the same coverage unit twice"             ambdup       ok 'grep -qF "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK5/CLAUDE.md"'
+# Members REORDERED against the conforming set, so a passing arm proves the comparison is
+# over SETS rather than over strings — order is not graded, membership is.
+ctl GK5b K5 "two declared sets denoting the same units, members reordered"     ambsame      ok 'grep -qF "${AMB_MARK}${BT}/trip-publish list${BT}${AMB_SEP}${BT}/trip status${BT}" "$WORK/GK5b/CLAUDE.md"'
 ctl GS1  S1 "a key present in Step 1 and absent from Step 2"                   step2drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1/CLAUDE.md")" = "1" ]'
 ctl GS1b S1 "the same divergence in the OTHER direction — present in Step 2, absent from Step 1" step1drift ok '[ "$(grep -c "trip-record log" "$WORK/GS1b/CLAUDE.md")" = "1" ]'
 ctl GS2  S2 "only ONE enumeration derivable — SINGLE-SOURCE, not agreement"    nostep2   ok  '! grep -q "^### Step 2:" "$WORK/GS2/CLAUDE.md"'
@@ -3067,7 +3295,11 @@ for gc in "${BT}/trip status${BT}" "${BT}/trip-record .publish-slug${BT}" "${BT}
   [[ "$gc" =~ $CELL_RE ]] || GRAM_OK=0
 done
 GRAM_BAD=0; GRAM_MAL=0
-for gc in "${BT}/trip <verb>${BT}" "${BT}/trip-new new (create)${BT}" "${BT}/Trip status${BT}" "${BT}trip status${BT}" "${BT}/trip status extra${BT}" "${BT}/trip_status${BT}" "${BT}/trip -status${BT}" "${BT}/trip-record .${BT}"; do
+# The last two are the SET-SHAPED cells, and they belong in the MALFORMED list rather than
+# the true one. That is the whole proof that the grammar was extended by a new CLASS and not
+# widened: CELL_RE is shared with adr4_check, whose §4 column contract is one form -> one
+# key, so a grammar that admitted either of these would silently re-grade that table too.
+for gc in "${BT}/trip <verb>${BT}" "${BT}/trip-new new (create)${BT}" "${BT}/Trip status${BT}" "${BT}trip status${BT}" "${BT}/trip status extra${BT}" "${BT}/trip_status${BT}" "${BT}/trip -status${BT}" "${BT}/trip-record .${BT}" "${AMB_MARK}${BT}/trip status${BT}${AMB_SEP}${BT}/trip check${BT}" "${BT}/trip status${BT}${AMB_SEP}${BT}/trip check${BT}"; do
   GRAM_MAL=$((GRAM_MAL+1))
   [[ "$gc" =~ $CELL_RE ]] && GRAM_BAD=$((GRAM_BAD+1))
 done
@@ -3076,7 +3308,7 @@ MIN_ADMITS_JUNK=0
 ALT_REJECTS_JUNK=1
 [[ "${BT}/trip --.x${BT}" =~ $CELL_RE ]] && ALT_REJECTS_JUNK=0
 if [ "$GRAM_OK" -eq 1 ] && [ "$GRAM_BAD" -eq 0 ] && [ "$MIN_ADMITS_JUNK" -eq 1 ] && [ "$ALT_REJECTS_JUNK" -eq 1 ]; then
-  PASS "G-GR: grammar control — ${GRAM_TRUE} true forms admitted, ${GRAM_MAL} malformed rejected, and the MINIMAL widening admits the junk cell the ALTERNATION rejects. A leading dot is part of an identity; a double dash is a spelling variant the key rule normalises away; the two can never co-occur, so the grammar must not express both at once"
+  PASS "G-GR: grammar control — ${GRAM_TRUE} true forms admitted, ${GRAM_MAL} malformed rejected, and the MINIMAL widening admits the junk cell the ALTERNATION rejects. A leading dot is part of an identity; a double dash is a spelling variant the key rule normalises away; the two can never co-occur, so the grammar must not express both at once. The malformed list includes BOTH set-shaped cells — marked and unmarked — so the single-target grammar is asserted UNCHANGED by the slice that admitted the set class: a set is parsed by its own classifier and its MEMBERS are what this regex grades"
 else
   FAIL "G-GR: grammar control — true admitted=$GRAM_OK, malformed admitted=$GRAM_BAD, minimal admits junk=$MIN_ADMITS_JUNK, alternation rejects junk=$ALT_REJECTS_JUNK"
 fi

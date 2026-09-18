@@ -341,14 +341,42 @@ The command set **is** the request taxonomy; `CLAUDE.md`'s Step-1 table document
 is deliberately inverted from the obvious direction: had the commands restated the table, the two
 would drift and a test would be needed to catch it. With the commands owning the taxonomy, the guard
 becomes a cheap assertion of **coverage** — every Step-1 row resolves to a command or a declared
-exclusion, and every unit of the command surface is covered by exactly one row.
+exclusion, and every unit of the command surface is covered by exactly one **addressed** row.
 
 Under a `/trip <verb>` surface the unit is a (command, verb) pair, not a command, which is why this is
 stated as coverage rather than as the one-to-one mapping an earlier draft of this section named: a
-verbed row covers the pair it names, a verbless row covers every verb its command declares, and where a
-command declares no verb the command itself is the unit. The guard grades that this mapping is total
-and non-overlapping. It does not grade whether the taxonomy the table documents is the right one —
-that stays review-maintained.
+verbed **addressed** row covers the pair it names, a verbless **addressed** row covers every verb its
+command declares, and where a command declares no verb the command itself is the unit. The guard
+grades that this mapping is total and non-overlapping. It does not grade whether the taxonomy the
+table documents is the right one — that stays review-maintained.
+
+**Amendment (2026-09-18, Friday) — the identity admits a further row class, and the word
+*addressed* above is what admits it.** The statement of coverage was written for a Command column
+in which a row could only address a verb or declare an exclusion, and it is correct for that
+column. A later slice admits an **ambiguity set**: the marker `AMBIGUOUS: `, then full-key code
+spans joined by ` · `, each span matching the cell grammar **unchanged**. A set is how a row says
+that an intent reaches more than one verb and is therefore rendered as a choice rather than
+resolved to one. It is **declared** by its marker and is never inferred from a parse failure —
+code spans joined in one cell without the marker remain a hard failure — so the accident and the
+intent take different branches rather than the same one. This amendment restates the identity by
+**narrowing its quantifier, not by weakening its predicate**, and what follows is the whole of the
+restatement.
+
+- **Totality does not weaken.** Every unit of the command surface is still covered, and set
+  membership never satisfies that obligation. A verb reachable only as an option inside a set is
+  an uncovered unit and a finding, exactly as it was before sets existed.
+- **Exclusivity is unchanged where it bit.** A unit covered by more than one *addressed* row is
+  the finding it always was, reached through the same predicate over the same records. What is
+  new is only this: a unit named in a declared set **beside** its own addressed row is a choice,
+  not a double cover.
+- **A set carries obligations of its own.** Every member resolves to exactly one coverage unit — a
+  member naming a whole command is refused, because a command is itself a choice — no unit is
+  named twice inside one set, and no two sets denote the same units.
+
+What this amendment does **not** reach: the guard still does not grade whether the taxonomy the
+table documents is the right one, and §4's disposition table is untouched, its cells still parsing
+under the same unchanged cell grammar. The amendment governs the coverage identity stated in this
+section and nothing else.
 
 The guard is a test in the shape of the existing `scripts/test-publish-guard.sh`, which already
 proves the pattern in this repo.

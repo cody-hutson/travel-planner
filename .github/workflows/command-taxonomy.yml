@@ -37,7 +37,8 @@ name: Command taxonomy
 # network, no Node and no gh, and its verdict is real. In summary, a green means: every
 # declared verb of every command file resolves to exactly one implementing region; every
 # ADDRESSED taxonomy cell covers a non-empty set of those verbs; every coverage unit of
-# the surface is covered by exactly one cell; the charter's two enumerations of the verb
+# the surface is covered by exactly one ADDRESSED cell (a declared ambiguity set names
+# verbs as options and never satisfies totality); the charter's two enumerations of the verb
 # set agree as a set difference in both directions; the publish-form disposition table is
 # complete, sentinel-current and cross-linked to the live surface with no command map
 # held anywhere; no command file reaches an excluded publish form; every RESOLVE-role
