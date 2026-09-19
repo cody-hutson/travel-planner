@@ -37,10 +37,17 @@ jobs:
           #
           # `grep -c` + a count test, NOT `grep -q`: `-q` exits on the FIRST match and
           # closes the pipe, so on a large body the producing `printf` takes EPIPE and
-          # `pipefail` makes the pipeline report 141 — the `if` would then read FALSE
-          # even though the marker was found, silently ignoring a present override.
-          # Same root cause as step 4 below; `-c` reads to EOF. `|| true` absorbs
-          # grep's exit 1 on zero matches (the idiom already used for ANCHOR_COUNT).
+          # `pipefail` carries the writer's failure out as the pipeline's status. That
+          # status is 141 ONLY where SIGPIPE is fatal; a GitHub-hosted runner hands the
+          # step SIGPIPE already ignored, so the writer returns 1 with a
+          # `write error: Broken pipe` on stderr instead. Either way the `if` reads
+          # FALSE even though the marker was found, silently ignoring a present
+          # override. NOTHING IN A SINGLE RUN'S OUTPUT DIAGNOSES THAT: the exit code
+          # can be 0, the summary block is present, and the check can be GREEN. Only
+          # the differential — was a marker-carrying body's override honoured? —
+          # separates it. Same root cause as step 4 below; `-c` reads to EOF.
+          # `|| true` absorbs grep's exit 1 on zero matches (the idiom already used
+          # for ANCHOR_COUNT).
           OVERRIDE_HITS=$(printf '%s\n' "$PR_BODY" \
             | grep -cE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->' || true)
           if [ "${OVERRIDE_HITS:-0}" -gt 0 ]; then
@@ -76,14 +83,19 @@ jobs:
           # `awk 'NR < n'`, NOT `head -n $((n-1))`. Both emit lines 1..n-1 — the
           # detection semantics are identical — but `head` STOPS READING once it has
           # its n-1 lines and closes the pipe. The producing `printf` then takes
-          # EPIPE and exits 141, and under `set -o pipefail` + `set -e` that kills
-          # the whole step BEFORE the scan below ever runs: the check reports a red
-          # X with no scan block and no findings, which reads as a detection but is
-          # an abort. It only trips once a PR body is long enough for `head` to
-          # finish while `printf` is still writing, so it lay dormant for seven runs
-          # and then fired on a ~42 KB body. `awk` drains its input to EOF, so the
-          # producer is never signalled and the pipeline exit status is honest —
-          # a genuine failure here still fails the step (no `|| true` fail-open).
+          # EPIPE and fails: 141 ONLY where SIGPIPE is fatal, while a GitHub-hosted
+          # runner hands the step SIGPIPE already ignored, so `printf` returns 1 with
+          # a `write error: Broken pipe` on stderr. Under `set -o pipefail` + `set -e`
+          # either status kills the whole step BEFORE the scan below ever runs: the
+          # check reports a red X with no scan block and no findings, which reads as
+          # a detection but is an abort. DIAGNOSE IT BY THE ABSENT SCAN BLOCK, never
+          # by the red X — an ordinary content failure is red too, and the exit code
+          # separates nothing. It only trips once a PR body is long enough for `head`
+          # to finish while `printf` is still writing, so it stays dormant until a
+          # body that large arrives; it has fired on this repository's own history,
+          # at this site. `awk` drains its input to EOF, so the producer is never
+          # signalled and the pipeline exit status is honest — a genuine failure here
+          # still fails the step (no `|| true` fail-open).
           if [ -z "${ANCHOR_LINE:-}" ]; then
             OUTSIDE_BLOCK="$PR_BODY"
           else
