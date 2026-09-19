@@ -347,10 +347,15 @@ _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
 # refused with every key read (X72). What the refusal does NOT reach is a key on
 # a line it never walks, nor a line it reads as a key that is none: a
 # continuation SHAPED like a key, at exactly the job-key indentation, is
-# recorded as a job, and can claim a context no real job claims. Nor, off the key
-# axis, does it reach a job read in full whose `name:` it reads otherwise than
-# GitHub does. The limit block the census prints states all three residuals as
-# conditions and names the arms that pin them.
+# recorded as a job, and can claim a context no real job claims. Nor does it
+# reach a continuation that begins with `#`: that is a comment to this reader
+# whatever the file makes of it, so no limb of the refusal sees the line at all
+# (X74). Nor, off the key axis, does it reach a job read in full whose `name:`
+# it reads otherwise than GitHub does. The limit block the census prints states
+# the residuals MEASURED SO FAR as conditions and names the arms that pin them.
+# It carries no count of them, deliberately: the shapes a line-oriented reader
+# cannot see are not an enumerable set, so a count of them is falsifiable by
+# construction.
 #
 # The groups are NAMED deliberately: adding a group shifts every positional
 # index, and two call sites read them.
@@ -488,7 +493,13 @@ def _unread_key_lines(lines, start, end, child_indent):
     opens the block at that indentation. This limb counts each of them all the
     same: what tells a continuation from a key is what an earlier line left
     OPEN, which a line-oriented reader does not know, and the other lines it
-    does not read for what they are. (A continuation line SHAPED
+    does not read for what they are. It counts them all the same only among the
+    lines it SEES, and one shape escapes before the counting: a line beginning
+    with `#` is a comment to this reader whatever the file makes of it, so a
+    continuation landing here that begins with `#` is skipped rather than
+    counted -- and `_bind_marker` then reads it as the first line of the
+    comment block above the next job key, which is how a job comes to be graded
+    under a posture no line of the file declares (X74). (A continuation line SHAPED
     like a key is the exception, and not a safe one: `_RE_KEY` matches it, so
     this limb passes it and the reader records a job off it. The limit block
     names that as open, and X66-X67 pin it as emitted.) So a workflow that both
@@ -693,12 +704,19 @@ def census_scan(root):
     any quotes around it stripped. A YAML parser reads a name from every line
     its value runs to, and a job whose name carries an expression, or that
     runs over a `strategy: matrix`, reports a context GitHub computes at run
-    time -- so the context compared here is not always the one GitHub reports. A
-    `name:` continued onto a further line is read as its first line alone
-    (X70), and a `name:`-shaped line inside another property's value, at the
-    property indentation and ahead of the job's own `name:`, is read as the
-    job's name (X71); the limit block states both, and the run-time case, as
-    conditions. `posture` is None when no marker BINDS to the job key (see
+    time -- so the context compared here is not always the one GitHub reports.
+    Three mechanisms for that are measured, and there is no claim that they are
+    all of them. A `name:` continued onto a further line is read as its first
+    line alone (X70). A `name:`-shaped line inside another property's value, at
+    the property indentation and ahead of the job's own `name:`, is read as the
+    job's name (X71). And the quote-strip above is `.strip('"').strip("'")` --
+    one layer of each, both ends, unconditionally -- so a value that itself
+    BEGINS AND ENDS with a quote character is read as the value inside it,
+    while all three parsers measured read those quotes as part of the name
+    (X75). That third one is a property of this line's own strip rather than of
+    any continuation, so the fold that reads a continued `name:` the way the
+    parsers do does not reach it. The limit block states each of them, and the
+    run-time case, as conditions. `posture` is None when no marker BINDS to the job key (see
     `_bind_marker` for what binding requires and why proximity is not it), and
     also when the bound marker's value is not one this tool recognises -- an
     answer it cannot read is not an answer, so the unreadable case fails closed
@@ -739,7 +757,11 @@ def census_scan(root):
     a line that is no key at all -- a job property's value continued at that
     indentation, which this reader cannot tell from a key, or a tag, an anchor
     or a bracket of a flow mapping written there on a line of its own -- and
-    that false refusal is accepted. See `_unread_key_lines`.
+    that false refusal is accepted. It is NOT set when that line begins with
+    `#`: the mark is computed over the lines this reader does not read as
+    comments, and `#` is the whole of what makes a line a comment to it, so a
+    continuation beginning with `#` is skipped by this limb and read as a
+    comment line by `_bind_marker` (X74). See `_unread_key_lines`.
 
     `displaced_key` records whether the `jobs:` block begins, comments aside,
     on a line other than the first one this reader recorded a job off. Both
@@ -913,8 +935,19 @@ def census_findings(jobs):
 # removes it -- so the residual is stated as the condition that produces it, and
 # the arms that hold it honest are named for whoever comes next.
 #
-# This is the block's fifth statement of that residual and the fourth correction
-# of it, so what each earlier version got wrong is worth naming. The first
+# This version stops counting the residuals, and the reason is a pattern rather
+# than any one finding. Each earlier version named a fixed number of open
+# classes; each was then handed a class it had not named, and its own count
+# went false in the same act. That is not bad luck five times over. The shapes a
+# line-oriented reader cannot see are not an enumerable set, so a count of them
+# is falsifiable BY CONSTRUCTION, and a block that carries one is a block whose
+# next reviewer refutes it. So the claim changes shape: the block states what
+# this reader structurally cannot see -- it reads KEY LINES and MARKER LINES,
+# not VALUES -- and gives the measured classes as INSTANCES of that sentence
+# rather than as a complete set. A class measured later then EXTENDS the block
+# instead of contradicting it.
+#
+# What each earlier version got wrong is still worth naming. The first
 # OVERSTATED coverage: it promised that a file yielding no record read off a job
 # key is refused, which was never true of a record read off the CONTENT of a
 # quoted scalar (X34). The second UNDERSTATED what could be done: it said no
@@ -932,9 +965,14 @@ def census_findings(jobs):
 # fires with no key missing named only continuations, where a block that opens
 # on a tag line is refused as well (X72); and its opening said a clean result
 # means the workflows and the declaration agree, which holds only of the
-# contexts this reader reads. So this version says which class is closed, by
-# what mechanism, and which three are left; and none is a remnant of the closed
-# one.
+# contexts this reader reads. The fifth UNDERSTATED once more, twice over: it
+# said three open classes where a job graded under a POSTURE no line of the
+# file declares was already reachable -- a property's quoted scalar continued
+# at the job-key indentation onto a line beginning with `#`, which every limb
+# skips and the marker binding reads as a comment (X74) -- and its account of
+# the name class said two mechanisms where the quote-strip is a third, on one
+# line, reachable with no continuation at all (X75). So this version says which
+# class is closed and by what mechanism, and then stops counting what is left.
 #
 # The second limit also says where the refusal reaches too far. A refusal that
 # fires on files the parsers measured accept is a limit of the instrument as
@@ -944,19 +982,25 @@ def census_findings(jobs):
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
     "API, so this census cannot confirm that any context is REGISTERED.",
-    "Registration remains an operator act outside any pull request. Nor does a",
-    "clean result establish that the workflows and the committed declaration",
-    "agree: it establishes that the declaration agrees with the context this",
-    "reader READ for each job, and that is the text of one line -- the job's first",
-    "`name:` line at its property indentation, or its key where it has none. It is",
-    "not always the context GitHub reports. A `name:` continued onto a further",
-    "line, or a line shaped like one inside another property's value, can put a",
-    "declared context on the line this reader reads while the name a YAML parser",
-    "reads is another -- the third open class below. A job whose `name:` carries",
-    "an expression, or that runs over a `strategy: matrix`, reports a context",
-    "GitHub computes at run time, which this reader never sees: a bare name added",
-    "to the declaration to silence a finding on such a job can read CLEAN over a",
-    "context GitHub never reports.",
+    "Registration remains an operator act outside any pull request.",
+    "",
+    "WHAT A CLEAN RESULT MEANS, and it is narrower than it looks. This reader is",
+    "line-oriented. It reads KEY LINES and MARKER LINES; it does not read VALUES,",
+    "and it does not know what an earlier line left open. So a clean result says",
+    "that the lines this reader COULD READ agree with the committed declaration.",
+    "It is NOT a statement about what the file's values contain. A value is",
+    "exactly where the text of a line this reader reads can be written without",
+    "being one -- a key, a marker, a `name:` -- and wherever a file does that, the",
+    "two come apart. Every open class named below is one measured instance of",
+    "that one sentence, and the sentence is the claim; the instances are not.",
+    "The context compared for each job is the text of ONE line -- its first",
+    "`name:` line at the job's property indentation, with one layer of double",
+    "quotes and then one of single quotes stripped off each end, or its key where",
+    "it has none. It is not always the context GitHub reports. A job whose",
+    "`name:` carries an expression, or that runs over a `strategy: matrix`,",
+    "reports a context GitHub computes at run time, which this reader never sees:",
+    "a bare name added to the declaration to silence a finding on such a job can",
+    "read CLEAN over a context GitHub never reports.",
     "",
     "WHICH FORMS IT READS: a block `jobs:` mapping at column zero whose job keys are",
     "`key:` lines, optionally quoted. That set is not exhaustive over the ways YAML",
@@ -980,7 +1024,10 @@ _CENSUS_LIMIT = (
     "job-key indentation, or shallower short of column zero. A line there that is",
     "not shaped like a key is no key at all, but this reader cannot tell it from a",
     "key it cannot read, so it refuses a workflow whose every job key it reads",
-    "(X37-X41). A line shaped like a key that sits SHALLOWER leaves the records",
+    "(X37-X41) -- UNLESS that line begins with `#`. Then it is a comment to this",
+    "reader whatever the file makes of it: no limb of the refusal sees it, and it",
+    "is read as a comment line instead, which is the posture class below (X74).",
+    "A line shaped like a key that sits SHALLOWER leaves the records",
     "read off the real keys unvouched for, so that file is refused too. Indenting",
     "the continuation deeper than the job keys clears either (X42). A block may",
     "also open, ahead of its first job key, on a line carrying only a tag or an",
@@ -995,21 +1042,34 @@ _CENSUS_LIMIT = (
     "and X68-X69 catch the sparing readers measured; they do not close that",
     "direction for every reader.",
     "",
-    "WHAT REMAINS OPEN is three classes, none a remnant of that one, and NONE IS",
-    "CLOSED.",
+    "WHAT REMAINS OPEN. What follows are the classes MEASURED SO FAR. It is a list",
+    "of instances, not a complete set, and it carries no count on purpose: a count",
+    "of what a line-oriented reader cannot see is falsifiable by construction, and",
+    "four consecutive reviews each handed this block a class it had not named and",
+    "made its own count false in the same act. None of these is a remnant of the",
+    "class closed above and none of them is closed. A class measured later EXTENDS",
+    "this list rather than contradicting it, and finding one is not evidence that",
+    "what is written here was wrong.",
     "A job this reader never WALKS. The `jobs:` block ends at the first non-comment",
     "line at column zero, so a quoted scalar or flow collection continued at column",
     "zero ends it early and every job below that point is neither read nor refused.",
     "Measured on files two parsers read as two jobs: CLEAN at exit 0 over the",
     "second, which claims required under a name this declaration does not carry.",
-    "THREE members are pinned, not one -- a double-quoted scalar, a single-quoted",
-    "one, and a flow sequence closed at column zero (X36, X45, X46) -- because an",
-    "author who closes one of them turns a single arm green with the others still",
-    "open. A whole block can go unwalked the same way: a top-level scalar",
-    "continued at column zero can carry a `jobs:` line of its own, and this reader",
-    "begins at the first `jobs:` line it finds, so it walks a block that opens",
-    "inside the scalar, records whatever that block holds, and never reaches the",
-    "real one (X73).",
+    "Three members are pinned SO FAR, not one -- a double-quoted scalar, a",
+    "single-quoted one, and a flow sequence closed at column zero (X36, X45, X46)",
+    "-- because an author who closes one of them turns a single arm green with the",
+    "others still open. A whole block can go unwalked the same way: a top-level",
+    "scalar continued at column zero can carry a `jobs:` line of its own, and this",
+    "reader begins at the first `jobs:` line it finds, so it walks a block that",
+    "opens inside the scalar, records whatever that block holds, and never reaches",
+    "the real one (X73). Nor is a continued value the only thing that ends a block",
+    "early: a `---` document separator is a non-comment line at column zero too, so",
+    "in a MULTI-DOCUMENT file -- two documents each carrying its own `jobs:` block,",
+    "which the parsers measured read as two documents and actionlint accepts at",
+    "rc 0 -- everything below the separator is neither read nor refused. What",
+    "GitHub itself does with such a file was not measured, so no verdict is claimed",
+    "for it here; the clause is recorded because the general sentence above covers",
+    "it and the causes named did not.",
     "A job this reader RECORDS that is not one. A continuation shaped like a key at",
     "EXACTLY the job-key indentation is a `key:` line to this reader, so none of",
     "the three tests fires on it, and it records a job off it. With a marker line",
@@ -1017,23 +1077,50 @@ _CENSUS_LIMIT = (
     "declared context -- and where the real job for that context is gone, the",
     "ABSENT it owes is masked: CLEAN at exit 0, measured on files both parsers read",
     "as one job. Telling that line from a key means knowing that a quote or a flow",
-    "is open, which this reader does not track. TWO members are pinned, a quoted",
-    "scalar and a flow mapping (X66, X67).",
+    "is open, which this reader does not track. Two members are pinned so far, a",
+    "quoted scalar and a flow mapping (X66, X67).",
     "A job this reader grades under a context the job does not report. It reads",
     "the context off one line, and a YAML parser reads a `name:` from every line",
-    "its value runs to. A `name:` continued onto a further line is read as",
-    "its first line alone; a `name:`-shaped line inside another property's quoted",
-    "value, landing at the property indentation ahead of any `name:` of the job's",
-    "own, is read as the job's name. Where the line read is a declared context, the",
+    "its value runs to. The mechanisms measured for this are distinct, and a",
+    "MEMBER COUNT IS NOT A MECHANISM COUNT -- read the arms as instances, never as",
+    "the class. A `name:` continued onto a further line is read as its first line",
+    "alone (X70). A `name:`-shaped line inside another property's quoted value,",
+    "landing at the property indentation ahead of any `name:` of the job's own, is",
+    "read as the job's name (X71). And the quote-strip takes one layer of double",
+    "quotes and then one of single quotes off each end unconditionally, so a value",
+    "that itself BEGINS AND ENDS with a quote character is read as the text inside",
+    "it while all three parsers measured read those quotes as part of the name",
+    "(X75) -- one line, no continuation, no phantom `name:` line. Where the line",
+    "read is a declared context, the",
     "UNREGISTERED the job owes is masked, and so, where that context's real job is",
     "gone, is the ABSENT: CLEAN at exit 0, measured on files both parsers read as",
-    "one job. TWO members are pinned, one per mechanism (X70, X71), because",
-    "folding a continued `name:` closes the first and not the second. Read the",
+    "one job. Each mechanism closes separately: folding a continued `name:` the",
+    "way the parsers do turns X70 red and leaves X71 and X75 at rc 0, measured. So",
+    "an author who lands that fold must not read this class as one close from",
+    "shut, and must not re-label the arms it did not reach. Read the",
     "other way -- a declared name wrapped onto a further line, written as a block",
     "scalar (`name: >-`) and read as `>-`, or followed by a comment read as part",
     "of it -- the same one-line read gives a false finding, and that direction",
     "fails closed.",
-    "No backstop stands behind any of the three: `Workflow SAST (actionlint)`, in",
+    "A job this reader grades under a POSTURE no line of the file declares. The",
+    "only line it reads a posture off is a COMMENT line, and a leading `#` is the",
+    "whole of what makes a line a comment to it. A job property's quoted scalar",
+    "continued at the job-key indentation -- the line the refusal above accepts a",
+    "false refusal for -- may begin with `#`, and then every limb of that refusal",
+    "skips it and the marker binding reads it as the first line of the comment",
+    "block above the NEXT job key. That job is graded under a posture the file",
+    "never declares: CLEAN at exit 0 over a tree owing ABSENT and UNDECLARED,",
+    "measured on a file the parsers read as two ordinary jobs and actionlint",
+    "accepts at rc 0 (X74). The identical continuation WITHOUT the leading `#` is",
+    "refused at exit 2, so the `#` is the whole of the difference, and it turns a",
+    "refusal that fails closed into a CLEAN that fails open. Closing it is not",
+    "line-local, as the other classes' closes are: telling a `#`-leading",
+    "continuation from a comment means tracking what an earlier line left open,",
+    "which is the cross-line lexing this reader does not do and which the one",
+    "measured attempt at it got wrong in the fail-open direction. The blunt",
+    "line-local close -- stop skipping comments in the second limb -- was measured",
+    "to turn about half of these arms red, so it is not a candidate either.",
+    "No backstop stands behind any of them: `Workflow SAST (actionlint)`, in",
     "this same job, exits 0 on every file their arms plant -- measured. It rejects",
     "YAML it cannot parse, and these files parse under both parsers measured, each",
     "of which accepts a continuation at every depth these arms use. GitHub's own",
@@ -1278,9 +1365,13 @@ def run_census(root, stream=sys.stdout):
             "read; the continuation of a value that a job's property began on a "
             "deeper line, which is no key at all and which this reader cannot "
             "tell from one; or a tag, an anchor or a bracket of a flow mapping on "
-            "a line of its own. This reader refuses them all, so a file whose "
-            "every job key it reads is refused too when it carries one of the "
-            "others there. And the block begins, comments aside, on the first "
+            "a line of its own. This reader refuses every one of them that it "
+            "SEES, so a file whose every job key it reads is refused too when it "
+            "carries one of the others there. What it does not see is a line "
+            "there beginning with `#`: that is a comment to this reader whatever "
+            "the file makes of it, so it is skipped rather than refused, and the "
+            "limit block below names the class that follows from it. And the "
+            "block begins, comments aside, on the first "
             "line it recorded a job off. A block beginning on any other line "
             "begins on a line this reader recorded no job off. That line may be "
             "a job key it could not read, or a line ahead of the first key that "
@@ -2702,6 +2793,90 @@ def census_arms():
     # truncation (X36, X45, X46) need not reach it, which is why it has an arm of
     # its own. A close turns it red -- at rc 1 UNREGISTERED if it walks the real
     # block, or at rc 2 if it refuses the file -- and must re-label it.
+    # X74 pins the POSTURE class as emitted: it DOCUMENTS the residual rather
+    # than guarding against it, and cannot be red first. `_RE_COMMENT` is `^\s*#`
+    # and nothing else, so a leading `#` is the whole of what makes a line a
+    # comment to this reader. A job property's quoted scalar continued at the
+    # job-key indentation is the line D-58's accepted false refusal fires on --
+    # write that continuation so it begins with `#` and the refusal does not fire
+    # at all: `_is_dedent`, `_block_child_indent`, `_unread_key_lines` and
+    # `_displaced_key_line` each skip it, and `_comment_block_top` admits it as
+    # the comment block above the NEXT job key, where `_bind_marker` reads it as
+    # a marker. Here `alpha` declares advisory honestly and its `env.NOTE` scalar
+    # runs on; the continuation spells `posture=required` and binds to
+    # `hygiene-v2`, whose `name:` is the declaration's last context and whose
+    # real job this tree lacks. The file declares no posture for `hygiene-v2`
+    # anywhere, so the tree owes rc 1 ABSENT and UNDECLARED, and the census
+    # reaches CLEAN at rc 0. All three per-file limbs read False. The trailing
+    # space before the closing quote is load-bearing: it leaves `_RE_MARKER`'s
+    # `(\S+)` group reading `required` rather than `required"`.
+    #
+    # Measured against its own controls. Replace the marker text with ordinary
+    # scalar text and the same file gives rc 1 ABSENT and UNDECLARED, so the
+    # census can see this tree. Write the same marker as a genuine comment and it
+    # gives rc 0, which is correct. Write the identical continuation at the same
+    # indentation WITHOUT the leading `#` and it is refused at rc 2 -- so the `#`
+    # is the whole of the difference between a refusal that fails closed and a
+    # CLEAN that fails open. PyYAML and actionlint (rc 0) read two ordinary jobs
+    # with the names below and no comment anywhere near the continuation.
+    #
+    # A close is NOT line-local, unlike the closes the other residual arms name:
+    # telling this line from a comment means knowing what an earlier line left
+    # open, which is the cross-line tracking this reader does not do. The blunt
+    # line-local close -- stop skipping comments in the second limb -- was
+    # measured to turn about half the arms in this list red, so it is not a
+    # candidate. Whatever closes it turns this arm red at rc 1 ABSENT and
+    # UNDECLARED, or rc 2 if it refuses the file, and must re-label it rather
+    # than put rc 0 back.
+    hash_cont = dict(base)
+    del hash_cont[last]
+    hash_cont[".github/workflows/synth-hash-cont.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  alpha:\n"
+        "    name: An advisory probe\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "    env:\n"
+        '      NOTE: "an open scalar\n'
+        '  # gate-efficacy: posture=required "\n'
+        "  hygiene-v2:\n"
+        "    name: " + tenth + "\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    # X75 is the NAME AXIS's third mechanism, pinned as emitted beside X70 and
+    # X71 so the class's arms cannot be read as its membership. `census_scan`
+    # strips the name it reads with `.strip('"').strip("'")` -- one layer of
+    # each, both ends, unconditionally -- so a value that itself begins and ends
+    # with a quote character is read as the text inside it. Here the job's name
+    # is the declaration's last context wrapped in literal single quotes, and
+    # PyYAML, actionlint and Psych all read a name carrying those quote
+    # characters, which is not a declared context. The tree has that context's
+    # real job removed, so it owes rc 1 ABSENT and UNREGISTERED and reaches
+    # CLEAN at rc 0.
+    #
+    # It is a separate arm because it is a separate MECHANISM, not a variation on
+    # one: there is no continuation and no phantom `name:` line, only the strip
+    # applied to a single line, so the fold that reads a continued `name:` the way
+    # the parsers do turns X70 red and leaves this one at rc 0 -- measured. An
+    # author who lands that fold and reads the class as one close from shut would
+    # re-label two arms while this mechanism stands untouched. A close turns this
+    # red at rc 1 ABSENT and UNREGISTERED, or rc 2 if it refuses the file, and
+    # must re-label it.
+    name_quoted = dict(base)
+    del name_quoted[last]
+    name_quoted[".github/workflows/synth-name-quoted.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  hygiene-v2:\n"
+        '    name: "\'' + tenth + '\'"\n'
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
     second_jobs = dict(base)
     second_jobs[".github/workflows/synth-second-jobs.yml"] = (
         'name: "Synthetic\n'
@@ -2967,6 +3142,30 @@ def census_arms():
                 "census reaches CLEAN. A close turns this red at rc 1 UNREGISTERED "
                 "if it walks the real block, or rc 2 if it refuses the file, and "
                 "must re-label it", second_jobs, 0, set()),
+        ("X74", "POSTURE AXIS, a NAMED RESIDUAL pinned as emitted -- it documents "
+                "the residual rather than guarding against it, and cannot be red "
+                "first: a job property's quoted scalar continued at the job-key "
+                "indentation onto a line beginning with `#`. Every limb of the "
+                "file-level refusal skips it as a comment and the marker binding "
+                "reads it as one, so the job below is graded under a posture no "
+                "line of the file declares -- the declaration's last context, "
+                "whose real job this tree lacks: CLEAN at rc 0 over a tree owing "
+                "ABSENT and UNDECLARED. The identical continuation WITHOUT the `#` "
+                "is refused at rc 2, so the `#` is the whole of the difference. A "
+                "close needs cross-line tracking, not a line-local test; whatever "
+                "closes it turns this red at rc 1 ABSENT and UNDECLARED, or rc 2 "
+                "if it refuses the file, and must re-label it",
+         hash_cont, 0, set()),
+        ("X75", "NAME AXIS, the THIRD mechanism, pinned as emitted: a `name:` whose "
+                "YAML value itself begins and ends with a quote character. The "
+                "one-layer-of-each quote-strip reads it as the declared context "
+                "inside, while all three parsers measured read a name carrying "
+                "those quotes -- so the tree's ABSENT and UNREGISTERED are both "
+                "masked: CLEAN at rc 0. One line, no continuation, no phantom "
+                "`name:`, so folding a continued `name:` does not reach it and this "
+                "class's arms are instances rather than its membership. A close "
+                "turns this red at rc 1 ABSENT and UNREGISTERED, or rc 2 if it "
+                "refuses the file, and must re-label it", name_quoted, 0, set()),
     ]
 
 
