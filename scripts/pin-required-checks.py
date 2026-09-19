@@ -60,15 +60,16 @@ MODES
         WHAT A CLEAN CENSUS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the
         branch protection API, so no check running in this repository's CI can
         confirm that a context is REGISTERED. A clean census means the
-        workflows and the committed declaration agree with each other.
-        Registration remains an operator act outside any pull request -- it is
-        what --apply below performs. The census makes an omission visible; it
-        cannot make one impossible.
+        committed declaration agrees with the context this reader READ for
+        each job -- one line of text, which is not always the context GitHub
+        reports, as the limit block states. Registration remains an operator
+        act outside any pull request -- it is what --apply below performs. The
+        census makes an omission visible; it cannot make one impossible.
 
         WHICH FORMS IT CAN READ is a separate limit from the one above, and it
         is stated in full in the limit block the census prints on EVERY exit
         path -- which key presentations are refused rather than missed, which
-        files the parsers measured accept are refused as well, and the two
+        files the parsers measured accept are refused as well, and the three
         classes that still escape both the reader and its own refusal. It is
         not restated here.
 
@@ -77,11 +78,13 @@ MODES
         it read in full: it yielded no record read off a job key at the
         shallowest indentation in its `jobs:` block, or it carries a line there
         that this reader does not recognise as a `key:` line, or its `jobs:`
-        block does not begin on the first line it read a job off. The first
-        two limbs refuse some files that both parsers measured accept -- a job
+        block does not begin on the first line it read a job off. The limbs
+        refuse some files that both parsers measured accept -- a job
         property's value continued at that indentation, or shallower, is no
-        key, but this reader cannot tell it from one it cannot read -- and the
-        false refusal is accepted because it fails closed.
+        key, but this reader cannot tell it from one it cannot read; and a tag
+        or an anchor written on a line of its own, or a bracket of a flow
+        mapping, that opens the block ahead of its first key is no key either
+        -- and each false refusal is accepted because it fails closed.
 
     --assert --stdin | --assert --file PATH
         The four-conjunct assertion alone, over a protection object or over a
@@ -112,8 +115,10 @@ EXIT CODES
        shallowest indentation in its `jobs:` block, or it carries a line there
        that this reader does not recognise as a `key:` line, a job property's
        value continued there included, or its `jobs:` block does not begin on
-       the first line it read a job off. "I cannot vouch I read this file" is a
-       refusal, never a finding, so it never shares exit 1)
+       the first line it read a job off, a block that opens on a tag or an
+       anchor line, or on a bracket of a flow mapping, included. "I cannot
+       vouch I read this file" is a refusal, never a finding, so it never
+       shares exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
     5  the self-test did not pass, so no live mode may run
@@ -287,10 +292,12 @@ def evaluate(raw, disabled=frozenset()):
 #
 # WHAT A GREEN CENSUS DOES NOT MEAN. `GITHUB_TOKEN` cannot read the branch
 # protection API, so no check running in this repository's CI can confirm that
-# a context is REGISTERED. A clean census means the workflows and the committed
-# declaration agree with each other. Registration remains an operator act
-# outside any pull request, performed by --apply above. The census makes an
-# omission visible at pull-request time; it cannot make one impossible.
+# a context is REGISTERED. A clean census means the committed declaration
+# agrees with the context this reader READ for each job, which is one line of
+# text and not always the context GitHub reports -- the limit block names how
+# the two can differ. Registration remains an operator act outside any pull
+# request, performed by --apply above. The census makes an omission visible at
+# pull-request time; it cannot make one impossible.
 # ==========================================================================
 
 POSTURE_VALUES = ("required", "advisory")
@@ -317,9 +324,10 @@ _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
 # this reader walks, whose job keys share one indentation as YAML requires, a
 # file in which this reader misses a job key is refused by `run_census`, by
 # name, in every position and whether or not the file also holds a job the
-# reader reads. The argument has two cases. If the block's first line -- its
-# first job key -- is not the first line this reader recorded a job off, the
-# file yields no record, or it fails the third limb. If it is, the reader's key
+# reader reads. The argument has two cases. If the block's first job key is not
+# the first line this reader recorded a job off, the file yields no record, or it
+# fails the third limb: the block begins on that key, or on a line above it that
+# is no key, and a job was recorded off neither. If it is, the reader's key
 # indentation is the real one, so a key missed at it is a line this pattern does
 # not match: that line fails the second limb when it is the block's shallowest,
 # and when something sits shallower still, every record fails the first. An
@@ -333,12 +341,16 @@ _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
 # job-key indentation, or shallower, and that line is no key at all -- but it is
 # refused all the same, because nothing on the line tells it from a key this
 # pattern cannot read. That over-reach is ACCEPTED: it fails closed, where the
-# one attempt to spare such lines failed open. What the refusal does NOT reach is
-# a key on a line it never walks, nor a line it reads as a key that is none: a
+# one attempt to spare such lines failed open. So is a second, made by the third
+# limb: a block that opens on a tag or an anchor written on a line of its own,
+# or on a bracket of a flow mapping, ahead of a first key this pattern reads, is
+# refused with every key read (X72). What the refusal does NOT reach is a key on
+# a line it never walks, nor a line it reads as a key that is none: a
 # continuation SHAPED like a key, at exactly the job-key indentation, is
-# recorded as a job, and can claim a context no real job claims. The limit block
-# the census prints states both residuals as conditions and names the arms that
-# pin them.
+# recorded as a job, and can claim a context no real job claims. Nor, off the key
+# axis, does it reach a job read in full whose `name:` it reads otherwise than
+# GitHub does. The limit block the census prints states all three residuals as
+# conditions and names the arms that pin them.
 #
 # The groups are NAMED deliberately: adding a group shifts every positional
 # index, and two call sites read them.
@@ -421,7 +433,8 @@ def _block_child_indent(lines, start, end):
     record is synthesised exists at the point it is synthesised, and does not
     have to be inferred afterwards from the record itself. They also disagree
     when a continuation sits shallower than the first line this reader
-    recognises as a key, which sets the mark on records that are not phantoms,
+    recognises as a key, or a tag, an anchor or a bracket of a flow mapping
+    opens the block there, which sets the mark on records that are not phantoms,
     and when a key is indented with a tab, which `_RE_KEY` and `_indent_of`
     measure at different widths. The file is refused in every case, and the
     diagnosis says what this reader cannot vouch for.
@@ -470,9 +483,12 @@ def _unread_key_lines(lines, start, end, child_indent):
     that every non-comment line at that indentation is a job key or part of one.
     A job PROPERTY's multi-line quoted scalar, or a flow collection it left open,
     continues onto later lines, and an author may land one of them at exactly
-    the job-key indentation; that line is neither. This limb counts it all the
-    same, because what tells the two apart is what an earlier line left OPEN,
-    and a line-oriented reader does not know that. (A continuation line SHAPED
+    the job-key indentation; that line is neither. Nor is a tag or an anchor
+    written on a line of its own, or a bracket of a flow mapping, where it
+    opens the block at that indentation. This limb counts each of them all the
+    same: what tells a continuation from a key is what an earlier line left
+    OPEN, which a line-oriented reader does not know, and the other lines it
+    does not read for what they are. (A continuation line SHAPED
     like a key is the exception, and not a safe one: `_RE_KEY` matches it, so
     this limb passes it and the reader records a job off it. The limit block
     names that as open, and X66-X67 pin it as emitted.) So a workflow that both
@@ -514,10 +530,12 @@ def _displaced_key_line(lines, start, end, job_indent):
 
     The third limb of the file-level refusal. `first` is the block's first line,
     blank lines and comments aside; `first_key` is the first line this reader
-    recorded a job off. In a valid workflow the block this reader enters is a
-    block mapping, and a block mapping begins on its first key -- so when the
-    two differ, the line the block begins on is one this reader did not record
-    a job off, and the lines it did record jobs off may not be the file's own.
+    recorded a job off. A `jobs:` block begins on its first job key, or on a
+    line above that key which is no key: a tag or an anchor written on a line
+    of its own, or the opening bracket of a flow mapping, which is not the
+    block mapping this reader reads. So when the two differ,
+    the line the block begins on is one this reader did not record a job off,
+    and the lines it did record jobs off may not be the file's own.
 
     The class this closes is measured, not foreseen. A job property's quoted
     scalar or flow collection may be continued onto a line shaped like a key
@@ -533,6 +551,16 @@ def _displaced_key_line(lines, start, end, job_indent):
     finding on the phantom alone that way, and X64 and X65 arm two of them. What
     they share is the line the block begins on: a job key this reader could not
     read, ahead of the phantom.
+
+    What else it refuses, and the refusal is accepted. Where the line the block
+    begins on is a tag or an anchor, or a flow mapping's bracket, placed deeper
+    than the job keys, the first line this reader records a job off may be the
+    real first key and every record genuine -- and still the two lines differ,
+    so the file is refused. Both parsers measured accept such a file, and X72
+    pins the tag. The refusal fails closed and its diagnosis names both lines:
+    the same kind of false refusal as the continuation the first two limbs
+    refuse, accepted for the same reason. Deleting a tag or an anchor line
+    clears it, and a flow mapping is outside the forms this reader reads.
 
     Line-local, deliberately: it compares two line indices the scan already
     has, and keeps no state across lines. It does not know what an earlier line
@@ -658,9 +686,19 @@ def census_scan(root):
     Line-oriented and stdlib-only: this module imports no YAML parser, and a
     census that needed one would not run on a runner that has not installed it.
 
-    The context name is the job's `name:` when it has one and the job KEY when
-    it does not, because that is what GitHub reports as the check's context in
-    each case. `posture` is None when no marker BINDS to the job key (see
+    The context name is read off the job's `name:` when it has one and is the
+    job KEY when it does not, because GitHub reports a job's name, or its key
+    where it has none, as the check's context. What is read here, though, is
+    ONE LINE: the first `name:` line at the job's property indentation, with
+    any quotes around it stripped. Both parsers measured read a name from every
+    line its value runs to, and a job whose name carries an expression, or that
+    runs over a `strategy: matrix`, reports a context GitHub computes at run
+    time -- so the context compared here is not always the one GitHub reports. A
+    `name:` continued onto a further line is read as its first line alone
+    (X70), and a `name:`-shaped line inside another property's value, at the
+    property indentation and ahead of the job's own `name:`, is read as the
+    job's name (X71); the limit block states both, and the run-time case, as
+    conditions. `posture` is None when no marker BINDS to the job key (see
     `_bind_marker` for what binding requires and why proximity is not it), and
     also when the bound marker's value is not one this tool recognises -- an
     answer it cannot read is not an answer, so the unreadable case fails closed
@@ -699,8 +737,9 @@ def census_scan(root):
     satisfied honestly, and the unread job sails to a CLEAN verdict it was never
     graded for. Nine measured shapes did exactly that. The mark is also set by
     a line that is no key at all -- a job property's value continued at that
-    indentation -- because this reader cannot tell the two apart, and that
-    false refusal is accepted. See `_unread_key_lines`.
+    indentation, which this reader cannot tell from a key, or a tag, an anchor
+    or a bracket of a flow mapping written there on a line of its own -- and
+    that false refusal is accepted. See `_unread_key_lines`.
 
     `displaced_key` records whether the `jobs:` block begins, comments aside,
     on a line other than the first one this reader recorded a job off. Both
@@ -708,7 +747,10 @@ def census_scan(root):
     that sits shallower than the job keys and ahead of all of them, because
     that phantom IS the shallowest line and every line beside it is a `key:`
     line -- and then every real job key is read as no key at all. What the
-    phantom cannot be is the line the block begins on. See `_displaced_key_line`.
+    phantom cannot be is the line the block begins on. The mark is also set by
+    a block that opens on a tag or an anchor line, or a bracket of a flow
+    mapping, ahead of a first key this reader reads, with every record genuine
+    -- a false refusal accepted as well. See `_displaced_key_line`.
     """
     jobs = []
     for rel, path in workflow_files(root):
@@ -782,8 +824,11 @@ def census_scan(root):
         # phantom read off a key-shaped continuation that sits shallower than
         # the job keys and ahead of every one of them, because that phantom IS
         # the shallowest line and every line beside it is a `key:` line. What
-        # the phantom cannot be is the line the block begins on. Per FILE, and
-        # recorded on the record, for the reason the other two are.
+        # the phantom cannot be is the line the block begins on. A block that
+        # opens on a tag or an anchor line, or a bracket of a flow mapping,
+        # fails it too with every key read -- the false refusal
+        # `_displaced_key_line` accepts. Per FILE, and recorded on the record,
+        # for the reason the other two are.
         displaced_key = _displaced_key_line(lines, start, end, job_indent) is not None
 
         keys = _key_lines(lines, start, end, job_indent)
@@ -868,7 +913,7 @@ def census_findings(jobs):
 # removes it -- so the residual is stated as the condition that produces it, and
 # the arms that hold it honest are named for whoever comes next.
 #
-# This is the block's fourth statement of that residual and the third correction
+# This is the block's fifth statement of that residual and the fourth correction
 # of it, so what each earlier version got wrong is worth naming. The first
 # OVERSTATED coverage: it promised that a file yielding no record read off a job
 # key is refused, which was never true of a record read off the CONTENT of a
@@ -880,8 +925,16 @@ def census_findings(jobs):
 # position, which was false of one displaced by a shallower phantom until the
 # third test closed it (X64-X65), and it named one open class where there were
 # two -- a job recorded off a line that is no key is walked, read, and graded
-# (X66-X67). So this version says which class is closed, by what mechanism, and
-# which two are left; and neither is a remnant of the closed one.
+# (X66-X67). The fourth UNDERSTATED once more: it named two open classes where
+# there were three -- a job graded under a context read off one line of its
+# `name:`, or off a `name:`-shaped line inside another value, is walked, read,
+# and graded, and can reach CLEAN (X70-X71); its account of where the refusal
+# fires with no key missing named only continuations, where a block that opens
+# on a tag line is refused as well (X72); and its opening said a clean result
+# means the workflows and the declaration agree, which holds only of the
+# contexts this reader reads. So this version says which class is closed, by
+# what mechanism, and which three are left; and none is a remnant of the closed
+# one.
 #
 # The second limit also says where the refusal reaches too far. A refusal that
 # fires on files the parsers measured accept is a limit of the instrument as
@@ -890,9 +943,20 @@ def census_findings(jobs):
 # refusal knows it can be wrong about that file, and what to change to clear it.
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
-    "API, so this census cannot confirm that any context is REGISTERED. A clean",
-    "result means the workflows and the committed declaration agree with each other.",
-    "Registration remains an operator act outside any pull request.",
+    "API, so this census cannot confirm that any context is REGISTERED.",
+    "Registration remains an operator act outside any pull request. Nor does a",
+    "clean result establish that the workflows and the committed declaration",
+    "agree: it establishes that the declaration agrees with the context this",
+    "reader READ for each job, and that is the text of one line -- the job's first",
+    "`name:` line at its property indentation, or its key where it has none. It is",
+    "not always the context GitHub reports. A `name:` continued onto a further",
+    "line, or a line shaped like one inside another property's value, can put a",
+    "declared context on the line this reader reads where the parsers measured",
+    "read another -- the third open class below. A job whose `name:` carries an",
+    "expression, or that runs over a `strategy: matrix`, reports a context GitHub",
+    "computes at run time, which this reader never sees: a bare name added to the",
+    "declaration to silence a finding on such a job can read CLEAN over a context",
+    "GitHub never reports.",
     "",
     "WHICH FORMS IT READS: a block `jobs:` mapping at column zero whose job keys are",
     "`key:` lines, optionally quoted. That set is not exhaustive over the ways YAML",
@@ -917,16 +981,22 @@ _CENSUS_LIMIT = (
     "not shaped like a key is no key at all, but this reader cannot tell it from a",
     "key it cannot read, so it refuses a workflow whose every job key it reads",
     "(X37-X41). A line shaped like a key that sits SHALLOWER leaves the records",
-    "read off the real keys unvouched for, so that file is refused too. Each false",
-    "refusal fails closed and names a line, and indenting the continuation deeper",
-    "than the job keys clears it (X42). Sparing such a line means knowing what",
-    "every earlier line left open, and a reader that guessed instead let a real",
-    "job key leave the census unrecorded -- the failure this census exists to",
-    "prevent. X43, X48-X63 and X68-X69 catch the sparing readers measured; they do",
-    "not close that direction for every reader.",
+    "read off the real keys unvouched for, so that file is refused too. Indenting",
+    "the continuation deeper than the job keys clears either (X42). A block may",
+    "also open, ahead of its first job key, on a line carrying only a tag or an",
+    "anchor, or on the opening bracket of a flow mapping. That line is no key, and",
+    "the block does not begin on a line a job was recorded off, so the file is",
+    "refused with every job key read, wherever the line sits (X72 pins a tag",
+    "deeper than the keys). Deleting a tag or an anchor line clears it; a flow",
+    "mapping is not a form this reader reads. Each false refusal fails closed and",
+    "names a line. Sparing a continuation means knowing what every earlier line",
+    "left open, and a reader that guessed instead let a real job key leave the",
+    "census unrecorded -- the failure this census exists to prevent. X43, X48-X63",
+    "and X68-X69 catch the sparing readers measured; they do not close that",
+    "direction for every reader.",
     "",
-    "WHAT REMAINS OPEN is two classes, neither a remnant of that one, and NEITHER",
-    "IS CLOSED.",
+    "WHAT REMAINS OPEN is three classes, none a remnant of that one, and NONE IS",
+    "CLOSED.",
     "A job this reader never WALKS. The `jobs:` block ends at the first non-comment",
     "line at column zero, so a quoted scalar or flow collection continued at column",
     "zero ends it early and every job below that point is neither read nor refused.",
@@ -935,7 +1005,11 @@ _CENSUS_LIMIT = (
     "THREE members are pinned, not one -- a double-quoted scalar, a single-quoted",
     "one, and a flow sequence closed at column zero (X36, X45, X46) -- because an",
     "author who closes one of them turns a single arm green with the others still",
-    "open.",
+    "open. A whole block can go unwalked the same way: a top-level scalar",
+    "continued at column zero can carry a `jobs:` line of its own, and this reader",
+    "begins at the first `jobs:` line it finds, so it walks a block that opens",
+    "inside the scalar, records whatever that block holds, and never reaches the",
+    "real one (X73).",
     "A job this reader RECORDS that is not one. A continuation shaped like a key at",
     "EXACTLY the job-key indentation is a `key:` line to this reader, so none of",
     "the three tests fires on it, and it records a job off it. With a marker line",
@@ -945,10 +1019,27 @@ _CENSUS_LIMIT = (
     "as one job. Telling that line from a key means knowing that a quote or a flow",
     "is open, which this reader does not track. TWO members are pinned, a quoted",
     "scalar and a flow mapping (X66, X67).",
-    "No backstop stands behind either: `Workflow SAST (actionlint)`, in this same",
-    "job, exits 0 on both -- measured. It rejects YAML it cannot parse, and these",
-    "files parse under both parsers measured, each of which accepts a continuation",
-    "at every depth these arms use. GitHub's own parser was not run on any of them.",
+    "A job this reader grades under a context the job does not report. It reads",
+    "the context off one line, and both parsers measured read a `name:` from every",
+    "line its value runs to. A `name:` continued onto a further line is read as",
+    "its first line alone; a `name:`-shaped line inside another property's quoted",
+    "value, landing at the property indentation ahead of any `name:` of the job's",
+    "own, is read as the job's name. Where the line read is a declared context, the",
+    "UNREGISTERED the job owes is masked, and so, where that context's real job is",
+    "gone, is the ABSENT: CLEAN at exit 0, measured on files both parsers read as",
+    "one job. TWO members are pinned, one per mechanism (X70, X71), because",
+    "folding a continued `name:` closes the first and not the second. Read the",
+    "other way -- a declared name wrapped onto a further line, written as a block",
+    "scalar (`name: >-`) and read as `>-`, or followed by a comment read as part",
+    "of it -- the same one-line read gives a false finding, and that direction",
+    "fails closed.",
+    "No backstop stands behind any of the three: `Workflow SAST (actionlint)`, in",
+    "this same job, exits 0 on every file their arms plant -- measured. It rejects",
+    "YAML it cannot parse, and these files parse under both parsers measured, each",
+    "of which accepts a continuation at every depth these arms use. GitHub's own",
+    "parser was not run on any of them. A parser that refused a value continued no",
+    "deeper than its key would still read X70, which continues its `name:` deeper",
+    "than that.",
 )
 
 
@@ -974,9 +1065,12 @@ def _unread_reason(path):
     Every sentence returned here must be true of EVERY file that reaches it,
     including the files this reader refuses that both parsers measured accept.
     A line at the key indentation that this reader cannot read is sometimes a
-    job key and sometimes the continuation of a property's value, and nothing
-    on the line says which. So the text names what this reader could not do and
-    what the line may be, and never asserts which of the two it is.
+    job key, sometimes the continuation of a property's value -- and nothing on
+    the line says which of those two it is -- and sometimes a line that opens
+    the block without being a key at all: a tag or an anchor written on a line
+    of its own, or a bracket of a flow mapping, which this reader does not read
+    for what it is. So the text names what this reader could not do and what
+    the line may be, and never asserts which it is.
 
     The branch after the third limb's is not a fallback that should never be
     reached. It names the shallowest lines when this reader looked for its job
@@ -1014,8 +1108,10 @@ def _unread_reason(path):
                     "a character, so its `jobs:` line on line 1 does not begin at "
                     "column zero to it; save the file as UTF-8 without the mark")
         if any(_RE_JOBS_ISH.match(line) for line in lines):
-            return ("its `jobs:` line is quoted, or carries a flow mapping on the "
-                    "same line; this reader begins at a bare `jobs:` at column zero")
+            return ("its `jobs:` line is quoted, or carries something after the "
+                    "colon other than a comment -- a flow mapping, a tag or an "
+                    "anchor among them; this reader begins at a bare `jobs:` at "
+                    "column zero")
         return "it carries no `jobs:` line at column zero"
 
     end = len(lines)
@@ -1043,7 +1139,8 @@ def _unread_reason(path):
             # its `ind` group in characters while `_indent_of` counts spaces;
             # and by a file both parsers measured accept, whose records were
             # read off real job keys, when a property's value is continued
-            # shallower than those keys. A
+            # shallower than those keys, or when a tag or an anchor line, or a
+            # bracket of a flow mapping, opens the block shallower than them. A
             # sentence asserting that records exist is false for one of them,
             # and one asserting that no job key was read is false for another.
             return ("line(s) {} sit at indentation {}, the shallowest in this "
@@ -1054,14 +1151,18 @@ def _unread_reason(path):
                     "from this file was read off a job key rather than off a "
                     "job's own property. A line at the shallowest indentation may "
                     "be a job key this reader cannot read, the continuation of a "
-                    "value that a job's property began on a deeper line, or a "
-                    "line indented with a tab, which it measures at a different "
-                    "width; it cannot tell which, so it refuses the file".format(
+                    "value that a job's property began on a deeper line, a tag or "
+                    "an anchor written on a line of its own, a bracket of a flow "
+                    "mapping, or a line indented with a tab, which it measures at "
+                    "a different width; it does not tell which, so it refuses the "
+                    "file".format(
                         where, child_indent, job_indent))
         # Lines at this indentation WERE read as job keys here, so the question
         # left is what the unread lines are, and this reader cannot say. A file
         # that continues a property's value at this indentation reaches this
-        # branch as surely as one hiding a job key, so the text states both. It
+        # branch as surely as one hiding a job key, and so does one whose block
+        # opens on a tag or an anchor line, or a bracket of a flow mapping, at
+        # this indentation, so the text states every one. It
         # says where this READER read the keys, not where the file's keys sit:
         # a key-shaped continuation shallower than the real keys can be what it
         # read, and the file's own keys are then elsewhere.
@@ -1072,27 +1173,34 @@ def _unread_reason(path):
                 "could be issued on those -- but such a line may be a job key this "
                 "reader cannot read, which would then never be graded at all, or "
                 "it may be no key: the continuation of a value that a job's "
-                "property began on a deeper line. This reader cannot tell the two "
-                "apart, so it refuses the file rather than grade it on the keys "
-                "it did read".format(where, child_indent))
+                "property began on a deeper line, a tag or an anchor written on "
+                "a line of its own, or a bracket of a flow mapping. This reader "
+                "does not tell these apart, so it refuses the file rather than "
+                "grade it on the keys it did read".format(where, child_indent))
 
     # The third limb, reached only when every line at the shallowest
     # indentation IS a `key:` line to this reader -- so there is no unread line
     # to name, and naming the two lines the limb compares is what tells the
     # author where to look. The text claims neither line is what it looks like:
     # the measured class puts a job key on the first and a value's continuation
-    # on the second, and the reader cannot see either fact.
+    # on the second, and the reader cannot see either fact. A block that opens
+    # on a tag or an anchor line, or a bracket of a flow mapping, reaches here
+    # too, with the real first key on the second line, so the text names that
+    # possibility beside the other.
     displaced = _displaced_key_line(lines, start, end, job_indent)
     if displaced:
         first, first_key = displaced
-        return ("its `jobs:` block begins, comments aside, on line {}, and the "
-                "first line this reader recorded a job off is line {}, at "
-                "indentation {}. A block mapping begins on its first key, so line "
-                "{} may be a job key this reader cannot read, which would then "
-                "never be graded, and line {} may be no key at all but the "
+        return ("its `jobs:` block begins, comments aside, on line {0}, and the "
+                "first line this reader recorded a job off is line {1}, at "
+                "indentation {2}. It recorded no job off line {3}. That line may "
+                "be a job key this reader cannot read, which would then never be "
+                "graded -- and line {4} may then be no key at all but the "
                 "continuation of a value that a job's property began on an "
-                "earlier line, which would make every job this reader recorded "
-                "here a phantom. It cannot tell which, so it refuses the "
+                "earlier line, which would make every job recorded here a "
+                "phantom. Or line {3} may be no key but a line that opens the "
+                "block: a tag or an anchor written on a line of its own ahead of "
+                "the first job key, or the opening bracket of a flow mapping. It "
+                "does not tell which, so it refuses the "
                 "file".format(first + 1, first_key + 1, job_indent,
                               first + 1, first_key + 1))
 
@@ -1167,27 +1275,34 @@ def run_census(root, stream=sys.stdout):
             "which is where this reader takes the job keys to sit. Every line at "
             "that indentation is, blank lines and comments aside, a `key:` line "
             "it recognises. A line there that is not may be a job key it cannot "
-            "read, or the continuation of a value that a job's property began on "
-            "a deeper line, which is no key at all; this reader cannot tell the "
-            "two apart and refuses both, so a file whose every job key it reads "
-            "is refused too when it continues a value there. And the block "
-            "begins, comments aside, on the first line it recorded a job off. A "
-            "block mapping begins on its first key, so a block beginning on any "
-            "other line begins on a line this reader recorded no job off, which "
-            "in a workflow is a job key it could not read. A file failing any of "
-            "the three tests is one this reader cannot vouch for, and grading "
-            "the rest would issue a verdict over a tree it may have read only in "
-            "part. No verdict is issued.")
+            "read; the continuation of a value that a job's property began on a "
+            "deeper line, which is no key at all and which this reader cannot "
+            "tell from one; or a tag, an anchor or a bracket of a flow mapping on "
+            "a line of its own. This reader refuses them all, so a file whose "
+            "every job key it reads is refused too when it carries one of the "
+            "others there. And the block begins, comments aside, on the first "
+            "line it recorded a job off. A block beginning on any other line "
+            "begins on a line this reader recorded no job off. That line may be "
+            "a job key it could not read, or a line ahead of the first key that "
+            "is no key at all -- a tag or an anchor on a line of its own, or the "
+            "opening bracket of a flow mapping; this reader does not tell these "
+            "apart and refuses the file whatever the line is, so a file whose "
+            "every job key it reads is refused too when such a line opens its "
+            "block. A file failing any of the three tests is one this reader "
+            "cannot vouch for, and grading the rest would issue a verdict over a "
+            "tree it may have read only in part. No verdict is issued.")
         out("Remedy: save the file as UTF-8 text without a byte-order mark, and "
             "write its jobs under a bare `jobs:` line at column zero, as a block "
-            "mapping in which every line at the job keys' indentation, comments "
-            "aside, is a job key written as a `key:` line -- indented with "
-            "spaces, optionally quoted but spelled without escapes, with nothing "
-            "between the key and its colon and nothing after the colon but a "
-            "comment. Where a job property's quoted scalar or flow collection "
-            "runs onto later lines, indent every continuation line deeper than "
-            "the job keys. Where the file is not a workflow, move it out of "
-            ".github/workflows/.")
+            "mapping that begins on its first job key, with nothing between the "
+            "`jobs:` line and that key but comments and blank lines -- no tag or "
+            "anchor on a line of its own. Every line at the job keys' "
+            "indentation, comments aside, must be a job key written as a `key:` "
+            "line: indented with spaces, optionally quoted but spelled without "
+            "escapes, with nothing between the key and its colon and nothing "
+            "after the colon but a comment. Where a job property's quoted scalar "
+            "or flow collection runs onto later lines, indent every continuation "
+            "line deeper than the job keys. Where the file is not a workflow, "
+            "move it out of .github/workflows/.")
 
     # The empty-population refusal, on the same principle as C0 in evaluate():
     # a scan that found nothing to grade has proved nothing about this tree, and
@@ -1232,7 +1347,9 @@ def run_census(root, stream=sys.stdout):
     # than "no job key was left unread", and knowingly so: a line there that is
     # no key at all -- a job property's value continued at that indentation --
     # fails it too, because this reader cannot tell it from a key it cannot
-    # read. That false refusal is accepted, because it fails closed (X37-X41).
+    # read, and so does a tag, an anchor or a bracket of a flow mapping on a
+    # line of its own there. That false refusal is accepted, because it fails
+    # closed (X37-X41).
     #
     # The first limb replaced "at least one record", which was satisfied by a
     # PHANTOM: a file whose only job key went unrecognised still yields a record,
@@ -1258,8 +1375,13 @@ def run_census(root, stream=sys.stdout):
     # job keys and ahead of every one of them -- it is the shallowest line, and
     # every line beside it is a `key:` line -- and then every real job key is
     # read as no key at all. Five measured files reached CLEAN, or a finding on
-    # the phantom alone, that way (X64, X65). A block mapping begins on its
-    # first key, and that phantom is never the line the block begins on.
+    # the phantom alone, that way (X64, X65). A `jobs:` block begins on its
+    # first job key, or on a line above it that is no key -- a tag or an anchor
+    # on a line of its own, or a bracket of a flow mapping -- and that phantom
+    # is none of them. The third limb is stronger than "no key was displaced",
+    # as the second is stronger than its own name: a block that opens on such a
+    # line fails it with every key read, and that false refusal is accepted as
+    # well, because it fails closed (X72).
     read = set(j["file"] for j in jobs
                if not j["synthesised"] and not j["unread_key"]
                and not j["displaced_key"])
@@ -2795,7 +2917,9 @@ def census_arms():
         ("X67", "CLASS P, the second member: the same through a FLOW MAPPING, with "
                 "no quote anywhere. Pinned as emitted, for the reason X45 and X46 "
                 "are pinned beside X36: a close aimed at one construction leaves "
-                "the other open", phantom_claim_flow, 0, set()),
+                "the other open. It documents the residual, as X66 does, and a "
+                "close turns this red at rc 1 ABSENT, or rc 2 if it refuses the "
+                "file, and must re-label it", phantom_claim_flow, 0, set()),
         ("X68", "SPANNING, outside X48-X63's family: a plain scalar INSIDE a flow "
                 "collection, continued onto a line beginning with `'`. Nothing is "
                 "open there in YAML and both parsers read two jobs, so the second "
