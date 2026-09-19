@@ -2490,6 +2490,112 @@ def census_arms():
         "    steps:\n"
         '      - run: "true"\n')
 
+    # X70-X71 pin the NAME AXIS, a named residual, exactly as this reader emits
+    # it: they DOCUMENT it rather than guard against it. The census grades each
+    # job under the text of ONE line -- the first `name:` line at the job's
+    # property indentation -- while a YAML parser reads the name from every line
+    # its value runs to. Where the line this reader keeps is a declared context
+    # and the name the parsers read is not, the job is graded under a context it
+    # does not report. Both trees have that context's job removed, so each owes
+    # ABSENT for the context and UNREGISTERED for the job that really claims
+    # required -- rc 1 -- and each reaches CLEAN at rc 0. Both parsers measured
+    # read each file as one job, under the longer name.
+    #
+    # X70 is N1: a plain `name:` continued onto a second line indented DEEPER
+    # than the property, and this reader keeps the first line. Every other
+    # residual arm here continues a value on a line no deeper than the key whose
+    # value it continues; this one does not, so a parser that refused such a
+    # continuation would still read it. X71 is N2: another property's quoted
+    # value continued onto a `name:`-shaped line at the property indentation,
+    # ahead of the job's own `name:`, which this reader takes for the job's name
+    # -- X66's mechanism one level down, a phantom NAME rather than a phantom
+    # job. Two arms for two mechanisms, because they close separately: folding a
+    # continued `name:` the way the parsers do turns X70 red and leaves X71 green.
+    #
+    # Documenting arms cannot be red first. A close turns each red -- at rc 1
+    # ABSENT and UNREGISTERED if it reads the name the parsers read, or at rc 2 if
+    # it refuses the file -- and must re-label it to want that verdict, not put
+    # rc 0 back.
+    name_cont = dict(base)
+    del name_cont[last]
+    name_cont[".github/workflows/synth-name-cont.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  hygiene-v2:\n"
+        "    name: " + tenth + "\n"
+        "      v2\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    name_in_value = dict(base)
+    del name_in_value[last]
+    name_in_value[".github/workflows/synth-name-in-value.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  hygiene-v2:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    env:\n"
+        '      NOTE: "renamed from the\n'
+        "    name: " + tenth + '"\n'
+        "    name: Hygiene v2\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    # X72 is an ACCEPTED FALSE REFUSAL of the THIRD limb, pinned beside X37-X41's
+    # deliberately: it DOCUMENTS the over-reach and detects nothing. A `jobs:`
+    # block may open on a line carrying node properties alone -- here a `!!map`
+    # tag, deeper than the job keys -- and the job key below it is a `key:` line
+    # this reader reads, so every record is genuine. The block does not begin on
+    # the first line a job was recorded off, though, so the third limb refuses a
+    # file both parsers measured accept, whose own verdict is rc 1 UNREGISTERED.
+    # The refusal fails closed and its diagnosis names the tag line, and deleting
+    # that line clears it. A flow mapping's opening bracket in the same place is
+    # refused the same way and is not pinned here: a flow mapping is not the
+    # block mapping this reader reads. A close that skips a line carrying only
+    # node properties when it finds where the block begins turns this arm red at
+    # rc 1 UNREGISTERED, and must re-label it rather than put rc 2 back.
+    tag_head = dict(base)
+    tag_head[".github/workflows/synth-tag-head.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "    !!map\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    # X73 pins the never-walked class a second way, and it documents it rather
+    # than guarding against it. A top-level scalar -- the workflow's own `name:`
+    # -- is continued at column zero, and one of its continuation lines is
+    # `jobs:`. This reader begins at the FIRST `jobs:` line at column zero, so it
+    # walks a block that opens inside the string and ends at the string's
+    # column-zero close, and it never reaches the real `jobs:` block below: the
+    # job there, claiming required under a name the declaration does not carry,
+    # is neither read nor refused, and the census reaches CLEAN at rc 0 where it
+    # owes rc 1 UNREGISTERED. Whatever the phantom block holds is recorded, so a
+    # file of this shape can also claim a declared context, as X66 does. Both
+    # parsers measured read the file as one job. A close aimed at in-block
+    # truncation (X36, X45, X46) need not reach it, which is why it has an arm of
+    # its own. A close turns it red -- at rc 1 UNREGISTERED if it walks the real
+    # block, or at rc 2 if it refuses the file -- and must re-label it.
+    second_jobs = dict(base)
+    second_jobs[".github/workflows/synth-second-jobs.yml"] = (
+        'name: "Synthetic\n'
+        "jobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  phantom:\n"
+        "    runs-on: ubuntu-latest\n"
+        '"\n'
+        "\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -2702,6 +2808,41 @@ def census_arms():
                 "the line after a `key: plain` line reaches rc 0 here; the other "
                 "sparing reader does not, which is X68's to catch",
          span_wrap, 2, set()),
+        ("X70", "NAME AXIS, N1, a NAMED RESIDUAL pinned as emitted -- it documents "
+                "the residual rather than guarding against it, and cannot be red "
+                "first: a job `name:` continued onto a second line indented DEEPER "
+                "than the property. This reader keeps the first line, the "
+                "declaration's last context, whose real job this tree lacks, so the "
+                "ABSENT and the UNREGISTERED the file owes are both masked: CLEAN "
+                "at rc 0. A close turns this red at rc 1 ABSENT and UNREGISTERED, "
+                "or rc 2 if it refuses the file, and must re-label it",
+         name_cont, 0, set()),
+        ("X71", "NAME AXIS, N2, the second member, pinned as emitted: another "
+                "property's quoted value continued onto a `name:`-shaped line at "
+                "the property indentation, ahead of the job's own `name:`. This "
+                "reader takes that line for the job's name -- the declaration's "
+                "last context, whose real job this tree lacks: CLEAN at rc 0. "
+                "Folding a continued `name:` does not reach it. A close turns this "
+                "red at rc 1 ABSENT and UNREGISTERED, or rc 2 if it refuses the "
+                "file, and must re-label it", name_in_value, 0, set()),
+        ("X72", "ACCEPTED FALSE REFUSAL of the THIRD limb -- documents a known "
+                "over-reach, detects none: a `jobs:` block that opens on a `!!map` "
+                "tag alone on its line, deeper than the job keys, above a job key "
+                "this reader reads. Every record is genuine, but the block does not "
+                "begin on the first line a job was recorded off, so the file is "
+                "refused. The verdict it deserves is rc 1 UNREGISTERED: a close "
+                "that skips a line carrying only node properties turns this red "
+                "there and must re-label it, not put rc 2 back",
+         tag_head, 2, set()),
+        ("X73", "RESIDUAL, pinned and NOT closed -- the never-walked class reached "
+                "a second way: the workflow's own `name:`, a double-quoted scalar "
+                "continued at column zero, carries a `jobs:` line. This reader "
+                "begins at the first `jobs:` line it finds, walks the block that "
+                "opens inside the string, and never reaches the real one, so the "
+                "job there claiming required is neither read nor refused and the "
+                "census reaches CLEAN. A close turns this red at rc 1 UNREGISTERED "
+                "if it walks the real block, or rc 2 if it refuses the file, and "
+                "must re-label it", second_jobs, 0, set()),
     ]
 
 
