@@ -1677,22 +1677,30 @@ def census_arms():
         "    steps:\n"
         "      - run: 'true'\n")
 
-    # X37-X42 are the FALSE-REFUSAL class, and they are the specificity
-    # direction of the whole X26-X34 family: does the unread-key limb refuse
-    # anything it should NOT? In every file below, each job key IS a `key:` line
-    # this reader reads. What lands at the job-key indentation is the
+    # X37-X41 are an ACCEPTED FALSE REFUSAL, pinned deliberately: they DOCUMENT a
+    # known defect and detect none. In every file below, each job key IS a
+    # `key:` line this reader reads. What lands at the job-key indentation is the
     # CONTINUATION of a value that a job's own PROPERTY began on an earlier line
     # -- a multi-line quoted scalar, or a flow collection still open. Such a line
-    # is neither a job key nor part of one, so a refusal naming it states
-    # something false about the file, and prints a remedy its author already
-    # satisfied. The correct verdict is the one the second job earns: rc 1
-    # UNREGISTERED, which is what the reader gave before the limb shipped.
+    # is neither a job key nor part of one, but this reader cannot tell it from a
+    # key it cannot read, so it refuses the file at rc 2. The verdict each file
+    # deserves is its second job's: rc 1 UNREGISTERED.
+    #
+    # The refusal is kept because it fails closed: nothing ships ungraded, and
+    # the refusal names the line. A lexer that spared these lines did repair all
+    # five, and it failed OPEN -- it spared real job keys too, the direction X43
+    # and X48-X63 now pin -- so it was taken back out and this false refusal was
+    # accepted in its place. A correct future fix, one that knows what every
+    # earlier line left open, turns each of these arms RED at rc 1 UNREGISTERED.
+    # That red is the fix working and not a regression: the fix must re-label
+    # these arms as repaired rather than put rc 2 back.
     #
     # Five members and one paired control, because the two constructions are
     # independent: a quoted scalar continues by not having closed, a flow
-    # collection by not having been bracketed shut, and a remedy aimed at one
-    # leaves the other standing. X41 drops the second job entirely, so the class
-    # is not read as a property of files holding two.
+    # collection by not having been bracketed shut, and a fix aimed at one leaves
+    # the other refused. X41 drops the second job entirely, so the class is not
+    # read as a property of files holding two. X42 is the control that confines
+    # the refusal to a continuation at exactly the job-key indentation.
     cont_double = dict(base)
     cont_double[".github/workflows/synth-cont-double.yml"] = (
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
@@ -1797,12 +1805,18 @@ def census_arms():
         "    steps:\n"
         '      - run: "true"\n')
 
-    # X44 asks the same question of the OTHER site that reads key lines. A flow
-    # collection's continuation can be shaped exactly like a key -- `  A:` is a
-    # mapping entry INSIDE the flow, not a job -- and the scan recorded a job
-    # off it, graded it, and emitted an UNDECLARED finding naming a line of the
-    # file that is not a job. One predicate must answer at both sites or the
-    # reader says a line is not a key while recording a job off it.
+    # X44 pins a PRE-EXISTING PHANTOM exactly as this reader emits it: it
+    # DOCUMENTS a known defect and detects none. A flow collection's continuation
+    # can be shaped exactly like a key -- `  A:` is a mapping entry INSIDE the
+    # flow, not a job -- and this reader records a job off it and grades it, so
+    # the census emits an UNDECLARED naming a line of the file that is not a job.
+    # Every reader of this file before the lexer did the same. The exit code is
+    # right: `new-suite` really is UNREGISTERED, so rc 1 is the verdict the file
+    # earns. The finding set is not: the UNDECLARED is false. On this shape the
+    # phantom fails closed, adding a red finding and hiding none. The lexer's
+    # `keys` filter removed it, but the filter read the lexer's output, so it left
+    # with the lexer. A correct future fix that stops reading keys inside an open
+    # flow turns this arm red at UNREGISTERED alone, and must re-label it.
     cont_keyish = dict(base)
     cont_keyish[".github/workflows/synth-cont-keyish.yml"] = (
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
@@ -1825,7 +1839,10 @@ def census_arms():
     # X45-X46 pin the two further members of X36's class. X36 alone pins ONE
     # point in it, so an author who closes that point turns X36 green with these
     # two still open -- the opposite of what a tripwire is for. Both are valid to
-    # both parsers and both reach a CLEAN census, exactly as X36 does.
+    # both parsers and both reach a CLEAN census, exactly as X36 does. X46's flow
+    # sequence is its job's `steps:`, which takes a sequence: under `env:`, which
+    # takes a mapping, actionlint rejects the file, and an arm modelling an
+    # invalid workflow proves nothing about a shippable one.
     trunc_single = dict(base)
     trunc_single[".github/workflows/synth-trunc-single.yml"] = \
         truncated[".github/workflows/synth-truncated.yml"].replace(
@@ -1836,11 +1853,10 @@ def census_arms():
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
         "  # gate-efficacy: posture=advisory\n"
         "  readable:\n"
-        "    env: [\n"
-        "1]\n"
+        "    name: Readable job\n"
         "    runs-on: ubuntu-latest\n"
-        "    steps:\n"
-        "      - run: 'true'\n"
+        "    steps: [\n"
+        "{run: 'true'}]\n"
         "  # gate-efficacy: posture=required\n"
         "  new-suite:\n"
         "    name: New suite (test-new-suite.sh)\n"
@@ -2038,32 +2054,36 @@ def census_arms():
                 "block, and the census reaches CLEAN over a job claiming required "
                 "under an undeclared name. The limit block states this; an arm going "
                 "red here is an author who has closed it", truncated, 0, set()),
-        ("X37", "FALSE REFUSAL: a job `name:` whose double-quoted scalar CONTINUES "
-                "onto a line landing at the job-key indentation. Every job key here "
-                "is a `key:` line this reader reads; that line is the tail of a "
-                "string. Refusing this file says something false about it and prints "
-                "a remedy its author already satisfied -- the verdict it earns is the "
-                "second job's, at rc 1", cont_double, 1, {"UNREGISTERED"}),
-        ("X38", "FALSE REFUSAL: the same, SINGLE-quoted. The two quoting characters "
-                "are independent alternatives and an assertion over one establishes "
-                "nothing about the other -- the same reason X13 and X14 are two arms",
-         cont_single, 1, {"UNREGISTERED"}),
-        ("X39", "FALSE REFUSAL: a `steps:` FLOW SEQUENCE left open at the end of its "
-                "line and closed at the job-key indentation. A different construction "
-                "from the two above -- it continues by not having been bracketed shut "
-                "rather than by not having closed a quote", cont_seq, 1,
-         {"UNREGISTERED"}),
-        ("X40", "FALSE REFUSAL: an `env:` FLOW MAPPING, the other bracket pair",
-         cont_map, 1, {"UNREGISTERED"}),
-        ("X41", "FALSE REFUSAL: the same in a file holding ONE job, so the class is "
-                "not read as a property of files holding two. Nothing about this "
-                "depends on a neighbour", cont_alone, 1, {"UNREGISTERED"}),
+        ("X37", "ACCEPTED FALSE REFUSAL -- documents a known defect, detects none: a "
+                "job `name:` whose double-quoted scalar CONTINUES onto a line landing "
+                "at the job-key indentation. Every job key here is a `key:` line this "
+                "reader reads; that line is the tail of a string, which this reader "
+                "cannot tell from a key it cannot read, so it refuses the file. The "
+                "verdict the file deserves is rc 1 UNREGISTERED: a correct future fix "
+                "turns this arm red there and must re-label it, not put rc 2 back",
+         cont_double, 2, set()),
+        ("X38", "ACCEPTED FALSE REFUSAL: the same, SINGLE-quoted. The two quoting "
+                "characters are independent alternatives -- the reason X13 and X14 "
+                "are two arms -- so a fix that repairs one leaves the other refused. "
+                "A correct fix turns this red at rc 1 and must re-label it",
+         cont_single, 2, set()),
+        ("X39", "ACCEPTED FALSE REFUSAL: a `steps:` FLOW SEQUENCE left open at the end "
+                "of its line and closed at the job-key indentation -- a different "
+                "construction from the two above, continuing because it was not "
+                "bracketed shut rather than because a quote did not close. A correct "
+                "fix turns this red at rc 1 and must re-label it", cont_seq, 2,
+         set()),
+        ("X40", "ACCEPTED FALSE REFUSAL: an `env:` FLOW MAPPING, the other bracket "
+                "pair. A correct fix turns this red at rc 1 and must re-label it",
+         cont_map, 2, set()),
+        ("X41", "ACCEPTED FALSE REFUSAL: the same in a file holding ONE job, so the "
+                "class is not read as a property of files holding two. A correct fix "
+                "turns this red at rc 1 and must re-label it", cont_alone, 2, set()),
         ("X42", "SPECIFICITY for X37-X41: the X37 file with its continuation ONE "
-                "column deeper. It was never refused and must not become so. The only "
-                "difference between this arm and X37 is the landing column, so a "
-                "reader that stopped refusing anything at all would pass X37 and this "
-                "one together -- and a reader whose discriminator is a CONSTANT rather "
-                "than the file's own key indentation would part them wrongly",
+                "column deeper, at an indentation where no job key sits. It is graded, "
+                "never refused, and must stay so. The landing column is the only "
+                "difference from X37, so this arm is what confines the accepted false "
+                "refusal to a continuation at exactly the job-key indentation",
          cont_deeper, 1, {"UNREGISTERED"}),
         ("X43", "THE ONE THAT KEEPS X26-X34 CLOSED against a reader that spares "
                 "lines: a property continuation at the job-key indentation, then a "
@@ -2075,12 +2095,13 @@ def census_arms():
                 "spares the continuation only the unread key can -- and a reader "
                 "that opens a quote at that line start spans the key and reaches "
                 "rc 0", cont_and_unread, 2, set()),
-        ("X44", "the same predicate at the OTHER site that reads key lines: a flow "
-                "mapping whose continuation is shaped exactly like a key (`  A:`). "
-                "The scan recorded a job off it and graded it, so the census emitted "
-                "an UNDECLARED naming a line of the file that is not a job. "
-                "UNREGISTERED is the only finding this file earns",
-         cont_keyish, 1, {"UNREGISTERED"}),
+        ("X44", "PRE-EXISTING PHANTOM, pinned as emitted -- documents a known defect, "
+                "detects none: a flow mapping whose continuation is shaped exactly "
+                "like a key (`  A:`). This reader records a job `A` off that line and "
+                "reports it UNDECLARED. The exit code is right -- `new-suite` really "
+                "is UNREGISTERED -- and the UNDECLARED is false. A correct fix turns "
+                "this red at UNREGISTERED alone and must re-label it",
+         cont_keyish, 1, {"UNDECLARED", "UNREGISTERED"}),
         ("X45", "RESIDUAL, pinned and NOT closed -- the second member of X36's class: "
                 "a SINGLE-quoted scalar continued at column zero. X36 pins one point "
                 "in this class; an author who closes that point turns X36 green with "
