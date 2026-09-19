@@ -652,9 +652,11 @@ graded against a figure no reader can find in the corpus is not gradeable. Nothi
 repository enforces it; it is a budget, recorded so an overage is a decision rather than an
 accident.
 
-**Four of the five verbs exceed it and one does not, so the overage is a property of the four that
-exceed rather than of the format.** Each is recorded with its reason. *Body lines* excludes the
-frontmatter block, which is what the budget is about; every figure is measured at `b89b367`:
+**Every one of the five exceeds it now, and the overage is still a property of the bodies rather
+than of the format — each is recorded with its reason.** The fifth is the newest and its margin was
+the narrowest: `trip-new` sat inside the budget until the standing confirm rule was appended to it
+in the change that rewrote this paragraph. *Body lines* excludes the frontmatter block, which is
+what the budget is about; each row names the commit its own figure was measured at:
 
 | Verb | Body lines | Over the budget by | Why it is retained at this size |
 |---|---|---|---|
@@ -662,7 +664,7 @@ frontmatter block, which is what the budget is about; every figure is measured a
 | `trip` | 1,120 | ~2.2× | measured at `b89b367`. The entry point, carrying every dispatching verb and the agent roster each one reads |
 | `trip-decommission` | 653 | ~1.3× | measured at `b89b367`. Three lifecycle verbs whose ordering is load-bearing and stated in full |
 | `trip-publish` | 553 | ~1.1× | measured at `b89b367`. The publish surface, whose refusals and their reasons are the bulk of it |
-| `trip-new` | 468 | — | measured at `b89b367`. Inside the budget, untouched |
+| `trip-new` | 520 | ~1.04× | measured on the commit that appended the standing confirm rule to § *What this command never does* — this one, which cannot carry its own hash. It read 468 at `b89b367` and sat inside the budget until then. The rule is one text stated in each command file rather than a citation to one, because a citation would make this file's conduct another file's to state, which is the form `ADR-007` § *Context* requires of a command |
 
 **No body content is reduced in the format conversion, deliberately.** Two constraints make the
 reduction a separate change rather than a cheap one to fold in here. A verb must behave identically
@@ -684,6 +686,6 @@ well would be doing it twice, the second time by somebody else.
 **The claim above about how many verbs exceed the budget is re-derivable, and is meant to be
 re-derived rather than carried.** The per-row figures are anchored to the commit they were measured
 at and are correct as history. The sentence introducing them carries no anchor, and every one of
-these bodies has grown since that commit — `trip-new` now sits inside the budget by a margin an
-ordinary addition would close. Measure the body lines at the commit you are reading before relying
-on it.
+these bodies has grown since the commit those rows name — `trip-new`'s margin was the narrowest of
+them, and the standing confirm rule closed it. Measure the body lines at the commit you are reading
+before relying on it.

@@ -417,6 +417,29 @@ verb-section parser asserts that no command file puts a verdict token in a condi
 a stop, a refusal or a redirect. That assertion is named here as the residual — not claimed as
 already made.
 
+**An act on a verb the operator did not type runs only after a confirmation that names the
+verb and its target, answered before the act.** The verb is the token in this file's
+requirement table. The target is the operand that verb's own `## <verb> <signature>` heading
+declares and, where it declares none, the trip `E1` resolved. Inference may reach such a
+verb, may name it and may prepare it; it may not act on its own selection. Where a verb's
+own section already states a confirmation shape — an echoed outgoing-to-incoming pair, a
+preview over a source's own answered set, a typed identifier, a display name beside a member
+count — that shape stands unchanged and this rule is added beneath it, never substituted for
+it. **A verb is outside this rule where its own `**Reads:**` block declares each of three
+things: that it writes nothing, that it dispatches no agent, and that it performs no act
+whose effect lands outside the trip's own files.** That is the inference line
+`reference/adr/ADR-007-command-entry-point.md` § 1 draws, read here rather than restated; a
+block declaring none of the three leaves its verb inside this rule, because a property
+nobody has declared is not one this rule may assume. **This rule is followed, not
+enforced.** No frontmatter key expresses a boundary finer than the file, the tool lists are
+turn-scoped and gate tools rather than acts, and no arrangement of them makes a confirmation
+happen — so the strength here is the strength of a rule, which is what § 1's amendment
+states and is the whole of what this file claims. A confirmation is what an inferred
+selection needs **before** an act the bounds already permit. It is never what makes an act
+they forbid available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`, and no
+overwrite or deletion of existing trip content, each of which the publishing and overwrite
+paragraphs above and `ADR-007` § 2 forbid unconditionally.
+
 ## Selecting the verb
 
 A literal lookup. Every step below is lexical, and the matching step — step 4 — has a
