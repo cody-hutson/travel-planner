@@ -187,8 +187,9 @@ skills directory under the verb's bare name, and the runtime reads the skill fro
 while naming the **link** as `${CLAUDE_SKILL_DIR}` — measured across every linked invocation. The
 engine root is still the directory two levels above it, because the kernel resolves `..` after it
 has followed the link: `<link>/../..` names the engine, and a lexical collapse of the same text
-names the home directory, which is why the verbs say to read it as the kernel does. The engine directory itself carries no skill file at its root and is
-not a skill; it is the thing the links point into. An earlier planning document named the nested
+names the home directory, which is why the verbs say to read it as the kernel does. The engine directory itself is
+the thing the links point into, and it carries a skill file of its own at its root — the guided-entry surface,
+which names a verb and runs none — so it is a skill as well, though not a verb. An earlier planning document named the nested
 form; that path is **superseded by the measurement**, and this sentence is the record of it.
 
 **The invocation posture the conversion preserves.** Every verb carries
@@ -201,6 +202,17 @@ under `.claude/commands/` is *the older format of the same mechanism*, carrying 
 frontmatter but for two keys, so moving to the current format is continuous with that record
 rather than in tension with it. What this record changes on that surface is its **location and
 format**, and nothing else.
+
+**Amendment (2026-09-18, Friday) — the engine directory now carries a skill file of its own.** The
+paragraph naming the home the conversion lands said that the engine directory carried no skill file
+at its root and was not a skill. That was true when this record was accepted, and it stopped being
+true when the milestone that owns conversational entry added the guided-entry surface at the engine
+root, so the claim is corrected in place above rather than left standing. This corrects a description
+of the layout and changes nothing decided here: the verbs keep their home and are still reached
+through their links, each verb keeps the invocation posture named above, and the surface at the root
+declares no verb of its own. Where model inference becomes permitted was never decided by this
+record, which says so in its opening; the rule that admits a surface which only proposes is recorded
+in `ADR-007-command-entry-point.md` § 1, in its amendment of the same date.
 
 ### 2. Operator data does not move
 

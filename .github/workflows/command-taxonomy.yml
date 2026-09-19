@@ -37,7 +37,9 @@ name: Command taxonomy
 # network, no Node and no gh, and its verdict is real. In summary, a green means: every
 # declared verb of every command file resolves to exactly one implementing region; every
 # ADDRESSED taxonomy cell covers a non-empty set of those verbs; every coverage unit of
-# the surface is covered by exactly one cell; the charter's two enumerations of the verb
+# the surface is covered by exactly one ADDRESSED cell (a declared ambiguity set offers its
+# options -- verbs, or a declared disposition -- and never satisfies totality); the charter's
+# two enumerations of the verb
 # set agree as a set difference in both directions; the publish-form disposition table is
 # complete, sentinel-current and cross-linked to the live surface with no command map
 # held anywhere; no command file reaches an excluded publish form; every RESOLVE-role
@@ -59,12 +61,15 @@ name: Command taxonomy
 # OUT OF SCOPE — deliberately, and by name:
 #   RUNTIME PRIVILEGE. This suite asserts that the command files DECLARE what ADR-007
 #   requires. It does not assert that a declaration is enforced at runtime, and a green
-#   here is NOT a privilege guarantee. On what a `disallowed-tools` line does, this
-#   repository carries two incompatible accounts with nothing arbitrating between them.
-#   This suite itself reads such a line: `invocation_check` matches it at the head of a
-#   command file and derives a grant count that later arms branch on. It reads it only as
-#   a DECLARATION — never as evidence that anything enforces it — so the two accounts stay
-#   unarbitrated here. The guard takes neither: every assertion it makes holds under either.
+#   here is NOT a privilege guarantee. What a `disallowed-tools` line does is SETTLED:
+#   ADR-007 § 1's 2026-09-11 amendment arbitrated it against the published contract — the
+#   named tools leave the pool for the turn that invoked the file and return at the next
+#   message, and a restriction that has to outlive the turn is a permission-settings deny
+#   rule. This suite itself reads such a line: `invocation_check` matches it at the head of
+#   a command file and derives a grant count that later arms branch on. It reads it only as
+#   a DECLARATION — never as evidence that anything enforces it — so it needs no position on
+#   the settled account: every assertion it makes is about what a file DECLARES and none is
+#   about what a declaration enforces, so each holds whatever the runtime does.
 #
 #   PROSE-RENDERED INVOCATIONS. The invocation limb reaches the FENCED rendering only.
 #   Where a command file renders an invocation as prose across a hard wrap, with a
