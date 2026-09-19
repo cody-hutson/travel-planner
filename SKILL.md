@@ -78,7 +78,10 @@ string only for the options that have one.
 ## Handing over
 
 In every state that reaches a verb, name the verb and give the **exact command string** to type —
-then stop.
+then stop. Take that string's operand signature from the derived **Arguments** column of
+`reference/command-reference.md`, read live at the moment of the hand-off and never copied into this
+file: fill the operands the request already supplied, and render the rest as the placeholders that
+column spells.
 
 That is the whole of the terminal, and deliberately so. The person typing the verb token is itself
 the declaration that `ADR-007` § 1's amendment requires on a retained arm, so this surface needs no
