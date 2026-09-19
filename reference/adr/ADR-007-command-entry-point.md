@@ -463,7 +463,7 @@ therefore not a substitute mechanism. It is the recorded finding that no substit
 because the surface declines the forms rather than standing in for the gates.
 
 **The dominant risk is gate absence, not gate unreachability — and the deferral above pointed at the
-smaller of the two.** Only two of the reachable forms are gated at all. Absence of a gate is the
+smaller of the two.** Only three of the reachable forms are gated at all. Absence of a gate is the
 publish lifecycle's dominant property: the default encrypted publish creates a public repo, enables
 Pages and prints the passphrase, behind no confirmation of any kind. The TTY leg was the *visible*
 risk, not the main one. The main ones are credential disclosure and un-gated out-of-repo effect, and
@@ -569,9 +569,9 @@ the table as it stands — eleven forms, three addressed and eight excluded. The
 References paragraph was right and is unchanged: it counts the forms carrying `#330-disclosure`
 among their reasons, a subset of the excluded forms rather than their total, and the row that was
 added carries a different reason. The TTY-leg determination's stdin-gate count, which had omitted
-the gate guarding `confirm`, is corrected in place in the same way; its stdout half was true and is
-unchanged. No row, disposition or reason changes, and nothing decided above
-moves.
+the gate guarding `confirm`, is corrected in place in the same way, as is the count of gated forms
+in the paragraph after it; its stdout half was true and is unchanged. No row, disposition or reason
+changes, and nothing decided above moves.
 
 ## Consequences
 
