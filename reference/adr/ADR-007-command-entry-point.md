@@ -453,21 +453,27 @@ pre-execution has no terminal; nothing in this release changes that, and nothing
 
 **The TTY leg's determination: nothing replaces the human gates, because no addressed form reaches
 one.** The script holds exactly three stdin-terminal gates and no stdout-terminal test at all. One
-guards the plaintext publish, one guards the repo delete, and one guards `confirm`. Every other
-reachable form passes through no human gate whatsoever. The leg therefore does not bar the lifecycle
-— it bars three forms, and §2 independently bars two of them by forbidding the only two flags that
-reach their non-interactive limbs. **For those two forms the leg and the bound are co-extensive, and
-the bound is the firmer basis**, because a review that "solved" the leg by inventing a non-interactive
-confirmation substitute would still be stopped by a bound it cannot negotiate. The correct output is
-therefore not a substitute mechanism. It is the recorded finding that no substitute is needed,
-because the surface declines the forms rather than standing in for the gates.
+guards the plaintext publish, one guards the repo delete, and one guards `confirm`. **Those gates
+stand in front of four of the table's forms rather than three**, because the one guarding the
+plaintext publish sits inside the plaintext branch while `--opaque` is parsed independently and only
+names the repo — so `publish --plaintext` and `publish --plaintext --opaque` both reach it. Every
+other reachable form passes through no human gate whatsoever. The leg therefore does not bar the
+lifecycle — it bars four forms, and §2 independently bars three of them by forbidding the only two
+flags that reach their non-interactive limbs: `ALLOW_PLAINTEXT` reaches the two plaintext forms and
+`--yes` reaches the repo delete, while the gate on `confirm` has no override flag at all. **For
+those three forms the leg and the bound are co-extensive, and the bound is the firmer basis**,
+because a review that "solved" the leg by inventing a non-interactive confirmation substitute would
+still be stopped by a bound it cannot negotiate. The correct output is therefore not a substitute
+mechanism. It is the recorded finding that no substitute is needed, because the surface declines the
+forms rather than standing in for the gates.
 
 **The dominant risk is gate absence, not gate unreachability — and the deferral above pointed at the
-smaller of the two.** Only three of the reachable forms are gated at all. Absence of a gate is the
-publish lifecycle's dominant property: the default encrypted publish creates a public repo, enables
-Pages and prints the passphrase, behind no confirmation of any kind. The TTY leg was the *visible*
-risk, not the main one. The main ones are credential disclosure and un-gated out-of-repo effect, and
-the partition below is drawn against those.
+smaller of the two.** Only four of the reachable forms are gated at all — the gates number three,
+the one guarding the plaintext publish standing in front of two of those forms. Absence of a gate is
+the publish lifecycle's dominant property: the default encrypted publish creates a public repo,
+enables Pages and prints the passphrase, behind no confirmation of any kind. The TTY leg was the
+*visible* risk, not the main one. The main ones are credential disclosure and un-gated out-of-repo
+effect, and the partition below is drawn against those.
 
 **The rule that produces the partition.** A publish-lifecycle invocation form is **ADDRESSED** only
 if all three hold: **(i)** it requires no change to the publish script; **(ii)** it writes no
@@ -570,8 +576,11 @@ References paragraph was right and is unchanged: it counts the forms carrying `#
 among their reasons, a subset of the excluded forms rather than their total, and the row that was
 added carries a different reason. The TTY-leg determination's stdin-gate count, which had omitted
 the gate guarding `confirm`, is corrected in place in the same way, as is the count of gated forms
-in the paragraph after it; its stdout half was true and is unchanged. No row, disposition or reason
-changes, and nothing decided above moves.
+in the paragraph after it; its stdout half was true and is unchanged. Those two gated-form counts
+were themselves stated at *gate* granularity while the table enumerates *forms* — the gate guarding
+the plaintext publish stands in front of both plaintext forms, `--opaque` being an independent flag
+— so each is corrected in place to the table's own unit, as are the two clauses in the determination
+that are derived from it. No row, disposition or reason changes, and nothing decided above moves.
 
 ## Consequences
 
