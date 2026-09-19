@@ -3505,13 +3505,13 @@ if [ "$RRC" -eq 1 ]; then PASS "R5c: the same accumulating summary with the valu
 # ── Group R, second remediation (#550 AC 1 / AC 4) — the bucket predicates ──
 #
 # R1–R5 grade what a summary may CARRY (AC 5). R6 grades what decides whether a summary
-# is written at all: the MOVED predicate. Stage 7 found it comparing `(day, role)` — the
-# venue matrix's placement tuple — while the field a re-timed event actually changes, the
-# clock time, sat in no structured source. A dinner moving 19:00 to 20:00 on the same day
-# produced no row; and because the no-op rule (AC 4) suppresses a summary whose difference
-# is empty, a re-bake whose ONLY change was that move published silently. AC 1's "what
-# moved" failed and AC 4 inverted — the rule that exists to suppress noise suppressed the
-# signal.
+# is written at all: the bucket predicates. MOVED is where R6 started. Stage 7 found that
+# predicate comparing `(day, role)` — the venue matrix's placement tuple — while the field
+# a re-timed event actually changes, the clock time, sat in no structured source. A dinner
+# moving 19:00 to 20:00 on the same day produced no row; and because the no-op rule (AC 4)
+# suppresses a summary whose difference is empty, a re-bake whose ONLY change was that move
+# published silently. AC 1's "what moved" failed and AC 4 inverted — the rule that exists
+# to suppress noise suppressed the signal.
 #
 # WHY THESE ARMS READ THE CONTRACT RATHER THAN SPELLING IT. This predicate is a document
 # contract, not a shipped function — the hub emits the summary. So R6 reads the placement
