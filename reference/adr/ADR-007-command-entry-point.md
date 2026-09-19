@@ -215,7 +215,7 @@ apart here, because a rule that runs them together claims a strength it does not
 | Where inference can enter | What governs it | What that governance is |
 |---|---|---|
 | **Invocation** — whether a request in prose reaches this surface at all, with no verb typed | `disable-model-invocation`, declared per file | **Enforced.** The runtime declines the invocation, and while the flag is set it withholds the file's description from context as well |
-| **Selection** — which verb an invocation runs, once the surface has been reached | the lookup each file states in its own § *Selecting the verb* | **Declared.** No frontmatter field expresses it |
+| **Selection** — which verb an invocation runs, once the surface has been reached | the lookup each verb-declaring file states in its own § *Selecting the verb* | **Declared.** No frontmatter field expresses it |
 | **Execution** — whether an act runs on a selection nobody declared | the confirmation the verb's own section states | **Declared.** No frontmatter field expresses it |
 
 **Nothing in the frontmatter expresses a boundary finer than the file, and that was re-established
@@ -568,7 +568,9 @@ were not: the References paragraph above still counted ten forms, and the second
 the table as it stands — eleven forms, three addressed and eight excluded. The *four* in the
 References paragraph was right and is unchanged: it counts the forms carrying `#330-disclosure`
 among their reasons, a subset of the excluded forms rather than their total, and the row that was
-added carries a different reason. No row, disposition or reason changes, and nothing decided above
+added carries a different reason. The TTY-leg determination's stdin-gate count, which had omitted
+the gate guarding `confirm`, is corrected in place in the same way; its stdout half was true and is
+unchanged. No row, disposition or reason changes, and nothing decided above
 moves.
 
 ## Consequences
