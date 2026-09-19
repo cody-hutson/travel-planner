@@ -555,10 +555,21 @@ means, it does not amend it.
 them. `#330-disclosure` refers to the finding that the publish script writes the passphrase to
 standard output on the encrypted publish and rotate paths, where bash pre-execution would place it
 in the session transcript. It is tracked separately, it is **not** fixed by this decision, and it is
-why four of the ten forms are excluded. Separately, the plaintext opt-out is slated to be
+why four of the eleven forms are excluded. Separately, the plaintext opt-out is slated to be
 hard-disabled at the script layer in the automated re-bake path, tracked in another milestone; this
 decision converges with that by declining every plaintext form at the command layer, so no second
 and softer invocation path is introduced.
+
+**Amendment (2026-09-18, Friday) — two restatements of this table's counts, corrected to agree
+with it.** When the table gained its row for `confirm`, this section's opening statement of how
+many forms exist was corrected in the same change, and two sentences restating the same counts
+were not: the References paragraph above still counted ten forms, and the second trade-off in
+§ *Consequences* counted ten forms and seven exclusions. Both are corrected in place to read from
+the table as it stands — eleven forms, three addressed and eight excluded. The *four* in the
+References paragraph was right and is unchanged: it counts the forms carrying `#330-disclosure`
+among their reasons, a subset of the excluded forms rather than their total, and the row that was
+added carries a different reason. No row, disposition or reason changes, and nothing decided above
+moves.
 
 ## Consequences
 
@@ -579,7 +590,7 @@ and softer invocation path is introduced.
 - More files than a single-command shape, and a taxonomy guard to maintain alongside them.
 - The publish lifecycle stayed a manual terminal step for one release, leaving the surface
   deliberately incomplete against its own lifecycle scope. The §4 amendment ends that for three of
-  its ten invocation forms; the other seven are declared exclusions, so what remains outside the
+  its eleven invocation forms; the other eight are declared exclusions, so what remains outside the
   surface is stated rather than pending.
 - `CLAUDE.md`'s Step-1 table changes role from source of truth to documentation of one; the table
   must be kept accurate to the command set rather than the reverse, which inverts how contributors
