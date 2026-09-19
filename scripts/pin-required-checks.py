@@ -2061,6 +2061,156 @@ def census_arms():
                         carrier, trigger, then),
                     tree, want_rc, want_codes))
 
+    # X64-X65 pin class V: a DISPLACED key indentation. A job property's quoted
+    # scalar or flow collection is continued onto a line that is shaped like a
+    # key and sits SHALLOWER than the job keys, and that line comes ahead of
+    # every line this reader reads as a key. The first key line it recognises
+    # is then that continuation, the shallowest line in the block agrees with
+    # it, and this reader takes its indentation to be the jobs' own -- so every
+    # real job key, deeper than that, is read as no key at all and leaves the
+    # census with no record, no finding and no refusal. Both limbs of the
+    # file-level refusal are honestly satisfied, because the record they check
+    # is the phantom. The first job key must be one this reader cannot read, or
+    # it would itself be the first key line; each file here also carries a
+    # canonical, readable `new-suite:` claiming required, which vanishes with
+    # the rest. Both files are valid to both parsers and reached a CLEAN census.
+    #
+    # Two constructions, because they continue for different reasons: a quoted
+    # scalar by not having closed, a flow collection by not having been
+    # bracketed shut. X64 spells its first key with a space before the colon;
+    # X65 anchors it and aliases it from a third job.
+    displaced = dict(base)
+    displaced[".github/workflows/synth-displaced.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  lint :\n"
+        '    name: "Lint\n'
+        " # gate-efficacy: posture=advisory\n"
+        " steps:\n"
+        '    job"\n'
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    displaced_flow = dict(base)
+    displaced_flow[".github/workflows/synth-displaced-flow.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  lint: &base\n"
+        "    runs-on: ubuntu-latest\n"
+        "    env: {\n"
+        " # gate-efficacy: posture=advisory\n"
+        " steps:\n"
+        "      one}\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    name: New suite (test-new-suite.sh)\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n"
+        "  clone: *base\n")
+
+    # X66-X67 pin class P, a PHANTOM CLAIM, exactly as this reader emits it:
+    # they DOCUMENT a named residual and detect none. The same kind of
+    # continuation lands at EXACTLY the job-key indentation, as a marker-shaped
+    # line, a key-shaped line and a `name:`-shaped line. Every line there is a
+    # `key:` line to this reader, so neither limb fires, and it records a job off
+    # the key-shaped line that claims required under the declaration's own last
+    # context. The tree has had that context's job removed, so the census owes
+    # ABSENT at rc 1 -- and the phantom claim masks it: CLEAN at rc 0. Telling
+    # that line from a key needs to know that a quote or a flow is open, and the
+    # one reader measured to know it failed open elsewhere and was taken out.
+    #
+    # Documenting arms cannot be red first: they want what the reader emits, so
+    # they are green before and after the change that lands them. A future
+    # close turns them red -- at rc 1 ABSENT if it spares the continuation and
+    # reads the rest of the file, or at rc 2 if it refuses the file -- and must
+    # re-label them to want that verdict, not put rc 0 back. Two constructions
+    # for the reason X36, X45 and X46 are three: a close aimed at one leaves the
+    # other open. X67 carries no quote at all; its `name:` line is a flow
+    # mapping's plain value, which is why no space follows the colon.
+    last = ".github/workflows/synth-{:02d}.yml".format(len(CONTEXT_ORDER) - 1)
+    phantom_claim = dict(base)
+    del phantom_claim[last]
+    phantom_claim[".github/workflows/synth-phantom-claim.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        '    name: "Readable\n'
+        "  # gate-efficacy: posture=required\n"
+        "  claimed:\n"
+        '    name: ' + tenth + '"\n'
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    phantom_claim_flow = dict(base)
+    del phantom_claim_flow[last]
+    phantom_claim_flow[".github/workflows/synth-phantom-claim-flow.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    name: Readable job\n"
+        "    runs-on: ubuntu-latest\n"
+        "    env: {\n"
+        "  # gate-efficacy: posture=required\n"
+        "  claimed:\n"
+        "    name:" + tenth + "\n"
+        "    }\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
+    # X68-X69 are the arms X48-X63 do not include. Those sixteen pin one family:
+    # a plain scalar in BLOCK context, carried by a `key:` value, whose FIRST
+    # continuation line begins with a flow-opening character. Two readers that
+    # spare lines -- one treating a line start as a node position only inside a
+    # flow, one refusing to open anything on the line directly after a
+    # `key: plain` line -- pass all sixteen and every other census arm bar
+    # X37-X41 and X44, and still lose a real job key on shapes outside that
+    # family. X68 is a plain scalar INSIDE a flow collection, continued onto a
+    # line beginning with `'`: it catches both. X69 is a job `name:` wrapped
+    # over THREE lines, so the trigger sits on a continuation whose previous
+    # line is itself a continuation: it catches the second. Both are valid to
+    # both parsers; neither is a claim that these two close the direction.
+    span_flow = dict(base)
+    span_flow[".github/workflows/synth-span-flow.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps: [{name: a step that keeps going\n"
+        "        'til the very end, run: \"true\"}]\n"
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite:\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        '      - run: "true"\n')
+
+    span_wrap = dict(base)
+    span_wrap[".github/workflows/synth-span-wrap.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=advisory\n"
+        "  readable:\n"
+        "    name: a build that keeps going\n"
+        "      and going and going\n"
+        "      'til the very end\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        '      - run: "true"\n'
+        "  # gate-efficacy: posture=required\n"
+        "  new-suite :\n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        '      - run: "true"\n')
+
     return [
         # id,  what it models,                                    files,        rc, codes
         ("X0", "the clean tree: every job declares, and the required set is "
@@ -2231,7 +2381,43 @@ def census_arms():
                 "which file. It must refuse like the rest, and `_unread_reason`'s "
                 "first branch, written for exactly this and unreachable until now, is "
                 "what names it", not_utf8, 2, set()),
-    ] + span_arms
+    ] + span_arms + [
+        ("X64", "CLASS V, closed: a job property's quoted scalar continued onto "
+                "a KEY-SHAPED line one column SHALLOWER than the job keys, ahead "
+                "of every line this reader reads as a key. It takes that line's "
+                "indentation for the jobs' own, records a phantom off it, and "
+                "every real job -- a canonical `new-suite:` claiming required "
+                "among them -- leaves the census. The file must refuse",
+         displaced, 2, set()),
+        ("X65", "CLASS V, closed: the same through a FLOW MAPPING left open, with "
+                "an anchored first key aliased by a third job. A close aimed at "
+                "quoting alone leaves this one open. The file must refuse",
+         displaced_flow, 2, set()),
+        ("X66", "CLASS P, a NAMED RESIDUAL pinned as emitted -- documents it, "
+                "detects none, and cannot be red first: a quoted scalar continued "
+                "at EXACTLY the job-key indentation as a marker, a key and a "
+                "`name:` line. This reader records a phantom claiming the "
+                "declaration's last context, whose real job this tree lacks, and "
+                "the ABSENT it owes is masked: CLEAN at rc 0. A close turns this "
+                "red at rc 1 ABSENT, or rc 2 if it refuses the file, and must "
+                "re-label it", phantom_claim, 0, set()),
+        ("X67", "CLASS P, the second member: the same through a FLOW MAPPING, with "
+                "no quote anywhere. Pinned as emitted, for the reason X45 and X46 "
+                "are pinned beside X36: a close aimed at one construction leaves "
+                "the other open", phantom_claim_flow, 0, set()),
+        ("X68", "SPANNING, outside X48-X63's family: a plain scalar INSIDE a flow "
+                "collection, continued onto a line beginning with `'`. Nothing is "
+                "open there in YAML and both parsers read two jobs, so the second "
+                "job must grade UNREGISTERED. Measured: both line-sparing readers "
+                "that pass X48-X63 lose that job here", span_flow, 1,
+         {"UNREGISTERED"}),
+        ("X69", "SPANNING, outside X48-X63's family: a job `name:` wrapped over "
+                "THREE lines, the `'` on the third, then a key this reader cannot "
+                "read. The file must refuse. Measured: a reader that spares only "
+                "the line after a `key: plain` line reaches rc 0 here; the other "
+                "sparing reader does not, which is X68's to catch",
+         span_wrap, 2, set()),
+    ]
 
 
 def _materialise(files, root):
@@ -2568,6 +2754,48 @@ def self_test(stream=sys.stdout):
                 "control arm's job keys are all lines this reader recognises, so the "
                 "mark is a measurement and not a reader that refuses every "
                 "file".format(aid, want_unread, want_total))
+
+    # E8 asserts WHY X64 refuses, and it is the limb neither E6 nor E7 reaches.
+    # In a class-V file the first line this reader recognises as a key IS the
+    # shallowest line in the block, so the provenance mark is not set; and every
+    # line there is a `key:` line to it, so the unread-key mark is not set
+    # either. Both limbs are honestly satisfied -- that is how the file reached
+    # CLEAN. What is wrong is WHERE the reader took the job keys from: not the
+    # line the block begins on. So this asserts the third mark on one file with
+    # the other two unset, and X0 is the control that matters -- a mark firing
+    # on a legitimate tree would refuse every file in it, and X64 would pass for
+    # the wrong reason.
+    for aid, rel, want_disp, want_total in (
+            ("X0", None, 0, EXPECTED_COUNT + 1),
+            ("X64", ".github/workflows/synth-displaced.yml", 1, EXPECTED_COUNT + 2)):
+        with tempfile.TemporaryDirectory(prefix="prc-census-") as root:
+            _materialise(by_id[aid], root)
+            scanned = census_scan(root)
+        disp = [j for j in scanned if j.get("displaced_key")]
+        also = [j for j in disp if j.get("synthesised") or j.get("unread_key")]
+        bad = len(scanned) != want_total or len(disp) != want_disp or also or (
+            rel is not None and sorted(j["file"] for j in disp) != [rel])
+        if bad:
+            failures.append("E8/{}: scanned {} record(s), {} marked displaced_key {} "
+                            "({} also carrying another mark) -- want {} of {} from "
+                            "{}, carrying no other mark. The file-level refusal is "
+                            "not resting on the displaced key".format(
+                                aid, len(scanned), len(disp),
+                                sorted(j["file"] for j in disp), len(also),
+                                want_disp, want_total, rel or "no file"))
+            out("  FAIL E8/{}: {} displaced_key ({} with another mark) of {} "
+                "record(s) -- want {}".format(aid, len(disp), len(also),
+                                              len(scanned), want_disp))
+        elif want_disp:
+            out("  PASS E8/{}: the file's record carries the displaced-key mark and "
+                "neither other mark ({} of {}). The refusal is WHERE the keys were "
+                "read from, which is the only limb that can reach this "
+                "shape".format(aid, want_disp, want_total))
+        else:
+            out("  PASS E8/{}: {} of {} record(s) carry the displaced-key mark -- "
+                "every control file's block begins on its first job key, so the "
+                "mark is a measurement and not a reader that refuses every "
+                "file".format(aid, want_disp, want_total))
 
     out("")
     out("-" * 78)
