@@ -70,10 +70,15 @@ name: Trip resolution contract
 #   states it. It cannot assert that a model actually walks the gate ladder at runtime,
 #   and a green here is not evidence that it did.
 #
-#   RUNTIME PRIVILEGE. `allowed-tools` / `disallowed-tools` are a pre-approval grant,
-#   turn-scoped — every tool stays callable, unlisted tools go through normal permission
-#   settings, and the grant clears at the next message. A GREEN CHECK HERE IS NOT A
-#   PRIVILEGE GUARANTEE, and must not be read as one.
+#   RUNTIME PRIVILEGE. The two keys are not one mechanism, and ADR-007 § 1's 2026-09-11
+#   amendment settled which is which against the published contract. `allowed-tools` is a
+#   turn-scoped PRE-APPROVAL and not a restriction — every tool stays callable, and a tool
+#   left off the list routes through the normal permission settings rather than being
+#   forbidden. `disallowed-tools` is a turn-scoped REMOVAL — the named tools leave the pool
+#   for the turn that invoked the file. Both clear at the next message, and a restriction
+#   that has to outlive the turn is a permission-settings deny rule. A GREEN CHECK HERE IS
+#   NOT A PRIVILEGE GUARANTEE, and must not be read as one: this suite asserts what a file
+#   DECLARES, never what a declaration enforces.
 #
 #   TAXONOMY BIJECTION. That is the command-taxonomy suite's invariant, not this one's.
 #   Two guards, two invariants, no overlap.
