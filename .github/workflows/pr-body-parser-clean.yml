@@ -8,6 +8,12 @@ permissions:
   contents: read
 
 jobs:
+  # gate-efficacy: posture=advisory
+  #   Advisory by decision, and deliberately absent from the required contexts.
+  #   Its subject is the pull-request BODY rather than the tree: it reads
+  #   `github.event.pull_request.body`, triggers on `pull_request` only, and honours
+  #   an in-body override marker the author controls — so it has no verdict at all on
+  #   a direct push to `main`. Recorded here so the omission reads as a decision.
   parser-clean:
     name: Close-keyword leak detection
     runs-on: ubuntu-latest
@@ -28,7 +34,27 @@ jobs:
           fi
 
           # 1. Override-marker detection (whole-body, requires HTML-comment wrapper)
-          if printf '%s\n' "$PR_BODY" | grep -qE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->'; then
+          #
+          # `grep -c` + a count test, NOT `grep -q`: `-q` exits on the FIRST match and
+          # closes the pipe, so on a large body the producing `printf` takes EPIPE and
+          # `pipefail` carries the writer's failure out as the pipeline's status. That
+          # status is 141 ONLY where SIGPIPE is fatal; a GitHub-hosted runner hands the
+          # step SIGPIPE already ignored, so the writer returns 1 with a broken-pipe
+          # write error on stderr instead. Either way the `if` reads FALSE even though
+          # the marker was found, silently ignoring a present override. NEITHER THE
+          # EXIT CODE NOR THE SUMMARY NOR THE CHECK'S COLOUR DIAGNOSES THAT: the exit
+          # code can be 0, the summary block is present, and the check can be GREEN.
+          # On a GitHub-hosted runner one trace does: a run that discarded the
+          # override carries that broken-pipe error on stderr, naming THIS
+          # statement's line, and no other run does. Where SIGPIPE is fatal there is
+          # no trace at all, and only the differential — was a marker-carrying body's
+          # override honoured? — separates it. Same root cause as step 4 below; `-c`
+          # reads to EOF.
+          # `|| true` absorbs grep's exit 1 on zero matches (the idiom already used
+          # for ANCHOR_COUNT).
+          OVERRIDE_HITS=$(printf '%s\n' "$PR_BODY" \
+            | grep -cE '<!--[[:space:]]*pr-body-parser-clean:[[:space:]]*allow-close-keyword[[:space:]]*-->' || true)
+          if [ "${OVERRIDE_HITS:-0}" -gt 0 ]; then
             {
               echo "## Override active"
               echo ""
@@ -57,10 +83,32 @@ jobs:
           fi
 
           # 4. Extract content OUTSIDE the Issue References block
+          #
+          # `awk 'NR < n'`, NOT `head -n $((n-1))`. Both emit lines 1..n-1 — the
+          # detection semantics are identical — but `head` STOPS READING once it has
+          # its n-1 lines and closes the pipe. The producing `printf` then takes
+          # EPIPE and fails: 141 ONLY where SIGPIPE is fatal, while a GitHub-hosted
+          # runner hands the step SIGPIPE already ignored, so `printf` returns 1 with
+          # a broken-pipe write error on stderr. Under `set -o pipefail` + `set -e`
+          # either status kills the whole step BEFORE the scan below ever runs: the
+          # check reports a red X with no scan block and no findings, which reads as
+          # a detection but is an abort. DIAGNOSE IT BY THE ABSENT SCAN BLOCK, never
+          # by the red X — an ordinary content failure is red too, and ON THE RUNNER
+          # THIS WORKFLOW ACTUALLY RUNS ON the exit code separates nothing: SIGPIPE is
+          # ignored there, so the abort exits 1 and so does a content failure. The
+          # scope is the same one the sentence above carries, and it is the whole of
+          # why this rule is needed: where SIGPIPE is fatal the two DO separate, 141
+          # against 1, and that is not where this step runs. It only trips once a PR
+          # body is long enough for `head`
+          # to finish while `printf` is still writing, so it stays dormant until a
+          # body that large arrives; it has fired on this repository's own history,
+          # at this site. `awk` drains its input to EOF, so the producer is never
+          # signalled and the pipeline exit status is honest — a genuine failure here
+          # still fails the step (no `|| true` fail-open).
           if [ -z "${ANCHOR_LINE:-}" ]; then
             OUTSIDE_BLOCK="$PR_BODY"
           else
-            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | head -n $((ANCHOR_LINE - 1)))
+            OUTSIDE_BLOCK=$(printf '%s\n' "$PR_BODY" | awk -v n="$ANCHOR_LINE" 'NR < n')
           fi
 
           # 5. Canonical close-keyword scan (close-family verb immediately followed by #N)

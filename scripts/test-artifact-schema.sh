@@ -2965,6 +2965,147 @@ else
   FAIL "CTL-A2neg: MUST NOT FIRE — an UNVERSIONED artifact naming an unknown class failed (rc=$R); A2 has escaped the version gate and the gate is now inventing a rule § 7.3 does not state"
 fi
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# CTL-NOSCHEMA1..3 — the schema lookup, and the class of failure NOTHING here could see.
+#
+# ── WHAT THESE THREE ARMS ARE FOR ────────────────────────────────────────────────
+# A2 above states the condition "declares schema-version N but no schema in
+# reference/schemas/ covers that class", and the gate emits it only when the class-id
+# SPELLS the literal UNKNOWN — the sentinel va_select's declared arm writes. A class-id that
+# reached va_check_artifact from the PATH arm can never spell it, so the identical condition
+# produced the opposite verdict depending on how the id happened to be written: rc 1 with a
+# finding under UNKNOWN, and rc 0 with ZERO BYTES under a well-formed one.
+#
+# Zero bytes is the whole difficulty. The degraded run's output was BYTE-IDENTICAL to a
+# healthy one, so no byte-comparison arm, no count arm and no finding arm in this suite could
+# reach it — and the artifact was reported `validated` against a schema that was never read.
+# Worse than unchecked: an artifact carrying five genuine A3 violations returned rc 1 with
+# 400 bytes of findings normally, and rc 0 with nothing at all under the degradation.
+#
+# ── THE SUBJECT IS DERIVED, NEVER SPELLED ────────────────────────────────────────
+# The class, its schema and its artifact come from the corpus's own declarations, read
+# through the validator's own functions. Nothing below hardcodes a class-id or a path, so a
+# corpus change moves the subject rather than silently un-testing these arms.
+NS_CID=""; NS_ART=""; NS_SCHEMA=""; NS_WITNESS=""
+while IFS= read -r NS_F; do
+  [ -n "$NS_F" ] || continue
+  NS_L="$(va_schema_lines "$ROOT" "$NS_F" 2>/dev/null | grep -v '^FINDING ')"
+  NS_W="$(va_schema_get "$NS_L" witness)"
+  [ -n "$NS_W" ] && [ -r "$ROOT/$NS_W" ] || continue
+  [ -n "$(va_schema_all "$NS_L" field)" ] || continue
+  grep -q '^schema-version:' "$ROOT/$NS_W" || continue
+  NS_CID="$(va_schema_get "$NS_L" class-id)"; NS_ART="$(va_schema_get "$NS_L" artifact)"
+  NS_SCHEMA="$NS_F"; NS_WITNESS="$NS_W"; break
+done <<EOF
+$(va_schema_files "$ROOT")
+EOF
+# A well-formed class-id the corpus provably does not cover, found by SEARCHING rather than
+# by assertion: a literal chosen once could silently become a real class later, and the arm
+# would then grade a covered class while claiming to grade an uncovered one.
+NS_UNCOVERED=""; NS_N=99
+while [ "$NS_N" -lt 400 ]; do
+  if ! va_schema_for "$ROOT" "C$NS_N" >/dev/null 2>&1; then NS_UNCOVERED="C$NS_N"; break; fi
+  NS_N=$((NS_N + 1))
+done
+
+# ── CTL-NOSCHEMA1 — MUST FIRE. The identical condition A2 already names, reached through a
+# well-formed class-id instead of the UNKNOWN sentinel.
+NS1_RC=0; NS1_OUT=""; NS1_REAL_RC=0; NS1_REAL_OUT=""; NS1_LOOKUP_BAD=0; NS1_LOOKUP_OK=0
+if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ]; then
+  NS1_OUT="$(va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_UNCOVERED" "$NS_ART" 2>&1)"; NS1_RC=$?
+  NS1_REAL_OUT="$(va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_CID" "$NS_ART" 2>&1)"; NS1_REAL_RC=$?
+  # The sensitivity/specificity pair on the LOOKUP itself, so "uncovered" is measured here
+  # rather than assumed from the arm's own verdict.
+  va_schema_for "$ROOT" "$NS_UNCOVERED" >/dev/null 2>&1 || NS1_LOOKUP_BAD=1
+  [ -n "$(va_schema_for "$ROOT" "$NS_CID" 2>/dev/null)" ] && va_schema_for "$ROOT" "$NS_CID" >/dev/null 2>&1 && NS1_LOOKUP_OK=1
+fi
+if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ] && [ "$NS1_LOOKUP_BAD" -eq 1 ] && [ "$NS1_LOOKUP_OK" -eq 1 ] \
+   && [ "$NS1_REAL_RC" -eq 0 ] && [ -z "$(printf '%s\n' "$NS1_REAL_OUT" | grep '^FINDING ')" ] \
+   && [ "$NS1_RC" -ne 0 ] && has_finding "$NS1_OUT" 'A2'; then
+  PASS "CTL-NOSCHEMA1: MUST FIRE — a versioned artifact (${NS_WITNESS##*/}) whose class resolves to NO SCHEMA fails closed at rc=$NS1_RC with A2, and it does so for a well-formed class-id ($NS_UNCOVERED) rather than only for the literal UNKNOWN. The lookup pair is measured, not assumed: va_schema_for returns non-zero for $NS_UNCOVERED and a path for $NS_CID; and the SAME artifact under its real class returns rc=$NS1_REAL_RC with no finding, so this arm grades the class-id and not the artifact"
+else
+  FAIL "CTL-NOSCHEMA1: MUST FIRE — a class the corpus does not cover was reported validated (subject=${NS_CID:-<none>} uncovered-id=${NS_UNCOVERED:-<none>} lookup-bad=$NS1_LOOKUP_BAD lookup-ok=$NS1_LOOKUP_OK degraded-rc=$NS1_RC real-rc=$NS1_REAL_RC). subject or uncovered-id empty means the derivation found no subject and this arm measured nothing; lookup-bad=0 or lookup-ok=0 means the class-id pair is not the pair this arm claims; real-rc non-zero means the artifact itself is failing and the comparison says nothing; otherwise the gate returned rc=$NS1_RC over an artifact it graded against no schema at all — $(printf '%s' "$NS1_OUT" | head -c 120)"
+fi
+
+# ── CTL-NOSCHEMA2 — MUST FIRE. The schema RESOLVES and then will not read.
+#
+# The corpus table is warmed in this shell FIRST, deliberately. With a cold table the shadow
+# below runs inside va_corpus_patterns too, the class drops out of the pattern table, and the
+# run takes the A2 branch — a real verdict, but not this one. Warming pins the branch under
+# test. #1149's memo fix makes warm the normal state inside va_main; this arm does not depend
+# on that, because it warms explicitly.
+NS2_MARK="$WORK/ns2_invoked"; NS2_OUT=""; NS2_RC=0; NS2_HITS=0; NS2_NAMES=0
+NS2_CTRL_RC=0; NS2_CTRL_FIND=1
+: > "$NS2_MARK"
+if [ -n "$NS_CID" ]; then
+  va_corpus_patterns "$ROOT" >/dev/null 2>&1
+  NS2_OUT="$(
+    eval "$(declare -f va_schema_lines | sed '1s/^va_schema_lines/va_schema_lines_unshadowed/')"
+    va_schema_lines() {
+      if [ "${2:-}" = "$NS_SCHEMA" ]; then printf 'x\n' >> "$NS2_MARK"; return 1; fi
+      va_schema_lines_unshadowed "$@"
+    }
+    va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_CID" "$NS_ART" 2>&1
+  )"; NS2_RC=$?
+  NS2_HITS="$(awk 'END { print NR + 0 }' "$NS2_MARK")"
+  # Prefix-free literal match on the schema path: it carries `/` and `.`, and `.` in a regex
+  # matches anything, so a regex arm would report a naming it did not observe.
+  NS2_NAMES="$(awk -v p="$NS_SCHEMA" 'index($0, p) > 0 { n++ } END { print n + 0 }' <<<"$NS2_OUT")"
+  NS2_CTRL_OUT="$(va_check_artifact "$ROOT" "$NS_WITNESS" "$NS_CID" "$NS_ART" 2>&1)"; NS2_CTRL_RC=$?
+  [ -z "$(printf '%s\n' "$NS2_CTRL_OUT" | grep '^FINDING ')" ] && NS2_CTRL_FIND=0
+fi
+if [ -n "$NS_CID" ] && [ "$NS2_HITS" -ge 1 ] && [ "$NS2_CTRL_RC" -eq 0 ] && [ "$NS2_CTRL_FIND" -eq 0 ] \
+   && [ "$NS2_RC" -ne 0 ] && has_finding "$NS2_OUT" 'X2' && [ "$NS2_NAMES" -ge 1 ]; then
+  PASS "CTL-NOSCHEMA2: MUST FIRE — with the read of $NS_SCHEMA shadowed to fail (injected $NS2_HITS time(s)) against a WARM pattern table, so the class still resolves and only its schema will not read, the gate FAILS CLOSED at rc=$NS2_RC with X2 naming that schema file. The identical call with the shadow removed returns rc=$NS2_CTRL_RC with no finding, so the verdict change is attributable to the one shadowed read"
+else
+  FAIL "CTL-NOSCHEMA2: MUST FIRE — a schema that resolved and then would not read did not fail closed (subject=${NS_CID:-<none>} shadow-invoked=$NS2_HITS rc=$NS2_RC names-schema=$NS2_NAMES control-rc=$NS2_CTRL_RC control-findings=$NS2_CTRL_FIND). shadow-invoked=0 means the injection never landed and this arm measured nothing; control-rc non-zero or control-findings=1 means the unshadowed subject was already failing, so the comparison proves nothing; rc=0 means the gate reported success over an artifact it never graded; names-schema=0 means it failed without saying WHICH read failed, which is the half of AC2 a bare non-zero does not satisfy"
+fi
+
+# ── CTL-NOSCHEMA3 — MUST NOT FIRE. The case this change is deliberately NOT about, and the
+# counter-arm the two above most need.
+#
+# A schema that resolves, parses, and declares NO FIELD is a real verdict about a real
+# schema: the artifact is validated against a declared field set that happens to be empty.
+# It is empty AT STATUS 0, and it must stay silent at rc 0. *Nothing was checked* and *there
+# was nothing to check* are different answers, and the gate must not render them alike in
+# either direction — the arms above close the first, this one keeps the second open.
+#
+# It is green before and after the change by design. Its value is the day someone decides an
+# empty field list should be an error too: that is the one remedy which satisfies every other
+# criterion here while silently making a legitimate schema fail, and this is what catches it.
+#
+# Zero schemas in the shipped corpus declare no field (the minimum is 8), so the subject is
+# CONSTRUCTED rather than found, and the construction is asserted before anything is read
+# into the result — a fixture that did not strip would make this arm pass over the wrong tree.
+ns3_clean() {   # ns3_clean <root> <path> <cid> <artifact> — true when rc is 0 AND no finding
+  local o rc
+  o="$(va_check_artifact "$1" "$2" "$3" "$4" 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] && [ -z "$(printf '%s\n' "$o" | grep '^FINDING ')" ]
+}
+NS3_FX="$WORK/noschema3"; NS3_SUBJ=0; NS3_STRIPPED=0; NS3_CIDOK=0; NS3_CLEAN=0; NS3_DISCRIM=0
+if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ]; then
+  mk_root "$NS3_FX"
+  if [ -r "$NS3_FX/$NS_WITNESS" ] && [ -r "$NS3_FX/$NS_SCHEMA" ]; then
+    NS3_SUBJ=1
+    awk '{ t = $0; sub(/^[ \t]+/, "", t); if (t !~ /^field /) print }' \
+      "$NS3_FX/$NS_SCHEMA" > "$NS3_FX/ns3.tmp" && mv "$NS3_FX/ns3.tmp" "$NS3_FX/$NS_SCHEMA"
+    NS3_L="$(va_schema_lines "$NS3_FX" "$NS_SCHEMA" 2>/dev/null | grep -v '^FINDING ')"
+    [ -z "$(va_schema_all "$NS3_L" field)" ] && NS3_STRIPPED=1
+    [ "$(va_schema_get "$NS3_L" class-id)" = "$NS_CID" ] && NS3_CIDOK=1
+    ns3_clean "$NS3_FX" "$NS_WITNESS" "$NS_CID" "$NS_ART" && NS3_CLEAN=1
+    # DISCRIMINATION. The same predicate over the uncovered-class input must report a
+    # failure. Without this limb a predicate that can never fail would pass this arm, and a
+    # MUST-NOT-FIRE arm that cannot fire proves nothing about what it claims to protect.
+    ns3_clean "$NS3_FX" "$NS_WITNESS" "$NS_UNCOVERED" "$NS_ART" || NS3_DISCRIM=1
+  fi
+fi
+if [ "$NS3_SUBJ" -eq 1 ] && [ "$NS3_STRIPPED" -eq 1 ] && [ "$NS3_CIDOK" -eq 1 ] \
+   && [ "$NS3_DISCRIM" -eq 1 ] && [ "$NS3_CLEAN" -eq 1 ]; then
+  PASS "CTL-NOSCHEMA3: MUST NOT FIRE — a schema that resolves, parses and declares NO FIELD still validates its artifact CLEAN at rc 0 with no finding. The fixture is asserted first: every 'field ' line was stripped from ${NS_SCHEMA##*/} (its field list reads empty) while its class-id still parses as $NS_CID, so the empty field set is real. And the same predicate over the uncovered-class input DOES report a failure, so this arm can fire and is reporting that it should not"
+else
+  FAIL "CTL-NOSCHEMA3: MUST NOT FIRE — the legitimate zero-field schema did not survive (subject=$NS3_SUBJ stripped=$NS3_STRIPPED class-id-parses=$NS3_CIDOK discriminates=$NS3_DISCRIM clean=$NS3_CLEAN). subject=0 means the fixture was never built; stripped=0 or class-id-parses=0 means the fixture is not the zero-field schema this arm claims, so its verdict is about some other tree; discriminates=0 means the predicate cannot report a failure at all and this arm is vacuous; clean=0 is the real finding — an empty DECLARED field set is now being treated as a failed read, which is the one remedy that breaks a schema with nothing wrong with it"
+fi
+
 # ── A5 — the file's own declaration disagreeing with the class that selected it.
 FX="$WORK/a5"; mk_root "$FX"
 printf -- '---\nartifact: outputs/activities-list.md\nschema-version: 1\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
@@ -3264,6 +3405,15 @@ DR_B_OUT=""; DR_B_RC=0; DR_B_SEL=0; DR_B_A2=0; DR_B_X2SCOPE=0
 DR_C_OUT=""; DR_C_RC=0; DR_C_SEL=0; DR_C_A2=0; DR_C_X2DOC=0; DR_C_X2SCOPE=0
 DR_D_OUT=""; DR_D_RC=0; DR_D_SEL=0; DR_D_MSG=0
 DR_E_OUT=""; DR_E_RC=0; DR_E_SAME=0; DR_E_ANCHOR=0; DR_C_SHAPE=0; DR_C_ANCHOR=0
+# ── THE A AND E CAPTURES SEPARATE THE TWO STREAMS, and that is STRICTER rather than looser.
+# Both were `2>&1`, so two IDENTICAL non-empty stderr blobs compared equal and passed
+# unnoticed — the comparison could not tell a clean run from a run that complained twice in
+# the same words. Split, stdout keeps the meaning CTL-DATAROOT2/3/4 already parse (stderr is
+# empty on the clean path, so those arms are unmoved), and emptiness of stderr becomes a
+# limb in its own right. B, C and D keep their merged captures deliberately: CTL-DATAROOT5's
+# subject IS a message this script writes to stderr.
+DR_A_ERRF="$WORK/dr_a_stderr"; DR_E_ERRF="$WORK/dr_e_stderr"
+DR_A_ERR=""; DR_E_ERR=""; DR_E_QUIET=0
 
 # dr_declares <file> — rc 0 when the file opens with a frontmatter block carrying an
 # `artifact:` key before the block closes. A read of the fixture's own bytes, independent of
@@ -3304,6 +3454,25 @@ dr_pattern_hits() {   # dr_pattern_hits <path> -> how many corpus path-patterns 
 $(va_corpus_patterns "$DR_ENGINE")
 EOF
   printf '%s' "$n"
+}
+# dr_linediff <a> <b> — the lines on which two captures differ, each side shown, capped.
+# Written here rather than shelled out to diff(1): this suite declares itself pure bash and
+# POSIX text processing, the captures it compares are a handful of lines each, and a
+# dependency added for a FAIL path is a dependency that first fails on the day it is needed.
+dr_linediff() {
+  awk -v a="$1" -v b="$2" '
+    BEGIN {
+      na = split(a, A, "\n"); nb = split(b, B, "\n")
+      n = (na > nb ? na : nb)
+      for (i = 1; i <= n && shown < 12; i++) {
+        if (A[i] != B[i]) {
+          shown++
+          printf "\n        line %d  two-argument form: %s", i, (i <= na ? A[i] : "<absent>")
+          printf "\n        line %d  --data-root= form: %s", i, (i <= nb ? B[i] : "<absent>")
+        }
+      }
+      if (shown == 0) printf "\n        (the two agree line for line; they differ in trailing bytes)"
+    }'
 }
 dr_field() {   # dr_field <output> <line-key> <field> -> the integer, or 0 when the line is absent
   local v
@@ -3364,7 +3533,8 @@ fi
 
 # The subject run, once; the arms read it. The same trip path, the same corpus root, the
 # same scope for every run below — only the data root moves.
-DR_A_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_A_RC=$?
+DR_A_OUT="$(va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>"$DR_A_ERRF")"; DR_A_RC=$?
+DR_A_ERR="$(cat "$DR_A_ERRF")"
 DR_A_SEL="$(dr_field "$DR_A_OUT" POPULATION selected)"
 DR_A_VAL="$(dr_field "$DR_A_OUT" PREDICATE validated)"
 DR_A_SKP="$(dr_field "$DR_A_OUT" PREDICATE skipped)"
@@ -3432,19 +3602,656 @@ fi
 
 # CTL-DATAROOT6 — the second spelling. The seam is taught once and typed on two scripts,
 # so `--data-root=<dir>` must be the same seam and not a second, unknown flag.
-DR_E_OUT="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>&1)"; DR_E_RC=$?
-# Agreement is only evidence over a NON-DEGENERATE subject: two spellings that agree on a
-# broken seam prove nothing about the spelling, so the anchor to CTL-DATAROOT2 is graded as
-# its own limb and named in the FAIL.
-DR_E_SAME=0; DR_E_ANCHOR=0
-[ "$DR_E_RC" -eq "$DR_A_RC" ] && [ "$DR_E_OUT" = "$DR_A_OUT" ] && DR_E_SAME=1
-[ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && DR_E_ANCHOR=1
-if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
-  PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0) — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts"
+#
+# ── THIS IS THE SUITE'S ONLY BYTE COMPARISON OF TWO WHOLE RUNS, AND ITS FAIL MUST SAY SO ──
+# Every other assertion here grades a PROPERTY — a count, an rc, a finding code. This one
+# compares two complete invocations, which makes it the only arm that can notice a run
+# degrading in a way no property names: a capture that comes back empty changes a count no
+# other arm reads, inside an invocation no other arm repeats. That sensitivity is the point
+# and it is kept.
+#
+# What was missing was the EVIDENCE. Its FAIL printed neither capture, so an occurrence
+# could not be attributed from its own log — the failure said the two differed and threw
+# away the only record of how. It now prints both rcs, both stdouts, both stderrs and the
+# line-level difference, so the next occurrence is diagnosable from the run that produced it.
+#
+# ── AND IT IS A FUNCTION, so CTL-DATAROOT6-MUT below can RE-RUN it under a mutation. An arm
+# that can only be asserted to notice a divergence is an arm nobody has watched notice one.
+#
+# dr6_no_mutation — the SENTINEL md_probe removes. While it is defined the predicate runs the
+# shipped va_main; with it gone the predicate installs a mutant shadow instead. It exists
+# because the probe primitive's mechanism is REMOVAL while the mutation this arm needs is a
+# behavioural DIVERGENCE: removing va_main itself would leave the predicate with no subject,
+# which a blind assertion survives just as visibly as a sound one. What is graded here is a
+# seam that still runs and answers differently for one spelling.
+dr6_no_mutation() { return 0; }
+# zzq_dr6_inert — the control's victim. The predicate never calls it, so removing it changes
+# nothing; it is what lets the unmutated control run through the SAME probe harness as the
+# mutated one, leaving the mutation as the only difference between the two measurements.
+zzq_dr6_inert() { return 0; }
+DR6_MARK="$WORK/dr6_mutated"
+dr6_predicate() {
+  local e_out e_err e_rc same=0 quiet=0 anchor=0
+  if ! declare -F dr6_no_mutation >/dev/null 2>&1; then
+    # THE MUTANT. va_main is shadowed so a `--data-root=<dir>` argument resolves to the
+    # SKELETON root — trips/README.md and nothing else. Every other argument passes through
+    # and the two-argument spelling is untouched, so what diverges is the second spelling and
+    # only the second spelling: exactly the defect this arm claims it would catch. The shadow
+    # records each rewrite, so "the mutation landed" is measured rather than assumed.
+    eval "$(declare -f va_main | sed '1s/^va_main/va_main_unshadowed/')"
+    va_main() {
+      local a; local -a args=()
+      for a in "$@"; do
+        case "$a" in --data-root=*) a="--data-root=$DR_SKEL"; printf 'x\n' >> "$DR6_MARK" ;; esac
+        args+=("$a")
+      done
+      va_main_unshadowed "${args[@]}"
+    }
+  fi
+  e_out="$(va_main --root "$DR_ENGINE" --data-root="$DR_DATA" --scope dir "$DR_TRIP" 2>"$DR_E_ERRF")"; e_rc=$?
+  e_err="$(cat "$DR_E_ERRF")"
+  DR_E_OUT="$e_out"; DR_E_ERR="$e_err"; DR_E_RC="$e_rc"
+  # Three limbs, each named in its own FAIL. SAME is the comparison itself; QUIET is the limb
+  # the stream split buys, and it is strictly stricter than what the merged capture graded;
+  # ANCHOR is the non-degeneracy tie to CTL-DATAROOT2, because two spellings that agree on a
+  # broken seam prove nothing about the spelling.
+  [ "$e_rc" -eq "$DR_A_RC" ] && [ "$e_out" = "$DR_A_OUT" ] && same=1
+  [ ! -s "$DR_A_ERRF" ] && [ ! -s "$DR_E_ERRF" ] && quiet=1
+  [ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && anchor=1
+  DR_E_SAME="$same"; DR_E_QUIET="$quiet"; DR_E_ANCHOR="$anchor"
+  dr6_verdict
+  return 0
+}
+dr6_verdict() {
+if [ "$DR_E_SAME" -eq 1 ] && [ "$DR_E_QUIET" -eq 1 ] && [ "$DR_E_ANCHOR" -eq 1 ]; then
+  PASS "CTL-DATAROOT6: the --data-root=<dir> spelling is byte-identical on stdout and rc to the two-argument form over the same fixture ($DR_A_SEL selected, rc=0), and BOTH runs wrote nothing to stderr — one seam, two spellings, as publish-trip-site.sh's parse_data_root already accepts. The streams are compared separately, so two identical non-empty stderr blobs can no longer agree their way past this arm"
 elif [ "$DR_E_SAME" -ne 1 ]; then
-  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form (rc=$DR_E_RC vs $DR_A_RC, outputs differ) — an operator who learned the seam on the sibling script types it here and is refused or misread"
+  FAIL "CTL-DATAROOT6: the --data-root=<dir> spelling diverged from the two-argument form. rc: two-argument=$DR_A_RC, --data-root==$DR_E_RC. stdout bytes: $(printf '%s' "$DR_A_OUT" | wc -c | tr -d ' ') against $(printf '%s' "$DR_E_OUT" | wc -c | tr -d ' ').$(dr_linediff "$DR_A_OUT" "$DR_E_OUT")
+        two-argument stderr: [${DR_A_ERR:-<empty>}]
+        --data-root= stderr: [${DR_E_ERR:-<empty>}]
+        Both at rc=0 with the stdouts differing is the transient-degradation signature: some capture inside ONE of these two invocations came back empty and the run reported a quieter verdict instead of a failure. Read the differing line above — a moved count names the read that failed. An operator who learned the seam on the sibling script types it here and is refused or misread"
+elif [ "$DR_E_QUIET" -ne 1 ]; then
+  FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but one or both wrote to stderr on a path that must be silent — two-argument [${DR_A_ERR:-<empty>}], --data-root= [${DR_E_ERR:-<empty>}]. A clean run over this fixture emits nothing there, so this is a subprocess complaining where the merged capture used to hide it behind an equal comparison"
 else
-  FAIL "CTL-DATAROOT6: the two spellings agree on stdout and rc, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
+  FAIL "CTL-DATAROOT6: the two spellings agree on stdout, rc and an empty stderr, but on a DEGENERATE subject (rc=$DR_A_RC, selected=$DR_A_SEL of $DR_N) — agreement over a broken seam proves nothing about the spelling, so CTL-DATAROOT2 is the arm to read"
+fi
+}
+dr6_predicate
+
+# ── CTL-DATAROOT6-MUT — the card's third acceptance criterion, satisfied by MUTATION rather
+# than by assertion: the arm above must still FAIL when the two spellings genuinely diverge,
+# and here it is watched doing so. The mutation is a genuine divergence and not a removed
+# subject — the seam runs, both spellings run, and only the `--data-root=` form is pointed at
+# the skeleton — so an arm that passed under it would be passing over a real defect.
+#
+# It is a ROLE-BEARING SIBLING of the DATAROOT family rather than a seventh numbered member:
+# the numbered series makes independent claims about the seam and this one makes none, it
+# grades DATAROOT6's own mutation-detectability. That is the relation CTL-ST-COV1/2 already
+# bear to group ST.
+#
+# NON-VACUITY IS GRADED FIRST, and it is graded here because md_flips cannot see it. The
+# oracle reads the mutated run's verdict counts; it cannot tell a predicate that survived a
+# mutation from one that was never mutated, and it cannot tell either from a predicate that
+# reports nothing at all. So the unmutated control runs through the same harness first and
+# must report exactly one PASS and no FAIL, and the shadow's own rewrite count is read after.
+DR6_CTRL="$(md_probe zzq_dr6_inert dr6_predicate)"
+: > "$DR6_MARK"
+if [ "$DR6_CTRL" != "1 0" ]; then
+  FAIL "CTL-DATAROOT6-MUT: the UNMUTATED control through the same probe harness returned '$DR6_CTRL' rather than '1 0' — the predicate does not report exactly one PASS and no FAIL when nothing is wrong, so a FAIL under mutation would say nothing about the mutation. Read CTL-DATAROOT6 above for what the predicate is actually reporting"
+else
+  # Registered with md_flips — the primitive shipped for exactly this and unused until now.
+  # It re-runs the predicate with the sentinel removed and asserts exactly one FAIL, no PASS.
+  md_flips dr6_no_mutation 'CTL-DATAROOT6-MUT' dr6_predicate
+  DR6_LANDED="$(awk 'END { print NR + 0 }' "$DR6_MARK")"
+  if [ "$DR6_LANDED" -ge 1 ]; then
+    PASS "CTL-DATAROOT6-MUT: the mutation landed — the shadow rewrote $DR6_LANDED --data-root= argument(s) to the skeleton root during the probe above, and the unmutated control through the same harness reported '$DR6_CTRL'. So the MD[CTL-DATAROOT6-MUT] verdict beside this line is a measurement of the arm under a genuine divergence of the second spelling, not of a probe that changed nothing"
+  else
+    FAIL "CTL-DATAROOT6-MUT: the mutation NEVER LANDED — the shadow rewrote 0 --data-root= arguments, so whatever MD[CTL-DATAROOT6-MUT] reported above was measured on an unmutated run. Either the predicate stopped using the --data-root=<dir> spelling or the sentinel is no longer what gates the shadow, and in both cases the third acceptance criterion is unproven"
+  fi
+fi
+
+# ── CTL-VA-DEGRADE — MUST FIRE. A captured subprocess read that comes back EMPTY is a
+# DIFFERENT FACT from a frontmatter block that legitimately declares no schema-version, and
+# va_check_artifact collapses the two: its skip predicate keys on `ver` being empty, which
+# is what BOTH states produce. So a transient failure of the frontmatter read turns a graded
+# artifact into a quiet SKIP at rc=0 and the run stays green over an artifact nothing
+# checked. That is the mechanism CTL-DATAROOT6 has been reporting without a vocabulary to
+# name it: the two spellings run the same fixture twice, and one capture coming back empty
+# in one of them is enough to make the byte comparison differ while both return 0.
+#
+# THE INJECTION IS THE TRANSIENT READ ITSELF, not a malformed fixture. va_fm_pairs is
+# shadowed to return EMPTY AT RC 0 for exactly one selected artifact and to defer to the
+# real function for every other call — the renamed original, not a hand-written stand-in,
+# because an arm that grades a stand-in grades the stand-in. Every other input is the
+# CTL-DATAROOT fixture unchanged, so a verdict change is attributable to the one shadowed
+# read and to nothing else.
+#
+# The target is DR_ART1, which the PATH arm selects (CTL-DATAROOT1 grades that: its pattern
+# hits are >= 1), so the shadow is reached from va_check_artifact and not from va_select's
+# declared arm. The witness is left alone for the same reason.
+VD_TARGET="$DR_ART1"; VD_MARK="$WORK/vd_invoked"; VD_OUT=""; VD_RC=0
+VD_HITS=0; VD_X2=0; VD_SKIP=0; VD_ANCHOR=0
+: > "$VD_MARK"
+if [ -n "$VD_TARGET" ]; then
+  VD_OUT="$(
+    eval "$(declare -f va_fm_pairs | sed '1s/^va_fm_pairs/va_fm_pairs_unshadowed/')"
+    va_fm_pairs() {
+      if [ "${2:-}" = "$VD_TARGET" ]; then printf 'x\n' >> "$VD_MARK"; return 0; fi
+      va_fm_pairs_unshadowed "$@"
+    }
+    va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1
+  )"; VD_RC=$?
+  VD_HITS="$(awk 'END { print NR + 0 }' "$VD_MARK")"
+  # Prefix match on the literal path rather than a regex: the path carries `/` and `.`, and
+  # `.` in a regex matches anything, so a regex arm would report a hit it did not observe.
+  VD_X2="$(awk -v p="FINDING X2 $VD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$VD_OUT")"
+  VD_SKIP="$(awk -v p="SKIP $VD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$VD_OUT")"
+fi
+[ "$DR_A_RC" -eq 0 ] && [ "$DR_A_SEL" -eq "$DR_N" ] && VD_ANCHOR=1
+if [ -n "$VD_TARGET" ] && [ "$VD_HITS" -ge 1 ] && [ "$VD_ANCHOR" -eq 1 ] \
+   && [ "$VD_RC" -ne 0 ] && [ "$VD_X2" -eq 1 ] && [ "$VD_SKIP" -eq 0 ]; then
+  PASS "CTL-VA-DEGRADE: MUST FIRE — with the frontmatter read for ${VD_TARGET##*/} shadowed to return empty at rc 0 (the transient-read signature, injected $VD_HITS time(s)), the run FAILS CLOSED (rc=$VD_RC) with one X2 naming that path and no SKIP for it, while the identical unshadowed run over the same fixture returned rc=0 with $DR_A_SEL of $DR_N selected. A read that did not complete and a frontmatter that declares no version are now two facts with two verdicts"
+else
+  FAIL "CTL-VA-DEGRADE: MUST FIRE — a degraded frontmatter read did not fail closed (target=${VD_TARGET:-<none>} shadow-invoked=$VD_HITS rc=$VD_RC x2-on-target=$VD_X2 skip-on-target=$VD_SKIP unshadowed-anchor=$VD_ANCHOR). Read the limbs in order: no target or shadow-invoked=0 means the injection never landed and this arm measured nothing; unshadowed-anchor=0 means CTL-DATAROOT2 is the arm to read, because agreement over a degenerate subject proves nothing; otherwise the validator converted an incomplete read into a quieter verdict at rc=0 — the artifact left the gate unchecked and the run reported success"
+fi
+
+# ── CTL-VA-COMMENT-ONLY-SKIPS — MUST NOT FIRE. A frontmatter block whose body is entirely
+# comment lines is a HEALTHY input, and the degraded-read limb has to leave it alone.
+#
+# va_fm_pairs skips `#` lines as legal frontmatter content — the validator's own grammar,
+# not an accident — so a comment-only block is PRESENT, PARSES, and yields ZERO pairs at
+# status 0. Keyed on the block's raw body being non-empty, that is byte-for-byte the
+# degraded-read signature, and the gate turned a healthy repository RED on it. The most
+# likely real instance is the very state the tolerant read exists to protect: a part-migrated
+# artifact carrying `---` / `# TODO: add schema-version` / `---`.
+#
+# THE LIMB MUST ASK WHETHER A FIELD WAS EXPECTED, not whether the body was non-empty. Three
+# shapes are graded as ONE boundary because that is what they are: comment-only and
+# comment-plus-blank must SKIP, and blank-only must SKIP as it already did — the near-miss
+# that stops this arm from being satisfied by a validator that simply skips everything.
+#
+# The fixture is the DATAROOT data root COPIED and its declaring artifact rewritten, so the
+# artifact is selected by the same path arm, through the same corpus, as the anchor run above.
+# Nothing is hardcoded about which class it is.
+FC_CTRL=0; FC_SCTRL=0; FC_BAD=0; FC_SELMIN=-1; FC_REPORT=""; FC_CASES=0
+if [ -n "$DR_ART1" ]; then
+  # Detector controls FIRST. A zero from either extraction below is only evidence that the
+  # subject is clean if the extraction is shown to respond to the thing it looks for.
+  FC_CTRL="$(awk -v p="FINDING X2 $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"FINDING X2 $DR_ART1 a synthetic control line")"
+  FC_SCTRL="$(awk -v p="SKIP $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"SKIP $DR_ART1 C0 (arm: control)")"
+  while IFS= read -r fc; do
+    [ -n "$fc" ] || continue
+    FC_CASES=$((FC_CASES + 1))
+    fc_dir="$WORK/fc_$fc"
+    cp -R "$DR_DATA" "$fc_dir" 2>/dev/null || { FC_BAD=$((FC_BAD + 1)); FC_REPORT="$FC_REPORT $fc:fixture-failed"; continue; }
+    case "$fc" in
+      comment-only)       printf '%s\n' '---' '# a note about this file' '---' '' '# body' > "$fc_dir/$DR_ART1" ;;
+      comment-plus-blank) printf '%s\n' '---' '' '# a note about this file' '' '---' '' '# body' > "$fc_dir/$DR_ART1" ;;
+      blank-only)         printf '%s\n' '---' '' '---' '' '# body' > "$fc_dir/$DR_ART1" ;;
+    esac
+    fc_out="$(va_main --root "$DR_ENGINE" --data-root "$fc_dir" --scope dir "$DR_TRIP" 2>&1)"; fc_rc=$?
+    fc_x2="$(awk -v p="FINDING X2 $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$fc_out")"
+    fc_skip="$(awk -v p="SKIP $DR_ART1 " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$fc_out")"
+    fc_sel="$(dr_field "$fc_out" POPULATION selected)"
+    if [ "$FC_SELMIN" -lt 0 ] || [ "$fc_sel" -lt "$FC_SELMIN" ]; then FC_SELMIN="$fc_sel"; fi
+    if [ "$fc_rc" -ne 0 ] || [ "$fc_x2" -ne 0 ] || [ "$fc_skip" -ne 1 ]; then
+      FC_BAD=$((FC_BAD + 1))
+      FC_REPORT="$FC_REPORT $fc:rc=$fc_rc,x2=$fc_x2,skip=$fc_skip,selected=$fc_sel"
+    fi
+  done <<EOF
+comment-only
+comment-plus-blank
+blank-only
+EOF
+fi
+if [ -z "$DR_ART1" ]; then
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: no declaring artifact was resolved in the DATAROOT fixture, so there is nothing to rewrite a frontmatter block onto and this arm measured nothing. CTL-DATAROOT1 is the arm to read"
+elif [ "$FC_CTRL" -ne 1 ] || [ "$FC_SCTRL" -ne 1 ]; then
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: the detectors are not live (x2-on-a-string-carrying-one-X2=$FC_CTRL, skip-on-a-string-carrying-one-SKIP=$FC_SCTRL, both must be 1). A zero from a detector that does not respond is a broken probe, not a healthy input"
+elif [ "$FC_SELMIN" -lt 1 ]; then
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: the smallest run selected $FC_SELMIN files, so 'the comment-only artifact skipped' would be a statement over the empty set"
+elif [ "$FC_BAD" -eq 0 ]; then
+  PASS "CTL-VA-COMMENT-ONLY-SKIPS: MUST NOT FIRE — all $FC_CASES frontmatter shapes that declare no field (comment-only, comment-plus-blank, blank-only) SKIP at rc 0 with no X2 against them, over runs selecting at least $FC_SELMIN file(s), with both detectors shown live. A block that parses and carries no schema-version still skips, which is the tolerant read's own stated invariant"
+else
+  FAIL "CTL-VA-COMMENT-ONLY-SKIPS: MUST NOT FIRE — $FC_BAD of $FC_CASES healthy frontmatter shapes did not skip cleanly:$FC_REPORT (each expects rc=0, x2=0, skip=1). A comment line is legal frontmatter content that va_fm_pairs skips by design, so a block of them PARSES and yields no pairs at status 0 — and a degraded-read limb keyed on the raw body being non-empty cannot tell that from a read that failed. The limb must key on whether a FIELD was expected"
+fi
+
+# ── CTL-VA-DEGRADE-DISCRIMINATOR — MUST FIRE, and it is the arm CTL-VA-DEGRADE cannot be.
+# CTL-VA-DEGRADE shadows `va_fm_pairs`. The discriminator that separates "the read failed"
+# from "nothing was declared" reads the block through `va_frontmatter` — and va_fm_pairs
+# reaches the file's bytes THROUGH THAT SAME FUNCTION. So a transient that empties the
+# underlying read empties BOTH the pairs read and the probe meant to notice: the presence
+# limb goes false, the artifact skips, and the run returns 0 with its output moved. That is
+# the original CI signature, reachable at the head that exists to remove it.
+#
+# A discriminator that shares a failure mode with the thing it discriminates is not one. The
+# remedy this arm grades is that the expectation is established by a read that DOES NOT GO
+# THROUGH va_frontmatter and carries no output to be emptied.
+#
+# The injection is the same shape as CTL-VA-DEGRADE's — the renamed original, deferring for
+# every path but one — so a verdict difference between the two arms is attributable to WHICH
+# function was shadowed and to nothing else.
+FD_TARGET="$DR_ART1"; FD_MARK="$WORK/fd_invoked"; FD_OUT=""; FD_RC=0
+FD_HITS=0; FD_X2=0; FD_SKIP=0; FD_CTRL=0
+: > "$FD_MARK"
+if [ -n "$FD_TARGET" ]; then
+  FD_CTRL="$(awk -v p="FINDING X2 $FD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"FINDING X2 $FD_TARGET a synthetic control line")"
+  FD_OUT="$(
+    eval "$(declare -f va_frontmatter | sed '1s/^va_frontmatter/va_frontmatter_unshadowed/')"
+    va_frontmatter() {
+      if [ "${1:-}" = "$DR_DATA/$FD_TARGET" ]; then printf 'x\n' >> "$FD_MARK"; return 0; fi
+      va_frontmatter_unshadowed "$@"
+    }
+    va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1
+  )"; FD_RC=$?
+  FD_HITS="$(awk 'END { print NR + 0 }' "$FD_MARK")"
+  FD_X2="$(awk -v p="FINDING X2 $FD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FD_OUT")"
+  FD_SKIP="$(awk -v p="SKIP $FD_TARGET " 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FD_OUT")"
+fi
+if [ -z "$FD_TARGET" ] || [ "$FD_HITS" -lt 1 ] || [ "$VD_ANCHOR" -ne 1 ] || [ "$FD_CTRL" -ne 1 ]; then
+  FAIL "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — the arm measured nothing (target=${FD_TARGET:-<none>} shadow-invoked=$FD_HITS unshadowed-anchor=$VD_ANCHOR x2-detector-on-control=$FD_CTRL). shadow-invoked=0 means the injection never landed; unshadowed-anchor=0 means the same fixture is not clean unshadowed, so a change under injection is not attributable to it; detector-on-control!=1 means the extraction does not respond to the finding it looks for"
+elif [ "$FD_RC" -ne 0 ] && [ "$FD_X2" -eq 1 ] && [ "$FD_SKIP" -eq 0 ]; then
+  PASS "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — with va_frontmatter itself shadowed to return empty at rc 0 for ${FD_TARGET##*/} (injected $FD_HITS time(s) — it is reached from BOTH the pairs read and the presence probe), the run still FAILS CLOSED (rc=$FD_RC) with one X2 naming that path and no SKIP for it. The expectation that a field was declared no longer travels through the read it is meant to adjudicate"
+else
+  FAIL "CTL-VA-DEGRADE-DISCRIMINATOR: MUST FIRE — a degraded read of the frontmatter block ITSELF did not fail closed (target=$FD_TARGET shadow-invoked=$FD_HITS rc=$FD_RC x2-on-target=$FD_X2 skip-on-target=$FD_SKIP). rc=0 with skip=1 is the original CI signature: va_fm_pairs reaches the file through va_frontmatter, so emptying va_frontmatter empties the pairs read AND the presence probe together, the presence limb goes false, and the artifact leaves the gate unchecked with the run reporting success. CTL-VA-DEGRADE passes on the same fixture because it shadows the INNER function only"
+fi
+
+# ── CTL-VA-FILTER-AGREEMENT[<fence>] — the two line filters that MUST stay in step, asserted
+# instead of commented. The degraded-read limb asks va_fm_declares_no_field whether a field was
+# expected; the pairs it adjudicates come from va_fm_pairs. Each carries its OWN copy of the
+# skip rules — trimmed-empty, and `#` — one written in awk and one in bash, and until this arm
+# nothing checked that the two copies say the same thing.
+#
+# THE DRIFT IS ONE EDIT CHEAP AND IT IS SILENT. Add a skip class to va_fm_pairs and not to the
+# probe, and a healthy artifact carrying that class fails closed with a false X2 — the exact
+# regression this card already paid for once — while the whole suite stays green, because no
+# arm reads the two filters against each other. The other direction is as bad and quieter: a
+# class the probe skips and va_fm_pairs does not leaves the limb silent at the moment it is
+# needed. So what is asserted is a BICONDITIONAL — va_fm_declares_no_field reports "no field"
+# for exactly the lines va_fm_pairs says nothing about — and not the implication alone.
+#
+# PARAMETERISED OVER BOTH FENCES, deliberately. The grammar has two copies as well: `---` for
+# markdown and `<!--` / `-->` for C19, whose declaration rides an HTML comment. A second
+# hand-written copy of this arm would inherit exactly the weakness the arm exists to close, so
+# the fence is an input and the comparator is written once.
+#
+# SCOPE, stated rather than left to be discovered. The subject is the LINE filter, so every
+# case is a well-formed TERMINATED block carrying exactly one content line. The block-level
+# branches — an unterminated fence, an absent block — are not line-filter questions and are
+# adjudicated elsewhere: each yields an A1 at status 1, which the degraded-read limb's own
+# `rc -eq 0` test excludes before this predicate is ever consulted.
+#
+# NON-VACUITY IS GRADED FIRST, in four limbs, because "the two filters agree" is a ZERO and a
+# zero from a comparator that cannot disagree is worth nothing. The case table must exercise
+# BOTH sides of the filter; the injection anchor must occur exactly once in va_fm_pairs' source
+# so the mutation is the edit it claims to be; the mutation must be shown to have applied; and
+# under it the comparator must report exactly the disagreements the injected class accounts
+# for. Over a CLEAN baseline, and with the injected class one the probe does not mirror, fewer
+# means it cannot see drift and more means the injection moved a case it does not account for.
+# Over a baseline that had ALREADY drifted, that drift is in the figure too, because the figure
+# is an absolute count under injection rather than a delta against the baseline, and the drift
+# can move it either way: a probe-side drift inside the injected class reads as fewer, and a
+# drift on any other shape as more. So a miss here has two causes, a defect in this arm and a
+# drift the comparator saw, and this limb's own count does not tell them apart; the limb names
+# both and points at the baseline disagreement count that does — it must not be read as "the
+# probe is broken". The
+# injection is a real source mutation of va_fm_pairs, one added skip class the probe does not
+# mirror, evaluated in a SUBSHELL so it cannot reach the arms below.
+#
+# THE UNMIRRORED PREMISE IS ASSERTED AND NOT CHECKED, and that is a known residual rather than
+# an oversight to find later. Nothing in the ladder asks whether the probe ALSO skips the class
+# being injected: FA_M is the case table's own count of that class's shapes whatever the filters
+# do, and FA_MUTOK asks only whether the source TEXT changed. So the edit the DRIFT branch below
+# itself prescribes — change both filters in one edit — makes the injection INERT, because the
+# class is then one both filters skip and adding it adds nothing. Measured: the arm goes red at
+# SENSITIVITY on both fences, 0 against 1 over a baseline of 0, which is the same pair of figures
+# a blind comparator produces. It FAILS CLOSED — a required check turns red and nothing ships
+# ungraded — so the cost is entirely in attribution, and the SENSITIVITY text below is written to
+# carry both readings and to name the read that separates them. Separating them BY MEASUREMENT is
+# a different thing: it needs a limb that runs the probe against the injected class before
+# trusting the injection and refuses a class both filters already skip, which is a behaviour
+# change to an arm on a required check. That limb is DEFERRED to AI-016; until it lands this
+# shape is described in the failure text and detected by nothing.
+FA_CASETABLE="$(cat <<'FA_EOF'
+empty|
+spaces-only|\040\040\040
+tab-only|\t
+formfeed-only|\f
+vtab-only|\v
+comment|# a note about this file
+comment-indented|\040\040\040# a note about this file
+comment-bare|#
+comment-with-colon|# note: this is not a field
+semicolon|; a note
+field|schema-version: 1
+field-empty-value|key:
+field-hash-in-key|a#b: v
+field-hash-in-value|x: # not a comment
+out-of-grammar|notakeyline
+not-kebab|Key: v
+dash-only|-
+colon-leading|: value
+FA_EOF
+)"
+FA_ANCHOR="'#'*)"
+FA_REPL="'#'* | ';'*)"
+FA_SRC="$(declare -f va_fm_pairs)"
+FA_ANCHOR_N="$(awk -v a="$FA_ANCHOR" 'BEGIN { n = 0 } { s = $0; while ((i = index(s, a)) > 0) { n++; s = substr(s, i + length(a)) } } END { print n + 0 }' <<<"$FA_SRC")"
+FA_MUT_SRC="${FA_SRC/"$FA_ANCHOR"/$FA_REPL}"
+FA_MUTOK=0; [ "$FA_MUT_SRC" != "$FA_SRC" ] && FA_MUTOK=1
+
+# fa_compare <dir> <ext> <open> <close> — writes one single-line fixture per case and prints
+# "<cases> <agreed-skips> <agreed-fields> <disagreements> <semicolon-cases> <report>".
+fa_compare() {
+  local dir="$1" ext="$2" open="$3" close="$4"
+  local lbl pay f prc pout trimmed
+  local cases=0 skips=0 fields=0 dis=0 semi=0 report=""
+  while IFS='|' read -r lbl pay; do
+    [ -n "$lbl" ] || continue
+    cases=$((cases + 1))
+    f="$lbl.$ext"
+    { printf '%s\n' "$open"; printf '%b\n' "$pay"; printf '%s\n' "$close"; printf '\n# body\n'; } > "$dir/$f"
+    trimmed="$(va_trim "$(printf '%b' "$pay")")"
+    case "$trimmed" in ';'*) semi=$((semi + 1)) ;; esac
+    va_fm_declares_no_field "$dir/$f"; prc=$?
+    pout="$(va_fm_pairs "$dir" "$f" 2>&1)"
+    if [ "$prc" -eq 0 ] && [ -z "$pout" ]; then
+      skips=$((skips + 1))
+    elif [ "$prc" -ne 0 ] && [ -n "$pout" ]; then
+      fields=$((fields + 1))
+    elif [ "$prc" -ne 0 ]; then
+      dis=$((dis + 1)); report="$report $lbl:false-x2[probe-expected-a-field,va_fm_pairs-said-nothing]"
+    else
+      dis=$((dis + 1)); report="$report $lbl:silent-limb[probe-expected-nothing,va_fm_pairs-parsed-it]"
+    fi
+  done <<EOF
+$FA_CASETABLE
+EOF
+  printf '%s %s %s %s %s %s\n' "$cases" "$skips" "$fields" "$dis" "$semi" "${report:- none}"
+}
+
+while IFS='|' read -r fa_fence fa_ext fa_open fa_close; do
+  [ -n "$fa_fence" ] || continue
+  fa_dir="$WORK/fa_$fa_fence"; mkdir -p "$fa_dir"
+  FA_C=0; FA_S=0; FA_F=0; FA_D=0; FA_M=0; FA_R="none"
+  fa_line="$(fa_compare "$fa_dir" "$fa_ext" "$fa_open" "$fa_close")"
+  [ -n "$fa_line" ] && read -r FA_C FA_S FA_F FA_D FA_M FA_R <<<"$fa_line"
+  FA_MUTD=-1
+  if [ "$FA_MUTOK" -eq 1 ]; then
+    fa_mdir="$WORK/fa_mut_$fa_fence"; mkdir -p "$fa_mdir"
+    FA_MUTD="$( eval "$FA_MUT_SRC"; fa_compare "$fa_mdir" "$fa_ext" "$fa_open" "$fa_close" | awk '{ print $4 + 0 }' )"
+  fi
+  if [ "$FA_C" -lt 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the case table yielded $FA_C case(s), so 'the two line filters agree' would be a statement over the empty set"
+  elif [ "$FA_ANCHOR_N" -ne 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: SPECIFICITY — the injection anchor occurs $FA_ANCHOR_N time(s) in va_fm_pairs' source rather than once, so the mutation below is not the single edit it claims to be and nothing it produces is attributable to one added skip class"
+  elif [ "$FA_MUTOK" -ne 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the injected skip class did not apply to va_fm_pairs' source, so the sensitivity arm ran against UNMUTATED code and its result says nothing about this comparator. The arm reports itself unusable rather than reporting the filters in step"
+  elif [ "$FA_S" -lt 1 ] || [ "$FA_F" -lt 1 ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the case table exercises only one side of the filter (agreed-skip=$FA_S agreed-field=$FA_F, both must be >= 1). A comparator shown only lines both filters skip agrees trivially"
+  elif [ "$FA_M" -lt 1 ] || [ "$FA_MUTD" -ne "$FA_M" ]; then
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: SENSITIVITY — with one skip class added to va_fm_pairs' own source the comparator reported $FA_MUTD disagreement(s) where the injected class ALONE accounts for exactly $FA_M. That figure is an ABSOLUTE count under injection, not a delta, so it equals $FA_M when the baseline is clean AND the injected class is one the probe does not mirror — and this run's UNINJECTED baseline reported $FA_D disagreement(s). READ THAT BASELINE COUNT FIRST, because this limb has two causes and the injected count alone names neither: a non-zero baseline means the shipped filters have ALREADY drifted, that drift is what moved this count, and the finding is a real drift rather than a defect in this comparator — the baseline's own directions are: $FA_R — read them with the false-x2 / silent-limb meanings the drift branch below states. With a baseline of 0 there are TWO readings below $FA_M and this arm cannot tell them apart. EITHER the comparator cannot see the drift it exists to see, and its zero on the shipped filters is a BROKEN PROBE rather than agreement; OR both filters ALREADY skip the injected class, which makes the injection INERT — nothing was added that was not already there, the zero is genuine agreement, and the comparator is sound. Tell them apart by reading va_fm_declares_no_field for the injected class: if the probe skips that class too, the unmirrored premise this arm rests on does not hold, and the fix is to inject a class NEITHER filter skips rather than to touch the comparator. That premise is asserted and NOT checked here — FA_MUTOK asks only whether the source text changed, never whether the change is a drift — so this shape is described rather than detected, and the limb that would measure it is deferred to AI-016. Above $FA_M the injection moved a case it does not account for"
+  elif [ "$FA_D" -eq 0 ]; then
+    PASS "CTL-VA-FILTER-AGREEMENT[$fa_fence]: va_fm_pairs' skip rules and va_fm_declares_no_field's agree on all $FA_C line shape(s) over the $fa_fence fence — $FA_S agreed skip(s) and $FA_F agreed field-declaration(s), no disagreement in either direction. The sensitivity arm fired on the same comparator: one unmirrored skip class added to va_fm_pairs' source turns this arm red on exactly $FA_M case(s), in a subshell that does not reach the arms below"
+  else
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the two line filters have DRIFTED on $FA_D of $FA_C shape(s) over the $fa_fence fence:$FA_R. false-x2 is the dangerous direction — va_fm_pairs skips the line as legal content while the probe reports a field was expected, so a healthy artifact carrying that shape fails closed with a finding that names a read which did not fail. silent-limb is the quiet one — the probe reports nothing was expected where va_fm_pairs did parse the line, so the degraded-read limb stays silent on exactly the input it exists to catch. Either way the fix is to change BOTH filters in one edit: they are one grammar with two implementations"
+  fi
+done <<EOF
+md|md|---|---
+html|html|<!--|-->
+EOF
+
+# ── CTL-VA-MEMO — the corpus is parsed ONCE per invocation, which is what va_corpus_patterns'
+# memo has always claimed and did not deliver. Every call site reaches that function from
+# inside a command substitution or a pipeline, so each cache write died with its subshell and
+# the 23-file schema corpus was re-parsed once per selected artifact.
+#
+# THIS IS GRADED HERE RATHER THAN LEFT AS A PERFORMANCE NOTE because the cost is not only
+# time. Each re-parse is a fork, and a fork is where a transient subprocess failure lands:
+# the exposure window CTL-DATAROOT6 has been catching is roughly the number of cold parses,
+# so removing them removes most of the window at source. The arm asserts the PROPERTY (at
+# most one cold parse) rather than a duration, which no CI runner can promise.
+#
+# The instrument is a shadow that counts, never one that answers: it records whether the
+# inherited cache would hit and then calls the renamed original, so the cache semantics under
+# measurement are the shipped ones. Its own neutrality is the third limb.
+VM_MARK="$WORK/vm_parses"; VM_ERRF="$WORK/vm_stderr"; VM_OUT=""; VM_RC=0
+VM_CALLS=0; VM_COLD=0; VM_SAME=0
+: > "$VM_MARK"
+VM_OUT="$(
+  eval "$(declare -f va_corpus_patterns | sed '1s/^va_corpus_patterns/va_corpus_patterns_unshadowed/')"
+  va_corpus_patterns() {
+    if [ "$VA_CACHE_ROOT" = "${1:-}" ]; then printf 'warm\n' >> "$VM_MARK"; else printf 'cold\n' >> "$VM_MARK"; fi
+    va_corpus_patterns_unshadowed "$@"
+  }
+  va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>"$VM_ERRF"
+)"; VM_RC=$?
+VM_CALLS="$(awk 'END { print NR + 0 }' "$VM_MARK")"
+VM_COLD="$(awk '/^cold$/ { n++ } END { print n + 0 }' "$VM_MARK")"
+[ "$VM_OUT" = "$DR_A_OUT" ] && [ "$VM_RC" -eq "$DR_A_RC" ] && [ ! -s "$VM_ERRF" ] && VM_SAME=1
+if [ "$VM_CALLS" -ge 2 ] && [ "$VM_COLD" -le 1 ] && [ "$VM_SAME" -eq 1 ]; then
+  PASS "CTL-VA-MEMO: the corpus is parsed at most once per va_main invocation — $VM_COLD cold parse(s) across $VM_CALLS calls to the pattern builder, with the instrumented run's stdout and rc identical to the unshadowed run above and its stderr empty. The memo now holds because va_main warms it in its own shell; before that every one of those calls was cold, and each was a fork the transient failure CTL-DATAROOT6 detects could land in"
+else
+  FAIL "CTL-VA-MEMO: the corpus cache is not holding for the invocation (calls=$VM_CALLS cold=$VM_COLD neutral=$VM_SAME rc=$VM_RC). calls<2 means the pattern builder was reached at most once, so 'one cold parse' would be a statement about a run that never consulted the cache rather than about the cache; cold>1 means the warm is not reaching the subshells and the corpus is being re-parsed per artifact; neutral=0 means the counting shadow changed the answer, so the count above measures the instrument"
+fi
+
+# ── CTL-VA-CAPTURE-CENSUS — every captured subprocess read in the validator is ACCOUNTED FOR,
+# in both directions: a site with no classification fails, and a classification naming no site
+# fails too.
+#
+# ── WHY A CENSUS AND NOT A SWEEP ─────────────────────────────────────────────────
+# The validator captures subprocess output into variables at 58 sites, and `set -o pipefail`
+# already makes `$?` the producer's status at every one of them — so the status is available
+# and nobody reads it. The obvious remedy, fail whenever a capture comes back empty, is the
+# WRONG one and the measurement says so: empty is a LEGITIMATE answer at 21 of those sites,
+# 1,393 times on a clean tree. A naive empty-implies-failure sweep emits 94 findings at the
+# declared-arm probe alone. So the classification comes first and the remedy follows it.
+#
+# What this arm grades is the classification's COMPLETENESS, never its correctness. A
+# confidently-wrong marker passes here; that is what CTL-VA-TOLERANCE-PRESERVED and the
+# fail-closed arms are for. What it makes impossible is a capture added later with no
+# classification at all — which is how a census stops being a one-time cleanup that rots.
+#
+# THE MARKER SITS ON THE LINE IT CLASSIFIES, with one stated exception: a capture inside a
+# here-document BODY cannot carry a trailing `#`, because there it would be data rather than a
+# comment. Those are attributed to the line that OPENED the body, which is the line directly
+# above them and is unambiguous.
+VC_SQ="'"
+VC_PIPE="| grep '^FINDING '"
+# va_census_report <source-text> — "TOTAL <sites> <marker-lines>" first, then one row per
+# finding. The site detector is the one the census was taken with: a `$(` that is not `$((`,
+# on a line that is not a comment, with here-document bodies attributed to their opener.
+va_census_report() {
+  awk -v SQ="$VC_SQ" -v PIPE="$VC_PIPE" '
+    function subs(s,   n, i) {
+      n = 0
+      while ((i = index(s, "$(")) > 0) {
+        if (substr(s, i + 2, 1) == "(") { s = substr(s, i + 3) } else { n++; s = substr(s, i + 2) }
+      }
+      return n
+    }
+    function opener(s,   tail) {
+      if (match(s, /<<-?[^<]*$/) == 0) return ""
+      tail = substr(s, RSTART + 2)
+      sub(/^-/, "", tail)
+      sub(/[ \t]*#.*$/, "", tail)
+      gsub(/[ \t"]/, "", tail)
+      gsub(SQ, "", tail)
+      if (tail ~ /^[A-Za-z_][A-Za-z0-9_]*$/) return tail
+      return ""
+    }
+    {
+      line = $0
+      if (hd != "") {
+        if (line == hd) { hd = ""; next }
+        n = subs(line); if (n > 0) { sites[hdline] += n; total += n }
+        next
+      }
+      s = line; sub(/^[ \t]+/, "", s)
+      if (substr(s, 1, 1) != "#") {
+        n = subs(line)
+        if (n == 0 && index(line, PIPE) > 0) n = 1
+        if (n > 0) { sites[NR] += n; total += n }
+        i = index(line, "# va-capture:")
+        if (i > 0) {
+          markers[NR] = 1; mlines++
+          rest = substr(line, i + 13)
+          sub(/^[ \t]+/, "", rest)
+          split(rest, F, /[ \t]+/); tok = F[1]
+          cnt = 1
+          if (match(tok, /\([0-9]+\)/)) cnt = substr(tok, RSTART + 1, RLENGTH - 2) + 0
+          cls = tok; sub(/[(:].*$/, "", cls)
+          declared[NR] = cnt; klass[NR] = cls
+          reason[NR] = (length(rest) > length(tok) + 4)
+          text[NR] = tok
+        }
+        t = opener(line)
+        if (t != "") { hd = t; hdline = NR }
+      }
+      keep[NR] = line
+    }
+    END {
+      printf "TOTAL\t%d\t%d\n", total + 0, mlines + 0
+      for (i = 1; i <= NR; i++) {
+        if (sites[i] > 0 && !markers[i]) printf "UNMARKED\t%d\t%s\n", i, substr(keep[i], 1, 90)
+        if (markers[i] && !(sites[i] > 0)) printf "UNCOUNTED\t%d\t%s\n", i, text[i]
+        if (sites[i] > 0 && markers[i] && declared[i] != sites[i]) printf "MISCOUNT\t%d\tdeclared=%d detected=%d\n", i, declared[i], sites[i]
+        if (markers[i] && klass[i] != "adjudicated" && klass[i] != "tolerant" && klass[i] != "impossible" && klass[i] != "guarded" && klass[i] != "deferred") printf "BADCLASS\t%d\t%s\n", i, text[i]
+        if (markers[i] && !reason[i]) printf "NOREASON\t%d\t%s\n", i, text[i]
+      }
+    }' <<<"$1"
+}
+VC_SRC="$(cat "$SELF_VALIDATOR" 2>/dev/null)"
+VC_PROBE='zzq_census_probe="$(printf %s x)"'
+VC_RPT="$(va_census_report "$VC_SRC")"
+VC_SITES="$(awk -F'\t' '$1 == "TOTAL" { print $2; exit }' <<<"$VC_RPT")"
+VC_MLINES="$(awk -F'\t' '$1 == "TOTAL" { print $3; exit }' <<<"$VC_RPT")"
+VC_BAD="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { n++ } END { print n + 0 }' <<<"$VC_RPT")"
+# The two control arms, on a COPY of the source text — a string in this shell, never the file
+# and never the tree, the same discipline CTL-ST-COV1 uses. Sensitivity: an unmarked capture
+# must be reported. Specificity: the SAME line carrying a marker must not be.
+VC_MUT_BAD="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { n++ } END { print n + 0 }' <<<"$(va_census_report "$VC_SRC
+$VC_PROBE")")"
+VC_OK_BAD="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { n++ } END { print n + 0 }' <<<"$(va_census_report "$VC_SRC
+$VC_PROBE   # va-capture: tolerant(1) — a synthetic probe line, marked, for the specificity arm")")"
+if [ -z "$VC_SRC" ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: the validator source read back empty, so the census below would be a statement over nothing"
+elif [ "$VC_SITES" -lt 1 ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: the site detector found 0 captures in a $(printf '%s' "$VC_SRC" | wc -l | tr -d ' ')-line file — the detector has stopped seeing the construct it counts, so its accounting proves nothing"
+elif [ "$VC_MUT_BAD" -ne $((VC_BAD + 1)) ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: SENSITIVITY — an unmarked capture appended to a copy of the source took the finding count from $VC_BAD to $VC_MUT_BAD rather than to $((VC_BAD + 1)). The census does not respond to a known hole, so its own zero says nothing"
+elif [ "$VC_OK_BAD" -ne "$VC_BAD" ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: SPECIFICITY — the SAME appended line carrying a marker took the finding count from $VC_BAD to $VC_OK_BAD. The census is reporting the line rather than its classification, so its findings are not measurements"
+elif [ "$VC_BAD" -ne 0 ]; then
+  FAIL "CTL-VA-CAPTURE-CENSUS: $VC_BAD capture site(s) or marker(s) are unaccounted for. UNMARKED is a capture with no classification; UNCOUNTED is a classification naming no capture; MISCOUNT is a line whose declared count and detected count disagree; BADCLASS is a class outside the five; NOREASON is a marker with no reason on it —
+$(printf '%s\n' "$VC_RPT" | awk -F'\t' '$1 != "TOTAL" { printf "        %s line %s: %s\n", $1, $2, $3 }')"
+else
+  PASS "CTL-VA-CAPTURE-CENSUS: all $VC_SITES capture site(s) across $VC_MLINES marked line(s) in the validator are accounted for, in both directions — every site carries a classification, every classification names a site, and every declared count matches its line's detected count. Both control arms fired on a copy of the source: an unmarked capture is reported, and the same line with a marker is not"
+fi
+
+# ── CTL-VA-FAILCLOSED-MATRIX — every adjudicated capture site FAILS CLOSED when its producer
+# does not complete. One row per site, and the injection is a STATUS failure rather than an
+# empty return, deliberately: a non-zero status is what a real transient subprocess failure
+# produces, it is uniform across sites so one shadow generator covers all of them, and it
+# needs no per-site knowledge of what "empty" would mean there.
+#
+# WHAT THIS ARM DOES NOT COVER, said plainly rather than left to be discovered. Status
+# injection is not empty injection: a site whose empty-at-rc-0 path differs from its non-zero
+# path is untested here, and empty-at-rc-0 is the harder case — it is the one CTL-VA-DEGRADE
+# reproduces, at one site. The arm also cannot reach the 21 tolerant sites at all, by
+# construction: there is nothing there to fail closed on.
+#
+# Fifteen of the validator's SIXTEEN adjudicated sites have a row. The sixteenth is the inner
+# substitution of the engine-root resolution, and it is unreachable rather than unrostered: a
+# nested capture's status is lost to the outer one, so there is no status to inject and
+# nothing in the file can adjudicate it. The outer read of that same line IS rostered.
+FC_MARK="$WORK/fc_invoked"
+FC_TABLE='fn|va_population|va_select/population
+fn|va_select|va_main/select
+fn|va_frontmatter|va_check_artifact/frontmatter-presence
+cut|1|va_check_corpus/s8-class-number,va_main/row-class-id
+cut|2|va_check_corpus/s8-class-name,va_main/row-artifact
+cut|3|va_main/row-path
+cut|4|va_main/row-arm
+fn|va_schema_files|va_corpus_patterns/schema-files
+fn|va_schema_get|va_corpus_patterns/class-id
+fn|va_schema_all|va_corpus_patterns/path-patterns
+fn|va_corpus_patterns|va_select/pattern-table
+fnarg|va_schema_get:artifact|va_corpus_patterns/artifact
+noroot|pwd|va_main/engine-root'
+# fc_run <kind> <arg> — one va_main over the CTL-DATAROOT fixture with a single producer
+# shadowed to exit 7. The shadow records each invocation, so "the injection landed" is read
+# rather than assumed. Its rc is va_main's, because va_main is the subshell's last command.
+fc_run() {
+  local kind="$1" arg="$2"
+  (
+    case "$kind" in
+      fn|noroot) eval "$arg() { printf 'x\n' >> \"\$FC_MARK\"; return 7; }" ;;
+      cut)       eval "cut() { case \" \$* \" in *\" -f$arg \"*) printf 'x\n' >> \"\$FC_MARK\"; return 7 ;; esac; command cut \"\$@\"; }" ;;
+      # `fnarg` is `<function>:<second-argument>` — it fails that function for ONE argument
+      # and defers to the renamed original otherwise. It exists for a site whose producer is
+      # shared with an earlier adjudicated site: shadowing the whole function would fail the
+      # earlier one first and this label would never be reached.
+      fnarg)     eval "$(declare -f "${arg%%:*}" | sed "1s/^${arg%%:*}/${arg%%:*}_unshadowed/")"
+                 eval "${arg%%:*}() { if [ \"\${2:-}\" = \"${arg#*:}\" ]; then printf 'x\n' >> \"\$FC_MARK\"; return 7; fi; ${arg%%:*}_unshadowed \"\$@\"; }" ;;
+    esac
+    # `noroot` omits --root, because the engine-root resolution is the one adjudicated site
+    # that only runs when no root was given. Every other row keeps the standard invocation,
+    # so the fixture is the same one CTL-DATAROOT2 graded clean.
+    case "$kind" in
+      noroot) va_main --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1 ;;
+      *)      va_main --root "$DR_ENGINE" --data-root "$DR_DATA" --scope dir "$DR_TRIP" 2>&1 ;;
+    esac
+  )
+}
+FC_BASE_X3="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"$DR_A_OUT")"
+if [ "$DR_A_RC" -ne 0 ] || [ "$FC_BASE_X3" -ne 0 ]; then
+  FAIL "CTL-VA-FAILCLOSED-MATRIX: the UNSHADOWED run over this fixture is not clean (rc=$DR_A_RC, X3=$FC_BASE_X3), so every row below would be measuring a fixture that was already failing rather than the injection. CTL-DATAROOT2 is the arm to read"
+else
+  while IFS='|' read -r FC_KIND FC_ARG FC_LABELS; do
+    [ -n "${FC_KIND:-}" ] || continue
+    : > "$FC_MARK"
+    FC_OUT="$(fc_run "$FC_KIND" "$FC_ARG")"; FC_RC=$?
+    FC_HITS="$(awk 'END { print NR + 0 }' "$FC_MARK")"
+    while IFS= read -r FC_LABEL; do
+      [ -n "${FC_LABEL:-}" ] || continue
+      FC_SEEN="$(awk -v p="FINDING X3 $FC_LABEL" 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FC_OUT")"
+      if [ "$FC_HITS" -ge 1 ] && [ "$FC_RC" -ne 0 ] && [ "$FC_SEEN" -ge 1 ]; then
+        PASS "CTL-VA-FAILCLOSED-MATRIX[$FC_LABEL]: with its producer shadowed to exit 7 (injected $FC_HITS time(s)) the run FAILS CLOSED at rc=$FC_RC and emits X3 naming this site, where the unshadowed run over the same fixture is rc=0 with no X3 at all"
+      else
+        FAIL "CTL-VA-FAILCLOSED-MATRIX[$FC_LABEL]: a producer that did not complete did not fail this site closed (shadow-invoked=$FC_HITS rc=$FC_RC x3-at-this-label=$FC_SEEN). shadow-invoked=0 means the injection never reached the site and this row measured nothing; rc=0 means the run reported success over a read that failed; x3=0 with rc non-zero means the failure is being attributed to something other than the read that caused it"
+      fi
+    done <<INNER
+$(printf '%s\n' "$FC_LABELS" | tr ',' '\n')
+INNER
+  done <<EOF
+$FC_TABLE
+EOF
+fi
+
+# ── CTL-VA-TOLERANCE-PRESERVED — the counter-arm, and the one this design most needs. Every
+# adjudication above ADDS a failure condition and removes none, so the risk the sweep carries
+# is not that it grades too little but that it grades a healthy repository red: one site
+# mis-sorted out of the tolerant class and the gate fails on a tree with nothing wrong with it.
+#
+# It is stated as INVARIANTS rather than as the literals 45 / 16 / 94 / 34 / 11 deliberately.
+# Those numbers drift as the repository gains artifacts, and an arm that must be re-baselined
+# on every content change teaches re-baselining. The literals are REPORTED by the suite's own
+# SELECTOR line, where a reader can see them; what is ASSERTED here is that the partition
+# closes and that the healthy run emits no degraded-read finding at all.
+TP_X3="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"$AR_OUT")"
+TP_CTRL="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"FINDING X3 zzq/control degraded read -- producer exited 7")"
+TP_CLOSES=0; TP_PARTITION=0
+[ "$AR_NSEL" -eq $((AR_NVER + AR_NSKIP)) ] && TP_CLOSES=1
+[ $((AR_NSEL + AR_NEXC + AR_NUNM)) -eq "$AR_NPOP" ] && TP_PARTITION=1
+if [ "$TP_CTRL" -ne 1 ]; then
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the X3 detector returned $TP_CTRL on a string that carries exactly one X3 finding, so its zero on the real run would be a broken probe rather than a clean tree"
+elif [ "$AR_NSEL" -lt 1 ]; then
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the tracked run selected $AR_NSEL files, so 'no X3 on a healthy tree' would be a statement over the empty set"
+elif [ "$AR_RC" -eq 0 ] && [ "$TP_X3" -eq 0 ] && [ "$TP_CLOSES" -eq 1 ] && [ "$TP_PARTITION" -eq 1 ]; then
+  PASS "CTL-VA-TOLERANCE-PRESERVED: the healthy tracked run is unmoved by the sweep — rc=0, ZERO X3 findings over $AR_NSEL selected files, selected = validated + skipped ($AR_NSEL = $AR_NVER + $AR_NSKIP), and selected + excluded + unmatched = the population ($AR_NSEL + $AR_NEXC + $AR_NUNM = $AR_NPOP). The 21 tolerant sites are annotated and not adjudicated, and the 1,393 empty reads a clean tree produces at them stay empty and stay green"
+else
+  FAIL "CTL-VA-TOLERANCE-PRESERVED: the sweep has moved the healthy tracked run (rc=$AR_RC x3=$TP_X3 selected=$AR_NSEL validated=$AR_NVER skipped=$AR_NSKIP excluded=$AR_NEXC unmatched=$AR_NUNM population=$AR_NPOP). An X3 on a tree with nothing wrong with it is a capture site mis-sorted out of the tolerant class — the one failure mode this design names for itself — and the finding's own label says which: $(printf '%s\n' "$AR_OUT" | awk 'index($0, "FINDING X3 ") == 1' | head -3 | tr '\n' ' ')"
 fi
 
 # ── CTL-e: the repository was never mutated. A control that writes into the tree it is
@@ -7487,11 +8294,17 @@ else
   FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
 fi
 
-# ── No assertion in this suite is REGISTERED with md_flips yet, and that is a consequence
-# rather than an omission: registration requires the assertion to be remediated first,
-# because an oracle asked to certify a still-blind assertion turns the suite red for a
-# defect it is reporting rather than causing. The declared residual in MD2 is this suite's
-# registration queue, and every entry that leaves it gains an MD[...] arm in the same edit.
+# ── ONE assertion in this suite is now REGISTERED with md_flips: CTL-DATAROOT6, registered by
+# CTL-DATAROOT6-MUT in group CTL. Registration requires the assertion to be remediated first,
+# because an oracle asked to certify a still-blind assertion turns the suite red for a defect
+# it is reporting rather than causing — which is why the count was zero until an arm had been
+# through that. The declared residual in MD2 is still this suite's registration queue, and
+# every entry that leaves it gains an MD[...] arm in the same edit.
+#
+# CTL-DATAROOT6's registration reads its subject as the SENTINEL rather than as va_main, and
+# the reason is stated at that arm: md_flips removes its subject, while the divergence being
+# graded there has to leave the seam running and answering differently for one spelling. The
+# sentinel is the seam between the primitive's mechanism and that requirement.
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
