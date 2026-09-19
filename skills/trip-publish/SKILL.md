@@ -13,8 +13,9 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh p
 
 The verb is the one the user typed. § *Selecting the verb* below is the whole of how it is
 reached: a literal lookup, lexical at every step, against the recognition set read live. So
-this file has no route by which a verb the user did not type could arrive, and no place to
-put the wording around the token even if it read it.
+nothing in this file supplies a verb the user did not type, and the lookup has no place to
+put the wording around the token; that the token was typed at all is held by this file's
+invocation flag, not by the lookup.
 
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
