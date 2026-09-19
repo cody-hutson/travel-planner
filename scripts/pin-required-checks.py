@@ -710,13 +710,18 @@ def census_scan(root):
     line alone (X70). A `name:`-shaped line inside another property's value, at
     the property indentation and ahead of the job's own `name:`, is read as the
     job's name (X71). And the quote-strip above is `.strip('"').strip("'")` --
-    one layer of each, both ends, unconditionally -- so a value that itself
-    BEGINS AND ENDS with a quote character is read as the value inside it,
-    while all three parsers measured read those quotes as part of the name
-    (X75). That third one is a property of this line's own strip rather than of
-    any continuation, so the fold that reads a continued `name:` the way the
-    parsers do does not reach it. The limit block states each of them, and the
-    run-time case, as conditions. `posture` is None when no marker BINDS to the job key (see
+    TWO PASSES, each unconditional and each removing EVERY leading and trailing
+    character of its own kind rather than one layer: all double quotes off each
+    end, then all single quotes. So a value wrapped in ANY NUMBER of quote
+    layers is read as the text inside all of them, while all three parsers
+    measured read those quotes as part of the name (X75). The order is part of
+    the mechanism: the double-quote pass runs to completion before the
+    single-quote pass begins, so a double quote that only the single-quote pass
+    exposes is never taken. That third one is a property of this line's own
+    strip rather than of any continuation, so the fold that reads a continued
+    `name:` the way the parsers do does not reach it. The limit block states
+    each of them, and the run-time case, as conditions.
+    `posture` is None when no marker BINDS to the job key (see
     `_bind_marker` for what binding requires and why proximity is not it), and
     also when the bound marker's value is not one this tool recognises -- an
     answer it cannot read is not an answer, so the unreadable case fails closed
@@ -990,13 +995,20 @@ _CENSUS_LIMIT = (
     "that the lines this reader COULD READ agree with the committed declaration.",
     "It is NOT a statement about what the file's values contain. A value is",
     "exactly where the text of a line this reader reads can be written without",
-    "being one -- a key, a marker, a `name:` -- and wherever a file does that, the",
-    "two come apart. Every open class named below is one measured instance of",
-    "that one sentence, and the sentence is the claim; the instances are not.",
+    "being one -- a key, a marker, a `name:`, the `jobs:` line, or the",
+    "column-zero line that ends the block -- and wherever a file does that, the",
+    "two come apart. They come apart two further ways, and naming only the first",
+    "left the universal below false of classes it already covers: where this",
+    "reader TRANSFORMS the line it did read, as the quote-strip below does, and",
+    "where what decides the answer sits on a line it reads NOTHING of -- a",
+    "continuation, or the `on:` block. Every open class named below is one",
+    "measured instance of this paragraph, and the paragraph is the claim; the",
+    "instances are not.",
     "The context compared for each job is the text of ONE line -- its first",
-    "`name:` line at the job's property indentation, with one layer of double",
-    "quotes and then one of single quotes stripped off each end, or its key where",
-    "it has none. It is not always the context GitHub reports. A job whose",
+    "`name:` line at the job's property indentation, with EVERY leading and",
+    "trailing double quote stripped off and then EVERY leading and trailing",
+    "single quote -- not one layer of each -- or its key where it has none. It",
+    "is not always the context GitHub reports. A job whose",
     "`name:` carries an expression, or that runs over a `strategy: matrix`,",
     "reports a context GitHub computes at run time, which this reader never sees:",
     "a bare name added to the declaration to silence a finding on such a job can",
@@ -1068,8 +1080,9 @@ _CENSUS_LIMIT = (
     "which the parsers measured read as two documents and actionlint accepts at",
     "rc 0 -- everything below the separator is neither read nor refused. What",
     "GitHub itself does with such a file was not measured, so no verdict is claimed",
-    "for it here; the clause is recorded because the general sentence above covers",
-    "it and the causes named did not.",
+    "for it here, and NO ARM PINS IT: this clause is described and unarmed. It is",
+    "recorded because the general sentence above covers it and the causes named",
+    "did not.",
     "A job this reader RECORDS that is not one. A continuation shaped like a key at",
     "EXACTLY the job-key indentation is a `key:` line to this reader, so none of",
     "the three tests fires on it, and it records a job off it. With a marker line",
@@ -1086,11 +1099,16 @@ _CENSUS_LIMIT = (
     "the class. A `name:` continued onto a further line is read as its first line",
     "alone (X70). A `name:`-shaped line inside another property's quoted value,",
     "landing at the property indentation ahead of any `name:` of the job's own, is",
-    "read as the job's name (X71). And the quote-strip takes one layer of double",
-    "quotes and then one of single quotes off each end unconditionally, so a value",
-    "that itself BEGINS AND ENDS with a quote character is read as the text inside",
-    "it while all three parsers measured read those quotes as part of the name",
-    "(X75) -- one line, no continuation, no phantom `name:` line. Where the line",
+    "read as the job's name (X71). And the quote-strip is TWO PASSES, each",
+    "unconditional and each taking EVERY leading and trailing character of its",
+    "own kind rather than one layer -- all double quotes off each end, then all",
+    "single quotes -- so a value wrapped in ANY NUMBER of quote layers is read as",
+    "the text inside all of them while all three parsers measured read those",
+    "quotes as part of the name (X75) -- one line, no continuation, no phantom",
+    "`name:` line. The ORDER is part of the mechanism and not an ordering of",
+    "convenience: the double-quote pass runs to completion before the single-quote",
+    "pass begins, so a double quote that only the single-quote pass exposes is",
+    "never taken, and a value quoted the other way round keeps it. Where the line",
     "read is a declared context, the",
     "UNREGISTERED the job owes is masked, and so, where that context's real job is",
     "gone, is the ABSENT: CLEAN at exit 0, measured on files both parsers read as",
@@ -1120,6 +1138,24 @@ _CENSUS_LIMIT = (
     "measured attempt at it got wrong in the fail-open direction. The blunt",
     "line-local close -- stop skipping comments in the second limb -- was measured",
     "to turn about half of these arms red, so it is not a candidate either.",
+    "A job this reader grades in a workflow that cannot run on a pull request at",
+    "all. It reads no `on:` line anywhere, so whether the workflow a job sits in",
+    "could produce a pull-request check is outside every class above: a job",
+    "claiming required under a declared context, in a workflow triggered only by",
+    "`workflow_dispatch`, only by `schedule`, or by a `push` restricted to tags,",
+    "reaches CLEAN at exit 0 over a tree owing ABSENT for that context --",
+    "measured, with the census's WHOLE STDOUT byte-identical to the same file",
+    "triggered on `pull_request`, so the `on:` block contributes nothing to the",
+    "verdict at all. What GitHub itself reports for a required check whose",
+    "workflow cannot fire on a pull request was NOT measured, so no verdict is",
+    "claimed for it here -- the same footing the multi-document clause above",
+    "stands on -- and NO ARM PINS IT either, so the backstop sentence below",
+    "reaches it only through a separate measurement: actionlint accepts all",
+    "three trigger shapes at rc 0, under a control it rejects. Every context",
+    "this declaration carries sits, in this repository's live tree, in a",
+    "workflow that does trigger on `pull_request`, measured over the whole",
+    "declaration, so nothing here is live today; a context added later could",
+    "change that with no line of this block changing.",
     "No backstop stands behind any of them: `Workflow SAST (actionlint)`, in",
     "this same job, exits 0 on every file their arms plant -- measured. It rejects",
     "YAML it cannot parse, and these files parse under both parsers measured, each",
@@ -2849,14 +2885,28 @@ def census_arms():
 
     # X75 is the NAME AXIS's third mechanism, pinned as emitted beside X70 and
     # X71 so the class's arms cannot be read as its membership. `census_scan`
-    # strips the name it reads with `.strip('"').strip("'")` -- one layer of
-    # each, both ends, unconditionally -- so a value that itself begins and ends
-    # with a quote character is read as the text inside it. Here the job's name
-    # is the declaration's last context wrapped in literal single quotes, and
-    # PyYAML, actionlint and Psych all read a name carrying those quote
+    # strips the name it reads with `.strip('"').strip("'")`: TWO PASSES, each
+    # unconditional and each removing EVERY leading and trailing character of
+    # its own kind rather than one layer -- all double quotes off each end, then
+    # all single quotes -- so a value wrapped in any number of quote layers is
+    # read as the text inside all of them. The order is part of the mechanism:
+    # the double-quote pass finishes before the single-quote pass begins, so a
+    # double quote that only the second pass exposes is never taken.
+    #
+    # TWO members are planted, and the second one is why the arity is stated
+    # rather than counted. In both, the job's name is the declaration's last
+    # context wrapped in literal quote characters -- ONE layer of single quotes
+    # inside double quotes, and TWO layers of single quotes inside double quotes
+    # -- and PyYAML, actionlint and Psych all read a name carrying those quote
     # characters, which is not a declared context. The tree has that context's
-    # real job removed, so it owes rc 1 ABSENT and UNREGISTERED and reaches
-    # CLEAN at rc 0.
+    # real job removed, so it owes rc 1 ABSENT and UNREGISTERED -- UNREGISTERED
+    # once per member, measured against a parser-faithful reading of this same
+    # tree -- and both members mask, so the census reaches CLEAN at rc 0. Adding
+    # the second member moved no verdict: this arm wanted rc 0 and no codes
+    # before it and wants the same after. The doubled member is the one a one-layer reading
+    # of the strip mis-predicts: one layer off each end would leave the context
+    # wrapped in single quotes, which is not declared, so a text saying "one
+    # layer of each" predicts a FINDING where the reader emits CLEAN.
     #
     # It is a separate arm because it is a separate MECHANISM, not a variation on
     # one: there is no continuation and no phantom `name:` line, only the strip
@@ -2865,7 +2915,11 @@ def census_arms():
     # author who lands that fold and reads the class as one close from shut would
     # re-label two arms while this mechanism stands untouched. A close turns this
     # red at rc 1 ABSENT and UNREGISTERED, or rc 2 if it refuses the file, and
-    # must re-label it.
+    # must re-label it. So does the NARROWER close of taking at most one layer of
+    # each: it reaches the doubled member and not the single-layer one, so this
+    # arm goes red while the mechanism stays open -- and that close was measured
+    # to turn X66 and X71 red as well, which is why it is deferred rather than
+    # taken here.
     name_quoted = dict(base)
     del name_quoted[last]
     name_quoted[".github/workflows/synth-name-quoted.yml"] = (
@@ -2873,6 +2927,14 @@ def census_arms():
         "  # gate-efficacy: posture=required\n"
         "  hygiene-v2:\n"
         '    name: "\'' + tenth + '\'"\n'
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+    name_quoted[".github/workflows/synth-name-quoted-2.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  hygiene-v3:\n"
+        '    name: "\'\'' + tenth + '\'\'"\n'
         "    runs-on: ubuntu-latest\n"
         "    steps:\n"
         "      - run: 'true'\n")
@@ -3157,15 +3219,22 @@ def census_arms():
                 "if it refuses the file, and must re-label it",
          hash_cont, 0, set()),
         ("X75", "NAME AXIS, the THIRD mechanism, pinned as emitted: a `name:` whose "
-                "YAML value itself begins and ends with a quote character. The "
-                "one-layer-of-each quote-strip reads it as the declared context "
-                "inside, while all three parsers measured read a name carrying "
-                "those quotes -- so the tree's ABSENT and UNREGISTERED are both "
-                "masked: CLEAN at rc 0. One line, no continuation, no phantom "
+                "YAML value itself begins and ends with quote characters. The "
+                "quote-strip is two unconditional passes, ALL double quotes off "
+                "each end and then ALL single quotes -- not one layer of each -- so "
+                "it reads the declared context inside ANY NUMBER of layers, while "
+                "all three parsers measured read a name carrying those quotes; the "
+                "tree's ABSENT and UNREGISTERED are both masked: CLEAN at rc 0. TWO "
+                "members are planted, one layer and two, and the doubled one is "
+                "what a one-layer reading of the strip mis-predicts as a finding. "
+                "One line, no continuation, no phantom "
                 "`name:`, so folding a continued `name:` does not reach it and this "
                 "class's arms are instances rather than its membership. A close "
                 "turns this red at rc 1 ABSENT and UNREGISTERED, or rc 2 if it "
-                "refuses the file, and must re-label it", name_quoted, 0, set()),
+                "refuses the file, and must re-label it -- as does the narrower "
+                "close to at most one layer of each, which reaches the doubled "
+                "member only and leaves the mechanism open",
+         name_quoted, 0, set()),
     ]
 
 
