@@ -687,23 +687,38 @@ NEG_O_RE='(^|[^a-z])(performs no act whose effect lands outside|acts? nowhere ou
 # ("nothing here stands behind…") matches it — the same limit every phrase recogniser in this
 # group has, and the reason the forms live in the one block that exists to declare.
 #
-# WHY THE CLASS IS FIVE SHAPES AND NOT ONE. It credited the typed confirmation alone, and over all
-# 37 arms exactly one arm declares one — while four others carry a confirmation of a different
-# shape on their own path. The class was widened to those shapes by operator decision, on the
+# WHY THE CLASS IS FOUR SHAPES AND NOT ONE. It credited the typed confirmation alone, and over all
+# 37 arms exactly one arm declares one — while others carry a confirmation of a different shape on
+# their own path. The class was widened by operator decision to the shapes the corpus names, on the
 # ground that the per-limb report is evidence for this release's central criterion and evidence
-# describing a confirmed arm as unconfirmed is wrong in the direction that matters. FOUR of the
-# five names below are the CORPUS'S OWN: the standing confirm rule each verb file states names an
-# echoed outgoing-to-incoming pair, a preview over a source's own answered set, a typed identifier
-# and a display name beside a member count, and C5 grades that rule's presence in all five files.
-# So the class is read off the rule rather than invented here. TWO departures from the rule's
-# wording are deliberate and are stated rather than left to be found: the typed shape keeps the
-# spelling the limb already shipped ("a typed confirmation" rather than the rule's "a typed
-# identifier"), because changing it would rewrite a live declaration for no verdict; and the
-# preview shape drops the rule's possessive ("a preview over the answered set"), because an
-# apostrophe inside this single-quoted pattern buys a quoting seam for no discrimination. THE
-# FIFTH, "a gated branch", is NOT one of the rule's four — it is the shape one arm actually
-# carries, whose path gates on a branch rather than on any of the four. It is credited because the
-# arm is gated, and named here as a shape the rule does not enumerate.
+# describing a confirmed arm as unconfirmed is wrong in the direction that matters. ALL FOUR names
+# below are the CORPUS'S OWN: the standing confirm rule each verb file states names an echoed
+# outgoing-to-incoming pair, a preview over a source's own answered set, a typed identifier and a
+# display name beside a member count — those four and no other — and C5 grades that rule's
+# presence in all five files. So the class is read off the rule rather than invented here. TWO
+# departures from the rule's wording are deliberate and are stated rather than left to be found:
+# the typed shape keeps the spelling the limb already shipped ("a typed confirmation" rather than
+# the rule's "a typed identifier"), because changing it would rewrite a live declaration for no
+# verdict; and the preview shape drops the rule's possessive ("a preview over the answered set"),
+# because an apostrophe inside this single-quoted pattern buys a quoting seam for no
+# discrimination.
+#
+# WHY IT IS NOT FIVE, AND THE TWO GATED ARMS IT DOES NOT CREDIT. A fifth shape, "a gated branch",
+# was credited and then dropped by operator decision: it is not one of the rule's four, and the one
+# declaration it matched stands only part of its arm behind the gate, which a count stated as a
+# lower bound on gated arms cannot credit. So two arms that DO gate are not credited — one of them
+# never was — and both are named here so the residual is read rather than rediscovered. `link`
+# declares a gate on two of its paths — the repoint, and a non-empty survey — and where the survey
+# is empty it writes with no confirmation at all; its declaration is accurate and stays in its own
+# block, and it is simply not a whole-arm gate. `group-expand` gates before its first write on
+# every path, with one confirmation over its consolidated member preview, but that is not a shape
+# the rule enumerates and its own block declares none. While their file carries the typed-only
+# posture, C2 is satisfied for both by that limb and C3 counts both there; widening the class to
+# reach either is a separate ruling, not an edit to this list. Residual, stated: the recogniser
+# reads WHICH shape a declaration names, never HOW MUCH of its arm stands behind it, so a
+# declaration placing only some of an arm's paths behind one of these four would still be
+# counted. None of the four live declarations does — each stands its arm's whole act behind its
+# gate — and that, not the recogniser, is what keeps C3's lower bound true.
 #
 # THE LIST IS THE RECOGNISER'S ONLY SOURCE. The pattern is BUILT from the array below rather than
 # spelled beside it, so the class a reader can enumerate and the class the limb matches cannot
@@ -711,7 +726,6 @@ NEG_O_RE='(^|[^a-z])(performs no act whose effect lands outside|acts? nowhere ou
 # GC3d requires none of them to be admitted WITHOUT it, which is the declaration-versus-mention
 # boundary re-armed once per shape rather than once for the list.
 CONFIRM_SHAPES=( 'a typed confirmation'
-                 'a gated branch'
                  'an echoed outgoing-to-incoming pair'
                  'a preview over the answered set'
                  'a display name beside a member count' )
@@ -3617,7 +3631,7 @@ if has_finding "$ALL" "$(surface C2)"; then FAIL "C2: an arm retaining declared 
 elif [ -z "$C_LNONE" ]; then FAIL "C2: NO SUBJECT — the per-limb counts were not emitted, so no arm was graded"
 else PASS "C2: each of the ${C_RETAIN} arms retaining declared intent declares a confirm gate in its own read-declaration block, or its file carries the typed-only posture (${C_LNONE} carry neither) — the per-arm obligation, graded per arm rather than per file, and from a declaration rather than from any sentence in the region that mentions a confirmation. The posture is role-scoped by the charter's own ROLE record: a CREATE-role file takes an argument rather than a verb, so the flag alone is its posture"; fi
 if [ -z "$C_LCONF" ] || [ -z "$C_LTYPED" ]; then FAIL "C3: NO SUBJECT — the per-limb report has no counts to report, so C2's green above is unreadable"
-else PASS "C3: PER-LIMB REPORT — of ${C_RETAIN} retained arms, the confirm limb carries ${C_LCONF} and the typed-only limb carries ${C_LTYPED}. The confirm limb credits ${#CONFIRM_SHAPES[@]} declared confirmation shape(s) — counted from the list the recogniser is built from, never spelled here — four of them named by the standing confirm rule C5 grades, and its count is a LOWER BOUND on gated arms rather than a census of them: an arm that gates without declaring it in its own read block is not counted, by construction.$( [ "${C_LCONF}" -eq 0 ] && printf ' %s' 'The CONFIRM LIMB IS VACUOUS: it carried zero arms on this run, so C2 above establishes nothing about it and its green rests entirely on the typed-only limb.' )$( [ "${C_LTYPED}" -eq 0 ] && printf ' %s' 'The TYPED-ONLY LIMB IS VACUOUS: it carried zero arms on this run.' ) Its verdict never depends on either count; it is the measurement that keeps C2 from reading as coverage it does not have"; fi
+else PASS "C3: PER-LIMB REPORT — of ${C_RETAIN} retained arms, the confirm limb carries ${C_LCONF} and the typed-only limb carries ${C_LTYPED}. The confirm limb credits ${#CONFIRM_SHAPES[@]} declared confirmation shape(s) — counted from the list the recogniser is built from, never spelled here — all of them named by the standing confirm rule C5 grades, and its count is a LOWER BOUND on gated arms rather than a census of them: it leaves out an arm that gates without declaring one of those shapes in its own read block, and an arm whose declared gate covers only some of its paths rather than the whole arm, which the class does not credit. The banner above CONFIRM_SHAPES names the gated arms each case leaves out, and the one condition the bound rests on.$( [ "${C_LCONF}" -eq 0 ] && printf ' %s' 'The CONFIRM LIMB IS VACUOUS: it carried zero arms on this run, so C2 above establishes nothing about it and its green rests entirely on the typed-only limb.' )$( [ "${C_LTYPED}" -eq 0 ] && printf ' %s' 'The TYPED-ONLY LIMB IS VACUOUS: it carried zero arms on this run.' ) Its verdict never depends on either count; it is the measurement that keeps C2 from reading as coverage it does not have"; fi
 if has_finding "$ALL" "$(surface C1)"; then FAIL "C1: THE JOIN — a rendered marker disagrees with the source it is supposed to state"; show "$ALL" 'C1'
 elif [ -z "$C_J1" ] || [ -z "$C_J2" ]; then FAIL "C1: NO SUBJECT — the join emitted no difference counts, so no marker was joined to anything"
 else PASS "C1: THE JOIN — for every graded coverage unit the side derived from its own read-declaration block equals the entry-class marker the routing map renders, as a set difference EMPTY IN BOTH DIRECTIONS (${C_J1} admitted-at-source-but-not-marked, ${C_J2} marked-but-not-admitted-at-source). Neither side holds a list: the source is read from the blocks and the marker from field 3 of the row B7 graded"; fi
@@ -4493,8 +4507,8 @@ fi
 
 # ── The WIDENED CLASS, armed per shape rather than per list. GC3 and GC3b above exercise the
 # limb end-to-end through a built world, and they do it on ONE shape — the typed confirmation the
-# fixture generator emits. A list of five that is only ever exercised on its first member is a
-# list whose other four are unmeasured: a typo in the fourth alternative, or an alternative whose
+# fixture generator emits. A list of four that is only ever exercised on its first member is a
+# list whose other three are unmeasured: a typo in the fourth alternative, or an alternative whose
 # token boundary does not hold, reads green on every run and silently drops that arm to the
 # typed-only limb. So the two arms below walk CONFIRM_SHAPES itself and grade the recogniser
 # directly, once per member, in the same normalisation the limb applies.
@@ -4504,7 +4518,7 @@ fi
 # SPECIFICITY: every shape WITHOUT the stem, in the live off-path sentence shape, is refused, and
 # so is the stem carrying a shape the list does not hold. That second arm is what keeps the
 # widening from becoming the mention-counting defect D-40 removed, re-armed once per shape: a
-# limb loosened to match a bare shape name passes GC3c unchanged and fails GC3d on all five.
+# limb loosened to match a bare shape name passes GC3c unchanged and fails GC3d on all four.
 GC3C_N=0; GC3C_MISS=''; GC3D_N=0; GC3D_FIRED=''
 for gcs in "${CONFIRM_SHAPES[@]}"; do
   gcp="$(neg_norm "Its destructive work stands behind ${gcs}, stated in full below.")"
