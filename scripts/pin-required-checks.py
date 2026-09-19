@@ -69,9 +69,10 @@ MODES
         WHICH FORMS IT CAN READ is a separate limit from the one above, and it
         is stated in full in the limit block the census prints on EVERY exit
         path -- which key presentations are refused rather than missed, which
-        files the parsers measured accept are refused as well, and the three
-        classes that still escape both the reader and its own refusal. It is
-        not restated here.
+        files the parsers measured accept are refused as well, and the classes
+        measured so far that still escape both the reader and its own refusal,
+        given as instances rather than as a counted list. It is not restated
+        here.
 
         Exit 0 clean / 1 finding(s) / 2 REFUSED -- no job this reader could
         read in any workflow file, or a workflow file this reader cannot vouch
@@ -701,26 +702,31 @@ def census_scan(root):
     job KEY when it does not, because GitHub reports a job's name, or its key
     where it has none, as the check's context. What is read here, though, is
     ONE LINE: the first `name:` line at the job's property indentation, with
-    any quotes around it stripped. A YAML parser reads a name from every line
-    its value runs to, and a job whose name carries an expression, or that
-    runs over a `strategy: matrix`, reports a context GitHub computes at run
-    time -- so the context compared here is not always the one GitHub reports.
-    Three mechanisms for that are measured, and there is no claim that they are
-    all of them. A `name:` continued onto a further line is read as its first
-    line alone (X70). A `name:`-shaped line inside another property's value, at
-    the property indentation and ahead of the job's own `name:`, is read as the
-    job's name (X71). And the quote-strip above is `.strip('"').strip("'")` --
-    TWO PASSES, each unconditional and each removing EVERY leading and trailing
-    character of its own kind rather than one layer: all double quotes off each
-    end, then all single quotes. So a value wrapped in ANY NUMBER of quote
-    layers is read as the text inside all of them, while all three parsers
-    measured read those quotes as part of the name (X75). The order is part of
-    the mechanism: the double-quote pass runs to completion before the
-    single-quote pass begins, so a double quote that only the single-quote pass
-    exposes is never taken. That third one is a property of this line's own
-    strip rather than of any continuation, so the fold that reads a continued
-    `name:` the way the parsers do does not reach it. The limit block states
-    each of them, and the run-time case, as conditions.
+    every leading and trailing double quote stripped off it and then every
+    leading and trailing single quote, in that order -- so a value quoted the
+    other way round keeps its double quotes. A YAML parser reads a name from
+    every line its value runs to, and a job whose name carries an expression,
+    or that runs over a `strategy: matrix`, reports a context GitHub computes
+    at run time -- so the context compared here is not always the one GitHub
+    reports. The mechanisms measured for that follow, as instances rather than
+    as a counted or complete list. A `name:` continued onto a further line is
+    read as its first line alone (X70). A `name:`-shaped line inside another
+    property's value, at the property indentation and ahead of the job's own
+    `name:`, is read as the job's name (X71). And the quote-strip above is
+    `.strip('"').strip("'")` -- TWO PASSES, each unconditional and each
+    removing EVERY leading and trailing character of its own kind rather than
+    one layer: all double quotes off each end, then all single quotes. So a
+    value wrapped in ANY NUMBER of quote layers is read as the text inside all
+    of them, while all three parsers measured read those quotes as part of the
+    name (X75). The order is part of the mechanism: the double-quote pass runs
+    to completion before the single-quote pass begins, so a double quote that
+    only the single-quote pass exposes is never taken. That third one is a
+    property of this line's own strip rather than of any continuation, so the
+    fold that reads a continued `name:` the way the parsers do does not reach
+    it. A `name:` written twice in one job is read at its first copy, where
+    both parsers measured keep the later one -- the repeated-key class in the
+    limit block. The limit block states each of them, and the run-time case, as
+    conditions.
     `posture` is None when no marker BINDS to the job key (see
     `_bind_marker` for what binding requires and why proximity is not it), and
     also when the bound marker's value is not one this tool recognises -- an
@@ -961,11 +967,12 @@ def census_findings(jobs):
 # touching the pattern, by refusing the FILE. The third OVERSTATED again, in both
 # directions at once: it said a key this reader cannot read is refused in every
 # position, which was false of one displaced by a shallower phantom until the
-# third test closed it (X64-X65), and it named one open class where there were
-# two -- a job recorded off a line that is no key is walked, read, and graded
-# (X66-X67). The fourth UNDERSTATED once more: it named two open classes where
-# there were three -- a job graded under a context read off one line of its
-# `name:`, or off a `name:`-shaped line inside another value, is walked, read,
+# third test closed it (X64-X65), and it named one open class where a further
+# one was already reachable -- a job recorded off a line that is no key is
+# walked, read, and graded (X66-X67). The fourth UNDERSTATED once more: it named
+# two open classes where a further one was already reachable -- a job
+# graded under a context read off one line of its `name:`, or off a
+# `name:`-shaped line inside another value, is walked, read,
 # and graded, and can reach CLEAN (X70-X71); its account of where the refusal
 # fires with no key missing named only continuations, where a block that opens
 # on a tag line is refused as well (X72); and its opening said a clean result
@@ -975,9 +982,19 @@ def census_findings(jobs):
 # file declares was already reachable -- a property's quoted scalar continued
 # at the job-key indentation onto a line beginning with `#`, which every limb
 # skips and the marker binding reads as a comment (X74) -- and its account of
-# the name class said two mechanisms where the quote-strip is a third, on one
-# line, reachable with no continuation at all (X75). So this version says which
-# class is closed and by what mechanism, and then stops counting what is left.
+# the name class said two mechanisms where the quote-strip was a further one, on
+# one line, reachable with no continuation at all (X75). So this version says
+# which class is closed and by what mechanism, and then stops counting what is
+# left.
+#
+# It counted again anyway. A later edit wrote that the reader and a file "come
+# apart two further ways" -- a count of the WAYS rather than of the classes, true
+# of every class then named -- and the next class measured, a key written twice,
+# was none of them. A rule that was stated and then broken is now enforced: E9
+# in the self-test fails on a number written in front of a class, a way, a
+# mechanism or a member, here, in any docstring in this module or in any arm
+# label. A count of a closed set is written as a measured tally in numerals, as
+# in 5 of 5.
 #
 # The second limit also says where the refusal reaches too far. A refusal that
 # fires on files the parsers measured accept is a limit of the instrument as
@@ -997,13 +1014,18 @@ _CENSUS_LIMIT = (
     "exactly where the text of a line this reader reads can be written without",
     "being one -- a key, a marker, a `name:`, the `jobs:` line, or the",
     "column-zero line that ends the block -- and wherever a file does that, the",
-    "two come apart. They come apart two further ways, and naming only the first",
-    "left the universal below false of classes it already covers: where this",
-    "reader TRANSFORMS the line it did read, as the quote-strip below does, and",
-    "where what decides the answer sits on a line it reads NOTHING of -- a",
-    "continuation, or the `on:` block. Every open class named below is one",
-    "measured instance of this paragraph, and the paragraph is the claim; the",
-    "instances are not.",
+    "two come apart. That is not the only way they come apart, and naming it",
+    "alone left the universal below false of classes it already covers. They",
+    "also come apart where this reader TRANSFORMS the line it did read, as the",
+    "quote-strip below does; where what decides the answer sits on a line it",
+    "reads NOTHING of -- a continuation, or the `on:` block; and where what",
+    "decides it is a rule that sits on NO line -- a key written twice, of which",
+    "both parsers measured keep only the later copy while this reader has no",
+    "rule for a repeat, so a file can come apart from this reader with every",
+    "line read as what it is. Those ways are instances, not a complete list: the",
+    "list carries no count, and a way measured later extends it rather than",
+    "contradicting it. Every open class named below is one measured instance of",
+    "this paragraph, and the paragraph is the claim; the instances are not.",
     "The context compared for each job is the text of ONE line -- its first",
     "`name:` line at the job's property indentation, with EVERY leading and",
     "trailing double quote stripped off and then EVERY leading and trailing",
@@ -1067,9 +1089,9 @@ _CENSUS_LIMIT = (
     "zero ends it early and every job below that point is neither read nor refused.",
     "Measured on files two parsers read as two jobs: CLEAN at exit 0 over the",
     "second, which claims required under a name this declaration does not carry.",
-    "Three members are pinned SO FAR, not one -- a double-quoted scalar, a",
-    "single-quoted one, and a flow sequence closed at column zero (X36, X45, X46)",
-    "-- because an author who closes one of them turns a single arm green with the",
+    "It is pinned SO FAR by a double-quoted scalar, a single-quoted one, and a",
+    "flow sequence closed at column zero (X36, X45, X46), not by one arm alone,",
+    "because an author who closes one of them turns a single arm green with the",
     "others still open. A whole block can go unwalked the same way: a top-level",
     "scalar continued at column zero can carry a `jobs:` line of its own, and this",
     "reader begins at the first `jobs:` line it finds, so it walks a block that",
@@ -1090,8 +1112,8 @@ _CENSUS_LIMIT = (
     "declared context -- and where the real job for that context is gone, the",
     "ABSENT it owes is masked: CLEAN at exit 0, measured on files both parsers read",
     "as one job. Telling that line from a key means knowing that a quote or a flow",
-    "is open, which this reader does not track. Two members are pinned so far, a",
-    "quoted scalar and a flow mapping (X66, X67).",
+    "is open, which this reader does not track. The members pinned so far include",
+    "a quoted scalar and a flow mapping (X66, X67).",
     "A job this reader grades under a context the job does not report. It reads",
     "the context off one line, and a YAML parser reads a `name:` from every line",
     "its value runs to. The mechanisms measured for this are distinct, and a",
@@ -1156,14 +1178,74 @@ _CENSUS_LIMIT = (
     "workflow that does trigger on `pull_request`, measured over the whole",
     "declaration, so nothing here is live today; a context added later could",
     "change that with no line of this block changing.",
-    "No backstop stands behind any of them: `Workflow SAST (actionlint)`, in",
+    "A job this reader grades off a key both parsers measured discard. A file may",
+    "write a mapping key twice: both parsers measured accept it and keep only the",
+    "LATER copy, and this reader has no rule for a repeat. A job key written twice",
+    "-- the first copy claiming required under a declared context, the second",
+    "advisory under another name -- is read as two jobs where both parsers read",
+    "one, the later: CLEAN at exit 0 over a tree owing ABSENT for that context --",
+    "measured, with the census's WHOLE STDOUT byte-identical to the same file with",
+    "the two keys made distinct, so the repeat contributes nothing to the verdict",
+    "at all. Every line of that file is read as what it is: what decides the answer",
+    "is the parsers' rule that a repeated key replaces the earlier copy, and that",
+    "rule sits on no line. The same rule reaches a job's `name:` written twice,",
+    "which this reader reads at its first line, and a `jobs:` key written twice,",
+    "whose second block it never walks -- each measured at CLEAN over a tree owing",
+    "a finding; with the declared context in the later `name:` instead, the same",
+    "read gives a false finding, which fails closed. What GitHub itself does with a",
+    "repeated key was not measured, so no verdict is claimed for it here, and",
+    "NO ARM PINS IT. It has a backstop all the same: `Workflow SAST (actionlint)`,",
+    "in this same job, rejects every such file at rc 1, naming the key it repeats",
+    "-- it checks the `jobs:` block, each job and the workflow's own keys for a",
+    "repeat -- measured on every member here, with the version this job installs",
+    "read in source rather than run. No workflow in this repository's live tree",
+    "repeats a key, measured over every mapping in every file, so nothing here is",
+    "live today; a workflow added later could change that with no line of this",
+    "block changing.",
+    "No backstop stands behind any class's arms: `Workflow SAST (actionlint)`, in",
     "this same job, exits 0 on every file their arms plant -- measured. It rejects",
     "YAML it cannot parse, and these files parse under both parsers measured, each",
     "of which accepts a continuation at every depth these arms use. GitHub's own",
     "parser was not run on any of them. A parser that refused a value continued no",
     "deeper than its key would still read X70, which continues its `name:` deeper",
-    "than that.",
+    "than that. A class no arm pins is outside that measurement, and the repeated",
+    "key's clause above names the backstop it has.",
 )
+
+
+# E9's detector, the self-test's guard on the rule stated above the limit
+# block. It finds a NUMBER written in front of a class, a way, a mechanism or a
+# member, with at most two ordinary words between them, as in "two further
+# ways". Three shapes pass, each for a reason: a measured tally written in
+# numerals, "5 of 5 members", which is how a count of a closed set is written
+# here; an ordinal, which indexes an instance and stays true when another is
+# found; and a number joined to the noun by a function word ("one for the
+# class"), which counts something else. The function words are refused INSIDE
+# the pattern rather than filtered afterwards, because a filtered match has
+# already consumed its text: "one of three mechanisms" would be matched from
+# "one", discarded, and the count inside it never seen.
+_OPEN_COUNT_NUMBER = (r"\d+|one|two|three|four|five|six|seven|eight|nine|ten|"
+                      r"eleven|twelve|twenty|both|pair of|couple of|dozen")
+_OPEN_COUNT_NOUN = r"class(?:es)?|ways?|mechanisms?|members?"
+_OPEN_COUNT_GLUE = (
+    "a", "an", "the", "of", "for", "to", "in", "on", "at", "by", "with", "from",
+    "into", "is", "are", "was", "were", "be", "been", "that", "which", "and",
+    "or", "but", "than", "as", "per", "each", "every", "its", "their", "this",
+    "these", "those")
+_RE_OPEN_COUNT = re.compile(
+    r"\b(" + _OPEN_COUNT_NUMBER + r")\s+((?:(?!(?:" + "|".join(_OPEN_COUNT_GLUE)
+    + r")\s)[A-Za-z-]+\s+){0,2}?)(" + _OPEN_COUNT_NOUN + r")\b", re.IGNORECASE)
+_RE_CLOSED_TALLY = re.compile(r"\d+\s+(?:out\s+)?of\s+$")
+
+
+def _open_counts(text):
+    """The counts E9 refuses in `text`: a number in front of a class, a way, a
+    mechanism or a member. Whitespace is normalised first, so a count the limit
+    block splits across its printed lines is read as the phrase it is."""
+    text = " ".join(text.split())
+    return [m.group(0) for m in _RE_OPEN_COUNT.finditer(text)
+            if not (m.group(1).isdigit()
+                    and _RE_CLOSED_TALLY.search(text[:m.start()]))]
 
 
 _RE_JOBS_ISH = re.compile(r"^(['\"]?)jobs\1:")
@@ -2467,7 +2549,7 @@ def census_arms():
         "    steps:\n"
         "      - run: 'true'\n")
 
-    # X45-X46 pin the two further members of X36's class. X36 alone pins ONE
+    # X45-X46 pin further members of X36's class. X36 alone pins ONE
     # point in it, so an author who closes that point turns X36 green with these
     # two still open -- the opposite of what a tripwire is for. Both are valid to
     # both parsers and both reach a CLEAN census, exactly as X36 does. X46's flow
@@ -3222,18 +3304,20 @@ def census_arms():
                 "YAML value itself begins and ends with quote characters. The "
                 "quote-strip is two unconditional passes, ALL double quotes off "
                 "each end and then ALL single quotes -- not one layer of each -- so "
-                "it reads the declared context inside ANY NUMBER of layers, while "
-                "all three parsers measured read a name carrying those quotes; the "
-                "tree's ABSENT and UNREGISTERED are both masked: CLEAN at rc 0. TWO "
-                "members are planted, one layer and two, and the doubled one is "
-                "what a one-layer reading of the strip mis-predicts as a finding. "
-                "One line, no continuation, no phantom "
-                "`name:`, so folding a continued `name:` does not reach it and this "
-                "class's arms are instances rather than its membership. A close "
-                "turns this red at rc 1 ABSENT and UNREGISTERED, or rc 2 if it "
-                "refuses the file, and must re-label it -- as does the narrower "
-                "close to at most one layer of each, which reaches the doubled "
-                "member only and leaves the mechanism open",
+                "it reads the declared context inside ANY NUMBER of layers with the "
+                "double quotes outside the single, while all three parsers measured "
+                "read a name carrying those quotes; the tree's ABSENT and "
+                "UNREGISTERED are both masked: CLEAN at rc 0. Quoted the other way "
+                "round, single quotes outside double, the double quotes survive the "
+                "strip and the name reads as a finding. It plants a member at one "
+                "layer and a member at two, and the doubled one is what a one-layer "
+                "reading of the strip mis-predicts as a finding. One line, no "
+                "continuation, no phantom `name:`, so folding a continued `name:` "
+                "does not reach it and this class's arms are instances rather than "
+                "its membership. A close turns this red at rc 1 ABSENT and "
+                "UNREGISTERED, or rc 2 if it refuses the file, and must re-label it "
+                "-- as does the narrower close to at most one layer of each, which "
+                "reaches the doubled member only and leaves the mechanism open",
          name_quoted, 0, set()),
     ]
 
@@ -3615,6 +3699,74 @@ def self_test(stream=sys.stdout):
                 "mark is a measurement and not a reader that refuses every "
                 "file".format(aid, want_disp, want_total))
 
+    # E9 guards the census's TEXT rather than its verdicts: the limit block,
+    # every docstring in this module and every arm label must not write a
+    # number in front of a class, a way, a mechanism or a member. The comment
+    # above `_CENSUS_LIMIT` says why the rule is enforced rather than stated.
+    # E9/controls runs first and is what makes a clean E9 a measurement: the
+    # detector must fire on every planted count -- the count the limit block
+    # itself once shipped among them -- and on none of the near-misses, so a
+    # detector that matches nothing cannot pass. Its reach is stated rather
+    # than implied: it does not see a count written after its noun, as an
+    # ordinal, by anaphora ("that pair") or as "twice", a count in a comment,
+    # or any noun outside those four. It goes red wherever --self-test runs,
+    # --plan and --apply included (they refuse at exit 5); CI runs --census
+    # alone, so it is not a CI gate.
+    planted = ("They come apart two further ways, and naming only the first",
+               "Three mechanisms for that are measured",
+               "and the three classes that still escape both the reader",
+               "Two members are pinned so far", "the 2 further ways",
+               "both mechanisms close separately", "a pair of ways",
+               "CLASS P, the second of two members",
+               "it is one of three mechanisms")
+    near_misses = ("5 of 5 members refused", "9 out of 9 members read",
+                   "NAME AXIS, the THIRD mechanism",
+                   "both parsers read as one job. Each mechanism closes separately",
+                   "Six arms for six presentations rather than one for the class",
+                   "Every open class named below is one measured instance")
+    blind = [p for p in planted if not _open_counts(p)]
+    loose = [p for p in near_misses if _open_counts(p)]
+    if blind or loose:
+        failures.append("E9/controls: the detector missed {} and fired on {} -- a "
+                        "clean E9 would measure nothing".format(blind, loose))
+        out("  FAIL E9/controls: missed {} planted count(s), fired on {} "
+            "near-miss(es)".format(len(blind), len(loose)))
+    else:
+        out("  PASS E9/controls: the detector fires on each of the {} planted "
+            "counts, the count the limit block once shipped among them, and on "
+            "none of the {} near-misses -- a closed count, an ordinal, and a "
+            "number and a noun in different sentences or joined by a function "
+            "word".format(len(planted), len(near_misses)))
+
+    texts = [("the limit block", " ".join(_CENSUS_LIMIT)),
+             ("the module docstring", globals().get("__doc__") or "")]
+    texts += [("{}()'s docstring".format(nm), obj.__doc__ or "")
+              for nm, obj in sorted(globals().items())
+              if hasattr(obj, "__code__")
+              and getattr(obj, "__module__", None) == __name__]
+    texts += [("arm {}'s label".format(a[0]), a[1])
+              for a in list(arms) + [positive] + list(guard_arms()) + list(c_arms)]
+    present = set(w for w, t in texts if t.strip())
+    hollow = sorted(set(("the limit block", "the module docstring",
+                         "census_scan()'s docstring")) - present)
+    hits = [(w, h) for w, t in texts for h in _open_counts(t)]
+    if hollow:
+        failures.append("E9: nothing to scan in {} -- docstrings stripped (python "
+                        "-OO) or missing, so this arm cannot vouch for them".format(
+                            ", ".join(hollow)))
+        out("  FAIL E9: nothing to scan in {}".format(", ".join(hollow)))
+    elif hits:
+        for where, hit in hits:
+            failures.append("E9: {} writes {!r}, a count of an open set -- state "
+                            "the members as instances, or write a closed count "
+                            "as a tally in numerals, 5 of 5".format(where, hit))
+            out("  FAIL E9: {} writes {!r}".format(where, hit))
+    else:
+        out("  PASS E9: no text the census prints or the self-test labels writes "
+            "a number in front of a class, a way, a mechanism or a member -- the "
+            "limit block, every docstring in this module and every arm label, {} "
+            "texts scanned".format(len(texts)))
+
     out("")
     out("-" * 78)
     if failures:
@@ -3624,8 +3776,9 @@ def self_test(stream=sys.stdout):
         return 1
     out("SELF-TEST PASSED -- 11 degenerate arms all failed on exactly their named "
         "conjuncts, the positive arm passed, every named conjunct is individually "
-        "load-bearing, every capture failure refused the write, and the registration "
-        "census graded every arm the stated way with a control that reached rc 0.")
+        "load-bearing, every capture failure refused the write, the registration "
+        "census graded every arm the stated way with a control that reached rc 0, "
+        "and no census text counts an open set.")
     return 0
 
 
