@@ -701,10 +701,13 @@ def census_scan(root):
     The context name is read off the job's `name:` when it has one and is the
     job KEY when it does not, because GitHub reports a job's name, or its key
     where it has none, as the check's context. What is read here, though, is
-    ONE LINE: the first `name:` line at the job's property indentation, with
-    every leading and trailing double quote stripped off it and then every
-    leading and trailing single quote, in that order -- so a value quoted the
-    other way round keeps its double quotes. A YAML parser reads a name from
+    ONE LINE: the first `name:` line at the job's property indentation,
+    stripped in the order this reader strips it -- every leading and trailing
+    character it reads as WHITESPACE first, its own runtime's Unicode notion
+    rather than the space and tab a plain scalar sheds; then every leading and
+    trailing double quote; then every leading and trailing single quote -- so a
+    value quoted the other way round keeps its double quotes, and whitespace
+    that only a quote pass exposes is never taken. A YAML parser reads a name from
     every line its value runs to, and a job whose name carries an expression,
     or that runs over a `strategy: matrix`, reports a context GitHub computes
     at run time -- so the context compared here is not always the one GitHub
@@ -718,12 +721,22 @@ def census_scan(root):
     one layer: all double quotes off each end, then all single quotes. So a
     value wrapped in ANY NUMBER of quote layers is read as the text inside all
     of them, while all three parsers measured read those quotes as part of the
-    name (X75). The order is part of the mechanism: the double-quote pass runs
-    to completion before the single-quote pass begins, so a double quote that
-    only the single-quote pass exposes is never taken. That third one is a
-    property of this line's own strip rather than of any continuation, so the
+    name (X75). And the whitespace strip that runs ahead of both quote passes
+    -- the `name:` pattern's own whitespace class on either side of the value,
+    and then the bare `.strip()` at the head of the chain -- takes this
+    runtime's Unicode notion of whitespace, which is wider than the space and
+    tab a plain scalar sheds, so an unquoted `name:` beginning or ending in a
+    character such as `U+00A0` is read as the bare text while the parsers
+    measured keep the character (X76). Where a plain scalar sheds it too, as it
+    does an ASCII space, the two agree, so what masks is the DIVERGENCE and not
+    the trimming; and removing either of those sites without the other leaves
+    the mechanism open -- measured. The order is part of the mechanism: the
+    whitespace strip runs before either quote pass, and the double-quote pass
+    runs to completion before the single-quote pass begins, so a double quote
+    that only the single-quote pass exposes is never taken. Those are
+    properties of this line's own strip rather than of any continuation, so the
     fold that reads a continued `name:` the way the parsers do does not reach
-    it. A `name:` written twice in one job is read at its first copy, where
+    them. A `name:` written twice in one job is read at its first copy, where
     both parsers measured keep the later one -- the repeated-key class in the
     limit block. The limit block states each of them, and the run-time case, as
     conditions.
@@ -1027,10 +1040,13 @@ _CENSUS_LIMIT = (
     "contradicting it. Every open class named below is one measured instance of",
     "this paragraph, and the paragraph is the claim; the instances are not.",
     "The context compared for each job is the text of ONE line -- its first",
-    "`name:` line at the job's property indentation, with EVERY leading and",
-    "trailing double quote stripped off and then EVERY leading and trailing",
-    "single quote -- not one layer of each -- or its key where it has none. It",
-    "is not always the context GitHub reports. A job whose",
+    "`name:` line at the job's property indentation -- stripped in the order",
+    "this reader strips it: EVERY leading and trailing character it reads as",
+    "WHITESPACE comes off FIRST, its own runtime's Unicode notion rather than",
+    "the space and tab a plain scalar sheds; then EVERY leading and trailing",
+    "double quote; then EVERY leading and trailing single quote -- not one",
+    "layer of each -- or its key where it has none. It is not always the",
+    "context GitHub reports. A job whose",
     "`name:` carries an expression, or that runs over a `strategy: matrix`,",
     "reports a context GitHub computes at run time, which this reader never sees:",
     "a bare name added to the declaration to silence a finding on such a job can",
@@ -1127,11 +1143,22 @@ _CENSUS_LIMIT = (
     "single quotes -- so a value wrapped in ANY NUMBER of quote layers is read as",
     "the text inside all of them while all three parsers measured read those",
     "quotes as part of the name (X75) -- one line, no continuation, no phantom",
-    "`name:` line. The ORDER is part of the mechanism and not an ordering of",
-    "convenience: the double-quote pass runs to completion before the single-quote",
-    "pass begins, so a double quote that only the single-quote pass exposes is",
-    "never taken, and a value quoted the other way round keeps it. Where the line",
-    "read is a declared context, the",
+    "`name:` line. And the strip that runs BEFORE both quote passes takes every",
+    "leading and trailing character this reader reads as whitespace, which is",
+    "its own runtime's Unicode notion and not the space and tab a plain scalar",
+    "sheds: an unquoted `name:` beginning or ending in such a character --",
+    "`U+00A0` is the member pinned -- is read as the bare declared context,",
+    "while the parsers measured keep the character. Where a plain scalar sheds",
+    "the character too, as it does an ASCII space, the reader and the parsers",
+    "agree and nothing is masked, so the mechanism is the DIVERGENCE between",
+    "the two notions rather than the trimming (X76). The ORDER is part of the",
+    "mechanism and not an ordering of convenience: the whitespace strip runs",
+    "before either quote pass, and the double-quote pass runs to completion",
+    "before the single-quote pass begins, so a double quote that only the",
+    "single-quote pass exposes is never taken, a value quoted the other way",
+    "round keeps it, and whitespace that only a quote pass exposes is never",
+    "taken either -- that direction gives a finding and fails closed. Where the",
+    "line read is a declared context, the",
     "UNREGISTERED the job owes is masked, and so, where that context's real job is",
     "gone, is the ABSENT: CLEAN at exit 0, measured on files both parsers read as",
     "one job. Each mechanism closes separately: folding a continued `name:` the",
@@ -3021,6 +3048,54 @@ def census_arms():
         "    steps:\n"
         "      - run: 'true'\n")
 
+    # X76 is the NAME AXIS mechanism that runs BEFORE X75's, pinned as emitted
+    # beside X70, X71 and X75. Ahead of the quote passes this reader takes the
+    # leading and trailing whitespace off the value -- in `_RE_NAME` on either
+    # side of the capture, and again in the bare `.strip()` that heads the
+    # chain -- and its notion of whitespace is its runtime's Unicode one, which
+    # is wider than the space and tab a plain scalar sheds. So an unquoted
+    # `name:` whose value begins or ends in a character inside that gap is read
+    # as the text without it.
+    #
+    # The member planted is the declaration's last context followed by
+    # `U+00A0`. The tree has that context's real job removed, so it owes rc 1
+    # ABSENT and UNREGISTERED -- PyYAML 6.0.3 and Psych 3.1.0 both read a name
+    # carrying the character, which is not a declared context -- and the reader
+    # masks both: CLEAN at rc 0.
+    #
+    # What makes it a measurement rather than an observation is the pair of
+    # controls it was built against, neither of which is planted here. The same
+    # tree with a VISIBLE trailing character emits rc 1 ABSENT and UNREGISTERED
+    # -- that is the verdict this one owes, measured on this tree shape rather
+    # than argued. The same tree with a trailing ASCII SPACE emits rc 0 and
+    # OWES rc 0, because a plain scalar sheds that character too. So the
+    # mechanism is not "this reader trims whitespace": it is the divergence
+    # between the two notions, and a close that narrowed the trim to the plain
+    # scalar's own set is what would reach it.
+    #
+    # A close must reach BOTH sites. Removing the `.strip()` alone leaves this
+    # arm at rc 0, and narrowing the pattern's whitespace class alone leaves it
+    # at rc 0; only both together turn it red at rc 1 ABSENT and UNREGISTERED
+    # -- measured on one-occurrence mutants of this reader. Whatever lands must
+    # re-label this arm rather than put rc 0 back.
+    #
+    # Unlike the repeated key, this mechanism has NO backstop: actionlint
+    # accepts the member at rc 0, under a control it rejects at rc 1. And
+    # unlike X75 it reaches a value carrying no quote at all, which is why it
+    # is a separate arm and not a variation on that one: the whitespace a quote
+    # pass exposes is never taken, so the character INSIDE the quotes gives a
+    # finding, and that direction fails closed.
+    name_ws = dict(base)
+    del name_ws[last]
+    name_ws[".github/workflows/synth-name-ws.yml"] = (
+        "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+        "  # gate-efficacy: posture=required\n"
+        "  hygiene-v4:\n"
+        "    name: " + tenth + " \n"
+        "    runs-on: ubuntu-latest\n"
+        "    steps:\n"
+        "      - run: 'true'\n")
+
     second_jobs = dict(base)
     second_jobs[".github/workflows/synth-second-jobs.yml"] = (
         'name: "Synthetic\n'
@@ -3319,6 +3394,27 @@ def census_arms():
                 "-- as does the narrower close to at most one layer of each, which "
                 "reaches the doubled member only and leaves the mechanism open",
          name_quoted, 0, set()),
+        ("X76", "NAME AXIS, the mechanism that runs BEFORE the quote-strip, pinned "
+                "as emitted: an unquoted `name:` whose value ends in `U+00A0`. "
+                "Ahead of both quote passes this reader takes off every leading and "
+                "trailing character its runtime calls whitespace -- a Unicode "
+                "notion wider than the space and tab a plain scalar sheds -- so it "
+                "reads the declaration's last context bare, while both parsers "
+                "measured read a name carrying the character; the tree's ABSENT and "
+                "UNREGISTERED are both masked: CLEAN at rc 0. The same tree with a "
+                "VISIBLE trailing character emits rc 1 ABSENT and UNREGISTERED, "
+                "which is the verdict this tree owes; with a trailing ASCII SPACE it "
+                "emits rc 0 and OWES rc 0, because a plain scalar sheds that too -- "
+                "so what masks is the DIVERGENCE between the two notions and not the "
+                "trimming. The character INSIDE the quotes gives a finding instead, "
+                "which is that direction failing closed. actionlint accepts the "
+                "member at rc 0 under a control it rejects, so unlike the repeated "
+                "key this has no backstop. A close must reach BOTH sites -- the "
+                "pattern's whitespace class and the bare `.strip()` -- since "
+                "removing either without the other leaves this at rc 0, measured; "
+                "whatever lands turns it red at rc 1 ABSENT and UNREGISTERED, or "
+                "rc 2 if it refuses the file, and must re-label it",
+         name_ws, 0, set()),
     ]
 
 
@@ -3709,7 +3805,14 @@ def self_test(stream=sys.stdout):
     # detector that matches nothing cannot pass. Its reach is stated rather
     # than implied: it does not see a count written after its noun, as an
     # ordinal, by anaphora ("that pair") or as "twice", a count in a comment,
-    # or any noun outside those four. It goes red wherever --self-test runs,
+    # or any noun outside those four. Nor does it read every text the census
+    # PRINTS: the refusal's definition and remedy, and `_unread_reason`'s
+    # per-file diagnoses, are function-local strings rather than a docstring or
+    # an arm label, and they are exactly where the census states what it does
+    # not see -- so a count planted in either leaves this arm green while the
+    # census prints it, measured. The arm's PASS line is scoped to what it
+    # reads for that reason, and widening `texts` to reach them is the other
+    # route. It goes red wherever --self-test runs,
     # --plan and --apply included (they refuse at exit 5); CI runs --census
     # alone, so it is not a CI gate.
     planted = ("They come apart two further ways, and naming only the first",
@@ -3762,10 +3865,12 @@ def self_test(stream=sys.stdout):
                             "as a tally in numerals, 5 of 5".format(where, hit))
             out("  FAIL E9: {} writes {!r}".format(where, hit))
     else:
-        out("  PASS E9: no text the census prints or the self-test labels writes "
-            "a number in front of a class, a way, a mechanism or a member -- the "
-            "limit block, every docstring in this module and every arm label, {} "
-            "texts scanned".format(len(texts)))
+        out("  PASS E9: no text THIS ARM READS writes a number in front of a "
+            "class, a way, a mechanism or a member -- the limit block, every "
+            "docstring in this module and every arm label, {} texts scanned. "
+            "The census prints text this arm does not read: the refusal's "
+            "definition and its remedy, and `_unread_reason`'s per-file "
+            "diagnoses. Those are outside this measurement".format(len(texts)))
 
     out("")
     out("-" * 78)
@@ -3778,7 +3883,7 @@ def self_test(stream=sys.stdout):
         "conjuncts, the positive arm passed, every named conjunct is individually "
         "load-bearing, every capture failure refused the write, the registration "
         "census graded every arm the stated way with a control that reached rc 0, "
-        "and no census text counts an open set.")
+        "and no text E9 reads counts an open set.")
     return 0
 
 
