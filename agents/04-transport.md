@@ -423,13 +423,19 @@ a secondary table inside a fence-form class — so it has nowhere to put a `cost
 and does not acquire one here. Its rows stay exactly as they are written today.
 
 **What never becomes a field.** `Rationale`, `What goes wrong if wrong choice made`,
-`Buffer rationale`, `Luggage handling`, `Group suitability`, the `Alternative`'s
-changing condition and the physical-cost flag notes carry **prose only**. They are
-not candidates for the marker, for frontmatter, or for any normalized token a later
-slice might reach for. They fail the frontmatter/body test's second question by
-construction — two correct writers do not phrase a failure mode identically — and
-that failure is the guarantee, not a reminder. A slice that normalizes one of them
-is reading the model, not the test.
+`Buffer rationale`, `Luggage handling`, `Luggage options`, `Group suitability`, the
+`Alternative`'s changing condition and the physical-cost flag notes carry **prose
+only**. They are not candidates for the marker, for frontmatter, or for any
+normalized token a later slice might reach for. They fail the frontmatter/body
+test's second question by construction — two correct writers do not phrase a
+failure mode identically — and that failure is the guarantee, not a reminder. A
+slice that normalizes one of them is reading the model, not the test.
+**The plural in `Luggage options` is the label's own wording, not an invitation to
+enumerate.** What it answers is where a particular party's bags sit during a
+particular gap, and whether a forwarding service is worth using on that stream — a
+judgement written per stream, never a menu a later slice can close into an enum.
+Its one countable part, the assembly minutes, is not its own to carry:
+`Buffer rationale:` holds it, and is fenced here for the same reason.
 
 ### Payment & Transit Card Setup
 
