@@ -3886,7 +3886,11 @@ fi
 # BOTH sides of the filter; the injection anchor must occur exactly once in va_fm_pairs' source
 # so the mutation is the edit it claims to be; the mutation must be shown to have applied; and
 # under it the comparator must report exactly the disagreements the injected class accounts
-# for — fewer means it cannot see drift, more means it is reporting something else. The
+# for — fewer means it cannot see drift; more means EITHER that OR a baseline that had
+# already drifted, because the figure is an absolute count under injection rather than a
+# delta against the baseline. Those two causes are not distinguishable from this limb's own
+# count, so the limb names both and points at the baseline disagreement count that tells
+# them apart — it must not be read as "the probe is broken". The
 # injection is a real source mutation of va_fm_pairs, one added skip class the probe does not
 # mirror, evaluated in a SUBSHELL so it cannot reach the arms below.
 FA_CASETABLE="$(cat <<'FA_EOF'
@@ -3967,7 +3971,7 @@ while IFS='|' read -r fa_fence fa_ext fa_open fa_close; do
   elif [ "$FA_S" -lt 1 ] || [ "$FA_F" -lt 1 ]; then
     FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: the case table exercises only one side of the filter (agreed-skip=$FA_S agreed-field=$FA_F, both must be >= 1). A comparator shown only lines both filters skip agrees trivially"
   elif [ "$FA_M" -lt 1 ] || [ "$FA_MUTD" -ne "$FA_M" ]; then
-    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: SENSITIVITY — with one unmirrored skip class added to va_fm_pairs' own source the comparator reported $FA_MUTD disagreement(s) where the injected class accounts for exactly $FA_M. Below that figure the comparator cannot see the drift it exists to see, and its zero on the shipped filters is a BROKEN PROBE rather than agreement; above it the injection moved a case it does not account for, so the comparator is reporting something other than the drift"
+    FAIL "CTL-VA-FILTER-AGREEMENT[$fa_fence]: SENSITIVITY — with one unmirrored skip class added to va_fm_pairs' own source the comparator reported $FA_MUTD disagreement(s) where the injected class ALONE accounts for exactly $FA_M. That figure is an ABSOLUTE count under injection, not a delta, so it equals $FA_M only when the baseline is clean — and this run's UNINJECTED baseline reported $FA_D disagreement(s). READ THAT BASELINE COUNT FIRST, because this limb has two causes and the injected count alone names neither: a non-zero baseline means the shipped filters have ALREADY drifted, that drift is what moved this count, and the finding is a real drift rather than a defect in this comparator — the baseline's own directions are: $FA_R — read them with the false-x2 / silent-limb meanings the drift branch below states. Only with a baseline of 0 does the probe reading hold: below $FA_M the comparator cannot see the drift it exists to see, and its zero on the shipped filters is a BROKEN PROBE rather than agreement; above it the injection moved a case it does not account for"
   elif [ "$FA_D" -eq 0 ]; then
     PASS "CTL-VA-FILTER-AGREEMENT[$fa_fence]: va_fm_pairs' skip rules and va_fm_declares_no_field's agree on all $FA_C line shape(s) over the $fa_fence fence — $FA_S agreed skip(s) and $FA_F agreed field-declaration(s), no disagreement in either direction. The sensitivity arm fired on the same comparator: one unmirrored skip class added to va_fm_pairs' source turns this arm red on exactly $FA_M case(s), in a subshell that does not reach the arms below"
   else
