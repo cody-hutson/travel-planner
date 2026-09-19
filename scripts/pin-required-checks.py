@@ -68,16 +68,20 @@ MODES
         WHICH FORMS IT CAN READ is a separate limit from the one above, and it
         is stated in full in the limit block the census prints on EVERY exit
         path -- which key presentations are refused rather than missed, which
-        valid files are refused as well, and the one class that still escapes
-        both the reader and its own refusal. It is not restated here.
+        files the parsers measured accept are refused as well, and the two
+        classes that still escape both the reader and its own refusal. It is
+        not restated here.
 
-        Exit 0 clean / 1 finding(s) / 2 REFUSED -- no jobs at all, or a workflow
-        file this reader cannot vouch it read in full: it yielded no record read
-        off a job key, or it carries a line where its job keys sit that this
-        reader does not recognise as a `key:` line. That second limb refuses
-        some VALID files too -- a job property's value continued at that
-        indentation is no key, but this reader cannot tell it from one it cannot
-        read -- and the false refusal is accepted because it fails closed.
+        Exit 0 clean / 1 finding(s) / 2 REFUSED -- no job this reader could
+        read in any workflow file, or a workflow file this reader cannot vouch
+        it read in full: it yielded no record read off a job key at the
+        shallowest indentation in its `jobs:` block, or it carries a line there
+        that this reader does not recognise as a `key:` line, or its `jobs:`
+        block does not begin on the first line it read a job off. The first
+        two limbs refuse some files that both parsers measured accept -- a job
+        property's value continued at that indentation, or shallower, is no
+        key, but this reader cannot tell it from one it cannot read -- and the
+        false refusal is accepted because it fails closed.
 
     --assert --stdin | --assert --file PATH
         The four-conjunct assertion alone, over a protection object or over a
@@ -102,12 +106,14 @@ EXIT CODES
     0  the mode's assertion held
     1  an assertion failed
     2  input was malformed or refused (a read that returned a shape with no
-       checks array; for --census, a workflow population with no jobs in it,
-       or a workflow file this reader cannot vouch it read in full -- it
-       yielded no record read off a job key, or it carries a line where its job
-       keys sit that this reader does not recognise as a `key:` line, a job
-       property's value continued there included. "I cannot vouch I read this
-       file" is a refusal, never a finding, so it never shares exit 1)
+       checks array; for --census, a workflow population in which this reader
+       found no job it could read, or a workflow file this reader cannot vouch
+       it read in full -- it yielded no record read off a job key at the
+       shallowest indentation in its `jobs:` block, or it carries a line there
+       that this reader does not recognise as a `key:` line, a job property's
+       value continued there included, or its `jobs:` block does not begin on
+       the first line it read a job off. "I cannot vouch I read this file" is a
+       refusal, never a finding, so it never shares exit 1)
     3  CAPTURE REFUSED -- no rollback artifact, so nothing was written
     4  the live required-context set has drifted from the expected set
     5  the self-test did not pass, so no live mode may run
@@ -307,24 +313,32 @@ _RE_JOBS = re.compile(r"^jobs:\s*(#.*)?$")
 # measured, and are armed as X20-X31; no bounded pattern closes that class.
 #
 # What DOES close it is not this pattern, and the claim needs its condition
-# stated or it becomes the same overstatement one rung down. A key this reader
-# misses is a non-comment line, where this file's job keys sit, that this
-# pattern does not match -- and `run_census` refuses any file carrying one, by
+# stated or it becomes the same overstatement one rung down. In a `jobs:` block
+# this reader walks, whose job keys share one indentation as YAML requires, a
+# file in which this reader misses a job key is refused by `run_census`, by
 # name, in every position and whether or not the file also holds a job the
-# reader reads. That second clause is the whole of it: an earlier form of this
-# same sentence was true only of a file yielding NO genuine record, which is why
-# the assertion now rests on what the FILE left unread as well as on where its
-# records came from.
+# reader reads. The argument has two cases. If the block's first line -- its
+# first job key -- is not the first line this reader recorded a job off, the
+# file yields no record, or it fails the third limb. If it is, the reader's key
+# indentation is the real one, so a key missed at it is a line this pattern does
+# not match: that line fails the second limb when it is the block's shallowest,
+# and when something sits shallower still, every record fails the first. An
+# earlier form of this sentence rested on the second limb alone and was false of
+# the class the third now closes (X64, X65); a form before that was true only of
+# a file yielding NO genuine record.
 #
-# Read that sentence in the direction it is written, and not backwards. Every
-# key this reader misses is such a line; NOT every such line is a key it missed.
-# A job property's quoted scalar or flow collection may be continued at the
-# job-key indentation, and that line is no key at all -- but it is refused all
-# the same, because nothing on the line tells it from a key this pattern cannot
-# read. That over-reach is ACCEPTED: it fails closed, where the one attempt to
-# spare such lines failed open. What the refusal does NOT reach is a key on a
-# line it never walks -- see the limit block the census prints, which states
-# that residual as its condition and names the three arms that pin it.
+# Read that in the direction it is written, and not backwards. Every file in
+# which this reader misses a key is refused; NOT every refused file is missing
+# one. A job property's quoted scalar or flow collection may be continued at the
+# job-key indentation, or shallower, and that line is no key at all -- but it is
+# refused all the same, because nothing on the line tells it from a key this
+# pattern cannot read. That over-reach is ACCEPTED: it fails closed, where the
+# one attempt to spare such lines failed open. What the refusal does NOT reach is
+# a key on a line it never walks, nor a line it reads as a key that is none: a
+# continuation SHAPED like a key, at exactly the job-key indentation, is
+# recorded as a job, and can claim a context no real job claims. The limit block
+# the census prints states both residuals as conditions and names the arms that
+# pin them.
 #
 # The groups are NAMED deliberately: adding a group shifts every positional
 # index, and two call sites read them.
@@ -345,7 +359,7 @@ def _indent_of(line):
 
 
 def _block_indent(lines, start, end):
-    """The indentation shared by the `jobs:` mapping's children, read from the file.
+    """The indentation this reader takes the `jobs:` mapping's children to share.
 
     YAML requires every child of a mapping to sit at one indentation, so the
     FIRST key line in the block answers for all of them -- and reading it is
@@ -360,7 +374,14 @@ def _block_indent(lines, start, end):
     then reads as the property indentation, and the census records a phantom job
     named after a property, which it goes on to grade instead of the job.
 
-    Returns None when the block holds no key line at all.
+    What this returns is the first line `_RE_KEY` matches, and that is not
+    always a key line. A job property's value continued onto a key-shaped line
+    SHALLOWER than the real keys, ahead of every one of them, is matched first,
+    and the answer is then that continuation's indentation. The file's real
+    keys are deeper, and none of them is recorded. `_displaced_key_line` is what
+    refuses that file: its block does not begin on the line matched here.
+
+    Returns None when no line in the block matches `_RE_KEY`.
     """
     for i in range(start, end):
         m = _RE_KEY.match(lines[i])
@@ -381,21 +402,29 @@ def _block_child_indent(lines, start, end):
 
     Ordinarily, and not always. A job property's quoted scalar or flow
     collection may be continued at the job keys' indentation, or shallower, and
-    that line is no child of the mapping at all. Continued AT it, the line is
-    counted as one this reader cannot read (see `_unread_key_lines`); continued
-    SHALLOWER, it answers here, and every record read off a real job key then
-    carries the mark of one read off a property. Either way a valid file is
-    refused, and either way the refusal fails closed.
+    that line is no child of the mapping at all. Continued AT it, a line this
+    reader does not read as a key is counted as unread (see
+    `_unread_key_lines`) and the file is refused; a line shaped like a key is
+    READ as one, and in a file the three limbs pass it is recorded and graded
+    as a job -- the phantom claim the limit block names as open. Continued
+    SHALLOWER, the line answers here. Where the first line this reader
+    recognises as a key sits deeper, every record read off a real job key
+    carries the mark of one read off a property, and the file is refused.
+    Where the continuation is itself that first line -- shaped like a key,
+    and ahead of every other -- the two agree, nothing is marked, and
+    `_displaced_key_line` refuses the file instead. Each refusal fails
+    closed; the recorded phantom does not.
 
     The two agree on a file this reader can read. They disagree when a job key
     went unrecognised and the scan carried on into that job's own properties,
     which is the moment a phantom record is made -- so the knowledge that a
     record is synthesised exists at the point it is synthesised, and does not
     have to be inferred afterwards from the record itself. They also disagree
-    when a continuation sits shallower than the keys, which sets the mark on
-    records that are not phantoms, and when a key is indented with a tab, which
-    `_RE_KEY` and `_indent_of` measure at different widths. The file is refused
-    in every case, and the diagnosis says what this reader cannot vouch for.
+    when a continuation sits shallower than the first line this reader
+    recognises as a key, which sets the mark on records that are not phantoms,
+    and when a key is indented with a tab, which `_RE_KEY` and `_indent_of`
+    measure at different widths. The file is refused in every case, and the
+    diagnosis says what this reader cannot vouch for.
 
     Blanks and comments are skipped because neither is a child; comments in
     particular sit at the marker indentation and would answer for the block.
@@ -418,16 +447,24 @@ def _unread_key_lines(lines, start, end, child_indent):
     The second limb of the file-level refusal, and the one that closes the key
     PRESENTATION class rather than describing it. `_block_child_indent` gives the
     indentation this reader takes the job keys to sit at, whatever is written
-    there, and every job key this reader misses is a non-comment line at that
-    indentation that `_RE_KEY` does not match. So refusing every such line
-    refuses every missed key. That is the whole argument, and it is why no
-    pattern had to be widened: the pattern decides what the reader CAN read, and
-    this decides whether anything at the key indentation was left unread. Six
-    measured key presentations, an anchored key and a record read off scalar
-    content all reached a CLEAN census while the refusal rested only on where a
-    record came from -- because each file also held a job the reader read, which
-    satisfied that limb honestly. None of them presents a job key that is not a
-    line at this indentation.
+    there, and every job key this reader misses AT that indentation is a
+    non-comment line there that `_RE_KEY` does not match. So refusing every
+    such line refuses every key missed there, and it is why no pattern had to be
+    widened: the pattern decides what the reader CAN read, and this decides
+    whether anything at the key indentation was left unread. Six measured key
+    presentations, an anchored key and a record read off scalar content all
+    reached a CLEAN census while the refusal rested only on where a record came
+    from -- because each file also held a job the reader read, which satisfied
+    that limb honestly. None of them presents a job key that is not a line at
+    this indentation.
+
+    A key missed ELSEWHERE is not this limb's, and it is not unguarded. Where
+    something sits shallower than the indentation the reader read its keys at,
+    the first limb marks every record. Where a key-shaped continuation that sits
+    shallower than the real keys BECOMES the indentation the reader reads --
+    ahead of every real key, so nothing is marked and every line here is a
+    `key:` line -- the real keys are not at this indentation at all, and this
+    limb finds nothing; `_displaced_key_line` is what refuses that file.
 
     The converse is FALSE, and an earlier form of this docstring asserted it:
     that every non-comment line at that indentation is a job key or part of one.
@@ -435,11 +472,16 @@ def _unread_key_lines(lines, start, end, child_indent):
     continues onto later lines, and an author may land one of them at exactly
     the job-key indentation; that line is neither. This limb counts it all the
     same, because what tells the two apart is what an earlier line left OPEN,
-    and a line-oriented reader does not know that. So a valid workflow whose
-    every job key this reader reads is refused, and X37-X41 pin five such files.
-    That false refusal is ACCEPTED because it fails closed. The one attempt to
-    spare such lines, by lexing what was open, failed open and let a real job
-    key leave the census; X43 and X48-X63 pin that direction.
+    and a line-oriented reader does not know that. (A continuation line SHAPED
+    like a key is the exception, and not a safe one: `_RE_KEY` matches it, so
+    this limb passes it and the reader records a job off it. The limit block
+    names that as open, and X66-X67 pin it as emitted.) So a workflow that both
+    parsers measured accept, and whose every job key this reader reads, is
+    refused, and X37-X41 pin five such files. That false refusal is ACCEPTED
+    because it fails closed. The one attempt to spare such lines, by lexing what
+    was open, failed open and let a real job key leave the census. X43 and
+    X48-X63 pin one family of shapes in that direction and X68-X69 two shapes
+    outside it; none of them pins the direction itself.
 
     Returned as INDICES rather than a boolean so the refusal can name the lines.
     `census_scan` and `_unread_reason` both call this, deliberately: two copies
@@ -642,9 +684,13 @@ def census_scan(root):
     marker it binds was written for the job whose key was missed. It is marked
     at the moment it is made so the assertion can refuse to accept it as
     evidence the file was read. The mark is decided per file and from
-    indentation alone, so a value continued SHALLOWER than the job keys sets it
-    on records read off real keys as well: the same kind of false refusal as
-    the one below, and it fails closed for the same reason.
+    indentation alone, so a value continued SHALLOWER than the first line this
+    reader recognises as a key sets it on records read off real keys as well:
+    the same kind of false refusal as the one below, and it fails closed for
+    the same reason. A value continued shallower that IS that first line --
+    shaped like a key, and ahead of every real one -- sets no mark at all,
+    because the phantom is then the shallowest line; `displaced_key` below is
+    what refuses that file.
 
     `unread_key` records whether a line WHERE THE JOB KEYS SIT is one this
     reader does not recognise as a key. It exists because provenance alone
@@ -702,8 +748,11 @@ def census_scan(root):
         # `_block_child_indent`: the two answers diverge when a key at the
         # block's own indentation went unrecognised, which is how the scan
         # comes to reach a job's properties and record them -- and also when a
-        # value continued shallower than the keys, or a tab, moves the
-        # shallowest line, which sets the mark on records that are not phantoms.
+        # value continued shallower than the first line this reader recognises
+        # as a key, or a tab, moves the shallowest line, which sets the mark on
+        # records that are not phantoms. A continuation that IS that first line
+        # moves both answers together and sets no mark; the third limb below
+        # refuses that file.
         # It is per FILE because `job_indent` is, so a file's records are all
         # synthesised or none of them are -- there is no mixed case to reason
         # about, and after `run_census`'s refusal no synthesised record survives
@@ -711,8 +760,9 @@ def census_scan(root):
         child_indent = _block_child_indent(lines, start, end)
         synthesised = child_indent is not None and job_indent > child_indent
 
-        # The second limb, and the one that closes the class. `synthesised` asks
-        # where this file's records CAME FROM; this asks whether any line where
+        # The second limb, and the one that closes the key-PRESENTATION class
+        # beside a readable job (X26-X34). `synthesised` asks where this file's
+        # records CAME FROM; this asks whether any line where
         # its job keys sit is one it could not read as a key -- a question that
         # a property's value continued there answers yes to as well, which is
         # the accepted false refusal `_unread_key_lines` describes. They are
@@ -818,22 +868,26 @@ def census_findings(jobs):
 # removes it -- so the residual is stated as the condition that produces it, and
 # the arms that hold it honest are named for whoever comes next.
 #
-# This is the block's third statement of that residual and the second correction
-# of it, so the two things each earlier version got wrong are worth naming. The
-# first OVERSTATED coverage: it promised that a file yielding no record read off
-# a job key is refused, which was never true of a record read off the CONTENT of
-# a quoted scalar (X34). The second UNDERSTATED what could be done: it said no
+# This is the block's fourth statement of that residual and the third correction
+# of it, so what each earlier version got wrong is worth naming. The first
+# OVERSTATED coverage: it promised that a file yielding no record read off a job
+# key is refused, which was never true of a record read off the CONTENT of a
+# quoted scalar (X34). The second UNDERSTATED what could be done: it said no
 # bounded pattern closes the class, which is true, and read as though the class
 # were therefore unclosable, which is not -- the class was closed without
-# touching the pattern, by refusing the FILE. So this version says which class
-# is closed, by what mechanism, and what is left; and what is left is a
-# different class rather than a remnant of the same one.
+# touching the pattern, by refusing the FILE. The third OVERSTATED again, in both
+# directions at once: it said a key this reader cannot read is refused in every
+# position, which was false of one displaced by a shallower phantom until the
+# third test closed it (X64-X65), and it named one open class where there were
+# two -- a job recorded off a line that is no key is walked, read, and graded
+# (X66-X67). So this version says which class is closed, by what mechanism, and
+# which two are left; and neither is a remnant of the closed one.
 #
 # The second limit also says where the refusal reaches too far. A refusal that
-# fires on valid files is a limit of the instrument as much as a class it
-# misses, and accepting it does not make it stop being one: an author whose
-# valid workflow is refused should find, in the output, that the refusal knows
-# it can be wrong about that file, and what to change to clear it.
+# fires on files the parsers measured accept is a limit of the instrument as
+# much as a class it misses, and accepting it does not make it stop being one:
+# an author whose workflow is refused should find, in the output, that the
+# refusal knows it can be wrong about that file, and what to change to clear it.
 _CENSUS_LIMIT = (
     "WHAT THIS DOES NOT ESTABLISH: `GITHUB_TOKEN` cannot read the branch protection",
     "API, so this census cannot confirm that any context is REGISTERED. A clean",
@@ -845,36 +899,56 @@ _CENSUS_LIMIT = (
     "lets a legal job ID be written, and no bounded pattern would be -- but do not",
     "read that as the class being unclosable. It is closed, and NOT by the pattern.",
     "A file is REFUSED BY NAME unless it yields a record read off a line recognised",
-    "as a job key AND carries no line where its own job keys sit, comments aside,",
-    "that this reader does not recognise as a `key:` line. So a key this reader",
-    "cannot read is refused in EVERY position, including beside a job it reads",
-    "perfectly well, which is where six presentations of one legal job ID used to",
-    "reach CLEAN. Those six, an anchored key (`key: &a`), and a record taken off",
-    "the CONTENT of a quoted scalar are all refused now -- measured (X20-X34).",
+    "as a job key, at the shallowest indentation in its `jobs:` block; carries no",
+    "line there, comments aside, that this reader does not recognise as a `key:`",
+    "line; AND has a block that begins on the first line it read a job off. So, in",
+    "a block it walks whose job keys share one indentation, a key this reader",
+    "cannot read is refused in EVERY position: beside a job it reads perfectly",
+    "well, where six presentations of one legal job ID used to reach CLEAN, and",
+    "ahead of a key-shaped continuation that sits shallower than the real keys and",
+    "so became the indentation this reader read keys at, where four files reached",
+    "CLEAN and a fifth graded only the phantom. Those six, an anchored key",
+    "(`key: &a`), X34's phantom beside an unread key, and that displaced class",
+    "are all refused now -- measured (X20-X34, X64-X65).",
     "",
     "THAT REFUSAL ALSO FIRES WHERE NO KEY IS MISSING, and that is accepted. A job",
     "PROPERTY's quoted scalar or flow collection may be continued at exactly the",
-    "job-key indentation, or shallower short of column zero. That line is no key",
-    "at all, but this reader cannot tell it from a key it cannot read, so it",
-    "refuses a valid workflow whose every job key it reads (X37-X41). The false",
-    "refusal fails closed and names the line; indenting the continuation deeper",
+    "job-key indentation, or shallower short of column zero. A line there that is",
+    "not shaped like a key is no key at all, but this reader cannot tell it from a",
+    "key it cannot read, so it refuses a workflow whose every job key it reads",
+    "(X37-X41). A line shaped like a key that sits SHALLOWER leaves the records",
+    "read off the real keys unvouched for, so that file is refused too. Each false",
+    "refusal fails closed and names a line, and indenting the continuation deeper",
     "than the job keys clears it (X42). Sparing such a line means knowing what",
     "every earlier line left open, and a reader that guessed instead let a real",
     "job key leave the census unrecorded -- the failure this census exists to",
-    "prevent (X43, X48-X63).",
+    "prevent. X43, X48-X63 and X68-X69 catch the sparing readers measured; they do",
+    "not close that direction for every reader.",
     "",
-    "WHAT REMAINS OPEN is a different class, not a remnant of that one: a job this",
-    "reader never WALKS. The `jobs:` block ends at the first non-comment line at",
-    "column zero, so a quoted scalar or flow collection continued at column zero",
-    "ends it early and every job below that point is neither read nor refused.",
+    "WHAT REMAINS OPEN is two classes, neither a remnant of that one, and NEITHER",
+    "IS CLOSED.",
+    "A job this reader never WALKS. The `jobs:` block ends at the first non-comment",
+    "line at column zero, so a quoted scalar or flow collection continued at column",
+    "zero ends it early and every job below that point is neither read nor refused.",
     "Measured on files two parsers read as two jobs: CLEAN at exit 0 over the",
     "second, which claims required under a name this declaration does not carry.",
     "THREE members are pinned, not one -- a double-quoted scalar, a single-quoted",
     "one, and a flow sequence closed at column zero (X36, X45, X46) -- because an",
     "author who closes one of them turns a single arm green with the others still",
-    "open. It is unchanged by the refusal above, and it is NOT closed.",
-    "No backstop stands behind it: `Workflow SAST (actionlint)`, in this same job,",
-    "exits 0 on it -- measured. It rejects INVALID YAML; that file is valid.",
+    "open.",
+    "A job this reader RECORDS that is not one. A continuation shaped like a key at",
+    "EXACTLY the job-key indentation is a `key:` line to this reader, so none of",
+    "the three tests fires on it, and it records a job off it. With a marker line",
+    "above and a `name:` line below, that phantom can claim required under a",
+    "declared context -- and where the real job for that context is gone, the",
+    "ABSENT it owes is masked: CLEAN at exit 0, measured on files both parsers read",
+    "as one job. Telling that line from a key means knowing that a quote or a flow",
+    "is open, which this reader does not track. TWO members are pinned, a quoted",
+    "scalar and a flow mapping (X66, X67).",
+    "No backstop stands behind either: `Workflow SAST (actionlint)`, in this same",
+    "job, exits 0 on both -- measured. It rejects YAML it cannot parse, and these",
+    "files parse under both parsers measured, each of which accepts a continuation",
+    "at every depth these arms use. GitHub's own parser was not run on any of them.",
 )
 
 
@@ -885,30 +959,36 @@ def _unread_reason(path):
     """Why this file was refused. A DIAGNOSIS, not the guarantee.
 
     THE GUARANTEE IS THE SET DIFFERENCE IN `run_census`, NOT THIS LIST. That
-    refusal fires whenever a walked file failed either limb -- it contributed no
-    record read off a job key, or it carries a line where its job keys sit that
-    this reader does not recognise as one -- whatever the cause, so a shape this
-    helper cannot name still fails closed, and a silent skip added to
-    `census_scan` later degrades the diagnostic without weakening the check. That
-    asymmetry is the whole reason the guard is a relation over files rather than
-    an enumeration of known-bad shapes: three shapes produced the first signature
-    and nine produced the second, so a shape list would have been written twelve
-    times over and still missed the thirteenth.
+    refusal fires whenever a walked file failed any of the three limbs -- it
+    contributed no record read off a job key at the block's shallowest
+    indentation, it carries a line there that this reader does not recognise as
+    a `key:` line, or its block does not begin on the first line it read a job
+    off -- whatever the cause, so a shape this helper cannot name still fails
+    closed, and a silent skip added to `census_scan` later degrades the
+    diagnostic without weakening the check. That asymmetry is the whole reason
+    the guard is a relation over files rather than an enumeration of known-bad
+    shapes: three shapes produced the first signature, nine the second and five
+    the third, so a shape list would have been written seventeen times over and
+    still missed the eighteenth.
 
     Every sentence returned here must be true of EVERY file that reaches it,
-    including the valid files this reader refuses. A line at the key
-    indentation that this reader cannot read is sometimes a job key and
-    sometimes the continuation of a property's value, and nothing on the line
-    says which. So the text names what this reader could not do and what the
-    line may be, and never asserts which of the two it is.
+    including the files this reader refuses that both parsers measured accept.
+    A line at the key indentation that this reader cannot read is sometimes a
+    job key and sometimes the continuation of a property's value, and nothing
+    on the line says which. So the text names what this reader could not do and
+    what the line may be, and never asserts which of the two it is.
 
-    The final branch is therefore not a fallback that should never be reached.
-    It is the honest answer for a cause this helper does not model. A job key
-    written with a tab can reach it -- `_RE_KEY` matches the key and
-    `_indent_of` measures it at a different width, so no record is read off it
-    at all -- and so can a block whose first `key:` line sits deeper than a
-    later, shallower one, which yields only records marked as phantoms. Its text
-    claims nothing that is untrue of either.
+    The branch after the third limb's is not a fallback that should never be
+    reached. It names the shallowest lines when this reader looked for its job
+    keys deeper than they sit and every one of them is a `key:` line to it. A
+    job key written with a tab reaches it -- `_RE_KEY` matches the key and
+    `_indent_of` measures it at a different width -- and so does a block whose
+    first `key:` line sits deeper than a later, shallower one, and so does a
+    file whose every job key this reader reads, when a value is continued onto
+    a key-shaped line shallower than those keys. Its text claims nothing that
+    is untrue of any of them. The last return is the honest answer for a cause
+    this helper does not model: no file the three limbs refuse reaches it
+    today, and its text is true of any that ever does.
     """
     try:
         with open(path, encoding="utf-8") as fh:
@@ -923,6 +1003,16 @@ def _unread_reason(path):
             break
 
     if start is None:
+        # A byte-order mark is read as a character, so a `jobs:` line after one
+        # is not at column zero to this reader however it looks -- and the
+        # remedy's "a bare `jobs:` line at column zero" is a description the
+        # file already appears to meet. Named first, so the author is told the
+        # one thing the text below would not.
+        if lines and lines[0].startswith("\ufeff") and (
+                _RE_JOBS.match(lines[0][1:]) or _RE_JOBS_ISH.match(lines[0][1:])):
+            return ("it begins with a byte-order mark, which this reader reads as "
+                    "a character, so its `jobs:` line on line 1 does not begin at "
+                    "column zero to it; save the file as UTF-8 without the mark")
         if any(_RE_JOBS_ISH.match(line) for line in lines):
             return ("its `jobs:` line is quoted, or carries a flow mapping on the "
                     "same line; this reader begins at a bare `jobs:` at column zero")
@@ -951,8 +1041,9 @@ def _unread_reason(path):
             # yielded phantoms; by one that yielded nothing at all -- a
             # tab-indented key is the measured case, because `_RE_KEY` counts
             # its `ind` group in characters while `_indent_of` counts spaces;
-            # and by a VALID file whose records were read off real job keys,
-            # when a property's value is continued shallower than those keys. A
+            # and by a file both parsers measured accept, whose records were
+            # read off real job keys, when a property's value is continued
+            # shallower than those keys. A
             # sentence asserting that records exist is false for one of them,
             # and one asserting that no job key was read is false for another.
             return ("line(s) {} sit at indentation {}, the shallowest in this "
@@ -967,11 +1058,15 @@ def _unread_reason(path):
                     "line indented with a tab, which it measures at a different "
                     "width; it cannot tell which, so it refuses the file".format(
                         where, child_indent, job_indent))
-        # The file's own keys WERE read here, so the only question left is what
-        # the unread lines are, and this reader cannot say. A valid file that
-        # continues a property's value at this indentation reaches this branch
-        # as surely as one hiding a job key, so the text states both.
-        return ("line(s) {} sit at indentation {}, where this file's job keys sit, "
+        # Lines at this indentation WERE read as job keys here, so the question
+        # left is what the unread lines are, and this reader cannot say. A file
+        # that continues a property's value at this indentation reaches this
+        # branch as surely as one hiding a job key, so the text states both. It
+        # says where this READER read the keys, not where the file's keys sit:
+        # a key-shaped continuation shallower than the real keys can be what it
+        # read, and the file's own keys are then elsewhere.
+        return ("line(s) {} sit at indentation {}, the shallowest in this file's "
+                "`jobs:` block and where this reader read its job keys, "
                 "and this reader does not recognise them as `key:` lines. Other "
                 "lines at that indentation WERE read as job keys, so a verdict "
                 "could be issued on those -- but such a line may be a job key this "
@@ -1001,8 +1096,39 @@ def _unread_reason(path):
                 "file".format(first + 1, first_key + 1, job_indent,
                               first + 1, first_key + 1))
 
-    return ("the reader walked it and recorded no job read off a line it "
-            "recognised as a job key")
+    # The first limb with every shallowest line a `key:` line, so nothing above
+    # named a line. Reached by a file whose every job key this reader reads, when
+    # a key-shaped continuation sits shallower than those keys, and by the two
+    # invalid shapes the docstring names. It names the shallowest lines and the
+    # depth the reader looked for keys at, and claims nothing about what either
+    # is: in the first case the reader DID record a job off every real key, so a
+    # sentence denying that would be false of it.
+    if job_indent > child_indent:
+        shallow = [i for i in range(start, end)
+                   if lines[i].strip() and not _RE_COMMENT.match(lines[i])
+                   and _indent_of(lines[i]) == child_indent]
+        where = ", ".join(str(i + 1) for i in shallow[:3])
+        if len(shallow) > 3:
+            where += " (and {} more)".format(len(shallow) - 3)
+        return ("line(s) {} sit at indentation {}, the shallowest in this file's "
+                "`jobs:` block and so where this reader takes its job keys to "
+                "sit, and each is a `key:` line to it -- but the first line it "
+                "recognised as a `key:` line measures {} deep, so it looked for "
+                "its job keys at that deeper indentation and took no job off the "
+                "shallower lines. It cannot vouch for any job it recorded here, "
+                "nor that a line at the shallowest indentation is not a job key "
+                "it never graded. Such a line may be a job key, the continuation "
+                "of a value that a job's property began on an earlier line, or a "
+                "line indented with a tab, which it measures at a different "
+                "width; it cannot tell which, so it refuses the file".format(
+                    where, child_indent, job_indent))
+
+    if not _key_lines(lines, start, end, job_indent):
+        return ("the reader walked it and recorded no job read off a line it "
+                "recognised as a job key")
+    return ("it failed a test in the definition below for a cause this "
+            "diagnosis names no line for, so this reader cannot vouch that it "
+            "read the file in full")
 
 
 def run_census(root, stream=sys.stdout):
@@ -1026,13 +1152,53 @@ def run_census(root, stream=sys.stdout):
     out("REGISTRATION CENSUS -- offline. No network, no gh, no token.")
     out("=" * 78)
 
+    def refused(rows):
+        # The per-file diagnoses, then the definition and the remedy -- ONE
+        # copy, printed by both refusal paths below. The empty-population path
+        # used to print neither, so a valid flow-style workflow, alone in its
+        # tree, was called MALFORMED with no file named and no remedy given.
+        for rel, path in rows:
+            out("    {} -- {}".format(rel, _unread_reason(path)))
+        if not rows:
+            return
+        out("A file is read in full, to this reader, when it passes three tests. "
+            "It yielded at least one record read off a line it recognised as a "
+            "job key, at the shallowest indentation in the file's `jobs:` block, "
+            "which is where this reader takes the job keys to sit. Every line at "
+            "that indentation is, blank lines and comments aside, a `key:` line "
+            "it recognises. A line there that is not may be a job key it cannot "
+            "read, or the continuation of a value that a job's property began on "
+            "a deeper line, which is no key at all; this reader cannot tell the "
+            "two apart and refuses both, so a file whose every job key it reads "
+            "is refused too when it continues a value there. And the block "
+            "begins, comments aside, on the first line it recorded a job off. A "
+            "block mapping begins on its first key, so a block beginning on any "
+            "other line begins on a line this reader recorded no job off, which "
+            "in a workflow is a job key it could not read. A file failing any of "
+            "the three tests is one this reader cannot vouch for, and grading "
+            "the rest would issue a verdict over a tree it may have read only in "
+            "part. No verdict is issued.")
+        out("Remedy: save the file as UTF-8 text without a byte-order mark, and "
+            "write its jobs under a bare `jobs:` line at column zero, as a block "
+            "mapping in which every line at the job keys' indentation, comments "
+            "aside, is a job key written as a `key:` line -- indented with "
+            "spaces, optionally quoted but spelled without escapes, with nothing "
+            "between the key and its colon and nothing after the colon but a "
+            "comment. Where a job property's quoted scalar or flow collection "
+            "runs onto later lines, indent every continuation line deeper than "
+            "the job keys. Where the file is not a workflow, move it out of "
+            ".github/workflows/.")
+
     # The empty-population refusal, on the same principle as C0 in evaluate():
     # a scan that found nothing to grade has proved nothing about this tree, and
-    # must never reach a clean exit.
+    # must never reach a clean exit. REFUSED, not MALFORMED, for the reason the
+    # per-file header below is: a file this reader found no job in may be a
+    # valid workflow written in a form it does not read.
     if not jobs:
-        out("MALFORMED: {} workflow file(s) walked under {}, 0 job(s) found.".format(
+        out("REFUSED: {} workflow file(s) walked under {}, 0 job(s) found.".format(
             len(files), os.path.join(root, ".github", "workflows")))
         out("A census over an empty population asserts nothing. Nothing was graded.")
+        refused(files)
         limit()
         return 2
 
@@ -1058,9 +1224,10 @@ def run_census(root, stream=sys.stdout):
     #
     # WHAT THE ASSERTION ASSERTS, in the words it is worth being exact about:
     # every workflow file walked yielded at least one record READ OFF A LINE THIS
-    # READER RECOGNISED AS A JOB KEY, carries NO LINE WHERE ITS JOB KEYS SIT
-    # that this reader failed to recognise as one, and has a `jobs:` block that
-    # BEGINS ON THE FIRST LINE IT RECORDED A JOB OFF. Three limbs, and each was
+    # READER RECOGNISED AS A JOB KEY, AT THE SHALLOWEST INDENTATION IN ITS
+    # `jobs:` BLOCK; carries NO LINE AT THAT INDENTATION that this reader failed
+    # to recognise as a `key:` line; and has a `jobs:` block that BEGINS ON THE
+    # FIRST LINE IT RECORDED A JOB OFF. Three limbs, and each was
     # arrived at by a measurement rather than by design. The second is stronger
     # than "no job key was left unread", and knowingly so: a line there that is
     # no key at all -- a job property's value continued at that indentation --
@@ -1102,33 +1269,7 @@ def run_census(root, stream=sys.stdout):
         # valid workflow: see the definition printed below it.
         out("REFUSED: {} of {} workflow file(s) this reader cannot vouch it read "
             "in full.".format(len(silent), len(files)))
-        for rel, path in silent:
-            out("    {} -- {}".format(rel, _unread_reason(path)))
-        out("A file is read in full, to this reader, when it yielded at least one "
-            "record read off a line it recognised as a job key, AND every line at "
-            "the indentation it takes the job keys to sit at -- the shallowest in "
-            "the file's `jobs:` block -- is, blank lines and comments aside, a "
-            "`key:` line it recognises. A line there that is not may be a job key "
-            "it cannot read, or the continuation of a value that a job's property "
-            "began on a deeper line, which is no key at all; this reader cannot "
-            "tell the two apart and refuses both, so a valid file whose every job "
-            "key it reads is refused too when it continues a value there. AND the "
-            "block begins, comments aside, on the first line it recorded a job "
-            "off. A block mapping begins on its first key, so a block beginning on "
-            "any other line begins on a line this reader recorded no job off, "
-            "which in a valid file is a job key it could not read. A file "
-            "failing any of the three tests is one this reader cannot vouch for, "
-            "and grading the rest would issue a verdict over a tree it may have "
-            "read only in part. No verdict is issued.")
-        out("Remedy: save the file as UTF-8 text, and write its jobs under a bare "
-            "`jobs:` line at column zero, as a block mapping in which every line "
-            "at the job keys' indentation, comments aside, is a job key written "
-            "as a `key:` line -- indented with spaces, optionally quoted but "
-            "spelled without escapes, with nothing between the key and its colon "
-            "and nothing after the colon but a comment. Where a job property's "
-            "quoted scalar or flow collection runs onto later lines, indent every "
-            "continuation line deeper than the job keys. Where the file is not a "
-            "workflow, move it out of .github/workflows/.")
+        refused(silent)
         limit()
         return 2
 
@@ -1851,8 +1992,9 @@ def census_arms():
     # pinned. The `jobs:` block ends at the first non-comment line at column zero,
     # and a double-quoted scalar continued at column zero is such a line, so the
     # block ends INSIDE the first job and the second job is never walked at all.
-    # Neither limb of the file-level refusal can see it: the truncated block
-    # yields a genuine record and leaves nothing unread within itself.
+    # No limb of the file-level refusal can see it: the truncated block yields
+    # a genuine record, leaves nothing unread within itself, and begins on its
+    # first key.
     #
     # This is not a remnant of the class above and no widening of that refusal
     # reaches it -- the file is not mis-READ, it is under-walked. It behaves
@@ -1897,7 +2039,9 @@ def census_arms():
         "      - run: 'true'\n")
 
     # X37-X41 are an ACCEPTED FALSE REFUSAL, pinned deliberately: they DOCUMENT a
-    # known defect and detect none. In every file below, each job key IS a
+    # known defect. They want the refusal this reader gives, so they go red when
+    # a reader stops giving it, whatever the reason -- which is why the red below
+    # needs reading with care. In every file below, each job key IS a
     # `key:` line this reader reads. What lands at the job-key indentation is the
     # CONTINUATION of a value that a job's own PROPERTY began on an earlier line
     # -- a multi-line quoted scalar, or a flow collection still open. Such a line
@@ -1907,19 +2051,29 @@ def census_arms():
     #
     # The refusal is kept because it fails closed: nothing ships ungraded, and
     # the refusal names the line. A lexer that spared these lines did repair all
-    # five, and it failed OPEN -- it spared real job keys too, the direction X43
-    # and X48-X63 now pin -- so it was taken back out and this false refusal was
-    # accepted in its place. A correct future fix, one that knows what every
-    # earlier line left open, turns each of these arms RED at rc 1 UNREGISTERED.
-    # That red is the fix working and not a regression: the fix must re-label
-    # these arms as repaired rather than put rc 2 back.
+    # five, and it failed OPEN -- it spared real job keys too, the direction X43,
+    # X48-X63 and X68-X69 catch for the readers measured -- so it was taken back
+    # out and this false refusal was accepted in its place. A correct future
+    # fix, one that knows what every earlier line left open, turns each of these
+    # arms RED at rc 1 UNREGISTERED.
+    #
+    # That red is NECESSARY for a correct fix and NOT SUFFICIENT. Two readers
+    # that spare lines without knowing what is open were measured producing
+    # exactly this red, with every other census arm but X44 green, while
+    # losing real job keys on valid shapes no arm then carried. So before these
+    # arms are re-labelled as repaired, X43, X48-X63, X68 and X69 must all stay
+    # green -- and those catch the sparing readers measured, not every reader,
+    # so a new one still owes a measurement of its own. Only then re-label
+    # these arms rather than put rc 2 back.
     #
     # Five members and one paired control, because the two constructions are
     # independent: a quoted scalar continues by not having closed, a flow
     # collection by not having been bracketed shut, and a fix aimed at one leaves
     # the other refused. X41 drops the second job entirely, so the class is not
-    # read as a property of files holding two. X42 is the control that confines
-    # the refusal to a continuation at exactly the job-key indentation.
+    # read as a property of files holding two. X42 is the control on the DEEPER
+    # side: with its continuation one column deeper, the file is graded. It
+    # confines the refusal from that side only -- a continuation SHALLOWER than
+    # the job keys is refused too, as the limit block says.
     cont_double = dict(base)
     cont_double[".github/workflows/synth-cont-double.yml"] = (
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
@@ -1994,12 +2148,17 @@ def census_arms():
             '  job"', '   job"')
 
     # X43 is the arm to read first if a later reader ever SPARES lines where the
-    # job keys sit. It was rebuilt so that the open such a reader might wrongly
-    # report SPANS the unread key line -- the dangerous case -- rather than
-    # closing above it, where a skip is short and harmless. ONE file carries, in
-    # order: a property's double-quoted scalar continued AT the job-key
-    # indentation; then a step `name:` written as a PLAIN scalar whose
-    # continuation line begins with `'`; then a key this reader cannot read.
+    # job keys sit -- and not the last. It catches one construction: a reader
+    # that treats the start of a block-context plain scalar's FIRST
+    # continuation line as a place a quote may open. Two other sparing readers
+    # were measured passing it while losing real keys elsewhere; X68 and X69
+    # are the shapes that caught them. It was rebuilt so that the open such a
+    # reader might wrongly report SPANS the unread key line -- the dangerous
+    # case -- rather than closing above it, where a skip is short and
+    # harmless. ONE file carries, in order: a property's double-quoted scalar
+    # continued AT the job-key indentation; then a step `name:` written as a
+    # PLAIN scalar whose continuation line begins with `'`; then a key this
+    # reader cannot read.
     # Nothing is open in YAML at that line start -- a plain scalar's continuation
     # is not a node position, so the `'` is text -- and both parsers read two
     # jobs. A reader that opens a quote there spans the key line with it, and
@@ -2031,11 +2190,15 @@ def census_arms():
     # the census emits an UNDECLARED naming a line of the file that is not a job.
     # Every reader of this file before the lexer did the same. The exit code is
     # right: `new-suite` really is UNREGISTERED, so rc 1 is the verdict the file
-    # earns. The finding set is not: the UNDECLARED is false. On this shape the
-    # phantom fails closed, adding a red finding and hiding none. The lexer's
-    # `keys` filter removed it, but the filter read the lexer's output, so it left
-    # with the lexer. A correct future fix that stops reading keys inside an open
-    # flow turns this arm red at UNREGISTERED alone, and must re-label it.
+    # earns. The finding set is not: the UNDECLARED is false. On THIS shape the
+    # phantom fails closed, adding a red finding and hiding none -- and that is a
+    # property of the shape, not of the construction. The same construction with
+    # a marker line above the key-shaped line and a `name:` line below it claims
+    # a declared context and fails OPEN, masking ABSENT: X67 pins that. The
+    # lexer's `keys` filter removed both phantoms, but the filter read the
+    # lexer's output, so it left with the lexer. A correct future fix that stops
+    # reading keys inside an open flow turns this arm red at UNREGISTERED alone,
+    # and must re-label it.
     cont_keyish = dict(base)
     cont_keyish[".github/workflows/synth-cont-keyish.yml"] = (
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
@@ -2100,8 +2263,17 @@ def census_arms():
         "    steps:\n"
         "      - run: 'true'\n").encode("latin-1")
 
-    # X48-X63 pin the direction no arm pinned before them: a skip that SPANS a
-    # job-key line. Each file wraps a PLAIN scalar -- a job `name:` or a step
+    # X48-X63 pin one FAMILY in a direction no arm pinned before them: a skip
+    # that SPANS a job-key line. They pin the family they were built from, not
+    # the direction. Each is a plain scalar in BLOCK context, carried by a `key:`
+    # value, tripping on its FIRST continuation line. Two readers that spare
+    # lines were measured passing all sixteen, and every other census arm bar
+    # X37-X41 and X44, while losing real job keys on valid shapes outside the
+    # family: both of them on a plain scalar inside a flow collection, and one
+    # of them also on a name wrapped over three lines and on a `- plain`
+    # sequence entry. X68 and X69 carry the first two of those.
+    #
+    # Each file wraps a PLAIN scalar -- a job `name:` or a step
     # `name:` -- onto a continuation line that begins with one of the four
     # characters that open something in flow syntax, and then declares a second
     # job. A plain scalar's continuation is not a node position, so in YAML that
@@ -2172,13 +2344,15 @@ def census_arms():
     # every line this reader reads as a key. The first key line it recognises
     # is then that continuation, the shallowest line in the block agrees with
     # it, and this reader takes its indentation to be the jobs' own -- so every
-    # real job key, deeper than that, is read as no key at all and leaves the
-    # census with no record, no finding and no refusal. Both limbs of the
-    # file-level refusal are honestly satisfied, because the record they check
-    # is the phantom. The first job key must be one this reader cannot read, or
-    # it would itself be the first key line; each file here also carries a
-    # canonical, readable `new-suite:` claiming required, which vanishes with
-    # the rest. Both files are valid to both parsers and reached a CLEAN census.
+    # real job key, deeper than that, is read as no key at all. The first two
+    # limbs of the file-level refusal are honestly satisfied, because the record
+    # they check is the phantom, so until the third limb these files left every
+    # real job out of the census with no record, no finding and no refusal. The
+    # first job key must be one this reader cannot read, or it would itself be
+    # the first key line; each file here also carries a canonical, readable
+    # `new-suite:` claiming required, which went unrecorded with the rest. Both
+    # parsers measured accept both files, and both reached a CLEAN census before
+    # the third limb; the line the block begins on is what refuses them now.
     #
     # Two constructions, because they continue for different reasons: a quoted
     # scalar by not having closed, a flow collection by not having been
@@ -2224,12 +2398,12 @@ def census_arms():
         "  clone: *base\n")
 
     # X66-X67 pin class P, a PHANTOM CLAIM, exactly as this reader emits it:
-    # they DOCUMENT a named residual and detect none. The same kind of
+    # they DOCUMENT a named residual rather than guard against it. The same kind of
     # continuation lands at EXACTLY the job-key indentation, as a marker-shaped
     # line, a key-shaped line and a `name:`-shaped line. Every line there is a
-    # `key:` line to this reader, so neither limb fires, and it records a job off
-    # the key-shaped line that claims required under the declaration's own last
-    # context. The tree has had that context's job removed, so the census owes
+    # `key:` line to this reader, so none of the three limbs fires, and it
+    # records a job off the key-shaped line that claims required under the
+    # declaration's own last context. The tree has had that context's job removed, so the census owes
     # ABSENT at rc 1 -- and the phantom claim masks it: CLEAN at rc 0. Telling
     # that line from a key needs to know that a quote or a flow is open, and the
     # one reader measured to know it failed open elsewhere and was taken out.
@@ -2418,8 +2592,8 @@ def census_arms():
          {"UNREGISTERED"}),
         ("X36", "RESIDUAL, pinned deliberately and NOT closed: a quoted scalar "
                 "continued at column zero ends the `jobs:` block early, so the job "
-                "below it is never walked -- not mis-read, never seen. Both limbs of "
-                "the file-level refusal are honestly satisfied by the truncated "
+                "below it is never walked -- not mis-read, never seen. Every limb of "
+                "the file-level refusal is honestly satisfied by the truncated "
                 "block, and the census reaches CLEAN over a job claiming required "
                 "under an undeclared name. The limit block states this; an arm going "
                 "red here is an author who has closed it", truncated, 0, set()),
@@ -2451,11 +2625,15 @@ def census_arms():
         ("X42", "SPECIFICITY for X37-X41: the X37 file with its continuation ONE "
                 "column deeper, at an indentation where no job key sits. It is graded, "
                 "never refused, and must stay so. The landing column is the only "
-                "difference from X37, so this arm is what confines the accepted false "
-                "refusal to a continuation at exactly the job-key indentation",
+                "difference from X37, so this arm confines the accepted false "
+                "refusal from the DEEPER side only. A continuation one column "
+                "SHALLOWER than the job keys is refused as well, and no arm here "
+                "confines that side",
          cont_deeper, 1, {"UNREGISTERED"}),
-        ("X43", "THE ONE THAT KEEPS X26-X34 CLOSED against a reader that spares "
-                "lines: a property continuation at the job-key indentation, then a "
+        ("X43", "KEEPS X26-X34 CLOSED against the line-sparing reader that shipped "
+                "and was taken out -- NOT against every such reader: two others "
+                "pass this arm and lose real keys on the shapes X68 and X69 carry. "
+                "The file: a property continuation at the job-key indentation, then a "
                 "step `name:` whose PLAIN continuation line begins with `'`, then a "
                 "key this reader cannot read. Nothing is open in YAML at that line "
                 "start and both parsers read two jobs, so the refusal is the verdict "
@@ -2492,14 +2670,16 @@ def census_arms():
                 "of every line this reader reads as a key. It takes that line's "
                 "indentation for the jobs' own, records a phantom off it, and "
                 "every real job -- a canonical `new-suite:` claiming required "
-                "among them -- leaves the census. The file must refuse",
+                "among them -- goes unrecorded, so a verdict here would leave "
+                "them out of the census. The file must refuse",
          displaced, 2, set()),
         ("X65", "CLASS V, closed: the same through a FLOW MAPPING left open, with "
                 "an anchored first key aliased by a third job. A close aimed at "
                 "quoting alone leaves this one open. The file must refuse",
          displaced_flow, 2, set()),
-        ("X66", "CLASS P, a NAMED RESIDUAL pinned as emitted -- documents it, "
-                "detects none, and cannot be red first: a quoted scalar continued "
+        ("X66", "CLASS P, a NAMED RESIDUAL pinned as emitted -- it documents the "
+                "residual rather than guarding against it, and cannot be red first: "
+                "a quoted scalar continued "
                 "at EXACTLY the job-key indentation as a marker, a key and a "
                 "`name:` line. This reader records a phantom claiming the "
                 "declaration's last context, whose real job this tree lacks, and "
@@ -2822,8 +3002,8 @@ def self_test(stream=sys.stdout):
     # yield a record read off a REAL job key, which is exactly the shape that
     # satisfied the record-provenance limb all the way to exit 0. So a refusal
     # here cannot rest on provenance, and asserting the rc alone would not say
-    # which limb fired -- both limbs reach rc 2 and the arm could not tell them
-    # apart. This asserts the discriminating pair on one file: NOT synthesised,
+    # which limb fired -- every limb reaches rc 2 and the arm could not tell
+    # them apart. This asserts the discriminating pair on one file: NOT synthesised,
     # AND carrying the unread-key mark. X0 is the control, and it is the one that
     # matters: a mark that fired on a legitimate tree would refuse every file in
     # it, and every rc-2 arm above would pass for the wrong reason.
@@ -2864,8 +3044,8 @@ def self_test(stream=sys.stdout):
     # In a class-V file the first line this reader recognises as a key IS the
     # shallowest line in the block, so the provenance mark is not set; and every
     # line there is a `key:` line to it, so the unread-key mark is not set
-    # either. Both limbs are honestly satisfied -- that is how the file reached
-    # CLEAN. What is wrong is WHERE the reader took the job keys from: not the
+    # either. Both earlier limbs are honestly satisfied -- that is how the file
+    # reached CLEAN. What is wrong is WHERE the reader took the job keys from: not the
     # line the block begins on. So this asserts the third mark on one file with
     # the other two unset, and X0 is the control that matters -- a mark firing
     # on a legitimate tree would refuse every file in it, and X64 would pass for
