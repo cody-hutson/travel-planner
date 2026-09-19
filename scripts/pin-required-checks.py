@@ -690,8 +690,8 @@ def census_scan(root):
     job KEY when it does not, because GitHub reports a job's name, or its key
     where it has none, as the check's context. What is read here, though, is
     ONE LINE: the first `name:` line at the job's property indentation, with
-    any quotes around it stripped. Both parsers measured read a name from every
-    line its value runs to, and a job whose name carries an expression, or that
+    any quotes around it stripped. A YAML parser reads a name from every line
+    its value runs to, and a job whose name carries an expression, or that
     runs over a `strategy: matrix`, reports a context GitHub computes at run
     time -- so the context compared here is not always the one GitHub reports. A
     `name:` continued onto a further line is read as its first line alone
@@ -951,12 +951,12 @@ _CENSUS_LIMIT = (
     "`name:` line at its property indentation, or its key where it has none. It is",
     "not always the context GitHub reports. A `name:` continued onto a further",
     "line, or a line shaped like one inside another property's value, can put a",
-    "declared context on the line this reader reads where the parsers measured",
-    "read another -- the third open class below. A job whose `name:` carries an",
-    "expression, or that runs over a `strategy: matrix`, reports a context GitHub",
-    "computes at run time, which this reader never sees: a bare name added to the",
-    "declaration to silence a finding on such a job can read CLEAN over a context",
-    "GitHub never reports.",
+    "declared context on the line this reader reads while the name a YAML parser",
+    "reads is another -- the third open class below. A job whose `name:` carries",
+    "an expression, or that runs over a `strategy: matrix`, reports a context",
+    "GitHub computes at run time, which this reader never sees: a bare name added",
+    "to the declaration to silence a finding on such a job can read CLEAN over a",
+    "context GitHub never reports.",
     "",
     "WHICH FORMS IT READS: a block `jobs:` mapping at column zero whose job keys are",
     "`key:` lines, optionally quoted. That set is not exhaustive over the ways YAML",
@@ -1020,8 +1020,8 @@ _CENSUS_LIMIT = (
     "is open, which this reader does not track. TWO members are pinned, a quoted",
     "scalar and a flow mapping (X66, X67).",
     "A job this reader grades under a context the job does not report. It reads",
-    "the context off one line, and both parsers measured read a `name:` from every",
-    "line its value runs to. A `name:` continued onto a further line is read as",
+    "the context off one line, and a YAML parser reads a `name:` from every line",
+    "its value runs to. A `name:` continued onto a further line is read as",
     "its first line alone; a `name:`-shaped line inside another property's quoted",
     "value, landing at the property indentation ahead of any `name:` of the job's",
     "own, is read as the job's name. Where the line read is a declared context, the",
@@ -2617,11 +2617,11 @@ def census_arms():
     # job under the text of ONE line -- the first `name:` line at the job's
     # property indentation -- while a YAML parser reads the name from every line
     # its value runs to. Where the line this reader keeps is a declared context
-    # and the name the parsers read is not, the job is graded under a context it
-    # does not report. Both trees have that context's job removed, so each owes
-    # ABSENT for the context and UNREGISTERED for the job that really claims
+    # and the name a YAML parser reads is not, the job is graded under a context
+    # it does not report. Both trees have that context's job removed, so each
+    # owes ABSENT for the context and UNREGISTERED for the job that really claims
     # required -- rc 1 -- and each reaches CLEAN at rc 0. Both parsers measured
-    # read each file as one job, under the longer name.
+    # accept each file, and the name a YAML parser reads is the longer one.
     #
     # X70 is N1: a plain `name:` continued onto a second line indented DEEPER
     # than the property, and this reader keeps the first line. Every other
