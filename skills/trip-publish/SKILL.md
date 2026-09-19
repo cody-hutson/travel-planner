@@ -11,8 +11,10 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh p
 
 `/trip-publish <verb> [--trip <slug>]`
 
-The verb is the one the user typed. Nothing in this file supplies a verb they did not
-type, and nothing in it reads the wording of the request to decide one.
+The verb is the one the user typed. § *Selecting the verb* below is the whole of how it is
+reached: a literal lookup, lexical at every step, against the recognition set read live. So
+this file has no route by which a verb the user did not type could arrive, and no place to
+put the wording around the token even if it read it.
 
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
@@ -42,8 +44,8 @@ grants and the fenced invocations.
 closed it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the
 published contract** rather than summarising it, and the account it confirms is the one
 `reference/adr/ADR-007-command-entry-point.md` § Context had already given — **clause for
-clause**, so the readings this file once set against each other were never incompatible,
-and the sentence that said they were is withdrawn rather than softened. `allowed-tools` is
+clause**, so the question this file once left open is settled in § Context's favour, and the
+sentence that called it unsettled is withdrawn rather than softened. `allowed-tools` is
 turn-scoped **pre-approval and not restriction**: every tool stays callable, and a tool
 left off the list routes through the usual permission settings rather than being forbidden.
 `disallowed-tools` is turn-scoped **removal** — the real restriction of the pair, and a
@@ -424,7 +426,10 @@ Render exactly this, and nothing else:
 1. The token, verbatim, as the user typed it.
 2. The verbs of the table above, read live from that table rather than from a list written
    into this section.
-3. Stop.
+3. One sentence naming the engine's guided-entry surface at its root — the surface that
+   takes a request in ordinary words and answers with the verb that serves it — and saying
+   that it names a verb and runs none. Name no verb in that sentence.
+4. Stop.
 
 Do not guess. Do not offer a near-match suggestion — no "did you mean" — for a suggestion
 is a classification with an extra step and a reflexive accept, on the least inspected path

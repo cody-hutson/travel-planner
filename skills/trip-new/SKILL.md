@@ -47,8 +47,8 @@ rule above is the whole of what makes it hold.**
 **What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has closed it.**
 Its 2026-09-11 amendment discharged the tool-list question by **quoting the published contract**
 rather than summarising it, and the account it confirms is the one `ADR-007` § *Context* had already
-given — **clause for clause**, so the readings this file once set against each other were never
-incompatible, and the sentence that said they were is withdrawn rather than softened.
+given — **clause for clause**, so the question this file once left open is settled in § *Context*'s
+favour, and the sentence that called it unsettled is withdrawn rather than softened.
 `allowed-tools` is turn-scoped **pre-approval and not restriction**: every tool stays callable, and
 a tool left off the list routes through the usual permission settings rather than being forbidden.
 `disallowed-tools` is turn-scoped **removal** — the real restriction of the pair, and a firmer thing

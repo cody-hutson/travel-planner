@@ -11,8 +11,10 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*
 
 `/trip-record <verb> [--trip <slug>] [verb args...]`
 
-The verb is the one the user typed. Nothing in this file supplies a verb they did not type, and
-nothing in it reads the wording of the request to decide one.
+The verb is the one the user typed. § *Selecting the verb* below is the whole of how it is reached:
+a literal lookup, lexical at every step, against the recognition set read live. So this file has no
+route by which a verb the user did not type could arrive, and no place to put the wording around the
+token even if it read it.
 
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
@@ -70,8 +72,8 @@ every entry of `disallowed-tools`, which denies the publish script directly and 
 it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the published
 contract** rather than summarising it, and the account it confirms is the one
 `reference/adr/ADR-007-command-entry-point.md` § *Context* had already given — **clause for
-clause**, so the readings this file once set against each other were never incompatible, and the
-sentence that said they were is withdrawn rather than softened. `allowed-tools` is turn-scoped
+clause**, so the question this file once left open is settled in § *Context*'s favour, and the
+sentence that called it unsettled is withdrawn rather than softened. `allowed-tools` is turn-scoped
 **pre-approval and not restriction**: every tool stays callable, and a tool left off the list routes
 through the usual permission settings rather than being forbidden. `disallowed-tools` is turn-scoped
 **removal** — the real restriction of the pair, and a firmer thing to say about these entries than
@@ -717,8 +719,10 @@ and there is no fifth.
 ## When no verb was typed
 
 Frozen. `/trip-record` on its own is **not** a default; it is a refusal. Say that no verb was given,
-print the verbs of this command read live from this file's own requirement table, and stop. Select
-no verb, and do not fall back to one.
+print the verbs of this command read live from this file's own requirement table, add one sentence
+naming the engine's guided-entry surface at its root — the surface that takes a request in ordinary
+words and answers with the verb that serves it, naming a verb and running none — and stop. Name no
+verb in that sentence. Select no verb, and do not fall back to one.
 
 `/trip` defaults a bare invocation to `status` because `status` is read-only. **This command declares
 no default at all, and the ground for that is a rule rather than a property of its verb set: which of
@@ -731,12 +735,15 @@ mode it is in.
 
 ## When the token is not a verb of this command
 
-Frozen. Render exactly three things and nothing else:
+Frozen. Render exactly four things and nothing else:
 
 1. The token, verbatim, as the user typed it.
 2. The verbs of this command, read live from this file's own requirement table — not from a list
    written into this file.
 3. One sentence stating that that table is the whole of this command's verb set at this revision.
+4. One sentence naming the engine's guided-entry surface at its root — the surface that takes a
+   request in ordinary words and answers with the verb that serves it — and saying that it names a
+   verb and runs none. Name no verb in that sentence.
 
 Then stop. Do not guess. **Do not offer a near-match suggestion — no "did you mean"** — a suggestion
 is a classification with an extra step and a reflexive accept, on the least-inspected path in this
