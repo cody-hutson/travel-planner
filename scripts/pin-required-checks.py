@@ -1947,12 +1947,18 @@ def census_arms():
         cont_double[".github/workflows/synth-cont-double.yml"].replace(
             '  job"', '   job"')
 
-    # X43 is the arm that keeps the fix from re-opening what this card closed,
-    # and it is the one to read first if a later author widens the skip. ONE
-    # file carries BOTH shapes: a property continuation at the job-key
-    # indentation AND, below it, a genuine key presentation this reader cannot
-    # read. A skip that swallowed the second along with the first would reach rc
-    # 1 here and look like a pass everywhere else in this list.
+    # X43 is the arm to read first if a later reader ever SPARES lines where the
+    # job keys sit. It was rebuilt so that the open such a reader might wrongly
+    # report SPANS the unread key line -- the dangerous case -- rather than
+    # closing above it, where a skip is short and harmless. ONE file carries, in
+    # order: a property's double-quoted scalar continued AT the job-key
+    # indentation; then a step `name:` written as a PLAIN scalar whose
+    # continuation line begins with `'`; then a key this reader cannot read.
+    # Nothing is open in YAML at that line start -- a plain scalar's continuation
+    # is not a node position, so the `'` is text -- and both parsers read two
+    # jobs. A reader that opens a quote there spans the key line with it, and
+    # the key leaves the census. No line below the `'` carries another one, so
+    # nothing closes that quote early and shortens the span.
     cont_and_unread = dict(base)
     cont_and_unread[".github/workflows/synth-cont-unread.yml"] = (
         "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
@@ -1962,13 +1968,15 @@ def census_arms():
         '  job"\n'
         "    runs-on: ubuntu-latest\n"
         "    steps:\n"
-        "      - run: 'true'\n"
+        "      - name: a step that keeps going\n"
+        "          'til the very end\n"
+        '        run: "true"\n'
         "  # gate-efficacy: posture=required\n"
         "  new-suite :\n"
         "    name: New suite (test-new-suite.sh)\n"
         "    runs-on: ubuntu-latest\n"
         "    steps:\n"
-        "      - run: 'true'\n")
+        '      - run: "true"\n')
 
     # X44 asks the same question of the OTHER site that reads key lines. A flow
     # collection's continuation can be shaped exactly like a key -- `  A:` is a
@@ -2036,6 +2044,72 @@ def census_arms():
         "    runs-on: ubuntu-latest\n"
         "    steps:\n"
         "      - run: 'true'\n").encode("latin-1")
+
+    # X48-X63 pin the direction no arm pinned before them: a skip that SPANS a
+    # job-key line. Each file wraps a PLAIN scalar -- a job `name:` or a step
+    # `name:` -- onto a continuation line that begins with one of the four
+    # characters that open something in flow syntax, and then declares a second
+    # job. A plain scalar's continuation is not a node position, so in YAML that
+    # character is text and nothing is open; both parsers read two jobs. A reader
+    # that treats every line start as a node position opens a quote or a flow
+    # there that never closes, and every line below it -- the second job's key
+    # included -- reads as the continuation of a value. A reader that did this
+    # was measured: all sixteen of these reached rc 0 under it.
+    #
+    # Four characters, two carriers and two key forms, and all sixteen are armed,
+    # because each axis is an independent alternative -- the reason X13 and X14
+    # are two arms. The tails are chosen so that NOTHING below the trigger closes
+    # what it would open: after a quote, no line carries that quote character;
+    # after a bracket, none carries its closer. A tail that closed the open early
+    # would end the span above the key line, and the arm would be measuring its
+    # tail. The READABLE form must grade UNREGISTERED at rc 1 -- the job is there
+    # and this reader reads it -- and the UNREADABLE form must refuse at rc 2.
+    spans = (("'", "'til the very end", '"'),
+             ('"', '"quoted phrase to come', "'"),
+             ("[", "[see the note below", '"'),
+             ("{", "{subject to change", '"'))
+    span_arms = []
+    for trigger, text, q in spans:
+        run = "run: {0}true{0}".format(q)
+        carriers = (
+            ("a job `name:`",
+             "    name: a build that keeps going\n"
+             "      " + text + "\n"
+             "    runs-on: ubuntu-latest\n"
+             "    steps:\n"
+             "      - " + run + "\n"),
+            ("a step `name:`",
+             "    name: Readable job\n"
+             "    runs-on: ubuntu-latest\n"
+             "    steps:\n"
+             "      - name: a step that keeps going\n"
+             "          " + text + "\n"
+             "        " + run + "\n"))
+        for carrier, props in carriers:
+            for key_line, want_rc, want_codes, then in (
+                    ("  new-suite:\n", 1, {"UNREGISTERED"},
+                     "a job key this reader READS. The job is there and must "
+                     "grade UNREGISTERED; a reader that spans it drops the job "
+                     "with no record, no finding and no refusal"),
+                    ("  new-suite :\n", 2, set(),
+                     "a key this reader cannot read. The file must refuse; a "
+                     "reader that spans it reaches CLEAN over a job claiming "
+                     "required")):
+                tree = dict(base)
+                tree[".github/workflows/synth-span.yml"] = (
+                    "name: Synthetic\n\non:\n  pull_request:\n\njobs:\n"
+                    "  # gate-efficacy: posture=advisory\n"
+                    "  readable:\n" + props +
+                    "  # gate-efficacy: posture=required\n" + key_line +
+                    "    runs-on: ubuntu-latest\n"
+                    "    steps:\n"
+                    "      - " + run + "\n")
+                span_arms.append((
+                    "X{}".format(48 + len(span_arms)),
+                    "FAIL-OPEN DIRECTION: {} wrapped as a PLAIN scalar whose "
+                    "continuation line begins with `{}`, then {}".format(
+                        carrier, trigger, then),
+                    tree, want_rc, want_codes))
 
     return [
         # id,  what it models,                                    files,        rc, codes
@@ -2171,12 +2245,16 @@ def census_arms():
                 "one together -- and a reader whose discriminator is a CONSTANT rather "
                 "than the file's own key indentation would part them wrongly",
          cont_deeper, 1, {"UNREGISTERED"}),
-        ("X43", "THE ONE THAT KEEPS X26-X34 CLOSED: one file carrying BOTH shapes -- "
-                "a property continuation at the job-key indentation AND, below it, a "
-                "key presentation this reader cannot read. The refusal must still "
-                "fire. A skip that swallowed the unread key along with the "
-                "continuation reaches rc 1 here and passes every other arm in this "
-                "list", cont_and_unread, 2, set()),
+        ("X43", "THE ONE THAT KEEPS X26-X34 CLOSED against a reader that spares "
+                "lines: a property continuation at the job-key indentation, then a "
+                "step `name:` whose PLAIN continuation line begins with `'`, then a "
+                "key this reader cannot read. Nothing is open in YAML at that line "
+                "start and both parsers read two jobs, so the refusal is the verdict "
+                "this file earns from ANY reader. Against a reader that spares "
+                "nothing the continuation already refuses it; against one that "
+                "spares the continuation only the unread key can -- and a reader "
+                "that opens a quote at that line start spans the key and reaches "
+                "rc 0", cont_and_unread, 2, set()),
         ("X44", "the same predicate at the OTHER site that reads key lines: a flow "
                 "mapping whose continuation is shaped exactly like a key (`  A:`). "
                 "The scan recorded a job off it and graded it, so the census emitted "
@@ -2198,7 +2276,7 @@ def census_arms():
                 "which file. It must refuse like the rest, and `_unread_reason`'s "
                 "first branch, written for exactly this and unreachable until now, is "
                 "what names it", not_utf8, 2, set()),
-    ]
+    ] + span_arms
 
 
 def _materialise(files, root):
