@@ -105,9 +105,17 @@ what you give up going conservative vs. what you risk going optimistic.
 5. Departure confidence — final journey planned with a buffer that reflects
    real stakes, not optimistic scheduling
 6. Depth coverage — the framing matches the party's familiarity with the
-   destination. Where a traveler's `Been here before?` is unknown, they
-   contribute no depth signal. This never overrides a hard constraint, a
-   stated need, or first-arrival clarity
+   destination. A mixed party does not average to a middle depth: the brief
+   carries both the orientation a first-timer needs and, for each traveler
+   who has been here before, at least one less-obvious call a repeat visitor
+   would not make unprompted — what has changed is one kind, not the only
+   one. Depth is carried by what the recommendation says, never by adding
+   modes to choose between (`reference/data-model.md` → "Depth calibration
+   is coverage, not a score"; that rule's unit is a candidate set, yours is
+   one recommended answer — cite it, do not re-derive it). Where one depth
+   is unrepresented, the framing leans wholly that way; where a traveler's
+   `Been here before?` is unknown, they contribute no depth signal. This
+   never overrides a hard constraint, a stated need, or first-arrival clarity
 
 ## Anti-Patterns to Actively Avoid
 
