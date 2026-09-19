@@ -93,8 +93,13 @@ jobs:
           # either status kills the whole step BEFORE the scan below ever runs: the
           # check reports a red X with no scan block and no findings, which reads as
           # a detection but is an abort. DIAGNOSE IT BY THE ABSENT SCAN BLOCK, never
-          # by the red X — an ordinary content failure is red too, and the exit code
-          # separates nothing. It only trips once a PR body is long enough for `head`
+          # by the red X — an ordinary content failure is red too, and ON THE RUNNER
+          # THIS WORKFLOW ACTUALLY RUNS ON the exit code separates nothing: SIGPIPE is
+          # ignored there, so the abort exits 1 and so does a content failure. The
+          # scope is the same one the sentence above carries, and it is the whole of
+          # why this rule is needed: where SIGPIPE is fatal the two DO separate, 141
+          # against 1, and that is not where this step runs. It only trips once a PR
+          # body is long enough for `head`
           # to finish while `printf` is still writing, so it stays dormant until a
           # body that large arrives; it has fired on this repository's own history,
           # at this site. `awk` drains its input to EOF, so the producer is never
