@@ -176,7 +176,7 @@ does, and that is the change this amendment records.
 
 **What the discharge removes is a standing caveat, not a claim.** No sentence above rested on either
 account — each is read from the `allowed-tools` grant or from a verb section — so nothing above needs
-restating now that the accounts are settled. § 2's bounds are untouched.
+restating now that the accounts are settled. The discharge leaves § 2's bounds untouched.
 
 **The same source settles the per-file question the 2026-08-28 amendment reached by reasoning.**
 `disable-model-invocation` is a **per-file boolean, and no per-verb key exists**. The published
@@ -206,8 +206,9 @@ declared intent is retained.** The decision above rests on *declared intent beat
 which the first decision driver states and which § *Context* calls the property that removes
 misrouting by construction. A later initiative buys approachability by spending part of it. **This
 amendment states which part may be spent, on which arms, and what is left standing after the
-spending.** Nothing above is rewritten: § 2's bounds are untouched, the 2026-08-28 narrowing stands,
-and the 2026-09-11 discharge stands. What follows is stated beside them.
+spending.** Nothing above is rewritten: § 2's bounds are untouched by this amendment, the
+2026-08-28 narrowing stands, and the 2026-09-11 discharge stands. What follows is stated beside
+them.
 
 **Inference can enter at more than one place, and only the first of them is enforced. They are kept
 apart here, because a rule that runs them together claims a strength it does not hold.**
@@ -296,9 +297,10 @@ verb shares, so a denial that today holds for the turn of one verb is not expres
 those to accept belongs to the record that decides a consolidated surface's privilege model; this
 amendment states the consequence and takes no position on it.
 
-**§ 2 is untouched, and what is not negotiable by a later slice is not negotiable by this one.** No
-confirmation admits `ALLOW_PLAINTEXT`, none admits `--yes` to `unpublish`, and none makes an overwrite
-or a deletion of existing trip content available: that bound's class is IRREVERSIBLE, and a
+**This amendment leaves § 2 untouched, and what is not negotiable by a later slice is not negotiable
+by this one.** No confirmation admits `ALLOW_PLAINTEXT`, none admits `--yes` to `unpublish`, and none
+makes an overwrite or a deletion of existing trip content available: that bound's class is
+IRREVERSIBLE, and a
 confirmation does not change a class. A confirmation is what an inferred selection needs **before** an
 act the bounds already permit. It is never what makes an act they forbid available.
 
@@ -418,8 +420,9 @@ record of the first release. Its substance is preserved; only a stale temporal c
 content-guard dependency has been corrected in place, and nothing else about it is rewritten — the
 claim that `verify_ciphertext` is absent from the plaintext branch remains, because it is still
 true. What follows is the control review the decision called for,
-and the partition that review produced. It **discharges** the deferral; it does not reverse it. §2's
-bounds are untouched, and the two forms those bounds cover stay out. The completeness claim below was
+and the partition that review produced. It **discharges** the deferral; it does not reverse it. This
+amendment leaves §2's bounds untouched, and the four forms those bounds cover — the rows the table
+below marks `ADR-007 §2` — stay out. The completeness claim below was
 recorded as an **assertion maintained by review** on the ground that nothing then parsed this table.
 It anticipated becoming a check, and said it should be re-stated as one **naming that reader**. That
 has happened, so it is re-stated here, with the reader named.
@@ -554,8 +557,8 @@ rather than collapsed.
 **What §2's third bound binds.** Its text names commands, and the mechanical check for it searches
 the command directory. Its **intent** is broader, and is recorded here so a later reader does not
 walk through the gap: the two forbidden flags bind **any non-interactive caller this repository
-ships**, whether or not that caller is a command file. §2's text is unchanged — this states what it
-means, it does not amend it.
+ships**, whether or not that caller is a command file. That bound's text is unchanged — this states
+what it means, it does not amend it.
 
 **References.** Two work items are named above; each is summarized here so the rules stand without
 them. `#330-disclosure` refers to the finding that the publish script writes the passphrase to
@@ -566,21 +569,27 @@ hard-disabled at the script layer in the automated re-bake path, tracked in anot
 decision converges with that by declining every plaintext form at the command layer, so no second
 and softer invocation path is introduced.
 
-**Amendment (2026-09-18, Friday) — two restatements of this table's counts, corrected to agree
-with it.** When the table gained its row for `confirm`, this section's opening statement of how
-many forms exist was corrected in the same change, and two sentences restating the same counts
-were not: the References paragraph above still counted ten forms, and the second trade-off in
-§ *Consequences* counted ten forms and seven exclusions. Both are corrected in place to read from
-the table as it stands — eleven forms, three addressed and eight excluded. The *four* in the
-References paragraph was right and is unchanged: it counts the forms carrying `#330-disclosure`
-among their reasons, a subset of the excluded forms rather than their total, and the row that was
-added carries a different reason. The TTY-leg determination's stdin-gate count, which had omitted
-the gate guarding `confirm`, is corrected in place in the same way, as is the count of gated forms
-in the paragraph after it; its stdout half was true and is unchanged. Those two gated-form counts
-were themselves stated at *gate* granularity while the table enumerates *forms* — the gate guarding
-the plaintext publish stands in front of both plaintext forms, `--opaque` being an independent flag
-— so each is corrected in place to the table's own unit, as are the two clauses in the determination
-that are derived from it. No row, disposition or reason changes, and nothing decided above moves.
+**Amendment (2026-09-18, Friday) — the counts this section restates, corrected to agree with the
+table and the script they read from.** When the table gained its row for `confirm`, this section's
+opening statement of how many forms exist was corrected in the same change, and two sentences
+restating the same counts were not: the References paragraph above still counted ten forms, and the
+second trade-off in § *Consequences* counted ten forms and seven exclusions. Both are corrected in
+place to read from the table as it stands — eleven forms, three addressed and eight excluded. The
+*four* in the References paragraph was right and is unchanged: it counts the forms carrying
+`#330-disclosure` among their reasons, a subset of the excluded forms rather than their total, and
+the row that was added carries a different reason. The TTY-leg determination's stdin-gate count,
+which had omitted the gate guarding `confirm`, is corrected in place in the same way, as is the
+count of gated forms in the paragraph after it; its stdout half was true and is unchanged. The
+counts stated at *gate* granularity while the table enumerates *forms* are the determination's own
+count of the forms the leg bars, and the gated-form count in the paragraph after it; the stdin-gate
+count is not among them, because its unit is the gate and at that unit it was already right. The
+gate guarding the plaintext publish stands in front of both plaintext forms, `--opaque` being an
+independent flag, so each is corrected in place to the table's own unit, as are the clauses in the
+determination derived from them. The 2026-08-24 amendment's own statement of how many forms §2's
+bounds cover is corrected here in the same way, and now names the rows it reads off. This heading is
+count-free for the same reason: it describes this record rather than the table, and a heading that
+counts its own corrections cannot stay true as the paragraph grows. No row, disposition or reason
+changes, and nothing decided above moves.
 
 ## Consequences
 
