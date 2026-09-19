@@ -477,12 +477,12 @@ day: <YYYY-MM-DD>
 - Advance reservation flag: Yes / No — if Yes, what category and why
 - Closure watch: [any venue categories to verify for this day of week]
 
-**The entry marker — one fenced block per entry, carrying the day key and nothing
-else.** Open every per-day entry with it, directly under that entry's own
-`**Day [N] — …**` line and above the labelled lines. It binds **all three** per-day
-surfaces in this file — the framework entry above, the routing signal and the
-experience-balance signal below. Those are three projections of one day, and
-carrying the same key in each is exactly what lets the hub join them.
+**The entry marker — one fenced block per entry, carrying the day key, admitting the
+declared cost field, and nothing else.** Open every per-day entry with it, directly
+under that entry's own `**Day [N] — …**` line and above the labelled lines. It binds
+**all three** per-day surfaces in this file — the framework entry above, the routing
+signal and the experience-balance signal below. Those are three projections of one
+day, and carrying the same key in each is exactly what lets the hub join them.
 
 `<YYYY-MM-DD>` is that day's own calendar date — the **Day** entity's natural key
 (`reference/data-architecture.md` → "The full assignment") — taken from
@@ -511,9 +511,9 @@ they are written today. Full statement:
 → "The cost field — the one addition rule 2 admits" amended the marker rule to admit
 one `cost: <amount> <currency> <basis>` line below the key, and it assigns that field
 by marker **form**, so every fenced class admits it — this one included. **You do not
-emit it yet** — this prompt is unchanged in what it writes, so a marker carrying the
-day key alone is the correct output today. It is described here so an entry you meet
-carrying one is read rather than treated as out of grammar.
+emit it** — this prompt is unchanged in what it writes, so a marker carrying the day
+key alone is the correct output. It is described here so an entry you meet carrying
+one is read rather than treated as out of grammar.
 
 **And unlike your four sibling spokes, you will not emit it later either — a stated
 non-use, not a deferral.** **A Day has no purchase**, so nothing in this file will
