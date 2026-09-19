@@ -39,13 +39,17 @@ jobs:
           # closes the pipe, so on a large body the producing `printf` takes EPIPE and
           # `pipefail` carries the writer's failure out as the pipeline's status. That
           # status is 141 ONLY where SIGPIPE is fatal; a GitHub-hosted runner hands the
-          # step SIGPIPE already ignored, so the writer returns 1 with a
-          # `write error: Broken pipe` on stderr instead. Either way the `if` reads
-          # FALSE even though the marker was found, silently ignoring a present
-          # override. NOTHING IN A SINGLE RUN'S OUTPUT DIAGNOSES THAT: the exit code
-          # can be 0, the summary block is present, and the check can be GREEN. Only
-          # the differential — was a marker-carrying body's override honoured? —
-          # separates it. Same root cause as step 4 below; `-c` reads to EOF.
+          # step SIGPIPE already ignored, so the writer returns 1 with a broken-pipe
+          # write error on stderr instead. Either way the `if` reads FALSE even though
+          # the marker was found, silently ignoring a present override. NEITHER THE
+          # EXIT CODE NOR THE SUMMARY NOR THE CHECK'S COLOUR DIAGNOSES THAT: the exit
+          # code can be 0, the summary block is present, and the check can be GREEN.
+          # On a GitHub-hosted runner one trace does: a run that discarded the
+          # override carries that broken-pipe error on stderr, naming THIS
+          # statement's line, and no other run does. Where SIGPIPE is fatal there is
+          # no trace at all, and only the differential — was a marker-carrying body's
+          # override honoured? — separates it. Same root cause as step 4 below; `-c`
+          # reads to EOF.
           # `|| true` absorbs grep's exit 1 on zero matches (the idiom already used
           # for ANCHOR_COUNT).
           OVERRIDE_HITS=$(printf '%s\n' "$PR_BODY" \
@@ -85,7 +89,7 @@ jobs:
           # its n-1 lines and closes the pipe. The producing `printf` then takes
           # EPIPE and fails: 141 ONLY where SIGPIPE is fatal, while a GitHub-hosted
           # runner hands the step SIGPIPE already ignored, so `printf` returns 1 with
-          # a `write error: Broken pipe` on stderr. Under `set -o pipefail` + `set -e`
+          # a broken-pipe write error on stderr. Under `set -o pipefail` + `set -e`
           # either status kills the whole step BEFORE the scan below ever runs: the
           # check reports a red X with no scan block and no findings, which reads as
           # a detection but is an abort. DIAGNOSE IT BY THE ABSENT SCAN BLOCK, never
