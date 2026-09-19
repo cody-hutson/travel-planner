@@ -455,6 +455,60 @@ def _unread_key_lines(lines, start, end, child_indent):
             and not _RE_KEY.match(lines[i])]
 
 
+def _key_lines(lines, start, end, job_indent):
+    """Indices of the lines this reader records a job off: `key:` lines at `job_indent`.
+
+    One definition, called by `census_scan` for its records and by
+    `_displaced_key_line` for its comparison, so the line a record came from
+    and the line the third limb compares against cannot drift apart.
+    """
+    return [i for i in range(start, end)
+            if _RE_KEY.match(lines[i])
+            and _indent_of(lines[i]) == job_indent]
+
+
+def _displaced_key_line(lines, start, end, job_indent):
+    """(first, first_key) when the `jobs:` block does not begin on its first key line.
+
+    The third limb of the file-level refusal. `first` is the block's first line,
+    blank lines and comments aside; `first_key` is the first line this reader
+    recorded a job off. In a valid workflow the block this reader enters is a
+    block mapping, and a block mapping begins on its first key -- so when the
+    two differ, the line the block begins on is one this reader did not record
+    a job off, and the lines it did record jobs off may not be the file's own.
+
+    The class this closes is measured, not foreseen. A job property's quoted
+    scalar or flow collection may be continued onto a line shaped like a key
+    that sits SHALLOWER than the job keys. When that line comes ahead of every
+    line this reader recognises as a key, it is the first `key:` line, so
+    `_block_indent` answers with its indentation; it is also the shallowest line
+    in the block, so `_block_child_indent` agrees and no record is marked
+    synthesised; and every line at that indentation is a `key:` line, so
+    `_unread_key_lines` finds nothing. Both earlier limbs are satisfied honestly,
+    by a phantom, and every real job key -- deeper, and so at an indentation this
+    reader no longer reads keys at -- leaves the census with no record, no
+    finding and no refusal. Five measured files reached a CLEAN census or a
+    finding on the phantom alone that way, and X64 and X65 arm two of them. What
+    they share is the line the block begins on: a job key this reader could not
+    read, ahead of the phantom.
+
+    Line-local, deliberately: it compares two line indices the scan already
+    has, and keeps no state across lines. It does not know what an earlier line
+    left open, and does not need to -- a job property's continuation cannot
+    come AHEAD of the block's first line, because the property it continues
+    has to come first.
+
+    None when the file yields no key line at all; the first limb refuses that.
+    """
+    keys = _key_lines(lines, start, end, job_indent)
+    if not keys:
+        return None
+    for i in range(start, end):
+        if lines[i].strip() and not _RE_COMMENT.match(lines[i]):
+            return None if i == keys[0] else (i, keys[0])
+    return None
+
+
 def _comment_block_top(lines, i):
     """Index of the FIRST line of the contiguous comment block ending at i-1.
 
@@ -576,9 +630,9 @@ def census_scan(root):
     a tree carrying an unregistered job in another -- the very defect this mode
     exists to surface, arriving through the mode's own parser.
 
-    Two per-FILE marks travel on every record, and the per-file assertion in
-    `run_census` needs both. Neither implies the other and they answer different
-    questions, which is why one of them was not enough.
+    Three per-FILE marks travel on every record, and the per-file assertion in
+    `run_census` needs all three. None implies another and they answer
+    different questions, which is why fewer of them were not enough.
 
     `synthesised` records where a record CAME FROM. A key presentation this
     reader does not recognise does not stop the scan: it carries on to the next
@@ -601,6 +655,14 @@ def census_scan(root):
     a line that is no key at all -- a job property's value continued at that
     indentation -- because this reader cannot tell the two apart, and that
     false refusal is accepted. See `_unread_key_lines`.
+
+    `displaced_key` records whether the `jobs:` block begins, comments aside,
+    on a line other than the first one this reader recorded a job off. Both
+    marks above are satisfied by a phantom read off a key-shaped continuation
+    that sits shallower than the job keys and ahead of all of them, because
+    that phantom IS the shallowest line and every line beside it is a `key:`
+    line -- and then every real job key is read as no key at all. What the
+    phantom cannot be is the line the block begins on. See `_displaced_key_line`.
     """
     jobs = []
     for rel, path in workflow_files(root):
@@ -665,9 +727,16 @@ def census_scan(root):
         # never re-reads the file.
         unread_key = bool(_unread_key_lines(lines, start, end, child_indent))
 
-        keys = [i for i in range(start, end)
-                if _RE_KEY.match(lines[i])
-                and _indent_of(lines[i]) == job_indent]
+        # The third limb: whether the block begins on the first line this
+        # reader records a job off. The two limbs above are both satisfied by a
+        # phantom read off a key-shaped continuation that sits shallower than
+        # the job keys and ahead of every one of them, because that phantom IS
+        # the shallowest line and every line beside it is a `key:` line. What
+        # the phantom cannot be is the line the block begins on. Per FILE, and
+        # recorded on the record, for the reason the other two are.
+        displaced_key = _displaced_key_line(lines, start, end, job_indent) is not None
+
+        keys = _key_lines(lines, start, end, job_indent)
 
         for n, i in enumerate(keys):
             key = _RE_KEY.match(lines[i]).group("key")
@@ -695,7 +764,8 @@ def census_scan(root):
 
             jobs.append({"file": rel, "key": key, "name": name or key,
                          "posture": posture, "raw": raw, "note": note,
-                         "synthesised": synthesised, "unread_key": unread_key})
+                         "synthesised": synthesised, "unread_key": unread_key,
+                         "displaced_key": displaced_key})
     return jobs
 
 
@@ -911,6 +981,26 @@ def _unread_reason(path):
                 "apart, so it refuses the file rather than grade it on the keys "
                 "it did read".format(where, child_indent))
 
+    # The third limb, reached only when every line at the shallowest
+    # indentation IS a `key:` line to this reader -- so there is no unread line
+    # to name, and naming the two lines the limb compares is what tells the
+    # author where to look. The text claims neither line is what it looks like:
+    # the measured class puts a job key on the first and a value's continuation
+    # on the second, and the reader cannot see either fact.
+    displaced = _displaced_key_line(lines, start, end, job_indent)
+    if displaced:
+        first, first_key = displaced
+        return ("its `jobs:` block begins, comments aside, on line {}, and the "
+                "first line this reader recorded a job off is line {}, at "
+                "indentation {}. A block mapping begins on its first key, so line "
+                "{} may be a job key this reader cannot read, which would then "
+                "never be graded, and line {} may be no key at all but the "
+                "continuation of a value that a job's property began on an "
+                "earlier line, which would make every job this reader recorded "
+                "here a phantom. It cannot tell which, so it refuses the "
+                "file".format(first + 1, first_key + 1, job_indent,
+                              first + 1, first_key + 1))
+
     return ("the reader walked it and recorded no job read off a line it "
             "recognised as a job key")
 
@@ -968,8 +1058,9 @@ def run_census(root, stream=sys.stdout):
     #
     # WHAT THE ASSERTION ASSERTS, in the words it is worth being exact about:
     # every workflow file walked yielded at least one record READ OFF A LINE THIS
-    # READER RECOGNISED AS A JOB KEY, and carries NO LINE WHERE ITS JOB KEYS SIT
-    # that this reader failed to recognise as one. Two limbs, and each was
+    # READER RECOGNISED AS A JOB KEY, carries NO LINE WHERE ITS JOB KEYS SIT
+    # that this reader failed to recognise as one, and has a `jobs:` block that
+    # BEGINS ON THE FIRST LINE IT RECORDED A JOB OFF. Three limbs, and each was
     # arrived at by a measurement rather than by design. The second is stronger
     # than "no job key was left unread", and knowingly so: a line there that is
     # no key at all -- a job property's value continued at that indentation --
@@ -993,8 +1084,18 @@ def run_census(root, stream=sys.stdout):
     # "did a good record come out" but "is every line at the key indentation one
     # this reader read as a key". X35 is what keeps it from being a reader that
     # refuses any file holding two jobs.
+    #
+    # The third limb asks whether the `jobs:` block BEGINS on the first line
+    # this reader recorded a job off. Both limbs above are satisfied by a
+    # phantom read off a key-shaped continuation that sits shallower than the
+    # job keys and ahead of every one of them -- it is the shallowest line, and
+    # every line beside it is a `key:` line -- and then every real job key is
+    # read as no key at all. Five measured files reached CLEAN, or a finding on
+    # the phantom alone, that way (X64, X65). A block mapping begins on its
+    # first key, and that phantom is never the line the block begins on.
     read = set(j["file"] for j in jobs
-               if not j["synthesised"] and not j["unread_key"])
+               if not j["synthesised"] and not j["unread_key"]
+               and not j["displaced_key"])
     silent = [(rel, path) for rel, path in files if rel not in read]
     if silent:
         # REFUSED rather than MALFORMED, because a file named here may be a
@@ -1011,10 +1112,14 @@ def run_census(root, stream=sys.stdout):
             "it cannot read, or the continuation of a value that a job's property "
             "began on a deeper line, which is no key at all; this reader cannot "
             "tell the two apart and refuses both, so a valid file whose every job "
-            "key it reads is refused too when it continues a value there. A file "
-            "failing either test is one this reader cannot vouch for, and grading "
-            "the rest would issue a verdict over a tree it may have read only in "
-            "part. No verdict is issued.")
+            "key it reads is refused too when it continues a value there. AND the "
+            "block begins, comments aside, on the first line it recorded a job "
+            "off. A block mapping begins on its first key, so a block beginning on "
+            "any other line begins on a line this reader recorded no job off, "
+            "which in a valid file is a job key it could not read. A file "
+            "failing any of the three tests is one this reader cannot vouch for, "
+            "and grading the rest would issue a verdict over a tree it may have "
+            "read only in part. No verdict is issued.")
         out("Remedy: save the file as UTF-8 text, and write its jobs under a bare "
             "`jobs:` line at column zero, as a block mapping in which every line "
             "at the job keys' indentation, comments aside, is a job key written "
