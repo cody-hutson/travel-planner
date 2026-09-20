@@ -3,6 +3,56 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.34.0] — 2026-09-19 — Guided command entry
+
+You can now say what you want in plain words and be walked to the command that does it. Until this
+release the trip commands answered only to their own names: you had to know that recording a
+traveller's dietary need is `profile` and not `person`, or that taking a site offline without ending
+the trip is `temporary` and not `archive`. The knowledge lived in the files, and the files were only
+reachable if you already knew which one to open.
+
+**A request in words now lands somewhere.** The engine root carries a guided-entry surface — the one
+thing reachable before you know any verb — and it reads the same routing map the commands are
+described by, live, at the moment it answers. It proposes; it does not act. What comes back is the
+verb, with your own words carried into its arguments, for you to run.
+
+**Ambiguity is rendered as a choice, not resolved by a guess.** Where an intent genuinely reaches
+more than one verb, the surface states the distinction in the terms that separate them and lets you
+pick. "We booked the hotel" can be a note on the trip or a change to a scheduled event, and those are
+different acts; you are shown both, and the option of neither. Eight such sets are declared, and two
+of them offer *no verb at all* as a first-class answer, because sometimes the right response to a
+sentence is that nothing needs recording.
+
+**Inference is permitted only where a command has declared it safe.** Each verb's own section states
+three things about itself: whether it writes, whether it hands work to another agent, and whether its
+effects can land outside the trip's own files. A verb that declares all three negatives may be
+resolved from an inferred intent. Anything else — including silence — keeps the old rule: the verb is
+the one you typed. Five of thirty-seven command arms qualify, and the routing map's markers are
+checked against those declarations in both directions on every push, so the map cannot drift from
+what the commands say about themselves.
+
+**Nothing in this release makes a command easier to fire by accident.** Every command file still
+withholds itself from the model, so guided entry ships propose-only: it hands you a command, and you
+run it. The destructive arms additionally carry a standing rule — an act on a verb you did not type
+waits for a confirmation naming the verb and its target — which is in place for the day any of that
+changes rather than switched on now. Four arms are gated on every path today, and two more gate without being
+credited as such — one on every path, one on only some of its own — which the guard names in its own
+output rather than leaving you to discover it.
+
+**The honest limits.** Reaching the guided surface from bare prose, with no verb and no mention of
+it, worked in eight of ten measured attempts; naming it works every time, and on an installed engine
+it is reachable by name. The confirmation rule above cannot fire while the command files withhold
+themselves, which is the intended posture and not an oversight. Both are recorded rather than
+implied.
+
+**Under the surface**, the taxonomy guard grew to 254 assertions: every command arm is joined to the
+routing-map entry that claims it, each declared set is checked for members that contradict each
+other, and a set that could resolve by inference while carrying an excluded option is now a failure
+rather than a silence — the last of those proven by planting the shape and measuring the guard blind
+to it before the change and failing on it after. The architecture record that governs where inference
+is permitted was corrected in place, with its counts restated at the granularity of the table they
+read from, so the document a future change is argued from agrees with itself.
+
 ## [0.33.0] — 2026-09-19 — Release and publish mechanics integrity
 
 No trip verb changes behaviour in this release. What changes is the machinery around them: a guard
