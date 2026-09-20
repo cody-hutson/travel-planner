@@ -79,6 +79,55 @@
 #        sentence that describes it, and the `## profile` offer, which is the one
 #        non-refusal discovery surface the command has and the one region no arm reached
 #        before. Carries its own MUST-FIRE arms. Nothing in it is pinned.
+#   FW   the frozen regression witness is held by an ASSERTION rather than by a review
+#        convention. Until this group shipped nothing in the repository enforced the freeze,
+#        and an edit to the witness passed every required suite green.
+#   PS   the per-event status presence check has a witness in the shipped corpus, and its
+#        SILENCE on the trip that carries both files is EARNED rather than assumed.
+#   LS   the locked-elements seed trigger — which trip's declared elements a seed would fire
+#        on. Emits from inside group PS's machinery under its own id, and is graded over a
+#        population this suite MEASURES: a zero population FAILS rather than passing quietly.
+#   VI   the venue-identity split rule has a witness. A MERGE is a claim, so the claim is
+#        asserted to carry the rung that warrants it, on ordered rungs stopped at the first
+#        that decides and biased toward SPLITTING an uncertain pair.
+#   C    the skip predicate, made observable rather than asserted — C1a and C1b, the two arms
+#        the section below calls THE POINT OF THIS SUITE. The fixtures differ by EXACTLY ONE
+#        LINE and that is asserted before either arm is graded.
+#   MD   the discriminating-evidence rule, asserted against THIS FILE: no PASS may be reached
+#        on a branch a DEGENERATE outcome also reaches. The oracle that grades it is itself
+#        controlled in both directions — it must convict a planted blind assertion and
+#        certify a remediated one, on the same subject in the same process.
+#   AF   the archived-trip freeze and the one operation that reaches through it. Both halves
+#        against a tracked fixture: an ordinary person edit leaves an archived trip
+#        byte-unchanged, and erasure reaches it anyway.
+#   PF   no verdict in this suite, or in the validator it sources, is decided by a pipeline's
+#        exit status. Closed at the SHAPE rather than at any one arm, because has_finding
+#        carries BOTH polarities and the dangerous one is a silent false GREEN.
+#   ER   the erasure verb's declared contract — the four failure modes that live only in
+#        prose, which AF's post-state grading of the fixture cannot reach.
+#   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The real
+#        person store is git-ignored, so tracked fixtures are the only instances this gate can
+#        reach, and a mark nothing carries is a grammar nothing grades.
+#   CE   the cost-entry surfaces: a priced-entity class denominator derived from two
+#        independently movable tables, plus the JOIN between them — the limb most likely to be
+#        wrong while every other limb reads green, because two non-empty sets keyed
+#        differently intersect in nothing and the census then reads zero over a corpus that
+#        plainly carries markers. This script holds NO copy of that class set.
+#   DH   derived trip history: the NEGATIVE assertion the person-record schema names as its
+#        own debt — the durable form emits zero TRIP and DEST labels. It held by construction
+#        and by every author so far having read the bullet, which is the shape of property
+#        that holds until something changes it and nothing notices.
+#   GM   reusable groups: the membership boundary mechanised — one anchored regex is the whole
+#        of that class's membership enforcement, and the group form emits zero PERSON-class
+#        labels. The exact twin of DH's sentence, left as prose while DH shipped.
+#   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
+#        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
+#        against the groups the run actually emitted. The executing set is taken from the RUN
+#        (SEEN ∪ SKIPPED), never from a static read of this file, because a static scan
+#        reports groups that do not execute and because membership in SEEN is the only form
+#        that is evidence a group RAN. Every zero carries a standing MUST-FIRE control, and
+#        each roster has its OWN add-only control rather than borrowing the other's. Runs
+#        LAST, and must stay last: a group emitting after it is invisible to it.
 #
 # ── WHY EN, CA, PB AND ST RUN AGAINST THE REAL TREE AND NOT INSIDE A FIXTURE ─────
 # Each is a statement about THIS COMMIT'S corpus — how many homes an enum has, whether four
@@ -144,9 +193,23 @@ SELF_VALIDATOR="$HERE/validate-artifacts.sh"
 source "$HERE/validate-artifacts.sh"     # BASH_SOURCE guard prevents dispatch
 set +e
 
-pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""
-PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
-FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); }
+pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; SEEN=""
+# Every verdict records its assertion id — the token before the first colon of the message
+# — so group RS at the foot of this file can ask which GROUPS actually emitted. SKIP has
+# always done this; PASS, FAIL and VACUOUS did not, and that asymmetry IS the gap RS closes.
+# A group deleted, renamed or made unreachable emits nothing at all: it never skips, so it
+# never reaches the strict-skip comparison below and vanishes silently.
+#
+# VACUOUS records too, and that is a deliberate divergence from test-publish-guard.sh, which
+# has no such verb. A VACUOUS verdict means the group RAN and found an empty population, so
+# excluding it would let a group rendering only VACUOUS read as VANISHED and fire RS1
+# spuriously. No group is statically VACUOUS-only today, so this is forward-protection taken
+# now rather than a defect diagnosed later.
+#
+# The two controls stay orthogonal — RS asks "did the group run", strict-skip asks "was the
+# skip declared" — and a group that only ever skips is present to both.
+PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); SEEN="$SEEN${*%%:*} "; }
+FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); SEEN="$SEEN${*%%:*} "; }
 SKIP() { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
 # ── THE DISCRIMINATING-EVIDENCE RULE (DER) — helpers, asserted by group MD ─────────
 #
@@ -209,7 +272,7 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   return 0
 }
 
-VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); }
+VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; }
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
@@ -8305,6 +8368,316 @@ fi
 # the reason is stated at that arm: md_flips removes its subject, while the divergence being
 # graded there has to leave the seam running and answering differently for one spelling. The
 # sentinel is the seam between the primitive's mechanism and that requirement.
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
+#
+# Two documents enumerate the groups that run here, and until this group shipped neither
+# was checked against anything. The coverage boundary in .github/workflows/artifact-schema.yml
+# declared NINE groups and closed with a sentence quantifying over them; the header block at
+# the top of this file declared FOURTEEN. The run emitted TWENTY-SEVEN. Eighteen groups —
+# two thirds of the suite — ran outside the boundary a green check claims to cover, and
+# thirteen ran outside the header a reader trusts. Neither number was a prediction: both
+# were measured on the commit this group was written against.
+#
+# GUARD_STRICT_SKIPS at the foot of this file is a real control and it covers exactly one
+# vanishing mode: a group that SKIPS without being declared. A group deleted, renamed, or
+# made unreachable emits nothing at all — it never skips, so it never reaches that
+# comparison. PASS, FAIL and VACUOUS did not record their ids until this group needed them;
+# only SKIP did. That asymmetry is the defect, and the harness note at the top records the fix.
+#
+# So both enumerations are PARSED and SET-DIFFED BOTH WAYS rather than read and believed.
+# RS1 catches a declared group that stopped emitting; RS2 catches an emitted group that was
+# never declared. A one-way check catches one of those and reads green on the other.
+#
+# THE EXECUTING SET COMES FROM THE RUN, NEVER FROM A STATIC READ OF THIS FILE, and that is a
+# correctness requirement rather than a style preference. A static scan of the verdict call
+# sites yields groups this suite does not run: X, whose only site X1 fires solely when CTL
+# did NOT execute, and ZMDL, which is planted inside md_probe's silent subshell. A statically
+# derived roster would declare both. Membership in SEEN is also the only form that is
+# evidence the group RAN, which is what the discriminating-evidence rule asks of any PASS
+# and what reading this file's text cannot supply.
+#
+# THE CANONICAL ROSTER IS THE WORKFLOW'S, and it deliberately does NOT live in this file. A
+# roster a suite derives from itself is the self-referential-validation defect: deleting a
+# group and its roster line would then be one edit, and the check could never fire. The
+# sibling suite records that reasoning at its own group RS and this design does not get to
+# re-derive it differently. The header block in this file is therefore asserted too, by RS8,
+# but as a SECOND roster graded against the same run — not as the authority.
+#
+# ── THE ROSTER GRAMMAR, AND THE ONE DIVERGENCE FROM THE SIBLING ──────────────────
+# Inside a boundary block, a roster line carries the group id as its leading field at exactly
+# THREE spaces after the comment marker, followed by TWO OR MORE spaces or end-of-line. An
+# explanation continues at eight or nine spaces and therefore cannot match.
+#
+# The sibling's grammar accepts a SINGLE space after the id. Applied here it yields three
+# phantom ids — A, CI and THE — from the prose of this workflow's OUT OF SCOPE block, whose
+# entries are sentences where the sibling's are ids. Those phantoms would enter the declared
+# set, never emit, and fire RS1 on every green run, permanently. The two-space rule is a
+# strict NARROWING of the sibling's and was measured to be a byte-for-byte no-op on the
+# sibling's own 25-id roster, so it does not fork the shared mechanism. Its residual risk —
+# a future OUT OF SCOPE sentence beginning with a capitalised token followed by two spaces —
+# fails LOUDLY: the token enters the declared set, does not emit, and RS1 turns red naming it.
+#
+# A block opens at its declared prefix and closes at the next `# ──` section rule, so a
+# roster-shaped line elsewhere is not read as a declaration. The open case is tested BEFORE
+# the close case because the header block's own opener is itself a `# ──` line.
+#
+# ── X IS DELIBERATELY NOT DECLARED. DO NOT "FIX" THIS BY ADDING A LINE ───────────
+# X1 is reachable only on a run where group CTL did not execute. Declared, X would fire RS1
+# on every green run. Undeclared, it fires RS2 only on a run where CTL has already failed —
+# a second finding riding on an already-red run, never a false red on a green one.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT DO ─────────────────────────────────────
+# It grades a group's EMISSION, not its CONTENT. A group gutted from 35 assertions to 1 still
+# emits and RS stays green. That is DECLINED rather than omitted, on the sibling's recorded
+# reasoning: the failure modes this group exists for — deletion, rename, unreachability — are
+# all zero-verdict conditions the roster already covers, and a declared per-group verdict
+# floor churns on every assertion added and, unraised, silently stops binding. RS0's vacuity
+# guard is the only floor that ships, and it cannot rot.
+#
+# ── REGISTRATION: AN EXPLICIT MD OPT-OUT, NOT A SILENT OMISSION ──────────────────
+# RS's subjects are a TRACKED FILE and the RUN'S OWN EMISSION RECORD. Neither is a shell
+# function, so md_flips — which registers an assertion by removing its subject FUNCTION — has
+# nothing to remove and is inapplicable. The compensating positive controls are RS6 and RS7:
+# they mutate a COPY of the real workflow and require the parse to track it line-for-line in
+# both directions, which is the file-subject analogue of removing a function and watching its
+# assertion flip.
+#
+# ── TWO STANDING CONSTRAINTS ON EVERY LATER CARD ─────────────────────────────────
+# RS MUST REMAIN THE LAST GROUP IN THIS FILE. It reads the complete emitted set; a group
+# emitting after it is invisible to it. A card appending a group inserts BEFORE this banner.
+#
+# RS MUST NEVER BE ADDED TO GUARD_EXPECTED_SKIPS. It is pure bash over two tracked files and
+# has no legitimate skip; an RS that skipped would be indistinguishable from the drift it
+# exists to detect.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group RS — this suite's two stated group rosters, asserted against the run."
+
+RS_WF="$ROOT/.github/workflows/artifact-schema.yml"
+
+# The block opener is a PARAMETER so one parser serves all three blocks — the workflow's two
+# and this file's header — rather than three readers that can disagree about the grammar.
+rs_parse() { # rs_parse <file> <block-open-prefix> -> space-delimited declared GROUP ids
+  local line inb=0 out=" "
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "$2"*)    inb=1; continue ;;
+      '# ──'*)  inb=0 ;;
+    esac
+    [ "$inb" -eq 1 ] || continue
+    [[ "$line" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)(\ \ |$) ]] || continue
+    case "$out" in *" ${BASH_REMATCH[1]} "*) ;; *) out="$out${BASH_REMATCH[1]} " ;; esac
+  done < "$1"
+  printf '%s' "${out# }"
+}
+
+# An assertion id reduced to its GROUP id — the leading run of capitals. This is the id
+# grammar SKIP has always used, taken one step further: ${*%%:*} yields ST-COV[traveler-intake],
+# CTLe, C1a, MD[PP1]; the groups are ST, CTL, C, MD. No second grammar is introduced, because
+# two id namespaces that can disagree is exactly the failure this group is about.
+rs_group() { [[ "$1" =~ ^([A-Z]+) ]] && printf '%s' "${BASH_REMATCH[1]}"; }
+
+# Set difference: members of <a> absent from <b>, deduped, first-occurrence order. Used in
+# BOTH directions, and with an empty <b> it is the dedupe — so the workflow's two blocks
+# union through this helper rather than through a fifth one. Membership is by containment in
+# a space-delimited haystack and NEVER by comm, which requires both sides lexically sorted
+# and answers wrongly otherwise; st_setdiff above already records that reason.
+rs_diff() { # rs_diff <a-set> <b-set> -> space-delimited members of a not in b
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  printf '%s' "${out# }"
+}
+
+rs_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# The ids this run actually emitted, reduced to groups: SEEN ∪ SKIPPED. The union is
+# load-bearing — a group whose only emission is a declared skip still RAN as far as this
+# question is concerned, and asking otherwise would duplicate the strict-skip control
+# instead of complementing it.
+RS_EMITTED=" "
+# shellcheck disable=SC2086
+for rsid in $SEEN $SKIPPED; do
+  rsg="$(rs_group "$rsid")"
+  [ -n "$rsg" ] || continue
+  case "$RS_EMITTED" in *" $rsg "*) ;; *) RS_EMITTED="$RS_EMITTED$rsg " ;; esac
+done
+# RS is emitting its own verdicts on the next lines, so it is a member of the emitted set by
+# construction — SEEN cannot yet hold a verdict this group has not printed. Added explicitly
+# rather than left implicit, because this is what makes RS2 and RS8 require RS's OWN roster
+# line in each document exactly as they require every other live group's.
+case "$RS_EMITTED" in *" RS "*) ;; *) RS_EMITTED="${RS_EMITTED}RS " ;; esac
+RS_EMITTED="${RS_EMITTED# }"
+
+RS_DECLARED=""; RS_READABLE=0
+if [ -r "$RS_WF" ]; then
+  RS_READABLE=1
+  RS_DECLARED="$(rs_diff "$(rs_parse "$RS_WF" '# IN SCOPE') $(rs_parse "$RS_WF" '# OUT OF SCOPE')" "")"
+fi
+RS_HDR=""; RS_SELFREAD=0
+if [ -r "$SELF" ]; then RS_SELFREAD=1; RS_HDR="$(rs_parse "$SELF" '# ── WHAT IT ASSERTS')"; fi
+RS_NDEC="$(rs_count "$RS_DECLARED")"
+RS_NEMIT="$(rs_count "$RS_EMITTED")"
+RS_NHDR="$(rs_count "$RS_HDR")"
+
+# RS0 runs FIRST and the ordering is what makes every zero below mean something. A parse that
+# reads zero ids makes its set-diffs empty and the arms pass against nothing — a probe failure
+# wearing a pass. Unreadable, zero-parsed and zero-emitted are each a distinct FAIL with its
+# own diagnosis, and only then may the diffs render a verdict.
+if [ "$RS_READABLE" -ne 1 ]; then
+  FAIL "RS0: the coverage boundary at .github/workflows/artifact-schema.yml is unreadable, so every verdict below would cover nothing — a roster that cannot be read is a finding, never a clean scan"
+elif [ "$RS_SELFREAD" -ne 1 ]; then
+  FAIL "RS0: this suite's own file is unreadable at '$SELF', so the header roster RS8 grades could not be parsed at all. The path is resolved before the validator is sourced; if that resolution moved, RS8's verdict is not trustworthy"
+elif [ "$RS_NDEC" -eq 0 ]; then
+  FAIL "RS0: the coverage boundary parsed to 0 group ids, so both set-diffs would be empty and would pass against nothing. The grammar is one id per line at THREE spaces after the comment marker followed by TWO OR MORE spaces, inside the IN SCOPE / OUT OF SCOPE blocks of .github/workflows/artifact-schema.yml — either a block moved or the grammar did, and no verdict below is trustworthy"
+elif [ "$RS_NEMIT" -eq 0 ]; then
+  FAIL "RS0: this run emitted 0 group ids, so both rosters would be compared against an empty run. PASS/FAIL/SKIP/VACUOUS record the token before the first colon; if that grammar moved, every comparison below is vacuous"
+elif [ "$RS_NHDR" -eq 0 ]; then
+  FAIL "RS0: the WHAT IT ASSERTS header block in this file parsed to 0 group ids, so RS8 would compare the run against an empty set and pass. The block opens at a '# ──' section rule and closes at the next one — either it moved, was renamed, or its roster lines stopped matching the two-space grammar"
+else
+  PASS "RS0: both rosters are readable and non-degenerate — ${RS_NDEC} group id(s) parsed from .github/workflows/artifact-schema.yml, ${RS_NHDR} from this file's WHAT IT ASSERTS header, ${RS_NEMIT} emitted by this run. Every arm below is therefore a measurement rather than an empty scan"
+
+  RS_MISSING="$(rs_diff "$RS_DECLARED" "$RS_EMITTED")"
+  if [ -n "$RS_MISSING" ]; then
+    FAIL "RS1: declared group(s) emitted no verdict in this run: ${RS_MISSING% } — deleted, renamed or unreachable. A vanished group emits nothing at all, so it never skips and GUARD_STRICT_SKIPS never sees it. Either restore the group or remove its line from the IN SCOPE block of .github/workflows/artifact-schema.yml"
+  else
+    PASS "RS1: all ${RS_NDEC} declared group(s) emitted at least one verdict — no declared group vanished from the run (denominator: ${RS_NEMIT} emitted group ids)"
+  fi
+
+  RS_EXTRA="$(rs_diff "$RS_EMITTED" "$RS_DECLARED")"
+  if [ -n "$RS_EXTRA" ]; then
+    FAIL "RS2: group(s) emitted verdicts but are not declared in the coverage boundary: ${RS_EXTRA% } — they run outside the boundary the closing sentence of .github/workflows/artifact-schema.yml quantifies over, so a green check there claims more than it proves. REMEDY: add one line per id to the IN SCOPE block of .github/workflows/artifact-schema.yml, in the form '#' then THREE spaces, the id, then TWO OR MORE spaces, then a one-line description. The two-or-more-spaces rule is this suite's one divergence from test-publish-guard.sh, whose roster accepts a single space — a line copied from that file in the single-space form parses to NOTHING here and earns a second identical red"
+  else
+    PASS "RS2: all ${RS_NEMIT} emitted group(s) are declared in the coverage boundary — nothing ran outside it, so that workflow's \"a green check means…\" closing sentence is true of this run rather than merely stated"
+  fi
+
+  RS_INTER=0
+  # shellcheck disable=SC2086
+  for rsid in $RS_EMITTED; do
+    case " $RS_DECLARED " in *" $rsid "*) RS_INTER=$((RS_INTER+1)) ;; esac
+  done
+  PASS "RS3: INVENTORY — |declared| = ${RS_NDEC}, |emitted| = ${RS_NEMIT}, |declared ∩ emitted| = ${RS_INTER}, |header| = ${RS_NHDR}. The zeros above and below are stated against those denominators, not against an unstated one. This arm REPORTS and does not assert — it is unconditional by design, the way MD3 reports its own population"
+
+  # ── RS4 … RS7: the controls on the controls ─────────────────────────────────────
+  # An arm that reports "no difference" is worth exactly as much as the evidence that it CAN
+  # report a difference. RS4 and RS5 mutate the two SETS one at a time; RS6 and RS7 mutate the
+  # FILE and re-parse it, which is the only pair that proves the roster is genuinely read from
+  # the workflow on this run rather than computed from something already in this process.
+  # Every victim is chosen from live data, so no id is hardcoded and none can rot.
+  #
+  # Each control grades the DELTA its own mutation caused — its predicate over the mutated
+  # input MINUS its output over the real one — never the raw output. That difference matters
+  # on exactly the run that matters: when RS1 or RS2 has a genuine finding, a control written
+  # as an exact-equality test fails too, and cascading control failures bury the one real
+  # finding the operator needs to read. A control must stay valid whether or not the arm it
+  # controls is currently clean.
+  #
+  # RS6 and RS7 write their fixtures under $WORK — the suite's mktemp -d, trapped on EXIT.
+  # Nothing is written into the tree; CTLe grades that property and this group must not be
+  # what turns it red.
+
+  RS_V1=""; for rsid in $RS_EMITTED; do RS_V1="$rsid"; break; done
+  RS_E4="$(rs_diff "$RS_EMITTED" "$RS_V1")"      # the emitted set with one real group gone
+  RS_M4="$(rs_diff "$RS_DECLARED" "$RS_E4")"     # RS1's own predicate, over that
+  RS_D4="$(rs_diff "$RS_M4" "$RS_MISSING")"      # what the mutation ADDED to RS1's finding
+  if [ "${RS_D4% }" = "$RS_V1" ]; then
+    PASS "RS4: CONTROL on RS1 — removing group '${RS_V1}' from the emitted set adds exactly '${RS_V1}' to RS1's finding and nothing else. RS1's verdict above is a measurement: the arm fires when a declared group stops emitting"
+  else
+    FAIL "RS4: CONTROL on RS1 did not fire as specified — removing '${RS_V1}' from the emitted set added '${RS_D4% }' to RS1's finding rather than '${RS_V1}'. RS1's clean verdict proves nothing until this control fires"
+  fi
+
+  RS_X5="$(rs_diff "$RS_EMITTED ZZQ" "$RS_DECLARED")"   # RS2's predicate, with a synthetic id
+  RS_D5="$(rs_diff "$RS_X5" "$RS_EXTRA")"               # what the mutation ADDED
+  if [ "${RS_D5% }" = "ZZQ" ]; then
+    PASS "RS5: CONTROL on RS2, ADD-ONLY — a synthetic group id 'ZZQ' added to the emitted set with EVERY existing declaration left intact adds exactly 'ZZQ' to RS2's finding and nothing else. RS2 is therefore not addition-blind: a group added with no roster line turns it red"
+  else
+    FAIL "RS5: CONTROL on RS2 did not fire as specified — a synthetic 'ZZQ' added to the emitted set added '${RS_D5% }' to RS2's finding rather than 'ZZQ'. RS2's clean verdict proves nothing until this control fires"
+  fi
+
+  # RS6 victim: the first declared id this run also emitted, so removing its declaration
+  # produces a genuine emitted-but-undeclared finding rather than a vacuous one.
+  RS_V2=""
+  # shellcheck disable=SC2086
+  for rsid in $RS_DECLARED; do
+    case " $RS_EMITTED " in *" $rsid "*) RS_V2="$rsid"; break ;; esac
+  done
+  RS_COPY6="$WORK/rs-roster-minus-one.yml"
+  : > "$RS_COPY6"
+  while IFS= read -r rsline || [ -n "$rsline" ]; do
+    if [[ "$rsline" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)(\ \ |$) ]] && [ "${BASH_REMATCH[1]}" = "$RS_V2" ]; then
+      continue
+    fi
+    printf '%s\n' "$rsline" >> "$RS_COPY6"
+  done < "$RS_WF"
+  RS_DEC2="$(rs_diff "$(rs_parse "$RS_COPY6" '# IN SCOPE') $(rs_parse "$RS_COPY6" '# OUT OF SCOPE')" "")"
+  RS_N2="$(rs_count "$RS_DEC2")"
+  RS_X6="$(rs_diff "$RS_EMITTED" "$RS_DEC2")"    # RS2's predicate against the mutated roster
+  RS_D6="$(rs_diff "$RS_X6" "$RS_EXTRA")"        # what deleting that one line ADDED
+  if [ -z "$RS_V2" ]; then
+    FAIL "RS6: CONTROL on the parser could not run — no declared group id was also emitted, which contradicts RS1/RS2 above and means the two sets are not being read from what they claim"
+  elif [ "$RS_N2" -ne $((RS_NDEC - 1)) ]; then
+    FAIL "RS6: CONTROL on the parser — deleting group '${RS_V2}'s roster line from a COPY of the workflow changed the parsed count from ${RS_NDEC} to ${RS_N2}, not to $((RS_NDEC - 1)). The parse is not tracking the file line-for-line, so the declared set above is not the file's"
+  elif [ "${RS_D6% }" = "$RS_V2" ]; then
+    PASS "RS6: CONTROL on the parser, REMOVAL — deleting group '${RS_V2}'s roster line from a COPY of the workflow drops the parsed count ${RS_NDEC} → ${RS_N2} and adds exactly '${RS_V2}' to RS2's finding. The roster is read from the workflow on every run, not derived from this file, so deleting a group and its declaration in one edit cannot pass"
+  else
+    FAIL "RS6: CONTROL on the parser did not fire as specified — deleting '${RS_V2}'s roster line from a copy of the workflow added '${RS_D6% }' to RS2's finding rather than '${RS_V2}'"
+  fi
+
+  # RS7 is RS6's ADD-ONLY twin on the same subject: a synthetic declaration is APPENDED to a
+  # copy of the real file with every existing roster line intact. It is written immediately
+  # after the IN SCOPE opener so it is unambiguously inside the block.
+  RS_COPY7="$WORK/rs-roster-plus-one.yml"
+  : > "$RS_COPY7"
+  while IFS= read -r rsline || [ -n "$rsline" ]; do
+    printf '%s\n' "$rsline" >> "$RS_COPY7"
+    case "$rsline" in
+      '# IN SCOPE'*) printf '#   ZZW   a synthetic roster line written by RS7 into a COPY, never into the tree\n' >> "$RS_COPY7" ;;
+    esac
+  done < "$RS_WF"
+  RS_DEC3="$(rs_diff "$(rs_parse "$RS_COPY7" '# IN SCOPE') $(rs_parse "$RS_COPY7" '# OUT OF SCOPE')" "")"
+  RS_N3="$(rs_count "$RS_DEC3")"
+  RS_X7="$(rs_diff "$RS_DEC3" "$RS_EMITTED")"    # RS1's predicate against the mutated roster
+  RS_D7="$(rs_diff "$RS_X7" "$RS_MISSING")"      # what adding that one line ADDED
+  if [ "$RS_N3" -ne $((RS_NDEC + 1)) ]; then
+    FAIL "RS7: CONTROL on the parser — appending one synthetic roster line to a COPY of the workflow changed the parsed count from ${RS_NDEC} to ${RS_N3}, not to $((RS_NDEC + 1)). The parser is blind to an added declaration, so RS1's denominator is not the file's"
+  elif [ "${RS_D7% }" = "ZZW" ]; then
+    PASS "RS7: CONTROL on the parser, ADD-ONLY — one synthetic roster line appended to a COPY of the workflow with every existing line intact raises the parsed count ${RS_NDEC} → ${RS_N3} and adds exactly 'ZZW' to RS1's finding. The parse sees an ADDITION as well as a removal, in the real file's own grammar"
+  else
+    FAIL "RS7: CONTROL on the parser did not fire as specified — appending a synthetic roster line to a copy of the workflow added '${RS_D7% }' to RS1's finding rather than 'ZZW'"
+  fi
+
+  # ── RS8 / RS9: the SECOND roster — this file's own WHAT IT ASSERTS header block ──
+  # Two derived comparisons over ONE extracted set are two assertions, so this one gets its
+  # own arm and its own MUST-FIRE control rather than inheriting RS2's. It is graded against
+  # RS_EMITTED — the same derived executing set — and NOT against the workflow's roster,
+  # deliberately: against the workflow, a group missing from BOTH documents would leave this
+  # diff empty and the header's staleness would stay hidden until the workflow was fixed,
+  # earning a second red run for one omission. Against the run, both rosters go red together
+  # and one edit closes both.
+  RS_HDR_EXTRA="$(rs_diff "$RS_EMITTED" "$RS_HDR")"     # emitted, absent from the header
+  RS_HDR_MISSING="$(rs_diff "$RS_HDR" "$RS_EMITTED")"   # in the header, emitted nothing
+  if [ -n "$RS_HDR_EXTRA" ]; then
+    FAIL "RS8: group(s) emitted verdicts but are not declared in this file's WHAT IT ASSERTS header: ${RS_HDR_EXTRA% } — a reader trusting that block is told this suite grades less than it does. REMEDY: add one line per id to the WHAT IT ASSERTS block at the top of scripts/test-artifact-schema.sh, in the form '#' then THREE spaces, the id, then TWO OR MORE spaces, then a one-line description; continuation lines indent to eight spaces so they cannot be read as declarations. The same two-or-more-spaces rule RS2 states applies here, and for the same reason"
+  elif [ -n "$RS_HDR_MISSING" ]; then
+    FAIL "RS8: group(s) declared in this file's WHAT IT ASSERTS header emitted no verdict in this run: ${RS_HDR_MISSING% } — deleted, renamed or unreachable. Either restore the group or remove its line from the WHAT IT ASSERTS block at the top of scripts/test-artifact-schema.sh"
+  else
+    PASS "RS8: this file's WHAT IT ASSERTS header declares exactly the ${RS_NEMIT} group(s) this run emitted, in both directions — the block a reader meets first is true of the suite underneath it rather than a description that stopped being checked"
+  fi
+
+  RS_X9="$(rs_diff "$RS_EMITTED ZZH" "$RS_HDR")"        # RS8's predicate, with a synthetic id
+  RS_D9="$(rs_diff "$RS_X9" "$RS_HDR_EXTRA")"           # what the mutation ADDED
+  if [ "${RS_D9% }" = "ZZH" ]; then
+    PASS "RS9: CONTROL on RS8, ADD-ONLY — a synthetic group id 'ZZH' added to the emitted set with EVERY existing header declaration left intact adds exactly 'ZZH' to RS8's finding and nothing else. RS8's zero above is a measurement, and it carries this control rather than borrowing RS5's: a second comparison whose PASS rested on the first arm's control would be a PASS nothing earned"
+  else
+    FAIL "RS9: CONTROL on RS8 did not fire as specified — a synthetic 'ZZH' added to the emitted set added '${RS_D9% }' to RS8's finding rather than 'ZZH'. RS8's clean verdict proves nothing until this control fires"
+  fi
+fi
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \

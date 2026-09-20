@@ -84,6 +84,63 @@ name: Artifact schema
 #        binding it is stated: every emittable code has a must-fire arm, and a code added
 #        by a later slice adds its arm in the same change. A count copied into this file
 #        would be a copy with no assertion behind it
+#   HC   the class heading and the validator's constant for it are ONE string with two
+#        homes, and the count inside that heading equals the number of rows the validator
+#        extracts. A document edit that leaves the constant behind would otherwise make
+#        every downstream group read green over ZERO rows
+#   UF   every schema declares every key of the universal frontmatter block. The key set is
+#        read FROM that block and the corpus from the schema directory, so no count is
+#        pinned and a schema that drops a required field cannot leave this suite's output
+#        byte-identical — which is what it used to do, measured rather than predicted
+#   LC   the value and key classifiers answer the same under every locale the host declares.
+#        A bracket range resolves against the collating sequence, so an unpinned range made
+#        CI enforce a rule an operator's own run did not
+#   FW   the frozen regression witness is held by an ASSERTION rather than by a review
+#        convention, which is a person remembering rather than a gate
+#   PS   the per-event status presence check has a witness in the shipped corpus, and its
+#        SILENCE on the trip carrying both files is earned rather than assumed
+#   LS   the locked-elements seed trigger: which trip's declared elements a seed would fire
+#        on, graded over a population this suite MEASURES rather than names
+#   VI   the venue-identity split rule has a witness. A merge is a claim, so the claim is
+#        asserted to carry the rung that warrants it
+#   C    the skip predicate, made observable rather than asserted — an unversioned artifact
+#        wrong in three ways contributes ZERO to the failure count, and the byte-identical
+#        fixture with a schema-version added does fail. The two arms the suite's own header
+#        calls the point of this suite
+#   MD   the discriminating-evidence rule, asserted against the suite file itself: no PASS
+#        may be reached on a branch a DEGENERATE outcome also reaches. The oracle that
+#        grades it is itself controlled in both directions
+#   AF   the archived-trip freeze and the one operation that reaches through it — an
+#        ordinary person edit leaves an archived trip untouched, and erasure reaches it
+#        anyway. Both halves, against a tracked fixture
+#   PF   no verdict in this suite, or in the validator it sources, is decided by a
+#        pipeline's exit status. Closed at the SHAPE rather than at any one arm, because
+#        that helper carries both polarities and the dangerous one is a silent false GREEN
+#   ER   the erasure verb's declared contract, and the two fixture properties the
+#        post-state grading of group AF cannot reach
+#   RL   reconcile-on-link: the state of the two tracked witnesses the link survey is
+#        graded on — totality over the resolving pair, and the negative over the unlinked
+#        fixture, which carries no reference and no reachable store. Nothing in it is pinned
+#   XT   extract: the state of the fixtures the extraction verb is graded on, the scope
+#        property separating one refusal rule from its unscoped drafting, and the normative
+#        statements no behavioural witness in a tree of prompt files can reach
+#   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The
+#        real store is git-ignored, so a mark no tracked fixture carries is a grammar
+#        nothing grades
+#   CE   the cost-entry surfaces: a priced-entity class denominator derived from two
+#        independently movable tables, plus the JOIN between them — the limb most likely to
+#        be wrong while every other reads green, because two non-empty sets keyed
+#        differently intersect in nothing
+#   DH   derived trip history: the NEGATIVE assertion the person-record schema names as its
+#        own debt — the durable form emits zero trip and destination labels
+#   GM   reusable groups: the membership boundary mechanised, and the twin negative
+#        assertion that was left as prose while its counterpart shipped
+#   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
+#        BOTH WAYS against the groups the run actually emitted. The executing set comes from
+#        the RUN, never from a static read of the suite. A group added and left undeclared
+#        turns RS2 red rather than narrowing this gate silently, which is the defect this
+#        boundary was previously exposed to. Roster-line format: '#' then three spaces, the
+#        id, then TWO OR MORE spaces, then one line of description
 #
 # ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
 # GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo, so
