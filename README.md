@@ -196,7 +196,7 @@ Three publish actions stay deliberately outside this surface and remain terminal
 
 ### Traveler profiles
 
-Each person travelling gets their own profile, copied from `templates/traveler-intake.template.md` into `trips/<destination>-<year>/travelers/`. It captures what someone **needs** (the constraints a plan has to stay inside — heat, mobility, diet, rest) separately from what they **want** (desires the plan tries to land within those bounds), plus their leanings, dates, budget, journey, lodging and party.
+Each person travelling gets their own profile, copied from `templates/traveler-intake.template.md` into `trips/<destination>-<year>/travelers/`. It captures what someone **wants** for this trip — desires the plan tries to land, each with its own priority tier — plus their leanings, dates, journey, lodging and party. What someone **needs** (the constraints a plan has to stay inside — heat, mobility, diet, rest) is a durable fact about the person rather than about one trip, so this form does not ask for it: needs are asked on the durable profile described next, and anything that has to be worked around for one trip alone goes in that trip's own `trip-context.md`.
 
 The answers that stay the same from one trip to the next — a passport's issuing country, a standing allergy, how you like to travel — are asked once instead, on a durable profile at `templates/person-intake.template.md`, held in `people/` and pointed at by a single `person:` line in the trip form. Filling one is optional and has no ordering requirement: a trip form on its own is complete, and a record written later is picked up on the next run.
 
