@@ -1,9 +1,14 @@
 # actionlint configuration for travel-planner
 #
-# Scopes a shellcheck SC2016 suppression to .github/workflows/pr-body-parser-clean.yml,
-# whose embedded shell scripts intentionally use single-quoted expressions (literal grep
-# patterns and bash variables that must not expand). SC2016 ("expressions don't expand in
-# single quotes") is a false positive there, so it is silenced for that one file only.
+# Scopes a shellcheck SC2016 suppression to .github/workflows/pr-body-parser-clean.yml.
+# The justification is structural rather than provenance: that workflow echoes the override
+# marker into the step summary wrapped in markdown backticks, inside single quotes so the
+# backticks are not read as command substitution — two such strings, both in report-only
+# blocks. SC2016 ("expressions don't expand in single quotes") flags exactly that shape, so
+# it is a false positive there and is silenced for that one file only. This wording is the
+# measured one and matches security.yml's "Run actionlint" comment; an earlier version of
+# both named literal grep patterns and non-expanding bash variables, which a four-arm
+# shellcheck discriminator falsified — a lone trailing `$` does not fire SC2016.
 #
 # Version note: actionlint v1.7.1 (pinned in security.yml) does not support the `paths`
 # config schema, so on that pin the load-bearing suppression is the `-ignore` flag in the
