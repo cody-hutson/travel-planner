@@ -130,6 +130,10 @@ nothing at all.
 substituted into it and did not rebuild it, so that date did not move. A regeneration
 would have moved it.
 
+The `· checked` marker carries the composition date because every composition
+re-derives the set; nothing else in this fixture records the check, and a later date
+would assert one the freeze forbids.
+
 ## The declaration
 
 Group `AF` reads the fence below and holds no copy of it, the same
@@ -155,7 +159,7 @@ survivor Dana
 marker examples/archived-trip-demo/trip-context.md ARCHIVED
 
 # pin <content-address> <path>
-pin 9243b408390a8eea7f31831c682b81d25bff6fa0 examples/archived-trip-demo/outputs/traveler-model.md
+pin 44214dbfd43a040ac05cc49fd06da4facbaac179 examples/archived-trip-demo/outputs/traveler-model.md
 pin 9ea67a3071eb0419025ca178cc9cd312ca38d5f4 examples/archived-trip-demo/travelers/dana.md
 pin 2a6594c117d1cc2c614640ad8f68fc4aaa557c35 examples/archived-trip-demo/travelers/per-4f1c.md
 pin c4201da97179b02b0128b08e76747bf643f7df85 examples/archived-trip-demo/trip-context.md

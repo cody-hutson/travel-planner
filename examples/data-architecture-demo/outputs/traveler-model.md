@@ -65,14 +65,10 @@ contradict the paragraph above.** The per-traveller document set is computed fro
 traveller's facets plus researched entry policy rather than stated by the traveller
 (`agents/00-enrichment.md` § *Derive the per-traveler document set*;
 `reference/data-model.md` § *Lifecycle facets*), so no reader should take it for an
-added facet. Its **value** is em-dashed on the two projected entries for the same
-reason `Passport:` is em-dashed in the source profiles: `reference/data-architecture.md`
-§ 5.6 now carries a `Documents` row scoped to this very class, and a tracked,
-world-readable worked example is the one place a declared non-publishable value must not
-go. The label ships because the guard's field limb reads it from this class; the em dash
-keeps the field demonstrated and empty at the same time. Sam's entry states `unknown`
-instead, and that is not an exception to the rule: `unknown` is the declared *absence*
-the profile-less branch requires, never a derived set.
+added facet. Every first-party entry here states `unknown` with its reason and its
+date, because no source in this trip states a passport country for any of them —
+which is why Sam's entry is not an exception to the rule but the shape all of them
+take.
 
 ## Alex
 
@@ -100,7 +96,7 @@ label, never a weight, and nothing here scores it.
 
 **Derived**
 
-- **Documents:** —
+- **Documents:** unknown — no passport country on file · checked 2026-08-29
 
 ## Robin
 
@@ -124,7 +120,7 @@ label, never a weight, and nothing here scores it.
 
 **Derived**
 
-- **Documents:** —
+- **Documents:** unknown — no passport country on file · checked 2026-08-29
 
 ## Sam `[OPERATOR-PROVIDED]`
 
@@ -147,7 +143,7 @@ here rather than inferred from an empty table there.
 
 **Derived**
 
-- **Documents:** unknown — no passport country on file
+- **Documents:** unknown — no passport country on file · checked 2026-08-29
 
   The profile-less form. A traveller with no filed profile still carries the line, so a
   consumer reads *unknown* rather than *nothing required* — the same rule that makes an

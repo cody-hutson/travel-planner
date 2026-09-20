@@ -67,7 +67,7 @@ by a rebuild.
 
 **Derived**
 
-- **Documents:** —
+- **Documents:** unknown — no passport country on file · checked 2025-10-08
 
 ## per-4f1c `[ERASED]`
 
@@ -87,7 +87,7 @@ by a rebuild.
 
 **Derived**
 
-- **Documents:** —
+- **Documents:** unknown — no passport country on file · checked 2025-10-08
 
 ## per-9a3e `[ERASED]` `[OPERATOR-PROVIDED]`
 
@@ -107,7 +107,7 @@ never "no desires"**, so this entry contributes no row to a desire-coverage tabl
 
 **Derived**
 
-- **Documents:** unknown — no passport country on file
+- **Documents:** unknown — no passport country on file · checked 2025-10-08
 
 ## per-b70d `[ERASED]` `[OPERATOR-PROVIDED]` `[THIRD-PARTY]`
 
@@ -126,8 +126,6 @@ anywhere, and no entry at all without operator input.
 *None recorded.* `ADR-006` restricts this class to needs.
 
 **Derived**
-
-- **Documents:** unknown — no passport country on file
 
 **This entry names no trip-level constraint, and the em dash is structural rather than
 an omission.** `reference/adr/ADR-006-third-party-data-capture.md` bars a `[THIRD-PARTY]`
