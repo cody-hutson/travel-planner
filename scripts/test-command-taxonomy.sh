@@ -129,6 +129,12 @@
 #     C4 TOTALITY — every coverage unit resolves to exactly one side
 #     C5 the standing confirm rule is PRESENT in every verb file and stated alike, read from the
 #        files' own text — PRESENCE ONLY: the rule is dormant, and C5 says nothing of behaviour
+#     C6 SET COMPOSITION — the same line quantified over a declared set's MEMBERSHIP rather than
+#        over an arm. A disposition member declares nothing, so under ADR-007 § 1's fail-closed
+#        rule it retains declared intent and the set with it; a set carrying one therefore names
+#        at least one unit member that retains it too. What is refused is the set whose readings
+#        DISAGREE — all units admitted beside a disposition — which was authorable with every
+#        assertion in this file green
 #
 #   L   the LANDING SURFACE — the guided-entry carrier at the engine root      (group L)
 #     L1 the carrier names a verb token · L2 it carries disable-model-invocation
@@ -2359,6 +2365,13 @@ inference_check() {
   local recs="$1" carrier="$2"
   local rc=0 line t1 t2 t3 t4 rrec
   local -a NK=() NB=() GK=() GC=() PC=() PV=() CFK=() DK=() DKC=() FILES=() RLC=() RLV=() RUC=() RUT=()
+  # ── The two SET channels, read here for C6 and for nothing else. They are the same records
+  # coverage_check reads, off the same stream, parsed field for field the same way — the set
+  # ordinal, then the member. This function does not re-derive them and holds no second copy:
+  # what it adds is the SIDE of each unit member, which it already derives for C1 and C2 from
+  # NK/NB, so the composition rule is the existing side function quantified over a set's
+  # membership rather than a second notion of what a member is.
+  local -a MS=() MC=() MV=() DS=()
 
   while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in
@@ -2371,6 +2384,12 @@ inference_check() {
       'DECL '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; DK+=( "$t2:$t3" ); DKC+=( "$t2" ) ;;
       'FILE '*)    IFS=' ' read -r t1 t2 <<< "$line"; FILES+=( "$t2" ) ;;
       'ROLE '*)    IFS=' ' read -r t1 t2 t3 <<< "$line"; RLC+=( "$t2" ); RLV+=( "$t3" ) ;;
+      # Four fields into four variables, three into three — the transport rule this file states
+      # at invocation_check, applied here exactly as coverage_check applies it to the same two
+      # records. C6 reads a disposition member's SET ORDINAL and never its reason, so the reason
+      # field is discarded rather than read into a variable that nothing consults.
+      'AMBPARTS '*)  IFS=' ' read -r t1 t2 t3 t4 <<< "$line"; MS+=( "$t2" ); MC+=( "$t3" ); MV+=( "$t4" ) ;;
+      'DISPPARTS '*) IFS=' ' read -r t1 t2 t3 <<< "$line"; DS+=( "$t2" ) ;;
     esac
   done <<< "$recs"
 
@@ -2480,6 +2499,79 @@ inference_check() {
   done
   printf 'COUNT CJ1 %d\n' "$n_j1"
   printf 'COUNT CJ2 %d\n' "$n_j2"
+
+  # ── C6 — SET COMPOSITION, FAIL-CLOSED. The inference line quantified over a SET's membership
+  # rather than over an arm.
+  #
+  # WHAT WAS AUTHORABLE BEFORE IT. A declared ambiguity set holds members of two kinds and only
+  # one of them carries an entry class: a UNIT member's class is its own verb's, and a DISPOSITION
+  # member has none — it is not an arm and owns no read-declaration block to declare one in.
+  # Nothing said which side it counted on, so a set pairing a disposition with unit members that
+  # are ALL inference-admitted could be authored with this entire suite green. Measured, not
+  # supposed: rewriting one live set's verb to an inference-admitted one left every verdict line
+  # of this suite byte-identical, while K1 still counted the row's member and the set arms still
+  # fired in the same run.
+  #
+  # THE RULE IS THE CORPUS'S, NOT THIS FILE'S. ADR-007 § 3's set-obligations bullet composes a
+  # set's entry class FAIL-CLOSED from its members' own sides, by applying § 1's own line to a
+  # member: a member declaring none of the negatives retains declared intent — silence included —
+  # so a set carrying a disposition member retains it too, and names at least one unit member that
+  # does the same. This function holds no copy of that requirement and no list on either side: it
+  # derives each unit member's side from NK/NB, live, exactly as C1 and C2 already derive an arm's.
+  #
+  # WHY THE PREDICATE IS "EVERY UNIT MEMBER ADMITTED" RATHER THAN "THE SET IS RETAINED". The second
+  # is a tautology under the rule and has no failing shape — a set with a disposition member is
+  # retained by construction, so an assertion of it could never go red. What is refusable is the set
+  # whose two readings DISAGREE: membership reading admitted, rule reading retained. That is exactly
+  # the all-admitted composition, and it is the one shape in which the fail-closed side is legible
+  # from the rule alone and not from the row. A set carrying a retained unit member reads retained
+  # under either reading and is not a finding; arm GC6b is that near-miss — an admitted unit member
+  # standing BESIDE a retained one — and it must stay green or this predicate is a blanket ban on
+  # admitted members rather than a composition rule.
+  #
+  # FAIL-CLOSED IN THE OTHER DIRECTION TOO. A member whose side cannot be derived — no
+  # read-declaration record for the unit it resolves to — counts RETAINED here, so an underived
+  # side can never manufacture a C6. That state is already a C4 and the run is red before this
+  # line is read; this clause decides only which finding gets to name it.
+  local -a C6SETS=()
+  local ci cj cm cu c6_sets=0 c6_hits=0 c6_units=0 c6_ret=0 c6_key c6_side c6_names
+  for (( ci=0; ci<${#DS[@]}; ci++ )); do
+    in_list "${DS[$ci]}" "${C6SETS[@]+"${C6SETS[@]}"}" || C6SETS+=( "${DS[$ci]}" )
+  done
+  c6_sets=${#C6SETS[@]}
+  for (( ci=0; ci<c6_sets; ci++ )); do
+    c6_units=0; c6_ret=0; c6_names=''
+    for (( cj=0; cj<${#MC[@]}; cj++ )); do
+      [ "${MS[$cj]}" = "${C6SETS[$ci]}" ] || continue
+      c6_units=$((c6_units+1))
+      # The member's coverage unit, computed by the SAME rule coverage_check computes it, so the
+      # two cannot disagree about which unit a member names.
+      c6_key=''
+      if [ "${MV[$cj]}" = '-' ]; then
+        for cu in "${UNITS[@]+"${UNITS[@]}"}"; do
+          case "$cu" in "${MC[$cj]}"|"${MC[$cj]}":*) c6_key="$cu" ;; esac
+        done
+      else
+        c6_key="${MC[$cj]}:${MV[$cj]}"
+      fi
+      [ -n "$c6_key" ] || c6_key='UNRESOLVED'
+      c6_side='RETAIN'
+      for (( cm=0; cm<nblocks; cm++ )); do
+        if [ "${NK[$cm]}" = "$c6_key" ]; then
+          if [ "${NB[$cm]}" -eq 7 ]; then c6_side='ADMIT'; else c6_side='RETAIN'; fi
+          break
+        fi
+      done
+      [ "$c6_side" = 'RETAIN' ] && c6_ret=$((c6_ret+1))
+      c6_names="$c6_names${c6_names:+, }$c6_key=$c6_side"
+    done
+    if [ "$c6_units" -gt 0 ] && [ "$c6_ret" -eq 0 ]; then
+      c6_hits=$((c6_hits+1))
+      printf 'FINDING C6 the declared ambiguity set %s carries a disposition member beside unit member(s) that are ALL inference-admitted [ %s ] — a member that declares nothing retains declared intent, so this set retains it while its own membership reads admitted. Name a unit member that retains declared intent, or drop the disposition member: a set whose side is legible only from the rule and not from the row is how resolving a set by inference gets authored with every check green\n' "${C6SETS[$ci]}" "$c6_names"; rc=1
+    fi
+  done
+  printf 'COUNT CDISPSETS %d\n' "$c6_sets"
+  printf 'COUNT CCOMPOSE %d\n' "$c6_hits"
 
   # ── C2 / C3 — the per-arm confirm obligation, and the per-limb report that makes it readable.
   # C2 quantifies over the DECLARED-INTENT side derived from the source, not over the marker:
@@ -3186,7 +3278,22 @@ gen_charter() {  # gen_charter <dir> <defect>
     fi
     # ── The disposition defect rows. Each plants ONE defect beside the two conforming sets
     # every world above already carries, so its arm grades the new predicate rather than the
-    # fixture. dispdiff is the ONLY must-NOT-fire world here and is read by GK5e.
+    # fixture. dispdiff and dispmixed are the must-NOT-fire worlds here, read by GK5e and GC6b.
+    #
+    # ── THE SET-COMPOSITION PAIR, read by GC6 and GC6b. Both carry a disposition member beside
+    # FIXTURE_ADMIT_KEY — the one key this fixture marks inference-admitted, and the one whose
+    # command file gen_cmd gives all three negatives, so the two surfaces cannot drift apart about
+    # which member is admitted. They differ in exactly ONE thing: whether a RETAINED unit member
+    # stands beside the admitted one. That is the whole of what C6 grades, so the pair is the
+    # whole of the evidence for it.
+    #   dispalladmit — every unit member admitted beside a disposition. The refused composition:
+    #                  its own membership reads admitted while the fail-closed rule retains it.
+    #   dispmixed    — the same set plus one RETAINED unit member. Both readings now agree, so no
+    #                  finding is owed; an implementation that objected to an admitted member
+    #                  anywhere inside a disposition-bearing set fires here and fails GC6b while
+    #                  passing GC6, which is the only thing that tells the rule from the ban.
+    if [ "$defect" = 'dispalladmit' ];  then printf '| X | sig | act | ex | %s%slightest-weight-action%s%s%s%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$FIXTURE_ADMIT_KEY" "$BT"; fi
+    if [ "$defect" = 'dispmixed' ];     then printf '| X | sig | act | ex | %s%slightest-weight-action%s%s%s%s%s%s/trip-record log%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$FIXTURE_ADMIT_KEY" "$BT" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'dispoffenum' ];   then printf '| X | sig | act | ex | %s%sbecause I said so%s%s/trip status%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'dispconj' ];      then printf '| X | sig | act | ex | %s%srepo-creation + argv-secret%s%s/trip status%s |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$BT" "$BT"; fi
     if [ "$defect" = 'dispnounit' ];    then printf '| X | sig | act | ex | %s%slightest-weight-action%s%srepo-creation |\n' "$AMB_MARK" "$DISP_MARK" "$AMB_SEP" "$DISP_MARK"; fi
@@ -3667,6 +3774,19 @@ else PASS "C3: PER-LIMB REPORT — of ${C_RETAIN} retained arms, the confirm lim
 if has_finding "$ALL" "$(surface C1)"; then FAIL "C1: THE JOIN — a rendered marker disagrees with the source it is supposed to state"; show "$ALL" 'C1'
 elif [ -z "$C_J1" ] || [ -z "$C_J2" ]; then FAIL "C1: NO SUBJECT — the join emitted no difference counts, so no marker was joined to anything"
 else PASS "C1: THE JOIN — for every graded coverage unit the side derived from its own read-declaration block equals the entry-class marker the routing map renders, as a set difference EMPTY IN BOTH DIRECTIONS (${C_J1} admitted-at-source-but-not-marked, ${C_J2} marked-but-not-admitted-at-source). Neither side holds a list: the source is read from the blocks and the marker from field 3 of the row B7 graded"; fi
+# ── C6 — set composition, fail-closed. Its own vacuity note, keyed on its OWN population and never
+# on AMBCELLS: a set population is non-zero whether or not a single DISPOSITION-bearing set exists,
+# so a note keyed on it would print "quantified over LIVE data" on a line whose subject was empty.
+# The same discipline DISP_NOTE already applies one level up, and for the same reason.
+C_DSETS="$(getcount "$C_OUT" CDISPSETS)"; C_COMPOSE="$(getcount "$C_OUT" CCOMPOSE)"
+if [ "${C_DSETS:-0}" -eq 0 ]; then
+  C6_NOTE="LIVE DISPOSITION-BEARING SET POPULATION 0 — this line quantified over nothing on this commit and establishes nothing about live data. Its evidence on this run is arm GC6, which plants the refused composition and FAILS if it is not flagged, and arm GC6b beside it, the near-miss that must stay green"
+else
+  C6_NOTE="Quantified over ${C_DSETS} LIVE disposition-bearing set(s) on this commit, not over fixtures alone"
+fi
+if has_finding "$ALL" "$(surface C6)"; then FAIL "C6: SET COMPOSITION — a declared set carries a disposition member beside unit members that are ALL inference-admitted, so the set's own membership reads admitted while the fail-closed rule retains it"; show "$ALL" 'C6'
+elif [ -z "$C_DSETS" ] || [ -z "$C_COMPOSE" ]; then FAIL "C6: NO SUBJECT — the set-composition counts were not emitted, so no set's membership was composed and nothing here was measured"
+else PASS "C6: SET COMPOSITION, FAIL-CLOSED — each of the ${C_DSETS} declared set(s) carrying a disposition member names at least one unit member that RETAINS declared intent (${C_COMPOSE} do not). A member that declares nothing is an arm whose block declares nothing, so it retains declared intent and the set with it; the requirement is ADR-007 § 3's set-obligations bullet and this guard holds no copy of it — each member's side is derived live from that verb's own read-declaration block, by the same side function C1 and C2 use. SCOPE: it grades a set's COMPOSITION and says nothing about rendering — a set is proposed and never resolved either way. ${C6_NOTE}"; fi
 C_RFILES="$(getcount "$C_OUT" CRULEFILES)"; C_RCARRY="$(getcount "$C_OUT" CRULECARRY)"
 C_RFORMS="$(getcount "$C_OUT" CRULEFORMS)"; C_RFLAG="$(getcount "$C_OUT" CRULEFLAG)"
 if has_finding "$ALL" "$(surface C5)"; then FAIL "C5: a verb file carries no statement of the standing confirm rule, or the verb files state it in more than one rendering"; show "$ALL" 'C5'
@@ -4496,6 +4616,26 @@ arm C1
 if grep -q '^FINDING C1 ' <<<"$GCOK"; then FAIL "GC1b: MUST-NOT-FIRE — the join fired on a world where marker and source agree on every unit"
 elif [ -z "$(getcount "$GCOK" CJ1)" ]; then FAIL "GC1b: NO SUBJECT — the conforming world emitted no join difference counts"
 else PASS "GC1b: MUST-NOT-FIRE — the join is silent on the conforming world ($(getcount "$GCOK" CJ1) and $(getcount "$GCOK" CJ2) in the two directions), so GC1 and GC1c above grade a disagreement rather than a checker that always fires"; fi
+
+# ── C6 — SET COMPOSITION, armed as a PAIR over two worlds differing in exactly one member.
+# The must-fire arm alone would be satisfied by a rule refusing any inference-admitted member
+# inside a disposition-bearing set, which is a different and much wider rule than the one
+# ADR-007 § 3 states; GC6b below is what separates the two.
+cctl GC6 C6 "a declared set carrying a disposition member whose unit members are ALL inference-admitted — the composition whose own membership reads admitted while the fail-closed rule retains it, and the shape that was authorable with this entire suite green" dispalladmit ok ok
+GC6B="$WORK/GC6b"; gen_tree "$GC6B" dispmixed ok; gen_carrier "$GC6B/SKILL.md" ok
+arm C6
+GC6B_OUT=""; GC6B_HITS=""
+if ! grep -qF "${AMB_MARK}${DISP_MARK}lightest-weight-action${AMB_SEP}${BT}${FIXTURE_ADMIT_KEY}${BT}${AMB_SEP}${BT}/trip-record log${BT}" "$GC6B/CLAUDE.md"; then
+  FAIL "GC6b: fixture integrity — the near-miss world must carry the disposition member, the ADMITTED unit member and a RETAINED unit member beside it; that set is absent, so a zero here would prove nothing"
+else
+  GC6B_OUT="$(inference_check "$(collect_records "$GC6B")" "$GC6B/SKILL.md")"
+  GC6B_HITS="$(printf '%s\n' "$GC6B_OUT" | grep '^FINDING C6 ' | head -3 | tr '\n' ' ')"
+  if [ -z "$GC6B_HITS" ]; then
+    PASS "GC6b: MUST-NOT-FIRE — a disposition-bearing set naming ${FIXTURE_ADMIT_KEY} (admitted) BESIDE a unit member that retains declared intent yields no C6, over $(getcount "$GC6B_OUT" CDISPSETS) disposition-bearing set(s) in that world. The zero is a measurement, not an absence: GC6 is the sensitivity arm on the same predicate over the same world MINUS the retained member, and it fires on this run. This arm is what makes C6 a composition rule rather than a ban on an inference-admitted member appearing in such a set at all"
+  else
+    FAIL "GC6b: a SPURIOUS C6 — a set that already names a unit member retaining declared intent was refused, so the predicate is reading the PRESENCE of an admitted member rather than the ABSENCE of a retained one: ${GC6B_HITS}"
+  fi
+fi
 
 # ── C2 / C3 — the confirm obligation and the per-limb report.
 cctl GC2 C2 "a retained arm whose region carries no confirm gate and whose file carries neither half of the typed-only posture — it stands behind nothing" ok noconfirm ok

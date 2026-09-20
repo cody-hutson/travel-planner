@@ -386,7 +386,24 @@ restatement.
   one reason from the closed vocabulary § 4 states; it resolves to no coverage unit, because a
   disposition is not one, and a set whose members are all dispositions is refused, because a row that
   routes to no command is an exclusion rather than a choice. Across both kinds: nothing is named twice
-  inside one set, and no two sets denote the same options.
+  inside one set, and no two sets denote the same options. **And the set's entry class is composed
+  FAIL-CLOSED from its members' own sides**, by the rule § 1 already states for an arm: a disposition
+  member declares none of the negatives § 1 requires — it is not an arm, and it has no block in which
+  to declare them — so *anything other than all of them declared, silence included, retains declared
+  intent* puts it on the retained side, and the set with it. **A set carrying a disposition member
+  therefore names at least one verb member that retains declared intent.** Where every verb member of
+  such a set is inference-admitted, the set's own membership reads as admitted while this rule makes it
+  retained; the row is refused, because the two readings disagree and a composition whose side is
+  legible only from the rule and not from the set is exactly how the converse this section does not
+  admit — resolving a set by inference — gets authored by accident.
+
+*(Amended again in the change that rules the composition question fail-closed. The bullet is edited in
+place for the reason the note below already gives, and nothing above it moves: the member kinds, what
+each resolves to, and the all-dispositions refusal are untouched, and no coverage unit is minted or
+withdrawn, so totality and exclusivity are total over the same population as before. What is new is an
+obligation on a set's MEMBERSHIP, which no predicate in this section reached: the shape it refuses was
+authorable with every check green. The rule it applies is not a new one — it is § 1's own line, quantified
+over a member rather than an arm, which is why it is stated here by citation rather than restated there.)*
 
 *(Amended in the change that admits a disposition as a member. The bullet is edited in place rather
 than corrected beneath, because a reader who stops at the bullet would otherwise carry away a rule that
