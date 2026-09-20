@@ -539,11 +539,43 @@ getcount() { printf '%s\n' "$1" | sed -n "s/^COUNT $2 //p" | head -1; }
 # grep reads are identical: bash appends exactly one newline, which is what the
 # `printf '%s\n'` it replaced did.
 has_finding() { grep -qE "^FINDING ($2) " <<<"$1"; }
-# `show` and `getcount` keep their pipelines deliberately. Both END in `head`, which also
-# exits early — but neither one's exit status is ever consulted: both are called inside a
-# command substitution for their OUTPUT, so there is no verdict for a spurious status to
-# corrupt. The defect is a pipeline whose STATUS is read, not a pipeline.
-show()     { printf '%s\n' "$1" | grep -E "^FINDING ($2) " | sed 's/^FINDING /       /' | head -8; }
+# `getcount` keeps its pipeline deliberately. It ENDS in `head`, which also exits early —
+# but its exit status is never consulted: it is called inside a command substitution for its
+# OUTPUT, so there is no verdict for a spurious status to corrupt. The defect is a pipeline
+# whose STATUS is read, not a pipeline.
+#
+# ── `show` CAPS ITS LIST, AND A CAPPED LIST NOW SAYS SO. This is the count-whose-denominator-
+# is-not-the-one-the-sentence-names defect — the family this suite spends its prose on —
+# displaced out of prose and into tooling. `show` printed the first SHOW_CAP matches and
+# stopped, silently: a world failing with sixteen findings of one id displayed eight, and a
+# reader who counted the display got eight. No verdict and no pass/fail count was ever
+# affected; what was affected is the EVIDENCE a failing run offers, which is the whole reason
+# a reporting group prints findings at all. Measured cost, not hypothetical: one acceptance
+# reviewer and one probe each read a capped list as a complete one.
+#
+# THE RESIDUAL IS COMPUTED FROM THE MATCHED SET, BEFORE THE CAP IS APPLIED, so the total this
+# prints is the population's and never the display's — printing `SHOW_CAP + (what head let
+# through)` would reproduce the same defect one level down. The cap itself is retained: the
+# list is a reader's aid and an unbounded one buries the verdict lines around it.
+#
+# The `| head` pipeline is gone with it, which is incidental rather than the point: `head` now
+# reads a here-string, so there is no writer for it to SIGPIPE and no second status for
+# `pipefail` to aggregate — the shape has_finding's note above describes, arrived at here for
+# a different reason. `show`'s status was never read either way; it returns 0 explicitly so
+# the trailing test cannot become one.
+SHOW_CAP=8
+show() {
+  local matched shown
+  matched="$(grep -E "^FINDING ($2) " <<<"$1" | sed 's/^FINDING /       /')"
+  [ -n "$matched" ] || return 0
+  shown="$(grep -c '' <<<"$matched")"
+  head -"$SHOW_CAP" <<<"$matched"
+  if [ "$shown" -gt "$SHOW_CAP" ]; then
+    printf '       … and %d more — %d finding(s) matched this id, %d shown. The list is capped; the count is not\n' \
+      "$(( shown - SHOW_CAP ))" "$shown" "$SHOW_CAP"
+  fi
+  return 0
+}
 
 # Records which ids a reporting group surfaces, so group Y can assert the mapping is
 # total. Returns the alternation for has_finding, so a group cannot surface an id without
