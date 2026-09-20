@@ -2352,13 +2352,28 @@ echo "ST — the starred-field count agrees across all four of its homes, in eve
 ST_TEMPLATES="templates/traveler-intake.template.md
 templates/person-intake.template.md"
 ST_STAR='⭐'
+# ST_DM — the SECOND document, and the one that makes this group grade a level rather than
+# only an agreement. Not a new literal: reference/data-model.md is already the subject of
+# RL_DM, XT_DM and HZ_DM further down, each reading the same field table by column index.
+# This is a FOURTH read of an already-controlled table, not a new reader.
+ST_DM="$ROOT/reference/data-model.md"
 mkdir -p "$WORK/st"
 
-# st_surfaces <file> — one TAB record per discovered assertion site, three surfaces:
+# st_surfaces <file> — one TAB record per discovered assertion site, four surfaces:
 #
 #   PROSE<TAB><line><TAB><count-as-integer>   a sentence that STATES the number
 #   MARKED<TAB><line><TAB><label>             a field whose bullet IS the star
 #   ANNOT<TAB><line><TAB><label>              the appendix's per-field restatement
+#   BULLET<TAB><line><TAB><label>             EVERY labelled field bullet, star or no star
+#
+# BULLET is the DENOMINATOR the cross-document arms below are keyed on, and it is emitted by
+# the MARKED branch with the glyph made optional rather than by a reader of its own. That is
+# load-bearing twice over. It makes MARKED a subset of BULLET BY CONSTRUCTION rather than by
+# coincidence, which is what ST3 rests on. And group RL further down defines rl_bullets for
+# its own population on a DIFFERENT anchored shape — `^\*\*[^:*]+:\*\*`, which diverges from
+# MARKED's on a label containing a colon — so borrowing it would put two readers of the same
+# corpus one file apart, which is the exact class of defect this group exists for. (It is also
+# defined AFTER this group executes, so this group could not call it in any case.)
 #
 # The glyph is located with index()/substr() rather than matched inside a bracket
 # expression, for the reason group LC states about the validator: a bracket range resolves
@@ -2410,14 +2425,19 @@ st_surfaces() {
     {
       line = $0; isfield = 0
       # MARKED — a list item whose bullet carries the glyph, then a bold label and a colon.
+      # BULLET — the SAME shape with the glyph made OPTIONAL, so every labelled field bullet
+      # is emitted and the starred ones are emitted twice, once under each kind. One traversal,
+      # one label rule, and therefore no way for the two populations to be read differently.
       if (match(line, /^-[ \t]*/)) {
-        rest = substr(line, RLENGTH + 1)
+        rest = substr(line, RLENGTH + 1); starred = 0
         if (index(rest, star) == 1) {
-          rest = substr(rest, slen + 1); sub(/^[ \t]+/, "", rest)
-          if (match(rest, /^\*\*[^*]+:\*\*/)) {
-            printf "MARKED\t%d\t%s\n", FNR, substr(rest, 3, RLENGTH - 5)
-            isfield = 1
-          }
+          rest = substr(rest, slen + 1); sub(/^[ \t]+/, "", rest); starred = 1
+        }
+        if (match(rest, /^\*\*[^*]+:\*\*/)) {
+          lbl = substr(rest, 3, RLENGTH - 5)
+          printf "BULLET\t%d\t%s\n", FNR, lbl
+          if (starred) printf "MARKED\t%d\t%s\n", FNR, lbl
+          isfield = 1
         }
       }
       # ANNOT — the appendix naming one starred field. Every match on the line, because the
@@ -2529,9 +2549,9 @@ st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 =
 # upper-case letter — so it cannot match the shape it is looking for and report a defect it had
 # just introduced. That is group PF's hazard, avoided by SCOPE rather than by scrubbing a needle.
 #
-# The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT records in the
-# same shape, and this reader returns those three if it is pointed at that function. Scoping it to
-# st_violations is what makes it a code reader; do not reuse it unscoped.
+# The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT/BULLET records
+# in the same shape, and this reader returns those four if it is pointed at that function. Scoping
+# it to st_violations is what makes it a code reader; do not reuse it unscoped.
 #
 # ── THE OPENING DELIMITER IS A CLASS, AND THE SINGLE-QUOTE LIMB IS LOAD-BEARING ──
 # An evaluator written in awk carries its emissions inside an awk `printf "..."`, so its codes open
@@ -2570,6 +2590,248 @@ st_setdiff() {
     $0 != "" && index(hay, " " $0 " ") == 0 && !seen[$0]++ { print }
   ' <<<"$1"
 }
+
+# ── THE CROSS-DOCUMENT HALF ──────────────────────────────────────────────────────
+# Everything above grades ONE fact with four homes INSIDE one form. That is AGREEMENT, and
+# agreement is not accuracy: four homes moved together onto a wrong number stay green. The
+# functions below grade the LEVEL — each form's starred set against reference/data-model.md's
+# field table, label for label and in BOTH directions — so a coherent four-home edit the
+# model does not carry is RED.
+#
+# NO COUNT IS WRITTEN DOWN HERE, and that is the whole shape of it. Group HC's comment states
+# the rule: a copy in this file "would be a THIRD home, green while the other two drifted
+# apart from each other." The key is BULLET PRESENCE on the form — which is what
+# reference/adr/ADR-012-people-library.md already declares the starred-pass split to be keyed
+# on, "the presence of a bullet in the shipped intake forms". Nothing below maps a class to a
+# form and nothing below names a form, so a third intake form is still ONE LINE in
+# ST_TEMPLATES. A Class-to-form map was the other candidate; it reproduces the whole partition
+# with exactly the two exceptions the document itself declares, so it is sound — and it was
+# NOT taken, because it would be a second place the class vocabulary lives and would make that
+# one line two.
+#
+# ── WHAT THIS PAIR DOES NOT PIN, SAID WHERE A READER WRITING AN AC WILL LOOK ─────
+# Group HC pins its level against SC_NCLASS — a row count produced by va_class_rows, the
+# SHIPPING validator's own extractor. There is no equivalent here, and this pair does not
+# claim one: nothing in the shipping path derives, consumes or acts on how many fields carry
+# the star, so the starred count has no producer to be graded against. What it has instead is
+# a SECOND, independently-maintained document whose starred rows are authored on the data
+# model's axis (class, scope, horizon) rather than on the form's. That is stronger than
+# intra-file agreement and weaker than a producer. Which of the two it is belongs in the
+# assertion rather than in a caveat on it.
+
+# st_labdiff / st_labint — set difference and intersection over LABELS, one per line,
+# first-occurrence order, deduplicated.
+#
+# st_setdiff above is NOT usable for this and the reason is load-bearing rather than stylistic.
+# Its membership test is containment in a SPACE-DELIMITED haystack, which is exactly right for
+# violation codes — no code carries a space — and wrong for field labels, which routinely do
+# (`Trip vibe`, `Leaving from`, `Lodging style`). Under that test the string "vibe Can" is
+# found in a haystack spelling "Trip vibe Can travel", so a comparison over labels could report
+# a membership the corpus does not carry and, worse, could report a real DIFFERENCE as absent.
+# These two key on the WHOLE LINE, which is what a label is.
+ST_SEP='ZZ-ST-SET-SEPARATOR'
+
+st_labdiff() {   # st_labdiff <a> <b> -> members of A absent from B
+  printf '%s\n%s\n%s\n' "$2" "$ST_SEP" "$1" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") b[$0] = 1; next }
+    $0 != "" && !($0 in b) && !seen[$0]++ { print }
+  '
+}
+
+st_labint() {   # st_labint <a> <b> -> members of A that are ALSO in B
+  printf '%s\n%s\n%s\n' "$2" "$ST_SEP" "$1" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") b[$0] = 1; next }
+    $0 != "" && ($0 in b) && !seen[$0]++ { print }
+  '
+}
+
+# st_dm_rows <data-model> — "<line><TAB><label>" for every field-table row whose Field cell
+# carries the star, in table order. ONE predicate for the whole cross-document half: the
+# extractor and the control arms' mutation targeting read the same rows by the same rule, so a
+# control cannot aim at a row the extractor does not see.
+#
+# Read with awk -F'|' BY COLUMN INDEX, exactly as rl_class, xt_class and hz_class read this same
+# table: $2 must be an integer row number and $3 is the Field cell. Those three groups already
+# rest on the document's own in-table warning — "Do not reorder these columns" — so this reader
+# inherits a constraint that is declared in the corpus rather than assumed here.
+#
+# The glyph is located with index() and NEVER inside a bracket expression, for the reason group
+# LC states about the validator: a bracket range resolves against the current locale's collating
+# sequence, so CI and an operator's shell can disagree about what it matched.
+st_dm_all() {
+  awk -F'|' -v star="$ST_STAR" '
+    NF < 8 { next }
+    {
+      num = $2; gsub(/[ \t]/, "", num)
+      if (num !~ /^[0-9]+$/) next
+      fld = $3
+      # the label is a code span; a row without one is the unlabelled free-text tail, which
+      # has no bullet form and so cannot appear in any form this group reads
+      if (!match(fld, /`[^`]+`/)) next
+      # index() does not touch RSTART/RLENGTH, so the star test is safe to take inline here
+      printf "%d\t%d\t%s\n", FNR, (index(fld, star) > 0) ? 1 : 0, substr(fld, RSTART + 1, RLENGTH - 2)
+    }' "$1"
+}
+
+# st_dm_rows <data-model> — "<line><TAB><label>" for the STARRED rows alone. The star is a
+# FLAG on the one predicate rather than a second copy of it, so the extractor and the control
+# arms' mutation targeting cannot come to disagree about which rows exist.
+st_dm_rows() { st_dm_all "$1" | awk -F'\t' '$2 == 1 { print $1 "\t" $3 }'; }
+
+# st_dm_starred <data-model> — the LABEL of every starred field-table row, one per line. This is
+# the registered subject of the md_flips arms in group MD: removing it empties every set below,
+# and every assertion here then reaches its non-degeneracy limb rather than an equality over two
+# empty sets.
+st_dm_starred() { st_dm_rows "$1" | awk -F'\t' '{ print $2 }'; }
+
+# st3_report <template> <data-model> — the ST3 comparison as TAB records. ONE evaluator drives
+# the shipping arm and every control arm alike, the st_surfaces/st_violations idiom one level up:
+# an evaluator that is not the one under test proves nothing about the one that ships.
+#
+#   NB<TAB><n>        distinct labelled bullets on the form — the DENOMINATOR
+#   NM<TAB><n>        distinct marked bullets on the form
+#   NS<TAB><n>        distinct starred rows in the model
+#   MNS<TAB><label>   marked on this form, NOT starred in the model
+#   SNM<TAB><label>   on this form and starred in the model, NOT marked on it
+#
+# MARKED is a subset of BULLET by construction, so M minus (B intersect S) reduces to M minus S,
+# and the two record kinds above are exactly the two directions of "B intersect S equals M". They
+# are emitted SEPARATELY and never merged: a red normally means the TABLE is stale, because
+# ADR-012 makes the forms authoritative and the table a restatement — and one merged list would
+# leave a builder guessing which of the two files to edit.
+st3_report() {
+  local surf b m s inter
+  surf="$(st_surfaces "$1")"
+  b="$(printf '%s\n' "$surf" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++')"
+  m="$(printf '%s\n' "$surf" | awk -F'\t' '$1 == "MARKED" { print $3 }' | awk 'NF && !seen[$0]++')"
+  s="$(st_dm_starred "$2" | awk 'NF && !seen[$0]++')"
+  inter="$(st_labint "$b" "$s")"
+  printf 'NB\t%s\n' "$(printf '%s\n' "$b" | grep -c '[^[:space:]]')"
+  printf 'NM\t%s\n' "$(printf '%s\n' "$m" | grep -c '[^[:space:]]')"
+  printf 'NS\t%s\n' "$(printf '%s\n' "$s" | grep -c '[^[:space:]]')"
+  st_labdiff "$m" "$s"     | awk 'NF { print "MNS\t" $0 }'
+  st_labdiff "$inter" "$m" | awk 'NF { print "SNM\t" $0 }'
+}
+
+# st3_assert <template> <data-model> — exactly ONE verdict, and self-contained: it takes no state
+# from the loop below and calls its own extractors. That is what makes the md_flips registration
+# in group MD a measurement of THIS assertion rather than of a value someone else computed for it
+# — md_flips removes a FUNCTION, so an assertion handed a precomputed set would survive its
+# subject's removal and report itself blind.
+st3_assert() {
+  local f="$1" dm="$2" tag rep nb nm ns nd
+  tag="${f##*/}"; tag="${tag%.template.md}"
+  rep="$(st3_report "$f" "$dm")"
+  nb="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" { print $2; exit }')"
+  nm="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NM" { print $2; exit }')"
+  ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
+  nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
+  if [ "${nb:-0}" -lt 1 ] || [ "${nm:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
+    FAIL "ST3[$tag]: a side of the comparison came back EMPTY (labelled bullets=${nb:-0}, marked=${nm:-0}, starred model rows=${ns:-0}) — two empty sets are equal, so a verdict here would be a PASS reached over nothing. A zero on any side is a broken extractor or a restructured document, never a clean tree. CTL-ST3-EXTRACT below drives this same limb on purpose"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "ST3[$tag]: over this form's $nb labelled bullet(s), the $nm field(s) it marks and the $ns starred row(s) in reference/data-model.md's field table are NOT the same set. ADR-012 makes the FORMS authoritative and the table a restatement of them, so the TABLE is normally the side to correct — read each direction before deciding:"
+    printf '%s\n' "$rep" | awk -F'\t' '
+      $1 == "MNS" { printf "      marked-not-in-model: %s — this form stars it and the table does not\n", $2 }
+      $1 == "SNM" { printf "      model-starred-not-marked: %s — the table stars it and this form carries the bullet unstarred\n", $2 }'
+  else
+    PASS "ST3[$tag]: the $nm field(s) this form marks are EXACTLY the starred rows of reference/data-model.md's field table that this form asks at all — label for label, both directions, over a denominator of $nb labelled bullet(s) intersected against $ns starred row(s). This is the LEVEL, not the in-form agreement ST1 grades: a coherent edit moving all four of this form's homes together onto a count the model does not carry is caught here and nowhere else. Keyed on bullet presence, so neither a count nor a class-to-form map is spelled in this file. CTL-ST3-FORM and CTL-ST3-MODEL below show this same comparison failing in each direction, and CTL-ST3-NEUTRAL shows it staying silent on a table edit that moves no star"
+  fi
+}
+
+# st4_report <union-of-marked> <data-model> — the ST4 comparison, same record shape.
+#
+#   NU<TAB><n>        distinct labels marked across ALL forms read this run
+#   NS<TAB><n>        distinct starred rows in the model
+#   UNS<TAB><label>   marked on some form, NOT starred in the model
+#   SNU<TAB><label>   starred in the model, marked on NO form
+st4_report() {
+  local u s
+  u="$(printf '%s\n' "$1" | awk 'NF && !seen[$0]++')"
+  s="$(st_dm_starred "$2" | awk 'NF && !seen[$0]++')"
+  printf 'NU\t%s\n' "$(printf '%s\n' "$u" | grep -c '[^[:space:]]')"
+  printf 'NS\t%s\n' "$(printf '%s\n' "$s" | grep -c '[^[:space:]]')"
+  st_labdiff "$u" "$s" | awk 'NF { print "UNS\t" $0 }'
+  st_labdiff "$s" "$u" | awk 'NF { print "SNU\t" $0 }'
+}
+
+# st4_assert <union-of-marked> <data-model> <members-read> — exactly ONE verdict, run level.
+#
+# ST3 IS BLIND TO AN INPUT THAT ONLY ADDS, by construction rather than by oversight: a starred
+# table row whose label is on NO form is in no form's bullet set, so it enters no form's
+# intersection and every per-form ST3 stays green. ST4 is the complement that closes it, and
+# CTL-ST4-ADD below drives exactly that input and asserts ST3's silence on it in the same breath
+# — which is the whole reason this arm exists.
+#
+# Its non-degeneracy gate is its OWN and is wider than ST3's, because this arm runs outside the
+# per-form loop and outside ST_OK: two empty sets are equal, and a run where no member was read
+# is precisely the branch a degenerate outcome reaches.
+st4_assert() {
+  local u="$1" dm="$2" nread="$3" rep nu ns nd
+  rep="$(st4_report "$u" "$dm")"
+  nu="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NU" { print $2; exit }')"
+  ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
+  nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
+  if [ "${nread:-0}" -lt 1 ] || [ "${nu:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
+    FAIL "ST4: a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, labels marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "ST4: the union of the marked sets across the $nread intake form(s) read this run ($nu label(s)) is NOT the starred set of reference/data-model.md's field table ($ns row(s)). A star added on one side and not the other is what this arm exists to catch, and the add-only direction is the one no per-form arm can see:"
+    printf '%s\n' "$rep" | awk -F'\t' '
+      $1 == "UNS" { printf "      marked-on-a-form-not-in-model: %s\n", $2 }
+      $1 == "SNU" { printf "      model-starred-on-no-form: %s — the table stars a label no intake form asks, and ST3 is BLIND to this by construction\n", $2 }'
+  else
+    PASS "ST4: the union of the marked sets across the $nread intake form(s) read this run is EXACTLY the $ns starred row(s) of reference/data-model.md's field table — $nu label(s), both directions. This is the ADD-ONLY complement to ST3: a starred row added to the table for a label no form carries enters no form's intersection and leaves every per-form ST3 green, so it is caught here. CTL-ST4-ADD below drives that input and asserts ST3's silence on it"
+  fi
+}
+
+# st3_mustfire <arm> <template-fixture> <model-fixture> <side> <label> <what> — ONE input mutated
+# alone, and the SAME st3_report must then name <label> on <side>. The mutation is asserted to
+# have LANDED before the verdict is read, exactly as st_mustfire does one level up: a fixture that
+# was never actually changed makes a must-fire arm's silence meaningless.
+#
+# These are a SEPARATE pair from st_mustfire/st_mustnotfire, deliberately. Those two are keyed to
+# st_violations' CODE vocabulary and they record coverage into ST_ARMED, which is ST-COV's second
+# input. Routing a cross-document arm through them would put a token ST-COV cannot find into that
+# accumulator and turn the bijection red — so ST_ARMED is not touched here, ST_CODES stays at the
+# six codes st_violations emits, and ST-COV's arithmetic is byte-unchanged.
+st3_mustfire() {
+  local id="$1" tf="$2" df="$3" side="$4" lbl="$5" what="$6" landed=0 rep hit n
+  cmp -s "$ST_FILE" "$tf" && cmp -s "$ST_DM" "$df" || landed=1
+  rep="$(st3_report "$tf" "$df")"
+  hit="$(printf '%s\n' "$rep" | awk -F'\t' -v s="$side" -v l="$lbl" '$1 == s && $2 == l { n++ } END { print n + 0 }')"
+  n="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
+  if [ "$landed:$hit" = "1:1" ]; then
+    PASS "$id: MUST FIRE — $what, and the same comparison names '$lbl' under $side ($n difference(s) in all). The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$id: MUST FIRE — $what, but the comparison did not name '$lbl' under $side (mutation-landed=$landed differences=$n). ST3's zero has no control behind it in this direction"
+  fi
+}
+
+# st3_mustnotfire <arm> <template-fixture> <model-fixture> <edit-expected> <what> — the arms that
+# tell a correct comparison from one that reddens on ANY difference between the two documents.
+st3_mustnotfire() {
+  local id="$1" tf="$2" df="$3" wantedit="$4" what="$5" landed=0 rep n live
+  cmp -s "$ST_FILE" "$tf" && cmp -s "$ST_DM" "$df" || landed=1
+  rep="$(st3_report "$tf" "$df")"
+  n="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
+  # The silence has to be EARNED. A comparison whose inputs came back empty is silent too, and
+  # that is precisely the branch a must-not-fire arm would otherwise certify as clean — the MD
+  # rule one level up, applied to this arm rather than declared as a residual for it. live reads
+  # yes only when all three populations are non-empty ON THIS VERY INPUT, so the three states are
+  # graded as one string and no PASS here is reachable over an empty set.
+  live="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" || $1 == "NM" || $1 == "NS" { if ($2 + 0 > 0) k++ } END { print (k == 3) ? "yes" : "no" }')"
+  if [ "$landed:$n:$live" = "$wantedit:0:yes" ]; then
+    PASS "$id: MUST NOT FIRE — $what, and the comparison reports 0 difference(s) over three non-empty populations"
+  else
+    FAIL "$id: MUST NOT FIRE — $what, but this arm read differs-from-original=$landed differences=$n populations-live=$live, wanting $wantedit:0:yes"
+  fi
+}
+
+# st_dm_fixture <name> — a fresh copy of the real data model under this member's temp dir. Never
+# $ROOT, for the reason st_fixture states below: CTLe grades, last of all, that this suite never
+# wrote into the tree it measures.
+st_dm_fixture() { cp "$ST_DM" "$ST_DIR/$1.md" && printf '%s\n' "$ST_DIR/$1.md"; }
 
 # st_fixture <name> — a fresh copy of the real template under the run's temp dir. Never
 # $ROOT: CTLe grades, last of all, that this suite never wrote into the tree it measures.
@@ -2647,6 +2909,20 @@ st_mustnotfire() {
 ST_CODES="$(st_codes "$(declare -f st_violations)")"
 ST_NCODES="$(printf '%s\n' "$ST_CODES" | grep -c '[^[:space:]]')"
 ST_COV_PROBE='ZZ-ST-COVERAGE-PROBE'
+# The label CTL-ST4-ADD plants in a COPY of the data model: a starred field-table row for a
+# field no intake form asks. It is deliberately un-bullet-shaped so it cannot collide with a
+# real label, and it is the ADD-ONLY input ST3 is blind to by construction.
+ST4_PHANTOM='ZZ-ST-NOFORM-FIELD'
+# The union ST4 grades after the loop, and the number of members that were actually READ into
+# it. Initialised HERE rather than inside the loop: a run whose every member failed ST0 must
+# reach ST4 with an empty union and a zero read-count, which is the degenerate branch ST4's own
+# gate refuses rather than a state that never arrives.
+ST_ALLMARKED=""
+ST_NREAD=0
+# The single member the group-MD registrations drive st3_assert over. Taken as the FIRST entry
+# of ST_TEMPLATES rather than as whatever the loop left in ST_FILE, so the registration grades a
+# deterministic subject; the assertion itself is identical on every member.
+ST_MD_FORM="$ROOT/$(printf '%s\n' "$ST_TEMPLATES" | awk 'NF { print; exit }')"
 ST_COV_PHANTOM='ZZ-ST-PHANTOM-ARM'
 
 while IFS= read -r ST_REL; do
@@ -2665,23 +2941,24 @@ ST_OK=1
 # Per MEMBER, not per run: every arm runs once for each template, so a set carried over from the
 # first member would report the second as covered by arms that never ran in its pass.
 ST_ARMED=""
-ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0
+ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0; ST_NBULLET=0
 if [ -r "$ST_FILE" ]; then
   ST_SURF="$(st_surfaces "$ST_FILE")"
   ST_NPROSE="$(st_n PROSE "$ST_SURF")"
   ST_NMARK="$(st_n MARKED "$ST_SURF")"
   ST_NANNOT="$(st_n ANNOT "$ST_SURF")"
+  ST_NBULLET="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++' | grep -c '[^[:space:]]')"
   ST_NGLYPH="$(awk -v star="$ST_STAR" '{ s = $0; while ((p = index(s, star)) > 0) { n++; s = substr(s, p + length(star)) } } END { print n + 0 }' "$ST_FILE")"
 fi
 
-printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s appendix annotation(s) in %s, over %s star glyph(s) in the file\n' \
-  "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH"
+printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s appendix annotation(s) in %s, over %s star glyph(s) in the file and %s distinct labelled field bullet(s) — the denominator ST3 intersects\n' \
+  "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH" "$ST_NBULLET"
 
 if [ ! -r "$ST_FILE" ]; then
   FAIL "ST0[$ST_TAG]: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
   ST_OK=0
 elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; then
-  PASS "ST0[$ST_TAG]: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
+  PASS "ST0[$ST_TAG]: all three of the IN-FORM surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here. The fourth surface — the $ST_NBULLET distinct labelled field bullet(s) the same reader discovers — is gated by ST3's own limb rather than here, so an empty bullet set fails naming ST3 instead of naming three surfaces that were found"
 else
   FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
   ST_OK=0
@@ -2708,6 +2985,21 @@ if [ "$ST_OK" -eq 1 ]; then
   else
     FAIL "ST-AR3[$ST_TAG]: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
   fi
+
+  # ST3 — the LEVEL, per form. Everything above this line grades agreement among this form's own
+  # four homes; this grades the set those homes describe against reference/data-model.md's field
+  # table. The shipping arm IS st3_assert, called here and registered in group MD, so what the
+  # registration grades and what this line renders cannot come apart.
+  st3_assert "$ST_FILE" "$ST_DM"
+
+  # The union ST4 grades after the loop, accumulated from the surfaces this run actually READ
+  # rather than re-derived once the loop has ended: a member that failed ST0 contributes nothing
+  # and is not counted, which is what lets ST4's own gate tell an empty union from an unread one.
+  # The newline is a literal continuation because this file uses no dollar-quoting anywhere, the
+  # same way ST_ARMED and ST_TEMPLATES are spelled.
+  ST_ALLMARKED="$ST_ALLMARKED
+$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $3 }')"
+  ST_NREAD=$((ST_NREAD + 1))
 fi
 
 # ── The control arms. Single-surface mutations that MUST turn ST red, covering every
@@ -2807,6 +3099,91 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
   st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
 
+  # ── The CROSS-DOCUMENT control arms. Same discipline as the four-home arms above — every
+  # mutation lands on a COPY under $WORK and is asserted to have landed before any verdict is
+  # read — with one difference that matters: there are now TWO documents, so each arm mutates
+  # exactly ONE of them and leaves the other byte-untouched. An arm that moved both would pass
+  # whatever the comparison did.
+  #
+  # They do NOT route through st_mustfire/st_mustnotfire. Those record coverage into ST_ARMED,
+  # which is ST-COV's second input and is keyed to st_violations' six codes; a cross-document
+  # arm recorded there would be a phantom ST-COV could not match. ST_ARMED is untouched below.
+
+  # CTL-ST3-FORM — MUST FIRE, and this arm IS the card's own worked mutant: a FOURTH field is
+  # starred on the trip form (a seventh on the durable one). That is the coherent edit ST1 stays
+  # green on once the banner, rule 4 and the appendix move with it — so it is the one input that
+  # shows ST3 grading a LEVEL rather than an agreement. The target is a bullet the probe
+  # DISCOVERED and that the model does NOT star, so the mutation is a real addition to this
+  # form's starred set rather than a no-op on one already there.
+  ST3_S="$(st_dm_starred "$ST_DM" | awk 'NF && !seen[$0]++')"
+  ST3_CAND="$(printf '%s\n%s\n%s\n' "$ST3_S" "$ST_SEP" "$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $2 " " $3 }')" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") s[$0] = 1; next }
+    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (!(lbl in s)) { print; exit } }
+  ')"
+  ST3_CL="${ST3_CAND%% *}"; ST3_CB="${ST3_CAND#* }"
+  if [ -n "$ST3_CAND" ]; then
+    ST_FX="$(st_fixture st3form)"
+    st_line_sub "$ST_FX" "$ST3_CL" "^-[ ]*" "- $ST_STAR "
+    st3_mustfire "CTL-ST3-FORM[$ST_TAG]" "$ST_FX" "$ST_DM" MNS "$ST3_CB" "ONE MORE field is starred on this form — the bullet '$ST3_CB' at line $ST3_CL gains the glyph, which is the card's own worked mutant — while reference/data-model.md is left byte-untouched"
+  else
+    FAIL "CTL-ST3-FORM[$ST_TAG]: every labelled bullet on this form is already starred in the model, so the add-a-star mutation could not be CONSTRUCTED and ST3's verdict above has no control behind it in this direction. A form with no unstarred bullet is itself a finding, not a reason to skip"
+  fi
+
+  # CTL-ST3-MODEL — MUST FIRE, and it closes the OTHER direction. The mutation is on the MODEL
+  # side, so it also proves the table is a LIVE input to ST3 rather than a document the arm
+  # merely names.
+  #
+  # The direction is why this arm ADDS a star rather than stripping one, and the reasoning is
+  # worth leaving here because it is not obvious. Stripping a model star leaves this form still
+  # marking the field, so the form's marked set EXCEEDS the model's — which surfaces as
+  # marked-not-in-model, the direction CTL-ST3-FORM above already covers. Two arms landing in
+  # the same difference list would leave model-starred-not-marked with no control at all, and
+  # ST3's zero would then be a measurement in one direction and an assumption in the other. So
+  # the target is an UNSTARRED table row whose label this form carries as an UNMARKED bullet:
+  # the model gains a star, the form does not, and the difference lands on the other side.
+  ST3_M="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $3 }' | awk 'NF && !seen[$0]++')"
+  ST3_B="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++')"
+  ST3_UNM="$(st_labdiff "$ST3_B" "$ST3_M")"
+  ST3_AROW="$(printf '%s\n%s\n%s\n' "$ST3_UNM" "$ST_SEP" "$(st_dm_all "$ST_DM" | awk -F'\t' '$2 == 0 { print $1 " " $3 }')" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") u[$0] = 1; next }
+    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in u) { print; exit } }
+  ')"
+  ST3_ARL="${ST3_AROW%% *}"; ST3_ARB="${ST3_AROW#* }"
+  if [ -n "$ST3_AROW" ]; then
+    ST3_DMFX="$(st_dm_fixture st3model-dm)"
+    st_line_sub "$ST3_DMFX" "$ST3_ARL" "[|][ ]*\`" "| $ST_STAR \`"
+    st3_mustfire "CTL-ST3-MODEL[$ST_TAG]" "$ST_FILE" "$ST3_DMFX" SNM "$ST3_ARB" "ONE field-table row GAINS a star on a COPY of reference/data-model.md ('$ST3_ARB', line $ST3_ARL) for a field this form carries as an UNMARKED bullet, leaving this form and every other surface byte-untouched"
+  else
+    FAIL "CTL-ST3-MODEL[$ST_TAG]: no unstarred field-table row carries a label this form asks as an unmarked bullet, so the model-side mutation could not be CONSTRUCTED and the model-starred-not-marked direction is UNCOVERED for this member. ST3's verdict above is then a measurement in one direction and an assumption in the other"
+  fi
+
+  # CTL-ST3-NEUTRAL — MUST NOT FIRE. The RATIONALE cell of a STARRED row is reworded, which
+  # changes the document and moves no star and no label. This is what tells a correct comparison
+  # from one that reddens on any difference between the two files — and it is aimed at the ninth
+  # column deliberately, because that is the cell the table's own column-order warning names as
+  # the one a rationale-reading arm follows.
+  ST3_SROW="$(printf '%s\n%s\n%s\n' "$ST3_M" "$ST_SEP" "$(st_dm_rows "$ST_DM" | awk -F'\t' '{ print $1 " " $2 }')" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") m[$0] = 1; next }
+    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in m) { print; exit } }
+  ')"
+  ST3_SRL="${ST3_SROW%% *}"; ST3_SRB="${ST3_SROW#* }"
+  if [ -n "$ST3_SROW" ]; then
+    ST3_DMFX2="$(st_dm_fixture st3neutral-dm)"
+    st_line_sub "$ST3_DMFX2" "$ST3_SRL" "[ ][|][ ]*$" " zzq-neutral-rewording |"
+    st3_mustnotfire "CTL-ST3-NEUTRAL[$ST_TAG]" "$ST_FILE" "$ST3_DMFX2" 1 "the RATIONALE cell of the starred field-table row '$ST3_SRB' is reworded on a copy of the model (line $ST3_SRL), changing the document while moving no star, no label and no row number"
+  else
+    FAIL "CTL-ST3-NEUTRAL[$ST_TAG]: no starred field-table row carries a label this form marks, so the neutral-edit control could not be CONSTRUCTED and nothing distinguishes ST3 from a comparison that reddens on any difference between the two documents"
+  fi
+
+  # CTL-ST3-CLEAN — MUST NOT FIRE. Unmutated copies of BOTH documents through the same
+  # comparison: the baseline that makes the two must-fire arms above mean anything.
+  ST_FX="$(st_fixture st3clean)"
+  ST3_DMFX3="$(st_dm_fixture st3clean-dm)"
+  st3_mustnotfire "CTL-ST3-CLEAN[$ST_TAG]" "$ST_FX" "$ST3_DMFX3" 0 "UNMUTATED copies of BOTH this form and reference/data-model.md are put through the same comparison"
+
   # ── ST-COV — the invariant this group had been holding BY HAND. Every code st_violations can
   # emit has a must-fire arm, and every must-fire arm names a code it can emit. BOTH directions,
   # because containment alone cannot tell a covered set from a reader that returned nothing: one
@@ -2877,6 +3254,76 @@ fi
 done <<EOF
 $ST_TEMPLATES
 EOF
+
+# ── ST4 and its two RUN-LEVEL arms. They sit outside the per-form loop because the proposition
+# is about the union ACROSS members, and because the input ST3 cannot see is one no single
+# member can see either.
+echo
+echo "  ── across every form read above"
+st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
+
+# CTL-ST4-ADD — MUST FIRE, and it is the ADD-ONLY input. A starred field-table row is appended
+# to a COPY of the model for a label NO intake form asks. Every existing declaration on both
+# forms and in the table is left byte-intact, so nothing is removed and nothing is renamed:
+# this is purely an addition, which is the class ADR-019 names as the one a per-form
+# intersection is structurally blind to.
+#
+# The arm grades BOTH halves in one verdict, because the second half is the reason the first
+# exists: ST4 must NAME the added label, and ST3 must stay SILENT on every member over the same
+# mutated model — with that silence EARNED, each member's comparison asserted non-degenerate on
+# the very input it stayed silent on. Two empty sets are silent too.
+ST4_FX="$WORK/st/st4add-dm.md"
+cp "$ST_DM" "$ST4_FX"
+printf '| 999 | %s `%s` | zzq | zzq | zzq | zzq | zzq | a synthetic starred row for a field no intake form asks |\n' "$ST_STAR" "$ST4_PHANTOM" >> "$ST4_FX"
+ST4_LANDED=0; cmp -s "$ST_DM" "$ST4_FX" || ST4_LANDED=1
+ST4_REP="$(st4_report "$ST_ALLMARKED" "$ST4_FX")"
+ST4_HIT="$(printf '%s\n' "$ST4_REP" | awk -F'\t' -v l="$ST4_PHANTOM" '$1 == "SNU" && $2 == l { n++ } END { print n + 0 }')"
+ST4_NDIFF="$(printf '%s\n' "$ST4_REP" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
+ST4_NMEM=0; ST4_SILENT=0
+while IFS= read -r ST4_REL; do
+  [ -n "$ST4_REL" ] || continue
+  ST4_NMEM=$((ST4_NMEM + 1))
+  ST4_ONE="$(st3_report "$ROOT/$ST4_REL" "$ST4_FX" | awk -F'\t' '
+    $1 == "NB" || $1 == "NM" || $1 == "NS" { if ($2 + 0 > 0) k++ }
+    $1 == "MNS" || $1 == "SNM" { d++ }
+    END { print ((k == 3) && (d + 0 == 0)) ? "1" : "0" }')"
+  ST4_SILENT=$((ST4_SILENT + ST4_ONE))
+done <<EOF
+$ST_TEMPLATES
+EOF
+ST4_WANT="landed=1 st4-names-the-addition=1 st4-differences=1 st3-silent-and-live=$ST4_NMEM/$ST4_NMEM"
+ST4_GOT="landed=$ST4_LANDED st4-names-the-addition=$ST4_HIT st4-differences=$ST4_NDIFF st3-silent-and-live=$ST4_SILENT/$ST4_NMEM"
+if [ "$ST4_GOT" = "$ST4_WANT" ]; then
+  PASS "CTL-ST4-ADD: MUST FIRE, ADD-ONLY — a starred field-table row for '$ST4_PHANTOM', a field no intake form asks, is APPENDED to a copy of reference/data-model.md with every existing declaration on both sides left intact. ST4 names exactly that label under model-starred-on-no-form and reports exactly one difference, while ST3 stays silent on all $ST4_NMEM member(s) over the SAME mutated model and is asserted non-degenerate on each. That silence is not a gap — it is ST3's declared blind spot, measured here rather than reasoned about, and it is the entire warrant for ST4 existing as a separate arm"
+else
+  FAIL "CTL-ST4-ADD: MUST FIRE, ADD-ONLY — the appended starred row for '$ST4_PHANTOM' was not graded as expected. Read '$ST4_GOT' against '$ST4_WANT'. If st4-names-the-addition is 0 the add-only direction is UNCOVERED and ST4's verdict above proves nothing; if st3-silent-and-live fell short, either ST3 is no longer blind to an addition — in which case this arm's warrant needs rewriting rather than patching — or a member's comparison went degenerate and its silence was never earned"
+fi
+
+# CTL-ST3-EXTRACT — MUST FIRE the NON-DEGENERACY limb, on the probe itself rather than on the
+# corpus. The whole field table is stripped from a copy of the model, so the extractor returns
+# the empty set; an empty extraction must reach a FAIL, because two empty sets are equal and a
+# comparison that reported them so would certify a document it had never read. It is also the
+# COMPENSATING CONTROL for the opt-out declared in group MD: reference/data-model.md is a file,
+# not a shell function, so md_flips cannot register it, and this arm is what grades that half.
+#
+# Both directions in one verdict, through md_probe — the suite's own oracle harness, used here
+# with a subject that does not exist, exactly as CTL-DATAROOT6's unmutated control does. The
+# stripped copy must return "0 1" (one FAIL, no PASS) and the clean one "1 0", so the arm
+# cannot pass on an assertion that reports nothing either way.
+ST3_NT="$WORK/st/st3notable-dm.md"
+awk -F'|' '{ ok = 1; if (NF >= 8) { num = $2; gsub(/[ \t]/, "", num); if (num ~ /^[0-9]+$/) ok = 0 } if (ok) print }' "$ST_DM" > "$ST3_NT"
+ST3_NT_N="$(st_dm_starred "$ST3_NT" | grep -c '[^[:space:]]')"
+ST3_RL_N="$(st_dm_starred "$ST_DM" | grep -c '[^[:space:]]')"
+ST3_RLOK=no; [ "$ST3_RL_N" -gt 0 ] && ST3_RLOK=yes
+ST3_EX_STRIP="$(md_probe zzq_st_no_such_subject st3_assert "$ST_MD_FORM" "$ST3_NT")"
+ST3_EX_CLEAN="$(md_probe zzq_st_no_such_subject st3_assert "$ST_MD_FORM" "$ST_DM")"
+ST3_EXWANT="stripped-extraction=0 real-extraction-nonempty=yes stripped-verdict=0 1 clean-verdict=1 0"
+ST3_EXGOT="stripped-extraction=$ST3_NT_N real-extraction-nonempty=$ST3_RLOK stripped-verdict=$ST3_EX_STRIP clean-verdict=$ST3_EX_CLEAN"
+if [ "$ST3_EXGOT" = "$ST3_EXWANT" ]; then
+  PASS "CTL-ST3-EXTRACT: MUST FIRE — with every field-table row removed from a COPY of reference/data-model.md the extractor returns the EMPTY set, and st3_assert over it reports exactly one FAIL and no PASS; over the real document, which yields $ST3_RL_N starred row(s), the same assertion reports exactly one PASS and no FAIL. So ST3's silence is a reading of a document that was actually parsed, and an extractor that had quietly stopped finding rows could not reach a PASS here. This arm is the compensating control for the file-subject opt-out declared in group MD"
+else
+  FAIL "CTL-ST3-EXTRACT: MUST FIRE — the extractor's non-degeneracy limb did not behave. Read '$ST3_EXGOT' against '$ST3_EXWANT'. A stripped-verdict other than '0 1' means an empty extraction can reach a PASS, which makes every ST3 and ST4 verdict above a statement over a document this suite may never have read"
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
 echo
@@ -8357,12 +8804,43 @@ else
   FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
 fi
 
-# ── ONE assertion in this suite is now REGISTERED with md_flips: CTL-DATAROOT6, registered by
-# CTL-DATAROOT6-MUT in group CTL. Registration requires the assertion to be remediated first,
-# because an oracle asked to certify a still-blind assertion turns the suite red for a defect
-# it is reporting rather than causing — which is why the count was zero until an arm had been
-# through that. The declared residual in MD2 is still this suite's registration queue, and
-# every entry that leaves it gains an MD[...] arm in the same edit.
+# ── Group ST's cross-document pair, REGISTERED. Two subjects and three registrations, because
+# ST3 rests on TWO extractors and either one going absent must flip it: st_dm_starred on the
+# model side and st_surfaces on the form side. One assertion function registered once per
+# subject is the shape test-publish-guard.sh already ships for M5b / M5b-join.
+#
+# st3_assert and st4_assert take every input as an ARGUMENT and call their own extractors, which
+# is what makes these registrations mean anything: md_flips removes a FUNCTION, so an assertion
+# handed a precomputed set would survive its subject's removal and report itself blind. Each
+# renders exactly one verdict, and each reaches a FAIL on its degenerate path rather than
+# skipping — md_probe counts verdicts, so an assertion that stayed silent under mutation would
+# report the probe broken instead of the assertion flipping.
+md_flips st_dm_starred 'ST3'        st3_assert "$ST_MD_FORM" "$ST_DM"
+md_flips st_surfaces   'ST3-marked' st3_assert "$ST_MD_FORM" "$ST_DM"
+md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
+
+# ── THE DOCUMENT HALF IS OPTED OUT, AND THE OPT-OUT IS DECLARED RATHER THAN SILENT ──
+# The other subject ST3 and ST4 rest on is reference/data-model.md, which is a FILE and not a
+# shell function. md_flips registers an assertion by removing its subject FUNCTION, so it cannot
+# reach a document, and registering one anyway would grade the oracle rather than the assertion
+# — PP0/PP9's stated reason, applied here. The COMPENSATING POSITIVE CONTROL is CTL-ST3-EXTRACT
+# in group ST: the same extractor over a copy of that document with every field-table row
+# removed must reach the FAILING limb, and the arm asserts in the same verdict that the clean
+# copy reaches the passing one. An opt-out with no compensating arm would be an exemption.
+
+# ── REGISTERED WITH md_flips: FOUR registrations over THREE assertions, and this figure is a
+# RUNNING TOTAL — it is what has landed on this branch so far, never what any one change
+# contributed. A change that adds a registration restates the total INCLUDING the ones already
+# here; a change that reads only its own contribution here will write a number that is wrong
+# the moment the next one lands.
+#
+# The three assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; and group
+# ST's cross-document pair, ST3 against each of its two extractors and ST4 against the model
+# extractor. Registration requires the assertion to be remediated first, because an oracle asked
+# to certify a still-blind assertion turns the suite red for a defect it is reporting rather than
+# causing — which is why the count was zero until an arm had been through that. The declared
+# residual in MD2 is still this suite's registration queue, and every entry that leaves it gains
+# an MD[...] arm in the same edit.
 #
 # CTL-DATAROOT6's registration reads its subject as the SENTINEL rather than as va_main, and
 # the reason is stated at that arm: md_flips removes its subject, while the divergence being
