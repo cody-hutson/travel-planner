@@ -2781,6 +2781,7 @@ The group-deletion verb. **It deletes exactly one file under `groups/` and nothi
 |---|---|
 | `<group-id>` is absent, or is not of the id's declared shape | refuse; print the shape and **offer no near-match** |
 | `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| the run is non-interactive | refuse. No flag skips the gate; a confirmation nobody can give is not a confirmation |
 | the operator declines the confirmation | write nothing; **the file is left byte-identical** |
 
 **It is irreversible and it is reconstructible, and both words are needed.** Nothing under `groups/` is in git, so there is no earlier version to restore from. But a group record is **a display name and a list of ids, every one of which still exists**, so the operator can make it again — `group-new` then `group-add`, from the member list the confirmation just showed them. **The receipt therefore prints the member ids it is about to destroy**, which is the one place this verb echoes them: they are the whole of what is being lost, and a receipt that withheld them would make the operation unreconstructible in fact while calling it reconstructible in principle.
