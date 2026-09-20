@@ -193,9 +193,14 @@ reach table** — the receipt stays total over the table it already declares.
 - **Abandons.** **There is no abandon event and nothing marks one.** A session that stops has
   stopped; the artifact is the state. A mark would be stored session state, which is O2 renamed.
 - **Completes.** **"Complete" is not a state of the artifact, and this record declines to invent
-  one.** On a form where no field is required there is no predicate the engine may evaluate that
-  means *done*. What is computable is **fully-canvassed**: every field is answered or declined and
-  none is un-asked. The interview *ends* when the traveller ends it or when the question set is
+  one.** **Every bulleted field on both forms is skippable** — each form says as much in its own
+  words — so there is no predicate over the *answers* that the engine may evaluate to mean *done*.
+  The one field a form does require is the **person form's title line**, which `S6` carries and which
+  that form calls the one thing the record cannot do without; it is a requirement on the artifact's
+  **identity**, not a completion predicate over the canvass, and satisfying it establishes that the
+  record can be addressed rather than that the interview has finished. What is computable is
+  **fully-canvassed**: every field is answered or declined and none is un-asked. The interview
+  *ends* when the traveller ends it or when the question set is
   exhausted. **Completeness is a property of the canvass, never of the answers**, and no engine
   branch may block on it — which is the flow-side reading of `agents/00-enrichment.md` § *Missing or
   blank profile*, where a file still left as unfilled placeholders is a normal state that must never
@@ -280,6 +285,14 @@ The `slot` / `block` split is **read live from `reference/data-model.md`'s `Scop
 restated here.** A half-written unit is not a legal unit, which is why per-answer cadence cannot
 apply inside a block.
 
+**Rule 7 admits the append of a unit that is not there, and only that.** A write *inside* a unit that
+already exists changes existing lines, so it fails rule 7's own condition that *no existing line
+changes* and is therefore not an append: its shape is **`Edit` under standing rule 2's second
+condition, at unit granularity** — the target exists, and the lines that change are exactly the named
+unit's labels. D3.3's spare-unit em dash is the case this record decides on that shape, and the
+granularity is the unit for the same reason the cadence above is: a half-written unit is not a legal
+unit. **Two write shapes, one cadence**, and no new standing clause is proposed for either.
+
 **D2.3 — Changing an answer is one mechanism, within a session and across sessions.** Name the
 field, **echo the outgoing value verbatim**, `Edit` only that field's lines, confirm. This is
 `profile`'s shipped edit route, and the echo shape standing rule 9 requires of the one write that
@@ -348,10 +361,25 @@ Three independent grounds, each read live:
 **The one way to break it, stated as a hard requirement because it is the single path by which this
 claim fails.** `scripts/test-artifact-schema.sh` group `AR3` asserts that no template reaches the
 selector, and states why: a template's `trip:` value is the placeholder and would fail the
-frontmatter arm. So **the seed MUST substitute `trip:` with the trip's directory name at seed time**,
-and on the person form MUST mint the record's own stem. A verbatim template copy is a conforming
-*template* and a non-conforming *artifact*. Route 2 today reads *write it to the path unmodified*
-while the template's own guidance says to replace the placeholder with the trip's directory name;
+frontmatter arm.
+
+**The requirement is per form, and it is not the same requirement on both.** On the **trip form**,
+whose template ships `trip: <trip-slug>`, the seed **MUST substitute** that value with the trip's
+directory name at seed time — that placeholder is the one `AR3`'s warrant names. On the **person
+form** the seed **MUST NOT touch `trip:` at all**: that form ships `trip: cross-trip`, a **reserved
+sentinel** that `reference/schemas/person-record.md` declares as this class's narrowing of the
+required `slug`, that resolves to no trip directory, and that the form's own fence instruction says
+to leave exactly as it stands. Substituting it would turn a conforming cross-trip record into one
+claiming a trip — a corruption of the very field the class narrows, and the failure this
+qualification exists to prevent. What the person form's seed **MUST** do instead is mint the
+record's own stem, which is a **filename** transform and not a frontmatter value: `artifact:` keeps
+its class string with its angle token on both forms, and both shipped worked records show exactly
+that shape.
+
+**Both directions are defects.** A verbatim template copy is a conforming *template* and a
+non-conforming *artifact*; an unqualified substitution is the opposite failure and is no less a
+defect. Route 2 today reads *write it to the path unmodified* while the template's own guidance
+says to replace the placeholder with the trip's directory name;
 the two sentences are reconcilable if *unmodified* means *do not edit the questions*, and the
 reconciliation is named in § *Residuals* rather than asserted here as a defect.
 
@@ -401,7 +429,13 @@ for that classification. The tier-crossing case is handled by D4.3 instead.
   human-authored, history-less file is IRREVERSIBLE under `ADR-007-command-entry-point.md` § 2 and
   buys only cosmetics; `Scope: block` makes repetition user data rather than a defect; the
   malformed-slot finding reaches slot-scoped fields only; and leaving the unit preserves the labels
-  the planner parses.
+  the planner parses. **The write shape is the one D2.2 states for a write inside an existing
+  unit — `Edit` under standing rule 2's second condition, taken per unit**, so the labels of one
+  spare unit are em-dashed in a single write and no line outside that unit changes. It is **not**
+  rule 7, which admits appends alone; replacing a placeholder with `—` changes an existing line.
+  Nor is it D2.1's cadence, which is `slot`-scoped by its own terms. **Without a stated shape this
+  write would have no sanctioned tool**, which is the gap rule 7 was itself written to close for
+  appends.
 - **Remove an instance** — reuse `fact`'s removal shape verbatim: name the unit, **echo it verbatim
   before writing**, remove no more than the named unit, and never remove a whole section.
 
@@ -435,8 +469,10 @@ The decision, stated as the behaviour it is:
 - **The interview never reduces a block below the unit count the seeded form carries.** The seed
   writes the form whole, so whatever repeat units the form ships with are present from the first
   instant, and D3.3's em-dash rule keeps them.
-- **An empty block is expressed by em-dashing its units, never by deleting them.** Zero units is
-  therefore a shape the interview does not produce, on either form.
+- **An empty block is expressed by em-dashing its units, never by deleting them** — in the write
+  shape D3.3 states, which is `Edit` under standing rule 2's second condition at unit granularity
+  rather than rule 7's append. Zero units is therefore a shape the interview does not produce, on
+  either form.
 - **Where a block's own form makes a word the load-bearing empty answer — the needs block, whose
   form offers `none` in words — that word is offered and recorded, and it is an answer.** `none` is
   answered; the em dash is not. The two are distinct states and this record keeps them distinct.
@@ -545,10 +581,12 @@ They decide no tone and no wording.
 **D5.1 — The confirmation-content rule, stated as a decidable test.**
 
 > A confirmation may contain only: **(i)** tokens the traveller uttered in this turn; **(ii)** the
-> field's own label, as the form spells it; and **(iii)** frame words from a closed, content-free
-> set the interviewer declares. **Test:** strike (ii) and (iii) from the confirmation; what remains
-> must be a **subsequence of the traveller's utterance in this turn**. Any word carrying a field
-> value is not a frame word.
+> field's own label, as the form spells it; and **(iii)** words that carry no field value — the
+> connective and framing material a sentence needs. **Test:** strike (ii), then strike every
+> remaining word that **carries no field value**; what remains must be a **subsequence of the
+> traveller's utterance in this turn**. **The discriminator is the word itself, never a list:** a
+> word that carries a field value is never struck, so a confirmation cannot pass by calling the
+> value it supplied a frame word.
 
 A worked pair, so a reviewer can grade a transcript without exercising judgement:
 
@@ -559,7 +597,11 @@ A worked pair, so a reviewer can grade a transcript without exercising judgement
 
 *Rejected:* *a confirmation must not add meaning* — rejected explicitly as **guidance rather than a
 test**. Two reviewers disagree about meaning, and the failure mode is precisely a confirmation that
-*feels* meaning-preserving.
+*feels* meaning-preserving. *Rejected:* declaring (iii) as an enumerated word list. Nothing in the
+corpus declares such a set, and a record that declared one would carry a closed vocabulary no surface
+reads — under which a word would be non-conforming for being **unlisted** rather than for carrying a
+value, which is not the property this test exists to decide. The test is written against the word's
+content instead, so it needs no list and grades the same transcripts.
 
 **D5.2 — *Keep their words* is operationalised as delete-only.** The templates' rule to *tighten the
 wording and not rewrite the meaning* becomes: **tightening may delete tokens and may never add one.**
@@ -677,8 +719,10 @@ rule is that a location absent from that table is not reachable by omission but 
 receipt says so. A third-party transcript is such a location. Disclosure is the only available
 control, and this record says so rather than implying a reach it does not have.
 
-**D6.5 — An interview session writes no `trip-log.md` entry.** The log's own text states that
-nothing makes a log entry mandatory. More decisively, `trip-log.md` is the **decision register**, and
+**D6.5 — An interview session writes no `trip-log.md` entry.** The statement that **nothing makes a
+log entry mandatory** is `skills/trip-record/SKILL.md` § `log`'s, not the log file's — no
+`trip-log.md` in the corpus carries it — and the attribution is corrected here rather than carried
+forward. More decisively, `trip-log.md` is the **decision register**, and
 a traveller's answers are not decisions — they are the artifact's content, and putting them in the
 register would give the register a second source for a fact the traveller's own file owns.
 *Rejected:* logging the session's start and stop as the resumption record — that is O2 wearing the
@@ -838,10 +882,15 @@ Every residual is named with its owner. A residual with no owner is not a residu
   `INDETERMINATE`; § *The override lifecycle* for the em dash as the shipped un-answer
 - `reference/data-architecture.md` § *Schema evolution* — the two interview target classes are
   permanently tolerated at version 0 and never engine-upgraded, which grounds D2.5 and forecloses O3
+- `reference/schemas/person-record.md` — the `trip: cross-trip` narrowing: a reserved sentinel that
+  type-checks as the required `slug`, resolves to no trip directory, and is therefore the one value
+  D2.5's seed requirement must **not** substitute
 - `skills/trip-record/SKILL.md` — standing rules 2, 3, 7 and 9 for the write conditions, the surface
   D2.4 reconciles, and the mechanical ground for D4.3; § `profile` for the ordered checks and the
   three create routes; § `promote` for the never-reached-from-a-report bound; § `fact` for the
-  whole-unit append and the echoed removal; § `extract` for the name-only preview behind D6.3
+  whole-unit append and the echoed removal; § `extract` for the name-only preview behind D6.3;
+  § `log` for the statement that nothing makes a log entry mandatory, which is D6.5's and is cited
+  to that section rather than to the log file
 - `skills/trip-new/SKILL.md` § *Resume — repair only* — resumption selected by a probe and never
   typed, which is D1.2's precedent
 - `agents/00-enrichment.md` — § *Missing or blank profile* for the normal-state branch and the

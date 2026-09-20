@@ -140,7 +140,8 @@ constraint was upheld at the Stage-5 gate **with this cost known**, and the cost
 § *How this file is extended* closes Zone A and states that **nothing may be appended below the last
 verb section**, enumerating what a later slice may add: requirement-table rows, a `**Reads:**` line
 per new verb section, one `## <verb>` section per row appended below every existing one,
-`allowed-tools` additions, and a repair under the repair extension point. A **shared, non-verb**
+`allowed-tools` additions, and — for a verb that changes a persist-mutable file — that file's own
+no-overwrite shape, stated inside that verb's own section. A **shared, non-verb**
 conduct section is none of those. So A2 authors conduct **inside the new verb's own Zone-B
 section**, and the other callers cite it. That is admissible — an existing Zone-B section may be
 edited — and it makes one verb section the de-facto library, which is the cost § *Residuals*
@@ -257,6 +258,33 @@ classification: reference/data-model.md § Field Scope → The classification
 output: travelers/<traveler>.md
 ```
 
+**The boundary is borne by two literals, and this contract names which one is normative.** Both
+shipped forms carry them on consecutive lines: a line-initial heading,
+`# END OF PROFILE — the guide below is not part of your profile`, and immediately beneath it the
+HTML comment `<!-- PROFILE-END -->`. **`boundary:` names the comment, and the comment is the
+normative literal.** The ground is measured rather than stylistic: at `edadfa9` the heading literal
+occurs **twice** in each guided form — once as the heading, once inside that form's own hand-off
+instruction, which names it in prose — while the comment occurs **once**. The heading literal
+therefore cannot satisfy D2.6 question 2 and the comment can.
+
+**The heading is not thereby demoted to decoration, and the record accounts for it because it is
+load-bearing to a different consumer.** It is the human-facing rendering of the same boundary, and it
+is the literal the skill surfaces match **line-initially**: probed at `edadfa9`,
+`skills/trip-record/SKILL.md` carries three such sites and `skills/trip-new/SKILL.md` one, while
+`reference/data-model.md`'s denominator rule reads the comment instead. **Today the two agree only
+by adjacency, and nothing asserts it**: no script reads either literal (probed over the tracked tree
+at `edadfa9`; the control token `ANSWERED(` is read by `scripts/test-artifact-schema.sh`, so scripts
+*are* being read by the same instrument). D2.6 question 2 is what converts that adjacency into an
+assertion, and D5.6 is what runs it.
+
+*Rejected:* retargeting `boundary:` at the heading literal — it occurs twice per form, so the
+exactly-once test that makes the boundary decidable fails on both shipped forms. *Rejected:*
+declaring the heading as a second fence key — it puts a second copy of a literal the form already
+carries into the declaration, which D2.2 refuses, and it grows the per-form cost § *Decision* 6
+exists to shrink. *Rejected:* leaving the heading unmentioned, which is the shape this clause
+replaces — a contract silent on the literal the skill surfaces key on declares a boundary the engine
+does not use.
+
 **D2.2 — The declaration points; it never copies.** Every key above is either a fact about the form
 itself or an address. `classification:` names the table and its section anchor; the table's own
 columns are read live at invocation and are not restated in the fence, in the form, or in the skill.
@@ -332,9 +360,22 @@ bump read as an artifact-class bump to `scripts/validate-artifacts.sh`.
 interviewer.** A reader takes an arbitrary form and answers:
 
 1. Exactly one `intake-form` fence occurs, above the boundary, carrying every declared key.
-2. The literal named by `boundary:` occurs exactly once in the file.
+2. The literal named by `boundary:` occurs exactly once in the file, **and** the form's
+   end-of-profile heading — the literal the skill surfaces match — occurs **line-initially** exactly
+   once, on the line immediately above it. The second limb is what asserts the two literals'
+   agreement; without it they agree only by adjacency, which is the state D2.1 records.
 3. Every `- [⭐ ]**<Label>:**` bullet **above** the boundary joins to exactly one row of the table
-   `classification:` names, on `(section, label)`.
+   `classification:` names, **on the label**. The key is the label alone and **not**
+   `(section, label)`, and the ground is measured rather than chosen: the forms' own `##` headings
+   carry display suffixes the table's `Section` cell does not — `Desires — what you want` against
+   `Desires`, `Needs — the must-haves` against `Needs`, `People dynamics & togetherness` against
+   `People dynamics` — so at `edadfa9` a literal pair join scores **11 of 19** distinct labels on the
+   trip form and **14 of 17** on the durable form, while the label join scores **19 of 19** and
+   **17 of 17**, which is `36/36` across both. The label is a key over that table, read live: its
+   rows carry one distinct label each, so *exactly one* is a property of the table rather than an
+   assumption. This is the same join D3.3's control arm runs, and `F11` already specifies the `F5`
+   read as joined on label — so the contract, the seam and the measurement name **one** join rather
+   than three.
 4. **No** `- **<Label>:**` bullet occurs **below** the boundary.
 5. `writer:` is `human`, and no field is marked `[DERIVED]` or `[ENRICH]`.
 
@@ -534,7 +575,7 @@ form or an address.
 | **F1** | the form's own identity | `form:` — a repo-relative path |
 | **F2** | the contract version the form was authored against | `form-version:` — an integer, so a skill and a form disagree detectably |
 | **F3** | the writer class of the form's fields | `writer:` — `human`; a form carrying any `[DERIVED]`/`[ENRICH]` field is not interviewable |
-| **F4** | where the profile half ends | `boundary:` — the sentinel literal, occurring exactly once |
+| **F4** | where the profile half ends | `boundary:` — the **normative** sentinel literal, occurring exactly once. The form bears the same boundary a second time as the line-initial end-of-profile **heading** immediately above it — the literal the skill surfaces match, and the reason D2.1 names one of the two normative rather than swapping between them. The heading is **not** a fence key; D2.6 question 2 grades it against the sentinel |
 | **F5** | which label-to-metadata table the form is keyed against | `classification:` — a path and a section anchor; **the table is not copied** |
 | **F6** | the artifact class the finished file becomes, and its path rule | `output:` — the `artifact:` string of the corresponding `reference/schemas/<class>.md` fence, which is simultaneously the class identity and the path pattern |
 
@@ -570,9 +611,12 @@ shipped forms at `edadfa9`; none is new authoring, and the contract's cost here 
   requirement for cardinality, class, horizon or the never-asked set is satisfied by the `F5` join,
   **not** by a new form declaration. Adding one would create the second source of truth D2.2
   refuses.
-- **`F4` is the only datum whose status changes.** It exists today and is normative in the
-  denominator rule; **no script reads it.** After this record it is declared in the fence, read by
-  the extractors, and graded fail-closed.
+- **`F4` is the only datum whose status changes, and it changes in both of the literals that
+  carry it.** The boundary exists today — normative in the denominator rule as the comment, matched
+  line-initially as the heading by the skill surfaces D2.1 names — and **no script reads either
+  literal.** After this record the comment is declared in the fence, read by the extractors, and
+  graded fail-closed, and the heading is graded **against** it by D2.6 question 2. Neither literal
+  is new authoring: both ship in both guided forms today.
 - **`F17` is the only datum that costs new authoring.** Everything else is either a key in one new
   fence or a line the shipped forms already carry.
 
@@ -693,7 +737,9 @@ Every residual is named with its owner. A residual with no owner is not a residu
   permitted additions and the repair extension point, which together select D1.1's landing site;
   § *What the blocks above are* for the `**Reads:**` declaration D1.3 repairs; and `## profile` for
   the three create routes, for route 1's falsified script sentence, and for the live-read discipline
-  this contract's `classification:` key extends rather than replaces
+  this contract's `classification:` key extends rather than replaces; and, with
+  `skills/trip-new/SKILL.md`, as the surfaces that match the boundary's **heading** literal
+  line-initially rather than its comment — the asymmetry D2.1 names and D2.6 question 2 asserts
 - `templates/traveler-intake.template.md`, `templates/person-intake.template.md` — cited as the
   authority on their own questions, their own option text, their own frontmatter instruction and
   their own stem transform. **Not restated**
