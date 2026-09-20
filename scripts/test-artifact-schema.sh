@@ -2623,6 +2623,143 @@ st_setdiff() {
   ' <<<"$1"
 }
 
+# ── cov_verdict / cov_assert — THE ARM-COVERAGE COMPARISON, IN ONE IMPLEMENTATION ─
+#
+# Three groups assert the same proposition: every code their evaluator can EMIT has a must-fire
+# arm, and every must-fire arm names a code that evaluator can emit. Group ST shipped it first.
+# Group CE copied it nine days later — its own opening comment says "on the ST precedent" — and
+# the result was measured rather than eyeballed: 24 of the 47 normalised non-blank lines of the
+# shorter arm are IDENTICAL once the group identifier is folded (st_/ce_, ST_/CE_, ST-/CE-, bare
+# ST/CE), rising to 28 of 47 once ST's per-fixture tag, for which CE has no analogue, is
+# neutralised too. Read it as 51-60%. Both control arms behaved: with NO folding at all the same
+# comparison returns 6 of 47, so the raw reader is live and the folding is doing real work; and
+# the same ST arm against an unrelated arm in this file returns 9 of 78, so the overlap is
+# SPECIFIC to the sibling pair rather than an artefact of shared shell boilerplate. Group CTL
+# would have been the third copy. It is a CALL instead, and so are the other two.
+#
+# ── WHY EXTRACTING HERE DOES NOT CROSS WHAT ADR-019 DECLINED TO CROSS ────────────
+# reference/adr/ADR-019 rejects a shared library on the finding that "the suites deliberately
+# duplicate their verdict harness rather than share it". Measured, that sentence describes the
+# SUITE boundary: md_probe is re-implemented in all five suites, 7 occurrences each. st_codes and
+# st_setdiff exist in exactly ONE file and are already called ACROSS GROUPS inside it, as
+# has_finding, mk_root and run_fx are. These helpers join that second class. Extraction within one
+# file crosses nothing that record declined to cross.
+#
+# The prefix is cov_ and not st_cov_ deliberately. st_codes and st_setdiff carry a group prefix
+# they have outgrown — they are group-agnostic and called from CE — and extending that pattern in
+# a NEW identifier would canonicalise the defect rather than stop at it. cov_ names the property
+# the helper grades, which stays true under a fourth consumer. Measured: 0 of the 31 function
+# prefixes in this file are cov_, so nothing collides.
+#
+# ── WHAT IS SHARED IS THE COMPARISON. WHAT IS NOT SHARED IS THE DERIVATION ───────
+# ST and CE emit a code as the head of a format string followed by a TAB; the validator emits
+# `FINDING <CODE> `. Forcing one reader over both shapes would mean either a two-alternative
+# regex — a closed class the next emitter shape defeats silently, which is the trap ADR-019
+# writes down — or normalising shipping code so that a test can share a helper, which inverts the
+# dependency. So each caller passes its OWN extractor and its OWN shaper. Those two are a MATCHED
+# PAIR: the extractor reads an emission shape and the shaper writes that same shape, so the
+# control arms below mutate an input the SHIPPING reader then consumes rather than a lookalike.
+
+# cov_emit_tab <code> / cov_emit_finding <code> — ONE synthetic emission line carrying <code>, in
+# the shape its paired extractor reads. Passed BY NAME so a control arm's mutation is built by
+# the same grammar the reader consumes; a shaper and an extractor that disagreed would make the
+# control silently unable to fire, which is the failure the control exists to refuse.
+cov_emit_tab()     { printf '  printf "%s\\t a synthetic emission that no arm covers\\n"\n' "$1"; }
+cov_emit_finding() { printf '  printf "FINDING %s a synthetic emission that no arm covers\\n"\n' "$1"; }
+
+# cov_verdict <verdict-id> <control-stem> <subject> <codes> <armed> — the coverage verdict, and
+# the ONLY verdict this function renders.
+#
+# Four limbs, and the ORDER is part of the assertion. The EMPTINESS gate runs FIRST, so a reader
+# that has gone quiet is named as the cause instead of leaving both set differences empty and the
+# group green over nothing. Then BOTH directions are graded, because containment alone cannot
+# tell a covered set from a reader that returned nothing: one that had stopped finding emissions
+# would report "0 uncovered" and be believed.
+#
+# Exactly one verdict on every path, including the degenerate one, and every path reaches a
+# verdict. That is what makes it registrable with md_flips, which COUNTS verdicts in a subshell:
+# an assertion that stayed silent under mutation reports the probe broken rather than the
+# assertion flipping.
+cov_verdict() {
+  local id="$1" stem="$2" subj="$3" codes="$4" armed="$5"
+  local cov_un cov_ph cov_nc cov_nu cov_np cov_na
+  cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
+  cov_un="$(st_setdiff "$codes" "$armed")"
+  cov_ph="$(st_setdiff "$armed" "$codes")"
+  cov_nu="$(printf '%s\n' "$cov_un" | grep -c '[^[:space:]]')"
+  cov_np="$(printf '%s\n' "$cov_ph" | grep -c '[^[:space:]]')"
+  cov_na="$(printf '%s\n' "$armed" | awk 'NF && !seen[$0]++' | grep -c '.')"
+  if [ "$cov_nc" -eq 0 ]; then
+    FAIL "$id: the code reader returned 0 codes from the body of $subj, so the coverage verdict would be a statement over the empty set — either the emitter is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
+  elif [ "$cov_nu" -ne 0 ]; then
+    FAIL "$id: $cov_nu of the $cov_nc code(s) $subj can emit have NO must-fire arm in this run — $(printf '%s' "$cov_un" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
+  elif [ "$cov_np" -ne 0 ]; then
+    FAIL "$id: $cov_np must-fire arm(s) name a code $subj cannot emit — $(printf '%s' "$cov_ph" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
+  else
+    PASS "$id: all $cov_nc code(s) $subj can emit [$(printf '%s' "$codes" | tr '\n' ' ')] have a must-fire arm, and all $cov_na armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the emitter's own body on this run, so a code added later arrives uncovered and RED rather than covered by a numeral in this file. ${stem}1 and ${stem}2 show this same comparison failing in each direction"
+  fi
+}
+
+# cov_assert <verdict-id> <control-stem> <control-tag> <subject> <extractor> <shaper> <body>
+#            <codes> <armed> <probe> <phantom>
+#
+# The coverage verdict plus the TWO standing MUST-FIRE controls that are what make its two zeros
+# measurements rather than assertions. Three properties are preserved from the arms this replaces,
+# and each is the reason one of them is written the way it is:
+#
+#   * Both controls mutate a COPY OF A STRING IN THIS SHELL — never this file, never the tree — so
+#     there is nothing to restore and no checkout can be asked to undo it.
+#   * Both assert the mutation LANDED before the verdict is read. A fixture that was never
+#     actually changed makes a must-fire arm's silence meaningless.
+#   * Both grade a DELTA against this run's own measurement rather than against a literal 1. On a
+#     tree that already carries an uncovered code the control must still be honest instead of
+#     inheriting that state and accusing itself.
+#
+# <control-tag> is appended AFTER the digit, because group ST runs once per intake form and its
+# arms are spelled CTL-ST-COV1[<form>]. The other two consumers pass an empty tag.
+cov_assert() {
+  local id="$1" stem="$2" tag="$3" subj="$4" ex="$5" shaper="$6"
+  local body="$7" codes="$8" armed="$9" probe="${10}" phantom="${11}"
+  local cov_nc cov_nu cov_np cov_mut cov_landed cov_mu cov_mn cov_hit
+  local cov_ma cov_al cov_mp cov_pn cov_phit
+  cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
+  cov_nu="$(st_setdiff "$codes" "$armed")"; cov_nu="$(printf '%s\n' "$cov_nu" | grep -c '[^[:space:]]')"
+  cov_np="$(st_setdiff "$armed" "$codes")"; cov_np="$(printf '%s\n' "$cov_np" | grep -c '[^[:space:]]')"
+
+  cov_verdict "$id" "$stem" "$subj" "$codes" "$armed"
+  [ "$cov_nc" -gt 0 ] || return 0
+
+  # Control 1 — the UNCOVERED direction. One synthetic emission is appended to a copy of the
+  # emitter's body and the SAME extractor and the SAME st_setdiff read it, so what is graded is
+  # the shipping comparison with one input changed.
+  cov_mut="$body
+$("$shaper" "$probe")"
+  cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
+  cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
+  cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
+  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probe}$")"
+  if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((cov_nu + 1)) ] && [ "$cov_hit" -eq 1 ]; then
+    PASS "${stem}1${tag}: MUST FIRE — one unarmed code appended to a COPY of the body of $subj takes the uncovered set from $cov_nu to $cov_mn and the new member IS that code. A code added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "${stem}1${tag}: MUST FIRE — an unarmed code appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((cov_nu + 1)) expected, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
+  fi
+
+  # Control 2 — the PHANTOM direction, the one that keeps the zero from resting on a reader that
+  # has gone quiet. Without it an extractor returning nothing would leave the uncovered set empty
+  # and the verdict would read GREEN over a group with no coverage at all.
+  cov_ma="$armed
+$phantom"
+  cov_al=0; [ "$cov_ma" != "$armed" ] && cov_al=1
+  cov_mp="$(st_setdiff "$cov_ma" "$codes")"
+  cov_pn="$(printf '%s\n' "$cov_mp" | grep -c '[^[:space:]]')"
+  cov_phit="$(printf '%s\n' "$cov_mp" | grep -c "^${phantom}$")"
+  if [ "$cov_al" -eq 1 ] && [ "$cov_pn" -eq $((cov_np + 1)) ] && [ "$cov_phit" -eq 1 ]; then
+    PASS "${stem}2${tag}: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $cov_np to $cov_pn and the new member IS that code. So $id's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
+  else
+    FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered group from a reader that returned nothing"
+  fi
+}
+
 # ── THE CROSS-DOCUMENT HALF ──────────────────────────────────────────────────────
 # Everything above grades ONE fact with four homes INSIDE one form. That is AGREEMENT, and
 # agreement is not accuracy: four homes moved together onto a wrong number stay green. The
@@ -3223,71 +3360,19 @@ if [ "$ST_OK" -eq 1 ]; then
   st3_mustnotfire "CTL-ST3-CLEAN[$ST_TAG]" "$ST_FX" "$ST3_DMFX3" 0 "UNMUTATED copies of BOTH this form and reference/data-model.md are put through the same comparison"
 
   # ── ST-COV — the invariant this group had been holding BY HAND. Every code st_violations can
-  # emit has a must-fire arm, and every must-fire arm names a code it can emit. BOTH directions,
-  # because containment alone cannot tell a covered set from a reader that returned nothing: one
-  # that had gone quiet would report "0 uncovered" and be believed. The reverse difference is what
-  # makes the zero a measurement, and the emptiness gate below is what names the cause instead of
-  # blaming the arms.
+  # emit has a must-fire arm, and every must-fire arm names a code it can emit. The comparison,
+  # the emptiness gate and the two MUST-FIRE controls are cov_assert above, which groups CE and
+  # CTL invoke with their own extractors: ONE implementation, three consumers. Nothing about this
+  # group's proposition moved into the helper except the arithmetic that was already identical.
+  #
+  # st_violations is UNCHANGED and so is ST_CODES — the derivation and the population two sibling
+  # cards in this release rest on are exactly as they were. What is passed here is that same
+  # ST_CODES, together with the function body the control arm mutates a copy of.
   #
   # Graded here, LAST, because its second input is the set of arms that ran.
-  ST_UNARMED="$(st_setdiff "$ST_CODES" "$ST_ARMED")"
-  ST_PHANTOM="$(st_setdiff "$ST_ARMED" "$ST_CODES")"
-  ST_NUNARMED="$(printf '%s\n' "$ST_UNARMED" | grep -c '[^[:space:]]')"
-  ST_NPHANTOM="$(printf '%s\n' "$ST_PHANTOM" | grep -c '[^[:space:]]')"
-  ST_NARMED="$(printf '%s\n' "$ST_ARMED" | awk 'NF && !seen[$0]++' | grep -c '.')"
-  if [ "$ST_NCODES" -eq 0 ]; then
-    FAIL "ST-COV[$ST_TAG]: the code reader returned 0 codes from st_violations' own body, so the coverage verdict would be a statement over the empty set — either the function is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
-  elif [ "$ST_NUNARMED" -ne 0 ]; then
-    FAIL "ST-COV[$ST_TAG]: $ST_NUNARMED of the $ST_NCODES code(s) st_violations can emit have NO must-fire arm in this run — $(printf '%s' "$ST_UNARMED" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
-  elif [ "$ST_NPHANTOM" -ne 0 ]; then
-    FAIL "ST-COV[$ST_TAG]: $ST_NPHANTOM must-fire arm(s) name a code st_violations cannot emit — $(printf '%s' "$ST_PHANTOM" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
-  else
-    PASS "ST-COV[$ST_TAG]: all $ST_NCODES code(s) st_violations can emit [$(printf '%s' "$ST_CODES" | tr '\n' ' ')] have a must-fire arm, and all $ST_NARMED armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the function's own body on this run, so a seventh code arrives uncovered and RED rather than covered by a numeral in this file. CTL-ST-COV1 and COV2 below show this same comparison failing in each direction"
-  fi
-
-  # CTL-ST-COV1 — MUST FIRE, and this arm IS the card's proof-by-mutation. A synthetic emission is
-  # appended to a COPY OF THE FUNCTION TEXT — a string in this shell, never this file and never the
-  # tree — so there is nothing to restore and no checkout can be asked to undo it. The SAME
-  # st_codes and the SAME st_setdiff read it, so what is graded is the shipping comparison with one
-  # input changed: the CTL-ST arms' own discipline one level up, which mutates a copy of the
-  # template and keeps the evaluator.
-  #
-  # Graded as a DELTA against ST-COV's own measurement rather than against a literal 1: on a tree
-  # that already carries an uncovered code this arm must still be honest instead of inheriting that
-  # state and accusing itself.
-  if [ "$ST_NCODES" -gt 0 ]; then
-    ST_COV_FN="$(declare -f st_violations)"
-    ST_COV_MUT="$ST_COV_FN
-        printf \"${ST_COV_PROBE}\\t a synthetic emission that no arm covers\\n\""
-    ST_COV_LANDED=0; [ "$ST_COV_MUT" != "$ST_COV_FN" ] && ST_COV_LANDED=1
-    ST_COV_MU="$(st_setdiff "$(st_codes "$ST_COV_MUT")" "$ST_ARMED")"
-    ST_COV_MN="$(printf '%s\n' "$ST_COV_MU" | grep -c '[^[:space:]]')"
-    ST_COV_HIT="$(printf '%s\n' "$ST_COV_MU" | grep -c "^${ST_COV_PROBE}$")"
-    if [ "$ST_COV_LANDED" -eq 1 ] && [ "$ST_COV_MN" -eq $((ST_NUNARMED + 1)) ] && [ "$ST_COV_HIT" -eq 1 ]; then
-      PASS "CTL-ST-COV1[$ST_TAG]: MUST FIRE — one unarmed code appended to a COPY of st_violations' body takes the uncovered set from $ST_NUNARMED to $ST_COV_MN and the new member IS that code. A seventh code added to the real function with no arm behind it turns ST-COV red, which is the property this group could previously only state. The mutation is asserted to have landed before the verdict is read"
-    else
-      FAIL "CTL-ST-COV1[$ST_TAG]: MUST FIRE — an unarmed code appended to a copy of the function body was not reported (mutation-landed=$ST_COV_LANDED, uncovered=$ST_COV_MN against $((ST_NUNARMED + 1)) expected, probe-found=$ST_COV_HIT). ST-COV's zero above does not respond to a known hole and therefore proves nothing"
-    fi
-  fi
-
-  # CTL-ST-COV2 — MUST FIRE on the OTHER direction, the one that keeps ST-COV's zero from resting
-  # on a reader that has gone quiet. A code no emission carries is added to a COPY of the armed
-  # set; the same comparison must name it. Without this arm an st_codes that returned nothing would
-  # leave the uncovered set empty and ST-COV would read GREEN over a group with no coverage at all
-  # — the exact shape of confidence-without-evidence this whole assertion exists to refuse.
-  if [ "$ST_NCODES" -gt 0 ]; then
-    ST_COV_MA="$ST_ARMED
-$ST_COV_PHANTOM"
-    ST_COV_ALANDED=0; [ "$ST_COV_MA" != "$ST_ARMED" ] && ST_COV_ALANDED=1
-    ST_COV_MP="$(st_setdiff "$ST_COV_MA" "$ST_CODES")"
-    ST_COV_PN="$(printf '%s\n' "$ST_COV_MP" | grep -c '[^[:space:]]')"
-    ST_COV_PH="$(printf '%s\n' "$ST_COV_MP" | grep -c "^${ST_COV_PHANTOM}$")"
-    if [ "$ST_COV_ALANDED" -eq 1 ] && [ "$ST_COV_PN" -eq $((ST_NPHANTOM + 1)) ] && [ "$ST_COV_PH" -eq 1 ]; then
-      PASS "CTL-ST-COV2[$ST_TAG]: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $ST_NPHANTOM to $ST_COV_PN and the new member IS that code. So ST-COV's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
-    else
-      FAIL "CTL-ST-COV2[$ST_TAG]: MUST FIRE — a phantom arm was not reported (mutation-landed=$ST_COV_ALANDED, phantom=$ST_COV_PN against $((ST_NPHANTOM + 1)) expected, probe-found=$ST_COV_PH). ST-COV cannot distinguish a covered group from a reader that returned nothing"
-    fi
-  fi
+  cov_assert "ST-COV[$ST_TAG]" 'CTL-ST-COV' "[$ST_TAG]" 'st_violations' \
+             st_codes cov_emit_tab "$(declare -f st_violations)" \
+             "$ST_CODES" "$ST_ARMED" "$ST_COV_PROBE" "$ST_COV_PHANTOM"
 fi
 done <<EOF
 $ST_TEMPLATES
@@ -8153,54 +8238,15 @@ EOF
   ce_mustnotfire "CTL-CE-NEUTRAL" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" "the body's H1 is reworded — the file changes, and no surface this group reads does" "$CE_L"
 
   # ── CE-COV — the arm inventory, read from ce_violations' own body and compared in BOTH
-  # directions, on the ST precedent. Containment alone cannot tell a covered set from a
-  # reader that returned nothing, so the reverse difference is what makes the zero a
-  # measurement. A code added with no arm behind it is RED here rather than latent.
+  # directions. This group shipped as a copy of ST's arm "on the ST precedent"; it is now a CALL
+  # to the same cov_assert that group ST and group CTL call, so the comparison has one
+  # implementation and the next group meets a helper rather than this decision. ce_violations and
+  # CE_CODES are untouched: what moved is the arithmetic, never the derivation.
   CE_CODES="$(st_codes "$(declare -f ce_violations)")"
   CE_NCODES="$(printf '%s\n' "$CE_CODES" | grep -c '[^[:space:]]')"
-  CE_UNARMED="$(st_setdiff "$CE_CODES" "$CE_ARMED")"
-  CE_PHANTOMS="$(st_setdiff "$CE_ARMED" "$CE_CODES")"
-  CE_NUNARMED="$(printf '%s\n' "$CE_UNARMED" | grep -c '[^[:space:]]')"
-  CE_NPHANTOM="$(printf '%s\n' "$CE_PHANTOMS" | grep -c '[^[:space:]]')"
-  CE_NARMED="$(printf '%s\n' "$CE_ARMED" | awk 'NF && !seen[$0]++' | grep -c '.')"
-  if [ "$CE_NCODES" -eq 0 ]; then
-    FAIL "CE-COV: the code reader returned 0 codes from ce_violations' own body, so the coverage verdict would be a statement over the empty set — either the function is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
-  elif [ "$CE_NUNARMED" -ne 0 ]; then
-    FAIL "CE-COV: $CE_NUNARMED of the $CE_NCODES code(s) ce_violations can emit have NO must-fire arm in this run — $(printf '%s' "$CE_UNARMED" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
-  elif [ "$CE_NPHANTOM" -ne 0 ]; then
-    FAIL "CE-COV: $CE_NPHANTOM must-fire arm(s) name a code ce_violations cannot emit — $(printf '%s' "$CE_PHANTOMS" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
-  else
-    PASS "CE-COV: all $CE_NCODES code(s) ce_violations can emit [$(printf '%s' "$CE_CODES" | tr '\n' ' ')] have a must-fire arm, and all $CE_NARMED armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the function's own body on this run, so a code added later arrives uncovered and RED rather than covered by a numeral in this file"
-  fi
-
-  # CTL-CE-COV1 / COV2 — the same proof-by-mutation ST carries, on this group's own reader.
-  # Both mutate a COPY of a string in this shell, never this file and never the tree, and
-  # both are graded as a DELTA rather than against a literal.
-  if [ "$CE_NCODES" -gt 0 ]; then
-    CE_COV_FN="$(declare -f ce_violations)"
-    CE_COV_MUT="$CE_COV_FN
-      printf \"${CE_PROBE}\\ta synthetic emission that no arm covers\\n\""
-    CE_COV_LANDED=0; [ "$CE_COV_MUT" != "$CE_COV_FN" ] && CE_COV_LANDED=1
-    CE_COV_MU="$(st_setdiff "$(st_codes "$CE_COV_MUT")" "$CE_ARMED")"
-    CE_COV_MN="$(printf '%s\n' "$CE_COV_MU" | grep -c '[^[:space:]]')"
-    CE_COV_HIT="$(printf '%s\n' "$CE_COV_MU" | grep -c "^${CE_PROBE}$")"
-    if [ "$CE_COV_LANDED" -eq 1 ] && [ "$CE_COV_MN" -eq $((CE_NUNARMED + 1)) ] && [ "$CE_COV_HIT" -eq 1 ]; then
-      PASS "CTL-CE-COV1: MUST FIRE — one unarmed code appended to a COPY of ce_violations' body takes the uncovered set from $CE_NUNARMED to $CE_COV_MN and the new member IS that code. A code added to the real function with no arm behind it turns CE-COV red, which is the property this group could otherwise only state"
-    else
-      FAIL "CTL-CE-COV1: MUST FIRE — an unarmed code appended to a copy of the function body was not reported (mutation-landed=$CE_COV_LANDED, uncovered=$CE_COV_MN against $((CE_NUNARMED + 1)) expected, probe-found=$CE_COV_HIT). CE-COV's zero does not respond to a known hole and therefore proves nothing"
-    fi
-    CE_COV_MA="$CE_ARMED
-$CE_PHANTOM"
-    CE_COV_ALANDED=0; [ "$CE_COV_MA" != "$CE_ARMED" ] && CE_COV_ALANDED=1
-    CE_COV_MP="$(st_setdiff "$CE_COV_MA" "$CE_CODES")"
-    CE_COV_PN="$(printf '%s\n' "$CE_COV_MP" | grep -c '[^[:space:]]')"
-    CE_COV_PH="$(printf '%s\n' "$CE_COV_MP" | grep -c "^${CE_PHANTOM}$")"
-    if [ "$CE_COV_ALANDED" -eq 1 ] && [ "$CE_COV_PN" -eq $((CE_NPHANTOM + 1)) ] && [ "$CE_COV_PH" -eq 1 ]; then
-      PASS "CTL-CE-COV2: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $CE_NPHANTOM to $CE_COV_PN and the new member IS that code. So CE-COV's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
-    else
-      FAIL "CTL-CE-COV2: MUST FIRE — a phantom arm was not reported (mutation-landed=$CE_COV_ALANDED, phantom=$CE_COV_PN against $((CE_NPHANTOM + 1)) expected, probe-found=$CE_COV_PH). CE-COV cannot distinguish a covered group from a reader that returned nothing"
-    fi
-  fi
+  cov_assert 'CE-COV' 'CTL-CE-COV' '' 'ce_violations' \
+             st_codes cov_emit_tab "$(declare -f ce_violations)" \
+             "$CE_CODES" "$CE_ARMED" "$CE_PROBE" "$CE_PHANTOM"
 fi
 
 if [ "$CE_RAN" -ne 1 ]; then
