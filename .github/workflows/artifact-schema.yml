@@ -86,10 +86,13 @@ name: Artifact schema
 #        defects that MUST, one per finding code the validator can emit, alongside the
 #        specificity arms that tell a correct implementation from a lookalike.
 #        THE ARM INVENTORY IS NOT RESTATED HERE, deliberately. It lives in exactly one
-#        place — the CTL section of the guard script, which is also where the invariant
-#        binding it is stated: every emittable code has a must-fire arm, and a code added
-#        by a later slice adds its arm in the same change. A count copied into this file
-#        would be a copy with no assertion behind it
+#        place — the CTL section of the guard script — and the invariant binding it is no
+#        longer merely STATED anywhere: the suite's own CTL-COV arm derives the emittable
+#        code set from the sourced validator's function bodies on every run and compares it,
+#        in both directions, against the arms that ran. A code added by a later slice with
+#        no arm behind it turns that arm RED in the same run rather than waiting for a
+#        reader to notice. A count copied into this file would still be a copy with no
+#        assertion behind it, and none is added here
 #   HC   the class heading and the validator's constant for it are ONE string with two
 #        homes, and the count inside that heading equals the number of rows the validator
 #        extracts. A document edit that leaves the constant behind would otherwise make

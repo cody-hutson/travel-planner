@@ -72,6 +72,19 @@
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
 #        A code with no arm is a check indistinguishable from one that CANNOT fire.
+#        That COVERAGE is now ASSERTED rather than promised: the code set is read on every
+#        run from the SOURCED validator's own function bodies — not from its file, so a
+#        comment naming a code cannot enter the set and the subject is a function the
+#        oracle in group MD can remove — and compared in BOTH directions against the arms
+#        that actually ran, which are recorded AT THE CALL rather than scanned out of this
+#        file. That accumulator is load-bearing: this group arms a code through three
+#        different idioms and one code has a must-fire arm in only the third, so a reader
+#        enumerating idioms would report a covered code uncovered. A code added to the
+#        validator with no arm behind it is RED here rather than latent, and so is an arm
+#        naming a code the validator cannot emit. The assertion is at CODE granularity and
+#        not at emission-site granularity — deleting one of a code's several emission sites
+#        leaves the code in the set and this arm green — and that boundary is declared here
+#        rather than left to be discovered. No count is spelled anywhere in this file.
 #   RL   reconcile-on-link: the state of the two tracked witnesses the `link` survey is
 #        graded on. Totality over the one resolving pair — every label classified, no
 #        label claimed twice, adjudicable set empty — and the negative over the unlinked
@@ -3592,6 +3605,18 @@ ctl_codes() {
 ctl_arm()   { CTL_ARMED="$CTL_ARMED
 $1"; }
 ctl_fired() { ctl_arm "$2"; has_finding "$1" "$2"; }
+
+# ctl_cov_assert <armed> — CTL-COV's coverage verdict ALONE, for group MD to register.
+#
+# It takes the armed set as an ARGUMENT and calls its own extractors, which is what makes the
+# registration mean anything: md_flips removes a FUNCTION, so an assertion handed a precomputed
+# code set would survive its subject's removal and report itself blind. It renders exactly ONE
+# verdict and reaches a FAIL on its degenerate path rather than staying silent — md_probe counts
+# verdicts, so an assertion that emitted nothing under mutation would report the probe broken
+# instead of the assertion flipping.
+ctl_cov_assert() {
+  cov_verdict 'CTL-COV' 'CTL-COV-MUT' 'the validator' "$(ctl_codes "$(ctl_body)")" "$1"
+}
 
 CTL_ARMED=""
 CTL_COV_PROBE='ZZCTLCOVPROBE'
@@ -9023,6 +9048,30 @@ md_flips st_dm_starred 'ST3'        st3_assert "$ST_MD_FORM" "$ST_DM"
 md_flips st_surfaces   'ST3-marked' st3_assert "$ST_MD_FORM" "$ST_DM"
 md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
 
+# ── Group CTL's coverage arm, REGISTERED on BOTH sides of what it grades — the reader and the
+# thing read. One subject alone would leave half the assertion ungraded.
+#
+# The READER: with ctl_codes removed the derived set is empty and the emptiness gate FAILs, so
+# CTL-COV's verdict required that reader to have RUN.
+#
+# The EMITTER: with va_check_artifact removed the derived set loses five codes — measured, A2 A3
+# A4 A5 A6 — which are still in the armed set and become PHANTOMS, so the verdict FAILs on its
+# other direction. That is the flip property applied to the subject the assertion is ABOUT, and
+# it is available here only because ctl_body reads the SOURCED functions: a derivation that read
+# scripts/validate-artifacts.sh would have a FILE for a subject, which md_flips cannot remove.
+#
+# NO CLAUSE-6 OPT-OUT IS DECLARED HERE, and that is an outcome rather than an omission. Both
+# subjects are shell functions, so registration is direct. The PP0/PP9 opt-out shape applies
+# where a subject is a file or an external binary, and choosing declare -f over a file read is
+# what avoided creating that case at all.
+#
+# va_check_artifact is the emitter subject because it is one of only four that CAN be one:
+# removing va_class_rows, va_main or va_read_ok drops NO code from the set, because every code
+# each emits is also emitted elsewhere. That last zero is not a dead probe — it is the
+# code-vs-site distinction this arm declares below, measured.
+md_flips ctl_codes         'CTL-COV'         ctl_cov_assert "$CTL_ARMED"
+md_flips va_check_artifact 'CTL-COV-emitter' ctl_cov_assert "$CTL_ARMED"
+
 # ── THE DOCUMENT HALF IS OPTED OUT, AND THE OPT-OUT IS DECLARED RATHER THAN SILENT ──
 # The other subject ST3 and ST4 rest on is reference/data-model.md, which is a FILE and not a
 # shell function. md_flips registers an assertion by removing its subject FUNCTION, so it cannot
@@ -9032,15 +9081,16 @@ md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NRE
 # removed must reach the FAILING limb, and the arm asserts in the same verdict that the clean
 # copy reaches the passing one. An opt-out with no compensating arm would be an exemption.
 
-# ── REGISTERED WITH md_flips: FOUR registrations over THREE assertions, and this figure is a
+# ── REGISTERED WITH md_flips: SIX registrations over FOUR assertions, and this figure is a
 # RUNNING TOTAL — it is what has landed on this branch so far, never what any one change
 # contributed. A change that adds a registration restates the total INCLUDING the ones already
 # here; a change that reads only its own contribution here will write a number that is wrong
 # the moment the next one lands.
 #
-# The three assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; and group
-# ST's cross-document pair, ST3 against each of its two extractors and ST4 against the model
-# extractor. Registration requires the assertion to be remediated first, because an oracle asked
+# The four assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; group ST's
+# cross-document pair, ST3 against each of its two extractors and ST4 against the model
+# extractor; and group CTL's coverage arm CTL-COV, against its reader and against one of its
+# emitters. Registration requires the assertion to be remediated first, because an oracle asked
 # to certify a still-blind assertion turns the suite red for a defect it is reporting rather than
 # causing — which is why the count was zero until an arm had been through that. The declared
 # residual in MD2 is still this suite's registration queue, and every entry that leaves it gains
