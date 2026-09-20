@@ -77,9 +77,10 @@
 #        comment naming a code cannot enter the set and the subject is a function the
 #        oracle in group MD can remove — and compared in BOTH directions against the arms
 #        that actually ran, which are recorded AT THE CALL rather than scanned out of this
-#        file. That accumulator is load-bearing: this group arms a code through three
-#        different idioms and one code has a must-fire arm in only the third, so a reader
-#        enumerating idioms would report a covered code uncovered. A code added to the
+#        file. That accumulator is load-bearing: this group names a code through SEVERAL
+#        unlike constructs, and at least one code's only must-fire arm is written in a form
+#        none of the others reach — so a reader enumerating the shapes it knows about would
+#        report a covered code uncovered. A code added to the
 #        validator with no arm behind it is RED here rather than latent, and so is an arm
 #        naming a code the validator cannot emit. The assertion is at CODE granularity and
 #        not at emission-site granularity — deleting one of a code's several emission sites
@@ -3583,13 +3584,20 @@ ctl_codes() {
 
 # ── THE ARMED SET IS A RUNTIME ACCUMULATOR, NEVER A SOURCE SCAN ──────────────────
 #
-# This is load-bearing and it is measured. This group arms a code through THREE distinct
-# idioms, not one. has_finding covers 15 of the 16 codes across 21 MUST-FIRE-positive sites.
-# X3 is armed by NEITHER of the other two shapes: its only must-fire arm is
-# CTL-VA-FAILCLOSED-MATRIX, which grades it through an `awk index()` with the code carried in a
-# shell variable. A scanner that recognised two of the three idioms would report X3 UNARMED and
-# CTL-COV would land RED on arrival for a code that is in fact covered — a closed class
-# presenting itself as complete, which is the exact trap this suite exists to refuse.
+# This is load-bearing and it is measured. This group names a code through FOUR unlike
+# constructs, and that number is REPORTED rather than relied on: what matters is that the set is
+# open, not that it has a particular size. has_finding, itself a grep here-string, reaches 15 of
+# the 16 codes across 21 MUST-FIRE-positive sites. A bare `grep -c '^FINDING A2 '` reaches a code
+# has_finding already covers, so it contributes nothing the first shape does not. An `awk
+# index()` over a LITERAL needle appears twice more — and in BOTH places it asserts X3 is ABSENT
+# rather than arming it, which is exactly the kind of near-miss that makes a source reader look
+# finished when it is not.
+#
+# X3's ONLY must-fire arm is the fourth shape: an `awk index()` whose needle is built from a
+# SHELL VARIABLE, at CTL-VA-FAILCLOSED-MATRIX. A reader enumerating the three shapes a
+# reasonable author would think of reports X3 UNARMED, and CTL-COV lands RED on arrival for a
+# code that is in fact covered — a closed class presenting itself as complete, which is the
+# exact trap this suite exists to refuse.
 #
 # Accumulating AT THE CALL removes the class entirely: however an arm is written, it records the
 # code by running. Recorded BEFORE the verdict, on the principle st_mustfire's own banner states
