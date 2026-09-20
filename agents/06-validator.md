@@ -42,7 +42,7 @@ naming the entry and its file, not a Critical.
 **Convenience-format anchor cap:**
 The food agent caps convenience-format anchor-meal nominations at 2 per
 category across `outputs/food-list.md` (`agents/02-food.md` →
-*Convenience-format anchor discipline*). Audit it from the artifact, not from
+"Convenience-format anchor discipline"). Audit it from the artifact, not from
 behaviour. Read every entry's **Anchor-meal eligibility** line and tally the
 `anchor-eligible` nominations per named category, over the whole accumulated
 file. Flag any category carrying more than 2. Flag any entry whose eligibility
@@ -1008,7 +1008,7 @@ category.
 line]. **T is the count of fenced `artifact-entry` blocks in
 `outputs/food-list.md`** — that block is this class's declared entry selector
 (`reference/data-architecture.md` § 4.5 rule 2; `reference/schemas/food-list.md`
-→ *The entry marker*), one per entry. Count the markers. Do **not** count `###`
+→ "The entry marker"), one per entry. Count the markers. Do **not** count `###`
 headings and do **not** count entry ordinals: the marker exists precisely
 because this class carries more third-level headings than entries, and because
 an `accumulate-append` file's numbering restarts or continues across appended
