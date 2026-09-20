@@ -64,19 +64,41 @@ preflight_ro() {
   gh auth status >/dev/null 2>&1 || die "gh is not authenticated. Run: gh auth login"
 }
 
+# perl is not optional, and it is asserted HERE — in ONE place, with ONE message — so that
+# its absence is an early, named, actionable failure rather than a projection that quietly
+# answers differently mid-run. Every verdict this file reaches about the CONTENT of a
+# render is computed from a perl text projection — strip_to_text (verify_ciphertext),
+# strip_to_published_text and strip_to_text_blocks (verify_publishable_content) and
+# strip_to_itinerary_text (the #552 organizer-confirm gate). None of the last three has an
+# equivalent expressible in sed, so there is nothing to degrade to; see the notes above
+# strip_to_text_blocks and strip_to_itinerary_text.
+#
+# TWO CALLERS, AND THEIR REASONS ARE NOT THE SAME ONE (#749). preflight calls it, so
+# cmd_publish and cmd_update reach it BEFORE the render is resolved and before the gate
+# runs: on a machine without perl the operator is told to install perl instead of being
+# told, by the gate itself, that an itinerary changed which did not. cmd_confirm calls it
+# DIRECTLY, and has to — it cannot call preflight at all, because preflight also demands
+# npx and an authenticated gh while confirm is local, TTY-only and offline. Its own reason
+# is sharper than "it would die later anyway": without this assertion it resolves the gate
+# state first, is handed an empty digest by a projection that could not run, and PRINTS a
+# gate state that perl's absence fabricated — "the itinerary moved since you confirmed
+# it", for a plan that may not have moved — then asks the organizer to type CONFIRM
+# against it. So the assertion belongs before that resolution, not merely before the
+# prompt.
+#
+# A SEPARATE FUNCTION RATHER THAN A SECOND COPY. Two spellings of one dependency assertion
+# are two messages that drift apart. This is the file's existing require_* shape — assert
+# a condition, die otherwise, return nothing — and its body is builtins only, so it runs to
+# its verdict under a stripped PATH with nothing stubbed. Graded by S11g (in place, inside
+# preflight), S11h (on its own, with no gh or npx stub in scope) and S11i (reached from
+# cmd_confirm, and reached in time).
+require_perl() {
+  command -v perl >/dev/null 2>&1 || die "perl not found — this script derives every content verdict (the ciphertext guard, the publishable-content guard, and the organizer-confirm gate) from perl text projections. Install perl and re-run."
+}
+
 preflight() {
   command -v npx  >/dev/null 2>&1 || die "npx not found (install Node.js — StatiCrypt runs via npx)."
-  # perl is not optional on the publish paths, and it is probed HERE so that its absence
-  # is an early, named, actionable failure rather than a projection that quietly answers
-  # differently mid-run. Every verdict this file reaches about the CONTENT of a render is
-  # computed from a perl text projection — strip_to_text (verify_ciphertext),
-  # strip_to_published_text (verify_publishable_content) and strip_to_itinerary_text (the
-  # #552 organizer-confirm gate). The last of the three has no equivalent expressible in
-  # sed, so there is nothing to degrade to; see the note above strip_to_itinerary_text.
-  # cmd_update calls this BEFORE it resolves the render and before the gate runs, so on a
-  # machine without perl the operator is told to install perl instead of being told, by
-  # the gate itself, that an itinerary changed which did not.
-  command -v perl >/dev/null 2>&1 || die "perl not found — this script derives every content verdict (the ciphertext guard, the publishable-content guard, and the organizer-confirm gate) from perl text projections. Install perl and re-run."
+  require_perl
   preflight_ro
 }
 
@@ -307,17 +329,58 @@ strip_to_published_text() { # <html_file> -> retrievable non-machinery content o
 # always saw, plus the knowledge of where one block ended. strip_to_text itself is NOT
 # touched: verify_ciphertext consumes it and AC 5 fixes that behaviour.
 # Newline-preserving, for the reason stated on strip_to_published_text above. The
-# <script>/<style> deletion is the worst offender — it removes a whole multi-line block —
-# and it is also the one the fallback cannot do at all. The `|| sed` fallback is line
-# oriented, so it IS line-preserving for the tag case by construction; what the two paths
-# disagree about is WHAT they strip, not where the lines are, and that divergence predates
-# this change.
+# <script>/<style> deletion is the worst offender — it removes a whole multi-line block.
+#
+# ONE LIMB, AND THE ASSESSMENT THAT DECIDED IT (#749, D-5(A) as extended by D-14). This
+# function shipped with strip_to_text's `perl … 2>/dev/null || sed …` idiom copied onto
+# it, and the question the card asked is the one #552 D10 already answered for
+# strip_to_itinerary_text: A FALLBACK IS HONEST ONLY WHERE THE FALLBACK CAN COMPUTE THE
+# SAME ANSWER. Measured here, it cannot. The perl program is three substitutions; the sed
+# limb was one.
+#
+#   1  script/style BODIES deleted   needs a -0777 slurp, a back-reference to the opening
+#                                    tag name and a lazy bound              sed cannot
+#   2  the BLOCK SENTINEL emitted    needs the block-tag class and an emission
+#                                                                           sed cannot
+#   3  tag -> space                                                         sed can
+#
+# SUBSTITUTION 2 IS THE ENTIRE REASON THIS FUNCTION EXISTS APART FROM strip_to_text, so
+# losing it is not a degradation — it is a different projection wearing this one's name.
+# With no sentinel every token lands in block 0, _guard_match's conjunctive rule finds its
+# same-block conjunct vacuously true for every pair, and the rule degrades to a bare word
+# window: verbatim the N-squared day-pairing false abort that ADR-008's first amendment
+# exists to fix, and which measured as a permanent abort from two days onward. Substitution
+# 1's absence compounds it — script and style bodies survive into the token stream on the
+# arm that carries the verdict, and inflate the very word count the 20-word
+# degraded-extraction floor is there to catch. Both directions are fail-CLOSED, a false
+# ABORT, which is exactly why nothing ever caught this: a false abort looks like the guard
+# working.
+#
+# WHY IT WAS REACHABLE AT ALL, since preflight now asserts perl. `||` reads a non-zero
+# STATUS, not an absence — a perl too old for a construct, a memory limit on the -0777
+# slurp of a large render, a locale abort. And verify_publishable_content, this function's
+# sole caller, is the natural predicate for any later non-interactive publish path; today
+# it is safe only because both its production callers preflight. Removing the limb makes it
+# safe BY CONSTRUCTION rather than by caller discipline.
+#
+# The limb is REMOVED rather than taught, for the reason the note above
+# strip_to_itinerary_text gives at length: POSIX sed expresses neither substitution, and an
+# approximation would put a FAIL-OPEN direction back on the table. `2>/dev/null` goes with
+# it, for that note's reason too — it existed to silence perl before falling back, and with
+# nothing to fall back to it would silence the one message that explains the failure,
+# leaving the caller's own wording ("yielded only 0 words of visible text") naming the
+# symptom and never the cause. perl is asserted in require_perl instead of assumed here.
+#
+# strip_to_text keeps ITS identical limb, deliberately and not by oversight: S11f and S14f
+# both use it as their SENSITIVITY arm, so removing it would zero the control that makes
+# their zeroes measurements, and #550 AC 5 byte-freezes it besides. A future change
+# extending there must re-point both arms in the same commit. Graded by group S14.
 strip_to_text_blocks() { # <html_file> -> visible text with block sentinels on stdout
   perl -0777 -pe "
     s{<(script|style)\b[^>]*>.*?</\1>}{ \$& =~ tr/\n//cdr }gise;
     s{<\s*/?\s*($_GUARD_BLOCK_TAGS)\b[^>]*>}{ ' $_GUARD_BLOCK ' . (\$& =~ tr/\n//cdr) }gie;
     s{<[^>]+>}{ ' ' . (\$& =~ tr/\n//cdr) }ge;
-  " "$1" 2>/dev/null || sed -E 's/<[^>]*>/ /g' "$1"
+  " "$1"
 }
 
 # The THIRD projection, and it exists because a tag can split a WORD. `Rurit<b>anian</b>`
@@ -2727,6 +2790,16 @@ cmd_update() { # <trip_dir>
 cmd_confirm() { # <trip_dir>
   local trip_dir="${1:?usage: confirm <trip-dir>}"
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+
+  # BEFORE the state resolution below, and the position is the substance rather than a
+  # detail (#749). preflight is NOT called here — it demands npx and an authenticated gh,
+  # and this command is local, TTY-only and offline — so the one dependency this path
+  # genuinely has is asserted on its own. Placing it merely before the prompt would still
+  # be wrong: change_confirmation_state runs first, its itinerary_digest call returns
+  # EMPTY on a perl-less host, an empty value can never equal the recorded baseline, and
+  # the organizer is shown a `Gate state` that perl's absence fabricated and asked to
+  # confirm against it. Graded by S11i, which reads the ORDER and not just the call.
+  require_perl
 
   local site_html state pending rec tmp dg ans
   site_html="$(resolve_site_html "$trip_dir")"

@@ -104,6 +104,7 @@ permissions:
   contents: read
 
 jobs:
+  # gate-efficacy: posture=required
   trip-resolution-contract:
     name: Trip resolution contract suite (test-trip-resolution-contract.sh)
     runs-on: ubuntu-latest
