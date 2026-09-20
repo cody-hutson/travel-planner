@@ -11,8 +11,11 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*
 
 `/trip-record <verb> [--trip <slug>] [verb args...]`
 
-The verb is the one the user typed. Nothing in this file supplies a verb they did not type, and
-nothing in it reads the wording of the request to decide one.
+The verb is the one the user typed. § *Selecting the verb* below is the whole of how it is reached:
+a literal lookup, lexical at every step, against the recognition set read live. So nothing in this
+file supplies a verb the user did not type, and the lookup has no place to put the wording around
+the token; that the token was typed at all is held by this file's invocation flag, not by the
+lookup.
 
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
@@ -56,39 +59,46 @@ went stale, to *a new grant*, which is already an edit to the extension point be
 section names is a grant with no function**, and taking one is a defect whatever this line says. No
 directory-creating grant is taken, and no verb of this command creates a directory.
 
-**Frozen.** `disable-model-invocation: true`; `argument-hint`, which is already verb-general; and
+**Frozen.** `disable-model-invocation: true`, which § 1 of
+`reference/adr/ADR-007-command-entry-point.md` freezes by a test rather than by preference — it
+admits relaxing the flag only on a file every one of whose declared verbs is inference-admitted,
+and this file declares arms that are not, so the posture here is derived and there is nothing to
+choose; `argument-hint`, which carries as much of this file's verb list as the input line renders
+and is graded as a **pair** with the `description` beside it pointing at
+`reference/command-reference.md` for the rest, so editing either half alone is what breaks it; and
 every entry of `disallowed-tools`, which denies the publish script directly and through `bash` and
 `sh`.
 
-**What `disallowed-tools` does at runtime is contested, and this file does not settle it.** Two
-accounts ship in this repo and they are not compatible.
-`reference/adr/ADR-007-command-entry-point.md` § *Context* says the field *removes the named tools
-from the pool* — a real restriction, turn-scoped in the same way as the grant. The trip-resolution
-contract workflow's own scope note says the opposite where it matters: `allowed-tools` and
-`disallowed-tools` alike are a turn-scoped pre-approval grant, **every tool stays callable**, and a
-green check there is not a privilege guarantee and must not be read as one. **Nothing in this repo
-arbitrates**, and the reason is narrower than *nothing reads the field*.
-`scripts/test-command-taxonomy.sh` does read it: its invocation classifier walks the command
-directory and matches this file's `disallowed-tools:` line on the publish-script grant token that
-line carries, counting it into a **tool-grant tally** — one term of a parse-coverage identity that
-guard asserts and fails on. That reading is of what this file **declares**; the guard says in terms
-that it takes neither account, because every assertion it makes is about a declaration and none
-about what a declaration enforces. **A declaration-level reading is what leaves the runtime question
-unarbitrated** — not the absence of a reader. Where else the field appears is **re-derived from the
-tree rather than listed here**: the list this sentence used to carry named the five command files,
-one workflow comment and the ADR, and was two short — it missed a second workflow comment and the
-guard itself, which is what a written-down census does.
+**What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has closed
+it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the published
+contract** rather than summarising it, and the account it confirms is the one
+`reference/adr/ADR-007-command-entry-point.md` § *Context* had already given — **clause for
+clause**, so the question this file once left open is settled in § *Context*'s favour, and the
+sentence that called it unsettled is withdrawn rather than softened. `allowed-tools` is turn-scoped
+**pre-approval and not restriction**: every tool stays callable, and a tool left off the list routes
+through the usual permission settings rather than being forbidden. `disallowed-tools` is turn-scoped
+**removal** — the real restriction of the pair, and a firmer thing to say about these entries than
+this passage used to say. **Durable blocking still needs a permission-settings deny rule, a
+different artifact and one this repo does not ship**, which is the bound every *never* below rests
+on and the reason the removal these entries carry ends at the next message.
+`scripts/test-command-taxonomy.sh` reads the line on a different axis, and the difference is worth
+keeping: its invocation classifier walks the command directory and matches this file's
+`disallowed-tools:` line on the publish-script grant token that line carries, counting it into a
+**tool-grant tally** — one term of a parse-coverage identity that guard asserts and fails on. That
+reading is of what this file **declares**, so what it establishes is that the entry was written, and
+a green check there is not a privilege guarantee and must not be read as one. Where else the field
+appears is **re-derived from the tree rather than listed here**: the list this sentence used to
+carry named the five command files, one workflow comment and the ADR, and was two short — it missed
+a second workflow comment and the guard itself, which is what a written-down census does.
 
-**What the two accounts agree on is all this file relies on.** The declaration is turn-scoped and
-clears at the next message; a tool left off `allowed-tools` is not thereby forbidden — it routes
-through the usual permission settings instead, so **omission is not prohibition** under either
-account; and durable blocking would need a permission-settings deny rule, a different artifact and
-one this release does not ship. So every *never* in this file names a **rule this file follows,
-never a property its frontmatter guarantees**: standing rule 1 is what makes this command never
-publish, and these entries stand beside it as a **declared** restriction whose runtime force this
-repo does not establish — corroboration, not the thing that makes the claim true. That is what
-freezes them, and it is what keeps the clause below sound under **either** account. **The contest is
-stated once, here.** A verb section names the control it actually rests on, and does not restate it.
+**What the settled account gives this file is narrower than enforcement, and that is all it relies
+on.** The declaration is turn-scoped and clears at the next message, and **omission is not
+prohibition**. So every *never* in this file names a **rule this file follows, never a property its
+frontmatter guarantees**: standing rule 1 is what makes this command never publish, and these
+entries stand beside it as a **declared** removal whose reach ends with the turn — corroboration,
+and firmer corroboration than before, but not the thing that makes the claim true. That is what
+freezes them, and it is what keeps the clause below sound. **The account is stated once, here.** A
+verb section names the control it actually rests on, and does not restate it.
 
 **Extension point — union only.** `allowed-tools` may gain a tool only where the verb that needs
 it is named in the adding slice's own design, and the addition is a union: no entry is removed and
@@ -643,6 +653,28 @@ only the verbs that existed when it was written.
     explicit act, confirmed against a name and a count. A bound written inside `erase` would leave the
     next slice free to add the tidy-up nobody asked for.
 
+14. **An act on a verb the operator did not type runs only after a confirmation that names the verb
+    and its target, answered before the act.** The verb is the token in this file's requirement
+    table. The target is the operand that verb's own `## <verb> <signature>` heading declares and,
+    where it declares none, the trip `E1` resolved. Inference may reach such a verb, may name it and
+    may prepare it; it may not act on its own selection. Where a verb's own section already states a
+    confirmation shape — an echoed outgoing-to-incoming pair, a preview over a source's own answered
+    set, a typed identifier, a display name beside a member count — that shape stands unchanged and
+    this rule is added beneath it, never substituted for it. **A verb is outside this rule where its
+    own `**Reads:**` block declares each of three things: that it writes nothing, that it dispatches
+    no agent, and that it performs no act whose effect lands outside the trip's own files.** That is
+    the inference line `reference/adr/ADR-007-command-entry-point.md` § 1 draws, read here rather
+    than restated; a block declaring none of the three leaves its verb inside this rule, because a
+    property nobody has declared is not one this rule may assume. **This rule is followed, not
+    enforced.** No frontmatter key expresses a boundary finer than the file, the tool lists are
+    turn-scoped and gate tools rather than acts, and no arrangement of them makes a confirmation
+    happen — so the strength here is the strength of a rule, which is what § 1's amendment states
+    and is the whole of what this file claims. A confirmation is what an inferred selection needs
+    **before** an act the bounds already permit. It is never what makes an act they forbid
+    available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`, and no overwrite or
+    deletion of existing trip content, each of which rules 1 and 2 above and `ADR-007` § 2 forbid
+    unconditionally.
+
 **Extension rule.** A later slice may append a numbered rule **only** where it genuinely binds every
 verb of this command, present and future, and must say in its own design that it did so and why. A
 rule that binds only that slice's own verbs goes inside those verb sections. Both failure modes are
@@ -687,9 +719,16 @@ and there is no fifth.
 
 ## When no verb was typed
 
-Frozen. `/trip-record` on its own is **not** a default; it is a refusal. Say that no verb was given,
-print the verbs of this command read live from this file's own requirement table, and stop. Select
-no verb, and do not fall back to one.
+Frozen. **One change has been made under this freeze, and it is recorded here rather than folded
+in:** the sentence naming the engine's guided-entry surface was added by an operator decision that
+lifted the freeze for that clause alone and was taken as a decision in its own right. The freeze
+stands for everything else in this section, which is not a later slice's to edit.
+
+`/trip-record` on its own is **not** a default; it is a refusal. Say that no verb was given,
+print the verbs of this command read live from this file's own requirement table, add one sentence
+naming the engine's guided-entry surface at its root — the surface that takes a request in ordinary
+words and answers with the verb that serves it, naming a verb and running none — and stop. Name no
+verb in that sentence. Select no verb, and do not fall back to one.
 
 `/trip` defaults a bare invocation to `status` because `status` is read-only. **This command declares
 no default at all, and the ground for that is a rule rather than a property of its verb set: which of
@@ -702,12 +741,21 @@ mode it is in.
 
 ## When the token is not a verb of this command
 
-Frozen. Render exactly three things and nothing else:
+Frozen. **One change has been made under this freeze, and it is recorded here rather than folded
+in:** item 4 below — the sentence naming the engine's guided-entry surface — was added by an
+operator decision that lifted the freeze for that item alone and was taken as a decision in its own
+right, which is also why this render's arity reads four rather than three. The freeze stands for
+everything else in this section, which is not a later slice's to edit.
+
+Render exactly four things and nothing else:
 
 1. The token, verbatim, as the user typed it.
 2. The verbs of this command, read live from this file's own requirement table — not from a list
    written into this file.
 3. One sentence stating that that table is the whole of this command's verb set at this revision.
+4. One sentence naming the engine's guided-entry surface at its root — the surface that takes a
+   request in ordinary words and answers with the verb that serves it — and saying that it names a
+   verb and runs none. Name no verb in that sentence.
 
 Then stop. Do not guess. **Do not offer a near-match suggestion — no "did you mean"** — a suggestion
 is a classification with an extra step and a reflexive accept, on the least-inspected path in this
@@ -739,7 +787,7 @@ first time a slice appends a row § *The shape of a table row* already admits �
 
 ## profile <name>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, the outgoing content on the edit route, **this file's frontmatter for the `person:` key** and **its body's labelled bullets**, the last two for the edit route's step-5 screen and for nothing else — named separately because purpose is the granularity this ceiling is stated at, and because `## extract` declares those same two reads of this same path; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class and answered-ness, read live at invocation and **never re-authored here**, for the **cardinality alone** of the edit route's step-5 extraction set; it is the same live read `## extract` declares and it is declared for the same reason, that a second implementation of either predicate would be a second source of truth for what a field is. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/*.md` — **the entry names alone, no file opened**, the denominator of the collision check below, named separately from the probe above because the read-scope ceiling names a glob by its directory *and* its selector and because a stem is not what a presence probe consumes; `trips/<slug>/travelers/<file>.md` — the file-existence probe that selects create from edit, the outgoing content on the edit route, **this file's frontmatter for the `person:` key** and **its body's labelled bullets**, the last two for the edit route's step-5 screen and for nothing else — named separately because purpose is the granularity this ceiling is stated at, and because `## extract` declares those same two reads of this same path; `templates/traveler-intake.template.md` — the interview script on route 1 and the copy source on route 2; `reference/data-architecture.md` — § 3.2, read at invocation for the canonical traveler key the collision check normalizes with, cited live rather than copied so that the trip side and the store side hold **one** identity relation between them; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class and answered-ness, read live at invocation and **never re-authored here**, for the **cardinality alone** of the edit route's step-5 extraction set; it is the same live read `## extract` declares and it is declared for the same reason, that a second implementation of either predicate would be a second source of truth for what a field is. Does not read `trip-context.md`, in either direction. **Takes no `Bash(ls:*)` use:** § *The frontmatter above* closes that grant to the listing block by name, and the listing block lists `trips/` — the parent — so it observes that this trip exists and nothing about what is inside it. **Dispatches no agent.**
 
 The traveler-document verb. It creates a profile that does not exist and edits one that does, and
 the branch is selected by a probe rather than by a tool grant.
@@ -799,7 +847,7 @@ same reason, on the same shape of guess.
 **3 — The file-existence probe, reached only once the directory is observed present and the
 collision check has passed.** `Read` `trips/<slug>/travelers/<file>.md`. Readable → **edit**. Not
 readable → **create**. This probe is the control that makes standing rule 2 operative, and it is the
-**whole** of that control: what the frontmatter does at runtime is the contested question § *The
+**whole** of that control: what the frontmatter does at runtime is the settled question § *The
 frontmatter above* records, and nothing here rests on it either way.
 
 **The precedence, stated rather than left to the order of the paragraphs.** **An absent directory
@@ -1121,7 +1169,7 @@ boundary would sit inside one section for no gain.
   skipped before the match, per the placeholder rule below. Present → **edit that row**. Absent →
   **add a row**. The probe runs before either write tool is reached and is the whole of the control,
   which is the same control `profile` rests on; nothing here rests on the frontmatter, whose runtime
-  force § *The frontmatter above* records as contested.
+  force § *The frontmatter above* records as turn-scoped.
 
 **Adding a row — the append shape standing rule 7 admits**, reached once the read named above has
 established the file and the presence probe has selected this branch. `Person` carries the name
@@ -1698,7 +1746,7 @@ infers a destination from which files exist.
 
 ## link <name> <person-id>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there; `trips/<slug>/travelers/<file>.md` — the file-existence probe that establishes the target is there, its frontmatter, read **before** it is written because a reference already present is echoed before it is replaced, and **its declared body fields**, read for the survey below and read before the write because the survey precedes it; `people/<person-id>.md` — the existence probe that establishes the reference **resolves before it is written**, the H1 line, read so the confirmation can name the person the id resolves to, and **its declared body fields**, read for that same survey; the **outgoing** record on the one branch where the file already carries a resolving `person:` naming a different id — its declared body fields alone, because the survey's pre-link side is composed against the record this trip references **now** rather than against an assumed absence; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**, the same live-read `## profile <name>`'s collision check already takes for its own predicate. **The minimality the widened surface replaces is preserved in the one form that survives a survey: no value read here is written anywhere, on either side, by this verb.** Does not enumerate the store, and does not read `trip-context.md` in either direction. Dispatches no agent.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there; `trips/<slug>/travelers/<file>.md` — the file-existence probe that establishes the target is there, its frontmatter, read **before** it is written because a reference already present is echoed before it is replaced, and **its declared body fields**, read for the survey below and read before the write because the survey precedes it; `people/<person-id>.md` — the existence probe that establishes the reference **resolves before it is written**, the H1 line, read so the confirmation can name the person the id resolves to, and **its declared body fields**, read for that same survey; the **outgoing** record on the one branch where the file already carries a resolving `person:` naming a different id — its declared body fields alone, because the survey's pre-link side is composed against the record this trip references **now** rather than against an assumed absence; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**, the same live-read `## profile <name>`'s collision check already takes for its own predicate. **The minimality the widened surface replaces is preserved in the one form that survives a survey: no value read here is written anywhere, on either side, by this verb.** Does not enumerate the store, and does not read `trip-context.md` in either direction. Dispatches no agent. Two of this verb's paths — the repoint, and a non-empty survey — stand behind a gated branch, placed before the write and stated in full by this section's confirmation-posture paragraph below.
 
 The reference verb. It writes the one frontmatter field that points this trip's traveler file at a
 durable person record, and it writes nothing else anywhere.
@@ -2032,7 +2080,7 @@ travelers:**`. No byte under `people/`. No derived model. No file is created and
 
 ## promote <name> <field-label>
 
-**Reads:** `trips/<slug>/travelers/<file>.md` — the `person:` reference and the named field's outgoing value, read **before** the write because both are echoed; `people/<person-id>.md` — the record that reference resolves to: its H1, so the confirmation names the person, **and the named field's line alone**, read before it is written because the outgoing record value is echoed for the operator to confirm against. **No other field of the record is read.** Does not enumerate the store. Dispatches no agent, and takes no `Bash(date:*)` use — see the timestamp negative below.
+**Reads:** `trips/<slug>/travelers/<file>.md` — the `person:` reference and the named field's outgoing value, read **before** the write because both are echoed; `people/<person-id>.md` — the record that reference resolves to: its H1, so the confirmation names the person, **and the named field's line alone**, read before it is written because the outgoing record value is echoed for the operator to confirm against. **No other field of the record is read.** Does not enumerate the store. Dispatches no agent, and takes no `Bash(date:*)` use — see the timestamp negative below. The write stands behind an echoed outgoing-to-incoming pair, which is what standing rule 9(d) requires of it and what the two reads above are taken before the write to supply.
 
 The promotion verb, and **the only verb of this command that writes outside `trips/<slug>/`.** It
 moves one value the operator already wrote in this trip into the durable record this trip
@@ -2118,7 +2166,7 @@ naming, in one place, is not a solicitation.
 
 ## erase <person-id>
 
-**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/` and `outputs/` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent.
+**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/` and `outputs/` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent. The erasure stands behind a typed confirmation of the id at a terminal, stated in full under § *The confirmation* below.
 
 The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only operation on this command surface that destroys personal data irrecoverably, and the only one that writes an archived trip.**
 
@@ -2313,7 +2361,7 @@ One row per **REACH** and per **REPORT** location, every run: **location · disp
 
 ## extract <name>
 
-**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/<file>.md` — the file-existence probe that gates every branch below, this file's frontmatter for the `person:` key, and its body's labelled bullets, which are both the value set this verb copies and the source of the display name; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class, scope, section and answered-ness, read live at invocation and **never re-authored here**, the same live read `## profile`'s collision check takes, because a second implementation of either predicate would be a second source of truth for what a field is; `reference/data-model.md` § *Determinism* — **O3**, for the duplicate-slot disposition the refusal below names; `<store-root>/people/` — the store listing, which is both the rejection set the minted id is sampled against and the denominator of the display-name collision check; `<store-root>/people/*.md` — **the H1 line alone**, for that collision check, and no other line of any record is read; `templates/person-intake.template.md` — the copy source for the record this verb creates, and a template read in order to copy from it is a read. **Does not read `trip-context.md`, in either direction** — the reason is stated below and it is the reason the negative exists rather than a courtesy. **Dispatches no agent. Takes no `Bash(ls:*)` use** and creates no directory.
+**Reads:** `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, which § *What the blocks above are* names as a read and requires declared; `trips/<slug>/travelers/<file>.md` — the file-existence probe that gates every branch below, this file's frontmatter for the `person:` key, and its body's labelled bullets, which are both the value set this verb copies and the source of the display name; `reference/data-model.md` § *Field Scope* → *The classification* and § *`ANSWERED()`* — class, scope, section and answered-ness, read live at invocation and **never re-authored here**, the same live read `## profile`'s collision check takes, because a second implementation of either predicate would be a second source of truth for what a field is; `reference/data-model.md` § *Determinism* — **O3**, for the duplicate-slot disposition the refusal below names; `<store-root>/people/` — the store listing, which is both the rejection set the minted id is sampled against and the denominator of the display-name collision check; `<store-root>/people/*.md` — **the H1 line alone**, for that collision check, and no other line of any record is read; `templates/person-intake.template.md` — the copy source for the record this verb creates, and a template read in order to copy from it is a read. **Does not read `trip-context.md`, in either direction** — the reason is stated below and it is the reason the negative exists rather than a courtesy. **Dispatches no agent. Takes no `Bash(ls:*)` use** and creates no directory. The creation stands behind a preview over the answered set — total over the source's answered fields, name-only, and stated in full under § *The preview, and it is name-only* below.
 
 The extraction verb. A traveller already has a filled profile on this trip, and the durable half of
 what it says belongs in a person record they do not yet have. This creates that record from the
@@ -2635,7 +2683,7 @@ The group-creation verb. It mints a record holding a display name and an empty m
 
 ## group-list [<group-id>]
 
-**Reads:** `<store-root>/groups/` — the store listing, on the no-argument branch, and the existence probe on the argument branch; `<store-root>/groups/*.md` or `<store-root>/groups/<group-id>.md` — the H1 and the `## Members` bullets, which are the whole of what either branch renders; `<store-root>/people/*.md` — **the H1 line alone**, on the argument branch only, to resolve each member id to a display name, and **no other line of any person record is read**. **Writes nothing on either branch. Dispatches no agent.**
+**Reads:** `<store-root>/groups/` — the store listing, on the no-argument branch, and the existence probe on the argument branch; `<store-root>/groups/*.md` or `<store-root>/groups/<group-id>.md` — the H1 and the `## Members` bullets, which are the whole of what either branch renders; `<store-root>/people/*.md` — **the H1 line alone**, on the argument branch only, to resolve each member id to a display name, and **no other line of any person record is read**. **Writes nothing on either branch. Dispatches no agent. Performs no act whose effect lands outside the trip's own files** — reading the store is an observation, and this verb writes nowhere at all.
 
 The read verb, and the only one of the six that writes nothing at all. **Its optional argument mirrors the incumbent `group [<name>]` idiom** — no argument renders the population, an argument renders one member of it — deliberately, so the two verbs that share a stem also share a shape.
 
@@ -2717,7 +2765,7 @@ The membership-removal verb. It removes one bullet and changes nothing else.
 
 ## group-delete <group-id>
 
-**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 and its `## Members` bullet count, the last two **read before the file is removed** because the confirmation is echoed against them and cannot be recovered afterwards. **Reads no person record, and reads nothing under `trips/<slug>/`** — both negatives are load-bearing rather than courtesies, and the section below says why. **Dispatches no agent.**
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 and its `## Members` bullet count, the last two **read before the file is removed** because the confirmation is echoed against them and cannot be recovered afterwards. **Reads no person record, and reads nothing under `trips/<slug>/`** — both negatives are load-bearing rather than courtesies, and the section below says why. **Dispatches no agent.** The removal stands behind a display name beside a member count, echoed from the two reads above and stated in full below, where the section says why it is not a typed-back id.
 
 The group-deletion verb. **It deletes exactly one file under `groups/` and nothing else, anywhere.**
 
@@ -2733,6 +2781,7 @@ The group-deletion verb. **It deletes exactly one file under `groups/` and nothi
 |---|---|
 | `<group-id>` is absent, or is not of the id's declared shape | refuse; print the shape and **offer no near-match** |
 | `<group-id>` resolves to nothing | refuse; say the group does not exist and **name nothing else** |
+| the run is non-interactive | refuse. No flag skips the gate; a confirmation nobody can give is not a confirmation |
 | the operator declines the confirmation | write nothing; **the file is left byte-identical** |
 
 **It is irreversible and it is reconstructible, and both words are needed.** Nothing under `groups/` is in git, so there is no earlier version to restore from. But a group record is **a display name and a list of ids, every one of which still exists**, so the operator can make it again — `group-new` then `group-add`, from the member list the confirmation just showed them. **The receipt therefore prints the member ids it is about to destroy**, which is the one place this verb echoes them: they are the whole of what is being lost, and a receipt that withheld them would make the operation unreconstructible in fact while calling it reconstructible in principle.
@@ -2837,7 +2886,7 @@ renders that field and the roster together and is where the reconcile is finishe
 
 ## history <name>
 
-**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, and **its frontmatter alone, for the `person:` key**, which is the reference this verb inverts; **no body line of that file is read**, because nothing in a traveller's own answers bears on where they have already been; `people/<person-id>.md` — the file-existence probe and **its frontmatter alone**, to establish that the reference resolves and whether it is a `merged-into:` stub, and **no body line of any person record is read**; `people/` — the store listing, for the stubs that redirect to that record, which is the closure step and the only reason this verb reads the store as a whole; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; and `trips/*/travelers/*.md` — **the frontmatter of every traveller file on every trip, read to the closing `---` and no further**, which is the resolution step and the only way another trip enters this verb's scope. **It opens no trip's `trip-context.md`, in either direction, its own included** — each trip's destination and lifecycle arrive by value in the record block above, which has already run, so a per-trip open would re-derive what that block already carries. **Writes nothing, anywhere, on every branch. Dispatches no agent. Takes no `Bash(ls:*)` use** — the listing block holds that grant by name, and this verb consumes its output rather than taking a listing of its own.
+**Reads:** `trips/<slug>/travelers/<file>.md` — the file-existence probe that resolves `<name>` on the resolved trip, and **its frontmatter alone, for the `person:` key**, which is the reference this verb inverts; **no body line of that file is read**, because nothing in a traveller's own answers bears on where they have already been; `people/<person-id>.md` — the file-existence probe and **its frontmatter alone**, to establish that the reference resolves and whether it is a `merged-into:` stub, and **no body line of any person record is read**; `people/` — the store listing, for the stubs that redirect to that record, which is the closure step and the only reason this verb reads the store as a whole; `trips/` — the trip listing, **which arrives from the listing block above rather than from a listing this verb takes**; and `trips/*/travelers/*.md` — **the frontmatter of every traveller file on every trip, read to the closing `---` and no further**, which is the resolution step and the only way another trip enters this verb's scope. **It opens no trip's `trip-context.md`, in either direction, its own included** — each trip's destination and lifecycle arrive by value in the record block above, which has already run, so a per-trip open would re-derive what that block already carries. **Writes nothing, anywhere, on every branch. Dispatches no agent. Performs no act whose effect lands outside the trip's own files** — every trip and every person record it reaches, it reaches read-only, and an observation is not an effect. **Takes no `Bash(ls:*)` use** — the listing block holds that grant by name, and this verb consumes its output rather than taking a listing of its own.
 
 The prior-visit verb. It answers *has this traveller been to this destination before* from the references the trips already carry, and **it answers by offering rather than by writing**: what it produces is a suggestion the traveller may take, and the answer that lands in their file is theirs.
 

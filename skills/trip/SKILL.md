@@ -12,8 +12,10 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*
 `/trip [verb] [--trip <slug>] [verb args...]`
 
 The verb is the one the user typed, or — on an empty argument string — the `status` default
-step 3 declares, which is the one verb this file supplies. Nothing in it reads the wording of
-the request to decide one.
+step 3 declares, which is the one verb this file supplies. § *Selecting the verb* below is the
+whole of how it is reached: a literal lookup, lexical at every step, against the recognition
+set read live. That is why the wording around the token is never read to decide a verb — the
+lookup has nowhere to put it.
 
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
@@ -153,29 +155,30 @@ blocks this file carries, and it already carries all of them** — no slice adds
 verb needing to know whether an artifact exists asks at verb time with `Read` or
 `Bash(ls:*)`, never with a block.
 
-**What `disallowed-tools` does at runtime is contested, and this file does not settle it.**
-Two accounts ship in this repo and they are not compatible. `ADR-007` § *Context* says the
-field *removes the named tools from the pool* — a real restriction, turn-scoped like the
-grant. The trip-resolution contract workflow's coverage-boundary note says the opposite
-where it matters: `allowed-tools` and `disallowed-tools` alike are a turn-scoped
-pre-approval grant, **every tool stays callable**, and a green check there is not a
-privilege guarantee and must not be read as one. **Nothing in this repo arbitrates**, and
-the reason is narrower than *nothing reads the field*. `scripts/test-command-taxonomy.sh`
-does read it: its invocation classifier matches this file's `disallowed-tools:` line on the
-publish-script grant token that line carries and counts it into a **tool-grant tally**, one
-term of a parse-coverage identity that guard asserts and fails on. It reads the line as a
-**declaration** and says in terms that it takes neither account — so a declaration-level
-reading is what leaves the runtime question unarbitrated, not the absence of a reader.
+**What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has
+closed it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the
+published contract** rather than summarising it, and the account it confirms is the one
+`ADR-007` § *Context* had already given — **clause for clause**, so the question this file
+once left open is settled in § *Context*'s favour, and the sentence that called it unsettled
+is withdrawn rather than softened. `allowed-tools` is turn-scoped **pre-approval and not
+restriction**: every tool stays callable, and a tool left off the list routes through the
+usual permission settings rather than being forbidden. `disallowed-tools` is turn-scoped
+**removal** — the real restriction of the pair, and a firmer thing to say about these
+entries than this passage used to say. **Durable blocking still needs a permission-settings
+deny rule, a different artifact and one this repo does not ship**, so the removal these
+entries carry ends at the next message. `scripts/test-command-taxonomy.sh` reads the line
+on a different axis: its invocation classifier matches this file's `disallowed-tools:` line
+on the publish-script grant token that line carries and counts it into a **tool-grant
+tally**, one term of a parse-coverage identity that guard asserts and fails on. It reads
+the line as a **declaration**, so what it establishes is that the entry was written — and a
+green check there is not a privilege guarantee and must not be read as one.
 
-**What the two accounts agree on is all this file relies on.** The declaration is
-turn-scoped and clears at the next message; a tool left off `allowed-tools` is not thereby
-forbidden — it routes through the usual permission settings instead, so **omission is not
-prohibition** under either account; and durable blocking would need a permission-settings
-deny rule, a different artifact and one this release does not ship. So every *never* below
-names a **rule this file follows, never a property its frontmatter guarantees**, which is
-the form `ADR-007` § *Context* requires of a command's conduct — and each holds under
-**either** account. **The contest is stated once, here.** A verb section names the control
-it actually rests on and does not restate it.
+**What the settled account gives this file is narrower than enforcement, and that is all it
+relies on.** The declaration is turn-scoped and clears at the next message, and **omission
+is not prohibition**. So every *never* below names a **rule this file follows, never a
+property its frontmatter guarantees**, which is the form `ADR-007` § *Context* requires of
+a command's conduct — and each holds on the rule alone. **The account is stated once,
+here.** A verb section names the control it actually rests on and does not restate it.
 
 ## Standing clause — binding every verb of this command, present and future
 
@@ -416,6 +419,29 @@ verb-section parser asserts that no command file puts a verdict token in a condi
 a stop, a refusal or a redirect. That assertion is named here as the residual — not claimed as
 already made.
 
+**An act on a verb the operator did not type runs only after a confirmation that names the
+verb and its target, answered before the act.** The verb is the token in this file's
+requirement table. The target is the operand that verb's own `## <verb> <signature>` heading
+declares and, where it declares none, the trip `E1` resolved. Inference may reach such a
+verb, may name it and may prepare it; it may not act on its own selection. Where a verb's
+own section already states a confirmation shape — an echoed outgoing-to-incoming pair, a
+preview over a source's own answered set, a typed identifier, a display name beside a member
+count — that shape stands unchanged and this rule is added beneath it, never substituted for
+it. **A verb is outside this rule where its own `**Reads:**` block declares each of three
+things: that it writes nothing, that it dispatches no agent, and that it performs no act
+whose effect lands outside the trip's own files.** That is the inference line
+`reference/adr/ADR-007-command-entry-point.md` § 1 draws, read here rather than restated; a
+block declaring none of the three leaves its verb inside this rule, because a property
+nobody has declared is not one this rule may assume. **This rule is followed, not
+enforced.** No frontmatter key expresses a boundary finer than the file, the tool lists are
+turn-scoped and gate tools rather than acts, and no arrangement of them makes a confirmation
+happen — so the strength here is the strength of a rule, which is what § 1's amendment
+states and is the whole of what this file claims. A confirmation is what an inferred
+selection needs **before** an act the bounds already permit. It is never what makes an act
+they forbid available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to `unpublish`, and no
+overwrite or deletion of existing trip content, each of which the publishing and overwrite
+paragraphs above and `ADR-007` § 2 forbid unconditionally.
+
 ## Selecting the verb
 
 A literal lookup. Every step below is lexical, and the matching step — step 4 — has a
@@ -466,7 +492,10 @@ Render exactly this, and nothing else:
 1. The token, verbatim, as the user typed it.
 2. The verbs of this command, read live from Step 1's `Command` column — not from a list
    written into this file.
-3. Stop.
+3. One sentence naming the engine's guided-entry surface at its root — the surface that
+   takes a request in ordinary words and answers with the verb that serves it — and saying
+   that it names a verb and runs none. Name no verb in that sentence.
+4. Stop.
 
 On this path, do not guess. Do not offer a near-match suggestion — no "did you mean" — for
 a suggestion is a classification with an extra step and a reflexive accept, on the least
@@ -507,10 +536,10 @@ and `CLAUDE.md` is loaded beside it when this repository is the workspace; an in
 opens `${CLAUDE_SKILL_DIR}/../../CLAUDE.md` for that column instead, the one read the installed
 form adds — so *live* there names a read of context, or of that one file. **Dispatches no agent**, so it attributes no
 agent read either: `trips/<slug>/trip-log.md` is read on neither side of that attribution,
-there being no second side.
+there being no second side. **It writes nothing and runs no script, so it performs no act
+whose effect lands outside the trip's own files.**
 
-Read-only, and read-only as a rule this verb follows. It writes nothing and runs no
-script.
+Read-only, and read-only as a rule this verb follows.
 
 `status` is exactly two renders, mutually exclusive, selected by `trip.resolution`.
 
@@ -1063,8 +1092,8 @@ did not resolve and do not present the site as current.
 
 **It never publishes.** The standing clause binds this verb, and it binds it **as a rule this
 verb follows**. `disallowed-tools` **names** the script path, `bash` and `sh` — and what
-naming them achieves at runtime is the contest stated above, on which this section takes
-neither side. What both accounts give is all this bound needs: `ADR-007` § *Context* is
+naming them achieves at runtime is the settled account stated above, and this bound does
+not rest on it. What that account gives is all this bound needs: `ADR-007` § *Context* is
 explicit that the declaration is turn-scoped, that **durable blocking needs a
 permission-settings deny rule, a different artifact this repo does not ship**, and that a
 tool left off `allowed-tools` is not thereby
@@ -1101,10 +1130,12 @@ script this verb invokes rather than by this verb; `trips/<slug>/` — the **exi
 the resolved trip path, taken to establish there is a tree to validate, which is a read and is
 declared. It reads no artifact **content** itself: every content read is the script's. It reads
 no block of `trip-context.md`. **Dispatches no agent** — the check is mechanical, not a
-judgment, so there is no prompt to supply and no finding for a model to reach.
+judgment, so there is no prompt to supply and no finding for a model to reach. **It writes
+nothing under `trips/<slug>/` and nothing anywhere else. It runs
+`scripts/validate-artifacts.sh`, which grades and reports and writes nothing — so this verb
+performs no act whose effect lands outside the trip's own files.**
 
-Read-only, and read-only as a rule this verb follows. It writes nothing under `trips/<slug>/`
-and nothing anywhere else.
+Read-only, and read-only as a rule this verb follows.
 
 **What it runs** — a single invocation:
 
