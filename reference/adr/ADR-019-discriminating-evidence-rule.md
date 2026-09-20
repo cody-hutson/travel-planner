@@ -1,6 +1,10 @@
 # ADR-019: The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running
 
-- **Status:** Proposed (2026-09-11)
+- **Status:** Accepted (2026-09-19). Landed `Proposed` (2026-09-11) and ratified here, by the
+  two-step this corpus already uses: `ADR-006`, `ADR-007` and `ADR-010` each landed `Proposed`
+  and were flipped by a later ratifying commit. The driving milestone shipped as `v0.31.0`, and
+  the rule this record states is cited by `ADR-008` and `ADR-021` and enforced by the
+  publish-guard suite — it has been in force since that release; only this line lagged.
 - **Deciders:** repo maintainer
 - **Driving work:** the privacy-control-integrity milestone. That milestone exists because
   six controls each read as enforcing and were not. This record ratifies the authoring rule
