@@ -105,9 +105,17 @@ what you give up going conservative vs. what you risk going optimistic.
 5. Departure confidence — final journey planned with a buffer that reflects
    real stakes, not optimistic scheduling
 6. Depth coverage — the framing matches the party's familiarity with the
-   destination. Where a traveler's `Been here before?` is unknown, they
-   contribute no depth signal. This never overrides a hard constraint, a
-   stated need, or first-arrival clarity
+   destination. A mixed party does not average to a middle depth: the brief
+   carries both the orientation a first-timer needs and, for each traveler
+   who has been here before, at least one less-obvious call a repeat visitor
+   would not make unprompted — what has changed is one kind, not the only
+   one. Depth is carried by what the recommendation says, never by adding
+   modes to choose between (`reference/data-model.md` → "Depth calibration
+   is coverage, not a score"; that rule's unit is a candidate set, yours is
+   one recommended answer — cite it, do not re-derive it). Where one depth
+   is unrepresented, the framing leans wholly that way; where a traveler's
+   `Been here before?` is unknown, they contribute no depth signal. This
+   never overrides a hard constraint, a stated need, or first-arrival clarity
 
 ## Anti-Patterns to Actively Avoid
 
@@ -415,13 +423,19 @@ a secondary table inside a fence-form class — so it has nowhere to put a `cost
 and does not acquire one here. Its rows stay exactly as they are written today.
 
 **What never becomes a field.** `Rationale`, `What goes wrong if wrong choice made`,
-`Buffer rationale`, `Luggage handling`, `Group suitability`, the `Alternative`'s
-changing condition and the physical-cost flag notes carry **prose only**. They are
-not candidates for the marker, for frontmatter, or for any normalized token a later
-slice might reach for. They fail the frontmatter/body test's second question by
-construction — two correct writers do not phrase a failure mode identically — and
-that failure is the guarantee, not a reminder. A slice that normalizes one of them
-is reading the model, not the test.
+`Buffer rationale`, `Luggage handling`, `Luggage options`, `Group suitability`, the
+`Alternative`'s changing condition and the physical-cost flag notes carry **prose
+only**. They are not candidates for the marker, for frontmatter, or for any
+normalized token a later slice might reach for. They fail the frontmatter/body
+test's second question by construction — two correct writers do not phrase a
+failure mode identically — and that failure is the guarantee, not a reminder. A
+slice that normalizes one of them is reading the model, not the test.
+**The plural in `Luggage options` is the label's own wording, not an invitation to
+enumerate.** What it answers is where a particular party's bags sit during a
+particular gap, and whether a forwarding service is worth using on that stream — a
+judgement written per stream, never a menu a later slice can close into an enum.
+Its one countable part, the assembly minutes, is not its own to carry:
+`Buffer rationale:` holds it, and is fenced here for the same reason.
 
 ### Payment & Transit Card Setup
 

@@ -49,8 +49,8 @@ legitimate anchor, and this rule never pushes toward reservations.
 **The cap does not reach a recurring slot.** A `Recurrence: daily` desire is
 filled by a standing supporting slot, and a recurring slot is never the day's
 anchor meal whatever the desire's tier (`agents/03-scheduling.md` → the three
-bounds on the slot; `reference/data-model.md` → *Recurrence is orthogonal to
-priority tier*). The candidates that fill it are therefore not anchor-meal
+bounds on the slot; `reference/data-model.md` → "Recurrence is orthogonal to
+priority tier"). The candidates that fill it are therefore not anchor-meal
 nominations, and this cap does not count them — supply as many distinct
 candidates as that slot needs. What binds there is the two-appearance venue
 cap, not this one. Mark each such entry `grazing/snack only`: it is the honest
