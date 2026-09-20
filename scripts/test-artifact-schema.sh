@@ -3503,6 +3503,100 @@ EOF
 }
 run_fx() { va_main --root "$1" --scope dir . 2>&1; }
 
+# ── ARM COVERAGE FOR THIS GROUP: THE DERIVATION, AND THE ACCUMULATOR ─────────────
+#
+# CTL's coverage rule — "One MUST-FIRE arm per code the validator can emit" — was stated in
+# this file's header and held BY HAND. Groups ST and CE assert their own; this group did not,
+# and the difference between a stated invariant and an asserted one is the whole subject of
+# this suite. CTL-COV below asserts it, through the same cov_assert those two groups call.
+#
+# ── THE DERIVATION IS THIS GROUP'S OWN, AND THAT IS THE CUT ──────────────────────
+# st_codes is not merely inconvenient here, it is INAPPLICABLE, and that was measured rather
+# than assumed: pointed at the validator it returns 3 matches, all of them false positives
+# (EXCLUDED, UNMATCHED) and ZERO real codes, because the emission shapes differ. st_violations
+# emits a code as the head of a format string followed by a TAB; the validator emits
+# `FINDING <CODE> `. So this group passes its own extractor to the shared comparison, which is
+# exactly the boundary the shared helper is drawn at: the comparison transfers, the derivation
+# does not.
+
+# ctl_body — the concatenated `declare -f` text of every sourced va_* function.
+#
+# A READ OF THE SOURCED FUNCTIONS, NOT OF THE FILE, and each of the three reasons is a property
+# this suite already grades elsewhere:
+#   1. It grades the SOURCED SUBJECT. Remove va_check_artifact and five codes leave the set;
+#      remove va_fm_pairs and A1 does. That is the DER flip property, directly, which is what
+#      makes the registration in group MD a measurement rather than a formality.
+#   2. Comments vanish BY CONSTRUCTION. A static read of the validator finds 44 emission sites,
+#      of which 2 are prose — a banner and a comment — and yields the same 16 codes only
+#      because those two happen to name codes that are also emitted. declare -f leaves no
+#      exclusion rule to maintain and no way for prose to enter the set at all.
+#   3. It leaves NO file subject, so DER clause 6 needs no opt-out here and none is declared.
+#      A file is not a shell function and md_flips cannot remove one; choosing declare -f over
+#      a read of scripts/validate-artifacts.sh is what avoided creating that case. Had the
+#      derivation read the file, this group would owe an explicit opt-out naming it, its
+#      reason, and a compensating positive control, in the shape PP0 and PP9 ship.
+ctl_body() {
+  local f
+  for f in $(declare -F | awk '$3 ~ /^va_/ { print $3 }'); do
+    declare -f "$f"
+  done
+}
+
+# ctl_codes <text> — the validator finding codes a text can EMIT, one per line, first-occurrence
+# order, deduplicated. A code is exactly what has_finding looks one up BY: the token after the
+# literal `FINDING ` at the head of an emitted record.
+#
+# The code must HEAD a format string — the match opens on the quote — so prose naming a code is
+# not a code. The opening delimiter is a CLASS for the reason st_codes states: a bash-side
+# evaluator carries its emissions inside single quotes, where a double-quoted format would expand
+# `$` and a backtick, and a reader admitting only one spelling returns the empty set over the
+# other while its caller reports a covered group.
+#
+# The glyph after `FINDING ` in the pattern below is a BRACKET, not an upper-case letter, so this
+# reader cannot match its own body and report a defect it had just introduced — group PF's hazard,
+# avoided by shape rather than by scrubbing a needle.
+ctl_codes() {
+  awk '
+    {
+      s = $0
+      while (match(s, /["\047]FINDING [A-Z][A-Z0-9]*[ "\047]/)) {
+        c = substr(s, RSTART + 9, RLENGTH - 10)
+        if (!seen[c]++) print c
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+  ' <<<"$1"
+}
+
+# ── THE ARMED SET IS A RUNTIME ACCUMULATOR, NEVER A SOURCE SCAN ──────────────────
+#
+# This is load-bearing and it is measured. This group arms a code through THREE distinct
+# idioms, not one. has_finding covers 15 of the 16 codes across 21 MUST-FIRE-positive sites.
+# X3 is armed by NEITHER of the other two shapes: its only must-fire arm is
+# CTL-VA-FAILCLOSED-MATRIX, which grades it through an `awk index()` with the code carried in a
+# shell variable. A scanner that recognised two of the three idioms would report X3 UNARMED and
+# CTL-COV would land RED on arrival for a code that is in fact covered — a closed class
+# presenting itself as complete, which is the exact trap this suite exists to refuse.
+#
+# Accumulating AT THE CALL removes the class entirely: however an arm is written, it records the
+# code by running. Recorded BEFORE the verdict, on the principle st_mustfire's own banner states
+# — coverage asks whether an arm EXISTS for the code, not whether that arm passes. An arm whose
+# own precondition short-circuited it correctly leaves its code uncovered, which is the honest
+# reading rather than a defect.
+#
+# The two MUST-NOT-FIRE sites — CTL-A2neg and CTL-SCOPE2 — keep calling has_finding and arm
+# nothing, exactly as st_mustnotfire does not accumulate. A must-not-fire arm asserts a code is
+# ABSENT; counting it as coverage would let a group claim an arm for a code it only ever
+# asserted could not appear. The swap makes that polarity lexically visible in the source, which
+# it was not before.
+ctl_arm()   { CTL_ARMED="$CTL_ARMED
+$1"; }
+ctl_fired() { ctl_arm "$2"; has_finding "$1" "$2"; }
+
+CTL_ARMED=""
+CTL_COV_PROBE='ZZCTLCOVPROBE'
+CTL_COV_PHANTOM='ZZCTLPHANTOMARM'
+
 CTL_RAN=0
 
 FX="$WORK/clean"; mk_root "$FX"
@@ -3555,7 +3649,7 @@ else
 fi
 
 B_OUT="$(run_fx "$FXB")"; B_RC=$?
-if [ "$B_RC" -ne 0 ] && has_finding "$B_OUT" 'A3' && has_finding "$B_OUT" 'A4'; then
+if [ "$B_RC" -ne 0 ] && ctl_fired "$B_OUT" 'A3' && ctl_fired "$B_OUT" 'A4'; then
   PASS "C1b: MUST FIRE — the byte-identical fixture with 'schema-version: 1' added and nothing else changed FAILS CLOSED (rc=$B_RC), emitting A3 (required field absent) and A4 (value outside its declared enum)"
 else
   FAIL "C1b: MUST FIRE — declaring a version did not make the same three violations fail (rc=$B_RC): $(printf '%s' "$B_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
@@ -3571,7 +3665,7 @@ FX="$WORK/a1"; mk_root "$FX"
 printf -- '---\nartifact: outputs/food-list.md\nschema-version: 1\ntrip: ctl\ntrip: ctl-again\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
   > "$FX/examples/ctl/outputs/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A1'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A1'; then
   PASS "CTL-A1: MUST FIRE — a duplicate frontmatter key is A1; picking either value silently would be the wrong answer to a question the file asks"
 else
   FAIL "CTL-A1: MUST FIRE — a duplicate key was accepted (rc=$R)"
@@ -3583,7 +3677,7 @@ FX="$WORK/a2"; mk_root "$FX"
 printf -- '---\nartifact: outputs/no-such-class.md\nschema-version: 1\ntrip: ctl\n---\n\n# x\n' \
   > "$FX/examples/ctl/unclaimed.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A2'; then
   PASS "CTL-A2: MUST FIRE — a VERSIONED artifact declaring a class no schema covers is A2. Without the declared arm this file would simply not be selected: it would leave the gate silently, which is the fail-OPEN the gate exists to close"
 else
   FAIL "CTL-A2: MUST FIRE — a versioned artifact naming an unknown class was not caught (rc=$R)"
@@ -3654,7 +3748,7 @@ if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ]; then
 fi
 if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ] && [ "$NS1_LOOKUP_BAD" -eq 1 ] && [ "$NS1_LOOKUP_OK" -eq 1 ] \
    && [ "$NS1_REAL_RC" -eq 0 ] && [ -z "$(printf '%s\n' "$NS1_REAL_OUT" | grep '^FINDING ')" ] \
-   && [ "$NS1_RC" -ne 0 ] && has_finding "$NS1_OUT" 'A2'; then
+   && [ "$NS1_RC" -ne 0 ] && ctl_fired "$NS1_OUT" 'A2'; then
   PASS "CTL-NOSCHEMA1: MUST FIRE — a versioned artifact (${NS_WITNESS##*/}) whose class resolves to NO SCHEMA fails closed at rc=$NS1_RC with A2, and it does so for a well-formed class-id ($NS_UNCOVERED) rather than only for the literal UNKNOWN. The lookup pair is measured, not assumed: va_schema_for returns non-zero for $NS_UNCOVERED and a path for $NS_CID; and the SAME artifact under its real class returns rc=$NS1_REAL_RC with no finding, so this arm grades the class-id and not the artifact"
 else
   FAIL "CTL-NOSCHEMA1: MUST FIRE — a class the corpus does not cover was reported validated (subject=${NS_CID:-<none>} uncovered-id=${NS_UNCOVERED:-<none>} lookup-bad=$NS1_LOOKUP_BAD lookup-ok=$NS1_LOOKUP_OK degraded-rc=$NS1_RC real-rc=$NS1_REAL_RC). subject or uncovered-id empty means the derivation found no subject and this arm measured nothing; lookup-bad=0 or lookup-ok=0 means the class-id pair is not the pair this arm claims; real-rc non-zero means the artifact itself is failing and the comparison says nothing; otherwise the gate returned rc=$NS1_RC over an artifact it graded against no schema at all — $(printf '%s' "$NS1_OUT" | head -c 120)"
@@ -3688,7 +3782,7 @@ if [ -n "$NS_CID" ]; then
   [ -z "$(printf '%s\n' "$NS2_CTRL_OUT" | grep '^FINDING ')" ] && NS2_CTRL_FIND=0
 fi
 if [ -n "$NS_CID" ] && [ "$NS2_HITS" -ge 1 ] && [ "$NS2_CTRL_RC" -eq 0 ] && [ "$NS2_CTRL_FIND" -eq 0 ] \
-   && [ "$NS2_RC" -ne 0 ] && has_finding "$NS2_OUT" 'X2' && [ "$NS2_NAMES" -ge 1 ]; then
+   && [ "$NS2_RC" -ne 0 ] && ctl_fired "$NS2_OUT" 'X2' && [ "$NS2_NAMES" -ge 1 ]; then
   PASS "CTL-NOSCHEMA2: MUST FIRE — with the read of $NS_SCHEMA shadowed to fail (injected $NS2_HITS time(s)) against a WARM pattern table, so the class still resolves and only its schema will not read, the gate FAILS CLOSED at rc=$NS2_RC with X2 naming that schema file. The identical call with the shadow removed returns rc=$NS2_CTRL_RC with no finding, so the verdict change is attributable to the one shadowed read"
 else
   FAIL "CTL-NOSCHEMA2: MUST FIRE — a schema that resolved and then would not read did not fail closed (subject=${NS_CID:-<none>} shadow-invoked=$NS2_HITS rc=$NS2_RC names-schema=$NS2_NAMES control-rc=$NS2_CTRL_RC control-findings=$NS2_CTRL_FIND). shadow-invoked=0 means the injection never landed and this arm measured nothing; control-rc non-zero or control-findings=1 means the unshadowed subject was already failing, so the comparison proves nothing; rc=0 means the gate reported success over an artifact it never graded; names-schema=0 means it failed without saying WHICH read failed, which is the half of AC2 a bare non-zero does not satisfy"
@@ -3744,7 +3838,7 @@ FX="$WORK/a5"; mk_root "$FX"
 printf -- '---\nartifact: outputs/activities-list.md\nschema-version: 1\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
   > "$FX/examples/ctl/outputs/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A5'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A5'; then
   PASS "CTL-A5: MUST FIRE — an artifact whose declared class disagrees with the class whose path-pattern selected it is A5"
 else
   FAIL "CTL-A5: MUST FIRE — a mismatched declaration was accepted (rc=$R)"
@@ -3755,7 +3849,7 @@ FX="$WORK/a6"; mk_root "$FX"
 printf -- '---\nartifact: outputs/food-list.md\nschema-version: 99\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
   > "$FX/examples/ctl/outputs/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A6'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A6'; then
   PASS "CTL-A6: MUST FIRE — an in-repo artifact declaring a version its own in-repo schema does not define is a broken repository, not a forward-compatible trip. The boundary is stated in the validator's source rather than left to be discovered"
 else
   FAIL "CTL-A6: MUST FIRE — a version above the class schema's own was accepted (rc=$R)"
@@ -3767,7 +3861,7 @@ sed 's|^artifact: outputs/food-list.md$|artifact: outputs/not-a-class.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 if grep -q '^artifact: outputs/not-a-class.md$' "$FX/reference/schemas/food-list.md"; then
   O="$(run_fx "$FX")"; R=$?
-  if [ "$R" -ne 0 ] && has_finding "$O" 'S1'; then
+  if [ "$R" -ne 0 ] && ctl_fired "$O" 'S1'; then
     PASS "CTL-S1: MUST FIRE — a schema whose artifact disagrees with its class's row in the enumeration is S1"
   else
     FAIL "CTL-S1: MUST FIRE — a schema disagreeing with the document was accepted (rc=$R)"
@@ -3780,7 +3874,7 @@ FX="$WORK/s2"; mk_root "$FX"
 sed 's|^schema-version: 1$|schema-version: 1\nthis line is not in the grammar|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S2'; then
   PASS "CTL-S2: MUST FIRE — an out-of-grammar line inside an artifact-schema fence is S2. The grammar is closed, so an unrecognised construct is a violation of the corpus and never a limitation of the parser"
 else
   FAIL "CTL-S2: MUST FIRE — an out-of-grammar schema line was accepted (rc=$R)"
@@ -3789,7 +3883,7 @@ fi
 FX="$WORK/s3"; mk_root "$FX"
 cp "$FX/reference/schemas/food-list.md" "$FX/reference/schemas/food-list-copy.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S3'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S3'; then
   PASS "CTL-S3: MUST FIRE — two schemas declaring the same class is S3, so a stray file under reference/schemas/ cannot silently become a second home for a class"
 else
   FAIL "CTL-S3: MUST FIRE — a duplicate class declaration was accepted (rc=$R)"
@@ -3802,7 +3896,7 @@ fi
 FX="$WORK/stray"; mk_root "$FX"
 printf -- '# notes\n\nscratch notes that are not a schema at all\n' > "$FX/reference/schemas/scratch-notes.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S2'; then
   PASS "CTL-STRAY: MUST FIRE — a stray non-schema file under reference/schemas/ is S2 (no artifact-schema fence). Homing the class enum in a directory listing is only safe while a non-member cannot sit in that directory unnoticed"
 else
   FAIL "CTL-STRAY: MUST FIRE — a stray file under reference/schemas/ was accepted (rc=$R); the corpus can gain a member nothing declares"
@@ -3812,7 +3906,7 @@ FX="$WORK/s4"; mk_root "$FX"
 sed 's|^path-pattern: .*$|path-pattern: **/outputs/**/food-list.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S4'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S4'; then
   PASS "CTL-S4: MUST FIRE — ** anywhere but the first or last segment is a malformed pattern, reported rather than quietly reinterpreted"
 else
   FAIL "CTL-S4: MUST FIRE — a malformed path-pattern was accepted (rc=$R)"
@@ -3822,7 +3916,7 @@ FX="$WORK/s5"; mk_root "$FX"
 sed 's|^witness: .*$|witness: examples/ctl/outputs/does-not-exist.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S5'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S5'; then
   PASS "CTL-S5: MUST FIRE — a declared witness that does not exist is S5"
 else
   FAIL "CTL-S5: MUST FIRE — a missing witness path was accepted (rc=$R)"
@@ -3833,7 +3927,7 @@ printf -- '# Food List — CTL fixture with no frontmatter at all\n' > "$FX/exam
 sed 's|^witness: .*$|witness: examples/ctl/outputs/food-list.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S6'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S6'; then
   PASS "CTL-S6: MUST FIRE — a declared witness that exists but carries no schema-version is a COVERAGE REGRESSION (S6). This is what lets the gate's teeth grow with the migration: the failing assertion is the class's own coverage declaration, not the skip predicate, so nothing re-branches the tolerant read"
 else
   FAIL "CTL-S6: MUST FIRE — a stripped witness was accepted (rc=$R)"
@@ -3843,7 +3937,7 @@ FX="$WORK/s7"; mk_root "$FX"
 sed 's|^witness: .*$|witness: reference/schemas/README.md\nno-witness-because: both, which is not allowed|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S7'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S7'; then
   PASS "CTL-S7: MUST FIRE — declaring both witness: and no-witness-because: is S7; they are mutually exclusive and exactly one is required"
 else
   FAIL "CTL-S7: MUST FIRE — a schema declaring both coverage branches was accepted (rc=$R)"
@@ -3851,7 +3945,7 @@ fi
 FX="$WORK/s7b"; mk_root "$FX"
 grep -v '^witness: ' "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S7'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S7'; then
   PASS "CTL-S7b: MUST FIRE — declaring NEITHER is S7 too. A class with no coverage statement is the silent-absence case the declaration exists to prevent"
 else
   FAIL "CTL-S7b: MUST FIRE — a schema declaring no coverage branch was accepted (rc=$R)"
@@ -3860,7 +3954,7 @@ fi
 FX="$WORK/s8"; mk_root "$FX"
 rm -f "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S8'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S8'; then
   PASS "CTL-S8: MUST FIRE — a class in the enumeration with no schema in the corpus breaks the bijection (S8). The guard holds no copy of the class list, so this is asserted against the document itself"
 else
   FAIL "CTL-S8: MUST FIRE — a missing class schema was accepted (rc=$R)"
@@ -3870,7 +3964,7 @@ fi
 FX="$WORK/x2"; mk_root "$FX"
 rm -rf "$FX/reference/schemas"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'X2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'X2'; then
   PASS "CTL-X2: MUST FIRE — an absent schema directory is X2, an unreadable population. An absent corpus must never read as a corpus with nothing wrong in it"
 else
   FAIL "CTL-X2: MUST FIRE — an absent schema directory did not fail (rc=$R)"
@@ -3889,7 +3983,7 @@ fi
 FX="$WORK/tplneg"; mk_root "$FX"
 cp "$ROOT/templates/trip-context.template.md" "$FX/examples/ctl/trip-context.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A4'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A4'; then
   PASS "CTL-TPLneg: MUST FIRE — the SAME bytes at a non-template path DO fail (its trip: value is the placeholder <trip-slug>, not a slug). So the exclusion is doing real work rather than decorating a file the gate would have passed anyway"
 else
   FAIL "CTL-TPLneg: MUST FIRE — the template's contents passed at a non-excluded path (rc=$R), so CTL-TPL proves nothing about the exclusion"
@@ -3926,7 +4020,7 @@ FX="$WORK/scope"; mk_root "$FX"
 mkdir -p "$FX/examples/ctl/empty-but-real"
 SCOPE_MISS_OUT="$(va_main --root "$FX" --scope dir examples/ctl/no-such-trip-xyz 2>&1)"; SCOPE_MISS_RC=$?
 SCOPE_EMPTY_OUT="$(va_main --root "$FX" --scope dir examples/ctl/empty-but-real 2>&1)"; SCOPE_EMPTY_RC=$?
-if [ "$SCOPE_MISS_RC" -ne 0 ] && has_finding "$SCOPE_MISS_OUT" 'X2'; then
+if [ "$SCOPE_MISS_RC" -ne 0 ] && ctl_fired "$SCOPE_MISS_OUT" 'X2'; then
   PASS "CTL-SCOPE1: MUST FIRE — a --scope dir target that does not exist is X2 and fails closed (rc=$SCOPE_MISS_RC). A mistyped trip name is an unreadable population, and an absent population must never read as a population with nothing wrong in it"
 else
   FAIL "CTL-SCOPE1: MUST FIRE — a nonexistent --scope dir target returned rc=$SCOPE_MISS_RC with no X2. A user who fat-fingers a trip name is being told their trip is clean"
@@ -4849,6 +4943,17 @@ else
     while IFS= read -r FC_LABEL; do
       [ -n "${FC_LABEL:-}" ] || continue
       FC_SEEN="$(awk -v p="FINDING X3 $FC_LABEL" 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FC_OUT")"
+      # ── X3's ONLY must-fire arm, and the reason CTL-COV's armed set is accumulated at the
+      # call rather than scanned out of this file. The grading two lines down is an `awk
+      # index()` over a code carried in a shell variable — neither of the other two arming
+      # idioms in this group, and invisible to any source reader that enumerates them. Recorded
+      # HERE, before the verdict, exactly as ctl_fired records before has_finding answers:
+      # coverage asks whether an arm EXISTS for X3, and this is it. Placed outside the verdict
+      # branches deliberately — a failing arm is a failing arm, not a missing one, and reporting
+      # X3 uncovered on top of it would name a second defect that is not there. The outer
+      # emptiness gate above still leaves X3 uncovered when the fixture was never clean enough
+      # for this loop to run, which is the honest reading rather than a hole.
+      ctl_arm X3
       if [ "$FC_HITS" -ge 1 ] && [ "$FC_RC" -ne 0 ] && [ "$FC_SEEN" -ge 1 ]; then
         PASS "CTL-VA-FAILCLOSED-MATRIX[$FC_LABEL]: with its producer shadowed to exit 7 (injected $FC_HITS time(s)) the run FAILS CLOSED at rc=$FC_RC and emits X3 naming this site, where the unshadowed run over the same fixture is rc=0 with no X3 at all"
       else
@@ -4895,6 +5000,21 @@ if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-co
 else
   FAIL "CTLe: a fixture appears to have been written into the repository tree"
 fi
+
+# ── CTL-COV — the invariant this group had been holding BY HAND, now graded. Every code the
+# validator can emit has a must-fire arm here, and every arm names a code it can emit. The
+# comparison is cov_assert, which groups ST and CE call with their own extractors; the
+# derivation is this group's own, for the measured reason stated at ctl_codes above.
+#
+# Graded AFTER CTLe, and the ordering is deliberate on both sides. Its second input is the set
+# of arms that RAN, so it cannot precede the last of them. And CTLe's own banner says it is
+# graded LAST, after every fixture above — CTL-COV builds no fixture, so grading it after CTLe
+# keeps that sentence true rather than quietly falsifying it.
+CTL_BODY="$(ctl_body)"
+CTL_CODES="$(ctl_codes "$CTL_BODY")"
+cov_assert 'CTL-COV' 'CTL-COV-MUT' '' 'the validator' \
+           ctl_codes cov_emit_finding "$CTL_BODY" \
+           "$CTL_CODES" "$CTL_ARMED" "$CTL_COV_PROBE" "$CTL_COV_PHANTOM"
 
 if [ "$CTL_RAN" -ne 1 ]; then
   FAIL "X1: group CTL did not execute — a run without it is a failure, never a pass"
