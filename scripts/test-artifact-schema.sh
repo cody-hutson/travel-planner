@@ -2828,15 +2828,21 @@ st4_assert() {
 # accumulator and turn the bijection red — so ST_ARMED is not touched here, ST_CODES stays at the
 # six codes st_violations emits, and ST-COV's arithmetic is byte-unchanged.
 st3_mustfire() {
-  local id="$1" tf="$2" df="$3" side="$4" lbl="$5" what="$6" landed=0 rep hit n
+  local id="$1" tf="$2" df="$3" side="$4" lbl="$5" what="$6" landed=0 rep hit n live
   cmp -s "$ST_FILE" "$tf" && cmp -s "$ST_DM" "$df" || landed=1
   rep="$(st3_report "$tf" "$df")"
   hit="$(printf '%s\n' "$rep" | awk -F'\t' -v s="$side" -v l="$lbl" '$1 == s && $2 == l { n++ } END { print n + 0 }')"
   n="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
-  if [ "$landed:$hit" = "1:1" ]; then
-    PASS "$id: MUST FIRE — $what, and the same comparison names '$lbl' under $side ($n difference(s) in all). The mutation is asserted to have landed before the verdict is read"
+  # The FIRING has to be earned too, and not only the silence its twin below grades. With the
+  # model extractor returning nothing, every marked label falls into the marked-not-in-model
+  # list for free — so an arm that only asked "is my label named?" would report a healthy fire
+  # over a broken instrument. Requiring all three populations non-empty ON THIS INPUT is what
+  # separates a difference the mutation caused from one an empty set manufactured.
+  live="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" || $1 == "NM" || $1 == "NS" { if ($2 + 0 > 0) k++ } END { print (k == 3) ? "yes" : "no" }')"
+  if [ "$landed:$hit:$live" = "1:1:yes" ]; then
+    PASS "$id: MUST FIRE — $what, and the same comparison names '$lbl' under $side ($n difference(s) in all, over three non-empty populations). The mutation is asserted to have landed before the verdict is read"
   else
-    FAIL "$id: MUST FIRE — $what, but the comparison did not name '$lbl' under $side (mutation-landed=$landed differences=$n). ST3's zero has no control behind it in this direction"
+    FAIL "$id: MUST FIRE — $what, but this arm read mutation-landed=$landed named-under-$side=$hit differences=$n populations-live=$live, wanting 1:1:yes. ST3's zero has no control behind it in this direction"
   fi
 }
 
