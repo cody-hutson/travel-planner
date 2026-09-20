@@ -3,6 +3,47 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.35.0] — 2026-09-20 — Prompt and fixture agreement
+
+The instructions this engine runs on, and the worked examples that demonstrate them, now say what the
+corpus had already decided. Nothing about how the engine behaves changes here. What changes is that a
+reader — human or agent — who opens one of these files and acts on what it says is acting on
+something true.
+
+**A term the engine reasons with is now defined where the rule that uses it lives.** The presence
+rule ranges over a trip's own days, and that set was used and never bound: two careful readers
+working from the same worked example reached different answers about whether a traveller counted as
+present on a given day. The binding now sits immediately above the rule that consumes it, names the
+block that publishes a trip's days, and settles the case that caused the disagreement — a traveller
+whose own window reaches past the trip's days does not thereby extend them.
+
+**Transport states an obligation its siblings already stated.** A mixed party does not average to a
+middle depth, and the other planning prompts said so in their own words while transport did not.
+Transport now carries it on its own output, cites the governing rule rather than re-deriving it, and
+keeps the limb that the rule's own scope excludes.
+
+**A worked example no longer describes a world that stopped existing.** Prompts began emitting an
+optional cost field after these examples were written, so prose explaining that no prompt emits it
+had quietly become false wherever it appeared. Each example now explains what is actually true of
+it — that its markers predate their emitter, which is the field being optional rather than an
+absence being declared — and the entry label it shows matches the label its own prompt declares.
+
+**A traveller's document set says what was found rather than nothing at all.** Where no source
+states a passport for someone, the worked examples now say exactly that, dated, instead of leaving
+the value blank and explaining the blank in prose. A third-party entry, which the instruction says
+carries no such line at all, no longer carries one.
+
+**Citations in the prompt corpus all use the same form.** The corpus had settled on a quoted section
+name; a handful of sites still used the older italic rendering, and the prompts are now uniform on
+the settled form. The ruling rests on the convention's own text, on the uniformity of the prompts
+themselves, and on the separate settled practice of the schema files — and deliberately not on the
+authoring commit, which on measurement turns out not to distinguish the readings at all.
+
+**The honest limits.** This release corrects the instances; it does not ship a detector for any of
+them. The citation form is uniform today and nothing guards it tomorrow, the new chronology prose is
+true today and nothing asserts it, and the schema's grading statement now names its own limit rather
+than closing it. Those are recorded, with an owner, rather than implied to be finished.
+
 ## [0.34.0] — 2026-09-19 — Guided command entry
 
 You can now say what you want in plain words and be walked to the command that does it. Until this
