@@ -13,12 +13,18 @@ person: psn-3c7e
 
 > **Illustrative, sanitized example. Not a real person.** No real personal detail
 > appears in this file.
+>
+> **Reading this on its own, without the repository?** Everything you need is here.
+> The answers below are complete, and they are what this file is for: a filled-in
+> form to hold beside your blank one. The bold notes between the sections explain
+> how this example fits the engine it ships with, and they name files you do not
+> have. Skip them — nothing in the profile depends on them.
 
 **This is the composition witness: a traveller file that references a durable person
-record.** Its sibling [`../people/psn-3c7e.md`](../people/psn-3c7e.md) is that record.
-Between them the two files carry every answerable slot of the intake form exactly once,
-and which file holds which slot is decided entirely by
-[`../../../reference/data-model.md`](../../../reference/data-model.md) § *Field Scope*.
+record.** That record is `examples/people-library-demo/people/psn-3c7e.md`, its sibling
+in this same example directory. Between them the two files carry every answerable slot
+of the intake form exactly once, and which file holds which slot is decided entirely by
+`reference/data-model.md` § *Field Scope*.
 
 **`person: psn-3c7e` is the whole of the link, and it is the only new byte a trip needs.**
 One optional frontmatter field, on this class and no other. The value is the record's
@@ -52,9 +58,9 @@ Every field below is `TRIP` or `DEST`, so composition returns this file's value 
 them and never reads the record. Every field the record holds is `PERSON` or `DEFAULT`, so
 composition returns the record's value and this trip inherits it. **No field is claimed
 twice, so this witness reports nothing** — it is the clean case. Its counterpart is
-[`../../data-architecture-demo/travelers/`](../../data-architecture-demo/travelers/),
-whose two files carry **no** reference and are the witness for the other half: a trip that
-predates the store, composing to itself with no store read attempted.
+`examples/data-architecture-demo/travelers/`, whose two files carry **no** reference and
+are the witness for the other half: a trip that predates the store, composing to itself
+with no store read attempted.
 
 ---
 
