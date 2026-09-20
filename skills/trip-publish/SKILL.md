@@ -11,8 +11,11 @@ disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh p
 
 `/trip-publish <verb> [--trip <slug>]`
 
-The verb is the one the user typed. Nothing in this file supplies a verb they did not
-type, and nothing in it reads the wording of the request to decide one.
+The verb is the one the user typed. § *Selecting the verb* below is the whole of how it is
+reached: a literal lookup, lexical at every step, against the recognition set read live. So
+nothing in this file supplies a verb the user did not type, and the lookup has no place to
+put the wording around the token; that the token was typed at all is held by this file's
+invocation flag, not by the lookup.
 
 **Engine root — where every path in this file resolves from.** This engine's own assets — the
 agent prompts, the reference documents, the templates and the shell entry points — live under
@@ -38,41 +41,43 @@ grants and the fenced invocations.
 
 ## Why this is its own file
 
-**What `disallowed-tools` does at runtime is contested, and this file does not settle it.**
-Two accounts ship in this repo and they are not compatible.
-`reference/adr/ADR-007-command-entry-point.md` § Context says the field *removes the named
-tools from the pool* — a real restriction. The trip-resolution contract workflow's
-scope note says the opposite where it matters: `allowed-tools` and `disallowed-tools` are a
-turn-scoped pre-approval grant and **every tool stays callable**, adding that a green check
-there is not a privilege guarantee and must not be read as one. **Nothing in this repo
-arbitrates**, and the reason is narrower than *nothing reads the field*.
-`scripts/test-command-taxonomy.sh` does read it: its invocation classifier walks the
-command directory and matches this file's `disallowed-tools:` line on the publish-script
-grant token that line carries, counting it into a **tool-grant tally** — one term of a
-parse-coverage identity that guard asserts and fails on. That reading is of what this file
-**declares**; the guard says in terms that it takes neither account, because every
-assertion it makes is about a declaration and none about what a declaration enforces. **A
-declaration-level reading is what leaves the runtime question unarbitrated** — not the
-absence of a reader. Where else the field appears is **re-derived from the tree rather than
-listed here**: the list this sentence used to carry named the five command files, one
-workflow comment and the ADR, and was two short — it missed a second workflow comment and
-the guard itself, which is what a written-down census does.
+**What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has
+closed it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the
+published contract** rather than summarising it, and the account it confirms is the one
+`reference/adr/ADR-007-command-entry-point.md` § Context had already given — **clause for
+clause**, so the question this file once left open is settled in § Context's favour, and the
+sentence that called it unsettled is withdrawn rather than softened. `allowed-tools` is
+turn-scoped **pre-approval and not restriction**: every tool stays callable, and a tool
+left off the list routes through the usual permission settings rather than being forbidden.
+`disallowed-tools` is turn-scoped **removal** — the real restriction of the pair, and a
+firmer thing to say about these entries than this passage used to say. **Durable blocking
+still needs a permission-settings deny rule — a different artifact, and one this repo does
+not ship**, so the removal these entries carry ends at the next message.
+`scripts/test-command-taxonomy.sh` reads the line on a different axis: its invocation
+classifier walks the command directory and matches this file's `disallowed-tools:` line on
+the publish-script grant token that line carries, counting it into a **tool-grant tally** —
+one term of a parse-coverage identity that guard asserts and fails on. That reading is of
+what this file **declares**, so what it establishes is that the entry was written, and a
+green check there is not a privilege guarantee and must not be read as one. Where else the
+field appears is **re-derived from the tree rather than listed here**: the list this
+sentence used to carry named the five command files, one workflow comment and the ADR, and
+was two short — it missed a second workflow comment and the guard itself, which is what a
+written-down census does.
 
-What the two accounts **agree** on is all this file relies on. The declaration is
-turn-scoped and clears at the next message; a tool left off `allowed-tools` is not thereby
-forbidden, it routes through the usual permission settings instead. **Omission is not
-prohibition** under either account. And durable blocking would need a permission-settings
-deny rule — a different artifact, and one this release does not ship.
+What the settled account gives this file is narrower than enforcement, and that is all it
+relies on. The declaration is turn-scoped and clears at the next message; a tool left off
+`allowed-tools` is not thereby forbidden, it routes through the usual permission settings
+instead. **Omission is not prohibition.**
 
 **So this file's conduct is written as rules it follows, never as a property its
-frontmatter guarantees**, and that is what keeps it sound under either account: every claim
-below holds without the disputed one being true.
+frontmatter guarantees**, and that is what keeps it sound on the rule alone: every claim
+below holds without the frontmatter being what makes it true.
 
 **Each claim here about what this command will not do is labelled by what establishes it,
 and the two bases are not interchangeable.** A claim resting on a **rule this file
 follows** holds because the file says so, and nothing but the file says so. A claim that
 *also* has a `disallowed-tools` entry behind it names that entry as a **declared**
-restriction — one whose runtime force this repo does not establish, and which is therefore
+removal — one whose reach ends with the turn, and which is therefore
 offered as corroboration rather than as the thing that makes the claim true. What is never
 claimed is the third thing: a prohibition inferred from a grant left out. Where this file's
 reach is bounded by omission alone, it says *unlisted*, not *denied*.
@@ -80,7 +85,7 @@ reach is bounded by omission alone, it says *unlisted*, not *denied*.
 That is why the publish surface is a separate file rather than a rule written inside
 `/trip`. A rule written inside one file cannot partition anything **across** files — only
 the per-file declarations can, because they are the only per-file thing there is to differ.
-What a runtime does with those declarations is the contested question above; the partition
+What a runtime does with those declarations is the settled question above; the partition
 is a property of the declarations either way, which is why it is stated as one. **This file
 holds the publish half of it, and that half is observable right here:** it reaches the
 publish script and names every content-mutating tool in its `disallowed-tools`. The editing
@@ -339,6 +344,29 @@ protects only the verbs that existed when it was written.
 7. **It never branches on freshness**, and adds no gate that blocks on it. G8 is reserved
    and report-only, and the contract records the reason: an unconditional
    render-newer-than-model gate refuses every correct publish rather than more of them.
+8. **An act on a verb the operator did not type runs only after a confirmation that names
+   the verb and its target, answered before the act.** The verb is the token in this file's
+   requirement table. The target is the operand that verb's own `## <verb> <signature>`
+   heading declares and, where it declares none, the trip `E1` resolved. Inference may
+   reach such a verb, may name it and may prepare it; it may not act on its own selection.
+   Where a verb's own section already states a confirmation shape — an echoed
+   outgoing-to-incoming pair, a preview over a source's own answered set, a typed
+   identifier, a display name beside a member count — that shape stands unchanged and this
+   rule is added beneath it, never substituted for it. **A verb is outside this rule where
+   its own `**Reads:**` block declares each of three things: that it writes nothing, that
+   it dispatches no agent, and that it performs no act whose effect lands outside the
+   trip's own files.** That is the inference line
+   `reference/adr/ADR-007-command-entry-point.md` § 1 draws, read here rather than
+   restated; a block declaring none of the three leaves its verb inside this rule, because
+   a property nobody has declared is not one this rule may assume. **This rule is followed,
+   not enforced.** No frontmatter key expresses a boundary finer than the file, the tool
+   lists are turn-scoped and gate tools rather than acts, and no arrangement of them makes
+   a confirmation happen — so the strength here is the strength of a rule, which is what
+   § 1's amendment states and is the whole of what this file claims. A confirmation is what
+   an inferred selection needs **before** an act the bounds already permit. It is never
+   what makes an act they forbid available: it admits no `ALLOW_PLAINTEXT`, no `--yes` to
+   `unpublish`, and no overwrite or deletion of existing trip content, each of which
+   rules 2 and 5 above and `ADR-007` § 2 forbid unconditionally.
 
 **Extension rule.** A later slice may append a numbered rule above only where it genuinely
 binds every verb of this command, present and future, and must say so in its own design; a
@@ -399,7 +427,10 @@ Render exactly this, and nothing else:
 1. The token, verbatim, as the user typed it.
 2. The verbs of the table above, read live from that table rather than from a list written
    into this section.
-3. Stop.
+3. One sentence naming the engine's guided-entry surface at its root — the surface that
+   takes a request in ordinary words and answers with the verb that serves it — and saying
+   that it names a verb and runs none. Name no verb in that sentence.
+4. Stop.
 
 Do not guess. Do not offer a near-match suggestion — no "did you mean" — for a suggestion
 is a classification with an extra step and a reflexive accept, on the least inspected path
@@ -541,7 +572,9 @@ pushed and name what the script named — a guard abort is not a partial publish
 what it needs and reports it, and a read here would give this command its own view of
 publication state, which § *Never assert a publication state that was not observed*
 forbids. Its depth cell is `G0`, so it reads no trip record either. Runs
-`scripts/publish-trip-site.sh list` and dispatches no agent.
+`scripts/publish-trip-site.sh list` and dispatches no agent. **It writes nothing, here or
+anywhere: the subcommand it runs resolves and reports and never writes, encrypts or
+pushes — so it performs no act whose effect lands outside the trip's own files.**
 
 Repo-wide, read-only, no trip, no arguments, depth `G0` on its own row. It reports each
 trip with its repo, status, published and edited dates, and the stale flag, exactly as the

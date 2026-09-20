@@ -176,7 +176,7 @@ does, and that is the change this amendment records.
 
 **What the discharge removes is a standing caveat, not a claim.** No sentence above rested on either
 account — each is read from the `allowed-tools` grant or from a verb section — so nothing above needs
-restating now that the accounts are settled. § 2's bounds are untouched.
+restating now that the accounts are settled. The discharge leaves § 2's bounds untouched.
 
 **The same source settles the per-file question the 2026-08-28 amendment reached by reasoning.**
 `disable-model-invocation` is a **per-file boolean, and no per-verb key exists**. The published
@@ -201,6 +201,109 @@ is **unestablished** — nothing consulted here says either way. The refusal pre
 expansion inside such a block is **undocumented** — the abort path is described, the trigger that
 reaches it is not. Both stay open, and no sentence in this record rests on either.
 
+**Amendment (2026-09-18, Friday) — where inference is permitted, and where
+declared intent is retained.** The decision above rests on *declared intent beats inferred intent*,
+which the first decision driver states and which § *Context* calls the property that removes
+misrouting by construction. A later initiative buys approachability by spending part of it. **This
+amendment states which part may be spent, on which arms, and what is left standing after the
+spending.** Nothing above is rewritten: § 2's bounds are untouched by this amendment, the
+2026-08-28 narrowing stands, and the 2026-09-11 discharge stands. What follows is stated beside
+them.
+
+**Inference can enter at more than one place, and only the first of them is enforced. They are kept
+apart here, because a rule that runs them together claims a strength it does not hold.**
+
+| Where inference can enter | What governs it | What that governance is |
+|---|---|---|
+| **Invocation** — whether a request in prose reaches this surface at all, with no verb typed | `disable-model-invocation`, declared per file | **Enforced.** The runtime declines the invocation, and while the flag is set it withholds the file's description from context as well |
+| **Selection** — which verb an invocation runs, once the surface has been reached | the lookup each verb-declaring file states in its own § *Selecting the verb* | **Declared.** No frontmatter field expresses it |
+| **Execution** — whether an act runs on a selection nobody declared | the confirmation the verb's own section states | **Declared.** No frontmatter field expresses it |
+
+**Nothing in the frontmatter expresses a boundary finer than the file, and that was re-established
+rather than carried over.** The 2026-09-11 amendment settled the model-invocation flag against the
+published enumeration. Read again at the date above, the same reference carries no key of narrower
+scope for the tool lists either; the permission-rule form that gates a model's use of a skill matches
+the skill by name rather than by what follows it; and a hook declared in frontmatter registers when
+the skill is first invoked, runs for the rest of the session, and receives nothing that names a verb
+— so it can gate a tool call and cannot attribute one to the verb that made it. **Splitting the
+surface remains the only mechanism that expresses the boundary**, which is the shape § 1 chose for the
+tool grants and the shape the 2026-09-11 amendment recorded for this flag.
+
+**The runtime does tell a typed invocation from a model's, and it tells the file nothing.** No field,
+no substitution and no marker carries it. A file that is model-invocable therefore cannot establish
+who supplied its argument string, and *"the verb is the one the user typed"* is a sentence whose truth
+is held by the flag rather than by the file that states it. **That is the property being spent, named
+exactly.**
+
+**The line, by arm class, derived from what each verb's own section declares.** An arm is
+**inference-admitted** where its own section declares each of these: that it **writes nothing**; that
+it **dispatches no agent**; and that it **performs no act whose effect lands outside the trip's own
+files**. Every other arm **retains declared intent** — including an arm whose section declares none of
+them, because a property nobody has declared is not a property this line may assume. **The derivation
+is the whole of the line: this amendment fixes no verb list and no count, and a verb a later slice
+adds takes its side from its own section with no edit here.**
+
+**Where in the section to read, fixed here rather than left to the reader.** Those declarations are
+read from the section's own `**Reads:**` block and from nowhere else in it — the block every verb
+section carries, and the one the taxonomy guard already parses. A statement made elsewhere in the
+section does not count toward admission, and a block that does not carry all of them leaves its arm
+on the retained side. **The boundary is fail-closed by construction**, so it can over-protect an arm
+and can never under-protect one: where the block is silent, the arm retains declared intent.
+
+**Why the admitted side is narrower than read-only — a different question, which the 2026-08-28
+amendment already answers for its own purpose.** A verb that writes nothing may still dispatch an
+agent, and a dispatch is spent whether or not it was wanted: no revert returns it. The failure
+`CLAUDE.md` names by example is the dispatch nobody asked for, so a dispatching verb sits on the
+retained side however little it writes.
+
+**What retaining declared intent requires.** An act runs only on a declaration made in the same
+exchange: the verb token typed by the operator, **or** a confirmation naming the verb and its target
+which the operator answers before the act. Inference may reach a retained arm, may name it and may
+prepare it; it may not execute on its own selection. Where a verb's section already states a
+confirmation shape — an echoed outgoing-to-incoming pair, a preview total over a source's own
+answered set, a typed identifier, a display name beside a member count — that shape stands unchanged
+and this rule is added to it, never substituted for it.
+
+**The confirmation is declared and not enforced, which is the half a later slice must not
+overstate.** The tool lists are turn-scoped and they gate tools rather than acts, so no arrangement of
+them makes a confirmation happen. The typed confirmations a non-interactive caller structurally
+cannot answer belong to `scripts/publish-trip-site.sh`, and § 4 excludes every form they guard, so no
+addressed form rests on one. A confirmation on this surface is a rule a verb follows — the form
+§ *Context* requires of a command's conduct — and its strength is the strength of that rule.
+**Saying so is the requirement; a slice that implemented it as though the frontmatter held it would
+be claiming a control this record says is not there.**
+
+**What the line costs on the mechanism this surface actually has.** The admitted side is a property
+of arms and the enforced surface is a property of files, so the two meet in a single test: **a file
+may declare `disable-model-invocation: false` only where every verb it declares is
+inference-admitted.** A file carrying arms of both kinds cannot be relaxed for the cheap ones without
+exposing the rest in the same act — the privilege union § 1 refused for the tool grants, arriving by
+the other key. Where no file satisfies the test, the enforced posture does not move, and guided entry
+is reached another way.
+
+**A surface that only proposes satisfies the same test, and is named here rather than left to be
+discovered.** A file that declares no verb of its own, writes nothing, dispatches nothing and acts
+nowhere outside the trip's own files is inference-admitted by the test above; reaching a verb from it
+is the operator typing what it named. **That is how prose can reach this surface with no verb file
+relaxed at all**, and it spends none of the property named above.
+
+**Consolidation, stated because it is in flight and is not decided here.** The line is a property of
+arms, so it survives a change in how many files carry them. The enforced test is a property of files,
+so under a single file it is evaluated over the union of every verb that file declares, and that union
+holds retained arms. A consolidated surface that is model-invocable therefore exposes every arm it
+carries, and one that is not carries this line as a declared rule alone. **The same asymmetry reaches
+the tool grants:** a single file declares the union of every grant and can keep only the denials every
+verb shares, so a denial that today holds for the turn of one verb is not expressible there. Which of
+those to accept belongs to the record that decides a consolidated surface's privilege model; this
+amendment states the consequence and takes no position on it.
+
+**This amendment leaves § 2 untouched, and what is not negotiable by a later slice is not negotiable
+by this one.** No confirmation admits `ALLOW_PLAINTEXT`, none admits `--yes` to `unpublish`, and none
+makes an overwrite or a deletion of existing trip content available: that bound's class is
+IRREVERSIBLE, and a
+confirmation does not change a class. A confirmation is what an inferred selection needs **before** an
+act the bounds already permit. It is never what makes an act they forbid available.
+
 ### 2. The privilege boundary
 
 Six bounds hold on every command in this surface:
@@ -213,8 +316,17 @@ Six bounds hold on every command in this surface:
 - **No command may set `ALLOW_PLAINTEXT`, and no command may pass `--yes` to `unpublish`.** These
   are the two flags that convert a refusal into a silent pass on a non-interactive caller. This bound
   is not negotiable by a later slice.
-- Every Step-1 row maps to exactly one command **or** to a declared exclusion. Silent gaps are not
-  permitted; an unaddressed request type is a stated one.
+- Every Step-1 row maps to exactly one command, **or** to a declared exclusion, **or** to a declared
+  ambiguity set. A set's members are of two kinds: a member naming a verb maps to one command on its
+  own row, and a member naming a **declared disposition** names one reason from the closed vocabulary
+  and maps to no command at all. Every set names at least one verb. Silent gaps are not permitted; an
+  unaddressed request type is a stated one, and a request type that reaches more than one command is a
+  stated **choice** rather than a silent pick. *(Amended 2026-09-18, Friday: the third limb is added in
+  the change that authors the first set, so the bound is never false. It was true of a Command column
+  in which a row could only address a verb or declare an exclusion, and § 3 below admits the same class
+  over the same rows — this limb and that identity are one statement seen from the bound and from the
+  guard. Amended again in the change that admits a disposition as a set member: the two member kinds
+  are named here because a bound stating only the first would be false at the first such member.)*
 - **No command may overwrite or delete existing trip content.** A trip's working tree is git-ignored
   and carries no history, and `trip-log.md` **is** the rationale record rather than a copy of one —
   so a clobber is recoverable from nothing: not from a revert, not from the repo, not from the log.
@@ -240,14 +352,70 @@ The command set **is** the request taxonomy; `CLAUDE.md`'s Step-1 table document
 is deliberately inverted from the obvious direction: had the commands restated the table, the two
 would drift and a test would be needed to catch it. With the commands owning the taxonomy, the guard
 becomes a cheap assertion of **coverage** — every Step-1 row resolves to a command or a declared
-exclusion, and every unit of the command surface is covered by exactly one row.
+exclusion, and every unit of the command surface is covered by exactly one **addressed** row.
 
 Under a `/trip <verb>` surface the unit is a (command, verb) pair, not a command, which is why this is
 stated as coverage rather than as the one-to-one mapping an earlier draft of this section named: a
-verbed row covers the pair it names, a verbless row covers every verb its command declares, and where a
-command declares no verb the command itself is the unit. The guard grades that this mapping is total
-and non-overlapping. It does not grade whether the taxonomy the table documents is the right one —
-that stays review-maintained.
+verbed **addressed** row covers the pair it names, a verbless **addressed** row covers every verb its
+command declares, and where a command declares no verb the command itself is the unit. The guard
+grades that this mapping is total and non-overlapping. It does not grade whether the taxonomy the
+table documents is the right one — that stays review-maintained.
+
+**Amendment (2026-09-18, Friday) — the identity admits a further row class, and the word
+*addressed* above is what admits it.** The statement of coverage was written for a Command column
+in which a row could only address a verb or declare an exclusion, and it is correct for that
+column. A later slice admits an **ambiguity set**: the marker `AMBIGUOUS: `, then full-key code
+spans joined by ` · `, each span matching the cell grammar **unchanged**. A set is how a row says
+that an intent reaches more than one verb and is therefore rendered as a choice rather than
+resolved to one. It is **declared** by its marker and is never inferred from a parse failure —
+code spans joined in one cell without the marker remain a hard failure — so the accident and the
+intent take different branches rather than the same one. This amendment restates the identity by
+**narrowing its quantifier, not by weakening its predicate**, and what follows is the whole of the
+restatement.
+
+- **Totality does not weaken.** Every unit of the command surface is still covered, and set
+  membership never satisfies that obligation. A verb reachable only as an option inside a set is
+  an uncovered unit and a finding, exactly as it was before sets existed.
+- **Exclusivity is unchanged where it bit.** A unit covered by more than one *addressed* row is
+  the finding it always was, reached through the same predicate over the same records. What is
+  new is only this: a unit named in a declared set **beside** its own addressed row is a choice,
+  not a double cover.
+- **A set carries obligations of its own.** Its members are of two kinds. A member naming a **verb**
+  resolves to exactly one coverage unit — a member naming a whole command is refused, because a command
+  is itself a choice. A member naming a **declared disposition** carries the exclusion marker and exactly
+  one reason from the closed vocabulary § 4 states; it resolves to no coverage unit, because a
+  disposition is not one, and a set whose members are all dispositions is refused, because a row that
+  routes to no command is an exclusion rather than a choice. Across both kinds: nothing is named twice
+  inside one set, and no two sets denote the same options. **And the set's entry class is composed
+  FAIL-CLOSED from its members' own sides**, by the rule § 1 already states for an arm: a disposition
+  member declares none of the negatives § 1 requires — it is not an arm, and it has no block in which
+  to declare them — so *anything other than all of them declared, silence included, retains declared
+  intent* puts it on the retained side, and the set with it. **A set carrying a disposition member
+  therefore names at least one verb member that retains declared intent.** Where every verb member of
+  such a set is inference-admitted, the set's own membership reads as admitted while this rule makes it
+  retained; the row is refused, because the two readings disagree and a composition whose side is
+  legible only from the rule and not from the set is exactly how the converse this section does not
+  admit — resolving a set by inference — gets authored by accident.
+
+*(Amended again in the change that rules the composition question fail-closed. The bullet is edited in
+place for the reason the note below already gives, and nothing above it moves: the member kinds, what
+each resolves to, and the all-dispositions refusal are untouched, and no coverage unit is minted or
+withdrawn, so totality and exclusivity are total over the same population as before. What is new is an
+obligation on a set's MEMBERSHIP, which no predicate in this section reached: the shape it refuses was
+authorable with every check green. The rule it applies is not a new one — it is § 1's own line, quantified
+over a member rather than an arm, which is why it is stated here by citation rather than restated there.)*
+
+*(Amended in the change that admits a disposition as a member. The bullet is edited in place rather
+than corrected beneath, because a reader who stops at the bullet would otherwise carry away a rule that
+is false — the same disposition taken in § 2's bound above, for the same shape. What did not change:
+totality and exclusivity above, whose predicates and whose records are untouched. A disposition mints no
+coverage unit and contributes no cover, so the identity is total over exactly the population it was
+total over before.)*
+
+What this amendment does **not** reach: the guard still does not grade whether the taxonomy the
+table documents is the right one, and §4's disposition table is untouched, its cells still parsing
+under the same unchanged cell grammar. The amendment governs the coverage identity stated in this
+section and nothing else.
 
 The guard is a test in the shape of the existing `scripts/test-publish-guard.sh`, which already
 proves the pattern in this repo.
@@ -269,8 +437,9 @@ record of the first release. Its substance is preserved; only a stale temporal c
 content-guard dependency has been corrected in place, and nothing else about it is rewritten — the
 claim that `verify_ciphertext` is absent from the plaintext branch remains, because it is still
 true. What follows is the control review the decision called for,
-and the partition that review produced. It **discharges** the deferral; it does not reverse it. §2's
-bounds are untouched, and the two forms those bounds cover stay out. The completeness claim below was
+and the partition that review produced. It **discharges** the deferral; it does not reverse it. This
+amendment leaves §2's bounds untouched, and the four forms those bounds cover — the rows the table
+below marks `ADR-007 §2` — stay out. The completeness claim below was
 recorded as an **assertion maintained by review** on the ground that nothing then parsed this table.
 It anticipated becoming a check, and said it should be re-stated as one **naming that reader**. That
 has happened, so it is re-stated here, with the reader named.
@@ -303,22 +472,28 @@ still runs on the encrypted branch only. **The TTY leg is structurally permanent
 pre-execution has no terminal; nothing in this release changes that, and nothing proposes to.
 
 **The TTY leg's determination: nothing replaces the human gates, because no addressed form reaches
-one.** The script holds exactly two stdin-terminal gates and no stdout-terminal test at all. One
-guards the plaintext publish; the other guards the repo delete. Every other reachable form passes
-through no human gate whatsoever. The leg therefore does not bar the lifecycle — it bars two forms,
-and §2 independently bars the same two by forbidding the only two flags that reach their
-non-interactive limbs. **For those two forms the leg and the bound are co-extensive, and the bound is
-the firmer basis**, because a review that "solved" the leg by inventing a non-interactive
-confirmation substitute would still be stopped by a bound it cannot negotiate. The correct output is
-therefore not a substitute mechanism. It is the recorded finding that no substitute is needed,
-because the surface declines the forms rather than standing in for the gates.
+one.** The script holds exactly three stdin-terminal gates and no stdout-terminal test at all. One
+guards the plaintext publish, one guards the repo delete, and one guards `confirm`. **Those gates
+stand in front of four of the table's forms rather than three**, because the one guarding the
+plaintext publish sits inside the plaintext branch while `--opaque` is parsed independently and only
+names the repo — so `publish --plaintext` and `publish --plaintext --opaque` both reach it. Every
+other reachable form passes through no human gate whatsoever. The leg therefore does not bar the
+lifecycle — it bars four forms, and §2 independently bars three of them by forbidding the only two
+flags that reach their non-interactive limbs: `ALLOW_PLAINTEXT` reaches the two plaintext forms and
+`--yes` reaches the repo delete, while the gate on `confirm` has no override flag at all. **For
+those three forms the leg and the bound are co-extensive, and the bound is the firmer basis**,
+because a review that "solved" the leg by inventing a non-interactive confirmation substitute would
+still be stopped by a bound it cannot negotiate. The correct output is therefore not a substitute
+mechanism. It is the recorded finding that no substitute is needed, because the surface declines the
+forms rather than standing in for the gates.
 
 **The dominant risk is gate absence, not gate unreachability — and the deferral above pointed at the
-smaller of the two.** Only two of the reachable forms are gated at all. Absence of a gate is the
-publish lifecycle's dominant property: the default encrypted publish creates a public repo, enables
-Pages and prints the passphrase, behind no confirmation of any kind. The TTY leg was the *visible*
-risk, not the main one. The main ones are credential disclosure and un-gated out-of-repo effect, and
-the partition below is drawn against those.
+smaller of the two.** Only four of the reachable forms are gated at all — the gates number three,
+the one guarding the plaintext publish standing in front of two of those forms. Absence of a gate is
+the publish lifecycle's dominant property: the default encrypted publish creates a public repo,
+enables Pages and prints the passphrase, behind no confirmation of any kind. The TTY leg was the
+*visible* risk, not the main one. The main ones are credential disclosure and un-gated out-of-repo
+effect, and the partition below is drawn against those.
 
 **The rule that produces the partition.** A publish-lifecycle invocation form is **ADDRESSED** only
 if all three hold: **(i)** it requires no change to the publish script; **(ii)** it writes no
@@ -399,17 +574,39 @@ rather than collapsed.
 **What §2's third bound binds.** Its text names commands, and the mechanical check for it searches
 the command directory. Its **intent** is broader, and is recorded here so a later reader does not
 walk through the gap: the two forbidden flags bind **any non-interactive caller this repository
-ships**, whether or not that caller is a command file. §2's text is unchanged — this states what it
-means, it does not amend it.
+ships**, whether or not that caller is a command file. That bound's text is unchanged — this states
+what it means, it does not amend it.
 
 **References.** Two work items are named above; each is summarized here so the rules stand without
 them. `#330-disclosure` refers to the finding that the publish script writes the passphrase to
 standard output on the encrypted publish and rotate paths, where bash pre-execution would place it
 in the session transcript. It is tracked separately, it is **not** fixed by this decision, and it is
-why four of the ten forms are excluded. Separately, the plaintext opt-out is slated to be
+why four of the eleven forms are excluded. Separately, the plaintext opt-out is slated to be
 hard-disabled at the script layer in the automated re-bake path, tracked in another milestone; this
 decision converges with that by declining every plaintext form at the command layer, so no second
 and softer invocation path is introduced.
+
+**Amendment (2026-09-18, Friday) — the counts this section restates, corrected to agree with the
+table and the script they read from.** When the table gained its row for `confirm`, this section's
+opening statement of how many forms exist was corrected in the same change, and two sentences
+restating the same counts were not: the References paragraph above still counted ten forms, and the
+second trade-off in § *Consequences* counted ten forms and seven exclusions. Both are corrected in
+place to read from the table as it stands — eleven forms, three addressed and eight excluded. The
+*four* in the References paragraph was right and is unchanged: it counts the forms carrying
+`#330-disclosure` among their reasons, a subset of the excluded forms rather than their total, and
+the row that was added carries a different reason. The TTY-leg determination's stdin-gate count,
+which had omitted the gate guarding `confirm`, is corrected in place in the same way, as is the
+count of gated forms in the paragraph after it; its stdout half was true and is unchanged. The
+counts stated at *gate* granularity while the table enumerates *forms* are the determination's own
+count of the forms the leg bars, and the gated-form count in the paragraph after it; the stdin-gate
+count is not among them, because its unit is the gate and at that unit it was already right. The
+gate guarding the plaintext publish stands in front of both plaintext forms, `--opaque` being an
+independent flag, so each is corrected in place to the table's own unit, as are the clauses in the
+determination derived from them. The 2026-08-24 amendment's own statement of how many forms §2's
+bounds cover is corrected here in the same way, and now names the rows it reads off. This heading is
+count-free for the same reason: it describes this record rather than the table, and a heading that
+counts its own corrections cannot stay true as the paragraph grows. No row, disposition or reason
+changes, and nothing decided above moves.
 
 ## Consequences
 
@@ -430,7 +627,7 @@ and softer invocation path is introduced.
 - More files than a single-command shape, and a taxonomy guard to maintain alongside them.
 - The publish lifecycle stayed a manual terminal step for one release, leaving the surface
   deliberately incomplete against its own lifecycle scope. The §4 amendment ends that for three of
-  its ten invocation forms; the other seven are declared exclusions, so what remains outside the
+  its eleven invocation forms; the other eight are declared exclusions, so what remains outside the
   surface is stated rather than pending.
 - `CLAUDE.md`'s Step-1 table changes role from source of truth to documentation of one; the table
   must be kept accurate to the command set rather than the reverse, which inverts how contributors
@@ -459,3 +656,11 @@ and softer invocation path is introduced.
   the sentences that amendment rests on are quoted there in full rather than pointed at: the record
   stands on its own if the page moves.
 - Epic: #252.
+- The references behind § 1's 2026-09-18 amendment: the published Claude Code
+  documentation for skills — its frontmatter reference, § *Control who invokes a skill*,
+  § *Pass arguments to skills* and § *Restricting Claude's skill access* — together with the
+  hooks reference § *Hooks in skills and agents* and its common-input-field table, and the
+  permissions reference, all read 2026-09-18. The 2026-09-11 amendment quotes the
+  sentences it had to arbitrate between competing in-repo accounts; these are **named rather than
+  quoted**, because nothing in this repository carries a competing account of them and a quotation
+  would be a second copy to keep current.
