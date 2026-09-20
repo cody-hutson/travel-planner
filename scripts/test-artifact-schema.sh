@@ -48,16 +48,26 @@
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
-#   ST   the starred-field count in EACH intake form agrees across ALL FOUR of that form's
-#        homes: the banner numeral, the appendix rule-4 numeral, the appendix's
-#        per-field `(starred)` annotations, and the marked fields themselves — which are the
-#        only home that is not a restatement of another, so they are the reference count.
+#   ST   the starred-field set in EACH intake form, graded on TWO propositions that are not
+#        the same one. AGREEMENT: the count agrees across all four of that form's homes — the
+#        banner numeral, the appendix rule-4 numeral, the appendix's per-field `(starred)`
+#        annotations, and the marked fields themselves, which are the only home that is not a
+#        restatement of another and so are the reference count. LEVEL: that form's marked set
+#        also equals the intersection of its labelled bullets with the starred rows of
+#        reference/data-model.md's field table, and across the run the union of the per-form
+#        marked sets equals that table's starred set — both in both directions, label for
+#        label, and the second is the add-only input the per-form comparison cannot see.
+#        NEITHER half compares the count against a shipping-path producer, because the starred
+#        count has none; that boundary is stated in the group rather than left to be inferred.
 #        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
 #        carries control arms covering every violation code it can emit, each mutating ONE
 #        surface alone and each required to turn it red, and two edits that must not.
 #        That COVERAGE is itself asserted rather than maintained: the code set is read from
 #        st_violations' own body on every run and compared, in both directions, against the
 #        arms that ran — so a code added with no arm behind it is RED rather than latent.
+#        No count is spelled anywhere in this file, and the cross-document half introduces no
+#        canonical value either: it is keyed on bullet presence, so a third intake form is
+#        still ONE LINE in ST_TEMPLATES.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
@@ -2283,7 +2293,29 @@ fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group ST — the starred-field count is ONE fact with FOUR homes inside EACH intake form,
-# and the three homes that merely describe it must agree with the one that IS it.
+# and the three homes that merely describe it must agree with the one that IS it. That is HALF
+# of this group. The other half grades the same set against a SECOND DOCUMENT.
+#
+# ── WHAT THIS GROUP PINS, AND WHAT IT DOES NOT ───────────────────────────────
+# Written down here because a reader composing an acceptance criterion against this gate has to
+# know which proposition they are buying — and because this group ran for several releases while
+# a governing document described it as something it was not, which no drift sweep caught.
+#
+#   ST1 / ST2   AGREEMENT INSIDE ONE FORM. The banner numeral, the appendix rule-4 numeral and
+#               the appendix's per-field annotations agree with the fields the form actually
+#               marks. Agreement is not accuracy: homes that moved together onto a wrong number
+#               agree perfectly, and this half stays green on precisely that edit.
+#   ST3 / ST4   THE LEVEL, against reference/data-model.md's field table. Per form, the
+#               intersection of that form's labelled bullets with the table's starred rows
+#               equals that form's marked set; across the run, the union of the per-form marked
+#               sets equals the table's starred set. Both in both directions, label for label.
+#               ST4 is the add-only complement ST3 is blind to by construction.
+#   NEITHER     a comparison against a SHIPPING-PATH PRODUCER. Group HC can pin its level that
+#               way because the class count HAS one — va_class_rows, which the validator itself
+#               runs. The starred count has none: nothing in the shipping path derives, consumes
+#               or acts on how many fields carry the star. So this group grades a second
+#               maintained document against the forms, which is stronger than a form agreeing
+#               with itself and weaker than a producer. Stating which is part of the gate.
 #
 # ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
 # This group shipped reading a single hardcoded path, at a commit where one intake form was
@@ -2345,7 +2377,7 @@ fi
 # drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "ST — the starred-field count agrees across all four of its homes, in every intake form"
+echo "ST — every intake form's starred set agrees across all four of its homes AND matches the data model's field table"
 
 # The population, one path per line. Each is graded independently and completely: its own
 # surfaces, its own violations, its own full set of control arms against its own fixtures.

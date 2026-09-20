@@ -59,12 +59,18 @@ name: Artifact schema
 #        are stated PER FIELD because the fields do not all have the same number of homes
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row
-#   ST   the starred-field count in EACH intake form — the per-trip
+#   ST   the starred-field set in EACH intake form — the per-trip
 #        templates/traveler-intake.template.md and the durable
-#        templates/person-intake.template.md — agrees across ALL
+#        templates/person-intake.template.md — on TWO propositions. AGREEMENT: the count
+#        agrees across ALL
 #        FOUR of that form's homes: the banner numeral, the appendix rule-4 numeral, the appendix's
 #        per-field (starred) annotations, and the marked fields themselves — the only home
-#        that is not a restatement of another, and therefore the reference count. Surfaces
+#        that is not a restatement of another, and therefore the reference count. LEVEL: that
+#        form's marked set equals the intersection of its labelled bullets with the starred
+#        rows of reference/data-model.md's field table, and across the run the union of the
+#        per-form marked sets equals that table's starred set — both in both directions,
+#        label for label. Neither half compares the count against a shipping-path producer,
+#        because the starred count has none. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
 #        surfaced this named two line numbers that had already moved. ST carries its own
 #        must-fire and specificity arms inside the group; THE ARM INVENTORY IS NOT RESTATED
@@ -168,10 +174,17 @@ name: Artifact schema
 #   PROSE, with ONE NAMED EXCEPTION. The schema constrains frontmatter and declared entry
 #   markers. It never constrains narrative body content, and a green here still says
 #   nothing about the quality or the accuracy of any artifact's prose. The exception is
-#   group ST, which checks exactly one prose INVARIANT and nothing else: that the
-#   self-referential starred-field count in each intake form agrees
-#   with itself across that form's four homes. Agreement is not accuracy — ST stays green on four
-#   homes that agree on a wrong number — so this clause is NARROWED here rather than
+#   group ST, and it checks the self-referential starred-field set in each intake form on
+#   two propositions and nothing else. The first is that the count agrees
+#   with itself across that form's four homes. Agreement is not accuracy — that half stays green on four
+#   homes that agree on a wrong number — which is why the second exists: the set each form
+#   marks is also graded against the starred rows of the data model's field table, per form
+#   and across the run, in both directions. That reaches the LEVEL and not merely the
+#   agreement, and it is still the only prose this gate adjudicates: it reads one table and
+#   two forms, it compares their starred sets against each other, and it says nothing about
+#   the quality or accuracy of any other narrative content anywhere in this repository. What
+#   it does NOT do is compare that set against anything the shipping path produces, because
+#   nothing there derives or consumes it. So this clause is NARROWED here rather than
 #   removed, and no other prose in any artifact is adjudicated by this gate.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
