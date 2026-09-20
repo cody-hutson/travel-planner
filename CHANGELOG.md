@@ -3,6 +3,75 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.33.0] — 2026-09-19 — Release and publish mechanics integrity
+
+No trip verb changes behaviour in this release. What changes is the machinery around them: a guard
+on the publish path can no longer answer from a projection that never ran, two required checks can
+no longer report success without having looked, and the release procedure this file is written
+under now describes what the repository actually does.
+
+**A publish-path guard could answer from a projection that never ran.** Every content verdict the
+publish script reaches — the ciphertext guard, the publishable-content guard and the
+organizer-confirm gate — is computed from a perl text projection. One of those projections carried
+a silent `sed` fallback copied from a sibling that could survive one; measured against the perl
+program it stood in for, it could compute one of three substitutions and neither of the two that
+decide the answer, so on a machine without perl it did not degrade, it answered differently. The
+sharp end was the organizer-confirm step, which is local and offline and cannot reach the
+dependency checks the publish path runs: it resolved the gate state from a digest the projection
+had failed to produce, told the organizer the itinerary had moved since they confirmed it — for a
+plan that had not moved — and then asked them to type CONFIRM against that. perl is now asserted
+once, by name, early enough on both routes that a missing dependency reports itself instead of
+being reported as a changed itinerary.
+
+**Two required checks were able to report success without having looked.** The artifact validator
+could report an artifact as validated against no schema at all, every field check silently skipped,
+and emit bytes identical to a healthy run — a state no assertion in the 261-assertion suite
+behind it could see. It now separates *nothing was checked* from *there was nothing to check*,
+names the artifact and the read that failed, and fails closed; an empty-but-real schema still
+reports exactly as it did. A second arm in the same suite failed and passed on identical content,
+because nine capture sites in the validator were treating a failed read and an absent value as
+the same answer. Those sites now fail closed, and the arm that was nondeterministic is registered
+against a divergence that is real.
+
+**A gate that aborted reported it as a detection.** The pull-request body check piped the body into
+readers that stop as soon as they have what they need. Past the pipe buffer the producing write
+fails, and under `set -o pipefail` that killed the step before the scan ever ran: a red X with no
+scan block, which reads like a finding and is an abort. Both sites now read to end of input. The
+instruction to diagnose that class by the absent scan block rather than by the exit code is
+measured rather than assumed — on GitHub-hosted runners the broken-pipe signal is ignored, so the
+abort exits with the same status an ordinary content failure does, and the code separates nothing.
+
+**Every workflow job now declares whether it binds.** A required check that was never registered is
+invisible: it runs, it passes, and it stops nothing. Each job now carries its posture as a
+committed line, and an offline census asserts set equality in both directions between the jobs
+claiming to be required and the declaration the pinning tool holds — on the author's own pull
+request, which is the first moment anyone asks the question. The census states its own limit on
+every exit path: it compares two committed texts, it cannot read branch protection from inside CI,
+and it makes an omission visible without making one impossible. It also refuses a file it cannot
+vouch it read in full, rather than reporting a finding it did not earn. The tool that performs the
+registration captures the prior protection object to disk and re-reads it before writing anything,
+asserts four conjuncts on the way back rather than a count that three separate wrong end states
+would also satisfy, and addresses the narrow endpoint so a payload cannot silently drop a setting
+it never mentions.
+
+**Two floors stopped encoding today's numbers.** A publish-guard case gated on a count that
+happened to equal the current size of a class, so growing that class would have kept the case green
+while it quietly stopped testing what it names. A set difference elsewhere answered for three of
+its four buckets. Both are now written against the thing they are about rather than against its
+present cardinality.
+
+**The release procedure now matches practice, including where practice diverged.** The changelog
+entry is a release-branch artifact: written on the branch, dated the day it is written rather than
+the day it merges, with its version heading stamped in the last commit before the merge and checked
+unclaimed at that moment. The tag goes on the release merge, so the tagged tree carries its own
+entry. The justification that used to rest on a gate argument now rests on the one that survives
+measurement — a follow-up pull request is gate-covered, so the gates were never the reason — and a
+short subsection explains why tags before this release look like three different procedures, which
+is because they were. The release pull-request body is documented as a summary plus links rather
+than a second copy of the work: each stage records its own detail where that detail already lives,
+which is what keeps a body from accreting one write-up per slice toward the platform's own
+character limit.
+
 ## [0.32.0] — 2026-09-14 — Trip engine ships as an installable capability
 
 The engine is installed, not opened. Until this release the five trip verbs were files in the

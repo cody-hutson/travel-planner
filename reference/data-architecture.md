@@ -1025,6 +1025,18 @@ everywhere.
 artifact carrying no `schema-version`, and **fails closed** on one that declares a version and
 violates that version's schema. The gate evaluates this rule; it does not invent a second one.
 
+**A schema the gate could not read is not a schema the artifact satisfied.** The predicate above
+governs an artifact whose schema was *resolved and read*. Where the gate cannot resolve an artifact's
+class to a schema, or resolves it and cannot parse the schema that class names, it has graded
+nothing — so it names the artifact and the read that failed, and **fails closed**. It never reports
+such an artifact as validated.
+
+The case this is deliberately *not*: a schema that resolves, parses, and declares no field to check.
+That artifact is validated against a schema whose declared field set is empty — a real verdict about
+a real schema — and it is reported exactly as it is today, silently and at rc 0. *Nothing was
+checked* and *there was nothing to check* are different answers, and the gate must never render them
+in the same bytes.
+
 ### 7.4 Evolution
 
 A schema change that only **adds an optional field** does not bump the version — readers already

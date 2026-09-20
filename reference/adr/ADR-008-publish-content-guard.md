@@ -861,6 +861,19 @@ this audit set"* — governs the **sources**; this guard governs the **published
 2 does not discharge layer 1, and a future reader should not conclude that it does — least of all for
 residuals 1 to 3 and 9 to 10 above, where layers 1 and 3 are the only cover.
 
+**The summary's guard is a conformance predicate, not a runtime guard.** `verify_summary_content`
+applies this document's class to `outputs/change-summary.md` under the same return-code contract as
+this guard, and the suite exercises it on every run — but nothing on a publish path calls it. That is
+correct rather than a gap: the change summary is classed `internal`, it never reaches a rendered page,
+and this guard's subject is the published file. Read the table above with that in mind — its `When`
+column belongs to the surfaces the table names, and the summary is not among them. The predicate
+establishes that the summary **conforms** to the class; it does not stand between the summary and a
+publish, because the summary has no publish to stand in front of. The stronger bound on that artifact
+is the derivation bound stated in `agents/05-hub-planner.md`: the generator may read only
+`publish: bound` classes, so a non-publishable value is never read at all — a bound that holds by
+construction rather than by inspection. The function's own header says as much in a local numbering
+that is not this table's, so read each layer by what it does rather than by the number it carries.
+
 ## References
 
 - The gap this closes, and its acceptance criteria: #123. The class re-key that supersedes the

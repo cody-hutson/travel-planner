@@ -152,6 +152,7 @@ permissions:
   contents: read
 
 jobs:
+  # gate-efficacy: posture=required
   artifact-schema:
     name: Artifact schema suite (test-artifact-schema.sh)
     runs-on: ubuntu-latest

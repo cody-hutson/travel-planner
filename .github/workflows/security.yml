@@ -17,26 +17,38 @@ permissions:
 #   2. markdown-link-check  — integrity of cross-references in the agent prompts / docs
 #   3. gitleaks            — secret scanning (universal; full history)
 #
-# Branch-protection required checks MUST match these 3 job name: fields exactly,
-# case-sensitive: "Workflow SAST (actionlint)", "Markdown link integrity (markdown-link-check)",
-# "Secret scanning (gitleaks)".
+# Whether a job here binds a merge is declared BY THAT JOB, on the
+# `# gate-efficacy: posture=` line above its key, and graded against the committed
+# context list by the registration census step in the actionlint job below.
 
 jobs:
+  # gate-efficacy: posture=required
   actionlint:
     name: Workflow SAST (actionlint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      # Same subject matter as actionlint — a property of the workflow YAML — so it
+      # rides this job rather than adding a new check name (which would need a
+      # branch-protection change). Runs BEFORE the actionlint install so a transient
+      # network failure there cannot mask a real registration finding.
+      - name: Required-check registration census
+        run: ./scripts/pin-required-checks.py --census
+
       - name: Install actionlint
         run: |
           # actionlint binary installer (upstream-recommended path)
           bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.1
           ./actionlint -version
       - name: Run actionlint
-        # The -ignore flag suppresses shellcheck SC2016 propagation from the
-        # byte-identically-copied pr-body-parser-clean.yml workflow. Single-quoted
-        # expressions in its embedded shell scripts are intentional (literal grep
-        # patterns + bash variables that must not expand at shellcheck-time).
+        # The -ignore flag suppresses shellcheck SC2016 propagation out of
+        # pr-body-parser-clean.yml. The justification is structural rather than
+        # provenance: that workflow echoes the override marker into the step
+        # summary wrapped in markdown backticks, inside single quotes so the
+        # backticks are not read as command substitution — two such strings,
+        # both in report-only blocks. SC2016 flags exactly that shape, so the
+        # suppression stays load-bearing while they do.
         # actionlint v1.7.1 does NOT support the `paths` config schema, so the
         # config-file approach (.github/actionlint.yaml) is forward-compatible
         # documentation only; the runtime -ignore flag is the load-bearing
@@ -44,6 +56,7 @@ jobs:
         run: |
           ./actionlint -color -ignore 'shellcheck reported issue in this script: SC2016:.+'
 
+  # gate-efficacy: posture=required
   markdown-link-check:
     name: Markdown link integrity (markdown-link-check)
     runs-on: ubuntu-latest
@@ -73,6 +86,7 @@ jobs:
           fi
           echo "All local markdown links resolve."
 
+  # gate-efficacy: posture=required
   gitleaks:
     name: Secret scanning (gitleaks)
     runs-on: ubuntu-latest
