@@ -1435,7 +1435,7 @@ with no site carries no row.
 
 ```count-assertion-digest
 # sites  path
-32      CHANGELOG.md
+34      CHANGELOG.md
 8       CLAUDE.md
 1       CONTRIBUTING.md
 5       README.md
