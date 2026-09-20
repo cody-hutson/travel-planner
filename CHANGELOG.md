@@ -23,15 +23,15 @@ plan that had not moved — and then asked them to type CONFIRM against that. pe
 once, by name, early enough on both routes that a missing dependency reports itself instead of
 being reported as a changed itinerary.
 
-**Two required checks could report success without having looked.** The artifact validator could
-report an artifact as validated against no schema at all, every field check silently skipped, and
-emit bytes identical to a healthy run — a state no assertion in the 261-assertion suite behind it
-could see. It now separates *nothing was checked* from *there was nothing to check*, names the
-artifact and the read that failed, and fails closed; an empty-but-real schema still reports exactly
-as it did. A second arm in the same suite failed and passed on identical content, because nine
-capture sites in the validator treated a failed read and an absent value as the same answer. Those
-sites now fail closed, and the arm that was nondeterministic is registered against a divergence
-that is real.
+**Two required checks were able to report success without having looked.** The artifact validator
+could report an artifact as validated against no schema at all, every field check silently skipped,
+and emit bytes identical to a healthy run — a state no assertion in the 261-assertion suite
+behind it could see. It now separates *nothing was checked* from *there was nothing to check*,
+names the artifact and the read that failed, and fails closed; an empty-but-real schema still
+reports exactly as it did. A second arm in the same suite failed and passed on identical content,
+because nine capture sites in the validator were treating a failed read and an absent value as
+the same answer. Those sites now fail closed, and the arm that was nondeterministic is registered
+against a divergence that is real.
 
 **A gate that aborted reported it as a detection.** The pull-request body check piped the body into
 readers that stop as soon as they have what they need. Past the pipe buffer the producing write
