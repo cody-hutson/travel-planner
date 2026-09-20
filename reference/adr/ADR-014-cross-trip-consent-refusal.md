@@ -200,10 +200,15 @@ file-less entry's absent reference bearer, which `ADR-012` types as a named gap 
 does not close. Under the refusal that gap is no longer a coverage hole, because the class it would
 serve holds no cross-trip record to discover.
 
-**Residual, recorded so it is not rediscovered:** the retention posture in `trips/README.md` —
-*"No command deletes a trip folder"* — is falsified by the shipped erasure verb, and `ADR-012` § 7
-already marks that contradiction unowned. It is adjacent to this record's subject and is not fixed
-here; it is tracked on its own card (#906).
+**Residual, recorded so it is not rediscovered — and since corrected:** the retention posture in
+`trips/README.md` — *"No command deletes a trip folder"* — was recorded here, and in `ADR-012` § 7,
+as falsified by the shipped erasure verb. **It is not.** The verb deletes a traveller file, the
+built site, the publish staging clone and the person's own record; it deletes no trip folder, and
+`skills/trip-decommission/SKILL.md` declares in terms that it never deletes trip content. What the
+verb falsified is the framing around the sentence — that clearing is only ever handwork — and the
+signpost now names the erasure exception beside it. `ADR-012`'s rows are discharged at the sites
+that carried them. It was adjacent to this record's subject and was reconciled on its own card
+(#906).
 
 ## References
 
