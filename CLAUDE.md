@@ -606,12 +606,14 @@ travel-planner/
 │   ├── 06-validator.md
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
-├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo
+├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo, archived-trip-demo, evening-boundary-demo, people-library-demo
 ├── people/                   ← the durable cross-trip person store — ships README.md only; every record git-ignored
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
+│   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
+│   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
 ├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites
