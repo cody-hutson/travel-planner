@@ -31,10 +31,12 @@ prices, no opening hours, no addresses, no external links and no real bookings.
 
 **Entry marker.** Each entry opens with a fenced `artifact-entry` block carrying the
 venue key — and, since `reference/data-architecture.md` § 4.5.1 amended the rule, one
-optional `cost:` line — and nothing else. **No marker here carries that line**, because
-no prompt emits it yet; each entry's own money line stays the master. Every marker here
-reads `venue: unminted` — the hub mints the token at its first enumeration, which runs
-after this writer, and this fixture runs no hub.
+optional `cost:` line — and nothing else. **No marker here carries that line.**
+`agents/02-food.md` began emitting the field after this fixture was written, so these
+markers are the case § 4.5.1 describes — written before their emitter, which is the
+field being optional rather than an absence being declared. Each entry's own money line
+stays the master. Every marker here reads `venue: unminted` — the hub mints the token at
+its first enumeration, which runs after this writer, and this fixture runs no hub.
 
 ### Destination Food Overview
 
@@ -83,7 +85,7 @@ venue: unminted
 - **Name** — Galleria dei Fornai, under the arcade at the edge of the historic core
 - **Closed:** one weekday, stated in the venue's own posting — *not exercised* here;
   this fixture ships no opening days
-- **Price range:** *not exercised* — no prices in this fixture
+- **Price:** *not exercised* — no prices in this fixture
   [Source date: not applicable — placeholder venue]
 - **What to order:** the grill plate that comes to the table rather than to a counter,
   which is the whole reason this is a seated room and not a stall
@@ -127,7 +129,7 @@ venue: unminted
 
 - **Name** — Vicolo dei Cuoppi, a stepped lane one block from the arcade
 - **Closed:** *not exercised* — no opening days in this fixture
-- **Price range:** *not exercised* — no prices in this fixture
+- **Price:** *not exercised* — no prices in this fixture
   [Source date: not applicable — placeholder venue]
 - **What to order:** the fried cone eaten standing or on a stool, not the sit-down plate
   the same stalls will serve if asked
