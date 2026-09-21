@@ -42,9 +42,9 @@ an information-egress surface (`CLAUDE.md`, `skills/trip-publish/SKILL.md`); and
 human-carried path (`ADR-003`, `ADR-010`, `ADR-014`, `README.md`,
 `scripts/publish-trip-site.sh`). The word is doing three jobs and arbitrating none of them.
 
-**Four surfaces carry a person on the far side.** The published site, the intake surface, the
-command surface, and the approval transport. Three of the four are governed in detail and the
-fourth is a declared placeholder — `ADR-010` states, in terms, that *"'Out-of-band' is a
+**Four surfaces carry a person on the far side, as of `edadfa9`.** The published site, the intake
+surface, the command surface, and the approval transport. Three of the four are governed in
+detail and the fourth is a declared placeholder — `ADR-010` states, in terms, that *"'Out-of-band' is a
 placeholder"* (`reference/adr/ADR-010-per-traveler-approval-collection.md`:230), inherited
 unimproved from `ADR-003` § *Decision 2*. What no record states is whether these four are the
 same *kind* of thing.
@@ -76,8 +76,8 @@ and give it a name. The name is decided in § *Decision* 6 under a measure-befor
 constraint, and every identifier this record mints carries its measured collision inline.
 
 **Baseline.** Every corpus fact in this record was read live at `edadfa9`, the merge of
-pull request #1187. Census: **156** tracked files, **137** tracked `md`·`sh`·`html`, **130**
-tracked `.md`, **24** under `reference/schemas/`. Counts are authored to `ADR-013` form **F1**
+pull request #1187. Census probed at `edadfa9`: **156** tracked files, **137** tracked
+`md`·`sh`·`html`, **130** tracked `.md`, **24** under `reference/schemas/`. Counts are authored to `ADR-013` form **F1**
 (anchored measurement); the measurement convention is stated once in § *Decision* 6 and holds
 for every count in this record.
 
@@ -94,8 +94,8 @@ for every count in this record.
   artifact."* Two successive drafts of this record's carry rule dropped the granularity and
   each had to hand-carve the one denial it most needed. The fence already computes it.
 - **Name the object that actually crosses.** A carry rule that names the build's *inputs* is a
-  rule about the build, not about the crossing. The object that crosses CH-1 is neither the five
-  `bound` artifacts nor the local render.
+  rule about the build, not about the crossing. The object that crosses CH-1 is neither the
+  `bound` artifacts § 9.1 names nor the local render.
 - **Type the arity before typing the subject.** Both defects this record's carry rule went
   through were the same defect: a **relation** typed as a **property**. Re-typing the subject
   while leaving the arity wrong relocates a defect one layer along instead of closing it.
@@ -150,10 +150,10 @@ layer, not of emphasis.
 is the property 1A lacked, and it resolves the three shipped senses of `channel` with no rename.
 
 **Option 1E — rename the concept to *reach surface*, leaving `channel` to its existing senses.**
-**Rejected on measurement.** `reach` occurs on **470 lines in 81 files** of 156 — it would trade
-an 82-line overload for a 470-line one — and it is additionally a closed-enum value in `ADR-012`.
-The adopt-and-disambiguate path in 1D costs one paragraph; the rename costs a reference cascade
-across 14 files and lands on a worse token.
+**Rejected on measurement.** Probed at `edadfa9`, `reach` occurs on **470 lines in 81 files** of
+156 — it would trade an 82-line overload for a 470-line one — and it is additionally a closed-enum
+value in `ADR-012`. The adopt-and-disambiguate path in 1D costs one paragraph; the rename costs a
+reference cascade over every file carrying the token, and lands on a worse one.
 
 **Withdrawn from an earlier pass of this design: the claim that the egress sense and the
 human-carried sense *contradict* each other on the passphrase.** Read live,
@@ -168,7 +168,7 @@ already applies to itself.
 
 ### Decision 2 — The channel-set, and what admits a fourth
 
-**Option 2A — the three surfaces the driving card named: site, approval transport, interview.**
+**Option 2A — the surfaces the driving card named — site, approval transport, interview.**
 **Rejected by Decision 1.** It seats a member whose carry cell cannot be filled, because the
 approval transport fails L2 against a declared placeholder. That is the *step-two-first* error the
 card itself diagnoses one level up.
@@ -222,7 +222,7 @@ non-rendering members. That reasoning does not hold, and the corpus says why in 
 § 5.2 at `:779-780` states the shipped fence *"does **not** inherit — it carries one row per field
 **per artifact scope**, so a passport value is non-publishable in C3 **and** in C12 by **two
 rows**, not from a single declaration carried into both."* A model whose subject is a value cannot
-express *the same value, two rows, because two scopes*. The fence is keyed
+express *the same value, a separate row per scope*. The fence is keyed
 `(limb, artifact-scope)` by construction, and § 5.6 at `:829` names the arity outright — *"The
 evaluator asks exactly **four** `(limb, artifact-scope)` questions."*
 
@@ -377,7 +377,7 @@ record** — never by a slice, and never as a side effect of building something.
 > |---|---|
 > | **HIT** | `v` is a value of a field or entry the fence marks at a queried pair |
 > | **CLEAN** | the pairs were queried and `v` is not in the class |
-> | **UNDETERMINED** | the class could not be computed (§ 5.4's five paths, § 5.6's sixth), **or** `A` is not a queried pair (§ 5.6:832-838; `scripts/test-publish-guard.sh` case **L10c**) |
+> | **UNDETERMINED** | the class could not be computed (§ 5.4's five paths, § 5.6's sixth), **or** `A` is not a queried pair — § 5.6's declared gap, *"A row naming any other pair is presently a code change… the guard aborts the publish as UNDETERMINED"*, graded by `scripts/test-publish-guard.sh` case **L10c** |
 >
 > **Off the four pairs `may-carry` returns UNDETERMINED — not `admit`, and not `deny`.**
 > Fail-closed is preserved where the corpus puts it: at the **call site**, which collapses HIT and
@@ -411,7 +411,7 @@ record** — never by a slice, and never as a side effect of building something.
 > **`C19 = render(C1, C10, C11, C13, C15) ⊎ { coordination-state, coordination-since }`**, and
 > **`P = StatiCrypt(C19)`** on the encrypted limb, **`P = C19`** on the `--plaintext` limb.
 >
-> - The five `bound` artifacts are the build's **read set**, not its carried content.
+> - The `bound` artifacts § 9.1 names are the build's **read set**, not its carried content.
 >   `reference/schemas/travel-site.md`:37 says so directly: the `publish-contract-artifacts`
 >   fence *"is a declaration of which artifacts the site build may **read** — not of what a
 >   render carries."*
@@ -454,8 +454,9 @@ from a class that **could not be computed**."*
 untouched and are now quoted in this record's own support. § 5.6's sixth — an unreadable or
 zero-row fence returns `2` and the publish aborts — is untouched. `verify_ciphertext` is
 untouched and is, for the first time, named as the relation its own contract declares.
-`ADR-007` § 2 is untouched. **Added:** § 5.6:832-838's unqueried-pair abort with its shipped test
-case `L10c`, and `verify_publishable_content`'s three-code contract with the call-site collapse.
+`ADR-007` § 2 is untouched. **Added:** § 5.6's declared-gap clause — the unqueried-pair abort — with
+its shipped test case `L10c`, and `verify_publishable_content`'s three-code contract with the
+call-site collapse.
 The clause **removes no fail-closed path**. The one thing it removes is an inference the corpus
 does not license.
 
@@ -493,7 +494,7 @@ roster-only and the cross-trip-composed states, yield five:
 | **K2** | a trip traveller file | `first-party` |
 | **K3a** | a C12 entry marked `[OPERATOR-PROVIDED]` alone | `operator-provided-only` |
 | **K3b** | a C12 entry marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` | `both-marks` |
-| **K4** | a roster row, and nothing sourced — see the two arms below | — |
+| **K4** | a roster row, and nothing sourced — see the arms below | — |
 
 **The axis declaration.** The engagement axis is decided in the sibling record and is **joined**
 here rather than re-derived. The fence below is the declaration both records are graded against;
@@ -572,7 +573,7 @@ reached *through* CH-3. **K4's CH-3 cell carries identity only** — its `## Gro
 written by `/trip-new` at creation and by `/trip-record` thereafter — which is the operator
 entering a **name**, not the subject being reached.
 
-**K4 is two arms, and the split is the point.** *Roster row only* is a **strict containment** in
+**K4 splits, and the split is the point.** *Roster row only* is a **strict containment** in
 `UNSOURCED`, not an identity, because the engine's flagged-gap branch **writes a C12 entry with
 content**. `K4 = K4a ⊎ K4b`, and the union is what restores the one-to-one correspondence the seam
 needs:
@@ -591,7 +592,8 @@ input"***: that clause closes the sentence defining the **third** fallback branc
 `none`. And it is **not** cited to `ADR-014` § 1, whose population reads live at `:26-30` as the
 same both-marks class — *"a person admitted to a trip's `outputs/traveler-model.md` as a single
 `## <Name>` heading marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]`"*. A citation that bites
-equally on a row with a different verdict cannot be what distinguishes this one. The re-grounding matters for the reason the clause exists at all: it
+equally on a row with a different verdict cannot be what distinguishes this one. The re-grounding
+matters for the reason the clause exists at all: it
 is there to stop a later slice proposing to close the gap, and it can only do that if it is true
 for the right reason. **A slice that supplies K4's needs converts that person to K3b** — which
 this record says *is* reached, through the operator.
@@ -654,10 +656,11 @@ every figure the earlier passes reported** — `reach` 470/81, `roster` 367/47, 
 `stated(` 15/4, `addressable` 11/8 — five independent reproductions, which is the evidence that
 the instrument rather than the corpus was the source of the disagreement.
 
-**Control arms on this exact instrument and population.** Sensitivity: `publish:` **167 / 88**,
-`internal-hard` **93 / 48**, `person:` **121 / 21**, `UNDETERMINED` **137 / 16** — four arms, all
-non-zero. Specificity: `\bzzq-not-a-token\b` **0 / 0**, `\bengagementzzq\w*` **0 / 0**. **Every
-zero below is therefore a measurement rather than a failed read**, and each proposed zero carries a
+**Control arms on this exact instrument and population, probed at `edadfa9`.** Sensitivity:
+`publish:` **167 / 88**, `internal-hard` **93 / 48**, `person:` **121 / 21**, `UNDETERMINED`
+**137 / 16** — every arm non-zero. Specificity: `\bzzq-not-a-token\b` **0 / 0**,
+`\bengagementzzq\w*` **0 / 0**. **Every zero below is therefore a measurement rather than a failed
+read**, and each proposed zero carries a
 **reciprocal root arm** so a bare-token zero cannot hide a non-zero root.
 
 | Identifier | Literal pattern | lines / files | Reciprocal root arm → observed | Verdict |
@@ -727,7 +730,7 @@ zero below is therefore a measurement rather than a failed read**, and each prop
   stated here because a binary reading is the easy mistake and it fails toward *admit*.
 - **Three R-tests at three enforcement strengths.** Named in § *Decision* 5, closed nowhere.
 - **K4's row will still read as a defect to someone.** That is precisely why it is written down,
-  split into its two arms, and grounded on the one fact true of both.
+  split into its arms, and grounded on the one fact true of both.
 - **The record carries a finding it does not repair** — the crossing artifact's missing class. A
   reader who expects a head decision gate to close everything it finds will read that as
   incomplete; the alternative was to amend a section this record does not own.
@@ -747,35 +750,35 @@ zero below is therefore a measurement rather than a failed read**, and each prop
 These are recorded rather than repaired. Each names its disposition, so a later reader can tell a
 deliberate carry from an oversight.
 
-**1. The crossing artifact has no § 1.1 class. This is a finding of this release.** § 1.1 carries
-**23** class rows and **none** is under `.publish/`. Measured: subject arm `\.publish` over the 23
-rows' path column → **0 / 23**, with an in-table sensitivity arm (`outputs/`) firing at **18 / 23**
-and a corpus-wide arm (`\.publish\b`) firing at **15 files** — so the zero is a measurement, not a
-dead reader. **Disposition:** not repaired here, on two grounds. This record does not own § 1.1,
-and the artifact is fully governed on the path that produces it by two fail-closed pre-push
+**1. The crossing artifact has no § 1.1 class. This is a finding of this release.** Probed at
+`edadfa9`: § 1.1 carries **23** class rows and **none** is under `.publish/` — subject arm
+`\.publish` over the 23 rows' path column → **0 / 23**, with an in-table sensitivity arm
+(`outputs/`) firing at **18 / 23** and a corpus-wide arm (`\.publish\b`) firing at **15 files**, so
+the zero is a measurement, not a dead reader. **Disposition:** not repaired here, on two grounds.
+This record does not own § 1.1, and the artifact is fully governed on the path that produces it by two fail-closed pre-push
 predicates. It is a gap in the class table's **coverage of the trust boundary**, and it belongs to
 whichever card next amends § 1.1.
 
 **2. The axis ships unnamed, but its six-value partition does not ship exercised.** Both this record
-and its sibling ground the axis on a classification the engine already computes. The shipped
-worked-example evidence is **one** fixture table —
+and its sibling ground the axis on a classification the engine already computes. Probed at
+`edadfa9`, the shipped worked-example evidence is a single fixture table —
 `examples/data-architecture-demo/outputs/traveler-model.md`:48-52, columns *Roster member · Source
-file · Entry · Branch* — carrying **two** observed `Branch` values across three rows, `normal` and
-`[OPERATOR-PROVIDED]`. `normal` merges `SELF-STATED` with `PERSON-LINKED`, and
+file · Entry · Branch* — carrying, as of `edadfa9`, the observed `Branch` values `normal` and
+`[OPERATOR-PROVIDED]` and no others. `normal` merges `SELF-STATED` with `PERSON-LINKED`, and
 `[OPERATOR-PROVIDED]` merges `OPERATOR-STATED` with `THIRD-PARTY-STATED` — **the second is exactly
 the merge `CLAUDE.md`:130 says fails in opposite directions.** The other fixture carries **no
-`Branch` column at all**, and `K4b`'s flagged-gap arm is unexercised: `PROFILE MISSING` measures
-**0 lines / 0 files across the 53 files under `examples/`**, against sensitivity arms
-`[OPERATOR-PROVIDED]` **13 / 5** and `[THIRD-PARTY]` **10 / 5** on the same instrument and
-population, and a reciprocal arm of **20 / 7** over all 156 files — so the marker is *specified* in
-the corpus and *never demonstrated* in a fixture. **Disposition: recorded as an observation, and
-the axis decision stands.** *"The axis already ships"* is sound as *a classification exists*; it is
+`Branch` column at all**, and `K4b`'s flagged-gap arm is unexercised: probed at `edadfa9`,
+`PROFILE MISSING` measures **0 lines / 0 files across the 53 files under `examples/`**, against
+sensitivity arms `[OPERATOR-PROVIDED]` **13 / 5** and `[THIRD-PARTY]` **10 / 5** on the same
+instrument and population, and a reciprocal arm of **20 / 7** over the whole tracked tree — so the
+marker is *specified* in the corpus and *never demonstrated* in a fixture. **Disposition: recorded
+as an observation, and the axis decision stands.** *"The axis already ships"* is sound as *a classification exists*; it is
 **not** measured as *this five-value partition ships*. `CLAUDE.md`:131-133 governs fixture
 completeness and is the surface that would close it — *"Any fixture standing as the worked example
 of this rule must exercise all three, and dropping one is a change to this rule, not a change to a
 fixture."*
 
-**3. The crossing artifact's two per-class fields can have no witness fixture, terminally.**
+**3. The crossing artifact's per-class field pair can have no witness fixture, terminally.**
 `reference/schemas/travel-site.md`:41 records the `no-witness-because:` clause as **terminal rather
 than pending**, because the site source *"stays local and git-ignored"* and so there is no tracked
 instance to point at and there will not be one. `scripts/test-publish-guard.sh` group `T` stands in
@@ -850,18 +853,18 @@ one.
   declared gap.
 - `reference/site-layout-spec.md` — § 3's Coordination Notice, § 8's file structure (`:670-673`),
   and §§ 9, 9.1's `publish-contract-artifacts` fence.
-- `reference/schemas/travel-site.md` — `:28-29` the two per-class fields, `:32` their declared
+- `reference/schemas/travel-site.md` — `:28-29` the per-class field pair, `:32` their declared
   purpose, `:37` the read-not-carried distinction, `:41` the terminal no-witness clause.
 - `scripts/publish-trip-site.sh` — `:1924` and `:1906-1914` (`verify_publishable_content` and its
   three-code contract), `:2214`/`:2232`/`:2237` (`verify_ciphertext`, its contract and its
   self-check), `:2666`, `:2679-2680`, `:2687`, `:2695`, `:2698`.
 - `scripts/test-publish-guard.sh` — case **L10c** at `:1123`, the unqueried-pair abort; group `T`,
   the coordination-state coupling test.
-- `agents/00-enrichment.md` — § *Missing or blank profile* (`:654-691`), the three branches and the
-  flagged-gap arm that makes `K4` two arms; `:651` on `stated()` versus `ANSWERED()`; `:891-894`,
+- `agents/00-enrichment.md` — § *Missing or blank profile* (`:654-691`), the branch set and the
+  flagged-gap arm that splits `K4`; `:651` on `stated()` versus `ANSWERED()`; `:891-894`,
   the profile-gap denominator.
 - `CLAUDE.md` — `:123-133` the three model-entry classes and the fixture-completeness rule; `:355`
   *never infer a mode*; § *Modes*, § *Archived trips*, § *Write ownership*; the standing rule on
   the passphrase value.
-- `skills/trip/SKILL.md`:73 and `skills/trip-publish/SKILL.md`:202 — the two requirement rows that
+- `skills/trip/SKILL.md`:73 and `skills/trip-publish/SKILL.md`:202 — the requirement rows that
   make mode production-gating rather than reach-indexing.
