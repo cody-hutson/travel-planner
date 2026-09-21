@@ -150,7 +150,11 @@ name: Artifact schema
 #        cardinality is derived from the fence group HZ grades and the actual spine is
 #        read out of the document by its own typography. Material is an operative token
 #        inside a normative declaration block; editorial is everything else, so rewording
-#        does not turn this red and that is asserted rather than promised
+#        does not turn this red and that is asserted rather than promised. The converse is
+#        asserted only where an arm grades it: the spine's cardinality, uniqueness,
+#        trip-relativity, year-advance and tuple membership, plus the reference-month
+#        declaration's own selector and operand. An operative token none of those names
+#        is still ungraded, and this line does not claim it is
 #   CE   its arm coverage is asserted at the same two granularities the ST line above
 #        describes, through the same shared comparison, so a code or an emission site added to
 #        its evaluator with no arm behind it turns the run RED rather than latent.

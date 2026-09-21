@@ -164,7 +164,10 @@
 #        a normative declaration is a blockquote opening with a bolded lead-in, and the
 #        operative content is the code spans inside one. That is the whole discriminator:
 #        MATERIAL is an operative token inside such a block, EDITORIAL is every unbolded,
-#        un-spanned word, so rewording is free and changing an operative token is not.
+#        un-spanned word. Rewording is free and RM6 asserts it; the converse holds only where
+#        an arm grades it — RM1-RM4 over the spine's cardinality, uniqueness, trip-relativity,
+#        year-advance and tuple membership, and RM9 over the reference-month declaration's own
+#        selector and operand. An operative token none of them names is still ungraded.
 #        Nothing is spelled here but the region's HEADING — an address, not the rule —
 #        and the one vocabulary word `clock`. It inherits HC1's read-by-shape MECHANISM
 #        and REJECTS HC1's grading posture, which is ADR-019's S4 rule-presence shape and
@@ -8909,10 +8912,22 @@ echo "RM — the reference-month RULE PROSE, anchored by a derived declaration s
 #   EDITORIAL = every unbolded, un-spanned word, inside a block or outside one.
 #
 # A normative DECLARATION BLOCK is a form the document already uses everywhere rather than one
-# this file imposes on it: a blockquote whose FIRST LINE OPENS WITH A BOLDED LEAD-IN. Measured
-# over reference/data-model.md on this commit — 53 blockquote blocks, 44 of them in that form
-# — so the reader discriminates rather than matching everything, and the 9 it excludes are the
-# evidence of that. Rewording is free; changing an operative token is not.
+# this file imposes on it: a blockquote whose FIRST LINE OPENS WITH A BOLDED LEAD-IN, and which
+# is not inside a fenced code block. Measured over reference/data-model.md on this commit — 48
+# blockquote blocks, 44 of them in that form — so the reader discriminates rather than matching
+# everything, and the 4 it excludes are the evidence of that. The fence clause is load-bearing
+# rather than decorative: a fence-blind reading of this same document counts 53 blocks, and the
+# extra 5 are fenced illustrative examples that a reader without it convicts as live rules.
+#
+# REWORDING IS FREE, AND THAT IS ASSERTED — RM6 demonstrates it by mutation on every run. THE
+# CONVERSE HOLDS ONLY WHERE AN ARM GRADES IT, and the arms are enumerable: RM1–RM4 grade the
+# spine's cardinality, uniqueness, trip-relativity, year-advance and tuple membership, and RM9
+# grades the reference-month declaration's own SELECTOR and OPERAND against the two encodings
+# of them this document carries independently of the declaration. An operative token no arm
+# above names is still ungraded, and this sentence used to claim otherwise: it read "changing
+# an operative token is not free" without qualification, while two edits inside the anchored
+# declaration — inverting the selector, and resolving the reference month from the wrapped term
+# — passed the whole suite green. RM9 closes those two; the unqualified claim does not return.
 #
 # The discriminator is stated as a property of DOCUMENTS IN THIS CORPUS rather than of this
 # region, because it is a shared contract: two different answers to the material-versus-
@@ -9042,7 +9057,34 @@ rm_read() {
     reg != 1 { next }
     $0 == "```horizon-verdict-cases" { print "FENCE\t" NR }
     {
-      if (substr($0, 1, 1) != ">") { blk = 0; decl = 0; next }
+      # FENCE STATE. A line opening a fenced code block toggles it; while it is open, a `>`
+      # line is SAMPLE TEXT and not a blockquote. Without this the reader convicts an ordinary
+      # documentation example: a fenced block whose line is a quote opening with a bolded
+      # lead-in read as a live declaration and turned RM1 and RM2 red on a document that was
+      # correct. This document already carries eleven such quote-leading lines in five
+      # fence-interior blocks elsewhere; none of them opens with a bolded lead-in TODAY, which
+      # is why the numerator was unaffected and the defect was latent rather than visible. That
+      # is a property of the current text, not of the reader, and it is the whole reason this
+      # is fixed rather than recorded. It is also exactly the denominator difference between
+      # the two readings of this document: fence-blind counts 53 blockquote blocks, fence-aware
+      # counts 48, and both count 44 in declaration form.
+      if (substr($0, 1, 3) == "```") { fence = 1 - fence; blk = 0; decl = 0; next }
+      if (fence == 1) { blk = 0; decl = 0; next }
+      if (substr($0, 1, 1) != ">") {
+        blk = 0; decl = 0
+        # JUST — the code spans of the NON-declaration prose of this region, taken only from a
+        # line opening with a bolded lead-in. This is the SECOND, independently authored
+        # encoding of the operative tokens that the document already carries: the declaration
+        # states the rule and the justification prose argues for it BY NAME. RM9 asserts the
+        # two agree, which is the same two-encodings-must-agree shape HZ9 already uses on the
+        # fence. It is a separate row kind, so no consumer filtering on SPINE, TUPLE or SPAN
+        # sees it. (No apostrophes in this block: the awk program is single-quoted.)
+        if (substr($0, 1, 2) == "**") {
+          n = split($0, p, "`")
+          for (i = 2; i <= n; i += 2) { s = trim(p[i]); if (s != "") print "JUST\t" s "\t" NR }
+        }
+        next
+      }
       if (blk == 0) { blk = 1; key = NR; decl = ($0 ~ /^>[ ]*\*\*/) ? 1 : 0 }
       if (decl != 1) next
       n = split($0, p, "`")
@@ -9175,8 +9217,18 @@ rm_setdiff() {
 #            block. NOTHING EXISTING IS TOUCHED. This is ADR-019's add-only input
 #   reword   one plain sentence, no code span and no bold lead-in, in a non-declaration
 #            paragraph of the region. The editorial half of the discriminator
+#   selector the declaration RHS keeps its operands and takes a DERIVED synthetic selector —
+#            the same token prefixed — which the justification prose names nowhere. RM10
+#   operand  the declaration RHS is rebuilt as <selector>(<first operand>, <year-advancing
+#            symbol>): the reference month resolving from the WRAPPED term. RM11
+#   optadd   a SECOND clock-bearing declaration of a NEW symbol, resolving from the wrapped
+#            term, appended as its own block. NOTHING EXISTING IS TOUCHED. RM12
 rm_mutate() {
-  awk -v mode="$2" -v sym="$3" -v op="$4" -v fl="$5" -v tl="$6" '
+  # wsym and sel are OPTIONAL — only the operative-token modes take them, and this file runs
+  # under `set -u`, so the three older modes calling this with six arguments would abort the
+  # whole suite on a bare "$7". Defaulted rather than required, so adding a parameter here is
+  # additive for every existing call site.
+  awk -v mode="$2" -v sym="$3" -v op="$4" -v fl="$5" -v tl="$6" -v wsym="${7:-}" -v sel="${8:-}" '
     function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
     mode == "revert" && NR == tl {
       n = split($0, p, "`"); hit = 0
@@ -9190,6 +9242,27 @@ rm_mutate() {
     }
     mode == "addition" && NR == fl {
       print "> **`" sym " = " op "`.** Synthetic second declaration, inserted by the RM8 control."
+      print ""
+      landed = 1
+    }
+    (mode == "selector" || mode == "operand") && NR == tl {
+      n = split($0, p, "`"); hit = 0
+      for (i = 2; i <= n; i += 2) {
+        s = trim(p[i])
+        if (match(s, /^[A-Za-z][A-Za-z0-9_]*[ ]*=/) && trim(substr(s, 1, RLENGTH - 1)) == sym) {
+          r = trim(substr(s, RLENGTH + 1))
+          if (r == "") continue
+          if (mode == "selector") {
+            if (match(r, /^[A-Za-z_][A-Za-z0-9_]*\(/)) { p[i] = sym " = zz" r; hit = 1; landed = 1 }
+          } else {
+            p[i] = sym " = " sel "(" op ", " wsym ")"; hit = 1; landed = 1
+          }
+        }
+      }
+      if (hit == 1) { out = p[1]; for (i = 2; i <= n; i++) out = out "`" p[i]; $0 = out }
+    }
+    mode == "optadd" && NR == fl {
+      print "> **`Z" sym " = " sel "(" op ", " wsym ")`.** Synthetic SECOND clock-bearing declaration, inserted by the RM12 control. Every existing declaration is byte-intact."
       print ""
       landed = 1
     }
@@ -9308,6 +9381,75 @@ if [ "$RM_OK" -eq 1 ]; then
     FAIL "RM4: the non-resolution clause names term(s) that are NOT operands of the declaration heading its own block — so the clause claims the rule fails to resolve on something the term never resolved from. Nothing here is spelled: the admissible set is read from that declaration's own right-hand side on this run"
   fi
 
+  # ── RM9 — THE OPERATIVE TOKENS THEMSELVES, not five derived properties of them. ──
+  # RM1–RM4 grade the spine's CARDINALITY, UNIQUENESS, TRIP-RELATIVITY, YEAR-ADVANCE and TUPLE
+  # MEMBERSHIP. Every one of those survives an edit that changes what the rule SAYS while
+  # preserving its shape, and two such edits were measured passing the whole suite at 406/0
+  # with all nine arms green: inverting the selector in the reference-month declaration, and
+  # resolving the reference month from the WRAPPED term instead of the trip term. The second
+  # is the worked acceptance example of the card that built this group. Both are material by
+  # this group's own discriminator — an operative token inside a normative declaration block —
+  # so the group was blind to precisely the class it declared itself to be about.
+  #
+  # NOTHING IS PINNED HERE EITHER, and that constraint is what shapes the two limbs. Neither
+  # the selector nor the operand is written in this file; both are compared against something
+  # the document states independently of the declaration.
+  #
+  #   OPERAND — the clock-bearing declaration must resolve from a declared symbol that is NOT
+  #   the year-advancing one. The year-advancing symbol is derived exactly as RM3 derives it,
+  #   from the presence of a year increment on its own right-hand side, so a rename of either
+  #   term carries through with no edit here.
+  #
+  #   SELECTOR — the leading call name of that declaration must also appear as a code span in
+  #   the NON-declaration justification prose of this same region. The document argues for its
+  #   selector by name in bolded lead-in paragraphs; the declaration is one encoding of that
+  #   choice and the argument is another, and RM9 asserts they agree. This is HZ9's shape —
+  #   two independent encodings of one rule, neither of them held here — applied to prose.
+  #
+  # EVERY clock-bearing row is checked rather than the first, which is what makes the arm
+  # addition-robust: a second declaration appended beside the correct one is caught here
+  # rather than averaged away.
+  rm_optokens() {  # rm_optokens <file> -> "<nclock> <badoperand> <badselector> <njust> <selectors>"
+    rm_read "$1" | awk -F'\t' '
+      $1 == "SPINE" { ns++; sym[ns] = $2; rhs[ns] = $3; idt[ns] = $6 }
+      $1 == "JUST"  { just[$2] = 1; nj++ }
+      END {
+        wsym = ""
+        for (i = 1; i <= ns; i++) { t = rhs[i]; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) wsym = sym[i] }
+        nclock = 0; badop = 0; badsel = 0; sels = ""
+        for (i = 1; i <= ns; i++) {
+          n = split(idt[i], tok, " "); delete has; hc = 0
+          for (k = 1; k <= n; k++) { has[tok[k]] = 1; if (tok[k] == "clock") hc = 1 }
+          if (hc != 1) continue
+          nclock++
+          namesw = (wsym != "" && (wsym in has)) ? 1 : 0
+          other = 0
+          for (j = 1; j <= ns; j++) if (j != i && sym[j] != wsym && (sym[j] in has)) other = 1
+          if (namesw == 1 || other != 1) badop++
+          s = ""
+          if (match(rhs[i], /^[A-Za-z_][A-Za-z0-9_]*\(/)) s = substr(rhs[i], 1, RLENGTH - 1)
+          if (s == "") badsel++
+          else { sels = sels (sels == "" ? "" : ",") s; if (!(s in just)) badsel++ }
+        }
+        printf "%d %d %d %d %s\n", nclock+0, badop+0, badsel+0, nj+0, (sels == "" ? "-" : sels)
+      }
+    '
+  }
+  # Pre-initialised for the same reason the controls below are: under `set -u` a reader that
+  # produced no line leaves these unset, and an unset reference aborts the suite instead of
+  # reaching the degeneracy branch that exists to report exactly that state.
+  RM_NCLK=0; RM_BADOP=0; RM_BADSEL=0; RM_NJUST=0; RM_SELS="-"
+  read -r RM_NCLK RM_BADOP RM_BADSEL RM_NJUST RM_SELS <<<"$(rm_optokens "$RM_DOC")"
+  if [ "${RM_NCLK:-0}" -eq 0 ] || [ "${RM_NJUST:-0}" -eq 0 ]; then
+    FAIL "RM9: the operative-token reader is DEGENERATE — ${RM_NCLK:-0} clock-bearing declaration(s) and ${RM_NJUST:-0} justification code span(s) were read from the region. Both populations are non-empty on a correct document, so a zero on either is a broken reader and this arm asserts nothing rather than passing over an empty set"
+  elif [ "$RM_BADOP" -ne 0 ]; then
+    FAIL "RM9: $RM_BADOP clock-bearing declaration(s) resolve the reference month from the YEAR-ADVANCING term, or from no other declared symbol at all. The reference month must resolve from the trip term; resolving it from the wrapped term silently moves every horizon comparison forward by up to a year while leaving the fence, the cardinality, the uniqueness and the tuple all intact — which is why RM1–RM4 stay green on that edit and this arm does not"
+  elif [ "$RM_BADSEL" -ne 0 ]; then
+    FAIL "RM9: the selector of the reference-month declaration (${RM_SELS}) appears in NO bolded justification paragraph of this region. The region argues for its selector by name; a declaration whose selector the argument never mentions means one of the two was edited and the other was not, and an inverted selector withdraws the monotonicity guarantee the argument itself calls what makes the rule shippable. Restore the declaration, or move the argument with it"
+  else
+    PASS "RM9: the OPERATIVE TOKENS of the reference-month declaration hold, over all $RM_NCLK clock-bearing declaration(s) — none resolves from the year-advancing term, each resolves from another declared symbol, and each selector (${RM_SELS}) is named in the bolded justification prose of this region, compared against $RM_NJUST code span(s) read from it. Neither the selector nor the operand is written in this file: the operand limb derives the year-advancing symbol the way RM3 does, and the selector limb compares the declaration against the region's own independently authored argument for it"
+  fi
+
   # ── RM5 / RM6 / RM8 — the three controls, all DELTA-GRADED against the base. ────
   # Each one scores its mutant against what the UNMUTATED document already scores, and grades
   # the DIFFERENCE. That is not a refinement, it is the difference between a control and a
@@ -9400,6 +9542,67 @@ if [ "$RM_OK" -eq 1 ]; then
       fi
     else
       FAIL "RM8: MUST FIRE, ADD-ONLY — the addition mutant did not land before line $RM_FL of the copy, so the add-only input this group exists to be sensitive to was never presented to it"
+    fi
+
+    # ── RM10 / RM11 / RM12 — RM9's controls. ───────────────────────────────────
+    # RM9 is a NEW comparison, so its zero earns nothing until each of its limbs is shown
+    # firing. All three mutants are built ENTIRELY out of values rm_read derived from the
+    # document on this run — the symbol, the selector, the first operand and the year-advancing
+    # symbol — so none of them spells a rule token into this file, and a rename of any term
+    # carries through with no edit here.
+    RM_WSYM="$(rm_read "$RM_DOC" | awk -F'\t' '$1 == "SPINE" && !w { t = $3; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) { print $2; w = 1 } }')"
+    RM_SEL1="$(printf '%s' "$RM_SELS" | cut -d, -f1)"
+    if [ -z "$RM_WSYM" ] || [ -z "$RM_SEL1" ] || [ "$RM_SEL1" = "-" ]; then
+      FAIL "RM10: MUST FIRE — the year-advancing symbol or the declaration's selector could not be derived from the document, so no operative-token mutant could be built out of the rule's own terms. RM9's verdict above rests on nothing"
+      FAIL "RM11: MUST FIRE — not run: the derivations RM10 reports missing are the same ones this mutant is built from"
+      FAIL "RM12: MUST FIRE, ADD-ONLY — not run: the derivations RM10 reports missing are the same ones this declaration is built from"
+    else
+      # RM10 — the SELECTOR limb. The selector is replaced by a derived synthetic (the same
+      # token, prefixed), which no justification paragraph names. That is the same code path an
+      # inverted selector takes: any selector the argument does not name fails this limb.
+      if rm_mutate "$RM_DOC" selector "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
+        # Pre-initialised because this file runs under `set -u`: a reader that produced no
+        # line would leave these unset and abort the suite rather than failing the arm.
+        RM_C10=0; RM_O10=0; RM_S10=0; RM_J10=0; RM_L10="-"
+        read -r RM_C10 RM_O10 RM_S10 RM_J10 RM_L10 <<<"$(rm_optokens "$RM_MUT")"
+        if [ "${RM_S10:-0}" -gt "$RM_BADSEL" ]; then
+          PASS "RM10: MUST FIRE — the reference-month declaration's SELECTOR replaced by a derived synthetic (\`${RM_SEL1}\` prefixed, a token this region argues for nowhere) moves RM9's selector limb from $RM_BADSEL to $RM_S10 failing declaration(s). Graded as a DELTA against the unmutated document, so the arm cannot pass on a failure that was there before it ran. An inverted selector takes this identical path: the limb asks whether the argument names the selector, not which selector it is"
+        else
+          FAIL "RM10: MUST FIRE — replacing the declaration's selector with a token no justification paragraph names left RM9's selector limb at $RM_S10, unchanged from $RM_BADSEL. That limb cannot see a selector substitution, so RM9's clean verdict says nothing about the selector"
+        fi
+      else
+        FAIL "RM10: MUST FIRE — the selector mutant did not land on line $RM_RLN of the copy, so this control never exercised RM9. A mutation that failed to apply must never be read as an arm that failed to fire"
+      fi
+
+      # RM11 — the OPERAND limb, and this is the card's own worked acceptance example:
+      # the reference month resolving from the WRAPPED term instead of the trip term.
+      if rm_mutate "$RM_DOC" operand "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
+        RM_C11=0; RM_O11=0; RM_S11=0; RM_J11=0; RM_L11="-"
+        read -r RM_C11 RM_O11 RM_S11 RM_J11 RM_L11 <<<"$(rm_optokens "$RM_MUT")"
+        if [ "${RM_O11:-0}" -gt "$RM_BADOP" ]; then
+          PASS "RM11: MUST FIRE — the reference-month declaration rewritten to resolve from the YEAR-ADVANCING term \`$RM_WSYM\` instead of the trip term, with the selector and the first operand kept as the document states them, moves RM9's operand limb from $RM_BADOP to $RM_O11 failing declaration(s). This is the edit the card that built this group named as its own worked example, and it passed the whole suite at 406/0 before this arm existed"
+        else
+          FAIL "RM11: MUST FIRE — resolving the reference month from the year-advancing term left RM9's operand limb at $RM_O11, unchanged from $RM_BADOP. The limb cannot see which term the rule resolves from, which is the one thing it exists to see"
+        fi
+      else
+        FAIL "RM11: MUST FIRE — the operand mutant did not land on line $RM_RLN of the copy, so this control never exercised RM9"
+      fi
+
+      # RM12 — ADD-ONLY. A SECOND clock-bearing declaration, resolving from the wrapped term,
+      # appended as its own block with every existing declaration byte-intact. RM9 checks every
+      # clock-bearing row rather than the first, and this is the input that proves it: an arm
+      # reading only the first row would average this away and stay green.
+      if rm_mutate "$RM_DOC" optadd "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
+        RM_C12=0; RM_O12=0; RM_S12=0; RM_J12=0; RM_L12="-"
+        read -r RM_C12 RM_O12 RM_S12 RM_J12 RM_L12 <<<"$(rm_optokens "$RM_MUT")"
+        if [ "${RM_O12:-0}" -gt "$RM_BADOP" ] && [ "${RM_C12:-0}" -gt "$RM_NCLK" ]; then
+          PASS "RM12: MUST FIRE, ADD-ONLY — a SECOND clock-bearing declaration resolving from the year-advancing term \`$RM_WSYM\`, appended as its own declaration block with every existing declaration left byte-intact, raises the clock-bearing population $RM_NCLK → $RM_C12 and RM9's operand limb $RM_BADOP → $RM_O12. RM9 is therefore NOT addition-blind: it grades every clock-bearing row rather than the first, which is exactly what an added contradicting declaration defeats in an arm that stops at one"
+        else
+          FAIL "RM12: MUST FIRE, ADD-ONLY — a second, contradicting clock-bearing declaration ADDED beside the correct one left RM9 at $RM_C12 clock-bearing row(s) and $RM_O12 operand failure(s), against $RM_NCLK and $RM_BADOP unmutated. RM9 is addition-blind, so its clean verdict does not survive an appended declaration"
+        fi
+      else
+        FAIL "RM12: MUST FIRE, ADD-ONLY — the add-only operative-token mutant did not land before line $RM_FL of the copy, so the addition RM9 must be sensitive to was never presented to it"
+      fi
     fi
   fi
 
