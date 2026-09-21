@@ -433,9 +433,11 @@ true — a resolution change is not a relocation.
   number on a branch that has since been swept, and no blob of it is reachable from any ref.
   The index convention forbids reuse and renumbering, and a number whose freeness cannot be
   established is not free — so the sequence carries a permanent gap at `ADR-020`, between this
-  record and `ADR-019`. Nothing in this repository grades record-number contiguity,
-  which is worth saying plainly: the gap is non-blocking **because nothing measures it**, not
-  because something measured it and passed.
+  record and `ADR-019`. That gap is now **declared**: it carries a row in the
+  `adr-number-declaration` fence in `reference/adr/README.md`, and
+  `scripts/test-corpus-hygiene.sh` group `D` grades the numbering against that fence. So the
+  gap is non-blocking **because something measures it and passes** — which is the opposite of
+  what this bullet said when it shipped, and the amendment below records the correction.
 - **An index/file status divergence class exists and is ungraded.** This record's own index edit
   repairs the one live instance, which leaves the class with zero observed instances and still
   no check behind it. The next occurrence will be silent, and this record merging `Proposed`
@@ -444,6 +446,20 @@ true — a resolution change is not a relocation.
   simplest candidate rests on the agent honouring a root stated in prose. That is gradable by an
   assertion over the declared text, never by observing a substitution, and a slice selecting one
   of them owes the assertion rather than the intention.
+
+**Amendment (2026-09-21, Monday) — record-number contiguity is graded now, and the first
+bullet's closing claim is corrected in place rather than softened.** That bullet shipped saying
+the gap at `ADR-020` was non-blocking *because nothing measures it, not because something
+measured it and passed*. That was a true statement of the state it was written in and is a
+false one now. `scripts/test-corpus-hygiene.sh` group `D` grades number uniqueness across the
+record directory and across the index, grades contiguity against the `adr-number-declaration`
+fence in `reference/adr/README.md`, and compares index against directory in both directions;
+this record's gap is declared in that fence and passes. **Nothing else in this section moves,
+and the scope of that is worth stating.** The second bullet names an index/file **status**
+divergence — a row's `Status` cell disagreeing with the record's own — which is a different
+property from the existence agreement group `D` grades, so that bullet stands unchanged and
+its class stays ungraded. The third bullet is untouched. No decision in this record is
+reversed, narrowed or re-opened.
 
 ### Reversibility summary
 

@@ -1,8 +1,9 @@
 name: Corpus hygiene
 
-# Runs scripts/test-corpus-hygiene.sh on every push and every pull request, so three defect
+# Runs scripts/test-corpus-hygiene.sh on every push and every pull request, so the defect
 # classes that survive a reorganisation are machine-graded rather than caught by whoever
-# happens to read the paragraph.
+# happens to read the paragraph. Their number is not written here — see the rule below, which
+# this sentence had already broken by the time a class was added to the suite.
 #
 # SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
 # particular in no run: step — every value below is a repo-static literal. The property is
@@ -53,6 +54,16 @@ name: Corpus hygiene
 #        reference/adr/ADR-013-count-assertion-basis.md and are not restated here. The
 #        residual population is DECLARED per path in the count-assertion-digest fence in
 #        reference/data-architecture.md and asserted in both directions
+#   D    ADR RECORD NUMBERING. A record number used twice — on two record files or on two
+#        index rows; a number inside the sequence that no record carries and no row declares;
+#        and a disagreement between the ADR index and the ADR directory in either direction.
+#        Two concurrent branches once shipped different records at one number with every
+#        required check green, because the records' filenames differ and only the index is
+#        shared. Deliberate gaps are declared per number in the adr-number-declaration fence
+#        in reference/adr/README.md and asserted in both directions, so a declaration cannot
+#        outlive the gap it excepts. The scope boundary — the row's key cell, the ungraded
+#        link text, the ungraded zero-padding — is declared in the suite's class-D banner
+#        entry and is not restated here
 #   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus one arm that
 #        replays a real historical defect. One MUST-FIRE arm per finding code the suite can
 #        emit, alongside the specificity arms that tell a correct implementation from a
@@ -62,8 +73,8 @@ name: Corpus hygiene
 #        code, checked in both directions. The code set is READ FROM the suite on every run
 #
 # NO POPULATION, ARM COUNT OR CODE COUNT IS WRITTEN INTO THIS FILE. Every figure the gate
-# knows is emitted at run time on its own summary lines — CITATION, LOCATOR and
-# COUNT-ASSERTION — and a numeral copied here would be a copy with no assertion behind it.
+# knows is emitted at run time on its own summary lines — CITATION, LOCATOR, COUNT-ASSERTION
+# and ADR-NUMBERING — and a numeral copied here would be a copy with no assertion behind it.
 # That is not a stylistic preference: one of the recurrences that motivated this whole gate
 # was a stale count in a workflow comment, in a block that twice forbade exactly this.
 #
@@ -76,6 +87,12 @@ name: Corpus hygiene
 #   and issue templates are not graded, and one of the motivating recurrences lived in a
 #   workflow comment. That gap is real and is left to review; stating it is what keeps a
 #   green from being read as more than it is.
+#
+#   WHETHER AN ADR NUMBER WAS FREE WHEN IT WAS CHOSEN. Group D grades the numbering of the
+#   corpus as it stands at the merge. It cannot hold a number for a branch that has not
+#   merged yet, so two concurrent branches can still each choose the same free number — what
+#   changes is that the collision is now caught at the merge instead of by hand afterwards.
+#   Reserving a number before a branch merges is a separate mechanism and is not this gate.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore keeps it out of a CI checkout, so those artifacts
 #   are unreachable by construction rather than by choice.
