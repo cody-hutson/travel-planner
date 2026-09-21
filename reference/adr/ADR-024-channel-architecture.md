@@ -793,13 +793,15 @@ message** — a line that *names* the function rather than declaring it. **Dispo
 location is carried in § *Decision* 3 and the divergence is reported rather than resolved to the
 cited value.
 
-**5. An Accepted record block-quotes the never-carry class at a stale two-member membership.**
-`ADR-010`:186-187 quotes `internal-hard` as *"Exactly C12 and C14"* where
-`reference/data-architecture.md`:770 reads *"Exactly C12, C14, C22 and C23."* **Disposition:
-observed and not edited here** — it is amendment-class work already in this release's scope and
-belongs to the change that owns that file. It is noted because § *Decision* 3 turns on the current
-membership, and **this record quotes the live four-member set** rather than inheriting the stale
-one.
+**5. An Accepted record block-quoted the never-carry class at a stale two-member membership, and
+this release corrected it.** When this record was written, `ADR-010`:186-187 quoted `internal-hard`
+as *"Exactly C12 and C14"* where `reference/data-architecture.md`:770 reads *"Exactly C12, C14, C22
+and C23."* **Disposition: observed here and not edited here** — it was amendment-class work already
+in this release's scope, and the change that owns that file has since made it: that block quote now
+carries the live set, with a dated amendment in `ADR-010` recording the correction. It is noted
+because § *Decision* 3 turns on the current membership, and **this record quoted the live
+four-member set** rather than inheriting the stale one, so the correction landing changed no clause
+here.
 
 ## Follow-on build slices
 

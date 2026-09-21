@@ -773,17 +773,19 @@ the same entry-scoped trigger — the entry is the row's subject.
 These are recorded rather than repaired. Each names its disposition, so a later reader can tell a
 deliberate carry from an oversight.
 
-**1. The derived model's regenerability classification contradicts the charter, and the two fail in
-opposite directions.** The artifact-class table defines `rebuilt-each-synthesis` as *"safe to
-regenerate because it holds no independent state"* and lists C12 among its members; the charter
-says the opposite for two of C12's three model-entry classes — one *"**dropped**, having **no
-source to re-derive it from**"*, the other *"**carried forward verbatim**… the erasure silently
-undone."*
+**1. The derived model's regenerability classification contradicted the charter, and this release
+carved the contradiction out.** When this record was written, the artifact-class table defined
+`rebuilt-each-synthesis` as *"safe to regenerate because it holds no independent state"* and listed
+C12 among its members, while the charter said the opposite for two of C12's three model-entry
+classes — one *"**dropped**, having **no source to re-derive it from**"*, the other *"**carried
+forward verbatim**… the erasure silently undone."*
 **An entry with no source to re-derive from is independent state.** **Disposition: corroborated
-here and deliberately not resolved.** It is amendment-class work already in this release's scope
-and belongs to the change that owns those files. **§ *Decision* 3 is grounded on the charter
-directly rather than on the class-table definition**, so `EB-0` stands on the clause that is right
-and the correction changes no clause here whenever it lands.
+here, and since resolved by the change in this release that owns that file** — § 6's definition cell
+now says in the cell itself that C12 carries a stated exception to that reason, with a note below the
+table naming which entry class is re-derived and which are not. The class assignment is unchanged;
+what was carved is the reason. **§ *Decision* 3 is grounded on the charter directly rather than on
+the class-table definition**, so `EB-0` stood on the clause that is right, and the correction landing
+changed no clause here — which is what this disposition predicted.
 
 **2. The six-value partition ships unexercised, even though the classification ships.** *"The axis
 already ships"* is sound as *a classification exists*; it is **not** measured as *this partition
@@ -799,16 +801,18 @@ instrument and population, and a reciprocal arm over the whole tracked tree that
 recorded as an observation; the axis decision stands.** The charter's own fixture-completeness
 rule is the surface that would close it, and a fixture is named as a follow-on slice below.
 
-**3. An Accepted record block-quotes the never-carry class at a stale two-member membership.**
-`ADR-010` § 4 quotes `internal-hard` as *"Exactly C12 and C14"* where
-`reference/data-architecture.md`:770 reads *"Exactly C12, C14, C22 and C23."* **Disposition:
-observed and not edited here** — it is amendment-class work already in this release's scope and
-belongs to the change that owns that file. It is recorded because § *Decision* 3's never-carry 2
-turns on the current membership, and **this record quotes the live four-member set** rather than
-inheriting the stale one. The two omitted classes are the durable person record and the group
-record, so the stale form omits from a **privacy** rule precisely the two classes that outlive the
-trip — which is why reproducing it in new corpus would have been a defect rather than a citation
-nit.
+**3. An Accepted record block-quoted the never-carry class at a stale two-member membership, and
+this release corrected it.** When this record was written, `ADR-010` § 4 quoted `internal-hard` as
+*"Exactly C12 and C14"* where `reference/data-architecture.md`:770 reads *"Exactly C12, C14, C22 and
+C23."* **Disposition: observed here and not edited here** — it was amendment-class work already in
+this release's scope, and the change that owns that file has since made it. `ADR-010` § 4 now quotes
+the live set and carries its own dated amendment recording the correction, so the divergence this
+finding names is closed on the tree that ships. It is recorded because § *Decision* 3's never-carry 2
+turns on the current membership, and **this record quoted the live four-member set** rather than
+inheriting the stale one — which is why the correction landing changed no clause here. The two
+omitted classes are the durable person record and the group record, so the stale form omitted from a
+**privacy** rule precisely the two classes that outlive the trip — which is why reproducing it in new
+corpus would have been a defect rather than a citation nit.
 
 **4. A derived block in the trip file has no writer, and this axis deliberately does not become
 one.** A later slice will be tempted to render this axis's value there, because it is the obvious
