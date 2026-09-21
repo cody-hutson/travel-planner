@@ -526,3 +526,188 @@ coverage.**
 > `[THIRD-PARTY]` marks a person who will never file one."* The narrowing is the correction; the
 > un-freezing is its point, because *"this kind may still file"* is a claim about an **edge**, not
 > about a row.
+
+### 5. What *engaged* means: two floors, and the engine still cannot observe an act
+
+**The honest half first.** The engine observes **no traveller act**, and that is a consequence of
+three shipped decisions rather than a shortfall of this one. So *engaged* is defined on what the
+engine **holds**, never on what a traveller **did**, and the record says so plainly rather than
+offering a definition nothing can evaluate.
+
+> **Floor one — *on record*.** A person is on record when **`engagement(t)` is at or above
+> `OPERATOR-STATED`**: the engine holds a C12 entry for them that is not a flagged gap. A
+> consumer needing the *first-party* reading states the stricter floor **`SELF-STATED`** instead.
+>
+> **Floor two — *depth*.** A separate, **consumer-declared** `depth-floor` over
+> `|{ s : ANSWERED(s) }|`, default **1**, taken across the four falses that
+> `reference/data-model.md` fixes as one equivalence class — absent, blank, exactly an em dash, or
+> a surviving bracketed placeholder.
+
+**Splitting them is the repair, not a refinement.** An earlier pass folded *is there anything on
+record* and *is there enough on record* into one predicate, and the consequence was that the
+composition bit read inert for the only declared consumer. They are different questions about
+different objects: floor one is a comparison on this axis, floor two is a count over a traveller's
+answered fields and is **not this axis's business**. A downstream card's starred-field requirement
+is floor two at a stricter setting, so that card becomes journey-wide without being re-decided and
+this axis is not asked to carry a depth question it was never a measure of.
+
+**`depth-floor` is a consumer declaration, with a stated cost.** **A cross-surface comparison must
+name the floor it used**, because two consumers declaring different floors will grade the same
+person differently and neither is wrong. That is the price of not centralising a threshold, and it
+is cheaper than a registry this record would have to keep true.
+
+> **Every transition is announced in the acting verb's or pass's own output**, and none of them
+> adds a writer: a C12 entry appearing with its marks; the shipped provenance transition for the
+> mark-moving edges, which already emits an update signal; the link and unlink verbs' own echoes;
+> and, for the read-failure value, the read's own failure naming the operand.
+
+**Diff-gradeability is named as an obligation rather than claimed as a property.** The trip, person
+and group stores are git-ignored and nothing observes them, so a transition is **not** gradeable by
+a repository diff. Where diff-gradeability is wanted it must come from a **tracked fixture under
+`examples/`**, and that is a follow-on slice this record names in § *Follow-on build slices*
+rather than an assertion it makes.
+
+### 6. Staleness reuses the shipped verdict family verbatim, and respects its declared boundary
+
+> For an artifact `a` a person was shown or agreed to, and the source `r` it derives from, the
+> relation takes the **shipped** verdicts: **`CURRENT`** — the derived side is the newest of that
+> relation's operands; **`BEHIND`** — it is not, and the line **names the leading source**;
+> **`UNDETERMINED`** — an operand could not be observed, and the line **names which one**.
+> Comparison is by **exact token, never by substring**. Every declared relation renders,
+> `CURRENT` included.
+
+**This record declares the family's applicability to the engagement layer and declares no
+membership.** Which relations a consumer evaluates stays that consumer's own declaration, exactly
+as `G8` requires, and there is therefore no list here to go stale.
+
+**Nothing is minted.** `skills/trip/SKILL.md` § *The freshness report* already ships the triple,
+the exact-token rule, the render-every-relation rule and the no-disposition-column self-guard. An
+earlier pass of this design minted a parallel family beside it; the whole of that vocabulary is
+withdrawn in § *Options considered* 5D, and the shipped one is reused as it stands.
+
+> **And the shipped family's declared boundary is adopted rather than worked around.**
+> `trip.freshness` is a property of *the resolved trip's own artifacts*: it *"carries no
+> publication state and asserts nothing about whether anything is published."* So **a relation
+> whose derived side is *what a traveller was shown* is OUTSIDE that boundary** — what a traveller
+> was shown is what **crossed a channel**. It is **not** `UNDETERMINED` inside the boundary, which
+> is what an earlier pass said. A consumer wanting that relation either evaluates it **outside**
+> `trip.freshness` and says so in its own report, or argues to widen the boundary — a change to a
+> shipped, self-guarding contract, which must be argued as one.
+
+**This composes with `ADR-022` without either record asserting anything about the other.** That
+record carries publication state as a condition on its published-site row; `trip.freshness` carries
+none. The two answer different halves — *is the built artifact behind its sources*, and *is what
+crossed the channel the built artifact* — and neither answers the other. The corpus says so
+itself, so neither record has to.
+
+### 7. The names, each with its measured collision
+
+**The measurement convention, stated once, because it is the whole of the instrument.**
+**Occurrences** = every regex match, counting multiple matches on one line separately.
+**Lines** = distinct matching lines. **Files** = distinct files with at least one match.
+**Every single-token count in this record is reported as `lines / files`, case-sensitive,
+`\b`-anchored, over the 156 tracked files at `edadfa9`**, measured by `python3` file reads with
+explicit patterns — never by `grep`, whose local build is `ugrep` and can return a plausible zero
+on a pattern it rejects. This is the same basis `ADR-022` pins, so the two records' figures are
+comparable rather than merely adjacent.
+
+**One extension, and it is load-bearing on this corpus.** A **multi-word phrase** is measured
+**wrap-tolerantly** — inter-word space as `\s+` over the whole file rather than line by line —
+and reported as **`occurrences / files`**, because a line-based phrase probe silently under-counts
+on a corpus hard-wrapped near 78 columns. **Demonstrated rather than asserted:** the domain
+designation measures **35 / 16** line-based and **36 / 17** wrap-tolerant at `edadfa9`; the
+difference is one occurrence, at `examples/data-architecture-demo/outputs/cost-estimate.md`:206,
+where a backticked heading reference ends a line and the following noun begins the next. **Read
+the matches, do not count them** — that single wrapped match is the whole of a disagreement that
+had already produced two different published figures for one designator.
+
+**Control arms on this exact instrument and population, probed at `edadfa9`.** Sensitivity,
+single-token: `publish:` **167 / 88**, `internal-hard` **93 / 48**, `person:` **121 / 21**,
+`UNDETERMINED` **137 / 16**. Sensitivity, wrap-tolerant phrase: `data\s+architecture`
+**5 / 3**, `never\s+rendered` **21 / 14**. Specificity: `\bzzq-not-a-token\b` **0 / 0**,
+`\bengagementzzq\w*` **0 / 0**, `zzqq\s+nosuch` **0 / 0**. **Every arm that should fire fires and
+every arm that should not does not, so every zero below is a measurement rather than a failed
+read**, and each proposed zero additionally carries a **reciprocal root arm** so a bare-token zero
+cannot hide a non-zero root.
+
+| Identifier | Literal pattern | lines / files | Reciprocal root arm → observed | Verdict |
+|---|---|---|---|---|
+| **`engagement`** (the axis) | `\bengagement\b` | **3 / 1** | `\bengag\w*` → **9 / 4** | **ADOPT**, and the measurement is the reason rather than a hurdle it cleared. All three bare matches sit in one record and every one of them names the milestone *Group approval engagement layer* — the scope these two records take half of. The six further root matches are the **verb** *engage(s)/engaged*, a different part of speech with no competing noun sense. `ADR-022` adopts the same name on the same figure |
+| `engagement(t)` | `\bengagement\s*\(` | **0 / 0** | the bare arm above is the reciprocal | adopt |
+| **`PERSON-LINKED`** | `\bPERSON-LINKED\b` | **0 / 0** | `\bperson[- ]link\w*` → **0 / 0** | adopt; names the `person:` edge, whose own arm fires at **121 / 21** |
+| **`SELF-STATED`** | `\bSELF-STATED\b` | **0 / 0** | `\bself[- ]stat\w*` → **0 / 0** | adopt |
+| **`OPERATOR-STATED`** | `\bOPERATOR-STATED\b` | **0 / 0** | `\boperator[- ]stat\w*` → **7 / 4** | adopt. The root is a **same-domain precedent**, not a collision — two records quote *"the only surviving record of what the operator stated"*, which is this exact state in the corpus's own words |
+| **`THIRD-PARTY-STATED`** | `\bTHIRD-PARTY-STATED\b` | **0 / 0** | `\bthird[- ]party[- ]stat\w*` → **0 / 0** | adopt |
+| **`UNSOURCED`** | `\bUNSOURCED\b` | **0 / 0** | `\bunsourc\w*` → **0 / 0** | adopt — clean on both arms |
+| **`ENGAGEMENT-UNDETERMINED`** | `\bENGAGEMENT-UNDETERMINED\b` | **0 / 0** | `\bUNDETERMINED\b` → **137 / 16** | adopt. The root is a **same-sense precedent** — the shipped guard's *could not be computed*, which is exactly this value's meaning |
+| **`NO-SUBJECT-KIND`** | `\bNO-SUBJECT-KIND\b` | **0 / 0** | `\bno[- ]subject[- ]kind\w*` → **0 / 0**; `\bsubject[- ]kind\w*` → **0 / 0** | adopt; a fence literal, clean on both arms |
+| **`EB-0` · `EB-1` · `EB-2` · `EB-3`** | each `\bEB-[0-3]\b` | **0 / 0** each | `\bEB\w*` → **0 / 0** | adopt. Clean on the prefix arm as well as the bare tokens, and the shape matches the sibling's own channel codes |
+| **`depth-floor`** | `\bdepth-floor\b` | **0 / 0** | `\bdepth[- ]floor\w*` → **0 / 0** | adopt |
+| *the profile-gap denominator* (the domain's term) | `profile-gap\s+denominator` | **1 / 1** *(occ / files)* | `\bprofile-gap\w*` → **3 / 3** at `edadfa9`, all the same sense | **adopt as a citation, not a mint.** Exact sense, in the clause this record grounds on |
+| `` `## Group` `` roster (the gloss) | `##\s+Group`?\s+roster` | **36 / 17** *(occ / files)* | bare `\broster\b` → **367 / 47**, at least two subjects | **adopt as the gloss only.** Shipped, single-sense across all matching files; the bare noun is never used as the designator |
+| `BEHIND` · `CURRENT` · `UNDETERMINED` | each `\b…\b` | **8 / 3** · **5 / 1** · **137 / 16** | — | **reused verbatim, not minted.** These are the shipped verdict tokens; the counts are reported because *"we reused the shipped name"* is a claim that needs measuring like any other. `CURRENT`'s matches are all in the family's own home file, and two of `BEHIND`'s are ordinary English in upper-case comments |
+
+**Withdrawn, and not to be re-minted.**
+
+| Candidate | Literal pattern | lines / files | Why withdrawn |
+|---|---|---|---|
+| **`B0` · `B1` · `B2` · `B3`** as bare boundary codes | each `\bB[0-3]\b` | **0 / 0** · **34 / 8** · **42 / 7** · **12 / 3** | **withdrawn on a measurement no earlier pass took, and it is this pass's sharpest naming finding.** The design proposed all four unmeasured. Three of the four collide, and they collide with **three unrelated subjects**: department-store basement levels in a worked example, a banned-phrase class table in the site spec, and **finding codes in the guard suites** — including the corpus-hygiene suite's own group-B code. Adopting the first code because it measures clean while its three siblings do not would be measuring one member of a set and adopting all of it. Replaced by **`EB-0`…`EB-3`**, clean on the bare tokens **and** on the prefix arm |
+| `reach` | `\breach\b` | **470 / 81** | over half the population at `edadfa9`, and **`REACH` is already a closed-enum value** in the people-library record. Reproduces the sibling's figure exactly |
+| `roster` (bare) | `\broster\b` | **367 / 47** | at least two live subjects — the party roster and the **agent roster** at **5 / 4**. Never used as this record's designator; the qualified form is the gloss |
+| `stated(` | `\bstated\s*\(` | **15 / 4** | collides with a shipped predicate the enrichment prompt forbids conflating with the one the proposal was defined on. **Dissolved rather than renamed**: the re-grounding in § *Decision* 1 removes the predicate pair entirely, so no replacement is owed |
+| `durable(` | `\bdurable\s*\(` | **0 / 0** | withdrawn with `stated(`; the bare root is large and the predicate no longer exists |
+| `SUPERSEDED` | `\bSUPERSEDED\b` | **0 / 0** | **withdrawn despite a clean census**, and it is the bound on the measure-before-adopting rule itself. Root `\bsupersed\w*` → **75 / 30**, and the collision is a **reservation clause plus a shipped guard**, not a count. **A token census cannot see a reservation** |
+| `provenance class` | `provenance\s+class` | **0 / 0** *(occ / files)* | proposed by an earlier pass for the axis and **withdrawn**: bare `\bprovenance\b` measures **238 / 92** at `edadfa9` — a larger share of the population than the one that got `reach` withdrawn. The family is single-sense, so joining it was defensible; it is withdrawn because the axis name is settled as `engagement` across both records, and one name beats a defensible second |
+| `addressability` | `\baddressability\b` | **0 / 0** | exact token clean, root `\baddressab\w*` → **11 / 8** in a **different subject** — the skills directory glossed as *the addressable surface*. **The root is the honest arm and it is the one reported.** This design needs no such noun |
+| `on-record` | `\bon-record\b` | **0 / 0** | clean as a hyphenated token, but the root `\brecord\w*` measures **2,539 / 116** at `edadfa9` and *record* is the corpus's own noun for the durable person record. A predicate a reader cannot tell from the surrounding English is not usable. **No token is minted**: floor one is written as a comparison on the axis |
+| `engaged` | `\bengaged\b` | **3 / 2** | **rejected on meaning rather than on count** — the one row where the smallest collision loses anyway. All three uses mean *a standing rule is in force*; and naming the axis for the verb would re-import the behavioural reading that § *Options considered* 4A rejects. **A name that argues against the record's own decision is worse than a name with a bigger census** |
+
+### 8. The seam: one partition under two names, joined on the row key
+
+> **`ADR-022`'s subject kinds and this record's `engagement(t)` values are one partition under two
+> names**, joined on the row key: `K4 ≡ UNSOURCED` · `K3a ≡ OPERATOR-STATED` ·
+> `K3b ≡ THIRD-PARTY-STATED` · `K2 ≡ SELF-STATED` · `K1 ≡ PERSON-LINKED`. **The agreement is
+> structural — a single partition declared in both fences — rather than two records having been
+> handed the same string.**
+
+**The correspondence is between `ADR-022`'s row labels and this record's value set — an identity
+of the *codomain*, not of the two records' subjects.** That distinction decides what each record
+may claim. `ADR-022`'s row key is a **static type**: *for a subject of kind K, which channel
+reaches them*. This record's value is the **result of a per-person, per-synthesis resolution**:
+*on whose authority does the engine hold this person, right now*. So the axis is **degenerate
+inside `ADR-022`**, where the table fixes the kind as the row — which is exactly why that record
+carries it as the row key rather than as a third column — and **not degenerate inside this
+record**, whose subject is a person over time and whose content is which edges exist, which are
+terminal, and which move no mark.
+
+**This record contributes two things the row key does not supply, and they are contributed at
+different strengths. Both are stated with their strength rather than levelled up.**
+
+- **The sixth value, `ENGAGEMENT-UNDETERMINED`.** It has no subject-kind counterpart, it is the
+  single named difference between the two token sets, and it is **structural**: it is declared in
+  both fences and is therefore gradeable. `ADR-022` carries it as a **table-level fail-closed
+  clause** below its reach table — not as a row and not as a column, because a value meaning *the
+  row could not be selected* cannot modify a row. **This record carries it as the sixth axis
+  value.** That asymmetry is deliberate and it **is** the named difference: one type of thing in
+  one record, one in the other, each correct for the table it sits in.
+- **The transition structure** — that a row's occupancy is a **present reading** rather than a
+  property of the person. This is genuine content of this record and the sibling's own text
+  already depends on it: *"A slice that supplies K4's needs converts that person to K3b — which
+  this record says **is** reached."* **But it is not represented in that record's governed table**,
+  which carries no transition column, cell or edge. **So it is a contribution to the seam's
+  meaning and not to the seam's machine-checkable half**, and this record says so rather than
+  claiming a structural contribution it cannot demonstrate.
+
+**The read-failure value's trigger is one sentence, written identically in both records.**
+
+> `engagement(t)` returns `ENGAGEMENT-UNDETERMINED` **iff a read this entry attempted could not be
+> completed** — the roster, the derived model, or the person store this entry's own `person:` line
+> references. It is **entry-scoped, never machine-scoped**: a field composing `UNKNOWN` is not it,
+> and a store nobody referenced is not it. A traveller file carrying no `person:` line attempts no
+> store read, so *"that traveller is entirely unaffected, on every trip."*
+
+**Entry-scoping is what removes the failure it would otherwise carry**: without it, the same
+traveller resolves differently on two machines because one of them cannot read a store that
+traveller never referenced. Both clauses are the corpus's; neither is minted here. In `ADR-022`
+the same value turns **every cell of a row** undetermined, which is the row-scoped projection of
+the same entry-scoped trigger — the entry is the row's subject.
