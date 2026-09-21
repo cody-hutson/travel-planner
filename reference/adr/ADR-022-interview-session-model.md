@@ -274,22 +274,45 @@ lines change* — which is the shape `profile`'s edit route already ships. **No 
 taken, and the grant union is unchanged.**
 
 **D2.2 — Cadence: one write per completed unit, for a `block`-scoped field.** A repeat unit is
-appended **whole**, when the unit is complete, with **every label of the unit present** and
-unanswered labels keeping their bracketed placeholder. The tool is `Edit` under **standing rule 7**,
-whose admitted shape is *"the target exists, no existing line changes, and the write adds lines at
-the end of the file **or under the block's own repeat unit**."* The shape is `fact`'s, verbatim: a
-new block written with all of the template's fields present, the unanswered ones keeping their
-bracketed placeholders.
+written **whole**, when the unit is complete, with **every label of the unit present**.
+
+**In-place completion is the normal case and the append is the exception**, and the headline says
+*per completed unit* rather than *per append* for that reason. D1.2's seed writes the form whole, and
+both shipped forms ship their repeat blocks **already seeded with units** — measured at `edadfa9`,
+each block of each guided form ships the same seeded unit count. So the first units a traveller fills
+are units that already exist on disk, and a write that creates one is reached only once the seeded
+units are used up.
+
+**What an unanswered label of a completed unit carries — reconciled with D1.3 and D2.4, not
+inherited.** A label the traveller did not answer, in a unit the interviewer is writing **because
+that unit is complete**, is a **skip**: it takes the em dash D2.4 assigns, and **never a surviving
+bracketed placeholder**. Leaving the bracket would make that label read `UNASKED` under D1.3, which
+means **ask** — so the next session would re-ask a label inside a unit already declared complete,
+reopening the question D2.4 closes and violating *nothing pushes twice* by exactly the mechanism
+§ *Context* names as the real defect. **`fact`'s shape is narrowed on this one axis and no other.**
+`fact` writes a block for a human to finish later, so its unanswered labels correctly keep their
+brackets; the interview writes a block it has just finished asking, so its unanswered labels are
+declined. Everything else of `fact`'s shape is taken verbatim — every one of the template's fields
+present, and no line outside the unit touched.
+
+**The bracket survives in exactly one place, and that place is not a contradiction.** A seeded unit
+**nobody has reached** stands with its brackets intact and reads `UNASKED`, which is correct: nobody
+has asked it. D3.3's em-dash rule fires when the traveller declines a unit, never before it is
+offered — so `UNASKED`, `DECLINED` and answered stay the three distinct states D1.3 defines, inside a
+block exactly as outside one.
 
 The `slot` / `block` split is **read live from `reference/data-model.md`'s `Scope` column and is not
-restated here.** A half-written unit is not a legal unit, which is why per-answer cadence cannot
-apply inside a block.
+restated here** — by the join R8 names. A half-written unit is not a legal unit, which is why
+per-answer cadence cannot apply inside a block.
 
-**Rule 7 admits the append of a unit that is not there, and only that.** A write *inside* a unit that
-already exists changes existing lines, so it fails rule 7's own condition that *no existing line
-changes* and is therefore not an append: its shape is **`Edit` under standing rule 2's second
-condition, at unit granularity** — the target exists, and the lines that change are exactly the named
-unit's labels. D3.3's spare-unit em dash is the case this record decides on that shape, and the
+**Rule 7 admits the append of a unit that is not there, and only that.** Its admitted shape is *"the
+target exists, no existing line changes, and the write adds lines at the end of the file **or under
+the block's own repeat unit**"* — so `Edit` under **standing rule 7** is the tool for the exception
+case above, a unit written beyond the seeded count. A write *inside* a unit that already exists
+changes existing lines, so it fails rule 7's own condition that *no existing line changes* and is
+therefore not an append: its shape is **`Edit` under standing rule 2's second condition, at unit
+granularity** — the target exists, and the lines that change are exactly the named unit's labels.
+**That is the normal case**, because the seeded units are there from the first instant. D3.3's spare-unit em dash is the case this record decides on that shape, and the
 granularity is the unit for the same reason the cadence above is: a half-written unit is not a legal
 unit. **Two write shapes, one cadence**, and no new standing clause is proposed for either.
 
@@ -535,12 +558,20 @@ to name the other route out loud when it reaches the crossing point.
    new standing clause is proposed: the Extension rule's bar — that a rule belongs there only where
    it genuinely binds every verb — is not met by an interview-specific widening.
 
-**Where the routing statement is read from.** The landing decision taken at Stage 5 relocates the
-interviewer-facing guide out of the form and into a verb section of `skills/trip-record/SKILL.md`,
-so the cross-form routing prose this decision consumes is **verb-body prose rather than form-side
-prose**. This record states the behaviour and not the placement: routing happens **at capture**,
-wherever the statement that names the destination form is authored. The consequence for the seam is
-carried on S16 in § *The seam*, which is withdrawn from the form-side requirement for this reason.
+**Where the routing statement is read from, stated against a measurement rather than against an
+assumption about the landing decision.** Probed at `edadfa9`, each guided form carries the routing
+statement **twice**: once in a guidance quote **above** its boundary, and once in the guide **below**
+it. The landing decision taken at Stage 5 relocates the interviewer-facing guide out of the form and
+into a verb section of `skills/trip-record/SKILL.md` — so it moves the **below-boundary** copy and
+leaves the above-boundary one where it is. **The statement is therefore form-side today and stays
+form-side after the extraction**, in the profile half, which becomes its sole form-side home.
+
+**None of that changes this decision, and saying so is the point of stating it.** This record states
+the behaviour and not the placement: routing happens **at capture**, wherever the statement that
+names the destination form is authored — above a boundary, below one, or in a verb body. The
+consequence for the seam is carried on S16 in § *The seam*, which is withdrawn as a **separate**
+requirement because the datum is already exposed by the form's own guidance quotes, and **not**
+because it left the form.
 
 **Accepted cost, stated plainly:** the traveller states a tier-crossing answer twice. The mitigation
 that adds no state is that the interviewer **names the field** on the other form, so the second
@@ -735,7 +766,14 @@ one primary purpose so that the cross-walk authored against this table has one r
 line. The sibling record supplies these. **This record neither decides where they are declared, nor
 how, nor in what file.** The rows are requirements on the *reader*, phrased as such.
 
-The table is grouped by purpose and its row count is **7 + 10 + 2 = 19**.
+The table is grouped by purpose and its row count is **7 + 11 + 2 = 20**.
+
+**`S16` and `S20` are not requirements on a form, and they are kept rather than deleted so the
+cross-walk records a disposition rather than a gap.** `S16` is withdrawn as a separate requirement and
+`S20` records a datum that is deliberately not form-exposed; each states its own ground in its own row, and
+a cross-walk line against either is filled by that ground rather than by a form clause. **Numbering
+is appended, never interleaved** — `S20` is a sequencing datum and sits at the end of group B, after
+`S17`, so that every citation of `S18` and `S19` still resolves to what it meant when it was written.
 
 ### A. To resume a session
 
@@ -755,14 +793,15 @@ The table is grouped by purpose and its row count is **7 + 10 + 2 = 19**.
 |---|---|---|---|
 | **S8** | The **star marker per field**, and the per-form starred count | the fast-pass set, read and never restated | D3.1 |
 | **S9** | The **section order and section names** | the namespace for the *jump to a named section* branch | D3.1, D3.4 |
-| **S10** | **`Scope` per field**, and for a block-scoped field its **repeat-unit boundary and constituent labels** | decides per-answer against per-unit write cadence | D2.1, D2.2, D3.3 |
+| **S10** | For a block-scoped field, its **repeat-unit boundary and constituent labels** — which bullets constitute one unit, and where that unit ends | a unit is written whole, so the interviewer must know what *whole* means before it can write one; this half **is** form-side, borne by the form's own markup | D2.2, D3.3 |
 | **S11** | **Block cardinality as the form ships it** — the repeat units a seeded instance starts with | D3.6 bounds the instance against the seeded shape, so the seeded shape must be readable | D3.3, D3.6 |
 | **S12** | The **never-asked computed field set** | the interview must not ask a field the form computes | D3.5 |
 | **S13** | The **option list per field, verbatim, in one authoritative home** | an offer must quote the form and never paraphrase it. Supplied by the joint amendment: the bracketed placeholder is the authoritative home | D5.3 |
 | **S14** | **Which fields are closed enums**, as a per-field marker, distinct from an open suggestion list | the two license different recording behaviour, and D5.4's test branches on it. Supplied by the joint amendment's per-field closed/open marker | D5.4 |
 | **S15** | The **skip-if condition** per field or section | a section whose precondition fails is not asked, and the condition is form-side | D3.1 |
-| **S16** | The **cross-form routing statement** — which other form a tier-crossing answer belongs to | **Withdrawn from the form-side seam.** The landing decision relocates the interviewer-facing guide into the verb body, so this statement is no longer form-side and the sibling record is not asked to expose it. The datum is still *read*; its home is the verb body. The row is kept rather than deleted so the cross-walk records a withdrawal rather than a gap | D4.3 |
+| **S16** | The **cross-form routing statement** — which other form a tier-crossing answer belongs to | **Withdrawn as a separate requirement — and the ground is corrected here rather than carried.** The withdrawal previously read that the landing decision moves this statement into the verb body, so it is no longer form-side. **That ground is false, and the measurement says so.** Probed at `edadfa9`: each guided form carries the routing statement **twice** — once in a guidance quote **above** its boundary and once in the guide **below** it. On the trip form the above-boundary statement names the durable form and the trip's own `trip-context.md`; on the durable form it names the trip form. The landing decision removes the below-boundary copy and leaves the above-boundary one untouched, so after the extraction the profile half is the datum's **sole** form-side home — the reverse of what the withdrawal assumed. **The row is still withdrawn, on the true ground:** the datum is form-side and is already exposed by the guidance quotes above the boundary, which the sibling's seam covers as prose, so no *separate* requirement is owed. D4.3 is unaffected either way — it states that routing happens **at capture**, wherever the statement is authored | D4.3 |
 | **S17** | The **field's class**, read live from `reference/data-model.md` and **not restated by the form** | the spoken-channel trigger and the routing test | D4.3, D6.3 |
+| **S20** | **`Scope` per field** — `slot` against `block` | **Not form-exposed, and this row records that rather than requiring it.** D2.2 reads `Scope` **live** from `reference/data-model.md`'s classification table and states in terms that it is not restated; the sibling's seam likewise places this datum in that table rather than in the form. A requirement on the *form* to expose it would create the second home both records refuse. The requirement is therefore on the **reader**: resolve it by the join R8 names — `(section, label)`, section as a leading segment of the enclosing `##` heading — never by a form declaration. **Split out of S10, which carried this limb and its form-side limb in one row under one supplier**; S10 keeps the form-side half | D2.1, D2.2, D3.3 |
 
 ### C. To distinguish unanswered from `none` from the em dash
 
@@ -783,7 +822,7 @@ by either record.**
 | **OS-2** | Closed enum against open suggestion list is distinguished nowhere, and D5.4 branches on it | **Resolved jointly.** The sibling record adds a per-field closed/open marker. D5.4 stands unchanged and becomes gradeable |
 | **OS-3** | The trip-context form carries no profile/guide boundary and no guide at all | **Reclassified out of scope for this epic**, on measurement rather than preference — it is misclassified by kind rather than by size. The consequence is carried in § *Residuals* as a mandatory statement at plan review |
 | **OS-4** | Option lists exist in more than one non-identical home per field, and D5.3 requires exactly one | **Resolved jointly**, by the same amendment as OS-2: the bracketed placeholder is the authoritative home, and option text is not relocated |
-| **OS-5** | Cross-form routing is prose inside the guide, which may move | **Settled by the landing decision.** D4.3 is stated against the verb-body placement, and S16 is withdrawn from the form-side seam |
+| **OS-5** | Cross-form routing is prose inside the guide, which may move | **Settled, and the premise is corrected.** The item assumed the statement lives only inside the guide; measured at `edadfa9`, each guided form carries it **above** its boundary as well, so the landing decision moves one copy and leaves the profile-half copy in place. D4.3 is therefore stated against **capture**, not against any placement, and S16 is withdrawn as a separate seam requirement because the datum is already exposed rather than because it left the form |
 | **OS-6** | The guides' numbered rules are a mixed block of conduct and session behaviour, and the split is a joint act | **Executed jointly.** This record states which numbered rules it governs — 4 through 8, in § *Decision* 5 — and states nothing about where they live. The sibling relocates the block |
 | **OS-7** | The skip-byte contradiction D2.4 resolves obliges an amendment to a standing rule, and needs an owner | **Wave-1 backlog**, owner assigned at Wave-1 planning. This record decides the semantics and edits no file but its own |
 
@@ -849,6 +888,7 @@ Every residual is named with its owner. A residual with no owner is not a residu
 | **R5** | The split of the guides' numbered rules is a joint act: this record owns the semantics of rules 4 through 8 and the sibling owns their placement. Neither half is complete alone | **joint**, this milestone |
 | **R6** | D5.4's gradeability depends on the per-field closed/open marker landing in the sibling record. The prohibition is written; its source is the sibling's to supply | **the sibling record** |
 | **R7** | **Third-party transcript reach — accepted, unreachable, disclosed.** The engine cannot reach a third-party assistant's history, `erase` cannot enumerate it, and no control exists beyond D6.4's disclosure. This is not deferred work; it is a permanent boundary of the deployment | **accepted**, stated by D6.4 |
+| **R8** | **The join key this record reads the classification table by — named here, because four decisions read that table live and none of them named it.** D2.2 reads the `Scope` column, D3.6 reads it again for the block/slot split OS-1 disposes to this record, D6.3 reads the `Class` column for the spoken-channel trigger, and S17 declares that class read live and never restated. **The key is `(section, label)`, with the section resolved as a leading segment of the bullet's enclosing `##` heading rather than by exact equality** — which is the key `scripts/test-artifact-schema.sh` group `XT` already grades: `XT12` requires the `## extract` section to state it in those terms, and `XT4` is the arm that measures both candidate section readings differing on the shipped headings. Exact equality drops every repeated block, which is where this record's whole `block`-scoped population lives, so it is not a candidate here at all. **The measured residual is that the join's totality is unasserted.** Probed at `edadfa9`: the table numbers its rows to a count the *Totals* sentence reconciles, and all but the last carry a backticked label — the final row is the unlabelled free-text tail and joins nothing by construction. Every one of the labelled rows carries a distinct label **and** a distinct `(section, label)` pair, so *exactly one* is a property of the table as it stands today rather than a rule anything enforces. `XT12` reports that arity live rather than asserting it, and the table's own *Totals* sentence reconciles class, scope and horizon against the row count while saying nothing about key uniqueness. **A row added with a duplicate pair breaks every one of the four live reads above, silently.** The sibling record carries the same residual against its own seam | **Wave 1**, as one arm over the classification table, alongside the assertion R3 names |
 
 ## References
 

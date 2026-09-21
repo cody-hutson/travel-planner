@@ -292,6 +292,27 @@ columns are read live at invocation and are not restated in the fence, in the fo
 `travelers/<traveler>.md` for the trip form and `people/<person>.md` for the durable form — which is
 simultaneously the artifact class's identity and its path rule.
 
+**Two of the keys restate a value the form's own frontmatter already carries, and this record states
+which wins rather than leaving it to a consumer.** Both shipped forms declare `writer: human` in
+their frontmatter, and both declare the finished file's class there as `artifact:` —
+`travelers/<traveler>.md` and `people/<person>.md`. The fence's `writer:` and `output:` name those
+same two facts. **The frontmatter is authoritative for both, unconditionally.** Three grounds, in
+descending weight: it is the surface `scripts/validate-artifacts.sh` actually reads, so a consumer
+preferring the fence would branch on a value the gate does not grade; it is the **artifact class's**
+own declaration, which D2.5 has already separated from the form contract's axis; and the form's own
+text tells its reader the fence is not a field they fill in, which makes it the more stable of the
+two. **A fence that disagrees with the frontmatter is a non-conforming form**, graded by D2.6
+question 5 — it is never a value a consumer may adopt, and never a reason to read the two keys as a
+second home for the fact.
+
+*Rejected:* **(a)** dropping `writer:` and `output:` from the fence and making the reader parse the
+frontmatter — the fence is the one block a form-agnostic reader is guaranteed to find, and these two
+keys are what let it refuse an uninterviewable form (question 5) without a frontmatter parser.
+**(b)** declaring the fence authoritative — it inverts the direction the shipped gate reads and
+would let a form claim a writer class the validator never sees. **(c)** leaving the precedence
+unstated, which is the shape this clause replaces: a second home for the same fact, with the
+arbitration left to whichever consumer reaches it first.
+
 *Rejected:* consolidating the existing homes into one declaration. It would restate the `Scope`,
 `Class`, `Ovr?` and `Horizon` columns, creating a further home for values `reference/data-model.md`
 owns and the live extractor groups already grade. The engine's own verdict on that shape is
@@ -330,6 +351,38 @@ complete admissible set, and **open** when the list is suggestive and a value ou
 legitimate answer. The marker is per field, it is form-side, and it is what a consumer branching on
 closedness reads.
 
+**The syntax, declared here because a marker with no syntax is not a marker.** The marker is a bare
+token — `closed` or `open` — written as the **head of that field's own bracketed placeholder**,
+followed by a colon and a single space, with the existing hint text after it:
+
+```
+- ⭐ **Trip vibe:** [closed: beach / city / nature / culture / food / mix]
+- **Specific:** [open: the allergy, the heat ceiling, the mobility limit]
+```
+
+**Four properties of that placement, each load-bearing.** It adds **no new surface**: the bracket is
+the per-field home D2.3 has just made authoritative, so the marker lands in the home the contract
+already names rather than opening a second one. It is **already delimited**, so a reader that can
+find the placeholder can find the marker with no further parse rule. It **travels with the form** to
+the no-repository reader of D4.1, needing no addition to the hand-off set. And it **leaves every
+existing predicate true**: the value still begins with `[` and ends with `]`, so `CLAUDE.md`
+§ *Resolving a trip*'s placeholder predicate is unchanged, an unfilled field still reads unanswered
+to `ANSWERED()`, and a form's bracketed-placeholder form stays the thing it was — which matters
+because the sibling record's un-asked test is a comparison against exactly that form.
+
+**One parse rule follows and is stated rather than left to be inferred:** a consumer reading option
+text per D2.3 takes the placeholder's contents **after** the marker and its `: ` separator. The
+marker is metadata about the list; it is not a member of it, and no offer may quote it.
+
+*Rejected for the syntax:* **(a)** a second bullet-level glyph beside the star — it would need a
+home in the form's own legend, and `ST2` already turns on the difference between counting marked
+fields and counting glyphs, so a second glyph puts weight on a discriminator that exists for another
+purpose. **(b)** a per-field key in the `intake-form` fence — it is a per-field value in a per-form
+declaration, so it grows linearly with the field count in the one place D6.1 exists to keep flat,
+and it separates the marker from the list it describes. **(c)** a suffix after the closing bracket —
+it sits outside the placeholder, so it is neither covered by the placeholder predicate nor carried
+by a form whose reader deletes the hint.
+
 **The ground is a measurement of the alternative, and the alternative failed.** A shape heuristic
 over the shipped brackets — the obvious way to avoid a marker — does not discriminate. Run at
 `edadfa9` over the labelled bullets above both boundaries, a classifier keyed on the shipped
@@ -356,7 +409,7 @@ and the template's own text states that the fence is *not a field you fill in* a
 are facts about the artifact class rather than answers. Overloading it would make a form-contract
 bump read as an artifact-class bump to `scripts/validate-artifacts.sh`.
 
-**D2.6 — The conformance test is five decidable questions, and none requires reading the
+**D2.6 — The conformance test is six decidable questions, and none requires reading the
 interviewer.** A reader takes an arbitrary form and answers:
 
 1. Exactly one `intake-form` fence occurs, above the boundary, carrying every declared key.
@@ -365,19 +418,56 @@ interviewer.** A reader takes an arbitrary form and answers:
    once, on the line immediately above it. The second limb is what asserts the two literals'
    agreement; without it they agree only by adjacency, which is the state D2.1 records.
 3. Every `- [⭐ ]**<Label>:**` bullet **above** the boundary joins to exactly one row of the table
-   `classification:` names, **on the label**. The key is the label alone and **not**
-   `(section, label)`, and the ground is measured rather than chosen: the forms' own `##` headings
-   carry display suffixes the table's `Section` cell does not — `Desires — what you want` against
-   `Desires`, `Needs — the must-haves` against `Needs`, `People dynamics & togetherness` against
-   `People dynamics` — so at `edadfa9` a literal pair join scores **11 of 19** distinct labels on the
-   trip form and **14 of 17** on the durable form, while the label join scores **19 of 19** and
-   **17 of 17**, which is `36/36` across both. The label is a key over that table, read live: its
-   rows carry one distinct label each, so *exactly one* is a property of the table rather than an
-   assumption. This is the same join D3.3's control arm runs, and `F11` already specifies the `F5`
-   read as joined on label — so the contract, the seam and the measurement name **one** join rather
-   than three.
+   `classification:` names, on **`(section, label)`** — with the section resolved as a **leading
+   segment** of the bullet's enclosing `##` heading, never by exact equality. **All three candidate
+   readings were measured at `edadfa9`** over the labelled bullets above both boundaries, and the
+   selection is the measurement rather than a preference:
+
+   | Reading of the key | Trip form | Durable form | Both |
+   |---|---|---|---|
+   | Exact `(section, label)` — section equal to the whole heading | 11 of 19 | 14 of 17 | `25/36` |
+   | **Leading-segment `(section, label)` — SELECTED** | **19 of 19** | **17 of 17** | **`36/36`** |
+   | Label alone | 19 of 19 | 17 of 17 | `36/36` |
+
+   **Exact equality fails because the forms' own `##` headings carry display suffixes the table's
+   `Section` cell does not** — `Desires — what you want` against `Desires`, `Needs — the must-haves`
+   against `Needs`, `People dynamics & togetherness` against `People dynamics`. Leading-segment
+   matching absorbs the suffix. **It therefore costs nothing in coverage: it scores exactly what the
+   label alone scores, while keeping the section dimension the label alone discards.**
+
+   **The section dimension is retained because a label-only key mis-resolves as soon as one label is
+   carried by more than one row, and the corpus already carries that collision.** Probed at
+   `edadfa9`: `templates/trip-context.template.md` carries a pair of `Applies to` bullets under
+   `## Hard Constraints`, while the classification table carries a single `Applies to`, in section
+   `Needs`. Under the label-alone reading that form's `Applies to` joins the `Needs` row — a wrong
+   answer returned confidently. Under leading-segment it joins nothing, which is the correct answer
+   for an artifact this contract does not serve (D3.3).
+
+   **This is the key the shipped arm `XT12` already requires**, in `scripts/test-artifact-schema.sh`
+   group `XT`: that the `## extract` section state the key as `(section, label)` rather than the
+   label alone, resolve the section as a leading segment, and carry the reason. `XT4` is its
+   companion, and it is the arm that measures both candidate section readings differing on the
+   shipped headings. **On today's table the label and the pair are extensionally equal** — probed at
+   `edadfa9`, the table's labelled rows carry one distinct label each **and** one distinct
+   `(section, label)` pair each, which is what `XT12` reports live rather than asserts. That equality
+   is the reason to *state* the key rather than a reason the choice does not matter: a wrong key
+   resolves identically today and would land as-built and stay invisible. **The contract, the seam
+   (`F11`) and this measurement therefore name one join, and it is the join the suite grades.**
 4. **No** `- **<Label>:**` bullet occurs **below** the boundary.
-5. `writer:` is `human`, and no field is marked `[DERIVED]` or `[ENRICH]`.
+5. `writer:` is `human`, and no field is marked `[DERIVED]` or `[ENRICH]`; **and the fence's
+   `writer:` and `output:` agree with the frontmatter they restate** — `writer:` with the
+   frontmatter's own `writer:`, and `output:` with its `artifact:`. Per D2.2's precedence rule the
+   frontmatter is authoritative, so a disagreement here is a non-conforming **form**, never a
+   licence for a consumer to prefer the fence.
+6. **Every field whose bracketed placeholder carries an option list carries exactly one closed/open
+   marker, well-formed by D2.4's syntax.** The two halves of that sentence are graded differently,
+   on purpose. **Well-formedness is machine-decidable**: the token is `closed` or `open`, it is the
+   head of that bullet's own bracketed placeholder, it is followed by `: `, and no bullet carries
+   two. **Whether a given field owes a marker at all is the reviewer's judgement and not the
+   machine's**, because deciding it mechanically needs precisely the shape heuristic D2.4 measured
+   and rejected — a contract that graded it would be asserting the classifier it just refused.
+   The conformance arm D5.6 adds grades the decidable half; the other half is named as `R11`
+   rather than claimed.
 
 Question 3 is one-directional by design: a classified row that renders as no bullet is conformant,
 because the rows that ship today for exactly that case are the title-line `Name` and the computed
@@ -385,8 +475,9 @@ because the rows that ship today for exactly that case are the title-line `Name`
 bullets.
 
 Applied to the tree at `edadfa9`, the two guided forms satisfy questions 2 through 5 and fail
-question 1 alone, because no fence exists yet. `templates/trip-context.template.md` fails questions
-1, 2, 3 and 5.
+questions 1 and 6 — **both for the same reason, and it is not a defect in the forms**: the fence and
+the markers are the authoring D3.1 and D3.2 add, and neither is in the tree yet.
+`templates/trip-context.template.md` fails questions 1, 2, 3, 5 and 6.
 
 **D2.7 — Why a fenced block, and not frontmatter or an HTML comment.** The custom fence info-string
 is the engine's shipped idiom for machine-readable declaration inside prose, used across the tracked
@@ -416,11 +507,14 @@ form's needs block answers with a word rather than an em dash.
 consumer after it.** The ground is measured and it is a misclassification by **kind**, not by size.
 Probed at `edadfa9`: its frontmatter declares `writer: block-owned` rather than `writer: human`; a
 substantial minority of its bullets sit under a `[DERIVED]` or `[ENRICH]` heading and are
-agent-owned, so interviewing a traveller for them would be a category error; and of its distinct
-labels, **exactly one** joins `reference/data-model.md`'s classification table — and that one is a
-name collision on `Applies to`. The control arm on the same join, same instrument, is total
-agreement for both guided forms: every label of each joins. It is not an unserved *form*; it is a
-multi-writer trip artifact that shares a markup shape with a form.
+agent-owned, so interviewing a traveller for them would be a category error; and **not one of its
+distinct labels joins** `reference/data-model.md`'s classification table under the key D2.6
+question 3 selects. The control arm on the same join, same instrument, is total agreement for both
+guided forms: every label of each joins. **The one apparent join is exactly what that key exists to
+refuse** — under the rejected label-alone reading this form's `Applies to` bullets resolve to the
+table's `Needs` row, which is a name collision and not a match; the leading-segment key reads the
+enclosing `## Hard Constraints` heading and correctly joins nothing. It is not an unserved *form*;
+it is a multi-writer trip artifact that shares a markup shape with a form.
 
 **Its entry price, stated so the deferral is a decision rather than an omission.** A classification
 row per new label, which for this artifact is nearly every label it carries; a **writer partition**
@@ -506,7 +600,8 @@ literal is absent is a failure, never a whole-file fallback. This is the clause 
 leak the context section names, and it is written to require evidence its subject could only have
 produced by running, per [`ADR-019`](ADR-019-discriminating-evidence-rule.md).
 
-**D5.6 — A second new arm grades contract conformance** — D2.6's five questions, over `ST_TEMPLATES`.
+**D5.6 — A second new arm grades contract conformance** — D2.6's six questions, over `ST_TEMPLATES`,
+taking question 6 at its decidable half per that question's own statement.
 It lands in `ST` and **not** in `scripts/validate-artifacts.sh`, because that validator's selector
 excludes `templates/*.template.md` ahead of both of its arms, so a conformance check placed there
 would never reach a form.
@@ -600,8 +695,8 @@ shipped forms at `edadfa9`; none is new authoring, and the contract's cost here 
 
 | # | Datum | Where it lives |
 |---|---|---|
-| **F11** | per-field cardinality — `slot` against `block` | the `Scope` column of the `F5` table, joined on label |
-| **F12** | per-field class, overridability and horizon | the `Class`, `Ovr?` and `Horizon` columns of the same table |
+| **F11** | per-field cardinality — `slot` against `block` | the `Scope` column of the `F5` table, joined on **`(section, label)`** with the section read as a **leading segment** of the bullet's enclosing `##` heading — the one key D2.6 question 3 selects and `XT12` grades |
+| **F12** | per-field class, overridability and horizon | the `Class`, `Ovr?` and `Horizon` columns of the same table, reached by the same `F11` join |
 | **F13** | which fields are never asked | that table's *never asked — computed* rationale |
 | **F16** | where the finished file is saved, and the write step | the output contract, in the verb and on the portable card, parameterised by `F6` and `F21` |
 
@@ -686,6 +781,10 @@ Every residual is named with its owner. A residual with no owner is not a residu
 | **R7** | The portable interview card is a **new tracked asset with no schema class** — it is a document rather than an artifact instance, and the class enumeration does not grow for it | **Wave 1**, stated here so the absence is a decision |
 | **R8** | **The split of the guides' numbered rules is a joint act.** This record relocates the block and decides where it lands; the sibling governs the semantics of the rules it names. **Neither half is complete alone**, and this record states nothing about those semantics | **joint**, this milestone |
 | **R9** | The `intake-form` fence is **not** graded by `scripts/validate-artifacts.sh`, whose selector excludes the templates ahead of both arms. D5.6 puts the conformance arm in `ST` instead, and this row exists so the validator's silence is read as a routing decision rather than as coverage | **Wave 1**, the extraction slice |
+| **R10** | **The join key's own uniqueness is unasserted.** D2.6 question 3 requires each bullet to join *exactly one* row, and that totality holds today only because the classification table's labelled rows carry one distinct label each and one distinct `(section, label)` pair each — measured at `edadfa9` and reported live by `XT12`, but **required by nothing**. A row added with a duplicate label breaks nothing under the selected leading-segment key so long as the sections differ, and a row added with a duplicate pair breaks question 3 silently. The table's own *Totals* sentence reconciles class, scope and horizon against the row count and says nothing about key uniqueness. Closing it is one arm over `F5`, and it belongs beside D5.6's rather than in this record | **Wave 1**, the extraction slice |
+| **R11** | **Question 6's undecidable half: whether a field that *ought* to carry a closed/open marker has one.** D2.4's measurement rules out deciding it from the option text's shape, so the conformance test grades well-formedness and leaves the obligation to a reviewer. The failure it admits is **fail-safe in the cheap direction** — an unmarked closed field is treated as open, so the interviewer records what was said rather than refusing a legitimate answer, which is the inverse and worse error. Named here so the asymmetry is a decision rather than an oversight | **Wave 1**, the extraction slice, with the marker authoring |
+| **R12** | **D2.3's rejection of declared option lists is the one MEDIUM-confidence decision in this record**, and § *Reversibility summary* says a Wave-1 spike could falsify it. It rests on the judgement that a reader of the bracket suffices rather than on a measurement of one. Until that spike runs, the single-authoritative-home limb of D2.3 is a decision taken on judgement while every other decision here rests on a live measurement with a firing control arm | **Wave 1**, as a spike before the extraction slice commits to the bracket |
+| **R13** | **The contract makes conduct free and leaves classification exactly as expensive as it was.** D6.3 states it; no row owned it. For a `trip-context`-shaped artifact the entry price is a classification row for nearly every label it carries, and that cost is the data model's rather than this contract's — which is a statement about *whose* cost it is, never a statement that it has been reduced. **The scalability claim this record makes is therefore about conduct alone**, and a reader comparing D6.1 against D6.2 should read it that narrowly | **accepted**, stated by D6.3; the data model's own, if anyone reduces it |
 
 ## References
 
