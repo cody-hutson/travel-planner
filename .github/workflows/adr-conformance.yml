@@ -1,0 +1,188 @@
+name: ADR conformance
+
+# Runs scripts/test-adr-conformance.sh on every push and every pull request, so the shape of
+# reference/adr/ is machine-graded rather than caught by whoever happens to read the file.
+#
+# SECURITY: no GitHub expression interpolation appears anywhere in this file, and in
+# particular in no run: step — every value below is a repo-static literal. The property is
+# stated without writing the token itself, so it stays mechanically checkable: a scan for the
+# interpolation syntax over this file must return exactly zero. There is no path for
+# attacker-controlled event data (issue titles, PR bodies, commit messages, head_ref) to
+# reach a shell.
+#
+# ── THIS CHECK IS ADVISORY, AND THAT IS FORCED RATHER THAN PREFERRED ─────────────
+# The posture marker below is not a matter of taste and not a soft start. The suite emits
+# findings on the live corpus THE MOMENT IT RUNS — records exist today without an expected
+# spine section — and the card that ships this mechanism is forbidden by its own scope bound
+# from authoring or editing any record. A required check here would therefore block every
+# merge on a defect this change is not permitted to fix.
+#
+# So the check reports honestly and does not gate. The suite exits non-zero, this job goes
+# red, and the merge is not blocked because the context is absent from branch protection.
+#
+# WHAT IS DELIBERATELY NOT USED, and why each would be worse than an honest red:
+#   continue-on-error: true   turns a FAILING run GREEN. That is a control that reads as
+#                             enforcing and is not — precisely the defect class this whole
+#                             milestone exists to close.
+#   a WARN_MODE env flag      puts a branch inside the suite whose only effect is to suppress
+#                             a verdict. Same defect, one level down.
+# The advisory posture is expressed ONCE, in the marker, and nowhere else. Nothing in the
+# suite knows about it.
+#
+# ── THE FLIP-TO-ENFORCE CONDITION, STATED HERE RATHER THAN LEFT TO JUDGEMENT ─────
+# All three limbs together, or none:
+#   1. THE SPINE GROUP READS ZERO. The records currently missing an expected-spine section
+#      gain one. That is the whole backlog — no other finding code has a live finding, and
+#      the suite prints the current count on its own FINDINGS line every run, so the
+#      remaining distance is read from a run rather than from this comment.
+#   2. ONE FULL RELEASE SHIPS WITH THIS CHECK GREEN — the same shakedown the sibling gates
+#      took before their own flip.
+#   3. THE FLIP IS EXECUTED AS THREE EDITS PLUS ONE OPERATOR ACT, all together: the required
+#      -check registry gains this job's context; SECURITY.md's required-check count and its
+#      count of workflows carrying a required check each move by one, with this filename
+#      added to its list; and the branch-protection rule is amended, which
+#      scripts/pin-required-checks.py --apply already mechanizes.
+#   ORDERING IS NOT OPTIONAL, and corpus-hygiene.yml already records why: registering the
+#   context BEFORE the workflow can report wedges the repository. Register last.
+#
+# ── THE CHECKOUT DEPTH IS LOAD-BEARING, NOT A DEFAULT NOBODY CHANGED ─────────────
+# Two arms replay defects this repository actually shipped, against the revisions that
+# carried them — a record whose file and index disagreed on its status, and a record left
+# marked Proposed while Accepted records cited the rule it states. Every other arm grades a
+# fixture the suite's own author wrote, which proves the detector does what its author
+# expected; these two prove it catches what the repository actually got wrong. They read
+# blobs from history, so the checkout below sets fetch-depth to the full history and the
+# suite FAILS rather than skipping when a blob is unreachable. Lowering the depth here
+# disarms those arms, and the suite will say so loudly rather than quietly passing.
+#
+# ── WHY A SEPARATE WORKFLOW RATHER THAN A STEP IN AN EXISTING JOB ────────────────
+# Three reasons, each checked against this suite rather than inherited:
+#
+#   1. POSTURE. Every existing suite-bearing workflow carries a REQUIRED check. Landing ADR
+#      grading inside one of them would make a day-one finding block every merge — the
+#      measurement that decided this whole design. corpus-hygiene.yml was the strongest
+#      candidate on every other axis: it already sets fetch-depth: 0, already reads
+#      reference/adr/, and would have added no CI surface at all. It is required, so it lost.
+#   2. FAILURE ATTRIBUTION. This suite goes red when a decision record's status disagrees
+#      with the index, or a record is missing a section. Routing that contributor to a check
+#      named "Corpus hygiene suite" is the legibility trap that file's own header names.
+#   3. SHARED FATE. A suite added to another job inherits that job's failure modes for
+#      reasons having nothing to do with what it grades.
+#
+# ── COVERAGE BOUNDARY ────────────────────────────────────────────────────────────
+# What a green check here does and does not prove.
+#
+# IN SCOPE — these groups run on every invocation and their verdicts are real:
+#   HD   THE HEADER BLOCK. Status, Deciders and Driving work present on every record and the
+#        status value parseable. The block is delimited by the first '## ' heading and never
+#        by a line count, because records carry amendment paragraphs of unbounded length
+#        between the title and the fields
+#   IX   INDEX / FILE AGREEMENT, IN BOTH DIRECTIONS. Statuses equal; a record with no index
+#        row fails; an index row naming no record fails; and a record carrying more than one
+#        index row fails, which is the input a first-match reader is blind to
+#   SP   THE EXPECTED SPINE, ABSENT-ONLY. An absent spine section fails; an extra section
+#        must not, because the index states that escape hatch in its own convention. The
+#        spine is READ from that convention on every run and is held nowhere
+#   LF   THE LIFECYCLE. A status token drawn from the enum the index declares, and a
+#        Superseded record naming its superseder. The token is the value's leading alphabetic
+#        word rather than a substring, because live status lines contain the word Proposed
+#        inside values that are not Proposed
+#   NU   RECORD-NUMBER CONTIGUITY, pinned in BOTH directions against one declared exemption
+#        held in the suite. An undeclared gap fails, and a declared exemption whose number
+#        has since been authored fails too, so closing the gap forces the declaration out in
+#        the same change
+#   LG   THE STATUS-LAG CANDIDATE. A record still marked Proposed while an Accepted record
+#        cites it. It REPORTS and never fails — whether a Proposed record is stale is a
+#        question about meaning, and a static arm decides a shape
+#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus two arms
+#        replaying real historical defects. One MUST-FIRE arm per finding code, each observed
+#        flipping on a mutation asserted to have LANDED, alongside the specificity arms and
+#        the ADD-ONLY arms. THE ARM INVENTORY IS NOT RESTATED HERE, deliberately — it lives
+#        in the CTL section of the suite, beside the invariant binding it
+#   Y    the inventory itself: every emittable code has an arm, every arm names an emittable
+#        code, checked in both directions. The code set is READ FROM the suite on every run
+#   PF   no verdict in the suite is decided by a pipeline's exit status
+#   MD   the discriminating-evidence rule, asserted against the suite's own extractors, all
+#        of them registered from the first commit
+#
+# NO POPULATION, ARM COUNT, CODE COUNT OR RECORD COUNT IS WRITTEN INTO THIS FILE. Every
+# figure the gate knows is emitted at run time on its own summary lines — CORPUS, NUMBERING
+# and FINDINGS. A numeral copied here would be a copy with no assertion behind it, and this
+# repository's corpus-hygiene suite exists to catch exactly that. It is also the property
+# that lets records arriving from a concurrently-merging release be absorbed without an edit
+# to this file or to the suite: the record set is derived from the directory on every run.
+#
+# OUT OF SCOPE — deliberately, and by name:
+#   WHETHER A DECISION IS CORRECT, or whether a status value is TRUE. The suite grades
+#   whether the status field AGREES with the index and is drawn from the declared lifecycle.
+#   A record can be uniformly marked Accepted, agree with its index row, and describe a
+#   decision that was quietly abandoned. Group LG narrows that gap by reporting citation
+#   pressure on a Proposed record; it does not close it, and nothing static can.
+#
+#   WHETHER A RECORD SHOULD EXIST, its size, or how the index is organised. The card that
+#   ships this mechanism authors no record and reorganises no index.
+#
+#   THE SUITE'S OWN SHELL QUALITY. actionlint lints workflow-embedded shell only, so no CI
+#   job shellchecks a standalone scripts/*.sh. This workflow adds one more file to that
+#   unlinted set. Stated so a green is not read as more than it is.
+#
+# ── ROLLING THIS GATE BACK ───────────────────────────────────────────────────────
+# While the check is ADVISORY this is a plain revert of the pull request that added the
+# workflow and the suite. Nothing depends on the context, so nothing wedges.
+#
+# ONCE THE CHECK IS REGISTERED AS REQUIRED that is no longer true, and the order is not
+# optional: de-register the required status check FIRST, reading the protection settings back
+# to confirm the context string is gone, and only then revert. A revert-first rollback leaves
+# branch protection demanding a context no workflow produces, and every subsequent pull
+# request — including the one trying to fix it — blocks on a check that can never report.
+#
+# PREFER THE PARTIAL ROLLBACK where only one group is at fault: land a change removing that
+# group, keeping this workflow and its job name. The context keeps reporting throughout. The
+# groups share no state beyond the harness precisely so that this path stays available.
+#
+# ── WHY THE STRICT MODE ──────────────────────────────────────────────────────────
+# GUARD_STRICT_SKIPS=1 makes a skipped group a failure unless it is declared. This suite
+# declares NO expected skips, so GUARD_EXPECTED_SKIPS is deliberately EMPTY: it is pure bash
+# and awk with no Node, no gh and no network, so it has no dependency-gated group and
+# therefore no legitimate skip. An empty declaration here is the correct value, not an
+# omission. VACUOUS is a separate verdict and is not a skip — a group whose population is
+# empty renders it, because an empty POPULATION is a measurement of the tree while a skipped
+# GROUP is a hole in the suite.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # gate-efficacy: posture=advisory
+  #   Advisory by measurement, and deliberately absent from the required contexts.
+  #   The suite emits findings on the live corpus the moment it runs, and the card
+  #   shipping it may not edit a record to clear them — so a required posture would
+  #   block every merge on a defect this change is forbidden to fix. The check
+  #   reports red and honestly; it does not gate. The flip-to-enforce condition is
+  #   written out in full above rather than left to a later reader's judgement.
+  adr-conformance:
+    name: ADR conformance suite (test-adr-conformance.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Load-bearing. Two arms read blobs from this repository's history; at the default
+          # depth of a single commit those blobs are unreachable and the arms hard-fail.
+          # See the checkout-depth note above before lowering this.
+          fetch-depth: 0
+
+      # No Node setup step: this suite is pure bash and POSIX text processing. It needs no
+      # Node, no gh and no network, which is exactly why its expected-skip set is empty.
+      - name: Run the ADR-conformance suite
+        env:
+          # A SKIP is a FAILURE unless its group is declared below.
+          GUARD_STRICT_SKIPS: '1'
+          # Empty by design — this suite has no dependency-gated group to declare.
+          GUARD_EXPECTED_SKIPS: ''
+        run: ./scripts/test-adr-conformance.sh
