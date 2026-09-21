@@ -3,13 +3,13 @@
 - **Status:** Proposed (2026-09-21)
 - **Deciders:** repo maintainer
 - **Driving work:** the time slice of the *traveller journey* milestone. This record is that
-  milestone's second head decision gate, standing beside `ADR-024` in the shape
+  milestone's second head decision gate, standing beside `ADR-026` in the shape
   `ADR-012-people-library.md`, `ADR-016-reusable-groups.md` and
   `ADR-021-installable-capability.md` already ship: it lands before any feature slice and
   settles the cross-cutting question each of them would otherwise answer separately — what a
   traveller's arc **is**, what crosses a boundary in it, and how one traveller is recognised
   as the same person on either side.
-- **What this record is.** A decision about **time**, where `ADR-024` decides **reach**.
+- **What this record is.** A decision about **time**, where `ADR-026` decides **reach**.
   `**Current mode:**` resolves through `G5` and `**Lifecycle:**` through `G4`, and **neither
   field's subject is a person**. Four capabilities each decide a piece of time locally and
   correctly — the interview's session lifecycle, the post-trip memory, the approval's validity,
@@ -389,7 +389,7 @@ The sixth row key is not compound, and that is the difference itself.
 re-derive from) and `both-marks` (**carried forward verbatim**, the erasure silently undone) —
 adding that *"the two file-less classes fail in **opposite** directions."* Those three, plus the
 roster-only state below them and the composed state above, **yield five subject kinds in agreement
-with `ADR-024` by construction rather than by negotiation**, and the read-failure value makes six.
+with `ADR-026` by construction rather than by negotiation**, and the read-failure value makes six.
 An earlier pass of this design asserted four, by merging `operator-provided-only` into
 `both-marks` — which are precisely the two classes the charter says fail in opposite directions,
 so the merge was not a simplification but the erasure of the distinction that matters most.
@@ -594,7 +594,7 @@ withdrawn in § *Options considered* 5D, and the shipped one is reused as it sta
 > `trip.freshness` and says so in its own report, or argues to widen the boundary — a change to a
 > shipped, self-guarding contract, which must be argued as one.
 
-**This composes with `ADR-024` without either record asserting anything about the other.** That
+**This composes with `ADR-026` without either record asserting anything about the other.** That
 record carries publication state as a condition on its published-site row; `trip.freshness` carries
 none. The two answer different halves — *is the built artifact behind its sources*, and *is what
 crossed the channel the built artifact* — and neither answers the other. The corpus says so
@@ -608,7 +608,7 @@ itself, so neither record has to.
 **Every single-token count in this record is reported as `lines / files`, case-sensitive,
 `\b`-anchored, over the 156 tracked files at `edadfa9`**, measured by `python3` file reads with
 explicit patterns — never by `grep`, whose local build is `ugrep` and can return a plausible zero
-on a pattern it rejects. This is the same basis `ADR-024` pins, so the two records' figures are
+on a pattern it rejects. This is the same basis `ADR-026` pins, so the two records' figures are
 comparable rather than merely adjacent.
 
 **One extension, and it is load-bearing on this corpus.** A **multi-word phrase** is measured
@@ -632,7 +632,7 @@ cannot hide a non-zero root.
 
 | Identifier | Literal pattern | lines / files | Reciprocal root arm → observed | Verdict |
 |---|---|---|---|---|
-| **`engagement`** (the axis) | `\bengagement\b` | **3 / 1** | `\bengag\w*` → **9 / 4** | **ADOPT**, and the measurement is the reason rather than a hurdle it cleared. All three bare matches sit in one record and every one of them names the milestone *Group approval engagement layer* — the scope these two records take half of. The six further root matches are the **verb** *engage(s)/engaged*, a different part of speech with no competing noun sense. `ADR-024` adopts the same name on the same figure |
+| **`engagement`** (the axis) | `\bengagement\b` | **3 / 1** | `\bengag\w*` → **9 / 4** | **ADOPT**, and the measurement is the reason rather than a hurdle it cleared. All three bare matches sit in one record and every one of them names the milestone *Group approval engagement layer* — the scope these two records take half of. The six further root matches are the **verb** *engage(s)/engaged*, a different part of speech with no competing noun sense. `ADR-026` adopts the same name on the same figure |
 | `engagement(t)` | `\bengagement\s*\(` | **0 / 0** | the bare arm above is the reciprocal | adopt |
 | **`PERSON-LINKED`** | `\bPERSON-LINKED\b` | **0 / 0** | `\bperson[- ]link\w*` → **0 / 0** | adopt; names the `person:` edge, whose own arm fires at **121 / 21** |
 | **`SELF-STATED`** | `\bSELF-STATED\b` | **0 / 0** | `\bself[- ]stat\w*` → **0 / 0** | adopt |
@@ -664,18 +664,18 @@ cannot hide a non-zero root.
 
 ### 8. The seam: one partition under two names, joined on the row key
 
-> **`ADR-024`'s subject kinds and this record's `engagement(t)` values are one partition under two
+> **`ADR-026`'s subject kinds and this record's `engagement(t)` values are one partition under two
 > names**, joined on the row key: `K4 ≡ UNSOURCED` · `K3a ≡ OPERATOR-STATED` ·
 > `K3b ≡ THIRD-PARTY-STATED` · `K2 ≡ SELF-STATED` · `K1 ≡ PERSON-LINKED`. **The agreement is
 > structural — a single partition declared in both fences — rather than two records having been
 > handed the same string.**
 
-**The correspondence is between `ADR-024`'s row labels and this record's value set — an identity
+**The correspondence is between `ADR-026`'s row labels and this record's value set — an identity
 of the *codomain*, not of the two records' subjects.** That distinction decides what each record
-may claim. `ADR-024`'s row key is a **static type**: *for a subject of kind K, which channel
+may claim. `ADR-026`'s row key is a **static type**: *for a subject of kind K, which channel
 reaches them*. This record's value is the **result of a per-person, per-synthesis resolution**:
 *on whose authority does the engine hold this person, right now*. So the axis is **degenerate
-inside `ADR-024`**, where the table fixes the kind as the row — which is exactly why that record
+inside `ADR-026`**, where the table fixes the kind as the row — which is exactly why that record
 carries it as the row key rather than as a third column — and **not degenerate inside this
 record**, whose subject is a person over time and whose content is which edges exist, which are
 terminal, and which move no mark.
@@ -685,7 +685,7 @@ different strengths. Both are stated with their strength rather than levelled up
 
 - **The sixth value, `ENGAGEMENT-UNDETERMINED`.** It has no subject-kind counterpart, it is the
   single named difference between the two token sets, and it is **structural**: it is declared in
-  both fences and is therefore gradeable. `ADR-024` carries it as a **table-level fail-closed
+  both fences and is therefore gradeable. `ADR-026` carries it as a **table-level fail-closed
   clause** below its reach table — not as a row and not as a column, because a value meaning *the
   row could not be selected* cannot modify a row. **This record carries it as the sixth axis
   value.** That asymmetry is deliberate and it **is** the named difference: one type of thing in
@@ -701,7 +701,7 @@ different strengths. Both are stated with their strength rather than levelled up
 **The read-failure value's trigger is one condition, and both records state its wording — the
 trigger clause and the entry-scoping limb — in the same words.** What differs between them is only
 what each names as the thing returning the value: `engagement(t)` here, because that operator is
-this record's own; the axis there, because `ADR-024` declares no operator to name.
+this record's own; the axis there, because `ADR-026` declares no operator to name.
 
 > `engagement(t)` returns `ENGAGEMENT-UNDETERMINED` **iff a read this entry attempted could not be
 > completed** — the roster, the derived model, or the person store this entry's own `person:` line
@@ -711,7 +711,7 @@ this record's own; the axis there, because `ADR-024` declares no operator to nam
 
 **Entry-scoping is what removes the failure it would otherwise carry**: without it, the same
 traveller resolves differently on two machines because one of them cannot read a store that
-traveller never referenced. Both clauses are the corpus's; neither is minted here. In `ADR-024`
+traveller never referenced. Both clauses are the corpus's; neither is minted here. In `ADR-026`
 the same value turns **every cell of that record's reach table** undetermined — not every cell of
 one row — and the difference is the consequence of the trigger rather than a divergence from it: the
 entry whose read failed is what selects a row there, so a read that did not complete leaves no row
@@ -878,7 +878,7 @@ not by minting a key.
   are three different outcomes and none of them reads as a decision the traveller made.
 - [ADR-021](ADR-021-installable-capability.md) — the two-artifact `Status:` obligation this record
   inherits, and the divergence it repaired.
-- [ADR-024](ADR-024-channel-architecture.md) — **the channel architecture this record is the time
+- [ADR-026](ADR-026-channel-architecture.md) — **the channel architecture this record is the time
   counterpart to.** It declares the same partition under the subject-kind name, at the same
   `axis-orientation: rows`, with five tokens to this record's six; the difference is
   `ENGAGEMENT-UNDETERMINED` and nothing else, and it is carried there as a table-level fail-closed

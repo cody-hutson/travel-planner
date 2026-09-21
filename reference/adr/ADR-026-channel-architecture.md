@@ -1,4 +1,4 @@
-# ADR-024: The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model
+# ADR-026: The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model
 
 - **Status:** Proposed (2026-09-21)
 - **Deciders:** repo maintainer
