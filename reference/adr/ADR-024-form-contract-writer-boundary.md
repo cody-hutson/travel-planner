@@ -455,6 +455,8 @@ lowering the tier: decision 1's degenerate case means a reversal does not churn 
 decision 6's conditional form means the one change most likely to arrive — an owner for the derived
 blocks — executes this record rather than amending it.
 
+**Amendment (2026-09-21, Monday) — scheduling content removed.** This record carried a trailing section naming build slices. That is scheduling, and scheduling belongs to a release plan, which changes when the backlog changes — while this record does not. The slice list is removed; every statement of what becomes false elsewhere is kept, including the mechanical coupling facts, which are consequences of the decisions rather than schedule. No decision is reversed, narrowed or re-opened.
+
 ## Residuals
 
 | Id | Residual | Owner |
@@ -487,15 +489,3 @@ blocks — executes this record rather than amending it.
   taken over
 - `scripts/test-artifact-schema.sh` — the suite that decision 5's conformance arm lands in, and the
   source of the any-fail reduction and strict-skip constraint that binds decision 6
-
-## Follow-on build slices
-
-1. **The consumer slice** — author the fence into the trip-context template, carrying the region key
-   as an address into the writer table. Grades the nine-row table and either reproduces or falsifies
-   it.
-2. **The interviewer slice** — decision 3's pre-write region-membership predicate in the interviewer,
-   with its refusal.
-3. **The assertion slice** — decision 5's discovered-region arm, with its sensitivity arm and its
-   must-fire negative arm, and decision 6's declared-and-reported exclusion.
-4. **The version slice** — the `form-version:` branch in the conformance arm, so a v1-declared form
-   and a v2-declared form are graded on their own question sets.
