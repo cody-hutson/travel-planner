@@ -232,6 +232,48 @@
 #        as unverified. The residual rides on every run as its own reported line and names
 #        what would settle it. No count is spelled anywhere in this file for this group: the
 #        behaviour set and the mode vocabulary are both read.
+#   W    the round-trip completeness walk that reference/site-layout-spec.md § 9.4
+#        prescribes and that nothing executed until this group shipped. THE WALK HAS TWO
+#        HALVES AND ONLY ONE OF THEM HAS A POPULATION HERE, and the group says which is
+#        which, because a gate that conflates them claims more than it grades. The CONTRACT
+#        half is real and graded on every run: every element TYPE the itinerary grammar can
+#        emit carries a declared disposition in a fence in that spec, and every declared
+#        disposition names an element the grammar still emits — both directions, which is
+#        what makes the fence a PIN rather than an allowlist, since a declaration cannot
+#        outlive the element it declares. The fence's element column carries the grammar's
+#        OWN spelling and the suite holds no copy of either set; the component column is
+#        graded against a catalog vocabulary DERIVED from § 3 on the same run, so a renamed
+#        component turns the row naming it red. The INSTANCE half — per day, per track, per
+#        event card — renders VACUOUS WITH ITS DENOMINATOR rather than PASS, because its
+#        population is empty by construction and cannot become non-empty: .gitignore puts
+#        every render outside the checkout and the site schema's no-witness clause is
+#        TERMINAL, naming a committed site fixture as exactly the wrong repair. That is not
+#        a bare report — a site fixture appearing in the tree turns the arm RED rather than
+#        being welcomed as a population. The whole load for those codes is carried by
+#        standing control arms over synthetic plan/site pairs built fresh on every run,
+#        each mutating ONE surface, each asserting the mutation LANDED before a verdict is
+#        read, and each driving the SAME functions the live arms drive: a dropped anchor
+#        card replayed, a split day whose second track loses its column, a stripped
+#        map-link, a dropped nightlife decline, an ADD-ONLY element added to the grammar
+#        with every existing declaration intact, a fence row naming an element nothing
+#        emits, a disposition outside the enum, a component the catalog does not define,
+#        and an unreadable plan. Three specificity arms say what must NOT fire: additive
+#        site scaffolding with no plan source, since the mapping is surjective and not
+#        bijective; both tracks correctly rendered; and a bold rationale LEAD-IN inside the
+#        grammar region, which is the over-fire a line-leading-bold reader produced and the
+#        reason the extractor is whole-line. Arm coverage is ASSERTED rather than promised
+#        and in both directions — the emittable code set is read from the SOURCED walker's
+#        own function bodies on every run, never from its text, so a comment naming a code
+#        cannot enter it, and the armed side is recorded from what the walker EMITTED
+#        rather than from what an arm declared it wanted. WHAT IT DOES NOT ESTABLISH is
+#        declared rather than inferred from a green: no arm shows that a build INVOKED the
+#        walk, and a clean walk grades the written site against the plan rather than the
+#        act of writing. Both residuals ride on every run as their own reported line. It
+#        deliberately does NOT anchor § 9.4's prose the way group RM anchors its rule — that
+#        shape fits a rule whose text can be reverted while its mechanism keeps working,
+#        and this rule had no mechanism at all, so the prose is replaced by an executable
+#        and anchored by its consumer instead. No count is spelled anywhere in this file
+#        for this group: every set is read
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -10737,6 +10779,598 @@ md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violat
 # the reason is stated at that arm: md_flips removes its subject, while the divergence being
 # graded there has to leave the seam running and answering differently for one spelling. The
 # sentinel is the seam between the primitive's mechanism and that requirement.
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group W — the round-trip completeness walk: the contract graded, the instances controlled.
+#
+# ── THE DEFECT ───────────────────────────────────────────────────────────────────
+# reference/site-layout-spec.md § 9.4 prescribes a walk — every element of a trip's
+# final-itinerary.md, every day and every track of a split day, resolving to a rendered
+# component or to a named exclusion. Three documents stated that obligation and NOTHING
+# EXECUTED IT: the charter, the site verb, and the spec itself each carried it, and it was
+# discharged by whoever happened to be reading the prose. The consequence the rule names in
+# its own sentence — a patch silently drops plan detail — is exactly what an ungraded rule
+# cannot prevent.
+#
+# ── THE WALK HAS TWO HALVES AND ONLY ONE HAS A CI POPULATION ─────────────────────
+# This is the shape of the group and it is stated first, because a gate that conflates the
+# two claims more than it grades — which is the defect this whole release exists to close.
+#
+#   THE CONTRACT HALF — every element TYPE the itinerary grammar can emit carries a declared
+#   disposition, and every declared disposition names an element the grammar still emits.
+#   Real population, tracked tree, graded on every run. W0-W3.
+#
+#   THE INSTANCE HALF — for a given plan and the site built from it, every element INSTANCE
+#   resolves to its component, per day and per track. ITS REAL POPULATION HERE IS EMPTY AND
+#   CANNOT BECOME NON-EMPTY. .gitignore carries `trips/*`, so no checkout holds a render; and
+#   reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than
+#   pending, naming a committed site fixture as "exactly the wrong repair". W4 renders that as
+#   VACUOUS WITH ITS DENOMINATOR rather than as a PASS, and the control arms below carry the
+#   whole load for RT3-RT6 over synthetic pairs.
+#
+# ── WHY THIS GROUP IS HERE, AND WHY IT IS NOT A SUITE OF ITS OWN ─────────────────
+# The group goes where the functions it drives are sourced — group T in the publish-guard
+# suite already wrote that rule down for a site-contract group. check-round-trip.sh is new, so
+# that was a free choice and it was the operator's; it lands here, on the suite that owns the
+# plan-artifact surface and already sources a validator over the tracked tree and a synthetic
+# fixture, which is the identical shape.
+#
+# A SUITE OF ITS OWN WAS REJECTED ON MEASUREMENT rather than on taste: "five suites" is a live
+# denominator across this file and five others, and a walker is a VALIDATOR, not a suite —
+# validate-artifacts.sh and publish-trip-site.sh are both outside that count today, and
+# check-round-trip.sh joins them there.
+#
+# ── WHY IT DOES NOT ANCHOR § 9.4's PROSE, WHICH IS A DIVERGENCE AND IS RECORDED ──
+# Group RM above ships a prose-anchoring shape and asks whether it generalizes. This group
+# DECLINES TO REUSE IT, and the reason is a matter of kind rather than of preference. RM's
+# subject is a rule whose TEXT can be reverted while the mechanism it governs keeps working,
+# so anchoring the text is the only available grip. This group's subject was a rule whose
+# MECHANISM DID NOT EXIST AT ALL; there was nothing to anchor the prose to. Anchoring § 9.4
+# would assert that the sentence is still written — true today, and true on every day the walk
+# went unrun. So the prose is REPLACED BY AN EXECUTABLE rather than anchored, and W3 then
+# grades that the verb declares the invocation, which anchors the prose BY ITS CONSUMER and is
+# strictly stronger than a text match. A rule-presence shape is ADR-019's S4 and is classified
+# Defective — addition-blind, which is why W3 ships with its own complement arm rather than
+# alone.
+#
+# ── NO ARCHITECTURE RECORD, AND THAT IS A DECISION ───────────────────────────────
+# The reasoning above — the two-call-site split, and a behavioural gate whose real population
+# is empty by construction and can never be non-empty — is recorded HERE and in the walker's
+# own header rather than in a new record. That is where this corpus already puts this class of
+# reasoning: group T states its own host-suite rationale, group B in the corpus-hygiene suite
+# states its own vacuity posture. A record would have landed a third file in a directory two
+# sibling cards are already editing this release.
+#
+# ── THE ARMS, AND WHICH INPUT EACH ONE FAILS ON ──────────────────────────────────
+#   W0        the instrument itself: the fence resolves at EXACTLY ONE site, the grammar
+#             region resolves, and both extractions are NON-ZERO. Runs FIRST and gates the
+#             rest, so a broken instrument FAILS rather than passing over an empty set
+#   W1        fence label set == grammar label set, BOTH directions, both denominators
+#             stated. An element ADDED to the grammar with no fence row fails it (RT1), and
+#             so does a fence row whose element the grammar no longer emits (RT2). That pair
+#             is what makes the fence a PIN rather than an allowlist
+#   W2        every disposition is in the closed enum {rendered, excluded}, and every
+#             `rendered` row names a component the § 3 catalog defines. The catalog vocabulary
+#             is DERIVED from the document on every run and no copy is held here, so a
+#             component renamed in the catalog turns the row that names it red
+#   W3        the site verb DECLARES the invocation and its frontmatter grant is ROOTED. This
+#             is the arm that makes the runtime call site non-removable
+#   W3c       the R3 complement: no clause on an invocation-bearing line in that verb's own
+#             § site region exempts, negates or makes-advisory the check. W3 alone is the S4
+#             shape and is blind to an ADDED clause; this arm is what closes that
+#   W4        VACUOUS, with its denominator — the instance half has no population on this tree
+#             and cannot acquire one. It is NOT a bare report: a committed site fixture, which
+#             is the repair the travel-site schema names as the wrong one, turns it RED
+#   W-CTL-*   the standing control arms, below — one MUST-FIRE per finding code the walker can
+#             emit, plus the specificity arms that tell a correct walk from a lookalike
+#   W12       the inventory, derived BOTH ways from the walker's own emission sites and from
+#             the codes the arms actually OBSERVED — never from a list held here. A code added
+#             to the walker with no arm behind it is RED rather than latent
+#
+# Every control builds its subject under $WORK by COPY-THEN-MUTATE, asserts the mutation
+# LANDED before any verdict is read, and drives THE SAME rt_* functions the live arms drive. A
+# control running different code from the assertion proves nothing about the assertion. The
+# armed side of W12's comparison is recorded AT THE CALL from what the walker actually EMITTED,
+# never from what an arm declared it wanted — an arm can name a code and cannot make one fire.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "W — the round-trip completeness walk, and where its population stops"
+
+# shellcheck source=check-round-trip.sh
+source "$HERE/check-round-trip.sh"     # BASH_SOURCE guard prevents dispatch
+
+W_GRAMMAR="$ROOT/agents/05-hub-planner.md"
+W_SPEC="$ROOT/reference/site-layout-spec.md"
+W_VERB="$ROOT/skills/trip/SKILL.md"
+W_D="$WORK/w"; mkdir -p "$W_D"
+W_TAB="$(printf '\t')"
+W_ARMED=" "
+
+# The invocation the verb must declare, and the rooted prefix its grant must carry. Two
+# ADDRESSES rather than rules — group RM already records that distinction in the same terms.
+W_SCRIPT='scripts/check-round-trip.sh'
+W_GRANT='${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh'
+
+# MATCHED, word-bounded and case-insensitive, over INVOCATION-BEARING LINES ONLY. The same
+# enumeration group MG states with the same written boundary, re-declared locally rather than
+# shared: MG scopes its scan to anchor-bearing lines of an agent prompt and this one scopes to
+# invocation-bearing lines of a verb region, so one lexicon serving both would make each
+# group's boundary the other group's to state.
+W_NEG_LEXICON='optional|advisory|may skip|skip|skips|skipped|not required|need not|exempt|no longer|at your discretion|if time permits|best effort|does not apply|does not run|omit|where convenient'
+
+w_count() { awk 'NF { n++ } END { print n+0 }' <<<"$1"; }
+w_join()  { printf '%s' "$1" | tr '\n' '|' | sed 's/|$//'; }
+
+# Set difference over LINES, and that is a correctness requirement rather than a style call.
+# An element label carries interior spaces — `Food Anchors`, `Supporting Experiences` — so the
+# space-delimited containment idiom every other group in this file uses (mg_diff, rs_diff,
+# st_setdiff) would compare FRAGMENTS of two labels rather than the labels, and report a
+# difference where there is none. Not comm either: comm needs both sides lexically sorted and
+# answers wrongly otherwise, which st_setdiff already records as its own reason.
+w_linediff() {   # w_linediff <a-lines> <b-lines> -> lines of a absent from b
+  local af="$W_D/.da" bf="$W_D/.db"
+  printf '%s\n' "$1" > "$af"; printf '%s\n' "$2" > "$bf"
+  awk 'NR == FNR { if (NF) B[$0] = 1; next } NF && !($0 in B) { print }' "$bf" "$af"
+}
+
+# The declaring rows of the fence — the angle-bracketed residual rows are excluded from the
+# grammar comparison BY SHAPE, because they are declared precisely for having no bold-label
+# counterpart. Excluding them by name would put a copy of them in this file.
+w_fence_labels() {   # w_fence_labels <spec-file>
+  awk -F"$W_TAB" 'NF > 1 && $1 != "!" && $1 !~ /^</ { print $1 }' <<<"$(rt_fence_rows "$1")"
+}
+
+w_site_region() {   # w_site_region <verb-file> -> the ## site section body
+  awk '/^## site$/ { inreg = 1; next } inreg && /^## / { inreg = 0 } inreg { print }' "$1"
+}
+
+# ── W0 — the instrument, graded before anything it feeds. Registered with md_flips below.
+w0_assert() {   # w0_assert <grammar-file> <spec-file>
+  local g="$1" s="$2" sites labels rows nl nr
+  sites="$(rt_fence_sites "$s")"
+  labels="$(rt_grammar_labels "$g")"
+  rows="$(rt_fence_rows "$s")"
+  nl="$(w_count "$labels")"; nr="$(w_count "$rows")"
+  if [ "$sites" = "1" ] && [ "$nl" -gt 0 ] && [ "$nr" -gt 0 ]; then
+    PASS "W0: the instrument is live — the round-trip contract fence resolves at exactly ONE site, the itinerary grammar region yields $nl element label(s), and the fence yields $nr row(s). Every verdict below is vacuous without this one, which is why it runs first and why a zero-row extraction is graded a broken instrument rather than a clean corpus"
+  else
+    FAIL "W0: the instrument is broken (fence sites=$sites, grammar labels=$nl, fence rows=$nr) — a fence with no home or two homes, or a zero-row extraction, makes every comparison below vacuously true"
+  fi
+}
+
+# ── W1 — the both-directions pin.
+w1_assert() {   # w1_assert <grammar-file> <spec-file>
+  local g="$1" s="$2" labels frows og of nog nof
+  labels="$(rt_grammar_labels "$g")"
+  frows="$(w_fence_labels "$s")"
+  og="$(w_linediff "$labels" "$frows")"
+  of="$(w_linediff "$frows" "$labels")"
+  nog="$(w_count "$og")"; nof="$(w_count "$of")"
+  if [ "$nog" -eq 0 ] && [ "$nof" -eq 0 ]; then
+    PASS "W1: the contract fence and the itinerary grammar declare the SAME element set, in BOTH directions — $(w_count "$labels") grammar label(s) against $(w_count "$frows") declaring fence row(s), zero on each side. Both denominators are stated because a zero against an unstated one is not a measurement, and both directions run because a one-way check is an allowlist"
+  else
+    FAIL "W1: the fence and the grammar disagree — $nog grammar label(s) with no fence row [$(w_join "$og")] and $nof fence row(s) the grammar no longer emits [$(w_join "$of")]"
+  fi
+}
+
+# ── W2 — the closed enum, and component membership against a DERIVED catalog.
+w2_assert() {   # w2_assert <spec-file>
+  local s="$1" rows comps nbad=0 detail="" lab disp comp part ok n
+  rows="$(rt_fence_rows "$s")"
+  comps="$(rt_components "$s")"
+  n="$(w_count "$comps")"
+  while IFS="$W_TAB" read -r lab disp comp; do
+    [ -n "$lab" ] || continue
+    case "$lab" in '!') nbad=$((nbad+1)); detail="$detail malformed-row"; continue ;; esac
+    case "$disp" in
+      rendered|excluded) ;;
+      *) nbad=$((nbad+1)); detail="$detail '$lab'->disposition:$disp"; continue ;;
+    esac
+    [ "$disp" = "rendered" ] || continue
+    ok=1
+    while IFS= read -r part; do
+      [ -n "$part" ] || continue
+      grep -qxF -- "$part" <<<"$comps" || ok=0
+    done <<<"$(tr '|' '\n' <<<"$comp")"
+    [ "$ok" -eq 1 ] || { nbad=$((nbad+1)); detail="$detail '$lab'->component:$comp"; }
+  done <<<"$rows"
+  if [ "$nbad" -eq 0 ] && [ "$n" -gt 0 ]; then
+    PASS "W2: every fence row carries a disposition from the closed enum {rendered, excluded}, and every rendered row names a component the § 3 catalog defines — graded against $n catalog token(s) DERIVED from that document on this run. This file holds no copy of that vocabulary, so a component renamed in the catalog turns the row naming it red rather than leaving a fence pointing at a home that no longer exists"
+  else
+    FAIL "W2: the fence does not resolve against the component catalog (offending row(s)=$nbad, catalog tokens=$n)$detail"
+  fi
+}
+
+# ── W3 — the runtime call site is DECLARED, and its grant is rooted.
+w3_assert() {   # w3_assert <verb-file>
+  local f="$1" region ninv ngrant
+  region="$(w_site_region "$f")"
+  ninv="$(awk -v s="$W_SCRIPT" 'index($0, s) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  ngrant="$(awk -v g="$W_GRANT" 'index($0, "allowed-tools:") > 0 && index($0, g) > 0 { n++ } END { print n+0 }' "$f")"
+  if [ "$ninv" -gt 0 ] && [ "$ngrant" -eq 1 ]; then
+    PASS "W3: the site verb DECLARES the walk — $ninv invocation-bearing line(s) in its own § site region, and exactly one ROOTED frontmatter grant for it. The prose is anchored by its consumer rather than by a text match, which is what makes the runtime call site non-removable without a red check"
+  else
+    FAIL "W3: the site verb does not declare the walk (invocation-bearing lines in § site=$ninv, rooted allowed-tools grants=$ngrant, expected >0 and exactly 1)"
+  fi
+}
+
+# ── W3c — the R3 complement. W3 alone is ADR-019's S4 rule-presence shape and is blind to an
+# ADDED clause; this arm is the direction that closes it.
+w3c_assert() {   # w3c_assert <verb-file>
+  local f="$1" region hits n nline
+  region="$(w_site_region "$f")"
+  # THE DENOMINATOR IS GRADED BEFORE THE ZERO IS READ, and this is not belt-and-braces: a
+  # negation scan over an EMPTY region reports zero hits and would PASS, which is a PASS
+  # reached on the branch a degenerate outcome also reaches — precisely what the
+  # discriminating-evidence rule forbids. The oracle in group MD caught exactly that on this
+  # arm's first run: with w_site_region removed the arm still reported a clean verdict. So
+  # the haystack is asserted non-degenerate first, and the denominator is stated in the
+  # verdict rather than left implicit.
+  nline="$(awk -v s="$W_SCRIPT" 'index($0, s) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  if [ "$nline" -eq 0 ]; then
+    FAIL "W3c: the scan found ZERO invocation-bearing lines in the site verb § site region, so there was nothing to grade — a zero over an empty haystack is a broken instrument and never a clean complement"
+    return 0
+  fi
+  hits="$(awk -v s="$W_SCRIPT" -v lex="$W_NEG_LEXICON" '
+    function hasneg(line,   k, L, i, t, l, re) {
+      l = tolower(line); k = split(lex, L, "|")
+      for (i = 1; i <= k; i++) {
+        t = tolower(L[i]); re = "(^|[^a-z])" t "([^a-z]|$)"
+        if (l ~ re) return L[i]
+      }
+      return ""
+    }
+    index($0, s) > 0 { t = hasneg($0); if (t != "") printf "%d\t%s\n", NR, t }' <<<"$region")"
+  n="$(w_count "$hits")"
+  if [ "$n" -eq 0 ]; then
+    PASS "W3c: none of the $nline invocation-bearing line(s) in the site verb § site region carries a clause exempting, negating or making-advisory the walk — the complement of W3 above, graded rather than assumed, and stated against its denominator. The lexicon is an enumeration with a written boundary and is scoped to invocation-bearing LINES, because a whole-region scan fires on legitimate prose about what the walk does NOT establish"
+  else
+    FAIL "W3c: $n invocation-bearing line(s) in the site verb § site region carry an exempting or advisory clause — [$(w_join "$hits")]"
+  fi
+}
+
+# ── W4 — the instance half's population, MEASURED rather than assumed, and rendered VACUOUS.
+W_POP="$(va_population "$ROOT" tracked)"
+W_NPOP="$(w_count "$W_POP")"
+W_NSITE="$(awk '/-travel-site\.html$/ { n++ } END { print n+0 }' <<<"$W_POP")"
+if [ "$W_NSITE" -eq 0 ]; then
+  VACUOUS "W4: the instance half — RT3, RT4, RT5 and RT6 — has NO population on this tree and cannot acquire one. 0 rendered site file(s) among $W_NPOP tracked file(s). .gitignore puts every real render outside the checkout, and reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than pending, naming a committed site fixture as exactly the wrong repair. This renders VACUOUS and never a PASS: an empty population is a real measurement of the tree, a PASS over it would be a green nothing earned, and the whole load for those four codes is carried by the control arms below"
+else
+  FAIL "W4: $W_NSITE rendered site file(s) are tracked in this repository. That is the repair reference/schemas/travel-site.md names as the wrong one — committing a site file to satisfy a gate — and it is graded here rather than welcomed"
+fi
+
+# ═════ THE CONTROLS, AS STANDING ARMS — not checks performed once while authoring. ═════
+
+# The synthetic pair. Two days, the second one split into two tracks with a stated nightlife
+# decline — the shape carrying every instance-half code at once, and the split day is net-new
+# because ZERO split-day coverage existed anywhere in the tracked corpus before this group.
+W_FX="$W_D/fx"; mkdir -p "$W_FX"
+cat > "$W_FX/plan.md" <<'WPLAN'
+**ADVANCE BOOKING CHECKLIST**
+
+**TRIP OVERVIEW**
+Group, dates, hotel.
+
+---
+
+**Day 1 — 2026-05-04 — Monday — Alfama morning**
+*Energy:* Medium | *Zone:* Alfama | *Type:* Walking
+
+**Anchor**
+Castelo Sao Jorge — Alfama — 09:30 — 2h — go early
+
+**Supporting Experiences**
+Portas do Sol — Alfama — 11:45 — 30m — the view
+
+**Food Anchors**
+- Lunch: Taberna Sal Grosso — petiscos — indoor — booked
+
+**Nightlife**
+Pensao Amor — Cais do Sodre — bar — from 22:00 — whole group — late
+*Next morning:* 10:00 start
+
+**Constraint Compliance**
+No stairs after 18:00 honored.
+
+---
+
+**Day 2 — 2026-05-05 — Tuesday — Split afternoon**
+*Energy:* High | *Zone:* Belem | *Type:* Split
+
+**Anchor**
+Mosteiro dos Jeronimos — Belem — 09:00 — 2h — book ahead
+
+**Parallel Track — Sam · Pat — small-group**
+*Trigger:* stated want
+Museu Berardo — Belem — 14:00 — 2h — modern wing
+
+**Parallel Track — Riley · Noor — small-group**
+*Trigger:* interest divergence
+Pasteis de Belem — Belem — 14:30 — 1h — queue outside
+
+**Nightlife**
+No nightlife tonight — whole group — early start
+
+---
+
+**OPEN DECISIONS**
+
+**ITINERARY VERSION LOG**
+WPLAN
+cat > "$W_FX/site.html" <<'WSITE'
+<!doctype html><html><body>
+<section class="hero-section">Lisbon</section>
+<header class="bg-d1">Day 1 — Alfama morning</header>
+<div class="day-grid">
+  <article class="act-card">Castelo Sao Jorge
+    <a class="map-link" href="https://maps.example/castelo">Map</a></article>
+  <article class="act-mini">Portas do Sol
+    <a class="map-link" href="https://maps.example/portas">Map</a></article>
+  <article class="food-card">Taberna Sal Grosso
+    <a class="map-link" href="https://maps.example/sal">Map</a></article>
+  <div class="night-zone">
+    <article class="night-card">Pensao Amor
+      <a class="map-link" href="https://maps.example/amor">Map</a></article>
+  </div>
+</div>
+<header class="bg-d2">Day 2 — Belem · Split PM</header>
+<div class="day-grid">
+  <article class="act-card">Mosteiro dos Jeronimos
+    <a class="map-link" href="https://maps.example/jeronimos">Map</a></article>
+</div>
+<div class="split-day">
+  <div class="split-point">Hotel · ~13:30</div>
+  <div class="track-col"><div class="track-label">Sam · Pat</div>
+    <article class="act-mini">Museu Berardo
+      <a class="map-link" href="https://maps.example/berardo">Map</a></article></div>
+  <div class="track-col"><div class="track-label">Riley · Noor</div>
+    <article class="act-mini">Pasteis de Belem
+      <a class="map-link" href="https://maps.example/pasteis">Map</a></article></div>
+</div>
+<div class="night-zone">No nightlife tonight — whole group</div>
+</body></html>
+WSITE
+
+# The synthetic ENGINE root, for the contract-half controls: the two real documents copied,
+# then mutated. The real tree is never written.
+W_FXR="$W_D/fxroot"; mkdir -p "$W_FXR/agents" "$W_FXR/reference"
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+cp "$W_SPEC"    "$W_FXR/reference/site-layout-spec.md"
+
+# w_ctl_fire <arm-id> <code> <expected-n> <prose> -- <cmd…>
+# Runs the walk, counts the code's findings, records the code on the ARMED side from what the
+# walker EMITTED, and grades both the firing and its cardinality.
+w_ctl_fire() {
+  local id="$1" code="$2" want="$3" prose="$4"; shift 4
+  [ "${1:-}" = "--" ] && shift
+  local out got
+  out="$("$@" 2>&1)"
+  got="$(awk -v c="$code" '$1 == "FINDING" && $2 == c { n++ } END { print n+0 }' <<<"$out")"
+  if [ "$got" -eq "$want" ]; then
+    case "$W_ARMED" in *" $code "*) ;; *) W_ARMED="$W_ARMED$code " ;; esac
+    PASS "$id: control, MUST FIRE — $prose. The walk reported $code exactly $got time(s), which is what makes the live verdict above a measurement rather than a scan that matches nothing"
+  else
+    FAIL "$id: the control did not behave — $prose; expected $code ×$want, observed ×$got"
+  fi
+}
+
+# w_ctl_silent <arm-id> <prose> -- <cmd…>  — the specificity direction.
+w_ctl_silent() {
+  local id="$1" prose="$2"; shift 2
+  [ "${1:-}" = "--" ] && shift
+  local out n
+  out="$("$@" 2>&1)"
+  n="$(awk '$1 == "FINDING" { n++ } END { print n+0 }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    PASS "$id: control, MUST NOT FIRE — $prose. The walk reported nothing, so a walker that flagged everything would fail this arm"
+  else
+    FAIL "$id: the specificity control fired — $prose; expected silence, observed $n finding(s)"
+  fi
+}
+
+# W-CTL-BOTH — the clean pair, both tracks rendered. Runs FIRST so every mutation below is a
+# mutation of something already shown to walk clean.
+w_ctl_silent 'W-CTL-BOTH' "a 2-track split day with BOTH tracks rendered, every event carrying its map-link and the stated nightlife decline present" \
+  -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site.html" "$W_D/wk-both"
+
+# W-CTL-RT3 — the arm the card names: replay a dropped element.
+awk '!/Castelo Sao Jorge/ && !/maps\.example\/castelo/' "$W_FX/site.html" > "$W_FX/site-rt3.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt3.html"; then
+  FAIL "W-CTL-RT3: the mutation did not land — the site copy is byte-identical to the original, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT3' RT3 1 "day 1's anchor is present in the plan and its act-card is deleted from a copy of the site (the mutation is asserted to have landed) — the dropped element REPLAYED" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt3.html" "$W_D/wk-rt3"
+fi
+
+# W-CTL-RT4 — the split-day track. The track's VENUE is retained and only its label removed,
+# so this arm fires RT4 alone rather than dragging RT3 along and grading two things at once.
+sed 's|<div class="track-label">Riley · Noor</div>||' "$W_FX/site.html" > "$W_FX/site-rt4.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt4.html"; then
+  FAIL "W-CTL-RT4: the mutation did not land — the site copy is byte-identical to the original, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT4' RT4 1 "a 2-track split day whose SECOND track column loses its label while its venue stays — the patch-touched-track-one drop § 9.4 names as the most common one" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt4.html" "$W_D/wk-rt4"
+fi
+
+# W-CTL-RT5 — the location invariant, resolved inside the card that names the venue.
+sed 's|<a class="map-link" href="https://maps.example/portas">Map</a>||' "$W_FX/site.html" > "$W_FX/site-rt5.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt5.html"; then
+  FAIL "W-CTL-RT5: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT5' RT5 1 "one rendered event card has its map-link stripped while every other card keeps one — so the arm grades the card rather than the page" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt5.html" "$W_D/wk-rt5"
+fi
+
+# W-CTL-RT6 — a stated decline and a dropped subgroup must not look alike on the page.
+awk '!/No nightlife tonight/' "$W_FX/site.html" > "$W_FX/site-rt6.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt6.html"; then
+  FAIL "W-CTL-RT6: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT6' RT6 1 "the plan states a nightlife decline and the site drops the line carrying it — block content, not absence" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt6.html" "$W_D/wk-rt6"
+fi
+
+# W-CTL-RT0a — an unreadable plan. The vacuity guard's first direction.
+w_ctl_fire 'W-CTL-RT0a' RT0 1 "the plan path does not resolve at all" \
+  -- rt_instance_walk "$W_FX/plan-does-not-exist.md" "$W_FX/site.html" "$W_D/wk-rt0a"
+
+# W-CTL-RT0b — a grammar whose region does not resolve, so the extraction returns ZERO rows.
+# This is the arm that keeps a broken instrument from reading as a clean corpus.
+sed 's|^### File: outputs/final-itinerary\.md$|### File: outputs/renamed-away.md|' \
+  "$W_GRAMMAR" > "$W_FXR/agents/05-hub-planner.md"
+if cmp -s "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"; then
+  FAIL "W-CTL-RT0b: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT0b' RT0 1 "the grammar region heading is renamed on a COPY, so the element extraction returns ZERO rows — graded a broken instrument and never a clean read" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+
+# W-CTL-RT1 — THE ADD-ONLY INPUT. A new element label added to the grammar with EVERY existing
+# declaration left intact. A rule-presence assertion is blind to exactly this.
+awk '/^\*\*Constraint Compliance\*\*$/ && !d { print "**Escape Room**"; print ""; d = 1 } { print }' \
+  "$W_GRAMMAR" > "$W_FXR/agents/05-hub-planner.md"
+if cmp -s "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"; then
+  FAIL "W-CTL-RT1: the addition did not land, so this control proves nothing about the add-only direction"
+else
+  w_ctl_fire 'W-CTL-RT1' RT1 1 "one NEW element label added to a copy of the grammar with every existing label and every fence row left intact — the ADD-ONLY input, which is the direction a rule-presence shape cannot see" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+
+# W-CTL-SEC — specificity, on the over-fire a line-leading-bold reader actually produced. A
+# bold LEAD-IN followed by prose is not an element label, and the grammar region carries real
+# ones today.
+awk -v ins='**A rationale sentence in bold.** Followed by ordinary prose on the same line.' \
+  '/^\*\*Constraint Compliance\*\*$/ && !d { print ins; print ""; d = 1 } { print }' \
+  "$W_GRAMMAR" > "$W_FXR/agents/05-hub-planner.md"
+if cmp -s "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"; then
+  FAIL "W-CTL-SEC: the mutation did not land, so this specificity control proves nothing"
+else
+  w_ctl_silent 'W-CTL-SEC' "a bold rationale LEAD-IN followed by prose on the same line, added inside the grammar region — a whole-line reader must not return it as an element label, which a line-leading-bold reader does" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+
+# W-CTL-RT2 — the pin's other direction, on the fence side.
+awk '/^ADVANCE BOOKING CHECKLIST/ && !d { print "Ghost Element                                                              rendered     act-card"; d = 1 } { print }' \
+  "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+  FAIL "W-CTL-RT2: the addition did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT2' RT2 1 "one fence row added naming an element the grammar does not emit, with every real row intact — a declaration that outlives its element" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"
+
+# W-CTL-ENUM — an out-of-enum disposition, and a component the catalog does not define. Both
+# are contract-integrity failures rather than element mismatches, so both land on RT0.
+awk '{ sub(/^Anchor( +)rendered( +)act-card$/, "Anchor                                                                     maybe        act-card"); print }' \
+  "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+  FAIL "W-CTL-ENUM: the mutation did not land, so this control proves nothing about W2"
+else
+  w_ctl_fire 'W-CTL-ENUM' RT0 1 "one fence row's disposition changed to a value outside the closed enum — the input W2 exists to reject" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"
+
+# W-CTL-COMP — the component half of W2, on the ADD direction.
+awk '{ sub(/^Anchor( +)rendered( +)act-card$/, "Anchor                                                                     rendered     no-such-component"); print }' \
+  "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+  FAIL "W-CTL-COMP: the mutation did not land, so this control proves nothing about W2"
+else
+  w_ctl_fire 'W-CTL-COMP' RT0 1 "one fence row re-pointed at a component the § 3 catalog does not define — a rendered home that does not exist" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"
+
+# W-CTL-ADD — specificity. § 9.2 is SURJECTIVE, not bijective: additive site scaffolding with
+# no plan source is legitimate, and a walk that flagged it would be grading the wrong direction.
+awk '/<section class="hero-section">/ { print; print "<aside class=\"essentials\">Essentials — plugs, tipping, transit passes</aside>"; next } { print }' \
+  "$W_FX/site.html" > "$W_FX/site-add.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-add.html"; then
+  FAIL "W-CTL-ADD: the addition did not land, so this specificity control proves nothing"
+else
+  w_ctl_silent 'W-CTL-ADD' "site-additive scaffolding with no plan element behind it, ADDED to the render" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-add.html" "$W_D/wk-add"
+fi
+
+# ── THE LIVE ARMS. They run AFTER the controls so every one of them is read against an
+# instrument already demonstrated to fire and to stay silent on the right inputs.
+w0_assert  "$W_GRAMMAR" "$W_SPEC"
+w1_assert  "$W_GRAMMAR" "$W_SPEC"
+w2_assert  "$W_SPEC"
+w3_assert  "$W_VERB"
+w3c_assert "$W_VERB"
+
+# ── W12 — the inventory, derived from the walker's own emission sites and from what the arms
+# OBSERVED. Neither side is a list held in this file.
+#
+# The emittable set is read from the SOURCED function bodies rather than from the script's
+# text, so a comment naming a code cannot enter it — bash discards comments when it stores a
+# function, which is the same property group CTL's own code census relies on.
+w_emittable() {
+  local fn body="" out=""
+  for fn in $(declare -F | awk '$3 ~ /^rt_/ { print $3 }'); do
+    body="$body$(declare -f "$fn")"$'\n'
+  done
+  out="$(awk '{ while (match($0, /rt_finding RT[0-9]+/)) { print substr($0, RSTART + 11, RLENGTH - 11); $0 = substr($0, RSTART + RLENGTH) } }' <<<"$body" | sort -u)"
+  printf '%s' "$out"
+}
+w_setdiff() {   # space-delimited; finding codes carry no interior space, so this is safe here
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  out="${out# }"; printf '%s' "${out% }"
+}
+W_EMIT="$(printf '%s' "$(w_emittable)" | tr '\n' ' ')"
+W_ARMED_T="$(printf '%s' "$W_ARMED" | awk '{ $1 = $1; print }')"
+W_NEMIT="$(awk '{ print NF }' <<<"$W_EMIT")"
+W_UNARMED="$(w_setdiff "$W_EMIT" "$W_ARMED_T")"
+W_PHANTOM="$(w_setdiff "$W_ARMED_T" "$W_EMIT")"
+if [ "$W_NEMIT" -eq 0 ]; then
+  FAIL "W12: the emittable-code census read ZERO codes out of the walker's own function bodies — the reader is broken, so the inventory below would be a comparison of two empty sets"
+elif [ -z "$W_UNARMED" ] && [ -z "$W_PHANTOM" ]; then
+  PASS "W12: INVENTORY — every one of the $W_NEMIT finding code(s) the walker can emit [$W_EMIT] has a MUST-FIRE arm that OBSERVED it above, and every code an arm observed is one some emission site can produce. Both directions, both sets derived on this run: the emittable side from the sourced function bodies, the armed side from what the walker actually emitted rather than from what an arm declared it wanted. A code added to the walker with no arm behind it is RED here rather than latent"
+else
+  FAIL "W12: the inventory does not close — code(s) the walker can emit with no arm [${W_UNARMED:-none}], code(s) an arm recorded that no emission site produces [${W_PHANTOM:-none}] (emittable=$W_NEMIT, armed='$W_ARMED_T')"
+fi
+
+# ── The declared residual, on the ps_dne channel so it rides on EVERY run rather than sitting
+# in a comment somebody has to open this file to read.
+ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. W3 grades that the verb DECLARES the invocation; whether a given run issued it is unreachable from any tree, because the trip tree is git-ignored and carries no history of the act. Nor does a clean walk establish that the site it read is the site the verb WROTE — it grades the artifact after the write. What would settle the first: a live site build against a real trip, with the walker's own output observed in that run"
+
+# ── W-OPTOUT — the control arms' subjects are FILES under $WORK, not shell functions.
+# `unset -f` cannot remove a file, so md_flips would grade the ORACLE rather than the
+# assertion and registering them would be a green proving only that the probe ran. Declared
+# here rather than left silently unregistered, with the compensating positive control the
+# authoring contract's clause 6 requires — the same shape PP0 and PP9 already ship in
+# scripts/test-publish-guard.sh.
+#
+#   $WORK/w/fx/plan.md · site.html    -> W-CTL-RT3 / RT4 / RT5 / RT6 / ADD / BOTH
+#   $WORK/w/fxroot/…                  -> W-CTL-RT0b / RT1 / RT2 / ENUM / COMP / SEC
+#
+# The compensating control is W0, which runs over the REAL documents and proves the fence
+# resolves at one site and both extractions are non-zero — so every control verdict above is
+# reached only after the instrument has been shown live over a real body. Every control arm
+# additionally drives the SAME rt_* functions the registered live arms drive, so md_flips on
+# those functions transitively demonstrates that the control arms' extractor can be made to
+# fail.
+#
+# ── REGISTERED WITH md_flips, INSIDE THIS GROUP rather than in group MD, for the reason the
+# PP and MG registrations give: they need this group's sourced walker and its fixtures, which
+# are torn down at its end.
+md_flips rt_fence_sites    'W0'  w0_assert  "$W_GRAMMAR" "$W_SPEC"
+md_flips rt_grammar_labels 'W1'  w1_assert  "$W_GRAMMAR" "$W_SPEC"
+md_flips rt_components     'W2'  w2_assert  "$W_SPEC"
+md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
+md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group RS — the group rosters that DESCRIBE this suite, asserted against the run.

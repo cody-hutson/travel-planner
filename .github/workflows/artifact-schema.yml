@@ -184,6 +184,35 @@ name: Artifact schema
 #        produced it or a person typed it — so the residual rides on every run as its own
 #        reported line, and what would settle it is named there. No count is spelled here
 #        or in the suite: the behaviours and the mode vocabulary are both read
+#   W    the round-trip completeness walk that reference/site-layout-spec.md § 9.4
+#        prescribes, and that was stated in three documents and executed by none until this
+#        group shipped. The walk has two halves and only one of them has a population in a
+#        CI checkout, so the group grades them apart rather than together. The CONTRACT
+#        half is real and runs on every invocation: every element type the itinerary
+#        grammar can emit carries a declared disposition in a fence in that spec, and every
+#        declared disposition names an element the grammar still emits — both directions,
+#        so an element added with no declaration fails AND a declaration whose element is
+#        gone fails. Neither set is held in the suite: the element labels are read from the
+#        grammar, the dispositions from the fence, and the component vocabulary each
+#        rendered row must name is derived from the component catalog on the same run. The
+#        INSTANCE half — per day, per split-day track, per event card — renders VACUOUS
+#        with its denominator rather than PASS, because a CI checkout contains no rendered
+#        site and cannot: the trip tree is git-ignored and the site schema's no-witness
+#        clause is terminal, naming a committed site fixture as exactly the wrong repair.
+#        A site fixture appearing in the tree turns that arm RED rather than supplying it a
+#        population. Those codes are carried instead by standing control arms over
+#        synthetic plan and site pairs built fresh on every run — a dropped card replayed,
+#        a split day missing its second track column, a stripped map-link, a dropped
+#        nightlife decline, an add-only element, a stale fence row, an out-of-enum
+#        disposition, an undefined component, an unreadable plan — plus the specificity
+#        arms that tell a correct walk from one that flags everything. THE ARM INVENTORY IS
+#        NOT RESTATED HERE, for the reason the CTL line below already gives, and the
+#        invariant binding it is asserted rather than stated: the code set is read from the
+#        sourced walker's own function bodies on every run and compared in both directions
+#        against the codes the arms actually observed. What a green here does NOT say is
+#        declared in the suite rather than left to be inferred: no arm shows that a site
+#        build invoked the walk, and the walk grades the written site against the plan
+#        rather than the act of writing
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared
