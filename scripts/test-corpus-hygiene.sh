@@ -479,12 +479,33 @@ function exempt_thresh(pad) {
 function exempt_arith(s) { return (s ~ /[0-9`*)] *\+ / && s ~ /= *\**[0-9]/) }
 # A locator is an address. The cardinal after it names a position, never a population.
 function exempt_locator(pad) { return (pad ~ / (sect|section|row|rule|step|wave|group|adr|item|phase) +[0-9]/) }
-function exempt_yv(low) {
-  if (low ~ /(19|20)[0-9][0-9]/) return 1
-  if (low ~ /v[0-9]+\.[0-9]+/)   return 1
-  if (low ~ /money[0-9]/)        return 1
-  return 0
-}
+# F1, DATE half. ADR-013 admits "the commit, revision or DATE the count was probed at".
+# Until this arm, an ISO date was exempted ACCIDENTALLY by exempt_f1's hex arm above: the
+# normalisation strips hyphens, so `2026-09-20` arrives as `20260920` — eight characters, all
+# [0-9a-f], carrying a digit — and is read as a commit sha. That coverage was real, undeclared,
+# and evaporates on any tightening of the hex window. Reads the RAW sentence, because the
+# normalisation strips the hyphens a date is written with; exempt_arith reads s for the same
+# reason. ISO is the form this corpus writes a date in — measured 179 ISO occurrences across 52
+# of 130 files against 15 long-form and zero US-format, with zero live instances of a
+# long-form-anchored count. A long-form recogniser would therefore be an assertion with no
+# population able to falsify it, so the long forms are a DECLARED EXCLUSION rather than an
+# oversight: a date written any other way does not anchor, and an author wanting the exemption
+# writes ISO. The optional day group is load-bearing rather than stylistic — see
+# CTL-C-SPEC-YEAR-ANCHOR, whose fixture is month-granular for exactly that reason.
+function exempt_f1date(s) { return (s ~ /(19|20)[0-9][0-9]-[0-1][0-9](-[0-3][0-9])?/) }
+# A year, price or version is "a value that happens to be a numeral" — ADR-013's own words, and
+# a claim about the TOKEN. Each is therefore skipped WHERE IT STANDS, at the subject test in
+# grade(), so the sentence around it is still graded. The sentence-scoped exempt_yv these
+# replace returned on the whole sentence, so a year, price or version ANYWHERE in a sentence
+# admitted a basis-free count beside it: a year in a path (`examples/tokyo-2026/`), in unrelated
+# prose, or inside a larger numeral (`198,329` collapses to `198329`, which carries `1983`).
+# All three classes carry the IDENTICAL scoping; none of them is sentence-scoped any more.
+function is_year(t) { return (t ~ /^(19|20)[0-9][0-9]$/) }
+# The HEAD of a price or version value. `$12.50` normalises to `money12 50` and `v1.2` to
+# `v1 2`, so the head is never a bare numeral and was already no subject; the MINOR parts ARE
+# bare numerals and were reachable only through the sentence-scoped arm. The value run in
+# grade() is what marks them.
+function is_value_head(t) { return (t ~ /^money[0-9]*$/ || t ~ /^v[0-9]+$/) }
 # GOVERNANCE DISTANCE. "Immediately governing" admits ONE adjective between the cardinal and
 # the noun — "121 tracked files" and "Four validator checks" are each one cardinal governing
 # one noun — and admits nothing more. The width was measured over this corpus at one, two
@@ -503,7 +524,7 @@ function exempt_yv(low) {
 #
 # Widening it is not free recall, and narrowing it is not free precision. Both directions
 # were measured before this one was chosen.
-function grade(rel, s, o,   pad, low, i, j, nt, tk, hit) {
+function grade(rel, s, o,   pad, low, i, j, nt, tk, hit, val, run) {
   low = tolower(s)
   if (index(low, "<!-- count:") > 0) return       # F2, inline form
   gsub(/\302\247/, " sect ", low)                 # the section glyph, byte-wise under LC_ALL=C
@@ -527,18 +548,38 @@ function grade(rel, s, o,   pad, low, i, j, nt, tk, hit) {
   # puts `section` one token after `two` and manufactures a count out of an adjective.
   gsub(/-/, "", low)
   while (match(low, /[0-9],[0-9]/)) low = substr(low, 1, RSTART) substr(low, RSTART + 2)
-  if (exempt_yv(low)) return
   pad = low
   gsub(/[^0-9a-z]+/, " ", pad)
   pad = " " pad " "
+  # Every arm below RETURNS with no side effect, so the exempt set is their UNION and the order
+  # here is semantically inert — it is chosen for readability. Measured: moving the former year
+  # arm from the head of this ladder to its foot produced byte-identical output over 130 files
+  # and 29,134 sentences, against a sensitivity arm of 332 sites. The year arm sat at the head
+  # and read as a precedence it never had; that apparent precedence is NOT what widened this
+  # gate, and a reordering on its own would have been a no-op.
   if (exempt_f1(pad))      return
+  if (exempt_f1date(s))    return
   if (exempt_past(pad))    return
   if (exempt_thresh(pad))  return
   if (exempt_locator(pad)) return
   if (exempt_arith(s))     return
   nt = split(pad, tk, / +/)
+  # VALUE TOKENS, marked before the subject test reads them. `run` carries across the dotted
+  # parts of one value, so `v1.2.3` marks both `2` and `3`, and the first token that is not a
+  # bare numeral clears it. val[] and run are extra parameters and so are local to this call —
+  # a file-scope array would leak marks from one sentence into the next.
+  run = 0
+  for (i = 1; i <= nt; i++) {
+    if (is_value_head(tk[i])) { run = 1; val[i] = 1; continue }
+    if (run && tk[i] ~ /^[0-9]+$/) { val[i] = 1; continue }
+    run = 0
+  }
   for (i = 1; i <= nt; i++) {
     if (!(tk[i] ~ /^[0-9]+$/) && !CARD[tk[i]]) continue
+    # THE TOKEN-SCOPE TEST. A year, or the minor part of a price or version, is a VALUE and
+    # never a cardinal governing the noun beside it. It is skipped here rather than exempting
+    # its whole sentence, so every other numeral in that sentence is still graded.
+    if (is_year(tk[i]) || val[i]) continue
     hit = 0
     # The cardinal must GOVERN the noun: ONE adjective may intervene, another cardinal may
     # not. LOOK is the governance distance; see the note above for why it is not wider.
@@ -945,6 +986,79 @@ ctl_fence "$D" '1  docs/other.md'
 ctl_c_doc "$D" docs/other.md 'The guard walks 12 files.'
 O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
 ctl_mustnot "CTL-C-SPEC-PAST" C3 "$O" "an F1' past-tense claim describes a state that WAS, which is not an assertion about the tree as it stands"
+
+# ── the VALUE-TOKEN arms: year, price and version ────────────────────────────────
+# Before these, the year/price/version exemption was the ONE class of the ladder's eight with
+# no control arm at all — F1, F2, F3, determiners, threshold, locator and past-tense each
+# carry a CTL-C-SPEC-* arm and this one carried none, which is how it stayed sentence-scoped
+# against its own justification without any arm going red.
+#
+# GROUP MD OPT-OUT, declared per clause 6 rather than left silent. The subject of all six arms
+# below is an awk function inside the GENERATED c.awk, not a shell function, so `unset -f` is
+# inapplicable and md_flips has nothing to remove; registering them would grade the oracle
+# rather than the assertion. The compensating positive control is the executed mutation matrix
+# recorded in the card — each arm below was observed red under a named mutation of its own
+# subject at its real call site, including an ADDITION-only mutation that leaves every existing
+# rule in place. An unregistered arm with no stated opt-out is what clause 6 forbids; this is
+# the statement.
+
+# CTL-C-SPEC-YEAR-ANCHOR — the F1 DATE half.
+D="$(ctl_mk cyanch)"
+ctl_c_doc "$D" docs/notes.md 'Measured in 2026-09, the guard walks 12 files.'
+ctl_fence "$D" '1  docs/other.md'
+ctl_c_doc "$D" docs/other.md 'The guard walks 12 files.'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-C-SPEC-YEAR-ANCHOR" C3 "$O" "the sentence names the DATE the count was probed at — the F1 date half. The fixture is MONTH-granular ON PURPOSE and simplifying it to a full date silently re-opens the hole: a YYYY-MM-DD date survives the normalisation as an eight-character all-hex token exempt_f1's sha arm cannot tell from a commit, so a day-granular fixture would pass with exempt_f1date deleted. Stripped, YYYY-MM is six characters and falls below that arm's seven-character floor, so only exempt_f1date can carry this silence"
+
+# CTL-C-SPEC-YEAR-TOKEN — the discriminating arm for is_year itself.
+D="$(ctl_mk cytok)"
+ctl_c_doc "$D" docs/notes.md 'The 2026 workflows run on every push.'
+ctl_fence "$D" '1  docs/other.md'
+ctl_c_doc "$D" docs/other.md 'The guard walks 12 files.'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-C-SPEC-YEAR-TOKEN" C3 "$O" "a year sits immediately before a corpus noun — it is a value that happens to be a numeral, never a cardinal governing that noun, and this is the arm that says so"
+
+# CTL-C-YEAR-UNRELATED — the COMPLEMENT arm for the year narrowing, and the one an
+# addition-blind rule-presence check could not supply: re-adding a sentence-scoped year clause
+# leaves every existing rule present and still turns this arm red.
+D="$(ctl_mk cyunrel)"
+ctl_c_doc "$D" docs/notes.md \
+  'The 2026 season is busy and the guard walks 12 files.' \
+  'Each of the ten files in `examples/tokyo-2026/` is pinned by hash.' \
+  'The tree holds 198,329 bytes across the 2 bearer files.'
+ctl_fence "$D" '0  docs/notes.md'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-C-YEAR-UNRELATED" C1 "$O" "three basis-free counts each sit beside a year that anchors nothing — one in ordinary prose, one inside a PATH, and one inside a larger numeral (198,329 collapses to 198329, which carries 1983) — and a sentence-scoped year exemption admits all three" 1
+
+# CTL-C-SPEC-PRICE-TOKEN — price carries the IDENTICAL token-scoping as the year, so it carries
+# its own arm. The fixture uses a price with a MINOR part, because that is the only part of a
+# price that is a bare numeral: `$12.50` normalises to `money12 50`, and the `money12` head was
+# never a subject, so a whole-currency fixture would pass with the scoping deleted.
+D="$(ctl_mk cprtok)"
+ctl_c_doc "$D" docs/notes.md 'Each row carries a $12.50 line.'
+ctl_fence "$D" '1  docs/other.md'
+ctl_c_doc "$D" docs/other.md 'The guard walks 12 files.'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-C-SPEC-PRICE-TOKEN" C3 "$O" "a price's minor part sits immediately before a corpus noun — a price is a value that happens to be a numeral, exactly as a year is, and the cents are not a count of lines"
+
+# CTL-C-SPEC-VERSION-TOKEN — version's own arm, on the same reasoning and the same shape:
+# `v1.2` normalises to `v1 2`, and only the `2` is a bare numeral a subject test can reach.
+D="$(ctl_mk cvrtok)"
+ctl_c_doc "$D" docs/notes.md 'The v1.2 schema files are pinned by hash.'
+ctl_fence "$D" '1  docs/other.md'
+ctl_c_doc "$D" docs/other.md 'The guard walks 12 files.'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-C-SPEC-VERSION-TOKEN" C3 "$O" "a version's minor part sits immediately before a corpus noun — the 2 of v1.2 is part of a version string and never a count of schema files"
+
+# CTL-C-PRICE-VERSION-UNRELATED — the COMPLEMENT arm for both, arity-asserted at 2 so it
+# discriminates the two classes separately: if either token-scoping regresses to sentence
+# scope, that class's file goes silent, the arity drops to 1, and this arm goes red.
+D="$(ctl_mk cpvunrel)"
+ctl_c_doc "$D" docs/price.md 'The suite costs $40 to run and the guard walks 12 files.'
+ctl_c_doc "$D" docs/version.md 'The v2.1 release ships 12 files.'
+ctl_fence "$D" '0  docs/price.md' '0  docs/version.md'
+O="$(ch_compare_c "$D" "$D/$CH_FENCE_DOC" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-C-PRICE-VERSION-UNRELATED" C1 "$O" "a basis-free count sits beside a price in one file and beside a version in the other, and neither value anchors the count — the same widening the year arm carried, in the two classes that kept it. The arity is the assertion: one finding per class, so a regression in either is visible on its own" 2
 
 # CTL-C-SEG — the sentence unit is the assertion, so it is arm-tested directly. A paragraph
 # reading merges these two sentences and lets the first one's anchor blind the second.

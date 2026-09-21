@@ -1445,7 +1445,7 @@ with no site carries no row.
 
 ```count-assertion-digest
 # sites  path
-34      CHANGELOG.md
+35      CHANGELOG.md
 8       CLAUDE.md
 1       CONTRIBUTING.md
 5       README.md
@@ -1465,7 +1465,7 @@ with no site carries no row.
 13      examples/data-architecture-demo/README.md
 5       examples/data-architecture-demo/outputs/activities-list.md
 2       examples/data-architecture-demo/outputs/change-summary.md
-1       examples/data-architecture-demo/outputs/cost-estimate.md
+2       examples/data-architecture-demo/outputs/cost-estimate.md
 2       examples/data-architecture-demo/outputs/event-status.md
 3       examples/data-architecture-demo/outputs/final-itinerary.md
 1       examples/data-architecture-demo/outputs/links-reference.md
@@ -1487,14 +1487,15 @@ with no site carries no row.
 6       examples/people-library-demo/travelers/noor.md
 1       examples/single-origin-demo/README.md
 1       examples/single-origin-demo/trip-context.md
-2       examples/tokyo-2026/outputs/activities-list.md
+3       examples/tokyo-2026/outputs/activities-list.md
+1       examples/tokyo-2026/outputs/final-itinerary.md
 2       reference/adr/ADR-006-third-party-data-capture.md
 4       reference/adr/ADR-007-command-entry-point.md
 20      reference/adr/ADR-008-publish-content-guard.md
-36      reference/adr/ADR-009-data-architecture.md
+37      reference/adr/ADR-009-data-architecture.md
 1       reference/adr/ADR-010-per-traveler-approval-collection.md
-10      reference/adr/ADR-011-per-traveler-cost-estimation.md
-29      reference/adr/ADR-012-people-library.md
+12      reference/adr/ADR-011-per-traveler-cost-estimation.md
+30      reference/adr/ADR-012-people-library.md
 1       reference/command-reference.md
 19      reference/data-architecture.md
 13      reference/data-model.md
