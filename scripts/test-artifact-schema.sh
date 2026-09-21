@@ -155,6 +155,28 @@
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The real
 #        person store is git-ignored, so tracked fixtures are the only instances this gate can
 #        reach, and a mark nothing carries is a grammar nothing grades.
+#   RM   the reference-month RULE PROSE, anchored so a prose-only revert fails a check.
+#        Group HZ grades WHERE the verdict fence lives and what its rows say; nothing
+#        graded what the rule text around it SAYS, so a rewrite of the prose left the
+#        fence intact and every arm green. The anchor is a DERIVED DECLARATION SPINE and
+#        not a pin: the expected cardinality comes from the fence HZ already grades, and
+#        the actual spine is read out of the document by the document's OWN typography —
+#        a normative declaration is a blockquote opening with a bolded lead-in, and the
+#        operative content is the code spans inside one. That is the whole discriminator:
+#        MATERIAL is an operative token inside such a block, EDITORIAL is every unbolded,
+#        un-spanned word, so rewording is free and changing an operative token is not.
+#        Nothing is spelled here but the region's HEADING — an address, not the rule —
+#        and the one vocabulary word `clock`. It inherits HC1's read-by-shape MECHANISM
+#        and REJECTS HC1's grading posture, which is ADR-019's S4 rule-presence shape and
+#        is classified Defective — addition-blind; HC1's own must-fire arm mutates the
+#        PROBE and establishes probe-liveness rather than the complement, so a negating
+#        clause ADDED to that document leaves both green. R3 and R4 therefore ship as
+#        SEPARATE arms and the group says which is which: the complement is a cardinality
+#        rather than a negation vocabulary, because a negation scan over this region
+#        over-fires on the unmutated document today. Three mutants run through the SAME
+#        comparator as the arms — a revert MUST be seen, an ADDITION must be seen, and a
+#        REWORD must NOT be — which is what makes the discriminator demonstrated in both
+#        directions rather than asserted. No count is spelled anywhere in this file.
 #   CE   the cost-entry surfaces: a priced-entity class denominator derived from two
 #        independently movable tables, plus the JOIN between them — the limb most likely to be
 #        wrong while every other limb reads green, because two non-empty sets keyed
@@ -8075,6 +8097,498 @@ fi
 
 if [ "$HZ_RAN" -ne 1 ]; then
   FAIL "HZ-integrity: group HZ did not execute — a run without it is a failure, never a pass"
+fi
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "RM — the reference-month RULE PROSE, anchored by a derived declaration spine"
+# ═════════════════════════════════════════════════════════════════════════════════
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# Group HZ above grades WHERE the `horizon-verdict-cases` fence lives and what its rows say.
+# Nothing graded what the RULE TEXT around it says. So an edit that rewrote the prose —
+# changing which term the reference month resolves from, or the condition under which it fails
+# to resolve — left the fence intact, every HZ arm passing, and CI green. That was correctly
+# classified a RESIDUAL rather than an escape: the specification never asked for such an arm.
+#
+# The CLASS matters more than the instance. This repository treats documents as
+# specifications, and several arms above read values straight out of prose tables. Where a
+# gate grades a structure's LOCATION but not its CONTENT, the document can drift from the
+# behaviour it describes while every check reports success.
+#
+# ── THE DISCRIMINATOR, STATED ONCE, AND IT IS THE DOCUMENT'S OWN ─────────────────
+#   MATERIAL  = an operative token inside a normative declaration block.
+#   EDITORIAL = every unbolded, un-spanned word, inside a block or outside one.
+#
+# A normative DECLARATION BLOCK is a form the document already uses everywhere rather than one
+# this file imposes on it: a blockquote whose FIRST LINE OPENS WITH A BOLDED LEAD-IN. Measured
+# over reference/data-model.md on this commit — 53 blockquote blocks, 44 of them in that form
+# — so the reader discriminates rather than matching everything, and the 9 it excludes are the
+# evidence of that. Rewording is free; changing an operative token is not.
+#
+# The discriminator is stated as a property of DOCUMENTS IN THIS CORPUS rather than of this
+# region, because it is a shared contract: two different answers to the material-versus-
+# editorial question inside one suite would be worse than either. Generally: a prose rule is
+# anchored by rendering its operative content inside the document's own normative-declaration
+# form, and asserting a derived bijection between those declarations and an independently
+# graded artifact the rule governs.
+#
+# ── NOTHING HERE IS PINNED, AND THAT IS THE WHOLE OF THE DESIGN ──────────────────
+# No digest, no clause literal, no expected count written by hand. The expected CARDINALITY is
+# derived from the fence group HZ already grades; the actual SPINE is read out of the document
+# BY SHAPE. The only strings this group spells about the document are the region's HEADING —
+# an ADDRESS, not the rule — and the one vocabulary word `clock`.
+#
+# A content digest over the region was considered and rejected on a measurement rather than on
+# taste. It has no material/editorial discriminator, so a typo fix turns it red; and re-pinning
+# is a single keystroke that the REVERTING author performs in the same commit, after which the
+# pin certifies the revert. A second machine-readable fence declaring the rule beside the prose
+# stating it was rejected too: that is two homes inside one document, free to drift, with
+# nothing holding them together.
+#
+# ── THE NAMED PRECEDENT IS DEFECTIVE, AND ADOPTING IT WHOLESALE WOULD HAVE IMPORTED
+#    THE DEFECT PLUS THE APPEARANCE OF BEING CONTROLLED FOR ─────────────────────
+# HC1 is the shipped precedent for this shape of anchor, and its MECHANISM is inherited here:
+# read the anchor from the document BY SHAPE, never by re-spelling it, because a copy in this
+# file would be a THIRD home, green while the other two drifted apart from each other.
+#
+# Its GRADING POSTURE is rejected, and that rejection is a reading of the record that now
+# governs it rather than a preference. HC1 asserts that a constant matches exactly one line of
+# a document: ADR-019's S4 rule-presence shape, classified DEFECTIVE — ADDITION-BLIND, remedy
+# R3. Verified rather than taken on trust — a negating clause ADDED to that document leaves
+# HC1's count at 1 and HC1 green.
+#
+# AND ITS CONTROL DOES NOT CLOSE THAT. HC1-CTL mutates the CONSTANT and requires the same awk
+# to match nothing. Its own comment says why: so that "HC1's match is a measurement and not an
+# artefact of the probe". That is PROBE-LIVENESS — the R4 family — and NOT R3's complement arm.
+# The two are easy to confuse because both are labelled MUST FIRE, and confusing them is worse
+# than having neither: an addition-blind assertion that LOOKS controlled for is one nobody
+# re-reads. A negating clause added to that document leaves BOTH arms green.
+#
+# So this group carries R3 and R4 as SEPARATE arms and says which is which:
+#   R3, the complement — RM1's exactly-once-per-symbol limb and RM2's absence limb. It is
+#      expressed as a CARDINALITY rather than as a negation vocabulary, because a negation-token
+#      scan over this region OVER-FIRES on the unmutated document today: the declarations
+#      legitimately read "never earlier than the clock", "Defined **only** where", and "it never
+#      passes silently". A gate that convicts correct work trains contributors to reach for its
+#      exemption marker.
+#   R4, the sensitivity and specificity arms — RM5 (a REVERT must be seen), RM8 (an ADDITION
+#      must be seen — the arm HC1 does not have and the reason this group is not HC1), and RM6
+#      (a REWORD must NOT be seen, which is what makes the discriminator demonstrated rather
+#      than asserted).
+#
+# ── REGISTRATION: AN EXPLICIT MD OPT-OUT, NOT A SILENT OMISSION ──────────────────
+# RM's subject is a FILE, reference/data-model.md, not a shell function. md_flips registers an
+# assertion by removing its subject FUNCTION, so it has nothing to remove here, and registering
+# the comparator instead would grade the ORACLE rather than the assertion — PP0's and PP9's
+# stated reason, applied here. The COMPENSATING POSITIVE CONTROLS are the RM5/RM8/RM6 mutant
+# set, which is strictly stronger than the oracle would be on this subject: it does not merely
+# observe that an arm flips when something is removed, it observes that it flips on a MATERIAL
+# change, flips on an ADDITION, and does NOT flip on an EDITORIAL one — three directions, on
+# the real subject, through the same comparator.
+#
+# ── EVERY ARM IS A SHELL TEST OVER AN ALREADY-EXTRACTED VALUE ───────────────────
+# Each condition below is a numeric comparison on a value the comparator already produced, never
+# `if rm_read …; then FAIL; else PASS`. A shell test cannot report an absent subject, so
+# extraction status is graded SEPARATELY and FIRST, in RM0 — ADR-019's R2, declare the haystack
+# non-degenerate before grading content.
+
+RM_DOC="$ROOT/reference/data-model.md"
+# The one string this group spells about the document, and it is the ADDRESS rather than the
+# rule. Everything graded below is read out of the region this heading names, by shape.
+RM_REGION="The reference month — what a horizon is compared against"
+RM_PRISTINE="$WORK/rm-pristine.md"
+
+# rm_read <file> — THE READER, and the only one. Emits TSV over the region RM_REGION names:
+#
+#   REGION <TAB> <line>
+#   FENCE  <TAB> <line>
+#   SPINE  <TAB> <sym> <TAB> <rhs> <TAB> <line> <TAB> <block key> <TAB> <rhs identifier tokens> <TAB> <rhs first operand>
+#   TUPLE  <TAB> <members, comma-joined> <TAB> <arity> <TAB> <line> <TAB> <block key>
+#   SPAN   <TAB> <span text> <TAB> <line> <TAB> <block key>
+#
+# SPINE, TUPLE and SPAN are the three classified kinds of ONE population — the code spans inside
+# a declaration block of the region — so every such span emits exactly one row and the row count
+# IS the vocabulary count. The two cannot drift into disagreeing.
+#
+# The tokenizer and the first-operand derivation live HERE, once, and are carried as fields, so
+# no consumer below re-derives them differently.
+rm_read() {
+  awk -v want="$RM_REGION" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    # The identifier tokens of a right-hand side, space-joined and deduped, in order. Every
+    # non-identifier byte becomes a separator, so punctuation and digits cannot enter the set.
+    function ids(s,   tmp, n, i, parts, out, seen) {
+      tmp = s; gsub(/[^A-Za-z0-9_]/, " ", tmp)
+      n = split(tmp, parts, " "); out = ""
+      for (i = 1; i <= n; i++) {
+        if (parts[i] !~ /^[A-Za-z_][A-Za-z0-9_]*$/) continue
+        if (parts[i] in seen) continue
+        seen[parts[i]] = 1; out = out (out == "" ? "" : " ") parts[i]
+      }
+      return out
+    }
+    # The FIRST OPERAND of a right-hand side: the text inside the outermost call up to the
+    # first comma, or the head of a comma list, or the whole expression. Derived from the
+    # document so the reversion RM5 applies is the rule reverted rather than a literal typed
+    # into this file.
+    function firstop(r,   inner, k, i, d, ch) {
+      if (match(r, /^[A-Za-z_][A-Za-z0-9_]*\(/)) {
+        inner = substr(r, RLENGTH + 1)
+        k = length(inner); while (k > 0 && substr(inner, k, 1) != ")") k--
+        if (k > 0) inner = substr(inner, 1, k - 1)
+      } else { inner = r }
+      d = 0
+      for (i = 1; i <= length(inner); i++) {
+        ch = substr(inner, i, 1)
+        if (ch == "(") d++
+        else if (ch == ")") d--
+        else if (ch == "," && d == 0) return trim(substr(inner, 1, i - 1))
+      }
+      return trim(inner)
+    }
+    /^### / {
+      if (reg == 1) { reg = 2 }
+      else if (reg == 0 && trim(substr($0, 5)) == want) { reg = 1; print "REGION\t" NR; next }
+    }
+    reg != 1 { next }
+    $0 == "```horizon-verdict-cases" { print "FENCE\t" NR }
+    {
+      if (substr($0, 1, 1) != ">") { blk = 0; decl = 0; next }
+      if (blk == 0) { blk = 1; key = NR; decl = ($0 ~ /^>[ ]*\*\*/) ? 1 : 0 }
+      if (decl != 1) next
+      n = split($0, p, "`")
+      for (i = 2; i <= n; i += 2) {
+        s = trim(p[i])
+        if (s == "") continue
+        if (match(s, /^[A-Za-z][A-Za-z0-9_]*[ ]*=/)) {
+          sym = trim(substr(s, 1, RLENGTH - 1)); rhs = trim(substr(s, RLENGTH + 1))
+          if (rhs != "") {
+            print "SPINE\t" sym "\t" rhs "\t" NR "\t" key "\t" ids(rhs) "\t" firstop(rhs)
+            continue
+          }
+        }
+        if (s ~ /^\([^()]*,[^()]*\)$/) {
+          m = split(substr(s, 2, length(s) - 2), q, ","); out = ""
+          for (j = 1; j <= m; j++) out = out (j > 1 ? "," : "") trim(q[j])
+          print "TUPLE\t" out "\t" m "\t" NR "\t" key
+          continue
+        }
+        print "SPAN\t" s "\t" NR "\t" key
+      }
+    }
+  ' "$1"
+}
+
+# rm_measure <file> — the extracted quantities, one line, space-separated, in this order:
+#
+#   nregion nfence nspine ndistinct ngood nbad nplus ntuple tarity towner tsubset nspan
+#
+# ngood / nbad are RM2's two limbs: a spine row whose RHS names `clock` ALONGSIDE another
+# declared symbol is good; one that names `clock` and no other declared symbol is bad.
+rm_measure() {
+  rm_read "$1" | awk -F'\t' '
+    $1 == "REGION" { nreg++ }
+    $1 == "FENCE"  { nfen++ }
+    $1 == "SPINE"  {
+      ns++; sym[ns] = $2; rhs[ns] = $3; key[ns] = $5; idt[ns] = $6
+      if (!($2 in seensym)) { seensym[$2] = 1; nd++ }
+      t = $3; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) nplus++
+    }
+    $1 == "TUPLE"  { nt++; tmem = $2; tar = $3; tkey = $5 }
+    $1 == "SPAN"   { nplain++ }
+    END {
+      for (i = 1; i <= ns; i++) {
+        n = split(idt[i], tok, " "); delete has; hasclock = 0
+        for (k = 1; k <= n; k++) { has[tok[k]] = 1; if (tok[k] == "clock") hasclock = 1 }
+        if (hasclock != 1) continue
+        other = 0
+        for (j = 1; j <= ns; j++) if (j != i && (sym[j] in has)) other = 1
+        if (other == 1) ngood++; else nbad++
+      }
+      if (nt == 1) {
+        for (i = 1; i <= ns; i++) if (key[i] == tkey) { owner = i; towner = 1 }
+        if (towner == 1) {
+          n = split(idt[owner], tok, " "); delete ops
+          for (k = 1; k <= n; k++) ops[tok[k]] = 1
+          m = split(tmem, mem, ","); tsub = 1
+          for (k = 1; k <= m; k++) if (!(mem[k] in ops)) tsub = 0
+        }
+      }
+      printf "%d %d %d %d %d %d %d %d %d %d %d %d\n", nreg+0, nfen+0, ns+0, nd+0, \
+        ngood+0, nbad+0, nplus+0, nt+0, tar+0, towner+0, tsub+0, ns+nt+nplain+0
+    }
+  '
+}
+
+# rm_violations <file> <expected cardinality> — THE CONTROLS' SCORER. The failing limbs the
+# comparator scores over <file>, as space-delimited tokens; empty is a clean document. It exists
+# because a mutant has to be scored as ONE number, while a standing arm has to say WHICH limb
+# moved and in which direction.
+#
+# What is shared with the standing arms — and it is the part FW3's rule is about — is the
+# EXTRACTOR: rm_read and rm_measure produce the numbers both sides read, so a control here is
+# evidence about the same reading the arms grade. A control running a different extractor would
+# prove nothing about them. Each token below names the limb of the arm that grades it, and every
+# control's message PRINTS the token list it scored, so which arm a mutant moved is visible in
+# the output rather than asserted here.
+#
+# The limbs are graded in the arms with `[ … ]` tests over already-extracted values rather than
+# by calling back into this function. That is ADR-019's own requirement and group MD enforces it:
+# a function in an `if` head puts the PASS on rc=127 — "the predicate does not exist" — exactly
+# as it puts it on "the document is clean". This file's static scanner caught that shape here
+# during authoring, which is the gate doing the job it was built for.
+#
+# The here-string is the shape this file already requires of a reader fed from a producer —
+# see the note above has_finding. It also keeps `read`, which stops at the first newline, off
+# the receiving end of a pipeline whose writer has not finished.
+rm_violations() {
+  local nreg nfen ns nd ng nb np nt ta to ts nsp out=""
+  read -r nreg nfen ns nd ng nb np nt ta to ts nsp <<<"$(rm_measure "$1")"
+  [ "$nreg" -eq 1 ]   || out="$out REGION"
+  [ "$nfen" -ge 1 ]   || out="$out FENCE"
+  [ "$ns"   -gt 0 ]   || out="$out EMPTY-SPINE"
+  [ "$nsp"  -gt 0 ]   || out="$out EMPTY-VOCAB"
+  [ "$ns"   -eq "$2" ] || out="$out CARDINALITY"
+  [ "$nd"   -eq "$ns" ] || out="$out UNIQUENESS"
+  [ "$ng"   -eq 1 ]   || out="$out REFMONTH"
+  [ "$nb"   -eq 0 ]   || out="$out CLOCK-ONLY"
+  [ "$np"   -eq 1 ]   || out="$out WRAP-ADVANCE"
+  [ "$nt"   -eq 1 ]   || out="$out TUPLE-COUNT"
+  [ "$ta"   -ge 2 ]   || out="$out TUPLE-ARITY"
+  [ "$to"   -eq 1 ]   || out="$out TUPLE-OWNER"
+  [ "$ts"   -eq 1 ]   || out="$out TUPLE-SUBSET"
+  printf '%s' "${out# }"
+}
+
+rm_nviol() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# rm_mutate <file> <mode> <sym> <first operand> <fence line> <target line> — writes a mutated
+# COPY to stdout and exits non-zero when the mutation did not land, so a mutation that failed
+# to apply can never be misread as an arm that failed to fire. Every mode is DERIVED: the
+# symbol, the operand and both anchors come from rm_read's own output over the real document.
+#
+#   revert   the reference-month declaration's RHS is replaced by its own first operand — the
+#            clock-only reversion, in the rule's own vocabulary
+#   addition a SECOND declaration of the same symbol, clock-only, appended as a new declaration
+#            block. NOTHING EXISTING IS TOUCHED. This is ADR-019's add-only input
+#   reword   one plain sentence, no code span and no bold lead-in, in a non-declaration
+#            paragraph of the region. The editorial half of the discriminator
+rm_mutate() {
+  awk -v mode="$2" -v sym="$3" -v op="$4" -v fl="$5" -v tl="$6" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    mode == "revert" && NR == tl {
+      n = split($0, p, "`"); hit = 0
+      for (i = 2; i <= n; i += 2) {
+        s = trim(p[i])
+        if (match(s, /^[A-Za-z][A-Za-z0-9_]*[ ]*=/) && trim(substr(s, 1, RLENGTH - 1)) == sym) {
+          p[i] = sym " = " op; hit = 1; landed = 1
+        }
+      }
+      if (hit == 1) { out = p[1]; for (i = 2; i <= n; i++) out = out "`" p[i]; $0 = out }
+    }
+    mode == "addition" && NR == fl {
+      print "> **`" sym " = " op "`.** Synthetic second declaration, inserted by the RM8 control."
+      print ""
+      landed = 1
+    }
+    mode == "reword" && NR == fl {
+      print "Inserted by the RM6 control. This sentence carries no code span and no bolded lead-in, sits outside every blockquote, and is exactly the editorial addition that must not turn this group red."
+      print ""
+      landed = 1
+    }
+    { print }
+    END { if (landed != 1) exit 9 }
+  ' "$1"
+}
+
+cp "$RM_DOC" "$RM_PRISTINE" 2>/dev/null || true
+RM_READABLE=0; [ -r "$RM_DOC" ] && RM_READABLE=1
+RM_NREG=0; RM_NFEN=0; RM_NS=0; RM_ND=0; RM_NG=0; RM_NB=0
+RM_NP=0; RM_NT=0; RM_TA=0; RM_TO=0; RM_TS=0; RM_NSP=0
+if [ "$RM_READABLE" -eq 1 ]; then
+  read -r RM_NREG RM_NFEN RM_NS RM_ND RM_NG RM_NB RM_NP RM_NT RM_TA RM_TO RM_TS RM_NSP <<<"$(rm_measure "$RM_DOC")"
+fi
+
+# RM_NREQ — THE EXPECTED CARDINALITY, DERIVED AND NEVER WRITTEN DOWN. One declaration for the
+# reference month itself, one more for each term the fence independently shows the rule needs:
+# a populated `trip-term` column (which HZ7 already asserts, since a reference month equal to
+# the clock makes the two verdict columns identical by construction, so HZ7's discriminating
+# row is only satisfiable when a trip term exists) and a populated `wrap-term` column (which
+# HZ11 already asserts). Both limbs are GRADED ABOVE before this group consumes them, so this
+# is a read of a checked quantity rather than an assumption about one.
+RM_NREQ=1
+[ "${HZ_GDIFF:-0}" -gt 0 ] 2>/dev/null && RM_NREQ=$((RM_NREQ + 1))
+[ "${HZ_PWRAP:-0}" -gt 0 ] 2>/dev/null && RM_NREQ=$((RM_NREQ + 1))
+
+# ── RM0 — the VACUITY GATE, first, and every branch FAILS rather than skipping. ──
+# A reader that resolved no region makes every count below zero, and zero compares equal to
+# zero — a probe failure wearing a pass. GUARD_STRICT_SKIPS is '1' here with an empty expected
+# set, so a vanishing group is already a failure; this arm matches HZ0's "required surface(s)
+# unreadable — not a skip and not a pass" posture and renders no VACUOUS.
+RM_OK=0
+if [ "$RM_READABLE" -ne 1 ]; then
+  FAIL "RM0: reference/data-model.md is unreadable, so the reference-month rule's prose could not be read at all. Every verdict below would be over an empty extraction, which is a broken instrument and never a clean document"
+elif [ -z "${HZ_GDIFF:-}" ] || [ -z "${HZ_PWRAP:-}" ]; then
+  FAIL "RM0: group HZ did not reach its fence-derived quantities, so this group's expected cardinality could not be DERIVED. RM_NREQ is 1 plus the fence's populated \`trip-term\` and \`wrap-term\` columns, read from HZ7's and HZ11's already-graded values — with those absent the only alternative is a hand-written count, which is the pin this group exists without"
+elif [ "$RM_NREG" -ne 1 ]; then
+  FAIL "RM0: the region heading '$RM_REGION' resolved $RM_NREG time(s) in reference/data-model.md, expected exactly 1 — at 0 the heading was renamed or moved and every arm below would grade an empty region; at 2+ the address is ambiguous and the spine would be read from more than one section. This group holds the heading as an ADDRESS and nothing else, so this is where a rename lands"
+elif [ "$RM_NFEN" -lt 1 ]; then
+  FAIL "RM0: the region carries no \`horizon-verdict-cases\` fence, so the expected cardinality RM_NREQ is derived from a fence that is not in the region it governs. Either the fence moved out of the rule's own section or the region bounds did — and RM1's count below would be graded against a quantity read from somewhere else"
+elif [ "$RM_NS" -eq 0 ]; then
+  FAIL "RM0: the declaration spine parsed to ZERO definitional spans inside the region's declaration blocks. A declaration block is a blockquote whose first line opens with a bolded lead-in and a definitional span is \`X = expr\` inside one; if either shape moved, every cardinality below compares zero against zero and passes over nothing"
+elif [ "$RM_NSP" -eq 0 ]; then
+  FAIL "RM0: the region's declaration blocks yielded ZERO code spans of any kind, so the projection that separates MATERIAL from EDITORIAL is reading nothing. The discriminator is the document's own typography and this is where its disappearance lands"
+else
+  RM_OK=1
+  PASS "RM0: the rule region is readable and non-degenerate — heading resolved once, the graded \`horizon-verdict-cases\` fence present in it, $RM_NS definitional span(s) on the declaration spine and $RM_NSP code span(s) across its declaration blocks, with the expected cardinality DERIVED as RM_NREQ=$RM_NREQ from HZ7's \`trip-term\` and HZ11's \`wrap-term\` columns rather than written here. Every arm below is a measurement rather than an empty scan"
+fi
+
+if [ "$RM_OK" -eq 1 ]; then
+  # Every arm below puts its PASS on a POSITIVE comparison of values rm_measure already
+  # extracted, with the diagnoses after it. That ordering is the whole of ADR-019's S2: a
+  # degenerate reading — an empty value where a count should be — makes the positive test
+  # false and lands on a FAIL, whereas the same limbs written diagnosis-first put the PASS on
+  # every condition nothing matched, an absent subject included.
+  #
+  # The values come from rm_measure; the limb TOKENS the controls below score are named in
+  # rm_violations and correspond one-for-one to the branches here.
+
+  # ── RM1 — the spine's CARDINALITY is derived, and each symbol is declared ONCE. ─
+  # The uniqueness limb is ADR-019's R3 complement, expressed as a cardinality rather than as
+  # a negation vocabulary: a SECOND declaration of an already-declared symbol — the classic
+  # add-only vector that leaves a rule-presence assertion green — turns this red.
+  if [ "$RM_NS" -eq "$RM_NREQ" ] && [ "$RM_ND" -eq "$RM_NS" ]; then
+    PASS "RM1: the declaration spine is EXACTLY $RM_NREQ definitional span(s) over $RM_ND distinct symbol(s) — the derived cardinality holds and no symbol is declared twice. The expectation is derived from the fence (1 + a populated \`trip-term\` + a populated \`wrap-term\`), never written down here, so it tracks the rule rather than a moment in its history. The uniqueness limb is the R3 complement: an added second declaration fails HERE rather than leaving a present rule reading present"
+  elif [ "$RM_NS" -ne "$RM_NREQ" ]; then
+    FAIL "RM1: the declaration spine carries $RM_NS definitional span(s), expected $RM_NREQ — one for the reference month plus one per term the fence independently shows the rule needs. Below the expectation a declaration was deleted or flattened out of its blockquote; above it, one was added. Neither is an editorial change, and the expectation is not a pin: it moves with the fence group HZ grades"
+  else
+    FAIL "RM1: the spine declares $RM_NS span(s) over only $RM_ND distinct symbol(s) — a symbol is declared more than once, so the rule has two definitions of one term inside the same region and nothing says which governs. THIS IS THE ADDITION CASE: the earlier declaration is untouched and still reads correctly, which is exactly why a rule-presence assertion would still be green here"
+  fi
+
+  # ── RM2 — the reference month is TRIP-RELATIVE, with an explicit absence limb. ──
+  # The positive limb: exactly one spine row names `clock` alongside ANOTHER declared symbol.
+  # The absence limb: no row names `clock` without one. The second is what makes reverting the
+  # rule fail whether the author REWRITES the existing declaration or ADDS a clock-only one
+  # beside it. Bound to a property HZ7 already measures.
+  if [ "$RM_NG" -eq 1 ] && [ "$RM_NB" -eq 0 ]; then
+    PASS "RM2: the reference month is TRIP-RELATIVE — exactly $RM_NG spine row names \`clock\` alongside another declared symbol of this same region, and $RM_NB row names \`clock\` without one. Both limbs are asserted because they fail on different edits: rewriting the declaration breaks the first, adding a clock-only one beside it breaks only the second. \`clock\` is the single vocabulary word this group spells; the symbols it is compared against are read from the document"
+  elif [ "$RM_NG" -ne 1 ]; then
+    FAIL "RM2: $RM_NG spine row(s) name \`clock\` alongside another declared symbol, expected exactly 1 — the reference month is no longer defined as a function of the clock AND a trip-resolved term. A reference month equal to the clock alone makes the fence's two verdict columns identical by construction, so this is the same reversion HZ7 detects one layer down, named at the symbol that moved rather than as a symptom"
+  else
+    FAIL "RM2: $RM_NB spine row(s) name \`clock\` and NO other declared symbol — a clock-only definition of the reference month is present in the region. This is the COMPLEMENT limb and it is the reason this group is not shaped like HC1: the correct declaration may be sitting untouched beside this one, so a presence assertion would read green while the document says two contradictory things"
+  fi
+
+  # ── RM3 — the wrapped term ADVANCES THE YEAR. ──────────────────────────────────
+  # HZ11 already requires the fence to carry a discriminating wrap pair; this is the prose
+  # that fence is the oracle for. Flattening the wrapped term to the title year is a material
+  # change that leaves the fence, and every HZ arm, untouched.
+  if [ "$RM_NP" -eq 1 ]; then
+    PASS "RM3: exactly $RM_NP spine row carries a year-advancing term — the wrapped term is defined as advancing past the title year, which is the whole of what distinguishes it from the resolved term. HZ11 grades that the fence DISCRIMINATES that clause; this arm grades that the prose the fence is an oracle for still states it"
+  else
+    FAIL "RM3: $RM_NP spine row(s) carry a year-advancing term, expected exactly 1 — at 0 the wrapped-term declaration was deleted or flattened so it no longer advances the year, and the New-Year clause the fence's \`wrap-term\` column grades has no prose defining it; above 1 a second year-advancing declaration was added and the rule has two"
+  fi
+
+  # ── RM4 — the NON-RESOLUTION CLAUSE names the selection pair. ───────────────────
+  # The clause's condition used to live in unbolded justification prose, where an operative-token
+  # projection cannot reach it — measured: a revert of that clause read PASS. It is now rendered
+  # as a tuple span inside the declaration, which brings it inside the projection. The members
+  # are checked against the operands of the declaration heading its OWN block, DERIVED from the
+  # spine rather than spelled, so the pair cannot name something the term does not resolve from.
+  if [ "$RM_NT" -eq 1 ] && [ "$RM_TA" -ge 2 ] && [ "$RM_TO" -eq 1 ] && [ "$RM_TS" -eq 1 ]; then
+    PASS "RM4: the non-resolution clause names the SELECTION PAIR as an operative token — exactly $RM_NT tuple span of arity $RM_TA, whose members are all operands of the declaration heading its own block. That subset is derived from the spine on this run and written nowhere here. Before this clause was promoted into a code span it lived in unbolded justification prose, where the projection could not see it and a year-only revert of it measured PASS"
+  elif [ "$RM_NT" -ne 1 ]; then
+    FAIL "RM4: the region's declaration blocks carry $RM_NT tuple span(s), expected exactly 1 — at 0 the non-resolution condition has left the operative projection and is back in prose no token-level anchor can see, which is precisely the escape this arm was added to close; above 1 the clause has been stated twice and nothing says which pair governs"
+  elif [ "$RM_TA" -lt 2 ]; then
+    FAIL "RM4: the non-resolution clause's tuple span has arity $RM_TA, expected at least 2 — the condition has been narrowed to a single term. The declared rule is that the PAIR's absence is what fails to resolve, not the year's, so an arity of 1 is the year-only reversion stated in the document's own notation"
+  elif [ "$RM_TO" -ne 1 ]; then
+    FAIL "RM4: the tuple span sits in a declaration block that carries no definitional span of its own, so there is nothing to check its members against. The subset limb is DERIVED from the declaration heading the tuple's own block — moving the clause out from under its declaration removes the derivation rather than weakening it"
+  else
+    FAIL "RM4: the non-resolution clause names term(s) that are NOT operands of the declaration heading its own block — so the clause claims the rule fails to resolve on something the term never resolved from. Nothing here is spelled: the admissible set is read from that declaration's own right-hand side on this run"
+  fi
+
+  # ── RM5 — MUST FIRE. SENSITIVITY, on a REVERT, through the SAME comparator. ─────
+  # Neither reader below carries an `exit`: awk drains its input, so the producer on the left
+  # of the pipe always finishes writing. A reader that stopped early would take the writer out
+  # with SIGPIPE and, under this file's `pipefail`, turn a successful read into a failed one —
+  # the hazard the note above has_finding states in full.
+  RM_REF="$(rm_read "$RM_DOC" | awk -F'\t' '
+    $1 == "SPINE" { n0++; sym[n0]=$2; ln[n0]=$4; idt[n0]=$6; op[n0]=$7 }
+    END {
+      for (i = 1; i <= n0; i++) {
+        k = split(idt[i], tok, " "); delete has; hc = 0
+        for (m = 1; m <= k; m++) { has[tok[m]] = 1; if (tok[m] == "clock") hc = 1 }
+        if (hc != 1) continue
+        o = 0; for (j = 1; j <= n0; j++) if (j != i && (sym[j] in has)) o = 1
+        if (o == 1) { hit++; h = i }
+      }
+      if (hit == 1) printf "%s\t%s\t%s\n", ln[h], sym[h], op[h]
+    }')"
+  RM_FL="$(rm_read "$RM_DOC" | awk -F'\t' '$1 == "FENCE" && n++ == 0 { print $2 }')"
+  RM_RLN="$(printf '%s' "$RM_REF" | cut -f1)"
+  RM_RSYM="$(printf '%s' "$RM_REF" | cut -f2)"
+  RM_ROP="$(printf '%s' "$RM_REF" | cut -f3)"
+  RM_MUT="$WORK/rm-mutant.md"
+
+  if [ -z "$RM_REF" ] || [ -z "$RM_FL" ]; then
+    FAIL "RM5: MUST FIRE — the reference-month row or the fence anchor could not be derived from the document, so no mutant could be built out of the rule's own terms. The controls below are unrun rather than passing, and RM1–RM4's verdicts have nothing behind them"
+    FAIL "RM6: MUST NOT FIRE — not run: the anchors RM5 reports missing are the same ones this arm's copy is built from"
+    FAIL "RM8: MUST FIRE, ADD-ONLY — not run: the anchors RM5 reports missing are the same ones this arm's declaration is derived from"
+  else
+    if rm_mutate "$RM_DOC" revert "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
+      RM_MV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
+      RM_MN="$(rm_nviol "$RM_MV")"
+      if [ "$RM_MN" -ge 1 ]; then
+        PASS "RM5: MUST FIRE — the reference-month declaration's right-hand side replaced by its OWN FIRST OPERAND (\`$RM_RSYM = $RM_ROP\`, a clock-only reversion derived from the document and not spelled here) scores $RM_MN violation(s) through this same comparator: ${RM_MV}. The zeros RM1–RM4 report are therefore measurements — this comparator CAN see the rule reverted"
+      else
+        FAIL "RM5: MUST FIRE — a clock-only reversion of the reference-month declaration scored ZERO violations through this comparator. Every arm above is then a reader that cannot see the change it exists to detect, and their green says nothing about the document"
+      fi
+    else
+      FAIL "RM5: MUST FIRE — the reversion mutant did not land on line $RM_RLN of the copy, so this control never exercised the comparator. A mutation that failed to apply must never be read as an arm that failed to fire, which is why landing is asserted separately from scoring"
+    fi
+
+    # ── RM6 — MUST NOT FIRE. SPECIFICITY, on a REWORD. ───────────────────────────
+    # This arm is what makes the material/editorial discriminator DEMONSTRATED rather than
+    # asserted. Without it, "ordinary rewording does not produce a false red" is a claim with
+    # no evidence behind it, and the cheapest way to satisfy every arm above would be a
+    # comparator that convicts every edit.
+    if rm_mutate "$RM_DOC" reword "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
+      RM_WV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
+      RM_WN="$(rm_nviol "$RM_WV")"
+      if [ "$RM_WN" -eq 0 ]; then
+        PASS "RM6: MUST NOT FIRE — one plain sentence added to a non-declaration paragraph of the region, carrying no code span and no bolded lead-in, scores ZERO violations through this same comparator. Editorial edits do not redden this group, and that is demonstrated on the real document rather than promised: RM5 has already shown the same comparator firing, so this zero is specificity and not a dead reader"
+      else
+        FAIL "RM6: MUST NOT FIRE — a purely editorial addition scored $RM_WN violation(s): ${RM_WV}. This group convicts correct work, and a gate that convicts correct work trains contributors to reach for its exemption marker rather than to read it"
+      fi
+    else
+      FAIL "RM6: MUST NOT FIRE — the editorial mutant did not land before line $RM_FL of the copy, so the specificity of every arm above is unmeasured"
+    fi
+
+    # ── RM8 — MUST FIRE, ADD-ONLY. The arm HC1 does not have. ────────────────────
+    # Nothing existing is touched: a SECOND, clock-only declaration of the same symbol is
+    # appended as its own declaration block, with the correct one left byte-intact beside it.
+    # This is ADR-019's S4 degenerate input — "an added negating or widening clause leaves the
+    # rule present" — run against this group's own arms. It fails RM1's uniqueness limb and
+    # RM2's absence limb, which is what carrying R3 rather than only R4 buys.
+    if rm_mutate "$RM_DOC" addition "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
+      RM_AV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
+      RM_AN="$(rm_nviol "$RM_AV")"
+      if [ "$RM_AN" -ge 1 ]; then
+        PASS "RM8: MUST FIRE, ADD-ONLY — a second, clock-only declaration of \`$RM_RSYM\` appended as its own declaration block, with every existing declaration left byte-intact, scores $RM_AN violation(s) through this same comparator: ${RM_AV}. This group is therefore NOT addition-blind. It is the arm the precedent named for this shape does not carry: that precedent's own must-fire control mutates the PROBE and proves the probe lives, which leaves an added negating clause green on both"
+      else
+        FAIL "RM8: MUST FIRE, ADD-ONLY — a second, contradicting declaration ADDED beside the correct one scored ZERO violations. This group is addition-blind: ADR-019's S4 degenerate input reaches its PASS, and the complement limbs RM1 and RM2 claim to carry are not doing the work they say they do"
+      fi
+    else
+      FAIL "RM8: MUST FIRE, ADD-ONLY — the addition mutant did not land before line $RM_FL of the copy, so the add-only input this group exists to be sensitive to was never presented to it"
+    fi
+  fi
+
+  # ── RM7 — the controls wrote to a COPY. The real document is untouched. ────────
+  # A control that mutated the tree it is measuring would make every arm above a statement
+  # about a document this commit does not contain. FW3b's arm, for FW3b's reason.
+  if cmp -s "$RM_DOC" "$RM_PRISTINE"; then
+    PASS "RM7: reference/data-model.md is byte-identical to the copy taken before RM5, RM6 and RM8 ran — all three mutants were written to a temp file and the measured tree was never touched"
+  else
+    FAIL "RM7: reference/data-model.md CHANGED while this group ran — a control has mutated the document it is measuring, so every verdict above describes a file this commit does not contain"
+  fi
 fi
 # ═════════════════════════════════════════════════════════════════════════════════
 echo

@@ -144,6 +144,13 @@ name: Artifact schema
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The
 #        real store is git-ignored, so a mark no tracked fixture carries is a grammar
 #        nothing grades
+#   RM   the reference-month RULE PROSE in reference/data-model.md, anchored so a
+#        prose-only revert fails a check rather than leaving the fence intact and every
+#        arm green. The anchor is a derived declaration spine, never a pin: the expected
+#        cardinality is derived from the fence group HZ grades and the actual spine is
+#        read out of the document by its own typography. Material is an operative token
+#        inside a normative declaration block; editorial is everything else, so rewording
+#        does not turn this red and that is asserted rather than promised
 #   CE   its arm coverage is asserted at the same two granularities the ST line above
 #        describes, through the same shared comparison, so a code or an emission site added to
 #        its evaluator with no arm behind it turns the run RED rather than latent.
