@@ -4,9 +4,11 @@
 #
 #   ./scripts/test-corpus-hygiene.sh
 #
-# Grades the tracked markdown corpus for three defect classes that survive a reorganisation
-# because nothing mechanical looks for them. Each was removed by hand at least once, and
-# each came back — inside the very work that removed it.
+# Grades the tracked markdown corpus for the defect classes that survive a reorganisation
+# because nothing mechanical looks for them. Each was repaired by hand at least once, and
+# most came back — inside the very work that removed them. Their number is not written here,
+# per the rule below: a tally in this banner is a copy with no assertion behind it, and this
+# one had already gone stale by the time the class after it was added.
 #
 # ── WHAT IT ASSERTS ──────────────────────────────────────────────────────────────
 #   A    CITATION FORM. A `.md` basename written bare, where that basename resolves to
@@ -83,6 +85,43 @@
 #        recurred. A removed assertion whose row was not updated fails too, on group ST's
 #        warrant: a floor cannot see the deletion of one of two sites.
 #
+#   D    ADR RECORD NUMBERING. A record number carried by two record files or by two index
+#        rows; a number inside the sequence carried by no record and DECLARED by no row; and
+#        a disagreement between the index and the directory in either direction. Two
+#        concurrent branches each shipped a DIFFERENT record at one number and every required
+#        check stayed green. The reason nothing objected is structural: the two records have
+#        different FILENAMES, so each change is an add of a distinct path and the merge has
+#        nothing to conflict on; the only file the two changes share is the index, and a
+#        resolution that keeps both rows leaves the collision on the default branch. It was
+#        caught by hand, and by hand is not a gate.
+#
+#        THE DELIBERATE GAP IS DECLARED, NOT SPECIAL-CASED. The convention forbids reuse and
+#        renumbering, so a withdrawn record leaves a permanent hole — and a hole is not a
+#        defect for being a hole, it is a defect for being unaccounted for. Gaps are therefore
+#        DECLARED per number in the `adr-number-declaration` fence in reference/adr/README.md
+#        and asserted in BOTH DIRECTIONS, on the same device and for the same reason as class
+#        C's digest: an undeclared gap fails, and a declared number that is occupied, that
+#        sits outside the span, or that is not readable as a number fails too. That second
+#        direction is what keeps a declaration from outliving the gap it excepts. A row
+#        carrying only a number is not a declaration — the reader requires both columns — and
+#        its number still reads undeclared, which arm CTL-D4-BAD-GAP asserts rather than
+#        leaves to be discovered.
+#
+#        THE SCOPE IS NARROWER THAN THE NAME, DELIBERATELY, AND THE BOUNDARY IS DECLARED.
+#        Three things this group reads past rather than grades, so a green is not read as
+#        more than it is. A row's record is the FIRST record-file link in it — the table's
+#        key cell — so a citation in a later cell is a reference and not a second row. The
+#        row's LINK TEXT is not compared against its target: a row whose label names one
+#        record over a link to another's file names a file that exists, and is graded by the
+#        target alone. And the number's SPELLING is ungraded: the recogniser takes the digit
+#        run from the basename rather than a fixed width, so a mis-padded `ADR-27-…` is
+#        numbered 27 and participates in every assertion here — but nothing fails it for the
+#        padding the convention asks for. Each is a live remediation rather than a hole
+#        nobody noticed, and reaching any of them is an edit to the recogniser below.
+#
+#        THE SPAN'S FLOOR IS THE FIRST NUMBER, NOT THE LOWEST ONE OBSERVED. Anchoring the
+#        floor at the observed minimum would make a missing lowest number the one hole
+#        nothing can see, because removing it moves the floor down with it.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, plus one arm that
 #        replays a defect this repository actually shipped. One MUST-FIRE arm per finding
 #        code this file can emit, alongside the specificity arms that tell a correct
@@ -173,6 +212,11 @@ CH_FENCE_TAG='count-assertion-digest'
 # The commit whose ADR-008 revision carries the motivating defect, and the path inside it.
 CH_RETRO_REV='b582bbb0038a4f8a007fa431c9241fe96fffd01d'
 CH_RETRO_PATH='reference/adr/ADR-008-publish-content-guard.md'
+# The ADR corpus: the record directory, the index that enumerates it, and the tag of the
+# declaring fence that index carries. Named once, and read from nowhere else.
+CH_ADR_DIR='reference/adr'
+CH_ADR_INDEX='reference/adr/README.md'
+CH_ADR_TAG='adr-number-declaration'
 
 pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
@@ -623,6 +667,106 @@ infence {
 }
 AWK
 
+# ── d.awk — class D, the ADR record-number scan ──────────────────────────────────
+cat > "$WORK/d.awk" <<'AWK'
+# ARGV[1] the declared-gap TSV, already extracted from the index by fence.awk — the SAME
+# reader class C drives, so the corpus's declaring device has one parser and not two.
+# ARGV[2] a newline-separated relative path list. -v ROOT=<dir> -v ADRDIR=<dir>
+# -v INDEX=<relpath> -v DECFILE=<path of ARGV[1]>
+#
+# THE TWO INPUTS ARE SPLIT BY FILENAME, NOT BY `FNR == NR`, AND THE DIFFERENCE IS LOAD-
+# BEARING. That idiom is sound only while the first file is non-empty: an empty declaration
+# leaves NR and FNR equal for every record of the SECOND file too, so the entire path list is
+# consumed as declaration rows and the walk reports an empty corpus — a zero that reads like
+# a clean tree. A fixture carrying no declaring fence is the ORDINARY case here, not an edge
+# one, so this was measured rather than reasoned about: with the idiom in place, four control
+# arms below went red and a fifth passed for the wrong reason.
+#
+# Emits one FINDING per defect, and ALWAYS a DENOM carrying the records walked, the index
+# rows read, the gaps declared, the gaps a declaration actually holds open, and the span's
+# upper bound — the denominators that make a zero a measurement rather than an empty walk.
+FILENAME == DECFILE {
+  split($0, d, "\t")
+  if (d[1] == "") next
+  if (d[1] ~ /^[0-9]+$/) { DECL[d[1] + 0] = d[2]; ndecl++ }
+  else                     BADROW[++nbad] = d[1] " " d[2]
+  next
+}
+{ if ($0 != "") FILES[++nf] = $0 }
+END {
+  # ── The records on disk. The recogniser is the BASENAME SHAPE and the number is the digit
+  # run inside it, NOT a fixed width: a width-anchored recogniser would make a mis-padded
+  # record invisible to every assertion below, which is the one answer a numbering gate must
+  # not give. What it costs is that the padding itself is ungraded, which the banner declares.
+  for (i = 1; i <= nf; i++) {
+    rel = FILES[i]
+    if (index(rel, ADRDIR "/") != 1) continue
+    b = rel; sub(/^.*\//, "", b)
+    if (b !~ /^ADR-[0-9]+-.+\.md$/) continue
+    nrec++
+    n = numof(b)
+    if (n > maxn) maxn = n
+    if (n in FBYNUM) printf "FINDING D1 record %s %s %s\n", pad(n), FBYNUM[n], b
+    else             FBYNUM[n] = b
+    HASFILE[b] = 1
+  }
+
+  # ── The index rows. A row's record is the FIRST record-file link in it — the key cell of
+  # the table — so a citation in a later cell is a reference and not a second row. Fenced
+  # blocks are skipped, which is also what keeps the declaring fence in that same document
+  # from being read as a table of rows.
+  idx = ROOT "/" INDEX
+  while ((getline line < idx) > 0) {
+    t = line; sub(/^[ \t]+/, "", t)
+    if (substr(t, 1, 3) == "```") { infence = !infence; continue }
+    if (infence) continue
+    if (substr(t, 1, 1) != "|") continue
+    if (!match(t, /\([^()]*ADR-[0-9]+-[^()]*\.md[^()]*\)/)) continue
+    tgt = substr(t, RSTART + 1, RLENGTH - 2)
+    sub(/[ \t].*$/, "", tgt)      # a link title
+    sub(/#.*$/, "", tgt)          # an anchor
+    sub(/^.*\//, "", tgt)         # any qualification; the index writes the sibling name
+    nrow++
+    n = numof(tgt)
+    if (n in RBYNUM) printf "FINDING D1 index %s %s %s\n", pad(n), RBYNUM[n], tgt
+    else             RBYNUM[n] = tgt
+    HASROW[tgt] = 1
+  }
+  close(idx)
+
+  # ── Index against directory, in BOTH directions. A number collision routes to D1 and an
+  # existence mismatch to D3, so one event is never counted under two codes.
+  for (b in HASFILE) if (!(b in HASROW))  printf "FINDING D3 orphan-record %s\n", b
+  for (b in HASROW)  if (!(b in HASFILE)) printf "FINDING D3 orphan-row %s\n", b
+
+  # ── The sequence.
+  for (n = 1; n <= maxn; n++) {
+    if (n in FBYNUM) continue
+    if (n in DECL)   { nheld++; continue }
+    printf "FINDING D2 %s\n", pad(n)
+  }
+
+  # ── The declaration, in the other direction, on class C's warrant: a declaration that
+  # outlives the gap it excepts is a standing exemption for whatever next takes that number.
+  for (k in DECL) {
+    kn = k + 0
+    if (k in FBYNUM)           { printf "FINDING D4 %s %s occupied-by-%s\n", pad(kn), DECL[k], FBYNUM[k]; continue }
+    if (kn < 1 || kn > maxn)     printf "FINDING D4 %s %s outside-the-span\n", pad(kn), DECL[k]
+  }
+  for (i = 1; i <= nbad; i++) printf "FINDING D4 %s not-a-number\n", BADROW[i]
+
+  # D0 is emitted BY THE EXTRACTOR rather than decided by the group, so it enters the group-Y
+  # inventory on the same terms as every other code. A surface that came back empty is a
+  # broken probe or a relocated corpus; reporting it as clean numbering is the one answer
+  # that must not be reachable.
+  if (nf == 0 || nrec == 0 || nrow == 0)
+    printf "FINDING D0 files=%d records=%d rows=%d\n", nf + 0, nrec + 0, nrow + 0
+  printf "DENOM %d %d %d %d %d\n", nrec + 0, nrow + 0, ndecl + 0, nheld + 0, maxn + 0
+}
+function numof(b,   k) { k = b; sub(/^ADR-/, "", k); sub(/-.*$/, "", k); return k + 0 }
+function pad(n) { return sprintf("%03d", n + 0) }
+AWK
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # THE COMPARATOR. ONE function, driven by the real-tree arm and by every group-C control
 # arm below.
@@ -639,7 +783,20 @@ ch_scan_b() { awk -v ROOT="$1" -f "$WORK/b.awk" "$2"; }
 # knob: a gate whose strictness can be set by the caller is not a gate. It is changed by
 # editing the line below, in a diff, alongside the fence rows that change with it.
 ch_scan_c() { awk -v ROOT="$1" -v SHOW="${3:-0}" -v LOOK=2 -f "$WORK/c.awk" "$2"; }
-ch_fence()  { awk -v TAG="$CH_FENCE_TAG" -f "$WORK/fence.awk" "$1"; }
+# The tag defaults to class C's, so every existing caller is unchanged; class D passes its
+# own. ONE fence reader serves both declaring fences — a second parser for the same on-disk
+# shape would be a second place for that shape to drift.
+ch_fence()  { awk -v TAG="${2:-$CH_FENCE_TAG}" -f "$WORK/fence.awk" "$1"; }
+
+# ch_scan_d <root> <listfile> — the class-D scan, shaped like ch_scan_a: the declaration is
+# extracted first, then handed to the walker as a file, so the control arms drive exactly the
+# code the real tree does.
+ch_scan_d() {
+  if [ -r "$1/$CH_ADR_INDEX" ]; then ch_fence "$1/$CH_ADR_INDEX" "$CH_ADR_TAG" > "$WORK/adrdec.tsv"
+  else : > "$WORK/adrdec.tsv"; fi
+  awk -v ROOT="$1" -v ADRDIR="$CH_ADR_DIR" -v INDEX="$CH_ADR_INDEX" \
+    -v DECFILE="$WORK/adrdec.tsv" -f "$WORK/d.awk" "$WORK/adrdec.tsv" "$2"
+}
 
 # ch_compare_c <root> <fence-doc-abs> <listfile> — the both-direction assertion.
 #   C0 the fence yields zero rows: an empty declaration asserts nothing.
@@ -772,6 +929,61 @@ if [ "${C_NFIND:-0}" -eq 0 ]; then
 else
   FAIL "C1/C2/C3/C4: $C_NFIND disagreement(s) between the observed count assertions and the \`$CH_FENCE_TAG\` declaration. For each one: remove the assertion, give it a basis (F1 anchor it to a commit, F2 move it inside a derived region, F3 write out the arithmetic), or update the row in the SAME commit so the diff carries the decision. Do not regenerate the whole fence to make this green — re-pin only the rows you meant to change:"
   printf '%s\n' "$C_FIND" | awk '$1 == "FINDING" { $1 = ""; printf "     %s\n", $0 }'
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "D — ADR record numbering: used once, no undeclared gap, index agrees with the directory"
+# ═════════════════════════════════════════════════════════════════════════════════
+D_OUT="$(ch_scan_d "$ROOT" "$WORK/list.real")"
+D_NREC="$(awk '$1 == "DENOM" { print $2 }' <<<"$D_OUT")"
+D_NROW="$(awk '$1 == "DENOM" { print $3 }' <<<"$D_OUT")"
+D_NDECL="$(awk '$1 == "DENOM" { print $4 }' <<<"$D_OUT")"
+D_NHELD="$(awk '$1 == "DENOM" { print $5 }' <<<"$D_OUT")"
+D_MAXN="$(awk '$1 == "DENOM" { print $6 }' <<<"$D_OUT")"
+D_NDUP="$(n_code "$D_OUT" D1)"
+D_NGAP="$(n_code "$D_OUT" D2)"
+D_NMIS="$(n_code "$D_OUT" D3)"
+D_NROT="$(n_code "$D_OUT" D4)"
+printf '  SURFACE: %s record file(s) under %s/ and %s index row(s) in %s, over a span reaching %s; %s declared number(s), %s of them holding a gap open.\n' \
+  "$D_NREC" "$CH_ADR_DIR" "$D_NROW" "$CH_ADR_INDEX" "$D_MAXN" "$D_NDECL" "$D_NHELD"
+for c in D0 D1 D2 D3 D4; do echo "$c" >> "$SURF_LOG"; done
+
+# The vacuity guard is written so an unrun extractor resolves to the LOUD answer: an unset
+# denominator reads 0 and lands on the FAIL limb, where a code-presence test would have read
+# an absent finding as a clean tree.
+if [ "${D_NREC:-0}" -gt 0 ] && [ "${D_NROW:-0}" -gt 0 ]; then
+  PASS "D0: the class-D surface is non-empty — $D_NREC record file(s) read from $CH_ADR_DIR/ and $D_NROW index row(s) from $CH_ADR_INDEX, so every verdict below is a measurement rather than a walk over nothing"
+else
+  FAIL "D0: the class-D surface came back EMPTY (records=$D_NREC rows=$D_NROW) — a zero here is a broken probe or a relocated corpus, never clean numbering, and D1/D2/D3 below would be verdicts over the empty set"
+fi
+
+if [ "${D_NDUP:-0}" -eq 0 ]; then
+  PASS "D1: no ADR number is carried by two record files or by two index rows — $D_NREC record(s) and $D_NROW row(s) resolve to distinct numbers on each surface separately. The zero is a measurement: arms CTL-D1, CTL-D1-FILE and CTL-D1-ROW plant a collision on both surfaces and on each alone, and require every one to be found"
+else
+  FAIL "D1: $D_NDUP ADR number collision(s). A number is spent when it is published — the convention in $CH_ADR_INDEX forbids reuse and renumbering, so a collision that reaches the default branch cannot be repaired by renaming and has to be resolved before the merge:"
+  grep '^FINDING D1 ' <<<"$D_OUT" | awk '{ printf "      %s surface, ADR-%s: %s and %s\n", $3, $4, $5, $6 }'
+fi
+
+if [ "${D_NGAP:-0}" -eq 0 ]; then
+  PASS "D2: every number up to $D_MAXN is either carried by a record or DECLARED a deliberate gap — $D_NHELD held open by a row in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX. A declared gap PASSING is the whole point of declaring it, and it is also what makes this zero a measurement in the other direction: a fence this scan failed to read would leave that gap undeclared and turn this verdict red rather than quietly green. Arm CTL-D2 plants an undeclared gap and requires it to fail; arm CTL-D2-DECL declares the same gap and requires silence"
+else
+  FAIL "D2: $D_NGAP number(s) up to $D_MAXN are carried by no record and declared by no row. Either the record is missing, or the gap is deliberate and belongs in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX — a row there needs BOTH columns, the number and a reason token, and a row carrying only a number declares nothing:"
+  grep '^FINDING D2 ' <<<"$D_OUT" | awk '{ printf "      ADR-%s\n", $3 }'
+fi
+
+if [ "${D_NMIS:-0}" -eq 0 ]; then
+  PASS "D3: the index and the directory agree in BOTH directions — each of $D_NREC record file(s) is named by a row, and each of $D_NROW row(s) names a record file that exists. This is the comparison nothing in this repository made before; arms CTL-D3-FILE and CTL-D3-ROW plant a mismatch in each direction, because a one-way walk is blind to whichever side it starts from"
+else
+  FAIL "D3: $D_NMIS disagreement(s) between $CH_ADR_INDEX and $CH_ADR_DIR/. A record with no row is invisible to every reader of the index; a row with no record is a link that does not resolve:"
+  grep '^FINDING D3 ' <<<"$D_OUT" | awk '{ printf "      %s: %s\n", $3, $4 }'
+fi
+
+if [ "${D_NROT:-0}" -eq 0 ]; then
+  PASS "D4: every row in the \`$CH_ADR_TAG\` fence still excepts a real gap — $D_NDECL declared number(s), none occupied by a record, none outside the span, none unreadable as a number. A declaration that outlives its gap is a standing exemption for whatever next takes that number, which is why this direction is asserted at all; arms CTL-D4, CTL-D4-SPAN and CTL-D4-BAD plant one of each"
+else
+  FAIL "D4: $D_NROT row(s) in the \`$CH_ADR_TAG\` fence in $CH_ADR_INDEX no longer except a gap. Remove the row in the same change that filled or corrected it — do not leave it standing:"
+  grep '^FINDING D4 ' <<<"$D_OUT" | awk '{ printf "      %s (%s): %s\n", $3, $4, $5 }'
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -1051,6 +1263,115 @@ else
     PASS "CTL-RETRO: C1 fired on the real historical revision of $CH_RETRO_PATH — $RETRO_N site(s), including the wrapped \"…one way in all / twelve places\" claim that passed every required check green on the day it shipped. This is the only arm here that tests a defect the repository actually carried"
   fi
 fi
+
+# ── D ────────────────────────────────────────────────────────────────────────────
+# Each fixture is a whole small ADR corpus — a record directory, an index, and where the arm
+# needs one a declaring fence — graded by the SAME ch_scan_d that graded the tree above. A
+# control running different code would prove nothing about the gate.
+ctl_adr_rec() {  # ctl_adr_rec <root> <basename...> — the record files on disk
+  local d="$1"; shift
+  local b; for b in "$@"; do printf 'A fixture record.\n' > "$d/$CH_ADR_DIR/$b"; done
+}
+ctl_adr_idx() {  # ctl_adr_idx <root> <basename...> — the index, one row per basename
+  local d="$1"; shift
+  { printf '# Architecture Decision Records\n\n## Index\n\n'
+    printf '| ADR | Title | Status |\n|-----|-------|--------|\n'
+    local b n
+    for b in "$@"; do
+      n="${b#ADR-}"; n="${n%%-*}"
+      printf '| [ADR-%s](%s) | Fixture | Accepted |\n' "$n" "$b"
+    done
+  } > "$d/$CH_ADR_INDEX"
+}
+ctl_adr_decl() {  # ctl_adr_decl <root> <row...> — append the declaring fence to that index
+  local d="$1"; shift
+  { printf '\n## Number declarations\n\n'
+    printf '```%s\n' "$CH_ADR_TAG"
+    printf '# number  reason\n'
+    local r; for r in "$@"; do printf '%s\n' "$r"; done
+    printf '```\n'
+  } >> "$d/$CH_ADR_INDEX"
+}
+
+D="$(ctl_mk d1)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md ADR-002-gamma.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md ADR-002-gamma.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D1" D1 "$O" "two records carry ONE number and the index keeps a row for each — the exact state two concurrent branches shipped, where the differing filenames leave the merge nothing to conflict on. The arity is the assertion: the collision is graded on the directory AND on the index, so an implementation reading only one surface is caught here rather than after a merge" 2
+
+D="$(ctl_mk d1file)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md ADR-002-gamma.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D1-FILE" D1 "$O" "the DIRECTORY carries two records at one number while the index keeps a single row — the merge resolution that drops a row instead of keeping both, which leaves the collision on disk and the index reading clean" 1
+
+D="$(ctl_mk d1row)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md ADR-002-gamma.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D1-ROW" D1 "$O" "the INDEX carries two rows at one number while the directory carries a single record — the collision graded on the index alone, so neither surface's verdict rests on the other's" 1
+
+D="$(ctl_mk d2)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-003-gamma.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D2" D2 "$O" "a number inside the span is carried by no record and declared by no row — the lost-number case, which on inspection is indistinguishable from a gap somebody decided to carry" 1
+
+D="$(ctl_mk d2decl)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_decl "$D" '002  deliberate-withdrawal'
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-D2-DECL" D2 "$O" "the SAME gap is declared by a row in the fence — the arm that tells a correct gate from a merely strict one, because a gate failing here fails on the live corpus too, where a withdrawn record's number is a permanent and deliberate hole"
+
+D="$(ctl_mk d3file)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md
+ctl_adr_idx "$D" ADR-001-alpha.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D3-FILE" D3 "$O" "a record file exists that no index row names — the direction nothing in this repository compared, and the one that catches a collision whose merge resolution kept a single row" 1
+
+D="$(ctl_mk d3row)"
+ctl_adr_rec "$D" ADR-001-alpha.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D3-ROW" D3 "$O" "an index row names a record file that does not exist — the other direction, which a walk starting from the directory cannot see at all" 1
+
+D="$(ctl_mk d4)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md
+ctl_adr_decl "$D" '002  stale-row'
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D4" D4 "$O" "a declared number is OCCUPIED by a record — the gap was filled and the row did not come out, which is how a declaration turns into a standing exemption for whatever next takes that number" 1
+
+D="$(ctl_mk d4span)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md
+ctl_adr_decl "$D" '009  never-reached'
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D4-SPAN" D4 "$O" "a declared number sits OUTSIDE the span — it excepts a gap the sequence does not have, so it asserts nothing today and would silently except a real one the day the sequence reaches it" 1
+
+D="$(ctl_mk d4bad)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-003-gamma.md
+ctl_adr_decl "$D" 'ADR-002  written-as-an-identifier'
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D4-BAD" D4 "$O" "a declaring row writes the full identifier where the number belongs — the likeliest authoring slip on this fence, and one that declares nothing while LOOKING like a declaration" 1
+ctl_mustfire "CTL-D4-BAD-GAP" D2 "$O" "and the same malformed row does NOT hold its gap open — the number it meant to except is still reported undeclared, so a row that reads like a declaration and is not cannot silently except anything. This is the pair that makes the fence fail-closed rather than fail-quiet" 1
+
+D="$(ctl_mk d0)"
+ctl_adr_idx "$D"
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustfire "CTL-D0" D0 "$O" "the index carries no row and the directory no record — an empty ADR surface, which is a broken probe or a relocated corpus and must never read as clean numbering" 1
+
+D="$(ctl_mk dspec)"
+ctl_adr_rec "$D" ADR-001-alpha.md ADR-002-beta.md
+printf 'notes, not a record\n' > "$D/$CH_ADR_DIR/notes.md"
+printf 'a draft carrying no number\n' > "$D/$CH_ADR_DIR/ADR-draft-thoughts.md"
+ctl_adr_idx "$D" ADR-001-alpha.md ADR-002-beta.md
+O="$(ch_scan_d "$D" "$(ctl_list "$D")")"
+ctl_mustnot "CTL-D-SPEC" D3 "$O" "the record directory also holds its own index, a notes file and a draft carrying no number — none of the three is a record, so none may be reported as a record the index forgot"
+ctl_mustnot "CTL-D-SPEC-DUP" D1 "$O" "none of those three resolves to a number either, so none can collide with a record or with another of them"
+ctl_mustnot "CTL-D-SPEC-GAP" D2 "$O" "and none shifts the span, so none manufactures a gap under the highest number a real record carries"
 
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
@@ -1427,6 +1748,8 @@ printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s)
   "$B_NHIT" "$B_NFILE" "$B_NWIDE" "$B_NOOS"
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
+printf 'ADR-NUMBERING: %s record file(s) and %s index row(s) over a span reaching %s; %s collision(s), %s undeclared gap(s), %s index/directory disagreement(s), %s stale declaration(s); %s gap(s) held open by declaration.\n' \
+  "$D_NREC" "$D_NROW" "$D_MAXN" "$D_NDUP" "$D_NGAP" "$D_NMIS" "$D_NROT" "$D_NHELD"
 if [ "$vacuous" -gt 0 ]; then
   printf 'NOTE: %d assertion group(s) had an EMPTY POPULATION and proved nothing about this tree. Those verdicts rest on group CTL.\n' "$vacuous"
 fi

@@ -29,6 +29,39 @@ options weighed, the decision, and the consequences.
   or pipeline changes, the secret/publish model, cross-agent contracts. One-line fixes and
   ordinary feature slices do not need an ADR.
 
+## Number declarations
+
+A number is spent when it is published. The convention above forbids reuse and renumbering, so
+a record withdrawn after its number was assigned does not give the number back — the sequence
+keeps a gap where it stood. That leaves two states a reader cannot tell apart by looking: a gap
+somebody decided to carry, and a number that was simply lost.
+
+The fence below is what tells them apart. Each row declares a number the sequence carries as a
+deliberate gap, and `scripts/test-corpus-hygiene.sh` group **D** grades the numbering against
+it. A number inside the span that no record file occupies and no row here declares is a
+finding; so is a row whose number turns out to be occupied, to sit outside the span, or not to
+be a number at all. That second direction is what keeps a declaration from outliving the gap it
+excepts and becoming a standing exemption for whatever next takes that number.
+
+The same group grades what nothing in this repository previously asserted: that a number is
+carried by at most one record file and at most one index row, and that the index below and the
+directory around it name the same records in both directions.
+
+Two columns, both required, whitespace-separated — the same shape as the count-assertion
+declaration in `reference/data-architecture.md`. A line whose first non-blank character is `#`
+is a comment; a blank line is ignored. The left column is the number and the right a single
+reason token; a row carrying only a number is not a declaration, and its number still reads
+undeclared. Why a particular gap exists belongs in the record that withdrew it, not here.
+
+```adr-number-declaration
+# number  reason
+020       superseded-record-never-merged
+```
+
+`ADR-020` is the only number declared today. It was assigned to the record `ADR-021`
+supersedes, on a branch that has since been swept; `ADR-021` § *Costs and residual risks*
+carries the account.
+
 ## Index
 
 | ADR | Title | Status |
