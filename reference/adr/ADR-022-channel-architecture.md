@@ -841,13 +841,13 @@ one.
   W-rule/R-rule intersection and is the positive evidence for two rules rather than one.
 - [ADR-021](ADR-021-installable-capability.md) — the two-artifact `Status:` obligation this record
   inherits, and the divergence it repaired.
-- **`ADR-023`** — **the engagement axis this record joins.** It declares the axis, its six values,
-  and the read-failure value `ENGAGEMENT-UNDETERMINED` that is the single named difference between
-  its token set and this record's five. The citation is mutual and must not be dropped: neither
-  record's axis declaration is gradeable without the other's. **Cited by number rather than as a
-  link, deliberately** — that record's kebab title is its own to choose, and a guessed filename
-  here would ship a dead link. The link form is added when both records are in the tree, in the
-  same change that authors their index rows.
+- [ADR-023](ADR-023-engagement-model-over-time.md) — **the engagement axis this record joins.** It
+  declares the axis, its six values, and the read-failure value `ENGAGEMENT-UNDETERMINED` that is
+  the single named difference between its token set and this record's five. The citation is mutual
+  and must not be dropped: neither record's axis declaration is gradeable without the other's. It
+  was carried by number while that record was unauthored, because its kebab title was its own to
+  choose and a guessed filename would have shipped a dead link; the link form lands here in the
+  same change that authors both index rows.
 - `reference/data-architecture.md` — §§ 1.1, 5.1, **5.3**, 5.4, 5.5, **5.6** with its
   `publish-contract-values` fence, its four queried `(limb, artifact-scope)` pairs, and its
   declared gap.

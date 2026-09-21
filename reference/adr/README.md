@@ -53,3 +53,5 @@ options weighed, the decision, and the consequences.
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Accepted |
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
 | [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |
+| [ADR-022](ADR-022-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Proposed |
+| [ADR-023](ADR-023-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Proposed |
