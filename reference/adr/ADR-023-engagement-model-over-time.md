@@ -89,7 +89,7 @@ of § *Decision* 5 minted a second family beside it. It does not; it reuses that
 request #1187 and the commit this release branched from. Census probed at `edadfa9`: **156**
 tracked files, **130** tracked `.md`, **24** under `reference/schemas/`. Counts are authored to
 `ADR-013` form **F1**, anchored measurement; the measurement convention is stated once in
-§ *Decision* 6 and holds for every count in this record.
+§ *Decision* 7 and holds for every count in this record.
 
 ## Decision drivers
 
@@ -302,3 +302,227 @@ Stated in § *Decision* 8. It preserves 7C's substance in full and drops the deg
 the axis genuinely contributes is then visible rather than buried: its **sixth value**, which has
 no subject-kind counterpart, and its **transition structure**, which is why a row's occupancy is
 a present reading rather than a property of the person.
+
+## Decision
+
+### 1. The arc is an independent axis, it already ships unnamed, and it is `G8`-class
+
+> **`engagement(t)`**, for `t` a member of the roster defined in § *Decision* 2, is the
+> **provenance class of that person's C12 entry** — widened below by the roster-only state and
+> above by the composition edge. It is **not** the planner's five modes and **not** a projection
+> of them.
+
+**Its evaluator and its carrier both ship today, and the record names them rather than implying
+them.** The **evaluator is the enrichment agent**, whose *Missing or blank profile* branch already
+assigns every roster member one of these states on every synthesis; the **carrier is C12**, where
+that assignment is already written. Nothing is added — no field, no writer, no verb, no schema,
+no store. What this record adds is the name, the closed value set, and the bounds below.
+
+**The class is `G8`, taken as an explicit branch rather than left to be inferred.**
+
+> `engagement(t)` is **`G8`-class**: evaluated **after** resolution, **report-only**, with
+> **consumer-declared membership**. It **never changes `trip.resolution`**, **no gate may be
+> added that blocks on it**, it is **not graded by `G7`**, and it **may not enter the resolution
+> contract's return as a new field without arguing for one** — which this record does not do.
+
+That branch is taken because the alternative is incoherent: a record may not call the axis *a
+resolution* while forbidding the mechanism that would resolve it. Taking it also inherits a
+**shipped mechanical self-guard** — the freshness relation table *"never gains a fifth column …
+**no disposition column**: there is nowhere in it for a verdict to be turned into a `RUN`, a
+`REDIRECT` or a `REFUSE`."* **A declared axis that cannot be turned into a disposition is the
+strongest available form of *never gates*, enforced by the shape of a table rather than by a
+sentence.**
+
+**The axis declaration.** The fence below is the declaration this record and its sibling are
+graded against; it is the corpus's own declared-set device, already shipping in seven instances
+(`publish-contract-values`, `publish-contract-artifacts`, `count-assertion-digest`,
+`frozen-witness-digest`, `horizon-verdict-cases`, `trip-contract-evidence`,
+`trip-contract-header`) and reused here rather than minted.
+
+```phase-axis-declaration
+# axis-orientation: rows
+# axis-name: engagement
+# governed-table: Decision 1 -> "The engagement axis and its six values"
+# row-key-column: 1
+# header-rows: 2
+# difference-from-channel-record: ENGAGEMENT-UNDETERMINED
+# axis-token              subject-kind
+PERSON-LINKED             K1
+SELF-STATED               K2
+OPERATOR-STATED           K3a
+THIRD-PARTY-STATED        K3b
+UNSOURCED                 K4
+ENGAGEMENT-UNDETERMINED   NO-SUBJECT-KIND
+```
+
+Two columns, both required, whitespace-separated; a line whose first non-blank character is `#` is
+a comment and is ignored. The fence declares **six** axis tokens. **`axis-orientation: rows` is
+load-bearing and is why no leading-column count appears here:** the axis tokens are **row keys** of
+the table below, so a comparator extracting column *headers* would read that table's attribute
+labels and diverge on a conformant record. A superseded specification of this criterion instructed
+a leading-column count, which presupposes a column orientation neither record carries; it is
+deliberately not carried, and `row-key-column` with `header-rows` is its orientation-correct
+analogue. **Both records declare `rows`**, and that agreement is what makes the cross-record
+assertion evaluable at all.
+
+**`NO-SUBJECT-KIND` is a declared vacancy, not a placeholder.** The sixth token is precisely the
+one with no subject-kind counterpart in the sibling's set, so the fence states that vacancy as a
+literal rather than as punctuation a parser would have to interpret. It is the machine-readable
+form of the named difference in § *Decision* 8.
+
+**The engagement axis and its six values.** Row keys are compound where a counterpart exists: the
+axis token and its subject kind, either side of the `≡` marker, both declared in the fence above.
+The sixth row key is not compound, and that is the difference itself.
+
+| Axis value | Shipped condition | Authored by | Model-entry class |
+|---|---|---|---|
+| **`PERSON-LINKED` ≡ K1** | `SELF-STATED` **and** frontmatter carrying `person: q`, resolving under `closure(p)` at one hop | the subject, across trips | `first-party` + C22 |
+| **`SELF-STATED` ≡ K2** | a C12 entry projected from the person's own `travelers/<t>.md` | the subject | `first-party` |
+| **`OPERATOR-STATED` ≡ K3a** | a C12 entry marked `[OPERATOR-PROVIDED]` **alone** | the operator, about a person who **may still file** | `operator-provided-only` |
+| **`THIRD-PARTY-STATED` ≡ K3b** | a C12 entry marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` | the operator, about a person who **will never file** | `both-marks` |
+| **`UNSOURCED` ≡ K4** | a roster row with no C12 entry, **or** a flagged-gap entry — `**Source:** none`, a `PROFILE MISSING` marker | nobody | — |
+| **`ENGAGEMENT-UNDETERMINED`** | a read **this entry attempted** could not be completed | — | — |
+
+**The value set closes over a live arbiter rather than over a preference.** `CLAUDE.md` states
+*"Erasure must reach every model-entry class, and there are **exactly three**"* —
+`first-party`, `operator-provided-only` (**dropped** under regeneration, having no source to
+re-derive from) and `both-marks` (**carried forward verbatim**, the erasure silently undone) —
+adding that *"the two file-less classes fail in **opposite** directions."* Those three, plus the
+roster-only state below them and the composed state above, **yield five subject kinds in agreement
+with `ADR-022` by construction rather than by negotiation**, and the read-failure value makes six.
+An earlier pass of this design asserted four, by merging `operator-provided-only` into
+`both-marks` — which are precisely the two classes the charter says fail in opposite directions,
+so the merge was not a simplification but the erasure of the distinction that matters most.
+
+**Four structural properties, each checkable rather than asserted.**
+
+- **A partition with two ordered edges, not a lattice and not a sequence.** `OPERATOR-STATED`,
+  `THIRD-PARTY-STATED` and `SELF-STATED` are **mutually exclusive by their marks** — an entry
+  carries `[OPERATOR-PROVIDED]` alone, both marks, or neither — so they partition. Exactly two
+  edges are ordered: `UNSOURCED` below the three, and `SELF-STATED` below `PERSON-LINKED`, because
+  composition strictly adds. `THIRD-PARTY-STATED` is **terminal**, by `ADR-014`'s refusal.
+- **The read-failure value sits outside the order.** No comparison is defined on
+  `ENGAGEMENT-UNDETERMINED`, which is the right answer rather than a gap: a value meaning *the
+  read did not complete* has nothing to be greater or less than. An earlier pass left it unplaced
+  in a proposed `≥` relation; under a partition there is no `≥` for it to be undefined on.
+- **The two ordered edges are different *kinds* of edge, and the corpus says which.** The
+  mark-moving edges are **provenance changes**, shipped in full — *"supersede, do not merge… both
+  marks are removed… an **update signal** is emitted."* The `SELF-STATED → PERSON-LINKED` edge is
+  explicitly **not** one: *"composition precedence between two **first-party** values with no
+  provenance mark on either side — not a supersession of a declared entry class, and not a
+  provenance change."* **So the composition edge is not inert** — it is the one edge that moves no
+  mark, and naming it correctly is what keeps the publish guard's supersession check from being
+  asked to adjudicate it.
+- **Not monotone.** A person can move down as well as up — an entry is dropped, a link is removed
+  — so `ADR-015`'s no-audit-owed argument does not transfer to this axis and is not claimed.
+
+**What the axis is not a measure of.** It is **not** interest, participation or effort. It answers
+*on what basis does the engine hold this person, and who authored it*. Someone who read every word
+and filled nothing in reads `UNSOURCED`, and that is correct: an axis reporting otherwise would be
+inventing.
+
+### 2. The domain is the profile-gap denominator, and a free-text mention sits outside it
+
+> The domain of `engagement(t)` is the **`Person` cells of the `## Group` roster** — the corpus's
+> own **profile-gap denominator** — under the canonical traveller key `reference/data-architecture.md`
+> § 3.2 already fixes: *"the `## <Name>` heading text, lowercased, with every non-`[a-z0-9]`
+> character removed"*. **Every roster member is individuated, so every roster member has a value**,
+> including one with no file and no operator input, who reads `UNSOURCED`.
+
+**The defined term is *the profile-gap denominator*, with the heading reference as its gloss on
+first use.** That phrase is the corpus's own role-phrase for this exact set, in the clause this
+record grounds on; the heading reference names the physical location. Two names for one object is
+a cost this record's own § *Decision* 7 principle names, so one of them is the term and the other
+is the gloss, rather than both being used interchangeably.
+
+**A free-text party mention is outside the domain, and that is a decision rather than a gap.** The
+shipped intake prompt's own examples are *"two kids, 6 and 9"* and *"my dad, 78, travelling on my
+booking"* — no name, no key, no individuating token. The function therefore has **no argument**
+there. **This is not the read-failure value**: the read completes; it is the *domain* that is
+underivable. The corpus reaches the same conclusion in its own voice — *"**Never invented from a
+`Party:` string.** A `Party:` value with no operator-supplied needs yields **no entry**… the name
+arrives **with** the needs, from the operator, or there is nothing to key an entry on."*
+
+**The entry event and the entry value are both named.** When the operator supplies that person's
+needs, the name arrives with them, a `## <Name>` C12 entry appears, and the person enters the
+domain at **the value their marks decide** — `OPERATOR-STATED` where the operator relays a
+first-party traveller's own needs, `THIRD-PARTY-STATED` where the subject will never file. The two
+marks are orthogonal, so entry is **mark-determined, never party-determined**, and this is
+`ADR-014`'s already-accepted intake cost rather than a new one.
+
+### 3. Four boundaries, one carry rule, and five never-carries
+
+> A **phase boundary** is one of exactly four, and they are named rather than numbered bare:
+>
+> - **`EB-0` re-synthesis** — a synthesis pass regenerates the derived model.
+> - **`EB-1` the axis** — a traveller's `engagement(t)` value moves along one of the two edges.
+> - **`EB-2` trip** — one trip ends and another begins for the same person.
+> - **`EB-3` lifecycle** — a trip moves between `ACTIVE` and `ARCHIVED`.
+
+**`EB-0` is the boundary an earlier pass omitted, and it is not a new rule.** The charter already
+states and grades it: the three model-entry classes behave in three different ways under a
+regeneration — `first-party` **re-derived**, `operator-provided-only` **dropped**, `both-marks`
+**carried forward verbatim** — and *"any fixture standing as the worked example of this rule must
+exercise all three."* `EB-0`'s row **is** those three behaviours, never collapsed.
+
+> **The carry rule.** A class carries across a boundary **iff the boundary does not change that
+> class's own declared scope.** The rule reads the columns the artifact-class table already
+> carries — `lifecycle` and `publish:` — and adds none.
+
+**Five never-carries, and each is a class fact rather than a policy.**
+
+| # | What never carries | Across | Why |
+|---|---|---|---|
+| 1 | every `rebuilt-each-synthesis` class | `EB-0` | regeneration is its declared scope; carrying it would be the shadow-state defect its own class name forecloses |
+| 2 | C12 and C14 to any render, **in any form including anonymized** | every boundary | `internal-hard`, at its live membership — **C12, C14, C22 and C23** |
+| 3 | a `both-marks` entry | `EB-2`, **permanently** | `ADR-014`'s cross-trip consent refusal closes rather than defers |
+| 4 | a `DEST`-class field value | `EB-2` | its declared scope is one destination |
+| 5 | a value of this axis itself | every boundary | it is a **present reading**, re-derived each synthesis, never a stored state to carry |
+
+**Never-carry 2 is quoted at its live membership deliberately.** `reference/data-architecture.md`:770
+reads *"never rendered **and** carrying values that must not reach a rendered page **in any form,
+including anonymized**. Exactly C12, C14, C22 and C23."* **C22 is the durable person record and
+C23 the group record**, both cross-trip and both `internal-hard` — so a two-member statement of
+this limb would omit from a **privacy** rule exactly the two classes that outlive the trip. An
+Accepted record in this corpus block-quotes that limb at a stale two-member membership; it is
+recorded as a finding of this release in § *Findings and observations carried* and is **not**
+inherited here.
+
+**Never-carry 5 is the one a later slice is most likely to want to break**, because a stored value
+is cheaper than a re-derivation. The cost of storing it is the whole of Option 1C: a shadow SSOT,
+a writer in a file whose writer is the subject, and a staleness that fails toward *on record*.
+
+### 4. Three join keys, one prohibition, and two kinds permanently unreachable
+
+> **`EB-0`** — the normalized traveller key within a trip. **`EB-2`** — `person: psn-<token>`,
+> inverted under `closure(p)` at one hop. **`EB-3`** — unchanged; the lifecycle boundary moves no
+> identity. **At the render boundary there is no join key, none may be minted, and that is
+> permanent.**
+
+**The render prohibition is a class boundary, not a threshold.** `ADR-010` § 4 forecloses the
+anonymized projection by name: a signal letting a reader tell *which* traveller acted is an
+anonymized projection of a C12 value. Not a name, not a handle, not a stable pseudonym, not a key
+fingerprint, not a per-traveller receipt. **At a render the only admissible signal is an aggregate
+count paired with a content digest** — the escape `ADR-010` § 4 itself names, *detectability does
+not require identity*.
+
+**Which kinds are reachable across `EB-2`, stated positively because silence here reads as
+coverage.**
+
+| Axis value ≡ kind | Reference bearer | Across `EB-2` | Reachable? |
+|---|---|---|---|
+| **`PERSON-LINKED` ≡ K1** | the surrogate key | **yes** — `closure(p)`, one hop | **yes** |
+| **`SELF-STATED` ≡ K2** | the path | **no** — trip-local by construction | **yes**, within the trip |
+| **`OPERATOR-STATED` ≡ K3a** | **none today** | **no** — dropped by regeneration | **no — and not permanently** |
+| **`THIRD-PARTY-STATED` ≡ K3b** | **none exists — a named gap** | **never** — `ADR-014`, permanently | **no — permanently** |
+| **`UNSOURCED` ≡ K4** | the roster cell, identity only | **never** — no bearer to invert | **no — permanently** |
+
+> **Two kinds are permanently unreachable — `THIRD-PARTY-STATED` and `UNSOURCED` — and a third,
+> `OPERATOR-STATED`, is *presently* unreachable and may cease to be.** An earlier pass of this
+> design wrote *"structurally empty, permanently"* across three kinds and thereby froze one that
+> is **awaiting** a source rather than structurally without one. `ADR-014` does not close
+> `OPERATOR-STATED`, and the shipped fixture says so in terms: a party member *"has simply not
+> filed a profile yet, so the entry is a placeholder for a source that **may still arrive**.
+> `[THIRD-PARTY]` marks a person who will never file one."* The narrowing is the correction; the
+> un-freezing is its point, because *"this kind may still file"* is a claim about an **edge**, not
+> about a row.
