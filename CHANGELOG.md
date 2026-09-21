@@ -3,6 +3,62 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-20 — The contract learns about writers
+
+This release decides and builds nothing, deliberately. The contract that says what makes a form
+interviewable was written against two forms that have one owner each, and it says a form is
+interviewable if it carries exactly one declaration. One declaration per form quietly assumes one
+writer per form. The largest intake surface in the engine does not work that way: the trip file's
+blocks are owned by nine different writers — some by a command, some by the enrichment agent, two
+blocks by nobody at all — so the contract has never met a form of that shape, and its claim to work
+generally has never been tested against one. What lands here is the decision that lets it be, settled
+before any slice is cut. Nothing in the engine behaves differently, and no form, skill or script
+changes.
+
+**What a form must declare in order to have more than one owner.** The unit that conforms is no
+longer the whole file but an **owned region inside it**, with a single-owner form being the simple
+case of a file that is one region — which is why both shipped forms stay conforming without a byte
+being edited. A region's extent is just its heading and everything under it until the next heading
+of the same or higher level, so the interviewer and the check that grades it work the boundary out
+from the document itself rather than from a list somebody maintains. The declaration stays one per
+form and gains an address pointing at the ownership table the engine already has, rather than a copy
+of it.
+
+**Who may write a block turns out to depend on when, not only on where.** Two of the nine blocks
+have more than one writer, chosen by the state the file is in — the traveller roster is written one
+way when the trip is created and another way afterwards. A rule keyed on the block alone has to pick
+one of those writers and would be confidently wrong about the other, so the decision keys ownership
+on the block **and** the condition together. That also settles what happens to the one block this
+makes only conditionally interviewable: it is interviewable after creation and not at creation, and
+the record says so rather than averaging the two.
+
+**The blocks nobody owns are set aside in a way that undoes itself.** Two derived blocks in the trip
+file have no writer — that is already documented as the engine's settled behaviour rather than a gap,
+and staleness there is reported rather than repaired. They are left outside the contract **until an
+owner is decided, and admitted by the rule already written down the moment one is**. The wording is
+deliberate: this repository lets a published decision be narrowed but never widened, so an
+unconditional exclusion would have to be replaced wholesale when those blocks get an owner, while
+this one simply runs. Setting them aside costs about eight per cent of the trip file's fields — a
+much smaller number than the one usually quoted at this decision, which belongs to a different and
+rejected option that would have put the whole file out of reach.
+
+**Every number in the record was measured again rather than carried.** The figure this work started
+from counted something with no definition anywhere in the repository, and three reasonable readings
+of it give three different answers. The record states its instrument once, names the commit it
+measured at, and shows the arithmetic, so a reader can re-derive any count in it; where two readings
+are both defensible it reports both instead of quietly picking one. The nine blocks each carry their
+own verdict and their own field count, and those add up to the file's total.
+
+**The honest limits.** The record decides a boundary; it ships no part of one. It binds the forms,
+the interviewer, the ownership table and the schema check, and edits none of them — nothing in the
+engine reads the new declaration yet, because nothing is written to read it. What it offers is a
+**prediction that can be proved wrong**, not a demonstration: a decision record runs nothing, and the
+first slice that actually builds a multi-owner form will grade all nine verdicts and either reproduce
+them or show one to be mistaken. That slice is named in the record, along with the four residual
+items and who owns each. The record is `Proposed`; the flip to `Accepted` is the operator's at the
+milestone close, and it moves the record's own status line and its index row together, since no check
+grades either half or their agreement.
+
 ## [0.37.0] — 2026-09-20 — Self-descriptions true of the engine
 
 Nothing about how the engine behaves changes here. What changes is that the places where the engine
