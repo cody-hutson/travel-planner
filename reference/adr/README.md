@@ -55,5 +55,5 @@ options weighed, the decision, and the consequences.
 | [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |
 | [ADR-022](ADR-022-interview-session-model.md) | The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer | Accepted |
 | [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) | The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs | Accepted |
-| [ADR-022](ADR-022-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Proposed |
-| [ADR-023](ADR-023-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Proposed |
+| [ADR-024](ADR-024-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Proposed |
+| [ADR-025](ADR-025-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Proposed |

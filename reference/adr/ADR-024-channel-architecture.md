@@ -1,4 +1,4 @@
-# ADR-022: The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model
+# ADR-024: The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model
 
 - **Status:** Proposed (2026-09-21)
 - **Deciders:** repo maintainer
@@ -841,7 +841,7 @@ one.
   W-rule/R-rule intersection and is the positive evidence for two rules rather than one.
 - [ADR-021](ADR-021-installable-capability.md) — the two-artifact `Status:` obligation this record
   inherits, and the divergence it repaired.
-- [ADR-023](ADR-023-engagement-model-over-time.md) — **the engagement axis this record joins.** It
+- [ADR-025](ADR-025-engagement-model-over-time.md) — **the engagement axis this record joins.** It
   declares the axis, its six values, and the read-failure value `ENGAGEMENT-UNDETERMINED` that is
   the single named difference between its token set and this record's five. The citation is mutual
   and must not be dropped: neither record's axis declaration is gradeable without the other's. It
