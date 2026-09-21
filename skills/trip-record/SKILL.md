@@ -1593,7 +1593,7 @@ directions are stated.
 - *Obliges, in the file:* the event re-opens to iteration and its booking question reopens — the
   derived cell recomputes to `yes` where `requires booking? = yes`.
 - *Obliges, beyond the file:* the trip now carries the **disruption-recovery trigger** § *Modes*
-  names, so the hub's equity-aware recovery and the validator's recovery-equity check belong to the
+  names, so the hub's equity-aware disruption recovery and the validator's recovery-equity check belong to the
   next planning pass. Name **`/trip replan`**, and **do not run it.** Name **`/trip-record log`** as
   well, and do not run it: *why* a
   booking fell through is exactly what the log carries, and the status table has no field for it.
