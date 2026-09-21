@@ -2637,6 +2637,104 @@ st_setdiff() {
   ' <<<"$1"
 }
 
+# ── st_sitemap / st_sites / st_attrib — ONE RUNG BELOW THE CODE: THE EMISSION SITE ─
+#
+# st_codes above answers which CODES an evaluator can emit. These three answer the finer question
+# that reader cannot: which PLACES in it can emit one. A code already covered by an arm can gain a
+# second, third or fourth emission site and a code-level comparison never moves — which is not
+# hypothetical here: st_violations emits DISAGREE from TWO places today, and both are reached by
+# arms that nothing asserts reach them.
+#
+#   st_sitemap <body>              -> one row per RAW emission site: "<KEY>\t<CODE>\t<PREFIX>"
+#   st_sites   <body>              -> the DISTINCT keys, first-occurrence order
+#   st_attrib  <records> <sitemap> -> one key per emitted record, attributed
+#
+# ── THE KEY IS <CODE>#<n>, AND ITS SHAPE IS A BUILD CONSTRAINT RATHER THAN A STYLE CALL ──
+# st_setdiff tests membership as index(hay, " " $0 " ") over a haystack joined with SPACES. A key
+# carrying the emission's literal prefix contains spaces, reads as ABSENT on every comparison, and
+# the arm goes SILENTLY GREEN over nothing — inside a helper THREE groups now share. So the key is
+# the code plus an ordinal over that code's DISTINCT emission signatures, it is whitespace-free by
+# construction, and st_setdiff is CALLED rather than modified.
+#
+# The ordinal moves if the emissions are reordered, and that is a non-event rather than a hazard:
+# BOTH sides of every comparison below are derived from the SAME body in the SAME run, so
+# transposing two emissions renames both identically and the set difference is invariant. Nothing
+# is declared anywhere, so nothing can drift. A LINE NUMBER was the other candidate key and is
+# refused by this group's own founding rule — every surface is found by markup shape and never by
+# line number, because the report that surfaced this named two line numbers that had already moved.
+#
+# The PREFIX is the detail's literal head, from the tab to the first printf conversion. It is what
+# makes attribution possible and it lives ONLY inside the sitemap, never in a verdict's set
+# arithmetic — the split is the point.
+#
+# st_sitemap reuses st_codes' needle, widened to capture the format that follows it, so it inherits
+# both of that reader's stated properties verbatim: it reads the PARSED body, so a reformat is a
+# non-event; and the character after the quote class in its pattern is a BRACKET and not an
+# upper-case letter, so it cannot see itself and report a defect it had just introduced. The
+# conversion is located with a NAMED CLASS and never a collating range — group LC's standing
+# finding, where a bracket range resolved against the collating sequence and matched the other case.
+st_sitemap() {
+  awk '
+    {
+      s = $0
+      while (match(s, /["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
+        sb = RSTART; sl = RLENGTH
+        c = substr(s, sb + 1, sl - 3)
+        r = substr(s, sb + sl)
+        s = r
+        if (match(r, /%[-#.*[:digit:]]*[[:alpha:]]/)) r = substr(r, 1, RSTART - 1)
+        sub(/\\n.*$/, "", r)
+        sub(/["\047].*$/, "", r)
+        sig = c "\034" r
+        if (!(sig in ord)) ord[sig] = ++nth[c]
+        print c "#" ord[sig] "\t" c "\t" r
+      }
+    }
+  ' <<<"$1"
+}
+
+# st_sites <body> — the distinct keys, first-occurrence order. A here-string rather than a pipe,
+# the shape group PF keeps closed across this whole file.
+st_sites() {
+  awk -F'\t' 'NF > 1 && !seen[$1]++ { print $1 }' <<<"$(st_sitemap "$1")"
+}
+
+# st_attrib <records> <sitemap> — the emission site each emitted record came FROM, one key per
+# record. This is what the accumulator records, and its semantics differ from ST_ARMED's on
+# purpose: an arm can declare a CODE it intends to provoke, but it cannot declare a SITE, so what
+# is recorded here is what the evaluator ACTUALLY emitted when that arm ran.
+#
+# A record is attributed to the site whose prefix it begins with, LONGEST match first, so a code
+# whose sites share a common head still resolves to the more specific one. A record NO derived
+# site explains is emitted as <CODE>#? — a member of no derived set, so it lands in the PHANTOM
+# direction and reddens. That is fail-closed by construction: a record the reader cannot explain
+# means the reader and the emitter have diverged, which is the failure a coverage arm exists for.
+#
+# The two inputs arrive as ONE stdin stream separated by a marker record rather than through
+# awk -v, which ABORTS on a multi-line value ("newline in string"). The marker is the FS byte,
+# which no format string in either evaluator carries.
+st_attrib() {
+  local at_mark
+  at_mark="$(printf '\034')"
+  awk -F'\t' -v mark="$at_mark" '
+    $0 == mark { at_rec = 1; next }
+    at_rec == 0 { if (NF < 2) next; n++; skey[n] = $1; scode[n] = $2; spfx[n] = $3; next }
+    {
+      if (NF < 2) next
+      det = substr($0, length($1) + 2); best = ""; bl = -1
+      for (i = 1; i <= n; i++) {
+        if (scode[i] != $1) continue
+        if (substr(det, 1, length(spfx[i])) == spfx[i] && length(spfx[i]) > bl) { bl = length(spfx[i]); best = skey[i] }
+      }
+      print (best == "" ? $1 "#?" : best)
+    }
+  ' <<EOF
+$2
+$at_mark
+$1
+EOF
+}
+
 # ── cov_verdict / cov_assert — THE ARM-COVERAGE COMPARISON, IN ONE IMPLEMENTATION ─
 #
 # Three groups assert the same proposition: every code their evaluator can EMIT has a must-fire
@@ -2696,6 +2794,12 @@ cov_emit_finding() { printf '  printf "FINDING %s a synthetic emission that no a
 # assertion flipping.
 cov_verdict() {
   local id="$1" stem="$2" subj="$3" codes="$4" armed="$5"
+  # <unit> — the NOUN the members of this comparison's two sets are. It defaults to the code
+  # granularity the three original consumers grade, so those call sites pass eleven arguments and
+  # render byte-identical text; groups ST and CE pass 'emission site' for their site arms. A
+  # comparison over site keys whose own verdict called them codes would be this release's defect
+  # in miniature — a gate describing something other than what it grades.
+  local unit="${6:-code}"
   local cov_un cov_ph cov_nc cov_nu cov_np cov_na
   cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
   cov_un="$(st_setdiff "$codes" "$armed")"
@@ -2704,18 +2808,18 @@ cov_verdict() {
   cov_np="$(printf '%s\n' "$cov_ph" | grep -c '[^[:space:]]')"
   cov_na="$(printf '%s\n' "$armed" | awk 'NF && !seen[$0]++' | grep -c '.')"
   if [ "$cov_nc" -eq 0 ]; then
-    FAIL "$id: the code reader returned 0 codes from the body of $subj, so the coverage verdict would be a statement over the empty set — either the emitter is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
+    FAIL "$id: the $unit reader returned 0 ${unit}s from the body of $subj, so the coverage verdict would be a statement over the empty set — either the emitter is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
   elif [ "$cov_nu" -ne 0 ]; then
-    FAIL "$id: $cov_nu of the $cov_nc code(s) $subj can emit have NO must-fire arm in this run — $(printf '%s' "$cov_un" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
+    FAIL "$id: $cov_nu of the $cov_nc $unit(s) $subj can emit have NO must-fire arm in this run — $(printf '%s' "$cov_un" | tr '\n' ' '). Any $unit with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
   elif [ "$cov_np" -ne 0 ]; then
-    FAIL "$id: $cov_np must-fire arm(s) name a code $subj cannot emit — $(printf '%s' "$cov_ph" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
+    FAIL "$id: $cov_np must-fire arm(s) name ${unit}s $subj cannot emit — $(printf '%s' "$cov_ph" | tr '\n' ' '). Either the $unit was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
   else
-    PASS "$id: all $cov_nc code(s) $subj can emit [$(printf '%s' "$codes" | tr '\n' ' ')] have a must-fire arm, and all $cov_na armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the emitter's own body on this run, so a code added later arrives uncovered and RED rather than covered by a numeral in this file. ${stem}1 and ${stem}2 show this same comparison failing in each direction"
+    PASS "$id: all $cov_nc $unit(s) $subj can emit [$(printf '%s' "$codes" | tr '\n' ' ')] have a must-fire arm, and all $cov_na armed $unit(s) name ${unit}s it can emit — a bijection, asserted in both directions. The set is READ FROM the emitter's own body on this run, so any $unit added later arrives uncovered and RED rather than covered by a numeral in this file. ${stem}1 and ${stem}2 show this same comparison failing in each direction"
   fi
 }
 
 # cov_assert <verdict-id> <control-stem> <control-tag> <subject> <extractor> <shaper> <body>
-#            <codes> <armed> <probe> <phantom>
+#            <codes> <armed> <probe> <phantom> [<probe-key>] [<unit>]
 #
 # The coverage verdict plus the TWO standing MUST-FIRE controls that are what make its two zeros
 # measurements rather than assertions. Three properties are preserved from the arms this replaces,
@@ -2734,13 +2838,27 @@ cov_verdict() {
 cov_assert() {
   local id="$1" stem="$2" tag="$3" subj="$4" ex="$5" shaper="$6"
   local body="$7" codes="$8" armed="$9" probe="${10}" phantom="${11}"
+  # ── THE TWO OPTIONAL PARAMETERS, AND WHY EACH HAS TO EXIST ──────────────────────
+  # <probe-key> is the member Control 1 expects the synthetic emission to ADD to the derived set,
+  # which is NOT always the probe itself: a site-granular extractor derives <probe>#1 from the very
+  # emission a code-granular one derives <probe> from, so a whole-line test against <probe> would
+  # miss and the control would FAIL on a working comparison. It defaults to <probe>, which is what
+  # keeps the three code-granular call sites byte-unchanged. The key is ASSERTED rather than
+  # assumed — the "the new member IS that key" limb below FAILs loudly if the derivation disagrees.
+  #
+  # <unit> is the noun, passed through to cov_verdict, defaulting to 'code'.
+  #
+  # Both are ADDITIVE and defaulted rather than positional-required, so extending this helper
+  # costs its existing consumers nothing — which is the property that let a fourth and fifth
+  # consumer arrive without a second implementation of the comparison.
+  local probekey="${12:-${10}}" unit="${13:-code}"
   local cov_nc cov_nu cov_np cov_mut cov_landed cov_mu cov_mn cov_hit
   local cov_ma cov_al cov_mp cov_pn cov_phit
   cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
   cov_nu="$(st_setdiff "$codes" "$armed")"; cov_nu="$(printf '%s\n' "$cov_nu" | grep -c '[^[:space:]]')"
   cov_np="$(st_setdiff "$armed" "$codes")"; cov_np="$(printf '%s\n' "$cov_np" | grep -c '[^[:space:]]')"
 
-  cov_verdict "$id" "$stem" "$subj" "$codes" "$armed"
+  cov_verdict "$id" "$stem" "$subj" "$codes" "$armed" "$unit"
   [ "$cov_nc" -gt 0 ] || return 0
 
   # Control 1 — the UNCOVERED direction. One synthetic emission is appended to a copy of the
@@ -2751,11 +2869,11 @@ $("$shaper" "$probe")"
   cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
   cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
   cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
-  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probe}$")"
+  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
   if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((cov_nu + 1)) ] && [ "$cov_hit" -eq 1 ]; then
-    PASS "${stem}1${tag}: MUST FIRE — one unarmed code appended to a COPY of the body of $subj takes the uncovered set from $cov_nu to $cov_mn and the new member IS that code. A code added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
+    PASS "${stem}1${tag}: MUST FIRE — one unarmed $unit appended to a COPY of the body of $subj takes the uncovered set from $cov_nu to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
   else
-    FAIL "${stem}1${tag}: MUST FIRE — an unarmed code appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((cov_nu + 1)) expected, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
+    FAIL "${stem}1${tag}: MUST FIRE — an unarmed $unit appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((cov_nu + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
   fi
 
   # Control 2 — the PHANTOM direction, the one that keeps the zero from resting on a reader that
@@ -2768,9 +2886,9 @@ $phantom"
   cov_pn="$(printf '%s\n' "$cov_mp" | grep -c '[^[:space:]]')"
   cov_phit="$(printf '%s\n' "$cov_mp" | grep -c "^${phantom}$")"
   if [ "$cov_al" -eq 1 ] && [ "$cov_pn" -eq $((cov_np + 1)) ] && [ "$cov_phit" -eq 1 ]; then
-    PASS "${stem}2${tag}: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $cov_np to $cov_pn and the new member IS that code. So $id's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
+    PASS "${stem}2${tag}: MUST FIRE — a phantom $unit, named by no emission at all, added to a COPY of the armed set, takes the phantom set from $cov_np to $cov_pn and the new member IS that $unit. So $id's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
   else
-    FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered group from a reader that returned nothing"
+    FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered $unit set from a reader that returned nothing"
   fi
 }
 
