@@ -40,7 +40,7 @@ resolvable for a person, and never stored on the person.**
 ### The three constraints the corpus already imposes on any answer
 
 **One — there is no Destination entity, and therefore no destination key.**
-`reference/data-architecture.md` § 3.4 assigns eleven entities across the two identity
+`reference/data-architecture.md` § 3.4 assigns twelve entities across the two identity
 kinds, and Destination is not among them. The two available proxies are both unusable as a
 join basis: `- **Primary destination:**` in a trip's `trip-context.md` is free prose with
 no controlled vocabulary, and the trip directory slug is the **Trip** natural key, whose
@@ -67,6 +67,20 @@ that *"Trip wins. Direct entry stays available and stays authoritative for the t
 Field-Scope row for `Already done` says a later trip-history capability *"would
 **supplement** these two, never replace them."* Those forward-hooks were written before this
 milestone; this record realises them rather than re-deciding them.
+
+**Amendment (2026-09-20, Sunday) — the entity count constraint One restates, corrected to agree
+with the section it reads from.** Constraint One counted the entity set at eleven.
+`reference/data-architecture.md` § 3.4 assigns **twelve** — *seven surrogate / five natural*, in
+its own words — and § 2 heads its table *Twelve entities*. The count moved when
+`reference/adr/ADR-016-reusable-groups.md` added Group to the surrogate branch, after this record
+landed and without coming back to this sentence. That is the same cause that left
+`reference/adr/ADR-010-per-traveler-approval-collection.md` quoting a stale class membership,
+corrected in this same release.
+
+**The constraint itself is unaffected, which is why this is a correction rather than a
+re-opening.** Constraint One turns on Destination being absent from the entity set, not on how
+large that set is, and Destination is absent from the twelve exactly as it was from the eleven.
+Nothing in § *Decision* moves, and the group coupling § 8 already records is unchanged.
 
 ## Decision drivers
 
