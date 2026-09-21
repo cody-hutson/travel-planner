@@ -16,7 +16,7 @@ person: psn-3c7e
 >
 > **Reading this on its own, without the repository?** Everything you need is here.
 > The answers below are complete, and they are what this file is for: a filled-in
-> form to hold beside your blank one. The bold notes between the sections explain
+> form to hold beside your blank one. The bold notes in this file explain
 > how this example fits the engine it ships with, and they name files you do not
 > have. Skip them — nothing in the profile depends on them.
 
