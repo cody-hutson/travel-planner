@@ -3187,6 +3187,13 @@ $want"
   cmp -s "$ST_FILE" "$fx" || landed=1
   v="$(st_violations "$(st_surfaces "$fx")")"
   n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  # The SITE side of the same coverage question. Recorded from the RECORDS rather than from $want,
+  # because $want is a code and only the record can say which of that code's emission sites was
+  # reached. Recorded after the evaluator has run and BEFORE the verdict, on the same principle
+  # the line above states. st_mustnotfire accumulates nothing here either: a must-not-fire arm
+  # asserts ZERO records, so counting there would let a FAILING one supply coverage.
+  ST_ARMED_SITES="$ST_ARMED_SITES
+$(st_attrib "$v" "$ST_SITEMAP")"
   if [ "$landed" -eq 1 ] && st_has "$v" "$want"; then
     PASS "$id: MUST FIRE — $what, and the same evaluator reports $want ($n violation(s) in all). The mutation is asserted to have landed before the verdict is read"
   else
@@ -3215,6 +3222,12 @@ st_mustnotfire() {
 # by being written into the function, and nothing here has to be told about it.
 ST_CODES="$(st_codes "$(declare -f st_violations)")"
 ST_NCODES="$(printf '%s\n' "$ST_CODES" | grep -c '[^[:space:]]')"
+# The EMISSION SITES the same function can emit FROM, derived once from the same body and for the
+# same reason: a site is a property of the EVALUATOR and not of any one template. One rung below
+# ST_CODES, and the gap between them is the whole of this arm's subject — the code set and the
+# site set are not the same size here, because one code is emitted from two places.
+ST_SITE_BODY="$(declare -f st_violations)"
+ST_SITEMAP="$(st_sitemap "$ST_SITE_BODY")"
 ST_COV_PROBE='ZZ-ST-COVERAGE-PROBE'
 # The label CTL-ST4-ADD plants in a COPY of the data model: a starred field-table row for a
 # field no intake form asks. It is deliberately un-bullet-shaped so it cannot collide with a
@@ -3231,6 +3244,15 @@ ST_NREAD=0
 # deterministic subject; the assertion itself is identical on every member.
 ST_MD_FORM="$ROOT/$(printf '%s\n' "$ST_TEMPLATES" | awk 'NF { print; exit }')"
 ST_COV_PHANTOM='ZZ-ST-PHANTOM-ARM'
+# The site arm's own probes. The probe is a CODE, because the shaper writes an emission and an
+# emission carries a code; the probe KEY is what a site-granular reader derives FROM that emission,
+# and the two differ by exactly the ordinal this arm exists to add. The key is written here rather
+# than computed, and cov_assert ASSERTS it: if st_sitemap's ordinal for a code appearing once in
+# the mutated body is ever not 1, the control FAILs loudly instead of passing over a comparison
+# that never fired. The phantom is already key-shaped, so it needs no such companion.
+ST_SITE_PROBE='ZZ-ST-SITE-PROBE'
+ST_SITE_PROBE_KEY='ZZ-ST-SITE-PROBE#1'
+ST_SITE_PHANTOM='ZZ-ST-PHANTOM-SITE#9'
 
 while IFS= read -r ST_REL; do
 [ -n "$ST_REL" ] || continue
@@ -3248,6 +3270,13 @@ ST_OK=1
 # Per MEMBER, not per run: every arm runs once for each template, so a set carried over from the
 # first member would report the second as covered by arms that never ran in its pass.
 ST_ARMED=""
+# PARALLEL to ST_ARMED and never a change to it — which is what keeps ST-COV's arithmetic and the
+# premises two sibling cards rest on exactly as they were. The two accumulators record genuinely
+# different things: ST_ARMED records the arm's DECLARED INTENT before the evaluator runs, and an
+# arm cannot declare a SITE because it names a code. This one records what the evaluator ACTUALLY
+# EMITTED, which is the stronger proposition for a site — this branch was reached by an input the
+# suite runs — and it is the only one available. Per MEMBER, for the reason stated above.
+ST_ARMED_SITES=""
 ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0; ST_NBULLET=0
 if [ -r "$ST_FILE" ]; then
   ST_SURF="$(st_surfaces "$ST_FILE")"
@@ -3269,6 +3298,36 @@ elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; 
 else
   FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
   ST_OK=0
+fi
+
+# ── ST-SITE0 — the ENTRY GATE for the site comparison, graded before anything rests on it, on
+# the shape this suite already ships nine times. It is NOT a zero: it is an EQUALITY between two
+# counts that must both be non-zero, so it cannot pass over an empty read.
+#
+# The first limb is the ordinary non-degeneracy one — a reader that has gone quiet must be named
+# as the cause rather than leaving both set differences empty.
+#
+# The SECOND limb is this design's one real blind spot, made loud instead of left silent. Two
+# emission sites of one code whose details open with the SAME literal are indistinguishable in the
+# output, so they collapse into one key and the population is under-reported — a smaller
+# denominator reading as full coverage. The gate FAILs naming both counts and the colliding code,
+# and the remedy is one sentence: give one of them a distinguishing literal head. A live worked
+# example is already in this file for anyone who wants to see the limb fire — st_sitemap over
+# st_surfaces returns MORE raw sites than distinct keys, because PROSE is emitted twice from two
+# formats that are byte-identical after the tab.
+ST_SITE_OK=1
+ST_SITE_RAW="$(printf '%s\n' "$ST_SITEMAP" | grep -c '[^[:space:]]')"
+ST_SITE_KEYS="$(st_sites "$ST_SITE_BODY")"
+ST_SITE_NK="$(printf '%s\n' "$ST_SITE_KEYS" | grep -c '[^[:space:]]')"
+ST_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++ } END { for (k in n) if (n[k] > 1) printf "%s ", k }' <<<"$ST_SITEMAP")"
+if [ "$ST_SITE_RAW" -eq 0 ]; then
+  FAIL "ST-SITE0[$ST_TAG]: the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
+  ST_SITE_OK=0
+elif [ "$ST_SITE_NK" -ne "$ST_SITE_RAW" ]; then
+  FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — code(s) ${ST_SITE_DUP% } emit from two or more places whose detail opens with the SAME literal, so those places are indistinguishable in the output and the site population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
+  ST_SITE_OK=0
+else
+  PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades, and the gap is the point: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
 fi
 
 if [ "$ST_OK" -eq 1 ]; then
@@ -3505,6 +3564,29 @@ if [ "$ST_OK" -eq 1 ]; then
   cov_assert "ST-COV[$ST_TAG]" 'CTL-ST-COV' "[$ST_TAG]" 'st_violations' \
              st_codes cov_emit_tab "$(declare -f st_violations)" \
              "$ST_CODES" "$ST_ARMED" "$ST_COV_PROBE" "$ST_COV_PHANTOM"
+
+  # ── ST-SITE — the SAME proposition one rung finer, read together with ST-COV above so the
+  # granularity ladder is visible in the OUTPUT rather than only in a comment. ST-COV asks whether
+  # every code this evaluator can emit has an arm; this asks whether every PLACE it can emit one
+  # from was reached. The residual between them is real and measured: one code here is emitted
+  # from two places, and until this line existed a third could be added with no arm behind it and
+  # nothing in this suite would have moved.
+  #
+  # Same helper, same four limbs in the same order, a different extractor and a different
+  # accumulator — which is exactly the substitution cov_assert was parameterised for. The probe
+  # KEY is passed because a site-granular reader derives <probe>#1 from the emission a
+  # code-granular one derives <probe> from; the unit noun is passed so the verdict names what it
+  # actually grades.
+  # Gated on ST-SITE0 rather than rendered unconditionally, for the reason cov_assert's own
+  # emptiness limb gives: a comparison over a reader that returned nothing, or over keys that
+  # collided, is UNMEASURED and must be named as that ONCE rather than reported a second time as a
+  # coverage hole it is not. The gate FAILs loudly, so a suppressed comparison can never read green.
+  if [ "$ST_SITE_OK" -eq 1 ]; then
+    cov_assert "ST-SITE[$ST_TAG]" 'CTL-ST-SITE' "[$ST_TAG]" 'st_violations' \
+               st_sites cov_emit_tab "$ST_SITE_BODY" \
+               "$ST_SITE_KEYS" "$ST_ARMED_SITES" "$ST_SITE_PROBE" "$ST_SITE_PHANTOM" \
+               "$ST_SITE_PROBE_KEY" 'emission site'
+  fi
 fi
 done <<EOF
 $ST_TEMPLATES
@@ -7997,6 +8079,21 @@ CE_RAN=0
 CE_PROBE='CE-SYNTHETIC-PROBE'
 CE_PHANTOM='CE-PHANTOM-ARM'
 CE_ARMED=""
+# ── The SITE rung, derived here beside the code-granular probes rather than beside CE_CODES.
+# CE_CODES is computed at the coverage verdict itself, AFTER every arm has run, and an accumulator
+# fed by those arms cannot be initialised after them — so the derivation moves up to the group's
+# own entry constants, which is the earliest point that is still once-per-run.
+#
+# CE's emission shape is the same tab-headed one group ST uses, so the SAME reader serves both;
+# what differs is only the body it is pointed at. The probe is a CODE because the shaper writes an
+# emission; the probe KEY is what a site-granular reader derives from that emission, and cov_assert
+# asserts the two agree rather than assuming it.
+CE_SITE_PROBE='CE-SITE-SYNTHETIC-PROBE'
+CE_SITE_PROBE_KEY='CE-SITE-SYNTHETIC-PROBE#1'
+CE_SITE_PHANTOM='CE-PHANTOM-SITE#9'
+# PARALLEL to CE_ARMED, never a change to it: CE_ARMED records the code an arm DECLARED it wanted,
+# this records the site the evaluator ACTUALLY EMITTED from when that arm ran.
+CE_ARMED_SITES=""
 CE_DIR="$WORK/ce"; mkdir -p "$CE_DIR"
 
 # ce_fenced <root> — the class-ids in the FENCED row of § 4.5's marker-form table, one per
@@ -8276,6 +8373,11 @@ ce_mustfire() {
 "
   v="$(ce_violations "$tree" "$trip" "$map" "$den")"
   n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  # The SITE side, read from the RECORDS rather than from $want for the reason st_mustfire states:
+  # an arm names a code, and only the record can say which of that code's emission sites was
+  # reached. ce_mustnotfire accumulates nothing, by the same rule.
+  CE_ARMED_SITES="$CE_ARMED_SITES
+$(st_attrib "$v" "$CE_SITEMAP")"
   if [ "$landed" -eq 1 ] && grep -q "^$want$(printf '\t')" <<<"$v"; then
     PASS "$id: MUST FIRE — $what, and the same evaluator reports $want ($n violation(s) in all). The mutation is asserted to have landed before the verdict is read"
   else
@@ -8293,6 +8395,14 @@ ce_mustnotfire() {
     FAIL "$id: MUST NOT FIRE — $what, but the evaluator reports $n violation(s) (edit-landed=$landed):$(printf '%s\n' "$v" | awk -F'\t' 'NF > 1 { printf " %s", $1 }')"
   fi
 }
+
+# The site derivation belongs HERE and not with the probe constants above: those sit ahead of
+# ce_violations' own definition, and `declare -f` over a function that does not exist yet returns
+# NOTHING — an empty sitemap, and a site comparison over the empty set. That is not a hypothetical;
+# it is what the first build of this arm did, and CE-SITE0's emptiness limb named the cause on the
+# first run rather than letting the comparison read green over nothing.
+CE_SITE_BODY="$(declare -f ce_violations)"
+CE_SITEMAP="$(st_sitemap "$CE_SITE_BODY")"
 
 CE_DEN_IDS="$(ce_denominator "$ROOT")"
 CE_NDEN="$(printf '%s\n' "$CE_DEN_IDS" | grep -c '[^[:space:]]')"
@@ -8346,6 +8456,27 @@ else
 fi
 
 if [ "$CE_RAN" -eq 1 ]; then
+  # ── CE-SITE0 — the ENTRY GATE for this group's site comparison, on the same shape group ST
+  # uses and for the same two reasons. It is an EQUALITY between two non-zero counts rather than a
+  # zero, so it cannot pass over a reader that has gone quiet; and its second limb converts this
+  # design's one blind spot into a failing input — two emission sites of one code whose details
+  # open with the SAME literal collapse into one key, under-reporting the population, which is a
+  # smaller denominator reading as full coverage.
+  CE_SITE_OK=1
+  CE_SITE_RAW="$(printf '%s\n' "$CE_SITEMAP" | grep -c '[^[:space:]]')"
+  CE_SITE_KEYS="$(st_sites "$CE_SITE_BODY")"
+  CE_SITE_NK="$(printf '%s\n' "$CE_SITE_KEYS" | grep -c '[^[:space:]]')"
+  CE_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++ } END { for (k in n) if (n[k] > 1) printf "%s ", k }' <<<"$CE_SITEMAP")"
+  if [ "$CE_SITE_RAW" -eq 0 ]; then
+    FAIL "CE-SITE0: the emission-site reader returned NO sites over the body of ce_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
+    CE_SITE_OK=0
+  elif [ "$CE_SITE_NK" -ne "$CE_SITE_RAW" ]; then
+    FAIL "CE-SITE0: $CE_SITE_RAW raw emission site(s) collapse to only $CE_SITE_NK distinct key(s) — code(s) ${CE_SITE_DUP% } emit from two or more places whose detail opens with the SAME literal, so those places are indistinguishable in the output and the site population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
+    CE_SITE_OK=0
+  else
+    PASS "CE-SITE0: the emission-site reader is non-degenerate and unambiguous over ce_violations — $CE_SITE_RAW raw site(s) resolving to $CE_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero. The site set and the code set need not be the same size, and this gate does not assert that they are: where an evaluator emits one code from several places, ONE member of the code set is several members of this one, and the gap between the two rungs is exactly the population CE-COV cannot see. What CE-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted"
+  fi
+
   CE_NMEASURED=0; CE_NPOPULATED=0; CE_NUNVERIF=0; CE_BAD=""
   while IFS= read -r CE_EST; do
     [ -n "$CE_EST" ] || continue
@@ -8518,6 +8649,22 @@ EOF
   cov_assert 'CE-COV' 'CTL-CE-COV' '' 'ce_violations' \
              st_codes cov_emit_tab "$(declare -f ce_violations)" \
              "$CE_CODES" "$CE_ARMED" "$CE_PROBE" "$CE_PHANTOM"
+
+  # ── CE-SITE — the same proposition one rung finer, read together with CE-COV so the ladder is
+  # visible in the output. This group is graded at site granularity for the same reason group ST
+  # is: its emissions are tab-headed, so the SAME reader resolves them, and its day-one state is a
+  # bijection so the extension asserts a property that already holds. Grading ST at site
+  # granularity and leaving CE at code granularity would re-create, inside one file, the very
+  # incoherence the shared helper exists to prevent.
+  # Gated on CE-SITE0 for the reason group ST's own gate gives: a comparison over a reader that
+  # returned nothing, or over keys that collided, is UNMEASURED and is named as that once rather
+  # than reported a second time as a coverage hole it is not.
+  if [ "$CE_SITE_OK" -eq 1 ]; then
+    cov_assert 'CE-SITE' 'CTL-CE-SITE' '' 'ce_violations' \
+               st_sites cov_emit_tab "$CE_SITE_BODY" \
+               "$CE_SITE_KEYS" "$CE_ARMED_SITES" "$CE_SITE_PROBE" "$CE_SITE_PHANTOM" \
+               "$CE_SITE_PROBE_KEY" 'emission site'
+  fi
 fi
 
 if [ "$CE_RAN" -ne 1 ]; then
