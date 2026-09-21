@@ -3,6 +3,65 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.36.0] — 2026-09-20 — Interviewer founding decisions
+
+This release decides and builds nothing, deliberately. Both intake forms already promise their
+reader that they can come back for the rest, and the engine has never been what keeps that promise —
+the filesystem keeps it, on the routes where the traveller edits the file themselves, and the
+assisted walk-through breaks it by holding the whole interview in conversation until a single write
+at the end. What lands here is the pair of founding decisions that let an interviewer be built,
+settled before any slice is cut. The interviewer itself is not in this release, and no behaviour
+described below is reachable yet.
+
+**A resumable interview now has a defined state, and that state is the traveller's own file.**
+Nothing new is stored to make resumption work: no cursor, no progress marker, no added frontmatter
+key. What a session needs to pick up where it stopped is derived from the form's own questions and
+from the answers already written into the file — so a form mailed to somebody and returned resumes
+exactly as one edited at this machine does, and a hand-edit made between sessions is absorbed rather
+than argued with. The write cadence follows from that: the file is seeded whole before the first
+question is asked, and each answer is written as it is given, so an abandoned session loses at most
+the answer in flight instead of the whole sitting.
+
+**A skipped question is now distinguishable from one nobody has asked, and that distinction turned
+out to be the real defect.** The predicate the engine already uses to decide whether a field carries
+an answer is true or false, and every unanswered shape falls on the same side of it — a surviving
+placeholder, an em dash, a blank. Read that way, every resumed session re-asks every skipped
+question, which breaks the standing promise that nothing pushes twice, and nothing in the repository
+could see it happen. The decision settles which byte carries which meaning: a skip writes the em
+dash, and a surviving placeholder means nobody has asked yet. That also resolves a live
+disagreement, on the same byte and in opposite directions, between the engine's standing rules and
+the forms' own instructions to their readers — a contradiction that survived precisely because
+nothing grades it.
+
+**Interview conduct gets an authored home, and a form now declares what it is.** Conduct is written
+once, inside the interviewer's own verb, rather than copied into the bottom of each form — and the
+durable half of intake, which no shipped verb reaches today, gains its first command surface in the
+same act. What stays beside each form is the prose about that form's own questions, because moving
+it would put it in a file that does not carry the fields it names. What a form declares in order to
+be interviewable is a small fenced block that points rather than copies: its own identity and
+version, where its question half ends, and the address of the table that already says what each of
+its fields is. The single genuinely new thing a form must author is a per-field marker saying
+whether its option list is the complete admissible set or merely a suggestion — and that is declared
+rather than inferred because a classifier over the shipped option text was measured and got it wrong
+in both directions on one run.
+
+**Somebody with no copy of the engine still receives a working interview.** The hand-off that
+travels to a third-party assistant gains a portable card carrying the conduct, so a recipient holds
+the questions, the conduct and a filled comparison without ever resolving an engine path. The
+restatements that are losing their only reader are deleted rather than relocated, and the guard that
+grades the starred-question count is re-grounded on what remains.
+
+**The honest limits.** Neither record ships the interviewer, and neither edits any file but itself:
+the conduct, the form changes and the guard work are all named as later slices, each with an owner.
+The trip-context form stays out of scope and is named as the first consumer afterwards rather than
+quietly omitted — it is a multi-writer trip artifact that happens to share a markup shape with a
+form, and its entry price is written down. Some of what a form exposes stays prose read by a
+language model: the decision makes those data locatable and single-homed, and nothing asserts that a
+hint was offered or that a filename transform was applied. Both records are `Proposed`. The flip to
+`Accepted` is the operator's at the milestone close, it moves the record's own status line and its
+index cell together, and no required check grades either half or their agreement — which is why each
+record carries that obligation in its own opening rather than leaving it to a gate.
+
 ## [0.35.0] — 2026-09-20 — Prompt and fixture agreement
 
 The instructions this engine runs on, and the worked examples that demonstrate them, now say what the
