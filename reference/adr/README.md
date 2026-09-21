@@ -53,5 +53,5 @@ options weighed, the decision, and the consequences.
 | [ADR-018](ADR-018-cost-estimation-method.md) | Cost estimation method — the commitment axis, the C13 read edge, and ADR-011's three deferred questions | Accepted |
 | [ADR-019](ADR-019-discriminating-evidence-rule.md) | The Discriminating-Evidence Rule — an assertion's PASS must require evidence its subject could only have produced by running | Accepted |
 | [ADR-021](ADR-021-installable-capability.md) | The trip engine is an installable capability, not a folder you open | Accepted |
-| [ADR-022](ADR-022-interview-session-model.md) | The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer | Proposed |
-| [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) | The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs | Proposed |
+| [ADR-022](ADR-022-interview-session-model.md) | The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer | Accepted |
+| [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) | The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs | Accepted |
