@@ -735,15 +735,17 @@ record and it is stated on `ADR-013`'s own model rather than left for a reader t
 - **No branch-protection change.** The new arms land inside `ST`, which blocks from inside the
   existing required check by design.
 
-### What later slices must change, each with an owner
+### What this decision makes false elsewhere
 
-| Change | Owner |
+**Amendment (2026-09-21, Monday) — scheduling content removed.** This section previously carried an `Owner` column assigning changes to a release wave, and the record additionally carried a trailing section naming build slices. Both are scheduling, and scheduling belongs to a release plan, which changes when the backlog changes — while this record does not. The wave assignments and the slice list are removed; every statement of what becomes false elsewhere is kept, including the mechanical coupling facts, which are consequences of the decisions rather than schedule. One cell gains an explicit `D5.1` basis it had been taking from the removed token. No decision is reversed, narrowed or re-opened.
+
+| Change | The constraint it carries |
 |---|---|
-| The conduct extraction itself — the fence in, the rules and restatements out, `ST` re-grounded, the digest row re-pinned | **Wave 1**, and it is **one commit**: `ST0` fails on an empty surface and `ST-COV` fails on an unarmed branch, so the removal, the re-grounding and the re-pin cannot be sequenced apart without a red required check between them |
-| `## profile` route 1's repair, per D1.3 | **Wave 1**, in the same act as the extraction that falsifies it |
-| The CI workflow comment that spells out `ST`'s four homes — a fifth restatement, ungraded, and false the moment D5.1 lands | **Wave 1**, same commit |
-| The command-reference derived region, which a new verb changes | **Wave 1** — one regeneration and a paste, with no skip path |
-| The durable form's Step-1 taxonomy row | **Wave 1** — see R5 |
+| The conduct extraction itself — the fence in, the rules and restatements out, `ST` re-grounded, the digest row re-pinned | and it is **one commit**: `ST0` fails on an empty surface and `ST-COV` fails on an unarmed branch, so the removal, the re-grounding and the re-pin cannot be sequenced apart without a red required check between them |
+| `## profile` route 1's repair, per D1.3 | in the same act as the extraction that falsifies it |
+| The CI workflow comment that spells out `ST`'s four homes — a fifth restatement, ungraded, and false the moment D5.1 lands | same commit, per D5.1 |
+| The command-reference derived region, which a new verb changes | one regeneration and a paste, with no skip path |
+| The durable form's Step-1 taxonomy row | see R5 |
 
 ### Two facts a small-looking change would hide
 
@@ -774,16 +776,16 @@ Every residual is named with its owner. A residual with no owner is not a residu
 |---|---|---|
 | **R1** | **`F14`, `F15`, `F18`, `F20` and `F21` stay prose, and nothing grades that a hint was offered or a transform applied.** Accepted, and stated as a non-goal rather than deferred work | **accepted**, stated by § *The seam* |
 | **R2** | **The *skill plus form* constraint was held with its cost known.** A reference document cited live at invocation is the cheapest home for conduct and matches the idiom `## profile` already uses; it is foreclosed by the constraint and not by merit, and the constraint makes one verb section the de-facto conduct library, which will read oddly at the third caller | **operator**, at milestone scope |
-| **R3** | `form-version:` disagreement is **detectable** and nothing acts on it in Wave 0 | **Wave 1**, the extraction slice |
+| **R3** | `form-version:` disagreement is **detectable** and nothing acts on it in Wave 0 | the extraction slice |
 | **R4** | The `Proposed` → `Accepted` flip moves this record's `Status:` line and its index cell, and no check grades either half or their agreement | **operator**, at milestone close |
-| **R5** | **The durable form's command route needs a `CLAUDE.md` Step-1 taxonomy disposition that nobody has scoped.** `ADR-007` § 3's coverage identity requires every unit of the command surface to be covered by exactly one addressed row, and the shipped **Traveler profile** row addresses a traveller's own profile rather than a durable person record. Whether the new verb takes a new addressed row or joins the existing *whose answers* ambiguity set is a taxonomy call this record does not own. **This record edits no file but its own** | **Wave 1**, owner assigned at Wave-1 planning |
+| **R5** | **The durable form's command route needs a `CLAUDE.md` Step-1 taxonomy disposition that nobody has scoped.** `ADR-007` § 3's coverage identity requires every unit of the command surface to be covered by exactly one addressed row, and the shipped **Traveler profile** row addresses a traveller's own profile rather than a durable person record. Whether the new verb takes a new addressed row or joins the existing *whose answers* ambiguity set is a taxonomy call this record does not own. **This record edits no file but its own** | owner assigned at Wave-1 planning |
 | **R6** | `templates/trip-context.template.md` remains uninterviewable, so **the contract ships unexercised on the artifact the scalability claim is usually argued from.** Its entry price is on record under D3.3 | **the first consumer slice, after this epic** |
-| **R7** | The portable interview card is a **new tracked asset with no schema class** — it is a document rather than an artifact instance, and the class enumeration does not grow for it | **Wave 1**, stated here so the absence is a decision |
+| **R7** | The portable interview card is a **new tracked asset with no schema class** — it is a document rather than an artifact instance, and the class enumeration does not grow for it | stated here so the absence is a decision |
 | **R8** | **The split of the guides' numbered rules is a joint act.** This record relocates the block and decides where it lands; the sibling governs the semantics of the rules it names. **Neither half is complete alone**, and this record states nothing about those semantics | **joint**, this milestone |
-| **R9** | The `intake-form` fence is **not** graded by `scripts/validate-artifacts.sh`, whose selector excludes the templates ahead of both arms. D5.6 puts the conformance arm in `ST` instead, and this row exists so the validator's silence is read as a routing decision rather than as coverage | **Wave 1**, the extraction slice |
-| **R10** | **The join key's own uniqueness is unasserted.** D2.6 question 3 requires each bullet to join *exactly one* row, and that totality holds today only because the classification table's labelled rows carry one distinct label each and one distinct `(section, label)` pair each — measured at `edadfa9` and reported live by `XT12`, but **required by nothing**. A row added with a duplicate label breaks nothing under the selected leading-segment key so long as the sections differ, and a row added with a duplicate pair breaks question 3 silently. The table's own *Totals* sentence reconciles class, scope and horizon against the row count and says nothing about key uniqueness. Closing it is one arm over `F5`, and it belongs beside D5.6's rather than in this record | **Wave 1**, the extraction slice |
-| **R11** | **Question 6's undecidable half: whether a field that *ought* to carry a closed/open marker has one.** D2.4's measurement rules out deciding it from the option text's shape, so the conformance test grades well-formedness and leaves the obligation to a reviewer. The failure it admits is **fail-safe in the cheap direction** — an unmarked closed field is treated as open, so the interviewer records what was said rather than refusing a legitimate answer, which is the inverse and worse error. Named here so the asymmetry is a decision rather than an oversight | **Wave 1**, the extraction slice, with the marker authoring |
-| **R12** | **D2.3's rejection of declared option lists is the one MEDIUM-confidence decision in this record**, and § *Reversibility summary* says a Wave-1 spike could falsify it. It rests on the judgement that a reader of the bracket suffices rather than on a measurement of one. Until that spike runs, the single-authoritative-home limb of D2.3 is a decision taken on judgement while every other decision here rests on a live measurement with a firing control arm | **Wave 1**, as a spike before the extraction slice commits to the bracket |
+| **R9** | The `intake-form` fence is **not** graded by `scripts/validate-artifacts.sh`, whose selector excludes the templates ahead of both arms. D5.6 puts the conformance arm in `ST` instead, and this row exists so the validator's silence is read as a routing decision rather than as coverage | the extraction slice |
+| **R10** | **The join key's own uniqueness is unasserted.** D2.6 question 3 requires each bullet to join *exactly one* row, and that totality holds today only because the classification table's labelled rows carry one distinct label each and one distinct `(section, label)` pair each — measured at `edadfa9` and reported live by `XT12`, but **required by nothing**. A row added with a duplicate label breaks nothing under the selected leading-segment key so long as the sections differ, and a row added with a duplicate pair breaks question 3 silently. The table's own *Totals* sentence reconciles class, scope and horizon against the row count and says nothing about key uniqueness. Closing it is one arm over `F5`, and it belongs beside D5.6's rather than in this record | the extraction slice |
+| **R11** | **Question 6's undecidable half: whether a field that *ought* to carry a closed/open marker has one.** D2.4's measurement rules out deciding it from the option text's shape, so the conformance test grades well-formedness and leaves the obligation to a reviewer. The failure it admits is **fail-safe in the cheap direction** — an unmarked closed field is treated as open, so the interviewer records what was said rather than refusing a legitimate answer, which is the inverse and worse error. Named here so the asymmetry is a decision rather than an oversight | the extraction slice, with the marker authoring |
+| **R12** | **D2.3's rejection of declared option lists is the one MEDIUM-confidence decision in this record**, and § *Reversibility summary* says a Wave-1 spike could falsify it. It rests on the judgement that a reader of the bracket suffices rather than on a measurement of one. Until that spike runs, the single-authoritative-home limb of D2.3 is a decision taken on judgement while every other decision here rests on a live measurement with a firing control arm | as a spike before the extraction slice commits to the bracket |
 | **R13** | **The contract makes conduct free and leaves classification exactly as expensive as it was.** D6.3 states it; no row owned it. For a `trip-context`-shaped artifact the entry price is a classification row for nearly every label it carries, and that cost is the data model's rather than this contract's — which is a statement about *whose* cost it is, never a statement that it has been reduced. **The scalability claim this record makes is therefore about conduct alone**, and a reader comparing D6.1 against D6.2 should read it that narrowly | **accepted**, stated by D6.3; the data model's own, if anyone reduces it |
 
 ## References
@@ -849,19 +851,3 @@ Every residual is named with its owner. A residual with no owner is not a residu
 - `README.md` at the repository root — the install loop that names the shipped verbs literally, the
   uninstall loop that repeats them, and the two sentences stating that updating is a `git pull`,
   which together ground the new-skill rejection
-
-## Follow-on build slices
-
-Named, and deliberately not scoped. Scoping is Wave-1 planning's.
-
-- **The extraction slice.** The fence in, the closed/open markers in, the rules and the restatements
-  out, `ST` re-grounded, the workflow comment amended and the digest rows re-pinned — as **one
-  commit**, for the reason D5.4 and § *Consequences* both state.
-- **The conduct slice.** Authors the interviewer's conduct into the landing site D1.1 names, against
-  the structure this record decides and the behaviour the sibling decides.
-- **The portable card.** Authors the hand-off asset D4.1 adds, and retargets both forms' paste-lines
-  at it.
-- **The taxonomy slice.** Carries R5 — the durable form's Step-1 disposition and the requirement row
-  the new verb owes.
-- **The first `trip-context` consumer.** Carries R6, and is the slice at which this contract first
-  meets the artifact it was deferred from.
