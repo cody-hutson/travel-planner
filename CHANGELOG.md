@@ -3,6 +3,55 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.39.0] — 2026-09-21 — Traveller journey founding decisions
+
+Two questions this engine had answered several times over, locally and correctly, now have one
+answer apiece. Nothing about how the engine behaves changes here — no new field, no new writer, no
+new verb, and no widening of what may be published. What changes is that the next slice to ask how a
+traveller is reached, or what carries across a boundary, finds a decision rather than a set of
+precedents.
+
+**What a channel is, and what may cross one, is now decided once.** The published site came from one
+trip, the approval transport from one need, the intake form from one template; each was sound alone,
+none was designed against the others, and no tracked file said what a channel was. The channel record
+settles it — a three-limb test for what counts as a channel, the channel-set and what would admit a
+further member, and carry as a relation typed on both sides rather than a property of either. Its
+denial half reads the shipped publish guard's own declared fence rather than re-declaring it, so
+every carry verdict it returns is the verdict that guard already returns today.
+
+**A traveller's arc across time is now a named axis with a closed value set.** The engine already
+computes that classification on every synthesis; it had no name, no declared domain and no boundary,
+so four capabilities each decided a piece of time for themselves. The engagement record names the
+axis, fixes its values, declares the boundaries and states how one traveller is recognised as the
+same person on either side — and runs nothing new to do it.
+
+**The two records agree by construction rather than by coincidence.** Each carries a declared axis
+fence naming its orientation, its token set and, where the sets differ, the difference by name. One
+record's token set is a subset of the other's, and the single value that separates them is carried as
+a table-level fail-closed clause on one side and as an axis value on the other. That agreement is
+what this release's cross-record acceptance criterion grades, and the criterion carries control arms
+that must fail on each of the wrong shapes — which the instrument it replaced did not.
+
+**Three live contradictions in the reference corpus are corrected alongside them.** A record quoting
+the never-rendered class membership had it at two members where the reference declares four, and the
+two it omitted are the durable person record and the group record — omitted, that is, from a privacy
+rule. A second record restated the entity count at eleven where the reference assigns twelve. Both
+drifted from one cause: the people-library and reusable-groups work added an entity and two classes
+after those records landed, and neither change came back to the citing sentence. The third is not a
+stale citation. The lifecycle table called the derived traveller model safe to regenerate *because it
+holds no independent state*, while the charter states that two of that file's three model-entry
+classes have no source to re-derive from — so regenerating drops what the operator supplied, or
+restores what an erasure removed, depending on which entry it meets. The class assignment was right
+and is kept; the reason is carved.
+
+**The honest limits.** Both records land `Proposed` rather than `Accepted`: they are the decision
+gates the following slices need, and nothing downstream is built here. Neither ships a detector for
+the contradictions corrected beside them — the corrected citations are true today and nothing guards
+them tomorrow, though the count that replaced a bare cardinal now carries its own anchor and
+population and so can be re-derived rather than trusted. A fixture gap on the engagement axis, and
+a pair of per-class fields with no witness fixture, are recorded as findings inside the records rather than
+closed.
+
 ## [0.38.0] — 2026-09-20 — The contract learns about writers
 
 This release decides and builds nothing, deliberately. The contract that says what makes a form

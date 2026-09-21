@@ -16,11 +16,34 @@
 #        `examples/` and `trips/` are excluded by construction, as are table rows that put
 #        the directory in an adjacent cell. The home map is DERIVED from the tracked tree
 #        on every run; this file holds no list of citable documents.
-#   B    LINE-NUMBER LOCATORS. A `path.ext:NNN` reference in tracked markdown. A line number
-#        is the least durable reference form there is — it rots on the next insertion above
-#        it, silently, and points at whatever moved into its place. The tracked population
-#        is empty and is expected to stay empty, so this group renders VACUOUS rather than a
+#   B    LINE-NUMBER LOCATORS. A `path.ext:NNN` reference in tracked markdown, IN THE BARE
+#        SPELLING ONLY. A line number is the least durable reference form there is — it rots
+#        on the next insertion above it, silently, and points at whatever moved into its
+#        place. The in-scope population is empty, so this group renders VACUOUS rather than a
 #        bare PASS, and group CTL is the only thing that ever exercises it.
+#
+#        THE SCOPE IS NARROWER THAN THE NAME, DELIBERATELY, AND THE GAP IS REPORTED ON EVERY
+#        RUN. B1's pattern requires the extension to sit immediately against the colon, so a
+#        locator whose path is code-spanned — the form this corpus actually writes, where the
+#        closing backtick falls between the extension and the colon — is outside it, as is
+#        one whose digits carry emphasis. The gate is narrow by the width of one markdown
+#        delimiter. That is now a DECLARATION rather than a blind spot: b.awk measures the
+#        wider population too, the group prints both figures and their difference beside its
+#        verdict, and the VACUOUS line says in terms that it is the predicate's verdict and
+#        not the corpus's. No numeral appears here, per the rule below; both are derived.
+#
+#        WHY NARROWED RATHER THAN WIDENED, which was the live alternative. Widening the
+#        pattern to the spelling the corpus uses was measured first, over the whole tracked
+#        tree rather than over one change's files: it finds a population that is entirely
+#        content one in-flight change authored, with NOTHING pre-existing — so widening would
+#        not turn this gate red on another author's work. It would turn it red on that
+#        change's own two records, whose locators are paired with verbatim quotations of the
+#        text they address. Converting them is a content change to reasoned records, on a
+#        scale no scope decision inside this file is entitled to force, and B1's own
+#        remediation line already prescribes the quotation those sites carry. So the boundary
+#        is written down and reported instead. Widening stays available to a change whose
+#        scope is those records, and it is a one-delimiter edit to the pattern below plus the
+#        conversions it then requires.
 #   C    BASIS-FREE COUNT ASSERTIONS. A count asserted about a countable corpus population
 #        while carrying no re-derivable basis. The unit is the SENTENCE — see the note on
 #        the unit below, which records why. A count is NOT a defect for being a count; it is
@@ -120,7 +143,9 @@
 # verdict from SKIP, for the reason the sibling suites already state: a skipped GROUP is a
 # hole in the suite, an empty POPULATION is a real measurement of the tree, and collapsing
 # the two would hide one behind the other. Group B is the empty population; it renders
-# VACUOUS and says so.
+# VACUOUS and says so. Read that precisely: what is empty is group B's IN-SCOPE population,
+# not the corpus's locators — the class-B entry above states the boundary and the group prints
+# the out-of-scope figure beside its own verdict on every run.
 #
 # ── ONE DEPENDENCY ON REPOSITORY HISTORY, STATED ─────────────────────────────────
 # Arm CTL-RETRO reads a blob from a commit in this repository's history. It is the only arm
@@ -332,9 +357,26 @@ cat > "$WORK/b.awk" <<'AWK'
 # ARGV[1] newline-separated relative path list. -v ROOT=<dir>
 # A locator is <path-ish><.ext>:<digits>. A section address (`§ 4`), a version (`v0.17.0`)
 # and a URL with a port are not locators and must not match.
+#
+# THE SCOPE IS THE BARE SPELLING, AND THE BOUNDARY IS MEASURED RATHER THAN ASSUMED.
+# B1's pattern requires the extension to sit IMMEDIATELY against the colon, so a locator
+# whose path is code-spanned — the form this corpus actually writes, where the closing
+# backtick falls between the extension and the colon — does not match it, and neither does
+# one whose digits carry emphasis. The gate is therefore narrower than its name reads by
+# exactly the width of a markdown delimiter. That narrowness is DECLARED rather than
+# repaired: see the class-B entry in this file's banner for why widening it is not this
+# gate's call to make.
+#
+# So the second loop below measures the WIDER population and reports it as a DENOM field —
+# never as a FINDING. It asserts nothing and fails nothing; its whole job is to keep B1's
+# empty in-scope population from reading as an empty corpus. It emits no finding code, so
+# the group-Y inventory is untouched and it needs no must-fire arm of its own. Its honesty
+# does not rest on an arm either: unlike B1's zero, a non-zero is self-evidencing, and arm
+# CTL-B1-WIDE nonetheless plants the code-spanned form B1 cannot see and requires this loop
+# to find it — otherwise a wide count that merely echoed `hits` would look identical here.
 { if ($0 != "") FILES[++nf] = $0 }
 END {
-  hits = 0
+  hits = 0; whits = 0
   for (i = 1; i <= nf; i++) {
     rel = FILES[i]; f = ROOT "/" rel
     infence = 0; ln = 0
@@ -349,16 +391,26 @@ END {
       # locator and then its line number as a second one. Arm CTL-B1-SPEC is that case.
       rest = line
       gsub(/(https?|ftp|file):\/\/[^ )>]*/, " url ", rest)
+      wide = rest
       while (match(rest, /[A-Za-z0-9_.\/-]+\.[A-Za-z0-9]+:[0-9]+/)) {
         tok = substr(rest, RSTART, RLENGTH)
         rest = substr(rest, RSTART + RLENGTH)
         hits++
         printf "FINDING B1 %s %d %s\n", rel, ln, tok
       }
+      # The out-of-scope measurement, over the SAME line after the SAME URL blanking, so the
+      # two populations differ by the predicate alone. `wide` is a separate cursor because the
+      # loop above consumes `rest`. The delimiter class admits the code span and the emphasis
+      # runs either side of the colon, which is the whole of the difference; it can match empty,
+      # so this population CONTAINS B1's rather than sitting beside it.
+      while (match(wide, /[A-Za-z0-9_.\/-]+\.[A-Za-z0-9]+[`*_]*:[`*_]*[0-9]+/)) {
+        wide = substr(wide, RSTART + RLENGTH)
+        whits++
+      }
     }
     close(f)
   }
-  printf "DENOM %d %d\n", nf, hits
+  printf "DENOM %d %d %d\n", nf, hits, whits
 }
 AWK
 
@@ -676,11 +728,14 @@ echo "B — line-number locators"
 B_OUT="$(ch_scan_b "$ROOT" "$WORK/list.real")"
 B_NFILE="$(awk '$1 == "DENOM" { print $2 }' <<<"$B_OUT")"
 B_NHIT="$(awk '$1 == "DENOM" { print $3 }' <<<"$B_OUT")"
-printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators.\n' "$B_NFILE"
+B_NWIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$B_OUT")"
+B_NOOS=$(( ${B_NWIDE:-0} - ${B_NHIT:-0} ))
+printf '  SURFACE: %s tracked markdown file(s) walked for path:line locators — %s in this group'"'"'s IN-SCOPE bare spelling, %s in either spelling, so %s sit OUTSIDE this predicate and are reported rather than counted as clean.\n' \
+  "$B_NFILE" "$B_NHIT" "$B_NWIDE" "$B_NOOS"
 echo "B1" >> "$SURF_LOG"
 
 if [ "${B_NHIT:-0}" -eq 0 ]; then
-  VACUOUS "B1: the tracked population is EMPTY — $B_NFILE file(s) walked, no path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found"
+  VACUOUS "B1: the IN-SCOPE population is EMPTY — $B_NFILE file(s) walked, no BARE path:line locator found. This group proves nothing about this tree by itself and says so rather than reporting a bare PASS; what it rests on is arm CTL-B1, which plants two locators in a fixture and requires both to be found. READ THIS AS THE PREDICATE'S VERDICT AND NOT THE CORPUS'S: $B_NWIDE locator(s) are present in either spelling and $B_NOOS of them are out of scope here by declaration — a code-spanned path or emphasised digits put a markdown delimiter between the extension and the colon, which B1's pattern does not cross. The banner's class-B entry carries the boundary and why widening it is not this gate's call; arm CTL-B1-WIDE is what makes the out-of-scope figure a measurement"
 else
   FAIL "B1: $B_NHIT line-number locator(s) in tracked markdown. A line number rots on the next insertion above it and then points at whatever moved into its place — cite the section or the quoted text instead:"
   grep '^FINDING B1 ' <<<"$B_OUT" | awk '{ printf "      %s:%s  %s\n", $3, $4, $5 }'
@@ -818,6 +873,25 @@ printf 'See ADR-007 4 row 10, released in v0.17.0, at https://example.com:8080/x
 ctl_fence "$D" '1  docs/notes.md'
 O="$(ch_scan_b "$D" "$(ctl_list "$D")")"
 ctl_mustnot "CTL-B1-SPEC" B1 "$O" "a section address, a version string and a URL carrying a port are each shaped like a locator and are none"
+
+# CTL-B1-WIDE — the arm that measures the DECLARED SCOPE BOUNDARY itself, in both directions
+# at once. The fixture carries only code-spanned locators, which is the form this corpus
+# actually writes. B1 must not see them (that is the declared narrowness) and the DENOM's wide
+# field must (that is what makes the out-of-scope figure a measurement). One comparison asserts
+# both: a wide count that merely echoed `hits`, or a second copy of B1's own pattern, cannot be
+# greater than it on this input. It registers NO arm code — it emits no finding and asserts no
+# code — so the group-Y inventory is unchanged by it.
+D="$(ctl_mk b1wide)"
+printf 'Declared at `scripts/publish-trip-site.sh`:2232, contract `reference/x.md`:**1924**.\n' > "$D/docs/notes.md"
+ctl_fence "$D" '1  docs/notes.md'
+O="$(ch_scan_b "$D" "$(ctl_list "$D")")"
+BW_NARROW="$(n_code "$O" B1)"
+BW_WIDE="$(awk '$1 == "DENOM" { print $4 }' <<<"$O")"
+if [ "${BW_WIDE:-0}" -gt "${BW_NARROW:-0}" ]; then
+  PASS "CTL-B1-WIDE: the scope boundary is a measurement in both directions — two code-spanned locators are planted, B1's in-scope pattern reports $BW_NARROW of them and the out-of-scope measurement reports $BW_WIDE. The strict inequality is the assertion: it convicts B1's declared blindness to the delimiter AND proves the wider loop is not an echo of the narrower one"
+else
+  FAIL "CTL-B1-WIDE: the out-of-scope measurement reported $BW_WIDE against B1's $BW_NARROW on a fixture carrying ONLY code-spanned locators. Without a strict inequality here the figure reported beside B1's verdict cannot be told from a copy of B1's own pattern, and the scope note it supports would be unfounded"
+fi
 
 # ── C ────────────────────────────────────────────────────────────────────────────
 ctl_c_doc() {  # ctl_c_doc <root> <relpath> <body...>
@@ -1349,7 +1423,8 @@ printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;3
   "$pass" "$fail" "$skip" "$vacuous"
 printf 'CITATION: %s markdown citation(s) read over %s tracked file(s); %s bare where a unique durable home exists.\n' \
   "$A_NCITE" "$A_NFILE" "$A_NBARE"
-printf 'LOCATOR: %s path:line locator(s) over %s tracked file(s).\n' "$B_NHIT" "$B_NFILE"
+printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s); %s in either spelling, %s out of scope by declaration.\n' \
+  "$B_NHIT" "$B_NFILE" "$B_NWIDE" "$B_NOOS"
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 if [ "$vacuous" -gt 0 ]; then

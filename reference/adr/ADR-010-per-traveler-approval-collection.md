@@ -184,13 +184,15 @@ The operative constraint is **stronger**, it is already in the corpus, and it bi
 rather than the channel. `reference/data-architecture.md` § 5.1 defines the class:
 
 > **`internal-hard`** — never rendered **and** carrying values that must not reach a rendered page
-> **in any form, including anonymized**. Exactly C12 and C14.
+> **in any form, including anonymized**. Exactly C12, C14, C22 and C23.
 
 C12 is `outputs/traveler-model.md` — the per-traveler artifact — and § 1.1 carries it at that class.
-The same clause is restated in four tracked files — `reference/data-architecture.md`,
+**The same clause is restated across the corpus rather than confined to one document.** Measured at
+`edadfa9` over the tracked tree, the wording *in any form, including anonymized* appears in
+**thirteen** files, this record among them — `reference/data-architecture.md`,
 `reference/adr/ADR-009-data-architecture.md`, `agents/06-validator.md` and
-`reference/site-layout-spec.md` — so it is a settled corpus-wide rule rather than one document's
-phrasing.
+`reference/site-layout-spec.md` among the others — so it is a settled corpus-wide rule rather than
+one document's phrasing.
 
 **Traveler identity may therefore not reach the render even pseudonymously.** Not a name, not a
 handle, not a stable pseudonym, not a key fingerprint, and not a per-traveler approval receipt, which
@@ -203,6 +205,25 @@ does not require identity. A traveler who did not approve, reading a count that 
 knows the count is wrong; a traveler who did approve, reading a digest other than the one they
 approved, knows the published content is not what they approved. Both failure modes are detectable
 from a count and a digest alone, and neither needs a name.
+
+**Amendment (2026-09-20, Sunday) — the quoted `internal-hard` membership, corrected to agree with
+the section it reads from.** The block quote above reproduced § 5.1 as it stood when this record
+landed, when the class had two members. `reference/adr/ADR-012-people-library.md` added the durable
+person record and `reference/adr/ADR-016-reusable-groups.md` the group record, each at
+`internal-hard` and each after this record was written, and neither change came back to this
+quotation. **The membership is corrected in place to the set § 5.1 now declares** — C12, C14, C22
+and C23 — which `reference/data-architecture.md` § 1.1 carries as four rows and names in prose as
+the third and the fourth member, and which `reference/site-layout-spec.md`,
+`reference/schemas/person-record.md` and `reference/schemas/group-record.md` each state
+independently. The restatement sentence above rotted from the same cause and is corrected in the
+same pass, now carrying its measurement rather than a bare cardinal.
+
+**The correction widens the bound; it does not loosen it, and it moves no decision.** This
+section's argument is about C12 and is untouched: traveler identity may not reach the render even
+pseudonymously, and the attestation ceiling rests on that. C22 and C23 are the durable person
+record and the reusable-group record, so the rule this section binds to covers two stores the
+stale quotation left out of a privacy constraint — which is the reason the correction is worth
+making rather than a tidy-up. Nothing decided above or below changes.
 
 ### 5. The abstraction band is `extend-seam`, not `new-abstraction`
 

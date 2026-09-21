@@ -927,10 +927,32 @@ membership disclaimer § 7.6 already carries.
 | Canonical token | Definition | Members |
 |---|---|---|
 | `accumulate-append` | Each re-run **appends** a new dated section; nothing is deleted. The full accumulated file is what downstream reads. | C2, C5, C6, C7, C8, C9, C18, C20 |
-| `rebuilt-each-synthesis` | Regenerated from scratch each synthesis pass from authoritative inputs. Safe to regenerate because it holds no independent state. | C4, C10, C11, C12, C14, C17, C21 |
+| `rebuilt-each-synthesis` | Regenerated from scratch each synthesis pass from authoritative inputs. Safe to regenerate because it holds no independent state. **C12 carries a stated exception to that reason — see the note below.** | C4, C10, C11, C12, C14, C17, C21 |
 | `versioned` | Each synthesis produces a new numbered version; prior versions are preserved as sibling files. | C15, C16 |
 | `persist-mutable` | A single file, updated **in place**, that survives every re-run. Synthesis *reads* it and never regenerates it. Not append-only: a row is deleted in the one case where its subject is removed, so no ghost row lingers. | C1, C3, C13, C22, C23 |
 | `output` | A render, not a lifecycle-managed source. Rebuilt from the artifacts it renders; never read back as a source. | C19 |
+
+**C12 is a member on the assignment and an exception on the reason, and the exception is what
+stops a reader of that row regenerating it blind.** `outputs/traveler-model.md` is rebuilt each
+synthesis pass, so the assignment stands and § 1.1's `L` column and § 9's `Lifecycle` column
+agree with this section unchanged. What does not hold for C12 is the **second sentence**.
+`CLAUDE.md` § *Archived trips — what the freeze binds* is authoritative here, and it distinguishes
+the model's entry classes by the provenance marks each entry carries: an entry carrying no mark
+is `first-party` and is re-derived from its own source file, which is exactly the case this
+row's reason describes; an entry carrying `[OPERATOR-PROVIDED]` alone is `operator-provided-only`;
+an entry carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` is `both-marks`. **Neither of
+the last two has a source file to be re-derived from**, so for those entries this artifact is not
+a projection of an authoritative input — it is the only surviving record of one.
+
+**They fail in opposite directions, which is why an assertion over either alone does not cover
+the pair.** A rebuild **drops** the `operator-provided-only` entry, losing what the operator
+supplied and nothing else holds; and it **carries the `both-marks` entry forward verbatim** —
+`agents/00-enrichment.md` states that carry-forward in terms, as the entry class a pass preserves
+rather than regenerates — so a rebuild run after an erasure restores what the erasure removed,
+undoing it silently. The charter's rule is that substituting rather than regenerating is the
+whole of it. **The classification is unchanged**, exactly as `CLAUDE.md` § *Output Versioning*
+already says of this same artifact: the exception is per entry rather than per class, and it
+qualifies this row's reason without moving its assignment.
 
 **Legacy spellings — a closed record, not an open instruction.** Two legacy forms existed in the
 corpus before this release, and they were **spellings, not additional classes**:
@@ -1492,7 +1514,6 @@ with no site carries no row.
 4       reference/adr/ADR-007-command-entry-point.md
 20      reference/adr/ADR-008-publish-content-guard.md
 36      reference/adr/ADR-009-data-architecture.md
-1       reference/adr/ADR-010-per-traveler-approval-collection.md
 10      reference/adr/ADR-011-per-traveler-cost-estimation.md
 29      reference/adr/ADR-012-people-library.md
 1       reference/command-reference.md
