@@ -1515,7 +1515,6 @@ with no site carries no row.
 4       reference/adr/ADR-007-command-entry-point.md
 20      reference/adr/ADR-008-publish-content-guard.md
 37      reference/adr/ADR-009-data-architecture.md
-1       reference/adr/ADR-010-per-traveler-approval-collection.md
 12      reference/adr/ADR-011-per-traveler-cost-estimation.md
 30      reference/adr/ADR-012-people-library.md
 1       reference/command-reference.md
