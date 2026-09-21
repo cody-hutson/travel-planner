@@ -1,6 +1,6 @@
 # ADR-022: The interview session model — derived resumption, a three-valued read of the unanswered class, and one write per answer
 
-- **Status:** Proposed (2026-09-20)
+- **Status:** Accepted (2026-09-20)
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
