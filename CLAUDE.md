@@ -480,7 +480,7 @@ When the itinerary changes (iteration mode, new bookings, swapped venues):
 - Read the current site HTML
 - Patch the affected sections — don't regenerate from scratch
 - Preserve any design tweaks the user already approved
-- After patching, run the round-trip completeness check (see `reference/site-layout-spec.md` §9 Plan/Site Single-Sourcing & Round-Trip Fidelity): every element in `final-itinerary.md` — every day and **every track of a split day** — still resolves to a rendered component or a named exclusion, so a patch never silently drops plan detail.
+- After patching, run `scripts/check-round-trip.sh --trip <slug>` — the executable form of the walk `reference/site-layout-spec.md` §9.4 prescribes. It establishes that every element in `final-itinerary.md` — every day and **every track of a split day** — still resolves to a rendered component or a named exclusion, so a patch never silently drops plan detail. Report its findings unaltered; where the check does not close, say which element did not resolve and do not present the site as current. It grades the written site against the plan and not the act of writing, so a clean run does not establish that the patch touched only what it meant to.
 
 ### Publishing to GitHub Pages
 
