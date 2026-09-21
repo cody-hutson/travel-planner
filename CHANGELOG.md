@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-20 — The contract learns about writers
+## [0.38.0] — 2026-09-20 — The contract learns about writers
 
 This release decides and builds nothing, deliberately. The contract that says what makes a form
 interviewable was written against two forms that have one owner each, and it says a form is
