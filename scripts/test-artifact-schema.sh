@@ -350,7 +350,14 @@ SELF_VALIDATOR="$HERE/validate-artifacts.sh"
 source "$HERE/validate-artifacts.sh"     # BASH_SOURCE guard prevents dispatch
 set +e
 
-pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; SEEN=""
+pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; SEEN=""; VACUOUS_IDS=""
+# The registration total, COUNTED rather than written down. MD_REG_N is one per md_flips call;
+# MD_ASSERT_N is one per distinct assertion, where an assertion is the (assertion-function,
+# argument-vector) pair — so the two registrations that grade one assertion against two
+# different subjects count once here and twice above. MD6 at the foot of this file reports both
+# and checks them against a second, independent reading. Initialised here because this file runs
+# under `set -u`.
+MD_REG_N=0; MD_REG_IDS=""; MD_ASSERT_N=0; MD_ASSERT_KEYS=""
 # Every verdict records its assertion id — the token before the first colon of the message
 # — so group RS at the foot of this file can ask which GROUPS actually emitted. SKIP has
 # always done this; PASS, FAIL and VACUOUS did not, and that asymmetry IS the gap RS closes.
@@ -414,7 +421,19 @@ md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail
 # it rather than having to introduce it.
 md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   local victim="$1" id="$2"; shift 2
-  local out p f
+  local out p f mdkey
+  # THE TOTAL IS COUNTED HERE, AT THE CALL, so there is no number anywhere for a later change
+  # to forget to restate. The assertion key is a checksum over the NUL-joined argument vector
+  # rather than a delimiter-joined string, because an argument here can carry spaces and
+  # newlines — two of these registrations pass whole document bodies — and a joined key could
+  # not tell one vector from another.
+  MD_REG_N=$((MD_REG_N + 1))
+  MD_REG_IDS="$MD_REG_IDS$id "
+  mdkey="$(printf '%s\0' "$@" | cksum | tr ' ' '_')"
+  case " $MD_ASSERT_KEYS " in
+    *" $mdkey "*) ;;
+    *) MD_ASSERT_KEYS="$MD_ASSERT_KEYS$mdkey "; MD_ASSERT_N=$((MD_ASSERT_N + 1)) ;;
+  esac
   out="$(md_probe "$victim" "$@")"
   if ! [[ "$out" =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
     FAIL "MD[$id]: the oracle subshell returned '$out' rather than a '<pass> <fail>' pair — the probe itself failed, so this arm is not a measurement"
@@ -429,7 +448,13 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   return 0
 }
 
-VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; }
+# VACUOUS also records the ID of every arm that rendered it, separately from SEEN, so the
+# closing NOTE can NAME those arms rather than assert a compensating group. The footer used to
+# hardcode one group as the basis whenever any vacuous verdict existed; the group that
+# compensates is a property of the ARM, not of the suite — this suite's only vacuous arm is
+# W4, carried by the W-CTL-* arms in its own group — so a literal there was a claim about a
+# run it had never read, and it was wrong here from the moment the first VACUOUS shipped.
+VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
@@ -10958,23 +10983,31 @@ md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violat
 # removed must reach the FAILING limb, and the arm asserts in the same verdict that the clean
 # copy reaches the passing one. An opt-out with no compensating arm would be an exemption.
 
-# ── REGISTERED WITH md_flips: EIGHTEEN registrations over SIXTEEN assertions, and this figure
-# is a
-# RUNNING TOTAL — it is what has landed on this branch so far, never what any one change
-# contributed. A change that adds a registration restates the total INCLUDING the ones already
-# here; a change that reads only its own contribution here will write a number that is wrong
-# the moment the next one lands.
+# ── REGISTERED WITH md_flips — AND THE TOTAL IS NOT WRITTEN HERE ANY MORE. ──────────────────
+# There used to be a count on this line. It declared itself a RUNNING TOTAL and carried its own
+# warning: a change that reads only its own contribution here will write a number that is wrong
+# the moment the next one lands. It then went stale in exactly that way — it read eighteen
+# registrations over sixteen assertions while the run emitted more than that, and the
+# enumeration beneath it omitted a whole group, because the card that added that group inserted
+# its registrations and never came back to a number in a different section of this file.
 #
-# The sixteen assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; group ST's
-# cross-document pair, ST3 against each of its two extractors and ST4 against the model
-# extractor; group CTL's coverage arm CTL-COV, against its reader and against one of its
-# emitters; the SITE coverage arms of groups ST and CE, ST-SITE and CE-SITE, each against the
-# emission-site reader the two of them share; and group MG's ten — MG0 against the register
-# reader, and MG2 / MG3 / MG4 against the charter-mode, prompt-mode and negation extractors for
-# each of the three declared behaviours. Group MG's registrations are emitted INSIDE that group
-# rather than here, for the reason its own comment gives: they need its register read and its
-# fixtures, which are torn down at its end. They are counted here anyway, because this figure is
-# the SUITE's total and not this section's.
+# NOTHING MECHANICAL COULD HAVE CAUGHT IT, and the reason is scope rather than absence. The
+# detector for a basis-free cardinal governing a corpus noun is group C of
+# scripts/test-corpus-hygiene.sh, and its scan surface is `git ls-files '*.md'` — a comment
+# inside a shell script is structurally out of its reach, however mature that detector is.
+#
+# SO THE FIGURE IS DERIVED INSTEAD OF RESTATED. md_flips counts its own calls and its own
+# distinct assertions as it makes them, and MD6 at the foot of this file reports both and
+# checks them against a second, independent reading — the MD[...] verdicts the run actually
+# emitted. There is no number here to go stale. That is the move this file already makes
+# twice: group RS reads both rosters live rather than holding a copy of either, and W12
+# derives its code inventory from the walker's own emission sites. This is that pattern
+# applied to the one count in this file that was still maintained by hand.
+#
+# WHAT IS KEPT HERE IS THE PART A READER CANNOT DERIVE — why the registrations sit where they
+# do. Group MG's are emitted INSIDE that group rather than here, for the reason its own comment
+# gives: they need its register read and its fixtures, which are torn down at its end. MD6
+# counts them wherever they are made, because the figure is the SUITE's and not any section's.
 # Registration requires the assertion to be remediated first, because an oracle asked
 # to certify a still-blind assertion turns the suite red for a defect it is reporting rather than
 # causing — which is why the count was zero until an arm had been through that. The declared
@@ -11165,9 +11198,19 @@ w1_assert() {   # w1_assert <grammar-file> <spec-file>
 
 # ── W2 — the closed enum, and component membership against a DERIVED catalog.
 w2_assert() {   # w2_assert <spec-file>
-  local s="$1" rows comps nbad=0 detail="" lab disp comp part ok n
+  local s="$1" rows comps nbad=0 detail="" lab disp comp part ok n nraw
   rows="$(rt_fence_rows "$s")"
   comps="$(rt_components "$s")"
+  # The catalog as the walker emits it is a MULTISET — one token per § 3 heading slug and one
+  # per backticked class token, and several headings name the same component. MEMBERSHIP is
+  # unaffected by that: a multiset and its set answer the same question, and the grep below
+  # gives identical verdicts either way. The COUNT is not. This verdict used to state the raw
+  # total and call it the vocabulary, which reports one number and names another — the
+  # engineering record for this arm carried the distinct figure while the shipped message
+  # carried the raw one. Both are reported now: the distinct count is the population being
+  # graded, the raw count is what it was read from.
+  nraw="$(w_count "$comps")"
+  comps="$(sort -u <<<"$comps")"
   n="$(w_count "$comps")"
   while IFS="$W_TAB" read -r lab disp comp; do
     [ -n "$lab" ] || continue
@@ -11185,9 +11228,9 @@ w2_assert() {   # w2_assert <spec-file>
     [ "$ok" -eq 1 ] || { nbad=$((nbad+1)); detail="$detail '$lab'->component:$comp"; }
   done <<<"$rows"
   if [ "$nbad" -eq 0 ] && [ "$n" -gt 0 ]; then
-    PASS "W2: every fence row carries a disposition from the closed enum {rendered, excluded}, and every rendered row names a component the § 3 catalog defines — graded against $n catalog token(s) DERIVED from that document on this run. This file holds no copy of that vocabulary, so a component renamed in the catalog turns the row naming it red rather than leaving a fence pointing at a home that no longer exists"
+    PASS "W2: every fence row carries a disposition from the closed enum {rendered, excluded}, and every rendered row names a component the § 3 catalog defines — graded against $n DISTINCT catalog token(s), read from $nraw occurrence(s) of them, DERIVED from that document on this run. The distinct count is the vocabulary being graded; the raw count is the multiset it was read from, and the two are stated separately because one of them is not the denominator. This file holds no copy of that vocabulary, so a component renamed in the catalog turns the row naming it red rather than leaving a fence pointing at a home that no longer exists"
   else
-    FAIL "W2: the fence does not resolve against the component catalog (offending row(s)=$nbad, catalog tokens=$n)$detail"
+    FAIL "W2: the fence does not resolve against the component catalog (offending row(s)=$nbad, distinct catalog tokens=$n from $nraw occurrence(s))$detail"
   fi
 }
 
@@ -11666,6 +11709,35 @@ md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
 # exists to detect.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
+# ── MD6 / MD7 — THE REGISTRATION TOTAL, DERIVED AND CROSS-CHECKED. ───────────────
+# Emitted HERE rather than with the rest of group MD because it must run after the LAST
+# md_flips call in the file, and group W makes five of them. Group MD already emits in more
+# than one place for the same reason — its MD[...] arms render wherever their registration
+# sits — so this is that pattern and not a new one.
+#
+# THE ASSERTION IS THAT TWO INDEPENDENT READINGS AGREE. One is the counter md_flips increments
+# at each call; the other is the run's own emission record, reduced to the MD[...] verdicts it
+# actually printed. A number stated in one place and never compared is exactly what went stale
+# here before — the prose used to declare a running total, and a later card added five
+# registrations without restating it.
+MD_SEEN_REG="$(awk 'BEGIN { n = split(ARGV[1], t, " "); c = 0; for (i = 1; i <= n; i++) if (substr(t[i], 1, 3) == "MD[") c++; print c }' "$SEEN")"
+if [ "${MD_REG_N:-0}" -eq 0 ] || [ "${MD_ASSERT_N:-0}" -eq 0 ]; then
+  FAIL "MD6: the registration record is EMPTY — $MD_REG_N registration(s) over $MD_ASSERT_N assertion(s) were recorded by the primitive itself. This suite calls md_flips, so a zero here means the counter stopped recording rather than that nothing is registered, and the inventory below would be a comparison of two empty sets"
+elif [ "$MD_REG_N" -ne "$MD_SEEN_REG" ]; then
+  FAIL "MD6: the two readings of the registration count DISAGREE — the primitive recorded $MD_REG_N call(s), the run emitted $MD_SEEN_REG MD[...] verdict(s). md_flips renders exactly one verdict per call on every path, so a difference means one of the two is not seeing what it claims to: either a call returned before rendering, or the id grammar the emission record reduces moved"
+else
+  PASS "MD6: INVENTORY — $MD_REG_N registration(s) over $MD_ASSERT_N distinct assertion(s), DERIVED from the calls this run made rather than from a figure written in this file. The count is confirmed against a SECOND reading — the $MD_SEEN_REG MD[...] verdict(s) in this run's own emission record — and the two agree. The difference between the two numbers is the registrations that grade one assertion against more than one subject. Nothing here is restated, so nothing here can go stale: this is the move groups RS and W12 already make, RS reading both rosters live and W12 deriving its code inventory from the walker's own emission sites"
+fi
+# MD7 — MUST FIRE, ADD-ONLY. The emission-record reader must SEE an added registration; if it
+# were constant, MD6's agreement above would hold no matter what either side did.
+MD_SEEN_REG2="$(awk 'BEGIN { n = split(ARGV[1], t, " "); c = 0; for (i = 1; i <= n; i++) if (substr(t[i], 1, 3) == "MD[") c++; print c }' "$SEEN MD[ZZREG] ")"
+if [ "$MD_SEEN_REG2" -eq $((MD_SEEN_REG + 1)) ]; then
+  PASS "MD7: CONTROL on MD6, ADD-ONLY — one synthetic registration id appended to a COPY of this run's emission record, with every real id left intact, moves the reader $MD_SEEN_REG → $MD_SEEN_REG2. MD6's agreement above is therefore a measurement: the reading it is checked against tracks an added registration rather than returning a constant"
+else
+  FAIL "MD7: CONTROL on MD6 did not fire as specified — appending one synthetic registration id moved the reader $MD_SEEN_REG → $MD_SEEN_REG2 rather than to $((MD_SEEN_REG + 1)). The emission-record reading MD6 rests on cannot see an added registration, so MD6's agreement proves nothing"
+fi
+
+echo
 echo "── Group RS — this suite's two stated group rosters, asserted against the run."
 
 RS_WF="$ROOT/.github/workflows/artifact-schema.yml"
@@ -11978,7 +12050,7 @@ printf 'SELECTOR: %d files selected / %d excluded / %d unmatched = %d tracked; %
   "$AR_NSEL" "$AR_NEXC" "$AR_NUNM" "$AR_NPOP" "$AR_NVER" "$AR_NSKIP"
 printf 'COVERAGE: %d witness / %d no-witness / %d total.\n' "$CV_W" "$CV_N" "$SC_NFILES"
 if [ "$vacuous" -gt 0 ]; then
-  printf 'NOTE: %d assertion group(s) had an EMPTY POPULATION and proved nothing. This run rests on group CTL.\n' "$vacuous"
+  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1

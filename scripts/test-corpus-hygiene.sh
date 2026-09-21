@@ -174,7 +174,7 @@ CH_FENCE_TAG='count-assertion-digest'
 CH_RETRO_REV='b582bbb0038a4f8a007fa431c9241fe96fffd01d'
 CH_RETRO_PATH='reference/adr/ADR-008-publish-content-guard.md'
 
-pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""
+pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
 FAIL()    { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); }
 SKIP()    { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
@@ -239,7 +239,11 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   return 0
 }
 
-VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); }
+# VACUOUS records the ID of every arm that rendered it, so the closing NOTE can NAME them
+# rather than assert a compensating group. The footer used to hardcode one group as the basis
+# whenever any vacuous verdict existed; the group that compensates is a property of the arm,
+# not of the suite, so a literal there is a claim about a run it never read.
+VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
@@ -1544,7 +1548,7 @@ printf 'LOCATOR: %s in-scope (bare) path:line locator(s) over %s tracked file(s)
 printf 'COUNT-ASSERTION: %s residual site(s) in %s file(s) over %s sentence(s) graded; %s declared row(s).\n' \
   "$C_NSITE" "$C_NDIRTY" "$C_NSENT" "$C_NROW"
 if [ "$vacuous" -gt 0 ]; then
-  printf 'NOTE: %d assertion group(s) had an EMPTY POPULATION and proved nothing about this tree. Those verdicts rest on group CTL.\n' "$vacuous"
+  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1

@@ -148,11 +148,15 @@ ADR_RETRO_IX_TAG='ADR-018'
 ADR_RETRO_LG_REV='b22e2ad'
 ADR_RETRO_LG_TAG='ADR-019'
 
-pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""
+pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; VACUOUS_IDS=""
 PASS()    { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
 FAIL()    { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); }
 SKIP()    { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
-VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); }
+# VACUOUS records the ID of every arm that rendered it, so the closing NOTE can NAME them
+# rather than assert a compensating group. The footer used to hardcode one group as the basis
+# whenever any vacuous verdict existed; the group that compensates is a property of the arm,
+# not of the suite, so a literal there is a claim about a run it never read.
+VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
 # ── THE DISCRIMINATING-EVIDENCE RULE (DER) — helpers, asserted by group MD ─────────
 #
@@ -1287,7 +1291,7 @@ printf 'CORPUS: %s record(s) derived from %s on this run; %s index row(s); %s ex
 printf 'NUMBERING: declared exemption(s) "%s", asserted in both directions.\n' "$ADR_NUM_EXEMPT"
 printf 'FINDINGS: %s on the live tree.\n' "$(grep -c '^FINDING ' <<<"$AD_FINAL" || true)"
 if [ "$vacuous" -gt 0 ]; then
-  printf 'NOTE: %d assertion group(s) had an EMPTY POPULATION and proved nothing about this tree. Those verdicts rest on group CTL.\n' "$vacuous"
+  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1
