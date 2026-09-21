@@ -7,7 +7,10 @@
 # Grades the shape of reference/adr/. The status field is the only thing telling a reader
 # whether a decision is in force, and it lagged reality four times before anything here
 # looked for it — every one of those corrections was made by a human who happened to read
-# the file. Five suites already read this directory as INPUT; none graded it.
+# the file. Every suite that existed before this one already read this directory as INPUT;
+# none graded it. That is stated without a count on purpose — this same change re-anchors
+# the suite-count denominator everywhere it was live, and shipping a fresh one here would
+# be the defect being retired, reintroduced by the change retiring it.
 #
 # ── WHAT IT ASSERTS ──────────────────────────────────────────────────────────────
 #   HD   THE HEADER BLOCK. Status, Deciders and Driving work present on every record, and

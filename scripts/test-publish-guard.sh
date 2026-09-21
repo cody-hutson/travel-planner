@@ -6236,7 +6236,8 @@ echo "── Group MD — every PASS here must require evidence its subject coul
 # condition opening with `[`, `[[`, `test` or `((` is a shell test: it cannot report an
 # absent subject, so a PASS on its else limb is not this defect and is NOT flagged. Form 3
 # is the one that matters most and is the easiest to miss — it was found by measurement
-# rather than by reading, and it carries 36 of the 59 sites across the five suites.
+# rather than by reading, and it carries 36 of the 59 sites counted across the five suites
+# that existed when this group was installed.
 #
 # The condition is read up to the FIRST `;`. What is OUTSIDE this scan, so the next vector
 # is a documented exclusion rather than a surprise: a condition carrying an embedded `;`,
@@ -6369,8 +6370,9 @@ MD_SELF_C1="${MD_C1_IDS% }"
 
 # ── The DECLARED residual. These sites carry the polarity-negative shape and are NOT
 # remediated by this change: #327's locked scope is the five named assertions (A, C, C2,
-# G2, I5) plus this oracle, and a 59-site sweep across five suites is exactly the blind
-# bulk edit this repository's own discipline forbids. They are declared here rather than
+# G2, I5) plus this oracle, and a 59-site sweep across the five suites that existed when
+# that scope was locked is exactly the blind bulk edit this repository's own discipline
+# forbids. They are declared here rather than
 # left silent, and the diff below runs in BOTH directions — an undeclared site FAILS, and
 # a declared site that no longer scans FAILS too, so remediating one obliges removing its
 # line. The list can only shrink; it cannot quietly absorb a new defect.

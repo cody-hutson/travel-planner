@@ -3593,7 +3593,8 @@ EOF
 # ── WHY EXTRACTING HERE DOES NOT CROSS WHAT ADR-019 DECLINED TO CROSS ────────────
 # reference/adr/ADR-019 rejects a shared library on the finding that "the suites deliberately
 # duplicate their verdict harness rather than share it". Measured, that sentence describes the
-# SUITE boundary: md_probe is re-implemented in all five suites, 7 occurrences each. st_codes and
+# SUITE boundary: md_probe is re-implemented in each of the five suites that existed when these
+# helpers were extracted, 7 occurrences each. st_codes and
 # st_setdiff exist in exactly ONE file and are already called ACROSS GROUPS inside it, as
 # has_finding, mk_root and run_fx are. These helpers join that second class. Extraction within one
 # file crosses nothing that record declined to cross.
@@ -10450,8 +10451,9 @@ fi
 # WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE THE DEFECT WAS FOUND. The defect
 # was measured in the publish-guard suite: deleting verify_ciphertext left four assertions
 # PASSing against a function that no longer existed, and deleting an entire subcommand
-# left that suite exiting 0. But the population is not concentrated there — 59 sites carry
-# the shape across the five suites, and this suite carries 1 of them. A guard installed only where the defect
+# left that suite exiting 0. But the population is not concentrated there — 59 sites carried
+# the shape across the five suites that existed when this group was installed, and this suite
+# carries 1 of them. A guard installed only where the defect
 # was noticed leaves the growth surface unguarded, and the growth is in the other suites:
 # two of them gained +499 and +278 lines in a single prior release.
 #
@@ -10619,8 +10621,9 @@ MD_SELF_C1="${MD_C1_IDS% }"
 
 # ── The DECLARED residual. These sites carry the polarity-negative shape and are NOT
 # remediated by this change, whose locked scope is the five named assertions in the
-# publish-guard suite plus this oracle in all five; a 59-site sweep across five suites is
-# exactly the blind bulk edit this repository's own discipline forbids. They are declared
+# publish-guard suite plus this oracle in each of the five suites that existed when that
+# scope was locked; a 59-site sweep across all of them is exactly the blind bulk edit this
+# repository's own discipline forbids. They are declared
 # here rather than left silent, and the diff below runs in BOTH directions — an undeclared
 # site FAILS, and a declared site that no longer scans FAILS too, so remediating one
 # obliges removing its line. The list can only shrink; it cannot quietly absorb a new
@@ -10815,10 +10818,14 @@ md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violat
 # plan-artifact surface and already sources a validator over the tracked tree and a synthetic
 # fixture, which is the identical shape.
 #
-# A SUITE OF ITS OWN WAS REJECTED ON MEASUREMENT rather than on taste: "five suites" is a live
-# denominator across this file and five others, and a walker is a VALIDATOR, not a suite —
-# validate-artifacts.sh and publish-trip-site.sh are both outside that count today, and
-# check-round-trip.sh joins them there.
+# A SUITE OF ITS OWN WAS REJECTED ON MEASUREMENT rather than on taste: the suite count was a
+# live denominator across this file and five others when that choice was made, and a walker is
+# a VALIDATOR, not a suite — validate-artifacts.sh and publish-trip-site.sh are both outside
+# that count, and check-round-trip.sh joins them there. That denominator has since been
+# re-anchored at every one of those sites by the change that added a sixth suite, so the cost
+# it named is paid and no longer argues against anything. What survives it is the
+# CLASSIFICATION, which is what the decision actually rested on: a validator is still not a
+# suite, and that is true at any count.
 #
 # ── WHY IT DOES NOT ANCHOR § 9.4's PROSE, WHICH IS A DIVERGENCE AND IS RECORDED ──
 # Group RM above ships a prose-anchoring shape and asks whether it generalizes. This group
