@@ -74,7 +74,15 @@ name: Artifact schema
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
 #        surfaced this named two line numbers that had already moved. ST carries its own
 #        must-fire and specificity arms inside the group; THE ARM INVENTORY IS NOT RESTATED
-#        HERE, for the reason the CTL line below already gives
+#        HERE, for the reason the CTL line below already gives. The invariant binding that
+#        inventory is no longer merely stated: the suite derives from the evaluator's own body,
+#        on every run, BOTH the set of violation codes it can emit AND the set of places it can
+#        emit one from, and compares each in both directions against the arms that ran. A code
+#        added later with no arm behind it turns that run RED, and so does a SECOND emission
+#        site for a code that already has one. What the assertion does not reach is the
+#        DIRECTION of a predicate inside a single site, and that boundary is declared in the
+#        suite rather than left to be inferred from a green. No count and no inventory is
+#        added here, for the reason the CTL line already gives
 #
 # EN, CA and PB each carry their own control arms — a deliberately drifted input that the
 # same probe must FIND and FLAG, and a fabricated input it must NOT match. A zero whose
@@ -136,7 +144,10 @@ name: Artifact schema
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The
 #        real store is git-ignored, so a mark no tracked fixture carries is a grammar
 #        nothing grades
-#   CE   the cost-entry surfaces: a priced-entity class denominator derived from two
+#   CE   its arm coverage is asserted at the same two granularities the ST line above
+#        describes, through the same shared comparison, so a code or an emission site added to
+#        its evaluator with no arm behind it turns the run RED rather than latent.
+#        The cost-entry surfaces themselves: a priced-entity class denominator derived from two
 #        independently movable tables, plus the JOIN between them — the limb most likely to
 #        be wrong while every other reads green, because two non-empty sets keyed
 #        differently intersect in nothing

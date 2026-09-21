@@ -65,6 +65,29 @@
 #        That COVERAGE is itself asserted rather than maintained: the code set is read from
 #        st_violations' own body on every run and compared, in both directions, against the
 #        arms that ran — so a code added with no arm behind it is RED rather than latent.
+#        IT IS ASSERTED AT TWO GRANULARITIES, and where it stops is a recorded decision rather
+#        than something to be inferred from a green. The ladder is group -> code -> EMISSION
+#        SITE -> predicate direction. ST-COV grades the code rung. ST-SITE grades the site
+#        rung: the PLACES the evaluator can emit from are read from the same body on the same
+#        run and compared both ways against the sites the arms actually REACHED, so a SECOND
+#        emission site for a code that already has an arm arrives uncovered and RED instead of
+#        shipping hand-held. That residual is live here and not hypothetical — one code is
+#        emitted from two places today, and both are reached by arms that nothing asserted
+#        reached them. The armed side is recorded from what the evaluator EMITTED and never
+#        from what an arm declared it wanted, because an arm can name a code and cannot name a
+#        site; ST-SITE0 declares the reader non-degenerate and its keys unambiguous first.
+#        WHAT IS DELIBERATELY NOT GRADED, each excluded on measured grounds rather than
+#        omitted: the PREDICATE rung, where one site carries two untested directions of a
+#        single condition — PROSE-POP fires when the prose-assertion count is not two, every
+#        arm here drives that count BELOW two and none drives it above, so the site is armed
+#        and one of its two directions is not; and group CTL, which stays at the code rung for
+#        four reasons, all of them measured at the arm itself — its emissions are not
+#        tab-headed, so this reader returns false positives and no real site over the
+#        validator; attribution there would run over stdout carrying paths and free text
+#        rather than over an in-process record set; several of its codes are ONE check emitted
+#        from several call sites, so arming them would arm the parser's factoring rather than
+#        its behaviour; and its code-rung arm is newer than this one. Neither exclusion is
+#        silent, and neither is permanent.
 #        No count is spelled anywhere in this file, and the cross-document half introduces no
 #        canonical value either: it is keyed on bullet presence, so a third intake form is
 #        still ONE LINE in ST_TEMPLATES.
@@ -136,7 +159,14 @@
 #        independently movable tables, plus the JOIN between them — the limb most likely to be
 #        wrong while every other limb reads green, because two non-empty sets keyed
 #        differently intersect in nothing and the census then reads zero over a corpus that
-#        plainly carries markers. This script holds NO copy of that class set.
+#        plainly carries markers. This script holds NO copy of that class set. Its arm coverage
+#        is asserted at the SAME TWO GRANULARITIES group ST states above and through the same
+#        shared comparison — every code ce_violations can emit has an arm, and every PLACE it
+#        can emit one from was reached — so a second emission site for an existing code arrives
+#        uncovered and RED here too. This evaluator emits each code from exactly one place
+#        today, which makes the two rungs coincide; that is a measurement of this body on this
+#        run rather than a property of the group, and it stops holding the moment a second
+#        emission is written.
 #   DH   derived trip history: the NEGATIVE assertion the person-record schema names as its
 #        own debt — the durable form emits zero TRIP and DEST labels. It held by construction
 #        and by every author so far having read the bullet, which is the shape of property
@@ -2890,6 +2920,28 @@ $phantom"
   else
     FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered $unit set from a reader that returned nothing"
   fi
+}
+
+# site_cov_assert <verdict-id> <control-stem> <subject> <body> <armed-sites> — the SITE coverage
+# verdict ALONE, for group MD to register. Groups ST and CE both call it, so the registration path
+# carries no second copy of the comparison either.
+#
+# It takes the BODY and derives the site set itself rather than being handed one, and that is what
+# makes the registration mean anything: md_flips removes a FUNCTION, so an assertion holding a
+# precomputed set would survive st_sitemap's removal and report itself blind. Exactly one verdict
+# on every path, including the degenerate one — md_probe COUNTS verdicts, so an assertion that
+# stayed silent under mutation would report the probe broken rather than the assertion flipping.
+site_cov_assert() {
+  local id="$1" stem="$2" subj="$3" body="$4" armed="$5"
+  local sa_raw sa_keys sa_nk
+  sa_raw="$(printf '%s\n' "$(st_sitemap "$body")" | grep -c '[^[:space:]]')"
+  sa_keys="$(st_sites "$body")"
+  sa_nk="$(printf '%s\n' "$sa_keys" | grep -c '[^[:space:]]')"
+  if [ "$sa_raw" -eq 0 ] || [ "$sa_nk" -ne "$sa_raw" ]; then
+    FAIL "$id: the emission-site reader returned $sa_raw raw site(s) resolving to $sa_nk distinct key(s) over the body of $subj — a site comparison cannot be graded over a reader that returned nothing, nor over one whose keys collide, so this verdict is UNMEASURED rather than clean"
+    return 0
+  fi
+  cov_verdict "$id" "$stem" "$subj" "$sa_keys" "$armed" 'emission site'
 }
 
 # ── THE CROSS-DOCUMENT HALF ──────────────────────────────────────────────────────
@@ -9345,6 +9397,17 @@ md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NRE
 md_flips ctl_codes         'CTL-COV'         ctl_cov_assert "$CTL_ARMED"
 md_flips va_check_artifact 'CTL-COV-emitter' ctl_cov_assert "$CTL_ARMED"
 
+# ── The SITE coverage arms of groups ST and CE, registered on their shared READER. st_sitemap is
+# the one subject both rest on: remove it and the derived site set is empty, the non-degeneracy
+# limb FAILs, and neither verdict can be reached on a clean reading. One subject rather than two
+# per arm, and that is a property of the design rather than a gap — the EMITTER side of the same
+# question is already registered one rung up, where CTL-COV-emitter removes a function and watches
+# armed codes become phantoms. Both subjects here are shell functions, so no clause-6 opt-out is
+# declared and none is needed: reading the evaluator through declare -f rather than through a file
+# is what avoids creating a file subject at all.
+md_flips st_sitemap 'ST-SITE' site_cov_assert 'ST-SITE' 'CTL-ST-SITE' 'st_violations' "$ST_SITE_BODY" "$ST_ARMED_SITES"
+md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violations' "$CE_SITE_BODY" "$CE_ARMED_SITES"
+
 # ── THE DOCUMENT HALF IS OPTED OUT, AND THE OPT-OUT IS DECLARED RATHER THAN SILENT ──
 # The other subject ST3 and ST4 rest on is reference/data-model.md, which is a FILE and not a
 # shell function. md_flips registers an assertion by removing its subject FUNCTION, so it cannot
@@ -9354,16 +9417,17 @@ md_flips va_check_artifact 'CTL-COV-emitter' ctl_cov_assert "$CTL_ARMED"
 # removed must reach the FAILING limb, and the arm asserts in the same verdict that the clean
 # copy reaches the passing one. An opt-out with no compensating arm would be an exemption.
 
-# ── REGISTERED WITH md_flips: SIX registrations over FOUR assertions, and this figure is a
+# ── REGISTERED WITH md_flips: EIGHT registrations over SIX assertions, and this figure is a
 # RUNNING TOTAL — it is what has landed on this branch so far, never what any one change
 # contributed. A change that adds a registration restates the total INCLUDING the ones already
 # here; a change that reads only its own contribution here will write a number that is wrong
 # the moment the next one lands.
 #
-# The four assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; group ST's
+# The six assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; group ST's
 # cross-document pair, ST3 against each of its two extractors and ST4 against the model
-# extractor; and group CTL's coverage arm CTL-COV, against its reader and against one of its
-# emitters. Registration requires the assertion to be remediated first, because an oracle asked
+# extractor; group CTL's coverage arm CTL-COV, against its reader and against one of its
+# emitters; and the SITE coverage arms of groups ST and CE, ST-SITE and CE-SITE, each against the
+# emission-site reader the two of them share. Registration requires the assertion to be remediated first, because an oracle asked
 # to certify a still-blind assertion turns the suite red for a defect it is reporting rather than
 # causing — which is why the count was zero until an arm had been through that. The declared
 # residual in MD2 is still this suite's registration queue, and every entry that leaves it gains
