@@ -3,6 +3,76 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.37.0] — 2026-09-20 — Self-descriptions true of the engine
+
+Nothing about how the engine behaves changes here. What changes is that the places where the engine
+describes itself — its front door, its maps of its own tree, its architecture table, the prose beside
+its own prompts — now describe the engine that exists rather than one that was planned, or one that
+has since moved. A reader who opens any of these files and acts on what it says is acting on
+something true.
+
+**All three hand-off routes now send a reader to the same worked profile.** The intake split moved
+needs, budget and the durable fields onto the person form, and moved the trip form's own
+worked-instance pointer along with them; the front door heard about neither change, so it named a
+filler the form no longer points at and described a needs-versus-desires split that form does not
+have. The pointer now names what the form names, and the claims standing beside it say only what was
+measured. The portable route — the one enumeration that never told a sender to pass the finished
+profile along — now carries the same clause its siblings carry, byte for byte, so a later agreement
+assertion across those homes can be a string comparison rather than a judgement.
+
+**The worked profile reads for somebody holding nothing else.** It is the exemplar mailed to a person
+with no repository to open, and it was carrying repo-relative links that resolve to nothing for
+exactly that reader. Its apparatus is also a composition witness that a required check grades, so
+deleting the apparatus was never available: the link surface is emptied instead, and a note tells a
+reader holding only this file what they can skip. No frontmatter line, no bullet and no heading
+moved, so every surface the schema suite reads this fixture through is byte-identical.
+
+**The maps of this tree name what the tree holds.** Enumerations of the repository's own structure
+had drifted from it in three places, each corrected against `git ls-files` as the denominator: the
+Folder Structure map's `reference/` row, the second enumeration of that same
+directory in `CLAUDE.md`, and a demo-fixture tally that went stale as fixtures were added.
+
+**The architecture table's Shipped column is true of the corpus, and now says how to check it.** The
+column carried no grading rule, so a reader could only take it on trust; it states one now — Yes
+where every class the model element binds carries it, Partial where it reached some and not others,
+with the shortfall named. The preamble and two cells are corrected against that rule. The gaps the
+table declares carry an explicit decision not to close them here: the seam they share would bump the
+schema grammar's version and owe a migration for instances a version behind, which sits on a
+compatibility surface this repository cannot reach. That weighing needs its own evidence rather than
+riding on a table correction.
+
+**The prose governing the `[DERIVED]` blocks agrees with the contract in force.** The enrichment
+prompt told a reader that the staleness signal sends the planner off to re-run the fill. No such
+performer exists — those blocks have no writer, and the hub planner refuses the re-derivation in
+terms — so a reader following the prompt went looking for a step that is not there. The prompt now
+reports the staleness and names no command, reusing wording another surface had already settled on,
+so the surfaces match as literal strings rather than as paraphrases.
+
+**`trips/README.md` describes what the erasure verb actually reaches.** The retention posture told a
+reader that clearing is a thing you do, in a file that named the erasure verb nowhere. What lands
+beside it names that verb and its reach: it substitutes a person's identifying values at every
+location its own reach table names, rewrites their profile as a tombstone, drops their durable
+record, and removes the built site along with the publish staging clone. The roster row survives and
+the party size is unchanged — the person travelled.
+
+**Two cards had their premises overturned by evidence, and the record says so.** The retention
+sentence standing beside that addition — no command deletes a trip folder — had been predicted by a
+pair of architecture records to be falsified once the erasure verb shipped. The verb shipped and the
+prediction did not hold, so the sentence was left byte-unchanged and the records were reconciled to
+the posture that held, each at the site that made the reading. The other card claimed the worked
+profile's frontmatter `person:` key was forbidden; it is required, by the same suite that grades the
+fixture, and acting on that card as written would have turned a required check red. Both are
+recorded as overturned rather than quietly re-scoped.
+
+**The honest limits.** This release corrects instances; it ships no detector for the class. The
+architecture seam is declared, reasoned and unowned — across the open backlog only the originating
+card names it, and that card closes at Stage 13. Same-class self-description defects found outside
+this release's scope are filed as their own cards rather than folded in. And under a C locale the
+artifact-schema suite is red on an unmodified tree, because its range test admits a separator only
+one character wide while the section it reads uses an en dash; CI passes because the runner locale is
+UTF-8. That is pre-existing and filed separately, and it is why every suite in this release was run
+in the ambient locale.
+
 ## [0.36.0] — 2026-09-20 — Interviewer founding decisions
 
 This release decides and builds nothing, deliberately. Both intake forms already promise their

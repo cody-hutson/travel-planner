@@ -121,9 +121,15 @@ All other days are locked."]
 > Computed per traveler. Do not manually edit.
 > Reads each traveler's own profile **by link** — the `## Group` roster below carries
 > the path (`travelers/<name>.md`). No value a traveler wrote is copied here: every
-> cell is derived, and is recomputed when a profile changes.
+> cell is derived, and goes stale when a profile changes.
 > **Recompute trigger:** any traveler profile change (the enrichment agent's update
 > signal in `outputs/traveler-model.md` is the signal to re-derive this block).
+> **Nothing currently performs that re-derivation.** This block has **no writer** in
+> `CLAUDE.md` § *Write ownership — trip-context.md, block by block*, so the
+> `Last derived:` line below records when the block was last derived and nothing
+> refreshes it. A date that has fallen behind the profiles is therefore the expected
+> state of this field, not a defect in the trip: staleness here is reported, never
+> repaired in place.
 
 - **Last derived:** [Date] — from the traveler profiles as of that date
 - **Baseline inherited by ASSERTED-SAME and UNKNOWN:** the trip-level window above
