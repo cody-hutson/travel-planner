@@ -196,6 +196,42 @@
 #   GM   reusable groups: the membership boundary mechanised — one anchored regex is the whole
 #        of that class's membership enforcement, and the group form emits zero PERSON-class
 #        labels. The exact twin of DH's sentence, left as prose while DH shipped.
+#   MG   the mode-gated agent behaviours, graded against a REGISTER fenced in CLAUDE.md
+#        § Modes. Three branches — the hub's equity-aware disruption recovery, the
+#        validator's recovery-equity check and its full pass on all days after a resequence
+#        — fire only on a later mode, and nothing in the previous command surface ever WROTE
+#        one, so all three never fired SILENTLY: the mode they waited on was never set and
+#        the mode they sat in is legal. A behaviour that never runs and one that runs
+#        correctly are indistinguishable from any check that only reads the artifact the
+#        behaviour would have written, so this group does not try to read that artifact. It
+#        makes non-firing COUNTED instead. Per behaviour: the anchor is LOCATED by reading
+#        the prompt and a zero-row extraction is graded a broken instrument; the charter and
+#        the prompt are asserted to gate it on the SAME mode set, BOTH diffs reported; no
+#        clause on an anchor-bearing line exempts, negates or makes-advisory it; and it
+#        occupies a row of that prompt's OWN declared output contract, so the containment
+#        accounting counts it with a denominator on every run. NEITHER THE BEHAVIOUR NOR ITS
+#        MODE IS SPELLED HERE — both are read from the charter, which is the whole of why a
+#        charter/prompt disagreement fails in EITHER direction, including one that only ADDS
+#        a mode to one side. An arm that spelled the mode would agree with whichever side it
+#        had copied. The controls are STANDING arms rather than checks performed once while
+#        authoring, each mutating a copy in the work directory, each asserting the mutation
+#        LANDED before a verdict is read, and each driving the SAME extractor the live arm
+#        drove: a deletion, a negation, an ADD-ONLY injection into a block the register does
+#        not name — the input a rule-presence assertion is blind to — a charter-side
+#        removal so the charter half is not graded by an uncontrolled extractor, and a
+#        containment re-read proving every mutation landed outside the tree being measured.
+#        The negation lexicon is an enumeration with a WRITTEN boundary and is scoped to
+#        anchor-bearing LINES, because a whole-prompt scan fires on a legitimate "Does not
+#        run" and a section-scoped one fires on a legitimate scoping negation — both
+#        measured on this corpus rather than predicted. WHAT IT DOES NOT ESTABLISH is
+#        declared rather than inferred from a green: no arm here shows an agent FIRED any
+#        branch. That is unassertable from a tree of prompt files, because a hand-built
+#        witness artifact passes identically whether an agent produced it or a person typed
+#        it — which is why a witness fixture was REJECTED rather than not thought of, since
+#        it would flip an honest counted gap into a green row while the branch stayed just
+#        as unverified. The residual rides on every run as its own reported line and names
+#        what would settle it. No count is spelled anywhere in this file for this group: the
+#        behaviour set and the mode vocabulary are both read.
 #   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
 #        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
 #        against the groups the run actually emitted. The executing set is taken from the RUN
@@ -2168,6 +2204,717 @@ if [ "$PS_OK" -eq 1 ]; then
   else
     FAIL "LS-D2: the arm did not behave (triggered='$PS_D2', hit=$PS_D2HIT, n=$PS_ND2, expected 2 including examples/data-architecture-demo)"
   fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group MG — the mode-gated agent behaviours: declared, agreed, un-negated, counted.
+#
+# ── THE DEFECT ───────────────────────────────────────────────────────────────────
+# Three agent-side behaviours branch on a mode: the hub's equity-aware disruption
+# recovery, the validator's recovery-equity check, and the validator's full pass on all
+# days after a resequence. Nothing in the previous command surface ever WROTE the modes
+# that gate them — a trip stayed in DISCOVERY — so all three never fired, silently,
+# because DISCOVERY is a legal mode. CLAUDE.md § "Write ownership" records that in its
+# own words; this group is the assertion behind it.
+#
+# The root cause is UNDETECTABLE SILENCE ON AN UNREACHABLE BRANCH, and the remedy is to
+# make non-firing COUNTED rather than silent. That is what every arm here does and it is
+# the whole of what they do.
+#
+# ── WHAT THIS GROUP DOES NOT ESTABLISH, DECLARED RATHER THAN DISCOVERED ──────────
+# NO ARM HERE ESTABLISHES THAT AN AGENT FIRED ANY OF THESE BRANCHES. Every arm grades
+# the TREE: that the branch is declared, that the charter and the prompt agree on the
+# modes gating it, that no clause exempts it, and that it is counted in the prompt's own
+# output contract. Firing is UNASSERTABLE from a tree of prompt files — a hand-built
+# witness artifact passes identically whether an agent produced it or a person typed it,
+# which is why a witness fixture was REJECTED on the record rather than not thought of.
+# Adding one would flip the honest DECLARED-NOT-EXERCISED accounting below to `exercised`
+# while the agent-side branch stayed exactly as unverified, which is strictly worse than
+# the present state: today the gap is counted, afterwards it would be hidden behind a
+# green row. WHAT WOULD SETTLE IT: a live dispatch of the named agent against a trip at
+# the branching mode, with the branch's own output observed in the artifact it writes.
+# That is a release-time observation run by hand, deliberately not a merge gate. The
+# declaration rides on every run as a ps_dne line rather than sitting in this comment.
+#
+# ── WHY THE REGISTER IS IN THE CHARTER AND NOT IN THIS FILE ──────────────────────
+# An arm that spelled the behaviour would be asserting its own literal, and an arm that
+# spelled the MODE could not detect a charter/prompt disagreement — it would agree with
+# whichever side it had copied. So BOTH come from CLAUDE.md § Modes, out of a fenced
+# `mode-gated-behaviour-register`, and THIS FILE HOLDS NO COPY OF ANY ROW. The idiom is
+# the corpus's own and is not invented here: trip-contract-evidence and
+# trip-contract-header in that same document, frozen-witness-digest read by group FW
+# above, and count-assertion-digest read by the corpus-hygiene suite.
+#
+# Two literals ARE spelled here and they are ADDRESSES rather than rules — the fence's
+# own name, and the two headings a declared contract table can carry. Group RM already
+# records that distinction in the same terms: naming the region is not naming the rule.
+# The contract heading is not pinned PER PROMPT: each prompt resolves whichever of the
+# declared headings yields rows in it, and exactly one must, so a third prompt with its
+# own contract table costs one line in MG_CONTRACT_HEADINGS and no per-file branch.
+# No count is spelled anywhere here either — not the number of behaviours, not the number
+# of modes. Both are read, and both are stated in the verdicts as measurements.
+#
+# ── THE NEGATION LEXICON IS AN ENUMERATION WITH A STATED BOUNDARY ────────────────
+# MATCHED, word-bounded and case-insensitive, over ANCHOR-BEARING LINES ONLY:
+#   optional · advisory · may skip · skip/skips/skipped · not required · need not ·
+#   exempt · no longer · at your discretion · if time permits · best effort ·
+#   does not apply · does not run · omit · where convenient
+#
+# NOT MATCHED, written down so the next vector is a documented exclusion rather than a
+# surprise: a negation spelled across two lines; a negation in a table cell whose anchor
+# sits in another cell; a SCOPING negation on a different line of the same section —
+# `agents/06-validator.md` legitimately says "you do not compute an equity score", which
+# NARROWS the check rather than exempting it and is deliberately out of population; and
+# an exemption expressed with no lexicon token at all. It FAILS OPEN on each of those,
+# and MG3's set-equality is what covers the widening half. The line scope is not
+# fastidiousness: a lexicon over the whole prompt fires on "Does not run" in that file's
+# IDEATION block, and a lexicon over the enclosing SECTION fires on the scoping negation
+# above — both measured, which is why the boundary is the anchor-bearing line.
+#
+# ── THE ARMS, AND WHICH INPUT EACH ONE FAILS ON ──────────────────────────────────
+#   MG0        the instrument itself: a register with rows, a § Modes table with rows, a
+#              readable prompt per row, a mode token the charter defines, and exactly one
+#              contract heading resolving per prompt. Runs FIRST and gates the rest, so a
+#              broken instrument FAILS rather than passing over an empty set
+#   MG1-<B>    the anchor occurs in its prompt, with the count stated. A ZERO-row
+#              extraction is graded a broken instrument and never a clean read
+#   MG2-<B>    charter modes == register modes, BOTH diffs reported — a charter that drops
+#              a mode fails, and so does one that ADDS a mode the register does not declare
+#   MG3-<B>    prompt modes == register modes, both diffs. This is the rule-presence site,
+#              remediated: MG-C3 below is an ADDITION, and it fails this arm
+#   MG4-<B>    no clause on an anchor-bearing line exempts, negates or makes-advisory the
+#              branch. The complement arm proper — it fails on an ADDED clause
+#   MG5-<B>    the register's contract-row is a first-cell row of that prompt's own
+#              declared contract table. A behaviour in prose and absent from the table
+#              fails. A contract row the register does NOT declare is not a failure — a
+#              contract may exceed the register — it lands in the ps_dne count instead
+#
+# Every control builds its subject in $WORK by COPY-THEN-MUTATE, asserts the mutation
+# LANDED before any verdict is read — the PS-A4C discipline, which caught exactly that
+# failure on its own first run — and drives the SAME extractor the live arm drove. A
+# control running different code from the assertion proves nothing about the assertion.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "MG — the mode-gated agent behaviours, against the register that declares them"
+
+MG_CHARTER="$ROOT/CLAUDE.md"
+MG_D="$WORK/mg"; mkdir -p "$MG_D"
+MG_TAB="$(printf '\t')"
+
+# The headings a declared output contract can carry. An ADDRESS list, not a rule list:
+# each prompt resolves whichever entry yields rows in it, and MG0 asserts exactly one does.
+MG_CONTRACT_HEADINGS='### Validation Summary
+### Recorded obligations'
+
+MG_NEG_LEXICON='optional|advisory|may skip|skip|skips|skipped|not required|need not|exempt|no longer|at your discretion|if time permits|best effort|does not apply|does not run|omit|where convenient'
+
+# mg_diff <a-set> <b-set> -> members of a absent from b, deduped, first-occurrence order.
+# Local rather than shared with group RS's rs_diff, which is defined BELOW this group: a
+# forward reference would be an ordering dependency nothing asserts. Membership is by
+# containment in a space-delimited haystack and never by comm, which needs both sides
+# lexically sorted and answers wrongly otherwise — st_setdiff already records that reason.
+#
+# BOTH ends are trimmed, and that is a correctness requirement rather than tidiness: these
+# sets are compared by STRING EQUALITY in the control arms below — "exactly this mode was
+# added and no other" — so a trailing space makes a correct control report itself broken.
+# rs_diff trims only the leading one because its callers pass the result to rs_count, which
+# cannot see the difference. The control arms caught this on their first run, which is the
+# branch they exist for.
+mg_diff() {
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out" in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  out="${out# }"
+  printf '%s' "${out% }"
+}
+# shellcheck disable=SC2086
+mg_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+mg_csv() { printf '%s' "$1" | tr ',' ' ' | tr -s ' '; }
+
+# mg_register [charter] -> "<anchor>\t<prompt>\t<modes>\t<contract-row>" per declared row.
+# Reads the fence and HOLDS NO COPY. `#`-leading and blank lines are dropped, so the
+# column header inside the fence is documentation rather than data.
+mg_register() {
+  awk '
+    /^```mode-gated-behaviour-register[ \t]*$/ { inb = 1; next }
+    inb && /^```/ { inb = 0; next }
+    inb {
+      line = $0
+      gsub(/^[ \t]+|[ \t]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, c, "|")
+      if (n < 4) next
+      for (i = 1; i <= 4; i++) gsub(/^[ \t]+|[ \t]+$/, "", c[i])
+      if (c[1] == "" || c[2] == "" || c[3] == "" || c[4] == "") next
+      printf "%s\t%s\t%s\t%s\n", c[1], c[2], c[3], c[4]
+    }
+  ' "${1:-$MG_CHARTER}" 2>/dev/null
+}
+
+# mg_charter_rows [charter] -> "<MODE>\t<rest of the row>" per § Modes table row. The mode
+# vocabulary is DERIVED from column 1 rather than enumerated here, so the modes are the
+# charter's statement and not this file's.
+mg_charter_rows() {
+  awk '
+    /^#+ / { inside = ($0 ~ /^### Modes[ \t]*$/); next }
+    inside && /^\|/ {
+      line = $0
+      if (line ~ /^\|[- |:]+\|$/) next
+      sub(/^\|/, "", line)
+      n = index(line, "|"); if (n < 2) next
+      lab = substr(line, 1, n - 1); rest = substr(line, n + 1)
+      gsub(/^[ \t]+|[ \t]+$/, "", lab)
+      if (lab !~ /^[A-Z]+$/) next
+      printf "%s\t%s\n", lab, rest
+    }
+  ' "${1:-$MG_CHARTER}" 2>/dev/null
+}
+
+mg_charter_vocab() {
+  local out
+  out="$(mg_charter_rows "${1:-$MG_CHARTER}" | awk -F'\t' '!($1 in s) { s[$1] = 1; printf "%s ", $1 }')"
+  printf '%s' "${out% }"
+}
+
+# mg_charter_modes <charter> <anchor> -> space-delimited mode tokens whose § Modes row
+# carries the anchor. Takes the FILE as a parameter so MG-C4 can drive the identical
+# extractor over a mutated copy; an extractor pinned to $ROOT could not be controlled at
+# all, and an uncontrolled extractor is what makes a zero unreadable.
+mg_charter_modes() {
+  local out
+  out="$(mg_charter_rows "$1" | awk -F'\t' -v a="$2" '
+    BEGIN { la = tolower(a) }
+    NF >= 2 && index(tolower($2), la) > 0 && !($1 in seen) { seen[$1] = 1; printf "%s ", $1 }
+  ')"
+  printf '%s' "${out% }"
+}
+
+# mg_prompt_labels <prompt> -> "<MODE>\t<labels-in-its-block>\t<line>" per mode label under
+# `## Mode Behavior`. A block is keyed by a leading `**MODE:**` or `**MODE / MODE:**` label
+# and runs to the next such label or to the next `## `. The label COUNT is emitted because
+# MG-C3 needs a block naming exactly one mode.
+mg_prompt_labels() {
+  awk '
+    /^## / { inside = ($0 ~ /^## Mode Behavior[ \t]*$/); next }
+    !inside { next }
+    /^\*\*[A-Z][A-Z \/]*:\*\*/ {
+      lab = $0; sub(/^\*\*/, "", lab)
+      n = index(lab, ":**"); if (n < 2) next
+      lab = substr(lab, 1, n - 1)
+      k = split(lab, raw, "/")
+      for (i = 1; i <= k; i++) {
+        gsub(/^[ \t]+|[ \t]+$/, "", raw[i])
+        if (raw[i] != "") printf "%s\t%d\t%d\n", raw[i], k, NR
+      }
+    }
+  ' "$1" 2>/dev/null
+}
+
+# mg_prompt_modes <prompt> <anchor> -> space-delimited mode tokens whose block BODY carries
+# the anchor. The label line is part of its own body, so an anchor injected into a label is
+# seen — which is exactly what MG-C3 relies on.
+mg_prompt_modes() {
+  local out
+  out="$(awk -v a="$2" '
+    function flush(   i) {
+      if (nlab > 0 && index(tolower(body), la) > 0)
+        for (i = 1; i <= nlab; i++)
+          if (!(labs[i] in seen)) { seen[labs[i]] = 1; printf "%s ", labs[i] }
+      nlab = 0; body = ""
+    }
+    BEGIN { la = tolower(a); nlab = 0; body = "" }
+    /^## / { flush(); inside = ($0 ~ /^## Mode Behavior[ \t]*$/); next }
+    !inside { next }
+    /^\*\*[A-Z][A-Z \/]*:\*\*/ {
+      flush()
+      lab = $0; sub(/^\*\*/, "", lab)
+      n = index(lab, ":**"); if (n < 2) next
+      lab = substr(lab, 1, n - 1)
+      nlab = split(lab, raw, "/")
+      for (i = 1; i <= nlab; i++) { gsub(/^[ \t]+|[ \t]+$/, "", raw[i]); labs[i] = raw[i] }
+      body = $0
+      next
+    }
+    nlab > 0 { body = body "\n" $0 }
+    END { flush() }
+  ' "$1" 2>/dev/null)"
+  printf '%s' "${out% }"
+}
+
+# mg_anchor_lines <file> <anchor> [all|modeblock] -> the line NUMBER of every line carrying
+# the anchor, case-insensitively.
+mg_anchor_lines() {
+  awk -v a="$2" -v scope="${3:-all}" '
+    BEGIN { la = tolower(a) }
+    /^## / { inmb = ($0 ~ /^## Mode Behavior[ \t]*$/) }
+    { if (scope == "modeblock" && !inmb) next
+      if (index(tolower($0), la) > 0) print NR }
+  ' "$1" 2>/dev/null
+}
+
+# mg_negations <file> <anchor> -> "SCANNED\t<n>" then "<line>\t<token>\t<text>" per hit.
+# The SCANNED header is load-bearing: it is what makes an ABSENT extractor distinguishable
+# from a CLEAN one. Without it a removed mg_negations returns nothing, a caller counts zero
+# hits, and MG4 reports a pass it did not earn — the blindness group MD exists to convict,
+# reached through the very registration meant to detect it.
+mg_negations() {
+  awk -v a="$2" -v lex="$MG_NEG_LEXICON" '
+    function norm(s,   t) { t = tolower(s); gsub(/[^a-z0-9]+/, " ", t); return " " t " " }
+    BEGIN { la = tolower(a); n = split(lex, L, "|"); scanned = 0; nh = 0 }
+    index(tolower($0), la) > 0 {
+      scanned++
+      nl = norm($0)
+      for (i = 1; i <= n; i++) {
+        if (L[i] == "") continue
+        if (index(nl, " " L[i] " ") > 0) { nh++; hits[nh] = NR "\t" L[i] "\t" $0; break }
+      }
+    }
+    END { printf "SCANNED\t%d\n", scanned; for (i = 1; i <= nh; i++) print hits[i] }
+  ' "$1" 2>/dev/null
+}
+mg_neg_scanned() { printf '%s\n' "$1" | awk -F'\t' '$1 == "SCANNED" && n == 0 { print $2; n = 1 }'; }
+mg_neg_hits()    { printf '%s\n' "$1" | awk -F'\t' '$1 != "SCANNED" && NF >= 3'; }
+
+# mg_contract_heading <prompt> -> the declared-contract heading that yields rows in this
+# prompt, or the empty string when none does or more than one does.
+mg_contract_heading() {
+  local h found="" n hits=0
+  while IFS= read -r h; do
+    [ -n "$h" ] || continue
+    n="$(ps_rows "$1" "$h" | grep -c '[^[:space:]]')"
+    if [ "$n" -gt 0 ]; then found="$h"; hits=$((hits+1)); fi
+  done <<EOF
+$MG_CONTRACT_HEADINGS
+EOF
+  [ "$hits" -eq 1 ] && printf '%s' "$found"
+  return 0
+}
+# mg_contract_rows <prompt> -> the first cell of every row of that prompt's contract table.
+# ps_rows REUSED unchanged — one extractor, two callers — per the ps_sets/ps_contain
+# precedent this suite already ships. A control running different code from the assertion
+# proves nothing about the assertion, and the same is true of a second extractor.
+mg_contract_rows() {
+  local h; h="$(mg_contract_heading "$1")"
+  [ -n "$h" ] || return 0
+  ps_rows "$1" "$h"
+}
+
+# ── MG0 — the instrument, graded before anything it feeds. Registered with md_flips below.
+mg0_assert() {
+  local reg nreg vocab bad_mode="" unread="" badhead="" a p m row cm
+  reg="$(mg_register "$MG_CHARTER")"
+  nreg="$(printf '%s\n' "$reg" | grep -c '[^[:space:]]')"
+  vocab="$(mg_charter_vocab "$MG_CHARTER")"
+  if [ "$nreg" -eq 0 ]; then
+    FAIL "MG0: the mode-gated-behaviour register in CLAUDE.md § Modes parsed to ZERO rows, so every arm below would compare an empty set against an empty set and pass. A renamed fence, a re-shaped row or a deleted register surfaces exactly this way, and that is a broken instrument rather than a corpus with nothing to declare"
+    return 0
+  fi
+  if [ -z "$vocab" ]; then
+    FAIL "MG0: the § Modes table in CLAUDE.md yielded ZERO mode rows, so the vocabulary every arm below compares against is empty and MG2's set-equality would pass against nothing"
+    return 0
+  fi
+  while IFS="$MG_TAB" read -r a p m row; do
+    [ -n "$a" ] || continue
+    if [ -r "$ROOT/$p" ]; then
+      [ -z "$(mg_contract_heading "$ROOT/$p")" ] && badhead="$badhead$p "
+    else
+      unread="$unread$p "
+    fi
+    for cm in $(mg_csv "$m"); do
+      case " $vocab " in *" $cm "*) ;; *) bad_mode="$bad_mode$cm " ;; esac
+    done
+  done <<EOF
+$reg
+EOF
+  if [ -n "$unread" ]; then
+    FAIL "MG0: the register names prompt(s) this suite cannot read: ${unread% }. Every arm over them would be a scan of nothing"
+  elif [ -n "$bad_mode" ]; then
+    FAIL "MG0: the register declares mode token(s) the charter's own § Modes table does not define: ${bad_mode% }. The vocabulary is the charter's, so a register row naming a mode outside it cannot be graded against either surface"
+  elif [ -n "$badhead" ]; then
+    FAIL "MG0: prompt(s) ${badhead% } resolve no single declared-contract heading — either none of the declared headings yields rows there, or more than one does, and MG5's lookup would be over an empty or an ambiguous table"
+  else
+    PASS "MG0: the instrument is live — $nreg register row(s) read from CLAUDE.md § Modes, $(mg_count "$vocab") mode token(s) derived from that section's own table ($vocab), every named prompt readable, and exactly one declared-contract heading resolving per prompt. This file holds no copy of any of it"
+  fi
+  return 0
+}
+
+MG_REG="$(mg_register "$MG_CHARTER")"
+MG_NREG="$(printf '%s\n' "$MG_REG" | grep -c '[^[:space:]]')"
+MG_VOCAB="$(mg_charter_vocab "$MG_CHARTER")"
+mg0_assert
+MG_OK=0
+[ "$MG_NREG" -gt 0 ] && [ -n "$MG_VOCAB" ] && MG_OK=1
+
+# ── The per-behaviour assertion functions. Each takes EVERY input as an argument and calls
+# its own extractors — which is what makes the md_flips registrations below mean anything:
+# md_flips removes a FUNCTION, so an assertion handed a precomputed set would survive its
+# subject's removal and report itself blind. Each renders exactly ONE verdict and reaches a
+# FAIL on its degenerate path rather than staying silent, because md_probe counts verdicts
+# and an assertion that went quiet under mutation would report the probe broken instead.
+mg2_assert() {   # mg2_assert <id> <anchor> <declared-modes-csv> <charter-file>
+  local id="$1" a="$2" want got missing extra
+  want="$(mg_csv "$3")"
+  if [ -z "$want" ]; then
+    FAIL "MG2-$id: the register row for '$a' declares no mode at all, so a comparison against the charter would be empty-equals-empty. A row with no mode is a broken declaration, never an agreement"
+    return 0
+  fi
+  got="$(mg_charter_modes "$4" "$a")"
+  missing="$(mg_diff "$want" "$got")"
+  extra="$(mg_diff "$got" "$want")"
+  if [ -z "$missing" ] && [ -z "$extra" ]; then
+    PASS "MG2-$id: CLAUDE.md § Modes gates '$a' on exactly the mode(s) the register declares — {$got}, over a vocabulary of $(mg_count "$MG_VOCAB") read from that same table. Set equality in BOTH directions, so a charter row that DROPPED a mode and one that ADDED a mode each fail here"
+  else
+    FAIL "MG2-$id: the charter and the register disagree on what gates '$a' — register {$want}, charter {${got:-empty}}; declared-but-absent-from-the-charter {${missing:-none}}; in-the-charter-but-undeclared {${extra:-none}}"
+  fi
+  return 0
+}
+mg3_assert() {   # mg3_assert <id> <anchor> <declared-modes-csv> <prompt-file>
+  local id="$1" a="$2" want got missing extra
+  want="$(mg_csv "$3")"
+  if [ -z "$want" ]; then
+    FAIL "MG3-$id: the register row for '$a' declares no mode at all, so the prompt comparison would be empty-equals-empty and could not fail"
+    return 0
+  fi
+  got="$(mg_prompt_modes "$4" "$a")"
+  missing="$(mg_diff "$want" "$got")"
+  extra="$(mg_diff "$got" "$want")"
+  if [ -z "$missing" ] && [ -z "$extra" ]; then
+    PASS "MG3-$id: the prompt's own ## Mode Behavior blocks gate '$a' on exactly {$got} — the register's declaration, both directions. This is the addition-blind rule-presence site, remediated: the MG-C3 control below ADDS the anchor to a block the register does not name, and this arm turns red on it"
+  else
+    FAIL "MG3-$id: the prompt and the register disagree on what gates '$a' — register {$want}, prompt {${got:-empty}}; declared-but-absent-from-the-prompt {${missing:-none}}; in-the-prompt-but-undeclared {${extra:-none}}"
+  fi
+  return 0
+}
+mg4_assert() {   # mg4_assert <id> <anchor> <prompt-file>
+  local id="$1" a="$2" out scanned hits nhits
+  out="$(mg_negations "$3" "$a")"
+  scanned="$(mg_neg_scanned "$out")"
+  if [ -z "$scanned" ]; then
+    FAIL "MG4-$id: the negation scan over '$a' emitted no denominator at all, so its silence is an ABSENT instrument rather than a clean read. The scan states the population it examined before any verdict is taken from it, precisely so the two cannot be confused"
+    return 0
+  fi
+  if [ "$scanned" -eq 0 ]; then
+    FAIL "MG4-$id: the negation scan examined ZERO anchor-bearing lines for '$a' — there is no population, so a zero hit count says nothing about whether a clause exempts the branch"
+    return 0
+  fi
+  hits="$(mg_neg_hits "$out")"
+  nhits="$(printf '%s\n' "$hits" | grep -c '[^[:space:]]')"
+  if [ "$nhits" -eq 0 ]; then
+    PASS "MG4-$id: no clause on any of the $scanned line(s) carrying '$a' exempts, negates or makes-advisory the branch — the complement, over a stated denominator. The lexicon is an enumeration with a written boundary, and the MG-C2 control adds a clause it must catch"
+  else
+    FAIL "MG4-$id: $nhits of $scanned anchor-bearing line(s) for '$a' carry an exempting or advisory clause: $(printf '%s' "$hits" | awk -F'\t' '{ printf "L%s(%s) ", $1, $2 }')"
+  fi
+  return 0
+}
+
+# ── MG1 / MG2 / MG3 / MG4 / MG5 — the live arms, one pass per declared behaviour.
+if [ "$MG_OK" -eq 1 ]; then
+  MG_PRE="$MG_D/pre-readings"; : > "$MG_PRE"
+  MG_N=0
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    MG_N=$((MG_N+1)); MGID="B$MG_N"
+    MGF="$ROOT/$MGP"
+
+    # MG1 — the anchor OCCURS, with its count stated. The haystack floor is asserted
+    # FIRST, so a zero extraction is graded a broken instrument and no arm below reads
+    # clean over an empty haystack.
+    MG_LINES="$(mg_anchor_lines "$MGF" "$MGA")"
+    MG_NLINES="$(printf '%s\n' "$MG_LINES" | grep -c '[^[:space:]]')"
+    if [ "$MG_NLINES" -gt 0 ]; then
+      PASS "MG1-$MGID: '$MGA' is located in $MGP by READING the prompt — $MG_NLINES line(s), at $(printf '%s' "$MG_LINES" | tr '\n' ' ' | sed 's/ $//'). The needle came from the charter's register and never from a literal in this file"
+    else
+      FAIL "MG1-$MGID: '$MGA' occurs ZERO times in $MGP. The register declares the behaviour there and the prompt does not carry it — a zero-row extraction is a broken instrument and must never read as a clean scan"
+    fi
+
+    mg2_assert "$MGID" "$MGA" "$MGM" "$MG_CHARTER"
+    mg3_assert "$MGID" "$MGA" "$MGM" "$MGF"
+    mg4_assert "$MGID" "$MGA" "$MGF"
+
+    # MG5 — the behaviour is COUNTED in the prompt's own declared output contract.
+    MG_CROWS="$(mg_contract_rows "$MGF")"
+    MG_NCROWS="$(printf '%s\n' "$MG_CROWS" | grep -c '[^[:space:]]')"
+    MG_CHEAD="$(mg_contract_heading "$MGF")"
+    if [ "$MG_NCROWS" -eq 0 ]; then
+      FAIL "MG5-$MGID: $MGP's declared contract table extracted ZERO rows, so the lookup for '$MGROW' would be over an empty table and could not fail. A renamed heading or a re-shaped table surfaces exactly this way"
+    elif grep -qxF -- "$MGROW" <<<"$MG_CROWS"; then
+      PASS "MG5-$MGID: '$MGROW' is a row of $MGP's own declared contract table — denominator $MG_NCROWS row(s) under '$MG_CHEAD'. The behaviour is therefore COUNTED by the containment accounting on every run rather than living only in prose, which is the blindness this card exists to end"
+    else
+      FAIL "MG5-$MGID: the register declares contract row '$MGROW' for '$MGA' and $MGP's declared contract table ($MG_NCROWS row(s) under '$MG_CHEAD') carries no such row. A behaviour stated in prose and absent from the table is outside the declared contract and nothing counts it"
+    fi
+
+    printf '%s\t%s\t%s\t%s\n' "$MGA" "$MG_NLINES" \
+      "$(mg_charter_modes "$MG_CHARTER" "$MGA")" "$(mg_prompt_modes "$MGF" "$MGA")" >> "$MG_PRE"
+  done <<EOF
+$MG_REG
+EOF
+fi
+
+# ── THE CONTROLS, AS STANDING ARMS — not checks performed once while authoring.
+if [ "$MG_OK" -eq 1 ]; then
+  MG_N=0
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    MG_N=$((MG_N+1)); MGID="B$MG_N"
+    MGF="$ROOT/$MGP"
+    MGWANT="$(mg_csv "$MGM")"
+
+    # MG-C1 — DELETION. Every anchor-bearing line removed; MG1 and MG3 must both flip.
+    MGC1="$MG_D/c1-$MGID.md"
+    awk -v a="$MGA" 'BEGIN { la = tolower(a) } index(tolower($0), la) == 0' "$MGF" > "$MGC1"
+    if ! cmp -s "$MGF" "$MGC1"; then
+      MGC1L="$(mg_anchor_lines "$MGC1" "$MGA" | grep -c '[^[:space:]]')"
+      MGC1M="$(mg_prompt_modes "$MGC1" "$MGA")"
+      if [ "$MGC1L" -eq 0 ] && [ -z "$MGC1M" ]; then
+        PASS "MG-C1-$MGID: control, DELETION — with every '$MGA' line stripped from a temp copy of $MGP (the mutation is asserted to have landed) the same extractors report 0 occurrence(s) and an EMPTY mode set, so MG1-$MGID and MG3-$MGID both flip. Their verdicts above are measurements of the prompt rather than of a scan that matches nothing"
+      else
+        FAIL "MG-C1-$MGID: the control did not behave — over the stripped copy the extractors still report $MGC1L line(s) and modes {${MGC1M:-empty}}; MG1-$MGID and MG3-$MGID have no deletion control behind them"
+      fi
+    else
+      FAIL "MG-C1-$MGID: the deletion did not land — the stripped copy of $MGP is byte-identical to the original, so this control proves nothing about MG1-$MGID or MG3-$MGID"
+    fi
+
+    # MG-C2 — NEGATION. An advisory clause APPENDED to the first anchor-bearing line
+    # inside a Mode Behavior block; MG4 must flip, naming exactly that line.
+    MGC2="$MG_D/c2-$MGID.md"
+    MGC2TGT="$(mg_anchor_lines "$MGF" "$MGA" modeblock | awk 'NR == 1 { print }')"
+    if [ -n "$MGC2TGT" ]; then
+      awk -v t="$MGC2TGT" 'NR == t { print $0 " (optional — at your discretion)"; next } { print }' "$MGF" > "$MGC2"
+      if ! cmp -s "$MGF" "$MGC2"; then
+        MGC2OUT="$(mg_negations "$MGC2" "$MGA")"
+        MGC2HITS="$(mg_neg_hits "$MGC2OUT")"
+        MGC2N="$(printf '%s\n' "$MGC2HITS" | grep -c '[^[:space:]]')"
+        MGC2LINE="$(printf '%s' "$MGC2HITS" | awk -F'\t' 'NR == 1 { print $1 }')"
+        if [ "$MGC2N" -eq 1 ] && [ "$MGC2LINE" = "$MGC2TGT" ]; then
+          PASS "MG-C2-$MGID: control, NEGATION — an advisory clause appended to line $MGC2TGT of $MGP, inside its ## Mode Behavior block (the mutation is asserted to have landed), makes the SAME scan report exactly one hit, on exactly that line. MG4-$MGID's zero is a measurement, and a lexicon that flagged everything would fail this arm's second limb"
+        else
+          FAIL "MG-C2-$MGID: the control did not behave — the scan reported $MGC2N hit(s) at line '${MGC2LINE:-none}' against an expected single hit at line $MGC2TGT; MG4-$MGID has no negation control behind it"
+        fi
+      else
+        FAIL "MG-C2-$MGID: the negation did not land on line $MGC2TGT of $MGP, so this control proves nothing about MG4-$MGID"
+      fi
+    else
+      FAIL "MG-C2-$MGID: '$MGA' occurs on no line inside $MGP's ## Mode Behavior block, so there is nowhere to plant the negation and MG4-$MGID stands uncontrolled"
+    fi
+
+    # MG-C3 — ADDITION, and it is the load-bearing one. The anchor is injected into a Mode
+    # Behavior block the register does NOT name, and MG3 must flip on an ADDITION rather
+    # than on a removal. That is the input a rule-presence assertion is blind to.
+    #
+    # The victim mode is DERIVED: the first mode in the charter's own vocabulary that the
+    # register does not declare for this behaviour AND whose block in this prompt carries a
+    # SINGLE label — injecting into a shared `A / B:` label would add two modes and the
+    # "exactly one" limb could not be written. A behaviour declared on every mode has no
+    # victim available, and that is reported as an uncontrolled arm rather than skipped.
+    MGC3="$MG_D/c3-$MGID.md"
+    MGC3CAND="$(mg_diff "$MG_VOCAB" "$MGWANT")"
+    MGC3M=""; MGC3LN=""
+    for mgc in $MGC3CAND; do
+      MGC3LN="$(mg_prompt_labels "$MGF" | awk -F'\t' -v m="$mgc" '$1 == m && $2 == 1 && n == 0 { print $3; n = 1 }')"
+      if [ -n "$MGC3LN" ]; then MGC3M="$mgc"; break; fi
+    done
+    if [ -n "$MGC3M" ]; then
+      awk -v t="$MGC3LN" -v a="$MGA" 'NR == t { sub(/:\*\*/, ":** " a " —", $0); print; next } { print }' "$MGF" > "$MGC3"
+      if ! cmp -s "$MGF" "$MGC3"; then
+        MGC3GOT="$(mg_prompt_modes "$MGC3" "$MGA")"
+        MGC3ADD="$(mg_diff "$MGC3GOT" "$MGWANT")"
+        MGC3LOST="$(mg_diff "$MGWANT" "$MGC3GOT")"
+        if [ "$MGC3ADD" = "$MGC3M" ] && [ -z "$MGC3LOST" ]; then
+          PASS "MG-C3-$MGID: control, ADDITION and ADD-ONLY — '$MGA' injected into $MGP's **$MGC3M:** block at line $MGC3LN with EVERY existing declaration left intact makes the same extractor report {$MGC3GOT}: exactly '$MGC3M' added and nothing lost. MG3-$MGID is therefore not addition-blind — a mode ADDED to one side turns it red, which is the input a rule-presence assertion cannot see"
+        else
+          FAIL "MG-C3-$MGID: the control did not behave — the injected copy reports modes {${MGC3GOT:-empty}}, adding {${MGC3ADD:-none}} against an expected exactly '$MGC3M' and losing {${MGC3LOST:-none}}; MG3-$MGID has no add-only control behind it and its set-equality is unproven in the widening direction"
+        fi
+      else
+        FAIL "MG-C3-$MGID: the injection did not land at line $MGC3LN of $MGP, so MG3-$MGID's widening direction stands uncontrolled"
+      fi
+    else
+      FAIL "MG-C3-$MGID: no single-label ## Mode Behavior block in $MGP carries a mode outside the register's {$MGWANT}, so the add-only input cannot be built and MG3-$MGID's widening direction is unproven. Candidates considered: {${MGC3CAND:-none}}"
+    fi
+  done <<EOF
+$MG_REG
+EOF
+
+  # MG-C4 — the CHARTER side, so MG2 has a control of its own rather than borrowing MG3's.
+  # One § Modes row loses the anchor in a temp copy of CLAUDE.md, and the same extractor
+  # must drop EXACTLY that mode. Two arms of a set-equality resting on one control would
+  # leave the charter half graded by an extractor nothing had demonstrated could fail.
+  MGC4A="$(printf '%s\n' "$MG_REG" | awk -F'\t' 'NR == 1 { print $1 }')"
+  MGC4SET="$(mg_charter_modes "$MG_CHARTER" "$MGC4A")"
+  MGC4M="$(printf '%s' "$MGC4SET" | awk '{ print $1 }')"
+  MGC4="$MG_D/c4-charter.md"
+  if [ -n "$MGC4A" ] && [ -n "$MGC4M" ]; then
+    awk -v m="$MGC4M" -v anc="$MGC4A" '
+      BEGIN { la = tolower(anc); L = length(anc) }
+      /^#+ / { inside = ($0 ~ /^### Modes[ \t]*$/) }
+      {
+        if (inside && index($0, "| " m " ") == 1 && index(tolower($0), la) > 0) {
+          line = $0; guard = 0
+          while (guard < 50) {
+            p = index(tolower(line), la)
+            if (p == 0) break
+            line = substr(line, 1, p - 1) "ZZQ-REMOVED" substr(line, p + L)
+            guard++
+          }
+          print line; next
+        }
+        print
+      }
+    ' "$MG_CHARTER" > "$MGC4"
+    if ! cmp -s "$MG_CHARTER" "$MGC4"; then
+      MGC4GOT="$(mg_charter_modes "$MGC4" "$MGC4A")"
+      MGC4LOST="$(mg_diff "$MGC4SET" "$MGC4GOT")"
+      MGC4GAIN="$(mg_diff "$MGC4GOT" "$MGC4SET")"
+      if [ "$MGC4LOST" = "$MGC4M" ] && [ -z "$MGC4GAIN" ]; then
+        PASS "MG-C4: control on the CHARTER — with '$MGC4A' removed from the § Modes **$MGC4M** row of a temp copy of CLAUDE.md (the mutation is asserted to have landed) the same extractor reports {${MGC4GOT:-empty}}: exactly '$MGC4M' dropped and nothing else. Every MG2 verdict rests on an extractor demonstrated able to fail, on the charter rather than on the prompt"
+      else
+        FAIL "MG-C4: the control did not behave — the mutated charter reports {${MGC4GOT:-empty}}, losing {${MGC4LOST:-none}} against an expected exactly '$MGC4M' and gaining {${MGC4GAIN:-none}}; every MG2 verdict above is uncontrolled"
+      fi
+    else
+      FAIL "MG-C4: the charter mutation did not land — the temp copy is byte-identical to CLAUDE.md, so MG2 has no control behind it"
+    fi
+  else
+    FAIL "MG-C4: no register row or no charter mode was available to mutate (anchor '${MGC4A:-none}', mode '${MGC4M:-none}'), so MG2 stands uncontrolled"
+  fi
+
+  # MG-C5 — CONTAINMENT. The controls above wrote only into $WORK, and that is ASSERTED
+  # rather than assumed: every extractor is re-run against $ROOT and must return the
+  # readings taken BEFORE any control ran. The PS-C4 arm, applied to this group's subjects.
+  MG_POST="$MG_D/post-readings"; : > "$MG_POST"
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    printf '%s\t%s\t%s\t%s\n' "$MGA" \
+      "$(mg_anchor_lines "$ROOT/$MGP" "$MGA" | grep -c '[^[:space:]]')" \
+      "$(mg_charter_modes "$MG_CHARTER" "$MGA")" \
+      "$(mg_prompt_modes "$ROOT/$MGP" "$MGA")" >> "$MG_POST"
+  done <<EOF
+$MG_REG
+EOF
+  if [ ! -s "$MG_PRE" ]; then
+    FAIL "MG-C5: no pre-control readings were recorded, so there is nothing to compare the repository against and the containment claim is unverifiable"
+  elif cmp -s "$MG_PRE" "$MG_POST"; then
+    PASS "MG-C5: containment — after every control above, re-reading the repository returns the identical $(grep -c '[^[:space:]]' "$MG_PRE") per-behaviour reading(s) taken before them. Every mutation landed in the work directory and nowhere else, so no control wrote into the tree it is measuring"
+  else
+    FAIL "MG-C5: the repository's readings CHANGED across the control arms — a control wrote into the tree it is meant to be measuring"
+  fi
+fi
+
+# ── PS-A6 — the HUB's containment denominator, the sibling PS-A4 already gives the
+# validator. It emits under the PS id deliberately: group RS reduces an assertion id to its
+# leading run of capitals, so this arm belongs to group PS's roster line and to that group's
+# accounting rather than opening a second home for one question. It lives HERE because it
+# reads mg_register, which group PS runs before.
+#
+# The card names "the hub's version-log / open-decisions obligation" and says the EXISTING
+# PS-A4/PS-A5 accounting will count it. That was measured and found false: PS-A4 and PS-A5
+# read agents/06-validator.md alone, and the hub carried no declared check list at all — its
+# version log and its open-decisions block are runtime-filled templates with no rows to
+# contain. So the hub gains a declared-obligations table and this arm reads it.
+PS_A6_FIX="$ROOT/examples/data-architecture-demo/outputs/final-itinerary.md"
+if [ "$MG_OK" -eq 1 ]; then
+  PS_A6_D="$MG_D/ps-a6"; mkdir -p "$PS_A6_D"
+  : > "$PS_A6_D/want"
+  PS_A6_PROMPTS=" "
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    [ "$ROOT/$MGP" = "$PS_PROMPT" ] && continue   # PS-A4 already owns that prompt's table
+    printf '%s\n' "$MGROW" >> "$PS_A6_D/want"
+    case "$PS_A6_PROMPTS" in *" $MGP "*) ;; *) PS_A6_PROMPTS="$PS_A6_PROMPTS$MGP " ;; esac
+  done <<EOF
+$MG_REG
+EOF
+  PS_A6_PROMPTS="${PS_A6_PROMPTS# }"
+  PS_A6_PROMPTS="${PS_A6_PROMPTS% }"
+  PS_A6_NWANT="$(grep -c '[^[:space:]]' "$PS_A6_D/want")"
+  : > "$PS_A6_D/have"
+  # shellcheck disable=SC2086
+  for psa6p in $PS_A6_PROMPTS; do mg_contract_rows "$ROOT/$psa6p" >> "$PS_A6_D/have"; done
+  PS_A6_NHAVE="$(grep -c '[^[:space:]]' "$PS_A6_D/have")"
+  if [ "$PS_A6_NWANT" -eq 0 ]; then
+    VACUOUS "PS-A6: the register declares no mode-gated behaviour outside the prompt PS-A4 already reads, so the second-prompt containment has nothing to grade. That is a real measurement of the register rather than a skipped arm — PS-A4 continues to cover the validator's own table"
+  elif [ "$PS_A6_NHAVE" -eq 0 ]; then
+    FAIL "PS-A6: the declared-contract table(s) of $PS_A6_PROMPTS extracted ZERO rows, so the containment below would be satisfied by an empty superset. An empty extraction is a broken instrument and must never read as containment satisfied"
+  else
+    PS_A6_MISS="$(ps_contain "$PS_A6_D/want" "$PS_A6_D/have" | tr '\n' ';')"
+    if [ -z "$PS_A6_MISS" ]; then
+      PASS "PS-A6: every one of the $PS_A6_NWANT register row(s) assigned to $PS_A6_PROMPTS is a row of that prompt's own declared contract table ($PS_A6_NHAVE row(s)). That prompt now has the containment denominator agents/06-validator.md has had since PS-A4 shipped"
+    else
+      FAIL "PS-A6: the register declares contract row(s) $PS_A6_PROMPTS does not carry: $PS_A6_MISS — a behaviour declared in the charter and absent from the prompt's own output contract"
+    fi
+    # PS-A6-DNE — the card's "counted where no fixture exercises it" clause, landing as an
+    # honest DECLARED-NOT-EXERCISED rather than as a green row. The fixture is deliberately
+    # NOT edited: a hand-built witness would flip this to `exercised` while the agent-side
+    # branch stayed exactly as unverified, which is the trade this card rejected on record.
+    if [ -r "$PS_A6_FIX" ]; then
+      PS_A6_NDNE=0
+      while IFS= read -r psa6r; do
+        [ -n "$psa6r" ] || continue
+        if ! grep -qF -- "$psa6r" "$PS_A6_FIX"; then
+          ps_dne "PS-A6: the hub declares '$psa6r' and the shipped fixture itinerary carries no version-log or open-decisions line naming it — unexercised in that fixture, never passed in it"
+          PS_A6_NDNE=$((PS_A6_NDNE+1))
+        fi
+      done < "$PS_A6_D/want"
+      [ "$PS_A6_NDNE" -gt 0 ] && ps_dne "PS-A6: $PS_A6_NDNE of the $PS_A6_NWANT register-declared obligation(s) on that prompt have no line in the shipped fixture. The count is what keeps the gap from being silent, and closing it with a hand-built witness is the one remedy this card refuses"
+    fi
+  fi
+  # PS-A6C — the MUST-FIRE arm. One row renamed in a temp copy of the list being compared
+  # AGAINST; the SAME comparator must name exactly that row. The victim is drawn from the
+  # list being PERTURBED, for the reason PS-A5C's own comment records.
+  if [ "$PS_A6_NWANT" -gt 0 ] && [ "$PS_A6_NHAVE" -gt 0 ]; then
+    PS_A6_V="$(head -1 "$PS_A6_D/have")"
+    awk -v v="$PS_A6_V" '$0 == v { print v " ZZ"; next } { print }' "$PS_A6_D/have" > "$PS_A6_D/have-mut"
+    if [ -n "$PS_A6_V" ] && ! cmp -s "$PS_A6_D/have" "$PS_A6_D/have-mut"; then
+      PS_A6_MR="$(ps_contain "$PS_A6_D/have-mut" "$PS_A6_D/have" | tr '\n' ';')"
+      if [ "$PS_A6_MR" = "${PS_A6_V} ZZ;" ]; then
+        PASS "PS-A6C: control — one contract row is renamed to '${PS_A6_V} ZZ' in a temp list (the perturbation is asserted to have landed) and the same comparator names EXACTLY that row and no other. PS-A6's clean result is a measurement, and a comparator that flagged everything would fail this arm's second limb"
+      else
+        FAIL "PS-A6C: the arm did not behave (reported '$PS_A6_MR', expected '${PS_A6_V} ZZ;') — PS-A6 cannot be read as containment"
+      fi
+    else
+      FAIL "PS-A6C: the row perturbation did not land, so the control proves nothing about PS-A6"
+    fi
+  fi
+fi
+
+# ── The declared residual, on the ps_dne channel so it rides on EVERY run rather than
+# sitting in a comment somebody has to open this file to read. The card asks for it in two
+# places and this is the second; CLAUDE.md § Modes carries the first.
+ps_dne "MG: no arm in this group establishes that an agent FIRED any mode-gated branch. Every arm grades the tree — declared, agreed, un-negated, counted. Firing is unassertable from a tree of prompt files, because a hand-built witness passes identically whether an agent produced it or a person typed it. What would settle it: a live dispatch of the named agent against a trip at the branching mode, with the branch's own output observed in the artifact it writes"
+
+# ── MG-OPTOUT — three subjects in this group are FILES, not shell functions. `unset -f`
+# cannot remove a file, so md_flips would grade the ORACLE rather than the assertion, and
+# registering them would be a green proving only that the probe ran. Declared here rather
+# than left silently unregistered, each with the compensating POSITIVE CONTROL that the
+# authoring contract's clause 6 requires:
+#
+#   CLAUDE.md § Modes        -> MG-C4                  (a row loses the anchor; MG2 flips)
+#   agents/05-hub-planner.md -> MG-C1 / MG-C2 / MG-C3  (deleted / negated / added)
+#   agents/06-validator.md   -> MG-C1 / MG-C2 / MG-C3  (the same three, per behaviour)
+#
+# Each is a mutation of the FILE the arm reads, observed flipping that arm by identifier.
+# That is strictly stronger evidence than `unset -f`: it removes the EVIDENCE the arm
+# grades rather than a function that fetches it. An opt-out with no compensating arm would
+# be an exemption, which is the thing clause 6 exists to prevent.
+#
+# ── REGISTERED WITH md_flips, INSIDE THIS GROUP rather than in group MD, for the reason
+# the PP registrations give: they need this group's register read and its fixtures, which
+# are torn down at its end. MD4 and MD5 have already run by now, so every MD[MG…] verdict
+# stands on an oracle whose sensitivity AND specificity are measured.
+if [ "$MG_OK" -eq 1 ]; then
+  md_flips mg_register 'MG0' mg0_assert
+  MG_N=0
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    MG_N=$((MG_N+1)); MGID="B$MG_N"
+    md_flips mg_charter_modes "MG2-$MGID" mg2_assert "$MGID" "$MGA" "$MGM" "$MG_CHARTER"
+    md_flips mg_prompt_modes  "MG3-$MGID" mg3_assert "$MGID" "$MGA" "$MGM" "$ROOT/$MGP"
+    md_flips mg_negations     "MG4-$MGID" mg4_assert "$MGID" "$MGA" "$ROOT/$MGP"
+  done <<EOF
+$MG_REG
+EOF
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -9963,17 +10710,24 @@ md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violat
 # removed must reach the FAILING limb, and the arm asserts in the same verdict that the clean
 # copy reaches the passing one. An opt-out with no compensating arm would be an exemption.
 
-# ── REGISTERED WITH md_flips: EIGHT registrations over SIX assertions, and this figure is a
+# ── REGISTERED WITH md_flips: EIGHTEEN registrations over SIXTEEN assertions, and this figure
+# is a
 # RUNNING TOTAL — it is what has landed on this branch so far, never what any one change
 # contributed. A change that adds a registration restates the total INCLUDING the ones already
 # here; a change that reads only its own contribution here will write a number that is wrong
 # the moment the next one lands.
 #
-# The six assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; group ST's
+# The sixteen assertions: CTL-DATAROOT6, registered by CTL-DATAROOT6-MUT in group CTL; group ST's
 # cross-document pair, ST3 against each of its two extractors and ST4 against the model
 # extractor; group CTL's coverage arm CTL-COV, against its reader and against one of its
-# emitters; and the SITE coverage arms of groups ST and CE, ST-SITE and CE-SITE, each against the
-# emission-site reader the two of them share. Registration requires the assertion to be remediated first, because an oracle asked
+# emitters; the SITE coverage arms of groups ST and CE, ST-SITE and CE-SITE, each against the
+# emission-site reader the two of them share; and group MG's ten — MG0 against the register
+# reader, and MG2 / MG3 / MG4 against the charter-mode, prompt-mode and negation extractors for
+# each of the three declared behaviours. Group MG's registrations are emitted INSIDE that group
+# rather than here, for the reason its own comment gives: they need its register read and its
+# fixtures, which are torn down at its end. They are counted here anyway, because this figure is
+# the SUITE's total and not this section's.
+# Registration requires the assertion to be remediated first, because an oracle asked
 # to certify a still-blind assertion turns the suite red for a defect it is reporting rather than
 # causing — which is why the count was zero until an arm had been through that. The declared
 # residual in MD2 is still this suite's registration queue, and every entry that leaves it gains

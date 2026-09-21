@@ -162,6 +162,28 @@ name: Artifact schema
 #        own debt — the durable form emits zero trip and destination labels
 #   GM   reusable groups: the membership boundary mechanised, and the twin negative
 #        assertion that was left as prose while its counterpart shipped
+#   MG   the mode-gated agent behaviours, against a REGISTER fenced in CLAUDE.md § Modes.
+#        Three branches in agents/05-hub-planner.md and agents/06-validator.md fire only on
+#        a later mode, and nothing in the previous command surface ever wrote one — so all
+#        three never fired, SILENTLY, because the mode they waited on was never set and the
+#        mode they sat in is legal. This group makes non-firing COUNTED rather than silent.
+#        Per declared behaviour: the anchor is LOCATED by reading the prompt, the charter
+#        and the prompt are asserted to gate it on the SAME mode set in BOTH directions, no
+#        clause on an anchor-bearing line exempts or makes-advisory the branch, and the
+#        behaviour occupies a row of that prompt's OWN declared output contract so the
+#        containment accounting counts it with a denominator on every run. Neither the
+#        behaviour nor its mode is spelled in the suite: both are read from the charter,
+#        which is what lets a charter/prompt disagreement fail in either direction —
+#        including one that only ADDS a mode to one side. The controls are STANDING arms,
+#        not checks performed once while authoring: a deletion, a negation, an ADD-ONLY
+#        injection into a block the register does not name, a charter-side removal, and a
+#        containment re-read proving every mutation landed outside the tree being measured.
+#        WHAT IT DOES NOT ESTABLISH is declared rather than left to be inferred from a
+#        green: no arm here shows an agent FIRED any branch. That is unassertable from a
+#        tree of prompt files — a hand-built witness passes identically whether an agent
+#        produced it or a person typed it — so the residual rides on every run as its own
+#        reported line, and what would settle it is named there. No count is spelled here
+#        or in the suite: the behaviours and the mode vocabulary are both read
 #   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
 #        BOTH WAYS against the groups the run actually emitted. The executing set comes from
 #        the RUN, never from a static read of the suite. A group added and left undeclared
