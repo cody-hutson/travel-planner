@@ -297,3 +297,182 @@ its instrument stated. Three candidates carried by earlier passes of this design
 earlier pass had taken. One further candidate was rejected on a structural property rather than a
 count: a token that is a **prefix of another token in the same set** cannot be measured
 independently of it, which is a defect in the set rather than in either name.
+
+## Decision
+
+### 1. A channel is a surface satisfying three limbs
+
+> A surface is a **channel** when all three hold:
+>
+> - **L1** — a person is on the far side.
+> - **L2** — the engine governs the crossing, via a named engine-side act declared in a tracked
+>   file.
+> - **L3** — the crossing point is **guardable**: a single place where a predicate can be
+>   evaluated **before** content crosses.
+
+L3 is the discriminating limb, and it is what makes the definition able to refuse. Applied to
+every candidate in hand:
+
+| Candidate | L1 | L2 | L3 | Verdict |
+|---|---|---|---|---|
+| The published site | yes | yes — `/trip-publish`, and the build | yes — the pre-push guard; `ADR-008`'s two limbs | **channel** |
+| The intake surface | yes | yes — the artifact write | yes — `scripts/validate-artifacts.sh` + the schema suite | **channel** |
+| The command surface | yes — the operator | yes — every verb | yes — `ADR-007` § 2's six bounds, per-verb `allowed-tools` | **channel** |
+| The **inbound approval return** | yes | **UNDETERMINED** — the transport is a declared placeholder | undecidable against a placeholder | **not a member — a typed vacancy** |
+| An internal record stream | **no** | — | — | **not a channel** |
+
+**The three shipped senses of `channel` resolve with no rename.** The internal record stream fails
+L1. The human-carried sense — *"their own channel"* — fails L2 and is an **operator-mediated
+crossing**, not a channel. The egress sense is not a competitor at all: it is this model's own
+`observers` axis, named in § *Decision* 3. **No edit is required to `ADR-003`, `ADR-010`,
+`ADR-014`, `README.md`, `scripts/publish-trip-site.sh`, `CLAUDE.md` or either skill**, and none is
+made.
+
+### 2. The channel-set is three members and two typed vacancy rows, one of them discharged
+
+| id | Channel | Far side | Direction | Crossing point / guard |
+|---|---|---|---|---|
+| **CH-1** | The published site | a passphrase-holding traveller | engine → traveller | the publish step; `verify_ciphertext` on the encrypted limb, `verify_publishable_content` on the `--plaintext` limb |
+| **CH-2** | The intake surface | the traveller themselves | traveller → engine | the artifact write; `scripts/validate-artifacts.sh` + the schema suite |
+| **CH-3** | The command surface | the **operator** | operator ↔ engine | the verb invocation; `ADR-007` § 2's six bounds, per-verb `allowed-tools` |
+| **V-1** | *approval notice, outbound* | *a traveller* | *engine → traveller* | **DISCHARGED — it crosses on CH-1.** `ADR-003` § 3 ships it: *"The published site shows a **'change pending / recently updated' state on next open**"* (`:53`) |
+| **V-2** | *approval return, inbound* | *a traveller* | *traveller → engine* | **VACANCY. L2 UNDETERMINED** — `ADR-010`:230, *"'Out-of-band' is a placeholder."* This is #718's work |
+
+**Why the vacancy verdict survives its own re-typing.** The admission test requires all three
+limbs to **hold**, and a limb that cannot be evaluated does not hold. So the approval transport is
+not a channel-set member under either reading. What changed is the **ground** — `UNDETERMINED`
+rather than determinately false — and the **scope**: only the inbound return is vacant.
+
+**V-1's discharge stands on a schema-declared field pair, not on an unchosen candidate.** The
+coordination state is carried by two `optional` per-class fields of the crossing artifact's own
+schema (§ *Decision* 3), whose declared purpose at `reference/schemas/travel-site.md`:32 is *"the
+coordination state ADR-003 § Decision 3 makes pull-based"*, with
+`reference/site-layout-spec.md` § 3's Coordination Notice named there as the consumer whose
+three-way branch *is* the state, and with regression coverage in
+`scripts/test-publish-guard.sh` group `T`. **`ADR-010`'s Candidate C is deliberately not cited
+here.** That candidate describes **inbound** token production, `:248-251` records it and its
+sibling **as candidates** — *"Choosing between them requires the channel"* — and V-1 is the
+**outbound** notice. Leaning on it would borrow a candidate for the half it does not address, and
+under the discharge above V-1 does not need it. It is left where it is, for #718.
+
+**What admits a fourth member.** All four must hold: **(1)** L1–L3 of § *Decision* 1; **(2)** its
+`audience` and `observers` values declared in the same change; **(3)** its `W-test` and `R-test`
+declared in the same change; **(4)** admission by **amendment to this record or by a superseding
+record** — never by a slice, and never as a side effect of building something.
+
+### 3. Carry is a relation, not a property, on both sides — and each side is typed over the artifacts its guard actually queries
+
+> **`may-carry(v, A, CH) = ¬denied(v, A) ∧ carry-envelope(CH) admits v`**
+>
+> **`denied(v, A)`** is `reference/data-architecture.md` § 5.3's union — *"non-publishable class =
+> { every value of a field declared `non-publishable` } ∪ { every value of an entry whose
+> `provenance` is `third-party` }"* (`:786-787`) — read from § 5.6's `publish-contract-values`
+> fence and **from nowhere else**, and **defined only on the four `(limb, artifact-scope)` pairs
+> that fence's evaluator queries**: `entry` and `field` against `outputs/traveler-model.md` (C12),
+> and `field` against `travelers/<traveler>.md` (C3) and `people/<person>.md` (C22). It is
+> **three-valued**:
+>
+> | Return | When |
+> |---|---|
+> | **HIT** | `v` is a value of a field or entry the fence marks at a queried pair |
+> | **CLEAN** | the pairs were queried and `v` is not in the class |
+> | **UNDETERMINED** | the class could not be computed (§ 5.4's five paths, § 5.6's sixth), **or** `A` is not a queried pair (§ 5.6:832-838; `scripts/test-publish-guard.sh` case **L10c**) |
+>
+> **Off the four pairs `may-carry` returns UNDETERMINED — not `admit`, and not `deny`.**
+> Fail-closed is preserved where the corpus puts it: at the **call site**, which collapses HIT and
+> UNDETERMINED into one abort (`scripts/publish-trip-site.sh`:2679-2680, whose message names both
+> causes — *"carries content that must not be published, **or** the non-publishable class could
+> not be determined"*). A channel with no publish call site inherits no verdict from this model
+> and takes its bound from its own rule.
+>
+> **`carry-envelope`** is the channel's declared (`audience`, `observers`) pair. A denial from
+> either side is dispositive; **neither side overrides the other.**
+>
+> **CH-1 — what crosses, and what the guard asserts.** The object that crosses is the
+> **published artifact `P` at `<trip_dir>/.publish/index.html`**
+> (`reference/site-layout-spec.md` § 8:671-673; `scripts/publish-trip-site.sh`:2666). **`P`
+> carries no § 1.1 artifact class** — recorded as a finding of this release in § *Findings
+> carried*, not assumed away. The local render **C19 stays local and git-ignored** (`:670`,
+> *"Source file (plaintext, stays local, git-ignored)"*) and is the **second operand** of CH-1's
+> guard, never its subject.
+>
+> | CH-1 limb | Predicate (declared at) | What it asserts |
+> |---|---|---|
+> | encrypted (default) | `verify_ciphertext(P, C19, boilerplate)` — declared `scripts/publish-trip-site.sh`:2232, contract `:2214` | `P` is verified ciphertext **of** C19 — a structural near-empty-visible-text proof plus a token backstop; *"MUST be FAIL-CLOSED: return 0 only when the output is provably safe"* (`:2210-2211`) |
+> | `--plaintext` (`ADR-008` opt-out) | `verify_publishable_content(C19, trip_dir)` — declared `scripts/publish-trip-site.sh`:**1924**, contract `:1906-1914` | no value of the class computed over the four queried pairs in `trip_dir` appears in the render, which this limb then copies to `P` byte-for-byte (`:2687`) |
+>
+> Both are **relations**. `verify_ciphertext`'s self-check at `:2237` makes the point
+> unarguable — *"never certify the source file as its own ciphertext"* — so a model naming C19 as
+> the crossing object names the operand the guard exists to hold `P` **apart from**.
+>
+> **`P`'s content, stated as a composition rather than a subtraction.**
+>
+> **`C19 = render(C1, C10, C11, C13, C15) ⊎ { coordination-state, coordination-since }`**, and
+> **`P = StatiCrypt(C19)`** on the encrypted limb, **`P = C19`** on the `--plaintext` limb.
+>
+> - The five `bound` artifacts are the build's **read set**, not its carried content.
+>   `reference/schemas/travel-site.md`:37 says so directly: the `publish-contract-artifacts`
+>   fence *"is a declaration of which artifacts the site build may **read** — not of what a
+>   render carries."*
+> - **`coordination-state: optional enum [none|pending|updated]`** and **`coordination-since:
+>   optional date`** are C19's own **per-class schema fields**
+>   (`reference/schemas/travel-site.md`:28-29), not a render of any `bound` input. They are what
+>   carries V-1's outbound notice inside the bytes that were pushed.
+> - **There is no `minus denied(v)`.** No redaction step exists anywhere on the publish path —
+>   the guard **aborts the whole publish** (`|| die`, `:2680`), and § 5.5 disclaims the
+>   capability a subtraction would imply: *"Keying the guard to a declared attribute makes the
+>   class **sourced**, not **complete**."* The R-test is an **abort gate over the whole
+>   artifact**, never a filter that removes values from it. A slice reading *minus* would build a
+>   redaction step this corpus does not have.
+>
+> **CH-2 and CH-3.** No render, no queried pair — so `may-carry` is **UNDETERMINED** and this
+> model asserts nothing about them. Their bounds exist and come from elsewhere: CH-2's is the
+> **W-rule** of § *Decision* 5, an authorship rule that needs no denial set at all; CH-3's is
+> `ADR-007` § 2's privilege boundary. **Widening § 5.6's fence to reach them is out of scope for
+> this record** and would close, by fiat, a gap § 5.6 keeps deliberately visible.
+>
+> **Still inert.** Every verdict this clause returns at `edadfa9` is the corpus's own, because
+> `denied` **is** the shipped fence read rather than re-declared, and the queried-pair
+> restriction **is** the shipped evaluator's. `internal-hard` is unwidened — it remains
+> *"never rendered **and** carrying values that must not reach a rendered page **in any form,
+> including anonymized**. Exactly C12, C14, C22 and C23"* (`reference/data-architecture.md`:770).
+> **#1242 is the only card that may move a cell.**
+
+**Why three-valued does not weaken fail-closed.** The corpus's own shape is a **three-valued
+predicate with binary fail-closed enforcement at the call site**, and it says why in terms:
+*"Three return codes where `verify_ciphertext` has two, because the test suite has to be able to
+tell a HIT from an UNDETERMINED: under a binary contract a guard that aborted for the WRONG REASON
+would still pass its own tests. The call site collapses both to one die, so `cmd_publish`
+behaviour stays binary; only the tests read the distinction."* An earlier draft of this clause
+collapsed those two layers and concluded that an undefined limb must *mean* deny. It does not. It
+means the model returns no verdict, and the call site — where there is one — refuses. § 5.4 at
+`:809-811` requires exactly this separation: *"A parsed-and-empty class must stay distinguishable
+from a class that **could not be computed**."*
+
+**Every fail-closed path survives, and this clause adds two.** § 5.4's five UNDETERMINED paths are
+untouched and are now quoted in this record's own support. § 5.6's sixth — an unreadable or
+zero-row fence returns `2` and the publish aborts — is untouched. `verify_ciphertext` is
+untouched and is, for the first time, named as the relation its own contract declares.
+`ADR-007` § 2 is untouched. **Added:** § 5.6:832-838's unqueried-pair abort with its shipped test
+case `L10c`, and `verify_publishable_content`'s three-code contract with the call-site collapse.
+The clause **removes no fail-closed path**. The one thing it removes is an inference the corpus
+does not license.
+
+**The two channel axes, declared worst-case.**
+
+| Axis | Values | What it states |
+|---|---|---|
+| **`audience`** | `operator` · `party` · `world` | who can **read** the content |
+| **`observers`** | `none-beyond-audience` · `third-party` | who can **see the bytes**, whether or not they can read them — the corpus's egress sense, named |
+
+| Channel | `audience` | `observers` | Why |
+|---|---|---|---|
+| **CH-1** encrypted limb | `party` | `world` | the ciphertext sits in a **public** repository and is world-fetchable |
+| **CH-1** `--plaintext` limb | `world` | `world` | the opt-out from the privacy default (`ADR-008`) |
+| **CH-2** | `party` | `third-party` | worst case is an interview conducted through an assistant whose history retains the transcript |
+| **CH-3** | `operator` | `third-party` | the same worst case — which is why `skills/trip-publish/SKILL.md`'s standing rule on the passphrase **value** exists |
+
+**The residual, stated rather than smoothed over.** An inert axis is a shape a later reader could
+mistake for a permission. The mitigation is this sentence: **#1242 is the only card that may move
+a cell, and it moves one.** That is the same device § 5.6 already uses for the tombstone it
+records so that nobody re-derives it.
