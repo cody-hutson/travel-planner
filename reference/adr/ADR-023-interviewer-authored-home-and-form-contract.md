@@ -1,6 +1,6 @@
 # ADR-023: The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs
 
-- **Status:** Proposed (2026-09-20)
+- **Status:** Accepted (2026-09-20)
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
