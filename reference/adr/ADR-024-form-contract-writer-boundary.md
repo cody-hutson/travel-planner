@@ -1,6 +1,8 @@
 # ADR-024: The form contract's writer boundary — the owned region as the unit, a key of region and condition, and an exclusion that executes rather than amends
 
-- **Status:** Proposed (2026-09-20)
+- **Status:** Accepted (2026-09-21). Landed `Proposed` (2026-09-20) and ratified here at the
+  milestone's close, by the two-step this corpus already uses: `ADR-010` and `ADR-019` each
+  landed `Proposed` on one day and were flipped by a later ratifying commit on another.
 - **Deciders:** repo maintainer
 - **Driving work:** the *contract learns about writers* milestone. This record is that milestone's
   single gating decision. It runs parallel to the build slices and gates only the trip-context
