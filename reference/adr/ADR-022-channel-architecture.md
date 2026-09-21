@@ -69,8 +69,9 @@ half is a declared gap; closing or not closing that gap changes no decision here
 **The axis this record indexes on already ships, unnamed.** `agents/00-enrichment.md`
 § *Missing or blank profile* assigns **every** roster member one of a small set of branches and
 writes the result into `outputs/traveler-model.md`; `:891-894` names the domain in the corpus's own
-words — *"the same roster you already take as the party and as the profile-gap denominator."* So the question this record's reach table faced was never
-*choose an index*. It was **declare a join** to a classification the engine already computes,
+words — *"the same roster you already take as the party and as the profile-gap denominator."* So
+the question this record's reach table faced was never *choose an index*. It was **declare a
+join** to a classification the engine already computes,
 and give it a name. The name is decided in § *Decision* 6 under a measure-before-adopting
 constraint, and every identifier this record mints carries its measured collision inline.
 
@@ -589,8 +590,8 @@ input"***: that clause closes the sentence defining the **third** fallback branc
 `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` population, which is **K3b**, whose row is not
 `none`. And it is **not** cited to `ADR-014` § 1, whose population reads live at `:26-30` as the
 same both-marks class — *"a person admitted to a trip's `outputs/traveler-model.md` as a single
-`## <Name>` heading marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]`"*. A citation that bites equally on a row with a different verdict cannot be
-what distinguishes this one. The re-grounding matters for the reason the clause exists at all: it
+`## <Name>` heading marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]`"*. A citation that bites
+equally on a row with a different verdict cannot be what distinguishes this one. The re-grounding matters for the reason the clause exists at all: it
 is there to stop a later slice proposing to close the gap, and it can only do that if it is true
 for the right reason. **A slice that supplies K4's needs converts that person to K3b** — which
 this record says *is* reached, through the operator.
@@ -691,3 +692,176 @@ zero below is therefore a measurement rather than a failed read**, and each prop
 | `addressable` | `\baddressable\b` | **11 / 8** | `ADR-007` and `README.md` gloss `skills/` as *the addressable surface* — a different subject. (The abstract noun `addressability` measures **0 / 0**; the **root** is the honest arm, and it is the one reported) |
 | `COMPOSED` | `\bCOMPOSED\b` | **0 / 0** | **withdrawn on its root arm, not its bare count.** `\bcompos\w*` → **286 / 40**, and this record's own prose uses *composed* and *composition* throughout, because composition is the people library's own verb. An all-caps enum token a reader cannot distinguish from the surrounding English is not a usable token. Replaced by `PERSON-LINKED` |
 | `SELF-STATED-LINKED` | `\bSELF-STATED-LINKED\b` | **0 / 0** | **rejected on structure, not on a count.** It contains `SELF-STATED`, another token of the same set, so a `\b`-anchored probe for the shorter token matches inside the longer one and neither can be measured independently. A containment check over the adopted set returns **0 pairs**; the same check on this rejected pair returns **1**, so the check is demonstrated rather than asserted |
+
+## Consequences
+
+**Positive**
+
+- **One definition becomes the arbiter for a rule that had eight authors**, without editing any of
+  them. *The engine never invents* is now the W-rule and the R-rule, and every channel carries an
+  observable test for each.
+- **Decision 3 is evaluable, and its *changes-no-verdict* claim is checked rather than stipulated.**
+  `denied` **is** the shipped fence read rather than re-declared, and the queried-pair restriction
+  **is** the shipped evaluator's, so the model structurally cannot return a verdict the guard does
+  not already return.
+- **The object that crosses CH-1 is named**, so CH-1's R-test grades an object this record
+  identifies — and it is named as a **relation**, which is what both of its predicates actually are.
+- **`ADR-010` § 6's placeholder becomes a typed vacancy with a stated discharge condition, and half
+  of it is marked already discharged.** #718 inherits a half-solved problem with the solved half
+  named and its evidence cited.
+- **Two records index one partition, declared in both and joined on the row key.** The seam is
+  structural rather than nominal, which is what makes it gradeable at all.
+- **#1242 remains a one-cell change**, and this record names it as the only card that may move a
+  cell.
+- **The measurement convention is now specified rather than described**, and it re-derives every
+  identifier figure this release's earlier passes reported.
+
+**Trade-offs**
+
+- **The vocabulary differs from the driving card's.** A reader following the thread will meet more
+  than one name for the same object, because three candidates were withdrawn on measurement after
+  the card was written. The withdrawals are recorded in § *Decision* 6 with their counts, which is
+  the mitigation available.
+- **`may-carry` is three-valued, and a binary consumer of it is a defect.** Any slice grading
+  against it must handle UNDETERMINED as an outcome distinct from both admit and deny. This is
+  stated here because a binary reading is the easy mistake and it fails toward *admit*.
+- **Three R-tests at three enforcement strengths.** Named in § *Decision* 5, closed nowhere.
+- **K4's row will still read as a defect to someone.** That is precisely why it is written down,
+  split into its two arms, and grounded on the one fact true of both.
+- **The record carries a finding it does not repair** — the crossing artifact's missing class. A
+  reader who expects a head decision gate to close everything it finds will read that as
+  incomplete; the alternative was to amend a section this record does not own.
+
+**Neutral, and explicitly unchanged**
+
+- `ADR-002` upheld. Nothing here needs a standing server, and no supersession is proposed.
+- `internal-hard` unwidened, at its live four-member membership — **C12, C14, C22 and C23**.
+  `ADR-006`'s third-party prohibition unwidened; the denial is now **computed** from § 5.6 rather
+  than asserted by hand, which is strictly no looser and one fewer hand-written exception.
+- The archived-trip freeze binds unchanged; erasure remains the one exception, by substitution.
+- **No dependency on § 5.2.** Its declared field-classification gap changes no decision here.
+- **No file moves and no renames.** One file is added.
+
+## Findings and observations carried
+
+These are recorded rather than repaired. Each names its disposition, so a later reader can tell a
+deliberate carry from an oversight.
+
+**1. The crossing artifact has no § 1.1 class. This is a finding of this release.** § 1.1 carries
+**23** class rows and **none** is under `.publish/`. Measured: subject arm `\.publish` over the 23
+rows' path column → **0 / 23**, with an in-table sensitivity arm (`outputs/`) firing at **18 / 23**
+and a corpus-wide arm (`\.publish\b`) firing at **15 files** — so the zero is a measurement, not a
+dead reader. **Disposition:** not repaired here, on two grounds. This record does not own § 1.1,
+and the artifact is fully governed on the path that produces it by two fail-closed pre-push
+predicates. It is a gap in the class table's **coverage of the trust boundary**, and it belongs to
+whichever card next amends § 1.1.
+
+**2. The axis ships unnamed, but its six-value partition does not ship exercised.** Both this record
+and its sibling ground the axis on a classification the engine already computes. The shipped
+worked-example evidence is **one** fixture table —
+`examples/data-architecture-demo/outputs/traveler-model.md`:48-52, columns *Roster member · Source
+file · Entry · Branch* — carrying **two** observed `Branch` values across three rows, `normal` and
+`[OPERATOR-PROVIDED]`. `normal` merges `SELF-STATED` with `PERSON-LINKED`, and
+`[OPERATOR-PROVIDED]` merges `OPERATOR-STATED` with `THIRD-PARTY-STATED` — **the second is exactly
+the merge `CLAUDE.md`:130 says fails in opposite directions.** The other fixture carries **no
+`Branch` column at all**, and `K4b`'s flagged-gap arm is unexercised: `PROFILE MISSING` measures
+**0 lines / 0 files across the 53 files under `examples/`**, against sensitivity arms
+`[OPERATOR-PROVIDED]` **13 / 5** and `[THIRD-PARTY]` **10 / 5** on the same instrument and
+population, and a reciprocal arm of **20 / 7** over all 156 files — so the marker is *specified* in
+the corpus and *never demonstrated* in a fixture. **Disposition: recorded as an observation, and
+the axis decision stands.** *"The axis already ships"* is sound as *a classification exists*; it is
+**not** measured as *this five-value partition ships*. `CLAUDE.md`:131-133 governs fixture
+completeness and is the surface that would close it — *"Any fixture standing as the worked example
+of this rule must exercise all three, and dropping one is a change to this rule, not a change to a
+fixture."*
+
+**3. The crossing artifact's two per-class fields can have no witness fixture, terminally.**
+`reference/schemas/travel-site.md`:41 records the `no-witness-because:` clause as **terminal rather
+than pending**, because the site source *"stays local and git-ignored"* and so there is no tracked
+instance to point at and there will not be one. `scripts/test-publish-guard.sh` group `T` stands in
+as a coupling test. **Disposition: recorded.** It is the same shape as finding 2 on a different
+surface, and reading it as a shortfall would invite the wrong repair — committing a site file to
+satisfy a gate.
+
+**4. One citation in this design's own inputs did not reproduce, and the live value governs.**
+`verify_publishable_content` is declared at **`scripts/publish-trip-site.sh`:1924**. An input to
+this record cited `scripts/test-publish-guard.sh`:4289, which reads live as the **S10 PASS
+message** — a line that *names* the function rather than declaring it. **Disposition:** the live
+location is carried in § *Decision* 3 and the divergence is reported rather than resolved to the
+cited value.
+
+**5. An Accepted record block-quotes the never-carry class at a stale two-member membership.**
+`ADR-010`:186-187 quotes `internal-hard` as *"Exactly C12 and C14"* where
+`reference/data-architecture.md`:770 reads *"Exactly C12, C14, C22 and C23."* **Disposition:
+observed and not edited here** — it is amendment-class work already in this release's scope and
+belongs to the change that owns that file. It is noted because § *Decision* 3 turns on the current
+membership, and **this record quotes the live four-member set** rather than inheriting the stale
+one.
+
+## Follow-on build slices
+
+- **#718 — the inbound approval return (V-2).** Inherits a vacancy whose L2 is `UNDETERMINED`
+  against a declared placeholder, with the **outbound** half already discharged and its evidence
+  named, so it is not re-derived. `ADR-010`'s two recorded candidates remain candidates.
+- **#1242 — the one cell that may move.** Argued for one channel, against `internal-hard`, and it
+  does not widen the channel-set's answer on its own.
+- **A § 1.1 row for the published artifact.** Finding 1. Owned by whichever card next amends § 1.1.
+- **A fixture that exercises the unsourced arm.** Finding 2, against `CLAUDE.md`:131-133's fixture
+  completeness rule.
+- **An observable test worth the name on CH-2 and CH-3.** The § *Decision* 5 residual: two of the
+  three R-tests are prose.
+
+## References
+
+- [ADR-002](ADR-002-living-site-refresh.md) — the secret model and the no-standing-server
+  constraint, upheld here and not superseded.
+- [ADR-003](ADR-003-group-coordination.md) — §§ 1–4, and **§ 3's pull-based notice** at `:53`,
+  which is what discharges V-1.
+- [ADR-006](ADR-006-third-party-data-capture.md) — a `[THIRD-PARTY]` value is never published in
+  attributed or anonymized form, and provenance-marking never establishes consent. Unwidened.
+- [ADR-007](ADR-007-command-entry-point.md) — § 2's privilege boundary, which is CH-3's R-test.
+- [ADR-008](ADR-008-publish-content-guard.md) — the two-limb publish guard, and the `--plaintext`
+  opt-out whose `audience` this record declares `world`.
+- [ADR-009](ADR-009-data-architecture.md) — the data architecture this record is the reach
+  counterpart to.
+- [ADR-010](ADR-010-per-traveler-approval-collection.md) — transport over server, the attestation
+  ceiling, and the unnamed channel. §§ 4, 6, 7; `:230`'s placeholder; `:248-251`'s candidates,
+  which stay candidates.
+- [ADR-012](ADR-012-people-library.md) — cross-trip person identity and the `person:` edge that
+  distinguishes `PERSON-LINKED`; `:294-296`'s reach-set disposition enum, on which the `reach`
+  withdrawal turns.
+- [ADR-013](ADR-013-count-assertion-basis.md) — every count in this record is authored to form
+  **F1**, anchored measurement.
+- [ADR-014](ADR-014-cross-trip-consent-refusal.md) — § 1's population is `K3b`, `:26-30`. Cited
+  for that row and deliberately **not** for `K4`.
+- [ADR-015](ADR-015-durable-field-validity-horizon.md) — §§ 6–7, and clause 7, which sits at the
+  W-rule/R-rule intersection and is the positive evidence for two rules rather than one.
+- [ADR-021](ADR-021-installable-capability.md) — the two-artifact `Status:` obligation this record
+  inherits, and the divergence it repaired.
+- **`ADR-023`** — **the engagement axis this record joins.** It declares the axis, its six values,
+  and the read-failure value `ENGAGEMENT-UNDETERMINED` that is the single named difference between
+  its token set and this record's five. The citation is mutual and must not be dropped: neither
+  record's axis declaration is gradeable without the other's. **Cited by number rather than as a
+  link, deliberately** — that record's kebab title is its own to choose, and a guessed filename
+  here would ship a dead link. The link form is added when both records are in the tree, in the
+  same change that authors their index rows.
+- `reference/data-architecture.md` — §§ 1.1, 5.1, **5.3**, 5.4, 5.5, **5.6** with its
+  `publish-contract-values` fence, its four queried `(limb, artifact-scope)` pairs, and its
+  declared gap.
+- `reference/site-layout-spec.md` — § 3's Coordination Notice, § 8's file structure (`:670-673`),
+  and §§ 9, 9.1's `publish-contract-artifacts` fence.
+- `reference/schemas/travel-site.md` — `:28-29` the two per-class fields, `:32` their declared
+  purpose, `:37` the read-not-carried distinction, `:41` the terminal no-witness clause.
+- `scripts/publish-trip-site.sh` — `:1924` and `:1906-1914` (`verify_publishable_content` and its
+  three-code contract), `:2214`/`:2232`/`:2237` (`verify_ciphertext`, its contract and its
+  self-check), `:2666`, `:2679-2680`, `:2687`, `:2695`, `:2698`.
+- `scripts/test-publish-guard.sh` — case **L10c** at `:1123`, the unqueried-pair abort; group `T`,
+  the coordination-state coupling test.
+- `agents/00-enrichment.md` — § *Missing or blank profile* (`:654-691`), the three branches and the
+  flagged-gap arm that makes `K4` two arms; `:651` on `stated()` versus `ANSWERED()`; `:891-894`,
+  the profile-gap denominator.
+- `CLAUDE.md` — `:123-133` the three model-entry classes and the fixture-completeness rule; `:355`
+  *never infer a mode*; § *Modes*, § *Archived trips*, § *Write ownership*; the standing rule on
+  the passphrase value.
+- `skills/trip/SKILL.md`:73 and `skills/trip-publish/SKILL.md`:202 — the two requirement rows that
+  make mode production-gating rather than reach-indexing.
