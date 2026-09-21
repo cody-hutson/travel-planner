@@ -3371,12 +3371,12 @@ ST_SITE_OK=1
 ST_SITE_RAW="$(printf '%s\n' "$ST_SITEMAP" | grep -c '[^[:space:]]')"
 ST_SITE_KEYS="$(st_sites "$ST_SITE_BODY")"
 ST_SITE_NK="$(printf '%s\n' "$ST_SITE_KEYS" | grep -c '[^[:space:]]')"
-ST_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++ } END { for (k in n) if (n[k] > 1) printf "%s ", k }' <<<"$ST_SITEMAP")"
+ST_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_SITEMAP")"
 if [ "$ST_SITE_RAW" -eq 0 ]; then
   FAIL "ST-SITE0[$ST_TAG]: the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
   ST_SITE_OK=0
 elif [ "$ST_SITE_NK" -ne "$ST_SITE_RAW" ]; then
-  FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — code(s) ${ST_SITE_DUP% } emit from two or more places whose detail opens with the SAME literal, so those places are indistinguishable in the output and the site population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
+  FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — key(s) ${ST_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
   ST_SITE_OK=0
 else
   PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades, and the gap is the point: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
@@ -8518,12 +8518,12 @@ if [ "$CE_RAN" -eq 1 ]; then
   CE_SITE_RAW="$(printf '%s\n' "$CE_SITEMAP" | grep -c '[^[:space:]]')"
   CE_SITE_KEYS="$(st_sites "$CE_SITE_BODY")"
   CE_SITE_NK="$(printf '%s\n' "$CE_SITE_KEYS" | grep -c '[^[:space:]]')"
-  CE_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++ } END { for (k in n) if (n[k] > 1) printf "%s ", k }' <<<"$CE_SITEMAP")"
+  CE_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$CE_SITEMAP")"
   if [ "$CE_SITE_RAW" -eq 0 ]; then
     FAIL "CE-SITE0: the emission-site reader returned NO sites over the body of ce_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
     CE_SITE_OK=0
   elif [ "$CE_SITE_NK" -ne "$CE_SITE_RAW" ]; then
-    FAIL "CE-SITE0: $CE_SITE_RAW raw emission site(s) collapse to only $CE_SITE_NK distinct key(s) — code(s) ${CE_SITE_DUP% } emit from two or more places whose detail opens with the SAME literal, so those places are indistinguishable in the output and the site population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
+    FAIL "CE-SITE0: $CE_SITE_RAW raw emission site(s) collapse to only $CE_SITE_NK distinct key(s) — key(s) ${CE_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
     CE_SITE_OK=0
   else
     PASS "CE-SITE0: the emission-site reader is non-degenerate and unambiguous over ce_violations — $CE_SITE_RAW raw site(s) resolving to $CE_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero. The site set and the code set need not be the same size, and this gate does not assert that they are: where an evaluator emits one code from several places, ONE member of the code set is several members of this one, and the gap between the two rungs is exactly the population CE-COV cannot see. What CE-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted"
