@@ -68,8 +68,8 @@ half is a declared gap; closing or not closing that gap changes no decision here
 
 **The axis this record indexes on already ships, unnamed.** `agents/00-enrichment.md`
 § *Missing or blank profile* assigns **every** roster member one of a small set of branches and
-writes the result into `outputs/traveler-model.md`; `:891` names the domain in the corpus's own
-words — *the profile-gap denominator*. So the question this record's reach table faced was never
+writes the result into `outputs/traveler-model.md`; `:891-894` names the domain in the corpus's own
+words — *"the same roster you already take as the party and as the profile-gap denominator."* So the question this record's reach table faced was never
 *choose an index*. It was **declare a join** to a classification the engine already computes,
 and give it a name. The name is decided in § *Decision* 6 under a measure-before-adopting
 constraint, and every identifier this record mints carries its measured collision inline.
@@ -476,3 +476,218 @@ does not license.
 mistake for a permission. The mitigation is this sentence: **#1242 is the only card that may move
 a cell, and it moves one.** That is the same device § 5.6 already uses for the tombstone it
 records so that nobody re-derives it.
+
+### 4. Reach is one crossing or two, and the engine's claims are about the first only
+
+**The subject set is five,** and the arbiter is live rather than negotiated. `CLAUDE.md`:123-133
+states *"Erasure must reach every model-entry class, and there are **exactly three**"* —
+`first-party`, `operator-provided-only` (**dropped** under regeneration, having no source to
+re-derive from) and `both-marks` (**carried forward verbatim**, the erasure silently undone) —
+adding that *"the two file-less classes fail in **opposite** directions."* Those three, plus the
+roster-only and the cross-trip-composed states, yield five:
+
+| Subject kind | What the engine holds | `CLAUDE.md`:123 class |
+|---|---|---|
+| **K1** | a trip traveller file **and** a durable person record reached through `person:` | `first-party` + C22 |
+| **K2** | a trip traveller file | `first-party` |
+| **K3a** | a C12 entry marked `[OPERATOR-PROVIDED]` alone | `operator-provided-only` |
+| **K3b** | a C12 entry marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` | `both-marks` |
+| **K4** | a roster row, and nothing sourced — see the two arms below | — |
+
+**The axis declaration.** The engagement axis is decided in the sibling record and is **joined**
+here rather than re-derived. The fence below is the declaration both records are graded against;
+it is the corpus's own declared-set device, which already ships in seven instances
+(`publish-contract-values`, `publish-contract-artifacts`, `count-assertion-digest`,
+`frozen-witness-digest`, `horizon-verdict-cases`, `trip-contract-evidence`,
+`trip-contract-header`).
+
+```phase-axis-declaration
+# axis-orientation: rows
+# axis-name: engagement
+# governed-table: Decision 4 -> "The reach table"
+# row-key-column: 1
+# header-rows: 2
+# difference-from-engagement-record: ENGAGEMENT-UNDETERMINED
+# subject-kind   axis-token
+K1               PERSON-LINKED
+K2               SELF-STATED
+K3a              OPERATOR-STATED
+K3b              THIRD-PARTY-STATED
+K4               UNSOURCED
+```
+
+Two columns, both required, whitespace-separated; a line whose first non-blank character is `#` is
+a comment and is ignored. The fence declares **five** axis tokens. **`axis-orientation: rows` is
+load-bearing and is why no leading-column count appears here:** the axis tokens are **row keys**,
+so a comparator extracting column *headers* would read this table's direction labels and diverge
+on a conformant record. A superseded specification of this criterion instructed a leading-column
+count, which presupposes the column orientation the axis decision deleted; it is deliberately not
+carried, and `row-key-column` with `header-rows` is its orientation-correct analogue.
+
+**The difference from the sibling's set is named, and it is exactly one token.** The engagement
+record declares **six** tokens; this record declares **five**; the difference is
+`ENGAGEMENT-UNDETERMINED` **and nothing else**. That token is this record's **read-failure**
+value, and it is carried **as a table-level fail-closed clause below the reach table — not as a
+row and not as a column.** That is what makes the difference a legitimate subset relation rather
+than an omission.
+
+**Why the axis enters through the row key rather than as a third column.** Its five values stand in
+a **one-to-one correspondence** with the five subject kinds above — `K4 ≡ UNSOURCED`,
+`K3a ≡ OPERATOR-STATED`, `K3b ≡ THIRD-PARTY-STATED`, `K2 ≡ SELF-STATED`, `K1 ≡ PERSON-LINKED` —
+because addressability is a property of the subject and the rows **are** the subjects. A column in
+one-to-one correspondence with the row key is the row key under another name, and this record's own
+§ *Options considered* 4A rejects a column no cell varies with. So the two records are declared to
+index **one partition under two names, joined on the row key**. The agreement is therefore
+**structural** — a single partition declared in both — rather than two records having been handed
+the same string.
+
+**The reach table.** Row keys are compound: the subject kind and its axis token, either side of
+the `≡` marker, both declared in the fence above. **No phase columns.** The cell grammar splits
+because the far sides differ.
+
+| Subject kind | in — *first crossing* | in — *subject crossed?* | out — to the subject |
+|---|---|---|---|
+| **K1 ≡ PERSON-LINKED** | **CH-2**, direct | **yes** | **CH-1**, iff published |
+| **K2 ≡ SELF-STATED** | **CH-2**, direct | **yes** | **CH-1**, iff published |
+| **K3a ≡ OPERATOR-STATED** | **CH-3**, operator-mediated | **never crossed** | **none** |
+| **K3b ≡ THIRD-PARTY-STATED** | **CH-3**, operator-mediated | **never crossed** | **none** |
+| **K4 ≡ UNSOURCED** | **CH-3**, operator-mediated — **identity only** | **never crossed** | **none** |
+
+> **Table-level fail-closed clause — the read-failure arm.** Where the roster, the derived model or
+> the person store **cannot be read**, the axis returns `ENGAGEMENT-UNDETERMINED` and **every cell
+> of this table is UNDETERMINED rather than its nominal value.** It is stated here, once, for the
+> whole table rather than as a row or a column, because a value meaning *the row could not be
+> selected* cannot modify a row — there is no row to modify. This lands the arm in the same
+> fail-closed family as § 5.4's five UNDETERMINED paths and § 5.6's sixth.
+
+**Why the cell grammar splits.** An earlier draft wrote a single `in: operator` cell, which reads
+as an affirmative reach verdict on a row whose subject is not the operator — while this record's own
+rule is that every claim the engine makes is about the **first** crossing. CH-1 and CH-2 face a
+traveller; CH-3 faces the operator. One grammar across both far sides cannot say which, so the
+two-crossing caveat now travels **with the row** instead of in prose above the table.
+
+**Two subject kinds are reached through the operator, not three.** K3a and K3b are the subjects
+reached *through* CH-3. **K4's CH-3 cell carries identity only** — its `## Group` roster row is
+written by `/trip-new` at creation and by `/trip-record` thereafter — which is the operator
+entering a **name**, not the subject being reached.
+
+**K4 is two arms, and the split is the point.** *Roster row only* is a **strict containment** in
+`UNSOURCED`, not an identity, because the engine's flagged-gap branch **writes a C12 entry with
+content**. `K4 = K4a ⊎ K4b`, and the union is what restores the one-to-one correspondence the seam
+needs:
+
+| Arm | Shipped condition | C12 entry? | out — to the subject |
+|---|---|---|---|
+| **K4a** | a roster row and no C12 entry at all | no | **none** |
+| **K4b** | a roster row with a **flagged-gap** C12 entry: `**Source:** none`, a `PROFILE MISSING` marker, and a `Trip-level facets` block carrying `Origin` at basis `UNKNOWN` (`agents/00-enrichment.md`:669-691) | **yes, with content** | **none** |
+
+**The outbound `none` is grounded on the class of the carrier, not on absence of content** — which
+is the only ground true of **both** arms. C12 is `internal-hard`
+(`reference/data-architecture.md`:770), so nothing in either state crosses CH-1 whatever the entry
+holds. **It is deliberately not cited to `CLAUDE.md`:557's *"no entry at all without operator
+input"***: that clause closes the sentence defining the **third** fallback branch — the
+`[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]` population, which is **K3b**, whose row is not
+`none`. And it is **not** cited to `ADR-014` § 1, whose population reads live at `:26-30` as the
+same both-marks class — *"a person admitted to a trip's `outputs/traveler-model.md` as a single
+`## <Name>` heading marked `[OPERATOR-PROVIDED]` **and** `[THIRD-PARTY]`"*. A citation that bites equally on a row with a different verdict cannot be
+what distinguishes this one. The re-grounding matters for the reason the clause exists at all: it
+is there to stop a later slice proposing to close the gap, and it can only do that if it is true
+for the right reason. **A slice that supplies K4's needs converts that person to K3b** — which
+this record says *is* reached, through the operator.
+
+**Mode's role, in one sentence, and it does not index anything.**
+
+> Mode conditions the **production** of a channel's content and never indexes its reach:
+> `/trip site` is `DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING` in its own requirement row
+> (`skills/trip/SKILL.md`:73) and so builds no site in `IDEATION`, which is the single instance
+> that bites on CH-1 — while `/trip-publish update` is `mode: any` (`:202`) and every
+> `/trip-record` verb is `mode: any`.
+
+**And mode is explicitly *not* an artifact-availability axis.** The corpus nowhere states that
+claim, and `CLAUDE.md`:355 forbids the inference in terms: *"**Never infer a mode** — not from the
+destination, not from which files exist, not from the request's wording."* Corroborated
+structurally: the destination shortlist is `internal` and `rebuilt-each-synthesis`, so once
+produced it persists on disk in every later mode; what a mode change alters is whether it is
+*refreshed*, never whether it exists. `production-gating` is the accurate label.
+
+**The `ARCHIVED` overlay.** CH-1 → **none**, the site is offline. CH-2 → **writable but inert** —
+*"the freeze binds derivation, not bytes."* CH-3 → **one operation only**, erasure, **by
+substitution, never by regeneration**, which is the mechanism `CLAUDE.md`:125 calls *"the whole of
+the rule."*
+
+### 5. Two rules, both channel-level; the observable test per channel
+
+> **W-rule** — the engine never **authors** a traveller's own statement about themselves.
+> **R-rule** — the engine never **emits** a value `may-carry` denies.
+>
+> Both bind every channel. **What is per-channel is the observable test**, and every member
+> carries one of each. **A channel with no stated test is unenforced regardless of the rule.**
+
+| Channel | **W-test** | **R-test** | Enforcement strength today |
+|---|---|---|---|
+| **CH-1** | **N/A — no inbound limb exists.** Stated as N/A rather than invented, so adding one becomes a visible change to this record | `verify_ciphertext` on the encrypted limb; `verify_publishable_content` on the `--plaintext` limb — both grading the relation between `P` and C19 | **shipped shell predicates + regression suite** |
+| **CH-2** | a prompt may name a field and a remedy; it may **never carry, quote, or offer a candidate value**. **Silence is not assent** in a spoken modality | what is said aloud is bounded — needs include medical facts, and a spoken interview is audible to a room | **prose** |
+| **CH-3** | provenance-marking records that a value is **second-hand** and **never establishes consent** (`ADR-006`) | the standing rule on the passphrase **value**; `ADR-007` § 2 — no command may set `ALLOW_PLAINTEXT`, none may pass `--yes` to `unpublish` | **prose bounds + per-verb `allowed-tools`** |
+
+**Why two rules rather than one.** `ADR-015` clause 7 sits at the intersection: a report line is an
+engine→human **emission** whose prohibition exists to protect **authorship**. That is why that
+record needed a subsection titled *"Why clause 7 is not a carve-out."* A one-rule model cannot
+explain that subsection; a two-rule model predicts it.
+
+**The residual, recorded rather than smoothed over.** The three R-tests are enforced at
+**materially different strengths** — one pair of shell predicates with their own regression suite,
+and two prose. Closing that is not this record's work. Stating it is what lets a reader see that
+the claim is checked on CH-1 and unchecked on CH-2 and CH-3.
+
+### 6. The names, each with its measured collision
+
+**The measurement convention, stated once, because it is the whole of the instrument.**
+**Occurrences** = every regex match, counting multiple matches on one line separately. **Lines** =
+distinct matching lines. **Files** = distinct files with at least one match. **Every count in this
+record is reported as `lines / files`, case-sensitive, `\b`-anchored, over the 156 tracked files
+at `edadfa9`**, measured by `python3` file reads with explicit patterns — never by `grep`, whose
+local build is `ugrep` and can return a plausible zero on a pattern it rejects. Stating the
+convention is not ceremony: three readers of this design derived three different numbers for the
+same tokens because the instrument was described and never specified. **This basis re-derives
+every figure the earlier passes reported** — `reach` 470/81, `roster` 367/47, `hop` 31/13,
+`stated(` 15/4, `addressable` 11/8 — five independent reproductions, which is the evidence that
+the instrument rather than the corpus was the source of the disagreement.
+
+**Control arms on this exact instrument and population.** Sensitivity: `publish:` **167 / 88**,
+`internal-hard` **93 / 48**, `person:` **121 / 21**, `UNDETERMINED` **137 / 16** — four arms, all
+non-zero. Specificity: `\bzzq-not-a-token\b` **0 / 0**, `\bengagementzzq\w*` **0 / 0**. **Every
+zero below is therefore a measurement rather than a failed read**, and each proposed zero carries a
+**reciprocal root arm** so a bare-token zero cannot hide a non-zero root.
+
+| Identifier | Literal pattern | lines / files | Reciprocal root arm → observed | Verdict |
+|---|---|---|---|---|
+| **`engagement`** (axis name) | `\bengagement\b` | **3 / 1** | `\bengag\w*` → **9 / 4** | **ADOPT.** All three bare matches are one sense and it is *this* domain: `ADR-010`:238, :368 and :382 each name the milestone *Group approval engagement layer*, and `:368` names #718 as its head gate — the scope this record takes half of. The six further root matches are the **verb** *engage(s)/engaged* — *"standing rule 3 is not engaged"* — a different part of speech with no noun sense available to confuse |
+| `engagement(t)` (predicate) | `\bengagement\s*\(` | **0 / 0** | the bare arm above is the reciprocal | adopt |
+| **`UNSOURCED`** | `\bUNSOURCED\b` | **0 / 0** | `\bunsourc\w*` → **0 / 0** | adopt — clean on both arms |
+| **`OPERATOR-STATED`** | `\bOPERATOR-STATED\b` | **0 / 0** | `\boperator[- ]stat\w*` → **7 / 4** | adopt. The root is a **same-domain precedent**, not a collision: `ADR-006`:139 and `ADR-012`:1291 both quote *"the only surviving record of what the operator stated"* — this exact state, in the corpus's own words |
+| **`THIRD-PARTY-STATED`** | `\bTHIRD-PARTY-STATED\b` | **0 / 0** | `\bthird[- ]party[- ]stat\w*` → **0 / 0** | adopt |
+| **`SELF-STATED`** | `\bSELF-STATED\b` | **0 / 0** | `\bself[- ]stat\w*` → **0 / 0** | adopt |
+| **`PERSON-LINKED`** | `\bPERSON-LINKED\b` | **0 / 0** | `\bperson[- ]link\w*` → **0 / 0** | adopt. Names the mechanism — the `person:` frontmatter edge, whose own arm fires at **121 / 21** |
+| **`ENGAGEMENT-UNDETERMINED`** | `\bENGAGEMENT-UNDETERMINED\b` | **0 / 0** | `\bUNDETERMINED\b` → **137 / 16** | adopt. The root is a **same-sense precedent** — the shipped guard's *could not be computed* — which is exactly this value's meaning, so the echo is correct rather than confusing |
+| `audience` | `\baudience\b` | **0 / 0** | `\baudiences?\b` → **1 / 1** | adopt. The single root match is `CHANGELOG.md`:1656, *"the three audiences it has"* — a different subject, in the one file this release must also write into |
+| `observers` | `\bobservers\b` | **1 / 1** | `\bobserver\w*` → **1 / 1** | adopt. `ADR-010`:96 — *"Those are different exposures with different observers"* — the **same sense** this axis names |
+| `may-carry` | `\bmay-carry\b` | **0 / 0** | `\bmay[- ]carr\w*` → **26 / 20** | adopt. The root is the ordinary modal phrase *may carry*; the **hyphenated** token is the identifier, and bare `carry` is far larger still |
+| `carry-envelope` | `\bcarry-envelope\b` | **0 / 0** | `\bcarry[- ]envelop\w*` → **0 / 0** | adopt |
+| `channel-set` | `\bchannel-set\b` | **0 / 0** | `\bchannel[- ]set\w*` → **1 / 1** | adopt. The single root match is `ADR-010`:293, *"the channel **sets** what a copy/paste actually costs"* — the **verb**, not this compound noun |
+| `vacancy` | `\bvacancy\b` | **0 / 0** | `\bvacanc\w*` → **0 / 0** | adopt |
+| `W-rule` · `R-rule` · `W-test` · `R-test` | `\bW-rule\b` · `\bR-rule\b` · `\bW-test\b` · `\bR-test\b` | **0 / 0** each | `\b[WR][- ]rule\w*` → **0 / 0**; `\b[WR][- ]test\w*` → **0 / 0** | adopt |
+| `direct-crossing` | `\bdirect-crossing\b` | **0 / 0** | `\bdirect[- ]cross\w*` → **0 / 0** | adopt |
+| `phase-axis-declaration` | `phase-axis-declaration` | **0 / 0** | — (a fence language, matched literally) | adopt |
+| `channel` | `\bchannel\b` | **82 / 14** | — | **retained by deliberate disambiguation** (§ *Decision* 1), the rename having measured worse |
+
+**Withdrawn, and not to be re-minted.**
+
+| Candidate | Literal pattern | lines / files | Why withdrawn |
+|---|---|---|---|
+| `reach` | `\breach\b` | **470 / 81** | 52% of the population, and **`REACH` is already a closed-enum value** — `ADR-012`:294-296's reach-set disposition axis, `REACH` · `REPORT` · `OUT` |
+| `roster` | `\broster\b` | **367 / 47** | the sibling record grounds the axis **domain** on the `## Group` roster; two records merging in one release would bind the token to two objects |
+| `hop` | `\bhop\b` | **31 / 13** | two live senses — a transport leg and a redirect hop — and the second is itself a path-length sense |
+| `stated(` | `\bstated\s*\(` | **15 / 4** | collides with a shipped predicate, and `agents/00-enrichment.md`:651 forbids conflating it with the predicate the proposal was defined on |
+| `addressable` | `\baddressable\b` | **11 / 8** | `ADR-007` and `README.md` gloss `skills/` as *the addressable surface* — a different subject. (The abstract noun `addressability` measures **0 / 0**; the **root** is the honest arm, and it is the one reported) |
+| `COMPOSED` | `\bCOMPOSED\b` | **0 / 0** | **withdrawn on its root arm, not its bare count.** `\bcompos\w*` → **286 / 40**, and this record's own prose uses *composed* and *composition* throughout, because composition is the people library's own verb. An all-caps enum token a reader cannot distinguish from the surrounding English is not a usable token. Replaced by `PERSON-LINKED` |
+| `SELF-STATED-LINKED` | `\bSELF-STATED-LINKED\b` | **0 / 0** | **rejected on structure, not on a count.** It contains `SELF-STATED`, another token of the same set, so a `\b`-anchored probe for the shorter token matches inside the longer one and neither can be measured independently. A containment check over the adopted set returns **0 pairs**; the same check on this rejected pair returns **1**, so the check is demonstrated rather than asserted |
