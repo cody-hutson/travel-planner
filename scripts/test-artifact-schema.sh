@@ -11518,6 +11518,15 @@ for rsid in $SEEN $SKIPPED; do
   [ -n "$rsg" ] || continue
   case "$RS_EMITTED" in *" $rsg "*) ;; *) RS_EMITTED="$RS_EMITTED$rsg " ;; esac
 done
+# RS_NRUN — the size of the emission record BEFORE RS adds itself, and it is counted here
+# rather than below for a reason that is the whole of its purpose. RS0's zero-emitted branch
+# exists to diagnose a DESTROYED EMISSION RECORD, and a count taken after the unconditional
+# append below has a floor of 1, so that branch could never be taken: a run whose PASS/FAIL
+# bookkeeping had stopped recording entirely still reported "1 emitted by this run" and called
+# every arm below a measurement. Counting the run's own contribution separately restores the
+# branch. RS_NEMIT stays the full set's size, because RS1/RS2/RS3/RS8 compare against the set
+# that includes RS and must keep doing so.
+RS_NRUN="$(rs_count "$RS_EMITTED")"
 # RS is emitting its own verdicts on the next lines, so it is a member of the emitted set by
 # construction — SEEN cannot yet hold a verdict this group has not printed. Added explicitly
 # rather than left implicit, because this is what makes RS2 and RS8 require RS's OWN roster
@@ -11546,12 +11555,12 @@ elif [ "$RS_SELFREAD" -ne 1 ]; then
   FAIL "RS0: this suite's own file is unreadable at '$SELF', so the header roster RS8 grades could not be parsed at all. The path is resolved before the validator is sourced; if that resolution moved, RS8's verdict is not trustworthy"
 elif [ "$RS_NDEC" -eq 0 ]; then
   FAIL "RS0: the coverage boundary parsed to 0 group ids, so both set-diffs would be empty and would pass against nothing. The grammar is one id per line at THREE spaces after the comment marker followed by TWO OR MORE spaces, inside the IN SCOPE / OUT OF SCOPE blocks of .github/workflows/artifact-schema.yml — either a block moved or the grammar did, and no verdict below is trustworthy"
-elif [ "$RS_NEMIT" -eq 0 ]; then
-  FAIL "RS0: this run emitted 0 group ids, so both rosters would be compared against an empty run. PASS/FAIL/SKIP/VACUOUS record the token before the first colon; if that grammar moved, every comparison below is vacuous"
+elif [ "$RS_NRUN" -eq 0 ]; then
+  FAIL "RS0: this run emitted 0 group ids before this group, so both rosters would be compared against an empty run. PASS/FAIL/SKIP/VACUOUS record the token before the first colon; if that grammar moved, every comparison below is vacuous. The count is taken BEFORE RS appends itself, which is what makes this branch reachable at all — counted after, it had a floor of 1 and a destroyed emission record read as a healthy run of one group"
 elif [ "$RS_NHDR" -eq 0 ]; then
   FAIL "RS0: the WHAT IT ASSERTS header block in this file parsed to 0 group ids, so RS8 would compare the run against an empty set and pass. The block opens at a '# ──' section rule and closes at the next one — either it moved, was renamed, or its roster lines stopped matching the two-space grammar"
 else
-  PASS "RS0: both rosters are readable and non-degenerate — ${RS_NDEC} group id(s) parsed from .github/workflows/artifact-schema.yml, ${RS_NHDR} from this file's WHAT IT ASSERTS header, ${RS_NEMIT} emitted by this run. Every arm below is therefore a measurement rather than an empty scan"
+  PASS "RS0: both rosters are readable and non-degenerate — ${RS_NDEC} group id(s) parsed from .github/workflows/artifact-schema.yml, ${RS_NHDR} from this file's WHAT IT ASSERTS header, ${RS_NEMIT} emitted by this run of which ${RS_NRUN} were recorded before this group added itself. Every arm below is therefore a measurement rather than an empty scan, and the ${RS_NRUN} is the denominator the zero-emitted branch above is tested against rather than one this group's own verdicts could supply"
 
   RS_MISSING="$(rs_diff "$RS_DECLARED" "$RS_EMITTED")"
   if [ -n "$RS_MISSING" ]; then
@@ -11686,6 +11695,76 @@ else
     PASS "RS9: CONTROL on RS8, ADD-ONLY — a synthetic group id 'ZZH' added to the emitted set with EVERY existing header declaration left intact adds exactly 'ZZH' to RS8's finding and nothing else. RS8's zero above is a measurement, and it carries this control rather than borrowing RS5's: a second comparison whose PASS rested on the first arm's control would be a PASS nothing earned"
   else
     FAIL "RS9: CONTROL on RS8 did not fire as specified — a synthetic 'ZZH' added to the emitted set added '${RS_D9% }' to RS8's finding rather than 'ZZH'. RS8's clean verdict proves nothing until this control fires"
+  fi
+
+  # ── RS10 — THE ORDERING CONSTRAINT, EXECUTED RATHER THAN STATED ─────────────────
+  # The banner at the head of this group declares in capitals that RS MUST REMAIN THE LAST
+  # GROUP IN THIS FILE, and until this arm existed nothing executed that sentence. A group
+  # appended after RS emits after RS has already read the emission record: RS0 and RS3 report
+  # the smaller count, RS2 passes stating "nothing ran outside it" — which is FALSE of such a
+  # run — and the suite exits 0 with a whole group unseen by the only arms that grade
+  # coverage. A prose-declared invariant that nothing executes is precisely the defect class
+  # this release exists to retire, and leaving it inside the group that most embodies that
+  # thesis is the one place it cannot be left.
+  #
+  # THE SUBJECT IS THIS FILE, NOT THE RUN, and that is forced rather than chosen: by the time
+  # RS could observe a later group's verdict at runtime it has already emitted its own, so no
+  # runtime reading of SEEN can see past itself. The assertion is therefore static over $SELF
+  # — the same file RS8 already reads — and it says: every verdict-emitting call site below
+  # this group's banner belongs to this group.
+  rs_after() {  # rs_after <file> -> the GROUP id of each verdict call site after RS's banner
+    awk '
+      /^echo "── Group RS / { inrs = 1; next }
+      inrs != 1 { next }
+      match($0, /^[[:space:]]*(PASS|FAIL|SKIP|VACUOUS)[[:space:]]+"/) {
+        rest = substr($0, RSTART + RLENGTH)
+        c = index(rest, ":"); if (c == 0) next
+        id = substr(rest, 1, c - 1)
+        if (match(id, /^[A-Z]+/)) print substr(id, RSTART, RLENGTH)
+      }
+    ' "$1"
+  }
+  # One id per CALL SITE, so rs_count gives sites and rs_diff against the empty set gives the
+  # group set. Both are reported: the site count is the non-degeneracy denominator, and a
+  # reader that found no site at all is a broken reader rather than a clean file.
+  RS_TAIL="$(rs_after "$SELF" | tr '\n' ' ')"
+  RS_NTAIL="$(rs_count "$RS_TAIL")"
+  RS_TAILG="$(rs_diff "$RS_TAIL" "")"
+  RS_FOREIGN="$(rs_diff "$RS_TAILG" "RS")"
+  # The second limb. A later group could in principle open its banner and emit nothing on the
+  # run being read — no call site, no finding from the limb above — so the banner itself is
+  # counted as well. Two limbs because they fail on different edits.
+  RS_LATERB="$(awk '/^echo "── Group RS /{s=1;next} s==1 && /^echo "── Group /{n++} END{print n+0}' "$SELF")"
+  if [ "$RS_NTAIL" -eq 0 ]; then
+    FAIL "RS10: ZERO verdict call site(s) were read from this file after group RS's own banner, which cannot be true of a file in which RS emits ten arms — the banner anchor '# echo \"── Group RS \"' or the call-site grammar moved, so this arm's clean reading would be a broken reader rather than an ordered file"
+  elif [ -n "$RS_FOREIGN" ]; then
+    FAIL "RS10: group(s) emit verdicts AFTER group RS's own block in this file: ${RS_FOREIGN% } — RS reads the emission record when it runs, so a group emitting after it is invisible to RS0, RS1, RS2, RS3 and RS8, and RS2's \"nothing ran outside it\" is then false of the run. REMEDY: move the group's block ABOVE this group's banner in scripts/test-artifact-schema.sh; a card appending a group inserts BEFORE the RS banner"
+  elif [ "$RS_LATERB" -ne 0 ]; then
+    FAIL "RS10: ${RS_LATERB} group banner(s) open after group RS's own in this file — a group declared below RS is ordered after the arm that grades coverage even on a run where it happens to emit nothing, so the ordering is already broken. REMEDY: move it above this group's banner"
+  else
+    PASS "RS10: no group emits a verdict after RS — ${RS_NTAIL} verdict call site(s) read from this file below this group's banner, every one of them RS's own, and 0 group banner(s) opening after it. The banner's standing constraint that RS REMAIN LAST is now asserted rather than described, which is what makes RS2's \"nothing ran outside it\" true of the run rather than true of the run up to the point RS read it"
+  fi
+
+  # RS11 is RS10's MUST-FIRE control and is ADD-ONLY by construction: it APPENDS one synthetic
+  # verdict call site to a COPY of this file, leaving every existing line byte-intact, which is
+  # exactly the shape of the edit RS10 exists to catch — a group added after RS. A control that
+  # removed something instead would demonstrate the reader is alive without demonstrating it is
+  # not addition-blind, and addition is the only direction this arm can fail in.
+  RS_COPY10="$WORK/rs-self-plus-tail-group.sh"
+  if cp "$SELF" "$RS_COPY10" 2>/dev/null; then
+    printf '  PASS "ZZY1: a synthetic verdict appended by RS11 to a COPY, never to the tree"\n' >> "$RS_COPY10"
+    RS_T10="$(rs_after "$RS_COPY10" | tr '\n' ' ')"
+    RS_N10="$(rs_count "$RS_T10")"
+    RS_D10="$(rs_diff "$(rs_diff "$RS_T10" "")" "RS")"
+    if [ "$RS_N10" -ne $((RS_NTAIL + 1)) ]; then
+      FAIL "RS11: CONTROL on RS10 — appending one synthetic verdict call site to a COPY of this file changed the site count from ${RS_NTAIL} to ${RS_N10}, not to $((RS_NTAIL + 1)). The reader is blind to an added call site, so RS10's clean verdict above is not a measurement"
+    elif [ "${RS_D10% }" = "ZZY" ]; then
+      PASS "RS11: CONTROL on RS10, ADD-ONLY — one synthetic verdict call site for group 'ZZY' appended to a COPY of this file with EVERY existing line intact raises the site count ${RS_NTAIL} → ${RS_N10} and adds exactly 'ZZY' to RS10's finding and nothing else. RS10's zero above is therefore a measurement: this arm fires on the real edit shape — a group appended after RS — in the real file's own grammar"
+    else
+      FAIL "RS11: CONTROL on RS10 did not fire as specified — a synthetic verdict appended after the RS block added '${RS_D10% }' to RS10's finding rather than 'ZZY'. RS10's clean verdict proves nothing until this control fires"
+    fi
+  else
+    FAIL "RS11: CONTROL on RS10 could not run — this file could not be copied to '$RS_COPY10', so RS10's reader was never shown to fire and its verdict above rests on nothing"
   fi
 fi
 
