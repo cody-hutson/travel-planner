@@ -87,8 +87,8 @@ demonstrated — and this record does not change that.** Probed at `5d2571c` ove
 `.md`, `.sh` and `.yml` files: the line-initial fence opener occurs **once, in one file**, and that
 file is the prior record's own worked example. **Zero** occurrences across `templates/`, `skills/`
 and `scripts/`. The control arm is `^lifecycle:` over the identical instrument and population, which
-returns **52 files** — so the probe discriminates and the zero is a finding rather than a broken
-instrument.
+returns **52 files** when probed at `5d2571c` — so the probe discriminates and the zero is a finding
+rather than a broken instrument.
 
 ## Decision drivers
 
@@ -154,17 +154,17 @@ would repeat that defect at the contract layer.
 | **1D** Key on region alone | **Rejected** |
 | **1E** Key on `(region × condition)` | **ADOPTED** |
 
-**Ground for 1E, and it is measured rather than anticipated.** Two of the nine writer rows name
-*several* writers for one block, disambiguated by lifecycle condition: the roster block is written
-by one command **at creation** and a different one **thereafter**, and the mode fields are written by
-a five-procedure set under a named carve-out. A key on region alone cannot express either. It would
+**Ground for 1E, and it is measured rather than anticipated.** Probed at `5d2571c`, two of the nine
+writer rows name *several* writers for one block, disambiguated by lifecycle condition: the roster
+block is written by one command **at creation** and a different one **thereafter**, and the mode
+fields are written by a five-procedure set under a named carve-out. A key on region alone cannot express either. It would
 resolve the roster block to two writers simultaneously and be forced to pick one, which is a wrong
 answer returned confidently — the same failure mode the prior record's join-key measurement rejected
 when a label-only key mis-resolved a colliding label.
 
 *Rejected — 1D.* It is the assumption every candidate mechanism in the problem statement carried,
-and the corpus falsifies it on two of nine rows. Keeping it would push the condition axis into the
-interviewer as an undeclared convention, which is exactly what decision 3 refuses.
+and the corpus falsifies it on both rows named just above. Keeping it would push the condition
+axis into the interviewer as an undeclared convention, which is exactly what decision 3 refuses.
 
 **What the condition is, stated so the key is decidable.** A **condition** is a predicate over state
 the contract can already resolve — the artifact's existence at the moment of the write, and the
@@ -215,9 +215,10 @@ distinguish them, and the mode fields are **not bullets** — measured at `5d257
 carries 0 field-shaped bullets and 2 line-initial bold fields — so a key resolving to a bullet set
 finds nothing there at all.
 
-*Rejected — 2C, and the price is stated as the problem statement requires.* Excluding block-owned
-surfaces wholesale puts **86 of 127 fields — 67.7 %** — permanently out of reach, or **71 of 111 —
-64.0 %** under the bracketed-placeholder reading. It forecloses the milestone's stated coverage goal,
+*Rejected — 2C, and the price is stated as the problem statement requires.* Probed at `5d2571c`,
+excluding block-owned surfaces wholesale puts **86 of 127 fields — 67.7 %** — permanently out of
+reach, or **71 of 111 — 64.0 %** under the bracketed-placeholder reading. It forecloses the
+milestone's stated coverage goal,
 and it is the only option that leaves the prior record's cost claim permanently undemonstrated on a
 dissimilar form, which is the value basis this record was opened on.
 
@@ -256,9 +257,9 @@ degenerate outcome also reaches.
 
 **Ground for 4A, and this is the answer to the migration question.** Under decision 1 a v1 form *is*
 the degenerate case, so both guided forms remain conforming **unedited**. **There is no migration.**
-A mixed-version corpus means one arm with a version branch, not two arms: a v1-declared form is
-graded on exactly the prior record's six questions, and a v2-declared form additionally gets the
-region questions.
+A mixed-version corpus means one arm carrying a version branch rather than a second arm beside it: a
+v1-declared form is graded on exactly the prior record's own question set, and a v2-declared form
+additionally gets the region questions.
 
 *Rejected — 4B.* It requires editing two forms that are conformant and were *made* so by the
 immediately preceding release — churn with no defect to fix, and it re-opens that record's
@@ -289,15 +290,15 @@ costing no edits anywhere, and **cheap is not independent**.
 discovering it costs the arm nothing and keeps the region vocabulary in exactly one place — the
 document.
 
-*Rejected — 5A*, because a single bit over nine differently-owned rows cannot say *which* region
-failed: a form conformant on eight of nine rows reads identically to one conformant on none.
+*Rejected — 5A*, because a single bit over differently-owned rows cannot say *which* region failed: a
+form conformant on all but one row reads identically to one conformant on none.
 
 *Rejected — 5B*, because it is the class-to-form map the assertion surface has already rejected one
 level down, reproduced at the region layer. An arm naming regions puts region vocabulary in the
 script beside the form's own declaration, and a record recommending it would stand in direct conflict
 with the arm it must land in.
 
-**The control arm, because an arm without one grades nothing.** Two arms, both required: a
+**The control arm, because an arm without one grades nothing.** Both of the following are required: a
 **sensitivity arm**, where the same probe over a conformant region returns green; and a **must-fire
 negative arm**, where a field-shaped bullet inserted under a no-writer heading drives the conformance
 verdict red.
@@ -340,8 +341,8 @@ behaviour* rather than creating a hole.
 order, and it leaves the interviewer with no rule for these regions in the interim.
 
 **The price of 6B, stated precisely — and it is not the coverage figure from § Context.** This
-exclusion costs **7 of 86 fields — 8.1 %** of the trip form: the two `[DERIVED]` sub-blocks, carrying
-5 and 2 fields. The 67.7 % figure belongs to **decision 2's option 2C**, a wholesale exclusion of
+exclusion costs **7 of 86 fields — 8.1 %** of the trip form, the two `[DERIVED]` sub-blocks carrying
+5 + 2 = 7 between them. The 67.7 % figure belongs to **decision 2's option 2C**, a wholesale exclusion of
 block-owned surfaces, which is a different exclusion entirely. The two are frequently conflated and
 this record does not conflate them.
 
@@ -350,7 +351,7 @@ this record does not conflate them.
 blocks, not a region in the document. 6B's clause reaches it by construction, since that row's own
 condition already reads that a new block gets an owner in the table before it gets content.
 
-## The nine rows — which become interviewable and which do not
+## Which writer rows become interviewable, and which do not
 
 **This is the record's falsifiable prediction. It is not a demonstration.** Every verdict below is
 derived from the decisions above applied to the writer table; none of them has been executed, because
@@ -367,7 +368,7 @@ instrument.
 |---|---|---|---|---|
 | 1 | Title line · roster · total travelers | one command at creation; another thereafter | 3 | **CONDITIONAL** — yes after creation; no at creation, where the roster is derived rather than asked. The clearest case for the `(region × condition)` key |
 | 2 | Mode fields — current mode, mode notes | a five-procedure set | 0 | **NO** — two independent grounds: the writer is a procedure set, **and** the fields are not bullets, so the contract's field key cannot see them |
-| 3 | `[ENRICH]` fields, 5 named blocks | the enrichment agent | 23 | **NO** — agent-owned; conformance question 5 refuses it. The two nested sub-blocks carry 0 fields, so the exclusion costs nothing beyond the three top-level blocks |
+| 3 | `[ENRICH]` fields, 5 named blocks | the enrichment agent | 23 | **NO** — agent-owned; conformance question 5 refuses it. The nested sub-blocks carry no fields of their own, so the exclusion costs nothing beyond the top-level blocks |
 | 4 | `[DERIVED]` blocks, 2 | **no writer exists** | 7 | **NO** — excluded, *conditionally*, per decision 6 |
 | 5 | Destination | the record command | 3 | **YES** |
 | 6 | Locked elements · current itinerary status | the operator, through the record command | 5 | **YES** — the row names the operator explicitly |
@@ -376,20 +377,22 @@ instrument.
 | 9 | A block not listed above | **nobody** | n/a | **NO** — no extent to interview; decision 6's clause reaches it by construction |
 
 **Totals, reconciled:** interviewable `3 + 5 + 45 = 53`; conditional `3`; not interviewable
-`0 + 23 + 7 + 0 = 30`. `53 + 3 + 30 = 86`, the file total. So **53 of 86 fields — 61.6 %** — are
-predicted interviewable outright, **3 — 3.5 %** conditionally, and **30 — 34.9 %** not.
+`0 + 23 + 7 + 0 = 30`. `53 + 3 + 30 = 86`, the file total. So, probed at `5d2571c`, **53 of 86
+fields — 61.6 %** — are predicted interviewable outright, **3 — 3.5 %** conditionally, and
+**30 — 34.9 %** not.
 
 **Row 7's zero carries its control arm.** The lifecycle marker occurs **0 times** at line-initial
-position in the template. The same instrument over the 5 example `trip-context.md` files returns
-**1** occurrence, in the archived demo — so the probe discriminates, and the template's zero is the
-finding that this marker has no extent in the form rather than a broken search.
+position in the template. Probed at `5d2571c`, the same instrument over the 5 example
+`trip-context.md` files returns **1** occurrence, in the archived demo — so the probe discriminates,
+and the template's zero is the finding that this marker has no extent in the form rather than a
+broken search.
 
 ## Consequences
 
 ### Blast radius
 
-**Structural by reach, cosmetic by edit.** The decision binds four surfaces simultaneously — which is
-what makes it cross-cutting rather than local — and edits none of them.
+**Structural by reach, cosmetic by edit.** The decision binds every surface in the table below
+simultaneously — which is what makes it cross-cutting rather than local — and edits none of them.
 
 | Surface bound | Edited by this record? |
 |---|---|
@@ -480,8 +483,8 @@ blocks — executes this record rather than amending it.
   the inheritance rule decision 2's extent expression reuses
 - `templates/trip-context.template.md` — the block-owned surface every measurement in this record is
   taken over
-- `scripts/test-artifact-schema.sh` — the suite decision 5's arm lands in, and the source of the
-  any-fail reduction and strict-skip constraint that binds decision 6
+- `scripts/test-artifact-schema.sh` — the suite that decision 5's conformance arm lands in, and the
+  source of the any-fail reduction and strict-skip constraint that binds decision 6
 
 ## Follow-on build slices
 
