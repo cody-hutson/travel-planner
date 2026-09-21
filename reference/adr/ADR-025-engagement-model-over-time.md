@@ -698,7 +698,10 @@ different strengths. Both are stated with their strength rather than levelled up
   meaning and not to the seam's machine-checkable half**, and this record says so rather than
   claiming a structural contribution it cannot demonstrate.
 
-**The read-failure value's trigger is one sentence, written identically in both records.**
+**The read-failure value's trigger is one condition, and both records state its wording — the
+trigger clause and the entry-scoping limb — in the same words.** What differs between them is only
+what each names as the thing returning the value: `engagement(t)` here, because that operator is
+this record's own; the axis there, because `ADR-024` declares no operator to name.
 
 > `engagement(t)` returns `ENGAGEMENT-UNDETERMINED` **iff a read this entry attempted could not be
 > completed** — the roster, the derived model, or the person store this entry's own `person:` line
@@ -709,8 +712,11 @@ different strengths. Both are stated with their strength rather than levelled up
 **Entry-scoping is what removes the failure it would otherwise carry**: without it, the same
 traveller resolves differently on two machines because one of them cannot read a store that
 traveller never referenced. Both clauses are the corpus's; neither is minted here. In `ADR-024`
-the same value turns **every cell of a row** undetermined, which is the row-scoped projection of
-the same entry-scoped trigger — the entry is the row's subject.
+the same value turns **every cell of that record's reach table** undetermined — not every cell of
+one row — and the difference is the consequence of the trigger rather than a divergence from it: the
+entry whose read failed is what selects a row there, so a read that did not complete leaves no row
+to select. That is why the sibling carries the clause at table level, and it is the reason that
+record states in terms.
 
 ## Consequences
 

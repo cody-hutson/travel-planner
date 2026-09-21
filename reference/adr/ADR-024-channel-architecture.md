@@ -555,12 +555,19 @@ because the far sides differ.
 | **K3b ≡ THIRD-PARTY-STATED** | **CH-3**, operator-mediated | **never crossed** | **none** |
 | **K4 ≡ UNSOURCED** | **CH-3**, operator-mediated — **identity only** | **never crossed** | **none** |
 
-> **Table-level fail-closed clause — the read-failure arm.** Where the roster, the derived model or
-> the person store **cannot be read**, the axis returns `ENGAGEMENT-UNDETERMINED` and **every cell
-> of this table is UNDETERMINED rather than its nominal value.** It is stated here, once, for the
-> whole table rather than as a row or a column, because a value meaning *the row could not be
-> selected* cannot modify a row — there is no row to modify. This lands the arm in the same
-> fail-closed family as § 5.4's five UNDETERMINED paths and § 5.6's sixth.
+> **Table-level fail-closed clause — the read-failure arm.** Where **a read this entry attempted
+> could not be completed** — the roster, the derived model, or the person store this entry's own
+> `person:` line references — the axis returns `ENGAGEMENT-UNDETERMINED` and **every cell of this
+> table is UNDETERMINED rather than its nominal value.** The trigger is **entry-scoped, never
+> machine-scoped**: a field composing `UNKNOWN` is not it, and a store nobody referenced is not it.
+> A traveller file carrying no `person:` line attempts no store read, so *"that traveller is
+> entirely unaffected, on every trip."* That limb is the corpus's and is not minted here —
+> `agents/00-enrichment.md` states it in those words, and without it the first unreadable store
+> would *"break every trip in the working directory rather than the ones that actually reference a
+> record."* The undetermined reading is stated here, once, for the whole table rather than as a row
+> or a column, because a value meaning *the row could not be selected* cannot modify a row — there
+> is no row to modify. This lands the arm in the same fail-closed family as § 5.4's five
+> UNDETERMINED paths and § 5.6's sixth.
 
 **Why the cell grammar splits.** An earlier draft wrote a single `in: operator` cell, which reads
 as an affirmative reach verdict on a row whose subject is not the operator — while this record's own
