@@ -279,7 +279,7 @@ When the user wants to plan a trip:
 3. Create `trips/<destination>-<year>/trip-log.md` with initial session entry
 4. Fill in trip-context through conversation — ask the user questions, don't make them edit markdown
 5. Set the mode based on what's known (IDEATION if exploring, DISCOVERY if destination picked, ENRICHMENT if flights/hotel booked)
-6. Set up traveler intake — one profile per person at `trips/<destination>-<year>/travelers/<name>.md`, from `templates/traveler-intake.template.md`. Offer the assisted interview first, the self-serve copy second, and the portable hand-off third for travellers who aren't at this machine. Never invent a field — an unanswered field is a skipped field, and a missing profile is handled as *unknown*, never as *no constraints*. **Intake is split, and that form is only its trip half:** the answers that stay the same trip to trip are asked on `templates/person-intake.template.md` and held once in `people/`. Where a traveler already has a record, name **`/trip-record link <name> <person-id>`** — it surveys what the link would change before writing anything, and gates on what it finds. Where they have a filled profile but no record, name **`/trip-record extract <name>`**, which builds the record from that profile's own answers. Neither is required and neither has an ordering: a trip form on its own is complete, and a record written later is picked up on the next pass.
+6. Set up traveler intake — one profile per person at `trips/<destination>-<year>/travelers/<name>.md`, from `templates/traveler-intake.template.md`. Offer the assisted interview first, the self-serve copy second, and the portable hand-off third for travellers who aren't at this machine. **Send [`examples/people-library-demo/travelers/noor.md`](examples/people-library-demo/travelers/noor.md) with the form on that third route** — they have no repository to open, so a filled-in profile travelling beside the form is the only comparison they will get. Never invent a field — an unanswered field is a skipped field, and a missing profile is handled as *unknown*, never as *no constraints*. **Intake is split, and that form is only its trip half:** the answers that stay the same trip to trip are asked on `templates/person-intake.template.md` and held once in `people/`. Where a traveler already has a record, name **`/trip-record link <name> <person-id>`** — it surveys what the link would change before writing anything, and gates on what it finds. Where they have a filled profile but no record, name **`/trip-record extract <name>`**, which builds the record from that profile's own answers. Neither is required and neither has an ordering: a trip form on its own is complete, and a record written later is picked up on the next pass.
 7. In IDEATION with no destination yet, name **`/trip ideas`** as the next move — it turns the group's leanings into a ranked shortlist (`outputs/destination-shortlist.md`) for the group to decide from. Name it; do not dispatch **Destination Ideation** from here — dispatching an agent is a different request type with its own command and its own permissions. Once the group picks, the hand-off is two named invocations, in this order: **`/trip-record destination <chosen>`**, then **`/trip-record mode DISCOVERY`**.
 
 ### Dispatching agents (only when classification calls for it)
@@ -617,12 +617,14 @@ travel-planner/
 │   ├── 06-validator.md
 │   ├── 07-nightlife.md
 │   └── destination-ideation.md
-├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo
+├── examples/                 ← worked examples, sanitized: tokyo-2026, ideation-demo, two-origin-demo, data-architecture-demo, single-origin-demo, archived-trip-demo, evening-boundary-demo, people-library-demo
 ├── people/                   ← the durable cross-trip person store — ships README.md only; every record git-ignored
 ├── reference/                ← engine reference specs
 │   ├── adr/                       ← architecture decision records (one file per decision)
+│   ├── command-reference.md       ← the whole command surface in one table (verb, arguments, required trip state)
 │   ├── data-architecture.md       ← engine-wide data architecture (artifact model, identity, serialization, publishability, lifecycle classes, schema version)
 │   ├── data-model.md              ← satisfaction-layer data architecture (storage homes, reconciliation, write ownership)
+│   ├── replan-protocol.md         ← the behaviour a replan takes when the trip is near
 │   ├── schemas/                   ← per-artifact-class schemas + the CI gate's coverage declaration
 │   └── site-layout-spec.md        ← travel-site responsive/layout specification
 ├── scripts/                  ← publish-trip-site.sh (private publish) + the test-*.sh guard suites

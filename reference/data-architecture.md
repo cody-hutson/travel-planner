@@ -1237,24 +1237,34 @@ rename repairs the register rather than silently orphaning a row.
 
 ## 8. Contracts, Granularity and Enforcement
 
-Five known contract defects each name a model element that would prevent them. **One of the five
-shipped in this release; four did not, and this section declares them rather than continuing to
+Five known contract defects each name a model element that would prevent them. **Four are declared
+gaps; the fifth shipped only in part, and this section declares both rather than continuing to
 assert them.** The `Shipped?` column is the reconciliation — it was written against a tree in which
-`reference/schemas/` held no files, and the per-class schemas that arrived later implement one row of
-it.
+`reference/schemas/` held no files, and the per-class schemas that arrived later implement part of
+one row of it. **The column is graded against the corpus, never against the intentions of the
+release that wrote it**: a row reads `Yes` only where every class its model element binds carries
+the element, and a row whose element reached some of those classes and not others reads `Partial`
+with the shortfall named.
 
 | Defect class | Model element that prevents it | Shipped? |
 |---|---|---|
-| A predicate two consumers read oppositely on a partial day | **`granularity:` as a declared property of every predicate and every factor** (`day` \| `time-block` \| `instant`), with **every predicate total over its declared domain.** The known mismatch — a time-block-granular constraint factor against a day-granular presence factor — would become a *declared, visible* mismatch rather than an implicit one. | **No — declared gap.** No schema carries a `granularity:` field, and totality is asserted nowhere. The mismatch remains implicit. |
+| A predicate two consumers read oppositely on a partial day | **`granularity:` as a declared property of every predicate and every factor** (`day` \| `time-block` \| `instant`), with **every predicate total over its declared domain.** The known mismatch — a time-block-granular constraint factor against a day-granular presence factor — would become a *declared, visible* mismatch rather than an implicit one. | **No — declared gap.** No schema carries a `granularity:` field, and totality is asserted nowhere. **That known mismatch is no longer implicit**, and this cell said it was: `reference/data-model.md` now declares the presence predicate day-granular at its own definition and sends time-block scope to the obligation's own factor. What is still absent is the general property — the mismatch is settled in prose at one predicate, not carried by the model for every predicate and factor, so the next pair to disagree gets no such sentence for free. |
 | An agent that cannot read a signal another agent publishes | **`reads:` and `writes:` declared per agent, and `readers:` per artifact class — a closed set, with the two required to agree.** A signal published on a channel no consumer opens would become a *detectable* contract violation rather than a silent one. | **No — declared gap.** No schema carries `readers:`, and no agent prompt carries a machine-readable `reads:` / `writes:` declaration. A prompt's read-declaration *site* is registered in § 7.7, but that register names where a citation goes, not what an agent reads. |
 | Suppliers blind to a field added upstream | **The propagation rule.** Adding a field to an artifact would oblige updating every agent in that artifact's declared `readers:` set, **derivable from the model rather than remembered.** | **No — declared gap, and it follows the row above.** The propagation rule is defined over the `readers:` set, so it cannot ship before that set does. |
-| A subject with no source having no field-label surface | **§ 4.5 rule 3 — the degenerate case is part of every schema**, plus § 4.3, so shared vocabulary is single-sourced and two writers cannot describe the same distinction two ways. | **Yes.** Every class whose shape admits a degenerate entry declares it — `venue: unminted` in the research classes, `day: undated` in C8, the no-source stream in C9 — each stated as a declared absence rather than a default value. |
+| A subject with no source having no field-label surface | **§ 4.5 rule 3 — the degenerate case is part of every schema**, plus § 4.3, so shared vocabulary is single-sourced and two writers cannot describe the same distinction two ways. | **Partial — and the shortfall is C12, the class rule 3 itself names.** The schemas that declare a degenerate case and cite § 4.5 rule 3 are the research classes (`venue: unminted`), C8 (`day: undated`) and C9 (the no-source stream) — each stated as a declared absence rather than a default value. `reference/schemas/traveler-model.md` declares none and carries no body-shape rationale at all, and `PROFILE MISSING` appears nowhere under `reference/schemas/`. The field-label surface for that entry shipped in `agents/00-enrichment.md` instead, as the `Trip-level facets` block of its profile-less branch — so the *behaviour* holds and the *schema declaration* rule 3 requires does not. C18 declares none either. |
 | A stated cap with no validator that audits it | **`enforced-by:` as a required property of every declared rule and every numeric cap** in the model. A rule with no enforcement point would be surfaced at authoring time instead of discovered by a later census. | **No — declared gap, and the sharpest one**, because this row states the rule the other three fail: *a rule with no enforcement point is a declared gap*. No schema carries `enforced-by:`; the caps this document states are audited by the guard suites where they are audited at all, and that correspondence is not declared anywhere a reader can query. |
 
 **The four gaps are declared, not deferred silently — and declaring them is what this section's own
 last row requires.** They are properties a later slice may add to the schema grammar; until it does,
 nothing in `reference/schemas/` asserts them, and a reader grading a class against this section
-grades it against the one row that shipped.
+grades it against the one row that shipped, **for the classes that row names.**
+
+**The seam those four name is not closed here, and that is a decision rather than an omission.** A
+schema-grammar addition that made any of them a required field would bump the version under § 7.4
+and owe a migration for instances at version *n−1* — and § 7.5 records that those instances sit on
+a compatibility surface which is a git-ignored directory this repository cannot reach, inspect or
+repair. Weighing that change needs its own evidence; it is not a rider on a correction to this
+table. Until a slice takes it, the declaration above is the whole of the position.
 
 ---
 

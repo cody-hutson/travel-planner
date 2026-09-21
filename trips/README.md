@@ -48,6 +48,17 @@ and archiving a trip does not shrink it. Clearing is a thing you do, and the poi
 writing it down is that the folder that has stopped being useful is exactly the one you
 stop noticing.
 
+**Erasure is the one exception, and it removes a person rather than a trip.**
+`/trip-record erase <person-id>` exists for the person who asks to be deleted. It deletes no trip
+folder: it substitutes that person's identifying values at every location its own reach table
+names, rewrites their `travelers/` profile as a tombstone, deletes their record in
+[`../people/`](../people/README.md), and removes the built site and the publish staging clone. The
+roster row survives and the party size is unchanged — the person travelled. What the sweep cannot
+reach it names, rather than implying it was total. It is the operation the archive freeze still
+lets through, it runs only when you type the record's id at a terminal, and nothing it destroys can
+be made again. So clearing is still a thing you do — this is the act the engine does for you, and
+it happens because someone asked, not because a folder went stale.
+
 **The privacy posture above still holds for archived trips.** An archived trip is not a
 published one — its contents remain git-ignored, remain on your machine, and remain
 outside the repo. Archiving changes what is *public*; it does not change what is *kept*.

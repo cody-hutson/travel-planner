@@ -529,6 +529,19 @@ timer runs"* — which is the baseline this design replaces, and which becomes f
 erasure verb ships. The same table also instructs the reader to *"Copy a profile forward"*, which
 contradicts the one-source-per-fact rule this milestone extends. Named, not fixed.
 
+> **Superseded by what shipped — neither reading held as written.** The retention posture did not
+> become false when the erasure verb shipped. `erase` deletes a traveller file, the built site, the
+> publish staging clone, a loser merge stub and the person's own record; **it deletes no trip
+> folder**, and `skills/trip-decommission/SKILL.md` declares in terms that it never deletes trip
+> content. What the verb falsified is the framing around the sentence — that clearing is only ever
+> handwork — so `trips/README.md` is reconciled by naming the erasure exception beside the sentence
+> rather than by correcting it. The copy-forward reading was **true when this subsection was written
+> and stopped being true the same evening**: `trips/README.md` was reversed to read *"Do not copy a
+> profile forward into the next trip"* hours after this record was ratified, and has read that way
+> since. This paragraph is left standing, because both readings were honest measurements when they
+> were made, and the record of a prediction being tested is worth more than a prediction quietly
+> deleted.
+
 ### Reference discovery — what the person-edit discovery spike established
 
 *This subsection records the findings of the spike on how a person edit discovers the trips that
@@ -1339,7 +1352,7 @@ stakeholder impact, not a rollback.
 | **Erasure** — its reach set, its receipt, and its typed confirmation | the erasure slice |
 | The person record's **artifact-class ordinal** in § 1.1 | the schema-and-store slice, at its own commit |
 | The **within-trip Traveler collision** — the intake surface selected edit-over-create on a bare file-existence probe | **UNOWNED at ratification; CLOSED in this milestone.** The `profile` verb now runs § 3.2's key check ahead of the existence probe and halts on a collision. Restated here because the record ratified it as out of scope |
-| `trips/README.md`'s retention posture — *"No command deletes a trip folder"* — which the erasure verb falsifies | **UNOWNED in this milestone.** Named, not fixed |
+| `trips/README.md`'s retention posture — *"No command deletes a trip folder"* — which this record expected the erasure verb to falsify | **UNOWNED at ratification; RECONCILED since.** The verb shipped and the sentence did not become false — no verb deletes a trip folder — so the signpost was reconciled by naming the erasure exception beside the sentence rather than by correcting it. Restated here because the record ratified it as out of scope |
 | The **reusable-group store** — a second cross-trip store holding sets of person ids, its identity scheme, its membership direction, and the erasure-reach row it adds | `reference/adr/ADR-016-reusable-groups.md`. It builds beside this record and reopens none of its decisions: the `person:` edge stays on the traveller file alone, the no-slot enumeration is untouched, and the membership edge runs group → person with no back-reference |
 
 ### Ratifier's notes — Context claims corrected without editing their record
@@ -1390,7 +1403,7 @@ mid-milestone renumbering already demonstrated.
 | `scripts/publish-trip-site.sh` **and** `reference/data-architecture.md` § 5.6 | **COUPLED, and this is the highest-severity item here.** A `Passport` fence row for the person-record scope **and** a third artifact-scope constant in the evaluator must land **in the same change**. The evaluator holds exactly two artifact-scope literals today; § 5.6 states that a row naming any other pair *"is presently a code change"* and that **the guard aborts the publish as UNDETERMINED** rather than guarding less than it declares. **A fence row alone aborts every publish of every trip** | publish-guard slice |
 | `skills/trip-new/SKILL.md` | **Refuse a trip slug equal to a reserved `trip:` sentinel** | command slice |
 | `agents/00-enrichment.md` · `skills/trip-record/SKILL.md` | **The absolute phrasing *"no durable artifact of any kind"* is false as written** and both surfaces attribute it to `ADR-006`, which does not say it. Each needs the same descriptive correction *Decision* § 6b makes: the entry has no *file*, and its durable record is the carried-forward model entry, trip-scoped and now deletable. **No shape or field changes** | enrichment slice · command slice |
-| `trips/README.md` retention table | *"No command deletes a trip folder"* becomes false when the erasure verb ships, and the same table's *"Copy a profile forward"* contradicts one-source-per-fact | **UNOWNED — routed** |
+| `trips/README.md` retention table | **Predicted here, and neither prediction held.** This record read *"No command deletes a trip folder"* as becoming false when the erasure verb shipped, and the same table's *"Copy a profile forward"* as contradicting one-source-per-fact. The sentence is true as written, and the table had already been reversed to *"Do not copy a profile forward"* before the verb shipped | **RECONCILED.** The signpost names the erasure exception beside the sentence; the copy-forward row needed no change. See the superseding note in *Context* → *Erasure reach* → *What this spike did not settle* |
 | `outputs/traveler-model.md`, its schema, and the agents that consume it | **Unchanged.** No field added, no shape changed, projection unchanged by identity | — |
 | `CLAUDE.md` § *Resolving a trip* | **Not touched.** No third evidence block, no new gate, and **no gate that blocks on freshness** — this design adds a relation and no gate | — |
 | `trip-context.md` and its write-ownership table · `agents/06-validator.md` and the spokes | **Not touched** | — |
@@ -1487,8 +1500,10 @@ mid-milestone renumbering already demonstrated.
 - `scripts/publish-trip-site.sh` — `clean()`, `stated()`, the reserved-key set and the leak-token
   branch, against which the tombstone's four properties are verified and its three rejected
   alternatives falsified
-- `trips/README.md` — the shipped retention posture (*Nothing here expires on its own*) that this
-  design replaces, and the *Copy a profile forward* instruction that contradicts one-source-per-fact
+- `trips/README.md` — the shipped retention posture (*Nothing here expires on its own*) this design
+  was read against. Both readings of it in this record are corrected where they were made: the
+  posture survives the erasure verb, and the *Copy a profile forward* instruction cited here had
+  already been reversed when this record was written
 - `reference/adr/ADR-009-data-architecture.md` — the record authoritative over the model this
   milestone extends
 - `reference/adr/README.md` — the section spine, the `Proposed` → `Accepted` lifecycle this record is

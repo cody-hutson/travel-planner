@@ -232,9 +232,12 @@ link against. Specifically:
   (see *Profile-change detection* below) and state that
   `trip-context.md` `## Logistics` → `### Per-Traveler Planning Days [DERIVED]`
   is now stale. You do **not** rewrite that block — journey & origin is still not
-  yours to write into trip-context.md, and the rule above is unchanged. The signal
-  is the only thing that tells the planner to re-run the `[DERIVED]` fill and refresh
-  the block's `Last derived:` line.
+  yours to write into trip-context.md, and the rule above is unchanged. **Report the
+  staleness and name no command.** That block has **no writer** in `CLAUDE.md`
+  § *Write ownership — trip-context.md, block by block*, so its staleness is reported
+  and never repaired in place: the update signal records that the block has fallen
+  behind its sources, and nothing re-runs the fill or brings the block's
+  `Last derived:` line back into date.
 
   A traveler may also note a **Special occasion?** — a birthday, anniversary,
   honeymoon, or milestone the trip is marking. It is not a lifecycle facet and
