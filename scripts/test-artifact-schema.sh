@@ -8361,6 +8361,19 @@ rm_violations() {
 
 rm_nviol() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
 
+# rm_setdiff <a> <b> — the limb tokens in <a> and not in <b>. Membership is containment in a
+# space-delimited haystack and never `comm`, which requires both sides lexically sorted and
+# answers wrongly otherwise; the helpers at group RS record that reason at length.
+rm_setdiff() {
+  local x out=""
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    out="$out $x"
+  done
+  printf '%s' "${out# }"
+}
+
 # rm_mutate <file> <mode> <sym> <first operand> <fence line> <target line> — writes a mutated
 # COPY to stdout and exits non-zero when the mutation did not land, so a mutation that failed
 # to apply can never be misread as an arm that failed to fire. Every mode is DERIVED: the
@@ -8505,7 +8518,18 @@ if [ "$RM_OK" -eq 1 ]; then
     FAIL "RM4: the non-resolution clause names term(s) that are NOT operands of the declaration heading its own block — so the clause claims the rule fails to resolve on something the term never resolved from. Nothing here is spelled: the admissible set is read from that declaration's own right-hand side on this run"
   fi
 
-  # ── RM5 — MUST FIRE. SENSITIVITY, on a REVERT, through the SAME comparator. ─────
+  # ── RM5 / RM6 / RM8 — the three controls, all DELTA-GRADED against the base. ────
+  # Each one scores its mutant against what the UNMUTATED document already scores, and grades
+  # the DIFFERENCE. That is not a refinement, it is the difference between a control and a
+  # coincidence, and it was found by mutation rather than reasoned about: written as absolutes
+  # — "the mutant scores at least one" and "the reword scores zero" — every one of these arms
+  # is wrong on a document that is ALREADY red. The sensitivity arms pass on the pre-existing
+  # violation without the mutation doing anything, and the specificity arm convicts the
+  # editorial edit for a violation that was there before it. Both directions were observed:
+  # reverting the non-resolution clause turned RM4 red, and RM6 then fired too and blamed the
+  # reword. Delta-grading keeps every one of them honest on a red tree, which is the posture
+  # group RS already states for its own controls one file-section down.
+  #
   # Neither reader below carries an `exit`: awk drains its input, so the producer on the left
   # of the pipe always finishes writing. A reader that stopped early would take the writer out
   # with SIGPIPE and, under this file's `pipefail`, turn a successful read into a failed one —
@@ -8527,6 +8551,10 @@ if [ "$RM_OK" -eq 1 ]; then
   RM_RSYM="$(printf '%s' "$RM_REF" | cut -f2)"
   RM_ROP="$(printf '%s' "$RM_REF" | cut -f3)"
   RM_MUT="$WORK/rm-mutant.md"
+  # The base every control below is graded against. On a green tree this is empty and the
+  # deltas read exactly as absolutes would; on a red one it is what keeps them attributable.
+  RM_BASEV="$(rm_violations "$RM_DOC" "$RM_NREQ")"
+  RM_BASEN="$(rm_nviol "$RM_BASEV")"
 
   if [ -z "$RM_REF" ] || [ -z "$RM_FL" ]; then
     FAIL "RM5: MUST FIRE — the reference-month row or the fence anchor could not be derived from the document, so no mutant could be built out of the rule's own terms. The controls below are unrun rather than passing, and RM1–RM4's verdicts have nothing behind them"
@@ -8535,11 +8563,12 @@ if [ "$RM_OK" -eq 1 ]; then
   else
     if rm_mutate "$RM_DOC" revert "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
       RM_MV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
-      RM_MN="$(rm_nviol "$RM_MV")"
+      RM_MD="$(rm_setdiff "$RM_MV" "$RM_BASEV")"
+      RM_MN="$(rm_nviol "$RM_MD")"
       if [ "$RM_MN" -ge 1 ]; then
-        PASS "RM5: MUST FIRE — the reference-month declaration's right-hand side replaced by its OWN FIRST OPERAND (\`$RM_RSYM = $RM_ROP\`, a clock-only reversion derived from the document and not spelled here) scores $RM_MN violation(s) through this same comparator: ${RM_MV}. The zeros RM1–RM4 report are therefore measurements — this comparator CAN see the rule reverted"
+        PASS "RM5: MUST FIRE — the reference-month declaration's right-hand side replaced by its OWN FIRST OPERAND (\`$RM_RSYM = $RM_ROP\`, a clock-only reversion derived from the document and not spelled here) ADDS $RM_MN limb(s) this document does not already fail: ${RM_MD}. Graded as a DELTA against the unmutated document's own $RM_BASEN violation(s), so the arm cannot pass on a violation that was there before it ran. The verdicts RM1–RM4 report are therefore measurements: this comparator CAN see the rule reverted"
       else
-        FAIL "RM5: MUST FIRE — a clock-only reversion of the reference-month declaration scored ZERO violations through this comparator. Every arm above is then a reader that cannot see the change it exists to detect, and their green says nothing about the document"
+        FAIL "RM5: MUST FIRE — a clock-only reversion of the reference-month declaration added NO limb the unmutated document does not already fail. Every arm above is then a reader that cannot see the change it exists to detect, and their verdict says nothing about the document"
       fi
     else
       FAIL "RM5: MUST FIRE — the reversion mutant did not land on line $RM_RLN of the copy, so this control never exercised the comparator. A mutation that failed to apply must never be read as an arm that failed to fire, which is why landing is asserted separately from scoring"
@@ -8552,11 +8581,13 @@ if [ "$RM_OK" -eq 1 ]; then
     # comparator that convicts every edit.
     if rm_mutate "$RM_DOC" reword "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
       RM_WV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
-      RM_WN="$(rm_nviol "$RM_WV")"
-      if [ "$RM_WN" -eq 0 ]; then
-        PASS "RM6: MUST NOT FIRE — one plain sentence added to a non-declaration paragraph of the region, carrying no code span and no bolded lead-in, scores ZERO violations through this same comparator. Editorial edits do not redden this group, and that is demonstrated on the real document rather than promised: RM5 has already shown the same comparator firing, so this zero is specificity and not a dead reader"
+      RM_WADD="$(rm_setdiff "$RM_WV" "$RM_BASEV")"
+      RM_WGONE="$(rm_setdiff "$RM_BASEV" "$RM_WV")"
+      RM_WN="$(rm_nviol "$RM_WADD")"
+      if [ -z "$RM_WADD" ] && [ -z "$RM_WGONE" ]; then
+        PASS "RM6: MUST NOT FIRE — one plain sentence added to a non-declaration paragraph of the region, carrying no code span and no bolded lead-in, leaves this comparator's verdict UNCHANGED in both directions against the unmutated document's own $RM_BASEN violation(s). Editorial edits do not move this group, and that is demonstrated on the real document rather than promised: RM5 has already shown the same comparator moving, so this is specificity and not a dead reader. It is graded as a delta rather than as a zero because a zero-expectation would convict the reword for a violation that was in the document before it"
       else
-        FAIL "RM6: MUST NOT FIRE — a purely editorial addition scored $RM_WN violation(s): ${RM_WV}. This group convicts correct work, and a gate that convicts correct work trains contributors to reach for its exemption marker rather than to read it"
+        FAIL "RM6: MUST NOT FIRE — a purely editorial addition MOVED this comparator's verdict: it added ${RM_WADD:-nothing} and removed ${RM_WGONE:-nothing} against the unmutated document's own $RM_BASEN violation(s). This group convicts correct work, and a gate that convicts correct work trains contributors to reach for its exemption marker rather than to read it"
       fi
     else
       FAIL "RM6: MUST NOT FIRE — the editorial mutant did not land before line $RM_FL of the copy, so the specificity of every arm above is unmeasured"
@@ -8570,11 +8601,12 @@ if [ "$RM_OK" -eq 1 ]; then
     # RM2's absence limb, which is what carrying R3 rather than only R4 buys.
     if rm_mutate "$RM_DOC" addition "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
       RM_AV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
-      RM_AN="$(rm_nviol "$RM_AV")"
+      RM_AD="$(rm_setdiff "$RM_AV" "$RM_BASEV")"
+      RM_AN="$(rm_nviol "$RM_AD")"
       if [ "$RM_AN" -ge 1 ]; then
-        PASS "RM8: MUST FIRE, ADD-ONLY — a second, clock-only declaration of \`$RM_RSYM\` appended as its own declaration block, with every existing declaration left byte-intact, scores $RM_AN violation(s) through this same comparator: ${RM_AV}. This group is therefore NOT addition-blind. It is the arm the precedent named for this shape does not carry: that precedent's own must-fire control mutates the PROBE and proves the probe lives, which leaves an added negating clause green on both"
+        PASS "RM8: MUST FIRE, ADD-ONLY — a second, clock-only declaration of \`$RM_RSYM\` appended as its own declaration block, with every existing declaration left byte-intact, ADDS $RM_AN limb(s) this document does not already fail: ${RM_AD}. Graded as a DELTA against the unmutated document's own $RM_BASEN violation(s), so this arm cannot pass on a violation the addition did not cause. This group is therefore NOT addition-blind — and this is the arm the precedent named for this shape does not carry: that precedent's own must-fire control mutates the PROBE and establishes that the probe lives, which leaves an added negating clause green on both of them"
       else
-        FAIL "RM8: MUST FIRE, ADD-ONLY — a second, contradicting declaration ADDED beside the correct one scored ZERO violations. This group is addition-blind: ADR-019's S4 degenerate input reaches its PASS, and the complement limbs RM1 and RM2 claim to carry are not doing the work they say they do"
+        FAIL "RM8: MUST FIRE, ADD-ONLY — a second, contradicting declaration ADDED beside the correct one added NO limb the unmutated document does not already fail. This group is addition-blind: ADR-019's S4 degenerate input reaches its PASS, and the complement limbs RM1 and RM2 claim to carry are not doing the work they say they do"
       fi
     else
       FAIL "RM8: MUST FIRE, ADD-ONLY — the addition mutant did not land before line $RM_FL of the copy, so the add-only input this group exists to be sensitive to was never presented to it"
