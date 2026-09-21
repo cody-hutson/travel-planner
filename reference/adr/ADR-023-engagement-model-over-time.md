@@ -711,3 +711,188 @@ traveller resolves differently on two machines because one of them cannot read a
 traveller never referenced. Both clauses are the corpus's; neither is minted here. In `ADR-022`
 the same value turns **every cell of a row** undetermined, which is the row-scoped projection of
 the same entry-scoped trigger — the entry is the row's subject.
+
+## Consequences
+
+**Positive**
+
+- **A classification the engine computes on every synthesis acquires a name, a closed value set, a
+  declared class and a stated domain** — and **nothing new runs**. What changes is that four
+  capabilities cite one thing instead of four, and each can now say which boundary it is crossing.
+- **The boundaries are declared, so *what carries* stops being re-derived per capability.** One
+  rule over columns that already ship, plus a closed never-carry set, replaces four local answers
+  that could not be compared with each other.
+- **The approval slice gains the boundary it actually crosses.** An earlier pass named three
+  boundaries and omitted re-synthesis, which is the one that slice crosses — so its claim that the
+  capabilities acquire a shared name for their scope was false for the capability that needed it
+  most. `EB-0` repairs that.
+- **Staleness gets one vocabulary and it is the corpus's own.** No new tokens, no second family to
+  grade, and the *supersession* reservation left intact — which matters here because under
+  § *Decision* 1 the provenance transition **is** an axis edge, so borrowing that word would have
+  put one token on two of this record's own objects.
+- **Two subject kinds are on the record as permanently unreachable, and a third as presently
+  unreachable.** Stated positively, because silence about reachability reads as coverage.
+- **The two records are checkable against each other structurally** — one partition declared in
+  both fences, at the same orientation, with the difference named and machine-readable.
+- **The measurement convention is specified rather than described**, and extended with the
+  wrap-tolerant phrase rule that a hard-wrapped corpus requires.
+
+**Trade-offs**
+
+- **The axis costs a read per roster member per synthesis**, where a stored field would cost one.
+  That is the trade the people-library and derived-history records already accepted, taken again
+  here for the same reason: a stored field is a shadow SSOT with a writer in the wrong layer.
+- **It is not monotone**, so no audit-free guarantee transfers to it. A later slice that wants one
+  must argue for it rather than inherit it.
+- **The engine still cannot tell whether a traveller engaged.** This is honest rather than
+  satisfying, and it is a consequence of `ADR-002` rather than of this decision.
+- **`depth-floor` is a consumer declaration**, so two consumers can grade the same person
+  differently and a cross-surface comparison must name its floor.
+- **No relation membership is declared here.** A reader wanting to know which staleness relations
+  are evaluated must read the consumer, which is what `G8` requires and is nonetheless one more
+  place to look.
+- **The vocabulary differs from the driving card's.** A reader following the thread will meet more
+  than one name for the same object, because candidates were withdrawn on measurement after the
+  card was written. The withdrawals are recorded in § *Decision* 7 with their counts, which is the
+  mitigation available.
+
+**Neutral, and explicitly unchanged**
+
+- `internal-hard` unwidened, at its live membership — **C12, C14, C22 and C23**.
+- `ADR-006`'s third-party prohibition unwidened; provenance-marking still records only that a
+  value is second-hand and still never establishes consent.
+- `ADR-014`'s cross-trip consent refusal unreopened. It closes `THIRD-PARTY-STATED` permanently,
+  and this record's narrowing in § *Decision* 4 does not touch it — it corrects a claim about a
+  **different** kind.
+- `ADR-002` upheld. Nothing here needs a standing server and no supersession is proposed.
+- The archived-trip freeze binds unchanged; erasure remains the one exception, by substitution.
+- **No file moves, no renames, no schema change, no new verb, no new writer.** One file is added.
+
+## Findings and observations carried
+
+These are recorded rather than repaired. Each names its disposition, so a later reader can tell a
+deliberate carry from an oversight.
+
+**1. The derived model's regenerability classification contradicts the charter, and the two fail in
+opposite directions.** The artifact-class table defines `rebuilt-each-synthesis` as *"safe to
+regenerate because it holds no independent state"* and lists C12 among its members; the charter
+says the opposite for two of C12's three model-entry classes — one *"**dropped**, having **no
+source to re-derive it from**"*, the other *"**carried forward verbatim**… the erasure silently
+undone."*
+**An entry with no source to re-derive from is independent state.** **Disposition: corroborated
+here and deliberately not resolved.** It is amendment-class work already in this release's scope
+and belongs to the change that owns those files. **§ *Decision* 3 is grounded on the charter
+directly rather than on the class-table definition**, so `EB-0` stands on the clause that is right
+and the correction changes no clause here whenever it lands.
+
+**2. The six-value partition ships unexercised, even though the classification ships.** *"The axis
+already ships"* is sound as *a classification exists*; it is **not** measured as *this partition
+ships*. Probed at `edadfa9`, the shipped worked-example evidence is a single fixture table with a
+`Branch` column carrying two observed values and no others — one of which merges `SELF-STATED`
+with `PERSON-LINKED`, and the other of which merges `OPERATOR-STATED` with `THIRD-PARTY-STATED`.
+**That second merge is exactly the one the charter says fails in opposite directions.** The other
+fixture carries no `Branch` column at all, and the flagged-gap arm is unexercised: probed at
+`edadfa9`, the `PROFILE MISSING` marker measures **0 / 0** across the files under `examples/`,
+against sensitivity arms `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]` that both fire on the same
+instrument and population, and a reciprocal arm over the whole tracked tree that fires as well —
+**so the marker is specified in the corpus and never demonstrated in a fixture.** **Disposition:
+recorded as an observation; the axis decision stands.** The charter's own fixture-completeness
+rule is the surface that would close it, and a fixture is named as a follow-on slice below.
+
+**3. An Accepted record block-quotes the never-carry class at a stale two-member membership.**
+`ADR-010` § 4 quotes `internal-hard` as *"Exactly C12 and C14"* where
+`reference/data-architecture.md`:770 reads *"Exactly C12, C14, C22 and C23."* **Disposition:
+observed and not edited here** — it is amendment-class work already in this release's scope and
+belongs to the change that owns that file. It is recorded because § *Decision* 3's never-carry 2
+turns on the current membership, and **this record quotes the live four-member set** rather than
+inheriting the stale one. The two omitted classes are the durable person record and the group
+record, so the stale form omits from a **privacy** rule precisely the two classes that outlive the
+trip — which is why reproducing it in new corpus would have been a defect rather than a citation
+nit.
+
+**4. A derived block in the trip file has no writer, and this axis deliberately does not become
+one.** A later slice will be tempted to render this axis's value there, because it is the obvious
+place for a per-traveller derived reading. **§ *Decision* 1's `G8` clause forbids it**, and the
+temptation is predictable rather than hypothetical. **Disposition: flagged, not repaired** — the
+block's ownership is decided elsewhere and this record does not claim it.
+
+**5. A reference bearer exists for only one of the five subject kinds, and two of the gaps are
+permanent.** `PERSON-LINKED` has the surrogate key; `SELF-STATED` has the path and is trip-local;
+the other three have no bearer, and for `THIRD-PARTY-STATED` and `UNSOURCED` that is permanent by
+decision rather than by omission. **Disposition: recorded as the shape of the model**, not as a
+gap to close. The one that may close is `OPERATOR-STATED`, and it closes by the subject filing —
+not by minting a key.
+
+## Follow-on build slices
+
+- **The approval slice.** It crosses `EB-0` and inherits the carry rule and the never-carry set;
+  its attribution question stays foreclosed by § *Decision* 4's render prohibition, which is
+  unchanged from `ADR-010` § 4.
+- **The post-trip memory slice.** It crosses `EB-2`, and the join key it may use is the surrogate
+  key under `closure(p)` at one hop, for the one kind that carries it.
+- **A tracked fixture that exercises the partition.** Finding 2, against the charter's own
+  fixture-completeness rule — and the only route to diff-gradeability named in § *Decision* 5.
+- **A staleness relation membership**, declared by whichever consumer wants one. This record
+  declares the family's applicability and no membership, so the first consumer to need a relation
+  declares it in its own report.
+- **A `depth-floor` convention**, if two consumers ever need to compare. Not needed until they do,
+  and a registry now would be a threshold nobody asked for.
+
+## References
+
+- [ADR-002](ADR-002-living-site-refresh.md) — the no-standing-server constraint, which is what
+  makes a behavioural definition of *engaged* unresolvable rather than merely hard. Upheld.
+- [ADR-003](ADR-003-group-coordination.md) — § 3's pull-based notice, the second of the three
+  independent removals of a traveller-side observation surface.
+- [ADR-006](ADR-006-third-party-data-capture.md) — provenance-marking records that a value is
+  second-hand and never establishes consent. Unwidened, and the source of the two marks that make
+  `OPERATOR-STATED` and `THIRD-PARTY-STATED` mutually exclusive.
+- [ADR-009](ADR-009-data-architecture.md) — the data architecture this record indexes against:
+  the artifact classes, § 3.2's canonical traveller key, and § 5.1's publishability enum.
+- [ADR-010](ADR-010-per-traveler-approval-collection.md) — § 2's attestation ceiling, which
+  rejects the organizer attestation; § 4's render bound and its *detectability does not require
+  identity* escape, which is the whole of § *Decision* 4's render clause. Its § 4 block-quotation
+  of the never-carry class is carried as finding 3.
+- [ADR-012](ADR-012-people-library.md) — cross-trip person identity, the `person:` edge that
+  distinguishes `PERSON-LINKED`, and `closure(p)`, the `EB-2` join key.
+- [ADR-013](ADR-013-count-assertion-basis.md) — every count in this record is authored to form
+  **F1**, anchored measurement.
+- [ADR-014](ADR-014-cross-trip-consent-refusal.md) — the refusal that makes
+  `THIRD-PARTY-STATED` terminal, and that **does not** close `OPERATOR-STATED`. § *Decision* 4's
+  narrowing turns on that distinction.
+- [ADR-015](ADR-015-durable-field-validity-horizon.md) — §§ 6–7 govern on every modality, and its
+  no-audit-owed argument is the one this record explicitly does **not** inherit, because this axis
+  is not monotone.
+- [ADR-017](ADR-017-derived-trip-history.md) — § 5's three absences, inherited intact: a completed
+  scan that found nothing, a traveller referencing no durable record, and an indeterminate read
+  are three different outcomes and none of them reads as a decision the traveller made.
+- [ADR-021](ADR-021-installable-capability.md) — the two-artifact `Status:` obligation this record
+  inherits, and the divergence it repaired.
+- [ADR-022](ADR-022-channel-architecture.md) — **the channel architecture this record is the time
+  counterpart to.** It declares the same partition under the subject-kind name, at the same
+  `axis-orientation: rows`, with five tokens to this record's six; the difference is
+  `ENGAGEMENT-UNDETERMINED` and nothing else, and it is carried there as a table-level fail-closed
+  clause and here as an axis value. **The citation is mutual and must not be dropped: neither
+  record's axis declaration is gradeable without the other's.**
+- `reference/data-architecture.md` — § 1.1's artifact classes, § 3.2's canonical traveller key,
+  § 5.1's publishability enum and its never-carry limb at `:770`, and the lifecycle-class table
+  whose `rebuilt-each-synthesis` definition is carried as finding 1.
+- `reference/data-model.md` — the four falses `ANSWERED()` collapses into one equivalence class,
+  which is `depth-floor`'s domain, and the party facet whose free-text mention § *Decision* 2
+  puts outside this axis's domain.
+- `reference/replan-protocol.md` — refuses a stored `shown-at` stamp in advance, which is
+  § *Options considered* 5B's ground.
+- `agents/00-enrichment.md` — § *Missing or blank profile*, the branch assignment that **is** this
+  axis; `:894`, the profile-gap denominator; the provenance transition and its reservation clause;
+  the composition-precedence clause that types the `SELF-STATED → PERSON-LINKED` edge as not a
+  provenance change; and the entry-scoped / field-scoped gap rule and the unreadable-store clause
+  that together bound `ENGAGEMENT-UNDETERMINED`.
+- `skills/trip/SKILL.md` — § *The freshness report*: the verdict triple, the exact-token rule, the
+  render-every-relation rule, the no-disposition-column self-guard, and the declared boundary
+  § *Decision* 6 adopts rather than widens.
+- `CLAUDE.md` — the three model-entry classes and the fixture-completeness rule; `G5` and `G8` of
+  the resolution ladder; § *Archived trips*; § *Write ownership*.
+- `templates/traveler-intake.template.md` — the shipped party-facet prompt examples that carry no
+  individuating token, which is why a free-text mention is outside the domain.
+- `examples/data-architecture-demo/outputs/traveler-model.md` — the shipped `Branch` column, and
+  the fixture whose two observed values are finding 2.
