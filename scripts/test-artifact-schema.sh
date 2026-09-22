@@ -3684,7 +3684,7 @@ cov_verdict() {
   elif [ "$cov_np" -ne 0 ]; then
     FAIL "$id: $cov_np must-fire arm(s) name ${unit}s $subj cannot emit — $(printf '%s' "$cov_ph" | tr '\n' ' '). Either the $unit was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
   else
-    PASS "$id: all $cov_nc $unit(s) $subj can emit [$(printf '%s' "$codes" | tr '\n' ' ')] have a must-fire arm, and all $cov_na armed $unit(s) name ${unit}s it can emit — a bijection, asserted in both directions. The set is READ FROM the emitter's own body on this run, so any $unit added later arrives uncovered and RED rather than covered by a numeral in this file. ${stem}1 and ${stem}2 show this same comparison failing in each direction"
+    PASS "$id: all $cov_nc $unit(s) $subj can emit [$(printf '%s' "$codes" | tr '\n' ' ')] have a must-fire arm, and all $cov_na armed $unit(s) name ${unit}s it can emit — a bijection, asserted in both directions, over the set the reader RESOLVED. The set is READ FROM the emitter's own body on this run rather than from a numeral in this file, so a $unit the reader resolves and no arm names arrives uncovered and RED. WHERE THIS STOPS: the reader's own pattern is the bound, and it is narrower than the emitter — it keys on the emission literal in a fixed shape, so a $unit written in a shape that pattern does not match is invisible to this comparison rather than covered by it. A green here is a bijection over what was read, never over everything that could be emitted. ${stem}1 and ${stem}2 show this same comparison failing in each direction"
   fi
 }
 
