@@ -108,3 +108,17 @@ primitive is required.
 - Narrow Activities' "Evening & Mixed-Group Options"; add the nightlife cross-reference note
   to Food and Activities.
 - Extend `agents/06-validator.md` with the per-night nightlife coverage check.
+## References
+
+- The nightlife epic (#59) and its milestone-head decision gate (#65) — the driving work this
+  record gates.
+- ADR convention: `reference/adr/README.md`, established by this record as travel-planner's first.
+- Roster boundary: `agents/01-activities.md` (its "Evening & Mixed-Group Options", narrowed here),
+  `agents/02-food.md` (food-forward drinking stays there), and `agents/07-nightlife.md` (the
+  research spoke this record adds).
+- Dedup arbitration: the venue-matrix rules in `reference/schemas/venue-matrix.md`, applied by
+  `agents/05-hub-planner.md`. The spoke researches and lists; it does not schedule.
+- Validator gate: `agents/06-validator.md` → the per-night nightlife coverage check.
+- Site render: `reference/site-layout-spec.md` → the `.night-card` type, reused rather than extended.
+- Precedent for a filename that is not a dispatch rank: `agents/destination-ideation.md`, which the
+  hub dispatches by role.
