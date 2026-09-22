@@ -3839,8 +3839,8 @@ fi
 # universal quantified over its own verb set, stated in Zone A, where nothing derives it. A
 # later slice added a verb that declares it writes nothing, and the sentence became false.
 # It had been written at TWO sites; one was converted when the verb landed and the other was
-# missed, so the corpus shipped a false universal at the surviving site with five suites and
-# every required check green. That is the whole argument for this group: the failure mode is
+# missed, so the corpus shipped a false universal at the surviving site with the five suites
+# then in place and every required check green. That is the whole argument for this group: the failure mode is
 # not that the rule is unknown, it is that a prose universal has no reader, and a repair that
 # leaves the next author the same silence is not a repair.
 #
@@ -5027,8 +5027,9 @@ fi
 # WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE THE DEFECT WAS FOUND. The defect
 # was measured in the publish-guard suite: deleting verify_ciphertext left four assertions
 # PASSing against a function that no longer existed, and deleting an entire subcommand
-# left that suite exiting 0. But the population is not concentrated there — 59 sites carry
-# the shape across the five suites, and this suite carries 33 of them — more than the suite where the defect was found. A guard installed only where the defect
+# left that suite exiting 0. But the population is not concentrated there — 59 sites carried
+# the shape across the five suites that existed when this group was installed, and this suite
+# carries 33 of them — more than the suite where the defect was found. A guard installed only where the defect
 # was noticed leaves the growth surface unguarded, and the growth is in the other suites:
 # two of them gained +499 and +278 lines in a single prior release.
 #
@@ -5196,8 +5197,9 @@ MD_SELF_C1="${MD_C1_IDS% }"
 
 # ── The DECLARED residual. These sites carry the polarity-negative shape and are NOT
 # remediated by this change, whose locked scope is the five named assertions in the
-# publish-guard suite plus this oracle in all five; a 59-site sweep across five suites is
-# exactly the blind bulk edit this repository's own discipline forbids. They are declared
+# publish-guard suite plus this oracle in each of the five suites that existed when that
+# scope was locked; a 59-site sweep across all of them is exactly the blind bulk edit this
+# repository's own discipline forbids. They are declared
 # here rather than left silent, and the diff below runs in BOTH directions — an undeclared
 # site FAILS, and a declared site that no longer scans FAILS too, so remediating one
 # obliges removing its line. The list can only shrink; it cannot quietly absorb a new

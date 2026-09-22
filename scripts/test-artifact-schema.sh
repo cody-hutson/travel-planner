@@ -48,20 +48,67 @@
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
-#   ST   the starred-field count in EACH intake form agrees across ALL FOUR of that form's
-#        homes: the banner numeral, the appendix rule-4 numeral, the appendix's
-#        per-field `(starred)` annotations, and the marked fields themselves — which are the
-#        only home that is not a restatement of another, so they are the reference count.
+#   ST   the starred-field set in EACH intake form, graded on TWO propositions that are not
+#        the same one. AGREEMENT: the count agrees across all four of that form's homes — the
+#        banner numeral, the appendix rule-4 numeral, the appendix's per-field `(starred)`
+#        annotations, and the marked fields themselves, which are the only home that is not a
+#        restatement of another and so are the reference count. LEVEL: that form's marked set
+#        also equals the intersection of its labelled bullets with the starred rows of
+#        reference/data-model.md's field table, and across the run the union of the per-form
+#        marked sets equals that table's starred set — both in both directions, label for
+#        label, and the second is the add-only input the per-form comparison cannot see.
+#        NEITHER half compares the count against a shipping-path producer, because the starred
+#        count has none; that boundary is stated in the group rather than left to be inferred.
 #        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
 #        carries control arms covering every violation code it can emit, each mutating ONE
 #        surface alone and each required to turn it red, and two edits that must not.
 #        That COVERAGE is itself asserted rather than maintained: the code set is read from
 #        st_violations' own body on every run and compared, in both directions, against the
 #        arms that ran — so a code added with no arm behind it is RED rather than latent.
+#        IT IS ASSERTED AT TWO GRANULARITIES, and where it stops is a recorded decision rather
+#        than something to be inferred from a green. The ladder is group -> code -> EMISSION
+#        SITE -> predicate direction. ST-COV grades the code rung. ST-SITE grades the site
+#        rung: the PLACES the evaluator can emit from are read from the same body on the same
+#        run and compared both ways against the sites the arms actually REACHED, so a SECOND
+#        emission site for a code that already has an arm arrives uncovered and RED instead of
+#        shipping hand-held. That residual is live here and not hypothetical — one code is
+#        emitted from two places today, and both are reached by arms that nothing asserted
+#        reached them. The armed side is recorded from what the evaluator EMITTED and never
+#        from what an arm declared it wanted, because an arm can name a code and cannot name a
+#        site; ST-SITE0 declares the reader non-degenerate and its keys unambiguous first.
+#        WHAT IS DELIBERATELY NOT GRADED, each excluded on measured grounds rather than
+#        omitted: the PREDICATE rung, where one site carries two untested directions of a
+#        single condition — PROSE-POP fires when the prose-assertion count is not two, every
+#        arm here drives that count BELOW two and none drives it above, so the site is armed
+#        and one of its two directions is not; and group CTL, which stays at the code rung for
+#        four reasons, all of them measured at the arm itself — its emissions are not
+#        tab-headed, so this reader returns false positives and no real site over the
+#        validator; attribution there would run over stdout carrying paths and free text
+#        rather than over an in-process record set; several of its codes are ONE check emitted
+#        from several call sites, so arming them would arm the parser's factoring rather than
+#        its behaviour; and its code-rung arm is newer than this one. Neither exclusion is
+#        silent, and neither is permanent.
+#        No count is spelled anywhere in this file, and the cross-document half introduces no
+#        canonical value either: it is keyed on bullet presence, so a third intake form is
+#        still ONE LINE in ST_TEMPLATES.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
 #        A code with no arm is a check indistinguishable from one that CANNOT fire.
+#        That COVERAGE is now ASSERTED rather than promised: the code set is read on every
+#        run from the SOURCED validator's own function bodies — not from its file, so a
+#        comment naming a code cannot enter the set and the subject is a function the
+#        oracle in group MD can remove — and compared in BOTH directions against the arms
+#        that actually ran, which are recorded AT THE CALL rather than scanned out of this
+#        file. That accumulator is load-bearing: this group names a code through SEVERAL
+#        unlike constructs, and at least one code's only must-fire arm is written in a form
+#        none of the others reach — so a reader enumerating the shapes it knows about would
+#        report a covered code uncovered. A code added to the
+#        validator with no arm behind it is RED here rather than latent, and so is an arm
+#        naming a code the validator cannot emit. The assertion is at CODE granularity and
+#        not at emission-site granularity — deleting one of a code's several emission sites
+#        leaves the code in the set and this arm green — and that boundary is declared here
+#        rather than left to be discovered. No count is spelled anywhere in this file.
 #   RL   reconcile-on-link: the state of the two tracked witnesses the `link` survey is
 #        graded on. Totality over the one resolving pair — every label classified, no
 #        label claimed twice, adjudicable set empty — and the negative over the unlinked
@@ -79,6 +126,165 @@
 #        sentence that describes it, and the `## profile` offer, which is the one
 #        non-refusal discovery surface the command has and the one region no arm reached
 #        before. Carries its own MUST-FIRE arms. Nothing in it is pinned.
+#   FW   the frozen regression witness is held by an ASSERTION rather than by a review
+#        convention. Until this group shipped nothing in the repository enforced the freeze,
+#        and an edit to the witness passed every required suite green.
+#   PS   the per-event status presence check has a witness in the shipped corpus, and its
+#        SILENCE on the trip that carries both files is EARNED rather than assumed.
+#   LS   the locked-elements seed trigger — which trip's declared elements a seed would fire
+#        on. Emits from inside group PS's machinery under its own id, and is graded over a
+#        population this suite MEASURES: a zero population FAILS rather than passing quietly.
+#   VI   the venue-identity split rule has a witness. A MERGE is a claim, so the claim is
+#        asserted to carry the rung that warrants it, on ordered rungs stopped at the first
+#        that decides and biased toward SPLITTING an uncertain pair.
+#   C    the skip predicate, made observable rather than asserted — C1a and C1b, the two arms
+#        the section below calls THE POINT OF THIS SUITE. The fixtures differ by EXACTLY ONE
+#        LINE and that is asserted before either arm is graded.
+#   MD   the discriminating-evidence rule, asserted against THIS FILE: no PASS may be reached
+#        on a branch a DEGENERATE outcome also reaches. The oracle that grades it is itself
+#        controlled in both directions — it must convict a planted blind assertion and
+#        certify a remediated one, on the same subject in the same process.
+#   AF   the archived-trip freeze and the one operation that reaches through it. Both halves
+#        against a tracked fixture: an ordinary person edit leaves an archived trip
+#        byte-unchanged, and erasure reaches it anyway.
+#   PF   no verdict in this suite, or in the validator it sources, is decided by a pipeline's
+#        exit status. Closed at the SHAPE rather than at any one arm, because has_finding
+#        carries BOTH polarities and the dangerous one is a silent false GREEN.
+#   ER   the erasure verb's declared contract — the four failure modes that live only in
+#        prose, which AF's post-state grading of the fixture cannot reach.
+#   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The real
+#        person store is git-ignored, so tracked fixtures are the only instances this gate can
+#        reach, and a mark nothing carries is a grammar nothing grades.
+#   RM   the reference-month RULE PROSE, anchored so a prose-only revert fails a check.
+#        Group HZ grades WHERE the verdict fence lives and what its rows say; nothing
+#        graded what the rule text around it SAYS, so a rewrite of the prose left the
+#        fence intact and every arm green. The anchor is a DERIVED DECLARATION SPINE and
+#        not a pin: the expected cardinality comes from the fence HZ already grades, and
+#        the actual spine is read out of the document by the document's OWN typography —
+#        a normative declaration is a blockquote opening with a bolded lead-in, and the
+#        operative content is the code spans inside one. That is the whole discriminator:
+#        MATERIAL is an operative token inside such a block, EDITORIAL is every unbolded,
+#        un-spanned word. Rewording is free and RM6 asserts it; the converse holds only where
+#        an arm grades it — RM1-RM4 over the spine's cardinality, uniqueness, trip-relativity,
+#        year-advance and tuple membership, and RM9 over the reference-month declaration's own
+#        selector and operand. An operative token none of them names is still ungraded.
+#        Nothing is spelled here but the region's HEADING — an address, not the rule —
+#        and the one vocabulary word `clock`. It inherits HC1's read-by-shape MECHANISM
+#        and REJECTS HC1's grading posture, which is ADR-019's S4 rule-presence shape and
+#        is classified Defective — addition-blind; HC1's own must-fire arm mutates the
+#        PROBE and establishes probe-liveness rather than the complement, so a negating
+#        clause ADDED to that document leaves both green. R3 and R4 therefore ship as
+#        SEPARATE arms and the group says which is which: the complement is a cardinality
+#        rather than a negation vocabulary, because a negation scan over this region
+#        over-fires on the unmutated document today. Three mutants run through the SAME
+#        comparator as the arms — a revert MUST be seen, an ADDITION must be seen, and a
+#        REWORD must NOT be — which is what makes the discriminator demonstrated in both
+#        directions rather than asserted. No count is spelled anywhere in this file.
+#   CE   the cost-entry surfaces: a priced-entity class denominator derived from two
+#        independently movable tables, plus the JOIN between them — the limb most likely to be
+#        wrong while every other limb reads green, because two non-empty sets keyed
+#        differently intersect in nothing and the census then reads zero over a corpus that
+#        plainly carries markers. This script holds NO copy of that class set. Its arm coverage
+#        is asserted at the SAME TWO GRANULARITIES group ST states above and through the same
+#        shared comparison — every code ce_violations can emit has an arm, and every PLACE it
+#        can emit one from was reached — so a second emission site for an existing code arrives
+#        uncovered and RED here too. This evaluator emits each code from exactly one place
+#        today, which makes the two rungs coincide; that is a measurement of this body on this
+#        run rather than a property of the group, and it stops holding the moment a second
+#        emission is written.
+#   DH   derived trip history: the NEGATIVE assertion the person-record schema names as its
+#        own debt — the durable form emits zero TRIP and DEST labels. It held by construction
+#        and by every author so far having read the bullet, which is the shape of property
+#        that holds until something changes it and nothing notices.
+#   GM   reusable groups: the membership boundary mechanised — one anchored regex is the whole
+#        of that class's membership enforcement, and the group form emits zero PERSON-class
+#        labels. The exact twin of DH's sentence, left as prose while DH shipped.
+#   MG   the mode-gated agent behaviours, graded against a REGISTER fenced in CLAUDE.md
+#        § Modes. Three branches — the hub's equity-aware disruption recovery, the
+#        validator's recovery-equity check and its full pass on all days after a resequence
+#        — fire only on a later mode, and nothing in the previous command surface ever WROTE
+#        one, so all three never fired SILENTLY: the mode they waited on was never set and
+#        the mode they sat in is legal. A behaviour that never runs and one that runs
+#        correctly are indistinguishable from any check that only reads the artifact the
+#        behaviour would have written, so this group does not try to read that artifact. It
+#        makes non-firing COUNTED instead. Per behaviour: the anchor is LOCATED by reading
+#        the prompt and a zero-row extraction is graded a broken instrument; the charter and
+#        the prompt are asserted to gate it on the SAME mode set, BOTH diffs reported; no
+#        clause on an anchor-bearing line exempts, negates or makes-advisory it; and it
+#        occupies a row of that prompt's OWN declared output contract, so the containment
+#        accounting counts it with a denominator on every run. NEITHER THE BEHAVIOUR NOR ITS
+#        MODE IS SPELLED HERE — both are read from the charter, which is the whole of why a
+#        charter/prompt disagreement fails in EITHER direction, including one that only ADDS
+#        a mode to one side. An arm that spelled the mode would agree with whichever side it
+#        had copied. The controls are STANDING arms rather than checks performed once while
+#        authoring, each mutating a copy in the work directory, each asserting the mutation
+#        LANDED before a verdict is read, and each driving the SAME extractor the live arm
+#        drove: a deletion, a negation, an ADD-ONLY injection into a block the register does
+#        not name — the input a rule-presence assertion is blind to — a charter-side
+#        removal so the charter half is not graded by an uncontrolled extractor, and a
+#        containment re-read proving every mutation landed outside the tree being measured.
+#        The negation lexicon is an enumeration with a WRITTEN boundary and is scoped to
+#        anchor-bearing LINES, because a whole-prompt scan fires on a legitimate "Does not
+#        run" and a section-scoped one fires on a legitimate scoping negation — both
+#        measured on this corpus rather than predicted. WHAT IT DOES NOT ESTABLISH is
+#        declared rather than inferred from a green: no arm here shows an agent FIRED any
+#        branch. That is unassertable from a tree of prompt files, because a hand-built
+#        witness artifact passes identically whether an agent produced it or a person typed
+#        it — which is why a witness fixture was REJECTED rather than not thought of, since
+#        it would flip an honest counted gap into a green row while the branch stayed just
+#        as unverified. The residual rides on every run as its own reported line and names
+#        what would settle it. No count is spelled anywhere in this file for this group: the
+#        behaviour set and the mode vocabulary are both read.
+#   W    the round-trip completeness walk that reference/site-layout-spec.md § 9.4
+#        prescribes and that nothing executed until this group shipped. THE WALK HAS TWO
+#        HALVES AND ONLY ONE OF THEM HAS A POPULATION HERE, and the group says which is
+#        which, because a gate that conflates them claims more than it grades. The CONTRACT
+#        half is real and graded on every run: every element TYPE the itinerary grammar can
+#        emit carries a declared disposition in a fence in that spec, and every declared
+#        disposition names an element the grammar still emits — both directions, which is
+#        what makes the fence a PIN rather than an allowlist, since a declaration cannot
+#        outlive the element it declares. The fence's element column carries the grammar's
+#        OWN spelling and the suite holds no copy of either set; the component column is
+#        graded against a catalog vocabulary DERIVED from § 3 on the same run, so a renamed
+#        component turns the row naming it red. The INSTANCE half — per day, per track, per
+#        event card — renders VACUOUS WITH ITS DENOMINATOR rather than PASS, because its
+#        population is empty by construction and cannot become non-empty: .gitignore puts
+#        every render outside the checkout and the site schema's no-witness clause is
+#        TERMINAL, naming a committed site fixture as exactly the wrong repair. That is not
+#        a bare report — a site fixture appearing in the tree turns the arm RED rather than
+#        being welcomed as a population. The whole load for those codes is carried by
+#        standing control arms over synthetic plan/site pairs built fresh on every run,
+#        each mutating ONE surface, each asserting the mutation LANDED before a verdict is
+#        read, and each driving the SAME functions the live arms drive: a dropped anchor
+#        card replayed, a split day whose second track loses its column, a stripped
+#        map-link, a dropped nightlife decline, an ADD-ONLY element added to the grammar
+#        with every existing declaration intact, a fence row naming an element nothing
+#        emits, a disposition outside the enum, a component the catalog does not define,
+#        and an unreadable plan. Three specificity arms say what must NOT fire: additive
+#        site scaffolding with no plan source, since the mapping is surjective and not
+#        bijective; both tracks correctly rendered; and a bold rationale LEAD-IN inside the
+#        grammar region, which is the over-fire a line-leading-bold reader produced and the
+#        reason the extractor is whole-line. Arm coverage is ASSERTED rather than promised
+#        and in both directions — the emittable code set is read from the SOURCED walker's
+#        own function bodies on every run, never from its text, so a comment naming a code
+#        cannot enter it, and the armed side is recorded from what the walker EMITTED
+#        rather than from what an arm declared it wanted. WHAT IT DOES NOT ESTABLISH is
+#        declared rather than inferred from a green: no arm shows that a build INVOKED the
+#        walk, and a clean walk grades the written site against the plan rather than the
+#        act of writing. Both residuals ride on every run as their own reported line. It
+#        deliberately does NOT anchor § 9.4's prose the way group RM anchors its rule — that
+#        shape fits a rule whose text can be reverted while its mechanism keeps working,
+#        and this rule had no mechanism at all, so the prose is replaced by an executable
+#        and anchored by its consumer instead. No count is spelled anywhere in this file
+#        for this group: every set is read
+#   RS   the two rosters that DESCRIBE this suite — the coverage boundary in
+#        .github/workflows/artifact-schema.yml and THIS BLOCK — each set-diffed BOTH WAYS
+#        against the groups the run actually emitted. The executing set is taken from the RUN
+#        (SEEN ∪ SKIPPED), never from a static read of this file, because a static scan
+#        reports groups that do not execute and because membership in SEEN is the only form
+#        that is evidence a group RAN. Every zero carries a standing MUST-FIRE control, and
+#        each roster has its OWN add-only control rather than borrowing the other's. Runs
+#        LAST, and must stay last: a group emitting after it is invisible to it.
 #
 # ── WHY EN, CA, PB AND ST RUN AGAINST THE REAL TREE AND NOT INSIDE A FIXTURE ─────
 # Each is a statement about THIS COMMIT'S corpus — how many homes an enum has, whether four
@@ -144,9 +350,30 @@ SELF_VALIDATOR="$HERE/validate-artifacts.sh"
 source "$HERE/validate-artifacts.sh"     # BASH_SOURCE guard prevents dispatch
 set +e
 
-pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""
-PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); }
-FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); }
+pass=0; fail=0; skip=0; vacuous=0; SKIPPED=""; SEEN=""; VACUOUS_IDS=""
+# The registration total, COUNTED rather than written down. MD_REG_N is one per md_flips call;
+# MD_ASSERT_N is one per distinct assertion, where an assertion is the (assertion-function,
+# argument-vector) pair — so the two registrations that grade one assertion against two
+# different subjects count once here and twice above. MD6 at the foot of this file reports both
+# and checks them against a second, independent reading. Initialised here because this file runs
+# under `set -u`.
+MD_REG_N=0; MD_REG_IDS=""; MD_ASSERT_N=0; MD_ASSERT_KEYS=""
+# Every verdict records its assertion id — the token before the first colon of the message
+# — so group RS at the foot of this file can ask which GROUPS actually emitted. SKIP has
+# always done this; PASS, FAIL and VACUOUS did not, and that asymmetry IS the gap RS closes.
+# A group deleted, renamed or made unreachable emits nothing at all: it never skips, so it
+# never reaches the strict-skip comparison below and vanishes silently.
+#
+# VACUOUS records too, and that is a deliberate divergence from test-publish-guard.sh, which
+# has no such verb. A VACUOUS verdict means the group RAN and found an empty population, so
+# excluding it would let a group rendering only VACUOUS read as VANISHED and fire RS1
+# spuriously. No group is statically VACUOUS-only today, so this is forward-protection taken
+# now rather than a defect diagnosed later.
+#
+# The two controls stay orthogonal — RS asks "did the group run", strict-skip asks "was the
+# skip declared" — and a group that only ever skips is present to both.
+PASS() { printf '  \033[1;32mPASS\033[0m %s\n' "$*"; pass=$((pass+1)); SEEN="$SEEN${*%%:*} "; }
+FAIL() { printf '  \033[1;31mFAIL\033[0m %s\n' "$*"; fail=$((fail+1)); SEEN="$SEEN${*%%:*} "; }
 SKIP() { printf '  \033[1;33mSKIP\033[0m %s\n' "$*"; skip=$((skip+1)); SKIPPED="$SKIPPED${*%%:*} "; }
 # ── THE DISCRIMINATING-EVIDENCE RULE (DER) — helpers, asserted by group MD ─────────
 #
@@ -194,7 +421,19 @@ md_probe() {   # md_probe <subject-fn> <assertion-fn> [args…] -> "<pass> <fail
 # it rather than having to introduce it.
 md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   local victim="$1" id="$2"; shift 2
-  local out p f
+  local out p f mdkey
+  # THE TOTAL IS COUNTED HERE, AT THE CALL, so there is no number anywhere for a later change
+  # to forget to restate. The assertion key is a checksum over the NUL-joined argument vector
+  # rather than a delimiter-joined string, because an argument here can carry spaces and
+  # newlines — two of these registrations pass whole document bodies — and a joined key could
+  # not tell one vector from another.
+  MD_REG_N=$((MD_REG_N + 1))
+  MD_REG_IDS="$MD_REG_IDS$id "
+  mdkey="$(printf '%s\0' "$@" | cksum | tr ' ' '_')"
+  case " $MD_ASSERT_KEYS " in
+    *" $mdkey "*) ;;
+    *) MD_ASSERT_KEYS="$MD_ASSERT_KEYS$mdkey "; MD_ASSERT_N=$((MD_ASSERT_N + 1)) ;;
+  esac
   out="$(md_probe "$victim" "$@")"
   if ! [[ "$out" =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
     FAIL "MD[$id]: the oracle subshell returned '$out' rather than a '<pass> <fail>' pair — the probe itself failed, so this arm is not a measurement"
@@ -209,9 +448,67 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
   return 0
 }
 
-VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); }
+# VACUOUS also records the ID of every arm that rendered it, separately from SEEN, so the
+# closing NOTE can NAME those arms rather than assert a compensating group. The footer used to
+# hardcode one group as the basis whenever any vacuous verdict existed; the group that
+# compensates is a property of the ARM, not of the suite — this suite's only vacuous arm is
+# W4, carried by the W-CTL-* arms in its own group — so a literal there was a claim about a
+# run it had never read, and it was wrong here from the moment the first VACUOUS shipped.
+VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d)"
+
+# ── THE EXIT TRAP, AND WHY THE ORDERING INVARIANT IS READ FROM INSIDE IT ─────────
+#
+# Group RS grades emission COVERAGE by reading the emission record, so it has to be the last
+# group to emit: anything emitting after it is invisible to the arms that grade coverage, and
+# the suite exits 0 with a group unseen.
+#
+# RS10 asserts that ordering STATICALLY, over this file's own text — every verdict call site
+# below RS's banner belongs to RS. A static positional reader is the right shape for the edit
+# it is aimed at, and it is defeated by two shapes that emit a verdict without writing one
+# where the reader looks. A COMPOUND FORM puts the call somewhere other than the start of a
+# line, so a reader anchored at `^` never sees it. A HELPER that emits on its caller's behalf
+# — `expect_rc` and everything like it — writes no verdict literal after the banner at all,
+# because the literal lives in the helper's own body, far above. Neither is exotic; both are
+# ordinary style in this file, and a positional check cannot be made to see either without
+# becoming a parser for the language.
+#
+# So the ordering is asserted TWICE, on two different kinds of evidence, and this is the half
+# that does not depend on where a call site is written. At process exit — after every group
+# has run, including any added later by any means — the emission record is compared against
+# the snapshot RS took when it read it. Whatever appended to that record after RS read it is
+# reported here, whatever line shape produced it. The static arm says the FILE is ordered; the
+# trap says the RUN was, which is the claim RS's coverage arms actually rest on.
+#
+# It runs in the trap rather than at the end of the body for the reason the invariant exists:
+# a check written as the last statement is a check the next appended statement displaces. An
+# EXIT trap cannot be appended past.
+RS_ORDER_ARMED=0
+RS_ORDER_SNAPSHOT=""
+guard_on_exit() {
+  local rc_in=$? tail_ids="" x g foreign=""
+  if [ "$RS_ORDER_ARMED" -eq 1 ]; then
+    # SEEN only ever appends, so the record written after RS read it is the literal suffix.
+    tail_ids="${SEEN#"$RS_ORDER_SNAPSHOT"}"
+    # shellcheck disable=SC2086
+    for x in $tail_ids; do
+      g="${x%%[!A-Z]*}"
+      [ -n "$g" ] || continue
+      [ "$g" = "RS" ] && continue
+      case " $foreign " in *" $g "*) continue ;; esac
+      foreign="$foreign$g "
+    done
+    if [ -n "$foreign" ]; then
+      printf '  \033[1;31mFAIL\033[0m RS-EXIT: group(s) emitted a verdict AFTER group RS read the emission record: %s. RS0, RS1, RS2, RS3 and RS8 graded coverage over a record that did not yet contain them, so this run'"'"'s coverage verdicts are true of the run only up to the point RS read it. This is read AT PROCESS EXIT rather than from this file'"'"'s text, so it fires on an emission whose call site RS10'"'"'s positional reader cannot see — a compound-form call, or a verdict emitted by a helper on its caller'"'"'s behalf. REMEDY: move the group'"'"'s block ABOVE group RS'"'"'s banner.\n' "${foreign% }"
+      rm -rf "$WORK"
+      exit 1
+    fi
+  fi
+  rm -rf "$WORK"
+  exit "$rc_in"
+}
+trap guard_on_exit EXIT
 
 # has_finding <output> <code> — the code appears as a FINDING token, not as a substring of
 # some longer word. A substring test would let A1 match A10 and read as a pass.
@@ -1669,7 +1966,16 @@ EOF
 # counted as neither a pass nor a failure, because it is neither: the fixture corpus
 # this suite reads says it in its own words — a check you cannot run is declared, not
 # passed.
-ps_dne() { printf '  \033[1;36mDECLARED-NOT-EXERCISED\033[0m %s\n' "$*"; }
+#
+# It DOES increment an emission tally, and that is a different thing from a verdict count.
+# ps_dne writes to stdout and nothing downstream reads it back, so an arm whose ps_dne calls
+# stopped happening and a corpus with nothing left to declare produce the identical run: no
+# line, no failure, exit 0. The tally is what lets an arm compare the lines it emitted
+# against the ones it counted, which is the only way that silence becomes observable. Every
+# call site is in the main shell — for-loops and `while … done < file`, never a pipeline —
+# so the increment reaches this variable rather than dying in a subshell.
+PS_DNE_N=0
+ps_dne() { PS_DNE_N=$((PS_DNE_N+1)); printf '  \033[1;36mDECLARED-NOT-EXERCISED\033[0m %s\n' "$*"; }
 
 PS_OK=1
 if [ "$PS_NTRIP" -eq 0 ]; then
@@ -2032,6 +2338,793 @@ if [ "$PS_OK" -eq 1 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group MG — the mode-gated agent behaviours: declared, agreed, un-negated, counted.
+#
+# ── THE DEFECT ───────────────────────────────────────────────────────────────────
+# Three agent-side behaviours branch on a mode: the hub's equity-aware disruption
+# recovery, the validator's recovery-equity check, and the validator's full pass on all
+# days after a resequence. Nothing in the previous command surface ever WROTE the modes
+# that gate them — a trip stayed in DISCOVERY — so all three never fired, silently,
+# because DISCOVERY is a legal mode. CLAUDE.md § "Write ownership" records that in its
+# own words; this group is the assertion behind it.
+#
+# The root cause is UNDETECTABLE SILENCE ON AN UNREACHABLE BRANCH, and the remedy is to
+# make non-firing COUNTED rather than silent. That is what every arm here does and it is
+# the whole of what they do.
+#
+# ── WHAT THIS GROUP DOES NOT ESTABLISH, DECLARED RATHER THAN DISCOVERED ──────────
+# NO ARM HERE ESTABLISHES THAT AN AGENT FIRED ANY OF THESE BRANCHES. Every arm grades
+# the TREE: that the branch is declared, that the charter and the prompt agree on the
+# modes gating it, that no clause exempts it, and that it is counted in the prompt's own
+# output contract. Firing is UNASSERTABLE from a tree of prompt files — a hand-built
+# witness artifact passes identically whether an agent produced it or a person typed it,
+# which is why a witness fixture was REJECTED on the record rather than not thought of.
+# Adding one would flip the honest DECLARED-NOT-EXERCISED accounting below to `exercised`
+# while the agent-side branch stayed exactly as unverified, which is strictly worse than
+# the present state: today the gap is counted, afterwards it would be hidden behind a
+# green row. WHAT WOULD SETTLE IT: a live dispatch of the named agent against a trip at
+# the branching mode, with the branch's own output observed in the artifact it writes.
+# That is a release-time observation run by hand, deliberately not a merge gate. The
+# declaration rides on every run as a ps_dne line rather than sitting in this comment.
+#
+# ── WHY THE REGISTER IS IN THE CHARTER AND NOT IN THIS FILE ──────────────────────
+# An arm that spelled the behaviour would be asserting its own literal, and an arm that
+# spelled the MODE could not detect a charter/prompt disagreement — it would agree with
+# whichever side it had copied. So BOTH come from CLAUDE.md § Modes, out of a fenced
+# `mode-gated-behaviour-register`, and THIS FILE HOLDS NO COPY OF ANY ROW. The idiom is
+# the corpus's own and is not invented here: trip-contract-evidence and
+# trip-contract-header in that same document, frozen-witness-digest read by group FW
+# above, and count-assertion-digest read by the corpus-hygiene suite.
+#
+# Two literals ARE spelled here and they are ADDRESSES rather than rules — the fence's
+# own name, and the two headings a declared contract table can carry. Group RM already
+# records that distinction in the same terms: naming the region is not naming the rule.
+# The contract heading is not pinned PER PROMPT: each prompt resolves whichever of the
+# declared headings yields rows in it, and exactly one must, so a third prompt with its
+# own contract table costs one line in MG_CONTRACT_HEADINGS and no per-file branch.
+# No count is spelled anywhere here either — not the number of behaviours, not the number
+# of modes. Both are read, and both are stated in the verdicts as measurements.
+#
+# ── THE NEGATION LEXICON IS AN ENUMERATION WITH A STATED BOUNDARY ────────────────
+# MATCHED, word-bounded and case-insensitive, over ANCHOR-BEARING LINES ONLY:
+#   optional · advisory · may skip · skip/skips/skipped · not required · need not ·
+#   exempt · no longer · at your discretion · if time permits · best effort ·
+#   does not apply · does not run · omit · where convenient
+#
+# NOT MATCHED, written down so the next vector is a documented exclusion rather than a
+# surprise: a negation spelled across two lines; a negation in a table cell whose anchor
+# sits in another cell; a SCOPING negation on a different line of the same section —
+# `agents/06-validator.md` legitimately says "you do **not** compute an equity score",
+# which NARROWS the check rather than exempting it; and an exemption expressed with no
+# lexicon token at all. It FAILS OPEN on each of those, and MG3's set-equality is what
+# covers the widening half.
+#
+# The line scope is not fastidiousness, and BOTH widenings it forecloses were measured on
+# this corpus. A lexicon over the WHOLE PROMPT fires on "Does not run" in that file's
+# IDEATION block — a different mode's disposition, not this branch's. A lexicon over the
+# ENCLOSING SECTION fires on ordinary prose elsewhere in the anchor's own section: a
+# neighbouring behaviour's "does not run", a "no longer", a "skips", an "optional"
+# describing a desire gate — none of them about the anchored branch at all. That is the
+# warrant for the anchor-bearing line, and it is why widening the scope by one level is a
+# gate that reports on prose it was never pointed at.
+#
+# THE SCOPING NEGATION IS OUT OF POPULATION FOR A DIFFERENT REASON, and conflating the two
+# was this comment's own defect: it carries NO lexicon token, so no scope admits it and the
+# line boundary is not what excludes it. Read it as the thing the line scope keeps out and
+# the boundary's warrant is wrong in a way no arm here would catch.
+#
+# ── THE ARMS, AND WHICH INPUT EACH ONE FAILS ON ──────────────────────────────────
+#   MG0        the instrument itself: a register with rows, a § Modes table with rows, a
+#              readable prompt per row, a mode token the charter defines, and exactly one
+#              contract heading resolving per prompt. Runs FIRST and gates the rest, so a
+#              broken instrument FAILS rather than passing over an empty set
+#   MG1-<B>    the anchor occurs in its prompt, with the count stated. A ZERO-row
+#              extraction is graded a broken instrument and never a clean read
+#   MG2-<B>    charter modes == register modes, BOTH diffs reported — a charter that drops
+#              a mode fails, and so does one that ADDS a mode the register does not declare
+#   MG3-<B>    prompt modes == register modes, both diffs. This is the rule-presence site,
+#              remediated: MG-C3 below is an ADDITION, and it fails this arm
+#   MG4-<B>    no clause on an anchor-bearing line exempts, negates or makes-advisory the
+#              branch. The complement arm proper — it fails on an ADDED clause
+#   MG5-<B>    the register's contract-row is a first-cell row of that prompt's own
+#              declared contract table. A behaviour in prose and absent from the table
+#              fails. A contract row the register does NOT declare is not a failure — a
+#              contract may exceed the register — it lands in the ps_dne count instead
+#
+# Every control builds its subject in $WORK by COPY-THEN-MUTATE, asserts the mutation
+# LANDED before any verdict is read — the PS-A4C discipline, which caught exactly that
+# failure on its own first run — and drives the SAME extractor the live arm drove. A
+# control running different code from the assertion proves nothing about the assertion.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "MG — the mode-gated agent behaviours, against the register that declares them"
+
+MG_CHARTER="$ROOT/CLAUDE.md"
+MG_D="$WORK/mg"; mkdir -p "$MG_D"
+MG_TAB="$(printf '\t')"
+
+# The headings a declared output contract can carry. An ADDRESS list, not a rule list:
+# each prompt resolves whichever entry yields rows in it, and MG0 asserts exactly one does.
+MG_CONTRACT_HEADINGS='### Validation Summary
+### Recorded obligations'
+
+MG_NEG_LEXICON='optional|advisory|may skip|skip|skips|skipped|not required|need not|exempt|no longer|at your discretion|if time permits|best effort|does not apply|does not run|omit|where convenient'
+
+# mg_diff <a-set> <b-set> -> members of a absent from b, deduped, first-occurrence order.
+# Local rather than shared with group RS's rs_diff, which is defined BELOW this group: a
+# forward reference would be an ordering dependency nothing asserts. Membership is by
+# containment in a space-delimited haystack and never by comm, which needs both sides
+# lexically sorted and answers wrongly otherwise — st_setdiff already records that reason.
+#
+# BOTH ends are trimmed, and that is a correctness requirement rather than tidiness: these
+# sets are compared by STRING EQUALITY in the control arms below — "exactly this mode was
+# added and no other" — so a trailing space makes a correct control report itself broken.
+# rs_diff trims only the leading one because its callers pass the result to rs_count, which
+# cannot see the difference. The control arms caught this on their first run, which is the
+# branch they exist for.
+mg_diff() {
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out" in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  out="${out# }"
+  printf '%s' "${out% }"
+}
+# shellcheck disable=SC2086
+mg_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+mg_csv() { printf '%s' "$1" | tr ',' ' ' | tr -s ' '; }
+
+# mg_register [charter] -> "<anchor>\t<prompt>\t<modes>\t<contract-row>" per declared row.
+# Reads the fence and HOLDS NO COPY. `#`-leading and blank lines are dropped, so the
+# column header inside the fence is documentation rather than data.
+mg_register() {
+  awk '
+    /^```mode-gated-behaviour-register[ \t]*$/ { inb = 1; next }
+    inb && /^```/ { inb = 0; next }
+    inb {
+      line = $0
+      gsub(/^[ \t]+|[ \t]+$/, "", line)
+      if (line == "" || substr(line, 1, 1) == "#") next
+      n = split(line, c, "|")
+      if (n < 4) next
+      for (i = 1; i <= 4; i++) gsub(/^[ \t]+|[ \t]+$/, "", c[i])
+      if (c[1] == "" || c[2] == "" || c[3] == "" || c[4] == "") next
+      printf "%s\t%s\t%s\t%s\n", c[1], c[2], c[3], c[4]
+    }
+  ' "${1:-$MG_CHARTER}" 2>/dev/null
+}
+
+# mg_charter_rows [charter] -> "<MODE>\t<rest of the row>" per § Modes table row. The mode
+# vocabulary is DERIVED from column 1 rather than enumerated here, so the modes are the
+# charter's statement and not this file's.
+mg_charter_rows() {
+  awk '
+    /^#+ / { inside = ($0 ~ /^### Modes[ \t]*$/); next }
+    inside && /^\|/ {
+      line = $0
+      if (line ~ /^\|[- |:]+\|$/) next
+      sub(/^\|/, "", line)
+      n = index(line, "|"); if (n < 2) next
+      lab = substr(line, 1, n - 1); rest = substr(line, n + 1)
+      gsub(/^[ \t]+|[ \t]+$/, "", lab)
+      if (lab !~ /^[A-Z]+$/) next
+      printf "%s\t%s\n", lab, rest
+    }
+  ' "${1:-$MG_CHARTER}" 2>/dev/null
+}
+
+mg_charter_vocab() {
+  local out
+  out="$(mg_charter_rows "${1:-$MG_CHARTER}" | awk -F'\t' '!($1 in s) { s[$1] = 1; printf "%s ", $1 }')"
+  printf '%s' "${out% }"
+}
+
+# mg_charter_modes <charter> <anchor> -> space-delimited mode tokens whose § Modes row
+# carries the anchor. Takes the FILE as a parameter so MG-C4 can drive the identical
+# extractor over a mutated copy; an extractor pinned to $ROOT could not be controlled at
+# all, and an uncontrolled extractor is what makes a zero unreadable.
+mg_charter_modes() {
+  local out
+  out="$(mg_charter_rows "$1" | awk -F'\t' -v a="$2" '
+    BEGIN { la = tolower(a) }
+    NF >= 2 && index(tolower($2), la) > 0 && !($1 in seen) { seen[$1] = 1; printf "%s ", $1 }
+  ')"
+  printf '%s' "${out% }"
+}
+
+# mg_prompt_labels <prompt> -> "<MODE>\t<labels-in-its-block>\t<line>" per mode label under
+# `## Mode Behavior`. A block is keyed by a leading `**MODE:**` or `**MODE / MODE:**` label
+# and runs to the next such label or to the next `## `. The label COUNT is emitted because
+# MG-C3 needs a block naming exactly one mode.
+mg_prompt_labels() {
+  awk '
+    /^## / { inside = ($0 ~ /^## Mode Behavior[ \t]*$/); next }
+    !inside { next }
+    /^\*\*[A-Z][A-Z \/]*:\*\*/ {
+      lab = $0; sub(/^\*\*/, "", lab)
+      n = index(lab, ":**"); if (n < 2) next
+      lab = substr(lab, 1, n - 1)
+      k = split(lab, raw, "/")
+      for (i = 1; i <= k; i++) {
+        gsub(/^[ \t]+|[ \t]+$/, "", raw[i])
+        if (raw[i] != "") printf "%s\t%d\t%d\n", raw[i], k, NR
+      }
+    }
+  ' "$1" 2>/dev/null
+}
+
+# mg_prompt_modes <prompt> <anchor> -> space-delimited mode tokens whose block BODY carries
+# the anchor. The label line is part of its own body, so an anchor injected into a label is
+# seen — which is exactly what MG-C3 relies on.
+mg_prompt_modes() {
+  local out
+  out="$(awk -v a="$2" '
+    function flush(   i) {
+      if (nlab > 0 && index(tolower(body), la) > 0)
+        for (i = 1; i <= nlab; i++)
+          if (!(labs[i] in seen)) { seen[labs[i]] = 1; printf "%s ", labs[i] }
+      nlab = 0; body = ""
+    }
+    BEGIN { la = tolower(a); nlab = 0; body = "" }
+    /^## / { flush(); inside = ($0 ~ /^## Mode Behavior[ \t]*$/); next }
+    !inside { next }
+    /^\*\*[A-Z][A-Z \/]*:\*\*/ {
+      flush()
+      lab = $0; sub(/^\*\*/, "", lab)
+      n = index(lab, ":**"); if (n < 2) next
+      lab = substr(lab, 1, n - 1)
+      nlab = split(lab, raw, "/")
+      for (i = 1; i <= nlab; i++) { gsub(/^[ \t]+|[ \t]+$/, "", raw[i]); labs[i] = raw[i] }
+      body = $0
+      next
+    }
+    nlab > 0 { body = body "\n" $0 }
+    END { flush() }
+  ' "$1" 2>/dev/null)"
+  printf '%s' "${out% }"
+}
+
+# mg_anchor_lines <file> <anchor> [all|modeblock] -> the line NUMBER of every line carrying
+# the anchor, case-insensitively.
+mg_anchor_lines() {
+  awk -v a="$2" -v scope="${3:-all}" '
+    BEGIN { la = tolower(a) }
+    /^## / { inmb = ($0 ~ /^## Mode Behavior[ \t]*$/) }
+    { if (scope == "modeblock" && !inmb) next
+      if (index(tolower($0), la) > 0) print NR }
+  ' "$1" 2>/dev/null
+}
+
+# mg_negations <file> <anchor> -> "SCANNED\t<n>" then "<line>\t<token>\t<text>" per hit.
+# The SCANNED header is load-bearing: it is what makes an ABSENT extractor distinguishable
+# from a CLEAN one. Without it a removed mg_negations returns nothing, a caller counts zero
+# hits, and MG4 reports a pass it did not earn — the blindness group MD exists to convict,
+# reached through the very registration meant to detect it.
+mg_negations() {
+  awk -v a="$2" -v lex="$MG_NEG_LEXICON" '
+    function norm(s,   t) { t = tolower(s); gsub(/[^a-z0-9]+/, " ", t); return " " t " " }
+    BEGIN { la = tolower(a); n = split(lex, L, "|"); scanned = 0; nh = 0 }
+    index(tolower($0), la) > 0 {
+      scanned++
+      nl = norm($0)
+      for (i = 1; i <= n; i++) {
+        if (L[i] == "") continue
+        if (index(nl, " " L[i] " ") > 0) { nh++; hits[nh] = NR "\t" L[i] "\t" $0; break }
+      }
+    }
+    END { printf "SCANNED\t%d\n", scanned; for (i = 1; i <= nh; i++) print hits[i] }
+  ' "$1" 2>/dev/null
+}
+mg_neg_scanned() { printf '%s\n' "$1" | awk -F'\t' '$1 == "SCANNED" && n == 0 { print $2; n = 1 }'; }
+mg_neg_hits()    { printf '%s\n' "$1" | awk -F'\t' '$1 != "SCANNED" && NF >= 3'; }
+
+# mg_contract_heading <prompt> -> the declared-contract heading that yields rows in this
+# prompt, or the empty string when none does or more than one does.
+mg_contract_heading() {
+  local h found="" n hits=0
+  while IFS= read -r h; do
+    [ -n "$h" ] || continue
+    n="$(ps_rows "$1" "$h" | grep -c '[^[:space:]]')"
+    if [ "$n" -gt 0 ]; then found="$h"; hits=$((hits+1)); fi
+  done <<EOF
+$MG_CONTRACT_HEADINGS
+EOF
+  [ "$hits" -eq 1 ] && printf '%s' "$found"
+  return 0
+}
+# mg_contract_rows <prompt> -> the first cell of every row of that prompt's contract table.
+# ps_rows REUSED unchanged — one extractor, two callers — per the ps_sets/ps_contain
+# precedent this suite already ships. A control running different code from the assertion
+# proves nothing about the assertion, and the same is true of a second extractor.
+mg_contract_rows() {
+  local h; h="$(mg_contract_heading "$1")"
+  [ -n "$h" ] || return 0
+  ps_rows "$1" "$h"
+}
+
+# ── MG0 — the instrument, graded before anything it feeds. Registered with md_flips below.
+mg0_assert() {
+  local reg nreg vocab bad_mode="" unread="" badhead="" a p m row cm
+  reg="$(mg_register "$MG_CHARTER")"
+  nreg="$(printf '%s\n' "$reg" | grep -c '[^[:space:]]')"
+  vocab="$(mg_charter_vocab "$MG_CHARTER")"
+  if [ "$nreg" -eq 0 ]; then
+    FAIL "MG0: the mode-gated-behaviour register in CLAUDE.md § Modes parsed to ZERO rows, so every arm below would compare an empty set against an empty set and pass. A renamed fence, a re-shaped row or a deleted register surfaces exactly this way, and that is a broken instrument rather than a corpus with nothing to declare"
+    return 0
+  fi
+  if [ -z "$vocab" ]; then
+    FAIL "MG0: the § Modes table in CLAUDE.md yielded ZERO mode rows, so the vocabulary every arm below compares against is empty and MG2's set-equality would pass against nothing"
+    return 0
+  fi
+  while IFS="$MG_TAB" read -r a p m row; do
+    [ -n "$a" ] || continue
+    if [ -r "$ROOT/$p" ]; then
+      [ -z "$(mg_contract_heading "$ROOT/$p")" ] && badhead="$badhead$p "
+    else
+      unread="$unread$p "
+    fi
+    for cm in $(mg_csv "$m"); do
+      case " $vocab " in *" $cm "*) ;; *) bad_mode="$bad_mode$cm " ;; esac
+    done
+  done <<EOF
+$reg
+EOF
+  if [ -n "$unread" ]; then
+    FAIL "MG0: the register names prompt(s) this suite cannot read: ${unread% }. Every arm over them would be a scan of nothing"
+  elif [ -n "$bad_mode" ]; then
+    FAIL "MG0: the register declares mode token(s) the charter's own § Modes table does not define: ${bad_mode% }. The vocabulary is the charter's, so a register row naming a mode outside it cannot be graded against either surface"
+  elif [ -n "$badhead" ]; then
+    FAIL "MG0: prompt(s) ${badhead% } resolve no single declared-contract heading — either none of the declared headings yields rows there, or more than one does, and MG5's lookup would be over an empty or an ambiguous table"
+  else
+    PASS "MG0: the instrument is live — $nreg register row(s) read from CLAUDE.md § Modes, $(mg_count "$vocab") mode token(s) derived from that section's own table ($vocab), every named prompt readable, and exactly one declared-contract heading resolving per prompt. This file holds no copy of any of it"
+  fi
+  return 0
+}
+
+MG_REG="$(mg_register "$MG_CHARTER")"
+MG_NREG="$(printf '%s\n' "$MG_REG" | grep -c '[^[:space:]]')"
+MG_VOCAB="$(mg_charter_vocab "$MG_CHARTER")"
+mg0_assert
+MG_OK=0
+[ "$MG_NREG" -gt 0 ] && [ -n "$MG_VOCAB" ] && MG_OK=1
+
+# ── The per-behaviour assertion functions. Each takes EVERY input as an argument and calls
+# its own extractors — which is what makes the md_flips registrations below mean anything:
+# md_flips removes a FUNCTION, so an assertion handed a precomputed set would survive its
+# subject's removal and report itself blind. Each renders exactly ONE verdict and reaches a
+# FAIL on its degenerate path rather than staying silent, because md_probe counts verdicts
+# and an assertion that went quiet under mutation would report the probe broken instead.
+mg2_assert() {   # mg2_assert <id> <anchor> <declared-modes-csv> <charter-file>
+  local id="$1" a="$2" want got missing extra
+  want="$(mg_csv "$3")"
+  if [ -z "$want" ]; then
+    FAIL "MG2-$id: the register row for '$a' declares no mode at all, so a comparison against the charter would be empty-equals-empty. A row with no mode is a broken declaration, never an agreement"
+    return 0
+  fi
+  got="$(mg_charter_modes "$4" "$a")"
+  missing="$(mg_diff "$want" "$got")"
+  extra="$(mg_diff "$got" "$want")"
+  if [ -z "$missing" ] && [ -z "$extra" ]; then
+    PASS "MG2-$id: CLAUDE.md § Modes gates '$a' on exactly the mode(s) the register declares — {$got}, over a vocabulary of $(mg_count "$MG_VOCAB") read from that same table. Set equality in BOTH directions, so a charter row that DROPPED a mode and one that ADDED a mode each fail here"
+  else
+    FAIL "MG2-$id: the charter and the register disagree on what gates '$a' — register {$want}, charter {${got:-empty}}; declared-but-absent-from-the-charter {${missing:-none}}; in-the-charter-but-undeclared {${extra:-none}}"
+  fi
+  return 0
+}
+mg3_assert() {   # mg3_assert <id> <anchor> <declared-modes-csv> <prompt-file>
+  local id="$1" a="$2" want got missing extra
+  want="$(mg_csv "$3")"
+  if [ -z "$want" ]; then
+    FAIL "MG3-$id: the register row for '$a' declares no mode at all, so the prompt comparison would be empty-equals-empty and could not fail"
+    return 0
+  fi
+  got="$(mg_prompt_modes "$4" "$a")"
+  missing="$(mg_diff "$want" "$got")"
+  extra="$(mg_diff "$got" "$want")"
+  if [ -z "$missing" ] && [ -z "$extra" ]; then
+    PASS "MG3-$id: the prompt's own ## Mode Behavior blocks gate '$a' on exactly {$got} — the register's declaration, both directions. This is the addition-blind rule-presence site, remediated: the MG-C3 control below ADDS the anchor to a block the register does not name, and this arm turns red on it"
+  else
+    FAIL "MG3-$id: the prompt and the register disagree on what gates '$a' — register {$want}, prompt {${got:-empty}}; declared-but-absent-from-the-prompt {${missing:-none}}; in-the-prompt-but-undeclared {${extra:-none}}"
+  fi
+  return 0
+}
+mg4_assert() {   # mg4_assert <id> <anchor> <prompt-file>
+  local id="$1" a="$2" out scanned hits nhits
+  out="$(mg_negations "$3" "$a")"
+  scanned="$(mg_neg_scanned "$out")"
+  if [ -z "$scanned" ]; then
+    FAIL "MG4-$id: the negation scan over '$a' emitted no denominator at all, so its silence is an ABSENT instrument rather than a clean read. The scan states the population it examined before any verdict is taken from it, precisely so the two cannot be confused"
+    return 0
+  fi
+  if [ "$scanned" -eq 0 ]; then
+    FAIL "MG4-$id: the negation scan examined ZERO anchor-bearing lines for '$a' — there is no population, so a zero hit count says nothing about whether a clause exempts the branch"
+    return 0
+  fi
+  hits="$(mg_neg_hits "$out")"
+  nhits="$(printf '%s\n' "$hits" | grep -c '[^[:space:]]')"
+  if [ "$nhits" -eq 0 ]; then
+    PASS "MG4-$id: no clause on any of the $scanned line(s) carrying '$a' exempts, negates or makes-advisory the branch — the complement, over a stated denominator. The lexicon is an enumeration with a written boundary, and the MG-C2 control adds a clause it must catch"
+  else
+    FAIL "MG4-$id: $nhits of $scanned anchor-bearing line(s) for '$a' carry an exempting or advisory clause: $(printf '%s' "$hits" | awk -F'\t' '{ printf "L%s(%s) ", $1, $2 }')"
+  fi
+  return 0
+}
+
+# ── MG1 / MG2 / MG3 / MG4 / MG5 — the live arms, one pass per declared behaviour.
+if [ "$MG_OK" -eq 1 ]; then
+  MG_PRE="$MG_D/pre-readings"; : > "$MG_PRE"
+  MG_N=0
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    MG_N=$((MG_N+1)); MGID="B$MG_N"
+    MGF="$ROOT/$MGP"
+
+    # MG1 — the anchor OCCURS, with its count stated. The haystack floor is asserted
+    # FIRST, so a zero extraction is graded a broken instrument and no arm below reads
+    # clean over an empty haystack.
+    MG_LINES="$(mg_anchor_lines "$MGF" "$MGA")"
+    MG_NLINES="$(printf '%s\n' "$MG_LINES" | grep -c '[^[:space:]]')"
+    if [ "$MG_NLINES" -gt 0 ]; then
+      PASS "MG1-$MGID: '$MGA' is located in $MGP by READING the prompt — $MG_NLINES line(s), at $(printf '%s' "$MG_LINES" | tr '\n' ' ' | sed 's/ $//'). The needle came from the charter's register and never from a literal in this file"
+    else
+      FAIL "MG1-$MGID: '$MGA' occurs ZERO times in $MGP. The register declares the behaviour there and the prompt does not carry it — a zero-row extraction is a broken instrument and must never read as a clean scan"
+    fi
+
+    mg2_assert "$MGID" "$MGA" "$MGM" "$MG_CHARTER"
+    mg3_assert "$MGID" "$MGA" "$MGM" "$MGF"
+    mg4_assert "$MGID" "$MGA" "$MGF"
+
+    # MG5 — the behaviour is COUNTED in the prompt's own declared output contract.
+    MG_CROWS="$(mg_contract_rows "$MGF")"
+    MG_NCROWS="$(printf '%s\n' "$MG_CROWS" | grep -c '[^[:space:]]')"
+    MG_CHEAD="$(mg_contract_heading "$MGF")"
+    if [ "$MG_NCROWS" -eq 0 ]; then
+      FAIL "MG5-$MGID: $MGP's declared contract table extracted ZERO rows, so the lookup for '$MGROW' would be over an empty table and could not fail. A renamed heading or a re-shaped table surfaces exactly this way"
+    elif grep -qxF -- "$MGROW" <<<"$MG_CROWS"; then
+      PASS "MG5-$MGID: '$MGROW' is a row of $MGP's own declared contract table — denominator $MG_NCROWS row(s) under '$MG_CHEAD'. The behaviour is therefore COUNTED by the containment accounting on every run rather than living only in prose, which is the blindness this card exists to end"
+    else
+      FAIL "MG5-$MGID: the register declares contract row '$MGROW' for '$MGA' and $MGP's declared contract table ($MG_NCROWS row(s) under '$MG_CHEAD') carries no such row. A behaviour stated in prose and absent from the table is outside the declared contract and nothing counts it"
+    fi
+
+    printf '%s\t%s\t%s\t%s\n' "$MGA" "$MG_NLINES" \
+      "$(mg_charter_modes "$MG_CHARTER" "$MGA")" "$(mg_prompt_modes "$MGF" "$MGA")" >> "$MG_PRE"
+  done <<EOF
+$MG_REG
+EOF
+fi
+
+# ── THE CONTROLS, AS STANDING ARMS — not checks performed once while authoring.
+if [ "$MG_OK" -eq 1 ]; then
+  MG_N=0
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    MG_N=$((MG_N+1)); MGID="B$MG_N"
+    MGF="$ROOT/$MGP"
+    MGWANT="$(mg_csv "$MGM")"
+
+    # MG-C1 — DELETION. Every anchor-bearing line removed; MG1 and MG3 must both flip.
+    MGC1="$MG_D/c1-$MGID.md"
+    awk -v a="$MGA" 'BEGIN { la = tolower(a) } index(tolower($0), la) == 0' "$MGF" > "$MGC1"
+    if ! cmp -s "$MGF" "$MGC1"; then
+      MGC1L="$(mg_anchor_lines "$MGC1" "$MGA" | grep -c '[^[:space:]]')"
+      MGC1M="$(mg_prompt_modes "$MGC1" "$MGA")"
+      if [ "$MGC1L" -eq 0 ] && [ -z "$MGC1M" ]; then
+        PASS "MG-C1-$MGID: control, DELETION — with every '$MGA' line stripped from a temp copy of $MGP (the mutation is asserted to have landed) the same extractors report 0 occurrence(s) and an EMPTY mode set, so MG1-$MGID and MG3-$MGID both flip. Their verdicts above are measurements of the prompt rather than of a scan that matches nothing"
+      else
+        FAIL "MG-C1-$MGID: the control did not behave — over the stripped copy the extractors still report $MGC1L line(s) and modes {${MGC1M:-empty}}; MG1-$MGID and MG3-$MGID have no deletion control behind them"
+      fi
+    else
+      FAIL "MG-C1-$MGID: the deletion did not land — the stripped copy of $MGP is byte-identical to the original, so this control proves nothing about MG1-$MGID or MG3-$MGID"
+    fi
+
+    # MG-C2 — NEGATION. An advisory clause APPENDED to the first anchor-bearing line
+    # inside a Mode Behavior block; MG4 must flip, naming exactly that line.
+    MGC2="$MG_D/c2-$MGID.md"
+    MGC2TGT="$(mg_anchor_lines "$MGF" "$MGA" modeblock | awk 'NR == 1 { print }')"
+    if [ -n "$MGC2TGT" ]; then
+      awk -v t="$MGC2TGT" 'NR == t { print $0 " (optional — at your discretion)"; next } { print }' "$MGF" > "$MGC2"
+      if ! cmp -s "$MGF" "$MGC2"; then
+        MGC2OUT="$(mg_negations "$MGC2" "$MGA")"
+        MGC2HITS="$(mg_neg_hits "$MGC2OUT")"
+        MGC2N="$(printf '%s\n' "$MGC2HITS" | grep -c '[^[:space:]]')"
+        MGC2LINE="$(printf '%s' "$MGC2HITS" | awk -F'\t' 'NR == 1 { print $1 }')"
+        if [ "$MGC2N" -eq 1 ] && [ "$MGC2LINE" = "$MGC2TGT" ]; then
+          PASS "MG-C2-$MGID: control, NEGATION — an advisory clause appended to line $MGC2TGT of $MGP, inside its ## Mode Behavior block (the mutation is asserted to have landed), makes the SAME scan report exactly one hit, on exactly that line. MG4-$MGID's zero is a measurement, and a lexicon that flagged everything would fail this arm's second limb"
+        else
+          FAIL "MG-C2-$MGID: the control did not behave — the scan reported $MGC2N hit(s) at line '${MGC2LINE:-none}' against an expected single hit at line $MGC2TGT; MG4-$MGID has no negation control behind it"
+        fi
+      else
+        FAIL "MG-C2-$MGID: the negation did not land on line $MGC2TGT of $MGP, so this control proves nothing about MG4-$MGID"
+      fi
+    else
+      FAIL "MG-C2-$MGID: '$MGA' occurs on no line inside $MGP's ## Mode Behavior block, so there is nowhere to plant the negation and MG4-$MGID stands uncontrolled"
+    fi
+
+    # MG-C2B — LEXICON COMPLETENESS, and the reason it is a separate arm from MG-C2 above.
+    # MG-C2 plants ONE clause and establishes that the scan is live. It cannot establish that
+    # every token of the enumeration reaches that scan, and its clause happens to exercise the
+    # token written first in the list — so the arm behind MG4's boundary was one token wide
+    # while the boundary is declared as the whole lexicon. A token that can never match is a
+    # boundary this gate is DESCRIBED by and does not HAVE: the comment above promises a reader
+    # that "exempt" or "where convenient" reddens the arm, and nothing here checked that any
+    # input spelled that way ever does. Each token is planted ALONE on the same target line —
+    # clean by MG4's own measurement — and must produce exactly one hit on exactly that line.
+    if [ -n "$MGC2TGT" ]; then
+      MGC2B_N=0; MGC2B_OK=0; MGC2B_BAD=""
+      MGC2B="$MG_D/c2b-$MGID.md"
+      while IFS= read -r mgtok; do
+        [ -n "$mgtok" ] || continue
+        MGC2B_N=$((MGC2B_N+1))
+        awk -v t="$MGC2TGT" -v k="$mgtok" 'NR == t { print $0 " (" k ")"; next } { print }' "$MGF" > "$MGC2B"
+        if cmp -s "$MGF" "$MGC2B"; then
+          MGC2B_BAD="$MGC2B_BAD ${mgtok}[mutation-did-not-land]"
+          continue
+        fi
+        MGC2BOUT="$(mg_negations "$MGC2B" "$MGA")"
+        MGC2BH="$(mg_neg_hits "$MGC2BOUT")"
+        MGC2BN="$(printf '%s\n' "$MGC2BH" | grep -c '[^[:space:]]')"
+        MGC2BL="$(printf '%s' "$MGC2BH" | awk -F'\t' 'NR == 1 { print $1 }')"
+        if [ "$MGC2BN" -eq 1 ] && [ "$MGC2BL" = "$MGC2TGT" ]; then
+          MGC2B_OK=$((MGC2B_OK+1))
+        else
+          MGC2B_BAD="$MGC2B_BAD ${mgtok}[${MGC2BN}hit@${MGC2BL:-none}]"
+        fi
+      done <<EOF
+$(printf '%s\n' "$MG_NEG_LEXICON" | tr '|' '\n')
+EOF
+      if [ "$MGC2B_N" -eq 0 ]; then
+        FAIL "MG-C2B-$MGID: the lexicon split to ZERO tokens, so this arm graded nothing — the enumeration MG4-$MGID's whole boundary rests on is unreadable from here, and an empty enumeration would make MG4's zero vacuous rather than clean"
+      elif [ -n "$MGC2B_BAD" ]; then
+        FAIL "MG-C2B-$MGID: $((MGC2B_N - MGC2B_OK)) of the $MGC2B_N lexicon token(s) do not reach the scan when planted alone on line $MGC2TGT of $MGP —$MGC2B_BAD. A token that cannot fire is a boundary this gate is described by and does not have"
+      else
+        PASS "MG-C2B-$MGID: all $MGC2B_N lexicon token(s) reach the scan — each planted ALONE on line $MGC2TGT of $MGP, every mutation asserted to have landed, each producing exactly one hit on exactly that line. MG-C2-$MGID establishes the scan is live on one clause; this establishes the ENUMERATION is reachable end to end, so the boundary written above MG4-$MGID is the boundary it actually has. What neither arm establishes is the unwritten half — an exemption phrased outside the lexicon still fails open, which is why MG3's set-equality carries the widening direction"
+      fi
+    fi
+
+    # MG-C3 — ADDITION, and it is the load-bearing one. The anchor is injected into a Mode
+    # Behavior block the register does NOT name, and MG3 must flip on an ADDITION rather
+    # than on a removal. That is the input a rule-presence assertion is blind to.
+    #
+    # The victim mode is DERIVED: the first mode in the charter's own vocabulary that the
+    # register does not declare for this behaviour AND whose block in this prompt carries a
+    # SINGLE label — injecting into a shared `A / B:` label would add two modes and the
+    # "exactly one" limb could not be written. A behaviour declared on every mode has no
+    # victim available, and that is reported as an uncontrolled arm rather than skipped.
+    MGC3="$MG_D/c3-$MGID.md"
+    MGC3CAND="$(mg_diff "$MG_VOCAB" "$MGWANT")"
+    MGC3M=""; MGC3LN=""
+    for mgc in $MGC3CAND; do
+      MGC3LN="$(mg_prompt_labels "$MGF" | awk -F'\t' -v m="$mgc" '$1 == m && $2 == 1 && n == 0 { print $3; n = 1 }')"
+      if [ -n "$MGC3LN" ]; then MGC3M="$mgc"; break; fi
+    done
+    if [ -n "$MGC3M" ]; then
+      awk -v t="$MGC3LN" -v a="$MGA" 'NR == t { sub(/:\*\*/, ":** " a " —", $0); print; next } { print }' "$MGF" > "$MGC3"
+      if ! cmp -s "$MGF" "$MGC3"; then
+        MGC3GOT="$(mg_prompt_modes "$MGC3" "$MGA")"
+        MGC3ADD="$(mg_diff "$MGC3GOT" "$MGWANT")"
+        MGC3LOST="$(mg_diff "$MGWANT" "$MGC3GOT")"
+        if [ "$MGC3ADD" = "$MGC3M" ] && [ -z "$MGC3LOST" ]; then
+          PASS "MG-C3-$MGID: control, ADDITION and ADD-ONLY — '$MGA' injected into $MGP's **$MGC3M:** block at line $MGC3LN with EVERY existing declaration left intact makes the same extractor report {$MGC3GOT}: exactly '$MGC3M' added and nothing lost. MG3-$MGID is therefore not addition-blind — a mode ADDED to one side turns it red, which is the input a rule-presence assertion cannot see"
+        else
+          FAIL "MG-C3-$MGID: the control did not behave — the injected copy reports modes {${MGC3GOT:-empty}}, adding {${MGC3ADD:-none}} against an expected exactly '$MGC3M' and losing {${MGC3LOST:-none}}; MG3-$MGID has no add-only control behind it and its set-equality is unproven in the widening direction"
+        fi
+      else
+        FAIL "MG-C3-$MGID: the injection did not land at line $MGC3LN of $MGP, so MG3-$MGID's widening direction stands uncontrolled"
+      fi
+    else
+      FAIL "MG-C3-$MGID: no single-label ## Mode Behavior block in $MGP carries a mode outside the register's {$MGWANT}, so the add-only input cannot be built and MG3-$MGID's widening direction is unproven. Candidates considered: {${MGC3CAND:-none}}"
+    fi
+  done <<EOF
+$MG_REG
+EOF
+
+  # MG-C4 — the CHARTER side, so MG2 has a control of its own rather than borrowing MG3's.
+  # One § Modes row loses the anchor in a temp copy of CLAUDE.md, and the same extractor
+  # must drop EXACTLY that mode. Two arms of a set-equality resting on one control would
+  # leave the charter half graded by an extractor nothing had demonstrated could fail.
+  MGC4A="$(printf '%s\n' "$MG_REG" | awk -F'\t' 'NR == 1 { print $1 }')"
+  MGC4SET="$(mg_charter_modes "$MG_CHARTER" "$MGC4A")"
+  MGC4M="$(printf '%s' "$MGC4SET" | awk '{ print $1 }')"
+  MGC4="$MG_D/c4-charter.md"
+  if [ -n "$MGC4A" ] && [ -n "$MGC4M" ]; then
+    awk -v m="$MGC4M" -v anc="$MGC4A" '
+      BEGIN { la = tolower(anc); L = length(anc) }
+      /^#+ / { inside = ($0 ~ /^### Modes[ \t]*$/) }
+      {
+        if (inside && index($0, "| " m " ") == 1 && index(tolower($0), la) > 0) {
+          line = $0; guard = 0
+          while (guard < 50) {
+            p = index(tolower(line), la)
+            if (p == 0) break
+            line = substr(line, 1, p - 1) "ZZQ-REMOVED" substr(line, p + L)
+            guard++
+          }
+          print line; next
+        }
+        print
+      }
+    ' "$MG_CHARTER" > "$MGC4"
+    if ! cmp -s "$MG_CHARTER" "$MGC4"; then
+      MGC4GOT="$(mg_charter_modes "$MGC4" "$MGC4A")"
+      MGC4LOST="$(mg_diff "$MGC4SET" "$MGC4GOT")"
+      MGC4GAIN="$(mg_diff "$MGC4GOT" "$MGC4SET")"
+      if [ "$MGC4LOST" = "$MGC4M" ] && [ -z "$MGC4GAIN" ]; then
+        PASS "MG-C4: control on the CHARTER — with '$MGC4A' removed from the § Modes **$MGC4M** row of a temp copy of CLAUDE.md (the mutation is asserted to have landed) the same extractor reports {${MGC4GOT:-empty}}: exactly '$MGC4M' dropped and nothing else. Every MG2 verdict rests on an extractor demonstrated able to fail, on the charter rather than on the prompt"
+      else
+        FAIL "MG-C4: the control did not behave — the mutated charter reports {${MGC4GOT:-empty}}, losing {${MGC4LOST:-none}} against an expected exactly '$MGC4M' and gaining {${MGC4GAIN:-none}}; every MG2 verdict above is uncontrolled"
+      fi
+    else
+      FAIL "MG-C4: the charter mutation did not land — the temp copy is byte-identical to CLAUDE.md, so MG2 has no control behind it"
+    fi
+  else
+    FAIL "MG-C4: no register row or no charter mode was available to mutate (anchor '${MGC4A:-none}', mode '${MGC4M:-none}'), so MG2 stands uncontrolled"
+  fi
+
+  # MG-C5 — CONTAINMENT. The controls above wrote only into $WORK, and that is ASSERTED
+  # rather than assumed: every extractor is re-run against $ROOT and must return the
+  # readings taken BEFORE any control ran. The PS-C4 arm, applied to this group's subjects.
+  MG_POST="$MG_D/post-readings"; : > "$MG_POST"
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    printf '%s\t%s\t%s\t%s\n' "$MGA" \
+      "$(mg_anchor_lines "$ROOT/$MGP" "$MGA" | grep -c '[^[:space:]]')" \
+      "$(mg_charter_modes "$MG_CHARTER" "$MGA")" \
+      "$(mg_prompt_modes "$ROOT/$MGP" "$MGA")" >> "$MG_POST"
+  done <<EOF
+$MG_REG
+EOF
+  if [ ! -s "$MG_PRE" ]; then
+    FAIL "MG-C5: no pre-control readings were recorded, so there is nothing to compare the repository against and the containment claim is unverifiable"
+  elif cmp -s "$MG_PRE" "$MG_POST"; then
+    PASS "MG-C5: containment — after every control above, re-reading the repository returns the identical $(grep -c '[^[:space:]]' "$MG_PRE") per-behaviour reading(s) taken before them. Every mutation landed in the work directory and nowhere else, so no control wrote into the tree it is measuring"
+  else
+    FAIL "MG-C5: the repository's readings CHANGED across the control arms — a control wrote into the tree it is meant to be measuring"
+  fi
+fi
+
+# ── PS-A6 — the HUB's containment denominator, the sibling PS-A4 already gives the
+# validator. It emits under the PS id deliberately: group RS reduces an assertion id to its
+# leading run of capitals, so this arm belongs to group PS's roster line and to that group's
+# accounting rather than opening a second home for one question. It lives HERE because it
+# reads mg_register, which group PS runs before.
+#
+# The card names "the hub's version-log / open-decisions obligation" and says the EXISTING
+# PS-A4/PS-A5 accounting will count it. That was measured and found false: PS-A4 and PS-A5
+# read agents/06-validator.md alone, and the hub carried no declared check list at all — its
+# version log and its open-decisions block are runtime-filled templates with no rows to
+# contain. So the hub gains a declared-obligations table and this arm reads it.
+PS_A6_FIX="$ROOT/examples/data-architecture-demo/outputs/final-itinerary.md"
+if [ "$MG_OK" -eq 1 ]; then
+  PS_A6_D="$MG_D/ps-a6"; mkdir -p "$PS_A6_D"
+  : > "$PS_A6_D/want"
+  PS_A6_PROMPTS=" "
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    [ "$ROOT/$MGP" = "$PS_PROMPT" ] && continue   # PS-A4 already owns that prompt's table
+    printf '%s\n' "$MGROW" >> "$PS_A6_D/want"
+    case "$PS_A6_PROMPTS" in *" $MGP "*) ;; *) PS_A6_PROMPTS="$PS_A6_PROMPTS$MGP " ;; esac
+  done <<EOF
+$MG_REG
+EOF
+  PS_A6_PROMPTS="${PS_A6_PROMPTS# }"
+  PS_A6_PROMPTS="${PS_A6_PROMPTS% }"
+  PS_A6_NWANT="$(grep -c '[^[:space:]]' "$PS_A6_D/want")"
+  : > "$PS_A6_D/have"
+  # shellcheck disable=SC2086
+  for psa6p in $PS_A6_PROMPTS; do mg_contract_rows "$ROOT/$psa6p" >> "$PS_A6_D/have"; done
+  PS_A6_NHAVE="$(grep -c '[^[:space:]]' "$PS_A6_D/have")"
+  if [ "$PS_A6_NWANT" -eq 0 ]; then
+    VACUOUS "PS-A6: the register declares no mode-gated behaviour outside the prompt PS-A4 already reads, so the second-prompt containment has nothing to grade. That is a real measurement of the register rather than a skipped arm — PS-A4 continues to cover the validator's own table"
+  elif [ "$PS_A6_NHAVE" -eq 0 ]; then
+    FAIL "PS-A6: the declared-contract table(s) of $PS_A6_PROMPTS extracted ZERO rows, so the containment below would be satisfied by an empty superset. An empty extraction is a broken instrument and must never read as containment satisfied"
+  else
+    PS_A6_MISS="$(ps_contain "$PS_A6_D/want" "$PS_A6_D/have" | tr '\n' ';')"
+    if [ -z "$PS_A6_MISS" ]; then
+      PASS "PS-A6: every one of the $PS_A6_NWANT register row(s) assigned to $PS_A6_PROMPTS is a row of that prompt's own declared contract table ($PS_A6_NHAVE row(s)). That prompt now has the containment denominator agents/06-validator.md has had since PS-A4 shipped"
+    else
+      FAIL "PS-A6: the register declares contract row(s) $PS_A6_PROMPTS does not carry: $PS_A6_MISS — a behaviour declared in the charter and absent from the prompt's own output contract"
+    fi
+    # PS-A6-DNE — the card's "counted where no fixture exercises it" clause, landing as an
+    # honest DECLARED-NOT-EXERCISED rather than as a green row. The fixture is deliberately
+    # NOT edited: a hand-built witness would flip this to `exercised` while the agent-side
+    # branch stayed exactly as unverified, which is the trade this card rejected on record.
+    #
+    # THE FIXTURE'S READABILITY IS AN ASSERTION HERE, NOT A CONDITION, and it is written that
+    # way because the alternative was this arm's own defect. This block was guarded by a bare
+    # `if [ -r "$PS_A6_FIX" ]` with no else: rename the fixture and every line below it
+    # evaporated — nothing emitted, nothing counted, nothing failed, exit 0. That is an
+    # undetectable silence reproduced inside the mechanism built to cure one, which is why the
+    # absence is now loud and the emission is now counted against what the arm claims.
+    if [ ! -r "$PS_A6_FIX" ]; then
+      FAIL "PS-A6-DNE: the fixture itinerary this arm accounts against is unreadable at '$PS_A6_FIX', so the declared-not-exercised accounting did not run. This is a FAILURE rather than a skip: the accounting IS this arm's entire output, so an unreadable fixture removes every line it would have emitted while the run still reads green — the arm would report exactly what a fully-exercised corpus reports"
+    else
+      PS_A6_DNE0="$PS_DNE_N"
+      PS_A6_NDNE=0
+      PS_A6_NSEEN=0
+      while IFS= read -r psa6r; do
+        [ -n "$psa6r" ] || continue
+        PS_A6_NSEEN=$((PS_A6_NSEEN+1))
+        if ! grep -qF -- "$psa6r" "$PS_A6_FIX"; then
+          ps_dne "PS-A6: the hub declares '$psa6r' and the shipped fixture itinerary carries no version-log or open-decisions line naming it — unexercised in that fixture, never passed in it"
+          PS_A6_NDNE=$((PS_A6_NDNE+1))
+        fi
+      done < "$PS_A6_D/want"
+      # Read the emission delta BEFORE the summary line, which is itself a ps_dne call.
+      PS_A6_DNED=$((PS_DNE_N - PS_A6_DNE0))
+      [ "$PS_A6_NDNE" -gt 0 ] && ps_dne "PS-A6: $PS_A6_NDNE of the $PS_A6_NWANT register-declared obligation(s) on that prompt have no line in the shipped fixture. The count is what keeps the gap from being silent, and closing it with a hand-built witness is the one remedy this card refuses"
+      # The accounting now asserts ITSELF, in both directions a silence could enter: the rows
+      # it walked against the rows the register handed it, and the lines ps_dne actually
+      # emitted against the ones this arm counted.
+      if [ "$PS_A6_NSEEN" -ne "$PS_A6_NWANT" ]; then
+        FAIL "PS-A6-DNE: the accounting walked $PS_A6_NSEEN row(s) where PS-A6 graded $PS_A6_NWANT — the list this loop reads and the list the verdict above measured are not the same list, so any count it reports is over an unknown population"
+      elif [ "$PS_A6_DNED" -ne "$PS_A6_NDNE" ]; then
+        FAIL "PS-A6-DNE: this arm counted $PS_A6_NDNE unexercised obligation(s) and ps_dne emitted $PS_A6_DNED line(s) for them — the tally and the channel disagree, so what a reader sees on the DECLARED-NOT-EXERCISED channel is not what the arm measured"
+      else
+        PASS "PS-A6-DNE: the declared-not-exercised accounting RAN — against a readable fixture, over the $PS_A6_NWANT register row(s) PS-A6 graded, finding $PS_A6_NDNE unexercised, with ps_dne emitting exactly that many line(s). WHAT THIS ESTABLISHES is that the accounting happened, read the population the verdict above read, and emitted what it counted. It establishes NOTHING about whether any obligation is exercised — that is the DECLARED-NOT-EXERCISED channel's whole subject, and it stays declared. An unreadable fixture now fails above rather than deleting this arm"
+      fi
+    fi
+  fi
+  # PS-A6C — the MUST-FIRE arm. One row renamed in a temp copy of the list being compared
+  # AGAINST; the SAME comparator must name exactly that row. The victim is drawn from the
+  # list being PERTURBED, for the reason PS-A5C's own comment records.
+  if [ "$PS_A6_NWANT" -gt 0 ] && [ "$PS_A6_NHAVE" -gt 0 ]; then
+    PS_A6_V="$(head -1 "$PS_A6_D/have")"
+    awk -v v="$PS_A6_V" '$0 == v { print v " ZZ"; next } { print }' "$PS_A6_D/have" > "$PS_A6_D/have-mut"
+    if [ -n "$PS_A6_V" ] && ! cmp -s "$PS_A6_D/have" "$PS_A6_D/have-mut"; then
+      PS_A6_MR="$(ps_contain "$PS_A6_D/have-mut" "$PS_A6_D/have" | tr '\n' ';')"
+      if [ "$PS_A6_MR" = "${PS_A6_V} ZZ;" ]; then
+        PASS "PS-A6C: control — one contract row is renamed to '${PS_A6_V} ZZ' in a temp list (the perturbation is asserted to have landed) and the same comparator names EXACTLY that row and no other. PS-A6's clean result is a measurement, and a comparator that flagged everything would fail this arm's second limb"
+      else
+        FAIL "PS-A6C: the arm did not behave (reported '$PS_A6_MR', expected '${PS_A6_V} ZZ;') — PS-A6 cannot be read as containment"
+      fi
+    else
+      FAIL "PS-A6C: the row perturbation did not land, so the control proves nothing about PS-A6"
+    fi
+  fi
+fi
+
+# ── The declared residual, on the ps_dne channel so it rides on EVERY run rather than
+# sitting in a comment somebody has to open this file to read. The card asks for it in two
+# places and this is the second; CLAUDE.md § Modes carries the first.
+ps_dne "MG: no arm in this group establishes that an agent FIRED any mode-gated branch. Every arm grades the tree — declared, agreed, un-negated, counted. Firing is unassertable from a tree of prompt files, because a hand-built witness passes identically whether an agent produced it or a person typed it. What would settle it: a live dispatch of the named agent against a trip at the branching mode, with the branch's own output observed in the artifact it writes"
+
+# ── MG-OPTOUT — three subjects in this group are FILES, not shell functions. `unset -f`
+# cannot remove a file, so md_flips would grade the ORACLE rather than the assertion, and
+# registering them would be a green proving only that the probe ran. Declared here rather
+# than left silently unregistered, each with the compensating POSITIVE CONTROL that the
+# authoring contract's clause 6 requires:
+#
+#   CLAUDE.md § Modes        -> MG-C4                  (a row loses the anchor; MG2 flips)
+#   agents/05-hub-planner.md -> MG-C1 / MG-C2 / MG-C3  (deleted / negated / added)
+#   agents/06-validator.md   -> MG-C1 / MG-C2 / MG-C3  (the same three, per behaviour)
+#
+# Each is a mutation of the FILE the arm reads, observed flipping that arm by identifier.
+# That is strictly stronger evidence than `unset -f`: it removes the EVIDENCE the arm
+# grades rather than a function that fetches it. An opt-out with no compensating arm would
+# be an exemption, which is the thing clause 6 exists to prevent.
+#
+# ── REGISTERED WITH md_flips, INSIDE THIS GROUP rather than in group MD, for the reason
+# the PP registrations give: they need this group's register read and its fixtures, which
+# are torn down at its end. MD4 and MD5 have already run by now, so every MD[MG…] verdict
+# stands on an oracle whose sensitivity AND specificity are measured.
+if [ "$MG_OK" -eq 1 ]; then
+  md_flips mg_register 'MG0' mg0_assert
+  MG_N=0
+  while IFS="$MG_TAB" read -r MGA MGP MGM MGROW; do
+    [ -n "$MGA" ] || continue
+    MG_N=$((MG_N+1)); MGID="B$MG_N"
+    md_flips mg_charter_modes "MG2-$MGID" mg2_assert "$MGID" "$MGA" "$MGM" "$MG_CHARTER"
+    md_flips mg_prompt_modes  "MG3-$MGID" mg3_assert "$MGID" "$MGA" "$MGM" "$ROOT/$MGP"
+    md_flips mg_negations     "MG4-$MGID" mg4_assert "$MGID" "$MGA" "$ROOT/$MGP"
+  done <<EOF
+$MG_REG
+EOF
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group VI — the venue-identity split rule has a witness.
 #
 # ── THE INVARIANT ────────────────────────────────────────────────────────────────
@@ -2220,7 +3313,29 @@ fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group ST — the starred-field count is ONE fact with FOUR homes inside EACH intake form,
-# and the three homes that merely describe it must agree with the one that IS it.
+# and the three homes that merely describe it must agree with the one that IS it. That is HALF
+# of this group. The other half grades the same set against a SECOND DOCUMENT.
+#
+# ── WHAT THIS GROUP PINS, AND WHAT IT DOES NOT ───────────────────────────────
+# Written down here because a reader composing an acceptance criterion against this gate has to
+# know which proposition they are buying — and because this group ran for several releases while
+# a governing document described it as something it was not, which no drift sweep caught.
+#
+#   ST1 / ST2   AGREEMENT INSIDE ONE FORM. The banner numeral, the appendix rule-4 numeral and
+#               the appendix's per-field annotations agree with the fields the form actually
+#               marks. Agreement is not accuracy: homes that moved together onto a wrong number
+#               agree perfectly, and this half stays green on precisely that edit.
+#   ST3 / ST4   THE LEVEL, against reference/data-model.md's field table. Per form, the
+#               intersection of that form's labelled bullets with the table's starred rows
+#               equals that form's marked set; across the run, the union of the per-form marked
+#               sets equals the table's starred set. Both in both directions, label for label.
+#               ST4 is the add-only complement ST3 is blind to by construction.
+#   NEITHER     a comparison against a SHIPPING-PATH PRODUCER. Group HC can pin its level that
+#               way because the class count HAS one — va_class_rows, which the validator itself
+#               runs. The starred count has none: nothing in the shipping path derives, consumes
+#               or acts on how many fields carry the star. So this group grades a second
+#               maintained document against the forms, which is stronger than a form agreeing
+#               with itself and weaker than a producer. Stating which is part of the gate.
 #
 # ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
 # This group shipped reading a single hardcoded path, at a commit where one intake form was
@@ -2282,20 +3397,35 @@ fi
 # drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "ST — the starred-field count agrees across all four of its homes, in every intake form"
+echo "ST — every intake form's starred set agrees across all four of its homes AND matches the data model's field table"
 
 # The population, one path per line. Each is graded independently and completely: its own
 # surfaces, its own violations, its own full set of control arms against its own fixtures.
 ST_TEMPLATES="templates/traveler-intake.template.md
 templates/person-intake.template.md"
 ST_STAR='⭐'
+# ST_DM — the SECOND document, and the one that makes this group grade a level rather than
+# only an agreement. Not a new literal: reference/data-model.md is already the subject of
+# RL_DM, XT_DM and HZ_DM further down, each reading the same field table by column index.
+# This is a FOURTH read of an already-controlled table, not a new reader.
+ST_DM="$ROOT/reference/data-model.md"
 mkdir -p "$WORK/st"
 
-# st_surfaces <file> — one TAB record per discovered assertion site, three surfaces:
+# st_surfaces <file> — one TAB record per discovered assertion site, four surfaces:
 #
 #   PROSE<TAB><line><TAB><count-as-integer>   a sentence that STATES the number
 #   MARKED<TAB><line><TAB><label>             a field whose bullet IS the star
 #   ANNOT<TAB><line><TAB><label>              the appendix's per-field restatement
+#   BULLET<TAB><line><TAB><label>             EVERY labelled field bullet, star or no star
+#
+# BULLET is the DENOMINATOR the cross-document arms below are keyed on, and it is emitted by
+# the MARKED branch with the glyph made optional rather than by a reader of its own. That is
+# load-bearing twice over. It makes MARKED a subset of BULLET BY CONSTRUCTION rather than by
+# coincidence, which is what ST3 rests on. And group RL further down defines rl_bullets for
+# its own population on a DIFFERENT anchored shape — `^\*\*[^:*]+:\*\*`, which diverges from
+# MARKED's on a label containing a colon — so borrowing it would put two readers of the same
+# corpus one file apart, which is the exact class of defect this group exists for. (It is also
+# defined AFTER this group executes, so this group could not call it in any case.)
 #
 # The glyph is located with index()/substr() rather than matched inside a bracket
 # expression, for the reason group LC states about the validator: a bracket range resolves
@@ -2347,14 +3477,19 @@ st_surfaces() {
     {
       line = $0; isfield = 0
       # MARKED — a list item whose bullet carries the glyph, then a bold label and a colon.
+      # BULLET — the SAME shape with the glyph made OPTIONAL, so every labelled field bullet
+      # is emitted and the starred ones are emitted twice, once under each kind. One traversal,
+      # one label rule, and therefore no way for the two populations to be read differently.
       if (match(line, /^-[ \t]*/)) {
-        rest = substr(line, RLENGTH + 1)
+        rest = substr(line, RLENGTH + 1); starred = 0
         if (index(rest, star) == 1) {
-          rest = substr(rest, slen + 1); sub(/^[ \t]+/, "", rest)
-          if (match(rest, /^\*\*[^*]+:\*\*/)) {
-            printf "MARKED\t%d\t%s\n", FNR, substr(rest, 3, RLENGTH - 5)
-            isfield = 1
-          }
+          rest = substr(rest, slen + 1); sub(/^[ \t]+/, "", rest); starred = 1
+        }
+        if (match(rest, /^\*\*[^*]+:\*\*/)) {
+          lbl = substr(rest, 3, RLENGTH - 5)
+          printf "BULLET\t%d\t%s\n", FNR, lbl
+          if (starred) printf "MARKED\t%d\t%s\n", FNR, lbl
+          isfield = 1
         }
       }
       # ANNOT — the appendix naming one starred field. Every match on the line, because the
@@ -2466,9 +3601,9 @@ st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 =
 # upper-case letter — so it cannot match the shape it is looking for and report a defect it had
 # just introduced. That is group PF's hazard, avoided by SCOPE rather than by scrubbing a needle.
 #
-# The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT records in the
-# same shape, and this reader returns those three if it is pointed at that function. Scoping it to
-# st_violations is what makes it a code reader; do not reuse it unscoped.
+# The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT/BULLET records
+# in the same shape, and this reader returns those four if it is pointed at that function. Scoping
+# it to st_violations is what makes it a code reader; do not reuse it unscoped.
 #
 # ── THE OPENING DELIMITER IS A CLASS, AND THE SINGLE-QUOTE LIMB IS LOAD-BEARING ──
 # An evaluator written in awk carries its emissions inside an awk `printf "..."`, so its codes open
@@ -2507,6 +3642,532 @@ st_setdiff() {
     $0 != "" && index(hay, " " $0 " ") == 0 && !seen[$0]++ { print }
   ' <<<"$1"
 }
+
+# ── st_sitemap / st_sites / st_attrib — ONE RUNG BELOW THE CODE: THE EMISSION SITE ─
+#
+# st_codes above answers which CODES an evaluator can emit. These three answer the finer question
+# that reader cannot: which PLACES in it can emit one. A code already covered by an arm can gain a
+# second, third or fourth emission site and a code-level comparison never moves — which is not
+# hypothetical here: st_violations emits DISAGREE from TWO places today, and both are reached by
+# arms that nothing asserts reach them.
+#
+#   st_sitemap <body>              -> one row per RAW emission site: "<KEY>\t<CODE>\t<PREFIX>"
+#   st_sites   <body>              -> the DISTINCT keys, first-occurrence order
+#   st_attrib  <records> <sitemap> -> one key per emitted record, attributed
+#
+# ── THE KEY IS <CODE>#<n>, AND ITS SHAPE IS A BUILD CONSTRAINT RATHER THAN A STYLE CALL ──
+# st_setdiff tests membership as index(hay, " " $0 " ") over a haystack joined with SPACES. A key
+# carrying the emission's literal prefix contains spaces, reads as ABSENT on every comparison, and
+# the arm goes SILENTLY GREEN over nothing — inside a helper THREE groups now share. So the key is
+# the code plus an ordinal over that code's DISTINCT emission signatures, it is whitespace-free by
+# construction, and st_setdiff is CALLED rather than modified.
+#
+# The ordinal moves if the emissions are reordered, and that is a non-event rather than a hazard:
+# BOTH sides of every comparison below are derived from the SAME body in the SAME run, so
+# transposing two emissions renames both identically and the set difference is invariant. Nothing
+# is declared anywhere, so nothing can drift. A LINE NUMBER was the other candidate key and is
+# refused by this group's own founding rule — every surface is found by markup shape and never by
+# line number, because the report that surfaced this named two line numbers that had already moved.
+#
+# The PREFIX is the detail's literal head, from the tab to the first printf conversion. It is what
+# makes attribution possible and it lives ONLY inside the sitemap, never in a verdict's set
+# arithmetic — the split is the point.
+#
+# st_sitemap reuses st_codes' needle, widened to capture the format that follows it, so it inherits
+# both of that reader's stated properties verbatim: it reads the PARSED body, so a reformat is a
+# non-event; and the character after the quote class in its pattern is a BRACKET and not an
+# upper-case letter, so it cannot see itself and report a defect it had just introduced. The
+# conversion is located with a NAMED CLASS and never a collating range — group LC's standing
+# finding, where a bracket range resolved against the collating sequence and matched the other case.
+st_sitemap() {
+  awk '
+    {
+      s = $0
+      while (match(s, /["\047][A-Z][A-Z0-9]*(-[A-Z0-9]+)*\\t/)) {
+        sb = RSTART; sl = RLENGTH
+        c = substr(s, sb + 1, sl - 3)
+        r = substr(s, sb + sl)
+        s = r
+        if (match(r, /%[-#.*[:digit:]]*[[:alpha:]]/)) r = substr(r, 1, RSTART - 1)
+        sub(/\\n.*$/, "", r)
+        sub(/["\047].*$/, "", r)
+        sig = c "\034" r
+        if (!(sig in ord)) ord[sig] = ++nth[c]
+        print c "#" ord[sig] "\t" c "\t" r
+      }
+    }
+  ' <<<"$1"
+}
+
+# st_sites <body> — the distinct keys, first-occurrence order. A here-string rather than a pipe,
+# the shape group PF keeps closed across this whole file.
+st_sites() {
+  awk -F'\t' 'NF > 1 && !seen[$1]++ { print $1 }' <<<"$(st_sitemap "$1")"
+}
+
+# st_attrib <records> <sitemap> — the emission site each emitted record came FROM, one key per
+# record. This is what the accumulator records, and its semantics differ from ST_ARMED's on
+# purpose: an arm can declare a CODE it intends to provoke, but it cannot declare a SITE, so what
+# is recorded here is what the evaluator ACTUALLY emitted when that arm ran.
+#
+# A record is attributed to the site whose prefix it begins with, LONGEST match first, so a code
+# whose sites share a common head still resolves to the more specific one. A record NO derived
+# site explains is emitted as <CODE>#? — a member of no derived set, so it lands in the PHANTOM
+# direction and reddens. That is fail-closed by construction: a record the reader cannot explain
+# means the reader and the emitter have diverged, which is the failure a coverage arm exists for.
+#
+# The two inputs arrive as ONE stdin stream separated by a marker record rather than through
+# awk -v, which ABORTS on a multi-line value ("newline in string"). The marker is the FS byte,
+# which no format string in either evaluator carries.
+st_attrib() {
+  local at_mark
+  at_mark="$(printf '\034')"
+  awk -F'\t' -v mark="$at_mark" '
+    $0 == mark { at_rec = 1; next }
+    at_rec == 0 { if (NF < 2) next; n++; skey[n] = $1; scode[n] = $2; spfx[n] = $3; next }
+    {
+      if (NF < 2) next
+      det = substr($0, length($1) + 2); best = ""; bl = -1
+      for (i = 1; i <= n; i++) {
+        if (scode[i] != $1) continue
+        if (substr(det, 1, length(spfx[i])) == spfx[i] && length(spfx[i]) > bl) { bl = length(spfx[i]); best = skey[i] }
+      }
+      print (best == "" ? $1 "#?" : best)
+    }
+  ' <<EOF
+$2
+$at_mark
+$1
+EOF
+}
+
+# ── cov_verdict / cov_assert — THE ARM-COVERAGE COMPARISON, IN ONE IMPLEMENTATION ─
+#
+# Three groups assert the same proposition: every code their evaluator can EMIT has a must-fire
+# arm, and every must-fire arm names a code that evaluator can emit. Group ST shipped it first.
+# Group CE copied it nine days later — its own opening comment says "on the ST precedent" — and
+# the result was measured rather than eyeballed: 24 of the 47 normalised non-blank lines of the
+# shorter arm are IDENTICAL once the group identifier is folded (st_/ce_, ST_/CE_, ST-/CE-, bare
+# ST/CE), rising to 28 of 47 once ST's per-fixture tag, for which CE has no analogue, is
+# neutralised too. Read it as 51-60%. Both control arms behaved: with NO folding at all the same
+# comparison returns 6 of 47, so the raw reader is live and the folding is doing real work; and
+# the same ST arm against an unrelated arm in this file returns 9 of 78, so the overlap is
+# SPECIFIC to the sibling pair rather than an artefact of shared shell boilerplate. Group CTL
+# would have been the third copy. It is a CALL instead, and so are the other two.
+#
+# ── WHY EXTRACTING HERE DOES NOT CROSS WHAT ADR-019 DECLINED TO CROSS ────────────
+# reference/adr/ADR-019 rejects a shared library on the finding that "the suites deliberately
+# duplicate their verdict harness rather than share it". Measured, that sentence describes the
+# SUITE boundary: md_probe is re-implemented in each of the five suites that existed when these
+# helpers were extracted, 7 occurrences each. st_codes and
+# st_setdiff exist in exactly ONE file and are already called ACROSS GROUPS inside it, as
+# has_finding, mk_root and run_fx are. These helpers join that second class. Extraction within one
+# file crosses nothing that record declined to cross.
+#
+# The prefix is cov_ and not st_cov_ deliberately. st_codes and st_setdiff carry a group prefix
+# they have outgrown — they are group-agnostic and called from CE — and extending that pattern in
+# a NEW identifier would canonicalise the defect rather than stop at it. cov_ names the property
+# the helper grades, which stays true under a fourth consumer. Measured: 0 of the 31 function
+# prefixes in this file are cov_, so nothing collides.
+#
+# ── WHAT IS SHARED IS THE COMPARISON. WHAT IS NOT SHARED IS THE DERIVATION ───────
+# ST and CE emit a code as the head of a format string followed by a TAB; the validator emits
+# `FINDING <CODE> `. Forcing one reader over both shapes would mean either a two-alternative
+# regex — a closed class the next emitter shape defeats silently, which is the trap ADR-019
+# writes down — or normalising shipping code so that a test can share a helper, which inverts the
+# dependency. So each caller passes its OWN extractor and its OWN shaper. Those two are a MATCHED
+# PAIR: the extractor reads an emission shape and the shaper writes that same shape, so the
+# control arms below mutate an input the SHIPPING reader then consumes rather than a lookalike.
+
+# cov_emit_tab <code> / cov_emit_finding <code> — ONE synthetic emission line carrying <code>, in
+# the shape its paired extractor reads. Passed BY NAME so a control arm's mutation is built by
+# the same grammar the reader consumes; a shaper and an extractor that disagreed would make the
+# control silently unable to fire, which is the failure the control exists to refuse.
+cov_emit_tab()     { printf '  printf "%s\\t a synthetic emission that no arm covers\\n"\n' "$1"; }
+cov_emit_finding() { printf '  printf "FINDING %s a synthetic emission that no arm covers\\n"\n' "$1"; }
+
+# cov_verdict <verdict-id> <control-stem> <subject> <codes> <armed> — the coverage verdict, and
+# the ONLY verdict this function renders.
+#
+# Four limbs, and the ORDER is part of the assertion. The EMPTINESS gate runs FIRST, so a reader
+# that has gone quiet is named as the cause instead of leaving both set differences empty and the
+# group green over nothing. Then BOTH directions are graded, because containment alone cannot
+# tell a covered set from a reader that returned nothing: one that had stopped finding emissions
+# would report "0 uncovered" and be believed.
+#
+# Exactly one verdict on every path, including the degenerate one, and every path reaches a
+# verdict. That is what makes it registrable with md_flips, which COUNTS verdicts in a subshell:
+# an assertion that stayed silent under mutation reports the probe broken rather than the
+# assertion flipping.
+cov_verdict() {
+  local id="$1" stem="$2" subj="$3" codes="$4" armed="$5"
+  # <unit> — the NOUN the members of this comparison's two sets are. It defaults to the code
+  # granularity the three original consumers grade, so those call sites pass eleven arguments and
+  # render byte-identical text; groups ST and CE pass 'emission site' for their site arms. A
+  # comparison over site keys whose own verdict called them codes would be this release's defect
+  # in miniature — a gate describing something other than what it grades.
+  local unit="${6:-code}"
+  local cov_un cov_ph cov_nc cov_nu cov_np cov_na
+  cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
+  cov_un="$(st_setdiff "$codes" "$armed")"
+  cov_ph="$(st_setdiff "$armed" "$codes")"
+  cov_nu="$(printf '%s\n' "$cov_un" | grep -c '[^[:space:]]')"
+  cov_np="$(printf '%s\n' "$cov_ph" | grep -c '[^[:space:]]')"
+  cov_na="$(printf '%s\n' "$armed" | awk 'NF && !seen[$0]++' | grep -c '.')"
+  if [ "$cov_nc" -eq 0 ]; then
+    FAIL "$id: the $unit reader returned 0 ${unit}s from the body of $subj, so the coverage verdict would be a statement over the empty set — either the emitter is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
+  elif [ "$cov_nu" -ne 0 ]; then
+    FAIL "$id: $cov_nu of the $cov_nc $unit(s) $subj can emit have NO must-fire arm in this run — $(printf '%s' "$cov_un" | tr '\n' ' '). Any $unit with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
+  elif [ "$cov_np" -ne 0 ]; then
+    FAIL "$id: $cov_np must-fire arm(s) name ${unit}s $subj cannot emit — $(printf '%s' "$cov_ph" | tr '\n' ' '). Either the $unit was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
+  else
+    PASS "$id: all $cov_nc $unit(s) $subj can emit [$(printf '%s' "$codes" | tr '\n' ' ')] have a must-fire arm, and all $cov_na armed $unit(s) name ${unit}s it can emit — a bijection, asserted in both directions, over the set the reader RESOLVED. The set is READ FROM the emitter's own body on this run rather than from a numeral in this file, so a $unit the reader resolves and no arm names arrives uncovered and RED. WHERE THIS STOPS: the reader's own pattern is the bound, and it is narrower than the emitter — it keys on the emission literal in a fixed shape, so a $unit written in a shape that pattern does not match is invisible to this comparison rather than covered by it. A green here is a bijection over what was read, never over everything that could be emitted. ${stem}1 and ${stem}2 show this same comparison failing in each direction"
+  fi
+}
+
+# cov_assert <verdict-id> <control-stem> <control-tag> <subject> <extractor> <shaper> <body>
+#            <codes> <armed> <probe> <phantom> [<probe-key>] [<unit>]
+#
+# The coverage verdict plus the TWO standing MUST-FIRE controls that are what make its two zeros
+# measurements rather than assertions. Three properties are preserved from the arms this replaces,
+# and each is the reason one of them is written the way it is:
+#
+#   * Both controls mutate a COPY OF A STRING IN THIS SHELL — never this file, never the tree — so
+#     there is nothing to restore and no checkout can be asked to undo it.
+#   * Both assert the mutation LANDED before the verdict is read. A fixture that was never
+#     actually changed makes a must-fire arm's silence meaningless.
+#   * Both grade a DELTA against this run's own measurement rather than against a literal 1. On a
+#     tree that already carries an uncovered code the control must still be honest instead of
+#     inheriting that state and accusing itself.
+#
+# <control-tag> is appended AFTER the digit, because group ST runs once per intake form and its
+# arms are spelled CTL-ST-COV1[<form>]. The other two consumers pass an empty tag.
+cov_assert() {
+  local id="$1" stem="$2" tag="$3" subj="$4" ex="$5" shaper="$6"
+  local body="$7" codes="$8" armed="$9" probe="${10}" phantom="${11}"
+  # ── THE TWO OPTIONAL PARAMETERS, AND WHY EACH HAS TO EXIST ──────────────────────
+  # <probe-key> is the member Control 1 expects the synthetic emission to ADD to the derived set,
+  # which is NOT always the probe itself: a site-granular extractor derives <probe>#1 from the very
+  # emission a code-granular one derives <probe> from, so a whole-line test against <probe> would
+  # miss and the control would FAIL on a working comparison. It defaults to <probe>, which is what
+  # keeps the three code-granular call sites byte-unchanged. The key is ASSERTED rather than
+  # assumed — the "the new member IS that key" limb below FAILs loudly if the derivation disagrees.
+  #
+  # <unit> is the noun, passed through to cov_verdict, defaulting to 'code'.
+  #
+  # Both are ADDITIVE and defaulted rather than positional-required, so extending this helper
+  # costs its existing consumers nothing — which is the property that let a fourth and fifth
+  # consumer arrive without a second implementation of the comparison.
+  local probekey="${12:-${10}}" unit="${13:-code}"
+  local cov_nc cov_nu cov_np cov_mut cov_landed cov_mu cov_mn cov_hit
+  local cov_ma cov_al cov_mp cov_pn cov_phit
+  cov_nc="$(printf '%s\n' "$codes" | grep -c '[^[:space:]]')"
+  cov_nu="$(st_setdiff "$codes" "$armed")"; cov_nu="$(printf '%s\n' "$cov_nu" | grep -c '[^[:space:]]')"
+  cov_np="$(st_setdiff "$armed" "$codes")"; cov_np="$(printf '%s\n' "$cov_np" | grep -c '[^[:space:]]')"
+
+  cov_verdict "$id" "$stem" "$subj" "$codes" "$armed" "$unit"
+  [ "$cov_nc" -gt 0 ] || return 0
+
+  # Control 1 — the UNCOVERED direction. One synthetic emission is appended to a copy of the
+  # emitter's body and the SAME extractor and the SAME st_setdiff read it, so what is graded is
+  # the shipping comparison with one input changed.
+  cov_mut="$body
+$("$shaper" "$probe")"
+  cov_landed=0; [ "$cov_mut" != "$body" ] && cov_landed=1
+  cov_mu="$(st_setdiff "$("$ex" "$cov_mut")" "$armed")"
+  cov_mn="$(printf '%s\n' "$cov_mu" | grep -c '[^[:space:]]')"
+  cov_hit="$(printf '%s\n' "$cov_mu" | grep -c "^${probekey}$")"
+  if [ "$cov_landed" -eq 1 ] && [ "$cov_mn" -eq $((cov_nu + 1)) ] && [ "$cov_hit" -eq 1 ]; then
+    PASS "${stem}1${tag}: MUST FIRE — one unarmed $unit appended to a COPY of the body of $subj takes the uncovered set from $cov_nu to $cov_mn and the new member IS that $unit ($probekey). Any $unit added to the real emitter with no arm behind it turns $id red, which is the property this group could otherwise only state. The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "${stem}1${tag}: MUST FIRE — an unarmed $unit appended to a copy of the body of $subj was not reported (mutation-landed=$cov_landed, uncovered=$cov_mn against $((cov_nu + 1)) expected, probe-key=$probekey, probe-found=$cov_hit). $id's zero above does not respond to a known hole and therefore proves nothing"
+  fi
+
+  # Control 2 — the PHANTOM direction, the one that keeps the zero from resting on a reader that
+  # has gone quiet. Without it an extractor returning nothing would leave the uncovered set empty
+  # and the verdict would read GREEN over a group with no coverage at all.
+  cov_ma="$armed
+$phantom"
+  cov_al=0; [ "$cov_ma" != "$armed" ] && cov_al=1
+  cov_mp="$(st_setdiff "$cov_ma" "$codes")"
+  cov_pn="$(printf '%s\n' "$cov_mp" | grep -c '[^[:space:]]')"
+  cov_phit="$(printf '%s\n' "$cov_mp" | grep -c "^${phantom}$")"
+  if [ "$cov_al" -eq 1 ] && [ "$cov_pn" -eq $((cov_np + 1)) ] && [ "$cov_phit" -eq 1 ]; then
+    PASS "${stem}2${tag}: MUST FIRE — a phantom $unit, named by no emission at all, added to a COPY of the armed set, takes the phantom set from $cov_np to $cov_pn and the new member IS that $unit. So $id's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
+  else
+    FAIL "${stem}2${tag}: MUST FIRE — a phantom arm was not reported (mutation-landed=$cov_al, phantom=$cov_pn against $((cov_np + 1)) expected, probe-found=$cov_phit). $id cannot distinguish a covered $unit set from a reader that returned nothing"
+  fi
+}
+
+# site_cov_assert <verdict-id> <control-stem> <subject> <body> <armed-sites> — the SITE coverage
+# verdict ALONE, for group MD to register. Groups ST and CE both call it, so the registration path
+# carries no second copy of the comparison either.
+#
+# It takes the BODY and derives the site set itself rather than being handed one, and that is what
+# makes the registration mean anything: md_flips removes a FUNCTION, so an assertion holding a
+# precomputed set would survive st_sitemap's removal and report itself blind. Exactly one verdict
+# on every path, including the degenerate one — md_probe COUNTS verdicts, so an assertion that
+# stayed silent under mutation would report the probe broken rather than the assertion flipping.
+site_cov_assert() {
+  local id="$1" stem="$2" subj="$3" body="$4" armed="$5"
+  local sa_raw sa_keys sa_nk
+  sa_raw="$(printf '%s\n' "$(st_sitemap "$body")" | grep -c '[^[:space:]]')"
+  sa_keys="$(st_sites "$body")"
+  sa_nk="$(printf '%s\n' "$sa_keys" | grep -c '[^[:space:]]')"
+  if [ "$sa_raw" -eq 0 ] || [ "$sa_nk" -ne "$sa_raw" ]; then
+    FAIL "$id: the emission-site reader returned $sa_raw raw site(s) resolving to $sa_nk distinct key(s) over the body of $subj — a site comparison cannot be graded over a reader that returned nothing, nor over one whose keys collide, so this verdict is UNMEASURED rather than clean"
+    return 0
+  fi
+  cov_verdict "$id" "$stem" "$subj" "$sa_keys" "$armed" 'emission site'
+}
+
+# ── THE CROSS-DOCUMENT HALF ──────────────────────────────────────────────────────
+# Everything above grades ONE fact with four homes INSIDE one form. That is AGREEMENT, and
+# agreement is not accuracy: four homes moved together onto a wrong number stay green. The
+# functions below grade the LEVEL — each form's starred set against reference/data-model.md's
+# field table, label for label and in BOTH directions — so a coherent four-home edit the
+# model does not carry is RED.
+#
+# NO COUNT IS WRITTEN DOWN HERE, and that is the whole shape of it. Group HC's comment states
+# the rule: a copy in this file "would be a THIRD home, green while the other two drifted
+# apart from each other." The key is BULLET PRESENCE on the form — which is what
+# reference/adr/ADR-012-people-library.md already declares the starred-pass split to be keyed
+# on, "the presence of a bullet in the shipped intake forms". Nothing below maps a class to a
+# form and nothing below names a form, so a third intake form is still ONE LINE in
+# ST_TEMPLATES. A Class-to-form map was the other candidate; it reproduces the whole partition
+# with exactly the two exceptions the document itself declares, so it is sound — and it was
+# NOT taken, because it would be a second place the class vocabulary lives and would make that
+# one line two.
+#
+# ── WHAT THIS PAIR DOES NOT PIN, SAID WHERE A READER WRITING AN AC WILL LOOK ─────
+# Group HC pins its level against SC_NCLASS — a row count produced by va_class_rows, the
+# SHIPPING validator's own extractor. There is no equivalent here, and this pair does not
+# claim one: nothing in the shipping path derives, consumes or acts on how many fields carry
+# the star, so the starred count has no producer to be graded against. What it has instead is
+# a SECOND, independently-maintained document whose starred rows are authored on the data
+# model's axis (class, scope, horizon) rather than on the form's. That is stronger than
+# intra-file agreement and weaker than a producer. Which of the two it is belongs in the
+# assertion rather than in a caveat on it.
+
+# st_labdiff / st_labint — set difference and intersection over LABELS, one per line,
+# first-occurrence order, deduplicated.
+#
+# st_setdiff above is NOT usable for this and the reason is load-bearing rather than stylistic.
+# Its membership test is containment in a SPACE-DELIMITED haystack, which is exactly right for
+# violation codes — no code carries a space — and wrong for field labels, which routinely do
+# (`Trip vibe`, `Leaving from`, `Lodging style`). Under that test the string "vibe Can" is
+# found in a haystack spelling "Trip vibe Can travel", so a comparison over labels could report
+# a membership the corpus does not carry and, worse, could report a real DIFFERENCE as absent.
+# These two key on the WHOLE LINE, which is what a label is.
+ST_SEP='ZZ-ST-SET-SEPARATOR'
+
+st_labdiff() {   # st_labdiff <a> <b> -> members of A absent from B
+  printf '%s\n%s\n%s\n' "$2" "$ST_SEP" "$1" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") b[$0] = 1; next }
+    $0 != "" && !($0 in b) && !seen[$0]++ { print }
+  '
+}
+
+st_labint() {   # st_labint <a> <b> -> members of A that are ALSO in B
+  printf '%s\n%s\n%s\n' "$2" "$ST_SEP" "$1" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") b[$0] = 1; next }
+    $0 != "" && ($0 in b) && !seen[$0]++ { print }
+  '
+}
+
+# st_dm_rows <data-model> — "<line><TAB><label>" for every field-table row whose Field cell
+# carries the star, in table order. ONE predicate for the whole cross-document half: the
+# extractor and the control arms' mutation targeting read the same rows by the same rule, so a
+# control cannot aim at a row the extractor does not see.
+#
+# Read with awk -F'|' BY COLUMN INDEX, exactly as rl_class, xt_class and hz_class read this same
+# table: $2 must be an integer row number and $3 is the Field cell. Those three groups already
+# rest on the document's own in-table warning — "Do not reorder these columns" — so this reader
+# inherits a constraint that is declared in the corpus rather than assumed here.
+#
+# The glyph is located with index() and NEVER inside a bracket expression, for the reason group
+# LC states about the validator: a bracket range resolves against the current locale's collating
+# sequence, so CI and an operator's shell can disagree about what it matched.
+st_dm_all() {
+  awk -F'|' -v star="$ST_STAR" '
+    NF < 8 { next }
+    {
+      num = $2; gsub(/[ \t]/, "", num)
+      if (num !~ /^[0-9]+$/) next
+      fld = $3
+      # the label is a code span; a row without one is the unlabelled free-text tail, which
+      # has no bullet form and so cannot appear in any form this group reads
+      if (!match(fld, /`[^`]+`/)) next
+      # index() does not touch RSTART/RLENGTH, so the star test is safe to take inline here
+      printf "%d\t%d\t%s\n", FNR, (index(fld, star) > 0) ? 1 : 0, substr(fld, RSTART + 1, RLENGTH - 2)
+    }' "$1"
+}
+
+# st_dm_rows <data-model> — "<line><TAB><label>" for the STARRED rows alone. The star is a
+# FLAG on the one predicate rather than a second copy of it, so the extractor and the control
+# arms' mutation targeting cannot come to disagree about which rows exist.
+st_dm_rows() { st_dm_all "$1" | awk -F'\t' '$2 == 1 { print $1 "\t" $3 }'; }
+
+# st_dm_starred <data-model> — the LABEL of every starred field-table row, one per line. This is
+# the registered subject of the md_flips arms in group MD: removing it empties every set below,
+# and every assertion here then reaches its non-degeneracy limb rather than an equality over two
+# empty sets.
+st_dm_starred() { st_dm_rows "$1" | awk -F'\t' '{ print $2 }'; }
+
+# st3_report <template> <data-model> — the ST3 comparison as TAB records. ONE evaluator drives
+# the shipping arm and every control arm alike, the st_surfaces/st_violations idiom one level up:
+# an evaluator that is not the one under test proves nothing about the one that ships.
+#
+#   NB<TAB><n>        distinct labelled bullets on the form — the DENOMINATOR
+#   NM<TAB><n>        distinct marked bullets on the form
+#   NS<TAB><n>        distinct starred rows in the model
+#   MNS<TAB><label>   marked on this form, NOT starred in the model
+#   SNM<TAB><label>   on this form and starred in the model, NOT marked on it
+#
+# MARKED is a subset of BULLET by construction, so M minus (B intersect S) reduces to M minus S,
+# and the two record kinds above are exactly the two directions of "B intersect S equals M". They
+# are emitted SEPARATELY and never merged: a red normally means the TABLE is stale, because
+# ADR-012 makes the forms authoritative and the table a restatement — and one merged list would
+# leave a builder guessing which of the two files to edit.
+st3_report() {
+  local surf b m s inter
+  surf="$(st_surfaces "$1")"
+  b="$(printf '%s\n' "$surf" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++')"
+  m="$(printf '%s\n' "$surf" | awk -F'\t' '$1 == "MARKED" { print $3 }' | awk 'NF && !seen[$0]++')"
+  s="$(st_dm_starred "$2" | awk 'NF && !seen[$0]++')"
+  inter="$(st_labint "$b" "$s")"
+  printf 'NB\t%s\n' "$(printf '%s\n' "$b" | grep -c '[^[:space:]]')"
+  printf 'NM\t%s\n' "$(printf '%s\n' "$m" | grep -c '[^[:space:]]')"
+  printf 'NS\t%s\n' "$(printf '%s\n' "$s" | grep -c '[^[:space:]]')"
+  st_labdiff "$m" "$s"     | awk 'NF { print "MNS\t" $0 }'
+  st_labdiff "$inter" "$m" | awk 'NF { print "SNM\t" $0 }'
+}
+
+# st3_assert <template> <data-model> — exactly ONE verdict, and self-contained: it takes no state
+# from the loop below and calls its own extractors. That is what makes the md_flips registration
+# in group MD a measurement of THIS assertion rather than of a value someone else computed for it
+# — md_flips removes a FUNCTION, so an assertion handed a precomputed set would survive its
+# subject's removal and report itself blind.
+st3_assert() {
+  local f="$1" dm="$2" tag rep nb nm ns nd
+  tag="${f##*/}"; tag="${tag%.template.md}"
+  rep="$(st3_report "$f" "$dm")"
+  nb="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" { print $2; exit }')"
+  nm="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NM" { print $2; exit }')"
+  ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
+  nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
+  if [ "${nb:-0}" -lt 1 ] || [ "${nm:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
+    FAIL "ST3[$tag]: a side of the comparison came back EMPTY (labelled bullets=${nb:-0}, marked=${nm:-0}, starred model rows=${ns:-0}) — two empty sets are equal, so a verdict here would be a PASS reached over nothing. A zero on any side is a broken extractor or a restructured document, never a clean tree. CTL-ST3-EXTRACT below drives this same limb on purpose"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "ST3[$tag]: over this form's $nb labelled bullet(s), the $nm field(s) it marks and the $ns starred row(s) in reference/data-model.md's field table are NOT the same set. ADR-012 makes the FORMS authoritative and the table a restatement of them, so the TABLE is normally the side to correct — read each direction before deciding:"
+    printf '%s\n' "$rep" | awk -F'\t' '
+      $1 == "MNS" { printf "      marked-not-in-model: %s — this form stars it and the table does not\n", $2 }
+      $1 == "SNM" { printf "      model-starred-not-marked: %s — the table stars it and this form carries the bullet unstarred\n", $2 }'
+  else
+    PASS "ST3[$tag]: the $nm field(s) this form marks are EXACTLY the starred rows of reference/data-model.md's field table that this form asks at all — label for label, both directions, over a denominator of $nb labelled bullet(s) intersected against $ns starred row(s). This is the LEVEL, not the in-form agreement ST1 grades: a coherent edit moving all four of this form's homes together onto a count the model does not carry is caught here and nowhere else. Keyed on bullet presence, so neither a count nor a class-to-form map is spelled in this file. CTL-ST3-FORM and CTL-ST3-MODEL below show this same comparison failing in each direction, and CTL-ST3-NEUTRAL shows it staying silent on a table edit that moves no star"
+  fi
+}
+
+# st4_report <union-of-marked> <data-model> — the ST4 comparison, same record shape.
+#
+#   NU<TAB><n>        distinct labels marked across ALL forms read this run
+#   NS<TAB><n>        distinct starred rows in the model
+#   UNS<TAB><label>   marked on some form, NOT starred in the model
+#   SNU<TAB><label>   starred in the model, marked on NO form
+st4_report() {
+  local u s
+  u="$(printf '%s\n' "$1" | awk 'NF && !seen[$0]++')"
+  s="$(st_dm_starred "$2" | awk 'NF && !seen[$0]++')"
+  printf 'NU\t%s\n' "$(printf '%s\n' "$u" | grep -c '[^[:space:]]')"
+  printf 'NS\t%s\n' "$(printf '%s\n' "$s" | grep -c '[^[:space:]]')"
+  st_labdiff "$u" "$s" | awk 'NF { print "UNS\t" $0 }'
+  st_labdiff "$s" "$u" | awk 'NF { print "SNU\t" $0 }'
+}
+
+# st4_assert <union-of-marked> <data-model> <members-read> — exactly ONE verdict, run level.
+#
+# ST3 IS BLIND TO AN INPUT THAT ONLY ADDS, by construction rather than by oversight: a starred
+# table row whose label is on NO form is in no form's bullet set, so it enters no form's
+# intersection and every per-form ST3 stays green. ST4 is the complement that closes it, and
+# CTL-ST4-ADD below drives exactly that input and asserts ST3's silence on it in the same breath
+# — which is the whole reason this arm exists.
+#
+# Its non-degeneracy gate is its OWN and is wider than ST3's, because this arm runs outside the
+# per-form loop and outside ST_OK: two empty sets are equal, and a run where no member was read
+# is precisely the branch a degenerate outcome reaches.
+st4_assert() {
+  local u="$1" dm="$2" nread="$3" rep nu ns nd
+  rep="$(st4_report "$u" "$dm")"
+  nu="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NU" { print $2; exit }')"
+  ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
+  nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
+  if [ "${nread:-0}" -lt 1 ] || [ "${nu:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
+    FAIL "ST4: a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, labels marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "ST4: the union of the marked sets across the $nread intake form(s) read this run ($nu label(s)) is NOT the starred set of reference/data-model.md's field table ($ns row(s)). A star added on one side and not the other is what this arm exists to catch, and the add-only direction is the one no per-form arm can see:"
+    printf '%s\n' "$rep" | awk -F'\t' '
+      $1 == "UNS" { printf "      marked-on-a-form-not-in-model: %s\n", $2 }
+      $1 == "SNU" { printf "      model-starred-on-no-form: %s — the table stars a label no intake form asks, and ST3 is BLIND to this by construction\n", $2 }'
+  else
+    PASS "ST4: the union of the marked sets across the $nread intake form(s) read this run is EXACTLY the $ns starred row(s) of reference/data-model.md's field table — $nu label(s), both directions. This is the ADD-ONLY complement to ST3: a starred row added to the table for a label no form carries enters no form's intersection and leaves every per-form ST3 green, so it is caught here. CTL-ST4-ADD below drives that input and asserts ST3's silence on it"
+  fi
+}
+
+# st3_mustfire <arm> <template-fixture> <model-fixture> <side> <label> <what> — ONE input mutated
+# alone, and the SAME st3_report must then name <label> on <side>. The mutation is asserted to
+# have LANDED before the verdict is read, exactly as st_mustfire does one level up: a fixture that
+# was never actually changed makes a must-fire arm's silence meaningless.
+#
+# These are a SEPARATE pair from st_mustfire/st_mustnotfire, deliberately. Those two are keyed to
+# st_violations' CODE vocabulary and they record coverage into ST_ARMED, which is ST-COV's second
+# input. Routing a cross-document arm through them would put a token ST-COV cannot find into that
+# accumulator and turn the bijection red — so ST_ARMED is not touched here, ST_CODES stays at the
+# six codes st_violations emits, and ST-COV's arithmetic is byte-unchanged.
+st3_mustfire() {
+  local id="$1" tf="$2" df="$3" side="$4" lbl="$5" what="$6" landed=0 rep hit n live
+  cmp -s "$ST_FILE" "$tf" && cmp -s "$ST_DM" "$df" || landed=1
+  rep="$(st3_report "$tf" "$df")"
+  hit="$(printf '%s\n' "$rep" | awk -F'\t' -v s="$side" -v l="$lbl" '$1 == s && $2 == l { n++ } END { print n + 0 }')"
+  n="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
+  # The FIRING has to be earned too, and not only the silence its twin below grades. With the
+  # model extractor returning nothing, every marked label falls into the marked-not-in-model
+  # list for free — so an arm that only asked "is my label named?" would report a healthy fire
+  # over a broken instrument. Requiring all three populations non-empty ON THIS INPUT is what
+  # separates a difference the mutation caused from one an empty set manufactured.
+  live="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" || $1 == "NM" || $1 == "NS" { if ($2 + 0 > 0) k++ } END { print (k == 3) ? "yes" : "no" }')"
+  if [ "$landed:$hit:$live" = "1:1:yes" ]; then
+    PASS "$id: MUST FIRE — $what, and the same comparison names '$lbl' under $side ($n difference(s) in all, over three non-empty populations). The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$id: MUST FIRE — $what, but this arm read mutation-landed=$landed named-under-$side=$hit differences=$n populations-live=$live, wanting 1:1:yes. ST3's zero has no control behind it in this direction"
+  fi
+}
+
+# st3_mustnotfire <arm> <template-fixture> <model-fixture> <edit-expected> <what> — the arms that
+# tell a correct comparison from one that reddens on ANY difference between the two documents.
+st3_mustnotfire() {
+  local id="$1" tf="$2" df="$3" wantedit="$4" what="$5" landed=0 rep n live
+  cmp -s "$ST_FILE" "$tf" && cmp -s "$ST_DM" "$df" || landed=1
+  rep="$(st3_report "$tf" "$df")"
+  n="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
+  # The silence has to be EARNED. A comparison whose inputs came back empty is silent too, and
+  # that is precisely the branch a must-not-fire arm would otherwise certify as clean — the MD
+  # rule one level up, applied to this arm rather than declared as a residual for it. live reads
+  # yes only when all three populations are non-empty ON THIS VERY INPUT, so the three states are
+  # graded as one string and no PASS here is reachable over an empty set.
+  live="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" || $1 == "NM" || $1 == "NS" { if ($2 + 0 > 0) k++ } END { print (k == 3) ? "yes" : "no" }')"
+  if [ "$landed:$n:$live" = "$wantedit:0:yes" ]; then
+    PASS "$id: MUST NOT FIRE — $what, and the comparison reports 0 difference(s) over three non-empty populations"
+  else
+    FAIL "$id: MUST NOT FIRE — $what, but this arm read differs-from-original=$landed differences=$n populations-live=$live, wanting $wantedit:0:yes"
+  fi
+}
+
+# st_dm_fixture <name> — a fresh copy of the real data model under this member's temp dir. Never
+# $ROOT, for the reason st_fixture states below: CTLe grades, last of all, that this suite never
+# wrote into the tree it measures.
+st_dm_fixture() { cp "$ST_DM" "$ST_DIR/$1.md" && printf '%s\n' "$ST_DIR/$1.md"; }
 
 # st_fixture <name> — a fresh copy of the real template under the run's temp dir. Never
 # $ROOT: CTLe grades, last of all, that this suite never wrote into the tree it measures.
@@ -2555,6 +4216,13 @@ $want"
   cmp -s "$ST_FILE" "$fx" || landed=1
   v="$(st_violations "$(st_surfaces "$fx")")"
   n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  # The SITE side of the same coverage question. Recorded from the RECORDS rather than from $want,
+  # because $want is a code and only the record can say which of that code's emission sites was
+  # reached. Recorded after the evaluator has run and BEFORE the verdict, on the same principle
+  # the line above states. st_mustnotfire accumulates nothing here either: a must-not-fire arm
+  # asserts ZERO records, so counting there would let a FAILING one supply coverage.
+  ST_ARMED_SITES="$ST_ARMED_SITES
+$(st_attrib "$v" "$ST_SITEMAP")"
   if [ "$landed" -eq 1 ] && st_has "$v" "$want"; then
     PASS "$id: MUST FIRE — $what, and the same evaluator reports $want ($n violation(s) in all). The mutation is asserted to have landed before the verdict is read"
   else
@@ -2583,8 +4251,37 @@ st_mustnotfire() {
 # by being written into the function, and nothing here has to be told about it.
 ST_CODES="$(st_codes "$(declare -f st_violations)")"
 ST_NCODES="$(printf '%s\n' "$ST_CODES" | grep -c '[^[:space:]]')"
+# The EMISSION SITES the same function can emit FROM, derived once from the same body and for the
+# same reason: a site is a property of the EVALUATOR and not of any one template. One rung below
+# ST_CODES, and the gap between them is the whole of this arm's subject — the code set and the
+# site set are not the same size here, because one code is emitted from two places.
+ST_SITE_BODY="$(declare -f st_violations)"
+ST_SITEMAP="$(st_sitemap "$ST_SITE_BODY")"
 ST_COV_PROBE='ZZ-ST-COVERAGE-PROBE'
+# The label CTL-ST4-ADD plants in a COPY of the data model: a starred field-table row for a
+# field no intake form asks. It is deliberately un-bullet-shaped so it cannot collide with a
+# real label, and it is the ADD-ONLY input ST3 is blind to by construction.
+ST4_PHANTOM='ZZ-ST-NOFORM-FIELD'
+# The union ST4 grades after the loop, and the number of members that were actually READ into
+# it. Initialised HERE rather than inside the loop: a run whose every member failed ST0 must
+# reach ST4 with an empty union and a zero read-count, which is the degenerate branch ST4's own
+# gate refuses rather than a state that never arrives.
+ST_ALLMARKED=""
+ST_NREAD=0
+# The single member the group-MD registrations drive st3_assert over. Taken as the FIRST entry
+# of ST_TEMPLATES rather than as whatever the loop left in ST_FILE, so the registration grades a
+# deterministic subject; the assertion itself is identical on every member.
+ST_MD_FORM="$ROOT/$(printf '%s\n' "$ST_TEMPLATES" | awk 'NF { print; exit }')"
 ST_COV_PHANTOM='ZZ-ST-PHANTOM-ARM'
+# The site arm's own probes. The probe is a CODE, because the shaper writes an emission and an
+# emission carries a code; the probe KEY is what a site-granular reader derives FROM that emission,
+# and the two differ by exactly the ordinal this arm exists to add. The key is written here rather
+# than computed, and cov_assert ASSERTS it: if st_sitemap's ordinal for a code appearing once in
+# the mutated body is ever not 1, the control FAILs loudly instead of passing over a comparison
+# that never fired. The phantom is already key-shaped, so it needs no such companion.
+ST_SITE_PROBE='ZZ-ST-SITE-PROBE'
+ST_SITE_PROBE_KEY='ZZ-ST-SITE-PROBE#1'
+ST_SITE_PHANTOM='ZZ-ST-PHANTOM-SITE#9'
 
 while IFS= read -r ST_REL; do
 [ -n "$ST_REL" ] || continue
@@ -2602,26 +4299,64 @@ ST_OK=1
 # Per MEMBER, not per run: every arm runs once for each template, so a set carried over from the
 # first member would report the second as covered by arms that never ran in its pass.
 ST_ARMED=""
-ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0
+# PARALLEL to ST_ARMED and never a change to it — which is what keeps ST-COV's arithmetic and the
+# premises two sibling cards rest on exactly as they were. The two accumulators record genuinely
+# different things: ST_ARMED records the arm's DECLARED INTENT before the evaluator runs, and an
+# arm cannot declare a SITE because it names a code. This one records what the evaluator ACTUALLY
+# EMITTED, which is the stronger proposition for a site — this branch was reached by an input the
+# suite runs — and it is the only one available. Per MEMBER, for the reason stated above.
+ST_ARMED_SITES=""
+ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0; ST_NBULLET=0
 if [ -r "$ST_FILE" ]; then
   ST_SURF="$(st_surfaces "$ST_FILE")"
   ST_NPROSE="$(st_n PROSE "$ST_SURF")"
   ST_NMARK="$(st_n MARKED "$ST_SURF")"
   ST_NANNOT="$(st_n ANNOT "$ST_SURF")"
+  ST_NBULLET="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++' | grep -c '[^[:space:]]')"
   ST_NGLYPH="$(awk -v star="$ST_STAR" '{ s = $0; while ((p = index(s, star)) > 0) { n++; s = substr(s, p + length(star)) } } END { print n + 0 }' "$ST_FILE")"
 fi
 
-printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s appendix annotation(s) in %s, over %s star glyph(s) in the file\n' \
-  "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH"
+printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s appendix annotation(s) in %s, over %s star glyph(s) in the file and %s distinct labelled field bullet(s) — the denominator ST3 intersects\n' \
+  "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH" "$ST_NBULLET"
 
 if [ ! -r "$ST_FILE" ]; then
   FAIL "ST0[$ST_TAG]: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
   ST_OK=0
 elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; then
-  PASS "ST0[$ST_TAG]: all three discovered surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here"
+  PASS "ST0[$ST_TAG]: all three of the IN-FORM surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here. The fourth surface — the $ST_NBULLET distinct labelled field bullet(s) the same reader discovers — is gated by ST3's own limb rather than here, so an empty bullet set fails naming ST3 instead of naming three surfaces that were found"
 else
   FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
   ST_OK=0
+fi
+
+# ── ST-SITE0 — the ENTRY GATE for the site comparison, graded before anything rests on it, on
+# the shape this suite already ships nine times. It is NOT a zero: it is an EQUALITY between two
+# counts that must both be non-zero, so it cannot pass over an empty read.
+#
+# The first limb is the ordinary non-degeneracy one — a reader that has gone quiet must be named
+# as the cause rather than leaving both set differences empty.
+#
+# The SECOND limb is this design's one real blind spot, made loud instead of left silent. Two
+# emission sites of one code whose details open with the SAME literal are indistinguishable in the
+# output, so they collapse into one key and the population is under-reported — a smaller
+# denominator reading as full coverage. The gate FAILs naming both counts and the colliding code,
+# and the remedy is one sentence: give one of them a distinguishing literal head. A live worked
+# example is already in this file for anyone who wants to see the limb fire — st_sitemap over
+# st_surfaces returns MORE raw sites than distinct keys, because PROSE is emitted twice from two
+# formats that are byte-identical after the tab.
+ST_SITE_OK=1
+ST_SITE_RAW="$(printf '%s\n' "$ST_SITEMAP" | grep -c '[^[:space:]]')"
+ST_SITE_KEYS="$(st_sites "$ST_SITE_BODY")"
+ST_SITE_NK="$(printf '%s\n' "$ST_SITE_KEYS" | grep -c '[^[:space:]]')"
+ST_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_SITEMAP")"
+if [ "$ST_SITE_RAW" -eq 0 ]; then
+  FAIL "ST-SITE0[$ST_TAG]: the emission-site reader returned NO sites over the body of st_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
+  ST_SITE_OK=0
+elif [ "$ST_SITE_NK" -ne "$ST_SITE_RAW" ]; then
+  FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — key(s) ${ST_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
+  ST_SITE_OK=0
+else
+  PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades, and the gap is the point: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
 fi
 
 if [ "$ST_OK" -eq 1 ]; then
@@ -2645,6 +4380,21 @@ if [ "$ST_OK" -eq 1 ]; then
   else
     FAIL "ST-AR3[$ST_TAG]: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
   fi
+
+  # ST3 — the LEVEL, per form. Everything above this line grades agreement among this form's own
+  # four homes; this grades the set those homes describe against reference/data-model.md's field
+  # table. The shipping arm IS st3_assert, called here and registered in group MD, so what the
+  # registration grades and what this line renders cannot come apart.
+  st3_assert "$ST_FILE" "$ST_DM"
+
+  # The union ST4 grades after the loop, accumulated from the surfaces this run actually READ
+  # rather than re-derived once the loop has ended: a member that failed ST0 contributes nothing
+  # and is not counted, which is what lets ST4's own gate tell an empty union from an unread one.
+  # The newline is a literal continuation because this file uses no dollar-quoting anywhere, the
+  # same way ST_ARMED and ST_TEMPLATES are spelled.
+  ST_ALLMARKED="$ST_ALLMARKED
+$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $3 }')"
+  ST_NREAD=$((ST_NREAD + 1))
 fi
 
 # ── The control arms. Single-surface mutations that MUST turn ST red, covering every
@@ -2744,76 +4494,202 @@ if [ "$ST_OK" -eq 1 ]; then
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
   st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
 
+  # ── The CROSS-DOCUMENT control arms. Same discipline as the four-home arms above — every
+  # mutation lands on a COPY under $WORK and is asserted to have landed before any verdict is
+  # read — with one difference that matters: there are now TWO documents, so each arm mutates
+  # exactly ONE of them and leaves the other byte-untouched. An arm that moved both would pass
+  # whatever the comparison did.
+  #
+  # They do NOT route through st_mustfire/st_mustnotfire. Those record coverage into ST_ARMED,
+  # which is ST-COV's second input and is keyed to st_violations' six codes; a cross-document
+  # arm recorded there would be a phantom ST-COV could not match. ST_ARMED is untouched below.
+
+  # CTL-ST3-FORM — MUST FIRE, and this arm IS the card's own worked mutant: a FOURTH field is
+  # starred on the trip form (a seventh on the durable one). That is the coherent edit ST1 stays
+  # green on once the banner, rule 4 and the appendix move with it — so it is the one input that
+  # shows ST3 grading a LEVEL rather than an agreement. The target is a bullet the probe
+  # DISCOVERED and that the model does NOT star, so the mutation is a real addition to this
+  # form's starred set rather than a no-op on one already there.
+  ST3_S="$(st_dm_starred "$ST_DM" | awk 'NF && !seen[$0]++')"
+  ST3_CAND="$(printf '%s\n%s\n%s\n' "$ST3_S" "$ST_SEP" "$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $2 " " $3 }')" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") s[$0] = 1; next }
+    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (!(lbl in s)) { print; exit } }
+  ')"
+  ST3_CL="${ST3_CAND%% *}"; ST3_CB="${ST3_CAND#* }"
+  if [ -n "$ST3_CAND" ]; then
+    ST_FX="$(st_fixture st3form)"
+    st_line_sub "$ST_FX" "$ST3_CL" "^-[ ]*" "- $ST_STAR "
+    st3_mustfire "CTL-ST3-FORM[$ST_TAG]" "$ST_FX" "$ST_DM" MNS "$ST3_CB" "ONE MORE field is starred on this form — the bullet '$ST3_CB' at line $ST3_CL gains the glyph, which is the card's own worked mutant — while reference/data-model.md is left byte-untouched"
+  else
+    FAIL "CTL-ST3-FORM[$ST_TAG]: every labelled bullet on this form is already starred in the model, so the add-a-star mutation could not be CONSTRUCTED and ST3's verdict above has no control behind it in this direction. A form with no unstarred bullet is itself a finding, not a reason to skip"
+  fi
+
+  # CTL-ST3-MODEL — MUST FIRE, and it closes the OTHER direction. The mutation is on the MODEL
+  # side, so it also proves the table is a LIVE input to ST3 rather than a document the arm
+  # merely names.
+  #
+  # The direction is why this arm ADDS a star rather than stripping one, and the reasoning is
+  # worth leaving here because it is not obvious. Stripping a model star leaves this form still
+  # marking the field, so the form's marked set EXCEEDS the model's — which surfaces as
+  # marked-not-in-model, the direction CTL-ST3-FORM above already covers. Two arms landing in
+  # the same difference list would leave model-starred-not-marked with no control at all, and
+  # ST3's zero would then be a measurement in one direction and an assumption in the other. So
+  # the target is an UNSTARRED table row whose label this form carries as an UNMARKED bullet:
+  # the model gains a star, the form does not, and the difference lands on the other side.
+  ST3_M="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $3 }' | awk 'NF && !seen[$0]++')"
+  ST3_B="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++')"
+  ST3_UNM="$(st_labdiff "$ST3_B" "$ST3_M")"
+  ST3_AROW="$(printf '%s\n%s\n%s\n' "$ST3_UNM" "$ST_SEP" "$(st_dm_all "$ST_DM" | awk -F'\t' '$2 == 0 { print $1 " " $3 }')" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") u[$0] = 1; next }
+    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in u) { print; exit } }
+  ')"
+  ST3_ARL="${ST3_AROW%% *}"; ST3_ARB="${ST3_AROW#* }"
+  if [ -n "$ST3_AROW" ]; then
+    ST3_DMFX="$(st_dm_fixture st3model-dm)"
+    st_line_sub "$ST3_DMFX" "$ST3_ARL" "[|][ ]*\`" "| $ST_STAR \`"
+    st3_mustfire "CTL-ST3-MODEL[$ST_TAG]" "$ST_FILE" "$ST3_DMFX" SNM "$ST3_ARB" "ONE field-table row GAINS a star on a COPY of reference/data-model.md ('$ST3_ARB', line $ST3_ARL) for a field this form carries as an UNMARKED bullet, leaving this form and every other surface byte-untouched"
+  else
+    FAIL "CTL-ST3-MODEL[$ST_TAG]: no unstarred field-table row carries a label this form asks as an unmarked bullet, so the model-side mutation could not be CONSTRUCTED and the model-starred-not-marked direction is UNCOVERED for this member. ST3's verdict above is then a measurement in one direction and an assumption in the other"
+  fi
+
+  # CTL-ST3-NEUTRAL — MUST NOT FIRE. The RATIONALE cell of a STARRED row is reworded, which
+  # changes the document and moves no star and no label. This is what tells a correct comparison
+  # from one that reddens on any difference between the two files — and it is aimed at the ninth
+  # column deliberately, because that is the cell the table's own column-order warning names as
+  # the one a rationale-reading arm follows.
+  ST3_SROW="$(printf '%s\n%s\n%s\n' "$ST3_M" "$ST_SEP" "$(st_dm_rows "$ST_DM" | awk -F'\t' '{ print $1 " " $2 }')" | awk -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past { if ($0 != "") m[$0] = 1; next }
+    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in m) { print; exit } }
+  ')"
+  ST3_SRL="${ST3_SROW%% *}"; ST3_SRB="${ST3_SROW#* }"
+  if [ -n "$ST3_SROW" ]; then
+    ST3_DMFX2="$(st_dm_fixture st3neutral-dm)"
+    st_line_sub "$ST3_DMFX2" "$ST3_SRL" "[ ][|][ ]*$" " zzq-neutral-rewording |"
+    st3_mustnotfire "CTL-ST3-NEUTRAL[$ST_TAG]" "$ST_FILE" "$ST3_DMFX2" 1 "the RATIONALE cell of the starred field-table row '$ST3_SRB' is reworded on a copy of the model (line $ST3_SRL), changing the document while moving no star, no label and no row number"
+  else
+    FAIL "CTL-ST3-NEUTRAL[$ST_TAG]: no starred field-table row carries a label this form marks, so the neutral-edit control could not be CONSTRUCTED and nothing distinguishes ST3 from a comparison that reddens on any difference between the two documents"
+  fi
+
+  # CTL-ST3-CLEAN — MUST NOT FIRE. Unmutated copies of BOTH documents through the same
+  # comparison: the baseline that makes the two must-fire arms above mean anything.
+  ST_FX="$(st_fixture st3clean)"
+  ST3_DMFX3="$(st_dm_fixture st3clean-dm)"
+  st3_mustnotfire "CTL-ST3-CLEAN[$ST_TAG]" "$ST_FX" "$ST3_DMFX3" 0 "UNMUTATED copies of BOTH this form and reference/data-model.md are put through the same comparison"
+
   # ── ST-COV — the invariant this group had been holding BY HAND. Every code st_violations can
-  # emit has a must-fire arm, and every must-fire arm names a code it can emit. BOTH directions,
-  # because containment alone cannot tell a covered set from a reader that returned nothing: one
-  # that had gone quiet would report "0 uncovered" and be believed. The reverse difference is what
-  # makes the zero a measurement, and the emptiness gate below is what names the cause instead of
-  # blaming the arms.
+  # emit has a must-fire arm, and every must-fire arm names a code it can emit. The comparison,
+  # the emptiness gate and the two MUST-FIRE controls are cov_assert above, which groups CE and
+  # CTL invoke with their own extractors: ONE implementation, three consumers. Nothing about this
+  # group's proposition moved into the helper except the arithmetic that was already identical.
+  #
+  # st_violations is UNCHANGED and so is ST_CODES — the derivation and the population two sibling
+  # cards in this release rest on are exactly as they were. What is passed here is that same
+  # ST_CODES, together with the function body the control arm mutates a copy of.
   #
   # Graded here, LAST, because its second input is the set of arms that ran.
-  ST_UNARMED="$(st_setdiff "$ST_CODES" "$ST_ARMED")"
-  ST_PHANTOM="$(st_setdiff "$ST_ARMED" "$ST_CODES")"
-  ST_NUNARMED="$(printf '%s\n' "$ST_UNARMED" | grep -c '[^[:space:]]')"
-  ST_NPHANTOM="$(printf '%s\n' "$ST_PHANTOM" | grep -c '[^[:space:]]')"
-  ST_NARMED="$(printf '%s\n' "$ST_ARMED" | awk 'NF && !seen[$0]++' | grep -c '.')"
-  if [ "$ST_NCODES" -eq 0 ]; then
-    FAIL "ST-COV[$ST_TAG]: the code reader returned 0 codes from st_violations' own body, so the coverage verdict would be a statement over the empty set — either the function is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
-  elif [ "$ST_NUNARMED" -ne 0 ]; then
-    FAIL "ST-COV[$ST_TAG]: $ST_NUNARMED of the $ST_NCODES code(s) st_violations can emit have NO must-fire arm in this run — $(printf '%s' "$ST_UNARMED" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
-  elif [ "$ST_NPHANTOM" -ne 0 ]; then
-    FAIL "ST-COV[$ST_TAG]: $ST_NPHANTOM must-fire arm(s) name a code st_violations cannot emit — $(printf '%s' "$ST_PHANTOM" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
-  else
-    PASS "ST-COV[$ST_TAG]: all $ST_NCODES code(s) st_violations can emit [$(printf '%s' "$ST_CODES" | tr '\n' ' ')] have a must-fire arm, and all $ST_NARMED armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the function's own body on this run, so a seventh code arrives uncovered and RED rather than covered by a numeral in this file. CTL-ST-COV1 and COV2 below show this same comparison failing in each direction"
-  fi
+  cov_assert "ST-COV[$ST_TAG]" 'CTL-ST-COV' "[$ST_TAG]" 'st_violations' \
+             st_codes cov_emit_tab "$(declare -f st_violations)" \
+             "$ST_CODES" "$ST_ARMED" "$ST_COV_PROBE" "$ST_COV_PHANTOM"
 
-  # CTL-ST-COV1 — MUST FIRE, and this arm IS the card's proof-by-mutation. A synthetic emission is
-  # appended to a COPY OF THE FUNCTION TEXT — a string in this shell, never this file and never the
-  # tree — so there is nothing to restore and no checkout can be asked to undo it. The SAME
-  # st_codes and the SAME st_setdiff read it, so what is graded is the shipping comparison with one
-  # input changed: the CTL-ST arms' own discipline one level up, which mutates a copy of the
-  # template and keeps the evaluator.
+  # ── ST-SITE — the SAME proposition one rung finer, read together with ST-COV above so the
+  # granularity ladder is visible in the OUTPUT rather than only in a comment. ST-COV asks whether
+  # every code this evaluator can emit has an arm; this asks whether every PLACE it can emit one
+  # from was reached. The residual between them is real and measured: one code here is emitted
+  # from two places, and until this line existed a third could be added with no arm behind it and
+  # nothing in this suite would have moved.
   #
-  # Graded as a DELTA against ST-COV's own measurement rather than against a literal 1: on a tree
-  # that already carries an uncovered code this arm must still be honest instead of inheriting that
-  # state and accusing itself.
-  if [ "$ST_NCODES" -gt 0 ]; then
-    ST_COV_FN="$(declare -f st_violations)"
-    ST_COV_MUT="$ST_COV_FN
-        printf \"${ST_COV_PROBE}\\t a synthetic emission that no arm covers\\n\""
-    ST_COV_LANDED=0; [ "$ST_COV_MUT" != "$ST_COV_FN" ] && ST_COV_LANDED=1
-    ST_COV_MU="$(st_setdiff "$(st_codes "$ST_COV_MUT")" "$ST_ARMED")"
-    ST_COV_MN="$(printf '%s\n' "$ST_COV_MU" | grep -c '[^[:space:]]')"
-    ST_COV_HIT="$(printf '%s\n' "$ST_COV_MU" | grep -c "^${ST_COV_PROBE}$")"
-    if [ "$ST_COV_LANDED" -eq 1 ] && [ "$ST_COV_MN" -eq $((ST_NUNARMED + 1)) ] && [ "$ST_COV_HIT" -eq 1 ]; then
-      PASS "CTL-ST-COV1[$ST_TAG]: MUST FIRE — one unarmed code appended to a COPY of st_violations' body takes the uncovered set from $ST_NUNARMED to $ST_COV_MN and the new member IS that code. A seventh code added to the real function with no arm behind it turns ST-COV red, which is the property this group could previously only state. The mutation is asserted to have landed before the verdict is read"
-    else
-      FAIL "CTL-ST-COV1[$ST_TAG]: MUST FIRE — an unarmed code appended to a copy of the function body was not reported (mutation-landed=$ST_COV_LANDED, uncovered=$ST_COV_MN against $((ST_NUNARMED + 1)) expected, probe-found=$ST_COV_HIT). ST-COV's zero above does not respond to a known hole and therefore proves nothing"
-    fi
-  fi
-
-  # CTL-ST-COV2 — MUST FIRE on the OTHER direction, the one that keeps ST-COV's zero from resting
-  # on a reader that has gone quiet. A code no emission carries is added to a COPY of the armed
-  # set; the same comparison must name it. Without this arm an st_codes that returned nothing would
-  # leave the uncovered set empty and ST-COV would read GREEN over a group with no coverage at all
-  # — the exact shape of confidence-without-evidence this whole assertion exists to refuse.
-  if [ "$ST_NCODES" -gt 0 ]; then
-    ST_COV_MA="$ST_ARMED
-$ST_COV_PHANTOM"
-    ST_COV_ALANDED=0; [ "$ST_COV_MA" != "$ST_ARMED" ] && ST_COV_ALANDED=1
-    ST_COV_MP="$(st_setdiff "$ST_COV_MA" "$ST_CODES")"
-    ST_COV_PN="$(printf '%s\n' "$ST_COV_MP" | grep -c '[^[:space:]]')"
-    ST_COV_PH="$(printf '%s\n' "$ST_COV_MP" | grep -c "^${ST_COV_PHANTOM}$")"
-    if [ "$ST_COV_ALANDED" -eq 1 ] && [ "$ST_COV_PN" -eq $((ST_NPHANTOM + 1)) ] && [ "$ST_COV_PH" -eq 1 ]; then
-      PASS "CTL-ST-COV2[$ST_TAG]: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $ST_NPHANTOM to $ST_COV_PN and the new member IS that code. So ST-COV's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
-    else
-      FAIL "CTL-ST-COV2[$ST_TAG]: MUST FIRE — a phantom arm was not reported (mutation-landed=$ST_COV_ALANDED, phantom=$ST_COV_PN against $((ST_NPHANTOM + 1)) expected, probe-found=$ST_COV_PH). ST-COV cannot distinguish a covered group from a reader that returned nothing"
-    fi
+  # Same helper, same four limbs in the same order, a different extractor and a different
+  # accumulator — which is exactly the substitution cov_assert was parameterised for. The probe
+  # KEY is passed because a site-granular reader derives <probe>#1 from the emission a
+  # code-granular one derives <probe> from; the unit noun is passed so the verdict names what it
+  # actually grades.
+  # Gated on ST-SITE0 rather than rendered unconditionally, for the reason cov_assert's own
+  # emptiness limb gives: a comparison over a reader that returned nothing, or over keys that
+  # collided, is UNMEASURED and must be named as that ONCE rather than reported a second time as a
+  # coverage hole it is not. The gate FAILs loudly, so a suppressed comparison can never read green.
+  if [ "$ST_SITE_OK" -eq 1 ]; then
+    cov_assert "ST-SITE[$ST_TAG]" 'CTL-ST-SITE' "[$ST_TAG]" 'st_violations' \
+               st_sites cov_emit_tab "$ST_SITE_BODY" \
+               "$ST_SITE_KEYS" "$ST_ARMED_SITES" "$ST_SITE_PROBE" "$ST_SITE_PHANTOM" \
+               "$ST_SITE_PROBE_KEY" 'emission site'
   fi
 fi
 done <<EOF
 $ST_TEMPLATES
 EOF
+
+# ── ST4 and its two RUN-LEVEL arms. They sit outside the per-form loop because the proposition
+# is about the union ACROSS members, and because the input ST3 cannot see is one no single
+# member can see either.
+echo
+echo "  ── across every form read above"
+st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
+
+# CTL-ST4-ADD — MUST FIRE, and it is the ADD-ONLY input. A starred field-table row is appended
+# to a COPY of the model for a label NO intake form asks. Every existing declaration on both
+# forms and in the table is left byte-intact, so nothing is removed and nothing is renamed:
+# this is purely an addition, which is the class ADR-019 names as the one a per-form
+# intersection is structurally blind to.
+#
+# The arm grades BOTH halves in one verdict, because the second half is the reason the first
+# exists: ST4 must NAME the added label, and ST3 must stay SILENT on every member over the same
+# mutated model — with that silence EARNED, each member's comparison asserted non-degenerate on
+# the very input it stayed silent on. Two empty sets are silent too.
+ST4_FX="$WORK/st/st4add-dm.md"
+cp "$ST_DM" "$ST4_FX"
+printf '| 999 | %s `%s` | zzq | zzq | zzq | zzq | zzq | a synthetic starred row for a field no intake form asks |\n' "$ST_STAR" "$ST4_PHANTOM" >> "$ST4_FX"
+ST4_LANDED=0; cmp -s "$ST_DM" "$ST4_FX" || ST4_LANDED=1
+ST4_REP="$(st4_report "$ST_ALLMARKED" "$ST4_FX")"
+ST4_HIT="$(printf '%s\n' "$ST4_REP" | awk -F'\t' -v l="$ST4_PHANTOM" '$1 == "SNU" && $2 == l { n++ } END { print n + 0 }')"
+ST4_NDIFF="$(printf '%s\n' "$ST4_REP" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
+ST4_NMEM=0; ST4_SILENT=0
+while IFS= read -r ST4_REL; do
+  [ -n "$ST4_REL" ] || continue
+  ST4_NMEM=$((ST4_NMEM + 1))
+  ST4_ONE="$(st3_report "$ROOT/$ST4_REL" "$ST4_FX" | awk -F'\t' '
+    $1 == "NB" || $1 == "NM" || $1 == "NS" { if ($2 + 0 > 0) k++ }
+    $1 == "MNS" || $1 == "SNM" { d++ }
+    END { print ((k == 3) && (d + 0 == 0)) ? "1" : "0" }')"
+  ST4_SILENT=$((ST4_SILENT + ST4_ONE))
+done <<EOF
+$ST_TEMPLATES
+EOF
+ST4_WANT="landed=1 st4-names-the-addition=1 st4-differences=1 st3-silent-and-live=$ST4_NMEM/$ST4_NMEM"
+ST4_GOT="landed=$ST4_LANDED st4-names-the-addition=$ST4_HIT st4-differences=$ST4_NDIFF st3-silent-and-live=$ST4_SILENT/$ST4_NMEM"
+if [ "$ST4_GOT" = "$ST4_WANT" ]; then
+  PASS "CTL-ST4-ADD: MUST FIRE, ADD-ONLY — a starred field-table row for '$ST4_PHANTOM', a field no intake form asks, is APPENDED to a copy of reference/data-model.md with every existing declaration on both sides left intact. ST4 names exactly that label under model-starred-on-no-form and reports exactly one difference, while ST3 stays silent on all $ST4_NMEM member(s) over the SAME mutated model and is asserted non-degenerate on each. That silence is not a gap — it is ST3's declared blind spot, measured here rather than reasoned about, and it is the entire warrant for ST4 existing as a separate arm"
+else
+  FAIL "CTL-ST4-ADD: MUST FIRE, ADD-ONLY — the appended starred row for '$ST4_PHANTOM' was not graded as expected. Read '$ST4_GOT' against '$ST4_WANT'. If st4-names-the-addition is 0 the add-only direction is UNCOVERED and ST4's verdict above proves nothing; if st3-silent-and-live fell short, either ST3 is no longer blind to an addition — in which case this arm's warrant needs rewriting rather than patching — or a member's comparison went degenerate and its silence was never earned"
+fi
+
+# CTL-ST3-EXTRACT — MUST FIRE the NON-DEGENERACY limb, on the probe itself rather than on the
+# corpus. The whole field table is stripped from a copy of the model, so the extractor returns
+# the empty set; an empty extraction must reach a FAIL, because two empty sets are equal and a
+# comparison that reported them so would certify a document it had never read. It is also the
+# COMPENSATING CONTROL for the opt-out declared in group MD: reference/data-model.md is a file,
+# not a shell function, so md_flips cannot register it, and this arm is what grades that half.
+#
+# Both directions in one verdict, through md_probe — the suite's own oracle harness, used here
+# with a subject that does not exist, exactly as CTL-DATAROOT6's unmutated control does. The
+# stripped copy must return "0 1" (one FAIL, no PASS) and the clean one "1 0", so the arm
+# cannot pass on an assertion that reports nothing either way.
+ST3_NT="$WORK/st/st3notable-dm.md"
+awk -F'|' '{ ok = 1; if (NF >= 8) { num = $2; gsub(/[ \t]/, "", num); if (num ~ /^[0-9]+$/) ok = 0 } if (ok) print }' "$ST_DM" > "$ST3_NT"
+ST3_NT_N="$(st_dm_starred "$ST3_NT" | grep -c '[^[:space:]]')"
+ST3_RL_N="$(st_dm_starred "$ST_DM" | grep -c '[^[:space:]]')"
+ST3_RLOK=no; [ "$ST3_RL_N" -gt 0 ] && ST3_RLOK=yes
+ST3_EX_STRIP="$(md_probe zzq_st_no_such_subject st3_assert "$ST_MD_FORM" "$ST3_NT")"
+ST3_EX_CLEAN="$(md_probe zzq_st_no_such_subject st3_assert "$ST_MD_FORM" "$ST_DM")"
+ST3_EXWANT="stripped-extraction=0 real-extraction-nonempty=yes stripped-verdict=0 1 clean-verdict=1 0"
+ST3_EXGOT="stripped-extraction=$ST3_NT_N real-extraction-nonempty=$ST3_RLOK stripped-verdict=$ST3_EX_STRIP clean-verdict=$ST3_EX_CLEAN"
+if [ "$ST3_EXGOT" = "$ST3_EXWANT" ]; then
+  PASS "CTL-ST3-EXTRACT: MUST FIRE — with every field-table row removed from a COPY of reference/data-model.md the extractor returns the EMPTY set, and st3_assert over it reports exactly one FAIL and no PASS; over the real document, which yields $ST3_RL_N starred row(s), the same assertion reports exactly one PASS and no FAIL. So ST3's silence is a reading of a document that was actually parsed, and an extractor that had quietly stopped finding rows could not reach a PASS here. This arm is the compensating control for the file-subject opt-out declared in group MD"
+else
+  FAIL "CTL-ST3-EXTRACT: MUST FIRE — the extractor's non-degeneracy limb did not behave. Read '$ST3_EXGOT' against '$ST3_EXWANT'. A stripped-verdict other than '0 1' means an empty extraction can reach a PASS, which makes every ST3 and ST4 verdict above a statement over a document this suite may never have read"
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
 echo
@@ -2870,6 +4746,119 @@ EOF
 }
 run_fx() { va_main --root "$1" --scope dir . 2>&1; }
 
+# ── ARM COVERAGE FOR THIS GROUP: THE DERIVATION, AND THE ACCUMULATOR ─────────────
+#
+# CTL's coverage rule — "One MUST-FIRE arm per code the validator can emit" — was stated in
+# this file's header and held BY HAND. Groups ST and CE assert their own; this group did not,
+# and the difference between a stated invariant and an asserted one is the whole subject of
+# this suite. CTL-COV below asserts it, through the same cov_assert those two groups call.
+#
+# ── THE DERIVATION IS THIS GROUP'S OWN, AND THAT IS THE CUT ──────────────────────
+# st_codes is not merely inconvenient here, it is INAPPLICABLE, and that was measured rather
+# than assumed: pointed at the validator it returns 3 matches, all of them false positives
+# (EXCLUDED, UNMATCHED) and ZERO real codes, because the emission shapes differ. st_violations
+# emits a code as the head of a format string followed by a TAB; the validator emits
+# `FINDING <CODE> `. So this group passes its own extractor to the shared comparison, which is
+# exactly the boundary the shared helper is drawn at: the comparison transfers, the derivation
+# does not.
+
+# ctl_body — the concatenated `declare -f` text of every sourced va_* function.
+#
+# A READ OF THE SOURCED FUNCTIONS, NOT OF THE FILE, and each of the three reasons is a property
+# this suite already grades elsewhere:
+#   1. It grades the SOURCED SUBJECT. Remove va_check_artifact and five codes leave the set;
+#      remove va_fm_pairs and A1 does. That is the DER flip property, directly, which is what
+#      makes the registration in group MD a measurement rather than a formality.
+#   2. Comments vanish BY CONSTRUCTION. A static read of the validator finds 44 emission sites,
+#      of which 2 are prose — a banner and a comment — and yields the same 16 codes only
+#      because those two happen to name codes that are also emitted. declare -f leaves no
+#      exclusion rule to maintain and no way for prose to enter the set at all.
+#   3. It leaves NO file subject, so DER clause 6 needs no opt-out here and none is declared.
+#      A file is not a shell function and md_flips cannot remove one; choosing declare -f over
+#      a read of scripts/validate-artifacts.sh is what avoided creating that case. Had the
+#      derivation read the file, this group would owe an explicit opt-out naming it, its
+#      reason, and a compensating positive control, in the shape PP0 and PP9 ship.
+ctl_body() {
+  local f
+  for f in $(declare -F | awk '$3 ~ /^va_/ { print $3 }'); do
+    declare -f "$f"
+  done
+}
+
+# ctl_codes <text> — the validator finding codes a text can EMIT, one per line, first-occurrence
+# order, deduplicated. A code is exactly what has_finding looks one up BY: the token after the
+# literal `FINDING ` at the head of an emitted record.
+#
+# The code must HEAD a format string — the match opens on the quote — so prose naming a code is
+# not a code. The opening delimiter is a CLASS for the reason st_codes states: a bash-side
+# evaluator carries its emissions inside single quotes, where a double-quoted format would expand
+# `$` and a backtick, and a reader admitting only one spelling returns the empty set over the
+# other while its caller reports a covered group.
+#
+# The glyph after `FINDING ` in the pattern below is a BRACKET, not an upper-case letter, so this
+# reader cannot match its own body and report a defect it had just introduced — group PF's hazard,
+# avoided by shape rather than by scrubbing a needle.
+ctl_codes() {
+  awk '
+    {
+      s = $0
+      while (match(s, /["\047]FINDING [A-Z][A-Z0-9]*[ "\047]/)) {
+        c = substr(s, RSTART + 9, RLENGTH - 10)
+        if (!seen[c]++) print c
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+  ' <<<"$1"
+}
+
+# ── THE ARMED SET IS A RUNTIME ACCUMULATOR, NEVER A SOURCE SCAN ──────────────────
+#
+# This is load-bearing and it is measured. This group names a code through FOUR unlike
+# constructs, and that number is REPORTED rather than relied on: what matters is that the set is
+# open, not that it has a particular size. has_finding, itself a grep here-string, reaches 15 of
+# the 16 codes across 21 MUST-FIRE-positive sites. A bare `grep -c '^FINDING A2 '` reaches a code
+# has_finding already covers, so it contributes nothing the first shape does not. An `awk
+# index()` over a LITERAL needle appears twice more — and in BOTH places it asserts X3 is ABSENT
+# rather than arming it, which is exactly the kind of near-miss that makes a source reader look
+# finished when it is not.
+#
+# X3's ONLY must-fire arm is the fourth shape: an `awk index()` whose needle is built from a
+# SHELL VARIABLE, at CTL-VA-FAILCLOSED-MATRIX. A reader enumerating the three shapes a
+# reasonable author would think of reports X3 UNARMED, and CTL-COV lands RED on arrival for a
+# code that is in fact covered — a closed class presenting itself as complete, which is the
+# exact trap this suite exists to refuse.
+#
+# Accumulating AT THE CALL removes the class entirely: however an arm is written, it records the
+# code by running. Recorded BEFORE the verdict, on the principle st_mustfire's own banner states
+# — coverage asks whether an arm EXISTS for the code, not whether that arm passes. An arm whose
+# own precondition short-circuited it correctly leaves its code uncovered, which is the honest
+# reading rather than a defect.
+#
+# The two MUST-NOT-FIRE sites — CTL-A2neg and CTL-SCOPE2 — keep calling has_finding and arm
+# nothing, exactly as st_mustnotfire does not accumulate. A must-not-fire arm asserts a code is
+# ABSENT; counting it as coverage would let a group claim an arm for a code it only ever
+# asserted could not appear. The swap makes that polarity lexically visible in the source, which
+# it was not before.
+ctl_arm()   { CTL_ARMED="$CTL_ARMED
+$1"; }
+ctl_fired() { ctl_arm "$2"; has_finding "$1" "$2"; }
+
+# ctl_cov_assert <armed> — CTL-COV's coverage verdict ALONE, for group MD to register.
+#
+# It takes the armed set as an ARGUMENT and calls its own extractors, which is what makes the
+# registration mean anything: md_flips removes a FUNCTION, so an assertion handed a precomputed
+# code set would survive its subject's removal and report itself blind. It renders exactly ONE
+# verdict and reaches a FAIL on its degenerate path rather than staying silent — md_probe counts
+# verdicts, so an assertion that emitted nothing under mutation would report the probe broken
+# instead of the assertion flipping.
+ctl_cov_assert() {
+  cov_verdict 'CTL-COV' 'CTL-COV-MUT' 'the validator' "$(ctl_codes "$(ctl_body)")" "$1"
+}
+
+CTL_ARMED=""
+CTL_COV_PROBE='ZZCTLCOVPROBE'
+CTL_COV_PHANTOM='ZZCTLPHANTOMARM'
+
 CTL_RAN=0
 
 FX="$WORK/clean"; mk_root "$FX"
@@ -2922,7 +4911,7 @@ else
 fi
 
 B_OUT="$(run_fx "$FXB")"; B_RC=$?
-if [ "$B_RC" -ne 0 ] && has_finding "$B_OUT" 'A3' && has_finding "$B_OUT" 'A4'; then
+if [ "$B_RC" -ne 0 ] && ctl_fired "$B_OUT" 'A3' && ctl_fired "$B_OUT" 'A4'; then
   PASS "C1b: MUST FIRE — the byte-identical fixture with 'schema-version: 1' added and nothing else changed FAILS CLOSED (rc=$B_RC), emitting A3 (required field absent) and A4 (value outside its declared enum)"
 else
   FAIL "C1b: MUST FIRE — declaring a version did not make the same three violations fail (rc=$B_RC): $(printf '%s' "$B_OUT" | grep '^FINDING ' | head -3 | tr '\n' ' ')"
@@ -2938,7 +4927,7 @@ FX="$WORK/a1"; mk_root "$FX"
 printf -- '---\nartifact: outputs/food-list.md\nschema-version: 1\ntrip: ctl\ntrip: ctl-again\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
   > "$FX/examples/ctl/outputs/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A1'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A1'; then
   PASS "CTL-A1: MUST FIRE — a duplicate frontmatter key is A1; picking either value silently would be the wrong answer to a question the file asks"
 else
   FAIL "CTL-A1: MUST FIRE — a duplicate key was accepted (rc=$R)"
@@ -2950,7 +4939,7 @@ FX="$WORK/a2"; mk_root "$FX"
 printf -- '---\nartifact: outputs/no-such-class.md\nschema-version: 1\ntrip: ctl\n---\n\n# x\n' \
   > "$FX/examples/ctl/unclaimed.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A2'; then
   PASS "CTL-A2: MUST FIRE — a VERSIONED artifact declaring a class no schema covers is A2. Without the declared arm this file would simply not be selected: it would leave the gate silently, which is the fail-OPEN the gate exists to close"
 else
   FAIL "CTL-A2: MUST FIRE — a versioned artifact naming an unknown class was not caught (rc=$R)"
@@ -3021,7 +5010,7 @@ if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ]; then
 fi
 if [ -n "$NS_CID" ] && [ -n "$NS_UNCOVERED" ] && [ "$NS1_LOOKUP_BAD" -eq 1 ] && [ "$NS1_LOOKUP_OK" -eq 1 ] \
    && [ "$NS1_REAL_RC" -eq 0 ] && [ -z "$(printf '%s\n' "$NS1_REAL_OUT" | grep '^FINDING ')" ] \
-   && [ "$NS1_RC" -ne 0 ] && has_finding "$NS1_OUT" 'A2'; then
+   && [ "$NS1_RC" -ne 0 ] && ctl_fired "$NS1_OUT" 'A2'; then
   PASS "CTL-NOSCHEMA1: MUST FIRE — a versioned artifact (${NS_WITNESS##*/}) whose class resolves to NO SCHEMA fails closed at rc=$NS1_RC with A2, and it does so for a well-formed class-id ($NS_UNCOVERED) rather than only for the literal UNKNOWN. The lookup pair is measured, not assumed: va_schema_for returns non-zero for $NS_UNCOVERED and a path for $NS_CID; and the SAME artifact under its real class returns rc=$NS1_REAL_RC with no finding, so this arm grades the class-id and not the artifact"
 else
   FAIL "CTL-NOSCHEMA1: MUST FIRE — a class the corpus does not cover was reported validated (subject=${NS_CID:-<none>} uncovered-id=${NS_UNCOVERED:-<none>} lookup-bad=$NS1_LOOKUP_BAD lookup-ok=$NS1_LOOKUP_OK degraded-rc=$NS1_RC real-rc=$NS1_REAL_RC). subject or uncovered-id empty means the derivation found no subject and this arm measured nothing; lookup-bad=0 or lookup-ok=0 means the class-id pair is not the pair this arm claims; real-rc non-zero means the artifact itself is failing and the comparison says nothing; otherwise the gate returned rc=$NS1_RC over an artifact it graded against no schema at all — $(printf '%s' "$NS1_OUT" | head -c 120)"
@@ -3055,7 +5044,7 @@ if [ -n "$NS_CID" ]; then
   [ -z "$(printf '%s\n' "$NS2_CTRL_OUT" | grep '^FINDING ')" ] && NS2_CTRL_FIND=0
 fi
 if [ -n "$NS_CID" ] && [ "$NS2_HITS" -ge 1 ] && [ "$NS2_CTRL_RC" -eq 0 ] && [ "$NS2_CTRL_FIND" -eq 0 ] \
-   && [ "$NS2_RC" -ne 0 ] && has_finding "$NS2_OUT" 'X2' && [ "$NS2_NAMES" -ge 1 ]; then
+   && [ "$NS2_RC" -ne 0 ] && ctl_fired "$NS2_OUT" 'X2' && [ "$NS2_NAMES" -ge 1 ]; then
   PASS "CTL-NOSCHEMA2: MUST FIRE — with the read of $NS_SCHEMA shadowed to fail (injected $NS2_HITS time(s)) against a WARM pattern table, so the class still resolves and only its schema will not read, the gate FAILS CLOSED at rc=$NS2_RC with X2 naming that schema file. The identical call with the shadow removed returns rc=$NS2_CTRL_RC with no finding, so the verdict change is attributable to the one shadowed read"
 else
   FAIL "CTL-NOSCHEMA2: MUST FIRE — a schema that resolved and then would not read did not fail closed (subject=${NS_CID:-<none>} shadow-invoked=$NS2_HITS rc=$NS2_RC names-schema=$NS2_NAMES control-rc=$NS2_CTRL_RC control-findings=$NS2_CTRL_FIND). shadow-invoked=0 means the injection never landed and this arm measured nothing; control-rc non-zero or control-findings=1 means the unshadowed subject was already failing, so the comparison proves nothing; rc=0 means the gate reported success over an artifact it never graded; names-schema=0 means it failed without saying WHICH read failed, which is the half of AC2 a bare non-zero does not satisfy"
@@ -3111,7 +5100,7 @@ FX="$WORK/a5"; mk_root "$FX"
 printf -- '---\nartifact: outputs/activities-list.md\nschema-version: 1\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
   > "$FX/examples/ctl/outputs/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A5'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A5'; then
   PASS "CTL-A5: MUST FIRE — an artifact whose declared class disagrees with the class whose path-pattern selected it is A5"
 else
   FAIL "CTL-A5: MUST FIRE — a mismatched declaration was accepted (rc=$R)"
@@ -3122,7 +5111,7 @@ FX="$WORK/a6"; mk_root "$FX"
 printf -- '---\nartifact: outputs/food-list.md\nschema-version: 99\ntrip: ctl\nwriter: food\nlifecycle: accumulate-append\nprovenance: researched\npublish: internal\ngenerated: 2026-08-28\n---\n\n# x\n' \
   > "$FX/examples/ctl/outputs/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A6'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A6'; then
   PASS "CTL-A6: MUST FIRE — an in-repo artifact declaring a version its own in-repo schema does not define is a broken repository, not a forward-compatible trip. The boundary is stated in the validator's source rather than left to be discovered"
 else
   FAIL "CTL-A6: MUST FIRE — a version above the class schema's own was accepted (rc=$R)"
@@ -3134,7 +5123,7 @@ sed 's|^artifact: outputs/food-list.md$|artifact: outputs/not-a-class.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 if grep -q '^artifact: outputs/not-a-class.md$' "$FX/reference/schemas/food-list.md"; then
   O="$(run_fx "$FX")"; R=$?
-  if [ "$R" -ne 0 ] && has_finding "$O" 'S1'; then
+  if [ "$R" -ne 0 ] && ctl_fired "$O" 'S1'; then
     PASS "CTL-S1: MUST FIRE — a schema whose artifact disagrees with its class's row in the enumeration is S1"
   else
     FAIL "CTL-S1: MUST FIRE — a schema disagreeing with the document was accepted (rc=$R)"
@@ -3147,7 +5136,7 @@ FX="$WORK/s2"; mk_root "$FX"
 sed 's|^schema-version: 1$|schema-version: 1\nthis line is not in the grammar|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S2'; then
   PASS "CTL-S2: MUST FIRE — an out-of-grammar line inside an artifact-schema fence is S2. The grammar is closed, so an unrecognised construct is a violation of the corpus and never a limitation of the parser"
 else
   FAIL "CTL-S2: MUST FIRE — an out-of-grammar schema line was accepted (rc=$R)"
@@ -3156,7 +5145,7 @@ fi
 FX="$WORK/s3"; mk_root "$FX"
 cp "$FX/reference/schemas/food-list.md" "$FX/reference/schemas/food-list-copy.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S3'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S3'; then
   PASS "CTL-S3: MUST FIRE — two schemas declaring the same class is S3, so a stray file under reference/schemas/ cannot silently become a second home for a class"
 else
   FAIL "CTL-S3: MUST FIRE — a duplicate class declaration was accepted (rc=$R)"
@@ -3169,7 +5158,7 @@ fi
 FX="$WORK/stray"; mk_root "$FX"
 printf -- '# notes\n\nscratch notes that are not a schema at all\n' > "$FX/reference/schemas/scratch-notes.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S2'; then
   PASS "CTL-STRAY: MUST FIRE — a stray non-schema file under reference/schemas/ is S2 (no artifact-schema fence). Homing the class enum in a directory listing is only safe while a non-member cannot sit in that directory unnoticed"
 else
   FAIL "CTL-STRAY: MUST FIRE — a stray file under reference/schemas/ was accepted (rc=$R); the corpus can gain a member nothing declares"
@@ -3179,7 +5168,7 @@ FX="$WORK/s4"; mk_root "$FX"
 sed 's|^path-pattern: .*$|path-pattern: **/outputs/**/food-list.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S4'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S4'; then
   PASS "CTL-S4: MUST FIRE — ** anywhere but the first or last segment is a malformed pattern, reported rather than quietly reinterpreted"
 else
   FAIL "CTL-S4: MUST FIRE — a malformed path-pattern was accepted (rc=$R)"
@@ -3189,7 +5178,7 @@ FX="$WORK/s5"; mk_root "$FX"
 sed 's|^witness: .*$|witness: examples/ctl/outputs/does-not-exist.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S5'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S5'; then
   PASS "CTL-S5: MUST FIRE — a declared witness that does not exist is S5"
 else
   FAIL "CTL-S5: MUST FIRE — a missing witness path was accepted (rc=$R)"
@@ -3200,7 +5189,7 @@ printf -- '# Food List — CTL fixture with no frontmatter at all\n' > "$FX/exam
 sed 's|^witness: .*$|witness: examples/ctl/outputs/food-list.md|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S6'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S6'; then
   PASS "CTL-S6: MUST FIRE — a declared witness that exists but carries no schema-version is a COVERAGE REGRESSION (S6). This is what lets the gate's teeth grow with the migration: the failing assertion is the class's own coverage declaration, not the skip predicate, so nothing re-branches the tolerant read"
 else
   FAIL "CTL-S6: MUST FIRE — a stripped witness was accepted (rc=$R)"
@@ -3210,7 +5199,7 @@ FX="$WORK/s7"; mk_root "$FX"
 sed 's|^witness: .*$|witness: reference/schemas/README.md\nno-witness-because: both, which is not allowed|' \
   "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S7'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S7'; then
   PASS "CTL-S7: MUST FIRE — declaring both witness: and no-witness-because: is S7; they are mutually exclusive and exactly one is required"
 else
   FAIL "CTL-S7: MUST FIRE — a schema declaring both coverage branches was accepted (rc=$R)"
@@ -3218,7 +5207,7 @@ fi
 FX="$WORK/s7b"; mk_root "$FX"
 grep -v '^witness: ' "$FX/reference/schemas/food-list.md" > "$FX/reference/schemas/food-list.md.n" && mv "$FX/reference/schemas/food-list.md.n" "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S7'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S7'; then
   PASS "CTL-S7b: MUST FIRE — declaring NEITHER is S7 too. A class with no coverage statement is the silent-absence case the declaration exists to prevent"
 else
   FAIL "CTL-S7b: MUST FIRE — a schema declaring no coverage branch was accepted (rc=$R)"
@@ -3227,7 +5216,7 @@ fi
 FX="$WORK/s8"; mk_root "$FX"
 rm -f "$FX/reference/schemas/food-list.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'S8'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'S8'; then
   PASS "CTL-S8: MUST FIRE — a class in the enumeration with no schema in the corpus breaks the bijection (S8). The guard holds no copy of the class list, so this is asserted against the document itself"
 else
   FAIL "CTL-S8: MUST FIRE — a missing class schema was accepted (rc=$R)"
@@ -3237,7 +5226,7 @@ fi
 FX="$WORK/x2"; mk_root "$FX"
 rm -rf "$FX/reference/schemas"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'X2'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'X2'; then
   PASS "CTL-X2: MUST FIRE — an absent schema directory is X2, an unreadable population. An absent corpus must never read as a corpus with nothing wrong in it"
 else
   FAIL "CTL-X2: MUST FIRE — an absent schema directory did not fail (rc=$R)"
@@ -3256,7 +5245,7 @@ fi
 FX="$WORK/tplneg"; mk_root "$FX"
 cp "$ROOT/templates/trip-context.template.md" "$FX/examples/ctl/trip-context.md"
 O="$(run_fx "$FX")"; R=$?
-if [ "$R" -ne 0 ] && has_finding "$O" 'A4'; then
+if [ "$R" -ne 0 ] && ctl_fired "$O" 'A4'; then
   PASS "CTL-TPLneg: MUST FIRE — the SAME bytes at a non-template path DO fail (its trip: value is the placeholder <trip-slug>, not a slug). So the exclusion is doing real work rather than decorating a file the gate would have passed anyway"
 else
   FAIL "CTL-TPLneg: MUST FIRE — the template's contents passed at a non-excluded path (rc=$R), so CTL-TPL proves nothing about the exclusion"
@@ -3293,7 +5282,7 @@ FX="$WORK/scope"; mk_root "$FX"
 mkdir -p "$FX/examples/ctl/empty-but-real"
 SCOPE_MISS_OUT="$(va_main --root "$FX" --scope dir examples/ctl/no-such-trip-xyz 2>&1)"; SCOPE_MISS_RC=$?
 SCOPE_EMPTY_OUT="$(va_main --root "$FX" --scope dir examples/ctl/empty-but-real 2>&1)"; SCOPE_EMPTY_RC=$?
-if [ "$SCOPE_MISS_RC" -ne 0 ] && has_finding "$SCOPE_MISS_OUT" 'X2'; then
+if [ "$SCOPE_MISS_RC" -ne 0 ] && ctl_fired "$SCOPE_MISS_OUT" 'X2'; then
   PASS "CTL-SCOPE1: MUST FIRE — a --scope dir target that does not exist is X2 and fails closed (rc=$SCOPE_MISS_RC). A mistyped trip name is an unreadable population, and an absent population must never read as a population with nothing wrong in it"
 else
   FAIL "CTL-SCOPE1: MUST FIRE — a nonexistent --scope dir target returned rc=$SCOPE_MISS_RC with no X2. A user who fat-fingers a trip name is being told their trip is clean"
@@ -4216,6 +6205,17 @@ else
     while IFS= read -r FC_LABEL; do
       [ -n "${FC_LABEL:-}" ] || continue
       FC_SEEN="$(awk -v p="FINDING X3 $FC_LABEL" 'index($0, p) == 1 { n++ } END { print n + 0 }' <<<"$FC_OUT")"
+      # ── X3's ONLY must-fire arm, and the reason CTL-COV's armed set is accumulated at the
+      # call rather than scanned out of this file. The grading two lines down is an `awk
+      # index()` over a code carried in a shell variable — neither of the other two arming
+      # idioms in this group, and invisible to any source reader that enumerates them. Recorded
+      # HERE, before the verdict, exactly as ctl_fired records before has_finding answers:
+      # coverage asks whether an arm EXISTS for X3, and this is it. Placed outside the verdict
+      # branches deliberately — a failing arm is a failing arm, not a missing one, and reporting
+      # X3 uncovered on top of it would name a second defect that is not there. The outer
+      # emptiness gate above still leaves X3 uncovered when the fixture was never clean enough
+      # for this loop to run, which is the honest reading rather than a hole.
+      ctl_arm X3
       if [ "$FC_HITS" -ge 1 ] && [ "$FC_RC" -ne 0 ] && [ "$FC_SEEN" -ge 1 ]; then
         PASS "CTL-VA-FAILCLOSED-MATRIX[$FC_LABEL]: with its producer shadowed to exit 7 (injected $FC_HITS time(s)) the run FAILS CLOSED at rc=$FC_RC and emits X3 naming this site, where the unshadowed run over the same fixture is rc=0 with no X3 at all"
       else
@@ -4262,6 +6262,21 @@ if [ ! -e "$ROOT/examples/ctl" ] && [ ! -e "$ROOT/reference/schemas/food-list-co
 else
   FAIL "CTLe: a fixture appears to have been written into the repository tree"
 fi
+
+# ── CTL-COV — the invariant this group had been holding BY HAND, now graded. Every code the
+# validator can emit has a must-fire arm here, and every arm names a code it can emit. The
+# comparison is cov_assert, which groups ST and CE call with their own extractors; the
+# derivation is this group's own, for the measured reason stated at ctl_codes above.
+#
+# Graded AFTER CTLe, and the ordering is deliberate on both sides. Its second input is the set
+# of arms that RAN, so it cannot precede the last of them. And CTLe's own banner says it is
+# graded LAST, after every fixture above — CTL-COV builds no fixture, so grading it after CTLe
+# keeps that sentence true rather than quietly falsifying it.
+CTL_BODY="$(ctl_body)"
+CTL_CODES="$(ctl_codes "$CTL_BODY")"
+cov_assert 'CTL-COV' 'CTL-COV-MUT' '' 'the validator' \
+           ctl_codes cov_emit_finding "$CTL_BODY" \
+           "$CTL_CODES" "$CTL_ARMED" "$CTL_COV_PROBE" "$CTL_COV_PHANTOM"
 
 if [ "$CTL_RAN" -ne 1 ]; then
   FAIL "X1: group CTL did not execute — a run without it is a failure, never a pass"
@@ -7040,6 +9055,762 @@ if [ "$HZ_RAN" -ne 1 ]; then
 fi
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
+echo "RM — the reference-month RULE PROSE, anchored by a derived declaration spine"
+# ═════════════════════════════════════════════════════════════════════════════════
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# Group HZ above grades WHERE the `horizon-verdict-cases` fence lives and what its rows say.
+# Nothing graded what the RULE TEXT around it says. So an edit that rewrote the prose —
+# changing which term the reference month resolves from, or the condition under which it fails
+# to resolve — left the fence intact, every HZ arm passing, and CI green. That was correctly
+# classified a RESIDUAL rather than an escape: the specification never asked for such an arm.
+#
+# The CLASS matters more than the instance. This repository treats documents as
+# specifications, and several arms above read values straight out of prose tables. Where a
+# gate grades a structure's LOCATION but not its CONTENT, the document can drift from the
+# behaviour it describes while every check reports success.
+#
+# ── THE DISCRIMINATOR, STATED ONCE, AND IT IS THE DOCUMENT'S OWN ─────────────────
+#   MATERIAL  = an operative token inside a normative declaration block.
+#   EDITORIAL = every unbolded, un-spanned word, inside a block or outside one.
+#
+# A normative DECLARATION BLOCK is a form the document already uses everywhere rather than one
+# this file imposes on it: a blockquote whose FIRST LINE OPENS WITH A BOLDED LEAD-IN, and which
+# is not inside a fenced code block. Measured over reference/data-model.md on this commit — 48
+# blockquote blocks, 44 of them in that form — so the reader discriminates rather than matching
+# everything, and the 4 it excludes are the evidence of that. The fence clause is load-bearing
+# rather than decorative: a fence-blind reading of this same document counts 53 blocks, and the
+# extra 5 are fenced illustrative examples that a reader without it convicts as live rules.
+#
+# REWORDING IS FREE, AND THAT IS ASSERTED — RM6 demonstrates it by mutation on every run. THE
+# CONVERSE HOLDS ONLY WHERE AN ARM GRADES IT, and the arms are enumerable: RM1–RM4 grade the
+# spine's cardinality, uniqueness, trip-relativity, year-advance and tuple membership, and RM9
+# grades the reference-month declaration's own SELECTOR and OPERAND against the two encodings
+# of them this document carries independently of the declaration. An operative token no arm
+# above names is still ungraded, and this sentence used to claim otherwise: it read "changing
+# an operative token is not free" without qualification, while two edits inside the anchored
+# declaration — inverting the selector, and resolving the reference month from the wrapped term
+# — passed the whole suite green. RM9 closes those two; the unqualified claim does not return.
+#
+# The discriminator is stated as a property of DOCUMENTS IN THIS CORPUS rather than of this
+# region, because it is a shared contract: two different answers to the material-versus-
+# editorial question inside one suite would be worse than either. Generally: a prose rule is
+# anchored by rendering its operative content inside the document's own normative-declaration
+# form, and asserting a derived bijection between those declarations and an independently
+# graded artifact the rule governs.
+#
+# ── NOTHING HERE IS PINNED, AND THAT IS THE WHOLE OF THE DESIGN ──────────────────
+# No digest, no clause literal, no expected count written by hand. The expected CARDINALITY is
+# derived from the fence group HZ already grades; the actual SPINE is read out of the document
+# BY SHAPE. The only strings this group spells about the document are the region's HEADING —
+# an ADDRESS, not the rule — and the one vocabulary word `clock`.
+#
+# A content digest over the region was considered and rejected on a measurement rather than on
+# taste. It has no material/editorial discriminator, so a typo fix turns it red; and re-pinning
+# is a single keystroke that the REVERTING author performs in the same commit, after which the
+# pin certifies the revert. A second machine-readable fence declaring the rule beside the prose
+# stating it was rejected too: that is two homes inside one document, free to drift, with
+# nothing holding them together.
+#
+# ── THE NAMED PRECEDENT IS DEFECTIVE, AND ADOPTING IT WHOLESALE WOULD HAVE IMPORTED
+#    THE DEFECT PLUS THE APPEARANCE OF BEING CONTROLLED FOR ─────────────────────
+# HC1 is the shipped precedent for this shape of anchor, and its MECHANISM is inherited here:
+# read the anchor from the document BY SHAPE, never by re-spelling it, because a copy in this
+# file would be a THIRD home, green while the other two drifted apart from each other.
+#
+# Its GRADING POSTURE is rejected, and that rejection is a reading of the record that now
+# governs it rather than a preference. HC1 asserts that a constant matches exactly one line of
+# a document: ADR-019's S4 rule-presence shape, classified DEFECTIVE — ADDITION-BLIND, remedy
+# R3. Verified rather than taken on trust — a negating clause ADDED to that document leaves
+# HC1's count at 1 and HC1 green.
+#
+# AND ITS CONTROL DOES NOT CLOSE THAT. HC1-CTL mutates the CONSTANT and requires the same awk
+# to match nothing. Its own comment says why: so that "HC1's match is a measurement and not an
+# artefact of the probe". That is PROBE-LIVENESS — the R4 family — and NOT R3's complement arm.
+# The two are easy to confuse because both are labelled MUST FIRE, and confusing them is worse
+# than having neither: an addition-blind assertion that LOOKS controlled for is one nobody
+# re-reads. A negating clause added to that document leaves BOTH arms green.
+#
+# So this group carries R3 and R4 as SEPARATE arms and says which is which:
+#   R3, the complement — RM1's exactly-once-per-symbol limb and RM2's absence limb. It is
+#      expressed as a CARDINALITY rather than as a negation vocabulary, because a negation-token
+#      scan over this region OVER-FIRES on the unmutated document today: the declarations
+#      legitimately read "never earlier than the clock", "Defined **only** where", and "it never
+#      passes silently". A gate that convicts correct work trains contributors to reach for its
+#      exemption marker.
+#   R4, the sensitivity and specificity arms — RM5 (a REVERT must be seen), RM8 (an ADDITION
+#      must be seen — the arm HC1 does not have and the reason this group is not HC1), and RM6
+#      (a REWORD must NOT be seen, which is what makes the discriminator demonstrated rather
+#      than asserted).
+#
+# ── REGISTRATION: AN EXPLICIT MD OPT-OUT, NOT A SILENT OMISSION ──────────────────
+# RM's subject is a FILE, reference/data-model.md, not a shell function. md_flips registers an
+# assertion by removing its subject FUNCTION, so it has nothing to remove here, and registering
+# the comparator instead would grade the ORACLE rather than the assertion — PP0's and PP9's
+# stated reason, applied here. The COMPENSATING POSITIVE CONTROLS are the RM5/RM8/RM6 mutant
+# set, which is strictly stronger than the oracle would be on this subject: it does not merely
+# observe that an arm flips when something is removed, it observes that it flips on a MATERIAL
+# change, flips on an ADDITION, and does NOT flip on an EDITORIAL one — three directions, on
+# the real subject, through the same comparator.
+#
+# ── EVERY ARM IS A SHELL TEST OVER AN ALREADY-EXTRACTED VALUE ───────────────────
+# Each condition below is a numeric comparison on a value the comparator already produced, never
+# `if rm_read …; then FAIL; else PASS`. A shell test cannot report an absent subject, so
+# extraction status is graded SEPARATELY and FIRST, in RM0 — ADR-019's R2, declare the haystack
+# non-degenerate before grading content.
+
+RM_DOC="$ROOT/reference/data-model.md"
+# The one string this group spells about the document, and it is the ADDRESS rather than the
+# rule. Everything graded below is read out of the region this heading names, by shape.
+RM_REGION="The reference month — what a horizon is compared against"
+RM_PRISTINE="$WORK/rm-pristine.md"
+
+# rm_read <file> — THE READER, and the only one. Emits TSV over the region RM_REGION names:
+#
+#   REGION <TAB> <line>
+#   FENCE  <TAB> <line>
+#   SPINE  <TAB> <sym> <TAB> <rhs> <TAB> <line> <TAB> <block key> <TAB> <rhs identifier tokens> <TAB> <rhs first operand>
+#   TUPLE  <TAB> <members, comma-joined> <TAB> <arity> <TAB> <line> <TAB> <block key>
+#   SPAN   <TAB> <span text> <TAB> <line> <TAB> <block key>
+#
+# SPINE, TUPLE and SPAN are the three classified kinds of ONE population — the code spans inside
+# a declaration block of the region — so every such span emits exactly one row and the row count
+# IS the vocabulary count. The two cannot drift into disagreeing.
+#
+# The tokenizer and the first-operand derivation live HERE, once, and are carried as fields, so
+# no consumer below re-derives them differently.
+rm_read() {
+  awk -v want="$RM_REGION" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    # The identifier tokens of a right-hand side, space-joined and deduped, in order. Every
+    # non-identifier byte becomes a separator, so punctuation and digits cannot enter the set.
+    function ids(s,   tmp, n, i, parts, out, seen) {
+      tmp = s; gsub(/[^A-Za-z0-9_]/, " ", tmp)
+      n = split(tmp, parts, " "); out = ""
+      for (i = 1; i <= n; i++) {
+        if (parts[i] !~ /^[A-Za-z_][A-Za-z0-9_]*$/) continue
+        if (parts[i] in seen) continue
+        seen[parts[i]] = 1; out = out (out == "" ? "" : " ") parts[i]
+      }
+      return out
+    }
+    # The FIRST OPERAND of a right-hand side: the text inside the outermost call up to the
+    # first comma, or the head of a comma list, or the whole expression. Derived from the
+    # document so the reversion RM5 applies is the rule reverted rather than a literal typed
+    # into this file.
+    function firstop(r,   inner, k, i, d, ch) {
+      if (match(r, /^[A-Za-z_][A-Za-z0-9_]*\(/)) {
+        inner = substr(r, RLENGTH + 1)
+        k = length(inner); while (k > 0 && substr(inner, k, 1) != ")") k--
+        if (k > 0) inner = substr(inner, 1, k - 1)
+      } else { inner = r }
+      d = 0
+      for (i = 1; i <= length(inner); i++) {
+        ch = substr(inner, i, 1)
+        if (ch == "(") d++
+        else if (ch == ")") d--
+        else if (ch == "," && d == 0) return trim(substr(inner, 1, i - 1))
+      }
+      return trim(inner)
+    }
+    /^### / {
+      if (reg == 1) { reg = 2 }
+      else if (reg == 0 && trim(substr($0, 5)) == want) { reg = 1; print "REGION\t" NR; next }
+    }
+    reg != 1 { next }
+    $0 == "```horizon-verdict-cases" { print "FENCE\t" NR }
+    {
+      # FENCE STATE. A line opening a fenced code block toggles it; while it is open, a `>`
+      # line is SAMPLE TEXT and not a blockquote. Without this the reader convicts an ordinary
+      # documentation example: a fenced block whose line is a quote opening with a bolded
+      # lead-in read as a live declaration and turned RM1 and RM2 red on a document that was
+      # correct. This document already carries eleven such quote-leading lines in five
+      # fence-interior blocks elsewhere; none of them opens with a bolded lead-in TODAY, which
+      # is why the numerator was unaffected and the defect was latent rather than visible. That
+      # is a property of the current text, not of the reader, and it is the whole reason this
+      # is fixed rather than recorded. It is also exactly the denominator difference between
+      # the two readings of this document: fence-blind counts 53 blockquote blocks, fence-aware
+      # counts 48, and both count 44 in declaration form.
+      if (substr($0, 1, 3) == "```") { fence = 1 - fence; blk = 0; decl = 0; next }
+      if (fence == 1) { blk = 0; decl = 0; next }
+      if (substr($0, 1, 1) != ">") {
+        blk = 0; decl = 0
+        # JUST — the code spans of the NON-declaration prose of this region, taken only from a
+        # line opening with a bolded lead-in. This is the SECOND, independently authored
+        # encoding of the operative tokens that the document already carries: the declaration
+        # states the rule and the justification prose argues for it BY NAME. RM9 asserts the
+        # two agree, which is the same two-encodings-must-agree shape HZ9 already uses on the
+        # fence. It is a separate row kind, so no consumer filtering on SPINE, TUPLE or SPAN
+        # sees it. (No apostrophes in this block: the awk program is single-quoted.)
+        if (substr($0, 1, 2) == "**") {
+          n = split($0, p, "`")
+          for (i = 2; i <= n; i += 2) { s = trim(p[i]); if (s != "") print "JUST\t" s "\t" NR }
+        }
+        next
+      }
+      if (blk == 0) { blk = 1; key = NR; decl = ($0 ~ /^>[ ]*\*\*/) ? 1 : 0 }
+      if (decl != 1) next
+      n = split($0, p, "`")
+      for (i = 2; i <= n; i += 2) {
+        s = trim(p[i])
+        if (s == "") continue
+        if (match(s, /^[A-Za-z][A-Za-z0-9_]*[ ]*=/)) {
+          sym = trim(substr(s, 1, RLENGTH - 1)); rhs = trim(substr(s, RLENGTH + 1))
+          if (rhs != "") {
+            print "SPINE\t" sym "\t" rhs "\t" NR "\t" key "\t" ids(rhs) "\t" firstop(rhs)
+            continue
+          }
+        }
+        if (s ~ /^\([^()]*,[^()]*\)$/) {
+          m = split(substr(s, 2, length(s) - 2), q, ","); out = ""
+          for (j = 1; j <= m; j++) out = out (j > 1 ? "," : "") trim(q[j])
+          print "TUPLE\t" out "\t" m "\t" NR "\t" key
+          continue
+        }
+        # The identifier set rides along, because the TUPLE limb needs to compare the promoted
+        # clause against the OTHER encoding of the same pair standing in its own block. No
+        # consumer filtering on the row kind is affected by a further field.
+        print "SPAN\t" s "\t" NR "\t" key "\t" ids(s)
+      }
+    }
+  ' "$1"
+}
+
+# rm_measure <file> — the extracted quantities, one line, space-separated, in this order:
+#
+#   nregion nfence nspine ndistinct ngood nbad nplus ntuple tarity towner tsubset nspan
+#
+# ngood / nbad are RM2's two limbs: a spine row whose RHS names `clock` ALONGSIDE another
+# declared symbol is good; one that names `clock` and no other declared symbol is bad.
+rm_measure() {
+  rm_read "$1" | awk -F'\t' '
+    $1 == "REGION" { nreg++ }
+    $1 == "FENCE"  { nfen++ }
+    $1 == "SPINE"  {
+      ns++; sym[ns] = $2; rhs[ns] = $3; key[ns] = $5; idt[ns] = $6
+      if (!($2 in seensym)) { seensym[$2] = 1; nd++ }
+      t = $3; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) nplus++
+    }
+    $1 == "TUPLE"  { nt++; tmem = $2; tar = $3; tkey = $5 }
+    $1 == "SPAN"   { nplain++; nspan++; spanids[nspan] = $5; spankey[nspan] = $4 }
+    END {
+      for (i = 1; i <= ns; i++) {
+        n = split(idt[i], tok, " "); delete has; hasclock = 0
+        for (k = 1; k <= n; k++) { has[tok[k]] = 1; if (tok[k] == "clock") hasclock = 1 }
+        if (hasclock != 1) continue
+        other = 0
+        for (j = 1; j <= ns; j++) if (j != i && (sym[j] in has)) other = 1
+        if (other == 1) ngood++; else nbad++
+      }
+      if (nt == 1) {
+        for (i = 1; i <= ns; i++) if (key[i] == tkey) { owner = i; towner = 1 }
+        if (towner == 1) {
+          n = split(idt[owner], tok, " "); delete ops
+          for (k = 1; k <= n; k++) ops[tok[k]] = 1
+          m = split(tmem, mem, ","); tsub = 1
+          for (k = 1; k <= m; k++) if (!(mem[k] in ops)) tsub = 0
+          # THE PAIR IS STATED TWICE INSIDE ITS OWN BLOCK, and the two statements must agree.
+          # Subset alone cannot see a SUBSTITUTION: swapping one member for another operand of
+          # the same declaration keeps every member inside `ops`, keeps the arity, and passes.
+          # The document already carries the pair a second time — the step that extracts it
+          # names it as a span — so the members are pinned against THAT encoding rather than
+          # against a literal written here. An added member fails this too, on cardinality.
+          for (sp = 1; sp <= nspan; sp++) {
+            if (spankey[sp] != tkey) continue
+            nn = split(spanids[sp], sid, " ")
+            if (nn != m) continue
+            delete sset
+            for (kk = 1; kk <= nn; kk++) sset[sid[kk]] = 1
+            okp = 1
+            for (kk = 1; kk <= m; kk++) if (!(mem[kk] in sset)) okp = 0
+            if (okp == 1) tpair++
+          }
+        }
+      }
+      printf "%d %d %d %d %d %d %d %d %d %d %d %d %d\n", nreg+0, nfen+0, ns+0, nd+0, \
+        ngood+0, nbad+0, nplus+0, nt+0, tar+0, towner+0, tsub+0, ns+nt+nplain+0, tpair+0
+    }
+  '
+}
+
+# rm_violations <file> <expected cardinality> — THE CONTROLS' SCORER. The failing limbs the
+# comparator scores over <file>, as space-delimited tokens; empty is a clean document. It exists
+# because a mutant has to be scored as ONE number, while a standing arm has to say WHICH limb
+# moved and in which direction.
+#
+# What is shared with the standing arms — and it is the part FW3's rule is about — is the
+# EXTRACTOR: rm_read and rm_measure produce the numbers both sides read, so a control here is
+# evidence about the same reading the arms grade. A control running a different extractor would
+# prove nothing about them. Each token below names the limb of the arm that grades it, and every
+# control's message PRINTS the token list it scored, so which arm a mutant moved is visible in
+# the output rather than asserted here.
+#
+# The limbs are graded in the arms with `[ … ]` tests over already-extracted values rather than
+# by calling back into this function. That is ADR-019's own requirement and group MD enforces it:
+# a function in an `if` head puts the PASS on rc=127 — "the predicate does not exist" — exactly
+# as it puts it on "the document is clean". This file's static scanner caught that shape here
+# during authoring, which is the gate doing the job it was built for.
+#
+# The here-string is the shape this file already requires of a reader fed from a producer —
+# see the note above has_finding. It also keeps `read`, which stops at the first newline, off
+# the receiving end of a pipeline whose writer has not finished.
+rm_violations() {
+  local nreg nfen ns nd ng nb np nt ta to ts nsp tp out=""
+  read -r nreg nfen ns nd ng nb np nt ta to ts nsp tp <<<"$(rm_measure "$1")"
+  [ "$nreg" -eq 1 ]   || out="$out REGION"
+  [ "$nfen" -ge 1 ]   || out="$out FENCE"
+  [ "$ns"   -gt 0 ]   || out="$out EMPTY-SPINE"
+  [ "$nsp"  -gt 0 ]   || out="$out EMPTY-VOCAB"
+  [ "$ns"   -eq "$2" ] || out="$out CARDINALITY"
+  [ "$nd"   -eq "$ns" ] || out="$out UNIQUENESS"
+  [ "$ng"   -eq 1 ]   || out="$out REFMONTH"
+  [ "$nb"   -eq 0 ]   || out="$out CLOCK-ONLY"
+  [ "$np"   -eq 1 ]   || out="$out WRAP-ADVANCE"
+  [ "$nt"   -eq 1 ]   || out="$out TUPLE-COUNT"
+  [ "$ta"   -ge 2 ]   || out="$out TUPLE-ARITY"
+  [ "$to"   -eq 1 ]   || out="$out TUPLE-OWNER"
+  [ "$ts"   -eq 1 ]   || out="$out TUPLE-SUBSET"
+  [ "$tp"   -eq 1 ]   || out="$out TUPLE-PAIR"
+  printf '%s' "${out# }"
+}
+
+rm_nviol() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# rm_setdiff <a> <b> — the limb tokens in <a> and not in <b>. Membership is containment in a
+# space-delimited haystack and never `comm`, which requires both sides lexically sorted and
+# answers wrongly otherwise; the helpers at group RS record that reason at length.
+rm_setdiff() {
+  local x out=""
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    out="$out $x"
+  done
+  printf '%s' "${out# }"
+}
+
+# rm_mutate <file> <mode> <sym> <first operand> <fence line> <target line> — writes a mutated
+# COPY to stdout and exits non-zero when the mutation did not land, so a mutation that failed
+# to apply can never be misread as an arm that failed to fire. Every mode is DERIVED: the
+# symbol, the operand and both anchors come from rm_read's own output over the real document.
+#
+#   revert   the reference-month declaration's RHS is replaced by its own first operand — the
+#            clock-only reversion, in the rule's own vocabulary
+#   addition a SECOND declaration of the same symbol, clock-only, appended as a new declaration
+#            block. NOTHING EXISTING IS TOUCHED. This is ADR-019's add-only input
+#   reword   one plain sentence, no code span and no bold lead-in, in a non-declaration
+#            paragraph of the region. The editorial half of the discriminator
+#   selector the declaration RHS keeps its operands and takes a DERIVED synthetic selector —
+#            the same token prefixed — which the justification prose names nowhere. RM10
+#   operand  the declaration RHS is rebuilt as <selector>(<first operand>, <year-advancing
+#            symbol>): the reference month resolving from the WRAPPED term. RM11
+#   optadd   a SECOND clock-bearing declaration of a NEW symbol, resolving from the wrapped
+#            term, appended as its own block. NOTHING EXISTING IS TOUCHED. RM12
+rm_mutate() {
+  # wsym and sel are OPTIONAL — only the operative-token modes take them, and this file runs
+  # under `set -u`, so the three older modes calling this with six arguments would abort the
+  # whole suite on a bare "$7". Defaulted rather than required, so adding a parameter here is
+  # additive for every existing call site.
+  awk -v mode="$2" -v sym="$3" -v op="$4" -v fl="$5" -v tl="$6" -v wsym="${7:-}" -v sel="${8:-}" '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    mode == "revert" && NR == tl {
+      n = split($0, p, "`"); hit = 0
+      for (i = 2; i <= n; i += 2) {
+        s = trim(p[i])
+        if (match(s, /^[A-Za-z][A-Za-z0-9_]*[ ]*=/) && trim(substr(s, 1, RLENGTH - 1)) == sym) {
+          p[i] = sym " = " op; hit = 1; landed = 1
+        }
+      }
+      if (hit == 1) { out = p[1]; for (i = 2; i <= n; i++) out = out "`" p[i]; $0 = out }
+    }
+    mode == "addition" && NR == fl {
+      print "> **`" sym " = " op "`.** Synthetic second declaration, inserted by the RM8 control."
+      print ""
+      landed = 1
+    }
+    (mode == "selector" || mode == "operand") && NR == tl {
+      n = split($0, p, "`"); hit = 0
+      for (i = 2; i <= n; i += 2) {
+        s = trim(p[i])
+        if (match(s, /^[A-Za-z][A-Za-z0-9_]*[ ]*=/) && trim(substr(s, 1, RLENGTH - 1)) == sym) {
+          r = trim(substr(s, RLENGTH + 1))
+          if (r == "") continue
+          if (mode == "selector") {
+            if (match(r, /^[A-Za-z_][A-Za-z0-9_]*\(/)) { p[i] = sym " = zz" r; hit = 1; landed = 1 }
+          } else {
+            p[i] = sym " = " sel "(" op ", " wsym ")"; hit = 1; landed = 1
+          }
+        }
+      }
+      if (hit == 1) { out = p[1]; for (i = 2; i <= n; i++) out = out "`" p[i]; $0 = out }
+    }
+    mode == "optadd" && NR == fl {
+      print "> **`Z" sym " = " sel "(" op ", " wsym ")`.** Synthetic SECOND clock-bearing declaration, inserted by the RM12 control. Every existing declaration is byte-intact."
+      print ""
+      landed = 1
+    }
+    mode == "reword" && NR == fl {
+      print "Inserted by the RM6 control. This sentence carries no code span and no bolded lead-in, sits outside every blockquote, and is exactly the editorial addition that must not turn this group red."
+      print ""
+      landed = 1
+    }
+    { print }
+    END { if (landed != 1) exit 9 }
+  ' "$1"
+}
+
+cp "$RM_DOC" "$RM_PRISTINE" 2>/dev/null || true
+RM_READABLE=0; [ -r "$RM_DOC" ] && RM_READABLE=1
+RM_NREG=0; RM_NFEN=0; RM_NS=0; RM_ND=0; RM_NG=0; RM_NB=0
+RM_NP=0; RM_NT=0; RM_TA=0; RM_TO=0; RM_TS=0; RM_NSP=0; RM_TP=0
+if [ "$RM_READABLE" -eq 1 ]; then
+  read -r RM_NREG RM_NFEN RM_NS RM_ND RM_NG RM_NB RM_NP RM_NT RM_TA RM_TO RM_TS RM_NSP RM_TP <<<"$(rm_measure "$RM_DOC")"
+fi
+
+# RM_NREQ — THE EXPECTED CARDINALITY, DERIVED AND NEVER WRITTEN DOWN. One declaration for the
+# reference month itself, one more for each term the fence independently shows the rule needs:
+# a populated `trip-term` column (which HZ7 already asserts, since a reference month equal to
+# the clock makes the two verdict columns identical by construction, so HZ7's discriminating
+# row is only satisfiable when a trip term exists) and a populated `wrap-term` column (which
+# HZ11 already asserts). Both limbs are GRADED ABOVE before this group consumes them, so this
+# is a read of a checked quantity rather than an assumption about one.
+RM_NREQ=1
+[ "${HZ_GDIFF:-0}" -gt 0 ] 2>/dev/null && RM_NREQ=$((RM_NREQ + 1))
+[ "${HZ_PWRAP:-0}" -gt 0 ] 2>/dev/null && RM_NREQ=$((RM_NREQ + 1))
+
+# ── RM0 — the VACUITY GATE, first, and every branch FAILS rather than skipping. ──
+# A reader that resolved no region makes every count below zero, and zero compares equal to
+# zero — a probe failure wearing a pass. GUARD_STRICT_SKIPS is '1' here with an empty expected
+# set, so a vanishing group is already a failure; this arm matches HZ0's "required surface(s)
+# unreadable — not a skip and not a pass" posture and renders no VACUOUS.
+RM_OK=0
+if [ "$RM_READABLE" -ne 1 ]; then
+  FAIL "RM0: reference/data-model.md is unreadable, so the reference-month rule's prose could not be read at all. Every verdict below would be over an empty extraction, which is a broken instrument and never a clean document"
+elif [ -z "${HZ_GDIFF:-}" ] || [ -z "${HZ_PWRAP:-}" ]; then
+  FAIL "RM0: group HZ did not reach its fence-derived quantities, so this group's expected cardinality could not be DERIVED. RM_NREQ is 1 plus the fence's populated \`trip-term\` and \`wrap-term\` columns, read from HZ7's and HZ11's already-graded values — with those absent the only alternative is a hand-written count, which is the pin this group exists without"
+elif [ "$RM_NREG" -ne 1 ]; then
+  FAIL "RM0: the region heading '$RM_REGION' resolved $RM_NREG time(s) in reference/data-model.md, expected exactly 1 — at 0 the heading was renamed or moved and every arm below would grade an empty region; at 2+ the address is ambiguous and the spine would be read from more than one section. This group holds the heading as an ADDRESS and nothing else, so this is where a rename lands"
+elif [ "$RM_NFEN" -lt 1 ]; then
+  FAIL "RM0: the region carries no \`horizon-verdict-cases\` fence, so the expected cardinality RM_NREQ is derived from a fence that is not in the region it governs. Either the fence moved out of the rule's own section or the region bounds did — and RM1's count below would be graded against a quantity read from somewhere else"
+elif [ "$RM_NS" -eq 0 ]; then
+  FAIL "RM0: the declaration spine parsed to ZERO definitional spans inside the region's declaration blocks. A declaration block is a blockquote whose first line opens with a bolded lead-in and a definitional span is \`X = expr\` inside one; if either shape moved, every cardinality below compares zero against zero and passes over nothing"
+elif [ "$RM_NSP" -eq 0 ]; then
+  FAIL "RM0: the region's declaration blocks yielded ZERO code spans of any kind, so the projection that separates MATERIAL from EDITORIAL is reading nothing. The discriminator is the document's own typography and this is where its disappearance lands"
+else
+  RM_OK=1
+  PASS "RM0: the rule region is readable and non-degenerate — heading resolved once, the graded \`horizon-verdict-cases\` fence present in it, $RM_NS definitional span(s) on the declaration spine and $RM_NSP code span(s) across its declaration blocks, with the expected cardinality DERIVED as RM_NREQ=$RM_NREQ from HZ7's \`trip-term\` and HZ11's \`wrap-term\` columns rather than written here. Every arm below is a measurement rather than an empty scan"
+fi
+
+if [ "$RM_OK" -eq 1 ]; then
+  # Every arm below puts its PASS on a POSITIVE comparison of values rm_measure already
+  # extracted, with the diagnoses after it. That ordering is the whole of ADR-019's S2: a
+  # degenerate reading — an empty value where a count should be — makes the positive test
+  # false and lands on a FAIL, whereas the same limbs written diagnosis-first put the PASS on
+  # every condition nothing matched, an absent subject included.
+  #
+  # The values come from rm_measure; the limb TOKENS the controls below score are named in
+  # rm_violations and correspond one-for-one to the branches here.
+
+  # ── RM1 — the spine's CARDINALITY is derived, and each symbol is declared ONCE. ─
+  # The uniqueness limb is ADR-019's R3 complement, expressed as a cardinality rather than as
+  # a negation vocabulary: a SECOND declaration of an already-declared symbol — the classic
+  # add-only vector that leaves a rule-presence assertion green — turns this red.
+  if [ "$RM_NS" -eq "$RM_NREQ" ] && [ "$RM_ND" -eq "$RM_NS" ]; then
+    PASS "RM1: the declaration spine is EXACTLY $RM_NREQ definitional span(s) over $RM_ND distinct symbol(s) — the derived cardinality holds and no symbol is declared twice. The expectation is derived from the fence (1 + a populated \`trip-term\` + a populated \`wrap-term\`), never written down here, so it tracks the rule rather than a moment in its history. The uniqueness limb is the R3 complement: an added second declaration fails HERE rather than leaving a present rule reading present"
+  elif [ "$RM_NS" -ne "$RM_NREQ" ]; then
+    FAIL "RM1: the declaration spine carries $RM_NS definitional span(s), expected $RM_NREQ — one for the reference month plus one per term the fence independently shows the rule needs. Below the expectation a declaration was deleted or flattened out of its blockquote; above it, one was added. Neither is an editorial change, and the expectation is not a pin: it moves with the fence group HZ grades"
+  else
+    FAIL "RM1: the spine declares $RM_NS span(s) over only $RM_ND distinct symbol(s) — a symbol is declared more than once, so the rule has two definitions of one term inside the same region and nothing says which governs. THIS IS THE ADDITION CASE: the earlier declaration is untouched and still reads correctly, which is exactly why a rule-presence assertion would still be green here"
+  fi
+
+  # ── RM2 — the reference month is TRIP-RELATIVE, with an explicit absence limb. ──
+  # The positive limb: exactly one spine row names `clock` alongside ANOTHER declared symbol.
+  # The absence limb: no row names `clock` without one. The second is what makes reverting the
+  # rule fail whether the author REWRITES the existing declaration or ADDS a clock-only one
+  # beside it. Bound to a property HZ7 already measures.
+  if [ "$RM_NG" -eq 1 ] && [ "$RM_NB" -eq 0 ]; then
+    PASS "RM2: the reference month is TRIP-RELATIVE — exactly $RM_NG spine row names \`clock\` alongside another declared symbol of this same region, and $RM_NB row names \`clock\` without one. Both limbs are asserted because they fail on different edits: rewriting the declaration breaks the first, adding a clock-only one beside it breaks only the second. \`clock\` is the single vocabulary word this group spells; the symbols it is compared against are read from the document"
+  elif [ "$RM_NG" -ne 1 ]; then
+    FAIL "RM2: $RM_NG spine row(s) name \`clock\` alongside another declared symbol, expected exactly 1 — the reference month is no longer defined as a function of the clock AND a trip-resolved term. A reference month equal to the clock alone makes the fence's two verdict columns identical by construction, so this is the same reversion HZ7 detects one layer down, named at the symbol that moved rather than as a symptom"
+  else
+    FAIL "RM2: $RM_NB spine row(s) name \`clock\` and NO other declared symbol — a clock-only definition of the reference month is present in the region. This is the COMPLEMENT limb and it is the reason this group is not shaped like HC1: the correct declaration may be sitting untouched beside this one, so a presence assertion would read green while the document says two contradictory things"
+  fi
+
+  # ── RM3 — the wrapped term ADVANCES THE YEAR. ──────────────────────────────────
+  # HZ11 already requires the fence to carry a discriminating wrap pair; this is the prose
+  # that fence is the oracle for. Flattening the wrapped term to the title year is a material
+  # change that leaves the fence, and every HZ arm, untouched.
+  if [ "$RM_NP" -eq 1 ]; then
+    PASS "RM3: exactly $RM_NP spine row carries a year-advancing term — the wrapped term is defined as advancing past the title year, which is the whole of what distinguishes it from the resolved term. HZ11 grades that the fence DISCRIMINATES that clause; this arm grades that the prose the fence is an oracle for still states it"
+  else
+    FAIL "RM3: $RM_NP spine row(s) carry a year-advancing term, expected exactly 1 — at 0 the wrapped-term declaration was deleted or flattened so it no longer advances the year, and the New-Year clause the fence's \`wrap-term\` column grades has no prose defining it; above 1 a second year-advancing declaration was added and the rule has two"
+  fi
+
+  # ── RM4 — the NON-RESOLUTION CLAUSE names the selection pair. ───────────────────
+  # The clause's condition used to live in unbolded justification prose, where an operative-token
+  # projection cannot reach it — measured: a revert of that clause read PASS. It is now rendered
+  # as a tuple span inside the declaration, which brings it inside the projection. The members
+  # are checked against the operands of the declaration heading its OWN block, DERIVED from the
+  # spine rather than spelled, so the pair cannot name something the term does not resolve from.
+  #
+  # SUBSET IS NOT ENOUGH, AND THE GAP IS SUBSTITUTION. Every member being an operand of the
+  # owning declaration holds just as well after one member is SWAPPED for a different operand
+  # of that same declaration: the arity is unchanged, the subset still holds, and the clause
+  # then states a non-resolution condition the rule does not have. Removal is caught by the
+  # arity limb and addition by nothing at all. So the members are pinned by EQUALITY against
+  # the pair's OTHER encoding — the document states the pair twice inside that one block, once
+  # as the span the extraction step names and once as this tuple, and the two must agree as
+  # sets. Derived from the document on every run, spelled nowhere here, and it is the same
+  # two-encodings-must-agree shape RM9 applies to the reference-month declaration.
+  if [ "$RM_NT" -eq 1 ] && [ "$RM_TA" -ge 2 ] && [ "$RM_TO" -eq 1 ] && [ "$RM_TS" -eq 1 ] && [ "$RM_TP" -eq 1 ]; then
+    PASS "RM4: the non-resolution clause names the SELECTION PAIR as an operative token — exactly $RM_NT tuple span of arity $RM_TA, whose members are all operands of the declaration heading its own block AND are exactly the members of the one other span in that block stating the same pair. Both comparisons are derived from the document on this run and written nowhere here. The second is what pins the OPERANDS rather than the shape: swapping a member for another operand of the same declaration leaves the subset and the arity untouched, and is caught only by the equality. Before this clause was promoted into a code span it lived in unbolded justification prose, where the projection could not see it and a year-only revert of it measured PASS"
+  elif [ "$RM_NT" -ne 1 ]; then
+    FAIL "RM4: the region's declaration blocks carry $RM_NT tuple span(s), expected exactly 1 — at 0 the non-resolution condition has left the operative projection and is back in prose no token-level anchor can see, which is precisely the escape this arm was added to close; above 1 the clause has been stated twice and nothing says which pair governs"
+  elif [ "$RM_TA" -lt 2 ]; then
+    FAIL "RM4: the non-resolution clause's tuple span has arity $RM_TA, expected at least 2 — the condition has been narrowed to a single term. The declared rule is that the PAIR's absence is what fails to resolve, not the year's, so an arity of 1 is the year-only reversion stated in the document's own notation"
+  elif [ "$RM_TP" -ne 1 ] && [ "$RM_TO" -eq 1 ] && [ "$RM_TS" -eq 1 ]; then
+    FAIL "RM4: the non-resolution clause's members are NOT the members of the pair as its own block states it elsewhere — $RM_TP span(s) in that block carry the clause's exact member set, expected exactly 1. Every member is still an operand of the owning declaration, so the subset limb is satisfied and the arity is unchanged: this is the SUBSTITUTION case, where one member was swapped for a different operand of the same declaration and the clause now states a condition the rule does not have. At 0 the two encodings of the pair disagree; above 1 the block states the pair more than twice and there is no single counterpart to agree with"
+  elif [ "$RM_TO" -ne 1 ]; then
+    FAIL "RM4: the tuple span sits in a declaration block that carries no definitional span of its own, so there is nothing to check its members against. The subset limb is DERIVED from the declaration heading the tuple's own block — moving the clause out from under its declaration removes the derivation rather than weakening it"
+  else
+    FAIL "RM4: the non-resolution clause names term(s) that are NOT operands of the declaration heading its own block — so the clause claims the rule fails to resolve on something the term never resolved from. Nothing here is spelled: the admissible set is read from that declaration's own right-hand side on this run"
+  fi
+
+  # ── RM9 — THE OPERATIVE TOKENS THEMSELVES, not five derived properties of them. ──
+  # RM1–RM4 grade the spine's CARDINALITY, UNIQUENESS, TRIP-RELATIVITY, YEAR-ADVANCE and TUPLE
+  # MEMBERSHIP. Every one of those survives an edit that changes what the rule SAYS while
+  # preserving its shape, and two such edits were measured passing the whole suite at 406/0
+  # with all nine arms green: inverting the selector in the reference-month declaration, and
+  # resolving the reference month from the WRAPPED term instead of the trip term. The second
+  # is the worked acceptance example of the card that built this group. Both are material by
+  # this group's own discriminator — an operative token inside a normative declaration block —
+  # so the group was blind to precisely the class it declared itself to be about.
+  #
+  # NOTHING IS PINNED HERE EITHER, and that constraint is what shapes the two limbs. Neither
+  # the selector nor the operand is written in this file; both are compared against something
+  # the document states independently of the declaration.
+  #
+  #   OPERAND — the clock-bearing declaration must resolve from a declared symbol that is NOT
+  #   the year-advancing one. The year-advancing symbol is derived exactly as RM3 derives it,
+  #   from the presence of a year increment on its own right-hand side, so a rename of either
+  #   term carries through with no edit here.
+  #
+  #   SELECTOR — the leading call name of that declaration must also appear as a code span in
+  #   the NON-declaration justification prose of this same region. The document argues for its
+  #   selector by name in bolded lead-in paragraphs; the declaration is one encoding of that
+  #   choice and the argument is another, and RM9 asserts they agree. This is HZ9's shape —
+  #   two independent encodings of one rule, neither of them held here — applied to prose.
+  #
+  # EVERY clock-bearing row is checked rather than the first, which is what makes the arm
+  # addition-robust: a second declaration appended beside the correct one is caught here
+  # rather than averaged away.
+  rm_optokens() {  # rm_optokens <file> -> "<nclock> <badoperand> <badselector> <njust> <selectors>"
+    rm_read "$1" | awk -F'\t' '
+      $1 == "SPINE" { ns++; sym[ns] = $2; rhs[ns] = $3; idt[ns] = $6 }
+      $1 == "JUST"  { just[$2] = 1; nj++ }
+      END {
+        wsym = ""
+        for (i = 1; i <= ns; i++) { t = rhs[i]; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) wsym = sym[i] }
+        nclock = 0; badop = 0; badsel = 0; sels = ""
+        for (i = 1; i <= ns; i++) {
+          n = split(idt[i], tok, " "); delete has; hc = 0
+          for (k = 1; k <= n; k++) { has[tok[k]] = 1; if (tok[k] == "clock") hc = 1 }
+          if (hc != 1) continue
+          nclock++
+          namesw = (wsym != "" && (wsym in has)) ? 1 : 0
+          other = 0
+          for (j = 1; j <= ns; j++) if (j != i && sym[j] != wsym && (sym[j] in has)) other = 1
+          if (namesw == 1 || other != 1) badop++
+          s = ""
+          if (match(rhs[i], /^[A-Za-z_][A-Za-z0-9_]*\(/)) s = substr(rhs[i], 1, RLENGTH - 1)
+          if (s == "") badsel++
+          else { sels = sels (sels == "" ? "" : ",") s; if (!(s in just)) badsel++ }
+        }
+        printf "%d %d %d %d %s\n", nclock+0, badop+0, badsel+0, nj+0, (sels == "" ? "-" : sels)
+      }
+    '
+  }
+  # Pre-initialised for the same reason the controls below are: under `set -u` a reader that
+  # produced no line leaves these unset, and an unset reference aborts the suite instead of
+  # reaching the degeneracy branch that exists to report exactly that state.
+  RM_NCLK=0; RM_BADOP=0; RM_BADSEL=0; RM_NJUST=0; RM_SELS="-"
+  read -r RM_NCLK RM_BADOP RM_BADSEL RM_NJUST RM_SELS <<<"$(rm_optokens "$RM_DOC")"
+  if [ "${RM_NCLK:-0}" -eq 0 ] || [ "${RM_NJUST:-0}" -eq 0 ]; then
+    FAIL "RM9: the operative-token reader is DEGENERATE — ${RM_NCLK:-0} clock-bearing declaration(s) and ${RM_NJUST:-0} justification code span(s) were read from the region. Both populations are non-empty on a correct document, so a zero on either is a broken reader and this arm asserts nothing rather than passing over an empty set"
+  elif [ "$RM_BADOP" -ne 0 ]; then
+    FAIL "RM9: $RM_BADOP clock-bearing declaration(s) resolve the reference month from the YEAR-ADVANCING term, or from no other declared symbol at all. The reference month must resolve from the trip term; resolving it from the wrapped term silently moves every horizon comparison forward by up to a year while leaving the fence, the cardinality, the uniqueness and the tuple all intact — which is why RM1–RM4 stay green on that edit and this arm does not"
+  elif [ "$RM_BADSEL" -ne 0 ]; then
+    FAIL "RM9: the selector of the reference-month declaration (${RM_SELS}) appears in NO bolded justification paragraph of this region. The region argues for its selector by name; a declaration whose selector the argument never mentions means one of the two was edited and the other was not, and an inverted selector withdraws the monotonicity guarantee the argument itself calls what makes the rule shippable. Restore the declaration, or move the argument with it"
+  else
+    PASS "RM9: the OPERATIVE TOKENS of the reference-month declaration hold, over all $RM_NCLK clock-bearing declaration(s) — none resolves from the year-advancing term, each resolves from another declared symbol, and each selector (${RM_SELS}) is named in the bolded justification prose of this region, compared against $RM_NJUST code span(s) read from it. Neither the selector nor the operand is written in this file: the operand limb derives the year-advancing symbol the way RM3 does, and the selector limb compares the declaration against the region's own independently authored argument for it"
+  fi
+
+  # ── RM5 / RM6 / RM8 — the three controls, all DELTA-GRADED against the base. ────
+  # Each one scores its mutant against what the UNMUTATED document already scores, and grades
+  # the DIFFERENCE. That is not a refinement, it is the difference between a control and a
+  # coincidence, and it was found by mutation rather than reasoned about: written as absolutes
+  # — "the mutant scores at least one" and "the reword scores zero" — every one of these arms
+  # is wrong on a document that is ALREADY red. The sensitivity arms pass on the pre-existing
+  # violation without the mutation doing anything, and the specificity arm convicts the
+  # editorial edit for a violation that was there before it. Both directions were observed:
+  # reverting the non-resolution clause turned RM4 red, and RM6 then fired too and blamed the
+  # reword. Delta-grading keeps every one of them honest on a red tree, which is the posture
+  # group RS already states for its own controls one file-section down.
+  #
+  # Neither reader below carries an `exit`: awk drains its input, so the producer on the left
+  # of the pipe always finishes writing. A reader that stopped early would take the writer out
+  # with SIGPIPE and, under this file's `pipefail`, turn a successful read into a failed one —
+  # the hazard the note above has_finding states in full.
+  RM_REF="$(rm_read "$RM_DOC" | awk -F'\t' '
+    $1 == "SPINE" { n0++; sym[n0]=$2; ln[n0]=$4; idt[n0]=$6; op[n0]=$7 }
+    END {
+      for (i = 1; i <= n0; i++) {
+        k = split(idt[i], tok, " "); delete has; hc = 0
+        for (m = 1; m <= k; m++) { has[tok[m]] = 1; if (tok[m] == "clock") hc = 1 }
+        if (hc != 1) continue
+        o = 0; for (j = 1; j <= n0; j++) if (j != i && (sym[j] in has)) o = 1
+        if (o == 1) { hit++; h = i }
+      }
+      if (hit == 1) printf "%s\t%s\t%s\n", ln[h], sym[h], op[h]
+    }')"
+  RM_FL="$(rm_read "$RM_DOC" | awk -F'\t' '$1 == "FENCE" && n++ == 0 { print $2 }')"
+  RM_RLN="$(printf '%s' "$RM_REF" | cut -f1)"
+  RM_RSYM="$(printf '%s' "$RM_REF" | cut -f2)"
+  RM_ROP="$(printf '%s' "$RM_REF" | cut -f3)"
+  RM_MUT="$WORK/rm-mutant.md"
+  # The base every control below is graded against. On a green tree this is empty and the
+  # deltas read exactly as absolutes would; on a red one it is what keeps them attributable.
+  RM_BASEV="$(rm_violations "$RM_DOC" "$RM_NREQ")"
+  RM_BASEN="$(rm_nviol "$RM_BASEV")"
+
+  if [ -z "$RM_REF" ] || [ -z "$RM_FL" ]; then
+    FAIL "RM5: MUST FIRE — the reference-month row or the fence anchor could not be derived from the document, so no mutant could be built out of the rule's own terms. The controls below are unrun rather than passing, and RM1–RM4's verdicts have nothing behind them"
+    FAIL "RM6: MUST NOT FIRE — not run: the anchors RM5 reports missing are the same ones this arm's copy is built from"
+    FAIL "RM8: MUST FIRE, ADD-ONLY — not run: the anchors RM5 reports missing are the same ones this arm's declaration is derived from"
+  else
+    if rm_mutate "$RM_DOC" revert "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
+      RM_MV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
+      RM_MD="$(rm_setdiff "$RM_MV" "$RM_BASEV")"
+      RM_MN="$(rm_nviol "$RM_MD")"
+      if [ "$RM_MN" -ge 1 ]; then
+        PASS "RM5: MUST FIRE — the reference-month declaration's right-hand side replaced by its OWN FIRST OPERAND (\`$RM_RSYM = $RM_ROP\`, a clock-only reversion derived from the document and not spelled here) ADDS $RM_MN limb(s) this document does not already fail: ${RM_MD}. Graded as a DELTA against the unmutated document's own $RM_BASEN violation(s), so the arm cannot pass on a violation that was there before it ran. The verdicts RM1–RM4 report are therefore measurements: this comparator CAN see the rule reverted"
+      else
+        FAIL "RM5: MUST FIRE — a clock-only reversion of the reference-month declaration added NO limb the unmutated document does not already fail. Every arm above is then a reader that cannot see the change it exists to detect, and their verdict says nothing about the document"
+      fi
+    else
+      FAIL "RM5: MUST FIRE — the reversion mutant did not land on line $RM_RLN of the copy, so this control never exercised the comparator. A mutation that failed to apply must never be read as an arm that failed to fire, which is why landing is asserted separately from scoring"
+    fi
+
+    # ── RM6 — MUST NOT FIRE. SPECIFICITY, on a REWORD. ───────────────────────────
+    # This arm is what makes the material/editorial discriminator DEMONSTRATED rather than
+    # asserted. Without it, "ordinary rewording does not produce a false red" is a claim with
+    # no evidence behind it, and the cheapest way to satisfy every arm above would be a
+    # comparator that convicts every edit.
+    if rm_mutate "$RM_DOC" reword "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
+      RM_WV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
+      RM_WADD="$(rm_setdiff "$RM_WV" "$RM_BASEV")"
+      RM_WGONE="$(rm_setdiff "$RM_BASEV" "$RM_WV")"
+      RM_WN="$(rm_nviol "$RM_WADD")"
+      if [ -z "$RM_WADD" ] && [ -z "$RM_WGONE" ]; then
+        PASS "RM6: MUST NOT FIRE — one plain sentence added to a non-declaration paragraph of the region, carrying no code span and no bolded lead-in, leaves this comparator's verdict UNCHANGED in both directions against the unmutated document's own $RM_BASEN violation(s). Editorial edits do not move this group, and that is demonstrated on the real document rather than promised: RM5 has already shown the same comparator moving, so this is specificity and not a dead reader. It is graded as a delta rather than as a zero because a zero-expectation would convict the reword for a violation that was in the document before it"
+      else
+        FAIL "RM6: MUST NOT FIRE — a purely editorial addition MOVED this comparator's verdict: it added ${RM_WADD:-nothing} and removed ${RM_WGONE:-nothing} against the unmutated document's own $RM_BASEN violation(s). This group convicts correct work, and a gate that convicts correct work trains contributors to reach for its exemption marker rather than to read it"
+      fi
+    else
+      FAIL "RM6: MUST NOT FIRE — the editorial mutant did not land before line $RM_FL of the copy, so the specificity of every arm above is unmeasured"
+    fi
+
+    # ── RM8 — MUST FIRE, ADD-ONLY. The arm HC1 does not have. ────────────────────
+    # Nothing existing is touched: a SECOND, clock-only declaration of the same symbol is
+    # appended as its own declaration block, with the correct one left byte-intact beside it.
+    # This is ADR-019's S4 degenerate input — "an added negating or widening clause leaves the
+    # rule present" — run against this group's own arms. It fails RM1's uniqueness limb and
+    # RM2's absence limb, which is what carrying R3 rather than only R4 buys.
+    if rm_mutate "$RM_DOC" addition "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" > "$RM_MUT" 2>/dev/null; then
+      RM_AV="$(rm_violations "$RM_MUT" "$RM_NREQ")"
+      RM_AD="$(rm_setdiff "$RM_AV" "$RM_BASEV")"
+      RM_AN="$(rm_nviol "$RM_AD")"
+      if [ "$RM_AN" -ge 1 ]; then
+        PASS "RM8: MUST FIRE, ADD-ONLY — a second, clock-only declaration of \`$RM_RSYM\` appended as its own declaration block, with every existing declaration left byte-intact, ADDS $RM_AN limb(s) this document does not already fail: ${RM_AD}. Graded as a DELTA against the unmutated document's own $RM_BASEN violation(s), so this arm cannot pass on a violation the addition did not cause. This group is therefore NOT addition-blind — and this is the arm the precedent named for this shape does not carry: that precedent's own must-fire control mutates the PROBE and establishes that the probe lives, which leaves an added negating clause green on both of them"
+      else
+        FAIL "RM8: MUST FIRE, ADD-ONLY — a second, contradicting declaration ADDED beside the correct one added NO limb the unmutated document does not already fail. This group is addition-blind: ADR-019's S4 degenerate input reaches its PASS, and the complement limbs RM1 and RM2 claim to carry are not doing the work they say they do"
+      fi
+    else
+      FAIL "RM8: MUST FIRE, ADD-ONLY — the addition mutant did not land before line $RM_FL of the copy, so the add-only input this group exists to be sensitive to was never presented to it"
+    fi
+
+    # ── RM10 / RM11 / RM12 — RM9's controls. ───────────────────────────────────
+    # RM9 is a NEW comparison, so its zero earns nothing until each of its limbs is shown
+    # firing. All three mutants are built ENTIRELY out of values rm_read derived from the
+    # document on this run — the symbol, the selector, the first operand and the year-advancing
+    # symbol — so none of them spells a rule token into this file, and a rename of any term
+    # carries through with no edit here.
+    RM_WSYM="$(rm_read "$RM_DOC" | awk -F'\t' '$1 == "SPINE" && !w { t = $3; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) { print $2; w = 1 } }')"
+    RM_SEL1="$(printf '%s' "$RM_SELS" | cut -d, -f1)"
+    if [ -z "$RM_WSYM" ] || [ -z "$RM_SEL1" ] || [ "$RM_SEL1" = "-" ]; then
+      FAIL "RM10: MUST FIRE — the year-advancing symbol or the declaration's selector could not be derived from the document, so no operative-token mutant could be built out of the rule's own terms. RM9's verdict above rests on nothing"
+      FAIL "RM11: MUST FIRE — not run: the derivations RM10 reports missing are the same ones this mutant is built from"
+      FAIL "RM12: MUST FIRE, ADD-ONLY — not run: the derivations RM10 reports missing are the same ones this declaration is built from"
+    else
+      # RM10 — the SELECTOR limb. The selector is replaced by a derived synthetic (the same
+      # token, prefixed), which no justification paragraph names. That is the same code path an
+      # inverted selector takes: any selector the argument does not name fails this limb.
+      if rm_mutate "$RM_DOC" selector "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
+        # Pre-initialised because this file runs under `set -u`: a reader that produced no
+        # line would leave these unset and abort the suite rather than failing the arm.
+        RM_C10=0; RM_O10=0; RM_S10=0; RM_J10=0; RM_L10="-"
+        read -r RM_C10 RM_O10 RM_S10 RM_J10 RM_L10 <<<"$(rm_optokens "$RM_MUT")"
+        if [ "${RM_S10:-0}" -gt "$RM_BADSEL" ]; then
+          PASS "RM10: MUST FIRE — the reference-month declaration's SELECTOR replaced by a derived synthetic (\`${RM_SEL1}\` prefixed, a token this region argues for nowhere) moves RM9's selector limb from $RM_BADSEL to $RM_S10 failing declaration(s). Graded as a DELTA against the unmutated document, so the arm cannot pass on a failure that was there before it ran. An inverted selector takes this identical path: the limb asks whether the argument names the selector, not which selector it is"
+        else
+          FAIL "RM10: MUST FIRE — replacing the declaration's selector with a token no justification paragraph names left RM9's selector limb at $RM_S10, unchanged from $RM_BADSEL. That limb cannot see a selector substitution, so RM9's clean verdict says nothing about the selector"
+        fi
+      else
+        FAIL "RM10: MUST FIRE — the selector mutant did not land on line $RM_RLN of the copy, so this control never exercised RM9. A mutation that failed to apply must never be read as an arm that failed to fire"
+      fi
+
+      # RM11 — the OPERAND limb, and this is the card's own worked acceptance example:
+      # the reference month resolving from the WRAPPED term instead of the trip term.
+      if rm_mutate "$RM_DOC" operand "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
+        RM_C11=0; RM_O11=0; RM_S11=0; RM_J11=0; RM_L11="-"
+        read -r RM_C11 RM_O11 RM_S11 RM_J11 RM_L11 <<<"$(rm_optokens "$RM_MUT")"
+        if [ "${RM_O11:-0}" -gt "$RM_BADOP" ]; then
+          PASS "RM11: MUST FIRE — the reference-month declaration rewritten to resolve from the YEAR-ADVANCING term \`$RM_WSYM\` instead of the trip term, with the selector and the first operand kept as the document states them, moves RM9's operand limb from $RM_BADOP to $RM_O11 failing declaration(s). This is the edit the card that built this group named as its own worked example, and it passed the whole suite at 406/0 before this arm existed"
+        else
+          FAIL "RM11: MUST FIRE — resolving the reference month from the year-advancing term left RM9's operand limb at $RM_O11, unchanged from $RM_BADOP. The limb cannot see which term the rule resolves from, which is the one thing it exists to see"
+        fi
+      else
+        FAIL "RM11: MUST FIRE — the operand mutant did not land on line $RM_RLN of the copy, so this control never exercised RM9"
+      fi
+
+      # RM12 — ADD-ONLY. A SECOND clock-bearing declaration, resolving from the wrapped term,
+      # appended as its own block with every existing declaration byte-intact. RM9 checks every
+      # clock-bearing row rather than the first, and this is the input that proves it: an arm
+      # reading only the first row would average this away and stay green.
+      if rm_mutate "$RM_DOC" optadd "$RM_RSYM" "$RM_ROP" "$RM_FL" "$RM_RLN" "$RM_WSYM" "$RM_SEL1" > "$RM_MUT" 2>/dev/null; then
+        RM_C12=0; RM_O12=0; RM_S12=0; RM_J12=0; RM_L12="-"
+        read -r RM_C12 RM_O12 RM_S12 RM_J12 RM_L12 <<<"$(rm_optokens "$RM_MUT")"
+        if [ "${RM_O12:-0}" -gt "$RM_BADOP" ] && [ "${RM_C12:-0}" -gt "$RM_NCLK" ]; then
+          PASS "RM12: MUST FIRE, ADD-ONLY — a SECOND clock-bearing declaration resolving from the year-advancing term \`$RM_WSYM\`, appended as its own declaration block with every existing declaration left byte-intact, raises the clock-bearing population $RM_NCLK → $RM_C12 and RM9's operand limb $RM_BADOP → $RM_O12. RM9 is therefore NOT addition-blind: it grades every clock-bearing row rather than the first, which is exactly what an added contradicting declaration defeats in an arm that stops at one"
+        else
+          FAIL "RM12: MUST FIRE, ADD-ONLY — a second, contradicting clock-bearing declaration ADDED beside the correct one left RM9 at $RM_C12 clock-bearing row(s) and $RM_O12 operand failure(s), against $RM_NCLK and $RM_BADOP unmutated. RM9 is addition-blind, so its clean verdict does not survive an appended declaration"
+        fi
+      else
+        FAIL "RM12: MUST FIRE, ADD-ONLY — the add-only operative-token mutant did not land before line $RM_FL of the copy, so the addition RM9 must be sensitive to was never presented to it"
+      fi
+    fi
+  fi
+
+  # ── RM7 — the controls wrote to a COPY. The real document is untouched. ────────
+  # A control that mutated the tree it is measuring would make every arm above a statement
+  # about a document this commit does not contain. FW3b's arm, for FW3b's reason.
+  if cmp -s "$RM_DOC" "$RM_PRISTINE"; then
+    PASS "RM7: reference/data-model.md is byte-identical to the copy taken before RM5, RM6 and RM8 ran — all three mutants were written to a temp file and the measured tree was never touched"
+  else
+    FAIL "RM7: reference/data-model.md CHANGED while this group ran — a control has mutated the document it is measuring, so every verdict above describes a file this commit does not contain"
+  fi
+fi
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
 echo "CE — the cost-estimate coverage pair agrees with the entries it counts"
 # ═════════════════════════════════════════════════════════════════════════════════
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
@@ -7093,6 +9864,21 @@ CE_RAN=0
 CE_PROBE='CE-SYNTHETIC-PROBE'
 CE_PHANTOM='CE-PHANTOM-ARM'
 CE_ARMED=""
+# ── The SITE rung, derived here beside the code-granular probes rather than beside CE_CODES.
+# CE_CODES is computed at the coverage verdict itself, AFTER every arm has run, and an accumulator
+# fed by those arms cannot be initialised after them — so the derivation moves up to the group's
+# own entry constants, which is the earliest point that is still once-per-run.
+#
+# CE's emission shape is the same tab-headed one group ST uses, so the SAME reader serves both;
+# what differs is only the body it is pointed at. The probe is a CODE because the shaper writes an
+# emission; the probe KEY is what a site-granular reader derives from that emission, and cov_assert
+# asserts the two agree rather than assuming it.
+CE_SITE_PROBE='CE-SITE-SYNTHETIC-PROBE'
+CE_SITE_PROBE_KEY='CE-SITE-SYNTHETIC-PROBE#1'
+CE_SITE_PHANTOM='CE-PHANTOM-SITE#9'
+# PARALLEL to CE_ARMED, never a change to it: CE_ARMED records the code an arm DECLARED it wanted,
+# this records the site the evaluator ACTUALLY EMITTED from when that arm ran.
+CE_ARMED_SITES=""
 CE_DIR="$WORK/ce"; mkdir -p "$CE_DIR"
 
 # ce_fenced <root> — the class-ids in the FENCED row of § 4.5's marker-form table, one per
@@ -7372,6 +10158,11 @@ ce_mustfire() {
 "
   v="$(ce_violations "$tree" "$trip" "$map" "$den")"
   n="$(printf '%s\n' "$v" | grep -c '[^[:space:]]')"
+  # The SITE side, read from the RECORDS rather than from $want for the reason st_mustfire states:
+  # an arm names a code, and only the record can say which of that code's emission sites was
+  # reached. ce_mustnotfire accumulates nothing, by the same rule.
+  CE_ARMED_SITES="$CE_ARMED_SITES
+$(st_attrib "$v" "$CE_SITEMAP")"
   if [ "$landed" -eq 1 ] && grep -q "^$want$(printf '\t')" <<<"$v"; then
     PASS "$id: MUST FIRE — $what, and the same evaluator reports $want ($n violation(s) in all). The mutation is asserted to have landed before the verdict is read"
   else
@@ -7389,6 +10180,14 @@ ce_mustnotfire() {
     FAIL "$id: MUST NOT FIRE — $what, but the evaluator reports $n violation(s) (edit-landed=$landed):$(printf '%s\n' "$v" | awk -F'\t' 'NF > 1 { printf " %s", $1 }')"
   fi
 }
+
+# The site derivation belongs HERE and not with the probe constants above: those sit ahead of
+# ce_violations' own definition, and `declare -f` over a function that does not exist yet returns
+# NOTHING — an empty sitemap, and a site comparison over the empty set. That is not a hypothetical;
+# it is what the first build of this arm did, and CE-SITE0's emptiness limb named the cause on the
+# first run rather than letting the comparison read green over nothing.
+CE_SITE_BODY="$(declare -f ce_violations)"
+CE_SITEMAP="$(st_sitemap "$CE_SITE_BODY")"
 
 CE_DEN_IDS="$(ce_denominator "$ROOT")"
 CE_NDEN="$(printf '%s\n' "$CE_DEN_IDS" | grep -c '[^[:space:]]')"
@@ -7442,6 +10241,27 @@ else
 fi
 
 if [ "$CE_RAN" -eq 1 ]; then
+  # ── CE-SITE0 — the ENTRY GATE for this group's site comparison, on the same shape group ST
+  # uses and for the same two reasons. It is an EQUALITY between two non-zero counts rather than a
+  # zero, so it cannot pass over a reader that has gone quiet; and its second limb converts this
+  # design's one blind spot into a failing input — two emission sites of one code whose details
+  # open with the SAME literal collapse into one key, under-reporting the population, which is a
+  # smaller denominator reading as full coverage.
+  CE_SITE_OK=1
+  CE_SITE_RAW="$(printf '%s\n' "$CE_SITEMAP" | grep -c '[^[:space:]]')"
+  CE_SITE_KEYS="$(st_sites "$CE_SITE_BODY")"
+  CE_SITE_NK="$(printf '%s\n' "$CE_SITE_KEYS" | grep -c '[^[:space:]]')"
+  CE_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$CE_SITEMAP")"
+  if [ "$CE_SITE_RAW" -eq 0 ]; then
+    FAIL "CE-SITE0: the emission-site reader returned NO sites over the body of ce_violations, so every site verdict below would be a statement over the empty set — either the evaluator is no longer reachable by that name or its emission shape has moved, and either way this group's site coverage is UNMEASURED rather than complete"
+    CE_SITE_OK=0
+  elif [ "$CE_SITE_NK" -ne "$CE_SITE_RAW" ]; then
+    FAIL "CE-SITE0: $CE_SITE_RAW raw emission site(s) collapse to only $CE_SITE_NK distinct key(s) — key(s) ${CE_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
+    CE_SITE_OK=0
+  else
+    PASS "CE-SITE0: the emission-site reader is non-degenerate and unambiguous over ce_violations — $CE_SITE_RAW raw site(s) resolving to $CE_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero. The site set and the code set need not be the same size, and this gate does not assert that they are: where an evaluator emits one code from several places, ONE member of the code set is several members of this one, and the gap between the two rungs is exactly the population CE-COV cannot see. What CE-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted"
+  fi
+
   CE_NMEASURED=0; CE_NPOPULATED=0; CE_NUNVERIF=0; CE_BAD=""
   while IFS= read -r CE_EST; do
     [ -n "$CE_EST" ] || continue
@@ -7605,53 +10425,30 @@ EOF
   ce_mustnotfire "CTL-CE-NEUTRAL" "$CE_FX" "$CE_STRIP" "$CE_SMAP" "$CE_DEN" "the body's H1 is reworded — the file changes, and no surface this group reads does" "$CE_L"
 
   # ── CE-COV — the arm inventory, read from ce_violations' own body and compared in BOTH
-  # directions, on the ST precedent. Containment alone cannot tell a covered set from a
-  # reader that returned nothing, so the reverse difference is what makes the zero a
-  # measurement. A code added with no arm behind it is RED here rather than latent.
+  # directions. This group shipped as a copy of ST's arm "on the ST precedent"; it is now a CALL
+  # to the same cov_assert that group ST and group CTL call, so the comparison has one
+  # implementation and the next group meets a helper rather than this decision. ce_violations and
+  # CE_CODES are untouched: what moved is the arithmetic, never the derivation.
   CE_CODES="$(st_codes "$(declare -f ce_violations)")"
   CE_NCODES="$(printf '%s\n' "$CE_CODES" | grep -c '[^[:space:]]')"
-  CE_UNARMED="$(st_setdiff "$CE_CODES" "$CE_ARMED")"
-  CE_PHANTOMS="$(st_setdiff "$CE_ARMED" "$CE_CODES")"
-  CE_NUNARMED="$(printf '%s\n' "$CE_UNARMED" | grep -c '[^[:space:]]')"
-  CE_NPHANTOM="$(printf '%s\n' "$CE_PHANTOMS" | grep -c '[^[:space:]]')"
-  CE_NARMED="$(printf '%s\n' "$CE_ARMED" | awk 'NF && !seen[$0]++' | grep -c '.')"
-  if [ "$CE_NCODES" -eq 0 ]; then
-    FAIL "CE-COV: the code reader returned 0 codes from ce_violations' own body, so the coverage verdict would be a statement over the empty set — either the function is no longer reachable by that name or its emission shape has moved, and either way this group's arm coverage is UNMEASURED rather than complete"
-  elif [ "$CE_NUNARMED" -ne 0 ]; then
-    FAIL "CE-COV: $CE_NUNARMED of the $CE_NCODES code(s) ce_violations can emit have NO must-fire arm in this run — $(printf '%s' "$CE_UNARMED" | tr '\n' ' '). A code with no arm is a check indistinguishable from one that CANNOT fire, and its branch is live either way"
-  elif [ "$CE_NPHANTOM" -ne 0 ]; then
-    FAIL "CE-COV: $CE_NPHANTOM must-fire arm(s) name a code ce_violations cannot emit — $(printf '%s' "$CE_PHANTOMS" | tr '\n' ' '). Either a code was renamed and its arm was not, or the reader has stopped seeing an emission it used to find"
-  else
-    PASS "CE-COV: all $CE_NCODES code(s) ce_violations can emit [$(printf '%s' "$CE_CODES" | tr '\n' ' ')] have a must-fire arm, and all $CE_NARMED armed code(s) name a code it can emit — a bijection, asserted in both directions. The set is READ FROM the function's own body on this run, so a code added later arrives uncovered and RED rather than covered by a numeral in this file"
-  fi
+  cov_assert 'CE-COV' 'CTL-CE-COV' '' 'ce_violations' \
+             st_codes cov_emit_tab "$(declare -f ce_violations)" \
+             "$CE_CODES" "$CE_ARMED" "$CE_PROBE" "$CE_PHANTOM"
 
-  # CTL-CE-COV1 / COV2 — the same proof-by-mutation ST carries, on this group's own reader.
-  # Both mutate a COPY of a string in this shell, never this file and never the tree, and
-  # both are graded as a DELTA rather than against a literal.
-  if [ "$CE_NCODES" -gt 0 ]; then
-    CE_COV_FN="$(declare -f ce_violations)"
-    CE_COV_MUT="$CE_COV_FN
-      printf \"${CE_PROBE}\\ta synthetic emission that no arm covers\\n\""
-    CE_COV_LANDED=0; [ "$CE_COV_MUT" != "$CE_COV_FN" ] && CE_COV_LANDED=1
-    CE_COV_MU="$(st_setdiff "$(st_codes "$CE_COV_MUT")" "$CE_ARMED")"
-    CE_COV_MN="$(printf '%s\n' "$CE_COV_MU" | grep -c '[^[:space:]]')"
-    CE_COV_HIT="$(printf '%s\n' "$CE_COV_MU" | grep -c "^${CE_PROBE}$")"
-    if [ "$CE_COV_LANDED" -eq 1 ] && [ "$CE_COV_MN" -eq $((CE_NUNARMED + 1)) ] && [ "$CE_COV_HIT" -eq 1 ]; then
-      PASS "CTL-CE-COV1: MUST FIRE — one unarmed code appended to a COPY of ce_violations' body takes the uncovered set from $CE_NUNARMED to $CE_COV_MN and the new member IS that code. A code added to the real function with no arm behind it turns CE-COV red, which is the property this group could otherwise only state"
-    else
-      FAIL "CTL-CE-COV1: MUST FIRE — an unarmed code appended to a copy of the function body was not reported (mutation-landed=$CE_COV_LANDED, uncovered=$CE_COV_MN against $((CE_NUNARMED + 1)) expected, probe-found=$CE_COV_HIT). CE-COV's zero does not respond to a known hole and therefore proves nothing"
-    fi
-    CE_COV_MA="$CE_ARMED
-$CE_PHANTOM"
-    CE_COV_ALANDED=0; [ "$CE_COV_MA" != "$CE_ARMED" ] && CE_COV_ALANDED=1
-    CE_COV_MP="$(st_setdiff "$CE_COV_MA" "$CE_CODES")"
-    CE_COV_PN="$(printf '%s\n' "$CE_COV_MP" | grep -c '[^[:space:]]')"
-    CE_COV_PH="$(printf '%s\n' "$CE_COV_MP" | grep -c "^${CE_PHANTOM}$")"
-    if [ "$CE_COV_ALANDED" -eq 1 ] && [ "$CE_COV_PN" -eq $((CE_NPHANTOM + 1)) ] && [ "$CE_COV_PH" -eq 1 ]; then
-      PASS "CTL-CE-COV2: MUST FIRE — a code no emission carries, added to a COPY of the armed set, takes the phantom set from $CE_NPHANTOM to $CE_COV_PN and the new member IS that code. So CE-COV's other zero is a measurement too, and a reader that had silently stopped finding emissions could not pass this group"
-    else
-      FAIL "CTL-CE-COV2: MUST FIRE — a phantom arm was not reported (mutation-landed=$CE_COV_ALANDED, phantom=$CE_COV_PN against $((CE_NPHANTOM + 1)) expected, probe-found=$CE_COV_PH). CE-COV cannot distinguish a covered group from a reader that returned nothing"
-    fi
+  # ── CE-SITE — the same proposition one rung finer, read together with CE-COV so the ladder is
+  # visible in the output. This group is graded at site granularity for the same reason group ST
+  # is: its emissions are tab-headed, so the SAME reader resolves them, and its day-one state is a
+  # bijection so the extension asserts a property that already holds. Grading ST at site
+  # granularity and leaving CE at code granularity would re-create, inside one file, the very
+  # incoherence the shared helper exists to prevent.
+  # Gated on CE-SITE0 for the reason group ST's own gate gives: a comparison over a reader that
+  # returned nothing, or over keys that collided, is UNMEASURED and is named as that once rather
+  # than reported a second time as a coverage hole it is not.
+  if [ "$CE_SITE_OK" -eq 1 ]; then
+    cov_assert 'CE-SITE' 'CTL-CE-SITE' '' 'ce_violations' \
+               st_sites cov_emit_tab "$CE_SITE_BODY" \
+               "$CE_SITE_KEYS" "$CE_ARMED_SITES" "$CE_SITE_PROBE" "$CE_SITE_PHANTOM" \
+               "$CE_SITE_PROBE_KEY" 'emission site'
   fi
 fi
 
@@ -8051,8 +10848,9 @@ fi
 # WHY THIS GROUP IS HERE AND NOT ONLY IN THE SUITE WHERE THE DEFECT WAS FOUND. The defect
 # was measured in the publish-guard suite: deleting verify_ciphertext left four assertions
 # PASSing against a function that no longer existed, and deleting an entire subcommand
-# left that suite exiting 0. But the population is not concentrated there — 59 sites carry
-# the shape across the five suites, and this suite carries 1 of them. A guard installed only where the defect
+# left that suite exiting 0. But the population is not concentrated there — 59 sites carried
+# the shape across the five suites that existed when this group was installed, and this suite
+# carries 1 of them. A guard installed only where the defect
 # was noticed leaves the growth surface unguarded, and the growth is in the other suites:
 # two of them gained +499 and +278 lines in a single prior release.
 #
@@ -8220,8 +11018,9 @@ MD_SELF_C1="${MD_C1_IDS% }"
 
 # ── The DECLARED residual. These sites carry the polarity-negative shape and are NOT
 # remediated by this change, whose locked scope is the five named assertions in the
-# publish-guard suite plus this oracle in all five; a 59-site sweep across five suites is
-# exactly the blind bulk edit this repository's own discipline forbids. They are declared
+# publish-guard suite plus this oracle in each of the five suites that existed when that
+# scope was locked; a 59-site sweep across all of them is exactly the blind bulk edit this
+# repository's own discipline forbids. They are declared
 # here rather than left silent, and the diff below runs in BOTH directions — an undeclared
 # site FAILS, and a declared site that no longer scans FAILS too, so remediating one
 # obliges removing its line. The list can only shrink; it cannot quietly absorb a new
@@ -8294,17 +11093,1160 @@ else
   FAIL "MD5: CONTROL on the oracle did not fire — the planted remediated assertion returned '$MD_CS' rather than '0 1' with its subject removed. An oracle that convicts everything is as useless as one that convicts nothing"
 fi
 
-# ── ONE assertion in this suite is now REGISTERED with md_flips: CTL-DATAROOT6, registered by
-# CTL-DATAROOT6-MUT in group CTL. Registration requires the assertion to be remediated first,
-# because an oracle asked to certify a still-blind assertion turns the suite red for a defect
-# it is reporting rather than causing — which is why the count was zero until an arm had been
-# through that. The declared residual in MD2 is still this suite's registration queue, and
-# every entry that leaves it gains an MD[...] arm in the same edit.
+# ── Group ST's cross-document pair, REGISTERED. Two subjects and three registrations, because
+# ST3 rests on TWO extractors and either one going absent must flip it: st_dm_starred on the
+# model side and st_surfaces on the form side. One assertion function registered once per
+# subject is the shape test-publish-guard.sh already ships for M5b / M5b-join.
+#
+# st3_assert and st4_assert take every input as an ARGUMENT and call their own extractors, which
+# is what makes these registrations mean anything: md_flips removes a FUNCTION, so an assertion
+# handed a precomputed set would survive its subject's removal and report itself blind. Each
+# renders exactly one verdict, and each reaches a FAIL on its degenerate path rather than
+# skipping — md_probe counts verdicts, so an assertion that stayed silent under mutation would
+# report the probe broken instead of the assertion flipping.
+md_flips st_dm_starred 'ST3'        st3_assert "$ST_MD_FORM" "$ST_DM"
+md_flips st_surfaces   'ST3-marked' st3_assert "$ST_MD_FORM" "$ST_DM"
+md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
+
+# ── Group CTL's coverage arm, REGISTERED on BOTH sides of what it grades — the reader and the
+# thing read. One subject alone would leave half the assertion ungraded.
+#
+# The READER: with ctl_codes removed the derived set is empty and the emptiness gate FAILs, so
+# CTL-COV's verdict required that reader to have RUN.
+#
+# The EMITTER: with va_check_artifact removed the derived set loses five codes — measured, A2 A3
+# A4 A5 A6 — which are still in the armed set and become PHANTOMS, so the verdict FAILs on its
+# other direction. That is the flip property applied to the subject the assertion is ABOUT, and
+# it is available here only because ctl_body reads the SOURCED functions: a derivation that read
+# scripts/validate-artifacts.sh would have a FILE for a subject, which md_flips cannot remove.
+#
+# NO CLAUSE-6 OPT-OUT IS DECLARED HERE, and that is an outcome rather than an omission. Both
+# subjects are shell functions, so registration is direct. The PP0/PP9 opt-out shape applies
+# where a subject is a file or an external binary, and choosing declare -f over a file read is
+# what avoided creating that case at all.
+#
+# va_check_artifact is the emitter subject because it is one of only four that CAN be one:
+# removing va_class_rows, va_main or va_read_ok drops NO code from the set, because every code
+# each emits is also emitted elsewhere. That last zero is not a dead probe — it is the
+# code-vs-site distinction this arm declares below, measured.
+md_flips ctl_codes         'CTL-COV'         ctl_cov_assert "$CTL_ARMED"
+md_flips va_check_artifact 'CTL-COV-emitter' ctl_cov_assert "$CTL_ARMED"
+
+# ── The SITE coverage arms of groups ST and CE, registered on their shared READER. st_sitemap is
+# the one subject both rest on: remove it and the derived site set is empty, the non-degeneracy
+# limb FAILs, and neither verdict can be reached on a clean reading. One subject rather than two
+# per arm, and that is a property of the design rather than a gap — the EMITTER side of the same
+# question is already registered one rung up, where CTL-COV-emitter removes a function and watches
+# armed codes become phantoms. Both subjects here are shell functions, so no clause-6 opt-out is
+# declared and none is needed: reading the evaluator through declare -f rather than through a file
+# is what avoids creating a file subject at all.
+md_flips st_sitemap 'ST-SITE' site_cov_assert 'ST-SITE' 'CTL-ST-SITE' 'st_violations' "$ST_SITE_BODY" "$ST_ARMED_SITES"
+md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violations' "$CE_SITE_BODY" "$CE_ARMED_SITES"
+
+# ── THE DOCUMENT HALF IS OPTED OUT, AND THE OPT-OUT IS DECLARED RATHER THAN SILENT ──
+# The other subject ST3 and ST4 rest on is reference/data-model.md, which is a FILE and not a
+# shell function. md_flips registers an assertion by removing its subject FUNCTION, so it cannot
+# reach a document, and registering one anyway would grade the oracle rather than the assertion
+# — PP0/PP9's stated reason, applied here. The COMPENSATING POSITIVE CONTROL is CTL-ST3-EXTRACT
+# in group ST: the same extractor over a copy of that document with every field-table row
+# removed must reach the FAILING limb, and the arm asserts in the same verdict that the clean
+# copy reaches the passing one. An opt-out with no compensating arm would be an exemption.
+
+# ── REGISTERED WITH md_flips — AND THE TOTAL IS NOT WRITTEN HERE ANY MORE. ──────────────────
+# There used to be a count on this line. It declared itself a RUNNING TOTAL and carried its own
+# warning: a change that reads only its own contribution here will write a number that is wrong
+# the moment the next one lands. It then went stale in exactly that way — it read eighteen
+# registrations over sixteen assertions while the run emitted more than that, and the
+# enumeration beneath it omitted a whole group, because the card that added that group inserted
+# its registrations and never came back to a number in a different section of this file.
+#
+# NOTHING MECHANICAL COULD HAVE CAUGHT IT, and the reason is scope rather than absence. The
+# detector for a basis-free cardinal governing a corpus noun is group C of
+# scripts/test-corpus-hygiene.sh, and its scan surface is `git ls-files '*.md'` — a comment
+# inside a shell script is structurally out of its reach, however mature that detector is.
+#
+# SO THE FIGURE IS DERIVED INSTEAD OF RESTATED. md_flips counts its own calls and its own
+# distinct assertions as it makes them, and MD6 at the foot of this file reports both and
+# checks them against a second, independent reading — the MD[...] verdicts the run actually
+# emitted. There is no number here to go stale. That is the move this file already makes
+# twice: group RS reads both rosters live rather than holding a copy of either, and W12
+# derives its code inventory from the walker's own emission sites. This is that pattern
+# applied to the one count in this file that was still maintained by hand.
+#
+# WHAT IS KEPT HERE IS THE PART A READER CANNOT DERIVE — why the registrations sit where they
+# do. Group MG's are emitted INSIDE that group rather than here, for the reason its own comment
+# gives: they need its register read and its fixtures, which are torn down at its end. MD6
+# counts them wherever they are made, because the figure is the SUITE's and not any section's.
+# Registration requires the assertion to be remediated first, because an oracle asked
+# to certify a still-blind assertion turns the suite red for a defect it is reporting rather than
+# causing — which is why the count was zero until an arm had been through that. The declared
+# residual in MD2 is still this suite's registration queue, and every entry that leaves it gains
+# an MD[...] arm in the same edit.
 #
 # CTL-DATAROOT6's registration reads its subject as the SENTINEL rather than as va_main, and
 # the reason is stated at that arm: md_flips removes its subject, while the divergence being
 # graded there has to leave the seam running and answering differently for one spelling. The
 # sentinel is the seam between the primitive's mechanism and that requirement.
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group W — the round-trip completeness walk: the contract graded, the instances controlled.
+#
+# ── THE DEFECT ───────────────────────────────────────────────────────────────────
+# reference/site-layout-spec.md § 9.4 prescribes a walk — every element of a trip's
+# final-itinerary.md, every day and every track of a split day, resolving to a rendered
+# component or to a named exclusion. Three documents stated that obligation and NOTHING
+# EXECUTED IT: the charter, the site verb, and the spec itself each carried it, and it was
+# discharged by whoever happened to be reading the prose. The consequence the rule names in
+# its own sentence — a patch silently drops plan detail — is exactly what an ungraded rule
+# cannot prevent.
+#
+# ── THE WALK HAS TWO HALVES AND ONLY ONE HAS A CI POPULATION ─────────────────────
+# This is the shape of the group and it is stated first, because a gate that conflates the
+# two claims more than it grades — which is the defect this whole release exists to close.
+#
+#   THE CONTRACT HALF — every element TYPE the itinerary grammar can emit carries a declared
+#   disposition, and every declared disposition names an element the grammar still emits.
+#   Real population, tracked tree, graded on every run. W0-W3.
+#
+#   THE INSTANCE HALF — for a given plan and the site built from it, every element INSTANCE
+#   resolves to its component, per day and per track. ITS REAL POPULATION HERE IS EMPTY AND
+#   CANNOT BECOME NON-EMPTY. .gitignore carries `trips/*`, so no checkout holds a render; and
+#   reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than
+#   pending, naming a committed site fixture as "exactly the wrong repair". W4 renders that as
+#   VACUOUS WITH ITS DENOMINATOR rather than as a PASS, and the control arms below carry the
+#   whole load for RT3-RT6 over synthetic pairs.
+#
+# ── WHY THIS GROUP IS HERE, AND WHY IT IS NOT A SUITE OF ITS OWN ─────────────────
+# The group goes where the functions it drives are sourced — group T in the publish-guard
+# suite already wrote that rule down for a site-contract group. check-round-trip.sh is new, so
+# that was a free choice and it was the operator's; it lands here, on the suite that owns the
+# plan-artifact surface and already sources a validator over the tracked tree and a synthetic
+# fixture, which is the identical shape.
+#
+# A SUITE OF ITS OWN WAS REJECTED ON MEASUREMENT rather than on taste: the suite count was a
+# live denominator across this file and five others when that choice was made, and a walker is
+# a VALIDATOR, not a suite — validate-artifacts.sh and publish-trip-site.sh are both outside
+# that count, and check-round-trip.sh joins them there. That denominator has since been
+# re-anchored at every one of those sites by the change that added a sixth suite, so the cost
+# it named is paid and no longer argues against anything. What survives it is the
+# CLASSIFICATION, which is what the decision actually rested on: a validator is still not a
+# suite, and that is true at any count.
+#
+# ── WHY IT DOES NOT ANCHOR § 9.4's PROSE, WHICH IS A DIVERGENCE AND IS RECORDED ──
+# Group RM above ships a prose-anchoring shape and asks whether it generalizes. This group
+# DECLINES TO REUSE IT, and the reason is a matter of kind rather than of preference. RM's
+# subject is a rule whose TEXT can be reverted while the mechanism it governs keeps working,
+# so anchoring the text is the only available grip. This group's subject was a rule whose
+# MECHANISM DID NOT EXIST AT ALL; there was nothing to anchor the prose to. Anchoring § 9.4
+# would assert that the sentence is still written — true today, and true on every day the walk
+# went unrun. So the prose is REPLACED BY AN EXECUTABLE rather than anchored, and W3 then
+# grades that the verb declares the invocation, which anchors the prose BY ITS CONSUMER and is
+# strictly stronger than a text match. A rule-presence shape is ADR-019's S4 and is classified
+# Defective — addition-blind, which is why W3 ships with its own complement arm rather than
+# alone.
+#
+# ── NO ARCHITECTURE RECORD, AND THAT IS A DECISION ───────────────────────────────
+# The reasoning above — the two-call-site split, and a behavioural gate whose real population
+# is empty by construction and can never be non-empty — is recorded HERE and in the walker's
+# own header rather than in a new record. That is where this corpus already puts this class of
+# reasoning: group T states its own host-suite rationale, group B in the corpus-hygiene suite
+# states its own vacuity posture. A record would have landed a third file in a directory two
+# sibling cards are already editing this release.
+#
+# ── THE ARMS, AND WHICH INPUT EACH ONE FAILS ON ──────────────────────────────────
+#   W0        the instrument itself: the fence resolves at EXACTLY ONE site, the grammar
+#             region resolves, and both extractions are NON-ZERO. Runs FIRST and gates the
+#             rest, so a broken instrument FAILS rather than passing over an empty set
+#   W1        fence label set == grammar label set, BOTH directions, both denominators
+#             stated. An element ADDED to the grammar with no fence row fails it (RT1), and
+#             so does a fence row whose element the grammar no longer emits (RT2). That pair
+#             is what makes the fence a PIN rather than an allowlist
+#   W2        every disposition is in the closed enum {rendered, excluded}, and every
+#             `rendered` row names a component the § 3 catalog defines. The catalog vocabulary
+#             is DERIVED from the document on every run and no copy is held here, so a
+#             component renamed in the catalog turns the row that names it red
+#   W3        the site verb DECLARES the invocation and its frontmatter grant is ROOTED. This
+#             is the arm that makes the runtime call site non-removable
+#   W3c       the R3 complement: no clause on an invocation-bearing line in that verb's own
+#             § site region exempts, negates or makes-advisory the check. W3 alone is the S4
+#             shape and is blind to an ADDED clause; this arm is what closes that
+#   W4        VACUOUS, with its denominator — the instance half has no population on this tree
+#             and cannot acquire one. It is NOT a bare report: a committed site fixture, which
+#             is the repair the travel-site schema names as the wrong one, turns it RED
+#   W-CTL-*   the standing control arms, below — one MUST-FIRE per finding code the walker can
+#             emit, plus the specificity arms that tell a correct walk from a lookalike
+#   W12       the inventory, derived BOTH ways from the walker's own emission sites and from
+#             the codes the arms actually OBSERVED — never from a list held here. A code added
+#             to the walker with no arm behind it is RED rather than latent
+#
+# Every control builds its subject under $WORK by COPY-THEN-MUTATE, asserts the mutation
+# LANDED before any verdict is read, and drives THE SAME rt_* functions the live arms drive. A
+# control running different code from the assertion proves nothing about the assertion. The
+# armed side of W12's comparison is recorded AT THE CALL from what the walker actually EMITTED,
+# never from what an arm declared it wanted — an arm can name a code and cannot make one fire.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "W — the round-trip completeness walk, and where its population stops"
+
+# shellcheck source=check-round-trip.sh
+source "$HERE/check-round-trip.sh"     # BASH_SOURCE guard prevents dispatch
+
+W_GRAMMAR="$ROOT/agents/05-hub-planner.md"
+W_SPEC="$ROOT/reference/site-layout-spec.md"
+W_VERB="$ROOT/skills/trip/SKILL.md"
+W_D="$WORK/w"; mkdir -p "$W_D"
+W_TAB="$(printf '\t')"
+W_ARMED=" "
+
+# The invocation the verb must declare, and the rooted prefix its grant must carry. Two
+# ADDRESSES rather than rules — group RM already records that distinction in the same terms.
+W_SCRIPT='scripts/check-round-trip.sh'
+W_GRANT='${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh'
+
+# MATCHED, word-bounded and case-insensitive, over INVOCATION-BEARING LINES ONLY. The same
+# enumeration group MG states with the same written boundary, re-declared locally rather than
+# shared: MG scopes its scan to anchor-bearing lines of an agent prompt and this one scopes to
+# invocation-bearing lines of a verb region, so one lexicon serving both would make each
+# group's boundary the other group's to state.
+W_NEG_LEXICON='optional|advisory|may skip|skip|skips|skipped|not required|need not|exempt|no longer|at your discretion|if time permits|best effort|does not apply|does not run|omit|where convenient'
+
+w_count() { awk 'NF { n++ } END { print n+0 }' <<<"$1"; }
+w_join()  { printf '%s' "$1" | tr '\n' '|' | sed 's/|$//'; }
+
+# Set difference over LINES, and that is a correctness requirement rather than a style call.
+# An element label carries interior spaces — `Food Anchors`, `Supporting Experiences` — so the
+# space-delimited containment idiom every other group in this file uses (mg_diff, rs_diff,
+# st_setdiff) would compare FRAGMENTS of two labels rather than the labels, and report a
+# difference where there is none. Not comm either: comm needs both sides lexically sorted and
+# answers wrongly otherwise, which st_setdiff already records as its own reason.
+w_linediff() {   # w_linediff <a-lines> <b-lines> -> lines of a absent from b
+  local af="$W_D/.da" bf="$W_D/.db"
+  printf '%s\n' "$1" > "$af"; printf '%s\n' "$2" > "$bf"
+  awk 'NR == FNR { if (NF) B[$0] = 1; next } NF && !($0 in B) { print }' "$bf" "$af"
+}
+
+# The declaring rows of the fence — the angle-bracketed residual rows are excluded from the
+# grammar comparison BY SHAPE, because they are declared precisely for having no bold-label
+# counterpart. Excluding them by name would put a copy of them in this file.
+w_fence_labels() {   # w_fence_labels <spec-file>
+  awk -F"$W_TAB" 'NF > 1 && $1 != "!" && $1 !~ /^</ { print $1 }' <<<"$(rt_fence_rows "$1")"
+}
+
+w_site_region() {   # w_site_region <verb-file> -> the ## site section body
+  awk '/^## site$/ { inreg = 1; next } inreg && /^## / { inreg = 0 } inreg { print }' "$1"
+}
+
+# ── W0 — the instrument, graded before anything it feeds. Registered with md_flips below.
+w0_assert() {   # w0_assert <grammar-file> <spec-file>
+  local g="$1" s="$2" sites labels rows nl nr
+  sites="$(rt_fence_sites "$s")"
+  labels="$(rt_grammar_labels "$g")"
+  rows="$(rt_fence_rows "$s")"
+  nl="$(w_count "$labels")"; nr="$(w_count "$rows")"
+  if [ "$sites" = "1" ] && [ "$nl" -gt 0 ] && [ "$nr" -gt 0 ]; then
+    PASS "W0: the instrument is live — the round-trip contract fence resolves at exactly ONE site, the itinerary grammar region yields $nl element label(s), and the fence yields $nr row(s). Every verdict below is vacuous without this one, which is why it runs first and why a zero-row extraction is graded a broken instrument rather than a clean corpus"
+  else
+    FAIL "W0: the instrument is broken (fence sites=$sites, grammar labels=$nl, fence rows=$nr) — a fence with no home or two homes, or a zero-row extraction, makes every comparison below vacuously true"
+  fi
+}
+
+# ── W1 — the both-directions pin.
+w1_assert() {   # w1_assert <grammar-file> <spec-file>
+  local g="$1" s="$2" labels frows og of nog nof
+  labels="$(rt_grammar_labels "$g")"
+  frows="$(w_fence_labels "$s")"
+  og="$(w_linediff "$labels" "$frows")"
+  of="$(w_linediff "$frows" "$labels")"
+  nog="$(w_count "$og")"; nof="$(w_count "$of")"
+  if [ "$nog" -eq 0 ] && [ "$nof" -eq 0 ]; then
+    PASS "W1: the contract fence and the itinerary grammar declare the SAME element set, in BOTH directions — $(w_count "$labels") grammar label(s) against $(w_count "$frows") declaring fence row(s), zero on each side. Both denominators are stated because a zero against an unstated one is not a measurement, and both directions run because a one-way check is an allowlist"
+  else
+    FAIL "W1: the fence and the grammar disagree — $nog grammar label(s) with no fence row [$(w_join "$og")] and $nof fence row(s) the grammar no longer emits [$(w_join "$of")]"
+  fi
+}
+
+# ── W2 — the closed enum, and component membership against a DERIVED catalog.
+w2_assert() {   # w2_assert <spec-file>
+  local s="$1" rows comps nbad=0 detail="" lab disp comp part ok n nraw
+  rows="$(rt_fence_rows "$s")"
+  comps="$(rt_components "$s")"
+  # The catalog as the walker emits it is a MULTISET — one token per § 3 heading slug and one
+  # per backticked class token, and several headings name the same component. MEMBERSHIP is
+  # unaffected by that: a multiset and its set answer the same question, and the grep below
+  # gives identical verdicts either way. The COUNT is not. This verdict used to state the raw
+  # total and call it the vocabulary, which reports one number and names another — the
+  # engineering record for this arm carried the distinct figure while the shipped message
+  # carried the raw one. Both are reported now: the distinct count is the population being
+  # graded, the raw count is what it was read from.
+  nraw="$(w_count "$comps")"
+  comps="$(sort -u <<<"$comps")"
+  n="$(w_count "$comps")"
+  while IFS="$W_TAB" read -r lab disp comp; do
+    [ -n "$lab" ] || continue
+    case "$lab" in '!') nbad=$((nbad+1)); detail="$detail malformed-row"; continue ;; esac
+    case "$disp" in
+      rendered|excluded) ;;
+      *) nbad=$((nbad+1)); detail="$detail '$lab'->disposition:$disp"; continue ;;
+    esac
+    [ "$disp" = "rendered" ] || continue
+    ok=1
+    while IFS= read -r part; do
+      [ -n "$part" ] || continue
+      grep -qxF -- "$part" <<<"$comps" || ok=0
+    done <<<"$(tr '|' '\n' <<<"$comp")"
+    [ "$ok" -eq 1 ] || { nbad=$((nbad+1)); detail="$detail '$lab'->component:$comp"; }
+  done <<<"$rows"
+  if [ "$nbad" -eq 0 ] && [ "$n" -gt 0 ]; then
+    PASS "W2: every fence row carries a disposition from the closed enum {rendered, excluded}, and every rendered row names a component the § 3 catalog defines — graded against $n DISTINCT catalog token(s), read from $nraw occurrence(s) of them, DERIVED from that document on this run. The distinct count is the vocabulary being graded; the raw count is the multiset it was read from, and the two are stated separately because one of them is not the denominator. This file holds no copy of that vocabulary, so a component renamed in the catalog turns the row naming it red rather than leaving a fence pointing at a home that no longer exists"
+  else
+    FAIL "W2: the fence does not resolve against the component catalog (offending row(s)=$nbad, distinct catalog tokens=$n from $nraw occurrence(s))$detail"
+  fi
+}
+
+# ── W3 — the runtime call site is DECLARED, and its grant is rooted.
+w3_assert() {   # w3_assert <verb-file>
+  local f="$1" region ninv ngrant
+  region="$(w_site_region "$f")"
+  ninv="$(awk -v s="$W_SCRIPT" 'index($0, s) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  ngrant="$(awk -v g="$W_GRANT" 'index($0, "allowed-tools:") > 0 && index($0, g) > 0 { n++ } END { print n+0 }' "$f")"
+  if [ "$ninv" -gt 0 ] && [ "$ngrant" -eq 1 ]; then
+    PASS "W3: the site verb DECLARES the walk — $ninv invocation-bearing line(s) in its own § site region, and exactly one ROOTED frontmatter grant for it. The prose is anchored by its consumer rather than by a text match, which is what makes the runtime call site non-removable without a red check"
+  else
+    FAIL "W3: the site verb does not declare the walk (invocation-bearing lines in § site=$ninv, rooted allowed-tools grants=$ngrant, expected >0 and exactly 1)"
+  fi
+}
+
+# ── W3c — the R3 complement. W3 alone is ADR-019's S4 rule-presence shape and is blind to an
+# ADDED clause; this arm is the direction that closes it.
+w3c_assert() {   # w3c_assert <verb-file>
+  local f="$1" region hits n nline
+  region="$(w_site_region "$f")"
+  # THE DENOMINATOR IS GRADED BEFORE THE ZERO IS READ, and this is not belt-and-braces: a
+  # negation scan over an EMPTY region reports zero hits and would PASS, which is a PASS
+  # reached on the branch a degenerate outcome also reaches — precisely what the
+  # discriminating-evidence rule forbids. The oracle in group MD caught exactly that on this
+  # arm's first run: with w_site_region removed the arm still reported a clean verdict. So
+  # the haystack is asserted non-degenerate first, and the denominator is stated in the
+  # verdict rather than left implicit.
+  nline="$(awk -v s="$W_SCRIPT" 'index($0, s) > 0 { n++ } END { print n+0 }' <<<"$region")"
+  if [ "$nline" -eq 0 ]; then
+    FAIL "W3c: the scan found ZERO invocation-bearing lines in the site verb § site region, so there was nothing to grade — a zero over an empty haystack is a broken instrument and never a clean complement"
+    return 0
+  fi
+  hits="$(awk -v s="$W_SCRIPT" -v lex="$W_NEG_LEXICON" '
+    function hasneg(line,   k, L, i, t, l, re) {
+      l = tolower(line); k = split(lex, L, "|")
+      for (i = 1; i <= k; i++) {
+        t = tolower(L[i]); re = "(^|[^a-z])" t "([^a-z]|$)"
+        if (l ~ re) return L[i]
+      }
+      return ""
+    }
+    index($0, s) > 0 { t = hasneg($0); if (t != "") printf "%d\t%s\n", NR, t }' <<<"$region")"
+  n="$(w_count "$hits")"
+  if [ "$n" -eq 0 ]; then
+    PASS "W3c: none of the $nline invocation-bearing line(s) in the site verb § site region carries a clause exempting, negating or making-advisory the walk — the complement of W3 above, graded rather than assumed, and stated against its denominator. The lexicon is an enumeration with a written boundary and is scoped to invocation-bearing LINES, because a whole-region scan fires on legitimate prose about what the walk does NOT establish"
+  else
+    FAIL "W3c: $n invocation-bearing line(s) in the site verb § site region carry an exempting or advisory clause — [$(w_join "$hits")]"
+  fi
+}
+
+# ── W4 — the instance half's population, MEASURED rather than assumed, and rendered VACUOUS.
+W_POP="$(va_population "$ROOT" tracked)"
+W_NPOP="$(w_count "$W_POP")"
+W_NSITE="$(awk '/-travel-site\.html$/ { n++ } END { print n+0 }' <<<"$W_POP")"
+if [ "$W_NSITE" -eq 0 ]; then
+  VACUOUS "W4: the instance half — RT3, RT4, RT5 and RT6 — has NO population on this tree and cannot acquire one. 0 rendered site file(s) among $W_NPOP tracked file(s). .gitignore puts every real render outside the checkout, and reference/schemas/travel-site.md carries a no-witness clause it calls TERMINAL rather than pending, naming a committed site fixture as exactly the wrong repair. This renders VACUOUS and never a PASS: an empty population is a real measurement of the tree, a PASS over it would be a green nothing earned, and the whole load for those four codes is carried by the control arms below"
+else
+  FAIL "W4: $W_NSITE rendered site file(s) are tracked in this repository. That is the repair reference/schemas/travel-site.md names as the wrong one — committing a site file to satisfy a gate — and it is graded here rather than welcomed"
+fi
+
+# ═════ THE CONTROLS, AS STANDING ARMS — not checks performed once while authoring. ═════
+
+# The synthetic pair. Two days, the second one split into two tracks with a stated nightlife
+# decline — the shape carrying every instance-half code at once, and the split day is net-new
+# because ZERO split-day coverage existed anywhere in the tracked corpus before this group.
+W_FX="$W_D/fx"; mkdir -p "$W_FX"
+cat > "$W_FX/plan.md" <<'WPLAN'
+**ADVANCE BOOKING CHECKLIST**
+
+**TRIP OVERVIEW**
+Group, dates, hotel.
+
+---
+
+**Day 1 — 2026-05-04 — Monday — Alfama morning**
+*Energy:* Medium | *Zone:* Alfama | *Type:* Walking
+
+**Anchor**
+Castelo Sao Jorge — Alfama — 09:30 — 2h — go early
+
+**Supporting Experiences**
+Portas do Sol — Alfama — 11:45 — 30m — the view
+
+**Food Anchors**
+- Lunch: Taberna Sal Grosso — petiscos — indoor — booked
+
+**Nightlife**
+Pensao Amor — Cais do Sodre — bar — from 22:00 — whole group — late
+*Next morning:* 10:00 start
+
+**Constraint Compliance**
+No stairs after 18:00 honored.
+
+---
+
+**Day 2 — 2026-05-05 — Tuesday — Split afternoon**
+*Energy:* High | *Zone:* Belem | *Type:* Split
+
+**Anchor**
+Mosteiro dos Jeronimos — Belem — 09:00 — 2h — book ahead
+
+**Parallel Track — Sam · Pat — small-group**
+*Trigger:* stated want
+Museu Berardo — Belem — 14:00 — 2h — modern wing
+
+**Parallel Track — Riley · Noor — small-group**
+*Trigger:* interest divergence
+Pasteis de Belem — Belem — 14:30 — 1h — queue outside
+
+**Nightlife**
+No nightlife tonight — whole group — early start
+
+---
+
+**OPEN DECISIONS**
+
+**ITINERARY VERSION LOG**
+WPLAN
+cat > "$W_FX/site.html" <<'WSITE'
+<!doctype html><html><body>
+<section class="hero-section">Lisbon</section>
+<header class="bg-d1">Day 1 — Alfama morning</header>
+<div class="day-grid">
+  <article class="act-card">Castelo Sao Jorge
+    <a class="map-link" href="https://maps.example/castelo">Map</a></article>
+  <article class="act-mini">Portas do Sol
+    <a class="map-link" href="https://maps.example/portas">Map</a></article>
+  <article class="food-card">Taberna Sal Grosso
+    <a class="map-link" href="https://maps.example/sal">Map</a></article>
+  <div class="night-zone">
+    <article class="night-card">Pensao Amor
+      <a class="map-link" href="https://maps.example/amor">Map</a></article>
+  </div>
+</div>
+<header class="bg-d2">Day 2 — Belem · Split PM</header>
+<div class="day-grid">
+  <article class="act-card">Mosteiro dos Jeronimos
+    <a class="map-link" href="https://maps.example/jeronimos">Map</a></article>
+</div>
+<div class="split-day">
+  <div class="split-point">Hotel · ~13:30</div>
+  <div class="track-col"><div class="track-label">Sam · Pat</div>
+    <article class="act-mini">Museu Berardo
+      <a class="map-link" href="https://maps.example/berardo">Map</a></article></div>
+  <div class="track-col"><div class="track-label">Riley · Noor</div>
+    <article class="act-mini">Pasteis de Belem
+      <a class="map-link" href="https://maps.example/pasteis">Map</a></article></div>
+</div>
+<div class="night-zone">No nightlife tonight — whole group</div>
+</body></html>
+WSITE
+
+# The synthetic ENGINE root, for the contract-half controls: the two real documents copied,
+# then mutated. The real tree is never written.
+W_FXR="$W_D/fxroot"; mkdir -p "$W_FXR/agents" "$W_FXR/reference"
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+cp "$W_SPEC"    "$W_FXR/reference/site-layout-spec.md"
+
+# w_ctl_fire <arm-id> <code> <expected-n> <prose> -- <cmd…>
+# Runs the walk, counts the code's findings, records the code on the ARMED side from what the
+# walker EMITTED, and grades both the firing and its cardinality.
+w_ctl_fire() {
+  local id="$1" code="$2" want="$3" prose="$4"; shift 4
+  [ "${1:-}" = "--" ] && shift
+  local out got
+  out="$("$@" 2>&1)"
+  got="$(awk -v c="$code" '$1 == "FINDING" && $2 == c { n++ } END { print n+0 }' <<<"$out")"
+  if [ "$got" -eq "$want" ]; then
+    case "$W_ARMED" in *" $code "*) ;; *) W_ARMED="$W_ARMED$code " ;; esac
+    PASS "$id: control, MUST FIRE — $prose. The walk reported $code exactly $got time(s), which is what makes the live verdict above a measurement rather than a scan that matches nothing"
+  else
+    FAIL "$id: the control did not behave — $prose; expected $code ×$want, observed ×$got"
+  fi
+}
+
+# w_ctl_silent <arm-id> <prose> -- <cmd…>  — the specificity direction.
+w_ctl_silent() {
+  local id="$1" prose="$2"; shift 2
+  [ "${1:-}" = "--" ] && shift
+  local out n
+  out="$("$@" 2>&1)"
+  n="$(awk '$1 == "FINDING" { n++ } END { print n+0 }' <<<"$out")"
+  if [ "$n" -eq 0 ]; then
+    PASS "$id: control, MUST NOT FIRE — $prose. The walk reported nothing, so a walker that flagged everything would fail this arm"
+  else
+    FAIL "$id: the specificity control fired — $prose; expected silence, observed $n finding(s)"
+  fi
+}
+
+# W-CTL-BOTH — the clean pair, both tracks rendered. Runs FIRST so every mutation below is a
+# mutation of something already shown to walk clean.
+w_ctl_silent 'W-CTL-BOTH' "a 2-track split day with BOTH tracks rendered, every event carrying its map-link and the stated nightlife decline present" \
+  -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site.html" "$W_D/wk-both"
+
+# W-CTL-RT3 — the arm the card names: replay a dropped element.
+awk '!/Castelo Sao Jorge/ && !/maps\.example\/castelo/' "$W_FX/site.html" > "$W_FX/site-rt3.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt3.html"; then
+  FAIL "W-CTL-RT3: the mutation did not land — the site copy is byte-identical to the original, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT3' RT3 1 "day 1's anchor is present in the plan and its act-card is deleted from a copy of the site (the mutation is asserted to have landed) — the dropped element REPLAYED" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt3.html" "$W_D/wk-rt3"
+fi
+
+# W-CTL-RT4 — the split-day track. The track's VENUE is retained and only its label removed,
+# so this arm fires RT4 alone rather than dragging RT3 along and grading two things at once.
+sed 's|<div class="track-label">Riley · Noor</div>||' "$W_FX/site.html" > "$W_FX/site-rt4.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt4.html"; then
+  FAIL "W-CTL-RT4: the mutation did not land — the site copy is byte-identical to the original, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT4' RT4 1 "a 2-track split day whose SECOND track column loses its label while its venue stays — the patch-touched-track-one drop § 9.4 names as the most common one" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt4.html" "$W_D/wk-rt4"
+fi
+
+# W-CTL-RT5 — the location invariant, resolved inside the card that names the venue.
+sed 's|<a class="map-link" href="https://maps.example/portas">Map</a>||' "$W_FX/site.html" > "$W_FX/site-rt5.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt5.html"; then
+  FAIL "W-CTL-RT5: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT5' RT5 1 "one rendered event card has its map-link stripped while every other card keeps one — so the arm grades the card rather than the page" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt5.html" "$W_D/wk-rt5"
+fi
+
+# W-CTL-RT6 — a stated decline and a dropped subgroup must not look alike on the page.
+awk '!/No nightlife tonight/' "$W_FX/site.html" > "$W_FX/site-rt6.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-rt6.html"; then
+  FAIL "W-CTL-RT6: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT6' RT6 1 "the plan states a nightlife decline and the site drops the line carrying it — block content, not absence" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-rt6.html" "$W_D/wk-rt6"
+fi
+
+# W-CTL-RT0a — an unreadable plan. The vacuity guard's first direction.
+w_ctl_fire 'W-CTL-RT0a' RT0 1 "the plan path does not resolve at all" \
+  -- rt_instance_walk "$W_FX/plan-does-not-exist.md" "$W_FX/site.html" "$W_D/wk-rt0a"
+
+# W-CTL-RT0b — a grammar whose region does not resolve, so the extraction returns ZERO rows.
+# This is the arm that keeps a broken instrument from reading as a clean corpus.
+sed 's|^### File: outputs/final-itinerary\.md$|### File: outputs/renamed-away.md|' \
+  "$W_GRAMMAR" > "$W_FXR/agents/05-hub-planner.md"
+if cmp -s "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"; then
+  FAIL "W-CTL-RT0b: the mutation did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT0b' RT0 1 "the grammar region heading is renamed on a COPY, so the element extraction returns ZERO rows — graded a broken instrument and never a clean read" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+
+# W-CTL-RT1 — THE ADD-ONLY INPUT. A new element label added to the grammar with EVERY existing
+# declaration left intact. A rule-presence assertion is blind to exactly this.
+awk '/^\*\*Constraint Compliance\*\*$/ && !d { print "**Escape Room**"; print ""; d = 1 } { print }' \
+  "$W_GRAMMAR" > "$W_FXR/agents/05-hub-planner.md"
+if cmp -s "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"; then
+  FAIL "W-CTL-RT1: the addition did not land, so this control proves nothing about the add-only direction"
+else
+  w_ctl_fire 'W-CTL-RT1' RT1 1 "one NEW element label added to a copy of the grammar with every existing label and every fence row left intact — the ADD-ONLY input, which is the direction a rule-presence shape cannot see" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+
+# W-CTL-SEC — specificity, on the over-fire a line-leading-bold reader actually produced. A
+# bold LEAD-IN followed by prose is not an element label, and the grammar region carries real
+# ones today.
+awk -v ins='**A rationale sentence in bold.** Followed by ordinary prose on the same line.' \
+  '/^\*\*Constraint Compliance\*\*$/ && !d { print ins; print ""; d = 1 } { print }' \
+  "$W_GRAMMAR" > "$W_FXR/agents/05-hub-planner.md"
+if cmp -s "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"; then
+  FAIL "W-CTL-SEC: the mutation did not land, so this specificity control proves nothing"
+else
+  w_ctl_silent 'W-CTL-SEC' "a bold rationale LEAD-IN followed by prose on the same line, added inside the grammar region — a whole-line reader must not return it as an element label, which a line-leading-bold reader does" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_GRAMMAR" "$W_FXR/agents/05-hub-planner.md"
+
+# W-CTL-RT2 — the pin's other direction, on the fence side.
+awk '/^ADVANCE BOOKING CHECKLIST/ && !d { print "Ghost Element                                                              rendered     act-card"; d = 1 } { print }' \
+  "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+  FAIL "W-CTL-RT2: the addition did not land, so this control proves nothing"
+else
+  w_ctl_fire 'W-CTL-RT2' RT2 1 "one fence row added naming an element the grammar does not emit, with every real row intact — a declaration that outlives its element" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"
+
+# W-CTL-ENUM — an out-of-enum disposition, and a component the catalog does not define. Both
+# are contract-integrity failures rather than element mismatches, so both land on RT0.
+awk '{ sub(/^Anchor( +)rendered( +)act-card$/, "Anchor                                                                     maybe        act-card"); print }' \
+  "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+  FAIL "W-CTL-ENUM: the mutation did not land, so this control proves nothing about W2"
+else
+  w_ctl_fire 'W-CTL-ENUM' RT0 1 "one fence row's disposition changed to a value outside the closed enum — the input W2 exists to reject" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"
+
+# W-CTL-COMP — the component half of W2, on the ADD direction.
+awk '{ sub(/^Anchor( +)rendered( +)act-card$/, "Anchor                                                                     rendered     no-such-component"); print }' \
+  "$W_SPEC" > "$W_FXR/reference/site-layout-spec.md"
+if cmp -s "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"; then
+  FAIL "W-CTL-COMP: the mutation did not land, so this control proves nothing about W2"
+else
+  w_ctl_fire 'W-CTL-COMP' RT0 1 "one fence row re-pointed at a component the § 3 catalog does not define — a rendered home that does not exist" \
+    -- rt_contract_walk "$W_FXR"
+fi
+cp "$W_SPEC" "$W_FXR/reference/site-layout-spec.md"
+
+# W-CTL-ADD — specificity. § 9.2 is SURJECTIVE, not bijective: additive site scaffolding with
+# no plan source is legitimate, and a walk that flagged it would be grading the wrong direction.
+awk '/<section class="hero-section">/ { print; print "<aside class=\"essentials\">Essentials — plugs, tipping, transit passes</aside>"; next } { print }' \
+  "$W_FX/site.html" > "$W_FX/site-add.html"
+if cmp -s "$W_FX/site.html" "$W_FX/site-add.html"; then
+  FAIL "W-CTL-ADD: the addition did not land, so this specificity control proves nothing"
+else
+  w_ctl_silent 'W-CTL-ADD' "site-additive scaffolding with no plan element behind it, ADDED to the render" \
+    -- rt_instance_walk "$W_FX/plan.md" "$W_FX/site-add.html" "$W_D/wk-add"
+fi
+
+# ── THE LIVE ARMS. They run AFTER the controls so every one of them is read against an
+# instrument already demonstrated to fire and to stay silent on the right inputs.
+w0_assert  "$W_GRAMMAR" "$W_SPEC"
+w1_assert  "$W_GRAMMAR" "$W_SPEC"
+w2_assert  "$W_SPEC"
+w3_assert  "$W_VERB"
+w3c_assert "$W_VERB"
+
+# ── W12 — the inventory, derived from the walker's own emission sites and from what the arms
+# OBSERVED. Neither side is a list held in this file.
+#
+# The emittable set is read from the SOURCED function bodies rather than from the script's
+# text, so a comment naming a code cannot enter it — bash discards comments when it stores a
+# function, which is the same property group CTL's own code census relies on.
+w_emittable() {
+  local fn body="" out=""
+  for fn in $(declare -F | awk '$3 ~ /^rt_/ { print $3 }'); do
+    body="$body$(declare -f "$fn")"$'\n'
+  done
+  out="$(awk '{ while (match($0, /rt_finding RT[0-9]+/)) { print substr($0, RSTART + 11, RLENGTH - 11); $0 = substr($0, RSTART + RLENGTH) } }' <<<"$body" | sort -u)"
+  printf '%s' "$out"
+}
+w_setdiff() {   # space-delimited; finding codes carry no interior space, so this is safe here
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  out="${out# }"; printf '%s' "${out% }"
+}
+W_EMIT="$(printf '%s' "$(w_emittable)" | tr '\n' ' ')"
+W_ARMED_T="$(printf '%s' "$W_ARMED" | awk '{ $1 = $1; print }')"
+W_NEMIT="$(awk '{ print NF }' <<<"$W_EMIT")"
+W_UNARMED="$(w_setdiff "$W_EMIT" "$W_ARMED_T")"
+W_PHANTOM="$(w_setdiff "$W_ARMED_T" "$W_EMIT")"
+if [ "$W_NEMIT" -eq 0 ]; then
+  FAIL "W12: the emittable-code census read ZERO codes out of the walker's own function bodies — the reader is broken, so the inventory below would be a comparison of two empty sets"
+elif [ -z "$W_UNARMED" ] && [ -z "$W_PHANTOM" ]; then
+  PASS "W12: INVENTORY — every one of the $W_NEMIT finding code(s) the walker can emit [$W_EMIT] has a MUST-FIRE arm that OBSERVED it above, and every code an arm observed is one some emission site can produce. Both directions, both sets derived on this run: the emittable side from the sourced function bodies, the armed side from what the walker actually emitted rather than from what an arm declared it wanted. A code added to the walker with no arm behind it is RED here rather than latent"
+else
+  FAIL "W12: the inventory does not close — code(s) the walker can emit with no arm [${W_UNARMED:-none}], code(s) an arm recorded that no emission site produces [${W_PHANTOM:-none}] (emittable=$W_NEMIT, armed='$W_ARMED_T')"
+fi
+
+# ── The declared residual, on the ps_dne channel so it rides on EVERY run rather than sitting
+# in a comment somebody has to open this file to read.
+ps_dne "W: no arm in this group establishes that a site build INVOKED the walk. W3 grades that the verb DECLARES the invocation; whether a given run issued it is unreachable from any tree, because the trip tree is git-ignored and carries no history of the act. Nor does a clean walk establish that the site it read is the site the verb WROTE — it grades the artifact after the write. What would settle the first: a live site build against a real trip, with the walker's own output observed in that run"
+
+# ── W-OPTOUT — the control arms' subjects are FILES under $WORK, not shell functions.
+# `unset -f` cannot remove a file, so md_flips would grade the ORACLE rather than the
+# assertion and registering them would be a green proving only that the probe ran. Declared
+# here rather than left silently unregistered, with the compensating positive control the
+# authoring contract's clause 6 requires — the same shape PP0 and PP9 already ship in
+# scripts/test-publish-guard.sh.
+#
+#   $WORK/w/fx/plan.md · site.html    -> W-CTL-RT3 / RT4 / RT5 / RT6 / ADD / BOTH
+#   $WORK/w/fxroot/…                  -> W-CTL-RT0b / RT1 / RT2 / ENUM / COMP / SEC
+#
+# The compensating control is W0, which runs over the REAL documents and proves the fence
+# resolves at one site and both extractions are non-zero — so every control verdict above is
+# reached only after the instrument has been shown live over a real body. Every control arm
+# additionally drives the SAME rt_* functions the registered live arms drive, so md_flips on
+# those functions transitively demonstrates that the control arms' extractor can be made to
+# fail.
+#
+# ── REGISTERED WITH md_flips, INSIDE THIS GROUP rather than in group MD, for the reason the
+# PP and MG registrations give: they need this group's sourced walker and its fixtures, which
+# are torn down at its end.
+md_flips rt_fence_sites    'W0'  w0_assert  "$W_GRAMMAR" "$W_SPEC"
+md_flips rt_grammar_labels 'W1'  w1_assert  "$W_GRAMMAR" "$W_SPEC"
+md_flips rt_components     'W2'  w2_assert  "$W_SPEC"
+md_flips w_site_region     'W3'  w3_assert  "$W_VERB"
+md_flips w_site_region     'W3c' w3c_assert "$W_VERB"
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RS — the group rosters that DESCRIBE this suite, asserted against the run.
+#
+# Two documents enumerate the groups that run here, and until this group shipped neither
+# was checked against anything. The coverage boundary in .github/workflows/artifact-schema.yml
+# declared NINE groups and closed with a sentence quantifying over them; the header block at
+# the top of this file declared FOURTEEN. The run emitted TWENTY-SEVEN. Eighteen groups —
+# two thirds of the suite — ran outside the boundary a green check claims to cover, and
+# thirteen ran outside the header a reader trusts. Neither number was a prediction: both
+# were measured on the commit this group was written against.
+#
+# GUARD_STRICT_SKIPS at the foot of this file is a real control and it covers exactly one
+# vanishing mode: a group that SKIPS without being declared. A group deleted, renamed, or
+# made unreachable emits nothing at all — it never skips, so it never reaches that
+# comparison. PASS, FAIL and VACUOUS did not record their ids until this group needed them;
+# only SKIP did. That asymmetry is the defect, and the harness note at the top records the fix.
+#
+# So both enumerations are PARSED and SET-DIFFED BOTH WAYS rather than read and believed.
+# RS1 catches a declared group that stopped emitting; RS2 catches an emitted group that was
+# never declared. A one-way check catches one of those and reads green on the other.
+#
+# THE EXECUTING SET COMES FROM THE RUN, NEVER FROM A STATIC READ OF THIS FILE, and that is a
+# correctness requirement rather than a style preference. A static scan of the verdict call
+# sites yields groups this suite does not run: X, whose only site X1 fires solely when CTL
+# did NOT execute, and ZMDL, which is planted inside md_probe's silent subshell. A statically
+# derived roster would declare both. Membership in SEEN is also the only form that is
+# evidence the group RAN, which is what the discriminating-evidence rule asks of any PASS
+# and what reading this file's text cannot supply.
+#
+# THE CANONICAL ROSTER IS THE WORKFLOW'S, and it deliberately does NOT live in this file. A
+# roster a suite derives from itself is the self-referential-validation defect: deleting a
+# group and its roster line would then be one edit, and the check could never fire. The
+# sibling suite records that reasoning at its own group RS and this design does not get to
+# re-derive it differently. The header block in this file is therefore asserted too, by RS8,
+# but as a SECOND roster graded against the same run — not as the authority.
+#
+# ── THE ROSTER GRAMMAR, AND THE ONE DIVERGENCE FROM THE SIBLING ──────────────────
+# Inside a boundary block, a roster line carries the group id as its leading field at exactly
+# THREE spaces after the comment marker, followed by TWO OR MORE spaces or end-of-line. An
+# explanation continues at eight or nine spaces and therefore cannot match.
+#
+# The sibling's grammar accepts a SINGLE space after the id. Applied here it yields three
+# phantom ids — A, CI and THE — from the prose of this workflow's OUT OF SCOPE block, whose
+# entries are sentences where the sibling's are ids. Those phantoms would enter the declared
+# set, never emit, and fire RS1 on every green run, permanently. The two-space rule is a
+# strict NARROWING of the sibling's and was measured to be a byte-for-byte no-op on the
+# sibling's own 25-id roster, so it does not fork the shared mechanism. Its residual risk —
+# a future OUT OF SCOPE sentence beginning with a capitalised token followed by two spaces —
+# fails LOUDLY: the token enters the declared set, does not emit, and RS1 turns red naming it.
+#
+# A block opens at its declared prefix and closes at the next `# ──` section rule, so a
+# roster-shaped line elsewhere is not read as a declaration. The open case is tested BEFORE
+# the close case because the header block's own opener is itself a `# ──` line.
+#
+# ── X IS DELIBERATELY NOT DECLARED. DO NOT "FIX" THIS BY ADDING A LINE ───────────
+# X1 is reachable only on a run where group CTL did not execute. Declared, X would fire RS1
+# on every green run. Undeclared, it fires RS2 only on a run where CTL has already failed —
+# a second finding riding on an already-red run, never a false red on a green one.
+#
+# ── WHAT THIS GROUP DELIBERATELY DOES NOT DO ─────────────────────────────────────
+# It grades a group's EMISSION, not its CONTENT. A group gutted from 35 assertions to 1 still
+# emits and RS stays green. That is DECLINED rather than omitted, on the sibling's recorded
+# reasoning: the failure modes this group exists for — deletion, rename, unreachability — are
+# all zero-verdict conditions the roster already covers, and a declared per-group verdict
+# floor churns on every assertion added and, unraised, silently stops binding. RS0's vacuity
+# guard is the only floor that ships, and it cannot rot.
+#
+# ── REGISTRATION: AN EXPLICIT MD OPT-OUT, NOT A SILENT OMISSION ──────────────────
+# RS's subjects are a TRACKED FILE and the RUN'S OWN EMISSION RECORD. Neither is a shell
+# function, so md_flips — which registers an assertion by removing its subject FUNCTION — has
+# nothing to remove and is inapplicable. The compensating positive controls are RS6 and RS7:
+# they mutate a COPY of the real workflow and require the parse to track it line-for-line in
+# both directions, which is the file-subject analogue of removing a function and watching its
+# assertion flip.
+#
+# ── TWO STANDING CONSTRAINTS ON EVERY LATER CARD ─────────────────────────────────
+# RS MUST REMAIN THE LAST GROUP IN THIS FILE. It reads the complete emitted set; a group
+# emitting after it is invisible to it. A card appending a group inserts BEFORE this banner.
+#
+# RS MUST NEVER BE ADDED TO GUARD_EXPECTED_SKIPS. It is pure bash over two tracked files and
+# has no legitimate skip; an RS that skipped would be indistinguishable from the drift it
+# exists to detect.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+# ── MD6 / MD7 — THE REGISTRATION TOTAL, DERIVED AND CROSS-CHECKED. ───────────────
+# Emitted HERE rather than with the rest of group MD because it must run after the LAST
+# md_flips call in the file, and group W makes five of them. Group MD already emits in more
+# than one place for the same reason — its MD[...] arms render wherever their registration
+# sits — so this is that pattern and not a new one.
+#
+# THE ASSERTION IS THAT TWO INDEPENDENT READINGS AGREE. One is the counter md_flips increments
+# at each call; the other is the run's own emission record, reduced to the MD[...] verdicts it
+# actually printed. A number stated in one place and never compared is exactly what went stale
+# here before — the prose used to declare a running total, and a later card added five
+# registrations without restating it.
+MD_SEEN_REG="$(awk 'BEGIN { n = split(ARGV[1], t, " "); c = 0; for (i = 1; i <= n; i++) if (substr(t[i], 1, 3) == "MD[") c++; print c }' "$SEEN")"
+if [ "${MD_REG_N:-0}" -eq 0 ] || [ "${MD_ASSERT_N:-0}" -eq 0 ]; then
+  FAIL "MD6: the registration record is EMPTY — $MD_REG_N registration(s) over $MD_ASSERT_N assertion(s) were recorded by the primitive itself. This suite calls md_flips, so a zero here means the counter stopped recording rather than that nothing is registered, and the inventory below would be a comparison of two empty sets"
+elif [ "$MD_REG_N" -ne "$MD_SEEN_REG" ]; then
+  FAIL "MD6: the two readings of the registration count DISAGREE — the primitive recorded $MD_REG_N call(s), the run emitted $MD_SEEN_REG MD[...] verdict(s). md_flips renders exactly one verdict per call on every path, so a difference means one of the two is not seeing what it claims to: either a call returned before rendering, or the id grammar the emission record reduces moved"
+else
+  PASS "MD6: INVENTORY — $MD_REG_N registration(s) over $MD_ASSERT_N distinct assertion(s), DERIVED from the calls this run made rather than from a figure written in this file. The count is confirmed against a SECOND reading — the $MD_SEEN_REG MD[...] verdict(s) in this run's own emission record — and the two agree. The difference between the two numbers is the registrations that grade one assertion against more than one subject. Nothing here is restated, so nothing here can go stale: this is the move groups RS and W12 already make, RS reading both rosters live and W12 deriving its code inventory from the walker's own emission sites"
+fi
+# MD7 — MUST FIRE, ADD-ONLY. The emission-record reader must SEE an added registration; if it
+# were constant, MD6's agreement above would hold no matter what either side did.
+MD_SEEN_REG2="$(awk 'BEGIN { n = split(ARGV[1], t, " "); c = 0; for (i = 1; i <= n; i++) if (substr(t[i], 1, 3) == "MD[") c++; print c }' "$SEEN MD[ZZREG] ")"
+if [ "$MD_SEEN_REG2" -eq $((MD_SEEN_REG + 1)) ]; then
+  PASS "MD7: CONTROL on MD6, ADD-ONLY — one synthetic registration id appended to a COPY of this run's emission record, with every real id left intact, moves the reader $MD_SEEN_REG → $MD_SEEN_REG2. MD6's agreement above is therefore a measurement: the reading it is checked against tracks an added registration rather than returning a constant"
+else
+  FAIL "MD7: CONTROL on MD6 did not fire as specified — appending one synthetic registration id moved the reader $MD_SEEN_REG → $MD_SEEN_REG2 rather than to $((MD_SEEN_REG + 1)). The emission-record reading MD6 rests on cannot see an added registration, so MD6's agreement proves nothing"
+fi
+
+echo
+echo "── Group RS — this suite's two stated group rosters, asserted against the run."
+
+RS_WF="$ROOT/.github/workflows/artifact-schema.yml"
+
+# The block opener is a PARAMETER so one parser serves all three blocks — the workflow's two
+# and this file's header — rather than three readers that can disagree about the grammar.
+rs_parse() { # rs_parse <file> <block-open-prefix> -> space-delimited declared GROUP ids
+  local line inb=0 out=" "
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "$2"*)    inb=1; continue ;;
+      '# ──'*)  inb=0 ;;
+    esac
+    [ "$inb" -eq 1 ] || continue
+    [[ "$line" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)(\ \ |$) ]] || continue
+    case "$out" in *" ${BASH_REMATCH[1]} "*) ;; *) out="$out${BASH_REMATCH[1]} " ;; esac
+  done < "$1"
+  printf '%s' "${out# }"
+}
+
+# An assertion id reduced to its GROUP id — the leading run of capitals. This is the id
+# grammar SKIP has always used, taken one step further: ${*%%:*} yields ST-COV[traveler-intake],
+# CTLe, C1a, MD[PP1]; the groups are ST, CTL, C, MD. No second grammar is introduced, because
+# two id namespaces that can disagree is exactly the failure this group is about.
+rs_group() { [[ "$1" =~ ^([A-Z]+) ]] && printf '%s' "${BASH_REMATCH[1]}"; }
+
+# Set difference: members of <a> absent from <b>, deduped, first-occurrence order. Used in
+# BOTH directions, and with an empty <b> it is the dedupe — so the workflow's two blocks
+# union through this helper rather than through a fifth one. Membership is by containment in
+# a space-delimited haystack and NEVER by comm, which requires both sides lexically sorted
+# and answers wrongly otherwise; st_setdiff above already records that reason.
+rs_diff() { # rs_diff <a-set> <b-set> -> space-delimited members of a not in b
+  local x out=" "
+  # shellcheck disable=SC2086
+  for x in $1; do
+    case " $2 " in *" $x "*) continue ;; esac
+    case "$out"  in *" $x "*) continue ;; esac
+    out="$out$x "
+  done
+  printf '%s' "${out# }"
+}
+
+rs_count() { local x n=0; for x in $1; do n=$((n+1)); done; printf '%s' "$n"; }
+
+# The ids this run actually emitted, reduced to groups: SEEN ∪ SKIPPED. The union is
+# load-bearing — a group whose only emission is a declared skip still RAN as far as this
+# question is concerned, and asking otherwise would duplicate the strict-skip control
+# instead of complementing it.
+RS_EMITTED=" "
+# shellcheck disable=SC2086
+for rsid in $SEEN $SKIPPED; do
+  rsg="$(rs_group "$rsid")"
+  [ -n "$rsg" ] || continue
+  case "$RS_EMITTED" in *" $rsg "*) ;; *) RS_EMITTED="$RS_EMITTED$rsg " ;; esac
+done
+# RS_NRUN — the size of the emission record BEFORE RS adds itself, and it is counted here
+# rather than below for a reason that is the whole of its purpose. RS0's zero-emitted branch
+# exists to diagnose a DESTROYED EMISSION RECORD, and a count taken after the unconditional
+# append below has a floor of 1, so that branch could never be taken: a run whose PASS/FAIL
+# bookkeeping had stopped recording entirely still reported "1 emitted by this run" and called
+# every arm below a measurement. Counting the run's own contribution separately restores the
+# branch. RS_NEMIT stays the full set's size, because RS1/RS2/RS3/RS8 compare against the set
+# that includes RS and must keep doing so.
+RS_NRUN="$(rs_count "$RS_EMITTED")"
+# RS is emitting its own verdicts on the next lines, so it is a member of the emitted set by
+# construction — SEEN cannot yet hold a verdict this group has not printed. Added explicitly
+# rather than left implicit, because this is what makes RS2 and RS8 require RS's OWN roster
+# line in each document exactly as they require every other live group's.
+case "$RS_EMITTED" in *" RS "*) ;; *) RS_EMITTED="${RS_EMITTED}RS " ;; esac
+RS_EMITTED="${RS_EMITTED# }"
+
+RS_DECLARED=""; RS_READABLE=0
+if [ -r "$RS_WF" ]; then
+  RS_READABLE=1
+  RS_DECLARED="$(rs_diff "$(rs_parse "$RS_WF" '# IN SCOPE') $(rs_parse "$RS_WF" '# OUT OF SCOPE')" "")"
+fi
+RS_HDR=""; RS_SELFREAD=0
+if [ -r "$SELF" ]; then RS_SELFREAD=1; RS_HDR="$(rs_parse "$SELF" '# ── WHAT IT ASSERTS')"; fi
+RS_NDEC="$(rs_count "$RS_DECLARED")"
+RS_NEMIT="$(rs_count "$RS_EMITTED")"
+RS_NHDR="$(rs_count "$RS_HDR")"
+
+# RS0 runs FIRST and the ordering is what makes every zero below mean something. A parse that
+# reads zero ids makes its set-diffs empty and the arms pass against nothing — a probe failure
+# wearing a pass. Unreadable, zero-parsed and zero-emitted are each a distinct FAIL with its
+# own diagnosis, and only then may the diffs render a verdict.
+if [ "$RS_READABLE" -ne 1 ]; then
+  FAIL "RS0: the coverage boundary at .github/workflows/artifact-schema.yml is unreadable, so every verdict below would cover nothing — a roster that cannot be read is a finding, never a clean scan"
+elif [ "$RS_SELFREAD" -ne 1 ]; then
+  FAIL "RS0: this suite's own file is unreadable at '$SELF', so the header roster RS8 grades could not be parsed at all. The path is resolved before the validator is sourced; if that resolution moved, RS8's verdict is not trustworthy"
+elif [ "$RS_NDEC" -eq 0 ]; then
+  FAIL "RS0: the coverage boundary parsed to 0 group ids, so both set-diffs would be empty and would pass against nothing. The grammar is one id per line at THREE spaces after the comment marker followed by TWO OR MORE spaces, inside the IN SCOPE / OUT OF SCOPE blocks of .github/workflows/artifact-schema.yml — either a block moved or the grammar did, and no verdict below is trustworthy"
+elif [ "$RS_NRUN" -eq 0 ]; then
+  FAIL "RS0: this run emitted 0 group ids before this group, so both rosters would be compared against an empty run. PASS/FAIL/SKIP/VACUOUS record the token before the first colon; if that grammar moved, every comparison below is vacuous. The count is taken BEFORE RS appends itself, which is what makes this branch reachable at all — counted after, it had a floor of 1 and a destroyed emission record read as a healthy run of one group"
+elif [ "$RS_NHDR" -eq 0 ]; then
+  FAIL "RS0: the WHAT IT ASSERTS header block in this file parsed to 0 group ids, so RS8 would compare the run against an empty set and pass. The block opens at a '# ──' section rule and closes at the next one — either it moved, was renamed, or its roster lines stopped matching the two-space grammar"
+else
+  PASS "RS0: both rosters are readable and non-degenerate — ${RS_NDEC} group id(s) parsed from .github/workflows/artifact-schema.yml, ${RS_NHDR} from this file's WHAT IT ASSERTS header, ${RS_NEMIT} emitted by this run of which ${RS_NRUN} were recorded before this group added itself. Every arm below is therefore a measurement rather than an empty scan, and the ${RS_NRUN} is the denominator the zero-emitted branch above is tested against rather than one this group's own verdicts could supply"
+
+  RS_MISSING="$(rs_diff "$RS_DECLARED" "$RS_EMITTED")"
+  if [ -n "$RS_MISSING" ]; then
+    FAIL "RS1: declared group(s) emitted no verdict in this run: ${RS_MISSING% } — deleted, renamed or unreachable. A vanished group emits nothing at all, so it never skips and GUARD_STRICT_SKIPS never sees it. Either restore the group or remove its line from the IN SCOPE block of .github/workflows/artifact-schema.yml"
+  else
+    PASS "RS1: all ${RS_NDEC} declared group(s) emitted at least one verdict — no declared group vanished from the run (denominator: ${RS_NEMIT} emitted group ids)"
+  fi
+
+  RS_EXTRA="$(rs_diff "$RS_EMITTED" "$RS_DECLARED")"
+  if [ -n "$RS_EXTRA" ]; then
+    FAIL "RS2: group(s) emitted verdicts but are not declared in the coverage boundary: ${RS_EXTRA% } — they run outside the boundary the closing sentence of .github/workflows/artifact-schema.yml quantifies over, so a green check there claims more than it proves. REMEDY: add one line per id to the IN SCOPE block of .github/workflows/artifact-schema.yml, in the form '#' then THREE spaces, the id, then TWO OR MORE spaces, then a one-line description. The two-or-more-spaces rule is this suite's one divergence from test-publish-guard.sh, whose roster accepts a single space — a line copied from that file in the single-space form parses to NOTHING here and earns a second identical red"
+  else
+    PASS "RS2: all ${RS_NEMIT} emitted group(s) are declared in the coverage boundary, so that workflow's \"a green check means…\" closing sentence is true of this run rather than merely stated. WHAT CARRIES THE WORD 'ALL' is not this arm: the record is read HERE, while RS is still running, so on its own this reads the groups that had emitted BY NOW. The RS-EXIT trap re-reads the record AT PROCESS EXIT and fails the run if anything emitted after this point — that is what extends this verdict from the run-so-far to the run. The earlier wording said \"nothing ran outside it\" on this arm's evidence alone, and a group emitting after RS falsified it while the arm stayed green"
+  fi
+
+  RS_INTER=0
+  # shellcheck disable=SC2086
+  for rsid in $RS_EMITTED; do
+    case " $RS_DECLARED " in *" $rsid "*) RS_INTER=$((RS_INTER+1)) ;; esac
+  done
+  PASS "RS3: INVENTORY — |declared| = ${RS_NDEC}, |emitted| = ${RS_NEMIT}, |declared ∩ emitted| = ${RS_INTER}, |header| = ${RS_NHDR}. The zeros above and below are stated against those denominators, not against an unstated one. This arm REPORTS and does not assert — it is unconditional by design, the way MD3 reports its own population"
+
+  # ── RS4 … RS7: the controls on the controls ─────────────────────────────────────
+  # An arm that reports "no difference" is worth exactly as much as the evidence that it CAN
+  # report a difference. RS4 and RS5 mutate the two SETS one at a time; RS6 and RS7 mutate the
+  # FILE and re-parse it, which is the only pair that proves the roster is genuinely read from
+  # the workflow on this run rather than computed from something already in this process.
+  # Every victim is chosen from live data, so no id is hardcoded and none can rot.
+  #
+  # Each control grades the DELTA its own mutation caused — its predicate over the mutated
+  # input MINUS its output over the real one — never the raw output. That difference matters
+  # on exactly the run that matters: when RS1 or RS2 has a genuine finding, a control written
+  # as an exact-equality test fails too, and cascading control failures bury the one real
+  # finding the operator needs to read. A control must stay valid whether or not the arm it
+  # controls is currently clean.
+  #
+  # RS6 and RS7 write their fixtures under $WORK — the suite's mktemp -d, trapped on EXIT.
+  # Nothing is written into the tree; CTLe grades that property and this group must not be
+  # what turns it red.
+
+  RS_V1=""; for rsid in $RS_EMITTED; do RS_V1="$rsid"; break; done
+  RS_E4="$(rs_diff "$RS_EMITTED" "$RS_V1")"      # the emitted set with one real group gone
+  RS_M4="$(rs_diff "$RS_DECLARED" "$RS_E4")"     # RS1's own predicate, over that
+  RS_D4="$(rs_diff "$RS_M4" "$RS_MISSING")"      # what the mutation ADDED to RS1's finding
+  if [ "${RS_D4% }" = "$RS_V1" ]; then
+    PASS "RS4: CONTROL on RS1 — removing group '${RS_V1}' from the emitted set adds exactly '${RS_V1}' to RS1's finding and nothing else. RS1's verdict above is a measurement: the arm fires when a declared group stops emitting"
+  else
+    FAIL "RS4: CONTROL on RS1 did not fire as specified — removing '${RS_V1}' from the emitted set added '${RS_D4% }' to RS1's finding rather than '${RS_V1}'. RS1's clean verdict proves nothing until this control fires"
+  fi
+
+  RS_X5="$(rs_diff "$RS_EMITTED ZZQ" "$RS_DECLARED")"   # RS2's predicate, with a synthetic id
+  RS_D5="$(rs_diff "$RS_X5" "$RS_EXTRA")"               # what the mutation ADDED
+  if [ "${RS_D5% }" = "ZZQ" ]; then
+    PASS "RS5: CONTROL on RS2, ADD-ONLY — a synthetic group id 'ZZQ' added to the emitted set with EVERY existing declaration left intact adds exactly 'ZZQ' to RS2's finding and nothing else. RS2 is therefore not addition-blind: a group added with no roster line turns it red"
+  else
+    FAIL "RS5: CONTROL on RS2 did not fire as specified — a synthetic 'ZZQ' added to the emitted set added '${RS_D5% }' to RS2's finding rather than 'ZZQ'. RS2's clean verdict proves nothing until this control fires"
+  fi
+
+  # RS6 victim: the first declared id this run also emitted, so removing its declaration
+  # produces a genuine emitted-but-undeclared finding rather than a vacuous one.
+  RS_V2=""
+  # shellcheck disable=SC2086
+  for rsid in $RS_DECLARED; do
+    case " $RS_EMITTED " in *" $rsid "*) RS_V2="$rsid"; break ;; esac
+  done
+  RS_COPY6="$WORK/rs-roster-minus-one.yml"
+  : > "$RS_COPY6"
+  while IFS= read -r rsline || [ -n "$rsline" ]; do
+    if [[ "$rsline" =~ ^\#\ \ \ ([A-Z][A-Za-z0-9]*)(\ \ |$) ]] && [ "${BASH_REMATCH[1]}" = "$RS_V2" ]; then
+      continue
+    fi
+    printf '%s\n' "$rsline" >> "$RS_COPY6"
+  done < "$RS_WF"
+  RS_DEC2="$(rs_diff "$(rs_parse "$RS_COPY6" '# IN SCOPE') $(rs_parse "$RS_COPY6" '# OUT OF SCOPE')" "")"
+  RS_N2="$(rs_count "$RS_DEC2")"
+  RS_X6="$(rs_diff "$RS_EMITTED" "$RS_DEC2")"    # RS2's predicate against the mutated roster
+  RS_D6="$(rs_diff "$RS_X6" "$RS_EXTRA")"        # what deleting that one line ADDED
+  if [ -z "$RS_V2" ]; then
+    FAIL "RS6: CONTROL on the parser could not run — no declared group id was also emitted, which contradicts RS1/RS2 above and means the two sets are not being read from what they claim"
+  elif [ "$RS_N2" -ne $((RS_NDEC - 1)) ]; then
+    FAIL "RS6: CONTROL on the parser — deleting group '${RS_V2}'s roster line from a COPY of the workflow changed the parsed count from ${RS_NDEC} to ${RS_N2}, not to $((RS_NDEC - 1)). The parse is not tracking the file line-for-line, so the declared set above is not the file's"
+  elif [ "${RS_D6% }" = "$RS_V2" ]; then
+    PASS "RS6: CONTROL on the parser, REMOVAL — deleting group '${RS_V2}'s roster line from a COPY of the workflow drops the parsed count ${RS_NDEC} → ${RS_N2} and adds exactly '${RS_V2}' to RS2's finding. The roster is read from the workflow on every run, not derived from this file, so deleting a group and its declaration in one edit cannot pass"
+  else
+    FAIL "RS6: CONTROL on the parser did not fire as specified — deleting '${RS_V2}'s roster line from a copy of the workflow added '${RS_D6% }' to RS2's finding rather than '${RS_V2}'"
+  fi
+
+  # RS7 is RS6's ADD-ONLY twin on the same subject: a synthetic declaration is APPENDED to a
+  # copy of the real file with every existing roster line intact. It is written immediately
+  # after the IN SCOPE opener so it is unambiguously inside the block.
+  RS_COPY7="$WORK/rs-roster-plus-one.yml"
+  : > "$RS_COPY7"
+  while IFS= read -r rsline || [ -n "$rsline" ]; do
+    printf '%s\n' "$rsline" >> "$RS_COPY7"
+    case "$rsline" in
+      '# IN SCOPE'*) printf '#   ZZW   a synthetic roster line written by RS7 into a COPY, never into the tree\n' >> "$RS_COPY7" ;;
+    esac
+  done < "$RS_WF"
+  RS_DEC3="$(rs_diff "$(rs_parse "$RS_COPY7" '# IN SCOPE') $(rs_parse "$RS_COPY7" '# OUT OF SCOPE')" "")"
+  RS_N3="$(rs_count "$RS_DEC3")"
+  RS_X7="$(rs_diff "$RS_DEC3" "$RS_EMITTED")"    # RS1's predicate against the mutated roster
+  RS_D7="$(rs_diff "$RS_X7" "$RS_MISSING")"      # what adding that one line ADDED
+  if [ "$RS_N3" -ne $((RS_NDEC + 1)) ]; then
+    FAIL "RS7: CONTROL on the parser — appending one synthetic roster line to a COPY of the workflow changed the parsed count from ${RS_NDEC} to ${RS_N3}, not to $((RS_NDEC + 1)). The parser is blind to an added declaration, so RS1's denominator is not the file's"
+  elif [ "${RS_D7% }" = "ZZW" ]; then
+    PASS "RS7: CONTROL on the parser, ADD-ONLY — one synthetic roster line appended to a COPY of the workflow with every existing line intact raises the parsed count ${RS_NDEC} → ${RS_N3} and adds exactly 'ZZW' to RS1's finding. The parse sees an ADDITION as well as a removal, in the real file's own grammar"
+  else
+    FAIL "RS7: CONTROL on the parser did not fire as specified — appending a synthetic roster line to a copy of the workflow added '${RS_D7% }' to RS1's finding rather than 'ZZW'"
+  fi
+
+  # ── RS8 / RS9: the SECOND roster — this file's own WHAT IT ASSERTS header block ──
+  # Two derived comparisons over ONE extracted set are two assertions, so this one gets its
+  # own arm and its own MUST-FIRE control rather than inheriting RS2's. It is graded against
+  # RS_EMITTED — the same derived executing set — and NOT against the workflow's roster,
+  # deliberately: against the workflow, a group missing from BOTH documents would leave this
+  # diff empty and the header's staleness would stay hidden until the workflow was fixed,
+  # earning a second red run for one omission. Against the run, both rosters go red together
+  # and one edit closes both.
+  RS_HDR_EXTRA="$(rs_diff "$RS_EMITTED" "$RS_HDR")"     # emitted, absent from the header
+  RS_HDR_MISSING="$(rs_diff "$RS_HDR" "$RS_EMITTED")"   # in the header, emitted nothing
+  if [ -n "$RS_HDR_EXTRA" ]; then
+    FAIL "RS8: group(s) emitted verdicts but are not declared in this file's WHAT IT ASSERTS header: ${RS_HDR_EXTRA% } — a reader trusting that block is told this suite grades less than it does. REMEDY: add one line per id to the WHAT IT ASSERTS block at the top of scripts/test-artifact-schema.sh, in the form '#' then THREE spaces, the id, then TWO OR MORE spaces, then a one-line description; continuation lines indent to eight spaces so they cannot be read as declarations. The same two-or-more-spaces rule RS2 states applies here, and for the same reason"
+  elif [ -n "$RS_HDR_MISSING" ]; then
+    FAIL "RS8: group(s) declared in this file's WHAT IT ASSERTS header emitted no verdict in this run: ${RS_HDR_MISSING% } — deleted, renamed or unreachable. Either restore the group or remove its line from the WHAT IT ASSERTS block at the top of scripts/test-artifact-schema.sh"
+  else
+    PASS "RS8: this file's WHAT IT ASSERTS header declares exactly the ${RS_NEMIT} group(s) this run emitted, in both directions — the block a reader meets first is true of the suite underneath it rather than a description that stopped being checked"
+  fi
+
+  RS_X9="$(rs_diff "$RS_EMITTED ZZH" "$RS_HDR")"        # RS8's predicate, with a synthetic id
+  RS_D9="$(rs_diff "$RS_X9" "$RS_HDR_EXTRA")"           # what the mutation ADDED
+  if [ "${RS_D9% }" = "ZZH" ]; then
+    PASS "RS9: CONTROL on RS8, ADD-ONLY — a synthetic group id 'ZZH' added to the emitted set with EVERY existing header declaration left intact adds exactly 'ZZH' to RS8's finding and nothing else. RS8's zero above is a measurement, and it carries this control rather than borrowing RS5's: a second comparison whose PASS rested on the first arm's control would be a PASS nothing earned"
+  else
+    FAIL "RS9: CONTROL on RS8 did not fire as specified — a synthetic 'ZZH' added to the emitted set added '${RS_D9% }' to RS8's finding rather than 'ZZH'. RS8's clean verdict proves nothing until this control fires"
+  fi
+
+  # ── RS10 — THE ORDERING CONSTRAINT, EXECUTED RATHER THAN STATED ─────────────────
+  # The banner at the head of this group declares in capitals that RS MUST REMAIN THE LAST
+  # GROUP IN THIS FILE, and until this arm existed nothing executed that sentence. A group
+  # appended after RS emits after RS has already read the emission record: RS0 and RS3 report
+  # the smaller count, RS2 passes stating "nothing ran outside it" — which is FALSE of such a
+  # run — and the suite exits 0 with a whole group unseen by the only arms that grade
+  # coverage. A prose-declared invariant that nothing executes is precisely the defect class
+  # this release exists to retire, and leaving it inside the group that most embodies that
+  # thesis is the one place it cannot be left.
+  #
+  # THE SUBJECT OF *THIS* ARM IS THIS FILE, NOT THE RUN. No reading of SEEN taken while RS is
+  # still running can see past itself, so the arm below is static over $SELF — the same file
+  # RS8 already reads — and it says: every verdict-emitting call site below this group's
+  # banner belongs to this group.
+  #
+  # THAT IS ONE OF TWO ARMS AND IT IS THE WEAKER ONE. A positional reader anchored at the
+  # start of a line is blind to a verdict emitted in a COMPOUND FORM, and blind to one emitted
+  # by a HELPER on its caller's behalf, where no verdict literal appears after the banner at
+  # all. The RUN is graded instead by the EXIT TRAP registered at the head of this file, which
+  # compares the emission record at process exit against the snapshot taken here. Arming it is
+  # this line; the trap's own comment carries the reasoning.
+  RS_ORDER_SNAPSHOT="$SEEN"
+  RS_ORDER_ARMED=1
+  rs_after() {  # rs_after <file> -> the GROUP id of each verdict call site after RS's banner
+    awk '
+      /^echo "── Group RS / { inrs = 1; next }
+      inrs != 1 { next }
+      match($0, /^[[:space:]]*(PASS|FAIL|SKIP|VACUOUS)[[:space:]]+"/) {
+        rest = substr($0, RSTART + RLENGTH)
+        c = index(rest, ":"); if (c == 0) next
+        id = substr(rest, 1, c - 1)
+        if (match(id, /^[A-Z]+/)) print substr(id, RSTART, RLENGTH)
+      }
+    ' "$1"
+  }
+  # One id per CALL SITE, so rs_count gives sites and rs_diff against the empty set gives the
+  # group set. Both are reported: the site count is the non-degeneracy denominator, and a
+  # reader that found no site at all is a broken reader rather than a clean file.
+  RS_TAIL="$(rs_after "$SELF" | tr '\n' ' ')"
+  RS_NTAIL="$(rs_count "$RS_TAIL")"
+  RS_TAILG="$(rs_diff "$RS_TAIL" "")"
+  RS_FOREIGN="$(rs_diff "$RS_TAILG" "RS")"
+  # The second limb. A later group could in principle open its banner and emit nothing on the
+  # run being read — no call site, no finding from the limb above — so the banner itself is
+  # counted as well. Two limbs because they fail on different edits.
+  RS_LATERB="$(awk '/^echo "── Group RS /{s=1;next} s==1 && /^echo "── Group /{n++} END{print n+0}' "$SELF")"
+  if [ "$RS_NTAIL" -eq 0 ]; then
+    FAIL "RS10: ZERO verdict call site(s) were read from this file after group RS's own banner, which cannot be true of a file in which RS emits ten arms — the banner anchor '# echo \"── Group RS \"' or the call-site grammar moved, so this arm's clean reading would be a broken reader rather than an ordered file"
+  elif [ -n "$RS_FOREIGN" ]; then
+    FAIL "RS10: group(s) emit verdicts AFTER group RS's own block in this file: ${RS_FOREIGN% } — RS reads the emission record when it runs, so a group emitting after it is invisible to RS0, RS1, RS2, RS3 and RS8, and RS2's \"nothing ran outside it\" is then false of the run. REMEDY: move the group's block ABOVE this group's banner in scripts/test-artifact-schema.sh; a card appending a group inserts BEFORE the RS banner"
+  elif [ "$RS_LATERB" -ne 0 ]; then
+    FAIL "RS10: ${RS_LATERB} group banner(s) open after group RS's own in this file — a group declared below RS is ordered after the arm that grades coverage even on a run where it happens to emit nothing, so the ordering is already broken. REMEDY: move it above this group's banner"
+  else
+    PASS "RS10: no group emits a verdict after RS IN THIS FILE'S TEXT — ${RS_NTAIL} verdict call site(s) read from below this group's banner, every one of them RS's own, and 0 group banner(s) opening after it. WHAT THIS ARM GRADES is the file's WRITTEN order, by a reader anchored at the start of a line, so it does not see a verdict emitted in a compound form or emitted by a helper on its caller's behalf. THE RUN'S emission order is graded separately and at PROCESS EXIT, by the RS-EXIT trap armed above, which compares the emission record after every group has run against the snapshot RS took: that is the arm that establishes nothing emitted after RS read the record, and it is the one RS2's coverage claim rests on. Two arms because they fail on different edits, and the earlier wording claimed the run's property from the file's evidence alone"
+  fi
+
+  # RS11 is RS10's MUST-FIRE control and is ADD-ONLY by construction: it APPENDS one synthetic
+  # verdict call site to a COPY of this file, leaving every existing line byte-intact, which is
+  # exactly the shape of the edit RS10 exists to catch — a group added after RS. A control that
+  # removed something instead would demonstrate the reader is alive without demonstrating it is
+  # not addition-blind, and addition is the only direction this arm can fail in.
+  RS_COPY10="$WORK/rs-self-plus-tail-group.sh"
+  if cp "$SELF" "$RS_COPY10" 2>/dev/null; then
+    printf '  PASS "ZZY1: a synthetic verdict appended by RS11 to a COPY, never to the tree"\n' >> "$RS_COPY10"
+    RS_T10="$(rs_after "$RS_COPY10" | tr '\n' ' ')"
+    RS_N10="$(rs_count "$RS_T10")"
+    RS_D10="$(rs_diff "$(rs_diff "$RS_T10" "")" "RS")"
+    # THE GROUP LIMB IS GRADED AS A DELTA, like the count limb beside it. It was compared
+    # against the literal 'ZZY', which is the one thing this file's own control doctrine
+    # forbids: on a tree that ALREADY carries a foreign group after RS — the tree where RS10
+    # is failing and this control matters most — the mutated copy's finding is that group PLUS
+    # 'ZZY', the literal comparison misses, and the control accuses ITSELF of not firing while
+    # it fired exactly as specified. Grade what the mutation ADDED against this run's own
+    # RS_FOREIGN, and assert separately that it LOST nothing, which is what add-only means.
+    RS_A10="$(rs_diff "$RS_D10" "$RS_FOREIGN")"
+    RS_L10="$(rs_diff "$RS_FOREIGN" "$RS_D10")"
+    if [ "$RS_N10" -ne $((RS_NTAIL + 1)) ]; then
+      FAIL "RS11: CONTROL on RS10 — appending one synthetic verdict call site to a COPY of this file changed the site count from ${RS_NTAIL} to ${RS_N10}, not to $((RS_NTAIL + 1)). The reader is blind to an added call site, so RS10's clean verdict above is not a measurement"
+    elif [ "${RS_A10% }" = "ZZY" ] && [ -z "${RS_L10% }" ]; then
+      PASS "RS11: CONTROL on RS10, ADD-ONLY — one synthetic verdict call site for group 'ZZY' appended to a COPY of this file with EVERY existing line intact raises the site count ${RS_NTAIL} → ${RS_N10}, ADDS exactly 'ZZY' to RS10's finding and LOSES nothing from it. Both limbs are deltas against this run's own measurement rather than against a literal, so the control stays honest on a tree that already carries a foreign group after RS — the tree where RS10 is red and this control matters most"
+    else
+      FAIL "RS11: CONTROL on RS10 did not fire as specified — a synthetic verdict appended after the RS block ADDED '${RS_A10:-none}' and LOST '${RS_L10:-none}' against this run's own finding, where exactly 'ZZY' added and nothing lost was required. RS10's clean verdict proves nothing until this control fires"
+    fi
+  else
+    FAIL "RS11: CONTROL on RS10 could not run — this file could not be copied to '$RS_COPY10', so RS10's reader was never shown to fire and its verdict above rests on nothing"
+  fi
+
+  # RS12 — the STANDING CONTROL ON RS10'S SECOND LIMB. RS10 fails on two different edits and
+  # only one of them had a control: RS11 above appends a verdict CALL SITE, which moves the
+  # first limb. The banner limb — a group whose block opens after RS but emits nothing on the
+  # run being read — had no control at all, so its zero was an assertion rather than a
+  # measurement, and a banner reader that had stopped matching would have read clean forever.
+  # ADD-ONLY and delta-graded for the same reasons RS11 is.
+  RS_COPY12="$WORK/rs-self-plus-tail-banner.sh"
+  if cp "$SELF" "$RS_COPY12" 2>/dev/null; then
+    printf 'echo "── Group ZZB — a synthetic banner appended by RS12 to a COPY, never to the tree"\n' >> "$RS_COPY12"
+    RS_B12="$(awk '/^echo "── Group RS /{s=1;next} s==1 && /^echo "── Group /{n++} END{print n+0}' "$RS_COPY12")"
+    if [ "$RS_B12" -ne $((RS_LATERB + 1)) ]; then
+      FAIL "RS12: CONTROL on RS10's banner limb — appending one synthetic group banner to a COPY of this file changed the later-banner count from ${RS_LATERB} to ${RS_B12}, not to $((RS_LATERB + 1)). The banner reader is blind to an added banner, so RS10's second limb is unproven and a group opening after RS could read clean"
+    else
+      PASS "RS12: CONTROL on RS10's banner limb, ADD-ONLY — one synthetic group banner for 'ZZB' appended to a COPY of this file with EVERY existing line intact raises the later-banner count ${RS_LATERB} → ${RS_B12}, a delta against this run's own measurement. RS10's second limb now fires on its own edit shape: a group DECLARED after RS, which the call-site limb cannot see on a run where that group emits nothing"
+    fi
+  else
+    FAIL "RS12: CONTROL on RS10's banner limb could not run — this file could not be copied to '$RS_COPY12', so the banner reader was never shown to fire and RS10's second limb rests on nothing"
+  fi
+fi
 
 echo
 printf 'Result: \033[1;32m%d passed\033[0m, \033[1;31m%d failed\033[0m, \033[1;33m%d skipped\033[0m, \033[1;36m%d vacuous\033[0m\n' \
@@ -8313,7 +12255,7 @@ printf 'SELECTOR: %d files selected / %d excluded / %d unmatched = %d tracked; %
   "$AR_NSEL" "$AR_NEXC" "$AR_NUNM" "$AR_NPOP" "$AR_NVER" "$AR_NSKIP"
 printf 'COVERAGE: %d witness / %d no-witness / %d total.\n' "$CV_W" "$CV_N" "$SC_NFILES"
 if [ "$vacuous" -gt 0 ]; then
-  printf 'NOTE: %d assertion group(s) had an EMPTY POPULATION and proved nothing. This run rests on group CTL.\n' "$vacuous"
+  printf 'NOTE: %d assertion(s) had an EMPTY POPULATION and proved nothing about this tree: %s. Read each named arm and its own verdict above for what carries it. This line names the vacuous ARMS rather than a compensating group, because the arms that compensate are not always in the group the vacuous arm belongs to, and a hardcoded group here was a claim about a run it had not read.\n' "$vacuous" "${VACUOUS_IDS% }"
 fi
 rc=0
 [ "$fail" -eq 0 ] || rc=1

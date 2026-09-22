@@ -231,3 +231,17 @@ Final, for the decision above.
   Stage 3 Bundle in any milestone.
 - **#120 — moot.** Shipped in v0.9.1 via Option B; Option A is foreclosed by events. This ADR's
   gating clause over #120 is discharged, not merely satisfied.
+## References
+
+- The design gate for #119 (no home for the needs of a party member who has no profile) and for
+  Option A of #120 (a plural-aware `Passport` field) — the driving work this record gates.
+- ADR-004 (contact and emergency privacy) — the PII precedent this record extends. Its § 4
+  fail-closed non-publication guarantee, together with the ADR-002 publish guard, is what the
+  "nothing third-party-sourced is published" rule rests on.
+- ADR-012 ratified the amendment recorded here. ADR-014 later asked whether any consent mechanism
+  could admit the cross-trip record that amendment refused.
+- The intake epic (#69), which kept per-traveler detail out of the form; and #93 (per-traveler
+  passports), left UNBOUND by this record's Q4 because identity capture is refused.
+- Capture surfaces: `templates/traveler-intake.template.md` — since split, alongside
+  `templates/person-intake.template.md` — plus `skills/trip-record/SKILL.md` and
+  `agents/00-enrichment.md`.

@@ -798,12 +798,23 @@ for a day this run did not change is still inside it.
 **Booking feasibility at the horizon** is not day-scoped either — its
 population is items, not days, so an item whose own deadline has passed on a
 day this run did not touch is still a defect in the plan.
+The **recovery-equity check** is not day-scoped either — where this iteration is
+a disruption recovery, its population is the per-traveler loss distribution the
+hub rebalanced against, not the set of days that changed, so a changed-day
+narrowing would never reach it.
 
-**RESEQUENCING:** Full pass on all days — the sequence change may have
-introduced new day-of-week conflicts even though no venues changed. Run the
+**RESEQUENCING:** Full pass on all days after a resequence — the sequence change
+may have introduced new day-of-week conflicts even though no venues changed, so
+the pass covers every day and not only the ones that moved. Run the
 status-integrity audit in full: a resequence must move only `planned` events
 and leave every `locked`/`firmed` event in place, with `option` events still
 alternatives (not promoted into primary slots).
+Where the resequence is itself **driven by a disruption** — a `locked → planned`
+regression re-opened an anchor, so the hub applied its equity-aware disruption
+recovery rather than merely reordering around the hole — run the
+**recovery-equity check** against that recovery as well: losses not concentrated
+on one traveler, and every traveler's needs still holding. The audit follows the
+recovery, so wherever the hub may rebalance, this check runs.
 
 ## Input
 
@@ -937,6 +948,8 @@ there is no file, so there is no frontmatter. Do not emit YAML into your respons
 | Transit currency on changed days (routing signal re-derived) | | | | |
 | Price-tier preservation on a replacement (food-list only; no Critical tier) | | | | |
 | Booking feasibility at the horizon (items inside their own lead time) | | | | |
+| Recovery equity (losses not concentrated; needs still hold) | | | | |
+| Full-pass day coverage after a resequence (all days, not only changed) | | | | |
 
 **Total issues requiring action:** [N Warning], [N Note] — the Critical total is
 carried in frontmatter as `critical-count` and is not restated here. The per-check

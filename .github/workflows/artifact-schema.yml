@@ -59,16 +59,30 @@ name: Artifact schema
 #        are stated PER FIELD because the fields do not all have the same number of homes
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row
-#   ST   the starred-field count in EACH intake form — the per-trip
+#   ST   the starred-field set in EACH intake form — the per-trip
 #        templates/traveler-intake.template.md and the durable
-#        templates/person-intake.template.md — agrees across ALL
+#        templates/person-intake.template.md — on TWO propositions. AGREEMENT: the count
+#        agrees across ALL
 #        FOUR of that form's homes: the banner numeral, the appendix rule-4 numeral, the appendix's
 #        per-field (starred) annotations, and the marked fields themselves — the only home
-#        that is not a restatement of another, and therefore the reference count. Surfaces
+#        that is not a restatement of another, and therefore the reference count. LEVEL: that
+#        form's marked set equals the intersection of its labelled bullets with the starred
+#        rows of reference/data-model.md's field table, and across the run the union of the
+#        per-form marked sets equals that table's starred set — both in both directions,
+#        label for label. Neither half compares the count against a shipping-path producer,
+#        because the starred count has none. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
 #        surfaced this named two line numbers that had already moved. ST carries its own
 #        must-fire and specificity arms inside the group; THE ARM INVENTORY IS NOT RESTATED
-#        HERE, for the reason the CTL line below already gives
+#        HERE, for the reason the CTL line below already gives. The invariant binding that
+#        inventory is no longer merely stated: the suite derives from the evaluator's own body,
+#        on every run, BOTH the set of violation codes it can emit AND the set of places it can
+#        emit one from, and compares each in both directions against the arms that ran. A code
+#        added later with no arm behind it turns that run RED, and so does a SECOND emission
+#        site for a code that already has one. What the assertion does not reach is the
+#        DIRECTION of a predicate inside a single site, and that boundary is declared in the
+#        suite rather than left to be inferred from a green. No count and no inventory is
+#        added here, for the reason the CTL line already gives
 #
 # EN, CA and PB each carry their own control arms — a deliberately drifted input that the
 # same probe must FIND and FLAG, and a fabricated input it must NOT match. A zero whose
@@ -80,10 +94,135 @@ name: Artifact schema
 #        defects that MUST, one per finding code the validator can emit, alongside the
 #        specificity arms that tell a correct implementation from a lookalike.
 #        THE ARM INVENTORY IS NOT RESTATED HERE, deliberately. It lives in exactly one
-#        place — the CTL section of the guard script, which is also where the invariant
-#        binding it is stated: every emittable code has a must-fire arm, and a code added
-#        by a later slice adds its arm in the same change. A count copied into this file
-#        would be a copy with no assertion behind it
+#        place — the CTL section of the guard script — and the invariant binding it is no
+#        longer merely STATED anywhere: the suite's own CTL-COV arm derives the emittable
+#        code set from the sourced validator's function bodies on every run and compares it,
+#        in both directions, against the arms that ran. A code added by a later slice with
+#        no arm behind it turns that arm RED in the same run rather than waiting for a
+#        reader to notice. A count copied into this file would still be a copy with no
+#        assertion behind it, and none is added here
+#   HC   the class heading and the validator's constant for it are ONE string with two
+#        homes, and the count inside that heading equals the number of rows the validator
+#        extracts. A document edit that leaves the constant behind would otherwise make
+#        every downstream group read green over ZERO rows
+#   UF   every schema declares every key of the universal frontmatter block. The key set is
+#        read FROM that block and the corpus from the schema directory, so no count is
+#        pinned and a schema that drops a required field cannot leave this suite's output
+#        byte-identical — which is what it used to do, measured rather than predicted
+#   LC   the value and key classifiers answer the same under every locale the host declares.
+#        A bracket range resolves against the collating sequence, so an unpinned range made
+#        CI enforce a rule an operator's own run did not
+#   FW   the frozen regression witness is held by an ASSERTION rather than by a review
+#        convention, which is a person remembering rather than a gate
+#   PS   the per-event status presence check has a witness in the shipped corpus, and its
+#        SILENCE on the trip carrying both files is earned rather than assumed
+#   LS   the locked-elements seed trigger: which trip's declared elements a seed would fire
+#        on, graded over a population this suite MEASURES rather than names
+#   VI   the venue-identity split rule has a witness. A merge is a claim, so the claim is
+#        asserted to carry the rung that warrants it
+#   C    the skip predicate, made observable rather than asserted — an unversioned artifact
+#        wrong in three ways contributes ZERO to the failure count, and the byte-identical
+#        fixture with a schema-version added does fail. The two arms the suite's own header
+#        calls the point of this suite
+#   MD   the discriminating-evidence rule, asserted against the suite file itself: no PASS
+#        may be reached on a branch a DEGENERATE outcome also reaches. The oracle that
+#        grades it is itself controlled in both directions
+#   AF   the archived-trip freeze and the one operation that reaches through it — an
+#        ordinary person edit leaves an archived trip untouched, and erasure reaches it
+#        anyway. Both halves, against a tracked fixture
+#   PF   no verdict in this suite, or in the validator it sources, is decided by a
+#        pipeline's exit status. Closed at the SHAPE rather than at any one arm, because
+#        that helper carries both polarities and the dangerous one is a silent false GREEN
+#   ER   the erasure verb's declared contract, and the two fixture properties the
+#        post-state grading of group AF cannot reach
+#   RL   reconcile-on-link: the state of the two tracked witnesses the link survey is
+#        graded on — totality over the resolving pair, and the negative over the unlinked
+#        fixture, which carries no reference and no reachable store. Nothing in it is pinned
+#   XT   extract: the state of the fixtures the extraction verb is graded on, the scope
+#        property separating one refusal rule from its unscoped drafting, and the normative
+#        statements no behavioural witness in a tree of prompt files can reach
+#   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The
+#        real store is git-ignored, so a mark no tracked fixture carries is a grammar
+#        nothing grades
+#   RM   the reference-month RULE PROSE in reference/data-model.md, anchored so a
+#        prose-only revert fails a check rather than leaving the fence intact and every
+#        arm green. The anchor is a derived declaration spine, never a pin: the expected
+#        cardinality is derived from the fence group HZ grades and the actual spine is
+#        read out of the document by its own typography. Material is an operative token
+#        inside a normative declaration block; editorial is everything else, so rewording
+#        does not turn this red and that is asserted rather than promised. The converse is
+#        asserted only where an arm grades it: the spine's cardinality, uniqueness,
+#        trip-relativity, year-advance and tuple membership, plus the reference-month
+#        declaration's own selector and operand. An operative token none of those names
+#        is still ungraded, and this line does not claim it is
+#   CE   its arm coverage is asserted at the same two granularities the ST line above
+#        describes, through the same shared comparison, so a code or an emission site added to
+#        its evaluator with no arm behind it turns the run RED rather than latent.
+#        The cost-entry surfaces themselves: a priced-entity class denominator derived from two
+#        independently movable tables, plus the JOIN between them — the limb most likely to
+#        be wrong while every other reads green, because two non-empty sets keyed
+#        differently intersect in nothing
+#   DH   derived trip history: the NEGATIVE assertion the person-record schema names as its
+#        own debt — the durable form emits zero trip and destination labels
+#   GM   reusable groups: the membership boundary mechanised, and the twin negative
+#        assertion that was left as prose while its counterpart shipped
+#   MG   the mode-gated agent behaviours, against a REGISTER fenced in CLAUDE.md § Modes.
+#        Three branches in agents/05-hub-planner.md and agents/06-validator.md fire only on
+#        a later mode, and nothing in the previous command surface ever wrote one — so all
+#        three never fired, SILENTLY, because the mode they waited on was never set and the
+#        mode they sat in is legal. This group makes non-firing COUNTED rather than silent.
+#        Per declared behaviour: the anchor is LOCATED by reading the prompt, the charter
+#        and the prompt are asserted to gate it on the SAME mode set in BOTH directions, no
+#        clause on an anchor-bearing line exempts or makes-advisory the branch, and the
+#        behaviour occupies a row of that prompt's OWN declared output contract so the
+#        containment accounting counts it with a denominator on every run. Neither the
+#        behaviour nor its mode is spelled in the suite: both are read from the charter,
+#        which is what lets a charter/prompt disagreement fail in either direction —
+#        including one that only ADDS a mode to one side. The controls are STANDING arms,
+#        not checks performed once while authoring: a deletion, a negation, an ADD-ONLY
+#        injection into a block the register does not name, a charter-side removal, and a
+#        containment re-read proving every mutation landed outside the tree being measured.
+#        WHAT IT DOES NOT ESTABLISH is declared rather than left to be inferred from a
+#        green: no arm here shows an agent FIRED any branch. That is unassertable from a
+#        tree of prompt files — a hand-built witness passes identically whether an agent
+#        produced it or a person typed it — so the residual rides on every run as its own
+#        reported line, and what would settle it is named there. No count is spelled here
+#        or in the suite: the behaviours and the mode vocabulary are both read
+#   W    the round-trip completeness walk that reference/site-layout-spec.md § 9.4
+#        prescribes, and that was stated in three documents and executed by none until this
+#        group shipped. The walk has two halves and only one of them has a population in a
+#        CI checkout, so the group grades them apart rather than together. The CONTRACT
+#        half is real and runs on every invocation: every element type the itinerary
+#        grammar can emit carries a declared disposition in a fence in that spec, and every
+#        declared disposition names an element the grammar still emits — both directions,
+#        so an element added with no declaration fails AND a declaration whose element is
+#        gone fails. Neither set is held in the suite: the element labels are read from the
+#        grammar, the dispositions from the fence, and the component vocabulary each
+#        rendered row must name is derived from the component catalog on the same run. The
+#        INSTANCE half — per day, per split-day track, per event card — renders VACUOUS
+#        with its denominator rather than PASS, because a CI checkout contains no rendered
+#        site and cannot: the trip tree is git-ignored and the site schema's no-witness
+#        clause is terminal, naming a committed site fixture as exactly the wrong repair.
+#        A site fixture appearing in the tree turns that arm RED rather than supplying it a
+#        population. Those codes are carried instead by standing control arms over
+#        synthetic plan and site pairs built fresh on every run — a dropped card replayed,
+#        a split day missing its second track column, a stripped map-link, a dropped
+#        nightlife decline, an add-only element, a stale fence row, an out-of-enum
+#        disposition, an undefined component, an unreadable plan — plus the specificity
+#        arms that tell a correct walk from one that flags everything. THE ARM INVENTORY IS
+#        NOT RESTATED HERE, for the reason the CTL line below already gives, and the
+#        invariant binding it is asserted rather than stated: the code set is read from the
+#        sourced walker's own function bodies on every run and compared in both directions
+#        against the codes the arms actually observed. What a green here does NOT say is
+#        declared in the suite rather than left to be inferred: no arm shows that a site
+#        build invoked the walk, and the walk grades the written site against the plan
+#        rather than the act of writing
+#   RS   this coverage boundary itself, and the suite's own header roster, each set-diffed
+#        BOTH WAYS against the groups the run actually emitted. The executing set comes from
+#        the RUN, never from a static read of the suite. A group added and left undeclared
+#        turns RS2 red rather than narrowing this gate silently, which is the defect this
+#        boundary was previously exposed to. Roster-line format: '#' then three spaces, the
+#        id, then TWO OR MORE spaces, then one line of description
 #
 # ── THE VACUITY DOOR THIS SUITE HAS TO WATCH ─────────────────────────────────────
 # GUARD_STRICT_SKIPS closes the door where a GROUP vanishes. This suite reads the repo, so
@@ -111,10 +250,17 @@ name: Artifact schema
 #   PROSE, with ONE NAMED EXCEPTION. The schema constrains frontmatter and declared entry
 #   markers. It never constrains narrative body content, and a green here still says
 #   nothing about the quality or the accuracy of any artifact's prose. The exception is
-#   group ST, which checks exactly one prose INVARIANT and nothing else: that the
-#   self-referential starred-field count in each intake form agrees
-#   with itself across that form's four homes. Agreement is not accuracy — ST stays green on four
-#   homes that agree on a wrong number — so this clause is NARROWED here rather than
+#   group ST, and it checks the self-referential starred-field set in each intake form on
+#   two propositions and nothing else. The first is that the count agrees
+#   with itself across that form's four homes. Agreement is not accuracy — that half stays green on four
+#   homes that agree on a wrong number — which is why the second exists: the set each form
+#   marks is also graded against the starred rows of the data model's field table, per form
+#   and across the run, in both directions. That reaches the LEVEL and not merely the
+#   agreement, and it is still the only prose this gate adjudicates: it reads one table and
+#   two forms, it compares their starred sets against each other, and it says nothing about
+#   the quality or accuracy of any other narrative content anywhere in this repository. What
+#   it does NOT do is compare that set against anything the shipping path produces, because
+#   nothing there derives or consumes it. So this clause is NARROWED here rather than
 #   removed, and no other prose in any artifact is adjudicated by this gate.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a

@@ -454,7 +454,7 @@ rebuilt venue-matrix.md — the coverage view has its own home. If you find
 yourself inventing a coverage percentage or an equity weighting, stop: scoring
 the balance dimensions is design-stage work this layer defers.
 
-**Disruption-recovery flow (equity-aware replanning — issue #18):**
+**Disruption-recovery flow — the hub's equity-aware disruption recovery (equity-aware replanning — issue #18):**
 Replanning is triggered two ways, and both run the same equitable recovery: a
 **disruption** — an event that regressed `locked → planned` in
 `outputs/event-status.md` (a missed booking, a cancelled hold, a sold-out
@@ -643,7 +643,8 @@ unbookable choice → `firmed`). State what changed, what was preserved, and any
 downstream implications. Update version number. **When the iteration is a
 disruption recovery** — an event regressed `locked → planned` (a missed booking /
 cancelled hold), or the enrichment agent emitted a changed-profile delta — run the
-**Disruption-recovery flow** above: compute the per-traveler loss distribution,
+**Disruption-recovery flow** above, which is the hub's equity-aware disruption recovery:
+compute the per-traveler loss distribution,
 prioritize the hardest-hit, re-run the affected engines with needs preserved, and
 regroup scattered gaps under a coherent theme rather than ad-hoc swaps.
 
@@ -659,7 +660,8 @@ changes placement, not status, so `event-status.md` is read but rarely written
 final-itinerary.md. State what was resequenced and why the new sequence is
 better. Update version number. If the resequence is itself driven by a disruption
 (a `locked → planned` regression re-opened an anchor), apply the
-**Disruption-recovery flow** above so the new sequence rebalances the loss rather
+**Disruption-recovery flow** above — the hub's equity-aware disruption recovery — so
+the new sequence rebalances the loss rather
 than merely reordering around the hole.
 
 ## Input
@@ -1343,3 +1345,32 @@ the day stays one group. One block per parallel track.]
 | Version | Date | Changes |
 |---------|------|---------|
 | v1 | [date] | Initial generation |
+
+---
+
+### Recorded obligations
+
+**This table is the declared output contract for `outputs/final-itinerary.md` — what its
+version log and its open-decisions block must carry.** Every row is an obligation stated
+elsewhere in this prompt; nothing here is new behaviour, and nothing here restates a rule
+its own section does not already carry. **A behaviour described in prose and absent from
+this table is not part of the declared contract, and that is graded rather than trusted:**
+`scripts/test-artifact-schema.sh` reads this table and compares it against the mode-gated
+behaviour register in `CLAUDE.md` § *Modes*, so a mode-gated branch declared in the charter
+with no row here turns that check red.
+
+The first column is named `Check` to match `agents/06-validator.md` § *Validation Summary*.
+That is deliberate: both tables are a prompt's own declared contract, so one extractor reads
+both and skips both headers by the same rule rather than by a second rule written for this
+one.
+
+| Check | Fires when | Where recorded |
+|-------|-----------|----------------|
+| Recovery rebalance recorded | the equity-aware disruption recovery ran — under `ITERATION`, or under `RESEQUENCING` where the resequence is disruption-driven | version log + the open-decisions block — what was lost, to whom, and how it was rebalanced |
+| Plan version incremented | every re-synthesis, patch or resequence | version log — a new `v<N>` row; never the frontmatter, which carries `schema-version` and not the plan version |
+| Iteration change summary | a patch under `ITERATION` | version log — what changed, what was preserved, and any downstream implications |
+| Resequence rationale | a resequence under `RESEQUENCING` | version log — what was resequenced and why the new sequence is better |
+| Unwarranted venue merge declared | two mentions could not be decided on location evidence, so rung 5 minted separate keys | the open-decisions block — the pair named, as a table row |
+| Unresolved venue key on a status row | a migrated row's venue did not resolve during the one-time key backfill | the row's `Notes` cell + the open-decisions block |
+| Recurring-desire shortfall named | the supplied lists cannot fill a recurring desire's slot on every honored day without breaching the two-appearance cap | the open-decisions block — the shortfall, with the days it misses |
+| Not-covered anchor noted | a traveler's anchor reads `not covered` on the coverage read | the open-decisions block — noted as a signal, never raised as a constraint failure |

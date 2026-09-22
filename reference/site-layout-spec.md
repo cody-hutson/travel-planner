@@ -808,6 +808,61 @@ from `final-itinerary.md`'s front/back matter and `trip-context.md`. It is stati
 the per-day plan detail the completeness rule gates — not a drift risk, and not part of the round-
 trip core.
 
+**The machine-readable projection of this section.** The mapping table above and § 9.3's
+exclusion list below remain the authority for how each element type disposes; the fence here is
+their projection, and the two are required to agree — the identical relationship § 9.1 already
+declares of its own fence. It exists so that the plan→site disposition of an element type has
+**one declared home**, and so an element added to the itinerary grammar lands there rather than
+in whichever consumer happened to notice it. **It is an asserted home.**
+`scripts/check-round-trip.sh` resolves this fence and grades it against the itinerary grammar in
+`agents/05-hub-planner.md` in both directions — an element the grammar emits with no fence row
+is a finding, and so is a fence row naming an element the grammar no longer emits — and
+`scripts/test-artifact-schema.sh` group `W` drives that comparison on every run. That is what
+makes it a pin rather than an allowlist: a declaration cannot outlive the element it declares.
+
+**Columns are separated by two or more spaces**, and that is a parsing requirement rather than a
+formatting preference: an element label carries single spaces of its own, so a single-space split
+would cut `Food Anchors` in half. The `element-label` column carries the grammar's own spelling,
+verbatim — the whole reason the fence exists is that the grammar's spelling and this document's
+prose spelling do not match on every row, and a similarity match between them would fail in the
+one direction that matters, silently re-matching a renamed label onto a near neighbour.
+
+```round-trip-contract-elements
+# element-label                                                            disposition  component
+ADVANCE BOOKING CHECKLIST                                                  rendered     booking-checklist
+TRIP OVERVIEW                                                              rendered     hero-section|overview-dashboard
+Day [N] — [Date] — [Day of week] — [Day theme or anchor place]             rendered     day-hero-banner
+Anchor                                                                     rendered     act-card
+Supporting Experiences                                                     rendered     act-card|act-mini
+AC Bailout                                                                 rendered     act-mini
+Alternatives                                                               rendered     alt-grid
+Food Anchors                                                               rendered     food-card
+Transit Notes                                                              rendered     transport-box
+Nightlife                                                                  rendered     night-card
+Constraint Compliance                                                      rendered     heat-weather-strip
+Parallel Track — [Subgroup members] — [single / small-group / full-group]  rendered     split-day|track-col
+Spoke Deviations                                                           excluded     —
+OPEN DECISIONS                                                             excluded     —
+ITINERARY VERSION LOG                                                      excluded     —
+<nightlife-decline>                                                        rendered     night-zone
+<artifact-frontmatter>                                                     excluded     —
+<traveler-model+satisfaction-metrics>                                      excluded     —
+```
+
+The `disposition` column is the closed enum `rendered` | `excluded`, matching this section
+(*renders as*) and § 9.3 (*intentional exclusions*) exactly. There is deliberately no third
+`additive` value: additive scaffolding is a property of the **site**, has no plan element to key
+on, and this section's invariant runs one way. Each `rendered` row names a component § 3 defines,
+by that component's own class token or by its heading — several components may serve one element,
+and `|` separates them.
+
+**The angle-bracketed rows are a declared residual, not a fudge.** This section and § 9.3 each
+carry an entry with no bold-label counterpart in the grammar: the nightlife decline, which is a
+*line* inside the Nightlife block rather than a block of its own; artifact frontmatter; and the
+per-traveler model. Naming them here is what keeps the both-directions comparison total. Leaving
+them implicit would make that diff permanently non-empty and train a reader to ignore it, which
+is how a pin decays into decoration.
+
 ### 9.3 Intentional exclusions — named, so nothing is silent
 
 Some itinerary elements are **deliberately not reader-facing.** They are named here so that "not

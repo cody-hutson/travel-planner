@@ -104,7 +104,7 @@ re-derivable basis. Four forms are admitted, each already demonstrated here.**
 
 | Form | What makes it sound | Demonstrated at |
 |---|---|---|
-| **F1 — anchored measurement** | The sentence names the commit, revision or date the count was probed at, so it is frozen to a point in history and cannot go stale. A past-tense or superseded claim is the same form: it describes a state that was. *Recognised by shape only, and the date half is not recognised at all — see the recogniser-coverage note below.* | `reference/adr/ADR-010-per-traveler-approval-collection.md`, whose crypto-primitive probe names its anchor commit and remains correct against a tree that has since grown |
+| **F1 — anchored measurement** | The sentence names the commit, revision or date the count was probed at, so it is frozen to a point in history and cannot go stale. A past-tense or superseded claim is the same form: it describes a state that was. *Recognised by shape only, and the date half reads an ISO date and no other spelling — see the recogniser-coverage note below.* | `reference/adr/ADR-010-per-traveler-approval-collection.md`, whose crypto-primitive probe names its anchor commit and remains correct against a tree that has since grown |
 | **F2 — derived-and-asserted region** | The count sits inside a region regenerated from its own source on every run, so nothing about it is maintained by hand. | the `command-surface: derived` region in `reference/command-reference.md`, regenerated and graded by `scripts/test-command-taxonomy.sh` |
 | **F3 — reconciled rule** | The sentence writes out the arithmetic that produces the number, so a change moves a countable a reader can re-derive rather than silently invalidating one they cannot. | `reference/data-model.md`, which reconciles its labelled-field denominator inline and states this convention in the same section |
 | **F4 — agreement-pinned population** | Several homes assert the same count and a marked population is the reference, so disagreement is what fails rather than any single home being trusted. *The sentence grader has no recogniser for this form and cannot see it — see the recogniser-coverage note below.* | the starred-field and class-assignment agreement groups in `scripts/test-artifact-schema.sh` |
@@ -118,9 +118,26 @@ authoring convention, which is broader than the implementation that grades it, a
 difference is recorded here rather than left for a contributor to hit by surprise. **F4 has
 no recogniser at all.** Agreement-pinning is a property of several homes agreeing, which no
 single sentence carries, so the grader cannot detect it; an F4 sentence still registers as a
-residual site and is carried by its fence row. **F1's date half has no recogniser either** —
-the implemented arm reads a commit-shaped token and the phrases `probed at`, `as of` and
-`baseline`, and nothing in it reads a date as the moment a count was probed. F2 and F3 are
+residual site and is carried by its fence row. **F1's date half is implemented, and what it
+reads is narrower than what the table admits.** The commit half reads a commit-shaped token
+and the phrases `probed at`, `as of` and `baseline`. The date half reads an **ISO** date —
+`YYYY-MM-DD`, or `YYYY-MM` — because that is the form this corpus writes a date in. Probed at
+2026-09-20 over the tracked markdown tree: 179 ISO occurrences across 52 files, against 15
+long-form ones and no US-format ones at all. **A
+date written any other way is not read as an anchor**, and an author wanting the exemption
+writes the ISO form; the long forms are a declared exclusion rather than an oversight, because
+a recogniser for them would be an assertion with no live instance able to falsify it.
+
+**What this record said before, and why the correction is recorded rather than quietly
+applied.** This note previously said the date half had *no recogniser at all*. That was a true
+statement of intent and a false statement of behaviour: an ISO date **was** already exempt, by
+accident. The normalisation strips hyphens before the exemption arms run, so `2026-09-20`
+reached them as `20260920` — eight characters, every one of them a hex digit — and the commit
+half's sha-shaped arm could not tell it from a commit. The coverage was real, undeclared, and
+would have evaporated on any tightening of that arm's character window. It is now carried by
+an arm of its own that says what it is for, which changes no verdict on this corpus today —
+the measured difference is zero sentences — and stops the behaviour depending on a character
+floor that was never chosen with dates in mind. F2 and F3 are
 implemented as the table describes, subject to the shape-only caveat below: the derived
 region is recognised by its opening marker rather than by confirming a generator writes it,
 and the arithmetic arm reads the arithmetic without evaluating it. **Authoring to a form the
@@ -131,6 +148,17 @@ that is carried, which is the fence's job and not a defect in the sentence.
 address — a section, row, step or wave number names a position, not a population. A
 **threshold** is a requirement — `minimum`, `at least`, `per` — and nothing about the tree
 makes it true or false. A **year, price or version** is a value that happens to be a numeral.
+
+**That last one is a fact about the TOKEN, and the grader now scopes it that way.** A year,
+price or version is skipped **where it stands**, so the sentence around it is still graded.
+The distinction is not pedantry: the earlier implementation returned on the whole **sentence**,
+so any year, price or version appearing anywhere in a sentence admitted a basis-free count
+beside it — a year inside a path, a year in unrelated prose, a year hiding inside a larger
+numeral, a currency figure three clauses away from the count it had nothing to do with. A year
+that **anchors** a count exempts it, as an F1 measurement; a year that merely **appears near**
+one exempts nothing. All three classes carry the identical scoping, so none of them can drift
+back to sentence scope without the other two, and each carries its own control arm.
+
 The determiners `no`, `one` and `both` are likewise grammar rather than counting; where a
 zero or a one is genuinely load-bearing it belongs in an F2 region, which is where a
 load-bearing count belongs regardless.

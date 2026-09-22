@@ -3,7 +3,7 @@ name: trip
 description: Plan, research, check, replan or reorder a trip, capture ideas, build its site, validate its artifacts, report where it stands. The entry point.
 argument-hint: status|plan|replan|reorder|research|check|ideas|site|schema
 disable-model-invocation: true
-allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Read, Task, Edit, Write
+allowed-tools: Bash(ls:*), Bash(grep:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/validate-artifacts.sh:*), Bash(${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh:*), Read, Task, Edit, Write
 disallowed-tools: [Bash(${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh:*), Bash(bash:*), Bash(sh:*), NotebookEdit]
 ---
 
@@ -1011,7 +1011,10 @@ recorded approval: the one event both deciding the `coordination-state` this bui
 dating the `updated` state's decay, read because it is the only record any shipped surface
 writes when the organizer decides, and because a date taken from this build instead would
 restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
-system, the booking indicators and the § 9 round-trip rules; the itinerary sources the
+system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
+round-trip contract fence and § 3 component catalog, together with
+`agents/05-hub-planner.md`'s itinerary grammar — read by `scripts/check-round-trip.sh`, the
+script the completeness check below invokes, rather than by this verb; the itinerary sources the
 § *Site References* table names, read as the quality bar rather than as templates;
 `trips/<slug>/outputs/<destination>-travel-site.html` — the **existence probe** that selects
 creating the site from patching it, and, on the patch route, the outgoing markup read before
@@ -1087,8 +1090,34 @@ does today, byte for byte.
 **The round-trip completeness check, run after every build and every patch.** Every element of
 `outputs/final-itinerary.md` — **every day, and every track of a split day** — still resolves
 to a rendered component or to a **named** exclusion. A dropped element is a defect; additive
-site scaffolding with no plan source is not. Where the check does not close, say which element
-did not resolve and do not present the site as current.
+site scaffolding with no plan source is not.
+
+**What it runs** — a single invocation:
+
+```
+${CLAUDE_SKILL_DIR}/../../scripts/check-round-trip.sh --trip <slug>
+```
+
+**`<slug>` is `trip.slug` exactly as `E1` spelled it.** No path is built from the `--trip`
+value — the standing clause's rule, applied.
+
+**Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
+`G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
+script where your data is, and the two are different questions. `--root` is the **engine** root
+and carries the itinerary grammar and the site-layout spec the walk grades against; `--data-root`
+is the **trip** root and carries the plan and the render. The script defaults `--root` to its own
+parent directory, which is correct for an installed engine, so only `--data-root` is appended
+here — the same seam `schema` states below for the same reason.
+
+**What it reports.** The script's own findings, rendered unaltered. This verb adds no verdict of
+its own and suppresses none of the script's. **Where the check does not close, say which element
+did not resolve and do not present the site as current.**
+
+**What the walk does not settle, so a clean run is not read as more than it is.** It grades the
+site **after** the write, never the act of writing: the trip tree is git-ignored and carries no
+history, so there is no earlier state to diff against. A clean walk says every element of the plan
+found a home in the bytes that are there now. It does not say the patch touched only what it meant
+to, and it does not make the no-regenerate rule above checkable.
 
 **It never publishes.** The standing clause binds this verb, and it binds it **as a rule this
 verb follows**. `disallowed-tools` **names** the script path, `bash` and `sh` — and what

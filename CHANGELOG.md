@@ -3,6 +3,62 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.40.0] — 2026-09-22 — Gates grade what they claim
+
+A gate that claims more than it checks is worse than a missing one, because the next reader trusts
+the sentence rather than the pattern beneath it. This release turned that question on its own
+instruments. Most of them failed it, and the failures were almost never in the logic — they were in
+what each instrument said about itself.
+
+**The rule this settles: a gate states the boundary of what it grades, as grounds rather than as a
+count or a universal.** A numeral written into a banner is a copy with no assertion behind it and
+goes stale at the next edit. A universal — *any*, *all*, *nothing* — is falsifiable in one line.
+Grounds outlive both, because they say why an instrument stops rather than where it happened to
+stop today. The rule is not invented here; it is read off three records that already obeyed it and
+one merged alongside this work that reached it independently and deleted a tally from its own
+banner to comply.
+
+**The release's own gates were the first to fail it.** One reported that no labelled track column
+named a value while searching the whole section, and three clean results proved false. One asserted
+that nothing had run outside its group, on a run where something had. One said a field column was
+held while its extractor admitted every row but one. One promised that any code added later would
+arrive uncovered and red, while its reader required a terminator that two ordinary spellings omit.
+Every conclusion survived re-measurement; the warrants did not, and warrants are what a later
+reader inherits.
+
+**Silence nothing could detect was the sharpest finding, and it sat inside the cure.** A block
+recording which declarations went unexercised was guarded on a fixture being readable, with no
+other branch. Rename the fixture and the accounting vanished at exit zero, with nothing counting
+the lines it should have emitted — the exact defect the work was written to remove, reproduced in
+the mechanism that removes it. The absence is now loud and the emission is counted against a tally.
+
+**Ordering is now an invariant instead of an assertion.** The check that one group runs last read
+the record in line, where a compound form and an expected-failure form both stepped around it. It
+now reads at process exit, so the property holds however the run is spelled. A clause pinned only
+by its shape is pinned by its operands too, because substituting one left the shape intact and the
+meaning reversed.
+
+**A predicate the suite documented as its routing had no callers.** Its verdict reported that no
+arm routed through it could be flipped by a signal race — true, and empty, because no arm routed
+through it at all. A pass with no denominator reads exactly like a pass. The predicate is gone and
+both sentences now describe the routing that exists.
+
+**A sixth suite grades the architecture records, and it ships green.** It derives its record set at
+run time rather than holding a list, which is why that set moving during the release cost it no
+edit. It arrived red on its only content finding — two records carried no references section — and
+the work that built it was forbidden from editing a record, so it shipped the failure with its own
+reasons written into the failure text. Those two records now carry references, and the suite is
+green on arrival rather than on a promise.
+
+**The honest limits.** One reader retains the same terminator gap that was corrected beside it; it
+is recorded, not closed. A prose cardinal above a correctly derived mechanism is declared rather
+than rewritten, because a control showed hundreds of comment lines carry a cardinal word and firing
+on all of them is the over-correction this release argues against. A malformed section declaration
+can still shrink what the record spine grades without the arm objecting. And no instrument here
+establishes that an agent took a branch it was told to take — that is unassertable from a static
+tree, the criterion that would have claimed it claims nothing, and what would settle it is named
+rather than implied.
+
 ## [0.39.0] — 2026-09-21 — Traveller journey founding decisions
 
 Two questions this engine had answered several times over, locally and correctly, now have one
