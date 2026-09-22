@@ -469,6 +469,33 @@ rt_site_cards() {   # rt_site_cards <markup-on-stdin-file> -> "<has-map-link>\t<
   ' "$f"
 }
 
+# The site's LABELED TRACK COLUMNS, one label's text per line, so a track member is resolved
+# INSIDE the `.track-label` the split-day component puts it in rather than anywhere on the day.
+# § 9.3 names `.track-label` as the element that carries the subgroup members, so that element
+# is what "carries a labeled track column naming it" can mean. A section-wide scan is the same
+# defect rt_site_cards exists to prevent one level down: it passes a day whose member string
+# appears only in a `.track-why` kicker, in a rejoin line, or in ordinary prose — the label
+# gone, the members still legible somewhere, and the column never rendered.
+#
+# The file is read into ONE buffer before splitting, so a label whose text sits on a different
+# line from its opening tag is still read. A line-keyed reader returns nothing for that shape
+# and a nothing is indistinguishable here from a label that is genuinely absent.
+rt_site_track_labels() {   # rt_site_track_labels <day-markup-file> -> one label's text per line
+  local f="$1"
+  awk '
+    { buf = buf " " $0 }
+    END {
+      n = split(buf, part, /class="track-label"[^>]*>/)
+      for (i = 2; i <= n; i++) {
+        seg = part[i]
+        p = index(seg, "<")
+        if (p > 0) seg = substr(seg, 1, p - 1)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", seg)
+        if (seg != "") print seg
+      }
+    }' "$f"
+}
+
 rt_instance_walk() {   # rt_instance_walk <plan-file> <site-file> [work-dir]
   local plan="$1" site="$2" work="${3:-}"
   local rc=0 days n_days
@@ -510,11 +537,16 @@ rt_instance_walk() {   # rt_instance_walk <plan-file> <site-file> [work-dir]
       rc=1
     fi
 
-    # RT4 — every declared track has its OWN labeled column.
-    local tday tmem
+    # RT4 — every declared track has its OWN labeled column. Resolved against the day's
+    # `.track-label` elements alone, and as a FIXED STRING: the finding names a labeled track
+    # column, so the labels are the population it may be measured over, and a member string is
+    # prose that carries regex metacharacters of its own — read as a pattern, `Sam (w/ Pat)`
+    # matches on a grouping it never wrote. Same `-qF --` form the venue arm below already uses.
+    local tlabels tday tmem
+    tlabels="$(rt_site_track_labels "$sec")"
     while IFS="$RT_TAB" read -r tday tmem; do
       [ "$tday" = "$d" ] || continue
-      if ! grep -q "$tmem" "$sec"; then
+      if ! grep -qF -- "$tmem" <<<"$tlabels"; then
         rt_finding RT4 "day $d declares a Parallel Track for '$tmem' and the site carries no labeled track column naming it — this is the split-day drop § 9.4 names as the most common one, a patch that moved the first track and left the second behind"
         rc=1
       fi
@@ -577,15 +609,30 @@ Exit 0 clean, 1 findings, 2 degraded read.
 USAGE
 }
 
+# A value-taking flag that reaches the end of the argument list with no value is a TERMINAL
+# argument error, and saying so is what keeps the parse loop finite. `shift 2` with one
+# argument remaining shifts NOTHING and returns 1 — measured, `$#` stays 1 and `$1` is
+# unchanged — and this file runs under `set -uo pipefail` with no `-e`, so that status is
+# discarded. The loop then re-reads the same `$1` on every pass and never terminates, which
+# makes every guard downstream of it unreachable: `--trip` alone never reaches the `[ -z
+# "$slug" ]` arm that exists to diagnose exactly that invocation. The guard is attached to
+# each arm that needs it rather than to a parallel list of value-taking flag names, because a
+# parallel list is a second place to forget a flag and re-open this.
+rt_need_value() {   # rt_need_value <remaining-argc> <flag>
+  [ "$1" -ge 2 ] && return 0
+  rt_finding RT0 "the flag '$2' takes a value and none was given — nothing was read"
+  return 1
+}
+
 rt_main() {
   local root="" data_root="" slug="" plan="" site="" mode="" rc=0
   while [ $# -gt 0 ]; do
     case "$1" in
-      --root)          root="${2:-}"; shift 2 ;;
-      --data-root)     data_root="${2:-}"; shift 2 ;;
-      --trip)          slug="${2:-}"; mode="trip"; shift 2 ;;
-      --plan)          plan="${2:-}"; mode="pair"; shift 2 ;;
-      --site)          site="${2:-}"; mode="pair"; shift 2 ;;
+      --root)          rt_need_value $# "$1" || { rt_usage >&2; return 2; }; root="$2";      shift 2 ;;
+      --data-root)     rt_need_value $# "$1" || { rt_usage >&2; return 2; }; data_root="$2"; shift 2 ;;
+      --trip)          rt_need_value $# "$1" || { rt_usage >&2; return 2; }; slug="$2"; mode="trip"; shift 2 ;;
+      --plan)          rt_need_value $# "$1" || { rt_usage >&2; return 2; }; plan="$2"; mode="pair"; shift 2 ;;
+      --site)          rt_need_value $# "$1" || { rt_usage >&2; return 2; }; site="$2"; mode="pair"; shift 2 ;;
       --contract-only) mode="contract"; shift ;;
       -h|--help)       rt_usage; return 0 ;;
       *) printf 'unknown argument: %s\n' "$1" >&2; rt_usage >&2; return 2 ;;
