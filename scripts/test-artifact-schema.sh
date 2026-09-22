@@ -1914,7 +1914,16 @@ EOF
 # counted as neither a pass nor a failure, because it is neither: the fixture corpus
 # this suite reads says it in its own words — a check you cannot run is declared, not
 # passed.
-ps_dne() { printf '  \033[1;36mDECLARED-NOT-EXERCISED\033[0m %s\n' "$*"; }
+#
+# It DOES increment an emission tally, and that is a different thing from a verdict count.
+# ps_dne writes to stdout and nothing downstream reads it back, so an arm whose ps_dne calls
+# stopped happening and a corpus with nothing left to declare produce the identical run: no
+# line, no failure, exit 0. The tally is what lets an arm compare the lines it emitted
+# against the ones it counted, which is the only way that silence becomes observable. Every
+# call site is in the main shell — for-loops and `while … done < file`, never a pipeline —
+# so the increment reaches this variable rather than dying in a subshell.
+PS_DNE_N=0
+ps_dne() { PS_DNE_N=$((PS_DNE_N+1)); printf '  \033[1;36mDECLARED-NOT-EXERCISED\033[0m %s\n' "$*"; }
 
 PS_OK=1
 if [ "$PS_NTRIP" -eq 0 ]; then
@@ -2333,13 +2342,24 @@ fi
 # NOT MATCHED, written down so the next vector is a documented exclusion rather than a
 # surprise: a negation spelled across two lines; a negation in a table cell whose anchor
 # sits in another cell; a SCOPING negation on a different line of the same section —
-# `agents/06-validator.md` legitimately says "you do not compute an equity score", which
-# NARROWS the check rather than exempting it and is deliberately out of population; and
-# an exemption expressed with no lexicon token at all. It FAILS OPEN on each of those,
-# and MG3's set-equality is what covers the widening half. The line scope is not
-# fastidiousness: a lexicon over the whole prompt fires on "Does not run" in that file's
-# IDEATION block, and a lexicon over the enclosing SECTION fires on the scoping negation
-# above — both measured, which is why the boundary is the anchor-bearing line.
+# `agents/06-validator.md` legitimately says "you do **not** compute an equity score",
+# which NARROWS the check rather than exempting it; and an exemption expressed with no
+# lexicon token at all. It FAILS OPEN on each of those, and MG3's set-equality is what
+# covers the widening half.
+#
+# The line scope is not fastidiousness, and BOTH widenings it forecloses were measured on
+# this corpus. A lexicon over the WHOLE PROMPT fires on "Does not run" in that file's
+# IDEATION block — a different mode's disposition, not this branch's. A lexicon over the
+# ENCLOSING SECTION fires on ordinary prose elsewhere in the anchor's own section: a
+# neighbouring behaviour's "does not run", a "no longer", a "skips", an "optional"
+# describing a desire gate — none of them about the anchored branch at all. That is the
+# warrant for the anchor-bearing line, and it is why widening the scope by one level is a
+# gate that reports on prose it was never pointed at.
+#
+# THE SCOPING NEGATION IS OUT OF POPULATION FOR A DIFFERENT REASON, and conflating the two
+# was this comment's own defect: it carries NO lexicon token, so no scope admits it and the
+# line boundary is not what excludes it. Read it as the thing the line scope keeps out and
+# the boundary's warrant is wrong in a way no arm here would catch.
 #
 # ── THE ARMS, AND WHICH INPUT EACH ONE FAILS ON ──────────────────────────────────
 #   MG0        the instrument itself: a register with rows, a § Modes table with rows, a
@@ -2771,6 +2791,47 @@ if [ "$MG_OK" -eq 1 ]; then
       FAIL "MG-C2-$MGID: '$MGA' occurs on no line inside $MGP's ## Mode Behavior block, so there is nowhere to plant the negation and MG4-$MGID stands uncontrolled"
     fi
 
+    # MG-C2B — LEXICON COMPLETENESS, and the reason it is a separate arm from MG-C2 above.
+    # MG-C2 plants ONE clause and establishes that the scan is live. It cannot establish that
+    # every token of the enumeration reaches that scan, and its clause happens to exercise the
+    # token written first in the list — so the arm behind MG4's boundary was one token wide
+    # while the boundary is declared as the whole lexicon. A token that can never match is a
+    # boundary this gate is DESCRIBED by and does not HAVE: the comment above promises a reader
+    # that "exempt" or "where convenient" reddens the arm, and nothing here checked that any
+    # input spelled that way ever does. Each token is planted ALONE on the same target line —
+    # clean by MG4's own measurement — and must produce exactly one hit on exactly that line.
+    if [ -n "$MGC2TGT" ]; then
+      MGC2B_N=0; MGC2B_OK=0; MGC2B_BAD=""
+      MGC2B="$MG_D/c2b-$MGID.md"
+      while IFS= read -r mgtok; do
+        [ -n "$mgtok" ] || continue
+        MGC2B_N=$((MGC2B_N+1))
+        awk -v t="$MGC2TGT" -v k="$mgtok" 'NR == t { print $0 " (" k ")"; next } { print }' "$MGF" > "$MGC2B"
+        if cmp -s "$MGF" "$MGC2B"; then
+          MGC2B_BAD="$MGC2B_BAD ${mgtok}[mutation-did-not-land]"
+          continue
+        fi
+        MGC2BOUT="$(mg_negations "$MGC2B" "$MGA")"
+        MGC2BH="$(mg_neg_hits "$MGC2BOUT")"
+        MGC2BN="$(printf '%s\n' "$MGC2BH" | grep -c '[^[:space:]]')"
+        MGC2BL="$(printf '%s' "$MGC2BH" | awk -F'\t' 'NR == 1 { print $1 }')"
+        if [ "$MGC2BN" -eq 1 ] && [ "$MGC2BL" = "$MGC2TGT" ]; then
+          MGC2B_OK=$((MGC2B_OK+1))
+        else
+          MGC2B_BAD="$MGC2B_BAD ${mgtok}[${MGC2BN}hit@${MGC2BL:-none}]"
+        fi
+      done <<EOF
+$(printf '%s\n' "$MG_NEG_LEXICON" | tr '|' '\n')
+EOF
+      if [ "$MGC2B_N" -eq 0 ]; then
+        FAIL "MG-C2B-$MGID: the lexicon split to ZERO tokens, so this arm graded nothing — the enumeration MG4-$MGID's whole boundary rests on is unreadable from here, and an empty enumeration would make MG4's zero vacuous rather than clean"
+      elif [ -n "$MGC2B_BAD" ]; then
+        FAIL "MG-C2B-$MGID: $((MGC2B_N - MGC2B_OK)) of the $MGC2B_N lexicon token(s) do not reach the scan when planted alone on line $MGC2TGT of $MGP —$MGC2B_BAD. A token that cannot fire is a boundary this gate is described by and does not have"
+      else
+        PASS "MG-C2B-$MGID: all $MGC2B_N lexicon token(s) reach the scan — each planted ALONE on line $MGC2TGT of $MGP, every mutation asserted to have landed, each producing exactly one hit on exactly that line. MG-C2-$MGID establishes the scan is live on one clause; this establishes the ENUMERATION is reachable end to end, so the boundary written above MG4-$MGID is the boundary it actually has. What neither arm establishes is the unwritten half — an exemption phrased outside the lexicon still fails open, which is why MG3's set-equality carries the widening direction"
+      fi
+    fi
+
     # MG-C3 — ADDITION, and it is the load-bearing one. The anchor is injected into a Mode
     # Behavior block the register does NOT name, and MG3 must flip on an ADDITION rather
     # than on a removal. That is the input a rule-presence assertion is blind to.
@@ -2918,16 +2979,40 @@ EOF
     # honest DECLARED-NOT-EXERCISED rather than as a green row. The fixture is deliberately
     # NOT edited: a hand-built witness would flip this to `exercised` while the agent-side
     # branch stayed exactly as unverified, which is the trade this card rejected on record.
-    if [ -r "$PS_A6_FIX" ]; then
+    #
+    # THE FIXTURE'S READABILITY IS AN ASSERTION HERE, NOT A CONDITION, and it is written that
+    # way because the alternative was this arm's own defect. This block was guarded by a bare
+    # `if [ -r "$PS_A6_FIX" ]` with no else: rename the fixture and every line below it
+    # evaporated — nothing emitted, nothing counted, nothing failed, exit 0. That is an
+    # undetectable silence reproduced inside the mechanism built to cure one, which is why the
+    # absence is now loud and the emission is now counted against what the arm claims.
+    if [ ! -r "$PS_A6_FIX" ]; then
+      FAIL "PS-A6-DNE: the fixture itinerary this arm accounts against is unreadable at '$PS_A6_FIX', so the declared-not-exercised accounting did not run. This is a FAILURE rather than a skip: the accounting IS this arm's entire output, so an unreadable fixture removes every line it would have emitted while the run still reads green — the arm would report exactly what a fully-exercised corpus reports"
+    else
+      PS_A6_DNE0="$PS_DNE_N"
       PS_A6_NDNE=0
+      PS_A6_NSEEN=0
       while IFS= read -r psa6r; do
         [ -n "$psa6r" ] || continue
+        PS_A6_NSEEN=$((PS_A6_NSEEN+1))
         if ! grep -qF -- "$psa6r" "$PS_A6_FIX"; then
           ps_dne "PS-A6: the hub declares '$psa6r' and the shipped fixture itinerary carries no version-log or open-decisions line naming it — unexercised in that fixture, never passed in it"
           PS_A6_NDNE=$((PS_A6_NDNE+1))
         fi
       done < "$PS_A6_D/want"
+      # Read the emission delta BEFORE the summary line, which is itself a ps_dne call.
+      PS_A6_DNED=$((PS_DNE_N - PS_A6_DNE0))
       [ "$PS_A6_NDNE" -gt 0 ] && ps_dne "PS-A6: $PS_A6_NDNE of the $PS_A6_NWANT register-declared obligation(s) on that prompt have no line in the shipped fixture. The count is what keeps the gap from being silent, and closing it with a hand-built witness is the one remedy this card refuses"
+      # The accounting now asserts ITSELF, in both directions a silence could enter: the rows
+      # it walked against the rows the register handed it, and the lines ps_dne actually
+      # emitted against the ones this arm counted.
+      if [ "$PS_A6_NSEEN" -ne "$PS_A6_NWANT" ]; then
+        FAIL "PS-A6-DNE: the accounting walked $PS_A6_NSEEN row(s) where PS-A6 graded $PS_A6_NWANT — the list this loop reads and the list the verdict above measured are not the same list, so any count it reports is over an unknown population"
+      elif [ "$PS_A6_DNED" -ne "$PS_A6_NDNE" ]; then
+        FAIL "PS-A6-DNE: this arm counted $PS_A6_NDNE unexercised obligation(s) and ps_dne emitted $PS_A6_DNED line(s) for them — the tally and the channel disagree, so what a reader sees on the DECLARED-NOT-EXERCISED channel is not what the arm measured"
+      else
+        PASS "PS-A6-DNE: the declared-not-exercised accounting RAN — against a readable fixture, over the $PS_A6_NWANT register row(s) PS-A6 graded, finding $PS_A6_NDNE unexercised, with ps_dne emitting exactly that many line(s). WHAT THIS ESTABLISHES is that the accounting happened, read the population the verdict above read, and emitted what it counted. It establishes NOTHING about whether any obligation is exercised — that is the DECLARED-NOT-EXERCISED channel's whole subject, and it stays declared. An unreadable fixture now fails above rather than deleting this arm"
+      fi
     fi
   fi
   # PS-A6C — the MUST-FIRE arm. One row renamed in a temp copy of the list being compared
