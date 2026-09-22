@@ -456,7 +456,59 @@ md_flips() {   # md_flips <subject-fn> <id> <assertion-fn> [args…]
 # run it had never read, and it was wrong here from the moment the first VACUOUS shipped.
 VACUOUS() { printf '  \033[1;36mVACUOUS\033[0m %s\n' "$*"; vacuous=$((vacuous+1)); SEEN="$SEEN${*%%:*} "; VACUOUS_IDS="$VACUOUS_IDS${*%%:*} "; }
 
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+WORK="$(mktemp -d)"
+
+# ── THE EXIT TRAP, AND WHY THE ORDERING INVARIANT IS READ FROM INSIDE IT ─────────
+#
+# Group RS grades emission COVERAGE by reading the emission record, so it has to be the last
+# group to emit: anything emitting after it is invisible to the arms that grade coverage, and
+# the suite exits 0 with a group unseen.
+#
+# RS10 asserts that ordering STATICALLY, over this file's own text — every verdict call site
+# below RS's banner belongs to RS. A static positional reader is the right shape for the edit
+# it is aimed at, and it is defeated by two shapes that emit a verdict without writing one
+# where the reader looks. A COMPOUND FORM puts the call somewhere other than the start of a
+# line, so a reader anchored at `^` never sees it. A HELPER that emits on its caller's behalf
+# — `expect_rc` and everything like it — writes no verdict literal after the banner at all,
+# because the literal lives in the helper's own body, far above. Neither is exotic; both are
+# ordinary style in this file, and a positional check cannot be made to see either without
+# becoming a parser for the language.
+#
+# So the ordering is asserted TWICE, on two different kinds of evidence, and this is the half
+# that does not depend on where a call site is written. At process exit — after every group
+# has run, including any added later by any means — the emission record is compared against
+# the snapshot RS took when it read it. Whatever appended to that record after RS read it is
+# reported here, whatever line shape produced it. The static arm says the FILE is ordered; the
+# trap says the RUN was, which is the claim RS's coverage arms actually rest on.
+#
+# It runs in the trap rather than at the end of the body for the reason the invariant exists:
+# a check written as the last statement is a check the next appended statement displaces. An
+# EXIT trap cannot be appended past.
+RS_ORDER_ARMED=0
+RS_ORDER_SNAPSHOT=""
+guard_on_exit() {
+  local rc_in=$? tail_ids="" x g foreign=""
+  if [ "$RS_ORDER_ARMED" -eq 1 ]; then
+    # SEEN only ever appends, so the record written after RS read it is the literal suffix.
+    tail_ids="${SEEN#"$RS_ORDER_SNAPSHOT"}"
+    # shellcheck disable=SC2086
+    for x in $tail_ids; do
+      g="${x%%[!A-Z]*}"
+      [ -n "$g" ] || continue
+      [ "$g" = "RS" ] && continue
+      case " $foreign " in *" $g "*) continue ;; esac
+      foreign="$foreign$g "
+    done
+    if [ -n "$foreign" ]; then
+      printf '  \033[1;31mFAIL\033[0m RS-EXIT: group(s) emitted a verdict AFTER group RS read the emission record: %s. RS0, RS1, RS2, RS3 and RS8 graded coverage over a record that did not yet contain them, so this run'"'"'s coverage verdicts are true of the run only up to the point RS read it. This is read AT PROCESS EXIT rather than from this file'"'"'s text, so it fires on an emission whose call site RS10'"'"'s positional reader cannot see — a compound-form call, or a verdict emitted by a helper on its caller'"'"'s behalf. REMEDY: move the group'"'"'s block ABOVE group RS'"'"'s banner.\n' "${foreign% }"
+      rm -rf "$WORK"
+      exit 1
+    fi
+  fi
+  rm -rf "$WORK"
+  exit "$rc_in"
+}
+trap guard_on_exit EXIT
 
 # has_finding <output> <code> — the code appears as a FINDING token, not as a substring of
 # some longer word. A substring test would let A1 match A10 and read as a pass.
@@ -11933,7 +11985,7 @@ else
   if [ -n "$RS_EXTRA" ]; then
     FAIL "RS2: group(s) emitted verdicts but are not declared in the coverage boundary: ${RS_EXTRA% } — they run outside the boundary the closing sentence of .github/workflows/artifact-schema.yml quantifies over, so a green check there claims more than it proves. REMEDY: add one line per id to the IN SCOPE block of .github/workflows/artifact-schema.yml, in the form '#' then THREE spaces, the id, then TWO OR MORE spaces, then a one-line description. The two-or-more-spaces rule is this suite's one divergence from test-publish-guard.sh, whose roster accepts a single space — a line copied from that file in the single-space form parses to NOTHING here and earns a second identical red"
   else
-    PASS "RS2: all ${RS_NEMIT} emitted group(s) are declared in the coverage boundary — nothing ran outside it, so that workflow's \"a green check means…\" closing sentence is true of this run rather than merely stated"
+    PASS "RS2: all ${RS_NEMIT} emitted group(s) are declared in the coverage boundary, so that workflow's \"a green check means…\" closing sentence is true of this run rather than merely stated. WHAT CARRIES THE WORD 'ALL' is not this arm: the record is read HERE, while RS is still running, so on its own this reads the groups that had emitted BY NOW. The RS-EXIT trap re-reads the record AT PROCESS EXIT and fails the run if anything emitted after this point — that is what extends this verdict from the run-so-far to the run. The earlier wording said \"nothing ran outside it\" on this arm's evidence alone, and a group emitting after RS falsified it while the arm stayed green"
   fi
 
   RS_INTER=0
@@ -12067,11 +12119,19 @@ else
   # this release exists to retire, and leaving it inside the group that most embodies that
   # thesis is the one place it cannot be left.
   #
-  # THE SUBJECT IS THIS FILE, NOT THE RUN, and that is forced rather than chosen: by the time
-  # RS could observe a later group's verdict at runtime it has already emitted its own, so no
-  # runtime reading of SEEN can see past itself. The assertion is therefore static over $SELF
-  # — the same file RS8 already reads — and it says: every verdict-emitting call site below
-  # this group's banner belongs to this group.
+  # THE SUBJECT OF *THIS* ARM IS THIS FILE, NOT THE RUN. No reading of SEEN taken while RS is
+  # still running can see past itself, so the arm below is static over $SELF — the same file
+  # RS8 already reads — and it says: every verdict-emitting call site below this group's
+  # banner belongs to this group.
+  #
+  # THAT IS ONE OF TWO ARMS AND IT IS THE WEAKER ONE. A positional reader anchored at the
+  # start of a line is blind to a verdict emitted in a COMPOUND FORM, and blind to one emitted
+  # by a HELPER on its caller's behalf, where no verdict literal appears after the banner at
+  # all. The RUN is graded instead by the EXIT TRAP registered at the head of this file, which
+  # compares the emission record at process exit against the snapshot taken here. Arming it is
+  # this line; the trap's own comment carries the reasoning.
+  RS_ORDER_SNAPSHOT="$SEEN"
+  RS_ORDER_ARMED=1
   rs_after() {  # rs_after <file> -> the GROUP id of each verdict call site after RS's banner
     awk '
       /^echo "── Group RS / { inrs = 1; next }
@@ -12102,7 +12162,7 @@ else
   elif [ "$RS_LATERB" -ne 0 ]; then
     FAIL "RS10: ${RS_LATERB} group banner(s) open after group RS's own in this file — a group declared below RS is ordered after the arm that grades coverage even on a run where it happens to emit nothing, so the ordering is already broken. REMEDY: move it above this group's banner"
   else
-    PASS "RS10: no group emits a verdict after RS — ${RS_NTAIL} verdict call site(s) read from this file below this group's banner, every one of them RS's own, and 0 group banner(s) opening after it. The banner's standing constraint that RS REMAIN LAST is now asserted rather than described, which is what makes RS2's \"nothing ran outside it\" true of the run rather than true of the run up to the point RS read it"
+    PASS "RS10: no group emits a verdict after RS IN THIS FILE'S TEXT — ${RS_NTAIL} verdict call site(s) read from below this group's banner, every one of them RS's own, and 0 group banner(s) opening after it. WHAT THIS ARM GRADES is the file's WRITTEN order, by a reader anchored at the start of a line, so it does not see a verdict emitted in a compound form or emitted by a helper on its caller's behalf. THE RUN'S emission order is graded separately and at PROCESS EXIT, by the RS-EXIT trap armed above, which compares the emission record after every group has run against the snapshot RS took: that is the arm that establishes nothing emitted after RS read the record, and it is the one RS2's coverage claim rests on. Two arms because they fail on different edits, and the earlier wording claimed the run's property from the file's evidence alone"
   fi
 
   # RS11 is RS10's MUST-FIRE control and is ADD-ONLY by construction: it APPENDS one synthetic
@@ -12116,15 +12176,43 @@ else
     RS_T10="$(rs_after "$RS_COPY10" | tr '\n' ' ')"
     RS_N10="$(rs_count "$RS_T10")"
     RS_D10="$(rs_diff "$(rs_diff "$RS_T10" "")" "RS")"
+    # THE GROUP LIMB IS GRADED AS A DELTA, like the count limb beside it. It was compared
+    # against the literal 'ZZY', which is the one thing this file's own control doctrine
+    # forbids: on a tree that ALREADY carries a foreign group after RS — the tree where RS10
+    # is failing and this control matters most — the mutated copy's finding is that group PLUS
+    # 'ZZY', the literal comparison misses, and the control accuses ITSELF of not firing while
+    # it fired exactly as specified. Grade what the mutation ADDED against this run's own
+    # RS_FOREIGN, and assert separately that it LOST nothing, which is what add-only means.
+    RS_A10="$(rs_diff "$RS_D10" "$RS_FOREIGN")"
+    RS_L10="$(rs_diff "$RS_FOREIGN" "$RS_D10")"
     if [ "$RS_N10" -ne $((RS_NTAIL + 1)) ]; then
       FAIL "RS11: CONTROL on RS10 — appending one synthetic verdict call site to a COPY of this file changed the site count from ${RS_NTAIL} to ${RS_N10}, not to $((RS_NTAIL + 1)). The reader is blind to an added call site, so RS10's clean verdict above is not a measurement"
-    elif [ "${RS_D10% }" = "ZZY" ]; then
-      PASS "RS11: CONTROL on RS10, ADD-ONLY — one synthetic verdict call site for group 'ZZY' appended to a COPY of this file with EVERY existing line intact raises the site count ${RS_NTAIL} → ${RS_N10} and adds exactly 'ZZY' to RS10's finding and nothing else. RS10's zero above is therefore a measurement: this arm fires on the real edit shape — a group appended after RS — in the real file's own grammar"
+    elif [ "${RS_A10% }" = "ZZY" ] && [ -z "${RS_L10% }" ]; then
+      PASS "RS11: CONTROL on RS10, ADD-ONLY — one synthetic verdict call site for group 'ZZY' appended to a COPY of this file with EVERY existing line intact raises the site count ${RS_NTAIL} → ${RS_N10}, ADDS exactly 'ZZY' to RS10's finding and LOSES nothing from it. Both limbs are deltas against this run's own measurement rather than against a literal, so the control stays honest on a tree that already carries a foreign group after RS — the tree where RS10 is red and this control matters most"
     else
-      FAIL "RS11: CONTROL on RS10 did not fire as specified — a synthetic verdict appended after the RS block added '${RS_D10% }' to RS10's finding rather than 'ZZY'. RS10's clean verdict proves nothing until this control fires"
+      FAIL "RS11: CONTROL on RS10 did not fire as specified — a synthetic verdict appended after the RS block ADDED '${RS_A10:-none}' and LOST '${RS_L10:-none}' against this run's own finding, where exactly 'ZZY' added and nothing lost was required. RS10's clean verdict proves nothing until this control fires"
     fi
   else
     FAIL "RS11: CONTROL on RS10 could not run — this file could not be copied to '$RS_COPY10', so RS10's reader was never shown to fire and its verdict above rests on nothing"
+  fi
+
+  # RS12 — the STANDING CONTROL ON RS10'S SECOND LIMB. RS10 fails on two different edits and
+  # only one of them had a control: RS11 above appends a verdict CALL SITE, which moves the
+  # first limb. The banner limb — a group whose block opens after RS but emits nothing on the
+  # run being read — had no control at all, so its zero was an assertion rather than a
+  # measurement, and a banner reader that had stopped matching would have read clean forever.
+  # ADD-ONLY and delta-graded for the same reasons RS11 is.
+  RS_COPY12="$WORK/rs-self-plus-tail-banner.sh"
+  if cp "$SELF" "$RS_COPY12" 2>/dev/null; then
+    printf 'echo "── Group ZZB — a synthetic banner appended by RS12 to a COPY, never to the tree"\n' >> "$RS_COPY12"
+    RS_B12="$(awk '/^echo "── Group RS /{s=1;next} s==1 && /^echo "── Group /{n++} END{print n+0}' "$RS_COPY12")"
+    if [ "$RS_B12" -ne $((RS_LATERB + 1)) ]; then
+      FAIL "RS12: CONTROL on RS10's banner limb — appending one synthetic group banner to a COPY of this file changed the later-banner count from ${RS_LATERB} to ${RS_B12}, not to $((RS_LATERB + 1)). The banner reader is blind to an added banner, so RS10's second limb is unproven and a group opening after RS could read clean"
+    else
+      PASS "RS12: CONTROL on RS10's banner limb, ADD-ONLY — one synthetic group banner for 'ZZB' appended to a COPY of this file with EVERY existing line intact raises the later-banner count ${RS_LATERB} → ${RS_B12}, a delta against this run's own measurement. RS10's second limb now fires on its own edit shape: a group DECLARED after RS, which the call-site limb cannot see on a run where that group emits nothing"
+    fi
+  else
+    FAIL "RS12: CONTROL on RS10's banner limb could not run — this file could not be copied to '$RS_COPY12', so the banner reader was never shown to fire and RS10's second limb rests on nothing"
   fi
 fi
 
