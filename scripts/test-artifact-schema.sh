@@ -9266,7 +9266,10 @@ rm_read() {
           print "TUPLE\t" out "\t" m "\t" NR "\t" key
           continue
         }
-        print "SPAN\t" s "\t" NR "\t" key
+        # The identifier set rides along, because the TUPLE limb needs to compare the promoted
+        # clause against the OTHER encoding of the same pair standing in its own block. No
+        # consumer filtering on the row kind is affected by a further field.
+        print "SPAN\t" s "\t" NR "\t" key "\t" ids(s)
       }
     }
   ' "$1"
@@ -9288,7 +9291,7 @@ rm_measure() {
       t = $3; gsub(/[ ]/, "", t); if (index(t, "+1") > 0) nplus++
     }
     $1 == "TUPLE"  { nt++; tmem = $2; tar = $3; tkey = $5 }
-    $1 == "SPAN"   { nplain++ }
+    $1 == "SPAN"   { nplain++; nspan++; spanids[nspan] = $5; spankey[nspan] = $4 }
     END {
       for (i = 1; i <= ns; i++) {
         n = split(idt[i], tok, " "); delete has; hasclock = 0
@@ -9305,10 +9308,26 @@ rm_measure() {
           for (k = 1; k <= n; k++) ops[tok[k]] = 1
           m = split(tmem, mem, ","); tsub = 1
           for (k = 1; k <= m; k++) if (!(mem[k] in ops)) tsub = 0
+          # THE PAIR IS STATED TWICE INSIDE ITS OWN BLOCK, and the two statements must agree.
+          # Subset alone cannot see a SUBSTITUTION: swapping one member for another operand of
+          # the same declaration keeps every member inside `ops`, keeps the arity, and passes.
+          # The document already carries the pair a second time — the step that extracts it
+          # names it as a span — so the members are pinned against THAT encoding rather than
+          # against a literal written here. An added member fails this too, on cardinality.
+          for (sp = 1; sp <= nspan; sp++) {
+            if (spankey[sp] != tkey) continue
+            nn = split(spanids[sp], sid, " ")
+            if (nn != m) continue
+            delete sset
+            for (kk = 1; kk <= nn; kk++) sset[sid[kk]] = 1
+            okp = 1
+            for (kk = 1; kk <= m; kk++) if (!(mem[kk] in sset)) okp = 0
+            if (okp == 1) tpair++
+          }
         }
       }
-      printf "%d %d %d %d %d %d %d %d %d %d %d %d\n", nreg+0, nfen+0, ns+0, nd+0, \
-        ngood+0, nbad+0, nplus+0, nt+0, tar+0, towner+0, tsub+0, ns+nt+nplain+0
+      printf "%d %d %d %d %d %d %d %d %d %d %d %d %d\n", nreg+0, nfen+0, ns+0, nd+0, \
+        ngood+0, nbad+0, nplus+0, nt+0, tar+0, towner+0, tsub+0, ns+nt+nplain+0, tpair+0
     }
   '
 }
@@ -9335,8 +9354,8 @@ rm_measure() {
 # see the note above has_finding. It also keeps `read`, which stops at the first newline, off
 # the receiving end of a pipeline whose writer has not finished.
 rm_violations() {
-  local nreg nfen ns nd ng nb np nt ta to ts nsp out=""
-  read -r nreg nfen ns nd ng nb np nt ta to ts nsp <<<"$(rm_measure "$1")"
+  local nreg nfen ns nd ng nb np nt ta to ts nsp tp out=""
+  read -r nreg nfen ns nd ng nb np nt ta to ts nsp tp <<<"$(rm_measure "$1")"
   [ "$nreg" -eq 1 ]   || out="$out REGION"
   [ "$nfen" -ge 1 ]   || out="$out FENCE"
   [ "$ns"   -gt 0 ]   || out="$out EMPTY-SPINE"
@@ -9350,6 +9369,7 @@ rm_violations() {
   [ "$ta"   -ge 2 ]   || out="$out TUPLE-ARITY"
   [ "$to"   -eq 1 ]   || out="$out TUPLE-OWNER"
   [ "$ts"   -eq 1 ]   || out="$out TUPLE-SUBSET"
+  [ "$tp"   -eq 1 ]   || out="$out TUPLE-PAIR"
   printf '%s' "${out# }"
 }
 
@@ -9441,9 +9461,9 @@ rm_mutate() {
 cp "$RM_DOC" "$RM_PRISTINE" 2>/dev/null || true
 RM_READABLE=0; [ -r "$RM_DOC" ] && RM_READABLE=1
 RM_NREG=0; RM_NFEN=0; RM_NS=0; RM_ND=0; RM_NG=0; RM_NB=0
-RM_NP=0; RM_NT=0; RM_TA=0; RM_TO=0; RM_TS=0; RM_NSP=0
+RM_NP=0; RM_NT=0; RM_TA=0; RM_TO=0; RM_TS=0; RM_NSP=0; RM_TP=0
 if [ "$RM_READABLE" -eq 1 ]; then
-  read -r RM_NREG RM_NFEN RM_NS RM_ND RM_NG RM_NB RM_NP RM_NT RM_TA RM_TO RM_TS RM_NSP <<<"$(rm_measure "$RM_DOC")"
+  read -r RM_NREG RM_NFEN RM_NS RM_ND RM_NG RM_NB RM_NP RM_NT RM_TA RM_TO RM_TS RM_NSP RM_TP <<<"$(rm_measure "$RM_DOC")"
 fi
 
 # RM_NREQ — THE EXPECTED CARDINALITY, DERIVED AND NEVER WRITTEN DOWN. One declaration for the
@@ -9531,12 +9551,24 @@ if [ "$RM_OK" -eq 1 ]; then
   # as a tuple span inside the declaration, which brings it inside the projection. The members
   # are checked against the operands of the declaration heading its OWN block, DERIVED from the
   # spine rather than spelled, so the pair cannot name something the term does not resolve from.
-  if [ "$RM_NT" -eq 1 ] && [ "$RM_TA" -ge 2 ] && [ "$RM_TO" -eq 1 ] && [ "$RM_TS" -eq 1 ]; then
-    PASS "RM4: the non-resolution clause names the SELECTION PAIR as an operative token — exactly $RM_NT tuple span of arity $RM_TA, whose members are all operands of the declaration heading its own block. That subset is derived from the spine on this run and written nowhere here. Before this clause was promoted into a code span it lived in unbolded justification prose, where the projection could not see it and a year-only revert of it measured PASS"
+  #
+  # SUBSET IS NOT ENOUGH, AND THE GAP IS SUBSTITUTION. Every member being an operand of the
+  # owning declaration holds just as well after one member is SWAPPED for a different operand
+  # of that same declaration: the arity is unchanged, the subset still holds, and the clause
+  # then states a non-resolution condition the rule does not have. Removal is caught by the
+  # arity limb and addition by nothing at all. So the members are pinned by EQUALITY against
+  # the pair's OTHER encoding — the document states the pair twice inside that one block, once
+  # as the span the extraction step names and once as this tuple, and the two must agree as
+  # sets. Derived from the document on every run, spelled nowhere here, and it is the same
+  # two-encodings-must-agree shape RM9 applies to the reference-month declaration.
+  if [ "$RM_NT" -eq 1 ] && [ "$RM_TA" -ge 2 ] && [ "$RM_TO" -eq 1 ] && [ "$RM_TS" -eq 1 ] && [ "$RM_TP" -eq 1 ]; then
+    PASS "RM4: the non-resolution clause names the SELECTION PAIR as an operative token — exactly $RM_NT tuple span of arity $RM_TA, whose members are all operands of the declaration heading its own block AND are exactly the members of the one other span in that block stating the same pair. Both comparisons are derived from the document on this run and written nowhere here. The second is what pins the OPERANDS rather than the shape: swapping a member for another operand of the same declaration leaves the subset and the arity untouched, and is caught only by the equality. Before this clause was promoted into a code span it lived in unbolded justification prose, where the projection could not see it and a year-only revert of it measured PASS"
   elif [ "$RM_NT" -ne 1 ]; then
     FAIL "RM4: the region's declaration blocks carry $RM_NT tuple span(s), expected exactly 1 — at 0 the non-resolution condition has left the operative projection and is back in prose no token-level anchor can see, which is precisely the escape this arm was added to close; above 1 the clause has been stated twice and nothing says which pair governs"
   elif [ "$RM_TA" -lt 2 ]; then
     FAIL "RM4: the non-resolution clause's tuple span has arity $RM_TA, expected at least 2 — the condition has been narrowed to a single term. The declared rule is that the PAIR's absence is what fails to resolve, not the year's, so an arity of 1 is the year-only reversion stated in the document's own notation"
+  elif [ "$RM_TP" -ne 1 ] && [ "$RM_TO" -eq 1 ] && [ "$RM_TS" -eq 1 ]; then
+    FAIL "RM4: the non-resolution clause's members are NOT the members of the pair as its own block states it elsewhere — $RM_TP span(s) in that block carry the clause's exact member set, expected exactly 1. Every member is still an operand of the owning declaration, so the subset limb is satisfied and the arity is unchanged: this is the SUBSTITUTION case, where one member was swapped for a different operand of the same declaration and the clause now states a condition the rule does not have. At 0 the two encodings of the pair disagree; above 1 the block states the pair more than twice and there is no single counterpart to agree with"
   elif [ "$RM_TO" -ne 1 ]; then
     FAIL "RM4: the tuple span sits in a declaration block that carries no definitional span of its own, so there is nothing to check its members against. The subset limb is DERIVED from the declaration heading the tuple's own block — moving the clause out from under its declaration removes the derivation rather than weakening it"
   else
