@@ -46,12 +46,12 @@ name: ADR conformance
 #   context BEFORE the workflow can report wedges the repository. Register last.
 #
 # ── THE CHECKOUT DEPTH IS LOAD-BEARING, NOT A DEFAULT NOBODY CHANGED ─────────────
-# Two arms replay defects this repository actually shipped, against the revisions that
+# SOME ARMS REPLAY DEFECTS this repository actually shipped, against the revisions that
 # carried them — a record whose file and index disagreed on its status, and a record left
 # marked Proposed while Accepted records cited the rule it states. Every other arm grades a
 # fixture the suite's own author wrote, which proves the detector does what its author
-# expected; these two prove it catches what the repository actually got wrong. They read
-# blobs from history, so the checkout below sets fetch-depth to the full history and the
+# expected; the replay arms prove it catches what the repository actually got wrong. They
+# read blobs from history, so the checkout below sets fetch-depth to the full history and the
 # suite FAILS rather than skipping when a blob is unreachable. Lowering the depth here
 # disarms those arms, and the suite will say so loudly rather than quietly passing.
 #
@@ -94,7 +94,7 @@ name: ADR conformance
 #   LG   THE STATUS-LAG CANDIDATE. A record still marked Proposed while an Accepted record
 #        cites it. It REPORTS and never fails — whether a Proposed record is stale is a
 #        question about meaning, and a static arm decides a shape
-#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus two arms
+#   CTL  a synthetic fixture tree built in a temp dir on every invocation, plus the arms
 #        replaying real historical defects. One MUST-FIRE arm per finding code, each observed
 #        flipping on a mutation asserted to have LANDED, alongside the specificity arms and
 #        the ADD-ONLY arms. THE ARM INVENTORY IS NOT RESTATED HERE, deliberately — it lives
@@ -172,9 +172,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Load-bearing. Two arms read blobs from this repository's history; at the default
-          # depth of a single commit those blobs are unreachable and the arms hard-fail.
-          # See the checkout-depth note above before lowering this.
+          # Load-bearing. The historical-replay arms read blobs from this repository's
+          # history; at the default depth of a single commit those blobs are unreachable and
+          # those arms hard-fail. See the checkout-depth note above before lowering this.
           fetch-depth: 0
 
       # No Node setup step: this suite is pure bash and POSIX text processing. It needs no

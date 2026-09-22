@@ -54,10 +54,14 @@
 # ── THE RECORD SET IS DERIVED, AND ONLY THE GAP IS PINNED ────────────────────────
 # THIS FILE HOLDS NO LIST OF RECORDS AND NO COUNT OF THEM. The set is read from the
 # directory on every invocation. That is not a style preference — it is the property the
-# operator locked this card on, and events have now validated it three times rather than
-# argument: while this release was being built, three sibling releases merged and the
-# record set moved 20 -> 22 -> 23. Any list written here would have been wrong three times
-# over, and re-pinning it by hand is the very maintenance this suite exists to remove.
+# operator locked this card on, and events rather than argument have validated it: while
+# this release was being built, sibling releases kept merging and the record set kept
+# growing. Any list written here would have been wrong each time, and re-pinning it by hand
+# is the very maintenance this suite exists to remove.
+#
+# THIS PARAGRAPH CARRIED THE FIGURES ITSELF and they went stale exactly as predicted, four
+# lines under the sentence forbidding them. They are gone rather than refreshed: a tally
+# here is a copy with no assertion behind it, and the arms below read the real set.
 #
 # ONE VALUE IS PINNED: ADR_NUM_EXEMPT, the known gap in the sequence. It is declared HERE
 # rather than in the index, because this card ships a mechanism and is forbidden from
@@ -202,14 +206,22 @@ WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 ARM_LOG="$WORK/arms";  : > "$ARM_LOG"
 SURF_LOG="$WORK/surf"; : > "$SURF_LOG"
 
-# has_code <output> <code> — the code appears as a finding token and not as a substring of a
-# longer one. The here-string is load-bearing and group PF asserts that it stays one: grep -q
-# exits on its first match, and feeding it from a PIPELINE kills the writer with SIGPIPE,
-# which under pipefail reports the pipeline as failed even though the match succeeded. A
-# here-string is a redirection on a simple command, so there is no second status to aggregate.
-has_code() { grep -q "^FINDING $2 " <<<"$1"; }
+# n_code <output> <code> — how many times the code appears as a finding token, compared as a
+# WHOLE FIELD so a code is never a substring of a longer one. This is what every code check in
+# this file routes through: the arms compare a COUNT rather than a presence, so an arm reads
+# the same way whether a code fired once or five times.
 n_code()   { awk -v c="$2" '$1 == "FINDING" && $2 == c { n++ } END { print n + 0 }' <<<"$1"; }
 # The denominator line every scan emits. A scan that produced none did not run.
+#
+# Both here-strings are load-bearing and group PF asserts that they stay here-strings: grep -q
+# exits on its first match, and feeding it from a PIPELINE kills the writer with SIGPIPE, which
+# under pipefail reports the pipeline as failed even though the match succeeded. A here-string
+# is a redirection on a simple command, so there is no second status to aggregate.
+#
+# A `has_code` predicate sat here and was called by NOTHING — the suite's code checks have
+# routed through n_code since they were written. It is removed rather than wired in: wiring a
+# dead predicate into live arms changes what those arms evaluate, and the sentences that
+# described the routing were the thing that was wrong, not the routing.
 has_denom() { grep -q "^DENOM " <<<"$1"; }
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -1007,7 +1019,14 @@ ctl_mustfire "CTL-NU0" NU0 "$(ad_scan_nu "$D" '')" "no record number could be pa
 # stands, the set with records APPENDED above its maximum (a sibling release merging after
 # this one), and the set with its top records REMOVED (this release landing first). The
 # verdict must be byte-identical across all three, because the declared gap sits below every
-# one of those boundaries and nothing in the arm is pinned to a maximum.
+# one of those boundaries.
+#
+# WHAT THE AGREEMENT IS WORTH DEPENDS ON ITS SHAPE, and the arm now says so on its own
+# verdict rather than leaving a reader to work it out. On a clean corpus all three reads are
+# empty, and three empty reads agree for reasons unrelated to merge order — a scanner pinned
+# to a maximum would produce the same three. So this arm establishes that the verdict does
+# not MOVE with merge order, and never that nothing is pinned; the firing is CTL-NU2's and
+# CTL-NU3's to establish, and both are MUST-FIRE.
 NUO_A="$WORK/nuo-a"; NUO_B="$WORK/nuo-b"; NUO_C="$WORK/nuo-c"
 mkdir -p "$NUO_A/$ADR_DIR" "$NUO_B/$ADR_DIR" "$NUO_C/$ADR_DIR"
 NUO_LIVE="$(ad_records "$ROOT")"
@@ -1031,12 +1050,23 @@ done <<<"$NUO_LIVE"
 NUO_VA="$(ad_scan_nu "$NUO_A" "$ADR_NUM_EXEMPT" | grep '^FINDING ' || true)"
 NUO_VB="$(ad_scan_nu "$NUO_B" "$ADR_NUM_EXEMPT" | grep '^FINDING ' || true)"
 NUO_VC="$(ad_scan_nu "$NUO_C" "$ADR_NUM_EXEMPT" | grep '^FINDING ' || true)"
+# THE SHAPE OF THE AGREEMENT IS REPORTED, because three EMPTY verdicts agree for reasons that
+# have nothing to do with merge order. On a contiguous set with its one hole declared exempt
+# every root is clean, so the comparison below is between three empty strings — and a scanner
+# that had stopped scanning past some boundary would produce the same three and pass here.
+# Naming the shape is what stops this arm being read as more than it is; CTL-NU2 and CTL-NU3
+# are the arms that establish the scanner fires at all, and they are MUST-FIRE.
+if [ -z "$NUO_VA" ] && [ -z "$NUO_VB" ] && [ -z "$NUO_VC" ]; then
+  NUO_SHAPE="all three verdicts are EMPTY — the agreement is between three clean reads, which is agreement of the weakest kind"
+else
+  NUO_SHAPE="the verdicts are NON-EMPTY and identical, so the agreement is between three actual findings"
+fi
 if [ "$NUO_N" -eq 0 ] || [ "$NUO_MAX" -eq 0 ]; then
   FAIL "CTL-NU-ORDER: the live record set derived to $NUO_N record(s) with maximum $NUO_MAX, so the three orderings were built over nothing and their agreement proves nothing"
 elif [ "$NUO_KEEP" -eq "$NUO_N" ]; then
   FAIL "CTL-NU-ORDER: the 'lands first' root kept all $NUO_N record(s) — the removal did not land, so root (c) is not a different ordering and the comparison below is between three identical trees"
 elif [ "$NUO_VA" = "$NUO_VB" ] && [ "$NUO_VB" = "$NUO_VC" ]; then
-  PASS "CTL-NU-ORDER: the contiguity verdict is IDENTICAL across three merge orders built from the LIVE derived set of $NUO_N record(s), max $NUO_MAX — as-is, plus two records above the maximum (a sibling merging second), and minus its top two (this release landing first; $NUO_KEEP kept). The declared exemption '$ADR_NUM_EXEMPT' sits below every boundary and nothing here is pinned to a maximum, so whichever release lands first the arm returns the same answer"
+  PASS "CTL-NU-ORDER: the contiguity verdict is IDENTICAL across three merge orders built from the LIVE derived set of $NUO_N record(s), max $NUO_MAX — as-is, plus two records above the maximum (a sibling merging second), and minus its top two (this release landing first; $NUO_KEEP kept). The declared exemption '$ADR_NUM_EXEMPT' sits below every boundary, so whichever release lands first the arm returns the same answer. WHAT THIS DOES NOT ESTABLISH: $NUO_SHAPE. Three clean reads agree whether or not anything is pinned to a maximum — a scanner that had stopped reading past some boundary would produce the same three and pass here — so this arm does NOT establish that nothing is pinned to a maximum, which is what its earlier wording claimed. It establishes that the verdict does not MOVE with merge order. That the scanner fires at all is CTL-NU2's and CTL-NU3's to establish, and each is MUST-FIRE"
 else
   FAIL "CTL-NU-ORDER: the contiguity verdict CHANGED with merge order — as-is '$NUO_VA', sibling-merges-second '$NUO_VB', lands-first '$NUO_VC'. Something in the arm is pinned to the record set's boundary, which is exactly the coupling the scope-lock forbids"
 fi
@@ -1193,9 +1223,12 @@ fi
 # match succeeded. That status is 141 only where SIGPIPE is fatal; where the shell inherited
 # it ignored the writer returns 1 instead, indistinguishable from the reader finding nothing.
 #
-# This suite routes its code checks through has_code(), whose callers include the INVERTED
-# form — `if has_code …; then FAIL` — where a spurious non-zero resolves toward the quiet
-# answer: the finding goes unreported and the arm records a pass on a state that carries it.
+# This suite routes its code checks through n_code(), which returns a COUNT its callers then
+# compare, and its scan-ran checks through has_denom(), which is a predicate. Both read from
+# a here-string for the reason above. The risk the inverted form carries is real wherever a
+# predicate decides a verdict — a spurious non-zero resolves toward the quiet answer, the
+# finding goes unreported, and the arm records a pass on a state that carries it — which is
+# why has_denom's shape is asserted here rather than assumed.
 #
 # The needle is assembled from two pieces because this scan reads its own source — a literal
 # spelling of the shape in the detector would make the detector match itself.
@@ -1223,7 +1256,7 @@ else
   if [ "$PF_GOOD" -eq 0 ]; then
     FAIL "PF1: the scan found 0 here-string grep -q sites in this file, so its zero on the pipeline shape proves nothing — the convention or the scan has moved, and neither verdict is trustworthy"
   elif [ "$PF_BAD" -eq 0 ]; then
-    PASS "PF1: ${PF_GOOD} here-string grep -q site(s) in this file, 0 of them pipelines — no verdict here, and none of the arms routed through has_code, can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan"
+    PASS "PF1: ${PF_GOOD} here-string grep -q site(s) in this file, 0 of them pipelines — no verdict in this file can be flipped by a SIGPIPE race under pipefail. The sensitivity arm fired (${PF_GOOD} > 0), so the zero is a measurement rather than an empty scan. WHAT THIS GRADES is every grep -q site in this file, by their line shape; the earlier wording named an arm set routed through a predicate that nothing in this file called, which made the clause vacuously true over an empty denominator. The code checks route through n_code, a count, and the scan-ran checks through has_denom, a predicate — both read from a here-string and both are inside this scan's denominator"
   else
     FAIL "PF1: ${PF_BAD} verdict site(s) in this file pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead"
   fi
