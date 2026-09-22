@@ -842,9 +842,11 @@ This is the payoff of D1.1 and it is listed first because it is the part a reade
 | `agents/00-enrichment.md` § *Missing or blank profile* | its predicate still fires correctly on a seeded-but-unanswered file, and D2.4 makes it **more** precise rather than less |
 | `scripts/validate-artifacts.sh` | no change; D2.5 is discharged against the script's own declared scope |
 
-### What later slices must change, each with an owner
+### What this decision makes false elsewhere
 
-| Surface | Change | Owner |
+**Amendment (2026-09-21, Monday) — scheduling content removed.** This section previously carried an `Owner` column assigning changes to a release wave, and the record additionally carried a trailing section naming build slices. Both are scheduling, and scheduling belongs to a release plan, which changes when the backlog changes — while this record does not. The wave assignments and the slice list are removed; every statement of what becomes false elsewhere is kept, including the mechanical coupling facts, which are consequences of the decisions rather than schedule. One cell gains an explicit `D5.1` basis it had been taking from the removed token. No decision is reversed, narrowed or re-opened.
+
+| Surface | Change | Who closes it |
 |---|---|---|
 | `reference/adr/README.md` | one index row for this record | this milestone's corpus step |
 | `skills/trip-record/SKILL.md` standing rule 3, and § `profile` → *Edit* | the skip byte, per D2.4 | Wave 1 |
@@ -881,14 +883,14 @@ Every residual is named with its owner. A residual with no owner is not a residu
 
 | # | Residual | Owner |
 |---|---|---|
-| **R1** | The standing-rule amendment D2.4 obliges — standing rule 3 and § `profile` → *Edit* must be reconciled toward the em dash in the same change that implements the semantics | **Wave 1**, owner assigned at Wave-1 planning |
+| **R1** | The standing-rule amendment D2.4 obliges — standing rule 3 and § `profile` → *Edit* must be reconciled toward the em dash in the same change that implements the semantics | owner assigned at Wave-1 planning |
 | **R2** | Route 2's *write it to the path unmodified* against the seed's placeholder substitution, per D2.5. The two sentences are reconcilable; the reconciliation is not written | **Wave 1** |
 | **R3** | No assertion grades the three-valued refinement. Placeholder-against-em-dash is graded nowhere today, which is exactly why the contradiction D2.4 resolves survived in the corpus | **Wave 1** |
 | **R4** | The trip-context form is out of scope for this epic, so **the session model ships unexercised on the form the scalability claim rests on.** This is said here rather than discovered later, and it is a **mandatory statement at plan review** rather than a design defect. It is an operator call about milestone scope | **plan review**, then the first consumer slice |
 | **R5** | The split of the guides' numbered rules is a joint act: this record owns the semantics of rules 4 through 8 and the sibling owns their placement. Neither half is complete alone | **joint**, this milestone |
 | **R6** | D5.4's gradeability depends on the per-field closed/open marker landing in the sibling record. The prohibition is written; its source is the sibling's to supply | **the sibling record** |
 | **R7** | **Third-party transcript reach — accepted, unreachable, disclosed.** The engine cannot reach a third-party assistant's history, `erase` cannot enumerate it, and no control exists beyond D6.4's disclosure. This is not deferred work; it is a permanent boundary of the deployment | **accepted**, stated by D6.4 |
-| **R8** | **The join key this record reads the classification table by — named here, because four decisions read that table live and none of them named it.** D2.2 reads the `Scope` column, D3.6 reads it again for the block/slot split OS-1 disposes to this record, D6.3 reads the `Class` column for the spoken-channel trigger, and S17 declares that class read live and never restated. **The key is `(section, label)`, with the section resolved as a leading segment of the bullet's enclosing `##` heading rather than by exact equality** — which is the key `scripts/test-artifact-schema.sh` group `XT` already grades: `XT12` requires the `## extract` section to state it in those terms, and `XT4` is the arm that measures both candidate section readings differing on the shipped headings. Exact equality drops every repeated block, which is where this record's whole `block`-scoped population lives, so it is not a candidate here at all. **The measured residual is that the join's totality is unasserted.** Probed at `edadfa9`: the table numbers its rows to a count the *Totals* sentence reconciles, and all but the last carry a backticked label — the final row is the unlabelled free-text tail and joins nothing by construction. Every one of the labelled rows carries a distinct label **and** a distinct `(section, label)` pair, so *exactly one* is a property of the table as it stands today rather than a rule anything enforces. `XT12` reports that arity live rather than asserting it, and the table's own *Totals* sentence reconciles class, scope and horizon against the row count while saying nothing about key uniqueness. **A row added with a duplicate pair breaks every one of the four live reads above, silently.** The sibling record carries the same residual against its own seam | **Wave 1**, as one arm over the classification table, alongside the assertion R3 names |
+| **R8** | **The join key this record reads the classification table by — named here, because four decisions read that table live and none of them named it.** D2.2 reads the `Scope` column, D3.6 reads it again for the block/slot split OS-1 disposes to this record, D6.3 reads the `Class` column for the spoken-channel trigger, and S17 declares that class read live and never restated. **The key is `(section, label)`, with the section resolved as a leading segment of the bullet's enclosing `##` heading rather than by exact equality** — which is the key `scripts/test-artifact-schema.sh` group `XT` already grades: `XT12` requires the `## extract` section to state it in those terms, and `XT4` is the arm that measures both candidate section readings differing on the shipped headings. Exact equality drops every repeated block, which is where this record's whole `block`-scoped population lives, so it is not a candidate here at all. **The measured residual is that the join's totality is unasserted.** Probed at `edadfa9`: the table numbers its rows to a count the *Totals* sentence reconciles, and all but the last carry a backticked label — the final row is the unlabelled free-text tail and joins nothing by construction. Every one of the labelled rows carries a distinct label **and** a distinct `(section, label)` pair, so *exactly one* is a property of the table as it stands today rather than a rule anything enforces. `XT12` reports that arity live rather than asserting it, and the table's own *Totals* sentence reconciles class, scope and horizon against the row count while saying nothing about key uniqueness. **A row added with a duplicate pair breaks every one of the four live reads above, silently.** The sibling record carries the same residual against its own seam | as one arm over the classification table, alongside the assertion R3 names |
 
 ## References
 
@@ -943,16 +945,3 @@ Every residual is named with its owner. A residual with no owner is not a residu
   exclusion that together discharge D2.5
 - `scripts/test-artifact-schema.sh` group `AR3` — the placeholder-substitution requirement the seed
   must satisfy
-
-## Follow-on build slices
-
-Named, and deliberately not scoped. Scoping is Wave-1 planning's.
-
-- **The conduct slice.** Authors the interviewer's conduct against the behaviour this record decides
-  and the structure the sibling decides, in the landing site the Stage-5 landing decision names.
-- **The skip-byte reconciliation.** Carries R1 and R2 — the standing-rule amendment and the route-2
-  reconciliation — as one change, because they touch the same verb section.
-- **The refinement assertion.** Carries R3: an assertion that grades the placeholder against the em
-  dash, written to require evidence its subject could only have produced by running.
-- **The first trip-context consumer.** Carries R4, and is the slice at which the session model is
-  first exercised on the form it has not met.
