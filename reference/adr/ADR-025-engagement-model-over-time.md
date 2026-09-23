@@ -1,6 +1,6 @@
 # ADR-025: The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity
 
-- **Status:** Proposed (2026-09-21)
+- **Status:** Accepted (2026-09-23)
 - **Deciders:** repo maintainer
 - **Driving work:** the time slice of the *traveller journey* milestone. This record is that
   milestone's second head decision gate, standing beside `ADR-026` in the shape
