@@ -1,9 +1,6 @@
 # ADR-026: The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model
 
-- **Status:** Accepted (2026-09-23). Landed `Proposed` (2026-09-21) and ratified here, after the
-  milestone's close this record names for the flip, by the two-step this corpus already uses:
-  `ADR-010` and `ADR-019` each landed `Proposed` on one day and were flipped by a later ratifying
-  commit on another.
+- **Status:** Accepted (2026-09-23)
 - **Deciders:** repo maintainer
 - **Driving work:** the architecture slice of the *traveller journey* milestone. This record is
   that milestone's **head decision gate**, in the shape `ADR-012-people-library.md`,
