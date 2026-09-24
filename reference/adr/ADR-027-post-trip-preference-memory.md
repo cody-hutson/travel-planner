@@ -230,3 +230,227 @@ gate binds a new field, and the rejection also stands on three grounds of its ow
 | Source side | a rule reading the whole section · an explicit list · a rule pinned to one sentence | **Pinned to one sentence:** the one in `reference/data-model.md` § *Three metric types* that names what coverage is *"determinable from"*. The same section names C14's inputs elsewhere with a narrower membership, so a rule reading the section at large could land on either |
 | Arrival | with the offer · with the first wave that renders a retained verdict | **With the first wave that renders** — the operator's decision at the scope lock on 2026-09-24 (Thursday). A render that carries a retained verdict carries its relation verdict from the first slice that renders one (W1a-0) |
 | Name | `plan-to-coverage` | the shipped `<source>-to-<derived>` shape. The token and its root arms `plan-to-` and `-to-coverage` measure 0 / 0 at `b199dc1`, against shipped siblings `itinerary-to-build` and `research-to-placement` that fire |
+
+## Decision
+
+### 1. Outcome retention — resolved where it was measured
+
+> **`outcomes(p, t₀)`** — for a person id `p` and the trip being planned `t₀`: for each trip
+> `t ∈ history(p)` with `t ≠ t₀` and `lifecycle(t) = ARCHIVED`, the rows of
+> `t/outputs/satisfaction-metrics.md`'s desire-coverage section whose traveller cell's key equals
+> the key of the stem of `t`'s bearer file — the one `t/travelers/*.md` whose frontmatter carries
+> `person: q`, `q ∈ closure(p)`. Where the point of use resolves no trip, the `t ≠ t₀` exclusion is
+> vacuous.
+
+**Terms, cited rather than restated.** `history(p)` and `closure(p)` are `ADR-017` § 1, at one hop.
+The key is `reference/data-model.md` § *Traveler identity*'s two-step key; since
+`normalize(derive(P)) == normalize(P)`, the stem's key equals the roster name's. `lifecycle(t)` is
+`E2`'s `**Lifecycle:**` value, absent → `ACTIVE` (`G4`).
+
+| AC-1 attribute | Decision |
+|---|---|
+| **Join key** | `EB-2` on `person: psn-<token>` under `closure(p)` at one hop — the key `ADR-025` names for this slice; `EB-0`, the traveller key, inside a trip. No key is minted. **Exactly one bearer per trip**, else `UNDETERMINED` (W1a-4) |
+| **Trips reached** | `ARCHIVED` only, excluding `t₀`; a reopened trip is `ACTIVE`. Only `PERSON-LINKED` travellers (K1): K2–K4 have no key across `EB-2` (`ADR-025` § 4), so a `[THIRD-PARTY]` member gets no cross-trip reading, by construction |
+| **What is read** | The desire-coverage section, and in it the traveller, tier and verdict cells. The section is found by header label, never by position (W1a-2). **Never** the desire's text, needs compliance, or the balance signals |
+| **Freeze-safe** | Nothing of `t` is written, regenerated or re-derived (`CLAUDE.md` § *Archived trips*); `ADR-017` § 2: *"reading is not derivation"* |
+| **Terminal states** | Each token with its condition, in the table below |
+| **Old instances** | Read under `reference/data-architecture.md` § 7.2's tolerant read. A reader never fails on a version it does not recognise |
+| **Unchanged** | `/trip-decommission archive` (it still *"moves nothing"*), C14's writers, the class table, `internal-hard`, and the reach table |
+
+**The person view's terminal set — each token printed only under the condition beside it.**
+`ADR-017` § 5 defines these tokens for its own resolution; this view reuses a token only where its
+condition implies that meaning, and prints a plain line where none does.
+
+| Output | Condition |
+|---|---|
+| `RESOLVED(n)` | the scan completed and reached archived trips other than `t₀` carrying `p`'s edge; `n` counts those reached trips, and each renders one of the per-trip readings below |
+| *edges exist, none archived* | the scan completed, `p`'s edge sits on trips other than `t₀`, and none of them is `ARCHIVED`. A plain line: never `NO-EDGE-FOUND`, and never a count of zero |
+| `NO-EDGE-FOUND` | the scan completed and **no** trip other than `t₀` carries `p`'s edge |
+| `NO-REFERENCE` | the traveller the view was asked about carries no `person:` reference, so there is no edge to invert and **no scan runs** |
+| `UNDETERMINED` | the store or the trip population could not be read, a bearer was present but unreadable, a reference dangled, or a stub was malformed — `ADR-017` § 5's conditions, inherited |
+
+**Per reached trip**, exactly one of: **tier × verdict tallies**; *holds no outcome record* — the
+file or its desire-coverage section is absent, or no row carries the bearer's key; or
+`UNDETERMINED` — the section is unreadable, its header names none of a needed cell, or the trip
+carries more than one bearer. **No state reads absence as `not covered`.**
+
+**The wording rule, stated at the rule.** Every retained verdict is rendered as **plan coverage as
+last synthesized** — whether the plan, when it was last synthesized, covered the desire. It is
+never rendered as what happened on the trip, what a traveller enjoyed, or how the trip went. An
+archived C14 is *"A coverage snapshot at synthesis time"* (`CLAUDE.md`), frozen at archive, and it
+records nothing that happened after that synthesis. Every render also carries each reached trip's
+`plan-to-coverage` verdict (W1a-0), so a snapshot that predates a later status change or plan edit
+says so — and what that verdict means, and does not, is stated with the relation.
+
+**Why A4 over A2.** The matrix in § *Options considered*, with no Accepted record foreclosing
+*Carry*: it wins one criterion — a deleted trip folder's outcomes survive — and costs a class, a
+writer, a store, a reach row, an `archive` change and a second home.
+
+**Reversibility: CHEAP · confidence HIGH.**
+
+### 2. Group memory — a view over the trips the operator confirms
+
+> **`members(G)`** — the survivor ids of `groups/<G>.md`'s `## Members` bullets, each resolved
+> through at most one `merged-into:` hop (`ADR-016` § 3's inherited resolution) and deduplicated. A
+> bullet that does not resolve is reported `UNDETERMINED` by id and is not a member. `n` is the
+> count of `## Members` bullets — the member count `group-list` prints — with every unresolved
+> bullet among them shown as `UNDETERMINED`.
+>
+> **`k(t)`** = `|{ m ∈ members(G) : t ∈ history(m) }|`.
+>
+> **`cand(G, t₀)`** — the trips `t` with `t ≠ t₀`, `lifecycle(t) = ARCHIVED` and `k(t) ≥ 2`. Each
+> candidate is rendered as its slug, `k(t) of n`, and `r(t)`, the number of data rows in `t`'s
+> `## Group` roster table — and nothing else.
+>
+> **`confirmed(G, t₀)` ⊆ `cand(G, t₀)`** — the candidates the operator confirms were this party's
+> trips. The engine offers no default selection, computes no similarity, and applies no threshold
+> beyond `k(t) ≥ 2`. The confirmation lives in the session and is **never stored**.
+>
+> **The group view** — for each `t ∈ confirmed(G, t₀)` and each `m ∈ members(G)` with
+> `t ∈ history(m)`: `m`'s rows of `outcomes(m, t₀)` on `t`, rendered under `m`'s person id as
+> tier × verdict tallies. Each is worded as plan coverage as last synthesized, with `t`'s
+> `plan-to-coverage` verdict. **No total is computed across members or across trips.**
+
+- **Why `k(t) ≥ 2` is not a threshold anyone defends.** It defines *joint*. A trip with one linked
+  member is that member's own history, which the person view already shows. The floor admits every
+  candidate, and the operator decides each one — `ADR-017` O7's shape, where partial matching
+  *"is the general case"*.
+- **A membership edit.** `group-add` of someone who never travelled raises `n` and moves no `k(t)`,
+  so no candidate disappears. `group-drop` can drop a trip's `k(t)` below 2, and that trip leaves
+  the list. The list is recomputed and shown on every invocation, and nothing about it is stored
+  (W2-1).
+- **Choosing the group.** A named `<group-id>` runs. With none, every *qualifying* group — at least
+  two resolvable members linked on `t₀` — is listed by **id and member count only, never by display
+  name**, and the engine chooses none (W2-4). Where no trip is resolved, the group must be named.
+- **Consent, argued per half.** The measured half joins only on person-linked keys, so no
+  `[THIRD-PARTY]` member is reached. `r(t)` is a count that individuates no one, and erasure keeps
+  the same count by design — row 5: *"Erasure does not reduce the party"*. There is no stated half,
+  so there is nothing else to argue.
+
+**The group view's terminal set — each output printed only under the condition beside it.**
+
+| Output | Condition |
+|---|---|
+| `UNDETERMINED` | the trip listing or the group record cannot be read. The population canary `G1` is inherited, so an unreadable listing never becomes *no joint trips* |
+| *fewer than two resolvable members* | the group resolves fewer than two members, so no scan runs, and the view says so |
+| *no joint archived trip* | the scan completed, some member's edge exists, and no archived trip other than `t₀` carries edges for two or more members. A plain line — **`NO-EDGE-FOUND` is never printed while any member's edge exists** |
+| `NO-EDGE-FOUND` | the scan completed and **no** member's edge exists on any trip other than `t₀` |
+| `UNDETERMINED`, per candidate | that candidate's roster cannot be read, so `r(t)` is not known |
+| `UNDETERMINED`, per bullet | a `## Members` bullet does not resolve; it is counted in `n` and is not a member |
+
+None of these reads as *this party has not travelled together*.
+
+**This record decides `ADR-017` § 9's open item for the group view, and names what it costs.** That
+item asks whether resolution can run without naming a person, and leaves it undecided because
+resolving every linked traveller in one pass *"multiplies the transcript surface"*. The group view
+is that operation: invoked on a group id, it resolves `history(m)` for every member. **It may run —
+on CH-3 only, bounded by § 4's transcript bound.** The multiplication is stated rather than
+implied: the render prints one line per member per confirmed trip. On `ADR-026`'s `audience` axis
+the view adds no reader — the operator already holds every archived trip's C14 locally. **On the
+`observers` axis it is not free:** CH-3's `observers` value is `third-party` (`ADR-026` § 3), the
+transcript of an operator session run through an assistant that retains it. That residual is
+accepted, bounded to ids and tallies, and named here.
+
+**What is declined, and what is delivered — stated in terms.** The epic's group criterion reads:
+*"A group carries its own travel memory, distinct from the union of its members' — the pattern that
+belongs to the party rather than to any individual in it."*
+
+- **Declined — the party-owned half**, under the driving card's AC-2 *"met or declined"* branch.
+  That is memory which belongs to the party rather than to any individual.
+- **Delivered — a group-scoped *view*, not a group-owned *memory*.** It shows members' own
+  measured outcomes, restricted to the trips the operator confirms were the party's. Every row in
+  it belongs to one individual. **This record does not claim the view is distinct from the union of
+  members' memories, and it does not claim the criterion is met.** The inherited scope decision
+  (*both person- and group-scoped*) is honoured at the level of scope — a group is an argument of
+  the read — not of ownership.
+- **Why declined — three grounds, each read live:**
+  - The only party-level surfaces are `trip-context.md`'s `## Soft Preferences`, `## Trip Style`,
+    `## Budget Posture` and the `Dietary preferences` line, and they carry mixed subjects. In the
+    tracked Tokyo example, `## Trip Style` names roster members and lists venues,
+    `## Budget Posture` prices meals in JPY and names venues, and the `Dietary preferences` line
+    restates a hard constraint.
+  - No erase reach row names any of them.
+  - The group record has *"no free-text section"* and *"holds no authored value"* (`ADR-016` § 3;
+    `reference/schemas/group-record.md`).
+
+  No admissible party-owned source exists, and minting one is a slot.
+- **The way back in — named, priced, not taken.** It is a preference slot on C23, admitted by a
+  **section-scoped supersession of `ADR-016`** (§ 8's I-A). Its price:
+  - § 3 is reversed.
+  - § 2's writer decision is re-grounded, because the schema's *"A group record holds no authored
+    value"* is its ground, and a preference section is an authored value.
+  - § 5 is extended: a reach disposition for the new section, `ER14`, and `GM3`'s *"every location
+    erasure reaches on this class is inside the member section"*.
+  - § 6 is extended: a write verb, and standing rule 12's operation class.
+  - One Convention sentence admitting section-scoped supersession is added to
+    `reference/adr/README.md`, together with a status suffix nothing grades.
+  - The slice also owes § 5's divergence report below, with a computable join.
+
+**No slot, so there is no `ADR-016` instrument (§ 8).** `ADR-016`,
+`reference/schemas/group-record.md`, `groups/README.md` and `GM1`–`GM3` are untouched, and Wave 2's
+four-surface change set is empty.
+
+**Reversibility: CHEAP · confidence HIGH on conformance, MEDIUM on value.**
+
+### 3. The Dislikes field
+
+| Attribute | Decision |
+|---|---|
+| **Label** | **`Dislikes`** — the plain-plural sibling of `Interests`, sharing no leading token with `Rather skip`. As a label it measures 0 / 0 at `b199dc1`, against `Rather skip`, `Cuisine appetite` and `Interests`, which all fire |
+| **Form, position** | `templates/person-intake.template.md` § `## Interests & tastes`, immediately after `Cuisine appetite`, **unstarred**: `Interests` holds that section's one star (`reference/data-model.md` § *The starred pass*) |
+| **Class / `Ovr?` / Scope** | **`DEFAULT`** / **Y** / **`slot`**, by the decision rule's tests; its siblings `Interests`, `Cuisine appetite`, `Rather skip`, `Day rhythm`, `Journey comfort` and `Pace` are all `DEFAULT` / `slot` |
+| **Horizon** | **`admissible`**, the operator's decision. A present `[VALID-THROUGH <YYYY-MM>]` mark is honoured (`ADR-015` clause 8); none is owed or asked for; `HZ2` is unchanged. **The epic's AC-8, honestly:** the field declares a value on the total axis, but a re-confirmation path exists only where a month is marked. An unmarked dislike composes as answered indefinitely — the trade accepted over `required` |
+| **Subject, delineated** | Kinds of activity or outing the person would rather not be offered **at a destination**. It excludes **where** (`Rather skip`, a destination veto), **when** (`Day rhythm`), **how full a day is** (`Pace`), **travel days** (`Journey comfort`), **food** (`Cuisine appetite`) and **anything unsafe** (a Need, `PERSON`) |
+| **Classification row** | Row 32, after `Cuisine appetite`, with rows 32–39 renumbered to 33–40. No citation of those row numbers exists at `b199dc1` |
+| **Form-contract row** | `ADR-023` D2.6 Q3 key **(`Interests & tastes`, `Dislikes`)**, with the section resolved as a leading segment. `ADR-024` § 1 key **(the durable form's single owned region — the whole form, `writer: human`) × (the trivially true condition — the writer does not vary with artifact existence or lifecycle)**. D2.4 marker **`open`**. Output class `people/<person>.md` (C22) |
+| **Composition** | `K5` and `K6` unchanged; `EXPIRED` and `HORIZON-UNCONFIRMED` arise only from a present mark (`ANSWERED()` clauses (i) and (ii)); no disposition is added |
+| **Provenance** | Outside `## Needs`, so no `[OPERATOR-PROVIDED]`; `[THIRD-PARTY]` is refused in C22. **Always first-party** (`reference/schemas/person-record.md`) |
+| **Consumption** | Carried through by label in the interests-&-tastes facet enumeration (W1b-3). A **per-traveller soft signal** in candidate selection and placement (W1b-5): never a veto for the party, never a validator gate, never scored — the epic adds no satisfaction metric, and the validator gates *"on Desires only"*. **A traveller's own `Desire` on this trip governs over their `Dislikes` where both name the same thing** |
+| **Routing a composed change** | **Unrouted.** A composed `Dislikes` change — a record edit (enrichment trigger `T1`) or a lapsed voluntary mark (trigger `T7`), landing at the report's exit 1 — is reported under **no** router class, exactly as `Interests` and `Cuisine appetite` are today. The enrichment prompt's *"The mapping is total"* has no class for any interests-&-tastes facet, and the router's classes admit no fifth (*"never add a fifth"*). Where every unmapped `DEFAULT` facet routes is one decision, pending (see *References*); it decides `Dislikes` with its siblings, rather than this record deciding it alone. The report line names the field, never its value |
+| **Merge** | Inherited from `ADR-012` § 1: unequal values refuse, and an expired value loses to a live one |
+
+**Wording sources for Wave 1b.** `ADR-023` D2.3 makes the bracket the authoritative home, so Wave
+1b owns the final text; these are its starting points.
+
+- **The form bullet:** `- **Dislikes:** [open: Kinds of activity or outing you'd rather not be offered on a trip — e.g., "theme parks, big guided group tours, shopping, nightclubs". Where you'd rather not go is Rather skip; early starts and late nights are Day rhythm; how full a day gets is Pace; travel days are Journey comfort; food is Cuisine appetite; anything that would make a trip unsafe for you is a Need. Skip if nothing comes to mind.]`
+  — the `open: ` head is written only once the form carries the `ADR-023` D2.4 markers (W1b-6).
+  None of the examples is a sibling's bracket example, and *"shopping"* is drawn from the
+  `Interests` tick list on purpose, so one vocabulary serves both polarities.
+- **The classification rationale cell:** *"The negative half of `Interests` — kinds of activity or
+  outing the person would rather not be offered at a destination, read as a soft signal and never
+  as a veto. Durable, and a trip may legitimately diverge. Where to go is `Rather skip`, which
+  destination ideation reads as a veto; when is `Day rhythm`; how full a day is `Pace`; travel days
+  are `Journey comfort`; food is `Cuisine appetite`; an aversion whose breach is a safety or
+  integrity defect is a **Need**."*
+- **The section preamble:** *"The broad stuff you're drawn to, and anything you'd rather not be
+  offered — a soft signal that helps shape what gets picked on any trip. Skip any line if nothing
+  stands out."*
+- **The Step-7 ask, appended:** *"Then any kind of activity or outing they'd rather not be offered —
+  not places, times, pace, travel days or food, which have their own lines."*
+
+**Reversibility: CHEAP · confidence HIGH**, becoming EXPENSIVE once operator records carry the
+label, because the store is git-ignored. The consumption behaviour is Wave 1b's to build.
+
+### 4. Offer-only, per writer class
+
+| Writer class | Who writes | What offer-only means there |
+|---|---|---|
+| **Person record** (C22, `writer: human`) | The person, in an editor | **`ADR-015` clauses 6–7, unchanged**: no mechanical write, no verb, schema unedited; a prompt may name a field and a remedy and **never carry, quote or offer a candidate value**. A measured outcome's remedy is the traveller stating this trip's `Desire`; outcomes never pre-fill it, and `ADR-017` § 9's `Desire` hook stays open. A dislike's remedy is the person editing their record; the offer may say a `Dislikes` answer exists, never quote it. **No enum value is offered**, unlike `ADR-017` § 4 |
+| **Group record** (C23, `writer: operator`) | **Nobody, for this capability** — there is no slot, and the party-owned half is declined; C23 stays written only by `ADR-016`'s verbs | The view is a read and offers nothing to write anywhere. Its one ask — confirming candidates — is not stored |
+| **Archived trips** | Nobody | The freeze. Nothing is written |
+| **The trip being planned** | Its travellers, through the ordinary authoring path | The offer writes nothing. Only a traveller's own answer lands |
+
+**Audience per half.**
+
+| Half | CH-2 (intake; far side the traveller; audience `party`) | CH-3 (command surface; audience `operator`) | CH-1 |
+|---|---|---|---|
+| Person view, `outcomes(p, t₀)` | **only when the viewer is `p`** | yes | never |
+| Group view | **never** | **yes** | never |
+
+**Transcript bound** (erase row 24; `ADR-017` § 6). A render carries slugs, member person ids,
+tier × verdict tallies, `k of n`, roster sizes and relation verdicts with the operand's file name —
+never a display name, a desire's text, a `Dislikes` value, a destination string or a record body.
+It lives in read-only surfaces with their own `**Reads:**`, never inside `## profile`, `## history`
+or enrichment (`ADR-017` O11–O13; W3-8).
+
+**Reversibility: CHEAP · confidence HIGH.**
