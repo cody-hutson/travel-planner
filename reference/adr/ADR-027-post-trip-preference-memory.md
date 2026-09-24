@@ -454,3 +454,115 @@ It lives in read-only surfaces with their own `**Reads:**`, never inside `## pro
 or enrichment (`ADR-017` O11–O13; W3-8).
 
 **Reversibility: CHEAP · confidence HIGH.**
+
+### 5. Person-over-group precedence
+
+> **The rule, stated at the rule.** Where a group-scoped value and a person-scoped value bear on
+> the same traveller and the same field, the person-scoped value governs for that traveller, and the
+> divergence is reported — never resolved silently in either direction.
+
+- **The operands.**
+  - A *person-scoped value* is that traveller's composed value: their traveller file plus the
+    record it references, under the lattice.
+  - A *group-scoped value* is a value held in a labelled slot keyed to the same field, whose
+    referent is the party as a whole rather than any one traveller in it.
+- **The typing: composition precedence, by named extension.**
+  - The defining clause (`agents/00-enrichment.md`, quoted by `ADR-025` § 1) types *"composition
+    precedence between two **first-party** values with no provenance mark on either side — not a
+    supersession of a declared entry class, and not a provenance change"*.
+  - A group-scoped value is not first-party: its writer is the operator (`writer: operator`), and
+    no traveller states it about themselves. So this rule's operands **do not satisfy the
+    first-party condition, and this record says so**.
+  - It keeps every other property: no mark moves, no provenance changes, no entry class is
+    superseded, and the reserved word is not used. It is **not an edge of the engagement axis**,
+    which keeps its two edges (`ADR-025` § 1).
+- **Where it binds — at the offer, narrow.**
+  - In per-traveller composition it holds by construction: the arguments of `V(f)` are `C`, `p`,
+    `A`, `r` and `s`, and no group-scoped value is among them.
+  - At the offer, under § 2's view, **there is no group-scoped value at all**. The group view
+    carries members' own outcomes, and the party-owned half is declined. The rule therefore holds by
+    absence, and **no divergence line is stated**, because no computable join exists from a group
+    operand to a `Field Scope` label.
+- **Carried forward.** The first slice to introduce a group-scoped value — only by § 2's way back
+  in — owes the divergence report, computed by a declared join from its labelled slot to the
+  `Field Scope` label with `REDUNDANT-OVERRIDE`'s trim-only, byte-exact equality — never a semantic
+  classifier. The report names traveller, field and source, never either value
+  (`reference/data-model.md` § *The report*), and never says *supersession*.
+- **Not claimed:** that a milestone-41 law exists. Whether this rule is admitted to such a law,
+  once one is stated, is not decided here.
+- **Scope: narrow.** How a trip's own party-level blocks meet each traveller's values at synthesis
+  is outside this rule (§ *What this record does not decide*).
+
+**Reversibility: CHEAP · confidence HIGH.**
+
+### 6. Erasure reach
+
+**Locations created → reach rows.**
+
+| # | Location created | Reach row(s), existing | What erasure does |
+|---|---|---|---|
+| L1 | `Dislikes` on `people/<person>.md` (C22) | **29** · **26** · **27** | Record deleted; loser stub deleted; survivor stub redacted |
+| L2 | A hand-written override on `travelers/<traveler>.md` (C3) | **8** | Rewritten to the token stem; every answered personal value becomes `—` |
+| L3 | The composed value in `outputs/traveler-model.md` (C12) | **10** | Heading tombstoned. `ACTIVE`: regenerated from the rewritten file. `ARCHIVED`: stays under `## per-<token> [ERASED]`, as every composed `DEFAULT` value does |
+
+A `Dislikes` update-signal line is a new instance in C12's existing `## Update signals` block, not
+a new location. That no row substitutes C12 free text beyond the entry heading is pre-existing, and
+is listed under § *What this record does not decide*.
+
+**Locations read → reach rows.** The group record's `## Members` section and the person store are
+read as well as the trips; each is mapped, and so is the one part of the group record that is
+deliberately **not** read.
+
+| Read | Used for | Reach row(s) | After `erase p` |
+|---|---|---|---|
+| Every trip's traveller frontmatter `person:` | `history`, `k(t)` | **8**, **9** | Bearer → `per-<token>`, `person:` removed; `p` is in no closure |
+| `people/` listing and closure frontmatter | `closure(p)` | **26**–**29** | Record deleted; stubs deleted, redacted or repointed |
+| `groups/<G>.md` `## Members` | `members(G)`, `n`, qualifying groups | **30** | `p`'s bullet, and any stub bullet redirecting to it, removed |
+| `groups/<G>.md` H1, the display name | — | **not read** | The qualifying listing prints id and member count only (§ 2), so no read reaches the name |
+| C14 desire coverage — the traveller, tier and verdict cells | outcomes | **11** | Name substituted; no edge leads to the row |
+| `## Group` roster, **row count only** | `r(t)` | **1**–**5** | The row survives with the token (row 1), so `r(t)` keeps counting it; `Total travelers` is unchanged too (row 5) |
+| `## Group` roster, **column 1 tested for the token's shape** | the relation's erasure reading (W1a-0) | **1** | The token that row writes is what the test detects; nothing read is printed |
+| `E2`'s `**Lifecycle:**` value | `lifecycle(t)` | — | Not person data |
+| The order of C14 and its named source files in `t/outputs/` | `plan-to-coverage` | — | Paths and order only; erasure's own writes reorder them, which the relation reports as an order set by an erasure (W1a-0) |
+| The session transcript | the render | **24** (REPORT) | Never echoes a subject value (§ 4) |
+
+**Reach rows added or changed: none.** `ER14`'s accounting is unchanged at
+21 + 5 + 4 = 30 rows (REACH, REPORT and OUT). **Nothing is unmapped in either direction.**
+
+**The reads are erasure-complete, structurally.** After `erase p`, `history(p)` is empty (rows
+8–9), `p ∉ members(G)` (row 30), and `p`'s C14 rows carry the token with no edge to them (row 11),
+so no read reconstructs `p`'s outcomes or identity. **Residuals:** an unlinked trip is invisible to
+these reads and to erasure alike (`ADR-017` § 6); a hand-deleted trip takes its outcomes with it;
+and the transcript is REPORT-typed.
+
+**Reversibility: MODERATE · confidence HIGH.**
+
+### 7. Conformance to ADR-025 and ADR-026
+
+| Accepted decision | How this design conforms |
+|---|---|
+| `ADR-025` § 3, the carry rule | No class carries across `EB-2`. C14 stays in its archived trip, the offer writes nothing into `t₀`, and what lands is a traveller's own answer |
+| `ADR-025`'s never-carries 1–5 | (1) a read is not a carry; (2) `internal-hard` is unwidened and nothing is rendered — C14 reaches only the transcript, as tallies; (3) `both-marks` is unreachable; (4) no `DEST` value is read or printed; (5) no axis value is read or stored |
+| `ADR-025` § 4, the join keys | `EB-2` on the person key and `EB-0` inside a trip; a group id is a view argument, never crossing a boundary or landing in a trip; no key at the render |
+| `ADR-025` § 1, the axis | No edge is added and no value moves. § 5's named extension concerns operands outside the axis |
+| `ADR-025` § 6, staleness | `plan-to-coverage` reuses the shipped triple and its rules, has no disposition column, is consumer-declared, and is evaluated **outside `trip.freshness`**, as that clause prescribes for a relation outside the boundary |
+| `ADR-026` §§ 1–2, the channel-set | No channel is added. The group view is on CH-3; the person view is on CH-2, for the viewer only, and on CH-3 |
+| `ADR-026` § 3, may-carry | CH-2 and CH-3 have no queried pair (`UNDETERMINED`), so their bounds come from the W-rule and `ADR-007` § 2. Nothing approaches CH-1. The group view's transcript sits on CH-3's `observers` value, `third-party` — the residual § 2 names |
+| `ADR-026` § 5, the W- and R-rules | W: no traveller statement is authored, and CH-2's W-test holds — no candidate value. R: needs compliance is never read and no other traveller's row reaches CH-2, so what is *"audible to a room"* is the viewer's own tallies |
+| `ADR-026`'s `ARCHIVED` overlay | Erasure is the one operation CH-3 performs *on* an archived trip; this capability performs none — it reads, as `history` does |
+
+**No divergence is intended, so no superseding decision is raised.**
+
+### 8. The group-slot instrument — none
+
+**I-C is decided: there is no slot, so there is no instrument.** `ADR-016` is untouched, and this
+record reverses, narrows and re-opens none of its decisions.
+
+- **I-A — a section-scoped supersession of `ADR-016` — is the way back in**, priced in § 2: § 3
+  reversed, § 2's writer decision re-grounded, §§ 5 and 6 extended, and a Convention sentence added
+  to `reference/adr/README.md` so that a supersession may be section-scoped at all. A later record
+  that wants a group preference slot takes this instrument and pays that price.
+- **I-D — an in-place amendment of `ADR-016` — is unavailable.** `reference/adr/README.md`
+  § *Convention* lets an amendment correct a claim, narrow a scope statement or repair a citation,
+  and says in terms that *"What an amendment may never do is reverse, narrow or re-open a
+  decision"*. Admitting a slot reverses § 3's decision, so it is the supersession path or nothing.
