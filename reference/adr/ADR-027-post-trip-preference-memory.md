@@ -566,3 +566,250 @@ record reverses, narrows and re-opens none of its decisions.
   § *Convention* lets an amendment correct a claim, narrow a scope statement or repair a citation,
   and says in terms that *"What an amendment may never do is reverse, narrow or re-open a
   decision"*. Admitting a slot reverses § 3's decision, so it is the supersession path or nothing.
+
+## Consequences
+
+**Positive**
+
+- **One retention mechanism — read where it was measured — so nothing migrates and a revert leaves
+  no residue.**
+- **No Accepted record is reversed.** `ADR-016`'s references-only property, its byte-identical
+  expansion and its row-30 guarantee all hold, as does `ADR-017`'s *nothing persisted*.
+- **Every read is erasure-complete by structure** (§ 6), and every location created maps to an
+  existing reach row.
+- **A party's joint trips become visible without anything recording that they were joint.**
+- **A dislike of a kind of outing gets a home distinct from the destination veto.**
+- **A retained verdict carries its freshness from the first slice that renders one**, so the
+  snapshot-read-as-outcome failure is detectable wherever it could first occur.
+- **`ADR-017` § 9's open item is decided for the group view, with its cost named** rather than
+  left to the first slice that runs it.
+
+**Trade-offs, stated**
+
+- A hand-deleted trip takes its memory with it.
+- Joint trips are re-confirmed on every invocation.
+- The party-owned half is declined, and taking it back costs a supersession (§ 8's I-A).
+- A joint trip on which fewer than two person-linked members travelled is never offered.
+- Renders are tallies, never text.
+- The group view reads each candidate's roster, which is wider than `history`'s ceiling.
+- An unmarked dislike composes as answered indefinitely.
+- A composed `Dislikes` change is reported under no router class until the pending router decision
+  lands, as its siblings are.
+- The group view multiplies the transcript, one line per member per confirmed trip, on an
+  `observers` axis that admits a third party.
+- The relation's verdict is an order among named files and nothing more, and it carries stated
+  readings for an erasure, an uninterpretable pass and a tie (W1a-0).
+
+**Risks**
+
+| ID | Risk | Mitigation | Residual |
+|---|---|---|---|
+| R-A | A Wave-3 author copies `history`'s enum offer | § 4 states the difference in terms | LOW |
+| R-B | A later slice caches `outcomes`, `cand` or a confirmation | *Nothing stored* is part of each definition, and `ADR-012` O10 is cited | LOW |
+| R-C | A Wave-1b prompt treats `Dislikes` as a veto or a gate | W1b-5, and the validator's *"Gate on Desires only"* | LOW |
+| R-D | A positional C14 read misreads the tracked witness | W1a-2, exercised by W1a-3 | LOW |
+| R-E | A sibling work item moves a premise — the encrypted-limb publishability decision, the person-form contract slice, or the ownership decision for the `[DERIVED]` blocks | Nothing here reaches CH-1; W1b-6 orders this slice against the person-form contract; no new `[DERIVED]` dependence is taken | LOW |
+| R-F | A count in this record or its changelog entry turns the corpus-hygiene gate red | Every count here is anchored to a commit or written out as arithmetic, and the suite runs before the branch is pushed | LOW |
+
+**Reversibility summary.** § 1 CHEAP / HIGH · § 2 CHEAP / HIGH · § 3 CHEAP / HIGH, becoming
+EXPENSIVE once operator records carry the label, because the store is git-ignored · § 4 CHEAP /
+HIGH · § 5 CHEAP / HIGH · § 6 MODERATE / HIGH.
+
+## What this record does not decide
+
+- The verb tokens and the exact `**Reads:**` lines of the slices.
+- Which command hosts the first rendering surface, and so where W1a-0's relation and grant land.
+- How a trip's own party-level blocks meet each traveller's values at synthesis.
+- Where a composed change to an unmapped `DEFAULT` facet routes — `Dislikes` among them.
+- Admission of § 5's rule to any milestone-41 law.
+- The bracket's final wording, which Wave 1b owns.
+- The shipped erasure gaps this design observed and does not repair: `trip-context.md` sections no
+  reach row names, names outside the entry heading in `outputs/traveler-model.md`, and the group
+  display name `group-list` already prints.
+- The C14 witness's desire-coverage layout, which differs from the layout its writer declares.
+- The apparent tension between `ADR-017` § 4's enum offer and CH-2's W-test, which is recorded as
+  observed and not verified as a defect.
+
+Each of these has a home outside this record, listed under *References*.
+
+## Follow-on build slices
+
+The constraints below are defined once, here, and every section above cites them by identifier.
+Wave 1a is the first wave that renders a retained verdict, so the freshness relation arrives with
+it rather than with the offer.
+
+*Wave 1a — outcome retention (the read).*
+
+- **W1a-0 — the freshness relation, with the first wave that renders.** Wave 1a's host declares
+  the `plan-to-coverage` relation, with the order observation named in its declared reads. If that
+  host is `/trip-record`, the amendment to its grant sentence — *"`Bash(ls:*)` for the listing
+  block and `Bash(grep:*)` for the record block, and nothing else in this file uses either"* —
+  lands in the same slice. `/trip` already declares a newest-first listing, `Bash(ls:*)` with
+  `-1t`, for its freshness report.
+  - **The relation.** For a reached archived trip `t`, the derived side is
+    `t/outputs/satisfaction-metrics.md`. The source side is pinned to the sentence in
+    `reference/data-model.md` § *Three metric types* that names what coverage is *"determinable
+    from"*: read at `b199dc1`, the itinerary, the traveller model and the per-event status —
+    `t/outputs/final-itinerary.md`, `t/outputs/traveler-model.md` and `t/outputs/event-status.md`.
+  - **The verdicts.** The shipped triple, verbatim: `CURRENT`; `BEHIND`, naming the leading
+    source; `UNDETERMINED`, naming the unobservable operand. Comparison is by exact token, and
+    order is observed as the shipped relations observe it. Every reached trip's verdict is
+    rendered, `CURRENT` included. It is evaluated **outside `trip.freshness`**, because `t` is not
+    the resolved trip, and the report says so. It is report-only.
+  - **What the verdict means, and nothing more.** `CURRENT` and `BEHIND` are an order among the
+    named files. Neither says a plan or a status changed after the last synthesis, and neither says
+    one did not.
+  - **Readings the render states rather than infers.** *Order set by an erasure* — where `t`'s
+    `## Group` roster carries an erasure tombstone, column 1 matching `per-[0-9a-f]{4}`, the
+    verdict reads as an order erasure's own writes set, never as a plan change. *An order the
+    relation cannot interpret* — where `t`'s last pass ran no validator after its hub, as an
+    IDEATION pass or a remediation leg does, the order that pass left is one the relation cannot
+    interpret, and the render says so. *A tie* — on a coarse filesystem, two operands may order
+    either way.
+  - **The bound that remains.** The observation is of files. Every shipped verb that writes C14
+    runs the hub before the validator (*"the validator reads the itinerary the hub produced"*,
+    `skills/trip/SKILL.md` §§ `plan` and `replan`), and `/trip check` writes neither file, so
+    outside the readings above the file tracks the last synthesis pass. A hand edit to C14 reads
+    `CURRENT`. None of this can make a render say more than plan coverage as last synthesized.
+- **W1a-1.** A read-only surface computes `outcomes(p, t₀)` exactly as § 1 defines it. It declares
+  its own `**Reads:**` — every trip's traveller frontmatter to the closing `---`; the person store
+  listing and closure frontmatter; each reached trip's C14 desire-coverage section; and the
+  relation's order observation and roster tombstone test (W1a-0) — writes nothing, dispatches no
+  agent, and performs no external act.
+- **W1a-2.** Find the section by the heading's leading segment `Desire-coverage`, and the three
+  cells by header label, accepting both shipped spellings: `Traveler` / `Traveller`,
+  `Priority tier` / `Tier`, `Covered?` / `Covered`. Strip emphasis from the verdict. A header naming
+  none of a needed cell reads `UNDETERMINED` for that trip. **Never read by column position, and
+  never read the `Desire` cell into output.**
+- **W1a-3.** A tracked archived-trip fixture with a person-linked traveller, an unlinked one and a
+  frozen C14, exercising a reached row, *holds no outcome record* and `NO-REFERENCE` — the fixture
+  gap this milestone's plan measured.
+- **W1a-4.** Exactly one bearer per trip, or that trip reads `UNDETERMINED` — determinism, and
+  single-valued arguments.
+- **W1a-5.** Each view prints `ADR-017` § 5's tokens only under the conditions § 1 and § 2 write
+  beside them, and no absence reads as `not covered`.
+
+*Wave 1b — `Dislikes`.*
+
+- **W1b-1.** The classification row with § 3's cells lands in one commit with every restatement it
+  moves, each cited by file and quotation and re-read at the slice's own baseline. In
+  `reference/data-model.md`: the denominator reconciliation in § *The denominator*, the totals line
+  under the classification table, the `DEFAULT` count in § *Composition and resolution*, the rows
+  below `Cuisine appetite` (renumbered by one), the interests-&-tastes facet line
+  (*"`Interests` and `Cuisine appetite` are durable"*), and the *"sevenfold"* multiplier, restated
+  as a rule rather than as a new multiplier. In `templates/person-intake.template.md`:
+  *"Skip either line"*, the section preamble, the `Fields:` line and the Step-7 ask.
+- **W1b-2.** The form bullet, the preamble and the Step-7 ask. **The bullet lands in the same
+  commit as its row**, because the schema suite resolves fixture bullets against the live table.
+- **W1b-3.** `Dislikes:` joins the interests-&-tastes enumeration in `agents/00-enrichment.md` and
+  the facet table in `reference/data-model.md`. Without it the field never reaches C12.
+- **W1b-4.** A composed `Dislikes` change is reported under no router class — exactly as `Interests`
+  and `Cuisine appetite` are — until the pending router decision assigns a class to every unmapped
+  `DEFAULT` facet at once. No fifth class is added, and the report names the field and never its
+  value.
+- **W1b-5.** `agents/01-activities.md` and `agents/07-nightlife.md` read it as a per-traveller soft
+  signal in candidate selection, and `agents/05-hub-planner.md` respects it at placement. It is
+  never a veto for the party, never a validator gate, and never scored. A traveller's own `Desire`
+  governs where both name the same thing.
+- **W1b-6.** The `open` marker is written once the person form carries the `ADR-023` D2.4 markers:
+  whichever of this slice and the person-form contract slice lands second writes it. The `Fields:`
+  line is updated only if it still exists.
+- **W1b-7.** Recommended rather than required: the person-record witness gains a `Dislikes` bullet,
+  so a tracked instance exercises the label.
+- **W1b-8.** No `HZ2` change. `HZ1` needs the new cell to read `admissible`.
+- **W1b-9.** Every numeral Wave 1b restates keeps its basis — arithmetic written out, as
+  § *The denominator* already does — or its `count-assertion-digest` row moves in the same commit.
+
+*Wave 2 — the group view.*
+
+- **W2-1.** `cand(G, t₀)` plus operator confirmation — never containment. It is recomputed and
+  shown on every invocation.
+- **W2-2.** No `trip-context.md` block is read except the `## Group` roster table, and from it only
+  the row count and the relation's tombstone test (W1a-0), which prints nothing it reads. `r(t)` is
+  rendered per candidate.
+- **W2-3.** `members(G)` and `n` per § 2, with `UNDETERMINED` per unresolved bullet and the `G1`
+  canary inherited.
+- **W2-4.** A named `<group-id>` runs. With none, every qualifying group is listed by id and member
+  count only, and none is chosen.
+- **W2-5.** No total across members or trips. No stored confirmation. No group id in any trip
+  artifact. `ADR-016`, `reference/schemas/group-record.md`, `groups/README.md` and `GM1`–`GM3` are
+  untouched.
+- **W2-6.** Its own `**Reads:**` declares the group record's `## Members`, the person store, every
+  trip's traveller frontmatter, each candidate trip's roster table, each reached trip's C14
+  desire-coverage section and the relation's order observation (W1a-0) — body reads `history`
+  never makes, which is why the view cannot live inside `history`.
+
+*Wave 3 — the offer.*
+
+- **W3-1.** The audience per half is § 4's table: the group view only where the operator is the
+  audience, never into an interview or any surface whose far side is a traveller, and never on
+  CH-1.
+- **W3-2.** § 1's wording rule, on every render.
+- **W3-3 and W3-6 are carried in W1a-0.** The relation and its host's grant arrive with the first
+  wave that renders, not with the offer.
+- **W3-4.** Offer-only (§ 4): name a field, the evidence and the remedy. Never quote a prior desire
+  or a `Dislikes` value, and never offer an enum value.
+- **W3-5.** § 4's transcript bound.
+- **W3-7.** No divergence line (§ 5).
+- **W3-8.** The offer is never placed inside `## profile`, `## history` or enrichment.
+
+## References
+
+- [`README.md`](README.md) — the ADR convention: the status lifecycle, and the amendment clause
+  that makes an in-place amendment of `ADR-016` unavailable (§ 8).
+- [ADR-007](ADR-007-command-entry-point.md) — § 2's bounds, which bound CH-3 where may-carry reads
+  `UNDETERMINED` (§ 7).
+- [ADR-010](ADR-010-per-traveler-approval-collection.md) — one of the homes of the `internal-hard`
+  membership a new class under *Carry* would move.
+- [ADR-012](ADR-012-people-library.md) — the person identity and merge semantics behind
+  `closure(p)`, and O10's staleness ground, which refuses a cache and prices *Carry*'s second home.
+- [ADR-013](ADR-013-count-assertion-basis.md) — the basis forms every count in this record is
+  authored to.
+- [ADR-014](ADR-014-cross-trip-consent-refusal.md) — the consent refusal the measured reads
+  preserve by construction.
+- [ADR-015](ADR-015-durable-field-validity-horizon.md) — clauses 4 and 6–8: the `Horizon` axis,
+  no mechanical write, the report-line bound, and the present-mark rule the field inherits.
+- [ADR-016](ADR-016-reusable-groups.md) — the group record. §§ 3–4 are the decisions § 2 declines to
+  reverse, O8 is the renumber precedent *Carry* would take, and the record is untouched.
+- [ADR-017](ADR-017-derived-trip-history.md) — `history(p)`, the reused scan, the operator-made
+  match (O7), the terminal tokens (§ 5), the shared blind spot (§ 6), and § 9's open item, which
+  § 2 decides for the group view.
+- [ADR-023](ADR-023-interviewer-authored-home-and-form-contract.md) — D2.3, D2.4 and D2.6: the
+  bracket as the authoritative home, the `open` / `closed` marker, and the `(section, label)` key.
+- [ADR-024](ADR-024-form-contract-writer-boundary.md) — § 1's key of region and condition, in which
+  the field's form-contract row is written.
+- [ADR-025](ADR-025-engagement-model-over-time.md) — the engagement axis and the
+  composition-precedence edge (§ 1), the carry rule and never-carries (§ 3), the join keys (§ 4)
+  and the staleness family (§ 6) this record conforms to.
+- [ADR-026](ADR-026-channel-architecture.md) — the channel-set, the `audience` and `observers`
+  axes, the W- and R-rules and the `ARCHIVED` overlay this record conforms to; CH-3's `observers`
+  value is the residual § 2 names.
+- `reference/data-model.md` — § *Field Scope* (the classification, the decision rule, the starred
+  pass), § *Composition* (the lattice, `ANSWERED()`, the report), § *The reference month*,
+  § *Satisfaction Metrics* and § *Traveler identity*.
+- `reference/data-architecture.md` — § 1.1's class enumeration, the `internal-hard` limb, §§ 7.2
+  and 7.5's tolerant read, and the `count-assertion-digest` fence this record adds no row to.
+- `reference/schemas/person-record.md` and `reference/schemas/group-record.md` — the two writer
+  classes, and what each admits.
+- `groups/README.md` — the references-only store § 2 leaves as it is.
+- `skills/trip-record/SKILL.md` — § `erase` and its reach table, § `travelers` and the router's
+  classes, § `history`, § `group-list`, § `group`, and the grant sentence W1a-0 may amend.
+- `skills/trip/SKILL.md` — § *The freshness report*, and §§ `plan`, `replan` and `check`.
+- `skills/trip-decommission/SKILL.md` — the standing rules and `archive`, unchanged.
+- `agents/00-enrichment.md` — the composition-precedence clause, the trigger set, the report
+  routing and the facet enumeration.
+- `agents/06-validator.md` and `agents/destination-ideation.md` — the soft-signal reading of
+  `Interests` and the veto reading of `Rather skip`, which together delineate the field.
+- `templates/person-intake.template.md` — the form the field lands on.
+- `scripts/test-artifact-schema.sh` — `HZ0`–`HZ2`, `ER14` and `GM1`–`GM3`.
+- `CLAUDE.md` — § *Archived trips — what the freeze binds*, § *Resolving a trip* (`G1`, `G4`,
+  `G8`) and § *Key Rules*.
+- `examples/tokyo-2026/trip-context.md` and
+  `examples/data-architecture-demo/outputs/satisfaction-metrics.md` — the party-level blocks read
+  for § 2's first ground, and the C14 witness whose header W1a-2 accepts.
+- **Work items.** #1200, the driving card, whose acceptance criteria this record answers. #1197,
+  the epic this record gates, which stays open. Filed for what this record does not decide: #1457,
+  erasure's reach missing names outside its listed places, group display names among them; #1458,
+  the router's totality over unmapped `DEFAULT` facets, which decides where a composed `Dislikes`
+  change routes; #1459, a trip's party-level preferences at synthesis; #1460, the C14 witness's
+  layout; and #1353, CH-2's tests, where the tension with `ADR-017` § 4's enum offer is noted.
