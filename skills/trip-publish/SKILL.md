@@ -182,11 +182,11 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 
 ## Trips in your data home
 
-`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+`ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; true`
 
 ## Trip records
 
-`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
+`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; true`
 
 ## Contract header
 

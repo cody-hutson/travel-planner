@@ -92,7 +92,7 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 
 ## Existing trips
 
-`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+`ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; true`
 
 ```trip-contract-header
 Contract: CLAUDE.md § Resolving a trip

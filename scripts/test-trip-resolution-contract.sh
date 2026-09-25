@@ -185,6 +185,16 @@ CLAUDE_MD="$ROOT/CLAUDE.md"
 SECTION_HEADING='### Resolving a trip'
 EVIDENCE_FENCE='trip-contract-evidence'
 HEADER_FENCE='trip-contract-header'
+# The two wrapper openers an evidence entry may never take again, each as it would open a
+# code span: a brace group and a parenthesised subshell. Claude Code refuses both on their
+# shape whatever the grants, which is why every entry is spelled as a bare list; CLAUDE.md
+# § "Resolving a trip" states that measurement and is its single home. They are WRITTEN
+# DOWN here, unlike the entry markers PIN3 derives, because they are not a property of the
+# canonical list — they are the shapes the list must not take. Two sites read them: PIN3's
+# `wrapped` limb fails a canonical entry that opens with one, and is_evid_line counts a
+# consumer line that opens with one, so a stale wrapped copy is graded rather than unseen.
+EVID_RETIRED_OPENERS='`{
+`('
 
 # ─────────────────────────────────────────────────────────────────────────────────
 # Extraction primitives. These are the ONLY reads of CLAUDE.md in this file.
@@ -211,6 +221,25 @@ fence_block() {  # <file> <info> <heading>
     esac
     [ "$line" = '```'"$info" ] && in_fence=1
   done < "$f"
+}
+
+# is_evid_line <line> — 0 iff the line OPENS with an evidence marker: one of the entry
+# markers PIN3 derives from the canonical list (EVID_MARKS — each entry's opening token
+# plus one space), or one of the retired wrapper openers declared above. It is the one
+# predicate every consumer-side block count in this file uses, so the checker and the
+# fixture-integrity counters in group CTL cannot come to disagree about what an evidence
+# block is. The lists are read through a here-document rather than a pipeline, for group
+# PF's reason: there is no second process, so nothing to signal and no status to aggregate.
+is_evid_line() {
+  local l="$1" mk
+  while IFS= read -r mk || [ -n "$mk" ]; do
+    [ -n "$mk" ] || continue
+    case "$l" in "$mk"*) return 0 ;; esac
+  done <<EOF
+$EVID_MARKS
+$EVID_RETIRED_OPENERS
+EOF
+  return 1
 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -309,9 +338,7 @@ conformance_check() {
     local -a blocks
     local m=0
     while IFS= read -r line || [ -n "$line" ]; do
-      case "$line" in
-        "$EVID_MARK"*) m=$((m+1)); blocks[$m]="$line" ;;
-      esac
+      if is_evid_line "$line"; then m=$((m+1)); blocks[$m]="$line"; fi
     done < "$f"
     if [ "$depth_known" -eq 1 ] && [ "$m" -lt "$need" ]; then
       printf 'FINDING P2 %s declares depth G%s (needs exactly %s evidence block(s)) but carries %s\n' \
@@ -490,31 +517,66 @@ EOF
   # harness substitutes no name for an operator data root. So the `!` prefix is now a
   # DEFECT rather than a requirement, and this arm grades it in that direction.
   #
-  # Four limbs, and the last two are the ones that make the defect unreachable rather
-  # than merely fixed: `CLAUDE_PROJECT_DIR` is the launching-workspace root whose use
-  # IS the defect, and `<data-root>` is the placeholder the ladder resolves. An entry
+  # Four content limbs, and the last two are the ones that make the defect unreachable
+  # rather than merely fixed: `CLAUDE_PROJECT_DIR` is the launching-workspace root whose
+  # use IS the defect, and `<data-root>` is the placeholder the ladder resolves. An entry
   # naming the first, or failing to name the second, is the original bug re-entering
   # through the one surface every consumer copies byte-identically.
   #
-  # EVID_MARK is derived here rather than written down. A hard-coded marker is the same
-  # drift surface one size smaller: it would go on matching `!`-prefixed lines after the
-  # charter retired that carrier, the consumer detector would find ZERO blocks in every
-  # file, and the suite would report five short prefixes instead of one changed marker.
-  bad=0; i=0; nomark=0
-  EVID_MARK=""
+  # Two shape limbs follow, and they exist because of the harness rather than the shell.
+  # `wrapped`: no entry may open with a retired wrapper opener (declared beside the other
+  # constants at the top of this file). The shell parses the bare list exactly as it parsed
+  # the group, so a wrapper adds no meaning — but Claude Code refuses a brace group that
+  # contains a quote character on its shape whatever the grants, and a subshell with or
+  # without them, and CLAUDE.md § "Resolving a trip" records that measurement as its single
+  # home. This limb is that constraint made a machine check at the declaration surface, so
+  # an edit that re-wraps an entry "for safety" is a red check rather than a refusal on
+  # every invocation. `nolead`: every entry must open with a command word — a backtick
+  # followed by a lowercase letter — because that word is what the consumer detector keys
+  # on. An entry that ever has to open with something else needs the detector moved to a
+  # different key (carrying each entry's index label into its consumers is the recorded
+  # alternative), never this limb relaxed.
+  #
+  # The detector's markers are derived here rather than written down: one per entry, its
+  # opening token — the text before its first space — plus one space. A hard-coded marker
+  # is the same drift surface one size smaller: it would go on matching a retired spelling
+  # after the charter moved on, the consumer detector would find ZERO blocks in every file,
+  # and the suite would report five short prefixes instead of one changed marker. One
+  # marker per entry rather than one shared by all of them, because the only prefix the
+  # entries ever shared was the wrapper the `wrapped` limb now forbids; unwrapped, each
+  # entry opens with its own read. The retired wrapper openers are markers too (see
+  # is_evid_line), so a stale wrapped copy left in a consumer is still counted and graded —
+  # P1 at its index, P3 as a surplus — instead of passing unseen. The list carries a new
+  # name rather than reusing the singular one it replaces, so a site still reading the old
+  # name dies under `set -u` instead of matching nothing.
+  bad=0; wrapped=0; nolead=0
+  EVID_MARKS=""; EVID_MARKS_SHOWN=""
   while IFS= read -r e || [ -n "$e" ]; do
-    i=$((i+1))
-    [ "$i" -eq 1 ] && EVID_MARK="${e:0:2}"
     case "$e" in '!'*) bad=$((bad+1)) ;; esac
     case "$e" in *'2>&1'*) ;; *) bad=$((bad+1)) ;; esac
     case "$e" in *'CLAUDE_PROJECT_DIR'*) bad=$((bad+1)) ;; esac
     case "$e" in *'<data-root>'*) ;; *) bad=$((bad+1)) ;; esac
-    case "$e" in "$EVID_MARK"*) ;; *) nomark=$((nomark+1)) ;; esac
+    while IFS= read -r op || [ -n "$op" ]; do
+      [ -n "$op" ] || continue
+      case "$e" in "$op"*) wrapped=$((wrapped+1)) ;; esac
+    done <<EOF
+$EVID_RETIRED_OPENERS
+EOF
+    lead=""
+    case "$e" in *' '*) lead="${e%% *}" ;; esac
+    case "$lead" in
+      '`'[[:lower:]]*)
+        mk="$lead "
+        EVID_MARKS="$EVID_MARKS$mk
+"
+        EVID_MARKS_SHOWN="$EVID_MARKS_SHOWN \"$mk\"" ;;
+      *) nolead=$((nolead+1)) ;;
+    esac
   done < "$CANON_FILE"
-  if [ "$CANON_N" -ge 1 ] && [ "$bad" -eq 0 ] && [ "$nomark" -eq 0 ] && [ -n "$EVID_MARK" ]; then
-    PASS "PIN3: all $CANON_N canonical entries are agent-run reads — none carries the retired \`!\` pre-execution prefix, every one captures stderr, every one resolves against the \`<data-root>\` placeholder, none names CLAUDE_PROJECT_DIR, and all share the leading marker \"$EVID_MARK\" the consumer detector derives from them"
+  if [ "$CANON_N" -ge 1 ] && [ "$bad" -eq 0 ] && [ "$wrapped" -eq 0 ] && [ "$nolead" -eq 0 ] && [ -n "$EVID_MARKS" ]; then
+    PASS "PIN3: all $CANON_N canonical entries are agent-run reads — none carries the retired \`!\` pre-execution prefix, every one captures stderr, every one resolves against the \`<data-root>\` placeholder, none names CLAUDE_PROJECT_DIR, none is wrapped in a brace group or a subshell, and every one opens with a command word, from which the consumer detector derives one marker per entry:${EVID_MARKS_SHOWN}"
   else
-    FAIL "PIN3: $bad canonical entr(y/ies) are \`!\`-prefixed, do not capture stderr, name CLAUDE_PROJECT_DIR, or do not name <data-root>; $nomark do not share the leading marker \"$EVID_MARK\""
+    FAIL "PIN3: $bad canonical entr(y/ies) are \`!\`-prefixed, do not capture stderr, name CLAUDE_PROJECT_DIR, or do not name <data-root>; $wrapped open with a retired wrapper — a brace group (the harness refusal reads \"Contains brace with quote character (expansion obfuscation)\") or a subshell, both refused on their shape whatever the grants; $nolead do not open with a command word (a backtick then a lowercase letter), so the consumer detector has no marker to derive from them. Markers derived:${EVID_MARKS_SHOWN:- none}"
     PIN_OK=0
   fi
 
@@ -741,8 +803,21 @@ fi
 #   dm D1 (max computation)    dd D1 (field-index read)    dc D1 (CREATE)
 #   cs code-span depth cells, MUST NOT FIRE      cx D2 (code-span specificity)
 #   hs H2 (code-span HEADER depth — fires, while the same rendering in the CELL passes)
+#   mx P3 (marker specificity — a line opening with an entry's own marker is counted, and a
+#          line opening with any other code span is not)
+#   wr P3 (a surplus copy in the retired wrapper shape is counted, not passed over)
 # and CTL-e is graded LAST, so the before/after comparison it makes covers every fixture
 # above it rather than a prefix of them.
+#
+# THE DETECTOR'S BOUNDARY, STATED BY ITS GROUNDS RATHER THAN BY A COUNT. An evidence block
+# is recognised by how its line OPENS — with an entry's own derived marker, or with a
+# retired wrapper opener — and by nothing else. A copy of an entry that opens with neither
+# is therefore not counted at all: a non-wrapped copy whose first word differs from every
+# entry's, such as one prefixed `LC_ALL=C`, reads to the detector as prose, and P1, P2 and
+# P3 all pass over it. Arm wr covers the retired wrapped spelling, the copy a rebase is
+# likeliest to leave beside its replacement, and nothing here claims more than that.
+# Closing the rest would mean recognising a block by its POSITION rather than its opener,
+# which was considered and not taken.
 #
 # THE COUNT OF ARMS IS DELIBERATELY NOT RESTATED ANYWHERE ELSE. The keys above are the
 # inventory; a number copied into a second file is a copy with no assertion behind it,
@@ -790,6 +865,19 @@ else
         fi
         i=$((i+1))
       done
+      # `markerprose` follows the prefix with two prose lines: one opening with a code span
+      # that is no entry's marker, and one opening with the first derived marker. The
+      # detector must count the second and not the first (arm mx).
+      if [ "$variant" = "markerprose" ]; then
+        printf '%s\n\n' '`/trip status` reports where the trip stands.'
+        printf '%s%s\n\n' "$MX_MARK1" 'lists the trips directory in prose rather than as an entry.'
+      fi
+      # `wrapsurplus` follows the complete prefix with a copy of E1 put back into the
+      # retired wrapper shape — the transition artifact a rebase leaves when an old line
+      # survives beside its replacement (arm wr).
+      if [ "$variant" = "wrapsurplus" ]; then
+        printf '%s\n\n' "$RETIRED1"
+      fi
       # contract header block. Each omission is its own variant so a defect arm removes
       # exactly one field: an arm whose fixture broke several things at once proves the
       # checker fired, not WHICH assertion fired.
@@ -869,6 +957,14 @@ else
   # The one mutation the defect arms need, derived from the extracted canonical.
   CANON1="$(sed -n '1p' "$CANON_FILE")"
   MUTATED="${CANON1/ 2>&1/}"
+  # Arm mx's marker, read from the derived list rather than written as a literal.
+  IFS= read -r MX_MARK1 <<<"$EVID_MARKS"
+  # Arm wr's copy: E1 put back into the retired wrapper shape, rebuilt from the extracted
+  # canonical rather than written down — a literal would be the second source PIN5 forbids.
+  RW_BT='`'
+  RW_INNER="${CANON1#"$RW_BT"}"
+  RW_INNER="${RW_INNER%"; true$RW_BT"}"
+  RETIRED1="${RW_BT}{ ${RW_INNER}; } ; true${RW_BT}"
 
   # Each arm gets its OWN fixture directory, so no arm ever has to clear another's —
   # a control case that deletes a tree is one bad variable away from deleting the wrong
@@ -973,7 +1069,7 @@ else
   D="$WORK/ctl_d"; mk_tree "$D" shortprefix
   d_blocks=0
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in "$EVID_MARK"*) d_blocks=$((d_blocks+1)) ;; esac
+    if is_evid_line "$line"; then d_blocks=$((d_blocks+1)); fi
   done < "$D/trip/SKILL.md"
   if [ "$d_blocks" -lt "$CANON_N" ] && grep -q -x -F -- 'contract-depth: G8' "$D/trip/SKILL.md"; then
     PASS "CTLd1: fixture integrity — the defective consumer declares depth G8 while carrying only $d_blocks of $CANON_N evidence block(s)"
@@ -1185,10 +1281,10 @@ else
   OP="$WORK/ctl_overprefix"; mk_tree "$OP" overprefix
   op_blocks=0; op_clean=0
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in "$EVID_MARK"*) op_blocks=$((op_blocks+1)) ;; esac
+    if is_evid_line "$line"; then op_blocks=$((op_blocks+1)); fi
   done < "$OP/trip-new/SKILL.md"
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in "$EVID_MARK"*) op_clean=$((op_clean+1)) ;; esac
+    if is_evid_line "$line"; then op_clean=$((op_clean+1)); fi
   done < "$A/trip-new/SKILL.md"
   if [ "$CANON_N" -gt 1 ] && [ "$op_blocks" -eq "$CANON_N" ] && [ "$op_clean" -eq 1 ] \
      && grep -q -x -F -- 'contract-depth: G2' "$OP/trip-new/SKILL.md"; then
@@ -1201,6 +1297,67 @@ else
     PASS "CTLop2: MUST-FIRE — a consumer carrying more of the canonical list than its declared depth requires is caught (P3); the prefix rule is an equality, not a minimum, and an over-provisioned command can no longer ship green with a widened tool grant"
   else
     FAIL "CTLop2: MUST-FIRE — an over-provisioned prefix passed (rc=$OP_RC); the check is a minimum only, so a widened grant and an unexamined divergent copy both ship green"
+  fi
+
+  # ── CTL-mx: the SPECIFICITY arm for the marker rule. The detector keys on each entry's
+  # own opening token, so its breadth is a property worth grading in BOTH directions: a
+  # detector narrowed below the derived set stops counting a line that opens with an
+  # entry's marker, and one widened into "any code span" starts counting prose that merely
+  # opens with a backtick. One fixture carries both specimens after a complete prefix, and
+  # the finding's own count says which of them the detector read.
+  MX="$WORK/ctl_markerprose"; mk_tree "$MX" markerprose
+  mx_marked=0; mx_slash=0; mx_clean=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    if is_evid_line "$line"; then mx_marked=$((mx_marked+1)); fi
+    case "$line" in '`/'*) mx_slash=$((mx_slash+1)) ;; esac
+  done < "$MX/trip/SKILL.md"
+  while IFS= read -r line || [ -n "$line" ]; do
+    if is_evid_line "$line"; then mx_clean=$((mx_clean+1)); fi
+  done < "$A/trip/SKILL.md"
+  if [ -n "$MX_MARK1" ] && [ "$mx_marked" -eq $((CANON_N+1)) ] && [ "$mx_slash" -eq 1 ] && [ "$mx_clean" -eq "$CANON_N" ]; then
+    PASS "CTLmx1: fixture integrity — the defective consumer carries $mx_marked marker-opened line(s), one more than its $CANON_N-entry prefix, and $mx_slash line opening with a code span that is no entry's marker; the SAME counter reads $mx_clean on the clean tree's trip. The extra marker (\"$MX_MARK1\") was read from the derived list, not written here"
+  else
+    FAIL "CTLmx1: the marker-prose fixture is not set up as claimed (marked=$mx_marked slash=$mx_slash clean=$mx_clean canonical=$CANON_N) — CTLmx2 and CTLmx3 would prove nothing"
+  fi
+  MX_OUT="$(conformance_check "$MX" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; MX_RC=$?
+  if [ "$MX_RC" -ne 0 ] && has_finding "$MX_OUT" 'P3'; then
+    PASS "CTLmx2: MUST-FIRE — a line opening with an entry's own marker is counted as an evidence block wherever it sits, so the surplus is caught (P3)"
+  else
+    FAIL "CTLmx2: MUST-FIRE — a line opening with an entry's marker was not counted (rc=$MX_RC); the detector has narrowed below the derived marker set"
+  fi
+  if grep -q -F -- "but carries $((CANON_N+1))" <<<"$MX_OUT"; then
+    PASS "CTLmx3: SPECIFICITY — the finding counts $((CANON_N+1)) block(s), not $((CANON_N+2)): the line opening with a code span that is no entry's marker was not read as an evidence block, so the detector did not widen into \"any code span\""
+  else
+    FAIL "CTLmx3: P3 did not count exactly $((CANON_N+1)) block(s), so the detector read a line it has no marker for: $(printf '%s' "$MX_OUT" | head -2 | tr '\n' ' ')"
+  fi
+
+  # ── CTL-wr: a consumer carrying a complete prefix PLUS a copy in the retired wrapper
+  # shape MUST fire P3. Keyed on the entries' own openers alone, the detector would not
+  # count that copy at all — the one spelling the harness refuses would sit in a consumer
+  # while P1, P2 and P3 all passed, measured on a scratch copy before this arm existed.
+  # Counting the retired wrapper openers as markers is what closes it, and this arm is what
+  # shows the closure holds.
+  WR="$WORK/ctl_wrapsurplus"; mk_tree "$WR" wrapsurplus
+  wr_open=0
+  while IFS= read -r op || [ -n "$op" ]; do
+    [ -n "$op" ] || continue
+    case "$RETIRED1" in "$op"*) wr_open=$((wr_open+1)) ;; esac
+  done <<EOF
+$EVID_RETIRED_OPENERS
+EOF
+  if [ -n "$RETIRED1" ] && [ "$RETIRED1" != "$CANON1" ] && [ "$wr_open" -eq 1 ] \
+     && grep -q -x -F -- "$RETIRED1" "$WR/trip/SKILL.md" \
+     && grep -q -x -F -- "$CANON1" "$WR/trip/SKILL.md" \
+     && ! grep -q -x -F -- "$RETIRED1" "$A/trip/SKILL.md"; then
+    PASS "CTLwr1: fixture integrity — the rebuilt copy differs from the canonical E1 and opens with one of the declared retired wrapper openers; the defective consumer carries it as a whole line beside the canonical E1, and the same probe finds it absent from the clean tree"
+  else
+    FAIL "CTLwr1: the retired-wrapper fixture is not set up as claimed — CTLwr2 would prove nothing"
+  fi
+  WR_OUT="$(conformance_check "$WR" "$CANON_FILE" "$CITATION" "$CANON_N" "$POINTER_LINE")"; WR_RC=$?
+  if [ "$WR_RC" -ne 0 ] && has_finding "$WR_OUT" 'P3'; then
+    PASS "CTLwr2: MUST-FIRE — a surplus copy in the retired wrapper shape is counted and caught (P3); the wrapper openers are markers too, so a stale wrapped copy cannot sit in a consumer unseen"
+  else
+    FAIL "CTLwr2: MUST-FIRE — a surplus copy in the retired wrapper shape passed (rc=$WR_RC); the detector keys only on the entries' own openers, so the spelling the harness refuses is invisible to P1, P2 and P3"
   fi
 
   # ── CTL-cs: a per-verb requirement table whose depth cells are rendered as CODE SPANS
