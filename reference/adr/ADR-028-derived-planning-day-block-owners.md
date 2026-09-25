@@ -576,3 +576,136 @@ repair happens in the act that changes its input, and a date line would be read 
   they have a profile at all; an `### Additional origins` block; an anchor leg; check-in or
   check-out; the trip dates.
 - An input of the trip window is recorded through `/trip-record fact`.
+
+### 7. Standing rule 15, appended by the later slice, verbatim
+
+> 15. **Recomputing a `[DERIVED]` block's lines in the act that records one of their declared inputs
+> is rule 2's fourth admitted shape, and it is stated as a widening of rule 2; rule 7, the earlier
+> widening of rule 2, is left exactly as it stands.** Where a verb writes a value the template
+> declares as an input of a `[DERIVED]` block that `CLAUDE.md` § *Write ownership* assigns to this
+> command, the same act recomputes, by the derivation the template states and no other and from the
+> inputs as they stand after the write, **only the lines of that block whose declared inputs include
+> a value this act changed**; it never rewrites a line on account of an input it did not change,
+> whatever that line holds. A recomputed line takes its bracketed placeholder (rule 3) only where an
+> input this act changed cannot be read in the shape the template declares; where an unchanged input
+> of that line cannot be so read, the line is left byte-identical and the verb says it could not
+> recompute it, naming that input's label. Nothing is parsed out of undeclared prose and nothing is
+> estimated. Before writing, the verb echoes every line it replaces, outgoing then incoming —
+> `ADR-007` § 2 bound 5's *say before writing what will not survive*. **A `[DERIVED]` block is a
+> derived artifact in that bound's sense:** each of its lines is computed from declared inputs held
+> in the same file, holds no independent state and can be recomputed from them at any time, which is
+> the property `derived` provenance names, and the echo preserves what a replaced line held. **Its
+> extent is its derived lines** — the bullet lines the template declares beneath the block's
+> heading — and never the heading, its tag or the blockquote prose above those lines. It reads the
+> blocks holding the declared inputs and no others. A statement about the derived block's own values
+> is recorded as the input it derives from. **It binds every verb, present and future,** because its
+> trigger is the input and not the verb: a rule placed in `fact` would leave the next verb that
+> records such an input without a tool.
+
+### 8. Standing rule 16, appended by the later slice, verbatim
+
+> 16. **Dispatching a role that writes more than one file is stated as a widening of rule 6, and
+> rule 6 is left exactly as it stands.** Where the role a verb dispatches writes more than one file,
+> the verb's own section names the agent, its role and every file that role writes, on the same
+> line; a write the section does not name is out of scope exactly as rule 6 makes it. The role's
+> reads, a read that precedes a replacing write among them, are declared where § *What the blocks
+> above are* already requires them: in the dispatching verb's own section. **It binds every verb,
+> present and future,** because the write set belongs to the role and every verb that dispatches the
+> role meets it: in this revision the enrichment agent's reconciler role writes the traveller model
+> and the presence file, and more than one verb of this revision dispatches that role.
+
+### 9. The erase reach row, appended by the later slice, verbatim
+
+> | # | Location | Disp. | What happens |
+> |---|---|---|---|
+> | **31** | `outputs/traveler-presence.md` — the entry heading | REACH | substitute to `## per-<token>`, **without** the `[ERASED]` mark, which stays the model's alone. The lines beneath it carry no name by the writer's own bound, so no free-text pass runs over them. Where the trip has no presence file, emit **`n/a`** and name the absent file; where the file holds no entry for the subject, emit **`n/a`** and name the population rule that admits none. **Never a silent skip** |
+
+**Its coupling, stated as a fact.** No instance of the presence file holds a name before this row
+exists. The table's accounting, the Phase A list and the write order take the row in the same
+change, and no arm ties the reach table to the class enumeration. What moves with the row, named so
+the change carries all of it:
+
+- **The accounting is two sentences, not one.** The tally group `ER14` grades against the table
+  (`scripts/test-artifact-schema.sh`:7047-7095) moves; so does the sentence after it — *"Rows 1–28
+  and row 30 are the locations a copy of the person's data can reach"*
+  (`skills/trip-record/SKILL.md`:2266) — which no arm grades and which the new row makes false.
+- **The row joins Phase A** (`:2298`) **and step 5 of the write order** (`:2286`), beside row 10, and
+  step 5 keeps row 10 as its first row reference: `ER12` finds the model's write step by the first
+  `row N` in each step (`scripts/test-artifact-schema.sh`:6982-6996, `:7002`).
+- **Row 10 stays the only `[ERASED]` site.** That single site is `ER8`'s claim — the mark lives on the
+  derived model's entry heading *"and NOWHERE ELSE"* (`scripts/test-artifact-schema.sh`:7344-7345) —
+  and `ER8` pairs only bearer files with model entries (`:7353-7375`), so it cannot see a presence
+  file. The new row's substitution and its bare token are therefore conduct (§ *Consequences*,
+  § *What nothing grades*).
+
+**Phase A, positional, written at step 5 beside row 10.** The heading is a projection of the roster
+cell written at step 1, so the authority-first order `ER12` grades holds
+(`scripts/test-artifact-schema.sh`:6970-7013). The file is kept out of Phase B on purpose (D-12): its
+lines stay name-free because the writer's own bound says so, not because a sweep catches them.
+
+**Why it can be ordered:** the file does not exist yet. The `## Logistics` gap stays routed outside
+this release, and this record writes no name there.
+
+### 10. The event, verbatim
+
+> For `### Effective Planning Days`, `ADR-024` decision 6's conditional exclusion ends — and the
+> region enters the contract by that record's own rules — at the change that names its writer in
+> `CLAUDE.md` § *Write ownership*. Decision 2D makes the fence key an address pointing at that table,
+> so a region's declared writer is the writer the table declares. For `### Per-Traveler Planning Days`
+> the exclusion ends with the region, at the change that removes it from the template; until then the
+> table declares no writer for it and decision 6 keeps it outside. This record's merge and its
+> ratification change neither the table nor the template. Deciding an owner does not authorize a
+> write: until the table names one, *"A writer not named for a block does not write it"* keeps
+> Effective unwritable.
+
+### 11. Where the rules live
+
+- The trip window's derivation, with its per-line inputs, stays in the template.
+- The presence file's labels, vocabulary, derivation rules, value shapes and by-reference forms go in
+  a section appended below the end of `reference/data-model.md`.
+- § *Presence* cites that section and the file, and it is edited only in place at equal line count —
+  `ADR-009`'s ordering rule (`reference/adr/ADR-009-data-architecture.md`:342-348).
+
+### 12. Readers and the transition
+
+**The four readers read each window from the presence file, as read-never-re-derived.** What each
+re-points, and what stays byte-identical:
+
+| Reader | Re-points | Stays byte-identical |
+|---|---|---|
+| scheduling | the presence pointer (`agents/03-scheduling.md`:39-42); input item 4 (`:314-319`); the Day-key sentence (`:489-491`); the cross-reference inside the model read's first bullet (`:345-347`), which names where the *other* limb comes from | *"two reads, and only these two"* (`:344`), and both reads |
+| transport | input item 3 (`agents/04-transport.md`:188-190); the membership sentence that follows item 7's scope (`:206-210`), below — item 7's bytes change there, its read of the model does not | item 7's read scope, *"for the depth signal and for nothing else"* (`:202-205`) |
+| hub | the presence read in § *What you read* (`agents/05-hub-planner.md`:1009-1010); the Presence row (`:1108`); step 5 (`:1134`) | *"`outputs/traveler-model.md` is not read into this artifact"* (`:1018-1020`), and the carry bound |
+| validator | the window limb (`agents/06-validator.md`:620-621); the input list gains the file as an appended item, with nothing renumbered | input item 8 (`:842-844`) |
+| data-model § *Presence* | each line of the section that names the per-traveller block — the trip-day set's scope, the window's one-home sentence, the window limb, the partial-day reading, the assumed-window paragraph and the no-presence-data paragraph — edited in place, one physical line each, at equal line count (`ADR-009`'s ordering rule); the no-presence-data paragraph carries the no-entry default below | every rule the section states |
+
+**Transport's membership sentence.** Today it reads *"Stream membership comes from `## Logistics`
+and the `## Group` roster, never from here: …"*. After the re-point it reads *"Stream membership
+comes from `## Logistics`, the `## Group` roster and item 3's windows in
+`outputs/traveler-presence.md`, never from here: …"*, and the rest stays verbatim. It changes because
+`## Logistics` covered item 3 only while the block sat inside it. The `[THIRD-PARTY]` ground still
+holds: *here* is still the model, and its scope is unchanged. The new source cannot drop a real
+passenger — it never carries a `[THIRD-PARTY]` entry and writes no origin, and a roster member with
+no entry reads under the no-entry default, on their origin's booking — so the window limb can take
+out only a first-party traveller who stated a different window.
+
+**A subject with no entry has no derivable window.** For the window limb they are present every trip
+day, read as an assumption exactly as an `UNKNOWN` basis is. That covers a `[THIRD-PARTY]` member by
+rule, a roster member added since the last pass, and anyone on a trip whose presence file does not
+yet exist.
+
+**Where the file itself is absent, the reader says the windows are not yet derived, and names
+`/trip-record travelers`.** The exit is a report rather than a stop because freshness is report-only:
+`G8` never changes a resolution, and no gate may be added that blocks on freshness (`CLAUDE.md`
+§ *Resolving a trip*, `:369`). **A placement reader carries `(assumed)` into whatever it places under
+that default** — the whole-group anchor scheduling places, the stream transport sizes and prices — as
+§ *Presence* already requires of anything that cites the set under an assumed window.
+
+### 13. Limits
+
+- Each writer touches its own block, file or lines and nothing else.
+- Only first-party roster entries get presence lines, and only the declared labels are written: no
+  facet, passport, documents or engagement-axis value.
+- Nothing is written on an `ARCHIVED` trip except erasure's substitution.
+- An unanswered or unresolved input takes a placeholder, `UNKNOWN` or `(assumed)`, never an estimate.
+- Deciding is not authorizing.
