@@ -47,9 +47,12 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 | `Bash(ls:*)` | the listing block below |
 | `Bash(grep:*)` | the record block below, which reads the lifecycle, the mode and the destination by value |
 | `Bash(date:*)` | `archive`'s closing log entry is dated from a `date +%F` tool call **in the body**, never as a further pre-execution block — the shipped convention `/trip-new` and `/trip-record log` already take, and required here because the header block below fixes how many pre-execution blocks this file carries and it already carries all of them |
-| `Bash(scripts/publish-trip-site.sh unpublish:*)` | `temporary` and `archive` invoke the `unpublish` arm, with the pages-only flag, both fixed in this file. **The grant is the arm, not the script** — `ADR-007` §1 is one authorization per function, and a script-wide grant would authorize every arm of the dispatch table at once |
+| `publish-trip-site.sh unpublish` | `temporary` and `archive` invoke the `unpublish` arm, with the pages-only flag, both fixed in this file. **The grant is the arm, not the script** — `ADR-007` §1 is one authorization per function, and a script-wide grant would authorize every arm of the dispatch table at once |
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
+
+**The publish script's grant is named here by script and arm, and spelled only in the
+frontmatter above.** A cell that spelled it would be a second copy to keep in step with it.
 
 **The denials, and what each one establishes — which is narrower than "enforced", and is bounded by
 the turn.** `allowed-tools` is a turn-scoped pre-approval grant and restricts nothing: every tool
