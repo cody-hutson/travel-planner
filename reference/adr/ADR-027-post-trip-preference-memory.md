@@ -1,6 +1,6 @@
 # ADR-027: Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot
 
-- **Status:** Proposed (2026-09-24)
+- **Status:** Accepted (2026-09-24)
 - **Deciders:** repo maintainer
 - **Driving work:** the *Post-trip preference memory: the founding decision* milestone. This record
   is its single head decision gate, landing before any feature slice in the shape `ADR-012`,
