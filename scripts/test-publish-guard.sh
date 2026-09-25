@@ -1814,12 +1814,12 @@ if [ "$MRC" -eq 0 ]; then PASS "M3e: a fresh model with a first-party passport a
 # passport edited only in the library leaves every file under the trip untouched and every
 # M3 comparison reads fresh while the projection is behind its real source set.
 #
-# THE STORE IS AT THE TRIP ROOT, DELIBERATELY. Store-root resolution is trip-root-first,
-# so this fixture is self-contained. A fixture that fell through to the repo-root store
-# would be RESOLVED on an author's machine and DANGLING in CI, because that directory is
-# git-ignored and absent from a clean checkout — a witness whose verdict depends on the
-# operator's private working directory is not a witness. It therefore depends on no
-# tracked example fixture either.
+# THE STORE IS AT THE TRIP ROOT, DELIBERATELY. Store-root resolution is trip-root-first
+# (reference/data-model.md -> "Composition — the trip-side read of a durable record"),
+# so this fixture is self-contained. A fixture that reached the rule's second step would
+# depend on which store that step finds, and that differs between an author's machine and
+# CI — a witness whose verdict depends on the operator's private working directory is not
+# a witness. It therefore depends on no tracked example fixture either.
 #
 # M4d IS THE LOAD-BEARING ARM, and it is worth saying which one and why. The partial
 # landing that puts a fence row in without widening the evaluator is the LOUDEST possible

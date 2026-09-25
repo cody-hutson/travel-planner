@@ -123,12 +123,14 @@ than by editorial taste.
 The section above is right that a person record does not belong inside a trip root, and
 nothing here softens it: in a real working tree `people/` is a **sibling** of `trips/`,
 outside every trip, which is the scoping the class exists to establish. This fixture
-cannot reproduce that layout for the same reason it exists at all — the repo-root store is
-git-ignored, so it is **absent from a fresh checkout**, and a witness referencing it would
-resolve on an author's machine and dangle in CI. The store-root rule reads
-`<trip-root>/people/` **first** and the repo root second, so co-locating the two here makes
-the reference resolve without leaving this directory, on any machine, with no dependence on
-whether an operator store happens to exist. **The compression of the two roots into one
+cannot reproduce that layout for the same reason it exists at all — the real store belongs to
+the operator and lives outside this repository, so a witness referencing it would give one
+verdict on an author's machine and another in CI. The store-root rule, stated in
+[`../../reference/data-model.md`](../../reference/data-model.md)
+§ *Composition — the trip-side read of a durable record*, looks in the trip root's own
+`people/` first, so co-locating the two here makes the reference resolve without leaving
+this directory, on any machine, with no dependence on whether an operator store happens to
+exist. **The compression of the two roots into one
 directory is this fixture's, and the file says so in its own prose so a reader does not
 learn the wrong layout from it.**
 

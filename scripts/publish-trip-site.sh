@@ -1678,9 +1678,9 @@ nonpublishable_values() { # <trip_dir> [site_html]
       #     UNDETERMINED verdict into a clean one.
       refs="$(_guard_frontmatter_key "$pf" "$_GUARD_REF_KEY")"
       # NOT-REFERENCING / TOMBSTONED: NO STORE READ IS ATTEMPTED. This `continue` is what
-      # keeps an absent store from degrading a trip that references nothing — the store is
-      # git-ignored and does not exist on a clean checkout, so without it the first CI run
-      # after the store shipped would abort every trip in the working directory.
+      # keeps an absent store from degrading a trip that references nothing — with no
+      # reference, no read is attempted, so there is nothing to fail. That is the rule in
+      # reference/data-model.md -> "Composition — the trip-side read of a durable record".
       [ -n "$refs" ] || continue
       if [ "$(awk 'NF { c++ } END { print c + 0 }' <<<"$refs")" -ne 1 ]; then
         warn "guard: a per-traveler profile carries more than one '$_GUARD_REF_KEY:' key — the reference is not single-valued, so the class is UNDETERMINED, not empty"; return 2

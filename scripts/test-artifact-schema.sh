@@ -7522,12 +7522,12 @@ fi
 # independent reasons. alex.md carries no `person:` key, so availability is
 # ABSENT-BY-DESIGN and a correct survey reports NOTHING on it — the proposed sensitivity
 # arm graded silence as failure. And the two files live in different trip roots:
-# examples/data-architecture-demo/people/ does not exist, and the store-root rule takes
-# <trip-root>/people/ then <repo-root>/people/ with NO upward search, so the second step
-# lands in a git-ignored directory that does not exist in a fresh checkout. That is the
-# trap the data model names by name — a witness whose verdict depends on the operator's
-# private working directory is not a witness. RL6 asserts BOTH halves of that, so the
-# reason the pairing is impossible is itself under test rather than remembered.
+# examples/data-architecture-demo/people/ does not exist, so the store-root rule in
+# reference/data-model.md -> "Composition — the trip-side read of a durable record" takes
+# its second step, out of the repository and into the operator's own data root. That is
+# the trap that section names: a verdict that differs between an author's machine and CI.
+# RL6 asserts BOTH halves of that, so the reason the pairing is impossible is itself under
+# test rather than remembered.
 #
 # ── THE TWO ARMS, AND WHY EACH NEEDS THE OTHER ──────────────────────────────────
 # Arm (i) is TOTALITY over the repo's only tracked resolving pair. Every label either
