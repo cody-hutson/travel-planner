@@ -734,7 +734,7 @@ roster's enrichment row names only the `[ENRICH]` fields (`CLAUDE.md`:294), whil
 writes `outputs/traveler-model.md`, so that sentence is already false at `54586fd`, independently of
 this record. This record adds a second unnamed write — the presence file — as a consequence of its own
 decision not to widen that cell. Beside it, `/trip replan` attributes a profile-triggered enrichment
-leg (`:731-733`) that its own *Dispatches* sentence omits (`:735-737`), a gap of the same class that
+leg (`skills/trip/SKILL.md`:731-733) that its own *Dispatches* sentence omits (`:735-737`), a gap of the same class that
 the presence file inherits. Rule 16 binds `/trip-record`'s verbs only and does not reach these
 sentences, although its reason — the write set belongs to the role — reaches them equally.
 
@@ -782,6 +782,13 @@ trip file's row, the traveller model's row, § 5.1's `internal-hard` set and § 
 (`scripts/test-artifact-schema.sh`:593-625). A schema and a witness land with the row. The witness
 goes in the two-origin example, whose trip file exercises every basis on both axes
 (`examples/two-origin-demo/trip-context.md` § *Per-Traveler Planning Days [DERIVED]*).
+`reference/schemas/README.md` moves with them: its § 1.2 ordinal citations of the exclusion warrants
+(`:137-138`) move with the renumber; its coverage-report line, its audit's file count and its
+reported split (`:183`, `:186`, `:194`) move with the schema and the witness, as do the coverage
+figures in the capture annotations of the validator's witness reads
+(`scripts/validate-artifacts.sh`:659-660); its list of the classes that joined with their own
+witness (`reference/schemas/README.md`:198-201) already omits `C23` at `54586fd`, independently of
+this record, and the presence class extends it; and no arm grades any of these lines.
 
 **`skills/trip-record/SKILL.md` — the standing clause** gains rules 15 and 16. Rules 2, 6, 7 and 14,
 and the frozen § *What the blocks above are*, stay true as written.
@@ -869,9 +876,12 @@ rule live at `54586fd`, and each is a coupling, not a schedule: it says what lan
 earlier than something else, and never when.
 
 1. **Scaffold — may land first.**
-   - The class row, with § 1.2's renumber, and the § 1.1 heading moving together with
+   - The class row, with § 1.2's renumber and the ordinal citations it moves
+     (`reference/schemas/README.md`:137-138), and the § 1.1 heading moving together with
      `VA_CLASS_HEADING` (arms `HC1` and `HC2`).
-   - The schema and the witness, together. Until the schema lands, the residual targeted-research
+   - The schema and the witness, together, with the lines they move or extend
+     (`reference/schemas/README.md`:183, `:186`, `:194`, `:198-201`;
+     `scripts/validate-artifacts.sh`:659-660). Until the schema lands, the residual targeted-research
      class claims the file — its selector is `trips/*/outputs/*.md`
      (`reference/schemas/targeted-research.md`:11-12) — the witness included, and erase's row 12
      would then sweep it in Phase B, which is the month-word hazard the new reach row exists to avoid.
@@ -933,7 +943,7 @@ that already set W1 aside.
    (`reference/schemas/cost-estimate.md`:79).
 3. **The item-7 paragraph reaches a wider read of the traveller model.** Its ground is
    purpose-independent but file-scoped: a transport read of `outputs/traveler-model.md` past the
-   depth signal could drop a `[THIRD-PARTY]` passenger from a stream being priced (`:89-93`). That is
+   depth signal could drop a `[THIRD-PARTY]` passenger from a stream being priced (`reference/adr/ADR-011-per-traveler-cost-estimation.md`:89-93). That is
    what bars W1, and it still does.
 4. **The presence file is neither.** It is not the estimate's writer, and it is not a read of the
    traveller model. The hazard `:89-93` names is designed out rather than avoided: the file never
