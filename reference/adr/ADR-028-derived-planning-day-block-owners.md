@@ -145,3 +145,222 @@ by section rather than by line.
   location erasure did not reach before this record and does not reach after it, because reach row
   10 covers the model's entry heading alone (`skills/trip-record/SKILL.md`:2244). The location class
   is not new; that block's reach is routed outside this release, beside the `## Logistics` gap.
+
+## Options considered
+
+Each option set names what was selected and the ground on which every other option was killed. The
+selections are stated in full in § *Decision*.
+
+### D-1 — Who writes the trip window
+
+**Selected: C, `/trip-record`** — the command whose verbs already record the trip window's inputs,
+recomputing the affected lines in the same act (Decision 1).
+
+- **A — the enrichment agent's reconciler role.** Rejected. The reference month resolves the trip
+  term from the title line and the trip window and says of both *"composition writes neither"*
+  (`reference/data-model.md` § *The reference month*), and `ADR-015` decision 1 adopts that
+  resolution (`reference/adr/ADR-015-durable-field-validity-horizon.md`:156-158). Making the
+  reconciler the trip window's writer changes what an `Accepted` decision rests on, which needs a
+  supersession outside this release. It would also put synthesis-written bytes in the trip file,
+  against the writer table's regeneration test.
+- **A′ — the trip window moved into the traveller model.** Rejected. `ADR-015` decision 1 reads the
+  trip window from `trip-context.md`, and the trip window is trip-level rather than a projection of
+  any one traveller.
+- **B — the enrichment agent's research role.** Rejected. It is a synthesis leg writing computed
+  bytes into the trip file, against the regeneration test, and it loses on dispatch: `/trip replan`
+  runs enrichment only on a profile trigger, and `/trip reorder` never runs it
+  (`skills/trip/SKILL.md`:731-733, `:808`).
+- **B′ — `fact` dispatching an agent to recompute.** Rejected. `fact` dispatches no agent
+  (`skills/trip-record/SKILL.md`:1280), and a dispatch would bring a synthesis writer back to the
+  same bytes.
+- **D — the hub.** Rejected. The hub runs after the spokes that read the trip window
+  (`CLAUDE.md` § *Dispatching agents*), so they would read the previous pass's value, and its write
+  would be a synthesis write into the trip file.
+- **E — a new verb.** Rejected on blast radius: a new command-surface entry to recompute lines the
+  recording verb already holds.
+- **F — a script.** Rejected: the writer table names commands, one agent and the operator as
+  writers, and no script.
+- **G — no owner.** Rejected: that is row 4's standing exception, which row 9 forbids.
+
+### D-2 — Where each traveller's window lives
+
+**Selected: W3 — a new presence class, `outputs/traveler-presence.md`,** written by the enrichment
+agent's reconciler role and rebuilt on every pass (Decision 2).
+
+- **W1 — lines on the traveller model's entries.** Rejected: it needs `ADR-011` decision 2
+  superseded, because it widens transport's read of that file past the depth signal (fact 4 of
+  § *Context*).
+- **W2 — the reconciler writes the block inside `trip-context.md`.** Rejected. It stands only on
+  named exceptions to four live rules — the writer table's regeneration test (`CLAUDE.md`
+  § *Write ownership*), `fact`'s admission ground built on it (`skills/trip-record/SKILL.md`:1289-1291),
+  the trip file's `persist-mutable` lifecycle (`reference/data-architecture.md`:932), and the
+  enrichment prompt's bar on writing journey facets into the trip file
+  (`agents/00-enrichment.md`:169-172). The trip file is on `/trip site`'s `**Reads:**` line, which is
+  the source side of the `itinerary-to-build` freshness relation (`skills/trip/SKILL.md`:334), so
+  every reconcile pass would read the published site as `BEHIND` when nothing it renders had changed.
+  And it writes travellers' names into `## Logistics`, which erasure does not reach.
+- **W4 — `/trip-record` writes the block**, copying the values the reconciler published or deriving
+  them itself. Rejected: the copy gives the window a second home, and the derivation gives it a
+  second composer beside the reconciler.
+- **W5 — the reconciler declared outside synthesis**, so that its write escapes the regeneration
+  test. Excluded at the design's first review, because the corpus places the reconciler inside
+  synthesis: it rebuilds the traveller model on every pass (`reference/data-architecture.md`:69,
+  § 6), and `/trip plan` runs it as the pipeline's first leg (`CLAUDE.md` § *Dispatching agents*;
+  `skills/trip/SKILL.md`:665-672).
+- **W6 — the block retired, and each reader derives the window.** Rejected: it breaks the readers'
+  *read, never re-derived* posture (`ADR-018` decision 5; DD4).
+- **W7 — a downstream writer, the hub or scheduling, at synthesis.** Rejected: every chain runs
+  transport and scheduling before the hub (`skills/trip/SKILL.md`:811; `CLAUDE.md`
+  § *Dispatching agents*), so a hub write is read stale by construction, and a synthesis write into
+  the trip file breaks the regeneration test.
+
+| Option | Reversibility | Confidence | What it costs |
+|---|---|---|---|
+| **W3 — the presence class** | MODERATE while `Proposed`; EXPENSIVE once `Accepted` | MEDIUM-HIGH | all additive: a class row, a schema, a witness, an erase row, and the reader re-points |
+| W2 — the block, written by the reconciler | the same | MEDIUM | the exceptions to four live rules above |
+| W1 — lines on the model, with a supersession | EXPENSIVE | HIGH on lifecycle fit, LOW on proportion | a supersession of `ADR-011` decision 2 |
+
+### D-3 — Whether the enrichment contract widens
+
+**Selected: (vi) — the reconciler's write set widens by one rebuilt file, the presence file.** The
+`[ENRICH]`-only contract on `trip-context.md` does not widen, and the research role widens nowhere
+(Decision 4).
+
+- **(i) The reconciler owns both blocks in the trip file.** Rejected: the trip-window half breaks
+  *"composition writes neither"*, which `ADR-015` decision 1 adopts, so it needs a supersession, and
+  it puts synthesis bytes in the trip file (D-1, A).
+- **(ii) Both roles widen.** Rejected: the research-role half is a synthesis leg writing computed
+  bytes into the trip file, and it loses on dispatch (D-1, B).
+- **(iii) The window stays in the trip file, written by the reconciler.** Rejected: this is W2
+  (D-2).
+- **(iv) `/trip-record`, or a new verb, owns the window in the trip file.** Rejected: a second home,
+  a second composer or a new verb (D-2, W4; D-1, E).
+- **(v) The window lives as lines on the model.** Rejected: this is W1, which only a supersession of
+  `ADR-011` decision 2 admits.
+
+`reference/data-model.md` § *Determinism*'s obligation O1 is the ground for none of these
+rejections (DD2).
+
+### D-4 — When each block is repaired
+
+**Selected: the trip window in the act that records a change to one of its inputs, line by line;
+each traveller's window on every reconciler pass, by a rebuild** (Decision 3). *"Staleness is
+reported, never repaired in place"* survives for neither block; its descendant is the routing in
+Decision 6.
+
+- **Repair on the next synthesis pass.** Rejected for the trip window: the pass that would repair it
+  is a synthesis leg writing the trip file (D-1, B and D). For each traveller's window it is the
+  selected shape, because the pass itself rebuilds the presence file.
+- **Report, and never repair.** Rejected: that is row 4's standing exception, which row 9 forbids once
+  a block has content.
+
+The precedent for repair in the act is `event`, which recomputes a derived cell in the act that
+changes its input (DD1).
+
+### D-5 — What records provenance
+
+**Selected: `Last derived:` retires with the per-traveller block; each window's provenance is the
+presence file's `generated:`; the trip window carries none** (Decision 5).
+
+- **Keep a `Last derived:` line.** Rejected: it would date a block that no longer holds the window,
+  while the presence file's frontmatter dates every pass that writes it.
+- **Give the trip window a date line.** Rejected: the trip window is repaired in the act that changes
+  its input, and a date line would be read by nothing — the freshness family observes order, never
+  time (`skills/trip/SKILL.md`:301).
+
+### D-6 — Whether the two blocks share a row
+
+**Selected: the blocks do not share a row** (§ *Decision*, before Decision 1). The one-row shape
+recorded a shared *absence* of a writer. The two blocks now have different writers, lifecycles and homes, and one row
+would assert a single writer for blocks that share none.
+
+### D-7 — The event that ends the exclusion, per region
+
+**Selected: per region, the change that settles the region's writer** — for the trip window, the
+change that names `/trip-record` in `CLAUDE.md` § *Write ownership*; for the per-traveller block,
+the change that removes it from the template (Decision 10).
+
+- **This record's merge, or its ratification.** Rejected: neither changes the table or the
+  template, and `ADR-024` decision 2D makes a region's declared writer the writer the table declares
+  (`reference/adr/ADR-024-form-contract-writer-boundary.md` § *2. How a boundary is declared*).
+  Ending the exclusion on this record's merge would admit a region the table still says nobody may
+  write.
+
+### D-8 — Where the rules live
+
+**Selected** (Decision 11): the trip window's derivation, with its per-line inputs, stays in the
+template beside the block; the presence file's labels, vocabulary, derivation rules, value shapes and
+by-reference forms go in a section appended below the end of `reference/data-model.md`; and
+§ *Presence* cites that section and the file. The placements this rules out:
+
+- **The per-traveller rules kept in the template.** The block they describe retires from it.
+- **The rules inserted into § *Presence*.** `ADR-009`'s ordering rule admits no net insertion above
+  the end of data-model's worked example, and edits there only in place at equal line count
+  (`reference/adr/ADR-009-data-architecture.md`:342-348).
+
+### D-9 — The hotel-departure time
+
+**Selected: it stays prose and is not an input of the trip window** (Decision 3). The departure line
+loses its hotel clause, and scheduling ends the departure day's usable window at transport's
+published `Recommended hotel departure:` (`agents/04-transport.md`:584).
+
+- **The time read as an input.** Rejected: its only home in the trip file is a leg set's
+  `- **Notes:**` prose, and a recompute parses nothing out of undeclared prose and estimates nothing
+  (Decision 7).
+
+### D-10 — How the trip window's recompute is admitted
+
+**Selected: a numbered widening of the standing clause, appended as rule 15** (Decision 7) — not an
+exception written inside `fact`.
+
+- **A verb-local exception in `fact`.** Rejected: the rule's trigger is the input, not the verb.
+  Written into `fact`, it would leave the next verb that records such an input without a tool — the
+  failure the standing clause's Extension rule names for a rule buried in one verb section
+  (`skills/trip-record/SKILL.md`:678-683).
+
+### D-11 — What keys a presence entry
+
+**Selected: the `## Group` roster's display name, as `## <Name>`** (Decision 2).
+
+- **A person token (`psn-<token>`).** Rejected. `ADR-012` decision 3 puts `person:` on
+  `travelers/<traveler>.md` *"and on no other class"*, and binds that the person key is not a
+  trip-internal join basis (`reference/adr/ADR-012-people-library.md`:1110, `:1127-1129`), so keying
+  by it needs a supersession. It is not total either: the field is optional and its absence is the
+  normal state of every traveller file (`:1112-1116`), and a fallback entry has no file at all. A
+  second in-trip location for a cross-trip id is also the widening `ADR-016` refused as its option
+  O7 (`reference/adr/ADR-016-reusable-groups.md`:103-111).
+- **A key only the model can resolve** — an ordinal, or a position. Rejected: every reader would
+  have to read `outputs/traveler-model.md` to learn who an entry is, which reopens the closed read
+  scopes this design exists to keep closed.
+
+### D-12 — How erasure reaches the presence file
+
+**Selected: a positional reach row in Phase A** (Decision 9).
+
+- **A Phase B word-boundary sweep of the file.** Rejected: a display name that is also a month word
+  would rewrite co-travellers' window values, which the fixtures write as dates such as
+  `May 14 (Thu)` and `Apr 9, ~1:00 PM` (`examples/data-architecture-demo/trip-context.md`:57;
+  `examples/two-origin-demo/trip-context.md` § *Per-Traveler Planning Days [DERIVED]*). That is the
+  ordinary-word hazard erase's own measurement names (`skills/trip-record/SKILL.md`:2302).
+
+### D-13 — The exit when a trip has no presence file yet
+
+**Selected: the readers' report** (Decision 12): a reader that finds no presence file says the
+windows are not yet derived, and names `/trip-record travelers`.
+
+- **A per-trip reconcile run by the build slice.** Rejected: unreachable. Operator trips live under
+  the data root the operator's pointer names, outside the repository (`CLAUDE.md`
+  § *Resolving a trip*, `G0-root`), so a build slice can only name a reconcile.
+- **A fallback to the legacy block.** Rejected: it would give the unowned block a reader again, and
+  it covers legacy trips only.
+- **A stop.** Not available: freshness is report-only, and no gate may be added that blocks on it
+  (`CLAUDE.md` § *Resolving a trip*, `G8`, `:369`).
+
+### D-14 — How the reconciler's second file is admitted
+
+**Selected: rule 16, appended as a widening of rule 6, with rule 6 left exactly as it stands**
+(Decision 8).
+
+- **An edit to rule 6.** Not admitted: the standing clause takes appended rules, not edits
+  (`skills/trip-record/SKILL.md`:678-683), and rule 6's restatement in § *What the blocks above are*
+  is frozen (`:324-325`, `:344`).
