@@ -91,3 +91,4 @@ carries the account.
 | [ADR-024](ADR-024-form-contract-writer-boundary.md) | The form contract's writer boundary — the owned region as the unit, a key of region and condition, and an exclusion that executes rather than amends | Accepted |
 | [ADR-025](ADR-025-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Accepted |
 | [ADR-026](ADR-026-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Accepted |
+| [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |

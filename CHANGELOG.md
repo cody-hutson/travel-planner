@@ -3,6 +3,46 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.41.0] — 2026-09-24 — Post-trip preference memory: the founding decision
+
+Where a trip's outcomes live once the trip is over, and who may write what is remembered, now has one
+answer. Nothing about how the engine behaves changes: no field is built, and no writer, verb or store
+is added. What changes is that the slices behind this capability — the read, the field, the group
+view and the offer — are cut against a decision rather than each deciding it.
+
+**A trip's coverage outcomes are read where they were measured.** They are read in place from each
+archived trip, reached by the person key under the same one-hop closure trip history already uses,
+and copied nowhere. Carrying them into a new store at archive was weighed and lost on cost rather than
+on any prior decision: it would add a class, a writer, a store and an erasure row to buy one property
+— that a hand-deleted trip's outcomes survive — which is also a privacy cost. Every retained verdict
+is worded as plan coverage as last synthesized, never as how the trip went, because the file it comes
+from is a snapshot of the plan and records nothing that happened after it.
+
+**A group gets a view, not a memory — and the record says which.** The operator confirms which archived
+trips were the party's, from candidates the engine lists without choosing; the view then shows each
+member's own outcomes on those trips, to the operator only, and computes no total. The party-owned
+half of the group criterion is declined in terms rather than claimed met, because every party-level
+surface the engine holds carries mixed subjects that erasure does not reach. The way back in — a
+preference slot on the group record, under a supersession scoped to one section — is named and
+priced, not taken, so the group record is untouched.
+
+**One durable field, specified and not yet built.** A dislike of a kind of outing gets its own label
+on the person record, kept distinct from the destination veto that `Rather skip` already is. It is a
+soft, per-traveller signal — never a veto for the party and never a gate — and a composed change to
+it is reported under no router class until the pending decision on unmapped fields routes it with its
+siblings.
+
+**Precedence is stated at the rule and holds by absence.** Where a person-scoped and a group-scoped
+value meet on the same traveller and field, the person's governs and the divergence is reported.
+Under the view decided here no group-scoped value exists, so the rule binds nothing yet and no
+divergence line is invented for it.
+
+**The honest limits.** A deleted trip's memory goes with it. The view never quotes a desire or a
+dislike, only tallies. Joint trips are confirmed on every use rather than remembered. The group view
+multiplies what a session transcript carries, one line per member per confirmed trip, and that
+residual is named rather than closed. And the record lands `Proposed`: it is the decision gate the
+following slices need, and nothing downstream is built here.
+
 ## [0.40.0] — 2026-09-22 — Gates grade what they claim
 
 A gate that claims more than it checks is worse than a missing one, because the next reader trusts
