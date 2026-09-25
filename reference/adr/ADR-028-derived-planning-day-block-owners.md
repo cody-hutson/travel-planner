@@ -115,9 +115,9 @@ projection nobody authors (`reference/data-model.md` § *Who Writes What — Fie
 was read live at `54586fd` (2026-09-24), the commit this record was authored against. That commit
 differs from `b199dc1`, where the decision was designed, by one other record, its index row and a
 changelog entry, and it moves no line cited here. A line locator is correct at that commit and moves
-with later edits, so the surfaces other releases were editing in parallel — `CLAUDE.md`
-§ *Write ownership*, `templates/trip-context.template.md` and `reference/data-model.md` — are cited
-by section rather than by line.
+with later edits, so where other releases were editing in parallel — `CLAUDE.md`'s
+§ *Write ownership*, § *Resolving a trip* and Key Rules, `templates/trip-context.template.md` and
+`reference/data-model.md` — the locator is a section or a label rather than a line.
 
 ## Decision drivers
 
@@ -355,7 +355,7 @@ windows are not yet derived, and names `/trip-record travelers`.
 - **A fallback to the legacy block.** Rejected: it would give the unowned block a reader again, and
   it covers legacy trips only.
 - **A stop.** Not available: freshness is report-only, and no gate may be added that blocks on it
-  (`CLAUDE.md` § *Resolving a trip*, `G8`, `:369`).
+  (`CLAUDE.md` § *Resolving a trip*, gate `G8`).
 
 ### D-14 — How the reconciler's second file is admitted
 
@@ -698,7 +698,7 @@ yet exist.
 **Where the file itself is absent, the reader says the windows are not yet derived, and names
 `/trip-record travelers`.** The exit is a report rather than a stop because freshness is report-only:
 `G8` never changes a resolution, and no gate may be added that blocks on freshness (`CLAUDE.md`
-§ *Resolving a trip*, `:369`). **A placement reader carries `(assumed)` into whatever it places under
+§ *Resolving a trip*, gate `G8`). **A placement reader carries `(assumed)` into whatever it places under
 that default** — the whole-group anchor scheduling places, the stream transport sizes and prices — as
 § *Presence* already requires of anything that cites the set under an assumed window.
 
@@ -721,10 +721,10 @@ them is a schedule.
 **`CLAUDE.md`.** Row 4 of § *Write ownership* becomes the trip window's row alone, naming
 `/trip-record` (Decision 1), and its *"read-only to every command"* and *"staleness is reported,
 never repaired in place"* become false. The per-traveller half leaves the table with its block, and
-row 9 needs nothing. The table's opening paragraph and its `[ENRICH]` row, the key rule that the
-enrichment agent writes only the `[ENRICH]` fields (`CLAUDE.md`:567), the satisfaction-layer homes
-(`:569`) and § *Output Versioning* stay true, because the roster's enrichment `Output File` cell
-(`:294`) is not widened (Decision 4). The File Structure tree gains the file, as it carries
+row 9 needs nothing. The table's opening paragraph and its `[ENRICH]` row, the Key Rules bullets
+that the enrichment agent writes only the `[ENRICH]` fields (*trip-context.md is sacred*) and that
+name the satisfaction-layer homes (*Satisfaction-layer homes*), and § *Output Versioning* stay true,
+because the roster's enrichment `Output File` cell (`CLAUDE.md`:294) is not widened (Decision 4). The File Structure tree gains the file, as it carries
 `outputs/cost-estimate.md`. Step 1's context-update and booked-what rows (`:195`, `:219`) become
 incomplete for an input of the trip window: only `fact` keeps the block true.
 
