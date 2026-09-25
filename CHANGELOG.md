@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-24 — The derived blocks get an owner
+## [0.42.0] — 2026-09-24 — The derived blocks get an owner
 
 This release decides and builds nothing, deliberately. The trip file carries two derived blocks —
 the trip's own planning window, and each traveller's window beside it — that the ownership table
