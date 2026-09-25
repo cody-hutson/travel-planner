@@ -1211,7 +1211,9 @@ finding into a refusal or a redirect.
 **An unversioned artifact is not a failure.** An artifact carrying no `schema-version` is read
 as version 0 and **skipped**; a *declared* version that violates its schema fails. The rule is
 **cited, never restated here** — `reference/data-architecture.md` → *Tolerant read* is its one
-home, and a second copy is a second source able to disagree with it.
+home, and a second copy is a second source able to disagree with it. The italic section name is
+deliberate: `reference/data-architecture.md` → *The citation-anchor register* sets the quoted
+form for the agent prompts it enumerates, and this file is not one of them.
 
 **Where there is nothing to validate.** Where the existence probe finds no `trips/<slug>/`
 tree, say so and stop. Do not run the script against a path that is not there.
