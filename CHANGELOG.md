@@ -3,6 +3,43 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-24 — The derived blocks get an owner
+
+This release decides and builds nothing, deliberately. The trip file carries two derived blocks —
+the trip's own planning window, and each traveller's window beside it — that the ownership table
+says have no writer, while the same table closes on the rule that a block gets an owner before it
+gets content. Both blocks have content, and the agents that plan a trip read them. What lands here is
+the decision that gives each block an owner, settled before any slice is cut, together with what
+that decision will make false when those slices land. Nothing in the engine behaves differently yet.
+
+**The trip's own planning window stays in the trip file, and belongs to the verb that records its
+inputs.** Its lines are computed from the booked flights and the hotel's check-in and check-out
+times, and the verb that records those facts keeps the affected lines current in the same act. A
+changed input recomputes only the lines it feeds, and a line that cannot be recomputed is reported
+with the input it could not read, never blanked and never estimated. The hotel-departure time is not
+one of its inputs: it stays free prose, and the last planning day ends where the transport brief
+says the group should leave.
+
+**Each traveller's window moves out of the trip file, into a new traveller-presence file** that the
+enrichment agent rebuilds on every reconcile pass, beside the traveller model. The agents that read
+presence will read it there, keyed by the roster name they already hold, and none of it reaches the
+published site. A rebuild says what it replaces before it writes. A traveller's name in the new file
+is reached by erasure through a row decided here, before any file holds a name; and a trip whose file
+does not exist yet reads every traveller as present, says the windows are not yet derived, and names
+the reconcile that would derive them.
+
+**Nothing may write the trip window until the ownership table names its writer.** That rewrite — not
+this record — admits the block to the form contract, and the per-traveller block leaves the contract
+when it leaves the trip file. Deciding an owner does not authorize a write.
+
+**The honest limits.** No prompt, table, template, verb, schema or class row changes in this
+release: the record binds them and edits none. It states what each later change makes false — the
+ownership row, the enrichment prompt, the agents that read presence, the template, the verbs that
+report staleness, and the records that rested on the blocks having no writer — and which of those
+changes have to land together. It also names what stays ungraded until a later slice arms it. The
+record is `Proposed`; the flip to `Accepted` is the maintainer's at the milestone close, and it moves
+the record's status line and its index row together.
+
 ## [0.41.0] — 2026-09-24 — Post-trip preference memory: the founding decision
 
 Where a trip's outcomes live once the trip is over, and who may write what is remembered, now has one
