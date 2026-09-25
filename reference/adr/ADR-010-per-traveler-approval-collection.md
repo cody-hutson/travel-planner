@@ -234,7 +234,7 @@ would duplicate." **That concern does not materialize.**
 #552 built its organizer-confirm gate in this release specifically so that a later replacement would
 be a substitution at a named seam rather than an excavation: the decision rule lives in the body of
 `change_confirmation_state`, while `require_change_confirmation`, its call site in `cmd_update`, its
-four-token vocabulary and its allowlist-proceed / wildcard-abort structure sit outside it and are
+five-token vocabulary and its allowlist-proceed / wildcard-abort structure sit outside it and are
 indifferent to how a confirmation was obtained. A collection mechanism replaces one function body.
 On the render side, #551's Coordination Notice component is the extension point for any additional
 coordination state, and it already exists.
@@ -242,6 +242,30 @@ coordination state, and it already exists.
 **The band is `extend-seam` on both surfaces.** This matters to sequencing, not just to bookkeeping:
 it is why the mechanism can be deferred behind #718 without the seam rotting, and why #719 is
 instructed to use the seam rather than excavate it.
+
+**Amendment (2026-09-25, Friday) — the seam's vocabulary, corrected from four tokens to five,
+and the one emission a replacement body owes.** The second paragraph of this section called the
+vocabulary four-token, and it was when this record landed. #1184 added a fifth token,
+`undetermined`, and the count is corrected in place. `undetermined` means that a baseline is
+recorded but the outgoing render's itinerary content could not be identified — the render could
+not be read, its itinerary text could not be projected, or that text could not be normalized — so
+whether the itinerary moved is unknown rather than known to have moved. It is computed on every
+run and never written to disk. `require_change_confirmation` aborts on it with an arm of its own,
+because the wildcard arm's message asserts that the content differs, and `cmd_confirm` refuses it
+before the terminal check and the prompt; the proceed allowlist is unchanged, and the token is not
+an exemption.
+
+**The token is emitted inside the body a collection mechanism replaces, which is what the second
+paragraph understated.** `change_confirmation_state` computes the outgoing digest, so the check
+that the render has an identity at all lives in the replaceable body rather than on the fixed side
+of the seam. Any body that replaces it must therefore emit `undetermined` whenever it cannot
+identify the outgoing render's itinerary content; a body that did not would bring back the
+conflation of "could not read it" with "it changed" that #1184 removed. This is a description of
+the seam's contract rather than a new rule, and it binds no particular successor: the SEAM S2
+comment above `change_confirmation_state` in `scripts/publish-trip-site.sh` states it beside the
+vocabulary, and group S15 of `scripts/test-publish-guard.sh` grades it whatever body the function
+holds. No decision moves — the band is still `extend-seam`, and a collection mechanism still
+replaces one function body; that body now owes one more emission.
 
 ### 6. The transport is left unnamed here — and that, not the verifier, is what blocks the mechanism
 
