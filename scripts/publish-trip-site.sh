@@ -32,11 +32,12 @@
 #
 # Organizer-confirm gate (ADR-003 § Decision 2). update refuses when the itinerary content
 # of the outgoing render differs from what is currently published and no organizer
-# confirmation covers it, or when it cannot determine that content at all (a render it cannot
-# read, project or normalize); rotate republishes through update and inherits the refusal. A
-# republish carrying the SAME itinerary content — a coordination-state marker change, say —
-# is not a plan change and passes. Record the approval with `confirm` (terminal only, no
-# override flag); it binds to that exact itinerary content, so a later edit re-opens the gate.
+# confirmation covers it, or, once a baseline is recorded, when it cannot determine that
+# content at all (a render it cannot read, project or normalize); rotate republishes through
+# update and inherits the refusal. A republish carrying the SAME itinerary content — a
+# coordination-state marker change, say — is not a plan change and passes. Record the
+# approval with `confirm` (terminal only, no override flag); it binds to that exact itinerary
+# content, so a later edit re-opens the gate.
 #
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
@@ -76,10 +77,12 @@ preflight_ro() {
 #
 # TWO CALLERS, AND THEIR REASONS ARE NOT THE SAME ONE (#749). preflight calls it, so
 # cmd_publish and cmd_update reach it BEFORE the render is resolved and before the gate
-# runs: on a machine without perl the operator is told to install perl instead of being
-# told, by the gate itself, that an itinerary changed which did not. cmd_confirm calls it
-# DIRECTLY, and has to — it cannot call preflight at all, because preflight also demands
-# npx and an authenticated gh while confirm is local, TTY-only and offline. Its own reason
+# runs: on a machine without perl the operator is told the cause, that perl is missing,
+# rather than meeting a symptom of it further on — with a baseline recorded, for one, the
+# gate cannot identify the render's itinerary content and aborts `undetermined` (#1184).
+# cmd_confirm calls it DIRECTLY, and has to — it cannot call preflight at all, because
+# preflight also demands npx and an authenticated gh while confirm is local, TTY-only and
+# offline. Its own reason
 # is the CAUSE, not the symptom: without this assertion it resolves the gate state first,
 # is handed an empty digest by a projection that could not run, and the state reads
 # `undetermined` — which confirm refuses before the terminal check and the prompt (#1184).
@@ -2411,7 +2414,7 @@ _COORD_NOTICE_CAP=512
 # before falling back; with nothing to fall back to it would silence the one message
 # that explains the failure. The non-zero status now reaches itinerary_digest, which
 # turns it into this file's existing "nothing" answer for a projection it could not
-# take — an answer every caller already handles as "not a match".
+# take — an answer the resolver reads as `undetermined` and both recorders decline to write.
 #
 # ── THE DECLARATION BLOCK IS EXCISED BY THE CORPUS'S OWN FRONTMATTER GRAMMAR ──
 # (#552, fourth remediation — AI-012, and the AI-014 wording it corrects)
@@ -2513,9 +2516,9 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
 # byte length) are combined, so the token binds size as well as CRC.
 # STATED TRADE: cksum is CRC-32 — it detects change, it does not resist forgery.
 # That is the correct property here, because ADR-003 places the trust in the
-# organizer explicitly and there is no adversary in this threat model. Should #88
-# later collect attributable per-traveler approvals, forgery resistance becomes
-# real and the swap is this one function body.
+# organizer explicitly and there is no adversary in this threat model. Should #719
+# (ADR-010's successor to #88) later collect attributable per-traveler approvals,
+# forgery resistance becomes real and the swap is this one function body.
 _digest_of() { # (stdin) -> one stable identity token
   cksum | awk '{ printf "%s-%s", $1, $2 }'
 }
@@ -2558,15 +2561,22 @@ _digest_of() { # (stdin) -> one stable identity token
 # whose own text opens with such a byte digests equal to the baseline (the state reads
 # `none-pending`) or to the confirmation record (it reads `confirmed`), and the gate lets
 # an unapproved change through on either route. So the pipeline's status is read too, in
-# the same way the projection's is: under this file's `pipefail` the command substitution
-# carries the status of the whole pipeline, and a failure in any stage is "no answer".
-# Success-path bytes are unchanged — a pipeline that succeeds prints the same token it
-# printed before. Graded by S15c.
+# the same way the projection's is: the command substitution carries the status of the
+# whole pipeline, and a failure in any stage is "no answer".
+#
+# `pipefail` IS SET INSIDE THE SUBSTITUTION ITSELF, and that placement is the closure. The
+# substitution inherits its caller's shell options, and a caller that sources this file can
+# turn `pipefail` off after this file's own `set` line has run. Without it the status read is
+# the last stage's alone, so a stage that failed after writing a prefix digests as the
+# truncated itinerary and the fail-open above returns on both routes. Setting it here makes
+# the read independent of that `set` line and of every caller. Success-path bytes are
+# unchanged — a pipeline that succeeds prints the same token it printed before. Graded by
+# S15c, and by S15k, which turns `pipefail` off in a fresh shell so this is the only one left.
 itinerary_digest() { # <html_file> -> identity token, or nothing
   [ -r "${1:-}" ] || return 0
   local text dg
   text="$(strip_to_itinerary_text "$1")" || return 0
-  dg="$(printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)" || return 0
   printf '%s' "$dg"
 }
 
@@ -2696,14 +2706,16 @@ change_confirmation_state() { # <trip_dir> -> one token on stdout
 #     on it too, but `*)`'s text asserts that the itinerary content differs — a claim
 #     nobody could have computed, and exactly the fabricated statement this token exists
 #     to remove. So the arm exists for its MESSAGE and not for its verdict: the proceed set
-#     is unchanged, `*)` is still the default, and the arm is not an exemption.
+#     is unchanged, `*)` is still the default, and the arm is not an exemption. That message
+#     speaks of the render's identity only, never of change in either direction, because
+#     identity is all the gate failed to establish. S15f grades both directions.
 require_change_confirmation() { # <trip_dir>
   local trip_dir="$1"
   local state
   state="$(change_confirmation_state "$trip_dir")"
   case "$state" in
     none-pending|confirmed) return 0 ;;
-    undetermined) die "GUARD ABORTED — could not determine whether the itinerary changed (state: undetermined): the outgoing render of ${trip_dir} could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed and the published plan is unchanged. This is not an itinerary change, and confirm refuses it for the same reason: fix whichever of the three it is, then re-run." ;;
+    undetermined) die "GUARD ABORTED — could not identify the itinerary content of the outgoing render of ${trip_dir} (state: undetermined): it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was pushed, and the published site was not touched. confirm refuses this state as well, because a confirmation binds to an identified itinerary and there is none: fix whichever of the three it is, then re-run." ;;
     *) die "GUARD ABORTED — the itinerary content differs from the published plan and no organizer confirmation covers it (state: ${state:-empty}). Nothing was pushed and the published plan is unchanged. Either confirm the change:  $(basename "$0") confirm ${trip_dir}  — or revert the working copy to the published plan and re-run." ;;
   esac
 }
@@ -2910,7 +2922,7 @@ cmd_confirm() { # <trip_dir>
   [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing confirmed. The published plan is unchanged."
 
   dg="$(itinerary_digest "$site_html")"
-  [ -n "$dg" ] || die "could not read the itinerary content of $site_html — nothing was recorded."
+  [ -n "$dg" ] || die "could not identify the itinerary content of $site_html — it could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. Nothing was recorded."
   rec="$(change_confirmation_path "$trip_dir")"
   tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the confirmation record beside $rec"
   printf 'digest=%s\nconfirmed=%s\n' "$dg" "$(_iso_now)" > "$tmp"
