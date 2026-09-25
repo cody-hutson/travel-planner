@@ -747,7 +747,7 @@ at `:61-63`, `:67-69`, `:169-172` and `:310`.
 **`agents/03-scheduling.md`.** It re-points as Decision 12's table states, and its day shape changes
 too: input item 3 (`:311-313`) ends the departure day's usable window at the anchor stream's
 `Recommended hotel departure:` (`agents/04-transport.md`:584), under the absent-brief rule
-(`:338-341`). That value is current under `reorder`, whose chain runs transport before scheduling
+(`agents/03-scheduling.md`:338-341). That value is current under `reorder`, whose chain runs transport before scheduling
 (`skills/trip/SKILL.md`:808, `:811`), and under `plan`, which dispatches in the pipeline order; it is
 as last written under a `replan` whose coupling conditions admit scheduling alone (`:745`); and under
 `research` it is the previous value or none (`:871`), which scheduling then says.
@@ -864,9 +864,9 @@ block whose names erasure does not reach today. This record does not widen that.
 
 ### The couplings — three landing sets
 
-The consequences above land in three sets. Each set is forced by a rule live at `54586fd`, and each is
-a coupling, not a schedule: it says what lands together, or no earlier than something else, and never
-when.
+The consequences above that concern the presence class land in three sets. Each set is forced by a
+rule live at `54586fd`, and each is a coupling, not a schedule: it says what lands together, or no
+earlier than something else, and never when.
 
 1. **Scaffold — may land first.**
    - The class row, with § 1.2's renumber, and the § 1.1 heading moving together with
@@ -898,6 +898,13 @@ when.
    6 or those verb lines, so none of this is graded.
 3. **Retire — no earlier than the cutover.** The template's per-traveller block, and the
    per-traveller half of row 4.
+
+The trip window's consequences take a landing order of their own: rule 15 and the template's
+per-line input declaration land no later than the change that names `/trip-record` in `CLAUDE.md`
+§ *Write ownership*, that change carries the lines of `fact` it makes false — its `[DERIVED]` route,
+its one-block rule and its cross-block row that names no command
+(`skills/trip-record/SKILL.md`:1306, `:1321-1322`, `:1372`) — and rule 15 alone does nothing until
+then, because its trigger is a block that table assigns to `/trip-record`.
 
 ### The per-trip transition
 
