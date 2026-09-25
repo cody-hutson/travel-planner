@@ -364,3 +364,215 @@ windows are not yet derived, and names `/trip-record travelers`.
 - **An edit to rule 6.** Not admitted: the standing clause takes appended rules, not edits
   (`skills/trip-record/SKILL.md`:678-683), and rule 6's restatement in § *What the blocks above are*
   is frozen (`:324-325`, `:344`).
+
+## Decision
+
+**Two owners, each in the form the card's AC-1 names, and a row each.**
+
+- **The trip window,** `### Effective Planning Days`, stays in `trip-context.md`. Its owner is a
+  write-ownership row naming `/trip-record` (Decision 1).
+- **Each traveller's window** moves out of that file into `outputs/traveler-presence.md`. Its owner
+  is that class's writer row in `reference/data-architecture.md` § 1.1 — the enrichment agent, in
+  its reconciler role — together with the lines it publishes there (Decision 2).
+- **The two blocks do not share a row.** The one-row shape recorded a shared absence of a writer,
+  and the two now differ in writer, lifecycle and home (D-6).
+- **No Layer 1 — human source field changes writer.** Both writes are computed. The trip window keeps
+  *Do not manually edit*. The presence file is derived and rebuilt. Readers still read published
+  values, and only the window's address moves. Resolving a by-reference cell means reading the trip
+  window's published line.
+
+**The numbers in the verbatim texts below are this revision's.** Rule 15, rule 16 and reach row 31
+are the next free numbers in their enumerations at `54586fd`. Both enumerations are append-only
+(`skills/trip-record/SKILL.md`:678-683, `:2268`), so the slice that appends each derives its number
+at its own base — exactly as the slice that adds the class row derives the class ordinal — and
+carries the number it derives into every text below that names it, including the trip window's row
+in Decision 1.
+
+### 1. The trip window's owner — its row, verbatim
+
+> | Block | Writer | Condition |
+> |-------|--------|-----------|
+> | `[DERIVED]` — `### Effective Planning Days` | `/trip-record` | Computed, never authored: each of its lines is recomputed in place, or reported as not recomputable, naming the unreadable input's label, in the same act, by any invocation that records a change to one of that line's declared inputs — the anchor origin's `### Outbound` or `### Return` legs as the template declares them, or `## Accommodation`'s `Check-in time:` or `Check-out time:` — under standing rule 15, and no line is rewritten on account of an input the act did not change. A statement about the block's own values records the input it derives from. |
+
+It replaces the trip window's half of row 4. The per-traveller half leaves the table with its block
+(Decision 10).
+
+### 2. The presence class — `outputs/traveler-presence.md`
+
+**This class's writer row is each traveller's window's owner row.**
+
+#### Identity
+
+- **Path:** `outputs/traveler-presence.md`, trip-relative, one file per trip. The name pairs it with
+  the traveller model, whose writer, lifecycle and key entity it shares, and names the predicate it
+  feeds (`reference/data-model.md` § *Presence*). Probed at `54586fd`, no tracked file carries the
+  name and no `traveler-*` glob exists.
+- **The row**, for the slice that adds it, which derives the class ordinal at its own base:
+
+  | C | Class | W (exactly one) | L | Prov | P | Primary entities |
+  |---|---|---|---|---|---|---|
+  | *the next in-model ordinal* | `outputs/traveler-presence.md` | enrichment | `rebuilt-each-synthesis` | `derived` | `internal` | Traveler, Day |
+
+- **The class is named by path, never by ordinal,** because the enumeration's numbering moves. That
+  is `ADR-012`'s rule, reused by `ADR-016` (`reference/adr/ADR-016-reusable-groups.md`:138-140). The
+  corpus inserts a new in-model class at the next in-model ordinal and renumbers the out-of-model
+  dispositions after it, as `ADR-011` did (`reference/adr/ADR-011-per-traveler-cost-estimation.md`:74-76)
+  and as `ADR-016` chose over appending past the closed set (`reference/adr/ADR-016-reusable-groups.md`:113-123).
+- **Primary entities — Traveler, Day.** § 2 of the data architecture names presence as the Traveler
+  N—M Day relation (`reference/data-architecture.md`:180, `:188`). Origin appears only as a warrant
+  token; no origin letter is written.
+- **Lifecycle — `rebuilt-each-synthesis`.** The file is rebuilt whole on every reconciler pass, and
+  never on an `ARCHIVED` trip. § 6's reason holds for it without the traveller model's per-entry
+  exception (`reference/data-architecture.md`:935-955): every entry re-derives from the roster and the
+  files the pass reads, a `PROFILE MISSING` or `[OPERATOR-PROVIDED]` entry has `UNKNOWN` bases by
+  rule, and no `[THIRD-PARTY]` entry exists to carry forward. It lands in § 7.6's self-upgrading row.
+- **Writer — `enrichment`, reconciler role only.** Its frontmatter is the traveller model's
+  (`agents/00-enrichment.md`:1050-1061), with `artifact: outputs/traveler-presence.md` and
+  `publish: internal`; `generated:` is the date of the pass.
+- **Provenance — `derived`:** *"A projection of authoritative inputs. It holds no independent state"*
+  (`reference/data-architecture.md`:489).
+- **A new class, because the model's seam cannot be extended here.** Extending the model's per-entry
+  derived-line seam would narrow `ADR-011` decision 2's bound on transport's read of that file
+  (fact 4 of § *Context*), and only a supersession may narrow a decision
+  (`reference/adr/README.md`:26-27). Adding a class supersedes nothing: `ADR-009`'s first decision
+  gives `reference/data-architecture.md` ownership of the enumeration
+  (`reference/adr/ADR-009-data-architecture.md`:323-326) — a topology, not a membership list — and
+  `ADR-011`, `ADR-012` and `ADR-016` each added an in-model class through a new record, a § 1.1 row
+  and a schema, with `ADR-009` still `Accepted` at `54586fd`.
+
+#### Publishability — `internal`, not `internal-hard`
+
+- **What the file holds:** roster display names, warrant tokens, local instants, day counts and a
+  zone delta. None of it is in § 5.3's non-publishable class: the file carries neither of the fields
+  § 5.6 declares, `Passport` and `Documents` (`reference/data-architecture.md`:844-848), and its
+  population rule admits no `[THIRD-PARTY]` entry. Each value is a publishable field by default
+  (§ 5.2, `:775`), and the same values sit today in `trip-context.md`, which is `publish: bound`
+  (`:58`).
+- **`internal-hard` is not earned.** § 5.1 reserves it for values that must not reach a page *"in any
+  form, including anonymized"* (`reference/data-architecture.md`:769-770). `ADR-011` draws the same
+  line: a name beside a figure is `internal`, and a name beside a reason is `internal-hard`
+  (`reference/adr/ADR-011-per-traveler-cost-estimation.md`:251-256).
+- **It takes no fence row.** Group `PB` expects exactly the § 1.1 rows whose class the
+  `publish-contract-artifacts` fence declares, and that fence declares only `bound` and
+  `internal-hard` (`reference/site-layout-spec.md`:722-738; `scripts/test-artifact-schema.sh`:1720).
+  An `internal` class takes no row there, as the cost estimate takes none
+  (`reference/adr/ADR-011-per-traveler-cost-estimation.md`:301-306), and nothing in the site
+  specification's § 9.3 exclusions either.
+- **Not a site input.** `/trip site` reads `trip-context.md` for *"the group, dates and trip-level
+  constraints the hero and overview render, and no other block"* (`skills/trip/SKILL.md`:998-1001) —
+  no per-traveller window — so the page does not change. The file stays off `site`'s `**Reads:**`
+  line, which is the source side of the `itinerary-to-build` freshness relation (`:334`); on that
+  line, every reconcile pass would raise a false `BEHIND`.
+- **The tripwire, in `ADR-011` decision 6's form.** If a value in the file ever carries a need- or
+  desire-derived justification, or anything drawn from a `[THIRD-PARTY]` entry, the class moves to
+  `internal-hard` and takes a row in the `publish-contract-artifacts` fence.
+
+#### Keying — the roster name
+
+- **The key is `## <Name>`, the `## Group` roster's display name.** Its normalized form is the
+  Traveler natural key (`reference/data-architecture.md`:237-243). Identity is decided *"by a rule
+  applied once per entity, never case-by-case per artifact"* (`:211`), and presence is a Traveler
+  relation. The roster is the name authority (`skills/trip-record/SKILL.md`:2288), so a reader joins
+  on a key it already holds, without reading the traveller model.
+- **A person token, and any key only the model can resolve, are barred** (D-11).
+- **The privacy cost:** a traveller's name gains one location, and Decision 9's reach row reaches it.
+
+#### Content
+
+- **H1:** `# Traveler Presence [DERIVED]`. Every `##` heading is an entry — there is no reserved key
+  and no collapse line — so a reader has one shape to branch on.
+- **Population:** every roster member whose model entry is first-party — projected from a traveller
+  file, or a `PROFILE MISSING` or `[OPERATOR-PROVIDED]`-only fallback — and **never** a member whose
+  entry carries `[THIRD-PARTY]`. The wording holds whether or not a third-party member ever holds a
+  roster row. **From the next rebuild after an erasure**, an erased member's entry is
+  `## per-<token>`, with `UNKNOWN` bases and by-reference cells. On an `ARCHIVED` trip no rebuild
+  runs — erasure substitutes and never regenerates — so the lines keep their pre-erasure values under
+  the token heading.
+- **The lines,** each whole on its label's line, in this order: `- **Window basis:**`,
+  `- **Origin basis:**`, `- **Effective window (local):**`, `- **Full + partial:**`,
+  `- **Timezone delta:**`. A basis line takes one warrant token. `Window basis` governs the window and
+  the count; `Origin basis` governs the delta.
+- **By reference.** A cell governed by `ASSERTED-SAME` or `UNKNOWN` reads `the trip-level window`,
+  `the trip-level total` or `the trip-level delta`, with ` (assumed)` under `UNKNOWN`. Only
+  `ASSERTED-DIFFERENT` carries a value, in the shapes the template's per-traveller table declares
+  today (`templates/trip-context.template.md` § *Per-Traveler Planning Days [DERIVED]*). A reference
+  resolves to the trip window's published lines, which are read and never re-derived.
+- **The allowlist bound.** An entry carries its heading and these lines, and nothing else drawn from
+  any per-traveller source. An `ASSERTED-DIFFERENT` statement that does not resolve to instants takes
+  the line's bracketed placeholder, and the reconciler raises a `VERIFY` in the traveller model's
+  `## Update signals` block that names the field label and never quotes the statement — prohibition
+  2 of that block (`agents/00-enrichment.md`:516-521). A statement's text is never written onto a
+  window line; the free-text path it arrives by is the intake form's `Arrive / leave:`
+  (`templates/traveler-intake.template.md`:113).
+- **The rebuild announces what will not survive.** Before writing, the reconciler reads the file it
+  replaces and states everything that will not survive the rebuild: every line whose value changes,
+  outgoing then incoming, and every entry the rebuild removes — a member who has left the roster, for
+  one. That is `ADR-007` § 2 bound 5's *say before writing what will not survive*
+  (`reference/adr/ADR-007-command-entry-point.md`:330-337), and `/trip`'s standing clause puts the
+  obligation on the verb that dispatches a replacement (`skills/trip/SKILL.md`:193-201, `:928-931`).
+  **The announce is surfaced at every verb that dispatches the rebuild:** `/trip-record travelers`,
+  `/trip-record person`, `/trip plan`, and `/trip replan` when a changed profile triggered it.
+- **The class-wide question is routed, not decided here.** Read this way, bound 5 reaches every
+  `rebuilt-each-synthesis` class a dispatched agent replaces — the traveller model rebuilt in the same
+  pass, and the hub's and the validator's rebuilds that `plan` replaces — while the data architecture
+  calls such regeneration safe (`reference/data-architecture.md`:489, `:930`). Whether those classes
+  owe the same announce is routed outside this release; this record decides it for the presence file
+  alone.
+
+### 3. Inputs, triggers and repair
+
+**The trip window.** Its inputs are declared per line:
+
+- the arrival line ← the final anchor `### Outbound` leg's `Arrives:`, and `Check-in time:`;
+- the departure line ← the first anchor `### Return` leg's `Departs:`, and `Check-out time:`;
+- the full-days line ← those two dates;
+- the total line ← every input of the arrival, departure and full-days lines;
+- the delta line ← the anchor legs' timezone annotations.
+
+The hotel-departure time is not an input (D-9). *Trigger:* an act that records a change to a line's
+input. *Repair:* that line, in that act, under rule 15 (Decision 7).
+
+**Each traveller's window.** *Inputs:* the `## Group` roster; each member's composed `Leaving from:`
+and `Arrive / leave:`, and whether they have a profile at all; `### Additional origins`; the anchor
+legs and trip dates an `ASSERTED-DIFFERENT` statement resolves against; `Check-in time:` and
+`Check-out time:`. *Trigger:* every reconciler pass. *Repair:* the rebuild, which announces what it
+replaces (Decision 2).
+
+**What reaches which.** A destination change reaches neither. A change of dates reaches the trip
+window only through its legs. A roster change, or a change to an origin other than the anchor,
+reaches each traveller's window only. Check-in and check-out reach both.
+
+*"Staleness is reported, never repaired in place"* survives for neither block; its descendant is
+Decision 6.
+
+### 4. The enrichment contract
+
+**The reconciler's write set widens by one rebuilt file, the presence file.** The `[ENRICH]`-only
+contract on `trip-context.md` does not widen, and the research role widens nowhere (D-3).
+
+**Not widened, on purpose: the enrichment row's `Output File` cell** in `CLAUDE.md`'s agent roster
+(`:294`). A path under `outputs/` in that cell enters `/trip research`'s agent-key filter
+(`skills/trip/SKILL.md`:877-880). The presence file is declared where the cost estimate is — in
+`reference/data-architecture.md` § 1.1 and in `CLAUDE.md`'s File Structure tree — and not in
+§ *Output Versioning*, whose absence rule yields to § 1.1 (`reference/data-architecture.md`:985-1005).
+
+### 5. Provenance
+
+**`Last derived:` retires with the per-traveller block.** Each window's provenance is the presence
+file's `generated:` — the date of the pass, written on every rebuild. A `generated:` older than the
+newest input change means no rebuild has run since. That is never a defect and never a gate, because
+the surface that changed the input already said so (Decision 6). **The trip window carries none:** its
+repair happens in the act that changes its input, and a date line would be read by nothing
+(`skills/trip/SKILL.md`:301).
+
+### 6. Staleness and routing
+
+*"Staleness is reported, never repaired in place"* survives for neither artifact.
+
+- Until the next rebuild, every surface that changes an input of a traveller's window and does not
+  dispatch the reconciler says in its own output that the presence file is behind, and names
+  `/trip-record travelers`.
+- Those inputs are: the roster; a member's composed `Leaving from:` or `Arrive / leave:`, or whether
+  they have a profile at all; an `### Additional origins` block; an anchor leg; check-in or
+  check-out; the trip dates.
+- An input of the trip window is recorded through `/trip-record fact`.
