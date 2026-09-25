@@ -30,14 +30,16 @@
 #   --disable-pages-only   unpublish: take the site offline but KEEP the repo (reversible). Default DELETES the repo.
 #   --yes          unpublish: skip the interactive confirmation (required for a non-interactive delete).
 #
-# Organizer-confirm gate (ADR-003 § Decision 2). update refuses when the itinerary content
-# of the outgoing render differs from what is currently published and no organizer
-# confirmation covers it, or, once a baseline is recorded, when it cannot determine that
-# content at all (a render it cannot read, project or normalize); rotate republishes through
-# update and inherits the refusal. A republish carrying the SAME itinerary content — a
-# coordination-state marker change, say — is not a plan change and passes. Record the
-# approval with `confirm` (terminal only, no override flag); it binds to that exact itinerary
-# content, so a later edit re-opens the gate.
+# Organizer-confirm gate (ADR-003 § Decision 2). Once a baseline is recorded, update refuses
+# when the itinerary content of the outgoing render differs from what is currently published
+# and no organizer confirmation covers it, or when it cannot determine that content at all
+# (a render it cannot read, project or normalize); rotate republishes through update and
+# inherits the refusal. With no baseline the gate is NOT ACTIVE and update publishes without
+# asking for confirmation; publish and update record one after each push whose render they
+# can identify, and warn when a push leaves the trip without one. A republish carrying the
+# SAME itinerary content — a coordination-state marker change, say — is not a plan change
+# and passes. Record the approval with `confirm` (terminal only, no override flag); it binds
+# to that exact itinerary content, so a later edit re-opens the gate.
 #
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
