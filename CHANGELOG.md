@@ -15,10 +15,11 @@ that decision will make false when those slices land. Nothing in the engine beha
 **The trip's own planning window stays in the trip file, and belongs to the verb that records its
 inputs.** Its lines are computed from the booked flights and the hotel's check-in and check-out
 times, and the verb that records those facts keeps the affected lines current in the same act. A
-changed input recomputes only the lines it feeds, and a line that cannot be recomputed is reported
-with the input it could not read, never blanked and never estimated. The hotel-departure time is not
-one of its inputs: it stays free prose, and the last planning day ends where the transport brief
-says the group should leave.
+changed input recomputes only the lines it feeds, and nothing is estimated. A line whose changed
+input cannot be read takes its placeholder, and only a line held back by an unchanged, unreadable
+input is left as it was and reported with the input it could not read, never blanked. The
+hotel-departure time is not one of its inputs: it stays free prose, and the last planning day ends
+where the transport brief says the group should leave.
 
 **Each traveller's window moves out of the trip file, into a new traveller-presence file** that the
 enrichment agent rebuilds on every reconcile pass, beside the traveller model. The agents that read
