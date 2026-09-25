@@ -34,7 +34,7 @@ So the fixture mirrors the real store's shape instead — a `people/` directory 
 record — and this README sits beside it exactly as `people/README.md` sits beside the real
 store's contents.
 
-## Why the record is tracked when every real one is ignored
+## Why this record is tracked when no real one is
 
 `.gitignore` carries `/people/*` with `!/people/README.md`, **rooted**. The leading slash is
 what makes this fixture possible: the rule catches the store at the repo root and does not
