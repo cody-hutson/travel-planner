@@ -901,10 +901,10 @@ earlier than something else, and never when.
 
 The trip window's consequences take a landing order of their own: rule 15 and the template's
 per-line input declaration land no later than the change that names `/trip-record` in `CLAUDE.md`
-§ *Write ownership*, that change carries the lines of `fact` it makes false — its `[DERIVED]` route,
-its one-block rule and its cross-block row that names no command
-(`skills/trip-record/SKILL.md`:1306, `:1321-1322`, `:1372`) — and rule 15 alone does nothing until
-then, because its trigger is a block that table assigns to `/trip-record`.
+§ *Write ownership*, that change carries the lines of `fact` it makes false — its *Reads:* line,
+its `[DERIVED]` route, its one-block rule and its cross-block row that names no command
+(`skills/trip-record/SKILL.md`:1280, `:1306`, `:1321-1322`, `:1372`) — and rule 15 alone does
+nothing until then, because its trigger is a block that table assigns to `/trip-record`.
 
 ### The per-trip transition
 
