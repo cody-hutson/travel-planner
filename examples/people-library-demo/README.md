@@ -5,7 +5,10 @@ personal detail, and — deliberately — no passport value of any kind.
 
 A minimal worked example for class **C22 `people/<person>.md`**, the durable person record.
 It exists to carry the one thing the schema gate cannot otherwise reach: **a tracked
-instance of a class whose real store is git-ignored.**
+instance of a class whose real store belongs to the operator and lives outside this
+repository.** Where that store is read from is the store-root rule's, stated in
+[`../../reference/data-model.md`](../../reference/data-model.md)
+§ *Composition — the trip-side read of a durable record*.
 
 It carries a second file for a second reason: [`travelers/noor.md`](travelers/noor.md), a
 traveller file bearing `person: psn-3c7e`. That is the **composition witness** — the pair
@@ -14,8 +17,10 @@ witness* below says why it lands here rather than in a trip fixture.
 
 **It now carries a third class for a third reason.** [`groups/grp-4a81.md`](groups/grp-4a81.md)
 is the witness for **C23 `groups/<group>.md`**, the reusable-group record — a second
-cross-trip class whose real store is ignored in exactly the same way. § *The group witness*
-below says why it lands in this root rather than opening one of its own.
+cross-trip class whose real store, like the person store, belongs to the operator and lives
+outside this repository: [`../../CLAUDE.md`](../../CLAUDE.md) § *Resolving a trip* names
+`groups/` among the stores the operator's data root holds. § *The group witness* below says
+why it lands in this root rather than opening one of its own.
 
 ## Why this is a new fixture root rather than a file in an existing one
 
@@ -58,8 +63,11 @@ coverage it is structurally unable to check. The invariant is asserted — see g
 
 [`people/psn-9d42.md`](people/psn-9d42.md) is an ordinary instance of the same class, added
 for one reason: **the validity horizon needed an instance the schema gate can reach.** The
-real store is git-ignored, so an untracked record cannot witness anything; and the record
-above cannot witness this particular mark, because it demonstrates the horizon's *home*
+real store belongs to the operator and lives outside this repository, as
+[`../../reference/data-model.md`](../../reference/data-model.md)
+§ *Composition — the trip-side read of a durable record* places it, so no record in it is
+tracked and an untracked record cannot witness anything; and the record above cannot
+witness this particular mark, because it demonstrates the horizon's *home*
 field, `Passport`, precisely by leaving it empty.
 
 | Property | Where to look |
