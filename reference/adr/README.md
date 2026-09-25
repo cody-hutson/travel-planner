@@ -92,4 +92,4 @@ carries the account.
 | [ADR-025](ADR-025-engagement-model-over-time.md) | The engagement model over time — the axis the engine already computes, what carries across a boundary, and identity continuity | Accepted |
 | [ADR-026](ADR-026-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Accepted |
 | [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |
-| [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Proposed |
+| [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
