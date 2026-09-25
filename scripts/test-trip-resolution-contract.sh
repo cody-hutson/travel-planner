@@ -190,9 +190,10 @@ HEADER_FENCE='trip-contract-header'
 # shape whatever the grants, which is why every entry is spelled as a bare list; CLAUDE.md
 # § "Resolving a trip" states that measurement and is its single home. They are WRITTEN
 # DOWN here, unlike the entry markers PIN3 derives, because they are not a property of the
-# canonical list — they are the shapes the list must not take. Two sites read them: PIN3's
-# `wrapped` limb fails a canonical entry that opens with one, and is_evid_line counts a
-# consumer line that opens with one, so a stale wrapped copy is graded rather than unseen.
+# canonical list — they are the shapes the list must not take. Among the sites that read
+# them, PIN3's `wrapped` limb fails a canonical entry that opens with one, and is_evid_line
+# counts a consumer line that opens with one, so a stale wrapped copy is graded rather than
+# unseen.
 EVID_RETIRED_OPENERS='`{
 `('
 
@@ -804,7 +805,8 @@ fi
 #   cs code-span depth cells, MUST NOT FIRE      cx D2 (code-span specificity)
 #   hs H2 (code-span HEADER depth — fires, while the same rendering in the CELL passes)
 #   mx P3 (marker specificity — a line opening with an entry's own marker is counted, and a
-#          line opening with any other code span is not)
+#          line opening with any other code span is not, except a retired wrapper opener,
+#          which is counted by design and graded by arm wr)
 #   wr P3 (a surplus copy in the retired wrapper shape is counted, not passed over)
 # and CTL-e is graded LAST, so the before/after comparison it makes covers every fixture
 # above it rather than a prefix of them.
