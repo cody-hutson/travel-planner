@@ -1,6 +1,6 @@
 # ADR-028: Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-25)
 - **Deciders:** repo maintainer
 - **Driving work:** the *derived blocks get an owner* milestone. This record is its gating decision.
 - **What this record is.** It decides the owner, inputs, repair and provenance of both derived
