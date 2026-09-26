@@ -7882,7 +7882,7 @@ T10_CONF=0; case "$T10_TOK" in *'.change-confirmed'*) T10_CONF=1 ;; esac
 if [ "$T10_CTL" -ne 1 ] || [ "$T10_CONF" -ne 1 ]; then
   FAIL "T10a-CTL: an injected sidecar path was recovered=$T10_CTL and the paragraph's own .change-confirmed token was found=$T10_CONF — the extractor is not reading the site verb's read declaration"
 elif [ "$T10_HIT" -eq 0 ] && [ "$T10_N" -gt 0 ]; then
-  PASS "T10a: the $T10_N backticked token(s) of the site verb's read declaration name neither .approvers nor .approvals — it reads the record, never the roster keys; an injected sidecar path was recovered from a mutated copy"
+  PASS "T10a: the $T10_N backticked token(s) of the site verb's read declaration name neither .approvers nor .approvals — it reads the record, never the roster keys; ARMED-RED — the same predicate over a copy with a sidecar path injected into that declaration finds it"
 else
   FAIL "T10a: the site verb's read declaration names an approver sidecar in $T10_HIT token(s) — a build reading it could render who was declared or who approved"
 fi
@@ -7912,10 +7912,18 @@ T10B_NAMES=0
 for t10n in Aria Beno Cass Dara Enzo; do
   case "$(cat "$T_DIR/t10_a.html")" in *"$t10n"*) T10B_NAMES=$((T10B_NAMES+1)) ;; esac
 done
-if [ "$T10B_SAME" -eq 1 ] && [ "$T10B_NAMES" -eq 5 ]; then
-  PASS "T10b: renders built to the contract from S25a's two records — declared {aria, beno} and {cass, dara}, each approving — are byte-identical, and each carries all 5 roster names in its hero: the names are bound content either way, and which of them approved never reaches the page"
+# ARMED-RED: a builder that also read the declaration — the read the contract forbids — renders the
+# two trips differently, so the byte comparison above can see approver-ness when it leaks.
+t10_render_mut() { # <trip> <out> — t10_render, plus the declared keys the site must never read
+  t10_render "$1" "$2"
+  printf '<!-- %s -->\n' "$(tr '\n' ' ' < "$1/.approvers")" >> "$2"
+}
+t10_render_mut "$SA25A" "$T_DIR/t10_ma.html"; t10_render_mut "$SA25B" "$T_DIR/t10_mb.html"
+T10B_MDIFF=0; cmp -s "$T_DIR/t10_ma.html" "$T_DIR/t10_mb.html" || T10B_MDIFF=1
+if [ "$T10B_SAME" -eq 1 ] && [ "$T10B_NAMES" -eq 5 ] && [ "$T10B_MDIFF" -eq 1 ]; then
+  PASS "T10b: renders built to the contract from S25a's two records — declared {aria, beno} and {cass, dara}, each approving — are byte-identical, and each carries all 5 roster names in its hero: the names are bound content either way, and which of them approved never reaches the page; ARMED-RED — a builder that read the declaration renders the two differently"
 else
-  FAIL "T10b: the two renders are byte-identical=$T10B_SAME (want 1) and carry $T10B_NAMES of 5 roster names (want 5)"
+  FAIL "T10b: the two renders are byte-identical=$T10B_SAME (want 1), carry $T10B_NAMES of 5 roster names (want 5); a declaration-reading builder renders them differently=$T10B_MDIFF (want 1)"
 fi
 
 # ── T11a — in the `site` verb's section, `approval-count=` first appears only after `confirmed=`,
