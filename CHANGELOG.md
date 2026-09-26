@@ -31,7 +31,9 @@ exposure, and what to do if one of your trips was rotated or updated while the v
   site's passphrase is `rotate`. A trip rotated under the old behaviour, with the variable still set,
   now meets this refusal instead of being quietly re-keyed.
 - **`update` re-checks `.passphrase` just before it pushes**, so it cannot put a passphrase back over a
-  rotation that finished while it was running.
+  rotation that finished while it was running. When the check stops it, `update` also takes its own
+  commit back out of the trip's local clone, so a later push cannot carry that page into the site's
+  history.
 - **Each step of encrypting, committing and pushing now stops the run on its own when it fails.**
   Before, a failed commit could read as a completed rotation whenever the caller had turned off the
   shell's stop-on-error setting.
@@ -55,8 +57,10 @@ the earlier versions as well, `unpublish` (which deletes the repository) and the
   - a copy of the trip on another machine.
 
   A check against the live site itself would cover them, and it is not part of this release.
-- Two rotations racing each other can still leave `.passphrase` naming a passphrase other than the one
-  last pushed. That is a lockout, not a leak.
+- Commands run on the same trip at the same moment are still not serialized. Two rotations racing
+  each other can leave `.passphrase` naming a passphrase other than the one last pushed — a lockout,
+  not a leak. An update racing a rotation can, in a narrow window, still put a page under the old
+  passphrase into the site's history. Run one command per trip at a time.
 
 ## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 

@@ -615,8 +615,9 @@ fall-through — and place its mitigation in the command. A second one existed, 
 the trip's `.passphrase` held a different key, so a routine update could undo a rotation
 (GHSA-gmm2-v7rr-jq7r). The script now refuses, before any network call, whenever the variable is set
 and the trip's `.passphrase` holds a different key or one it cannot read as a key, and `rotate` no
-longer consults the variable at all. The unreadable-file residual, and its command-layer mitigation,
-are unchanged. The `/trip-publish` precondition that refuses whenever the variable is set stays in
+longer takes its key from the variable; it reads the variable only to warn when it still differs
+from the new key. The unreadable-file residual, and its command-layer mitigation, are unchanged.
+The `/trip-publish` precondition that refuses whenever the variable is set stays in
 place: a command that must never read a passphrase value cannot tell an agreeing pair from a
 disagreeing one, so it still declines to reach the script's decision. No row, disposition or reason
 in the table above changes.
