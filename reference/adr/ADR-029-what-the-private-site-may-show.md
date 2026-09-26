@@ -107,7 +107,26 @@ Counts are authored to `ADR-013` form **F1**, anchored measurement.
 
 ## Options considered
 
-*Authored in the commits that follow on this release branch.*
+**The verdict.** Four options were weighed at the first design pass and narrowed across the next
+three. CR-1d locked a fifth shape.
+
+| Option | What the private site would carry | Disposition |
+|---|---|---|
+| **VO-1 — nothing moves** | no leaning value, in any form, on either limb | **Not locked.** It was safe, and it left an existing flow ungoverned: the group already relays the attributed shortlist by hand. It also left the milestone's pre-plan page with nothing to render, the empty surface #1241's third acceptance criterion rules out |
+| **VO-2 — the intake position, as stated** | the shortlist as its writer produces it: names, counts, vetoes with their reasons, and verbatim leaning text | **Rejected from the first pass onward.** It renders a veto's free-text reason and a leaning's verbatim text, which every later pass kept off the page |
+| **VO-3 — aggregate only** | candidates and counts, with no roster name beside any leaning | **Rejected at the second pass.** It lost its only advantage inside the party to the operator's facts — leanings are already open there — and it still needed the person record's class to move |
+| **VO-4, revised as VO-4R to VO-4R4 — party leanings, consented per trip** | named leanings in a written allowlist form, only on a trip where every traveller who filed a form agreed, admitted by their content and bound to the shortlist by a digest | **Not carried forward.** Each revision needed a further condition, and CR-1d found that machinery defending against a public site the product does not have |
+| **The group-site rule** | what the group needs to coordinate the trip, under the coordination test and its lists, with a share mark for desires and for the occasion | **Locked at CR-1d.** § *Decision* 1 to 6 |
+
+**How the change is expressed.** The card asked whether a widening is a new class, a per-limb value,
+or a model where the site declares its limb.
+
+| Mechanism | Disposition |
+|---|---|
+| **A new value of the `publish:` enum**, such as a group-only class | **Rejected.** § 5.1's enum is closed at four values, and an artifact class cannot isolate a field: the traveller model and the person record carry values that are out beside values that are in, so no class value of either artifact can admit one without the other |
+| **A per-limb `publish:` value, or a site that declares its limb** | **Rejected.** The render is limb-blind: the build writes one page before any limb is chosen and both limbs ship that page, so a limb-keyed class would need a build-time limb input the build does not have. The site phase-model record decides the shape limb-blind as well |
+| **A field-keyed exception inside `internal-hard`**, consent-gated and bound by content and digest | **Not carried forward**, with the rest of the fourth pass's enforcement design |
+| **A reading of the class for the values the group may see** — the class values stay; for those values alone, *never rendered* reads *never on a public page* on the private site; they reach the render only through a `bound` artifact their producer writes; and the public path refuses group-only content by structure | **Chosen.** § *Decision* 1 and 7. It changes no class value of the traveller model, the traveller file or the person record; the one class value that moves is the destination shortlist's |
 
 ## Decision
 
