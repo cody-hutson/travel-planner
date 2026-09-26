@@ -6898,20 +6898,28 @@ else
 fi
 
 # ── CTL-ST-CF-REGION-RENDER — the region renderer over CTL-ST-CF-Q4-NO's reading: exactly ONE region
-# FAILs beyond those the live reading already fails, it is the region the leak was written into, and the
-# ids are the live ones, in the same order. A DELTA, so a region already red does not redden this too.
+# FAILs beyond the live reading, it is the region the leak was written into, and the ids are the live
+# ones, in the same order. A DELTA on each region's FINDING COUNT, never on its status alone: a region
+# FAILs beyond the live reading when it FAILs where that reading passes it, or FAILs with more findings
+# than that reading gives it. A status cannot move FAIL → FAIL, so the count is what shows the leak
+# landing in a target the form already fails, and a region already red does not redden this too.
 ST_CF_RR0="$(st_cf_regions_report "$ST_CF_TAG" "$ST_CF_LIVE")"
 ST_CF_RR1="$(st_cf_regions_report "$ST_CF_TAG" "$ST_CF_Q4NO_V")"
 ST_CF_RRK="$(awk -v t="${ST_CF_QN%%|*}" '$1 == "GRADED" { k++; if ($2 == t) { print k; exit } }' <<<"$ST_CF_LIVE")"
 ST_CF_RRW="$(awk -F'\t' -v k="${ST_CF_RRK:-0}" 'NR == k + 0 { print $2; exit }' <<<"$ST_CF_RR0")"
-ST_CF_RRF="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "FAIL") f[$2] = 1; next } $1 == "FAIL" && !($2 in f) { printf "%s ", $2 }' <(printf '%s\n' "$ST_CF_RR0") <(printf '%s\n' "$ST_CF_RR1"))"
+# st_cf_rr_count <report> <reading> — "<id><TAB><PASS|FAIL><TAB><findings>" per region, in order: each
+# report line with the finding count of the GRADED record it renders, that record's eleventh field.
+st_cf_rr_count() { awk -F'\t' 'FILENAME == ARGV[1] { split($0, g, " "); if (g[1] == "GRADED") c[++n] = g[11] + 0; next } NF >= 2 { k++; print $2 "\t" $1 "\t" c[k] + 0 }' <(printf '%s\n' "$2") <(printf '%s\n' "$1"); }
+ST_CF_RRC0="$(st_cf_rr_count "$ST_CF_RR0" "$ST_CF_LIVE")"; ST_CF_RRC1="$(st_cf_rr_count "$ST_CF_RR1" "$ST_CF_Q4NO_V")"
+ST_CF_RRF="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($2 == "FAIL") n0[$1] = $3; next } $2 == "FAIL" && (!($1 in n0) || $3 + 0 > n0[$1] + 0) { printf "%s ", $1 }' <(printf '%s\n' "$ST_CF_RRC0") <(printf '%s\n' "$ST_CF_RRC1"))"
+ST_CF_RRA="$(awk -F'\t' -v w="$ST_CF_RRW" '$1 == w { print $3; exit }' <<<"$ST_CF_RRC0")"; ST_CF_RRB="$(awk -F'\t' -v w="$ST_CF_RRW" '$1 == w { print $3; exit }' <<<"$ST_CF_RRC1")"
 ST_CF_RRI0="$(cut -f2 <<<"$ST_CF_RR0")"; ST_CF_RRI1="$(cut -f2 <<<"$ST_CF_RR1")"
 if [ -z "$ST_CF_QN" ]; then
   VACUOUS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: CTL-ST-CF-Q4-NO had no region to write into, so there is no provoked reading to render"
 elif [ -n "$ST_CF_RRW" ] && [ "${ST_CF_RRF% }" = "$ST_CF_RRW" ] && [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ]; then
-  PASS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over the reading CTL-ST-CF-Q4-NO provoked, exactly one region renders FAIL beyond those this form already fails, ST-CF[$ST_CF_RRW], the region the leak was written into, and every region id is the live one in the live order. So a region verdict names WHICH region failed, and a form conformant on all but one region no longer reads like one conformant on none"
+  PASS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over the reading CTL-ST-CF-Q4-NO provoked, exactly one region FAILs beyond the live reading, ST-CF[$ST_CF_RRW], the region the leak was written into, its findings ${ST_CF_RRA} → ${ST_CF_RRB}; and every region id is the live one in the live order. So a region verdict names WHICH region failed, and a form conformant on all but one region no longer reads like one conformant on none"
 else
-  FAIL "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over CTL-ST-CF-Q4-NO's reading the regions failing beyond the live reading's were [${ST_CF_RRF% }], where exactly [${ST_CF_RRW:-the leak target}] is owed, and the id list $( [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ] && echo matched || echo DIFFERED from ) the live one"
+  FAIL "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over CTL-ST-CF-Q4-NO's reading the regions failing beyond the live reading's — where it passes them, or with more findings than it gives them — were [${ST_CF_RRF% }], where exactly [${ST_CF_RRW:-the leak target}] is owed, its findings ${ST_CF_RRA:-none} → ${ST_CF_RRB:-none}; and the id list $( [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ] && echo matched || echo DIFFERED from ) the live one"
 fi
 
 # ── CTL-ST-CF-DECL-V2 — the version-2 key set is DERIVED, and it fails closed. With the contract record's
