@@ -384,8 +384,111 @@ defeat:** a reader who holds it, and a copy already taken. That is why the publi
 
 ## Consequences
 
-*Authored in the commits that follow on this release branch.*
+**Positive**
+
+- **The group's coordination flow moves onto a governed channel.** What travellers already relayed by
+  hand appears on a surface with a stated list, a stated notice and a stated refusal on the public
+  path.
+- **The change is class-shaped.** No journey record is superseded, the three class-derived bounds move
+  by pointer, and exactly one class value moves — the destination shortlist's.
+- **The milestone's pre-plan page has something to render.** The site phase-model record gives the
+  shortlist and the group's shared details a home before a plan exists, so #1241's third acceptance
+  criterion is met without its revisit branch.
+- **The non-publishable field class is kept out by construction and checked at the outcome.**
+  Safeguard 7 keeps it from every writer of a group-visible file, and the check of safeguard 6 reads
+  every file the build reads before any publish.
+- **The approval milestone's attribution bound is unchanged**, so its cards inherit nothing wider.
+
+**Costs and residuals, stated rather than smoothed**
+
+- **Filer status is inferable on the private page.** A traveller's shared values appear beside their
+  roster name only if they filed their own form, so a reader can infer who filed. The verdict admits
+  this on the private site; the engagement value itself is never rendered, and nothing of it reaches a
+  public page.
+- **Readership is whoever holds the passphrase**, and a passphrase shared beyond the party widens it
+  (§ 8). The notice says so.
+- **Removal reaches forward only.** A copy already cached, screenshotted or forwarded persists.
+- **A form edited by hand is observed only at the next reconcile**, and a publish in between shows the
+  previous state (safeguard 4).
+- **The concealed block lists its attendees**, by the form requirement 2 fixes, so a block whose
+  attendee list leaves one traveller out can itself tell that traveller something is planned.
+- **The OUT rule on values is conduct at the producers.** Safeguard 6 checks the field class
+  mechanically; an OUT kind written in free text is caught by no mechanism until Wave 1 decides whether
+  to extend the check.
+- **Restatements of the anonymized clause.** The class clause *in any form, including anonymized* is
+  restated across the corpus — 16 files and 23 occurrences at `8b2ac05`, measured with the pattern
+  `in\W+any\W+form\W+including\W+anonymi[sz]ed`, which tolerates a blockquote line break. That
+  population is what the Wave-1 slice reconciles when it relaxes the IN values' bound, and it is not
+  edited in this release.
+
+**Reversibility and confidence.** The verdict is **EXPENSIVE** once a slice renders a shared value —
+a published value cannot be unpublished — and **CHEAP** while this record reads `Proposed`, because
+nothing is built on it. The class-model reading is **MODERATE**: the shortlist's move reverts in one
+commit. Confidence is **HIGH** that the verdict is the operator's and is transcribed whole, and
+**MEDIUM** on safeguards 6 and 7, whose false-positive cost and projection boundary Wave 1 measures.
+
+## What this record does not decide
+
+| Not decided here | Decided by |
+|---|---|
+| Where each IN item shows, in which phase, and under which section ceiling | [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) |
+| What of a traveller's contact and emergency details the group sees, and how an emergency contact's details are kept | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| The form of the concealed block, and the filer predicate the build reads | the site phase-model record |
+| The share mark's representation on the forms, the notice's wording, and the recording verb for a refusal or withdrawal | the Wave-1 slices below |
+| Any approval attribution | the approval milestone's records, under `ADR-010` § 4 unchanged |
+
+## Follow-on build slices
+
+All Wave 1. **None goes live before the fix for the rotation defect tracked privately** (safeguard 5).
+
+- **The share mark on both forms**, and the notice that replaces *never published*, with the example
+  answers safeguard 1 names replaced.
+- **The concealed occasion block**, in the form the site phase-model record decides.
+- **The public-path refusal of group-only content**, keyed on structure (safeguard 2).
+- **The filer predicate the build can read**, so that people who did not fill in their own form are
+  excluded (safeguard 3).
+- **The recording verb for a refusal, a removal or a withdrawal**, which runs the reconcile step in
+  the same act (safeguard 4). Today the profile verb names the reconcile step and does not run it.
+- **The destination shortlist's class edit**, with its § 9.1 authority and fence rows in one commit,
+  in the site phase-model record's render slice.
+- **The neutral-label producer rules** of § 5, and a new neutral-label witness fixture.
+- **Safeguard 6's publish-time check**, and the measurement that decides whether it extends to free-text
+  OUT items.
+- **Safeguard 7's projection script**, and the split between internal and group-visible writes.
+- **The reconciliation of the restated anonymized clause**, over the population the Consequences name.
+- **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, and the
+  Decision-4 supersession entry inside `ADR-009` (§ 7).
 
 ## References
 
-*Authored in the commits that follow on this release branch.*
+- [ADR-026](ADR-026-channel-architecture.md) — the channel architecture: `may-carry`, the
+  channel-axis table whose encrypted-limb `audience` cell this record moves, and the `observers`
+  correction this release carries beside this record.
+- [ADR-025](ADR-025-engagement-model-over-time.md) — never-carry 2, never-carry 3, never-carry 5, and
+  § *Decision* 4's render prohibition, each read here as it tracks the class.
+- [ADR-010](ADR-010-per-traveler-approval-collection.md) — § 4's bar on traveller identity reaching the
+  render, class-derived for the IN values, and unchanged for approval attribution.
+- [ADR-009](ADR-009-data-architecture.md) — § *Decision* 4, the publishability model, of which this
+  record supersedes 4.1's `internal-hard` sentence for the IN values.
+- [ADR-006](ADR-006-third-party-data-capture.md) — the third-party boundary, which stands.
+- [ADR-004](ADR-004-contact-emergency-privacy.md) — the contact and emergency model the contact and
+  emergency record revisits.
+- [ADR-008](ADR-008-publish-content-guard.md) — the two-limb publish guard, unchanged.
+- [ADR-012](ADR-012-people-library.md) — the person record's class, which stays `internal-hard` and is
+  read for its IN fields by A-1.
+- [ADR-013](ADR-013-count-assertion-basis.md) — every count in this record is authored to form F1.
+- [ADR-014](ADR-014-cross-trip-consent-refusal.md) — the refusal behind never-carry 3.
+- [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) — the site-channel
+  consumer of this verdict.
+- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the record that
+  decides what of a traveller's contact and emergency details the group sees.
+- `reference/data-architecture.md` — § 5.1's class enum, § 5.5's paraphrase limit, and § 5.6's
+  `publish-contract-values` fence, whose `field` rows safeguards 6 and 7 name.
+- `reference/site-layout-spec.md` — § 9.1, the authority for what the site build reads.
+- `templates/person-intake.template.md` and `templates/traveler-intake.template.md` — the two intake
+  forms whose *never published* promise safeguard 1 replaces, and whose labels A-1 and § 2 use.
+- `agents/destination-ideation.md` — the shortlist's writer, which joins the producer list of § 5.
+- `agents/05-hub-planner.md` — the itinerary's writer, which owes § 5's neutral labels.
+- Provenance: the card, #1242; its design sub-task, #1385, carrying the four passes, the four reviews,
+  the operator's facts, CR-1 to CR-1d and decision Q; the joint source-binding step, #1383; decision P
+  on #1546; the plan, its surface map, the fit review and CR-2 on #1369.
