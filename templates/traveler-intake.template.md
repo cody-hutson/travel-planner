@@ -48,6 +48,10 @@ publish: internal
 >   the placeholder text sitting there** — a leftover `[bracketed placeholder]` reads as
 >   *unanswered*, exactly like an empty line, and a profile still carrying its brackets
 >   reads as one nobody has filled in yet.
+> - A bracket that opens with `closed:` lists every answer that question takes; one that
+>   opens with `open:` lists suggestions, and an answer of your own is just as good. That
+>   opening word is a note to you, not part of your answer — replace the whole bracket
+>   either way. Skipping works exactly as it does everywhere else.
 > - For the repeatable desire blocks, **add as many as you like and delete the rest.**
 >
 > **Two things are worth keeping straight as you go:**
@@ -66,6 +70,19 @@ publish: internal
 > there, not written here.
 >
 > Placeholders only in this template — no real personal data in the template file itself.
+>
+> **The `intake-form` block below is not a field you fill in.** It tells the engine what this
+> form asks, and in a finished profile it only notes which form was filled in. Leave it
+> exactly as it stands.
+
+```intake-form
+form: templates/traveler-intake.template.md
+form-version: 1
+writer: human
+boundary: <!-- PROFILE-END -->
+classification: reference/data-model.md § Field Scope → The classification
+output: travelers/<traveler>.md
+```
 
 ---
 
@@ -85,7 +102,7 @@ publish: internal
 > *For when no destination is fixed yet.* Where would you love to go — and where would
 > you rather not? Skip this whole section once the destination is already decided.
 
-- ⭐ **Trip vibe:** [The kind of trip you're after — e.g., beach / city / nature / culture / food / mix. Skip if you're easy.]
+- ⭐ **Trip vibe:** [open: The kind of trip you're after — e.g., beach / city / nature / culture / food / mix. Skip if you're easy.]
 
 > This is *your* wishlist for this trip. The planner gathers everyone's leanings into a
 > group shortlist — you're not picking the destination here, just saying what you're after.
@@ -154,23 +171,23 @@ publish: internal
 > and say whether it is a one-off or something you want **every day**:
 
 - ⭐ **Desire:** [What you want — an archetype from the list above is a complete answer on its own. **One line is a complete first pass.** e.g., start with "a slow morning", sharpen later to "a slow museum morning rather than a packed sightseeing sprint."]
-- **Priority tier:** [Exactly one of:
+- **Priority tier:** [closed: Exactly one of:
     - **anchor** — you'd be genuinely disappointed to miss this; build the trip to land it.
     - **wish** — a real want to try hard for, but it can yield to a need or to someone else's anchor.
     - **nice-to-have** — a bonus; lovely if it fits, no loss if it doesn't.]
-- **Recurrence:** [*(optional)* `one-off` or `daily`. Most wants are one-off — a single occasion somewhere in the trip. Say `daily` for something you want **every day you're there**: a morning coffee before the day starts, a swim, an evening walk. It's separate from how much it matters — a daily want can be an anchor, a wish, or a nice-to-have. Leave the em dash (`—`) if it's a one-off.]
+- **Recurrence:** [closed: *(optional)* `one-off` or `daily`. Most wants are one-off — a single occasion somewhere in the trip. Say `daily` for something you want **every day you're there**: a morning coffee before the day starts, a swim, an evening walk. It's separate from how much it matters — a daily want can be an anchor, a wish, or a nice-to-have. Leave the em dash (`—`) if it's a one-off.]
 - **Theme tag(s):** [*(optional)* a word or two grouping it by kind — e.g., `museums, slow-pace`, `markets, food`, `nature`, `nightlife`. Skip if none come to mind.]
 - **Overlap:** [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]
 
 - **Desire:** [Second thing you want — e.g., "explore the local markets."]
-- **Priority tier:** [anchor / wish / nice-to-have]
-- **Recurrence:** [*(optional)* `one-off` / `daily` — leave `—` for a one-off]
+- **Priority tier:** [closed: anchor / wish / nice-to-have]
+- **Recurrence:** [closed: *(optional)* `one-off` / `daily` — leave `—` for a one-off]
 - **Theme tag(s):** [*(optional)* — e.g., `markets, food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
 - **Desire:** [Third thing you want — e.g., "one standout coffee place."]
-- **Priority tier:** [anchor / wish / nice-to-have]
-- **Recurrence:** [*(optional)* `one-off` / `daily` — leave `—` for a one-off]
+- **Priority tier:** [closed: anchor / wish / nice-to-have]
+- **Recurrence:** [closed: *(optional)* `one-off` / `daily` — leave `—` for a one-off]
 - **Theme tag(s):** [*(optional)* — e.g., `food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
@@ -185,7 +202,7 @@ publish: internal
 >  How well you already know this destination — a soft signal that helps shape what gets
 > picked. Skip either line if it doesn't apply.
 
-- **Been here before?:** [How well you already know this destination — one of: never / once / a few times / know it well — e.g., "once, about ten years ago." Skip if the destination isn't decided yet, or if you'd rather not say.]
+- **Been here before?:** [closed: How well you already know this destination — one of: never / once / a few times / know it well — e.g., "once, about ten years ago." Skip if the destination isn't decided yet, or if you'd rather not say.]
 - **Already done:** [*(optional)* Anything you've already seen or eaten here that you don't need to repeat — e.g., "did the castle and the main museum last time." Skip if it doesn't apply.]
 
 > This is about *this destination*, not your tastes in general — those live in your person
@@ -199,7 +216,7 @@ publish: internal
 > everyone their own space without anyone feeling dragged along or left out. It's *your
 > individual view* — the planner decides any actual splits. Skip any line that doesn't apply.
 
-- **Group time:** [How much of the trip you'd like as a group — e.g., one of: "Mostly together" / "Some solo or sub-group time" / "Lots of independent time." Skip if you don't mind.]
+- **Group time:** [open: How much of the trip you'd like as a group — e.g., one of: "Mostly together" / "Some solo or sub-group time" / "Lots of independent time." Skip if you don't mind.]
 - **Split off with:** [Anyone you'd especially enjoy peeling off with — names, "anyone," or "no preference" — e.g., "Jordan, for the slower stuff." Skip if no preference.]
 - **Whole-group moments:** [Things you want EVERYONE there for — e.g., "every dinner", "the day trip", "the first night." Skip if none feel essential.]
 
@@ -255,7 +272,7 @@ follow these rules exactly.
    text in the file is a hint for you — do not read it out as a script.
 3. **Offer the choices.** Where a field lists options, or the section carries a menu, put
    those in front of them. Recognising something is far faster than recalling it.
-4. **Do the starred fields first.** The three fields marked with a star are the two-to-three
+4. **Do the starred fields first.** The fields marked with a star are the two-to-three
    minute pass. When they are done, say what is left and ask whether they want to keep
    going, stop there, or jump to a particular section. All three are fine answers.
 5. **"Skip" is always valid.** Accept it immediately and move on. Never push twice.
@@ -268,14 +285,12 @@ follow these rules exactly.
 ### Assistant — the sections, in order
 
 ### Step 1 — About you
-Fields: **Relationship**, **Party**.
 Ask whether anyone is travelling with them who will not fill in their own form — kids and
 ages, a partner who is not doing this. Relationship only matters if the rest of the group
 would not already know who they are. Their name goes in the title line at the top of the
 file, not in a field of its own.
 
 ### Step 2 — Destination leanings
-Fields: **Trip vibe** (starred).
 Ask first whether the destination is already decided — if it is, skip the questions for
 this whole section. **Skipping a section never removes it from the output:** every field
 still ships, each with an em dash where the answer would go (see "producing the finished
@@ -283,11 +298,9 @@ file" below). Dropping the lines loses the labels the planner parses.
 Otherwise offer the vibe options — beach, city, nature, culture, food, or a mix.
 
 ### Step 3 — Dates & availability
-Fields: **Can travel** (starred), **Blackout**, **Trip length**.
 When can they travel? Then anything they absolutely cannot do, and how long feels right.
 
 ### Step 4 — Getting there & back
-Fields: **Arrive / leave**.
 Ask when they expect to arrive and head home, whatever the booking state. If they will be
 on whatever the group books, record that as their answer — an empty field means they did
 not answer, never that they match the group. Where they set out from, what a long travel
@@ -295,7 +308,6 @@ day does to them, and their passport are **not asked here**: they are the same f
 trip to the next, so they live in the person profile.
 
 ### Step 5 — Where you stay
-Fields: **Rooming**.
 Whether they want their own room, are happy sharing, and with whom. Skip it if they are
 travelling alone or do not know the group yet. What kind of place they like to sleep in is
 a durable answer and lives in the person profile.
@@ -317,7 +329,6 @@ nobody wrote down anywhere is the one thing this engine cannot plan around, and 
 first-time traveller filling only this form has no other place to put it.
 
 ### Step 6 — Desires — what you want
-Fields per block: **Desire** (starred), **Priority tier**, **Recurrence**, **Theme tag(s)**, **Overlap** (leave blank).
 Offer the archetype menu from the section as starting points — an archetype on its own is
 a complete first pass. Then make each one specific to
 them. For every desire, ask for exactly one priority tier — *anchor* (would be genuinely
@@ -329,7 +340,6 @@ instead of the other. Suggest a theme tag or two, reusing the archetype wording 
 it fits. Leave **Overlap** blank.
 
 ### Step 7 — Interests & tastes
-Fields: **Been here before?**, **Already done**.
 Ask whether they have been here before — offer the four options (never, once, a few times,
 know it well) — and if they have, anything they have already done that they would not need
 to repeat. Skip both if the destination is not decided yet. What they are drawn to in
@@ -344,14 +354,12 @@ and leave the field unanswered where they would rather not say — an unanswered
 as *unknown*, which is a different thing from `never` and is treated as one.
 
 ### Step 8 — People dynamics & togetherness
-Fields: **Group time**, **Split off with**, **Whole-group moments**.
 Offer mostly together, some solo or sub-group time, or lots of independent time. Then who
 they would enjoy peeling off with, and anything they want everyone present for. Skip the
 section if they do not know the group yet. What they would do with an hour to themselves
 is a durable answer and lives in the person profile.
 
 ### Step 9 — Anything else
-Fields: **Special occasion?**, plus the free-text line at the end.
 Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? Then:
 anything the questions missed.
 
@@ -359,6 +367,10 @@ anything the questions missed.
 
 When the interview is done, output **one markdown code block** containing the profile and
 nothing else. No preamble, no commentary, no summary afterwards.
+
+Fence that code block with `~~~` rather than with backticks: the profile carries a
+backtick-fenced `intake-form` block of its own, and a backtick fence around the profile would
+end at that block's closing line, cutting the profile short.
 
 - Include **everything above the `# END OF PROFILE` line**, and nothing from below it.
 - Keep every field label **exactly as written**, including the `**bold**` and the star
