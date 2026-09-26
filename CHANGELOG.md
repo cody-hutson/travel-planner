@@ -3,6 +3,55 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
+
+This release finishes what earlier corrective releases left partly done. Two defects changed how the
+engine behaves. The rest were documents stating a rule their own home no longer held, and each now
+says what the home says.
+
+**The verbs' evidence reads run instead of being refused.** Every verb that finds a trip begins with
+the same small reads: it lists the trips directory, then reads the header lines of each trip's
+context. Those reads were written inside a brace group, and the harness refuses that shape outright,
+whatever the verbs' grants allow. They are now written as bare lists, which the shell parses exactly
+as it parsed the group, and which the harness admits.
+
+Within the session's allowed working directories, all five verbs now issue their reads without being
+refused, measured by running each verb's reads headless under that verb's own grants. Where the data
+root lies outside those
+directories the harness still refuses them. That boundary is this release's declared limit, and it is
+carried forward on its own. The sentinels that make a failed read visible are unchanged. The one
+shell condition that stops them — an unmatched glob where `grep` is a shell function, as it is in the
+harness — is now written down beside the rule, with the reason no gate misreads it.
+
+**The publish gate says when it cannot tell whether the itinerary changed.** The organizer-confirmation
+gate compares the outgoing render's itinerary text with what was last published. That text can fail
+three ways: the render cannot be read, its itinerary text cannot be extracted, or that text cannot be
+normalized, and a single byte that is not valid UTF-8 is enough. The failure used to be swallowed, a
+partial text was compared, and an update could pass as unchanged or as already confirmed.
+
+The gate now has a fifth state, `undetermined`. On it, update refuses, names the three possible causes,
+and claims nothing about whether the content changed; confirm refuses the same state before it asks.
+The check no longer leans on a setting elsewhere in the script, so it holds wherever the script runs.
+When a push leaves a trip without a baseline, the recording step now warns in words that match what
+the next update will do. The collection seam's decision record is amended to name the fifth state,
+and to name the one emission any replacement for that step owes.
+
+**Documents that restated a rule agree with its home again.**
+- Two verb pages named the publish script's grants with a pre-conversion spelling. They now name each
+  grant by script and arm, and leave the spelling to the frontmatter.
+- A demo trip's schedule note, a clause in the scheduling agent, and a section citation in the trip
+  skill now match the corpus an earlier release corrected. The clause's promise of a future change is
+  restated as the history it has become.
+- The people-library example and its traveller fixture no longer say the real person store is
+  git-ignored inside this repository. They say it belongs to the operator and lives outside the
+  repository, and they defer to the store-root rule's home by name.
+
+**The honest limits.** The directory boundary above stays open. A handful of confirmation-gate edge
+cases stay outside the new state and are tracked together. One of them is a failed baseline write,
+which leaves a trip without a baseline and without the warning. The same "git-ignored" wording
+elsewhere in the corpus, and a few stale references found along the way, were filed rather than fixed
+here.
+
 ## [0.42.0] — 2026-09-24 — The derived blocks get an owner
 
 This release decides and builds nothing, deliberately. The trip file carries two derived blocks —
