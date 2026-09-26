@@ -48,6 +48,10 @@ publish: internal
 >   the placeholder text sitting there** — a leftover `[bracketed placeholder]` reads as
 >   *unanswered*, exactly like an empty line, and a profile still carrying its brackets
 >   reads as one nobody has filled in yet.
+> - A bracket that opens with `closed:` lists every answer that question takes; one that
+>   opens with `open:` lists suggestions, and an answer of your own is just as good. That
+>   opening word is a note to you, not part of your answer — replace the whole bracket
+>   either way. Skipping works exactly as it does everywhere else.
 > - For the repeatable desire blocks, **add as many as you like and delete the rest.**
 >
 > **Two things are worth keeping straight as you go:**
@@ -66,6 +70,19 @@ publish: internal
 > there, not written here.
 >
 > Placeholders only in this template — no real personal data in the template file itself.
+>
+> **The `intake-form` block below is not a field you fill in.** It tells the engine what this
+> form asks, and in a finished profile it only notes which form was filled in. Leave it
+> exactly as it stands.
+
+```intake-form
+form: templates/traveler-intake.template.md
+form-version: 1
+writer: human
+boundary: <!-- PROFILE-END -->
+classification: reference/data-model.md § Field Scope → The classification
+output: travelers/<traveler>.md
+```
 
 ---
 
@@ -85,7 +102,7 @@ publish: internal
 > *For when no destination is fixed yet.* Where would you love to go — and where would
 > you rather not? Skip this whole section once the destination is already decided.
 
-- ⭐ **Trip vibe:** [The kind of trip you're after — e.g., beach / city / nature / culture / food / mix. Skip if you're easy.]
+- ⭐ **Trip vibe:** [open: The kind of trip you're after — e.g., beach / city / nature / culture / food / mix. Skip if you're easy.]
 
 > This is *your* wishlist for this trip. The planner gathers everyone's leanings into a
 > group shortlist — you're not picking the destination here, just saying what you're after.
@@ -154,23 +171,23 @@ publish: internal
 > and say whether it is a one-off or something you want **every day**:
 
 - ⭐ **Desire:** [What you want — an archetype from the list above is a complete answer on its own. **One line is a complete first pass.** e.g., start with "a slow morning", sharpen later to "a slow museum morning rather than a packed sightseeing sprint."]
-- **Priority tier:** [Exactly one of:
+- **Priority tier:** [closed: Exactly one of:
     - **anchor** — you'd be genuinely disappointed to miss this; build the trip to land it.
     - **wish** — a real want to try hard for, but it can yield to a need or to someone else's anchor.
     - **nice-to-have** — a bonus; lovely if it fits, no loss if it doesn't.]
-- **Recurrence:** [*(optional)* `one-off` or `daily`. Most wants are one-off — a single occasion somewhere in the trip. Say `daily` for something you want **every day you're there**: a morning coffee before the day starts, a swim, an evening walk. It's separate from how much it matters — a daily want can be an anchor, a wish, or a nice-to-have. Leave the em dash (`—`) if it's a one-off.]
+- **Recurrence:** [closed: *(optional)* `one-off` or `daily`. Most wants are one-off — a single occasion somewhere in the trip. Say `daily` for something you want **every day you're there**: a morning coffee before the day starts, a swim, an evening walk. It's separate from how much it matters — a daily want can be an anchor, a wish, or a nice-to-have. Leave the em dash (`—`) if it's a one-off.]
 - **Theme tag(s):** [*(optional)* a word or two grouping it by kind — e.g., `museums, slow-pace`, `markets, food`, `nature`, `nightlife`. Skip if none come to mind.]
 - **Overlap:** [*(leave blank)* — the planner works out who else shares this; you don't fill it in. If you happen to know someone shares it, you can note who you *think* does, but the real answer is computed.]
 
 - **Desire:** [Second thing you want — e.g., "explore the local markets."]
-- **Priority tier:** [anchor / wish / nice-to-have]
-- **Recurrence:** [*(optional)* `one-off` / `daily` — leave `—` for a one-off]
+- **Priority tier:** [closed: anchor / wish / nice-to-have]
+- **Recurrence:** [closed: *(optional)* `one-off` / `daily` — leave `—` for a one-off]
 - **Theme tag(s):** [*(optional)* — e.g., `markets, food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
 - **Desire:** [Third thing you want — e.g., "one standout coffee place."]
-- **Priority tier:** [anchor / wish / nice-to-have]
-- **Recurrence:** [*(optional)* `one-off` / `daily` — leave `—` for a one-off]
+- **Priority tier:** [closed: anchor / wish / nice-to-have]
+- **Recurrence:** [closed: *(optional)* `one-off` / `daily` — leave `—` for a one-off]
 - **Theme tag(s):** [*(optional)* — e.g., `food`]
 - **Overlap:** [*(leave blank — the planner computes it)*]
 
@@ -185,7 +202,7 @@ publish: internal
 >  How well you already know this destination — a soft signal that helps shape what gets
 > picked. Skip either line if it doesn't apply.
 
-- **Been here before?:** [How well you already know this destination — one of: never / once / a few times / know it well — e.g., "once, about ten years ago." Skip if the destination isn't decided yet, or if you'd rather not say.]
+- **Been here before?:** [closed: How well you already know this destination — one of: never / once / a few times / know it well — e.g., "once, about ten years ago." Skip if the destination isn't decided yet, or if you'd rather not say.]
 - **Already done:** [*(optional)* Anything you've already seen or eaten here that you don't need to repeat — e.g., "did the castle and the main museum last time." Skip if it doesn't apply.]
 
 > This is about *this destination*, not your tastes in general — those live in your person
@@ -199,7 +216,7 @@ publish: internal
 > everyone their own space without anyone feeling dragged along or left out. It's *your
 > individual view* — the planner decides any actual splits. Skip any line that doesn't apply.
 
-- **Group time:** [How much of the trip you'd like as a group — e.g., one of: "Mostly together" / "Some solo or sub-group time" / "Lots of independent time." Skip if you don't mind.]
+- **Group time:** [open: How much of the trip you'd like as a group — e.g., one of: "Mostly together" / "Some solo or sub-group time" / "Lots of independent time." Skip if you don't mind.]
 - **Split off with:** [Anyone you'd especially enjoy peeling off with — names, "anyone," or "no preference" — e.g., "Jordan, for the slower stuff." Skip if no preference.]
 - **Whole-group moments:** [Things you want EVERYONE there for — e.g., "every dinner", "the day trip", "the first night." Skip if none feel essential.]
 
@@ -359,6 +376,10 @@ anything the questions missed.
 
 When the interview is done, output **one markdown code block** containing the profile and
 nothing else. No preamble, no commentary, no summary afterwards.
+
+Fence that code block with `~~~` rather than with backticks: the profile carries a
+backtick-fenced `intake-form` block of its own, and a backtick fence around the profile would
+end at that block's closing line, cutting the profile short.
 
 - Include **everything above the `# END OF PROFILE` line**, and nothing from below it.
 - Keep every field label **exactly as written**, including the `**bold**` and the star
