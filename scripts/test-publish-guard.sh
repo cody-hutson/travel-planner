@@ -6670,6 +6670,25 @@ else
   FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
 fi
 
+# PF2 — no unbraced dollar-name is directly followed by a non-ASCII byte, in this suite or the
+# publish script. Under a UTF-8 locale, bash 3.2 — macOS's /bin/bash — reads such a byte as part
+# of the NAME: a name followed straight by an ellipsis expands a variable whose name ends in the
+# ellipsis's first byte, which is unset, and under set -u the run dies. That is how unpublish's
+# delete path died, deleting nothing, on the platform this suite runs on, while every CI run on
+# bash 5 stayed green. The scan is perl under LC_ALL=C, so its byte class means bytes on every
+# host and every grep; a site planted in a control file is the evidence that it can find one.
+PF2_CTL="$WORK/pf2-control.sh"; printf 'x=1; echo "$x\342\200\246"\n' > "$PF2_CTL"
+pf2_scan() { LC_ALL=C perl -ne 'while (/\$[A-Za-z_]\w*[\x80-\xff]/g) { (my $f = $ARGV) =~ s{.*/}{}; print "$f:$.\n" } close ARGV if eof' "$@" 2>/dev/null; }
+PF2_CTL_HITS="$(pf2_scan "$PF2_CTL")"
+PF2_HITS="$(pf2_scan "$SELF" "$SELF_PUBLISH")"
+if [ -z "$PF2_CTL_HITS" ]; then
+  FAIL "PF2: the scan did not find the site planted in its control file, so its zero on this suite and the publish script would prove nothing. VERDICT WITHHELD"
+elif [ -z "$PF2_HITS" ]; then
+  PASS "PF2: no unbraced dollar-name is directly followed by a non-ASCII byte in this suite or the publish script, so bash 3.2 cannot read a multibyte character into a variable name here. The planted control site was found, so the zero is a measurement"
+else
+  FAIL "PF2: an unbraced dollar-name is directly followed by a non-ASCII byte at: $(tr '\n' ' ' <<< "$PF2_HITS")— under macOS's bash 3.2 in a UTF-8 locale that byte becomes part of the name, and set -u kills the run. Brace the name"
+fi
+
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group MD — the Discriminating-Evidence Rule, asserted against this file.
 #
@@ -7767,6 +7786,29 @@ rv5_assert() { # <id> <no-value|unknown>
 }
 for rv_f in no-value unknown; do rv5_assert "RV5-$rv_f" "$rv_f"; done
 
+# ── RV13 — Q-1. An unknown option is refused WITHOUT being echoed. A mistyped
+# "--passphrase=<value>", or a value typed with its flag forgotten, IS the token, so echoing it
+# puts a passphrase on stderr — and into any captured log or transcript. rotate's parser is new in
+# this release; publish's and unpublish's carried the same echo before it.
+rv13_assert() { # <id> <rotate|publish|unpublish> <eq|bare>
+  local id="$1" verb="$2" form="$3" name d out rc tok seen=0 leak=0
+  local k='rv-mistyped-synthetic-key-18'
+  name="rv13-$verb-$form-$RANDOM"; d="$(rv_fixture "$name" 'rv-live-synthetic-key-0019')"
+  case "$form" in eq) tok="--passphrase=$k" ;; *) tok="$k" ;; esac
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$verb" "$d" "$tok" ) 2>&1 )"; rc=$?
+  rv_has "$out" 'unknown option' && seen=1
+  rv_has "$out" "$k" && leak=1
+  if [ "$rc" -ne 1 ] || [ "$seen" -eq 0 ]; then
+    FAIL "$id: $verb did not refuse the mistyped option as an unknown option (rc=$rc). VERDICT WITHHELD"
+  elif [ "$leak" -eq 1 ]; then
+    FAIL "$id: $verb echoed the unknown option, so a mistyped passphrase reached the output"
+  else
+    PASS "$id: $verb refuses an unknown option without echoing it, so a mistyped passphrase never reaches the output"
+  fi
+}
+for rv_v in rotate publish unpublish; do rv13_assert "RV13-$rv_v" "$rv_v" eq; done
+rv13_assert "RV13-rotate-bare" rotate bare
+
 # ── RV7 — D-5. When STATICRYPT_PASSWORD is still set after a rotation and differs from the
 # new key, rotate says so — value-free, on stderr — because the next publish or update will
 # refuse. It stays silent when the variable matches the new key, or is unset. The warning's
@@ -7921,6 +7963,133 @@ rv10b_assert() { # <id>
 }
 rv10b_assert "RV10b"
 
+# 0 when any revision of <bare>'s main carries a page whose nonce the encrypt shim recorded for
+# <key>. History is published too, so a page anywhere in it counts, not only the tip.
+rv_history_has_key() { # <bare> <key>
+  local revs rev html n line re='staticryptEncrypted="(rv[0-9a-f]+)"'
+  revs="$(git -C "$1" rev-list main 2>/dev/null)"
+  while IFS= read -r rev; do
+    [ -n "$rev" ] || continue
+    html="$(git -C "$1" show "${rev}:index.html" 2>/dev/null)" || continue
+    [[ "$html" =~ $re ]] || continue
+    n="${BASH_REMATCH[1]}"
+    while IFS= read -r line || [ -n "$line" ]; do
+      [ "$line" = "$n $2" ] && return 0
+    done < "$RV_KEYLOG"
+  done <<< "$revs"
+  return 1
+}
+
+# ── RV14 — Q-3. A .passphrase that is a symbolic link is written THROUGH, as it was before the
+# atomic writer: the link survives, and its target holds the new key — the key the pushed page is
+# under. Replacing the link would leave the operator's key store holding the revoked key.
+rv14_assert() { # <id>
+  local id="$1" name d bare rc store link=0 key pushed
+  name="rv14-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"
+  store="$RVW/$name-store"; mkdir -p "$store"
+  printf '%s\n' 'rv-stored-synthetic-key-0020' > "$store/key"; chmod 600 "$store/key"
+  ln -s "$store/key" "$d/.passphrase"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
+  [ -L "$d/.passphrase" ] && link=1
+  key="$(cat "$store/key" 2>/dev/null)"; pushed="$(rv_pushed_key "$bare")"
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: rotate through a symlinked .passphrase did not complete (rc=$rc) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$link" -eq 0 ]; then
+    FAIL "$id: rotate replaced the symlinked .passphrase with a regular file — the linked key store keeps the revoked key"
+  elif [ -z "$pushed" ] || [ "$key" != "$pushed" ]; then
+    FAIL "$id: the link's target does not hold the key the pushed page is under"
+  else
+    PASS "$id: rotate writes the new key through a symlinked .passphrase — the link survives, and its target holds the key the pushed page is under"
+  fi
+}
+rv14_assert "RV14"
+
+# ── RV15 — Q-2. A page an earlier update committed but failed to push stays in the reused clone,
+# encrypted under the current key. A rotation committing on top would push it too — publishing,
+# under the key being revoked, content that was never live under it, to exactly the holders the
+# rotation exists to cut off. rotate must refuse while the clone holds a commit the remote does
+# not, and change nothing. Removing the clone, the remedy it names first, must then let the
+# rotation publish only its own page: the whole history is read for the pending page's key.
+rv15_assert() { # <id>
+  local id="$1" name d bare out rc0 rc1 rc2 h0 h1 ahead same=0 seen=0 carried=0
+  local k1='rv-pending-page-synthetic-key-21'
+  name="rv15-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  git -C "$d/.publish" remote set-url origin "$RVW/missing/$name-trip.git"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc0=$?
+  git -C "$d/.publish" remote set-url origin "$bare"
+  ahead="$(git -C "$d/.publish" rev-list --count refs/remotes/origin/main..HEAD 2>/dev/null)"
+  cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc1=$?
+  h1="$(rv_head "$bare")"
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  rv_has "$out" 'not yet pushed' && seen=1
+  rm -rf "$d/.publish"
+  ( unset STATICRYPT_PASSWORD; rv15_bare="$bare"
+    gh() {
+      printf '%s\n' "$*" >> "$RV_GHLOG"
+      case "${1:-} ${2:-}" in
+        "api user")    printf 'testowner' ;;
+        "repo view")   return 1 ;;
+        "auth status") printf "Token scopes: 'repo'\n" ;;
+        "repo clone")  git clone -q "$rv15_bare" "$4" ;;
+        *)             return 0 ;;
+      esac
+    }
+    set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc2=$?
+  rv_history_has_key "$bare" "$k1" && carried=1
+  if [ "$rc0" -ne 1 ] || [ "$ahead" != 1 ]; then
+    FAIL "$id: the failed update did not leave exactly one unpushed commit (rc=$rc0, ahead=$ahead) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$rc1" -ne 1 ]; then
+    FAIL "$id: rotate went ahead (rc=$rc1) with a page in the clone the remote does not have — its push carries that page, under the key it revokes"
+  elif [ "$seen" -eq 0 ]; then
+    FAIL "$id: rotate exited 1 without naming the unpushed page. VERDICT WITHHELD"
+  elif [ "$h0" != "$h1" ] || [ "$same" -eq 0 ]; then
+    FAIL "$id: the refusal changed the site or .passphrase"
+  elif [ "$rc2" -ne 0 ]; then
+    FAIL "$id: after the named remedy (remove the clone), the rotation did not complete (rc=$rc2)"
+  elif [ "$carried" -eq 1 ]; then
+    FAIL "$id: the site's history holds the pending page under the revoked key"
+  else
+    PASS "$id: rotate refuses while the clone holds an unpushed page and changes nothing; after its named remedy the rotation publishes only its own page — no page under the revoked key reaches the history"
+  fi
+}
+rv15_assert "RV15"
+
+# ── RV16 — Q-5. The discard takes back only this run's OWN commit. When another command commits
+# on top of it before the re-check — named residual (i) — HEAD is no longer this run's commit, and
+# discarding HEAD would drop the other command's page and leave the clone behind the remote. The
+# ownership test is the ciphertext itself: nonced, so no other commit carries the same page.
+rv16_assert() { # <id>
+  local id="$1" name d out rc rot tip seen=0 claimed=0
+  local k1='rv-racing-update-synthetic-key-22' k2='rv-racing-rotation-synthetic-key-23'
+  name="rv16-$RANDOM"; d="$(rv_fixture "$name" "$k1")"
+  out="$( ( unset STATICRYPT_PASSWORD; rv16_d="$d"; rv16_k2="$k2"; rv16_rot="$RVW/$name.rot"
+            commit_noreply() {
+              local e
+              git -C "$1" -c user.name=t -c user.email=t@example.invalid commit --quiet -m "$2" || return 1
+              # another command commits its own page on top, and records its key, before this run re-checks
+              e="$(rv_enc_shim "$SRC" "$rv16_k2")"; cp "$e/index.html" "$1/index.html"; rm -rf "$e"
+              git -C "$1" add index.html || return 1
+              git -C "$1" -c user.name=t -c user.email=t@example.invalid commit --quiet -m rotation || return 1
+              git -C "$1" rev-parse HEAD > "$rv16_rot"
+              printf '%s\n' "$rv16_k2" > "$rv16_d/.passphrase"
+            }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  rot="$(cat "$RVW/$name.rot" 2>/dev/null)"; tip="$(git -C "$d/.publish" rev-parse main 2>/dev/null)"
+  rv_has "$out" 'changed while this update was running' && seen=1
+  rv_has "$out" 'discarded its own commit' && claimed=1
+  if [ "$rc" -ne 1 ] || [ "$seen" -eq 0 ] || [ -z "$rot" ]; then
+    FAIL "$id: the update did not stop at the key-of-record re-check with another commit on top of its own (rc=$rc). VERDICT WITHHELD"
+  elif [ "$tip" != "$rot" ]; then
+    FAIL "$id: the update moved main off the other command's commit — it discarded a page that was not its own and left the clone behind the remote"
+  elif [ "$claimed" -eq 1 ]; then
+    FAIL "$id: the update reported discarding its own commit when the commit on top was another command's"
+  else
+    PASS "$id: with another command's commit on top of its own, the update leaves the clone as it is and says it could not take its commit back — it discards only a commit it can show is its own"
+  fi
+}
+rv16_assert "RV16"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -7941,6 +8110,14 @@ md_flips cmd_update  "RV10" rv10_assert "RV10"
 # RV10b is registered against the discard itself, not the whole command: with it removed the
 # update still stops and still says why, so the arm can only fail because the commit stayed.
 md_flips discard_own_commit "RV10b" rv10b_assert "RV10b"
+# RV13 flips when its verb is gone; RV14 and RV15 are registered against the function each one
+# grades, so a PASS can only come from that function having run. RV16's safe outcome is "no
+# discard", which any removal also produces, so it is registered against the command it drives.
+for rv_v in rotate publish unpublish; do md_flips "cmd_$rv_v" "RV13-$rv_v" rv13_assert "RV13-$rv_v" "$rv_v" eq; done
+md_flips cmd_rotate "RV13-rotate-bare" rv13_assert "RV13-rotate-bare" rotate bare
+md_flips resolve_key_path "RV14" rv14_assert "RV14"
+md_flips refuse_unpushed_residue "RV15" rv15_assert "RV15"
+md_flips cmd_update "RV16" rv16_assert "RV16"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
