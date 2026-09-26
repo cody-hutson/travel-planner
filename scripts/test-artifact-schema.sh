@@ -6873,13 +6873,17 @@ fi
 # that names a region gains a clause naming another writer at creation: its regions go from YES to
 # CONDITIONAL and no declared field is stranded, so no question the evaluator asks moves — and the pin
 # must FAIL, naming that row, both verdicts and the record it is a finding about. Graded as a DELTA:
-# the defects the flip ADDS to this run's own pin report, so a table already off its pin still has an
-# honest arm here rather than a second red.
-ST_CF_PR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+# the defects the flip ADDS to this run's own pin report. The flip lands on the first such row that is
+# ON its pin — one the live pin report reads as a MATCH — and never on one already off it: flipping a
+# row off its pin can move it back ONTO its pin, which adds no defect. So a table already off its pin
+# still has an honest arm here rather than a second red. Where no such row is on its pin and the table
+# is off its pin, there is no flip to read, and the arm is VACUOUS while ST-CF-PIN names the rows off it.
+ST_CF_PREP0="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$ST_CF_RG")")"
+ST_CF_PBAD0="$(awk -F'\t' '$1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING" { n++ } END { print n + 0 }' <<<"$ST_CF_PREP0")"
+ST_CF_PR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MATCH") on[$2] = 1; next } $1 == "ROW" && $4 == "YES" && $5 == "addressed" && ($2 in on) { print $2; exit }' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_RG"))"
 ST_CF_PW="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "ROW" && $2 == r { print $9; exit }' <<<"$ST_CF_RG")"
 ST_CF_PX="$(st_cf_charter_fixture pin-flip)"
 [ -n "$ST_CF_PR" ] && st_cf_cell "$ST_CF_PX" "$(st_cf_rowline "$ST_CF_PR")" "$ST_CF_WCOL" set "\`/zz-st-cf-probe\` at creation; $ST_CF_PW"
-ST_CF_PREP0="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$ST_CF_RG")")"
 ST_CF_PREP="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$(ft_regions "$ST_CF_FILE" "$ST_CF_PX" 2>/dev/null)")")"
 ST_CF_PNEW="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING") d[$0] = 1; next }
   ($1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING") && !($0 in d)' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_PREP"))"
@@ -6891,7 +6895,9 @@ ST_CF_PFC="$(awk 'NR == 1' <<<"$ST_CF_PFV")"; ST_CF_PFM="$(awk 'NR > 1' <<<"$ST_
 ST_CF_PFA=0
 case "$ST_CF_PFM" in *"row $ST_CF_PR ("*) case "$ST_CF_PFM" in *"a finding about ADR-024 (AC2)"*) ST_CF_PFA=1 ;; esac ;; esac
 ST_CF_PET0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_PET1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_PX")" | tr '\n' ' ')"
-if ! cmp -s "$ST_CF_OWN" "$ST_CF_PX" && [ "$ST_CF_PMM" -eq 1 ] && [ -n "$ST_CF_PMR" ] && [ "$ST_CF_PFC" = "0 1" ] && [ "$ST_CF_PFA" -eq 1 ]; then
+if [ -z "$ST_CF_PR" ] && [ "$ST_CF_PBAD0" -gt 0 ]; then
+  VACUOUS "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: no interviewer-owned row of the writer table that names a region is on its pin, and the table is off its pin at $ST_CF_PBAD0 row(s), so no flip here can show the pin catching one — flipping a row off its pin can put it back on. ST-CF-PIN[$ST_CF_TAG] names those rows, and this arm adds no second red for them"
+elif ! cmp -s "$ST_CF_OWN" "$ST_CF_PX" && [ "$ST_CF_PMM" -eq 1 ] && [ -n "$ST_CF_PMR" ] && [ "$ST_CF_PFC" = "0 1" ] && [ "$ST_CF_PFA" -eq 1 ]; then
   PASS "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — on a COPY of the charter, row $ST_CF_PR gains a clause naming another writer at creation, and the one defect it adds to this run's pin report is exactly that row, pinned and now realized as $ST_CF_PMR, in ONE FAIL that names it as a finding about ADR-024 (AC2), while the evaluator's own findings read [${ST_CF_PET1% }] against the form's [${ST_CF_PET0% }]: a flip that strands no declared field is the one no question sees, and the pin is what sees it"
 else
   FAIL "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — with row ${ST_CF_PR:-none}'s Writer cell given a creation clause on a COPY of the charter, the pin gained $ST_CF_PMM defect(s) over this run's own report, row ${ST_CF_PR:-none} reading '${ST_CF_PMR:-no mismatch}' where its pinned verdict → CONDITIONAL (condition) is owed, the assertion read '$ST_CF_PFC' where '0 1' is owed, and its message named the row and the record $ST_CF_PFA time(s). A pin that cannot see this flip absorbs it"
