@@ -5779,10 +5779,17 @@ fi
 # ── EVERY ARM IS A DELTA, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─────
 # Each must-fire arm mutates ONE thing on a copy of a member and passes only if its code RISES
 # against that member's own live reading; each must-not-fire arm passes only if the copy's
-# findings EQUAL the live reading's. So a form that already fails a question still has honest
-# arms, and no arm can pass on a finding it inherited. Every arm mutates a copy of a form whose
-# boundary resolves — for version 2, whose regions resolve and hold a graded field — so a member
-# that does not is named ONCE, by its entry gate, while ST-CF[<form>] names the question.
+# findings EQUAL the live reading's. So no arm can pass on a finding it inherited: that is what
+# the delta guarantees, and it makes an arm's green evidence. It does not make every red evidence.
+# A delta measures an arm's mutation only where the form does not already fail the arm's question
+# AT THE ARM'S OWN TARGET: the evaluator emits at most one Q6 finding per bullet, an unusable
+# fence replaces every key-level Q1 finding with one fence-level finding, and a mutation that
+# touches the failing site can remove the live finding. There an arm can go red with its control
+# and the evaluator both sound, and its message may then blame one of them. Such a red fails
+# closed: ST-CF[<form>] is red in the same run and names the true finding, and once the form is
+# fixed the arm reads honestly again. Every arm mutates a copy of a form whose boundary
+# resolves — for version 2, whose regions resolve and hold a graded field — so a member that
+# does not is named ONCE, by its entry gate, while ST-CF[<form>] names the question.
 #
 # ── COVERAGE IS GRADED ONCE, OVER THE RUN ───────────────────────────────────────
 # The codes and emission sites of st_cf_violations are read from its own body, and the arms
@@ -6241,10 +6248,11 @@ st_cf_pin_assert() {
 # st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] [charter] — ONE thing mutated on a
 # copy of the member, of the data model or of the charter, and the SAME evaluator must then report MORE
 # <code> findings than
-# the member's own live reading does. A DELTA, never an absolute: on a member that already fails a
-# question the arm still grades what its own mutation did, and it cannot pass on an inherited
-# finding. Coverage is recorded on the CALL — the code before the verdict, the SITES from what the
-# evaluator actually emitted — into run-level accumulators, graded once after the last member.
+# the member's own live reading does. A DELTA, never an absolute, so it cannot pass on an inherited
+# finding. Where the member already fails the question at this arm's own target the count may not
+# rise, and the ST-CF block's header says what that red is. Coverage is recorded on the CALL — the
+# code before the verdict, the SITES from what the evaluator actually emitted — into run-level
+# accumulators, graded once after the last member.
 st_cf_mustfire() {
   local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" chart="${7:-$ST_CF_OWN}" landed=0 v n0 n1
   ST_CF_ARMED="$ST_CF_ARMED
@@ -7046,9 +7054,10 @@ ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'e.g
 st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the first bullet's bracket, after an example that opens it (line $ST_CF_B1L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
 # Q6-NOMARK — every marker removed from a copy must leave the form conforming, since the contract
 # never grades whether a field owes one; and the Q6 arms must still be constructible on that copy,
-# because they plant a marker rather than needing one to exist.
+# because they plant a marker rather than needing one to exist. EVERY marker at the head of a
+# bracket comes off, a doubled head included, so none is left for the copy to be read with.
 ST_CF_FX="$ST_CF_DIR/q6-nomark.md"
-awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) { sub(/:\*\* \[(closed|open): /, ":** [") } { print }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE" > "$ST_CF_FX"
+awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) && match($0, /:\*\* \[(closed|open): /) { s = RSTART; h = substr($0, RSTART + RLENGTH); while (match(h, /^(closed|open): /)) h = substr(h, RLENGTH + 1); $0 = substr($0, 1, s - 1) ":** [" h } { print }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE" > "$ST_CF_FX"
 ST_CF_NMV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
 ST_CF_NMT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_NMT1="$(st_cf_tally "$ST_CF_NMV" | tr '\n' ' ')"
 ST_CF_NMK="$(awk '/^- .*\*\*[^*]+:\*\* \[(closed|open): / { n++ } END { print n + 0 }' "$ST_CF_FX")"
@@ -7059,7 +7068,7 @@ ST_CF_NML=0; cmp -s "$ST_CF_FILE" "$ST_CF_FX" || ST_CF_NML=1
 if [ "$ST_CF_NML" -eq 1 ] && [ "$ST_CF_NMK" -eq 0 ] && [ "$ST_CF_NMT1" = "$ST_CF_NMT0" ] && [ "$ST_CF_NMQ1" -gt "$ST_CF_NMQ0" ]; then
   PASS "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — with every closed/open marker removed from a copy of the form it reads exactly the form's own findings [${ST_CF_NMT0% }]: a form with no option-bearing field passes question 6, because whether a field owes a marker is a reviewer's call. The Q6 arms need no marker to exist either — a marker planted on that same copy still raises Q6 ($ST_CF_NMQ0 → $ST_CF_NMQ1)"
 else
-  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }], and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Either question 6 grades whether a marker is owed, which the contract leaves to a reviewer, or its arms cannot be built on a form without one"
+  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }], and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Those numbers tell three causes apart. A copy reading MORE findings than the form means question 6 grades whether a marker is owed, which the contract leaves to a reviewer; a planted marker that does not raise Q6 means its arms cannot be built on a form without one; and a copy reading FEWER Q6 findings than the form means this form already fails question 6 at a marker the copy removed, so that finding went with the marker and this arm cannot be measured on this form until ST-CF[$ST_CF_TAG]'s Q6 finding is fixed"
 fi
 
 # ── VERSION: the dispatch ──
