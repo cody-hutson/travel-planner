@@ -616,7 +616,9 @@ the trip's `.passphrase` held a different key, so a routine update could undo a 
 (GHSA-gmm2-v7rr-jq7r). The script now refuses, before any network call, whenever the variable is set
 and the trip's `.passphrase` holds a different key or one it cannot read as a key, and `rotate` no
 longer takes its key from the variable; it reads the variable only to warn when it still differs
-from the new key. The unreadable-file residual, and its command-layer mitigation, are unchanged.
+from the new key. The unreadable-file residual is still a silent re-key, now to a key the script
+records in `.passphrase` rather than one it recorded nowhere; its command-layer mitigation is
+unchanged.
 The `/trip-publish` precondition that refuses whenever the variable is set stays in
 place: a command that must never read a passphrase value cannot tell an agreeing pair from a
 disagreeing one, so it still declines to reach the script's decision. No row, disposition or reason

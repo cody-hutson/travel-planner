@@ -3980,7 +3980,7 @@ fi
 #   S5   a malformed record is never read as approval            (ADR-007 §2 placeholder bound)
 #   S6   the abort is the DEFAULT ARM, not an enumerated case    (structural)
 #   S7   marker-only republish passes, and an edit under the same marker does not  (D6)
-#   S8   rotate inherits the gate through cmd_update             (no rotate exemption)
+#   S8   rotate applies the gate itself                          (no rotate exemption)
 #   S9   cmd_publish stays ungated and cannot overwrite a plan   (ungated-path proof)
 #   S10  the two ADR-002 D4 guards are untouched by this gate    (CIAC-3)
 #
@@ -4238,7 +4238,7 @@ else
   FAIL "S8a: reached=$S_REACHED8A clone-on-confirmed=$S_CLONE8B — the harness never exercised the publish path, and S8b would prove nothing"
 fi
 if [ "$S_RC8A" -ne 0 ] && [ "$S_CLONE8A" -eq 0 ]; then
-  PASS "S8b: rotate on an unconfirmed itinerary change ABORTS (rc=$S_RC8A) and never clones the per-trip repo — the gate is inherited through cmd_update and fires before any network effect"
+  PASS "S8b: rotate on an unconfirmed itinerary change ABORTS (rc=$S_RC8A) and never clones the per-trip repo — rotate applies the gate itself, and it fires before any network effect"
 else
   FAIL "S8b: rotate returned rc=$S_RC8A with clone=$S_CLONE8A — rotate is exempt from the gate, which republishes unapproved content by another route"
 fi

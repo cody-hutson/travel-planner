@@ -519,7 +519,7 @@ scripts/publish-trip-site.sh update trips/<destination>-<year>
 ```bash
 scripts/publish-trip-site.sh rotate trips/<destination>-<year>
 ```
-Rotation re-encrypts under a new passphrase — never `$STATICRYPT_PASSWORD` — records it in `.passphrase`, and re-publishes; previously-shared viewers must re-receive the new one. **A rotation protects what you publish from then on, not what you already published:** `rotate` adds a commit and never rewrites history, so every earlier version of the page stays in the per-trip repository, readable by anyone holding the passphrase it was encrypted under. To withdraw those as well, `unpublish` (which deletes the repository) and then `publish` again.
+Rotation re-encrypts under a new passphrase — never `$STATICRYPT_PASSWORD` — records it in `.passphrase`, and re-publishes; previously-shared viewers must re-receive the new one. If an earlier `update` or `rotate` stopped at its push, `rotate` refuses until that page is dealt with: remove the trip's `.publish` directory (it is cloned again, and nothing is lost), or run `update` first if the current passphrase's holders should see the page. **A rotation protects what you publish from then on, not what you already published:** `rotate` adds a commit and never rewrites history, so every earlier version of the page stays in the per-trip repository, readable by anyone holding the passphrase it was encrypted under. To withdraw those as well, `unpublish` (which deletes the repository) and then `publish` again.
 
 **Listing published sites** (read-only — never writes, encrypts, or pushes):
 ```bash

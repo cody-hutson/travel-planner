@@ -33,8 +33,8 @@
 # Organizer-confirm gate (ADR-003 § Decision 2). Once a baseline is recorded, update refuses
 # when the itinerary content of the outgoing render differs from what is currently published
 # and no organizer confirmation covers it, or when it cannot determine that content at all
-# (a render it cannot read, project or normalize); rotate republishes through update and
-# inherits the refusal. With no baseline the gate is NOT ACTIVE and update publishes without
+# (a render it cannot read, project or normalize); rotate re-publishes the same render and
+# applies the refusal itself. With no baseline the gate is NOT ACTIVE and update publishes without
 # asking for confirmation; publish and update record one after each push whose render they
 # can identify, and warn when a push leaves the trip without one. A republish carrying the
 # SAME itinerary content — a coordination-state marker change, say — is not a plan change
@@ -52,6 +52,8 @@
 # .passphrase only once that ciphertext is committed, immediately before the push. update
 # re-reads .passphrase just before its own push; if a rotation recorded a different key
 # meanwhile, it stops and takes its own commit back out, so a later push cannot carry it.
+# rotate refuses while the per-trip clone holds a page an earlier run committed but did not
+# push: pushed on top, that page would reach history under the key being revoked.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
