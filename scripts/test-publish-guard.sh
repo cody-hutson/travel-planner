@@ -7636,7 +7636,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -7809,6 +7809,46 @@ if [ "$SA23G_RC" -ne 0 ] && [ "$SA23G_SAME" -eq 1 ] && [ ! -e "$SA23G/.change-co
   PASS "S23g: CONTROL — on a trip that declares no approvers, confirm over an unchanged plan still refuses with the shipped 'nothing to confirm' message word for word and writes nothing; C1's reordering reaches the declared branch alone. ARMED-RED — a policy answering 'declared' for this trip loses that message"
 else
   FAIL "S23g: an undeclared trip's confirm returned rc=$SA23G_RC with the shipped message=$SA23G_SAME (want 1); under the all-declared mutant the message survived=$SA23G_MSAME (want 0)"
+fi
+
+# ── S23h — #719's Stage 7 F-02: ONCE THE PLAN IS PUBLISHED, A TERMINAL ACT KEEPS THE DATE. The plan
+# is published — the baseline is its own digest — and the approval record names it: 3 of 3 approved
+# at 2 of 3, dated 2027-06-01. A withdrawal that keeps the threshold met, and then a bare Enter, each
+# rewrite the count alone and keep confirmed=, so no later act revives a recently-updated notice for
+# a plan that did not change; and confirm no longer tells the organizer the record is dated now.
+# CONTROL — the plan not yet published (C2's T + 8 case, S21f's shape): the same bare Enter still
+# re-stamps confirmed= at its own time, so a late push can be preceded by a refresh. ARMED-RED — with
+# _baseline_matches answering "not published", the same bare Enter on a fresh copy moves the date:
+# this arm sees the re-stamp it guards against. The stub is withdrawn here, and S26a checks it.
+sa23h_fixture() { # <name> <baseline-digest> -> a declaring trip, 3 of 3 approved at 2 of 3, record dated 06-01
+  local d
+  d="$(sa_trip "$1" 16:30 "$2")"
+  sa_declare "$d" 2 zqa1 zqb2 zqc3
+  for sak in zqa1 zqb2 zqc3; do sa_rec "$d" "$sak" approve "$S_DB"; done
+  printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3\n' "$S_DB" > "$d/.change-confirmed"
+  printf '%s' "$d"
+}
+SA23H="$(sa23h_fixture s23h "$S_DB")"
+sa_confirm "$SA23H" "$(printf '3\nwithdraw %s\nCONFIRM\n' "$S_DB")" '2027-06-21T09:00:00Z'; SA23H_RC1=$?
+SA23H_R1="$(cat "$SA23H/.change-confirmed")"
+sa_confirm "$SA23H" $'\n' '2027-06-23T09:00:00Z'; SA23H_RC2=$?
+SA23H_R2="$(cat "$SA23H/.change-confirmed")"
+SA23H_NOW=0; case "$(cat "$WORK/sa_conf.out")" in *"dated now"*) SA23H_NOW=1 ;; esac
+SA23H_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=2' "$S_DB")"
+SA23H_ST="$(sa_state "$SA23H")"
+SA23H2="$(sa23h_fixture s23h2 "$S_DA")"
+sa_confirm "$SA23H2" $'\n' '2027-06-23T09:00:00Z'; SA23H_RC3=$?
+SA23H_R3="$(cat "$SA23H2/.change-confirmed")"
+SA23H_WANT3="$(printf 'digest=%s\nconfirmed=2027-06-23T09:00:00Z\napproval-count=3' "$S_DB")"
+SA23H3="$(sa23h_fixture s23h3 "$S_DB")"
+_baseline_matches() { return 1; }   # MUTANT: the published plan reads as not yet published
+sa_confirm "$SA23H3" $'\n' '2027-06-23T09:00:00Z'
+sa_restore _baseline_matches
+SA23H_MKEPT=0; case "$(cat "$SA23H3/.change-confirmed")" in *'confirmed=2027-06-01T09:00:00Z'*) SA23H_MKEPT=1 ;; esac
+if [ "$SA23H_RC1" -eq 0 ] && [ "$SA23H_R1" = "$SA23H_WANT" ] && [ "$SA23H_RC2" -eq 0 ] && [ "$SA23H_R2" = "$SA23H_WANT" ] && [ "$SA23H_NOW" -eq 0 ] && [ "$SA23H_ST" = none-pending ] && [ "$SA23H_RC3" -eq 0 ] && [ "$SA23H_R3" = "$SA23H_WANT3" ] && [ "$SA23H_MKEPT" -eq 0 ]; then
+  PASS "S23h: F-02 — on a published plan at 2 of 3, a withdrawal that keeps the threshold met and then a bare Enter each rewrite only the count (3 -> 2) and keep confirmed= at 2027-06-01, confirm does not say the record is dated now, and the gate still reads the plan unchanged; CONTROL — before publication the same bare Enter re-stamps confirmed= to its own time (C2's T + 8 case); ARMED-RED — with the plan read as unpublished the date moves"
+else
+  FAIL "S23h: withdrawal rc=$SA23H_RC1 record [${SA23H_R1//$'\n'/ | }]; bare Enter rc=$SA23H_RC2 record [${SA23H_R2//$'\n'/ | }] (want both [${SA23H_WANT//$'\n'/ | }]); 'dated now' printed=$SA23H_NOW (want 0); state '$SA23H_ST' (want none-pending); unpublished control rc=$SA23H_RC3 record [${SA23H_R3//$'\n'/ | }] (want [${SA23H_WANT3//$'\n'/ | }]); unpublished-reading mutant kept the date=$SA23H_MKEPT (want 0)"
 fi
 
 # ── S24a — ERASURE (#719 INT-10). Substituting one approver's key with the erasure token's key

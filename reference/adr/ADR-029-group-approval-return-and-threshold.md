@@ -387,8 +387,10 @@ Answers #718's second criterion. The flow, as a numbered step table:
 | 6 — Gate | the engine | `update` proceeds only on `confirmed`: distinct declared approvers, each counted by their latest record for the outgoing digest, reach the threshold | S2 and S3 |
 | 7 — Render | the engine, to the travellers | the `updated` notice carries the approval count and the approval code, with one static statement that names the organizer as the source of the count and shows no threshold — for example *"k approvals, as stated by the organizer"*, never *"k travellers approved"* | CH-1 |
 
-- A withdrawal recorded after the change has published un-publishes nothing: the organizer
-  decides whether to revert, and the site's count changes at the next rebuild.
+- A withdrawal recorded after the change has published un-publishes nothing and re-dates nothing:
+  the organizer decides whether to revert, the approval record keeps its date, and the site's count
+  changes at the next rebuild while its `updated` notice is still showing — a notice that has
+  already decayed does not return.
 - **Privilege split.** Declaring who approves is policy, and may be agent-addressable. Recording
   that someone approved is an attestation: **EXCLUDED `ADR-007 §2`, terminal-only, with no override
   flag** — the reason `ADR-007` § 4 row 11 already gives for `confirm`. With no declaration,

@@ -3072,16 +3072,49 @@ _ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-z
   mv -f "$tmp" "$f" || { rm -f "$tmp"; return 1; }
 }
 
-# The declared path's writer of .change-confirmed (#719, as corrected at the scope-lock: C2).
+# The date an approval record KEEPS once its plan is published (#719's Stage 7 F-02, decided
+# option i): the record's own confirmed= value, printed only where the record already names
+# <digest> AND <digest> is the published plan — read from .published-itinerary through the same
+# shim S2 uses, so a baseline recorded under the legacy digest still counts as this plan's. It
+# prints nothing otherwise, and nothing where the record carries no confirmed= line; the caller
+# then stamps the act's own time, as before. Read-only.
+_published_record_date() { # <trip_dir> <digest> -> the kept confirmed= value, or nothing
+  local trip_dir="$1" dg="$2" rec base line
+  [ -n "$dg" ] || return 0
+  rec="$(change_confirmation_path "$trip_dir")"
+  [ "$(_record_digest "$rec")" = "$dg" ] || return 0
+  base="$(_record_digest "$(published_itinerary_path "$trip_dir")")"
+  [ -n "$base" ] || return 0
+  _baseline_matches "$trip_dir" "$base" "$dg" || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in confirmed=*) printf '%s' "${line#confirmed=}"; return 0 ;; esac
+  done < "$rec"
+  return 0
+}
+
+# The declared path's writer of .change-confirmed (#719, as corrected at the scope-lock: C2, and
+# at Stage 7: F-02).
 # THE RECORD MIRRORS THE VERDICT. It is run by confirm's declared branch after the terminal check
 # on every run — one that records an approval or a withdrawal, and one that records nothing — so
 # the record is written from the tally for the plan the organizer is at, whatever moved that
 # tally: a recording, or a change to the declaration.
-#   k ≥ t                              -> digest=<digest>, confirmed=<now>, approval-count=<k>.
-#                                         confirmed= is stamped at THIS act, every time, so it
-#                                         dates the last terminal act before the plan publishes —
-#                                         the moment the layout spec's seven-day window runs from —
-#                                         rather than the first moment the threshold was met.
+#   k ≥ t, and the record already names -> the count alone is rewritten; digest= and confirmed=
+#   <digest>, the published plan          stay. Once a plan is published its record's date is kept,
+#                                         so no later terminal act — a late approval, a withdrawal
+#                                         that leaves the threshold met, a bare refresh — re-dates
+#                                         it and revives a recently-updated notice for a plan that
+#                                         did not change (_published_record_date).
+#   k ≥ t, otherwise                   -> digest=<digest>, confirmed=<now>, approval-count=<k>.
+#                                         confirmed= is stamped at THIS act, so it dates the last
+#                                         terminal act before the plan publishes — the moment the
+#                                         layout spec's seven-day window runs from — including the
+#                                         refresh before a late push (C2's T + 8 case). A C1 revert
+#                                         is stamped here too, deliberately: a record naming an
+#                                         abandoned plan, re-anchored to the published one, is dated
+#                                         at the re-anchoring act, because only that date post-dates
+#                                         the entry raised for the abandoned change, and an entry the
+#                                         date does not post-date reads as undecided and holds the
+#                                         site's notice at pending.
 #   k < t, and the record names <digest> -> the count alone is rewritten; digest= and confirmed=
 #                                         stay, so a withdrawal after publication changes the
 #                                         count the next build renders and nothing else.
@@ -3090,13 +3123,15 @@ _ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-z
 # Atomic, as confirm's own write is. A top-level function, never inside cmd_confirm: group T reads
 # the FIRST `printf … digest=` in cmd_confirm's own body as the undeclared record's format (T6c).
 _record_threshold_met() { # <trip_dir> <digest> -> 0, or non-zero with nothing changed
-  local trip_dir="$1" dg="$2" rec tmp k t s line conf=""
+  local trip_dir="$1" dg="$2" rec tmp k t s line conf="" when
   rec="$(change_confirmation_path "$trip_dir")"
   read -r k t s <<<"$(_approval_tally "$trip_dir" "$dg")"
   case "$k$t" in ''|*[!0123456789]*) return 1 ;; esac
   if [ "$k" -ge "$t" ]; then
+    when="$(_published_record_date "$trip_dir" "$dg")"
+    if [ -z "$when" ]; then when="$(_iso_now)"; fi
     tmp="$(mktemp "${rec}.XXXXXX")" || return 1
-    if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\n' "$dg" "$(_iso_now)" "$k" > "$tmp" && mv -f "$tmp" "$rec"; then
+    if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\n' "$dg" "$when" "$k" > "$tmp" && mv -f "$tmp" "$rec"; then
       return 0
     fi
     rm -f "$tmp"; return 1
@@ -3467,14 +3502,15 @@ _confirm_has_terminal() { [ -t 0 ]; }
 # a pasted reply, checked against the grammar and against the outgoing plan's code, then CONFIRM —
 # or Enter, which records nothing. Either way the approval record is then written from the
 # verdict (C2, _record_threshold_met), which also re-anchors it to a published plan whose own
-# approvals meet the threshold (C1). Where the plan going out IS the published one, its own
+# approvals meet the threshold (C1), and which keeps the date of a record that already names the
+# published plan (Stage 7 F-02) — the one case whose closing message does not say "dated now". Where the plan going out IS the published one, its own
 # approvals fall short and the record names some other plan — an approval for a plan that was
 # then reverted, on a trip published before its declaration existed — the record is offered for
 # retirement behind CONFIRM, and the bytes it replaces are kept beside it (ADR-007 § 2's
 # replace-with-preservation shape). Nothing else is ever written without a CONFIRM.
 _confirm_declared() { # <trip_dir> <site_html> <state>
   local trip_dir="$1" site_html="$2" state="$3"
-  local out_dg k t s pending keys="" nk=0 key line sel i raw parsed verb code ans recorded=0 rec rec_dg keep tmp
+  local out_dg k t s pending keys="" nk=0 key line sel i raw parsed verb code ans recorded=0 rec rec_dg keep tmp kept
   out_dg="$(itinerary_digest "$site_html")"
   [ -n "$out_dg" ] || die "cannot record for $trip_dir — could not identify the itinerary content of $site_html; any error printed above names the cause. An approval binds to an identified itinerary, so nothing was recorded."
   read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
@@ -3530,6 +3566,9 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
     recorded=1
   fi
 
+  # Whether the record already names the published plan, read BEFORE the write: that is the one
+  # case in which the write keeps the record's date, and the message below must say which it did.
+  kept="$(_published_record_date "$trip_dir" "$out_dg")"
   if ! _record_threshold_met "$trip_dir" "$out_dg"; then
     if [ "$recorded" -eq 1 ]; then
       die "could not write the approval record at $(change_confirmation_path "$trip_dir"). The ledger entry above stands; re-run confirm and press Enter at the approver prompt to write the record."
@@ -3538,7 +3577,9 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
   fi
   read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
   if [ "$recorded" -eq 1 ]; then ok "Recorded as the organizer's statement."; else info "Nothing recorded."; fi
-  if [ "$k" -ge "$t" ]; then
+  if [ "$k" -ge "$t" ] && [ -n "$kept" ]; then
+    ok "Approvals for this plan: $k; $t needed — met. This plan is the published one, so its approval record keeps the date it already carries and only its count is brought up to date; rebuild the site and run  $(basename "$0") update ${trip_dir}  to show that count while the site's notice is still showing."
+  elif [ "$k" -ge "$t" ]; then
     ok "Approvals for this plan: $k; $t needed — met. The approval record for this plan is dated now; rebuild the site so it carries the approval count and code, then run  $(basename "$0") update ${trip_dir}"
   else
     info "Approvals for this plan: $k; $t needed — not yet met."
