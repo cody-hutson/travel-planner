@@ -6658,13 +6658,13 @@ fi
 # Every production function an arm below stubs or mutates, saved before any arm runs. sa_restore
 # re-evaluates the saved text; S26a compares each against it, so a stub that outlives its arm is
 # found by name rather than by the arms after it going quietly wrong.
-SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state'
+SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code'
 for safn in $SA_SAVED_FNS; do
   eval "SA_SAVED_${safn}=\"\$(declare -f ${safn})\""
 done
-sa_restore() { # <fn> — the saved production definition, re-evaluated
+sa_restore() { # <fn> — the saved production definition, re-evaluated; unset where none was saved
   local v="SA_SAVED_$1"
-  eval "${!v}"
+  if [ -n "${!v}" ]; then eval "${!v}"; else unset -f "$1"; fi
 }
 
 # A trip dir holding an s_render render, and a published baseline where one is given.
@@ -6883,16 +6883,21 @@ else
 fi
 
 # ── S16l — #719's DR-2 reading of FM-2: a malformed state is `none-pending` only where the
-# outgoing plan IS the baseline; with the plan changed, the same state is unconfirmed.
+# outgoing plan IS the baseline; with the plan changed, the same state is unconfirmed. ARMED-RED:
+# the literal reading — a malformed state never reads unchanged — holds even a marker-only
+# republish, and this arm convicts it; the baseline comparison is stubbed off, then restored.
 SA16L="$(sa_trip s16l 14:00 "$S_DA")"
 printf 'threshold=all\n' > "$SA16L/.approvers"
 SA16L2="$(sa_trip s16l2 16:30 "$S_DA")"
 printf 'threshold=all\n' > "$SA16L2/.approvers"
 SA_ST1="$(sa_state "$SA16L")"; SA_ST2="$(sa_state "$SA16L2")"
-if [ "$SA_ST1" = none-pending ] && [ "$SA_ST2" = unconfirmed ]; then
-  PASS "S16l: a malformed declaration on an UNCHANGED plan resolves none-pending — nothing new can publish, so a marker-only republish is not held — and the same state with the plan changed resolves unconfirmed (control)"
+_baseline_matches() { return 1; }   # MUTANT: the literal reading of FM-2
+SA_MUT="$(sa_state "$SA16L")"
+sa_restore _baseline_matches
+if [ "$SA_ST1" = none-pending ] && [ "$SA_ST2" = unconfirmed ] && [ "$SA_MUT" = unconfirmed ]; then
+  PASS "S16l: a malformed declaration on an UNCHANGED plan resolves none-pending — nothing new can publish, so a marker-only republish is not held — and the same state with the plan changed resolves unconfirmed (control); ARMED-RED — the literal reading holds the unchanged plan too ('$SA_MUT')"
 else
-  FAIL "S16l: malformed and unchanged '$SA_ST1' (want none-pending), malformed and changed '$SA_ST2' (want unconfirmed)"
+  FAIL "S16l: malformed and unchanged '$SA_ST1' (want none-pending), malformed and changed '$SA_ST2' (want unconfirmed), literal-reading mutant '$SA_MUT' (want unconfirmed)"
 fi
 
 # ── S16m — A DANGLING DECLARATION IS PRESENT, not absent. ARMED-RED: an existence-only presence
@@ -7228,19 +7233,25 @@ else
   FAIL "S20b: lines=$SA20B_N (want 3), grammar='$SA20B_GRAM' (want empty), free-text verdict='$SA20B_BAD' (want a refusal)"
 fi
 
-# ── S20c — ATOMIC. With mv failing, the ledger is byte-identical and no temp file remains.
+# ── S20c — ATOMIC. With mv failing, the append returns exactly 1, the ledger is byte-identical
+# and no temp file remains. CONTROL: the same call with mv working returns 0 and adds the line, so
+# the refusal is the failed move's and not an append that could not run at all.
 SA20C="$WORK/sa-s20c"; mkdir -p "$SA20C"
 sa_rec "$SA20C" zqa1 approve "$S_DA"
 cp "$SA20C/.approvals" "$WORK/sa20c.pre"
+SA20C2="$WORK/sa-s20c2"; mkdir -p "$SA20C2"
+cp "$SA20C/.approvals" "$SA20C2/.approvals"
+( _ledger_append "$SA20C2" zqb2 approve "$S_DB" ) >/dev/null 2>&1; SA20C_CRC=$?
+SA20C_CLINES="$(wc -l < "$SA20C2/.approvals" | tr -d ' ')"
 mv() { return 1; }
 ( _ledger_append "$SA20C" zqb2 approve "$S_DB" ) >/dev/null 2>&1; SA20C_RC=$?
 unset -f mv
 SA20C_TMP=0; for saf in "$SA20C"/.approvals.*; do [ -e "$saf" ] && SA20C_TMP=$((SA20C_TMP+1)); done
 SA20C_SAME=0; cmp -s "$WORK/sa20c.pre" "$SA20C/.approvals" && SA20C_SAME=1
-if [ "$SA20C_RC" -ne 0 ] && [ "$SA20C_SAME" -eq 1 ] && [ "$SA20C_TMP" -eq 0 ]; then
-  PASS "S20c: with mv failing the append returns non-zero (rc=$SA20C_RC), the ledger is byte-identical and no temp file remains — a partial line never lands. The mv stub is withdrawn"
+if [ "$SA20C_CRC" -eq 0 ] && [ "$SA20C_CLINES" -eq 2 ] && [ "$SA20C_RC" -eq 1 ] && [ "$SA20C_SAME" -eq 1 ] && [ "$SA20C_TMP" -eq 0 ]; then
+  PASS "S20c: with mv failing the append returns exactly 1, the ledger is byte-identical and no temp file remains — a partial line never lands; the control, the same append with mv working, returns 0 and adds its line. The mv stub is withdrawn"
 else
-  FAIL "S20c: rc=$SA20C_RC, ledger unchanged=$SA20C_SAME, temp files left=$SA20C_TMP"
+  FAIL "S20c: control rc=$SA20C_CRC lines=$SA20C_CLINES (want 0 and 2); failed-move rc=$SA20C_RC (want 1), ledger unchanged=$SA20C_SAME, temp files left=$SA20C_TMP"
 fi
 
 # ── S21 — THE RENDER'S APPROVAL-CODE GUARD (FM-3), C2's PRESENCE RULE, AND rotate (F3). These
@@ -7404,10 +7415,21 @@ sa_rec "$SA21G2" zqa1 approve "$SA_P16"
 SA21G_ST1="$(sa_state "$SA21G1")"; SA21G_ST2="$(sa_state "$SA21G2")"
 read -r SA_RC SA21G_CL1 SA_V SA_C <<<"$(sa_push update "$SA21G1")"
 read -r SA_RC SA21G_CL2 SA_V SA_C <<<"$(sa_push update "$SA21G2")"
-if [ "$SA21G_ST1" = confirmed ] && [ "$SA21G_ST2" = none-pending ] && [ "$SA21G_CL1" -eq 1 ] && [ "$SA21G_CL2" -eq 1 ]; then
-  PASS "S21g: CONTROL — an undeclared trip with an organizer-confirmed change, and a declaring trip republishing its unchanged plan, both reach the clone with a pair-less render: C2's presence rule binds only an approved change on a declaring trip"
+# ARMED-RED: a presence rule that over-reached — requiring the pair on every update — refuses
+# both of these pushes, and this arm convicts it. The guard is saved, overridden and restored.
+require_render_approval_code() { # MUTANT: the pair required on every update
+  local nc nk code
+  read -r nc nk code <<<"$(_render_approval_pair "$2")"
+  if [ "${3:-update}" = update ] && [ "$nc" -eq 0 ]; then die "mutant: no approval pair"; fi
+  return 0
+}
+read -r SA_RC SA21G_M1 SA_V SA_C <<<"$(sa_push update "$SA21G1")"
+read -r SA_RC SA21G_M2 SA_V SA_C <<<"$(sa_push update "$SA21G2")"
+sa_restore require_render_approval_code
+if [ "$SA21G_ST1" = confirmed ] && [ "$SA21G_ST2" = none-pending ] && [ "$SA21G_CL1" -eq 1 ] && [ "$SA21G_CL2" -eq 1 ] && [ "$SA21G_M1" -eq 0 ] && [ "$SA21G_M2" -eq 0 ]; then
+  PASS "S21g: CONTROL — an undeclared trip with an organizer-confirmed change, and a declaring trip republishing its unchanged plan, both reach the clone with a pair-less render: C2's presence rule binds only an approved change on a declaring trip; ARMED-RED — an over-reaching rule requiring the pair on every update refuses both"
 else
-  FAIL "S21g: undeclared '$SA21G_ST1' clone=$SA21G_CL1, declared-unchanged '$SA21G_ST2' clone=$SA21G_CL2 — C2 is refusing a push it was not written for"
+  FAIL "S21g: undeclared '$SA21G_ST1' clone=$SA21G_CL1, declared-unchanged '$SA21G_ST2' clone=$SA21G_CL2 (want 1 and 1); over-reaching mutant clones $SA21G_M1 / $SA21G_M2 (want 0 and 0)"
 fi
 
 # ── S21h–S21k — rotate, THE THIRD PUSH PATH (the scope-lock's F3). rotate writes a new
@@ -7417,12 +7439,12 @@ fi
 # was published (#1468's third case, which #719 widens). When #1468 moves the guards ahead of that
 # write, these arms turn red on the residual limb, and that is the signal to re-point them. No
 # passphrase value is ever printed here; the file is compared, not shown.
-sa_rotate() { # <trip> -> "rc clone passphrase-rewritten"
+sa_rotate() { # <trip> -> "rc clone passphrase-rewritten"; the refusal's text to $WORK/sa_rot.err
   local d="$1" before after rc ch=0 cl=0 log
   printf 'zzq-residual-passphrase-before-rotate\n' > "$d/.passphrase"
   before="$(cat "$d/.passphrase")"
   : > "$SA_GHLOG"
-  ( cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
+  ( cmd_rotate "$d" ) >/dev/null 2>"$WORK/sa_rot.err"; rc=$?
   after="$(cat "$d/.passphrase" 2>/dev/null)"
   if [ "$after" != "$before" ]; then ch=1; fi
   log="$(cat "$SA_GHLOG")"
@@ -7432,39 +7454,43 @@ sa_rotate() { # <trip> -> "rc clone passphrase-rewritten"
 SA21H="$(sa_ptrip s21h '' '' 16:30 '' pending)"
 sa_declare "$SA21H" 1 zqa1
 read -r SA_HRC SA_HCL SA_HCH <<<"$(sa_rotate "$SA21H")"
+SA_HMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"state: unconfirmed"*) SA_HMSG=1 ;; esac
 SA21H2="$(sa_ptrip s21h2 1 "$SA_P16" 16:30 "$SA_P14")"
 sa_declare "$SA21H2" 1 zqa1
 sa_rec "$SA21H2" zqa1 approve "$SA_P16"
 read -r SA_RC SA_H2CL SA_CH <<<"$(sa_rotate "$SA21H2")"
 if [ "$SA_H2CL" -ne 1 ]; then
   FAIL "S21h: CONTROL — rotate on an approved declaring trip whose render carries its own pair did not reach the clone, so a refusal below would not be attributable to the state under test"
-elif [ "$SA_HRC" -ne 0 ] && [ "$SA_HCL" -eq 0 ] && [ "$SA_HCH" -eq 1 ]; then
-  PASS "S21h: rotate on a declaring trip with NO baseline and no approvals (#718's FM-2 i) refuses before any clone — and the passphrase file was rewritten first, the residual this arm measures; the control, an approved trip carrying its pair, reaches the clone"
+elif [ "$SA_HRC" -ne 0 ] && [ "$SA_HCL" -eq 0 ] && [ "$SA_HMSG" -eq 1 ] && [ "$SA_HCH" -eq 1 ]; then
+  PASS "S21h: rotate on a declaring trip with NO baseline and no approvals (#718's FM-2 i) is refused by the gate (state: unconfirmed) before any clone — and the passphrase file was rewritten first, the residual this arm measures; the control, an approved trip carrying its pair, reaches the clone"
 else
-  FAIL "S21h: rotate with no baseline rc=$SA_HRC clone=$SA_HCL passphrase-rewritten=$SA_HCH"
+  FAIL "S21h: rotate with no baseline rc=$SA_HRC clone=$SA_HCL refused-as-unconfirmed=$SA_HMSG passphrase-rewritten=$SA_HCH"
 fi
 SA21I="$(sa_ptrip s21i 2 "$SA_WRONG" 16:30 "$SA_P16")"
 read -r SA_IRC SA_ICL SA_ICH <<<"$(sa_rotate "$SA21I")"
-if [ "$SA_IRC" -ne 0 ] && [ "$SA_ICL" -eq 0 ] && [ "$SA_ICH" -eq 1 ]; then
-  PASS "S21i: rotate on a render stating another plan's approval code refuses before any clone — after the passphrase was rewritten, the measured residual"
+SA_IMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"approval code"*"must be the code of the plan"*) SA_IMSG=1 ;; esac
+if [ "$SA_IRC" -ne 0 ] && [ "$SA_ICL" -eq 0 ] && [ "$SA_IMSG" -eq 1 ] && [ "$SA_ICH" -eq 1 ]; then
+  PASS "S21i: rotate on a render stating another plan's approval code is refused by the code guard before any clone — after the passphrase was rewritten, the measured residual"
 else
-  FAIL "S21i: rotate with a mismatched code rc=$SA_IRC clone=$SA_ICL passphrase-rewritten=$SA_ICH"
+  FAIL "S21i: rotate with a mismatched code rc=$SA_IRC clone=$SA_ICL code-guard-refusal=$SA_IMSG passphrase-rewritten=$SA_ICH"
 fi
 SA21J="$(sa_ptrip s21j 2 '' 16:30 "$SA_P16")"
 read -r SA_JRC SA_JCL SA_JCH <<<"$(sa_rotate "$SA21J")"
-if [ "$SA_JRC" -ne 0 ] && [ "$SA_JCL" -eq 0 ] && [ "$SA_JCH" -eq 1 ]; then
-  PASS "S21j: rotate on a render carrying half the approval pair refuses before any clone — after the passphrase was rewritten, the measured residual"
+SA_JMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"travels together"*) SA_JMSG=1 ;; esac
+if [ "$SA_JRC" -ne 0 ] && [ "$SA_JCL" -eq 0 ] && [ "$SA_JMSG" -eq 1 ] && [ "$SA_JCH" -eq 1 ]; then
+  PASS "S21j: rotate on a render carrying half the approval pair is refused by the code guard before any clone — after the passphrase was rewritten, the measured residual"
 else
-  FAIL "S21j: rotate with half a pair rc=$SA_JRC clone=$SA_JCL passphrase-rewritten=$SA_JCH"
+  FAIL "S21j: rotate with half a pair rc=$SA_JRC clone=$SA_JCL pair-refusal=$SA_JMSG passphrase-rewritten=$SA_JCH"
 fi
 SA21K="$(sa_ptrip s21k '' '' 16:30 "$SA_P14" pending)"
 sa_declare "$SA21K" 1 zqa1
 sa_rec "$SA21K" zqa1 approve "$SA_P16"
 read -r SA_KRC SA_KCL SA_KCH <<<"$(sa_rotate "$SA21K")"
-if [ "$SA_KRC" -ne 0 ] && [ "$SA_KCL" -eq 0 ] && [ "$SA_KCH" -eq 1 ]; then
-  PASS "S21k: rotate on an approved declaring trip whose render carries no pair refuses before any clone (C2, reached through rotate) — after the passphrase was rewritten, the measured residual"
+SA_KMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"carries no approval count or code"*) SA_KMSG=1 ;; esac
+if [ "$SA_KRC" -ne 0 ] && [ "$SA_KCL" -eq 0 ] && [ "$SA_KMSG" -eq 1 ] && [ "$SA_KCH" -eq 1 ]; then
+  PASS "S21k: rotate on an approved declaring trip whose render carries no pair is refused by C2's own rule before any clone — after the passphrase was rewritten, the measured residual"
 else
-  FAIL "S21k: rotate with an approved plan and no pair rc=$SA_KRC clone=$SA_KCL passphrase-rewritten=$SA_KCH"
+  FAIL "S21k: rotate with an approved plan and no pair rc=$SA_KRC clone=$SA_KCL C2-refusal=$SA_KMSG passphrase-rewritten=$SA_KCH"
 fi
 unset -f gh npx
 
@@ -7545,10 +7571,22 @@ fi
 # ── S23b — THE UNDECLARED WRITE IS UNCHANGED: the format group T reads out of cmd_confirm's own
 # body is still exactly the two-line record, so T6's extractor still reads the undeclared limb.
 SA23B_FMT="$(t6_confirm_fmt)"
-if [ "$SA23B_FMT" = 'digest=%s\nconfirmed=%s\n' ]; then
-  PASS "S23b: t6_confirm_fmt reads '$SA23B_FMT' out of cmd_confirm — the first record write in its own body is still the organizer's two-line confirmation, and the declared writer sits outside it"
+# ARMED-RED: over a copy of the script whose cmd_confirm writes the declared record FIRST, the same
+# extractor reads the three-line format — so this arm sees the regression it guards against.
+SA23B_MUT="$WORK/sa23b_mut.sh"; : > "$SA23B_MUT"
+while IFS= read -r saline || [ -n "$saline" ]; do
+  printf '%s\n' "$saline" >> "$SA23B_MUT"
+  case "$saline" in
+    'cmd_confirm() {'*) printf '%s\n' "  printf 'digest=%s\\nconfirmed=%s\\napproval-count=%s\\n' 1 2 3 >/dev/null" >> "$SA23B_MUT" ;;
+  esac
+done < "$SELF_PUBLISH"
+SA23B_SELF="$SELF_PUBLISH"; SELF_PUBLISH="$SA23B_MUT"
+SA23B_MUTFMT="$(t6_confirm_fmt)"
+SELF_PUBLISH="$SA23B_SELF"
+if [ "$SA23B_FMT" = 'digest=%s\nconfirmed=%s\n' ] && [ "$SA23B_MUTFMT" = 'digest=%s\nconfirmed=%s\napproval-count=%s\n' ]; then
+  PASS "S23b: t6_confirm_fmt reads '$SA23B_FMT' out of cmd_confirm — the first record write in its own body is still the organizer's two-line confirmation, and the declared writer sits outside it; ARMED-RED — over a copy whose cmd_confirm writes the declared record first, it reads the three-line format"
 else
-  FAIL "S23b: t6_confirm_fmt read '$SA23B_FMT' — a declared-path write has become the first one in cmd_confirm's body, and group T now reads the wrong format"
+  FAIL "S23b: t6_confirm_fmt read '$SA23B_FMT' (want the two-line format) and over the mutated copy '$SA23B_MUTFMT' (want the three-line format)"
 fi
 
 # ── S23c — the record the declared writer produces decides `updated` under group T's own
@@ -7649,10 +7687,16 @@ SA23G="$(sa_trip s23g 14:00 "$S_DA")"
 SA23G_ERR="$( ( cmd_confirm "$SA23G" ) </dev/null 2>&1 >/dev/null )"; SA23G_RC=$?
 SA23G_SHIPPED="nothing to confirm for $SA23G — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
 SA23G_SAME=0; case "$SA23G_ERR" in *"$SA23G_SHIPPED") SA23G_SAME=1 ;; esac
-if [ "$SA23G_RC" -ne 0 ] && [ "$SA23G_SAME" -eq 1 ] && [ ! -e "$SA23G/.change-confirmed" ] && [ ! -e "$SA23G/.approvals" ]; then
-  PASS "S23g: CONTROL — on a trip that declares no approvers, confirm over an unchanged plan still refuses with the shipped 'nothing to confirm' message word for word and writes nothing; C1's reordering reaches the declared branch alone"
+# ARMED-RED: were the declared branch taken by a trip that declares nothing, the shipped refusal
+# would be gone — injected by a policy that answers `declared` for every trip, then restored.
+_approval_policy() { printf declared; }
+SA23G_MERR="$( ( cmd_confirm "$SA23G" ) </dev/null 2>&1 >/dev/null )"
+sa_restore _approval_policy
+SA23G_MSAME=0; case "$SA23G_MERR" in *"$SA23G_SHIPPED") SA23G_MSAME=1 ;; esac
+if [ "$SA23G_RC" -ne 0 ] && [ "$SA23G_SAME" -eq 1 ] && [ ! -e "$SA23G/.change-confirmed" ] && [ ! -e "$SA23G/.approvals" ] && [ "$SA23G_MSAME" -eq 0 ]; then
+  PASS "S23g: CONTROL — on a trip that declares no approvers, confirm over an unchanged plan still refuses with the shipped 'nothing to confirm' message word for word and writes nothing; C1's reordering reaches the declared branch alone. ARMED-RED — a policy answering 'declared' for this trip loses that message"
 else
-  FAIL "S23g: an undeclared trip's confirm returned rc=$SA23G_RC with the shipped message=$SA23G_SAME — C1 has changed a path it was not written for"
+  FAIL "S23g: an undeclared trip's confirm returned rc=$SA23G_RC with the shipped message=$SA23G_SAME (want 1); under the all-declared mutant the message survived=$SA23G_MSAME (want 0)"
 fi
 
 # ── S24a — ERASURE (#719 INT-10). Substituting one approver's key with the erasure token's key
