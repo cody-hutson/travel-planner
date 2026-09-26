@@ -6587,11 +6587,12 @@ ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_ve
 # rules and never a measurement of the form. The lifecycle row's zero IS measured, by the probe that
 # counts the lines of the form opening on its bold label.
 #
-# ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each landing changes the realized vector
+# ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each change moves the realized vector
 # there, so each must update this pin in the same change. The change that names `/trip-record` for
-# `### Effective Planning Days` — that record's Decision 1 row, which this release's plan calls its
-# cutover — adds a row whose region realizes NO (marked) and narrows the `[DERIVED]` row's Block text
-# to the per-traveller block; its Retire landing set then removes that half of the row with its block.
+# `### Effective Planning Days` — that record's Decision 1 row — adds a row whose region realizes
+# NO (marked) and narrows the `[DERIVED]` row's Block text to the per-traveller block. Its Retire
+# landing set, no earlier than the Cutover set that first emits the traveller-presence file, then
+# removes that half of the row together with its block.
 #
 # One line per row: `<form tag> | <Block cell, verbatim> | <realized verdict>`.
 ST_CF_PIN='trip-context | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition)
@@ -6721,9 +6722,23 @@ st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q
 ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G1ROW" '$1 == r { print $9; exit }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig-v2)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig-v2)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
 st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet joins (row ${ST_CF_G1ROW:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
+# Q3-EMPTY-V2 — every field deleted. Graded on the empty-set finding ITSELF rather than on every Q3:
+# deleting every field also deletes whatever Q3 findings the live reading carried, so a count of the
+# whole code can fall on a form already failing question 3 while this site fires.
+ST_CF_ARMED="$ST_CF_ARMED
+Q3"
 ST_CF_FX="$ST_CF_DIR/q3-empty-v2.md"
 awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "FIELD") d[$2] = 1; next } !(FNR in d)' <(printf '%s\n' "$ST_CF_RG") "$ST_CF_FILE" > "$ST_CF_FX"
-st_cf_mustfire "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "every field-shaped bullet is deleted, at any indent, so the join would be graded over the empty set"
+ST_CF_EV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
+ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$ST_CF_EV" "$ST_CF_SITEMAP")"
+st_cf_empty() { awk -F'\t' '$1 == "Q3" && index($2, "no field-shaped bullet sits in an interviewable region") == 1 { n++ } END { print n + 0 }' <<<"$1"; }
+ST_CF_EV0="$(st_cf_empty "$ST_CF_LIVE")"; ST_CF_EV1="$(st_cf_empty "$ST_CF_EV")"
+if ! cmp -s "$ST_CF_FILE" "$ST_CF_FX" && [ "$ST_CF_EV1" -gt "$ST_CF_EV0" ]; then
+  PASS "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]: MUST FIRE — every field-shaped bullet is deleted, at any indent, and the evaluator says the join would be graded over the empty set ($ST_CF_EV0 → $ST_CF_EV1), rather than reading an empty join as a clean one"
+else
+  FAIL "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]: MUST FIRE — with every field-shaped bullet deleted, the empty-set finding went $ST_CF_EV0 → $ST_CF_EV1, where a rise is owed. A join graded over nothing would read as clean"
+fi
 ST_CF_FX="$(st_cf_fixture q3-address-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "The classification" "The classifications"
 st_cf_mustfire "CTL-ST-CF-Q3-ADDRESS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the classification: anchor is edited so its last segment leads no heading of the data model (line $ST_CF_KC)"
 ST_CF_FX="$(st_cf_fixture q3-reverse)"; st_line_del "$ST_CF_FX" "${ST_CF_GUL:-0}"
@@ -6838,7 +6853,9 @@ ST_CF_CA="$(awk -F'\t' -v r="$ST_CF_AR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r
 ST_CF_CN="$(awk -F'\t' -v r="$ST_CF_NR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "carried" : "absent"); exit }' <<<"$ST_CF_CG")"
 ST_CF_CV0="$(st_cf_row_vector "$ST_CF_RG" | cut -f1-3)"; ST_CF_CV1="$(st_cf_row_vector "$ST_CF_CG" | cut -f1-3)"
 ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")" | tr '\n' ' ')"
-if [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ "$ST_CF_CT1" = "$ST_CF_CT0" ]; then
+if [ -z "$ST_CF_AR" ] || [ -z "$ST_CF_NR" ] || [ -z "$ST_CF_AS" ]; then
+  VACUOUS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: the writer table carries no AGENT row with a contract span (${ST_CF_AR:-none}) or no addressed row naming no writer (${ST_CF_NR:-none}), so there is no Condition-cell citation to move between them"
+elif [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ "$ST_CF_CT1" = "$ST_CF_CT0" ]; then
   PASS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter the agent contract span $ST_CF_AS leaves the Condition cell of row $ST_CF_AR and is written into that of row $ST_CF_NR, and every row's class reads as before [${ST_CF_CL0% }], every realized verdict with it, and the evaluator's findings [${ST_CF_CT0% }]. A writer's class is read from its Writer and Block cells alone, so the column that explains cannot move a verdict"
 else
   FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
@@ -6847,44 +6864,53 @@ fi
 # ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewable row
 # that names a region gains a clause naming another writer at creation: its regions go from YES to
 # CONDITIONAL and no declared field is stranded, so no question the evaluator asks moves — and the pin
-# must FAIL, naming that row, both verdicts and the record it is a finding about.
+# must FAIL, naming that row, both verdicts and the record it is a finding about. Graded as a DELTA:
+# the defects the flip ADDS to this run's own pin report, so a table already off its pin still has an
+# honest arm here rather than a second red.
 ST_CF_PR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
 ST_CF_PW="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "ROW" && $2 == r { print $9; exit }' <<<"$ST_CF_RG")"
 ST_CF_PX="$(st_cf_charter_fixture pin-flip)"
 [ -n "$ST_CF_PR" ] && st_cf_cell "$ST_CF_PX" "$(st_cf_rowline "$ST_CF_PR")" "$ST_CF_WCOL" set "\`/zz-st-cf-probe\` at creation; $ST_CF_PW"
-ST_CF_PV0="$(st_cf_row_vector "$ST_CF_RG" | awk -F'\t' -v r="$ST_CF_PR" '$1 == r { print $2; exit }')"
+ST_CF_PREP0="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$ST_CF_RG")")"
 ST_CF_PREP="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$(ft_regions "$ST_CF_FILE" "$ST_CF_PX" 2>/dev/null)")")"
-ST_CF_PMM="$(awk -F'\t' '$1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING" { n++ } END { print n + 0 }' <<<"$ST_CF_PREP")"
-ST_CF_PMR="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "MISMATCH" && $2 == r { print $4 " → " $5; exit }' <<<"$ST_CF_PREP")"
+ST_CF_PNEW="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING") d[$0] = 1; next }
+  ($1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING") && !($0 in d)' <(printf '%s\n' "$ST_CF_PREP0") <(printf '%s\n' "$ST_CF_PREP"))"
+ST_CF_PMM="$(printf '%s\n' "$ST_CF_PNEW" | grep -c '[^[:space:]]')"
+ST_CF_PMR="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "MISMATCH" && $2 == r && $5 == "CONDITIONAL (condition)" { print $4 " → " $5; exit }' <<<"$ST_CF_PNEW")"
 ST_CF_PFV="$( ( pass=0; fail=0; msg=""; PASS() { pass=$((pass + 1)); }; FAIL() { fail=$((fail + 1)); msg="$*"; }
   st_cf_pin_assert "$ST_CF_REL" "$ST_CF_PX" > /dev/null 2>&1; printf '%d %d\n%s' "$pass" "$fail" "$msg" ) )"
 ST_CF_PFC="$(awk 'NR == 1' <<<"$ST_CF_PFV")"; ST_CF_PFM="$(awk 'NR > 1' <<<"$ST_CF_PFV")"
 ST_CF_PFA=0
 case "$ST_CF_PFM" in *"row $ST_CF_PR ("*) case "$ST_CF_PFM" in *"a finding about ADR-024 (AC2)"*) ST_CF_PFA=1 ;; esac ;; esac
 ST_CF_PET0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_PET1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_PX")" | tr '\n' ' ')"
-if ! cmp -s "$ST_CF_OWN" "$ST_CF_PX" && [ "$ST_CF_PMM" -eq 1 ] && [ "$ST_CF_PMR" = "$ST_CF_PV0 → CONDITIONAL (condition)" ] && [ "$ST_CF_PFC" = "0 1" ] && [ "$ST_CF_PFA" -eq 1 ]; then
-  PASS "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — on a COPY of the charter, row $ST_CF_PR gains a clause naming another writer at creation, and the pin reports exactly that row, pinned and now realized as $ST_CF_PMR, in ONE FAIL that names it as a finding about ADR-024 (AC2), while the evaluator's own findings read [${ST_CF_PET1% }] against the form's [${ST_CF_PET0% }]: a flip that strands no declared field is the one no question sees, and the pin is what sees it"
+if ! cmp -s "$ST_CF_OWN" "$ST_CF_PX" && [ "$ST_CF_PMM" -eq 1 ] && [ -n "$ST_CF_PMR" ] && [ "$ST_CF_PFC" = "0 1" ] && [ "$ST_CF_PFA" -eq 1 ]; then
+  PASS "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — on a COPY of the charter, row $ST_CF_PR gains a clause naming another writer at creation, and the one defect it adds to this run's pin report is exactly that row, pinned and now realized as $ST_CF_PMR, in ONE FAIL that names it as a finding about ADR-024 (AC2), while the evaluator's own findings read [${ST_CF_PET1% }] against the form's [${ST_CF_PET0% }]: a flip that strands no declared field is the one no question sees, and the pin is what sees it"
 else
-  FAIL "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — with row ${ST_CF_PR:-none}'s Writer cell given a creation clause on a COPY of the charter, the pin reported $ST_CF_PMM defect(s), row ${ST_CF_PR:-none} as '${ST_CF_PMR:-no mismatch}' where '$ST_CF_PV0 → CONDITIONAL (condition)' is owed, the assertion read '$ST_CF_PFC' where '0 1' is owed, and its message named the row and the record $ST_CF_PFA time(s). A pin that cannot see this flip absorbs it"
+  FAIL "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — with row ${ST_CF_PR:-none}'s Writer cell given a creation clause on a COPY of the charter, the pin gained $ST_CF_PMM defect(s) over this run's own report, row ${ST_CF_PR:-none} reading '${ST_CF_PMR:-no mismatch}' where its pinned verdict → CONDITIONAL (condition) is owed, the assertion read '$ST_CF_PFC' where '0 1' is owed, and its message named the row and the record $ST_CF_PFA time(s). A pin that cannot see this flip absorbs it"
 fi
 
 # ── CTL-ST-CF-REGION-RENDER — the region renderer over CTL-ST-CF-Q4-NO's reading: exactly ONE region
-# FAILs, it is the region the leak was written into, and the ids are the live ones, in the same order.
+# FAILs beyond those the live reading already fails, it is the region the leak was written into, and the
+# ids are the live ones, in the same order. A DELTA, so a region already red does not redden this too.
 ST_CF_RR0="$(st_cf_regions_report "$ST_CF_TAG" "$ST_CF_LIVE")"
 ST_CF_RR1="$(st_cf_regions_report "$ST_CF_TAG" "$ST_CF_Q4NO_V")"
 ST_CF_RRK="$(awk -v t="${ST_CF_QN%%|*}" '$1 == "GRADED" { k++; if ($2 == t) { print k; exit } }' <<<"$ST_CF_LIVE")"
 ST_CF_RRW="$(awk -F'\t' -v k="${ST_CF_RRK:-0}" 'NR == k + 0 { print $2; exit }' <<<"$ST_CF_RR0")"
-ST_CF_RRF="$(awk -F'\t' '$1 == "FAIL" { printf "%s ", $2 }' <<<"$ST_CF_RR1")"
+ST_CF_RRF="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "FAIL") f[$2] = 1; next } $1 == "FAIL" && !($2 in f) { printf "%s ", $2 }' <(printf '%s\n' "$ST_CF_RR0") <(printf '%s\n' "$ST_CF_RR1"))"
 ST_CF_RRI0="$(cut -f2 <<<"$ST_CF_RR0")"; ST_CF_RRI1="$(cut -f2 <<<"$ST_CF_RR1")"
-if [ -n "$ST_CF_RRW" ] && [ "${ST_CF_RRF% }" = "$ST_CF_RRW" ] && [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ]; then
-  PASS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over the reading CTL-ST-CF-Q4-NO provoked, exactly one region renders FAIL, ST-CF[$ST_CF_RRW], the region the leak was written into, and every region id is the live one in the live order. So a region verdict names WHICH region failed, and a form conformant on all but one region no longer reads like one conformant on none"
+if [ -z "$ST_CF_QN" ]; then
+  VACUOUS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: CTL-ST-CF-Q4-NO had no region to write into, so there is no provoked reading to render"
+elif [ -n "$ST_CF_RRW" ] && [ "${ST_CF_RRF% }" = "$ST_CF_RRW" ] && [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ]; then
+  PASS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over the reading CTL-ST-CF-Q4-NO provoked, exactly one region renders FAIL beyond those this form already fails, ST-CF[$ST_CF_RRW], the region the leak was written into, and every region id is the live one in the live order. So a region verdict names WHICH region failed, and a form conformant on all but one region no longer reads like one conformant on none"
 else
-  FAIL "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over CTL-ST-CF-Q4-NO's reading the regions failing were [${ST_CF_RRF% }], where exactly [${ST_CF_RRW:-the leak target}] is owed, and the id list $( [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ] && echo matched || echo DIFFERED from ) the live one"
+  FAIL "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over CTL-ST-CF-Q4-NO's reading the regions failing beyond the live reading's were [${ST_CF_RRF% }], where exactly [${ST_CF_RRW:-the leak target}] is owed, and the id list $( [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ] && echo matched || echo DIFFERED from ) the live one"
 fi
 
 # ── CTL-ST-CF-DECL-V2 — the version-2 key set is DERIVED, and it fails closed. With the contract record's
 # worked fence losing its boundary: line, and then carrying it twice, on copies, the evaluator must say
-# the version-2 set cannot be derived; over the real record it must not.
+# the version-2 set cannot be derived; over the real record it must not. Keyed on the live reading as the
+# CTL-ST-CF-DECL arms are: where the real record ALREADY leaves the set underivable — the mutation this
+# arm rehearses, replayed on the tracked record — ST-CF[<form>] carries that red alone and this stands.
 ST_CF_ARMED="$ST_CF_ARMED
 Q1"
 ST_CF_DBL="$(awk -v a="$ST_CF_DFO" -v b="$ST_CF_DFC" -v k="$ST_CF_V2_DROP" 'FNR > a + 0 && FNR < b + 0 && index($0, k ":") == 1 { print FNR; exit }' "$ST_CF_DECL")"
@@ -6896,7 +6922,9 @@ ST_CF_DVD="$( ( ST_CF_DECL="$ST_CF_DX2"; st_cf_violations "$ST_CF_FILE" "$ST_CF_
 ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
 $(st_attrib "$ST_CF_DVL" "$ST_CF_SITEMAP")"
 ST_CF_DGOT="lost=$(st_cf_dv2 "$ST_CF_DVL") doubled=$(st_cf_dv2 "$ST_CF_DVD") real=$(st_cf_dv2 "$ST_CF_LIVE")"
-if [ -n "$ST_CF_DBL" ] && [ "$ST_CF_DGOT" = "lost=1 doubled=1 real=0" ]; then
+if [ "$(st_cf_dv2 "$ST_CF_LIVE")" -gt 0 ]; then
+  PASS "CTL-ST-CF-DECL-V2[$ST_CF_TAG]: MUST FIRE — the real record ALREADY leaves the version-2 key set underivable ($ST_CF_DGOT), the mutation this arm rehearses, so ST-CF[$ST_CF_TAG] carries that red and this arm stands rather than repeating it"
+elif [ -n "$ST_CF_DBL" ] && [ "$ST_CF_DGOT" = "lost=1 doubled=1 real=0" ]; then
   PASS "CTL-ST-CF-DECL-V2[$ST_CF_TAG]: MUST FIRE — the contract record's worked fence with its $ST_CF_V2_DROP: line removed, and with it doubled, on copies, each leaves the version-2 key set underivable and the evaluator says so once, while the real record, which carries it once, reads no such finding ($ST_CF_DGOT). The version-2 set is a delta on the record's own fence, and it cannot silently read a set nobody declared"
 else
   FAIL "CTL-ST-CF-DECL-V2[$ST_CF_TAG]: MUST FIRE — the version-2 key set derivation read '$ST_CF_DGOT' where 'lost=1 doubled=1 real=0' is owed, over the worked fence's $ST_CF_V2_DROP: line ${ST_CF_DBL:-(not found)}"
