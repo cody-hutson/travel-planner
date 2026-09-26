@@ -374,6 +374,16 @@ engaged, and the channel-set stays at three members. The V-2 row and this sectio
 retained as decided and read through this paragraph: the row's ground is now *L2 fails on the
 traveller leg* rather than *undetermined*. The *Follow-on* bullet for #718 is discharged.
 
+**Amendment (2026-09-26, Saturday) — a citation repair: the line locators into `ADR-003`
+removed.** The V-1 row above and the `ADR-003` entry under *References* each cited `ADR-003` § 3's
+pull-based notice by a line number in that record, beside a citation that does not depend on one —
+the row by quotation, the entry by section. When #719 recorded the partial supersession of
+`ADR-003` § *Decision 2* in that record's own `Status:` block, the block grew and the line those
+locators named moved, so each would have pointed at other text. Both locators were removed in that
+change and nothing else in either site was edited: the row keeps its quotation and the entry its
+citation of § 3, and each of those moves with the text it names. No decision of this record
+changes.
+
 ### 3. Carry is a relation, not a property, on both sides — and each side is typed over the artifacts its guard actually queries
 
 > **`may-carry(v, A, CH) = ¬denied(v, A) ∧ carry-envelope(CH) admits v`**
