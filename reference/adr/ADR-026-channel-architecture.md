@@ -336,7 +336,7 @@ made.
 | **CH-1** | The published site | a passphrase-holding traveller | engine → traveller | the publish step; `verify_ciphertext` on the encrypted limb, `verify_publishable_content` on the `--plaintext` limb |
 | **CH-2** | The intake surface | the traveller themselves | traveller → engine | the artifact write; `scripts/validate-artifacts.sh` + the schema suite |
 | **CH-3** | The command surface | the **operator** | operator ↔ engine | the verb invocation; `ADR-007` § 2's six bounds, per-verb `allowed-tools` |
-| **V-1** | *approval notice, outbound* | *a traveller* | *engine → traveller* | **DISCHARGED — it crosses on CH-1.** `ADR-003` § 3 ships it: *"The published site shows a **'change pending / recently updated' state on next open**"* (`:53`) |
+| **V-1** | *approval notice, outbound* | *a traveller* | *engine → traveller* | **DISCHARGED — it crosses on CH-1.** `ADR-003` § 3 ships it: *"The published site shows a **'change pending / recently updated' state on next open**"* |
 | **V-2** | *approval return, inbound* | *a traveller* | *traveller → engine* | **VACANCY. L2 UNDETERMINED** — `ADR-010`:230, *"'Out-of-band' is a placeholder."* This is #718's work |
 
 **Why the vacancy verdict survives its own re-typing.** The admission test requires all three
@@ -840,7 +840,7 @@ here.
 
 - [ADR-002](ADR-002-living-site-refresh.md) — the secret model and the no-standing-server
   constraint, upheld here and not superseded.
-- [ADR-003](ADR-003-group-coordination.md) — §§ 1–4, and **§ 3's pull-based notice** at `:53`,
+- [ADR-003](ADR-003-group-coordination.md) — §§ 1–4, and **§ 3's pull-based notice**,
   which is what discharges V-1.
 - [ADR-006](ADR-006-third-party-data-capture.md) — a `[THIRD-PARTY]` value is never published in
   attributed or anonymized form, and provenance-marking never establishes consent. Unwidened.

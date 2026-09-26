@@ -1,6 +1,14 @@
 # ADR-003: Group coordination — change representation, approval workflow, notification, privacy
 
-- **Status:** Accepted (2026-07-12)
+- **Status:** Accepted (2026-07-12); **amended once (2026-09-26)**. **First amendment** — it
+  records a **superseding decision** rather than a defect in this document.
+  [ADR-029](ADR-029-group-approval-return-and-threshold.md) supersedes the gate rule of Decision 2
+  — republish gated on the organizer's confirmation rather than on a system-counted quorum — with
+  approvals the organizer states on travellers' behalf, marked `organizer-stated` and counted
+  against a declared threshold; a trip that declares no approvers is gated on the organizer's
+  confirmation exactly as before. The rest of Decision 2, and Decisions 1, 3 and 4, stand. The
+  superseded clauses are retained as decided, with an inline marker pointing forward, per
+  `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the group-coordination epic (#77); this ADR is its milestone-head design gate (#86).
 
@@ -45,7 +53,10 @@ or was added), carrying no more detail than the site already encrypts. The organ
 The organizer (who owns the Mac mini and the plaintext) shares the change summary, the group
 approves through their own channel (out-of-band), and the organizer **confirms → the republish
 path (#85) fires**. Republish gates on the organizer's confirmation, **not** a system-counted
-quorum. On rejection, the current published plan holds. The tool does what only it can —
+quorum. *(Superseded in part — first amendment: [ADR-029](ADR-029-group-approval-return-and-threshold.md)
+replaces this gate rule with approvals the organizer states on travellers' behalf, marked
+`organizer-stated` and counted against a declared threshold; the rest of this decision stands.)*
+On rejection, the current published plan holds. The tool does what only it can —
 represent the change and gate the republish — and the humans do the consensus.
 
 ### 3. Notification — pull-based

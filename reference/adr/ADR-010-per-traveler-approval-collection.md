@@ -233,11 +233,12 @@ would duplicate." **That concern does not materialize.**
 
 #552 built its organizer-confirm gate in this release specifically so that a later replacement would
 be a substitution at a named seam rather than an excavation: the decision rule lives in the body of
-`change_confirmation_state`, while `require_change_confirmation`, its call site in `cmd_update`, its
-five-token vocabulary and its allowlist-proceed / wildcard-abort structure sit outside it and are
-indifferent to how a confirmation was obtained. A collection mechanism replaces one function body.
-On the render side, #551's Coordination Notice component is the extension point for any additional
-coordination state, and it already exists.
+`change_confirmation_state`, while `require_change_confirmation`, the one call line in `cmd_update`
+that reaches it, its five-token vocabulary and its allowlist-proceed / wildcard-abort structure sit
+outside it and are indifferent to how a confirmation was obtained. A collection mechanism replaces
+that function's body; the one that shipped reached further, as the amendment at the end of this
+section records. On the render side, #551's Coordination Notice component is the extension point for
+any additional coordination state, and it already exists.
 
 **The band is `extend-seam` on both surfaces.** This matters to sequencing, not just to bookkeeping:
 it is why the mechanism can be deferred behind #718 without the seam rotting, and why #719 is
@@ -266,6 +267,27 @@ comment above `change_confirmation_state` in `scripts/publish-trip-site.sh` stat
 vocabulary, and group S15 of `scripts/test-publish-guard.sh` grades it whatever body the function
 holds. No decision moves — the band is still `extend-seam`, and a collection mechanism still
 replaces one function body; that body now owes one more emission.
+
+**Amendment (2026-09-26, Saturday) — the replacement, as it shipped, reached beyond the one function
+body this section names.** The collection build (#719), conforming to
+[ADR-029](ADR-029-group-approval-return-and-threshold.md), replaced the body of
+`change_confirmation_state` as this section anticipated. It also replaced the body of `_digest_of`,
+so that the digest an approval binds is SHA-256 rather than CRC-32, as that record's fifth decision
+requires, and kept a CRC-32 baseline readable, so that a plan recorded before the change still
+matches itself; it extended `cmd_confirm` with the recording act for a trip that declares approvers,
+reached ahead of the command's nothing-pending refusal; and it added a guard,
+`require_render_approval_code`, that refuses a render stating half of the approval pair, either
+field twice, or an approval code that is not the code of the itinerary it carries — and, on `update`
+of an approved change on a trip that declares approvers, a render stating neither. `cmd_publish`
+calls that guard before the repo is touched. In `cmd_update` the gate's call line became one call to
+`require_publish_guards`, which calls `require_change_confirmation` unchanged and then the guard, so
+the gate is still reached from one call line and relocating it is still moving that line. The second
+paragraph's sentence and its naming of the gate's call site are corrected in place, and the
+restatement closing the amendment above is corrected by this paragraph. What they were used to
+establish still holds: `require_change_confirmation`'s body, the five-token vocabulary and the
+allowlist-proceed / wildcard-abort structure are unchanged; the replacement body still emits
+`undetermined` whenever a baseline is recorded and the outgoing render's itinerary content cannot be
+identified; and the band is still `extend-seam` on both surfaces. No decision moves.
 
 ### 6. The transport is left unnamed here — and that, not the verifier, is what blocks the mechanism
 

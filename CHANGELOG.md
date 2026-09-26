@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-26 — Group approval: the decided model
+## [Unreleased] — 2026-09-26 — Group approval: a decided model, and a republish that waits for it
 
 **Group approval has a decided model.** A new decision record settles the inbound approval return
 the channel architecture left open. A traveller replies in the group's own thread with a one-line
@@ -16,6 +16,28 @@ and a code reach the published site, and only a fixed-form line travels through 
 service. The record also writes down, for the first time, how one decision of an accepted record is
 superseded while the rest stands, and names the organizer-confirm rule as the decision it
 supersedes that way.
+
+**A plan change can wait for the travellers who approve it.** The organizer declares who approves a
+trip's changes — named travellers from the group, and how many of them must agree, all of them
+unless the organizer says otherwise. When the plan changes, the organizer shares the change summary
+and a one-line approval code in the group's own thread, each traveller who agrees replies with that
+line, and the organizer records each reply at a terminal, where it is kept as the organizer's
+statement on that traveller's behalf and never as the traveller's own. The site republishes only
+once enough approvals for that exact plan are recorded. A trip that declares nobody works as before:
+the organizer's own confirmation is enough.
+
+**What a traveller can check.** Beside its *recently updated* notice, the published site now shows
+how many approvals the organizer recorded and the plan's approval code, and nothing that says who
+approved. A traveller who did not approve can see a count that includes them, and anyone can compare
+the code on the site with the one shared in the thread. The code is now a stronger fingerprint of
+the plan, so a different plan cannot carry an approved code, and sites published before this
+release keep working without anyone re-approving a plan that did not change. The security policy
+states what the count proves and what it does not.
+
+**The organizer-confirm rule is superseded in part, in the form now written down for it.** The
+accepted record that made republish wait on the organizer's confirmation now records, in its own
+status line, which part of that decision the new record replaces, and keeps its original words with
+a pointer forward.
 
 ## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 
