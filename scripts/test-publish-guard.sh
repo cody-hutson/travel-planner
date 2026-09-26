@@ -7784,6 +7784,191 @@ else
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
+# the site verb's name-free read, and the band's excision with the pair inside it.
+#
+#   T9   INT-6   C19 declares exactly the pair — typed, optional, no threshold — and the band's
+#                static statement names the organizer and never says that travellers approved
+#   T10  INT-7   the site verb reads neither approver sidecar, and two trips differing only in
+#                who approved render byte-identically
+#   T11  INT-9   the mapping reads the count after the date and conditions the pair on it, and
+#                the widest band the contract admits is still excised from the digest
+#
+# As T1–T8 do, every rule is read out of the documents — the fence, § 3 of the component
+# contract and the `site` verb's section — and each extractor is shown to recover a value injected
+# into a mutated copy of its own source, so a green here is the corpus's and not this file's.
+# These arms follow S26a because T10b reads S25a's records. Offline; no legitimate skip.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "The approval pair on the render — #719 (INT-6, INT-7, INT-9):"
+
+# The per-class fields C19's fence declares: every `field` line after its `# Per-class fields`
+# comment, as `name|type`, in document order.
+t9_perclass() { # [<schema-file>]
+  awk '/^```artifact-schema/ { f = 1; next } f && /^```/ { exit }
+       f && /^# Per-class fields/ { p = 1; next }
+       f && p && /^field / { n = $2; sub(/:$/, "", n); t = $0; sub(/^field [^:]*: /, "", t); print n "|" t }' "${1:-$T_SCHEMA}"
+}
+T9_FIELDS="$(t9_perclass)"
+T9_N="$(printf '%s\n' "$T9_FIELDS" | awk 'NF' | wc -l | tr -d ' ')"
+T9_CNT=0; T9_CODE=0; T9_THR=0
+while IFS= read -r t9f; do
+  case "$t9f" in 'approval-count|optional integer') T9_CNT=1 ;; 'approval-code|optional slug') T9_CODE=1 ;; esac
+  case "${t9f%%|*}" in *threshold*|*required*) T9_THR=$((T9_THR+1)) ;; esac
+done <<<"$T9_FIELDS"
+awk '{ print } /^field coordination-since:/ { print "field zzqfab: optional integer" }' "$T_SCHEMA" > "$T_DIR/t9_schema_mut.md"
+T9_CTL="$(t9_perclass "$T_DIR/t9_schema_mut.md")"
+T9_CTLHIT=0; case "$T9_CTL" in *'zzqfab|optional integer'*) T9_CTLHIT=1 ;; esac
+if [ "$T9_CTLHIT" -ne 1 ]; then
+  FAIL "T9a-CTL: a field injected into a copy of $(basename "$T_SCHEMA") was not recovered — the extractor is not reading the fence, so its count below would be this file's"
+elif [ "$T9_N" -eq 4 ] && [ "$T9_CNT" -eq 1 ] && [ "$T9_CODE" -eq 1 ] && [ "$T9_THR" -eq 0 ]; then
+  PASS "T9a: C19's fence declares exactly 4 per-class fields — the coordination pair and the approval pair — with approval-count typed 'optional integer' and approval-code 'optional slug', and no per-class field names a threshold or a requirement; an injected field was recovered from a mutated copy"
+else
+  FAIL "T9a: per-class fields=$T9_N (want 4), approval-count typed right=$T9_CNT, approval-code typed right=$T9_CODE, threshold/required-named fields=$T9_THR (want 0). Fields: $(printf '%s' "$T9_FIELDS" | tr '\n' ' ')"
+fi
+
+# The band's static statement: the first bold span after "one static statement and the two
+# values:" in § 3's approval-fields paragraph. Paragraph-scoped, as T5's extractor is.
+T9_MARK='one static statement and the two values:'
+t9_statement() { # [<spec-file>] -> the statement, or nothing
+  awk -v mark="$T9_MARK" '
+    BEGIN { RS = ""; FS = "\n" }
+    { p = $0; gsub(/\n/, " ", p); a = index(p, mark); if (a == 0) next
+      p = substr(p, a + length(mark)); i = index(p, "**"); if (i == 0) exit
+      p = substr(p, i + 2); j = index(p, "**"); if (j == 0) exit
+      print substr(p, 1, j - 1); exit }' "${1:-$T_SPEC}"
+}
+# The lexicon of a traveller-approval claim — a list, so its boundary is stated: a claim made
+# entirely in other words is not seen (S15f's shape).
+T9_LEX='travellers approved|travelers approved|approved by|have approved|has approved'
+t9_claims() { # <text> -> the lexicon phrases the text carries
+  local t="$1" out="" w IFS='|'
+  shopt -s nocasematch
+  for w in $T9_LEX; do case "$t" in *"$w"*) out="$out[$w]" ;; esac; done
+  shopt -u nocasematch
+  printf '%s' "$out"
+}
+T9_STMT="$(t9_statement)"
+t_inject_after_mark "$T_SPEC" "$T9_MARK" ' **Travellers approved:** and' > "$T_DIR/t9_spec_mut.md"
+T9_MSTMT="$(t9_statement "$T_DIR/t9_spec_mut.md")"
+T9_HITS="$(t9_claims "$T9_STMT")"; T9_MHITS="$(t9_claims "$T9_MSTMT")"
+T9_PLANT="$(t9_claims 'Approved by Dana and Eli')"; T9_NEUT="$(t9_claims 'Approvals recorded for this plan')"
+T9_ORG=0; case "$T9_STMT" in *organizer*) T9_ORG=1 ;; esac
+if [ -z "$T9_STMT" ] || [ "$T9_MSTMT" != 'Travellers approved:' ]; then
+  FAIL "T9b-CTL: the statement read '$T9_STMT' and, from a copy with a counter-statement injected, '$T9_MSTMT' — the extractor is not reading § 3, so a clean statement below would prove nothing"
+elif [ -z "$T9_MHITS" ] || [ -z "$T9_PLANT" ] || [ -n "$T9_NEUT" ]; then
+  FAIL "T9b: CONTROL on the lexicon — the injected counter-statement read [$T9_MHITS], a planted claim [$T9_PLANT] (both must be flagged) and a neutral line [$T9_NEUT] (must not be)"
+elif [ "$T9_ORG" -eq 1 ] && [ -z "$T9_HITS" ]; then
+  PASS "T9b: § 3's static statement is '$T9_STMT' — it names the organizer as the source of the count and carries none of the traveller-approval phrases; the lexicon flags an injected counter-statement and a planted claim, and passes a neutral line"
+else
+  FAIL "T9b: the statement '$T9_STMT' names the organizer=$T9_ORG and carries claim phrases [$T9_HITS] — the band would say travellers approved, which is the organizer's statement on their behalf"
+fi
+
+# ── T10a — the site verb's read declaration names neither approver sidecar.
+t10_reads() { # [<trip-md>] -> every backticked token of the `site` section's **Reads:** paragraph
+  awk '/^## site$/ { s = 1; next } s && /^## / { exit }
+       s && /^\*\*Reads:\*\*/ { r = 1 } s && r && /^$/ { exit }
+       s && r { print }' "${1:-$T_TRIPMD}" > "$T_DIR/t10_reads.txt"
+  t5_tokens "$T_DIR/t10_reads.txt"
+}
+T10_TOK="$(t10_reads)"
+T10_N="$(printf '%s\n' "$T10_TOK" | awk 'NF' | wc -l | tr -d ' ')"
+T10_HIT=0
+while IFS= read -r t10t; do case "$t10t" in *.approvers*|*.approvals*) T10_HIT=$((T10_HIT+1)) ;; esac; done <<<"$T10_TOK"
+awk '/^## site$/ { s = 1 } s && /^\*\*Reads:\*\*/ && !d { sub(/\*\*Reads:\*\*/, "**Reads:** `trips/<slug>/.approvers` — injected;"); d = 1 } { print }' "$T_TRIPMD" > "$T_DIR/t10_trip_mut.md"
+T10_CTL=0
+while IFS= read -r t10t; do case "$t10t" in *.approvers*) T10_CTL=1 ;; esac; done <<<"$(t10_reads "$T_DIR/t10_trip_mut.md")"
+T10_CONF=0; case "$T10_TOK" in *'.change-confirmed'*) T10_CONF=1 ;; esac
+if [ "$T10_CTL" -ne 1 ] || [ "$T10_CONF" -ne 1 ]; then
+  FAIL "T10a-CTL: an injected sidecar path was recovered=$T10_CTL and the paragraph's own .change-confirmed token was found=$T10_CONF — the extractor is not reading the site verb's read declaration"
+elif [ "$T10_HIT" -eq 0 ] && [ "$T10_N" -gt 0 ]; then
+  PASS "T10a: the $T10_N backticked token(s) of the site verb's read declaration name neither .approvers nor .approvals — it reads the record, never the roster keys; an injected sidecar path was recovered from a mutated copy"
+else
+  FAIL "T10a: the site verb's read declaration names an approver sidecar in $T10_HIT token(s) — a build reading it could render who was declared or who approved"
+fi
+
+# ── T10b — renders built to the contract from S25a's two records are byte-identical, and both
+# carry every roster name in the hero: names reach the page as bound content either way, and
+# approver-ness is what never does.
+t10_render() { # <trip> <out> — hero from the roster's Person cells, the pair and band from the record
+  local d="$1" out="$2" names="" line cnt="" dg=""
+  while IFS= read -r line; do
+    case "$line" in '| Person'*|'|---'*) ;; '| '*) line="${line#| }"; names="$names ${line%% |*}" ;; esac
+  done < "$d/trip-context.md"
+  while IFS= read -r line; do
+    case "$line" in approval-count=*) cnt="${line#approval-count=}" ;; digest=*) dg="${line#digest=}" ;; esac
+  done < "$d/.change-confirmed"
+  {
+    printf '<!--\nartifact: %s\nschema-version: 1\ntrip: porto-2027\nwriter: site\nlifecycle: output\nprovenance: derived\npublish: output\ngenerated: 2027-06-02\n' "$S12_ART"
+    printf 'coordination-state: updated\ncoordination-since: 2027-06-02\napproval-count: %s\napproval-code: %s\n-->\n' "$cnt" "$dg"
+    printf '<!DOCTYPE html><html><body><section class="hero"><h1>Porto 2027</h1><p>%s</p></section>\n' "${names# }"
+    printf '<div class="%s is-updated"><span>Recently updated</span> <time>2027-06-02</time> <span>%s</span> <span>%s</span> <span>%s</span> <code>%s</code></div>\n' "$T_CLASS" "$T9_STMT" "$cnt" "$(_code_prefix "$dg")" "$dg"
+    printf '<section class="day"><p>Miradouro da Vitoria at 16:30.</p></section></body></html>\n'
+  } > "$out"
+}
+t10_render "$SA25A" "$T_DIR/t10_a.html"; t10_render "$SA25B" "$T_DIR/t10_b.html"
+T10B_SAME=0; cmp -s "$T_DIR/t10_a.html" "$T_DIR/t10_b.html" && T10B_SAME=1
+T10B_NAMES=0
+for t10n in Aria Beno Cass Dara Enzo; do
+  case "$(cat "$T_DIR/t10_a.html")" in *"$t10n"*) T10B_NAMES=$((T10B_NAMES+1)) ;; esac
+done
+if [ "$T10B_SAME" -eq 1 ] && [ "$T10B_NAMES" -eq 5 ]; then
+  PASS "T10b: renders built to the contract from S25a's two records — declared {aria, beno} and {cass, dara}, each approving — are byte-identical, and each carries all 5 roster names in its hero: the names are bound content either way, and which of them approved never reaches the page"
+else
+  FAIL "T10b: the two renders are byte-identical=$T10B_SAME (want 1) and carry $T10B_NAMES of 5 roster names (want 5)"
+fi
+
+# ── T11a — in the `site` verb's section, `approval-count=` first appears only after `confirmed=`,
+# and the pair is conditioned on that line reading as a non-negative integer.
+t11_order() { # [<trip-md>] -> "confirmed-offset count-offset conditioned"
+  awk '/^## site$/ { s = 1; next } s && /^## / { exit } s { print }' "${1:-$T_TRIPMD}" > "$T_DIR/t11_site.txt"
+  local body a b cond=0
+  body="$(tr '\n' ' ' < "$T_DIR/t11_site.txt")"
+  a="${body%%confirmed=*}"; b="${body%%approval-count=*}"
+  case "$body" in *'approval-count='*'reads as a non-negative integer'*) cond=1 ;; esac
+  printf '%s %s %s' "${#a}" "${#b}" "$cond"
+}
+read -r T11_CONF T11_CNT T11_COND <<<"$(t11_order)"
+awk '/^## site$/ { s = 1 } s && /^\*\*Reads:\*\*/ && !d { sub(/\*\*Reads:\*\*/, "**Reads:** the `approval-count=` line first;"); d = 1 } { print }' "$T_TRIPMD" > "$T_DIR/t11_trip_mut.md"
+read -r T11_MCONF T11_MCNT T11_MCOND <<<"$(t11_order "$T_DIR/t11_trip_mut.md")"
+if [ "$T11_MCNT" -ge "$T11_MCONF" ]; then
+  FAIL "T11a-CTL: with approval-count= injected ahead of confirmed= in a copy, the order read count=$T11_MCNT against confirmed=$T11_MCONF — the extractor cannot see an inversion"
+elif [ "$T11_CONF" -lt "$T11_CNT" ] && [ "$T11_COND" -eq 1 ]; then
+  PASS "T11a: in the site verb's section confirmed= first appears at offset $T11_CONF and approval-count= at $T11_CNT — the count is read after the date — and the pair is conditioned on that line reading as a non-negative integer; an injected inversion in a copy is detected"
+else
+  FAIL "T11a: confirmed= at $T11_CONF, approval-count= at $T11_CNT (want the count after), conditioned=$T11_COND (want 1)"
+fi
+
+# ── T11b — THE WIDEST BAND THE CONTRACT ADMITS IS STILL EXCISED. An `updated` band carrying the
+# statement read from § 3, a count of 999, the grouped prefix and the full code stays inside the
+# excision cap and flat, so the render digests exactly as its band-free twin. CONTROL: the same
+# band with one nested element of the band's own tag is NOT excised — the flat-markup rule, measured.
+T11_CODE="$(printf 'the widest code' | _digest_of)"
+t11_page() { # <file> <band-or-empty>
+  printf '<!DOCTYPE html><html><body><section class="hero"><h1>Porto 2027</h1></section>\n%s<section class="day"><p>Miradouro da Vitoria at 16:30.</p></section></body></html>\n' "$2" > "$1"
+}
+T11_REST="<time>2027-06-02</time> <span>$T9_STMT</span> <span>999</span> <span>$(_code_prefix "$T11_CODE")</span> <code>$T11_CODE</code>"
+T11_INNER="<span>Recently updated</span> $T11_REST"
+t11_page "$T_DIR/t11_none.html" ''
+t11_page "$T_DIR/t11_flat.html" "<div class=\"$T_CLASS is-updated\">$T11_INNER</div>
+"
+# The nested element opens the band, so the lazy match stops at ITS closing tag and the rest of
+# the band — the date, the statement, the count and the code — is left inside the digest.
+t11_page "$T_DIR/t11_nest.html" "<div class=\"$T_CLASS is-updated\"><div><span>Recently updated</span></div> $T11_REST</div>
+"
+T11_DN="$(itinerary_digest "$T_DIR/t11_none.html")"
+T11_DF="$(itinerary_digest "$T_DIR/t11_flat.html")"
+T11_DX="$(itinerary_digest "$T_DIR/t11_nest.html")"
+T11_LEN=${#T11_INNER}
+if [ -z "$T9_STMT" ] || [ -z "$T11_DN" ]; then
+  FAIL "T11b: the statement ('$T9_STMT') or the band-free digest ('$T11_DN') is empty, so the equality below would compare nothing"
+elif [ "$T11_LEN" -le "$_COORD_NOTICE_CAP" ] && [ "$T11_DF" = "$T11_DN" ] && [ "$T11_DX" != "$T11_DN" ]; then
+  PASS "T11b: an updated band carrying the statement, a count of 999, the grouped prefix and the full code is $T11_LEN characters against the cap of $_COORD_NOTICE_CAP, and it is excised — the render digests exactly as its band-free twin; the control, the same band with one nested element of its own tag, is NOT excised, which is the flat-markup rule measured"
+else
+  FAIL "T11b: band length $T11_LEN against cap $_COORD_NOTICE_CAP; flat band excised=$([ "$T11_DF" = "$T11_DN" ] && echo 1 || echo 0) (want 1); nested band left in the digest=$([ "$T11_DX" != "$T11_DN" ] && echo 1 || echo 0) (want 1)"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group PF — no verdict in this suite, or in the publish script it guards, is decided by a
 # pipeline's exit status.
 #
