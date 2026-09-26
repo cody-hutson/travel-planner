@@ -59,6 +59,12 @@ name: Artifact schema
 #        are stated PER FIELD because the fields do not all have the same number of homes
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row
+#   FT   reference/data-model.md's field table: the extractor that reads it by index and the
+#        (section, label) resolver with a token-bounded leading segment, which every group
+#        reading the table goes through; the row count declared in the denominator rule and
+#        graded against the table; a key that cannot resolve a bullet to two rows; a closed
+#        vocabulary per axis; every labelled row reached by a form's bullet unless declared
+#        bullet-less; and the heading-to-section rule stated in the data model and the skill
 #   ST   the starred-field set in EACH intake form — the per-trip
 #        templates/traveler-intake.template.md and the durable
 #        templates/person-intake.template.md — on TWO propositions. AGREEMENT: the count

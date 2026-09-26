@@ -48,6 +48,12 @@
 #        of homes, and `writer` is excluded with its ground measured rather than asserted.
 #   PB   the publish-bound artifact set matches the site-layout spec's declaring fence, in
 #        both directions and with the class agreeing per row.
+#   FT   reference/data-model.md's field table: the extractor that reads it by index and the
+#        (section, label) resolver with a token-bounded leading segment, which every group
+#        reading the table goes through; the row count declared in the denominator rule and
+#        graded against the table; a key that cannot resolve a bullet to two rows; a closed
+#        vocabulary per axis; every labelled row reached by a form's bullet unless declared
+#        bullet-less; and the heading-to-section rule stated in the data model and the skill
 #   ST   the starred-field set in EACH intake form, graded on TWO propositions that are not
 #        the same one. AGREEMENT: the count agrees across all four of that form's homes — the
 #        banner numeral, the appendix rule-4 numeral, the appendix's per-field `(starred)`
@@ -3312,6 +3318,541 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# Group FT — reference/data-model.md's field table: the extractor that reads it by index, the
+# (section, label) resolver every group reading it goes through, and the table's own integrity
+# — its row count, its key, its vocabulary and its coverage — asserted rather than assumed.
+#
+# ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
+# The field table used to be read by index in several places, each carrying its own copy of the
+# column arithmetic and each keyed on the LABEL alone. The trip-context backfill puts a second
+# `Applies to` row under `Hard Constraints` beside the one under `Needs`, and a `Destination`
+# section beside `Destination leanings`. Keyed on the label, a bullet resolves to the wrong row
+# and re-grades another form's field while the suite stays green; matched as a plain string
+# prefix, `Destination` leads `Destination leanings` and one heading reaches two sections. So
+# the table is read by index in ft_rows, which every group reading it goes through; a bullet is
+# resolved on (section, label) by ft_resolve; and the leading-segment rule lives in ft_lead, an
+# awk function every awk program that needs it embeds from "$FT_LEAD_FN" rather than copies.
+# The EXTRACT controls strip rows by `$2` and read nothing else.
+#
+# ── THE LEADING SEGMENT, AND THE TOKEN BOUNDARY THAT MAKES IT A KEY ──────────────
+# A section leads a heading when the heading begins with it AND the rest of the heading is
+# empty, or opens — after optional whitespace — on a character that is neither a letter, a
+# digit nor whitespace. So `Needs` leads `Needs — the must-haves` and `People dynamics` leads
+# `People dynamics & togetherness`, while `Destination` leads neither `Destination leanings`
+# nor `Destination Baseline [ENRICH]`. Named classes only, for the reason group LC states.
+# reference/data-model.md § The denominator states the same rule in prose, and so does the
+# extract verb in skills/trip-record/SKILL.md; FT6 grades that both still say it.
+#
+# ── THE INTERFACE, WHICH LATER GROUPS REUSE RATHER THAN RE-DERIVE ────────────────
+#   ft_rows <data-model> [all]   num section label class ovr scope horizon star line rationale,
+#                                one TAB record per row; `all` admits the unlabelled row too
+#   ft_resolve <rows-file>       reads `heading<TAB>label[<TAB>passthrough…]` on stdin and
+#                                writes, in input order, ONE<TAB>num, NONE<TAB>- or
+#                                AMBIG<TAB>n,m, each followed by the input line. It never
+#                                picks between two rows and has no label-only fallback: a
+#                                caller treats AMBIG as FAIL, and NONE as FAIL unless its own
+#                                stated rule exempts it
+#   ft_under <rows> <headings>   the labelled rows whose section leads one of the headings
+#   ft_heads <file…>             every `## ` heading, with `## ` and trailing space, tab and CR
+#                                removed — the heading shape every caller hands the resolver
+# The resolver knows nothing of boundaries, regions, indentation or forms. Callers filter
+# FIRST and then resolve. Both two-input readers key their first input on FILENAME rather than
+# on NR == FNR, so an EMPTY first input can never be read as the second one.
+#
+# ── THE ARMS ─────────────────────────────────────────────────────────────────────
+#   FT0  the extraction is non-empty: rows, and labelled rows
+#   FT1  the table carries exactly the row count its denominator rule DECLARES — one
+#        declaration, rows numbered 1..N in order — so a row added or removed alone is red
+#   FT2  no two labelled rows share a label under sections one of which leads the other. That
+#        is exactly the condition under which one bullet could resolve to two rows, so this
+#        arm is what keeps AMBIG unreachable on the tracked table
+#   FT3  every cell on every axis is inside that axis's closed vocabulary, and `Ovr?` follows
+#        from `Class` — which is also where a reordered column lands
+#   FT4  the resolver itself, graded on a synthetic table that carries both hazards
+#   FT5  every labelled row is REACHED by a bullet of a tracked form, unless its own rationale
+#        declares it bullet-less — the rows→fields direction. The fields→rows direction is
+#        RL1's, XT1's and ST3's, which resolve every bullet they read
+#   FT6  the heading-to-section rule is STATED where its runtime readers look: the data
+#        model's § The denominator and the extract verb's section of skills/trip-record/SKILL.md
+# Every arm has a standing control on a COPY under $WORK, asserted to have LANDED, and graded
+# as a DELTA against this run's own live reading — never against a clean-table literal — so a
+# mutation replayed on the tracked table turns the arm it targets red and no control besides.
+# No count is spelled in this group: the declared row count is read from the document.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "FT — the field table: read through ft_rows, resolved on (section, label), its row count declared and its key unique"
+
+FT_RAN=0
+FT_OK=1
+FT_DOC="$ROOT/reference/data-model.md"
+FT_STAR='⭐'
+FT_FORM_T="$ROOT/templates/traveler-intake.template.md"
+FT_FORM_P="$ROOT/templates/person-intake.template.md"
+FT_FORM_C="$ROOT/templates/trip-context.template.md"
+FT_SKILL="$ROOT/skills/trip-record/SKILL.md"
+mkdir -p "$WORK/ft"
+
+# ft_lead <section> <heading> — the token-bounded leading segment. Embedded, never copied.
+FT_LEAD_FN='function ft_lead(s, h,   r) {
+  if (s == "" || index(h, s) != 1) return 0
+  r = substr(h, length(s) + 1)
+  return (r == "" || r ~ /^[[:space:]]*[^[:alnum:][:space:]]/)
+}'
+# ft_nobul <rationale> — the row's OWN Rationale cell declares the field bullet-less: never asked
+# and computed, or borne by the title line rather than by a bullet. RL3 and FT5 both need it, so
+# it is embedded from here rather than written twice.
+FT_NOBUL_FN='function ft_nobul(r) { return (r ~ /Never asked/ || r ~ /not by a bullet/) }'
+
+ft_rows() {
+  awk -F'|' -v star="$FT_STAR" -v all="${2:-}" '
+    NF < 9 { next }
+    { num = $2; gsub(/[ \t]/, "", num); if (num !~ /^[0-9]+$/) next
+      lbl = ""
+      if (match($3, /`[^`]+`/)) lbl = substr($3, RSTART + 1, RLENGTH - 2); else if (all != "all") next
+      sec = $4; gsub(/^[ \t]+|[ \t]+$/, "", sec); cls = $5; gsub(/[ \t*]/, "", cls)
+      ovr = $6; gsub(/[ \t*]/, "", ovr); scp = $7; gsub(/[ \t`]/, "", scp)
+      hor = $8; gsub(/[ \t`*]/, "", hor); rat = $9; gsub(/^[ \t]+|[ \t]+$/, "", rat)
+      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d\t%s\n", num, sec, lbl, cls, ovr, scp, hor, (index($3, star) > 0) ? 1 : 0, FNR, rat }' "$1"
+}
+ft_resolve() {
+  awk -F'\t' "$FT_LEAD_FN"'
+    FILENAME == ARGV[1] { if ($3 != "") { n++; rn[n] = $1; rs[n] = $2; rl[n] = $3 }; next }
+    { k = 0; ids = ""
+      for (i = 1; i <= n; i++) if (rl[i] == $2 && ft_lead(rs[i], $1)) { k++; ids = ids (k > 1 ? "," : "") rn[i] }
+      printf "%s\t%s\t%s\n", (k == 1) ? "ONE" : ((k == 0) ? "NONE" : "AMBIG"), (k == 0) ? "-" : ids, $0 }' "$1" -
+}
+ft_under() {
+  awk -F'\t' "$FT_LEAD_FN"'
+    FILENAME == ARGV[1] { if ($0 != "") hd[++nh] = $0; next }
+    $3 != "" { for (i = 1; i <= nh; i++) if (ft_lead($2, hd[i])) { print; next } }' "$2" "$1"
+}
+ft_heads() { awk '/^## / { h = substr($0, 4); sub(/[ \t\r]+$/, "", h); print h }' "$@"; }
+ft_decl_rows() {
+  awk '{ s = $0; while (match(s, /=[ \t]*[0-9]+[ \t]+answerable slots/)) {
+           t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); print t; s = substr(s, RSTART + RLENGTH) } }' "$1"
+}
+
+# ft_count_report <data-model> — rows<TAB>declared<TAB>declarations<TAB>seq-ok. `rows` counts
+# every row, the unlabelled one included, because the declared count is of answerable slots;
+# `seq-ok` is `yes` when every row's number equals its ordinal in file order.
+ft_count_report() {
+  local r d nd sq
+  r="$(ft_rows "$1" all | grep -c '[^[:space:]]')"
+  d="$(ft_decl_rows "$1")"
+  nd="$(printf '%s\n' "$d" | grep -c '[^[:space:]]')"
+  sq="$(ft_rows "$1" all | awk -F'\t' '$1 + 0 != NR { bad = 1 } END { print (NR > 0 && !bad) ? "yes" : "no" }')"
+  printf '%s\t%s\t%s\t%s\n' "$r" "$(printf '%s\n' "$d" | awk 'NF { print; exit }')" "$nd" "$sq"
+}
+
+# ft_key_report <data-model> — one record per pair of labelled rows sharing a label under
+# sections one of which leads the other: num-a<TAB>num-b<TAB>label<TAB>section-a<TAB>section-b.
+ft_key_report() {
+  ft_rows "$1" | awk -F'\t' "$FT_LEAD_FN"'
+    { n++; num[n] = $1; sec[n] = $2; lab[n] = $3 }
+    END { for (i = 1; i <= n; i++) for (j = i + 1; j <= n; j++)
+            if (lab[i] == lab[j] && (ft_lead(sec[i], sec[j]) || ft_lead(sec[j], sec[i])))
+              printf "%s\t%s\t%s\t%s\t%s\n", num[i], num[j], lab[i], sec[i], sec[j] }'
+}
+
+# ft_vocab_report <data-model> — one record per out-of-vocabulary cell, read over EVERY row:
+# num<TAB>axis=value. `Ovr?` is owed by `Class`: N for PERSON, Y for DEFAULT, n/a otherwise.
+ft_vocab_report() {
+  ft_rows "$1" all | awk -F'\t' '
+    { c = $4; o = $5; s = $6; h = $7
+      if (c != "PERSON" && c != "DEFAULT" && c != "TRIP" && c != "DEST") print $1 "\tclass=" c
+      if (s != "slot" && s != "block") print $1 "\tscope=" s
+      if (h != "required" && h != "admissible") print $1 "\thorizon=" h
+      w = (c == "PERSON") ? "N" : ((c == "DEFAULT") ? "Y" : "n/a")
+      if (o != w) print $1 "\tovr=" o " (class " c " owes " w ")" }'
+}
+
+# Each assertion renders EXACTLY ONE verdict on every path and FAILs on an empty extraction
+# before anything else, so md_flips in group MD can register it and a removed extractor flips it.
+ft_count_assert() {
+  local rep r d nd sq
+  rep="$(ft_count_report "$1")"
+  r="$(printf '%s\n' "$rep" | cut -f1)"; d="$(printf '%s\n' "$rep" | cut -f2)"
+  nd="$(printf '%s\n' "$rep" | cut -f3)"; sq="$(printf '%s\n' "$rep" | cut -f4)"
+  if [ "${r:-0}" -lt 1 ]; then
+    FAIL "FT1: the field table parsed to 0 rows, so there is no count to compare with the declared one — a broken extractor or a restructured document, never a clean table. CTL-FT-EXTRACT below drives this limb on purpose"
+  elif [ "${nd:-0}" -ne 1 ]; then
+    FAIL "FT1: the denominator rule carries ${nd:-0} declaration(s) of the form '= <N> answerable slots' where exactly one is the declared row count — none leaves the count ungraded, and two leave it ambiguous"
+  elif [ "$sq" != "yes" ]; then
+    FAIL "FT1: the table's row numbers do not run 1..N in file order, so a row was inserted, deleted or renumbered without the numbering moving with it"
+  elif [ "$r" -ne "$d" ]; then
+    FAIL "FT1: the field table carries $r row(s) and its denominator rule declares $d — a row was added or removed without the reconciliation moving with it, or the reconciliation moved alone. Re-derive the count from the forms, then move the table and the sentence together"
+  else
+    PASS "FT1: the field table carries exactly the $d row(s) its denominator rule declares, numbered 1..N in file order. The count is READ from the reconciliation's own '= <N> answerable slots' rather than spelled here, so a row added or removed alone turns this red — CTL-FT1-OVER and CTL-FT1-UNDER show both directions, and CTL-FT1-REWORD shows a rationale edit does not"
+  fi
+}
+ft_key_assert() {
+  local nl rep nk
+  nl="$(ft_rows "$1" | grep -c '[^[:space:]]')"
+  rep="$(ft_key_report "$1")"
+  nk="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
+  if [ "${nl:-0}" -lt 1 ]; then
+    FAIL "FT2: the field table parsed to 0 labelled rows, so an empty key report here would certify a key over nothing"
+  elif [ "$nk" -ne 0 ]; then
+    FAIL "FT2: $nk pair(s) of labelled rows share a label under sections one of which leads the other, so a bullet under a heading both sections lead resolves to BOTH rows — AMBIG, which every reader of this table treats as FAIL:"
+    printf '%s\n' "$rep" | awk -F'\t' 'NF >= 5 { printf "      rows %s and %s: `%s` under `%s` and `%s`\n", $1, $2, $3, $4, $5 }'
+  else
+    PASS "FT2: no two of the $nl labelled row(s) share a label under sections one of which leads the other, so no bullet can resolve to two rows and ft_resolve's AMBIG is unreachable on the tracked table. A label MAY repeat across unrelated sections — \`Applies to\` does — which is why the key is (section, label). CTL-FT2-DUP, CTL-FT2-LEAD and CTL-FT2-NEAR show this failing on a duplicate and on a glossed section, and staying silent across a token boundary"
+  fi
+}
+ft_vocab_assert() {
+  local nr rep nv
+  nr="$(ft_rows "$1" all | grep -c '[^[:space:]]')"
+  rep="$(ft_vocab_report "$1")"
+  nv="$(printf '%s\n' "$rep" | grep -c '[^[:space:]]')"
+  if [ "${nr:-0}" -lt 1 ]; then
+    FAIL "FT3: the field table parsed to 0 rows, so an empty vocabulary report here would be a statement over nothing"
+  elif [ "$nv" -ne 0 ]; then
+    FAIL "FT3: $nv cell(s) sit outside their axis's closed vocabulary — a mistyped token, or a column shifted by an insertion, which reads every row's cells from the wrong column at once:"
+    printf '%s\n' "$rep" | awk -F'\t' 'NF >= 2 { printf "      row %s: %s\n", $1, $2 }'
+  else
+    PASS "FT3: every cell of all $nr row(s) is inside its axis's closed vocabulary — Class in {PERSON, DEFAULT, TRIP, DEST}, Scope in {slot, block}, Horizon in {required, admissible} — and every Ovr? cell is the one its Class owes. This is also where a column inserted before \`Rationale\` lands: every row would read another axis's token and fail here at once. CTL-FT3-TYPO shows one mistyped class turning it red"
+  fi
+}
+
+# ft_resolve_assert — the resolver on a SYNTHETIC table carrying both hazards: a section that is a
+# glossed extension of another (`Needs` / `Needs — the must-haves`) and a section that is a plain
+# string prefix of another without being its leading segment (`Destination` / `Destination leanings`).
+ft_resolve_assert() {
+  local rows="$WORK/ft/ft4-rows.tsv" got want
+  want='AMBIG:1,2 ONE:1 ONE:5 ONE:3 NONE:- ONE:4 NONE:- NONE:-'
+  printf '%s\t%s\t%s\n' 1 'Needs' 'Specific' 2 'Needs — the must-haves' 'Specific' \
+    3 'Destination leanings' 'Would love' 4 'People dynamics' "Solo, I'd" 5 'Destination' 'Would love' > "$rows"
+  got="$(printf '%s\t%s\n' 'Needs — the must-haves' 'Specific' 'Needs — the other gloss' 'Specific' \
+      'Destination' 'Would love' 'Destination leanings' 'Would love' 'Destination leanings extra' 'Would love' \
+      'People dynamics & togetherness' "Solo, I'd" 'Budget' 'Specific' '' 'Specific' \
+    | ft_resolve "$rows" | awk -F'\t' '{ printf "%s%s:%s", (NR > 1) ? " " : "", $1, $2 }')"
+  if [ -z "$got" ]; then
+    FAIL "FT4: the resolver returned NOTHING for eight synthetic bullets, so every group that resolves through it is grading an empty answer"
+  elif [ "$got" = "$want" ]; then
+    PASS "FT4: on a synthetic table carrying both hazards the resolver answers exactly '$want' — a heading two sections lead resolves AMBIG rather than to either; a glossed heading resolves to the section it opens with; \`Destination\` leads neither \`Destination leanings\` nor \`Destination leanings extra\`, because the rest of each opens on a letter; \`People dynamics\` leads \`People dynamics & togetherness\`; and a heading no section leads, or no heading at all, resolves NONE with no label-only fallback"
+  else
+    FAIL "FT4: the resolver answered '$got' where '$want' is owed. A string-prefix matcher reads \`Destination leanings\` as led by \`Destination\`; an exact-equality one misses every glossed heading; a first-wins one never says AMBIG. Each is a confident wrong answer to every group that resolves through it"
+  fi
+}
+
+# ft_bullets <form> <stop> — "heading<TAB>label<TAB>line" for every labelled bullet at ANY indent,
+# the heading in ft_heads' shape. stop=1 reads a guided form only ABOVE the whole-line
+# `<!-- PROFILE-END -->` boundary its own fence declares; stop=0 reads the whole file, which is how
+# trip-context is read, because its repeated units nest their bullets. A reader of its own rather
+# than a borrowed one: rl_bullets, xt_bullets and st_surfaces all anchor at column 0, and a
+# trip-context field rendered only inside an origin unit would be invisible to every one of them.
+ft_bullets() {
+  awk -v star="$FT_STAR" -v stop="$2" '
+    stop == 1 { t = $0; sub(/[ \t\r]+$/, "", t); if (t == "<!-- PROFILE-END -->") exit }
+    /^## / { h = substr($0, 4); sub(/[ \t\r]+$/, "", h); next }
+    match($0, /^[ \t]*-[ \t]+/) {
+      rest = substr($0, RLENGTH + 1)
+      if (index(rest, star) == 1) { rest = substr(rest, length(star) + 1); sub(/^[ \t]+/, "", rest) }
+      if (match(rest, /^\*\*[^*]+:\*\*/)) print h "\t" substr(rest, 3, RLENGTH - 5) "\t" FNR
+    }' "$1"
+}
+
+# ft_cover_report <data-model> <trip-form> <person-form> <trip-context> — the rows→fields
+# direction as TAB records. NBUL is counted from the forms, never from the resolver's output, so a
+# resolver that went quiet cannot shrink its own denominator:
+#   NBUL<TAB>n       labelled bullets read across the three forms
+#   NRES<TAB>n       of those, the ones that resolved ONE — the non-degeneracy input
+#   NROWS<TAB>n      labelled rows in the table
+#   HIT<TAB>n        labelled rows at least one bullet reached
+#   NBL<TAB>n        labelled rows the table's own rationale declares bullet-less
+#   ORPHAN<TAB>num<TAB>label<TAB>section   a row no bullet reaches that is NOT declared bullet-less
+ft_cover_report() {
+  local bul
+  bul="$( { ft_bullets "$2" 1; ft_bullets "$3" 1; ft_bullets "$4" 0; } )"
+  printf 'NBUL\t%s\n' "$(printf '%s\n' "$bul" | grep -c '[^[:space:]]')"
+  printf '%s\n' "$bul" | awk 'NF' | ft_resolve <(ft_rows "$1") | awk -F'\t' "$FT_NOBUL_FN"'
+    FILENAME == ARGV[1] { n++; num[n] = $1; sec[n] = $2; lab[n] = $3; nob[n] = ft_nobul($10); next }
+    $1 == "ONE" { one++; hit[$2] = 1 }
+    END { h = 0; b = 0
+          for (i = 1; i <= n; i++) { if (num[i] in hit) h++; if (nob[i]) b++ }
+          printf "NRES\t%d\nNROWS\t%d\nHIT\t%d\nNBL\t%d\n", one + 0, n, h, b
+          for (i = 1; i <= n; i++) if (!(num[i] in hit) && !nob[i]) printf "ORPHAN\t%s\t%s\t%s\n", num[i], lab[i], sec[i] }' <(ft_rows "$1") -
+}
+ft_cover_assert() {
+  local rep nbul nres nr hit nbl nor
+  rep="$(ft_cover_report "$@")"
+  nbul="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NBUL" { print $2; exit }')"
+  nres="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NRES" { print $2; exit }')"
+  nr="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NROWS" { print $2; exit }')"
+  hit="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "HIT" { print $2; exit }')"
+  nbl="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NBL" { print $2; exit }')"
+  nor="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "ORPHAN" { n++ } END { print n + 0 }')"
+  if [ "${nr:-0}" -lt 1 ] || [ "${nbul:-0}" -lt 1 ] || [ "${nres:-0}" -lt 1 ]; then
+    FAIL "FT5: a side of the coverage comparison came back EMPTY (labelled rows=${nr:-0}, form bullets read=${nbul:-0}, bullets resolved to a row=${nres:-0}) — every row would read as an orphan, or none would, over a comparison that never ran"
+  elif [ "$nor" -ne 0 ]; then
+    FAIL "FT5: $nor labelled row(s) are reached by NO bullet of the guided forms (read above their boundary) or of trip-context (read at any indent), and their rationale does not declare them bullet-less — each is a row that outlived its field, classified for a question no form asks:"
+    printf '%s\n' "$rep" | awk -F'\t' '$1 == "ORPHAN" { printf "      row %s: `%s` under %s\n", $2, $3, $4 }'
+  else
+    PASS "FT5: every one of the $nr labelled row(s) is reached by a bullet of a tracked form or declared bullet-less by its own rationale — $hit reached, $nbl declared bullet-less — over $nbul bullet(s) read, $nres of them resolved to a row. This is the rows→fields direction: RL1, XT1 and ST3 resolve every bullet they read onto a row, and nothing else asked whether every row still has a field behind it. CTL-FT5-ORPHAN shows one deleted bullet turning its row red, and CTL-FT5-REPEAT shows a bullet whose row other bullets still reach leaving it green"
+  fi
+}
+
+# ft_region <file> <heading> — the region under one heading, up to the next heading of the same or
+# a higher level, whitespace-collapsed to one line, so FT6 grades CONTENT and never the wrap.
+ft_region() {
+  awk -v a="$2" '
+    !on && index($0, a) == 1 { on = 1; lvl = a; sub(/ .*/, "", lvl); next }
+    on && match($0, /^#+ /) && RLENGTH - 1 <= length(lvl) { exit }
+    on { print }' "$1" | tr '\n' ' ' | tr -s '[:space:]' ' '
+}
+FT_RULE_BOUND='opens (after optional whitespace) on a character that is neither a letter, a digit nor whitespace'
+FT_RULE_REFUSE='`Destination` does not lead `Destination leanings`'
+# ft_rule_assert <data-model> <skill> — the heading-to-section rule is STATED at both of the homes
+# its runtime readers look in: the token boundary, and the worked refusal it exists for.
+ft_rule_assert() {
+  local dm sk db dr sb sr
+  dm="$(ft_region "$1" '### The denominator')"
+  sk="$(ft_region "$2" '## extract ')"
+  db=0; dr=0; sb=0; sr=0
+  grep -qF "$FT_RULE_BOUND" <<<"$dm" && db=1
+  grep -qF "$FT_RULE_REFUSE" <<<"$dm" && dr=1
+  grep -qF "$FT_RULE_BOUND" <<<"$sk" && sb=1
+  grep -qF "$FT_RULE_REFUSE" <<<"$sk" && sr=1
+  if [ "${#dm}" -lt 2 ] || [ "${#sk}" -lt 2 ]; then
+    FAIL "FT6: a region came back EMPTY — reference/data-model.md § The denominator read ${#dm} character(s) and the extract verb's section of skills/trip-record/SKILL.md read ${#sk} — so a missing rule would be reported as a failed parse and a present one could not be seen"
+  elif [ "$db$dr$sb$sr" = "1111" ]; then
+    PASS "FT6: the heading-to-section rule is stated at both of its homes — reference/data-model.md § The denominator, which every verb reading the table cites for what a field is, and the extract verb's own key paragraph — each carrying the token boundary ('$FT_RULE_BOUND') and its worked refusal (${FT_RULE_REFUSE}). ft_lead is the executable form of that sentence; FT4 grades the executable and this grades the sentence, so the rule cannot survive in one and silently vanish from the other"
+  else
+    FAIL "FT6: the heading-to-section rule reads boundary-in-data-model=$db refusal-in-data-model=$dr boundary-in-skill=$sb refusal-in-skill=$sr. Without it, a reader resolving \`## Destination leanings\` by a string or word prefix reaches two sections — \`Destination leanings\` and \`Destination\` — and nothing a runtime reader consults says which"
+  fi
+}
+
+# ── FT0 — the extraction is non-empty. The rest of the group, and every group that resolves
+# through this one, would otherwise grade an empty table.
+FT_ROWS0="$WORK/ft/rows.tsv"
+FT_R0=0; FT_L0=0
+if [ -r "$FT_DOC" ]; then
+  ft_rows "$FT_DOC" > "$FT_ROWS0"
+  FT_R0="$(ft_rows "$FT_DOC" all | grep -c '[^[:space:]]')"
+  FT_L0="$(grep -c '[^[:space:]]' "$FT_ROWS0")"
+fi
+if [ "$FT_R0" -gt 0 ] && [ "$FT_L0" -gt 0 ]; then
+  PASS "FT0: reference/data-model.md's field table extracted to $FT_R0 row(s), $FT_L0 of them carrying a field label, through ft_rows — the extractor every group reading that table goes through. A run that parsed it into nothing fails HERE rather than letting FT1-FT6 and every resolving group grade an empty table"
+  FT_RAN=1
+else
+  FAIL "FT0: reference/data-model.md's field table extracted to $FT_R0 row(s) / $FT_L0 labelled — the document is unreadable or the table is gone, so every verdict below, and every group that resolves a bullet through ft_resolve, would grade nothing"
+  FT_OK=0
+fi
+
+ft_count_assert "$FT_DOC"
+ft_key_assert "$FT_DOC"
+ft_vocab_assert "$FT_DOC"
+ft_resolve_assert
+ft_cover_assert "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FORM_C"
+ft_rule_assert "$FT_DOC" "$FT_SKILL"
+
+# ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
+# copy's report with this run's LIVE report as a delta, so replaying a mutation on the tracked
+# table reddens the arm it targets and leaves these standing.
+if [ "$FT_OK" -eq 1 ]; then
+  FT_REP0="$(ft_count_report "$FT_DOC")"
+  FT_KR0="$(ft_key_report "$FT_DOC")"
+  FT_VR0="$(ft_vocab_report "$FT_DOC")"
+  FT_CR0="$(ft_rows "$FT_DOC" all | awk -F'\t' '$1 + 0 > m { m = $1 + 0 } END { print m + 0 }')"
+  FT_NEXT=$((FT_CR0 + 1))
+  FT_LASTLN="$(ft_rows "$FT_DOC" all | awk -F'\t' 'END { print $9 + 0 }')"
+  FT_SEP='ZZ-FT-SET-SEPARATOR'
+  # ft_delta <a> <b> — the lines of <b> that <a> does not carry: what a mutation ADDED to a report.
+  ft_delta() {
+    printf '%s\n%s\n%s\n' "$1" "$FT_SEP" "$2" | awk -v sep="$FT_SEP" '
+      !past && $0 == sep { past = 1; next }
+      !past { if ($0 != "") a[$0] = 1; next }
+      $0 != "" && !($0 in a) { print }'
+  }
+  ft_row_line() { printf '| %s | `%s` | %s | **%s** | %s | `%s` | `admissible` | %s |\n' "$@"; }
+
+  # CTL-FT1-OVER / -UNDER — MUST FIRE, one row added and one row removed, each alone.
+  FT_FX="$WORK/ft/over.md"; cp "$FT_DOC" "$FT_FX"
+  ft_row_line "$FT_NEXT" 'ZZ-FT-EXTRA-ROW' 'ZZ-FT-SECTION' TRIP n/a slot 'a synthetic row the declared count does not carry' >> "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_R="$(ft_count_report "$FT_FX")"
+  FT_WANT="$(printf '%s\n' "$FT_REP0" | awk -F'\t' '{ printf "%d\t%s\t%s\t%s", $1 + 1, $2, $3, $4 }')"
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_R" = "$FT_WANT" ]; then
+    PASS "CTL-FT1-OVER: MUST FIRE — one row appended to a copy of the model, the reconciliation left alone, moves the count report from '$(printf '%s' "$FT_REP0" | tr '\t' ' ')' to '$(printf '%s' "$FT_R" | tr '\t' ' ')': one more row, the same declaration, the numbering still in order. FT1 reads exactly that report, so the addition alone is a count/declaration mismatch it cannot pass"
+  else
+    FAIL "CTL-FT1-OVER: MUST FIRE — landed=$FT_LD, the count report read '$(printf '%s' "$FT_R" | tr '\t' ' ')' where '$(printf '%s' "$FT_WANT" | tr '\t' ' ')' was owed. The instrument FT1 grades does not see an added row"
+  fi
+  FT_FX="$WORK/ft/under.md"
+  awk -v ln="$FT_LASTLN" 'FNR != ln' "$FT_DOC" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_R="$(ft_count_report "$FT_FX")"
+  FT_WANT="$(printf '%s\n' "$FT_REP0" | awk -F'\t' '{ printf "%d\t%s\t%s\t%s", $1 - 1, $2, $3, $4 }')"
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_R" = "$FT_WANT" ]; then
+    PASS "CTL-FT1-UNDER: MUST FIRE — the last numbered row deleted from a copy of the model (line $FT_LASTLN), the reconciliation left alone, moves the count report to '$(printf '%s' "$FT_R" | tr '\t' ' ')': one row fewer against the same declaration"
+  else
+    FAIL "CTL-FT1-UNDER: MUST FIRE — landed=$FT_LD, the count report read '$(printf '%s' "$FT_R" | tr '\t' ' ')' where '$(printf '%s' "$FT_WANT" | tr '\t' ' ')' was owed. The instrument FT1 grades does not see a removed row"
+  fi
+  # CTL-FT1-REWORD — MUST NOT FIRE. A rationale edit changes the document and no count, key or cell.
+  FT_FX="$WORK/ft/reword.md"
+  awk -v ln="$FT_LASTLN" 'FNR == ln { sub(/[ ][|][ \t]*$/, " zzq-ft-reworded |") } { print }' "$FT_DOC" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_SAME=0
+  [ "$(ft_count_report "$FT_FX")" = "$FT_REP0" ] && [ "$(ft_key_report "$FT_FX")" = "$FT_KR0" ] \
+    && [ "$(ft_vocab_report "$FT_FX")" = "$FT_VR0" ] && FT_SAME=1
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_SAME" -eq 1 ]; then
+    PASS "CTL-FT1-REWORD: MUST NOT FIRE — the last row's rationale reworded on a copy of the model leaves the count, key and vocabulary reports byte-equal to this run's live ones. The arms grade the table's structure, not its prose"
+  else
+    FAIL "CTL-FT1-REWORD: MUST NOT FIRE — landed=$FT_LD reports-unchanged=$FT_SAME: a rationale edit moved a structural report, so FT1-FT3 would redden on prose"
+  fi
+
+  # CTL-FT2-DUP — MUST FIRE, and it is the milestone's own worked hazard: a second row for a label
+  # the table already carries twice, under that label's FIRST section, same scope, different class.
+  # Derived rather than named: the first label carried more than once, else the first label at all.
+  FT_DUP="$(awk -F'\t' '{ c[$3]++; if (!($3 in s)) { n++; o[n] = $3; s[$3] = $2 } }
+      END { for (i = 1; i <= n; i++) if (c[o[i]] > 1) { print o[i] "\t" s[o[i]]; exit }
+            if (n > 0) print o[1] "\t" s[o[1]] }' "$FT_ROWS0")"
+  FT_DUPL="$(printf '%s\n' "$FT_DUP" | cut -f1)"; FT_DUPS="$(printf '%s\n' "$FT_DUP" | cut -f2)"
+  FT_FX="$WORK/ft/dup.md"; cp "$FT_DOC" "$FT_FX"
+  ft_row_line "$FT_NEXT" "$FT_DUPL" "$FT_DUPS" PERSON '**N**' block 'a synthetic second row for a label the table already carries' >> "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_ADD="$(ft_delta "$FT_KR0" "$(ft_key_report "$FT_FX")")"
+  FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
+  FT_OFF="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v n="$FT_NEXT" -v l="$FT_DUPL" 'NF && !(($1 == n || $2 == n) && $3 == l) { k++ } END { print k + 0 }')"
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_NADD" -ge 1 ] && [ "$FT_OFF" -eq 0 ]; then
+    PASS "CTL-FT2-DUP: MUST FIRE — a second \`$FT_DUPL\` row under \`$FT_DUPS\`, class PERSON where the existing one differs, appended as row $FT_NEXT to a copy of the model, adds $FT_NADD key record(s), every one naming row $FT_NEXT and that label only. Keyed on the label alone this edit re-grades the other row's field while the suite stays green; here it is a named FT2 failure"
+  else
+    FAIL "CTL-FT2-DUP: MUST FIRE — landed=$FT_LD, the key report gained $FT_NADD record(s), $FT_OFF of them not naming row $FT_NEXT with label '$FT_DUPL'. FT2's zero above has no control behind it for the duplicate it exists to catch"
+  fi
+  # CTL-FT2-LEAD — MUST FIRE: the same label under a section and its glossed extension.
+  FT_FX="$WORK/ft/lead.md"; cp "$FT_DOC" "$FT_FX"
+  { ft_row_line "$FT_NEXT" 'ZZ-FT-LEAD' 'ZZ-FT-SECTION' TRIP n/a slot 'synthetic'
+    ft_row_line "$((FT_NEXT + 1))" 'ZZ-FT-LEAD' 'ZZ-FT-SECTION — a gloss' TRIP n/a slot 'synthetic'; } >> "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_NL="$(ft_key_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-LEAD" { n++ } END { print n + 0 }')"
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_NL" -eq 1 ]; then
+    PASS "CTL-FT2-LEAD: MUST FIRE — one label under \`ZZ-FT-SECTION\` and under \`ZZ-FT-SECTION — a gloss\` on a copy of the model yields exactly 1 key record: the gloss opens on a dash, so the shorter section leads the longer and one heading would reach both rows"
+  else
+    FAIL "CTL-FT2-LEAD: MUST FIRE — landed=$FT_LD, $FT_NL key record(s) for ZZ-FT-LEAD where exactly 1 is owed"
+  fi
+  # CTL-FT2-NEAR — MUST NOT FIRE: a string prefix that is NOT a leading segment.
+  FT_FX="$WORK/ft/near.md"; cp "$FT_DOC" "$FT_FX"
+  { ft_row_line "$FT_NEXT" 'ZZ-FT-NEAR' 'ZZ-FT-SECTION' TRIP n/a slot 'synthetic'
+    ft_row_line "$((FT_NEXT + 1))" 'ZZ-FT-NEAR' 'ZZ-FT-SECTION leanings' TRIP n/a slot 'synthetic'; } >> "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_NN="$(ft_key_report "$FT_FX" | awk -F'\t' '$3 == "ZZ-FT-NEAR" { n++ } END { print n + 0 }')"
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_NN" -eq 0 ]; then
+    PASS "CTL-FT2-NEAR: MUST NOT FIRE — one label under \`ZZ-FT-SECTION\` and under \`ZZ-FT-SECTION leanings\` on a copy of the model yields 0 key records: the rest of the longer section opens on a letter, so the shorter does not lead it — the \`Destination\` / \`Destination leanings\` shape, which a string-prefix key would have convicted"
+  else
+    FAIL "CTL-FT2-NEAR: MUST NOT FIRE — landed=$FT_LD, $FT_NN key record(s) for ZZ-FT-NEAR where 0 are owed. The key is reading a string prefix as a leading segment"
+  fi
+
+  # CTL-FT3-TYPO — MUST FIRE: one class token mistyped on the first TRIP row.
+  FT_TL="$(awk -F'\t' '$4 == "TRIP" { print $9; exit }' "$FT_ROWS0")"
+  FT_FX="$WORK/ft/typo.md"
+  awk -v ln="${FT_TL:-0}" 'FNR == ln { sub(/\*\*TRIP\*\*/, "**TRIPX**") } { print }' "$FT_DOC" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_ADD="$(ft_delta "$FT_VR0" "$(ft_vocab_report "$FT_FX")")"
+  FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
+  FT_NX="$(printf '%s\n' "$FT_ADD" | awk -F'\t' '$2 == "class=TRIPX" { n++ } END { print n + 0 }')"
+  if [ "$FT_LD" -eq 1 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_NX" -eq 1 ]; then
+    PASS "CTL-FT3-TYPO: MUST FIRE — \`**TRIP**\` retyped \`**TRIPX**\` on one row of a copy of the model (line $FT_TL) adds exactly one vocabulary record, class=TRIPX, and nothing else. A token outside the closed vocabulary was graded by none of the arms this table had"
+  else
+    FAIL "CTL-FT3-TYPO: MUST FIRE — landed=$FT_LD, the vocabulary report gained $FT_NADD record(s), $FT_NX of them class=TRIPX, where exactly one of each is owed"
+  fi
+
+  # CTL-FT-EXTRACT — MUST FIRE the non-degeneracy limbs on the probe itself: every numbered row
+  # stripped, as CTL-ST3-EXTRACT strips them. The compensating control for the document half,
+  # which md_flips cannot register because a document is not a function.
+  FT_FX="$WORK/ft/notable.md"
+  awk -F'|' '{ ok = 1; if (NF >= 8) { num = $2; gsub(/[ \t]/, "", num); if (num ~ /^[0-9]+$/) ok = 0 } if (ok) print }' "$FT_DOC" > "$FT_FX"
+  FT_X1="$(md_probe zzq_ft_no_such_subject ft_count_assert "$FT_FX")"
+  FT_X2="$(md_probe zzq_ft_no_such_subject ft_key_assert "$FT_FX")"
+  FT_X3="$(md_probe zzq_ft_no_such_subject ft_vocab_assert "$FT_FX")"
+  FT_XR="$(md_probe zzq_ft_no_such_subject ft_count_assert "$FT_DOC")"
+  FT_XRN="$(printf '%s' "$FT_XR" | awk '{ print $1 + $2 }')"
+  FT_XGOT="FT1=$FT_X1 FT2=$FT_X2 FT3=$FT_X3 real-FT1-verdicts=$FT_XRN"
+  FT_XWANT="FT1=0 1 FT2=0 1 FT3=0 1 real-FT1-verdicts=1"
+  if [ "$FT_XGOT" = "$FT_XWANT" ]; then
+    PASS "CTL-FT-EXTRACT: MUST FIRE — with every numbered row stripped from a copy of the model, FT1, FT2 and FT3 each report exactly one FAIL and no PASS, and over the real document FT1 reaches exactly one verdict ($FT_XR). So no arm here can pass over a table it did not parse. This is the compensating control for the document half of the opt-out declared in group MD"
+  else
+    FAIL "CTL-FT-EXTRACT: MUST FIRE — read '$FT_XGOT' where '$FT_XWANT' is owed. An empty extraction reaching anything but one FAIL makes FT1-FT3 statements over a table this suite may never have read"
+  fi
+
+  # CTL-FT5-ORPHAN — MUST FIRE, and CTL-FT5-REPEAT — MUST NOT. Each deletes ONE trip-context bullet
+  # on a copy: the first whose row no other bullet reaches, and the first whose row another does.
+  FT_CR="$(ft_cover_report "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FORM_C" | awk -F'\t' '$1 == "ORPHAN"')"
+  FT_HITS="$( { ft_bullets "$FT_FORM_T" 1; ft_bullets "$FT_FORM_P" 1; ft_bullets "$FT_FORM_C" 0; } | ft_resolve "$FT_ROWS0" \
+      | awk -F'\t' '$1 == "ONE" { c[$2]++ } END { for (k in c) print k "\t" c[k] }')"
+  ft_c_target() {   # ft_c_target <want-once 1|0> -> "line<TAB>num<TAB>label" of the first such trip-context bullet
+    printf '%s\n%s\n%s\n' "$FT_HITS" "$FT_SEP" "$(ft_bullets "$FT_FORM_C" 0 | ft_resolve "$FT_ROWS0")" | awk -F'\t' -v sep="$FT_SEP" -v once="$1" '
+      !past && $0 == sep { past = 1; next }
+      !past { if (NF >= 2) c[$1] = $2; next }
+      $1 == "ONE" && ((once == 1 && c[$2] == 1) || (once == 0 && c[$2] > 1)) { print $5 "\t" $2 "\t" $4; exit }'
+  }
+  FT_OT="$(ft_c_target 1)"; FT_RT="$(ft_c_target 0)"
+  FT_OTL="$(printf '%s' "$FT_OT" | cut -f1)"; FT_OTN="$(printf '%s' "$FT_OT" | cut -f2)"; FT_OTB="$(printf '%s' "$FT_OT" | cut -f3)"
+  FT_RTL="$(printf '%s' "$FT_RT" | cut -f1)"; FT_RTB="$(printf '%s' "$FT_RT" | cut -f3)"
+  FT_FX="$WORK/ft/orphan-context.md"
+  awk -v ln="${FT_OTL:-0}" 'FNR != ln' "$FT_FORM_C" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_FORM_C" "$FT_FX" || FT_LD=1
+  FT_ADD="$(ft_delta "$FT_CR" "$(ft_cover_report "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FX" | awk -F'\t' '$1 == "ORPHAN"')")"
+  FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
+  FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v n="${FT_OTN:-x}" '$2 == n { k++ } END { print k + 0 }')"
+  if [ -z "$FT_OT" ]; then
+    FAIL "CTL-FT5-ORPHAN: MUST FIRE — no trip-context bullet reaches a row that no other bullet reaches, so the orphaning mutation could not be CONSTRUCTED and FT5's zero has no control behind it"
+  elif [ "$FT_LD" -eq 1 ] && [ "$FT_NADD" -eq 1 ] && [ "$FT_HITN" -eq 1 ]; then
+    PASS "CTL-FT5-ORPHAN: MUST FIRE — the one trip-context bullet for \`$FT_OTB\` deleted from a copy of the template (line $FT_OTL) orphans exactly that row, row $FT_OTN, and no other: the table still classifies a field no form asks, which is the row that outlives its field"
+  else
+    FAIL "CTL-FT5-ORPHAN: MUST FIRE — deleting the bullet for '$FT_OTB' (line ${FT_OTL:-none}) read landed=$FT_LD, $FT_NADD new orphan(s), $FT_HITN of them row ${FT_OTN:-none}, where exactly one new orphan and that row are owed"
+  fi
+  FT_FX="$WORK/ft/repeat-context.md"
+  awk -v ln="${FT_RTL:-0}" 'FNR != ln' "$FT_FORM_C" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_FORM_C" "$FT_FX" || FT_LD=1
+  FT_ADD="$(ft_delta "$FT_CR" "$(ft_cover_report "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FX" | awk -F'\t' '$1 == "ORPHAN"')")"
+  FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
+  if [ -z "$FT_RT" ]; then
+    FAIL "CTL-FT5-REPEAT: MUST NOT FIRE — no trip-context bullet reaches a row another bullet also reaches, so the specificity mutation could not be CONSTRUCTED"
+  elif [ "$FT_LD" -eq 1 ] && [ "$FT_NADD" -eq 0 ]; then
+    PASS "CTL-FT5-REPEAT: MUST NOT FIRE — one of several trip-context bullets for \`$FT_RTB\` deleted from a copy of the template (line $FT_RTL) orphans nothing, because other bullets still reach that row. FT5 grades whether a row has a field, not how many times the form renders it"
+  else
+    FAIL "CTL-FT5-REPEAT: MUST NOT FIRE — deleting one repeated bullet for '$FT_RTB' read landed=$FT_LD and $FT_NADD new orphan(s), where 0 are owed"
+  fi
+
+  # CTL-FT6-DM and CTL-FT6-SKILL — MUST FIRE, the sentence removed from each home in turn; and
+  # CTL-FT6-WRAP — MUST NOT, the sentence re-wrapped mid-phrase so the arm is seen to read CONTENT.
+  # Delta-keyed like every control here: each is graded against FT6's LIVE verdict, so where the
+  # live document has already lost the sentence — the very mutation these arms rehearse — FT6
+  # carries that red alone and these controls stay standing rather than failing to construct.
+  FT_VL="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_DOC" "$FT_SKILL")"
+  FT_FX="$WORK/ft/rule-dm.md"
+  awk -v p="$FT_RULE_BOUND" 'index($0, p) == 0' "$FT_DOC" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_V="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_FX" "$FT_SKILL")"
+  if [ "$FT_V" = "0 1" ] && { [ "$FT_LD" -eq 1 ] || [ "$FT_VL" = "0 1" ]; }; then
+    PASS "CTL-FT6-DM: MUST FIRE — the heading-to-section sentence removed from a copy of reference/data-model.md turns FT6 to exactly one FAIL ($FT_V), with the skill untouched"
+  else
+    FAIL "CTL-FT6-DM: MUST FIRE — landed=$FT_LD, FT6 read '$FT_V' where '0 1' is owed with the data model's sentence removed"
+  fi
+  FT_FX="$WORK/ft/rule-skill.md"
+  awk 'index($0, "(after optional whitespace) on a character that is neither a") == 0' "$FT_SKILL" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_SKILL" "$FT_FX" || FT_LD=1
+  FT_V="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_DOC" "$FT_FX")"
+  if [ "$FT_V" = "0 1" ] && { [ "$FT_LD" -eq 1 ] || [ "$FT_VL" = "0 1" ]; }; then
+    PASS "CTL-FT6-SKILL: MUST FIRE — the line carrying the token boundary removed from a copy of skills/trip-record/SKILL.md turns FT6 to exactly one FAIL ($FT_V), with the data model untouched"
+  else
+    FAIL "CTL-FT6-SKILL: MUST FIRE — landed=$FT_LD, FT6 read '$FT_V' where '0 1' is owed with the skill's sentence removed"
+  fi
+  FT_FX="$WORK/ft/rule-wrap.md"
+  awk -v p="$FT_RULE_BOUND" 'i = index($0, p) { k = i + index(p, " on a character") - 1; print substr($0, 1, k - 1); print substr($0, k + 1); next } { print }' "$FT_DOC" > "$FT_FX"
+  FT_LD=0; cmp -s "$FT_DOC" "$FT_FX" || FT_LD=1
+  FT_V="$(md_probe zzq_ft_no_such_subject ft_rule_assert "$FT_FX" "$FT_SKILL")"
+  if [ "$FT_V" = "$FT_VL" ] && { [ "$FT_LD" -eq 1 ] || [ "$FT_VL" = "0 1" ]; }; then
+    PASS "CTL-FT6-WRAP: MUST NOT FIRE — the data model's sentence re-wrapped mid-phrase on a copy grades exactly as the live document does ($FT_V), so FT6 reads the rule's content and never its line breaks"
+  else
+    FAIL "CTL-FT6-WRAP: MUST NOT FIRE — landed=$FT_LD, the re-wrapped copy read '$FT_V' where the live document reads '$FT_VL'. A reflow alone would turn FT6 red, which is the failure that gets an arm disabled rather than trusted"
+  fi
+fi
+
+if [ "$FT_RAN" -ne 1 ]; then
+  FAIL "FT-integrity: group FT did not execute — every group that resolves a bullet through ft_resolve reads this table, so a run without it is a failure, never a pass"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group ST — the starred-field count is ONE fact with FOUR homes inside EACH intake form,
 # and the three homes that merely describe it must agree with the one that IS it. That is HALF
 # of this group. The other half grades the same set against a SECOND DOCUMENT.
@@ -3406,17 +3947,21 @@ templates/person-intake.template.md"
 ST_STAR='⭐'
 # ST_DM — the SECOND document, and the one that makes this group grade a level rather than
 # only an agreement. Not a new literal: reference/data-model.md is already the subject of
-# RL_DM, XT_DM and HZ_DM further down, each reading the same field table by column index.
-# This is a FOURTH read of an already-controlled table, not a new reader.
+# FT_DOC above and of RL_DM, XT_DM and HZ_DM further down. It is read only through group FT's
+# ft_rows, and every bullet is matched to a row through ft_resolve, so this is not a new reader
+# of the table and it keys on (section, label) exactly as every other group reading it does.
 ST_DM="$ROOT/reference/data-model.md"
 mkdir -p "$WORK/st"
 
 # st_surfaces <file> — one TAB record per discovered assertion site, four surfaces:
 #
-#   PROSE<TAB><line><TAB><count-as-integer>   a sentence that STATES the number
-#   MARKED<TAB><line><TAB><label>             a field whose bullet IS the star
-#   ANNOT<TAB><line><TAB><label>              the appendix's per-field restatement
-#   BULLET<TAB><line><TAB><label>             EVERY labelled field bullet, star or no star
+#   PROSE<TAB><line><TAB><count-as-integer>        a sentence that STATES the number
+#   MARKED<TAB><line><TAB><label><TAB><heading>    a field whose bullet IS the star
+#   ANNOT<TAB><line><TAB><label>                   the appendix's per-field restatement
+#   BULLET<TAB><line><TAB><label><TAB><heading>    EVERY labelled field bullet, star or no star
+#
+# The heading is the enclosing `## ` heading in ft_heads' shape, carried so the cross-document
+# arms resolve each bullet on (section, label) through ft_resolve rather than on its label alone.
 #
 # BULLET is the DENOMINATOR the cross-document arms below are keyed on, and it is emitted by
 # the MARKED branch with the glyph made optional rather than by a reader of its own. That is
@@ -3476,6 +4021,9 @@ st_surfaces() {
     }
     {
       line = $0; isfield = 0
+      # The enclosing `## ` heading, trimmed as ft_heads trims it. No `next`: the line still
+      # reaches the PROSE reader below exactly as it did before the heading was carried.
+      if (line ~ /^## /) { head = substr(line, 4); sub(/[ \t\r]+$/, "", head) }
       # MARKED — a list item whose bullet carries the glyph, then a bold label and a colon.
       # BULLET — the SAME shape with the glyph made OPTIONAL, so every labelled field bullet
       # is emitted and the starred ones are emitted twice, once under each kind. One traversal,
@@ -3487,8 +4035,8 @@ st_surfaces() {
         }
         if (match(rest, /^\*\*[^*]+:\*\*/)) {
           lbl = substr(rest, 3, RLENGTH - 5)
-          printf "BULLET\t%d\t%s\n", FNR, lbl
-          if (starred) printf "MARKED\t%d\t%s\n", FNR, lbl
+          printf "BULLET\t%d\t%s\t%s\n", FNR, lbl, head
+          if (starred) printf "MARKED\t%d\t%s\t%s\n", FNR, lbl, head
           isfield = 1
         }
       }
@@ -3925,8 +4473,8 @@ site_cov_assert() {
 # Everything above grades ONE fact with four homes INSIDE one form. That is AGREEMENT, and
 # agreement is not accuracy: four homes moved together onto a wrong number stay green. The
 # functions below grade the LEVEL — each form's starred set against reference/data-model.md's
-# field table, label for label and in BOTH directions — so a coherent four-home edit the
-# model does not carry is RED.
+# field table, field for field, each bullet resolved on (section, label), and in BOTH directions
+# — so a coherent four-home edit the model does not carry is RED.
 #
 # NO COUNT IS WRITTEN DOWN HERE, and that is the whole shape of it. Group HC's comment states
 # the rule: a copy in this file "would be a THIRD home, green while the other two drifted
@@ -3977,72 +4525,74 @@ st_labint() {   # st_labint <a> <b> -> members of A that are ALSO in B
   '
 }
 
-# st_dm_rows <data-model> — "<line><TAB><label>" for every field-table row whose Field cell
-# carries the star, in table order. ONE predicate for the whole cross-document half: the
+# st_dm_all <data-model> — "<line><TAB><star><TAB><label><TAB><section><TAB><num>" for every
+# labelled field-table row, in table order. ONE predicate for the whole cross-document half: the
 # extractor and the control arms' mutation targeting read the same rows by the same rule, so a
 # control cannot aim at a row the extractor does not see.
 #
-# Read with awk -F'|' BY COLUMN INDEX, exactly as rl_class, xt_class and hz_class read this same
-# table: $2 must be an integer row number and $3 is the Field cell. Those three groups already
-# rest on the document's own in-table warning — "Do not reorder these columns" — so this reader
-# inherits a constraint that is declared in the corpus rather than assumed here.
-#
-# The glyph is located with index() and NEVER inside a bracket expression, for the reason group
-# LC states about the validator: a bracket range resolves against the current locale's collating
-# sequence, so CI and an operator's shell can disagree about what it matched.
-st_dm_all() {
-  awk -F'|' -v star="$ST_STAR" '
-    NF < 8 { next }
-    {
-      num = $2; gsub(/[ \t]/, "", num)
-      if (num !~ /^[0-9]+$/) next
-      fld = $3
-      # the label is a code span; a row without one is the unlabelled free-text tail, which
-      # has no bullet form and so cannot appear in any form this group reads
-      if (!match(fld, /`[^`]+`/)) next
-      # index() does not touch RSTART/RLENGTH, so the star test is safe to take inline here
-      printf "%d\t%d\t%s\n", FNR, (index(fld, star) > 0) ? 1 : 0, substr(fld, RSTART + 1, RLENGTH - 2)
-    }' "$1"
-}
+# A PROJECTION of group FT's ft_rows, which takes every field by column index for every group
+# that reads this table and rests on the document's own in-table warning — "Do not reorder these
+# columns" — so this reader inherits a constraint declared in the corpus rather than assumed here,
+# and FT3 is where a reordered column lands. ft_rows locates the glyph with index() and NEVER
+# inside a bracket expression, for the reason group LC states about the validator: a bracket
+# range resolves against the current locale's collating sequence, so CI and an operator's shell
+# can disagree about what it matched.
+st_dm_all() { ft_rows "$1" | awk -F'\t' '{ print $9 "\t" $8 "\t" $3 "\t" $2 "\t" $1 }'; }
 
-# st_dm_rows <data-model> — "<line><TAB><label>" for the STARRED rows alone. The star is a
-# FLAG on the one predicate rather than a second copy of it, so the extractor and the control
+# st_dm_rows <data-model> — "<line><TAB><label><TAB><num>" for the STARRED rows alone. The star
+# is a FLAG on the one predicate rather than a second copy of it, so the extractor and the control
 # arms' mutation targeting cannot come to disagree about which rows exist.
-st_dm_rows() { st_dm_all "$1" | awk -F'\t' '$2 == 1 { print $1 "\t" $3 }'; }
+st_dm_rows() { st_dm_all "$1" | awk -F'\t' '$2 == 1 { print $1 "\t" $3 "\t" $5 }'; }
 
-# st_dm_starred <data-model> — the LABEL of every starred field-table row, one per line. This is
-# the registered subject of the md_flips arms in group MD: removing it empties every set below,
-# and every assertion here then reaches its non-degeneracy limb rather than an equality over two
+# st_dm_starred <data-model> — "<num><TAB><label>" for every starred field-table row. This is the
+# registered subject of the md_flips arms in group MD: removing it empties every set below, and
+# every assertion here then reaches its non-degeneracy limb rather than an equality over two
 # empty sets.
-st_dm_starred() { st_dm_rows "$1" | awk -F'\t' '{ print $2 }'; }
+st_dm_starred() { st_dm_rows "$1" | awk -F'\t' '{ print $3 "\t" $2 }'; }
 
 # st3_report <template> <data-model> — the ST3 comparison as TAB records. ONE evaluator drives
 # the shipping arm and every control arm alike, the st_surfaces/st_violations idiom one level up:
 # an evaluator that is not the one under test proves nothing about the one that ships.
 #
-#   NB<TAB><n>        distinct labelled bullets on the form — the DENOMINATOR
-#   NM<TAB><n>        distinct marked bullets on the form
-#   NS<TAB><n>        distinct starred rows in the model
-#   MNS<TAB><label>   marked on this form, NOT starred in the model
-#   SNM<TAB><label>   on this form and starred in the model, NOT marked on it
+#   NB<TAB><n>                 distinct labelled bullets on the form, as (section, label) pairs
+#                              — the DENOMINATOR
+#   NM<TAB><n>                 distinct marked bullets on the form, as pairs
+#   NS<TAB><n>                 distinct starred rows in the model
+#   MNS<TAB><label><TAB><why>  marked on this form and NOT resolved ONE to a starred row; <why> is
+#                              `unstarred`, `NONE` or `AMBIG`
+#   SNM<TAB><label>            a starred row some bullet on this form resolves to, which NO marked
+#                              bullet on it resolves to
 #
-# MARKED is a subset of BULLET by construction, so M minus (B intersect S) reduces to M minus S,
-# and the two record kinds above are exactly the two directions of "B intersect S equals M". They
-# are emitted SEPARATELY and never merged: a red normally means the TABLE is stale, because
-# ADR-012 makes the forms authoritative and the table a restatement — and one merged list would
-# leave a builder guessing which of the two files to edit.
+# Every bullet is resolved on (section, label) through ft_resolve, never on its label, so a label
+# two rows share cannot put a star on the wrong one. MNS ITERATES THE PAIRS and looks each one's
+# resolution up — never the resolver's output. With ft_resolve absent every marked pair then reads
+# unresolved and the comparison FAILs, where an evaluator iterating the resolver's output would
+# find nothing to report and pass. MARKED is a subset of BULLET by construction, so the two record
+# kinds are exactly the two directions of "the starred rows the form's bullets reach are the rows
+# its marked bullets reach". They are emitted SEPARATELY and never merged: a red normally means
+# the TABLE is stale, because ADR-012 makes the forms authoritative and the table a restatement —
+# and one merged list would leave a builder guessing which of the two files to edit.
+st_pairs() { printf '%s\n' "$1" | awk -F'\t' -v k="$2" '$1 == k { print $4 "\t" $3 }' | awk 'NF && !seen[$0]++'; }
 st3_report() {
-  local surf b m s inter
+  local surf b m s res
   surf="$(st_surfaces "$1")"
-  b="$(printf '%s\n' "$surf" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++')"
-  m="$(printf '%s\n' "$surf" | awk -F'\t' '$1 == "MARKED" { print $3 }' | awk 'NF && !seen[$0]++')"
+  b="$(st_pairs "$surf" BULLET)"
+  m="$(st_pairs "$surf" MARKED)"
   s="$(st_dm_starred "$2" | awk 'NF && !seen[$0]++')"
-  inter="$(st_labint "$b" "$s")"
-  printf 'NB\t%s\n' "$(printf '%s\n' "$b" | grep -c '[^[:space:]]')"
-  printf 'NM\t%s\n' "$(printf '%s\n' "$m" | grep -c '[^[:space:]]')"
-  printf 'NS\t%s\n' "$(printf '%s\n' "$s" | grep -c '[^[:space:]]')"
-  st_labdiff "$m" "$s"     | awk 'NF { print "MNS\t" $0 }'
-  st_labdiff "$inter" "$m" | awk 'NF { print "SNM\t" $0 }'
+  res="$(printf '%s\n' "$b" | awk 'NF' | ft_resolve <(ft_rows "$2"))"
+  { printf '%s\n%s\n%s\n%s\n' "$s" "$ST_SEP" "$res" "$ST_SEP"
+    printf '%s\n' "$b" | awk 'NF { print "B\t" $0 }'
+    printf '%s\n' "$m" | awk 'NF { print "M\t" $0 }'; } | awk -F'\t' -v sep="$ST_SEP" '
+    $0 == sep { part++; next }
+    part == 0 { if (NF >= 2 && !($1 in star)) { ns++; sn[ns] = $1; star[$1] = 1; slab[$1] = $2 }; next }
+    part == 1 { if (NF >= 4) res[$3 "\t" $4] = ($1 == "ONE") ? $2 : $1; next }
+    { k = $2 "\t" $3; r = (k in res) ? res[k] : "NONE"
+      if ($1 == "B") { nb++; if (r in star) hitb[r] = 1 }
+      if ($1 == "M") { nm++; if (r in star) hitm[r] = 1
+                       else { nx++; xl[nx] = $3; xw[nx] = (r == "NONE" || r == "AMBIG") ? r : "unstarred" } } }
+    END { printf "NB\t%d\nNM\t%d\nNS\t%d\n", nb, nm, ns
+          for (i = 1; i <= nx; i++) printf "MNS\t%s\t%s\n", xl[i], xw[i]
+          for (i = 1; i <= ns; i++) if ((sn[i] in hitb) && !(sn[i] in hitm)) printf "SNM\t%s\n", slab[sn[i]] }'
 }
 
 # st3_assert <template> <data-model> — exactly ONE verdict, and self-contained: it takes no state
@@ -4063,27 +4613,37 @@ st3_assert() {
   elif [ "$nd" -ne 0 ]; then
     FAIL "ST3[$tag]: over this form's $nb labelled bullet(s), the $nm field(s) it marks and the $ns starred row(s) in reference/data-model.md's field table are NOT the same set. ADR-012 makes the FORMS authoritative and the table a restatement of them, so the TABLE is normally the side to correct — read each direction before deciding:"
     printf '%s\n' "$rep" | awk -F'\t' '
-      $1 == "MNS" { printf "      marked-not-in-model: %s — this form stars it and the table does not\n", $2 }
+      $1 == "MNS" { printf "      marked-not-in-model: %s — this form stars it and it resolves to no starred row (%s)\n", $2, $3 }
       $1 == "SNM" { printf "      model-starred-not-marked: %s — the table stars it and this form carries the bullet unstarred\n", $2 }'
   else
-    PASS "ST3[$tag]: the $nm field(s) this form marks are EXACTLY the starred rows of reference/data-model.md's field table that this form asks at all — label for label, both directions, over a denominator of $nb labelled bullet(s) intersected against $ns starred row(s). This is the LEVEL, not the in-form agreement ST1 grades: a coherent edit moving all four of this form's homes together onto a count the model does not carry is caught here and nowhere else. Keyed on bullet presence, so neither a count nor a class-to-form map is spelled in this file. CTL-ST3-FORM and CTL-ST3-MODEL below show this same comparison failing in each direction, and CTL-ST3-NEUTRAL shows it staying silent on a table edit that moves no star"
+    PASS "ST3[$tag]: the $nm field(s) this form marks are EXACTLY the starred rows of reference/data-model.md's field table that this form asks at all — field for field, each bullet resolved on (section, label), both directions, over a denominator of $nb labelled bullet(s) resolved against $ns starred row(s). This is the LEVEL, not the in-form agreement ST1 grades: a coherent edit moving all four of this form's homes together onto a count the model does not carry is caught here and nowhere else. Keyed on bullet presence, so neither a count nor a class-to-form map is spelled in this file. CTL-ST3-FORM and CTL-ST3-MODEL below show this same comparison failing in each direction, and CTL-ST3-NEUTRAL shows it staying silent on a table edit that moves no star"
   fi
 }
 
-# st4_report <union-of-marked> <data-model> — the ST4 comparison, same record shape.
+# st4_report <union-of-marked> <data-model> — the ST4 comparison, same record shape. The union is of
+# (section, label) PAIRS, so ST4 resolves exactly as ST3 does, and iterates the pairs for the same
+# reason.
 #
-#   NU<TAB><n>        distinct labels marked across ALL forms read this run
-#   NS<TAB><n>        distinct starred rows in the model
-#   UNS<TAB><label>   marked on some form, NOT starred in the model
-#   SNU<TAB><label>   starred in the model, marked on NO form
+#   NU<TAB><n>                 distinct marked pairs across ALL forms read this run
+#   NS<TAB><n>                 distinct starred rows in the model
+#   UNS<TAB><label><TAB><why>  marked on some form, NOT resolved ONE to a starred row
+#   SNU<TAB><label>            starred in the model, reached by NO marked pair on any form
 st4_report() {
-  local u s
+  local u s res
   u="$(printf '%s\n' "$1" | awk 'NF && !seen[$0]++')"
   s="$(st_dm_starred "$2" | awk 'NF && !seen[$0]++')"
-  printf 'NU\t%s\n' "$(printf '%s\n' "$u" | grep -c '[^[:space:]]')"
-  printf 'NS\t%s\n' "$(printf '%s\n' "$s" | grep -c '[^[:space:]]')"
-  st_labdiff "$u" "$s" | awk 'NF { print "UNS\t" $0 }'
-  st_labdiff "$s" "$u" | awk 'NF { print "SNU\t" $0 }'
+  res="$(printf '%s\n' "$u" | awk 'NF' | ft_resolve <(ft_rows "$2"))"
+  { printf '%s\n%s\n%s\n%s\n' "$s" "$ST_SEP" "$res" "$ST_SEP"
+    printf '%s\n' "$u" | awk 'NF { print "M\t" $0 }'; } | awk -F'\t' -v sep="$ST_SEP" '
+    $0 == sep { part++; next }
+    part == 0 { if (NF >= 2 && !($1 in star)) { ns++; sn[ns] = $1; star[$1] = 1; slab[$1] = $2 }; next }
+    part == 1 { if (NF >= 4) res[$3 "\t" $4] = ($1 == "ONE") ? $2 : $1; next }
+    { k = $2 "\t" $3; r = (k in res) ? res[k] : "NONE"; nu++
+      if (r in star) hit[r] = 1
+      else { nx++; xl[nx] = $3; xw[nx] = (r == "NONE" || r == "AMBIG") ? r : "unstarred" } }
+    END { printf "NU\t%d\nNS\t%d\n", nu, ns
+          for (i = 1; i <= nx; i++) printf "UNS\t%s\t%s\n", xl[i], xw[i]
+          for (i = 1; i <= ns; i++) if (!(sn[i] in hit)) printf "SNU\t%s\n", slab[sn[i]] }'
 }
 
 # st4_assert <union-of-marked> <data-model> <members-read> — exactly ONE verdict, run level.
@@ -4104,14 +4664,14 @@ st4_assert() {
   ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
   nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
   if [ "${nread:-0}" -lt 1 ] || [ "${nu:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
-    FAIL "ST4: a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, labels marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
+    FAIL "ST4: a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, fields marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
   elif [ "$nd" -ne 0 ]; then
-    FAIL "ST4: the union of the marked sets across the $nread intake form(s) read this run ($nu label(s)) is NOT the starred set of reference/data-model.md's field table ($ns row(s)). A star added on one side and not the other is what this arm exists to catch, and the add-only direction is the one no per-form arm can see:"
+    FAIL "ST4: the union of the marked sets across the $nread intake form(s) read this run ($nu field(s), each resolved on (section, label)) is NOT the starred set of reference/data-model.md's field table ($ns row(s)). A star added on one side and not the other is what this arm exists to catch, and the add-only direction is the one no per-form arm can see:"
     printf '%s\n' "$rep" | awk -F'\t' '
-      $1 == "UNS" { printf "      marked-on-a-form-not-in-model: %s\n", $2 }
+      $1 == "UNS" { printf "      marked-on-a-form-not-in-model: %s (%s)\n", $2, $3 }
       $1 == "SNU" { printf "      model-starred-on-no-form: %s — the table stars a label no intake form asks, and ST3 is BLIND to this by construction\n", $2 }'
   else
-    PASS "ST4: the union of the marked sets across the $nread intake form(s) read this run is EXACTLY the $ns starred row(s) of reference/data-model.md's field table — $nu label(s), both directions. This is the ADD-ONLY complement to ST3: a starred row added to the table for a label no form carries enters no form's intersection and leaves every per-form ST3 green, so it is caught here. CTL-ST4-ADD below drives that input and asserts ST3's silence on it"
+    PASS "ST4: the union of the marked sets across the $nread intake form(s) read this run is EXACTLY the $ns starred row(s) of reference/data-model.md's field table — $nu marked field(s), field for field, each resolved on (section, label), both directions. This is the ADD-ONLY complement to ST3: a starred row added to the table for a label no form carries enters no form's intersection and leaves every per-form ST3 green, so it is caught here. CTL-ST4-ADD below drives that input and asserts ST3's silence on it"
   fi
 }
 
@@ -4393,7 +4953,7 @@ if [ "$ST_OK" -eq 1 ]; then
   # The newline is a literal continuation because this file uses no dollar-quoting anywhere, the
   # same way ST_ARMED and ST_TEMPLATES are spelled.
   ST_ALLMARKED="$ST_ALLMARKED
-$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $3 }')"
+$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $4 "\t" $3 }')"
   ST_NREAD=$((ST_NREAD + 1))
 fi
 
@@ -4510,11 +5070,14 @@ if [ "$ST_OK" -eq 1 ]; then
   # shows ST3 grading a LEVEL rather than an agreement. The target is a bullet the probe
   # DISCOVERED and that the model does NOT star, so the mutation is a real addition to this
   # form's starred set rather than a no-op on one already there.
-  ST3_S="$(st_dm_starred "$ST_DM" | awk 'NF && !seen[$0]++')"
-  ST3_CAND="$(printf '%s\n%s\n%s\n' "$ST3_S" "$ST_SEP" "$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $2 " " $3 }')" | awk -v sep="$ST_SEP" '
+  # The target is found by RESOLVING the form's bullets, exactly as the comparison does: the first
+  # bullet, in file order, whose (section, label) resolves ONE to an unstarred row.
+  ST3_SNUM="$(st_dm_starred "$ST_DM" | cut -f1)"
+  ST3_BRES="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $4 "\t" $3 "\t" $2 }' | ft_resolve <(ft_rows "$ST_DM"))"
+  ST3_CAND="$(printf '%s\n%s\n%s\n' "$ST3_SNUM" "$ST_SEP" "$ST3_BRES" | awk -F'\t' -v sep="$ST_SEP" '
     !past && $0 == sep { past = 1; next }
     !past { if ($0 != "") s[$0] = 1; next }
-    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (!(lbl in s)) { print; exit } }
+    $1 == "ONE" && !($2 in s) { print $5 " " $4; exit }
   ')"
   ST3_CL="${ST3_CAND%% *}"; ST3_CB="${ST3_CAND#* }"
   if [ -n "$ST3_CAND" ]; then
@@ -4537,14 +5100,15 @@ if [ "$ST_OK" -eq 1 ]; then
   # ST3's zero would then be a measurement in one direction and an assumption in the other. So
   # the target is an UNSTARRED table row whose label this form carries as an UNMARKED bullet:
   # the model gains a star, the form does not, and the difference lands on the other side.
-  ST3_M="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "MARKED" { print $3 }' | awk 'NF && !seen[$0]++')"
-  ST3_B="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++')"
-  ST3_UNM="$(st_labdiff "$ST3_B" "$ST3_M")"
-  ST3_AROW="$(printf '%s\n%s\n%s\n' "$ST3_UNM" "$ST_SEP" "$(st_dm_all "$ST_DM" | awk -F'\t' '$2 == 0 { print $1 " " $3 }')" | awk -v sep="$ST_SEP" '
-    !past && $0 == sep { past = 1; next }
-    !past { if ($0 != "") u[$0] = 1; next }
-    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in u) { print; exit } }
-  ')"
+  # The target is the lowest table line among the UNSTARRED rows that an unmarked bullet of this
+  # form resolves to — the pairs, resolved, rather than the labels.
+  ST3_MP="$(st_pairs "$ST_SURF" MARKED)"
+  ST3_AROW="$(printf '%s\n%s\n%s\n%s\n%s\n' "$ST3_MP" "$ST_SEP" "$ST3_BRES" "$ST_SEP" "$(st_dm_all "$ST_DM")" | awk -F'\t' -v sep="$ST_SEP" '
+    $0 == sep { part++; next }
+    part == 0 { if ($0 != "") mk[$0] = 1; next }
+    part == 1 { if ($1 == "ONE" && !(($3 "\t" $4) in mk)) un[$2] = 1; next }
+    $2 == 0 && ($5 in un) && (best == "" || $1 + 0 < best + 0) { best = $1; lab = $3 }
+    END { if (best != "") print best " " lab }')"
   ST3_ARL="${ST3_AROW%% *}"; ST3_ARB="${ST3_AROW#* }"
   if [ -n "$ST3_AROW" ]; then
     ST3_DMFX="$(st_dm_fixture st3model-dm)"
@@ -4559,11 +5123,14 @@ if [ "$ST_OK" -eq 1 ]; then
   # from one that reddens on any difference between the two files — and it is aimed at the ninth
   # column deliberately, because that is the cell the table's own column-order warning names as
   # the one a rationale-reading arm follows.
-  ST3_SROW="$(printf '%s\n%s\n%s\n' "$ST3_M" "$ST_SEP" "$(st_dm_rows "$ST_DM" | awk -F'\t' '{ print $1 " " $2 }')" | awk -v sep="$ST_SEP" '
+  # The target is the lowest table line among the STARRED rows a marked bullet of this form
+  # resolves to.
+  ST3_MRES="$(printf '%s\n' "$ST3_MP" | awk 'NF' | ft_resolve <(ft_rows "$ST_DM"))"
+  ST3_SROW="$(printf '%s\n%s\n%s\n' "$ST3_MRES" "$ST_SEP" "$(st_dm_rows "$ST_DM")" | awk -F'\t' -v sep="$ST_SEP" '
     !past && $0 == sep { past = 1; next }
-    !past { if ($0 != "") m[$0] = 1; next }
-    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in m) { print; exit } }
-  ')"
+    !past { if ($1 == "ONE") mr[$2] = 1; next }
+    ($3 in mr) && (best == "" || $1 + 0 < best + 0) { best = $1; lab = $2 }
+    END { if (best != "") print best " " lab }')"
   ST3_SRL="${ST3_SROW%% *}"; ST3_SRB="${ST3_SROW#* }"
   if [ -n "$ST3_SROW" ]; then
     ST3_DMFX2="$(st_dm_fixture st3neutral-dm)"
@@ -7559,11 +8126,13 @@ fi
 # still passes — which is precisely what makes this arm load-bearing rather than tidy.
 #
 # ── NOTHING HERE IS PINNED ──────────────────────────────────────────────────────
-# The classification is read live from reference/data-model.md and never re-authored, the
-# same live-read the command file's own collision check takes. The fixtures are read from
-# the tree. No count in this group is written down: every one is derived on the run, and
-# the only literals are the two paths the milestone shipped and the two labels the
-# classification's own rationale declares bullet-less.
+# The classification is read live from reference/data-model.md through group FT's ft_rows
+# and never re-authored, the same live-read the command file's own collision check takes, and
+# every bullet is matched to a row on (section, label) through ft_resolve. The fixtures are read
+# from the tree. No count in this group is written down: every one is derived on the run, and
+# the only literals are the paths of the resolving pair, of the unlinked fixture and of the two
+# guided forms whose headings bound RL3's population, plus the two phrases the classification's
+# own rationale uses to declare a field bullet-less.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "RL — reconcile-on-link: the survey's two witnesses"
@@ -7574,35 +8143,28 @@ RL_CMD="$ROOT/skills/trip-record/SKILL.md"
 RL_PAIR_T="$ROOT/examples/people-library-demo/travelers/noor.md"
 RL_PAIR_R="$ROOT/examples/people-library-demo/people/psn-3c7e.md"
 RL_UNLINKED="$ROOT/examples/data-architecture-demo/travelers/alex.md"
+# The two guided forms. Their `## ` headings bound RL3's population: the rows RL3 grades are the
+# rows whose section leads a heading of one of them, because the pair partitions THEIR fields.
+RL_FORM_T="$ROOT/templates/traveler-intake.template.md"
+RL_FORM_P="$ROOT/templates/person-intake.template.md"
 RL_STAR='⭐'
 
-# rl_class — the classification table, read LIVE. Emits "label<TAB>class<TAB>scope".
-# Fields are taken BY INDEX, never row-wide: a row-wide match would read the class token
-# out of the rationale column, which discusses other classes by name in several rows.
-rl_class() {
-  awk -F'|' '
-    NF < 8 { next }
-    {
-      num = $2; gsub(/[ \t]/, "", num)
-      if (num !~ /^[0-9]+$/) next
-      fld = $3
-      # the label is a code span; a row without one is the unlabelled free-text tail,
-      # which has no bullet form and so cannot appear in any file this group reads
-      if (!match(fld, /`[^`]+`/)) next
-      lbl = substr(fld, RSTART + 1, RLENGTH - 2)
-      cls = $5; gsub(/[ \t*]/, "", cls)
-      scp = $7; gsub(/[ \t`]/, "", scp)
-      print lbl "\t" cls "\t" scp
-    }' "$1"
-}
+# rl_class <data-model> — the classification table, read LIVE. Emits
+# "label<TAB>class<TAB>scope<TAB>section<TAB>num". A PROJECTION of group FT's ft_rows, which takes
+# every field by index and never row-wide: a row-wide match would read the class token out of the
+# rationale column, which discusses other classes by name in several rows.
+rl_class() { ft_rows "$1" | awk -F'\t' '{ print $3 "\t" $4 "\t" $6 "\t" $2 "\t" $1 }'; }
 
-# rl_bullets <file> <honour_star> — emits "label<TAB>value" for every intake bullet.
-# honour_star=0 reproduces the MEASURED miss: the star-decorated bullets vanish.
+# rl_bullets <file> <honour_star> — emits "label<TAB>value<TAB>heading" for every intake bullet,
+# the heading being the enclosing `## ` heading trimmed as ft_heads trims it, which is what a
+# bullet is resolved on. honour_star=0 reproduces the MEASURED miss: the star-decorated bullets
+# vanish.
 # The star prefix is removed with a dynamic sub() rather than by arithmetic on length(),
 # because length() counts characters or bytes depending on the awk and the locale, and
 # group LC exists because this suite has already been bitten by exactly that.
 rl_bullets() {
   awk -v star="$RL_STAR" -v honour="$2" '
+    /^## / { head = substr($0, 4); sub(/[ \t\r]+$/, "", head); next }
     /^- / {
       rest = substr($0, 3)
       starred = 0
@@ -7612,8 +8174,18 @@ rl_bullets() {
       lbl = substr(rest, 3, RLENGTH - 5)
       val = substr(rest, RLENGTH + 1)
       sub(/^[ \t]+/, "", val); sub(/[ \t\r]+$/, "", val)
-      print lbl "\t" val
+      print lbl "\t" val "\t" head
     }' "$1"
+}
+
+# rl_answered_class <file> <class> — how many ANSWERED bullets of <file> resolve ONE, on (section,
+# label), to a row of <class>. The class is joined from RL_ROWS by the resolved row NUMBER, never
+# by label, so a label two rows share cannot lend one row's class to the other's field.
+rl_answered_class() {
+  rl_bullets "$1" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 }' | ft_resolve "$RL_ROWS" | awk -F'\t' -v c="$2" '
+    FILENAME == ARGV[1] { cls[$1] = $4; next }
+    $1 == "ONE" && cls[$2] == c && $5 != "" && $5 != "—" && $5 != "-" && $5 !~ /^\[.*\]$/ { n++ }
+    END { print n + 0 }' "$RL_ROWS" -
 }
 
 # ANSWERED() is the data model's own predicate and is applied inline at each site below:
@@ -7621,12 +8193,15 @@ rl_bullets() {
 # `none` IS an answer — the one place the form makes a word stand in for the em dash.
 
 RL_OK=1
-for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED"; do
+RL_MISSING=""
+for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED" "$RL_FORM_T" "$RL_FORM_P"; do
   [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
 done
 
 RL_CLASSFILE="$WORK/rl-class.tsv"
+RL_ROWS="$WORK/rl-rows.tsv"
 if [ "$RL_OK" -eq 1 ]; then
+  ft_rows "$RL_DM" > "$RL_ROWS"
   rl_class "$RL_DM" > "$RL_CLASSFILE"
   RL_NCLASS="$(grep -c '[^[:space:]]' "$RL_CLASSFILE" || true)"
   RL_NPERSON="$(awk -F'\t' '$2 == "PERSON"' "$RL_CLASSFILE" | grep -c '[^[:space:]]' || true)"
@@ -7646,25 +8221,24 @@ if [ "$RL_OK" -eq 1 ]; then
   # The survey's value function takes the field's class and scope as two of its five
   # arguments. A label the table does not classify has no class to take, so the survey
   # is undefined on it — which is a hole in the mechanism, not a missing test.
-  RL_UNCL=""
-  RL_SEEN=0
-  for rl_f in "$RL_PAIR_T" "$RL_PAIR_R"; do
-    while IFS="$(printf '\t')" read -r rl_l _; do
-      [ -n "$rl_l" ] || continue
-      RL_SEEN=$((RL_SEEN + 1))
-      if ! awk -F'\t' -v l="$rl_l" '$1 == l { f = 1 } END { exit f ? 0 : 1 }' "$RL_CLASSFILE"; then
-        case " $RL_UNCL " in *" $rl_l "*) ;; *) RL_UNCL="$RL_UNCL $rl_l" ;; esac
-      fi
-    done <<EOF
-$(rl_bullets "$rl_f" 1)
-EOF
-  done
+  # Every bullet is RESOLVED on (section, label) through ft_resolve; the denominator is the
+  # bullets the extractor read, never the resolver's own output, so a resolver that went quiet
+  # cannot shrink the population it is graded over. AMBIG is FT2's failure seen from here.
+  RL1_RES="$( { rl_bullets "$RL_PAIR_T" 1; rl_bullets "$RL_PAIR_R" 1; } | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve "$RL_ROWS")"
+  RL_SEEN="$( { rl_bullets "$RL_PAIR_T" 1; rl_bullets "$RL_PAIR_R" 1; } | grep -c '[^[:space:]]')"
+  RL_NRES1="$(printf '%s\n' "$RL1_RES" | awk -F'\t' '$1 == "ONE" { n++ } END { print n + 0 }')"
+  RL_UNCL="$(printf '%s\n' "$RL1_RES" | awk -F'\t' '$1 == "NONE" && !s[$4]++ { printf " %s (under \"%s\")", $4, $3 }')"
+  RL_AMB="$(printf '%s\n' "$RL1_RES" | awk -F'\t' '$1 == "AMBIG" && !s[$4]++ { printf " %s (rows %s)", $4, $2 }')"
   if [ "$RL_SEEN" -eq 0 ]; then
     FAIL "RL1: the extractor found 0 bullets across both sides of the resolving pair — the denominator is empty, so a clean verdict here would certify nothing"
+  elif [ -n "$RL_AMB" ]; then
+    FAIL "RL1: bullet(s) that resolve to MORE THAN ONE row:$RL_AMB — two rows share the label under sections that both lead the heading, which is FT2's failure; the survey cannot take a class from a field the key does not single out"
   elif [ -n "$RL_UNCL" ]; then
-    FAIL "RL1: label(s) the live classification does not cover:$RL_UNCL — the survey composes a field from its class and its scope, so an unclassified label is a field the mechanism has no rule for"
+    FAIL "RL1: bullet(s) the live classification does not cover on (section, label):$RL_UNCL — the survey composes a field from its class and its scope, so an unclassified field is one the mechanism has no rule for"
+  elif [ "$RL_NRES1" -ne "$RL_SEEN" ]; then
+    FAIL "RL1: the resolver answered $RL_NRES1 of $RL_SEEN bullet(s) ONE and named no other outcome for the rest — the resolution is short, so a clean verdict here would rest on bullets that were never resolved"
   else
-    PASS "RL1: all $RL_SEEN bullet(s) across both sides of the resolving pair resolve to a class and a scope in the live table — the survey's class argument is total over this pair, and the denominator is non-zero so the verdict is a measurement"
+    PASS "RL1: all $RL_SEEN bullet(s) across both sides of the resolving pair resolve ONE, on (section, label), to a row carrying a class and a scope in the live table — the survey's class argument is total over this pair, no bullet reaches two rows, and the denominator is non-zero so the verdict is a measurement"
   fi
 
   # ── RL2 — the parse-layer sensitivity arm. MUST FIRE. ─────────────────────────
@@ -7677,36 +8251,79 @@ EOF
   fi
 
   # ── RL3 — arm (i): no field is claimed twice across the resolving pair ─────────
-  # The fixture states this in prose. This is the same claim, asserted.
-  RL_BOTH="$(awk -F'\t' 'NR == FNR { a[$1]; next } ($1 in a) { print $1 }' \
-    <(rl_bullets "$RL_PAIR_T" 1) <(rl_bullets "$RL_PAIR_R" 1) | sort -u | tr '\n' ' ')"
-  # The only classified labels legitimately absent from BOTH sides are the two the
-  # classification's own rationale declares carry no bullet: one is never asked and is
-  # computed per trip, the other is borne by the title line in both forms. They are read
-  # from the table's rationale column rather than listed here.
-  # The rationale column is $9: the table carries a `Horizon` axis between `Scope` and
-  # `Rationale`, so this index moved with it. It is the ONLY arm in this file that reads
-  # the rationale column, and a stale index here empties RL_NOBULLET rather than reading
-  # the wrong cell quietly — RL3's own RL_NNB guard below is what turns that into a FAIL.
-  RL_NOBULLET="$(awk -F'|' '
-      NF < 9 { next }
-      { num = $2; gsub(/[ \t]/, "", num); if (num !~ /^[0-9]+$/) next
-        if (!match($3, /`[^`]+`/)) next
-        lbl = substr($3, RSTART + 1, RLENGTH - 2)
-        if ($9 ~ /Never asked/ || $9 ~ /not by a bullet/) print lbl }' "$RL_DM" | sort -u)"
-  RL_ABSENT="$(awk -F'\t' 'NR == FNR { seen[$1]; next } !($1 in seen) { print $1 }' \
-    <(cat <(rl_bullets "$RL_PAIR_T" 1) <(rl_bullets "$RL_PAIR_R" 1)) "$RL_CLASSFILE" | sort -u)"
-  RL_UNEXPLAINED="$(comm -23 <(printf '%s\n' "$RL_ABSENT" | grep '[^[:space:]]' | sort -u) \
-                             <(printf '%s\n' "$RL_NOBULLET" | grep '[^[:space:]]' | sort -u) | tr '\n' ' ')"
-  RL_NNB="$(printf '%s\n' "$RL_NOBULLET" | grep -c '[^[:space:]]' || true)"
-  if [ "$RL_NNB" -eq 0 ]; then
+  # The fixture states this in prose. This is the same claim, asserted — over the population the
+  # pair actually PARTITIONS, which is the rows whose section leads a heading of one of the two
+  # guided forms. The rest of the table classifies fields of other forms, which neither side of
+  # this pair carries by design, so reading the whole table would convict the pair of gaps it does
+  # not have. The leading segment is ft_lead's, token-bounded, so `Destination` does not lead
+  # `Destination leanings` and a trip-context section cannot enter the population by string prefix.
+  #
+  # The only rows legitimately absent from BOTH sides are those the classification's own rationale
+  # declares carry no bullet — read from the Rationale column through ft_rows, never listed here. A
+  # stale column would empty that set, and the NB limb below turns that into a FAIL.
+  rl3_report() {
+    local rows="$1"
+    ft_heads "$RL_FORM_T" "$RL_FORM_P" > "$WORK/rl3-heads.txt"
+    ft_under "$rows" "$WORK/rl3-heads.txt" > "$WORK/rl3-pop.tsv"
+    { rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tT" }'
+      rl_bullets "$RL_PAIR_R" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tR" }'; } | ft_resolve "$rows" > "$WORK/rl3-res.tsv"
+    awk -F'\t' -v total="$(grep -c '[^[:space:]]' "$rows")" "$FT_NOBUL_FN"'
+      FILENAME == ARGV[1] { if ($1 == "ONE") side[$2] = side[$2] $6; next }
+      { n++; s = side[$1]; nobul = ft_nobul($10); if (nobul) nb++
+        if (index(s, "T") && index(s, "R")) print "BOTH\t" $3
+        else if (s == "" && !nobul) print "UNEXPL\t" $3 }
+      END { print "POP\t" n + 0; print "NOTHER\t" total - n; print "NB\t" nb + 0 }' "$WORK/rl3-res.tsv" "$WORK/rl3-pop.tsv"
+  }
+  RL3_REP="$(rl3_report "$RL_ROWS")"
+  RL3_POPROWS="$(cat "$WORK/rl3-pop.tsv")"
+  RL_POP="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "POP" { print $2; exit }')"
+  RL_NOTHER="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "NOTHER" { print $2; exit }')"
+  RL_NNB="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "NB" { print $2; exit }')"
+  RL_BOTH="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "BOTH" { printf "%s ", $2 }')"
+  RL_UNEXPLAINED="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "UNEXPL" { printf "%s ", $2 }')"
+  if [ "${RL_POP:-0}" -eq 0 ]; then
+    FAIL "RL3: the population came back EMPTY — no classified row has a section leading a heading of either guided form, so a clean verdict here would be the partition of nothing. A renamed form heading or a failed parse is the likeliest cause"
+  elif [ "${RL_NNB:-0}" -eq 0 ]; then
     FAIL "RL3: the classification declares no bullet-less field at all, so the exemption set this arm subtracts is empty and its verdict would be an artefact of a failed parse rather than a property of the pair"
   elif [ -n "$RL_BOTH" ]; then
-    FAIL "RL3: label(s) claimed by BOTH sides of the resolving pair: $RL_BOTH — this is the clean witness, and a field claimed twice makes it a contested one"
+    FAIL "RL3: field(s) claimed by BOTH sides of the resolving pair: ${RL_BOTH}— this is the clean witness, and a field claimed twice makes it a contested one"
   elif [ -n "$RL_UNEXPLAINED" ]; then
-    FAIL "RL3: classified label(s) carried by neither side and not declared bullet-less: $RL_UNEXPLAINED — the pair no longer partitions the form, so RL4's empty verdict would be silence about a gap rather than agreement"
+    FAIL "RL3: classified field(s) of the guided forms carried by neither side and not declared bullet-less: ${RL_UNEXPLAINED}— the pair no longer partitions the forms, so RL4's empty verdict would be silence about a gap rather than agreement"
   else
-    PASS "RL3: the two sides of the resolving pair claim no label in common, and every classified label absent from both is one the table's own rationale declares carries no bullet ($RL_NNB of them). The pair partitions the form, which is what makes the next arm's zero meaningful"
+    PASS "RL3: over the $RL_POP classified row(s) whose section leads a heading of one of the two guided forms, the two sides of the resolving pair claim no field in common, and every row neither side carries is one the table's own rationale declares bullet-less ($RL_NNB of them). The pair partitions the forms, which is what makes the next arm's zero meaningful. The other $RL_NOTHER row(s) classify fields of forms this pair does not fill and are outside the population by construction — the leading segment is token-bounded, so no trip-context section enters it by string prefix. CTL-RL3-INPAIR and CTL-RL3-OTHERFORM show the population boundary in both directions"
+  fi
+
+  # CTL-RL3-INPAIR — MUST FIRE, and CTL-RL3-OTHERFORM — MUST NOT. Each appends ONE synthetic row to
+  # a COPY of RL_ROWS and is keyed on its own label, so a mutation replayed on the tracked table
+  # cannot turn either red. INPAIR's row sits under the section of the first population row, so a
+  # field the forms carry and the pair does not must be named; OTHERFORM's sits under the section of
+  # the first labelled row OUTSIDE the population, so a field of another form must not be.
+  RL3_INSEC="$(printf '%s\n' "$RL3_POPROWS" | awk -F'\t' 'NF >= 2 { print $2; exit }')"
+  RL3_OUTSEC="$(printf '%s\n%s\n%s\n' "$RL3_POPROWS" "ZZ-RL3-SEPARATOR" "$(cat "$RL_ROWS")" | awk -F'\t' '
+    !past && $0 == "ZZ-RL3-SEPARATOR" { past = 1; next }
+    !past { if (NF >= 1) in_pop[$1] = 1; next }
+    NF >= 2 && !($1 in in_pop) { print $2; exit }')"
+  RL3_FX="$WORK/rl3-inpair-rows.tsv"; cp "$RL_ROWS" "$RL3_FX"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' 9001 "$RL3_INSEC" 'ZZ-RL3-UNCARRIED' TRIP n/a slot admissible 0 0 synthetic >> "$RL3_FX"
+  RL3_LD=0; cmp -s "$RL_ROWS" "$RL3_FX" || RL3_LD=1
+  RL3_R="$(rl3_report "$RL3_FX")"
+  RL3_HIT="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$1 == "UNEXPL" && $2 == "ZZ-RL3-UNCARRIED" { n++ } END { print n + 0 }')"
+  RL3_P="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$1 == "POP" { print $2; exit }')"
+  if [ -n "$RL3_INSEC" ] && [ "$RL3_LD" -eq 1 ] && [ "$RL3_HIT" -eq 1 ] && [ "${RL3_P:-0}" -eq $((RL_POP + 1)) ]; then
+    PASS "CTL-RL3-INPAIR: MUST FIRE — a synthetic row under \`$RL3_INSEC\`, a section of the guided forms, appended to a copy of the rows RL3 reads, enters the population ($RL_POP → $RL3_P) and is named UNEXPLAINED, because neither side of the pair carries it. RL3's partition is graded over the fields the forms ask, and a field they ask that the pair drops is caught"
+  else
+    FAIL "CTL-RL3-INPAIR: MUST FIRE — section='$RL3_INSEC' landed=$RL3_LD named-unexplained=$RL3_HIT population $RL_POP → ${RL3_P:-none}, wanting a named field and a population one larger. RL3's zero has no control behind it inside the population"
+  fi
+  RL3_FX="$WORK/rl3-otherform-rows.tsv"; cp "$RL_ROWS" "$RL3_FX"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' 9002 "$RL3_OUTSEC" 'ZZ-RL3-OTHERFORM' TRIP n/a slot admissible 0 0 synthetic >> "$RL3_FX"
+  RL3_LD=0; cmp -s "$RL_ROWS" "$RL3_FX" || RL3_LD=1
+  RL3_R="$(rl3_report "$RL3_FX")"
+  RL3_HIT="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$2 == "ZZ-RL3-OTHERFORM" { n++ } END { print n + 0 }')"
+  RL3_P="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$1 == "POP" { print $2; exit }')"
+  if [ -n "$RL3_OUTSEC" ] && [ "$RL3_LD" -eq 1 ] && [ "$RL3_HIT" -eq 0 ] && [ "${RL3_P:-0}" -eq "$RL_POP" ]; then
+    PASS "CTL-RL3-OTHERFORM: MUST NOT FIRE — a synthetic row under \`$RL3_OUTSEC\`, a section of no guided form, appended to a copy of the rows RL3 reads, stays OUTSIDE the population ($RL_POP unchanged) and is named nowhere. A field of another form is not a gap in this pair, which is the reading that turned RL3 red on the whole table"
+  else
+    FAIL "CTL-RL3-OTHERFORM: MUST NOT FIRE — section='$RL3_OUTSEC' landed=$RL3_LD named=$RL3_HIT population $RL_POP → ${RL3_P:-none}, wanting the row outside the population and unnamed"
   fi
 
   # ── RL4 — arm (i): the adjudicable set over the resolving pair is EMPTY ────────
@@ -7714,14 +8331,8 @@ EOF
   # override that differs from the record. Both are trip-side answers, so both are zero
   # exactly when the trip side answers no durable label at all — which is what this
   # witness is for.
-  RL_TP="$(rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '
-      NR == FNR { cls[$1] = $2; next }
-      (cls[$1] == "PERSON") && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
-      END { print n + 0 }' "$RL_CLASSFILE" -)"
-  RL_TD="$(rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '
-      NR == FNR { cls[$1] = $2; next }
-      (cls[$1] == "DEFAULT") && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
-      END { print n + 0 }' "$RL_CLASSFILE" -)"
+  RL_TP="$(rl_answered_class "$RL_PAIR_T" PERSON)"
+  RL_TD="$(rl_answered_class "$RL_PAIR_T" DEFAULT)"
   RL_TANS="$(rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '
       $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ } END { print n + 0 }')"
   if [ "$RL_TANS" -eq 0 ]; then
@@ -7733,10 +8344,7 @@ EOF
   fi
 
   # ── RL5 — RL4's control. MUST FIRE, on the same instrument. ───────────────────
-  RL_AP="$(rl_bullets "$RL_UNLINKED" 1 | awk -F'\t' '
-      NR == FNR { cls[$1] = $2; next }
-      (cls[$1] == "PERSON") && $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n++ }
-      END { print n + 0 }' "$RL_CLASSFILE" -)"
+  RL_AP="$(rl_answered_class "$RL_UNLINKED" PERSON)"
   if [ "$RL_AP" -gt 0 ]; then
     PASS "RL5: MUST FIRE — the SAME extractor and the SAME classification read $RL_AP answered person-class bullet(s) on the legacy fixture. RL4's zero is therefore a measurement and not an empty scan. These are files authored against the unsplit form, which is why the population exists to be found"
   else
@@ -7989,23 +8597,11 @@ XT_TOMB="$ROOT/examples/archived-trip-demo/travelers/per-4f1c.md"
 XT_SPLIT="$ROOT/examples/people-library-demo/travelers/noor.md"
 XT_STAR='⭐'
 
-# xt_class — the classification, read LIVE. Emits "label<TAB>class<TAB>scope<TAB>section".
-# Fields are taken BY INDEX, never row-wide: a row-wide match would read a class token
-# out of the rationale column, which names other classes in several rows.
-xt_class() {
-  awk -F'|' '
-    NF < 8 { next }
-    {
-      num = $2; gsub(/[ \t]/, "", num)
-      if (num !~ /^[0-9]+$/) next
-      if (!match($3, /`[^`]+`/)) next
-      lbl = substr($3, RSTART + 1, RLENGTH - 2)
-      sec = $4; gsub(/^[ \t]+|[ \t]+$/, "", sec)
-      cls = $5; gsub(/[ \t*]/, "", cls)
-      scp = $7; gsub(/[ \t`]/, "", scp)
-      print lbl "\t" cls "\t" scp "\t" sec
-    }' "$1"
-}
+# xt_class <data-model> — the classification, read LIVE. Emits
+# "label<TAB>class<TAB>scope<TAB>section<TAB>num". A PROJECTION of group FT's ft_rows, which takes
+# every field by index and never row-wide: a row-wide match would read a class token out of the
+# rationale column, which names other classes in several rows.
+xt_class() { ft_rows "$1" | awk -F'\t' '{ print $3 "\t" $4 "\t" $6 "\t" $2 "\t" $1 }'; }
 
 # xt_bullets <file> <honour_star> — emits "label<TAB>value<TAB>heading" per intake bullet.
 # honour_star=0 reproduces the MEASURED miss: every starred bullet vanishes.
@@ -8038,7 +8634,9 @@ for xt_f in "$XT_DM" "$XT_CMD" "$XT_A" "$XT_B" "$XT_DANA" "$XT_TOMB" "$XT_SPLIT"
 done
 
 XT_CLASSFILE="$WORK/xt-class.tsv"
+XT_ROWS="$WORK/xt-rows.tsv"
 if [ "$XT_OK" -eq 1 ]; then
+  ft_rows "$XT_DM" > "$XT_ROWS"
   xt_class "$XT_DM" > "$XT_CLASSFILE"
   XT_NCLASS="$(grep -c '[^[:space:]]' "$XT_CLASSFILE" || true)"
   XT_NPERSON="$(awk -F'\t' '$2 == "PERSON"' "$XT_CLASSFILE" | grep -c '[^[:space:]]' || true)"
@@ -8060,30 +8658,28 @@ if [ "$XT_OK" -eq 1 ]; then
   # classify has no class to take. The verb's own totality refusal makes an
   # unreachable NAMED label a refusal, so the denominator must not be the parse's
   # own output — which is what this arm and XT2 together establish.
-  XT_UNCL=""
-  XT_SEEN=0
-  for xt_f in "$XT_A" "$XT_B"; do
-    while IFS="$(printf '\t')" read -r xt_l _ xt_h; do
-      [ -n "$xt_l" ] || continue
-      XT_SEEN=$((XT_SEEN + 1))
-      if ! awk -F'\t' -v l="$xt_l" '$1 == l { f = 1 } END { exit f ? 0 : 1 }' "$XT_CLASSFILE"; then
-        # a bullet under a heading the table names no section for carries no
-        # classified field — the trip-local override block is the shipped instance
-        if awk -F'\t' -v h="$xt_h" '
-             { s = $4 } index(h, s) == 1 { f = 1 } END { exit f ? 0 : 1 }' "$XT_CLASSFILE"; then
-          case " $XT_UNCL " in *" $xt_l "*) ;; *) XT_UNCL="$XT_UNCL $xt_l" ;; esac
-        fi
-      fi
-    done <<EOF
-$(xt_bullets "$xt_f" 1)
-EOF
-  done
+  # Every bullet is RESOLVED on (section, label) through ft_resolve, with the denominator taken
+  # from the extractor rather than from the resolver. A bullet that resolves NONE is unclassified
+  # only when some row's section LEADS its heading — the trip-local override block is the shipped
+  # instance of a heading the table names no section for — and one that resolves AMBIG is FT2's
+  # failure seen from here.
+  XT1_RES="$( { xt_bullets "$XT_A" 1; xt_bullets "$XT_B" 1; } | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve "$XT_ROWS")"
+  XT_SEEN="$( { xt_bullets "$XT_A" 1; xt_bullets "$XT_B" 1; } | grep -c '[^[:space:]]')"
+  XT_NRES="$(printf '%s\n' "$XT1_RES" | grep -c '[^[:space:]]')"
+  XT_AMB="$(printf '%s\n' "$XT1_RES" | awk -F'\t' '$1 == "AMBIG" && !s[$4]++ { printf " %s (rows %s)", $4, $2 }')"
+  XT_UNCL="$(printf '%s\n' "$XT1_RES" | awk -F'\t' "$FT_LEAD_FN"'
+      FILENAME == ARGV[1] { if (!($2 in sec)) { sec[$2] = 1; ns++; sa[ns] = $2 }; next }
+      $1 == "NONE" { for (i = 1; i <= ns; i++) if (ft_lead(sa[i], $3)) { if (!u[$4]++) printf " %s", $4; break } }' "$XT_ROWS" -)"
   if [ "$XT_SEEN" -eq 0 ]; then
     FAIL "XT1: the extractor found 0 bullets across the two nominated fixtures — the denominator is empty, so a clean verdict here would certify nothing"
+  elif [ "$XT_NRES" -ne "$XT_SEEN" ]; then
+    FAIL "XT1: the resolver answered $XT_NRES line(s) for $XT_SEEN bullet(s) — the resolution is short, so a clean verdict here would rest on bullets that were never resolved"
+  elif [ -n "$XT_AMB" ]; then
+    FAIL "XT1: bullet(s) that resolve to MORE THAN ONE row:$XT_AMB — two rows share the label under sections that both lead the heading, which is FT2's failure; the partition cannot take a class from a field the key does not single out"
   elif [ -n "$XT_UNCL" ]; then
     FAIL "XT1: label(s) under a classified section that the live table does not cover:$XT_UNCL — the partition takes a field's class and scope, so an unclassified label under a classified section is a field the verb has no rule for"
   else
-    PASS "XT1: all $XT_SEEN bullet(s) across the two nominated fixtures either resolve to a class and a scope in the live table, or sit under a heading the table names no section for. The partition's class argument is total over this pair, and the denominator is non-zero so the verdict is a measurement"
+    PASS "XT1: all $XT_SEEN bullet(s) across the two nominated fixtures either resolve ONE, on (section, label), to a class and a scope in the live table, or sit under a heading no section of the table leads. The partition's class argument is total over this pair, and the denominator is non-zero so the verdict is a measurement"
   fi
 
   # ── XT2 — the star-decorated-bullet miss. MUST FIRE. ──────────────────────────
@@ -8103,13 +8699,13 @@ EOF
   XT_BLOCKDUP=0
   XT_SLOTDUP=0
   for xt_f in "$XT_A" "$XT_B"; do
-    xt_bullets "$xt_f" 1 > "$WORK/xt-b.tsv"
-    XT_D="$(awk -F'\t' '
-        NR == FNR { cls[$1] = $2; scp[$1] = $3; next }
-        (cls[$1] == "PERSON" || cls[$1] == "DEFAULT") &&
-        $2 != "" && $2 != "—" && $2 != "-" && $2 !~ /^\[.*\]$/ { n[$1]++ }
-        END { for (l in n) if (n[l] > 1) print l "\t" scp[l] }' \
-        "$XT_CLASSFILE" "$WORK/xt-b.tsv")"
+    # The MOVES set is keyed by the resolved row NUMBER, so a label two rows share cannot pool
+    # one row's repetitions with the other's.
+    XT_D="$(xt_bullets "$xt_f" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 }' | ft_resolve "$XT_ROWS" | awk -F'\t' '
+        FILENAME == ARGV[1] { cls[$1] = $4; scp[$1] = $6; lab[$1] = $3; next }
+        $1 == "ONE" && (cls[$2] == "PERSON" || cls[$2] == "DEFAULT") &&
+        $5 != "" && $5 != "—" && $5 != "-" && $5 !~ /^\[.*\]$/ { n[$2]++ }
+        END { for (k in n) if (n[k] > 1) print lab[k] "\t" scp[k] }' "$XT_ROWS" -)"
     xt_nb="$(printf '%s\n' "$XT_D" | awk -F'\t' '$2 == "block"' | grep -c '[^[:space:]]' || true)"
     xt_ns="$(printf '%s\n' "$XT_D" | awk -F'\t' '$2 == "slot"' | grep -c '[^[:space:]]' || true)"
     XT_BLOCKDUP=$((XT_BLOCKDUP + xt_nb))
@@ -8134,16 +8730,16 @@ EOF
     "$ROOT/templates/traveler-intake.template.md" 2>/dev/null \
     | awk '/^## / { h = substr($0, 4); sub(/[ \t\r]+$/, "", h); print h }' | sort -u > "$XT_HEADS"
   XT_NH="$(grep -c '[^[:space:]]' "$XT_HEADS" || true)"
-  XT_EXACT="$(awk -F'\t' 'NR == FNR { s[$4]; next } ($0 in s) { n++ } END { print n + 0 }' \
-    "$XT_CLASSFILE" "$XT_HEADS")"
-  XT_LEAD="$(awk -F'\t' '
-      NR == FNR { s[$4]; next }
-      { for (k in s) if (index($0, k) == 1) { n++; break } }
-      END { print n + 0 }' "$XT_CLASSFILE" "$XT_HEADS")"
+  XT_EXACT="$(awk -F'\t' 'FILENAME == ARGV[1] { s[$2]; next } ($0 in s) { n++ } END { print n + 0 }' \
+    "$XT_ROWS" "$XT_HEADS")"
+  XT_LEAD="$(awk -F'\t' "$FT_LEAD_FN"'
+      FILENAME == ARGV[1] { s[$2]; next }
+      { for (k in s) if (ft_lead(k, $0)) { n++; break } }
+      END { print n + 0 }' "$XT_ROWS" "$XT_HEADS")"
   if [ "$XT_NH" -eq 0 ]; then
     FAIL "XT4: MUST FIRE — 0 section headings were read across the forms and fixtures, so neither reading had anything to match and the key is untested"
   elif [ "$XT_LEAD" -gt "$XT_EXACT" ]; then
-    PASS "XT4: MUST FIRE — over $XT_NH distinct heading(s), leading-segment section matching resolves $XT_LEAD where exact equality resolves $XT_EXACT. That gap IS the (section, label) hazard: the forms render a repeated block as a heading carrying a trailing gloss, so an exact-equality section key silently drops every block-scoped field — which is the whole population rule 11(f)'s scoping exists to admit"
+    PASS "XT4: MUST FIRE — over $XT_NH distinct heading(s), token-bounded leading-segment section matching — ft_lead, the rule every resolving group shares — resolves $XT_LEAD where exact equality resolves $XT_EXACT. That gap IS the (section, label) hazard: the forms render a repeated block as a heading carrying a trailing gloss, so an exact-equality section key silently drops every block-scoped field — which is the whole population rule 11(f)'s scoping exists to admit"
   else
     FAIL "XT4: MUST FIRE — leading-segment matching resolved $XT_LEAD and exact equality resolved $XT_EXACT over $XT_NH heading(s). With no gap this arm has not shown the two keys differ, so XT3's scope verdict rests on a section key of unknown behaviour"
   fi
@@ -8330,10 +8926,11 @@ EOF
   # ── XT12 — the key the parse matches on: `(section, label)`, leading-segment ──
   # XT4 measures that the two candidate section keys DIFFER on the shipped headings;
   # this arm grades that the section still SAYS which one it takes. The arity is
-  # reported live rather than asserted, because that is the honest statement: label
-  # and pair are extensionally equal on today's table, so a wrong key resolves
-  # identically and lands as-built — which is why the stated key is the only surface
-  # on which it can be caught at all.
+  # reported live rather than asserted. Where label and pair are extensionally equal a
+  # wrong key resolves identically and lands as-built, which is why the stated key is
+  # the only surface on which it can be caught; where pairs exceed labels, some label
+  # is carried by more than one row and only the pair key resolves it — the state
+  # group FT's key arm keeps unambiguous.
   XT_KEYLBL="$(cut -f1 "$XT_CLASSFILE" | sort -u | grep -c '[^[:space:]]' || true)"
   XT_KEYPAIR="$(cut -f1,4 "$XT_CLASSFILE" | sort -u | grep -c '[^[:space:]]' || true)"
   XT_KEYSTATED=0
@@ -8345,7 +8942,7 @@ EOF
   if [ "$XT_SECN" -eq 0 ] || [ "$XT_KEYLBL" -eq 0 ]; then
     FAIL "XT12: the \`## extract\` section read $XT_SECN line(s) and the live table $XT_KEYLBL distinct label(s) — with either at zero this arm would be grading an empty scan"
   elif [ "$XT_KEYSTATED" -eq 1 ] && [ "$XT_KEYLEAD" -eq 1 ] && [ "$XT_KEYWHY" -eq 1 ]; then
-    PASS "XT12: the section still states the key as \`(section, label)\` rather than the label alone, still resolves the section as a LEADING SEGMENT of the enclosing heading, and still carries the reason — exact equality drops every repeated block, which is where this verb's whole \`block\`-scoped population lives. Measured live on the same table: $XT_KEYLBL distinct label(s) against $XT_KEYPAIR distinct (section, label) pair(s). At equality the two keys resolve identically TODAY, which is exactly why a wrong key would land as-built and stay invisible — the stated key is the only surface that can catch it, and until this arm nothing read it"
+    PASS "XT12: the section still states the key as \`(section, label)\` rather than the label alone, still resolves the section as a LEADING SEGMENT of the enclosing heading, and still carries the reason — exact equality drops every repeated block, which is where this verb's whole \`block\`-scoped population lives. Measured live on the same table: $XT_KEYLBL distinct label(s) against $XT_KEYPAIR distinct (section, label) pair(s). Where the two are equal the keys resolve identically and a wrong key would land as-built and stay invisible; where pairs exceed labels, at least one label is carried by more than one row and only the pair key resolves it — which is the state group FT's key arm keeps unambiguous"
   else
     FAIL "XT12: the section reads key-stated=$XT_KEYSTATED leading-segment=$XT_KEYLEAD reason-stated=$XT_KEYWHY, over $XT_KEYLBL distinct label(s) and $XT_KEYPAIR distinct pair(s). Label-only keying mis-resolves the first time two rows share a label — the corpus already warns of two \`Applies to\` fields sharing one — and exact-equality section matching drops every repeated block outright"
   fi
@@ -8369,13 +8966,12 @@ fi
 # reads that axis LIVE and holds no copy of it, the same live-read RL0 and XT0 take.
 #
 # ── THE COLUMN POSITION IS THE HAZARD ───────────────────────────────────────────
-# `rl_class` and `xt_class` take their fields BY INDEX, reading $2 $3 $4 $5 $7. `Horizon`
-# sits immediately after `Scope` so all four are preserved and the rationale column moves
-# from $8 to $9 — which RL3's own extractor reads, and which moved with it. Placed anywhere
-# EARLIER the column shifts the class or scope field and both of those groups grade a
-# class-blind table WHILE THE SUITE REPORTS GREEN. HZ0's arms are aimed at that: a run that
-# parsed the axis into an empty or single-valued set fails here rather than passing every
-# arm below over nothing.
+# The table is read BY INDEX in group FT's ft_rows, which every group reading it goes through,
+# so a column inserted anywhere shifts the class, scope or horizon field for all of them at once
+# and they would grade a class-blind table WHILE THE SUITE REPORTS GREEN. FT3's closed
+# vocabulary per axis is where that lands first; HZ0's arms are aimed at it too: a run that
+# parsed the axis into an empty or single-valued set fails here rather than passing every arm
+# below over nothing.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "HZ — the validity-horizon axis, and the tracked instance that exercises the mark"
@@ -8386,28 +8982,17 @@ HZ_FIX="$ROOT/examples/people-library-demo/people/psn-9d42.md"
 HZ_STAR='⭐'
 HZ_MARK='VALID-THROUGH'
 
-# hz_class — the classification, read LIVE. Emits "label<TAB>horizon<TAB>scope".
-# Fields are taken BY INDEX, in the style of its two siblings and with the same numeric-row
-# and code-span guards; the NF guard is 9 because the row must reach the horizon column.
-hz_class() {
-  awk -F'|' '
-    NF < 9 { next }
-    {
-      num = $2; gsub(/[ \t]/, "", num)
-      if (num !~ /^[0-9]+$/) next
-      if (!match($3, /`[^`]+`/)) next
-      lbl = substr($3, RSTART + 1, RLENGTH - 2)
-      scp = $7; gsub(/[ \t`]/, "", scp)
-      hor = $8; gsub(/[ \t`*]/, "", hor)
-      print lbl "\t" hor "\t" scp
-    }' "$1"
-}
+# hz_class <data-model> — the classification, read LIVE. Emits "label<TAB>horizon<TAB>scope". A
+# PROJECTION of group FT's ft_rows, with the same numeric-row and code-span guards its siblings take.
+hz_class() { ft_rows "$1" | awk -F'\t' '{ print $3 "\t" $7 "\t" $6 }'; }
 
-# hz_marked <file> — emits "label<TAB>scope-of-that-label" for every bullet carrying the
-# mark. The star prefix is stripped with a dynamic sub() rather than by arithmetic on
-# length(), for the reason group LC exists.
+# hz_marked <file> — emits "heading<TAB>label" for every bullet carrying the mark, the heading
+# trimmed as ft_heads trims it, so HZ3 resolves each marked bullet on (section, label). The star
+# prefix is stripped with a dynamic sub() rather than by arithmetic on length(), for the reason
+# group LC exists.
 hz_marked() {
   awk -v star="$HZ_STAR" -v mark="$HZ_MARK" '
+    /^## / { head = substr($0, 4); sub(/[ \t\r]+$/, "", head); next }
     /^- / {
       rest = substr($0, 3)
       sub("^" star "[ \t]*", "", rest)
@@ -8415,7 +9000,7 @@ hz_marked() {
       lbl = substr(rest, 3, RLENGTH - 5)
       val = substr(rest, RLENGTH + 1)
       if (index(val, mark) == 0) next
-      print lbl
+      print head "\t" lbl
     }' "$1"
 }
 
@@ -8426,7 +9011,9 @@ for hz_f in "$HZ_DM" "$HZ_FIX"; do
 done
 
 HZ_CLASSFILE="$WORK/hz-class.tsv"
+HZ_ROWS="$WORK/hz-rows.tsv"
 if [ "$HZ_OK" -eq 1 ]; then
+  ft_rows "$HZ_DM" > "$HZ_ROWS"
   hz_class "$HZ_DM" > "$HZ_CLASSFILE"
   HZ_NAXIS="$(grep -c '[^[:space:]]' "$HZ_CLASSFILE" || true)"
   HZ_NREQ="$(awk -F'\t' '$2 == "required"' "$HZ_CLASSFILE" | grep -c '[^[:space:]]' || true)"
@@ -8469,20 +9056,20 @@ if [ "$HZ_OK" -eq 1 ]; then
   # horizon's home field by leaving it EMPTY, so the mark had no tracked instance at all.
   HZ_MARKED="$(hz_marked "$HZ_FIX" | sort -u)"
   HZ_NMARKED="$(printf '%s\n' "$HZ_MARKED" | grep -c '[^[:space:]]' || true)"
-  HZ_SLOT=0
-  HZ_BLOCK=0
-  HZ_UNCLASSED=""
-  while IFS= read -r hz_l; do
-    [ -n "$hz_l" ] || continue
-    hz_s="$(awk -F'\t' -v l="$hz_l" '$1 == l { print $3; exit }' "$HZ_CLASSFILE")"
-    case "$hz_s" in
-      slot)  HZ_SLOT=$((HZ_SLOT + 1)) ;;
-      block) HZ_BLOCK=$((HZ_BLOCK + 1)) ;;
-      *)     HZ_UNCLASSED="$HZ_UNCLASSED $hz_l" ;;
-    esac
-  done <<EOF
-$HZ_MARKED
-EOF
+  # Each marked bullet is RESOLVED on (section, label) through ft_resolve and takes its scope from
+  # the ONE row it reaches; a bullet resolving NONE or AMBIG has no scope and is reported as such.
+  HZ_RES="$(printf '%s\n' "$HZ_MARKED" | awk 'NF' | ft_resolve "$HZ_ROWS")"
+  HZ_NRES="$(printf '%s\n' "$HZ_RES" | grep -c '[^[:space:]]')"
+  HZ3_SC="$(printf '%s\n' "$HZ_RES" | awk -F'\t' '
+      FILENAME == ARGV[1] { scp[$1] = $6; next }
+      NF < 4 { next }
+      $1 == "ONE" && scp[$2] == "slot"  { ns++; next }
+      $1 == "ONE" && scp[$2] == "block" { nb++; next }
+      { un = un " " $4 }
+      END { printf "%d\t%d\t%s\n", ns + 0, nb + 0, un }' "$HZ_ROWS" -)"
+  HZ_SLOT="$(printf '%s\n' "$HZ3_SC" | cut -f1)"
+  HZ_BLOCK="$(printf '%s\n' "$HZ3_SC" | cut -f2)"
+  HZ_UNCLASSED="$(printf '%s\n' "$HZ3_SC" | cut -f3)"
   # Control arm, MUST FIRE: the same extractor over the SAME fixture with the mark token
   # replaced by one no bullet carries. A run where this returns non-zero is matching on
   # something other than the mark, and HZ3's counts would be an artefact of that.
@@ -8491,12 +9078,12 @@ EOF
             if (!match(rest, /^\*\*[^:*]+:\*\*/)) next
             if (index(substr(rest, RLENGTH + 1), mark) == 0) next
             n++ } END { print n+0 }' "$HZ_FIX")"
-  if [ "$HZ_NMARKED" -eq 0 ] || [ "$HZ_CTL" -ne 0 ]; then
-    FAIL "HZ3: the extractor read $HZ_NMARKED marked bullet(s) and its specificity arm read $HZ_CTL (expected 0) — with either wrong, the scope coverage below is an artefact of a broken probe rather than a property of the fixture"
+  if [ "$HZ_NMARKED" -eq 0 ] || [ "$HZ_CTL" -ne 0 ] || [ "$HZ_NRES" -ne "$HZ_NMARKED" ]; then
+    FAIL "HZ3: the extractor read $HZ_NMARKED marked bullet(s), the resolver answered $HZ_NRES of them, and its specificity arm read $HZ_CTL (expected 0) — with either wrong, the scope coverage below is an artefact of a broken probe rather than a property of the fixture"
   elif [ -n "$HZ_UNCLASSED" ]; then
-    FAIL "HZ3: marked bullet(s) whose label the live classification does not scope:$HZ_UNCLASSED — a mark on a field with no scope has no rule for what a lapsed value does to the composed source"
+    FAIL "HZ3: marked bullet(s) the live classification does not resolve ONE on (section, label), so has no scope for:$HZ_UNCLASSED — a mark on a field with no scope has no rule for what a lapsed value does to the composed source"
   elif [ "$HZ_SLOT" -ge 1 ] && [ "$HZ_BLOCK" -ge 1 ]; then
-    PASS "HZ3: the mark is exercised in a TRACKED instance across BOTH field scopes — $HZ_SLOT slot-scoped and $HZ_BLOCK block-scoped marked bullet(s) over $HZ_NMARKED total, each scoped from the live table rather than from a list here. Both are needed because a lapsed value behaves differently on each: slot-scoped composes UNKNOWN and reports, block-scoped is RETAINED in the union and reports. The specificity arm read $HZ_CTL, so these counts are a measurement"
+    PASS "HZ3: the mark is exercised in a TRACKED instance across BOTH field scopes — $HZ_SLOT slot-scoped and $HZ_BLOCK block-scoped marked bullet(s) over $HZ_NMARKED total, each resolved on (section, label) and scoped from the ONE row it reaches in the live table rather than from a list here. Both are needed because a lapsed value behaves differently on each: slot-scoped composes UNKNOWN and reports, block-scoped is RETAINED in the union and reports. The specificity arm read $HZ_CTL, so these counts are a measurement"
   else
     FAIL "HZ3: the tracked fixture exercises $HZ_SLOT slot-scoped and $HZ_BLOCK block-scoped marked bullet(s) — both must be non-zero. Dropping either leaves one half of the scope rule graded by nothing, and the two halves fail in OPPOSITE directions: a wrongly-dropped slot value reads as never-answered, a wrongly-dropped block value deletes a constraint and the plan then grades compliant"
   fi
@@ -10502,10 +11089,11 @@ DH_CMD="$ROOT/skills/trip-record/SKILL.md"
 DH_HEADING="What a record does not hold"
 DH_VERB="history"
 
-# dh_class_labels <doc> <class> — the labels the classification types as <class>, read
-# LIVE and by INDEX. rl_class already emits "label<TAB>class<TAB>scope" from that table and
-# is reused rather than re-derived: a second extractor over the same columns would be a
-# second thing to keep aligned with a table whose column order is load-bearing.
+# dh_class_labels <doc> <class> — the labels the classification types as <class>, read LIVE.
+# rl_class, a projection of group FT's ft_rows, is reused rather than re-derived: a second
+# extractor over the same columns would be a second thing to keep aligned with a table whose
+# column order is load-bearing. DH0 sizes its population from it; DH2 grades FIELDS, resolved on
+# (section, label), because a label two rows share would otherwise lend one row's class to both.
 dh_class_labels() { rl_class "$1" | awk -F'\t' -v c="$2" '$2 == c { print $1 }' | sort -u; }
 
 # dh_form_labels <form> — the field labels a shipped intake form asks for. rl_bullets is
@@ -10565,16 +11153,34 @@ if [ "$DH_OK" -eq 1 ]; then
   # and the reason it is graded on the FORM rather than on the fence is that the fence
   # constrains frontmatter while the record's answers are body bullets: a trip-scoped
   # question could be added to the durable form without touching a schema at all.
-  DH_LEAK="$(comm -12 <(printf '%s\n' "$DH_PLBL") <(printf '%s\n' "$DH_SCOPED"))"
+  # Both forms' bullets are RESOLVED on (section, label) against the live table. The leak is the
+  # distinct rows of class TRIP or DEST a bullet on the durable form reaches; the sensitivity arm is
+  # the same count on the trip form. A bullet reaching no row, or two, is a FAIL of its own and is
+  # graded FIRST, because an unresolved field has no class to be excluded by.
+  DH_ROWS="$WORK/dh-rows.tsv"
+  ft_rows "$RL_DM" > "$DH_ROWS"
+  dh_resolve() { rl_bullets "$1" 1 | awk -F'\t' '{ print $3 "\t" $1 }' | ft_resolve "$DH_ROWS"; }
+  dh_scoped_rows() {   # dh_scoped_rows <resolution> -> distinct TRIP/DEST rows reached, as labels
+    printf '%s\n' "$1" | awk -F'\t' 'FILENAME == ARGV[1] { cls[$1] = $4; next }
+      $1 == "ONE" && (cls[$2] == "TRIP" || cls[$2] == "DEST") && !s[$2]++ { print $4 }' "$DH_ROWS" -
+  }
+  DH_PRES="$(dh_resolve "$DH_PERSON_FORM")"
+  DH_TRES="$(dh_resolve "$DH_TRIP_FORM")"
+  DH_NBUL="$( { rl_bullets "$DH_PERSON_FORM" 1; rl_bullets "$DH_TRIP_FORM" 1; } | grep -c '[^[:space:]]')"
+  DH_NRES1="$(printf '%s\n%s\n' "$DH_PRES" "$DH_TRES" | awk -F'\t' '$1 == "ONE" { n++ } END { print n + 0 }')"
+  DH_UNRES="$(printf '%s\n%s\n' "$DH_PRES" "$DH_TRES" | awk -F'\t' 'NF >= 4 && $1 != "ONE" { printf "%s (%s, under \"%s\") ", $4, $1, $3 }')"
+  DH_LEAK="$(dh_scoped_rows "$DH_PRES")"
   DH_NLEAK="$(printf '%s\n' "$DH_LEAK" | grep -c '[^[:space:]]' || true)"
-  DH_CTL="$(comm -12 <(printf '%s\n' "$DH_TLBL") <(printf '%s\n' "$DH_SCOPED"))"
+  DH_CTL="$(dh_scoped_rows "$DH_TRES")"
   DH_NCTL="$(printf '%s\n' "$DH_CTL" | grep -c '[^[:space:]]' || true)"
-  if [ "$DH_NCTL" -eq 0 ]; then
-    FAIL "DH2: MUST FIRE — the SENSITIVITY arm returned zero. The same intersection over the trip intake form found none of the $DH_NSCOPED trip/dest label(s) among its $DH_NTLBL field label(s), which cannot be true of a form whose whole subject is one trip. The subject arm's zero is therefore an empty scan rather than a clean form, and this group reports the probe UNUSABLE rather than the corpus clean. The likeliest cause is a label-text divergence between the classification and the forms, which would make BOTH intersections empty"
+  if [ "$DH_NRES1" -ne "$DH_NBUL" ]; then
+    FAIL "DH2: $((DH_NBUL - DH_NRES1)) of the $DH_NBUL field bullet(s) on the two intake forms do not resolve ONE, on (section, label), to a classified row: ${DH_UNRES}— a field that reaches no row, or two, has no class for the exclusion to be graded on, so the zero below would be about the fields that happened to resolve rather than the form"
+  elif [ "$DH_NCTL" -eq 0 ]; then
+    FAIL "DH2: MUST FIRE — the SENSITIVITY arm returned zero. The same resolution over the trip intake form reached none of the classification's TRIP or DEST rows among its $DH_NTLBL field label(s), which cannot be true of a form whose whole subject is one trip. The subject arm's zero is therefore an empty scan rather than a clean form, and this group reports the probe UNUSABLE rather than the corpus clean. The likeliest cause is a label or heading divergence between the classification and the forms, which would make BOTH counts empty"
   elif [ "$DH_NLEAK" -eq 0 ]; then
-    PASS "DH2: the durable intake form emits ZERO trip- or destination-scoped labels — none of its $DH_NPLBL field label(s) is among the $DH_NSCOPED the classification types TRIP or DEST. The zero is a measurement: the SENSITIVITY arm, the identical intersection over the trip intake form, returned $DH_NCTL on the same run. This is the negative assertion \`$DH_SCHEMA_REL\` says is owed, and it is what makes trip history structurally absent from the durable form rather than absent because successive authors remembered the bullet"
+    PASS "DH2: the durable intake form reaches ZERO trip- or destination-scoped fields — every one of its bullets resolves ONE, on (section, label), and none of the rows reached is typed TRIP or DEST by the classification. The zero is a measurement: the SENSITIVITY arm, the identical resolution over the trip intake form, reached $DH_NCTL such field(s) on the same run. This is the negative assertion \`$DH_SCHEMA_REL\` says is owed, and it is what makes trip history structurally absent from the durable form rather than absent because successive authors remembered the bullet"
   else
-    FAIL "DH2: $DH_NLEAK label(s) on the durable intake form are typed TRIP or DEST by the classification: $(printf '%s' "$DH_LEAK" | tr '\n' ' ')— the durable form is asking a question that is only meaningful relative to one trip or one destination, so its answer has no correct value to carry across trips. The sensitivity arm returned $DH_NCTL on the same run, so this is a real finding rather than a broken probe. Either the label belongs on the trip form, or its row in the classification is wrong; the two cannot both stand"
+    FAIL "DH2: $DH_NLEAK field(s) on the durable intake form resolve to rows the classification types TRIP or DEST: $(printf '%s' "$DH_LEAK" | tr '\n' ' ')— the durable form is asking a question that is only meaningful relative to one trip or one destination, so its answer has no correct value to carry across trips. The sensitivity arm returned $DH_NCTL on the same run, so this is a real finding rather than a broken probe. Either the field belongs on the trip form, or its row in the classification is wrong; the two cannot both stand"
   fi
 
   # ── DH3 — THE READER-FACING HALF, at both of its homes. A structural property nobody can
@@ -11107,6 +11713,18 @@ fi
 md_flips st_dm_starred 'ST3'        st3_assert "$ST_MD_FORM" "$ST_DM"
 md_flips st_surfaces   'ST3-marked' st3_assert "$ST_MD_FORM" "$ST_DM"
 md_flips st_dm_starred 'ST4'        st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
+# ── Group FT's arms and the resolver ST's pair rests on, REGISTERED. ST3 and ST4 resolve every
+# bullet through ft_resolve, so removing it must flip them too — which is why their MNS and UNS
+# iterate the pairs rather than the resolver's output. The document half is opted out as ST's is,
+# and CTL-FT-EXTRACT is its compensating control.
+md_flips ft_resolve    'ST3-resolve' st3_assert "$ST_MD_FORM" "$ST_DM"
+md_flips ft_resolve    'ST4-resolve' st4_assert "$ST_ALLMARKED" "$ST_DM" "$ST_NREAD"
+md_flips ft_rows       'FT1'        ft_count_assert "$FT_DOC"
+md_flips ft_rows       'FT2'        ft_key_assert "$FT_DOC"
+md_flips ft_rows       'FT3'        ft_vocab_assert "$FT_DOC"
+md_flips ft_resolve    'FT4'        ft_resolve_assert
+md_flips ft_resolve    'FT5'        ft_cover_assert "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FORM_C"
+md_flips ft_region     'FT6'        ft_rule_assert "$FT_DOC" "$FT_SKILL"
 
 # ── Group CTL's coverage arm, REGISTERED on BOTH sides of what it grades — the reader and the
 # thing read. One subject alone would leave half the assertion ungraded.

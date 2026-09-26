@@ -2416,7 +2416,10 @@ parse loses it and every downstream count still looks plausible.
 a distinct `(section, label)` pair in those terms, and this verb matches on that pair: the `label` is
 the bullet's own label, and the `section` is the classification table's `Section` value for which the
 enclosing `## ` heading's text is that value **read as a leading segment** — the forms render
-`## Needs — the must-haves` where the table says `Needs`. **Exact equality on the section would miss
+`## Needs — the must-haves` where the table says `Needs`. That segment ends at a token boundary, the
+rule `reference/data-model.md` § *The denominator* states: the rest of the heading is empty, or opens
+(after optional whitespace) on a character that is neither a letter, a digit nor whitespace — so
+`Destination` does not lead `Destination leanings`. **Exact equality on the section would miss
 every repeated block**, which is where this verb's whole `block`-scoped population lives, and
 matching the label alone is sound only for as long as no two rows share one. A bullet under a heading
 the table names no section for — a trip-local override block is the shipped instance — carries no
