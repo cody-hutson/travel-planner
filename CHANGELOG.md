@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
+## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 
 This release finishes what earlier corrective releases left partly done. Two defects changed how the
 engine behaves. The rest were documents stating a rule their own home no longer held, and each now
