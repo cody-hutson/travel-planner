@@ -76,7 +76,12 @@
 #        boundary for every reader of its bullets, through ONE resolver shared with FT and RL,
 #        and a boundary that does not resolve is a read of NOTHING, never of the whole file.
 #        The population is a declared list, asserted to contain the starred pass's forms and
-#        to account for every tracked template — never one discovered by fence.
+#        to account for every tracked template — never one discovered by fence. A form-version
+#        2 form is graded PER REGION: every heading of level 2 or deeper is a region, resolved
+#        to one row of the writer table its address names — by name, marker, parent, then the
+#        default row — through group FT's ft_regions; its fields join only in interviewable
+#        regions, and back; a region no writer owns is a declared exclusion, reported per
+#        region; and the verdict each row of that table realizes is pinned, keyed by its Block.
 #        NEITHER of the first two compares the count against a shipping-path producer, because
 #        the starred count has none; that boundary is stated in the group rather than left to
 #        be inferred. Every surface is found by MARKUP SHAPE and never by line number, and each
@@ -113,7 +118,11 @@
 #        the conformance arm introduces a canonical value: the first is keyed on bullet
 #        presence and the second on each declaration's own text, so a new intake form costs
 #        ONE LINE in the conformance population, and one in ST_TEMPLATES where it has a
-#        starred pass.
+#        starred pass. A further BLOCK-OWNED form costs its fence, its own writer table, its
+#        classification rows, that line and a pin of the verdicts its rows realize, and no
+#        other code here — on two preconditions: ST_CF_OWN names ONE file, so that table
+#        must live in CLAUDE.md; and no other form's write-ownership anchor may lead that
+#        table's heading, token-bounded, nor may its anchor lead another's.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
@@ -3377,14 +3386,24 @@ fi
 # comment lines is what keeps it inside the contract as written, which grades the keys a
 # fence carries and not how its lines are laid out.
 ST_CF_FORMS="templates/traveler-intake.template.md
-templates/person-intake.template.md"
-# trip-context is block-owned: its questions belong to whichever writer owns each region, so
-# it conforms per region under ADR-024 and waits for that region contract rather than being
-# graded whole-file on this one.
-ST_CF_EXCLUDED="templates/trip-context.template.md awaits-region-contract"
+templates/person-intake.template.md
+templates/trip-context.template.md"
+# No tracked template is excluded. trip-context is block-owned and joined the population on the
+# region contract (ADR-024), graded per region by the version-2 branch; the list stays declared,
+# and empty is a legal value for it.
+ST_CF_EXCLUDED=""
 # The contract's declared key set is read LIVE from the record's one worked fence, never
 # copied here — ST-CF0 grades that the record still declares one.
 ST_CF_DECL="$ROOT/reference/adr/ADR-023-interviewer-authored-home-and-form-contract.md"
+# THE CHARTER a version-2 form's `write-ownership:` key must address: ONE file, so a later
+# block-owned form's writer table lives in it too. The fence names it repository-relative.
+ST_CF_OWN="$ROOT/CLAUDE.md"
+# THE VERSION-2 KEY SET, as a DELTA and never as a list: ADR-023's worked fence read live, with its
+# one `boundary` key exchanged IN PLACE for the address key. A block-owned form has no single-cut
+# boundary (ADR-024 § 1), and its fence gains an address pointing at the writer table (ADR-024 2D).
+# These two names are the whole of what this file holds of that set.
+ST_CF_V2_DROP='boundary'
+ST_CF_V2_KEY='write-ownership'
 # The end-of-profile heading the skill surfaces match line-initially; question 2 grades it
 # against the boundary. It is a line PREFIX, never a whole line.
 ST_CF_HEAD='# END OF PROFILE'
@@ -3475,7 +3494,8 @@ st_cf_version() {
 # st_cf_v1_member <path> — a member of the population whose contract version is not 2. A
 # version-2 form is block-owned and has no single-cut boundary (ADR-024), so no boundary stop
 # applies to it; a member whose version cannot be read stays a version-1 member and its stop
-# fails CLOSED. No member declares version 2 on this tree, so today this is membership.
+# fails CLOSED. The trip-context form declares version 2, so it is a member and never a
+# version-1 member: every boundary stop reads it whole.
 st_cf_v1_member() { st_cf_is_member "$1" && [ "$(st_cf_version "$1")" != 2 ]; }
 
 # ST_CF_UNRES — the version-1 members whose boundary does not resolve, named ONCE. Every verdict
@@ -3533,6 +3553,10 @@ st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
 #   ft_under <rows> <headings>   the labelled rows whose section leads one of the headings
 #   ft_heads <file…>             every `## ` heading, with `## ` and trailing space, tab and CR
 #                                removed — the heading shape every caller hands the resolver
+#   ft_regions <form> <charter>  a block-owned form's REGIONS, each resolved to one row of the
+#                                writer table the form's own address names, with every field placed
+#                                in its region — the one computation of that contract, which group
+#                                ST grades and an interviewer reads. Its records are stated above it
 # The resolver knows nothing of boundaries, regions, indentation or forms. Callers filter
 # FIRST and then resolve. Both two-input readers key their first input on FILENAME rather than
 # on NR == FNR, so an EMPTY first input can never be read as the second one.
@@ -3602,6 +3626,239 @@ ft_under() {
     $3 != "" { for (i = 1; i <= nh; i++) if (ft_lead($2, hd[i])) { print; next } }' "$2" "$1"
 }
 ft_heads() { awk '/^## / { h = substr($0, 4); sub(/[ \t\r]+$/, "", h); print h }' "$@"; }
+
+# ft_regions <form> <charter> — the REGION CONTRACT of a block-owned form (ADR-024 decisions 1B, 1E and
+# 2D), computed ONCE, here, for every reader that needs it: group ST's conformance arm reads these
+# records to grade a version-2 form, and an interviewer deciding whether it may write a field reads the
+# same ones — which is what ADR-024's first driver asks, a boundary both readers compute identically,
+# rather than a second reader re-deriving the grammar from the table's prose. It knows no form and no
+# row by name. It resolves against the <charter> it is handed and REPORTS the path the form's address
+# names; checking that the two agree is the caller's, so a copy of the charter can stand in for it.
+#
+# EXTENT is the heading tree: every heading of level 2 or deeper, outside the frontmatter and outside a
+# fence, is a region — the heading and everything beneath it until the next heading of equal or higher
+# level. The WRITER TABLE is the one the form's `write-ownership:` key addresses, `<path> § <anchor>`,
+# each ` → ` segment of the anchor a token-bounded lead (ft_lead) of exactly one heading of the charter.
+#
+# A ROW'S CLASS IS READ FROM ITS WRITER AND BLOCK CELLS ONLY, never from any other column, which explains
+# and never declares. Writer: each `;`-clause is one condition; a clause naming two or more commands (code
+# spans opening on `/`) makes a writer SET; a cell naming a command is CMD; one naming none and carrying an
+# `agents/<name>.md` span is AGENT; anything else is NONE — no writer. Block: a heading span names a
+# region, a marker span (`[ENRICH]`) claims the headings carrying it, and a bold-label span (`**X:**`)
+# names a line. A row whose Block carries no span at all is a CATCH-ALL; the one catch-all naming exactly
+# one command in one clause is the DEFAULT row, and its command is the INTERVIEWER, spelled nowhere here.
+# A CMD row is YES when every clause names the interviewer alone, CONDITIONAL when some do, and OTHER
+# when none do — UNDECIDED when no default decides who the interviewer is.
+#
+# A REGION RESOLVES to the row naming it (same level, token-bounded lead), else to the one row carrying
+# its heading's marker, else to its parent's row, else to the default row. Two candidates at a step is a
+# finding, never a pick. Its verdict: no row, UNRESOLVED; a NONE row, EXCLUDED (no-writer) — ADR-024
+# decision 6, a declared exclusion; marked [DERIVED] or [ENRICH], itself or an ancestor, NO (marked);
+# a writer set, an agent or another command, NO; CONDITIONAL; else YES.
+#
+# REACH, per row: `addressed` (a heading or marker span), `default`, and the two no step of that
+# resolution can land on — `catch-all`, a spanless row that is not the default, and `label-only`, a row
+# whose Block names only a bold label. Those two are UNREACHABLE BY CONSTRUCTION, so a region can never
+# test their verdicts; the LABEL record is the one probe that measures a label-only row, counting the
+# lines of the form that open on its label, which must be none.
+#
+# TAB records, in this order:
+#   ADDRESS  <keys> <path> <anchor>            how many address keys the fence carries, and the value split at ` § `
+#   ANCHOR   <segment> <k>                     k = the charter's headings the segment leads, fenced lines skipped
+#   TABLE    <section> <header> <rows> <block-columns> <writer-columns>   charter lines; 0 when absent
+#   DEFAULT  <row> <command | why>             the default row and the interviewer, or 0 and why not
+#   ROW      <r> <writer-class> <class> <reach> <line> <commands> <conditions> <writer> <block> <other>
+#              <commands> and <conditions> run one per `;`-clause, joined by `;` and `; `; a clause's
+#              condition is its text with the command spans taken out — `at creation`, `thereafter`
+#   AMBIG    <line> <heading> <rows>           two or more rows name the heading
+#   UNMARKED <line> <heading> <marker> <n> <rows>  the heading's marker is carried by n rows, not one
+#   MARKDIS  <line> <heading> <marker> <row>   a named heading carries a marker its row does not
+#   PHANTOM  <row> <heading>                   a row names a heading the form does not carry
+#   REGION   <line> <end> <level> <row> <how> <verdict> <ground> <heading>
+#   FIELD    <line> <region> <section> <label>  a field-shaped bullet at any indent; <region> is the line of
+#              its innermost region, 0 above the first; <section> is its `## ` heading, the resolver's key
+#   BOLD     <line> <region> <label>            a line opening on a bold label: a field the key cannot see
+#   LABEL    <row> <label> <n> <first-line>     the form's lines opening on a row's bold-label span
+ft_regions() {
+  { cat "$2" 2>/dev/null; printf '\n\034\n'; cat "$1" 2>/dev/null; } |
+  awk -v akey="$ST_CF_V2_KEY" -v star="$FT_STAR" "$FT_LEAD_FN""$ST_CF_FENCE_FN"'
+    function hlevel(s) { match(s, /^#+/); return RLENGTH }
+    function htext(s) { sub(/^#+[ \t]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+    function cspans(s, out,   k) { k = 0; while (match(s, /`[^`]+`/)) { out[++k] = substr(s, RSTART + 1, RLENGTH - 2); s = substr(s, RSTART + RLENGTH) }; return k }
+    function nospans(s) { gsub(/`[^`]+`/, " ", s); gsub(/\([ \t]*\)/, " ", s); gsub(/[ \t]+/, " ", s); sub(/^ /, "", s); sub(/ $/, "", s); return s }
+    function splitrow(s, out,   k, i, t) {
+      gsub(/\\\|/, "\035", s); sub(/^[ \t]*\|/, "", s); sub(/\|[ \t\r]*$/, "", s)
+      k = split(s, out, "|")
+      for (i = 1; i <= k; i++) { t = out[i]; gsub(/\035/, "|", t); gsub(/\t/, " ", t); gsub(/^[ \t]+|[ \t]+$/, "", t); out[i] = t }
+      return k
+    }
+    !past && $0 == "\034" { past = 1; next }
+    !past { C[++nc] = $0; next }
+    { L[++n] = $0 }
+    END {
+      # The address, read from the fence of the form itself, as the shared helper bounds that fence.
+      cf_form_fence(L, n)
+      na = 0; ov = ""
+      if (CF_NF == 1 && CF_WHY == "") for (i = 1; i <= CF_NK; i++) if (CF_K[i] == akey) { na++; ov = CF_V[i] }
+      asp = index(ov, " § ")
+      opath = (asp > 0) ? substr(ov, 1, asp - 1) : ov
+      oanc = (asp > 0) ? substr(ov, asp + length(" § ")) : ""
+      printf "ADDRESS\t%d\t%s\t%s\n", na, (opath == "" ? "-" : opath), (oanc == "" ? "-" : oanc)
+      # The charter: its headings, fenced lines skipped, and the section the anchor leads to.
+      CF_ON = 0; nch = 0
+      for (i = 1; i <= nc; i++) {
+        if (cf_fence_step(C[i]) != "") continue
+        if (C[i] ~ /^#+[ \t]/) { nch++; chl[nch] = i; chv[nch] = hlevel(C[i]); cht[nch] = htext(C[i]) }
+      }
+      tgt = 0
+      if (oanc != "") {
+        nos = split(oanc, oseg, " → ")
+        for (s = 1; s <= nos; s++) {
+          kk = 0; kh = 0
+          for (i = 1; i <= nch; i++) if (ft_lead(oseg[s], cht[i])) { kk++; kh = i }
+          printf "ANCHOR\t%s\t%d\n", oseg[s], kk
+          if (kk == 1 && s == nos) tgt = kh
+        }
+      }
+      # The writer table: the first pipe line of that section is its header, one Block and one Writer
+      # column named there, and every pipe line after it until the first that is not one is a row.
+      thead = 0; nbc = 0; nwc = 0; bcol = 0; wcol = 0; nrow = 0
+      if (tgt > 0) {
+        se = nc
+        for (i = tgt + 1; i <= nch; i++) if (chv[i] <= chv[tgt]) { se = chl[i] - 1; break }
+        CF_ON = 0
+        for (i = chl[tgt] + 1; i <= se; i++) {
+          if (cf_fence_step(C[i]) != "") continue
+          if (thead == 0) {
+            if (C[i] ~ /^[ \t]*\|/) {
+              thead = i; nhc = splitrow(C[i], hc)
+              for (j = 1; j <= nhc; j++) { if (hc[j] == "Block") { nbc++; bcol = j }; if (hc[j] == "Writer") { nwc++; wcol = j } }
+            }
+            continue
+          }
+          if (C[i] ~ /^[ \t]*\|[-| :]+\|[ \t\r]*$/) continue
+          if (C[i] !~ /^[ \t]*\|/) break
+          nrow++; nk = splitrow(C[i], rc); RB[nrow] = rc[bcol]; RW[nrow] = rc[wcol]; RLN[nrow] = i
+          oc = ""; for (j = 1; j <= nk; j++) if (j != bcol && j != wcol) oc = oc (oc == "" ? "" : " | ") rc[j]
+          RO[nrow] = oc
+        }
+      }
+      printf "TABLE\t%d\t%d\t%d\t%d\t%d\n", (tgt > 0 ? chl[tgt] : 0), thead, nrow, nbc, nwc
+      okt = (tgt > 0 && thead > 0 && nbc == 1 && nwc == 1 && nrow > 0)
+      # Each row, read from its Block and Writer cells alone.
+      ndf = 0; dflt = 0; icmd = ""; cal = ""
+      if (okt) for (r = 1; r <= nrow; r++) {
+        nsp = cspans(RB[r], sp); NHS[r] = 0; NMK[r] = 0; NLB[r] = 0
+        for (j = 1; j <= nsp; j++) {
+          if (sp[j] ~ /^#+[ \t]/) { NHS[r]++; HSL[r, NHS[r]] = hlevel(sp[j]); HST[r, NHS[r]] = htext(sp[j]) }
+          else if (sp[j] ~ /^\[[[:upper:]]+\]$/) { NMK[r]++; MKR[r, NMK[r]] = sp[j] }
+          else if (sp[j] ~ /^\*\*[^*]+:\*\*$/) { NLB[r]++; LBS[r, NLB[r]] = sp[j] }
+        }
+        NSP[r] = nsp
+        ncl = split(RW[r], cl, ";"); tot = 0; wset = 0; cmds = ""; conds = ""
+        for (j = 1; j <= ncl; j++) {
+          nx = cspans(cl[j], xs); kk = 0; c1 = ""
+          for (q = 1; q <= nx; q++) if (substr(xs[q], 1, 1) == "/") { kk++; c1 = c1 (kk > 1 ? "," : "") xs[q] }
+          NCM[r, j] = kk; CMD[r, j] = (kk == 1) ? c1 : ""; tot += kk; if (kk >= 2) wset = 1
+          t = nospans(cl[j])
+          cmds = cmds (j > 1 ? ";" : "") (kk == 0 ? "-" : c1)
+          conds = conds (j > 1 ? "; " : "") (t == "" ? "-" : t)
+        }
+        NCL[r] = ncl; RCM[r] = cmds; RCD[r] = conds
+        agt = 0; nx = cspans(RW[r], xs)
+        for (q = 1; q <= nx; q++) if (xs[q] ~ /^agents\/[^ \/]+\.md$/) agt = 1
+        WCL[r] = wset ? "WSET" : (tot > 0 ? "CMD" : (agt ? "AGENT" : "NONE"))
+        if (nsp == 0 && WCL[r] == "CMD") { ndf++; dflt = r; cal = cal (cal == "" ? "" : ", ") "row " r " (class CMD, read from its Writer cell: " RW[r] ")" }
+      }
+      why = "the section write-ownership names carries no writer table"
+      if (okt) {
+        why = ""
+        if (ndf != 1) why = ndf " catch-all row(s) — a Block cell carrying no span — name a writer" (cal == "" ? "" : ": " cal)
+        else if (NCL[dflt] != 1 || NCM[dflt, 1] != 1) why = "the default row, row " dflt " (class CMD), holds " NCL[dflt] " clause(s) naming " NCM[dflt, 1] " command(s) in its first, where one clause naming one command is owed — read from its Writer cell: " RW[dflt]
+        if (why == "") icmd = CMD[dflt, 1]; else dflt = 0
+      }
+      printf "DEFAULT\t%d\t%s\n", dflt, (why == "" ? icmd : why)
+      if (okt) for (r = 1; r <= nrow; r++) {
+        if (WCL[r] != "CMD") RCL[r] = WCL[r]
+        else {
+          nin = 0; for (j = 1; j <= NCL[r]; j++) if (NCM[r, j] == 1 && CMD[r, j] == icmd) nin++
+          RCL[r] = (icmd == "") ? "UNDECIDED" : ((nin == NCL[r]) ? "YES" : ((nin > 0) ? "CONDITIONAL" : "OTHER"))
+        }
+        RCH[r] = (r == dflt) ? "default" : ((NHS[r] > 0 || NMK[r] > 0) ? "addressed" : ((NSP[r] == 0) ? "catch-all" : "label-only"))
+        printf "ROW\t%d\t%s\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", r, WCL[r], RCL[r], RCH[r], RLN[r], RCM[r], RCD[r], RW[r], RB[r], RO[r]
+      }
+      # The form: its regions, outside the frontmatter and every fence.
+      fmx = 0
+      if (L[1] == "---") for (i = 2; i <= n; i++) if (L[i] == "---") { fmx = i; break }
+      CF_ON = 0; ng = 0
+      for (i = 1; i <= n; i++) {
+        if (i <= fmx || cf_fence_step(L[i]) != "") { SK[i] = 1; continue }
+        if (L[i] ~ /^#+[ \t]/ && hlevel(L[i]) >= 2) { ng++; GL[ng] = i; GV[ng] = hlevel(L[i]); GT[ng] = htext(L[i]) }
+      }
+      for (k = 1; k <= ng; k++) {
+        GP[k] = 0; for (q = k - 1; q >= 1; q--) if (GV[q] < GV[k]) { GP[k] = q; break }
+        GE[k] = n; for (q = k + 1; q <= ng; q++) if (GV[q] <= GV[k]) { GE[k] = GL[q] - 1; break }
+      }
+      for (k = 1; k <= ng; k++) {
+        GR[k] = 0; GH[k] = "unresolved"
+        mk = ""; if (match(GT[k], /\[[[:upper:]]+\]/)) mk = substr(GT[k], RSTART, RLENGTH)
+        if (!okt) continue
+        nn = 0; ids = ""
+        for (r = 1; r <= nrow; r++) for (j = 1; j <= NHS[r]; j++)
+          if (HSL[r, j] == GV[k] && ft_lead(HST[r, j], GT[k])) { nn++; ids = ids (nn > 1 ? "," : "") r; GR[k] = r; break }
+        if (nn > 1) { printf "AMBIG\t%d\t%s\t%s\n", GL[k], GT[k], ids; GR[k] = 0; GH[k] = "ambiguous" }
+        else if (nn == 1) GH[k] = "named"
+        else if (mk != "") {
+          nm = 0; ids = ""
+          for (r = 1; r <= nrow; r++) for (j = 1; j <= NMK[r]; j++) if (MKR[r, j] == mk) { nm++; ids = ids (nm > 1 ? "," : "") r; GR[k] = r; break }
+          if (nm != 1) { printf "UNMARKED\t%d\t%s\t%s\t%d\t%s\n", GL[k], GT[k], mk, nm, (ids == "" ? "-" : ids); GR[k] = 0; GH[k] = "unmarked" }
+          else GH[k] = "marker"
+        }
+        else if (GV[k] > 2 && GP[k] > 0) { GR[k] = GR[GP[k]]; GH[k] = "inherits" }
+        else if (dflt > 0) { GR[k] = dflt; GH[k] = "default" }
+        if (GR[k] > 0 && mk != "") {
+          has = 0; for (j = 1; j <= NMK[GR[k]]; j++) if (MKR[GR[k], j] == mk) has = 1
+          if (!has) printf "MARKDIS\t%d\t%s\t%s\t%d\n", GL[k], GT[k], mk, GR[k]
+        }
+      }
+      if (okt) for (r = 1; r <= nrow; r++) for (j = 1; j <= NHS[r]; j++) {
+        cc = 0; for (k = 1; k <= ng; k++) if (GV[k] == HSL[r, j] && ft_lead(HST[r, j], GT[k])) cc++
+        if (cc == 0) printf "PHANTOM\t%d\t%s %s\n", r, substr("######", 1, HSL[r, j]), HST[r, j]
+      }
+      for (k = 1; k <= ng; k++) {
+        GM[k] = (index(GT[k], "[DERIVED]") || index(GT[k], "[ENRICH]")) ? 1 : ((GP[k] > 0) ? GM[GP[k]] : 0)
+        r = GR[k]
+        if (r == 0) { v = "UNRESOLVED"; g = (GH[k] == "ambiguous" || GH[k] == "unmarked") ? GH[k] : "unresolved" }
+        else if (RCL[r] == "NONE") { v = "EXCLUDED"; g = "no-writer" }
+        else if (GM[k]) { v = "NO"; g = "marked" }
+        else if (RCL[r] == "WSET") { v = "NO"; g = "writer-set" }
+        else if (RCL[r] == "AGENT") { v = "NO"; g = "agent" }
+        else if (RCL[r] == "OTHER") { v = "NO"; g = "not-interviewer" }
+        else if (RCL[r] == "UNDECIDED") { v = "UNRESOLVED"; g = "no-interviewer" }
+        else if (RCL[r] == "CONDITIONAL") { v = "CONDITIONAL"; g = "condition" }
+        else { v = "YES"; g = "interviewer" }
+        printf "REGION\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%s\n", GL[k], GE[k], GV[k], r, GH[k], v, g, GT[k]
+      }
+      # The fields, each placed in its innermost region, on the resolver key ft_bullets reads.
+      h2 = ""
+      for (i = 1; i <= n; i++) {
+        if (SK[i]) continue
+        if (L[i] ~ /^## /) { h2 = substr(L[i], 4); sub(/[ \t\r]+$/, "", h2); continue }
+        if (L[i] ~ /^#/) continue
+        kb = 0; for (k = 1; k <= ng; k++) if (GL[k] < i && i <= GE[k]) kb = k
+        if (match(L[i], /^[ \t]*-[ \t]+/)) {
+          rest = substr(L[i], RLENGTH + 1)
+          if (index(rest, star) == 1) { rest = substr(rest, length(star) + 1); sub(/^[ \t]+/, "", rest) }
+          if (match(rest, /^\*\*[^*]+:\*\*/)) printf "FIELD\t%d\t%d\t%s\t%s\n", i, (kb ? GL[kb] : 0), h2, substr(rest, 3, RLENGTH - 5)
+        } else if (match(L[i], /^\*\*[^*]+:\*\*/)) printf "BOLD\t%d\t%d\t%s\n", i, (kb ? GL[kb] : 0), substr(L[i], 3, RLENGTH - 5)
+      }
+      if (okt) for (r = 1; r <= nrow; r++) for (j = 1; j <= NLB[r]; j++) {
+        c = 0; fl = 0
+        for (i = 1; i <= n; i++) if (!SK[i] && index(L[i], LBS[r, j]) == 1) { c++; if (!fl) fl = i }
+        printf "LABEL\t%d\t%s\t%d\t%d\n", r, LBS[r, j], c, fl
+      }
+    }'
+}
 ft_decl_rows() {
   awk '{ s = $0; while (match(s, /=[ \t]*[0-9]+[ \t]+answerable slots/)) {
            t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); print t; s = substr(s, RSTART + RLENGTH) } }' "$1"
@@ -4094,7 +4351,9 @@ fi
 #               the six questions of ADR-023 § D2.6, each finding named by its question; the
 #               population is asserted against ST_TEMPLATES and against every tracked template.
 #               Its fields end at its boundary for every reader, fail-closed — which is what turns
-#               the guide half's measured-but-undeclared zero into an asserted one.
+#               the guide half's measured-but-undeclared zero into an asserted one. A block-owned
+#               form declares version 2 and answers the same questions per REGION, each region
+#               rendered as its own verdict, with the rows of its writer table pinned.
 #
 # ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
 # This group shipped reading a single hardcoded path, at a commit where one intake form was
@@ -4156,7 +4415,7 @@ fi
 # drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "ST — every intake form's starred set agrees across both of its homes AND matches the data model's field table, and every declared form conforms to the form contract"
+echo "ST — every intake form's starred set agrees across both of its homes AND matches the data model's field table, and every declared form conforms to the form contract, per region where it declares regions"
 
 # The population, one path per line. Each is graded independently and completely: its own
 # surfaces, its own violations, its own full set of control arms against its own fixtures.
@@ -5471,8 +5730,42 @@ fi
 #   VERSION  the fence names a contract version this arm does not grade. The evaluator reads
 #       the version from its OWN fence reading and dispatches on it BEFORE the boundary is
 #       consulted, so an unsupported version is named as that and never as a boundary fault.
-#       Version 1 is the only version graded here; a later version gains a branch at that
-#       dispatch, and the codes above are the questions every version answers.
+#       Versions 1 and 2 are graded here. Any other version declares a key set this arm does
+#       not know, so no key is graded against one: VERSION names it, alone.
+#
+# ── VERSION 2 — THE REGION CONTRACT (ADR-024), THE SAME QUESTIONS LIFTED PER REGION ────
+# A block-owned form has no single-cut boundary and no one writer, so the unit is the REGION:
+# every heading of level 2 or deeper, resolved to one row of the writer table its
+# `write-ownership:` key addresses. Group FT's ft_regions is the ONE computation of that
+# contract — the regions, each row's class and the conditions its clauses carry, and every
+# field placed in its region — and this arm grades the form against it, with the same codes:
+#   Q1  one fence, the version-2 key set — ADR-023's, its boundary key exchanged in place for
+#       the address key — once each and no other, `form:` itself, and ABOVE EVERY REGION.
+#   Q2  EXTENT: the address names ST_CF_OWN and leads one of its headings, whose section holds
+#       one table with one Block and one Writer column and a decidable default row; every
+#       region resolves to one row, every heading a row names exists, no row that no heading can
+#       reach owns a line of the form, no field sits above the first region, and one region at
+#       least exists. A row's class is read from its Writer and Block cells ONLY, never from the
+#       column that explains it, and every finding the table produces names the row, its class
+#       and the Writer cell the class was read from.
+#   Q3  every field in a YES or CONDITIONAL region joins exactly one row of the classification,
+#       one such field at least exists, the resolver answered every field this arm counts itself,
+#       and — the reverse join — every row whose section leads a `## ` region of the form is
+#       carried by a field of an interviewable region.
+#   Q4  no DECLARED field sits in a NO or EXCLUDED region. An undeclared one is no write an
+#       interviewer can make, and must not fire.
+#   Q5  the fence agrees with the frontmatter, and no field in an interviewable region is
+#       marked. A marked REGION is a verdict, never a finding: [DERIVED] and [ENRICH] regions
+#       read NO, and a region whose row declares no writer reads EXCLUDED, a declared exclusion
+#       rendered as its own verdict rather than dropped (ADR-024 decision 6).
+#   Q6  the markers of the graded fields, as version 1 grades them.
+# RESIDUAL — THE DEFAULT ROUTE FOR A NEW BLOCK, named so it is not rediscovered. The table's
+# catch-all for a block it does not list declares no writer, and no step of the resolution can
+# land on it: a `## ` heading the table does not name resolves to the DEFAULT row, and so reads
+# interviewable. A new block with a classified field therefore conforms here before it has an
+# owner in the table, the reverse of that row's own rule. What this arm does instead is make the
+# rule surface at the moment it bites: an UNCLASSIFIED field in a default-resolved region fails
+# question 3 with a message citing that row's rule, read from the table itself.
 #
 # ── IDS, AND WHY NO ID CARRIES A SPACE ──────────────────────────────────────────
 # The form verdict is ST-CF[<form>], <form> the file's basename without `.template.md`. A
@@ -5480,15 +5773,16 @@ fi
 # lower-case, hyphen-joined slug, with a numeric suffix on a repeat — and never with a space:
 # PASS and FAIL record an id as the text before the first colon, and group RS splits that record
 # on whitespace, so a spaced id would enter the run as several phantom groups. A version-1 form
-# is ONE region, its whole profile half, so no region id is rendered on this tree.
+# is ONE region, its whole profile half, so it renders no region id; a version-2 form renders
+# one per region, after its form verdict.
 #
 # ── EVERY ARM IS A DELTA, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─────
 # Each must-fire arm mutates ONE thing on a copy of a member and passes only if its code RISES
 # against that member's own live reading; each must-not-fire arm passes only if the copy's
 # findings EQUAL the live reading's. So a form that already fails a question still has honest
 # arms, and no arm can pass on a finding it inherited. Every arm mutates a copy of a form whose
-# boundary resolves, so a member whose boundary does not resolve is named ONCE, by its entry
-# gate, while ST-CF[<form>] names the question.
+# boundary resolves — for version 2, whose regions resolve and hold a graded field — so a member
+# that does not is named ONCE, by its entry gate, while ST-CF[<form>] names the question.
 #
 # ── COVERAGE IS GRADED ONCE, OVER THE RUN ───────────────────────────────────────
 # The codes and emission sites of st_cf_violations are read from its own body, and the arms
@@ -5530,21 +5824,80 @@ st_cf_decl_read() {
 st_cf_decl_keys() { awk -F'\t' '$1 == "KEY" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
 st_cf_decl_why() { awk -F'\t' '$1 == "FAIL" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
 
-# st_cf_violations <form> <member> <data-model> — one "<CODE><TAB><detail>" record per finding, codes
-# Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`, space-separated so
-# it is never read as a code. Four inputs arrive as one stream separated by FS-byte marker lines,
-# because awk -v aborts on a multi-line value: the contract's keys, the form's surfaces, the
-# resolver's answers for its bullets, and the data model's unfenced headings; the form follows.
+# st_cf_violations <form> <member> <data-model> [charter] — one "<CODE><TAB><detail>" record per
+# finding, codes Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`,
+# space-separated so it is never read as a code. A version-2 reading also carries one `GRADED` record
+# per region, space-separated for the same reason, which the region renderer below reads. Six inputs
+# arrive as one stream separated by FS-byte marker lines, because awk -v aborts on a multi-line value:
+# the contract's keys, the form's surfaces, the resolver's answers for its bullets, the data model's
+# unfenced headings, the region contract ft_regions reads from the form and the charter, and the data
+# model's rows; the form follows. The reader is chosen by st_cf_version and the evaluator dispatches on
+# its OWN fence reading, so a form whose two readings disagree gets the wrong inputs and fails closed.
 st_cf_violations() {
-  local f="$1" member="$2" dm="$3" cfk cfs cfr cfh
+  local f="$1" member="$2" dm="$3" chart="${4:-$ST_CF_OWN}" cfk cfs cfr cfh cfg cft
   cfk="$(st_cf_decl_keys "$ST_CF_DECL")"
-  cfs="$(st_surfaces "$f")"
-  cfr="$(awk -F'\t' '$1 == "BULLET" { print $4 "\t" $3 "\t" $2 }' <<<"$cfs" | ft_resolve <(ft_rows "$dm") 2>/dev/null)"
+  if [ "$(st_cf_version "$f")" = 2 ]; then
+    cfs=""
+    cfg="$(ft_regions "$f" "$chart" 2>/dev/null)"
+    cfr="$(awk -F'\t' '$1 == "FIELD" { print $4 "\t" $5 "\t" $2 }' <<<"$cfg" | ft_resolve <(ft_rows "$dm") 2>/dev/null)"
+    cft="$(ft_rows "$dm" 2>/dev/null)"
+  else
+    cfs="$(st_surfaces "$f")"
+    cfr="$(awk -F'\t' '$1 == "BULLET" { print $4 "\t" $3 "\t" $2 }' <<<"$cfs" | ft_resolve <(ft_rows "$dm") 2>/dev/null)"
+    cfg=""; cft=""
+  fi
   cfh="$(awk "$ST_CF_FENCE_FN"'
     { if (cf_fence_step($0) != "") next }
     /^#+ / { sub(/^#+ /, ""); sub(/[ \t\r]+$/, ""); print }' "$dm")"
-  { printf '%s\n\034\n' "$cfk"; printf '%s\n\034\n' "$cfs"; printf '%s\n\034\n' "$cfr"; printf '%s\n\034\n' "$cfh"; cat "$f"; } |
-  awk -F'\t' -v member="$member" -v tbl="${ST_DM#"$ROOT/"}" -v hd="$ST_CF_HEAD" "$FT_LEAD_FN""$ST_CF_FENCE_FN"'
+  { printf '%s\n\034\n' "$cfk"; printf '%s\n\034\n' "$cfs"; printf '%s\n\034\n' "$cfr"; printf '%s\n\034\n' "$cfh"
+    printf '%s\n\034\n' "$cfg"; printf '%s\n\034\n' "$cft"; cat "$f"; } |
+  awk -F'\t' -v member="$member" -v tbl="${ST_DM#"$ROOT/"}" -v hd="$ST_CF_HEAD" -v own="${ST_CF_OWN#"$ROOT/"}" \
+      -v v2drop="$ST_CF_V2_DROP" -v v2key="$ST_CF_V2_KEY" -v star="$ST_STAR" "$FT_LEAD_FN""$ST_CF_FENCE_FN""$FT_NOBUL_FN"'
+    # THE SHARED QUESTIONS — each is one set of emission sites both versions call, so a site either
+    # version reaches is the same site, and neither version can drift from the other on it.
+    function q3_address(   cv, sp, cpath, nseg, seg, s, k, i) {
+      cv = fv["classification"]; sp = index(cv, " § ")
+      cpath = (sp > 0) ? substr(cv, 1, sp - 1) : cv
+      if (cpath != tbl) printf "Q3\tclassification: names %s, not the table this arm joins against, %s\n", cpath, tbl
+      else {
+        nseg = split(substr(cv, sp + length(" § ")), seg, " → ")
+        for (s = 1; s <= nseg; s++) {
+          k = 0
+          for (i = 1; i <= nth; i++) if (ft_lead(seg[s], th[i])) k++
+          if (k != 1) printf "Q3\tthe classification anchor segment %s leads %d heading(s) of %s, not exactly one\n", seg[s], k, tbl
+        }
+      }
+    }
+    function q3_count(a, b) { printf "Q3\tthe (section, label) resolver answered %d of %d bullet(s)\n", a, b }
+    function q3_join(i, why) { printf "Q3\tthe bullet %s under %s at line %s joins %s%s\n", rlb[i], (rhd[i] == "" ? "no heading" : rhd[i]), rln[i], (rst[i] == "AMBIG" ? "rows " rid[i] : "no row"), why }
+    function q5_agree(   i, fw, fa) {
+      fw = ""; fa = ""
+      if (L[1] == "---") for (i = 2; i <= n && L[i] != "---"; i++) {
+        if (index(L[i], "writer: ") == 1) fw = substr(L[i], 9)
+        if (index(L[i], "artifact: ") == 1) fa = substr(L[i], 11)
+      }
+      if (fv["writer"] != fw) printf "Q5\tthe fence writer %s disagrees with the frontmatter writer %s\n", fv["writer"], fw
+      if (fv["output"] != fa) printf "Q5\tthe fence output %s disagrees with the frontmatter artifact %s\n", fv["output"], fa
+    }
+    # Q6 reads the HEAD of each bullet bracket and nothing after it: a head that opens on the
+    # marker word must be well-formed, and must not carry a second marker straight after it.
+    function q6_markers(cnt,   i, t, p, val, h6) {
+      for (i = 1; i <= cnt; i++) {
+        t = L[bln[i]]; p = index(t, ":**")
+        val = substr(t, p + 3); sub(/^[ \t]+/, "", val)
+        if (substr(val, 1, 1) != "[") continue
+        h6 = substr(val, 2)
+        if (tolower(h6) !~ /^[ \t]*(closed|open)[ \t]*:/) continue
+        if (h6 !~ /^(closed|open): [^ \t]/)
+          printf "Q6\ta malformed marker on %s at line %d: the head of its bracket must read closed or open in lower case, then a colon and one space\n", blb[i], bln[i]
+        else if (tolower(substr(h6, index(h6, ":") + 2)) ~ /^[ \t]*(closed|open)[ \t]*:/)
+          printf "Q6\tthe bullet %s at line %d carries a second marker at the head of its bracket\n", blb[i], bln[i]
+      }
+    }
+    # rowsays <r> — a writer-table row as every table-derived finding names it: its number, its class,
+    # and the Writer cell the class was read from. rowlist does the same for a comma-joined list.
+    function rowsays(r) { r = r + 0; return (r in WC) ? "writer-table row " r " (class " RC[r] ", read from its Writer cell: " RWT[r] ")" : "no writer-table row" }
+    function rowlist(ids,   k, a, i, o) { k = split(ids, a, ","); o = ""; for (i = 1; i <= k; i++) o = o (i > 1 ? " and " : "") rowsays(a[i]); return o }
     $0 == "\034" { sec++; next }
     sec == 0 { if ($0 != "") { ndk++; DK[ndk] = $0; ISDK[$0] = 1 }; next }
     sec == 1 {
@@ -5555,6 +5908,23 @@ st_cf_violations() {
     }
     sec == 2 { if ($0 != "") { nr++; rst[nr] = $1; rid[nr] = $2; rhd[nr] = $3; rlb[nr] = $4; rln[nr] = $5 }; next }
     sec == 3 { if ($0 != "") th[++nth] = $0; next }
+    sec == 4 {
+      if ($1 == "ADDRESS") { anum = $2 + 0; apath = $3 }
+      else if ($1 == "ANCHOR") { nan++; ANS[nan] = $2; ANK[nan] = $3 + 0 }
+      else if ($1 == "TABLE") { ttgt = $2 + 0; thdr = $3 + 0; trows = $4 + 0; tbc = $5 + 0; twc = $6 + 0 }
+      else if ($1 == "DEFAULT") { dflt = $2 + 0; dwhy = $3 }
+      else if ($1 == "ROW") { r = $2 + 0; if (r > mrw) mrw = r; WC[r] = $3; RC[r] = $4; RH[r] = $5; RWT[r] = $9; RBK[r] = $10; ROT[r] = $11 }
+      else if ($1 == "AMBIG") { nam++; AML[nam] = $2 + 0; AMH[nam] = $3; AMR[nam] = $4 }
+      else if ($1 == "UNMARKED") { nua++; UAL[nua] = $2 + 0; UAH[nua] = $3; UAM[nua] = $4; UAN[nua] = $5 + 0; UAR[nua] = $6 }
+      else if ($1 == "MARKDIS") { nmd++; MDL[nmd] = $2 + 0; MDH[nmd] = $3; MDM[nmd] = $4; MDR[nmd] = $5 + 0 }
+      else if ($1 == "PHANTOM") { nph++; PHR[nph] = $2 + 0; PHH[nph] = $3 }
+      else if ($1 == "REGION") { ngr++; GL[ngr] = $2 + 0; GE[ngr] = $3 + 0; GV[ngr] = $4 + 0; GR[ngr] = $5 + 0; GH[ngr] = $6; GVD[ngr] = $7; GGR[ngr] = $8; GT[ngr] = $9; RIX[$2 + 0] = ngr }
+      else if ($1 == "FIELD") FREG[$2 + 0] = $3 + 0
+      else if ($1 == "BOLD") { BREG[$2 + 0] = $3 + 0; GB[$3 + 0]++ }
+      else if ($1 == "LABEL") { nlb++; LBR[nlb] = $2 + 0; LBL[nlb] = $3; LBN[nlb] = $4 + 0; LBF[nlb] = $5 + 0 }
+      next
+    }
+    sec == 5 { if ($0 != "") { nt5++; TN[nt5] = $1; TS[nt5] = $2; TLB[nt5] = $3; TNB[nt5] = ft_nobul($10) }; next }
     { L[++n] = $0 }
     END {
       cf_form_fence(L, n)
@@ -5562,22 +5932,116 @@ st_cf_violations() {
       if (nf != 1) printf "Q1\tthe form carries %d intake-form fence opener(s), and exactly one is required\n", nf
       if (nf == 1 && CF_WHY != "") printf "Q1\tthe intake-form fence opened at line %d is not closed: %s\n", fo, CF_WHY
       usable = (nf == 1 && CF_WHY == "")
+      ver = ""
       if (usable) {
         for (i = 1; i <= CF_NK; i++) { nkey[CF_K[i]]++; fv[CF_K[i]] = CF_V[i] }
-        for (i = 1; i <= ndk; i++)
-          if (nkey[DK[i]] + 0 != 1)
-            printf "Q1\tthe declared key %s appears %d time(s) in the fence, and exactly once is required\n", DK[i], nkey[DK[i]] + 0
-        for (i = 1; i <= CF_NK; i++)
-          if (!(CF_K[i] in ISDK) && !(CF_K[i] in und)) {
+        ver = ("form-version" in fv) ? fv["form-version"] : ""
+        # THE KEY SET THIS VERSION DECLARES. Version 1 grades the contract as its record declares it, and
+        # so does a fence naming no version, whose missing form-version key is then a finding. Version 2
+        # grades the same set with its one boundary key exchanged, in place, for the address key. Any other
+        # version declares a set this arm does not know, so none is graded against it: VERSION names that
+        # version below, alone, rather than a key set and a boundary it was never bound to.
+        nek = 0
+        if (ver == "2") {
+          nd = 0; for (i = 1; i <= ndk; i++) if (DK[i] == v2drop) nd++
+          if (nd != 1) printf "Q1\tthe contract worked fence carries the key %s %d time(s), and the version-2 key set exchanges exactly one for %s, so that set cannot be derived\n", v2drop, nd, v2key
+          for (i = 1; i <= ndk; i++) { nek++; EK[nek] = (DK[i] == v2drop && nd == 1) ? v2key : DK[i]; ISEK[EK[nek]] = 1 }
+        } else if (ver == "1" || ver == "") for (i = 1; i <= ndk; i++) { nek++; EK[nek] = DK[i]; ISEK[DK[i]] = 1 }
+        for (i = 1; i <= nek; i++)
+          if (nkey[EK[i]] + 0 != 1)
+            printf "Q1\tthe declared key %s appears %d time(s) in the fence, and exactly once is required\n", EK[i], nkey[EK[i]] + 0
+        if (ver == "1" || ver == "" || ver == "2") for (i = 1; i <= CF_NK; i++)
+          if (!(CF_K[i] in ISEK) && !(CF_K[i] in und)) {
             und[CF_K[i]] = 1
             printf "Q1\tthe fence carries the key %s, which the contract does not declare\n", CF_K[i]
           }
         if (("form" in fv) && fv["form"] != member) printf "Q1\tform: reads %s, but this form is declared as %s\n", fv["form"], member
         if (bl > 0 && fc >= bl) printf "Q1\tthe fence ends at line %d, at or below the boundary at line %d\n", fc, bl
       }
-      # THE DISPATCH, on this reading of the fence and ahead of the boundary gate below: the only
-      # version graded here is 1, and every other value, the absent one included, is named here.
-      ver = (usable && ("form-version" in fv)) ? fv["form-version"] : ""
+      # THE DISPATCH, on this reading of the fence and ahead of the boundary gate below: version 2 is
+      # the region contract and branches here, version 1 falls through, and every other value, the
+      # absent one included, is named here — never as a boundary fault.
+      if (usable && ver == "2") {
+        # ── VERSION 2 — THE REGION CONTRACT (ADR-024), graded per region. Every region, row and field
+        # is read from ft_regions, the one computation of that contract; what is graded here is whether
+        # the form conforms to it. The questions are D2.6 lifted per region: question 2 grades extent,
+        # 3 the join inside every interviewable region and back, 4 that no declared field sits in a
+        # region the interviewer does not own, 5 the fence against the frontmatter and a marked bullet
+        # in an interviewable region, and 6 the markers of the graded bullets. Every finding derived from
+        # the writer table names the row, its class and the Writer cell the class was read from.
+        addrok = (anum == 1 && apath == own)
+        if (ngr == 0) printf "Q2\tthe form carries no heading of level 2 or deeper, so it has no region to grade\n"
+        else if (fc > GL[1]) printf "Q1\ta region-contract fence must precede every region, and this one ends at line %d, inside the region that opens at line %d\n", fc, GL[1]
+        if (anum == 1 && apath != own) printf "Q2\twrite-ownership: names %s, not the charter this arm reads, %s\n", apath, own
+        for (i = 1; i <= nan; i++) if (ANK[i] != 1) printf "Q2\tthe write-ownership anchor segment %s leads %d heading(s) of %s, not exactly one\n", ANS[i], ANK[i], own
+        okt = (ttgt > 0 && thdr > 0 && trows > 0 && tbc == 1 && twc == 1)
+        if (ttgt > 0 && !okt) printf "Q2\tthe section write-ownership names carries no writer table: %d header row(s), %d Block and %d Writer column(s), %d row(s)\n", (thdr > 0), tbc, twc, trows
+        if (okt && dflt == 0) printf "Q2\tthe writer table leaves its default row undecidable, so the interviewer command it names is unknown: %s\n", dwhy
+        for (i = 1; i <= nam; i++) { printf "Q2\ttwo or more writer-table rows name the heading %s at line %d, so its writer is ambiguous: %s\n", AMH[i], AML[i], rowlist(AMR[i]); RFND[RIX[AML[i]]]++ }
+        for (i = 1; i <= nua; i++) { printf "Q2\tno single writer-table row carries the marker on the heading %s at line %d: %s is carried by %d row(s)%s\n", UAH[i], UAL[i], UAM[i], UAN[i], (UAN[i] > 0 ? ", " rowlist(UAR[i]) : ""); RFND[RIX[UAL[i]]]++ }
+        for (i = 1; i <= nmd; i++) { printf "Q2\ta named heading carries a marker its row does not: %s at line %d carries %s, and %s does not\n", MDH[i], MDL[i], MDM[i], rowsays(MDR[i]); RFND[RIX[MDL[i]]]++ }
+        for (i = 1; i <= nph; i++) printf "Q2\ta writer-table row names a heading the form does not carry: %s names %s\n", rowsays(PHR[i]), PHH[i]
+        # The probe for a row that is unreachable by construction: its bold label must open no line of
+        # the form, because no heading can give that row an extent and the region around the line would
+        # claim it instead.
+        for (i = 1; i <= nlb; i++) if (LBN[i] > 0 && (RH[LBR[i]] == "label-only" || RH[LBR[i]] == "catch-all")) {
+          printf "Q2\ta line opening on a bold label the writer table names sits in the form, where no heading can give its row an extent: %d line(s) open on %s, the block %s owns — the first at line %d\n", LBN[i], LBL[i], rowsays(LBR[i]), LBF[i]
+          RFND[RIX[BREG[LBF[i]]]]++
+        }
+        q3_address()
+        # This branch counts the field-shaped bullets itself, the shape ft_regions reads, so a reader or
+        # a resolver that dropped a field cannot shrink the denominator it is compared against.
+        fmx = 0; if (L[1] == "---") for (i = 2; i <= n; i++) if (L[i] == "---") { fmx = i; break }
+        CF_ON = 0; nown = 0
+        for (i = 1; i <= n; i++) {
+          if (i <= fmx || cf_fence_step(L[i]) != "") continue
+          if (match(L[i], /^[ \t]*-[ \t]+/)) {
+            rest = substr(L[i], RLENGTH + 1)
+            if (index(rest, star) == 1) { rest = substr(rest, length(star) + 1); sub(/^[ \t]+/, "", rest) }
+            if (rest ~ /^\*\*[^*]+:\*\*/) nown++
+          }
+        }
+        if (nr != nown) q3_count(nr, nown)
+        # A region that resolved by DEFAULT is the route a block the table does not list takes, so an
+        # unclassified field there cites the table rule for such a block, read from the table itself.
+        dcite = " — its region resolved to the default row, which is how a block the writer table does not list resolves"
+        for (r = 1; r <= mrw; r++) if (RH[r] == "catch-all" && WC[r] == "NONE") { dcite = dcite ", and row " r " of that table (" RBK[r] " — " RWT[r] ") rules: " ROT[r]; break }
+        nb = 0
+        for (i = 1; i <= nr; i++) {
+          ln = rln[i] + 0; kb = RIX[FREG[ln]] + 0
+          if (kb == 0) { printf "Q2\ta field-shaped bullet at line %d sits above the first region, outside the partition\n", ln; continue }
+          GF[kb]++
+          if (GVD[kb] == "YES" || GVD[kb] == "CONDITIONAL") {
+            nb++; bln[nb] = ln; blb[nb] = rlb[i]
+            if (rst[i] == "ONE") HIT[rid[i]] = 1
+            else { q3_join(i, (GH[kb] == "default" ? dcite : "")); RFND[kb]++ }
+            if (index(L[ln], "[DERIVED]") || index(L[ln], "[ENRICH]")) { printf "Q5\tthe bullet %s at line %d sits in an interviewable region and carries a [DERIVED] or [ENRICH] marker\n", rlb[i], ln; RFND[kb]++ }
+          } else if ((GVD[kb] == "NO" || GVD[kb] == "EXCLUDED") && rst[i] != "NONE") {
+            printf "Q4\ta declared field sits in a region the interviewer does not own: the bullet %s at line %d joins %s, and its region %s resolves to %s, so it is %s (%s)\n", rlb[i], ln, (rst[i] == "AMBIG" ? "rows " rid[i] : "row " rid[i]), GT[kb], rowsays(GR[kb]), GVD[kb], GGR[kb]
+            RFND[kb]++
+          }
+        }
+        if (nb == 0) printf "Q3\tno field-shaped bullet sits in an interviewable region, so the join would be graded over the empty set\n"
+        # THE REVERSE JOIN: every labelled row of the classification whose section leads a
+        # `## ` region of this form must be reached by a graded bullet, unless its own rationale declares
+        # it bullet-less — so a field deleted from an interviewable region, or a region emptied, is red.
+        # It is not graded over the empty set, which the finding above already names.
+        if (nb > 0) for (t = 1; t <= nt5; t++) {
+          if (TLB[t] == "" || TNB[t]) continue
+          kk = 0; for (k = 1; k <= ngr; k++) if (GV[k] == 2 && ft_lead(TS[t], GT[k])) { kk = k; break }
+          if (kk == 0 || (TN[t] in HIT)) continue
+          printf "Q3\tclassification row %s (%s, %s) is carried by no field-shaped bullet in an interviewable region of this form\n", TN[t], TS[t], TLB[t]
+          RFND[kk]++
+        }
+        q5_agree()
+        q6_markers(nb)
+        for (k = 1; k <= ngr; k++) {
+          t = GT[k]; gsub(/\t/, " ", t)
+          printf "GRADED %d %d %d %d %s %s %s %d %d %d %s\n", GL[k], GE[k], GV[k], GR[k], GH[k], (addrok ? GVD[k] : "UNRESOLVED"), (addrok ? GGR[k] : "address"), GF[k] + 0, GB[GL[k]] + 0, RFND[k] + 0, t
+        }
+        printf "DENOM %d %s\n", nb, ver
+        exit
+      }
       if (usable && ver != "1") {
         printf "VERSION\tform-version: reads %s, which is not a version this arm grades\n", (ver == "" ? "nothing" : ver)
         printf "DENOM %d %s\n", nb + 0, (ver == "" ? "-" : ver)
@@ -5591,50 +6055,21 @@ st_cf_violations() {
         else if (hl != bl - 1) printf "Q2\tthe end-of-profile heading is at line %d, not on the line immediately above the boundary at line %d\n", hl, bl
       }
       if (!usable || bl == 0) { printf "DENOM %d %s\n", nb + 0, "-"; exit }
-      cv = fv["classification"]; sp = index(cv, " § ")
-      cpath = (sp > 0) ? substr(cv, 1, sp - 1) : cv
-      if (cpath != tbl) printf "Q3\tclassification: names %s, not the table this arm joins against, %s\n", cpath, tbl
-      else {
-        nseg = split(substr(cv, sp + length(" § ")), seg, " → ")
-        for (s = 1; s <= nseg; s++) {
-          k = 0
-          for (i = 1; i <= nth; i++) if (ft_lead(seg[s], th[i])) k++
-          if (k != 1) printf "Q3\tthe classification anchor segment %s leads %d heading(s) of %s, not exactly one\n", seg[s], k, tbl
-        }
-      }
+      q3_address()
       if (nb == 0) printf "Q3\tno labelled bullet sits above the boundary, so the join would be graded over the empty set\n"
-      else if (nr != nb) printf "Q3\tthe (section, label) resolver answered %d of %d bullet(s)\n", nr, nb
+      else if (nr != nb) q3_count(nr, nb)
       for (i = 1; i <= nr; i++)
-        if (rst[i] != "ONE")
-          printf "Q3\tthe bullet %s under %s at line %s joins %s\n", rlb[i], (rhd[i] == "" ? "no heading" : rhd[i]), rln[i], (rst[i] == "AMBIG" ? "rows " rid[i] : "no row")
+        if (rst[i] != "ONE") q3_join(i, "")
       for (i = 1; i <= nw; i++)
         printf "Q4\tthe labelled bullet %s sits at line %s, below the boundary at line %d\n", wlb[i], wln[i], bl
-      fw = ""; fa = ""
-      if (L[1] == "---") for (i = 2; i <= n && L[i] != "---"; i++) {
-        if (index(L[i], "writer: ") == 1) fw = substr(L[i], 9)
-        if (index(L[i], "artifact: ") == 1) fa = substr(L[i], 11)
-      }
       if (fv["writer"] != "human") printf "Q5\twriter: reads %s, not human\n", fv["writer"]
-      if (fv["writer"] != fw) printf "Q5\tthe fence writer %s disagrees with the frontmatter writer %s\n", fv["writer"], fw
-      if (fv["output"] != fa) printf "Q5\tthe fence output %s disagrees with the frontmatter artifact %s\n", fv["output"], fa
+      q5_agree()
       for (i = 1; i < bl; i++) isb[i] = 0
       for (i = 1; i <= nb; i++) isb[bln[i]] = 1
       for (i = 1; i < bl; i++)
         if ((L[i] ~ /^#+ / || isb[i]) && (index(L[i], "[DERIVED]") || index(L[i], "[ENRICH]")))
           printf "Q5\tline %d above the boundary carries a [DERIVED] or [ENRICH] marker\n", i
-      # Q6 reads the HEAD of each bullet bracket and nothing after it: a head that opens on the
-      # marker word must be well-formed, and must not carry a second marker straight after it.
-      for (i = 1; i <= nb; i++) {
-        t = L[bln[i]]; p = index(t, ":**")
-        val = substr(t, p + 3); sub(/^[ \t]+/, "", val)
-        if (substr(val, 1, 1) != "[") continue
-        h6 = substr(val, 2)
-        if (tolower(h6) !~ /^[ \t]*(closed|open)[ \t]*:/) continue
-        if (h6 !~ /^(closed|open): [^ \t]/)
-          printf "Q6\ta malformed marker on %s at line %d: the head of its bracket must read closed or open in lower case, then a colon and one space\n", blb[i], bln[i]
-        else if (tolower(substr(h6, index(h6, ":") + 2)) ~ /^[ \t]*(closed|open)[ \t]*:/)
-          printf "Q6\tthe bullet %s at line %d carries a second marker at the head of its bracket\n", blb[i], bln[i]
-      }
+      q6_markers(nb)
       printf "DENOM %d %s\n", nb, ver
     }'
 }
@@ -5645,7 +6080,8 @@ st_cf_tag() { local t="${1##*/}"; printf '%s' "${t%.template.md}"; }
 # repository-relative path. Self-contained, so the md_flips registrations in group MD measure THIS
 # assertion: it FAILs, in order, on an unreadable form, on a contract whose key set reads empty, on
 # a reading that is not closed by exactly one DENOM record, and on any finding, listing each by its
-# question. Otherwise it PASSes, naming the bullets graded and the half of question 6 it grades.
+# question. Otherwise it PASSes, naming the bullets graded and the half of question 6 it grades — and,
+# for a version-2 form, its regions by verdict and every declared exclusion by name.
 st_cf_assert() {
   local member="$1" dm="$2" f="$ROOT/$1" tag v nd nb nf
   tag="$(st_cf_tag "$member")"
@@ -5666,6 +6102,8 @@ st_cf_assert() {
   elif [ "$nf" -ne 0 ]; then
     FAIL "ST-CF[$tag]: $member does not conform to the form contract — $nf finding(s), each named by the question of ADR-023 § D2.6 it fails:"
     printf '%s\n' "$v" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
+  elif [ "$(awk '$1 == "DENOM" { print $3; exit }' <<<"$v")" = 2 ]; then
+    PASS "ST-CF[$tag]: $member conforms to the region contract of ADR-024 at form-version 2 — one closed intake-form fence above every region, carrying the version-2 key set once and no other key; $(st_cf_regions_summary "$v"); each of its ${nb:-0} field-shaped bullet(s) in an interviewable region joining exactly one row of the table its classification key addresses, and every such row of its sections carried by one; no declared field in a region the interviewer does not own. Each region is graded below as its own ST-CF[$tag/<slug>], and ST-CF-PIN[$tag] grades the rows of the writer table as they realize"
   else
     PASS "ST-CF[$tag]: $member conforms to the form contract on all six questions of ADR-023 § D2.6 — one closed intake-form fence above the boundary, carrying each declared key once and no other; the boundary one whole line with the end-of-profile heading directly above it; each of its ${nb:-0} labelled bullet(s) above the boundary joining exactly one row of the table its classification key addresses, on (section, label); none below; a human writer agreeing with the frontmatter; and every closed/open marker well-formed at the head of its bracket. Question 6 is graded at its decidable half only: whether a field OWES a marker is a reviewer's call (ADR-023 R11), so an unmarked bracket is never a finding here"
   fi
@@ -5674,18 +6112,145 @@ st_cf_assert() {
 # st_cf_tally <reading> — "<code> <count>" per code in a reading, sorted: the unit the arms compare.
 st_cf_tally() { awk -F'\t' 'NF > 1 { n[$1]++ } END { for (c in n) print c, n[c] }' <<<"$1" | sort; }
 
-# st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] — ONE thing mutated on a copy of
-# the member, or of the data model, and the SAME evaluator must then report MORE <code> findings than
+# st_cf_regions_report <tag> <reading> — "PASS|FAIL<TAB><tag>/<slug><TAB><message>", one per GRADED
+# record of a version-2 reading. The slug is the heading lower-cased with every run of other characters
+# one hyphen, and a numeric suffix on a repeat, so no id carries a space. A region FAILs on a finding
+# inside it and on an unresolved verdict; an EXCLUDED region PASSes and says it is a declared exclusion,
+# reported rather than dropped (ADR-024 decision 6).
+st_cf_regions_report() {
+  awk -v tag="$1" '
+    function slug(s,   t) { t = tolower(s); gsub(/[^[:alnum:]]+/, "-", t); gsub(/^-+|-+$/, "", t); return (t == "" ? "region" : t) }
+    $1 == "GRADED" {
+      h = $0; for (j = 1; j <= 11; j++) sub(/^[^ ]+ /, "", h)
+      s = slug(h); id = s; c = 1; while (id in seen) id = s "-" (++c); seen[id] = 1
+      m = substr("######", 1, $4) " " h " — " $7 " (" $8 "), writer-table row " $5 " (" $6 "), " $9 " field-shaped bullet(s)"
+      if ($10 > 0) m = m ", " $10 " bold-line field(s) the key cannot see"
+      if ($7 == "EXCLUDED") m = m " — a declared exclusion, reported rather than dropped: no writer is declared for it (ADR-024 decision 6)"
+      if ($11 > 0) m = m " — " $11 " finding(s) in this region, named in ST-CF[" tag "]"
+      printf "%s\t%s/%s\t%s\n", (($11 > 0 || $7 == "UNRESOLVED") ? "FAIL" : "PASS"), tag, id, m
+    }' <<<"$2"
+}
+st_cf_regions_assert() {   # <tag> <reading> — one ST-CF[<tag>/<slug>] verdict per region
+  local v id m
+  while IFS="$(printf '\t')" read -r v id m; do
+    [ -n "$v" ] || continue
+    if [ "$v" = PASS ]; then PASS "ST-CF[$id]: $m"; else FAIL "ST-CF[$id]: $m"; fi
+  done <<<"$(st_cf_regions_report "$1" "$2")"
+}
+# st_cf_regions_summary <reading> — the regions of a version-2 reading counted by verdict, and each
+# EXCLUDED region named, so the form verdict itself states its declared exclusions.
+st_cf_regions_summary() {
+  awk '
+    $1 == "GRADED" { n++; c[$7]++; if ($7 == "EXCLUDED") { h = $0; for (j = 1; j <= 11; j++) sub(/^[^ ]+ /, "", h); x = x (x == "" ? "" : " and ") substr("######", 1, $4) " " h } }
+    END {
+      o = n " region(s) resolved to rows of the writer table its write-ownership: key addresses — "
+      o = o (c["YES"] + 0) " YES, " (c["CONDITIONAL"] + 0) " CONDITIONAL, " (c["NO"] + 0) " NO and " (c["EXCLUDED"] + 0) " EXCLUDED"
+      o = o ((x == "") ? ", so no region is a declared exclusion" : ", the EXCLUDED being declared exclusions it reports rather than drops: " x)
+      printf "%s", o
+    }' <<<"$1"
+}
+
+# st_cf_row_vector <regions> — the REALIZED ROW VECTOR of a version-2 form, one TAB record per row of
+# its writer table, in table order, from ft_regions' records:
+#   <row> <verdict> <class> <regions> <fields> <writer> <block>
+# A row's verdict is the verdict and ground its regions realize, joined with ` + ` where they differ. A
+# row no step of the resolution can land on reads UNREACHABLE (by construction) — its verdict is a
+# property of the rules, never a measurement of the form — and an addressed row that resolves no region
+# reads NO EXTENT.
+st_cf_row_vector() {
+  awk -F'\t' '
+    $1 == "ROW" { n++; R[n] = $2; C[n] = $4; H[n] = $5; W[n] = $9; B[n] = $10; next }
+    $1 == "REGION" { k++; RR[k] = $5; V[k] = $7 " (" $8 ")"; RL[k] = $2; next }
+    $1 == "FIELD" { F[$3]++ }
+    END {
+      for (i = 1; i <= n; i++) {
+        v = ""; ng = 0; nf = 0; split("", seen)
+        for (j = 1; j <= k; j++) if (RR[j] == R[i]) { ng++; nf += F[RL[j]]; if (!(V[j] in seen)) { seen[V[j]] = 1; v = v (v == "" ? "" : " + ") V[j] } }
+        if (H[i] == "catch-all" || H[i] == "label-only") v = "UNREACHABLE (by construction)"
+        else if (ng == 0) v = "NO EXTENT"
+        printf "%s\t%s\t%s\t%d\t%d\t%s\t%s\n", R[i], v, C[i], ng, nf, W[i], B[i]
+      }
+    }' <<<"$1"
+}
+
+# st_cf_pin_report <tag> <vector> — the pin against the realized vector, KEYED BY BLOCK TEXT:
+#   NPIN<TAB>n and NROW<TAB>n, then per row MATCH<TAB>row<TAB>block<TAB>verdict,
+#   MISMATCH<TAB>row<TAB>block<TAB>pinned<TAB>realized<TAB>class<TAB>writer, or
+#   UNPINNED<TAB>row<TAB>block<TAB>realized<TAB>class<TAB>writer, and MISSING<TAB>block<TAB>pinned for
+#   a pinned row no longer in the table. A pin line's Block text runs to its LAST ` | `.
+st_cf_pin_report() {
+  printf '%s\n%s\n%s\n' "$ST_CF_PIN" "$ST_SEP" "$2" | awk -F'\t' -v tag="$1" -v sep="$ST_SEP" '
+    !past && $0 == sep { past = 1; next }
+    !past {
+      a = index($0, " | "); if (a == 0 || substr($0, 1, a - 1) != tag) next
+      rest = substr($0, a + 3); last = 0; pos = 0; t = rest
+      while ((b = index(t, " | ")) > 0) { last = pos + b; pos += b + 2; t = substr(t, b + 3) }
+      if (last == 0) next
+      k = substr(rest, 1, last - 1); np++; PK[np] = k; PV[k] = substr(rest, last + 3); next
+    }
+    NF >= 7 { nr++; R[nr] = $1; V[nr] = $2; C[nr] = $3; W[nr] = $6; B[nr] = $7; HAS[$7] = 1 }
+    END {
+      printf "NPIN\t%d\nNROW\t%d\n", np, nr
+      for (i = 1; i <= nr; i++) {
+        if (!(B[i] in PV)) printf "UNPINNED\t%s\t%s\t%s\t%s\t%s\n", R[i], B[i], V[i], C[i], W[i]
+        else if (PV[B[i]] != V[i]) printf "MISMATCH\t%s\t%s\t%s\t%s\t%s\t%s\n", R[i], B[i], PV[B[i]], V[i], C[i], W[i]
+        else printf "MATCH\t%s\t%s\t%s\n", R[i], B[i], V[i]
+      }
+      for (i = 1; i <= np; i++) if (!(PK[i] in HAS)) printf "MISSING\t%s\t%s\n", PK[i], PV[PK[i]]
+    }'
+}
+
+# st_cf_pin_assert <member> [charter] — exactly ONE verdict, ST-CF-PIN[<tag>]: the rows of the writer
+# table the member's region contract realizes, against the vector ST_CF_PIN pins for it. It FAILs on an
+# empty pin and on an empty realized vector, and then on every row whose realized verdict is not its
+# pinned one, every row the pin does not carry and every pinned row gone — each named with its class and
+# the Writer cell the class was read from, as a finding about ADR-024 (AC2), because the pin IS that
+# record's prediction as this arm realized it at merge. Self-contained, so group MD registers it on
+# ft_regions and removing that reader reaches its non-degeneracy limb.
+st_cf_pin_assert() {
+  local member="$1" chart="${2:-$ST_CF_OWN}" tag rg vec rep np nr nbad lst sm
+  tag="$(st_cf_tag "$member")"
+  rg="$(ft_regions "$ROOT/$member" "$chart" 2>/dev/null)"
+  vec="$(st_cf_row_vector "$rg")"
+  rep="$(st_cf_pin_report "$tag" "$vec")"
+  np="$(awk -F'\t' '$1 == "NPIN" { print $2 + 0; exit }' <<<"$rep")"
+  nr="$(awk -F'\t' '$1 == "NROW" { print $2 + 0; exit }' <<<"$rep")"
+  nbad="$(awk -F'\t' '$1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING" { n++ } END { print n + 0 }' <<<"$rep")"
+  if [ "${np:-0}" -lt 1 ]; then
+    FAIL "ST-CF-PIN[$tag]: ST_CF_PIN pins no realized row vector for $member, so an edit to its writer table that moves a verdict would have nothing to be compared with — a version-2 member owes a pin"
+  elif [ "${nr:-0}" -lt 1 ]; then
+    FAIL "ST-CF-PIN[$tag]: the region contract of $member resolved NO writer-table row, so its $np pinned row(s) would be compared with the empty set — ST-CF[$tag] names why"
+  elif [ "$nbad" -ne 0 ]; then
+    lst="$(awk -F'\t' '
+      $1 == "MISMATCH" { printf "%srow %s (%s) was pinned %s and now realizes %s, as class %s read from its Writer cell: %s", (n++ ? "; " : ""), $2, $3, $4, $5, $6, $7 }
+      $1 == "UNPINNED" { printf "%srow %s (%s) realizes %s and carries no pin, as class %s read from its Writer cell: %s", (n++ ? "; " : ""), $2, $3, $4, $5, $6 }
+      $1 == "MISSING"  { printf "%sthe row pinned as (%s), %s, is no longer in the table", (n++ ? "; " : ""), $2, $3 }' <<<"$rep")"
+    FAIL "ST-CF-PIN[$tag]: $nbad row(s) of the writer table no longer realize the vector pinned for $member, and each is a finding about ADR-024 (AC2), never absorbed: $lst. An edit to that table that moves a verdict updates this pin in the same change"
+  else
+    sm="$(awk -F'\t' '
+      FILENAME == ARGV[1] { if ($1 == "LABEL") { lb[$2] = lb[$2] (lb[$2] == "" ? "" : ", ") $3 " opening " $4 " line(s) of the form" }; next }
+      NF >= 7 {
+        o = "row " $1 " " $2
+        if ($2 ~ /^UNREACHABLE/) o = o ((lb[$1] == "") ? "" : ", its label " lb[$1])
+        else o = o " over " $4 " region(s) and " $5 " field(s)"
+        printf "%s%s", (n++ ? "; " : ""), o }' <(printf '%s\n' "$rg") <(printf '%s\n' "$vec"))"
+    PASS "ST-CF-PIN[$tag]: every one of the $nr row(s) of the writer table realizes the verdict ST_CF_PIN pins for it, keyed by its Block text — $sm. These are the verdicts ADR-024 predicts for its rows as this arm realizes them — EXCLUDED is that record's conditional NO, and UNREACHABLE its NO with no extent, where no step of the resolution can land on the row — so an edit to that table that moves one is a finding about ADR-024 (AC2), never absorbed. CTL-ST-CF-PIN-FLIP shows one such edit turning this red"
+  fi
+}
+
+# st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] [charter] — ONE thing mutated on a
+# copy of the member, of the data model or of the charter, and the SAME evaluator must then report MORE
+# <code> findings than
 # the member's own live reading does. A DELTA, never an absolute: on a member that already fails a
 # question the arm still grades what its own mutation did, and it cannot pass on an inherited
 # finding. Coverage is recorded on the CALL — the code before the verdict, the SITES from what the
 # evaluator actually emitted — into run-level accumulators, graded once after the last member.
 st_cf_mustfire() {
-  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" landed=0 v n0 n1
+  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" chart="${7:-$ST_CF_OWN}" landed=0 v n0 n1
   ST_CF_ARMED="$ST_CF_ARMED
 $want"
-  { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_DM" "$dm"; } || landed=1
-  v="$(st_cf_violations "$fx" "$member" "$dm")"
+  { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_DM" "$dm" && cmp -s "$ST_CF_OWN" "$chart"; } || landed=1
+  v="$(st_cf_violations "$fx" "$member" "$dm" "$chart")"
   n0="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
   n1="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$v")"
   ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
@@ -5697,14 +6262,14 @@ $(st_attrib "$v" "$ST_CF_SITEMAP")"
   fi
 }
 
-# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> — the copy's findings must EQUAL
+# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> [charter] — the copy's findings must EQUAL
 # the member's live reading, over a non-zero count of graded bullets: what tells an evaluator that
 # grades the contract from one that reddens on any edit. Records no coverage, because a must-not-fire
 # arm asserts that nothing new was emitted.
 st_cf_mustnotfire() {
-  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" landed=0 v t0 t1 nb
-  cmp -s "$ST_CF_FILE" "$fx" || landed=1
-  v="$(st_cf_violations "$fx" "$member" "$ST_DM")"
+  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" chart="${6:-$ST_CF_OWN}" landed=0 v t0 t1 nb
+  { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_CF_OWN" "$chart"; } || landed=1
+  v="$(st_cf_violations "$fx" "$member" "$ST_DM" "$chart")"
   t0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; t1="$(st_cf_tally "$v" | tr '\n' ' ')"
   nb="$(awk '$1 == "DENOM" { print $2 + 0; exit }' <<<"$v")"
   if [ "$landed" -eq "$wantedit" ] && [ "$t1" = "$t0" ] && [ "${nb:-0}" -gt 0 ]; then
@@ -5744,6 +6309,33 @@ st_cf_key_line() {
   awk -v want="$2" "$ST_CF_FENCE_FN"'{ L[NR] = $0 } END { cf_form_fence(L, NR); for (i = 1; i <= CF_NK; i++) if (CF_K[i] == want) { print CF_KL[i]; exit } }' "$1"
 }
 st_cf_tracked_templates() { git -C "$ROOT" ls-files -- 'templates/*.template.md'; }
+# st_cf_charter_fixture <name> — a copy of the charter, for the arms that mutate a writer table.
+st_cf_charter_fixture() { cp "$ST_CF_OWN" "$ST_CF_DIR/$1-charter.md" && printf '%s\n' "$ST_CF_DIR/$1-charter.md"; }
+# st_cf_line_lit <file> <line> <old> <new> — the first LITERAL occurrence of <old> on one line replaced.
+st_cf_line_lit() {
+  awk -v ln="$2" -v a="$3" -v b="$4" 'FNR == ln + 0 { p = index($0, a); if (p > 0) $0 = substr($0, 1, p - 1) b substr($0, p + length(a)) } { print }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+# st_cf_col <file> <header-line> <name> — the column a table header names, counted from 1.
+st_cf_col() {
+  awk -v ln="$2" -v nm="$3" 'FNR == ln + 0 { s = $0; gsub(/\\\|/, "\035", s); sub(/^[ \t]*\|/, "", s); sub(/\|[ \t\r]*$/, "", s)
+    k = split(s, a, "|"); for (i = 1; i <= k; i++) { t = a[i]; gsub(/^[ \t]+|[ \t]+$/, "", t); if (t == nm) { print i; exit } } }' "$1"
+}
+# st_cf_cell <file> <line> <column> <set|add|drop> <text> — ONE cell of the table row at <line>
+# rewritten: `set` replaces it, `add` appends <text>, `drop` deletes every literal occurrence. The row is
+# re-joined with ` | `, an escaped pipe kept escaped.
+st_cf_cell() {
+  awk -v ln="$2" -v c="$3" -v m="$4" -v t="$5" 'FNR == ln + 0 {
+      s = $0; gsub(/\\\|/, "\035", s); sub(/^[ \t]*\|/, "", s); sub(/\|[ \t\r]*$/, "", s)
+      k = split(s, a, "|"); o = "|"
+      for (i = 1; i <= k; i++) {
+        x = a[i]; gsub(/^[ \t]+|[ \t]+$/, "", x)
+        if (i == c + 0) { if (m == "set") x = t; else if (m == "add") x = x t; else if (t != "") while ((p = index(x, t)) > 0) x = substr(x, 1, p - 1) substr(x, p + length(t)) }
+        n2 = split(x, pp, "\035"); x = pp[1]; for (j = 2; j <= n2; j++) x = x "\\|" pp[j]
+        o = o " " x " |"
+      }
+      $0 = o }
+    { print }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
 
 # st_cf_sub_report <st-templates> <forms> — MISS<TAB>path per ST_TEMPLATES member the conformance
 # population does not list, then NT<TAB>n (ST_TEMPLATES members) and NI<TAB>n (members also listed).
@@ -5823,7 +6415,7 @@ if [ "$ST_CF_NFORMS" -lt 1 ]; then
 elif [ "$ST_CF_NKEYS" -lt 1 ]; then
   FAIL "ST-CF0: the contract's declared key set read EMPTY from ${ST_CF_DECL#"$ROOT/"} — $(st_cf_decl_why "$ST_CF_DECL") — so every form would be graded against a contract nobody declares"
 else
-  PASS "ST-CF0: the conformance arm has a non-empty population, $ST_CF_NFORMS declared form(s), and a non-empty contract: $ST_CF_NKEYS key(s) [$(printf '%s' "$ST_CF_KEYS" | tr '\n' ' ')] read LIVE from the one closed worked fence of ${ST_CF_DECL#"$ROOT/"}, whose Status does not read Superseded. The key set is copied nowhere in this file, so an edit to that fence moves every form's verdict in the same run. CTL-ST-CF-DECL, CTL-ST-CF-DECL-UNCLOSED and CTL-ST-CF-DECL-SUPERSEDED show the reader refusing a record it must not read"
+  PASS "ST-CF0: the conformance arm has a non-empty population, $ST_CF_NFORMS declared form(s), and a non-empty contract: $ST_CF_NKEYS key(s) [$(printf '%s' "$ST_CF_KEYS" | tr '\n' ' ')] read LIVE from the one closed worked fence of ${ST_CF_DECL#"$ROOT/"}, whose Status does not read Superseded — and, at form-version 2, the same set with its one $ST_CF_V2_DROP key exchanged in place for $ST_CF_V2_KEY [$(awk -v d="$ST_CF_V2_DROP" -v k="$ST_CF_V2_KEY" 'NF { printf "%s ", ($0 == d ? k : $0) }' <<<"$ST_CF_KEYS")]. The key set is copied nowhere in this file, so an edit to that fence moves every form's verdict in the same run. CTL-ST-CF-DECL, CTL-ST-CF-DECL-UNCLOSED and CTL-ST-CF-DECL-SUPERSEDED show the reader refusing a record it must not read"
 fi
 
 # CTL-ST-CF-DECL / -DECL-UNCLOSED / -DECL-SUPERSEDED — MUST FIRE, each on a COPY of ADR-023: the
@@ -5978,6 +6570,39 @@ ST_CF_SITE_PROBE_KEY='ZZ-ST-CF-SITE-PROBE#1'
 ST_CF_SITE_PHANTOM='ZZ-ST-CF-PHANTOM-SITE#9'
 # The member the group-MD registrations grade: the FIRST entry of ST_CF_FORMS, by its path.
 ST_CF_MD_FORM="$(printf '%s\n' "$ST_CF_FORMS" | awk 'NF { print; exit }')"
+# The member the version-2 registrations grade: the FIRST entry of ST_CF_FORMS declaring version 2.
+ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_version "$ROOT/$st_cf_m")" = 2 ] && { printf '%s' "$st_cf_m"; break; }; done <<<"$ST_CF_FORMS")"
+
+# ── THE REALIZED ROW VECTOR, PINNED ─────────────────────────────────────────────────────────────
+# A version-2 form's writer table is read LIVE as its declaration, and a prose table can move a
+# region's verdict without stranding a declared field: a creation clause added to a Writer cell turns
+# YES into CONDITIONAL, and no question the evaluator asks can see it. So the verdict each row realizes
+# is pinned here, per member, KEYED BY THE ROW'S BLOCK TEXT and never by its number, so that a row
+# inserted into the table renumbers nothing. ST-CF-PIN[<tag>] grades it on every run: a row realizing
+# another verdict, a row the pin does not carry, and a pinned row gone each FAIL as a finding about
+# ADR-024 (AC2). The values are the verdicts ADR-024 predicts for its rows, as this arm realized them at
+# merge — EXCLUDED is that record's conditional NO, and UNREACHABLE is its NO with no extent. Two rows
+# read UNREACHABLE BY CONSTRUCTION, the lifecycle-marker row and the catch-all for a block the table
+# does not list: no step of the resolution can land on either, so their verdict is a property of the
+# rules and never a measurement of the form. The lifecycle row's zero IS measured, by the probe that
+# counts the lines of the form opening on its bold label.
+#
+# ADR-028 (Accepted) rewrites the `[DERIVED]` row twice, and each landing changes the realized vector
+# there, so each must update this pin in the same change. The change that names `/trip-record` for
+# `### Effective Planning Days` — that record's Decision 1 row, which this release's plan calls its
+# cutover — adds a row whose region realizes NO (marked) and narrows the `[DERIVED]` row's Block text
+# to the per-traveller block; its Retire landing set then removes that half of the row with its block.
+#
+# One line per row: `<form tag> | <Block cell, verbatim> | <realized verdict>`.
+ST_CF_PIN='trip-context | Title line · `## Group` roster · `Total travelers` | CONDITIONAL (condition)
+trip-context | `## Mode` → `Current mode` and `Mode notes` | NO (writer-set)
+trip-context | `[ENRICH]` fields — `### Transit Access`, `### Walkable Proximity`, `## Weather Context`, `## Destination Baseline`, `## Events & Calendar` | NO (marked)
+trip-context | `[DERIVED]` blocks — `### Effective Planning Days`, `### Per-Traveler Planning Days` | EXCLUDED (no-writer)
+trip-context | `## Destination` | YES (interviewer)
+trip-context | `## Locked Elements` · `## Current Itinerary Status` | YES (interviewer)
+trip-context | `**Lifecycle:**` — the lifecycle marker line | UNREACHABLE (by construction)
+trip-context | every untagged field **not named above** | YES (interviewer)
+trip-context | a block not listed above | UNREACHABLE (by construction)'
 # Run-level, per D-12 of the seam: every member's arms land in ONE armed set, graded after the loop.
 ST_CF_ARMED=""
 ST_CF_ARMED_SITES=""
@@ -5994,6 +6619,290 @@ echo "  ── $ST_CF_REL (form contract)"
 
 st_cf_assert "$ST_CF_REL" "$ST_DM"
 ST_CF_LIVE="$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" 2>/dev/null)"
+
+# ══ VERSION 2 — a block-owned form. Every region is graded on its own, the rows its writer table
+# realizes are graded against their pin, and the arms below mutate a copy of the form, of the data model
+# or of the charter. Every target is DISCOVERED from this member's own region contract — the records
+# ft_regions reads and the resolver's answers for them — and never named here. ════════════════════
+if [ "$(st_cf_version "$ST_CF_FILE")" = 2 ]; then
+st_cf_regions_assert "$ST_CF_TAG" "$ST_CF_LIVE"
+st_cf_pin_assert "$ST_CF_REL"
+ST_CF_RG="$(ft_regions "$ST_CF_FILE" "$ST_CF_OWN" 2>/dev/null)"
+ST_CF_RS="$(awk -F'\t' '$1 == "FIELD" { print $4 "\t" $5 "\t" $2 "\t" $3 }' <<<"$ST_CF_RG" | ft_resolve <(ft_rows "$ST_DM") 2>/dev/null)"
+# The graded bullets: resolver answers ONE inside a YES or CONDITIONAL region, as
+# line<TAB>label<TAB>section<TAB>field-table row<TAB>region line<TAB>how the region resolved<TAB>its writer-table row
+ST_CF_GR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "REGION") { v[$2] = $7; h[$2] = $6; w[$2] = $5 }; next }
+  $1 == "ONE" && (v[$6] == "YES" || v[$6] == "CONDITIONAL") { print $5 "\t" $4 "\t" $3 "\t" $2 "\t" $6 "\t" h[$6] "\t" w[$6] }' <(printf '%s\n' "$ST_CF_RG") <(printf '%s\n' "$ST_CF_RS"))"
+ST_CF_NT="$(awk -F'\t' '$1 == "TABLE" { print $4 + 0; exit }' <<<"$ST_CF_RG")"
+ST_CF_NG="$(awk -F'\t' '$1 == "REGION" { n++ } END { print n + 0 }' <<<"$ST_CF_RG")"
+ST_CF_NGB="$(printf '%s\n' "$ST_CF_GR" | grep -c '[^[:space:]]')"
+# THE ENTRY GATE of a version-2 member: every arm below mutates a copy whose regions resolve against a
+# writer table and whose interviewable regions hold a graded field, so a member without them is named
+# ONCE, here.
+if [ "${ST_CF_NT:-0}" -lt 1 ] || [ "${ST_CF_NG:-0}" -lt 1 ] || [ "${ST_CF_NGB:-0}" -lt 1 ]; then
+  FAIL "CTL-ST-CF[$ST_CF_TAG]: none of the conformance arms could be constructed on $ST_CF_REL — its region contract read ${ST_CF_NT:-0} writer-table row(s), ${ST_CF_NG:-0} region(s) and ${ST_CF_NGB:-0} graded bullet(s), and every arm mutates a copy whose regions resolve and whose interviewable regions hold a field. ST-CF[$ST_CF_TAG] names the question; this member's arms are UNMEASURED and named here once"
+  continue
+fi
+st_cf_gr() { awk -F'\t' -v c="$2" -v k="$1" 'NR == k + 0 { print $c; exit }' <<<"$ST_CF_GR"; }
+ST_CF_G1L="$(st_cf_gr 1 1)"; ST_CF_G1B="$(st_cf_gr 1 2)"; ST_CF_G1ROW="$(st_cf_gr 1 4)"
+ST_CF_G1RL="$(st_cf_gr 1 5)"; ST_CF_G1HOW="$(st_cf_gr 1 6)"; ST_CF_G1WR="$(st_cf_gr 1 7)"
+ST_CF_GDL="$(awk -F'\t' '$6 == "default" { print $1; exit }' <<<"$ST_CF_GR")"
+ST_CF_GDB="$(awk -F'\t' '$6 == "default" { print $2; exit }' <<<"$ST_CF_GR")"
+# the first graded bullet that is the ONLY graded bullet reaching its field-table row
+ST_CF_GUL="$(awk -F'\t' '{ L[NR] = $1; R[NR] = $4; c[$4]++ } END { for (i = 1; i <= NR; i++) if (c[R[i]] == 1) { print L[i]; exit } }' <<<"$ST_CF_GR")"
+ST_CF_FA="$(st_cf_fence_at "$ST_CF_FILE")"; ST_CF_FO="${ST_CF_FA%% *}"; ST_CF_FC="${ST_CF_FA##* }"
+ST_CF_KA="$(st_cf_key_line "$ST_CF_FILE" "$ST_CF_V2_KEY")"
+ST_CF_KF="$(st_cf_key_line "$ST_CF_FILE" form)"
+ST_CF_KC="$(st_cf_key_line "$ST_CF_FILE" classification)"
+ST_CF_KV="$(st_cf_key_line "$ST_CF_FILE" form-version)"
+ST_CF_KO="$(st_cf_key_line "$ST_CF_FILE" output)"
+ST_CF_R1="$(awk -F'\t' '$1 == "REGION" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_R2="$(awk -F'\t' '$1 == "REGION" && ++n == 2 { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_RN="$(awk -F'\t' '$1 == "REGION" && $6 == "named" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_RM="$(awk -F'\t' '$1 == "REGION" && $6 == "named" && $9 ~ /\[[[:upper:]]+\]/ { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_TH="$(awk -F'\t' '$1 == "TABLE" { print $3; exit }' <<<"$ST_CF_RG")"
+ST_CF_WCOL="$(st_cf_col "$ST_CF_OWN" "$ST_CF_TH" Writer)"; ST_CF_BCOL="$(st_cf_col "$ST_CF_OWN" "$ST_CF_TH" Block)"
+ST_CF_NCOL="$(awk -v ln="$ST_CF_TH" 'FNR == ln + 0 { s = $0; sub(/^[ \t]*\|/, "", s); sub(/\|[ \t\r]*$/, "", s); print split(s, a, "|"); exit }' "$ST_CF_OWN")"
+st_cf_rowline() { awk -F'\t' -v r="$1" '$1 == "ROW" && $2 == r { print $6; exit }' <<<"$ST_CF_RG"; }
+# st_cf_leak <verdict> — the first region of that verdict whose `## ` section holds a bullet that
+# resolved ONE, as "<heading line>|<that bullet's label>": the write a leak arm inserts there.
+st_cf_leak() {
+  awk -F'\t' -v want="$1" 'FILENAME == ARGV[1] { if ($1 == "REGION") { n++; RL[n] = $2; RV[n] = $7; if ($4 == 2) cur = $9; SE[n] = ($4 == 2) ? $9 : cur }; next }
+    $1 == "ONE" && !($3 in lab) { lab[$3] = $4 }
+    END { for (i = 1; i <= n; i++) if (RV[i] == want && (SE[i] in lab)) { print RL[i] "|" lab[SE[i]]; exit } }' <(printf '%s\n' "$ST_CF_RG") <(printf '%s\n' "$ST_CF_RS")
+}
+
+# ── Q1: the fence, its version-2 key set, and its place above every region ──
+ST_CF_FX="$(st_cf_fixture q1-keys-v2)"; st_line_del "$ST_CF_FX" "$ST_CF_KA"
+st_cf_mustfire "CTL-ST-CF-Q1-KEYS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's $ST_CF_V2_KEY: line is deleted (line $ST_CF_KA), so a key of the version-2 set appears zero times"
+ST_CF_FX="$(st_cf_fixture q1-identity-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KF" "[.]template[.]md" ".elsewhere.md"
+st_cf_mustfire "CTL-ST-CF-Q1-IDENTITY-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's form: value names another file (line $ST_CF_KF)"
+ST_CF_FX="$ST_CF_DIR/q1-region.md"
+awk -v a="$ST_CF_FO" -v b="$ST_CF_FC" -v h="$ST_CF_R1" 'FNR >= a + 0 && FNR <= b + 0 { f[++k] = $0; next } { print } FNR == h + 0 { print ""; for (i = 1; i <= k; i++) print f[i] }' "$ST_CF_FILE" > "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q1-REGION[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence is cut and set down again below the heading of the first region (line $ST_CF_R1), inside that region"
+
+# ── Q2: the address, the writer table, and the extent every region resolves to ──
+ST_CF_FX="$(st_cf_fixture q2-own-path)"; st_cf_line_lit "$ST_CF_FX" "$ST_CF_KA" "${ST_CF_OWN#"$ROOT/"} §" "README.md §"
+st_cf_mustfire "CTL-ST-CF-Q2-OWN-PATH[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the address names another file as the charter (line $ST_CF_KA)"
+ST_CF_FX="$(st_cf_fixture q2-own-anchor)"; st_line_sub "$ST_CF_FX" "$ST_CF_KA" "[ \t]*$" "s"
+st_cf_mustfire "CTL-ST-CF-Q2-OWN-ANCHOR[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the address anchor gains a letter (line $ST_CF_KA), so it leads no heading of the charter"
+ST_CF_FX="$(st_cf_fixture q2-own-table)"; ST_CF_CX="$(st_cf_charter_fixture q2-own-table)"; st_cf_cell "$ST_CF_CX" "$ST_CF_TH" "$ST_CF_WCOL" set Owner
+st_cf_mustfire "CTL-ST-CF-Q2-OWN-TABLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the writer table's Writer column is renamed on a COPY of the charter (line $ST_CF_TH), the form left byte-untouched" "$ST_DM" "$ST_CF_CX"
+ST_CF_Y="$(awk -F'\t' '$1 == "ROW" && $5 == "catch-all" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_DCMD="$(awk -F'\t' '$1 == "DEFAULT" { print $3; exit }' <<<"$ST_CF_RG")"
+ST_CF_FX="$(st_cf_fixture q2-default)"; ST_CF_CX="$(st_cf_charter_fixture q2-default)"
+[ -n "$ST_CF_Y" ] && st_cf_cell "$ST_CF_CX" "$(st_cf_rowline "$ST_CF_Y")" "$ST_CF_WCOL" set "\`$ST_CF_DCMD\`"
+st_cf_mustfire "CTL-ST-CF-Q2-DEFAULT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the catch-all row ${ST_CF_Y:-none} of a COPY of the charter gains the default row's command, so two catch-all rows name a writer and the interviewer is undecidable" "$ST_DM" "$ST_CF_CX"
+# the first row, in TABLE order, that names a region, with the heading of its first named region; and
+# the next row in table order that names one
+ST_CF_A1="$(awk -F'\t' '$1 == "REGION" && $6 == "named" && !(($5 + 0) in h) { h[$5 + 0] = substr("######", 1, $4) " " $9; if (m == 0 || $5 + 0 < m) m = $5 + 0 } END { if (m) print m "|" h[m] }' <<<"$ST_CF_RG")"
+ST_CF_A2="$(awk -F'\t' -v r="${ST_CF_A1%%|*}" '$1 == "REGION" && $6 == "named" && $5 + 0 > r + 0 && (m == 0 || $5 + 0 < m) { m = $5 + 0 } END { if (m) print m }' <<<"$ST_CF_RG")"
+ST_CF_FX="$(st_cf_fixture q2-ambig)"; ST_CF_CX="$(st_cf_charter_fixture q2-ambig)"
+[ -n "$ST_CF_A2" ] && st_cf_cell "$ST_CF_CX" "$(st_cf_rowline "$ST_CF_A2")" "$ST_CF_BCOL" add " · \`${ST_CF_A1#*|}\`"
+st_cf_mustfire "CTL-ST-CF-Q2-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "on a COPY of the charter, row ${ST_CF_A2:-none} also names the heading row ${ST_CF_A1%%|*} names (${ST_CF_A1#*|}), so two rows name one region" "$ST_DM" "$ST_CF_CX"
+ST_CF_FX="$(st_cf_fixture q2-mark-none)"; st_cf_ins_after "$ST_CF_FX" "$((ST_CF_R2 - 1))" '### ZZ-ST-CF-PROBE [ZZSTCFPROBE]\n'
+st_cf_mustfire "CTL-ST-CF-Q2-MARK-NONE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a heading carrying a marker no row carries is inserted before the second region (line $ST_CF_R2)"
+ST_CF_MK="$(awk -F'\t' -v l="$ST_CF_RM" '$1 == "REGION" && $2 == l { if (match($9, /\[[[:upper:]]+\]/)) print substr($9, RSTART, RLENGTH); exit }' <<<"$ST_CF_RG")"
+ST_CF_FX="$(st_cf_fixture q2-mark-disagree)"; st_cf_line_lit "$ST_CF_FX" "${ST_CF_RM:-0}" "${ST_CF_MK:-[ZZ-NONE]}" "[ZZSTCFPROBE]"
+st_cf_mustfire "CTL-ST-CF-Q2-MARK-DISAGREE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the marker of the first named, marked region heading is replaced by one its row does not carry (line ${ST_CF_RM:-none})"
+ST_CF_FX="$(st_cf_fixture q2-phantom)"; st_line_sub "$ST_CF_FX" "$ST_CF_RN" "[ \t]*$" "ZZ"
+st_cf_mustfire "CTL-ST-CF-Q2-PHANTOM[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the heading of the first named region gains a suffix (line $ST_CF_RN), so the row naming it names a heading the form does not carry"
+ST_CF_FX="$ST_CF_DIR/q2-empty.md"; awk '/^##+[ \t]/ { sub(/^#+[ \t]+/, "") } { print }' "$ST_CF_FILE" > "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q2-EMPTY[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "every heading of level 2 or deeper is demoted to text, so the form has no region"
+ST_CF_FX="$(st_cf_fixture q2-above)"; st_cf_ins_after "$ST_CF_FX" "$((ST_CF_R1 - 1))" '- **ZZ-ST-CF-ABOVE:** a field-shaped bullet above every region\n'
+st_cf_mustfire "CTL-ST-CF-Q2-ABOVE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a field-shaped bullet is inserted above the first region (line $ST_CF_R1), outside the partition"
+ST_CF_LB="$(awk -F'\t' '$1 == "ROW" { h[$2] = $5 } $1 == "LABEL" && (h[$2] == "label-only" || h[$2] == "catch-all") { print $3; exit }' <<<"$ST_CF_RG")"
+ST_CF_FX="$(st_cf_fixture q2-label)"; [ -n "$ST_CF_LB" ] && st_cf_ins_after "$ST_CF_FX" "$ST_CF_R1" "\\n$ST_CF_LB ZZ-ST-CF-LABEL"
+st_cf_mustfire "CTL-ST-CF-Q2-LABEL[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a line opening on the bold label ${ST_CF_LB:-(none)}, which the writer table gives to a row no heading can reach, is inserted under the first region (line $ST_CF_R1) — the probe of that row's zero"
+
+# ── Q3: the join inside every interviewable region, the reverse join, and the address ──
+ST_CF_FX="$(st_cf_fixture q3-unjoined-v2)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_G1L" 'ZZ-ST-CF-UNCLASSIFIED'
+st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first graded bullet ('$ST_CF_G1B', line $ST_CF_G1L) is relabelled with a label no field-table row carries"
+ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G1ROW" '$1 == r { print $9; exit }')"
+ST_CF_FX="$(st_cf_fixture q3-ambig-v2)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig-v2)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
+st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet joins (row ${ST_CF_G1ROW:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
+ST_CF_FX="$ST_CF_DIR/q3-empty-v2.md"
+awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "FIELD") d[$2] = 1; next } !(FNR in d)' <(printf '%s\n' "$ST_CF_RG") "$ST_CF_FILE" > "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q3-EMPTY-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "every field-shaped bullet is deleted, at any indent, so the join would be graded over the empty set"
+ST_CF_FX="$(st_cf_fixture q3-address-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "The classification" "The classifications"
+st_cf_mustfire "CTL-ST-CF-Q3-ADDRESS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the classification: anchor is edited so its last segment leads no heading of the data model (line $ST_CF_KC)"
+ST_CF_FX="$(st_cf_fixture q3-reverse)"; st_line_del "$ST_CF_FX" "${ST_CF_GUL:-0}"
+st_cf_mustfire "CTL-ST-CF-Q3-REVERSE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the only graded bullet reaching its field-table row is deleted (line ${ST_CF_GUL:-none}), so that row is carried by no field of an interviewable region — the reverse join"
+# Q3-RESOLVER-V2 — the resolver itself removed, on the unmutated member: the evaluator must say it
+# answered none of the fields, rather than read its silence as a clean join.
+ST_CF_ARMED="$ST_CF_ARMED
+Q3"
+ST_CF_RV="$( ( unset -f ft_resolve; st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" ) 2>/dev/null )"
+ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$ST_CF_RV" "$ST_CF_SITEMAP")"
+ST_CF_RV0="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+ST_CF_RV1="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_RV")"
+if [ "$ST_CF_RV1" -gt "$ST_CF_RV0" ]; then
+  PASS "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed, the evaluator over the unmutated form reports that the resolver answered none of its fields ($ST_CF_RV0 → $ST_CF_RV1), so question 3 cannot pass on a join that never ran"
+else
+  FAIL "CTL-ST-CF-Q3-RESOLVER-V2[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed the evaluator's 'resolver answered 0 of' finding went $ST_CF_RV0 → $ST_CF_RV1, where a rise is owed. A join the resolver never made would read as a clean one"
+fi
+# Q3-DEFAULT-V2 — an unclassified field in a region that resolved by DEFAULT, the route a block the
+# writer table does not list takes: the finding must rise AND cite the table's rule for such a block.
+ST_CF_ARMED="$ST_CF_ARMED
+Q3"
+ST_CF_FX="$(st_cf_fixture q3-default-v2)"; st_cf_relabel "$ST_CF_FX" "${ST_CF_GDL:-0}" 'ZZ-ST-CF-NEW-BLOCK-FIELD'
+ST_CF_DV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
+ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$ST_CF_DV" "$ST_CF_SITEMAP")"
+ST_CF_DV0="$(awk -F'\t' '$1 == "Q3" { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+ST_CF_DV1="$(awk -F'\t' '$1 == "Q3" { n++ } END { print n + 0 }' <<<"$ST_CF_DV")"
+ST_CF_DVC="$(awk -F'\t' '$1 == "Q3" && index($2, "ZZ-ST-CF-NEW-BLOCK-FIELD") && index($2, "resolved to the default row") && index($2, "rules: ") { n++ } END { print n + 0 }' <<<"$ST_CF_DV")"
+if [ -n "$ST_CF_GDL" ] && [ "$ST_CF_DV1" -gt "$ST_CF_DV0" ] && [ "$ST_CF_DVC" -eq 1 ]; then
+  PASS "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — the graded bullet '$ST_CF_GDB' at line $ST_CF_GDL, in a region that resolved by default, is relabelled with a label no field-table row carries: Q3 rises $ST_CF_DV0 → $ST_CF_DV1, and the finding cites the writer table's own rule for a block it does not list, read from the table — the rule a new block meets at the moment it is added"
+else
+  FAIL "CTL-ST-CF-Q3-DEFAULT-V2[$ST_CF_TAG]: MUST FIRE — with a default-resolved bullet (line ${ST_CF_GDL:-none}) relabelled, Q3 went $ST_CF_DV0 → $ST_CF_DV1 and $ST_CF_DVC finding(s) cited the table's rule for an unlisted block, where a rise and one citing finding are owed"
+fi
+
+# ── Q4: nothing declared in a region the interviewer does not own ──
+ST_CF_QX="$(st_cf_leak EXCLUDED)"; ST_CF_QN="$(st_cf_leak NO)"
+if [ -n "$ST_CF_QX" ]; then
+  ST_CF_FX="$(st_cf_fixture q4-excluded)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QX%%|*}" "- **${ST_CF_QX#*|}:** ZZ-ST-CF-LEAK"
+  st_cf_mustfire "CTL-ST-CF-Q4-EXCLUDED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q4 "a declared field ('${ST_CF_QX#*|}') is written under the heading of the first EXCLUDED region whose section declares one (line ${ST_CF_QX%%|*}) — a write into a region no writer owns"
+  ST_CF_FX="$(st_cf_fixture q4-inert)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QX%%|*}" "- **ZZ-ST-CF-INERT:** an undeclared field-shaped bullet"
+  st_cf_mustnotfire "CTL-ST-CF-Q4-INERT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "an UNDECLARED field-shaped bullet is written at the same place (line ${ST_CF_QX%%|*}) — no interviewer can address a pair the classification does not declare, so it is not a write the interviewer could make"
+else
+  VACUOUS "CTL-ST-CF-Q4-EXCLUDED[$ST_CF_TAG]: no EXCLUDED region of $ST_CF_REL sits in a section holding a declared field, so there is no leak into a no-writer region to construct — the exclusion's leak site is armed by CTL-ST-CF-Q4-NO and CTL-ST-CF-ROW-FLIP"
+fi
+if [ -n "$ST_CF_QN" ]; then
+  ST_CF_FX="$(st_cf_fixture q4-no)"; st_cf_ins_after "$ST_CF_FX" "${ST_CF_QN%%|*}" "- **${ST_CF_QN#*|}:** ZZ-ST-CF-LEAK"
+  st_cf_mustfire "CTL-ST-CF-Q4-NO[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q4 "a declared field ('${ST_CF_QN#*|}') is written under the heading of the first NO region whose section declares one (line ${ST_CF_QN%%|*})"
+  ST_CF_Q4NO_V="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
+else
+  VACUOUS "CTL-ST-CF-Q4-NO[$ST_CF_TAG]: no NO region of $ST_CF_REL sits in a section holding a declared field"
+  ST_CF_Q4NO_V=""
+fi
+if [ "$ST_CF_G1HOW" = named ]; then
+  ST_CF_FX="$(st_cf_fixture row-flip)"; ST_CF_CX="$(st_cf_charter_fixture row-flip)"; st_cf_cell "$ST_CF_CX" "$(st_cf_rowline "$ST_CF_G1WR")" "$ST_CF_WCOL" set nobody
+  st_cf_mustfire "CTL-ST-CF-ROW-FLIP[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q4 "on a COPY of the charter, the Writer cell of row $ST_CF_G1WR, which names the first graded bullet's region, is set to name no writer — its declared fields are stranded in a region no writer owns" "$ST_DM" "$ST_CF_CX"
+else
+  VACUOUS "CTL-ST-CF-ROW-FLIP[$ST_CF_TAG]: the first graded bullet's region resolved by $ST_CF_G1HOW rather than by name, so there is no row naming it to flip"
+fi
+
+# ── Q5 and Q6: the fence against the frontmatter, a marked graded bullet, and its marker ──
+ST_CF_FX="$(st_cf_fixture q5-bullet)"; st_line_sub "$ST_CF_FX" "$ST_CF_G1L" "[ \t]*$" " [ENRICH]"
+st_cf_mustfire "CTL-ST-CF-Q5-BULLET[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first graded bullet gains an [ENRICH] marker (line $ST_CF_G1L), so an agent-owned field sits in an interviewable region"
+ST_CF_FX="$(st_cf_fixture q5-output-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KO" "[.]md[ \t]*$" ".elsewhere.md"
+st_cf_mustfire "CTL-ST-CF-Q5-OUTPUT-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the fence's output: no longer names the frontmatter's artifact (line $ST_CF_KO)"
+ST_CF_FX="$(st_cf_fixture q6-v2)"; st_cf_plant "$ST_CF_FX" "$ST_CF_G1L" 'Closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first graded bullet's bracket (line $ST_CF_G1L)"
+
+# ── VERSION: an unsupported version is named as that, and as nothing else ──
+ST_CF_ARMED="$ST_CF_ARMED
+VERSION"
+ST_CF_FX="$(st_cf_fixture version-v2)"; st_line_sub "$ST_CF_FX" "$ST_CF_KV" ":[ ]*2[ \t]*$" ": 3"
+ST_CF_VV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
+ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$ST_CF_VV" "$ST_CF_SITEMAP")"
+ST_CF_VT="$(st_cf_tally "$ST_CF_VV" | tr '\n' ' ')"
+if ! cmp -s "$ST_CF_FILE" "$ST_CF_FX" && [ "${ST_CF_VT% }" = "VERSION 1" ]; then
+  PASS "CTL-ST-CF-VERSION-V2[$ST_CF_TAG]: MUST FIRE — the fence's form-version: is set to a version this arm does not grade (line $ST_CF_KV), and the evaluator reads [${ST_CF_VT% }]: the version is named, and the key set and boundary it was never bound to are not"
+else
+  FAIL "CTL-ST-CF-VERSION-V2[$ST_CF_TAG]: MUST FIRE — with the form-version: set to an unsupported version, the evaluator read [${ST_CF_VT% }], where exactly one VERSION finding and no other is owed — an unsupported version diagnosed as a key-set or boundary fault sends its author to repair the wrong thing"
+fi
+
+# ── Edits that must not fire ──
+ST_CF_FX="$(st_cf_fixture clean)"
+st_cf_mustnotfire "CTL-ST-CF-CLEAN[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 0 "an UNMUTATED copy of the form is put through the same evaluator, the baseline every arm above is a delta against"
+ST_CF_NL="$(awk -F'\t' -v r="$ST_CF_G1RL" '$1 == "FIELD" && $3 == r { l = $2 } END { print l + 0 }' <<<"$ST_CF_RG")"
+ST_CF_FX="$(st_cf_fixture neutral-v2)"; st_cf_ins_after "$ST_CF_FX" "$ST_CF_NL" '\nA sentence of prose inside the region, which no question grades.'
+st_cf_mustnotfire "CTL-ST-CF-NEUTRAL-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "a blank line and a sentence of prose are added after the last field of the first graded bullet's region (line $ST_CF_NL), changing the file and no declaration"
+ST_CF_SR="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "FIELD") f[$3]++; next } $1 == "REGION" && $4 >= 3 && $7 == "YES" && f[$2] > 0 { print $2 " " $3; exit }' <(printf '%s\n' "$ST_CF_RG") <(printf '%s\n' "$ST_CF_RG"))"
+ST_CF_FX="$(st_cf_fixture sens-v2)"; [ -n "$ST_CF_SR" ] && st_cf_dup_range "$ST_CF_FX" "${ST_CF_SR%% *}" "${ST_CF_SR##* }"
+st_cf_mustnotfire "CTL-ST-CF-SENS-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the first sub-region of level 3 or deeper that is interviewable and holds a field is duplicated in place (lines ${ST_CF_SR:-none}) — a repeated block, as the form invites its filler to add, resolves as its twin does"
+# CTL-ST-CF-CONDITION-CELL — MUST NOT FIRE, the specificity of the class reader. On a COPY of the
+# charter, the agent contract span leaves the Condition cell of the first AGENT row and is written into
+# the Condition cell of the first addressed row naming no writer. A class read from the Writer and Block
+# cells alone does not move, and neither does any realized verdict.
+ST_CF_AR="$(awk -F'\t' '$1 == "ROW" && $3 == "AGENT" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_NR="$(awk -F'\t' '$1 == "ROW" && $3 == "NONE" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_AS="$(awk -F'\t' -v r="$ST_CF_AR" '$1 == "ROW" && $2 == r { if (match($9, /`agents\/[^`]+\.md`/)) print substr($9, RSTART, RLENGTH); exit }' <<<"$ST_CF_RG")"
+ST_CF_CX="$(st_cf_charter_fixture condition-cell)"
+if [ -n "$ST_CF_AR" ] && [ -n "$ST_CF_NR" ] && [ -n "$ST_CF_AS" ]; then
+  ST_CF_C=1
+  while [ "$ST_CF_C" -le "${ST_CF_NCOL:-0}" ]; do
+    { [ "$ST_CF_C" = "$ST_CF_BCOL" ] || [ "$ST_CF_C" = "$ST_CF_WCOL" ]; } || { st_cf_cell "$ST_CF_CX" "$(st_cf_rowline "$ST_CF_AR")" "$ST_CF_C" drop "$ST_CF_AS"; ST_CF_LC="$ST_CF_C"; }
+    ST_CF_C=$((ST_CF_C + 1))
+  done
+  st_cf_cell "$ST_CF_CX" "$(st_cf_rowline "$ST_CF_NR")" "${ST_CF_LC:-0}" add " Contract: $ST_CF_AS."
+fi
+ST_CF_CG="$(ft_regions "$ST_CF_FILE" "$ST_CF_CX" 2>/dev/null)"
+ST_CF_CL0="$(awk -F'\t' '$1 == "ROW" { printf "%s:%s/%s ", $2, $3, $4 }' <<<"$ST_CF_RG")"
+ST_CF_CL1="$(awk -F'\t' '$1 == "ROW" { printf "%s:%s/%s ", $2, $3, $4 }' <<<"$ST_CF_CG")"
+ST_CF_CA="$(awk -F'\t' -v r="$ST_CF_AR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "kept" : "gone"); exit }' <<<"$ST_CF_CG")"
+ST_CF_CN="$(awk -F'\t' -v r="$ST_CF_NR" -v s="$ST_CF_AS" '$1 == "ROW" && $2 == r { print (index($11, s) ? "carried" : "absent"); exit }' <<<"$ST_CF_CG")"
+ST_CF_CV0="$(st_cf_row_vector "$ST_CF_RG" | cut -f1-3)"; ST_CF_CV1="$(st_cf_row_vector "$ST_CF_CG" | cut -f1-3)"
+ST_CF_CT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_CT1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_CX")" | tr '\n' ' ')"
+if [ "$ST_CF_CA" = gone ] && [ "$ST_CF_CN" = carried ] && [ -n "${ST_CF_CL0% }" ] && [ "$ST_CF_CL1" = "$ST_CF_CL0" ] && [ "$ST_CF_CV1" = "$ST_CF_CV0" ] && [ "$ST_CF_CT1" = "$ST_CF_CT0" ]; then
+  PASS "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — on a COPY of the charter the agent contract span $ST_CF_AS leaves the Condition cell of row $ST_CF_AR and is written into that of row $ST_CF_NR, and every row's class reads as before [${ST_CF_CL0% }], every realized verdict with it, and the evaluator's findings [${ST_CF_CT0% }]. A writer's class is read from its Writer and Block cells alone, so the column that explains cannot move a verdict"
+else
+  FAIL "CTL-ST-CF-CONDITION-CELL[$ST_CF_TAG]: MUST NOT FIRE — with the agent contract span moved between Condition cells on a COPY of the charter (source row ${ST_CF_AR:-none} $ST_CF_CA, target row ${ST_CF_NR:-none} $ST_CF_CN), the classes read [${ST_CF_CL1% }] against [${ST_CF_CL0% }] and the findings [${ST_CF_CT1% }] against [${ST_CF_CT0% }], where both are owed unchanged. A class read from the Condition column moves a verdict with the explanation of a row rather than its declaration"
+fi
+
+# ── CTL-ST-CF-PIN-FLIP — MUST FIRE on the pin. On a COPY of the charter, the first interviewable row
+# that names a region gains a clause naming another writer at creation: its regions go from YES to
+# CONDITIONAL and no declared field is stranded, so no question the evaluator asks moves — and the pin
+# must FAIL, naming that row, both verdicts and the record it is a finding about.
+ST_CF_PR="$(awk -F'\t' '$1 == "ROW" && $4 == "YES" && $5 == "addressed" { print $2; exit }' <<<"$ST_CF_RG")"
+ST_CF_PW="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "ROW" && $2 == r { print $9; exit }' <<<"$ST_CF_RG")"
+ST_CF_PX="$(st_cf_charter_fixture pin-flip)"
+[ -n "$ST_CF_PR" ] && st_cf_cell "$ST_CF_PX" "$(st_cf_rowline "$ST_CF_PR")" "$ST_CF_WCOL" set "\`/zz-st-cf-probe\` at creation; $ST_CF_PW"
+ST_CF_PV0="$(st_cf_row_vector "$ST_CF_RG" | awk -F'\t' -v r="$ST_CF_PR" '$1 == r { print $2; exit }')"
+ST_CF_PREP="$(st_cf_pin_report "$ST_CF_TAG" "$(st_cf_row_vector "$(ft_regions "$ST_CF_FILE" "$ST_CF_PX" 2>/dev/null)")")"
+ST_CF_PMM="$(awk -F'\t' '$1 == "MISMATCH" || $1 == "UNPINNED" || $1 == "MISSING" { n++ } END { print n + 0 }' <<<"$ST_CF_PREP")"
+ST_CF_PMR="$(awk -F'\t' -v r="$ST_CF_PR" '$1 == "MISMATCH" && $2 == r { print $4 " → " $5; exit }' <<<"$ST_CF_PREP")"
+ST_CF_PFV="$( ( pass=0; fail=0; msg=""; PASS() { pass=$((pass + 1)); }; FAIL() { fail=$((fail + 1)); msg="$*"; }
+  st_cf_pin_assert "$ST_CF_REL" "$ST_CF_PX" > /dev/null 2>&1; printf '%d %d\n%s' "$pass" "$fail" "$msg" ) )"
+ST_CF_PFC="$(awk 'NR == 1' <<<"$ST_CF_PFV")"; ST_CF_PFM="$(awk 'NR > 1' <<<"$ST_CF_PFV")"
+ST_CF_PFA=0
+case "$ST_CF_PFM" in *"row $ST_CF_PR ("*) case "$ST_CF_PFM" in *"a finding about ADR-024 (AC2)"*) ST_CF_PFA=1 ;; esac ;; esac
+ST_CF_PET0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_PET1="$(st_cf_tally "$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" "$ST_CF_PX")" | tr '\n' ' ')"
+if ! cmp -s "$ST_CF_OWN" "$ST_CF_PX" && [ "$ST_CF_PMM" -eq 1 ] && [ "$ST_CF_PMR" = "$ST_CF_PV0 → CONDITIONAL (condition)" ] && [ "$ST_CF_PFC" = "0 1" ] && [ "$ST_CF_PFA" -eq 1 ]; then
+  PASS "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — on a COPY of the charter, row $ST_CF_PR gains a clause naming another writer at creation, and the pin reports exactly that row, pinned and now realized as $ST_CF_PMR, in ONE FAIL that names it as a finding about ADR-024 (AC2), while the evaluator's own findings read [${ST_CF_PET1% }] against the form's [${ST_CF_PET0% }]: a flip that strands no declared field is the one no question sees, and the pin is what sees it"
+else
+  FAIL "CTL-ST-CF-PIN-FLIP[$ST_CF_TAG]: MUST FIRE — with row ${ST_CF_PR:-none}'s Writer cell given a creation clause on a COPY of the charter, the pin reported $ST_CF_PMM defect(s), row ${ST_CF_PR:-none} as '${ST_CF_PMR:-no mismatch}' where '$ST_CF_PV0 → CONDITIONAL (condition)' is owed, the assertion read '$ST_CF_PFC' where '0 1' is owed, and its message named the row and the record $ST_CF_PFA time(s). A pin that cannot see this flip absorbs it"
+fi
+
+# ── CTL-ST-CF-REGION-RENDER — the region renderer over CTL-ST-CF-Q4-NO's reading: exactly ONE region
+# FAILs, it is the region the leak was written into, and the ids are the live ones, in the same order.
+ST_CF_RR0="$(st_cf_regions_report "$ST_CF_TAG" "$ST_CF_LIVE")"
+ST_CF_RR1="$(st_cf_regions_report "$ST_CF_TAG" "$ST_CF_Q4NO_V")"
+ST_CF_RRK="$(awk -v t="${ST_CF_QN%%|*}" '$1 == "GRADED" { k++; if ($2 == t) { print k; exit } }' <<<"$ST_CF_LIVE")"
+ST_CF_RRW="$(awk -F'\t' -v k="${ST_CF_RRK:-0}" 'NR == k + 0 { print $2; exit }' <<<"$ST_CF_RR0")"
+ST_CF_RRF="$(awk -F'\t' '$1 == "FAIL" { printf "%s ", $2 }' <<<"$ST_CF_RR1")"
+ST_CF_RRI0="$(cut -f2 <<<"$ST_CF_RR0")"; ST_CF_RRI1="$(cut -f2 <<<"$ST_CF_RR1")"
+if [ -n "$ST_CF_RRW" ] && [ "${ST_CF_RRF% }" = "$ST_CF_RRW" ] && [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ]; then
+  PASS "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over the reading CTL-ST-CF-Q4-NO provoked, exactly one region renders FAIL, ST-CF[$ST_CF_RRW], the region the leak was written into, and every region id is the live one in the live order. So a region verdict names WHICH region failed, and a form conformant on all but one region no longer reads like one conformant on none"
+else
+  FAIL "CTL-ST-CF-REGION-RENDER[$ST_CF_TAG]: over CTL-ST-CF-Q4-NO's reading the regions failing were [${ST_CF_RRF% }], where exactly [${ST_CF_RRW:-the leak target}] is owed, and the id list $( [ "$ST_CF_RRI1" = "$ST_CF_RRI0" ] && echo matched || echo DIFFERED from ) the live one"
+fi
+
+# ── CTL-ST-CF-DECL-V2 — the version-2 key set is DERIVED, and it fails closed. With the contract record's
+# worked fence losing its boundary: line, and then carrying it twice, on copies, the evaluator must say
+# the version-2 set cannot be derived; over the real record it must not.
+ST_CF_ARMED="$ST_CF_ARMED
+Q1"
+ST_CF_DBL="$(awk -v a="$ST_CF_DFO" -v b="$ST_CF_DFC" -v k="$ST_CF_V2_DROP" 'FNR > a + 0 && FNR < b + 0 && index($0, k ":") == 1 { print FNR; exit }' "$ST_CF_DECL")"
+ST_CF_DX0="$(st_cf_dcopy v2-lost)"; st_line_del "$ST_CF_DX0" "${ST_CF_DBL:-0}"
+ST_CF_DX2="$(st_cf_dcopy v2-doubled)"; st_cf_dup_range "$ST_CF_DX2" "${ST_CF_DBL:-0}" "${ST_CF_DBL:-0}"
+st_cf_dv2() { awk -F'\t' '$1 == "Q1" && index($2, "the contract worked fence carries the key") == 1 { n++ } END { print n + 0 }' <<<"$1"; }
+ST_CF_DVL="$( ( ST_CF_DECL="$ST_CF_DX0"; st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" ) 2>/dev/null )"
+ST_CF_DVD="$( ( ST_CF_DECL="$ST_CF_DX2"; st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" ) 2>/dev/null )"
+ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$ST_CF_DVL" "$ST_CF_SITEMAP")"
+ST_CF_DGOT="lost=$(st_cf_dv2 "$ST_CF_DVL") doubled=$(st_cf_dv2 "$ST_CF_DVD") real=$(st_cf_dv2 "$ST_CF_LIVE")"
+if [ -n "$ST_CF_DBL" ] && [ "$ST_CF_DGOT" = "lost=1 doubled=1 real=0" ]; then
+  PASS "CTL-ST-CF-DECL-V2[$ST_CF_TAG]: MUST FIRE — the contract record's worked fence with its $ST_CF_V2_DROP: line removed, and with it doubled, on copies, each leaves the version-2 key set underivable and the evaluator says so once, while the real record, which carries it once, reads no such finding ($ST_CF_DGOT). The version-2 set is a delta on the record's own fence, and it cannot silently read a set nobody declared"
+else
+  FAIL "CTL-ST-CF-DECL-V2[$ST_CF_TAG]: MUST FIRE — the version-2 key set derivation read '$ST_CF_DGOT' where 'lost=1 doubled=1 real=0' is owed, over the worked fence's $ST_CF_V2_DROP: line ${ST_CF_DBL:-(not found)}"
+fi
+continue
+fi
 
 # THE ENTRY GATE, on ST's own ST_OK shape: every arm below mutates a copy of a form whose boundary
 # resolves, so a member whose boundary does not is named ONCE, here, rather than once per arm.
@@ -9564,6 +10473,29 @@ else
   FAIL "CTL-RL-BOUNDARY-INSTANCE: $( [ "$RL_BI_LAND" = yes ] || st_cf_unres_note )MUST NOT FIRE — the spliced copy carries-the-fence=$RL_BI_LAND and reads $RL_BI_N bullet(s), $( [ "$RL_BI_R0" = "$RL_BI_R1" ] && echo identical to || echo DIFFERENT from ) the file itself. A stop keyed on the fence rather than on membership cuts every finished profile at a boundary it does not carry"
 fi
 
+# CTL-RL-BOUNDARY-V2 — MUST NOT FIRE. A version-2 member is block-owned and has no single-cut boundary,
+# so rl_bullets reads it WHOLE: its read equals the same file's read at a path outside the population,
+# and is non-empty. A stop that reached it would read nothing, or a guessed prefix, as its fields.
+RL_V2_N=0; RL_V2_BAD=""; RL_V2_R=0
+while IFS= read -r rl_m; do
+  [ -n "$rl_m" ] || continue
+  [ "$(st_cf_version "$ROOT/$rl_m")" = 2 ] || continue
+  RL_V2_N=$((RL_V2_N + 1))
+  rl_fx="$WORK/rl-v2-$(st_cf_tag "$rl_m").md"; cp "$ROOT/$rl_m" "$rl_fx"
+  rl_a="$(rl_bullets "$ROOT/$rl_m" 1)"; rl_b="$(rl_bullets "$rl_fx" 1)"
+  rl_na="$(printf '%s\n' "$rl_a" | grep -c '[^[:space:]]')"; RL_V2_R=$((RL_V2_R + rl_na))
+  { [ "$rl_a" = "$rl_b" ] && [ "$rl_na" -gt 0 ]; } || RL_V2_BAD="$RL_V2_BAD $rl_m=$rl_na"
+done <<EOF
+$ST_CF_FORMS
+EOF
+if [ "$RL_V2_N" -eq 0 ]; then
+  VACUOUS "CTL-RL-BOUNDARY-V2: no member of the declared population declares version 2, so there is no block-owned form whose whole read to compare"
+elif [ -z "$RL_V2_BAD" ]; then
+  PASS "CTL-RL-BOUNDARY-V2: MUST NOT FIRE — each of the $RL_V2_N version-2 member(s) reads through rl_bullets exactly as the same file reads at a path outside the population, $RL_V2_R bullet(s) in all, and none is empty. A block-owned form has no single-cut boundary, so no stop reaches it and nothing of it is cut"
+else
+  FAIL "CTL-RL-BOUNDARY-V2: MUST NOT FIRE — a version-2 member read differently from its own copy outside the population, or read empty:${RL_V2_BAD}. A boundary stop has reached a form that has no boundary"
+fi
+
 if [ "$RL_RAN" -ne 1 ]; then
   FAIL "RL-integrity: group RL did not execute — a run without it is a failure, never a pass"
 fi
@@ -12787,6 +13719,12 @@ md_flips ft_resolve       'ST-CF-join'     st_cf_assert "$ST_CF_MD_FORM" "$ST_DM
 md_flips st_cf_decl_keys  'ST-CF-decl'     st_cf_assert "$ST_CF_MD_FORM" "$ST_DM"
 md_flips st_labint        'ST-CF-SUB'      st_cf_sub_assert "$ST_TEMPLATES" "$ST_CF_FORMS"
 md_flips st_cf_tracked_templates 'ST-CF-POP' st_cf_pop_assert "$ST_CF_FORMS" "$ST_CF_EXCLUDED"
+# The version-2 branch, REGISTERED on the two functions a block-owned form's verdict adds: the version
+# reader that chooses its inputs, and ft_regions, the one computation of its region contract — which the
+# pin of its realized rows rests on too, so removing that reader must flip the pin's verdict as well.
+md_flips st_cf_version    'ST-CF-version'  st_cf_assert "$ST_CF_MD_V2" "$ST_DM"
+md_flips ft_regions       'ST-CF-regions'  st_cf_assert "$ST_CF_MD_V2" "$ST_DM"
+md_flips ft_regions       'ST-CF-PIN'      st_cf_pin_assert "$ST_CF_MD_V2"
 
 # ── Group CTL's coverage arm, REGISTERED on BOTH sides of what it grades — the reader and the
 # thing read. One subject alone would leave half the assertion ungraded.

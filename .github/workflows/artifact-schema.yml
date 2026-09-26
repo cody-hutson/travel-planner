@@ -86,7 +86,12 @@ name: Artifact schema
 #        its bracket, the decidable half, because whether a field owes one is a reviewer's
 #        call. The population is a declared list that contains the starred pass's forms and
 #        accounts for every tracked template, never one discovered by fence, and a form's
-#        fields end at its boundary for every reader, fail-closed. Neither of the first two
+#        fields end at its boundary for every reader, fail-closed. A form-version 2 form is
+#        graded per region: every heading of level 2 or deeper is a region, resolved to one
+#        row of the writer table its address names — by name, marker, parent, then the
+#        default row — its fields join only in interviewable regions, a region no writer owns
+#        is a declared exclusion reported per region, and the verdict each row of that table
+#        realizes is pinned, keyed by its Block text. Neither of the first two
 #        compares the count against a shipping-path producer, because the starred count has
 #        none. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
@@ -280,8 +285,9 @@ name: Artifact schema
 #   it does NOT do is compare that set against anything the shipping path produces, because
 #   nothing there derives or consumes it. So this clause is NARROWED here rather than
 #   removed, and no other prose in any artifact is adjudicated by this gate. The same group's
-#   conformance arm reads a form's declarative markup — its fence, its boundary, its headings, its
-#   labelled bullets and the closed/open marker at the head of a bracket — and none of its narrative.
+#   conformance arm reads a form's declarative markup — its fence, its boundary, its headings,
+#   for a version-2 form the charter's writer table it addresses, its labelled bullets and the
+#   closed/open marker at the head of a bracket — and none of its narrative.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
 #   CI checkout contains no trip. Those artifacts are unreachable by construction, not by
