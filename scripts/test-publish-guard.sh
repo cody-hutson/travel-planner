@@ -6115,19 +6115,31 @@ t6_newest_entry() { # <change-summary.md> -> newest YYYY-MM-DD, or nothing
 }
 
 # coordination-state, resolved from the record the DOCUMENT names, and generic over it.
-# BOTH declared lines of that record are read: `digest=` decides whether the record counts
-# as an approval at all — through the shipped parser, so a record present but saying nothing
-# is not one (ADR-007 § 2's placeholder bound, the property S5 grades on the gate's side of
-# the same file) — and `confirmed=` supplies the moment every entry is measured against.
+# THREE lines of that record are read: `digest=` decides whether the record counts as an
+# approval at all — through the shipped parser, so a record present but saying nothing is not
+# one (ADR-007 § 2's placeholder bound, the property S5 grades on the gate's side of the same
+# file) — `confirmed=` supplies the moment every entry is measured against, and
+# `approval-count=` decides the no-entry limb. With no entry, the mapping reads `none` unless the
+# record carries an approval count — a line only the declared path writes — and then the record
+# is itself the decided event and the state is `updated` (#719's Stage 7 F-01, decided option i);
+# a record without that line, the organizer's two-line confirmation, still reads `none` exactly as
+# before. S21l builds a render through this function and pushes it.
 t6_state() { # <trip_dir> <state-record-path> -> none|pending|updated
-  local dir="$1" rel line c="" e=""
+  local dir="$1" rel line c="" e="" n=""
   rel="$(t6_rel "$2")"
   e="$(t6_newest_entry "$dir/outputs/change-summary.md")"
-  if [ -z "$e" ]; then printf 'none'; return 0; fi
   if [ -n "$(_record_digest "$dir/$rel")" ]; then
     while IFS= read -r line || [ -n "$line" ]; do
-      case "$line" in confirmed=*) c="${line#confirmed=}"; c="${c:0:10}"; break ;; esac
+      case "$line" in
+        confirmed=*)      if [ -z "$c" ]; then c="${line#confirmed=}"; c="${c:0:10}"; fi ;;
+        approval-count=*) if [ -z "$n" ]; then n="${line#approval-count=}"; fi ;;
+      esac
     done < "$dir/$rel"
+  fi
+  if [ -z "$e" ]; then
+    case "$n" in ''|*[!0123456789]*) printf 'none'; return 0 ;; esac
+    if [ -z "$c" ]; then printf 'none'; return 0; fi
+    printf 'updated'; return 0
   fi
   if [ -z "$c" ]; then printf 'pending'; return 0; fi
   if [[ "$e" > "$c" ]]; then printf 'pending'; return 0; fi
@@ -6498,9 +6510,9 @@ t8_since() { # <trip_dir> <state-record-path> -> YYYY-MM-DD, or nothing
   return 0
 }
 
-# coordination-state as the BUILD writes it: t6_state's three limbs, then the prune on the
-# `updated` limb alone. Generic over the record, the window and the null-state token, all
-# three of which come from the documents rather than from this file.
+# coordination-state as the BUILD writes it: t6_state's limbs, then the prune on the `updated`
+# state alone, whichever limb reached it. Generic over the record, the window and the null-state
+# token, all three of which come from the documents rather than from this file.
 #
 # _epoch_of_iso is the SOURCED converter, not date arithmetic written here. The BSD/GNU
 # divergence it exists to absorb is the same class of defect this release already tripped
@@ -6623,9 +6635,9 @@ fi
 #   S25  INT-7   name-freedom, stated over approver-ness
 #   S26          the restore: every stub and mutant these arms set is withdrawn
 #
-# PLACEMENT. These arms sit after group T rather than beside S0–S15 because two of them read
-# group T's own extractors — S23b applies t6_confirm_fmt and S23c t6_state — and T10b reads
-# S25a's records. Group RS reduces every id to its leading capitals, so where an arm sits in this
+# PLACEMENT. These arms sit after group T rather than beside S0–S15 because three of them read
+# group T's own extractors — S21l builds its render through t8_state_at_build and t6_state, S23b
+# applies t6_confirm_fmt and S23c t6_state — and T10b reads S25a's records. Group RS reduces every id to its leading capitals, so where an arm sits in this
 # file changes nothing it grades.
 #
 # HOW THE ARMS ARE WRITTEN — group S15's three rules, unchanged. Every negative is a captured
@@ -7491,6 +7503,106 @@ if [ "$SA_KRC" -ne 0 ] && [ "$SA_KCL" -eq 0 ] && [ "$SA_KMSG" -eq 1 ] && [ "$SA_
   PASS "S21k: rotate on an approved declaring trip whose render carries no pair is refused by C2's own rule before any clone — after the passphrase was rewritten, the measured residual"
 else
   FAIL "S21k: rotate with an approved plan and no pair rc=$SA_KRC clone=$SA_KCL C2-refusal=$SA_KMSG passphrase-rewritten=$SA_KCH"
+fi
+
+# ── S21l — #719's Stage 7 F-01: AN APPROVED DECLARED CHANGE WITH NO CHANGE-SUMMARY ENTRY PUBLISHES.
+# THE RENDER IS BUILT THROUGH THE MAPPING, never by hand. sa_build takes the state and its date from
+# group T's own resolver — t8_state_at_build, which is t6_state's limbs and then the prune, over the
+# record, the window and the null token read from the documents — and the approval pair from that
+# record on an `updated` render alone. sa_page is only the printer: every coordination value it
+# prints is the mapping's. S21d–S21f pass those values in by hand, which is why no arm could see a
+# mapping that resolves `none` where C2's presence rule requires the pair.
+#
+# THE SUBJECT: two declaring trips whose changed plan is approved — one with no change summary at
+# all, one whose summary holds no entry. The first build resolves `none` and update refuses it with
+# C2's message; the terminal refresh that message names writes the approval record; the rebuilt
+# render resolves `updated`, carries the pair, and update reaches the clone. ARMED-RED: under
+# t6_state's earlier body — no entry reads `none` before the record is read — the same refreshed
+# fixture builds a pair-less render and update refuses it again: the refresh cannot converge. The
+# mutant is saved, swapped in and restored inside this arm. CONTROL — the undeclared path is
+# unchanged: an undeclared trip whose organizer confirmed a change, with no entry, builds
+# byte-identically under both resolvers, reads `none`, carries no pair, and reaches the clone.
+sa_build() { # <trip> <plan-time> <build-YYYY-MM-DD> — writes the render through the mapping; prints the state
+  local d="$1" st since="" cnt="" code="" line
+  st="$(t8_state_at_build "$d" "$T6_DOCREC" "$3" "$T8_W" "$T8_NONE")"
+  case "$st" in
+    pending) since="$(t6_newest_entry "$d/outputs/change-summary.md")" ;;
+    updated)
+      since="$(t8_since "$d" "$T6_DOCREC")"
+      if [ -r "$d/$(t6_rel "$T6_DOCREC")" ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+          case "$line" in
+            digest=*)         code="${line#digest=}" ;;
+            approval-count=*) cnt="${line#approval-count=}" ;;
+          esac
+        done < "$d/$(t6_rel "$T6_DOCREC")"
+      fi
+      case "$cnt" in ''|*[!0123456789]*) cnt=""; code="" ;; esac ;;
+  esac
+  sa_page "$d/outputs/porto-travel-site.html" "$cnt" "$code" "$2" "${st:-zzq-unresolved}" "$since"
+  printf '%s' "$st"
+}
+SA21L1="$WORK/sa-s21l1"; SA21L2="$WORK/sa-s21l2"
+mkdir -p "$SA21L1/outputs" "$SA21L2/outputs"
+{
+  printf -- '---\nartifact: outputs/change-summary.md\nschema-version: 1\ntrip: s21l-fixture\n'
+  printf -- 'writer: hub\nlifecycle: accumulate-append\nprovenance: derived\n'
+  printf -- 'publish: internal\ngenerated: 2027-06-10\nstatus: pending\n---\n'
+} > "$SA21L2/outputs/change-summary.md"
+SA21L_PRE_OK=0; SA21L_POST_OK=0; SA21L_MUT_OK=0; SA21L_DETAIL=""
+for sad in "$SA21L1" "$SA21L2"; do
+  s_record "$sad/.published-itinerary" "$SA_P14" published
+  sa_declare "$sad" 1 zqa1
+  sa_rec "$sad" zqa1 approve "$SA_P16"
+  sast1="$(sa_build "$sad" 16:30 2027-06-10)"
+  read -r sarc1 sacl1 SA_V SA_C <<<"$(sa_push update "$sad")"
+  samsg1=0; case "$(cat "$WORK/sa_push.err")" in *"carries no approval count or code"*) samsg1=1 ;; esac
+  _confirm_has_terminal() { return 0; }
+  _iso_now() { printf '2027-06-10T09:00:00Z'; }
+  printf '\n' | ( cmd_confirm "$sad" ) >/dev/null 2>&1
+  sa_restore _confirm_has_terminal; sa_restore _iso_now
+  sast2="$(sa_build "$sad" 16:30 2027-06-10)"
+  read -r sanc sank sacode <<<"$(_render_approval_pair "$sad/outputs/porto-travel-site.html")"
+  read -r sarc2 sacl2 SA_V SA_C <<<"$(sa_push update "$sad")"
+  SA21L_DETAIL="$SA21L_DETAIL [$(basename "$sad"): first build '$sast1' rc=$sarc1 clone=$sacl1 C2=$samsg1; rebuilt '$sast2' pair=$sanc/$sank code-own=$([ "$sacode" = "$SA_P16" ] && echo 1 || echo 0) rc=$sarc2 clone=$sacl2]"
+  if [ "$sast1" = none ] && [ "$sarc1" -ne 0 ] && [ "$sacl1" -eq 0 ] && [ "$samsg1" -eq 1 ]; then SA21L_PRE_OK=$((SA21L_PRE_OK+1)); fi
+  if [ "$sast2" = updated ] && [ "$sanc" -eq 1 ] && [ "$sank" -eq 1 ] && [ "$sacode" = "$SA_P16" ] && [ "$sacl2" -eq 1 ]; then SA21L_POST_OK=$((SA21L_POST_OK+1)); fi
+done
+# The undeclared control: an organizer-confirmed change, no entry, built under the resolver as it is.
+SA21L3="$WORK/sa-s21l3"; mkdir -p "$SA21L3/outputs"
+s_record "$SA21L3/.published-itinerary" "$SA_P14" published
+s_record "$SA21L3/.change-confirmed" "$SA_P16" confirmed
+SA21L3_ST="$(sa_build "$SA21L3" 16:30 2027-06-10)"
+cp "$SA21L3/outputs/porto-travel-site.html" "$WORK/sa21l3_now.html"
+read -r SA_RC SA21L3_CL SA_V SA_C <<<"$(sa_push update "$SA21L3")"
+# ARMED-RED — the mapping's earlier resolver, swapped in and restored.
+SA21L_T6_SAVED="$(declare -f t6_state)"
+t6_state() { # MUTANT: t6_state's earlier body — with no entry it reads `none` before the record is read
+  local dir="$1" rel line c="" e=""
+  rel="$(t6_rel "$2")"
+  e="$(t6_newest_entry "$dir/outputs/change-summary.md")"
+  if [ -z "$e" ]; then printf 'none'; return 0; fi
+  if [ -n "$(_record_digest "$dir/$rel")" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in confirmed=*) c="${line#confirmed=}"; c="${c:0:10}"; break ;; esac
+    done < "$dir/$rel"
+  fi
+  if [ -z "$c" ]; then printf 'pending'; return 0; fi
+  if [[ "$e" > "$c" ]]; then printf 'pending'; return 0; fi
+  printf 'updated'
+}
+SA21L_MST="$(sa_build "$SA21L1" 16:30 2027-06-10)"
+read -r SA21L_MRC SA21L_MCL SA_V SA_C <<<"$(sa_push update "$SA21L1")"
+SA21L_MMSG=0; case "$(cat "$WORK/sa_push.err")" in *"carries no approval count or code"*) SA21L_MMSG=1 ;; esac
+sa_build "$SA21L3" 16:30 2027-06-10 >/dev/null
+SA21L3_SAME=0; cmp -s "$WORK/sa21l3_now.html" "$SA21L3/outputs/porto-travel-site.html" && SA21L3_SAME=1
+eval "$SA21L_T6_SAVED"
+SA21L_T6_BACK=0; [ "$(declare -f t6_state)" = "$SA21L_T6_SAVED" ] && SA21L_T6_BACK=1
+if [ "$SA21L_MST" = none ] && [ "$SA21L_MRC" -ne 0 ] && [ "$SA21L_MCL" -eq 0 ] && [ "$SA21L_MMSG" -eq 1 ]; then SA21L_MUT_OK=1; fi
+if [ "$SA21L_PRE_OK" -eq 2 ] && [ "$SA21L_POST_OK" -eq 2 ] && [ "$SA21L_MUT_OK" -eq 1 ] && [ "$SA21L3_ST" = none ] && [ "$SA21L3_CL" -eq 1 ] && [ "$SA21L3_SAME" -eq 1 ] && [ "$SA21L_T6_BACK" -eq 1 ]; then
+  PASS "S21l: F-01 — with no change-summary entry (absent, and present but empty), an approved declared change builds through the mapping to 'none' and update refuses it naming the refresh; after that refresh the rebuilt render resolves 'updated', carries its own count and code, and update reaches the clone — the refusal converges. ARMED-RED: under t6_state's earlier body the refreshed fixture still builds 'none' and update refuses it; CONTROL: an undeclared trip with no entry builds byte-identically under both resolvers, reads 'none' and reaches the clone"
+else
+  FAIL "S21l: before-refresh refusals $SA21L_PRE_OK/2, after-refresh publishes $SA21L_POST_OK/2 (want 2 and 2)$SA21L_DETAIL; earlier-resolver mutant state '$SA21L_MST' rc=$SA21L_MRC clone=$SA21L_MCL C2=$SA21L_MMSG (want none, refusal); undeclared control '$SA21L3_ST' clone=$SA21L3_CL byte-identical=$SA21L3_SAME (want none, 1, 1); t6_state restored=$SA21L_T6_BACK"
 fi
 unset -f gh npx
 
