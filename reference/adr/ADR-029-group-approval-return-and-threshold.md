@@ -377,7 +377,7 @@ Answers #718's second criterion. The flow, as a numbered step table:
 
 | Step | Actor | Act | Where the engine acts |
 |---|---|---|---|
-| 1 — Declare | the operator | declares the approver population — a subset of the `## Group` roster's Person cells — and a threshold of `all` or an integer from 1 to n | a declaration surface #719 chooses; operator-stated policy, reversible, echoed outgoing-to-incoming, so it may be agent-addressable, as `/trip-record .publish-slug` already is |
+| 1 — Declare | the operator | declares the approver population — a subset of the `## Group` roster's Person cells — and a threshold of `all` or an integer from 1 to n | a declaration surface #719 chooses; operator-declared policy, reversible, echoed outgoing-to-incoming, so it may be agent-addressable, as `/trip-record .publish-slug` already is |
 | 2 — Request | the engine, to the organizer | emits the approval line for the outgoing itinerary, `approve <64 hex>`, from the same digest function the gate uses | a read-only emission on CH-3 |
 | 3 — Share | the organizer, to the group's thread | posts the change summary and the approval line, exactly as `ADR-003` § 2 already has them share the summary | none — operator-mediated, outbound |
 | 4 — Reply | each traveller who approves, in the thread | replies with that line; `withdraw <64 hex>` retracts; silence and refusal leave the plan held | none — V-2's traveller-side leg |
