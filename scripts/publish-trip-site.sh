@@ -49,7 +49,9 @@
 # two keys is how the next routine update used to undo a rotation (GHSA-gmm2-v7rr-jq7r). The only
 # remedy offered is to unset the variable; keys change only through rotate. rotate never reads
 # the variable for its key: it re-encrypts under the new passphrase, and records it in
-# .passphrase only once that ciphertext is committed, immediately before the push.
+# .passphrase only once that ciphertext is committed, immediately before the push. update
+# re-reads .passphrase just before its own push; if a rotation recorded a different key
+# meanwhile, it stops and takes its own commit back out, so a later push cannot carry it.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
@@ -181,7 +183,7 @@ get_passphrase() { # <trip_dir>
   else
     p="$(gen_passphrase)"; write_passphrase_file "$pf" "$p"
   fi
-  [ "${#p}" -ge 12 ] || die "passphrase too weak (need ≥12 chars for a public, brute-forceable ciphertext). If STATICRYPT_PASSWORD is set, unset it; otherwise the key in $pf is too short — change it with rotate."
+  [ "${#p}" -ge 12 ] || die "passphrase too weak (need ≥12 chars for a public, brute-forceable ciphertext). If STATICRYPT_PASSWORD is set, unset it. Otherwise the key in $pf is too short: on a published trip, change it with rotate; on a trip not yet published, replace it with a longer one, or delete the file and publish will generate one."
   printf '%s' "$p"
 }
 
@@ -231,15 +233,33 @@ require_passphrase_sources_agree() { # <trip_dir> -> returns 0, or dies via refu
   refuse_passphrase_conflict "$pf"
 }
 
+# Take THIS run's own commit back out of the per-trip clone, and nothing else. main moves back to
+# the commit's parent only while it still points at <commit>: a compare-and-swap, so a commit
+# another run has since put on top is never discarded, and whatever sat beneath this one (a
+# rotation's committed-but-unpushed page, which the next update exists to carry) stays. Never a
+# reset of the clone: resetting a clone another run is using can turn that run's push into a
+# no-op that still reports success. The index and working tree are left alone; the next run's
+# copy and add replace them.
+discard_own_commit() { # <pub_dir> <commit>
+  local parent
+  parent="$(git -C "$1" rev-parse --verify -q "$2^")" || return 1
+  git -C "$1" update-ref -m "discard own commit: key of record changed" refs/heads/main "$parent" "$2"
+}
+
 # The key of record, re-read immediately before a push. If .passphrase no longer holds the key
 # this run encrypted under, another rotate or update recorded a different key after this run
-# resolved its own, and pushing now would put a revoked key back over it. A trip with no
-# .passphrase (the variable supplies its key) has no record to compare, and passes.
-require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under>
+# resolved its own, and pushing now would put a revoked key back over it. So stop — and take
+# this run's own commit back out first: it is a page under the replaced key, and the clone is
+# reused as it stands, so a commit left there rides the next push. A trip with no .passphrase
+# (the variable supplies its key) has no record to compare, and passes.
+require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pub_dir> <this-run's-commit>
   local pf="$1/.passphrase"
   [ -e "$pf" ] || return 0
   passphrase_file_holds "$pf" "$2" && return 0
-  die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. Nothing was pushed; re-run update."
+  if discard_own_commit "$3" "$4"; then
+    die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing and discarded its own commit, so no later push can carry its page under the replaced key. Re-run update."
+  fi
+  die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing, but could not discard its own commit from $3. Remove $3 before re-running update: a later push from it would carry a page under the replaced key."
 }
 
 # After a rotation: STATICRYPT_PASSWORD still set, and not the new key, means the next publish or
@@ -2945,7 +2965,7 @@ cmd_update() { # <trip_dir>
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase owner slug
+  local site_html pub_dir passphrase owner slug mine
   site_html="$(resolve_site_html "$trip_dir")"
   # THE ORGANIZER-CONFIRM GATE (#552, ADR-003 § Decision 2). Its position is exact
   # and load-bearing: after the render is resolved (the gate digests it) and BEFORE
@@ -2958,10 +2978,13 @@ cmd_update() { # <trip_dir>
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
 
   encrypt_verify_commit "$pub_dir" "$site_html" "$passphrase" update
+  # The commit this run just made: the only one the re-check below may take back out.
+  mine="$(git -C "$pub_dir" rev-parse --verify -q HEAD)" \
+    || die "update: could not read back the commit just made in $pub_dir. Nothing was pushed."
   # The key of record, re-read immediately before the push: a rotation that committed in the
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
-  require_key_of_record "$trip_dir" "$passphrase"
+  require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
   push_trip_site "$pub_dir" update
   # The push succeeded, so this itinerary content IS what is published now. Recorded
   # here rather than earlier for that reason: a sidecar written before the push would
@@ -3056,8 +3079,8 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   local pf="$trip_dir/.passphrase" site_html pub_dir owner slug
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # Both refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
-  # naming the key the live site is still under.
-  [ "${#newp}" -ge 12 ] || die "rotate refused — the new passphrase is shorter than 12 characters. Nothing was changed; $pf still holds the key the live site is under."
+  # exactly as it was.
+  [ "${#newp}" -ge 12 ] || die "rotate refused — the new passphrase is shorter than 12 characters. Nothing was changed: $pf is exactly as it was."
   passphrase_file_holds "$pf" "$newp" && die "rotate refused — the new passphrase is the one $pf already holds, so this rotation would revoke nothing. Nothing was changed."
   preflight; resolve_noreply_identity
   site_html="$(resolve_site_html "$trip_dir")"
