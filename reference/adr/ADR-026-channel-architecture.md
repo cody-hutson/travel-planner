@@ -361,6 +361,19 @@ under the discharge above V-1 does not need it. It is left where it is, for #718
 declared in the same change; **(4)** admission by **amendment to this record or by a superseding
 record** — never by a slice, and never as a side effect of building something.
 
+**Amendment (2026-09-26, Saturday) — V-2 resolved: an operator-mediated crossing on CH-3, and no
+fourth member.** [ADR-029](ADR-029-group-approval-return-and-threshold.md) § *Decision* 1 names the
+transport this row left as a placeholder — the group's own shared thread, with a direct message or
+an in-person relay admissible — and applies § *Decision* 1's limbs to it. L1 holds; L2 and L3 do
+not hold on its traveller-side leg, because no engine-side act governs a reply crossing a messaging
+service and there is no point at which the engine can evaluate a predicate before it does. V-2 is
+therefore the operator-mediated crossing § *Decision* 1 already names for *"their own channel"*:
+an approval enters the engine only as the organizer's statement, on CH-3, through a terminal-only
+recording act. No fourth member is admitted, so the four admission conditions above are not
+engaged, and the channel-set stays at three members. The V-2 row and this section's heading are
+retained as decided and read through this paragraph: the row's ground is now *L2 fails on the
+traveller leg* rather than *undetermined*. The *Follow-on* bullet for #718 is discharged.
+
 ### 3. Carry is a relation, not a property, on both sides — and each side is typed over the artifacts its guard actually queries
 
 > **`may-carry(v, A, CH) = ¬denied(v, A) ∧ carry-envelope(CH) admits v`**

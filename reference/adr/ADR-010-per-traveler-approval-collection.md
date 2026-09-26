@@ -337,6 +337,23 @@ group-trip tool. The technical comparison is settled above; what remains is a pr
 whether this tool should ask its users to hold keys — and that judgment is materially changed by
 which channel #718 names, because the channel sets what a copy/paste actually costs a traveler.
 
+**Amendment (2026-09-26, Saturday) — the re-reading this section asked for is recorded, and the
+choice is made there.** This record's *Consequences* asked #718 to re-read these candidates rather
+than adopt them. [ADR-029](ADR-029-group-approval-return-and-threshold.md) does, and it chooses
+Candidate D, refined. It records one finding against Candidate C that this section could not
+state, and the finding is scoped to **Candidate C as specified on #708**: for that specification
+the proviso *"provided the signing key never leaves the traveler"* is necessary and not
+sufficient, because the specification enrols the key through the organizer and holds and
+exercises it in page script the organizer authors, so an approval it produces does not reach even
+the token-level unforgeability § *Decision* 2 describes. The proviso holds for a key the traveller
+keeps in a tool the traveller controls, and § *Decision* 2 stands: unforgeability of the approval
+token remains reachable. What that record adds is where the binding comes from — which key stands
+for which traveller reaches the build host by the organizer's hand whatever the mechanism, so the
+record the engine keeps is organizer-attested as to whose approval it counts — and why it
+therefore chooses detectability. The candidates above are retained as recorded; that record
+carries the argument. § *Decision* 2's reduction of "not organizer-attested" to unforgeability and
+detectability stands as decided.
+
 ### 8. This record changes no other record's status
 
 **`ADR-003` § *Decision 2* stands, in full, and this record proposes no supersession of it.** The
@@ -358,6 +375,18 @@ superseded at all**; all nine prior records read `Accepted`.
 a build slice, and by a record that does not currently need it. The gap is real, it is now written
 down, and whichever work item first actually ships a partial supersession will have to establish the
 form deliberately — with #719 the likely occasion.
+
+**Amendment (2026-09-26, Saturday) — the form this section names as missing now exists, and one
+clause here was overtaken.** `reference/adr/README.md` § *Convention* now states the form for
+superseding one decision, or part of one, of an Accepted record.
+[ADR-029](ADR-029-group-approval-return-and-threshold.md) establishes it deliberately, as this
+section asked, being the record whose replacement rule is the first partial supersession to ship
+in the codified form. The gate rule of `ADR-003` § *Decision 2* is superseded in that form, in the
+change that ships its replacement, as this section's timing rule requires. The clause *"no record
+in it has ever been superseded at all"* was true when this record landed and was overtaken on the
+day it was ratified: `ADR-009`'s eighth amendment, dated 2026-09-02, records `ADR-011` § 3
+superseding part of that record's Decision 3. The sentences above are retained as decided and read
+through this paragraph. No decision here moves.
 
 ### 9. Reversibility and confidence
 
