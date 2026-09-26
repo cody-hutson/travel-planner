@@ -7082,7 +7082,11 @@ gh() {   # mock: answer the read-only probes; create, clone and push nothing rea
   esac
 }
 npx() { return 0; }
-encrypt_to_tmp() { local e; e="$(mktemp -d)"; cp "$ENC_OK" "$e/index.html"; printf '%s' "$e"; }
+# A fresh ciphertext marker per call, as real StatiCrypt's per-encryption salt gives: every
+# re-encryption differs from the one already committed. A shim returning ENC_OK's fixed bytes made
+# each rotation after the first an EMPTY commit, which failed — and this suite's errexit-off hid it
+# until the GHSA-gmm2-v7rr-jq7r fix made the commit fail closed. The graded channel is unchanged.
+encrypt_to_tmp() { local e n; e="$(mktemp -d)"; n="$(od -An -N4 -tx1 /dev/urandom | tr -dc 'a-f0-9')"; sed "s/bb12ab/pp$n/" "$ENC_OK" > "$e/index.html"; printf '%s' "$e"; }
 make_boilerplate() { return 1; }
 
 # $SRC is this suite's synthetic plaintext itinerary and $ENC_OK the ciphertext group A
