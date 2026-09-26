@@ -79,8 +79,9 @@
 # its ciphertext, to the key it was encrypted under, and must be under the key .passphrase
 # records whatever STATICRYPT_PASSWORD carries. publish and update refuse when the variable
 # and .passphrase disagree, before any network effect; an aborted rotation leaves .passphrase
-# byte-identical at every abort point; and the arms that grade independence from errexit run
-# without it, because that is what they grade.
+# byte-identical at every abort point; an update stopped because the key of record changed
+# under it leaves no commit behind for a later push to carry; and the arms that grade
+# independence from errexit run without it, because that is what they grade.
 # MD = the Discriminating-Evidence Rule, asserted against this file. Every assertion's
 # PASS must require evidence its subject could only have produced by RUNNING. MD re-runs
 # each REGISTERED assertion with its subject removed and requires that assertion to flip
@@ -7084,8 +7085,9 @@ gh() {   # mock: answer the read-only probes; create, clone and push nothing rea
 npx() { return 0; }
 # A fresh ciphertext marker per call, as real StatiCrypt's per-encryption salt gives: every
 # re-encryption differs from the one already committed. A shim returning ENC_OK's fixed bytes made
-# each rotation after the first an EMPTY commit, which failed — and this suite's errexit-off hid it
-# until the GHSA-gmm2-v7rr-jq7r fix made the commit fail closed. The graded channel is unchanged.
+# every rotation an EMPTY commit — the first included, because PP2's seed commit is ENC_OK itself —
+# which failed, and this suite's errexit-off hid it until the GHSA-gmm2-v7rr-jq7r fix made the
+# commit fail closed. The graded channel is unchanged.
 encrypt_to_tmp() { local e n; e="$(mktemp -d)"; n="$(od -An -N4 -tx1 /dev/urandom | tr -dc 'a-f0-9')"; sed "s/bb12ab/pp$n/" "$ENC_OK" > "$e/index.html"; printf '%s' "$e"; }
 make_boilerplate() { return 1; }
 
@@ -7368,6 +7370,7 @@ unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
 # WHAT THE ARMS BIND TO. The key of the PUSHED page, not the key a function was handed:
 # rv_enc_shim writes a per-call nonce into the ciphertext it returns and records nonce ->
 # key, and rv_pushed_key reads the nonce back out of the bare repository's main:index.html.
+# RV10b reads every revision main holds, not only its tip: history is published too.
 #
 # DISCIPLINES, each load-bearing:
 #   - Every subject runs in its own subshell with STATICRYPT_PASSWORD unset or set by the
@@ -7765,29 +7768,35 @@ rv5_assert() { # <id> <no-value|unknown>
 for rv_f in no-value unknown; do rv5_assert "RV5-$rv_f" "$rv_f"; done
 
 # ── RV7 — D-5. When STATICRYPT_PASSWORD is still set after a rotation and differs from the
-# new key, rotate says so — value-free — because the next publish or update will refuse. It
-# stays silent when the variable matches the new key, or is unset.
+# new key, rotate says so — value-free, on stderr — because the next publish or update will
+# refuse. It stays silent when the variable matches the new key, or is unset. The warning's
+# rotation is captured with its two channels APART: merged, a warning moved to stdout (the
+# announcer's channel) reads exactly like one on stderr, and the arm could not tell.
 rv7_assert() { # <id>
-  local id="$1" d1 d2 d3 o1 o2 o3 r1 r2 r3 k1 w1=0 w23=0 leak=0
+  local id="$1" d1 d2 d3 o1 e1 o2 o3 r1 r2 r3 k1 w1=0 wout=0 w23=0 leak=0
   local env='rv-stale-env-synthetic-key-09' nk='rv-chosen-new-synthetic-key-10' cur='rv-current-synthetic-key-11'
   d1="$(rv_fixture "rv7a-$RANDOM" "$cur")"; d2="$(rv_fixture "rv7b-$RANDOM" "$cur")"; d3="$(rv_fixture "rv7c-$RANDOM" "$cur")"
-  o1="$( ( export STATICRYPT_PASSWORD="$env"; set -e; cmd_rotate "$d1" ) 2>&1 )"; r1=$?
+  o1="$( ( export STATICRYPT_PASSWORD="$env"; set -e; cmd_rotate "$d1" ) 2>"$RVW/$id.stderr" )"; r1=$?
+  e1="$(cat "$RVW/$id.stderr" 2>/dev/null)"
   o2="$( ( export STATICRYPT_PASSWORD="$nk"; set -e; cmd_rotate "$d2" --passphrase "$nk" ) 2>&1 )"; r2=$?
   o3="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d3" ) 2>&1 )"; r3=$?
   k1="$(cat "$d1/.passphrase" 2>/dev/null)"
-  rv_has "$o1" 'still set in this environment' && w1=1
+  rv_has "$e1" 'still set in this environment' && w1=1
+  rv_has "$o1" 'still set in this environment' && wout=1
   { rv_has "$o2" 'still set in this environment' || rv_has "$o3" 'still set in this environment'; } && w23=1
-  { rv_has "$o1" "$env" || { [ -n "$k1" ] && rv_has "$o1" "$k1"; }; } && leak=1
+  { rv_has "$o1$e1" "$env" || { [ -n "$k1" ] && rv_has "$o1$e1" "$k1"; }; } && leak=1
   if [ "$r1" -ne 0 ] || [ "$r2" -ne 0 ] || [ "$r3" -ne 0 ]; then
     FAIL "$id: a rotation did not complete (rc=$r1/$r2/$r3) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$wout" -eq 1 ]; then
+    FAIL "$id: rotate's warning about a still-set STATICRYPT_PASSWORD reached standard output — it belongs on stderr, apart from the announcer's channel"
   elif [ "$w1" -eq 0 ]; then
-    FAIL "$id: rotate with a different STATICRYPT_PASSWORD still set gave no warning — the next publish or update will refuse, and the operator was not told why"
+    FAIL "$id: rotate with a different STATICRYPT_PASSWORD still set gave no warning on stderr — the next publish or update will refuse, and the operator was not told why"
   elif [ "$w23" -eq 1 ]; then
     FAIL "$id: rotate warned although the variable matched the new key or was unset"
   elif [ "$leak" -eq 1 ]; then
     FAIL "$id: rotate's output carries a passphrase VALUE"
   else
-    PASS "$id: rotate warns, value-free, only when the variable is set and differs from the new key"
+    PASS "$id: rotate warns on stderr, value-free, only when the variable is set and differs from the new key"
   fi
 }
 rv7_assert "RV7"
@@ -7873,6 +7882,45 @@ rv10_assert() { # <id>
 }
 rv10_assert "RV10"
 
+# ── RV10b — FM-6, followed through. RV10 shows the aborted update pushes nothing at the moment it
+# stops. But it has already COMMITTED, under the key the concurrent rotation revoked, and the
+# per-trip clone is reused as it stands: a commit left there rides the next push, and the next
+# routine update is the refusal's own remedy. So abort one update exactly as RV10 does, run a
+# second, and read the key of EVERY revision the bare repository's main now holds — the page at
+# the tip is the control that the walk reads keys at all. None may be the key the aborted run
+# resolved.
+rv10b_assert() { # <id>
+  local id="$1" name d bare o1 rc1 rc2 revs rev html n line head_key="" carried=0 seen=0
+  local k1='rv-resolved-synthetic-key-16' k2='rv-concurrent-rotation-key-17' re='staticryptEncrypted="(rv[0-9a-f]+)"'
+  name="rv10b-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  o1="$( ( unset STATICRYPT_PASSWORD; rv10b_pf="$d/.passphrase"; rv10b_k2="$k2"
+           encrypt_to_tmp() { rv_enc_shim "$@"; printf '%s\n' "$rv10b_k2" > "$rv10b_pf"; }
+           set -e; cmd_update "$d" ) 2>&1 )"; rc1=$?
+  rv_has "$o1" 'changed while this update was running' && seen=1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  head_key="$(rv_pushed_key "$bare")"
+  revs="$(git -C "$bare" rev-list main 2>/dev/null)"
+  while IFS= read -r rev; do
+    [ -n "$rev" ] || continue
+    html="$(git -C "$bare" show "$rev:index.html" 2>/dev/null)" || continue
+    [[ "$html" =~ $re ]] || continue
+    n="${BASH_REMATCH[1]}"
+    while IFS= read -r line || [ -n "$line" ]; do
+      [ "$line" = "$n $k1" ] && carried=1
+    done < "$RV_KEYLOG"
+  done <<< "$revs"
+  if [ "$rc1" -ne 1 ] || [ "$seen" -eq 0 ]; then
+    FAIL "$id: the first update did not stop at the key-of-record re-check (rc=$rc1) — nothing to follow up. VERDICT WITHHELD"
+  elif [ "$rc2" -ne 0 ] || [ "$head_key" != "$k2" ]; then
+    FAIL "$id: the follow-up update did not publish under the key of record (rc=$rc2) — the history walk has no control. VERDICT WITHHELD"
+  elif [ "$carried" -eq 1 ]; then
+    FAIL "$id: the follow-up update pushed the aborted run's commit — the site's history now holds a page under the key the rotation revoked"
+  else
+    PASS "$id: an update stopped by the key-of-record re-check leaves nothing behind — the next update's push carries no page under the revoked key"
+  fi
+}
+rv10b_assert "RV10b"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -7890,6 +7938,9 @@ md_flips cmd_rotate  "RV8-errexit-off" rv8_assert "RV8-errexit-off" errexit-off
 md_flips cmd_rotate  "RV8-or-true"     rv8_assert "RV8-or-true"     or-true
 md_flips cmd_rotate  "RV9"  rv9_assert  "RV9"
 md_flips cmd_update  "RV10" rv10_assert "RV10"
+# RV10b is registered against the discard itself, not the whole command: with it removed the
+# update still stops and still says why, so the arm can only fail because the commit stayed.
+md_flips discard_own_commit "RV10b" rv10b_assert "RV10b"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
