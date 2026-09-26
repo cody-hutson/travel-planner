@@ -6416,8 +6416,9 @@ fi
 # window. Under it, once a trip has carried a dated entry `e` is non-empty forever, so
 # every later resolution is `pending` or `updated` and `none` is unreachable. T6e does
 # reach `none` — over a trip with NO change summary at all, a trip that has never
-# coordinated anything. So the three arms above grade the mapping's three limbs on a
-# trip with no history, and say nothing about the one state a trip WITH history has to
+# coordinated anything. So the three arms above grade the mapping's entry-bearing limbs and
+# its null case on a trip with no history — the no-entry `updated` limb a declared approval
+# record reaches is S21l's — and say nothing about the one state a trip WITH history has to
 # be able to return to.
 #
 # WHY THAT MATTERS TO AC 5. T3 asserts the null-case render is BYTE-IDENTICAL to a
