@@ -37,8 +37,8 @@ makes `engagement(t)` `G8`-class — *"no gate may be added that blocks on it"*.
 Candidates C and D unchosen, and § 8 names the partial-supersession form as missing. This record
 decides only what those records left open.
 
-**The seam this record specifies against, read live** in `scripts/publish-trip-site.sh` and cited
-by function:
+**The seam this record specifies against, read at `8b2ac05`, before #719 replaced it,** in
+`scripts/publish-trip-site.sh` and cited by function:
 
 - `change_confirmation_state` (SEAM S2) emits one of five tokens — `none-pending`,
   `undetermined`, `unconfirmed`, `stale`, `confirmed`. Its banner says a replacement *"must emit
@@ -214,6 +214,7 @@ present:
 | M-D | `ADR-010`'s Candidate D, as specified on #708 | a keyless roster; the organizer records; `cksum`-bound; four tokens | extend-seam |
 | **M-D+** | D, repaired and refined | organizer-stated records bound to a SHA-256 digest; a closed grammar; a name-free count and code on the render; a default population equal to the shipped gate; reconcilable against the thread | extend-seam |
 | M-H | A count-only ledger | the organizer records a count, with no approver keys | extend-seam |
+| M-H+ | M-H, marked — the adversarial review's counter-design CD-1, on #1507 | every recording appends one `organizer-stated` record bound to the outgoing digest and naming nobody; the gate counts approvals, net of withdrawals, against a declared count or `all` | extend-seam |
 | M-0 | Null | keep the organizer-confirm gate, and record V-2 only | no change |
 
 **Elimination:**
@@ -221,7 +222,7 @@ present:
 | # | Verdict | Kill reason — the hard constraint breached |
 |---|---|---|
 | M-0 | eliminated | governance conformance: the operator's decision to build the collection in this release, and the approved Release Outcome Statement, require a threshold-counting gate built in this release |
-| M-H | eliminated | governance conformance: the Outcome Statement names *"an approval the organizer enters on a traveller's behalf"*, which a keyless count cannot express; it also has no de-duplication |
+| M-H | survives to the matrix, scored in its marked form, M-H+ | no hard-constraint breach. The Outcome Statement's *"an approval the organizer enters on a traveller's behalf"* fixes what a record's mark says, not how it is keyed, so a count ledger whose every record is marked `organizer-stated` meets it. What M-H lacks — de-duplication and per-approver withdrawal — are costs, and the matrix scores them |
 | M-D, as specified | eliminated | governance conformance: its resolver has four tokens and no `undetermined` arm, which the S2 contract now owes (`ADR-010` § 5's amendment); its binding is CRC-32. Its repaired form is M-D+ |
 | M-C, M-Cp, M-E | survive to the matrix | no hard-constraint breach. The corollary is a finding the maintainer weighs, so it is scored rather than used to kill |
 
@@ -233,6 +234,7 @@ present:
 | M-Cp | **EXPENSIVE** — credentials registered at the organizer's origin persist in travellers' password managers | **LOW**: WebAuthn signs whatever challenge the page supplies behind a generic prompt, and the credential is registered through the organizer's page (the corollary) | structural — WebAuthn in the decrypted page, COSE and DER parsing | as M-C; custody moves to the platform vendor |
 | M-E | MODERATE | **LOW** — the address binding is organizer-registered (the corollary) | structural | adds a network dependency to a local-only act |
 | **M-D+** ← recommended | CHEAP to MODERATE — see below | **HIGH** on what it claims: it claims detectability only, and says so | behavioural to structural — the S2 body, the `_digest_of` body, `cmd_confirm` extended, a declaration surface, the count and code on the render, an erase row | extend-seam at S2 and at the Coordination Notice (`ADR-010` § 5); W-rule-conformant; `ADR-025` § 4-conformant; `ADR-007` § 2-conformant |
+| M-H+ — weighed at the scope-lock and not chosen | CHEAP | **HIGH** on what it claims: detectability, with what a traveller sees unchanged from M-D+ — the count and the code on the render, and attributed replies in the thread | behavioural — no approver key in any new sidecar, so no erase row and no roster-key coupling; and it gives up de-duplication and per-approver withdrawal, which only the keys provide | as M-D+, plus data minimisation |
 
 **Rollback statements.**
 
@@ -282,7 +284,7 @@ the plan holds.
 | P-1 | Every roster member, derived | eliminated | the denominator changes whenever the roster changes, and it is ill-defined under each of #1491's readings of roster standing |
 | P-2 | Roster members at or above `SELF-STATED` | eliminated | `ADR-025` § 1 — *"no gate may be added that blocks on it"*; a gate whose denominator is a function of `engagement(t)` blocks on it |
 | **P-3** | **An operator-declared subset of the roster, plus a threshold of `all` or an integer from 1 to n** | **← recommended** | — |
-| P-4 | A declared integer only, with no keys | eliminated | this is M-H |
+| P-4 | A declared integer only, with no keys | not chosen | this is M-H's population; O-2 scores M-H in its marked form, M-H+, and does not choose it |
 
 **The kinds.** A reading carried into this milestone held that K1 and K2 could approve
 unforgeably, by `ADR-026` § 4. The live read corrects it. `ADR-026` § 4 makes K1 and K2 the only
@@ -355,8 +357,8 @@ Answers #718's second criterion. `ADR-010` § 7 reserves the choice to the maint
 - `ADR-010`'s Candidate C is not chosen, on the corollary and on proportionality: repaired to
   reach token-level unforgeability, it would buy evidence portability rather than detectability,
   at EXPENSIVE reversibility and a first cryptographic surface (O-2). The maintainer rendered the
-  choice at the scope-lock gate, choosing this keyed ledger over a keyless, count-only variant put
-  to them there as a live alternative.
+  choice at the scope-lock gate, choosing this keyed ledger over M-H+, the marked keyless ledger O-2
+  scores, which was put to them there as a live alternative and not chosen.
 - **#88's second criterion** — approvals captured *"attributably, not organizer-attested"* — **is
   unmet by construction under this decision, and delivered as detectability**, by the
   maintainer's proportionality choice under `ADR-010` § 7. `ADR-010` § 2's reduction of that
