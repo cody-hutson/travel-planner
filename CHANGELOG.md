@@ -3,6 +3,61 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-26 — A rotation revokes the passphrase it replaces
+
+This is a security release. It fixes GHSA-gmm2-v7rr-jq7r: rotating a site's passphrase could leave the
+old passphrase working. Every release up to and including 0.43.0 is affected. The advisory describes the
+exposure, and what to do if one of your trips was rotated or updated while the variable was set.
+
+**What went wrong.**
+- `rotate` re-published through `update`, and `update` took its key from `STATICRYPT_PASSWORD` whenever
+  that variable was set, ahead of the trip's `.passphrase`. With the variable set, a rotation
+  re-encrypted the site under the variable — usually the very passphrase you were rotating away from —
+  while it reported that the passphrase had rotated.
+- A routine `update`, with the variable still set, did the same after a rotation that had worked.
+- `rotate` wrote the new passphrase to `.passphrase` before any of its checks ran. A rotation that
+  stopped partway therefore left the file holding a passphrase the live site was not under. After a
+  too-short `--passphrase`, the only copy of the live one on disk was gone.
+
+**What changed.**
+- **`rotate` encrypts under the new passphrase it chose, never the environment variable.** It records
+  that passphrase in `.passphrase` only once the new ciphertext is committed, immediately before the
+  push. A rotation that stops before that point leaves `.passphrase` exactly as it was. One whose push
+  fails leaves it naming the new passphrase, and the next `update` finishes the job.
+- **`publish` and `update` refuse when the variable and the file disagree.** The refusal happens before
+  any network call, whenever `STATICRYPT_PASSWORD` is set and the trip's `.passphrase` holds a
+  different passphrase, or one that cannot be read as a passphrase. The message names the variable and
+  the file, never a passphrase, and gives one remedy: unset the variable. The only way to change a
+  site's passphrase is `rotate`. A trip rotated under the old behaviour, with the variable still set,
+  now meets this refusal instead of being quietly re-keyed.
+- **`update` re-checks `.passphrase` just before it pushes**, so it cannot put a passphrase back over a
+  rotation that finished while it was running.
+- **Each step of encrypting, committing and pushing now stops the run on its own when it fails.**
+  Before, a failed commit could read as a completed rotation whenever the caller had turned off the
+  shell's stop-on-error setting.
+- **Weak or malformed input is refused.**
+  - Encryption refuses a passphrase shorter than 12 characters, before StatiCrypt runs.
+  - `rotate` refuses an unknown option, a `--passphrase` with no value, and a new passphrase equal to
+    the current one.
+  - `.passphrase` is readable by you alone from the moment it is written.
+- **The guard suite gains group RV.** It grades all of this against the page actually pushed. Its
+  arms were committed before the fix, and the arms that grade the defect fail against the old script.
+
+**A rotation protects what you publish from then on.** It adds a commit and never rewrites history, so
+every earlier version of a site stays in its per-trip repository, readable by anyone who holds the
+passphrase it was encrypted under. `CLAUDE.md` and `rotate`'s closing message now say so. To withdraw
+the earlier versions as well, `unpublish` (which deletes the repository) and then `publish` again.
+
+**The honest limits.**
+- The refusal compares the variable with `.passphrase`, so it cannot see three cases:
+  - a trip published from the variable alone;
+  - a `.passphrase` restored from an older backup;
+  - a copy of the trip on another machine.
+
+  A check against the live site itself would cover them, and it is not part of this release.
+- Two rotations racing each other can still leave `.passphrase` naming a passphrase other than the one
+  last pushed. That is a lockout, not a leak.
+
 ## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 
 This release finishes what earlier corrective releases left partly done. Two defects changed how the
