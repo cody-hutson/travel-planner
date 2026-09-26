@@ -31,6 +31,8 @@ You will receive an acknowledgement, an initial assessment, and a remediation pl
 - Worked example artifacts in `examples/` (sanitized end-to-end trip walkthroughs)
 - Reference architecture in `reference/` (site-layout spec and other design notes)
 - Template files in `templates/` (trip-context templates)
+- Scripts in `scripts/` — the publish script (StatiCrypt encryption, passphrase handling, the pre-push guards) and its test suites
+- The command surface in `skills/` — the `/trip-*` verbs, including the publish command's passphrase preconditions
 - Top-level governance: `CLAUDE.md`, `README.md`
 - GitHub Actions workflows in `.github/workflows/`
 - Repository configuration (Dependabot, branch settings, issue templates, PR template)
@@ -46,7 +48,7 @@ You will receive an acknowledgement, an initial assessment, and a remediation pl
 |---------|--------|
 | Dependabot vulnerability alerts | Enabled (auto on visibility flip to public) |
 | Dependabot security updates (auto-PR) | Enabled |
-| Dependabot version updates (scheduled) | See `.github/dependabot.yml` (github-actions ecosystem only — this is a markdown-only repo) |
+| Dependabot version updates (scheduled) | See `.github/dependabot.yml` (github-actions ecosystem only — the repo has no package manifest; its one runtime dependency, StatiCrypt, is pinned by exact version in the publish script) |
 | Workflow YAML SAST (actionlint) | See `.github/workflows/security.yml` |
 | Markdown link integrity (markdown-link-check) | See `.github/workflows/security.yml` |
 | Secret scanning (gitleaks, full history) | See `.github/workflows/security.yml` |

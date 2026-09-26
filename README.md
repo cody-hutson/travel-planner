@@ -265,7 +265,7 @@ scripts/publish-trip-site.sh list                                           # in
 scripts/publish-trip-site.sh unpublish trips/<destination>-<year>           # take the site down (deletes the repo)
 ```
 
-The passphrase is saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one.
+Unless you supply one in `STATICRYPT_PASSWORD`, the passphrase is generated and saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. That file is the trip's key of record: while the variable is set and disagrees with it, `publish` and `update` refuse until you unset the variable. Change the key with `rotate`; it protects what you publish from then on, while earlier versions stay readable in the per-trip repository's history. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one.
 
 **Metadata privacy.** By default the per-trip repo is named `<destination>-<year>-trip` and is public, so the destination and year are visible even though the itinerary is encrypted (commit timestamps also reveal when you publish). Pass `--opaque` to name the repo with a random token instead (e.g. `trip-a1b2c3d4e5`); it's saved to `.publish-slug`, so `update`/`rotate`/`unpublish` resolve the same repo. You can still set your own name in `trips/<destination>-<year>/.publish-slug` (a shared, shorter, or custom name).
 

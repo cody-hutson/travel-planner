@@ -608,6 +608,19 @@ count-free for the same reason: it describes this record rather than the table, 
 counts its own corrections cannot stay true as the paragraph grows. No row, disposition or reason
 changes, and nothing decided above moves.
 
+**Amendment (2026-09-26, Saturday) — the environment override can no longer re-key a trip
+silently.** The residuals above name one silent re-key hazard on `update` — the unreadable-file
+fall-through — and place its mitigation in the command. A second one existed, and it is now closed
+**in the script**: with `STATICRYPT_PASSWORD` set, `update` encrypted under the variable even where
+the trip's `.passphrase` held a different key, so a routine update could undo a rotation
+(GHSA-gmm2-v7rr-jq7r). The script now refuses, before any network call, whenever the variable is set
+and the trip's `.passphrase` holds a different key or one it cannot read as a key, and `rotate` no
+longer consults the variable at all. The unreadable-file residual, and its command-layer mitigation,
+are unchanged. The `/trip-publish` precondition that refuses whenever the variable is set stays in
+place: a command that must never read a passphrase value cannot tell an agreeing pair from a
+disagreeing one, so it still declines to reach the script's decision. No row, disposition or reason
+in the table above changes.
+
 ## Consequences
 
 **Positive**

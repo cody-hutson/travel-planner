@@ -3078,7 +3078,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   push_trip_site "$pub_dir" rotate
   record_published_itinerary "$trip_dir" "$site_html"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
-  warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one."
+  warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."
   warn_if_environment_differs "$newp"
   announce_passphrase_file "New passphrase" "$pf"
   printf '\n'

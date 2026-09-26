@@ -7289,8 +7289,9 @@ else
 fi
 
 # ── PP8 — the env-override limb, and it is a defect in its own right. With
-# $STATICRYPT_PASSWORD set, get_passphrase returns the environment value and writes NO
-# file, while the message this change replaced announced it as "saved to …/.passphrase"
+# $STATICRYPT_PASSWORD set and no .passphrase present (the arm removes it first — a differing
+# file is now refused before resolution, GHSA-gmm2-v7rr-jq7r), the resolver takes the
+# environment value and writes NO file, while the message this change replaced announced it as "saved to …/.passphrase"
 # unconditionally. Measured before the fix: 653 capture bytes, env value present, the
 # saved-to claim present, the file absent. The helper branches on the DESTINATION's state,
 # so both limbs stay value-free and neither makes a claim about a file that is not there.
