@@ -9,7 +9,7 @@
 #
 #   ./scripts/test-publish-guard.sh
 #
-# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, MD, PP, RS) always run. Identity (D) + unpublish idempotency (J1)
+# Pure-bash tests (A–C2, F, H, I, K, L, Q, U, MD, PP, RV, RS) always run. Identity (D) + unpublish idempotency (J1)
 # skip without gh auth. Real-StatiCrypt tests (E, G) skip if npx/staticrypt is unavailable.
 # That parenthesis is a reading aid and has never been complete — the AUTHORITATIVE roster
 # of groups that run is the coverage boundary in .github/workflows/publish-guard.yml, and
@@ -75,6 +75,12 @@
 # value-absence test is satisfied by an announcer that never ran. PP7 restores the pre-fix
 # value-emitting announcer on every run and requires the same arm to convict it; PP8 grades
 # the env-supplied limb, where the shipped message claimed a file it had not written.
+# RV = a rotation revokes (GHSA-gmm2-v7rr-jq7r). The page rotate pushes is bound, by a nonce in
+# its ciphertext, to the key it was encrypted under, and must be under the key .passphrase
+# records whatever STATICRYPT_PASSWORD carries. publish and update refuse when the variable
+# and .passphrase disagree, before any network effect; an aborted rotation leaves .passphrase
+# byte-identical at every abort point; and the arms that grade independence from errexit run
+# without it, because that is what they grade.
 # MD = the Discriminating-Evidence Rule, asserted against this file. Every assertion's
 # PASS must require evidence its subject could only have produced by RUNNING. MD re-runs
 # each REGISTERED assertion with its subject removed and requires that assertion to flip
@@ -105,6 +111,9 @@ ROOT="$(dirname "$HERE")"
 # shellcheck source=publish-trip-site.sh
 source "$HERE/publish-trip-site.sh"      # BASH_SOURCE guard prevents dispatch
 set +e
+# Hermetic: an inherited STATICRYPT_PASSWORD would silently turn every file-backed arm below
+# into an environment-supplied one. Arms that need the variable set it in their own subshell.
+unset STATICRYPT_PASSWORD
 
 pass=0; fail=0; skip=0; SKIPPED=""; SEEN=""
 # Every verdict records its assertion id — the token before the first colon of the
@@ -7335,6 +7344,553 @@ md_flips cmd_rotate               "PP6-rot" pp_wiring_assert         "PP6"
 unset -f gh npx
 eval "$PP_ORIG_ENC"
 eval "$PP_ORIG_BOIL"
+unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
+      GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1 GIT_CONFIG_KEY_2 GIT_CONFIG_VALUE_2
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group RV — a rotation revokes: the page rotate pushes is under the key it records,
+# whatever the environment carries (GHSA-gmm2-v7rr-jq7r).
+#
+# THE DEFECT, through 0.43.0. rotate wrote a fresh passphrase to .passphrase and then
+# re-published through update, whose resolution returns $STATICRYPT_PASSWORD before it
+# reads the file. With the variable set, the site was re-encrypted under the variable, so
+# the previous passphrase kept working while rotate reported a rotation. A routine update
+# with the variable still set did the same after a CORRECT rotation. And rotate wrote the
+# file before any of update's checks ran, so an aborted rotation left .passphrase holding a
+# key the live site was not under — after a too-short --passphrase, the only on-disk copy
+# of the live key was gone.
+#
+# WHAT THE ARMS BIND TO. The key of the PUSHED page, not the key a function was handed:
+# rv_enc_shim writes a per-call nonce into the ciphertext it returns and records nonce ->
+# key, and rv_pushed_key reads the nonce back out of the bare repository's main:index.html.
+#
+# DISCIPLINES, each load-bearing:
+#   - Every subject runs in its own subshell with STATICRYPT_PASSWORD unset or set by the
+#     arm. An inherited variable would silently turn a control into the attack.
+#   - Subjects run under ( set -e; … ), production's errexit — EXCEPT RV8, whose subject IS
+#     independence from errexit: a caller in an `||` context, or this suite's own set +e,
+#     disables -e for the whole function body, and the fix must stop on its own.
+#   - Scratch repositories pin commit signing OFF. The arms that need a commit to FAIL pin
+#     commit.gpgsign=true with gpg.format=openpgp and gpg.program=false inside their own
+#     subshell: deterministic, offline, and never reaching an operator's signing agent.
+#   - Every refusal or abort arm asserts an exact rc AND a witness only the graded point
+#     prints, so an absent subject (rc=127) cannot satisfy it. Conditions in the verdict
+#     chains are shell tests over flags computed first (MD2).
+#   - The "unreadable" arm assumes a non-root runner, as CI's is: root reads mode 000.
+#
+# ORDER. RV6 and RV12 grade the REAL encrypt_to_tmp and run before its shim is installed:
+# md_probe removes its subject by name, so a shim standing in that name would leave both
+# arms blind to the function they exist to grade.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group RV — a rotation revokes: the pushed page is under the key rotate records, whatever the environment carries."
+
+RVW="$WORK/rv"; mkdir -p "$RVW/origin"
+RV_GHLOG="$RVW/gh.log"; RV_NPXLOG="$RVW/npx.log"; RV_KEYLOG="$RVW/keys.log"
+: > "$RV_GHLOG"; : > "$RV_NPXLOG"; : > "$RV_KEYLOG"
+RV_ORIG_ENC="$(declare -f encrypt_to_tmp)"
+RV_ORIG_BOIL="$(declare -f make_boilerplate)"
+export GIT_CONFIG_COUNT=3 \
+  GIT_CONFIG_KEY_0=commit.gpgsign     GIT_CONFIG_VALUE_0=false \
+  GIT_CONFIG_KEY_1=tag.gpgsign        GIT_CONFIG_VALUE_1=false \
+  GIT_CONFIG_KEY_2=init.defaultBranch GIT_CONFIG_VALUE_2=main
+
+rv_has()   { case "$1" in *"$2"*) return 0 ;; esac; return 1; }          # substring, no pipeline
+rv_lines() { local n; n="$(wc -l < "$1")"; printf '%s' "${n//[^0-9]/}"; }   # line count, no pipeline
+rv_head()  { git -C "$1" rev-parse main 2>/dev/null; }
+
+gh() {   # mock: log the call, answer the read-only probes, create and clone nothing real
+  printf '%s\n' "$*" >> "$RV_GHLOG"
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 1 ;;
+    "auth status") [ -z "${RV_GH_AUTH_FAIL:-}" ] || return 1; printf "Token scopes: 'repo'\n" ;;
+    "repo clone")  return 1 ;;
+    *)             return 0 ;;
+  esac
+}
+npx() { printf 'npx\n' >> "$RV_NPXLOG"; return 0; }
+
+# A trip whose per-trip clone already exists, pushing to a local bare repository named
+# <name>-trip.git so ensure_pub_clone reuses it. The optional key seeds .passphrase.
+rv_fixture() { # <name> [key] -> trip dir
+  local d="$RVW/$1" bare="$RVW/origin/$1-trip.git"
+  mkdir -p "$d/outputs" "$bare"
+  cp "$SRC" "$d/outputs/$1-travel-site.html"
+  git init -q --bare "$bare"
+  git init -q "$d/.publish"
+  git -C "$d/.publish" remote add origin "$bare"
+  cp "$ENC_OK" "$d/.publish/index.html"
+  git -C "$d/.publish" add index.html
+  git -C "$d/.publish" -c user.name=t -c user.email=t@example.invalid commit -q -m seed
+  git -C "$d/.publish" branch -M main
+  git -C "$d/.publish" push -q origin main
+  if [ "$#" -ge 2 ]; then printf '%s\n' "$2" > "$d/.passphrase"; chmod 600 "$d/.passphrase"; fi
+  printf '%s' "$d"
+}
+
+# The key the page at <bare>'s main was encrypted under, read from the nonce the encrypt
+# shim wrote into it. Prints nothing when no pushed page carries a nonce.
+rv_pushed_key() { # <bare>
+  local html n line re='staticryptEncrypted="(rv[0-9a-f]+)"'
+  html="$(git -C "$1" show main:index.html 2>/dev/null)" || return 0
+  [[ "$html" =~ $re ]] || return 0
+  n="${BASH_REMATCH[1]}"
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in "$n "*) printf '%s' "${line#"$n "}"; return 0 ;; esac
+  done < "$RV_KEYLOG"
+}
+
+# The encrypt shim: ENC_OK (or $RV_ENC_SRC) with a per-call nonce in place of its
+# ciphertext marker. The keys it records are synthetic and never printed by any arm.
+rv_enc_shim() { # <src_html> <passphrase> -> dir holding index.html
+  local e n
+  n="rv$(od -An -N6 -tx1 /dev/urandom | tr -dc 'a-f0-9')"
+  e="$(mktemp -d)"
+  sed "s/bb12ab/$n/" "${RV_ENC_SRC:-$ENC_OK}" > "$e/index.html"
+  printf '%s %s\n' "$n" "$2" >> "$RV_KEYLOG"
+  printf '%s' "$e"
+}
+
+# ── RV6 / RV12 — the REAL encrypt_to_tmp, before any shim. RV6: a key below the 12-character
+# floor must be refused BEFORE StatiCrypt is reached, with errexit OFF (this suite's default),
+# because the floor may not depend on how the caller spelled the call. The npx mock PRODUCES
+# output: a non-producing one fails the call for an unrelated reason and would read as the
+# floor holding. RV6c is the control — a long key reaches npx exactly once.
+rv6_assert() { # <id> <short|long>
+  local id="$1" which="$2" key rc calls
+  case "$which" in short) key='short-key' ;; *) key='rv-long-enough-synthetic-key' ;; esac
+  : > "$RV_NPXLOG"
+  ( npx() {
+      local a dd=""
+      printf 'npx\n' >> "$RV_NPXLOG"
+      for a in "$@"; do [ "$dd" = next ] && dd="$a"; [ "$a" = -d ] && dd=next; done
+      mkdir -p "$dd"; printf 'ciphertext\n' > "$dd/index.html"
+    }
+    encrypt_to_tmp "$SRC" "$key" ) >/dev/null 2>&1; rc=$?
+  calls="$(rv_lines "$RV_NPXLOG")"
+  if [ "$which" = short ]; then
+    if [ "$rc" -ne 1 ]; then
+      FAIL "$id: encrypt_to_tmp handed a 9-character key returned rc=$rc, want exactly 1 — StatiCrypt may run under a key below the floor ($calls npx call(s))"
+    elif [ "$calls" != "0" ]; then
+      FAIL "$id: encrypt_to_tmp refused the short key only after $calls npx call(s) — the floor must stop it before StatiCrypt is reached"
+    else
+      PASS "$id: a key below the 12-character floor is refused before StatiCrypt runs (rc=1, 0 npx calls), with errexit off"
+    fi
+  else
+    if [ "$rc" -ne 0 ] || [ "$calls" != "1" ]; then
+      FAIL "$id: CONTROL — a key above the floor returned rc=$rc with $calls npx call(s), want rc=0 and exactly 1: the arm above cannot tell a floor from a broken path"
+    else
+      PASS "$id: CONTROL — a key above the floor reaches StatiCrypt exactly once (rc=0), so RV6's zero is a measurement"
+    fi
+  fi
+}
+rv6_assert "RV6" short
+rv6_assert "RV6c" long
+
+# RV12 — the key reaches StatiCrypt only through the STATICRYPT_PASSWORD prefix assignment.
+# StatiCrypt 3.5.4 prefers a set STATICRYPT_PASSWORD over -p, so an inherited variable would
+# beat an explicit -p — and -p would put the key in argv.
+rv12_assert() { # <id>
+  local id="$1" b hasprefix=0 hasp=0
+  b="$(declare -f encrypt_to_tmp 2>/dev/null)"
+  rv_has "$b" 'STATICRYPT_PASSWORD="$passphrase"' && hasprefix=1
+  { rv_has "$b" ' -p ' || rv_has "$b" '--password'; } && hasp=1
+  if [ "${#b}" -lt 200 ]; then
+    FAIL "$id: encrypt_to_tmp's parsed body is ${#b} bytes — the subject is absent or a stub. VERDICT WITHHELD"
+  elif [ "$hasprefix" -eq 0 ]; then
+    FAIL "$id: encrypt_to_tmp no longer hands StatiCrypt the key through the STATICRYPT_PASSWORD prefix assignment"
+  elif [ "$hasp" -eq 1 ]; then
+    FAIL "$id: encrypt_to_tmp passes the key with -p/--password — an inherited STATICRYPT_PASSWORD would win over it, and the key would sit in argv"
+  else
+    PASS "$id: encrypt_to_tmp hands the key over only through the prefix assignment, never -p or --password (${#b}-byte body)"
+  fi
+}
+rv12_assert "RV12"
+md_flips encrypt_to_tmp "RV6"  rv6_assert  "RV6" short
+md_flips encrypt_to_tmp "RV6c" rv6_assert  "RV6c" long
+md_flips encrypt_to_tmp "RV12" rv12_assert "RV12"
+
+# Every arm below runs against the shims.
+encrypt_to_tmp()   { rv_enc_shim "$@"; }
+make_boilerplate() { return 1; }
+
+# ── RV1 — AC1. rotate, with STATICRYPT_PASSWORD holding the current key: the pushed page
+# must be under the key .passphrase now holds, and that must not be the previous key.
+# RV1c is the same rotation with the variable unset.
+rv1_assert() { # <id> <set|unset>
+  local id="$1" mode="$2" name d k rc now old='rv-previous-synthetic-key-0001'
+  name="rv1-$mode-$RANDOM"; d="$(rv_fixture "$name" "$old")"
+  if [ "$mode" = set ]; then
+    ( export STATICRYPT_PASSWORD="$old"; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
+  else
+    ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
+  fi
+  k="$(rv_pushed_key "$RVW/origin/$name-trip.git")"
+  now="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$rc" -ne 0 ]; then
+    FAIL "$id: rotate (variable $mode) returned rc=$rc, want 0"
+  elif [ -z "$k" ]; then
+    FAIL "$id: no pushed page carries a nonce — the push was not observed. DEGENERATE, VERDICT WITHHELD"
+  elif [ "$k" = "$old" ]; then
+    FAIL "$id: the pushed page is still under the PREVIOUS passphrase (variable $mode) — rotate reported a rotation and revoked nothing"
+  elif [ "$k" != "$now" ]; then
+    FAIL "$id: the pushed page is not under the key .passphrase holds (variable $mode) — the passphrase rotate announces does not open the site"
+  else
+    PASS "$id: with the variable $mode, rotate pushed a page under the key .passphrase now holds, and it is not the previous key"
+  fi
+}
+rv1_assert "RV1"  set
+rv1_assert "RV1c" unset
+
+# ── RV2 / RV2c — AC2. The variable and .passphrase disagree: update and publish must refuse
+# before any gh call — on a never-cloned trip, so a refusal that followed the clone could not
+# hide — and the refusal must name both sources and carry neither value.
+rv2_assert() { # <id> <update|publish>
+  local id="$1" verb="$2" name d out rc calls named=0 leaks=0
+  name="rv2-$verb-$RANDOM"; d="$RVW/$name"; mkdir -p "$d/outputs"
+  cp "$SRC" "$d/outputs/$name-travel-site.html"
+  printf '%s\n' 'rv-file-synthetic-key-AAAA-1' > "$d/.passphrase"
+  : > "$RV_GHLOG"
+  out="$( ( export STATICRYPT_PASSWORD='rv-env-synthetic-key-BBBB-2'; set -e; "cmd_$verb" "$d" ) 2>&1 )"; rc=$?
+  calls="$(rv_lines "$RV_GHLOG")"
+  rv_has "$out" 'STATICRYPT_PASSWORD' && rv_has "$out" "$d/.passphrase" && named=1
+  { rv_has "$out" 'rv-env-synthetic-key-BBBB-2' || rv_has "$out" 'rv-file-synthetic-key-AAAA-1'; } && leaks=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: $verb with the variable and .passphrase disagreeing returned rc=$rc, want exactly 1 (a refusal)"
+  elif [ "$named" -eq 0 ]; then
+    FAIL "$id: $verb exited 1, but not with a refusal naming both STATICRYPT_PASSWORD and the trip's .passphrase — some other failure, so the disagreement was never graded"
+  elif [ "$calls" != "0" ]; then
+    FAIL "$id: $verb refused only after $calls gh call(s) — the disagreement must stop it before any network effect"
+  elif [ "$leaks" -eq 1 ]; then
+    FAIL "$id: the refusal carries a passphrase VALUE"
+  else
+    PASS "$id: $verb refuses the disagreement before any gh call (rc=1, 0 calls), naming both sources and carrying neither value"
+  fi
+}
+rv2_assert "RV2"  update
+rv2_assert "RV2c" publish
+
+# RV2b — the refusal states no value, length or prefix. A substring test cannot show a
+# length is absent, so this is differential: two refusals over key pairs of different
+# lengths and prefixes, from the same trip path, must be byte-identical.
+rv2b_assert() { # <id>
+  local id="$1" name d m1 m2 r1 r2 both=0
+  name="rv2b-$RANDOM"; d="$RVW/$name"; mkdir -p "$d/outputs"
+  cp "$SRC" "$d/outputs/$name-travel-site.html"
+  printf '%s\n' 'aa-short-file-key-01' > "$d/.passphrase"
+  m1="$( ( export STATICRYPT_PASSWORD='bb-short-env-key-02'; set -e; cmd_update "$d" ) 2>&1 )"; r1=$?
+  printf '%s\n' 'zz-a-considerably-longer-synthetic-file-key-0003' > "$d/.passphrase"
+  m2="$( ( export STATICRYPT_PASSWORD='yy-another-much-longer-synthetic-env-key-000004'; set -e; cmd_update "$d" ) 2>&1 )"; r2=$?
+  rv_has "$m1" 'STATICRYPT_PASSWORD' && rv_has "$m2" 'STATICRYPT_PASSWORD' && both=1
+  if [ "$r1" -ne 1 ] || [ "$r2" -ne 1 ] || [ "$both" -eq 0 ]; then
+    FAIL "$id: the two disagreeing runs did not both refuse naming STATICRYPT_PASSWORD (rc=$r1/$r2) — nothing to compare. VERDICT WITHHELD"
+  elif [ "$m1" != "$m2" ]; then
+    FAIL "$id: the refusal text changed when only the passphrases' lengths and prefixes changed — it discloses something about a value"
+  else
+    PASS "$id: two refusals over key pairs of different lengths and prefixes are byte-identical (${#m1} bytes) — the refusal states no value, length or prefix"
+  fi
+}
+rv2b_assert "RV2b"
+
+# RV2d — controls. Where the sources do not disagree, update publishes exactly as before:
+# variable only, file only, both equal, and an EMPTY variable (which is unset, everywhere).
+rv2d_assert() { # <id> <env-only|file-only|agree|empty-env>
+  local id="$1" c="$2" name d k rc want
+  name="rv2d-$c-$RANDOM"
+  case "$c" in
+    env-only)  want='rv-env-only-synthetic-key-01'; d="$(rv_fixture "$name")"
+               ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    file-only) want='rv-file-only-synthetic-key-02'; d="$(rv_fixture "$name" "$want")"
+               ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    agree)     want='rv-agreeing-synthetic-key-003'; d="$(rv_fixture "$name" "$want")"
+               ( export STATICRYPT_PASSWORD="$want"; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+    *)         want='rv-empty-env-synthetic-key-04'; d="$(rv_fixture "$name" "$want")"
+               ( export STATICRYPT_PASSWORD=''; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$? ;;
+  esac
+  k="$(rv_pushed_key "$RVW/origin/$name-trip.git")"
+  if [ "$rc" -ne 0 ] || [ -z "$k" ]; then
+    FAIL "$id: update ($c) returned rc=$rc and pushed no page bound to a key — a non-conflicting case must publish"
+  elif [ "$k" != "$want" ]; then
+    FAIL "$id: update ($c) pushed a page under a key other than the one its sources name"
+  else
+    PASS "$id: update ($c) publishes under the key its sources name — no disagreement, no refusal, unchanged behaviour"
+  fi
+}
+for rv_c in env-only file-only agree empty-env; do rv2d_assert "RV2d-$rv_c" "$rv_c"; done
+
+# RV2e — FM-4's domain. A .passphrase the resolver cannot read AS the variable's key is a
+# disagreement, not an absence: unreadable, empty, newline only, a second line, CRLF. Each
+# file's first line equals the variable where it has one, so only the shape triggers.
+rv2e_assert() { # <id> <unreadable|empty|newline-only|two-line|crlf>
+  local id="$1" s="$2" name d out rc calls named=0 key='rv-domain-synthetic-key-0005'
+  name="rv2e-$s-$RANDOM"; d="$(rv_fixture "$name")"
+  case "$s" in
+    unreadable)   printf '%s\n' "$key" > "$d/.passphrase"; chmod 000 "$d/.passphrase" ;;
+    empty)        : > "$d/.passphrase" ;;
+    newline-only) printf '\n' > "$d/.passphrase" ;;
+    two-line)     printf '%s\n%s\n' "$key" 'rv-second-line' > "$d/.passphrase" ;;
+    *)            printf '%s\r\n' "$key" > "$d/.passphrase" ;;
+  esac
+  : > "$RV_GHLOG"
+  out="$( ( export STATICRYPT_PASSWORD="$key"; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  calls="$(rv_lines "$RV_GHLOG")"
+  chmod 600 "$d/.passphrase" 2>/dev/null
+  rv_has "$out" 'STATICRYPT_PASSWORD' && named=1
+  if [ "$rc" -ne 1 ] || [ "$named" -eq 0 ]; then
+    FAIL "$id: with the variable set and a .passphrase that is $s, update returned rc=$rc without the refusal"
+  elif [ "$calls" != "0" ]; then
+    FAIL "$id: the $s-file refusal came after $calls gh call(s)"
+  else
+    PASS "$id: a .passphrase that is $s, beside a set variable, is refused before any gh call"
+  fi
+}
+for rv_s in unreadable empty newline-only two-line crlf; do rv2e_assert "RV2e-$rv_s" "$rv_s"; done
+
+# ── RV3 — AC3. A rotation aborted before its push leaves .passphrase byte-identical, at every
+# abort point, each proven REACHED by the point's own message. "absent": a trip with no
+# .passphrase keeps none after an aborted rotation.
+rv3_assert() { # <id> <floor|gate|preflight|clone|encrypt|guard|commit|absent>
+  local id="$1" p="$2" name d bare out rc h0 h1 w seen=0 same=0
+  name="rv3-$p-$RANDOM"; bare="$RVW/origin/$name-trip.git"
+  case "$p" in
+    gate|absent) d="$(s_fixture "$name" 16:30 none)"
+                 s_record "$d/.published-itinerary" "$S_DA" published ;;
+    clone)       d="$RVW/$name"; mkdir -p "$d/outputs"; cp "$SRC" "$d/outputs/$name-travel-site.html" ;;
+    *)           d="$(rv_fixture "$name")" ;;
+  esac
+  [ "$p" = absent ] || printf '%s\n' 'rv-live-synthetic-key-0006' > "$d/.passphrase"
+  [ -e "$d/.passphrase" ] && cp -p "$d/.passphrase" "$RVW/$name.before"
+  h0="$(rv_head "$bare")"
+  case "$p" in
+    floor)     w='shorter than 12 characters'
+               out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase 'short-key' ) 2>&1 )"; rc=$? ;;
+    gate|absent) w='itinerary content differs'
+               out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    preflight) w='gh is not authenticated'
+               out="$( ( unset STATICRYPT_PASSWORD; export RV_GH_AUTH_FAIL=1; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    clone)     w="run 'publish' first"
+               out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    encrypt)   w='rv-encrypt-shim-refused'
+               out="$( ( unset STATICRYPT_PASSWORD
+                         encrypt_to_tmp() { printf 'rv-encrypt-shim-refused\n' >&2; return 1; }
+                         set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    guard)     w='not verified ciphertext'
+               out="$( ( unset STATICRYPT_PASSWORD; export RV_ENC_SRC="$ENC_LEAK"; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+    *)         w='failed to sign'
+               out="$( ( unset STATICRYPT_PASSWORD
+                         export GIT_CONFIG_COUNT=5 GIT_CONFIG_VALUE_0=true \
+                           GIT_CONFIG_KEY_3=gpg.format GIT_CONFIG_VALUE_3=openpgp \
+                           GIT_CONFIG_KEY_4=gpg.program GIT_CONFIG_VALUE_4=false
+                         set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$? ;;
+  esac
+  h1="$(rv_head "$bare")"
+  rv_has "$out" "$w" && seen=1
+  if [ "$p" = absent ]; then
+    [ ! -e "$d/.passphrase" ] && same=1
+  else
+    cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  fi
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: rotate aborted at the $p point returned rc=$rc, want exactly 1"
+  elif [ "$seen" -eq 0 ]; then
+    FAIL "$id: rotate exited 1 without the $p point's own message — the abort was not observed where this arm grades it. VERDICT WITHHELD"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: the per-trip repository moved during a rotation aborted at the $p point"
+  elif [ "$same" -eq 0 ]; then
+    FAIL "$id: a rotation aborted at the $p point left .passphrase changed or created — it no longer names the key the live site is under"
+  else
+    PASS "$id: rotate aborted at the $p point (rc=1, the point's own message) and .passphrase is exactly as it was"
+  fi
+}
+for rv_p in floor gate preflight clone encrypt guard commit absent; do rv3_assert "RV3-$rv_p" "$rv_p"; done
+
+# ── RV4 — AC4. The push fails after the commit point: .passphrase must already name the new
+# key, and the next update must publish under it — never back under the revoked one.
+rv4_assert() { # <id>
+  local id="$1" name d bare out rc k2 now old='rv-before-rotation-key-07' told=0
+  name="rv4-$RANDOM"; d="$(rv_fixture "$name" "$old")"; bare="$RVW/origin/$name-trip.git"
+  git -C "$d/.publish" remote set-url origin "$RVW/missing/$name-trip.git"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  git -C "$d/.publish" remote set-url origin "$bare"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  k2="$(rv_pushed_key "$bare")"
+  now="$(cat "$d/.passphrase" 2>/dev/null)"
+  rv_has "$out" 'ROTATED' && told=1
+  if [ "$rc" -eq 0 ] || [ "$told" -eq 1 ]; then
+    FAIL "$id: a rotation whose push failed reported success (rc=$rc)"
+  elif [ -z "$k2" ]; then
+    FAIL "$id: the follow-up update pushed no page bound to a key — convergence was not observed. VERDICT WITHHELD"
+  elif [ "$k2" = "$old" ]; then
+    FAIL "$id: after a failed-push rotation, the next update published under the REVOKED key — the rotation was silently undone"
+  elif [ "$k2" != "$now" ]; then
+    FAIL "$id: after a failed-push rotation, the next update did not publish under the key .passphrase names"
+  else
+    PASS "$id: a rotation whose push failed left .passphrase naming the new key, and the next update converged the site onto it"
+  fi
+}
+rv4_assert "RV4"
+
+# ── RV5 — rotate's arguments. A --passphrase with no value, and an unknown option, are
+# refused before anything is written; neither may silently generate a key and rotate.
+rv5_assert() { # <id> <no-value|unknown>
+  local id="$1" f="$2" name d bare out rc h0 h1 w seen=0 same=0
+  name="rv5-$f-$RANDOM"; d="$(rv_fixture "$name" 'rv-live-synthetic-key-0008')"; bare="$RVW/origin/$name-trip.git"
+  cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(rv_head "$bare")"
+  if [ "$f" = no-value ]; then
+    w='needs a value'
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --passphrase ) 2>&1 )"; rc=$?
+  else
+    w='unknown option'
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" --bogus ) 2>&1 )"; rc=$?
+  fi
+  h1="$(rv_head "$bare")"
+  rv_has "$out" "$w" && seen=1
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: rotate with $f returned rc=$rc, want exactly 1 — it went ahead instead of refusing"
+  elif [ "$seen" -eq 0 ]; then
+    FAIL "$id: rotate exited 1 without saying why ($f). VERDICT WITHHELD"
+  elif [ "$h0" != "$h1" ] || [ "$same" -eq 0 ]; then
+    FAIL "$id: rotate with $f changed the site or .passphrase"
+  else
+    PASS "$id: rotate with $f refuses (rc=1) and changes nothing"
+  fi
+}
+for rv_f in no-value unknown; do rv5_assert "RV5-$rv_f" "$rv_f"; done
+
+# ── RV7 — D-5. When STATICRYPT_PASSWORD is still set after a rotation and differs from the
+# new key, rotate says so — value-free — because the next publish or update will refuse. It
+# stays silent when the variable matches the new key, or is unset.
+rv7_assert() { # <id>
+  local id="$1" d1 d2 d3 o1 o2 o3 r1 r2 r3 k1 w1=0 w23=0 leak=0
+  local env='rv-stale-env-synthetic-key-09' nk='rv-chosen-new-synthetic-key-10' cur='rv-current-synthetic-key-11'
+  d1="$(rv_fixture "rv7a-$RANDOM" "$cur")"; d2="$(rv_fixture "rv7b-$RANDOM" "$cur")"; d3="$(rv_fixture "rv7c-$RANDOM" "$cur")"
+  o1="$( ( export STATICRYPT_PASSWORD="$env"; set -e; cmd_rotate "$d1" ) 2>&1 )"; r1=$?
+  o2="$( ( export STATICRYPT_PASSWORD="$nk"; set -e; cmd_rotate "$d2" --passphrase "$nk" ) 2>&1 )"; r2=$?
+  o3="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d3" ) 2>&1 )"; r3=$?
+  k1="$(cat "$d1/.passphrase" 2>/dev/null)"
+  rv_has "$o1" 'still set in this environment' && w1=1
+  { rv_has "$o2" 'still set in this environment' || rv_has "$o3" 'still set in this environment'; } && w23=1
+  { rv_has "$o1" "$env" || { [ -n "$k1" ] && rv_has "$o1" "$k1"; }; } && leak=1
+  if [ "$r1" -ne 0 ] || [ "$r2" -ne 0 ] || [ "$r3" -ne 0 ]; then
+    FAIL "$id: a rotation did not complete (rc=$r1/$r2/$r3) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$w1" -eq 0 ]; then
+    FAIL "$id: rotate with a different STATICRYPT_PASSWORD still set gave no warning — the next publish or update will refuse, and the operator was not told why"
+  elif [ "$w23" -eq 1 ]; then
+    FAIL "$id: rotate warned although the variable matched the new key or was unset"
+  elif [ "$leak" -eq 1 ]; then
+    FAIL "$id: rotate's output carries a passphrase VALUE"
+  else
+    PASS "$id: rotate warns, value-free, only when the variable is set and differs from the new key"
+  fi
+}
+rv7_assert "RV7"
+
+# ── RV8 — FM-1. The commit is forced to fail and errexit cannot stop it: once with this
+# suite's own errexit OFF, once with the caller spelling `cmd_rotate … || true` under set -e.
+# In both, bash ignores -e for the whole function body; the rotation must stop on its own.
+rv8_assert() { # <id> <errexit-off|or-true>
+  local id="$1" how="$2" name d bare out rc h0 h1 told=0 same=0
+  name="rv8-$how-$RANDOM"; d="$(rv_fixture "$name" 'rv-live-synthetic-key-0012')"; bare="$RVW/origin/$name-trip.git"
+  cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(rv_head "$bare")"
+  if [ "$how" = errexit-off ]; then
+    out="$( ( unset STATICRYPT_PASSWORD
+              export GIT_CONFIG_COUNT=5 GIT_CONFIG_VALUE_0=true \
+                GIT_CONFIG_KEY_3=gpg.format GIT_CONFIG_VALUE_3=openpgp \
+                GIT_CONFIG_KEY_4=gpg.program GIT_CONFIG_VALUE_4=false
+              cmd_rotate "$d"; printf 'rv8-caller-continued\n' ) 2>&1 )"; rc=$?
+  else
+    out="$( ( unset STATICRYPT_PASSWORD
+              export GIT_CONFIG_COUNT=5 GIT_CONFIG_VALUE_0=true \
+                GIT_CONFIG_KEY_3=gpg.format GIT_CONFIG_VALUE_3=openpgp \
+                GIT_CONFIG_KEY_4=gpg.program GIT_CONFIG_VALUE_4=false
+              set -e; cmd_rotate "$d" || true; printf 'rv8-caller-continued\n' ) 2>&1 )"; rc=$?
+  fi
+  h1="$(rv_head "$bare")"
+  { rv_has "$out" 'ROTATED' || rv_has "$out" 'rv8-caller-continued'; } && told=1
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: with the commit forced to fail ($how), the run ended rc=$rc, want exactly 1 — the failure did not stop it"
+  elif [ "$told" -eq 1 ]; then
+    FAIL "$id: a rotation whose commit failed was reported done, or its caller carried on ($how)"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: the per-trip repository moved although the commit failed ($how)"
+  elif [ "$same" -eq 0 ]; then
+    FAIL "$id: a rotation whose commit failed changed .passphrase ($how)"
+  else
+    PASS "$id: a failed commit stops the rotation by itself ($how): rc=1, nothing reported, the repository unmoved, .passphrase exactly as it was"
+  fi
+}
+rv8_assert "RV8-errexit-off" errexit-off
+rv8_assert "RV8-or-true"     or-true
+
+# ── RV9 — the operator's path shape. Every other fixture path here is absolute; the command
+# people type is relative (rotate trips/<dir>). A key write placed inside a `cd` would break
+# exactly this form while every other arm stayed green.
+rv9_assert() { # <id>
+  local id="$1" name d rc k now
+  name="rv9-$RANDOM"; d="$(rv_fixture "$name" 'rv-live-synthetic-key-0013')"
+  ( cd "$RVW" || exit 1; unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$name" ) >/dev/null 2>&1; rc=$?
+  k="$(rv_pushed_key "$RVW/origin/$name-trip.git")"
+  now="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$rc" -ne 0 ] || [ -z "$k" ]; then
+    FAIL "$id: rotate given a relative trip path returned rc=$rc with no observable push"
+  elif [ "$k" != "$now" ]; then
+    FAIL "$id: rotate given a relative trip path pushed a page not under the key .passphrase holds"
+  else
+    PASS "$id: rotate works from a relative trip path — the page it pushed is under the key .passphrase holds"
+  fi
+}
+rv9_assert "RV9"
+
+# ── RV10 — FM-6. Another rotation changes .passphrase after this update resolved its key and
+# before it pushes (simulated inside the encrypt step). update must re-read the key of record
+# and stop, or it pushes the revoked key over the rotation.
+rv10_assert() { # <id>
+  local id="$1" name d bare out rc h0 h1 seen=0
+  name="rv10-$RANDOM"; d="$(rv_fixture "$name" 'rv-resolved-synthetic-key-14')"; bare="$RVW/origin/$name-trip.git"
+  h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; rv10_pf="$d/.passphrase"
+            encrypt_to_tmp() { rv_enc_shim "$@"; printf '%s\n' 'rv-concurrent-rotation-key-15' > "$rv10_pf"; }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"
+  rv_has "$out" 'changed while this update was running' && seen=1
+  if [ "$rc" -ne 1 ]; then
+    FAIL "$id: update carried on although .passphrase changed under it (rc=$rc) — it would push the revoked key over a concurrent rotation"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: the per-trip repository moved although the key of record changed mid-update"
+  elif [ "$seen" -eq 0 ]; then
+    FAIL "$id: update exited 1 without the key-of-record message — the check was not the cause. VERDICT WITHHELD"
+  else
+    PASS "$id: update re-reads the key of record before its push and stops when it has changed — the revoked key is never pushed over a rotation"
+  fi
+}
+rv10_assert "RV10"
+
+# ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
+# removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
+md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
+md_flips cmd_rotate  "RV1c" rv1_assert  "RV1c" unset
+md_flips cmd_update  "RV2"  rv2_assert  "RV2"  update
+md_flips cmd_publish "RV2c" rv2_assert  "RV2c" publish
+md_flips cmd_update  "RV2b" rv2b_assert "RV2b"
+for rv_c in env-only file-only agree empty-env; do md_flips cmd_update "RV2d-$rv_c" rv2d_assert "RV2d-$rv_c" "$rv_c"; done
+for rv_s in unreadable empty newline-only two-line crlf; do md_flips cmd_update "RV2e-$rv_s" rv2e_assert "RV2e-$rv_s" "$rv_s"; done
+for rv_p in floor gate preflight clone encrypt guard commit absent; do md_flips cmd_rotate "RV3-$rv_p" rv3_assert "RV3-$rv_p" "$rv_p"; done
+md_flips cmd_rotate  "RV4"  rv4_assert  "RV4"
+for rv_f in no-value unknown; do md_flips cmd_rotate "RV5-$rv_f" rv5_assert "RV5-$rv_f" "$rv_f"; done
+md_flips cmd_rotate  "RV7"  rv7_assert  "RV7"
+md_flips cmd_rotate  "RV8-errexit-off" rv8_assert "RV8-errexit-off" errexit-off
+md_flips cmd_rotate  "RV8-or-true"     rv8_assert "RV8-or-true"     or-true
+md_flips cmd_rotate  "RV9"  rv9_assert  "RV9"
+md_flips cmd_update  "RV10" rv10_assert "RV10"
+
+# Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
+# definitions, never unset — `unset -f` here would delete the real ones.
+unset -f gh npx
+eval "$RV_ORIG_ENC"
+eval "$RV_ORIG_BOIL"
 unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 \
       GIT_CONFIG_KEY_1 GIT_CONFIG_VALUE_1 GIT_CONFIG_KEY_2 GIT_CONFIG_VALUE_2
 
