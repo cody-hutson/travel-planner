@@ -3,6 +3,20 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-26 — Group approval: the decided model
+
+**Group approval has a decided model.** A new decision record settles the inbound approval return
+the channel architecture left open. A traveller replies in the group's own thread with a one-line
+approval code, and the organizer records it at a terminal. The record says plainly what that makes
+each approval: the organizer's statement, marked organizer-stated and never presented as the
+traveller's own. It also says why. However an approval is collected, which traveller it counts for
+reaches the engine through the organizer, and no published page may show that link. What a
+traveller can do instead is check the published count and code against the thread. Only a count
+and a code reach the published site, and only a fixed-form line travels through the messaging
+service. The record also writes down, for the first time, how one decision of an accepted record is
+superseded while the rest stands, and names the organizer-confirm rule as the decision it
+supersedes that way.
+
 ## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 
 This release finishes what earlier corrective releases left partly done. Two defects changed how the
