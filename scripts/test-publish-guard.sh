@@ -1814,12 +1814,12 @@ if [ "$MRC" -eq 0 ]; then PASS "M3e: a fresh model with a first-party passport a
 # passport edited only in the library leaves every file under the trip untouched and every
 # M3 comparison reads fresh while the projection is behind its real source set.
 #
-# THE STORE IS AT THE TRIP ROOT, DELIBERATELY. Store-root resolution is trip-root-first,
-# so this fixture is self-contained. A fixture that fell through to the repo-root store
-# would be RESOLVED on an author's machine and DANGLING in CI, because that directory is
-# git-ignored and absent from a clean checkout — a witness whose verdict depends on the
-# operator's private working directory is not a witness. It therefore depends on no
-# tracked example fixture either.
+# THE STORE IS AT THE TRIP ROOT, DELIBERATELY. Store-root resolution is trip-root-first
+# (reference/data-model.md -> "Composition — the trip-side read of a durable record"),
+# so this fixture is self-contained. A fixture that reached the rule's second step would
+# depend on which store that step finds, and that differs between an author's machine and
+# CI — a witness whose verdict depends on the operator's private working directory is not
+# a witness. It therefore depends on no tracked example fixture either.
 #
 # M4d IS THE LOAD-BEARING ARM, and it is worth saying which one and why. The partial
 # landing that puts a fence row in without widening the evaluator is the LOUDEST possible
@@ -4345,7 +4345,8 @@ fi
 #         require_perl by a command that needs neither gh nor npx. No stubs are set for
 #         it, and that absence IS the evidence
 #   S11i  REACHABILITY AT THE SOURCE, AND THE ORDER (#749) — cmd_confirm calls it, and
-#         calls it BEFORE it resolves the gate state, so no fabricated state is printed
+#         calls it BEFORE it resolves the gate state, so a perl-less host meets a failure
+#         that names perl
 #
 # Offline: $WORK fixtures, a shell-function stub for perl and for gh/npx (the S8/S9
 # technique), and a PATH with no perl on it. No network, no Node, no TTY, no real gh. This
@@ -4483,13 +4484,16 @@ fi
 
 # ── S11i — REACHABILITY AT THE SOURCE, AND THE ORDER (#749). S11h proves the helper
 # aborts; this proves cmd_confirm reaches it, and reaches it EARLY ENOUGH. The order is the
-# substance, not a detail: placing the call merely "before the prompt" is still wrong.
-# change_confirmation_state runs one step earlier, and on a perl-less host its
-# itinerary_digest call returns EMPTY, an empty value can never equal the recorded
-# baseline, and the resolver falls through to `unconfirmed` or `stale`. The organizer is
-# then shown `Gate state      : stale` — the itinerary moved since you confirmed it — for a
-# plan that may not have moved at all, asked to type CONFIRM against that fabricated state,
-# and only THEN met by the death. The probe therefore belongs before the state resolution.
+# substance, not a detail: placing the call merely "before the prompt" would name the
+# SYMPTOM rather than the CAUSE. change_confirmation_state runs one step earlier, and on a
+# perl-less host its itinerary_digest call returns EMPTY; since #1184 the resolver reads
+# that as `undetermined` and cmd_confirm refuses it before the terminal check and the
+# prompt. That is safe, but the refusal says the itinerary's state could not be
+# determined, when what is wrong is that perl is missing. (Before #1184 the same path fell
+# through to `unconfirmed` or `stale`, showed the organizer `Gate state      : stale` for a
+# plan that may not have moved, and asked for a CONFIRM against that fabricated state —
+# which is why #749 moved the probe.) The probe therefore belongs before the state
+# resolution, so that the failure names perl.
 #
 # Read from the PARSED bodies, so a mention inside a comment cannot fake any of it. The
 # sensitivity arm is preflight, which calls the same helper, so the detector demonstrably
@@ -4504,15 +4508,15 @@ case "$S11I_ROT"  in *require_perl*)              S11I_SPEC=1  ;; *) S11I_SPEC=0
 S11I_AT_CALL="${S11I_CONF%%require_perl*}"
 S11I_AT_STATE="${S11I_CONF%%change_confirmation_state*}"
 if [ "$S11I_CALLS" -ne 1 ]; then
-  FAIL "S11i: cmd_confirm's parsed body (${#S11I_CONF}B) DOES NOT CALL require_perl at all. On a host without perl it runs change_confirmation_state first, is handed an empty digest, prints a gate state that perl's absence fabricated, asks the organizer to type CONFIRM against it, and only then dies"
+  FAIL "S11i: cmd_confirm's parsed body (${#S11I_CONF}B) DOES NOT CALL require_perl at all. On a host without perl it runs change_confirmation_state first, is handed an empty digest and resolves 'undetermined', so the organizer is refused on the SYMPTOM — the state could not be determined — and is never told that perl is missing"
 elif [ "$S11I_STATE" -ne 1 ]; then
   FAIL "S11i: cmd_confirm's parsed body carries no change_confirmation_state call, so the ordering comparison below has no right-hand side — the resolver was renamed or the gate was restructured, and this arm is no longer reading what it claims"
 elif [ "$S11I_SENS" -ne 1 ] || [ "$S11I_SPEC" -ne 0 ]; then
   FAIL "S11i: the detector's own arms did not fire — sensitivity (require_perl in preflight, ${#S11I_PRE}B) = $S11I_SENS, specificity (require_perl in cmd_rotate, ${#S11I_ROT}B) = $S11I_SPEC. Until both fire, a hit in cmd_confirm proves nothing about what this scan can see"
 elif [ "${#S11I_AT_CALL}" -lt "${#S11I_AT_STATE}" ]; then
-  PASS "S11i: cmd_confirm calls require_perl at byte ${#S11I_AT_CALL} of its parsed body and change_confirmation_state at byte ${#S11I_AT_STATE} — the dependency is asserted BEFORE the gate state is resolved, so a perl-less host meets a named failure instead of a fabricated 'stale'. Sensitivity: the same scan finds the call in preflight; specificity: it finds none in cmd_rotate"
+  PASS "S11i: cmd_confirm calls require_perl at byte ${#S11I_AT_CALL} of its parsed body and change_confirmation_state at byte ${#S11I_AT_STATE} — the dependency is asserted BEFORE the gate state is resolved, so a perl-less host meets a failure that names perl instead of an 'undetermined' refusal that names only the symptom. Sensitivity: the same scan finds the call in preflight; specificity: it finds none in cmd_rotate"
 else
-  FAIL "S11i: cmd_confirm CALLS require_perl TOO LATE — at byte ${#S11I_AT_CALL} of its parsed body, after change_confirmation_state at byte ${#S11I_AT_STATE}. This is the failure that reproduces the harm: the state is resolved from an empty digest and printed as 'stale' before the probe is ever reached, so the organizer is still asked to confirm a change the render may not carry"
+  FAIL "S11i: cmd_confirm CALLS require_perl TOO LATE — at byte ${#S11I_AT_CALL} of its parsed body, after change_confirmation_state at byte ${#S11I_AT_STATE}. The state is then resolved from an empty digest before the probe is ever reached: it reads 'undetermined', so a perl-less host is refused on the symptom rather than told that perl is missing"
 fi
 
 # ── Group S, third remediation (#552, SEAM-2) — C19's DECLARATION BLOCK ──────
@@ -5081,6 +5085,484 @@ elif [ "$S14_SENT_SH" -eq 0 ] && [ "$S14_SENT_OK" -eq 1 ] && [ "$S14_SCRIPT_SH" 
   PASS "S14g: THE TWO LIMBS DO NOT COMPUTE THE SAME ANSWER, measured rather than asserted — over one fixture the removed sed limb yields ${#S14_SHADOW}B carrying ZERO block sentinels and the script body's token INTACT, while the perl limb yields ${#S14_OK}B carrying sentinels and no script token. That is the card's question with its input, its comparison and its difference standing in the suite; the shadow was withdrawn and the projection reads its denominator again"
 else
   FAIL "S14g: the comparison did not separate the limbs — shadow sentinels=$S14_SENT_SH real sentinels=$S14_SENT_OK, shadow script-token=$S14_SCRIPT_SH real script-token=$S14_SCRIPT_OK. Either the fixture stopped carrying a block tag or a script body, or the two limbs now agree, in which case the premise of this whole group has changed and the removal needs re-deciding rather than re-asserting"
+fi
+
+# ── Group S15 (#1184) — THE UNDETERMINED STATE: "could not read it" is not "it changed" ──
+#
+# S0–S14 grade the gate, the projection it reads and the projections beside it. S15 grades
+# what the gate does when the outgoing render has NO itinerary identity at all. Before this
+# card the resolver could not tell the two apart: an empty outgoing digest never equals the
+# recorded baseline, so an unreadable or unprojectable render fell through to `unconfirmed`
+# or `stale`, the gate's abort told the organizer that the itinerary content differed, and
+# confirm went on to the CONFIRM prompt against a state nobody had computed. The conflation
+# was not confined to an empty digest either. BSD `tr` under a UTF-8 locale exits 1 AFTER
+# writing a prefix when it meets a byte that is not valid UTF-8, so the digest identified a
+# TRUNCATED itinerary, and a day appended behind such a byte read as `none-pending`, or as
+# `confirmed` when a confirmation covered the prefix — either member of the proceed set
+# publishes an unapproved change.
+#
+#   S15a  THE SUBJECT, unreadable — a dangling-symlink render with a recorded baseline
+#         resolves `undetermined`, with no confirmation record and with an old one
+#   S15b  THE SUBJECT, unprojectable — perl failing resolves `undetermined`; control: the
+#         same trip with perl working resolves `none-pending`
+#   S15c  THE SUBJECT, unnormalizable — the normalization stage failing yields NO digest
+#         and `undetermined`; control: with it working the render digests to its baseline
+#   S15d  CONTROL — a READABLE changed render still resolves `unconfirmed` / `stale`
+#   S15e  SPECIFICITY — the token keys on a FAILED read, not an empty one: no baseline with
+#         an unreadable render stays `none-pending`, and a render whose visible text is
+#         genuinely empty still resolves `unconfirmed`
+#   S15f  AC-2 — the gate aborts, names the token, and makes no content claim in either
+#         direction; controls: a readable changed render's abort does make the content claim,
+#         and the claim lexicon flags a planted change claim and a planted no-change claim
+#   S15g  AC-3 — confirm refuses before the terminal check and records nothing; control: a
+#         readable changed render reaches the terminal check
+#   S15h  AC-4, VISIBILITY — a failing perl's stderr now reaches the caller from each of the
+#         three programs that used to discard it; control: a working perl writes 0 bytes
+#   S15i  AC-4, POLICY — over the parsed bodies of every perl-bearing function, a discard
+#         appears exactly where a fallback does, and only strip_to_text carries both
+#   S15j  THE RESTORE — every stub this group set is withdrawn
+#   S15k  THE PIN — with `pipefail` turned OFF in a fresh shell that sourced the script, a
+#         day appended behind such a byte still resolves `undetermined` on both routes and
+#         the gate refuses; control: the same day in valid UTF-8 resolves `unconfirmed`
+#   S15l  THE RECORDER — on an unreadable render it warns NOT ACTIVE only with no baseline
+#         and keeps-the-baseline only with one, writing no sidecar either way; control: a
+#         readable render writes the sidecar. Neither arm sets a stub in this shell
+#
+# HOW THE ARMS ARE WRITTEN, because this suite enforces three rules on itself. Every
+# negative is a captured value inside a `[ … ]` conjunction that leads to a PASS — never a
+# live command whose failure lands on a PASS limb, which group MD's static arm refuses and
+# which MD_LEGACY is not allowed to grow to excuse. No verdict is read through a pipeline
+# into an early-exiting grep (group PF). And every stub is unset in the arm that set it.
+#
+# S15c STUBS `tr` RATHER THAN FEEDING IT A REAL INVALID BYTE, and the reason is the runner.
+# BSD `tr` on macOS fails on such a byte; GNU `tr` on the ubuntu CI runner is byte-oriented
+# and is not expected to [INFERRED — not measured on this host], so a real byte would make
+# the arm discriminate on one platform and pass vacuously on the other. A stubbed stage
+# fails on both, and a failing stage is exactly what the digest's status read must catch.
+#
+# Offline: $WORK fixtures, a dangling symlink, and shell-function stubs for perl and tr. No
+# network, no Node, no TTY, no gh. This group has no legitimate skip and is deliberately
+# NOT declared in GUARD_EXPECTED_SKIPS.
+echo
+echo "The undetermined state — could not read is not changed (#1184):"
+
+S15_RENDER='outputs/porto-travel-site.html'
+# A render the resolver can LOCATE but nothing can READ. A dangling symlink rather than a
+# chmod 000 file, because a privileged runner reads a 000 file anyway (the note on L5b) and
+# nothing, root included, reads through a link to a file that does not exist.
+s15_dangling() { # <name> -> a trip dir whose render is a dangling symlink
+  local d="$WORK/$1"
+  mkdir -p "$d/outputs"
+  ln -s "$d/outputs/zzq-s15-no-such-render.html" "$d/$S15_RENDER"
+  printf '%s' "$d"
+}
+
+# ── S15a — THE SUBJECT, UNREADABLE. Two trips, both with a recorded baseline: one with no
+# confirmation record (which used to read `unconfirmed`) and one with an old one (which
+# used to read `stale`). Fixture integrity is graded first: the render must be a link, must
+# be unreadable, and must still be what resolve_site_html hands the resolver.
+S15AD="$(s15_dangling s15a)"
+s_record "$S15AD/.published-itinerary" "$S_DA" published
+S15AD2="$(s15_dangling s15a2)"
+s_record "$S15AD2/.published-itinerary" "$S_DA" published
+s_record "$S15AD2/.change-confirmed"    "$S_DA" confirmed
+S15A_RES="$(resolve_site_html "$S15AD" 2>/dev/null)"
+S15A_ST1="$(change_confirmation_state "$S15AD" 2>/dev/null)"
+S15A_ST2="$(change_confirmation_state "$S15AD2" 2>/dev/null)"
+S15A_LINK=0; [ -L "$S15AD/$S15_RENDER" ] && S15A_LINK=1
+S15A_READ=0; [ -r "$S15AD/$S15_RENDER" ] && S15A_READ=1
+if [ "$S15A_LINK" -ne 1 ] || [ "$S15A_READ" -ne 0 ] || [ "$S15A_RES" != "$S15AD/$S15_RENDER" ]; then
+  FAIL "S15a: fixture integrity — the render is a symlink=$S15A_LINK and readable=$S15A_READ, and resolve_site_html returned '$S15A_RES'. The fixture is not an unreadable render the resolver can still locate, so the verdict would be about something else"
+elif [ "$S15A_ST1" = "undetermined" ] && [ "$S15A_ST2" = "undetermined" ]; then
+  PASS "S15a: an UNREADABLE outgoing render with a recorded baseline resolves undetermined — with no confirmation record ($S15A_ST1) and with an old one ($S15A_ST2). Neither is read as the itinerary having moved, which is what unconfirmed and stale both assert"
+else
+  FAIL "S15a: an unreadable render resolved '$S15A_ST1' with no record and '$S15A_ST2' with an old one — the resolver still reads 'could not read it' as 'it changed', and the gate and confirm will say so to the organizer"
+fi
+
+# ── S15b — THE SUBJECT, UNPROJECTABLE. The render is IDENTICAL to the baseline, so the plan
+# has not moved at all; the perl stub is the only thing that differs between the two
+# resolutions, and the control is the same trip read again once the stub is gone.
+S15BD="$(s_fixture s15b 14:00 none)"
+s_record "$S15BD/.published-itinerary" "$S_DA" published
+perl() { printf 'perl: simulated failure (S15 stub)\n' >&2; return 127; }
+S15B_ST="$(change_confirmation_state "$S15BD" 2>/dev/null)"
+unset -f perl
+S15B_CTL="$(change_confirmation_state "$S15BD" 2>/dev/null)"
+if [ "$S15B_CTL" != "none-pending" ]; then
+  FAIL "S15b: CONTROL — with perl working the same trip resolved '$S15B_CTL', not none-pending. Its render does not match its own baseline, so an undetermined here would not be attributable to the stub"
+elif [ "$S15B_ST" = "undetermined" ]; then
+  PASS "S15b: with perl failing, a trip whose render is IDENTICAL to its baseline resolves undetermined, and with perl working the same trip resolves $S15B_CTL — an UNPROJECTABLE render is its own state, not a plan change"
+else
+  FAIL "S15b: with perl failing, a trip whose render has not moved resolved '$S15B_ST' — a projection that could not run is being read as a change to the plan"
+fi
+
+# ── S15c — THE SUBJECT, UNNORMALIZABLE. `tr` is stubbed to fail the way BSD `tr` fails on
+# an invalid byte, minus the prefix. What is graded is the digest's own STATUS read: a
+# pipeline whose stage fails still ends in cksum, and cksum over whatever arrived is a
+# well-formed token (the empty-input token, here) that identifies no itinerary at all.
+S15CD="$(s_fixture s15c 14:00 none)"
+s_record "$S15CD/.published-itinerary" "$S_DA" published
+tr() { return 1; }
+S15C_DG="$(itinerary_digest "$S15CD/$S15_RENDER" 2>/dev/null)"
+S15C_ST="$(change_confirmation_state "$S15CD" 2>/dev/null)"
+unset -f tr
+S15C_CTL="$(itinerary_digest "$S15CD/$S15_RENDER")"
+if [ -z "$S15C_CTL" ] || [ "$S15C_CTL" != "$S_DA" ]; then
+  FAIL "S15c: CONTROL — with tr working the render digested '$S15C_CTL' against its baseline $S_DA, so the fixture's identity is not known and the verdict below would not be attributable to the stub"
+elif [ -z "$S15C_DG" ] && [ "$S15C_ST" = "undetermined" ]; then
+  PASS "S15c: with the normalization stage failing, itinerary_digest yields NO token and the state is undetermined, while with it working the same render digests $S15C_CTL — a failing stage is 'no answer', so a truncated or empty normalization is never compared as though it were the itinerary"
+else
+  FAIL "S15c: with the normalization stage failing, itinerary_digest yielded '$S15C_DG' and the state read '$S15C_ST' — a failed pipeline still produced a token. On macOS that token identifies a TRUNCATED itinerary, and a day appended behind a byte that is not valid UTF-8 digests equal to the baseline and publishes unconfirmed"
+fi
+
+# ── S15d — CONTROL. A readable render whose itinerary DID move must still read as a change.
+# It gates on the near-miss alone (S14d's rule): it holds before this card and after it,
+# which is what makes S15a–S15c measurements rather than a resolver that stopped seeing
+# changes altogether.
+S15DD="$(s_fixture s15d 16:30 none)"
+s_record "$S15DD/.published-itinerary" "$S_DA" published
+S15DD2="$(s_fixture s15d2 16:30 none)"
+s_record "$S15DD2/.published-itinerary" "$S_DA" published
+s_record "$S15DD2/.change-confirmed"    "$S_DA" confirmed
+S15D_ST1="$(change_confirmation_state "$S15DD")"
+S15D_ST2="$(change_confirmation_state "$S15DD2")"
+if [ "$S15D_ST1" = "unconfirmed" ] && [ "$S15D_ST2" = "stale" ]; then
+  PASS "S15d: CONTROL — a READABLE render whose itinerary moved still resolves unconfirmed with no confirmation record and stale with an old one, so the new token does not swallow a real change"
+else
+  FAIL "S15d: a readable changed render resolved '$S15D_ST1' with no record and '$S15D_ST2' with an old one, not unconfirmed and stale — a real itinerary change is no longer reported as one"
+fi
+
+# ── S15e — SPECIFICITY. The token must key on a FAILED read and on nothing else. (i) With no
+# baseline the answer does not depend on the render, so an unreadable one still reads
+# `none-pending`: the no-baseline branch answers first. (ii) A render whose visible text is
+# genuinely empty projects SUCCESSFULLY to nothing and gets a real token — S11d's property,
+# one level up — so against a real baseline it reads `unconfirmed`, never `undetermined`.
+S15ED="$(s15_dangling s15e)"
+S15ED2="$(s_fixture s15e2 14:00 none)"
+printf '%s' '<!DOCTYPE html><html><head><style>.hero{color:#333}</style></head><body><script>var mapReady=1;</script></body></html>' > "$S15ED2/$S15_RENDER"
+s_record "$S15ED2/.published-itinerary" "$S_DA" published
+S15E_ST1="$(change_confirmation_state "$S15ED" 2>/dev/null)"
+S15E_ST2="$(change_confirmation_state "$S15ED2")"
+S15E_DG2="$(itinerary_digest "$S15ED2/$S15_RENDER")"
+if [ -z "$S15E_DG2" ]; then
+  FAIL "S15e: the empty-visible-text render yielded no digest at all, so it cannot show that an empty OUTPUT differs from a failed STATUS — the specificity arm would be vacuous"
+elif [ "$S15E_ST1" = "none-pending" ] && [ "$S15E_ST2" = "unconfirmed" ]; then
+  PASS "S15e: SPECIFICITY — with NO baseline an unreadable render still resolves none-pending, and a render whose visible text is genuinely empty digests to $S15E_DG2 and resolves unconfirmed against a real baseline. The token keys on a failed read, never on an empty one"
+else
+  FAIL "S15e: no baseline with an unreadable render resolved '$S15E_ST1' (want none-pending), and an empty-visible-text render with a baseline resolved '$S15E_ST2' (want unconfirmed) — the token is firing on emptiness, or ahead of the no-baseline branch"
+fi
+
+# ── S15f — AC-2, THE GATE. Three things at once, and the second and third are why the arm
+# exists: the gate aborts, its message names the token, and its message makes NO CONTENT
+# CLAIM IN EITHER DIRECTION — neither that the itinerary changed nor that it did not. What
+# the gate failed to establish is the render's identity, and its message may speak of that
+# and of nothing else.
+#
+# THE CLAIM IS GRADED BY A LEXICON OF THE VOCABULARY OF CHANGE, BOTH POLARITIES, not by the
+# one phrase `*)` uses. The earlier form of this arm looked only for "itinerary content
+# differs", and a message saying "This is not an itinerary change" — the opposite claim,
+# which nobody computed either — passed it, as did one saying the itinerary "changed" in
+# other words. A word from the lexicon anywhere in the message fails the arm, even where the
+# sentence around it only wonders about a change, because such a sentence is one edit away
+# from making one. The stated boundary: a lexicon is a list, so a claim made entirely in
+# words outside it is not seen.
+#
+# Three controls. The gate on a readable changed render must abort carrying the vocabulary,
+# so the capture can see a claim. The lexicon must flag a planted change claim and a planted
+# no-change claim, so both polarities are in it. And it must pass a planted identity
+# sentence, so it is not flagging everything. The trip dir is scrubbed from each message
+# first, so a path can never supply a stem.
+S15F_LEX='differ chang move same identical match modif altered edit'
+s15f_claims() { # <text> -> the lexicon stems the text carries, space-separated; empty when none
+  local t="$1" w out=""
+  shopt -s nocasematch
+  for w in $S15F_LEX; do
+    case "$t" in *"$w"*) out="$out$w " ;; esac
+  done
+  shopt -u nocasematch
+  printf '%s' "${out% }"
+}
+S15F_TRIP='<trip>'
+S15F_ERR="$( ( require_change_confirmation "$S15AD" ) 2>&1 >/dev/null )"; S15F_RC=$?
+S15F_CERR="$( ( require_change_confirmation "$S15DD" ) 2>&1 >/dev/null )"; S15F_CRC=$?
+S15F_MSG="${S15F_ERR//"$S15AD"/$S15F_TRIP}"
+S15F_CMSG="${S15F_CERR//"$S15DD"/$S15F_TRIP}"
+S15F_TOKEN=0
+case "$S15F_MSG" in *undetermined*) S15F_TOKEN=1 ;; esac
+S15F_HITS="$(s15f_claims "$S15F_MSG")"
+S15F_CHITS="$(s15f_claims "$S15F_CMSG")"
+S15F_YES="$(s15f_claims 'the itinerary changed since the published plan')"
+S15F_NO="$(s15f_claims 'This is not an itinerary change')"
+S15F_ID="$(s15f_claims 'could not identify the itinerary content of the outgoing render')"
+if [ "$S15F_CRC" -eq 0 ] || [ -z "$S15F_CHITS" ]; then
+  FAIL "S15f: CONTROL — the gate on a readable changed render returned rc=$S15F_CRC carrying claim vocabulary [$S15F_CHITS], so this probe cannot see the claim it is looking for and a zero on the subject would prove nothing"
+elif [ -z "$S15F_YES" ] || [ -z "$S15F_NO" ] || [ -n "$S15F_ID" ]; then
+  FAIL "S15f: CONTROL on the lexicon — a planted change claim read [$S15F_YES], a planted no-change claim read [$S15F_NO] and a planted identity sentence read [$S15F_ID]. Both claims must be flagged and the identity sentence must not, or the lexicon is missing a polarity or flagging everything"
+elif [ "$S15F_RC" -ne 0 ] && [ "$S15F_TOKEN" -eq 1 ] && [ -z "$S15F_HITS" ]; then
+  PASS "S15f: AC-2 — on an unreadable render the gate ABORTS (rc=$S15F_RC), names the token undetermined, and its message carries none of the vocabulary of change in either polarity ($S15F_LEX), so it claims neither that the itinerary changed nor that it did not. The control, a readable changed render, aborts carrying that vocabulary [$S15F_CHITS], and the lexicon flags a planted change claim [$S15F_YES] and a planted no-change claim [$S15F_NO] while passing an identity sentence"
+else
+  FAIL "S15f: on an unreadable render the gate returned rc=$S15F_RC, named the token=$S15F_TOKEN and carried claim vocabulary [$S15F_HITS] — it either publishes, or its abort makes a content claim nobody computed, in one direction or the other. Message: ${S15F_MSG:0:600}"
+fi
+
+# ── S15g — AC-3, CONFIRM. It must refuse BEFORE the terminal check — which is also before
+# the prompt, so on a TTY the CONFIRM prompt is unreachable on this state — and record
+# nothing. stdin is /dev/null, so a run that got past the refusal would die at the terminal
+# check instead, and that difference is what the arm reads. The control is confirm on a
+# readable changed render, which must reach the terminal check.
+S15G_ERR="$( ( cmd_confirm "$S15AD" ) </dev/null 2>&1 >/dev/null )"; S15G_RC=$?
+S15G_CERR="$( ( cmd_confirm "$S15DD" ) </dev/null 2>&1 >/dev/null )"; S15G_CRC=$?
+S15G_CAUSE=0; S15G_TERM=0; S15G_CTERM=0; S15G_REC=0
+case "$S15G_ERR"  in *"could not determine"*) S15G_CAUSE=1 ;; esac
+case "$S15G_ERR"  in *"requires a terminal"*) S15G_TERM=1 ;;  esac
+case "$S15G_CERR" in *"requires a terminal"*) S15G_CTERM=1 ;; esac
+[ -e "$S15AD/.change-confirmed" ] && S15G_REC=1
+if [ "$S15G_CRC" -eq 0 ] || [ "$S15G_CTERM" -ne 1 ]; then
+  FAIL "S15g: CONTROL — confirm on a readable changed render returned rc=$S15G_CRC and reached the terminal check=$S15G_CTERM, so this probe cannot tell a refusal before the prompt from a death at the terminal check"
+elif [ "$S15G_RC" -ne 0 ] && [ "$S15G_CAUSE" -eq 1 ] && [ "$S15G_TERM" -eq 0 ] && [ "$S15G_REC" -eq 0 ]; then
+  PASS "S15g: AC-3 — confirm on an unreadable render REFUSES (rc=$S15G_RC), saying it could not determine whether the itinerary changed, never reaches the terminal check, and writes no confirmation record; the control, a readable changed render, does reach the terminal check (rc=$S15G_CRC). On a TTY the CONFIRM prompt is unreachable on this state"
+else
+  FAIL "S15g: confirm on an unreadable render returned rc=$S15G_RC, named the cause=$S15G_CAUSE, reached the terminal check=$S15G_TERM and wrote a record=$S15G_REC — on a terminal the organizer would be asked to type CONFIRM against a state nobody could compute"
+fi
+
+# ── S15h — AC-4, VISIBILITY. Each program that used to discard its stderr is run with a
+# failing perl and its stderr captured: strip_to_published_text, strip_to_joined_text and
+# _decode_entities. The control is the same three calls with perl working, over a healthy
+# render, which must write nothing — so the non-zero is the failure surfacing and not chatter.
+S15H_FIX="$WORK/s15h.html"; s_render "$S15H_FIX" 14:00 pending
+strip_to_published_text "$S15H_FIX" >/dev/null 2>"$WORK/s15h_ok_pub.err"
+strip_to_joined_text    "$S15H_FIX" >/dev/null 2>"$WORK/s15h_ok_join.err"
+_decode_entities       < "$S15H_FIX" >/dev/null 2>"$WORK/s15h_ok_dec.err"
+perl() { printf 'perl: simulated failure (S15 stub)\n' >&2; return 127; }
+strip_to_published_text "$S15H_FIX" >/dev/null 2>"$WORK/s15h_fail_pub.err"
+strip_to_joined_text    "$S15H_FIX" >/dev/null 2>"$WORK/s15h_fail_join.err"
+_decode_entities       < "$S15H_FIX" >/dev/null 2>"$WORK/s15h_fail_dec.err"
+unset -f perl
+S15H_OKP="$(wc -c < "$WORK/s15h_ok_pub.err" | tr -d ' ')"
+S15H_OKJ="$(wc -c < "$WORK/s15h_ok_join.err" | tr -d ' ')"
+S15H_OKD="$(wc -c < "$WORK/s15h_ok_dec.err" | tr -d ' ')"
+S15H_FAP="$(wc -c < "$WORK/s15h_fail_pub.err" | tr -d ' ')"
+S15H_FAJ="$(wc -c < "$WORK/s15h_fail_join.err" | tr -d ' ')"
+S15H_FAD="$(wc -c < "$WORK/s15h_fail_dec.err" | tr -d ' ')"
+if [ "$S15H_OKP" -ne 0 ] || [ "$S15H_OKJ" -ne 0 ] || [ "$S15H_OKD" -ne 0 ]; then
+  FAIL "S15h: CONTROL — with perl working the three programs wrote ${S15H_OKP}B / ${S15H_OKJ}B / ${S15H_OKD}B of stderr over a healthy render, so a non-zero under the stub would not be distinguishable from ordinary output"
+elif [ "$S15H_FAP" -gt 0 ] && [ "$S15H_FAJ" -gt 0 ] && [ "$S15H_FAD" -gt 0 ]; then
+  PASS "S15h: AC-4 — with perl failing, strip_to_published_text, strip_to_joined_text and _decode_entities each pass its diagnostic through (${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B), where a working perl writes 0B from each. A failure in any of the three now says why, instead of reaching the guard as an empty stream"
+else
+  FAIL "S15h: with perl failing the three programs wrote ${S15H_FAP}B / ${S15H_FAJ}B / ${S15H_FAD}B of stderr — at least one still discards the only trace its failure leaves, and the guard downstream reads the empty stream as 'no markup to inspect'"
+fi
+
+# ── S15i — AC-4, POLICY, read from the PARSED bodies so a comment cannot fake it. The rule
+# is stated once, above strip_to_published_text: a program discards its stderr only when a
+# fallback limb follows it. So over every perl-bearing function, `/dev/null` is present
+# exactly where `||` is, and strip_to_text — the single function with a fallback — is the
+# single one with both. `declare -f` renders the redirection as `2> /dev/null`, which is why
+# the discard is matched on `/dev/null` alone.
+#
+# COMPLETENESS, AND ITS STATED BOUNDARY. The list of functions below is a list, so a
+# seventh perl program added to the publish script would be invisible to it. The arm
+# therefore counts the script's non-comment lines that invoke perl and requires the count
+# to equal the length of the list, so a new program fails here until it is listed. The
+# count reads an invocation by NAME — at line start, or after whitespace, `(`, `|`, `;`, a
+# backtick or `$` — so a program inside a command substitution counts as well as one at
+# the start of a line; its control fixture carries both. What it does not see, by
+# construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
+# and a change that removes one program while adding another, because it compares a count
+# and not a set.
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities strip_to_itinerary_text'
+S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
+s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
+  local line t n=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    t="${line#"${line%%[![:space:]]*}"}"
+    case "$t" in '#'*) continue ;; esac
+    [[ "$line" =~ $S15I_RE ]] && n=$((n+1))
+  done < "$1"
+  printf '%d' "$n"
+}
+S15I_SYNF="$WORK/s15i_perl_lines.sh"
+{
+  printf '%s\n' '  perl -0777 -pe "s/a/b/" "$1"'
+  printf '%s\n' 'x="$(perl -e "print 1")"'
+  printf '%s\n' '  # perl -pe 1'
+  printf '%s\n' 'y=superperl -x'
+} > "$S15I_SYNF"
+S15I_SYN="$(s15_perl_lines "$S15I_SYNF")"
+S15I_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
+S15I_NFN=0; S15I_EMPTY=0; S15I_SPEC=0; S15I_TEXT=""; S15I_BAD=""; S15I_BITS=""
+for s15fn in $S15I_FNS; do
+  S15I_NFN=$((S15I_NFN+1))
+  s15body="$(declare -f "$s15fn" 2>/dev/null)"
+  [ -n "$s15body" ] || S15I_EMPTY=$((S15I_EMPTY+1))
+  s15dn=0; s15fb=0
+  case "$s15body" in *'/dev/null'*) s15dn=1 ;; esac
+  case "$s15body" in *'||'*)        s15fb=1 ;; esac
+  case "$s15body" in *zzz_not_a_real_identifier*) S15I_SPEC=$((S15I_SPEC+1)) ;; esac
+  S15I_BITS="$S15I_BITS $s15fn=$s15dn$s15fb"
+  if [ "$s15fn" = "strip_to_text" ]; then S15I_TEXT="$s15dn$s15fb"
+  elif [ "$s15dn$s15fb" != "00" ]; then S15I_BAD="$S15I_BAD $s15fn=$s15dn$s15fb"; fi
+done
+if [ "$S15I_EMPTY" -ne 0 ]; then
+  FAIL "S15i: $S15I_EMPTY of the $S15I_NFN listed functions have no parsed body — a name no longer resolves, and a clean reading of a missing body would be an empty scan"
+elif [ "$S15I_SYN" -ne 2 ]; then
+  FAIL "S15i: CONTROL on the completeness count — over a fixture carrying a line-start invocation, a mid-line one inside a command substitution, a comment and a longer name, the scan counted $S15I_SYN, not 2, so its count over the publish script is not a measurement"
+elif [ "$S15I_TEXT" != "11" ]; then
+  FAIL "S15i: SENSITIVITY — strip_to_text reads discard/fallback=$S15I_TEXT, not 11. It is the one function that legitimately carries both, so the detector either cannot see a discard or a fallback, and every 00 below proves nothing"
+elif [ "$S15I_NLINE" -ne "$S15I_NFN" ]; then
+  FAIL "S15i: COMPLETENESS — $S15I_NLINE non-comment lines of the publish script invoke perl, but $S15I_NFN functions are listed here. A perl program exists that this policy check does not read; list it, or remove the listing of one that is gone"
+elif [ "$S15I_SPEC" -ne 0 ]; then
+  FAIL "S15i: SPECIFICITY — a fabricated identifier was found in $S15I_SPEC parsed body/bodies, so the matcher is reading something other than the bodies"
+elif [ -z "$S15I_BAD" ]; then
+  PASS "S15i: AC-4 — over the parsed bodies of all $S15I_NFN perl-bearing functions (bits discard/fallback:$S15I_BITS) a discard appears exactly where a fallback does, and only strip_to_text carries both. The completeness count agrees ($S15I_NLINE invoking lines against $S15I_NFN listed functions), and its control fixture counted the mid-line invocation as well as the line-start one"
+else
+  FAIL "S15i: the rule 'discard only in front of a fallback' is broken by:$S15I_BAD — a program with no fallback is discarding the only message that explains its failure, or a fallback is running with its first limb's error in view"
+fi
+
+# ── S15j — THE RESTORE. S6c's rule applied to this group's stubs: an injection that outlives
+# its arm turns every later verdict into a grade of the stub. Both stubbed names must be
+# gone as functions, and the projection must read S0's token again on a fresh render.
+S15J_R="$WORK/s15j.html"; s_render "$S15J_R" 14:00 none
+S15J_DG="$(itinerary_digest "$S15J_R")"
+S15J_STUBS=""
+declare -F perl >/dev/null 2>&1 && S15J_STUBS="$S15J_STUBS perl"
+declare -F tr   >/dev/null 2>&1 && S15J_STUBS="$S15J_STUBS tr"
+if [ -z "$S15J_STUBS" ] && [ -n "$S15J_DG" ] && [ "$S15J_DG" = "$S_DA" ]; then
+  PASS "S15j: every stub this group set is withdrawn — neither perl nor tr is a shell function any more, and a fresh render digests $S15J_DG, the token S0 read before any stub existed. Group T and everything after it grade production code"
+else
+  FAIL "S15j: after the group the stubs still defined are [${S15J_STUBS# }] and a fresh render digests '$S15J_DG' against S0's $S_DA — a stub outlived its arm, and every verdict after it is grading the stub"
+fi
+
+# ── S15k — THE PIN. itinerary_digest reads its pipeline's status with `pipefail` set INSIDE
+# its own command substitution, and this arm is what shows the placement holds. Every arm
+# above runs in this suite's shell, which sets `pipefail` itself before sourcing the script,
+# so none of them can tell the pin from that line or from the script's own `set` line:
+# remove the pin, or reduce the script's `set -euo pipefail` to `set -eu`, and they all stay
+# green. This arm starts a FRESH bash from the repository root, sources the script by its
+# repository-relative path, and turns `pipefail` OFF, so the pin is the only `pipefail` left.
+#
+# ITS INPUT IS THE RENDER THAT OPENED THE FAIL-OPEN: the baseline render with a day inserted
+# after its last published text, the day's own text opening with byte 0xC9, which is not
+# valid UTF-8, read under LC_ALL=en_US.UTF-8. It goes through both routes that published it
+# before #1184 — `none-pending` (the baseline is the render without the day) and `confirmed`
+# (the baseline is an older plan, and the confirmation is the render without the day). Both
+# must read `undetermined`, and the gate must refuse on both.
+#
+# TWO SOURCES OF THE FAILING STAGE, BECAUSE THE PLATFORMS DIFFER. BSD `tr` under a UTF-8
+# locale stops at that byte after writing the prefix before it (measured on macOS); GNU `tr`
+# is byte-oriented and does not, which is why S15c stubs it. So the fresh shell first runs
+# this platform's own `tr` over the render. Where it fails, the REAL case is graded: the real
+# byte through the real `tr`. The EMULATED case is graded on every platform, the CI runner
+# included: a `tr` defined in the fresh shell alone, which writes the translation of
+# everything before the first 0xC9 byte and returns 1 — BSD's behaviour, reproduced. The
+# emulation lives and dies with that shell; this shell never holds it, and S15j's restore is
+# unaffected.
+#
+# FIXTURE INTEGRITY, graded first. Every fresh shell must report `pipefail` off. The emulated
+# stage must fail on the render and pass the valid-UTF-8 one. And the prefix digest — the same
+# pipeline with no `pipefail` at all, which is what the digest reads if the pin is removed —
+# must equal the baseline, so this input really does publish without the pin and a pass here
+# is the pin's doing. The control is the same day in valid UTF-8 through the same fresh shell:
+# that render can be identified, so it must read `unconfirmed`, which shows the harness does
+# not read everything as `undetermined`.
+S15K_FRESH="$WORK/s15k_fresh.sh"
+cat > "$S15K_FRESH" <<'FRESH'
+m="$1"; d="$2"; r="$3"
+source scripts/publish-trip-site.sh || { printf 'SOURCE-FAILED'; exit 0; }
+set +o pipefail
+if [ "$m" = emulated ]; then
+  tr() {
+    perl -0777 -e 'binmode STDIN; binmode STDOUT; my $s = <STDIN>; $s = "" unless defined $s; my $cut = ($s =~ s/\xC9.*//s); print $s; exit($cut ? 1 : 0)' | command tr "$@"
+    local ps=("${PIPESTATUS[@]}")
+    [ "${ps[0]}" -eq 0 ] || return 1
+    return "${ps[1]}"
+  }
+fi
+pf=off; case ":$SHELLOPTS:" in *:pipefail:*) pf=on ;; esac
+tf=0; tr -s '[:space:]' ' ' < "$r" >/dev/null 2>&1 || tf=$?
+pre="$(printf '%s' "$(strip_to_itinerary_text "$r")" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _digest_of)"
+st="$(change_confirmation_state "$d")"
+rc=0; ( require_change_confirmation "$d" ) >/dev/null 2>&1 || rc=$?
+printf '%s %s %s %s %s' "${st:-empty}" "$rc" "$pf" "$tf" "${pre:-empty}"
+FRESH
+s15k_run() { # <real|emulated> <trip_dir> <render> -> "state gate-rc pipefail tr-status prefix-digest"
+  ( cd "$ROOT" && LC_ALL=en_US.UTF-8 bash "$S15K_FRESH" "$1" "$2" "$3" 2>/dev/null )
+}
+s15k_trip() { # <name> <render> <baseline-digest> [<confirmation-digest>] -> the trip dir
+  local d="$WORK/$1"
+  mkdir -p "$d/outputs"
+  cp "$2" "$d/$S15_RENDER"
+  s_record "$d/.published-itinerary" "$3" published
+  [ -z "${4:-}" ] || s_record "$d/.change-confirmed" "$4" confirmed
+  printf '%s' "$d"
+}
+S15K_R0="$WORK/s15k_r0.html"; s_render "$S15K_R0" 14:00 none
+S15K_R0DG="$(itinerary_digest "$S15K_R0")"
+S15K_H1="$WORK/s15k_h1.html"; S15K_OK="$WORK/s15k_ok.html"
+{ sed '/<script>/,$d' "$S15K_R0"; printf '<section class="day"><h2>%svora</h2><p>A day trip by train.</p></section>\n' $'\311'; sed -n '/<script>/,$p' "$S15K_R0"; } > "$S15K_H1"
+{ sed '/<script>/,$d' "$S15K_R0"; printf '<section class="day"><h2>%svora</h2><p>A day trip by train.</p></section>\n' $'\303\211'; sed -n '/<script>/,$p' "$S15K_R0"; } > "$S15K_OK"
+S15KN="$(s15k_trip s15kn "$S15K_H1" "$S_DA")"
+S15KC="$(s15k_trip s15kc "$S15K_H1" "$S_DB" "$S_DA")"
+S15KV="$(s15k_trip s15kv "$S15K_OK" "$S_DA")"
+read -r S15K_EN_ST S15K_EN_RC S15K_EN_PF S15K_EN_TF S15K_EN_PRE <<<"$(s15k_run emulated "$S15KN" "$S15KN/$S15_RENDER")"
+read -r S15K_EC_ST S15K_EC_RC S15K_EC_PF S15K_EC_TF S15K_EC_PRE <<<"$(s15k_run emulated "$S15KC" "$S15KC/$S15_RENDER")"
+read -r S15K_EV_ST S15K_EV_RC S15K_EV_PF S15K_EV_TF S15K_EV_PRE <<<"$(s15k_run emulated "$S15KV" "$S15KV/$S15_RENDER")"
+read -r S15K_RN_ST S15K_RN_RC S15K_RN_PF S15K_RN_TF S15K_RN_PRE <<<"$(s15k_run real "$S15KN" "$S15KN/$S15_RENDER")"
+read -r S15K_RC_ST S15K_RC_RC S15K_RC_PF S15K_RC_TF S15K_RC_PRE <<<"$(s15k_run real "$S15KC" "$S15KC/$S15_RENDER")"
+S15K_PFS="$S15K_EN_PF$S15K_EC_PF$S15K_EV_PF$S15K_RN_PF$S15K_RC_PF"
+S15K_REAL=0; [ "${S15K_RN_TF:-0}" != "0" ] && S15K_REAL=1
+S15K_REALOK=1; S15K_REALTXT='not applicable (this platform'"'"'s tr is byte-oriented)'
+if [ "$S15K_REAL" -eq 1 ]; then
+  S15K_REALOK=0; S15K_REALTXT='graded too (this platform'"'"'s tr fails on the byte)'
+  [ "$S15K_RN_ST" = "undetermined" ] && [ "$S15K_RN_RC" != "0" ] && [ "$S15K_RC_ST" = "undetermined" ] && [ "$S15K_RC_RC" != "0" ] && S15K_REALOK=1
+fi
+if [ "$S15K_R0DG" != "$S_DA" ] || [ "$S15K_PFS" != "offoffoffoffoff" ] || [ "${S15K_EN_TF:-0}" = "0" ] || [ "$S15K_EV_TF" != "0" ] || [ "$S15K_EN_PRE" != "$S_DA" ]; then
+  FAIL "S15k: fixture integrity — the render without the day digests '$S15K_R0DG' against the baseline $S_DA; pipefail in the fresh shells reads [$S15K_PFS] (want off in all five); the emulated stage returned ${S15K_EN_TF:-none} on the render (want non-zero) and ${S15K_EV_TF:-none} on the valid one (want 0); and the prefix digest is '$S15K_EN_PRE' (want the baseline). The fixture does not reproduce the fail-open's precondition, so no verdict below would be about the pin"
+elif [ "$S15K_EV_ST" != "unconfirmed" ] || [ "$S15K_EV_RC" = "0" ]; then
+  FAIL "S15k: CONTROL — the same day in valid UTF-8 resolved '$S15K_EV_ST' with gate rc=$S15K_EV_RC through the same fresh shell, not unconfirmed with a refusal. The harness is not reading an identifiable render as one, so an undetermined below would not be attributable to the failing stage"
+elif [ "$S15K_EN_ST" = "undetermined" ] && [ "$S15K_EN_RC" != "0" ] && [ "$S15K_EC_ST" = "undetermined" ] && [ "$S15K_EC_RC" != "0" ] && [ "$S15K_REALOK" -eq 1 ]; then
+  PASS "S15k: with pipefail OFF in a fresh shell that sourced the script, a day appended behind a byte that is not valid UTF-8 resolves undetermined on the none-pending route and on the confirmed route, and the gate refuses on both (rc $S15K_EN_RC / $S15K_EC_RC). The emulated stage is graded on this platform, and the real one is $S15K_REALTXT. The prefix digest without pipefail equals the baseline, so this input publishes if the pin is removed; the pin is what holds it. Control: the valid-UTF-8 day resolves unconfirmed"
+else
+  FAIL "S15k: with pipefail OFF in a fresh shell, the render resolved emulated '$S15K_EN_ST' (gate rc $S15K_EN_RC) on the none-pending route and '$S15K_EC_ST' (gate rc $S15K_EC_RC) on the confirmed route, and real '$S15K_RN_ST' (rc $S15K_RN_RC) / '$S15K_RC_ST' (rc $S15K_RC_RC). The digest's status read no longer carries its own pipefail: a stage that failed after writing a prefix digests as the truncated itinerary, which equals the baseline or the confirmation, and the gate proceeds with an unapproved change"
+fi
+
+# ── S15l — THE RECORDER'S TWO WARNINGS (#1184, the Stage 5 review's FM-1). After a push the
+# recorder cannot refuse; it can only say which state an unidentifiable render leaves the
+# trip in, and the two states are opposite. With a baseline recorded the gate keeps it and
+# refuses the next update as `undetermined`; with none the gate has no anchor and is NOT
+# ACTIVE. Swapping the two warnings tells a trip with no baseline that the gate still guards
+# it, and silencing them tells nobody anything. Both were invisible to every arm above, which
+# read the recorder only statically. So it runs on an unreadable render twice, once per
+# state: each warning must appear on its own branch alone, no sidecar may be written or
+# changed, and rc must be 0. The control is a readable render with no baseline, which must
+# write the sidecar and warn nothing, so "nothing written" above is a measurement of a writer
+# that can write.
+S15LA="$(s15_dangling s15la)"
+S15LB="$(s15_dangling s15lb)"
+s_record "$S15LB/.published-itinerary" "$S_DA" published
+cp "$S15LB/.published-itinerary" "$WORK/s15lb.before"
+S15LC="$(s_fixture s15lc 14:00 none)"
+S15L_BASEB="$(_record_digest "$S15LB/.published-itinerary")"
+S15L_UNR=0; [ -L "$S15LA/$S15_RENDER" ] && [ ! -r "$S15LA/$S15_RENDER" ] && [ -L "$S15LB/$S15_RENDER" ] && [ ! -r "$S15LB/$S15_RENDER" ] && S15L_UNR=1
+S15L_ERRA="$( ( record_published_itinerary "$S15LA" "$S15LA/$S15_RENDER" ) 2>&1 >/dev/null )"; S15L_RCA=$?
+S15L_ERRB="$( ( record_published_itinerary "$S15LB" "$S15LB/$S15_RENDER" ) 2>&1 >/dev/null )"; S15L_RCB=$?
+S15L_ERRC="$( ( record_published_itinerary "$S15LC" "$S15LC/$S15_RENDER" ) 2>&1 >/dev/null )"; S15L_RCC=$?
+S15L_A=""; S15L_B=""; S15L_C=""
+case "$S15L_ERRA" in *"NOT ACTIVE"*) S15L_A="${S15L_A}N" ;; esac
+case "$S15L_ERRA" in *"keeps the baseline it already had"*) S15L_A="${S15L_A}K" ;; esac
+case "$S15L_ERRB" in *"NOT ACTIVE"*) S15L_B="${S15L_B}N" ;; esac
+case "$S15L_ERRB" in *"keeps the baseline it already had"*) S15L_B="${S15L_B}K" ;; esac
+case "$S15L_ERRC" in *"NOT ACTIVE"*) S15L_C="${S15L_C}N" ;; esac
+case "$S15L_ERRC" in *"keeps the baseline it already had"*) S15L_C="${S15L_C}K" ;; esac
+S15L_SIDEA=0; [ -e "$S15LA/.published-itinerary" ] && S15L_SIDEA=1
+S15L_SAMEB=0; cmp -s "$WORK/s15lb.before" "$S15LB/.published-itinerary" && S15L_SAMEB=1
+S15L_RECC="$(_record_digest "$S15LC/.published-itinerary")"
+if [ "$S15L_UNR" -ne 1 ] || [ "$S15L_BASEB" != "$S_DA" ]; then
+  FAIL "S15l: fixture integrity — both renders unreadable symlinks=$S15L_UNR, and the recorded baseline reads '$S15L_BASEB' against $S_DA. The fixture is not the two states the recorder distinguishes, so the verdict would be about something else"
+elif [ "$S15L_RCC" -ne 0 ] || [ "$S15L_RECC" != "$S_DA" ] || [ -n "$S15L_C" ]; then
+  FAIL "S15l: CONTROL — on a readable render with no baseline the recorder returned rc=$S15L_RCC, wrote a sidecar reading '$S15L_RECC' (want $S_DA) and warned [$S15L_C] (want nothing). It cannot be shown to write, so the absence of a write below proves nothing"
+elif [ "$S15L_RCA" -eq 0 ] && [ "$S15L_RCB" -eq 0 ] && [ "$S15L_A" = "N" ] && [ "$S15L_B" = "K" ] && [ "$S15L_SIDEA" -eq 0 ] && [ "$S15L_SAMEB" -eq 1 ]; then
+  PASS "S15l: on an unreadable render the recorder warns NOT ACTIVE when no baseline is recorded and that the gate keeps the baseline it already had when one is, each on its own branch alone; it writes no sidecar on the first, leaves the recorded one byte-identical on the second, and returns 0 on both. The control, a readable render, writes the sidecar ($S15L_RECC) and warns nothing"
+else
+  FAIL "S15l: on an unreadable render the recorder warned [$S15L_A] with no baseline (want N, NOT ACTIVE) and [$S15L_B] with one (want K, keeps the baseline), returned rc $S15L_RCA / $S15L_RCB, wrote a sidecar with no baseline=$S15L_SIDEA and left the recorded one unchanged=$S15L_SAMEB. The warnings are swapped or silent, so a trip is told the gate guards it when it does not, or is told nothing"
 fi
 # ═════════════════════════════════════════════════════════════════════════════════
 # Group T (#551 AC 5) — the coordination notice: its identity, its state vocabulary,

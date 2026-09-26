@@ -1943,9 +1943,13 @@ adr4_check() {
 #               and the suite would stay green while doing it
 #   TOOL-GRANT  the mention is enclosed in a Bash(...) grant token — on a frontmatter
 #               grant line, OR rendered as a code span in a grant-inventory table. This
-#               class is defined by the GRANT TOKEN and not by the frontmatter region,
-#               because the delivered surface renders grant tokens in body tables and a
-#               frontmatter-only rule reports those as unresolved
+#               class is defined by the GRANT TOKEN and not by the frontmatter region, so
+#               a grant token rendered in a body table is classified rather than reported
+#               as unresolved, as a frontmatter-only rule would report it. No delivered
+#               table renders one today, because the grant tables name the script and its
+#               arm and spell the grant only in the frontmatter. The table half is kept for
+#               a verb that renders a token there again, and arm G0f keeps it exercised
+#               on a synthetic body-table row
 #   PROSE       the path appears inside a markdown code span in body text
 #
 # The banned tokens are tested by USE, not by MENTION: the plaintext override fails on

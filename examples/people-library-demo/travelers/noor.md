@@ -37,11 +37,13 @@ root carries one, so the resolution never leaves this directory.
 In a real working tree `people/` is a **sibling** of `trips/` — a person record is
 referenced from trips and lives outside every one of them, which is the scoping the
 library exists to establish. A tracked fixture cannot reproduce that layout, because the
-repo-root store is git-ignored and so does not exist in a fresh checkout at all. Falling
-through to it would make this witness resolve `RESOLVED` on an author's machine and
-`DANGLING` in CI, and a witness whose verdict depends on someone's private working
-directory is not a witness. So the fixture compresses the two roots into one directory
-and relies on the store-root rule's **first** step to make that legal and deterministic.
+real store belongs to the operator and lives outside this repository. Resolving through
+to it would give this witness one verdict on an author's machine and another in CI, and a
+witness whose verdict depends on someone's private working directory is not a witness.
+So the fixture compresses the two roots into one directory and relies on the first step
+of the store-root rule in `reference/data-model.md`
+§ *Composition — the trip-side read of a durable record* to make that legal and
+deterministic.
 **The compression is the fixture's, not the design's.**
 
 **What this file deliberately does not carry, and why the absence is the point:**

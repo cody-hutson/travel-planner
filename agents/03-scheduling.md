@@ -507,6 +507,11 @@ Everything else about the entry stays in the labelled lines, in prose, exactly a
 they are written today. Full statement:
 `reference/schemas/scheduling-framework.md` → "The entry marker".
 
+**The `today` in that sentence is kept on purpose, and it is not a deferral.** It
+says where the entry's prose already stands — the full statement cited above says
+the same in its own words — and it promises no later change. The claim about this
+class's future is the non-use stated below, and it is stated as one.
+
 **The cost field is admitted here, and it is optional.** `reference/data-architecture.md`
 → "The cost field — the one addition rule 2 admits" amended the marker rule to admit
 one `cost: <amount> <currency> <basis>` line below the key, and it assigns that field
@@ -517,8 +522,8 @@ one is read rather than treated as out of grammar.
 
 **And unlike your four sibling spokes, you will not emit it later either — a stated
 non-use, not a deferral.** **A Day has no purchase**, so nothing in this file will
-ever populate the field: the day key alone is this class's marker in full, now and
-after the estimating slice lands. It is named rather than left silent so the
+ever populate the field: the day key alone is this class's marker in full, and it
+stayed so when the estimating slice landed. It is named rather than left silent so the
 admission reads as a decided non-use rather than as an omission a later slice
 mistakes for an oversight. **C8 is likewise outside the cost estimate's
 denominator** — that denominator selects classes whose Primary-entities cell names

@@ -109,8 +109,11 @@ is the case where one file's declared set spans both jobs at once.
 | `Bash(ls:*)` | the trip-listing evidence block below, which the declared `contract-depth` requires |
 | `Bash(grep:*)` | the trip-record evidence block below, which the declared `contract-depth` requires |
 | `Bash(test:*)` | `update`'s passphrase precondition. Chosen because it is the narrowest primitive that answers *present and readable*, and because it **discloses no contents** — it answers by exit status, so no file's contents reach any channel. **It is still a read of the path it names**, under the definition § *What counts as a read here* adopts, and `update`'s `**Reads:**` line declares it as one. A malformed invocation can still put a usage diagnostic on stderr; that names an operand, never a file's contents |
-| `Bash(scripts/publish-trip-site.sh update:*)` | `update`'s single invocation |
-| `Bash(scripts/publish-trip-site.sh list:*)` | `list`'s single invocation |
+| `publish-trip-site.sh update` | `update`'s single invocation |
+| `publish-trip-site.sh list` | `list`'s single invocation |
+
+**The publish script's grants are named here by script and arm, and spelled only in the
+frontmatter above.** A cell that spelled one would be a second copy to keep in step with it.
 
 **Denied, not merely unlisted:** `Read`, `Write`, `Edit`, `NotebookEdit`. Nothing here
 writes a file or edits one, and that rests on those denials — unlisted would prohibit
@@ -182,11 +185,11 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 
 ## Trips in your data home
 
-`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+`ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; true`
 
 ## Trip records
 
-`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
+`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; true`
 
 ## Contract header
 

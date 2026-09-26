@@ -129,8 +129,8 @@ content is generated here.
 > `ASSERTED-SAME` origin is asserted, not assumed — while Riley's window cells do,
 > because Riley's Window basis is `UNKNOWN`.
 >
-> Whole-group anchors on Apr 8 and Apr 13–15 fall outside at least one traveler's
-> window. Naming who is absent is the scheduler's job, not this block's.
+> Whole-group anchors on Apr 13–15 fall outside at least one traveler's window.
+> Naming who is absent is the scheduler's job, not this block's.
 
 ---
 
@@ -170,8 +170,8 @@ content is generated here.
 
 - **Total travelers:** 4
 - **Travel mode:** Group moves together, with noted exceptions
-- **Subgroup notes:** Sam arrives Apr 8 and departs Apr 12 — Apr 8 and Apr 13–15 are
-  not whole-group days. Pat's and Riley's timing is unconfirmed; treat their presence
+- **Subgroup notes:** Sam arrives Apr 8 and departs Apr 12 — Apr 13–15 are not
+  whole-group days. Pat's and Riley's timing is unconfirmed; treat their presence
   on any day as an assumption until their profiles are answered.
 
 ---
@@ -336,5 +336,5 @@ None identified — this example demonstrates the planning-days derivation only.
 - Pat's and Riley's timing basis is `UNKNOWN`. Any finding that either of them is
   present or absent on a given day is an **assumption**, and must be named as one —
   not a fact.
-- Sam is not present on Apr 8 morning, or on Apr 13, 14, or 15. A whole-group anchor
-  on those days is a scheduling error, not a preference.
+- Sam is not present on Apr 13, 14, or 15. A whole-group anchor on those days is a
+  scheduling error, not a preference.

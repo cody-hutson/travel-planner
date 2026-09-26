@@ -112,11 +112,11 @@ blocks and nothing has run ahead of you: an entry yields no evidence until you i
 
 ## Trips in your data home
 
-`{ ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; } ; true`
+`ls -1 "<data-root>/trips" 2>&1 || printf 'TRIPS-DIR-UNREADABLE\n'; true`
 
 ## Trip records
 
-`{ grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; } ; true`
+`grep -H -E '^\*\*Current mode:\*\*|^- \*\*Primary destination:\*\*|^\*\*Lifecycle:\*\*' "<data-root>/trips"/*/trip-context.md 2>&1 || printf 'NO-TRIP-CONTEXT-READABLE\n'; true`
 
 ## Contract header
 
@@ -243,14 +243,14 @@ and it takes exactly this shape:
 **Three hazards, and each is a silent failure rather than a loud one.** They come from how the
 conformance guard reads this file, not from taste.
 
-1. **The evidence-entry counter counts every line in the whole file that begins with the
-   canonical entries' own leading marker — today `` `{ ``, derived by the guard from the charter
-   rather than written into it — and grades that count as an equality against the declared depth,
-   in both directions.** No slice adds an evidence entry, and **no slice writes a line beginning
-   with that marker anywhere in this file**, including inside a fenced example. A surplus entry is
-   a tool grant with no function and an unconditional red check on push. The marker moved when the
-   `!` pre-execution carrier was retired for these reads; it is derived, so it will move again the
-   same way if the charter changes it.
+1. **The evidence-entry counter counts every line in the whole file that begins with an evidence
+   marker — each canonical entry's own opening token, derived by the guard from the charter rather
+   than written into it, or a retired wrapper opener, a code span opening with a brace or a
+   parenthesis — and grades that count as an equality against the declared depth, in both
+   directions.** No slice adds an evidence entry, and **no slice writes a line beginning with such
+   a marker anywhere in this file**, including inside a fenced example. A surplus entry is a tool
+   grant with no function and an unconditional red check on push. The entry markers are derived,
+   so they move with the charter whenever it re-spells an entry, and none is written here.
 2. **The depth cell is read at field index 5 of a pipe-split row.** A sixth column moves it, the
    guard then finds no row carrying a depth and reports the requirement table **absent**, and with
    no rows found `contract-depth` goes unchecked in both directions. **The table stays exactly five

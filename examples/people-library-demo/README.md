@@ -5,7 +5,10 @@ personal detail, and — deliberately — no passport value of any kind.
 
 A minimal worked example for class **C22 `people/<person>.md`**, the durable person record.
 It exists to carry the one thing the schema gate cannot otherwise reach: **a tracked
-instance of a class whose real store is git-ignored.**
+instance of a class whose real store belongs to the operator and lives outside this
+repository.** Where that store is read from is the store-root rule's, stated in
+[`../../reference/data-model.md`](../../reference/data-model.md)
+§ *Composition — the trip-side read of a durable record*.
 
 It carries a second file for a second reason: [`travelers/noor.md`](travelers/noor.md), a
 traveller file bearing `person: psn-3c7e`. That is the **composition witness** — the pair
@@ -14,8 +17,10 @@ witness* below says why it lands here rather than in a trip fixture.
 
 **It now carries a third class for a third reason.** [`groups/grp-4a81.md`](groups/grp-4a81.md)
 is the witness for **C23 `groups/<group>.md`**, the reusable-group record — a second
-cross-trip class whose real store is ignored in exactly the same way. § *The group witness*
-below says why it lands in this root rather than opening one of its own.
+cross-trip class whose real store, like the person store, belongs to the operator and lives
+outside this repository: [`../../CLAUDE.md`](../../CLAUDE.md) § *Resolving a trip* names
+`groups/` among the stores the operator's data root holds. § *The group witness* below says
+why it lands in this root rather than opening one of its own.
 
 ## Why this is a new fixture root rather than a file in an existing one
 
@@ -29,7 +34,7 @@ So the fixture mirrors the real store's shape instead — a `people/` directory 
 record — and this README sits beside it exactly as `people/README.md` sits beside the real
 store's contents.
 
-## Why the record is tracked when every real one is ignored
+## Why this record is tracked when no real one is
 
 `.gitignore` carries `/people/*` with `!/people/README.md`, **rooted**. The leading slash is
 what makes this fixture possible: the rule catches the store at the repo root and does not
@@ -58,8 +63,11 @@ coverage it is structurally unable to check. The invariant is asserted — see g
 
 [`people/psn-9d42.md`](people/psn-9d42.md) is an ordinary instance of the same class, added
 for one reason: **the validity horizon needed an instance the schema gate can reach.** The
-real store is git-ignored, so an untracked record cannot witness anything; and the record
-above cannot witness this particular mark, because it demonstrates the horizon's *home*
+real store belongs to the operator and lives outside this repository, as
+[`../../reference/data-model.md`](../../reference/data-model.md)
+§ *Composition — the trip-side read of a durable record* places it, so no record in it is
+tracked and an untracked record cannot witness anything; and the record above cannot
+witness this particular mark, because it demonstrates the horizon's *home*
 field, `Passport`, precisely by leaving it empty.
 
 | Property | Where to look |
@@ -123,12 +131,14 @@ than by editorial taste.
 The section above is right that a person record does not belong inside a trip root, and
 nothing here softens it: in a real working tree `people/` is a **sibling** of `trips/`,
 outside every trip, which is the scoping the class exists to establish. This fixture
-cannot reproduce that layout for the same reason it exists at all — the repo-root store is
-git-ignored, so it is **absent from a fresh checkout**, and a witness referencing it would
-resolve on an author's machine and dangle in CI. The store-root rule reads
-`<trip-root>/people/` **first** and the repo root second, so co-locating the two here makes
-the reference resolve without leaving this directory, on any machine, with no dependence on
-whether an operator store happens to exist. **The compression of the two roots into one
+cannot reproduce that layout for the same reason it exists at all — the real store belongs to
+the operator and lives outside this repository, so a witness referencing it would give one
+verdict on an author's machine and another in CI. The store-root rule, stated in
+[`../../reference/data-model.md`](../../reference/data-model.md)
+§ *Composition — the trip-side read of a durable record*, looks in the trip root's own
+`people/` first, so co-locating the two here makes the reference resolve without leaving
+this directory, on any machine, with no dependence on whether an operator store happens to
+exist. **The compression of the two roots into one
 directory is this fixture's, and the file says so in its own prose so a reader does not
 learn the wrong layout from it.**
 
