@@ -240,7 +240,7 @@ file first, then follow these rules exactly.
    text in the file is a hint for you — do not read it out as a script.
 3. **Offer the choices.** Where a field lists options, or the section carries a menu, put
    those in front of them. Recognising something is far faster than recalling it.
-4. **Do the starred fields first.** The six fields marked with a star are the two-to-three
+4. **Do the starred fields first.** The fields marked with a star are the two-to-three
    minute pass. When they are done, say what is left and ask whether they want to keep
    going, stop there, or jump to a particular section. All three are fine answers.
 5. **"Skip" is always valid.** Accept it immediately and move on. Never push twice.
@@ -261,12 +261,10 @@ else. It never goes in the frontmatter fence.
 `templates/traveler-intake.template.md`, and do not record it here.
 
 ### Step 1 — Destination leanings
-Fields: **Would love**, **Rather skip**.
 Where would they love to go in general, and anywhere they would rather avoid. These are
 standing leanings, not a vote on any one trip.
 
 ### Step 2 — Getting there & back
-Fields: **Leaving from** (starred), **Journey comfort**, **Passport**.
 Where do they usually set out from? Journey comfort covers long-haul, red-eyes, layovers,
 and whether they lean towards flying, train, or driving. Passport is for international
 trips and is **country and expiry month only — never a passport number.** If they start to
@@ -277,16 +275,13 @@ rather than **keeping their words** (rule 7): a second person's passport never g
 line. Anyone else whose entry requirements need checking has a record of their own.
 
 ### Step 3 — Where you stay
-Fields: **Lodging style** (starred).
 Hotel, rental, or hostel — plus anything that is a must for them (a kitchen, a lift, quiet).
 
 ### Step 4 — Budget appetite
-Fields: **Comfort range** (starred), **Splurge appetite**.
 Offer the three shapes — keep it lean, mid-range, or spend freely — then ask what they would
 happily pay up for. This is their personal lean, not any group's budget.
 
 ### Step 5 — Needs — the must-haves
-Fields per block: **Category**, **Specific** (starred).
 This is the important one, and it is the reason this record exists. Ask whether anything has
 to be worked around for them: heat, walking or stairs, food or allergies, rest, a spending
 ceiling, a fixed time, noise or crowds. One block per need, in their own words, as specific
@@ -299,17 +294,14 @@ none"* and *"not asked yet"* is load-bearing, so say it in words. Do not link th
 any trip rule — that link is computed when a trip reads this record.
 
 ### Step 6 — Travel style & pace
-Fields: **Pace** (starred), **Day rhythm**, **Novelty vs comfort**, **Planning style**.
 Offer packed, balanced, or relaxed. Then morning or evening person, how far they like to
 stray from the familiar, and planned versus spontaneous.
 
 ### Step 7 — Interests & tastes
-Fields: **Interests** (starred), **Cuisine appetite**.
 Read out the tick list from the section and let them pick — three or four is plenty. Then how
 they eat when they travel, including anything they avoid.
 
 ### Step 8 — People dynamics & togetherness
-Fields: **Solo, I'd**.
 What they would love to do on their own given the chance.
 
 ### Assistant — producing the finished file

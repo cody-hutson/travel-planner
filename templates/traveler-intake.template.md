@@ -272,7 +272,7 @@ follow these rules exactly.
    text in the file is a hint for you — do not read it out as a script.
 3. **Offer the choices.** Where a field lists options, or the section carries a menu, put
    those in front of them. Recognising something is far faster than recalling it.
-4. **Do the starred fields first.** The three fields marked with a star are the two-to-three
+4. **Do the starred fields first.** The fields marked with a star are the two-to-three
    minute pass. When they are done, say what is left and ask whether they want to keep
    going, stop there, or jump to a particular section. All three are fine answers.
 5. **"Skip" is always valid.** Accept it immediately and move on. Never push twice.
@@ -285,14 +285,12 @@ follow these rules exactly.
 ### Assistant — the sections, in order
 
 ### Step 1 — About you
-Fields: **Relationship**, **Party**.
 Ask whether anyone is travelling with them who will not fill in their own form — kids and
 ages, a partner who is not doing this. Relationship only matters if the rest of the group
 would not already know who they are. Their name goes in the title line at the top of the
 file, not in a field of its own.
 
 ### Step 2 — Destination leanings
-Fields: **Trip vibe** (starred).
 Ask first whether the destination is already decided — if it is, skip the questions for
 this whole section. **Skipping a section never removes it from the output:** every field
 still ships, each with an em dash where the answer would go (see "producing the finished
@@ -300,11 +298,9 @@ file" below). Dropping the lines loses the labels the planner parses.
 Otherwise offer the vibe options — beach, city, nature, culture, food, or a mix.
 
 ### Step 3 — Dates & availability
-Fields: **Can travel** (starred), **Blackout**, **Trip length**.
 When can they travel? Then anything they absolutely cannot do, and how long feels right.
 
 ### Step 4 — Getting there & back
-Fields: **Arrive / leave**.
 Ask when they expect to arrive and head home, whatever the booking state. If they will be
 on whatever the group books, record that as their answer — an empty field means they did
 not answer, never that they match the group. Where they set out from, what a long travel
@@ -312,7 +308,6 @@ day does to them, and their passport are **not asked here**: they are the same f
 trip to the next, so they live in the person profile.
 
 ### Step 5 — Where you stay
-Fields: **Rooming**.
 Whether they want their own room, are happy sharing, and with whom. Skip it if they are
 travelling alone or do not know the group yet. What kind of place they like to sleep in is
 a durable answer and lives in the person profile.
@@ -334,7 +329,6 @@ nobody wrote down anywhere is the one thing this engine cannot plan around, and 
 first-time traveller filling only this form has no other place to put it.
 
 ### Step 6 — Desires — what you want
-Fields per block: **Desire** (starred), **Priority tier**, **Recurrence**, **Theme tag(s)**, **Overlap** (leave blank).
 Offer the archetype menu from the section as starting points — an archetype on its own is
 a complete first pass. Then make each one specific to
 them. For every desire, ask for exactly one priority tier — *anchor* (would be genuinely
@@ -346,7 +340,6 @@ instead of the other. Suggest a theme tag or two, reusing the archetype wording 
 it fits. Leave **Overlap** blank.
 
 ### Step 7 — Interests & tastes
-Fields: **Been here before?**, **Already done**.
 Ask whether they have been here before — offer the four options (never, once, a few times,
 know it well) — and if they have, anything they have already done that they would not need
 to repeat. Skip both if the destination is not decided yet. What they are drawn to in
@@ -361,14 +354,12 @@ and leave the field unanswered where they would rather not say — an unanswered
 as *unknown*, which is a different thing from `never` and is treated as one.
 
 ### Step 8 — People dynamics & togetherness
-Fields: **Group time**, **Split off with**, **Whole-group moments**.
 Offer mostly together, some solo or sub-group time, or lots of independent time. Then who
 they would enjoy peeling off with, and anything they want everyone present for. Skip the
 section if they do not know the group yet. What they would do with an hour to themselves
 is a durable answer and lives in the person profile.
 
 ### Step 9 — Anything else
-Fields: **Special occasion?**, plus the free-text line at the end.
 Is the trip marking anything — a birthday, an anniversary, a honeymoon, a milestone? Then:
 anything the questions missed.
 

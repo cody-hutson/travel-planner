@@ -54,39 +54,54 @@
 #        graded against the table; a key that cannot resolve a bullet to two rows; a closed
 #        vocabulary per axis; every labelled row reached by a form's bullet unless declared
 #        bullet-less; and the heading-to-section rule stated in the data model and the skill
-#   ST   the starred-field set in EACH intake form, graded on TWO propositions that are not
-#        the same one. AGREEMENT: the count agrees across all four of that form's homes — the
-#        banner numeral, the appendix rule-4 numeral, the appendix's per-field `(starred)`
-#        annotations, and the marked fields themselves, which are the only home that is not a
-#        restatement of another and so are the reference count. LEVEL: that form's marked set
-#        also equals the intersection of its labelled bullets with the starred rows of
+#   ST   the starred-field set in EACH intake form, and the form contract every DECLARED form
+#        answers, graded on THREE propositions that are not the same one. AGREEMENT: the count
+#        agrees across BOTH of that form's homes — the banner numeral, and the marked fields
+#        themselves, which are the only home that is not a restatement of another and so are
+#        the reference count — and the banner is the one sentence stating it IN THE SHAPE THE
+#        PROSE READER COUNTS: a numeral followed, within three intervening words, by `field(s)`
+#        or `of them`, on a line that names the star. A restatement worded outside that shape
+#        is not read at all, so the one-statement pin holds over that shape and never over
+#        every way of saying the number. LEVEL: that form's marked set also equals the
+#        intersection of its labelled bullets with the starred rows of
 #        reference/data-model.md's field table, and across the run the union of the per-form
-#        marked sets equals that table's starred set — both in both directions, label for
-#        label, and the second is the add-only input the per-form comparison cannot see.
-#        NEITHER half compares the count against a shipping-path producer, because the starred
-#        count has none; that boundary is stated in the group rather than left to be inferred.
-#        Every surface is found by MARKUP SHAPE and never by line number, and the evaluator
-#        carries control arms covering every violation code it can emit, each mutating ONE
-#        surface alone and each required to turn it red, and two edits that must not.
-#        That COVERAGE is itself asserted rather than maintained: the code set is read from
-#        st_violations' own body on every run and compared, in both directions, against the
+#        marked sets equals that table's starred set — both in both directions, field for
+#        field, each bullet resolved on (section, label), and the second is the add-only input
+#        the per-form comparison cannot see. CONFORMANCE: every form in a DECLARED population
+#        answers the six questions of the form contract (ADR-023 § D2.6) — one intake-form
+#        fence carrying each declared key once and no other; a whole-line boundary with the
+#        end-of-profile heading above it; every labelled bullet above it joining one
+#        field-table row, none below; a human writer agreeing with the frontmatter; each
+#        closed/open marker well-formed at the head of its bracket. A form's fields end at its
+#        boundary for every reader of its bullets, through ONE resolver shared with FT and RL,
+#        and a boundary that does not resolve is a read of NOTHING, never of the whole file.
+#        The population is a declared list, asserted to contain the starred pass's forms and
+#        to account for every tracked template — never one discovered by fence.
+#        NEITHER of the first two compares the count against a shipping-path producer, because
+#        the starred count has none; that boundary is stated in the group rather than left to
+#        be inferred. Every surface is found by MARKUP SHAPE and never by line number, and each
+#        evaluator carries control arms covering every violation code it can emit, each
+#        mutating ONE surface alone and each required to turn it red, and edits that must not.
+#        That COVERAGE is itself asserted rather than maintained: each evaluator's code set is
+#        read from its own body on every run and compared, in both directions, against the
 #        arms that ran — so a code added with no arm behind it is RED rather than latent.
 #        IT IS ASSERTED AT TWO GRANULARITIES, and where it stops is a recorded decision rather
 #        than something to be inferred from a green. The ladder is group -> code -> EMISSION
-#        SITE -> predicate direction. ST-COV grades the code rung. ST-SITE grades the site
-#        rung: the PLACES the evaluator can emit from are read from the same body on the same
-#        run and compared both ways against the sites the arms actually REACHED, so a SECOND
-#        emission site for a code that already has an arm arrives uncovered and RED instead of
-#        shipping hand-held. That residual is live here and not hypothetical — one code is
-#        emitted from two places today, and both are reached by arms that nothing asserted
-#        reached them. The armed side is recorded from what the evaluator EMITTED and never
-#        from what an arm declared it wanted, because an arm can name a code and cannot name a
-#        site; ST-SITE0 declares the reader non-degenerate and its keys unambiguous first.
+#        SITE -> predicate direction. ST-COV and ST-CF-COV grade the code rung. ST-SITE and
+#        ST-CF-SITE grade the site rung: the PLACES an evaluator can emit from are read from the
+#        same body on the same run and compared both ways against the sites the arms actually
+#        REACHED, so a SECOND emission site for a code that already has an arm arrives
+#        uncovered and RED instead of shipping hand-held. The armed side is recorded from what
+#        the evaluator EMITTED and never from what an arm declared it wanted, because an arm
+#        can name a code and cannot name a site; ST-SITE0 and ST-CF-SITE0 declare the reader
+#        non-degenerate and its keys unambiguous first. The conformance arm's coverage is
+#        graded ONCE per run, over the arms every member ran, because a site one version of the
+#        contract reaches is one a member on another version cannot.
 #        WHAT IS DELIBERATELY NOT GRADED, each excluded on measured grounds rather than
-#        omitted: the PREDICATE rung, where one site carries two untested directions of a
-#        single condition — PROSE-POP fires when the prose-assertion count is not two, every
-#        arm here drives that count BELOW two and none drives it above, so the site is armed
-#        and one of its two directions is not; and group CTL, which stays at the code rung for
+#        omitted: the PREDICATE rung as a rung — no reader here tells the two directions of one
+#        condition apart, so where both directions matter they are armed BY NAME, as
+#        PROSE-POP's are: it fires when the prose-assertion count is not one, CTL-ST-D1 drives
+#        the count below one and CTL-ST-A1 above it; and group CTL, which stays at the code rung for
 #        four reasons, all of them measured at the arm itself — its emissions are not
 #        tab-headed, so this reader returns false positives and no real site over the
 #        validator; attribution there would run over stdout carrying paths and free text
@@ -94,9 +109,11 @@
 #        from several call sites, so arming them would arm the parser's factoring rather than
 #        its behaviour; and its code-rung arm is newer than this one. Neither exclusion is
 #        silent, and neither is permanent.
-#        No count is spelled anywhere in this file, and the cross-document half introduces no
-#        canonical value either: it is keyed on bullet presence, so a third intake form is
-#        still ONE LINE in ST_TEMPLATES.
+#        No count is spelled anywhere in this file, and neither the cross-document half nor
+#        the conformance arm introduces a canonical value: the first is keyed on bullet
+#        presence and the second on each declaration's own text, so a new intake form costs
+#        ONE LINE in the conformance population, and one in ST_TEMPLATES where it has a
+#        starred pass.
 #   CTL  a synthetic fixture tree, built in a temp dir ON EVERY RUN, population by
 #        construction at every wave. One MUST-FIRE arm per code the validator can emit,
 #        plus the specificity arms that tell a correct implementation from a lookalike.
@@ -3318,6 +3335,167 @@ if [ "$VI_OK" -eq 1 ] && [ "$VI_NMULTI" -gt 0 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
+# THE DECLARED FORM POPULATION, AND THE ONE RESOLVER OF A FORM'S BOUNDARY. No verdict is
+# rendered here. Four groups read what this block declares — FT's row coverage, ST's
+# conformance arm and its field surfaces, RL's form reads, and DH through RL — so it sits
+# ahead of FT, the first of them to run.
+#
+# ── THE POPULATION IS DECLARED, NEVER DISCOVERED ────────────────────────────────
+# ST_CF_FORMS names every form group ST's conformance arm grades against the form contract
+# (reference/adr/ADR-023-interviewer-authored-home-and-form-contract.md § D2.6), one
+# repository-relative path per line. ST_CF_EXCLUDED names every other tracked template as one
+# `path reason-token` row, so the arm REPORTS what it does not grade rather than dropping it.
+# ST-CF-POP asserts that the two lists together account for every tracked
+# templates/*.template.md, and ST-CF-SUB that ST_TEMPLATES — the starred pass's own list — is
+# contained in ST_CF_FORMS, so neither list can drift from the other silently. A form is never
+# FOUND by looking for a fence: a filled profile copies its form's fence, so "carries the
+# fence" names every instance too, and a population read that way would grade profiles as
+# forms. The exclusion list may be EMPTY: a declared form joining the population leaves it
+# so, and that is a legal declaration rather than a missing one.
+#
+# ── THE BOUNDARY IS READ FROM THE FORM'S OWN FENCE, AS A WHOLE LINE, FAIL-CLOSED ─────
+# st_boundary takes the literal the form's own `boundary:` key names and finds the ONE line
+# that is exactly that literal, trailing whitespace aside. The fence's own `boundary:` line
+# names the literal and is therefore never that line — which is why the match is whole-line:
+# counted as a substring, every conforming form carries the literal twice. It answers
+# `LINE<TAB>n` or `FAIL<TAB>why`, and every reader that stops at a boundary reads NOTHING on
+# a FAIL — never the whole file, which is the silent direction. The readers are st_surfaces
+# (group ST, always), rl_bullets (group RL, for a version-1 member of the population) and
+# ft_bullets (group FT, for the same members): one resolver, three stops.
+#
+# ── ONE FENCE-STATE HELPER FOR EVERY LINE SCAN THAT MEETS A FENCE ───────────────
+# ST_CF_FENCE_FN is embedded, never copied, by every awk program here that reads a fenced
+# declaration or must skip fenced text, the way "$FT_LEAD_FN" is. It tracks CommonMark fence
+# state — a run of three or more backticks or tildes opens, the same character at least as
+# long and alone on its line closes — so a fence inside ANOTHER fence is text and never a
+# declaration. Three scans ride on it: the form's own fence (cf_form_fence), ADR-023's worked
+# fence (st_cf_decl_read), and the data model's headings for question 3's anchor, which skip
+# every fenced line. The FORM's fence is read on a bounded grammar rather than to the next
+# closer: its body is key lines, blank lines and comment lines (a first non-blank `#`), and
+# the first line that is none of those and not its closer ENDS it, unclosed. That bound is
+# what stops a lost closer from reading a whole guide as fence content; admitting blank and
+# comment lines is what keeps it inside the contract as written, which grades the keys a
+# fence carries and not how its lines are laid out.
+ST_CF_FORMS="templates/traveler-intake.template.md
+templates/person-intake.template.md"
+# trip-context is block-owned: its questions belong to whichever writer owns each region, so
+# it conforms per region under ADR-024 and waits for that region contract rather than being
+# graded whole-file on this one.
+ST_CF_EXCLUDED="templates/trip-context.template.md awaits-region-contract"
+# The contract's declared key set is read LIVE from the record's one worked fence, never
+# copied here — ST-CF0 grades that the record still declares one.
+ST_CF_DECL="$ROOT/reference/adr/ADR-023-interviewer-authored-home-and-form-contract.md"
+# The end-of-profile heading the skill surfaces match line-initially; question 2 grades it
+# against the boundary. It is a line PREFIX, never a whole line.
+ST_CF_HEAD='# END OF PROFILE'
+
+ST_CF_FENCE_FN='
+function cf_run(s,   c, k) {
+  c = substr(s, 1, 1)
+  if (c != "`" && c != "~") return 0
+  k = 1
+  while (substr(s, k + 1, 1) == c) k++
+  return (k >= 3) ? k : 0
+}
+function cf_fence_step(s,   k, r) {
+  k = cf_run(s)
+  if (CF_ON) {
+    if (k >= CF_LEN && substr(s, 1, 1) == CF_CH && substr(s, k + 1) ~ /^[ \t\r]*$/) { CF_ON = 0; return "C" }
+    return "I"
+  }
+  if (k == 0) return ""
+  r = substr(s, k + 1)
+  if (substr(s, 1, 1) == "`" && index(r, "`") > 0) return ""
+  CF_ON = 1; CF_CH = substr(s, 1, 1); CF_LEN = k
+  sub(/^[ \t]+/, "", r); sub(/[ \t\r]+$/, "", r); CF_INFO = r
+  return "O"
+}
+function cf_keyline(s,   p, k, v) {
+  p = index(s, ":")
+  if (p < 2) return 0
+  k = substr(s, 1, p - 1); v = substr(s, p + 1)
+  if (k !~ /^[[:lower:]][[:lower:][:digit:]-]*$/ || v !~ /^[ \t]+[^ \t\r]/) return 0
+  sub(/^[ \t]+/, "", v); sub(/[ \t\r]+$/, "", v)
+  CF_KEY = k; CF_VAL = v
+  return 1
+}
+function cf_form_fence(L, n,   i, body, t) {
+  CF_NF = 0; CF_FO = 0; CF_FC = 0; CF_WHY = ""; CF_NK = 0; CF_ON = 0; body = 0
+  for (i = 1; i <= n; i++) {
+    if (body) {
+      if (cf_fence_step(L[i]) == "C") { CF_FC = i; body = 0; continue }
+      if (cf_keyline(L[i])) { CF_NK++; CF_K[CF_NK] = CF_KEY; CF_V[CF_NK] = CF_VAL; CF_KL[CF_NK] = i; continue }
+      if (L[i] ~ /^[ \t\r]*$/ || L[i] ~ /^[ \t]*#/) continue
+      t = L[i]; gsub(/\t/, " ", t)
+      CF_WHY = "line " i " is neither a key line, a blank or comment line, nor the line closing the fence: " t
+      body = 0; CF_ON = 0
+    }
+    if (cf_fence_step(L[i]) == "O" && CF_INFO == "intake-form") { CF_NF++; if (CF_NF == 1) { CF_FO = i; body = 1 } }
+  }
+  if (body) CF_WHY = "it runs to the end of the file"
+}'
+
+# st_cf_is_member <path> — the path, taken relative to the repository, is a line of ST_CF_FORMS.
+# Membership is by PATH, so a copy of a form under $WORK is never a member and an instance that
+# copied a form's fence is never one either.
+st_cf_is_member() { awk -v p="${1#"$ROOT/"}" '$0 == p { f = 1 } END { exit !f }' <<<"$ST_CF_FORMS"; }
+
+# st_boundary <form> — LINE<TAB>n, or FAIL<TAB>why. See the block comment above.
+st_boundary() {
+  awk "$ST_CF_FENCE_FN"'
+    { L[NR] = $0 }
+    END {
+      cf_form_fence(L, NR)
+      if (CF_NF != 1) { printf "FAIL\t%d intake-form fence opener(s)\n", CF_NF; exit }
+      if (CF_WHY != "") { printf "FAIL\tthe intake-form fence is not closed: %s\n", CF_WHY; exit }
+      nk = 0; v = ""
+      for (i = 1; i <= CF_NK; i++) if (CF_K[i] == "boundary") { nk++; v = CF_V[i] }
+      if (nk != 1) { printf "FAIL\t%d boundary key(s) in the fence\n", nk; exit }
+      n = 0
+      for (i = 1; i <= NR; i++) { s = L[i]; sub(/[ \t\r]+$/, "", s); if (s == v) { n++; bl = i } }
+      if (n != 1) { printf "FAIL\t%d whole line(s) equal the boundary literal\n", n; exit }
+      printf "LINE\t%d\n", bl
+    }' "$1"
+}
+
+# st_cf_version <form> — the value of the form's one `form-version:` key, or nothing. It only
+# picks which READER a form gets; the conformance evaluator dispatches on its own fence reading.
+st_cf_version() {
+  awk "$ST_CF_FENCE_FN"'
+    { L[NR] = $0 }
+    END {
+      cf_form_fence(L, NR)
+      if (CF_NF != 1 || CF_WHY != "") exit
+      k = 0
+      for (i = 1; i <= CF_NK; i++) if (CF_K[i] == "form-version") { k++; v = CF_V[i] }
+      if (k == 1) print v
+    }' "$1"
+}
+
+# st_cf_v1_member <path> — a member of the population whose contract version is not 2. A
+# version-2 form is block-owned and has no single-cut boundary (ADR-024), so no boundary stop
+# applies to it; a member whose version cannot be read stays a version-1 member and its stop
+# fails CLOSED. No member declares version 2 on this tree, so today this is membership.
+st_cf_v1_member() { st_cf_is_member "$1" && [ "$(st_cf_version "$1")" != 2 ]; }
+
+# ST_CF_UNRES — the version-1 members whose boundary does not resolve, named ONCE. Every verdict
+# such a boundary turns red outside the conformance arm prefixes its FAIL with this note, so a
+# reader triaging by message is sent to the one cause rather than to five symptoms.
+ST_CF_UNRES=""
+while IFS= read -r st_cf_u; do
+  [ -n "$st_cf_u" ] || continue
+  st_cf_v1_member "$ROOT/$st_cf_u" || continue
+  st_cf_ut="${st_cf_u##*/}"; st_cf_ut="${st_cf_ut%.template.md}"
+  case "$(st_boundary "$ROOT/$st_cf_u" 2>/dev/null)" in
+    LINE*) ;;
+    *) ST_CF_UNRES="${ST_CF_UNRES:+$ST_CF_UNRES; }member ${st_cf_ut}'s boundary did not resolve — see ST-CF[${st_cf_ut}]" ;;
+  esac
+done <<EOF
+$ST_CF_FORMS
+EOF
+st_cf_unres_note() { [ -z "$ST_CF_UNRES" ] || printf '%s — ' "$ST_CF_UNRES"; }
+
+# ═════════════════════════════════════════════════════════════════════════════════
 # Group FT — reference/data-model.md's field table: the extractor that reads it by index, the
 # (section, label) resolver every group reading it goes through, and the table's own integrity
 # — its row count, its key, its vocabulary and its coverage — asserted rather than assumed.
@@ -3386,9 +3564,6 @@ FT_RAN=0
 FT_OK=1
 FT_DOC="$ROOT/reference/data-model.md"
 FT_STAR='⭐'
-FT_FORM_T="$ROOT/templates/traveler-intake.template.md"
-FT_FORM_P="$ROOT/templates/person-intake.template.md"
-FT_FORM_C="$ROOT/templates/trip-context.template.md"
 FT_SKILL="$ROOT/skills/trip-record/SKILL.md"
 mkdir -p "$WORK/ft"
 
@@ -3535,15 +3710,18 @@ ft_resolve_assert() {
   fi
 }
 
-# ft_bullets <form> <stop> — "heading<TAB>label<TAB>line" for every labelled bullet at ANY indent,
-# the heading in ft_heads' shape. stop=1 reads a guided form only ABOVE the whole-line
-# `<!-- PROFILE-END -->` boundary its own fence declares; stop=0 reads the whole file, which is how
+# ft_bullets <form> <mode> — "heading<TAB>label<TAB>line" for every labelled bullet at ANY indent,
+# the heading in ft_heads' shape. mode=stop reads a form only ABOVE the boundary st_boundary
+# resolves from that form's own fence, and reads NOTHING when it does not resolve — the shared
+# resolver, never a literal of this group's own. mode=whole reads the whole file, which is how
 # trip-context is read, because its repeated units nest their bullets. A reader of its own rather
 # than a borrowed one: rl_bullets, xt_bullets and st_surfaces all anchor at column 0, and a
 # trip-context field rendered only inside an origin unit would be invisible to every one of them.
 ft_bullets() {
-  awk -v star="$FT_STAR" -v stop="$2" '
-    stop == 1 { t = $0; sub(/[ \t\r]+$/, "", t); if (t == "<!-- PROFILE-END -->") exit }
+  local bl=-1
+  [ "$2" = "stop" ] && bl="$(awk -F'\t' '$1 == "LINE" { v = $2 } END { print v + 0 }' <<<"$(st_boundary "$1")")"
+  awk -v star="$FT_STAR" -v bl="$bl" '
+    bl == 0 || (bl > 0 && FNR >= bl) { exit }
     /^## / { h = substr($0, 4); sub(/[ \t\r]+$/, "", h); next }
     match($0, /^[ \t]*-[ \t]+/) {
       rest = substr($0, RLENGTH + 1)
@@ -3552,10 +3730,35 @@ ft_bullets() {
     }' "$1"
 }
 
-# ft_cover_report <data-model> <trip-form> <person-form> <trip-context> — the rows→fields
-# direction as TAB records. NBUL is counted from the forms, never from the resolver's output, so a
-# resolver that went quiet cannot shrink its own denominator:
-#   NBUL<TAB>n       labelled bullets read across the three forms
+# ft_declared — every DECLARED form, member of the conformance population or excluded from it,
+# as "<mode><TAB><path>": a version-1 member is read above its boundary (stop) and every other
+# declared form whole. This is the population FT5 reads, so a new form reaches FT5 by being
+# declared once, in the block above group FT, rather than by a further list of paths here.
+ft_declared() {
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if st_cf_v1_member "$ROOT/$f"; then printf 'stop\t%s\n' "$ROOT/$f"; else printf 'whole\t%s\n' "$ROOT/$f"; fi
+  done <<EOF
+$ST_CF_FORMS
+EOF
+  awk -v root="$ROOT" 'NF { print "whole\t" root "/" $1 }' <<<"$ST_CF_EXCLUDED"
+}
+# ft_read_all <forms> — every labelled bullet of every "<mode><TAB><path>" entry, in entry order.
+ft_read_all() {
+  local m p
+  while IFS="$(printf '\t')" read -r m p; do
+    [ -n "$p" ] || continue
+    ft_bullets "$p" "$m"
+  done <<EOF
+$1
+EOF
+}
+
+# ft_cover_report <data-model> <forms> — the rows→fields direction as TAB records, over the
+# "<mode><TAB><path>" entries ft_declared emits. NBUL is counted from the forms, never from the
+# resolver's output, so a resolver that went quiet cannot shrink its own denominator:
+#   NBUL<TAB>n       labelled bullets read across the declared forms
 #   NRES<TAB>n       of those, the ones that resolved ONE — the non-degeneracy input
 #   NROWS<TAB>n      labelled rows in the table
 #   HIT<TAB>n        labelled rows at least one bullet reached
@@ -3563,7 +3766,7 @@ ft_bullets() {
 #   ORPHAN<TAB>num<TAB>label<TAB>section   a row no bullet reaches that is NOT declared bullet-less
 ft_cover_report() {
   local bul
-  bul="$( { ft_bullets "$2" 1; ft_bullets "$3" 1; ft_bullets "$4" 0; } )"
+  bul="$(ft_read_all "$2")"
   printf 'NBUL\t%s\n' "$(printf '%s\n' "$bul" | grep -c '[^[:space:]]')"
   printf '%s\n' "$bul" | awk 'NF' | ft_resolve <(ft_rows "$1") | awk -F'\t' "$FT_NOBUL_FN"'
     FILENAME == ARGV[1] { n++; num[n] = $1; sec[n] = $2; lab[n] = $3; nob[n] = ft_nobul($10); next }
@@ -3583,12 +3786,12 @@ ft_cover_assert() {
   nbl="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NBL" { print $2; exit }')"
   nor="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "ORPHAN" { n++ } END { print n + 0 }')"
   if [ "${nr:-0}" -lt 1 ] || [ "${nbul:-0}" -lt 1 ] || [ "${nres:-0}" -lt 1 ]; then
-    FAIL "FT5: a side of the coverage comparison came back EMPTY (labelled rows=${nr:-0}, form bullets read=${nbul:-0}, bullets resolved to a row=${nres:-0}) — every row would read as an orphan, or none would, over a comparison that never ran"
+    FAIL "FT5: $(st_cf_unres_note)a side of the coverage comparison came back EMPTY (labelled rows=${nr:-0}, form bullets read=${nbul:-0}, bullets resolved to a row=${nres:-0}) — every row would read as an orphan, or none would, over a comparison that never ran"
   elif [ "$nor" -ne 0 ]; then
-    FAIL "FT5: $nor labelled row(s) are reached by NO bullet of the guided forms (read above their boundary) or of trip-context (read at any indent), and their rationale does not declare them bullet-less — each is a row that outlived its field, classified for a question no form asks:"
+    FAIL "FT5: $(st_cf_unres_note)$nor labelled row(s) are reached by NO bullet of a declared form — a version-1 member read above its boundary, every other declared form read at any indent — and their rationale does not declare them bullet-less. Each is a row that outlived its field, classified for a question no form asks:"
     printf '%s\n' "$rep" | awk -F'\t' '$1 == "ORPHAN" { printf "      row %s: `%s` under %s\n", $2, $3, $4 }'
   else
-    PASS "FT5: every one of the $nr labelled row(s) is reached by a bullet of a tracked form or declared bullet-less by its own rationale — $hit reached, $nbl declared bullet-less — over $nbul bullet(s) read, $nres of them resolved to a row. This is the rows→fields direction: RL1, XT1 and ST3 resolve every bullet they read onto a row, and nothing else asked whether every row still has a field behind it. CTL-FT5-ORPHAN shows one deleted bullet turning its row red, and CTL-FT5-REPEAT shows a bullet whose row other bullets still reach leaving it green"
+    PASS "FT5: every one of the $nr labelled row(s) is reached by a bullet of a declared form or declared bullet-less by its own rationale — $hit reached, $nbl declared bullet-less — over $nbul bullet(s) read, $nres of them resolved to a row. The forms read are the declared population, so a form reaches this arm by being declared once rather than by a list of its own here. This is the rows→fields direction: RL1, XT1 and ST3 resolve every bullet they read onto a row, and nothing else asked whether every row still has a field behind it. CTL-FT5-ORPHAN shows one deleted bullet turning its row red, and CTL-FT5-REPEAT shows a bullet whose row other bullets still reach leaving it green"
   fi
 }
 
@@ -3639,11 +3842,16 @@ else
   FT_OK=0
 fi
 
+# The declared forms FT5 reads, and the one its two controls mutate a copy of: the first declared
+# form read whole, which is the form whose repeated units give a row several bullets.
+FT_FORMS="$(ft_declared)"
+FT_FORM_C="$(awk -F'\t' '$1 == "whole" { print $2; exit }' <<<"$FT_FORMS")"
+
 ft_count_assert "$FT_DOC"
 ft_key_assert "$FT_DOC"
 ft_vocab_assert "$FT_DOC"
 ft_resolve_assert
-ft_cover_assert "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FORM_C"
+ft_cover_assert "$FT_DOC" "$FT_FORMS"
 ft_rule_assert "$FT_DOC" "$FT_SKILL"
 
 # ── The controls. Each mutates a COPY under $WORK, asserts the mutation LANDED, and compares the
@@ -3775,11 +3983,13 @@ if [ "$FT_OK" -eq 1 ]; then
 
   # CTL-FT5-ORPHAN — MUST FIRE, and CTL-FT5-REPEAT — MUST NOT. Each deletes ONE trip-context bullet
   # on a copy: the first whose row no other bullet reaches, and the first whose row another does.
-  FT_CR="$(ft_cover_report "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FORM_C" | awk -F'\t' '$1 == "ORPHAN"')"
-  FT_HITS="$( { ft_bullets "$FT_FORM_T" 1; ft_bullets "$FT_FORM_P" 1; ft_bullets "$FT_FORM_C" 0; } | ft_resolve "$FT_ROWS0" \
+  # The copy takes trip-context's place in the declared entries, read the way trip-context is.
+  ft_swap() { awk -F'\t' -v a="$2" -v b="$3" 'BEGIN { OFS = "\t" } $2 == a { $2 = b } { print }' <<<"$1"; }
+  FT_CR="$(ft_cover_report "$FT_DOC" "$FT_FORMS" | awk -F'\t' '$1 == "ORPHAN"')"
+  FT_HITS="$(ft_read_all "$FT_FORMS" | ft_resolve "$FT_ROWS0" \
       | awk -F'\t' '$1 == "ONE" { c[$2]++ } END { for (k in c) print k "\t" c[k] }')"
   ft_c_target() {   # ft_c_target <want-once 1|0> -> "line<TAB>num<TAB>label" of the first such trip-context bullet
-    printf '%s\n%s\n%s\n' "$FT_HITS" "$FT_SEP" "$(ft_bullets "$FT_FORM_C" 0 | ft_resolve "$FT_ROWS0")" | awk -F'\t' -v sep="$FT_SEP" -v once="$1" '
+    printf '%s\n%s\n%s\n' "$FT_HITS" "$FT_SEP" "$(ft_bullets "$FT_FORM_C" whole | ft_resolve "$FT_ROWS0")" | awk -F'\t' -v sep="$FT_SEP" -v once="$1" '
       !past && $0 == sep { past = 1; next }
       !past { if (NF >= 2) c[$1] = $2; next }
       $1 == "ONE" && ((once == 1 && c[$2] == 1) || (once == 0 && c[$2] > 1)) { print $5 "\t" $2 "\t" $4; exit }'
@@ -3790,7 +4000,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/orphan-context.md"
   awk -v ln="${FT_OTL:-0}" 'FNR != ln' "$FT_FORM_C" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_FORM_C" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_CR" "$(ft_cover_report "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FX" | awk -F'\t' '$1 == "ORPHAN"')")"
+  FT_ADD="$(ft_delta "$FT_CR" "$(ft_cover_report "$FT_DOC" "$(ft_swap "$FT_FORMS" "$FT_FORM_C" "$FT_FX")" | awk -F'\t' '$1 == "ORPHAN"')")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   FT_HITN="$(printf '%s\n' "$FT_ADD" | awk -F'\t' -v n="${FT_OTN:-x}" '$2 == n { k++ } END { print k + 0 }')"
   if [ -z "$FT_OT" ]; then
@@ -3803,7 +4013,7 @@ if [ "$FT_OK" -eq 1 ]; then
   FT_FX="$WORK/ft/repeat-context.md"
   awk -v ln="${FT_RTL:-0}" 'FNR != ln' "$FT_FORM_C" > "$FT_FX"
   FT_LD=0; cmp -s "$FT_FORM_C" "$FT_FX" || FT_LD=1
-  FT_ADD="$(ft_delta "$FT_CR" "$(ft_cover_report "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FX" | awk -F'\t' '$1 == "ORPHAN"')")"
+  FT_ADD="$(ft_delta "$FT_CR" "$(ft_cover_report "$FT_DOC" "$(ft_swap "$FT_FORMS" "$FT_FORM_C" "$FT_FX")" | awk -F'\t' '$1 == "ORPHAN"')")"
   FT_NADD="$(printf '%s\n' "$FT_ADD" | grep -c '[^[:space:]]')"
   if [ -z "$FT_RT" ]; then
     FAIL "CTL-FT5-REPEAT: MUST NOT FIRE — no trip-context bullet reaches a row another bullet also reaches, so the specificity mutation could not be CONSTRUCTED"
@@ -3853,55 +4063,63 @@ if [ "$FT_RAN" -ne 1 ]; then
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
-# Group ST — the starred-field count is ONE fact with FOUR homes inside EACH intake form,
-# and the three homes that merely describe it must agree with the one that IS it. That is HALF
-# of this group. The other half grades the same set against a SECOND DOCUMENT.
+# Group ST — the starred-field count is ONE fact with TWO homes inside EACH intake form, the
+# banner that states it and the marked fields that ARE it, and the one must agree with the other.
+# That is the first of this group's three propositions. The second grades the same set against
+# a SECOND DOCUMENT. The third grades every DECLARED form against the form contract.
 #
 # ── WHAT THIS GROUP PINS, AND WHAT IT DOES NOT ───────────────────────────────
 # Written down here because a reader composing an acceptance criterion against this gate has to
 # know which proposition they are buying — and because this group ran for several releases while
 # a governing document described it as something it was not, which no drift sweep caught.
 #
-#   ST1 / ST2   AGREEMENT INSIDE ONE FORM. The banner numeral, the appendix rule-4 numeral and
-#               the appendix's per-field annotations agree with the fields the form actually
-#               marks. Agreement is not accuracy: homes that moved together onto a wrong number
-#               agree perfectly, and this half stays green on precisely that edit.
+#   ST1 / ST2   AGREEMENT INSIDE ONE FORM. The banner numeral agrees with the fields the form
+#               actually marks, and the banner is the one sentence stating the count in the shape
+#               the PROSE reader counts. Agreement is not accuracy: a banner and a marked set that
+#               moved together onto a wrong number agree perfectly, and this half stays green on
+#               precisely that edit. And a restatement worded outside that shape is not read.
 #   ST3 / ST4   THE LEVEL, against reference/data-model.md's field table. Per form, the
 #               intersection of that form's labelled bullets with the table's starred rows
 #               equals that form's marked set; across the run, the union of the per-form marked
-#               sets equals the table's starred set. Both in both directions, label for label.
-#               ST4 is the add-only complement ST3 is blind to by construction.
+#               sets equals the table's starred set. Both in both directions, field for field,
+#               each bullet resolved on (section, label). ST4 is the add-only complement ST3 is
+#               blind to by construction.
 #   NEITHER     a comparison against a SHIPPING-PATH PRODUCER. Group HC can pin its level that
 #               way because the class count HAS one — va_class_rows, which the validator itself
 #               runs. The starred count has none: nothing in the shipping path derives, consumes
 #               or acts on how many fields carry the star. So this group grades a second
 #               maintained document against the forms, which is stronger than a form agreeing
 #               with itself and weaker than a producer. Stating which is part of the gate.
+#   ST-CF       CONFORMANCE, over the DECLARED population above group FT. Every member answers
+#               the six questions of ADR-023 § D2.6, each finding named by its question; the
+#               population is asserted against ST_TEMPLATES and against every tracked template.
+#               Its fields end at its boundary for every reader, fail-closed — which is what turns
+#               the guide half's measured-but-undeclared zero into an asserted one.
 #
 # ── THE POPULATION IS A LIST, AND IT BECAME ONE ON PURPOSE ───────────────────────
 # This group shipped reading a single hardcoded path, at a commit where one intake form was
 # the whole population. The intake has since been split into a per-trip form and a durable
-# per-person one, and the count is now TWO facts — one per form, 3 and 6
-# — each with the same four homes inside its own file. A guard that had kept its single
-# path would have gone on grading the trip form correctly and said NOTHING about the second,
-# which is the shape of stale coverage this suite exists to refuse. So ST_TEMPLATES is a
-# LIST and every arm below runs once per member, fixtures and all, with each verdict tagged
-# by the form it graded. Adding a third intake form is one line here, not a second group.
+# per-person one, and the count is now TWO facts — one per form — each with the same two homes
+# inside its own file. A guard that had kept its single path would have gone on grading the trip
+# form correctly and said NOTHING about the second, which is the shape of stale coverage this
+# suite exists to refuse. So ST_TEMPLATES is a LIST and every arm below runs once per member,
+# fixtures and all, with each verdict tagged by the form it graded. Adding a further intake form
+# with a starred pass is one line here, not a second group; the conformance population above
+# group FT is its own list, asserted to contain this one.
 #
 # ── WHY THIS GROUP EXISTS ────────────────────────────────────────────────────────
-# Each intake form tells its reader how many of its fields carry the
-# star, and it tells them TWICE in prose — in the banner at the top and again in rule 4 of
-# the agent appendix at the bottom — while the appendix ALSO restates the starred set field
-# by field as `**Label** (starred)`. Only one of those four surfaces is not a restatement:
-# the marked fields themselves. The other three are claims about it.
+# Each intake form tells its reader how many of its fields carry the star, in the banner at the
+# top, and the marked fields are the star set itself. The appendix once restated the same count
+# twice more — a rule-4 numeral and a `**Label** (starred)` annotation per field — and this group
+# graded all four homes. Those two appendix homes were DELETED, not relocated, when the form
+# contract retired every restatement whose only reader was the interview conduct leaving the
+# form (ADR-023 D5.1), and their branches left this group together with their arms (D5.4). What
+# remains is the banner, graded against the marked fields.
 #
 # Nothing in this repository read those templates before this group. So starring one more
-# field and updating the banner alone would have shipped a stale appendix, in two places,
-# with every gate green — and the appendix is the surface an agent reads to run the intake,
-# so the stale copy is the one that drives the conversation. It has not happened yet: all
-# four homes agree on this commit. That is precisely when the guard is cheap, and it is why
-# it is added now rather than after the first drift. A latent defect is still a defect; the
-# only thing that is latent is the evidence.
+# field and leaving the banner alone would have shipped a stale count with every gate green —
+# and the banner is what a traveller reads first. A latent defect is still a defect; the only
+# thing that is latent is the evidence.
 #
 # ── WHY IT LIVES HERE AND NOT IN A SCRIPT OF ITS OWN ─────────────────────────────
 # The status checks this repository requires on main are JOB NAMES. A new workflow would
@@ -3911,8 +4129,8 @@ fi
 # blocks from its first commit, with no branch-protection change assumed, needed or made.
 #
 # ── THE PROBE IS KEYED ON SHAPE, NEVER ON A LINE NUMBER ─────────────────────────
-# The report that surfaced this named the two numerals at lines 6 and 295. They are live at
-# 21 and 320. A guard pinned to a line number would have been wrong before it was written,
+# The report that surfaced this named the two numerals at lines 6 and 295, and both had already
+# moved. A guard pinned to a line number would have been wrong before it was written,
 # so every surface here is discovered by its MARKUP SHAPE and the line number is an OUTPUT
 # of that discovery rather than an input to it. One pair of functions drives the real arms
 # and every control arm alike, the vi_bindings/vi_violations idiom above: an evaluator
@@ -3938,7 +4156,7 @@ fi
 # drift this group is meant to notice, and GUARD_EXPECTED_SKIPS is correctly empty.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
-echo "ST — every intake form's starred set agrees across all four of its homes AND matches the data model's field table"
+echo "ST — every intake form's starred set agrees across both of its homes AND matches the data model's field table, and every declared form conforms to the form contract"
 
 # The population, one path per line. Each is graded independently and completely: its own
 # surfaces, its own violations, its own full set of control arms against its own fixtures.
@@ -3953,12 +4171,24 @@ ST_STAR='⭐'
 ST_DM="$ROOT/reference/data-model.md"
 mkdir -p "$WORK/st"
 
-# st_surfaces <file> — one TAB record per discovered assertion site, four surfaces:
+# st_surfaces <file> — one TAB record per discovered site, five record kinds:
 #
+#   BOUNDARY<TAB><line><TAB><how>                  the form's boundary, emitted FIRST: its line,
+#                                                  or 0 with the reason when it does not resolve
 #   PROSE<TAB><line><TAB><count-as-integer>        a sentence that STATES the number
-#   MARKED<TAB><line><TAB><label><TAB><heading>    a field whose bullet IS the star
-#   ANNOT<TAB><line><TAB><label>                   the appendix's per-field restatement
-#   BULLET<TAB><line><TAB><label><TAB><heading>    EVERY labelled field bullet, star or no star
+#   MARKED<TAB><line><TAB><label><TAB><heading>    a field above the boundary whose bullet IS the star
+#   BULLET<TAB><line><TAB><label><TAB><heading>    EVERY labelled field bullet above the boundary,
+#                                                  star or no star
+#   BELOW<TAB><line><TAB><label><TAB><heading>     a labelled field bullet BELOW the boundary — a
+#                                                  field the form contract says cannot be there
+#
+# THE FIELD RECORDS STOP AT THE BOUNDARY, AND THE STOP IS FAIL-CLOSED. The boundary is resolved
+# by st_boundary from the form's own fence, the one resolver every group shares. A field bullet
+# above it is BULLET (and MARKED when starred), one below it is BELOW, and when the boundary does
+# not resolve NO field record is emitted at all: an empty denominator is loud (ST0 and ST3 fail
+# on it, and ST-CF names the cause), where a whole-file read would silently count a guide-half
+# bullet as a field. PROSE is NOT stopped. A second statement of the count is likeliest in the
+# guide, below the boundary, which is exactly where a stopped reader would miss it.
 #
 # The heading is the enclosing `## ` heading in ft_heads' shape, carried so the cross-document
 # arms resolve each bullet on (section, label) through ft_resolve rather than on its label alone.
@@ -3979,25 +4209,31 @@ mkdir -p "$WORK/st"
 # every bracket used below is a NAMED CLASS rather than a range, which is the same fix LC2
 # already enforces on va_type_ok.
 #
-# PROSE is the hard surface, and it is hard for a specific reason: BOTH prose sites carry a
-# COMPETING cardinal. The banner reads "about 2-3 minutes" before it reads "three of them"
-# (six, on the durable form), and rule 4 reads "the two-to-three minute pass" after it reads
-# "the three fields". Both decoys are the SAME two on either form and both survived the
-# split unchanged, which is why the window below needed no retuning for the new member. A reader
-# that took the first number on the line would report 2 for the banner, agree with nothing,
-# and be wrong in a way that never announces itself. So a number counts only when it is
-# followed — within at most three intervening words, across whitespace or dashes only — by
-# `field`/`fields` or by `of them`. That window is what rejects both decoys, and it was
-# tuned against them rather than guessed. A line that is itself a MARKED or an ANNOT record
-# is never also a PROSE record: the surfaces are disjoint by construction, so a starred
-# field can never be miscounted as a claim about how many starred fields there are.
+# PROSE is the hard surface, and it is hard for a specific reason: the banner carries a
+# COMPETING cardinal. It reads "about 2-3 minutes" before it reads "three of them" (six, on the
+# durable form). The decoy is the SAME on either form and survived the split unchanged, which is
+# why the window below needed no retuning for the new member. A reader that took the first
+# number on the line would report 2, agree with nothing, and be wrong in a way that never
+# announces itself. So a number counts only when it is followed — within at most three
+# intervening words, across whitespace or dashes only — by `field`/`fields` or by `of them`.
+# That window is what rejects the decoy, and it was tuned against it rather than guessed. It is
+# also the WHOLE of what this reader counts: a restatement worded any other way — "the three
+# starred questions", "do the 3 starred ones first" — is no PROSE record at all, so the
+# one-statement pin ST1 grades is a pin over this shape and never over every way of saying the
+# number. A line that is itself a field bullet is never also a PROSE record: the surfaces are
+# disjoint by construction, so a starred field can never be miscounted as a claim about how many
+# starred fields there are.
 st_surfaces() {
-  awk -v star="$ST_STAR" -v ndash='–' -v mdash='—' '
+  local sb sbl sbh
+  sb="$(st_boundary "$1")"
+  sbl="$(awk -F'\t' 'NR == 1 && $1 == "LINE" { print $2 + 0 }' <<<"$sb")"
+  sbh="$(awk -F'\t' 'NR == 1 { print (($1 == "LINE") ? "LINE" : $2) }' <<<"$sb")"
+  awk -v star="$ST_STAR" -v ndash='–' -v mdash='—' -v bl="${sbl:-0}" -v how="${sbh:-unresolved}" '
     # cardinal <token> — the integer this token ENDS with at a word boundary, or -1.
     # Anchoring at the end of the token is what enforces the "number, then a separator"
     # shape: rule 4 opens with the list marker "4." and that 4 is NOT a cardinal here,
-    # because a period follows it rather than a space. That single property is the whole
-    # difference between reading the rule and reading its number.
+    # because a period follows it rather than a space. That single property is what keeps
+    # the list marker of a rule about the starred fields from reading as a count of them.
     function cardinal(tok,   c, p, w) {
       if (match(tok, /[0-9]+$/)) {
         c = substr(tok, RSTART, RLENGTH)
@@ -4018,6 +4254,8 @@ st_surfaces() {
       split("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty", nw, " ")
       for (i = 1; i <= 20; i++) NUM[nw[i]] = i
       slen = length(star)
+      bl = bl + 0
+      printf "BOUNDARY\t%d\t%s\n", bl, how
     }
     {
       line = $0; isfield = 0
@@ -4028,6 +4266,8 @@ st_surfaces() {
       # BULLET — the SAME shape with the glyph made OPTIONAL, so every labelled field bullet
       # is emitted and the starred ones are emitted twice, once under each kind. One traversal,
       # one label rule, and therefore no way for the two populations to be read differently.
+      # A field-shaped line is kept out of the PROSE test on shape alone, wherever it sits;
+      # which record it becomes is decided by the boundary alone.
       if (match(line, /^-[ \t]*/)) {
         rest = substr(line, RLENGTH + 1); starred = 0
         if (index(rest, star) == 1) {
@@ -4035,20 +4275,14 @@ st_surfaces() {
         }
         if (match(rest, /^\*\*[^*]+:\*\*/)) {
           lbl = substr(rest, 3, RLENGTH - 5)
-          printf "BULLET\t%d\t%s\t%s\n", FNR, lbl, head
-          if (starred) printf "MARKED\t%d\t%s\t%s\n", FNR, lbl, head
+          if (bl > 0 && FNR < bl) {
+            printf "BULLET\t%d\t%s\t%s\n", FNR, lbl, head
+            if (starred) printf "MARKED\t%d\t%s\t%s\n", FNR, lbl, head
+          } else if (bl > 0 && FNR > bl) {
+            printf "BELOW\t%d\t%s\t%s\n", FNR, lbl, head
+          }
           isfield = 1
         }
-      }
-      # ANNOT — the appendix naming one starred field. Every match on the line, because the
-      # appendix lists several fields per line and only some of them are starred.
-      seg = line
-      while (match(seg, /\*\*[^*]+\*\*[ \t]*\(starred\)/)) {
-        lab = substr(seg, RSTART + 2, RLENGTH - 2)
-        sub(/\*\*[ \t]*\(starred\)$/, "", lab)
-        printf "ANNOT\t%d\t%s\n", FNR, lab
-        seg = substr(seg, RSTART + RLENGTH)
-        isfield = 1
       }
       if (isfield) next
       # PROSE — a claim ABOUT the starred set, so the line must refer to the star at all.
@@ -4072,50 +4306,32 @@ st_surfaces() {
 
 # st_violations <surfaces> — one "<CODE><TAB><detail>" line per disagreement.
 #
-# MARKED is the reference count, because it is the only one of the four homes that is not a
-# restatement of another: the fields ARE the starred set, the rest describe it.
+# MARKED is the reference count, because it is the only one of the two homes that is not a
+# restatement of the other: the fields ARE the starred set, and the banner describes it.
 #
-# PROSE-POP is pinned at EXACTLY two rather than floored at one, and the pin is the point.
-# A floor cannot see the deletion of one of two sites, which is the drift this group was
-# asked to catch — the same reason AR2, AR3 and AR6 pin exact zeros with a stated warrant
-# instead of asserting "not too many". A third assertion added on purpose turns ST red and
-# is declared in the same change. That is the intent rather than the cost.
+# PROSE-POP is pinned at EXACTLY one, and the pin is the point. The banner is the form's ONE
+# statement of the count, so a floor would let a second statement ship green — the further home
+# the form contract forbids — and a deleted banner and a duplicated one are both drift. It is the
+# same reason AR2, AR3 and AR6 pin exact zeros with a stated warrant instead of asserting "not
+# too many". CTL-ST-D1 drives the count below one and CTL-ST-A1 above it, so both directions of
+# the one site are armed by name. What the pin counts is the shape st_surfaces reads, no wider.
 #
-# LABELS-SET and LABELS-ORDER are two codes and not one because a rename and a reorder are
-# different facts about the corpus, and a single verdict covering both would name neither —
-# the CTL-SCOPE rule applied one level up.
+# The appendix's two homes, and the three codes that graded them, left this function in the same
+# change as their arms (ADR-023 D5.4): ST-COV fails on a code with no arm and on an arm naming a
+# code the function cannot emit, so the branches and the arms could not leave apart.
 st_violations() {
   awk -F'\t' '
     $1 == "PROSE"  { np++; pl[np] = $2; pv[np] = $3 }
-    $1 == "MARKED" { nm++; ml[nm] = $3 }
-    $1 == "ANNOT"  { na++; al[na] = $3; if (a1 == "") a1 = $2; a2 = $2 }
+    $1 == "MARKED" { nm++ }
     END {
-      np += 0; nm += 0; na += 0
-      if (np != 2)
-        printf "PROSE-POP\t%d prose count assertion(s) discovered; this template states the starred count in exactly 2 places, the banner and appendix rule 4\n", np
+      np += 0; nm += 0
+      if (np != 1)
+        printf "PROSE-POP\t%d prose count assertion(s) discovered; this template states the starred count in exactly 1 place, the banner\n", np
       if (nm == 0)
         printf "MARKED-EMPTY\tno field carries the star bullet, so the reference count would be a statement over the empty set\n"
-      if (na == 0)
-        printf "ANNOT-EMPTY\tno appendix annotation restates a starred field\n"
       for (i = 1; i <= np; i++)
         if (pv[i] + 0 != nm)
           printf "DISAGREE\tthe prose assertion at line %s says %s; %d field(s) actually carry the star\n", pl[i], pv[i], nm
-      if (na != nm)
-        printf "DISAGREE\tthe appendix restates %d starred field(s), lines %s-%s; %d field(s) actually carry the star\n", na, a1, a2, nm
-      for (i = 1; i <= nm; i++) inm[ml[i]] = 1
-      for (i = 1; i <= na; i++) ina[al[i]] = 1
-      d = ""
-      for (i = 1; i <= nm; i++) if (!(ml[i] in ina)) d = d " marked-only:" ml[i]
-      for (i = 1; i <= na; i++) if (!(al[i] in inm)) d = d " annotated-only:" al[i]
-      if (d != "")
-        printf "LABELS-SET\tthe marked set and the appendix set are not the same set —%s\n", d
-      else {
-        om = ""; oa = ""
-        for (i = 1; i <= nm; i++) om = om "|" ml[i]
-        for (i = 1; i <= na; i++) oa = oa "|" al[i]
-        if (om != oa)
-          printf "LABELS-ORDER\tthe same labels appear in a different order — marked: %s / appendix: %s\n", substr(om, 2), substr(oa, 2)
-      }
     }
   ' <<EOF
 $1
@@ -4149,9 +4365,9 @@ st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 =
 # upper-case letter — so it cannot match the shape it is looking for and report a defect it had
 # just introduced. That is group PF's hazard, avoided by SCOPE rather than by scrubbing a needle.
 #
-# The shape is NOT unique to violation codes: st_surfaces emits PROSE/MARKED/ANNOT/BULLET records
-# in the same shape, and this reader returns those four if it is pointed at that function. Scoping
-# it to st_violations is what makes it a code reader; do not reuse it unscoped.
+# The shape is NOT unique to violation codes: st_surfaces emits BOUNDARY/PROSE/MARKED/BULLET/BELOW
+# records in the same shape, and this reader returns those if it is pointed at that function.
+# Scoping it to an evaluator is what makes it a code reader; do not reuse it unscoped.
 #
 # ── THE OPENING DELIMITER IS A CLASS, AND THE SINGLE-QUOTE LIMB IS LOAD-BEARING ──
 # An evaluator written in awk carries its emissions inside an awk `printf "..."`, so its codes open
@@ -4163,7 +4379,7 @@ st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 =
 # admitted. The quote character is incidental to the shape — what identifies a code is that it
 # HEADS a format string and is followed by the tab separating it from its detail. Broadening cannot
 # lose a match, and it was asserted not to move st_violations' own reading: both spellings return
-# the identical six codes there.
+# the identical code set there.
 #
 # Self-blindness survives by the same argument the narrow form used — the character following the
 # delimiter in the pattern below is a bracket, not an upper-case letter, so the reader cannot match
@@ -4195,9 +4411,9 @@ st_setdiff() {
 #
 # st_codes above answers which CODES an evaluator can emit. These three answer the finer question
 # that reader cannot: which PLACES in it can emit one. A code already covered by an arm can gain a
-# second, third or fourth emission site and a code-level comparison never moves — which is not
-# hypothetical here: st_violations emits DISAGREE from TWO places today, and both are reached by
-# arms that nothing asserts reach them.
+# second, third or fourth emission site and a code-level comparison never moves — which was not
+# hypothetical here: st_violations emitted DISAGREE from TWO places, both reached by arms that
+# nothing asserted reached them, until the appendix home behind one of them was retired.
 #
 #   st_sitemap <body>              -> one row per RAW emission site: "<KEY>\t<CODE>\t<PREFIX>"
 #   st_sites   <body>              -> the DISTINCT keys, first-occurrence order
@@ -4470,11 +4686,12 @@ site_cov_assert() {
 }
 
 # ── THE CROSS-DOCUMENT HALF ──────────────────────────────────────────────────────
-# Everything above grades ONE fact with four homes INSIDE one form. That is AGREEMENT, and
-# agreement is not accuracy: four homes moved together onto a wrong number stay green. The
-# functions below grade the LEVEL — each form's starred set against reference/data-model.md's
-# field table, field for field, each bullet resolved on (section, label), and in BOTH directions
-# — so a coherent four-home edit the model does not carry is RED.
+# Everything above grades ONE fact with two homes INSIDE one form. That is AGREEMENT, and
+# agreement is not accuracy: a banner and a marked set moved together onto a wrong number stay
+# green. The functions below grade the LEVEL — each form's starred set against
+# reference/data-model.md's field table, field for field, each bullet resolved on (section,
+# label), and in BOTH directions — so a coherent edit of both homes the model does not carry is
+# RED.
 #
 # NO COUNT IS WRITTEN DOWN HERE, and that is the whole shape of it. Group HC's comment states
 # the rule: a copy in this file "would be a THIRD home, green while the other two drifted
@@ -4616,7 +4833,7 @@ st3_assert() {
       $1 == "MNS" { printf "      marked-not-in-model: %s — this form stars it and it resolves to no starred row (%s)\n", $2, $3 }
       $1 == "SNM" { printf "      model-starred-not-marked: %s — the table stars it and this form carries the bullet unstarred\n", $2 }'
   else
-    PASS "ST3[$tag]: the $nm field(s) this form marks are EXACTLY the starred rows of reference/data-model.md's field table that this form asks at all — field for field, each bullet resolved on (section, label), both directions, over a denominator of $nb labelled bullet(s) resolved against $ns starred row(s). This is the LEVEL, not the in-form agreement ST1 grades: a coherent edit moving all four of this form's homes together onto a count the model does not carry is caught here and nowhere else. Keyed on bullet presence, so neither a count nor a class-to-form map is spelled in this file. CTL-ST3-FORM and CTL-ST3-MODEL below show this same comparison failing in each direction, and CTL-ST3-NEUTRAL shows it staying silent on a table edit that moves no star"
+    PASS "ST3[$tag]: the $nm field(s) this form marks are EXACTLY the starred rows of reference/data-model.md's field table that this form asks at all — field for field, each bullet resolved on (section, label), both directions, over a denominator of $nb labelled bullet(s) resolved against $ns starred row(s). This is the LEVEL, not the in-form agreement ST1 grades: a coherent edit moving both of this form's homes together onto a count the model does not carry is caught here and nowhere else. Keyed on bullet presence, so neither a count nor a class-to-form map is spelled in this file. CTL-ST3-FORM and CTL-ST3-MODEL below show this same comparison failing in each direction, and CTL-ST3-NEUTRAL shows it staying silent on a table edit that moves no star"
   fi
 }
 
@@ -4664,9 +4881,9 @@ st4_assert() {
   ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
   nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
   if [ "${nread:-0}" -lt 1 ] || [ "${nu:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
-    FAIL "ST4: a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, fields marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
+    FAIL "ST4: $(st_cf_unres_note)a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, fields marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
   elif [ "$nd" -ne 0 ]; then
-    FAIL "ST4: the union of the marked sets across the $nread intake form(s) read this run ($nu field(s), each resolved on (section, label)) is NOT the starred set of reference/data-model.md's field table ($ns row(s)). A star added on one side and not the other is what this arm exists to catch, and the add-only direction is the one no per-form arm can see:"
+    FAIL "ST4: $(st_cf_unres_note)the union of the marked sets across the $nread intake form(s) read this run ($nu field(s), each resolved on (section, label)) is NOT the starred set of reference/data-model.md's field table ($ns row(s)). A star added on one side and not the other is what this arm exists to catch, and the add-only direction is the one no per-form arm can see:"
     printf '%s\n' "$rep" | awk -F'\t' '
       $1 == "UNS" { printf "      marked-on-a-form-not-in-model: %s (%s)\n", $2, $3 }
       $1 == "SNU" { printf "      model-starred-on-no-form: %s — the table stars a label no intake form asks, and ST3 is BLIND to this by construction\n", $2 }'
@@ -4684,7 +4901,7 @@ st4_assert() {
 # st_violations' CODE vocabulary and they record coverage into ST_ARMED, which is ST-COV's second
 # input. Routing a cross-document arm through them would put a token ST-COV cannot find into that
 # accumulator and turn the bijection red — so ST_ARMED is not touched here, ST_CODES stays at the
-# six codes st_violations emits, and ST-COV's arithmetic is byte-unchanged.
+# codes st_violations emits, and ST-COV's arithmetic does not move.
 st3_mustfire() {
   local id="$1" tf="$2" df="$3" side="$4" lbl="$5" what="$6" landed=0 rep hit n live
   cmp -s "$ST_FILE" "$tf" && cmp -s "$ST_DM" "$df" || landed=1
@@ -4807,14 +5024,15 @@ st_mustnotfire() {
 
 # The code set st_violations can emit, read from the function's own body ONCE: it is a property of
 # the EVALUATOR, not of any one template, so it is derived here and compared per member below.
-# Neither the codes nor their number is spelled in this file — a seventh code arrives in ST_CODES
+# Neither the codes nor their number is spelled in this file — a further code arrives in ST_CODES
 # by being written into the function, and nothing here has to be told about it.
 ST_CODES="$(st_codes "$(declare -f st_violations)")"
 ST_NCODES="$(printf '%s\n' "$ST_CODES" | grep -c '[^[:space:]]')"
 # The EMISSION SITES the same function can emit FROM, derived once from the same body and for the
 # same reason: a site is a property of the EVALUATOR and not of any one template. One rung below
-# ST_CODES, and the gap between them is the whole of this arm's subject — the code set and the
-# site set are not the same size here, because one code is emitted from two places.
+# ST_CODES, and the gap between them is the whole of this arm's subject — the two sets need not be
+# the same size, because a code emitted from several places is ONE member of the first and several
+# of the second. Today each code has one site, so the gap is zero and this arm is what keeps it so.
 ST_SITE_BODY="$(declare -f st_violations)"
 ST_SITEMAP="$(st_sitemap "$ST_SITE_BODY")"
 ST_COV_PROBE='ZZ-ST-COVERAGE-PROBE'
@@ -4866,26 +5084,26 @@ ST_ARMED=""
 # EMITTED, which is the stronger proposition for a site — this branch was reached by an input the
 # suite runs — and it is the only one available. Per MEMBER, for the reason stated above.
 ST_ARMED_SITES=""
-ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_NANNOT=0; ST_NGLYPH=0; ST_NBULLET=0
+ST_SURF=""; ST_NPROSE=0; ST_NMARK=0; ST_BLINE=0; ST_NGLYPH=0; ST_NBULLET=0
 if [ -r "$ST_FILE" ]; then
   ST_SURF="$(st_surfaces "$ST_FILE")"
   ST_NPROSE="$(st_n PROSE "$ST_SURF")"
   ST_NMARK="$(st_n MARKED "$ST_SURF")"
-  ST_NANNOT="$(st_n ANNOT "$ST_SURF")"
+  ST_BLINE="$(st_field BOUNDARY 1 2 "$ST_SURF")"
   ST_NBULLET="$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $3 }' | awk 'NF && !seen[$0]++' | grep -c '[^[:space:]]')"
   ST_NGLYPH="$(awk -v star="$ST_STAR" '{ s = $0; while ((p = index(s, star)) > 0) { n++; s = substr(s, p + length(star)) } } END { print n + 0 }' "$ST_FILE")"
 fi
 
-printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) / %s appendix annotation(s) in %s, over %s star glyph(s) in the file and %s distinct labelled field bullet(s) — the denominator ST3 intersects\n' \
-  "$ST_NPROSE" "$ST_NMARK" "$ST_NANNOT" "$ST_REL" "$ST_NGLYPH" "$ST_NBULLET"
+printf '  SURFACES: %s prose count assertion(s) / %s marked field(s) in %s above the boundary at line %s, over %s star glyph(s) in the file and %s distinct labelled field bullet(s) — the denominator ST3 intersects\n' \
+  "$ST_NPROSE" "$ST_NMARK" "$ST_REL" "${ST_BLINE:-0}" "$ST_NGLYPH" "$ST_NBULLET"
 
 if [ ! -r "$ST_FILE" ]; then
   FAIL "ST0[$ST_TAG]: $ST_REL is missing or unreadable, so every verdict below would be about a file this suite never read. This population exists by construction — a tracked file — so its absence is a FAILURE and never a skip"
   ST_OK=0
-elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ] && [ "$ST_NANNOT" -gt 0 ]; then
-  PASS "ST0[$ST_TAG]: all three of the IN-FORM surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s), $ST_NMARK marked field(s), $ST_NANNOT appendix annotation(s), each found by markup shape and reporting the line it was found on. A zero on any of them would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here. The fourth surface — the $ST_NBULLET distinct labelled field bullet(s) the same reader discovers — is gated by ST3's own limb rather than here, so an empty bullet set fails naming ST3 instead of naming three surfaces that were found"
+elif [ "$ST_NPROSE" -gt 0 ] && [ "$ST_NMARK" -gt 0 ]; then
+  PASS "ST0[$ST_TAG]: both of the IN-FORM surfaces have a NON-EMPTY population — $ST_NPROSE prose assertion(s) and $ST_NMARK marked field(s), each found by markup shape and reporting the line it was found on. A zero on either would make every verdict below a statement over the empty set; the exact prose population is pinned by ST1, not here. The third surface — the $ST_NBULLET distinct labelled field bullet(s) the same reader discovers — is gated by ST3's own limb rather than here, so an empty bullet set fails naming ST3 instead of naming two surfaces that were found"
 else
-  FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK annotations=$ST_NANNOT) — a zero here is a broken probe or a restructured template, not a clean file, and ST1 below would be asserting agreement among surfaces it never found"
+  FAIL "ST0[$ST_TAG]: a surface came back EMPTY (prose=$ST_NPROSE marked=$ST_NMARK) — a zero here is a broken probe, a restructured template, or a boundary that did not resolve, which empties the field surfaces by design and which ST-CF names; it is never a clean file, and ST1 below would be asserting agreement among surfaces it never found"
   ST_OK=0
 fi
 
@@ -4916,16 +5134,16 @@ elif [ "$ST_SITE_NK" -ne "$ST_SITE_RAW" ]; then
   FAIL "ST-SITE0[$ST_TAG]: $ST_SITE_RAW raw emission site(s) collapse to only $ST_SITE_NK distinct key(s) — key(s) ${ST_SITE_DUP% } are each produced by TWO OR MORE emission sites whose detail opens with the same literal, so those sites are indistinguishable in the output and the population below is UNDER-REPORTED. Give one of them a distinguishing literal head; a smaller denominator reading as full coverage is exactly the failure this arm exists to refuse"
   ST_SITE_OK=0
 else
-  PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades, and the gap is the point: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
+  PASS "ST-SITE0[$ST_TAG]: the emission-site reader is non-degenerate and unambiguous — $ST_SITE_RAW raw site(s) resolving to $ST_SITE_NK distinct key(s), an EQUALITY between two non-zero counts rather than a zero, so it cannot pass over an empty read. The $ST_SITE_NK site(s) sit one rung below the $ST_NCODES code(s) ST-COV grades: a code emitted from several places is ONE member of that set and several of this one. What ST-SITE compares this against is recorded from what the evaluator ACTUALLY EMITTED when each arm ran, never from the code an arm declared it wanted — an arm can name a code and cannot name a site"
 fi
 
 if [ "$ST_OK" -eq 1 ]; then
   ST_VIOL="$(st_violations "$ST_SURF")"
   ST_NVIOL="$(printf '%s\n' "$ST_VIOL" | grep -c '[^[:space:]]')"
   if [ "$ST_NVIOL" -eq 0 ]; then
-    PASS "ST1[$ST_TAG]: all four homes of the starred count agree — $ST_NMARK marked field(s), both prose assertions reading $ST_NMARK, and $ST_NANNOT appendix annotation(s) carrying the same labels in the same order. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface"
+    PASS "ST1[$ST_TAG]: both homes of the starred count agree — $ST_NMARK marked field(s), and the one prose assertion, the banner's, reading $ST_NMARK. The zero is a measurement: the CTL-ST arms below show this same evaluator failing on a single-surface mutation of every kind it can report and staying silent on two edits that change no surface. It is a measurement over the shape the prose reader counts, and a restatement worded outside that shape is not read"
   else
-    FAIL "ST1[$ST_TAG]: $ST_NVIOL disagreement(s) among the four homes of the starred count in $ST_REL — one of them was updated and the others were not:"
+    FAIL "ST1[$ST_TAG]: $ST_NVIOL disagreement(s) between the two homes of the starred count in $ST_REL — one of them was updated and the other was not, or the count is stated somewhere other than the banner:"
     printf '%s\n' "$ST_VIOL" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
   fi
 
@@ -4941,8 +5159,8 @@ if [ "$ST_OK" -eq 1 ]; then
     FAIL "ST-AR3[$ST_TAG]: AR_NTPL reads '${AR_NTPL:-unset}' rather than 0 — group ST has pulled a template into the selector and falsified AR3, which is the one thing this group was required not to do"
   fi
 
-  # ST3 — the LEVEL, per form. Everything above this line grades agreement among this form's own
-  # four homes; this grades the set those homes describe against reference/data-model.md's field
+  # ST3 — the LEVEL, per form. Everything above this line grades agreement between this form's own
+  # two homes; this grades the set those homes describe against reference/data-model.md's field
   # table. The shipping arm IS st3_assert, called here and registered in group MD, so what the
   # registration grades and what this line renders cannot come apart.
   st3_assert "$ST_FILE" "$ST_DM"
@@ -4963,30 +5181,16 @@ fi
 # from the surface it is meant to exercise.
 if [ "$ST_OK" -eq 1 ]; then
   ST_PL1="$(st_field PROSE 1 2 "$ST_SURF")";  ST_PV1="$(st_field PROSE 1 3 "$ST_SURF")"
-  ST_PL2="$(st_field PROSE 2 2 "$ST_SURF")";  ST_PV2="$(st_field PROSE 2 3 "$ST_SURF")"
   ST_ML1="$(st_field MARKED 1 2 "$ST_SURF")"; ST_MB1="$(st_field MARKED 1 3 "$ST_SURF")"
-  ST_AL1="$(st_field ANNOT 1 2 "$ST_SURF")"
 
   ST_FX="$(st_fixture m1)"; st_bump "$ST_FX" "$ST_PL1" "$ST_PV1"
-  st_mustfire "CTL-ST-M1[$ST_TAG]" "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields and the appendix untouched"
-
-  ST_FX="$(st_fixture m2)"; st_bump "$ST_FX" "$ST_PL2" "$ST_PV2"
-  st_mustfire "CTL-ST-M2[$ST_TAG]" "$ST_FX" DISAGREE "the APPENDIX RULE-4 numeral alone is restated as $((ST_PV2 - 1)) at line $ST_PL2, with the banner and the annotations untouched"
+  st_mustfire "CTL-ST-M1[$ST_TAG]" "$ST_FX" DISAGREE "the BANNER numeral alone is restated as $((ST_PV1 - 1)) at line $ST_PL1, with the marked fields untouched"
 
   ST_FX="$(st_fixture m3)"; st_line_sub "$ST_FX" "$ST_ML1" "${ST_STAR}[ ]*" ""
-  st_mustfire "CTL-ST-M3[$ST_TAG]" "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving every numeral and every annotation as it was"
-
-  ST_FX="$(st_fixture m4)"; st_line_sub "$ST_FX" "$ST_AL1" "[ ]*[(]starred[)]" ""
-  st_mustfire "CTL-ST-M4[$ST_TAG]" "$ST_FX" DISAGREE "ONE appendix annotation is dropped at line $ST_AL1, leaving both numerals and every marked field as they were"
+  st_mustfire "CTL-ST-M3[$ST_TAG]" "$ST_FX" DISAGREE "the star is stripped from ONE marked field ('$ST_MB1', line $ST_ML1), leaving the banner numeral as it was"
 
   ST_FX="$(st_fixture d1)"; st_line_del "$ST_FX" "$ST_PL1"
-  st_mustfire "CTL-ST-D1[$ST_TAG]" "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1) — the case a count-only comparison passes, because the remaining numeral still agrees"
-
-  ST_FX="$(st_fixture d2)"; st_line_del "$ST_FX" "$ST_PL2"
-  st_mustfire "CTL-ST-D2[$ST_TAG]" "$ST_FX" PROSE-POP "the APPENDIX RULE-4 assertion is DELETED outright (line $ST_PL2), the same hole at the other site"
-
-  ST_FX="$(st_fixture r1)"; st_line_sub "$ST_FX" "$ST_ML1" "[*][*]$ST_MB1:[*][*]" "**$ST_MB1 (renamed):**"
-  st_mustfire "CTL-ST-R1[$ST_TAG]" "$ST_FX" LABELS-SET "ONE marked field is RENAMED ('$ST_MB1', line $ST_ML1) and every count is left equal, so only a label-for-label comparison can see it"
+  st_mustfire "CTL-ST-D1[$ST_TAG]" "$ST_FX" PROSE-POP "the BANNER assertion is DELETED outright (line $ST_PL1), taking the prose population below its pin of one — the case a comparison of the numerals it finds passes, because nothing left disagrees"
 
   # R2 is the subtle one: the banner keeps its glyph and keeps its numeral, but stops being
   # a countable assertion. It is the failure a count-only comparison cannot see, because
@@ -5000,75 +5204,52 @@ if [ "$ST_OK" -eq 1 ]; then
     FAIL "CTL-ST-R2[$ST_TAG]: MUST FIRE — the reword was supposed to leave the glyph on line $ST_PL1 and did not, so this arm would be testing deletion rather than the reword it is named for"
   fi
 
-  # ── LABELS-ORDER, MARKED-EMPTY and ANNOT-EMPTY each have a branch in st_violations and,
-  # until these three arms, had nothing showing the branch can be REACHED. An emitted code no
-  # arm has been observed firing is a claim about the evaluator rather than a measurement of
-  # it — the standard the arms above already meet, applied to the three codes that
-  # shipped without it. Each is provoked ALONE, and each asserts its OWN code rather than
-  # settling for a red, because a red proves only that something fired.
+  # A1 — the OTHER direction of PROSE-POP's one site. A SECOND statement of the count, agreeing
+  # with the marked fields, is appended BELOW the boundary — where a stopped reader would never see
+  # it, which is why PROSE is not stopped. D1 and R2 drive the count below one; this drives it
+  # above, so both directions of the pin are armed by name rather than one of them assumed.
+  ST_FX="$(st_fixture a1)"; printf '\nThe %s starred fields come first.\n' "$(st_word "$ST_NMARK")" >> "$ST_FX"
+  st_mustfire "CTL-ST-A1[$ST_TAG]" "$ST_FX" PROSE-POP "a SECOND statement of the starred count, agreeing with the marked fields, is appended below the boundary — the further home the form contract forbids"
 
-  # O1 — a pure REORDER, the case LABELS-ORDER was split from LABELS-SET to name. Transposing
-  # two appendix annotations leaves both label SETS equal and every count untouched, so
-  # LABELS-SET is silent by construction and LABELS-ORDER is the only surface that can still
-  # see the edit. The two sites must be distinct lines: one sub() per call means a
-  # transposition inside a single line would rewrite the label this arm had just written and
-  # cancel to no edit, so the precondition is GRADED rather than assumed, the way R2 grades
-  # its own.
-  ST_AB1="$(st_field ANNOT 1 3 "$ST_SURF")"
-  ST_AL2="$(st_field ANNOT 2 2 "$ST_SURF")"; ST_AB2="$(st_field ANNOT 2 3 "$ST_SURF")"
-  if [ "$ST_AL1" != "$ST_AL2" ]; then
-    ST_FX="$(st_fixture o1)"
-    st_line_sub "$ST_FX" "$ST_AL1" "[*][*]$ST_AB1[*][*]" "**$ST_AB2**"
-    st_line_sub "$ST_FX" "$ST_AL2" "[*][*]$ST_AB2[*][*]" "**$ST_AB1**"
-    st_mustfire "CTL-ST-O1[$ST_TAG]" "$ST_FX" LABELS-ORDER "the appendix's first two annotations are TRANSPOSED ('$ST_AB1' at line $ST_AL1 with '$ST_AB2' at line $ST_AL2), so both sets stay equal and every count stays put — the one edit only an order-aware comparison can see"
-  else
-    FAIL "CTL-ST-O1[$ST_TAG]: MUST FIRE — the first two appendix annotations both sit on line $ST_AL1, so transposing them would cancel to no edit and this arm would grade nothing. LABELS-ORDER needs two annotations on distinct lines to be provoked"
-  fi
+  # ── MARKED-EMPTY has a branch in st_violations and, until the arm below, had nothing showing
+  # the branch can be REACHED. An emitted code no arm has been observed firing is a claim about
+  # the evaluator rather than a measurement of it. It is provoked ALONE, and it asserts its OWN
+  # code rather than settling for a red, because a red proves only that something fired.
 
   # E1 — the MARKED surface emptied outright. The star is stripped from every marked bullet
   # the probe DISCOVERED, one sub per RECORD rather than one per line, so the several-per-line
   # shape st_surfaces already handles is emptied too. MARKED-EMPTY is what stops ST1's "the
   # fields ARE the reference count" from becoming a statement over the empty set: without this
-  # arm, a template that had lost every star could still be reported as four homes in
+  # arm, a template that had lost every star could still be reported as two homes in
   # agreement about nothing.
   ST_FX="$(st_fixture e1)"; ST_I=1
   while [ "$ST_I" -le "$ST_NMARK" ]; do
     st_line_sub "$ST_FX" "$(st_field MARKED "$ST_I" 2 "$ST_SURF")" "${ST_STAR}[ ]*" ""
     ST_I=$((ST_I + 1))
   done
-  st_mustfire "CTL-ST-E1[$ST_TAG]" "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the three homes that merely describe it describing nothing"
-
-  # E2 — the ANNOT surface emptied the same way and for the same reason: the appendix's
-  # per-field restatement is the home ST1 compares label FOR label, and a zero there would
-  # make that comparison vacuous while both numerals still agreed with the marked set.
-  ST_FX="$(st_fixture e2)"; ST_I=1
-  while [ "$ST_I" -le "$ST_NANNOT" ]; do
-    st_line_sub "$ST_FX" "$(st_field ANNOT "$ST_I" 2 "$ST_SURF")" "[ ]*[(]starred[)]" ""
-    ST_I=$((ST_I + 1))
-  done
-  st_mustfire "CTL-ST-E2[$ST_TAG]" "$ST_FX" ANNOT-EMPTY "all $ST_NANNOT appendix annotations are dropped, leaving the marked fields and both numerals standing with nothing restating them field by field"
+  st_mustfire "CTL-ST-E1[$ST_TAG]" "$ST_FX" MARKED-EMPTY "the star is stripped from ALL $ST_NMARK marked field(s), taking the reference count itself to zero and leaving the banner that merely describes it describing nothing"
 
   ST_FX="$(st_fixture clean)"
   st_mustnotfire "CTL-ST-CLEAN[$ST_TAG]" "$ST_FX" 0 "an UNMUTATED copy of the real file is put through the same evaluator, which is the baseline that makes every must-fire arm above mean something"
 
   ST_FX="$(st_fixture neutral)"; st_line_sub "$ST_FX" "$ST_ML1" "[[]" "[Reworded hint — "
-  st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label, no glyph and no annotation"
+  st_mustnotfire "CTL-ST-NEUTRAL[$ST_TAG]" "$ST_FX" 1 "the bracketed HINT inside a marked field is reworded (line $ST_ML1), changing the file but no surface — no numeral, no label and no glyph"
 
-  # ── The CROSS-DOCUMENT control arms. Same discipline as the four-home arms above — every
+  # ── The CROSS-DOCUMENT control arms. Same discipline as the in-form arms above — every
   # mutation lands on a COPY under $WORK and is asserted to have landed before any verdict is
   # read — with one difference that matters: there are now TWO documents, so each arm mutates
   # exactly ONE of them and leaves the other byte-untouched. An arm that moved both would pass
   # whatever the comparison did.
   #
   # They do NOT route through st_mustfire/st_mustnotfire. Those record coverage into ST_ARMED,
-  # which is ST-COV's second input and is keyed to st_violations' six codes; a cross-document
+  # which is ST-COV's second input and is keyed to the codes st_violations emits; a cross-document
   # arm recorded there would be a phantom ST-COV could not match. ST_ARMED is untouched below.
 
-  # CTL-ST3-FORM — MUST FIRE, and this arm IS the card's own worked mutant: a FOURTH field is
-  # starred on the trip form (a seventh on the durable one). That is the coherent edit ST1 stays
-  # green on once the banner, rule 4 and the appendix move with it — so it is the one input that
-  # shows ST3 grading a LEVEL rather than an agreement. The target is a bullet the probe
-  # DISCOVERED and that the model does NOT star, so the mutation is a real addition to this
+  # CTL-ST3-FORM — MUST FIRE, and this arm IS the card's own worked mutant: ONE MORE field is
+  # starred on the form. That is the coherent edit ST1 stays green on once the banner moves with
+  # it — so it is the one input that shows ST3 grading a LEVEL rather than an agreement. The
+  # target is a bullet the probe DISCOVERED and that the model does NOT star, so the mutation is
+  # a real addition to this
   # form's starred set rather than a no-op on one already there.
   # The target is found by RESOLVING the form's bullets, exactly as the comparison does: the first
   # bullet, in file order, whose (section, label) resolves ONE to an unstarred row.
@@ -5152,9 +5333,10 @@ if [ "$ST_OK" -eq 1 ]; then
   # CTL invoke with their own extractors: ONE implementation, three consumers. Nothing about this
   # group's proposition moved into the helper except the arithmetic that was already identical.
   #
-  # st_violations is UNCHANGED and so is ST_CODES — the derivation and the population two sibling
-  # cards in this release rest on are exactly as they were. What is passed here is that same
-  # ST_CODES, together with the function body the control arm mutates a copy of.
+  # The derivation is unchanged: what is passed here is ST_CODES as read from st_violations' own
+  # body, together with the function body the control arm mutates a copy of. When the appendix
+  # homes were retired their codes left that body and their arms left this loop in the same
+  # change, which is the only order in which this verdict stays green between the two.
   #
   # Graded here, LAST, because its second input is the set of arms that ran.
   cov_assert "ST-COV[$ST_TAG]" 'CTL-ST-COV' "[$ST_TAG]" 'st_violations' \
@@ -5164,9 +5346,10 @@ if [ "$ST_OK" -eq 1 ]; then
   # ── ST-SITE — the SAME proposition one rung finer, read together with ST-COV above so the
   # granularity ladder is visible in the OUTPUT rather than only in a comment. ST-COV asks whether
   # every code this evaluator can emit has an arm; this asks whether every PLACE it can emit one
-  # from was reached. The residual between them is real and measured: one code here is emitted
-  # from two places, and until this line existed a third could be added with no arm behind it and
-  # nothing in this suite would have moved.
+  # from was reached. The residual between them was real and measured: one code here was emitted
+  # from two places, and until this line existed a third could have been added with no arm behind
+  # it and nothing in this suite would have moved. Each code has one site today; this arm is what
+  # keeps a second from arriving silently.
   #
   # Same helper, same four limbs in the same order, a different extractor and a different
   # accumulator — which is exactly the substitution cov_assert was parameterised for. The probe
@@ -5229,7 +5412,7 @@ ST4_GOT="landed=$ST4_LANDED st4-names-the-addition=$ST4_HIT st4-differences=$ST4
 if [ "$ST4_GOT" = "$ST4_WANT" ]; then
   PASS "CTL-ST4-ADD: MUST FIRE, ADD-ONLY — a starred field-table row for '$ST4_PHANTOM', a field no intake form asks, is APPENDED to a copy of reference/data-model.md with every existing declaration on both sides left intact. ST4 names exactly that label under model-starred-on-no-form and reports exactly one difference, while ST3 stays silent on all $ST4_NMEM member(s) over the SAME mutated model and is asserted non-degenerate on each. That silence is not a gap — it is ST3's declared blind spot, measured here rather than reasoned about, and it is the entire warrant for ST4 existing as a separate arm"
 else
-  FAIL "CTL-ST4-ADD: MUST FIRE, ADD-ONLY — the appended starred row for '$ST4_PHANTOM' was not graded as expected. Read '$ST4_GOT' against '$ST4_WANT'. If st4-names-the-addition is 0 the add-only direction is UNCOVERED and ST4's verdict above proves nothing; if st3-silent-and-live fell short, either ST3 is no longer blind to an addition — in which case this arm's warrant needs rewriting rather than patching — or a member's comparison went degenerate and its silence was never earned"
+  FAIL "CTL-ST4-ADD: $(st_cf_unres_note)MUST FIRE, ADD-ONLY — the appended starred row for '$ST4_PHANTOM' was not graded as expected. Read '$ST4_GOT' against '$ST4_WANT'. If st4-names-the-addition is 0 the add-only direction is UNCOVERED and ST4's verdict above proves nothing; if st3-silent-and-live fell short, either ST3 is no longer blind to an addition — in which case this arm's warrant needs rewriting rather than patching — or a member's comparison went degenerate and its silence was never earned"
 fi
 
 # CTL-ST3-EXTRACT — MUST FIRE the NON-DEGENERACY limb, on the probe itself rather than on the
@@ -5255,7 +5438,755 @@ ST3_EXGOT="stripped-extraction=$ST3_NT_N real-extraction-nonempty=$ST3_RLOK stri
 if [ "$ST3_EXGOT" = "$ST3_EXWANT" ]; then
   PASS "CTL-ST3-EXTRACT: MUST FIRE — with every field-table row removed from a COPY of reference/data-model.md the extractor returns the EMPTY set, and st3_assert over it reports exactly one FAIL and no PASS; over the real document, which yields $ST3_RL_N starred row(s), the same assertion reports exactly one PASS and no FAIL. So ST3's silence is a reading of a document that was actually parsed, and an extractor that had quietly stopped finding rows could not reach a PASS here. This arm is the compensating control for the file-subject opt-out declared in group MD"
 else
-  FAIL "CTL-ST3-EXTRACT: MUST FIRE — the extractor's non-degeneracy limb did not behave. Read '$ST3_EXGOT' against '$ST3_EXWANT'. A stripped-verdict other than '0 1' means an empty extraction can reach a PASS, which makes every ST3 and ST4 verdict above a statement over a document this suite may never have read"
+  FAIL "CTL-ST3-EXTRACT: $(st_cf_unres_note)MUST FIRE — the extractor's non-degeneracy limb did not behave. Read '$ST3_EXGOT' against '$ST3_EXWANT'. A stripped-verdict other than '0 1' means an empty extraction can reach a PASS, which makes every ST3 and ST4 verdict above a statement over a document this suite may never have read"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# ST-CF — THE FORM CONTRACT, graded on every DECLARED form. ADR-023 § D2.6 states six decidable
+# questions a form must answer to be interviewable. This arm asks them of every member of
+# ST_CF_FORMS, declared above group FT, and names each finding by its question.
+#
+# ── WHAT EACH QUESTION GRADES — D2.6 AS WRITTEN, AND NOTHING THE CONTRACT DOES NOT STATE ──
+#   Q1  exactly one intake-form fence, closed, above the boundary; each key the contract
+#       declares appears in it exactly once, no undeclared key appears, and `form:` names the
+#       form itself. KEY ORDER AND LINE LAYOUT ARE NOT GRADED, because the contract states
+#       neither: a copy with its keys reordered, or with a blank or comment line among them,
+#       conforms. The key set is read LIVE from ADR-023's one worked fence, never copied here.
+#   Q2  the literal `boundary:` names occurs as exactly one WHOLE line, and the end-of-profile
+#       heading begins exactly one line, the one immediately above it.
+#   Q3  every labelled bullet above the boundary joins exactly one row of the table the
+#       `classification:` key addresses, on (section, label), through group FT's resolver; and
+#       the address resolves — its path is the table this arm joins, and each `§ A → B` segment
+#       leads exactly one of that table's headings, fenced examples skipped.
+#   Q4  no labelled bullet sits below the boundary.
+#   Q5  `writer:` is human; the fence's `writer:` and `output:` agree with the frontmatter's
+#       `writer:` and `artifact:`; and no heading or bullet above the boundary is marked
+#       [DERIVED] or [ENRICH].
+#   Q6  at its DECIDABLE half, and only there: a closed/open marker at the HEAD of a bullet's
+#       bracketed placeholder is well-formed — `closed` or `open` in lower case, then a colon and
+#       one space — and is not followed by a second one. Text later in the bracket is prose, so
+#       `open:` in the middle of a hint is never a finding. Whether a field OWES a marker is a
+#       reviewer's call (ADR-023 R11), so an unmarked bracket is never a finding either, and a
+#       form with no option-bearing field passes.
+#   VERSION  the fence names a contract version this arm does not grade. The evaluator reads
+#       the version from its OWN fence reading and dispatches on it BEFORE the boundary is
+#       consulted, so an unsupported version is named as that and never as a boundary fault.
+#       Version 1 is the only version graded here; a later version gains a branch at that
+#       dispatch, and the codes above are the questions every version answers.
+#
+# ── IDS, AND WHY NO ID CARRIES A SPACE ──────────────────────────────────────────
+# The form verdict is ST-CF[<form>], <form> the file's basename without `.template.md`. A
+# contract that partitions a form into regions reports each region as ST-CF[<form>/<slug>] — a
+# lower-case, hyphen-joined slug, with a numeric suffix on a repeat — and never with a space:
+# PASS and FAIL record an id as the text before the first colon, and group RS splits that record
+# on whitespace, so a spaced id would enter the run as several phantom groups. A version-1 form
+# is ONE region, its whole profile half, so no region id is rendered on this tree.
+#
+# ── EVERY ARM IS A DELTA, AND EVERY MEMBER'S ARMS ARE GATED ON ITS BOUNDARY ─────
+# Each must-fire arm mutates ONE thing on a copy of a member and passes only if its code RISES
+# against that member's own live reading; each must-not-fire arm passes only if the copy's
+# findings EQUAL the live reading's. So a form that already fails a question still has honest
+# arms, and no arm can pass on a finding it inherited. Every arm mutates a copy of a form whose
+# boundary resolves, so a member whose boundary does not resolve is named ONCE, by its entry
+# gate, while ST-CF[<form>] names the question.
+#
+# ── COVERAGE IS GRADED ONCE, OVER THE RUN ───────────────────────────────────────
+# The codes and emission sites of st_cf_violations are read from its own body, and the arms
+# every member ran accumulate into one armed set graded after the last member: a site one
+# contract version reaches is one a member on another version cannot, so a per-member bijection
+# could not hold across versions.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "  ── the form contract, over the declared population"
+
+# st_cf_decl_read <record> — the contract's declared keys, read from the record's ONE worked
+# `intake-form` fence: KEY<TAB>k per key, in the fence's order, or a single FAIL<TAB>why. It
+# refuses a record whose Status reads Superseded, a worked fence that is absent, doubled or never
+# closed, and one carrying a line that is not a key line — each of which would otherwise hand every
+# form a contract nobody declares, because a superseded record keeps its fence and a lost closer
+# turns the prose after it into "keys". The fence is located with the shared fence-state helper,
+# so a fenced example elsewhere in the record is text and never the declaration.
+st_cf_decl_read() {
+  awk "$ST_CF_FENCE_FN"'
+    BEGIN { hdr = 1 }
+    hdr && /^## / { hdr = 0 }
+    hdr && index($0, "- **Status:**") == 1 { ns++; st = substr($0, length("- **Status:**") + 1); sub(/^[ \t]+/, "", st) }
+    {
+      s = cf_fence_step($0)
+      if (s == "O" && CF_INFO == "intake-form") { nf++; if (nf == 1) { on = 1; fo = NR }; next }
+      if (on && s == "C") { on = 0; closed = 1; next }
+      if (on) { if (cf_keyline($0)) k[++nk] = CF_KEY; else if (bad == "") bad = NR }
+    }
+    END {
+      if (ns + 0 != 1) { printf "FAIL\tthe record carries %d Status line(s) in its header block, and exactly one is read\n", ns + 0; exit }
+      if (st ~ /^Superseded/) { printf "FAIL\tthe record reads %s, so its worked fence no longer declares the contract\n", st; exit }
+      if (nf + 0 != 1) { printf "FAIL\tthe record carries %d worked intake-form fence(s), and exactly one is read\n", nf + 0; exit }
+      if (!closed) { printf "FAIL\tthe worked intake-form fence opened at line %d is never closed\n", fo; exit }
+      if (bad != "") { printf "FAIL\tline %d of the worked fence is not a key line, so the fence is not the declaration it is read as\n", bad; exit }
+      if (nk + 0 == 0) { printf "FAIL\tthe worked fence declares no key\n"; exit }
+      for (i = 1; i <= nk; i++) printf "KEY\t%s\n", k[i]
+    }' "$1"
+}
+st_cf_decl_keys() { awk -F'\t' '$1 == "KEY" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
+st_cf_decl_why() { awk -F'\t' '$1 == "FAIL" { print $2 }' <<<"$(st_cf_decl_read "$1")"; }
+
+# st_cf_violations <form> <member> <data-model> — one "<CODE><TAB><detail>" record per finding, codes
+# Q1 to Q6 and VERSION, closed by ONE record `DENOM <graded-bullets> <version>`, space-separated so
+# it is never read as a code. Four inputs arrive as one stream separated by FS-byte marker lines,
+# because awk -v aborts on a multi-line value: the contract's keys, the form's surfaces, the
+# resolver's answers for its bullets, and the data model's unfenced headings; the form follows.
+st_cf_violations() {
+  local f="$1" member="$2" dm="$3" cfk cfs cfr cfh
+  cfk="$(st_cf_decl_keys "$ST_CF_DECL")"
+  cfs="$(st_surfaces "$f")"
+  cfr="$(awk -F'\t' '$1 == "BULLET" { print $4 "\t" $3 "\t" $2 }' <<<"$cfs" | ft_resolve <(ft_rows "$dm") 2>/dev/null)"
+  cfh="$(awk "$ST_CF_FENCE_FN"'
+    { if (cf_fence_step($0) != "") next }
+    /^#+ / { sub(/^#+ /, ""); sub(/[ \t\r]+$/, ""); print }' "$dm")"
+  { printf '%s\n\034\n' "$cfk"; printf '%s\n\034\n' "$cfs"; printf '%s\n\034\n' "$cfr"; printf '%s\n\034\n' "$cfh"; cat "$f"; } |
+  awk -F'\t' -v member="$member" -v tbl="${ST_DM#"$ROOT/"}" -v hd="$ST_CF_HEAD" "$FT_LEAD_FN""$ST_CF_FENCE_FN"'
+    $0 == "\034" { sec++; next }
+    sec == 0 { if ($0 != "") { ndk++; DK[ndk] = $0; ISDK[$0] = 1 }; next }
+    sec == 1 {
+      if ($1 == "BOUNDARY") { bl = $2 + 0; bhow = $3 }
+      else if ($1 == "BULLET") { nb++; bln[nb] = $2; blb[nb] = $3 }
+      else if ($1 == "BELOW")  { nw++; wln[nw] = $2; wlb[nw] = $3 }
+      next
+    }
+    sec == 2 { if ($0 != "") { nr++; rst[nr] = $1; rid[nr] = $2; rhd[nr] = $3; rlb[nr] = $4; rln[nr] = $5 }; next }
+    sec == 3 { if ($0 != "") th[++nth] = $0; next }
+    { L[++n] = $0 }
+    END {
+      cf_form_fence(L, n)
+      nf = CF_NF; fo = CF_FO; fc = CF_FC
+      if (nf != 1) printf "Q1\tthe form carries %d intake-form fence opener(s), and exactly one is required\n", nf
+      if (nf == 1 && CF_WHY != "") printf "Q1\tthe intake-form fence opened at line %d is not closed: %s\n", fo, CF_WHY
+      usable = (nf == 1 && CF_WHY == "")
+      if (usable) {
+        for (i = 1; i <= CF_NK; i++) { nkey[CF_K[i]]++; fv[CF_K[i]] = CF_V[i] }
+        for (i = 1; i <= ndk; i++)
+          if (nkey[DK[i]] + 0 != 1)
+            printf "Q1\tthe declared key %s appears %d time(s) in the fence, and exactly once is required\n", DK[i], nkey[DK[i]] + 0
+        for (i = 1; i <= CF_NK; i++)
+          if (!(CF_K[i] in ISDK) && !(CF_K[i] in und)) {
+            und[CF_K[i]] = 1
+            printf "Q1\tthe fence carries the key %s, which the contract does not declare\n", CF_K[i]
+          }
+        if (("form" in fv) && fv["form"] != member) printf "Q1\tform: reads %s, but this form is declared as %s\n", fv["form"], member
+        if (bl > 0 && fc >= bl) printf "Q1\tthe fence ends at line %d, at or below the boundary at line %d\n", fc, bl
+      }
+      # THE DISPATCH, on this reading of the fence and ahead of the boundary gate below: the only
+      # version graded here is 1, and every other value, the absent one included, is named here.
+      ver = (usable && ("form-version" in fv)) ? fv["form-version"] : ""
+      if (usable && ver != "1") {
+        printf "VERSION\tform-version: reads %s, which is not a version this arm grades\n", (ver == "" ? "nothing" : ver)
+        printf "DENOM %d %s\n", nb + 0, (ver == "" ? "-" : ver)
+        exit
+      }
+      if (bl == 0) printf "Q2\tthe boundary does not resolve: %s\n", bhow
+      else {
+        nh = 0; hl = 0
+        for (i = 1; i <= n; i++) if (index(L[i], hd) == 1) { nh++; hl = i }
+        if (nh != 1) printf "Q2\tthe end-of-profile heading begins %d line(s), and exactly one must\n", nh
+        else if (hl != bl - 1) printf "Q2\tthe end-of-profile heading is at line %d, not on the line immediately above the boundary at line %d\n", hl, bl
+      }
+      if (!usable || bl == 0) { printf "DENOM %d %s\n", nb + 0, "-"; exit }
+      cv = fv["classification"]; sp = index(cv, " § ")
+      cpath = (sp > 0) ? substr(cv, 1, sp - 1) : cv
+      if (cpath != tbl) printf "Q3\tclassification: names %s, not the table this arm joins against, %s\n", cpath, tbl
+      else {
+        nseg = split(substr(cv, sp + length(" § ")), seg, " → ")
+        for (s = 1; s <= nseg; s++) {
+          k = 0
+          for (i = 1; i <= nth; i++) if (ft_lead(seg[s], th[i])) k++
+          if (k != 1) printf "Q3\tthe classification anchor segment %s leads %d heading(s) of %s, not exactly one\n", seg[s], k, tbl
+        }
+      }
+      if (nb == 0) printf "Q3\tno labelled bullet sits above the boundary, so the join would be graded over the empty set\n"
+      else if (nr != nb) printf "Q3\tthe (section, label) resolver answered %d of %d bullet(s)\n", nr, nb
+      for (i = 1; i <= nr; i++)
+        if (rst[i] != "ONE")
+          printf "Q3\tthe bullet %s under %s at line %s joins %s\n", rlb[i], (rhd[i] == "" ? "no heading" : rhd[i]), rln[i], (rst[i] == "AMBIG" ? "rows " rid[i] : "no row")
+      for (i = 1; i <= nw; i++)
+        printf "Q4\tthe labelled bullet %s sits at line %s, below the boundary at line %d\n", wlb[i], wln[i], bl
+      fw = ""; fa = ""
+      if (L[1] == "---") for (i = 2; i <= n && L[i] != "---"; i++) {
+        if (index(L[i], "writer: ") == 1) fw = substr(L[i], 9)
+        if (index(L[i], "artifact: ") == 1) fa = substr(L[i], 11)
+      }
+      if (fv["writer"] != "human") printf "Q5\twriter: reads %s, not human\n", fv["writer"]
+      if (fv["writer"] != fw) printf "Q5\tthe fence writer %s disagrees with the frontmatter writer %s\n", fv["writer"], fw
+      if (fv["output"] != fa) printf "Q5\tthe fence output %s disagrees with the frontmatter artifact %s\n", fv["output"], fa
+      for (i = 1; i < bl; i++) isb[i] = 0
+      for (i = 1; i <= nb; i++) isb[bln[i]] = 1
+      for (i = 1; i < bl; i++)
+        if ((L[i] ~ /^#+ / || isb[i]) && (index(L[i], "[DERIVED]") || index(L[i], "[ENRICH]")))
+          printf "Q5\tline %d above the boundary carries a [DERIVED] or [ENRICH] marker\n", i
+      # Q6 reads the HEAD of each bullet bracket and nothing after it: a head that opens on the
+      # marker word must be well-formed, and must not carry a second marker straight after it.
+      for (i = 1; i <= nb; i++) {
+        t = L[bln[i]]; p = index(t, ":**")
+        val = substr(t, p + 3); sub(/^[ \t]+/, "", val)
+        if (substr(val, 1, 1) != "[") continue
+        h6 = substr(val, 2)
+        if (tolower(h6) !~ /^[ \t]*(closed|open)[ \t]*:/) continue
+        if (h6 !~ /^(closed|open): [^ \t]/)
+          printf "Q6\ta malformed marker on %s at line %d: the head of its bracket must read closed or open in lower case, then a colon and one space\n", blb[i], bln[i]
+        else if (tolower(substr(h6, index(h6, ":") + 2)) ~ /^[ \t]*(closed|open)[ \t]*:/)
+          printf "Q6\tthe bullet %s at line %d carries a second marker at the head of its bracket\n", blb[i], bln[i]
+      }
+      printf "DENOM %d %s\n", nb, ver
+    }'
+}
+
+st_cf_tag() { local t="${1##*/}"; printf '%s' "${t%.template.md}"; }
+
+# st_cf_assert <member> <data-model> — exactly ONE verdict, ST-CF[<tag>], for the member at its
+# repository-relative path. Self-contained, so the md_flips registrations in group MD measure THIS
+# assertion: it FAILs, in order, on an unreadable form, on a contract whose key set reads empty, on
+# a reading that is not closed by exactly one DENOM record, and on any finding, listing each by its
+# question. Otherwise it PASSes, naming the bullets graded and the half of question 6 it grades.
+st_cf_assert() {
+  local member="$1" dm="$2" f="$ROOT/$1" tag v nd nb nf
+  tag="$(st_cf_tag "$member")"
+  if [ ! -r "$f" ]; then
+    FAIL "ST-CF[$tag]: $member is missing or unreadable, so there is no form to grade against the contract — a declared member that does not exist is a finding, never a skip"
+    return 0
+  fi
+  if [ -z "$(st_cf_decl_keys "$ST_CF_DECL")" ]; then
+    FAIL "ST-CF[$tag]: the contract's declared key set reads EMPTY from ${ST_CF_DECL#"$ROOT/"}, so every question here would be graded against a contract nobody declares — ST-CF0 names why"
+    return 0
+  fi
+  v="$(st_cf_violations "$f" "$member" "$dm")"
+  nd="$(awk '$1 == "DENOM" { n++ } END { print n + 0 }' <<<"$v")"
+  nb="$(awk '$1 == "DENOM" { print $2 + 0; exit }' <<<"$v")"
+  nf="$(awk -F'\t' 'NF > 1 { n++ } END { print n + 0 }' <<<"$v")"
+  if [ "$nd" -ne 1 ]; then
+    FAIL "ST-CF[$tag]: the evaluator's reading of $member carries $nd DENOM record(s) where exactly one closes it, so the reading is truncated or doubled and no verdict can rest on it"
+  elif [ "$nf" -ne 0 ]; then
+    FAIL "ST-CF[$tag]: $member does not conform to the form contract — $nf finding(s), each named by the question of ADR-023 § D2.6 it fails:"
+    printf '%s\n' "$v" | awk -F'\t' 'NF > 1 { printf "      %s: %s\n", $1, $2 }'
+  else
+    PASS "ST-CF[$tag]: $member conforms to the form contract on all six questions of ADR-023 § D2.6 — one closed intake-form fence above the boundary, carrying each declared key once and no other; the boundary one whole line with the end-of-profile heading directly above it; each of its ${nb:-0} labelled bullet(s) above the boundary joining exactly one row of the table its classification key addresses, on (section, label); none below; a human writer agreeing with the frontmatter; and every closed/open marker well-formed at the head of its bracket. Question 6 is graded at its decidable half only: whether a field OWES a marker is a reviewer's call (ADR-023 R11), so an unmarked bracket is never a finding here"
+  fi
+}
+
+# st_cf_tally <reading> — "<code> <count>" per code in a reading, sorted: the unit the arms compare.
+st_cf_tally() { awk -F'\t' 'NF > 1 { n[$1]++ } END { for (c in n) print c, n[c] }' <<<"$1" | sort; }
+
+# st_cf_mustfire <arm> <member> <fixture> <code> <what> [data-model] — ONE thing mutated on a copy of
+# the member, or of the data model, and the SAME evaluator must then report MORE <code> findings than
+# the member's own live reading does. A DELTA, never an absolute: on a member that already fails a
+# question the arm still grades what its own mutation did, and it cannot pass on an inherited
+# finding. Coverage is recorded on the CALL — the code before the verdict, the SITES from what the
+# evaluator actually emitted — into run-level accumulators, graded once after the last member.
+st_cf_mustfire() {
+  local id="$1" member="$2" fx="$3" want="$4" what="$5" dm="${6:-$ST_DM}" landed=0 v n0 n1
+  ST_CF_ARMED="$ST_CF_ARMED
+$want"
+  { cmp -s "$ST_CF_FILE" "$fx" && cmp -s "$ST_DM" "$dm"; } || landed=1
+  v="$(st_cf_violations "$fx" "$member" "$dm")"
+  n0="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+  n1="$(awk -F'\t' -v c="$want" '$1 == c { n++ } END { print n + 0 }' <<<"$v")"
+  ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$v" "$ST_CF_SITEMAP")"
+  if [ "$landed" -eq 1 ] && [ "$n1" -gt "$n0" ]; then
+    PASS "$id: MUST FIRE — $what, and the same evaluator raises $want from $n0 to $n1 finding(s) against this form's own live reading. The mutation is asserted to have landed before the verdict is read"
+  else
+    FAIL "$id: MUST FIRE — $what, but $want went from $n0 to $n1 finding(s) with mutation-landed=$landed, where a rise is owed. ST-CF's verdict on this question has no control behind it"
+  fi
+}
+
+# st_cf_mustnotfire <arm> <member> <fixture> <edit-expected> <what> — the copy's findings must EQUAL
+# the member's live reading, over a non-zero count of graded bullets: what tells an evaluator that
+# grades the contract from one that reddens on any edit. Records no coverage, because a must-not-fire
+# arm asserts that nothing new was emitted.
+st_cf_mustnotfire() {
+  local id="$1" member="$2" fx="$3" wantedit="$4" what="$5" landed=0 v t0 t1 nb
+  cmp -s "$ST_CF_FILE" "$fx" || landed=1
+  v="$(st_cf_violations "$fx" "$member" "$ST_DM")"
+  t0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; t1="$(st_cf_tally "$v" | tr '\n' ' ')"
+  nb="$(awk '$1 == "DENOM" { print $2 + 0; exit }' <<<"$v")"
+  if [ "$landed" -eq "$wantedit" ] && [ "$t1" = "$t0" ] && [ "${nb:-0}" -gt 0 ]; then
+    PASS "$id: MUST NOT FIRE — $what, and the copy reads exactly the findings the form itself reads [${t0% }] over ${nb} graded bullet(s)"
+  else
+    FAIL "$id: MUST NOT FIRE — $what, but the copy reads [${t1% }] against the form's own [${t0% }], with differs-from-original=$landed where $wantedit is expected and ${nb:-0} graded bullet(s)"
+  fi
+}
+
+# ── The mutators. Each rewrites ONE copy under $WORK in place, and none takes a value through awk -v
+# that could carry a literal newline; an inserted text uses \n escapes instead.
+st_cf_fixture() { cp "$ST_CF_FILE" "$ST_CF_DIR/$1.md" && printf '%s\n' "$ST_CF_DIR/$1.md"; }
+st_cf_dm_fixture() { cp "$ST_DM" "$ST_CF_DIR/$1-dm.md" && printf '%s\n' "$ST_CF_DIR/$1-dm.md"; }
+st_cf_ins_after() {   # st_cf_ins_after <file> <line> <text> — <text> after line <line>
+  awk -v ln="$2" -v t="$3" '{ print } FNR == ln { print t }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+st_cf_del_range() { awk -v a="$2" -v b="$3" 'FNR < a || FNR > b' "$1" > "$1.new" && mv "$1.new" "$1"; }
+st_cf_dup_range() {   # st_cf_dup_range <file> <from> <to> — the range again, straight after itself
+  awk -v a="$2" -v b="$3" '{ print } FNR >= a && FNR <= b { r[++k] = $0 } FNR == b { for (i = 1; i <= k; i++) print r[i] }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+st_cf_move_to_end() {   # st_cf_move_to_end <file> <from> <to> — the range cut, and put at the end
+  awk -v a="$2" -v b="$3" 'FNR >= a && FNR <= b { r[++k] = $0; next } { print } END { print ""; for (i = 1; i <= k; i++) print r[i] }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+st_cf_swap_lines() {   # st_cf_swap_lines <file> <a> <b>
+  awk -v a="$2" -v b="$3" '{ L[FNR] = $0 } END { for (i = 1; i <= FNR; i++) print ((i == a) ? L[b] : ((i == b) ? L[a] : L[i])) }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+st_cf_relabel() {   # st_cf_relabel <file> <line> <label> — a bullet's bold label replaced, taken literally
+  awk -v ln="$2" -v nl="$3" 'FNR == ln { p = index($0, "**"); q = index($0, ":**"); if (p > 0 && q > p) $0 = substr($0, 1, p + 1) nl substr($0, q) } { print }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+st_cf_plant() {   # st_cf_plant <file> <line> <text> — <text> planted at the head of that bullet's bracket
+  awk -v ln="$2" -v t="$3" 'FNR == ln { p = index($0, ":**"); if (p > 0) { q = index(substr($0, p), "["); if (q > 0) { q = p + q - 1; $0 = substr($0, 1, q) t substr($0, q + 1) } } } { print }' "$1" > "$1.new" && mv "$1.new" "$1"
+}
+# st_cf_fence_at <file> — "<opener> <closer>" of the form's declared fence, 0 for either not found.
+st_cf_fence_at() { awk "$ST_CF_FENCE_FN"'{ L[NR] = $0 } END { cf_form_fence(L, NR); print CF_FO + 0, CF_FC + 0 }' "$1"; }
+# st_cf_key_line <file> <key> — the line carrying <key> inside the form's declared fence.
+st_cf_key_line() {
+  awk -v want="$2" "$ST_CF_FENCE_FN"'{ L[NR] = $0 } END { cf_form_fence(L, NR); for (i = 1; i <= CF_NK; i++) if (CF_K[i] == want) { print CF_KL[i]; exit } }' "$1"
+}
+st_cf_tracked_templates() { git -C "$ROOT" ls-files -- 'templates/*.template.md'; }
+
+# st_cf_sub_report <st-templates> <forms> — MISS<TAB>path per ST_TEMPLATES member the conformance
+# population does not list, then NT<TAB>n (ST_TEMPLATES members) and NI<TAB>n (members also listed).
+st_cf_sub_report() {
+  st_labdiff "$1" "$2" | awk 'NF { print "MISS\t" $0 }'
+  printf 'NT\t%s\n' "$(printf '%s\n' "$1" | awk 'NF && !seen[$0]++' | grep -c '[^[:space:]]')"
+  printf 'NI\t%s\n' "$(st_labint "$1" "$2" | grep -c '[^[:space:]]')"
+}
+st_cf_sub_assert() {
+  local rep nt ni nm miss
+  rep="$(st_cf_sub_report "$1" "$2")"
+  nt="$(awk -F'\t' '$1 == "NT" { print $2; exit }' <<<"$rep")"
+  ni="$(awk -F'\t' '$1 == "NI" { print $2; exit }' <<<"$rep")"
+  nm="$(awk -F'\t' '$1 == "MISS" { n++ } END { print n + 0 }' <<<"$rep")"
+  miss="$(awk -F'\t' '$1 == "MISS" { printf "%s ", $2 }' <<<"$rep")"
+  if [ "${nt:-0}" -lt 1 ]; then
+    FAIL "ST-CF-SUB: ST_TEMPLATES read EMPTY, so its containment in the conformance population would be a statement over the empty set"
+  elif [ "$nm" -ne 0 ]; then
+    FAIL "ST-CF-SUB: $nm form(s) the starred pass grades are NOT in the conformance population: ${miss}— a form whose declaration nothing checks. Add it to ST_CF_FORMS"
+  elif [ "${ni:-0}" -ne "$nt" ]; then
+    FAIL "ST-CF-SUB: the intersection of ST_TEMPLATES with the conformance population reads ${ni:-0} of $nt member(s) while no member reads missing — the two readings disagree, so neither can be trusted"
+  else
+    PASS "ST-CF-SUB: every one of the $nt form(s) the starred pass grades is in the conformance population — ST_TEMPLATES is contained in ST_CF_FORMS, the difference and the intersection agreeing — so the two lists cannot drift apart silently. CTL-ST-CF-SUB shows a form added to ST_TEMPLATES alone turning this red"
+  fi
+}
+
+# st_cf_pop_report <tracked> <forms> <excluded> — the declared population against every tracked
+# template: NT, NF and NX counts, then one record per defect — UNLISTED (tracked, in neither list),
+# STALE (a member or an exclusion naming no tracked template), BOTH (a member and an exclusion at
+# once), BADROW (an exclusion row that is not one path and one reason token) — and one
+# EXCLUDED<TAB>path<TAB>reason per exclusion. An EMPTY exclusion list is legal and reads NX 0.
+st_cf_pop_report() {
+  printf '%s\n%s\n%s\n%s\n%s\n' "$1" "$ST_SEP" "$2" "$ST_SEP" "$3" | awk -v sep="$ST_SEP" '
+    $0 == sep { part++; next }
+    part == 0 { if (NF) { nt++; tr[$0] = 1; tl[nt] = $0 }; next }
+    part == 1 { if (NF) { nf++; fm[$1] = 1; fl[nf] = $1 }; next }
+    part == 2 { if (NF) { nx++; if (NF != 2) bad[++nbad] = $0; else { xm[$1] = $2; xl[nx] = $1 } }; next }
+    END {
+      printf "NT\t%d\nNF\t%d\nNX\t%d\n", nt, nf, nx
+      for (i = 1; i <= nt; i++) if (!(tl[i] in fm) && !(tl[i] in xm)) printf "UNLISTED\t%s\n", tl[i]
+      for (i = 1; i <= nf; i++) if (!(fl[i] in tr)) printf "STALE\t%s\n", fl[i]
+      for (i = 1; i <= nx; i++) if (xl[i] != "" && !(xl[i] in tr)) printf "STALE\t%s\n", xl[i]
+      for (i = 1; i <= nf; i++) if (fl[i] in xm) printf "BOTH\t%s\n", fl[i]
+      for (i = 1; i <= nbad; i++) printf "BADROW\t%s\n", bad[i]
+      for (i = 1; i <= nx; i++) if (xl[i] != "") printf "EXCLUDED\t%s\t%s\n", xl[i], xm[xl[i]]
+    }'
+}
+st_cf_pop_assert() {
+  local rep nt nf nx nd xs
+  rep="$(st_cf_pop_report "$(st_cf_tracked_templates)" "$1" "$2")"
+  nt="$(awk -F'\t' '$1 == "NT" { print $2; exit }' <<<"$rep")"
+  nf="$(awk -F'\t' '$1 == "NF" { print $2; exit }' <<<"$rep")"
+  nx="$(awk -F'\t' '$1 == "NX" { print $2; exit }' <<<"$rep")"
+  nd="$(awk -F'\t' '$1 == "UNLISTED" || $1 == "STALE" || $1 == "BOTH" || $1 == "BADROW" { n++ } END { print n + 0 }' <<<"$rep")"
+  xs="$(awk -F'\t' '$1 == "EXCLUDED" { printf "%s%s (%s)", (n++ ? ", " : ""), $2, $3 }' <<<"$rep")"
+  [ -n "$xs" ] || xs="none — the exclusion list is empty, which is a legal declaration"
+  if [ "${nt:-0}" -lt 1 ] || [ "${nf:-0}" -lt 1 ]; then
+    FAIL "ST-CF-POP: a side of the population came back EMPTY (tracked templates=${nt:-0}, declared members=${nf:-0}). An empty EXCLUSION list is legal, but an empty tracked set or member list would make this accounting a statement over nothing"
+  elif [ "$nd" -ne 0 ]; then
+    FAIL "ST-CF-POP: the declared population does not account for the tracked templates — $nd defect(s):"
+    printf '%s\n' "$rep" | awk -F'\t' '
+      $1 == "UNLISTED" { printf "      unlisted: %s — tracked, and in neither ST_CF_FORMS nor ST_CF_EXCLUDED\n", $2 }
+      $1 == "STALE"    { printf "      stale: %s — declared, and no tracked template has that path\n", $2 }
+      $1 == "BOTH"     { printf "      both: %s — a member and an exclusion at once\n", $2 }
+      $1 == "BADROW"   { printf "      bad exclusion row: %s — not one path and one reason token\n", $2 }'
+  else
+    PASS "ST-CF-POP: every one of the $nt tracked template(s) is accounted for — ${nf} graded by the conformance arm and ${nx:-0} excluded; exclusions: ${xs}. No list names a file that is not tracked. The population is DECLARED rather than discovered by fence, and this is what keeps it complete: a template added to the tree and to neither list turns this red (CTL-ST-CF-POP-ADD), and so does a declared path naming no tracked file (CTL-ST-CF-POP-STALE)"
+  fi
+}
+
+# ── RUN LEVEL, before any member: the contract, the two list assertions, and the resolver ────────
+ST_CF_KEYS="$(st_cf_decl_keys "$ST_CF_DECL")"
+ST_CF_NKEYS="$(printf '%s\n' "$ST_CF_KEYS" | grep -c '[^[:space:]]')"
+ST_CF_NFORMS="$(printf '%s\n' "$ST_CF_FORMS" | grep -c '[^[:space:]]')"
+if [ "$ST_CF_NFORMS" -lt 1 ]; then
+  FAIL "ST-CF0: the conformance population ST_CF_FORMS is EMPTY, so every verdict below would be about no form at all"
+elif [ "$ST_CF_NKEYS" -lt 1 ]; then
+  FAIL "ST-CF0: the contract's declared key set read EMPTY from ${ST_CF_DECL#"$ROOT/"} — $(st_cf_decl_why "$ST_CF_DECL") — so every form would be graded against a contract nobody declares"
+else
+  PASS "ST-CF0: the conformance arm has a non-empty population, $ST_CF_NFORMS declared form(s), and a non-empty contract: $ST_CF_NKEYS key(s) [$(printf '%s' "$ST_CF_KEYS" | tr '\n' ' ')] read LIVE from the one closed worked fence of ${ST_CF_DECL#"$ROOT/"}, whose Status does not read Superseded. The key set is copied nowhere in this file, so an edit to that fence moves every form's verdict in the same run. CTL-ST-CF-DECL, CTL-ST-CF-DECL-UNCLOSED and CTL-ST-CF-DECL-SUPERSEDED show the reader refusing a record it must not read"
+fi
+
+# CTL-ST-CF-DECL / -DECL-UNCLOSED / -DECL-SUPERSEDED — MUST FIRE, each on a COPY of ADR-023: the
+# worked fence doubled and removed, its closer removed, and the record's Status superseded. Each copy
+# must read NO key while the real record reads some. Keyed on the live reading like group FT's
+# controls: where the live record has ALREADY been read empty — the very mutation these arms rehearse,
+# replayed on the tracked record — ST-CF0 carries that red alone and these stay standing.
+mkdir -p "$WORK/st-cf/decl"
+ST_CF_DX="$WORK/st-cf/decl"
+ST_CF_DFA="$(awk "$ST_CF_FENCE_FN"'{ s = cf_fence_step($0); if (s == "O" && CF_INFO == "intake-form" && !o) o = NR; else if (o && !c && s == "C") c = NR } END { print o + 0, c + 0 }' "$ST_CF_DECL")"
+ST_CF_DFO="${ST_CF_DFA%% *}"; ST_CF_DFC="${ST_CF_DFA##* }"
+st_cf_dcopy() { cp "$ST_CF_DECL" "$ST_CF_DX/$1.md" && printf '%s' "$ST_CF_DX/$1.md"; }
+st_cf_dkeys() { st_cf_decl_keys "$1" | grep -c '[^[:space:]]'; }
+# st_cf_dfired <copy> — yes when the copy reads no key and either it differs from the record while
+# the record reads keys, or the record already reads none.
+st_cf_dfired() {
+  local n l=0
+  n="$(st_cf_dkeys "$1")"; cmp -s "$ST_CF_DECL" "$1" || l=1
+  if [ "$n" -eq 0 ] && { { [ "$l" -eq 1 ] && [ "$ST_CF_NKEYS" -gt 0 ]; } || [ "$ST_CF_NKEYS" -eq 0 ]; }; then printf 'yes'; else printf 'no:keys=%s,landed=%s' "$n" "$l"; fi
+}
+ST_CF_DD="$(st_cf_dcopy twice)"; st_cf_dup_range "$ST_CF_DD" "$ST_CF_DFO" "$ST_CF_DFC"
+ST_CF_DG="$(st_cf_dcopy gone)"; st_cf_del_range "$ST_CF_DG" "$ST_CF_DFO" "$ST_CF_DFC"
+ST_CF_DU="$(st_cf_dcopy unclosed)"; st_line_del "$ST_CF_DU" "$ST_CF_DFC"
+ST_CF_DS="$(st_cf_dcopy superseded)"
+awk 'done == 0 && index($0, "- **Status:**") == 1 { print "- **Status:** Superseded by ADR-999 (2026-10-01)"; done = 1; next } { print }' "$ST_CF_DECL" > "$ST_CF_DS"
+ST_CF_DGOT="twice=$(st_cf_dfired "$ST_CF_DD") gone=$(st_cf_dfired "$ST_CF_DG")"
+if [ "$ST_CF_DGOT" = "twice=yes gone=yes" ]; then
+  PASS "CTL-ST-CF-DECL: MUST FIRE — a copy of the record with its worked fence DOUBLED and a copy with it REMOVED each read no key, while the real record reads $ST_CF_NKEYS: the reader takes the contract from exactly one worked fence, and refuses both to choose between two and to invent one"
+else
+  FAIL "CTL-ST-CF-DECL: MUST FIRE — read '$ST_CF_DGOT' where 'twice=yes gone=yes' is owed, over a live reading of $ST_CF_NKEYS key(s). A reader that returns keys from a doubled or absent fence grades every form against a contract nobody declared"
+fi
+ST_CF_DUF="$(st_cf_dfired "$ST_CF_DU")"; ST_CF_DUW="$(st_cf_decl_why "$ST_CF_DU")"
+if [ "$ST_CF_DUF" = yes ] && [ -n "$ST_CF_DUW" ]; then
+  PASS "CTL-ST-CF-DECL-UNCLOSED: MUST FIRE — the worked fence's closing line deleted from a copy of the record (line $ST_CF_DFC) reads no key and names why ($ST_CF_DUW). Without the closer the fence would run into the prose after it and hand every form a key set made of sentences"
+else
+  FAIL "CTL-ST-CF-DECL-UNCLOSED: MUST FIRE — with the worked fence's closer deleted the copy read '$ST_CF_DUF' with reason '$ST_CF_DUW', where no key and a reason are owed"
+fi
+ST_CF_DSF="$(st_cf_dfired "$ST_CF_DS")"; ST_CF_DSW="$(st_cf_decl_why "$ST_CF_DS")"
+if [ "$ST_CF_DSF" = yes ] && [ "${ST_CF_DSW#*Superseded}" != "$ST_CF_DSW" ]; then
+  PASS "CTL-ST-CF-DECL-SUPERSEDED: MUST FIRE — the record's Status rewritten as superseded on a copy reads no key and names the status. A supersession marks the old record rather than editing it, so its worked fence stays in place, and a reader of the fence alone would go on grading every form against a contract no longer in force"
+else
+  FAIL "CTL-ST-CF-DECL-SUPERSEDED: MUST FIRE — the superseded copy read '$ST_CF_DSF' with reason '$ST_CF_DSW', where no key and a reason naming the supersession are owed"
+fi
+
+# ST-CF-SUB, and CTL-ST-CF-SUB — MUST FIRE, ADD-ONLY: a form appended to a COPY of ST_TEMPLATES alone.
+st_cf_sub_assert "$ST_TEMPLATES" "$ST_CF_FORMS"
+ST_CF_SPROBE='templates/zz-st-cf-starred-only.template.md'
+ST_CF_SM0="$(st_cf_sub_report "$ST_TEMPLATES" "$ST_CF_FORMS" | awk -F'\t' '$1 == "MISS" { n++ } END { print n + 0 }')"
+ST_CF_SR1="$(st_cf_sub_report "$ST_TEMPLATES
+$ST_CF_SPROBE" "$ST_CF_FORMS")"
+ST_CF_SM1="$(awk -F'\t' '$1 == "MISS" { n++ } END { print n + 0 }' <<<"$ST_CF_SR1")"
+ST_CF_SH1="$(awk -F'\t' -v p="$ST_CF_SPROBE" '$1 == "MISS" && $2 == p { n++ } END { print n + 0 }' <<<"$ST_CF_SR1")"
+if [ "$ST_CF_SM1" -eq $((ST_CF_SM0 + 1)) ] && [ "$ST_CF_SH1" -eq 1 ]; then
+  PASS "CTL-ST-CF-SUB: MUST FIRE, ADD-ONLY — a form appended to a COPY of ST_TEMPLATES and to nothing else takes the missing set from $ST_CF_SM0 to $ST_CF_SM1, and the new member IS that form. A form given a starred pass and no conformance grading cannot ship green"
+else
+  FAIL "CTL-ST-CF-SUB: MUST FIRE, ADD-ONLY — the appended form moved the missing set $ST_CF_SM0 → $ST_CF_SM1 and named it $ST_CF_SH1 time(s), where one more member, that one, is owed"
+fi
+
+# ST-CF-POP, and three controls on its report: a tracked template added to neither list and a
+# declared member naming no tracked file MUST FIRE; the exclusion list emptied, its forms joined to
+# the population, MUST NOT — the declaration the population takes when every form is graded.
+st_cf_pop_assert "$ST_CF_FORMS" "$ST_CF_EXCLUDED"
+ST_CF_TR="$(st_cf_tracked_templates)"
+st_cf_defects() { awk -F'\t' -v k="$2" '$1 == k { n++ } END { print n + 0 }' <<<"$1"; }
+ST_CF_PR0="$(st_cf_pop_report "$ST_CF_TR" "$ST_CF_FORMS" "$ST_CF_EXCLUDED")"
+ST_CF_PR1="$(st_cf_pop_report "$ST_CF_TR
+templates/zz-st-cf-unlisted.template.md" "$ST_CF_FORMS" "$ST_CF_EXCLUDED")"
+ST_CF_PU0="$(st_cf_defects "$ST_CF_PR0" UNLISTED)"; ST_CF_PU1="$(st_cf_defects "$ST_CF_PR1" UNLISTED)"
+ST_CF_PUH="$(awk -F'\t' '$1 == "UNLISTED" && $2 == "templates/zz-st-cf-unlisted.template.md" { n++ } END { print n + 0 }' <<<"$ST_CF_PR1")"
+if [ "$ST_CF_PU1" -eq $((ST_CF_PU0 + 1)) ] && [ "$ST_CF_PUH" -eq 1 ]; then
+  PASS "CTL-ST-CF-POP-ADD: MUST FIRE — a template added to a COPY of the tracked set and to neither list takes the unlisted set from $ST_CF_PU0 to $ST_CF_PU1, naming that template. A new form cannot join the tree without joining the declaration"
+else
+  FAIL "CTL-ST-CF-POP-ADD: MUST FIRE — the unlisted set moved $ST_CF_PU0 → $ST_CF_PU1 and named the added template $ST_CF_PUH time(s), where one more, that one, is owed"
+fi
+ST_CF_PR2="$(st_cf_pop_report "$ST_CF_TR" "$ST_CF_FORMS
+templates/zz-st-cf-stale.template.md" "$ST_CF_EXCLUDED")"
+ST_CF_PS0="$(st_cf_defects "$ST_CF_PR0" STALE)"; ST_CF_PS1="$(st_cf_defects "$ST_CF_PR2" STALE)"
+if [ "$ST_CF_PS1" -eq $((ST_CF_PS0 + 1)) ]; then
+  PASS "CTL-ST-CF-POP-STALE: MUST FIRE — a member naming no tracked file, appended to a COPY of ST_CF_FORMS, takes the stale set from $ST_CF_PS0 to $ST_CF_PS1. A declaration that outlives its form is a standing exemption for whatever takes that path next, and it is refused"
+else
+  FAIL "CTL-ST-CF-POP-STALE: MUST FIRE — the stale set moved $ST_CF_PS0 → $ST_CF_PS1, where one more is owed"
+fi
+ST_CF_NXF="$ST_CF_FORMS
+$(awk 'NF { print $1 }' <<<"$ST_CF_EXCLUDED")"
+ST_CF_PR3="$(st_cf_pop_report "$ST_CF_TR" "$ST_CF_NXF" "")"
+ST_CF_PD3="$(awk -F'\t' '$1 == "UNLISTED" || $1 == "STALE" || $1 == "BOTH" || $1 == "BADROW" { n++ } END { print n + 0 }' <<<"$ST_CF_PR3")"
+ST_CF_PX3="$(awk -F'\t' '$1 == "NX" { print $2; exit }' <<<"$ST_CF_PR3")"
+ST_CF_PV3="$(md_probe zzq_st_cf_no_such_subject st_cf_pop_assert "$ST_CF_NXF" "")"
+if [ "$ST_CF_PD3" -eq 0 ] && [ "${ST_CF_PX3:-x}" = 0 ] && [ "$ST_CF_PV3" = "1 0" ]; then
+  PASS "CTL-ST-CF-POP-NOEXCL: MUST NOT FIRE — every excluded form joined to the population and the exclusion list left EMPTY reads 0 defect(s) and 0 exclusion(s), and ST-CF-POP's own assertion over those lists reports one PASS and no FAIL ($ST_CF_PV3). An empty exclusion list is a declaration the population can take, not a missing one"
+else
+  FAIL "CTL-ST-CF-POP-NOEXCL: MUST NOT FIRE — with the exclusion list empty the report read $ST_CF_PD3 defect(s) and ${ST_CF_PX3:-no} exclusion count, and the assertion read '$ST_CF_PV3' where '1 0' is owed. A population that can never drop its last exclusion cannot take in the form that exclusion waits for"
+fi
+
+# CTL-ST-BOUNDARY-RESOLVE — the resolver on SEVEN synthetic forms, each a title line, a fence
+# (none for nofence, no boundary key for nokey) and a body, answering exactly one owed string: an
+# exact whole line resolves; a leading space does not; trailing space is ignored; the literal inside
+# a longer line does not count; twice is ambiguous; no fence and no key are failures.
+mkdir -p "$WORK/st-cf/resolve"
+ST_CF_LIT='<!-- ZZ-ST-BOUNDARY -->'
+st_cf_bform() {   # st_cf_bform <name> <fence: 2 with the key, 1 without, 0 none> <body-line>...
+  local nm="$1" fen="$2" out="$WORK/st-cf/resolve/$1.md"; shift 2
+  { printf '# %s\n' "$nm"
+    if [ "$fen" -gt 0 ]; then
+      printf '%s\n' '```intake-form' 'form: x'
+      [ "$fen" -eq 2 ] && printf 'boundary: %s\n' "$ST_CF_LIT"
+      printf '%s\n' '```'
+    fi
+    printf '%s\n' "$@"; } > "$out"
+  printf '%s' "$out"
+}
+st_cf_bans() { awk -F'\t' 'NR == 1 { print (($1 == "LINE") ? $2 : "FAIL"); exit }' <<<"$(st_boundary "$1")"; }
+ST_CF_BB='- **ZZ:** x'
+ST_CF_RGOT="exact=$(st_cf_bans "$(st_cf_bform exact 2 "$ST_CF_BB" "$ST_CF_LIT" "$ST_CF_BB")")"
+ST_CF_RGOT="$ST_CF_RGOT lead=$(st_cf_bans "$(st_cf_bform lead 2 "$ST_CF_BB" " $ST_CF_LIT")")"
+ST_CF_RGOT="$ST_CF_RGOT trail=$(st_cf_bans "$(st_cf_bform trail 2 "$ST_CF_BB" "$ST_CF_LIT  ")")"
+ST_CF_RGOT="$ST_CF_RGOT inline=$(st_cf_bans "$(st_cf_bform inline 2 "text $ST_CF_LIT text" "$ST_CF_BB" "$ST_CF_LIT")")"
+ST_CF_RGOT="$ST_CF_RGOT twice=$(st_cf_bans "$(st_cf_bform twice 2 "$ST_CF_LIT" "$ST_CF_BB" "$ST_CF_LIT")")"
+ST_CF_RGOT="$ST_CF_RGOT nofence=$(st_cf_bans "$(st_cf_bform nofence 0 "$ST_CF_BB" "$ST_CF_LIT")")"
+ST_CF_RGOT="$ST_CF_RGOT nokey=$(st_cf_bans "$(st_cf_bform nokey 1 "$ST_CF_BB" "$ST_CF_LIT")")"
+ST_CF_RWANT='exact=7 lead=FAIL trail=7 inline=8 twice=FAIL nofence=FAIL nokey=FAIL'
+if [ "$ST_CF_RGOT" = "$ST_CF_RWANT" ]; then
+  PASS "CTL-ST-BOUNDARY-RESOLVE: the boundary resolver answers exactly '$ST_CF_RWANT' on seven synthetic forms — a whole line resolves, trailing space aside; a leading space, the literal inside a longer line, a second whole line, a missing fence and a fence with no boundary key each fail rather than resolve. So the fence's own boundary: line is never the boundary, and no ambiguous or absent boundary becomes a whole-file read"
+else
+  FAIL "CTL-ST-BOUNDARY-RESOLVE: the boundary resolver answered '$ST_CF_RGOT' where '$ST_CF_RWANT' is owed. A resolver that matches substrings stops at the fence's own boundary: line; one that takes the first of two whole lines hides an ambiguity; one that falls back to the whole file reads a guide half as fields"
+fi
+
+# ST-CF-SITE0 — the entry gate for the site comparison, graded exactly as ST-SITE0 is, once, because
+# the code and site sets are properties of the evaluator rather than of any one form.
+ST_CF_SITE_BODY="$(declare -f st_cf_violations)"
+ST_CF_CODES="$(st_codes "$ST_CF_SITE_BODY")"
+ST_CF_NCODES="$(printf '%s\n' "$ST_CF_CODES" | grep -c '[^[:space:]]')"
+ST_CF_SITEMAP="$(st_sitemap "$ST_CF_SITE_BODY")"
+ST_CF_SITE_KEYS="$(st_sites "$ST_CF_SITE_BODY")"
+ST_CF_SITE_RAW="$(printf '%s\n' "$ST_CF_SITEMAP" | grep -c '[^[:space:]]')"
+ST_CF_SITE_NK="$(printf '%s\n' "$ST_CF_SITE_KEYS" | grep -c '[^[:space:]]')"
+ST_CF_SITE_DUP="$(awk -F'\t' 'NF > 1 { n[$1]++; c[$1] = $2 } END { for (k in n) if (n[k] > 1) printf "%s (code %s) ", k, c[k] }' <<<"$ST_CF_SITEMAP")"
+ST_CF_SITE_OK=1
+if [ "$ST_CF_SITE_RAW" -eq 0 ]; then
+  FAIL "ST-CF-SITE0: the emission-site reader returned NO sites over the body of st_cf_violations, so every site verdict below would be a statement over the empty set and the conformance arm's site coverage is UNMEASURED rather than complete"
+  ST_CF_SITE_OK=0
+elif [ "$ST_CF_SITE_NK" -ne "$ST_CF_SITE_RAW" ]; then
+  FAIL "ST-CF-SITE0: $ST_CF_SITE_RAW raw emission site(s) collapse to only $ST_CF_SITE_NK distinct key(s) — key(s) ${ST_CF_SITE_DUP% } are each produced by two or more sites whose detail opens with the same literal, so the population below is UNDER-REPORTED. Give one of them a distinguishing literal head"
+  ST_CF_SITE_OK=0
+else
+  PASS "ST-CF-SITE0: the emission-site reader is non-degenerate and unambiguous over st_cf_violations — $ST_CF_SITE_RAW raw site(s) resolving to $ST_CF_SITE_NK distinct key(s), one rung below its $ST_CF_NCODES code(s), an EQUALITY between two non-zero counts rather than a zero. ST-CF-SITE compares this against what the evaluator ACTUALLY EMITTED when each arm ran, never against the code an arm declared it wanted"
+fi
+ST_CF_COV_PROBE='ZZ-ST-CF-COVERAGE-PROBE'
+ST_CF_COV_PHANTOM='ZZ-ST-CF-PHANTOM-ARM'
+ST_CF_SITE_PROBE='ZZ-ST-CF-SITE-PROBE'
+ST_CF_SITE_PROBE_KEY='ZZ-ST-CF-SITE-PROBE#1'
+ST_CF_SITE_PHANTOM='ZZ-ST-CF-PHANTOM-SITE#9'
+# The member the group-MD registrations grade: the FIRST entry of ST_CF_FORMS, by its path.
+ST_CF_MD_FORM="$(printf '%s\n' "$ST_CF_FORMS" | awk 'NF { print; exit }')"
+# Run-level, per D-12 of the seam: every member's arms land in ONE armed set, graded after the loop.
+ST_CF_ARMED=""
+ST_CF_ARMED_SITES=""
+
+# ── PER MEMBER: the form verdict, then — behind the member's own boundary — every arm ────────────
+while IFS= read -r ST_CF_REL; do
+[ -n "$ST_CF_REL" ] || continue
+ST_CF_FILE="$ROOT/$ST_CF_REL"
+ST_CF_TAG="$(st_cf_tag "$ST_CF_REL")"
+ST_CF_DIR="$WORK/st-cf/$ST_CF_TAG"
+mkdir -p "$ST_CF_DIR"
+echo
+echo "  ── $ST_CF_REL (form contract)"
+
+st_cf_assert "$ST_CF_REL" "$ST_DM"
+ST_CF_LIVE="$(st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" 2>/dev/null)"
+
+# THE ENTRY GATE, on ST's own ST_OK shape: every arm below mutates a copy of a form whose boundary
+# resolves, so a member whose boundary does not is named ONCE, here, rather than once per arm.
+ST_CF_GK=unreadable; ST_CF_GW="the file is missing or unreadable"
+if [ -r "$ST_CF_FILE" ]; then
+  ST_CF_G="$(st_boundary "$ST_CF_FILE")"
+  ST_CF_GK="$(awk -F'\t' 'NR == 1 { print $1 }' <<<"$ST_CF_G")"
+  ST_CF_GW="$(awk -F'\t' 'NR == 1 { print $2 }' <<<"$ST_CF_G")"
+fi
+if [ "$ST_CF_GK" != "LINE" ]; then
+  FAIL "CTL-ST-CF[$ST_CF_TAG]: none of the conformance arms could be constructed on $ST_CF_REL — ${ST_CF_GW} — because every arm mutates a copy of a form whose boundary resolves. ST-CF[$ST_CF_TAG] names the question; this member's arms are UNMEASURED and named here once"
+  continue
+fi
+
+# Every target is DISCOVERED on the member, never named: the fence and its key lines, the boundary,
+# the first labelled bullet and its label, the first bullet carrying a marker, the first `## `.
+ST_CF_BL="$ST_CF_GW"
+ST_CF_FA="$(st_cf_fence_at "$ST_CF_FILE")"; ST_CF_FO="${ST_CF_FA%% *}"; ST_CF_FC="${ST_CF_FA##* }"
+ST_CF_KW="$(st_cf_key_line "$ST_CF_FILE" writer)"
+ST_CF_KC="$(st_cf_key_line "$ST_CF_FILE" classification)"
+ST_CF_KF="$(st_cf_key_line "$ST_CF_FILE" form)"
+ST_CF_KV="$(st_cf_key_line "$ST_CF_FILE" form-version)"
+ST_CF_KO="$(st_cf_key_line "$ST_CF_FILE" output)"
+ST_CF_SURF="$(st_surfaces "$ST_CF_FILE")"
+ST_CF_B1L="$(st_field BULLET 1 2 "$ST_CF_SURF")"; ST_CF_B1B="$(st_field BULLET 1 3 "$ST_CF_SURF")"
+ST_CF_B1H="$(st_field BULLET 1 4 "$ST_CF_SURF")"
+ST_CF_MKL="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) && ($0 ~ /:\*\* \[(closed|open): /) { print FNR; exit }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE")"
+ST_CF_H1L="$(awk -v bl="$ST_CF_BL" 'FNR < bl + 0 && /^## / { print FNR; exit }' "$ST_CF_FILE")"
+ST_CF_BLIT="$(awk -v n="$ST_CF_BL" 'FNR == n + 0 { print; exit }' "$ST_CF_FILE")"
+
+# ── Q1: the fence and its keys ──
+ST_CF_FX="$(st_cf_fixture q1-absent)"; st_cf_del_range "$ST_CF_FX" "$ST_CF_FO" "$ST_CF_FC"
+st_cf_mustfire "CTL-ST-CF-Q1-ABSENT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the intake-form fence is deleted outright (lines $ST_CF_FO-$ST_CF_FC)"
+ST_CF_FX="$(st_cf_fixture q1-twice)"; st_cf_dup_range "$ST_CF_FX" "$ST_CF_FO" "$ST_CF_FC"
+st_cf_mustfire "CTL-ST-CF-Q1-TWICE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the intake-form fence is duplicated in place, so the form carries two"
+ST_CF_FX="$(st_cf_fixture q1-unclosed)"; st_line_del "$ST_CF_FX" "$ST_CF_FC"
+st_cf_mustfire "CTL-ST-CF-Q1-UNCLOSED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's closing line is deleted (line $ST_CF_FC), so its body runs into the text after it"
+ST_CF_FX="$(st_cf_fixture q1-malformed)"; st_line_sub "$ST_CF_FX" "$ST_CF_KW" "^writer:[ ]*" "writer "
+st_cf_mustfire "CTL-ST-CF-Q1-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's writer line loses its colon (line $ST_CF_KW), so it is no key line and no layout either, and the fence ends there unclosed"
+ST_CF_FX="$(st_cf_fixture q1-keys)"; st_line_del "$ST_CF_FX" "$ST_CF_KC"
+st_cf_mustfire "CTL-ST-CF-Q1-KEYS[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's classification: line is deleted (line $ST_CF_KC), so a declared key appears zero times"
+ST_CF_FX="$(st_cf_fixture q1-dupkey)"; st_cf_dup_range "$ST_CF_FX" "$ST_CF_KF" "$ST_CF_KF"
+st_cf_mustfire "CTL-ST-CF-Q1-DUPKEY[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's form: line is duplicated (line $ST_CF_KF), so a declared key appears twice"
+ST_CF_FX="$(st_cf_fixture q1-undeclared)"; st_cf_ins_after "$ST_CF_FX" "$ST_CF_FO" 'zz-st-cf-undeclared: zz'
+st_cf_mustfire "CTL-ST-CF-Q1-UNDECLARED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "a key the contract does not declare is added to the fence, after its opening line"
+ST_CF_FX="$(st_cf_fixture q1-identity)"; st_line_sub "$ST_CF_FX" "$ST_CF_KF" "[.]template[.]md" ".elsewhere.md"
+st_cf_mustfire "CTL-ST-CF-Q1-IDENTITY[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence's form: value names another file (line $ST_CF_KF) — a fence copied into a new form and never edited"
+ST_CF_FX="$(st_cf_fixture q1-below)"; st_cf_move_to_end "$ST_CF_FX" "$ST_CF_FO" "$ST_CF_FC"
+st_cf_mustfire "CTL-ST-CF-Q1-BELOW[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q1 "the fence is moved to the end of the file, below the boundary"
+# The rules the contract does NOT state, each with an arm that must not fire.
+ST_CF_FX="$(st_cf_fixture q1-reorder)"; st_cf_swap_lines "$ST_CF_FX" "$ST_CF_KV" "$ST_CF_KW"
+st_cf_mustnotfire "CTL-ST-CF-Q1-REORDER[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the fence's form-version: and writer: lines are swapped (lines $ST_CF_KV and $ST_CF_KW) — the contract declares a key SET, and an order is an authoring convention it does not state"
+ST_CF_FX="$(st_cf_fixture q1-layout)"; st_cf_ins_after "$ST_CF_FX" "$ST_CF_FO" '\n# a layout comment inside the fence'
+st_cf_mustnotfire "CTL-ST-CF-Q1-LAYOUT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "a blank line and a comment line are added inside the fence — layout the contract does not grade, and which the grammar bounding the fence admits"
+
+# ── Q2: the boundary and the heading above it ──
+ST_CF_FX="$(st_cf_fixture q2-twice)"; printf '\n%s\n' "$ST_CF_BLIT" >> "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q2-TWICE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a second whole line equal to the boundary literal is appended, so the boundary no longer resolves to one line"
+ST_CF_FX="$(st_cf_fixture q2-moved)"; st_cf_ins_after "$ST_CF_FX" "$((ST_CF_BL - 1))" ''
+st_cf_mustfire "CTL-ST-CF-Q2-MOVED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a blank line is inserted between the end-of-profile heading and the boundary, so the two literals no longer sit together"
+ST_CF_FX="$(st_cf_fixture q2-heading)"; printf '\n%s — a second end-of-profile heading\n' "$ST_CF_HEAD" >> "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q2-HEADING[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a second line beginning with the end-of-profile heading is appended"
+ST_CF_FX="$(st_cf_fixture q2-gone)"; st_line_del "$ST_CF_FX" "$ST_CF_BL"
+st_cf_mustfire "CTL-ST-CF-Q2-GONE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the boundary line is deleted (line $ST_CF_BL), so the literal its fence names occurs nowhere as a whole line"
+
+# ── Q3: the join, and the address it is made through ──
+ST_CF_FX="$(st_cf_fixture q3-unjoined)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_B1L" 'ZZ-ST-CF-UNCLASSIFIED'
+st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first labelled bullet ('$ST_CF_B1B', line $ST_CF_B1L) is relabelled with a label no field-table row carries"
+ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_B1H" "$ST_CF_B1B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" { print $2; exit }')"
+ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_ROW" '$1 == r { print $9; exit }')"
+ST_CF_FX="$(st_cf_fixture q3-ambig)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
+st_cf_mustfire "CTL-ST-CF-Q3-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first bullet joins (row ${ST_CF_ROW:-none}) is duplicated on a COPY of the data model, the form left byte-untouched, so that bullet reaches two rows" "$ST_CF_DMFX"
+ST_CF_FX="$(st_cf_fixture q3-address)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "The classification" "The classifications"
+st_cf_mustfire "CTL-ST-CF-Q3-ADDRESS[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the classification: anchor is edited so its last segment leads no heading of the data model (line $ST_CF_KC)"
+ST_CF_FX="$(st_cf_fixture q3-table)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "reference/data-model[.]md" "reference/elsewhere.md"
+st_cf_mustfire "CTL-ST-CF-Q3-TABLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the classification: key names another file as the table (line $ST_CF_KC)"
+ST_CF_FX="$ST_CF_DIR/q3-empty.md"
+awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") d[$2] = 1; next } !(FNR in d)' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE" > "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q3-EMPTY[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "every labelled bullet above the boundary is deleted, so the join would be graded over the empty set"
+# Q3-RESOLVER — the resolver itself removed, on the unmutated member: the evaluator must say the
+# resolver answered none of the bullets, rather than read its silence as a clean join.
+ST_CF_ARMED="$ST_CF_ARMED
+Q3"
+ST_CF_RV="$( ( unset -f ft_resolve; st_cf_violations "$ST_CF_FILE" "$ST_CF_REL" "$ST_DM" ) 2>/dev/null )"
+ST_CF_ARMED_SITES="$ST_CF_ARMED_SITES
+$(st_attrib "$ST_CF_RV" "$ST_CF_SITEMAP")"
+ST_CF_RV0="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_LIVE")"
+ST_CF_RV1="$(awk -F'\t' '$1 == "Q3" && index($2, "the (section, label) resolver answered 0 of") == 1 { n++ } END { print n + 0 }' <<<"$ST_CF_RV")"
+if [ "$ST_CF_RV1" -gt "$ST_CF_RV0" ]; then
+  PASS "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed, the evaluator over the unmutated form reports that the resolver answered none of its bullets ($ST_CF_RV0 → $ST_CF_RV1), so question 3 cannot pass on a join that never ran"
+else
+  FAIL "CTL-ST-CF-Q3-RESOLVER[$ST_CF_TAG]: MUST FIRE — with ft_resolve removed the evaluator's 'resolver answered 0 of' finding went $ST_CF_RV0 → $ST_CF_RV1, where a rise is owed. A join the resolver never made would read as a clean one"
+fi
+
+# ── Q4: nothing labelled below the boundary ──
+ST_CF_FX="$(st_cf_fixture q4)"; printf '\n- **ZZ-ST-CF-BELOW:** a labelled bullet below the boundary\n' >> "$ST_CF_FX"
+st_cf_mustfire "CTL-ST-CF-Q4[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q4 "a labelled bullet is appended below the boundary — the leak that moved two groups' denominators while every check stayed green"
+
+# ── Q5: the writer, and the two restated facts ──
+ST_CF_FX="$(st_cf_fixture q5-writer)"; st_line_sub "$ST_CF_FX" "$ST_CF_KW" ":[ ]*human" ": agent"
+st_cf_mustfire "CTL-ST-CF-Q5-WRITER[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the fence's writer: is changed to agent (line $ST_CF_KW)"
+ST_CF_FX="$(st_cf_fixture q5-output)"; st_line_sub "$ST_CF_FX" "$ST_CF_KO" "[.]md[ \t]*$" ".elsewhere.md"
+st_cf_mustfire "CTL-ST-CF-Q5-OUTPUT[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the fence's output: no longer names the frontmatter's artifact (line $ST_CF_KO)"
+ST_CF_FX="$(st_cf_fixture q5-marked)"; st_line_sub "$ST_CF_FX" "$ST_CF_H1L" "[ \t]*$" " [ENRICH]"
+st_cf_mustfire "CTL-ST-CF-Q5-MARKED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q5 "the first section heading gains an [ENRICH] marker (line $ST_CF_H1L), so an agent-owned field sits in the profile half"
+
+# ── Q6: the head of a bracket, and only its head ──
+ST_CF_FX="$(st_cf_fixture q6-malformed)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'Closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-MALFORMED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "a marker in the wrong case is planted at the head of the first bullet's bracket (line $ST_CF_B1L)"
+ST_CF_FX="$(st_cf_fixture q6-double)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'closed: closed: '
+st_cf_mustfire "CTL-ST-CF-Q6-DOUBLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q6 "two markers are planted at the head of the first bullet's bracket (line $ST_CF_B1L)"
+ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'e.g., "open: any weekend", '
+st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the first bullet's bracket, after an example that opens it (line $ST_CF_B1L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
+# Q6-NOMARK — every marker removed from a copy must leave the form conforming, since the contract
+# never grades whether a field owes one; and the Q6 arms must still be constructible on that copy,
+# because they plant a marker rather than needing one to exist.
+ST_CF_FX="$ST_CF_DIR/q6-nomark.md"
+awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) { sub(/:\*\* \[(closed|open): /, ":** [") } { print }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE" > "$ST_CF_FX"
+ST_CF_NMV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
+ST_CF_NMT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_NMT1="$(st_cf_tally "$ST_CF_NMV" | tr '\n' ' ')"
+ST_CF_NMK="$(awk '/^- .*\*\*[^*]+:\*\* \[(closed|open): / { n++ } END { print n + 0 }' "$ST_CF_FX")"
+ST_CF_NMP="$ST_CF_DIR/q6-nomark-planted.md"; cp "$ST_CF_FX" "$ST_CF_NMP"; st_cf_plant "$ST_CF_NMP" "${ST_CF_MKL:-$ST_CF_B1L}" 'Closed: '
+ST_CF_NMQ0="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$ST_CF_NMV")"
+ST_CF_NMQ1="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$(st_cf_violations "$ST_CF_NMP" "$ST_CF_REL" "$ST_DM")")"
+ST_CF_NML=0; cmp -s "$ST_CF_FILE" "$ST_CF_FX" || ST_CF_NML=1
+if [ "$ST_CF_NML" -eq 1 ] && [ "$ST_CF_NMK" -eq 0 ] && [ "$ST_CF_NMT1" = "$ST_CF_NMT0" ] && [ "$ST_CF_NMQ1" -gt "$ST_CF_NMQ0" ]; then
+  PASS "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — with every closed/open marker removed from a copy of the form it reads exactly the form's own findings [${ST_CF_NMT0% }]: a form with no option-bearing field passes question 6, because whether a field owes a marker is a reviewer's call. The Q6 arms need no marker to exist either — a marker planted on that same copy still raises Q6 ($ST_CF_NMQ0 → $ST_CF_NMQ1)"
+else
+  FAIL "CTL-ST-CF-Q6-NOMARK[$ST_CF_TAG]: MUST NOT FIRE — the marker-free copy (landed=$ST_CF_NML, markers left=$ST_CF_NMK) read [${ST_CF_NMT1% }] against the form's own [${ST_CF_NMT0% }], and a planted marker moved Q6 $ST_CF_NMQ0 → $ST_CF_NMQ1. Either question 6 grades whether a marker is owed, which the contract leaves to a reviewer, or its arms cannot be built on a form without one"
+fi
+
+# ── VERSION: the dispatch ──
+ST_CF_FX="$(st_cf_fixture version)"; st_line_sub "$ST_CF_FX" "$ST_CF_KV" ":[ ]*1[ \t]*$" ": 99"
+st_cf_mustfire "CTL-ST-CF-VERSION[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" VERSION "the fence's form-version: is set to a version this arm does not grade (line $ST_CF_KV)"
+
+# ── Edits that must not fire at all ──
+ST_CF_FX="$(st_cf_fixture clean)"
+st_cf_mustnotfire "CTL-ST-CF-CLEAN[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 0 "an UNMUTATED copy of the form is put through the same evaluator, the baseline every arm above is a delta against"
+ST_CF_FX="$(st_cf_fixture neutral)"; printf '\nA sentence of guide prose below the boundary, which no question grades.\n' >> "$ST_CF_FX"
+st_cf_mustnotfire "CTL-ST-CF-NEUTRAL[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "one sentence of prose is appended below the boundary, changing the file and no declaration"
+ST_CF_FX="$(st_cf_fixture fenced-example)"
+{ printf '\n~~~markdown\n'; awk -v a="$ST_CF_FO" -v b="$ST_CF_FC" 'FNR >= a + 0 && FNR <= b + 0' "$ST_CF_FILE"; printf '~~~\n'; } >> "$ST_CF_FX"
+st_cf_mustnotfire "CTL-ST-CF-FENCED-EXAMPLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "a worked example is appended below the boundary: a ~~~ fence carrying a copy of the form's own intake-form block, as a returned profile carries it. A fence inside another fence is text, so the form still carries ONE declaration"
+
+# ── The boundary stop itself, on group ST's own reader ──
+ST_CF_FX="$(st_cf_fixture boundary-stop)"
+printf '\n- **ZZ-ST-BELOW-PLAIN:** a plain bullet below the boundary\n- %s **ZZ-ST-BELOW-STARRED:** a starred bullet below the boundary\n' "$ST_STAR" >> "$ST_CF_FX"
+ST_CF_S1="$(st_surfaces "$ST_CF_FX")"
+ST_CF_CK0="$(awk -F'\t' '$1 == "BULLET" || $1 == "MARKED"' <<<"$ST_CF_SURF" | cksum)"
+ST_CF_CK1="$(awk -F'\t' '$1 == "BULLET" || $1 == "MARKED"' <<<"$ST_CF_S1" | cksum)"
+ST_CF_NB0="$(st_n BULLET "$ST_CF_SURF")"
+ST_CF_NW0="$(st_n BELOW "$ST_CF_SURF")"; ST_CF_NW1="$(st_n BELOW "$ST_CF_S1")"
+ST_CF_NWZ="$(awk -F'\t' '$1 == "BELOW" && ($3 == "ZZ-ST-BELOW-PLAIN" || $3 == "ZZ-ST-BELOW-STARRED") { n++ } END { print n + 0 }' <<<"$ST_CF_S1")"
+if [ "$ST_CF_CK0" = "$ST_CF_CK1" ] && [ "$ST_CF_NB0" -gt 0 ] && [ "$ST_CF_NWZ" -eq 2 ] && [ "$ST_CF_NW1" -eq $((ST_CF_NW0 + 2)) ]; then
+  PASS "CTL-ST-BOUNDARY-STOP[$ST_CF_TAG]: a plain and a starred labelled bullet appended below the boundary leave the form's BULLET and MARKED records byte-identical ($ST_CF_NB0 bullet(s)) and arrive as exactly two BELOW records naming them. So ST3's denominator and ST1's marked count cannot move on a guide-half edit, and question 4 sees it instead"
+else
+  FAIL "CTL-ST-BOUNDARY-STOP[$ST_CF_TAG]: the two appended bullets read field-records-unchanged=$( [ "$ST_CF_CK0" = "$ST_CF_CK1" ] && echo yes || echo no ), bullets=$ST_CF_NB0, BELOW $ST_CF_NW0 → $ST_CF_NW1 with $ST_CF_NWZ of them named — a guide-half bullet is leaking into the field records, or the stop is not reporting it"
+fi
+ST_CF_FX="$(st_cf_fixture boundary-closed)"; st_line_del "$ST_CF_FX" "$ST_CF_BL"
+ST_CF_S2="$(st_surfaces "$ST_CF_FX")"
+ST_CF_NF2="$(awk -F'\t' '$1 == "BULLET" || $1 == "MARKED" || $1 == "BELOW" { n++ } END { print n + 0 }' <<<"$ST_CF_S2")"
+ST_CF_SH2="$(awk -v star="$ST_STAR" '{ r = $0; sub(/^-[ \t]*/, "", r); if (index(r, star) == 1) { r = substr(r, length(star) + 1); sub(/^[ \t]+/, "", r) } } /^-/ && r ~ /^\*\*[^*]+:\*\*/ { n++ } END { print n + 0 }' "$ST_CF_FX")"
+ST_CF_Q2C="$(awk -F'\t' '$1 == "Q2" { n++ } END { print n + 0 }' <<<"$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")")"
+if [ "$ST_CF_NF2" -eq 0 ] && [ "$ST_CF_SH2" -gt 0 ] && [ "$ST_CF_Q2C" -gt 0 ]; then
+  PASS "CTL-ST-BOUNDARY-CLOSED[$ST_CF_TAG]: with the boundary line deleted the form's reader emits NO field record at all though $ST_CF_SH2 field-shaped line(s) remain, and question 2 names the unresolved boundary. The stop fails CLOSED — never a whole-file read of the guide half as fields"
+else
+  FAIL "CTL-ST-BOUNDARY-CLOSED[$ST_CF_TAG]: with the boundary line deleted the reader emitted $ST_CF_NF2 field record(s) over $ST_CF_SH2 field-shaped line(s), and question 2 fired $ST_CF_Q2C time(s) — an unresolved boundary must read NOTHING and be named, or the stop has become a whole-file fallback"
+fi
+done <<EOF
+$ST_CF_FORMS
+EOF
+
+# ── RUN LEVEL, after every member: the conformance arm's coverage, graded once over every arm that
+# ran on any member (D-12 of the seam), at the code rung and at the site rung.
+echo
+echo "  ── the form contract's arm coverage, over every member read above"
+# When NO member's arms could be constructed, every code would read uncovered for a reason that
+# is not a coverage hole — each member's entry gate has already named that reason once. So the
+# run renders ONE failure saying coverage is unmeasured, rather than a list of codes and sites
+# that were never given the chance to be armed.
+ST_CF_NARMED="$(printf '%s\n' "$ST_CF_ARMED" | grep -c '[^[:space:]]')"
+if [ "$ST_CF_NARMED" -eq 0 ]; then
+  FAIL "ST-CF-COV: $(st_cf_unres_note)no member's conformance arms could be constructed in this run, so the code and site coverage of st_cf_violations is UNMEASURED — each member's entry gate above names why, once"
+else
+  cov_assert 'ST-CF-COV' 'CTL-ST-CF-COV' '' 'st_cf_violations' \
+             st_codes cov_emit_tab "$ST_CF_SITE_BODY" \
+             "$ST_CF_CODES" "$ST_CF_ARMED" "$ST_CF_COV_PROBE" "$ST_CF_COV_PHANTOM"
+  if [ "$ST_CF_SITE_OK" -eq 1 ]; then
+    cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' '' 'st_cf_violations' \
+               st_sites cov_emit_tab "$ST_CF_SITE_BODY" \
+               "$ST_CF_SITE_KEYS" "$ST_CF_ARMED_SITES" "$ST_CF_SITE_PROBE" "$ST_CF_SITE_PHANTOM" \
+               "$ST_CF_SITE_PROBE_KEY" 'emission site'
+  fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────────
@@ -8143,10 +9074,12 @@ RL_CMD="$ROOT/skills/trip-record/SKILL.md"
 RL_PAIR_T="$ROOT/examples/people-library-demo/travelers/noor.md"
 RL_PAIR_R="$ROOT/examples/people-library-demo/people/psn-3c7e.md"
 RL_UNLINKED="$ROOT/examples/data-architecture-demo/travelers/alex.md"
-# The two guided forms. Their `## ` headings bound RL3's population: the rows RL3 grades are the
-# rows whose section leads a heading of one of them, because the pair partitions THEIR fields.
-RL_FORM_T="$ROOT/templates/traveler-intake.template.md"
-RL_FORM_P="$ROOT/templates/person-intake.template.md"
+# The guided forms, as absolute paths: the version-1 members of the declared form population
+# above group FT, read from that declaration rather than listed here. Their `## ` headings bound
+# RL3's population — the rows RL3 grades are the rows whose section leads a heading of one of them,
+# because the pair partitions THEIR fields. A block-owned form declares another contract version and
+# is no guided form, so it never enters this list.
+RL_FORMS="$(while IFS= read -r rl_m; do [ -n "$rl_m" ] && st_cf_v1_member "$ROOT/$rl_m" && printf '%s\n' "$ROOT/$rl_m"; done <<<"$ST_CF_FORMS")"
 RL_STAR='⭐'
 
 # rl_class <data-model> — the classification table, read LIVE. Emits
@@ -8155,15 +9088,26 @@ RL_STAR='⭐'
 # rationale column, which discusses other classes by name in several rows.
 rl_class() { ft_rows "$1" | awk -F'\t' '{ print $3 "\t" $4 "\t" $6 "\t" $2 "\t" $1 }'; }
 
-# rl_bullets <file> <honour_star> — emits "label<TAB>value<TAB>heading" for every intake bullet,
-# the heading being the enclosing `## ` heading trimmed as ft_heads trims it, which is what a
-# bullet is resolved on. honour_star=0 reproduces the MEASURED miss: the star-decorated bullets
+# rl_bullets <file> <honour_star> [form] — emits "label<TAB>value<TAB>heading" for every intake
+# bullet, the heading being the enclosing `## ` heading trimmed as ft_heads trims it, which is what
+# a bullet is resolved on. honour_star=0 reproduces the MEASURED miss: the star-decorated bullets
 # vanish.
+# FORM MODE — a version-1 member of the declared form population, or any file when `form` is
+# passed — reads only ABOVE the boundary st_boundary resolves from the file's own fence, and reads
+# NOTHING when that boundary does not resolve: a whole-file fallback would count the guide half's
+# bullets as fields, which is the leak form mode exists to close. Every other file — an instance, a
+# fixture, a copy under $WORK — is read whole, because a filled profile copies its form's fence,
+# and the stop is keyed on MEMBERSHIP so that no instance is ever cut by it.
 # The star prefix is removed with a dynamic sub() rather than by arithmetic on length(),
 # because length() counts characters or bytes depending on the awk and the locale, and
 # group LC exists because this suite has already been bitten by exactly that.
 rl_bullets() {
-  awk -v star="$RL_STAR" -v honour="$2" '
+  local rl_bl=-1
+  if [ "${3:-}" = "form" ] || st_cf_v1_member "$1"; then
+    rl_bl="$(awk -F'\t' '$1 == "LINE" { v = $2 } END { print v + 0 }' <<<"$(st_boundary "$1")")"
+  fi
+  awk -v star="$RL_STAR" -v honour="$2" -v bl="$rl_bl" '
+    bl == 0 || (bl > 0 && FNR >= bl) { exit }
     /^## / { head = substr($0, 4); sub(/[ \t\r]+$/, "", head); next }
     /^- / {
       rest = substr($0, 3)
@@ -8194,9 +9138,15 @@ rl_answered_class() {
 
 RL_OK=1
 RL_MISSING=""
-for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED" "$RL_FORM_T" "$RL_FORM_P"; do
+for rl_f in "$RL_DM" "$RL_CMD" "$RL_PAIR_T" "$RL_PAIR_R" "$RL_UNLINKED"; do
   [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
 done
+while IFS= read -r rl_f; do
+  [ -n "$rl_f" ] || continue
+  [ -r "$rl_f" ] || { RL_OK=0; RL_MISSING="$RL_MISSING ${rl_f#"$ROOT/"}"; }
+done <<EOF
+$RL_FORMS
+EOF
 
 RL_CLASSFILE="$WORK/rl-class.tsv"
 RL_ROWS="$WORK/rl-rows.tsv"
@@ -8263,7 +9213,7 @@ if [ "$RL_OK" -eq 1 ]; then
   # stale column would empty that set, and the NB limb below turns that into a FAIL.
   rl3_report() {
     local rows="$1"
-    ft_heads "$RL_FORM_T" "$RL_FORM_P" > "$WORK/rl3-heads.txt"
+    while IFS= read -r rl_h; do [ -n "$rl_h" ] && ft_heads "$rl_h"; done <<<"$RL_FORMS" > "$WORK/rl3-heads.txt"
     ft_under "$rows" "$WORK/rl3-heads.txt" > "$WORK/rl3-pop.tsv"
     { rl_bullets "$RL_PAIR_T" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tT" }'
       rl_bullets "$RL_PAIR_R" 1 | awk -F'\t' '{ print $3 "\t" $1 "\t" $2 "\tR" }'; } | ft_resolve "$rows" > "$WORK/rl3-res.tsv"
@@ -8522,6 +9472,96 @@ if [ "$RL_OK" -eq 1 ]; then
   else
     FAIL "RL8: the \`## link\` section renders=$RL_VALPAIR every-survey-row=$RL_EVERYROW direct-read=$RL_DIRECT block-scoped-render=$RL_BLOCKSCOPE two-unknowns-distinguished=$RL_TWOUNK report-bound=$RL_NOPERSIST surfaces-named=$RL_SURFACES residual-filed-under-erasure-reach=$RL_GROUND superseded-no-restatement-still-present=$RL_OLDRULE overreaching-justification-still-present=$RL_OVERREACH inverted-by-address-disposal-still-present=$RL_ADDRDISP. A missing render leaves the operator adjudicating on field labels alone; a render scoped to the adjudicable subset stops them on a survey it shows no values for; a pair derived from the compositions renders their own value twice on the DEFAULT limb and never the record's; an unstated block rule leaves a Needs row rendering one line, N lines or the union depending on who reads it; an undistinguished UNKNOWN gives two conditions with opposite remedies one appearance; a missing bound is a value reaching a persisted artifact by a route the report rule never sanctioned; a residual filed under the wrong ground hands the next reader a contradiction against the data model; and a surviving superseded sentence leaves the section stating both rules at once"
   fi
+fi
+
+# ── THE BOUNDARY STOP ON rl_bullets, AND THE MEMBERSHIP THAT SCOPES IT ─────────
+# rl_bullets reads a version-1 member of the declared form population only above its boundary, and
+# every other file whole. These arms grade both halves: which files get the stop, and what it does.
+
+# CTL-RL-BOUNDARY-MEMBERS — the scope. Every declared member reads in form mode exactly when its
+# contract version is not 2; the resolving pair's trip file and a copy under $WORK never do; and the
+# version reader that keeps a block-owned form out of form mode reads a `2` where a fence says so.
+RL_BM_N=0; RL_BM_BAD=""
+while IFS= read -r rl_m; do
+  [ -n "$rl_m" ] || continue
+  RL_BM_N=$((RL_BM_N + 1))
+  rl_want=v1; [ "$(st_cf_version "$ROOT/$rl_m")" = 2 ] && rl_want=v2
+  rl_got=v2; st_cf_v1_member "$ROOT/$rl_m" && rl_got=v1
+  [ "$rl_want" = "$rl_got" ] || RL_BM_BAD="$RL_BM_BAD $rl_m=$rl_got"
+done <<EOF
+$ST_CF_FORMS
+EOF
+RL_BM_PAIR=no; st_cf_v1_member "$RL_PAIR_T" && RL_BM_PAIR=yes
+cp "$RL_PAIR_T" "$WORK/rl-bm-copy.md"
+RL_BM_WORK=no; st_cf_v1_member "$WORK/rl-bm-copy.md" && RL_BM_WORK=yes
+# The version reader's control is a synthetic fence of its own, so that no member's state can
+# decide whether the reader is shown to work.
+printf '%s\n' '# ZZ' '```intake-form' 'form: zz' 'form-version: 2' '```' > "$WORK/rl-bm-v2.md"
+RL_BM_V2="$(st_cf_version "$WORK/rl-bm-v2.md")"
+if [ "$RL_BM_N" -gt 0 ] && [ -z "$RL_BM_BAD" ] && [ "$RL_BM_PAIR" = no ] && [ "$RL_BM_WORK" = no ] && [ "$RL_BM_V2" = 2 ]; then
+  PASS "CTL-RL-BOUNDARY-MEMBERS: rl_bullets' form mode reaches exactly the declared members whose contract version is not 2 — all $RL_BM_N member(s) of the population read as the version reader says — and never the resolving pair's trip file or a copy under \$WORK, while the version reader reads 2 from a synthetic fence that says 2. The stop is keyed on MEMBERSHIP, so a filled profile carrying its form's fence is never cut by it"
+else
+  FAIL "CTL-RL-BOUNDARY-MEMBERS: form mode reached members=$RL_BM_N mismatched=[${RL_BM_BAD# }] pair-trip-file=$RL_BM_PAIR work-copy=$RL_BM_WORK, and the version reader read '$RL_BM_V2' where 2 is owed. A stop keyed on anything but membership either cuts an instance or misses a form"
+fi
+
+# Per version-1 member, behind that member's own boundary — ONE FAIL when it does not resolve:
+#   CTL-RL-BOUNDARY-STOP    two labelled bullets appended below the boundary of a copy leave form
+#                           mode byte-identical to the member's, while a whole read carries both
+#   CTL-RL-BOUNDARY-CLOSED  the boundary line deleted from a copy: form mode reads NOTHING, while a
+#                           whole read still finds bullets — fail-closed, never a whole-file fallback
+while IFS= read -r rl_m; do
+  [ -n "$rl_m" ] || continue
+  st_cf_v1_member "$ROOT/$rl_m" || continue
+  rl_tag="$(st_cf_tag "$rl_m")"
+  rl_g="$(st_boundary "$ROOT/$rl_m")"
+  if [ "$(awk -F'\t' 'NR == 1 { print $1 }' <<<"$rl_g")" != "LINE" ]; then
+    FAIL "CTL-RL-BOUNDARY[$rl_tag]: $(st_cf_unres_note)neither boundary arm could be constructed on $rl_m — $(awk -F'\t' 'NR == 1 { print $2 }' <<<"$rl_g") — because both mutate a copy of a form whose boundary resolves; this member's rl_bullets stop is UNMEASURED and named here once"
+    continue
+  fi
+  rl_bl="$(awk -F'\t' 'NR == 1 { print $2 }' <<<"$rl_g")"
+  rl_fx="$WORK/rl-bstop-$rl_tag.md"; cp "$ROOT/$rl_m" "$rl_fx"
+  printf '\n- **ZZ-RL-BELOW-PLAIN:** a plain bullet below the boundary\n- %s **ZZ-RL-BELOW-STARRED:** a starred bullet below the boundary\n' "$RL_STAR" >> "$rl_fx"
+  rl_c0="$(rl_bullets "$ROOT/$rl_m" 1 | cksum)"; rl_c1="$(rl_bullets "$rl_fx" 1 form | cksum)"
+  rl_n0="$(rl_bullets "$ROOT/$rl_m" 1 | grep -c '[^[:space:]]')"
+  rl_w="$(rl_bullets "$rl_fx" 1 | awk -F'\t' '$1 == "ZZ-RL-BELOW-PLAIN" || $1 == "ZZ-RL-BELOW-STARRED" { n++ } END { print n + 0 }')"
+  if [ "$rl_c0" = "$rl_c1" ] && [ "$rl_n0" -gt 0 ] && [ "$rl_w" -eq 2 ]; then
+    PASS "CTL-RL-BOUNDARY-STOP[$rl_tag]: a plain and a starred labelled bullet appended below the boundary of a copy leave rl_bullets' form mode byte-identical to the member's own read ($rl_n0 bullet(s)), while a whole read of the same copy carries both. So a bullet in the guide half cannot move a denominator read through rl_bullets — DH's among them"
+  else
+    FAIL "CTL-RL-BOUNDARY-STOP[$rl_tag]: with two bullets appended below the boundary, form mode read $( [ "$rl_c0" = "$rl_c1" ] && echo the-same || echo DIFFERENT ) records over $rl_n0 bullet(s), and a whole read found $rl_w of the two — the stop is either leaking the guide half or not being applied"
+  fi
+  rl_fx="$WORK/rl-bclosed-$rl_tag.md"
+  awk -v n="$rl_bl" 'FNR != n + 0' "$ROOT/$rl_m" > "$rl_fx"
+  rl_f0="$(rl_bullets "$rl_fx" 1 form | grep -c '[^[:space:]]')"
+  rl_w0="$(rl_bullets "$rl_fx" 1 | grep -c '[^[:space:]]')"
+  if [ "$rl_f0" -eq 0 ] && [ "$rl_w0" -gt 0 ]; then
+    PASS "CTL-RL-BOUNDARY-CLOSED[$rl_tag]: with the boundary line deleted from a copy, form mode reads NOTHING while a whole read of the same copy still finds $rl_w0 bullet(s) — the stop fails CLOSED, so an unresolved boundary empties a denominator loudly rather than filling it with the guide half"
+  else
+    FAIL "CTL-RL-BOUNDARY-CLOSED[$rl_tag]: with the boundary line deleted, form mode read $rl_f0 bullet(s) and a whole read $rl_w0, where none and some are owed — an unresolved boundary has become a whole-file read"
+  fi
+done <<EOF
+$ST_CF_FORMS
+EOF
+
+# CTL-RL-BOUNDARY-INSTANCE — MUST NOT FIRE. The resolving pair's trip file, with the first member's
+# fence spliced in after its frontmatter — a filled profile carrying its form's fence, as every
+# finished profile now does — reads exactly as the file itself reads, and non-empty. The splice is
+# three plain reads and never passes the fence text through awk -v, which aborts on a multi-line
+# value.
+RL_BI_M="$(printf '%s\n' "$ST_CF_FORMS" | awk 'NF { print; exit }')"
+RL_BI_FA="$(st_cf_fence_at "$ROOT/$RL_BI_M")"; RL_BI_FO="${RL_BI_FA%% *}"; RL_BI_FC="${RL_BI_FA##* }"
+RL_BI_FME="$(awk 'NR == 1 && $0 == "---" { f = 1; next } f && $0 == "---" { print NR; exit }' "$RL_PAIR_T")"
+RL_BI_FX="$WORK/rl-instance.md"
+{ awk -v n="${RL_BI_FME:-0}" 'FNR <= n + 0' "$RL_PAIR_T"
+  printf '\n'
+  awk -v a="$RL_BI_FO" -v b="$RL_BI_FC" 'FNR >= a + 0 && FNR <= b + 0' "$ROOT/$RL_BI_M"
+  awk -v n="${RL_BI_FME:-0}" 'FNR > n + 0' "$RL_PAIR_T"; } > "$RL_BI_FX"
+RL_BI_LAND="$(st_cf_fence_at "$RL_BI_FX" | awk '{ print (($1 > 0 && $2 > $1) ? "yes" : "no") }')"
+RL_BI_R0="$(rl_bullets "$RL_PAIR_T" 1)"; RL_BI_R1="$(rl_bullets "$RL_BI_FX" 1)"
+RL_BI_N="$(printf '%s\n' "$RL_BI_R1" | grep -c '[^[:space:]]')"
+if [ "$RL_BI_LAND" = yes ] && [ "$RL_BI_R0" = "$RL_BI_R1" ] && [ "$RL_BI_N" -gt 0 ]; then
+  PASS "CTL-RL-BOUNDARY-INSTANCE: MUST NOT FIRE — the resolving pair's trip file with a form's intake-form fence spliced in after its frontmatter reads exactly as the file itself reads, $RL_BI_N bullet(s), both whole. A finished profile copies its form's fence, and the stop is keyed on the declared population rather than on carrying a fence, so no instance is ever cut short"
+else
+  FAIL "CTL-RL-BOUNDARY-INSTANCE: $( [ "$RL_BI_LAND" = yes ] || st_cf_unres_note )MUST NOT FIRE — the spliced copy carries-the-fence=$RL_BI_LAND and reads $RL_BI_N bullet(s), $( [ "$RL_BI_R0" = "$RL_BI_R1" ] && echo identical to || echo DIFFERENT from ) the file itself. A stop keyed on the fence rather than on membership cuts every finished profile at a boundary it does not carry"
 fi
 
 if [ "$RL_RAN" -ne 1 ]; then
@@ -11104,6 +12144,9 @@ dh_form_labels() { rl_bullets "$1" 1 | cut -f1 | sort -u; }
 
 DH_OK=1
 DH_MISSING=""
+# Set when DH0 itself renders a FAIL, so DH-integrity can say the group stopped there rather than
+# that it never ran.
+DH_ZERO_FAILED=0
 for dh_f in "$DH_PERSON_FORM" "$DH_TRIP_FORM" "$DH_PEOPLE" "$DH_CMD" "$ROOT/$DH_SCHEMA_REL" "$RL_DM"; do
   [ -r "$dh_f" ] || { DH_OK=0; DH_MISSING="$DH_MISSING ${dh_f#"$ROOT/"}"; }
 done
@@ -11126,11 +12169,13 @@ if [ "$DH_OK" -eq 1 ]; then
     PASS "DH0: every population below is DERIVED and every one came back non-empty — $DH_NUKEYS universal key(s) from the architecture document's § 4.4 block, $DH_NDECL declared field(s) in $DH_SCHEMA_REL read through the validator's own schema reader, $DH_NSCOPED trip- or destination-scoped label(s) from the live classification, and $DH_NPLBL / $DH_NTLBL field label(s) on the durable and trip intake forms. This gate exists because two of the three arms below are ZEROES: over an empty extraction a zero is not a measurement, and a run that parsed one of these into nothing would otherwise report the corpus clean"
     DH_RAN=1
   else
-    FAIL "DH0: a required population is EMPTY — universal keys $DH_NUKEYS, declared fields $DH_NDECL, trip/dest labels $DH_NSCOPED, durable-form labels $DH_NPLBL, trip-form labels $DH_NTLBL. Not a skip and not a pass: every arm below would be a statement over the empty set, and the two that are zeroes would read as clean. The likeliest causes are a reordered classification column, which this group reads by index through rl_class, and a renamed fence in § 4.4"
+    FAIL "DH0: $(st_cf_unres_note)a required population is EMPTY — universal keys $DH_NUKEYS, declared fields $DH_NDECL, trip/dest labels $DH_NSCOPED, durable-form labels $DH_NPLBL, trip-form labels $DH_NTLBL. Not a skip and not a pass: every arm below would be a statement over the empty set, and the two that are zeroes would read as clean. The likeliest causes are a reordered classification column, which this group reads by index through rl_class, and a renamed fence in § 4.4"
     DH_OK=0
+    DH_ZERO_FAILED=1
   fi
 else
-  FAIL "DH0: required surface(s) unreadable:$DH_MISSING — not a skip and not a pass"
+  FAIL "DH0: $(st_cf_unres_note)required surface(s) unreadable:$DH_MISSING — not a skip and not a pass"
+  DH_ZERO_FAILED=1
 fi
 
 if [ "$DH_OK" -eq 1 ]; then
@@ -11264,7 +12309,12 @@ not a table line"
   fi
 fi
 
-if [ "$DH_RAN" -ne 1 ]; then
+# DH-integrity names what stopped the group. DH0 renders a FAIL of its own, so a group that stopped
+# THERE executed and failed rather than failing to execute — and a reader triaging by message is
+# sent to DH0's cause instead of being told the group vanished.
+if [ "$DH_RAN" -ne 1 ] && [ "$DH_ZERO_FAILED" -eq 1 ]; then
+  FAIL "DH-integrity: $(st_cf_unres_note)group DH stopped at DH0, which FAILED above, so DH1 to DH4 were never graded — a run in this state is a failure, never a pass. DH0's own message names the empty population"
+elif [ "$DH_RAN" -ne 1 ]; then
   FAIL "DH-integrity: group DH did not execute — a run without it is a failure, never a pass"
 fi
 
@@ -11723,8 +12773,20 @@ md_flips ft_rows       'FT1'        ft_count_assert "$FT_DOC"
 md_flips ft_rows       'FT2'        ft_key_assert "$FT_DOC"
 md_flips ft_rows       'FT3'        ft_vocab_assert "$FT_DOC"
 md_flips ft_resolve    'FT4'        ft_resolve_assert
-md_flips ft_resolve    'FT5'        ft_cover_assert "$FT_DOC" "$FT_FORM_T" "$FT_FORM_P" "$FT_FORM_C"
+md_flips ft_resolve    'FT5'        ft_cover_assert "$FT_DOC" "$FT_FORMS"
 md_flips ft_region     'FT6'        ft_rule_assert "$FT_DOC" "$FT_SKILL"
+# ── Group ST's conformance arm, REGISTERED on every function its form verdict rests on — the
+# evaluator, the boundary resolver, the surface reader the stop lives in, the resolver the join goes
+# through and the reader of the contract's keys — plus its two list assertions on the function each
+# reads. Every assertion takes its inputs as arguments and calls its own extractors, so removing a
+# subject must reach its non-degeneracy limb rather than a verdict someone else computed for it.
+md_flips st_cf_violations 'ST-CF'          st_cf_assert "$ST_CF_MD_FORM" "$ST_DM"
+md_flips st_boundary      'ST-CF-boundary' st_cf_assert "$ST_CF_MD_FORM" "$ST_DM"
+md_flips st_surfaces      'ST-CF-bullets'  st_cf_assert "$ST_CF_MD_FORM" "$ST_DM"
+md_flips ft_resolve       'ST-CF-join'     st_cf_assert "$ST_CF_MD_FORM" "$ST_DM"
+md_flips st_cf_decl_keys  'ST-CF-decl'     st_cf_assert "$ST_CF_MD_FORM" "$ST_DM"
+md_flips st_labint        'ST-CF-SUB'      st_cf_sub_assert "$ST_TEMPLATES" "$ST_CF_FORMS"
+md_flips st_cf_tracked_templates 'ST-CF-POP' st_cf_pop_assert "$ST_CF_FORMS" "$ST_CF_EXCLUDED"
 
 # ── Group CTL's coverage arm, REGISTERED on BOTH sides of what it grades — the reader and the
 # thing read. One subject alone would leave half the assertion ungraded.
@@ -11760,6 +12822,7 @@ md_flips va_check_artifact 'CTL-COV-emitter' ctl_cov_assert "$CTL_ARMED"
 # is what avoids creating a file subject at all.
 md_flips st_sitemap 'ST-SITE' site_cov_assert 'ST-SITE' 'CTL-ST-SITE' 'st_violations' "$ST_SITE_BODY" "$ST_ARMED_SITES"
 md_flips st_sitemap 'CE-SITE' site_cov_assert 'CE-SITE' 'CTL-CE-SITE' 'ce_violations' "$CE_SITE_BODY" "$CE_ARMED_SITES"
+md_flips st_sitemap 'ST-CF-SITE' site_cov_assert 'ST-CF-SITE' 'CTL-ST-CF-SITE' 'st_cf_violations' "$ST_CF_SITE_BODY" "$ST_CF_ARMED_SITES"
 
 # ── THE DOCUMENT HALF IS OPTED OUT, AND THE OPT-OUT IS DECLARED RATHER THAN SILENT ──
 # The other subject ST3 and ST4 rest on is reference/data-model.md, which is a FILE and not a

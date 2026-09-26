@@ -65,23 +65,35 @@ name: Artifact schema
 #        graded against the table; a key that cannot resolve a bullet to two rows; a closed
 #        vocabulary per axis; every labelled row reached by a form's bullet unless declared
 #        bullet-less; and the heading-to-section rule stated in the data model and the skill
-#   ST   the starred-field set in EACH intake form — the per-trip
+#   ST   the starred-field set in EACH intake form, and the form contract, on THREE
+#        propositions. AGREEMENT: in each form of the starred pass — the per-trip
 #        templates/traveler-intake.template.md and the durable
-#        templates/person-intake.template.md — on TWO propositions. AGREEMENT: the count
-#        agrees across ALL
-#        FOUR of that form's homes: the banner numeral, the appendix rule-4 numeral, the appendix's
-#        per-field (starred) annotations, and the marked fields themselves — the only home
-#        that is not a restatement of another, and therefore the reference count. LEVEL: that
-#        form's marked set equals the intersection of its labelled bullets with the starred
-#        rows of reference/data-model.md's field table, and across the run the union of the
-#        per-form marked sets equals that table's starred set — both in both directions,
-#        label for label. Neither half compares the count against a shipping-path producer,
-#        because the starred count has none. Surfaces
+#        templates/person-intake.template.md — the count agrees across BOTH of that form's
+#        homes: the banner numeral, and the marked fields themselves — the only home that is
+#        not a restatement of another, and therefore the reference count. The banner is the
+#        form's one statement of the count IN THE SHAPE THE SUITE READS: a numeral followed,
+#        within three intervening words, by "field(s)" or "of them", on a line naming the star.
+#        A further restatement in THAT shape turns ST red; one worded otherwise is not read,
+#        so the one-statement pin holds over that shape and never over every way of saying the
+#        number. LEVEL: that form's marked set equals the intersection of its labelled bullets
+#        with the starred rows of reference/data-model.md's field table, and across the run
+#        the union of the per-form marked sets equals that table's starred set — both in both
+#        directions, field for field, each bullet resolved on (section, label). CONFORMANCE:
+#        every form in a DECLARED population answers the contract's six questions — one fence
+#        carrying each declared key once and no other; a whole-line boundary with the heading
+#        above it; every bullet above it joining one field-table row, none below; a human
+#        writer agreeing with the frontmatter; each marker present well-formed at the head of
+#        its bracket, the decidable half, because whether a field owes one is a reviewer's
+#        call. The population is a declared list that contains the starred pass's forms and
+#        accounts for every tracked template, never one discovered by fence, and a form's
+#        fields end at its boundary for every reader, fail-closed. Neither of the first two
+#        compares the count against a shipping-path producer, because the starred count has
+#        none. Surfaces
 #        are discovered by MARKUP SHAPE and never by line number, because the report that
 #        surfaced this named two line numbers that had already moved. ST carries its own
 #        must-fire and specificity arms inside the group; THE ARM INVENTORY IS NOT RESTATED
 #        HERE, for the reason the CTL line below already gives. The invariant binding that
-#        inventory is no longer merely stated: the suite derives from the evaluator's own body,
+#        inventory is no longer merely stated: the suite derives from each evaluator's own body,
 #        on every run, BOTH the set of violation codes it can emit AND the set of places it can
 #        emit one from, and compares each in both directions against the arms that ran. A code
 #        added later with no arm behind it turns that run RED, and so does a SECOND emission
@@ -258,7 +270,7 @@ name: Artifact schema
 #   nothing about the quality or the accuracy of any artifact's prose. The exception is
 #   group ST, and it checks the self-referential starred-field set in each intake form on
 #   two propositions and nothing else. The first is that the count agrees
-#   with itself across that form's four homes. Agreement is not accuracy — that half stays green on four
+#   with itself across that form's two homes and is stated once. Agreement is not accuracy — that half stays green on two
 #   homes that agree on a wrong number — which is why the second exists: the set each form
 #   marks is also graded against the starred rows of the data model's field table, per form
 #   and across the run, in both directions. That reaches the LEVEL and not merely the
@@ -267,7 +279,9 @@ name: Artifact schema
 #   the quality or accuracy of any other narrative content anywhere in this repository. What
 #   it does NOT do is compare that set against anything the shipping path produces, because
 #   nothing there derives or consumes it. So this clause is NARROWED here rather than
-#   removed, and no other prose in any artifact is adjudicated by this gate.
+#   removed, and no other prose in any artifact is adjudicated by this gate. The same group's
+#   conformance arm reads a form's declarative markup — its fence, its boundary, its headings, its
+#   labelled bullets and the closed/open marker at the head of a bracket — and none of its narrative.
 #
 #   A USER'S trips/ DIRECTORY. .gitignore carries `trips/*` with `!trips/README.md`, so a
 #   CI checkout contains no trip. Those artifacts are unreachable by construction, not by
