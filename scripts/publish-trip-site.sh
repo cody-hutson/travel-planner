@@ -3304,7 +3304,7 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
       die "refusing a non-interactive delete without --yes. Re-run with --yes to confirm deleting $owner/$slug."
     fi
   fi
-  info "Deleting $owner/$slug…"
+  info "Deleting $owner/${slug}…"
   gh repo delete "$owner/$slug" --yes >/dev/null 2>&1 \
     || die "delete failed — check the delete_repo scope and that you own $owner/$slug."
   # The local mirror now points at a deleted repo; remove it so a later publish starts clean.
