@@ -18,7 +18,8 @@
 # Usage:
 #   publish-trip-site.sh publish   <trip-dir> [--plaintext] [--opaque]
 #   publish-trip-site.sh update    <trip-dir>
-#   publish-trip-site.sh confirm   <trip-dir>   (interactive; records the organizer's approval of an itinerary change)
+#   publish-trip-site.sh confirm   <trip-dir>   (interactive; records the organizer's approval of an itinerary change,
+#                                                or, on a trip that declares approvers, each reply as the organizer's statement)
 #   publish-trip-site.sh rotate    <trip-dir> [--passphrase <new>]
 #   publish-trip-site.sh list                       (read-only inventory of all trips under trips/; gh optional)
 #   publish-trip-site.sh unpublish <trip-dir> [--disable-pages-only] [--yes]
@@ -30,16 +31,24 @@
 #   --disable-pages-only   unpublish: take the site offline but KEEP the repo (reversible). Default DELETES the repo.
 #   --yes          unpublish: skip the interactive confirmation (required for a non-interactive delete).
 #
-# Organizer-confirm gate (ADR-003 § Decision 2). Once a baseline is recorded, update refuses
-# when the itinerary content of the outgoing render differs from what is currently published
-# and no organizer confirmation covers it, or when it cannot determine that content at all
-# (a render it cannot read, project or normalize); rotate republishes through update and
-# inherits the refusal. With no baseline the gate is NOT ACTIVE and update publishes without
-# asking for confirmation; publish and update record one after each push whose render they
-# can identify, and warn when a push leaves the trip without one. A republish carrying the
-# SAME itinerary content — a coordination-state marker change, say — is not a plan change
-# and passes. Record the approval with `confirm` (terminal only, no override flag); it binds
-# to that exact itinerary content, so a later edit re-opens the gate.
+# Approval gate (ADR-029, which supersedes in part the organizer-confirm rule of ADR-003 §
+# Decision 2). Once a baseline is recorded, update refuses when the itinerary content of the
+# outgoing render differs from what is currently published and no approval covers it, or when it
+# cannot determine that content at all (a render it cannot read, project or normalize); rotate
+# republishes through update and inherits the refusal. A republish carrying the SAME itinerary
+# content — a coordination-state marker change, say — is not a plan change and passes. Two
+# configurations:
+#   - A trip that declares no approvers is gated on the organizer's own confirmation, exactly as
+#     before. With no baseline the gate is NOT ACTIVE there and update publishes without asking;
+#     publish and update record a baseline after each push whose render they can identify, and
+#     warn when a push leaves the trip without one.
+#   - A trip that declares approvers (<trip-dir>/.approvers, written by /trip-record .approvers)
+#     is gated on the declared number of them approving this exact plan, each approval recorded
+#     by the organizer at a terminal as the organizer's statement. Its plan is evaluated against
+#     its approvals even with no baseline, and update refuses an approved plan whose render does
+#     not carry its approval count and code.
+# Record either with `confirm` (terminal only, no override flag). An approval binds to that exact
+# itinerary content, so a later edit re-opens the gate.
 #
 # Passphrase resolution (in order): $STATICRYPT_PASSWORD, then <trip-dir>/.passphrase,
 # else a strong one is generated and saved to <trip-dir>/.passphrase (git-ignored, chmod 600).
@@ -2302,6 +2311,11 @@ verify_ciphertext() { # <enc> <src> [boilerplate_html]
 # and one recorder. It is deliberately placed BELOW the ADR-008 guard region and
 # ABOVE every subcommand, so it shares no hunk with either.
 #
+# That rule is superseded in part by ADR-029's second decision; the default configuration
+# reproduces it exactly. The approval collection that replaced it (#719) extends this same
+# block: SEAM S2's body, the digest primitive, the approval sidecars and their readers, and the
+# render's approval-code guard below.
+#
 # ── WHAT THE GATE MEASURES, AND WHY IT IS NOT "A PUBLISH IS HAPPENING" ────────
 # The first cut of this design blocked a republish whenever a change was pending.
 # That is wrong here, and the reason is structural rather than stylistic: ADR-002
@@ -2510,18 +2524,38 @@ strip_to_itinerary_text() { # <html_file> -> visible itinerary text on stdout, o
   ' "$1"
 }
 
-# SEAM (#88) — the digest primitive, reading STDIN. cksum, not shasum/sha256sum:
-# those are the BSD-vs-GNU dialect split this file documents at length above
-# _epoch_of_file, and cksum in the stdin form is the repository's only existing
-# digest idiom (scripts/test-command-taxonomy.sh). The stdin form omits the
-# filename, so the token depends only on content; BOTH emitted fields (checksum and
-# byte length) are combined, so the token binds size as well as CRC.
-# STATED TRADE: cksum is CRC-32 — it detects change, it does not resist forgery.
-# That is the correct property here, because ADR-003 places the trust in the
-# organizer explicitly and there is no adversary in this threat model. Should #719
-# (ADR-010's successor to #88) later collect attributable per-traveler approvals,
-# forgery resistance becomes real and the swap is this one function body.
-_digest_of() { # (stdin) -> one stable identity token
+# SEAM (#88) — the digest primitive, reading STDIN, and since #719 the digest an approval
+# BINDS: SHA-256 over the bytes, printed as 64 lowercase hex characters (ADR-029 § Decision 5).
+# One value serves the gate, the approval line the organizer shares, the code the render
+# states and every approval record, so there is one function to trust rather than several.
+#
+# THE ADVERSARY IS REAL NOW. This body was cksum — CRC-32 plus length — on the stated ground
+# that it detects change and need not resist forgery, because the trust sat with the organizer
+# and nothing compared a digest across hands. An approval changes that: a traveller compares the
+# code they approved with the code the published site states, and a code that a chosen edit can
+# be made to collide with proves nothing. CRC-32 is constructibly collidable, so the swap this
+# seam's earlier comment anticipated is taken.
+#
+# WHY CORE PERL. Digest::SHA ships with perl, and perl is already a dependency this file asserts
+# in one place — require_perl — so the swap adds none. It also avoids the BSD-versus-GNU split
+# between shasum and sha256sum, the dialect class this file documents at length above
+# _epoch_of_file. The program slurps stdin EXPLICITLY and hashes the empty string on empty
+# input, rather than relying on perl's -n or -0777 loop behaviour, which differs on empty input:
+# an empty projection must still yield the real empty-string token, as S11d and S15e require. It
+# carries no fallback limb and discards no stderr — S15i's rule for every perl program here.
+#
+# The CRC-32 body survives only as _legacy_digest_of below, for the legacy-baseline shim.
+_digest_of() { # (stdin) -> one stable identity token: SHA-256 of the bytes, 64 lowercase hex
+  perl -MDigest::SHA=sha256_hex -e 'binmode STDIN; local $/; my $s = <STDIN>; $s = q() unless defined $s; print sha256_hex($s)'
+}
+
+# The pre-#719 digest primitive, kept for ONE reader: the legacy-baseline shim, _baseline_matches.
+# A baseline recorded before the swap reads `<digits>-<digits>` — CRC-32 and byte length, a shape
+# disjoint from 64 lowercase hex — and the shim compares it with this function's answer over the
+# same projection, so a published plan that did not move is never re-read as a plan change merely
+# because the digest function changed. It is never an approval's digest: nothing that records or
+# counts an approval calls it.
+_legacy_digest_of() { # (stdin) -> the pre-#719 CRC-32-plus-length token
   cksum | awk '{ printf "%s-%s", $1, $2 }'
 }
 
@@ -2582,6 +2616,20 @@ itinerary_digest() { # <html_file> -> identity token, or nothing
   printf '%s' "$dg"
 }
 
+# The same identity under the PRE-#719 digest, for the legacy-baseline shim alone. A sibling of
+# itinerary_digest rather than a parameter of it, with the same shape for the same reasons: the
+# projection's status is read first, and `pipefail` is set inside its own substitution, so a
+# stage that fails yields NOTHING rather than a token for a truncated itinerary. The pipeline is
+# duplicated rather than factored out of itinerary_digest deliberately — that function's shape is
+# what groups S11 and S15 grade, and this one must not be able to move it.
+_legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token, or nothing
+  [ -r "${1:-}" ] || return 0
+  local text dg
+  text="$(strip_to_itinerary_text "$1")" || return 0
+  dg="$(set -o pipefail; printf '%s' "$text" | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' | _legacy_digest_of)" || return 0
+  printf '%s' "$dg"
+}
+
 # The three sidecars, one resolver each. All three sit inside the trip dir, which
 # .gitignore excludes (`trips/*`) and which no subcommand ever copies into the
 # per-trip repo — so none of them is a publish surface.
@@ -2597,6 +2645,14 @@ change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
 # The itinerary content as of the last successful push. Written by cmd_publish and
 # cmd_update; read only here.
 published_itinerary_path() { printf '%s' "$1/.published-itinerary"; }
+# The two approval sidecars (#719, ADR-029 § Decisions 2–4), under the same git-ignored trip dir
+# and, like the three above, never copied into the per-trip repo. The site build reads NEITHER:
+# both hold roster keys, and the render may carry only the aggregate (ADR-029 § Decision 6).
+#   .approvers  the declaration — who approves, and how many must; written by /trip-record .approvers
+#   .approvals  the ledger — one organizer-stated record per approval or withdrawal, written ONLY by
+#               confirm, by an atomic append that preserves every prior byte
+approver_declaration_path() { printf '%s' "$1/.approvers"; }
+approval_ledger_path()      { printf '%s' "$1/.approvals"; }
 
 # The `digest=` line of a two-line record, or NOTHING when the file is absent, the
 # line is missing, or the token is not a well-formed digest. Folding those three
@@ -2651,35 +2707,262 @@ record_published_itinerary() { # <trip_dir> <site_html>
   mv -f "$tmp" "$out"
 }
 
+# ── THE APPROVAL READERS (#719, ADR-029 § Decisions 2–5) ─────────────────────────
+# Pure readers over the two approval sidecars. SEAM S2's body below is their caller on the gate's
+# path; confirm's declared branch and the render guard call them too. Each is a bash read loop —
+# no associative array (bash 3.2) and no pipeline into an early-exiting reader (group PF) — and
+# every character class is ENUMERATED rather than written as a range, so no verdict here depends
+# on the locale's collation order.
+
+# The approval policy of a trip: exactly one of `none`, `declared` or `malformed` on stdout.
+#   none       neither sidecar is present — the trip is gated on the organizer's own
+#              confirmation, the rule ADR-003 § Decision 2 shipped
+#   declared   the declaration is present, and both files are readable and on their grammars
+#   malformed  a ledger with no declaration (#718's FM-2 ii), or either file unreadable or off its
+#              grammar; one warn line on stderr names the file and the rule it broke
+# A file is PRESENT when it exists OR is a symbolic link, so a dangling link is present and
+# unreadable rather than absent. An existence-only test would read a broken declaration as no
+# declaration at all and hand the trip back to the organizer-confirm default (S16m).
+# The grammars are strict and ONE bad line poisons the whole file rather than being skipped: a
+# reader that skipped bad lines would let a corrupted `withdraw` drop out of the count and
+# re-open an approval the organizer had withdrawn (S16g).
+_approval_policy() { # <trip_dir> -> none | declared | malformed
+  local trip_dir="$1" dfile lfile dpres=0 lpres=0 why
+  dfile="$(approver_declaration_path "$trip_dir")"
+  lfile="$(approval_ledger_path "$trip_dir")"
+  if [ -e "$dfile" ] || [ -L "$dfile" ]; then dpres=1; fi
+  if [ -e "$lfile" ] || [ -L "$lfile" ]; then lpres=1; fi
+  if [ "$dpres" -eq 0 ] && [ "$lpres" -eq 0 ]; then printf 'none'; return 0; fi
+  if [ "$dpres" -eq 0 ]; then
+    warn "the approval state of $trip_dir is malformed: $lfile is present and $dfile is not. A ledger with no declaration counts no approval, so every plan change is held until the two agree."
+    printf 'malformed'; return 0
+  fi
+  why="$(_approvers_grammar "$dfile")"
+  if [ -n "$why" ]; then
+    warn "the approval state of $trip_dir is malformed: $dfile — $why. Every plan change is held until it is repaired."
+    printf 'malformed'; return 0
+  fi
+  if [ "$lpres" -eq 1 ]; then
+    why="$(_approvals_grammar "$lfile")"
+    if [ -n "$why" ]; then
+      warn "the approval state of $trip_dir is malformed: $lfile — $why. Every plan change is held until it is repaired."
+      printf 'malformed'; return 0
+    fi
+  fi
+  printf 'declared'
+  return 0
+}
+
+# The declaration's grammar (#719 EG-3). Prints the FIRST rule the file breaks, or nothing.
+#   line 1      exactly `threshold=all`, or `threshold=<n>` with <n> an integer from 1 to the
+#               number of approver= lines, written without a leading zero
+#   lines 2..   one or more `approver=<key>`, <key> a canonical traveller key — [a-z0-9]+, the
+#               normalization reference/data-architecture.md § 3.2 fixes — pairwise distinct
+#   every line  newline-terminated; no blank line, no comment, no other line
+# A rule names a line NUMBER and never a value: this diagnostic reaches whatever captured the
+# caller's standard error, and a key is a projection of a traveller's name.
+_approvers_grammar() { # <declaration_file> -> the first rule it breaks, or nothing
+  local f="$1" line n=0 thr="" keys=" " nk=0 key last=0
+  if [ ! -r "$f" ]; then printf 'it is present but cannot be read'; return 0; fi
+  while :; do
+    if ! IFS= read -r line; then
+      if [ -z "$line" ]; then break; fi
+      last=1
+    fi
+    n=$((n+1))
+    if [ "$last" -eq 1 ]; then printf 'its line %d is not newline-terminated' "$n"; return 0; fi
+    if [ "$n" -eq 1 ]; then
+      case "$line" in
+        threshold=all) thr=all ;;
+        threshold=[123456789]*)
+          thr="${line#threshold=}"
+          case "$thr" in *[!0123456789]*) printf 'its line 1 is not threshold=all or threshold=<n>'; return 0 ;; esac ;;
+        *) printf 'its line 1 is not threshold=all or threshold=<n> with <n> of 1 or more'; return 0 ;;
+      esac
+      continue
+    fi
+    case "$line" in
+      approver=*) key="${line#approver=}" ;;
+      *) printf 'its line %d is not an approver=<key> line' "$n"; return 0 ;;
+    esac
+    case "$key" in
+      ''|*[!abcdefghijklmnopqrstuvwxyz0123456789]*)
+        printf 'its line %d does not carry a canonical traveller key, [a-z0-9]+' "$n"; return 0 ;;
+    esac
+    case "$keys" in *" $key "*) printf 'its line %d declares an approver a second time' "$n"; return 0 ;; esac
+    keys="$keys$key "; nk=$((nk+1))
+  done < "$f"
+  if [ "$n" -eq 0 ]; then printf 'it is empty, and its line 1 must be threshold=all or threshold=<n>'; return 0; fi
+  if [ "$nk" -eq 0 ]; then printf 'it declares no approver= line'; return 0; fi
+  if [ "$thr" != all ]; then
+    if [ "${#thr}" -gt 4 ] || [ "$thr" -gt "$nk" ]; then
+      printf 'its threshold is larger than the number of approvers it declares'; return 0
+    fi
+  fi
+  return 0
+}
+
+# The ledger's grammar (#719 EG-3). Prints the FIRST rule the ledger breaks, or nothing.
+# One record per line, exactly five fields separated by single spaces, and no free text:
+#     organizer-stated <key> <approve|withdraw> <64 lowercase hex> <YYYY-MM-DDTHH:MM:SSZ>
+# The provenance token leads every record (#719 INT-5), so no line here can be read as a
+# traveller's own statement. An empty ledger conforms and counts nothing. As above, a rule
+# names a line number and never a value.
+_approvals_grammar() { # <ledger_file> -> the first rule it breaks, or nothing
+  local f="$1" line n=0 last=0 f1 f2 f3 f4 f5 f6 D='[0123456789]'
+  if [ ! -r "$f" ]; then printf 'it is present but cannot be read'; return 0; fi
+  while :; do
+    if ! IFS= read -r line; then
+      if [ -z "$line" ]; then break; fi
+      last=1
+    fi
+    n=$((n+1))
+    if [ "$last" -eq 1 ]; then printf 'its line %d is not newline-terminated' "$n"; return 0; fi
+    case "$line" in
+      ''|' '*|*' '|*'  '*) printf 'its line %d is not five fields separated by single spaces' "$n"; return 0 ;;
+    esac
+    f1=""; f2=""; f3=""; f4=""; f5=""; f6=""
+    IFS=' ' read -r f1 f2 f3 f4 f5 f6 <<<"$line"
+    if [ -z "$f5" ] || [ -n "$f6" ]; then printf 'its line %d is not five fields separated by single spaces' "$n"; return 0; fi
+    if [ "$f1" != 'organizer-stated' ]; then printf 'its line %d does not open with the provenance token organizer-stated' "$n"; return 0; fi
+    case "$f2" in
+      *[!abcdefghijklmnopqrstuvwxyz0123456789]*) printf 'its line %d does not carry a canonical traveller key, [a-z0-9]+' "$n"; return 0 ;;
+    esac
+    case "$f3" in approve|withdraw) ;; *) printf 'its line %d records neither approve nor withdraw' "$n"; return 0 ;; esac
+    if [ "${#f4}" -ne 64 ]; then printf 'its line %d does not carry a 64-character code' "$n"; return 0; fi
+    case "$f4" in *[!0123456789abcdef]*) printf 'its line %d carries a code outside lowercase hex' "$n"; return 0 ;; esac
+    case "$f5" in
+      $D$D$D$D-$D$D-$D$D[T]$D$D:$D$D:$D$D[Z]) ;;
+      *) printf 'its line %d does not end in a YYYY-MM-DDTHH:MM:SSZ time' "$n"; return 0 ;;
+    esac
+  done < "$f"
+  return 0
+}
+
+# The tally for one plan (#719 INT-1 b): "k t s" on stdout. Called only on a `declared` policy,
+# so both files have already passed their grammars.
+#   t  the declared threshold, with `all` read as the number of declared approvers
+#   k  the number of declared approvers whose LATEST record bearing <digest> is `approve` — an
+#      approval, a withdrawal and a re-approval count once, as the last of them says
+#   s  1 when some declared approver holds an `approve` record for any OTHER digest: approvals
+#      exist, but for a version of the plan that is no longer the one going out
+# A record by a key that is not declared counts for nothing, and the count is not clipped to the
+# threshold (S16c). Nothing here reads a traveller file, a person record, the derived model or a
+# provenance mark (#719 INT-8): a change in anybody's engagement changes no verdict.
+_approval_tally() { # <trip_dir> <digest> -> "k t s"
+  local trip_dir="$1" dg="$2" dfile lfile line thr="" keys="" nk=0 k=0 s=0 key latest r f2 f3 f4
+  dfile="$(approver_declaration_path "$trip_dir")"
+  lfile="$(approval_ledger_path "$trip_dir")"
+  if [ -r "$dfile" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        threshold=*) thr="${line#threshold=}" ;;
+        approver=*)  keys="$keys ${line#approver=}"; nk=$((nk+1)) ;;
+      esac
+    done < "$dfile"
+  fi
+  if [ "$thr" = all ]; then thr="$nk"; fi
+  # A threshold that resolves to nothing, or to zero, is never met: it is printed as a
+  # non-number, which S2's own shape check reads as `unconfirmed`. The declaration's grammar
+  # already refuses both; this keeps the tally from depending on that.
+  case "$thr" in ''|0|*[!0123456789]*) thr=none ;; esac
+  for key in $keys; do
+    latest=""
+    if [ -r "$lfile" ]; then
+      while IFS= read -r line || [ -n "$line" ]; do
+        r="${line#* }"; f2="${r%% *}"; r="${r#* }"; f3="${r%% *}"; r="${r#* }"; f4="${r%% *}"
+        if [ "$f2" != "$key" ]; then continue; fi
+        if [ "$f4" = "$dg" ]; then
+          latest="$f3"
+        elif [ "$f3" = approve ]; then
+          s=1
+        fi
+      done < "$lfile"
+    fi
+    if [ "$latest" = approve ]; then k=$((k+1)); fi
+  done
+  printf '%s %s %s' "$k" "$thr" "$s"
+  return 0
+}
+
+# THE LEGACY-BASELINE SHIM (ADR-029 § Decision 5, a requirement on #719). A published baseline
+# recorded before the digest swap reads `<digits>-<digits>`, a shape disjoint from 64 lowercase
+# hex, so a direct comparison with the outgoing SHA-256 digest can never be equal and every
+# published trip would read as moved. So a CRC-shaped baseline is compared with the LEGACY
+# projection of the outgoing render instead: equal means the published plan did not move, the
+# state is `none-pending`, and the next successful push re-records the baseline in SHA-256
+# through record_published_itinerary. Only S2 calls this, and only with the BASELINE. A
+# CRC-shaped confirmation or ledger digest is never an approval: the ledger's grammar admits 64
+# hex alone, and a CRC-shaped `.change-confirmed` can never equal a 64-hex outgoing digest, so on
+# a trip that declares no approvers it reads `stale`.
+_baseline_matches() { # <trip_dir> <baseline-digest> <outgoing-digest> -> 0 when the outgoing plan is the published one
+  local trip_dir="$1" base="$2" out="$3" legacy
+  if [ -z "$base" ]; then return 1; fi
+  if [ "$base" = "$out" ]; then return 0; fi
+  case "$base" in
+    ''|*[!0123456789-]*|-*|*-|*-*-*) return 1 ;;
+    *-*) ;;
+    *) return 1 ;;
+  esac
+  legacy="$(_legacy_itinerary_digest "$(resolve_site_html "$trip_dir")")"
+  if [ -n "$legacy" ] && [ "$legacy" = "$base" ]; then return 0; fi
+  return 1
+}
+
 # SEAM S2 (#88) — the resolver. Pure: reads files, no network, no TTY, no writes.
-# #719 (ADR-010's successor to #88) replaces THIS BODY to aggregate per-traveler approvals
-# against its decided threshold; the five-token contract, require_change_confirmation and
-# its call site all survive that replacement unchanged, provided the replacement emits from
-# this vocabulary — which the allowlist-proceed case below enforces by aborting on anything
-# else. ONE EMISSION THE REPLACEMENT OWES (#1184): it must emit `undetermined` whenever it
-# cannot identify the outgoing render's itinerary content. That check lives in THIS body,
-# because this is the body that computes the outgoing digest; a replacement that dropped it
-# would bring back the conflation of "could not read it" with "it changed". Group S15 of
-# the publish-guard suite grades it whatever body this function holds.
+# #719 replaced THIS BODY (ADR-029 § Decisions 2–5), as ADR-010 § 5 anticipated: on a trip that
+# declares approvers the verdict is the tally of organizer-stated approvals against the declared
+# threshold; on a trip that declares none it is the organizer-confirm rule ADR-003 § Decision 2
+# shipped, unchanged except that a legacy CRC-shaped confirmation never counts. The five-token
+# contract and require_change_confirmation's body survive the replacement unchanged, and the
+# allowlist-proceed case there still aborts on anything outside this vocabulary. THE EMISSION
+# THE REPLACEMENT OWES (#1184) is kept: `undetermined` whenever the verdict depends on the
+# outgoing render's itinerary content and that content cannot be identified — on every policy,
+# the declared no-baseline branch included. Group S15 grades it whatever body this function holds.
 #
-#   none-pending  no published baseline, OR the outgoing itinerary content is
-#                 exactly what is already published        -> proceed
-#   undetermined  a baseline is recorded but the outgoing render could not be read,
-#                 projected or normalized — whether it moved is UNKNOWN; never
-#                 written to any sidecar                                       -> abort
-#   unconfirmed   itinerary content moved, and no parseable confirmation  -> abort
-#   stale         itinerary content moved since it was confirmed          -> abort
-#   confirmed     the confirmation covers this exact itinerary content    -> proceed
+#   none-pending  no baseline on a trip that declares no approvers, OR the outgoing itinerary
+#                 content is exactly what is published — directly, or through the
+#                 legacy-baseline shim                                                -> proceed
+#   undetermined  the verdict depends on the outgoing render, and it could not be read,
+#                 projected or normalized — whether it moved is UNKNOWN; never written
+#                 to any sidecar                                                      -> abort
+#   unconfirmed   itinerary content moved and no approval covers it: no parseable
+#                 confirmation, too few declared approvals, or a malformed approval state -> abort
+#   stale         itinerary content moved since it was approved                       -> abort
+#   confirmed     the approval covers this exact itinerary content — the organizer's
+#                 confirmation, or the declared threshold met by approvals for it     -> proceed
 #
-# The no-baseline branch stays FIRST: with no anchor there is nothing to compare, so the
-# answer does not depend on the render, and `undetermined` fires only when it does.
+# THE NO-BASELINE BRANCH STAYS FIRST for a trip that declares no approvers: with no anchor there
+# is nothing to compare, so the answer does not depend on the render. A trip that DOES declare
+# approvers is evaluated against its approvals even with no baseline (#718's FM-2 i) — a
+# declaration exists to hold plan changes, and one with no anchor would otherwise wave every
+# change through. A MALFORMED approval state is never the legacy default (FM-2 ii): it reads
+# `unconfirmed` wherever the plan cannot be shown unchanged, and `none-pending` only where the
+# outgoing plan equals the baseline, where nothing new can be publishing (#719 DR-2).
 change_confirmation_state() { # <trip_dir> -> one token on stdout
-  local trip_dir="$1" base_dg out_dg rec_dg
+  local trip_dir="$1" pol base_dg out_dg rec_dg k t s
+  pol="$(_approval_policy "$trip_dir")"
   base_dg="$(_record_digest "$(published_itinerary_path "$trip_dir")")"
-  if [ -z "$base_dg" ]; then printf 'none-pending'; return 0; fi
+  if [ -z "$base_dg" ]; then
+    case "$pol" in
+      none)      printf 'none-pending'; return 0 ;;   # the shipped first branch, undeclared trips only
+      malformed) printf 'unconfirmed';  return 0 ;;   # FM-2: never the legacy default
+    esac                                              # declared: FM-2(i), evaluated below
+  fi
   out_dg="$(itinerary_digest "$(resolve_site_html "$trip_dir")")"
   if [ -z "$out_dg" ]; then printf 'undetermined'; return 0; fi
-  if [ "$out_dg" = "$base_dg" ]; then printf 'none-pending'; return 0; fi
+  if [ -n "$base_dg" ] && _baseline_matches "$trip_dir" "$base_dg" "$out_dg"; then printf 'none-pending'; return 0; fi
+  case "$pol" in
+    malformed) printf 'unconfirmed'; return 0 ;;
+    declared)
+      read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
+      case "$k$t" in ''|*[!0123456789]*) printf 'unconfirmed'; return 0 ;; esac
+      if [ "$k" -ge "$t" ]; then printf 'confirmed'; return 0; fi
+      if [ "$s" = 1 ]; then printf 'stale'; return 0; fi
+      printf 'unconfirmed'; return 0 ;;
+  esac
+  # none — the organizer-confirm rule ADR-003 § Decision 2 shipped. A legacy (CRC-shaped)
+  # record never equals a 64-hex digest, so it reads `stale` and never counts.
   rec_dg="$(_record_digest "$(change_confirmation_path "$trip_dir")")"
   if [ -z "$rec_dg" ]; then printf 'unconfirmed'; return 0; fi
   if [ "$rec_dg" = "$out_dg" ]; then printf 'confirmed'; return 0; fi
@@ -2722,6 +3005,200 @@ require_change_confirmation() { # <trip_dir>
   esac
 }
 
+# ── THE RECORDING ACT'S PRIMITIVES (#719, ADR-029 § Decisions 3 and 6) ─────────────
+
+# A code as a traveller compares it by eye: its first eight characters, grouped in fours.
+_code_prefix() { # <code> -> "xxxx xxxx"
+  printf '%s %s' "${1:0:4}" "${1:4:4}"
+}
+
+# The approval line's grammar at the recording act — ADR-029 § Decision 6's R-test, with the two
+# normalizations #719 chose (O-E, EG-4), neither of which can admit a byte able to carry a name, a
+# need or a URL:
+#   * the blanks AROUND the line are trimmed — space, tab, CR and LF, the bytes a paste or a
+#     messaging service adds at the ends of a line;
+#   * the verb's letter case is folded, through two enumerated patterns rather than ${v,,}
+#     (bash 3.2 has none) or tr (whose classes depend on the locale).
+# BETWEEN the two tokens only spaces and tabs are admitted, so a line break there makes two lines,
+# and two lines are refused. The code stays strict: exactly 64 characters from an enumerated
+# lowercase-hex class, so an uppercase code, a truncated or overlong code, a CRC token and a URL
+# are all refused. The blank set is written out rather than taken from [[:space:]], whose members
+# depend on the locale — under a UTF-8 locale it can include a non-breaking space, which this
+# grammar refuses in every position.
+# Prints the normalized `approve <code>` or `withdraw <code>` and returns 0; otherwise it writes
+# one reason line to stderr, echoing no part of the line, and returns 1. It writes no file.
+_approval_line_parse() { # <raw line> -> "verb code" on stdout, or a reason on stderr and 1
+  local s="$1" ends=$' \t\r\n' mid=$' \t' verb code
+  s="${s#"${s%%[!$ends]*}"}"
+  s="${s%"${s##*[!$ends]}"}"
+  case "$s" in
+    '') printf '%s\n' "not an approval line: it is empty" >&2; return 1 ;;
+    *$'\n'*|*$'\r'*) printf '%s\n' "not an approval line: it spans more than one line" >&2; return 1 ;;
+  esac
+  verb="${s%%[$mid]*}"
+  if [ "$verb" = "$s" ]; then
+    printf '%s\n' "not an approval line: it has one word, and an approval line is a verb and a 64-character code" >&2; return 1
+  fi
+  code="${s#"$verb"}"
+  code="${code#"${code%%[!$mid]*}"}"
+  case "$code" in
+    *[$mid]*) printf '%s\n' "not an approval line: it has more than two words" >&2; return 1 ;;
+  esac
+  case "$verb" in
+    [Aa][Pp][Pp][Rr][Oo][Vv][Ee]) verb=approve ;;
+    [Ww][Ii][Tt][Hh][Dd][Rr][Aa][Ww]) verb=withdraw ;;
+    *) printf '%s\n' "not an approval line: its first word is neither approve nor withdraw" >&2; return 1 ;;
+  esac
+  if [ "${#code}" -ne 64 ]; then
+    printf '%s\n' "not an approval line: its code is ${#code} characters long, and a code is 64" >&2; return 1
+  fi
+  case "$code" in
+    *[!0123456789abcdef]*) printf '%s\n' "not an approval line: its code carries a character outside lowercase 0-9 and a-f" >&2; return 1 ;;
+  esac
+  printf '%s %s' "$verb" "$code"
+  return 0
+}
+
+# The ledger's only writer: one organizer-stated record appended, atomically. The existing bytes
+# are copied into a temp file beside the ledger, one record is appended there, and the result is
+# moved into place — so a failure at any step removes the temp file and leaves the ledger exactly
+# as it was, and a partial line never lands (#719 INT-5, S20).
+_ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-zero with nothing changed
+  local f tmp
+  f="$(approval_ledger_path "$1")"
+  tmp="$(mktemp "${f}.XXXXXX")" || return 1
+  if [ -e "$f" ]; then cat "$f" > "$tmp" || { rm -f "$tmp"; return 1; }; fi
+  printf 'organizer-stated %s %s %s %s\n' "$2" "$3" "$4" "$(_iso_now)" >> "$tmp" || { rm -f "$tmp"; return 1; }
+  mv -f "$tmp" "$f" || { rm -f "$tmp"; return 1; }
+}
+
+# The declared path's writer of .change-confirmed (#719, as corrected at the scope-lock: C2).
+# THE RECORD MIRRORS THE VERDICT. It is run by confirm's declared branch after the terminal check
+# on every run — one that records an approval or a withdrawal, and one that records nothing — so
+# the record is written from the tally for the plan the organizer is at, whatever moved that
+# tally: a recording, or a change to the declaration.
+#   k ≥ t                              -> digest=<digest>, confirmed=<now>, approval-count=<k>.
+#                                         confirmed= is stamped at THIS act, every time, so it
+#                                         dates the last terminal act before the plan publishes —
+#                                         the moment the layout spec's seven-day window runs from —
+#                                         rather than the first moment the threshold was met.
+#   k < t, and the record names <digest> -> the count alone is rewritten; digest= and confirmed=
+#                                         stay, so a withdrawal after publication changes the
+#                                         count the next build renders and nothing else.
+#   k < t, and it does not               -> no write.
+# The record carries a digest, a date and a count, and NOTHING that names anybody (#719 INT-7).
+# Atomic, as confirm's own write is. A top-level function, never inside cmd_confirm: group T reads
+# the FIRST `printf … digest=` in cmd_confirm's own body as the undeclared record's format (T6c).
+_record_threshold_met() { # <trip_dir> <digest> -> 0, or non-zero with nothing changed
+  local trip_dir="$1" dg="$2" rec tmp k t s line conf=""
+  rec="$(change_confirmation_path "$trip_dir")"
+  read -r k t s <<<"$(_approval_tally "$trip_dir" "$dg")"
+  case "$k$t" in ''|*[!0123456789]*) return 1 ;; esac
+  if [ "$k" -ge "$t" ]; then
+    tmp="$(mktemp "${rec}.XXXXXX")" || return 1
+    if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\n' "$dg" "$(_iso_now)" "$k" > "$tmp" && mv -f "$tmp" "$rec"; then
+      return 0
+    fi
+    rm -f "$tmp"; return 1
+  fi
+  if [ "$(_record_digest "$rec")" != "$dg" ]; then return 0; fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in confirmed=*) conf="${line#confirmed=}"; break ;; esac
+  done < "$rec"
+  if [ -z "$conf" ]; then return 0; fi
+  tmp="$(mktemp "${rec}.XXXXXX")" || return 1
+  if printf 'digest=%s\nconfirmed=%s\napproval-count=%s\n' "$dg" "$conf" "$k" > "$tmp" && mv -f "$tmp" "$rec"; then
+    return 0
+  fi
+  rm -f "$tmp"; return 1
+}
+
+# The approval pair a render declares, read from its C19 declaration block exactly as
+# scripts/validate-artifacts.sh's va_frontmatter reads it — line 1 exactly `<!--`, then every line
+# up to one that is exactly `-->` — so this guard and the validator agree on what the block is.
+# Prints "<count-occurrences> <code-occurrences> <code>", the code `-` where there is none.
+_render_approval_pair() { # <site_html> -> "nc nk code"
+  local f="$1" line n=0 nc=0 nk=0 code='-' v blanks=$' \t\r'
+  if [ -r "$f" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      n=$((n+1))
+      if [ "$n" -eq 1 ]; then
+        if [ "$line" != '<!--' ]; then break; fi
+        continue
+      fi
+      if [ "$line" = '-->' ]; then break; fi
+      case "$line" in
+        approval-count:*) nc=$((nc+1)) ;;
+        approval-code:*)
+          nk=$((nk+1))
+          v="${line#approval-code:}"
+          v="${v#"${v%%[!$blanks]*}"}"; v="${v%"${v##*[!$blanks]}"}"
+          code="${v:--}" ;;
+      esac
+    done < "$f"
+  fi
+  printf '%s %s %s' "$nc" "$nk" "$code"
+  return 0
+}
+
+# THE RENDER'S APPROVAL-CODE GUARD — #718's review FM-3, and the scope-lock's C2 presence rule.
+# The site verb copies the approval pair — the C19 fields `approval-count` and `approval-code` —
+# from .change-confirmed onto the render of a trip that declares approvers, and cannot check it,
+# because it holds no digest of what it writes. This guard binds the pair to the render it rides:
+#   more than one occurrence of either field                  -> abort
+#   one of the two, without the other                         -> abort — the pair travels together
+#   both, and the code is not this render's itinerary digest  -> abort — a published approval code
+#                                                                must be its own plan's
+#   neither                                                   -> proceed — except on update, when
+#       the trip declares approvers and S2 resolves `confirmed`: an approved declared push must
+#       carry its own count and code (C2). Without that rule a declaration change that meets the
+#       threshold publishes the changed plan behind a stale `pending` band with no count and no
+#       code — the latch #551's decision D11 removed, re-opened by another route.
+# It is not a second gate on the plan: S3 has already decided whether the plan may publish, and
+# this guard decides only whether the render's approval claim is true of the render. The count's
+# VALUE is never read — only its presence is. Called by update and rotate through
+# require_publish_guards, and by publish on its own, before any repo is probed, created or cloned.
+require_render_approval_code() { # <trip_dir> <site_html> <update|publish>
+  local trip_dir="$1" site_html="$2" path="${3:-update}" nc nk code own own_txt pol state
+  read -r nc nk code <<<"$(_render_approval_pair "$site_html")"
+  if [ "$nc" -gt 1 ] || [ "$nk" -gt 1 ]; then
+    die "GUARD ABORTED — the render ${site_html} declares approval-count or approval-code more than once, so it does not say which count and which code it states. Nothing was pushed. Rebuild the site."
+  fi
+  if [ "$nc" -ne "$nk" ]; then
+    die "GUARD ABORTED — the render ${site_html} carries one of approval-count and approval-code without the other; the pair travels together. Nothing was pushed. Rebuild the site."
+  fi
+  if [ "$nc" -eq 1 ]; then
+    own="$(itinerary_digest "$site_html")"
+    if [ "$code" != "$own" ]; then
+      if [ -n "$own" ]; then own_txt="$(_code_prefix "$own")"; else own_txt="(none — it could not be identified)"; fi
+      die "GUARD ABORTED — the render states approval code $(_code_prefix "$code"), but the itinerary it carries has code ${own_txt}: a published approval code must be the code of the plan it is published with. Nothing was pushed. Rebuild the site from the current records. If the plan that approval was for has been abandoned, run  $(basename "$0") confirm ${trip_dir}  at a terminal first — it re-anchors the approval record to the plan the render now carries, and the rebuilt site then states that plan's own code."
+    fi
+    return 0
+  fi
+  if [ "$path" = update ]; then
+    pol="$(_approval_policy "$trip_dir" 2>/dev/null)"
+    if [ "$pol" = declared ]; then
+      state="$(change_confirmation_state "$trip_dir" 2>/dev/null)"
+      if [ "$state" = confirmed ]; then
+        die "GUARD ABORTED — ${trip_dir} declares approvers and its outgoing plan is approved (state: confirmed), but the render carries no approval count or code, so the group would see the plan change without the count and the code that let them check it. Nothing was pushed. Run  $(basename "$0") confirm ${trip_dir}  at a terminal — pressing Enter at its approver prompt records nothing and writes the approval record for this plan — then rebuild the site and re-run."
+      fi
+    fi
+  fi
+  return 0
+}
+
+# THE REPUBLISH PATH'S GUARDS, AS ONE CALL LINE (#719, the scope-lock's C5). update calls this and
+# nothing else at the gate's position: S3 exactly as it was, and then the render's approval-code
+# guard. #85 relocates the gate onto its event-driven path by moving that one line, as S3's own
+# banner promises, so the code guard cannot be left behind by a relocation that carries S3 alone.
+# publish calls the code guard on its own: S3 does not gate publish, by design.
+require_publish_guards() { # <trip_dir> <site_html>
+  local trip_dir="$1" site_html="$2"
+  require_change_confirmation "$trip_dir"
+  require_render_approval_code "$trip_dir" "$site_html" update
+  return 0
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Subcommands
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2744,6 +3221,10 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
 
   local site_html slug pub_dir owner ans
   site_html="$(resolve_site_html "$trip_dir")"
+  # The render's approval-code guard (#719, FM-3), before the repo is probed, created or pushed.
+  # S3 does not gate publish, by design — it cannot overwrite a published plan — but a render
+  # stating an approval code that is not its own plan's must not reach a first publish either.
+  require_render_approval_code "$trip_dir" "$site_html" publish
   slug="$(slug_for "$trip_dir")"
   pub_dir="$trip_dir/.publish"
   owner="$(gh api user --jq '.login')"
@@ -2836,12 +3317,14 @@ cmd_update() { # <trip_dir>
 
   local site_html pub_dir passphrase enc owner slug boiler
   site_html="$(resolve_site_html "$trip_dir")"
-  # THE ORGANIZER-CONFIRM GATE (#552, ADR-003 § Decision 2). Its position is exact
-  # and load-bearing: after the render is resolved (the gate digests it) and BEFORE
-  # ensure_pub_clone, which performs network I/O and can remove the publish dir. On
-  # an abort nothing has been cloned, encrypted, copied or pushed — the same
-  # discipline the plaintext gate states for itself in cmd_publish.
-  require_change_confirmation "$trip_dir"
+  # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
+  # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
+  # is resolved (both read it) and BEFORE ensure_pub_clone, which performs network I/O and can
+  # remove the publish dir. S3 runs first and decides whether the plan may publish; the code
+  # guard follows it because it needs the render's identity and must still precede the clone.
+  # On an abort nothing has been cloned, encrypted, copied or pushed — the same discipline the
+  # plaintext gate states for itself in cmd_publish. #85 relocates both by moving this line.
+  require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
   passphrase="$(get_passphrase "$trip_dir" 0)"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
@@ -2885,9 +3368,24 @@ cmd_confirm() { # <trip_dir>
   # to confirm against it.) Graded by S11i, which reads the ORDER and not just the call.
   require_perl
 
-  local site_html state pending rec tmp dg ans
+  local site_html state pending rec tmp dg ans pol
   site_html="$(resolve_site_html "$trip_dir")"
   state="$(change_confirmation_state "$trip_dir")"
+
+  # A TRIP THAT DECLARES APPROVERS TAKES ITS OWN BRANCH (#719, ADR-029 § Decision 3), and it is
+  # taken AHEAD of the "nothing to confirm" refusal below — the scope-lock's C1. That refusal
+  # exists so an organizer confirmation cannot pre-authorise an unseen future change. A record
+  # on the declared path binds to the outgoing plan's own digest and cannot do that; on the plan
+  # that is already published it is how a withdrawal after publication is recorded, and how a
+  # plan reverted after an approval re-anchors the approval record to itself. An undetermined
+  # state is still refused below before anything binds, on either path. _confirm_declared keeps
+  # the terminal-only, no-override-flag rule. A trip that declares no approvers takes neither of
+  # these branches and is unchanged in every byte it prints and writes.
+  pol="$(_approval_policy "$trip_dir" 2>/dev/null)"   # the state read above already printed any diagnostic
+  if [ "$pol" = declared ] && [ "$state" != undetermined ]; then
+    _confirm_declared "$trip_dir" "$site_html" "$state"
+    return $?
+  fi
 
   # Refuse when there is no itinerary change in front of the organizer. A
   # confirmation recorded now would be a PRE-AUTHORISATION of an unseen future
@@ -2902,6 +3400,14 @@ cmd_confirm() { # <trip_dir>
   # would ask the organizer to type CONFIRM against a state nobody could compute.
   [ "$state" != "undetermined" ] \
     || die "cannot confirm for $trip_dir — could not determine whether its itinerary changed: the outgoing render $site_html could not be read, its itinerary text could not be projected, or that text could not be normalized (for example, the render carries a byte that is not valid UTF-8); any error printed above names the cause. A confirmation binds to an identified itinerary and there is none to bind to, so nothing was recorded."
+
+  # A malformed approval state (#719, FM-2 ii) holds every plan change at the gate, and it is not
+  # the organizer-confirm default either: recording an organizer confirmation here would not open
+  # the gate, and the organizer would be told it had. So it is refused, naming the files.
+  case "$pol" in
+    none) : ;;
+    *) die "cannot record for $trip_dir — its approval sidecars are malformed (the diagnostic above names the file and the rule it broke). Repair $(approver_declaration_path "$trip_dir") or $(approval_ledger_path "$trip_dir"), or retire both together; nothing was recorded." ;;
+  esac
 
   # TTY-only, with no override flag, and the absence of the flag is the point.
   # ADR-007 §2 names the two existing flags that convert a refusal into a silent
@@ -2939,6 +3445,127 @@ cmd_confirm() { # <trip_dir>
   ok "Confirmed. The next  $(basename "$0") update ${trip_dir}  will publish this itinerary; a further edit re-opens the gate."
 }
 
+# The terminal test of confirm's declared branch. A function rather than an inline test so that
+# the publish-guard suite can drive the branch end to end with the test stubbed (S19a) — it is not
+# a flag and not an override: a caller that RUNS this script cannot redefine it, because the script
+# defines it after anything the environment could supply. The undeclared path keeps its literal.
+_confirm_has_terminal() { [ -t 0 ]; }
+
+# CONFIRM ON A TRIP THAT DECLARES APPROVERS (#719, ADR-029 § Decision 3, as corrected by the
+# scope-lock's C1, C2 and F5).
+#
+# BEFORE THE TERMINAL CHECK it prints only what may be shared: the header, the approval line for
+# the outgoing plan — `approve <64 hex>`, alone on its line and flush left, so it copies whole —
+# the plan's code grouped for comparing by eye, and how many approvals are recorded for this plan.
+# It prints no approver and no threshold, so a run with no terminal discloses the line to share
+# and a count, and names no approver and no plan content.
+#
+# THEN THE TERMINAL CHECK — terminal-only, with deliberately no flag to skip it: recording an
+# approval is the organizer's attestation, person-reserved for the reason ADR-007 § 4 gives confirm.
+#
+# AFTER IT: the threshold and the declared approvers by number, and then either one recording —
+# a pasted reply, checked against the grammar and against the outgoing plan's code, then CONFIRM —
+# or Enter, which records nothing. Either way the approval record is then written from the
+# verdict (C2, _record_threshold_met), which also re-anchors it to a published plan whose own
+# approvals meet the threshold (C1). Where the plan going out IS the published one, its own
+# approvals fall short and the record names some other plan — an approval for a plan that was
+# then reverted, on a trip published before its declaration existed — the record is offered for
+# retirement behind CONFIRM, and the bytes it replaces are kept beside it (ADR-007 § 2's
+# replace-with-preservation shape). Nothing else is ever written without a CONFIRM.
+_confirm_declared() { # <trip_dir> <site_html> <state>
+  local trip_dir="$1" site_html="$2" state="$3"
+  local out_dg k t s pending keys="" nk=0 key line sel i raw parsed verb code ans recorded=0 rec rec_dg keep tmp
+  out_dg="$(itinerary_digest "$site_html")"
+  [ -n "$out_dg" ] || die "cannot record for $trip_dir — could not identify the itinerary content of $site_html; any error printed above names the cause. An approval binds to an identified itinerary, so nothing was recorded."
+  read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
+
+  printf '\n  Recording approvals for: %s\n' "$trip_dir"
+  printf '  Site render     : %s\n' "$site_html"
+  pending="$(pending_change_path "$trip_dir")"
+  if [ -r "$pending" ]; then
+    printf '  Change summary  : %s\n' "$pending"
+  else
+    warn "no change summary at $pending — share the approval line with your own description of the change."
+  fi
+  printf '  Gate state      : %s\n' "$state"
+  printf '  Approval line — share it in the group'"'"'s thread with the change summary:\n'
+  printf 'approve %s\n' "$out_dg"
+  printf '  Code, for comparing by eye: %s\n' "$(_code_prefix "$out_dg")"
+  printf '  Approvals recorded for this plan: %s\n' "$k"
+
+  _confirm_has_terminal || die "recording an approval requires a terminal — it records your statement of a traveller's approval, and there is deliberately no flag to skip it. The approval line above can be shared without one. Run it yourself:  $(basename "$0") confirm ${trip_dir}"
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in approver=*) keys="$keys ${line#approver=}"; nk=$((nk+1)) ;; esac
+  done < "$(approver_declaration_path "$trip_dir")"
+  printf '\n  Approvals needed for this plan: %s, of %s declared approver(s):\n' "$t" "$nk"
+  i=0
+  for key in $keys; do
+    i=$((i+1)); printf '    %d) %s\n' "$i" "$key"
+  done
+  printf '  Number of the approver whose reply you are recording, or Enter to record nothing: '
+  read -r sel || sel=""
+  if [ -n "$sel" ]; then
+    case "$sel" in
+      *[!0123456789]*|?????*) die "not recorded — that is not the number of a declared approver. Nothing was written." ;;
+    esac
+    key=""; i=0
+    for line in $keys; do
+      i=$((i+1))
+      if [ "$i" -eq "$sel" ]; then key="$line"; fi
+    done
+    [ -n "$key" ] || die "not recorded — $sel is not the number of a declared approver. Nothing was written."
+    printf '  Paste the reply line from %s: ' "$key"
+    read -r raw || raw=""
+    parsed="$(_approval_line_parse "$raw")" || die "not recorded — that is not an approval line (the reason is above). Nothing was written."
+    verb="${parsed%% *}"; code="${parsed#* }"
+    if [ "$code" != "$out_dg" ]; then
+      die "not recorded — that line is for a different version of the plan (code $(_code_prefix "$code")); the current code is $(_code_prefix "$out_dg"). Ask for the current line."
+    fi
+    printf '  Type CONFIRM to record this as %s'"'"'s %s, stated by you (organizer-stated): ' "$key" "$verb"
+    read -r ans || ans=""
+    [ "${ans:-}" = "CONFIRM" ] || die "aborted — nothing recorded."
+    _ledger_append "$trip_dir" "$key" "$verb" "$out_dg" \
+      || die "could not append to the approval ledger at $(approval_ledger_path "$trip_dir") — nothing was recorded, and the ledger is as it was."
+    recorded=1
+  fi
+
+  if ! _record_threshold_met "$trip_dir" "$out_dg"; then
+    if [ "$recorded" -eq 1 ]; then
+      die "could not write the approval record at $(change_confirmation_path "$trip_dir"). The ledger entry above stands; re-run confirm and press Enter at the approver prompt to write the record."
+    fi
+    die "could not write the approval record at $(change_confirmation_path "$trip_dir"); nothing was recorded."
+  fi
+  read -r k t s <<<"$(_approval_tally "$trip_dir" "$out_dg")"
+  if [ "$recorded" -eq 1 ]; then ok "Recorded as the organizer's statement."; else info "Nothing recorded."; fi
+  if [ "$k" -ge "$t" ]; then
+    ok "Approvals for this plan: $k; $t needed — met. The approval record for this plan is dated now; rebuild the site so it carries the approval count and code, then run  $(basename "$0") update ${trip_dir}"
+  else
+    info "Approvals for this plan: $k; $t needed — not yet met."
+  fi
+
+  rec="$(change_confirmation_path "$trip_dir")"
+  rec_dg="$(_record_digest "$rec")"
+  if [ "$state" = none-pending ] && [ "$k" -lt "$t" ] && [ -n "$rec_dg" ] && [ "$rec_dg" != "$out_dg" ]; then
+    printf '\n  The approval record names another version of the plan (code %s). The plan going out is the published one (code %s), and its own approvals fall short, so the site would go on stating the other version'"'"'s code and update refuses to publish that.\n' "$(_code_prefix "$rec_dg")" "$(_code_prefix "$out_dg")"
+    printf '  Type CONFIRM to retire the record — it becomes a record of the published plan with no approval count, and the record it replaces is kept beside it: '
+    read -r ans || ans=""
+    if [ "${ans:-}" = "CONFIRM" ]; then
+      keep="$(mktemp "${rec}.replaced-XXXXXX")" || die "could not stage a copy of $rec — nothing was retired."
+      if ! cat "$rec" > "$keep"; then rm -f "$keep"; die "could not keep a copy of $rec — nothing was retired."; fi
+      tmp="$(mktemp "${rec}.XXXXXX")" || die "could not stage the retired record beside $rec — nothing was retired; the copy is at $keep."
+      if printf 'digest=%s\nconfirmed=%s\n' "$out_dg" "$(_iso_now)" > "$tmp" && mv -f "$tmp" "$rec"; then
+        ok "Retired. The approval record now names the published plan, with no approval count; the record it replaced is kept at $keep."
+      else
+        rm -f "$tmp"; die "could not write the retired record — $rec is as it was; the copy is at $keep."
+      fi
+    else
+      info "Left as it is — the approval record still names the other version of the plan."
+    fi
+  fi
+  return 0
+}
+
 cmd_rotate() { # <trip_dir> [--passphrase <new>]
   local trip_dir="${1:?usage: rotate <trip-dir> [--passphrase <new>]}"; shift || true
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
@@ -2950,6 +3577,11 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   fi
   # Re-encrypt + push under the new passphrase FIRST; cmd_update dies on failure, so the
   # "rotated" confirmation below is only reached once the new ciphertext is actually live.
+  # RESIDUAL (#1468's third case, widened by #719): the passphrase file above is written BEFORE
+  # update's guards run, so any refusal on that path — the approval gate, including a declared
+  # trip with no baseline or approvals, or the render's approval-code guard — leaves the new
+  # passphrase in the file while the site stays under the old one, and the warning below is
+  # never reached. Moving the guards ahead of the write is #1468's remedy.
   cmd_update "$trip_dir"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one."
   announce_passphrase_file "New passphrase" "$pf"

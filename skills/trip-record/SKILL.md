@@ -151,6 +151,7 @@ data-root-pointer: ${HOME}/.travel-planner/data-root
 | group-delete | ANY | any | any | G8 |
 | group-expand | ACTIVE | any | any | G8 |
 | history | ACTIVE | any | any | G8 |
+| .approvers | ACTIVE | any | any | G8 |
 
 The block above is this file's contract declaration, and the requirement table sits **below** it,
 outside the fence, so it renders as a markdown table. The fence the contract publishes names that
@@ -2166,7 +2167,7 @@ naming, in one place, is not a solicitation.
 
 ## erase <person-id>
 
-**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/` and `outputs/` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent. The erasure stands behind a typed confirmation of the id at a terminal, stated in full under § *The confirmation* below.
+**Reads:** `people/<person-id>.md` — the file-existence probe and its frontmatter, to resolve the id and to detect a `merged-into:` stub; `people/` — the store listing, for the stub sweep in step 3 and for the collision check; `groups/` — the group-store listing, and `groups/*.md` — the `## Members` bullets of every group record, read **before they are written** because row 30 removes a bullet located by value and the receipt's occurrence count is derived from the section rather than remembered. **The group store is read in full and unconditionally, not per trip**, because a group record belongs to no trip and the discovery step below cannot reach one; `trips/` — the trip listing; `trips/*/travelers/*.md` — the frontmatter of every traveller file on every trip, which is the discovery step and the **only** way a trip enters this run's scope; and, for each trip that discovery resolved, that trip's own `trip-context.md`, `trip-log.md`, `travelers/`, `outputs/`, `.approvers` and `.approvals` in full, because a substitution has to read a value to replace it. **Reads no trip discovery did not resolve** — except the residual scan below, which reads other trips' bodies and **writes none of them**. Dispatches no agent. The erasure stands behind a typed confirmation of the id at a terminal, stated in full under § *The confirmation* below.
 
 The erasure verb. A person asked to be deleted; this removes their record and the values that were copied out of it, everywhere those copies can still be found. **It is the only operation on this command surface that destroys personal data irrecoverably, and the only one that writes an archived trip.**
 
@@ -2262,8 +2263,9 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 | **28** | **merge stub whose `merged-into:` names the deleted record** | REACH | repoint the redirect at the tombstone. **Never delete it** — redirect depth is pinned at one hop, so a deleted stub strands every referrer as `MALFORMED` rather than resolving |
 | **29** | `people/<person-id>.md` — the record | REACH | **delete the file.** No stub is left in the store |
 | **30** | `groups/*.md` — the `## Members` bullets naming the subject id, **and any bullet naming a `merged-into:` stub id that redirects to it** | REACH | **remove the bullet. No tombstone.** A `per-<token>` written here would be a stable **cross-trip** pseudonym surviving in a **cross-trip** store — the exact correlation the per-(person × trip) mint exists to destroy. Removal is safe because a member set is variable-length **by construction**, so a smaller set is a valid one rather than an emptied location. Where removal empties a group or leaves a single member, **the group is not deleted** — emit its id and its new count. The stub half needs no new machinery: step 2's discovery already computes the stubs that redirect to this record, and this sweep consumes that set. **This row's reach over the section is total by construction rather than by enumeration**: `reference/schemas/group-record.md` closes `## Members` to member bullets and blank lines, so the only thing the section can contain is the thing this row removes, and there is no residue of another shape for it to miss |
+| **31** | `.approvers` · `.approvals` — the approver key on every `approver=` line and in every ledger record | REACH | **substitute** the subject's canonical traveller key with the token's own key — `per` and the four hex digits, the key `per-<token>` normalizes to — wherever it is a whole key field, in both files in one write step. **No record is removed and no line is emptied**: a declared approver who is erased stays declared under the token, and every organizer-stated record stays counted under it, so the gate's verdict and the published count are unchanged by the erasure. Where the trip has neither file, emit **`n/a`** and name both files. **Never a silent skip** |
 
-**The table carries 30 rows — 21 REACH, 5 REPORT and 4 OUT — numbered contiguously.** Rows 1–28 and row 30 are the locations a copy of the person's data can reach; row 29 is the person's own record.
+**The table carries 31 rows — 22 REACH, 5 REPORT and 4 OUT — numbered contiguously.** Every row but row 29 is a location a copy of the person's data can reach; row 29 is the person's own record.
 
 **Row 30 is numbered after the record and written before it, and the two orders are separate on purpose.** The numbering is **append-only**, because every citation by number in the write order and in the two phase lists re-points silently under a renumbering — which is the property `ER14` grades as contiguity. The write order is stated in its own block below, where each position carries its reason; **the store is still written last, and row 30 is part of the store step rather than after it.** Deleting the record before the group sweep would strand a partial run with a member bullet naming an id nothing resolves and no record to re-derive the sweep from, which is the same argument that put row 29 last in the first place. **That accounting is graded against the table by `scripts/test-artifact-schema.sh` arm `ER14`**, in every term and in both directions, because the receipt's totality rests on this table being the whole population and a bare numeral is the one part of that claim nothing was checking: a row can be added while the figure beside it stays, and a reader checking the figure then reads a confirmation where a widening happened. Re-state the accounting in the same commit as the row. `people/README.md` is **not** a location: it is a tracked signpost carrying no person data, and keeping it that way is a property of the store rather than a thing this verb checks.
 
@@ -2283,7 +2285,7 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 
 ### The order of writes, and why it is not tidiness
 
-> **1.** row 1 — the roster cell. **2.** rows 2–4 — the rest of § *Group*. **3.** rows 8–9 — the traveller file and its reference field. **4.** row 6 — `Applies to:`. **5.** row 10 — the derived model. **6.** rows 11–15, 17 — the remaining derived and accumulated artifacts. **7.** row 18 — the publish staging clone. **8.** rows 26–28 and row 30 — the merge stubs and the group store. **9.** row 29 — the person's own record, and the last write of the store.
+> **1.** row 1 — the roster cell. **2.** rows 2–4 — the rest of § *Group*. **3.** rows 8–9 — the traveller file and its reference field. **4.** row 6 — `Applies to:`. **5.** row 10 — the derived model — then row 31, the approval sidecars. **6.** rows 11–15, 17 — the remaining derived and accumulated artifacts. **7.** row 18 — the publish staging clone. **8.** rows 26–28 and row 30 — the merge stubs and the group store. **9.** row 29 — the person's own record, and the last write of the store.
 
 **The roster is written first because it is the name authority.** `agents/00-enrichment.md` § *Traveler identity* states it: the roster cell is the authoritative display name, the model heading and the traveller-file stem are **projections** of it, and where a projection disagrees *"the roster is right and the projection is the defect"* — the reconciler converges the projection onto the roster and is forbidden to repair by rewriting the roster.
 
@@ -2295,7 +2297,7 @@ Locations are named **by path, never by an artifact-class ordinal.** That enumer
 
 ### The two-phase sweep, and why a name is not a safe pattern
 
-**Phase A — structural loci.** Rows 1, 2, 3, 5, 6, 8, 9, 10, 26–30. Each is a named cell, heading, field or path, addressed **by position**. Phase A never pattern-matches a name; it rewrites a located slot. **Row 30 belongs here and not in Phase B, and the distinction is exact rather than incidental:** a member bullet is located by an **id**, matched whole against an anchored line, never by a display name — so the free-text hazards Phase B's bounds exist for do not arise, and the group store is outside Phase B's one-trip-directory scope in any case.
+**Phase A — structural loci.** Rows 1, 2, 3, 5, 6, 8, 9, 10, 26–31. Each is a named cell, heading, field or path, addressed **by position**. Phase A never pattern-matches a name; it rewrites a located slot. **Row 30 belongs here and not in Phase B, and the distinction is exact rather than incidental:** a member bullet is located by an **id**, matched whole against an anchored line, never by a display name — so the free-text hazards Phase B's bounds exist for do not arise, and the group store is outside Phase B's one-trip-directory scope in any case.
 
 **Phase B — bounded free-text.** Rows 4, 6, 11–15, 17. **Word-boundary, case-sensitive, and scoped to one trip directory per pass.**
 
@@ -2345,7 +2347,7 @@ One row per **REACH** and per **REPORT** location, every run: **location · disp
 
 ### The standing rules this verb writes under are rules 10 and 13
 
-**Rule 10 carries every row but one.** This section discharges each of its conditions by name. **(a)** every location written is a row of the table above, and the receipt is total over it; **(b)** every rewritten value becomes the minted token or the form's declared not-answered sentinel, and **no location is emptied** — rows 5 and 6 are the two that would otherwise be, and both are pinned; **(c)** Phase B is scoped to one trip directory, word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator types the record's id at a terminal, with no flag and no non-interactive path; **(e)** every location emits exactly one receipt row, including `n/a` for the absent roster column and `UNREACHABLE` for the four locations nothing local reaches.
+**Rule 10 carries every row but one.** This section discharges each of its conditions by name. **(a)** every location written is a row of the table above, and the receipt is total over it; **(b)** every rewritten value becomes the minted token or the form's declared not-answered sentinel, and **no location is emptied** — rows 5 and 6 are the two that would otherwise be, and both are pinned. Row 31's rewritten keys are the token in the sidecars' own key form — the key the tombstoned roster cell normalizes to; **(c)** Phase B is scoped to one trip directory, word-boundary and case-sensitive, and reaches no path outside it; **(d)** the operator types the record's id at a terminal, with no flag and no non-interactive path; **(e)** every location emits exactly one receipt row, including `n/a` for the absent roster column and `UNREACHABLE` for the four locations nothing local reaches.
 
 **Row 30 is rule 13's, and it is stated separately rather than folded in because rule 10 cannot carry it.** Rule 10(b) admits a rewritten value that becomes the minted token, and the minted token is the one thing that must never be written into a cross-trip store; and its *no location is emptied* clause is calibrated to a constraint roster, where empty grades as compliant, rather than to a member set whose length is variable by construction. Rule 13's five conditions are discharged here, named by letter rather than in the bracketed form rule 10's own discharge uses — that form is anchored by an arm of the schema suite at exactly one site in this section, and a second instance of it would leave the arm unable to locate the site it grades. Clause **a**: the location is row 30 of the table above and emits its receipt row like every other. Clause **b**: the bullet is matched whole, against an anchored line, by id. Clause **c**: removal leaves the record standing. Clause **d**: a group left with no members or with one is reported by id and count. Clause **e**: no group record is deleted at any count.
 
@@ -2947,3 +2949,74 @@ Where the target field is **unanswered** by the traveller, and only there:
 **The standing clause is taken unwidened, and no rule is appended for this verb.** Every widening in that clause — rules 9 through 13 — derives a permitted **write** target or operation, and a verb that writes nothing anywhere has nothing to derive and reaches for nothing. Saying so is what keeps the widening ladder honest: a verb naming a rule it did not need would make the next author reach for one too. **`## profile <name>`'s declared read-scope ceiling is left exactly as it stands** — this verb declares its own rather than widening that one, which is what the per-verb `**Reads:**` line is for.
 
 **Reversibility: n/a — this verb writes nothing.**
+
+## .approvers <name...> [--threshold <n>]
+
+**Reads:** `trips/<slug>/trip-context.md` — the `## Group` roster table's first column alone, the Person cells, read to resolve each name the operator typed to one canonical traveller key; `trips/<slug>/.approvers` — the existence probe that selects creating the file from replacing it, and, on the replace route, the outgoing declaration read before it is overwritten, so that it can be echoed and so the reversal has something to restore; `trips/<slug>/.published-itinerary` — an existence probe alone, with no byte of it read, so the verb can say when a declaration would hold every `update` and every `rotate` until the current plan is approved. Reads no `.approvals`, no traveller file, no derived model and no person record: a declaration is a set of roster keys and a threshold, and nothing else settles it. Runs no script and dispatches no agent.
+
+**The one file this verb writes, and it is not `trip-context.md`.** The target is
+`trips/<slug>/.approvers` — under `trips/<slug>/` per standing rule 5, where `<slug>` is
+`trip.slug` exactly as `E1` spelled it. That path lies **outside § *Write ownership*'s scope**,
+which is `trip-context.md` block by block. The publish script's approval gate reads it, and so does
+its `confirm` subcommand; the site build never does.
+`reference/adr/ADR-029-group-approval-return-and-threshold.md` § *Decision* 3 makes declaring who
+approves a policy act the operator may reach through a command, and makes recording that someone
+approved a terminal act, which this command cannot perform.
+
+**Resolution — each name to exactly one roster key.** Each name the operator typed is normalized to
+a key the way `reference/data-architecture.md` § 3.2 fixes the canonical traveller key —
+lowercased, with every character outside `[a-z0-9]` removed — and matched by exact key equality
+against the same normalization of each Person cell of the `## Group` roster. The declaration holds
+those keys and no display name, because erasure substitutes a key it can only find by exact
+equality. Refuse, writing nothing:
+
+- a name that matches no Person cell — and name the roster's display names, so the operator can
+  choose;
+- a name that normalizes to the empty key;
+- a key that matches two Person cells;
+- the same approver named twice;
+- no name at all.
+
+**The threshold.** Omitted, it is `all`, the recommended setting (`ADR-029` § *Decision* 4):
+every approver named must approve, so the count the published site shows can include only someone
+the organizer recorded as approving. `--threshold <n>` takes an integer from 1 to the number of
+approvers named, and `--threshold all` is accepted as written. Anything else is refused, writing
+nothing.
+
+**The file's exact shape.** Line 1 is `threshold=all` or `threshold=<n>`, then one
+`approver=<key>` line for each approver, in the order named. Every line ends in a newline, and there
+is nothing else — no blank line, no comment and no display name. The gate reads this file strictly:
+a declaration off this shape is read as malformed, and a malformed declaration holds every plan
+change at the gate until it is repaired.
+
+**Create versus replace, selected by an existence probe.** `Read` the target path; the probe runs
+before either write tool is reached. Not readable → **create** with `Write`, which is standing rule
+2's one condition for it. Readable → **replace**, and only after all four of these:
+
+1. **Echo the outgoing declaration verbatim.**
+2. Name what changes: the approvers added and removed, and the threshold before and after.
+3. Name the reversal — **restore the outgoing declaration**. Reversibility **CHEAP**, and cheap only
+   because step 1 preserved it.
+4. **Ask once**, then `Edit`. The declaration's lines are the file's lines, so the whole file is the
+   named field standing rule 2 lets `Edit` change.
+
+**The consequences, stated on every write.**
+
+1. The next `update` of a changed plan waits for the declared approvals. The organizer records them
+   one at a time, at a terminal, with `scripts/publish-trip-site.sh confirm`, and nothing on this
+   command surface can record one.
+2. An organizer confirmation already recorded no longer covers a pending change.
+3. Retiring a declaration is the operator's own act, and it removes `.approvals` with it: a ledger
+   left behind without a declaration holds every plan change.
+4. **Where the probe finds no `trips/<slug>/.published-itinerary`**, the trip has no published
+   baseline, so every `update` and every `rotate` waits for approvals of its current plan — a
+   republish that changes only the coordination marker included — until they are recorded. Name the
+   order that costs nothing: republish once with `/trip-publish update` while the trip is still
+   undeclared, so the push records a baseline, and declare afterwards.
+
+`- **Total travelers:**` is not read and sets nothing here: the declared population is the approvers named, never the party's size.
+
+**Never.** It runs no subcommand of `scripts/publish-trip-site.sh`, so it cannot record an
+approval. It reads no `.passphrase` and no `.approvals`, writes no path but
+`trips/<slug>/.approvers`, writes no approval record, and names no approver to any file the site
+build reads.

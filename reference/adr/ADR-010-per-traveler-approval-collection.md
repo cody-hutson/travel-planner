@@ -233,11 +233,12 @@ would duplicate." **That concern does not materialize.**
 
 #552 built its organizer-confirm gate in this release specifically so that a later replacement would
 be a substitution at a named seam rather than an excavation: the decision rule lives in the body of
-`change_confirmation_state`, while `require_change_confirmation`, its call site in `cmd_update`, its
-five-token vocabulary and its allowlist-proceed / wildcard-abort structure sit outside it and are
-indifferent to how a confirmation was obtained. A collection mechanism replaces one function body.
-On the render side, #551's Coordination Notice component is the extension point for any additional
-coordination state, and it already exists.
+`change_confirmation_state`, while `require_change_confirmation`, the one call line in `cmd_update`
+that reaches it, its five-token vocabulary and its allowlist-proceed / wildcard-abort structure sit
+outside it and are indifferent to how a confirmation was obtained. A collection mechanism replaces
+that function's body; the one that shipped reached further, as the amendment at the end of this
+section records. On the render side, #551's Coordination Notice component is the extension point for
+any additional coordination state, and it already exists.
 
 **The band is `extend-seam` on both surfaces.** This matters to sequencing, not just to bookkeeping:
 it is why the mechanism can be deferred behind #718 without the seam rotting, and why #719 is
@@ -266,6 +267,27 @@ comment above `change_confirmation_state` in `scripts/publish-trip-site.sh` stat
 vocabulary, and group S15 of `scripts/test-publish-guard.sh` grades it whatever body the function
 holds. No decision moves — the band is still `extend-seam`, and a collection mechanism still
 replaces one function body; that body now owes one more emission.
+
+**Amendment (2026-09-26, Saturday) — the replacement, as it shipped, reached beyond the one function
+body this section names.** The collection build (#719), conforming to
+[ADR-029](ADR-029-group-approval-return-and-threshold.md), replaced the body of
+`change_confirmation_state` as this section anticipated. It also replaced the body of `_digest_of`,
+so that the digest an approval binds is SHA-256 rather than CRC-32, as that record's fifth decision
+requires, and kept a CRC-32 baseline readable, so that a plan recorded before the change still
+matches itself; it extended `cmd_confirm` with the recording act for a trip that declares approvers,
+reached ahead of the command's nothing-pending refusal; and it added a guard,
+`require_render_approval_code`, that refuses a render stating half of the approval pair, either
+field twice, or an approval code that is not the code of the itinerary it carries — and, on `update`
+of an approved change on a trip that declares approvers, a render stating neither. `cmd_publish`
+calls that guard before the repo is touched. In `cmd_update` the gate's call line became one call to
+`require_publish_guards`, which calls `require_change_confirmation` unchanged and then the guard, so
+the gate is still reached from one call line and relocating it is still moving that line. The second
+paragraph's sentence and its naming of the gate's call site are corrected in place, and the
+restatement closing the amendment above is corrected by this paragraph. What they were used to
+establish still holds: `require_change_confirmation`'s body, the five-token vocabulary and the
+allowlist-proceed / wildcard-abort structure are unchanged; the replacement body still emits
+`undetermined` whenever a baseline is recorded and the outgoing render's itinerary content cannot be
+identified; and the band is still `extend-seam` on both surfaces. No decision moves.
 
 ### 6. The transport is left unnamed here — and that, not the verifier, is what blocks the mechanism
 
@@ -337,6 +359,23 @@ group-trip tool. The technical comparison is settled above; what remains is a pr
 whether this tool should ask its users to hold keys — and that judgment is materially changed by
 which channel #718 names, because the channel sets what a copy/paste actually costs a traveler.
 
+**Amendment (2026-09-26, Saturday) — the re-reading this section asked for is recorded, and the
+choice is made there.** This record's *Consequences* asked #718 to re-read these candidates rather
+than adopt them. [ADR-029](ADR-029-group-approval-return-and-threshold.md) does, and it chooses
+Candidate D, refined. It records one finding against Candidate C that this section could not
+state, and the finding is scoped to **Candidate C as specified on #708**: for that specification
+the proviso *"provided the signing key never leaves the traveler"* is necessary and not
+sufficient, because the specification enrols the key through the organizer and holds and
+exercises it in page script the organizer authors, so an approval it produces does not reach even
+the token-level unforgeability § *Decision* 2 describes. The proviso holds for a key the traveller
+keeps in a tool the traveller controls, and § *Decision* 2 stands: unforgeability of the approval
+token remains reachable. What that record adds is where the binding comes from — which key stands
+for which traveller reaches the build host by the organizer's hand whatever the mechanism, so the
+record the engine keeps is organizer-attested as to whose approval it counts — and why it
+therefore chooses detectability. The candidates above are retained as recorded; that record
+carries the argument. § *Decision* 2's reduction of "not organizer-attested" to unforgeability and
+detectability stands as decided.
+
 ### 8. This record changes no other record's status
 
 **`ADR-003` § *Decision 2* stands, in full, and this record proposes no supersession of it.** The
@@ -358,6 +397,18 @@ superseded at all**; all nine prior records read `Accepted`.
 a build slice, and by a record that does not currently need it. The gap is real, it is now written
 down, and whichever work item first actually ships a partial supersession will have to establish the
 form deliberately — with #719 the likely occasion.
+
+**Amendment (2026-09-26, Saturday) — the form this section names as missing now exists, and one
+clause here was overtaken.** `reference/adr/README.md` § *Convention* now states the form for
+superseding one decision, or part of one, of an Accepted record.
+[ADR-029](ADR-029-group-approval-return-and-threshold.md) establishes it deliberately, as this
+section asked, being the record whose replacement rule is the first partial supersession to ship
+in the codified form. The gate rule of `ADR-003` § *Decision 2* is superseded in that form, in the
+change that ships its replacement, as this section's timing rule requires. The clause *"no record
+in it has ever been superseded at all"* was true when this record landed and was overtaken on the
+day it was ratified: `ADR-009`'s eighth amendment, dated 2026-09-02, records `ADR-011` § 3
+superseding part of that record's Decision 3. The sentences above are retained as decided and read
+through this paragraph. No decision here moves.
 
 ### 9. Reversibility and confidence
 
