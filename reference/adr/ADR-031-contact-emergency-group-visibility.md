@@ -452,9 +452,7 @@ read.
 
 **When: on every reconciler pass, in every mode.** The group snapshot is gated on IDEATION because
 plan-mode renders exclude it; the carrier renders in every state the site builds, so that reason does
-not arise. Every dispatcher of the reconciler — `/trip-record travelers`, `/trip-record person`,
-`/trip plan` and `/trip replan` — names the file on its Reads line, unconditionally (`ADR-028`'s
-standing rule 16).
+not arise.
 
 **Lifecycle: `rebuilt-each-synthesis`**, rebuilt whole, with no carry-forward: `ADR-025` never-carry 1
 applies with no third-party carve-out, because no third-party entry can enter. No pass runs on an
@@ -469,9 +467,6 @@ applies with no third-party carve-out, because no third-party entry can enter. N
   recorded at the source through a verb that runs the reconcile step in the same act. That step
   rewrites the carrier, so `itinerary-to-build` reads `BEHIND`, naming it, until the organizer's next
   update.
-- **The file's path never enters the enrichment roster row's `Output File` cell** in `CLAUDE.md`,
-  where a path under `outputs/` would enter `/trip research`'s agent-key filter — `ADR-028` § 4's
-  trap, carried as a Wave-1 authoring constraint.
 
 #### C-3 — Its class
 
@@ -481,47 +476,22 @@ form. § 5.1's enum is closed, so no group-only value is minted: the group-only 
 private-site record's public-path refusal, keyed on the section (C-5). Every row below is decided here
 and landed by Wave 1; none is edited in this release.
 
-| C | Class | W (exactly one) | L | Prov | P | Primary entities |
-|---|---|---|---|---|---|---|
-| the next in-model ordinal | `outputs/group-contacts.md` | enrichment | `rebuilt-each-synthesis` | `derived` | **`bound`** | Traveler |
-
-The class is named by path, never by ordinal; the landing slice derives the ordinal at its own base.
-Its § 9.1 authority row and its `publish-contract-artifacts` fence row land with the § 1.1 row in one
-commit, so group `PB` stays green:
-
-| Site element | Authoritative artifact | The site reads it for |
-|---|---|---|
-| Group contacts — each filer's shared in-trip contact and emergency line | `group-contacts.md` | The group contacts section, in every state the site builds |
-
-| artifact | class |
-|---|---|
-| `outputs/group-contacts.md` | `bound` |
-
-**The element fence `round-trip-contract-elements-group-contacts`**, at label grain, graded against the
-writer's grammar block. The labels are working names; Wave 1 spells them as the capture form does.
-
-| element-label | disposition | component |
-|---|---|---|
-| `Group Contacts [DERIVED]` | rendered | `group-contacts` — the section title; the mark is provenance metadata and is not rendered; the frame line renders as the standfirst |
-| `<traveler-entry>` — each `## <Name>` | rendered | `group-contacts` — the entry title |
-| `In-trip contact` | rendered | `group-contacts` |
-| `Emergency contact` | rendered | `group-contacts` — exactly one per entry, in one of the closed states: the attested name, with a note that the organizer holds how to reach them · *on file with the organizer* · *no emergency contact on file* |
-| `<artifact-frontmatter>` | excluded | — |
+- **A § 1.1 row** for `outputs/group-contacts.md`: writer `enrichment`, lifecycle
+  `rebuilt-each-synthesis`, provenance `derived`, **`publish: bound`**, primary entity Traveler. The
+  class is named by path, never by ordinal; the landing slice derives the ordinal at its own base.
+- **A § 9.1 authority row and a `publish-contract-artifacts` fence row**, landing with the § 1.1
+  row in one commit, so group `PB` stays green.
+- **The element fence `round-trip-contract-elements-group-contacts`**, at label grain, graded
+  against the writer's grammar block. The labels are working names; Wave 1 spells them as the
+  capture form does.
+- **An erase reach row**, appended by the landing slice at its own base, which deletes the subject's
+  entry whole, with no tombstone and no token — the roster carries the trip's tombstone, and the
+  file holds no independent state — and never skips silently.
 
 **§ 5.6: no row is scoped to this file.** The way to reach the contact never enters it; its own row is
 the one § 3, rule 6 places on the organizer-only file. There is no row for the name, which D1 renders
 when attested, and none for the in-trip contact, which is group-visible when shared, so a row would make
 the validator Critical on a lawful line; its public-path protection is structural (C-5).
-
-**The erase reach row**, appended by the landing slice at its own base:
-
-| # | Location | Disp. | What happens |
-|---|---|---|---|
-| the next free number | `outputs/group-contacts.md` — the subject's entry | REACH | **delete the entry whole**, with no tombstone and no token: the roster carries the trip's tombstone, and the file holds no independent state. Emit `n/a` naming the absent file, or naming the population rule that admits no entry. **Never a silent skip** |
-
-**Frontmatter:** `artifact: outputs/group-contacts.md` · `schema-version: 1` · `trip:` ·
-`writer: enrichment` · `lifecycle: rebuilt-each-synthesis` · `provenance: derived` · `publish: bound` ·
-`generated:` the date of the pass.
 
 #### C-4 — Where it shows
 
@@ -658,7 +628,7 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 | `skills/trip/SKILL.md` | the `site` verb's Reads line, in every state; `plan`'s and `replan`'s naming of the carrier write |
 | `skills/trip-record/SKILL.md` | `travelers` and `person`: the dispatcher naming; the recording verb; `erase`: the carrier's reach row, the organizer-only file, every page file, the accounting and the tally |
 | `agents/06-validator.md` | the inline list of publish-bound artifacts |
-| `CLAUDE.md` | the file-structure tree and § *How to build it* — **not** the enrichment roster row's `Output File` cell |
+| `CLAUDE.md` | the file-structure tree and § *How to build it* |
 | `scripts/check-round-trip.sh` and `scripts/test-artifact-schema.sh` | the carrier's per-artifact declaration, the `PB` pairing, the label arm, the erase tally; the erasure witness and `ER15` |
 | `scripts/publish-trip-site.sh` and `scripts/test-publish-guard.sh` | the widened queried set for the organizer-only file's row |
 | `examples/` | a sanitized witness of the carrier's class |
@@ -725,7 +695,9 @@ component and one fence name.
 
 ## Follow-on build slices
 
-All Wave 1, none live before the fix for the rotation defect tracked privately:
+All Wave 1, none live before the fix for the rotation defect tracked privately. Each slice names
+what Wave 1 must specify; the build detail this record does not carry is kept, non-binding, in the
+Wave-1 working notes on its Stage-6 sub-task, #1547:
 
 - **The capture build**: the trip form's fields, choices and notice; the filing script, the
   organizer-only file and the block on agent reads; the way-to-reach's § 5.6 row with the queried set
@@ -780,4 +752,4 @@ All Wave 1, none live before the fix for the rotation defect tracked privately:
   `scripts/test-artifact-schema.sh` — the guard and its queried set, and the erasure witness's arm.
 - Provenance: the card, #1545; its design sub-task, #1546, carrying the design, the operator's D1 to
   D3, the carrier and its decisions K, S, P and MG-C1; the fit review and CR-2 on #1369; decision Q on
-  #1385.
+  #1385; and the Wave-1 working notes this record's build detail moved to, on #1547.
