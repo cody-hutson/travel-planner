@@ -1694,13 +1694,14 @@ else
 fi
 
 # L15e — NO FALLBACK. The trip exists only in the working directory. With the flag given it
-# must not be found: the refusal names the ROOTED path, and gh is never reached.
+# must not be found: the refusal names the data root it looked under — never the argument itself,
+# which may be a passphrase typed in the trip's place (RV13-omitted) — and gh is never reached.
 l15_run stub "$L15DECOY" unpublish trips/l15-cwd-only --disable-pages-only --data-root "$L15DATA"
-l15e_rc="$L15_RC"; l15e_rooted="$(l15_has "$L15_OUT" "no such trip dir: $L15DATA/trips/l15-cwd-only")"
+l15e_rc="$L15_RC"; l15e_rooted="$(l15_has "$L15_OUT" "no such trip dir under $L15DATA/")"
 if [ "$l15e_rc" -eq 1 ] && [ "$l15e_rooted" = 1 ] && [ -z "$L15_LOGT" ]; then
-  PASS "L15e: NO FALLBACK — a trip present only in the working directory is refused as 'no such trip dir' naming the path under --data-root (rc=$l15e_rc), before any gh call. Falling back to the working directory would reach a different trip of the same name, which is L15a's defect"
+  PASS "L15e: NO FALLBACK — a trip present only in the working directory is refused as 'no such trip dir' naming the data root it looked under (rc=$l15e_rc), before any gh call. Falling back to the working directory would reach a different trip of the same name, which is L15a's defect"
 else
-  FAIL "L15e: a trip missing under --data-root was not refused at the rooted path (rc=$l15e_rc, rooted path named=$l15e_rooted, gh calls: ${L15_LOGT:-none}) — the resolver fell back to the working directory. Output: $L15_OUT"
+  FAIL "L15e: a trip missing under --data-root was not refused under the data root (rc=$l15e_rc, data root named=$l15e_rooted, gh calls: ${L15_LOGT:-none}) — the resolver fell back to the working directory. Output: $L15_OUT"
 fi
 
 # L15f — an ABSOLUTE <trip-dir> is used as given, with the flag present.
@@ -9957,6 +9958,261 @@ rv18_assert() { # <id>
 }
 rv18_assert "RV18"
 
+# ── RV19 — DQ-2, the δ interleaving: γ with the two pushes the other way round. An update commits on
+# top of a rotation's commit, reads it back and re-checks .passphrase a moment BEFORE the rotation
+# records its key; the rotation then records it and pushes first. The update's own push is an
+# ordinary fast-forward on top of the rotation's commit, so it put its page — under the key the
+# rotation revoked — back as the live one while both commands reported success. The update's push
+# must be bound to the remote state its re-check saw: it fails, takes back exactly its own commit
+# and says so, and the rotation's page, under the key it recorded, stays live.
+rv19_assert() { # <id>
+  local id="$1" name d bare pub e r1 out rc live tip otip injected=0 claimed=0
+  local k1='rv-delta-old-synthetic-key-26' k2='rv-delta-new-synthetic-key-27'
+  name="rv19-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  # the rotation's commit, made before the update runs and not yet pushed; its key is not yet recorded
+  e="$(rv_enc_shim "$SRC" "$k2")"; cp "$e/index.html" "$pub/index.html"; rm -rf "$e"
+  git -C "$pub" add index.html
+  git -C "$pub" -c user.name=t -c user.email=t@example.invalid commit -q -m rotation
+  r1="$(git -C "$pub" rev-parse HEAD)"
+  out="$( ( unset STATICRYPT_PASSWORD; rv19_d="$d"; rv19_pub="$pub"; rv19_r1="$r1"; rv19_k2="$k2"; rv19_mark="$RVW/$name.injected"
+            rv19_def="$(declare -f require_key_of_record)"; eval "rv19_real_rkr ${rv19_def#require_key_of_record}"
+            require_key_of_record() {   # the update re-checks and passes; THEN the rotation records its key and pushes first
+              rv19_real_rkr "$@" || return $?
+              if [ ! -e "$rv19_mark" ]; then
+                : > "$rv19_mark"
+                printf '%s\n' "$rv19_k2" > "$rv19_d/.passphrase"
+                git -C "$rv19_pub" push --quiet origin "$rv19_r1:refs/heads/main" || return 1
+              fi
+            }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  [ -e "$RVW/$name.injected" ] && injected=1
+  live="$(rv_pushed_key "$bare")"
+  tip="$(git -C "$pub" rev-parse main 2>/dev/null)"; otip="$(git -C "$pub" rev-parse refs/remotes/origin/main 2>/dev/null)"
+  rv_has "$out" 'discarded its own commit' && claimed=1
+  if [ "$injected" -eq 0 ]; then
+    FAIL "$id: the rotation's key write and push were never reached between the update's re-check and its push — the interleaving was not reproduced. VERDICT WITHHELD"
+  elif [ "$rc" -eq 0 ] && [ "$live" = "$k1" ]; then
+    FAIL "$id: the update reported success and put its page, under the key the rotation revoked, back as the live one — its push was not bound to the remote state its re-check saw"
+  elif [ "$rc" -ne 1 ]; then
+    FAIL "$id: the update did not stop (rc=$rc) after a rotation recorded its key and pushed between the update's re-check and its push"
+  elif [ "$live" != "$k2" ]; then
+    FAIL "$id: the live page is not the rotation's, under the key the rotation recorded"
+  elif [ "$claimed" -eq 0 ] || [ "$tip" != "$r1" ] || [ "$tip" != "$otip" ]; then
+    FAIL "$id: the update did not take back exactly its own commit and say so (claimed=$claimed) — the clone is not at the rotation's commit, or is behind the remote"
+  else
+    PASS "$id: an update that re-checked the key a moment before a rotation recorded its new one fails at its push, takes back exactly its own commit and says so — the rotation's page, under the key it recorded, stays live"
+  fi
+}
+rv19_assert "RV19"
+
+# ── RV20 — DQ-6. A reused clone on a branch other than main — a pre-existing repository served from
+# master, say — took this run's commit on that branch while the push targeted main, a branch nothing
+# serves: update reported "Updated" and rotate "Passphrase ROTATED" with the served page unchanged.
+# Both must refuse, naming the branch, before anything is committed; rotate must leave .passphrase as
+# it was.
+rv20_assert() { # <id> <update|rotate>
+  local id="$1" verb="$2" name d bare pub out rc h0 h1 ahead mainref=0 named=0 same=0
+  local k1='rv-master-served-synthetic-key-28'
+  name="rv20-$verb-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  # re-shape the fixture into a repository served from master: the clone and the bare hold master only
+  git -C "$pub" branch -M master
+  git -C "$pub" push -q origin master
+  git -C "$bare" symbolic-ref HEAD refs/heads/master
+  git -C "$bare" update-ref -d refs/heads/main
+  git -C "$pub" update-ref -d refs/remotes/origin/main
+  git -C "$pub" fetch -q origin
+  cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(git -C "$bare" rev-parse master)"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$verb" "$d" ) 2>&1 )"; rc=$?
+  h1="$(git -C "$bare" rev-parse master)"
+  git -C "$bare" rev-parse --verify -q refs/heads/main >/dev/null && mainref=1
+  rv_has "$out" "'master'" && named=1
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  ahead="$(git -C "$pub" rev-list --count refs/remotes/origin/master..HEAD 2>/dev/null)"
+  if [ "$rc" -eq 0 ]; then
+    FAIL "$id: $verb reported success on a clone of a site served from master — its push went to main, a branch nothing serves, and the served page is unchanged"
+  elif [ "$rc" -ne 1 ] || [ "$named" -eq 0 ]; then
+    FAIL "$id: $verb did not refuse naming the clone's branch (rc=$rc). VERDICT WITHHELD"
+  elif [ "$mainref" -eq 1 ] || [ "$h0" != "$h1" ]; then
+    FAIL "$id: the refusal still changed the per-trip repository"
+  elif [ "$ahead" != 0 ] || [ "$same" -eq 0 ]; then
+    FAIL "$id: the refusal left a commit in the clone or changed .passphrase"
+  else
+    PASS "$id: $verb refuses a clone on a branch other than main, naming it, before anything is committed — the per-trip repository and .passphrase are exactly as they were"
+  fi
+}
+rv20_assert "RV20-update" update
+rv20_assert "RV20-rotate" rotate
+
+# ── RV21 — DQ-4. push_trip_site builds "<commit>:refs/heads/main". An empty commit id makes that
+# ":refs/heads/main" — a DELETION of the site's branch, which a remote permitting it carries out —
+# and an id naming no commit is not a page any run made. The push must refuse both, naming the
+# reason, before git is asked to push anything. The bare repository here permits the deletion.
+rv21_assert() { # <id> <empty|junk>
+  local id="$1" form="$2" name d bare pub own desc out rc h0 h1 said=0
+  name="rv21-$form-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  git -C "$bare" config receive.denyDeleteCurrent ignore
+  case "$form" in
+    empty) own='';                desc='an empty commit id' ;;
+    *)     own='not-a-commit-id'; desc='a commit id that names no commit' ;;
+  esac
+  h0="$(rv_head "$bare")"
+  out="$( ( set -e; push_trip_site "$pub" "$own" update ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"
+  rv_has "$out" 'not a commit' && said=1
+  if [ -z "$h1" ]; then
+    FAIL "$id: push_trip_site deleted the site's branch when handed $desc"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: push_trip_site changed the site's branch when handed $desc"
+  elif [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: push_trip_site did not refuse $desc as not a commit (rc=$rc). VERDICT WITHHELD"
+  else
+    PASS "$id: push_trip_site refuses $desc before pushing anything — the site's branch is untouched"
+  fi
+}
+rv21_assert "RV21-empty" empty
+rv21_assert "RV21-junk" junk
+
+# ── RV13-omitted — DQ-3. With the trip left out, the first argument after the command is whatever
+# came next — a passphrase typed with its flag forgotten, say — and the trip-directory refusal
+# repeated it on stderr, where a captured log or transcript keeps it. The refusal says where it
+# looked instead, and never repeats the argument; with --data-root it names that root.
+rv13o_assert() { # <id> <verb> <bare|eq|rooted>
+  local id="$1" verb="$2" form="$3" out rc tok seen=0 leak=0 where=1
+  local k='rv-omitted-trip-synthetic-key-29'
+  case "$form" in eq) tok="--passphrase=$k" ;; *) tok="$k" ;; esac
+  if [ "$form" = rooted ]; then
+    out="$( ( unset STATICRYPT_PASSWORD; _GUARD_DATA_ROOT="$RVW"; _GUARD_DATA_ROOT_EXPLICIT=1; set -e; "cmd_$verb" "$tok" ) 2>&1 )"; rc=$?
+    rv_has "$out" "no such trip dir under $RVW/" || where=0
+  else
+    out="$( ( unset STATICRYPT_PASSWORD; set -e; "cmd_$verb" "$tok" ) 2>&1 )"; rc=$?
+  fi
+  rv_has "$out" 'no such trip dir' && seen=1
+  rv_has "$out" "$k" && leak=1
+  if [ "$rc" -ne 1 ] || [ "$seen" -eq 0 ] || [ "$where" -eq 0 ]; then
+    FAIL "$id: $verb did not refuse the missing trip directory, saying where it looked (rc=$rc). VERDICT WITHHELD"
+  elif [ "$leak" -eq 1 ]; then
+    FAIL "$id: $verb repeated the argument in its trip-directory refusal, so a passphrase typed in the trip's place reached the output"
+  else
+    PASS "$id: $verb refuses a missing trip directory without repeating the argument, so a passphrase typed in the trip's place never reaches the output"
+  fi
+}
+for rv_v in rotate publish unpublish update confirm; do rv13o_assert "RV13-omitted-$rv_v" "$rv_v" bare; done
+rv13o_assert "RV13-omitted-rotate-eq" rotate eq
+rv13o_assert "RV13-omitted-rooted" rotate rooted
+
+# ── RV13-subcommand — DQ-3's sixth site: the dispatcher. A flag typed before the subcommand, as many
+# command lines teach, became the subcommand, and its refusal repeated it. It must refuse without
+# repeating it.
+rv13s_assert() { # <id>
+  local id="$1" out rc seen=0 leak=0
+  local k='rv-subcommand-synthetic-key-33'
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; main "--passphrase=$k" rotate "$RVW/rv13s-none" ) 2>&1 )"; rc=$?
+  rv_has "$out" 'unknown subcommand' && seen=1
+  rv_has "$out" "$k" && leak=1
+  if [ "$rc" -ne 1 ] || [ "$seen" -eq 0 ]; then
+    FAIL "$id: the dispatcher did not refuse the flag typed in the subcommand's place as an unknown subcommand (rc=$rc). VERDICT WITHHELD"
+  elif [ "$leak" -eq 1 ]; then
+    FAIL "$id: the dispatcher repeated the unknown subcommand, so a passphrase typed before the subcommand reached the output"
+  else
+    PASS "$id: the dispatcher refuses an unknown subcommand without repeating it, so a passphrase typed before the subcommand never reaches the output"
+  fi
+}
+rv13s_assert "RV13-subcommand"
+
+# ── RV22 — DQ-5. rotate records its key through a link where .passphrase is one, and refuses a link
+# it cannot follow or a key file it cannot stage beside. It resolved that path only at its commit
+# point, after committing: a bad path stopped rotate with a commit left in the clone, and the next
+# rotate refused that commit as a page an earlier run left unpushed. The path must be proven before
+# anything is committed.
+rv22_assert() { # <id> <missing-dir|loop>
+  local id="$1" form="$2" name d bare pub out rc h0 h1 ahead lnk0 lnk1 said=0
+  name="rv22-$form-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  case "$form" in
+    missing-dir) ln -s "$RVW/$name-keystore/missing-dir/sub/key" "$d/.passphrase" ;;
+    *)           ln -s "$d/.passphrase-b" "$d/.passphrase"; ln -s "$d/.passphrase" "$d/.passphrase-b" ;;
+  esac
+  lnk0="$(readlink "$d/.passphrase")"; h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"; lnk1="$(readlink "$d/.passphrase")"
+  ahead="$(git -C "$pub" rev-list --count refs/remotes/origin/main..HEAD 2>/dev/null)"
+  case "$form" in
+    missing-dir) rv_has "$out" 'missing-dir/sub/key' && said=1 ;;
+    *)           rv_has "$out" 'could not follow' && said=1 ;;
+  esac
+  if [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: rotate did not refuse the key path it cannot write (rc=$rc). VERDICT WITHHELD"
+  elif [ "$ahead" != 0 ]; then
+    FAIL "$id: rotate refused the key path only after committing — a commit is left in the clone (ahead=$ahead), and the next rotate refuses it as an unpushed page from an earlier run"
+  elif [ "$h0" != "$h1" ] || [ "$lnk0" != "$lnk1" ]; then
+    FAIL "$id: the refusal changed the site or the .passphrase link"
+  else
+    PASS "$id: rotate refuses a key path it cannot write before anything is committed — the clone, the site and the link are exactly as they were"
+  fi
+}
+rv22_assert "RV22-missing-dir" missing-dir
+rv22_assert "RV22-loop" loop
+
+# ── RV23 — DQ-7, the discard's "already on the remote" test. When the key-of-record check stops an
+# update whose OWN commit another command has already pushed — a branch push from elsewhere carried
+# it — that commit is published. Taking it back would leave the clone behind the remote and claim a
+# discard that did not happen. The discard must refuse, and the update must say the commit may be
+# live. This is the shape only that test guards: with another commit stacked on top instead, the
+# discard's compare-and-swap refuses on its own.
+rv23_assert() { # <id>
+  local id="$1" name d bare pub out rc tip otip injected=0 claimed=0 honest=0
+  local k1='rv-pushed-own-synthetic-key-30' k2='rv-pushed-own-new-synthetic-key-31'
+  name="rv23-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  out="$( ( unset STATICRYPT_PASSWORD; rv23_d="$d"; rv23_pub="$pub"; rv23_k2="$k2"; rv23_mark="$RVW/$name.injected"
+            rv23_def="$(declare -f require_key_of_record)"; eval "rv23_real_rkr ${rv23_def#require_key_of_record}"
+            require_key_of_record() {   # another command pushes the branch, carrying the commit this run made, then records a new key
+              if [ ! -e "$rv23_mark" ]; then
+                : > "$rv23_mark"
+                git -C "$rv23_pub" push --quiet origin main || return 1
+                printf '%s\n' "$rv23_k2" > "$rv23_d/.passphrase"
+              fi
+              rv23_real_rkr "$@"
+            }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  [ -e "$RVW/$name.injected" ] && injected=1
+  tip="$(git -C "$pub" rev-parse main 2>/dev/null)"; otip="$(git -C "$pub" rev-parse refs/remotes/origin/main 2>/dev/null)"
+  rv_has "$out" 'discarded its own commit' && claimed=1
+  rv_has "$out" 'may already have published it' && honest=1
+  if [ "$injected" -eq 0 ] || [ "$rc" -ne 1 ]; then
+    FAIL "$id: the update did not stop at its key check after its own commit was pushed from elsewhere (rc=$rc). VERDICT WITHHELD"
+  elif [ "$claimed" -eq 1 ] || [ "$tip" != "$otip" ]; then
+    FAIL "$id: the update took back a commit that was already published — it claimed a discard and left the clone behind the remote"
+  elif [ "$honest" -eq 0 ]; then
+    FAIL "$id: the update did not say its commit may already be published"
+  else
+    PASS "$id: an update whose own commit was already pushed from elsewhere refuses to take it back, says it may be live, and leaves the clone level with the remote"
+  fi
+}
+rv23_assert "RV23"
+
+# ── RV24 — DQ-7, the refusal's unreadable-ref branch. rotate counts the clone's unpushed pages against
+# its record of the remote; when that record cannot be read it cannot tell whether a page under the
+# key being revoked would ride its push. It must refuse and change nothing — never read the
+# unreadable record as "no unpushed pages".
+rv24_assert() { # <id>
+  local id="$1" name d bare pub out rc h0 h1 same=0 said=0
+  local k1='rv-unreadable-ref-synthetic-key-32'
+  name="rv24-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  git -C "$pub" update-ref -d refs/remotes/origin/main
+  cp -p "$d/.passphrase" "$RVW/$name.before"; h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"
+  cmp -s "$RVW/$name.before" "$d/.passphrase" && same=1
+  rv_has "$out" 'could not tell' && said=1
+  if [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: rotate did not refuse when it could not read its record of the remote (rc=$rc)"
+  elif [ "$h0" != "$h1" ] || [ "$same" -eq 0 ]; then
+    FAIL "$id: the refusal changed the site or .passphrase"
+  else
+    PASS "$id: rotate refuses when it cannot read its record of the remote, and changes nothing — it never reads an unreadable record as no unpushed pages"
+  fi
+}
+rv24_assert "RV24"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -9988,6 +10244,20 @@ md_flips cmd_update "RV16" rv16_assert "RV16"
 # RV17 and RV18 grade what a push publishes, so they are registered against the push itself.
 md_flips push_trip_site "RV17" rv17_assert "RV17"
 md_flips push_trip_site "RV18" rv18_assert "RV18"
+# RV19 and RV23 end safe — no push, no discard — whenever their subject is removed, so like RV16 they
+# are registered against the command they drive; the lease and the "already on the remote" test they
+# answer to are proven by mutation instead. RV20, RV21, RV22 and RV24 are registered against the
+# function each one grades.
+md_flips cmd_update "RV19" rv19_assert "RV19"
+for rv_c in update rotate; do md_flips require_publish_branch "RV20-$rv_c" rv20_assert "RV20-$rv_c" "$rv_c"; done
+for rv_c in empty junk; do md_flips push_trip_site "RV21-$rv_c" rv21_assert "RV21-$rv_c" "$rv_c"; done
+for rv_v in rotate publish unpublish update confirm; do md_flips "cmd_$rv_v" "RV13-omitted-$rv_v" rv13o_assert "RV13-omitted-$rv_v" "$rv_v" bare; done
+md_flips cmd_rotate "RV13-omitted-rotate-eq" rv13o_assert "RV13-omitted-rotate-eq" rotate eq
+md_flips cmd_rotate "RV13-omitted-rooted" rv13o_assert "RV13-omitted-rooted" rotate rooted
+md_flips main "RV13-subcommand" rv13s_assert "RV13-subcommand"
+for rv_c in missing-dir loop; do md_flips prove_key_path "RV22-$rv_c" rv22_assert "RV22-$rv_c" "$rv_c"; done
+md_flips cmd_update "RV23" rv23_assert "RV23"
+md_flips refuse_unpushed_residue "RV24" rv24_assert "RV24"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
