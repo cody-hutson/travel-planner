@@ -95,3 +95,4 @@ carries the account.
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
 | [ADR-029](ADR-029-what-the-private-site-may-show.md) | What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page | Proposed |
 | [ADR-030](ADR-030-site-phase-model-and-surface-contract.md) | The site's phase model and surface contract — what drives its shape, the render table across the phases, and the section ceiling | Proposed |
+| [ADR-031](ADR-031-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Proposed |
