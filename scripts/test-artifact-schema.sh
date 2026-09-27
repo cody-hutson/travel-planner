@@ -149,7 +149,10 @@
 #        byte-unchanged, and erasure reaches it anyway.
 #   PF   no verdict in this suite, or in the validator it sources, is decided by a pipeline's
 #        exit status. Closed at the SHAPE rather than at any one arm, because has_finding
-#        carries BOTH polarities and the dangerous one is a silent false GREEN.
+#        carries BOTH polarities and the dangerous one is a silent false GREEN. The same race
+#        one step removed is closed too: no awk that exits on its first match reads
+#        downstream of a writer, adjudicated or not, because a capture whose status nothing
+#        reads today is one marker edit away from being graded.
 #   ER   the erasure verb's declared contract — the four failure modes that live only in
 #        prose, which AF's post-state grading of the fixture cannot reach.
 #   HZ   the validity-horizon axis and the tracked instance that exercises the mark. The real
@@ -1518,7 +1521,7 @@ ca_compare_doc() {  # <rows> <pairs> <field> ; "<total>\t<compared>\t<unpaired>\
 # lifecycle token, so an unresolved binding makes every comparison mismatch and the arms go
 # RED. An unresolved column must not be able to produce a green, and a fallback naming a real
 # column would do exactly that.
-CA_LIFECOL="$(printf '%s\n' "$CA_COLS" | awk -F'\t' '$1 == "lifecycle" { print $2; exit }')"
+CA_LIFECOL="$(awk -F'\t' '$1 == "lifecycle" { print $2; exit }' <<<"$CA_COLS")"
 CA_LIFECOL="${CA_LIFECOL:-0}"
 CA_M="$(ca_members)"
 CA_MPF="$(printf '%s\n' "$CA_M" | grep -c '^PARSE-FAIL' || true)"
@@ -1552,8 +1555,8 @@ ca_witness_field() {  # <field-index-in-CA_ROWS> <frontmatter-key> ; emits "<cmp
   local fidx="$1" key="$2" cid wpath want got bad=0 cmp=0 detail=""
   while IFS="$VA_TAB" read -r cid wpath; do
     [ -n "$cid" ] && [ -n "$wpath" ] || continue
-    want="$(printf '%s\n' "$CA_ROWS" | awk -F'\t' -v n="${cid#C}" -v f="$fidx" '$1 == n { v = $f; sub(/ .*$/, "", v); print v; exit }')"
-    got="$(va_fm_pairs "$ROOT" "$wpath" 2>/dev/null | awk -F'\t' -v k="$key" '$1 == k { print $2; exit }')"
+    want="$(awk -F'\t' -v n="${cid#C}" -v f="$fidx" '$1 == n { v = $f; sub(/ .*$/, "", v); print v; exit }' <<<"$CA_ROWS")"
+    got="$(va_fm_pairs "$ROOT" "$wpath" 2>/dev/null | awk -F'\t' -v k="$key" '$1 == k && n == 0 { print $2; n = 1 }')"
     cmp=$((cmp+1))
     if [ "$want" != "$got" ]; then bad=$((bad+1)); detail="$detail $cid:${want:-<absent>}vs${got:-<absent>}"; fi
   done <<EOF
@@ -1677,7 +1680,7 @@ if [ "$PB_OK" -eq 1 ]; then
   # NAME rather than by position for the reason CA0 states, and defaulted to a field index
   # that cannot exist so an unresolved binding yields an empty comparison rather than a
   # plausible one read out of the wrong column.
-  PB_PUBCOL="$(printf '%s\n' "$CA_COLS" | awk -F'\t' '$1 == "publish" { print $2; exit }')"
+  PB_PUBCOL="$(awk -F'\t' '$1 == "publish" { print $2; exit }' <<<"$CA_COLS")"
   PB_PUBCOL="${PB_PUBCOL:-99}"
   PB_BADCLASS="$(printf '%s\n' "$PB_ROWS" | awk -F'\t' -v e="$PB_PUBENUM" '
     function member(v,   i, n, A) { n = split(e, A, "|"); for (i = 1; i <= n; i++) if (v == A[i]) return 1; return 0 }
@@ -1728,7 +1731,7 @@ fi
 # => the fence side is unmatched. Both mutations asserted to have landed.
 if [ "$PB_OK" -eq 1 ]; then
   PB_DROP="$(printf '%s\n' "$PB_ROWS" | awk 'NR > 1')"
-  PB_ADD="$(printf '%s\n%s\t%s\n' "$PB_ROWS" 'outputs/zzz-not-a-class.md' "$(printf '%s\n' "$PB_ROWS" | awk -F'\t' 'NF>1{print $2; exit}')")"
+  PB_ADD="$(printf '%s\n%s\t%s\n' "$PB_ROWS" 'outputs/zzz-not-a-class.md' "$(awk -F'\t' 'NF>1{print $2; exit}' <<<"$PB_ROWS")")"
   PB_C1="$(pb_compare "$PB_DROP" | cut -f4)"
   PB_C2="$(pb_compare "$PB_ADD" | cut -f3)"
   PB_MUT=0
@@ -3585,7 +3588,7 @@ st_n() { printf '%s\n' "$2" | awk -F'\t' -v k="$1" '$1 == k { n++ } END { print 
 
 # st_field <kind> <ordinal> <column> <surfaces> — one cell of a discovered record, so every
 # mutation below aims at a site the probe FOUND rather than at a line this file names.
-st_field() { printf '%s\n' "$4" | awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o) { print $c; exit } }'; }
+st_field() { awk -F'\t' -v k="$1" -v o="$2" -v c="$3" '$1 == k { n++; if (n == o) { print $c; exit } }' <<<"$4"; }
 
 # st_codes <text> — the violation codes a text can EMIT, one per line, first-occurrence order,
 # deduplicated. A code is exactly what st_has looks one up BY: the first TAB-DELIMITED FIELD of an
@@ -4054,9 +4057,9 @@ st3_assert() {
   local f="$1" dm="$2" tag rep nb nm ns nd
   tag="${f##*/}"; tag="${tag%.template.md}"
   rep="$(st3_report "$f" "$dm")"
-  nb="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NB" { print $2; exit }')"
-  nm="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NM" { print $2; exit }')"
-  ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
+  nb="$(awk -F'\t' '$1 == "NB" { print $2; exit }' <<<"$rep")"
+  nm="$(awk -F'\t' '$1 == "NM" { print $2; exit }' <<<"$rep")"
+  ns="$(awk -F'\t' '$1 == "NS" { print $2; exit }' <<<"$rep")"
   nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "MNS" || $1 == "SNM" { n++ } END { print n + 0 }')"
   if [ "${nb:-0}" -lt 1 ] || [ "${nm:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
     FAIL "ST3[$tag]: a side of the comparison came back EMPTY (labelled bullets=${nb:-0}, marked=${nm:-0}, starred model rows=${ns:-0}) — two empty sets are equal, so a verdict here would be a PASS reached over nothing. A zero on any side is a broken extractor or a restructured document, never a clean tree. CTL-ST3-EXTRACT below drives this same limb on purpose"
@@ -4100,8 +4103,8 @@ st4_report() {
 st4_assert() {
   local u="$1" dm="$2" nread="$3" rep nu ns nd
   rep="$(st4_report "$u" "$dm")"
-  nu="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NU" { print $2; exit }')"
-  ns="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NS" { print $2; exit }')"
+  nu="$(awk -F'\t' '$1 == "NU" { print $2; exit }' <<<"$rep")"
+  ns="$(awk -F'\t' '$1 == "NS" { print $2; exit }' <<<"$rep")"
   nd="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "UNS" || $1 == "SNU" { n++ } END { print n + 0 }')"
   if [ "${nread:-0}" -lt 1 ] || [ "${nu:-0}" -lt 1 ] || [ "${ns:-0}" -lt 1 ]; then
     FAIL "ST4: a side of the run-level comparison came back EMPTY (forms read=${nread:-0}, labels marked across them=${nu:-0}, starred model rows=${ns:-0}) — the equality of two empty sets is the branch a degenerate run reaches, so it is refused here before any verdict is rendered"
@@ -4271,7 +4274,7 @@ ST_NREAD=0
 # The single member the group-MD registrations drive st3_assert over. Taken as the FIRST entry
 # of ST_TEMPLATES rather than as whatever the loop left in ST_FILE, so the registration grades a
 # deterministic subject; the assertion itself is identical on every member.
-ST_MD_FORM="$ROOT/$(printf '%s\n' "$ST_TEMPLATES" | awk 'NF { print; exit }')"
+ST_MD_FORM="$ROOT/$(awk 'NF { print; exit }' <<<"$ST_TEMPLATES")"
 ST_COV_PHANTOM='ZZ-ST-PHANTOM-ARM'
 # The site arm's own probes. The probe is a CODE, because the shaper writes an emission and an
 # emission carries a code; the probe KEY is what a site-granular reader derives FROM that emission,
@@ -4514,7 +4517,7 @@ if [ "$ST_OK" -eq 1 ]; then
   ST3_CAND="$(printf '%s\n%s\n%s\n' "$ST3_S" "$ST_SEP" "$(printf '%s\n' "$ST_SURF" | awk -F'\t' '$1 == "BULLET" { print $2 " " $3 }')" | awk -v sep="$ST_SEP" '
     !past && $0 == sep { past = 1; next }
     !past { if ($0 != "") s[$0] = 1; next }
-    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (!(lbl in s)) { print; exit } }
+    NF && n == 0 { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (!(lbl in s)) { print; n = 1 } }
   ')"
   ST3_CL="${ST3_CAND%% *}"; ST3_CB="${ST3_CAND#* }"
   if [ -n "$ST3_CAND" ]; then
@@ -4543,7 +4546,7 @@ if [ "$ST_OK" -eq 1 ]; then
   ST3_AROW="$(printf '%s\n%s\n%s\n' "$ST3_UNM" "$ST_SEP" "$(st_dm_all "$ST_DM" | awk -F'\t' '$2 == 0 { print $1 " " $3 }')" | awk -v sep="$ST_SEP" '
     !past && $0 == sep { past = 1; next }
     !past { if ($0 != "") u[$0] = 1; next }
-    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in u) { print; exit } }
+    NF && n == 0 { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in u) { print; n = 1 } }
   ')"
   ST3_ARL="${ST3_AROW%% *}"; ST3_ARB="${ST3_AROW#* }"
   if [ -n "$ST3_AROW" ]; then
@@ -4562,7 +4565,7 @@ if [ "$ST_OK" -eq 1 ]; then
   ST3_SROW="$(printf '%s\n%s\n%s\n' "$ST3_M" "$ST_SEP" "$(st_dm_rows "$ST_DM" | awk -F'\t' '{ print $1 " " $2 }')" | awk -v sep="$ST_SEP" '
     !past && $0 == sep { past = 1; next }
     !past { if ($0 != "") m[$0] = 1; next }
-    NF { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in m) { print; exit } }
+    NF && n == 0 { lbl = $0; sub(/^[0-9]+ /, "", lbl); if (lbl in m) { print; n = 1 } }
   ')"
   ST3_SRL="${ST3_SROW%% *}"; ST3_SRB="${ST3_SROW#* }"
   if [ -n "$ST3_SROW" ]; then
@@ -6150,10 +6153,14 @@ fi
 # reproduces, at one site. The arm also cannot reach the 21 tolerant sites at all, by
 # construction: there is nothing there to fail closed on.
 #
-# Fifteen of the validator's SIXTEEN adjudicated sites have a row. The sixteenth is the inner
-# substitution of the engine-root resolution, and it is unreachable rather than unrostered: a
-# nested capture's status is lost to the outer one, so there is no status to inject and
-# nothing in the file can adjudicate it. The outer read of that same line IS rostered.
+# Nineteen of the validator's TWENTY adjudicated sites have a row: one per va_read_ok label,
+# of which there is one for each of its 19 `# va-capture: adjudicated` marker lines. Twenty is
+# the sum of the site counts those markers declare, each of which CTL-VA-CAPTURE-CENSUS above
+# asserts equal to its line's detected count. The twentieth site is the inner substitution of
+# the engine-root resolution, on the one line marked adjudicated(2), and it is unreachable
+# rather than unrostered: a nested capture's status is lost to the outer one, so there is no
+# status to inject and nothing in the file can adjudicate it. The outer read of that same
+# line IS rostered.
 FC_MARK="$WORK/fc_invoked"
 FC_TABLE='fn|va_population|va_select/population
 fn|va_select|va_main/select
@@ -6167,6 +6174,10 @@ fn|va_schema_get|va_corpus_patterns/class-id
 fn|va_schema_all|va_corpus_patterns/path-patterns
 fn|va_corpus_patterns|va_select/pattern-table
 fnarg|va_schema_get:artifact|va_corpus_patterns/artifact
+fncaller|va_corpus_patterns:va_schema_for|va_schema_for/pattern-table
+awkprog|$1 == c { print $4; exit }|va_schema_for/class-lookup
+fncaller|va_schema_get:va_check_artifact|va_check_artifact/schema-version
+fnarg|va_schema_all:field|va_check_artifact/field-list
 noroot|pwd|va_main/engine-root'
 # fc_run <kind> <arg> — one va_main over the CTL-DATAROOT fixture with a single producer
 # shadowed to exit 7. The shadow records each invocation, so "the injection landed" is read
@@ -6183,6 +6194,25 @@ fc_run() {
       # earlier one first and this label would never be reached.
       fnarg)     eval "$(declare -f "${arg%%:*}" | sed "1s/^${arg%%:*}/${arg%%:*}_unshadowed/")"
                  eval "${arg%%:*}() { if [ \"\${2:-}\" = \"${arg#*:}\" ]; then printf 'x\n' >> \"\$FC_MARK\"; return 7; fi; ${arg%%:*}_unshadowed \"\$@\"; }" ;;
+      # `fncaller` is `<function>:<caller>` — it fails that function only when the named
+      # function calls it, and defers to the renamed original otherwise. It exists where an
+      # argument cannot isolate the site. va_corpus_patterns takes the same root at both of
+      # its adjudicated sites. va_check_corpus reads schema-version with the same argument
+      # va_check_artifact does, at an S1-guarded read that runs first, so an fnarg row would
+      # also raise an S1 per schema and make rc and shadow-invoked true before this site is
+      # reached. FUNCNAME[1] is the immediate caller, and it survives the command
+      # substitution each site captures through.
+      fncaller)  eval "$(declare -f "${arg%%:*}" | sed "1s/^${arg%%:*}/${arg%%:*}_unshadowed/")"
+                 eval "${arg%%:*}() { if [ \"\${FUNCNAME[1]:-}\" = \"${arg#*:}\" ]; then printf 'x\n' >> \"\$FC_MARK\"; return 7; fi; ${arg%%:*}_unshadowed \"\$@\"; }" ;;
+      # `awkprog` is one awk program, verbatim — it fails awk for that program alone and
+      # defers to the real awk otherwise. It exists for a site whose producer is awk itself,
+      # reading a here-string: there is no pipe stage to shadow, and shadowing awk whole
+      # would fail the earlier adjudicated reads made through it first, so this label would
+      # never be reached. The program is matched as a whole argument, so the row names one
+      # site. It is compared from a variable rather than spliced into an eval, so no quoting
+      # stands between the table and the comparison.
+      awkprog)   FC_AWKPROG="$arg"
+                 awk() { local fc_a; for fc_a in "$@"; do if [ "$fc_a" = "$FC_AWKPROG" ]; then printf 'x\n' >> "$FC_MARK"; return 7; fi; done; command awk "$@"; } ;;
     esac
     # `noroot` omits --root, because the engine-root resolution is the one adjudicated site
     # that only runs when no root was given. Every other row keeps the standard invocation,
@@ -6761,6 +6791,121 @@ else
   FAIL "PF1: ${PF_BAD} verdict site(s) in the scan set pipe into an early-exiting grep under pipefail — it exits on first match, the writer takes SIGPIPE, and the pipeline reports failure on a successful match. Use the here-string form instead; it is a simple command, so pipefail has nothing to aggregate"
 fi
 
+# ── PF2 — the same race one step removed: an awk that exits on its first match, reading
+# downstream of a writer.
+#
+# PF1 closes the shape where the early exit IS the verdict. This arm closes the shape where it
+# feeds a CAPTURE: awk prints the right value and leaves, and if the writer still has a write
+# to make it dies on SIGPIPE, so pipefail reports failure over a correct answer. At a capture
+# whose status nothing reads that is invisible, which is how the shape survived in the
+# validator: its class lookup was a first-match pipe for as long as nothing graded its status,
+# and became a live fail-closed defect — an X3 naming a read that had not failed — the moment
+# a sweep adjudicated it. Observed under load on Linux, where bash's printf flushes a pipe in
+# 4 KiB writes and that 4,527-byte table is two of them; macOS flushes in 16 KiB and cannot
+# reproduce it at that size.
+#
+# So the SHAPE is asserted absent from both files, adjudicated or not, for PF1's reason: a
+# tolerant capture becomes an adjudicated one by a one-word marker edit, and the site that
+# then fails is the one nobody was looking at. The remedy is a here-string where the producer
+# is a variable — there is no writer process to signal — and a DRAINING reader, one that keeps
+# reading after it has printed, where the producer is a function or a composite printf.
+#
+# WHAT IT MATCHES is an enumeration with a stated boundary, not a closed class: a pipe, then
+# awk as the next word, then that awk's program — to the line's last single quote or, when the
+# quotes after awk are unbalanced, across the following lines to the one that closes it —
+# carrying the word exit once every END block is removed, because END runs after EOF and
+# cannot leave a writer blocked. Full-line comments and a trailing ` # ` comment are not code,
+# and an OR-list is scrubbed exactly as PF1 scrubs it. It fails OPEN on awk reached through a
+# variable, a path or a prefix, on a double-quoted program, on a program using the '\'' idiom,
+# and on every early-closing reader that is not awk. It fails CLOSED on an END block that
+# nests braces and on the word inside a string literal: each reads as a hit someone then
+# inspects, never as a clean scan.
+#
+# The needles are assembled from pieces and the control fixture is written from them, for the
+# reason PF1's needle is: this scan reads its own source.
+PF2_A='a'"wk"; PF2_X='ex'"it"; PF2_Q="'"
+PF2_RE_PIPE="[|][[:space:]]*${PF2_A}([[:space:]]|\$)"
+PF2_RE_END='END[[:space:]]*[{][^}]*[}]'
+PF2_RE_EXIT="(^|[^[:alnum:]_])${PF2_X}([^[:alnum:]_]|\$)"
+
+# pf2_exits <program-text> — 0 when the program can stop reading before EOF.
+pf2_exits() {
+  local p="$1"
+  while [[ "$p" =~ $PF2_RE_END ]]; do p="${p/"${BASH_REMATCH[0]}"/ }"; done
+  [[ "$p" =~ $PF2_RE_EXIT ]]
+}
+
+# pf2_scan <file> — "<hits>\t<here-string sites>\t<hit line numbers>". A multi-line program
+# is attributed to the line that opened it, the one carrying the pipe.
+pf2_scan() {
+  local f="$1" line s prog q n=0 at=0 open=0 bad=0 good=0 hits=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    n=$((n+1))
+    if [ "$open" -eq 1 ]; then
+      prog="$prog $line"
+      case "$line" in
+        *"$PF2_Q"*) open=0; if pf2_exits "${prog%"$PF2_Q"*}"; then bad=$((bad+1)); hits="$hits $at"; fi ;;
+      esac
+      continue
+    fi
+    s="${line#"${line%%[![:space:]]*}"}"
+    case "$s" in '#'*) continue ;; esac
+    case "$line" in *"$PF2_A"*"$PF2_X"*'<<<'*) good=$((good+1)) ;; esac
+    case "$line" in *'|'*"$PF2_A"*) ;; *) continue ;; esac
+    s="${line//||/  }"
+    s="${s%%[[:space:]]#[[:space:]]*}"
+    [[ "$s" =~ $PF2_RE_PIPE ]] || continue
+    prog="${s#*"${BASH_REMATCH[0]}"}"
+    q="${prog//[!$PF2_Q]/}"
+    if [ $(( ${#q} % 2 )) -eq 1 ]; then open=1; at=$n; continue; fi
+    if pf2_exits "${prog%"$PF2_Q"*}"; then bad=$((bad+1)); hits="$hits $n"; fi
+  done < "$f"
+  printf '%s\t%s\t%s\n' "$bad" "$good" "${hits# }"
+}
+
+# The control fixture: two sites that must be flagged (a one-line program at line 1, a
+# multi-line one opened at line 2), then one each of the forms that must NOT be — an exit
+# inside END, the here-string remedy (the fixture's one correct-form site), the draining
+# remedy, an OR-list reading a file, a comment, and a trailing comment carrying the word.
+PF2_FIX="$WORK/pf2-control-fixture.sh"
+{
+  printf 'printf y | %s %s{ print; %s }%s\n' "$PF2_A" "$PF2_Q" "$PF2_X" "$PF2_Q"
+  printf 'x="$(printf y | %s %s\n  $1 == k { print; %s }\n%s)"\n' "$PF2_A" "$PF2_Q" "$PF2_X" "$PF2_Q"
+  printf 'printf y | %s %s{ f = 1 } END { %s f }%s\n' "$PF2_A" "$PF2_Q" "$PF2_X" "$PF2_Q"
+  printf 'x="$(%s %s{ print; %s }%s <<<"$y")"\n' "$PF2_A" "$PF2_Q" "$PF2_X" "$PF2_Q"
+  printf 'x="$(f | %s %sn == 0 { print; n = 1 }%s)"\n' "$PF2_A" "$PF2_Q" "$PF2_Q"
+  printf 'grep -c y f || %s %s{ print; %s }%s f\n' "$PF2_A" "$PF2_Q" "$PF2_X" "$PF2_Q"
+  printf '# printf y | %s %s{ print; %s }%s\n' "$PF2_A" "$PF2_Q" "$PF2_X" "$PF2_Q"
+  printf 'x="$(printf y | %s %s$1 == k { print $2 }%s)"   # drains; its %s lives elsewhere\n' "$PF2_A" "$PF2_Q" "$PF2_Q" "$PF2_X"
+} > "$PF2_FIX"
+PF2_FX_B=""; PF2_FX_G=""; PF2_FX_H=""
+IFS="$VA_TAB" read -r PF2_FX_B PF2_FX_G PF2_FX_H <<<"$(pf2_scan "$PF2_FIX")"
+
+PF2_BAD=0; PF2_GOOD=0; PF2_UNREAD=0; PF2_HITS=""
+for pffile in "$SELF" "$SELF_VALIDATOR"; do
+  if [ ! -r "$pffile" ]; then
+    PF2_UNREAD=$((PF2_UNREAD+1)); continue
+  fi
+  pfb=0; pfg=0; pfh=""
+  IFS="$VA_TAB" read -r pfb pfg pfh <<<"$(pf2_scan "$pffile")"
+  PF2_BAD=$((PF2_BAD + ${pfb:-0})); PF2_GOOD=$((PF2_GOOD + ${pfg:-0}))
+  for pfn in $pfh; do PF2_HITS="$PF2_HITS ${pffile##*/}:$pfn"; done
+done
+# Graded in PF1's order, with the detector's own control inserted ahead of any count it
+# produces: a scan that cannot read its inputs, whose detector does not respond, or that finds
+# no instance of the CORRECT form is broken, and its zero would be a probe failure wearing a pass.
+if [ "$PF2_UNREAD" -ne 0 ]; then
+  FAIL "PF2: $PF2_UNREAD of the 2 files in the scan set were unreadable, so the verdict below would cover less than it claims"
+elif [ "$PF2_FX_B" != "2" ] || [ "$PF2_FX_H" != "1 2" ] || [ "$PF2_FX_G" != "1" ]; then
+  FAIL "PF2: CONTROL on the detector — over a fixture carrying a one-line and a multi-line early exit (lines 1 and 2), one correct-form site, and five forms that must not be flagged, it reported hits=${PF2_FX_B:-<none>} at [${PF2_FX_H:-}] with ${PF2_FX_G:-<none>} correct-form site(s), rather than 2 at [1 2] with 1. Its count over the real files proves nothing until this control fires"
+elif [ "$PF2_GOOD" -eq 0 ]; then
+  FAIL "PF2: the scan found 0 here-string awk early-exit sites across the scan set, so its zero on the pipeline shape proves nothing — the convention or the scan has moved, and neither verdict is trustworthy"
+elif [ "$PF2_BAD" -eq 0 ]; then
+  PASS "PF2: no awk that stops at its first match reads downstream of a writer in this suite or the validator it sources — ${PF2_GOOD} early-exit site(s) are fed by a here-string instead, and every one-line and multi-line pipe into awk drains to EOF. Both controls fired first: the detector flagged the two planted sites and none of the five safe forms, and the correct form was found (${PF2_GOOD} > 0), so the zero is a measurement rather than an empty scan"
+else
+  FAIL "PF2: ${PF2_BAD} site(s) pipe into an awk that exits on its first match —${PF2_HITS}. The writer can still have a write to make when awk leaves; it takes SIGPIPE and pipefail reports failure over a correct value, which an adjudicated capture turns into an X3. Feed the reader with a here-string when the producer is a variable, or let it drain — print on the first match and keep reading — when the producer is a function"
+fi
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Group ER — the erasure verb's declared contract, and the two fixture
 # properties group AF does not reach.
@@ -6939,8 +7084,8 @@ if [ "$ER_OK" -eq 1 ]; then
   # rather than by a phrase, because a phrase is what a collapse rewrites first.
   ER_NPA="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase A") == 1 { c++ } END { print c + 0 }')"
   ER_NPB="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase B") == 1 { c++ } END { print c + 0 }')"
-  ER_PA_AT="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase A") == 1 { print NR; exit } END { }')"
-  ER_PB_AT="$(printf '%s\n' "$ER_SEC" | awk 'index($0, "**Phase B") == 1 { print NR; exit } END { }')"
+  ER_PA_AT="$(awk 'index($0, "**Phase A") == 1 { print NR; exit } END { }' <<<"$ER_SEC")"
+  ER_PB_AT="$(awk 'index($0, "**Phase B") == 1 { print NR; exit } END { }' <<<"$ER_SEC")"
   if [ "$ER_NPA" -eq 1 ] && [ "$ER_NPB" -eq 1 ] && [ "${ER_PA_AT:-0}" -lt "${ER_PB_AT:-0}" ]; then
     PASS "ER10: the sweep declares exactly one structural phase and exactly one free-text phase, in that order — so Phase A's by-position addressing and Phase B's bounded pattern match remain two different mechanisms rather than one pass carrying the weaker discipline of the two"
   else
@@ -6979,7 +7124,7 @@ if [ "$ER_OK" -eq 1 ]; then
   # Parsed as an ordered sequence rather than matched as a phrase, and the two end
   # conditions are read from the step's own text rather than from a pinned row number, so
   # the arm survives the reach table growing a row.
-  ER_ORD="$(printf '%s\n' "$ER_SEC" | awk '
+  ER_ORD="$(awk '
     index($0, "> **1.**") == 1 {
       s = $0
       while (match(s, /\*\*[0-9]+\.\*\*/)) {
@@ -6992,14 +7137,14 @@ if [ "$ER_OK" -eq 1 ]; then
         printf "%d\t%d\t%s\n", num, r, tolower(seg)
       }
       exit
-    }')"
+    }' <<<"$ER_SEC")"
   ER_ORD_N="$(printf '%s\n' "$ER_ORD" | grep -c '[^[:space:]]')"
   ER_ORD_SEQ="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { n++; if ($1 != n) bad++ } END { print bad + 0 }')"
-  ER_ORD_FIRST="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { print $2; exit }')"
-  ER_ORD_FIRSTTXT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { print $3; exit }')"
+  ER_ORD_FIRST="$(awk -F'\t' 'NF > 1 { print $2; exit }' <<<"$ER_ORD")"
+  ER_ORD_FIRSTTXT="$(awk -F'\t' 'NF > 1 { print $3; exit }' <<<"$ER_ORD")"
   ER_ORD_LASTTXT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 { t = $3 } END { print t }')"
-  ER_ORD_ROSTER_AT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 && $2 == 1 { print $1; exit }')"
-  ER_ORD_MODEL_AT="$(printf '%s\n' "$ER_ORD" | awk -F'\t' 'NF > 1 && $2 == 10 { print $1; exit }')"
+  ER_ORD_ROSTER_AT="$(awk -F'\t' 'NF > 1 && $2 == 1 { print $1; exit }' <<<"$ER_ORD")"
+  ER_ORD_MODEL_AT="$(awk -F'\t' 'NF > 1 && $2 == 10 { print $1; exit }' <<<"$ER_ORD")"
   ER_ORD_AUTH=0; ER_ORD_STORE=0
   case "$ER_ORD_FIRSTTXT" in *roster*) [ "${ER_ORD_FIRST:-0}" -eq 1 ] && ER_ORD_AUTH=1 ;; esac
   case "$ER_ORD_LASTTXT"  in *store*)  ER_ORD_STORE=1 ;; esac
@@ -7069,7 +7214,7 @@ if [ "$ER_OK" -eq 1 ]; then
   ER_T_REPORT="$(printf '%s' "$ER_TBL" | cut -f4)"
   ER_T_OUT="$(printf '%s' "$ER_TBL" | cut -f5)"
   ER_T_UNK="$(printf '%s' "$ER_TBL" | cut -f6)"
-  ER_DCL="$(printf '%s\n' "$ER_SEC" | awk '
+  ER_DCL="$(awk '
     index($0, "The table carries") > 0 {
       s = $0
       if (match(s, /carries [0-9]+ rows/))  { t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); a = t + 0 }
@@ -7078,7 +7223,7 @@ if [ "$ER_OK" -eq 1 ]; then
       if (match(s, /[0-9]+ OUT/))           { t = substr(s, RSTART, RLENGTH); gsub(/[^0-9]/, "", t); d = t + 0 }
       printf "%d\t%d\t%d\t%d\n", a + 0, b + 0, c + 0, d + 0
       exit
-    }')"
+    }' <<<"$ER_SEC")"
   ER_D_TOT="$(printf '%s' "$ER_DCL" | cut -f1)"
   ER_D_REACH="$(printf '%s' "$ER_DCL" | cut -f2)"
   ER_D_REPORT="$(printf '%s' "$ER_DCL" | cut -f3)"
@@ -7106,8 +7251,8 @@ if [ "$ER_OK" -eq 1 ]; then
   # Two sites, for the same reason ER2 and ER11 are two arms: the reach table's row and the
   # § *What the traveller file becomes* declaration each state it, and grading only one leaves
   # a single edit sufficient.
-  ER_R8="$(printf '%s\n' "$ER_SEC" | awk '/^\|[ \t]*\*\*8\*\*[ \t]*\|/ { split($0, c, "|"); print c[5]; exit }')"
-  ER_R9="$(printf '%s\n' "$ER_SEC" | awk '/^\|[ \t]*\*\*9\*\*[ \t]*\|/ { split($0, c, "|"); print c[5]; exit }')"
+  ER_R8="$(awk '/^\|[ \t]*\*\*8\*\*[ \t]*\|/ { split($0, c, "|"); print c[5]; exit }' <<<"$ER_SEC")"
+  ER_R9="$(awk '/^\|[ \t]*\*\*9\*\*[ \t]*\|/ { split($0, c, "|"); print c[5]; exit }' <<<"$ER_SEC")"
   ER_BEC="$(printf '%s\n' "$ER_SEC" | awk '
     index($0, "### What the traveller file becomes") == 1 { on = 1; next }
     on && /^### / { on = 0 }
@@ -10059,7 +10204,7 @@ ce_spreads() {
   for f in "$tree/$trip"/outputs/*.md; do
     [ -e "$f" ] || continue
     base="${f##*/}"
-    cls="$(printf '%s\n' "$map" | awk -F'\t' -v b="$base" '$1 == b { print $2; exit }')"
+    cls="$(awk -F'\t' -v b="$base" '$1 == b { print $2; exit }' <<<"$map")"
     [ -n "$cls" ] || continue
     case "$den" in *"|$cls|"*) ;; *) continue ;; esac
     ce_ranges "$f"
@@ -10079,7 +10224,7 @@ ce_violations() {
   for f in "$tree/$trip"/outputs/*.md; do
     [ -e "$f" ] || continue
     base="${f##*/}"
-    cls="$(printf '%s\n' "$map" | awk -F'\t' -v b="$base" '$1 == b { print $2; exit }')"
+    cls="$(awk -F'\t' -v b="$base" '$1 == b { print $2; exit }' <<<"$map")"
     [ -n "$cls" ] || continue
     case "$den" in *"|$cls|"*) ;; *) continue ;; esac
     while IFS=$'\t' read -r state val; do

@@ -71,6 +71,62 @@ contact on file* says something about a person — both are recorded as the cost
 All three records land `Proposed`. The flip to `Accepted` is the maintainer's at the milestone close,
 the private-site record first, and it moves each record's status line and its index row together.
 
+## [0.44.1] — 2026-09-26 — The personal-data gate reads the lines a pull request adds
+
+**The personal-data gate now reads what a pull request adds.** The required check that keeps
+personal email addresses and OS home paths out of this public repository reads commit messages and
+author identities, and it reads the lines a change adds to files. That second half never read
+anything. It dropped the diff's file headers with a pattern the Linux runner's `grep` takes to mean
+any line that starts with `+`, which removed every added line along with them, so it passed on an
+empty stream every time; on macOS the same pattern is rejected outright, and the error was
+swallowed. Only the commit-message half was ever live. A scan of every line added across the
+repository's history, run with the gate's own patterns, finds no match, so nothing slipped through
+while the gap was open.
+
+**The gate proves it can see before it scans.** Every run first passes a planted email address and
+a planted home path — assembled at run time, never committed — through the same filter the real
+checks use, and fails unless each is caught and nothing is reported from a file header or a removed
+line. A filter that cannot run now fails the gate instead of reading as clean, and the log says how
+many added lines each check read, so a pass over nothing looks different from a pass over clean
+content. One narrow case is still skipped, and the workflow says so where the filter is defined: an
+added line whose own text begins with `++`.
+
+## [0.44.0] — 2026-09-26 — Group approval: a decided model, and a republish that waits for it
+
+**Group approval has a decided model.** A new decision record settles the inbound approval return
+the channel architecture left open. A traveller replies in the group's own thread with a one-line
+approval code, and the organizer records it at a terminal. The record says plainly what that makes
+each approval: the organizer's statement, marked organizer-stated and never presented as the
+traveller's own. It also says why. However an approval is collected, which traveller it counts for
+reaches the engine through the organizer, and no published page may show that link. What a
+traveller can do instead is check the published count and code against the thread. Only a count
+and a code reach the published site, and only a fixed-form line travels through the messaging
+service. The record also writes down, for the first time, how one decision of an accepted record is
+superseded while the rest stands, and names the organizer-confirm rule as the decision it
+supersedes that way.
+
+**A plan change can wait for the travellers who approve it.** The organizer declares who approves a
+trip's changes — named travellers from the group, and how many of them must agree, all of them
+unless the organizer says otherwise. When the plan changes, the organizer shares the change summary
+and a one-line approval code in the group's own thread, each traveller who agrees replies with that
+line, and the organizer records each reply at a terminal, where it is kept as the organizer's
+statement on that traveller's behalf and never as the traveller's own. The site republishes only
+once enough approvals for that exact plan are recorded. A trip that declares nobody works as before:
+the organizer's own confirmation is enough.
+
+**What a traveller can check.** Beside its *recently updated* notice, the published site now shows
+how many approvals the organizer recorded and the plan's approval code, and nothing that says who
+approved. A traveller who did not approve can see a count that includes them, and anyone can compare
+the code on the site with the one shared in the thread. The code is now a stronger fingerprint of
+the plan, so a different plan cannot carry an approved code, and sites published before this
+release keep working without anyone re-approving a plan that did not change. The security policy
+states what the count proves and what it does not.
+
+**The organizer-confirm rule is superseded in part, in the form now written down for it.** The
+accepted record that made republish wait on the organizer's confirmation now records, in its own
+status line, which part of that decision the new record replaces, and keeps its original words with
+a pointer forward.
+
 ## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 
 This release finishes what earlier corrective releases left partly done. Two defects changed how the

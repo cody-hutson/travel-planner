@@ -107,6 +107,16 @@ direct push impossible; only `enforce_admins: true` would do that.
 break-glass event, or any direct push whose personal-data gate run fails. Either one
 means the mitigation is carrying weight the setting should be carrying instead.
 
+## Group approval — what an approval count proves
+
+A trip can require named travellers' approvals before a changed plan republishes. This section states what that adds and what it can and cannot prove. The decision record behind it is [`reference/adr/ADR-029-group-approval-return-and-threshold.md`](reference/adr/ADR-029-group-approval-return-and-threshold.md).
+
+**What it adds.** No server, account, key or service — the no-standing-server decision in [`reference/adr/ADR-002-living-site-refresh.md`](reference/adr/ADR-002-living-site-refresh.md) is upheld. On the organizer's machine, in the trip's git-ignored directory: `.approvers`, the declared approvers and how many of them must approve, and `.approvals`, one line for each approval or withdrawal the organizer records. On the group's own messaging service: a fixed-form approval line — the word `approve` and a 64-character code — which the service sees along with its usual metadata, such as who is in the group and when messages are sent. On the published site: an approval count and that code, and nothing that names anybody.
+
+**What it proves, and what it does not.** Every approval is the organizer's statement, recorded at a terminal and marked `organizer-stated`; a traveller cannot sign their own. So the organizer can record an approval nobody gave, and can republish without the gate by not running it. What the feature delivers is **detectability**. An approval recorded for a traveller who did not give one is counted in the published count, which anyone can hold against the replies in the group's thread. An approver can compare the code they approved with the code on the site, and because the code is a SHA-256 digest of the plan, a different plan cannot carry the approved code. Each reply sits in the group's thread under the sender's own account, where the organizer cannot write for anyone else. The site shows the code's first eight characters grouped for comparison by eye, and a comparison by eye is bounded by that prefix: it catches an honest mistake, not a forgery.
+
+**The trade-off against the no-server decision.** A service that collected approvals itself could count them without the organizer's hand, but this project rejects a standing server on merit rather than on cost, and even a signed approval would still reach the engine through the organizer's word about whose it is. The feature keeps the server-less model and pays for it in ceremony: the organizer transcribes each approval once, at a terminal. The change summary the organizer shares with the approval line is the same summary the group already received before this feature existed; how much of it the messaging service can read depends on whether the thread is end-to-end encrypted.
+
 ## Automated Security PRs — Pipeline Exemption
 
 Dependabot version-update PRs and Dependabot security-update PRs are tagged with the `dependabot` label and bypass the standard issue triage flow. Dependency bumps are self-contained, reversible, and CI-validated; subjecting each to full proposal review would create overhead disproportionate to risk.
