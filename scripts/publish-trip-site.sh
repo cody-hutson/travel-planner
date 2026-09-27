@@ -235,6 +235,7 @@ resolve_key_path() { # <path> -> the path to write, on stdout
 prove_key_path() { # <passphrase_file>
   local pf dir
   pf="$(resolve_key_path "$1")" || die "could not follow $1 to the file it links to — nothing was recorded."
+  [ ! -e "$pf" ] || [ -f "$pf" ] || die "could not record a passphrase at $pf — it is not a regular file. Nothing was recorded."
   dir="$(dirname "$pf")"
   [ -d "$dir" ] && [ -w "$dir" ] || die "could not stage a passphrase beside $pf — nothing was recorded."
 }
@@ -242,6 +243,7 @@ prove_key_path() { # <passphrase_file>
 write_passphrase_file() { # <passphrase_file> <passphrase>
   local pf p="$2" tmp
   pf="$(resolve_key_path "$1")" || die "could not follow $1 to the file it links to — nothing was recorded."
+  [ ! -e "$pf" ] || [ -f "$pf" ] || die "could not record a passphrase at $pf — it is not a regular file. Nothing was recorded."
   tmp="$(mktemp "${pf}.XXXXXX")" || die "could not stage a passphrase beside $pf — nothing was recorded."
   if ! { printf '%s\n' "$p" > "$tmp" && mv -f "$tmp" "$pf"; }; then
     rm -f "$tmp"; die "could not record the passphrase in $pf — nothing was recorded."
@@ -3653,7 +3655,7 @@ cmd_update() { # <trip_dir>
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase owner slug mine="" lease=""
+  local site_html pub_dir passphrase owner slug mine="" lease="" prior=""
   site_html="$(resolve_site_html "$trip_dir")"
   # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
   # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
@@ -3673,10 +3675,22 @@ cmd_update() { # <trip_dir>
   # The remote tip the key check below is made against, read BEFORE the check, and the lease the
   # push is bound to: a rotation that records its key and pushes after the check moves the remote
   # off this tip, so this run's push fails instead of fast-forwarding over it (see push_trip_site).
+  # The record is refreshed first. A push the server applied but this clone never recorded — a
+  # connection dropped after the server accepted it — would otherwise leave the lease behind for
+  # good, and every later update would refuse. A rewind is refused rather than followed: the site's
+  # history moving backwards means pages were withdrawn from elsewhere, and pushing on top of the
+  # old record would publish them again. The fetch comes BEFORE the key check, so the argument that
+  # closes the δ interleaving is unchanged: a rotation that pushes after it moves the remote off
+  # the lease, and one that pushed before it recorded its key first.
+  prior="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" || prior=""
+  git -C "$pub_dir" fetch --quiet origin main \
+    || die "update: could not fetch the site's current state into $pub_dir, so its push could not be bound to it. Nothing was pushed; re-run update when the site can be reached."
   lease="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
     || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so its push could not be bound to what its key check saw. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
+  [ -z "$prior" ] || git -C "$pub_dir" merge-base --is-ancestor "$prior" "$lease" \
+    || die "update refused — the site's history was rewound after $pub_dir last recorded it (pages withdrawn from another machine, say), and pushing now would publish them again. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site) and re-run update."
   git -C "$pub_dir" merge-base --is-ancestor "$lease" "$mine" \
-    || die "update: this run's commit does not descend from the remote tip $pub_dir last recorded, so its push could not be a fast-forward. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
+    || die "update: this run's commit does not descend from the site's current tip, so its push could not be a fast-forward — another command or machine moved the site, and may already have published this run's page beneath its own. Nothing was pushed by this run. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
   # The key of record, re-read immediately before the push: a rotation that committed in the
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
