@@ -1470,7 +1470,6 @@ with no site carries no row.
 35      CHANGELOG.md
 8       CLAUDE.md
 1       CONTRIBUTING.md
-5       README.md
 5       SECURITY.md
 3       agents/00-enrichment.md
 5       agents/01-activities.md
