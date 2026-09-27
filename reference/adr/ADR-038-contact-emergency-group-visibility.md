@@ -581,7 +581,8 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
   does not run in IDEATION, so for the field class the private-site record's safeguard 6 covers that
   half.
 - **Two shared surfaces are re-read at the slice's own base** — `reference/site-layout-spec.md` § 3 and
-  the `site` verb's section of `skills/trip/SKILL.md` — because another release edits both.
+  the `site` verb's section of `skills/trip/SKILL.md` — because both have changed since this record's
+  base, `8b2ac05`.
 - **The erasure witness** is relabelled or reworded, with `ER15` kept green (§ 4).
 - **The approval gate is changed to match** § 4's rule (the operator's R1): the republish gate of
   `ADR-029` § *Decision* 3, step 6, never holds a change that only removes or narrows what the group
