@@ -14,7 +14,8 @@ options weighed, the decision, and the consequences.
   record may carry further sections, and carrying one is not a divergence to be recorded.
 - **Status lifecycle:** `Proposed` → `Accepted` → `Superseded`. An Accepted ADR is
   immutable **as to its decisions** — to change a decision, author a new ADR and mark the
-  old one `Superseded by ADR-MMM` rather than editing the original.
+  old one `Superseded by ADR-MMM` rather than editing the original; where only one decision,
+  or part of one, changes, the partial form below applies.
 - **Amendment — correcting an Accepted ADR without changing a decision.** An Accepted ADR
   **is** edited in place to correct a claim it got wrong, narrow a scope or coverage
   statement, or repair a citation whose target has moved. None of those is a change of
@@ -25,6 +26,18 @@ options weighed, the decision, and the consequences.
   does. Say what was corrected and why, and **correct the claim in place rather than
   softening it**. What an amendment may never do is reverse, narrow or re-open a *decision*:
   that is the supersession path above.
+- **Superseding one decision, or part of one.** Where a later record supersedes one decision of
+  an Accepted ADR, or part of one, and the rest of that ADR stands, the earlier ADR is **not**
+  marked `Superseded`: its `Status:` value and its index cell stay `Accepted`, because the record
+  is still in force. Three things carry the change instead. The superseding record names, in its
+  own Decision section, the record and the decision it supersedes and states that the rest
+  stands. The earlier ADR's `Status:` line records the supersession — the decision, the
+  superseding record and the date — as an amendment that **records** a decision taken elsewhere
+  and takes none itself, the one kind of amendment that may concern a decision. And the
+  superseded text is retained as decided, never rewritten, with an inline marker at it pointing
+  forward. The supersession is recorded when it takes effect and not before: for a rule
+  implemented in code, that is the change that ships the replacement. `ADR-009`'s eighth
+  amendment is the first instance of this form.
 - **When to write one:** for decisions that are cross-cutting or hard to reverse — roster
   or pipeline changes, the secret/publish model, cross-agent contracts. One-line fixes and
   ordinary feature slices do not need an ADR.
@@ -93,3 +106,4 @@ carries the account.
 | [ADR-026](ADR-026-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Accepted |
 | [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
+| [ADR-029](ADR-029-group-approval-return-and-threshold.md) | Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part | Proposed |
