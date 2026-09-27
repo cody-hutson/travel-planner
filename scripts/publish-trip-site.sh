@@ -65,12 +65,13 @@
 # remedy offered is to unset the variable; keys change only through rotate. rotate never reads
 # the variable for its key: it re-encrypts under the new passphrase, and records it in
 # .passphrase only once that ciphertext is committed, immediately before the push. update
-# re-reads .passphrase just before its own push; if a rotation recorded a different key
-# meanwhile, it stops and takes its own commit back out, so a later push cannot carry it.
+# re-reads .passphrase just before its own push, after fetching the site's current state; a
+# rotation that has recorded a different key by then, or that pushes first, stops it, and it takes
+# its own commit back out where it safely can, so a later push cannot carry it.
 # rotate refuses while the per-trip clone holds a page an earlier run committed but did not
 # push: pushed on top, that page would reach history under the key being revoked. A push
 # carries the commit its own run made, never another command's newer one, and update's push is
-# also bound to the remote state its key check saw — so a run that loses a race to another
+# also bound to the site as it fetched it just before its key check — so a run that loses a race to another
 # command stops and says so instead of reporting success. Commands run on one trip at the same
 # moment are still not serialized; run one at a time. The site is published from main, and a
 # clone on any other branch is refused.
