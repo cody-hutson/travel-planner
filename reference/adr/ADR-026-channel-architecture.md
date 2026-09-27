@@ -544,7 +544,8 @@ path this section names is untouched.
   slices that land those decisions, `C19`'s read set is that admitted set, and mode bites on CH-1 in
   every state the site builds. The decision of § 4 — mode conditions the production of a channel's
   content and never indexes its reach — is unchanged; the group snapshot, which
-  [the group-snapshot record](ADR-037-group-snapshot.md) has produced only in `IDEATION`, is one more instance of it.
+  [the group-snapshot record](ADR-037-group-snapshot.md) has produced only in `IDEATION`, is one
+  more instance of it.
 
 ### 4. Reach is one crossing or two, and the engine's claims are about the first only
 

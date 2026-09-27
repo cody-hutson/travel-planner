@@ -166,7 +166,9 @@
   publish-bound set as the artifacts `reference/site-layout-spec.md § 9.1` names. The records of the
   *site serves every phase* milestone, each `Proposed`, add members to that set, each from the Wave-1
   slice that lands it: [the private-site record](ADR-030-what-the-private-site-may-show.md) moves the
-  destination shortlist to `bound`, [the group-snapshot record](ADR-037-group-snapshot.md) adds the group snapshot, and [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md)
+  destination shortlist to `bound`, [the group-snapshot record](ADR-037-group-snapshot.md) adds the
+  group snapshot, and [the contact and emergency
+  record](ADR-038-contact-emergency-group-visibility.md)
   adds the group contacts file. § 9.1 remains the authority, and group `PB` keeps the correspondence
   asserted as each slice lands its § 1.1 row and its fence row in one commit. The sentence is retained,
   with an inline pointer at it. **The Decision 4 supersession** — the exception the private-site

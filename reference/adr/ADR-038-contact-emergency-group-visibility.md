@@ -4,7 +4,9 @@
 - **Deciders:** repo maintainer
 - **Driving work:** #1545, one of the records of the *The site serves every phase: the founding
   decision* milestone, beside [the private-site record](ADR-030-what-the-private-site-may-show.md)
-  (#1242) and the #1296 card's records, which [the site phase-model record](ADR-031-site-phase-model.md) lists. The operator pulled the card into the milestone when the private-site verdict was locked.
+  (#1242) and the #1296 card's records, which [the site phase-model
+  record](ADR-031-site-phase-model.md) lists. The operator pulled the card into the milestone when
+  the private-site verdict was locked.
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after
   [the private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because what this record shows rides that record's
@@ -18,7 +20,12 @@
   trade-off its Consequences accepted. Everything else in `ADR-004` stays in force. `ADR-004` is never
   marked superseded, its index cell stays `Accepted`, and this record carries no Supersedes bullet. The
   dated note inside `ADR-004` that records this lands in the milestone's closing ratify chore, in the
-  same change as this record's `Accepted` flip — not in this release (§ 5).
+  same change as this record's `Accepted` flip — not in this release (§ 5). This record also supersedes
+  [ADR-029](ADR-029-group-approval-return-and-threshold.md) **in part**: the gate step of its § *Decision* 3,
+  step 6, and only for a change that only removes or narrows what the group sees about a person (§ 4).
+  Everything else in `ADR-029` stays in force. `ADR-029` is never marked superseded either, its index
+  cell stays `Accepted`, and its record of this supersession lands in the same ratify chore — the
+  operator's R1, recorded on #1369.
 - **What this record is.** A decision about **what of a traveller's contact and emergency details the
   group sees on the private site**: whether it sees any, at what level per traveller, how an
   emergency contact's details are handled given the contact is a third party, what the traveller opts
@@ -34,7 +41,8 @@
   scoped carrier design on #1546, ordered by CR-2's third call; and the operator's lock of that
   carrier as decision K, with the storage rule S, the publish-time check P and the approval rule
   MG-C1. Decision Q, recorded on #1385, binds the carrier's writer input through the private-site
-  record's safeguard 7.
+  record's safeguard 7. The operator's R1, recorded on #1369 after the group-approval release merged,
+  reconciled MG-C1 with that release's record, `ADR-029`, by superseding part of it.
 
 ## Context
 
@@ -359,11 +367,22 @@ the carrier's lines. The notice carries no other new text.
   carries it. **No publish gate is added.** Today `/trip-record profile` names the reconcile step and
   does not run it, so the recording verb is a Wave-1 obligation shared with the private-site record.
 - **No group approval.** A change to a traveller's own sharing choice, in either direction, is not a
-  plan change: `ADR-003` § 2's approval governs plan changes. The organizer's confirmation, which gates
-  every republish, is the only gate. **The rule: a change that only removes or narrows what the group
+  plan change: `ADR-003` § 2's approval governs plan changes.
+  **The rule: a change that only removes or narrows what the group
   sees about a person is never held for the group's approval.** It binds any approval step on the
-  publish path, and it is reconciled with the group-approval release at that release's Stage-9 plan
-  review.
+  publish path. The organizer's confirmation remains the only gate on such a change.
+- **What this supersedes in `ADR-029`, once accepted — the operator's R1.** The gate on a republish
+  is step 6 of [ADR-029](ADR-029-group-approval-return-and-threshold.md)'s § *Decision* 3:
+  *"`update` proceeds only on `confirmed`: distinct declared approvers, each counted by their latest
+  record for the outgoing digest, reach the threshold"*. For a change that only removes or narrows what the group sees about a person, and for
+  no other change, this record supersedes that step once it is accepted: such a change is never held
+  for the declared approvers, and the organizer's confirmation remains its only gate. The rest of
+  `ADR-029` § *Decision* 3, and every other decision of that record, stands. The form is
+  `reference/adr/README.md` § *Convention*'s partial one, the form `ADR-029` § *Decision* 7 itself uses
+  for `ADR-003` § *Decision 2*: `ADR-029` is never marked `Superseded` and its index cell stays
+  `Accepted`; its `Status:` line records this supersession, and an inline marker at step 6 points
+  forward to this record, in the milestone's closing ratify chore, when this record is accepted. This
+  record's change edits no line of `ADR-029`.
 - **Withdrawing is as easy as giving**: the same form and fields, with no reason asked. A field that
   was declined or withdrawn is never asked about again on that trip — the form's own rule is "Never
   push twice".
@@ -495,7 +514,8 @@ the validator Critical on a lawful line; its public-path protection is structura
 #### C-4 — Where it shows
 
 **The section ceiling returns a section, `group-contacts`, in every state the site builds** — both
-IDEATION rows and the four plan modes — as [the section-ceiling record](ADR-033-site-section-ceiling.md)'s ladder runs it: the
+IDEATION rows and the four plan modes — as [the section-ceiling
+record](ADR-033-site-section-ceiling.md)'s ladder runs it: the
 element has
 a § 9.1 authority once the class lands; every rendered value is admitted by D1 and D2, and the § 5.6
 row involved names a value the file never carries; no § 3 component carries a per-traveller record in
@@ -555,8 +575,10 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 - **Two shared surfaces are re-read at the slice's own base** — `reference/site-layout-spec.md` § 3 and
   the `site` verb's section of `skills/trip/SKILL.md` — because another release edits both.
 - **The erasure witness** is relabelled or reworded, with `ER15` kept green (§ 4).
-- **The approval rule** of § 4 is reconciled with the group-approval release at its Stage-9 plan
-  review.
+- **The approval gate is changed to match** § 4's rule (the operator's R1): the republish gate of
+  `ADR-029` § *Decision* 3, step 6, never holds a change that only removes or narrows what the group
+  sees about a person for the declared approvers, and the organizer's confirmation remains its only
+  gate.
 - **Nothing goes live** before the fix for the rotation defect tracked privately ships.
 
 ## Consequences
@@ -600,7 +622,8 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 - **Every render that carries the section refuses the `--plaintext` limb.** The section renders for any
   trip with a filer, so that opt-out is unavailable to such a trip in every phase — "nothing personal on
   a public page", applied.
-- **The approval rule stands until it is reconciled** with the group-approval release.
+- **Until Wave 1 changes the gate, the rule has no mechanism on a trip that declares approvers**:
+  `ADR-029`'s threshold, as shipped, holds such a republish for the declared approvers (§ 7).
 - **Go-live stays behind the private-site record's fifth safeguard**, unchanged.
 
 **Aggregation trace — what consumes each new evaluand.**
@@ -612,7 +635,7 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 | the way to reach a contact in an audited artifact | the validator's privacy audit: any member of the non-publishable class reaching a publish-bound artifact is always Critical | Critical wherever the audit reads, once Wave 1 names the carrier in its list; in IDEATION the audit does not run, and safeguard 6 covers the field class there |
 | the way to reach a contact in a plaintext render | the publish guard aborts on a member of the class | the `--plaintext` publish aborts |
 | "the carrier's staleness never gates a build or a publish" | `CLAUDE.md` `G8`, and `/trip-publish` rule 7: "It never branches on freshness, and adds no gate that blocks on it." | **holds** |
-| "a withdrawal needs no group approval" | the organizer-confirm gate, whose proceed set is the organizer's own confirmation | **holds at `8b2ac05`**. A proposed approval threshold in the group-approval release would hold such a republish on the group, which § 4's approval rule answers |
+| "a withdrawal needs no group approval" | the organizer-confirm gate, whose proceed set is the organizer's own confirmation | **holds at `8b2ac05`**. `ADR-029`'s approval threshold, since accepted, holds such a republish on the group on a trip that declares approvers; this record supersedes that step for such a change (§ 4), and Wave 1 changes the gate to match (§ 7) |
 
 **Blast radius — Wave 1, named here and not performed; this release keeps all of it out.**
 
@@ -666,7 +689,8 @@ construction, never redacted later; one writer per file; an undetermined read fa
 *Scalability:* a new traveller costs nothing; a new field costs one list row, one fence row and one
 notice line; there is no new store beyond the organizer-only file. *Maintainability:* it reuses the
 reconciler, the engagement tokens, `ADR-028`'s keying, erase-row and naming rules, the group snapshot's
-mark and withhold rules and [the round-trip contract record](ADR-032-site-round-trip-contract.md)'s two-grain contract, and mints
+mark and withhold rules and [the round-trip contract record](ADR-032-site-round-trip-contract.md)'s
+two-grain contract, and mints
 one class, one
 component and one fence name.
 
@@ -680,7 +704,7 @@ component and one fence name.
 | § 4, the choices, the notice and withdrawal | **CHEAP** | HIGH |
 | § 5, `ADR-004` section by section, and the dated note | **CHEAP** — a note in a record | HIGH |
 | § 6, the carrier | **CHEAP** while `Proposed`; **EXPENSIVE** once built | HIGH on the file, its class and its placement; MEDIUM-HIGH on the writer, whose values are conduct |
-| § 7, the approval rule | **MODERATE** | MEDIUM, until it is reconciled with the group-approval release |
+| § 4 and § 7, the approval rule and its supersession of `ADR-029` in part | **MODERATE** | MEDIUM — the operator's R1 |
 
 ## What this record does not decide
 
@@ -692,7 +716,8 @@ component and one fence name.
 | The form labels, the notice's wording, the organizer-only file's name and the filing script's design | Wave 1 |
 | Retention after the trip | a routed intake card |
 | A deputy holder with the organizer's access | a candidate future card |
-| Whether a withdrawal-only republish may wait on an approval threshold | nothing: § 4's rule says it never does; the reconciliation with the group-approval release happens at that release's Stage-9 plan review |
+| How `ADR-029`'s gate is changed to match § 4's rule | Wave 1 (§ 7) |
+| The record of this supersession inside `ADR-029` | the milestone's closing ratify chore (§ 4) |
 
 ## Follow-on build slices
 
@@ -708,9 +733,10 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
 - **Erasure's reach**: every trip page file, and the organizer-only file.
 - **The erasure witness**: relabelled or reworded, with `ER15` green.
 - **The private-site record's safeguard 6** gains the way to reach the contact when the capture ships.
+- **The approval gate**, changed to match § 4's rule (§ 7).
 - **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, after the
-  private-site record's, in the same change as the dated note inside `ADR-004` and `ADR-011`'s dated
-  amendment.
+  private-site record's, in the same change as the dated note inside `ADR-004`, `ADR-011`'s dated
+  amendment and `ADR-029`'s record of this supersession.
 - **Routed, not Wave 1's by this record:** retention after the trip; a deputy holder.
 
 ## References
@@ -719,12 +745,15 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
   share mark this record reuses, and the safeguards it cites: 1, the notice; 3, people who did not
   file; 4, refusal and removal at the next update; 5, the rotation fix first; 6, decision P; 7,
   decision Q.
-- [The site phase-model record](ADR-031-site-phase-model.md) — the render table that places the carrier in every state
+- [The site phase-model record](ADR-031-site-phase-model.md) — the render table that places the
+  carrier in every state
   the site builds.
 - [The section-ceiling record](ADR-033-site-section-ceiling.md) — the ladder that returns the carrier's section.
-- [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the two-grain contract whose rows and fences the carrier's
+- [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the two-grain contract
+  whose rows and fences the carrier's
   slice extends.
-- [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot, whose writer and keying, and whose mark and
+- [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot, whose writer and
+  keying, and whose mark and
   withhold rules, the carrier reuses.
 - [ADR-004](ADR-004-contact-emergency-privacy.md) — the contact and emergency model this record
   supersedes in part.
@@ -738,6 +767,8 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
   keying, write-set widening, erase-row shape and naming rules the carrier reuses.
 - [ADR-003](ADR-003-group-coordination.md) — § 2, the approval that governs plan changes, which a
   withdrawal is not.
+- [ADR-029](ADR-029-group-approval-return-and-threshold.md) — the gate step of § *Decision* 3, which this
+  record supersedes in part once accepted, and § *Decision* 7, the partial form's precedent.
 - [ADR-002](ADR-002-living-site-refresh.md) — the living-site record, whose privacy line, only to
   travellers, holds.
 - [ADR-009](ADR-009-data-architecture.md) — its eighth amendment, the form the dated note inside
@@ -757,5 +788,5 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
 - `scripts/publish-trip-site.sh`, `scripts/test-publish-guard.sh` and
   `scripts/test-artifact-schema.sh` — the guard and its queried set, and the erasure witness's arm.
 - Provenance: the card, #1545; its design sub-task, #1546, carrying the design, the operator's D1 to
-  D3, the carrier and its decisions K, S, P and MG-C1; the fit review and CR-2 on #1369; decision Q on
-  #1385; and the Wave-1 working notes this record's build detail moved to, on #1547.
+  D3, the carrier and its decisions K, S, P and MG-C1; the fit review, CR-2 and R1 on #1369; decision Q
+  on #1385; and the Wave-1 working notes this record's build detail moved to, on #1547.

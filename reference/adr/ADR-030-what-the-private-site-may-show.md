@@ -3,7 +3,8 @@
 - **Status:** Proposed
 - **Deciders:** repo maintainer
 - **Driving work:** #1242, one of the records of the *The site serves every phase: the founding
-  decision* milestone, beside the #1296 card's records, which [the site phase-model record](ADR-031-site-phase-model.md)
+  decision* milestone, beside the #1296 card's records, which [the site phase-model
+  record](ADR-031-site-phase-model.md)
   lists, and [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md)
   (#1545). `ADR-026` names this card as the only one that may move a cell of its channel-axis
   table; this record is that move, together with the class-side change the move needs.
@@ -70,7 +71,8 @@ not carry forward.** It defended against a public site, which this product does 
 reference material for the later slices rather than a requirement of this record.
 
 **The records beside this one carry the rest.** The site phase-model record decides where each item
-this record admits renders and in which phase, and [the section-ceiling record](ADR-033-site-section-ceiling.md) under which
+this record admits renders and in which phase, and [the section-ceiling
+record](ADR-033-site-section-ceiling.md) under which
 section ceiling. The contact and
 emergency record revisits `ADR-004` against this verdict, and decides what of a traveller's contact
 and emergency details the group sees.
@@ -152,7 +154,8 @@ necessary and not sufficient; the class-side change is § 7.
 **Its consumer.** [The site phase-model record](ADR-031-site-phase-model.md) is
 the site-channel consumer of this verdict. Whether and where each item in § 2 shows, and in which
 phase, is that record's call, made through its render table and
-[the section-ceiling record](ADR-033-site-section-ceiling.md)'s ladder; this record decides only what may appear.
+[the section-ceiling record](ADR-033-site-section-ceiling.md)'s ladder; this record decides only
+what may appear.
 
 ### 2. What may appear on the private site, and what never appears on any page
 
@@ -212,7 +215,8 @@ site phase-model record's.
 traveller model and the person record `internal-hard`. A value on § 2's IN list reaches the render
 only through a `bound` artifact that its producer writes — the trip context for who is coming and the
 trip's own dates, the destination shortlist for the leanings, the itinerary for what the plan
-expresses, and the further carriers [the group-snapshot record](ADR-037-group-snapshot.md) and the contact and emergency
+expresses, and the further carriers [the group-snapshot record](ADR-037-group-snapshot.md) and the
+contact and emergency
 record decide.
 
 **The destination shortlist becomes `bound`.** `outputs/destination-shortlist.md` moves from
@@ -394,7 +398,8 @@ defeat:** a reader who holds it, and a copy already taken. That is why the publi
 - **The change is class-shaped.** No journey record is superseded, the three class-derived bounds move
   by pointer, and exactly one class value moves — the destination shortlist's.
 - **The milestone's pre-plan page has something to render.** The site phase-model record and the
-  group-snapshot record give the shortlist and the group's shared details a home before a plan exists, so #1241's third acceptance
+  group-snapshot record give the shortlist and the group's shared details a home before a plan
+  exists, so #1241's third acceptance
   criterion is met without its revisit branch.
 - **The non-publishable field class is kept out by construction and checked at the outcome.**
   Safeguard 7 keeps it from every writer of a group-visible file, and the check of safeguard 6 reads
@@ -480,9 +485,11 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
   read for its IN fields by A-1.
 - [ADR-013](ADR-013-count-assertion-basis.md) — every count in this record is authored to form F1.
 - [ADR-014](ADR-014-cross-trip-consent-refusal.md) — the refusal behind never-carry 3.
-- [The site phase-model record](ADR-031-site-phase-model.md) — the site-channel consumer of this verdict. It lists the
+- [The site phase-model record](ADR-031-site-phase-model.md) — the site-channel consumer of this
+  verdict. It lists the
   #1296 card's other records, among them [the section-ceiling record](ADR-033-site-section-ceiling.md) and
-  [the group-snapshot record](ADR-037-group-snapshot.md), which carries the group's shared details before a plan.
+  [the group-snapshot record](ADR-037-group-snapshot.md), which carries the group's shared details
+  before a plan.
 - [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the record that
   decides what of a traveller's contact and emergency details the group sees.
 - `reference/data-architecture.md` — § 5.1's class enum, § 5.5's paraphrase limit, and § 5.6's

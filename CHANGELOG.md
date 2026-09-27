@@ -52,8 +52,10 @@ the organizer is the person to tell if something happens. The way to reach an em
 held by the organizer alone: when the form is filed, a script moves it into a file only the organizer
 reads, and no agent step and no page ever touches it. The relationship to the traveller is never
 asked. A change that only removes or narrows what the group sees about someone never waits for the
-group's approval. `ADR-004` keeps every section this does not change, and a dated note inside it
-records the rest when these records are accepted.
+group's approval. Once accepted, the record that says so supersedes, for such a change only, the step
+of the group-approval record that holds a republish for the travellers who approve; the rest of that
+record stands, and a later slice changes the gate to match. `ADR-004` keeps every section this does
+not change, and a dated note inside it records the rest when these records are accepted.
 
 **Earlier records gain pointers where the new ones would otherwise contradict them.** `ADR-026`'s
 declared channel values gain the one its own table already used, and its citations into the publish
