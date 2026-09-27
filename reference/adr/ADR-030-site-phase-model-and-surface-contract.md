@@ -270,7 +270,407 @@ history. A client-side hide is rejected for the reason the client-side switch wa
 
 ## Decision
 
-*Authored in the commits that follow on this release branch.*
+### 1. What drives the shape
+
+> **One site.** Its shape is a function of the resolved state **σ = (`trip.mode`,
+> `trip.destination`)**, the fields gates `G5` and `G6` already return, through **one declared
+> render table**.
+
+- **S1 — Shape.** For σ, the build renders exactly the artifacts, and exactly the scaffolding, the
+  render table admits for σ. The section and navigation set is **derived**: the components of each
+  admitted artifact's rendered element types, plus the admitted scaffolding. The build takes σ from
+  the resolution record it already holds. It never re-reads the Mode line, and never infers σ from
+  the destination, from which files exist, or from the request.
+- **S2 — Fill.** Inside the admitted shape, content comes from each section's single § 9.1 authority.
+  **An admitted artifact that is absent does not shrink the shape**: the walk reads it as a degraded
+  read, failing closed, never as a clean smaller site. On a healthy trip in a plan mode this cannot
+  fire: the hub writes the links reference and the venue matrix before the itinerary, and the event
+  status exists by the first synthesis. An authority that is present but empty renders its section's
+  declared empty state, as the Booking Checklist's *all booked* state already does; scaffolding with
+  nothing to say is not emitted. A non-admitted artifact that exists is not rendered and, where its
+  class is `bound`, is named per state in § 9.3.
+- **S3 — Reach is mode-blind.** The class (`reference/data-architecture.md` § 5.1) and `may-carry`
+  (`ADR-026` § 3) decide what may be carried; σ never widens or narrows either. The render table
+  decides only whether a state's build **produces** a render of an admissible artifact. No cell may
+  admit, in any state, a form the class and the private-site record's verdict would not admit in every
+  state.
+- **S4 — Limb-blind.** The shape is keyed on σ, never on the publish limb. The render is written before
+  any limb is chosen and both limbs ship that one page, so **the shape model neither needs nor supplies
+  a build-time limb input.** No fill differs by limb: the public path's refusal of group-only content
+  is the private-site record's safeguard 2, keyed on structure.
+- **Grain.** σ acts on whole artifacts. Element dispositions inside a rendered artifact are mode-blind,
+  so no element fence gains a mode column. A disposition that varies by mode would be a change to this
+  rule, made only by a record and run through the ceiling. This record makes none: the hero's pre-plan
+  form is a component variant, not an element disposition.
+
+**Falsification.**
+
+- **F1 — existence changes nothing.** Two builds in the same σ that differ only in whether some
+  artifact exists show the **same** sections and navigation; the build missing an admitted artifact
+  reports a degraded walk. *Under the wrong model — shape by existence — a reader would see sections
+  appear and vanish with files, and the shortlist reappear beside a chosen destination.*
+- **F2 — mode changes exactly what is declared.** Two builds that differ only in σ show section sets
+  that differ by exactly the table's difference: nothing between any two plan modes, and the declared
+  difference between IDEATION and a plan mode. *Under per-phase surfaces a reader would lose the
+  surface at every transition; under a client-side switch, every earlier phase would sit inside every
+  later ciphertext.*
+- **What would show this model wrong:** a reader-facing need that only a separate surface can meet —
+  a different audience per phase, which `ADR-026` would make a different channel — or a transition
+  whose content cannot be expressed as a state row.
+
+**The declared-phase residual.** The site follows the operator's declaration, not the group's
+conversation. A group re-arguing the destination while the trip still reads DISCOVERY sees the
+plan-phase site until someone runs `/trip-record mode`. `G5` forbids inferring otherwise.
+
+**The refresh obligation this shape creates** is named here and its policy set in § 6. A change of
+state is a change of shape, so the published render is out of date until it is rebuilt **and**
+republished. A rebuild is already observable: the Mode line lives in `trip-context.md`, a declared
+input of `site`, so `itinerary-to-build` reads `BEHIND` after any `/trip-record mode`. Automating a
+rebuild or a republish belongs to the living-site milestone.
+
+### 2. The round-trip contract, extended past the itinerary across its surfaces
+
+**The contract becomes two-grain**: a new **artifact grain**, indexed by state and total over the
+`bound` classes, and the **element grain** as today — mode-blind, one fence per rendered artifact.
+
+| Surface | Today | Decided |
+|---|---|---|
+| **§ 9.1's fence and § 1.1, held equal by group `PB`** | declares which artifacts the build may read | **retained, and mode-blind**: no mode column and no mode-qualified class. A pre-plan artifact reaches the build only through a class change that lands in § 1.1 **and** the fence in one commit; group `PB`'s pairing fails otherwise |
+| **§ 9.2's obligation** | a surjection over the itinerary's elements | **two-grain** — below |
+| **§ 9.3** | element exclusions only | **gains a state column.** Element rows apply in every state their artifact renders in, today's unchanged. Artifact rows name a `bound` class a state does not render, with the reason. A class excluded by its own class value is never listed. The residual row for the traveller model and the satisfaction metrics stays as it is: it belongs to the grammar comparison of the itinerary's element fence, not to the artifact grain |
+| **§ 9.4's walk** | one pass, over the itinerary | **three passes, with σ as input** — below |
+| **§ 9.5's boundary** | a component gap is a fast-follow | **extended to the phase dimension, and closed to reach** — below |
+
+**§ 9.2 — the two grains.**
+
+- **(a) Artifact grain.** A new render-table fence in § 9.2, its proposed info string
+  `round-trip-contract-artifacts`. It carries one row per `bound` class and state: `rendered` with its
+  home, or `excluded` and named in § 9.3. **Only `bound` classes take rows**; a class that is
+  `internal`, `internal-hard` or `output` is excluded by that class, which the walk reads from § 1.1
+  (`ADR-028` § 2's reading, reused). Scaffolding takes angle-bracketed rows — `<sticky-navigation>`,
+  `<coordination-notice>`, `<reference-matter>` — because which scaffolding a state emits is part of
+  its shape.
+- **(b) Element grain.** `round-trip-contract-elements` stays byte-for-byte as the itinerary's fence.
+  Each newly rendered artifact gets a sibling fence, `round-trip-contract-elements-<artifact-stem>`,
+  graded against the grammar of the agent that produces it, at the grain that artifact's own schema
+  declares. **No entry marker is ever added to an artifact to make it walkable.** Every element fence
+  carries the `<artifact-frontmatter>` exclusion.
+
+**§ 9.4 — the walk's passes.** The walker takes σ from the verb. **Without σ it refuses the artifact
+and shape passes and reports them as not run — never as clean.** It never infers σ.
+
+1. **Artifact pass.** Its contract half, on the tracked tree: every `bound` class has a row for every
+   state the `site` row admits, and every row names a `bound` class, graded against § 1.1 in both
+   directions as group `PB` grades the fence. Its instance half, at the verb: every artifact admitted
+   for σ is readable; otherwise the read is degraded.
+2. **Element pass.** Today's walk, run once per rendered artifact against that artifact's own fence.
+3. **Shape pass.** The render carries no component σ does not admit. This catches the surplus
+   direction; the deficit stays with the shipped finding for an unresolved element.
+
+A patch across a change of state is a structural patch, and a section it leaves behind is the shape
+pass's surplus finding.
+
+**§ 9.5 — three cases that look alike.** An admitted component that was not placed is a build defect,
+in scope. An artifact a state renders, with an element type no component represents, is a component
+gap, a fast-follow; the ceiling decides whether it becomes a section, a region or a field. An artifact
+whose class forbids rendering is **never a gap**: § 9.5 routes no class change, and reach moves only
+through a record that lands in § 1.1 and the fence together.
+
+**The interfaces Wave 1 implements**, decided here so no slice re-decides them:
+
+- **The walker is extended, not forked.** `scripts/check-round-trip.sh` turns its fence-tag and grammar
+  constants into per-artifact declarations; a second walker would split the suite's inventory and its
+  invocation anchor. The label shape is the one new parameter — whole-line bold for the itinerary,
+  headings inside the agent's output block for the shortlist, and a `- **Label:**` bullet inside the
+  writer's grammar block for the group snapshot; the group contacts file's fence is likewise at label
+  grain, graded against its writer's grammar block. The walker gains two finding classes, proposed as
+  `RT7`, an undispositioned `bound` class (the contract half), and `RT8`, a surplus component (the
+  instance half), each with a must-fire control arm and its inventory entry.
+- **The verb passes σ to the walker** the way it already passes the data root: an instruction appended
+  on its own line, carrying no script path, so the suite still counts a single invocation line.
+- **Group `W` gains the render-table arms**: the rows against § 1.1's `bound` set in both directions,
+  the state keys against the mode set and the destination dispositions read from `CLAUDE.md`, and the
+  component tokens against § 3. Group `PB` is unchanged.
+- **The render's own state-gating takes no row in the mode-gated behaviour register.** That register's
+  declared scope is agent-side branches in agent files that carry an output contract, and the `site`
+  verb dispatches no agent; the render table is the single home of the render's state-gating. The
+  group snapshot's production gate is an agent-side branch and does take a row (§ 9).
+- **Render-table rows name their modes explicitly.** `any` is not used: under `G7`'s grammar it admits
+  `UNSET`.
+
+### 3. The section-growth ceiling
+
+A proposed addition goes through four tests, in order. The first test that decides returns the
+disposition; only a proposal that passes all four earns a section.
+
+| Test | The question, answered from a declared table | If it decides |
+|---|---|---|
+| **Q1 Source** | Does it render plan content — an element type with a § 9.1 authority? | **No → scaffolding (D1).** Admitted only under § 9.2's additive clause: no plan content, reads only what the build already reads, not emitted when empty, no navigation entry |
+| **Q2 Reach** | Is every value it renders readable in every state it targets — an authority that is `bound`, not denied by the § 5.6 value fence, and admitted by `may-carry`? | **No → blocked (D0).** Not a ceiling question; it goes to the class owner or the verdict |
+| **Q3 Representability** | Can an existing § 3 component carry its element type as a field, a variant, or an entry in an existing region? | **Yes → a field or variant (D2)** of that component — § 9.5's test, applied at section level |
+| **Q4 Placement** | Is its element keyed to a unit an existing section already iterates over — a day, a track, a booking item? | **Yes → a region (D3)** of that section; a new component is allowed only because Q3 found none |
+| — | none of the four decided | **A section (D4)**, with its render-table rows, its element-fence rows and its declared empty state |
+
+**Mode never earns a section by itself.** A proposal whose only ground is that one mode would like the
+same content shown differently is a variant, under Q3; that is why the four plan modes share one
+shape. #87 consumes Q3 and Q4 as its card-type questions.
+
+**Calibration** — the ladder reproduces every disposition the corpus already decided:
+
+| Case | Q1 | Q2 | Q3 | Q4 | Ladder | Corpus |
+|---|---|---|---|---|---|---|
+| Booking Checklist | the itinerary's checklist element | `bound` | no component renders a list spanning days ordered by action date | not per-day | **D4 section** | a section |
+| Split-Day | the Parallel Track | `bound` | none could | per-day | **D3 region** | a region of one day |
+| Nightlife decline | a line of the itinerary | `bound` | the band carries it | — | **D2 field** | no new card type |
+| Coordination Notice | no plan source | — | — | — | **D1 scaffolding** | carried by no § 9 table |
+
+**The worked example: an ENRICHMENT *Flights & lodging* section → NO.** Q1 passes: the facts belong to
+the trip context, whose § 9.1 row already feeds the hero and the overview. Q2 passes: the trip context
+is `bound`, and no § 5.6 row is scoped to it. **Q3 decides**: the Overview Dashboard and the Hero's
+stats grid already carry the trip context's trip-level facts. It is **a field of the Overview
+Dashboard**, filled when present in any plan mode and not emitted when absent, with no section, no
+render-table row and no mode gate. Its whole cost in Wave 1 is two edits: § 9.1's row gains the facts,
+and the `site` verb's "no other block" read scope widens to the trip context's `## Logistics` and
+`## Accommodation` blocks.
+
+**The ladder, run on this record's own additions:**
+
+| Proposal | Q1 | Q2 | Q3 | Q4 | Result |
+|---|---|---|---|---|---|
+| **The destination shortlist** | its elements, with a § 9.1 authority row when it becomes `bound` | `bound` once moved; its values are in the private-site record's IN list; no § 5.6 row scopes it | no component represents a destination candidate | trip-level, not per-day | **D4: a section, `group-shortlist`** |
+| **The concealed occasion** | an itinerary event | the concealed form carries only plan facts | the schedule-timeline entry can carry it | — | **D2: an `is-concealed` variant** of the schedule entry; no new card type |
+| **The group snapshot** | its elements, with a § 9.1 authority row when its class lands | `bound`; every value in the private-site record's IN list; no § 5.6 row scopes it | no § 3 component carries a per-traveller record | keyed to a person, and no section iterates people | **D4: a section, `group-snapshot`** |
+| **The group contacts file**, by citation to [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) | its elements, with a § 9.1 authority row when its class lands | `bound`; every rendered value admitted by that record; the one § 5.6 row involved names a value the file never carries | no component carries a per-traveller record in every state | keyed to a traveller, and no section iterates travellers in every state | **D4: a section, `group-contacts`** |
+
+### 4. The map — what each state's build renders, and where
+
+The map is indexed on what each state's build **renders**, never on which artifacts exist.
+
+**One row per state.**
+
+| State σ | The build | What it renders | § 9.3 artifact exclusions for the state |
+|---|---|---|---|
+| IDEATION × UNDECIDED (*No destination yet*) | RUN | the trip context → the hero, pre-plan variant · the shortlist → the shortlist section · the group snapshot → its section · the group contacts file → its section | the itinerary, the links reference, the venue matrix, the event status |
+| IDEATION × DECIDED (*Destination in play*) | RUN | the trip context → the hero, pre-plan variant naming the destination in play · the group snapshot → its section · the group contacts file → its section | the shortlist, and the itinerary, the links reference, the venue matrix, the event status |
+| DISCOVERY, ENRICHMENT, ITERATION or RESEQUENCING × DECIDED | RUN | the plan-phase shape below, and the group contacts file → its section | the shortlist and the group snapshot |
+| a plan mode × UNDECIDED | a declared non-row: the verb's own stop (§ 5) | — | — |
+| `UNSET` × any | REFUSE, by `G7` | — | — |
+| `ARCHIVED` | not served; the lifecycle cell | a declared non-row | — |
+
+**The plan-mode rows are identical by decision**: the ceiling rejects every section specific to one
+plan mode, so the only difference in shape between modes lies in IDEATION's rows. The plan-phase shape
+is today's site with one section added in every plan mode: the group contacts section, which the
+contact and emergency record's carrier fills.
+
+**The plan-phase shape, class by class.**
+
+| Class | `publish:` | In the four plan modes | Home |
+|---|---|---|---|
+| `trip-context.md` | `bound` | rendered | the Hero Section and the Overview Dashboard: group, dates, home base, trip-level constraints |
+| `outputs/final-itinerary.md` | `bound` | rendered, and walked | element grain: `round-trip-contract-elements`, unchanged |
+| `outputs/links-reference.md` | `bound` | rendered, a supporting source | every map link, and every website, tickets and booking link |
+| `outputs/venue-matrix.md` | `bound` | rendered, a supporting source | day placement and de-duplication in the Day sections and the alternatives grid |
+| `outputs/event-status.md` | `bound` | rendered, a supporting source | the Booking Checklist's membership, and every card's booking pill |
+| `outputs/group-contacts.md` | `bound`, from the contact and emergency record's slice | rendered | the group contacts section |
+| `outputs/destination-shortlist.md` | `bound`, from the render slice | excluded (state), named in § 9.3 | — |
+| `outputs/group-snapshot.md` | `bound`, from its slice | excluded (state), named in § 9.3 | — |
+| `travelers/<traveler>.md` · `outputs/traveler-model.md` | `internal` · `internal-hard` | excluded by class; never a build input | the traveller model's § 9.3 residual row is retained |
+| `outputs/traveler-presence.md`, decided by `ADR-028` § 2 | `internal`, as declared | excluded by class, with no map edit when its slice lands | — |
+| `people/<person>.md` and the group store | `internal-hard` | outside the map: not per-trip, and no build input reaches them | a value from the person record reaches a page only as its producer carries it, through the traveller model, into the shortlist, the itinerary or the group snapshot |
+| the satisfaction metrics, the change summary, the log, the spoke lists, the itinerary versions, the validation report, targeted research, the cost estimate | `internal` or `internal-hard` | excluded by class | the change summary is read only for the Coordination Notice's state and date |
+| scaffolding: `<sticky-navigation>` · `<coordination-notice>` · `<reference-matter>` | — | admitted | the Coordination Notice keeps § 3's rule of not emitting when empty |
+
+**The render-table rows**, shown as a table rather than as a fence, because a fenced copy would be a
+second declaring site.
+
+| artifact | modes | destination | disposition | home |
+|---|---|---|---|---|
+| `trip-context.md` | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | rendered | `hero-section` · `overview-dashboard` |
+| `trip-context.md` | IDEATION | UNDECIDED, DECIDED | rendered | `hero-section`, pre-plan variant |
+| `outputs/final-itinerary.md` | DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING | DECIDED | rendered | `elements:round-trip-contract-elements` |
+| `outputs/links-reference.md` | the same plan modes | DECIDED | rendered | `map-link` |
+| `outputs/venue-matrix.md` | the same plan modes | DECIDED | rendered | `day-grid` · `alt-grid` |
+| `outputs/event-status.md` | the same plan modes | DECIDED | rendered | `booking-checklist` |
+| the itinerary, the links reference, the venue matrix, the event status | IDEATION | UNDECIDED, DECIDED | excluded | named in § 9.3 |
+| `outputs/destination-shortlist.md` | IDEATION | UNDECIDED | rendered | `elements:round-trip-contract-elements-destination-shortlist` → `group-shortlist` |
+| `outputs/destination-shortlist.md` | IDEATION | DECIDED | excluded | named in § 9.3 |
+| `outputs/destination-shortlist.md` | the plan modes | DECIDED | excluded | named in § 9.3 |
+| `outputs/group-snapshot.md` | IDEATION | UNDECIDED, DECIDED | rendered | `elements:round-trip-contract-elements-group-snapshot` → `group-snapshot` |
+| `outputs/group-snapshot.md` | the plan modes | DECIDED | excluded | named in § 9.3 |
+| `outputs/group-contacts.md` | IDEATION | UNDECIDED, DECIDED | rendered | `elements:round-trip-contract-elements-group-contacts` → `group-contacts` |
+| `outputs/group-contacts.md` | the plan modes | DECIDED | rendered | the same |
+| `<sticky-navigation>` · `<coordination-notice>` · `<reference-matter>` | the plan modes | DECIDED | rendered | their § 3 components |
+| `<sticky-navigation>` · `<coordination-notice>` · `<reference-matter>` | IDEATION | UNDECIDED, DECIDED | excluded | IDEATION renders no plan: no Day sections to navigate, no plan change to announce, no front or back matter |
+
+- **Tokens are graded, not judged.** Each component token is checked against § 3's catalog the way the
+  element fence's tokens already are, and a token the catalog does not define turns an arm red. The
+  proposed tokens — `group-shortlist`, `group-snapshot`, `group-contacts`, `is-concealed` and the new
+  fence names — stay proposed, and Wave 1 re-measures them at its own base.
+- **Reference matter has no § 3 component today**, so the shape pass cannot see it. That is a declared
+  residual.
+- **The plan mode with no destination is a declared non-row**, beside the table, as `ARCHIVED` is.
+
+**The group contacts rows** are the contact and emergency record's carrier, placed here by citation to
+[that record](ADR-031-contact-emergency-group-visibility.md). The ceiling returns a section for it
+(§ 3), which renders in every state the site builds — both IDEATION rows and the four plan modes — and
+takes no § 9.3 row, because nothing of it is excluded in any built state. For each traveller who
+filed their own form it carries their in-trip contact, when they chose to share it, and their
+emergency line in one of three states: the contact's name, shown only on the traveller's attestation
+that the contact agreed, with a note that the organizer holds how to reach them; *on file with the
+organizer*; or *no emergency contact on file*. The way to reach an emergency contact and the
+relationship are never shown. Its three states follow the snapshot's rule: present with entries →
+rendered; present with none → a neutral declared empty state; absent → a degraded read, with the remedy
+`/trip-record travelers`. What the file carries, who writes it and why each line holds are that
+record's. **The organizer line** — who to tell if something happens — is not a section: it is a field
+of the hero, rendered from the `## Group` roster alone in every state the site builds, under the
+content rules that record states.
+
+**The § 9.3 rows.**
+
+| Excluded | Where | Why |
+|---|---|---|
+| the destination shortlist | IDEATION × DECIDED, and every plan mode | the destination is recorded, so the ideation question is answered; its producer no longer refreshes it; and a rendered ranking beside the chosen destination would be a second source for *where* |
+| the itinerary, the links reference, the venue matrix, the event status | both IDEATION rows | IDEATION's shape is pre-plan; a plan artifact left from an earlier phase is superseded by the declared return |
+| the group snapshot | every plan mode | once a plan exists, the plan answers when, from where, where the group stays and at what pace; the snapshot is produced only in IDEATION, so it is no longer refreshed; and a stated preference beside the decided plan would re-open settled choices |
+| `Handoff to DISCOVERY`, an element of the shortlist | wherever the shortlist renders | an instruction to whoever operates the engine, not reader content |
+
+**Named in this record, with no § 9.3 row.** The hub planner's IDEATION comparison has no artifact,
+so it has no rendered home in any state (below).
+
+**The IDEATION rows in detail.** Both rows cite [the private-site record](ADR-029-what-the-private-site-may-show.md)
+as the ground of what they may render.
+
+- **The hero, pre-plan variant** — a D2 variant of the Hero. It never renders a placeholder value: a
+  value that begins with `[` and ends with `]` is never an answer. **With no destination recorded, its
+  title comes from `trip.slug`**, the only trip-level name the engine holds in that state. With a
+  destination in play, it names the destination as under consideration rather than chosen. The
+  destination-specific elements of the spec's § 7 take a declared neutral default while the destination
+  is undecided; their design is Wave 1's, and #87 consumes it. **The roster renders every traveller's
+  name, and a relationship only for a traveller who filed their own form** — the operator's D-1. Where
+  the build cannot read a filer predicate from a `bound` artifact, **it shows no relationship for
+  anyone**: it fails closed. The Wave-1 item that excludes people who did not fill in their own form
+  names that predicate; the group snapshot is not it, because its entries also leave out a refuser.
+- **The shortlist section**, in *No destination yet* only. It renders the shortlist at the heading grain
+  its schema declares, adding no entry marker:
+
+  | Element | Disposition | Home |
+  |---|---|---|
+  | `Group Destination Shortlist [DERIVED]` | rendered | the section title; the frame blockquote beneath it renders as the standfirst; the `[DERIVED]` mark is provenance metadata and is not rendered |
+  | `Shortlist (ranked)` | rendered | the ranked candidate entries |
+  | `Vetoes applied (Rather skip)` | rendered | the vetoes, with their reasons as the writer leaves them (below) |
+  | `Conflicts & coverage` | rendered | conflicts, and coverage per traveller |
+  | `Handoff to DISCOVERY` | **excluded** — a § 9.3 element row | an instruction to the operator, not reader content |
+  | `<artifact-frontmatter>` | excluded | the residual every element fence carries |
+
+  **Its three states**, none inferred from existence: present with a ranking → rendered; present with an
+  empty ranking → its declared empty state, the vetoes, gaps and request rendered as written; absent → a
+  degraded read, never a smaller site, with the remedy `/trip ideas`.
+- **The source binding, by citation.** The leanings this section renders carry one class in both
+  enrichment states: the class of their source of record, `outputs/traveler-model.md`, as the
+  private-site record's reach clause states it. The shortlist writer's fallback read of
+  `travelers/<traveler>.md`, and the durable `people/<person>.md` fields the model carries, change only
+  where the bytes come from, never the bound. The build reads none of the three; it reads the
+  shortlist. The verdict admits the leanings and the shortlist on the private site, so the first of
+  the three branches Step 0 named holds: the rendered form is the shortlist as its agent writes it,
+  bounded by the rule on people who did not file. Neither the aggregate-only branch nor the no-home
+  branch arises. On the public limb nothing personal is published: the render is limb-blind, and the
+  public path's refusal of group-only content is the private-site record's.
+- **The shortlist's writer owes two rules**, both Wave 1. It names only people who filed their own form,
+  so a line naming a person who did not file is excluded at production. And under the private-site
+  record's out-by-kind rule, `agents/destination-ideation.md` joins that record's producer list: a veto
+  reason that states or implies an OUT kind is left out whole, never trimmed or reworded, while the veto
+  line itself stays.
+- **The hub planner's IDEATION comparison has no artifact.** `agents/05-hub-planner.md` § *Mode Behavior*
+  describes an IDEATION output — a destination's appeal, its key tradeoffs, a best-fit traveller profile
+  and a verdict — with no declared file: the agent names no file for it, its output format declares
+  none, and no § 1.1 class matches it. The build renders artifacts only, so it has no rendered home in
+  any state; the *Destination in play* row names it as not rendered, with that reason, so the absence
+  is declared rather than silent. It takes no § 9.3 row and no render-table row, because it is not a
+  class. Declaring one is routed to a follow-on card with two constraints: it is a new class, and its
+  content is not bounded by the private-site record's lists at production — key tradeoffs routinely
+  carry cost, and a best-fit profile can carry a need.
+
+**The shortlist after IDEATION — the page moves on** (the operator's D-4). The shortlist is excluded in
+IDEATION × DECIDED and in every plan mode, each state named in § 9.3 with one reason in three parts:
+once a destination is recorded the question the shortlist answers is closed, and `/trip ideas` refuses
+in that state; its producer, the ideation agent, is skipped once a destination is set, so a rendered
+shortlist would drift; and a ranking beside the recorded destination would be a second source for
+*where*. It persists on disk (`ADR-026` § *Decision* 4), and persistence is not a render. Clearing the
+destination returns the trip to *No destination yet*, and the shortlist renders again: the table
+follows the declared state in both directions. **No later state renders a form of a leaning wider than
+IDEATION's, because no later state renders the shortlist at all.**
+
+**The shortlist's consumer refusal, decided.** Both of its read-back refusals stand verbatim —
+`/trip-record` does not read it, and `/trip ideas` never reads it back — each protecting one source for
+a chosen destination. The site build becomes its one reader, of the whole file, and only while no
+destination is recorded: the one state with no chosen destination for it to be a second source of. No
+consumer branches on a candidate-level value, because the element fence is at heading grain and adds
+no entry marker. Wave 1 amends two sentences, and only two, each to name that one reader: the ideation
+agent's statement that nothing in the engine reads the file back, and the schema's no-consumer
+paragraph.
+
+**How the values the group may see reach the page — by carrier.** The build reads none of
+`travelers/<traveler>.md`, `outputs/traveler-model.md` or `people/<person>.md`, in any state. Each keeps
+its class, and each takes no render-table row. A value on the private-site record's IN list reaches the
+page only through a `bound` artifact that carries it:
+
+| IN item | Held in | The `bound` carrier the build reads | Renders |
+|---|---|---|---|
+| who is coming: name, relationship | the trip context's `## Group` roster (Person · Role / Relationship) | the trip context | the hero, in every admitted state: every name, and the relationship for filers only (D-1) |
+| destination leanings (`Would love`, `Rather skip`, `Trip vibe`) and the shortlist built from them | the person record and the traveller file, reconciled into the traveller model | the shortlist | the shortlist section, IDEATION × UNDECIDED only |
+| dates: the trip's own | the trip context | the trip context | the hero, when set |
+| dates: can travel, blackout, trip length, per traveller | the traveller file | the group snapshot | IDEATION: the group snapshot |
+| arrive and leave, per traveller | the traveller file | the group snapshot | IDEATION: the group snapshot. In plan modes the booked legs render as plan content through the itinerary's trip overview |
+| getting there: leaving from, journey comfort | the person record | the group snapshot; the booked origins and legs reach the itinerary as plan content | IDEATION: the group snapshot |
+| where you stay: lodging style, rooming | the person record, the traveller file | the group snapshot; the booked property reaches the itinerary | IDEATION: the group snapshot |
+| interests and tastes; pace and day rhythm | the person record, the traveller file | the group snapshot; the itinerary, where the plan expresses them | IDEATION: the group snapshot; plan modes: as the plan carries them |
+| desires the traveller marks group-facing | the traveller file, with its share mark | the group snapshot, a marked desire's `Desire` text; the itinerary, where the plan lands one | IDEATION: the group snapshot; plan modes: as the plan carries it |
+| the special occasion, marked not private | the traveller file, with its share mark | the group snapshot; the itinerary | IDEATION: the group snapshot; plan modes: where the plan carries it |
+
+- **Desires.** A marked desire renders as its own text only in the group snapshot, in IDEATION; in plan
+  modes it appears only as the plan carries it. **An unmarked desire is never named** — a rule on the
+  hub's itinerary output, owed by Wave 1, because the build renders what the itinerary carries.
+- **The occasion, and the concealed block.** Marked not private, it may be named where the plan carries
+  it. Private, it is never named. **Private and made a trip event, it renders as the concealed block**:
+  in the Day section of its day, at its time, in the schedule timeline — plan modes only, since before a
+  plan there is no calendar — showing a generic title, its attendees as the roster spells them and its
+  time, **and nothing else**: no venue name, description, map link or marker, booking pill, website or
+  ticket link, checklist entry, or transit note naming the venue. The event stays in the itinerary with
+  its venue, so it stays planned and bookable, and carries a concealment mark derived from the
+  traveller's share mark. The build renders the concealed form for a marked event — a reduced form the
+  build produces, where the corpus puts one, since no redaction step exists on the publish path. The
+  itinerary stays the day's single authority. **The concealment binds every component that could
+  identify the event** — the Booking Checklist, joined by event; booking pills; map links and markers,
+  joined by venue; and links. That is a Wave-1 obligation, not a choice left open: the mark must be
+  resolvable at each of those joins, either carried onto the event's booking-status row or with every
+  component joining on the marked event. The spec's location invariant, that an event names a venue
+  and renders a map link on its card, and the validator's matching check gain a **stated carve-out** in
+  Wave 1, never a silent exception: the concealed block names no venue, so on the page it is not an
+  event. The itinerary's grammar gains the mark, and its element fence one `<concealed-occasion>`
+  residual row, rendered to the schedule variant.
+- **An OUT value stays out by its kind, wherever it is carried.** This record relies on the private-site
+  record's out-by-kind rule and restates none of it: the exclusion is the producer's, never a build-side
+  redaction.
+- **People who did not fill in their own form.** The private-site record's safeguard 3 binds every
+  carrier: the shortlist at production, the itinerary where the hub already copies no `[THIRD-PARTY]`
+  value, the group snapshot by its population rule (§ 9), the group contacts file by its own, and the
+  roster by D-1.
+
+**#1241's acceptance criteria through these rows.** Its shape criterion is met **existentially**: hold a
+trip's destination state and flip the mode between IDEATION and any plan mode, and the section and
+navigation sets differ by exactly the table's difference — IDEATION × UNDECIDED shows the hero, the
+shortlist section, the group snapshot section and the group contacts section; IDEATION × DECIDED shows
+the hero, the group snapshot section and the group contacts section; a plan mode shows the hero, the
+overview, sticky navigation, the Day sections, the Booking Checklist, reference matter, the Coordination
+Notice when its state is stated, and the group contacts section. Among the four plan modes the sets are
+equal by decision, so the universal reading — every pair must differ — fails by design, and this record
+says so. **Its IDEATION criterion is met by the *No destination yet* row**: a trip in IDEATION with no
+destination yields a non-empty page. The contract gates that criterion names — the `site` row and the
+shortlist's class — are both lifted by Wave-1 edits this record decides, and `/trip-publish update`
+already admits any mode and any destination. The no-form branch does not arise, and that criterion
+needs no revisit.
+
+*The remaining Decision subsections are authored in the next commit on this release branch.*
 
 ## Consequences
 
