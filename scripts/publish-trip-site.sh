@@ -24,7 +24,13 @@
 #   publish-trip-site.sh list                       (read-only inventory of all trips under trips/; gh optional)
 #   publish-trip-site.sh unpublish <trip-dir> [--disable-pages-only] [--yes]
 #
-#   <trip-dir>     A trip working dir, e.g. trips/tokyo-2026 (contains outputs/<name>-travel-site.html)
+#   <trip-dir>     A trip working dir, e.g. trips/tokyo-2026 (contains outputs/<name>-travel-site.html).
+#                  A relative one resolves against --data-root when that is given, else against the
+#                  working directory; an absolute one is used as given.
+#   --data-root <dir>
+#                  Accepted by every subcommand, after it: the operator data root, the directory
+#                  holding trips/, people/ and groups/. Roots a relative <trip-dir>, list's scan and
+#                  the person store. Name it when the engine is installed apart from your data.
 #   --plaintext    Opt OUT of privacy: publish the unencrypted site (default is encrypted).
 #   --opaque       Name the per-trip repo opaquely (random slug — no destination/year); persisted to .publish-slug.
 #   --passphrase   Supply a specific new passphrase for rotate (else one is generated).
@@ -1426,6 +1432,10 @@ _GUARD_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # surface, and a caller could point this guard at a store with fewer records and narrow
 # the class from outside the repository. An argument is visible in the invocation the
 # grant admits; an inherited variable is not.
+#
+# The store is not its only consumer. list roots its scan here, and resolve_trip_dir, beside
+# the parser below, roots a relative <trip-dir> — each ONLY when the flag was given, never on
+# the engine-root default above.
 #
 # The flag is `--data-root` and deliberately NOT `--root`. This script has TWO roots to
 # name and they diverge the moment the engine is installed — a `--root` here would read as
@@ -3305,6 +3315,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     esac
     shift
   done
+  trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   preflight; resolve_noreply_identity
 
@@ -3404,6 +3415,7 @@ ensure_pub_clone() { # <trip_dir> -> ensures <trip_dir>/.publish is the RIGHT pe
 
 cmd_update() { # <trip_dir>
   local trip_dir="${1:?usage: update <trip-dir>}"
+  trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   preflight; resolve_noreply_identity
 
@@ -3446,6 +3458,7 @@ cmd_update() { # <trip_dir>
 
 cmd_confirm() { # <trip_dir>
   local trip_dir="${1:?usage: confirm <trip-dir>}"
+  trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
 
   # BEFORE the state resolution below, and the position is the substance rather than a
@@ -3668,6 +3681,9 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
 
 cmd_rotate() { # <trip_dir> [--passphrase <new>]
   local trip_dir="${1:?usage: rotate <trip-dir> [--passphrase <new>]}"; shift || true
+  # Resolved here and not left to cmd_update: the passphrase file below is written BEFORE
+  # update runs, so an unrooted path would write it under the working directory.
+  trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   local pf="$trip_dir/.passphrase"
   if [ "${1:-}" = "--passphrase" ] && [ -n "${2:-}" ]; then
@@ -3793,6 +3809,7 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
     esac
     shift
   done
+  trip_dir="$(resolve_trip_dir "$trip_dir")"
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
   preflight_ro
   local owner slug ans
@@ -3890,6 +3907,42 @@ parse_data_root() {  # <args…>  -> _GUARD_ARGV holds the args with --data-root
   [ -d "$_GUARD_DATA_ROOT" ] && [ -r "$_GUARD_DATA_ROOT" ] \
     || die "--data-root is not a readable directory: $_GUARD_DATA_ROOT"
   _GUARD_DATA_ROOT="$(cd "$_GUARD_DATA_ROOT" && pwd)"
+}
+
+# THE SAME SEAM, ROOTING THE <trip-dir> ARGUMENT. --data-root names the directory holding
+# trips/, people/ and groups/, yet it used to root only the person store and list's scan:
+# every arm taking a <trip-dir> still resolved a relative one against the working directory.
+# After an install that directory is arbitrary — whatever project the session has open — so
+# the invocation the verbs make, a relative trips/<slug> beside an explicit --data-root, died
+# "no such trip dir" from anywhere but the data root itself. Where the working directory
+# happened to hold a trip of the same name it was worse: the arm acted on THAT trip, a
+# takedown reported a no-op for the wrong repo, and the person store came from the other home.
+#
+# Three rules, each load-bearing:
+#   • A relative <trip-dir> is rooted at $_GUARD_DATA_ROOT ONLY when --data-root was given.
+#     Without the flag it resolves against the working directory exactly as it always has —
+#     never against the variable's engine-root DEFAULT, whose trips/ is a record-free skeleton
+#     after install. That is cmd_list's rule for its scan root, applied to the trip argument.
+#   • With the flag there is NO fallback to the working directory. A trip absent under the
+#     data root is "no such trip dir", naming the rooted path: trying the working directory
+#     next would find a different trip of the same name, which is the defect above.
+#   • An absolute <trip-dir> is used as given.
+#
+# It mirrors validate-artifacts.sh, whose --scope dir <path> is relative to --data-root.
+#
+# It prints the path and cannot fail, so each caller keeps its own `[ -d ] || die`. The split
+# is deliberate: a die inside a command substitution exits only the subshell, and a caller
+# reached through `if` or `||` — the guard suite drives every arm that way — does not inherit
+# errexit, so a resolver that died would hand its caller an empty path to carry on with.
+resolve_trip_dir() {  # <trip-dir> -> the directory the arm operates on
+  case "$1" in
+    /*) printf '%s' "$1" ;;
+    *)  if [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ]; then
+          printf '%s/%s' "$_GUARD_DATA_ROOT" "$1"
+        else
+          printf '%s' "$1"
+        fi ;;
+  esac
 }
 
 main() {
