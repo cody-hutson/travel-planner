@@ -39,9 +39,10 @@ the page shows who is coming, a ranked shortlist of places, and a group snapshot
 traveller chose to share about when and how they travel. Once a place is being explored, the
 shortlist leaves the page, so the recorded destination stays the one answer to where; the snapshot
 stays until planning starts, when today's full itinerary site takes over. A page never keeps an
-earlier phase's content, hidden or otherwise, and a report now says when the published page lags the
-latest build. A short rule of questions decides whether a proposed addition earns its own section,
-becomes a region of one, or is only a field of an existing one.
+earlier phase's content, hidden or otherwise. The report that already marks a published page as stale
+will, once a later slice lands, compare the page last published with the latest build by what they
+show rather than by their timestamps. A short rule of questions decides whether a proposed addition
+earns its own section, becomes a region of one, or is only a field of an existing one.
 
 **Each traveller's contact and emergency line reaches the group, in every phase.** A traveller may
 share one way to be reached during the trip. For each traveller who filled in their own form, the page
@@ -49,7 +50,7 @@ shows their emergency contact's name — only when the traveller confirms the co
 listed — or that an emergency contact is on file with the organizer, or that none is. One line says
 the organizer is the person to tell if something happens. The way to reach an emergency contact is
 held by the organizer alone: when the form is filed, a script moves it into a file only the organizer
-reads, and no planning step or page ever touches it. The relationship to the traveller is never
+reads, and no agent step and no page ever touches it. The relationship to the traveller is never
 asked. A change that only removes or narrows what the group sees about someone never waits for the
 group's approval. `ADR-004` keeps every section this does not change, and a dated note inside it
 records the rest when these records are accepted.
