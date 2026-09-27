@@ -80,7 +80,8 @@
 # records whatever STATICRYPT_PASSWORD carries. publish and update refuse when the variable
 # and .passphrase disagree, before any network effect; an aborted rotation leaves .passphrase
 # byte-identical at every abort point; an update stopped because the key of record changed
-# under it leaves no commit behind for a later push to carry; and the arms that grade
+# under it leaves no commit behind for a later push to carry; a push publishes exactly the commit
+# its own run made; and the arms that grade
 # independence from errexit run without it, because that is what they grade.
 # MD = the Discriminating-Evidence Rule, asserted against this file. Every assertion's
 # PASS must require evidence its subject could only have produced by RUNNING. MD re-runs
@@ -8058,9 +8059,11 @@ rv15_assert "RV15"
 # ── RV16 — Q-5. The discard takes back only this run's OWN commit. When another command commits
 # on top of it before the re-check — named residual (i) — HEAD is no longer this run's commit, and
 # discarding HEAD would drop the other command's page and leave the clone behind the remote. The
-# ownership test is the ciphertext itself: nonced, so no other commit carries the same page.
+# ownership test is the ciphertext itself: nonced, so no other commit carries the same page. The
+# stop may come at the read-back right after this run's commit, or at the re-check: either way the
+# other command's commit stays where it is, and no discard is claimed.
 rv16_assert() { # <id>
-  local id="$1" name d out rc rot tip seen=0 claimed=0
+  local id="$1" name d out rc rot tip claimed=0
   local k1='rv-racing-update-synthetic-key-22' k2='rv-racing-rotation-synthetic-key-23'
   name="rv16-$RANDOM"; d="$(rv_fixture "$name" "$k1")"
   out="$( ( unset STATICRYPT_PASSWORD; rv16_d="$d"; rv16_k2="$k2"; rv16_rot="$RVW/$name.rot"
@@ -8076,19 +8079,82 @@ rv16_assert() { # <id>
             }
             set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
   rot="$(cat "$RVW/$name.rot" 2>/dev/null)"; tip="$(git -C "$d/.publish" rev-parse main 2>/dev/null)"
-  rv_has "$out" 'changed while this update was running' && seen=1
   rv_has "$out" 'discarded its own commit' && claimed=1
-  if [ "$rc" -ne 1 ] || [ "$seen" -eq 0 ] || [ -z "$rot" ]; then
-    FAIL "$id: the update did not stop at the key-of-record re-check with another commit on top of its own (rc=$rc). VERDICT WITHHELD"
+  if [ "$rc" -ne 1 ] || [ -z "$rot" ]; then
+    FAIL "$id: the update did not stop with another command's commit on top of its own (rc=$rc). VERDICT WITHHELD"
   elif [ "$tip" != "$rot" ]; then
     FAIL "$id: the update moved main off the other command's commit — it discarded a page that was not its own and left the clone behind the remote"
   elif [ "$claimed" -eq 1 ]; then
     FAIL "$id: the update reported discarding its own commit when the commit on top was another command's"
   else
-    PASS "$id: with another command's commit on top of its own, the update leaves the clone as it is and says it could not take its commit back — it discards only a commit it can show is its own"
+    PASS "$id: with another command's commit on top of its own, the update stops, leaves the clone as it is and claims no discard — it never takes back a commit it cannot show is its own"
   fi
 }
 rv16_assert "RV16"
+
+# ── RV17 — DQ-1, the β interleaving. rotate commits; an update commits on top before rotate pushes.
+# A push of the BRANCH publishes that update's page — under the key the rotation revokes — as the
+# live page, while rotate reports that the passphrase rotated. rotate must publish exactly its own
+# commit, so that its success means its own page is the one live.
+rv17_assert() { # <id>
+  local id="$1" name d bare rc live pf
+  local k1='rv-beta-old-synthetic-key-24'
+  name="rv17-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  ( unset STATICRYPT_PASSWORD; rv17_pub="$d/.publish"; rv17_k1="$k1"
+    write_passphrase_file() {   # rotate's commit point: an update commits on top here, before rotate pushes
+      local e
+      e="$(rv_enc_shim "$SRC" "$rv17_k1")"; cp "$e/index.html" "$rv17_pub/index.html"; rm -rf "$e"
+      git -C "$rv17_pub" add index.html || return 1
+      git -C "$rv17_pub" -c user.name=t -c user.email=t@example.invalid commit --quiet -m update || return 1
+      printf '%s\n' "$2" > "$1"
+    }
+    set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
+  live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$rc" -ne 0 ] || [ -z "$live" ]; then
+    FAIL "$id: the rotation did not complete with a readable live page (rc=$rc) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$live" = "$k1" ]; then
+    FAIL "$id: rotate reported success while the live page is another command's, under the key the rotation revoked — it pushed the branch, not its own commit"
+  elif [ "$live" != "$pf" ]; then
+    FAIL "$id: the live page is not under the key rotate recorded"
+  else
+    PASS "$id: with another command's commit stacked on top, rotate publishes exactly its own commit — its success means its own page, under the key it recorded, is the one live"
+  fi
+}
+rv17_assert "RV17"
+
+# ── RV18 — DQ-1, the γ interleaving. rotate commits; an update commits on top AND pushes before rotate
+# records its key. rotate's own push then has nothing new to send, and a branch push reports success
+# with the update's old-key page live. A rotation that lost that race must say so — its push must
+# fail — and the next update, the remedy its message names, must bring the live page under the key
+# the rotation recorded.
+rv18_assert() { # <id>
+  local id="$1" name d bare rc rc2 live live2 pf
+  local k1='rv-gamma-old-synthetic-key-25'
+  name="rv18-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  ( unset STATICRYPT_PASSWORD; rv18_pub="$d/.publish"; rv18_k1="$k1"
+    write_passphrase_file() {   # an update commits on top AND pushes, before rotate records its key
+      local e
+      e="$(rv_enc_shim "$SRC" "$rv18_k1")"; cp "$e/index.html" "$rv18_pub/index.html"; rm -rf "$e"
+      git -C "$rv18_pub" add index.html || return 1
+      git -C "$rv18_pub" -c user.name=t -c user.email=t@example.invalid commit --quiet -m update || return 1
+      git -C "$rv18_pub" push --quiet origin main || return 1
+      printf '%s\n' "$2" > "$1"
+    }
+    set -e; cmd_rotate "$d" ) >/dev/null 2>&1; rc=$?
+  live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  live2="$(rv_pushed_key "$bare")"
+  if [ "$rc" -eq 0 ] && [ "$live" != "$pf" ]; then
+    FAIL "$id: rotate reported success while the live page stayed under the key it revoked — a rotation that loses the race must fail at its push"
+  elif [ "$rc" -eq 0 ]; then
+    FAIL "$id: the rotation was meant to lose the race, and it completed — the interleaving was not reproduced. VERDICT WITHHELD"
+  elif [ "$rc2" -ne 0 ] || [ -z "$live2" ] || [ "$live2" != "$pf" ]; then
+    FAIL "$id: after the rotation failed, the next update did not bring the live page under the key rotate recorded (rc=$rc2)"
+  else
+    PASS "$id: a rotation that lost the race to a concurrent update fails at its push instead of reporting success, and the next update brings the live page under the key it recorded"
+  fi
+}
+rv18_assert "RV18"
 
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
@@ -8118,6 +8184,9 @@ md_flips cmd_rotate "RV13-rotate-bare" rv13_assert "RV13-rotate-bare" rotate bar
 md_flips resolve_key_path "RV14" rv14_assert "RV14"
 md_flips refuse_unpushed_residue "RV15" rv15_assert "RV15"
 md_flips cmd_update "RV16" rv16_assert "RV16"
+# RV17 and RV18 grade what a push publishes, so they are registered against the push itself.
+md_flips push_trip_site "RV17" rv17_assert "RV17"
+md_flips push_trip_site "RV18" rv18_assert "RV18"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
