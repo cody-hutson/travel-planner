@@ -1,6 +1,6 @@
 # ADR-029: Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part
 
-- **Status:** Proposed (2026-09-26)
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #718, the head design gate of the *Group approval engagement layer* milestone
   (#34), under the group-approval epic (#1297). The collection build that conforms to this record
@@ -15,14 +15,14 @@
   unwidened — re-decides nothing `ADR-025` or `ADR-026` decided, and proposes no standing server
   (`ADR-002` upheld).
 - **The status flip is named here, and so is what grades it.** Moving this record from `Proposed`
-  to `Accepted` is the maintainer's, at this milestone's close. It moves both halves of a
+  to `Accepted` was the maintainer's, taken at this milestone's close. It moved both halves of a
   two-artifact state — this `Status:` line and this record's cell in `reference/adr/README.md` —
   and group `IX` of `scripts/test-adr-conformance.sh` compares them on every push, advisory rather
-  than required. Until the flip, Accepted records cite a record that reads `Proposed`: the dated
-  amendments this record's own change adds to `ADR-026` § *Decision* 2 and to `ADR-010` §§ 7–8 do
-  so from the start, and `ADR-003`'s `Status:` line joins them when #719 ships the replacement
-  rule. The suite's `LG` group reports each such citation as a status-lag candidate — it reports
-  and never fails — and every one of them clears at the flip.
+  than required. Until the flip, Accepted records cited a record that read `Proposed`: the dated
+  amendments this record's own change added to `ADR-026` § *Decision* 2 and to `ADR-010` §§ 7–8 did
+  so from the start, and `ADR-003`'s `Status:` line joined them when #719 shipped the replacement
+  rule. The suite's `LG` group reported each such citation as a status-lag candidate — it reports
+  and never fails — and every one of them cleared at the flip.
 
 ## Context
 
