@@ -512,15 +512,16 @@ mitigation § 4 names, and it is stated as one.**
 test -z "${STATICRYPT_PASSWORD:-}"
 ```
 
-A non-zero exit is a **refusal, and it stops.** The override outranks the file in the
-script's resolution order, so limb (i) passes while `update` re-encrypts and pushes under
-the override and the trip's saved passphrase still holds the previous value — a silent
-re-key that limb (i) cannot catch, because limb (i) passes. This command must never read a
-passphrase value at all, so it cannot compare them; the safe branch is to refuse and hand
-off. Say:
-that `STATICRYPT_PASSWORD` is set in this environment; that `update` would re-key the
-published site under it; and that where that is the intent, the operator runs the update
-themselves in their own terminal. Name the variable. Name no value, no substitute, no
+A non-zero exit is a **refusal, and it stops.** Limb (i) guarantees the trip's passphrase
+file exists, so with the override also set there are two keys in play, and this command must
+never read a passphrase value, so it cannot tell whether they agree. The script itself refuses
+an update whose two keys disagree, before any network call — a silent re-key is how a routine
+update once undid a rotation — and an agreeing pair resolves to the same key either way; this
+limb keeps the command from reaching that decision at all, because it cannot see which case it
+is in. Say:
+that `STATICRYPT_PASSWORD` is set in this environment; that the trip's `.passphrase` is the
+key of record; and that the remedy is to unset the variable — to change the site's
+passphrase, the operator runs `rotate` in their own terminal. Name the variable. Name no value, no substitute, no
 length, no prefix.
 
 ### Ordering

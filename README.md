@@ -202,8 +202,14 @@ To run another subcommand from the table, swap it in for `publish trips/<slug>` 
 | `list` | Show every trip's publish state, and which sites are out of date |
 | `unpublish trips/<slug>` | Take the site down. This deletes the repo unless you add `--disable-pages-only` |
 
-- The passphrase is saved in your data folder, at `trips/<slug>/.passphrase`. Share it privately.
-  The encryption is only as strong as the passphrase.
+- The passphrase is saved in your data folder, at `trips/<slug>/.passphrase`, and that file is
+  the trip's key of record. Share it privately. The encryption is only as strong as the
+  passphrase.
+- If you set `STATICRYPT_PASSWORD` and it doesn't match the trip's `.passphrase`, `publish` and
+  `update` refuse until you unset it.
+- `rotate` protects what you publish from then on. Earlier versions of the site stay in the
+  repo's history, readable with the old passphrase; to remove those too, `unpublish` and
+  publish again.
 - The repo name is public and includes the destination and year, unless you used `--opaque`.
 - You can require named travelers to approve a plan change before it goes live. Declare them with
   `/trip-record .approvers`, and record their approvals with `confirm`.

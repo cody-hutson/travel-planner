@@ -1,0 +1,10 @@
+# Synthetic passphrases in scripts/test-publish-guard.sh (group RV), which gitleaks'
+# generic-api-key rule reports. They are test fixtures, not secrets: each names itself
+# as a synthetic or throwaway value, and none opens anything. The history scan reports
+# a finding at the commit that added it, so a later edit cannot clear it; these
+# fingerprints record the known false positives instead.
+9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7462
+9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7555
+9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7582
+9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7584
+9ad91d7c0d62b7949d48db4feb8f65a9c03dadd7:scripts/test-publish-guard.sh:generic-api-key:7626

@@ -3,6 +3,103 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.46.1] — 2026-09-26 — A rotation revokes the passphrase it replaces
+
+This is a security release. It fixes GHSA-gmm2-v7rr-jq7r: rotating a site's passphrase could leave the
+old passphrase working. Every release up to and including 0.46.0 is affected. The advisory describes the
+exposure, and what to do if one of your trips was rotated or updated while the variable was set.
+
+**What went wrong.**
+- `rotate` re-published through `update`, and `update` took its key from `STATICRYPT_PASSWORD` whenever
+  that variable was set, ahead of the trip's `.passphrase`. With the variable set, a rotation
+  re-encrypted the site under the variable — usually the very passphrase you were rotating away from —
+  while it reported that the passphrase had rotated.
+- A routine `update`, with the variable still set, did the same after a rotation that had worked.
+- `rotate` wrote the new passphrase to `.passphrase` before any of its checks ran. A rotation that
+  stopped partway therefore left the file holding a passphrase the live site was not under. After a
+  too-short `--passphrase`, the only copy of the live one on disk was gone.
+
+**What changed.**
+- **`rotate` encrypts under the new passphrase it chose, never the environment variable.** It records
+  that passphrase in `.passphrase` — through the link, where the file is a symbolic link — only once
+  the new ciphertext is committed, immediately before the push. A rotation that stops before that point
+  leaves `.passphrase` exactly as it was. One whose push fails leaves it naming the new passphrase, and
+  the next `update`, run with `STATICRYPT_PASSWORD` unset, finishes the job.
+- **`rotate` refuses while the trip's local clone holds a page that was committed but not yet pushed**,
+  left by an earlier `update` or `rotate` that stopped at its push. Pushed on top, that page would reach
+  the site's history under the passphrase being revoked, readable by exactly the people the rotation
+  cuts off. The message names the remedy: remove the trip's `.publish` directory (it is cloned again,
+  and nothing is lost) and rotate again — or run `update` first, if the current passphrase's holders
+  should see that page.
+- **`publish` and `update` refuse when the variable and the file disagree.** The refusal happens before
+  any network call, whenever `STATICRYPT_PASSWORD` is set and the trip's `.passphrase` holds a
+  different passphrase, or one that cannot be read as a passphrase. The message names the variable and
+  the file, never a passphrase, and gives one remedy: unset the variable. The only way to change a
+  site's passphrase is `rotate`. A trip rotated under the old behaviour, with the variable still set,
+  now meets this refusal instead of being quietly re-keyed.
+- **`rotate` and `update` push the commit they made, never another command's newer one, and
+  `update`'s push lands only on the site as its check saw it.** When a rotation and an update race
+  on one trip, whichever loses now stops and says so, rather than reporting success while a page
+  under the old passphrase is the live one.
+- **`update` re-checks `.passphrase` just before it pushes, and its push is bound to the site as
+  that check saw it.** A rotation that records a new passphrase before an `update`'s check, or pushes
+  before it does, now stops that `update`, at its check or at its push, instead of the `update` putting the
+  old passphrase back over the rotation. When it stops, `update` takes its own commit back out of the
+  trip's local clone where it safely can — only a commit whose page is the ciphertext it encrypted,
+  and never one already published — so a later push does not carry that page into the site's history
+  (see the limits).
+- **`update` refreshes its record of the site before it pushes.** A push that landed without the
+  trip's local clone recording it no longer stops later updates, and a site history rewound from
+  elsewhere is refused rather than published again.
+- **In `rotate` and `update`, each step of encrypting, committing and pushing now stops the run on its own when it fails.**
+  Before, a failed commit could read as a completed rotation whenever the caller had turned off the
+  shell's stop-on-error setting.
+- **Weak or malformed input is refused.**
+  - Encryption refuses a passphrase shorter than 12 characters, before StatiCrypt runs.
+  - `rotate` refuses an unknown option, a `--passphrase` with no value, and a new passphrase equal to
+    the current one.
+  - A passphrase typed in place of the trip, an option or the subcommand is not repeated to
+    the terminal: `rotate`, `publish` and
+    `unpublish` refuse an unknown option without repeating it, every command refuses a missing trip
+    directory without repeating the argument, and an unknown subcommand is not repeated either.
+  - `rotate` checks where it will record the new passphrase — following the link, where
+    `.passphrase` is one — before it commits anything, so a location it cannot write stops it with
+    nothing changed.
+    - `rotate` refuses a `.passphrase` that resolves to a directory, before it commits anything.
+  - `update` and `rotate` refuse a trip whose local clone is on a branch other than `main`, naming
+    the branch: the site is published from `main`.
+  - `.passphrase` is readable by you alone from the moment it is written.
+- **`unpublish` runs on macOS's default shell.** Under a UTF-8 locale, macOS's `bash` 3.2 misread one of
+  its messages and stopped the delete before anything was deleted. The withdrawal described below now
+  works there.
+- **The guard suite gains group RV.** It grades the rotation behaviours against the key handed to encryption for the page
+  actually pushed, and the refusals by their exact outcome. Its arms were committed before the fix, and the arms that grade the defect
+  fail against the old script. A new lint catches the shell-parsing slip that stopped `unpublish`.
+
+**A rotation protects what you publish from then on.** It adds a commit and never rewrites history, so
+every earlier version of a site stays in its per-trip repository, readable by anyone who holds the
+passphrase it was encrypted under. `CLAUDE.md` and `rotate`'s closing message now say so. To withdraw
+the earlier versions as well, `unpublish` (which deletes the repository) and then `publish` again.
+
+**The honest limits.**
+- The refusal compares the variable with `.passphrase`, so it cannot see three cases:
+  - a trip published from the variable alone;
+  - a `.passphrase` restored from an older backup;
+  - a copy of the trip on another machine.
+
+  A check against the live site itself would cover them, and it is not part of this release.
+- Commands run on the same trip at the same moment are still not serialized. Two rotations racing
+  each other can leave `.passphrase` naming a passphrase other than the one last pushed — a lockout,
+  not a leak. When a rotation and an update race, whichever loses stops and says so. A rotation
+  that stopped after recording its new passphrase is completed by the next `update`; one that was
+  refused before recording anything must be run again. Either way the update's page, under the old
+  passphrase, can still reach the site's history. Run one command per trip at a time. If two did
+  overlap, run `update` again once both have finished, then check that the old passphrase no longer
+  opens the site — and if it still does, run `rotate` again.
+- On a trip published from the variable alone, an `update` run without the variable generates a new
+  passphrase and does not announce it, so the people holding the old one are locked out. Use `rotate`
+  there: it announces the passphrase it sets.
+
 ## [0.46.0] — 2026-09-26 — The site serves every phase: the founding decision
 
 This release decides and builds nothing, deliberately. The private trip site has been built only once

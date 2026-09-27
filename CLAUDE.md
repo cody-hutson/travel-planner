@@ -508,9 +508,9 @@ That one command:
 
 If the pre-push guard aborts, **nothing was published** — the error names what failed; rebuild the site and re-run.
 
-**Passphrase.** If `$STATICRYPT_PASSWORD` is set it is used; otherwise a strong one is generated and saved to `trips/<destination>-<year>/.passphrase` (git-ignored, never published). Share it over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
+**Passphrase.** The trip's key of record is `trips/<destination>-<year>/.passphrase` (git-ignored, never published); when none exists, a strong one is generated and saved there. `$STATICRYPT_PASSWORD`, when set, is used in its place — but where the trip also has a `.passphrase` holding a different key, or one that cannot be read as a key, `publish` and `update` refuse rather than choose between the two, before any network call. The remedy is to unset the variable; the only way to change the key is `rotate`. Share the passphrase over a private channel — anyone with the passphrase can view the site; without it, the page is just a prompt.
 
-**Repo name.** By default the per-trip repo is `<destination>-<year>-trip`. Pass `--opaque` to `publish` to name it with a random token instead (`trip-<hex>`, no destination/year); the name is saved to `.publish-slug` so every later command resolves the same repo. To publish to a custom or pre-existing repo — a shorter shared name or an existing site — put the bare repo name in `trips/<destination>-<year>/.publish-slug` (git-ignored). `publish`/`update`/`rotate`/`list`/`unpublish` all resolve it the same way.
+**Repo name.** By default the per-trip repo is `<destination>-<year>-trip`. Pass `--opaque` to `publish` to name it with a random token instead (`trip-<hex>`, no destination/year); the name is saved to `.publish-slug` so every later command resolves the same repo. To publish to a custom or pre-existing repo — a shorter shared name or an existing site — put the bare repo name in `trips/<destination>-<year>/.publish-slug` (git-ignored). `publish`/`update`/`rotate`/`list`/`unpublish` all resolve it the same way. A pre-existing repo must serve its site from `main`: `update` and `rotate` refuse a trip whose clone is on any other branch, and name it.
 
 **Site is live at:** `https://<github-username>.github.io/<destination>-<year>-trip/` — the URL shows a passphrase prompt, not the itinerary.
 
@@ -523,7 +523,7 @@ If the pre-push guard aborts, **nothing was published** — the error names what
 ```bash
 <engine-root>/scripts/publish-trip-site.sh rotate trips/<destination>-<year> --data-root <data-root>
 ```
-Rotation re-encrypts under a new passphrase and re-publishes; previously-shared viewers must re-receive the new one.
+Rotation re-encrypts under a new passphrase — never `$STATICRYPT_PASSWORD` — records it in `.passphrase`, and re-publishes; previously-shared viewers must re-receive the new one. If an earlier `update` or `rotate` stopped at its push, `rotate` refuses until that page is dealt with: remove the trip's `.publish` directory (it is cloned again, and nothing is lost), or run `update` first if the current passphrase's holders should see the page. **A rotation protects what you publish from then on, not what you already published:** `rotate` adds a commit and never rewrites history, so every earlier version of the page stays in the per-trip repository, readable by anyone holding the passphrase it was encrypted under. To withdraw those as well, `unpublish` (which deletes the repository) and then `publish` again.
 
 **Listing published sites** (read-only — never writes, encrypts, or pushes):
 ```bash

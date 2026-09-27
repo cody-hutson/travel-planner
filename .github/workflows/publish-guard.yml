@@ -87,6 +87,13 @@ name: Publish guard
 #         terminal, so it has no legitimate skip and MUST NOT be named in
 #         GUARD_EXPECTED_SKIPS — a skipped privacy control is a green that proves less
 #         than it appears to
+#   RV    a rotation revokes (GHSA-gmm2-v7rr-jq7r): the page rotate pushes is under the
+#         key it records, whatever STATICRYPT_PASSWORD carries; publish and update refuse
+#         when the variable and .passphrase disagree, before any network effect; an
+#         aborted rotation leaves .passphrase byte-identical at every abort point. Pure
+#         bash plus git with mocked gh/npx and no network, Node, authenticated CLI or
+#         terminal, so it has no legitimate skip and MUST NOT be named in
+#         GUARD_EXPECTED_SKIPS
 #   MD    the Discriminating-Evidence Rule: every assertion's PASS must require evidence
 #         its subject could only have produced by RUNNING. MD re-runs each registered
 #         assertion with its subject removed and requires it to flip, and statically
