@@ -245,9 +245,9 @@ the corpus: of **38** verb rows, **6** name a mode and all six are `/trip` synth
 read `any`, and **2** do not read mode at all. **Not one verb that reaches a person gates on
 mode** — `/trip-publish update`, the verb that puts the site in front of a traveller, is
 `mode: any` in the requirement table under `skills/trip-publish/SKILL.md` § *Contract header*, and
-all 22 `/trip-record` verbs are
-`mode: any`. Mode has no jurisdiction over the subject, so it cannot be the index whatever its
-cardinality.
+all 23 `/trip-record` verbs, probed at `83f9256`, are `mode: any` — the 22 read at `edadfa9` and
+`.approvers`, added since. Mode has no jurisdiction over the subject, so it cannot be the index
+whatever its cardinality.
 
 **Option 4B — index on publication state and lifecycle instead.** Its **substance** is adopted;
 its **form** is not. These are **conditions**, not an index: publication state governs the
@@ -510,10 +510,10 @@ a cell, and it moves one.** That is the same device § 5.6 already uses for the 
 records so that nobody re-derives it.
 
 **Amendment (2026-09-26, Saturday) — the `observers` values corrected, the citations into the publish
-skill repaired, and what the records of the *site serves every phase* milestone decide against this
-record.** Nothing above is rewritten except where a claim is corrected in place, and no decision
-of this record is reversed, narrowed or re-opened: `may-carry` stands as defined, and every fail-closed
-path this section names is untouched.
+skill repaired, the count of `/trip-record` verbs corrected, and what the records of the *site serves
+every phase* milestone decide against this record.** Nothing above is rewritten except where a claim
+is corrected in place, and no decision of this record is reversed, narrowed or re-opened: `may-carry`
+stands as defined, and every fail-closed path this section names is untouched.
 
 - **The `observers` axis admits `world`.** The channel table above gives both CH-1 limbs the
   `observers` value `world` — the ciphertext sits in a public repository and is world-fetchable — but
@@ -526,6 +526,13 @@ path this section names is untouched.
   under § *Contract header*; the passphrase rule, as rule 4 of § *Standing clause — binding every verb
   of this command, present and future*; and the reconciliation, in § *What counts as a read here*. The
   citation of `skills/trip/SKILL.md`'s `site` row is current and stays.
+- **The count of `/trip-record` verbs is corrected in place.** *Options considered*, Decision 4,
+  option 4A said that all 22 `/trip-record` verbs are `mode: any`, a present-tense claim read at
+  `edadfa9`. The requirement table under `skills/trip-record/SKILL.md` § *Contract header* has since
+  gained `.approvers`, so the verbs number 23, probed at `83f9256`, and every one is `mode: any`. The
+  sentence now names both figures, and its conclusion — not one verb that reaches a person gates on
+  mode — is unchanged. The census before it, over every per-verb requirement table, is a measurement
+  at this record's baseline, `edadfa9`, and stands as measured.
 - **The cell #1242 moves.** § 3's sentences that name #1242 as the only card that may move a cell, and
   the matching bullets under *Consequences* and *Follow-on build slices*, are retained as written.
   [The private-site record](ADR-030-what-the-private-site-may-show.md) is that move. CH-1's encrypted
