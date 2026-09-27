@@ -6671,7 +6671,7 @@ fi
 # Every production function an arm below stubs or mutates, saved before any arm runs. sa_restore
 # re-evaluates the saved text; S26a compares each against it, so a stub that outlives its arm is
 # found by name rather than by the arms after it going quietly wrong.
-SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code'
+SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code _undecided_entry'
 for safn in $SA_SAVED_FNS; do
   eval "SA_SAVED_${safn}=\"\$(declare -f ${safn})\""
 done
@@ -7605,6 +7605,9 @@ if [ "$SA21L_PRE_OK" -eq 2 ] && [ "$SA21L_POST_OK" -eq 2 ] && [ "$SA21L_MUT_OK" 
 else
   FAIL "S21l: before-refresh refusals $SA21L_PRE_OK/2, after-refresh publishes $SA21L_POST_OK/2 (want 2 and 2)$SA21L_DETAIL; earlier-resolver mutant state '$SA21L_MST' rc=$SA21L_MRC clone=$SA21L_MCL C2=$SA21L_MMSG (want none, refusal); undeclared control '$SA21L3_ST' clone=$SA21L3_CL byte-identical=$SA21L3_SAME (want none, 1, 1); t6_state restored=$SA21L_T6_BACK"
 fi
+# The mocks are withdrawn here, and their text is kept for S23i, the one later arm that pushes: it
+# re-evaluates them and withdraws them again itself, so S26a still finds neither left defined.
+SA_MOCK_GH="$(declare -f gh)"; SA_MOCK_NPX="$(declare -f npx)"
 unset -f gh npx
 
 # ── S22a — INDEPENDENT OF engagement(t) (ADR-025 § 1, ADR-029 § Decision 4). One approver's
@@ -7637,7 +7640,7 @@ fi
 # recording act's functions, name no traveller file, person record, derived model or provenance
 # mark. Sensitivity: the class-source function that does read the derived model names it.
 # Specificity: a fabricated token is in none of them.
-SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date'
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
 SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
 for safn in $SA22_FNS; do
   SA22_N=$((SA22_N+1))
@@ -7850,6 +7853,99 @@ if [ "$SA23H_RC1" -eq 0 ] && [ "$SA23H_R1" = "$SA23H_WANT" ] && [ "$SA23H_RC2" -
   PASS "S23h: F-02 — on a published plan at 2 of 3, a withdrawal that keeps the threshold met and then a bare Enter each rewrite only the count (3 -> 2) and keep confirmed= at 2027-06-01, confirm does not say the record is dated now, and the gate still reads the plan unchanged; CONTROL — before publication the same bare Enter re-stamps confirmed= to its own time (C2's T + 8 case); ARMED-RED — with the plan read as unpublished the date moves"
 else
   FAIL "S23h: withdrawal rc=$SA23H_RC1 record [${SA23H_R1//$'\n'/ | }]; bare Enter rc=$SA23H_RC2 record [${SA23H_R2//$'\n'/ | }] (want both [${SA23H_WANT//$'\n'/ | }]); 'dated now' printed=$SA23H_NOW (want 0); state '$SA23H_ST' (want none-pending); unpublished control rc=$SA23H_RC3 record [${SA23H_R3//$'\n'/ | }] (want [${SA23H_WANT3//$'\n'/ | }]); unpublished-reading mutant kept the date=$SA23H_MKEPT (want 0)"
+fi
+
+# ── S23i — #719's item 8, THE ABANDONED-CHANGE EXIT (the operator's decision, option B). A change
+# raised after the published plan's approval record was dated, and abandoned before any approval,
+# leaves an entry the mapping reads as undecided while the working copy is back on the published
+# plan: the band reads `pending`, and under item 7's kept date alone no terminal act clears it. The
+# fixture: a declaring trip at 2 of 3 whose plan is published and approved by all three, its record
+# dated 2027-06-01, with the plan's own entry (2027-05-30) and the abandoned change's (2027-06-05) in
+# its change summary. SUBJECT: a bare Enter on 2027-06-10 re-stamps confirmed= at the act, adds no
+# ledger line and says "dated now"; the render built THROUGH THE MAPPING on 2027-06-11 (sa_build)
+# resolves `updated` · 2027-06-10 with the plan's own count and code; update passes both guards and
+# reaches the clone; and the gate reads the published plan unchanged before and after. ARMED-RED:
+# with _undecided_entry reading no entry — the writer as it stood before this exit — the same Enter
+# on a fresh copy keeps 2027-06-01 and the rebuilt band stays `pending`. CONTROLS: entries dated
+# 2027-05-30 and the approval's own day keep the date, so "later than" is strict, as the mapping's
+# is; a summary that cannot be read (a dangling link) keeps it, and so does one whose only later
+# headings are not dated entries — the stated fail direction, which never puts a false "recently
+# updated" on the site; and a trip that declares nobody, with the same history, is refused by
+# confirm with the shipped message word for word, its record byte-unchanged. The push mocks S21l
+# withdrew are re-evaluated for this arm and withdrawn again at its end.
+sa23i_fixture() { # <name> [<entry-date>...] -> a declaring trip at 2 of 3, published, approved 3 of 3, record dated 06-01
+  local d n="$1" sak; shift
+  d="$(sa_ptrip "$n" '' '' 16:30 "$SA_P16" pending)"
+  sa_declare "$d" 2 zqa1 zqb2 zqc3
+  for sak in zqa1 zqb2 zqc3; do sa_rec "$d" "$sak" approve "$SA_P16"; done
+  printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3\n' "$SA_P16" > "$d/.change-confirmed"
+  if [ $# -gt 0 ]; then t6_trip "$d" "$@" >/dev/null; fi
+  printf '%s' "$d"
+}
+eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
+SA23I_KEPT_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3' "$SA_P16")"
+# The subject.
+SA23I="$(sa23i_fixture s23i 2027-05-30 2027-06-05)"
+SA23I_ST0="$(sa_state "$SA23I")"
+SA23I_B0="$(sa_build "$SA23I" 16:30 2027-06-06)"
+SA23I_L0="$(wc -l < "$SA23I/.approvals" | tr -d ' ')"
+sa_confirm "$SA23I" $'\n' '2027-06-10T09:00:00Z'; SA23I_RC=$?
+SA23I_OUT="$(cat "$WORK/sa_conf.out")"
+SA23I_REC="$(cat "$SA23I/.change-confirmed")"
+SA23I_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=3' "$SA_P16")"
+SA23I_L1="$(wc -l < "$SA23I/.approvals" | tr -d ' ')"
+SA23I_NOW=0; case "$SA23I_OUT" in *"dated now"*) SA23I_NOW=1 ;; esac
+SA23I_KEEPS=0; case "$SA23I_OUT" in *"keeps the date"*) SA23I_KEEPS=1 ;; esac
+SA23I_B1="$(sa_build "$SA23I" 16:30 2027-06-11)"
+SA23I_SINCE=''
+while IFS= read -r saline; do case "$saline" in coordination-since:*) SA23I_SINCE="${saline#coordination-since: }" ;; esac; done < "$SA23I/outputs/porto-travel-site.html"
+read -r SA23I_NC SA23I_NK SA23I_CODE <<<"$(_render_approval_pair "$SA23I/outputs/porto-travel-site.html")"
+read -r SA_RC SA23I_CL SA_V SA_C <<<"$(sa_push update "$SA23I")"
+SA23I_ST1="$(sa_state "$SA23I")"
+# ARMED-RED — the writer reading no entry date, swapped in and restored.
+SA23IM="$(sa23i_fixture s23im 2027-05-30 2027-06-05)"
+_undecided_entry() { return 1; }   # MUTANT: no entry is ever read, so item 7's kept date has no exception
+sa_confirm "$SA23IM" $'\n' '2027-06-10T09:00:00Z'
+sa_restore _undecided_entry
+SA23IM_KEPT=0; case "$(cat "$SA23IM/.change-confirmed")" in *'confirmed=2027-06-01T09:00:00Z'*) SA23IM_KEPT=1 ;; esac
+SA23IM_B="$(sa_build "$SA23IM" 16:30 2027-06-11)"
+# CONTROL — no entry later than the record: one before it, and one on the approval's own day.
+SA23IC="$(sa23i_fixture s23ic 2027-05-30 2027-06-01)"
+sa_confirm "$SA23IC" $'\n' '2027-06-10T09:00:00Z'; SA23IC_RC=$?
+SA23IC_REC="$(cat "$SA23IC/.change-confirmed")"
+SA23IC_KEEPS=0; case "$(cat "$WORK/sa_conf.out")" in *"keeps the date"*) SA23IC_KEEPS=1 ;; esac
+# CONTROL — the fail direction: a summary present as a dangling link, which cannot be read.
+SA23ID="$(sa23i_fixture s23id)"
+ln -s "$WORK/zzq-no-such-summary.md" "$SA23ID/outputs/change-summary.md"
+sa_confirm "$SA23ID" $'\n' '2027-06-10T09:00:00Z'; SA23ID_RC=$?
+SA23ID_REC="$(cat "$SA23ID/.change-confirmed")"
+# CONTROL — later headings that are not dated entries: neither reader counts them.
+SA23IH="$(sa23i_fixture s23ih 2027-05-30)"
+printf -- '### 2027-06-05 — a sub-heading\n\n## 2027-6-5 — a heading with no YYYY-MM-DD date\n\n' >> "$SA23IH/outputs/change-summary.md"
+sa_confirm "$SA23IH" $'\n' '2027-06-10T09:00:00Z'; SA23IH_RC=$?
+SA23IH_REC="$(cat "$SA23IH/.change-confirmed")"
+SA23IH_MAP="$(t6_newest_entry "$SA23IH/outputs/change-summary.md")"
+# CONTROL — a trip that declares nobody, with the same history: the organizer's two-line record
+# names the published plan, and the abandoned change's entry post-dates it.
+SA23IU="$(sa_ptrip s23iu '' '' 16:30 "$SA_P16" pending)"
+s_record "$SA23IU/.change-confirmed" "$SA_P16" confirmed
+t6_trip "$SA23IU" 2027-05-30 2027-06-05 >/dev/null
+cp "$SA23IU/.change-confirmed" "$WORK/sa23iu.before"
+SA23IU_ERR="$( ( cmd_confirm "$SA23IU" ) </dev/null 2>&1 >/dev/null )"; SA23IU_RC=$?
+SA23IU_SHIPPED="nothing to confirm for $SA23IU — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+SA23IU_SAME=0; case "$SA23IU_ERR" in *"$SA23IU_SHIPPED") SA23IU_SAME=1 ;; esac
+SA23IU_KEPT=0; cmp -s "$WORK/sa23iu.before" "$SA23IU/.change-confirmed" && SA23IU_KEPT=1
+unset -f gh npx
+if [ "$SA23I_ST0" = none-pending ] && [ "$SA23I_B0" = pending ] && [ "$SA23I_RC" -eq 0 ] && [ "$SA23I_REC" = "$SA23I_WANT" ] && [ "$SA23I_L1" = "$SA23I_L0" ] && [ "$SA23I_NOW" -eq 1 ] && [ "$SA23I_KEEPS" -eq 0 ] \
+   && [ "$SA23I_B1" = updated ] && [ "$SA23I_SINCE" = 2027-06-10 ] && [ "$SA23I_NC" -eq 1 ] && [ "$SA23I_NK" -eq 1 ] && [ "$SA23I_CODE" = "$SA_P16" ] && [ "$SA23I_CL" -eq 1 ] && [ "$SA23I_ST1" = none-pending ] \
+   && [ "$SA23IM_KEPT" -eq 1 ] && [ "$SA23IM_B" = pending ] \
+   && [ "$SA23IC_RC" -eq 0 ] && [ "$SA23IC_REC" = "$SA23I_KEPT_WANT" ] && [ "$SA23IC_KEEPS" -eq 1 ] \
+   && [ "$SA23ID_RC" -eq 0 ] && [ "$SA23ID_REC" = "$SA23I_KEPT_WANT" ] \
+   && [ "$SA23IH_RC" -eq 0 ] && [ "$SA23IH_REC" = "$SA23I_KEPT_WANT" ] && [ "$SA23IH_MAP" = 2027-05-30 ] \
+   && [ "$SA23IU_RC" -ne 0 ] && [ "$SA23IU_SAME" -eq 1 ] && [ "$SA23IU_KEPT" -eq 1 ]; then
+  PASS "S23i: item 8 — on a published plan at 2 of 3 whose record is dated before an abandoned change's entry, the build reads 'pending'; a bare Enter re-stamps confirmed= to the act, adds no ledger line and says 'dated now'; the render built through the mapping resolves 'updated' · 2027-06-10 with the plan's own count and code, update passes both guards to the clone, and the gate reads none-pending throughout. ARMED-RED — a writer reading no entry keeps the date and the band stays 'pending'; CONTROLS — an entry on or before the record's day keeps the date, an unreadable summary and later non-entry headings keep it (the fail direction), and an undeclared trip with the same history is refused word for word with its record untouched"
+else
+  FAIL "S23i: gate before '$SA23I_ST0' (want none-pending), first build '$SA23I_B0' (want pending), Enter rc=$SA23I_RC record [${SA23I_REC//$'\n'/ | }] (want [${SA23I_WANT//$'\n'/ | }]), ledger lines $SA23I_L0 -> $SA23I_L1, 'dated now'=$SA23I_NOW 'keeps the date'=$SA23I_KEEPS (want 1 and 0); rebuilt '$SA23I_B1' since '$SA23I_SINCE' (want updated, 2027-06-10), pair $SA23I_NC/$SA23I_NK code-own=$([ "$SA23I_CODE" = "$SA_P16" ] && echo 1 || echo 0), clone=$SA23I_CL, gate after '$SA23I_ST1'; mutant kept the date=$SA23IM_KEPT band '$SA23IM_B' (want 1, pending); no-later-entry control rc=$SA23IC_RC record [${SA23IC_REC//$'\n'/ | }] keeps-message=$SA23IC_KEEPS; dangling-link control rc=$SA23ID_RC record [${SA23ID_REC//$'\n'/ | }]; non-entry-heading control rc=$SA23IH_RC record [${SA23IH_REC//$'\n'/ | }] mapping newest '$SA23IH_MAP'; undeclared control rc=$SA23IU_RC shipped-message=$SA23IU_SAME record untouched=$SA23IU_KEPT"
 fi
 
 # ── S24a — ERASURE (#719 INT-10). Substituting one approver's key with the erasure token's key

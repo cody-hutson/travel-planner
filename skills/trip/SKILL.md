@@ -1011,7 +1011,8 @@ recorded approval: the one event both deciding the `coordination-state` this bui
 dating the `updated` state's decay, read because it is the only record any shipped surface
 writes when a change is approved — the organizer's own confirmation on a trip that declares no
 approvers, and on one that does, the last terminal act that left the declared threshold met before
-the plan was published — and
+the plan was published, save the later acts the paragraph on what dates the `updated` state names:
+a revert, and the act after a change abandoned before any approval — and
 because a date taken from this build instead would restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
 round-trip contract fence and § 3 component catalog, together with
@@ -1083,11 +1084,17 @@ organizer's CONFIRM, or, on a trip that declares approvers, the last terminal ac
 declared threshold met before the plan it names is published — and no later path re-stamps it:
 `publish` and `update` write `.published-itinerary`, a different sidecar, and once the record names
 the published plan a later terminal act rewrites only its count. So a date read from it moves only
-at the organizer's own act, and never for a plan that has already published — with one exception,
-a revert: where the record names a plan that was then abandoned and the working copy is back on the
-published plan, `confirm` re-anchors the record to the published plan — or, where that plan's own
-approvals fall short, offers to retire it — and either write is dated at that act, because only that
-date post-dates the entry raised for the abandoned change. A
+at the organizer's own act, and never for a plan that has already published — with two exceptions,
+both reached once a change is abandoned and the working copy is back on the published plan. The
+first is a revert: where the record names the abandoned plan, `confirm` re-anchors the record to
+the published plan — or, where that plan's own approvals fall short, offers to retire it. The
+second is a change abandoned before any approval: on a trip that declares approvers, where the
+record still names the published plan and `trips/<slug>/outputs/change-summary.md` holds an entry
+dated after the `YYYY-MM-DD` prefix of its `confirmed=` — the entry that change raised, read
+exactly as the mapping above reads entries, and never through `status` — a terminal act that
+leaves that plan's own approvals meeting the threshold re-stamps `confirmed=` at the act instead of
+keeping it. Each of those writes is dated at its act, because only that date post-dates the entry
+raised for the abandoned change. A
 `coordination-since` re-derived from the build would be re-stamped on every later rebuild:
 § 3's window would restart each time instead of decaying, and a trip rebuilt months later would
 announce itself as recently updated, the failure `reference/schemas/travel-site.md` says this
@@ -1106,8 +1113,9 @@ its two-line form. `confirm` writes that record
 from the verdict at every terminal act — a recording, or a run that records nothing — that leaves
 the declared threshold met for the plan it is run on, and stamps `confirmed=` at that act unless the
 record already names that plan and it is the published one, when the act rewrites only the count
-and keeps the date; so the pair's seven-day window runs from the last terminal act before the plan
-publishes, and no later act re-dates it but the revert named above. A recording that leaves the
+and keeps the date — save after a change abandoned before any approval, the exception named above;
+so the pair's seven-day window runs from the last terminal act before the plan publishes, and no
+later act re-dates it but the revert and that exception. A recording that leaves the
 threshold unmet for the plan the record already names rewrites only its count, too. So the
 state, its date and the pair all come from one record, and `update` refuses to push an approved
 change on a trip that declares approvers unless the render carries the pair. **This verb never

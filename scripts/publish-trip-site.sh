@@ -2634,11 +2634,18 @@ _legacy_itinerary_digest() { # <html_file> -> the pre-#719 CRC-32 identity token
 # .gitignore excludes (`trips/*`) and which no subcommand ever copies into the
 # per-trip repo — so none of them is a publish surface.
 #
-# SEAM S1 (#550) — DISPLAY ONLY, and deliberately not load-bearing. #550 landed the
+# SEAM S1 (#550) — deliberately not load-bearing for the gate. #550 landed the
 # pending change as outputs/change-summary.md (class C20) carrying a `status`
 # field, not as a presence-marker file. The gate does not read it: keying on it
 # would key on publish-as-such, which is exactly what this design must not do.
 # cmd_confirm prints it so the organizer confirms against a named artifact.
+# Since #719's item 8 the declared path's RECORD WRITER reads it too — the dates of its
+# entry headings and nothing else, through _undecided_entry. The reason is the site's
+# `pending` band: a change raised after the published plan's approval record was dated,
+# and abandoned before any approval, leaves an entry the site's mapping reads as
+# undecided, and only a record re-dated past that entry lets the band clear. `status` is
+# still read by nothing: nothing ever moves it off `pending`, which is why
+# skills/trip/SKILL.md § site does not read it either.
 pending_change_path()     { printf '%s' "$1/outputs/change-summary.md"; }
 # The organizer's recorded approval, digest-bound to the itinerary it approves.
 change_confirmation_path() { printf '%s' "$1/.change-confirmed"; }
@@ -3072,14 +3079,56 @@ _ledger_append() { # <trip_dir> <key> <approve|withdraw> <digest> -> 0, or non-z
   mv -f "$tmp" "$f" || { rm -f "$tmp"; return 1; }
 }
 
+# THE CHANGE SUMMARY'S ENTRY DATES, read the one way skills/trip/SKILL.md § site's mapping reads
+# them (#719, item 8 of the locked corrections — the abandoned-change exit, the operator's
+# decision). 0 when outputs/change-summary.md holds an entry that mapping reads as UNDECIDED
+# against <confirmed-value>: an entry whose date is later than that value's YYYY-MM-DD prefix. An
+# entry is a dated heading — a line opening `## ` and then a YYYY-MM-DD date, the heading the hub
+# appends for each change (agents/05-hub-planner.md § Output: outputs/change-summary.md) and the
+# only part of the file the mapping reads. `status` is never read; § site records why it is not
+# the signal. This is the record writer's one read of the summary, and SEAM S2 makes none.
+#
+# THE FAIL DIRECTION IS "NO UNDECIDED ENTRY", and it is chosen rather than defaulted. It keeps the
+# record's date, which is what the writer did before this read existed, and it can never put a
+# false "recently updated" on the site: a date moves only where the mapping itself reads an entry
+# as undecided. So 1 is returned when the summary is absent; when it is present but is not a
+# readable regular file — a dangling link, a directory, a file that cannot be opened; and when
+# <confirmed-value> does not open with a YYYY-MM-DD date to measure against. A heading that is not
+# a dated entry — a deeper heading, or a date not written YYYY-MM-DD — is no entry here, as it is
+# none to the mapping. The dates compare as the integers YYYYMMDD, which on well-formed dates is
+# the mapping's own order and depends on no locale; the classes are enumerated for the reason the
+# approval readers above give. Graded by S23i.
+_undecided_entry() { # <trip_dir> <confirmed-value> -> 0 when the change summary holds an entry dated later
+  local f="" line="" d="" c="${2:-}" D='[0123456789]'
+  c="${c:0:10}"
+  case "$c" in $D$D$D$D-$D$D-$D$D) ;; *) return 1 ;; esac
+  f="$(pending_change_path "$1")"
+  if [ ! -f "$f" ] || [ ! -r "$f" ]; then return 1; fi
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "## "$D$D$D$D-$D$D-$D$D*)
+        d="${line:3:10}"
+        if [ "${d//-/}" -gt "${c//-/}" ]; then return 0; fi ;;
+    esac
+  done < "$f"
+  return 1
+}
+
 # The date an approval record KEEPS once its plan is published (#719's Stage 7 F-02, decided
-# option i): the record's own confirmed= value, printed only where the record already names
-# <digest> AND <digest> is the published plan — read from .published-itinerary through the same
-# shim S2 uses, so a baseline recorded under the legacy digest still counts as this plan's. It
-# prints nothing otherwise, and nothing where the record carries no confirmed= line; the caller
-# then stamps the act's own time, as before. Read-only.
+# option i), and the one exception to keeping it (item 8, the operator's decision). It prints the
+# record's own confirmed= value only where the record already names <digest> AND <digest> is the
+# published plan — read from .published-itinerary through the same shim S2 uses, so a baseline
+# recorded under the legacy digest still counts as this plan's — AND no change-summary entry is
+# dated after that value (_undecided_entry). Such an entry is a change raised after the approval
+# and abandoned before any approval of its own: the working copy is back on the published plan,
+# the mapping reads the entry as undecided, and a kept date would hold the site's `pending` band
+# with no terminal act left to clear it. There the caller stamps the act's own time instead —
+# the trade the C1 revert already makes: the next build shows the unchanged plan as recently
+# updated, with its own count and code, for up to seven days. It prints nothing otherwise, and
+# nothing where the record carries no confirmed= line; the caller then stamps the act's own time,
+# as before. Read-only, and 0 on every path, because its callers assign its output under `set -e`.
 _published_record_date() { # <trip_dir> <digest> -> the kept confirmed= value, or nothing
-  local trip_dir="$1" dg="$2" rec base line
+  local trip_dir="$1" dg="$2" rec base line conf=""
   [ -n "$dg" ] || return 0
   rec="$(change_confirmation_path "$trip_dir")"
   [ "$(_record_digest "$rec")" = "$dg" ] || return 0
@@ -3087,8 +3136,11 @@ _published_record_date() { # <trip_dir> <digest> -> the kept confirmed= value, o
   [ -n "$base" ] || return 0
   _baseline_matches "$trip_dir" "$base" "$dg" || return 0
   while IFS= read -r line || [ -n "$line" ]; do
-    case "$line" in confirmed=*) printf '%s' "${line#confirmed=}"; return 0 ;; esac
+    case "$line" in confirmed=*) conf="${line#confirmed=}"; break ;; esac
   done < "$rec"
+  [ -n "$conf" ] || return 0
+  if _undecided_entry "$trip_dir" "$conf"; then return 0; fi
+  printf '%s' "$conf"
   return 0
 }
 
@@ -3103,7 +3155,9 @@ _published_record_date() { # <trip_dir> <digest> -> the kept confirmed= value, o
 #                                         so no later terminal act — a late approval, a withdrawal
 #                                         that leaves the threshold met, a bare refresh — re-dates
 #                                         it and revives a recently-updated notice for a plan that
-#                                         did not change (_published_record_date).
+#                                         did not change (_published_record_date) — save where the
+#                                         change summary holds an entry dated after that date,
+#                                         which the next row takes (item 8).
 #   k ≥ t, otherwise                   -> digest=<digest>, confirmed=<now>, approval-count=<k>.
 #                                         confirmed= is stamped at THIS act, so it dates the last
 #                                         terminal act before the plan publishes — the moment the
@@ -3114,7 +3168,10 @@ _published_record_date() { # <trip_dir> <digest> -> the kept confirmed= value, o
 #                                         at the re-anchoring act, because only that date post-dates
 #                                         the entry raised for the abandoned change, and an entry the
 #                                         date does not post-date reads as undecided and holds the
-#                                         site's notice at pending.
+#                                         site's notice at pending. So is item 8's exit, for the same
+#                                         reason: a record that names the published plan, where a
+#                                         change raised after its date was abandoned before any
+#                                         approval, is dated at the act that leaves the threshold met.
 #   k < t, and the record names <digest> -> the count alone is rewritten; digest= and confirmed=
 #                                         stay, so a withdrawal after publication changes the
 #                                         count the next build renders and nothing else.
@@ -3503,7 +3560,8 @@ _confirm_has_terminal() { [ -t 0 ]; }
 # or Enter, which records nothing. Either way the approval record is then written from the
 # verdict (C2, _record_threshold_met), which also re-anchors it to a published plan whose own
 # approvals meet the threshold (C1), and which keeps the date of a record that already names the
-# published plan (Stage 7 F-02) — the one case whose closing message does not say "dated now". Where the plan going out IS the published one, its own
+# published plan (Stage 7 F-02) unless a change raised after that date was abandoned before any
+# approval (item 8) — keeping it is the one case whose closing message does not say "dated now". Where the plan going out IS the published one, its own
 # approvals fall short and the record names some other plan — an approval for a plan that was
 # then reverted, on a trip published before its declaration existed — the record is offered for
 # retirement behind CONFIRM, and the bytes it replaces are kept beside it (ADR-007 § 2's
@@ -3566,8 +3624,9 @@ _confirm_declared() { # <trip_dir> <site_html> <state>
     recorded=1
   fi
 
-  # Whether the record already names the published plan, read BEFORE the write: that is the one
-  # case in which the write keeps the record's date, and the message below must say which it did.
+  # Whether the write keeps the record's date — the record already names the published plan, and
+  # no change-summary entry is dated after it (item 8) — read BEFORE the write, through the one
+  # predicate the writer itself calls, so the message below says which it did and cannot disagree.
   kept="$(_published_record_date "$trip_dir" "$out_dg")"
   if ! _record_threshold_met "$trip_dir" "$out_dg"; then
     if [ "$recorded" -eq 1 ]; then
