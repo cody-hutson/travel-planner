@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-26 — A rotation revokes the passphrase it replaces
+## [0.46.1] — 2026-09-26 — A rotation revokes the passphrase it replaces
 
 This is a security release. It fixes GHSA-gmm2-v7rr-jq7r: rotating a site's passphrase could leave the
 old passphrase working. Every release up to and including 0.46.0 is affected. The advisory describes the
