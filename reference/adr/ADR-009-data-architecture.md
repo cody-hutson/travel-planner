@@ -1,13 +1,14 @@
 # ADR-009: Data architecture — entity identity, serialization, publishability, topology, and schema evolution
 
-- **Status:** Accepted (2026-08-28); **amended eight times (three on 2026-08-29, the fourth through
-  the seventh on 2026-08-30, the eighth on 2026-09-02)** — citation form, then the `provenance` enum's
-  membership, then four
+- **Status:** Accepted (2026-08-28); **amended nine times (three on 2026-08-29, the fourth through
+  the seventh on 2026-08-30, the eighth on 2026-09-02, the ninth on 2026-09-26)** — citation form,
+  then the `provenance` enum's membership, then four
   claims this record made that the release did not ship, then three enforcement warrants this record
   asserted that no file implements, then the `provenance:` key narrowed to its own scope with the
   member that scope was missing, then two claims of byte-identity against `main` that a later commit
   in this same release falsified, then the first of those three warrants falsified in turn by the
-  gate that shipped to close it, and then Decision 3's entry-marker rule widened by one field.
+  gate that shipped to close it, then Decision 3's entry-marker rule widened by one field, and then a
+  pointer at Decision 4.1's `bound` sentence.
   **Eighth amendment** — the entry-marker rule, and it is the only amendment here that records a
   **superseding decision** rather than a defect in this document. Decision 3 fixed the marker as
   holding *the entity key and nothing else*. `ADR-011` § 3 amends that rule to admit one optional
@@ -161,6 +162,19 @@
   same thing about the same section. **No decision, rule, residual, coverage claim or key
   derivation is changed, and none is re-opened** — a gap this record declared has been closed by
   the tree, and the record now says so.
+  **Ninth amendment** — a pointer at Decision 4.1's `bound` sentence, which states the
+  publish-bound set as the artifacts `reference/site-layout-spec.md § 9.1` names. The records of the
+  *site serves every phase* milestone, each `Proposed`, add members to that set, each from the Wave-1
+  slice that lands it: [the private-site record](ADR-030-what-the-private-site-may-show.md) moves the
+  destination shortlist to `bound`, [the group-snapshot record](ADR-037-group-snapshot.md) adds the
+  group snapshot, and [the contact and emergency
+  record](ADR-038-contact-emergency-group-visibility.md)
+  adds the group contacts file. § 9.1 remains the authority, and group `PB` keeps the correspondence
+  asserted as each slice lands its § 1.1 row and its fence row in one commit. The sentence is retained,
+  with an inline pointer at it. **The Decision 4 supersession** — the exception the private-site
+  record makes to Decision 4 for the values the group may see — is recorded in this record as the next
+  amendment, in the Wave-1 change that ships the replacement, and not here. **No decision of this
+  record is changed by this amendment, and none is re-opened.**
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156
@@ -554,7 +568,10 @@ Publishability is declared at **two granularities**, and they compose by **union
 
 **4.1 — Artifact class,** the `publish:` field, a closed four-value enum. **`bound`** — the site build
 reads it; exactly the five artifacts named in `reference/site-layout-spec.md § 9.1`, which remains the
-authority while this field is its machine-readable projection. **That the two agree is asserted, and
+authority while this field is its machine-readable projection. **[Pointer — ninth amendment
+(2026-09-26).** The set grows, each member from the Wave-1 slice that lands it: the destination
+shortlist, the group snapshot and the group contacts file, decided by three of the records of the *site
+serves every phase* milestone; § 9.1 remains the authority.**]** **That the two agree is asserted, and
 the assertion lives in the gate rather than in the schema grammar:** `scripts/test-artifact-schema.sh`
 group `PB` resolves the `publish-contract-artifacts` fence § 9.1 declares and requires the
 publish-bound set and that fence to agree in both directions. The per-class schemas still constrain

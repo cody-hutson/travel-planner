@@ -387,10 +387,29 @@ exclusion costs **7 of 86 fields — 8.1 %** of the trip form, the two `[DERIVED
 block-owned surfaces, which is a different exclusion entirely. The two are frequently conflated and
 this record does not conflate them.
 
-**The second writerless row is disposed of too, and it is structurally different.** The row covering
-*a block not listed above* is also writerless, but it has **no extent** — it is a rule about future
-blocks, not a region in the document. 6B's clause reaches it by construction, since that row's own
-condition already reads that a new block gets an owner in the table before it gets content.
+**The second writerless row is structurally different, and it is reached only through
+classification.** The row covering *a block not listed above* is also writerless, but it has **no
+extent** — it is a rule about future blocks, not a region in the document. No step of the conformance
+arm's region resolution lands on it: a new, untagged `##` block the table does not list resolves to
+the default row and is graded interviewable. This row's rule, that a new block gets an owner in the
+table before it gets content, is cited only when a field in such a block fails classification, and is
+never applied by construction.
+
+**Amendment (2026-09-27, Sunday) — an unlisted block resolves to the default row; this corrects a
+claim.** This section said 6B's clause reaches the row for *a block not listed above* by construction,
+and the prediction table's row 9 said the same. The conformance arm in `scripts/test-artifact-schema.sh`
+does otherwise. Measured at `1234561`, it resolves a region by its heading's name, then its marker,
+then its parent, then the default row, and no step lands on a catch-all row that is not the default,
+so its pin reads row 9 as unreachable. The arm cannot tell a new block from one the table merely
+leaves unnamed: both take the default route, and a new, untagged `##` block is graded
+**interviewable**. A field in it that the classification declares conforms; a field it does not
+declare fails question 3 with a finding that cites row 9's rule, read from the table, which is the case
+the arm's must-fire control `CTL-ST-CF-Q3-DEFAULT-V2` exercises. **Corrected in place:** the row is
+reached only through classification, never by construction, and this section and row 9 now say so.
+Whether an unlisted block should instead be excluded, as row 9's rule reads, is a design decision owned
+by #1521, which amends this record again if it changes what the arm does. No decision changes: 6B's
+conditional exclusion still governs every region with no declared writer, and row 9's verdict — NO,
+with no extent — is the one the arm realizes.
 
 ## Which writer rows become interviewable, and which do not
 
@@ -415,7 +434,7 @@ instrument.
 | 6 | Locked elements · current itinerary status | the operator, through the record command | 5 | **YES** — the row names the operator explicitly |
 | 7 | The lifecycle marker line | the decommission command | 0 | **NO** — **the line is absent from the template entirely**; it is an instance-only, command-written marker with no extent in the form |
 | 8 | Every untagged field not named above | the record command | 45 | **YES** — the default row; human source |
-| 9 | A block not listed above | **nobody** | n/a | **NO** — no extent to interview; decision 6's clause reaches it by construction |
+| 9 | A block not listed above | **nobody** | n/a | **NO** — no extent to interview; reached only through classification, since a new, untagged block resolves to row 8 (decision 6's amendment of 2026-09-27) |
 
 **Totals, reconciled:** interviewable `3 + 5 + 45 = 53`; conditional `3`; not interviewable
 `0 + 23 + 7 + 0 = 30`. `53 + 3 + 30 = 86`, the file total. So, probed at `5d2571c`, **53 of 86

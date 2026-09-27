@@ -107,3 +107,12 @@ carries the account.
 | [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
 | [ADR-029](ADR-029-group-approval-return-and-threshold.md) | Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part | Accepted |
+| [ADR-030](ADR-030-what-the-private-site-may-show.md) | What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page | Proposed |
+| [ADR-031](ADR-031-site-phase-model.md) | The site's phase model — the resolved state drives its shape through one render table, and what each state's build renders | Proposed |
+| [ADR-032](ADR-032-site-round-trip-contract.md) | The site's round-trip contract across its rendered artifacts — two grains, one render table, and a walk in three passes | Proposed |
+| [ADR-033](ADR-033-site-section-ceiling.md) | The site's section-growth ceiling — four tests over declared tables, and what earns a section | Proposed |
+| [ADR-034](ADR-034-site-build-admission.md) | The site build's admission of the pre-plan states — one requirement row, a declared stop, the page's file name, and the pre-plan classes | Proposed |
+| [ADR-035](ADR-035-site-transitions-and-refresh.md) | The site's transitions — replace, never accumulate; what a traveller was shown; and the refresh obligation | Proposed |
+| [ADR-036](ADR-036-published-artifact-model-row.md) | The published artifact takes no in-model row — `ADR-026` Finding 1 declined, in terms, and routed | Proposed |
+| [ADR-037](ADR-037-group-snapshot.md) | The group snapshot — what travellers share with the group before a plan, whose it is, who writes it, and where it shows | Proposed |
+| [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Proposed |
