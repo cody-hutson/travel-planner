@@ -157,11 +157,13 @@ reference cascade over every file carrying the token, and lands on a worse one.
 
 **Withdrawn from an earlier pass of this design: the claim that the egress sense and the
 human-carried sense *contradict* each other on the passphrase.** Read live,
-`skills/trip-publish/SKILL.md`:319-323 scopes its standing rule to **the command** — *"the object
-of this rule is the value, not the path"* — while `scripts/publish-trip-site.sh` addresses **the
-operator**. Two statements about different agents are not a contradiction, and the corpus states
-the reconciliation itself at `:249-252`: *"Both statements are true; they are about **different
-objects**, and the file's error was letting one answer the other's question."* The **overload** is
+`skills/trip-publish/SKILL.md` § *Standing clause — binding every verb of this command, present and
+future*, rule 4, scopes its standing rule to **the command** — *"the object of this rule is the
+value, not the path"* — while `scripts/publish-trip-site.sh` addresses **the operator**. Two
+statements about different agents are not a contradiction, and the corpus states the
+reconciliation itself in that file's § *What counts as a read here*: *"Both statements are true;
+they are about **different objects**, and the file's error was letting one answer the other's
+question."* The **overload** is
 real and remains the reason a definition is needed; the **collision** was manufactured. This
 strengthens 1D rather than weakening it — the discrimination method 1D uses is the one the corpus
 already applies to itself.
@@ -242,7 +244,8 @@ jurisdiction question was then measured independently across every per-verb requ
 the corpus: of **38** verb rows, **6** name a mode and all six are `/trip` synthesis verbs, **30**
 read `any`, and **2** do not read mode at all. **Not one verb that reaches a person gates on
 mode** — `/trip-publish update`, the verb that puts the site in front of a traveller, is
-`mode: any` at `skills/trip-publish/SKILL.md`:202, and all 22 `/trip-record` verbs are
+`mode: any` in the requirement table under `skills/trip-publish/SKILL.md` § *Contract header*, and
+all 22 `/trip-record` verbs are
 `mode: any`. Mode has no jurisdiction over the subject, so it cannot be the index whatever its
 cardinality.
 
@@ -465,7 +468,7 @@ does not license.
 | Axis | Values | What it states |
 |---|---|---|
 | **`audience`** | `operator` · `party` · `world` | who can **read** the content |
-| **`observers`** | `none-beyond-audience` · `third-party` | who can **see the bytes**, whether or not they can read them — the corpus's egress sense, named |
+| **`observers`** | `none-beyond-audience` · `third-party` · `world` | who can **see the bytes**, whether or not they can read them — the corpus's egress sense, named |
 
 | Channel | `audience` | `observers` | Why |
 |---|---|---|---|
@@ -478,6 +481,43 @@ does not license.
 mistake for a permission. The mitigation is this sentence: **#1242 is the only card that may move
 a cell, and it moves one.** That is the same device § 5.6 already uses for the tombstone it
 records so that nobody re-derives it.
+
+**Amendment (2026-09-26, Saturday) — the `observers` values corrected, the citations into the publish
+skill repaired, and what the three records of the *site serves every phase* milestone decide against
+this record.** Nothing above is rewritten except where a claim is corrected in place, and no decision
+of this record is reversed, narrowed or re-opened: `may-carry` stands as defined, and every fail-closed
+path this section names is untouched.
+
+- **The `observers` axis admits `world`.** The channel table above gives both CH-1 limbs the
+  `observers` value `world` — the ciphertext sits in a public repository and is world-fetchable — but
+  the axis table declared only `none-beyond-audience` and `third-party`, so those cells were ill-typed
+  against their own axis. `world` is added to the axis's declared values, in place. That corrects a
+  claim; it changes no cell, and every channel keeps the values the table already gave it.
+- **The citations into `skills/trip-publish/SKILL.md` are repaired.** This record cited that file by
+  line number, and its lines have moved while the text stands. Each citation is repaired in place by
+  section or quotation rather than by a new line number: the `update` row, in the requirement table
+  under § *Contract header*; the passphrase rule, as rule 4 of § *Standing clause — binding every verb
+  of this command, present and future*; and the reconciliation, in § *What counts as a read here*. The
+  citation of `skills/trip/SKILL.md`'s `site` row is current and stays.
+- **The cell #1242 moves.** § 3's sentences that name #1242 as the only card that may move a cell, and
+  the matching bullets under *Consequences* and *Follow-on build slices*, are retained as written.
+  [The private-site record](ADR-029-what-the-private-site-may-show.md) is that move. CH-1's encrypted
+  limb's `audience` cell, `party`, becomes load-bearing, because `carry-envelope` for that limb now
+  admits exactly the values that record lists as the group's to see; the `--plaintext` limb, whose
+  `audience` is `world`, admits none of them; and the `observers` cell stays `world` on both limbs.
+  The class-side change the move needs is that record's, not this one's.
+- **For the site channel.** § 3's composition of `C19` and § 4's sentence on `IDEATION` describe the
+  build as it stood when this record was written.
+  [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) decides two things.
+  First, `/trip site` builds in `IDEATION`. Second, each build reads exactly the artifacts its render
+  table admits for the resolved mode and destination — in `IDEATION`, the group snapshot in both
+  destination states, and the destination shortlist when no destination is recorded; and in every
+  state the site builds, the group contacts file that
+  [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) decides. From the
+  slice that lands that decision, `C19`'s read set is that admitted set, and mode bites on CH-1 in every
+  state the site builds. The decision of § 4 — mode conditions the production of a channel's content
+  and never indexes its reach — is unchanged; the group snapshot, produced only in `IDEATION`, is one
+  more instance of it.
 
 ### 4. Reach is one crossing or two, and the engine's claims are about the first only
 
@@ -610,7 +650,8 @@ this record says *is* reached, through the operator.
 > Mode conditions the **production** of a channel's content and never indexes its reach:
 > `/trip site` is `DISCOVERY, ENRICHMENT, ITERATION, RESEQUENCING` in its own requirement row
 > (`skills/trip/SKILL.md`:73) and so builds no site in `IDEATION`, which is the single instance
-> that bites on CH-1 — while `/trip-publish update` is `mode: any` (`:202`) and every
+> that bites on CH-1 — while `/trip-publish update` is `mode: any` (the requirement table under
+> `skills/trip-publish/SKILL.md` § *Contract header*) and every
 > `/trip-record` verb is `mode: any`.
 
 **And mode is explicitly *not* an artifact-availability axis.** The corpus nowhere states that
@@ -875,5 +916,6 @@ here.
 - `CLAUDE.md` — `:123-133` the three model-entry classes and the fixture-completeness rule; `:355`
   *never infer a mode*; § *Modes*, § *Archived trips*, § *Write ownership*; the standing rule on
   the passphrase value.
-- `skills/trip/SKILL.md`:73 and `skills/trip-publish/SKILL.md`:202 — the requirement rows that
+- `skills/trip/SKILL.md`:73 and the `update` row of the requirement table under
+  `skills/trip-publish/SKILL.md` § *Contract header* — the requirement rows that
   make mode production-gating rather than reach-indexing.
