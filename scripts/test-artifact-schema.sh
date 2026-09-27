@@ -6153,10 +6153,14 @@ fi
 # reproduces, at one site. The arm also cannot reach the 21 tolerant sites at all, by
 # construction: there is nothing there to fail closed on.
 #
-# Fifteen of the validator's SIXTEEN adjudicated sites have a row. The sixteenth is the inner
-# substitution of the engine-root resolution, and it is unreachable rather than unrostered: a
-# nested capture's status is lost to the outer one, so there is no status to inject and
-# nothing in the file can adjudicate it. The outer read of that same line IS rostered.
+# Nineteen of the validator's TWENTY adjudicated sites have a row: one per va_read_ok label,
+# of which there is one for each of its 19 `# va-capture: adjudicated` marker lines. Twenty is
+# the sum of the site counts those markers declare, each of which CTL-VA-CAPTURE-CENSUS above
+# asserts equal to its line's detected count. The twentieth site is the inner substitution of
+# the engine-root resolution, on the one line marked adjudicated(2), and it is unreachable
+# rather than unrostered: a nested capture's status is lost to the outer one, so there is no
+# status to inject and nothing in the file can adjudicate it. The outer read of that same
+# line IS rostered.
 FC_MARK="$WORK/fc_invoked"
 FC_TABLE='fn|va_population|va_select/population
 fn|va_select|va_main/select
@@ -6170,6 +6174,10 @@ fn|va_schema_get|va_corpus_patterns/class-id
 fn|va_schema_all|va_corpus_patterns/path-patterns
 fn|va_corpus_patterns|va_select/pattern-table
 fnarg|va_schema_get:artifact|va_corpus_patterns/artifact
+fncaller|va_corpus_patterns:va_schema_for|va_schema_for/pattern-table
+awkprog|$1 == c { print $4; exit }|va_schema_for/class-lookup
+fncaller|va_schema_get:va_check_artifact|va_check_artifact/schema-version
+fnarg|va_schema_all:field|va_check_artifact/field-list
 noroot|pwd|va_main/engine-root'
 # fc_run <kind> <arg> — one va_main over the CTL-DATAROOT fixture with a single producer
 # shadowed to exit 7. The shadow records each invocation, so "the injection landed" is read
@@ -6186,6 +6194,25 @@ fc_run() {
       # earlier one first and this label would never be reached.
       fnarg)     eval "$(declare -f "${arg%%:*}" | sed "1s/^${arg%%:*}/${arg%%:*}_unshadowed/")"
                  eval "${arg%%:*}() { if [ \"\${2:-}\" = \"${arg#*:}\" ]; then printf 'x\n' >> \"\$FC_MARK\"; return 7; fi; ${arg%%:*}_unshadowed \"\$@\"; }" ;;
+      # `fncaller` is `<function>:<caller>` — it fails that function only when the named
+      # function calls it, and defers to the renamed original otherwise. It exists where an
+      # argument cannot isolate the site. va_corpus_patterns takes the same root at both of
+      # its adjudicated sites. va_check_corpus reads schema-version with the same argument
+      # va_check_artifact does, at an S1-guarded read that runs first, so an fnarg row would
+      # also raise an S1 per schema and make rc and shadow-invoked true before this site is
+      # reached. FUNCNAME[1] is the immediate caller, and it survives the command
+      # substitution each site captures through.
+      fncaller)  eval "$(declare -f "${arg%%:*}" | sed "1s/^${arg%%:*}/${arg%%:*}_unshadowed/")"
+                 eval "${arg%%:*}() { if [ \"\${FUNCNAME[1]:-}\" = \"${arg#*:}\" ]; then printf 'x\n' >> \"\$FC_MARK\"; return 7; fi; ${arg%%:*}_unshadowed \"\$@\"; }" ;;
+      # `awkprog` is one awk program, verbatim — it fails awk for that program alone and
+      # defers to the real awk otherwise. It exists for a site whose producer is awk itself,
+      # reading a here-string: there is no pipe stage to shadow, and shadowing awk whole
+      # would fail the earlier adjudicated reads made through it first, so this label would
+      # never be reached. The program is matched as a whole argument, so the row names one
+      # site. It is compared from a variable rather than spliced into an eval, so no quoting
+      # stands between the table and the comparison.
+      awkprog)   FC_AWKPROG="$arg"
+                 awk() { local fc_a; for fc_a in "$@"; do if [ "$fc_a" = "$FC_AWKPROG" ]; then printf 'x\n' >> "$FC_MARK"; return 7; fi; done; command awk "$@"; } ;;
     esac
     # `noroot` omits --root, because the engine-root resolution is the one adjudicated site
     # that only runs when no root was given. Every other row keeps the standard invocation,
