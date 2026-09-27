@@ -264,8 +264,9 @@ shipped forms carry them on consecutive lines: a line-initial heading,
 HTML comment `<!-- PROFILE-END -->`. **`boundary:` names the comment, and the comment is the
 normative literal.** The ground is measured rather than stylistic: at `edadfa9` the heading literal
 occurs **twice** in each guided form — once as the heading, once inside that form's own hand-off
-instruction, which names it in prose — while the comment occurs **once**. The heading literal
-therefore cannot satisfy D2.6 question 2 and the comment can.
+instruction, which names it in prose — while the comment occurs **once**, and occurs as a **whole
+line**, which the heading literal never does: the skill surfaces match it as the start of a longer
+line. The heading literal therefore cannot satisfy D2.6 question 2 and the comment can.
 
 **The heading is not thereby demoted to decoration, and the record accounts for it because it is
 load-bearing to a different consumer.** It is the human-facing rendering of the same boundary, and it
@@ -277,13 +278,24 @@ at `edadfa9`; the control token `ANSWERED(` is read by `scripts/test-artifact-sc
 *are* being read by the same instrument). D2.6 question 2 is what converts that adjacency into an
 assertion, and D5.6 is what runs it.
 
-*Rejected:* retargeting `boundary:` at the heading literal — it occurs twice per form, so the
-exactly-once test that makes the boundary decidable fails on both shipped forms. *Rejected:*
+*Rejected:* retargeting `boundary:` at the heading literal — it occurs twice per form as a substring
+and never as a whole line, so the exactly-once test that makes the boundary decidable fails on both
+shipped forms under either reading. *Rejected:*
 declaring the heading as a second fence key — it puts a second copy of a literal the form already
 carries into the declaration, which D2.2 refuses, and it grows the per-form cost § *Decision* 6
 exists to shrink. *Rejected:* leaving the heading unmentioned, which is the shape this clause
 replaces — a contract silent on the literal the skill surfaces key on declares a boundary the engine
 does not use.
+
+**Amendment (2026-09-26, Saturday) — the boundary is a whole line; this corrects a claim.** This section, D2.6
+question 2 and `F4` below counted the comment's occurrences in the file. That held at `edadfa9`,
+before any form carried the fence. Once the fence this section requires landed, it names the literal
+on its own `boundary:` line, so every conforming form carries the comment twice as a substring, and a
+substring count fails every form this contract accepts. **Corrected in place to count whole lines:**
+the boundary is the one line that is exactly the literal, trailing whitespace aside, and the fence's
+`boundary:` line is never that line. No decision changes — `boundary:` names the comment, and the
+comment is normative — and the ground is sharper: the heading literal is a line prefix, never a whole
+line.
 
 **D2.2 — The declaration points; it never copies.** Every key above is either a fact about the form
 itself or an address. `classification:` names the table and its section anchor; the table's own
@@ -368,7 +380,11 @@ the no-repository reader of D4.1, needing no addition to the hand-off set. And i
 existing predicate true**: the value still begins with `[` and ends with `]`, so `CLAUDE.md`
 § *Resolving a trip*'s placeholder predicate is unchanged, an unfilled field still reads unanswered
 to `ANSWERED()`, and a form's bracketed-placeholder form stays the thing it was — which matters
-because the sibling record's un-asked test is a comparison against exactly that form.
+because the sibling record's un-asked test reads a surviving placeholder as unasked, and a surviving
+placeholder reaches that test in two shapes under one `form-version`: with the marker, in a profile
+seeded from a form that carries it, and without it, in one seeded before the marker landed. The test
+is therefore a **shape** predicate — the value opens with `[` and closes with `]` — and never a byte
+comparison against the form's current bracket.
 
 **One parse rule follows and is stated rather than left to be inferred:** a consumer reading option
 text per D2.3 takes the placeholder's contents **after** the marker and its `: ` separator. The
@@ -400,6 +416,17 @@ adding a column there would put an interview concern into a planning table, the 
 `reference/data-model.md` already records against reusing its sibling predicate); declaring a
 closed set's members in the fence (a second copy of the bracket's text, which D2.3 exists to avoid).
 
+**Amendment (2026-09-26, Saturday) — the un-asked test is a shape predicate; this corrects a claim.** This section
+called the sibling record's un-asked test "a comparison against exactly that form". It is not, because
+unanswered brackets survive in instances in two shapes once the marker lands: a profile seeded from a
+form that carries the marker keeps it on every unanswered bracket, and one seeded before it landed
+keeps the bracket without it — both under `form-version: 1`, since the marker is authored on the
+existing contract version rather than a new one. A byte comparison against the form's current bracket
+would read the second shape as answered. **Corrected in place:** the test is the placeholder predicate
+this section already names — a value that opens with `[` and closes with `]` is unanswered — which reads
+both shapes alike. No decision changes: the marker still heads the bracket, and the placeholder
+predicate still holds.
+
 **D2.5 — The contract is versioned on its own axis, by `form-version:`.** A skill and a form can
 then disagree **detectably** rather than silently.
 
@@ -413,7 +440,9 @@ bump read as an artifact-class bump to `scripts/validate-artifacts.sh`.
 interviewer.** A reader takes an arbitrary form and answers:
 
 1. Exactly one `intake-form` fence occurs, above the boundary, carrying every declared key.
-2. The literal named by `boundary:` occurs exactly once in the file, **and** the form's
+2. The literal named by `boundary:` occurs exactly once in the file **as a whole line** — the line
+   whose content, trailing whitespace aside, is exactly that literal, which the fence's own `boundary:`
+   line never is — **and** the form's
    end-of-profile heading — the literal the skill surfaces match — occurs **line-initially** exactly
    once, on the line immediately above it. The second limb is what asserts the two literals'
    agreement; without it they agree only by adjacency, which is the state D2.1 records.
@@ -594,14 +623,16 @@ branches of `st_violations` are removed as one act, because `ST-COV` fails when 
 suite red; removing the branches without the arms turns it red the other way.
 
 **D5.5 — A new must-fire arm converts the incidental zero into an asserted one.** The arm inserts a
-`- **Label:**` line below the boundary and requires the refusal to fire. `rl_bullets` gains a
-boundary stop, and it is **fail-closed**: a form carrying the `intake-form` fence whose `boundary:`
-literal is absent is a failure, never a whole-file fallback. This is the clause that discharges the
+`- **Label:**` line below the boundary and requires the refusal to fire. Both readers that count a
+form's labelled bullets — `rl_bullets`, and group `ST`'s own surface reader — gain a boundary stop,
+through one resolver, and it is **fail-closed**: a **declared** form whose boundary does not resolve
+is a failure, never a whole-file fallback. This is the clause that discharges the
 leak the context section names, and it is written to require evidence its subject could only have
 produced by running, per [`ADR-019`](ADR-019-discriminating-evidence-rule.md).
 
-**D5.6 — A second new arm grades contract conformance** — D2.6's six questions, over `ST_TEMPLATES`,
-taking question 6 at its decidable half per that question's own statement.
+**D5.6 — A second new arm grades contract conformance** — D2.6's six questions, over the arm's own
+declared population of forms, which contains `ST_TEMPLATES`, taking question 6 at its decidable half
+per that question's own statement.
 It lands in `ST` and **not** in `scripts/validate-artifacts.sh`, because that validator's selector
 excludes `templates/*.template.md` ahead of both of its arms, so a conformance check placed there
 would never reach a form.
@@ -614,6 +645,23 @@ The marked set and the banner numeral still restate one fact to each other, the 
 hand-maintained, and `ST` is the arm that catches a star added without the banner following.
 *Rejected:* keeping `rl_bullets` whole-file and relying on the measured zero, for the reason
 D2.6 question 4 exists.
+
+**Amendment (2026-09-26, Saturday) — the conformance arm's population, and the boundary stop's scope; this corrects
+two claims.** D5.6 named the arm's population as `ST_TEMPLATES`, and D5.5 scoped the stop to *a form
+carrying the `intake-form` fence*. Both matched what they were written for: `ST_TEMPLATES` was every
+form, and the fence was about to reach only the two guided forms; no filled profile carried it yet.
+Neither survives the decisions that followed. `ADR-024` decision 4A puts the trip-context form on this
+same arm, with a version branch, and that form has no starred pass — while D5.3 keeps `ST0`'s refusal
+of an `ST_TEMPLATES` member without one verbatim. Read as `ST_TEMPLATES`, D5.6's population therefore
+sets D5.3 against decision 4A, and neither of those can yield, so the phrase is the claim that was
+wrong. And a finished profile copies its form's fence, so *carrying the fence* now names every filled
+profile too, and a stop scoped that way would cut them. **Corrected in place:** the arm grades its own
+declared population, asserted to contain `ST_TEMPLATES` and to account for every tracked template; and
+the stop is scoped to that population's forms on this contract — a form `ADR-024` grades per region
+has no single boundary to stop at — and never to whether a file carries the fence. No decision changes:
+one conformance arm, in `ST` and not in the validator, and a fail-closed stop. The trip-context form
+joins the population under `ADR-024`, not under this amendment. The stop also reaches group `ST`'s own
+reader, which counts the same bullets and which D5.5 did not name.
 
 ### 6. The cost of the next form
 
@@ -630,12 +678,18 @@ claim the record is for.
 | Output contract | none |
 | `Fields:` restatement | none — retired |
 | Star-count homes to keep in agreement | two, both in the form, both graded |
-| `ST_TEMPLATES` | one line |
+| `ST_TEMPLATES` | one line, where the form has a starred pass |
+| The conformance arm's declared population | one line |
 | The form lists of the other form-reading groups | one line each, where the form participates |
 | Hand-off artifacts | none — the card is form-agnostic |
 | Command surface | none if it reuses the interview verb; otherwise one requirement row, one Step-1 taxonomy row, and a regeneration of the command-reference derived region |
 | Install or link changes | none |
 | `README.md` loops | none |
+
+**Amendment (2026-09-26, Saturday) — the population line; this corrects a claim.** The table priced
+`ST_TEMPLATES` and no other list inside `ST`. A form now costs a line in the conformance arm's declared
+population, and a line in `ST_TEMPLATES` only where it has a starred pass — the unit this table
+already prices. Corrected in place, to agree with D5.6 as amended.
 
 **D6.2 — What a form costs today, for comparison.** A third guided form costs a hand-written conduct
 appendix of roughly the length each shipped guide already carries, the whole `ST` home set to keep in
@@ -670,7 +724,7 @@ form or an address.
 | **F1** | the form's own identity | `form:` — a repo-relative path |
 | **F2** | the contract version the form was authored against | `form-version:` — an integer, so a skill and a form disagree detectably |
 | **F3** | the writer class of the form's fields | `writer:` — `human`; a form carrying any `[DERIVED]`/`[ENRICH]` field is not interviewable |
-| **F4** | where the profile half ends | `boundary:` — the **normative** sentinel literal, occurring exactly once. The form bears the same boundary a second time as the line-initial end-of-profile **heading** immediately above it — the literal the skill surfaces match, and the reason D2.1 names one of the two normative rather than swapping between them. The heading is **not** a fence key; D2.6 question 2 grades it against the sentinel |
+| **F4** | where the profile half ends | `boundary:` — the **normative** sentinel literal, occurring exactly once **as a whole line**; the fence's own `boundary:` line names it and is not that line. The form bears the same boundary a second time as the line-initial end-of-profile **heading** immediately above it — the literal the skill surfaces match, and the reason D2.1 names one of the two normative rather than swapping between them. The heading is **not** a fence key; D2.6 question 2 grades it against the sentinel |
 | **F5** | which label-to-metadata table the form is keyed against | `classification:` — a path and a section anchor; **the table is not copied** |
 | **F6** | the artifact class the finished file becomes, and its path rule | `output:` — the `artifact:` string of the corresponding `reference/schemas/<class>.md` fence, which is simultaneously the class identity and the path pattern |
 
@@ -783,10 +837,18 @@ Every residual is named with its owner. A residual with no owner is not a residu
 | **R7** | The portable interview card is a **new tracked asset with no schema class** — it is a document rather than an artifact instance, and the class enumeration does not grow for it | stated here so the absence is a decision |
 | **R8** | **The split of the guides' numbered rules is a joint act.** This record relocates the block and decides where it lands; the sibling governs the semantics of the rules it names. **Neither half is complete alone**, and this record states nothing about those semantics | **joint**, this milestone |
 | **R9** | The `intake-form` fence is **not** graded by `scripts/validate-artifacts.sh`, whose selector excludes the templates ahead of both arms. D5.6 puts the conformance arm in `ST` instead, and this row exists so the validator's silence is read as a routing decision rather than as coverage | the extraction slice |
-| **R10** | **The join key's own uniqueness is unasserted.** D2.6 question 3 requires each bullet to join *exactly one* row, and that totality holds today only because the classification table's labelled rows carry one distinct label each and one distinct `(section, label)` pair each — measured at `edadfa9` and reported live by `XT12`, but **required by nothing**. A row added with a duplicate label breaks nothing under the selected leading-segment key so long as the sections differ, and a row added with a duplicate pair breaks question 3 silently. The table's own *Totals* sentence reconciles class, scope and horizon against the row count and says nothing about key uniqueness. Closing it is one arm over `F5`, and it belongs beside D5.6's rather than in this record | the extraction slice |
+| **R10** | **Closed** — see the amendment below the table. **The join key's own uniqueness is unasserted.** D2.6 question 3 requires each bullet to join *exactly one* row, and that totality holds today only because the classification table's labelled rows carry one distinct label each and one distinct `(section, label)` pair each — measured at `edadfa9` and reported live by `XT12`, but **required by nothing**. A row added with a duplicate label breaks nothing under the selected leading-segment key so long as the sections differ, and a row added with a duplicate pair breaks question 3 silently. The table's own *Totals* sentence reconciles class, scope and horizon against the row count and says nothing about key uniqueness. Closing it is one arm over `F5`, and it belongs beside D5.6's rather than in this record | the extraction slice |
 | **R11** | **Question 6's undecidable half: whether a field that *ought* to carry a closed/open marker has one.** D2.4's measurement rules out deciding it from the option text's shape, so the conformance test grades well-formedness and leaves the obligation to a reviewer. The failure it admits is **fail-safe in the cheap direction** — an unmarked closed field is treated as open, so the interviewer records what was said rather than refusing a legitimate answer, which is the inverse and worse error. Named here so the asymmetry is a decision rather than an oversight | the extraction slice, with the marker authoring |
 | **R12** | **D2.3's rejection of declared option lists is the one MEDIUM-confidence decision in this record**, and § *Reversibility summary* says a Wave-1 spike could falsify it. It rests on the judgement that a reader of the bracket suffices rather than on a measurement of one. Until that spike runs, the single-authoritative-home limb of D2.3 is a decision taken on judgement while every other decision here rests on a live measurement with a firing control arm | as a spike before the extraction slice commits to the bracket |
 | **R13** | **The contract makes conduct free and leaves classification exactly as expensive as it was.** D6.3 states it; no row owned it. For a `trip-context`-shaped artifact the entry price is a classification row for nearly every label it carries, and that cost is the data model's rather than this contract's — which is a statement about *whose* cost it is, never a statement that it has been reduced. **The scalability claim this record makes is therefore about conduct alone**, and a reader comparing D6.1 against D6.2 should read it that narrowly | **accepted**, stated by D6.3; the data model's own, if anyone reduces it |
+
+**Amendment (2026-09-26, Saturday) — R10 is closed; this corrects a claim.** R10 says the join key's uniqueness is
+unasserted. It is now asserted: group `FT` of `scripts/test-artifact-schema.sh` refuses a field-table
+row that a bullet could join alongside another, and question 3 joins through that group's resolver,
+which names every candidate row and picks none when there is more than one. The guard landed beside
+the resolver, in `FT`, not beside the arm D5.6 adds, as the row says; because question 3 reads the
+table through that resolver, the guard and the join cannot disagree. The row stays, marked closed, so
+the residual stays readable.
 
 ## References
 

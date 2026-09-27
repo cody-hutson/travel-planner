@@ -18,6 +18,19 @@ publish: bound
 > trip's directory name; leave every other field exactly as it stands — they are
 > facts about the artifact class, not about this trip. Field shapes and permitted
 > values: `reference/data-architecture.md` → "Universal frontmatter".
+>
+> **The `intake-form` block below is not a field you fill in.** It tells the engine which
+> blocks of this file an interviewer may ask about, and in a trip's own file it only notes
+> which form the file was copied from. Leave it exactly as it stands.
+
+```intake-form
+form: templates/trip-context.template.md
+form-version: 2
+writer: block-owned
+write-ownership: CLAUDE.md § Write ownership — trip-context.md
+classification: reference/data-model.md § Field Scope → The classification
+output: trip-context.md
+```
 
 ---
 
