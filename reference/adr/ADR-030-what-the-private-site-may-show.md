@@ -338,11 +338,15 @@ is recorded inside `ADR-009` in its eighth amendment's form — a `Status:`-line
 marker, the superseded sentence retained as decided — in the Wave-1 change that ships the
 replacement, and not before: the first change after which the build renders an IN value that an
 `internal-hard` class binds (§ 4), because `reference/adr/README.md` § *Convention* records a
-supersession when it takes effect — the operator's T1, recorded on #1369. Two slices can be that
-change: the destination shortlist's class edit, in the site phase-model record's render slice, and
-the group snapshot slice of [the group-snapshot record](ADR-037-group-snapshot.md). Each carries the
-entry as a condition, and the first of them to land records it. This record's `Accepted` flip
-records nothing inside `ADR-009`.
+supersession when it takes effect — the operator's T1, recorded on #1369. Two slices bring such a
+value to the page: the destination shortlist's class edit, in the site phase-model record's render
+slice, and the group snapshot slice of [the group-snapshot record](ADR-037-group-snapshot.md). The
+shortlist and the group snapshot render only in IDEATION, which the build admits only from the
+phase-aware build of [the site-admission record](ADR-034-site-build-admission.md), so any of the
+three slices can be the change that completes the replacement. Each carries the entry as a
+condition, and whichever of them completes the replacement records it: the first change after which
+an IDEATION build renders the shortlist or the group snapshot. This record's `Accepted` flip records
+nothing inside `ADR-009`.
 
 **The journey records' bounds move by pointer.** Never-carry 2 of `ADR-025`, its § *Decision* 4 render
 prohibition and `ADR-010` § 4's bar on traveller identity reaching the render each carry a dated
@@ -465,8 +469,9 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
   the same act (safeguard 4). Today the profile verb names the reconcile step and does not run it.
 - **The destination shortlist's class edit**, with its § 9.1 authority and fence rows in one commit,
   in the site phase-model record's render slice. It carries the Decision-4 supersession entry inside
-  `ADR-009` as a condition: whichever of it and the group snapshot slice lands first records the
-  entry (§ 7).
+  `ADR-009` as a condition, as do the group snapshot slice and the site-admission record's phase-aware
+  build: whichever of the three completes the replacement — the first change after which an IDEATION
+  build renders the shortlist or the group snapshot — records the entry (§ 7).
 - **The neutral-label producer rules** of § 5, and a new neutral-label witness fixture.
 - **Safeguard 6's publish-time check**, and the measurement that decides whether it extends to free-text
   OUT items.

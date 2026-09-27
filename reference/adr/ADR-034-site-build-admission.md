@@ -201,7 +201,11 @@ what Wave 1 must specify; the build detail this record does not carry is kept, n
 Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 - **The phase-aware build**: the `site` row and its section, and the stem rule with the erasure reach
-  over every page file.
+  over every page file. It also carries the private-site record's § *Decision* 7 condition, the
+  Decision-4 supersession entry inside `ADR-009`, as do the shortlist's render slice and the group
+  snapshot slice: the build admits IDEATION only from this slice, and the shortlist and the group
+  snapshot render only there, so whichever of the three completes the replacement — the first change after which an IDEATION build
+  renders the shortlist or the group snapshot — records the entry.
 - **The page's file-name sites**, each disposed of one by one.
 - **Routed, not Wave 1's by this record:** the observation that `/trip research`'s filter keeps the
   ideation agent out on one limb only.
