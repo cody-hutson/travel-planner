@@ -7068,13 +7068,16 @@ ST_CF_FX="$(st_cf_fixture q6-middle)"; st_cf_plant "$ST_CF_FX" "$ST_CF_B1L" 'e.g
 st_cf_mustnotfire "CTL-ST-CF-Q6-MIDDLE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" 1 "the text open: is planted in the MIDDLE of the first bullet's bracket, after an example that opens it (line $ST_CF_B1L) — later text in a bracket is prose, and the contract grades the marker at its head alone"
 # Q6-NOMARK — every marker removed from a copy must leave the form conforming, since the contract
 # never grades whether a field owes one; and the Q6 arms must still be constructible on that copy,
-# because they plant a marker rather than needing one to exist. EVERY marker at the head of a
-# bracket comes off, a doubled head included, so none is left for the copy to be read with.
+# because they plant a marker rather than needing one to exist. EVERY marker at the head of the
+# field's bracket comes off, a doubled head included, so none is left for the copy to be read with.
+# "markers left" counts what remains at that same site — the one question 6 reads, the bracket
+# straight after the first `:**` of each labelled bullet — in the shape the strip removes. A bracket
+# later on the line is prose to question 6, so a marker there is not counted.
 ST_CF_FX="$ST_CF_DIR/q6-nomark.md"
 awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) && match($0, /:\*\* \[(closed|open): /) { s = RSTART; h = substr($0, RSTART + RLENGTH); while (match(h, /^(closed|open): /)) h = substr(h, RLENGTH + 1); $0 = substr($0, 1, s - 1) ":** [" h } { print }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FILE" > "$ST_CF_FX"
 ST_CF_NMV="$(st_cf_violations "$ST_CF_FX" "$ST_CF_REL" "$ST_DM")"
 ST_CF_NMT0="$(st_cf_tally "$ST_CF_LIVE" | tr '\n' ' ')"; ST_CF_NMT1="$(st_cf_tally "$ST_CF_NMV" | tr '\n' ' ')"
-ST_CF_NMK="$(awk '/^- .*\*\*[^*]+:\*\* \[(closed|open): / { n++ } END { print n + 0 }' "$ST_CF_FX")"
+ST_CF_NMK="$(awk -F'\t' 'FILENAME == ARGV[1] { if ($1 == "BULLET") b[$2] = 1; next } (FNR in b) { p = index($0, ":**"); if (p > 0 && substr($0, p + 3) ~ /^ \[(closed|open): /) n++ } END { print n + 0 }' <(printf '%s\n' "$ST_CF_SURF") "$ST_CF_FX")"
 ST_CF_NMP="$ST_CF_DIR/q6-nomark-planted.md"; cp "$ST_CF_FX" "$ST_CF_NMP"; st_cf_plant "$ST_CF_NMP" "${ST_CF_MKL:-$ST_CF_B1L}" 'Closed: '
 ST_CF_NMQ0="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$ST_CF_NMV")"
 ST_CF_NMQ1="$(awk -F'\t' '$1 == "Q6" { n++ } END { print n + 0 }' <<<"$(st_cf_violations "$ST_CF_NMP" "$ST_CF_REL" "$ST_DM")")"
