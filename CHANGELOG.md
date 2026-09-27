@@ -3,6 +3,73 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [Unreleased] — 2026-09-26 — The site serves every phase: the founding decision
+
+This release decides and builds nothing, deliberately. The private trip site has been built only once
+a destination is chosen and a plan exists, and nothing said what it may show a travel group before
+then, or what it may show about the people going. Three decision records settle that together,
+before any slice is cut, so the slices that follow build against one answer rather than each deciding
+it. Nothing in the engine behaves differently yet.
+
+**The private site belongs to the travel group, and nothing personal goes on a public page.**
+Personal information the group needs to coordinate the trip may appear on the passphrase-protected
+site: who is coming, their destination leanings and the shortlist built from them, when each can
+travel, how they get there and like to stay, what they like to do, and the wants and the occasion a
+traveller chooses to share. What is about the person rather than the trip stays off every page —
+health needs, money, identity documents, the details of people who did not fill in their own form,
+and who wants time apart from whom. A traveller marks what they want the group to see, and anything
+unmarked stays personal. A private occasion that becomes a planned event shows on the page as a
+concealed block with a generic title. The plan still honours every need, under neutral labels that
+name no one.
+
+**Seven safeguards come with that verdict.** Travellers are told at collection what the group will
+see. A page carrying group-only content is refused on the public publishing path by its structure,
+with no matching on values. People who did not fill in their own form are left out. A refusal or a
+removal is recorded through a step that brings the page's details up to date, and it reaches the site
+at the organizer's next update. Nothing goes live before the fix for the rotation defect tracked
+privately. Before every publish, on both paths and in every phase, a check reads every file the site
+build uses for passport and travel-document details — a mechanical check of the outcome, on top of
+the rule that the build never reads those fields. And the steps that write the files the site build
+reads never receive those fields at all: they work from a copy of the traveller details with them
+removed.
+
+**The site gets a shape for every phase.** One site, whose sections follow the trip's declared mode
+and whether a destination is recorded, through one declared table. While the group is still choosing,
+the page shows who is coming, a ranked shortlist of places, and a group snapshot of what each
+traveller chose to share about when and how they travel. Once a place is being explored, the
+shortlist leaves the page, so the recorded destination stays the one answer to where; the snapshot
+stays until planning starts, when today's full itinerary site takes over. A page never keeps an
+earlier phase's content, hidden or otherwise, and a report now says when the published page lags the
+latest build. A short rule of questions decides whether a proposed addition earns its own section,
+becomes a region of one, or is only a field of an existing one.
+
+**Each traveller's contact and emergency line reaches the group, in every phase.** A traveller may
+share one way to be reached during the trip. For each traveller who filled in their own form, the page
+shows their emergency contact's name — only when the traveller confirms the contact agreed to be
+listed — or that an emergency contact is on file with the organizer, or that none is. One line says
+the organizer is the person to tell if something happens. The way to reach an emergency contact is
+held by the organizer alone: when the form is filed, a script moves it into a file only the organizer
+reads, and no planning step or page ever touches it. The relationship to the traveller is never
+asked. A change that only removes or narrows what the group sees about someone never waits for the
+group's approval. `ADR-004` keeps every section this does not change, and a dated note inside it
+records the rest when these records are accepted.
+
+**Earlier records gain pointers where the new ones would otherwise contradict them.** `ADR-026`'s
+declared channel values gain the one its own table already used, and its citations into the publish
+command, which had drifted by line number, now name the section or quote the text. `ADR-009`,
+`ADR-008`, `ADR-012`, `ADR-025` and `ADR-010` each gain a dated pointer to what the new records
+decide. No earlier decision is reversed, narrowed or re-opened.
+
+**The honest limits.** No agent file, template, verb, schema, class row or script changes in this
+release: the records bind them and edit none. The shortlist's class, the new files, the site's
+admission of the early phases, the checks and the filing script are all later slices, named in the
+records together with the ones that must land at the same time. Some of the rules sit on the writers
+of those files, and only their labels can be graded; what a writer puts inside a line is conduct.
+Whether a traveller filed their own form can be inferred on the private page, and *no emergency
+contact on file* says something about a person — both are recorded as the costs of decisions taken.
+All three records land `Proposed`. The flip to `Accepted` is the maintainer's at the milestone close,
+the private-site record first, and it moves each record's status line and its index row together.
+
 ## [0.43.0] — 2026-09-25 — Reads the harness admits, and a gate that can say it cannot tell
 
 This release finishes what earlier corrective releases left partly done. Two defects changed how the
