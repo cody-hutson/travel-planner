@@ -320,28 +320,29 @@ repository's only personal-data control cannot see inside a binary.**
 
 `.github/workflows/depersonalization.yml` scans **added diff lines**. Both of its
 content checks read `git diff --unified=0 <base>..<head> …` and pass it through the
-same grep stages, each run on its own so that an error in any of them fails the gate:
+same two stages, each run on its own so that an error in either fails the gate:
 
 ```
-grep -E '^\+'           # keep the added lines
-grep -Ev '^\+\+\+'      # drop the `+++ b/<path>` file headers
-grep -EI "<pattern>"    # match the personal-data pattern
+LC_ALL=C sed -n '/^@@/,/^diff --git /{/^[+]/p;}'   # keep the added lines inside each hunk
+grep -aE "<pattern>"                              # match the personal-data pattern
 ```
 
-and that chain is blind to a binary twice over. `git diff` emits **no content
-lines** for a binary file — only `Binary files a/x and b/x differ` — so there is
-nothing for `grep -E '^\+'` to match; and `grep -I` **explicitly suppresses binary
-matches** even where content did reach it.
+and that chain is blind to a binary file, for a reason no flag on either stage can
+change. `git diff` emits **no content lines** for a binary file — only `Binary files
+a/x and b/x differ`, and no hunk — so there is nothing inside a hunk for the first
+stage to keep. The second stage reads everything it is given as text, so nothing that
+reaches it is lost to a byte `grep` takes for binary; a screenshot's pixels never
+reach it.
 
-Measured through those stages on a purpose-built repository, on macOS under BSD grep,
-in which a PNG and an SVG carried the **identical** leak tokens — an address at a
-personal-mail domain and an OS user-home path. Each check reported the SVG's added
-line; the PNG produced no added line at all, so neither check had anything to read.
-The PNG half is a property of `git diff` rather than of `grep`, so it holds on any
-runner. The SVG half depends on the `grep` doing the reading, so the gate re-measures
-it on the Linux runner every time it runs: before scanning anything, it passes
-planted SVG `<text>` lines through the same stages and fails unless each check
-reports its own.
+Measured through those stages on a purpose-built repository, on macOS under BSD sed
+and BSD grep, in which a PNG and an SVG carried the **identical** leak tokens — an
+address at a personal-mail domain and an OS user-home path. Each check reported the
+SVG's added line; the PNG produced no added line at all, so neither check had anything
+to read. The PNG half is a property of `git diff` rather than of the stages, so it
+holds on any runner. The SVG half depends on the tools doing the reading, so the gate
+re-measures it on the Linux runner every time it runs: before scanning anything, it
+passes planted SVG lines through the same stages and fails unless each check reports
+its own.
 
 **This paragraph once said the SVG was caught, and on the runner it was not.** The
 header filter was then the *basic* regex `grep -v '^\+\+\+'`. GNU grep, which the
