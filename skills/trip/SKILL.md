@@ -1076,7 +1076,17 @@ so a state keyed on it could never reach `updated` at all, and, § 3 giving the 
 to `is-updated` alone, the pending band would never decay either. It would **latch**: the
 organizer confirms, the plan republishes, and the site goes on telling every traveller a change
 is pending, indefinitely. **What clears `pending` is an approval recorded later than the newest
-entry** — one `confirm` away, an event with its own moment, and nothing rewritten.
+entry** — an event with its own moment, recorded by `confirm` at a terminal, and nothing rewritten.
+A change abandoned before any approval is the case to state: it leaves the working copy back on the
+published plan with nothing new to approve, and what clears the band then turns on whether the trip
+declares approvers. On a trip that declares them it is still one `confirm` away — a terminal act that
+leaves the published plan's own approvals meeting the threshold re-dates the approval record past
+the abandoned change's entry, the exception the paragraph below names — and where those approvals
+have fallen short of the threshold since publication, the band stays until an act meets it again.
+On a trip that declares nobody, `confirm` refuses the unchanged plan, so the band stays until a new
+change is confirmed and published. Where a revert, a retire or that exception clears the band, the
+next build shows an unchanged published plan as *recently updated* for up to seven days, with the
+plan's own count and code after a revert or that exception and with none after a retire.
 
 **The same record dates the `updated` state, and it is why that limb does not anchor to this
 run.** `confirm` writes `confirmed=` at the instant the approval event is recorded — the
@@ -1118,7 +1128,10 @@ so the pair's seven-day window runs from the last terminal act before the plan p
 later act re-dates it but the revert and that exception. A recording that leaves the
 threshold unmet for the plan the record already names rewrites only its count, too. So the
 state, its date and the pair all come from one record, and `update` refuses to push an approved
-change on a trip that declares approvers unless the render carries the pair. **This verb never
+change on a trip that declares approvers unless the render carries the pair. That refusal reads
+the pair and not the window, so a render built inside the seven-day window and pushed after it has
+closed passes, and its band — with the count and code it shows — has already decayed at open; a
+refresh at the terminal and a rebuild just before a late push are what keep the pair on show. **This verb never
 compares the code with the render it writes**, because it holds no digest of it;
 `scripts/publish-trip-site.sh` does, and refuses to push a render whose code is not its own
 itinerary's. **And it reads neither approver sidecar** — `.approvers` and `.approvals` hold roster
