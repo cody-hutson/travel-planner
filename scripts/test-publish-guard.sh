@@ -10213,6 +10213,91 @@ rv24_assert() { # <id>
 }
 rv24_assert "RV24"
 
+# ── RV25 — DQ3-1. A push the server applied but the clone never recorded — a connection dropped after
+# the server accepted it — left the clone's record of the remote behind for good. update leased its
+# push on that record, so every later update refused and its "re-run update" looped. update must
+# refresh the record before it leases, and converge: the next update succeeds with the live page
+# under the key .passphrase names. The push below goes BY PATH, so no remote-tracking ref moves.
+rv25_assert() { # <id> <rotate|update>
+  local id="$1" form="$2" name d bare pub e c rec0 srv0 rc live pf
+  local k1='rv-unrecorded-old-synthetic-key-34' k2='rv-unrecorded-new-synthetic-key-35'
+  name="rv25-$form-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  case "$form" in
+    rotate) e="$(rv_enc_shim "$SRC" "$k2")"; printf '%s\n' "$k2" > "$d/.passphrase" ;;
+    *)      e="$(rv_enc_shim "$SRC" "$k1")" ;;
+  esac
+  cp "$e/index.html" "$pub/index.html"; rm -rf "$e"
+  git -C "$pub" add index.html
+  git -C "$pub" -c user.name=t -c user.email=t@example.invalid commit -q -m "$form"
+  c="$(git -C "$pub" rev-parse HEAD)"
+  git -C "$pub" push -q "$bare" "$c:refs/heads/main"
+  rec0="$(git -C "$pub" rev-parse refs/remotes/origin/main 2>/dev/null)"; srv0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc=$?
+  live="$(rv_pushed_key "$bare")"; pf="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$srv0" != "$c" ] || [ "$rec0" = "$c" ]; then
+    FAIL "$id: the push was not applied-but-unrecorded as set up — nothing to grade. VERDICT WITHHELD"
+  elif [ "$rc" -ne 0 ]; then
+    FAIL "$id: after a $form push the server applied but the clone never recorded, update did not converge (rc=$rc) — the stale record kept it refusing"
+  elif [ -z "$live" ] || [ "$live" != "$pf" ]; then
+    FAIL "$id: update completed, but the live page is not under the key .passphrase names"
+  else
+    PASS "$id: after a $form push the server applied but the clone never recorded, the next update converges — the live page is under the key .passphrase names"
+  fi
+}
+rv25_assert "RV25-rotate" rotate
+rv25_assert "RV25-update" update
+
+# ── RV26 — the rewind guard the refreshed record needs. When the site's history was rewound from
+# elsewhere — pages withdrawn by a force-push from another machine — an update whose clone still
+# records the old tip must not publish those pages again. After refreshing its record it refuses,
+# naming the rewind, unless its old record is an ancestor of the new one.
+rv26_assert() { # <id>
+  local id="$1" name d bare p0 out rc n0 n1 said=0
+  local k1='rv-rewind-synthetic-key-36'
+  name="rv26-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  p0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  git -C "$bare" update-ref refs/heads/main "$p0"
+  n0="$(git -C "$bare" rev-list --count main)"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  n1="$(git -C "$bare" rev-list --count main)"
+  rv_has "$out" 'rewound' && said=1
+  if [ "$n0" != 1 ]; then
+    FAIL "$id: the remote was not rewound to its first page as set up — nothing to grade. VERDICT WITHHELD"
+  elif [ "$n1" != "$n0" ]; then
+    FAIL "$id: the update published pages the rewind had withdrawn"
+  elif [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: the update did not refuse naming the rewind (rc=$rc). VERDICT WITHHELD"
+  else
+    PASS "$id: after the site's history was rewound elsewhere, update refuses naming the rewind and publishes nothing — withdrawn pages stay withdrawn"
+  fi
+}
+rv26_assert "RV26"
+
+# ── RV27 — DQ3-4. A .passphrase that resolves to a directory took a rotation's key INTO that directory,
+# at a random name, while rotate reported success: the site was re-keyed and the key stranded. rotate
+# must refuse before anything is committed.
+rv27_assert() { # <id>
+  local id="$1" name d bare pub out rc h0 h1 ahead said=0
+  name="rv27-$RANDOM"; d="$(rv_fixture "$name")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  mkdir -p "$RVW/$name-keydir"; ln -s "$RVW/$name-keydir" "$d/.passphrase"
+  h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  h1="$(rv_head "$bare")"; ahead="$(git -C "$pub" rev-list --count refs/remotes/origin/main..HEAD 2>/dev/null)"
+  rv_has "$out" 'not a regular file' && said=1
+  if [ "$rc" -eq 0 ]; then
+    FAIL "$id: rotate reported success with its new key stranded inside a directory"
+  elif [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: rotate did not refuse a key path that is a directory (rc=$rc). VERDICT WITHHELD"
+  elif [ "$ahead" != 0 ] || [ "$h0" != "$h1" ]; then
+    FAIL "$id: rotate refused only after committing, or changed the site"
+  else
+    PASS "$id: rotate refuses a key path that is a directory before anything is committed — the clone and the site are exactly as they were"
+  fi
+}
+rv27_assert "RV27"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -10258,6 +10343,11 @@ md_flips main "RV13-subcommand" rv13s_assert "RV13-subcommand"
 for rv_c in missing-dir loop; do md_flips prove_key_path "RV22-$rv_c" rv22_assert "RV22-$rv_c" "$rv_c"; done
 md_flips cmd_update "RV23" rv23_assert "RV23"
 md_flips refuse_unpushed_residue "RV24" rv24_assert "RV24"
+# RV25 and RV26 are registered against the command they drive: the fetch and the rewind guard they
+# answer to are proven by mutation. RV27 is registered against the function it grades.
+for rv_c in rotate update; do md_flips cmd_update "RV25-$rv_c" rv25_assert "RV25-$rv_c" "$rv_c"; done
+md_flips cmd_update "RV26" rv26_assert "RV26"
+md_flips prove_key_path "RV27" rv27_assert "RV27"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
