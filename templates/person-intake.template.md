@@ -47,6 +47,11 @@ publish: internal-hard
 >   the placeholder text sitting there** — a leftover `[bracketed placeholder]` reads as
 >   *unanswered*, exactly like an empty line, and a profile still carrying its brackets
 >   reads as one nobody has filled in yet.
+> - A bracket that opens with `closed:` lists every answer that question takes; one that
+>   opens with `open:` lists suggestions, and an answer of your own is just as good. That
+>   opening word is a note to you, not part of your answer — replace the whole bracket
+>   either way. Skipping works exactly as it does everywhere else, and so does `none` for
+>   the needs below.
 > - For the repeatable need blocks, **add as many as you like and delete the rest.**
 >
 > **Your needs are why this file is worth keeping.** A need is non-negotiable — the boundary
@@ -57,6 +62,19 @@ publish: internal-hard
 > trip form, not here.
 >
 > Placeholders only in this template — no real personal data in the template file itself.
+>
+> **The `intake-form` block below is not a field you fill in.** It tells the engine what this
+> form asks, and in a finished record it only notes which form was filled in. Leave it
+> exactly as it stands.
+
+```intake-form
+form: templates/person-intake.template.md
+form-version: 1
+writer: human
+boundary: <!-- PROFILE-END -->
+classification: reference/data-model.md § Field Scope → The classification
+output: people/<person>.md
+```
 
 ---
 
@@ -100,7 +118,7 @@ publish: internal-hard
 > The kind of place you're comfortable sleeping in. Who you share a room with is a
 > per-trip answer and is asked on the trip form instead.
 
-- ⭐ **Lodging style:** [Hotel, rental, or hostel — plus anything that's a must for you — e.g., "rental with a kitchen", "hotel; need a lift rather than stairs", "anywhere quiet". Skip if you're happy with whatever the group picks.]
+- ⭐ **Lodging style:** [open: Hotel, rental, or hostel — plus anything that's a must for you — e.g., "rental with a kitchen", "hotel; need a lift rather than stairs", "anywhere quiet". Skip if you're happy with whatever the group picks.]
 
 > This refines a trip's Accommodation — it doesn't choose it. The property, the booking, and
 > the room list stay in each trip's own file.
@@ -112,7 +130,7 @@ publish: internal-hard
 > How you like to spend on a trip — your personal lean. Skip either part if you'd
 > rather not say.
 
-- ⭐ **Comfort range:** [Your day-to-day spend comfort — keep it lean / mid-range / spend freely, plus anything worth adding — e.g., "mid-range; happy with simple lunches and a nice dinner", "keep it lean", "comfortable spending freely". Skip if you'd rather not say.]
+- ⭐ **Comfort range:** [open: Your day-to-day spend comfort — keep it lean / mid-range / spend freely, plus anything worth adding — e.g., "mid-range; happy with simple lunches and a nice dinner", "keep it lean", "comfortable spending freely". Skip if you'd rather not say.]
 - **Splurge appetite:** [What you'd happily pay up for versus stay lean on — e.g., "splurge on one standout meal, save on the rest", "pay for comfort on transit, casual on food". Skip if nothing stands out.]
 
 > This is *your* personal lean. It refines — it doesn't replace — the trip-level budget
@@ -139,13 +157,13 @@ publish: internal-hard
 > an em dash means "no answer", but for needs the difference between *"I have none"* and
 > *"not asked yet"* is load-bearing, so say it in words.
 
-- **Category:** [One of: Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other — e.g., Heat]
+- **Category:** [closed: One of: Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other — e.g., Heat]
 - ⭐ **Specific:** [Your personal detail — the *how much* and the *what exactly*. **One line is a complete first pass.** e.g., start with "no direct sun after early afternoon", sharpen later to "fades fast above ~82°F / 28°C in direct sun; needs shade or indoors by early afternoon on hot days." Skip the block entirely if this one doesn't apply to you.]
 
-- **Category:** [Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other]
+- **Category:** [closed: Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other]
 - **Specific:** [Second must-have — e.g., "prefers under ~15 minutes continuous walking before a sit-down break; step-free routing." Delete this block if you have only one need.]
 
-- **Category:** [Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other]
+- **Category:** [closed: Heat / Mobility / Dietary-health / Rest / Budget cap / Timing / Sensory / Other]
 - **Specific:** [Third must-have — e.g., "tree-nut allergy; carries an epi-pen; needs nut-free confirmation before any tasting menu." Delete this block if it doesn't apply.]
 
 > Add as many need blocks as you like; delete the spares. Each need is exactly one Category.
@@ -158,10 +176,10 @@ publish: internal-hard
 
 > How you like a trip to *feel*, day to day. Skip any line that doesn't fit.
 
-- ⭐ **Pace:** [packed / balanced / relaxed — e.g., "balanced: a couple of things a day with room to breathe." Skip if you're easy.]
-- **Day rhythm:** [morning or evening person — e.g., "early riser, fading by 9 PM", "slow mornings, alive at night." Skip if it varies.]
+- ⭐ **Pace:** [open: packed / balanced / relaxed — e.g., "balanced: a couple of things a day with room to breathe." Skip if you're easy.]
+- **Day rhythm:** [open: morning or evening person — e.g., "early riser, fading by 9 PM", "slow mornings, alive at night." Skip if it varies.]
 - **Novelty vs comfort:** [how far you like to stray from the familiar — e.g., "love the unfamiliar", "a bit of adventure, but a comfortable base." Skip if no strong lean.]
-- **Planning style:** [planned / spontaneous — e.g., "like a loose plan with room to wander", "book everything in advance." Skip if you don't mind.]
+- **Planning style:** [open: planned / spontaneous — e.g., "like a loose plan with room to wander", "book everything in advance." Skip if you don't mind.]
 
 ---
 
@@ -179,7 +197,7 @@ publish: internal-hard
 > `festivals & events` · `spa & wellness`
 
 - ⭐ **Interests:** [Copy across the ones that spark from the list above, comma-separated — e.g., "museums, food & markets, walking a neighbourhood." Skip if you're open to anything.]
-- **Cuisine appetite:** [How you eat when you travel — adventurous / familiar / specific loves & avoids — e.g., "adventurous; love street food; not big on seafood." Skip if no strong feelings.]
+- **Cuisine appetite:** [open: How you eat when you travel — adventurous / familiar / specific loves & avoids — e.g., "adventurous; love street food; not big on seafood." Skip if no strong feelings.]
 
 > This is a soft signal that informs selection. Whether you have been to a *particular*
 > destination before, and what you already did there, are per-trip answers and are asked on
@@ -222,7 +240,7 @@ file first, then follow these rules exactly.
    text in the file is a hint for you — do not read it out as a script.
 3. **Offer the choices.** Where a field lists options, or the section carries a menu, put
    those in front of them. Recognising something is far faster than recalling it.
-4. **Do the starred fields first.** The six fields marked with a star are the two-to-three
+4. **Do the starred fields first.** The fields marked with a star are the two-to-three
    minute pass. When they are done, say what is left and ask whether they want to keep
    going, stop there, or jump to a particular section. All three are fine answers.
 5. **"Skip" is always valid.** Accept it immediately and move on. Never push twice.
@@ -243,12 +261,10 @@ else. It never goes in the frontmatter fence.
 `templates/traveler-intake.template.md`, and do not record it here.
 
 ### Step 1 — Destination leanings
-Fields: **Would love**, **Rather skip**.
 Where would they love to go in general, and anywhere they would rather avoid. These are
 standing leanings, not a vote on any one trip.
 
 ### Step 2 — Getting there & back
-Fields: **Leaving from** (starred), **Journey comfort**, **Passport**.
 Where do they usually set out from? Journey comfort covers long-haul, red-eyes, layovers,
 and whether they lean towards flying, train, or driving. Passport is for international
 trips and is **country and expiry month only — never a passport number.** If they start to
@@ -259,16 +275,13 @@ rather than **keeping their words** (rule 7): a second person's passport never g
 line. Anyone else whose entry requirements need checking has a record of their own.
 
 ### Step 3 — Where you stay
-Fields: **Lodging style** (starred).
 Hotel, rental, or hostel — plus anything that is a must for them (a kitchen, a lift, quiet).
 
 ### Step 4 — Budget appetite
-Fields: **Comfort range** (starred), **Splurge appetite**.
 Offer the three shapes — keep it lean, mid-range, or spend freely — then ask what they would
 happily pay up for. This is their personal lean, not any group's budget.
 
 ### Step 5 — Needs — the must-haves
-Fields per block: **Category**, **Specific** (starred).
 This is the important one, and it is the reason this record exists. Ask whether anything has
 to be worked around for them: heat, walking or stairs, food or allergies, rest, a spending
 ceiling, a fixed time, noise or crowds. One block per need, in their own words, as specific
@@ -281,23 +294,24 @@ none"* and *"not asked yet"* is load-bearing, so say it in words. Do not link th
 any trip rule — that link is computed when a trip reads this record.
 
 ### Step 6 — Travel style & pace
-Fields: **Pace** (starred), **Day rhythm**, **Novelty vs comfort**, **Planning style**.
 Offer packed, balanced, or relaxed. Then morning or evening person, how far they like to
 stray from the familiar, and planned versus spontaneous.
 
 ### Step 7 — Interests & tastes
-Fields: **Interests** (starred), **Cuisine appetite**.
 Read out the tick list from the section and let them pick — three or four is plenty. Then how
 they eat when they travel, including anything they avoid.
 
 ### Step 8 — People dynamics & togetherness
-Fields: **Solo, I'd**.
 What they would love to do on their own given the chance.
 
 ### Assistant — producing the finished file
 
 When the interview is done, output **one markdown code block** containing the record and
 nothing else. No preamble, no commentary, no summary afterwards.
+
+Fence that code block with `~~~` rather than with backticks: the record carries a
+backtick-fenced `intake-form` block of its own, and a backtick fence around the record would
+end at that block's closing line, cutting the record short.
 
 - Include **everything above the `# END OF PROFILE` line**, and nothing from below it.
 - Keep every field label **exactly as written**, including the `**bold**` and the star

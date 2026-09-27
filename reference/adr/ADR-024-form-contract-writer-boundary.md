@@ -190,10 +190,25 @@ predicate rather than a file predicate; and the arm grades per region while regi
 **Ground for 2D — it declares no new vocabulary.** The markers already exist and are already
 load-bearing: `[DERIVED]` and `[ENRICH]` live in heading text and the writer table is keyed on
 exactly those markers. The inheritance rule is *already stated* in that table — an untagged `###` or
-`####` sub-block inherits its parent `##` section's row. So the fence gains a key that is an
-**address** pointing at the writer table, never an enumeration, which is what the prior record's
-D2.2 requires when it says the declaration points and never copies. The fence count stays exactly
-one.
+`####` sub-block inherits its parent `##` section's row. So the fence **exchanges one key for
+another**: it gains a key that is an **address** pointing at the writer table, never an enumeration,
+which is what the prior record's D2.2 requires when it says the declaration points and never copies;
+and it gives up `boundary:`, because decision 1's consequence is that a single-cut boundary does not
+generalize. The fence count stays exactly one.
+
+**Amendment (2026-09-26, Saturday) — the version-2 key set, and the record it is read from; this
+corrects a claim.** This section said the fence *gains* a key. Read that way, a version-2 fence carries
+every key the prior record's worked fence declares, `boundary:` among them, and one more — but a
+block-owned form has no single-cut boundary for `boundary:` to name, which is decision 1's own
+consequence. Nor did this record say where the set is declared: it carries no worked fence of its own,
+and adding one would widen a coverage statement, which the amendment clause does not admit. **Corrected
+in place:** the fence exchanges one key for another. At `form-version: 2` the key set is the prior
+record's worked fence, read live, with that fence's one `boundary:` key exchanged in place for
+`write-ownership:`, whose value addresses the writer table in the grammar `classification:` already
+uses — a path, then a section anchor. The set is declared once, in the prior record, and the conformance
+arm holds only the exchange. The gain's ground is this decision's address; the drop's is decision 1.
+No decision changes: one fence, extent from the heading tree, and an address rather than an
+enumeration.
 
 **Extent, expressed so both readers compute it identically.** A region's extent is **the heading and
 everything beneath it until the next heading of equal or higher level**. That is ordinary markdown
@@ -244,10 +259,10 @@ artifact it cannot distinguish an engine write from a human one.
 
 **The shape 3D takes is already in the corpus.** The prior record's D5.5 is a **must-fire negative
 arm**: it inserts a field-shaped line below the boundary and *requires the refusal to fire*. This
-decision is that shape lifted one level — insert a write into a region whose writer is not the
-interviewer, and require the refusal. That is this repository's own Discriminating-Evidence Rule,
-which the assertion suite states in its own words: a PASS may never be reached on a branch a
-degenerate outcome also reaches.
+decision is that shape lifted one level — insert a **declared** field, the only write an interviewer
+can make, into a region whose writer is not the interviewer, and require the refusal. That is this
+repository's own Discriminating-Evidence Rule, which the assertion suite states in its own words: a
+PASS may never be reached on a branch a degenerate outcome also reaches.
 
 ### 4. The version axis
 
@@ -260,8 +275,21 @@ degenerate outcome also reaches.
 **Ground for 4A, and this is the answer to the migration question.** Under decision 1 a v1 form *is*
 the degenerate case, so both guided forms remain conforming **unedited**. **There is no migration.**
 A mixed-version corpus means one arm carrying a version branch rather than a second arm beside it: a
-v1-declared form is graded on exactly the prior record's own question set, and a v2-declared form
-additionally gets the region questions.
+v1-declared form is graded on exactly the prior record's own question set, and a v2-declared form on
+that same question set **lifted per region**, with the same codes — question 2 grades each region's
+extent rather than a single-cut boundary, question 4 that no declared field sits in a region whose
+writer is not the interviewer, and question 5 keeps the fence's agreement with the frontmatter and the
+refusal of a marked field in an interviewable region, without the `writer: human` a block-owned form
+cannot declare.
+
+**Amendment (2026-09-26, Saturday) — the version-2 questions are the prior record's, lifted per
+region; this corrects a claim.** This section said a v2-declared form *additionally* gets the region
+questions, which reads as the prior record's questions plus further ones. A block-owned form cannot
+answer questions 2, 4 and 5 as they are written: it has no single-cut boundary for question 2 to find or
+for question 4 to stop at, and its `writer:` is not `human`, which question 5 requires. **Corrected in
+place:** a v2-declared form is graded on the same questions, each lifted per region, with the same
+codes — decision 1's whole form being the degenerate region. No decision changes: one arm, one version
+branch, and a v1-declared form graded on the prior record's questions unchanged.
 
 *Rejected — 4B.* It requires editing two forms that are conformant and were *made* so by the
 immediately preceding release — churn with no defect to fix, and it re-opens that record's
@@ -302,8 +330,19 @@ with the arm it must land in.
 
 **The control arm, because an arm without one grades nothing.** Both of the following are required: a
 **sensitivity arm**, where the same probe over a conformant region returns green; and a **must-fire
-negative arm**, where a field-shaped bullet inserted under a no-writer heading drives the conformance
-verdict red.
+negative arm**, where a **declared** field — a field-shaped bullet whose (section, label) the
+classification declares — inserted under a no-writer heading drives the conformance verdict red.
+
+**Amendment (2026-09-26, Saturday) — the must-fire arm inserts a declared field; this corrects a
+claim.** This section and decision 3 said a field-shaped bullet inserted under a no-writer heading drives
+the verdict red. Read literally, that is refuted by the form it was written for: measured at
+`f48847a`, the two `[DERIVED]` blocks already carry 7 field-shaped bullets and no classification row
+declares any of them. Those bullets are not a defect under any decision above: they are the blocks'
+own derived lines, which no interviewer can address, because an interviewer writes only a pair the
+classification declares. A rule that reddened every inserted bullet would redden the form as it stands.
+**Corrected in place:** the arm inserts a **declared** field, and an undeclared twin inserted at the same
+place must not fire. No decision changes: the must-fire negative arm still grades a write into a region
+whose writer is not the interviewer, and a declared field is the only write an interviewer can make.
 
 **A mechanical constraint this decision places on decision 6.** The suite reduces by any-fail and,
 under its strict skip mode, an undeclared skip also fails. Combined with the empty-population clause

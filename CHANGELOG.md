@@ -73,6 +73,77 @@ contact on file* says something about a person — both are recorded as the cost
 All nine land `Proposed`. The flip to `Accepted` is the maintainer's at the milestone close,
 the private-site record first, and it moves each record's status line and its index row together.
 
+## [0.45.0] — 2026-09-27 — A form can say what it asks
+
+Two earlier releases decided what makes an intake form interviewable, and where the boundary sits in
+a form several writers own. This release builds both into the forms, behind a required check. Until
+now interviewability was prose: nothing declared which fields either guided form offers, the trip
+file's form declared nothing, and nothing graded them. A labelled field added below a guided form's
+end-of-profile line changed the checks' counts, and every check stayed green.
+
+**Each intake form now declares what it asks, in one fenced block a machine reads.** Above their
+questions, the traveller's trip form and the durable person form carry an `intake-form` block that
+points rather than copies: the form and its version, its writer, where its questions end, where its
+fields are classified, and what it produces. Each marks a choice field's list as the whole
+admissible set or only suggestions, and its output contract asks for the record in a `~~~` fence,
+since the declaration's closing line would end a plain code block early and strand the answers. The
+trip file's form declares itself per region by addressing, not copying, `CLAUDE.md`'s ownership
+table, and reports its derived blocks as declared exclusions, not fields.
+
+**A form that drifts from its declaration now fails a required check.** The artifact-schema suite
+grades each guided form against `ADR-023`'s contract: one closed declaration above the boundary
+carrying each key once, a whole-line boundary, every labelled field joined to exactly one
+classification row, nothing labelled below the boundary, a writer matching the file, and every
+choice marker well-formed at its bracket's head. The trip file's form is graded per region against
+`ADR-024`: a declared field where the interviewer may not write fails by name, citing the table's
+row. Every question has a must-fire arm, counted against every code and emission site, so a grader
+that quietly drops a question fails its coverage check.
+
+**`ADR-023` and `CLAUDE.md` § *Write ownership* are now read by a required check.** Both were prose
+a reviewer read. The suite takes the contract's keys from `ADR-023`'s one worked declaration,
+refusing a superseded record. It reads the ownership table for the trip-file regions an interviewer
+may write, pinning each row's verdict keyed by its text, not its position. A verdict-moving table
+edit fails the check, naming the row and both verdicts, so the same change must update the pin: who
+may write a block is now decided on purpose. A single meaning-preserving edit lets a writer's class
+read from the table's Writer column alone. Both records carry dated amendments correcting claims
+found wrong before the build; one found during it is named under the limits.
+
+**The classification table covers the trip file's form, and is read one way everywhere.** The data
+model gains a row for every field in the interviewer-writable regions, and every reader reaches a
+row through one resolver keyed on section and label. A section reaches a longer heading only where
+the remainder opens on punctuation, so `Needs` still reaches `Needs — the must-haves` and
+`Destination` no longer reaches `Destination leanings`. Both the data model and the record command's
+extraction step state that rule, as the check requires. A duplicate section-and-label row fails by
+name, closing `ADR-023`'s residual R10, that the join key's uniqueness was unasserted, as a dated
+amendment records.
+
+**The restatements the contract retired are gone.** Each guided form's per-section `Fields:` lines
+and the numeral in its interview rules restated what the form carries; they are deleted, not moved.
+The starred-question guard now keeps two homes in agreement, the banner's count and the starred
+fields, where it used to keep four.
+
+**What the check costs, measured rather than estimated.** The grader is 420 lines, 240 in the
+evaluator plus 180 in the region reader it calls, against roughly 325 accepted when it was scoped,
+and it has 39 emission sites, up from 22 before the trip file's form joined. The growth comes
+chiefly from the pinned ownership verdicts and the separate region reader, both decided at scoping;
+it is reported, not narrowed.
+
+**What the cost claim can and cannot say yet.** `ADR-023` prices the next interviewable form in
+fifteen units, but both forms here are retrofits, which exercise few of them. They show only that
+the declaration block and markers repeat at equal authoring cost across the two retrofits, plus one
+form-specific clause each and a per-field judgement of whether a marker is owed: narrower than
+confirming the claim, whose subject is a new form where conduct would be free.
+
+**The honest limits.** Nothing in this release interviews anyone through the trip file's form: the
+interviewer that asks what it declares is later work. A new trip-file block the ownership table
+omits is graded under its default row, as interviewable, where `ADR-024` says its exclusion reaches
+such a block by construction; an unclassified field in it still fails, citing the rule for unlisted
+blocks, and the rest of that residual is recorded, not closed. An arm run against a form already
+failing that arm's question adds a second failure beside the real one; the run still fails closed,
+and the grading fix is tracked, with a relaxed rule for a declaration's key lines that no
+must-not-fire arm yet covers. Whether a field owes a marker stays a reviewer's call; the check
+grades the decidable half, and says so in its output.
+
 ## [0.44.1] — 2026-09-26 — The personal-data gate reads the lines a pull request adds
 
 **The personal-data gate now reads what a pull request adds.** The required check that keeps
