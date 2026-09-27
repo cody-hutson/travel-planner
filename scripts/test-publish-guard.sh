@@ -10298,6 +10298,153 @@ rv27_assert() { # <id>
 }
 rv27_assert "RV27"
 
+# ── RV26-retry — DQ4-1. The rewind refusal fired once. Its own fetch had already moved the clone's
+# record to the rewound tip, so the same command run again — the natural retry after any refusal —
+# found an old record that was an ancestor of the new one, passed the guard, and published the
+# withdrawn pages. A refused rewind must stay refused until the clone is removed, which is the
+# remedy the refusal names.
+rv26r_assert() { # <id>
+  local id="$1" name d bare p0 out1 out2 rc1 rc2 n_pre n0 n1 n2 said1=0 said2=0
+  local k1='rv-rewind-retry-synthetic-key-37'
+  name="rv26r-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  p0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  n_pre="$(git -C "$bare" rev-list --count main)"
+  git -C "$bare" update-ref refs/heads/main "$p0"
+  n0="$(git -C "$bare" rev-list --count main)"
+  out1="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc1=$?
+  n1="$(git -C "$bare" rev-list --count main)"
+  out2="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc2=$?
+  n2="$(git -C "$bare" rev-list --count main)"
+  rv_has "$out1" 'rewound' && said1=1
+  rv_has "$out2" 'rewound' && said2=1
+  if [ "$n_pre" != 3 ] || [ "$n0" != 1 ]; then
+    FAIL "$id: the site did not carry two update pages that a rewind to its first page withdrew, as set up ($n_pre, then $n0) — nothing to grade. VERDICT WITHHELD"
+  elif [ "$rc1" -ne 1 ] || [ "$said1" -eq 0 ] || [ "$n1" != "$n0" ]; then
+    FAIL "$id: the first update after the rewind did not refuse naming it with nothing published (rc=$rc1) — that is the case RV26 grades. VERDICT WITHHELD"
+  elif [ "$n2" != "$n0" ]; then
+    FAIL "$id: the same update run again after the rewind refusal published the withdrawn pages (the site went from $n0 to $n2 commits) — the refusal's own fetch left the record at the rewound tip, so the retry passed"
+  elif [ "$rc2" -ne 1 ] || [ "$said2" -eq 0 ]; then
+    FAIL "$id: the retry did not refuse naming the rewind (rc=$rc2). VERDICT WITHHELD"
+  else
+    PASS "$id: after the site's history was rewound elsewhere, update refuses on the retry too, naming the rewind, and publishes nothing — the refusal holds until the clone is removed"
+  fi
+}
+rv26r_assert "RV26-retry"
+
+# ── RV28 — DQ4-1, its second path. With no record of the remote in the clone, the rewind guard had
+# nothing to compare and was skipped: the fetch created the record at the rewound tip, and the
+# update published the withdrawn pages. An update that cannot read its record must refuse, naming
+# it, before anything reaches the site — a fresh clone always carries a record, so removing the
+# clone, the remedy the refusal names, converges.
+rv28_assert() { # <id>
+  local id="$1" name d bare pub p0 out rc n_pre n0 n1 hasrec=0 said=0
+  local k1='rv-no-record-rewind-synthetic-key-38'
+  name="rv28-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  p0="$(rv_head "$bare")"
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1
+  n_pre="$(git -C "$bare" rev-list --count main)"
+  git -C "$bare" update-ref refs/heads/main "$p0"
+  git -C "$pub" update-ref -d refs/remotes/origin/main
+  git -C "$pub" rev-parse --verify -q refs/remotes/origin/main >/dev/null && hasrec=1
+  n0="$(git -C "$bare" rev-list --count main)"
+  out="$( ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  n1="$(git -C "$bare" rev-list --count main)"
+  rv_has "$out" 'could not read the record' && said=1
+  if [ "$n_pre" != 3 ] || [ "$n0" != 1 ] || [ "$hasrec" -eq 1 ]; then
+    FAIL "$id: the site was not rewound with the clone's record removed, as set up — nothing to grade. VERDICT WITHHELD"
+  elif [ "$n1" != "$n0" ]; then
+    FAIL "$id: an update whose clone had no record of the remote published the pages a rewind withdrew (the site went from $n0 to $n1 commits) — with nothing to compare, the rewind guard was skipped"
+  elif [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: the update did not refuse naming the missing record (rc=$rc). VERDICT WITHHELD"
+  else
+    PASS "$id: an update whose clone has no record of the remote refuses, naming it, and publishes nothing — a rewind cannot pass the guard by the record being absent"
+  fi
+}
+rv28_assert "RV28"
+
+# ── RV29 — DQ4-2. An update that could not fetch the site stopped before its key check. When a
+# rotation had recorded a new key by then, the update kept its own commit, a page under the key the
+# rotation replaced, and its "re-run update" remedy pushed that page into the site's history. The
+# fetch failure must run the key check first, as the push failure does: take back exactly its own
+# commit and say so, so the next update publishes no page under the replaced key. The git shim
+# below stands for both events at the one fetch the script makes: the rotation's key write, then
+# the unreachable site.
+rv29_assert() { # <id>
+  local id="$1" name d bare pub out rc rc2 h0 h1 ahead injected=0 claimed=0 hist=0
+  local k1='rv-fetch-fail-old-synthetic-key-39' k2='rv-fetch-fail-new-synthetic-key-40'
+  name="rv29-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"; pub="$d/.publish"
+  h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; rv29_d="$d"; rv29_k2="$k2"; rv29_mark="$RVW/$name.injected"
+            git() {   # a rotation records its key, then the site cannot be reached when the update fetches
+              if [ "${1:-}" = -C ] && [ "${3:-}" = fetch ] && [ ! -e "$rv29_mark" ]; then
+                : > "$rv29_mark"
+                printf '%s\n' "$rv29_k2" > "$rv29_d/.passphrase"
+                return 1
+              fi
+              command git "$@"
+            }
+            set -e; cmd_update "$d" ) 2>&1 )"; rc=$?
+  [ -e "$RVW/$name.injected" ] && injected=1
+  h1="$(rv_head "$bare")"
+  ahead="$(git -C "$pub" rev-list --count refs/remotes/origin/main..main 2>/dev/null)"
+  rv_has "$out" 'discarded its own commit' && claimed=1
+  ( unset STATICRYPT_PASSWORD; set -e; cmd_update "$d" ) >/dev/null 2>&1; rc2=$?
+  rv_history_has_key "$bare" "$k1" && hist=1
+  if [ "$injected" -eq 0 ]; then
+    FAIL "$id: the fetch after the update's commit was never reached — the interleaving was not reproduced. VERDICT WITHHELD"
+  elif [ "$hist" -eq 1 ]; then
+    FAIL "$id: a page under the key the rotation replaced reached the site's history — the update that could not fetch kept its commit, and the next update carried it"
+  elif [ "$rc" -ne 1 ] || [ "$claimed" -eq 0 ] || [ "$ahead" != 0 ] || [ "$h0" != "$h1" ]; then
+    FAIL "$id: the update that could not fetch after a key change did not stop, take back exactly its own commit and say so (rc=$rc, claimed=$claimed, ahead=$ahead)"
+  elif [ "$rc2" -ne 0 ]; then
+    FAIL "$id: CONTROL — the next update, with the site reachable, did not complete (rc=$rc2), so the history check above graded nothing"
+  else
+    PASS "$id: an update that cannot fetch after a rotation recorded a new key takes back its own commit and says so, and the next update publishes no page under the replaced key"
+  fi
+}
+rv29_assert "RV29"
+
+# ── RV30 — review 4's I-5, the write-time guard. rotate proves its key path a regular file before
+# committing, and write_passphrase_file checks again at the write, for a directory put in place
+# between the two. Nothing graded that second check, so removing it moved no arm. It must refuse,
+# record nothing into the directory, and leave the site as it was.
+rv30_assert() { # <id>
+  local id="$1" name d bare out rc h0 h1 left injected=0 said=0
+  local k1='rv-write-time-synthetic-key-41'
+  name="rv30-$RANDOM"; d="$(rv_fixture "$name" "$k1")"; bare="$RVW/origin/$name-trip.git"
+  h0="$(rv_head "$bare")"
+  out="$( ( unset STATICRYPT_PASSWORD; rv30_d="$d"; rv30_mark="$RVW/$name.injected"
+            rv30_def="$(declare -f refuse_unpushed_residue)"; eval "rv30_real_rur ${rv30_def#refuse_unpushed_residue}"
+            refuse_unpushed_residue() {   # the key path was proven a regular file; THEN a directory takes its place
+              rv30_real_rur "$@" || return $?
+              if [ ! -e "$rv30_mark" ]; then
+                : > "$rv30_mark"
+                mv "$rv30_d/.passphrase" "$rv30_d/.passphrase-before"
+                mkdir "$rv30_d/.passphrase"
+              fi
+            }
+            set -e; cmd_rotate "$d" ) 2>&1 )"; rc=$?
+  [ -e "$RVW/$name.injected" ] && injected=1
+  h1="$(rv_head "$bare")"
+  left="$(find "$d/.passphrase" -mindepth 1 2>/dev/null)"
+  rv_has "$out" 'not a regular file' && said=1
+  if [ "$injected" -eq 0 ] || [ ! -d "$d/.passphrase" ]; then
+    FAIL "$id: the directory never took the key path's place between the proof and the write — nothing to grade. VERDICT WITHHELD"
+  elif [ "$rc" -eq 0 ] || [ -n "$left" ]; then
+    FAIL "$id: rotate recorded its key into a directory that replaced .passphrase after the path was proven (rc=$rc) — the write-time check did not hold"
+  elif [ "$rc" -ne 1 ] || [ "$said" -eq 0 ]; then
+    FAIL "$id: rotate did not refuse the directory at the write, naming it (rc=$rc). VERDICT WITHHELD"
+  elif [ "$h0" != "$h1" ]; then
+    FAIL "$id: the refusal at the write still changed the site"
+  else
+    PASS "$id: a directory put in place of .passphrase after rotate proved the path is refused at the write — nothing is recorded into it and the site is as it was"
+  fi
+}
+rv30_assert "RV30"
+
 # ── The MD registrations — each re-runs the SAME argv its live arm ran, with the subject
 # removed. RV6 and RV12 were registered above, against the real encrypt_to_tmp.
 md_flips cmd_rotate  "RV1"  rv1_assert  "RV1"  set
@@ -10348,6 +10495,13 @@ md_flips refuse_unpushed_residue "RV24" rv24_assert "RV24"
 for rv_c in rotate update; do md_flips cmd_update "RV25-$rv_c" rv25_assert "RV25-$rv_c" "$rv_c"; done
 md_flips cmd_update "RV26" rv26_assert "RV26"
 md_flips prove_key_path "RV27" rv27_assert "RV27"
+# RV26-retry and RV28 are registered against the command they drive, as RV25 and RV26 are: the
+# restored record and the missing-record refusal they answer to sit inside cmd_update and are proven
+# by mutation. RV29 and RV30 are registered against the function whose check each one grades.
+md_flips cmd_update "RV26-retry" rv26r_assert "RV26-retry"
+md_flips cmd_update "RV28" rv28_assert "RV28"
+md_flips require_key_of_record "RV29" rv29_assert "RV29"
+md_flips write_passphrase_file "RV30" rv30_assert "RV30"
 
 # Teardown: mocks go; the shimmed production functions are RE-DEFINED from the saved
 # definitions, never unset — `unset -f` here would delete the real ones.
