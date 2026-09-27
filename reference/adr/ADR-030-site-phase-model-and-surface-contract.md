@@ -670,7 +670,492 @@ shortlist's class — are both lifted by Wave-1 edits this record decides, and `
 already admits any mode and any destination. The no-form branch does not arise, and that criterion
 needs no revisit.
 
-*The remaining Decision subsections are authored in the next commit on this release branch.*
+### 5. The build verb's admission, and the pre-plan classes
+
+**The admission dispositions.**
+
+| State σ | Disposition | Where it is expressed |
+|---|---|---|
+| IDEATION × UNDECIDED | **RUN** | the row |
+| IDEATION × DECIDED | **RUN** | the row |
+| a plan mode × DECIDED | **RUN**, unchanged | the row |
+| a plan mode × UNDECIDED | **the verb's own declared stop**, naming the remedy: record the destination with `/trip-record destination`, or return to IDEATION with `/trip-record mode` | the verb's own section; a declared non-row of the render table, as `ARCHIVED` is |
+| `UNSET` × any | **REFUSE**, carrying `G5`'s remedy: `templates/trip-context.template.md` for the field, and `/trip-record mode` to set it | the row: its mode cell names the five modes and never reads `any` |
+| `ARCHIVED` | not served, unchanged | the row |
+
+**The row, as Wave 1 writes it:** `site · ACTIVE · IDEATION, DISCOVERY, ENRICHMENT, ITERATION,
+RESEQUENCING · any · G8`. Admission rests on [the private-site record](ADR-029-what-the-private-site-may-show.md):
+an IDEATION build has something admissible to render because that record admits the leanings and the
+group's shared details on the private site.
+
+**Why a plan mode with no destination is a stop, not an admission.** The admitted set — IDEATION with
+either destination state, plus the plan modes with a destination — is not a cross-product, and a `G7`
+row is one. Nothing asks for a plan-phase site with no destination, and `plan`, `replan` and `check` all
+refuse that state today. The charter sanctions the form: a verb the table admits can still stop inside
+its own section. The verb index will list `site` as RUN there, the same declared residual `check`
+carries. The walker's contract half is total over the states the row admits, less the declared
+non-rows. **`UNSET`**: the shape is a function of the declared mode, and `G5` forbids inferring one —
+`UNSET` is not a sixth mode — so rendering any shape for it would either infer a mode or mint a shape
+for a non-mode. The published page stays at its last build, and `/trip-publish update`, which admits
+any mode, can still republish that build.
+
+**The page's file name with no destination — the stem rule.** While no destination is recorded, the
+render is written to `outputs/<trip.slug>-travel-site.html`; once one is recorded, to
+`outputs/<destination>-travel-site.html`, as today. Every reader already takes any `*-travel-site.html`
+member, the newest first. The first build with a destination therefore **creates** a new page rather
+than patching the old one (§ 6), and the IDEATION page stays on disk, unpublished by the newest-member
+rule. **Its consequence for erasure:** the IDEATION page can hold the shortlist, travellers' leanings
+beside their names, the group snapshot and the group contacts section, so the erasure verb's reach
+must name **every** `outputs/*-travel-site.html` file — the pattern every reader already uses — not the
+destination-named one alone. That is a Wave-1 condition of the slice that lands the stem rule
+(CR-2 call 6), and it is why the erasure verb is named among the stem rule's consequences.
+
+**The pre-plan classes.**
+
+| Artifact | `publish:` | Decision |
+|---|---|---|
+| `outputs/destination-shortlist.md` | `internal` → **`bound`** | decided by the private-site record; the render slice lands it in one commit with its § 9.1 authority and fence rows, so group `PB` stays green |
+| `outputs/group-snapshot.md` (new) | — → **`bound`** | decided by this record (§ 9); its slice lands the § 1.1 row with its § 9.1 rows in one commit |
+| `outputs/group-contacts.md` (new) | — → **`bound`** | decided by the contact and emergency record |
+| `travelers/<traveler>.md` | `internal` | unchanged |
+| `outputs/traveler-model.md` · `people/<person>.md` | `internal-hard` | unchanged; the private-site record relaxes their IN values' bound, not their class values |
+| the spoke lists | `internal` | unchanged; *Destination in play*'s overview-level spoke output has no rendered home |
+| the hub's IDEATION comparison | — | no artifact, so no class |
+| the render | `output` | unchanged; its source list gains the three new `bound` classes, in their slices |
+
+**The Reads line.** The shortlist, the group snapshot and the group contacts file each join the `site`
+verb's **Reads:** line in every state, with no false `BEHIND`. The shortlist's only dispatcher,
+`/trip ideas`, admits IDEATION × UNDECIDED alone, and the snapshot is produced only in IDEATION (§ 9),
+so each can lead `itinerary-to-build` only in a state that renders it, where `BEHIND` is true; the
+group contacts file renders in every built state, so the reason does not arise for it. `ADR-028`'s
+reason for keeping its own class off the line — a class rebuilt while never rendered — therefore does
+not apply. The shortlist's half rests on the third limb of `/trip research`'s agent-key filter — the
+roster's dispatch cell — which alone keeps the ideation agent out of `research`; an observation that a
+reworded dispatch cell could silently re-admit it is routed to the next release.
+
+### 6. Transitions, what a traveller was shown, and the refresh obligation
+
+**The render policy: replace, never accumulate.** A build renders exactly its state's row. Content from
+a superseded phase is not rendered — not as history, not collapsed, not hidden, because hidden text still
+ships inside the ciphertext.
+
+| Transition | What the next build does | How |
+|---|---|---|
+| IDEATION × UNDECIDED → × DECIDED | the shortlist section goes; the hero names the destination in play; the group snapshot and the group contacts sections stay | **a create**: the file name's stem changes from the trip's slug to the destination, so the verb's existence probe misses and the first build with a destination writes a new page. The IDEATION page stays on disk, unpublished by rule, because publish and both relations take the newest page; nothing is deleted, as `ADR-007` § 2 requires, and erasure reaches both files (§ 5) |
+| IDEATION × DECIDED → a plan mode | the plan-phase shape; the group snapshot section leaves; the group contacts section stays | a structural patch of the same file; the shape pass catches a leftover section |
+| a plan mode → a plan mode | no change of shape | a patch |
+| a plan mode → IDEATION | the plan sections go; the group snapshot section returns; the shortlist returns only if the destination was cleared | a structural patch, or for *No destination yet* the slug-named page, patched if present and created if not |
+| any state → `UNSET` | no build | the published page stays at its last build |
+
+**A published page from a superseded phase is a liability, within a bound.** From the transition until
+rebuild, confirm and republish, the group sees the superseded phase. The worked instance is the stale
+shortlist: the group has chosen a place, and until the site is rebuilt and republished the page still
+ranks it beside the places they passed over. **The liability lasts exactly as long as the relation below
+reads `BEHIND`.**
+
+**The relation — declared outside `trip.freshness`**, as `ADR-025` § *Decision* 6 requires of a relation
+whose derived side is what a traveller was shown.
+
+| Field | Declared value |
+|---|---|
+| **name** | `build-to-published`, in the shipped `<source>-to-<derived>` form |
+| **derived side** | what crossed the channel: the render as last pushed, identified by the digest the `.published-itinerary` sidecar records at each successful push |
+| **source side** | the newest local render, the member publish itself takes |
+| **observation** | **content identity**: the render's visible-text digest — the organizer-confirm gate's own projection — compared against the recorded digest |
+| **verdicts** | the shipped family, by exact token. `CURRENT` when they are equal; `BEHIND` when they differ, naming the local render as the leading source; `UNDETERMINED` when no push is recorded, naming the published side, or when the render cannot be projected, naming the render |
+| **evaluated by** | `/trip-publish list`, in its own report, labelled as outside `trip.freshness` |
+| **gating** | none; report-only. The publish verb never branches on freshness |
+| **cannot observe** | a push made from another machine, since the record is local; a site published before the sidecar existed, which reads `UNDETERMINED`, naming the published side, until its next push; anything outside the projection — the coordination band and the render's declaration block — by design; materiality |
+
+`list` computes its staleness column today by order — the local modification time against the remote
+commit's date — with its own tokens. The relation takes the shipped verdicts and the identity
+observation, and the `list` edit — `scripts/publish-trip-site.sh`'s `cmd_list` and
+`skills/trip-publish/SKILL.md` § *list* — is Wave 1's. `list` stays read-only and never gates.
+
+**The refresh obligation.** Automating any step of it belongs to the living-site milestone.
+
+| Step | Trigger | Signal | Remedy |
+|---|---|---|---|
+| **R0 reconcile** | a traveller's form, a person record, the roster or a link changes | the verb that made the change names `/trip-record travelers` without running it — already true of `profile`, `link`, `unlink` and `extract`. Wave 1 widens what they say is behind to name the group snapshot, adds the line to `group`, where `ADR-028` § 6 already places the obligation, and adds it to `mode` on a move **into** IDEATION, because the file on disk is then as of its last IDEATION pass | `/trip-record travelers` |
+| **R1 rebuild** | a change of σ — the trip context written by `/trip-record mode` or `/trip-record destination` — or of an admitted input: the shortlist by `/trip ideas`, the group snapshot and the group contacts file by the reconcile step, the plan artifacts by planning | `itinerary-to-build` reads `BEHIND`, naming the leading source | `/trip site` |
+| **R2 confirm** | a rebuild that changes the visible text | the organizer-confirm gate refuses `update` | `confirm`. This is intended under `ADR-003` § *Decision* 2, not a deadlock: `confirm` is always the organizer's, and a digest-only change needs none |
+| **R3 republish** | R1 and R2 done | `build-to-published` reads `BEHIND` | `/trip-publish update` |
+
+**A refusal, a removal or a withdrawal reaches the page through R0 to R3.** Under the private-site
+record's safeguard 4 it is recorded only through a verb that runs the reconcile step, so every staleness
+report shows the page as behind until the organizer's next update carries it; no publish gate is added.
+
+**The shortlist's own staleness case.** A shortlist built from the fallback read and later overtaken by
+a model rebuild changes no class. If `/trip ideas` re-runs, R1 to R3 carry the new shortlist to the
+page; if it does not, the shortlist against its own inputs is observed by no relation — a declared
+residual, since the shortlist is rebuilt only by its own verb.
+
+### 7. Conformance to `ADR-025` and `ADR-026`
+
+| Accepted decision | How this record conforms |
+|---|---|
+| `ADR-026` § 4, production-gating | Mode conditions what each state's build renders, through one render table. Reach is unchanged in every state, and no state is inferred from which files exist. The group snapshot, produced only in IDEATION, is one more instance |
+| `ADR-026` § 3, `may-carry` | Nothing crosses CH-1 that the class and the private-site record's verdict do not admit in every state. The render is limb-blind. No redaction step is added: the concealed block is a reduced form the build produces |
+| `ADR-026` § 5, the R-rule | The build emits no value `may-carry` denies. The traveller file, the model and the person record are never read |
+| `ADR-026` §§ 1–2, the channel-set | No channel is added: one page and one ciphertext, on both limbs |
+| `ADR-026`'s `ARCHIVED` overlay | No render in `ARCHIVED`: a declared non-row |
+| `ADR-025` § 1 and § 5 | The group snapshot reads the engagement value to decide its population, at the floor `SELF-STATED`, and never stores or renders it |
+| `ADR-025` § 3, the carry rule and never-carries | Rendering carries no class across a boundary. Never-carry 2 holds for every value outside the private-site record's IN list, as that record reads it; the group snapshot is rebuilt each synthesis with no carry-forward, and the axis value is never written |
+| `ADR-025` § 4, the render prohibition | Unchanged for values that are out. IN values reach the private page only as the private-site record admits |
+| `ADR-025` § 4 and `ADR-010` § 4, the inference of who filed | Governed by the private-site record's pointers into both sections, which carry the sentence on it. This record relies on that sentence and restates none of it |
+| `ADR-025` § 6, staleness | `build-to-published` reuses the shipped verdict family and its rules, has no disposition column, is declared by its consumer, and is evaluated outside `trip.freshness` |
+| `ADR-028` §§ 2, 4 and 9 | The group snapshot reuses its keying, its write-set widening and its erase-row shape |
+| `ADR-006` | No third-party value enters the group snapshot, by its population rule |
+| `ADR-004` | The group snapshot carries no contact or emergency value; [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)'s carrier holds what of them the group sees |
+| `ADR-003` § 2 | A transition's or a snapshot change's visible-text change reaches the group only through the organizer's `confirm` (R2) |
+| `ADR-007` § 2 | Nothing is deleted at a transition; the IDEATION page stays on disk |
+| `ADR-007` § 2, bound 5 | The rebuild announce is not taken for the group snapshot: the class-wide question `ADR-028` § 2 routed covers every `rebuilt-each-synthesis` file a dispatched agent replaces, and this record does not pre-decide it |
+
+**No divergence from a decision is intended.** Two claims in `ADR-026` — § 3's composition of the render
+and § 4's sentence on IDEATION — describe the build as it stood when that record was written, and this
+release adds a dated pointer to `ADR-026` recording what this record decides.
+
+### 8. `ADR-026` Finding 1 — declined, in terms, and routed
+
+The finding asks for a § 1.1 row for the published artifact, at `<trip>/.publish/index.html`, owed by
+whichever card next amends § 1.1 — which this card's slices do. **It is declined here, and routed to a
+card of its own**, on four grounds, the limb-independent ones first:
+
+1. **An in-model row would contradict an existing disposition.** § 1.2 disposes of `.publish/` out of
+   the model — never traversed by any selector — and a row for the published artifact needs a selector
+   inside it. This record cites that disposition by its path, never by an ordinal, because the
+   out-of-model rows are renumbered by another milestone's slice.
+2. **The published artifact is already governed** on the path that produces it, by two fail-closed
+   pre-push predicates.
+3. **This record decides the render's content per state**, not the class of the object that crosses the
+   channel, which is `ADR-026` § 3's subject.
+4. **A corollary on the encrypted limb only.** There the published artifact is ciphertext and cannot
+   carry the universal frontmatter every in-model class requires; on `--plaintext` it is the render
+   byte for byte and does carry it, which is why this ground is a corollary.
+
+**The route** is an intake observation carrying the orphaned-assignment evidence — the assignment has
+already passed two cards, `ADR-027`'s and `ADR-028`'s, that each decided a new § 1.1 class and answered
+neither, and an assignment keyed on a future event that nothing checks is a standing exemption — and
+the § 1.2 option: an explicit out-of-model row split from the `.publish/` row. This release makes no
+§ 1.1 edit. **The new classes this milestone decides**
+— the group snapshot here, the group contacts file in the contact and emergency record — are not the
+published artifact, and they are what fired the milestone's re-size.
+
+### 9. The group snapshot
+
+**Before there is a plan, the private page gets a section about the people going.** It shows while the
+group is choosing where to go, and while a place is being explored but not yet planned; once planning
+starts, the plan takes over the page. For each person who filled in their own trip form it shows what
+they said, in their own words — when they can travel, where they would set out from, how they like to
+stay, eat and pace their days, the wants they chose to share, and the occasion the trip marks if they
+said it is not private. A line appears only if the person answered it; nothing is guessed. It is the
+operator's D-3, designed on #1388, and it holds G-1 to G-6 whole.
+
+#### G-1 — What it carries
+
+**A closed field list, every row of the private-site record's IN list disposed of by name.** Labels are
+spelled exactly as the intake forms spell them; the scope is the one `reference/data-model.md`
+§ *Field Scope* assigns.
+
+| IN item | Field | Asked on | Scope | In the snapshot? | Why |
+|---|---|---|---|---|---|
+| who is coming — name | the roster's `Person` cell | the trip context's `## Group` | — | **no — the entry key only** | the hero renders every name from the trip context (D-1); each entry is headed by the roster display name, a projection of the roster cell, not a second statement of who is coming |
+| who is coming — relationship | `Relationship` | the trip form | TRIP | **no** | for a filer the hero renders the roster's *Role / Relationship* cell (D-1); a second relationship text on the same page would give one fact a second home |
+| destination leanings and the shortlist | `Would love`, `Rather skip` · `Trip vibe` | the person form · the trip form | DEFAULT · TRIP | **no** | the shortlist section carries them in *No destination yet*; D-4 takes them off the page once a destination is in play |
+| dates | `Can travel`, `Blackout`, `Trip length` | the trip form | TRIP | **yes** | no rendered document carries a traveller's own window before a plan; the trip's own dates stay with the hero |
+| dates — arrive and leave | `Arrive / leave` | the trip form | TRIP | **yes** | the booked legs reach the page only through the itinerary, in plan modes |
+| getting there | `Leaving from`, `Journey comfort` | the person form | DEFAULT | **yes** | — |
+| where you stay | `Lodging style` · `Rooming` | the person form · the trip form | DEFAULT · TRIP | **yes** | the booked property reaches the page only through the trip context and the itinerary |
+| interests and tastes | `Interests`, `Cuisine appetite` | the person form | DEFAULT | **yes** | — |
+| interests and tastes for this destination | `Been here before?`, `Already done` | the trip form | DEST | **yes, only while a destination is recorded** | a DEST value is scoped to one destination; with none recorded it has no referent, so the writer omits both lines — the reason `ADR-025` never-carry 4 gives across trips, applied inside one |
+| pace and day rhythm | `Pace`, `Day rhythm` | the person form | DEFAULT | **yes** | — |
+| desires the traveller marks group-facing | `Desire` | the trip form's desire block | TRIP | **yes — the `Desire` text of a marked desire, and nothing else of the block** | its priority tier, recurrence and theme tags are planner annotations, and its overlap signal is computed over every desire, marked or not, so carrying it would disclose unmarked desires |
+| the special occasion, marked not private | `Special occasion?` | the trip form | TRIP | **yes — only when marked** | unmarked means private, and a private occasion leaves no trace: no line, no placeholder, nothing saying something is withheld |
+
+**What a line carries.** The value the traveller model carries for that label, verbatim — carried
+through, not computed. A DEFAULT field is the composed value: the person record's, unless the trip form
+answers it. **A line is carried only when its value is answered** — absent, blank, an em dash, a
+surviving bracketed placeholder and a lapsed horizon are not answers — and **no line carries a
+bracketed mark of any kind**, provenance or horizon.
+
+**Never carried**, named so the list is closed in both directions: `Party`, `Passport`, `Documents`,
+`Comfort range`, `Splurge appetite`, the needs block (`Category`, `Specific`, `Applies to`), `Novelty vs
+comfort`, `Planning style`, `Group time`, `Split off with`, `Whole-group moments`, `Solo, I'd`, the
+free-text tail, update signals, divergence reports, and the engagement value itself (`ADR-025`
+never-carry 5).
+
+**The list changes only by a record decision.** A value outside it is never admitted by the writer's
+judgment. That is this class's tripwire in `ADR-011` decision 6's form, inverted: the class never moves;
+the list does, and only in terms.
+
+#### G-2 — Whose data it carries
+
+**The population.** An entry exists only for a roster member whose engagement value (`ADR-025`
+§ *Decision* 1) is **`SELF-STATED` or `PERSON-LINKED`** — a traveller-model entry projected from the
+person's own `travelers/<traveler>.md`, composed with their own `people/<person>.md` where it is linked.
+In `ADR-025` § 5's terms the snapshot declares its floor at **`SELF-STATED`**, the stricter first-party
+reading that section names for a consumer needing one.
+
+| Engagement value | In the snapshot? | Why |
+|---|---|---|
+| `PERSON-LINKED` · `SELF-STATED` | yes | they filed their own form |
+| `OPERATOR-STATED` | **no** | the operator relayed the values; the person did not fill in their own form (the private-site record's safeguard 3) |
+| `THIRD-PARTY-STATED` | **no** | `ADR-006`; the entry carries needs only |
+| `UNSOURCED` — no entry, a missing profile, or a blank form | **no** | nothing first-party is held |
+| `ENGAGEMENT-UNDETERMINED` | **no**, and the pass says so | fail closed: a read that did not complete admits no one |
+
+**Also excluded:** an erased member, on every later pass, and a traveller who has recorded a refusal
+(the private-site record's safeguard 4, whose capture is Wave 1's). **An entry is written only when at
+least one line survives the list, the mark rule and the withhold rule.** A non-filer, a refuser and a
+filer with nothing to show all look the same — no entry — and **the page never says which**, so a
+refusal is never itself disclosed. The engagement value decides the population and is never written or
+rendered.
+
+**Keying.** `## <Name>`, the `## Group` roster's display name — the Traveler natural key, as `ADR-028`
+§ 2 keys the presence file. The roster is the display-name authority; a person token is never used.
+
+**People who did not fill in their own form** (D-1). Their roster name shows through the hero, and
+nothing else about them does: no entry, and — by the withhold rule — no line in anyone else's entry
+that names or describes them.
+
+**Desires and the occasion.** A desire is carried only when the traveller has marked it group-facing,
+and the occasion only when it is marked not private — the private-site record's share mark, whose
+representation is Wave 1's. **An absent or malformed mark reads as unmarked.**
+
+**The withhold rule — OUT binds by kind, not by carrier.** This is D-2's "out everywhere", applied at
+the one producer this record adds. **A carried line is withheld whole — never trimmed, never
+paraphrased — when its value states or implies any OUT kind:**
+
+| OUT kind | A line that would be withheld | Where the example comes from |
+|---|---|---|
+| a need or must-have | `Lodging style:` "hotel; need a lift rather than stairs" | the person form's own `Lodging style` example |
+| money | `Rooming:` "own room if it's affordable" | the trip form's own `Rooming` example |
+| a person who did not fill in their own form | `Special occasion?:` "Mum's 70th, on the Thursday", where that person is a non-filer | the trip form's own `Special occasion?` example |
+| togetherness, or a split | `Rooming:` "my own room, away from Sam" | — |
+| identification, or contact details | an address written into `Leaving from` | — |
+
+**Why withhold rather than trim.** Trimming publishes words the traveller did not write, against the
+reconciler's own rule that it never authors or rewrites a traveller's own words. Withholding costs
+coverage and never misstates anyone; a traveller who wants the line shown can reword it, and the
+notice (the private-site record's safeguard 1) is where they learn that.
+
+**What grades it, stated so a green is not read as more.** The labels are mechanically gradable: Wave 1
+adds a schema arm holding every line's label to G-1's list and every heading to a roster name. **The
+values are conduct**: paraphrase is out of reach by construction (`reference/data-architecture.md`
+§ 5.5), and no guard reads this file's values on the private limb.
+
+#### G-3 — Who writes it, and when
+
+**The writer: the enrichment agent, in its reconciler role only**, never its research role — one
+writer, as § 1.1 requires. It already reads every input — each `travelers/<traveler>.md`, the linked
+person record, `trip-context.md` and the model it replaces; it already carries every IN field into the
+model by its label; and it is the one component that computes who filed, since its missing-profile
+branch is `ADR-025`'s evaluator. **So the snapshot adds no read and no agent.** `ADR-028` § 4 widened
+the same role's write set by the presence file, and this is the same kind of extension.
+
+**Its source.** As designed, the snapshot is a projection of the traveller model the same pass writes,
+read and never re-derived, and the reconciler's composed source stays "a value, not a file", never
+materialised. **The private-site record's safeguard 7 (decision Q) re-points that input:** no agent step
+that writes a file the site build reads receives a value of the non-publishable field class, so the
+step that writes the snapshot reads the script-made projection of the traveller data that omits the
+class, and the writing of internal files from full inputs is split from the writing of group-visible
+files from the projection. **Carried to Wave 1, as conditions by citation to
+[the private-site record](ADR-029-what-the-private-site-may-show.md):** the projection script; that
+split; and the snapshot's writer input re-pointed to the projection. G-1's list carries no member of
+that class, so what the snapshot carries is unchanged by it.
+
+**When: production is gated on the declared mode.** The reconciler writes the snapshot **on a pass
+whose resolved mode is IDEATION, in either destination state, and on no other pass.** Outside IDEATION it
+leaves the file untouched on disk: not rewritten, not deleted. The mode comes from the dispatching verb's
+resolved record and is never inferred. This is `ADR-026` § *Decision* 4 exactly: mode conditions
+production, never reach.
+
+| Dispatcher of the reconciler role | Admits | Writes the snapshot |
+|---|---|---|
+| `/trip-record travelers`, `/trip-record person` | mode `any` | when the resolved mode is IDEATION |
+| `/trip plan` | IDEATION, DISCOVERY, ENRICHMENT × DECIDED | in IDEATION × DECIDED only |
+| `/trip replan` | DISCOVERY, ENRICHMENT, ITERATION | never |
+
+**Why the gate.** The site declares the snapshot on its **Reads:** line, which is the source side of
+`itinerary-to-build`. A file rewritten on plan-mode passes would raise a `BEHIND` that a rebuild clears
+without changing the page — the false `BEHIND` `ADR-028` § 2 kept the presence file off that line to
+avoid. Producing the snapshot only in the states that render it is the shortlist's argument, reused: it
+joins the Reads line in every state, and it can lead `itinerary-to-build` only where `BEHIND` is true.
+The gate is an agent-side branch on the mode, so **the Wave-1 slice registers it** in the mode-gated
+behaviour register:
+
+| anchor | agent file | modes | contract-row |
+|---|---|---|---|
+| group snapshot write | `agents/00-enrichment.md` | IDEATION | a row in an output-contract table the agent file gains, under a heading added to group `MG`'s declared set |
+
+The agent file carries neither of group `MG`'s declared contract headings today, so the table and the
+heading are Wave-1 items; **until they land, the branch is ungraded**, and this record says so.
+
+**Lifecycle: `rebuilt-each-synthesis`.** Rebuilt whole on every IDEATION pass; never appended, never
+versioned. There is no carry-forward exception: `ADR-025` never-carry 1 applies without the traveller
+model's third-party carve-out, because no third-party entry can enter this file. The tolerant read's
+write-stop applies to the file it replaces: a higher `schema-version` on disk means report and decline.
+On an `ARCHIVED` trip no pass runs.
+
+**The rebuild announce.** `ADR-007` § 2 bound 5's announce is **not** taken for this file. The
+class-wide question `ADR-028` § 2 routed covers every `rebuilt-each-synthesis` file a dispatched agent
+replaces, this one included, and this record does not pre-decide it. The change a group would see is
+confirmed by the organizer at R2 before it reaches them.
+
+**The writer's contract**, which Wave 1 lands in `agents/00-enrichment.md`:
+- **Source:** as above, re-pointed to the projection under safeguard 7.
+- **Gate:** written on a pass whose resolved mode is IDEATION; otherwise left untouched.
+- **Population:** G-2, including its two exclusions — erased, refused — and the one-line floor.
+- **Content:** G-1's closed list, answered values only, no bracketed marks; `Been here before?` and
+  `Already done` only while a destination is recorded.
+- **Withhold:** G-2's rule — withhold the line whole, never trim.
+- **Frontmatter:** `artifact: outputs/group-snapshot.md` · `schema-version: 1` · `trip: <trip-slug>` ·
+  `writer: enrichment` · `lifecycle: rebuilt-each-synthesis` · `provenance: derived` · `publish: bound` ·
+  `generated: <date of the pass>`.
+- **H1:** `# Group Snapshot [DERIVED]`, with a frame line.
+- **Write-stop:** a higher `schema-version` on disk → report and decline.
+- **Never** a `##` heading that is not a roster name, never a value in a report block, and never a
+  provenance mark — the model's own prohibitions, applied to this file.
+
+**The dispatchers** (`ADR-028` standing rule 16). The Reads lines of `/trip-record travelers`,
+`/trip-record person` and `/trip plan` each name this file among the role's writes, on the same line,
+**with its condition: "while the resolved mode is IDEATION"**.
+
+**Where the rules live.** The field list, the population rule and the withhold rule go in a section
+appended to `reference/data-model.md` — where `ADR-028` § 11 put the presence file's rules, so the
+reconciler's derived files keep one home for their rules. The shape goes in a new
+`reference/schemas/group-snapshot.md`, and the agent file cites both.
+
+**Erasure.** `/trip-record erase` reaches the snapshot directly, by a reach row the landing slice appends
+at its own base in `ADR-028` § 9's shape:
+
+| # | Location | Disp. | What happens |
+|---|---|---|---|
+| the next free number | `outputs/group-snapshot.md` — the subject's entry | REACH | **delete the entry whole** — heading and every line. **No tombstone and no token:** the roster row already carries the trip's tombstone, the file holds no independent state, and a tokenized entry would publish an erased person's values under a pseudonym. Where the trip has no snapshot, emit **`n/a`** and name the absent file; where it holds no entry for the subject, emit **`n/a`** and name the population rule that admits none. **Never a silent skip** |
+
+The row is positional, written in the same step as the model's entry, after the roster; the table's
+accounting sentences and its tally move with it.
+
+**Currency — how it stays current when a traveller edits their form.** Report-only throughout: no gate
+blocks on any of it (`CLAUDE.md` G8; `/trip-publish` rule 7). The chain is R0 to R3 in § 6: the named
+reconcile step rewrites the snapshot, `itinerary-to-build` reads `BEHIND`, the organizer confirms, and
+`build-to-published` reads `BEHIND` until the republish. **A form edited by hand** is observed by nothing
+until the next reconciler pass, whose profile-change detection catches it — a declared residual, the
+one the shortlist already carries and the model carries today. **No new relation is added**: a
+`profiles-to-snapshot` relation would read `BEHIND` in every plan mode, with a remedy that cannot clear
+it.
+
+**Safeguard 4 for this document.** A refusal, a removal from the roster or an erasure is honoured **at
+the snapshot's next rebuild, by construction**: nothing is carried forward, and a refuser or a departed
+member gets no entry. Erasure reaches the file at once. Reaching the published page takes R1 to R3,
+which are report-only; under the private-site record's safeguard 4, as CR-2 call 1 decided it, a
+refusal or a removal is recorded only through a verb that runs the reconcile step, so every staleness
+report shows the page as behind until the organizer's next update carries it, with no publish gate.
+
+#### G-4 — Its class
+
+**`outputs/group-snapshot.md`** — writer `enrichment`, lifecycle `rebuilt-each-synthesis`, provenance
+`derived`, **`publish: bound`**, primary entities Traveler and Desire. It is named by path, never by
+ordinal, because the enumeration's numbering moves (`ADR-028` § 2's rule, reused). Every row below is
+decided here and landed by Wave 1; none is edited in this release.
+
+**The § 1.1 row.** The landing slice derives the ordinal at its own base.
+
+| C | Class | W (exactly one) | L | Prov | P | Primary entities |
+|---|---|---|---|---|---|---|
+| the next in-model ordinal | `outputs/group-snapshot.md` | enrichment | `rebuilt-each-synthesis` | `derived` | **`bound`** | Traveler, Desire |
+
+**The § 9.1 authority row and the `publish-contract-artifacts` fence row** — both land with the § 1.1
+row in one commit, so group `PB` stays green.
+
+| Site element | Authoritative artifact | The site reads it for |
+|---|---|---|
+| Pre-plan group details — each traveller's own shared dates, journey, lodging, tastes and pace, their marked desires and their shareable occasion | `group-snapshot.md` | The group snapshot section, in IDEATION |
+
+| artifact | class |
+|---|---|
+| `outputs/group-snapshot.md` | `bound` |
+
+**§ 5.6: no row.** The file carries no `Passport` or `Documents` field and no `[THIRD-PARTY]` entry, by
+its own population rule. A row naming a pair outside those the evaluator queries would parse and then
+abort every publish as `UNDETERMINED`.
+
+**The rest of its footprint is Wave 1's:** § 5.1's statement of the `bound` set, the render's source
+list, the validator's inline list and `CLAUDE.md` § *How to build it* each gain this member, after the
+shortlist.
+
+**Why `bound`, and not `internal` or `internal-hard`.** It exists to be rendered, and every value in it
+is IN on the private site by the private-site record's verdict. `internal-hard` is reserved for a class
+whose values must not reach a rendered page in any form (`reference/data-architecture.md` § 5.1), and
+the one class that holds these values that way, the traveller model, keeps that class unchanged.
+
+**The element fence** `round-trip-contract-elements-group-snapshot`, at the label grain the class's
+schema declares, graded against the writer's grammar block. Its label shape is a third value of the
+walker's label-shape parameter: a `- **Label:**` bullet inside that block.
+
+| element-label | disposition | component |
+|---|---|---|
+| `Group Snapshot [DERIVED]` | rendered | `group-snapshot` — the section title; the `[DERIVED]` mark is provenance metadata and is not rendered; the frame line beneath it renders as the standfirst |
+| `<traveller-entry>` — each `## <Name>` heading | rendered | `group-snapshot` — the entry title |
+| `Can travel` | rendered | `group-snapshot` |
+| `Blackout` | rendered | `group-snapshot` |
+| `Trip length` | rendered | `group-snapshot` |
+| `Arrive / leave` | rendered | `group-snapshot` |
+| `Leaving from` | rendered | `group-snapshot` |
+| `Journey comfort` | rendered | `group-snapshot` |
+| `Lodging style` | rendered | `group-snapshot` |
+| `Rooming` | rendered | `group-snapshot` |
+| `Interests` | rendered | `group-snapshot` |
+| `Cuisine appetite` | rendered | `group-snapshot` |
+| `Been here before?` | rendered | `group-snapshot` |
+| `Already done` | rendered | `group-snapshot` |
+| `Pace` | rendered | `group-snapshot` |
+| `Day rhythm` | rendered | `group-snapshot` |
+| `Desire` | rendered | `group-snapshot` |
+| `Special occasion?` | rendered | `group-snapshot` |
+| `<artifact-frontmatter>` | excluded | — |
+
+#### G-5 — Where it shows
+
+**The ladder** returns **D4, a section**, `group-snapshot` (§ 3): no § 3 component carries a
+per-traveller record — the Hero is a trip-level banner with a line of names, the shortlist section is
+keyed by candidate, and the Overview Dashboard is keyed by day and not admitted in IDEATION — and no
+section iterates people. Mode earns nothing here: the ground is a new source artifact whose element type
+no component represents, not a mode wanting content shown differently.
+
+**Per state** (§ 4): rendered in *No destination yet* and in *Destination in play*; excluded, and named
+in § 9.3, in every plan mode, which keep today's shape plus the group contacts section. **Why every plan
+mode excludes it:** once a plan exists, the plan is the page's answer to when, from where, where the
+group stays and at what pace; the snapshot's producer stops refreshing it outside IDEATION; and a
+traveller's stated preference beside the decided plan is a second, possibly stale answer that re-opens
+settled choices.
+
+**Its three states**, none inferred from existence: present with entries → rendered; present with none
+→ **the declared empty state**, a neutral line that gives no reason; absent → **a degraded read, never a
+smaller site** — the walk exits degraded, the verb does not present the site as current, and the remedy
+is `/trip-record travelers`. Where the section sits, its title and its frame line are Wave 1's layout
+and words; the frame says it is what travellers chose to share, in their own words, and that it is not
+a plan.
+
+#### G-6 — What never happens
+
+| Never | How it holds |
+|---|---|
+| **anything from the OUT list** | three layers. **The field list:** no OUT field is on it (G-1). **The population:** no non-filer, operator-relayed, third-party, erased or refusing member gets an entry (G-2). **The withhold rule:** content that is out, inside a carried value, withholds the line (G-2). Money: no `Comfort range` or `Splurge appetite`, and money in a value withholds it. Identification: no `Passport` or `Documents`. Needs: no needs block, and a need in a value withholds it. Non-filers and a traveller's `Party` entry: never carried, never named or described. Contact and emergency details: none carried, and an address or a number withholds the line; what of them the group sees is [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)'s carrier. Planner internals and cross-trip group records: never read or carried. Unmarked desires, novelty against comfort, planning style, togetherness, *split off with*, satisfaction metrics: not on the list, and the overlap signal is excluded because it would disclose unmarked desires |
+| **a public page** | the render is limb-blind, and every value in the section is group-only by construction. The private-site record's public-path refusal covers this section **by its presence alone** — a structural key, with no matching on values, which paraphrase would defeat — and no redaction step is added |
+| **going live before the rotation fix** | the private-site record's fifth safeguard binds every Wave-1 slice of this document — the class, the writer and the section: none goes live before the fix for the rotation defect tracked privately ships |
+
+**The notice couples with the snapshot.** The private-site record's safeguard 1 is how a traveller learns
+what the snapshot shows, what the share mark does and why a mixed answer is left out, so it states G-1's
+list, the mark rule and the withhold rule. The forms' own example answers that put content that is out
+in an IN line — the person form's `Lodging style`, the trip form's `Rooming` and `Special occasion?` —
+are replaced in the same edit.
+
+**Two Wave-1 authoring constraints.** The snapshot's path never enters the enrichment agent's roster-row
+`Output File` cell in `CLAUDE.md`, where a path under `outputs/` would enter `/trip research`'s agent-key
+filter — `ADR-028` § 4's trap. And the new file is named by its path and as *the group snapshot*, never
+as a bare *snapshot*, because the reconciler's own agent file already uses that word for the model it
+compares against.
 
 ## Consequences
 
