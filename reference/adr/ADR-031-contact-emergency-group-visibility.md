@@ -2,10 +2,9 @@
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
-- **Driving work:** #1545, one of three records of the *The site serves every phase: the founding
+- **Driving work:** #1545, one of the records of the *The site serves every phase: the founding
   decision* milestone, beside [the private-site record](ADR-029-what-the-private-site-may-show.md)
-  (#1242) and [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md)
-  (#1296). The operator pulled the card into the milestone when the private-site verdict was locked.
+  (#1242) and the #1296 card's records, which [the site phase-model record](ADR-030-site-phase-model.md) lists. The operator pulled the card into the milestone when the private-site verdict was locked.
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after
   [the private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because what this record shows rides that record's
@@ -235,7 +234,7 @@ is never shown for a traveller who has recorded a refusal, under the private-sit
 - It never suggests contacting the organizer instead of the local emergency services.
 
 **Placement is the site phase-model record's.** The carrier this record decides (§ 6) is placed in
-[the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md)'s render table, by
+[the site phase-model record](ADR-030-site-phase-model.md)'s render table, by
 citation to this record: a section in every state the site builds, and the organizer line as a field
 of the hero.
 
@@ -496,7 +495,8 @@ the validator Critical on a lawful line; its public-path protection is structura
 #### C-4 — Where it shows
 
 **The section ceiling returns a section, `group-contacts`, in every state the site builds** — both
-IDEATION rows and the four plan modes — as the site phase-model record's ladder runs it: the element has
+IDEATION rows and the four plan modes — as [the section-ceiling record](ADR-033-site-section-ceiling.md)'s ladder runs it: the
+element has
 a § 9.1 authority once the class lands; every rendered value is admitted by D1 and D2, and the § 5.6
 row involved names a value the file never carries; no § 3 component carries a per-traveller record in
 every targeted state; and no section iterates travellers in every such state, while a snapshot region
@@ -644,7 +644,7 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 | § 1.1 | **net-new** `outputs/group-contacts.md`, because in-place is infeasible: the group snapshot, the trip context, the traveller file, the traveller model, the itinerary and the presence file each fail as a host |
 | the reconciler's write set | reviewed → **extended** by one file, written on every pass |
 | the § 3 catalog | **net-new** `group-contacts`, because no component carries a per-traveller record in every state |
-| § 9.1 and § 9.2 | **extended** by rows, in the site phase-model record's shapes |
+| § 9.1 and § 9.2 | **extended** by rows, in the round-trip contract record's shapes |
 | the erase reach table | **extended** by the carrier's row |
 | the freshness table | reviewed → **retained**: no new relation; the carrier rides `itinerary-to-build` and `build-to-published` |
 
@@ -666,7 +666,8 @@ construction, never redacted later; one writer per file; an undetermined read fa
 *Scalability:* a new traveller costs nothing; a new field costs one list row, one fence row and one
 notice line; there is no new store beyond the organizer-only file. *Maintainability:* it reuses the
 reconciler, the engagement tokens, `ADR-028`'s keying, erase-row and naming rules, the group snapshot's
-mark and withhold rules and the site phase-model record's two-grain contract, and mints one class, one
+mark and withhold rules and [the round-trip contract record](ADR-032-site-round-trip-contract.md)'s two-grain contract, and mints
+one class, one
 component and one fence name.
 
 **Reversibility and confidence.**
@@ -686,7 +687,7 @@ component and one fence name.
 | Not decided here | Decided by |
 |---|---|
 | What the private site may show in general, the share mark and the safeguards | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
-| Where the group contacts section sits in each phase, and the page's shape | [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) |
+| Where the group contacts section sits in each phase, and the page's shape | [the site phase-model record](ADR-030-site-phase-model.md) |
 | What a channel is and what it may carry | `ADR-026` |
 | The form labels, the notice's wording, the organizer-only file's name and the filing script's design | Wave 1 |
 | Retention after the trip | a routed intake card |
@@ -718,8 +719,13 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
   share mark this record reuses, and the safeguards it cites: 1, the notice; 3, people who did not
   file; 4, refusal and removal at the next update; 5, the rotation fix first; 6, decision P; 7,
   decision Q.
-- [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) — the render table
-  that places the carrier in every state the site builds, and the ladder that returns its section.
+- [The site phase-model record](ADR-030-site-phase-model.md) — the render table that places the carrier in every state
+  the site builds.
+- [The section-ceiling record](ADR-033-site-section-ceiling.md) — the ladder that returns the carrier's section.
+- [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the two-grain contract whose rows and fences the carrier's
+  slice extends.
+- [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot, whose writer and keying, and whose mark and
+  withhold rules, the carrier reuses.
 - [ADR-004](ADR-004-contact-emergency-privacy.md) — the contact and emergency model this record
   supersedes in part.
 - [ADR-006](ADR-006-third-party-data-capture.md) — the third-party boundary: its scope, its Q1

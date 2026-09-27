@@ -1422,7 +1422,7 @@ those values alone *never rendered* reads *never on a public page* on the privat
 person-form fields it covers are `Would love`, `Rather skip`, `Leaving from`, `Journey comfort`,
 `Lodging style`, `Interests`, `Cuisine appetite`, `Pace` and `Day rhythm`. They reach the private site
 only through a `bound` artifact their producer writes — the destination shortlist, and the group
-snapshot [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) decides —
+snapshot [the group-snapshot record](ADR-037-group-snapshot.md) decides —
 and never by the site build reading the store. **Nothing reaches a public page.** The row is
 retained as written; no decision of this record changes, and none is re-opened.
 

@@ -510,8 +510,8 @@ a cell, and it moves one.** That is the same device § 5.6 already uses for the 
 records so that nobody re-derives it.
 
 **Amendment (2026-09-26, Saturday) — the `observers` values corrected, the citations into the publish
-skill repaired, and what the three records of the *site serves every phase* milestone decide against
-this record.** Nothing above is rewritten except where a claim is corrected in place, and no decision
+skill repaired, and what the records of the *site serves every phase* milestone decide against this
+record.** Nothing above is rewritten except where a claim is corrected in place, and no decision
 of this record is reversed, narrowed or re-opened: `may-carry` stands as defined, and every fail-closed
 path this section names is untouched.
 
@@ -534,17 +534,17 @@ path this section names is untouched.
   `audience` is `world`, admits none of them; and the `observers` cell stays `world` on both limbs.
   The class-side change the move needs is that record's, not this one's.
 - **For the site channel.** § 3's composition of `C19` and § 4's sentence on `IDEATION` describe the
-  build as it stood when this record was written.
-  [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) decides two things.
-  First, `/trip site` builds in `IDEATION`. Second, each build reads exactly the artifacts its render
-  table admits for the resolved mode and destination — in `IDEATION`, the group snapshot in both
-  destination states, and the destination shortlist when no destination is recorded; and in every
-  state the site builds, the group contacts file that
+  build as it stood when this record was written. Two records of that milestone decide what replaces
+  them. [The site-admission record](ADR-034-site-build-admission.md) decides that `/trip site` builds in
+  `IDEATION`. [The site phase-model record](ADR-030-site-phase-model.md) decides that each build reads
+  exactly the artifacts its render table admits for the resolved mode and destination — in
+  `IDEATION`, the group snapshot in both destination states, and the destination shortlist when no
+  destination is recorded; and in every state the site builds, the group contacts file that
   [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) decides. From the
-  slice that lands that decision, `C19`'s read set is that admitted set, and mode bites on CH-1 in every
-  state the site builds. The decision of § 4 — mode conditions the production of a channel's content
-  and never indexes its reach — is unchanged; the group snapshot, produced only in `IDEATION`, is one
-  more instance of it.
+  slices that land those decisions, `C19`'s read set is that admitted set, and mode bites on CH-1 in
+  every state the site builds. The decision of § 4 — mode conditions the production of a channel's
+  content and never indexes its reach — is unchanged; the group snapshot, which
+  [the group-snapshot record](ADR-037-group-snapshot.md) has produced only in `IDEATION`, is one more instance of it.
 
 ### 4. Reach is one crossing or two, and the engine's claims are about the first only
 

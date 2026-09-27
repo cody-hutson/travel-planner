@@ -166,8 +166,7 @@
   publish-bound set as the artifacts `reference/site-layout-spec.md § 9.1` names. The records of the
   *site serves every phase* milestone, each `Proposed`, add members to that set, each from the Wave-1
   slice that lands it: [the private-site record](ADR-029-what-the-private-site-may-show.md) moves the
-  destination shortlist to `bound`, [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md)
-  adds the group snapshot, and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
+  destination shortlist to `bound`, [the group-snapshot record](ADR-037-group-snapshot.md) adds the group snapshot, and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
   adds the group contacts file. § 9.1 remains the authority, and group `PB` keeps the correspondence
   asserted as each slice lands its § 1.1 row and its fence row in one commit. The sentence is retained,
   with an inline pointer at it. **The Decision 4 supersession** — the exception the private-site
@@ -569,7 +568,7 @@ Publishability is declared at **two granularities**, and they compose by **union
 reads it; exactly the five artifacts named in `reference/site-layout-spec.md § 9.1`, which remains the
 authority while this field is its machine-readable projection. **[Pointer — ninth amendment
 (2026-09-26).** The set grows, each member from the Wave-1 slice that lands it: the destination
-shortlist, the group snapshot and the group contacts file, decided by the three records of the *site
+shortlist, the group snapshot and the group contacts file, decided by three of the records of the *site
 serves every phase* milestone; § 9.1 remains the authority.**]** **That the two agree is asserted, and
 the assertion lives in the gate rather than in the schema grammar:** `scripts/test-artifact-schema.sh`
 group `PB` resolves the `publish-contract-artifacts` fence § 9.1 declares and requires the

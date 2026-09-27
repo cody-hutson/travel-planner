@@ -2,9 +2,9 @@
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
-- **Driving work:** #1242, one of three records of the *The site serves every phase: the founding
-  decision* milestone, beside [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md)
-  (#1296) and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
+- **Driving work:** #1242, one of the records of the *The site serves every phase: the founding
+  decision* milestone, beside the #1296 card's records, which [the site phase-model record](ADR-030-site-phase-model.md)
+  lists, and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
   (#1545). `ADR-026` names this card as the only one that may move a cell of its channel-axis
   table; this record is that move, together with the class-side change the move needs.
 - **The verdict this record carries was locked by the operator, not chosen here.** It is CR-1d,
@@ -27,7 +27,7 @@
 - **The status flip is named here, because nothing grades it.** Moving this record from `Proposed`
   to `Accepted` is the maintainer's, taken at this milestone's close, and it moves **both** halves
   of a two-artifact state: the `Status:` line above, and this record's `Status` cell in
-  `reference/adr/README.md`. The site phase-model record and the contact and emergency record each
+  `reference/adr/README.md`. The #1296 card's records and the contact and emergency record each
   name this record's `Accepted` status as the precondition of their own flip, so this record flips
   first. The same close records, inside `ADR-009`, the part of `ADR-009` § *Decision* 4 this record
   supersedes (§ *Decision* 7 below).
@@ -69,8 +69,9 @@ ever appears on a public page. **The detailed enforcement design of the third an
 not carry forward.** It defended against a public site, which this product does not have, and it is
 reference material for the later slices rather than a requirement of this record.
 
-**Two records beside this one carry the rest.** The site phase-model record decides where each item
-this record admits renders, in which phase, and under which section ceiling. The contact and
+**The records beside this one carry the rest.** The site phase-model record decides where each item
+this record admits renders and in which phase, and [the section-ceiling record](ADR-033-site-section-ceiling.md) under which
+section ceiling. The contact and
 emergency record revisits `ADR-004` against this verdict, and decides what of a traveller's contact
 and emergency details the group sees.
 
@@ -148,10 +149,10 @@ now defined — for exactly the values § 2 lists as in. The `observers` cell st
 limbs; it is an input to the threat model in § 8, not the cell that moves. The channel-side move is
 necessary and not sufficient; the class-side change is § 7.
 
-**Its consumer.** [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) is
+**Its consumer.** [The site phase-model record](ADR-030-site-phase-model.md) is
 the site-channel consumer of this verdict. Whether and where each item in § 2 shows, and in which
-phase, is that record's call, made through its section ceiling and its render table; this record
-decides only what may appear.
+phase, is that record's call, made through its render table and
+[the section-ceiling record](ADR-033-site-section-ceiling.md)'s ladder; this record decides only what may appear.
 
 ### 2. What may appear on the private site, and what never appears on any page
 
@@ -211,8 +212,8 @@ site phase-model record's.
 traveller model and the person record `internal-hard`. A value on § 2's IN list reaches the render
 only through a `bound` artifact that its producer writes — the trip context for who is coming and the
 trip's own dates, the destination shortlist for the leanings, the itinerary for what the plan
-expresses, and the further carriers the site phase-model record and the contact and emergency record
-decide.
+expresses, and the further carriers [the group-snapshot record](ADR-037-group-snapshot.md) and the contact and emergency
+record decide.
 
 **The destination shortlist becomes `bound`.** `outputs/destination-shortlist.md` moves from
 `internal` to `bound`, so that the build may read it. The move lands in the site phase-model record's
@@ -305,8 +306,8 @@ already kept out by that record's storage rule. Those writers read a script-made
 traveller data that omits the class. A step that needs one of those fields for its own work, such as
 the per-traveller document derivation, writes only files the site build never reads. **Safeguard 7
 extends the contact and emergency record's data minimization to the whole field class; safeguard 6
-stays as the mechanical check of the outcome.** Carried to Wave 1, and stated as conditions in the site
-phase-model record and the contact and emergency record by citation to this safeguard: the projection
+stays as the mechanical check of the outcome.** Carried to Wave 1, and stated as conditions in the
+group-snapshot record and the contact and emergency record by citation to this safeguard: the projection
 script; the split between writing internal files from full inputs and writing group-visible files
 from the projection; and the group snapshot's and the group contacts file's writer inputs, re-pointed
 to the projection.
@@ -392,8 +393,8 @@ defeat:** a reader who holds it, and a copy already taken. That is why the publi
   path.
 - **The change is class-shaped.** No journey record is superseded, the three class-derived bounds move
   by pointer, and exactly one class value moves — the destination shortlist's.
-- **The milestone's pre-plan page has something to render.** The site phase-model record gives the
-  shortlist and the group's shared details a home before a plan exists, so #1241's third acceptance
+- **The milestone's pre-plan page has something to render.** The site phase-model record and the
+  group-snapshot record give the shortlist and the group's shared details a home before a plan exists, so #1241's third acceptance
   criterion is met without its revisit branch.
 - **The non-publishable field class is kept out by construction and checked at the outcome.**
   Safeguard 7 keeps it from every writer of a group-visible file, and the check of safeguard 6 reads
@@ -432,7 +433,7 @@ commit. Confidence is **HIGH** that the verdict is the operator's and is transcr
 
 | Not decided here | Decided by |
 |---|---|
-| Where each IN item shows, in which phase, and under which section ceiling | [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) |
+| Where each IN item shows, in which phase, and under which section ceiling | [the site phase-model record](ADR-030-site-phase-model.md); the ceiling is [the section-ceiling record](ADR-033-site-section-ceiling.md)'s |
 | What of a traveller's contact and emergency details the group sees, and how an emergency contact's details are kept | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
 | The form of the concealed block, and the filer predicate the build reads | the site phase-model record |
 | The share mark's representation on the forms, the notice's wording, and the recording verb for a refusal or withdrawal | the Wave-1 slices below |
@@ -479,8 +480,9 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
   read for its IN fields by A-1.
 - [ADR-013](ADR-013-count-assertion-basis.md) — every count in this record is authored to form F1.
 - [ADR-014](ADR-014-cross-trip-consent-refusal.md) — the refusal behind never-carry 3.
-- [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) — the site-channel
-  consumer of this verdict.
+- [The site phase-model record](ADR-030-site-phase-model.md) — the site-channel consumer of this verdict. It lists the
+  #1296 card's other records, among them [the section-ceiling record](ADR-033-site-section-ceiling.md) and
+  [the group-snapshot record](ADR-037-group-snapshot.md), which carries the group's shared details before a plan.
 - [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the record that
   decides what of a traveller's contact and emergency details the group sees.
 - `reference/data-architecture.md` — § 5.1's class enum, § 5.5's paraphrase limit, and § 5.6's

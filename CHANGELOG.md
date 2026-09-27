@@ -7,7 +7,7 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 
 This release decides and builds nothing, deliberately. The private trip site has been built only once
 a destination is chosen and a plan exists, and nothing said what it may show a travel group before
-then, or what it may show about the people going. Three decision records settle that together,
+then, or what it may show about the people going. Nine decision records settle that together,
 before any slice is cut, so the slices that follow build against one answer rather than each deciding
 it. Nothing in the engine behaves differently yet.
 
@@ -68,7 +68,7 @@ records together with the ones that must land at the same time. Some of the rule
 of those files, and only their labels can be graded; what a writer puts inside a line is conduct.
 Whether a traveller filed their own form can be inferred on the private page, and *no emergency
 contact on file* says something about a person — both are recorded as the costs of decisions taken.
-All three records land `Proposed`. The flip to `Accepted` is the maintainer's at the milestone close,
+All nine land `Proposed`. The flip to `Accepted` is the maintainer's at the milestone close,
 the private-site record first, and it moves each record's status line and its index row together.
 
 ## [0.44.1] — 2026-09-26 — The personal-data gate reads the lines a pull request adds
