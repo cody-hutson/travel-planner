@@ -156,7 +156,438 @@ is on file.
 
 ## Decision
 
-*Authored in the commits that follow on this release branch.*
+**Terms.** The **organizer** is the person who runs the trip's planning and holds its local store —
+`ADR-004` § 3's "coordinator who runs the build", and `ADR-003`'s organizer. The **in-trip contact**
+is `ADR-004`'s "contact method", narrowed to this trip. The **emergency contact** is `ADR-004`'s
+"one emergency contact (a name and how to reach them)". These are working names; Wave 1 chooses the
+form labels.
+
+### 1. Whether the group sees contact and emergency information at all — yes, in part
+
+**What the group sees on the private site:**
+
+- **each traveller's in-trip contact**, when that traveller marks it shared;
+- **one trip-wide line** naming the organizer as the person to tell if something happens, because the
+  organizer holds the emergency contacts travellers chose to give;
+- **for each traveller who filed their own form, an emergency line** in one of three states: the
+  emergency contact's **name**, only when the traveller confirms on their form that the contact agreed
+  to be listed for the group (the operator's D1); *on file with the organizer*, when the traveller gave
+  an emergency contact without that confirmation; or *no emergency contact on file* (the operator's
+  D2).
+
+**What stays with the organizer:** the way to reach an emergency contact. **What is never captured:**
+the contact's relationship to the traveller.
+
+**The coordination test, applied.**
+
+| Item | Result | Why |
+|---|---|---|
+| The in-trip contact | **IN**, on the traveller's choice | it is how the group reaches someone during the trip, and the traveller filled in their own form, so safeguard 3 does not bar it |
+| Who to tell if something happens | **IN** | it is about the trip's arrangements, and the only person it names is the organizer, who is already IN as one of the people coming |
+| Whether an emergency contact is on file with the organizer | **IN** | the operator's D2 |
+| The emergency contact's name | **IN only on the traveller's attestation** | the operator's D1: the contact is a third party (`ADR-006`), so the name shows only as the traveller's statement that the contact agreed to be listed |
+| The way to reach the emergency contact | **OUT** — the organizer only | it is about a person outside the group who did not fill in a form of their own; safeguard 3 excludes such a person, and `ADR-006` stands |
+| The emergency contact's relationship to the traveller | **never captured** | `ADR-004` § 2's closed set stands (CR-2's fourth call) |
+
+**Why not a full "no", keeping `ADR-004` as it is.**
+- `ADR-004`'s own trade-off rests on the premise that the organizer coordinates. The private-site
+  record removed that premise: the private site is now the group's coordination surface.
+- *Organizer-visible* in `ADR-004` § 3 means the data sits in the organizer's local trip store, which
+  is not something the group carries on the trip, while the site is the one surface every traveller
+  has with them.
+- The strongest case for "no" is that friends usually have each other's numbers already. The share
+  choice meets it: a traveller who prefers a group chat simply does not share, so the cost of "yes" is
+  bounded by each person's own decision.
+
+**Why not the full details.** The way to reach a third party stays with the organizer, and no
+mechanism reaches that person for their own consent. The name shows only on the traveller's
+attestation that the contact agreed, which records the traveller's statement and is never described
+as the contact's consent.
+
+### 2. At what level, per traveller — a closed list
+
+| # | Item | About | The group sees it | The organizer holds it | Public page |
+|---|---|---|---|---|---|
+| L-1 | **In-trip contact**: one way to reach the traveller during this trip, in the traveller's own words | the traveller | when the traveller marks it shared | always, once given | never |
+| L-2 | **Who to tell if something happens**: the organizer, who holds the emergency contacts travellers chose to give | the trip's arrangements | always, as one line for the whole trip | n/a | never |
+| L-3 | **The emergency line**: the contact's name, on the traveller's attestation; otherwise *on file with the organizer*; otherwise *no emergency contact on file* | the traveller's arrangement, and a third party's name | for every traveller who filed their own form, and never for a traveller who refused | the contact's name, always once given | never |
+| — | **The way to reach the emergency contact** | a third party | never | always, once given, in the organizer-only file (§ 3, rule 4) | never |
+
+**The emergency line is shown for filers only**: the operator's D-1 shows nothing else about a person
+who did not fill in their own form, and rule 1 below makes the field the traveller's own statement. It
+is never shown for a traveller who has recorded a refusal, under the private-site record's safeguard 4.
+
+**Nothing else. The exclusions are stated so that no later slice re-derives them:**
+- **The emergency contact's relationship to the traveller** is never captured. In a small named group,
+  "her sister" identifies a person — `ADR-006` Q3's reasoning applies: stripping a name does not strip
+  the identification — and `ADR-004` § 2's closed field set, "No more", stays in force.
+- **A free-text "if something happens" note.** Its obvious content is medical, so it would re-open the
+  private-site record's row for needs and must-haves — the plan honours them without displaying them —
+  by a side door. Free text also defeats a closed list.
+- **A second emergency contact, an address, or any health information.**
+
+**L-2's content rules.**
+- It names the organizer only through the organizer's own entry in the trip context's `## Group`
+  roster, which records the planner role and is already IN. If the organizer is not on the roster, the
+  line carries no name.
+- It is **rendered from the roster alone**: the render never reads an emergency-contact field to decide
+  whether, or how, to show the line.
+- It never suggests contacting the organizer instead of the local emergency services.
+
+**Placement is the site phase-model record's.** The carrier this record decides (§ 6) is placed in
+[the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md)'s render table, by
+citation to this record: a section in every state the site builds, and the organizer line as a field
+of the hero.
+
+### 3. The emergency contact is a third party — the rules
+
+1. **Source.** The details are the traveller's own statement, on the traveller's own trip form. They
+   are never entered by the operator on the traveller's behalf, and never copied from another trip or
+   record.
+2. **The ground for each value.**
+   - Capture rests on the traveller's opt-in, which `ADR-004` § 3 already requires and this record
+     keeps. The way to reach the contact is never published, so its capture rests on `ADR-006` Q1's
+     ground: the consent hazard that record guards against does not arise where the value cannot be
+     published by construction.
+   - **The name's ground is the operator's D1 plus the traveller's attestation** that the contact
+     agreed to be listed for the group. It is worded as the traveller's attestation, **never as the
+     contact's consent**: in `ADR-006`'s own words, such a claim records the appearance of consent
+     rather than consent itself, and must not be described as though it establishes consent.
+     `ADR-006` Q1 is not cited for the name, because the name, once attested, is rendered.
+   - The contact's own consent is not obtained and never claimed: no channel reaches a person who is
+     not travelling, and `ADR-026` § 2 admits a new channel only by amendment or a superseding record.
+3. **`ADR-006`'s refusal to capture identity data does not reach this.** That refusal is scoped to
+   party members — people travelling without a profile — and an emergency contact is not travelling.
+   `ADR-004` § 2 permitted one name and one way to reach them before `ADR-006` existed; this record
+   keeps that permission exactly and does not widen it. `ADR-006` needs no edit.
+4. **Where it lives — the storage rule (decision S).** The traveller gives the details on their own
+   trip form, `travelers/<traveler>.md`, inside the trip's directory in the operator's trip store;
+   rule 1 stands.
+   - **When the form is filed, a script — not an agent step — moves the emergency contact's way to
+     reach them, and any name the contact has not agreed to show, into an organizer-only file beside
+     the traveller's trip file, in the same trip directory.** It runs before any agent step reads the
+     form. The file's name is Wave 1's.
+   - **The traveller's trip file keeps only what the group may see about the contact**: the agreed
+     name, the agreement mark, and an *on file* marker.
+   - This is data minimization: the organizer holds the way to reach the contact, and only the
+     organizer and the filing script ever touch it.
+   - The field-scope class is **`TRIP`**, under `reference/data-model.md` § *Field Scope* — test T1,
+     its subject being this trip's safety arrangement, with the T4 fail-safe default behind it — and
+     the `TRIP` rules apply to the organizer-only file unchanged. The existing machinery then keeps
+     the details out of the durable person record: the person form never declares the fields, so
+     `/trip-record promote` refuses them; `/trip-record extract` leaves a `TRIP` field in place; and
+     the composition table treats a `TRIP` field found in the person record as a schema violation.
+   - The details are **never projected into the derived traveller model or any planning artifact**,
+     because nothing the planner does needs them. The one group-visible projection is the group
+     contacts file (§ 6), written beside the model and never through it, and it carries no way to
+     reach an emergency contact.
+5. **Who reads it.** Only the organizer reads the organizer-only file. Nothing in the render or the
+   planning pipeline reads it, and **no agent step reads it — Wave 1 enforces this mechanically, not by
+   instruction alone**. This restores the design's rule that only the organizer reads the details,
+   which the carrier design had relaxed for the carrier's writer: that writer now reads only the
+   traveller file's agreed name, agreement mark and *on file* marker.
+6. **Never on any page, in any form** — the way to reach the contact, and a name the contact has not
+   agreed to show: not attributed, not anonymized, not reduced to a relationship. An attested name
+   reaches the private site only, never a public page. This is `ADR-004` § 4, on today's machinery:
+   - (a) the render never reads the way-to-reach field, and neither does the carrier's writer;
+   - (b) one `field` row in `reference/data-architecture.md` § 5.6's `publish-contract-values` fence
+     targets **the way to reach the contact, never the name**, scoped to the organizer-only file. It
+     makes the value a member of the non-publishable class: the `--plaintext` limb's guard aborts on
+     it, and the validator's privacy audit is Critical on it wherever that audit reads. § 5.6 calls a
+     row outside the evaluator's queried pairs a code change, so the slice that lands this row widens
+     the queried set in the same change: a row outside it aborts every publish as `UNDETERMINED`;
+   - (c) the private-site record's safeguard 6, decision P, checks every file the site build reads for
+     the non-publishable field class before every publish, on both limbs and in every phase, and the
+     way to reach the contact joins that class when its capture ships. This is defense in depth: a
+     mechanical check of the outcome, on top of the render's rule that it never reads those fields.
+
+   `ADR-026` § 3 records that the encrypted limb's guard asserts encryption, not content. On that limb
+   the guarantee rests on (a) to (c), the footing every never-rendered value stands on.
+7. **The assisted interview never asks for or repeats the contact's details.** It tells the traveller
+   the fields exist and that they write them into the form themselves. `ADR-026` § 3 declares the
+   intake surface's observers to be `third-party`, because an assistant's history keeps the
+   transcript; and `/trip-record erase` types the session transcript as a report, not swept, so a
+   transcript copy is one that no removal reaches.
+8. **Removal at the contact's request.** The contact may ask the traveller or the organizer, and the
+   organizer removes the details. No reason is required. **A removal reaches forward only**: copies
+   already published stay out of erasure's reach.
+9. **What the group learns about the contact**: whether a traveller gave one, by the operator's D2,
+   and the contact's name only on the traveller's attestation, by D1. Nothing else.
+
+### 4. What the traveller opts in to, what they are told, and how they withdraw
+
+**Opt-ins: separate choices, each off until the traveller makes it.** There is no pre-ticked answer,
+and silence is not consent.
+
+| # | Choice | Effect | Source |
+|---|---|---|---|
+| C-1 | Give an emergency contact | captured; the way to reach them is kept in the organizer-only file; the group sees the emergency line's *on file with the organizer* state | `ADR-004` § 3, kept |
+| C-2 | Give an in-trip contact | captured; the organizer sees it | `ADR-004` § 3, kept |
+| C-3 | Share the in-trip contact with the group | shown on the private site | **the private-site record's share mark, reused by citation** rather than a new device. Unmarked means organizer-only, as an unmarked desire means personal. C-3 requires C-2 |
+| C-4 | Confirm that the emergency contact agreed to be listed for the group | the contact's name shows in the emergency line; without it the line reads *on file with the organizer* | the operator's D1. C-4 requires C-1 |
+
+**An absent or malformed mark reads as unmarked, and an absent or malformed confirmation as not
+confirmed.**
+
+**What they are told.** It is told at collection, beside the fields, under the private-site record's
+safeguard 1, and for these fields it replaces the form's current *private — never published* promise.
+The list of elements is closed; Wave 1 writes the words.
+
+| # | The traveller is told |
+|---|---|
+| N-1 | What each field is for: the in-trip contact lets the group reach them during the trip; the emergency contact lets the organizer reach someone for them if something happens |
+| N-2 | Who sees each one. The way to reach the emergency contact: the organizer only, never on the site, in any form. The emergency contact's name: everyone with the trip's password, only when the traveller confirms the contact agreed to be listed; otherwise the group sees only that a contact is on file with the organizer. The in-trip contact: the organizer once given, plus everyone with the trip's password if marked shared. None of them ever appears on a public page |
+| N-3 | The group sees who to tell — the organizer — and, for each traveller, whether an emergency contact is on file, by name when confirmed |
+| N-4 | Both stay with this trip: neither is saved to their profile or carried into later trips |
+| N-5 | The emergency contact is someone else's details: they should tell that person they have been listed, confirm on the form that the person agreed only if they have, and that person can ask the organizer to remove them |
+| N-6 | They can change or remove either at any time; the site catches up at the organizer's next update; anyone who already saw a detail may have kept a note of it |
+| N-7 | Only the organizer holds the ways to reach emergency contacts. If the organizer is the one affected, or cannot be reached, nobody on the trip can reach the traveller's emergency contact through the site, so they should keep it on their own phone too |
+
+**The notice couples with the carrier.** It says that the group contacts section appears from the
+first pre-plan page onward, and what each of the three emergency states means; N-2, N-3 and N-5 name
+the carrier's lines. The notice carries no other new text.
+
+**How they withdraw:**
+- **W-1.** Unmark the in-trip contact, and it returns to organizer-only.
+- **W-2.** Remove either value, and it is gone from the trip store.
+- **W-3.** Or ask the organizer to do either.
+- **W-4.** The emergency contact can ask the organizer directly (§ 3, rule 8).
+
+**Timing and gates.**
+- **A withdrawal is honoured at the organizer's next update**, under the private-site record's
+  safeguard 4 as CR-2's first call reads it: it is recorded only through a verb that runs the reconcile
+  step in the same act, so every staleness report shows the page as behind until the next update
+  carries it. **No publish gate is added.** Today `/trip-record profile` names the reconcile step and
+  does not run it, so the recording verb is a Wave-1 obligation shared with the private-site record.
+- **No group approval.** A change to a traveller's own sharing choice, in either direction, is not a
+  plan change: `ADR-003` § 2's approval governs plan changes. The organizer's confirmation, which gates
+  every republish, is the only gate. **The rule: a change that only removes or narrows what the group
+  sees about a person is never held for the group's approval.** It binds any approval step on the
+  publish path, and it is reconciled with the group-approval release at that release's Stage-9 plan
+  review.
+- **Withdrawing is as easy as giving**: the same form and fields, with no reason asked. A field that
+  was declined or withdrawn is never asked about again on that trip — the form's own rule is "Never
+  push twice".
+
+**Erasure.**
+- `/trip-record erase` rewrites the whole traveller file and deletes and rebuilds the render. **Under
+  the storage rule it must also reach the organizer-only file**, and under CR-2's sixth call every trip
+  page file, not only the newest: both are Wave-1 conditions of the slices that land the capture and
+  the page's file-name rule. The carrier's own erase row deletes the subject's entry whole (§ 6).
+- `examples/archived-trip-demo/` witnesses an `Emergency contact` override being reduced to the
+  not-answered sentinel, through the artifact-schema suite's arm `ER15`. Once Wave 1 declares the
+  field, the witness's descriptions of it — a label no schema declares, a divergent copy of a durable
+  field — become false, so the slice that declares the field moves the witness to a label that is still
+  undeclared, or rewords them, with `ER15` kept green.
+- **Removal only works forward**: it cannot recall a copy someone already made.
+
+### 5. What `ADR-004` keeps, and what this record supersedes
+
+| `ADR-004` section | Disposition | What this record states |
+|---|---|---|
+| § 1 Storage location | **kept**, with clauses re-read | The data lives only in that trip's directory in the operator's trip store: never committed, never written to `trip-context.md`. The store resolves through the data root, per `ADR-021`'s amendment — a resolution change is not a relocation. Under the storage rule the way to reach the contact, and a name the contact has not agreed to show, live in the organizer-only file beside the traveller's trip file (§ 3, rule 4). § 1's *never written to the published artifact* now reads field by field: never, for the way to reach the contact; private site only, for a shared in-trip contact, an attested name and the emergency line's state |
+| § 2 Minimum field set | **kept**, and stated as closed | A contact method — now the in-trip contact — plus one emergency contact: a name and one way to reach them. "No more": no relationship, address, second contact or free-text note |
+| § 3 Consent & visibility | **consent kept; visibility superseded in part** | Opt-in is kept, now as the choices C-1 to C-4. The in-trip contact is organizer-visible by default and group-visible on the private site when marked shared; the emergency contact's name is group-visible on the traveller's attestation; whether a contact is on file is group-visible for every filer. The way to reach the contact stays organizer-only |
+| § 4 Non-publication guarantee | **kept** for the way to reach the contact, an unshared in-trip contact and an unattested name; **narrowed** for a shared in-trip contact, an attested name and the emergency line's state: private site yes, public page never | Enforcement is § 3, rule 6. The group-visible items take the private-site record's handling of IN items, including its public-path refusal keyed on the group contacts section's presence, with no matching on values |
+| Consequences — the trade-off accepted "since the organizer coordinates" | **withdrawn** | Its premise is gone (the private-site record) |
+| Follow-on build slices | **handed to Wave 1** | The local capture goes to this record's capture build, with the filing script; the validator check becomes the § 5.6 row; the intake opt-in step becomes C-1 to C-4 and N-1 to N-7 |
+| *Every section* | **Nothing ever reaches a public page** | It holds for L-1, L-2 and L-3 alike |
+
+**How the supersession is recorded — the operator's D3, timed by CR-2's fifth call.** A dated note
+inside `ADR-004`, in the form `ADR-009`'s eighth amendment uses: `ADR-004`'s `Status:` line records the
+supersession in part, and inline markers stand at § 1's *never written to the published artifact*,
+§ 3's visibility, § 4's guarantee and the Consequences trade-off; everything else stays in force. The
+note lands at the milestone's closing ratify chore, in the same change as this record's `Accepted` flip
+— not in this release, and until then `ADR-004` is the decision in force. `ADR-004` is never marked
+superseded and its index cell stays `Accepted`, so this record carries no Supersedes bullet: it names
+here the sections it supersedes in part, and states that the rest stands. **`ADR-011`'s two
+restatements of `ADR-004`** — § 1's *never written to the published artifact*, and § 2 read as a
+minimum rather than the closed set it is — are corrected by one dated amendment in `ADR-011`, which
+lands with the `ADR-004` note; `ADR-011`'s own conclusion is untouched.
+
+### 6. The carrier — how the group-visible items reach the page
+
+The operator locked the carrier as decision K: C-1 to C-5 as designed, with the storage change of
+§ 3, rule 4.
+
+#### C-1 — The file
+
+**A new per-trip derived file, `outputs/group-contacts.md`.** It holds one entry per traveller who
+filed their own trip form. Each entry carries the **in-trip contact**, when shared, and the
+**emergency line**, always, in one of its three states. The **organizer line** is not in it: it renders
+from the trip context's roster. The in-trip contact is the traveller's own and the name is a third
+party's, but both share one key — the traveller — one population, one writer, one lifecycle, one reach
+and one purpose, so one entry holds both. The closures of every other home are under *Options
+considered*.
+
+#### C-2 — Who writes it, and from what
+
+**The writer is the enrichment agent, in its reconciler role only** — one writer, as § 1.1 requires.
+This reuses `ADR-028` § 2's pattern and the group snapshot's: the role already reads every
+`travelers/<traveler>.md` and the roster, and already computes who filed — the engagement value
+(`ADR-025` § 1), which is the carrier's population — so the carrier adds no agent, no dispatch and no
+read.
+
+| Carried | Read from | How |
+|---|---|---|
+| the entry key, `## <Name>` | the roster's display name | a projection of the roster cell — the Traveler natural key, as the group snapshot and `ADR-028` § 2 key theirs |
+| the population | the engagement value computed in the same pass | used, never written |
+| the in-trip contact | the traveller's trip file: its value and its share mark | verbatim, only when marked |
+| the emergency line's state | the traveller's trip file: the *on file* marker | the marker only; the way to reach the contact is never read |
+| the emergency contact's name | the traveller's trip file: the agreed name and its agreement mark | verbatim, only when on file and attested |
+
+- **Never through the traveller model**, never from the trip context, never from the person record —
+  the person form never declares these `TRIP` fields — and never from a session or the interview.
+- **Under the private-site record's safeguard 7, decision Q**, the step that writes this file reads a
+  script-made projection of the traveller data that omits the non-publishable field class, rather than
+  the full trip file; the fields above pass through that projection unchanged.
+- **The read set is closed by label**: each output line is filled only from its own label, verbatim —
+  carry-through, not computation. An absent or malformed mark reads as unmarked, and an absent or
+  malformed attestation as not attested.
+- **The withhold rule**: a line is withheld whole, never trimmed, when its value states or implies a way
+  to reach anyone but its own subject, a relationship, a person who did not file, or any OUT kind. A
+  withheld name falls back to *on file with the organizer*; a withheld in-trip contact shows nothing.
+- **The relationship is never captured**, and the file's grammar has no line for the way to reach an
+  emergency contact.
+
+**When: on every reconciler pass, in every mode.** The group snapshot is gated on IDEATION because
+plan-mode renders exclude it; the carrier renders in every state the site builds, so that reason does
+not arise. Every dispatcher of the reconciler — `/trip-record travelers`, `/trip-record person`,
+`/trip plan` and `/trip replan` — names the file on its Reads line, unconditionally (`ADR-028`'s
+standing rule 16).
+
+**Lifecycle: `rebuilt-each-synthesis`**, rebuilt whole, with no carry-forward: `ADR-025` never-carry 1
+applies with no third-party carve-out, because no third-party entry can enter. No pass runs on an
+`ARCHIVED` trip, and the tolerant read's write-stop applies.
+
+**Write ownership** (`CLAUDE.md` § *Write ownership*).
+- Ownership follows the writer, not the caller: the file is the enrichment agent's, whichever verb
+  dispatches it, and it adds no block to `trip-context.md`.
+- It is never edited by hand: every change is made at the source.
+- **Withdrawal and removal follow CR-2's first call.** Unsharing, removing a value, the organizer acting
+  on request, the contact's own removal request and a refusal under the private-site record are each
+  recorded at the source through a verb that runs the reconcile step in the same act. That step
+  rewrites the carrier, so `itinerary-to-build` reads `BEHIND`, naming it, until the organizer's next
+  update.
+- **The file's path never enters the enrichment roster row's `Output File` cell** in `CLAUDE.md`,
+  where a path under `outputs/` would enter `/trip research`'s agent-key filter — `ADR-028` § 4's
+  trap, carried as a Wave-1 authoring constraint.
+
+#### C-3 — Its class
+
+**`publish: bound`.** The file exists to be rendered, and D1 and D2 admit every value in it on the
+private site. It is not `internal-hard`, which is for values that must not reach a rendered page in any
+form. § 5.1's enum is closed, so no group-only value is minted: the group-only property comes from the
+private-site record's public-path refusal, keyed on the section (C-5). Every row below is decided here
+and landed by Wave 1; none is edited in this release.
+
+| C | Class | W (exactly one) | L | Prov | P | Primary entities |
+|---|---|---|---|---|---|---|
+| the next in-model ordinal | `outputs/group-contacts.md` | enrichment | `rebuilt-each-synthesis` | `derived` | **`bound`** | Traveler |
+
+The class is named by path, never by ordinal; the landing slice derives the ordinal at its own base.
+Its § 9.1 authority row and its `publish-contract-artifacts` fence row land with the § 1.1 row in one
+commit, so group `PB` stays green:
+
+| Site element | Authoritative artifact | The site reads it for |
+|---|---|---|
+| Group contacts — each filer's shared in-trip contact and emergency line | `group-contacts.md` | The group contacts section, in every state the site builds |
+
+| artifact | class |
+|---|---|
+| `outputs/group-contacts.md` | `bound` |
+
+**The element fence `round-trip-contract-elements-group-contacts`**, at label grain, graded against the
+writer's grammar block. The labels are working names; Wave 1 spells them as the capture form does.
+
+| element-label | disposition | component |
+|---|---|---|
+| `Group Contacts [DERIVED]` | rendered | `group-contacts` — the section title; the mark is provenance metadata and is not rendered; the frame line renders as the standfirst |
+| `<traveler-entry>` — each `## <Name>` | rendered | `group-contacts` — the entry title |
+| `In-trip contact` | rendered | `group-contacts` |
+| `Emergency contact` | rendered | `group-contacts` — exactly one per entry, in one of the closed states: the attested name, with a note that the organizer holds how to reach them · *on file with the organizer* · *no emergency contact on file* |
+| `<artifact-frontmatter>` | excluded | — |
+
+**§ 5.6: no row is scoped to this file.** The way to reach the contact never enters it; its own row is
+the one § 3, rule 6 places on the organizer-only file. There is no row for the name, which D1 renders
+when attested, and none for the in-trip contact, which is group-visible when shared, so a row would make
+the validator Critical on a lawful line; its public-path protection is structural (C-5).
+
+**The erase reach row**, appended by the landing slice at its own base:
+
+| # | Location | Disp. | What happens |
+|---|---|---|---|
+| the next free number | `outputs/group-contacts.md` — the subject's entry | REACH | **delete the entry whole**, with no tombstone and no token: the roster carries the trip's tombstone, and the file holds no independent state. Emit `n/a` naming the absent file, or naming the population rule that admits no entry. **Never a silent skip** |
+
+**Frontmatter:** `artifact: outputs/group-contacts.md` · `schema-version: 1` · `trip:` ·
+`writer: enrichment` · `lifecycle: rebuilt-each-synthesis` · `provenance: derived` · `publish: bound` ·
+`generated:` the date of the pass.
+
+#### C-4 — Where it shows
+
+**The section ceiling returns a section, `group-contacts`, in every state the site builds** — both
+IDEATION rows and the four plan modes — as the site phase-model record's ladder runs it: the element has
+a § 9.1 authority once the class lands; every rendered value is admitted by D1 and D2, and the § 5.6
+row involved names a value the file never carries; no § 3 component carries a per-traveller record in
+every targeted state; and no section iterates travellers in every such state, while a snapshot region
+in IDEATION plus a section in the plan modes would give one element a second home and move it at the
+IDEATION exit. The site phase-model record carries the render-table rows by citation to this record,
+and there is no § 9.3 row, because nothing is excluded in any built state.
+
+**The organizer line is not re-decided.** It stays a field of the hero, rendered from the roster alone,
+in every state the site builds, under § 2's content rules.
+
+**Why IDEATION too.** The in-trip contact is how the group reaches each other while it coordinates,
+before the trip as well as during it. Showing the section from the first page lets each traveller see
+what the group sees about them, and correct or withdraw it, before anyone travels, and one section in
+every built state means no transition moves it. When the page file changes its name at the first
+build with a destination, both files carry the section, and CR-2's sixth call — erasure over every
+trip page file — covers that.
+
+**The section's three states**, none inferred from existence: present with entries → rendered; present
+with none → the declared empty state, a neutral line that gives no reason; absent → a degraded read,
+never a smaller site — the walk exits degraded, the verb does not present the site as current, and the
+remedy is `/trip-record travelers`. Where the section sits, its title and its frame line are Wave 1's.
+
+#### C-5 — What never happens
+
+| Never | How it holds |
+|---|---|
+| **The way to reach an emergency contact on any page** | It is not in the carrier's grammar, and the carrier's writer never reads it: the emergency line's state reads the *on file* marker. It lives in the organizer-only file, which no agent step reads, and a value mixed into another line withholds that line. Its § 5.6 row makes it a class member, so the `--plaintext` guard aborts on it and the validator's audit is Critical on it wherever that audit reads, and the private-site record's safeguard 6 checks every file the site build reads for it before every publish. The encrypted limb asserts encryption, not content (`ADR-026` § 3), so there it rests on the writer's construction and on those checks |
+| **The relationship** | never captured; no label carries it; a name value stating one is withheld whole, and the line falls back to *on file with the organizer* |
+| **A public page** | the private-site record's public-path refusal covers the section **by its presence**, with no per-value matching; the render is limb-blind, and no redaction step is added |
+| **A non-filer beyond their name** | the population's floor is `SELF-STATED` — `ADR-025` § 5's first-party reading — so no `OPERATOR-STATED`, `THIRD-PARTY-STATED`, `UNSOURCED` or erased member, and no refuser, has an entry, and `ENGAGEMENT-UNDETERMINED` admits no one, which the pass reports. The name shows through the hero, under D-1, and no line names or describes such a person. All of them look the same: no entry |
+| **An unshared contact, or an unattested name** | each is carried only under its mark; an absent or malformed mark reads as not given |
+| **A withdrawal held back** | recorded through a verb that runs the reconcile step; nothing carries forward, so the rebuild drops the line; `itinerary-to-build` reads `BEHIND` until the organizer's next update; no gate blocks on freshness. The residuals: a hand edit with no verb is observed only at the next reconcile, and removal reaches forward only |
+| **Contact data in the traveller model or a planning artifact** | the file is written beside the model, never through it (§ 3, rule 4) |
+| **Going live early** | the private-site record's safeguard 5 binds every Wave-1 slice of the carrier: nothing goes live before the fix for the rotation defect tracked privately ships |
+
+### 7. Conditions carried to Wave 1
+
+Each is a condition of the slice named, stated here so that no slice re-decides it:
+
+- **The capture build**: the trip form's fields and the choices C-1 to C-4; the notice elements N-1 to
+  N-7; **the filing script and the block on agent reads of the organizer-only file** (§ 3, rules 4 and
+  5); the organizer-only file itself; the way-to-reach's § 5.6 row scoped to that file, with the
+  evaluator's queried set widened in the same change (§ 3, rule 6); the `TRIP` rows in
+  `reference/data-model.md` § *Field Scope* and their totals; and the recording verb for a withdrawal
+  or a removal, shared with the private-site record (CR-2's first call).
+- **Erasure** reaches every trip page file (CR-2's sixth call) and, under the storage rule, the
+  organizer-only file.
+- **The carrier slice**: the class, its fences and its section; its schema; its writer contract,
+  **with the writer's input re-pointed to the script-made projection of the private-site record's
+  safeguard 7**, and the split between writing internal files from full inputs and writing
+  group-visible files from that projection; its erase row; the dispatchers' Reads lines; and a
+  sanitized witness under `examples/`.
+- **The validator.** Its inline list of the publish-bound artifacts gains the carrier. The validator
+  does not run in IDEATION, so for the field class the private-site record's safeguard 6 covers that
+  half.
+- **Two shared surfaces are re-read at the slice's own base** — `reference/site-layout-spec.md` § 3 and
+  the `site` verb's section of `skills/trip/SKILL.md` — because another release edits both.
+- **The erasure witness** is relabelled or reworded, with `ER15` kept green (§ 4).
+- **The approval rule** of § 4 is reconciled with the group-approval release at its Stage-9 plan
+  review.
+- **Nothing goes live** before the fix for the rotation defect tracked privately ships.
 
 ## Consequences
 
