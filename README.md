@@ -1,278 +1,253 @@
 # Travel Planner
 
-A multi-agent trip planning system. Nine specialized agents research, plan, validate, and produce travel itineraries.
+Plan a group trip with [Claude Code](https://claude.com/claude-code). Tell it where you're going and
+who's coming. A team of AI agents researches the destination and builds a day-by-day itinerary that
+works for everyone in the group. The plan is checked before you rely on it, then turned into a
+travel website that only people with the passphrase can open.
 
 ## What it produces
 
-The headline output is a single self-contained HTML travel site — encrypted before it is published, decrypted in the reader's browser. This is the desktop layout, drawn against the design system in [`reference/site-layout-spec.md`](reference/site-layout-spec.md) and populated from the worked example in [`examples/data-architecture-demo/`](examples/data-architecture-demo/):
+A self-contained website for the trip, with a day-by-day schedule, maps, food picks and a booking
+checklist:
 
-![Desktop layout of a generated travel site: a full-bleed hero carrying the destination, the trip dates and four trip stats; a sticky day-navigation strip with per-day colour coding; a day banner above a heat strip marking the trip's no-unshaded-outdoor-block window; and a four-column day grid — schedule timeline, featured stop cards, food and night cards, and a schematic map — with a booking-status pill on every card, over a booking checklist derived from tracked per-event status.](examples/data-architecture-demo/site-preview.svg)
+![Desktop layout of a generated travel site: a hero with the destination, dates and trip stats; a sticky day-navigation strip; a heat strip marking the no-unshaded-outdoor window; and a four-column day grid of schedule, featured stops, food and night cards, and a map, with a booking-status pill on every card.](examples/data-architecture-demo/site-preview.svg)
 
-*A figure, not a screenshot — and a fixture, not a real trip. Every name, time, event ID and count in it is taken from [`examples/data-architecture-demo/`](examples/data-architecture-demo/); that [fixture's README](examples/data-architecture-demo/README.md) records how the figure is kept current, and why it is committed as source rather than captured as an image.*
+*A generated site's desktop layout, drawn from the example data in
+[`examples/data-architecture-demo/`](examples/data-architecture-demo/). It is not a real trip.*
 
-The markdown a finished plan is actually made of is in [`examples/tokyo-2026/`](examples/tokyo-2026/) — one full planning cycle, including the [final itinerary](examples/tokyo-2026/outputs/final-itinerary.md) and the [food research](examples/tokyo-2026/outputs/food-list.md) behind it. That example predates the artifact schema: it covers a subset of the artifact classes, and its files carry no `artifact:` frontmatter. For the shape an artifact has now, read the migrated fixture in [`examples/data-architecture-demo/`](examples/data-architecture-demo/), where every artifact carries its declaration block. It also predates the **three-way evening ownership boundary** the engine now ships: its `## Evening / Nightlife (Mixed Group)` section routes every evening venue to the activities spoke, where the shipped rule splits them across activities, food and nightlife by each venue's primary draw — so a reader following that section would route venues in a way the agent prompts now forbid. For the compliant shape, read [`examples/evening-boundary-demo/`](examples/evening-boundary-demo/).
+## How it works
 
-## Folder Structure
+1. **Each traveler fills in a short profile.** It covers what they want from this trip. A second
+   profile, filled once and reused, covers what they always need, such as diet, mobility, heat and
+   rest. A missing profile counts as *unknown*, never as *no constraints*.
+2. **Research agents cover the destination.** One gathers context like weather, transit and local
+   events. Others research activities, food, nightlife, transport and scheduling, and each writes
+   its findings to its own file.
+3. **A hub agent assembles the itinerary.** Everyone's needs are hard limits. Everyone's wishes are
+   balanced across the group.
+4. **A validator audits the plan.** It checks every constraint on every day, plus closures,
+   reservations and an indoor fallback for every long outdoor block.
+5. **You make changes in conversation.** Swap two days, ask for more dinner options near the hotel,
+   or record a booking. Small changes are direct edits, and only the affected agents re-run.
+6. **You publish the site encrypted.** Only ciphertext leaves your machine.
 
-| Path | Purpose |
-|---|---|
-| `CLAUDE.md` | Operating instructions for Claude Code |
-| `skills/` | The slash commands — the addressable way in (see [First run](#first-run)) |
-| `agents/` | Behavioral definitions for the 9 agents (destination-ideation, enrichment, activities, food, nightlife, scheduling, transport, hub-planner, validator) |
-| `templates/` | `trip-context.template.md` — copy this when starting a new trip. `traveler-intake.template.md` — one per traveler per trip; the trip half of intake. `person-intake.template.md` — one per person, ever; the durable half |
-| `reference/` | `data-architecture.md` — the engine-wide data architecture every artifact is built to; `data-model.md` — the satisfaction layer's specialization of it; `schemas/` — the per-artifact-class schemas the CI gate validates against; `site-layout-spec.md` — implementation spec for the published travel site; `command-reference.md` — the whole command surface in one derived table; `replan-protocol.md` — how a replan behaves when the trip is near; `adr/` — architecture decision records |
-| `scripts/` | `publish-trip-site.sh` — encrypt + privately publish a trip site; alongside it the `test-*.sh` guard suites, each run by its own workflow in `.github/workflows/` on every push |
-| `examples/` | Worked examples — one sanitized real trip (`examples/tokyo-2026/`) plus seven purpose-built demo fixtures |
-| `trips/` | Inside the engine, an empty skeleton — only its `README.md` signpost is tracked, and nothing writes a record here. Your trips live at `<data-root>/trips/`, the directory the pointer in [Install](#install) names: per-trip working directories, never published |
-| `people/` | Inside the engine, the same empty skeleton (a tracked `README.md` signpost). Your durable cross-trip person store lives at `<data-root>/people/` — one record per person, read alongside a trip profile rather than copied into it, never published |
+Each trip is a folder of plain markdown you can read, diff and edit. Your trip data lives in a
+folder you choose, outside this repository, and stays on your machine.
+
+## Requirements
+
+- [Claude Code](https://claude.com/claude-code), desktop app or CLI
+- `git`
+- Only if you publish a site: `bash`, `perl`, [Node.js](https://nodejs.org) (which runs StatiCrypt
+  through `npx`), and the [GitHub CLI](https://cli.github.com), signed in with `gh auth login`
 
 ## Install
 
-The engine installs into [Claude Code](https://claude.com/claude-code) as six personal skills: five verb skills — one per trip verb — each linked from a single engine directory, and that engine directory itself, which needs no link because it is not a verb but the surface you reach by describing what you want in ordinary words. There is nothing to *build* — no compile step and no dependency tree — but there **is** something to install: the engine is cloned into Claude Code's own skills directory, and each verb is linked beside it under its own name, which is what gives the trip verbs a home of their own. Once installed you reach them by typing them, from whatever project you have open, and the verbs carry the planning flow with them: each names the engine's own [`CLAUDE.md`](CLAUDE.md) and opens it from where the engine is installed, so the flow does not depend on which folder is open. Opening this folder stops being how the engine is used. It works the same in the **desktop app** and the **CLI**; [`reference/adr/ADR-021-installable-capability.md`](reference/adr/ADR-021-installable-capability.md) records why.
+The engine installs as a set of Claude Code personal skills. There is nothing to build. These steps
+are for macOS and Linux. For Windows, see the notes at the end of this section.
 
-### Prerequisites
-
-**To plan a trip:**
-
-- [Claude Code](https://claude.com/claude-code) — desktop app or CLI
-- `git` — to acquire the engine. The clone below lands in the directory Claude Code reads personal skills from, so acquiring the engine and placing it are one step; linking the verbs is the other, and it is one line
-
-**To publish a trip site** (optional — only when you want to share a finished itinerary):
-
-- [Node.js](https://nodejs.org) — provides `npx`, which runs StatiCrypt (`staticrypt@3.5.4`) for encrypt-at-publish
-- [`gh`](https://cli.github.com) (GitHub CLI), authenticated — run `gh auth login` once
-
-### What running this costs
-
-Not what the trip costs — what the *engine* costs to run. Planning happens inside Claude Code, so what you spend is model usage on whatever Claude Code plan you already have. This repo can't see your billing and collects no usage data, so what follows is an order of magnitude, not a price; any figure printed here would be wrong the next time plans or model pricing moved.
-
-Nearly all of it is agent dispatches, and [`CLAUDE.md`](CLAUDE.md) already sorts every request by how many it needs. **Building the first full plan is the expensive operation** — the whole pipeline runs (enrichment, five research agents, the hub planner, the validator, plus a remediation pass if the validator finds something critical), several of those agents do live web research, and all of them run on the top model tier, which is a deliberate choice rather than a place the engine economizes. Treat it as one sitting, not a background job. The first site build is a second pass of the same kind — a bespoke design artifact, not a template fill.
-
-**Everything after that is one to two orders of magnitude cheaper**, and it is what an active trip actually consumes. A direct edit, a quick lookup or a site tweak dispatches no agents at all; Claude reads the one file and changes it. Targeted research ("more dinner options near the hotel") dispatches a single agent and appends to what is already there. A structural change, like swapping two days, re-runs only the affected agents plus a hub patch. Updating a published site patches the affected sections instead of regenerating them, and the publish step itself is shell plus `npx` — no model in the loop.
-
-The gap is deliberate: the operating instructions make the lightest action that matches the intent the default, so re-running the food agent to fix a typo is something the engine is explicitly told not to do. What genuinely varies is how much research a destination needs and how many rounds you iterate before a plan feels right — both scale that first pass; neither changes the ratio.
-
-### Install steps
-
-**Acquire it.**
+**1. Clone the engine** into your Claude Code skills folder:
 
 ```bash
 git clone https://github.com/cody-hutson/travel-planner ~/.claude/skills/travel-planner
 ```
 
-**Link the verbs.** The checkout you just made is the engine, and each verb lives inside it at
-`skills/<verb>/`, beside the asset tree it reads. What makes a verb reachable is a link to that
-directory placed beside the engine, under the verb's own name — one per verb, five in all.
-
-**macOS / Linux:**
+**2. Link the commands** next to it, so each one is available under its own name:
 
 ```bash
 for v in trip trip-new trip-record trip-publish trip-decommission; do ln -s ~/.claude/skills/travel-planner/skills/$v ~/.claude/skills/$v; done
 ```
 
-**Windows** (`cmd`, no elevation needed):
+**3. Create your data folder.** Your trips, traveler records and groups live here. Put it anywhere
+*outside* the engine, so updating or removing the engine never touches your data. This example uses
+`~/travel`. These commands give it the same empty `trips/`, `people/` and `groups/` folders the
+engine ships, then record its location in a pointer file:
+
+```bash
+mkdir -p ~/travel && cd ~/travel
+for d in trips people groups; do mkdir -p $d && cp ~/.claude/skills/travel-planner/$d/README.md $d/; done
+mkdir -p ~/.travel-planner && printf '%s\n' "$(pwd)" > ~/.travel-planner/data-root
+```
+
+If you used an earlier version, your old checkout already holds your trips. Run only the last
+line, from inside that checkout.
+
+**4. Let Claude Code read your data folder.** The commands run from whatever project you have open,
+so Claude Code needs permission to read the data folder and the pointer. Add both to your user
+settings, `~/.claude/settings.json`. If that file already exists, add the entry to its
+`permissions` object:
+
+```json
+{
+  "permissions": {
+    "additionalDirectories": ["~/travel", "~/.travel-planner"]
+  }
+}
+```
+
+To update the engine, run `git pull` in `~/.claude/skills/travel-planner`. If a release adds a new
+command, link it the same way as in step 2.
+
+<details>
+<summary>Windows (not yet confirmed on Windows, so please <a href="https://github.com/cody-hutson/travel-planner/issues">report how it goes</a>)</summary>
+
+From `cmd`, with no elevation needed:
 
 ```bat
+git clone https://github.com/cody-hutson/travel-planner "%USERPROFILE%\.claude\skills\travel-planner"
 for %v in (trip trip-new trip-record trip-publish trip-decommission) do mklink /J "%USERPROFILE%\.claude\skills\%v" "%USERPROFILE%\.claude\skills\travel-planner\skills\%v"
 ```
 
-The Windows line is the documented-equivalent form — a directory junction where the line above
-makes a symbolic link — and **it has not yet been verified by a Windows user**. If it does not
-behave as the next paragraph describes, that report is the measurement this release is missing.
+Then create your data folder as in step 3, and write its absolute path, on one line, to
+`%USERPROFILE%\.travel-planner\data-root`. Allow both folders as in step 4. Publishing runs a bash
+script, so use Git Bash or WSL for it.
 
-**What the runtime does with those.** Claude Code treats each entry directly under
-`~/.claude/skills/` that holds a `SKILL.md` as a personal skill, named by the entry, and its Skills
-documentation states that such an entry may be a symlink to a directory elsewhere on disk: Claude
-Code reads `SKILL.md` from the link's target. So when it next starts, each verb appears under its
-own bare name — `/trip`, `/trip-new`, `/trip-record`, `/trip-publish`, `/trip-decommission` — and
-finds every asset it names two levels above its link — the link is followed before `..` is
-resolved, so that path is the engine directory. The
-engine directory itself is a skill too: it carries a `SKILL.md` at its root, so the runtime indexes
-it under its own name alongside the verbs — and that is what makes conversational entry reachable,
-because a request in ordinary words reaches that surface and it names the verb to type. Nothing is
-copied and nothing is rearranged.
-**Installing is placing the directory and linking the verbs; updating is a `git pull`** in the
-engine directory — the links name it by path and follow whatever it holds — and there is no
-separate install command to run.
-
-Then, wherever you work:
-
-- **Desktop app** — you no longer open the `travel-planner` folder. Open whatever project you are
-  in; the verbs are there because the engine is installed, not because its folder is open.
-- **CLI** — the same. Run `claude` wherever you work. The verbs do not depend on your working
-  directory, and neither does your trip data — that is the next section.
-
-That is the whole of what installing buys. A verb used to resolve your trips through whichever
-folder happened to be open, so it appeared in every project and worked only in the checkout.
-Installed, the engine has a location of its own and finds your data through the pointer below.
-
-### Upgrading from the copied-command layout
-
-Skip this on a fresh install. It applies if you ran an earlier version and copied the verb files
-into Claude Code's user-scope command directory so they would be available outside the checkout —
-the workaround this release removes the need for. Those copies still answer, and they answer with
-the old resolution behaviour, so remove them.
-
-**Remove them one path at a time, never the directory.** That directory is shared: it commonly
-holds unrelated commands of your own, and nothing here should touch them.
-
-```bash
-rm ~/.claude/commands/trip.md
-rm ~/.claude/commands/trip-new.md
-rm ~/.claude/commands/trip-record.md
-rm ~/.claude/commands/trip-publish.md
-rm ~/.claude/commands/trip-decommission.md
-```
-
-**Nothing is lost by doing this.** Every one of those copies is byte-for-byte a revision of the
-same verb that this repository already tracks, so the content lives in git history and not only
-in the file you are deleting:
-
-```bash
-git log --all --oneline --name-only --no-renames --diff-filter=D -- '*/trip*.md'   # the paths and revisions
-git show <commit>:<path>                                             # print any one of them
-```
-
-If you ever hand-edited one of those copies, `diff` it against the installed
-`skills/<verb>/SKILL.md` before removing it, so you keep whatever you changed on purpose.
-
-Afterwards: those paths are gone, every other command in that directory is untouched, and `/trip`
-resolves to the installed engine rather than to a stale copy.
-
-### Tell the engine where your trips live
-
-The verbs read and write your own trip data, and they find it through **one pointer file** rather than
-through whatever directory you happen to be working in. Create it once:
-
-```bash
-mkdir -p ~/.travel-planner
-printf '%s\n' "$(pwd)" > ~/.travel-planner/data-root
-```
-
-Run that from the directory that holds your trips. If you used an earlier version, that is the
-checkout you had before — `trips/`, `people/` and `groups/` are already there, so nothing moves and
-nothing is copied. If you are starting fresh, make a directory for them anywhere you like and run it
-there. Either way it is **not** the engine directory you just installed: removing or replacing the
-engine must never touch your data, which is the point of the pointer. The file holds **one absolute
-path and nothing else**.
-
-Until it exists, every verb stops and says so, naming the file and this step. That is deliberate: the
-alternative is a verb that resolves *something*, finds a directory that happens to exist, and reports
-that you have no trips while your real ones sit elsewhere.
-
-**What uninstalling does to your data.** Uninstalling is the install in reverse: remove the five
-verb links from `~/.claude/skills/` — each is a link, so removing it leaves the engine untouched —
-and then delete the engine directory, `~/.claude/skills/travel-planner`. Nothing else is involved.
-
-```bash
-for v in trip trip-new trip-record trip-publish trip-decommission; do rm ~/.claude/skills/$v; done   # the five links; on Windows, rmdir each junction
-```
-
-This pointer lives outside both and survives. Your data lives outside both, at the path the pointer
-names, and survives — removing your trips means deleting that directory yourself, on purpose.
-Updating the engine is a `git pull` in its directory and touches neither. The `trips/`, `people/`
-and `groups/` directories that ship inside the engine are an empty skeleton carrying only a
-`README.md` each; they are not your store, and nothing ever writes one of your records into them.
-
-Tell Claude you want to plan a trip and the conversation takes over. Each trip lives in `trips/<destination>-<year>/`: `trip-context.md` is the source of truth, `trip-log.md` bridges multiple planning sessions, `travelers/` holds one profile per person for this trip — each optionally pointing at that person's durable record in `people/`, which sits outside every trip and is read alongside the profile — and `outputs/` holds the agent artifacts — some accumulating across sessions, others rebuilt, versioned or persisted in place, each per its declared lifecycle class.
-
-### First run
-
-Conversation is not the only way in. The files in `skills/` give the engine an address: type `/` in Claude Code and they offer themselves with tab-completion, so the request types [`CLAUDE.md`](CLAUDE.md) routes are visible at the prompt instead of being something you have to know to ask for.
-
-**Start with `/trip`.** With no verb it runs `status`, whose own rule is that it writes nothing and runs no script: it reads what is in `trips/`, resolves the trip and its mode, and states what is available and what comes next. On a fresh clone there are no trips yet — `/trip` says so, and names `/trip-new` as the way to make one.
-
-| Command | What it is for |
-|---|---|
-| `/trip` | The entry point. Bare `/trip` reports where the trip stands; its verbs run the planning work — `plan`, `research`, `replan`, `check`, `site` and `schema` among them |
-| `/trip-new` | Starts a trip that does not exist yet: the folder, `trip-context.md`, `trip-log.md`, and traveler intake. It only creates — re-run on an existing trip, it adds what is missing and rewrites nothing |
-| `/trip-record` | Writes what you know into the trip's own files — a traveler profile, a third party's needs, the destination, the mode, the party, trip facts, per-event status, the session log |
-| `/trip-publish` | `update` re-publishes an already-public site after edits; `list` reports what is published |
-| `/trip-decommission` | `temporary` takes a site offline, `archive` concludes a finished trip, `reopen` brings an archived one back |
-
-Each file states its own verbs and what each one needs, so the list above is a starting point rather than the whole surface — [`reference/command-reference.md`](reference/command-reference.md) is that surface in one table, every verb with the arguments it takes and the trip state it needs. Once `trips/` holds more than one trip, every command takes `--trip <slug>` to say which.
-
-Three publish actions stay deliberately outside this surface and remain terminal commands you run yourself: creating the published repo in the first place, rotating its passphrase, and deleting it. `/trip-publish` does none of the three — [`reference/adr/ADR-007-command-entry-point.md`](reference/adr/ADR-007-command-entry-point.md) records the reasoning and dispositions every publish form one way or the other.
-
-### Traveler profiles
-
-Each person travelling gets their own profile, copied from `templates/traveler-intake.template.md` into `trips/<destination>-<year>/travelers/`. It captures what someone **wants** for this trip — desires the plan tries to land, each with its own priority tier — plus their leanings, dates, journey, lodging and party. What someone **needs** (the constraints a plan has to stay inside — heat, mobility, diet, rest) is a durable fact about the person rather than about one trip, so this form does not ask for it: needs are asked on the durable profile described next, and anything that has to be worked around for one trip alone goes in that trip's own `trip-context.md`.
-
-The answers that stay the same from one trip to the next — a passport's issuing country, a standing allergy, how you like to travel — are asked once instead, on a durable profile at `templates/person-intake.template.md`, held in `people/` and pointed at by a single `person:` line in the trip form. Filling one is optional and has no ordering requirement: a trip form on its own is complete, and a record written later is picked up on the next run.
-
-Three commands connect the two. **`/trip-record link <name> <person-id>`** points a trip profile at a record that already exists; before it writes anything it surveys what the link would change — every field where the two sources disagree, with both values — and stops for your confirmation where it finds one, so nothing is merged silently and abandoning costs nothing. **`/trip-record extract <name>`** goes the other way, for the common case of someone who filled a trip profile before there was a store: it builds a record from that profile's own answered durable fields and points the file at it. It **copies and never moves** — not a byte of the profile changes, so it keeps working exactly as before — takes one file per run, and confirms against a preview that names every field it would move and shows no value but the display name. **`/trip-record unlink <name>`** removes the pointer and leaves the record untouched. None of the three is required to plan a trip, and none is a first-run step — they are read here because the profiles are, but they are available on any trip at any time, and [`people/README.md`](people/README.md) is where each is written up in full.
-
-Both forms are **self-guiding**: a ⭐-marked set gives a two-to-three minute first pass — three fields on the trip form, six on the durable one — and an interview appendix travels with each file, so you can hand the whole thing to any assistant, say "help me fill this out," and it interviews you section by section and returns just the completed profile. Nothing is compulsory; a missing profile is handled as *unknown*, never as *no constraints*.
-
-For the shape and depth a filled profile has, read the worked profile at [`examples/people-library-demo/travelers/noor.md`](examples/people-library-demo/travelers/noor.md) — the same one the form itself names, under *What a filled-in one looks like*. It carries the form's sections and field labels in the form's own order, with answers written into them and an em dash on every question its traveller skipped, so you can hold a draft up against a finished one before the pipeline ever reads it. It doubles as the worked example of a profile pointed at a durable record, so it carries commentary on which answers live where alongside the answers themselves.
-
-Your own profiles carry real personal detail, so they never leave your machine and are never published — trip profiles in the git-ignored `trips/` working directory, person records in the git-ignored `people/` store. The worked profile above is the other case — an invented fixture person, carrying no real personal detail to withhold — and the file opens by saying so.
+</details>
 
 ### Verify
 
-**Confirm the engine is installed and reachable.** This is the check that matters, because
-reaching a verb from outside the engine's folder is the property installing it buys. From any
-directory that is not the engine's, start Claude Code and type `/`: the trip verbs offer
-themselves with tab-completion under their own names, and `/trip` with no verb reports where your
-trip stands. On a fresh install it says there are no trips yet and names `/trip-new`. If the verbs
-do not offer themselves at all, the links are missing or point at nothing — `ls -l ~/.claude/skills/`
-should list the five verb links, each resolving into the engine, and the engine directory beside
-them. That last entry is a real directory rather than a link, so it resolves into nothing and that
-is correct — it is the engine, not a pointer to it. If they offer themselves but cannot
-find your trips, the data-root pointer above is what to check, and the verb names that file for you.
+Restart Claude Code, open any project and type `/trip`. It should say there are no trips yet and
+suggest `/trip-new`.
 
-**Confirm the engine is intact.** A different question, and one to run inside the engine directory,
-`~/.claude/skills/travel-planner`:
+- **The commands don't appear:** `ls -l ~/.claude/skills/` should list the five links, next to the
+  `travel-planner` directory itself.
+- **They appear but can't find your trips, or ask for permission to read them:** check the path in
+  `~/.travel-planner/data-root` and your `additionalDirectories` entry. The error message names the
+  file to fix.
 
-```bash
-ls agents/        # 9 agent definitions
-head -1 CLAUDE.md # operating instructions present
-```
+<details>
+<summary>Upgrading from a version that copied commands into <code>~/.claude/commands/</code></summary>
 
-If you intend to publish, confirm the publish toolchain is ready:
+Older copies still answer to `/trip` with the old behavior, so remove them one file at a time.
+Other commands of your own may live in that folder, so don't delete the folder itself:
 
 ```bash
-node --version    # Node.js present (provides npx → StatiCrypt)
-gh auth status    # GitHub CLI authenticated
+rm ~/.claude/commands/{trip,trip-new,trip-record,trip-publish,trip-decommission}.md
 ```
 
-## Agent Roster
+If you edited one of those copies by hand, `diff` it against `skills/<verb>/SKILL.md` in the engine
+first, so you keep your changes.
 
-| Agent | Role |
+</details>
+
+<details>
+<summary>Uninstalling</summary>
+
+Remove the five links. Each one is only a link, so this leaves the engine in place:
+
+```bash
+for v in trip trip-new trip-record trip-publish trip-decommission; do rm ~/.claude/skills/$v; done
+```
+
+On Windows, `rmdir` each junction instead. Then delete the engine directory,
+`~/.claude/skills/travel-planner`. Your data folder and `~/.travel-planner/` are left alone. Delete
+them yourself if you want them gone.
+
+</details>
+
+## First run
+
+```text
+/trip-new lisbon-2027            set up the trip and walk through traveler intake
+/trip-record destination Lisbon  record the destination once it's decided
+/trip plan                       research, build and validate the itinerary
+/trip site                       build the travel website
+/trip                            see where the trip stands and what to do next
+```
+
+Each command tells you what comes next, so you don't need to memorize them. You can also describe
+what you want, like *"we booked the hotel"* or *"find more dinner options near Bairro Alto"*, and
+Claude names the command that does it. If the group hasn't chosen a destination yet, `/trip ideas` turns
+everyone's leanings into a ranked shortlist.
+
+| Command | Use it to |
 |---|---|
-| Destination Ideation | Turns the group's leanings into a ranked shortlist — produces `destination-shortlist.md` |
-| Enrichment | Destination specialist — fills in trip-context `[ENRICH]` fields; reconciles traveler profiles into `traveler-model.md` |
-| Activities | Activity finder — produces `activities-list.md` |
-| Food | Food writer — produces `food-list.md` |
-| Nightlife | Going-out curator — produces `nightlife-list.md`; desire-gated, never force-scheduled |
-| Scheduling | Itinerary architect — produces `scheduling-framework.md` |
-| Transport | Logistics — produces `transport-brief.md` |
-| Hub Planner | Synthesis director — produces final itinerary + reference files |
-| Validator | Pre-departure audit — produces `validation-report.md`; enforces the fail-closed checks, including that no non-publishable profile field reaches a published artifact |
+| `/trip` | Check status, and plan, research, replan, audit and build the site |
+| `/trip-new` | Start a trip |
+| `/trip-record` | Record what you know: profiles, bookings, the destination, decisions, people and groups |
+| `/trip-publish` | Re-publish a site after changes, or list what's published |
+| `/trip-decommission` | Take a site offline, archive a finished trip, or reopen one |
 
-Full agent dispatch protocol, mode definitions, output versioning rules, and site generation guidance are in [`CLAUDE.md`](CLAUDE.md).
+The [command reference](reference/command-reference.md) lists every verb, its arguments, and when it
+can run. If you have more than one trip, add `--trip <slug>` to say which one.
 
-## Publishing a Trip Site
+To see what a filled-in traveler profile looks like, read
+[`examples/people-library-demo/travelers/noor.md`](examples/people-library-demo/travelers/noor.md).
+To see a finished itinerary from a real trip, read
+[`examples/tokyo-2026/outputs/final-itinerary.md`](examples/tokyo-2026/outputs/final-itinerary.md).
+Traveler records that carry over between trips, and groups of people who travel together, are
+covered in [`people/README.md`](people/README.md) and [`groups/README.md`](groups/README.md).
 
-When an itinerary is ready, Claude produces a single self-contained HTML file and publishes it **private-by-default** — the site is encrypted (StatiCrypt, AES-256-CBC + HMAC-SHA256) before anything reaches the web, and only the ciphertext is pushed to a per-trip public GitHub repo with Pages. Visitors get a passphrase prompt and decrypt in-browser, so free hosting still works and the plaintext itinerary never leaves your machine.
+## Publishing a trip site
+
+Publishing encrypts the site and pushes only the ciphertext to a new public GitHub repo, served
+with GitHub Pages. Visitors enter a passphrase, and the page decrypts in their browser.
+
+Run the publish script yourself, in a terminal. It lives in the engine, and `--data-root` tells it
+where your data folder is (`~/travel` in the install example), so it works from any directory:
 
 ```bash
-scripts/publish-trip-site.sh publish   trips/<destination>-<year>            # encrypt + publish
-scripts/publish-trip-site.sh publish   trips/<destination>-<year> --opaque   # ...with an opaque repo name
-scripts/publish-trip-site.sh update    trips/<destination>-<year>            # re-publish after edits
-scripts/publish-trip-site.sh rotate    trips/<destination>-<year>            # change the passphrase
-scripts/publish-trip-site.sh list                                           # inventory every trip's publish state
-scripts/publish-trip-site.sh unpublish trips/<destination>-<year>           # take the site down (deletes the repo)
+~/.claude/skills/travel-planner/scripts/publish-trip-site.sh publish trips/<slug> --data-root ~/travel
 ```
 
-Unless you supply one in `STATICRYPT_PASSWORD`, the passphrase is generated and saved to `trips/<destination>-<year>/.passphrase` (git-ignored) — share it over a private channel. That file is the trip's key of record: while the variable is set and disagrees with it, `publish` and `update` refuse until you unset the variable. Change the key with `rotate`; it protects what you publish from then on, while earlier versions stay readable in the per-trip repository's history. Security rests on passphrase strength plus a 600k-iteration KDF (the published bytes are public ciphertext, not an access-controlled page), so use a strong one.
+To run another subcommand from the table, swap it in for `publish trips/<slug>` and keep
+`--data-root ~/travel` at the end.
 
-**Metadata privacy.** By default the per-trip repo is named `<destination>-<year>-trip` and is public, so the destination and year are visible even though the itinerary is encrypted (commit timestamps also reveal when you publish). Pass `--opaque` to name the repo with a random token instead (e.g. `trip-a1b2c3d4e5`); it's saved to `.publish-slug`, so `update`/`rotate`/`unpublish` resolve the same repo. You can still set your own name in `trips/<destination>-<year>/.publish-slug` (a shared, shorter, or custom name).
+| Subcommand | What it does |
+|---|---|
+| `publish trips/<slug>` | Encrypt and publish the first time. Add `--opaque` to give the repo a random name |
+| `update trips/<slug>` | Re-publish after changes. `/trip-publish update` does this from Claude Code |
+| `confirm trips/<slug>` | Record approval of a pending change |
+| `rotate trips/<slug>` | Change the passphrase |
+| `list` | Show every trip's publish state, and which sites are out of date |
+| `unpublish trips/<slug>` | Take the site down. This deletes the repo unless you add `--disable-pages-only` |
 
-**Lifecycle.** `list` prints a read-only inventory of every trip under `trips/` — repo, live URL, and a stale flag when your local build is newer than what's deployed. It runs without `gh`; the publish-state columns stay blank until you `gh auth login`. `unpublish` takes a site down: by default it deletes the per-trip repo (irreversible; needs the `delete_repo` gh scope and a typed confirmation), or `--disable-pages-only` keeps the repo and just takes the site offline (reversible). Takedown does not guarantee removal from third-party caches or clones.
+- The passphrase is saved in your data folder, at `trips/<slug>/.passphrase`, and that file is
+  the trip's key of record. Share it privately. The encryption is only as strong as the
+  passphrase.
+- If you set `STATICRYPT_PASSWORD` and it doesn't match the trip's `.passphrase`, `publish` and
+  `update` refuse until you unset it.
+- `rotate` protects what you publish from then on. Earlier versions of the site stay in the
+  repo's history, readable with the old passphrase; to remove those too, `unpublish` and
+  publish again.
+- The repo name is public and includes the destination and year, unless you used `--opaque`.
+- You can require named travelers to approve a plan change before it goes live. Declare them with
+  `/trip-record .approvers`, and record their approvals with `confirm`.
 
-To publish fully public instead, run `scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext` yourself in a terminal. Two controls stand on that path, in this order: a publishable-content check runs first and refuses if a traveller's passport details, or a need recorded for someone with no profile of their own, have reached the page — and refuses equally when it cannot tell; then it asks you to type `PUBLISH` to confirm. The ciphertext verify is not one of the two — that one runs on the encrypted branch only. Full flow in [`CLAUDE.md`](CLAUDE.md).
+[`SECURITY.md`](SECURITY.md) explains what the encryption and the approvals do and don't protect.
+You can also publish without encryption, by adding `--plaintext` to the publish line. Only you can
+run that, from a terminal. The publishing section of [`CLAUDE.md`](CLAUDE.md) describes the checks
+it runs first.
+
+## What it costs to run
+
+Planning uses your Claude Code plan. The first full plan is the expensive part. Every agent runs,
+several of them search the web, and all of them run on the top model tier, so set aside a sitting
+for it. After that, most requests, like edits, lookups and bookings, run no agents at all.
+Targeted research runs one agent. Keeping a trip current costs a small fraction of building it.
+
+## Repository map
+
+| Path | What's there |
+|---|---|
+| `CLAUDE.md` | The operating manual Claude follows: request routing, the agents, planning modes, rules |
+| `SKILL.md` | The entry point that turns a request in your own words into the right command |
+| `skills/` | The commands, one folder each |
+| `agents/` | One prompt per agent |
+| `templates/` | The blank trip context and the two traveler intake forms |
+| `reference/` | Architecture, schemas, the site design spec, the command reference, and decision records (`adr/`) |
+| `scripts/` | The publish script, the checks `/trip site` and `/trip schema` run, and the CI test suites |
+| `examples/` | Worked examples. `tokyo-2026/` is a real trip, kept exactly as an earlier version of the engine planned it. `evening-boundary-demo/` shows how evenings are routed now |
+| `trips/`, `people/`, `groups/` | Empty skeletons that install step 3 copies into your data folder |
+| `analysis/` | Local scratch space for reviews of this repo. Git-ignored |
+
+## Contributing, security and changes
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md) and
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## License
 
-[Business Source License 1.1](LICENSE) — permits non-production / personal / educational / internal-business use; commercial offerings require alternative licensing arrangements (contact the owner). Automatic conversion to Apache License 2.0 on 2030-05-27.
+[Business Source License 1.1](LICENSE). It allows non-production, personal, educational and
+internal-business use. Commercial offerings need a separate license, so contact the owner. It
+converts to Apache License 2.0 on 2030-05-27.

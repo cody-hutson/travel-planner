@@ -406,8 +406,26 @@ EOF
 }
 
 # va_schema_get <lines> <key> — first value for a key.
+#
+# ── FED BY A HERE-STRING, NEVER BY A PIPE — THE `exit` IS THE REASON ─────────────
+# The reader stops at its first match, and downstream of a `printf … |` writer that early
+# exit is a race under the `pipefail` set at the top of this file. The writer is bash's
+# printf builtin, which flushes through stdio in buffer-sized writes — 4 KiB on Linux, 16 KiB
+# on macOS — so an input longer than one buffer is two writes or more. When awk matches in
+# the first write and exits before the next one lands, the writer dies on SIGPIPE and the
+# pipeline reports 141 over a CORRECT answer: every adjudicated caller then fails closed
+# with an X3 naming a read that did not fail. Observed at va_schema_for's class lookup, a
+# 4,527-byte table that is two writes on Linux and one on macOS — which is why a loaded
+# Linux run reproduced it and a Mac cannot.
+#
+# A here-string has no writer process to signal: bash stages the input before awk starts,
+# so the `exit` costs nothing and the status is awk's own. Where the producer is a FUNCTION
+# rather than a variable (va_select's declared arm) the reader drains instead of exiting,
+# which closes the same race. Every first-match read in this file takes one of the two, and
+# the suite's group PF asserts the pipe-into-early-exit shape absent rather than trusting
+# this note to be read.
 va_schema_get() {
-  printf '%s\n' "$1" | awk -F'\t' -v k="$2" '$1 == k { print $2; exit }'
+  awk -F'\t' -v k="$2" '$1 == k { print $2; exit }' <<<"$1"
 }
 # va_schema_all <lines> <key> — every value for a repeatable key.
 va_schema_all() {
@@ -610,7 +628,7 @@ va_check_corpus() {
     local want=""
     case "$cid" in
       C[0-9]|C[0-9][0-9])
-        want="$(printf '%s\n' "$classes" | awk -F'\t' -v n="${cid#C}" '$1 == n { print $2; exit }')" ;;   # va-capture: guarded:S1 — an empty want is S1 below; the case arm only assigns for a well-formed class-id
+        want="$(awk -F'\t' -v n="${cid#C}" '$1 == n { print $2; exit }' <<<"$classes")" ;;   # va-capture: guarded:S1 — an empty want is S1 below; the case arm only assigns for a well-formed class-id
     esac
     if [ -z "$want" ]; then
       printf 'FINDING S1 %s class-id %s names no in-model row of the class enumeration\n' "$rel" "${cid:-<absent>}"; rc=1
@@ -834,9 +852,9 @@ EOF
     fi
     # DECLARED ARM — see the header. A file the path arm did not claim, which declares a
     # class of its own, is resolved anyway rather than leaving the gate unobserved.
-    declared="$(va_fm_pairs "$data_root" "$f" 2>/dev/null | awk -F'\t' '$1 == "artifact" { print $2; exit }')"   # va-capture: tolerant(1) — the declared-arm probe reads every file the path arm did not claim; 94 of 94 come back empty on this tree and each is an UNMATCHED row. Empty is the answer this arm exists to get
+    declared="$(va_fm_pairs "$data_root" "$f" 2>/dev/null | awk -F'\t' '$1 == "artifact" && n == 0 { print $2; n = 1 }')"   # va-capture: tolerant(1) — the declared-arm probe reads every file the path arm did not claim; 94 of 94 come back empty on this tree and each is an UNMATCHED row. Empty is the answer this arm exists to get
     if [ -n "$declared" ]; then
-      cid="$(printf '%s\n' "$pats" | awk -F'\t' -v a="$declared" '$2 == a { print $1; exit }')"   # va-capture: tolerant(1) — an unresolvable class falls back to UNKNOWN by design, which is what raises A2 downstream
+      cid="$(awk -F'\t' -v a="$declared" '$2 == a { print $1; exit }' <<<"$pats")"   # va-capture: tolerant(1) — an unresolvable class falls back to UNKNOWN by design, which is what raises A2 downstream
       printf '%s\t%s\t%s\tdeclared\n' "${cid:-UNKNOWN}" "$declared" "$f"
       continue
     fi
@@ -899,8 +917,8 @@ va_check_artifact() {
   printf '%s\n' "$pairs" | grep '^FINDING ' 2>/dev/null   # va-capture: tolerant(1) — the finding-reporting pipeline; a clean artifact reports nothing
   pairs="$(printf '%s\n' "$pairs" | grep -v '^FINDING ' 2>/dev/null)"   # va-capture: tolerant(1) — the filter feeding the reads below; an artifact whose frontmatter is all findings filters to nothing
 
-  ver="$(printf '%s\n' "$pairs" | awk -F'\t' '$1 == "schema-version" { print $2; exit }')"   # va-capture: tolerant(1) — an absent schema-version is the whole subject of the tolerant read
-  declared="$(printf '%s\n' "$pairs" | awk -F'\t' '$1 == "artifact" { print $2; exit }')"   # va-capture: tolerant(1) — a file need not declare artifact:; the path arm has already resolved its class
+  ver="$(awk -F'\t' '$1 == "schema-version" { print $2; exit }' <<<"$pairs")"   # va-capture: tolerant(1) — an absent schema-version is the whole subject of the tolerant read
+  declared="$(awk -F'\t' '$1 == "artifact" { print $2; exit }' <<<"$pairs")"   # va-capture: tolerant(1) — a file need not declare artifact:; the path arm has already resolved its class
 
   # ── THE SKIP PREDICATE. Cited, not restated:
   #    reference/data-architecture.md -> "Tolerant read" / "The gate's skip predicate".
@@ -1062,7 +1080,7 @@ va_check_artifact() {
     req="${fl%% *}"; fl="${fl#* }"
     typ="${fl%% *}"; enum=""
     case "$fl" in *'['*']'*) enum="${fl#*[}"; enum="${enum%]*}" ;; esac
-    val="$(printf '%s\n' "$pairs" | awk -F'\t' -v k="$name" '$1 == k { print $2; exit }')"   # va-capture: tolerant(1) — an optional field that is absent has no value; 20 of 284 field reads on this tree, and A3 below grades a REQUIRED one
+    val="$(awk -F'\t' -v k="$name" '$1 == k { print $2; exit }' <<<"$pairs")"   # va-capture: tolerant(1) — an optional field that is absent has no value; 20 of 284 field reads on this tree, and A3 below grades a REQUIRED one
     if [ -z "$val" ]; then
       if [ "$req" = "required" ]; then
         printf 'FINDING A3 %s field %s is required by %s and is absent\n' "$rel" "$name" "$art"; rc=1
@@ -1117,7 +1135,9 @@ va_schema_for() {
   local root="$1" cid="$2" rel pats
   pats="$(va_corpus_patterns "$root")"   # va-capture: adjudicated — allow: an empty table is a root carrying no corpus, a real state whose answer is "no row covers this class" at status 1 below, so only the STATUS is adjudicated here
   va_read_ok "va_schema_for/pattern-table $cid" "$?" "$pats" allow || { printf '%s\n' "$pats"; return 2; }
-  rel="$(printf '%s\n' "$pats" | awk -F'\t' -v c="$cid" '$1 == c { print $4; exit }')"   # va-capture: adjudicated — allow: no row for this class is the real answer status 1 reports below, so only the STATUS is adjudicated
+  # A here-string, not a pipe: this is the site where the early-exit SIGPIPE race was
+  # observed, and va_schema_get above carries the reason in full.
+  rel="$(awk -F'\t' -v c="$cid" '$1 == c { print $4; exit }' <<<"$pats")"   # va-capture: adjudicated — allow: no row for this class is the real answer status 1 reports below, so only the STATUS is adjudicated
   va_read_ok "va_schema_for/class-lookup $cid" "$?" "$rel" allow || return 2
   [ -n "$rel" ] || return 1
   printf '%s' "$rel"

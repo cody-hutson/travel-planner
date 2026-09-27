@@ -47,7 +47,7 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 | `Bash(ls:*)` | the listing block below |
 | `Bash(grep:*)` | the record block below, which reads the lifecycle, the mode and the destination by value |
 | `Bash(date:*)` | `archive`'s closing log entry is dated from a `date +%F` tool call **in the body**, never as a further pre-execution block — the shipped convention `/trip-new` and `/trip-record log` already take, and required here because the header block below fixes how many pre-execution blocks this file carries and it already carries all of them |
-| `publish-trip-site.sh unpublish` | `temporary` and `archive` invoke the `unpublish` arm, with the pages-only flag, both fixed in this file. **The grant is the arm, not the script** — `ADR-007` §1 is one authorization per function, and a script-wide grant would authorize every arm of the dispatch table at once |
+| `publish-trip-site.sh unpublish` | `temporary` and `archive` invoke the `unpublish` arm, with the pages-only and data-root flags, each fixed in this file. **The grant is the arm, not the script** — `ADR-007` §1 is one authorization per function, and a script-wide grant would authorize every arm of the dispatch table at once |
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
 
@@ -243,7 +243,7 @@ This clause sits outside every verb section on purpose: a rule written inside on
 the verbs that existed when it was written.
 
 1. **Never sets `ALLOW_PLAINTEXT`, and never passes `--yes` to `unpublish`.** `ADR-007` §2 bound 3,
-   which is not negotiable by a later slice. The subcommand and the flag each invoking verb passes
+   which is not negotiable by a later slice. The subcommand and the flags each invoking verb passes
    are fixed in this file; **the verb's argument string is never forwarded to the script**, so no
    user-supplied token can become a script flag. **This rule is followed, not enforced** — a per-arm
    denial cannot express a flag inside an arm this file grants, and the frontmatter section above
@@ -465,9 +465,14 @@ That is what could not be established, and the remedy. It is not a report that t
 Takes the trip's site offline and leaves the local tree untouched.
 
 **Invokes:** `scripts/publish-trip-site.sh`, subcommand `unpublish`, on `trips/<slug>`, with the
-`--disable-pages-only` flag — and nothing else. The path is spelled **repo-relative**, exactly as the
-frontmatter entries spell it. **The subcommand and the flag are fixed here**, and the verb's argument
-string is **never forwarded**, so no user-supplied token can become a flag. That closes the
+`--disable-pages-only` flag and `--data-root <trip.data_root>` — and nothing else. The script path is
+spelled **repo-relative**, exactly as the frontmatter entries spell it. **`trips/<slug>` stays
+relative, and the data-root flag roots it:** its value is the absolute path gate `G0-root` resolved,
+so the script finds the trip under your data root from whatever directory the session is in. Without
+the flag it would look under the working directory, where the trip is not — and where a trip of the
+same name would be the wrong one, whose repo a no-op line would then name. **The subcommand and the
+flags are fixed here**, and the verb's argument string is **never forwarded**, so no user-supplied
+token can become a flag; the data-root value is not taken from that string either. That closes the
 **caller-supplied** route to `--yes`, and it closes it **by this file's own conduct** — the
 frontmatter cannot express a flag inside an arm it grants, which is the residual named above.
 
@@ -530,9 +535,9 @@ entry in the trip's log.
    `trip.resolution`, and renders no gate id.
 2. **The takedown** — the same fixed invocation `temporary` makes:
    `scripts/publish-trip-site.sh`, subcommand `unpublish`, on `trips/<slug>`, with
-   `--disable-pages-only`, and nothing else. The argument string is not forwarded. **Nothing is
-   deleted:** that limb returns before the delete-scope check and the typed confirmation, and it
-   touches neither the publish marker nor the passphrase file.
+   `--disable-pages-only` and `--data-root <trip.data_root>`, and nothing else. The argument string
+   is not forwarded. **Nothing is deleted:** that limb returns before the delete-scope check and
+   the typed confirmation, and it touches neither the publish marker nor the passphrase file.
 3. **The marker** — set `**Lifecycle:**` to `ARCHIVED`, per § *The lifecycle marker*.
 4. **The closing log entry** — append it, per § *The closing entry*.
 
@@ -594,7 +599,7 @@ And the marker **changes how every other verb of the whole surface resolves this
 blast radius rather than reversal cost.
 
 **Never.** Deletes nothing and removes no line. Runs no subcommand other than the one named in step 2
-and passes no flag other than the one named there. Sets no `ALLOW_PLAINTEXT`. Passes no `--yes`.
+and passes no flag other than the ones named there. Sets no `ALLOW_PLAINTEXT`. Passes no `--yes`.
 Reads or renders no passphrase. Deletes no repo — see § *Deleting the trip's public repo*, named in
 this verb's output as the further option and never run from here. Adds no heading to
 `trip-context.md`, and writes no `templates/` file.
@@ -701,10 +706,16 @@ not a substitute mechanism. It is the hand-off below, and **this command never r
 **Where this appears.** In `temporary`'s and `archive`'s own output, as the further option available
 to the operator. Not in the not-a-verb refusal, which renders its three things and stops.
 
-**The hand-off.** The command lives in `scripts/publish-trip-site.sh`. The form is its `unpublish`
-subcommand on the trip's directory **without** the disable-pages-only flag — the default, which is
-the deleting one. **Point the operator at `CLAUDE.md` § *Publishing to GitHub Pages*, which carries
-the literal line to run**, and state, in terms:
+**The hand-off.** The command lives in `scripts/publish-trip-site.sh`, under the engine root. The
+form is its `unpublish` subcommand on the trip's directory **without** the disable-pages-only flag —
+the default, which is the deleting one — and with the data-root flag every line of that section
+carries. **Point the operator at `CLAUDE.md` § *Publishing to GitHub Pages*, which carries the
+literal line to run, and print that line for them with every placeholder filled:** `trip.slug` for
+the placeholder trip directory, `trip.data_root` for `<data-root>`, and for `<engine-root>` the
+engine root named at the top of this file, its `..` segments kept as written — collapsed as text,
+they land outside the engine when this verb's directory is a link. Filled, the line runs from
+whatever directory the operator's terminal is in. Printing it is not running it. Then state, in
+terms:
 
 - **It deletes the public repo, and with it the destination-and-year in the repo's name** — not only
   the site.
