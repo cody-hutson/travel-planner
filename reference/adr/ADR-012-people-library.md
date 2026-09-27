@@ -1,6 +1,6 @@
 # ADR-012: People library — cross-trip person identity, merge semantics, erasure reach, and reference discovery
 
-- **Status:** Accepted (2026-09-03); **amended twice (2026-09-06, 2026-09-07)**.
+- **Status:** Accepted (2026-09-03); **amended three times (2026-09-06, 2026-09-07, 2026-09-26)**.
   **First amendment** — three sites in this record assigned *redundant-override normalization* to
   enrichment: the reasoning in *Why an `OVERRIDDEN` trip is reported and not dropped*, the enrichment
   row of § 7 *What this record does NOT decide*, and the `reference/data-model.md` entry under
@@ -17,6 +17,10 @@
   holding a single member; the space was later enumerated and holds more than one. **No decision
   changes:** the exclusion, its tier and its reasoning are untouched, and the reversal condition's
   changed standing is decided by `ADR-014` rather than by this edit.
+  **Third amendment** — recorded as a dated paragraph beside the blast-radius table in
+  *Consequences*, next to the row it reads. That row gives the person record `publish: internal-hard`;
+  a later record reads that class for the values a travel group may see on its private site.
+  **No decision changes:** the class value stands, and nothing reaches a public page.
 - **Deciders:** repo maintainer
 - **Driving work:** the People library milestone. This record is the prerequisite architecture
   decision that milestone's first acceptance criterion requires, and it is the milestone-head
@@ -1407,6 +1411,20 @@ mid-milestone renumbering already demonstrated.
 | `outputs/traveler-model.md`, its schema, and the agents that consume it | **Unchanged.** No field added, no shape changed, projection unchanged by identity | — |
 | `CLAUDE.md` § *Resolving a trip* | **Not touched.** No third evidence block, no new gate, and **no gate that blocks on freshness** — this design adds a relation and no gate | — |
 | `trip-context.md` and its write-ownership table · `agents/06-validator.md` and the spokes | **Not touched** | — |
+
+**Amendment (2026-09-26, Saturday) — the person record's class, read for the values the group may
+see.** The § 1.1 row above gives the person record `publish: internal-hard`, the value § 5.1 reserves
+for a class whose values must not reach a rendered page in any form. [The private-site
+record](ADR-029-what-the-private-site-may-show.md) keeps that class value and reads it for the values
+a travel group may see: a value from the person record carries the person record's class in every
+artifact that carries it, by union with that artifact's own class and never by override, and for
+those values alone *never rendered* reads *never on a public page* on the private site. The
+person-form fields it covers are `Would love`, `Rather skip`, `Leaving from`, `Journey comfort`,
+`Lodging style`, `Interests`, `Cuisine appetite`, `Pace` and `Day rhythm`. They reach the private site
+only through a `bound` artifact their producer writes — the destination shortlist, and the group
+snapshot [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) decides —
+and never by the site build reading the store. **Nothing reaches a public page.** The row is
+retained as written; no decision of this record changes, and none is re-opened.
 
 ### What becomes true, and what becomes checkable
 
