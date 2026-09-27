@@ -351,7 +351,7 @@ correction: readable by the party, its bytes fetchable by anyone.
 |---|---|---|
 | **A shared passphrase** | the group receives it by design, and the verdict addresses that group | a passphrase shared beyond the party widens readership, and nothing in the engine observes or undoes that; the notice says so (safeguard 1) |
 | **A forwarded link** | a link without the passphrase reaches only the passphrase entry page and ciphertext | a link forwarded with the passphrase is the row above |
-| **A Pages repository that is public** | protection rests on passphrase strength and the key-derivation cost, not on access control; the ciphertext's `observers` value is `world` | an offline guess at the passphrase is the one path from `observers` to readership, which is why the rotation fix ships first (safeguard 5) |
+| **A Pages repository that is public** | protection rests on passphrase strength and the key-derivation cost, not on access control; the ciphertext's `observers` value is `world` | an offline guess at the passphrase is the one path from `observers` to readership |
 | **Browser cache** | a republish replaces what the site serves | a copy already cached persists; removal reaches forward only (safeguard 4) |
 | **A screenshot** | nothing on the page is protected against it, and nothing claims to be | a screenshot persists beyond every update; removal reaches forward only |
 
