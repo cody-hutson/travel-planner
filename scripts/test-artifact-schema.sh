@@ -6730,7 +6730,7 @@ st_cf_mustfire "CTL-ST-CF-Q2-LABEL[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "a l
 # ── Q3: the join inside every interviewable region, the reverse join, and the address ──
 ST_CF_FX="$(st_cf_fixture q3-unjoined-v2)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_G1L" 'ZZ-ST-CF-UNCLASSIFIED'
 st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first graded bullet ('$ST_CF_G1B', line $ST_CF_G1L) is relabelled with a label no field-table row carries"
-ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G1ROW" '$1 == r { print $9; exit }')"
+ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_G1ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig-v2)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig-v2)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
 st_cf_mustfire "CTL-ST-CF-Q3-AMBIG-V2[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first graded bullet joins (row ${ST_CF_G1ROW:-none}) is duplicated on a COPY of the data model, so that bullet reaches two rows" "$ST_CF_DMFX"
 # Q3-EMPTY-V2 — every field deleted. Graded on the empty-set finding ITSELF rather than on every Q3:
