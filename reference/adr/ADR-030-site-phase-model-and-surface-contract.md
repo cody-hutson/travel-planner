@@ -117,7 +117,156 @@ on #1369, fixed the closed list of what this record still had to decide.
 
 ## Options considered
 
-*Authored in the commits that follow on this release branch.*
+### What drives the shape
+
+| | Option | In one line | Disposition |
+|---|---|---|---|
+| **A** | **One site, its shape keyed on the resolved state through one render table** | the build reads the resolved mode and destination from the resolution record; a table says what that state's build renders | **chosen** |
+| B | A sequence of per-phase surfaces | each phase gets its own page or repository, and a transition replaces the surface | **rejected.** It breaks the fixed publish surface — one file, one ciphertext check, one passphrase per repository; separate surfaces would be separate channels under `ADR-026` § 2; the catalog has rejected a page per unit once; and at every transition the group would lose its anchors and its checklist state |
+| C | Shape driven by which files exist | render whatever has content | **rejected.** It fails #1241's shape criterion by construction and is the reading `ADR-026` § 4 and `G5` forbid: once the shortlist has a home it would render beside a chosen destination indefinitely |
+| D | A declared coarse partition, pre-plan and plan | shape keyed on a derived two-value phase | **rejected, as the close rival.** It mints a partition and a mapping the corpus does not have. A to D is a table compression and CHEAP; D to A is a vocabulary split and MODERATE |
+| F | One site carrying every phase, with a client-side switch | every phase is always built; the viewer picks one | **rejected.** It publishes superseded content inside every ciphertext for the trip's whole life, and hidden text is still visible text to the confirm gate |
+| G | The trip's temporal horizon, before, during and after | shape keyed on time from the dates | **rejected.** It keys on something undeclared, which `G5` forbids; its useful form — today's day first during the trip — is a client-side variant, not a driver |
+
+### The grain the driver acts at
+
+| Option | What the state gates | Disposition |
+|---|---|---|
+| **Artifact** | a state's build renders an artifact whole, or not at all | **chosen.** It is the grain the class is declared at, the grain `ADR-026` § 4 gates production at, and the grain agents produce at |
+| Section | a section-admission table, independent of artifacts | **rejected.** It declares a second time which component renders which element, and nothing ties a section to its source's class |
+| Element | a mode column on every element-fence row | **rejected.** It permits a partially rendered artifact and splits the walk's grammar comparison |
+
+### How the completeness contract extends
+
+| | Option | Disposition |
+|---|---|---|
+| X1 | A mode column on § 9.1's fence | **rejected.** Reach would become a function of mode |
+| X2 | One generalized element fence with artifact and mode columns, replacing the shipped fence | **rejected.** It changes the identity of a shipped, graded pin and moves gating to element grain |
+| **X3** | **Two grains: a new artifact-grain render table, and one element fence per rendered artifact, the shipped fence untouched** | **chosen** |
+| X4 | Prose only | **rejected.** A rule stated and executed nowhere is the defect group `W` names |
+| X5 | A render table listing every per-trip class, `internal` ones included | **rejected.** It declares § 1.1's class a second time and goes stale with every new class |
+
+### The section ceiling
+
+| | Option | Disposition |
+|---|---|---|
+| K1 | A numeric cap on sections per state | **rejected.** Nothing grounds the number, and a cap forces the re-litigation the criterion forbids |
+| K2 | One section per distinct reader question | **rejected.** A judgment per card |
+| K3 | One section per artifact | **rejected.** False today: the Hero, the Overview, the Day sections and the Checklist all render itinerary elements |
+| **K4** | **A four-test ladder over declared tables** | **chosen.** It reuses § 9.5's representability test and the § 9.1, § 5.1 and § 5.6 declarations, and reproduces every decided case |
+| K5 | A section budget per mode | **rejected.** A budget invites spending it |
+
+### What *Destination in play* renders
+
+| | Option | Disposition |
+|---|---|---|
+| **A** | **The hero naming the destination as under consideration rather than chosen; the shortlist off the page** | **chosen** — the operator's D-4: the page moves on, and the shortlist stays on disk. The group snapshot (D-3) and the group contacts section (the carrier) join it, so the page is no longer the hero alone |
+| B | Keep the shortlist as *how we got here* | **rejected.** A second, possibly stale source for *where*, from a producer that has stopped refreshing it |
+| C | Declare the hub's destination comparison and render it | **rejected here, routed.** A new class, and its content is not bounded by the private-site record's lists at production |
+| D | Refuse the state | **rejected.** A published shortlist page could then never be rebuilt to the declared state — a transition the site could not follow |
+
+### The shortlist after IDEATION
+
+| | Option | Disposition |
+|---|---|---|
+| **A** | **Excluded, per state, and named in § 9.3** | **chosen** |
+| B | Rendered as history | **rejected.** A second source for *where*, and the client-side-switch option by another route |
+| C | Collapsed to a one-line record, such as "chosen from a shortlist of three" | **rejected.** It restates the trip context's destination — a second home — and adds nothing a reader acts on |
+
+### The concealed occasion's form
+
+| | Option | Disposition |
+|---|---|---|
+| **A** | **A variant of the schedule entry, concealed at render from a mark on the itinerary's event** | **chosen** |
+| B | The hub writes the event into the itinerary already concealed, with no venue | **rejected.** The event stops being bookable and trackable, because the booking status joins by venue key: either the organizer loses the booking, or the venue reaches the page through the booking status and the links anyway |
+| C | A new card type | **rejected by the ceiling**: Q3 finds the schedule entry |
+
+### How the admission is encoded
+
+| | Option | Disposition |
+|---|---|---|
+| **A** | **One row naming the five modes and `any` destination, with the verb's own stop for a plan mode with no destination, and a declared non-row in the render table** | **chosen** — the charter's sanctioned form, with no contract change |
+| B | The same row, admitting a plan mode with no destination and rendering the plan-phase shape | **rejected.** It widens the verb to a state no card asks for, and one that `plan`, `replan` and `check` refuse |
+| C | Separate rows with parentheticals, a pre-plan `site` and a plan `site` | **rejected.** The taxonomy guard admits the form, but `G7`'s lookup is defined for one row per verb. The only precedent, `/trip-new`'s create and resume rows, sits at depth `G2`, where `G7` never runs, and multi-row semantics at `G7` would change `CLAUDE.md` § *Resolving a trip* |
+| D | `any` in the mode cell | **rejected.** It admits `UNSET` |
+
+### The page's file name with no destination
+
+| | Option | Disposition |
+|---|---|---|
+| **A** | **The trip's slug** | **chosen.** It is the shipped per-trip stem: the publish script's `slug_for` names the repository `<dir>-trip` by default, and `trip.slug` is the directory name "exactly as E1 spelled it" (`CLAUDE.md` § *What the contract returns*) |
+| B | A fixed literal, such as an ideation-named page | **rejected.** It mints a name with no gain over A |
+| C | One stable stem for every state | **rejected.** It renames every existing plan-mode page, so each trip's next build misses the existence probe and regenerates, dropping approved design — the overwrite the verb's no-regenerate rule forbids |
+
+### `ADR-026` Finding 1
+
+| | Option | Disposition |
+|---|---|---|
+| A | Take it: an in-model § 1.1 row for the published artifact | **rejected**, on the grounds in § 8 |
+| B | Take it: an explicit § 1.2 row, split from the `.publish/` row | **left to the routed card.** It is a disposition about the trust boundary, outside this record's domain, and it changes the enumeration's closed count |
+| **C** | **Decline in terms, and route** | **chosen** |
+| D | Decline silently | **rejected.** That is the pattern that orphaned it |
+
+### The transition policy, and the shown relation's observation
+
+**Replace** is chosen. Accumulating is rejected: a second source, and a ciphertext that grows with
+history. A client-side hide is rejected for the reason the client-side switch was.
+
+| Criterion | **Content identity** (chosen) | Order (today's `list`) |
+|---|---|---|
+| What it measures | whether what crossed the channel is the built artifact — `ADR-025` § 6's own words | whether anything was built after the last push |
+| A rebuild that changes nothing | `CURRENT` | reads stale — a false positive |
+| Clocks | none; the comparison is local | the local modification time against the remote commit's date, across two machines |
+| Needs the network | no | yes |
+| Reuses | the confirm gate's projection and the publish script's record of the last push | the file's timestamp and the remote commit date |
+| Blind to | a push made from another machine | a content-free touch that reads as change |
+
+### How the values the group may see reach the page
+
+| | Option | Disposition |
+|---|---|---|
+| **A** | **`bound` carriers only** | **chosen** — the trip context, the shortlist, the itinerary, the group snapshot and the group contacts file |
+| B | The traveller file made `bound`, with a field fence | **rejected.** A wider read surface for less coverage, and the build would parse hand-edited files carrying values that are out |
+| C | A derived, `bound` projection of the shared details | **taken as the group snapshot** (§ 9), by the operator's D-3 |
+| D | The build reads the traveller model's fields under a field-keyed exception | **rejected.** It is the field-keyed mechanism of the private-site card's fourth design pass, which that record does not carry forward, and it contradicts § 2's contract |
+
+### The group snapshot's writer and home
+
+| | Option | Disposition |
+|---|---|---|
+| **W1** | **The enrichment agent, in its reconciler role** | **chosen.** It already reads every input and already computes who filed, so it adds no agent |
+| W2 | The destination-ideation agent | **rejected.** It is skipped once a destination is set, so it cannot serve *Destination in play*; its declared read is the leaning fields only, and the shortlist's no-reader design stands |
+| W3 | The site build, deriving it at render from the traveller model | **rejected.** The build reads no traveller file or model, and the model is `internal-hard` — never rendered in any form |
+| W4 | A `/trip-record` verb, writing it itself | **rejected.** That verb's own writes are human source; where a derived file must be rebuilt it dispatches the reconciler or names that step, because ownership follows the writer, not the caller |
+| W5 | The hub | **rejected.** It runs only in synthesis — never in *No destination yet* — and the snapshot is not plan content |
+| W6 | A new agent | **rejected.** A new roster row and dispatch for a projection the reconciler already holds every input of |
+| **S1** | **A new `bound` class, `outputs/group-snapshot.md`** | **chosen** — net-new, because in-place is infeasible |
+| S2 | Fold it into the shortlist | **infeasible.** The shortlist renders only in *No destination yet*, its producer is skipped once a destination is set, and its schema declines per-entry fields |
+| S3 | Fold it into the trip context | **infeasible.** No per-traveller desire detail goes in that file, which is block-owned, and it would give traveller answers a second, hand-edited home |
+| S4 | Relax the traveller model to `bound` behind a field fence | **rejected.** The model carries values that are out, and the field-keyed mechanism is not carried forward |
+| S5 | The traveller file made `bound`, with a field fence | **rejected.** It covers only the per-trip half, and the build would parse raw hand-edited files |
+| S6 | Widen `ADR-028`'s presence file | **infeasible.** It is `internal` and bounded to its window lines, and its own tripwire moves it to `internal-hard` the moment it carries content derived from desires |
+
+### The group snapshot's production and currency
+
+| | Option | Disposition |
+|---|---|---|
+| **P1** | **Written only on IDEATION passes; on the `site` verb's Reads line in every state** | **chosen** — the shortlist's pattern, with no false `BEHIND`. Its costs: a mode branch in an agent, graded only once registered; and on a return to IDEATION the file on disk is as of its last IDEATION pass until reconciled, which the `mode` verb names |
+| P2 | Written on every pass; the Reads line qualified by state | **rejected.** A state-qualified Reads line is a new idiom this record declined for the shortlist — two patterns for one problem. Its real merit, a file kept current across a return, is named |
+| P3 | Written on every pass; the Reads line unqualified | **rejected.** A false `BEHIND` on every plan-mode reconcile — `ADR-028` § 2's own reason |
+| P4 | The site verb dispatches the reconciler before building | **rejected.** The site dispatches no agent and never edits an `outputs/` file as a side effect; it would widen the verb's grants and read class |
+| **R-a** | **No new freshness relation** | **chosen** — ride the named reconcile step, R1 to R3, and the declared hand-edit residual |
+| R-b | A `profiles-to-snapshot` relation | **rejected under P1.** It would read `BEHIND` in every plan mode, with a remedy that cannot clear it |
+
+### The group snapshot's smaller forks
+
+| Fork | Chosen | Rejected, and why |
+|---|---|---|
+| Plan modes | excluded | rendered as a section: it re-opens the plan-mode carriers, and D-3 scopes the document to before a plan |
+| A marked desire | its `Desire` text only | the whole desire block: its overlap signal would disclose unmarked desires, and its tiers invite ranking people's wants |
+| Content that is out, inside a carried value | withhold the line whole | trim it: that publishes words the traveller did not write |
+| The population floor | `SELF-STATED` | `ADR-025`'s default floor, `OPERATOR-STATED`: the private-site record's safeguard 3 |
+| The name | `outputs/group-snapshot.md` — the operator's own term | a neutral stem such as `group-details`: it loses traceability to D-3 |
 
 ## Decision
 
