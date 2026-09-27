@@ -227,6 +227,18 @@ resolve_key_path() { # <path> -> the path to write, on stdout
 # rename in the same directory as the file the key lives in — so a crash cannot leave half a key
 # behind, and a symlinked <pf> keeps its link. On any failure the staged copy is removed and
 # nothing is recorded.
+# The same path, proven BEFORE anything is committed. rotate records its key only at its commit
+# point, after committing, so a link it could not follow, or a directory it could not stage in,
+# stopped it there with a commit left in the clone, which the next rotate then refused as an
+# earlier run's unpushed page. Same refusals, same words, nothing committed yet. A key store that
+# disappears between this proof and the write is still caught by write_passphrase_file itself.
+prove_key_path() { # <passphrase_file>
+  local pf dir
+  pf="$(resolve_key_path "$1")" || die "could not follow $1 to the file it links to — nothing was recorded."
+  dir="$(dirname "$pf")"
+  [ -d "$dir" ] && [ -w "$dir" ] || die "could not stage a passphrase beside $pf — nothing was recorded."
+}
+
 write_passphrase_file() { # <passphrase_file> <passphrase>
   local pf p="$2" tmp
   pf="$(resolve_key_path "$1")" || die "could not follow $1 to the file it links to — nothing was recorded."
@@ -3440,7 +3452,7 @@ cmd_publish() { # <trip_dir> [--plaintext] [--opaque]
     shift
   done
   trip_dir="$(resolve_trip_dir "$trip_dir")"
-  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+  [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
   # Before anything else, and with no network call: two keys may not both speak. A --plaintext
   # publish uses no key, so it is not asked.
   [ "$plaintext" = "1" ] || require_passphrase_sources_agree "$trip_dir"
@@ -3591,7 +3603,7 @@ refuse_unpushed_residue() { # <pub_dir>
   n="$(git -C "$1" rev-list --count refs/remotes/origin/main..HEAD 2>/dev/null)" \
     || die "rotate refused — could not tell whether $1 holds pages the per-trip repository does not have. Remove $1 (it is cloned again from the published site, so nothing is lost) and re-run rotate. Nothing was changed."
   [ "$n" = 0 ] && return 0
-  die "rotate refused — $1 holds a page that was committed but not yet pushed: an earlier update or rotate stopped at its push. A rotation would publish it too, under the passphrase you are revoking. Remove $1 (it is cloned again from the published site; every page is rebuilt from the trip, so nothing is lost) and re-run rotate — or run update first, if the current passphrase's holders should see that page. Nothing was changed."
+  die "rotate refused — $1 holds a page that was committed but not yet pushed — by an earlier update or rotate that stopped at its push, or by one still running. A rotation would publish it too, under the passphrase you are revoking. Remove $1 (it is cloned again from the published site; every page is rebuilt from the trip, so nothing is lost) and re-run rotate — or run update first, if the current passphrase's holders should see that page. Nothing was changed."
 }
 
 # Push exactly this run's own commit, never the branch. A commit another command stacked on top in
@@ -3636,7 +3648,7 @@ require_publish_branch() { # <pub_dir> <verb>
 cmd_update() { # <trip_dir>
   local trip_dir="${1:?usage: update <trip-dir>}"
   trip_dir="$(resolve_trip_dir "$trip_dir")"
-  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+  [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
   # Before anything else, and with no network call: two keys may not both speak.
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
@@ -3686,7 +3698,7 @@ cmd_update() { # <trip_dir>
 cmd_confirm() { # <trip_dir>
   local trip_dir="${1:?usage: confirm <trip-dir>}"
   trip_dir="$(resolve_trip_dir "$trip_dir")"
-  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+  [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
 
   # BEFORE the state resolution below, and the position is the substance rather than a
   # detail (#749). preflight is NOT called here — it demands npx and an authenticated gh,
@@ -3920,13 +3932,14 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # Rooted before any path is built from it (#1563): .passphrase and the per-trip clone must be
   # this trip's own under --data-root, never a path under the working directory.
   trip_dir="$(resolve_trip_dir "$trip_dir")"
-  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+  [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
   local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
-  # Both refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
-  # exactly as it was.
+  # These refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
+  # exactly as it was, and the clone without a commit of its own.
   [ "${#newp}" -ge 12 ] || die "rotate refused — the new passphrase is shorter than 12 characters. Nothing was changed: $pf is exactly as it was."
   passphrase_file_holds "$pf" "$newp" && die "rotate refused — the new passphrase is the one $pf already holds, so this rotation would revoke nothing. Nothing was changed."
+  prove_key_path "$pf"
   preflight; resolve_noreply_identity
   site_html="$(resolve_site_html "$trip_dir")"
   # rotate re-publishes the same render, so it applies update's own guards itself, as the same one
@@ -4064,7 +4077,7 @@ cmd_unpublish() { # <trip_dir> [--disable-pages-only] [--yes]
     shift
   done
   trip_dir="$(resolve_trip_dir "$trip_dir")"
-  [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
+  [ -d "$trip_dir" ] || die "no such trip dir$(trip_dir_where) — check the first argument after the command, which names the trip; it is not repeated here, in case a passphrase was typed in its place."
   preflight_ro
   local owner slug ans
   owner="$(gh api user --jq '.login')" || die "could not read GitHub user."
@@ -4178,8 +4191,10 @@ parse_data_root() {  # <args…>  -> _GUARD_ARGV holds the args with --data-root
 #     never against the variable's engine-root DEFAULT, whose trips/ is a record-free skeleton
 #     after install. That is cmd_list's rule for its scan root, applied to the trip argument.
 #   • With the flag there is NO fallback to the working directory. A trip absent under the
-#     data root is "no such trip dir", naming the rooted path: trying the working directory
-#     next would find a different trip of the same name, which is the defect above.
+#     data root is "no such trip dir", naming the data root it looked under — never the
+#     argument itself, which may be a passphrase typed in the trip's place (trip_dir_where):
+#     trying the working directory next would find a different trip of the same name, which
+#     is the defect above.
 #   • An absolute <trip-dir> is used as given.
 #
 # It mirrors validate-artifacts.sh, whose --scope dir <path> is relative to --data-root.
@@ -4188,6 +4203,16 @@ parse_data_root() {  # <args…>  -> _GUARD_ARGV holds the args with --data-root
 # is deliberate: a die inside a command substitution exits only the subshell, and a caller
 # reached through `if` or `||` — the guard suite drives every arm that way — does not inherit
 # errexit, so a resolver that died would hand its caller an empty path to carry on with.
+# Where a <trip-dir> that is not a directory was looked for, for its refusal — never the argument
+# itself. With the trip left out, the first argument after the command is whatever came next, a
+# passphrase typed with its flag forgotten, say, and repeating it put that value on stderr, where a
+# captured log or transcript keeps it (GHSA-gmm2-v7rr-jq7r). The data root, when --data-root named
+# it, is the part an operator needs; the argument is theirs to re-read.
+trip_dir_where() { # -> " under <data-root>/" when --data-root was given, else nothing
+  [ "$_GUARD_DATA_ROOT_EXPLICIT" = "1" ] && printf ' under %s/' "$_GUARD_DATA_ROOT"
+  return 0
+}
+
 resolve_trip_dir() {  # <trip-dir> -> the directory the arm operates on
   case "$1" in
     /*) printf '%s' "$1" ;;
@@ -4211,7 +4236,7 @@ main() {
     list|status) cmd_list      "$@" ;;
     unpublish)   cmd_unpublish "$@" ;;
     -h|--help|help|"") usage 0 ;;
-    *) die "unknown subcommand: $sub (try: publish | update | confirm | rotate | list | unpublish)" ;;
+    *) die "unknown subcommand — it is not repeated here, in case a passphrase was typed in its place (try: publish | update | confirm | rotate | list | unpublish)" ;;
   esac
 }
 
