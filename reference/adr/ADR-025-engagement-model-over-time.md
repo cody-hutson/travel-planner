@@ -492,6 +492,15 @@ inherited here.
 is cheaper than a re-derivation. The cost of storing it is the whole of Option 1C: a shadow SSOT,
 a writer in a file whose writer is the subject, and a staleness that fails toward *on record*.
 
+**Amendment (2026-09-26, Saturday) — never-carry 2 tracks the class.** Never-carry 2 states the
+`internal-hard` class at its live membership, and what binds is that class as the corpus reads it.
+[The private-site record](ADR-029-what-the-private-site-may-show.md) keeps every one of those class
+values and reads the class for the values a travel group may see on its private site: for those
+values alone, *never rendered* reads *never on a public page*, and they reach the private site only
+through a `bound` artifact their producer writes. Never-carry 2 therefore holds, across every
+boundary, for every value outside that record's list as that record reads it, and on every public
+page for every value. No decision of this record is changed, and none is re-opened.
+
 ### 4. Three join keys, one prohibition, and two kinds permanently unreachable
 
 > **`EB-0`** — the normalized traveller key within a trip. **`EB-2`** — `person: psn-<token>`,
@@ -526,6 +535,18 @@ coverage.**
 > `[THIRD-PARTY]` marks a person who will never file one."* The narrowing is the correction; the
 > un-freezing is its point, because *"this kind may still file"* is a claim about an **edge**, not
 > about a row.
+
+**Amendment (2026-09-26, Saturday) — *that is permanent*, read as class-derived.** The statement
+above that at the render boundary no join key may be minted, *and that is permanent*, and the render
+prohibition that follows it are a class boundary, as this section says: the prohibition forecloses a
+signal that is an anonymized projection of a traveller-model value, and the traveller model is
+`internal-hard`. [The private-site record](ADR-029-what-the-private-site-may-show.md) keeps that class
+value and reads the class for the values a group may see on its private site, the reading the joint
+source-binding step of its milestone fixed on #1383. *Permanent* therefore holds for everything that
+reading does not admit, and on every public page for every value. On the private site, rendering a
+filer's IN values under their roster name is admitted by that verdict even though it lets a reader
+infer who filed their own form; the engagement value itself is never rendered; and nothing of it
+reaches a public page. No decision of this record is changed, and none is re-opened.
 
 ### 5. What *engaged* means: two floors, and the engine still cannot observe an act
 
