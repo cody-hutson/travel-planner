@@ -2,7 +2,8 @@
 
 - **Status:** Accepted (2026-08-23); Decision and Coverage boundary amended **three times** the same
   day; **citation form amended a fourth time (2026-08-28)**, **a fifth time (2026-08-29)** and **a sixth time (2026-08-30)**;
-  **Decision, Coverage boundary and residual list amended a seventh time (2026-09-11)**; **residual 10 retracted and the class-source narrowing re-derived, an eighth time (2026-09-12)**.
+  **Decision, Coverage boundary and residual list amended a seventh time (2026-09-11)**; **residual 10 retracted and the class-source narrowing re-derived, an eighth time (2026-09-12)**;
+  **a pointer at the validator's publish-bound source set, a ninth time (2026-09-26)**.
   **First amendment** — an independent adversarial design review confirmed four defects in the first
   implementation: the guard matched the visible-text projection rather than the published bytes, the
   name arm applied no stoplist, the class bound to a `[DERIVED]` cache with no freshness check, and
@@ -97,6 +98,17 @@
   through all seven. Its **scope** is corrected, and the coverage boundary states the measured
   boundary rather than the intended one. Where any amendment disagreed with an earlier claim in this
   document, the claim is **corrected in place**, not softened.
+  **Ninth amendment (2026-09-26)** — a pointer at the validator's publish-bound source set, which
+  option 2 below and the coverage boundary's first layer state as the sources
+  `reference/site-layout-spec.md` § 9.1 names. The records of the *site serves every phase*
+  milestone, each `Proposed`, add members to that set, each from the Wave-1 slice that lands it:
+  [the private-site record](ADR-029-what-the-private-site-may-show.md) moves the destination shortlist
+  to `bound`, [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) adds the
+  group snapshot, and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
+  adds the group contacts file. The slice that lands each member also adds it to the validator's
+  inline list, and § 9.1 remains the authority. Both sentences are retained, with an inline pointer
+  at option 2's. **No decision, rule, residual, coverage claim or exit code is changed, and none is
+  re-opened.**
 - **Deciders:** repo maintainer
 - **Driving work:** #123, the plaintext content guard. Establishes the mechanism, the class-source
   seam that #278 later re-keys, and — above all — the coverage boundary this layer does and does
@@ -194,7 +206,9 @@ never a clean pass — which is the rule `agents/06-validator.md` already states
    this guard must certify the *render*, and `CLAUDE.md` routes a site tweak to a direct edit of the
    HTML with no agent involved, so the render can change after the last validation pass. The
    `validation-report.md` variant fails on (iii) alone: it certifies a different artifact at an
-   earlier time.
+   earlier time. **[Pointer — ninth amendment (2026-09-26).** The set the validator audits grows with
+   the publish-bound set, each member from the Wave-1 slice that lands it; § 9.1 remains the
+   authority.**]**
 
 3. **Value-keyed extraction and match** — read the class's own home, extract each traveler's captured
    *values*, and match those values against the render. **Chosen — see below.**
