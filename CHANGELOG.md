@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-26 — Group approval: a decided model, and a republish that waits for it
+## [0.44.0] — 2026-09-26 — Group approval: a decided model, and a republish that waits for it
 
 **Group approval has a decided model.** A new decision record settles the inbound approval return
 the channel architecture left open. A traveller replies in the group's own thread with a one-line
