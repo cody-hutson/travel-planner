@@ -80,7 +80,11 @@ nothing new reaches a public or third-party surface.
 **Trade-offs**
 
 - Approval is **not system-enforced** — it relies on the organizer to honor group consensus.
-- Async approvals are not tracked by the tool (they happen out-of-band).
+- Async approvals are not tracked by the tool (they happen out-of-band). *(Superseded in part —
+  first amendment: on a trip that declares approvers,
+  [ADR-029](ADR-029-group-approval-return-and-threshold.md) has the tool track them, each recorded
+  at a terminal as the organizer's statement and counted against a declared threshold; on a trip
+  that declares none they are still not tracked.)*
 - System-collected, per-traveler approval is deferred to a future enhancement (#88), which would
   require revisiting the server-less model.
 
