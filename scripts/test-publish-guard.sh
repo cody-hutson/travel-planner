@@ -24,7 +24,9 @@
 # L8-L10 grade the publishability DECLARATION: that the class has exactly one home, that
 # the guard's verdict follows a change to it, and that an unreadable declaration is
 # UNDETERMINED rather than an empty class. L11 pins the reserved-heading suppression —
-# both limbs, one of which has no backstop.
+# both limbs, one of which has no backstop. L14 and L15 grade the --data-root seam: L14 on
+# the person store, L15 on the <trip-dir> argument, EXECUTING the script from a working
+# directory that is not the data root — the only shape an installed engine's verbs produce.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -1573,6 +1575,176 @@ if [ "$l14b" -eq 2 ] && [ "$l14a" -eq 0 ]; then
   PASS "L14b: MUST-FIRE — the SAME trip and the SAME render, with the data root pointed at a record-free store skeleton, aborts UNDETERMINED (rc=2) while the identical run against the real store returns 0. The verdict follows the data root, so the seam is delivered rather than described — and this is the exact state an installed engine is in before it is told where the operator store lives"
 else
   FAIL "L14b: the verdict did not follow the data root (real=$l14a skeleton=$l14b) — a step-2 fallback that ignores the seam reads the engine's own skeleton after install, which returns 2 on every referencing trip"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L15 — THE SAME SEAM ON THE <trip-dir> ARGUMENT, driven as a SUBPROCESS.
+#
+# L14 grades the seam on the person store by calling a function with the root re-pointed.
+# That shape cannot see this defect, and no other arm here could either: every one sources
+# the script and hands cmd_* an ABSOLUTE $WORK path, so neither main()'s parse of
+# --data-root nor a RELATIVE <trip-dir> in a foreign working directory was ever exercised.
+# After an install that is the only shape a verb produces — `update trips/<slug>` and
+# `unpublish trips/<slug> --disable-pages-only`, each with --data-root appended, from
+# whatever directory the session has open — and it died "no such trip dir" everywhere but
+# the data root. So these arms EXECUTE the script, from a working directory that is not the
+# data root, and read what it names.
+#
+# THE DECOY IS THE DISCRIMINATOR. One working directory holds its own trips/<slug> whose
+# .publish-slug names a different repo. A resolver that ignores the flag names the decoy's
+# repo, and so does one that falls back to the working directory when the data root misses
+# (L15e). Only a resolver that roots a relative path at the data root, and there alone,
+# names the data-root trip's repo. Before resolve_trip_dir the script named the decoy's —
+# a takedown reporting a no-op for the wrong repo while the real site stayed up.
+#
+# Offline, like the rest of L: gh and npx are stub FILES on a PATH prefix local to each run,
+# because the subject is a separate process and a shell-function mock would not reach it.
+# The gh stub answers the auth and user reads and fails every other call — every repo reads
+# absent and every clone is refused — so no arm can create, clone, disable or push anything.
+L15DATA="$WORK/l15_data"; L15DECOY="$WORK/l15_decoy_cwd"; L15EMPTY="$WORK/l15_empty_cwd"
+L15BIN="$WORK/l15_bin"; L15LOG="$WORK/l15_gh.log"
+mkdir -p "$L15DATA/trips/l15-trip/outputs" "$L15DECOY/trips/l15-trip" "$L15DECOY/trips/l15-cwd-only" \
+         "$L15EMPTY" "$L15BIN"
+printf '# trips\n' > "$L15DATA/trips/README.md"
+printf '<!DOCTYPE html><html><head><title>x</title></head><body><h1>Day 1</h1><p>Harbour walk, then the lighthouse.</p></body></html>\n' \
+  > "$L15DATA/trips/l15-trip/outputs/l15-trip-travel-site.html"
+printf 'l15-dataroot-slug\n' > "$L15DATA/trips/l15-trip/.publish-slug"
+printf 'l15-decoy-slug\n'    > "$L15DECOY/trips/l15-trip/.publish-slug"
+cat > "$L15BIN/gh" <<L15GH
+#!/usr/bin/env bash
+printf 'gh %s\n' "\$*" >> "$L15LOG"
+case "\${1:-} \${2:-}" in
+  'auth status') exit 0 ;;
+  'api user')    case "\$*" in *.login*) echo l15-owner ;; *.id*) echo 4242 ;; esac; exit 0 ;;
+esac
+exit 1
+L15GH
+printf '#!/usr/bin/env bash\nexit 0\n' > "$L15BIN/npx"
+chmod +x "$L15BIN/gh" "$L15BIN/npx"
+L15_OUT=""; L15_RC=0; L15_LOGT=""
+l15_run() {   # l15_run <stub|bare> <cwd> <args…> — executes the script; sets L15_OUT L15_RC L15_LOGT
+  local mode="$1" cwd="$2"; shift 2
+  : > "$L15LOG"
+  if [ "$mode" = stub ]; then
+    L15_OUT="$( cd "$cwd" && PATH="$L15BIN:$PATH" "$SELF_PUBLISH" "$@" </dev/null 2>&1 )"; L15_RC=$?
+  else
+    L15_OUT="$( cd "$cwd" && "$SELF_PUBLISH" "$@" </dev/null 2>&1 )"; L15_RC=$?
+  fi
+  L15_LOGT="$(cat "$L15LOG" 2>/dev/null)"
+}
+l15_has() { case "$1" in *"$2"*) printf 1 ;; *) printf 0 ;; esac; }
+
+# L15c — fixture integrity, graded FIRST, for the reason L14c gives: the arms below mean
+# something only if the two trips genuinely coexist under different names, the empty working
+# directory genuinely holds no trips/, the cwd-only trip genuinely exists in one place alone,
+# and the stubs are really there to be found.
+if [ "$(cat "$L15DATA/trips/l15-trip/.publish-slug")" = l15-dataroot-slug ] \
+   && [ "$(cat "$L15DECOY/trips/l15-trip/.publish-slug")" = l15-decoy-slug ] \
+   && [ ! -e "$L15EMPTY/trips" ] && [ -d "$L15DECOY/trips/l15-cwd-only" ] \
+   && [ ! -e "$L15DATA/trips/l15-cwd-only" ] && [ -x "$L15BIN/gh" ] && [ -x "$L15BIN/npx" ] \
+   && [ -x "$SELF_PUBLISH" ]; then
+  PASS "L15c: fixture integrity — the data root and the decoy working directory each hold a trip of the same name naming a DIFFERENT repo, the empty working directory holds no trips/, one trip exists only in the decoy directory, and the script and both stubs are executable"
+else
+  FAIL "L15c: the <trip-dir> fixture is not set up as claimed — every L15 arm below would prove nothing"
+fi
+
+# L15a — MUST-FIRE: the decommission verb's invocation, from the DECOY directory.
+l15_run stub "$L15DECOY" unpublish trips/l15-trip --disable-pages-only --data-root "$L15DATA"
+l15a_rc="$L15_RC"; l15a_hit="$(l15_has "$L15_OUT" 'l15-owner/l15-dataroot-slug')"
+l15a_decoy="$(l15_has "$L15_OUT$L15_LOGT" 'l15-decoy-slug')"; l15a_view="$(l15_has "$L15_LOGT" 'repo view l15-owner/l15-dataroot-slug')"
+if [ "$l15a_rc" -eq 0 ] && [ "$l15a_hit" = 1 ] && [ "$l15a_view" = 1 ] && [ "$l15a_decoy" = 0 ]; then
+  PASS "L15a: MUST-FIRE — \`unpublish trips/<slug> --disable-pages-only --data-root <root>\`, EXECUTED from a working directory holding a same-named decoy trip, resolves the trip under the data root: the repo it probes and reports is the data-root trip's (rc=$l15a_rc) and the decoy's name appears nowhere in its output or its gh calls"
+else
+  FAIL "L15a: the relative <trip-dir> was not rooted at --data-root (rc=$l15a_rc, data-root repo named=$l15a_hit, probed=$l15a_view, decoy named=$l15a_decoy). Output: $L15_OUT"
+fi
+
+# L15b — CONTROL: the same command WITHOUT the flag. The default is the working directory,
+# unchanged, so this names the decoy — which is also what shows the probe above can tell the
+# two trips apart rather than reporting one name whatever it resolved.
+l15_run stub "$L15DECOY" unpublish trips/l15-trip --disable-pages-only
+l15b_rc="$L15_RC"; l15b_decoy="$(l15_has "$L15_OUT" 'l15-owner/l15-decoy-slug')"; l15b_data="$(l15_has "$L15_OUT$L15_LOGT" 'l15-dataroot-slug')"
+if [ "$l15b_rc" -eq 0 ] && [ "$l15b_decoy" = 1 ] && [ "$l15b_data" = 0 ]; then
+  PASS "L15b: CONTROL — with no --data-root the same command resolves against the working directory exactly as before the seam and names the decoy's repo (rc=$l15b_rc); the resolver roots only on the flag, never on the variable's engine-root default"
+else
+  FAIL "L15b: with no --data-root the command did not resolve against the working directory (rc=$l15b_rc, decoy named=$l15b_decoy, data-root named=$l15b_data) — either the flagless default moved or L15a's discrimination proves nothing. Output: $L15_OUT"
+fi
+
+# L15d — THE INSTALLED CASE, on the publish verb's invocation: `update` from a working
+# directory holding no trips/ at all. The stub refuses the clone, so the run stops at the
+# first network step — and the per-trip repo that step names is the proof that the trip was
+# found under the data root and carried through preflight, the render, and both guards.
+l15_run stub "$L15EMPTY" update trips/l15-trip --data-root "$L15DATA"
+l15d_rc="$L15_RC"; l15d_clone="$(l15_has "$L15_OUT" 'per-trip repo l15-owner/l15-dataroot-slug not found')"
+l15d_nodir="$(l15_has "$L15_OUT" 'no such trip dir')"; l15d_log="$(l15_has "$L15_LOGT" 'repo clone l15-owner/l15-dataroot-slug')"
+if [ "$l15d_rc" -eq 1 ] && [ "$l15d_clone" = 1 ] && [ "$l15d_log" = 1 ] && [ "$l15d_nodir" = 0 ]; then
+  PASS "L15d: \`update trips/<slug> --data-root <root>\` EXECUTED from a directory with no trips/ — the shape every installed session has — finds the trip under the data root and reaches the clone of that trip's repo (refused by the stub, rc=$l15d_rc), where it used to die 'no such trip dir' before preflight"
+else
+  FAIL "L15d: update did not reach the data-root trip's clone (rc=$l15d_rc, clone named=$l15d_clone, clone attempted=$l15d_log, 'no such trip dir'=$l15d_nodir). Output: $L15_OUT"
+fi
+
+# L15e — NO FALLBACK. The trip exists only in the working directory. With the flag given it
+# must not be found: the refusal names the ROOTED path, and gh is never reached.
+l15_run stub "$L15DECOY" unpublish trips/l15-cwd-only --disable-pages-only --data-root "$L15DATA"
+l15e_rc="$L15_RC"; l15e_rooted="$(l15_has "$L15_OUT" "no such trip dir: $L15DATA/trips/l15-cwd-only")"
+if [ "$l15e_rc" -eq 1 ] && [ "$l15e_rooted" = 1 ] && [ -z "$L15_LOGT" ]; then
+  PASS "L15e: NO FALLBACK — a trip present only in the working directory is refused as 'no such trip dir' naming the path under --data-root (rc=$l15e_rc), before any gh call. Falling back to the working directory would reach a different trip of the same name, which is L15a's defect"
+else
+  FAIL "L15e: a trip missing under --data-root was not refused at the rooted path (rc=$l15e_rc, rooted path named=$l15e_rooted, gh calls: ${L15_LOGT:-none}) — the resolver fell back to the working directory. Output: $L15_OUT"
+fi
+
+# L15f — an ABSOLUTE <trip-dir> is used as given, with the flag present.
+l15_run stub "$L15EMPTY" unpublish "$L15DECOY/trips/l15-trip" --disable-pages-only --data-root "$L15DATA"
+l15f_rc="$L15_RC"; l15f_decoy="$(l15_has "$L15_OUT" 'l15-owner/l15-decoy-slug')"
+if [ "$l15f_rc" -eq 0 ] && [ "$l15f_decoy" = 1 ]; then
+  PASS "L15f: an absolute <trip-dir> is taken as given even beside --data-root — the trip it names is the one resolved (rc=$l15f_rc); only a relative path is rooted"
+else
+  FAIL "L15f: an absolute <trip-dir> was re-based or refused (rc=$l15f_rc, its repo named=$l15f_decoy). Output: $L15_OUT"
+fi
+
+# L15g — confirm, with NO stub at all: it needs neither gh nor npx, so this is the real
+# script in the real environment. Its refusal names the directory it resolved.
+l15_run bare "$L15EMPTY" confirm trips/l15-trip --data-root "$L15DATA"
+l15g_rc="$L15_RC"; l15g_rooted="$(l15_has "$L15_OUT" "nothing to confirm for $L15DATA/trips/l15-trip")"
+if [ "$l15g_rc" -eq 1 ] && [ "$l15g_rooted" = 1 ]; then
+  PASS "L15g: confirm, executed with no stub from a directory with no trips/, resolves the trip under --data-root and reads its render — its refusal names the rooted trip (rc=$l15g_rc), not 'no such trip dir'"
+else
+  FAIL "L15g: confirm did not resolve the trip under --data-root (rc=$l15g_rc, rooted trip named=$l15g_rooted). Output: $L15_OUT"
+fi
+
+# L15h — TOTALITY over the arms, read from PARSED bodies so a comment cannot fake it. Every
+# cmd_* whose body refuses "no such trip dir" must call resolve_trip_dir BEFORE that refusal.
+# The population is derived from the loaded functions, not listed here, so an arm added later
+# joins it; publish and rotate, which no arm above executes, are held here. The detector is
+# controlled on planted bodies first — one late, one missing — so its verdict is a measurement.
+l15_order() {   # l15_order <fn> -> ok | late | missing | n/a
+  local body pre
+  body="$(declare -f "$1" 2>/dev/null)" || { printf 'n/a'; return 0; }
+  case "$body" in *'no such trip dir'*) ;; *) printf 'n/a'; return 0 ;; esac
+  pre="${body%%no such trip dir*}"
+  case "$pre" in
+    *resolve_trip_dir*) printf 'ok' ;;
+    *) case "$body" in *resolve_trip_dir*) printf 'late' ;; *) printf 'missing' ;; esac ;;
+  esac
+}
+zzl15_late()    { [ -d "$1" ] || die "no such trip dir: $1"; local d; d="$(resolve_trip_dir "$1")"; printf '%s' "$d"; }
+zzl15_missing() { [ -d "$1" ] || die "no such trip dir: $1"; }
+l15h_ctl="$(l15_order zzl15_late) $(l15_order zzl15_missing) $(l15_order resolve_trip_dir)"
+unset -f zzl15_late zzl15_missing
+l15h_pop=0; l15h_ok=0; l15h_bad=""; l15h_fn=""
+while read -r _ _ l15h_fn; do
+  case "$l15h_fn" in cmd_*) ;; *) continue ;; esac
+  case "$(l15_order "$l15h_fn")" in
+    ok)   l15h_pop=$((l15h_pop+1)); l15h_ok=$((l15h_ok+1)) ;;
+    late|missing) l15h_pop=$((l15h_pop+1)); l15h_bad="$l15h_bad$l15h_fn " ;;
+  esac
+done <<< "$(declare -F)"
+l15h_upd="$(l15_order cmd_update)"; l15h_unp="$(l15_order cmd_unpublish)"
+if [ "$l15h_ctl" != 'late missing n/a' ]; then
+  FAIL "L15h: CONTROL on the detector — planted late / missing bodies and a body with no refusal read '$l15h_ctl' rather than 'late missing n/a', so the totality verdict below is not a measurement"
+elif [ "$l15h_pop" -gt 0 ] && [ "$l15h_ok" -eq "$l15h_pop" ] && [ "$l15h_upd" = ok ] && [ "$l15h_unp" = ok ]; then
+  PASS "L15h: all $l15h_pop cmd_* arm(s) that refuse 'no such trip dir' call resolve_trip_dir before refusing, read from their parsed bodies — the verb-reached update and unpublish among them. The detector's control read planted late / missing bodies correctly"
+else
+  FAIL "L15h: cmd_* arm(s) refuse 'no such trip dir' without resolving first: ${l15h_bad:-none} (population $l15h_pop, ok $l15h_ok, update=$l15h_upd, unpublish=$l15h_unp) — a relative <trip-dir> reaching that arm is resolved against the working directory"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

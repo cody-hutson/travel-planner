@@ -260,7 +260,7 @@ error was letting one answer the other's question:
 - **A read of a value** is contents reaching a channel. It is what standing rule 4 forbids
   for a passphrase, and its purpose is that no secret enters the transcript.
 
-So `test -r "trips/<slug>/.passphrase"` **is** a read of that path, **is** declared in
+So `test -r "<data-root>/trips/<slug>/.passphrase"` **is** a read of that path, **is** declared in
 `update`'s `**Reads:**` line, and is **not** a read of that value — and rule 4 is untouched
 by the declaration. Keeping the narrower definition would have been the worse choice on this
 file specifically: it is the only file on this surface that observes a passphrase path at
@@ -484,10 +484,15 @@ primitive.
 **(i) The trip's passphrase file is present and readable.**
 
 ```
-test -r "trips/<slug>/.passphrase"
+test -r "<data-root>/trips/<slug>/.passphrase"
 ```
 
-with `<slug>` replaced by `trip.slug`. A non-zero exit is a **refusal, and it stops.** Say:
+with `<data-root>` replaced by `trip.data_root` and `<slug>` by `trip.slug`. **The probe is rooted
+because it must test the file the script will read.** The invocation below resolves the trip
+under the data root, so a probe resolved against your working directory tests some other file or
+none: it refuses a trip whose passphrase is in place, or it passes on a same-named trip elsewhere
+while the script mints a fresh passphrase for this one — the silent re-key this limb exists to
+stop. A non-zero exit is a **refusal, and it stops.** Say:
 that the trip's passphrase file at that path is absent or unreadable; that `update` would
 otherwise mint a fresh passphrase, overwrite that file, re-encrypt and push while printing
 nothing, locking out everyone holding the previous one; and that the remedy is to restore
@@ -528,7 +533,11 @@ Precondition → invocation → report. Nothing is invoked before every limb pas
 ${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update trips/<slug>
 ```
 
-with `<slug>` replaced by `trip.slug`. Run it from the repo root.
+with `<slug>` replaced by `trip.slug`. **Run it from any directory, and keep `trips/<slug>`
+relative:** with the flag below appended the script resolves it under the data root rather than
+the working directory, which is the same shape `/trip schema` gives `--scope dir trips/<slug>`.
+The engine directory is no better a place to stand than any other — once the engine is installed,
+its `trips/` is an empty skeleton.
 
 **Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
@@ -589,8 +598,8 @@ script emits them.
 ${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list
 ```
 
-Run it from the repo root: the script scans `./trips/` and refuses elsewhere, and it takes
-no argument beyond the data-root seam below.
+Run it from any directory: with the data-root flag below appended the script scans
+`<data-root>/trips/` rather than `./trips/`, and it takes no argument beyond that flag.
 
 **Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
