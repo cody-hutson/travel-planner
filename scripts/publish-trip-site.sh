@@ -250,20 +250,22 @@ require_passphrase_sources_agree() { # <trip_dir> -> returns 0, or dies via refu
   refuse_passphrase_conflict "$pf"
 }
 
-# Take THIS run's own commit back out of the per-trip clone, and nothing else. Two tests keep it
-# to its own. Ownership: <commit>'s page must be the exact ciphertext this run encrypted — nonced,
-# so no other commit carries it — because <commit> is read from HEAD after the commit returns, and
-# another command may have committed on top by then. Position: main moves back to the commit's
-# parent only while it still points at <commit>, a compare-and-swap, so whatever sat beneath this
-# one (a rotation's committed-but-unpushed page, which the next update exists to carry) stays.
-# Never a reset of the clone: resetting a clone another run is using can turn that run's push into
-# a no-op that still reports success. The index and working tree are left alone; the next run's
-# copy and add replace them.
-discard_own_commit() { # <pub_dir> <commit> <blob-of-this-run's-ciphertext>
-  local parent page
-  [ -n "${3:-}" ] || return 1
-  page="$(git -C "$1" rev-parse --verify -q "$2:index.html")" || return 1
-  [ "$page" = "$3" ] || return 1
+# Take THIS run's own commit back out of the per-trip clone, and nothing else. <commit> is the one
+# encrypt_verify_commit read back and proved by its page, so it is this run's own. Two more tests.
+# Unpublished: another command's push can carry this commit beneath its own, and a page already on
+# the site is not discarded by moving a local branch — so a commit on the remote, or a remote that
+# cannot be read, is left alone. Position: main moves back to the commit's parent only while it
+# still points at <commit>, a compare-and-swap, so whatever sat beneath this one (a rotation's
+# committed-but-unpushed page, which the next update exists to carry) stays. Never a reset of the
+# clone: resetting a clone another run is using can turn that run's push into a no-op that still
+# reports success. The index and working tree are left alone; the next run's copy and add replace
+# them.
+discard_own_commit() { # <pub_dir> <this-run's-own-commit>
+  local parent
+  [ -n "${2:-}" ] || return 1
+  git -C "$1" rev-parse --verify -q refs/remotes/origin/main >/dev/null || return 1
+  git -C "$1" merge-base --is-ancestor "$2" refs/remotes/origin/main
+  case $? in 1) ;; *) return 1 ;; esac
   parent="$(git -C "$1" rev-parse --verify -q "$2^")" || return 1
   git -C "$1" update-ref -m "discard own commit: key of record changed" refs/heads/main "$parent" "$2"
 }
@@ -274,11 +276,11 @@ discard_own_commit() { # <pub_dir> <commit> <blob-of-this-run's-ciphertext>
 # this run's own commit back out first: it is a page under the replaced key, and the clone is
 # reused as it stands, so a commit left there rides the next push. A trip with no .passphrase
 # (the variable supplies its key) has no record to compare, and passes.
-require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pub_dir> <this-run's-commit> <this-run's-page-blob>
+require_key_of_record() { # <trip_dir> <passphrase-this-run-encrypted-under> <pub_dir> <this-run's-own-commit>
   local pf="$1/.passphrase"
   [ -e "$pf" ] || return 0
   passphrase_file_holds "$pf" "$2" && return 0
-  if discard_own_commit "$3" "$4" "${5:-}"; then
+  if discard_own_commit "$3" "$4"; then
     die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing and discarded its own commit, so no later push can carry its page under the replaced key. Re-run update."
   fi
   die "$pf changed while this update was running — another rotate or update recorded a different key after this run resolved its own. This run pushed nothing itself, but could not confirm its own commit in $3 and take it back — another command may have committed on top of it, and may already have published it. Remove $3 before re-running update, so no later push from it carries a page under the replaced key."
@@ -2958,8 +2960,8 @@ ensure_pub_clone() { # <trip_dir> -> ensures <trip_dir>/.publish is the RIGHT pe
 # signed commit made the push a no-op that reported success, so a rotation read as done with the
 # site still under the old key (GHSA-gmm2-v7rr-jq7r). git -C rather than cd, so a trip path the
 # caller passes — relative, as operators type it — stays valid throughout.
-encrypt_verify_commit() { # <pub_dir> <site_html> <passphrase> <verb> [<var-to-receive-the-page-blob>]
-  local pub_dir="$1" site_html="$2" passphrase="$3" verb="$4" enc boiler page_blob
+encrypt_verify_commit() { # <pub_dir> <site_html> <passphrase> <verb> [<var-to-receive-this-run's-commit>]
+  local pub_dir="$1" site_html="$2" passphrase="$3" verb="$4" enc boiler evc_blob evc_own
   [ "${#passphrase}" -ge 12 ] || die "$verb: no usable passphrase (need ≥12 characters). Nothing was pushed."
   if [ "$verb" = rotate ]; then info "Re-encrypting under the new passphrase…"; else info "Re-encrypting edited site…"; fi
   enc="$(encrypt_to_tmp "$site_html" "$passphrase")" || die "$verb: the encryption step failed. Nothing was pushed."
@@ -2969,18 +2971,22 @@ encrypt_verify_commit() { # <pub_dir> <site_html> <passphrase> <verb> [<var-to-r
     || { rm -rf "$enc" "$boiler"; die "GUARD ABORTED $verb — output is not verified ciphertext. Nothing was pushed."; }
   rm -rf "$boiler"
   cp "$enc/index.html" "$pub_dir/index.html" || { rm -rf "$enc"; die "$verb: could not place the ciphertext in $pub_dir. Nothing was pushed."; }
-  # The page's git blob id, from this run's own private copy: the fingerprint the key-of-record
-  # re-check uses to tell this run's commit from another command's (see discard_own_commit).
-  if [ -n "${5:-}" ]; then
-    page_blob="$(git -C "$pub_dir" hash-object "$enc/index.html")" \
-      || { rm -rf "$enc"; die "$verb: could not fingerprint the ciphertext. Nothing was pushed."; }
-    printf -v "$5" '%s' "$page_blob"
-  fi
+  # The page's git blob id, from this run's own private copy — nonced ciphertext, so no other
+  # command's commit carries the same page. It is how this run recognises its own commit below.
+  evc_blob="$(git -C "$pub_dir" hash-object "$enc/index.html")" \
+    || { rm -rf "$enc"; die "$verb: could not fingerprint the ciphertext. Nothing was pushed."; }
   rm -rf "$enc"
   ok "Guard passed."
   git -C "$pub_dir" add index.html || die "$verb: could not stage the ciphertext in $pub_dir. Nothing was pushed."
   commit_noreply "$pub_dir" "Update trip site" \
     || die "$verb: could not commit the ciphertext in $pub_dir (commit signing, or the git error above). Nothing was pushed."
+  # This run's own commit, read back at once and proved by its page. If another command moved the
+  # clone in between, stop: nothing after this point may push, record or discard a commit that is
+  # not this run's own. (The caller's variable must not share a name with a local here.)
+  evc_own="$(git -C "$pub_dir" rev-parse --verify -q HEAD)" \
+    && [ "$(git -C "$pub_dir" rev-parse --verify -q "${evc_own}:index.html")" = "$evc_blob" ] \
+    || die "$verb: another command changed $pub_dir between this run's commit and its read-back. Nothing was pushed by this run; run one command per trip at a time, and re-run."
+  [ -z "${5:-}" ] || printf -v "$5" '%s' "$evc_own"
 }
 
 # A rotation publishes everything beneath its own commit. A page an earlier update or rotate
@@ -2999,8 +3005,12 @@ refuse_unpushed_residue() { # <pub_dir>
   die "rotate refused — $1 holds a page that was committed but not yet pushed: an earlier update or rotate stopped at its push. A rotation would publish it too, under the passphrase you are revoking. Remove $1 (it is cloned again from the published site; every page is rebuilt from the trip, so nothing is lost) and re-run rotate — or run update first, if the current passphrase's holders should see that page. Nothing was changed."
 }
 
-push_trip_site() { # <pub_dir> <verb>
-  git -C "$1" push --quiet origin main || die "$2: the push to the per-trip repository failed."
+# Push exactly this run's own commit, never the branch. A commit another command stacked on top in
+# the meantime is not this push's to publish; and when another command has already moved the remote
+# past this commit, the push is a non-fast-forward and FAILS — so a run that lost a race says so,
+# instead of reporting success with a page that is not the one live.
+push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb>
+  git -C "$1" push --quiet origin "$2:refs/heads/main" || die "$3: the push to the per-trip repository failed."
 }
 
 cmd_update() { # <trip_dir>
@@ -3010,7 +3020,7 @@ cmd_update() { # <trip_dir>
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase owner slug mine own_blob=""
+  local site_html pub_dir passphrase owner slug mine=""
   site_html="$(resolve_site_html "$trip_dir")"
   # THE ORGANIZER-CONFIRM GATE (#552, ADR-003 § Decision 2). Its position is exact
   # and load-bearing: after the render is resolved (the gate digests it) and BEFORE
@@ -3022,16 +3032,13 @@ cmd_update() { # <trip_dir>
   passphrase="$(get_passphrase "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
 
-  encrypt_verify_commit "$pub_dir" "$site_html" "$passphrase" update own_blob
-  # HEAD after the commit, and the page this run encrypted: the re-check below takes a commit back
-  # out only when the two agree, so another command's commit on top is never taken for this one.
-  mine="$(git -C "$pub_dir" rev-parse --verify -q HEAD)" \
-    || die "update: could not read back the commit just made in $pub_dir. Nothing was pushed."
+  # mine receives this run's own commit, read back and proved by its page (see the function).
+  encrypt_verify_commit "$pub_dir" "$site_html" "$passphrase" update mine
   # The key of record, re-read immediately before the push: a rotation that committed in the
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
-  require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine" "$own_blob"
-  push_trip_site "$pub_dir" update
+  require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
+  push_trip_site "$pub_dir" "$mine" update
   # The push succeeded, so this itinerary content IS what is published now. Recorded
   # here rather than earlier for that reason: a sidecar written before the push would
   # claim content a failed push never delivered, and the next republish would then
@@ -3122,7 +3129,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
     shift
   done
   [ -d "$trip_dir" ] || die "no such trip dir: $trip_dir"
-  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug
+  local pf="$trip_dir/.passphrase" site_html pub_dir owner slug mine=""
   [ "$supplied" = "1" ] || newp="$(gen_passphrase)"
   # Both refusals come BEFORE anything is written: an aborted rotation must leave .passphrase
   # exactly as it was.
@@ -3140,14 +3147,14 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   refuse_unpushed_residue "$pub_dir"
   # The new key is handed down explicitly, so the environment is never read for it
   # (GHSA-gmm2-v7rr-jq7r) — a set STATICRYPT_PASSWORD can no longer take a rotation's place.
-  encrypt_verify_commit "$pub_dir" "$site_html" "$newp" rotate
+  encrypt_verify_commit "$pub_dir" "$site_html" "$newp" rotate mine
   # THE COMMIT POINT: the new ciphertext is committed and not yet pushed. Recording the key here,
   # and not after the push, means no reachable state sends a later update back to the revoked
   # key — every abort before this line left .passphrase untouched, and a push that fails after it
   # leaves .passphrase naming the key the next update converges the site onto.
   write_passphrase_file "$pf" "$newp"
   info "New passphrase recorded in the trip's .passphrase. Pushing — if the push fails, re-run update to finish the rotation; until it succeeds, the previous passphrase still opens the site."
-  push_trip_site "$pub_dir" rotate
+  push_trip_site "$pub_dir" "$mine" rotate
   record_published_itinerary "$trip_dir" "$site_html"
   ok "Updated: https://${owner}.github.io/${slug}/  (changes appear behind the passphrase prompt)"
   warn "Passphrase ROTATED — anyone you previously shared the site with must re-receive the new one. Earlier versions stay in the per-trip repository's history, readable to anyone holding an old passphrase; to withdraw them, unpublish (which deletes the repository) and publish again."
