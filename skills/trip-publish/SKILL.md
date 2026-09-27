@@ -260,7 +260,7 @@ error was letting one answer the other's question:
 - **A read of a value** is contents reaching a channel. It is what standing rule 4 forbids
   for a passphrase, and its purpose is that no secret enters the transcript.
 
-So `test -r "trips/<slug>/.passphrase"` **is** a read of that path, **is** declared in
+So `test -r "<data-root>/trips/<slug>/.passphrase"` **is** a read of that path, **is** declared in
 `update`'s `**Reads:**` line, and is **not** a read of that value — and rule 4 is untouched
 by the declaration. Keeping the narrower definition would have been the worse choice on this
 file specifically: it is the only file on this surface that observes a passphrase path at
@@ -484,10 +484,15 @@ primitive.
 **(i) The trip's passphrase file is present and readable.**
 
 ```
-test -r "trips/<slug>/.passphrase"
+test -r "<data-root>/trips/<slug>/.passphrase"
 ```
 
-with `<slug>` replaced by `trip.slug`. A non-zero exit is a **refusal, and it stops.** Say:
+with `<data-root>` replaced by `trip.data_root` and `<slug>` by `trip.slug`. **The probe is rooted
+because it must test the file the script will read.** The invocation below resolves the trip
+under the data root, so a probe resolved against your working directory tests some other file or
+none: it refuses a trip whose passphrase is in place, or it passes on a same-named trip elsewhere
+while the script mints a fresh passphrase for this one — the silent re-key this limb exists to
+stop. A non-zero exit is a **refusal, and it stops.** Say:
 that the trip's passphrase file at that path is absent or unreadable; that `update` would
 otherwise mint a fresh passphrase, overwrite that file, re-encrypt and push while printing
 nothing, locking out everyone holding the previous one; and that the remedy is to restore
@@ -528,7 +533,11 @@ Precondition → invocation → report. Nothing is invoked before every limb pas
 ${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh update trips/<slug>
 ```
 
-with `<slug>` replaced by `trip.slug`. Run it from the repo root.
+with `<slug>` replaced by `trip.slug`. **Run it from any directory, and keep `trips/<slug>`
+relative:** with the flag below appended the script resolves it under the data root rather than
+the working directory, which is the same shape `/trip schema` gives `--scope dir trips/<slug>`.
+The engine directory is no better a place to stand than any other — once the engine is installed,
+its `trips/` is an empty skeleton.
 
 **Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
@@ -549,13 +558,18 @@ already guards precisely.
 
 A first publish is not a verb of this file, so render the named remedy as an **operator
 hand-off**: point at `CLAUDE.md` → *Publishing to GitHub Pages*, print that section's
-publish command for the operator to run in their own terminal, with `trip.slug`
-substituted for the placeholder trip directory, and stop. **Print the line** — a hand-off
-that names a section and leaves the operator with nothing runnable has failed, the same
-standard the plaintext hand-off below is held to. **Rendering a command line for the
-operator is not constructing an invocation**, and the two must not be collapsed: what is
-forbidden is running it, routing it through any primitive, or offering `publish` as a verb
-of this command. Do not do those. Do print the line.
+publish command for the operator to run in their own terminal with every placeholder
+filled, and stop. **Fill each one, or the printed line runs from nowhere:** `trip.slug`
+for the placeholder trip directory, `trip.data_root` for `<data-root>`, and for
+`<engine-root>` the engine root named at the top of this file, its `..` segments kept as
+written — collapsed as text, they land outside the engine when this verb's directory is a
+link. Filled, the line runs from whatever directory the operator's terminal is in.
+**Print the line** — a hand-off that names a section and leaves the operator with nothing
+runnable has failed, the same standard the plaintext hand-off below is held to.
+**Rendering a command line for the operator is not constructing an invocation**, and the
+two must not be collapsed: what is forbidden is running it, routing it through any
+primitive, or offering `publish` as a verb of this command. Do not do those. Do print the
+line.
 
 **When the resolved trip is `ARCHIVED`**, the row above declares `lifecycle: ACTIVE`, so
 G7 disposes `REFUSE`: name the cell the resolved state does not satisfy and the value the
@@ -589,8 +603,8 @@ script emits them.
 ${CLAUDE_SKILL_DIR}/../../scripts/publish-trip-site.sh list
 ```
 
-Run it from the repo root: the script scans `./trips/` and refuses elsewhere, and it takes
-no argument beyond the data-root seam below.
+Run it from any directory: with the data-root flag below appended the script scans
+`<data-root>/trips/` rather than `./trips/`, and it takes no argument beyond that flag.
 
 **Append `--data-root <trip.data_root>` to the line above**, using the absolute path gate
 `G0-root` resolved. Rooting the script's *path* makes the script reachable; it does not tell the
@@ -637,7 +651,8 @@ the pre-push ciphertext guard, running a content guard instead.
 
 So this is an operator action. The hand-off: point at `CLAUDE.md` → *Publishing to GitHub
 Pages* → the opt-out paragraph, **print that paragraph's command for the operator to run
-in their own terminal**, with `trip.slug` substituted for the placeholder trip directory,
-say why an agent cannot run it, and stop. Print the line — a hand-off that names a section
-and leaves the operator with nothing runnable has failed. Do not run it, and do not carry
-a second copy of it here: that paragraph is its one home.
+in their own terminal**, with every placeholder filled exactly as the first-publish
+hand-off under § *update* fills them, say why an agent cannot run it, and stop. Print the
+line — a hand-off that names a section and leaves the operator with nothing runnable has
+failed. Do not run it, and do not carry a second copy of it here: that paragraph is its
+one home.

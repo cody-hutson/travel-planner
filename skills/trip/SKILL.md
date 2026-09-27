@@ -1006,11 +1006,14 @@ surface for status; `trips/<slug>/outputs/change-summary.md` — its dated entri
 alone, which are what raise a change in the first place, read because
 `reference/site-layout-spec.md` § 3's Coordination Notice is a read surface for the
 coordination state exactly as the checklist is for booking status;
-`trips/<slug>/.change-confirmed` — its `digest=` and `confirmed=` lines, the organizer's
+`trips/<slug>/.change-confirmed` — its `digest=`, `confirmed=` and `approval-count=` lines, the
 recorded approval: the one event both deciding the `coordination-state` this build writes and
 dating the `updated` state's decay, read because it is the only record any shipped surface
-writes when the organizer decides, and because a date taken from this build instead would
-restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
+writes when a change is approved — the organizer's own confirmation on a trip that declares no
+approvers, and on one that does, the last terminal act that left the declared threshold met before
+the plan was published, save the later acts the paragraph on what dates the `updated` state names:
+a revert, and the act after a change abandoned before any approval — and
+because a date taken from this build instead would restart § 3's window on every rebuild; `reference/site-layout-spec.md` — the responsive architecture, the card
 system, the booking indicators and the § 9 round-trip rules; that same document's § 9.2
 round-trip contract fence and § 3 component catalog, together with
 `agents/05-hub-planner.md`'s itinerary grammar — read by `scripts/check-round-trip.sh`, the
@@ -1032,22 +1035,31 @@ preserve design tweaks already approved; `Write` is reached only where the file 
 exist. A regenerate silently drops plan detail and approved design, which is the overwrite
 bound 5 forbids, and it takes no licence from the append shape either.
 
-**The coordination state comes from the organizer's recorded approval, and the mapping is
+**The coordination state comes from the recorded approval, and the mapping is
 closed.** `reference/schemas/travel-site.md` declares `coordination-state` and
 `coordination-since` on this build's own frontmatter, and `reference/site-layout-spec.md` § 3
 declares what the render does with them. This verb decides only the value, and it
-decides it from `trips/<slug>/.change-confirmed` — the organizer's recorded approval —
+decides it from `trips/<slug>/.change-confirmed` — the recorded approval —
 read against the dated entries of `trips/<slug>/outputs/change-summary.md`, which are what
-raise a change in the first place. Two readings settle the whole mapping. The record counts
+raise a change in the first place. Three readings settle the whole mapping. The record counts
 as an approval only where its `digest=` parses as a token, so a record present but saying
-nothing is not consent; and an
+nothing is not consent; an
 entry is **undecided** where its date is later than the `YYYY-MM-DD` prefix of `confirmed=`, or
-where there is no approval to measure it against at all. The three limbs, closed: at least one
+where there is no approval to measure it against at all; and the record carries an **approval
+count** where it holds an `approval-count=` line that reads as a non-negative integer, a line only
+the declared path writes. The limbs, closed: at least one
 undecided entry → `pending`, with `coordination-since` the date of the newest undecided entry;
-no undecided entry and a readable approval → `updated`, with `coordination-since` the date the
+at least one entry, none of them undecided, and a readable approval → `updated`, with `coordination-since` the date the
 approval itself was recorded — the `YYYY-MM-DD` prefix of the `confirmed=` line of
 `trips/<slug>/.change-confirmed`, never the date of this build; no
-`outputs/change-summary.md`, or no entry in one, → `none`, with `coordination-since` omitted.
+`outputs/change-summary.md`, or no entry in one, and a readable approval carrying an approval
+count and a `confirmed=` date → `updated` as well, dated and paired exactly as that limb is,
+because on a trip that declares approvers the approval record is itself the decided event, and an
+approved change for which no entry was ever written must still reach its render with its count
+and code — without it, `update` refuses the pair-less render and the refresh its refusal names
+can never clear it; no `outputs/change-summary.md`, or no entry in one, and no such record →
+`none`, with `coordination-since` omitted — the organizer's own two-line confirmation carries no
+count, so a trip that has never declared approvers reads exactly as it did before approvals existed.
 Where the state resolves to `none` the notice is **not emitted at all**; § 3 states that rule
 and this verb does not restate it.
 
@@ -1057,27 +1069,78 @@ a correction.** Presence was rejected first and for a reason that still holds: C
 decision recorded in it, and a build reading presence would announce a change pending on a trip
 whose last change was confirmed months ago. `status` was the reading that replaced it, and it
 fails one step further down the same argument. Nothing in this repository ever moves that field
-off `pending` — `confirm` records the organizer's decision by writing `digest=` and `confirmed=`
-to `trips/<slug>/.change-confirmed` and writes nothing else, and no other surface promotes it —
+off `pending` — `confirm` records the approval event by writing `digest=` and `confirmed=`
+to `trips/<slug>/.change-confirmed` — with an `approval-count=` line, and entries in the approval
+ledger, on a trip that declares approvers — and never writes that field, and no other surface promotes it —
 so a state keyed on it could never reach `updated` at all, and, § 3 giving the seven-day window
 to `is-updated` alone, the pending band would never decay either. It would **latch**: the
 organizer confirms, the plan republishes, and the site goes on telling every traveller a change
 is pending, indefinitely. **What clears `pending` is an approval recorded later than the newest
-entry** — one `confirm` away, an event with its own moment, and nothing rewritten.
+entry** — an event with its own moment, recorded by `confirm` at a terminal, and nothing rewritten.
+A change abandoned before any approval is the case to state: it leaves the working copy back on the
+published plan with nothing new to approve, and what clears the band then turns on whether the trip
+declares approvers. On a trip that declares them it is still one `confirm` away — a terminal act that
+leaves the published plan's own approvals meeting the threshold re-dates the approval record past
+the abandoned change's entry, the exception the paragraph below names — and where those approvals
+have fallen short of the threshold since publication, the band stays until an act meets it again.
+On a trip that declares nobody, `confirm` refuses the unchanged plan, so the band stays until a new
+change is confirmed and published. Where a revert, a retire or that exception clears the band, the
+next build shows an unchanged published plan as *recently updated* for up to seven days, with the
+plan's own count and code after a revert or that exception and with none after a retire.
 
 **The same record dates the `updated` state, and it is why that limb does not anchor to this
-run.** `confirm` writes `confirmed=` at the instant the organizer types CONFIRM and no later
-path re-stamps it — `publish` and `update` write `.published-itinerary`, a different sidecar —
-so a date read from it moves when and only when the organizer decides again. A
+run.** `confirm` writes `confirmed=` at the instant the approval event is recorded — the
+organizer's CONFIRM, or, on a trip that declares approvers, the last terminal act that leaves the
+declared threshold met before the plan it names is published — and no later path re-stamps it:
+`publish` and `update` write `.published-itinerary`, a different sidecar, and once the record names
+the published plan a later terminal act rewrites only its count. So a date read from it moves only
+at the organizer's own act, and never for a plan that has already published — with two exceptions,
+both reached once a change is abandoned and the working copy is back on the published plan. The
+first is a revert: where the record names the abandoned plan, `confirm` re-anchors the record to
+the published plan — or, where that plan's own approvals fall short, offers to retire it. The
+second is a change abandoned before any approval: on a trip that declares approvers, where the
+record still names the published plan and `trips/<slug>/outputs/change-summary.md` holds an entry
+dated after the `YYYY-MM-DD` prefix of its `confirmed=` — the entry that change raised, read
+exactly as the mapping above reads entries, and never through `status` — a terminal act that
+leaves that plan's own approvals meeting the threshold re-stamps `confirmed=` at the act instead of
+keeping it. Each of those writes is dated at its act, because only that date post-dates the entry
+raised for the abandoned change. A
 `coordination-since` re-derived from the build would be re-stamped on every later rebuild:
 § 3's window would restart each time instead of decaying, and a trip rebuilt months later would
 announce itself as recently updated, the failure `reference/schemas/travel-site.md` says this
 field exists to prevent. The `pending` limb anchors to an **entry** rather than to a run for the
 same reason.
 
-**And the `updated` limb is pruned at the build where its window has already closed.** Where the
-recorded approval is older than the window § 3 declares, this build writes `none` and emits no
-band. That is **not** § 3's decay moved to build time: § 3 evaluates the window at **open**
+**On a trip that declares approvers, the `updated` state also carries the approval pair, from the
+same record.** Where `trips/<slug>/.change-confirmed` carries an `approval-count=` line that reads
+as a non-negative integer, this build writes `approval-count` from it and `approval-code` from that
+record's `digest=` value into its frontmatter, and § 3's `updated` band renders both; where the
+line is absent, neither field is written and the band is what it was. A trip that declares no
+approvers carries no such line, with one stated exception: a declaration retired by hand leaves the
+last `approval-count=` line in the record, so the last recorded count and code go on showing — on the
+no-entry limb above as on the other — until the organizer's next `confirm` rewrites the record in
+its two-line form. `confirm` writes that record
+from the verdict at every terminal act — a recording, or a run that records nothing — that leaves
+the declared threshold met for the plan it is run on, and stamps `confirmed=` at that act unless the
+record already names that plan and it is the published one, when the act rewrites only the count
+and keeps the date — save after a change abandoned before any approval, the exception named above;
+so the pair's seven-day window runs from the last terminal act before the plan publishes, and no
+later act re-dates it but the revert and that exception. A recording that leaves the
+threshold unmet for the plan the record already names rewrites only its count, too. So the
+state, its date and the pair all come from one record, and `update` refuses to push an approved
+change on a trip that declares approvers unless the render carries the pair. That refusal reads
+the pair and not the window, so a render built inside the seven-day window and pushed after it has
+closed passes, and its band — with the count and code it shows — has already decayed at open; a
+refresh at the terminal and a rebuild just before a late push are what keep the pair on show. **This verb never
+compares the code with the render it writes**, because it holds no digest of it;
+`scripts/publish-trip-site.sh` does, and refuses to push a render whose code is not its own
+itinerary's. **And it reads neither approver sidecar** — `.approvers` and `.approvals` hold roster
+keys, and a build that read them could render who was declared or who approved; the record it reads
+carries a digest, a date and a count, and nothing that names anybody.
+
+**And the `updated` state is pruned at the build where its window has already closed, whichever
+limb reached it.** Where the recorded approval is older than the window § 3 declares,
+this build writes `none` and emits no band. That is **not** § 3's decay moved to build time: § 3 evaluates the window at **open**
 against the reader's own clock and this verb does not touch that. It is a floor in the one
 direction that cannot freeze — the build is never earlier than the approval and an open of these
 bytes is never earlier than the build, so a window already closed at the build is closed at

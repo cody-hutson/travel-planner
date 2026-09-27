@@ -215,6 +215,8 @@ Before doing anything, determine what kind of request this is:
 | **Group roster** | A traveler joins or leaves, or the party's shape changes | **DECLARED-INTENT** — Edit the whole of `## Group` — roster table, total travelers, travel mode, subgroup notes. | "Sam's not coming", "Add two more people" | `/trip-record group` |
 | **Trip fact capture** | User states a fact belonging in `trip-context.md` that no other verb owns | **DECLARED-INTENT** — Route the statement to its block and write it there. The default-row verb. | "We booked the hotel", "Budget is 3000 euros" | `/trip-record fact` |
 | **Publish slug** | User wants to set or change the published site's repo name | **DECLARED-INTENT** — Create or replace `trips/<slug>/.publish-slug`, echoing the outgoing value so the change is reversible. | "Publish it as lisbon-trip", "Change the site name" | `/trip-record .publish-slug` |
+| **Approver declaration** | The operator wants a plan change to wait for named travellers' approvals before it republishes, or changes who approves or how many must | **DECLARED-INTENT** — Create or replace `trips/<slug>/.approvers` — the declared approvers and the threshold — echoing the outgoing declaration so the change is reversible. Records no approval; that is a terminal act. | "Dana, Eli and Farah approve changes", "Any two of us can approve" | `/trip-record .approvers` |
+| **Approval recording** | A traveller has approved or withdrawn a pending plan change, and the user wants it recorded | Name the terminal act and stop: the organizer runs `<engine-root>/scripts/publish-trip-site.sh confirm trips/<slug> --data-root <data-root>` at a terminal (from any directory; § *Publishing to GitHub Pages* defines the placeholders), which prints the approval line and records each reply as the organizer's statement. No command records an approval, and none may — and no agent writes `trips/<slug>/.approvals` or `trips/<slug>/.change-confirmed`, through a verb or by a direct edit. | "Dana approved the change", "Eli withdrew his approval" | EXCLUDED: ADR-007 §2 |
 | **Event status** | A placed event is booked, cancelled, or its hold changes | **DECLARED-INTENT** — Change one named row's `Status` cell and recompute that row's derived needs-booking cell. Creates no row and no file. | "We booked the Belem tour", "The 8pm table fell through" | `/trip-record event` |
 | **Ambiguous — booked what** | User reports a booking and has not said whether the thing booked is a placed event, or whether it needs a verb at all | State the distinction and let the user pick: the lightest-weight action edits `trip-context.md` directly and runs no verb, `fact` routes a trip-level booking to its block in that same file, `event` changes a placed event's status on the itinerary and recomputes what that row derives. The first two differ by routing, not by file — the direct edit puts the line where the user says, `fact` is the verb that knows which block it belongs in. Propose the choice; never resolve it here. | "We booked the hotel", "We booked the Belem tour" | AMBIGUOUS: EXCLUDED: lightest-weight-action · `/trip-record fact` · `/trip-record event` |
 | **Session log entry** | A session's reasoning, options considered, or context belongs in the record | **DECLARED-INTENT** — Append one entry to `trip-log.md`. Never re-opens a prior entry. | "Log what we decided", "Note why we skipped Sintra" | `/trip-record log` |
@@ -257,7 +259,7 @@ Before doing anything, determine what kind of request this is:
 | `/trip site` | that verb's `**Reads:**` line | own |
 | `/trip schema` | that verb's `**Reads:**` line | own |
 | `/trip-record person` · `travelers` | that verb's `**Reads:**` line — the verb reads nothing of its own; the reconciler it dispatches reads | own + attributed-agent |
-| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` · `link` · `unlink` · `promote` · `extract` | that verb's `**Reads:**` line | own |
+| `/trip-record profile` · `destination` · `mode` · `group` · `fact` · `.publish-slug` · `event` · `log` · `link` · `unlink` · `promote` · `extract` · `.approvers` | that verb's `**Reads:**` line | own |
 | `/trip-record group-new` · `group-list` · `group-add` · `group-drop` · `group-delete` | that verb's `**Reads:**` line — these read the group store, and `group-list` and `group-add` additionally read a person record's H1 or its existence probe alone. **None reads anything under `trips/<slug>/`**, which is why each declares `lifecycle: ANY` | own |
 | `/trip-record group-expand` | that verb's `**Reads:**` line — the group store for the member set, and then, **per member, two cited read sets rather than one**: `link`'s on every branch (that traveller file, that person record, the outgoing record on a repoint, and the classification predicates read live), and on the `NEW` branch alone `profile`'s create-route reads as well, because that branch creates the traveller file `link` refuses to create. Both are cited, not re-derived, and running either N times does not widen it | own |
 | `/trip-record erase` | that verb's `**Reads:**` line — the widest of any verb on this surface, and the only one that reads another trip **in full**: the store, every trip's traveller frontmatter to discover which trips reference the record, and then in full each trip that discovery resolved. Its residual scan reads trip roots it will **not** write | own |
@@ -490,17 +492,19 @@ When the itinerary changes (iteration mode, new bookings, swapped venues):
 
 **Published trip sites are private-by-default.** A trip itinerary — dates, lodging, who you're travelling with — must not be world-readable. The publish flow encrypts the site before anything reaches the public per-trip repo, so only ciphertext is ever pushed. Free public Pages hosting still works because decryption happens client-side, in the viewer's browser, after they enter the passphrase.
 
+**Every command in this section runs as printed from any directory.** `<engine-root>` is the directory the engine was cloned into — `~/.claude/skills/travel-planner` by the README's install — and `<data-root>` is your trip data home, the path held in `~/.travel-planner/data-root`. The trip directory stays relative because `--data-root` roots it under your data home; the flag also roots `list`'s scan and the person store the plaintext content guard reads, so keep it on every line. After an install the engine and your data live apart, so a line that leaned on the working directory ran from neither of them. This is the shape `/trip-publish` already gives the invocations it runs itself.
+
 When the user says "publish this" or "put this on GitHub", run:
 
 ```bash
-scripts/publish-trip-site.sh publish trips/<destination>-<year>
+<engine-root>/scripts/publish-trip-site.sh publish trips/<destination>-<year> --data-root <data-root>
 ```
 
 That one command:
 1. Encrypts `outputs/[destination]-travel-site.html` with StatiCrypt (AES-256-CBC + HMAC-SHA256, 600k PBKDF2-SHA256) into a passphrase-gated `index.html`.
 2. Runs a fail-closed **pre-push guard** that refuses to push unless the output is verified ciphertext with no plaintext itinerary tokens.
 3. Creates the per-trip **public** repo and pushes **only the ciphertext**, using a no-reply commit identity (never the user's email).
-4. Enables Pages and prints the live URL plus **where the passphrase is saved** — the path, never the value. The passphrase itself never reaches standard output on any path, so a captured or transcript-injected publish cannot disclose it; read it yourself with `cat trips/<destination>-<year>/.passphrase`.
+4. Enables Pages and prints the live URL plus **where the passphrase is saved** — the path, never the value. The passphrase itself never reaches standard output on any path, so a captured or transcript-injected publish cannot disclose it; read it yourself with `cat <data-root>/trips/<destination>-<year>/.passphrase`, the path the publish prints.
 
 If the pre-push guard aborts, **nothing was published** — the error names what failed; rebuild the site and re-run.
 
@@ -512,35 +516,35 @@ If the pre-push guard aborts, **nothing was published** — the error names what
 
 **Updating after edits** (re-encrypt and re-publish only ciphertext):
 ```bash
-scripts/publish-trip-site.sh update trips/<destination>-<year>
+<engine-root>/scripts/publish-trip-site.sh update trips/<destination>-<year> --data-root <data-root>
 ```
 
 **Rotating the passphrase** (e.g. after sharing with someone who should no longer keep access):
 ```bash
-scripts/publish-trip-site.sh rotate trips/<destination>-<year>
+<engine-root>/scripts/publish-trip-site.sh rotate trips/<destination>-<year> --data-root <data-root>
 ```
 Rotation re-encrypts under a new passphrase and re-publishes; previously-shared viewers must re-receive the new one.
 
 **Listing published sites** (read-only — never writes, encrypts, or pushes):
 ```bash
-scripts/publish-trip-site.sh list
+<engine-root>/scripts/publish-trip-site.sh list --data-root <data-root>
 ```
-Prints every trip under `trips/` with its repo, live URL (or "not published"), last-published vs last-edited, and a **stale** flag when your local build is newer than what's deployed.
+Prints every trip under `<data-root>/trips/` with its repo, live URL (or "not published"), last-published vs last-edited, and a **stale** flag when your local build is newer than what's deployed.
 
 **Taking a site down:**
 ```bash
-scripts/publish-trip-site.sh unpublish trips/<destination>-<year>                      # delete the repo (default)
-scripts/publish-trip-site.sh unpublish trips/<destination>-<year> --disable-pages-only # keep repo, site offline
+<engine-root>/scripts/publish-trip-site.sh unpublish trips/<destination>-<year> --data-root <data-root>                      # delete the repo (default)
+<engine-root>/scripts/publish-trip-site.sh unpublish trips/<destination>-<year> --disable-pages-only --data-root <data-root> # keep repo, site offline
 ```
 The default **deletes** the per-trip repo — removing the site *and* the destination/year in its name. Deletion is irreversible, needs the `delete_repo` gh scope (grant once with `gh auth refresh -h github.com -s delete_repo`), and prompts you to type the repo name to confirm. `--disable-pages-only` instead disables Pages and keeps the repo (reversible). Either way `unpublish` is idempotent (a no-op if the site is already gone), and content may persist in third-party caches or clones after takedown.
 
 **Opting out** — publish the itinerary fully public and unencrypted — is explicit, requires confirmation, and is **an operator action, never a Claude action**. Run it yourself in a terminal:
 ```bash
-scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext
+<engine-root>/scripts/publish-trip-site.sh publish trips/<destination>-<year> --plaintext --data-root <data-root>
 ```
 The script prompts you to type `PUBLISH` to confirm.
 
-> **Claude must not set `ALLOW_PLAINTEXT`.** That variable exists so an operator can run the script from their own non-interactive automation. It is not a way for Claude to proceed past the prompt. The confirmation is gated on stdin being a terminal, and **a command Claude runs never has one** — so setting the variable does not "confirm non-interactively", it skips the confirmation entirely. The plaintext branch is also the one branch that does **not** run the pre-push ciphertext guard — it runs a *content* guard instead: the publish refuses if a traveler's Passport value or a `[THIRD-PARTY]`-marked value has reached the rendered page, and refuses equally when it cannot determine whether one has (`verify_publishable_content`; `reference/adr/ADR-008-publish-content-guard.md`). That guard and the typed confirmation are the two controls standing on this branch. Where a plaintext publish is what the user wants, **print the command above for them to run** and say why; do not run it. Binding rule: `reference/adr/ADR-007-command-entry-point.md` § 2.
+> **Claude must not set `ALLOW_PLAINTEXT`.** That variable exists so an operator can run the script from their own non-interactive automation. It is not a way for Claude to proceed past the prompt. The confirmation is gated on stdin being a terminal, and **a command Claude runs never has one** — so setting the variable does not "confirm non-interactively", it skips the confirmation entirely. The plaintext branch is also the one branch that does **not** run the pre-push ciphertext guard — it runs a *content* guard instead: the publish refuses if a traveler's Passport value or a `[THIRD-PARTY]`-marked value has reached the rendered page, and refuses equally when it cannot determine whether one has (`verify_publishable_content`; `reference/adr/ADR-008-publish-content-guard.md`). That guard and the typed confirmation are the two controls standing on this branch. Where a plaintext publish is what the user wants, **print the command above for them to run**, its placeholders filled, and say why; do not run it. Binding rule: `reference/adr/ADR-007-command-entry-point.md` § 2.
 
 > **What "private" means here.** The published bytes are world-fetchable ciphertext; security rests on passphrase strength plus the 600k-iteration KDF, not on access control — anyone can download the file and attempt an offline guess. Use a strong passphrase. This is privacy-by-construction (a fresh repo, only ciphertext ever committed), not an identity-gated ACL.
 >

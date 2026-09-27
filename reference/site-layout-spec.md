@@ -137,7 +137,7 @@ from.
 - Rendered **only** when the render's `coordination-state` frontmatter is `pending` or `updated`
 - Placement: immediately after the Hero Section, before the Overview Dashboard
 - Two variants: `.coord-notice.is-pending` · `.coord-notice.is-updated`
-- Content: a static label string + the `coordination-since` date. **Nothing else**
+- Content: a static label string + the `coordination-since` date — and, on the `updated` variant of a trip that declares approvers, the approval count and the approval code below. **Nothing else**
 - No link, no expander, no traveler control — the state is complete on open or it is not delivered
 
 **Placement is derived, not chosen.** The Hero is `100svh`, so a band *inside* it competes with
@@ -165,11 +165,28 @@ band emitted there is nothing to excise and the projection is exactly what it wa
 component existed.
 
 **The band carries no plan content, and that is a construction rather than a review finding.**
-Its entire data input is `{enum, date}`. There is no slot for a venue, a person, a time or a
+Its entire data input is `{enum, date}` — and, on the `updated` variant of a trip that declares
+approvers, `{enum, date, count, code}`, where the count is a number and the code is a digest from
+which no plan content can be read. There is no slot for a venue, a person, a time or a
 *what moved*, and the label strings are static literals in the build rather than values
 interpolated from plan content — so it cannot emit a member of the ADR-008 non-publishable class,
 and it needs no privacy mechanism of its own. ADR-003 § *Decision 2* has the organizer share the
 proposed change out of band; this band says only that there is one.
+
+**The `updated` variant's approval fields, rendered only where the render declares them.** Where
+the render's frontmatter carries `approval-count` and `approval-code` — which the `site` verb writes
+only from a record carrying an approval count, which only a trip that declares approvers produces —
+the `updated` band adds, after its date, one static statement and the two values: **Approvals, as
+stated by the organizer:** the count, and the plan's code as a grouped eight-character prefix
+beside the full code. The statement names the organizer as the source of the count and shows no
+threshold; it never says that travellers approved, because every approval it counts is the
+organizer's statement on a traveller's behalf. The prefix is for comparison by eye, and a
+comparison by eye is bounded by it: it catches an honest mistake, not a forgery. **The band's
+markup stays flat** — no element inside it carries the band's own tag name — **and its content stays
+inside the excision cap** the publish script declares for this band, because the itinerary
+projection excises the band by a bounded, lazy match to the first closing tag of the band's own
+name: a nested element of that name, or a band longer than the cap, is left in the digest, and every
+republish that changes only the marker then aborts.
 
 **Neither §9 table gains a row.** This component is **site-additive scaffolding**, which §9.2
 permits in terms. §9.2's completeness rule is surjective plan → site, so an element with no

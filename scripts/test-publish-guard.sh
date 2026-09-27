@@ -24,7 +24,9 @@
 # L8-L10 grade the publishability DECLARATION: that the class has exactly one home, that
 # the guard's verdict follows a change to it, and that an unreadable declaration is
 # UNDETERMINED rather than an empty class. L11 pins the reserved-heading suppression —
-# both limbs, one of which has no backstop.
+# both limbs, one of which has no backstop. L14 and L15 grade the --data-root seam: L14 on
+# the person store, L15 on the <trip-dir> argument, EXECUTING the script from a working
+# directory that is not the data root — the only shape an installed engine's verbs produce.
 # M = published-bytes / stoplist / freshness remediation (#123 A6.5) · N = block-scoped
 # conjunctive window (#123 PR-7) · O = the [THIRD-PARTY] class: entry denylist,
 # value-granularity mark, real derived-model shape (#123 AC 3).
@@ -1573,6 +1575,176 @@ if [ "$l14b" -eq 2 ] && [ "$l14a" -eq 0 ]; then
   PASS "L14b: MUST-FIRE — the SAME trip and the SAME render, with the data root pointed at a record-free store skeleton, aborts UNDETERMINED (rc=2) while the identical run against the real store returns 0. The verdict follows the data root, so the seam is delivered rather than described — and this is the exact state an installed engine is in before it is told where the operator store lives"
 else
   FAIL "L14b: the verdict did not follow the data root (real=$l14a skeleton=$l14b) — a step-2 fallback that ignores the seam reads the engine's own skeleton after install, which returns 2 on every referencing trip"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# L15 — THE SAME SEAM ON THE <trip-dir> ARGUMENT, driven as a SUBPROCESS.
+#
+# L14 grades the seam on the person store by calling a function with the root re-pointed.
+# That shape cannot see this defect, and no other arm here could either: every one sources
+# the script and hands cmd_* an ABSOLUTE $WORK path, so neither main()'s parse of
+# --data-root nor a RELATIVE <trip-dir> in a foreign working directory was ever exercised.
+# After an install that is the only shape a verb produces — `update trips/<slug>` and
+# `unpublish trips/<slug> --disable-pages-only`, each with --data-root appended, from
+# whatever directory the session has open — and it died "no such trip dir" everywhere but
+# the data root. So these arms EXECUTE the script, from a working directory that is not the
+# data root, and read what it names.
+#
+# THE DECOY IS THE DISCRIMINATOR. One working directory holds its own trips/<slug> whose
+# .publish-slug names a different repo. A resolver that ignores the flag names the decoy's
+# repo, and so does one that falls back to the working directory when the data root misses
+# (L15e). Only a resolver that roots a relative path at the data root, and there alone,
+# names the data-root trip's repo. Before resolve_trip_dir the script named the decoy's —
+# a takedown reporting a no-op for the wrong repo while the real site stayed up.
+#
+# Offline, like the rest of L: gh and npx are stub FILES on a PATH prefix local to each run,
+# because the subject is a separate process and a shell-function mock would not reach it.
+# The gh stub answers the auth and user reads and fails every other call — every repo reads
+# absent and every clone is refused — so no arm can create, clone, disable or push anything.
+L15DATA="$WORK/l15_data"; L15DECOY="$WORK/l15_decoy_cwd"; L15EMPTY="$WORK/l15_empty_cwd"
+L15BIN="$WORK/l15_bin"; L15LOG="$WORK/l15_gh.log"
+mkdir -p "$L15DATA/trips/l15-trip/outputs" "$L15DECOY/trips/l15-trip" "$L15DECOY/trips/l15-cwd-only" \
+         "$L15EMPTY" "$L15BIN"
+printf '# trips\n' > "$L15DATA/trips/README.md"
+printf '<!DOCTYPE html><html><head><title>x</title></head><body><h1>Day 1</h1><p>Harbour walk, then the lighthouse.</p></body></html>\n' \
+  > "$L15DATA/trips/l15-trip/outputs/l15-trip-travel-site.html"
+printf 'l15-dataroot-slug\n' > "$L15DATA/trips/l15-trip/.publish-slug"
+printf 'l15-decoy-slug\n'    > "$L15DECOY/trips/l15-trip/.publish-slug"
+cat > "$L15BIN/gh" <<L15GH
+#!/usr/bin/env bash
+printf 'gh %s\n' "\$*" >> "$L15LOG"
+case "\${1:-} \${2:-}" in
+  'auth status') exit 0 ;;
+  'api user')    case "\$*" in *.login*) echo l15-owner ;; *.id*) echo 4242 ;; esac; exit 0 ;;
+esac
+exit 1
+L15GH
+printf '#!/usr/bin/env bash\nexit 0\n' > "$L15BIN/npx"
+chmod +x "$L15BIN/gh" "$L15BIN/npx"
+L15_OUT=""; L15_RC=0; L15_LOGT=""
+l15_run() {   # l15_run <stub|bare> <cwd> <args…> — executes the script; sets L15_OUT L15_RC L15_LOGT
+  local mode="$1" cwd="$2"; shift 2
+  : > "$L15LOG"
+  if [ "$mode" = stub ]; then
+    L15_OUT="$( cd "$cwd" && PATH="$L15BIN:$PATH" "$SELF_PUBLISH" "$@" </dev/null 2>&1 )"; L15_RC=$?
+  else
+    L15_OUT="$( cd "$cwd" && "$SELF_PUBLISH" "$@" </dev/null 2>&1 )"; L15_RC=$?
+  fi
+  L15_LOGT="$(cat "$L15LOG" 2>/dev/null)"
+}
+l15_has() { case "$1" in *"$2"*) printf 1 ;; *) printf 0 ;; esac; }
+
+# L15c — fixture integrity, graded FIRST, for the reason L14c gives: the arms below mean
+# something only if the two trips genuinely coexist under different names, the empty working
+# directory genuinely holds no trips/, the cwd-only trip genuinely exists in one place alone,
+# and the stubs are really there to be found.
+if [ "$(cat "$L15DATA/trips/l15-trip/.publish-slug")" = l15-dataroot-slug ] \
+   && [ "$(cat "$L15DECOY/trips/l15-trip/.publish-slug")" = l15-decoy-slug ] \
+   && [ ! -e "$L15EMPTY/trips" ] && [ -d "$L15DECOY/trips/l15-cwd-only" ] \
+   && [ ! -e "$L15DATA/trips/l15-cwd-only" ] && [ -x "$L15BIN/gh" ] && [ -x "$L15BIN/npx" ] \
+   && [ -x "$SELF_PUBLISH" ]; then
+  PASS "L15c: fixture integrity — the data root and the decoy working directory each hold a trip of the same name naming a DIFFERENT repo, the empty working directory holds no trips/, one trip exists only in the decoy directory, and the script and both stubs are executable"
+else
+  FAIL "L15c: the <trip-dir> fixture is not set up as claimed — every L15 arm below would prove nothing"
+fi
+
+# L15a — MUST-FIRE: the decommission verb's invocation, from the DECOY directory.
+l15_run stub "$L15DECOY" unpublish trips/l15-trip --disable-pages-only --data-root "$L15DATA"
+l15a_rc="$L15_RC"; l15a_hit="$(l15_has "$L15_OUT" 'l15-owner/l15-dataroot-slug')"
+l15a_decoy="$(l15_has "$L15_OUT$L15_LOGT" 'l15-decoy-slug')"; l15a_view="$(l15_has "$L15_LOGT" 'repo view l15-owner/l15-dataroot-slug')"
+if [ "$l15a_rc" -eq 0 ] && [ "$l15a_hit" = 1 ] && [ "$l15a_view" = 1 ] && [ "$l15a_decoy" = 0 ]; then
+  PASS "L15a: MUST-FIRE — \`unpublish trips/<slug> --disable-pages-only --data-root <root>\`, EXECUTED from a working directory holding a same-named decoy trip, resolves the trip under the data root: the repo it probes and reports is the data-root trip's (rc=$l15a_rc) and the decoy's name appears nowhere in its output or its gh calls"
+else
+  FAIL "L15a: the relative <trip-dir> was not rooted at --data-root (rc=$l15a_rc, data-root repo named=$l15a_hit, probed=$l15a_view, decoy named=$l15a_decoy). Output: $L15_OUT"
+fi
+
+# L15b — CONTROL: the same command WITHOUT the flag. The default is the working directory,
+# unchanged, so this names the decoy — which is also what shows the probe above can tell the
+# two trips apart rather than reporting one name whatever it resolved.
+l15_run stub "$L15DECOY" unpublish trips/l15-trip --disable-pages-only
+l15b_rc="$L15_RC"; l15b_decoy="$(l15_has "$L15_OUT" 'l15-owner/l15-decoy-slug')"; l15b_data="$(l15_has "$L15_OUT$L15_LOGT" 'l15-dataroot-slug')"
+if [ "$l15b_rc" -eq 0 ] && [ "$l15b_decoy" = 1 ] && [ "$l15b_data" = 0 ]; then
+  PASS "L15b: CONTROL — with no --data-root the same command resolves against the working directory exactly as before the seam and names the decoy's repo (rc=$l15b_rc); the resolver roots only on the flag, never on the variable's engine-root default"
+else
+  FAIL "L15b: with no --data-root the command did not resolve against the working directory (rc=$l15b_rc, decoy named=$l15b_decoy, data-root named=$l15b_data) — either the flagless default moved or L15a's discrimination proves nothing. Output: $L15_OUT"
+fi
+
+# L15d — THE INSTALLED CASE, on the publish verb's invocation: `update` from a working
+# directory holding no trips/ at all. The stub refuses the clone, so the run stops at the
+# first network step — and the per-trip repo that step names is the proof that the trip was
+# found under the data root and carried through preflight, the render, and both guards.
+l15_run stub "$L15EMPTY" update trips/l15-trip --data-root "$L15DATA"
+l15d_rc="$L15_RC"; l15d_clone="$(l15_has "$L15_OUT" 'per-trip repo l15-owner/l15-dataroot-slug not found')"
+l15d_nodir="$(l15_has "$L15_OUT" 'no such trip dir')"; l15d_log="$(l15_has "$L15_LOGT" 'repo clone l15-owner/l15-dataroot-slug')"
+if [ "$l15d_rc" -eq 1 ] && [ "$l15d_clone" = 1 ] && [ "$l15d_log" = 1 ] && [ "$l15d_nodir" = 0 ]; then
+  PASS "L15d: \`update trips/<slug> --data-root <root>\` EXECUTED from a directory with no trips/ — the shape every installed session has — finds the trip under the data root and reaches the clone of that trip's repo (refused by the stub, rc=$l15d_rc), where it used to die 'no such trip dir' before preflight"
+else
+  FAIL "L15d: update did not reach the data-root trip's clone (rc=$l15d_rc, clone named=$l15d_clone, clone attempted=$l15d_log, 'no such trip dir'=$l15d_nodir). Output: $L15_OUT"
+fi
+
+# L15e — NO FALLBACK. The trip exists only in the working directory. With the flag given it
+# must not be found: the refusal names the ROOTED path, and gh is never reached.
+l15_run stub "$L15DECOY" unpublish trips/l15-cwd-only --disable-pages-only --data-root "$L15DATA"
+l15e_rc="$L15_RC"; l15e_rooted="$(l15_has "$L15_OUT" "no such trip dir: $L15DATA/trips/l15-cwd-only")"
+if [ "$l15e_rc" -eq 1 ] && [ "$l15e_rooted" = 1 ] && [ -z "$L15_LOGT" ]; then
+  PASS "L15e: NO FALLBACK — a trip present only in the working directory is refused as 'no such trip dir' naming the path under --data-root (rc=$l15e_rc), before any gh call. Falling back to the working directory would reach a different trip of the same name, which is L15a's defect"
+else
+  FAIL "L15e: a trip missing under --data-root was not refused at the rooted path (rc=$l15e_rc, rooted path named=$l15e_rooted, gh calls: ${L15_LOGT:-none}) — the resolver fell back to the working directory. Output: $L15_OUT"
+fi
+
+# L15f — an ABSOLUTE <trip-dir> is used as given, with the flag present.
+l15_run stub "$L15EMPTY" unpublish "$L15DECOY/trips/l15-trip" --disable-pages-only --data-root "$L15DATA"
+l15f_rc="$L15_RC"; l15f_decoy="$(l15_has "$L15_OUT" 'l15-owner/l15-decoy-slug')"
+if [ "$l15f_rc" -eq 0 ] && [ "$l15f_decoy" = 1 ]; then
+  PASS "L15f: an absolute <trip-dir> is taken as given even beside --data-root — the trip it names is the one resolved (rc=$l15f_rc); only a relative path is rooted"
+else
+  FAIL "L15f: an absolute <trip-dir> was re-based or refused (rc=$l15f_rc, its repo named=$l15f_decoy). Output: $L15_OUT"
+fi
+
+# L15g — confirm, with NO stub at all: it needs neither gh nor npx, so this is the real
+# script in the real environment. Its refusal names the directory it resolved.
+l15_run bare "$L15EMPTY" confirm trips/l15-trip --data-root "$L15DATA"
+l15g_rc="$L15_RC"; l15g_rooted="$(l15_has "$L15_OUT" "nothing to confirm for $L15DATA/trips/l15-trip")"
+if [ "$l15g_rc" -eq 1 ] && [ "$l15g_rooted" = 1 ]; then
+  PASS "L15g: confirm, executed with no stub from a directory with no trips/, resolves the trip under --data-root and reads its render — its refusal names the rooted trip (rc=$l15g_rc), not 'no such trip dir'"
+else
+  FAIL "L15g: confirm did not resolve the trip under --data-root (rc=$l15g_rc, rooted trip named=$l15g_rooted). Output: $L15_OUT"
+fi
+
+# L15h — TOTALITY over the arms, read from PARSED bodies so a comment cannot fake it. Every
+# cmd_* whose body refuses "no such trip dir" must call resolve_trip_dir BEFORE that refusal.
+# The population is derived from the loaded functions, not listed here, so an arm added later
+# joins it; publish and rotate, which no arm above executes, are held here. The detector is
+# controlled on planted bodies first — one late, one missing — so its verdict is a measurement.
+l15_order() {   # l15_order <fn> -> ok | late | missing | n/a
+  local body pre
+  body="$(declare -f "$1" 2>/dev/null)" || { printf 'n/a'; return 0; }
+  case "$body" in *'no such trip dir'*) ;; *) printf 'n/a'; return 0 ;; esac
+  pre="${body%%no such trip dir*}"
+  case "$pre" in
+    *resolve_trip_dir*) printf 'ok' ;;
+    *) case "$body" in *resolve_trip_dir*) printf 'late' ;; *) printf 'missing' ;; esac ;;
+  esac
+}
+zzl15_late()    { [ -d "$1" ] || die "no such trip dir: $1"; local d; d="$(resolve_trip_dir "$1")"; printf '%s' "$d"; }
+zzl15_missing() { [ -d "$1" ] || die "no such trip dir: $1"; }
+l15h_ctl="$(l15_order zzl15_late) $(l15_order zzl15_missing) $(l15_order resolve_trip_dir)"
+unset -f zzl15_late zzl15_missing
+l15h_pop=0; l15h_ok=0; l15h_bad=""; l15h_fn=""
+while read -r _ _ l15h_fn; do
+  case "$l15h_fn" in cmd_*) ;; *) continue ;; esac
+  case "$(l15_order "$l15h_fn")" in
+    ok)   l15h_pop=$((l15h_pop+1)); l15h_ok=$((l15h_ok+1)) ;;
+    late|missing) l15h_pop=$((l15h_pop+1)); l15h_bad="$l15h_bad$l15h_fn " ;;
+  esac
+done <<< "$(declare -F)"
+l15h_upd="$(l15_order cmd_update)"; l15h_unp="$(l15_order cmd_unpublish)"
+if [ "$l15h_ctl" != 'late missing n/a' ]; then
+  FAIL "L15h: CONTROL on the detector — planted late / missing bodies and a body with no refusal read '$l15h_ctl' rather than 'late missing n/a', so the totality verdict below is not a measurement"
+elif [ "$l15h_pop" -gt 0 ] && [ "$l15h_ok" -eq "$l15h_pop" ] && [ "$l15h_upd" = ok ] && [ "$l15h_unp" = ok ]; then
+  PASS "L15h: all $l15h_pop cmd_* arm(s) that refuse 'no such trip dir' call resolve_trip_dir before refusing, read from their parsed bodies — the verb-reached update and unpublish among them. The detector's control read planted late / missing bodies correctly"
+else
+  FAIL "L15h: cmd_* arm(s) refuse 'no such trip dir' without resolving first: ${l15h_bad:-none} (population $l15h_pop, ok $l15h_ok, update=$l15h_upd, unpublish=$l15h_unp) — a relative <trip-dir> reaching that arm is resolved against the working directory"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3987,6 +4159,9 @@ fi
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "Organizer-confirm gate (#552 AC 5):"
+# The failure count as group S opens — read back by S16n (#719), the regression floor, which
+# requires every verdict from here to the end of group T to have held under the new S2 body.
+S_FAIL_BASE=$fail
 
 # A render carrying real itinerary text, an optional coordination-notice band, and both
 # a <style> rule and a <script> body — so the arms below cover the whole boundary rather
@@ -4253,6 +4428,14 @@ fi
 # cannot fake a call site.
 S_BODY_PUB="$(declare -f cmd_publish)"
 S_BODY_UPD="$(declare -f cmd_update)"
+# #719, the scope-lock's C5: cmd_update reaches the gate through ONE call line,
+# require_publish_guards, which calls require_change_confirmation unchanged and then the
+# render's approval-code guard — so relocating the gate onto #85's path stays a one-line move.
+# The gate is therefore read through that wrapper here, and ONLY where cmd_update's own parsed
+# body calls it: a wrapper that still exists but is no longer called gates nothing, and must not
+# keep S9b and S10 green.
+case "$S_BODY_UPD" in *require_publish_guards*) S_BODY_UPD="$S_BODY_UPD
+$(declare -f require_publish_guards 2>/dev/null)" ;; esac
 case "$S_BODY_PUB" in *require_change_confirmation*) S_PUBGATED=1 ;; *) S_PUBGATED=0 ;; esac
 case "$S_BODY_PUB" in *record_published_itinerary*)  S_PUBRECS=1 ;; *) S_PUBRECS=0 ;; esac
 case "$S_BODY_UPD" in *require_change_confirmation*) S_UPDGATED=1 ;; *) S_UPDGATED=0 ;; esac
@@ -5358,8 +5541,8 @@ fi
 # single one with both. `declare -f` renders the redirection as `2> /dev/null`, which is why
 # the discard is matched on `/dev/null` alone.
 #
-# COMPLETENESS, AND ITS STATED BOUNDARY. The list of functions below is a list, so a
-# seventh perl program added to the publish script would be invisible to it. The arm
+# COMPLETENESS, AND ITS STATED BOUNDARY. The list of functions below is a list, so an
+# eighth perl program added to the publish script would be invisible to it. The arm
 # therefore counts the script's non-comment lines that invoke perl and requires the count
 # to equal the length of the list, so a new program fails here until it is listed. The
 # count reads an invocation by NAME — at line start, or after whitespace, `(`, `|`, `;`, a
@@ -5368,7 +5551,7 @@ fi
 # construction: perl invoked through a variable or by a path (`$PERL`, `/usr/bin/perl`),
 # and a change that removes one program while adding another, because it compares a count
 # and not a set.
-S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities strip_to_itinerary_text'
+S15I_FNS='strip_to_text strip_to_published_text strip_to_text_blocks strip_to_joined_text _decode_entities strip_to_itinerary_text _digest_of'
 S15I_RE='(^|[[:space:](|;`$])perl[[:space:]]+-'
 s15_perl_lines() { # <file> -> the number of non-comment lines that invoke perl by name
   local line t n=0
@@ -6104,19 +6287,31 @@ t6_newest_entry() { # <change-summary.md> -> newest YYYY-MM-DD, or nothing
 }
 
 # coordination-state, resolved from the record the DOCUMENT names, and generic over it.
-# BOTH declared lines of that record are read: `digest=` decides whether the record counts
-# as an approval at all — through the shipped parser, so a record present but saying nothing
-# is not one (ADR-007 § 2's placeholder bound, the property S5 grades on the gate's side of
-# the same file) — and `confirmed=` supplies the moment every entry is measured against.
+# THREE lines of that record are read: `digest=` decides whether the record counts as an
+# approval at all — through the shipped parser, so a record present but saying nothing is not
+# one (ADR-007 § 2's placeholder bound, the property S5 grades on the gate's side of the same
+# file) — `confirmed=` supplies the moment every entry is measured against, and
+# `approval-count=` decides the no-entry limb. With no entry, the mapping reads `none` unless the
+# record carries an approval count — a line only the declared path writes — and then the record
+# is itself the decided event and the state is `updated` (#719's Stage 7 F-01, decided option i);
+# a record without that line, the organizer's two-line confirmation, still reads `none` exactly as
+# before. S21l builds a render through this function and pushes it.
 t6_state() { # <trip_dir> <state-record-path> -> none|pending|updated
-  local dir="$1" rel line c="" e=""
+  local dir="$1" rel line c="" e="" n=""
   rel="$(t6_rel "$2")"
   e="$(t6_newest_entry "$dir/outputs/change-summary.md")"
-  if [ -z "$e" ]; then printf 'none'; return 0; fi
   if [ -n "$(_record_digest "$dir/$rel")" ]; then
     while IFS= read -r line || [ -n "$line" ]; do
-      case "$line" in confirmed=*) c="${line#confirmed=}"; c="${c:0:10}"; break ;; esac
+      case "$line" in
+        confirmed=*)      if [ -z "$c" ]; then c="${line#confirmed=}"; c="${c:0:10}"; fi ;;
+        approval-count=*) if [ -z "$n" ]; then n="${line#approval-count=}"; fi ;;
+      esac
     done < "$dir/$rel"
+  fi
+  if [ -z "$e" ]; then
+    case "$n" in ''|*[!0123456789]*) printf 'none'; return 0 ;; esac
+    if [ -z "$c" ]; then printf 'none'; return 0; fi
+    printf 'updated'; return 0
   fi
   if [ -z "$c" ]; then printf 'pending'; return 0; fi
   if [[ "$e" > "$c" ]]; then printf 'pending'; return 0; fi
@@ -6393,8 +6588,9 @@ fi
 # window. Under it, once a trip has carried a dated entry `e` is non-empty forever, so
 # every later resolution is `pending` or `updated` and `none` is unreachable. T6e does
 # reach `none` — over a trip with NO change summary at all, a trip that has never
-# coordinated anything. So the three arms above grade the mapping's three limbs on a
-# trip with no history, and say nothing about the one state a trip WITH history has to
+# coordinated anything. So the three arms above grade the mapping's entry-bearing limbs and
+# its null case on a trip with no history — the no-entry `updated` limb a declared approval
+# record reaches is S21l's — and say nothing about the one state a trip WITH history has to
 # be able to return to.
 #
 # WHY THAT MATTERS TO AC 5. T3 asserts the null-case render is BYTE-IDENTICAL to a
@@ -6487,9 +6683,9 @@ t8_since() { # <trip_dir> <state-record-path> -> YYYY-MM-DD, or nothing
   return 0
 }
 
-# coordination-state as the BUILD writes it: t6_state's three limbs, then the prune on the
-# `updated` limb alone. Generic over the record, the window and the null-state token, all
-# three of which come from the documents rather than from this file.
+# coordination-state as the BUILD writes it: t6_state's limbs, then the prune on the `updated`
+# state alone, whichever limb reached it. Generic over the record, the window and the null-state
+# token, all three of which come from the documents rather than from this file.
 #
 # _epoch_of_iso is the SOURCED converter, not date arithmetic written here. The BSD/GNU
 # divergence it exists to absorb is the same class of defect this release already tripped
@@ -6595,6 +6791,1610 @@ if [ "$T8_PEND" = 'pending' ]; then
   PASS "T8d: SCOPE — a trip carrying a further entry dated $T6_E2, later than the same approval, still resolves 'pending' at the same far build ($T8_BUILD_FAR). The prune is scoped to the \`updated\` limb and does not reach an unapproved change: a pending band has no window to close, § 3 giving the decay to \`is-updated\` alone"
 else
   FAIL "T8d: an UNDECIDED entry dated $T6_E2 resolved '$T8_PEND' at build $T8_BUILD_FAR — the prune has reached the \`pending\` limb, so a change the group never approved stops being announced once the build is old enough. That is a silent wrong statement to the reader, in the opposite direction from the latch T6c removed"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group S, #719 — THE APPROVAL COLLECTION (ADR-029), as built and as corrected at its scope-lock.
+#
+#   S16  INT-1   S2's new body: the five tokens, the declared tally, #718's FM-2 absence states
+#   S17  INT-2   the binding digest, one value throughout, and the legacy-baseline shim
+#   S18  INT-3   the approval line: its grammar, its normalization, stale codes, its emission
+#   S19  INT-4   recording is terminal-only, with no override flag
+#   S20  INT-5   the ledger: append-only, atomic, grammar-bound
+#   S21  INT-6   the render's approval-code guard; C2's presence rule; rotate, the third push path
+#   S22  INT-8   independence from engagement(t)
+#   S23  INT-9   the threshold-met record as C2 corrected it, and confirm's re-anchoring (C1)
+#   S24  INT-10  erasure's key substitution leaves the verdict unchanged
+#   S25  INT-7   name-freedom, stated over approver-ness
+#   S26          the restore: every stub and mutant these arms set is withdrawn
+#
+# PLACEMENT. These arms sit after group T rather than beside S0–S15 because three of them read
+# group T's own extractors — S21l builds its render through t8_state_at_build and t6_state, S23b
+# applies t6_confirm_fmt and S23c t6_state — and T10b reads S25a's records. Group RS reduces every id to its leading capitals, so where an arm sits in this
+# file changes nothing it grades.
+#
+# HOW THE ARMS ARE WRITTEN — group S15's three rules, unchanged. Every negative is a captured
+# value inside a `[ … ]` conjunction that leads to a PASS; nothing is read through a pipeline into
+# an early-exiting grep (group PF); every stub is withdrawn in the arm that set it — by
+# re-evaluating the saved production definition rather than by unsetting the name, so no
+# production function is ever left undefined. An ARMED-RED arm carries its defect inside the arm:
+# the defect is injected, must be convicted by the same assertion, and is withdrawn before the
+# verdict prints.
+#
+# Offline: $WORK fixtures, shell-function mocks of gh and npx on the push paths (S8's technique),
+# a stubbed terminal test for confirm's interactive branch, and no network, no Node, no TTY. No
+# legitimate skip, and deliberately NOT declared in GUARD_EXPECTED_SKIPS.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "The approval collection — ADR-029, built by #719:"
+
+# ── S16n — THE REGRESSION FLOOR, taken FIRST so it measures only what came before this block.
+# Every verdict from S0 through T8d grades the gate, its projections and the coordination notice
+# whatever body S2 holds, and all of them must still hold under the new one. Two edits to those
+# arms are sanctioned, each forced by a change the scope-lock made: S15i lists _digest_of, now a
+# perl program (its comment count moves to "an eighth"); and S9b/S10 read cmd_update's gate
+# through its one wrapper line (C5). S6a–S6c are among the arms counted, untouched.
+if [ -n "${S_FAIL_BASE:-}" ] && [ "$fail" -eq "$S_FAIL_BASE" ]; then
+  PASS "S16n: the regression floor holds — no verdict from S0 through T8d failed under the new S2 body (failure count $S_FAIL_BASE as group S opened, $fail now). The two sanctioned edits are S15I_FNS gaining _digest_of and S9b/S10 reading the gate through require_publish_guards; S6a–S6c are unchanged"
+else
+  FAIL "S16n: $((fail - ${S_FAIL_BASE:-0})) verdict(s) from S0 through T8d failed under the new S2 body (base '${S_FAIL_BASE:-unset}') — the replacement moved a property an existing arm grades, or the base count was never taken"
+fi
+
+# Every production function an arm below stubs or mutates, saved before any arm runs. sa_restore
+# re-evaluates the saved text; S26a compares each against it, so a stub that outlives its arm is
+# found by name rather than by the arms after it going quietly wrong.
+SA_SAVED_FNS='_iso_now _approval_tally _approvals_grammar _approval_policy _ledger_append _record_threshold_met _baseline_matches _digest_of _approval_line_parse _confirm_has_terminal change_confirmation_state require_render_approval_code _undecided_entry'
+for safn in $SA_SAVED_FNS; do
+  eval "SA_SAVED_${safn}=\"\$(declare -f ${safn})\""
+done
+sa_restore() { # <fn> — the saved production definition, re-evaluated; unset where none was saved
+  local v="SA_SAVED_$1"
+  if [ -n "${!v}" ]; then eval "${!v}"; else unset -f "$1"; fi
+}
+
+# A trip dir holding an s_render render, and a published baseline where one is given.
+sa_trip() { # <name> <plan-time> [<baseline-digest>] -> the trip dir
+  local d="$WORK/sa-$1"
+  mkdir -p "$d/outputs"
+  s_render "$d/outputs/porto-travel-site.html" "$2" none
+  if [ -n "${3:-}" ]; then s_record "$d/.published-itinerary" "$3" published; fi
+  printf '%s' "$d"
+}
+# A declaration in EG-3's grammar, and one ledger record written fixture-side.
+sa_declare() { # <trip> <threshold> <key>...
+  local d="$1" th="$2" k; shift 2
+  { printf 'threshold=%s\n' "$th"; for k in "$@"; do printf 'approver=%s\n' "$k"; done; } > "$d/.approvers"
+}
+sa_rec() { # <trip> <key> <approve|withdraw> <digest>
+  printf 'organizer-stated %s %s %s 2027-06-01T00:00:00Z\n' "$2" "$3" "$4" >> "$1/.approvals"
+}
+sa_state() { change_confirmation_state "$1" 2>/dev/null; }
+sa_gate()  { ( require_change_confirmation "$1" ) >/dev/null 2>&1; }
+
+# ── S16a — declared `all` over three, and all three approve the outgoing plan.
+SA16A="$(sa_trip s16a 16:30 "$S_DA")"
+sa_declare "$SA16A" all zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA16A" "$sak" approve "$S_DB"; done
+SA_ST="$(sa_state "$SA16A")"; sa_gate "$SA16A"; SA_RC=$?
+if [ "$SA_ST" = confirmed ] && [ "$SA_RC" -eq 0 ]; then
+  PASS "S16a: three declared approvers under \`all\`, each with an approve for the outgoing plan, resolve confirmed and the gate returns 0 — the declared threshold is what opens it"
+else
+  FAIL "S16a: a fully approved declared plan resolved '$SA_ST' (gate rc=$SA_RC) — the shipped body reads only .change-confirmed, which this trip does not have"
+fi
+
+# ── S16b — THE DECLARATION BINDS. A .change-confirmed covering the plan is beside two of three
+# approvals: on a declaring trip the gate reads the tally, never the organizer's record.
+SA16B="$(sa_trip s16b 16:30 "$S_DA")"
+sa_declare "$SA16B" all zqa1 zqb2 zqc3
+sa_rec "$SA16B" zqa1 approve "$S_DB"; sa_rec "$SA16B" zqb2 approve "$S_DB"
+s_record "$SA16B/.change-confirmed" "$S_DB" confirmed
+SA_ST="$(sa_state "$SA16B")"; sa_gate "$SA16B"; SA_RC=$?
+if [ "$SA_ST" = unconfirmed ] && [ "$SA_RC" -ne 0 ]; then
+  PASS "S16b: two of three declared approvals, beside an organizer confirmation covering the same plan, resolve unconfirmed and the gate ABORTS (rc=$SA_RC) — the declaration binds, and the organizer's own confirmation cannot stand in for the approvers"
+else
+  FAIL "S16b: a short tally beside a covering .change-confirmed resolved '$SA_ST' (rc=$SA_RC) — the organizer-confirm default is overriding the declaration"
+fi
+
+# ── S16c — threshold 2 of 3 with three approvals: met, and the count is not clipped.
+SA16C="$(sa_trip s16c 16:30 "$S_DA")"
+sa_declare "$SA16C" 2 zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA16C" "$sak" approve "$S_DB"; done
+SA_ST="$(sa_state "$SA16C")"; SA_TALLY="$(_approval_tally "$SA16C" "$S_DB")"
+if [ "$SA_ST" = confirmed ] && [ "$SA_TALLY" = '3 2 0' ]; then
+  PASS "S16c: threshold 2 of 3 with three approvals resolves confirmed and the tally reads '$SA_TALLY' — k counts every approving declared key and is not clipped to t"
+else
+  FAIL "S16c: threshold 2 of 3 with three approvals resolved '$SA_ST' with tally '$SA_TALLY' (want confirmed, '3 2 0')"
+fi
+
+# ── S16d — approvals only for the OLD plan read stale; rebound to the outgoing plan, confirmed.
+SA16D="$(sa_trip s16d 16:30 "$S_DA")"
+sa_declare "$SA16D" all zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA16D" "$sak" approve "$S_DA"; done
+SA16D2="$(sa_trip s16d2 16:30 "$S_DA")"
+sa_declare "$SA16D2" all zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA16D2" "$sak" approve "$S_DB"; done
+SA_ST1="$(sa_state "$SA16D")"; SA_ST2="$(sa_state "$SA16D2")"
+if [ "$SA_ST1" = stale ] && [ "$SA_ST2" = confirmed ]; then
+  PASS "S16d: approvals that exist only for the previous plan resolve stale, and the SAME records rebound to the outgoing plan resolve confirmed (control) — an approval never carries forward onto content it did not cover"
+else
+  FAIL "S16d: approvals for the old plan resolved '$SA_ST1' (want stale) and rebound resolved '$SA_ST2' (want confirmed)"
+fi
+
+# ── S16e — THE LATEST RECORD COUNTS. approve-then-withdraw is no approval; withdraw-then-approve
+# is one. ARMED-RED: a tally counting any approve at all, ignoring later records, reads the first
+# case confirmed — it is injected, convicted, and withdrawn inside this arm.
+SA16E="$(sa_trip s16e 16:30 "$S_DA")"
+sa_declare "$SA16E" all zqa1 zqb2 zqc3
+sa_rec "$SA16E" zqa1 approve "$S_DB"; sa_rec "$SA16E" zqb2 approve "$S_DB"
+sa_rec "$SA16E" zqc3 approve "$S_DB"; sa_rec "$SA16E" zqc3 withdraw "$S_DB"
+SA16E2="$(sa_trip s16e2 16:30 "$S_DA")"
+sa_declare "$SA16E2" all zqa1 zqb2 zqc3
+sa_rec "$SA16E2" zqa1 approve "$S_DB"; sa_rec "$SA16E2" zqb2 approve "$S_DB"
+sa_rec "$SA16E2" zqc3 withdraw "$S_DB"; sa_rec "$SA16E2" zqc3 approve "$S_DB"
+SA_ST1="$(sa_state "$SA16E")"; SA_ST2="$(sa_state "$SA16E2")"
+_approval_tally() { # MUTANT: a key counts once it holds ANY approve for the digest
+  local trip_dir="$1" dg="$2" line key keys="" thr="" nk=0 k=0 hit
+  while IFS= read -r line; do
+    case "$line" in threshold=*) thr="${line#threshold=}" ;; approver=*) keys="$keys ${line#approver=}"; nk=$((nk+1)) ;; esac
+  done < "$trip_dir/.approvers"
+  if [ "$thr" = all ]; then thr="$nk"; fi
+  for key in $keys; do
+    hit=0
+    while IFS= read -r line; do
+      case "$line" in "organizer-stated $key approve $dg "*) hit=1 ;; esac
+    done < "$trip_dir/.approvals"
+    k=$((k+hit))
+  done
+  printf '%s %s 0' "$k" "$thr"
+}
+SA_MUT="$(sa_state "$SA16E")"
+sa_restore _approval_tally
+SA_BACK="$(sa_state "$SA16E")"
+if [ "$SA_ST1" = unconfirmed ] && [ "$SA_ST2" = confirmed ] && [ "$SA_MUT" = confirmed ] && [ "$SA_BACK" = unconfirmed ]; then
+  PASS "S16e: approve-then-withdraw for one key under \`all\` resolves unconfirmed and withdraw-then-approve resolves confirmed (control); ARMED-RED — a tally counting any approve reads the first case '$SA_MUT', so this arm convicts that defect, and after the restore it reads '$SA_BACK' again"
+else
+  FAIL "S16e: latest-record semantics — approve-then-withdraw '$SA_ST1' (want unconfirmed), withdraw-then-approve '$SA_ST2' (want confirmed), mutant '$SA_MUT' (want confirmed), restored '$SA_BACK' (want unconfirmed)"
+fi
+
+# ── S16f — an approve by an UNDECLARED key counts for nothing.
+SA16F="$(sa_trip s16f 16:30 "$S_DA")"
+sa_declare "$SA16F" all zqa1 zqb2 zqc3
+sa_rec "$SA16F" zqa1 approve "$S_DB"; sa_rec "$SA16F" zqb2 approve "$S_DB"; sa_rec "$SA16F" zqx9 approve "$S_DB"
+SA_ST="$(sa_state "$SA16F")"; SA_TALLY="$(_approval_tally "$SA16F" "$S_DB")"
+if [ "$SA_ST" = unconfirmed ] && [ "$SA_TALLY" = '2 3 0' ]; then
+  PASS "S16f: an approve by a key the declaration does not name, beside two declared approvals under \`all\` of three, resolves unconfirmed with tally '$SA_TALLY' — only declared approvers count"
+else
+  FAIL "S16f: an undeclared key's approve moved the verdict to '$SA_ST' (tally '$SA_TALLY', want unconfirmed and '2 3 0')"
+fi
+
+# ── S16g — ONE OFF-GRAMMAR LINE POISONS THE LEDGER. With three valid approvals and one bad line
+# the state is unconfirmed and stderr names .approvals; a CORRUPTED withdraw that is a key's latest
+# record is the fail-open case. ARMED-RED: a reader that skips bad lines reads that one confirmed.
+SA16G="$(sa_trip s16g 16:30 "$S_DA")"
+sa_declare "$SA16G" all zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA16G" "$sak" approve "$S_DB"; done
+printf 'organizer-stated zqa1 approve not-a-code 2027-06-01T00:00:00Z\n' >> "$SA16G/.approvals"
+SA_ST1="$(change_confirmation_state "$SA16G" 2>"$WORK/sa16g.err")"
+SA_NAMES=0; case "$(cat "$WORK/sa16g.err")" in *.approvals*) SA_NAMES=1 ;; esac
+SA16G2="$(sa_trip s16g2 16:30 "$S_DA")"
+sa_declare "$SA16G2" all zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA16G2" "$sak" approve "$S_DB"; done
+printf 'organizer-stated zqc3 withdraw %s 2027-06-01T00:00:00Z\n' "${S_DB:0:63}" >> "$SA16G2/.approvals"
+SA_ST2="$(sa_state "$SA16G2")"
+_approvals_grammar() { return 0; }   # MUTANT: every line conforms, so a bad line is skipped by the tally
+SA_MUT="$(sa_state "$SA16G2")"
+sa_restore _approvals_grammar
+if [ "$SA_ST1" = unconfirmed ] && [ "$SA_NAMES" -eq 1 ] && [ "$SA_ST2" = unconfirmed ] && [ "$SA_MUT" = confirmed ]; then
+  PASS "S16g: three valid approvals plus one off-grammar line resolve unconfirmed with stderr naming .approvals, and a corrupted withdraw that is a key's latest record resolves unconfirmed too; ARMED-RED — a skip-bad-lines reader reads that second trip '$SA_MUT', the fail-open this closes"
+else
+  FAIL "S16g: bad line '$SA_ST1' (names .approvals=$SA_NAMES), corrupted withdraw '$SA_ST2' (both want unconfirmed), skip-bad-lines mutant '$SA_MUT' (want confirmed)"
+fi
+
+# ── S16h — #718's FM-2(ii): a ledger with no declaration is malformed, never the default.
+SA16H="$(sa_trip s16h 16:30 "$S_DA")"
+sa_rec "$SA16H" zqa1 approve "$S_DB"
+s_record "$SA16H/.change-confirmed" "$S_DB" confirmed
+SA_ST="$(sa_state "$SA16H")"
+if [ "$SA_ST" = unconfirmed ]; then
+  PASS "S16h: FM-2(ii) — a ledger with no declaration, beside an organizer confirmation covering a changed plan, resolves unconfirmed: a half-retired declaration never falls back to the organizer-confirm default"
+else
+  FAIL "S16h: a ledger with no declaration resolved '$SA_ST' — the organizer default is reading a trip whose approval state is broken"
+fi
+
+# ── S16i — #718's FM-2(i): a declaring trip with NO baseline is still evaluated.
+SA16I="$(sa_trip s16i 16:30)"
+sa_declare "$SA16I" 1 zqa1
+SA16I2="$(sa_trip s16i2 16:30)"
+sa_declare "$SA16I2" 1 zqa1
+sa_rec "$SA16I2" zqa1 approve "$S_DB"
+SA_ST1="$(sa_state "$SA16I")"; SA_ST2="$(sa_state "$SA16I2")"
+if [ "$SA_ST1" = unconfirmed ] && [ "$SA_ST2" = confirmed ]; then
+  PASS "S16i: FM-2(i) — a declaring trip with no baseline and no approvals resolves unconfirmed, never none-pending, and the same trip with its threshold met resolves confirmed (control)"
+else
+  FAIL "S16i: no baseline, no approvals resolved '$SA_ST1' (want unconfirmed); no baseline, threshold met resolved '$SA_ST2' (want confirmed)"
+fi
+
+# ── S16j — UNDETERMINED ON EVERY POLICY. A dangling render on a declaring trip, with a baseline
+# and without one. ARMED-RED: a declared branch that tallies the EMPTY digest reads unconfirmed.
+SA16J="$(s15_dangling sa-s16j)"
+s_record "$SA16J/.published-itinerary" "$S_DA" published
+sa_declare "$SA16J" 1 zqa1
+SA16J2="$(s15_dangling sa-s16j2)"
+sa_declare "$SA16J2" 1 zqa1
+SA_ST1="$(sa_state "$SA16J")"; SA_ST2="$(sa_state "$SA16J2")"
+sa16j_mutant() { # the declared branch WITHOUT the identity check: the empty digest is tallied
+  local trip_dir="$1" out k t s
+  out="$(itinerary_digest "$(resolve_site_html "$trip_dir" 2>/dev/null)")"
+  read -r k t s <<<"$(_approval_tally "$trip_dir" "$out")"
+  if [ "$k" -ge "$t" ]; then printf confirmed; elif [ "$s" = 1 ]; then printf stale; else printf unconfirmed; fi
+}
+SA_MUT="$(sa16j_mutant "$SA16J2")"
+if [ "$SA_ST1" = undetermined ] && [ "$SA_ST2" = undetermined ] && [ "$SA_MUT" = unconfirmed ]; then
+  PASS "S16j: a dangling render on a declaring trip resolves undetermined with a baseline and without one — the owed emission survives the declared branch; ARMED-RED — tallying the empty digest instead reads '$SA_MUT', the claim 'it changed' nobody computed"
+else
+  FAIL "S16j: dangling render with baseline '$SA_ST1', without '$SA_ST2' (both want undetermined); empty-digest mutant '$SA_MUT' (want unconfirmed)"
+fi
+
+# ── S16k — EACH MALFORMED DECLARATION, one fixture per malformation. Each trip also carries an
+# organizer confirmation covering its changed plan, so reading the declaration as absent would
+# resolve confirmed: an unconfirmed here is the malformed limb, not the default.
+SA_K_OK=0; SA_K_N=0; SA_K_BAD=""
+for saspec in 'threshold=all\n\napprover=zqa1\n' 'threshold=all\napprover=zqa1\nnote=hello\n' \
+              'threshold=0\napprover=zqa1\n' 'threshold=3\napprover=zqa1\napprover=zqb2\n' \
+              'threshold=all\napprover=zqa1\napprover=zqa1\n' 'threshold=all\napprover=\n' \
+              'threshold=all\napprover=Zqa1\n' 'approver=zqa1\n' 'threshold=all\n'; do
+  SA_K_N=$((SA_K_N+1))
+  sad="$(sa_trip "s16k$SA_K_N" 16:30 "$S_DA")"
+  s_record "$sad/.change-confirmed" "$S_DB" confirmed
+  # shellcheck disable=SC2059  # the specification IS the format: it carries only \n escapes
+  printf "$saspec" > "$sad/.approvers"
+  sapol="$(_approval_policy "$sad" 2>"$WORK/sa16k.err")"
+  saerr="$(wc -c < "$WORK/sa16k.err" | tr -d ' ')"
+  sast="$(sa_state "$sad")"
+  if [ "$sapol" = malformed ] && [ "$saerr" -gt 0 ] && [ "$sast" = unconfirmed ]; then
+    SA_K_OK=$((SA_K_OK+1))
+  else
+    SA_K_BAD="$SA_K_BAD #$SA_K_N=$sapol/$sast/${saerr}B"
+  fi
+done
+SA_K_CTL="$(_approval_policy "$SA16A" 2>"$WORK/sa16k_ctl.err")"
+SA_K_CTLERR="$(wc -c < "$WORK/sa16k_ctl.err" | tr -d ' ')"
+if [ "$SA_K_CTL" != declared ] || [ "$SA_K_CTLERR" -ne 0 ]; then
+  FAIL "S16k: CONTROL — S16a's conforming declaration read '$SA_K_CTL' with ${SA_K_CTLERR}B of diagnostic, so the grammar is refusing a good file and the nine refusals below prove nothing"
+elif [ "$SA_K_OK" -eq 9 ] && [ "$SA_K_N" -eq 9 ]; then
+  PASS "S16k: all 9 malformed declarations — a blank line, an unknown key, threshold=0, a threshold above the count, a duplicate approver, an empty key, an uppercase key, no threshold= line, no approver= line — read malformed with a diagnostic and resolve unconfirmed; the conforming declaration reads declared and silent (control)"
+else
+  FAIL "S16k: $SA_K_OK of $SA_K_N malformed declarations were refused as policy/state/diagnostic —$SA_K_BAD"
+fi
+
+# ── S16l — #719's DR-2 reading of FM-2: a malformed state is `none-pending` only where the
+# outgoing plan IS the baseline; with the plan changed, the same state is unconfirmed. ARMED-RED:
+# the literal reading — a malformed state never reads unchanged — holds even a marker-only
+# republish, and this arm convicts it; the baseline comparison is stubbed off, then restored.
+SA16L="$(sa_trip s16l 14:00 "$S_DA")"
+printf 'threshold=all\n' > "$SA16L/.approvers"
+SA16L2="$(sa_trip s16l2 16:30 "$S_DA")"
+printf 'threshold=all\n' > "$SA16L2/.approvers"
+SA_ST1="$(sa_state "$SA16L")"; SA_ST2="$(sa_state "$SA16L2")"
+_baseline_matches() { return 1; }   # MUTANT: the literal reading of FM-2
+SA_MUT="$(sa_state "$SA16L")"
+sa_restore _baseline_matches
+if [ "$SA_ST1" = none-pending ] && [ "$SA_ST2" = unconfirmed ] && [ "$SA_MUT" = unconfirmed ]; then
+  PASS "S16l: a malformed declaration on an UNCHANGED plan resolves none-pending — nothing new can publish, so a marker-only republish is not held — and the same state with the plan changed resolves unconfirmed (control); ARMED-RED — the literal reading holds the unchanged plan too ('$SA_MUT')"
+else
+  FAIL "S16l: malformed and unchanged '$SA_ST1' (want none-pending), malformed and changed '$SA_ST2' (want unconfirmed), literal-reading mutant '$SA_MUT' (want unconfirmed)"
+fi
+
+# ── S16m — A DANGLING DECLARATION IS PRESENT, not absent. ARMED-RED: an existence-only presence
+# test reads it absent and hands the trip to the organizer default, which reads confirmed here.
+SA16M="$(sa_trip s16m 16:30 "$S_DA")"
+ln -s "$SA16M/zzq-no-such-declaration" "$SA16M/.approvers"
+s_record "$SA16M/.change-confirmed" "$S_DB" confirmed
+SA_ST="$(sa_state "$SA16M")"
+_approval_policy() { # MUTANT: presence by existence alone
+  if [ -e "$1/.approvers" ] || [ -e "$1/.approvals" ]; then printf declared; else printf none; fi
+}
+SA_MUT="$(sa_state "$SA16M")"
+sa_restore _approval_policy
+if [ -L "$SA16M/.approvers" ] && [ ! -e "$SA16M/.approvers" ] && [ "$SA_ST" = unconfirmed ] && [ "$SA_MUT" = confirmed ]; then
+  PASS "S16m: a declaration that is a dangling link reads present-and-unreadable, so the trip resolves unconfirmed; ARMED-RED — an existence-only test reads it absent and resolves '$SA_MUT' through the organizer default"
+else
+  FAIL "S16m: dangling declaration resolved '$SA_ST' (want unconfirmed); existence-only mutant '$SA_MUT' (want confirmed)"
+fi
+
+# ── S17a — KNOWN ANSWERS. The digest is SHA-256 over the bytes: FIPS 180-4's own `abc` vector,
+# and the empty string's digest for empty input.
+SA17_ABC="$(printf 'abc' | _digest_of)"
+SA17_NIL="$(printf '' | _digest_of)"
+if [ "$SA17_ABC" = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' ] \
+   && [ "$SA17_NIL" = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' ]; then
+  PASS "S17a: _digest_of returns the SHA-256 known answers — 'abc' gives ba7816bf…15ad and empty input gives e3b0c442…b855, the real empty-string token, so an empty projection still has an identity"
+else
+  FAIL "S17a: _digest_of gave '$SA17_ABC' for 'abc' and '$SA17_NIL' for empty input — not SHA-256 (cksum gives 1219131554-3 and 4294967295-0)"
+fi
+
+# ── S17b — one itinerary byte apart, two different 64-character codes.
+s_render "$WORK/sa17b1.html" 14:00 none; s_render "$WORK/sa17b2.html" 14:01 none
+SA17_B1="$(itinerary_digest "$WORK/sa17b1.html")"; SA17_B2="$(itinerary_digest "$WORK/sa17b2.html")"
+SA17_HEX=1
+for sad in "$SA17_B1" "$SA17_B2"; do
+  case "$sad" in *[!0123456789abcdef]*|'') SA17_HEX=0 ;; esac
+  if [ "${#sad}" -ne 64 ]; then SA17_HEX=0; fi
+done
+if [ "$SA17_HEX" -eq 1 ] && [ "$SA17_B1" != "$SA17_B2" ]; then
+  PASS "S17b: two renders one itinerary byte apart (14:00 and 14:01) digest to two different 64-character lowercase-hex codes"
+else
+  FAIL "S17b: the codes '$SA17_B1' and '$SA17_B2' are not two distinct 64-hex values"
+fi
+
+# ── S17c — THE SHIM, UNCHANGED PLAN. A CRC-shaped baseline recorded before the swap, equal to
+# the legacy digest of the unchanged render, reads none-pending and the gate passes. ARMED-RED:
+# with the shim replaced by exact equality the same trip reads unconfirmed, and the gate's abort
+# then claims the itinerary differs — a statement nobody computed (#718's FM-1).
+SA17C="$(sa_trip s17c 14:00)"
+SA17C_CRC="$(_legacy_itinerary_digest "$SA17C/outputs/porto-travel-site.html")"
+s_record "$SA17C/.published-itinerary" "$SA17C_CRC" published
+SA17C_SHAPE=0; case "$SA17C_CRC" in *[!0123456789-]*|''|-*|*-|*-*-*) ;; *-*) SA17C_SHAPE=1 ;; esac
+SA_ST="$(sa_state "$SA17C")"; sa_gate "$SA17C"; SA_RC=$?
+_baseline_matches() { [ "$2" = "$3" ]; }   # MUTANT: no shim
+SA_MUT="$(sa_state "$SA17C")"
+SA_MUTMSG="$( ( require_change_confirmation "$SA17C" ) 2>&1 >/dev/null )"
+sa_restore _baseline_matches
+SA_DIFFERS=0; case "$SA_MUTMSG" in *differs*) SA_DIFFERS=1 ;; esac
+if [ "$SA17C_SHAPE" -ne 1 ]; then
+  FAIL "S17c: fixture integrity — the legacy digest '$SA17C_CRC' is not CRC-shaped, so this is not a pre-swap baseline"
+elif [ "$SA_ST" = none-pending ] && [ "$SA_RC" -eq 0 ] && [ "$SA_MUT" = unconfirmed ] && [ "$SA_DIFFERS" -eq 1 ]; then
+  PASS "S17c: a CRC-shaped baseline ($SA17C_CRC) equal to the legacy digest of the unchanged render resolves none-pending and the gate passes — the digest swap is never read as a plan change; ARMED-RED — without the shim the same trip resolves '$SA_MUT' and the abort claims the content differs"
+else
+  FAIL "S17c: shim state '$SA_ST' (gate rc=$SA_RC; want none-pending, 0), no-shim mutant '$SA_MUT' with a 'differs' claim=$SA_DIFFERS (want unconfirmed, 1)"
+fi
+
+# ── S17d — THE SHIM, CHANGED PLAN. A CRC baseline of the old plan against a new render.
+s_render "$WORK/sa17d_old.html" 14:00 none
+SA17D="$(sa_trip s17d 16:30 "$(_legacy_itinerary_digest "$WORK/sa17d_old.html")")"
+SA_ST="$(sa_state "$SA17D")"
+if [ "$SA_ST" = unconfirmed ]; then
+  PASS "S17d: a CRC-shaped baseline of the previous plan against a changed render resolves unconfirmed — the shim admits only an unchanged plan"
+else
+  FAIL "S17d: a CRC baseline of D0 against a render of D1 resolved '$SA_ST' (want unconfirmed) — the shim is admitting a changed plan"
+fi
+
+# ── S17e — A LEGACY TOKEN NEVER COUNTS AS AN APPROVAL. A trip that declares nothing, with a CRC
+# baseline of the old plan and a CRC-shaped confirmation equal to the legacy digest of the NEW
+# plan: before the swap that confirmation matched and the trip read confirmed; now it reads stale.
+SA17E="$(sa_trip s17e 16:30 "$(_legacy_itinerary_digest "$WORK/sa17d_old.html")")"
+s_record "$SA17E/.change-confirmed" "$(_legacy_itinerary_digest "$SA17E/outputs/porto-travel-site.html")" confirmed
+SA_ST="$(sa_state "$SA17E")"
+if [ "$SA_ST" = stale ]; then
+  PASS "S17e: a CRC-shaped organizer confirmation of the new plan, recorded before the swap, resolves stale — a legacy token is never an approval, at the price of one more confirm"
+else
+  FAIL "S17e: a legacy CRC confirmation resolved '$SA_ST' (want stale) — a legacy token is being counted as an approval"
+fi
+
+# ── S17f — the recorder writes SHA-256. CONTROL: with the digest stubbed to the legacy body the
+# same call writes `<digits>-<digits>`, so the 64-hex result is the swap's doing.
+SA17F="$(sa_trip s17f 14:00)"
+( record_published_itinerary "$SA17F" "$SA17F/outputs/porto-travel-site.html" ) >/dev/null 2>&1
+SA17F_REC="$(_record_digest "$SA17F/.published-itinerary")"
+SA17F2="$(sa_trip s17f2 14:00)"
+_digest_of() { _legacy_digest_of; }   # the pre-#719 body, restored for the control
+( record_published_itinerary "$SA17F2" "$SA17F2/outputs/porto-travel-site.html" ) >/dev/null 2>&1
+sa_restore _digest_of
+SA17F_OLD="$(_record_digest "$SA17F2/.published-itinerary")"
+SA17F_HEX=0; case "$SA17F_REC" in *[!0123456789abcdef]*|'') ;; *) [ "${#SA17F_REC}" -eq 64 ] && SA17F_HEX=1 ;; esac
+SA17F_CRC=0; case "$SA17F_OLD" in *[!0123456789-]*|''|-*|*-|*-*-*) ;; *-*) SA17F_CRC=1 ;; esac
+if [ "$SA17F_HEX" -eq 1 ] && [ "$SA17F_CRC" -eq 1 ]; then
+  PASS "S17f: record_published_itinerary writes a 64-hex baseline, and with the pre-#719 digest restored the same call writes '$SA17F_OLD' (control) — the recorder follows the one digest function"
+else
+  FAIL "S17f: the recorder wrote '$SA17F_REC' (want 64 hex) and, under the legacy body, '$SA17F_OLD' (want digits-digits)"
+fi
+
+# The approval line in a captured confirm output: how many lines read exactly `approve <64 hex>`,
+# and the code on the last of them. A read loop, not grep: group PF's rule.
+sa_line_codes() { # <text> -> "n code"
+  local line c n=0 last=''
+  while IFS= read -r line; do
+    case "$line" in
+      'approve '*) c="${line#approve }"
+        if [ "${#c}" -eq 64 ]; then
+          case "$c" in *[!0123456789abcdef]*) ;; *) n=$((n+1)); last="$c" ;; esac
+        fi ;;
+    esac
+  done <<<"$1"
+  printf '%s %s' "$n" "${last:--}"
+}
+
+# ── S17g — ONE VALUE. The gate's outgoing digest, the code in the line confirm emits, and the
+# digest the ledger records for that line are the same bytes, for one render.
+SA17G="$(sa_trip s17g 16:30 "$S_DA")"
+sa_declare "$SA17G" 1 zqa1
+SA17G_GATE="$(itinerary_digest "$SA17G/outputs/porto-travel-site.html")"
+SA17G_OUT="$( ( cmd_confirm "$SA17G" ) </dev/null 2>/dev/null )"
+read -r SA17G_N SA17G_LINE <<<"$(sa_line_codes "$SA17G_OUT")"
+( _ledger_append "$SA17G" zqa1 approve "$SA17G_LINE" ) >/dev/null 2>&1
+SA17G_REC=''
+while IFS= read -r saline; do
+  sar="${saline#* }"; sar="${sar#* }"; sar="${sar#* }"; SA17G_REC="${sar%% *}"
+done < "$SA17G/.approvals"
+if [ "$SA17G_N" -eq 1 ] && [ -n "$SA17G_GATE" ] && [ "$SA17G_LINE" = "$SA17G_GATE" ] && [ "$SA17G_REC" = "$SA17G_GATE" ]; then
+  PASS "S17g: ONE VALUE — the gate's outgoing digest, the code in the approval line confirm emits, and the digest the ledger records for it are byte-equal ($(_code_prefix "$SA17G_GATE") …)"
+else
+  FAIL "S17g: gate '$SA17G_GATE', emitted line '$SA17G_LINE' ($SA17G_N matching line(s)), recorded '$SA17G_REC' — the three are not one value"
+fi
+
+# ── S17h — S15i's POLICY OVER THE NEW PROGRAM, and F4: the completeness count must be proof
+# against a SUBSTITUTION, not merely balanced. It compares a count and not a set, so a _digest_of
+# written without perl plus an unlisted perl program elsewhere would balance it; so the listed
+# body must itself be an invocation by S15i's own regex. And the CRC shape still parses, so
+# group T's fixtures (T6c, T8b) and a pre-swap record are still read as tokens.
+SA17H_BODY="$(declare -f _digest_of)"
+SA17H_DN=0; SA17H_FB=0
+case "$SA17H_BODY" in *'/dev/null'*) SA17H_DN=1 ;; esac
+case "$SA17H_BODY" in *'||'*) SA17H_FB=1 ;; esac
+SA17H_RE=0; if [[ "$SA17H_BODY" =~ $S15I_RE ]]; then SA17H_RE=1; fi
+SA17H_NFN=0; for sad in $S15I_FNS; do SA17H_NFN=$((SA17H_NFN+1)); done
+SA17H_NLINE="$(s15_perl_lines "$SELF_PUBLISH")"
+printf 'digest=4294967295-1234\nconfirmed=2027-06-01T00:00:00Z\n' > "$WORK/sa17h.rec"
+SA17H_CRC="$(_record_digest "$WORK/sa17h.rec")"
+if [ "$SA17H_DN$SA17H_FB" = 00 ] && [ "$SA17H_RE" -eq 1 ] && [ "$SA17H_NFN" -eq 7 ] && [ "$SA17H_NLINE" -eq 7 ] && [ "$SA17H_CRC" = '4294967295-1234' ]; then
+  PASS "S17h: _digest_of's parsed body reads discard/fallback 00, invokes perl by S15i's own regex (F4 — the listed body is a perl program, so the count cannot be balanced by a substitution), S15I_FNS lists 7 and the script has 7 perl-invoking lines; the CRC token still parses for group T and for a pre-swap record"
+else
+  FAIL "S17h: bits $SA17H_DN$SA17H_FB (want 00), regex match $SA17H_RE (want 1), listed $SA17H_NFN and counted $SA17H_NLINE (want 7 and 7), CRC parse '$SA17H_CRC'"
+fi
+
+# ── S18a — MUST REFUSE. Ten lines the grammar must not admit, each refused with nothing printed:
+# a name appended, a URL, 63 and 65 hex, uppercase hex, a CRC token, a bare yes, the verb alone,
+# two lines, and a non-breaking space between the tokens.
+SA_H="$S_DB"
+SA_UP="$(printf '%s' "$SA_H" | tr 'abcdef' 'ABCDEF')"
+SA18_REFUSE=( "approve $SA_H Dana" "approve https://example.invalid/approve?code=$SA_H" "approve ${SA_H:0:63}"
+              "approve ${SA_H}0" "approve $SA_UP" "approve 4294967295-1234" "yes" "approve"
+              "approve $SA_H"$'\n'"approve $SA_H" "approve"$'\xc2\xa0'"$SA_H" )
+SA18_OK=0; SA18_BAD=""
+for (( sai=0; sai<${#SA18_REFUSE[@]}; sai++ )); do
+  saout="$(_approval_line_parse "${SA18_REFUSE[$sai]}" 2>/dev/null)"; sarc=$?
+  if [ "$sarc" -eq 1 ] && [ -z "$saout" ]; then SA18_OK=$((SA18_OK+1)); else SA18_BAD="$SA18_BAD #$((sai+1))=rc$sarc"; fi
+done
+if [ "$SA18_OK" -eq 10 ] && [ "${#SA18_REFUSE[@]}" -eq 10 ]; then
+  PASS "S18a: all 10 must-refuse lines are refused with nothing printed — a name appended, a URL, 63 and 65 hex, uppercase hex, a CRC token, a bare yes, the verb alone, two lines, and a non-breaking space between the tokens. The alphabet cannot carry a name, a need or a URL"
+else
+  FAIL "S18a: $SA18_OK of ${#SA18_REFUSE[@]} must-refuse lines were refused —$SA18_BAD"
+fi
+
+# ── S18b — MUST ACCEPT, each normalized to the exact form. ARMED-RED: a byte-exact parser
+# accepts only the two lines already in that form.
+SA18_ACCEPT=( "approve $SA_H" "approve $SA_H " $'\r\n'"approve $SA_H"$'\r\n' "Approve $SA_H" "APPROVE $SA_H" "withdraw $SA_H" "approve"$'\t'"$SA_H" )
+SA18_WANT=( "approve $SA_H" "approve $SA_H" "approve $SA_H" "approve $SA_H" "approve $SA_H" "withdraw $SA_H" "approve $SA_H" )
+sa18_count() { # -> how many of SA18_ACCEPT the live parser normalizes to SA18_WANT
+  local i o n=0
+  for (( i=0; i<${#SA18_ACCEPT[@]}; i++ )); do
+    o="$(_approval_line_parse "${SA18_ACCEPT[$i]}" 2>/dev/null)"
+    if [ "$o" = "${SA18_WANT[$i]}" ]; then n=$((n+1)); fi
+  done
+  printf '%d' "$n"
+}
+SA18_GOOD="$(sa18_count)"
+_approval_line_parse() { # MUTANT: byte-exact, no normalization
+  local v="${1%% *}" c="${1#* }"
+  case "$v" in approve|withdraw) ;; *) return 1 ;; esac
+  if [ "${#c}" -ne 64 ]; then return 1; fi
+  case "$c" in *[!0123456789abcdef]*) return 1 ;; esac
+  printf '%s %s' "$v" "$c"
+}
+SA18_EXACT="$(sa18_count)"
+sa_restore _approval_line_parse
+if [ "$SA18_GOOD" -eq 7 ] && [ "$SA18_EXACT" -eq 2 ]; then
+  PASS "S18b: all 7 must-accept lines normalize to the exact form — the exact line, a trailing space, surrounding CRLF, 'Approve', 'APPROVE', 'withdraw', a tab between the tokens; ARMED-RED — a byte-exact parser accepts only $SA18_EXACT of them"
+else
+  FAIL "S18b: the live parser normalized $SA18_GOOD of 7 (want 7); the byte-exact mutant accepted $SA18_EXACT (want 2)"
+fi
+
+# ── S18c — A WELL-FORMED LINE FOR ANOTHER PLAN IS REFUSED AS STALE, and the ledger is untouched.
+# Driven end to end through confirm, with the terminal test stubbed and the prompts fed from a
+# fixture; the stub is withdrawn in the arm.
+SA18C="$(sa_trip s18c 16:30 "$S_DA")"
+sa_declare "$SA18C" 1 zqa1
+sa_rec "$SA18C" zqa1 withdraw "$S_DA"
+cp "$SA18C/.approvals" "$WORK/sa18c.before"
+_confirm_has_terminal() { return 0; }
+SA18C_ERR="$( printf '1\napprove %s\nCONFIRM\n' "$S_DA" | ( cmd_confirm "$SA18C" ) 2>&1 >/dev/null )"; SA18C_RC=$?
+sa_restore _confirm_has_terminal
+SA18C_STALE=0; case "$SA18C_ERR" in *"different version of the plan"*) SA18C_STALE=1 ;; esac
+SA18C_SAME=0; cmp -s "$WORK/sa18c.before" "$SA18C/.approvals" && SA18C_SAME=1
+if [ "$SA18C_RC" -ne 0 ] && [ "$SA18C_STALE" -eq 1 ] && [ "$SA18C_SAME" -eq 1 ] && [ ! -e "$SA18C/.change-confirmed" ]; then
+  PASS "S18c: a well-formed approval line for the previous plan is refused as stale (rc=$SA18C_RC, naming the current code), the ledger is byte-identical and no approval record is written"
+else
+  FAIL "S18c: a line for another plan returned rc=$SA18C_RC, stale-named=$SA18C_STALE, ledger unchanged=$SA18C_SAME — a stale code reached the ledger or the refusal said the wrong thing"
+fi
+
+# ── S18d — THE EMISSION, END TO END, WITH NO TERMINAL. confirm on a declaring trip with a changed
+# plan and stdin from /dev/null prints exactly one approval line for the outgoing plan and then
+# refuses at the terminal check. Its pre-terminal output names NO approver and states NO threshold
+# (F5 a): a non-interactive read of confirm discloses the line to share and a count, and nothing
+# that says who is declared or how many are needed. Nothing is written.
+SA18D="$(sa_trip s18d 16:30 "$S_DA")"
+sa_declare "$SA18D" all zqaria zqbeno zqcass
+sa_rec "$SA18D" zqaria approve "$S_DB"
+cp "$SA18D/.approvals" "$WORK/sa18d.before"
+SA18D_OUT="$( ( cmd_confirm "$SA18D" ) </dev/null 2>"$WORK/sa18d.err" )"; SA18D_RC=$?
+read -r SA18D_N SA18D_CODE <<<"$(sa_line_codes "$SA18D_OUT")"
+SA18D_LEAK=0; SA18D_SENS=0
+for sak in zqaria zqbeno zqcass; do
+  case "$SA18D_OUT" in *"$sak"*) SA18D_LEAK=$((SA18D_LEAK+1)) ;; esac
+  case "$(cat "$SA18D/.approvers")" in *"$sak"*) SA18D_SENS=$((SA18D_SENS+1)) ;; esac
+done
+SA18D_THR=0; case "$SA18D_OUT" in *needed*|*threshold*) SA18D_THR=1 ;; esac
+SA18D_COUNT=0; case "$SA18D_OUT" in *"Approvals recorded for this plan: 1"*) SA18D_COUNT=1 ;; esac
+SA18D_TERM=0; case "$(cat "$WORK/sa18d.err")" in *"requires a terminal"*) SA18D_TERM=1 ;; esac
+SA18D_SAME=0; cmp -s "$WORK/sa18d.before" "$SA18D/.approvals" && SA18D_SAME=1
+if [ "$SA18D_SENS" -ne 3 ]; then
+  FAIL "S18d: fixture integrity — the declaration carries $SA18D_SENS of its 3 keys, so their absence from the output would prove nothing"
+elif [ "$SA18D_RC" -ne 0 ] && [ "$SA18D_N" -eq 1 ] && [ "$SA18D_CODE" = "$S_DB" ] && [ "$SA18D_LEAK" -eq 0 ] && [ "$SA18D_THR" -eq 0 ] && [ "$SA18D_COUNT" -eq 1 ] && [ "$SA18D_TERM" -eq 1 ] && [ "$SA18D_SAME" -eq 1 ] && [ ! -e "$SA18D/.change-confirmed" ]; then
+  PASS "S18d: with no terminal, confirm prints exactly one line of the form 'approve <64 hex>' carrying the outgoing plan's code and the recorded count, names none of the 3 declared keys (all 3 are in the declaration — the sensitivity arm), states no threshold, refuses at the terminal check, and writes nothing"
+else
+  FAIL "S18d: rc=$SA18D_RC, approval lines=$SA18D_N (code matches=$([ "$SA18D_CODE" = "$S_DB" ] && echo 1 || echo 0)), keys leaked=$SA18D_LEAK, threshold shown=$SA18D_THR, count shown=$SA18D_COUNT, terminal refusal=$SA18D_TERM, ledger unchanged=$SA18D_SAME"
+fi
+
+# ── S19a — RECORDING IS TERMINAL-ONLY. With stdin not a terminal the declared branch refuses
+# after printing the line and appends nothing. ARMED-RED: with the terminal test stubbed true and
+# the prompts fed from a fixture, the same call DOES append a record — so the refusal is the
+# terminal test's doing, and nothing else stands between a non-interactive caller and the ledger.
+SA19A="$(sa_trip s19a 16:30 "$S_DA")"
+sa_declare "$SA19A" 1 zqa1
+SA19A_OUT="$( ( cmd_confirm "$SA19A" ) </dev/null 2>/dev/null )"; SA19A_RC=$?
+read -r SA19A_N SA19A_CODE <<<"$(sa_line_codes "$SA19A_OUT")"
+SA19A_NONE=0; [ ! -e "$SA19A/.approvals" ] && SA19A_NONE=1
+_confirm_has_terminal() { return 0; }
+printf '1\napprove %s\nCONFIRM\n' "$S_DB" | ( cmd_confirm "$SA19A" ) >/dev/null 2>&1; SA19A_ARC=$?
+sa_restore _confirm_has_terminal
+SA19A_ALINES=0; [ -r "$SA19A/.approvals" ] && SA19A_ALINES="$(wc -l < "$SA19A/.approvals" | tr -d ' ')"
+if [ "$SA19A_RC" -ne 0 ] && [ "$SA19A_N" -eq 1 ] && [ "$SA19A_NONE" -eq 1 ] && [ "$SA19A_ARC" -eq 0 ] && [ "$SA19A_ALINES" -eq 1 ]; then
+  PASS "S19a: with no terminal the declared branch prints the approval line, refuses (rc=$SA19A_RC) and appends nothing; ARMED-RED — with the terminal test stubbed true the same call appends $SA19A_ALINES record, so the terminal test is the only thing a non-interactive caller meets. The stub is withdrawn"
+else
+  FAIL "S19a: no-terminal rc=$SA19A_RC, lines=$SA19A_N, ledger absent=$SA19A_NONE; stubbed rc=$SA19A_ARC, records appended=$SA19A_ALINES"
+fi
+
+# ── S19b — THE ORDER AND THE ABSENCE OF AN OVERRIDE, read from the parsed bodies so a comment
+# cannot fake either: in _confirm_declared the terminal test precedes the first append, and
+# neither confirm body carries --yes, --force or ALLOW_. Sensitivity: the same scan finds
+# ALLOW_PLAINTEXT in cmd_publish, which does carry an override.
+SA19_DECL="$(declare -f _confirm_declared)"; SA19_CONF="$(declare -f cmd_confirm)"; SA19_PUB="$(declare -f cmd_publish)"
+SA19_TERM=0; SA19_APP=0
+case "$SA19_DECL" in *_confirm_has_terminal*) SA19_TERM=1 ;; esac
+case "$SA19_DECL" in *_ledger_append*) SA19_APP=1 ;; esac
+SA19_AT_T="${SA19_DECL%%_confirm_has_terminal*}"; SA19_AT_A="${SA19_DECL%%_ledger_append*}"
+SA19_FLAGS=0
+for satok in '--yes' '--force' 'ALLOW_'; do
+  case "$SA19_DECL" in *"$satok"*) SA19_FLAGS=$((SA19_FLAGS+1)) ;; esac
+  case "$SA19_CONF" in *"$satok"*) SA19_FLAGS=$((SA19_FLAGS+1)) ;; esac
+done
+SA19_SENS=0; case "$SA19_PUB" in *ALLOW_PLAINTEXT*) SA19_SENS=1 ;; esac
+if [ "$SA19_TERM" -eq 1 ] && [ "$SA19_APP" -eq 1 ] && [ "${#SA19_AT_T}" -lt "${#SA19_AT_A}" ] && [ "$SA19_FLAGS" -eq 0 ] && [ "$SA19_SENS" -eq 1 ]; then
+  PASS "S19b: in _confirm_declared's parsed body the terminal test (byte ${#SA19_AT_T}) precedes the first ledger append (byte ${#SA19_AT_A}), and neither confirm body carries --yes, --force or ALLOW_; the sensitivity arm finds ALLOW_PLAINTEXT in cmd_publish"
+else
+  FAIL "S19b: terminal test present=$SA19_TERM at ${#SA19_AT_T}, append present=$SA19_APP at ${#SA19_AT_A}, override tokens=$SA19_FLAGS (want 0), sensitivity=$SA19_SENS (want 1)"
+fi
+
+# ── S20a — THE APPEND PRESERVES EVERY PRIOR BYTE. The pre-append ledger is a byte-prefix of the
+# post-append one, exactly one line is added, and the result is on the grammar. ARMED-RED: a
+# writer that truncates fails the prefix check.
+SA20="$WORK/sa-s20"; mkdir -p "$SA20"
+sa_rec "$SA20" zqa1 approve "$S_DA"
+cp "$SA20/.approvals" "$WORK/sa20.pre"
+( _ledger_append "$SA20" zqb2 approve "$S_DB" ) >/dev/null 2>&1; SA20_RC=$?
+sa20_prefix() { # <before> <after> -> 1 when <before> is a byte-prefix of <after>
+  local n
+  n="$(wc -c < "$1" | tr -d ' ')"
+  head -c "$n" "$2" > "$WORK/sa20.cut"
+  if cmp -s "$WORK/sa20.cut" "$1"; then printf 1; else printf 0; fi
+}
+SA20_PFX="$(sa20_prefix "$WORK/sa20.pre" "$SA20/.approvals")"
+SA20_ADDED=$(( $(wc -l < "$SA20/.approvals" | tr -d ' ') - $(wc -l < "$WORK/sa20.pre" | tr -d ' ') ))
+SA20_GRAM="$(_approvals_grammar "$SA20/.approvals")"
+SA20M="$WORK/sa-s20m"; mkdir -p "$SA20M"
+sa_rec "$SA20M" zqa1 approve "$S_DA"
+cp "$SA20M/.approvals" "$WORK/sa20m.pre"
+_ledger_append() { printf 'organizer-stated %s %s %s %s\n' "$2" "$3" "$4" "$(_iso_now)" > "$(approval_ledger_path "$1")"; }   # MUTANT: truncates
+( _ledger_append "$SA20M" zqb2 approve "$S_DB" ) >/dev/null 2>&1
+sa_restore _ledger_append
+SA20_MPFX="$(sa20_prefix "$WORK/sa20m.pre" "$SA20M/.approvals")"
+if [ "$SA20_RC" -eq 0 ] && [ "$SA20_PFX" = 1 ] && [ "$SA20_ADDED" -eq 1 ] && [ -z "$SA20_GRAM" ] && [ "$SA20_MPFX" = 0 ]; then
+  PASS "S20a: the ledger before the append is a byte-prefix of the ledger after it, exactly 1 line was added, and the result conforms to the grammar; ARMED-RED — a truncating writer fails the same prefix check"
+else
+  FAIL "S20a: rc=$SA20_RC, prefix=$SA20_PFX, lines added=$SA20_ADDED, grammar='$SA20_GRAM', truncating mutant prefix=$SA20_MPFX (want 0)"
+fi
+
+# ── S20b — three scripted appends give three conformant lines; a planted free-text record makes
+# the ledger malformed rather than being read.
+SA20B="$WORK/sa-s20b"; mkdir -p "$SA20B"
+for sak in zqa1 zqb2 zqc3; do ( _ledger_append "$SA20B" "$sak" approve "$S_DB" ) >/dev/null 2>&1; done
+SA20B_N="$(wc -l < "$SA20B/.approvals" | tr -d ' ')"
+SA20B_GRAM="$(_approvals_grammar "$SA20B/.approvals")"
+printf 'organizer-stated zqa1 approve %s 2027-06-01T00:00:00Z because Dana said yes on the call\n' "$S_DB" >> "$SA20B/.approvals"
+SA20B_BAD="$(_approvals_grammar "$SA20B/.approvals")"
+if [ "$SA20B_N" -eq 3 ] && [ -z "$SA20B_GRAM" ] && [ -n "$SA20B_BAD" ]; then
+  PASS "S20b: three scripted appends give 3 conformant organizer-stated records, and a planted free-text record is refused by the grammar ('$SA20B_BAD') rather than read"
+else
+  FAIL "S20b: lines=$SA20B_N (want 3), grammar='$SA20B_GRAM' (want empty), free-text verdict='$SA20B_BAD' (want a refusal)"
+fi
+
+# ── S20c — ATOMIC. With mv failing, the append returns exactly 1, the ledger is byte-identical
+# and no temp file remains. CONTROL: the same call with mv working returns 0 and adds the line, so
+# the refusal is the failed move's and not an append that could not run at all.
+SA20C="$WORK/sa-s20c"; mkdir -p "$SA20C"
+sa_rec "$SA20C" zqa1 approve "$S_DA"
+cp "$SA20C/.approvals" "$WORK/sa20c.pre"
+SA20C2="$WORK/sa-s20c2"; mkdir -p "$SA20C2"
+cp "$SA20C/.approvals" "$SA20C2/.approvals"
+( _ledger_append "$SA20C2" zqb2 approve "$S_DB" ) >/dev/null 2>&1; SA20C_CRC=$?
+SA20C_CLINES="$(wc -l < "$SA20C2/.approvals" | tr -d ' ')"
+mv() { return 1; }
+( _ledger_append "$SA20C" zqb2 approve "$S_DB" ) >/dev/null 2>&1; SA20C_RC=$?
+unset -f mv
+SA20C_TMP=0; for saf in "$SA20C"/.approvals.*; do [ -e "$saf" ] && SA20C_TMP=$((SA20C_TMP+1)); done
+SA20C_SAME=0; cmp -s "$WORK/sa20c.pre" "$SA20C/.approvals" && SA20C_SAME=1
+if [ "$SA20C_CRC" -eq 0 ] && [ "$SA20C_CLINES" -eq 2 ] && [ "$SA20C_RC" -eq 1 ] && [ "$SA20C_SAME" -eq 1 ] && [ "$SA20C_TMP" -eq 0 ]; then
+  PASS "S20c: with mv failing the append returns exactly 1, the ledger is byte-identical and no temp file remains — a partial line never lands; the control, the same append with mv working, returns 0 and adds its line. The mv stub is withdrawn"
+else
+  FAIL "S20c: control rc=$SA20C_CRC lines=$SA20C_CLINES (want 0 and 2); failed-move rc=$SA20C_RC (want 1), ledger unchanged=$SA20C_SAME, temp files left=$SA20C_TMP"
+fi
+
+# ── S21 — THE RENDER'S APPROVAL-CODE GUARD (FM-3), C2's PRESENCE RULE, AND rotate (F3). These
+# arms drive update, publish, confirm and rotate end to end against a mock gh and npx, as S8/S9
+# do, and read the mock's log: an abort that happened before `repo clone` (update, rotate) or
+# before `repo view` (publish) touched nothing. The renders carry C19's own declaration block,
+# built by sa_page with the artifact string read from the schema (S12's discipline).
+SA_GHLOG="$WORK/sa_gh.log"
+gh() {   # mock: record the call, answer the read-only probes, create or clone nothing real
+  printf '%s\n' "$*" >> "$SA_GHLOG"
+  case "${1:-} ${2:-}" in
+    "api user")    printf 'testowner' ;;
+    "repo view")   return 0 ;;
+    "auth status") printf "Token scopes: 'repo'\n" ;;
+    *)             return 0 ;;
+  esac
+}
+npx() { return 0; }
+sa_page() { # <file> <count-or-empty> <code-or-empty> <plan-time> [<coordination-state> <since>]
+  local f="$1" cnt="$2" code="$3" tm="$4" st="${5:-updated}" since="${6:-2027-06-02}"
+  {
+    printf '<!--\nartifact: %s\nschema-version: 1\ntrip: porto-2027\nwriter: site\nlifecycle: output\nprovenance: derived\npublish: output\ngenerated: 2027-06-02\ncoordination-state: %s\n' "$S12_ART" "$st"
+    if [ "$st" != none ]; then printf 'coordination-since: %s\n' "$since"; fi
+    if [ -n "$cnt" ]; then printf 'approval-count: %s\n' "$cnt"; fi
+    if [ -n "$code" ]; then printf 'approval-code: %s\n' "$code"; fi
+    printf -- '-->\n<!DOCTYPE html><html><head><title>Porto 2027</title>\n<style>.hero{color:#333}</style></head><body>\n<section class="hero"><h1>Porto 2027</h1></section>\n'
+    printf '<section class="day"><h2>Saturday</h2>\n<p>Miradouro da Vitoria at %s. Then the riverside walk to the bridge.</p></section>\n<script>var mapReady=1;</script>\n</body></html>\n' "$tm"
+  } > "$f"
+}
+sa_page "$WORK/sa_p14.html" '' '' 14:00; SA_P14="$(itinerary_digest "$WORK/sa_p14.html")"
+sa_page "$WORK/sa_p16.html" '' '' 16:30; SA_P16="$(itinerary_digest "$WORK/sa_p16.html")"
+SA_WRONG="$(printf 'a plan nobody approved' | _digest_of)"
+sa_ptrip() { # <name> <count> <code> <plan-time> [<baseline-digest>] [<state>] -> a trip dir with an sa_page render
+  local d="$WORK/sa-$1"
+  mkdir -p "$d/outputs"
+  sa_page "$d/outputs/porto-travel-site.html" "$2" "$3" "$4" "${6:-updated}"
+  if [ -n "${5:-}" ]; then s_record "$d/.published-itinerary" "$5" published; fi
+  printf '%s' "$d"
+}
+# The flags are computed OUTSIDE any command substitution: bash 3.2 mis-parses a `case`
+# pattern's closing parenthesis inside `$( … )`, which is the runner's bash on macOS.
+sa_push() { # <update|publish> <trip> -> "rc clone view create"; stderr to $WORK/sa_push.err
+  local rc log cl=0 vw=0 cr=0
+  : > "$SA_GHLOG"
+  if [ "$1" = publish ]; then ( cmd_publish "$2" ) >/dev/null 2>"$WORK/sa_push.err"; rc=$?
+  else ( cmd_update "$2" ) >/dev/null 2>"$WORK/sa_push.err"; rc=$?; fi
+  log="$(cat "$SA_GHLOG")"
+  case "$log" in *"repo clone"*)  cl=1 ;; esac
+  case "$log" in *"repo view"*)   vw=1 ;; esac
+  case "$log" in *"repo create"*) cr=1 ;; esac
+  printf '%s %s %s %s' "$rc" "$cl" "$vw" "$cr"
+}
+
+# ── S21a — update refuses a render stating another plan's approval code, before any clone.
+# CONTROL: the same render stating its OWN code reaches the clone.
+SA21A="$(sa_ptrip s21a 2 "$SA_WRONG" 16:30 "$SA_P16")"
+read -r SA21A_RC SA21A_CL SA_V SA_C <<<"$(sa_push update "$SA21A")"
+SA21A_MSG="$(cat "$WORK/sa_push.err")"
+SA21A2="$(sa_ptrip s21a2 2 "$SA_P16" 16:30 "$SA_P16")"
+read -r SA_RC SA21A_CCL SA_V SA_C <<<"$(sa_push update "$SA21A2")"
+SA21A_CODE=0; case "$SA21A_MSG" in *"approval code"*) SA21A_CODE=1 ;; esac
+if [ "$SA21A_RC" -ne 0 ] && [ "$SA21A_CL" -eq 0 ] && [ "$SA21A_CODE" -eq 1 ] && [ "$SA21A_CCL" -eq 1 ]; then
+  PASS "S21a: update ABORTS on a render whose approval code is not its own plan's (rc=$SA21A_RC), before any clone, naming the code; the control — the same render stating its own code — reaches the clone"
+else
+  FAIL "S21a: mismatch rc=$SA21A_RC clone=$SA21A_CL code-named=$SA21A_CODE; own-code control clone=$SA21A_CCL"
+fi
+
+# ── S21b — THE PAIR TRAVELS TOGETHER. Either half alone is refused before any clone; a render
+# carrying neither field proceeds exactly as today.
+SA21B1="$(sa_ptrip s21b1 2 '' 16:30 "$SA_P16")"
+SA21B2="$(sa_ptrip s21b2 '' "$SA_P16" 16:30 "$SA_P16")"
+SA21B3="$(sa_ptrip s21b3 '' '' 16:30 "$SA_P16")"
+read -r SA_B1RC SA_B1CL SA_V SA_C <<<"$(sa_push update "$SA21B1")"
+read -r SA_B2RC SA_B2CL SA_V SA_C <<<"$(sa_push update "$SA21B2")"
+read -r SA_B3RC SA_B3CL SA_V SA_C <<<"$(sa_push update "$SA21B3")"
+if [ "$SA_B1RC" -ne 0 ] && [ "$SA_B1CL" -eq 0 ] && [ "$SA_B2RC" -ne 0 ] && [ "$SA_B2CL" -eq 0 ] && [ "$SA_B3CL" -eq 1 ]; then
+  PASS "S21b: a render carrying the count alone, or the code alone, is refused before any clone; a render carrying neither field reaches the clone, so an undeclared render is unaffected"
+else
+  FAIL "S21b: count-only rc=$SA_B1RC clone=$SA_B1CL; code-only rc=$SA_B2RC clone=$SA_B2CL (both want refusal, no clone); neither-field clone=$SA_B3CL (want 1)"
+fi
+
+# ── S21c — publish refuses the same mismatch before the repo is even probed. CONTROL: a render
+# carrying no approval field still reaches the existence probe, and still dies there (S9a).
+SA21C="$(sa_ptrip s21c 2 "$SA_WRONG" 16:30)"
+read -r SA21C_RC SA_CL SA21C_V SA21C_C <<<"$(sa_push publish "$SA21C")"
+SA21C2="$(sa_ptrip s21c2 '' '' 16:30)"
+read -r SA_RC SA_CL SA21C_CV SA_C <<<"$(sa_push publish "$SA21C2")"
+if [ "$SA21C_RC" -ne 0 ] && [ "$SA21C_V" -eq 0 ] && [ "$SA21C_C" -eq 0 ] && [ "$SA21C_CV" -eq 1 ]; then
+  PASS "S21c: publish ABORTS on a mismatched approval code (rc=$SA21C_RC) before the repo is probed or created; the control, a render with no approval field, reaches the existence probe"
+else
+  FAIL "S21c: mismatch rc=$SA21C_RC view=$SA21C_V create=$SA21C_C (want refusal before both); no-field control view=$SA21C_CV (want 1)"
+fi
+
+# ── S21d — C2: AN APPROVED DECLARED PUSH CARRIES ITS OWN PAIR. The threshold is met for the
+# changed plan, but no approval record was ever written — the state a declaration change reaches
+# with no terminal act — so the site build could only render a pending band with no count or
+# code. update refuses, before any clone, and its message names the refresh at the terminal. The
+# refusal must be C2's rule and not S3's: the state here is `confirmed`, which S3 lets through.
+SA21D="$(sa_ptrip s21d '' '' 16:30 "$SA_P14" pending)"
+sa_declare "$SA21D" 1 zqa1
+sa_rec "$SA21D" zqa1 approve "$SA_P16"
+SA21D_ST="$(sa_state "$SA21D")"
+read -r SA21D_RC SA21D_CL SA_V SA_C <<<"$(sa_push update "$SA21D")"
+SA21D_MSG="$(cat "$WORK/sa_push.err")"
+SA21D_C2=0; case "$SA21D_MSG" in *"carries no approval count or code"*confirm*) SA21D_C2=1 ;; esac
+if [ "$SA21D_ST" = confirmed ] && [ "$SA21D_RC" -ne 0 ] && [ "$SA21D_CL" -eq 0 ] && [ "$SA21D_C2" -eq 1 ]; then
+  PASS "S21d: C2 — a declaring trip whose changed plan is approved (state $SA21D_ST) but whose render carries no approval count or code is refused before any clone, and the refusal is C2's own, naming the terminal refresh; without it the plan would publish behind a pending band with no count or code"
+else
+  FAIL "S21d: state '$SA21D_ST' (want confirmed), rc=$SA21D_RC, clone=$SA21D_CL, C2 message=$SA21D_C2 — an approved declared plan can publish without its pair, or the refusal is not the one C2 specifies"
+fi
+
+# ── S21e — AND THE REFRESH PROCEEDS. confirm at a terminal, pressing Enter at the approver
+# prompt, records nothing and writes the approval record from the verdict; the site rebuilt from
+# that record carries the pair, and update reaches the clone.
+_confirm_has_terminal() { return 0; }
+_iso_now() { printf '2027-06-10T09:00:00Z'; }
+printf '\n' | ( cmd_confirm "$SA21D" ) >/dev/null 2>&1; SA21E_RC=$?
+sa_restore _confirm_has_terminal; sa_restore _iso_now
+SA21E_REC="$(cat "$SA21D/.change-confirmed" 2>/dev/null)"
+SA21E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=1' "$SA_P16")"
+sa_page "$SA21D/outputs/porto-travel-site.html" 1 "$SA_P16" 16:30 updated 2027-06-10
+read -r SA21E_PRC SA21E_CL SA_V SA_C <<<"$(sa_push update "$SA21D")"
+SA21E_NOLEDGER=0; [ "$(wc -l < "$SA21D/.approvals" | tr -d ' ')" -eq 1 ] && SA21E_NOLEDGER=1
+if [ "$SA21E_RC" -eq 0 ] && [ "$SA21E_REC" = "$SA21E_WANT" ] && [ "$SA21E_NOLEDGER" -eq 1 ] && [ "$SA21E_CL" -eq 1 ]; then
+  PASS "S21e: C2's refresh — confirm at a terminal with nothing recorded writes the approval record from the verdict (the plan's code, the act's own time, the count) and adds no ledger line; the site rebuilt from it carries the pair and update reaches the clone"
+else
+  FAIL "S21e: refresh rc=$SA21E_RC, record='${SA21E_REC//$'\n'/ | }' (want the three lines for this plan), ledger untouched=$SA21E_NOLEDGER, push clone=$SA21E_CL"
+fi
+
+# ── S21f — C2 AND #718's F2: A PUSH LONG AFTER THE THRESHOLD WAS MET. The record says the
+# threshold was met on 2027-06-01; a site built eight days later has pruned the `updated` limb, so
+# its render carries neither the band nor the pair. update refuses; the refresh RE-STAMPS
+# confirmed= at its own time, the rebuilt render carries the pair, and the push proceeds.
+SA21F="$(sa_ptrip s21f '' '' 16:30 "$SA_P14" none)"
+sa_declare "$SA21F" 1 zqa1
+sa_rec "$SA21F" zqa1 approve "$SA_P16"
+printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=1\n' "$SA_P16" > "$SA21F/.change-confirmed"
+read -r SA21F_RC SA21F_CL SA_V SA_C <<<"$(sa_push update "$SA21F")"
+_confirm_has_terminal() { return 0; }
+_iso_now() { printf '2027-06-09T09:00:00Z'; }
+printf '\n' | ( cmd_confirm "$SA21F" ) >/dev/null 2>&1
+sa_restore _confirm_has_terminal; sa_restore _iso_now
+SA21F_CONF=''
+while IFS= read -r saline; do case "$saline" in confirmed=*) SA21F_CONF="${saline#confirmed=}" ;; esac; done < "$SA21F/.change-confirmed"
+sa_page "$SA21F/outputs/porto-travel-site.html" 1 "$SA_P16" 16:30 updated 2027-06-09
+read -r SA_RC SA21F_CL2 SA_V SA_C <<<"$(sa_push update "$SA21F")"
+if [ "$SA21F_RC" -ne 0 ] && [ "$SA21F_CL" -eq 0 ] && [ "$SA21F_CONF" = '2027-06-09T09:00:00Z' ] && [ "$SA21F_CL2" -eq 1 ]; then
+  PASS "S21f: a render built after the seven-day window closed carries no pair and update refuses it; the terminal refresh re-stamps confirmed= to its own time ($SA21F_CONF), and the render rebuilt from that record reaches the clone — the pair's window runs from the last terminal act before publication"
+else
+  FAIL "S21f: pruned push rc=$SA21F_RC clone=$SA21F_CL (want refusal), refreshed confirmed='$SA21F_CONF' (want 2027-06-09T09:00:00Z), rebuilt push clone=$SA21F_CL2"
+fi
+
+# ── S21g — CONTROL: C2 reaches no push it was not written for. An undeclared trip whose change
+# the organizer confirmed, and a declaring trip republishing its UNCHANGED plan, both proceed with
+# a render that carries no approval pair.
+SA21G1="$(sa_ptrip s21g1 '' '' 16:30 "$SA_P14" pending)"
+s_record "$SA21G1/.change-confirmed" "$SA_P16" confirmed
+SA21G2="$(sa_ptrip s21g2 '' '' 16:30 "$SA_P16" pending)"
+sa_declare "$SA21G2" 1 zqa1
+sa_rec "$SA21G2" zqa1 approve "$SA_P16"
+SA21G_ST1="$(sa_state "$SA21G1")"; SA21G_ST2="$(sa_state "$SA21G2")"
+read -r SA_RC SA21G_CL1 SA_V SA_C <<<"$(sa_push update "$SA21G1")"
+read -r SA_RC SA21G_CL2 SA_V SA_C <<<"$(sa_push update "$SA21G2")"
+# ARMED-RED: a presence rule that over-reached — requiring the pair on every update — refuses
+# both of these pushes, and this arm convicts it. The guard is saved, overridden and restored.
+require_render_approval_code() { # MUTANT: the pair required on every update
+  local nc nk code
+  read -r nc nk code <<<"$(_render_approval_pair "$2")"
+  if [ "${3:-update}" = update ] && [ "$nc" -eq 0 ]; then die "mutant: no approval pair"; fi
+  return 0
+}
+read -r SA_RC SA21G_M1 SA_V SA_C <<<"$(sa_push update "$SA21G1")"
+read -r SA_RC SA21G_M2 SA_V SA_C <<<"$(sa_push update "$SA21G2")"
+sa_restore require_render_approval_code
+if [ "$SA21G_ST1" = confirmed ] && [ "$SA21G_ST2" = none-pending ] && [ "$SA21G_CL1" -eq 1 ] && [ "$SA21G_CL2" -eq 1 ] && [ "$SA21G_M1" -eq 0 ] && [ "$SA21G_M2" -eq 0 ]; then
+  PASS "S21g: CONTROL — an undeclared trip with an organizer-confirmed change, and a declaring trip republishing its unchanged plan, both reach the clone with a pair-less render: C2's presence rule binds only an approved change on a declaring trip; ARMED-RED — an over-reaching rule requiring the pair on every update refuses both"
+else
+  FAIL "S21g: undeclared '$SA21G_ST1' clone=$SA21G_CL1, declared-unchanged '$SA21G_ST2' clone=$SA21G_CL2 (want 1 and 1); over-reaching mutant clones $SA21G_M1 / $SA21G_M2 (want 0 and 0)"
+fi
+
+# ── S21h–S21k — rotate, THE THIRD PUSH PATH (the scope-lock's F3). rotate writes a new
+# passphrase and then republishes through update, so every refusal #719 adds on update's path is
+# reached through rotate too — AFTER the passphrase write. Each arm asserts the refusal and that
+# nothing was cloned, and MEASURES the residual: the passphrase file was rewritten although nothing
+# was published (#1468's third case, which #719 widens). When #1468 moves the guards ahead of that
+# write, these arms turn red on the residual limb, and that is the signal to re-point them. No
+# passphrase value is ever printed here; the file is compared, not shown.
+sa_rotate() { # <trip> -> "rc clone passphrase-rewritten"; the refusal's text to $WORK/sa_rot.err
+  local d="$1" before after rc ch=0 cl=0 log
+  printf 'zzq-residual-passphrase-before-rotate\n' > "$d/.passphrase"
+  before="$(cat "$d/.passphrase")"
+  : > "$SA_GHLOG"
+  ( cmd_rotate "$d" ) >/dev/null 2>"$WORK/sa_rot.err"; rc=$?
+  after="$(cat "$d/.passphrase" 2>/dev/null)"
+  if [ "$after" != "$before" ]; then ch=1; fi
+  log="$(cat "$SA_GHLOG")"
+  case "$log" in *"repo clone"*) cl=1 ;; esac
+  printf '%s %s %s' "$rc" "$cl" "$ch"
+}
+SA21H="$(sa_ptrip s21h '' '' 16:30 '' pending)"
+sa_declare "$SA21H" 1 zqa1
+read -r SA_HRC SA_HCL SA_HCH <<<"$(sa_rotate "$SA21H")"
+SA_HMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"state: unconfirmed"*) SA_HMSG=1 ;; esac
+SA21H2="$(sa_ptrip s21h2 1 "$SA_P16" 16:30 "$SA_P14")"
+sa_declare "$SA21H2" 1 zqa1
+sa_rec "$SA21H2" zqa1 approve "$SA_P16"
+read -r SA_RC SA_H2CL SA_CH <<<"$(sa_rotate "$SA21H2")"
+if [ "$SA_H2CL" -ne 1 ]; then
+  FAIL "S21h: CONTROL — rotate on an approved declaring trip whose render carries its own pair did not reach the clone, so a refusal below would not be attributable to the state under test"
+elif [ "$SA_HRC" -ne 0 ] && [ "$SA_HCL" -eq 0 ] && [ "$SA_HMSG" -eq 1 ] && [ "$SA_HCH" -eq 1 ]; then
+  PASS "S21h: rotate on a declaring trip with NO baseline and no approvals (#718's FM-2 i) is refused by the gate (state: unconfirmed) before any clone — and the passphrase file was rewritten first, the residual this arm measures; the control, an approved trip carrying its pair, reaches the clone"
+else
+  FAIL "S21h: rotate with no baseline rc=$SA_HRC clone=$SA_HCL refused-as-unconfirmed=$SA_HMSG passphrase-rewritten=$SA_HCH"
+fi
+SA21I="$(sa_ptrip s21i 2 "$SA_WRONG" 16:30 "$SA_P16")"
+read -r SA_IRC SA_ICL SA_ICH <<<"$(sa_rotate "$SA21I")"
+SA_IMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"approval code"*"must be the code of the plan"*) SA_IMSG=1 ;; esac
+if [ "$SA_IRC" -ne 0 ] && [ "$SA_ICL" -eq 0 ] && [ "$SA_IMSG" -eq 1 ] && [ "$SA_ICH" -eq 1 ]; then
+  PASS "S21i: rotate on a render stating another plan's approval code is refused by the code guard before any clone — after the passphrase was rewritten, the measured residual"
+else
+  FAIL "S21i: rotate with a mismatched code rc=$SA_IRC clone=$SA_ICL code-guard-refusal=$SA_IMSG passphrase-rewritten=$SA_ICH"
+fi
+SA21J="$(sa_ptrip s21j 2 '' 16:30 "$SA_P16")"
+read -r SA_JRC SA_JCL SA_JCH <<<"$(sa_rotate "$SA21J")"
+SA_JMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"travels together"*) SA_JMSG=1 ;; esac
+if [ "$SA_JRC" -ne 0 ] && [ "$SA_JCL" -eq 0 ] && [ "$SA_JMSG" -eq 1 ] && [ "$SA_JCH" -eq 1 ]; then
+  PASS "S21j: rotate on a render carrying half the approval pair is refused by the code guard before any clone — after the passphrase was rewritten, the measured residual"
+else
+  FAIL "S21j: rotate with half a pair rc=$SA_JRC clone=$SA_JCL pair-refusal=$SA_JMSG passphrase-rewritten=$SA_JCH"
+fi
+SA21K="$(sa_ptrip s21k '' '' 16:30 "$SA_P14" pending)"
+sa_declare "$SA21K" 1 zqa1
+sa_rec "$SA21K" zqa1 approve "$SA_P16"
+read -r SA_KRC SA_KCL SA_KCH <<<"$(sa_rotate "$SA21K")"
+SA_KMSG=0; case "$(cat "$WORK/sa_rot.err")" in *"carries no approval count or code"*) SA_KMSG=1 ;; esac
+if [ "$SA_KRC" -ne 0 ] && [ "$SA_KCL" -eq 0 ] && [ "$SA_KMSG" -eq 1 ] && [ "$SA_KCH" -eq 1 ]; then
+  PASS "S21k: rotate on an approved declaring trip whose render carries no pair is refused by C2's own rule before any clone — after the passphrase was rewritten, the measured residual"
+else
+  FAIL "S21k: rotate with an approved plan and no pair rc=$SA_KRC clone=$SA_KCL C2-refusal=$SA_KMSG passphrase-rewritten=$SA_KCH"
+fi
+
+# ── S21l — #719's Stage 7 F-01: AN APPROVED DECLARED CHANGE WITH NO CHANGE-SUMMARY ENTRY PUBLISHES.
+# THE RENDER IS BUILT THROUGH THE MAPPING, never by hand. sa_build takes the state and its date from
+# group T's own resolver — t8_state_at_build, which is t6_state's limbs and then the prune, over the
+# record, the window and the null token read from the documents — and the approval pair from that
+# record on an `updated` render alone. sa_page is only the printer: every coordination value it
+# prints is the mapping's. S21d–S21f pass those values in by hand, which is why no arm could see a
+# mapping that resolves `none` where C2's presence rule requires the pair.
+#
+# THE SUBJECT: two declaring trips whose changed plan is approved — one with no change summary at
+# all, one whose summary holds no entry. The first build resolves `none` and update refuses it with
+# C2's message; the terminal refresh that message names writes the approval record; the rebuilt
+# render resolves `updated`, carries the pair, and update reaches the clone. ARMED-RED: under
+# t6_state's earlier body — no entry reads `none` before the record is read — the same refreshed
+# fixture builds a pair-less render and update refuses it again: the refresh cannot converge. The
+# mutant is saved, swapped in and restored inside this arm. CONTROL — the undeclared path is
+# unchanged: an undeclared trip whose organizer confirmed a change, with no entry, builds
+# byte-identically under both resolvers, reads `none`, carries no pair, and reaches the clone.
+sa_build() { # <trip> <plan-time> <build-YYYY-MM-DD> — writes the render through the mapping; prints the state
+  local d="$1" st since="" cnt="" code="" line
+  st="$(t8_state_at_build "$d" "$T6_DOCREC" "$3" "$T8_W" "$T8_NONE")"
+  case "$st" in
+    pending) since="$(t6_newest_entry "$d/outputs/change-summary.md")" ;;
+    updated)
+      since="$(t8_since "$d" "$T6_DOCREC")"
+      if [ -r "$d/$(t6_rel "$T6_DOCREC")" ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+          case "$line" in
+            digest=*)         code="${line#digest=}" ;;
+            approval-count=*) cnt="${line#approval-count=}" ;;
+          esac
+        done < "$d/$(t6_rel "$T6_DOCREC")"
+      fi
+      case "$cnt" in ''|*[!0123456789]*) cnt=""; code="" ;; esac ;;
+  esac
+  sa_page "$d/outputs/porto-travel-site.html" "$cnt" "$code" "$2" "${st:-zzq-unresolved}" "$since"
+  printf '%s' "$st"
+}
+SA21L1="$WORK/sa-s21l1"; SA21L2="$WORK/sa-s21l2"
+mkdir -p "$SA21L1/outputs" "$SA21L2/outputs"
+{
+  printf -- '---\nartifact: outputs/change-summary.md\nschema-version: 1\ntrip: s21l-fixture\n'
+  printf -- 'writer: hub\nlifecycle: accumulate-append\nprovenance: derived\n'
+  printf -- 'publish: internal\ngenerated: 2027-06-10\nstatus: pending\n---\n'
+} > "$SA21L2/outputs/change-summary.md"
+SA21L_PRE_OK=0; SA21L_POST_OK=0; SA21L_MUT_OK=0; SA21L_DETAIL=""
+for sad in "$SA21L1" "$SA21L2"; do
+  s_record "$sad/.published-itinerary" "$SA_P14" published
+  sa_declare "$sad" 1 zqa1
+  sa_rec "$sad" zqa1 approve "$SA_P16"
+  sast1="$(sa_build "$sad" 16:30 2027-06-10)"
+  read -r sarc1 sacl1 SA_V SA_C <<<"$(sa_push update "$sad")"
+  samsg1=0; case "$(cat "$WORK/sa_push.err")" in *"carries no approval count or code"*) samsg1=1 ;; esac
+  _confirm_has_terminal() { return 0; }
+  _iso_now() { printf '2027-06-10T09:00:00Z'; }
+  printf '\n' | ( cmd_confirm "$sad" ) >/dev/null 2>&1
+  sa_restore _confirm_has_terminal; sa_restore _iso_now
+  sast2="$(sa_build "$sad" 16:30 2027-06-10)"
+  read -r sanc sank sacode <<<"$(_render_approval_pair "$sad/outputs/porto-travel-site.html")"
+  read -r sarc2 sacl2 SA_V SA_C <<<"$(sa_push update "$sad")"
+  SA21L_DETAIL="$SA21L_DETAIL [$(basename "$sad"): first build '$sast1' rc=$sarc1 clone=$sacl1 C2=$samsg1; rebuilt '$sast2' pair=$sanc/$sank code-own=$([ "$sacode" = "$SA_P16" ] && echo 1 || echo 0) rc=$sarc2 clone=$sacl2]"
+  if [ "$sast1" = none ] && [ "$sarc1" -ne 0 ] && [ "$sacl1" -eq 0 ] && [ "$samsg1" -eq 1 ]; then SA21L_PRE_OK=$((SA21L_PRE_OK+1)); fi
+  if [ "$sast2" = updated ] && [ "$sanc" -eq 1 ] && [ "$sank" -eq 1 ] && [ "$sacode" = "$SA_P16" ] && [ "$sacl2" -eq 1 ]; then SA21L_POST_OK=$((SA21L_POST_OK+1)); fi
+done
+# The undeclared control: an organizer-confirmed change, no entry, built under the resolver as it is.
+SA21L3="$WORK/sa-s21l3"; mkdir -p "$SA21L3/outputs"
+s_record "$SA21L3/.published-itinerary" "$SA_P14" published
+s_record "$SA21L3/.change-confirmed" "$SA_P16" confirmed
+SA21L3_ST="$(sa_build "$SA21L3" 16:30 2027-06-10)"
+cp "$SA21L3/outputs/porto-travel-site.html" "$WORK/sa21l3_now.html"
+read -r SA_RC SA21L3_CL SA_V SA_C <<<"$(sa_push update "$SA21L3")"
+# ARMED-RED — the mapping's earlier resolver, swapped in and restored.
+SA21L_T6_SAVED="$(declare -f t6_state)"
+t6_state() { # MUTANT: t6_state's earlier body — with no entry it reads `none` before the record is read
+  local dir="$1" rel line c="" e=""
+  rel="$(t6_rel "$2")"
+  e="$(t6_newest_entry "$dir/outputs/change-summary.md")"
+  if [ -z "$e" ]; then printf 'none'; return 0; fi
+  if [ -n "$(_record_digest "$dir/$rel")" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in confirmed=*) c="${line#confirmed=}"; c="${c:0:10}"; break ;; esac
+    done < "$dir/$rel"
+  fi
+  if [ -z "$c" ]; then printf 'pending'; return 0; fi
+  if [[ "$e" > "$c" ]]; then printf 'pending'; return 0; fi
+  printf 'updated'
+}
+SA21L_MST="$(sa_build "$SA21L1" 16:30 2027-06-10)"
+read -r SA21L_MRC SA21L_MCL SA_V SA_C <<<"$(sa_push update "$SA21L1")"
+SA21L_MMSG=0; case "$(cat "$WORK/sa_push.err")" in *"carries no approval count or code"*) SA21L_MMSG=1 ;; esac
+sa_build "$SA21L3" 16:30 2027-06-10 >/dev/null
+SA21L3_SAME=0; cmp -s "$WORK/sa21l3_now.html" "$SA21L3/outputs/porto-travel-site.html" && SA21L3_SAME=1
+eval "$SA21L_T6_SAVED"
+SA21L_T6_BACK=0; [ "$(declare -f t6_state)" = "$SA21L_T6_SAVED" ] && SA21L_T6_BACK=1
+if [ "$SA21L_MST" = none ] && [ "$SA21L_MRC" -ne 0 ] && [ "$SA21L_MCL" -eq 0 ] && [ "$SA21L_MMSG" -eq 1 ]; then SA21L_MUT_OK=1; fi
+if [ "$SA21L_PRE_OK" -eq 2 ] && [ "$SA21L_POST_OK" -eq 2 ] && [ "$SA21L_MUT_OK" -eq 1 ] && [ "$SA21L3_ST" = none ] && [ "$SA21L3_CL" -eq 1 ] && [ "$SA21L3_SAME" -eq 1 ] && [ "$SA21L_T6_BACK" -eq 1 ]; then
+  PASS "S21l: F-01 — with no change-summary entry (absent, and present but empty), an approved declared change builds through the mapping to 'none' and update refuses it naming the refresh; after that refresh the rebuilt render resolves 'updated', carries its own count and code, and update reaches the clone — the refusal converges. ARMED-RED: under t6_state's earlier body the refreshed fixture still builds 'none' and update refuses it; CONTROL: an undeclared trip with no entry builds byte-identically under both resolvers, reads 'none' and reaches the clone"
+else
+  FAIL "S21l: before-refresh refusals $SA21L_PRE_OK/2, after-refresh publishes $SA21L_POST_OK/2 (want 2 and 2)$SA21L_DETAIL; earlier-resolver mutant state '$SA21L_MST' rc=$SA21L_MRC clone=$SA21L_MCL C2=$SA21L_MMSG (want none, refusal); undeclared control '$SA21L3_ST' clone=$SA21L3_CL byte-identical=$SA21L3_SAME (want none, 1, 1); t6_state restored=$SA21L_T6_BACK"
+fi
+# The mocks are withdrawn here, and their text is kept for S23i, the one later arm that pushes: it
+# re-evaluates them and withdraws them again itself, so S26a still finds neither left defined.
+SA_MOCK_GH="$(declare -f gh)"; SA_MOCK_NPX="$(declare -f npx)"
+unset -f gh npx
+
+# ── S22a — INDEPENDENT OF engagement(t) (ADR-025 § 1, ADR-029 § Decision 4). One approver's
+# entry in the derived traveller model moves from unmarked to [OPERATOR-PROVIDED] to
+# [OPERATOR-PROVIDED] [THIRD-PARTY], and then their traveller file gains a person: reference. The
+# token and the tally are the same across all four states; the four states do differ in bytes.
+SA22="$(sa_trip s22 16:30 "$S_DA")"
+sa_declare "$SA22" 2 zqa1 zqb2
+sa_rec "$SA22" zqa1 approve "$S_DB"; sa_rec "$SA22" zqb2 approve "$S_DB"
+mkdir -p "$SA22/travelers"
+SA22_TOK=""; SA22_SNAP=""
+for sastate in 1 2 3 4; do
+  case "$sastate" in
+    1) printf '## Zqa1\n- Mobility: no stairs\n' > "$SA22/outputs/traveler-model.md"; printf '# Zqa1\n' > "$SA22/travelers/zqa1.md" ;;
+    2) printf '## Zqa1 [OPERATOR-PROVIDED]\n- Mobility: no stairs\n' > "$SA22/outputs/traveler-model.md" ;;
+    3) printf '## Zqa1 [OPERATOR-PROVIDED] [THIRD-PARTY]\n- Mobility: no stairs\n' > "$SA22/outputs/traveler-model.md" ;;
+    4) printf -- '---\nperson: psn-zqa1\n---\n# Zqa1\n' > "$SA22/travelers/zqa1.md" ;;
+  esac
+  SA22_TOK="$SA22_TOK $(sa_state "$SA22")/$(_approval_tally "$SA22" "$S_DB" | tr ' ' ',')"
+  SA22_SNAP="$SA22_SNAP|$(cat "$SA22/outputs/traveler-model.md" "$SA22/travelers/zqa1.md" | _digest_of)"
+done
+SA22_DISTINCT="$(printf '%s\n' "${SA22_SNAP#|}" | tr '|' '\n' | sort -u | wc -l | tr -d ' ')"
+if [ "$SA22_TOK" = ' confirmed/2,2,0 confirmed/2,2,0 confirmed/2,2,0 confirmed/2,2,0' ] && [ "$SA22_DISTINCT" -eq 4 ]; then
+  PASS "S22a: across four engagement states of one approver — unmarked, operator-provided, third-party, and a person: reference added — the token and the tally are identical (confirmed, 2 of 2), while the four states are $SA22_DISTINCT distinct byte states: no approval verdict reads engagement"
+else
+  FAIL "S22a: tokens/tallies across the four states:$SA22_TOK (want confirmed/2,2,0 four times); distinct byte states $SA22_DISTINCT (want 4)"
+fi
+
+# ── S22b — the same property read from the PARSED bodies: S2 and every function it calls, and the
+# recording act's functions, name no traveller file, person record, derived model or provenance
+# mark. Sensitivity: the class-source function that does read the derived model names it.
+# Specificity: a fabricated token is in none of them.
+SA22_FNS='change_confirmation_state _approval_policy _approvers_grammar _approvals_grammar _approval_tally _baseline_matches _legacy_itinerary_digest _legacy_digest_of itinerary_digest strip_to_itinerary_text _digest_of _record_digest published_itinerary_path change_confirmation_path approver_declaration_path approval_ledger_path resolve_site_html _confirm_declared _approval_line_parse _ledger_append _record_threshold_met _published_record_date _undecided_entry'
+SA22_EMPTY=0; SA22_HIT=""; SA22_SPEC=0; SA22_N=0
+for safn in $SA22_FNS; do
+  SA22_N=$((SA22_N+1))
+  sabody="$(declare -f "$safn" 2>/dev/null)"
+  if [ -z "$sabody" ]; then SA22_EMPTY=$((SA22_EMPTY+1)); fi
+  for satok in traveler-model travelers/ people/ OPERATOR-PROVIDED THIRD-PARTY; do
+    case "$sabody" in *"$satok"*) SA22_HIT="$SA22_HIT $safn:$satok" ;; esac
+  done
+  case "$sabody" in *zzq-fabricated-s22b*) SA22_SPEC=$((SA22_SPEC+1)) ;; esac
+done
+SA22_SENS=0; case "$(declare -f nonpublishable_values)" in *traveler-model*) SA22_SENS=1 ;; esac
+if [ "$SA22_EMPTY" -eq 0 ] && [ -z "$SA22_HIT" ] && [ "$SA22_SENS" -eq 1 ] && [ "$SA22_SPEC" -eq 0 ]; then
+  PASS "S22b: the parsed bodies of all $SA22_N functions on the gate's and the recording act's paths name no traveller file, person record, derived model or provenance mark; the sensitivity arm finds the derived model in nonpublishable_values, and a fabricated token is in none"
+else
+  FAIL "S22b: empty bodies=$SA22_EMPTY, hits:${SA22_HIT:- none}, sensitivity=$SA22_SENS, specificity=$SA22_SPEC"
+fi
+
+# ── S23a — THE THRESHOLD-MET RECORD, AS C2 CORRECTED IT: the record mirrors the verdict. Threshold
+# 2 of 3, with the clock pinned at each act: below the threshold nothing is written; the act that
+# meets it writes the three lines with confirmed= at its own instant; a later act while met
+# RE-STAMPS confirmed= (the design had kept the first stamp — C2 moved it to the last terminal act
+# before publication); and a withdrawal that drops below the threshold rewrites the count alone.
+SA23="$(sa_trip s23 16:30 "$S_DA")"
+sa_declare "$SA23" 2 zqa1 zqb2 zqc3
+_iso_now() { printf '%s' "$SA23_NOW"; }
+SA23_NOW='2027-06-01T09:00:00Z'; sa_rec "$SA23" zqa1 approve "$S_DB"; _record_threshold_met "$SA23" "$S_DB"
+SA23_R1=0; [ -e "$SA23/.change-confirmed" ] && SA23_R1=1
+SA23_NOW='2027-06-02T09:00:00Z'; sa_rec "$SA23" zqb2 approve "$S_DB"; _record_threshold_met "$SA23" "$S_DB"
+SA23_R2="$(cat "$SA23/.change-confirmed" 2>/dev/null)"
+SA23_NOW='2027-06-03T09:00:00Z'; sa_rec "$SA23" zqc3 approve "$S_DB"; _record_threshold_met "$SA23" "$S_DB"
+SA23_R3="$(cat "$SA23/.change-confirmed" 2>/dev/null)"
+SA23_NOW='2027-06-04T09:00:00Z'; sa_rec "$SA23" zqc3 withdraw "$S_DB"; sa_rec "$SA23" zqb2 withdraw "$S_DB"; _record_threshold_met "$SA23" "$S_DB"
+SA23_R4="$(cat "$SA23/.change-confirmed" 2>/dev/null)"
+sa_restore _iso_now
+SA23_W2="$(printf 'digest=%s\nconfirmed=2027-06-02T09:00:00Z\napproval-count=2' "$S_DB")"
+SA23_W3="$(printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=3' "$S_DB")"
+SA23_W4="$(printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=1' "$S_DB")"
+if [ "$SA23_R1" -eq 0 ] && [ "$SA23_R2" = "$SA23_W2" ] && [ "$SA23_R3" = "$SA23_W3" ] && [ "$SA23_R4" = "$SA23_W4" ]; then
+  PASS "S23a: below the threshold no record is written; the act that meets it writes digest=, confirmed= at its instant and approval-count=; a later act while met re-stamps confirmed= to its own instant (C2); a withdrawal below the threshold rewrites only the count, keeping confirmed= — the record mirrors the verdict, and names nobody"
+else
+  FAIL "S23a: after the first approval a record existed=$SA23_R1 (want 0); after meeting [${SA23_R2//$'\n'/ | }]; after a later approval [${SA23_R3//$'\n'/ | }]; after withdrawals [${SA23_R4//$'\n'/ | }]"
+fi
+
+# ── S23b — THE UNDECLARED WRITE IS UNCHANGED: the format group T reads out of cmd_confirm's own
+# body is still exactly the two-line record, so T6's extractor still reads the undeclared limb.
+SA23B_FMT="$(t6_confirm_fmt)"
+# ARMED-RED: over a copy of the script whose cmd_confirm writes the declared record FIRST, the same
+# extractor reads the three-line format — so this arm sees the regression it guards against.
+SA23B_MUT="$WORK/sa23b_mut.sh"; : > "$SA23B_MUT"
+while IFS= read -r saline || [ -n "$saline" ]; do
+  printf '%s\n' "$saline" >> "$SA23B_MUT"
+  case "$saline" in
+    'cmd_confirm() {'*) printf '%s\n' "  printf 'digest=%s\\nconfirmed=%s\\napproval-count=%s\\n' 1 2 3 >/dev/null" >> "$SA23B_MUT" ;;
+  esac
+done < "$SELF_PUBLISH"
+SA23B_SELF="$SELF_PUBLISH"; SELF_PUBLISH="$SA23B_MUT"
+SA23B_MUTFMT="$(t6_confirm_fmt)"
+SELF_PUBLISH="$SA23B_SELF"
+if [ "$SA23B_FMT" = 'digest=%s\nconfirmed=%s\n' ] && [ "$SA23B_MUTFMT" = 'digest=%s\nconfirmed=%s\napproval-count=%s\n' ]; then
+  PASS "S23b: t6_confirm_fmt reads '$SA23B_FMT' out of cmd_confirm — the first record write in its own body is still the organizer's two-line confirmation, and the declared writer sits outside it; ARMED-RED — over a copy whose cmd_confirm writes the declared record first, it reads the three-line format"
+else
+  FAIL "S23b: t6_confirm_fmt read '$SA23B_FMT' (want the two-line format) and over the mutated copy '$SA23B_MUTFMT' (want the three-line format)"
+fi
+
+# ── S23c — the record the declared writer produces decides `updated` under group T's own
+# resolver, so the notice clears on a declaring trip exactly as it does on any other.
+SA23C="$(t6_trip "$WORK/sa-s23c" 2027-05-30)"
+s_render "$SA23C/outputs/porto-travel-site.html" 16:30 none
+sa_declare "$SA23C" 1 zqa1
+sa_rec "$SA23C" zqa1 approve "$S_DB"
+_iso_now() { printf '2027-06-02T09:00:00Z'; }
+_record_threshold_met "$SA23C" "$S_DB"
+sa_restore _iso_now
+SA23C_ST="$(t6_state "$SA23C" "$T6_DOCREC")"
+if [ "$SA23C_ST" = updated ]; then
+  PASS "S23c: t6_state over a record _record_threshold_met wrote resolves 'updated' — the declared record clears a pending entry raised before it, as the organizer's does"
+else
+  FAIL "S23c: t6_state over the declared record resolved '$SA23C_ST' (want updated) — the notice would latch on a declaring trip"
+fi
+
+# The declared branch driven end to end: terminal test stubbed, clock pinned, prompts fed from a
+# fixture, and every stub withdrawn before the caller reads the result.
+sa_confirm() { # <trip> <stdin-text> <now> -> the exit status
+  local rc
+  _confirm_has_terminal() { return 0; }
+  _iso_now() { printf '%s' "$SA_CONF_NOW"; }
+  SA_CONF_NOW="$3"
+  printf '%s\n' "$2" | ( cmd_confirm "$1" ) >"$WORK/sa_conf.out" 2>"$WORK/sa_conf.err"; rc=$?
+  sa_restore _confirm_has_terminal; sa_restore _iso_now
+  return "$rc"
+}
+
+# ── S23d — C1: A WITHDRAWAL AFTER PUBLICATION IS RECORDABLE. The plan is published and its
+# approvals met the threshold; a traveller withdraws. confirm records it against the published
+# plan — exactly one ledger line — the record's count drops and its date stays, and the gate still
+# reads the published plan unchanged. Before C1, confirm refused here with "nothing to confirm".
+SA23D="$(sa_trip s23d 16:30 "$S_DB")"
+sa_declare "$SA23D" 2 zqa1 zqb2
+sa_rec "$SA23D" zqa1 approve "$S_DB"; sa_rec "$SA23D" zqb2 approve "$S_DB"
+printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=2\n' "$S_DB" > "$SA23D/.change-confirmed"
+SA23D_PRE="$(wc -l < "$SA23D/.approvals" | tr -d ' ')"
+sa_confirm "$SA23D" "$(printf '1\nwithdraw %s\nCONFIRM\n' "$S_DB")" '2027-06-05T09:00:00Z'; SA23D_RC=$?
+SA23D_POST="$(wc -l < "$SA23D/.approvals" | tr -d ' ')"
+SA23D_LAST=''; while IFS= read -r saline; do SA23D_LAST="$saline"; done < "$SA23D/.approvals"
+SA23D_REC="$(cat "$SA23D/.change-confirmed")"
+SA23D_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=1' "$S_DB")"
+SA23D_ST="$(sa_state "$SA23D")"
+if [ "$SA23D_RC" -eq 0 ] && [ $((SA23D_POST - SA23D_PRE)) -eq 1 ] && [ "$SA23D_LAST" = "organizer-stated zqa1 withdraw $S_DB 2027-06-05T09:00:00Z" ] && [ "$SA23D_REC" = "$SA23D_WANT" ] && [ "$SA23D_ST" = none-pending ]; then
+  PASS "S23d: C1 — on a published plan, confirm records a withdrawal as exactly one organizer-stated ledger line, the approval record's count drops to 1 with its date kept, and the gate still reads the published plan unchanged (none-pending); the site's count changes at the next rebuild"
+else
+  FAIL "S23d: rc=$SA23D_RC, ledger lines $SA23D_PRE -> $SA23D_POST, last '$SA23D_LAST', record [${SA23D_REC//$'\n'/ | }], state '$SA23D_ST' — a withdrawal after publication is not recordable as C1 requires"
+fi
+
+# ── S23e — C1: A REVERTED PLAN RE-ANCHORS AT THE TERMINAL. Approvals were recorded for a plan
+# that was then abandoned — the record names it — and the working copy is back on the published
+# plan, whose own approvals meet the threshold. confirm, recording nothing, re-anchors the record
+# to the published plan rather than leaving the site stating the abandoned plan's code.
+SA23E="$(sa_trip s23e 14:00 "$S_DA")"
+sa_declare "$SA23E" 1 zqa1
+sa_rec "$SA23E" zqa1 approve "$S_DA"; sa_rec "$SA23E" zqa1 approve "$S_DB"
+printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=1\n' "$S_DB" > "$SA23E/.change-confirmed"
+sa_confirm "$SA23E" $'\n' '2027-06-06T09:00:00Z'; SA23E_RC=$?
+SA23E_REC="$(cat "$SA23E/.change-confirmed")"
+SA23E_WANT="$(printf 'digest=%s\nconfirmed=2027-06-06T09:00:00Z\napproval-count=1' "$S_DA")"
+if [ "$SA23E_RC" -eq 0 ] && [ "$SA23E_REC" = "$SA23E_WANT" ]; then
+  PASS "S23e: C1 — with the plan reverted to the published one and that plan's own approvals meeting the threshold, confirm (recording nothing) re-anchors the approval record to the published plan, dated at the act; the abandoned plan's code leaves the next build"
+else
+  FAIL "S23e: rc=$SA23E_RC, record [${SA23E_REC//$'\n'/ | }] — the reverted plan did not re-anchor, so the site keeps the abandoned code and every push refuses until the window closes"
+fi
+
+# ── S23f — C1: THE RETIRE, and what refusing it leaves. On a trip published before its
+# declaration existed, the published plan has no approvals of its own; the record names an
+# abandoned plan. Declining the offer writes nothing. Accepting it rewrites the record to name the
+# published plan with no approval count, and keeps the replaced bytes beside it.
+SA23F="$(sa_trip s23f 14:00 "$S_DA")"
+sa_declare "$SA23F" 1 zqa1
+sa_rec "$SA23F" zqa1 approve "$S_DB"
+printf 'digest=%s\nconfirmed=2027-06-03T09:00:00Z\napproval-count=1\n' "$S_DB" > "$SA23F/.change-confirmed"
+cp "$SA23F/.change-confirmed" "$WORK/sa23f.before"
+sa_confirm "$SA23F" "$(printf '\nno\n')" '2027-06-07T09:00:00Z'; SA23F_RC1=$?
+SA23F_SAME=0; cmp -s "$WORK/sa23f.before" "$SA23F/.change-confirmed" && SA23F_SAME=1
+SA23F_KEPT1=0; for saf in "$SA23F"/.change-confirmed.replaced-*; do [ -e "$saf" ] && SA23F_KEPT1=$((SA23F_KEPT1+1)); done
+sa_confirm "$SA23F" "$(printf '\nCONFIRM\n')" '2027-06-07T09:00:00Z'; SA23F_RC2=$?
+SA23F_REC="$(cat "$SA23F/.change-confirmed")"
+SA23F_WANT="$(printf 'digest=%s\nconfirmed=2027-06-07T09:00:00Z' "$S_DA")"
+SA23F_KEPT=0; SA23F_KEPTSAME=0
+for saf in "$SA23F"/.change-confirmed.replaced-*; do
+  if [ -e "$saf" ]; then SA23F_KEPT=$((SA23F_KEPT+1)); cmp -s "$saf" "$WORK/sa23f.before" && SA23F_KEPTSAME=1; fi
+done
+if [ "$SA23F_RC1" -eq 0 ] && [ "$SA23F_SAME" -eq 1 ] && [ "$SA23F_KEPT1" -eq 0 ] && [ "$SA23F_RC2" -eq 0 ] && [ "$SA23F_REC" = "$SA23F_WANT" ] && [ "$SA23F_KEPT" -eq 1 ] && [ "$SA23F_KEPTSAME" -eq 1 ]; then
+  PASS "S23f: C1 — declining the retire leaves the record byte-identical and keeps no copy; accepting it rewrites the record to name the published plan with no approval count, dated at the act, and keeps the replaced record beside it byte for byte (ADR-007 § 2's replace-with-preservation shape)"
+else
+  FAIL "S23f: declined rc=$SA23F_RC1 unchanged=$SA23F_SAME copies=$SA23F_KEPT1; accepted rc=$SA23F_RC2 record [${SA23F_REC//$'\n'/ | }] copies=$SA23F_KEPT identical=$SA23F_KEPTSAME"
+fi
+
+# ── S23g — CONTROL: a trip that declares no approvers is untouched by C1. confirm on its
+# unchanged plan still refuses with the shipped "nothing to confirm" message, word for word, and
+# writes nothing.
+SA23G="$(sa_trip s23g 14:00 "$S_DA")"
+SA23G_ERR="$( ( cmd_confirm "$SA23G" ) </dev/null 2>&1 >/dev/null )"; SA23G_RC=$?
+SA23G_SHIPPED="nothing to confirm for $SA23G — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+SA23G_SAME=0; case "$SA23G_ERR" in *"$SA23G_SHIPPED") SA23G_SAME=1 ;; esac
+# ARMED-RED: were the declared branch taken by a trip that declares nothing, the shipped refusal
+# would be gone — injected by a policy that answers `declared` for every trip, then restored.
+_approval_policy() { printf declared; }
+SA23G_MERR="$( ( cmd_confirm "$SA23G" ) </dev/null 2>&1 >/dev/null )"
+sa_restore _approval_policy
+SA23G_MSAME=0; case "$SA23G_MERR" in *"$SA23G_SHIPPED") SA23G_MSAME=1 ;; esac
+if [ "$SA23G_RC" -ne 0 ] && [ "$SA23G_SAME" -eq 1 ] && [ ! -e "$SA23G/.change-confirmed" ] && [ ! -e "$SA23G/.approvals" ] && [ "$SA23G_MSAME" -eq 0 ]; then
+  PASS "S23g: CONTROL — on a trip that declares no approvers, confirm over an unchanged plan still refuses with the shipped 'nothing to confirm' message word for word and writes nothing; C1's reordering reaches the declared branch alone. ARMED-RED — a policy answering 'declared' for this trip loses that message"
+else
+  FAIL "S23g: an undeclared trip's confirm returned rc=$SA23G_RC with the shipped message=$SA23G_SAME (want 1); under the all-declared mutant the message survived=$SA23G_MSAME (want 0)"
+fi
+
+# ── S23h — #719's Stage 7 F-02: ONCE THE PLAN IS PUBLISHED, A TERMINAL ACT KEEPS THE DATE. The plan
+# is published — the baseline is its own digest — and the approval record names it: 3 of 3 approved
+# at 2 of 3, dated 2027-06-01. A withdrawal that keeps the threshold met, and then a bare Enter, each
+# rewrite the count alone and keep confirmed=, so no later act revives a recently-updated notice for
+# a plan that did not change; and confirm no longer tells the organizer the record is dated now.
+# CONTROL — the plan not yet published (C2's T + 8 case, S21f's shape): the same bare Enter still
+# re-stamps confirmed= at its own time, so a late push can be preceded by a refresh. ARMED-RED — with
+# _baseline_matches answering "not published", the same bare Enter on a fresh copy moves the date:
+# this arm sees the re-stamp it guards against. The stub is withdrawn here, and S26a checks it.
+sa23h_fixture() { # <name> <baseline-digest> -> a declaring trip, 3 of 3 approved at 2 of 3, record dated 06-01
+  local d
+  d="$(sa_trip "$1" 16:30 "$2")"
+  sa_declare "$d" 2 zqa1 zqb2 zqc3
+  for sak in zqa1 zqb2 zqc3; do sa_rec "$d" "$sak" approve "$S_DB"; done
+  printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3\n' "$S_DB" > "$d/.change-confirmed"
+  printf '%s' "$d"
+}
+SA23H="$(sa23h_fixture s23h "$S_DB")"
+sa_confirm "$SA23H" "$(printf '3\nwithdraw %s\nCONFIRM\n' "$S_DB")" '2027-06-21T09:00:00Z'; SA23H_RC1=$?
+SA23H_R1="$(cat "$SA23H/.change-confirmed")"
+sa_confirm "$SA23H" $'\n' '2027-06-23T09:00:00Z'; SA23H_RC2=$?
+SA23H_R2="$(cat "$SA23H/.change-confirmed")"
+SA23H_NOW=0; case "$(cat "$WORK/sa_conf.out")" in *"dated now"*) SA23H_NOW=1 ;; esac
+SA23H_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=2' "$S_DB")"
+SA23H_ST="$(sa_state "$SA23H")"
+SA23H2="$(sa23h_fixture s23h2 "$S_DA")"
+sa_confirm "$SA23H2" $'\n' '2027-06-23T09:00:00Z'; SA23H_RC3=$?
+SA23H_R3="$(cat "$SA23H2/.change-confirmed")"
+SA23H_WANT3="$(printf 'digest=%s\nconfirmed=2027-06-23T09:00:00Z\napproval-count=3' "$S_DB")"
+SA23H3="$(sa23h_fixture s23h3 "$S_DB")"
+_baseline_matches() { return 1; }   # MUTANT: the published plan reads as not yet published
+sa_confirm "$SA23H3" $'\n' '2027-06-23T09:00:00Z'
+sa_restore _baseline_matches
+SA23H_MKEPT=0; case "$(cat "$SA23H3/.change-confirmed")" in *'confirmed=2027-06-01T09:00:00Z'*) SA23H_MKEPT=1 ;; esac
+if [ "$SA23H_RC1" -eq 0 ] && [ "$SA23H_R1" = "$SA23H_WANT" ] && [ "$SA23H_RC2" -eq 0 ] && [ "$SA23H_R2" = "$SA23H_WANT" ] && [ "$SA23H_NOW" -eq 0 ] && [ "$SA23H_ST" = none-pending ] && [ "$SA23H_RC3" -eq 0 ] && [ "$SA23H_R3" = "$SA23H_WANT3" ] && [ "$SA23H_MKEPT" -eq 0 ]; then
+  PASS "S23h: F-02 — on a published plan at 2 of 3, a withdrawal that keeps the threshold met and then a bare Enter each rewrite only the count (3 -> 2) and keep confirmed= at 2027-06-01, confirm does not say the record is dated now, and the gate still reads the plan unchanged; CONTROL — before publication the same bare Enter re-stamps confirmed= to its own time (C2's T + 8 case); ARMED-RED — with the plan read as unpublished the date moves"
+else
+  FAIL "S23h: withdrawal rc=$SA23H_RC1 record [${SA23H_R1//$'\n'/ | }]; bare Enter rc=$SA23H_RC2 record [${SA23H_R2//$'\n'/ | }] (want both [${SA23H_WANT//$'\n'/ | }]); 'dated now' printed=$SA23H_NOW (want 0); state '$SA23H_ST' (want none-pending); unpublished control rc=$SA23H_RC3 record [${SA23H_R3//$'\n'/ | }] (want [${SA23H_WANT3//$'\n'/ | }]); unpublished-reading mutant kept the date=$SA23H_MKEPT (want 0)"
+fi
+
+# ── S23i — #719's item 8, THE ABANDONED-CHANGE EXIT (the operator's decision, option B). A change
+# raised after the published plan's approval record was dated, and abandoned before any approval,
+# leaves an entry the mapping reads as undecided while the working copy is back on the published
+# plan: the band reads `pending`, and under item 7's kept date alone no terminal act clears it. The
+# fixture: a declaring trip at 2 of 3 whose plan is published and approved by all three, its record
+# dated 2027-06-01, with the plan's own entry (2027-05-30) and the abandoned change's (2027-06-05) in
+# its change summary. SUBJECT: a bare Enter on 2027-06-10 re-stamps confirmed= at the act, adds no
+# ledger line and says "dated now"; the render built THROUGH THE MAPPING on 2027-06-11 (sa_build)
+# resolves `updated` · 2027-06-10 with the plan's own count and code; update passes both guards and
+# reaches the clone; and the gate reads the published plan unchanged before and after. ARMED-RED:
+# with _undecided_entry reading no entry — the writer as it stood before this exit — the same Enter
+# on a fresh copy keeps 2027-06-01 and the rebuilt band stays `pending`. CONTROLS: entries dated
+# 2027-05-30 and the approval's own day keep the date, so "later than" is strict, as the mapping's
+# is; a summary that cannot be read (a dangling link) keeps it, and so does one whose only later
+# headings are not dated entries — the stated fail direction, which never puts a false "recently
+# updated" on the site; and a trip that declares nobody, with the same history, is refused by
+# confirm with the shipped message word for word, its record byte-unchanged. The push mocks S21l
+# withdrew are re-evaluated for this arm and withdrawn again at its end.
+sa23i_fixture() { # <name> [<entry-date>...] -> a declaring trip at 2 of 3, published, approved 3 of 3, record dated 06-01
+  local d n="$1" sak; shift
+  d="$(sa_ptrip "$n" '' '' 16:30 "$SA_P16" pending)"
+  sa_declare "$d" 2 zqa1 zqb2 zqc3
+  for sak in zqa1 zqb2 zqc3; do sa_rec "$d" "$sak" approve "$SA_P16"; done
+  printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3\n' "$SA_P16" > "$d/.change-confirmed"
+  if [ $# -gt 0 ]; then t6_trip "$d" "$@" >/dev/null; fi
+  printf '%s' "$d"
+}
+eval "$SA_MOCK_GH"; eval "$SA_MOCK_NPX"
+SA23I_KEPT_WANT="$(printf 'digest=%s\nconfirmed=2027-06-01T09:00:00Z\napproval-count=3' "$SA_P16")"
+# The subject.
+SA23I="$(sa23i_fixture s23i 2027-05-30 2027-06-05)"
+SA23I_ST0="$(sa_state "$SA23I")"
+SA23I_B0="$(sa_build "$SA23I" 16:30 2027-06-06)"
+SA23I_L0="$(wc -l < "$SA23I/.approvals" | tr -d ' ')"
+sa_confirm "$SA23I" $'\n' '2027-06-10T09:00:00Z'; SA23I_RC=$?
+SA23I_OUT="$(cat "$WORK/sa_conf.out")"
+SA23I_REC="$(cat "$SA23I/.change-confirmed")"
+SA23I_WANT="$(printf 'digest=%s\nconfirmed=2027-06-10T09:00:00Z\napproval-count=3' "$SA_P16")"
+SA23I_L1="$(wc -l < "$SA23I/.approvals" | tr -d ' ')"
+SA23I_NOW=0; case "$SA23I_OUT" in *"dated now"*) SA23I_NOW=1 ;; esac
+SA23I_KEEPS=0; case "$SA23I_OUT" in *"keeps the date"*) SA23I_KEEPS=1 ;; esac
+SA23I_B1="$(sa_build "$SA23I" 16:30 2027-06-11)"
+SA23I_SINCE=''
+while IFS= read -r saline; do case "$saline" in coordination-since:*) SA23I_SINCE="${saline#coordination-since: }" ;; esac; done < "$SA23I/outputs/porto-travel-site.html"
+read -r SA23I_NC SA23I_NK SA23I_CODE <<<"$(_render_approval_pair "$SA23I/outputs/porto-travel-site.html")"
+read -r SA_RC SA23I_CL SA_V SA_C <<<"$(sa_push update "$SA23I")"
+SA23I_ST1="$(sa_state "$SA23I")"
+# ARMED-RED — the writer reading no entry date, swapped in and restored.
+SA23IM="$(sa23i_fixture s23im 2027-05-30 2027-06-05)"
+_undecided_entry() { return 1; }   # MUTANT: no entry is ever read, so item 7's kept date has no exception
+sa_confirm "$SA23IM" $'\n' '2027-06-10T09:00:00Z'
+sa_restore _undecided_entry
+SA23IM_KEPT=0; case "$(cat "$SA23IM/.change-confirmed")" in *'confirmed=2027-06-01T09:00:00Z'*) SA23IM_KEPT=1 ;; esac
+SA23IM_B="$(sa_build "$SA23IM" 16:30 2027-06-11)"
+# CONTROL — no entry later than the record: one before it, and one on the approval's own day.
+SA23IC="$(sa23i_fixture s23ic 2027-05-30 2027-06-01)"
+sa_confirm "$SA23IC" $'\n' '2027-06-10T09:00:00Z'; SA23IC_RC=$?
+SA23IC_REC="$(cat "$SA23IC/.change-confirmed")"
+SA23IC_KEEPS=0; case "$(cat "$WORK/sa_conf.out")" in *"keeps the date"*) SA23IC_KEEPS=1 ;; esac
+# CONTROL — the fail direction: a summary present as a dangling link, which cannot be read.
+SA23ID="$(sa23i_fixture s23id)"
+ln -s "$WORK/zzq-no-such-summary.md" "$SA23ID/outputs/change-summary.md"
+sa_confirm "$SA23ID" $'\n' '2027-06-10T09:00:00Z'; SA23ID_RC=$?
+SA23ID_REC="$(cat "$SA23ID/.change-confirmed")"
+# CONTROL — later headings that are not dated entries: neither reader counts them.
+SA23IH="$(sa23i_fixture s23ih 2027-05-30)"
+printf -- '### 2027-06-05 — a sub-heading\n\n## 2027-6-5 — a heading with no YYYY-MM-DD date\n\n' >> "$SA23IH/outputs/change-summary.md"
+sa_confirm "$SA23IH" $'\n' '2027-06-10T09:00:00Z'; SA23IH_RC=$?
+SA23IH_REC="$(cat "$SA23IH/.change-confirmed")"
+SA23IH_MAP="$(t6_newest_entry "$SA23IH/outputs/change-summary.md")"
+# CONTROL — a trip that declares nobody, with the same history: the organizer's two-line record
+# names the published plan, and the abandoned change's entry post-dates it.
+SA23IU="$(sa_ptrip s23iu '' '' 16:30 "$SA_P16" pending)"
+s_record "$SA23IU/.change-confirmed" "$SA_P16" confirmed
+t6_trip "$SA23IU" 2027-05-30 2027-06-05 >/dev/null
+cp "$SA23IU/.change-confirmed" "$WORK/sa23iu.before"
+SA23IU_ERR="$( ( cmd_confirm "$SA23IU" ) </dev/null 2>&1 >/dev/null )"; SA23IU_RC=$?
+SA23IU_SHIPPED="nothing to confirm for $SA23IU — the itinerary content of the outgoing render is the plan that is already published (or the trip has never been published). Confirmation binds to a change; there is none."
+SA23IU_SAME=0; case "$SA23IU_ERR" in *"$SA23IU_SHIPPED") SA23IU_SAME=1 ;; esac
+SA23IU_KEPT=0; cmp -s "$WORK/sa23iu.before" "$SA23IU/.change-confirmed" && SA23IU_KEPT=1
+unset -f gh npx
+if [ "$SA23I_ST0" = none-pending ] && [ "$SA23I_B0" = pending ] && [ "$SA23I_RC" -eq 0 ] && [ "$SA23I_REC" = "$SA23I_WANT" ] && [ "$SA23I_L1" = "$SA23I_L0" ] && [ "$SA23I_NOW" -eq 1 ] && [ "$SA23I_KEEPS" -eq 0 ] \
+   && [ "$SA23I_B1" = updated ] && [ "$SA23I_SINCE" = 2027-06-10 ] && [ "$SA23I_NC" -eq 1 ] && [ "$SA23I_NK" -eq 1 ] && [ "$SA23I_CODE" = "$SA_P16" ] && [ "$SA23I_CL" -eq 1 ] && [ "$SA23I_ST1" = none-pending ] \
+   && [ "$SA23IM_KEPT" -eq 1 ] && [ "$SA23IM_B" = pending ] \
+   && [ "$SA23IC_RC" -eq 0 ] && [ "$SA23IC_REC" = "$SA23I_KEPT_WANT" ] && [ "$SA23IC_KEEPS" -eq 1 ] \
+   && [ "$SA23ID_RC" -eq 0 ] && [ "$SA23ID_REC" = "$SA23I_KEPT_WANT" ] \
+   && [ "$SA23IH_RC" -eq 0 ] && [ "$SA23IH_REC" = "$SA23I_KEPT_WANT" ] && [ "$SA23IH_MAP" = 2027-05-30 ] \
+   && [ "$SA23IU_RC" -ne 0 ] && [ "$SA23IU_SAME" -eq 1 ] && [ "$SA23IU_KEPT" -eq 1 ]; then
+  PASS "S23i: item 8 — on a published plan at 2 of 3 whose record is dated before an abandoned change's entry, the build reads 'pending'; a bare Enter re-stamps confirmed= to the act, adds no ledger line and says 'dated now'; the render built through the mapping resolves 'updated' · 2027-06-10 with the plan's own count and code, update passes both guards to the clone, and the gate reads none-pending throughout. ARMED-RED — a writer reading no entry keeps the date and the band stays 'pending'; CONTROLS — an entry on or before the record's day keeps the date, an unreadable summary and later non-entry headings keep it (the fail direction), and an undeclared trip with the same history is refused word for word with its record untouched"
+else
+  FAIL "S23i: gate before '$SA23I_ST0' (want none-pending), first build '$SA23I_B0' (want pending), Enter rc=$SA23I_RC record [${SA23I_REC//$'\n'/ | }] (want [${SA23I_WANT//$'\n'/ | }]), ledger lines $SA23I_L0 -> $SA23I_L1, 'dated now'=$SA23I_NOW 'keeps the date'=$SA23I_KEEPS (want 1 and 0); rebuilt '$SA23I_B1' since '$SA23I_SINCE' (want updated, 2027-06-10), pair $SA23I_NC/$SA23I_NK code-own=$([ "$SA23I_CODE" = "$SA_P16" ] && echo 1 || echo 0), clone=$SA23I_CL, gate after '$SA23I_ST1'; mutant kept the date=$SA23IM_KEPT band '$SA23IM_B' (want 1, pending); no-later-entry control rc=$SA23IC_RC record [${SA23IC_REC//$'\n'/ | }] keeps-message=$SA23IC_KEEPS; dangling-link control rc=$SA23ID_RC record [${SA23ID_REC//$'\n'/ | }]; non-entry-heading control rc=$SA23IH_RC record [${SA23IH_REC//$'\n'/ | }] mapping newest '$SA23IH_MAP'; undeclared control rc=$SA23IU_RC shipped-message=$SA23IU_SAME record untouched=$SA23IU_KEPT"
+fi
+
+# ── S24a — ERASURE (#719 INT-10). Substituting one approver's key with the erasure token's key
+# form in BOTH sidecars, in one step, leaves the token and the tally unchanged. CONTROL: the same
+# substitution in the declaration alone orphans that approver's records, and the plan is held —
+# which is why reach row 31 writes both files in one step.
+SA24="$(sa_trip s24 16:30 "$S_DA")"
+sa_declare "$SA24" all zqa1 zqb2 zqc3
+for sak in zqa1 zqb2 zqc3; do sa_rec "$SA24" "$sak" approve "$S_DB"; done
+SA24_BEFORE="$(sa_state "$SA24")/$(_approval_tally "$SA24" "$S_DB")"
+sa24_sub() { # <file> — the subject's key replaced by the token's key form, wherever it is a whole field
+  local f="$1" line out=''
+  while IFS= read -r line; do
+    case "$line" in
+      approver=zqa1) line='approver=per3c7e' ;;
+      'organizer-stated zqa1 '*) line="organizer-stated per3c7e ${line#organizer-stated zqa1 }" ;;
+    esac
+    out="$out$line
+"
+  done < "$f"
+  printf '%s' "$out" > "$f"
+}
+SA24C="$(sa_trip s24c 16:30 "$S_DA")"
+cp "$SA24/.approvers" "$SA24/.approvals" "$SA24C/"
+sa24_sub "$SA24/.approvers"; sa24_sub "$SA24/.approvals"
+sa24_sub "$SA24C/.approvers"
+SA24_AFTER="$(sa_state "$SA24")/$(_approval_tally "$SA24" "$S_DB")"
+SA24_CTL="$(sa_state "$SA24C")"
+if [ "$SA24_BEFORE" = 'confirmed/3 3 0' ] && [ "$SA24_AFTER" = "$SA24_BEFORE" ] && [ "$SA24_CTL" = unconfirmed ]; then
+  PASS "S24a: replacing an approver's key with the erasure token's key form in both sidecars leaves the verdict and the tally unchanged ($SA24_AFTER); the control, the declaration alone, reads '$SA24_CTL' — so the row must write both files in one step"
+else
+  FAIL "S24a: before '$SA24_BEFORE', after both files '$SA24_AFTER' (want equal, confirmed/3 3 0), declaration-only control '$SA24_CTL' (want unconfirmed)"
+fi
+
+# ── S25a — NAME-FREEDOM, STATED OVER APPROVER-NESS (#718's FM-4). Two trips share one
+# five-member roster, one outgoing plan and a count of 2, and differ only in who is declared and
+# who approved. With the clock pinned, the approval records the two writes produce are
+# BYTE-IDENTICAL, so no input the site build reads can tell which roster members are approvers.
+# ARMED-RED: a writer that let the keys into the record makes the two differ.
+SA25_ROSTER='## Group\n\n| Person | Notes |\n|---|---|\n| Aria | — |\n| Beno | — |\n| Cass | — |\n| Dara | — |\n| Enzo | — |\n'
+SA25A="$(sa_trip s25a 16:30 "$S_DA")"; SA25B="$(sa_trip s25b 16:30 "$S_DA")"
+# shellcheck disable=SC2059  # the roster literal carries only \n escapes
+printf "$SA25_ROSTER" > "$SA25A/trip-context.md"; cp "$SA25A/trip-context.md" "$SA25B/trip-context.md"
+sa_declare "$SA25A" 2 aria beno; sa_rec "$SA25A" aria approve "$S_DB"; sa_rec "$SA25A" beno approve "$S_DB"
+sa_declare "$SA25B" 2 cass dara; sa_rec "$SA25B" cass approve "$S_DB"; sa_rec "$SA25B" dara approve "$S_DB"
+_iso_now() { printf '2027-06-02T09:00:00Z'; }
+_record_threshold_met "$SA25A" "$S_DB"; _record_threshold_met "$SA25B" "$S_DB"
+SA25_SAME=0; cmp -s "$SA25A/.change-confirmed" "$SA25B/.change-confirmed" && SA25_SAME=1
+SA25_DIFFDECL=0; cmp -s "$SA25A/.approvers" "$SA25B/.approvers" || SA25_DIFFDECL=1
+SA25_DIFFLEDG=0; cmp -s "$SA25A/.approvals" "$SA25B/.approvals" || SA25_DIFFLEDG=1
+SA25M1="$(sa_trip s25m1 16:30 "$S_DA")"; SA25M2="$(sa_trip s25m2 16:30 "$S_DA")"
+cp "$SA25A/.approvers" "$SA25A/.approvals" "$SA25M1/"; cp "$SA25B/.approvers" "$SA25B/.approvals" "$SA25M2/"
+_record_threshold_met() { # MUTANT: the record names who approved
+  local rec; rec="$(change_confirmation_path "$1")"
+  printf 'digest=%s\nconfirmed=%s\napproval-count=2\napprovers=%s\n' "$2" "$(_iso_now)" "$(tr '\n' ' ' < "$1/.approvers")" > "$rec"
+}
+_record_threshold_met "$SA25M1" "$S_DB"; _record_threshold_met "$SA25M2" "$S_DB"
+sa_restore _record_threshold_met; sa_restore _iso_now
+SA25_MDIFF=0; cmp -s "$SA25M1/.change-confirmed" "$SA25M2/.change-confirmed" || SA25_MDIFF=1
+if [ "$SA25_SAME" -eq 1 ] && [ "$SA25_DIFFDECL" -eq 1 ] && [ "$SA25_DIFFLEDG" -eq 1 ] && [ "$SA25_MDIFF" -eq 1 ]; then
+  PASS "S25a: two trips with one roster, one plan and a count of 2, differing only in who is declared and who approved, produce BYTE-IDENTICAL approval records — while their declarations and ledgers differ (sensitivity); ARMED-RED — a writer that let the keys in makes the records differ"
+else
+  FAIL "S25a: records identical=$SA25_SAME (want 1), declarations differ=$SA25_DIFFDECL, ledgers differ=$SA25_DIFFLEDG (want 1 and 1), key-writing mutant differs=$SA25_MDIFF (want 1)"
+fi
+
+# ── S26a — THE RESTORE (S15j's rule, applied to this block). Every production function an arm
+# above stubbed or mutated reads exactly as saved, none of the external commands stubbed here is
+# still a shell function, and a fresh render digests to the SHA-256 token S0 read.
+SA26_MOVED=""
+for safn in $SA_SAVED_FNS; do
+  sav="SA_SAVED_$safn"
+  if [ "$(declare -f "$safn")" != "${!sav}" ]; then SA26_MOVED="$SA26_MOVED $safn"; fi
+done
+SA26_STUBS=""
+for safn in mv gh npx perl tr; do
+  declare -F "$safn" >/dev/null 2>&1 && SA26_STUBS="$SA26_STUBS $safn"
+done
+s_render "$WORK/sa26.html" 14:00 none
+SA26_DG="$(itinerary_digest "$WORK/sa26.html")"
+SA26_HEX=0; case "$SA26_DG" in *[!0123456789abcdef]*|'') ;; *) [ "${#SA26_DG}" -eq 64 ] && SA26_HEX=1 ;; esac
+if [ -z "$SA26_MOVED" ] && [ -z "$SA26_STUBS" ] && [ "$SA26_HEX" -eq 1 ] && [ "$SA26_DG" = "$S_DA" ]; then
+  PASS "S26a: every production function this block stubbed or mutated reads exactly as saved, no stubbed external command is still a function, and a fresh render digests to S0's SHA-256 token — the arms after this one grade production code"
+else
+  FAIL "S26a: functions not restored:[${SA26_MOVED# }], stubs left:[${SA26_STUBS# }], fresh digest '$SA26_DG' against S0's '$S_DA'"
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group T, #719 — THE APPROVAL PAIR ON THE RENDER: the schema's two fields, the band's statement,
+# the site verb's name-free read, and the band's excision with the pair inside it.
+#
+#   T9   INT-6   C19 declares exactly the pair — typed, optional, no threshold — and the band's
+#                static statement names the organizer and never says that travellers approved
+#   T10  INT-7   the site verb reads neither approver sidecar, and two trips differing only in
+#                who approved render byte-identically
+#   T11  INT-9   the mapping reads the count after the date and conditions the pair on it, and
+#                the widest band the contract admits is still excised from the digest
+#
+# As T1–T8 do, every rule is read out of the documents — the fence, § 3 of the component
+# contract and the `site` verb's section — and each extractor is shown to recover a value injected
+# into a mutated copy of its own source, so a green here is the corpus's and not this file's.
+# These arms follow S26a because T10b reads S25a's records. Offline; no legitimate skip.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "The approval pair on the render — #719 (INT-6, INT-7, INT-9):"
+
+# The per-class fields C19's fence declares: every `field` line after its `# Per-class fields`
+# comment, as `name|type`, in document order.
+t9_perclass() { # [<schema-file>]
+  awk '/^```artifact-schema/ { f = 1; next } f && /^```/ { exit }
+       f && /^# Per-class fields/ { p = 1; next }
+       f && p && /^field / { n = $2; sub(/:$/, "", n); t = $0; sub(/^field [^:]*: /, "", t); print n "|" t }' "${1:-$T_SCHEMA}"
+}
+T9_FIELDS="$(t9_perclass)"
+T9_N="$(printf '%s\n' "$T9_FIELDS" | awk 'NF' | wc -l | tr -d ' ')"
+T9_CNT=0; T9_CODE=0; T9_THR=0
+while IFS= read -r t9f; do
+  case "$t9f" in 'approval-count|optional integer') T9_CNT=1 ;; 'approval-code|optional slug') T9_CODE=1 ;; esac
+  case "${t9f%%|*}" in *threshold*|*required*) T9_THR=$((T9_THR+1)) ;; esac
+done <<<"$T9_FIELDS"
+awk '{ print } /^field coordination-since:/ { print "field zzqfab: optional integer" }' "$T_SCHEMA" > "$T_DIR/t9_schema_mut.md"
+T9_CTL="$(t9_perclass "$T_DIR/t9_schema_mut.md")"
+T9_CTLHIT=0; case "$T9_CTL" in *'zzqfab|optional integer'*) T9_CTLHIT=1 ;; esac
+if [ "$T9_CTLHIT" -ne 1 ]; then
+  FAIL "T9a-CTL: a field injected into a copy of $(basename "$T_SCHEMA") was not recovered — the extractor is not reading the fence, so its count below would be this file's"
+elif [ "$T9_N" -eq 4 ] && [ "$T9_CNT" -eq 1 ] && [ "$T9_CODE" -eq 1 ] && [ "$T9_THR" -eq 0 ]; then
+  PASS "T9a: C19's fence declares exactly 4 per-class fields — the coordination pair and the approval pair — with approval-count typed 'optional integer' and approval-code 'optional slug', and no per-class field names a threshold or a requirement; an injected field was recovered from a mutated copy"
+else
+  FAIL "T9a: per-class fields=$T9_N (want 4), approval-count typed right=$T9_CNT, approval-code typed right=$T9_CODE, threshold/required-named fields=$T9_THR (want 0). Fields: $(printf '%s' "$T9_FIELDS" | tr '\n' ' ')"
+fi
+
+# The band's static statement: the first bold span after "one static statement and the two
+# values:" in § 3's approval-fields paragraph. Paragraph-scoped, as T5's extractor is.
+T9_MARK='one static statement and the two values:'
+t9_statement() { # [<spec-file>] -> the statement, or nothing
+  awk -v mark="$T9_MARK" '
+    BEGIN { RS = ""; FS = "\n" }
+    { p = $0; gsub(/\n/, " ", p); a = index(p, mark); if (a == 0) next
+      p = substr(p, a + length(mark)); i = index(p, "**"); if (i == 0) exit
+      p = substr(p, i + 2); j = index(p, "**"); if (j == 0) exit
+      print substr(p, 1, j - 1); exit }' "${1:-$T_SPEC}"
+}
+# The lexicon of a traveller-approval claim — a list, so its boundary is stated: a claim made
+# entirely in other words is not seen (S15f's shape).
+T9_LEX='travellers approved|travelers approved|approved by|have approved|has approved'
+t9_claims() { # <text> -> the lexicon phrases the text carries
+  local t="$1" out="" w IFS='|'
+  shopt -s nocasematch
+  for w in $T9_LEX; do case "$t" in *"$w"*) out="$out[$w]" ;; esac; done
+  shopt -u nocasematch
+  printf '%s' "$out"
+}
+T9_STMT="$(t9_statement)"
+t_inject_after_mark "$T_SPEC" "$T9_MARK" ' **Travellers approved:** and' > "$T_DIR/t9_spec_mut.md"
+T9_MSTMT="$(t9_statement "$T_DIR/t9_spec_mut.md")"
+T9_HITS="$(t9_claims "$T9_STMT")"; T9_MHITS="$(t9_claims "$T9_MSTMT")"
+T9_PLANT="$(t9_claims 'Approved by Dana and Eli')"; T9_NEUT="$(t9_claims 'Approvals recorded for this plan')"
+T9_ORG=0; case "$T9_STMT" in *organizer*) T9_ORG=1 ;; esac
+if [ -z "$T9_STMT" ] || [ "$T9_MSTMT" != 'Travellers approved:' ]; then
+  FAIL "T9b-CTL: the statement read '$T9_STMT' and, from a copy with a counter-statement injected, '$T9_MSTMT' — the extractor is not reading § 3, so a clean statement below would prove nothing"
+elif [ -z "$T9_MHITS" ] || [ -z "$T9_PLANT" ] || [ -n "$T9_NEUT" ]; then
+  FAIL "T9b: CONTROL on the lexicon — the injected counter-statement read [$T9_MHITS], a planted claim [$T9_PLANT] (both must be flagged) and a neutral line [$T9_NEUT] (must not be)"
+elif [ "$T9_ORG" -eq 1 ] && [ -z "$T9_HITS" ]; then
+  PASS "T9b: § 3's static statement is '$T9_STMT' — it names the organizer as the source of the count and carries none of the traveller-approval phrases; the lexicon flags an injected counter-statement and a planted claim, and passes a neutral line"
+else
+  FAIL "T9b: the statement '$T9_STMT' names the organizer=$T9_ORG and carries claim phrases [$T9_HITS] — the band would say travellers approved, which is the organizer's statement on their behalf"
+fi
+
+# ── T10a — the site verb's read declaration names neither approver sidecar.
+t10_reads() { # [<trip-md>] -> every backticked token of the `site` section's **Reads:** paragraph
+  awk '/^## site$/ { s = 1; next } s && /^## / { exit }
+       s && /^\*\*Reads:\*\*/ { r = 1 } s && r && /^$/ { exit }
+       s && r { print }' "${1:-$T_TRIPMD}" > "$T_DIR/t10_reads.txt"
+  t5_tokens "$T_DIR/t10_reads.txt"
+}
+T10_TOK="$(t10_reads)"
+T10_N="$(printf '%s\n' "$T10_TOK" | awk 'NF' | wc -l | tr -d ' ')"
+T10_HIT=0
+while IFS= read -r t10t; do case "$t10t" in *.approvers*|*.approvals*) T10_HIT=$((T10_HIT+1)) ;; esac; done <<<"$T10_TOK"
+awk '/^## site$/ { s = 1 } s && /^\*\*Reads:\*\*/ && !d { sub(/\*\*Reads:\*\*/, "**Reads:** `trips/<slug>/.approvers` — injected;"); d = 1 } { print }' "$T_TRIPMD" > "$T_DIR/t10_trip_mut.md"
+T10_CTL=0
+while IFS= read -r t10t; do case "$t10t" in *.approvers*) T10_CTL=1 ;; esac; done <<<"$(t10_reads "$T_DIR/t10_trip_mut.md")"
+T10_CONF=0; case "$T10_TOK" in *'.change-confirmed'*) T10_CONF=1 ;; esac
+if [ "$T10_CTL" -ne 1 ] || [ "$T10_CONF" -ne 1 ]; then
+  FAIL "T10a-CTL: an injected sidecar path was recovered=$T10_CTL and the paragraph's own .change-confirmed token was found=$T10_CONF — the extractor is not reading the site verb's read declaration"
+elif [ "$T10_HIT" -eq 0 ] && [ "$T10_N" -gt 0 ]; then
+  PASS "T10a: the $T10_N backticked token(s) of the site verb's read declaration name neither .approvers nor .approvals — it reads the record, never the roster keys; ARMED-RED — the same predicate over a copy with a sidecar path injected into that declaration finds it"
+else
+  FAIL "T10a: the site verb's read declaration names an approver sidecar in $T10_HIT token(s) — a build reading it could render who was declared or who approved"
+fi
+
+# ── T10b — renders built to the contract from S25a's two records are byte-identical, and both
+# carry every roster name in the hero: names reach the page as bound content either way, and
+# approver-ness is what never does.
+t10_render() { # <trip> <out> — hero from the roster's Person cells, the pair and band from the record
+  local d="$1" out="$2" names="" line cnt="" dg=""
+  while IFS= read -r line; do
+    case "$line" in '| Person'*|'|---'*) ;; '| '*) line="${line#| }"; names="$names ${line%% |*}" ;; esac
+  done < "$d/trip-context.md"
+  while IFS= read -r line; do
+    case "$line" in approval-count=*) cnt="${line#approval-count=}" ;; digest=*) dg="${line#digest=}" ;; esac
+  done < "$d/.change-confirmed"
+  {
+    printf '<!--\nartifact: %s\nschema-version: 1\ntrip: porto-2027\nwriter: site\nlifecycle: output\nprovenance: derived\npublish: output\ngenerated: 2027-06-02\n' "$S12_ART"
+    printf 'coordination-state: updated\ncoordination-since: 2027-06-02\napproval-count: %s\napproval-code: %s\n-->\n' "$cnt" "$dg"
+    printf '<!DOCTYPE html><html><body><section class="hero"><h1>Porto 2027</h1><p>%s</p></section>\n' "${names# }"
+    printf '<div class="%s is-updated"><span>Recently updated</span> <time>2027-06-02</time> <span>%s</span> <span>%s</span> <span>%s</span> <code>%s</code></div>\n' "$T_CLASS" "$T9_STMT" "$cnt" "$(_code_prefix "$dg")" "$dg"
+    printf '<section class="day"><p>Miradouro da Vitoria at 16:30.</p></section></body></html>\n'
+  } > "$out"
+}
+t10_render "$SA25A" "$T_DIR/t10_a.html"; t10_render "$SA25B" "$T_DIR/t10_b.html"
+T10B_SAME=0; cmp -s "$T_DIR/t10_a.html" "$T_DIR/t10_b.html" && T10B_SAME=1
+T10B_NAMES=0
+for t10n in Aria Beno Cass Dara Enzo; do
+  case "$(cat "$T_DIR/t10_a.html")" in *"$t10n"*) T10B_NAMES=$((T10B_NAMES+1)) ;; esac
+done
+# ARMED-RED: a builder that also read the declaration — the read the contract forbids — renders the
+# two trips differently, so the byte comparison above can see approver-ness when it leaks.
+t10_render_mut() { # <trip> <out> — t10_render, plus the declared keys the site must never read
+  t10_render "$1" "$2"
+  printf '<!-- %s -->\n' "$(tr '\n' ' ' < "$1/.approvers")" >> "$2"
+}
+t10_render_mut "$SA25A" "$T_DIR/t10_ma.html"; t10_render_mut "$SA25B" "$T_DIR/t10_mb.html"
+T10B_MDIFF=0; cmp -s "$T_DIR/t10_ma.html" "$T_DIR/t10_mb.html" || T10B_MDIFF=1
+if [ "$T10B_SAME" -eq 1 ] && [ "$T10B_NAMES" -eq 5 ] && [ "$T10B_MDIFF" -eq 1 ]; then
+  PASS "T10b: renders built to the contract from S25a's two records — declared {aria, beno} and {cass, dara}, each approving — are byte-identical, and each carries all 5 roster names in its hero: the names are bound content either way, and which of them approved never reaches the page; ARMED-RED — a builder that read the declaration renders the two differently"
+else
+  FAIL "T10b: the two renders are byte-identical=$T10B_SAME (want 1), carry $T10B_NAMES of 5 roster names (want 5); a declaration-reading builder renders them differently=$T10B_MDIFF (want 1)"
+fi
+
+# ── T11a — in the `site` verb's section, `approval-count=` first appears only after `confirmed=`,
+# and the pair is conditioned on that line reading as a non-negative integer.
+t11_order() { # [<trip-md>] -> "confirmed-offset count-offset conditioned"
+  awk '/^## site$/ { s = 1; next } s && /^## / { exit } s { print }' "${1:-$T_TRIPMD}" > "$T_DIR/t11_site.txt"
+  local body a b cond=0
+  body="$(tr '\n' ' ' < "$T_DIR/t11_site.txt")"
+  a="${body%%confirmed=*}"; b="${body%%approval-count=*}"
+  case "$body" in *'approval-count='*'reads as a non-negative integer'*) cond=1 ;; esac
+  printf '%s %s %s' "${#a}" "${#b}" "$cond"
+}
+read -r T11_CONF T11_CNT T11_COND <<<"$(t11_order)"
+awk '/^## site$/ { s = 1 } s && /^\*\*Reads:\*\*/ && !d { sub(/\*\*Reads:\*\*/, "**Reads:** the `approval-count=` line first;"); d = 1 } { print }' "$T_TRIPMD" > "$T_DIR/t11_trip_mut.md"
+read -r T11_MCONF T11_MCNT T11_MCOND <<<"$(t11_order "$T_DIR/t11_trip_mut.md")"
+if [ "$T11_MCNT" -ge "$T11_MCONF" ]; then
+  FAIL "T11a-CTL: with approval-count= injected ahead of confirmed= in a copy, the order read count=$T11_MCNT against confirmed=$T11_MCONF — the extractor cannot see an inversion"
+elif [ "$T11_CONF" -lt "$T11_CNT" ] && [ "$T11_COND" -eq 1 ]; then
+  PASS "T11a: in the site verb's section confirmed= first appears at offset $T11_CONF and approval-count= at $T11_CNT — the count is read after the date — and the pair is conditioned on that line reading as a non-negative integer; an injected inversion in a copy is detected"
+else
+  FAIL "T11a: confirmed= at $T11_CONF, approval-count= at $T11_CNT (want the count after), conditioned=$T11_COND (want 1)"
+fi
+
+# ── T11b — THE WIDEST BAND THE CONTRACT ADMITS IS STILL EXCISED. An `updated` band carrying the
+# statement read from § 3, a count of 999, the grouped prefix and the full code stays inside the
+# excision cap and flat, so the render digests exactly as its band-free twin. CONTROL: the same
+# band with one nested element of the band's own tag is NOT excised — the flat-markup rule, measured.
+T11_CODE="$(printf 'the widest code' | _digest_of)"
+t11_page() { # <file> <band-or-empty>
+  printf '<!DOCTYPE html><html><body><section class="hero"><h1>Porto 2027</h1></section>\n%s<section class="day"><p>Miradouro da Vitoria at 16:30.</p></section></body></html>\n' "$2" > "$1"
+}
+T11_REST="<time>2027-06-02</time> <span>$T9_STMT</span> <span>999</span> <span>$(_code_prefix "$T11_CODE")</span> <code>$T11_CODE</code>"
+T11_INNER="<span>Recently updated</span> $T11_REST"
+t11_page "$T_DIR/t11_none.html" ''
+t11_page "$T_DIR/t11_flat.html" "<div class=\"$T_CLASS is-updated\">$T11_INNER</div>
+"
+# The nested element opens the band, so the lazy match stops at ITS closing tag and the rest of
+# the band — the date, the statement, the count and the code — is left inside the digest.
+t11_page "$T_DIR/t11_nest.html" "<div class=\"$T_CLASS is-updated\"><div><span>Recently updated</span></div> $T11_REST</div>
+"
+T11_DN="$(itinerary_digest "$T_DIR/t11_none.html")"
+T11_DF="$(itinerary_digest "$T_DIR/t11_flat.html")"
+T11_DX="$(itinerary_digest "$T_DIR/t11_nest.html")"
+T11_LEN=${#T11_INNER}
+if [ -z "$T9_STMT" ] || [ -z "$T11_DN" ]; then
+  FAIL "T11b: the statement ('$T9_STMT') or the band-free digest ('$T11_DN') is empty, so the equality below would compare nothing"
+elif [ "$T11_LEN" -le "$_COORD_NOTICE_CAP" ] && [ "$T11_DF" = "$T11_DN" ] && [ "$T11_DX" != "$T11_DN" ]; then
+  PASS "T11b: an updated band carrying the statement, a count of 999, the grouped prefix and the full code is $T11_LEN characters against the cap of $_COORD_NOTICE_CAP, and it is excised — the render digests exactly as its band-free twin; the control, the same band with one nested element of its own tag, is NOT excised, which is the flat-markup rule measured"
+else
+  FAIL "T11b: band length $T11_LEN against cap $_COORD_NOTICE_CAP; flat band excised=$([ "$T11_DF" = "$T11_DN" ] && echo 1 || echo 0) (want 1); nested band left in the digest=$([ "$T11_DX" != "$T11_DN" ] && echo 1 || echo 0) (want 1)"
 fi
 
 # ═════════════════════════════════════════════════════════════════════════════════
