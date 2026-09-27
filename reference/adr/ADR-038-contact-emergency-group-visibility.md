@@ -19,13 +19,14 @@
   private site; § 1's "never written to the published artifact", now read field by field; and the
   trade-off its Consequences accepted. Everything else in `ADR-004` stays in force. `ADR-004` is never
   marked superseded, its index cell stays `Accepted`, and this record carries no Supersedes bullet. The
-  dated note inside `ADR-004` that records this lands in the milestone's closing ratify chore, in the
-  same change as this record's `Accepted` flip — not in this release (§ 5). This record also supersedes
+  dated note inside `ADR-004` that records this lands in the Wave-1 change that ships the replacement,
+  the carrier slice — not in this release (§ 5). This record also supersedes
   [ADR-029](ADR-029-group-approval-return-and-threshold.md) **in part**: the gate step of its § *Decision* 3,
   step 6, and only for a change that only removes or narrows what the group sees about a person (§ 4).
   Everything else in `ADR-029` stays in force. `ADR-029` is never marked superseded either, its index
-  cell stays `Accepted`, and its record of this supersession lands in the same ratify chore — the
-  operator's R1, recorded on #1369.
+  cell stays `Accepted`, and its record of this supersession lands in the Wave-1 change that ships the
+  replacement gate (§ 7) — the operator's R1, recorded on #1369, timed by the operator's T1, recorded
+  there too.
 - **What this record is.** A decision about **what of a traveller's contact and emergency details the
   group sees on the private site**: whether it sees any, at what level per traveller, how an
   emergency contact's details are handled given the contact is a third party, what the traveller opts
@@ -126,7 +127,7 @@ is on file.
 |---|---|
 | Flip `ADR-004` to superseded, whole, when this record is accepted | **not taken.** The operator's D3 keeps `ADR-004`'s still-valid sections in force |
 | The same, with a forward pointer written now | **not taken** |
-| **A dated note inside `ADR-004`, in the form `ADR-009`'s eighth amendment already uses for a partial supersession** | **chosen** — the operator's D3. The note lands at the milestone's closing ratify chore, with this record's `Accepted` flip (CR-2's fifth call). `ADR-009`'s eighth amendment is the corpus precedent for recording a superseding decision in place |
+| **A dated note inside `ADR-004`, in the form `ADR-009`'s eighth amendment already uses for a partial supersession** | **chosen** — the operator's D3. The note lands in the Wave-1 change that ships the replacement (CR-2's fifth call, as the operator's T1 re-timed it; § 5). `ADR-009`'s eighth amendment is the corpus precedent for recording a superseding decision in place |
 
 ### The carrier
 
@@ -381,7 +382,9 @@ the carrier's lines. The notice carries no other new text.
   `reference/adr/README.md` § *Convention*'s partial one, the form `ADR-029` § *Decision* 7 itself uses
   for `ADR-003` § *Decision 2*: `ADR-029` is never marked `Superseded` and its index cell stays
   `Accepted`; its `Status:` line records this supersession, and an inline marker at step 6 points
-  forward to this record, in the milestone's closing ratify chore, when this record is accepted. This
+  forward to this record. Both land in the Wave-1 change that ships the replacement gate (§ 7), because
+  § *Convention* records a supersession *"when it takes effect and not before: for a rule implemented
+  in code, that is the change that ships the replacement"* — the operator's T1, recorded on #1369. This
   record's change edits no line of `ADR-029`.
 - **Withdrawing is as easy as giving**: the same form and fields, with no reason asked. A field that
   was declined or withdrawn is never asked about again on that trip — the form's own rule is "Never
@@ -411,12 +414,15 @@ the carrier's lines. The notice carries no other new text.
 | Follow-on build slices | **handed to Wave 1** | The local capture goes to this record's capture build, with the filing script; the validator check becomes the § 5.6 row; the intake opt-in step becomes C-1 to C-4 and N-1 to N-7 |
 | *Every section* | **Nothing ever reaches a public page** | It holds for L-1, L-2 and L-3 alike |
 
-**How the supersession is recorded — the operator's D3, timed by CR-2's fifth call.** A dated note
-inside `ADR-004`, in the form `ADR-009`'s eighth amendment uses: `ADR-004`'s `Status:` line records the
-supersession in part, and inline markers stand at § 1's *never written to the published artifact*,
-§ 3's visibility, § 4's guarantee and the Consequences trade-off; everything else stays in force. The
-note lands at the milestone's closing ratify chore, in the same change as this record's `Accepted` flip
-— not in this release, and until then `ADR-004` is the decision in force. `ADR-004` is never marked
+**How the supersession is recorded — the operator's D3, timed by CR-2's fifth call as the operator's
+T1 revised it.** A dated note inside `ADR-004`, in the form `ADR-009`'s eighth amendment uses:
+`ADR-004`'s `Status:` line records the supersession in part, and inline markers stand at § 1's *never
+written to the published artifact*, § 3's visibility, § 4's guarantee and the Consequences trade-off;
+everything else stays in force. The note lands in the Wave-1 change that ships the replacement: the
+carrier slice (§ 7), the change that first brings a contact or emergency item to the private site,
+because `reference/adr/README.md` § *Convention* records a supersession when it takes effect and not
+before — the operator's T1, recorded on #1369. It lands neither in this release nor with this record's
+`Accepted` flip, and until then `ADR-004` is the decision in force. `ADR-004` is never marked
 superseded and its index cell stays `Accepted`, so this record carries no Supersedes bullet: it names
 here the sections it supersedes in part, and states that the rest stands. **`ADR-011`'s two
 restatements of `ADR-004`** — § 1's *never written to the published artifact*, and § 2 read as a
@@ -568,7 +574,9 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
   **with the writer's input re-pointed to the script-made projection of the private-site record's
   safeguard 7**, and the split between writing internal files from full inputs and writing
   group-visible files from that projection; its erase row; the dispatchers' Reads lines; and a
-  sanitized witness under `examples/`.
+  sanitized witness under `examples/`. **It ships the replacement of `ADR-004`'s visibility sections**,
+  so the same change records it: the dated note inside `ADR-004`, with `ADR-011`'s dated amendment
+  (§ 5).
 - **The validator.** Its inline list of the publish-bound artifacts gains the carrier. The validator
   does not run in IDEATION, so for the field class the private-site record's safeguard 6 covers that
   half.
@@ -578,7 +586,8 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 - **The approval gate is changed to match** § 4's rule (the operator's R1): the republish gate of
   `ADR-029` § *Decision* 3, step 6, never holds a change that only removes or narrows what the group
   sees about a person for the declared approvers, and the organizer's confirmation remains its only
-  gate.
+  gate. **The same change records the supersession inside `ADR-029`**: the `Status:`-line entry and
+  the inline marker at step 6 (§ 4).
 - **Nothing goes live** before the fix for the rotation defect tracked privately ships.
 
 ## Consequences
@@ -717,7 +726,7 @@ component and one fence name.
 | Retention after the trip | a routed intake card |
 | A deputy holder with the organizer's access | a candidate future card |
 | How `ADR-029`'s gate is changed to match § 4's rule | Wave 1 (§ 7) |
-| The record of this supersession inside `ADR-029` | the milestone's closing ratify chore (§ 4) |
+| The record of this supersession inside `ADR-029` | the Wave-1 change that ships the replacement gate (§ 4, § 7) |
 
 ## Follow-on build slices
 
@@ -729,14 +738,17 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
   organizer-only file and the block on agent reads; the way-to-reach's § 5.6 row with the queried set
   widened; the `TRIP` rows; and the recording verb, shared with the private-site record.
 - **The carrier**: its class, schema, rules, writer contract through the projection, section, fences,
-  erase row, dispatcher naming, validator list and sanitized witness.
+  erase row, dispatcher naming, validator list and sanitized witness; and, as the change that ships
+  the replacement of `ADR-004`'s visibility sections, the dated note inside `ADR-004` with `ADR-011`'s
+  dated amendment (§ 5).
 - **Erasure's reach**: every trip page file, and the organizer-only file.
 - **The erasure witness**: relabelled or reworded, with `ER15` green.
 - **The private-site record's safeguard 6** gains the way to reach the contact when the capture ships.
-- **The approval gate**, changed to match § 4's rule (§ 7).
+- **The approval gate**, changed to match § 4's rule, with `ADR-029`'s record of this supersession in
+  the same change (§ 7).
 - **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, after the
-  private-site record's, in the same change as the dated note inside `ADR-004`, `ADR-011`'s dated
-  amendment and `ADR-029`'s record of this supersession.
+  private-site record's. The chore flips the status and nothing else: the notes inside `ADR-004` and
+  `ADR-029`, and `ADR-011`'s dated amendment, land with the slices above.
 - **Routed, not Wave 1's by this record:** retention after the trip; a deputy holder.
 
 ## References
@@ -788,5 +800,5 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
 - `scripts/publish-trip-site.sh`, `scripts/test-publish-guard.sh` and
   `scripts/test-artifact-schema.sh` — the guard and its queried set, and the erasure witness's arm.
 - Provenance: the card, #1545; its design sub-task, #1546, carrying the design, the operator's D1 to
-  D3, the carrier and its decisions K, S, P and MG-C1; the fit review, CR-2 and R1 on #1369; decision Q
+  D3, the carrier and its decisions K, S, P and MG-C1; the fit review, CR-2, R1 and T1 on #1369; decision Q
   on #1385; and the Wave-1 working notes this record's build detail moved to, on #1547.

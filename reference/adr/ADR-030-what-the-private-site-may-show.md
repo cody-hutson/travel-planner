@@ -30,8 +30,9 @@
   of a two-artifact state: the `Status:` line above, and this record's `Status` cell in
   `reference/adr/README.md`. The #1296 card's records and the contact and emergency record each
   name this record's `Accepted` status as the precondition of their own flip, so this record flips
-  first. The same close records, inside `ADR-009`, the part of `ADR-009` § *Decision* 4 this record
-  supersedes (§ *Decision* 7 below).
+  first. The close flips statuses and nothing else: the entry inside `ADR-009` that records the part of
+  `ADR-009` § *Decision* 4 this record supersedes lands in the Wave-1 change that ships the
+  replacement (§ *Decision* 7 below).
 
 ## Context
 
@@ -334,8 +335,14 @@ override* — is not superseded: A-1 composes by union. 4.1's `bound` sentence i
 it names § 9.1 as the authority, and its growth is a claim the new classes make stale once built,
 which this release records as a pointer in `ADR-009` rather than as a supersession. The supersession
 is recorded inside `ADR-009` in its eighth amendment's form — a `Status:`-line entry and an inline
-marker, the superseded sentence retained as decided — at this milestone's close, in the same change
-that flips this record to `Accepted`, and not before.
+marker, the superseded sentence retained as decided — in the Wave-1 change that ships the
+replacement, and not before: the first change after which the build renders an IN value that an
+`internal-hard` class binds (§ 4), because `reference/adr/README.md` § *Convention* records a
+supersession when it takes effect — the operator's T1, recorded on #1369. Two slices can be that
+change: the destination shortlist's class edit, in the site phase-model record's render slice, and
+the group snapshot slice of [the group-snapshot record](ADR-037-group-snapshot.md). Each carries the
+entry as a condition, and the first of them to land records it. This record's `Accepted` flip
+records nothing inside `ADR-009`.
 
 **The journey records' bounds move by pointer.** Never-carry 2 of `ADR-025`, its § *Decision* 4 render
 prohibition and `ADR-010` § 4's bar on traveller identity reaching the render each carry a dated
@@ -457,14 +464,16 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
 - **The recording verb for a refusal, a removal or a withdrawal**, which runs the reconcile step in
   the same act (safeguard 4). Today the profile verb names the reconcile step and does not run it.
 - **The destination shortlist's class edit**, with its § 9.1 authority and fence rows in one commit,
-  in the site phase-model record's render slice.
+  in the site phase-model record's render slice. It carries the Decision-4 supersession entry inside
+  `ADR-009` as a condition: whichever of it and the group snapshot slice lands first records the
+  entry (§ 7).
 - **The neutral-label producer rules** of § 5, and a new neutral-label witness fixture.
 - **Safeguard 6's publish-time check**, and the measurement that decides whether it extends to free-text
   OUT items.
 - **Safeguard 7's projection script**, and the split between internal and group-visible writes.
 - **The reconciliation of the restated anonymized clause**, over the population the Consequences name.
-- **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, and the
-  Decision-4 supersession entry inside `ADR-009` (§ 7).
+- **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, and nothing
+  else.
 
 ## References
 
@@ -501,4 +510,4 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
 - `agents/05-hub-planner.md` — the itinerary's writer, which owes § 5's neutral labels.
 - Provenance: the card, #1242; its design sub-task, #1385, carrying the four passes, the four reviews,
   the operator's facts, CR-1 to CR-1d and decision Q; the joint source-binding step, #1383; decision P
-  on #1546; the plan, its surface map, the fit review and CR-2 on #1369.
+  on #1546; the plan, its surface map, the fit review, CR-2 and T1 on #1369.

@@ -539,7 +539,9 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 - **The hero's pre-plan variant**, in the phase-aware build.
 - **The shortlist's render slice**: its class edit with its § 9.1 rows in one commit, its section, its
-  writer's filer and withhold rules, and the two one-reader sentences.
+  writer's filer and withhold rules, and the two one-reader sentences. It also carries the
+  private-site record's § *Decision* 7 condition: whichever of this slice and the group snapshot slice
+  lands first records that record's Decision-4 supersession entry inside `ADR-009`.
 - **The concealed occasion**: the variant, the carve-outs, the mark and its joins.
 - **The group contacts section**, placed as § 2 states, in the contact and emergency record's slices.
 - **Routed, not Wave 1's by this record:** the hub's IDEATION comparison artifact.

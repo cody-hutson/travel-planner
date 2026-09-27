@@ -172,9 +172,9 @@
   adds the group contacts file. § 9.1 remains the authority, and group `PB` keeps the correspondence
   asserted as each slice lands its § 1.1 row and its fence row in one commit. The sentence is retained,
   with an inline pointer at it. **The Decision 4 supersession** — the exception the private-site
-  record makes to Decision 4 for the values the group may see — is recorded in this record when that
-  record is accepted, as the next amendment, and not here. **No decision of this record is changed
-  by this amendment, and none is re-opened.**
+  record makes to Decision 4 for the values the group may see — is recorded in this record as the next
+  amendment, in the Wave-1 change that ships the replacement, and not here. **No decision of this
+  record is changed by this amendment, and none is re-opened.**
 - **Deciders:** repo maintainer
 - **Driving work:** #275, under the engine-wide data-architecture epic #273. Records the six decisions
   settled by the specification slice #274 and consumed by #276–#288. Records the disposition of #156

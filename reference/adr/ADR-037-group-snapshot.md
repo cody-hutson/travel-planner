@@ -413,7 +413,10 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 - **The group snapshot slice**: its class, schema and rules, its writer contract, its gated production
   and register row, the dispatchers' naming, the reconcile-step namings, its section, its erase row, a
-  sanitized fixture, and its writer input re-pointed to the private-site record's projection.
+  sanitized fixture, and its writer input re-pointed to the private-site record's projection. It also
+  carries the private-site record's § *Decision* 7 condition: whichever of this slice and the
+  shortlist's render slice lands first records that record's Decision-4 supersession entry inside
+  `ADR-009`.
 - **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, after the
   private-site record's.
 

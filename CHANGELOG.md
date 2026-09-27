@@ -55,7 +55,7 @@ asked. A change that only removes or narrows what the group sees about someone n
 group's approval. Once accepted, the record that says so supersedes, for such a change only, the step
 of the group-approval record that holds a republish for the travellers who approve; the rest of that
 record stands, and a later slice changes the gate to match. `ADR-004` keeps every section this does
-not change, and a dated note inside it records the rest when these records are accepted.
+not change, and a dated note inside it records the rest in the later slice that makes the change.
 
 **Earlier records gain pointers where the new ones would otherwise contradict them.** `ADR-026`'s
 declared channel values gain the one its own table already used, and its citations into the publish
