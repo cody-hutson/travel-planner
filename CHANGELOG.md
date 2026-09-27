@@ -3,6 +3,26 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
+## [0.45.0] — 2026-09-26 — The personal-data gate reads the lines a pull request adds
+
+**The personal-data gate now reads what a pull request adds.** The required check that keeps
+personal email addresses and OS home paths out of this public repository reads commit messages and
+author identities, and it reads the lines a change adds to files. That second half never read
+anything. It dropped the diff's file headers with a pattern the Linux runner's `grep` takes to mean
+any line that starts with `+`, which removed every added line along with them, so it passed on an
+empty stream every time; on macOS the same pattern is rejected outright, and the error was
+swallowed. Only the commit-message half was ever live. A scan of every line added across the
+repository's history, run with the gate's own patterns, finds no match, so nothing slipped through
+while the gap was open.
+
+**The gate proves it can see before it scans.** Every run first passes a planted email address and
+a planted home path — assembled at run time, never committed — through the same filter the real
+checks use, and fails unless each is caught and nothing is reported from a file header or a removed
+line. A filter that cannot run now fails the gate instead of reading as clean, and the log says how
+many added lines each check read, so a pass over nothing looks different from a pass over clean
+content. One narrow case is still skipped, and the workflow says so where the filter is defined: an
+added line whose own text begins with `++`.
+
 ## [0.44.0] — 2026-09-26 — Group approval: a decided model, and a republish that waits for it
 
 **Group approval has a decided model.** A new decision record settles the inbound approval return

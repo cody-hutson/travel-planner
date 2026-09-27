@@ -1483,7 +1483,7 @@ with no site carries no row.
 1       examples/archived-trip-demo/travelers/dana.md
 2       examples/archived-trip-demo/travelers/per-4f1c.md
 2       examples/archived-trip-demo/trip-context.md
-13      examples/data-architecture-demo/README.md
+11      examples/data-architecture-demo/README.md
 5       examples/data-architecture-demo/outputs/activities-list.md
 2       examples/data-architecture-demo/outputs/change-summary.md
 2       examples/data-architecture-demo/outputs/cost-estimate.md
