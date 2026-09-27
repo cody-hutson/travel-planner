@@ -225,6 +225,19 @@ record and the reusable-group record, so the rule this section binds to covers t
 stale quotation left out of a privacy constraint — which is the reason the correction is worth
 making rather than a tidy-up. Nothing decided above or below changes.
 
+**Amendment (2026-09-26, Saturday) — the bar on traveller identity at the render, read as
+class-derived for the values a group may see.** This section's bar — traveller identity may not reach
+the render even pseudonymously — derives from the class: a signal letting a reader tell which
+traveller acted is an anonymized projection of a traveller-model value, and § 5.1 forecloses that
+projection for an `internal-hard` class. [The private-site record](ADR-029-what-the-private-site-may-show.md)
+keeps that class value and reads the class for the values a travel group may see on its private
+site. On the private site, rendering a filer's IN values under their roster name is admitted by that
+verdict even though it lets a reader infer who filed their own form; the engagement value itself is
+never rendered; and nothing of it reaches a public page. **Approval attribution is not one of those
+values**, so this section's bar on a name, a handle, a stable pseudonym, a key fingerprint or a
+per-traveller approval receipt stands exactly as written, and a count paired with a digest remains
+the only admissible signal of who approved. Nothing decided above or below changes.
+
 ### 5. The abstraction band is `extend-seam`, not `new-abstraction`
 
 The 2026-08-30 readiness note recorded a concern that #88's remediation implies a `new-abstraction`
