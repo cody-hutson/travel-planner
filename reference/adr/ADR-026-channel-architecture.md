@@ -370,9 +370,13 @@ service and there is no point at which the engine can evaluate a predicate befor
 therefore the operator-mediated crossing § *Decision* 1 already names for *"their own channel"*:
 an approval enters the engine only as the organizer's statement, on CH-3, through a terminal-only
 recording act. No fourth member is admitted, so the four admission conditions above are not
-engaged, and the channel-set stays at three members. The V-2 row and this section's heading are
-retained as decided and read through this paragraph: the row's ground is now *L2 fails on the
-traveller leg* rather than *undetermined*. The *Follow-on* bullet for #718 is discharged.
+engaged, and the channel-set stays at three members. The V-2 row, this section's heading,
+§ *Decision* 1's candidate row for *the inbound approval return* and the paragraph *Why the vacancy
+verdict survives its own re-typing* are retained as decided and read through this paragraph: the
+V-2 row's ground is now *L2 fails on the traveller leg* rather than *undetermined*; the candidate
+row's verdict — not a member — now stands on that ground rather than on a placeholder; and the
+inbound return is no longer vacant, being resolved as that crossing. The *Follow-on* bullet for #718
+is discharged.
 
 **Amendment (2026-09-26, Saturday) — a citation repair: the line locators into `ADR-003`
 removed.** The V-1 row above and the `ADR-003` entry under *References* each cited `ADR-003` § 3's

@@ -408,7 +408,9 @@ change that ships its replacement, as this section's timing rule requires. The c
 in it has ever been superseded at all"* was true when this record landed and was overtaken on the
 day it was ratified: `ADR-009`'s eighth amendment, dated 2026-09-02, records `ADR-011` § 3
 superseding part of that record's Decision 3. The sentences above are retained as decided and read
-through this paragraph. No decision here moves.
+through this paragraph, as are the *Trade-offs* bullet under *Consequences* that calls the gap
+*documented and still open* and the *Follow-on* bullet on the partial-supersession form: the gap is
+closed, and the form is established by the record that bullet anticipated. No decision here moves.
 
 ### 9. Reversibility and confidence
 
