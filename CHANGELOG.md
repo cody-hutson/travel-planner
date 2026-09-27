@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-26 — The site serves every phase: the founding decision
+## [0.46.0] — 2026-09-26 — The site serves every phase: the founding decision
 
 This release decides and builds nothing, deliberately. The private trip site has been built only once
 a destination is chosen and a plan exists, and nothing said what it may show a travel group before
