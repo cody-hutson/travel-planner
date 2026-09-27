@@ -6580,7 +6580,7 @@ ST_CF_SITE_PROBE='ZZ-ST-CF-SITE-PROBE'
 ST_CF_SITE_PROBE_KEY='ZZ-ST-CF-SITE-PROBE#1'
 ST_CF_SITE_PHANTOM='ZZ-ST-CF-PHANTOM-SITE#9'
 # The member the group-MD registrations grade: the FIRST entry of ST_CF_FORMS, by its path.
-ST_CF_MD_FORM="$(printf '%s\n' "$ST_CF_FORMS" | awk 'NF { print; exit }')"
+ST_CF_MD_FORM="$(awk 'NF { print; exit }' <<<"$ST_CF_FORMS")"
 # The member the version-2 registrations grade: the FIRST entry of ST_CF_FORMS declaring version 2.
 ST_CF_MD_V2="$(while IFS= read -r st_cf_m; do [ -n "$st_cf_m" ] && [ "$(st_cf_version "$ROOT/$st_cf_m")" = 2 ] && { printf '%s' "$st_cf_m"; break; }; done <<<"$ST_CF_FORMS")"
 
@@ -7024,8 +7024,8 @@ st_cf_mustfire "CTL-ST-CF-Q2-GONE[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q2 "the 
 # ── Q3: the join, and the address it is made through ──
 ST_CF_FX="$(st_cf_fixture q3-unjoined)"; st_cf_relabel "$ST_CF_FX" "$ST_CF_B1L" 'ZZ-ST-CF-UNCLASSIFIED'
 st_cf_mustfire "CTL-ST-CF-Q3-UNJOINED[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the first labelled bullet ('$ST_CF_B1B', line $ST_CF_B1L) is relabelled with a label no field-table row carries"
-ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_B1H" "$ST_CF_B1B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" { print $2; exit }')"
-ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_ROW" '$1 == r { print $9; exit }')"
+ST_CF_ROW="$(printf '%s\t%s\n' "$ST_CF_B1H" "$ST_CF_B1B" | ft_resolve <(ft_rows "$ST_DM") | awk -F'\t' '$1 == "ONE" && n == 0 { print $2; n = 1 }')"
+ST_CF_ROWL="$(ft_rows "$ST_DM" | awk -F'\t' -v r="$ST_CF_ROW" '$1 == r && n == 0 { print $9; n = 1 }')"
 ST_CF_FX="$(st_cf_fixture q3-ambig)"; ST_CF_DMFX="$(st_cf_dm_fixture q3-ambig)"; st_cf_dup_range "$ST_CF_DMFX" "${ST_CF_ROWL:-0}" "${ST_CF_ROWL:-0}"
 st_cf_mustfire "CTL-ST-CF-Q3-AMBIG[$ST_CF_TAG]" "$ST_CF_REL" "$ST_CF_FX" Q3 "the field-table row the first bullet joins (row ${ST_CF_ROW:-none}) is duplicated on a COPY of the data model, the form left byte-untouched, so that bullet reaches two rows" "$ST_CF_DMFX"
 ST_CF_FX="$(st_cf_fixture q3-address)"; st_line_sub "$ST_CF_FX" "$ST_CF_KC" "The classification" "The classifications"
@@ -10655,7 +10655,7 @@ EOF
 # finished profile now does — reads exactly as the file itself reads, and non-empty. The splice is
 # three plain reads and never passes the fence text through awk -v, which aborts on a multi-line
 # value.
-RL_BI_M="$(printf '%s\n' "$ST_CF_FORMS" | awk 'NF { print; exit }')"
+RL_BI_M="$(awk 'NF { print; exit }' <<<"$ST_CF_FORMS")"
 RL_BI_FA="$(st_cf_fence_at "$ROOT/$RL_BI_M")"; RL_BI_FO="${RL_BI_FA%% *}"; RL_BI_FC="${RL_BI_FA##* }"
 RL_BI_FME="$(awk 'NR == 1 && $0 == "---" { f = 1; next } f && $0 == "---" { print NR; exit }' "$RL_PAIR_T")"
 RL_BI_FX="$WORK/rl-instance.md"
