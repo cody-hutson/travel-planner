@@ -262,7 +262,8 @@ required check grades, so a neutral-label witness is a new fixture rather than a
 that a change reaches the site at the organizer's next update while copies already seen may persist.
 The same edit replaces the three example answers the forms carry today that put an OUT kind inside an
 IN line — the person form's `Lodging style` and the trip form's `Rooming` and `Special occasion?` —
-with examples that carry none.
+with examples that carry none. Another draft pull request edits both intake forms, so the Wave-1
+slice that makes this edit re-reads them at its own base.
 
 **2 — Nothing personal on a public page.** The refusal on the `--plaintext` limb is **structural**: a
 render carrying a group-only section — the destination shortlist's section, the group snapshot section
