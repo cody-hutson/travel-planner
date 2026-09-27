@@ -123,7 +123,7 @@ observation, and the `list` edit — `scripts/publish-trip-site.sh`'s `cmd_list`
 |---|---|---|---|
 | **R0 reconcile** | a traveller's form, a person record, the roster or a link changes | the verb that made the change names `/trip-record travelers` without running it | `/trip-record travelers` |
 | **R1 rebuild** | a change of σ — the trip context written by `/trip-record mode` or `/trip-record destination` — or of an admitted input: the shortlist by `/trip ideas`, the group snapshot and the group contacts file by the reconcile step, the plan artifacts by planning | `itinerary-to-build` reads `BEHIND`, naming the leading source | `/trip site` |
-| **R2 confirm** | a rebuild that changes the visible text | the organizer-confirm gate refuses `update` | `confirm`. This is intended under `ADR-003` § *Decision* 2, not a deadlock: `confirm` is always the organizer's, and a digest-only change needs none |
+| **R2 confirm** | a rebuild that changes the visible text | the organizer-confirm gate refuses `update` | `confirm`. This is intended under `ADR-003` § *Decision* 2, not a deadlock: `confirm` is always the organizer's, and a digest-only change needs none. On a trip that declares approvers, `ADR-029` § *Decision* 3 extends the same step: the organizer records each declared approver's reply through `confirm`, and `update` proceeds once they reach the declared threshold |
 | **R3 republish** | R1 and R2 done | `build-to-published` reads `BEHIND` | `/trip-publish update` |
 
 **A refusal, a removal or a withdrawal reaches the page through R0 to R3.** Under the private-site
@@ -135,12 +135,13 @@ a model rebuild changes no class. If `/trip ideas` re-runs, R1 to R3 carry the n
 page; if it does not, the shortlist against its own inputs is observed by no relation — a declared
 residual, since the shortlist is rebuilt only by its own verb.
 
-### 2. Conformance to `ADR-025`, `ADR-003` and `ADR-007`
+### 2. Conformance to `ADR-025`, `ADR-003`, `ADR-029` and `ADR-007`
 
 | Accepted decision | How this record conforms |
 |---|---|
 | `ADR-025` § 6, staleness | `build-to-published` reuses the shipped verdict family and its rules, has no disposition column, is declared by its consumer, and is evaluated outside `trip.freshness` |
 | `ADR-003` § 2 | A transition's or a snapshot change's visible-text change reaches the group only through the organizer's `confirm` (R2) |
+| `ADR-029` § 3 | On a trip that declares approvers, the same visible-text change reaches the group only once the declared approvers' replies, recorded by the organizer through `confirm`, reach the threshold (R2). The remedy is unchanged |
 | `ADR-007` § 2 | Nothing is deleted at a transition; the IDEATION page stays on disk |
 
 ## Consequences
@@ -153,7 +154,8 @@ residual, since the shortlist is rebuilt only by its own verb.
 **Costs and residuals, stated rather than smoothed**
 
 - **Transitions that change visible text ask for the organizer's confirmation**, by `ADR-003`'s own
-  logic; that is new behaviour.
+  logic — and, on a trip that declares approvers, for the approvals the organizer records up to the
+  threshold, by `ADR-029`'s; that is new behaviour.
 - **`build-to-published` cannot see a push made from another machine**, and the shortlist against its own
   inputs is observed by no relation.
 
@@ -162,7 +164,7 @@ residual, since the shortlist is rebuilt only by its own verb.
 | Evaluand | Consuming rule | Effect on the aggregate |
 |---|---|---|
 | `build-to-published` reads `BEHIND` | `/trip-publish` rule 7: "It never branches on freshness, and adds no gate that blocks on it." | report-only |
-| a transition's, or a snapshot change's, visible-text change | the organizer-confirm gate, whose proceed set is the organizer's own confirmation | `update` waits for `confirm` — intended under `ADR-003` |
+| a transition's, or a snapshot change's, visible-text change | the organizer-confirm gate, whose proceed set is the organizer's own confirmation — on a trip that declares approvers, `ADR-029` § *Decision* 3's threshold | `update` waits for `confirm` — intended under `ADR-003`, and under `ADR-029` on a trip that declares approvers |
 
 **The non-blocking claims hold.** The shown relation never gates a publish.
 
@@ -216,6 +218,8 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot.
 - [ADR-025](ADR-025-engagement-model-over-time.md) — § 6's staleness family.
 - [ADR-003](ADR-003-group-coordination.md) — § 2, the organizer's confirmation.
+- [ADR-029](ADR-029-group-approval-return-and-threshold.md) — § *Decision* 3, the approvals the
+  organizer records through `confirm` against a declared threshold, on a trip that declares approvers.
 - [ADR-007](ADR-007-command-entry-point.md) — § 2, under which nothing is deleted at a transition.
 - `skills/trip/SKILL.md` — the freshness report.
 - `skills/trip-publish/SKILL.md` — the `update` row, rule 7 and § *list*.
