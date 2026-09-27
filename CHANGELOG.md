@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [Unreleased] — 2026-09-27 — A form can say what it asks
+## [0.45.0] — 2026-09-27 — A form can say what it asks
 
 Two earlier releases decided what makes an intake form interviewable, and where the boundary sits in
 a form several writers own. This release builds both into the forms, behind a required check. Until
