@@ -494,7 +494,7 @@ a writer in a file whose writer is the subject, and a staleness that fails towar
 
 **Amendment (2026-09-26, Saturday) — never-carry 2 tracks the class.** Never-carry 2 states the
 `internal-hard` class at its live membership, and what binds is that class as the corpus reads it.
-[The private-site record](ADR-029-what-the-private-site-may-show.md) keeps every one of those class
+[The private-site record](ADR-030-what-the-private-site-may-show.md) keeps every one of those class
 values and reads the class for the values a travel group may see on its private site: for those
 values alone, *never rendered* reads *never on a public page*, and they reach the private site only
 through a `bound` artifact their producer writes. Never-carry 2 therefore holds, across every
@@ -540,7 +540,7 @@ coverage.**
 above that at the render boundary no join key may be minted, *and that is permanent*, and the render
 prohibition that follows it are a class boundary, as this section says: the prohibition forecloses a
 signal that is an anonymized projection of a traveller-model value, and the traveller model is
-`internal-hard`. [The private-site record](ADR-029-what-the-private-site-may-show.md) keeps that class
+`internal-hard`. [The private-site record](ADR-030-what-the-private-site-may-show.md) keeps that class
 value and reads the class for the values a group may see on its private site, the reading the joint
 source-binding step of its milestone fixed on #1383. *Permanent* therefore holds for everything that
 reading does not admit, and on every public page for every value. On the private site, rendering a

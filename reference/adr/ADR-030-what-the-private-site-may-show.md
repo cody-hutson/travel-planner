@@ -1,10 +1,10 @@
-# ADR-029: What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page
+# ADR-030: What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
 - **Driving work:** #1242, one of the records of the *The site serves every phase: the founding
-  decision* milestone, beside the #1296 card's records, which [the site phase-model record](ADR-030-site-phase-model.md)
-  lists, and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
+  decision* milestone, beside the #1296 card's records, which [the site phase-model record](ADR-031-site-phase-model.md)
+  lists, and [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md)
   (#1545). `ADR-026` names this card as the only one that may move a cell of its channel-axis
   table; this record is that move, together with the class-side change the move needs.
 - **The verdict this record carries was locked by the operator, not chosen here.** It is CR-1d,
@@ -149,7 +149,7 @@ now defined — for exactly the values § 2 lists as in. The `observers` cell st
 limbs; it is an input to the threat model in § 8, not the cell that moves. The channel-side move is
 necessary and not sufficient; the class-side change is § 7.
 
-**Its consumer.** [The site phase-model record](ADR-030-site-phase-model.md) is
+**Its consumer.** [The site phase-model record](ADR-031-site-phase-model.md) is
 the site-channel consumer of this verdict. Whether and where each item in § 2 shows, and in which
 phase, is that record's call, made through its render table and
 [the section-ceiling record](ADR-033-site-section-ceiling.md)'s ladder; this record decides only what may appear.
@@ -182,7 +182,7 @@ record's call.
   emergency contact's name, shown on the traveller's attestation that the contact agreed, is the
   contact and emergency record's decision rather than an exception to this row;
 - **contact and emergency details** — what of them the group sees is decided by
-  [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md); everything else
+  [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md); everything else
   of them stays out;
 - planner and operator internals: the trip log, the validation report, cross-trip group records;
 - personal desires (unmarked), novelty vs comfort, planning style, togetherness (group time,
@@ -433,8 +433,8 @@ commit. Confidence is **HIGH** that the verdict is the operator's and is transcr
 
 | Not decided here | Decided by |
 |---|---|
-| Where each IN item shows, in which phase, and under which section ceiling | [the site phase-model record](ADR-030-site-phase-model.md); the ceiling is [the section-ceiling record](ADR-033-site-section-ceiling.md)'s |
-| What of a traveller's contact and emergency details the group sees, and how an emergency contact's details are kept | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| Where each IN item shows, in which phase, and under which section ceiling | [the site phase-model record](ADR-031-site-phase-model.md); the ceiling is [the section-ceiling record](ADR-033-site-section-ceiling.md)'s |
+| What of a traveller's contact and emergency details the group sees, and how an emergency contact's details are kept | [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) |
 | The form of the concealed block, and the filer predicate the build reads | the site phase-model record |
 | The share mark's representation on the forms, the notice's wording, and the recording verb for a refusal or withdrawal | the Wave-1 slices below |
 | Any approval attribution | the approval milestone's records, under `ADR-010` § 4 unchanged |
@@ -480,10 +480,10 @@ All Wave 1. **None goes live before the fix for the rotation defect tracked priv
   read for its IN fields by A-1.
 - [ADR-013](ADR-013-count-assertion-basis.md) — every count in this record is authored to form F1.
 - [ADR-014](ADR-014-cross-trip-consent-refusal.md) — the refusal behind never-carry 3.
-- [The site phase-model record](ADR-030-site-phase-model.md) — the site-channel consumer of this verdict. It lists the
+- [The site phase-model record](ADR-031-site-phase-model.md) — the site-channel consumer of this verdict. It lists the
   #1296 card's other records, among them [the section-ceiling record](ADR-033-site-section-ceiling.md) and
   [the group-snapshot record](ADR-037-group-snapshot.md), which carries the group's shared details before a plan.
-- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the record that
+- [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the record that
   decides what of a traveller's contact and emergency details the group sees.
 - `reference/data-architecture.md` — § 5.1's class enum, § 5.5's paraphrase limit, and § 5.6's
   `publish-contract-values` fence, whose `field` rows safeguards 6 and 7 name.

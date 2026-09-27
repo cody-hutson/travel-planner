@@ -6,10 +6,10 @@
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries the group snapshot; *References* lists the card's other records. The milestone's other
-  cards are [the private-site record](ADR-029-what-the-private-site-may-show.md) (#1242) and [the
-  contact and emergency record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  cards are [the private-site record](ADR-030-what-the-private-site-may-show.md) (#1242) and [the
+  contact and emergency record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after
-  [the private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  [the private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because every value it carries is one that record admits
   (G-4). The flip is the maintainer's, taken at
   this milestone's close, and it moves both halves of a two-artifact state: the `Status:` line
@@ -19,7 +19,7 @@
   who writes it and when, its class, where it shows, and what never happens.
 - **What this record is not.** It does not decide what the private site may show, which is the
   private-site record's, or where the snapshot's section sits in each state, which [the site
-  phase-model record](ADR-030-site-phase-model.md)'s map places. It builds nothing, and in this
+  phase-model record](ADR-031-site-phase-model.md)'s map places. It builds nothing, and in this
   release it changes no `publish:` value, no fence line and no per-verb requirement row: every
   change it decides lands in a later slice.
 - **How it was decided.** In a scoped design step for the group snapshot on the card's design
@@ -31,7 +31,7 @@
 ## Context
 
 **Before a plan, nothing rendered carries the group's shared details.** [The site phase-model
-record](ADR-030-site-phase-model.md) carries a value the group may see to the page only through a
+record](ADR-031-site-phase-model.md) carries a value the group may see to the page only through a
 `bound` artifact that carries it, and before a plan no rendered document carries a traveller's own
 window, where they set out from, or how they like to stay and pace their days. Of the carriers that
 record weighed, a derived, `bound` projection of the shared details was taken as the group snapshot,
@@ -222,7 +222,7 @@ that writes a file the site build reads receives a value of the non-publishable 
 step that writes the snapshot reads the script-made projection of the traveller data that omits the
 class, and the writing of internal files from full inputs is split from the writing of group-visible
 files from the projection. **Carried to Wave 1, as conditions by citation to
-[the private-site record](ADR-029-what-the-private-site-may-show.md):** the projection script; that
+[the private-site record](ADR-030-what-the-private-site-may-show.md):** the projection script; that
 split; and the snapshot's writer input re-pointed to the projection. G-1's list carries no member of
 that class, so what the snapshot carries is unchanged by it.
 
@@ -300,7 +300,7 @@ keyed by candidate, and the Overview Dashboard is keyed by day and not admitted 
 section iterates people. Mode earns nothing here: the ground is a new source artifact whose element type
 no component represents, not a mode wanting content shown differently.
 
-**Per state** ([the site phase-model record](ADR-030-site-phase-model.md)'s map): rendered in *No
+**Per state** ([the site phase-model record](ADR-031-site-phase-model.md)'s map): rendered in *No
 destination yet* and in *Destination in play*; excluded, and named in § 9.3, in every plan mode,
 which keep today's shape plus the group contacts section.
 
@@ -315,7 +315,7 @@ a plan.
 
 | Never | How it holds |
 |---|---|
-| **anything from the OUT list** | three layers. **The field list:** no OUT field is on it (G-1). **The population:** no non-filer, operator-relayed, third-party, erased or refusing member gets an entry (G-2). **The withhold rule:** content that is out, inside a carried value, withholds the line (G-2). Money: no `Comfort range` or `Splurge appetite`, and money in a value withholds it. Identification: no `Passport` or `Documents`. Needs: no needs block, and a need in a value withholds it. Non-filers and a traveller's `Party` entry: never carried, never named or described. Contact and emergency details: none carried, and an address or a number withholds the line; what of them the group sees is [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)'s carrier. Planner internals and cross-trip group records: never read or carried. Unmarked desires, novelty against comfort, planning style, togetherness, *split off with*, satisfaction metrics: not on the list, and the overlap signal is excluded because it would disclose unmarked desires |
+| **anything from the OUT list** | three layers. **The field list:** no OUT field is on it (G-1). **The population:** no non-filer, operator-relayed, third-party, erased or refusing member gets an entry (G-2). **The withhold rule:** content that is out, inside a carried value, withholds the line (G-2). Money: no `Comfort range` or `Splurge appetite`, and money in a value withholds it. Identification: no `Passport` or `Documents`. Needs: no needs block, and a need in a value withholds it. Non-filers and a traveller's `Party` entry: never carried, never named or described. Contact and emergency details: none carried, and an address or a number withholds the line; what of them the group sees is [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md)'s carrier. Planner internals and cross-trip group records: never read or carried. Unmarked desires, novelty against comfort, planning style, togetherness, *split off with*, satisfaction metrics: not on the list, and the overlap signal is excluded because it would disclose unmarked desires |
 | **a public page** | the render is limb-blind, and every value in the section is group-only by construction. The private-site record's public-path refusal covers this section **by its presence alone** — a structural key, with no matching on values, which paraphrase would defeat — and no redaction step is added |
 | **going live before the rotation fix** | the private-site record's fifth safeguard binds every Wave-1 slice of this document — the class, the writer and the section: none goes live before the fix for the rotation defect tracked privately ships |
 
@@ -334,7 +334,7 @@ are replaced in the same edit.
 | `ADR-025` § 3, the carry rule and never-carries | The group snapshot is rebuilt each synthesis with no carry-forward, and the axis value is never written |
 | `ADR-028` §§ 2, 4 and 9 | The group snapshot reuses its keying, its write-set widening and its erase-row shape |
 | `ADR-006` | No third-party value enters the group snapshot, by its population rule |
-| `ADR-004` | The group snapshot carries no contact or emergency value; [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)'s carrier holds what of them the group sees |
+| `ADR-004` | The group snapshot carries no contact or emergency value; [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md)'s carrier holds what of them the group sees |
 | `ADR-007` § 2, bound 5 | The rebuild announce is not taken for the group snapshot: the class-wide question `ADR-028` § 2 routed covers every `rebuilt-each-synthesis` file a dispatched agent replaces, and this record does not pre-decide it |
 
 ## Consequences
@@ -398,11 +398,11 @@ keying and erase-row shape, and renames nothing.
 
 | Not decided here | Decided by |
 |---|---|
-| What the private site may show, the share mark and the safeguards | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
-| What of a traveller's contact and emergency details the group sees, and their carrier | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| What the private site may show, the share mark and the safeguards | [the private-site record](ADR-030-what-the-private-site-may-show.md) |
+| What of a traveller's contact and emergency details the group sees, and their carrier | [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) |
 | The engagement axis and its boundaries | `ADR-025` |
 | The rebuild announce for `rebuilt-each-synthesis` files | the class-wide question `ADR-028` § 2 routed |
-| Where the snapshot's section sits in each state, and the page's shape | [the site phase-model record](ADR-030-site-phase-model.md) |
+| Where the snapshot's section sits in each state, and the page's shape | [the site phase-model record](ADR-031-site-phase-model.md) |
 | The refresh steps R0 to R3 the snapshot rides | [the site-transitions record](ADR-035-site-transitions-and-refresh.md) |
 
 ## Follow-on build slices
@@ -419,9 +419,9 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 ## References
 
-- [The private-site record](ADR-029-what-the-private-site-may-show.md) — the IN list the snapshot's
+- [The private-site record](ADR-030-what-the-private-site-may-show.md) — the IN list the snapshot's
   fields are drawn from, the share mark, and the safeguards it binds: 1, 3, 4, 5 and 7.
-- [The site phase-model record](ADR-030-site-phase-model.md) — what drives the site's shape, and the
+- [The site phase-model record](ADR-031-site-phase-model.md) — what drives the site's shape, and the
   map of what each state's build renders.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the round-trip contract
   across the rendered artifacts, and the walk.
@@ -433,7 +433,7 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
   traveller was shown, and the refresh obligation.
 - [The published-artifact record](ADR-036-published-artifact-model-row.md) — `ADR-026` Finding 1,
   declined in terms and routed.
-- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the carrier
+- [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the carrier
   that holds what of a traveller's contact and emergency details the group sees.
 - [ADR-025](ADR-025-engagement-model-over-time.md) — the engagement axis and its floors, the carry rule
   and never-carries.

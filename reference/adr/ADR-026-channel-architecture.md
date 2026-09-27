@@ -528,7 +528,7 @@ path this section names is untouched.
   citation of `skills/trip/SKILL.md`'s `site` row is current and stays.
 - **The cell #1242 moves.** § 3's sentences that name #1242 as the only card that may move a cell, and
   the matching bullets under *Consequences* and *Follow-on build slices*, are retained as written.
-  [The private-site record](ADR-029-what-the-private-site-may-show.md) is that move. CH-1's encrypted
+  [The private-site record](ADR-030-what-the-private-site-may-show.md) is that move. CH-1's encrypted
   limb's `audience` cell, `party`, becomes load-bearing, because `carry-envelope` for that limb now
   admits exactly the values that record lists as the group's to see; the `--plaintext` limb, whose
   `audience` is `world`, admits none of them; and the `observers` cell stays `world` on both limbs.
@@ -536,11 +536,11 @@ path this section names is untouched.
 - **For the site channel.** § 3's composition of `C19` and § 4's sentence on `IDEATION` describe the
   build as it stood when this record was written. Two records of that milestone decide what replaces
   them. [The site-admission record](ADR-034-site-build-admission.md) decides that `/trip site` builds in
-  `IDEATION`. [The site phase-model record](ADR-030-site-phase-model.md) decides that each build reads
+  `IDEATION`. [The site phase-model record](ADR-031-site-phase-model.md) decides that each build reads
   exactly the artifacts its render table admits for the resolved mode and destination — in
   `IDEATION`, the group snapshot in both destination states, and the destination shortlist when no
   destination is recorded; and in every state the site builds, the group contacts file that
-  [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) decides. From the
+  [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) decides. From the
   slices that land those decisions, `C19`'s read set is that admitted set, and mode bites on CH-1 in
   every state the site builds. The decision of § 4 — mode conditions the production of a channel's
   content and never indexes its reach — is unchanged; the group snapshot, which

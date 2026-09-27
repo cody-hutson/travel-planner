@@ -7,12 +7,12 @@
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries how its round-trip completeness contract extends past the itinerary; *References* lists
   the card's other records. The milestone's other cards are [the private-site
-  record](ADR-029-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
-  record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  record](ADR-030-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
+  record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after [the
-  private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because the card's pre-plan rows, in [the site phase-model
-  record](ADR-030-site-phase-model.md), render values that record admits. The flip is the
+  record](ADR-031-site-phase-model.md), render values that record admits. The flip is the
   maintainer's, taken at this milestone's close, and it moves both halves of a two-artifact state:
   the `Status:` line above, and this record's `Status` cell in `reference/adr/README.md`.
 - **What this record is.** A decision about **how the site's round-trip completeness contract extends past
@@ -20,7 +20,7 @@
   grains, the render table's place in § 9.2, § 9.3's state column, the walk's three passes and
   § 9.5's boundary.
 - **What this record is not.** It does not decide what each state renders — the render table's rows
-  are [the site phase-model record](ADR-030-site-phase-model.md)'s — or what earns a section, which
+  are [the site phase-model record](ADR-031-site-phase-model.md)'s — or what earns a section, which
   is [the section-ceiling record](ADR-033-site-section-ceiling.md)'s. It builds nothing, and in this
   release it changes no `publish:` value, no fence line and no per-verb requirement row: every
   change it decides lands in a later slice.
@@ -41,7 +41,7 @@ today is its class: `outputs/destination-shortlist.md` is `internal`, never rend
 extension of § 9.2.
 
 **Terms.** σ is the resolved state, (`trip.mode`, `trip.destination`), on which [the site
-phase-model record](ADR-030-site-phase-model.md) keys the site's shape through one render table;
+phase-model record](ADR-031-site-phase-model.md) keys the site's shape through one render table;
 that record's map fills the table's rows.
 
 **What the live target establishes.** Every fact below was read live at `8b2ac05`, the base of this
@@ -206,7 +206,7 @@ walker, and renames nothing.
 
 | Not decided here | Decided by |
 |---|---|
-| What each state renders — the render table's rows — and σ | [the site phase-model record](ADR-030-site-phase-model.md) |
+| What each state renders — the render table's rows — and σ | [the site phase-model record](ADR-031-site-phase-model.md) |
 | What earns a section, a region or a field | [the section-ceiling record](ADR-033-site-section-ceiling.md) |
 | The classes the build reads, and the states it admits | [the site-admission record](ADR-034-site-build-admission.md) |
 | The group snapshot's element fence rows | [the group-snapshot record](ADR-037-group-snapshot.md) |
@@ -225,7 +225,7 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 ## References
 
-- [The site phase-model record](ADR-030-site-phase-model.md) — what drives the site's shape, and the
+- [The site phase-model record](ADR-031-site-phase-model.md) — what drives the site's shape, and the
   map of what each state's build renders.
 - [The section-ceiling record](ADR-033-site-section-ceiling.md) — the four-test ladder that decides
   what earns a section.

@@ -1,4 +1,4 @@
-# ADR-030: The site's phase model — the resolved state drives its shape through one render table, and what each state's build renders
+# ADR-031: The site's phase model — the resolved state drives its shape through one render table, and what each state's build renders
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
@@ -6,10 +6,10 @@
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries its shape driver and its map; *References* lists the card's other records. The milestone's
-  other cards are [the private-site record](ADR-029-what-the-private-site-may-show.md) (#1242) and
-  [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  other cards are [the private-site record](ADR-030-what-the-private-site-may-show.md) (#1242) and
+  [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after
-  [the private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  [the private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because this record's pre-plan rows render values that
   record admits. The flip is the maintainer's, taken at
   this milestone's close, and it moves both halves of a two-artifact state: the `Status:` line
@@ -285,7 +285,7 @@ second declaring site.
   the new fence names — stay proposed, and Wave 1 re-measures them at its own base.
 
 **The group contacts rows** are the contact and emergency record's carrier, placed here by citation
-to [that record](ADR-031-contact-emergency-group-visibility.md). The ceiling returns a section for
+to [that record](ADR-038-contact-emergency-group-visibility.md). The ceiling returns a section for
 it ([the section-ceiling record](ADR-033-site-section-ceiling.md)), which renders in every state the
 site builds — both IDEATION rows and the four plan modes — and takes no § 9.3 row, because nothing
 of it is excluded in any built state. For each traveller who filed their own form it carries their
@@ -309,7 +309,7 @@ Group` roster alone in every state the site builds, under the content rules that
 | `Handoff to DISCOVERY`, an element of the shortlist | wherever the shortlist renders | an instruction to whoever operates the engine, not reader content |
 
 **The IDEATION rows in detail.** Both rows cite [the private-site
-record](ADR-029-what-the-private-site-may-show.md) as the ground of what they may render.
+record](ADR-030-what-the-private-site-may-show.md) as the ground of what they may render.
 
 - **The hero, pre-plan variant** — a D2 variant of the Hero. It never renders a placeholder value: a
   value that begins with `[` and ends with `]` is never an answer. **With no destination recorded, its
@@ -518,9 +518,9 @@ state costs one row per `bound` class. *Maintainability:* it reuses `G5`'s modes
 
 | Not decided here | Decided by |
 |---|---|
-| What the private site may show, the share mark and the safeguards | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
-| That a value that is out stays out when a `bound` artifact carries it, and the producers that owe it | [the private-site record](ADR-029-what-the-private-site-may-show.md) (D-2); this record names the ideation agent among them |
-| What of a traveller's contact and emergency details the group sees, and their carrier | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| What the private site may show, the share mark and the safeguards | [the private-site record](ADR-030-what-the-private-site-may-show.md) |
+| That a value that is out stays out when a `bound` artifact carries it, and the producers that owe it | [the private-site record](ADR-030-what-the-private-site-may-show.md) (D-2); this record names the ideation agent among them |
+| What of a traveller's contact and emergency details the group sees, and their carrier | [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) |
 | What a channel is and what it may carry | `ADR-026` |
 | How the round-trip completeness contract grades what each state renders | [the round-trip contract record](ADR-032-site-round-trip-contract.md) |
 | What earns a section, a region or a field | [the section-ceiling record](ADR-033-site-section-ceiling.md) |
@@ -548,9 +548,9 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 ## References
 
-- [The private-site record](ADR-029-what-the-private-site-may-show.md) — the verdict every IDEATION cell
+- [The private-site record](ADR-030-what-the-private-site-may-show.md) — the verdict every IDEATION cell
   cites, its lists, its share mark, its concealed occasion, and its safeguards 1 to 7.
-- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the carrier this
+- [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the carrier this
   record places in every state.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the round-trip contract
   across the rendered artifacts, and the walk.

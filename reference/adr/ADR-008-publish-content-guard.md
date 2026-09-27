@@ -102,8 +102,8 @@
   option 2 below and the coverage boundary's first layer state as the sources
   `reference/site-layout-spec.md` § 9.1 names. The records of the *site serves every phase*
   milestone, each `Proposed`, add members to that set, each from the Wave-1 slice that lands it:
-  [the private-site record](ADR-029-what-the-private-site-may-show.md) moves the destination shortlist
-  to `bound`, [the group-snapshot record](ADR-037-group-snapshot.md) adds the group snapshot, and [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md)
+  [the private-site record](ADR-030-what-the-private-site-may-show.md) moves the destination shortlist
+  to `bound`, [the group-snapshot record](ADR-037-group-snapshot.md) adds the group snapshot, and [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md)
   adds the group contacts file. The slice that lands each member also adds it to the validator's
   inline list, and § 9.1 remains the authority. Both sentences are retained, with an inline pointer
   at option 2's. **No decision, rule, residual, coverage claim or exit code is changed, and none is

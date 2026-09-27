@@ -7,12 +7,12 @@
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries the card's answer to `ADR-026`'s Finding 1; *References* lists the card's other records.
   The milestone's other cards are [the private-site
-  record](ADR-029-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
-  record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  record](ADR-030-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
+  record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after [the
-  private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because the card's pre-plan rows, in [the site phase-model
-  record](ADR-030-site-phase-model.md), render values that record admits. The flip is the
+  record](ADR-031-site-phase-model.md), render values that record admits. The flip is the
   maintainer's, taken at this milestone's close, and it moves both halves of a two-artifact state:
   the `Status:` line above, and this record's `Status` cell in `reference/adr/README.md`.
 - **What this record is.** A decision on **`ADR-026`'s Finding 1**: whether the published artifact takes a row
@@ -30,7 +30,7 @@
 **The assignment.** `ADR-026`'s Finding 1 asks for a § 1.1 row for the published artifact, and
 assigns it to whichever card next amends `reference/data-architecture.md` § 1.1. The #1296 card's
 slices do: the destination shortlist's class edit lands in [the site phase-model
-record](ADR-030-site-phase-model.md)'s render slice, and [the group-snapshot
+record](ADR-031-site-phase-model.md)'s render slice, and [the group-snapshot
 record](ADR-037-group-snapshot.md) decides a new class.
 
 ## Decision drivers
@@ -68,7 +68,7 @@ card of its own**, on four grounds, the limb-independent ones first:
 2. **The published artifact is already governed** on the path that produces it, by two fail-closed
    pre-push predicates.
 3. **The card decides the render's content per state**, in [the site phase-model
-   record](ADR-030-site-phase-model.md), not the class of the object that crosses the channel, which
+   record](ADR-031-site-phase-model.md), not the class of the object that crosses the channel, which
    is `ADR-026` § 3's subject.
 4. **A corollary on the encrypted limb only.** There the published artifact is ciphertext and cannot
    carry the universal frontmatter every in-model class requires; on `--plaintext` it is the render
@@ -99,7 +99,7 @@ emergency record — are not the published artifact, and they are what fired the
 | Not decided here | Decided by |
 |---|---|
 | An explicit § 1.2 row for the published artifact, split from the `.publish/` row — the finding's option B | the routed card |
-| What the site renders in each state | [the site phase-model record](ADR-030-site-phase-model.md) |
+| What the site renders in each state | [the site phase-model record](ADR-031-site-phase-model.md) |
 | The class of the object that crosses the channel | `ADR-026` § 3 |
 
 ## Follow-on build slices
@@ -114,7 +114,7 @@ emergency record — are not the published artifact, and they are what fired the
 - [ADR-027](ADR-027-post-trip-preference-memory.md) and
   [ADR-028](ADR-028-derived-planning-day-block-owners.md) — the two cards the assignment has already
   passed.
-- [The site phase-model record](ADR-030-site-phase-model.md) — what drives the site's shape, and the
+- [The site phase-model record](ADR-031-site-phase-model.md) — what drives the site's shape, and the
   map of what each state's build renders.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the round-trip contract
   across the rendered artifacts, and the walk.
@@ -125,7 +125,7 @@ emergency record — are not the published artifact, and they are what fired the
 - [The site-transitions record](ADR-035-site-transitions-and-refresh.md) — transitions, what a
   traveller was shown, and the refresh obligation.
 - [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot.
-- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the group
+- [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the group
   contacts file, one of the new classes the milestone decides.
 - `reference/data-architecture.md` — § 1.1's classes and § 1.2's out-of-model dispositions.
 - `scripts/publish-trip-site.sh` — the fail-closed pre-push predicates that govern the published

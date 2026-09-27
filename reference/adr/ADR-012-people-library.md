@@ -1415,7 +1415,7 @@ mid-milestone renumbering already demonstrated.
 **Amendment (2026-09-26, Saturday) — the person record's class, read for the values the group may
 see.** The § 1.1 row above gives the person record `publish: internal-hard`, the value § 5.1 reserves
 for a class whose values must not reach a rendered page in any form. [The private-site
-record](ADR-029-what-the-private-site-may-show.md) keeps that class value and reads it for the values
+record](ADR-030-what-the-private-site-may-show.md) keeps that class value and reads it for the values
 a travel group may see: a value from the person record carries the person record's class in every
 artifact that carries it, by union with that artifact's own class and never by override, and for
 those values alone *never rendered* reads *never on a public page* on the private site. The

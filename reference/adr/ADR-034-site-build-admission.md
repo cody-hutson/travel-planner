@@ -7,12 +7,12 @@
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries the build verb's admission of the pre-plan states; *References* lists the card's other
   records. The milestone's other cards are [the private-site
-  record](ADR-029-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
-  record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  record](ADR-030-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
+  record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after [the
-  private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because the card's pre-plan rows, in [the site phase-model
-  record](ADR-030-site-phase-model.md), render values that record admits. The flip is the
+  record](ADR-031-site-phase-model.md), render values that record admits. The flip is the
   maintainer's, taken at this milestone's close, and it moves both halves of a two-artifact state:
   the `Status:` line above, and this record's `Status` cell in `reference/adr/README.md`.
 - **What this record is.** A decision about **how the build verb admits the pre-plan states**: the admission
@@ -20,7 +20,7 @@
   destination, the page's file name while no destination is recorded, the pre-plan classes the
   build reads, and its Reads line.
 - **What this record is not.** It does not decide what each admitted state renders, which is [the
-  site phase-model record](ADR-030-site-phase-model.md)'s. It builds nothing, and in this release it
+  site phase-model record](ADR-031-site-phase-model.md)'s. It builds nothing, and in this release it
   changes no `publish:` value, no fence line and no per-verb requirement row: every change it
   decides lands in a later slice.
 - **How it was decided.** In the second design pass on the card's design sub-task #1388, which decided the
@@ -37,11 +37,11 @@ requirement row admits the four plan modes with a decided destination only. `ADR
 site built in DISCOVERY and one built in ITERATION render the same shape, differing only in fill.
 
 **This record answers its first half**: that the build does not run in IDEATION. [The site
-phase-model record](ADR-030-site-phase-model.md) answers the other half, that the build does not
+phase-model record](ADR-031-site-phase-model.md) answers the other half, that the build does not
 read the mode where it runs.
 
 **Terms.** σ is the resolved state, (`trip.mode`, `trip.destination`), on which [the site
-phase-model record](ADR-030-site-phase-model.md) keys the site's shape.
+phase-model record](ADR-031-site-phase-model.md) keys the site's shape.
 
 **What the live target establishes.** Every fact below was read live at `8b2ac05`, the base of this
 release.
@@ -102,7 +102,7 @@ closed list of what this record still had to decide.
 
 **The row, as Wave 1 writes it:** `site · ACTIVE · IDEATION, DISCOVERY, ENRICHMENT, ITERATION,
 RESEQUENCING · any · G8`. Admission rests on [the private-site
-record](ADR-029-what-the-private-site-may-show.md): an IDEATION build has something admissible to
+record](ADR-030-what-the-private-site-may-show.md): an IDEATION build has something admissible to
 render because that record admits the leanings and the group's shared details on the private site.
 
 **Why a plan mode with no destination is a stop, not an admission.** The admitted set — IDEATION with
@@ -188,11 +188,11 @@ not apply.
 
 | Not decided here | Decided by |
 |---|---|
-| What each admitted state renders | [the site phase-model record](ADR-030-site-phase-model.md) |
+| What each admitted state renders | [the site phase-model record](ADR-031-site-phase-model.md) |
 | What a transition does to the page | [the site-transitions record](ADR-035-site-transitions-and-refresh.md) |
 | The group snapshot's class, and the passes that produce it | [the group-snapshot record](ADR-037-group-snapshot.md) |
-| The destination shortlist's class value | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
-| The group contacts file's class | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| The destination shortlist's class value | [the private-site record](ADR-030-what-the-private-site-may-show.md) |
+| The group contacts file's class | [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) |
 
 ## Follow-on build slices
 
@@ -210,8 +210,8 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 ## References
 
-- [The private-site record](ADR-029-what-the-private-site-may-show.md) — the verdict the admission rests on.
-- [The site phase-model record](ADR-030-site-phase-model.md) — what drives the site's shape, and the
+- [The private-site record](ADR-030-what-the-private-site-may-show.md) — the verdict the admission rests on.
+- [The site phase-model record](ADR-031-site-phase-model.md) — what drives the site's shape, and the
   map of what each state's build renders.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the round-trip contract
   across the rendered artifacts, and the walk.
@@ -222,7 +222,7 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 - [The published-artifact record](ADR-036-published-artifact-model-row.md) — `ADR-026` Finding 1,
   declined in terms and routed.
 - [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot.
-- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the group
+- [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the group
   contacts file, one of the pre-plan classes the build reads.
 - [ADR-026](ADR-026-channel-architecture.md) — § 4's production-gating.
 - [ADR-028](ADR-028-derived-planning-day-block-owners.md) — § 2's reason for keeping its own class off

@@ -1,12 +1,12 @@
-# ADR-031: Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier
+# ADR-038: Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier
 
 - **Status:** Proposed
 - **Deciders:** repo maintainer
 - **Driving work:** #1545, one of the records of the *The site serves every phase: the founding
-  decision* milestone, beside [the private-site record](ADR-029-what-the-private-site-may-show.md)
-  (#1242) and the #1296 card's records, which [the site phase-model record](ADR-030-site-phase-model.md) lists. The operator pulled the card into the milestone when the private-site verdict was locked.
+  decision* milestone, beside [the private-site record](ADR-030-what-the-private-site-may-show.md)
+  (#1242) and the #1296 card's records, which [the site phase-model record](ADR-031-site-phase-model.md) lists. The operator pulled the card into the milestone when the private-site verdict was locked.
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after
-  [the private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  [the private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because what this record shows rides that record's
   coordination test and share mark. The flip is the maintainer's, taken at this milestone's close, and
   it moves both halves of a two-artifact state: the `Status:` line above, and this record's `Status`
@@ -234,7 +234,7 @@ is never shown for a traveller who has recorded a refusal, under the private-sit
 - It never suggests contacting the organizer instead of the local emergency services.
 
 **Placement is the site phase-model record's.** The carrier this record decides (§ 6) is placed in
-[the site phase-model record](ADR-030-site-phase-model.md)'s render table, by
+[the site phase-model record](ADR-031-site-phase-model.md)'s render table, by
 citation to this record: a section in every state the site builds, and the organizer line as a field
 of the hero.
 
@@ -686,8 +686,8 @@ component and one fence name.
 
 | Not decided here | Decided by |
 |---|---|
-| What the private site may show in general, the share mark and the safeguards | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
-| Where the group contacts section sits in each phase, and the page's shape | [the site phase-model record](ADR-030-site-phase-model.md) |
+| What the private site may show in general, the share mark and the safeguards | [the private-site record](ADR-030-what-the-private-site-may-show.md) |
+| Where the group contacts section sits in each phase, and the page's shape | [the site phase-model record](ADR-031-site-phase-model.md) |
 | What a channel is and what it may carry | `ADR-026` |
 | The form labels, the notice's wording, the organizer-only file's name and the filing script's design | Wave 1 |
 | Retention after the trip | a routed intake card |
@@ -715,11 +715,11 @@ Wave-1 working notes on its Stage-6 sub-task, #1547:
 
 ## References
 
-- [The private-site record](ADR-029-what-the-private-site-may-show.md) — the coordination test, the
+- [The private-site record](ADR-030-what-the-private-site-may-show.md) — the coordination test, the
   share mark this record reuses, and the safeguards it cites: 1, the notice; 3, people who did not
   file; 4, refusal and removal at the next update; 5, the rotation fix first; 6, decision P; 7,
   decision Q.
-- [The site phase-model record](ADR-030-site-phase-model.md) — the render table that places the carrier in every state
+- [The site phase-model record](ADR-031-site-phase-model.md) — the render table that places the carrier in every state
   the site builds.
 - [The section-ceiling record](ADR-033-site-section-ceiling.md) — the ladder that returns the carrier's section.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the two-grain contract whose rows and fences the carrier's

@@ -6,18 +6,18 @@
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries its section-growth ceiling; *References* lists the card's other records. The milestone's
-  other cards are [the private-site record](ADR-029-what-the-private-site-may-show.md) (#1242) and
-  [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  other cards are [the private-site record](ADR-030-what-the-private-site-may-show.md) (#1242) and
+  [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after [the
-  private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because the card's pre-plan rows, in [the site phase-model
-  record](ADR-030-site-phase-model.md), render values that record admits. The flip is the
+  record](ADR-031-site-phase-model.md), render values that record admits. The flip is the
   maintainer's, taken at this milestone's close, and it moves both halves of a two-artifact state:
   the `Status:` line above, and this record's `Status` cell in `reference/adr/README.md`.
 - **What this record is.** A decision about **what earns a section** on the site: a four-test ladder over
   declared tables, calibrated on the dispositions the corpus already decided.
 - **What this record is not.** It does not decide what each state renders, or where a section sits
-  in each state — that is [the site phase-model record](ADR-030-site-phase-model.md)'s. It builds
+  in each state — that is [the site phase-model record](ADR-031-site-phase-model.md)'s. It builds
   nothing, and in this release it changes no `publish:` value, no fence line and no per-verb
   requirement row.
 - **How it was decided.** In the first design pass on the card's design sub-task #1388, which
@@ -108,7 +108,7 @@ decide:**
 | **The destination shortlist** | its elements, with a § 9.1 authority row when it becomes `bound` | `bound` once moved; its values are in the private-site record's IN list; no § 5.6 row scopes it | no component represents a destination candidate | trip-level, not per-day | **D4: a section, `group-shortlist`** |
 | **The concealed occasion** | an itinerary event | the concealed form carries only plan facts | the schedule-timeline entry can carry it | — | **D2: an `is-concealed` variant** of the schedule entry; no new card type |
 | **The group snapshot**, by citation to [the group-snapshot record](ADR-037-group-snapshot.md) | its elements, with a § 9.1 authority row when its class lands | `bound`; every value in the private-site record's IN list; no § 5.6 row scopes it | no § 3 component carries a per-traveller record | keyed to a person, and no section iterates people | **D4: a section, `group-snapshot`** |
-| **The group contacts file**, by citation to [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) | its elements, with a § 9.1 authority row when its class lands | `bound`; every rendered value admitted by that record; the one § 5.6 row involved names a value the file never carries | no component carries a per-traveller record in every state | keyed to a traveller, and no section iterates travellers in every state | **D4: a section, `group-contacts`** |
+| **The group contacts file**, by citation to [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) | its elements, with a § 9.1 authority row when its class lands | `bound`; every rendered value admitted by that record; the one § 5.6 row involved names a value the file never carries | no component carries a per-traveller record in every state | keyed to a traveller, and no section iterates travellers in every state | **D4: a section, `group-contacts`** |
 
 ## Consequences
 
@@ -127,9 +127,9 @@ decide:**
 | Not decided here | Decided by |
 |---|---|
 | Per-card visual design | #87, which consumes this record's ceiling |
-| What each state renders, and where each section sits in each state | [the site phase-model record](ADR-030-site-phase-model.md) |
+| What each state renders, and where each section sits in each state | [the site phase-model record](ADR-031-site-phase-model.md) |
 | What the group snapshot carries | [the group-snapshot record](ADR-037-group-snapshot.md) |
-| What the group contacts file carries | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| What the group contacts file carries | [the contact and emergency record](ADR-038-contact-emergency-group-visibility.md) |
 
 ## Follow-on build slices
 
@@ -141,7 +141,7 @@ carry is kept, non-binding, in the Wave-1 working notes on its Stage-6 sub-task,
 
 ## References
 
-- [The site phase-model record](ADR-030-site-phase-model.md) — what drives the site's shape, and the
+- [The site phase-model record](ADR-031-site-phase-model.md) — what drives the site's shape, and the
   map of what each state's build renders.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the round-trip contract
   across the rendered artifacts, and the walk.
@@ -152,7 +152,7 @@ carry is kept, non-binding, in the Wave-1 working notes on its Stage-6 sub-task,
 - [The published-artifact record](ADR-036-published-artifact-model-row.md) — `ADR-026` Finding 1,
   declined in terms and routed.
 - [The group-snapshot record](ADR-037-group-snapshot.md) — the group snapshot.
-- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the group
+- [The contact and emergency record](ADR-038-contact-emergency-group-visibility.md) — the group
   contacts file, whose section the ladder returns.
 - `reference/site-layout-spec.md` — § 3's catalog, § 9.1, § 9.2 and § 9.5.
 - `reference/data-architecture.md` — § 5.1 and § 5.6.

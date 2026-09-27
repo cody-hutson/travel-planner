@@ -7,19 +7,19 @@
   decision is recorded one topic to a record, under the operator's R2 on #1369, and this record
   carries what happens at a transition, and the refresh obligation; *References* lists the card's
   other records. The milestone's other cards are [the private-site
-  record](ADR-029-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
-  record](ADR-031-contact-emergency-group-visibility.md) (#1545).
+  record](ADR-030-what-the-private-site-may-show.md) (#1242) and [the contact and emergency
+  record](ADR-038-contact-emergency-group-visibility.md) (#1545).
 - **The precondition of this record's status flip.** This record flips to `Accepted` only after [the
-  private-site record](ADR-029-what-the-private-site-may-show.md) reads `Accepted` — in its
+  private-site record](ADR-030-what-the-private-site-may-show.md) reads `Accepted` — in its
   `Status:` line and in its index cell — because the card's pre-plan rows, in [the site phase-model
-  record](ADR-030-site-phase-model.md), render values that record admits. The flip is the
+  record](ADR-031-site-phase-model.md), render values that record admits. The flip is the
   maintainer's, taken at this milestone's close, and it moves both halves of a two-artifact state:
   the `Status:` line above, and this record's `Status` cell in `reference/adr/README.md`.
 - **What this record is.** A decision about **what happens to earlier-phase content at a transition, what a
   traveller was shown, and the refresh obligation**: the render policy at a change of state, the
   `build-to-published` relation, and the steps R0 to R3.
 - **What this record is not.** It does not decide what each state renders, which is [the site
-  phase-model record](ADR-030-site-phase-model.md)'s. It builds nothing, and in this release it
+  phase-model record](ADR-031-site-phase-model.md)'s. It builds nothing, and in this release it
   changes no `publish:` value, no fence line and no per-verb requirement row: every change it
   decides lands in a later slice.
 - **How it was decided.** In the second design pass on the card's design sub-task #1388, which decided the
@@ -31,7 +31,7 @@
 ## Context
 
 **The refresh obligation the card's shape creates.** [The site phase-model
-record](ADR-030-site-phase-model.md) keys the site's shape on the resolved state σ = (`trip.mode`,
+record](ADR-031-site-phase-model.md) keys the site's shape on the resolved state σ = (`trip.mode`,
 `trip.destination`), so a change of state is a change of shape, and the published render is out of
 date until it is rebuilt **and** republished. That record names the obligation; this record sets its
 policy.
@@ -65,7 +65,7 @@ closed list of what this record still had to decide.
 
 **Replace** is chosen. Accumulating is rejected: a second source, and a ciphertext that grows with
 history. A client-side hide is rejected for the reason the client-side switch was
-([the site phase-model record](ADR-030-site-phase-model.md)'s option F).
+([the site phase-model record](ADR-031-site-phase-model.md)'s option F).
 
 | Criterion | **Content identity** (chosen) | Order (today's `list`) |
 |---|---|---|
@@ -186,7 +186,7 @@ verdict family and the confirm gate's projection, and renames nothing.
 | Not decided here | Decided by |
 |---|---|
 | Scheduled refresh, re-encryption and republish | the living-site milestone |
-| What each state renders | [the site phase-model record](ADR-030-site-phase-model.md) |
+| What each state renders | [the site phase-model record](ADR-031-site-phase-model.md) |
 | The page's file name, and erasure's reach over every page file | [the site-admission record](ADR-034-site-build-admission.md) |
 
 ## Follow-on build slices
@@ -201,9 +201,9 @@ Wave-1 working notes on its Stage-6 sub-task, #1392:
 
 ## References
 
-- [The private-site record](ADR-029-what-the-private-site-may-show.md) — safeguard 4, which a
+- [The private-site record](ADR-030-what-the-private-site-may-show.md) — safeguard 4, which a
   refusal, a removal or a withdrawal reaches through R0 to R3.
-- [The site phase-model record](ADR-030-site-phase-model.md) — what drives the site's shape, and the
+- [The site phase-model record](ADR-031-site-phase-model.md) — what drives the site's shape, and the
   map of what each state's build renders.
 - [The round-trip contract record](ADR-032-site-round-trip-contract.md) — the round-trip contract
   across the rendered artifacts, and the walk.
