@@ -3,7 +3,7 @@
 All notable changes to the travel-planner engine are documented here. The format
 follows Keep a Changelog; versions follow Semantic Versioning.
 
-## [0.45.0] — 2026-09-26 — The personal-data gate reads the lines a pull request adds
+## [0.44.1] — 2026-09-26 — The personal-data gate reads the lines a pull request adds
 
 **The personal-data gate now reads what a pull request adds.** The required check that keeps
 personal email addresses and OS home paths out of this public repository reads commit messages and
