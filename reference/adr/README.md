@@ -115,4 +115,4 @@ carries the account.
 | [ADR-035](ADR-035-site-transitions-and-refresh.md) | The site's transitions — replace, never accumulate; what a traveller was shown; and the refresh obligation | Accepted |
 | [ADR-036](ADR-036-published-artifact-model-row.md) | The published artifact takes no in-model row — `ADR-026` Finding 1 declined, in terms, and routed | Accepted |
 | [ADR-037](ADR-037-group-snapshot.md) | The group snapshot — what travellers share with the group before a plan, whose it is, who writes it, and where it shows | Accepted |
-| [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Proposed |
+| [ADR-038](ADR-038-contact-emergency-group-visibility.md) | Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier | Accepted |
