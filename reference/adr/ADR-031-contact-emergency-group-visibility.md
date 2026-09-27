@@ -85,7 +85,74 @@ path never carries contact or emergency data.
 
 ## Options considered
 
-*Authored in the commits that follow on this release branch.*
+### What the group sees
+
+Each option answers whether the group sees anything, at what level, and how the emergency contact's
+details are handled, together.
+
+| Option | The group sees | The emergency contact's details | Disposition |
+|---|---|---|---|
+| **A** — `ADR-004` stands | nothing | organizer only | **rejected.** Its premise is gone, and the group could reach no one |
+| **B** — the shared in-trip contact and a trip-wide "who to tell" line | each traveller's in-trip contact, when shared; the organizer as the holder of the emergency contacts | organizer only | the design's recommendation, and the base of the locked outcome |
+| **B′** — B plus a per-traveller "emergency contact on file with the organizer" line | B, and whether each traveller has one on file | organizer only | **taken by the operator's D2**, shown for every traveller who filed, as one of the emergency line's three states. Its cost is recorded under *Consequences* |
+| **C** — B plus the contact's relationship to the traveller | B, plus a relationship | relationship published | **rejected.** In a small named group a relationship identifies a person, and `ADR-004` § 2's closed set stands: the relationship is never captured (CR-2's fourth call) |
+| **D** — B plus the contact's name and way to reach them, on the traveller's attestation | everything | published to the group | **rejected for the way to reach the contact**, which stays with the organizer. The operator's D1 takes the name alone, shown only on the traveller's attestation that the contact agreed |
+| **E** — the details on a separately encrypted, organizer-only page | B | inside a second ciphertext | **rejected.** A third party's data inside a world-fetchable ciphertext, which `ADR-004` refused even for the traveller's own data, and a new publish artifact |
+| **F** — B plus a free-text "if something happens" note | B, plus the note | organizer only | **rejected.** Its obvious content is medical, which would re-open the needs row the private-site record keeps out, and free text defeats a closed list |
+| **G** — B plus a deputy holder with the organizer's access | B | the organizer and a deputy | **deferred** to a candidate future card: a new role, and a second copy of a third party's data |
+
+**Locked: B, plus D1, plus D2.** The group sees each traveller's shared in-trip contact, one line
+naming who to tell, and — for each traveller who filed their own form — an emergency line that names
+the contact on the traveller's attestation, says a contact is on file with the organizer, or says none
+is on file.
+
+### Where the way to reach an emergency contact is kept
+
+| Option | Disposition |
+|---|---|
+| In the traveller's trip file, with the carrier's writer reading only whether it is answered — the carrier design | **superseded by S** |
+| **Moved at filing, by a script, into an organizer-only file beside the traveller's trip file** — S | **chosen.** Data minimization: the organizer holds the way to reach the contact, and only the organizer and the filing script ever touch it |
+
+### How `ADR-004` records the change
+
+| Option | Disposition |
+|---|---|
+| Flip `ADR-004` to superseded, whole, when this record is accepted | **not taken.** The operator's D3 keeps `ADR-004`'s still-valid sections in force |
+| The same, with a forward pointer written now | **not taken** |
+| **A dated note inside `ADR-004`, in the form `ADR-009`'s eighth amendment already uses for a partial supersession** | **chosen** — the operator's D3. The note lands at the milestone's closing ratify chore, with this record's `Accepted` flip (CR-2's fifth call). `ADR-009`'s eighth amendment is the corpus precedent for recording a superseding decision in place |
+
+### The carrier
+
+| | Option | Disposition |
+|---|---|---|
+| **K1** | **A new per-trip `bound` file, `outputs/group-contacts.md`** | **chosen** — net-new, because in-place is infeasible |
+| K2 | Extend the group snapshot into every phase | **rejected.** It re-opens the operator's D-3, which scopes the snapshot to before a plan and draws its fields only from the private-site record's IN list, and it re-opens the snapshot's own production gate and plan-mode exclusion |
+| K3 | The snapshot in IDEATION, and another carrier in the plan modes | **rejected.** One element with a second home, and the snapshot's field list still bars it |
+| K4 | The trip context; the traveller file made `bound`; the traveller model relaxed; the itinerary; the presence file | **rejected by constraint.** `ADR-004` § 1, kept, bars the trip context; the build reads no traveller file and never a raw hand-edited one; the model is `internal-hard`, and contact data stays out of it; the itinerary is absent in IDEATION, versioned, and written by a planning agent; the presence file is `internal` and bounded to its window lines |
+| K5 | A first-party file and a separate third-party-derived one | **rejected.** It separates nothing the carrier needs separated — the way to reach the contact is in neither — and doubles the class, the fences and the erase rows |
+| K6 | A follow-on card | **foreclosed** by CR-2's third call |
+
+### The carrier's writer
+
+| | Option | Disposition |
+|---|---|---|
+| **W1** | **The enrichment agent's reconciler role, reading the traveller's own trip data** | **chosen.** It already reads every traveller's trip file and the roster, and already computes who filed, which is the carrier's population. Its input is re-pointed to the script-made projection under the private-site record's safeguard 7 (§ 7) |
+| W2 | The reconciler, projecting from the traveller model | **rejected.** Contact data never enters the model (§ 3, rule 4) |
+| W3 | The site build, reading the traveller file | **rejected.** The build reads no traveller file, dispatches no agent, and edits no `outputs/` file |
+| W4 | A `/trip-record` verb | **rejected.** That verb writes human source; a derived file's writer is the agent |
+| W5 | The hub | **rejected.** It runs in synthesis only, and it is a planning agent |
+| W6 | A deterministic script projection | **not chosen.** A new writer class in § 1.1's writer column, with no precedent |
+
+### The smaller forks
+
+| Fork | Chosen | Rejected, and why |
+|---|---|---|
+| Production | every reconciler pass, in every mode | gated on IDEATION like the snapshot: the carrier must stay current in the plan modes; the site verb dispatching the reconciler: the build never edits an `outputs/` file as a side effect |
+| The emergency line | three states — D2's *whether*, with D1's name as the named state | two states: D2 locked *whether*; a name with no way to reach them on file: the organizer could not act on it |
+| The population floor | `SELF-STATED` | `ADR-025`'s default floor, `OPERATOR-STATED`: the private-site record's safeguard 3 |
+| A value mixing in something that is out | withhold the line whole | trim it: that publishes words the traveller did not write |
+| Placement | a section in every state the site builds | a field of the hero: no component carries a per-traveller record; a region of the snapshot's section: the snapshot leaves the page once a plan exists |
+| The name | `outputs/group-contacts.md` — the `group-*` family of group-facing homes | `traveler-contacts`: that family names `internal` reconciler files; `if-something-happens`: the in-trip contact also serves ordinary coordination |
 
 ## Decision
 
