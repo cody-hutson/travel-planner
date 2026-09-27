@@ -3876,7 +3876,7 @@ ft_count_report() {
   d="$(ft_decl_rows "$1")"
   nd="$(printf '%s\n' "$d" | grep -c '[^[:space:]]')"
   sq="$(ft_rows "$1" all | awk -F'\t' '$1 + 0 != NR { bad = 1 } END { print (NR > 0 && !bad) ? "yes" : "no" }')"
-  printf '%s\t%s\t%s\t%s\n' "$r" "$(printf '%s\n' "$d" | awk 'NF { print; exit }')" "$nd" "$sq"
+  printf '%s\t%s\t%s\t%s\n' "$r" "$(awk 'NF { print; exit }' <<<"$d")" "$nd" "$sq"
 }
 
 # ft_key_report <data-model> — one record per pair of labelled rows sharing a label under
@@ -4039,11 +4039,11 @@ ft_cover_report() {
 ft_cover_assert() {
   local rep nbul nres nr hit nbl nor
   rep="$(ft_cover_report "$@")"
-  nbul="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NBUL" { print $2; exit }')"
-  nres="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NRES" { print $2; exit }')"
-  nr="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NROWS" { print $2; exit }')"
-  hit="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "HIT" { print $2; exit }')"
-  nbl="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "NBL" { print $2; exit }')"
+  nbul="$(awk -F'\t' '$1 == "NBUL" { print $2; exit }' <<<"$rep")"
+  nres="$(awk -F'\t' '$1 == "NRES" { print $2; exit }' <<<"$rep")"
+  nr="$(awk -F'\t' '$1 == "NROWS" { print $2; exit }' <<<"$rep")"
+  hit="$(awk -F'\t' '$1 == "HIT" { print $2; exit }' <<<"$rep")"
+  nbl="$(awk -F'\t' '$1 == "NBL" { print $2; exit }' <<<"$rep")"
   nor="$(printf '%s\n' "$rep" | awk -F'\t' '$1 == "ORPHAN" { n++ } END { print n + 0 }')"
   if [ "${nr:-0}" -lt 1 ] || [ "${nbul:-0}" -lt 1 ] || [ "${nres:-0}" -lt 1 ]; then
     FAIL "FT5: $(st_cf_unres_note)a side of the coverage comparison came back EMPTY (labelled rows=${nr:-0}, form bullets read=${nbul:-0}, bullets resolved to a row=${nres:-0}) — every row would read as an orphan, or none would, over a comparison that never ran"
@@ -4252,7 +4252,7 @@ if [ "$FT_OK" -eq 1 ]; then
     printf '%s\n%s\n%s\n' "$FT_HITS" "$FT_SEP" "$(ft_bullets "$FT_FORM_C" whole | ft_resolve "$FT_ROWS0")" | awk -F'\t' -v sep="$FT_SEP" -v once="$1" '
       !past && $0 == sep { past = 1; next }
       !past { if (NF >= 2) c[$1] = $2; next }
-      $1 == "ONE" && ((once == 1 && c[$2] == 1) || (once == 0 && c[$2] > 1)) { print $5 "\t" $2 "\t" $4; exit }'
+      $1 == "ONE" && ((once == 1 && c[$2] == 1) || (once == 0 && c[$2] > 1)) && n == 0 { print $5 "\t" $2 "\t" $4; n = 1 }'
   }
   FT_OT="$(ft_c_target 1)"; FT_RT="$(ft_c_target 0)"
   FT_OTL="$(printf '%s' "$FT_OT" | cut -f1)"; FT_OTN="$(printf '%s' "$FT_OT" | cut -f2)"; FT_OTB="$(printf '%s' "$FT_OT" | cut -f3)"
@@ -10334,9 +10334,9 @@ if [ "$RL_OK" -eq 1 ]; then
   }
   RL3_REP="$(rl3_report "$RL_ROWS")"
   RL3_POPROWS="$(cat "$WORK/rl3-pop.tsv")"
-  RL_POP="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "POP" { print $2; exit }')"
-  RL_NOTHER="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "NOTHER" { print $2; exit }')"
-  RL_NNB="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "NB" { print $2; exit }')"
+  RL_POP="$(awk -F'\t' '$1 == "POP" { print $2; exit }' <<<"$RL3_REP")"
+  RL_NOTHER="$(awk -F'\t' '$1 == "NOTHER" { print $2; exit }' <<<"$RL3_REP")"
+  RL_NNB="$(awk -F'\t' '$1 == "NB" { print $2; exit }' <<<"$RL3_REP")"
   RL_BOTH="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "BOTH" { printf "%s ", $2 }')"
   RL_UNEXPLAINED="$(printf '%s\n' "$RL3_REP" | awk -F'\t' '$1 == "UNEXPL" { printf "%s ", $2 }')"
   if [ "${RL_POP:-0}" -eq 0 ]; then
@@ -10356,17 +10356,17 @@ if [ "$RL_OK" -eq 1 ]; then
   # cannot turn either red. INPAIR's row sits under the section of the first population row, so a
   # field the forms carry and the pair does not must be named; OTHERFORM's sits under the section of
   # the first labelled row OUTSIDE the population, so a field of another form must not be.
-  RL3_INSEC="$(printf '%s\n' "$RL3_POPROWS" | awk -F'\t' 'NF >= 2 { print $2; exit }')"
+  RL3_INSEC="$(awk -F'\t' 'NF >= 2 { print $2; exit }' <<<"$RL3_POPROWS")"
   RL3_OUTSEC="$(printf '%s\n%s\n%s\n' "$RL3_POPROWS" "ZZ-RL3-SEPARATOR" "$(cat "$RL_ROWS")" | awk -F'\t' '
     !past && $0 == "ZZ-RL3-SEPARATOR" { past = 1; next }
     !past { if (NF >= 1) in_pop[$1] = 1; next }
-    NF >= 2 && !($1 in in_pop) { print $2; exit }')"
+    NF >= 2 && !($1 in in_pop) && n == 0 { print $2; n = 1 }')"
   RL3_FX="$WORK/rl3-inpair-rows.tsv"; cp "$RL_ROWS" "$RL3_FX"
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' 9001 "$RL3_INSEC" 'ZZ-RL3-UNCARRIED' TRIP n/a slot admissible 0 0 synthetic >> "$RL3_FX"
   RL3_LD=0; cmp -s "$RL_ROWS" "$RL3_FX" || RL3_LD=1
   RL3_R="$(rl3_report "$RL3_FX")"
   RL3_HIT="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$1 == "UNEXPL" && $2 == "ZZ-RL3-UNCARRIED" { n++ } END { print n + 0 }')"
-  RL3_P="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$1 == "POP" { print $2; exit }')"
+  RL3_P="$(awk -F'\t' '$1 == "POP" { print $2; exit }' <<<"$RL3_R")"
   if [ -n "$RL3_INSEC" ] && [ "$RL3_LD" -eq 1 ] && [ "$RL3_HIT" -eq 1 ] && [ "${RL3_P:-0}" -eq $((RL_POP + 1)) ]; then
     PASS "CTL-RL3-INPAIR: MUST FIRE — a synthetic row under \`$RL3_INSEC\`, a section of the guided forms, appended to a copy of the rows RL3 reads, enters the population ($RL_POP → $RL3_P) and is named UNEXPLAINED, because neither side of the pair carries it. RL3's partition is graded over the fields the forms ask, and a field they ask that the pair drops is caught"
   else
@@ -10377,7 +10377,7 @@ if [ "$RL_OK" -eq 1 ]; then
   RL3_LD=0; cmp -s "$RL_ROWS" "$RL3_FX" || RL3_LD=1
   RL3_R="$(rl3_report "$RL3_FX")"
   RL3_HIT="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$2 == "ZZ-RL3-OTHERFORM" { n++ } END { print n + 0 }')"
-  RL3_P="$(printf '%s\n' "$RL3_R" | awk -F'\t' '$1 == "POP" { print $2; exit }')"
+  RL3_P="$(awk -F'\t' '$1 == "POP" { print $2; exit }' <<<"$RL3_R")"
   if [ -n "$RL3_OUTSEC" ] && [ "$RL3_LD" -eq 1 ] && [ "$RL3_HIT" -eq 0 ] && [ "${RL3_P:-0}" -eq "$RL_POP" ]; then
     PASS "CTL-RL3-OTHERFORM: MUST NOT FIRE — a synthetic row under \`$RL3_OUTSEC\`, a section of no guided form, appended to a copy of the rows RL3 reads, stays OUTSIDE the population ($RL_POP unchanged) and is named nowhere. A field of another form is not a gap in this pair, which is the reading that turned RL3 red on the whole table"
   else
