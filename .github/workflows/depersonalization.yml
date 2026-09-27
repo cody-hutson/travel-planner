@@ -39,9 +39,10 @@ jobs:
 
           # Resolve the diff range from the triggering event. `github.event.pull_request`
           # is null on a push, so the PR fields cannot be read unconditionally: they would
-          # resolve to empty strings and the range would collapse to "..", which the email
-          # scan below accepts silently as an empty diff and the metadata scan errors into
-          # its `|| true` — a gate that reports success having read nothing.
+          # resolve to empty strings and the range would collapse to "..", which git
+          # rejects as a path outside the repository instead of reading it as a range.
+          # The guard below names that cause before anything is scanned; each scan would
+          # otherwise stop on git's error, since none of them swallows one.
           NULL_SHA='0000000000000000000000000000000000000000'
           case "$EVENT_NAME" in
             pull_request) BASE_SHA="$PR_BASE_SHA";     HEAD_SHA="$PR_HEAD_SHA" ;;
@@ -84,11 +85,12 @@ jobs:
           USERPATH='/(Users|home)/[A-Za-z0-9._-]+/'
 
           # ── The content checks' filter chain, defined ONCE ──────────────────────────
-          # The control below and checks 1 and 2 after it call these same functions, so
-          # the chain the control proves is, by construction, the chain that gates. That
-          # is why the control is a stage of this step rather than a step of its own:
-          # steps share no shell state, so a separate step would need a second copy of
-          # the chain, and a copy is what drifts.
+          # The control below and checks 1 and 2 after it call these same functions, and
+          # check 3 matches through the chain's last stage, so the chain the control
+          # proves is, by construction, the chain that gates. That is why the control is
+          # a stage of this step rather than a step of its own: steps share no shell
+          # state, so a separate step would need a second copy of the chain, and a copy
+          # is what drifts.
           work="$(mktemp -d)"
 
           # One grep stage, file to file. grep exits 0 when it matched and 1 when it
@@ -108,21 +110,46 @@ jobs:
             fi
           }
 
-          # Writes <diff>.added — the added CONTENT lines of the unified diff in <diff>,
-          # every `+` line except the `+++ b/<path>` file headers — and <diff>.<label>,
-          # those of them matching <pattern>. Both filters are EREs on purpose: in an
-          # ERE `\+` is a literal plus under every grep, and in a BRE it is not. The
-          # header filter was once the BRE `grep -v '^\+\+\+'`. GNU grep, this runner's,
-          # reads that as "a line starting with one or more `+`", so it removed every
-          # added line; BSD grep and ugrep reject it outright, and a `|| true` absorbed
-          # the error. Either way checks 1 and 2 could never report anything.
-          # Residual, stated rather than left to be found: an added line whose own
-          # content begins with `++` reads as `+++…` in the diff and is dropped with the
-          # headers.
+          # The added CONTENT lines of the unified diff in <in>, written to <out>. A `+`
+          # line is added content only inside a hunk, so the filter follows the diff's
+          # structure rather than a line's prefix: each sed range opens on a hunk header
+          # and closes on the next file's `diff --git` line, and the `---`/`+++` file
+          # headers after that line lie outside every range. An added line whose own
+          # text begins with `++` reads `+++…` in the diff, the very shape of a file
+          # header, and it is still read, because it sits inside a hunk. `[+]` is a
+          # literal plus in every sed's basic regex, where `\+` is not: GNU reads a BRE
+          # `\+` as "one or more", and a header filter written that way once removed
+          # every added line before either check saw it. sed rather than awk, because
+          # macOS awk ends a line at its first NUL byte and would hide what follows it;
+          # GNU sed and BSD sed both keep the whole line. `LC_ALL=C` makes sed read
+          # bytes rather than characters: in a UTF-8 locale BSD sed stops with "illegal
+          # byte sequence" at a byte that is invalid there, and the filter's patterns are
+          # plain ASCII, so the C locale changes nothing they match. Any status but 0
+          # means the filter did not run.
+          added_stage() {  # added_stage <in> <out>
+            if ! LC_ALL=C sed -n '/^@@/,/^diff --git /{/^[+]/p;}' < "$1" > "$2"; then
+              echo "::error::sed exited non-zero on this runner — the added-line filter could not run, so nothing was scanned."
+              exit 1
+            fi
+          }
+
+          # The lines of <in> matching <pattern>, written to <out>. `-a` reads every
+          # line as text. Without it GNU grep treats input holding a NUL byte as binary
+          # and stops printing matches once it meets one, and it drops, one at a time,
+          # the lines that are invalid in the runner's locale; `-I` goes further and
+          # takes everything after a NUL as a non-match. Every line in a diff comes
+          # from a file git judged to be text — a binary file yields no added line at
+          # all — so neither behaviour may apply here: each would hide a leak on a line
+          # it skipped.
+          match_stage() {  # match_stage <in> <out> <pattern>
+            grep_stage "$1" "$2" -aE "$3"
+          }
+
+          # Writes <diff>.added — the added content lines of the unified diff in <diff> —
+          # and <diff>.<label>, those of them matching <pattern>.
           content_scan() {  # content_scan <diff> <label> <pattern>
-            grep_stage "$1" "$1.plus" -E '^\+'
-            grep_stage "$1.plus" "$1.added" -Ev '^\+\+\+'
-            grep_stage "$1.added" "$1.$2" -EI "$3"
+            added_stage "$1" "$1.added"
+            match_stage "$1.added" "$1.$2" "$3"
           }
           lines_in() { wc -l < "$1" | tr -d ' '; }
 
@@ -136,25 +163,45 @@ jobs:
           planted_email="gate.selftest${at}gmail.com"
           planted_path="/${home_seg}/gate-selftest/notes"
 
-          # FIRE — a new SVG adding one line that carries the email and one that carries
-          # the path. Two added content lines; each check reports exactly its own.
-          printf '%s\n' \
-            'diff --git a/fig.svg b/fig.svg' \
-            'new file mode 100644' \
-            '--- /dev/null' \
-            '+++ b/fig.svg' \
-            '@@ -0,0 +1,2 @@' \
-            "+<text x=\"8\" y=\"16\">write to ${planted_email}</text>" \
-            "+<text x=\"8\" y=\"32\">notes kept in ${planted_path}</text>" \
-            > "$work/fire.diff"
+          # FIRE — a new SVG adding five lines, each carrying a planted value where a
+          # chain that reads less than every byte of every added line would lose it:
+          # after a NUL byte, plainly, in a line whose own text begins `++` (so that in
+          # the diff it has exactly the shape of a `+++ b/<path>` file header), and after
+          # a byte that is invalid in UTF-8. A text file's NUL can reach a diff, because
+          # git looks for one only in a file's first 8,000 bytes. printf's format string
+          # writes the NUL and the invalid byte (octal 351), since a shell variable
+          # cannot hold a NUL. Five added content lines; the email check reports two of
+          # them and the path check three.
+          {
+            printf '%s\n' \
+              'diff --git a/fig.svg b/fig.svg' \
+              'new file mode 100644' \
+              '--- /dev/null' \
+              '+++ b/fig.svg' \
+              '@@ -0,0 +1,5 @@'
+            printf '+<desc>\000 kept for %s</desc>\n' "$planted_email"
+            printf '%s\n' \
+              "+<text x=\"8\" y=\"16\">write to ${planted_email}</text>" \
+              "+<text x=\"8\" y=\"32\">notes kept in ${planted_path}</text>" \
+              "+++ b${planted_path}"
+            printf '+<desc>\351 %s</desc>\n' "$planted_path"
+          } > "$work/fire.diff"
 
-          # QUIET — the same values only where a check must NOT look: a file header's
-          # path and a removed line, beside one clean added line. One added content
-          # line; neither check reports anything. The header is what makes the control
-          # specific to the filter — a filter that dropped nothing would pass FIRE and
-          # fail here.
+          # QUIET — the same values only where a check must NOT look, beside clean added
+          # lines: a file header's path and a removed line. The header belongs to a
+          # SECOND file and follows the first file's hunk, because that is where a
+          # filter whose hunk never closed would take it for content; a first file's
+          # header cannot show that. Two added content lines; neither check reports
+          # anything. The header is what makes the control specific to the filter — a
+          # filter that dropped nothing would pass FIRE and fail here.
           quiet_file="fixture${planted_path}/${planted_email}.md"
           printf '%s\n' \
+            'diff --git a/notes.md b/notes.md' \
+            '--- a/notes.md' \
+            '+++ b/notes.md' \
+            '@@ -1 +1 @@' \
+            '-an older clean line' \
+            '+a newer clean line' \
             "diff --git a/${quiet_file} b/${quiet_file}" \
             "--- a/${quiet_file}" \
             "+++ b/${quiet_file}" \
@@ -169,21 +216,63 @@ jobs:
           done
           grep_version="$(grep --version | sed -n 1p)"
           measured="FIRE added=$(lines_in "$work/fire.diff.added") email=$(lines_in "$work/fire.diff.email") path=$(lines_in "$work/fire.diff.path"); QUIET added=$(lines_in "$work/quiet.diff.added") email=$(lines_in "$work/quiet.diff.email") path=$(lines_in "$work/quiet.diff.path")"
-          wanted='FIRE added=2 email=1 path=1; QUIET added=1 email=0 path=0'
+          wanted='FIRE added=5 email=2 path=3; QUIET added=2 email=0 path=0'
           if [ "$measured" != "$wanted" ]; then
-            echo "::error::content-check control failed on ${grep_version} — measured ${measured}; wanted ${wanted}. Checks 1 and 2 cannot be trusted to read added lines, so nothing was scanned."
+            echo "::error::content-check control failed on ${grep_version} — measured ${measured}; wanted ${wanted}. Checks 1 to 3 cannot be trusted to read what they are given, so nothing was scanned."
             exit 1
           fi
           echo "Content-check control passed on ${grep_version} — ${measured}."
+
+          # Writes <diff>, the range's unified diff limited to <pathspec…>, and
+          # <diff>.numstat, git's own per-file count of the lines that range adds and
+          # removes under the same pathspec, so that "the same range and pathspec" is
+          # true by construction rather than by two copies agreeing. Both are taken at
+          # ZERO lines of context. git's count of added lines can depend on the context
+          # length: on a clean commit in this repository's history, one unchanged line
+          # is removed and re-added at zero context and left alone at three, so a
+          # numstat at its default context can disagree with the patch the checks
+          # read. `diff.context` sets numstat's context without asking for a patch,
+          # where `--unified` would add one to its output.
+          read_range() {  # read_range <diff> <check> <pathspec…>
+            local diff="$1" check="$2"
+            shift 2
+            if ! git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" -- "$@" > "$diff"; then
+              echo "::error::git diff could not read the range for check $check, so nothing was scanned."
+              exit 1
+            fi
+            if ! git -c diff.context=0 diff --numstat "$BASE_SHA".."$HEAD_SHA" -- "$@" > "$diff.numstat"; then
+              echo "::error::git diff --numstat could not count the range for check $check, so nothing was scanned."
+              exit 1
+            fi
+          }
+
+          # Stops the gate unless the added content lines content_scan read from <diff>
+          # number exactly what git counts for the same range. A line the chain loses
+          # without an error — to a byte some tool takes for binary, or to a diff shape
+          # no filter anticipated — would otherwise pass as a clean line, and nothing
+          # else compares the two. A binary file's numstat row reads `-` and adds
+          # nothing, because git emits no content line for it either. The counts are
+          # compared as strings: `[ -ne ]` on an empty operand exits 2, which an `if`
+          # reads as "not different".
+          added_agrees() {  # added_agrees <diff> <check>
+            local got want
+            got="$(lines_in "$1.added")" \
+              || { echo "::error::could not count the added lines check $2 read, so its result cannot be trusted."; exit 1; }
+            want="$(awk '$1 != "-" { n += $1 } END { print n + 0 }' < "$1.numstat")" \
+              || { echo "::error::could not total git's own added-line count for check $2, so its result cannot be trusted."; exit 1; }
+            if [ "$got" != "$want" ]; then
+              echo "::error::check $2 read $got added line(s) where git counts $want for the same range — lines were lost or invented between git and the match, so nothing check $2 reported can be trusted."
+              exit 1
+            fi
+          }
 
           fail=0
 
           # 1. Personal email in ADDED lines — every file EXCEPT the intentional
           #    contact homes (LICENSE, SECURITY.md) where an owner email is allowed.
-          git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" -- . ':(exclude)LICENSE' ':(exclude)SECURITY.md' \
-            > "$work/email.diff" \
-            || { echo "::error::git diff could not read the range for check 1, so nothing was scanned."; exit 1; }
+          read_range "$work/email.diff" 1 . ':(exclude)LICENSE' ':(exclude)SECURITY.md'
           content_scan "$work/email.diff" hits "$EMAIL"
+          added_agrees "$work/email.diff" 1
           if [ -s "$work/email.diff.hits" ]; then
             echo "::error::personal email address found in added lines (allowed only in LICENSE / SECURITY.md)"
             cat "$work/email.diff.hits"
@@ -191,10 +280,9 @@ jobs:
           fi
 
           # 2. OS user-home path in ADDED lines — never allowed.
-          git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" \
-            > "$work/path.diff" \
-            || { echo "::error::git diff could not read the range for check 2, so nothing was scanned."; exit 1; }
+          read_range "$work/path.diff" 2 .
           content_scan "$work/path.diff" hits "$USERPATH"
+          added_agrees "$work/path.diff" 2
           if [ -s "$work/path.diff.hits" ]; then
             echo "::error::OS user-home path (/Users/<name>/ or /home/<name>/) found in added lines"
             cat "$work/path.diff.hits"
@@ -203,18 +291,23 @@ jobs:
 
           # Say how many added lines each check read, so a green over zero added lines
           # reads differently from a clean one.
-          echo "Added lines scanned: $(lines_in "$work/email.diff.added") by check 1 (LICENSE and SECURITY.md excluded), $(lines_in "$work/path.diff.added") by check 2."
+          echo "Added lines scanned: $(lines_in "$work/email.diff.added") by check 1 (LICENSE and SECURITY.md excluded), $(lines_in "$work/path.diff.added") by check 2, each equal to git's own count."
           if [ "$(lines_in "$work/path.diff.added")" -eq 0 ]; then
             echo "::notice::this range adds no content lines — checks 1 and 2 had nothing to read."
           fi
 
           # 3. Commit messages + author/committer identity across the PR's commits.
-          #    Catches a personal-email author identity re-entering history.
-          meta="$(git log --format='%B%n%an <%ae>%n%cn <%ce>' "$BASE_SHA".."$HEAD_SHA" || true)"
-          meta_hits="$(printf '%s\n' "$meta" | grep -EI "$EMAIL|$USERPATH" || true)"
-          if [ -n "$meta_hits" ]; then
+          #    Catches a personal-email author identity re-entering history. Read and
+          #    matched as checks 1 and 2 are: a range git log cannot read stops the gate
+          #    rather than scanning as clean, and the match is the chain's own last stage.
+          if ! git log --format='%B%n%an <%ae>%n%cn <%ce>' "$BASE_SHA".."$HEAD_SHA" > "$work/meta"; then
+            echo "::error::git log could not read the range for check 3, so no commit message or identity was scanned."
+            exit 1
+          fi
+          match_stage "$work/meta" "$work/meta.hits" "$EMAIL|$USERPATH"
+          if [ -s "$work/meta.hits" ]; then
             echo "::error::personal data in a commit message or author/committer identity"
-            printf '%s\n' "$meta_hits"
+            cat "$work/meta.hits"
             echo "Hint: commit with a GitHub noreply email (Settings - Emails - keep my email private)."
             fail=1
           fi
