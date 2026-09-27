@@ -1,6 +1,6 @@
 # ADR-038: Contact and emergency information on the private site — what the group sees, the emergency contact as a third party, and the carrier
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1545, one of the records of the *The site serves every phase: the founding
   decision* milestone, beside [the private-site record](ADR-030-what-the-private-site-may-show.md)

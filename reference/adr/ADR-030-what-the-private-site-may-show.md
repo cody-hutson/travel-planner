@@ -1,6 +1,6 @@
 # ADR-030: What the private trip site may show — the coordination test, the share mark, and nothing personal on a public page
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1242, one of the records of the *The site serves every phase: the founding
   decision* milestone, beside the #1296 card's records, which [the site phase-model

@@ -1,6 +1,6 @@
 # ADR-031: The site's phase model — the resolved state drives its shape through one render table, and what each state's build renders
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1296, the milestone-head design gate for the epic *The site serves every phase*
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's

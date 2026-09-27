@@ -1,6 +1,6 @@
 # ADR-032: The site's round-trip contract across its rendered artifacts — two grains, one render table, and a walk in three passes
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1296, the milestone-head design gate for the epic *The site serves every phase*
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's

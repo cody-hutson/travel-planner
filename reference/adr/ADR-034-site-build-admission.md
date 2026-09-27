@@ -1,6 +1,6 @@
 # ADR-034: The site build's admission of the pre-plan states — one requirement row, a declared stop, the page's file name, and the pre-plan classes
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1296, the milestone-head design gate for the epic *The site serves every phase*
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's

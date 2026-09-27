@@ -1,6 +1,6 @@
 # ADR-033: The site's section-growth ceiling — four tests over declared tables, and what earns a section
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1296, the milestone-head design gate for the epic *The site serves every phase*
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's
