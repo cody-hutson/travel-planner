@@ -558,13 +558,18 @@ already guards precisely.
 
 A first publish is not a verb of this file, so render the named remedy as an **operator
 hand-off**: point at `CLAUDE.md` → *Publishing to GitHub Pages*, print that section's
-publish command for the operator to run in their own terminal, with `trip.slug`
-substituted for the placeholder trip directory, and stop. **Print the line** — a hand-off
-that names a section and leaves the operator with nothing runnable has failed, the same
-standard the plaintext hand-off below is held to. **Rendering a command line for the
-operator is not constructing an invocation**, and the two must not be collapsed: what is
-forbidden is running it, routing it through any primitive, or offering `publish` as a verb
-of this command. Do not do those. Do print the line.
+publish command for the operator to run in their own terminal with every placeholder
+filled, and stop. **Fill each one, or the printed line runs from nowhere:** `trip.slug`
+for the placeholder trip directory, `trip.data_root` for `<data-root>`, and for
+`<engine-root>` the engine root named at the top of this file, its `..` segments kept as
+written — collapsed as text, they land outside the engine when this verb's directory is a
+link. Filled, the line runs from whatever directory the operator's terminal is in.
+**Print the line** — a hand-off that names a section and leaves the operator with nothing
+runnable has failed, the same standard the plaintext hand-off below is held to.
+**Rendering a command line for the operator is not constructing an invocation**, and the
+two must not be collapsed: what is forbidden is running it, routing it through any
+primitive, or offering `publish` as a verb of this command. Do not do those. Do print the
+line.
 
 **When the resolved trip is `ARCHIVED`**, the row above declares `lifecycle: ACTIVE`, so
 G7 disposes `REFUSE`: name the cell the resolved state does not satisfy and the value the
@@ -646,7 +651,8 @@ the pre-push ciphertext guard, running a content guard instead.
 
 So this is an operator action. The hand-off: point at `CLAUDE.md` → *Publishing to GitHub
 Pages* → the opt-out paragraph, **print that paragraph's command for the operator to run
-in their own terminal**, with `trip.slug` substituted for the placeholder trip directory,
-say why an agent cannot run it, and stop. Print the line — a hand-off that names a section
-and leaves the operator with nothing runnable has failed. Do not run it, and do not carry
-a second copy of it here: that paragraph is its one home.
+in their own terminal**, with every placeholder filled exactly as the first-publish
+hand-off under § *update* fills them, say why an agent cannot run it, and stop. Print the
+line — a hand-off that names a section and leaves the operator with nothing runnable has
+failed. Do not run it, and do not carry a second copy of it here: that paragraph is its
+one home.

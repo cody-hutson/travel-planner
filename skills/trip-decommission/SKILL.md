@@ -706,10 +706,16 @@ not a substitute mechanism. It is the hand-off below, and **this command never r
 **Where this appears.** In `temporary`'s and `archive`'s own output, as the further option available
 to the operator. Not in the not-a-verb refusal, which renders its three things and stops.
 
-**The hand-off.** The command lives in `scripts/publish-trip-site.sh`. The form is its `unpublish`
-subcommand on the trip's directory **without** the disable-pages-only flag — the default, which is
-the deleting one. **Point the operator at `CLAUDE.md` § *Publishing to GitHub Pages*, which carries
-the literal line to run**, and state, in terms:
+**The hand-off.** The command lives in `scripts/publish-trip-site.sh`, under the engine root. The
+form is its `unpublish` subcommand on the trip's directory **without** the disable-pages-only flag —
+the default, which is the deleting one — and with the data-root flag every line of that section
+carries. **Point the operator at `CLAUDE.md` § *Publishing to GitHub Pages*, which carries the
+literal line to run, and print that line for them with every placeholder filled:** `trip.slug` for
+the placeholder trip directory, `trip.data_root` for `<data-root>`, and for `<engine-root>` the
+engine root named at the top of this file, its `..` segments kept as written — collapsed as text,
+they land outside the engine when this verb's directory is a link. Filled, the line runs from
+whatever directory the operator's terminal is in. Printing it is not running it. Then state, in
+terms:
 
 - **It deletes the public repo, and with it the destination-and-year in the repo's name** — not only
   the site.
