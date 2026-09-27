@@ -6,7 +6,7 @@ follows Keep a Changelog; versions follow Semantic Versioning.
 ## [Unreleased] — 2026-09-26 — A rotation revokes the passphrase it replaces
 
 This is a security release. It fixes GHSA-gmm2-v7rr-jq7r: rotating a site's passphrase could leave the
-old passphrase working. Every release up to and including 0.43.0 is affected. The advisory describes the
+old passphrase working. Every release up to and including 0.44.1 is affected. The advisory describes the
 exposure, and what to do if one of your trips was rotated or updated while the variable was set.
 
 **What went wrong.**
@@ -37,13 +37,17 @@ exposure, and what to do if one of your trips was rotated or updated while the v
   the file, never a passphrase, and gives one remedy: unset the variable. The only way to change a
   site's passphrase is `rotate`. A trip rotated under the old behaviour, with the variable still set,
   now meets this refusal instead of being quietly re-keyed.
-- **`rotate` and `update` push exactly the commit they made.** A rotation that loses a race to a
-  concurrent `update` now fails at its push, rather than reporting success while the update's page,
-  under the old passphrase, is the live one.
-- **`update` re-checks `.passphrase` just before it pushes**, so it cannot put a passphrase back over a
-  rotation that finished while it was running. When the check stops it, `update` also takes its own
-  commit back out of the trip's local clone — only a commit whose page is the ciphertext it encrypted —
-  so a later push does not carry that page into the site's history (see the limits).
+- **`rotate` and `update` push the commit they made, never another command's newer one, and
+  `update`'s push lands only on the site as its check saw it.** When a rotation and an update race
+  on one trip, whichever loses now stops and says so, rather than reporting success while a page
+  under the old passphrase is the live one.
+- **`update` re-checks `.passphrase` just before it pushes, and its push is bound to the site as
+  that check saw it.** A rotation that records a new passphrase and pushes while an `update` is
+  running now stops that `update`, at its check or at its push, instead of the `update` putting the
+  old passphrase back over the rotation. When it stops, `update` takes its own commit back out of the
+  trip's local clone where it safely can — only a commit whose page is the ciphertext it encrypted,
+  and never one already published — so a later push does not carry that page into the site's history
+  (see the limits).
 - **In `rotate` and `update`, each step of encrypting, committing and pushing now stops the run on its
   own when it fails.**
   Before, a failed commit could read as a completed rotation whenever the caller had turned off the
@@ -51,8 +55,15 @@ exposure, and what to do if one of your trips was rotated or updated while the v
 - **Weak or malformed input is refused.**
   - Encryption refuses a passphrase shorter than 12 characters, before StatiCrypt runs.
   - `rotate` refuses an unknown option, a `--passphrase` with no value, and a new passphrase equal to
-    the current one. No command echoes an unknown option any more, so a mistyped
-    `--passphrase=<value>` never reaches the terminal.
+    the current one.
+  - A passphrase typed in the wrong place is not repeated to the terminal: `rotate`, `publish` and
+    `unpublish` refuse an unknown option without repeating it, every command refuses a missing trip
+    directory without repeating the argument, and an unknown subcommand is not repeated either.
+  - `rotate` checks where it will record the new passphrase — following the link, where
+    `.passphrase` is one — before it commits anything, so a location it cannot write stops it with
+    nothing changed.
+  - `update` and `rotate` refuse a trip whose local clone is on a branch other than `main`, naming
+    the branch: the site is published from `main`.
   - `.passphrase` is readable by you alone from the moment it is written.
 - **`unpublish` runs on macOS's default shell.** Under a UTF-8 locale, macOS's `bash` 3.2 misread one of
   its messages and stopped the delete before anything was deleted. The withdrawal described below now
@@ -75,9 +86,10 @@ the earlier versions as well, `unpublish` (which deletes the repository) and the
   A check against the live site itself would cover them, and it is not part of this release.
 - Commands run on the same trip at the same moment are still not serialized. Two rotations racing
   each other can leave `.passphrase` naming a passphrase other than the one last pushed — a lockout,
-  not a leak. A rotation that loses a race to an update now fails at its push and says so, and the next
-  `update` finishes it; the update's page, under the old passphrase, can still reach the site's
-  history. Run one command per trip at a time.
+  not a leak. When a rotation and an update race, whichever loses stops and says so, and the next
+  `update` finishes the job; but the update's page, under the old passphrase, can still reach the
+  site's history. Run one command per trip at a time. If two did overlap, run `update` again once
+  both have finished, then check that the old passphrase no longer opens the site.
 - On a trip published from the variable alone, an `update` run without the variable generates a new
   passphrase and does not announce it, so the people holding the old one are locked out. Use `rotate`
   there: it announces the passphrase it sets.
