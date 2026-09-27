@@ -8511,11 +8511,13 @@ fi
 # above them and is unambiguous.
 VC_SQ="'"
 VC_PIPE="| grep '^FINDING '"
-# va_census_report <source-text> — "TOTAL <sites> <marker-lines>" first, then one row per
-# finding. The site detector is the one the census was taken with: a `$(` that is not `$((`,
-# on a line that is not a comment, with here-document bodies attributed to their opener.
+# va_census_report <source-text> [classes] — "TOTAL <sites> <marker-lines>" first, then one row
+# per finding. The site detector is the one the census was taken with: a `$(` that is not `$((`,
+# on a line that is not a comment, with here-document bodies attributed to their opener. Given
+# `classes`, the findings give way to one "CLASS <class> <sites> <marker-lines>" row per class
+# marked, so a per-class count quoted elsewhere is read from the census that takes it.
 va_census_report() {
-  awk -v SQ="$VC_SQ" -v PIPE="$VC_PIPE" '
+  awk -v SQ="$VC_SQ" -v PIPE="$VC_PIPE" -v MODE="${2:-}" '
     function subs(s,   n, i) {
       n = 0
       while ((i = index(s, "$(")) > 0) {
@@ -8565,6 +8567,11 @@ va_census_report() {
     }
     END {
       printf "TOTAL\t%d\t%d\n", total + 0, mlines + 0
+      if (MODE == "classes") {
+        for (i = 1; i <= NR; i++) if (markers[i]) { csites[klass[i]] += sites[i]; clines[klass[i]]++ }
+        for (c in clines) printf "CLASS\t%s\t%d\t%d\n", c, csites[c], clines[c]
+        exit
+      }
       for (i = 1; i <= NR; i++) {
         if (sites[i] > 0 && !markers[i]) printf "UNMARKED\t%d\t%s\n", i, substr(keep[i], 1, 90)
         if (markers[i] && !(sites[i] > 0)) printf "UNCOUNTED\t%d\t%s\n", i, text[i]
@@ -8611,8 +8618,9 @@ fi
 # WHAT THIS ARM DOES NOT COVER, said plainly rather than left to be discovered. Status
 # injection is not empty injection: a site whose empty-at-rc-0 path differs from its non-zero
 # path is untested here, and empty-at-rc-0 is the harder case — it is the one CTL-VA-DEGRADE
-# reproduces, at one site. The arm also cannot reach the 21 tolerant sites at all, by
-# construction: there is nothing there to fail closed on.
+# reproduces, at one site. The arm also cannot reach the tolerant sites at all, by
+# construction: there is nothing there to fail closed on. Their number is read from the census
+# rather than spelled here, where it went stale once; CTL-VA-TOLERANCE-PRESERVED reports it.
 #
 # Nineteen of the validator's TWENTY adjudicated sites have a row: one per va_read_ok label,
 # of which there is one for each of its 19 `# va-capture: adjudicated` marker lines. Twenty is
@@ -8621,7 +8629,8 @@ fi
 # the engine-root resolution, on the one line marked adjudicated(2), and it is unreachable
 # rather than unrostered: a nested capture's status is lost to the outer one, so there is no
 # status to inject and nothing in the file can adjudicate it. The outer read of that same
-# line IS rostered.
+# line IS rostered. The one-row-per-label correspondence is not held by this comment:
+# CTL-VA-FAILCLOSED-ROSTER below reads both sides of it on every run.
 FC_MARK="$WORK/fc_invoked"
 FC_TABLE='fn|va_population|va_select/population
 fn|va_select|va_main/select
@@ -8720,6 +8729,213 @@ $FC_TABLE
 EOF
 fi
 
+# ── CTL-VA-FAILCLOSED-ROSTER — the matrix above has a row for every adjudicated label, and that
+# is READ from the validator on every run rather than held by hand.
+#
+# FC_TABLE is typed, and until this arm nothing compared it with the file it grades. Four
+# adjudicated labels — va_schema_for/pattern-table, va_schema_for/class-lookup,
+# va_check_artifact/schema-version and va_check_artifact/field-list — shipped with no row, and
+# deleting their four va_read_ok calls left the whole suite green. The count in the comment
+# above drifted with them. A fifth label added with no row is RED here on arrival.
+#
+# THE LABELS ARE READ FROM THE SOURCED FUNCTIONS, through ctl_body, for the reasons its banner
+# gives: prose cannot enter the set — the validator names va_read_ok in comments, one of them
+# trailing a live capture — the subject is a function group MD can remove, and no file becomes a
+# subject owing a clause-6 opt-out. A label is written in one of TWO forms, and a reader keyed on
+# the first misses every label in the second: single-quoted, 'va_main/select', and double-quoted
+# with a runtime suffix, "va_schema_for/class-lookup $cid", whose label is its first word. A
+# call in neither form is REPORTED rather than skipped, because a label this reader cannot see
+# would otherwise be a site this comparison called complete by saying nothing about it.
+#
+# WHAT IS COMPARED, in both directions: every label a call carries must be named by a row, and
+# every label a row names must be carried by a call. The table is read with the matrix loop's own
+# two reads, so a label counts as rostered exactly when that loop would grade it. Two shapes that
+# a set comparison would pass are reported as well: a row the loop runs that names no label,
+# which it would inject at and render nothing for; and a label two calls share, which is one row
+# for two sites — an X3 from either satisfies it, so the other goes ungraded while the
+# comparison reads it covered.
+#
+# The inner substitution on the adjudicated(2) engine-root line has no label of its own, so it
+# is in neither set and needs no exception here.
+#
+# WHERE THIS STOPS. It grades the ROSTER, never a row: whether a row's injection reaches its site
+# and fails it closed is the matrix's own question, asked per row above. And the reader's reach
+# is the bound: ctl_body reads the va_* functions only, and a call made through a variable
+# naming va_read_ok is not a call the pattern sees. A call whose LABEL is an expansion is seen,
+# and reported UNREADABLE.
+
+# fc_labels <body> — one line per va_read_ok call in <body>, in call order and with repeats:
+# "CALL<TAB><label>", or "UNREADABLE<TAB><call>" when the label is in neither literal form.
+# The definition's own header is not a call.
+fc_labels() {
+  awk -v SQ="'" '
+    {
+      s = $0
+      while (match(s, /(^|[^A-Za-z0-9_])va_read_ok[ \t]+/)) {
+        s = substr(s, RSTART + RLENGTH)
+        if (substr(s, 1, 2) == "()") continue
+        q = substr(s, 1, 1); w = ""
+        if (q == SQ || q == "\"") {
+          e = index(substr(s, 2), q)
+          if (e > 0) w = substr(s, 2, e - 1)
+          sub(/[ \t].*$/, "", w)
+          if (q != SQ && w ~ /[$`\\]/) w = ""
+        }
+        if (w != "") printf "CALL\t%s\n", w
+        else printf "UNREADABLE\t%s\n", substr(s, 1, 60)
+      }
+    }' <<<"$1"
+}
+
+# fc_rostered <table> — one line per label the rows of <table> name, read with the matrix loop's
+# own two reads: a row splits on `|` with its labels in the third field, a row with no kind is
+# skipped, and that field splits on `,` with empty pieces dropped. "ROW<TAB><label>", or
+# "NOLABEL<TAB><row>" for a row the loop runs that names none.
+fc_rostered() {
+  local k a l x n
+  while IFS='|' read -r k a l; do
+    [ -n "${k:-}" ] || continue
+    n=0
+    while IFS= read -r x; do
+      [ -n "${x:-}" ] || continue
+      printf 'ROW\t%s\n' "$x"; n=$((n + 1))
+    done <<FCR_LABELS
+$(printf '%s\n' "$l" | tr ',' '\n')
+FCR_LABELS
+    [ "$n" -gt 0 ] || printf 'NOLABEL\t%s|%s|%s\n' "$k" "$a" "$l"
+  done <<FCR_ROWS
+$1
+FCR_ROWS
+}
+
+# fc_roster_report <labels> <table> — "TOTAL <calls> <labels> <rostered>" first, then one row
+# per finding, in the census's shape above: UNROSTERED is a label no row names, PHANTOM a label a
+# row names that no call carries, NOLABEL a row naming none, UNREADABLE a call whose label this
+# reader cannot see, SHARED a label more than one call carries. <labels> is fc_labels' output,
+# taken as an argument so the controls below can hold the validator fixed and change the table.
+fc_roster_report() {
+  awk -F'\t' '
+    $1 == "CALL"       { calls++; if (!($2 in v)) { v[$2] = 1; vo[++nv] = $2 } else if (v[$2]++ == 1) sh[++ns] = $2; next }
+    $1 == "UNREADABLE" { ur[++nu] = $2; next }
+    $1 == "ROW"        { if (!($2 in t)) { t[$2] = 1; to[++nt] = $2 }; next }
+    $1 == "NOLABEL"    { nl[++nn] = $2; next }
+    END {
+      printf "TOTAL\t%d\t%d\t%d\n", calls, nv, nt
+      for (i = 1; i <= nv; i++) if (!(vo[i] in t)) printf "UNROSTERED\t%s\n", vo[i]
+      for (i = 1; i <= nt; i++) if (!(to[i] in v)) printf "PHANTOM\t%s\n", to[i]
+      for (i = 1; i <= nn; i++) printf "NOLABEL\t%s\n", nl[i]
+      for (i = 1; i <= nu; i++) printf "UNREADABLE\t%s\n", ur[i]
+      for (i = 1; i <= ns; i++) printf "SHARED\t%s\n", sh[i]
+    }' <<<"$1
+$(fc_rostered "$2")"
+}
+
+# fc_roster_assert <table> — CTL-VA-FAILCLOSED-ROSTER's verdict ALONE, for group MD to register.
+# It reads the validator itself rather than taking a label set, because md_flips removes a
+# FUNCTION and an assertion handed a precomputed set would survive its subject's removal and
+# report itself blind. Exactly one verdict on every path, the degenerate one included.
+fc_roster_assert() {
+  local rpt calls=0 labels=0 named=0 bad=""
+  rpt="$(fc_roster_report "$(fc_labels "$(ctl_body)")" "$1")"
+  read -r calls labels named <<<"$(awk -F'\t' '$1 == "TOTAL" { print $2, $3, $4 }' <<<"$rpt")"
+  bad="$(awk -F'\t' '$1 != "TOTAL" && NF > 0 { printf "        %s %s\n", $1, $2 }' <<<"$rpt")"
+  if [ "${labels:-0}" -lt 1 ]; then
+    FAIL "CTL-VA-FAILCLOSED-ROSTER: the label reader found no va_read_ok label in the sourced validator, so 'every adjudicated label has a row' would be a statement over the empty set. The calls have left the va_* functions, their spelling has moved, or the reader has stopped seeing it, and in every case the roster is UNMEASURED rather than complete"
+  elif [ -n "$bad" ]; then
+    FAIL "CTL-VA-FAILCLOSED-ROSTER: FC_TABLE and the validator's va_read_ok labels disagree. UNROSTERED is an adjudicated label no row names, so nothing injects at its site; PHANTOM is a label a row names that no call carries; NOLABEL is a row the matrix runs and renders nothing for; UNREADABLE is a call whose label is in neither literal form; SHARED is a label several calls carry, one row for several sites —
+$bad"
+  else
+    PASS "CTL-VA-FAILCLOSED-ROSTER: all ${labels:-0} adjudicated label(s) carried by the validator's ${calls:-0} va_read_ok call(s) have a row in FC_TABLE, and all ${named:-0} label(s) its rows name are carried by a call — both directions, with no row naming nothing, no call whose label is unreadable, and no label two calls share. Both sides are READ on this run, the labels from the sourced functions and the rows as the matrix loop reads them, so a label added with no row is RED here rather than latent. This grades the roster, never a row: whether each injection fails its site closed is the matrix's own verdict above"
+  fi
+}
+fc_roster_assert "$FC_TABLE"
+
+# ── The control arms. Each is a MEASUREMENT of one number the verdict above reads as zero or as
+# non-zero, taken on a COPY — a string in this shell, never FC_TABLE and never the tree, the
+# census's discipline. Each grades a DELTA against this run's own report rather than a literal,
+# so a table that already carries a finding still gets a control that answers for itself.
+FCR_LABELS="$(fc_labels "$(ctl_body)")"
+FCR_RPT="$(fc_roster_report "$FCR_LABELS" "$FC_TABLE")"
+FCR_NLAB="$(awk -F'\t' '$1 == "TOTAL" { print $3 }' <<<"$FCR_RPT")"
+FCR_U0="$(awk -F'\t' '$1 == "UNROSTERED" { print $2 }' <<<"$FCR_RPT")"
+
+# READ — the floor under the verdict, and the reader's two forms. Over the validator the reader
+# must find labels at all. Over a fixture carrying one call in each literal form, the
+# definition's own header, a call whose label is an expansion and a label repeated, with a table
+# rostering both literal labels, the report must read exactly: three readable calls carrying two
+# labels, both rostered, one UNREADABLE, one SHARED — and nothing else.
+FCR_FIX_BODY="$(cat <<'FCR_FIX'
+    va_read_ok 'zzq_fix/one' "$?" "$a" allow || return 1;
+    va_read_ok "zzq_fix/two $rel" "$?" "$b" deny || return 1;
+va_read_ok ()
+    va_read_ok "$zzq_label" "$?" "$c" allow || return 1;
+    va_read_ok 'zzq_fix/one' "$?" "$d" allow || return 1;
+FCR_FIX
+)"
+FCR_FIX_TABLE='fn|zzq_fix_a|zzq_fix/one
+fn|zzq_fix_b|zzq_fix/two'
+FCR_FIX_GOT="$(awk -F'\t' '{ if ($1 == "UNREADABLE") print $1; else print }' <<<"$(fc_roster_report "$(fc_labels "$FCR_FIX_BODY")" "$FCR_FIX_TABLE")")"
+FCR_FIX_WANT="TOTAL${VA_TAB}3${VA_TAB}2${VA_TAB}2
+UNREADABLE
+SHARED${VA_TAB}zzq_fix/one"
+if [ "$FCR_FIX_GOT" != "$FCR_FIX_WANT" ]; then
+  FAIL "CTL-VA-FAILCLOSED-ROSTER-READ: CONTROL on the label reader — over a fixture with one call in each literal form, the definition's header, a call whose label is an expansion and a label repeated, the report read [$(printf '%s' "$FCR_FIX_GOT" | tr '\n\t' '; ')] rather than [$(printf '%s' "$FCR_FIX_WANT" | tr '\n\t' '; ')]. Until the reader reads both forms, skips the header and reports what it cannot read, its count over the validator is not a measurement"
+elif [ "${FCR_NLAB:-0}" -lt 1 ]; then
+  FAIL "CTL-VA-FAILCLOSED-ROSTER-READ: the label reader passes its fixture and finds NO label in the sourced validator, so the verdict's zeros would be read over the empty set"
+else
+  PASS "CTL-VA-FAILCLOSED-ROSTER-READ: CONTROL on the label reader — over a fixture it reads a single-quoted label and the first word of a double-quoted one, skips the definition's header, reports the call whose label is an expansion and the label two calls share, and reports nothing else; over the sourced validator it finds $FCR_NLAB label(s). So the verdict's comparison runs over a set this reader actually produced"
+fi
+
+# The two mutation controls are gated on the reader having found labels at all, as cov_assert
+# gates its own. With none, every row reads PHANTOM and no removal can un-roster anything, so
+# MUT1 would fail for the reason READ has already named.
+if [ "${FCR_NLAB:-0}" -ge 1 ]; then
+  # MUT1 — the UNROSTERED direction, once PER ROW: each row the matrix runs is removed ALONE from
+  # a copy of the table, and exactly its own labels must become unrostered. Per row rather than
+  # once, because that is the property a roster is for — deleting any one row turns the verdict
+  # red naming what the row covered — and it holds only while no label is named by two rows.
+  FCR_I=0; FCR_NROW=0; FCR_MISS=""
+  while IFS= read -r FCR_ROW; do
+    FCR_I=$((FCR_I + 1))
+    FCR_OWN="$(fc_rostered "$FCR_ROW")"
+    [ -n "$FCR_OWN" ] || continue
+    FCR_NROW=$((FCR_NROW + 1))
+    FCR_OWN="$(awk -F'\t' '$1 == "ROW" { print $2 }' <<<"$FCR_OWN")"
+    FCR_MUT="$(awk -v n="$FCR_I" 'NR != n' <<<"$FC_TABLE")"
+    FCR_NEW="$(st_setdiff "$(awk -F'\t' '$1 == "UNROSTERED" { print $2 }' <<<"$(fc_roster_report "$FCR_LABELS" "$FCR_MUT")")" "$FCR_U0")"
+    if [ "$FCR_MUT" = "$FC_TABLE" ] || [ -z "$FCR_OWN" ] \
+       || [ -n "$(st_setdiff "$FCR_OWN" "$FCR_NEW")" ] || [ -n "$(st_setdiff "$FCR_NEW" "$FCR_OWN")" ]; then
+      FCR_MISS="$FCR_MISS
+        row $FCR_I names [$(printf '%s' "$FCR_OWN" | tr '\n' ' ')] and its removal un-rostered [$(printf '%s' "$FCR_NEW" | tr '\n' ' ')]"
+    fi
+  done <<<"$FC_TABLE"
+  if [ "$FCR_NROW" -lt 1 ]; then
+    FAIL "CTL-VA-FAILCLOSED-ROSTER-MUT1: the table reader found no row the matrix runs, so there was no row to remove and this control measured nothing"
+  elif [ -n "$FCR_MISS" ]; then
+    FAIL "CTL-VA-FAILCLOSED-ROSTER-MUT1: MUST FIRE — removing a row alone from a copy of the table did not un-roster exactly the labels it names. A label that stays rostered is named by another row as well, so no one row is load-bearing for it; a label that never becomes unrostered is not carried by any call, which the verdict names PHANTOM; a row naming nothing un-rosters nothing —$FCR_MISS"
+  else
+    PASS "CTL-VA-FAILCLOSED-ROSTER-MUT1: MUST FIRE — each of the $FCR_NROW rows the matrix runs, removed alone from a COPY of the table, un-rosters exactly the label(s) it names and nothing else. So the verdict's UNROSTERED count is a measurement, and deleting any one row turns it red naming what that row covered"
+  fi
+
+  # MUT2 — the PHANTOM direction, in both of its shapes: a row naming a label no call carries,
+  # and a row naming no label at all, each appended alone to a copy of the table. The first must
+  # add exactly one PHANTOM, and it must be that label; the second exactly one NOLABEL.
+  FCR_PH_LABEL='zzq_roster/phantom'
+  FCR_PH_TABLE="$FC_TABLE
+fn|zzq_roster_probe|$FCR_PH_LABEL"
+  FCR_NL_TABLE="$FC_TABLE
+fn|zzq_roster_probe|"
+  FCR_PH_NEW="$(st_setdiff "$(awk -F'\t' '$1 == "PHANTOM" { print $2 }' <<<"$(fc_roster_report "$FCR_LABELS" "$FCR_PH_TABLE")")" "$(awk -F'\t' '$1 == "PHANTOM" { print $2 }' <<<"$FCR_RPT")")"
+  FCR_NL0="$(awk -F'\t' '$1 == "NOLABEL" { n++ } END { print n + 0 }' <<<"$FCR_RPT")"
+  FCR_NL1="$(awk -F'\t' '$1 == "NOLABEL" { n++ } END { print n + 0 }' <<<"$(fc_roster_report "$FCR_LABELS" "$FCR_NL_TABLE")")"
+  if [ "$FCR_PH_TABLE" != "$FC_TABLE" ] && [ "$FCR_NL_TABLE" != "$FC_TABLE" ] \
+     && [ "$FCR_PH_NEW" = "$FCR_PH_LABEL" ] && [ "$FCR_NL1" -eq $((FCR_NL0 + 1)) ]; then
+    PASS "CTL-VA-FAILCLOSED-ROSTER-MUT2: MUST FIRE — a row naming a label no call carries, appended to a COPY of the table, adds exactly one PHANTOM and it IS that label ($FCR_PH_LABEL); a row naming no label at all adds exactly one NOLABEL ($FCR_NL0 → $FCR_NL1). So the verdict's PHANTOM and NOLABEL counts are measurements too"
+  else
+    FAIL "CTL-VA-FAILCLOSED-ROSTER-MUT2: MUST FIRE — a row the validator cannot account for was not reported (new-phantom=[$(printf '%s' "$FCR_PH_NEW" | tr '\n' ' ')] against [$FCR_PH_LABEL], nolabel=$FCR_NL0 → $FCR_NL1 against $((FCR_NL0 + 1))). So the verdict's PHANTOM and NOLABEL counts are not measurements: it cannot tell a table whose rows all name carried labels from one naming a label nothing carries, or a row naming nothing"
+  fi
+fi
+
 # ── CTL-VA-TOLERANCE-PRESERVED — the counter-arm, and the one this design most needs. Every
 # adjudication above ADDS a failure condition and removes none, so the risk the sweep carries
 # is not that it grades too little but that it grades a healthy repository red: one site
@@ -8733,6 +8949,10 @@ fi
 TP_X3="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"$AR_OUT")"
 TP_CTRL="$(awk 'index($0, "FINDING X3 ") == 1 { n++ } END { print n + 0 }' <<<"FINDING X3 zzq/control degraded read -- producer exited 7")"
 TP_CLOSES=0; TP_PARTITION=0
+# The tolerant class's size is REPORTED below and read from the census to do it, never spelled:
+# it was spelled once, as the sweep's 21, and the census went on to count more.
+TP_TOL_SITES=0; TP_TOL_LINES=0
+IFS="$VA_TAB" read -r TP_TOL_SITES TP_TOL_LINES <<<"$(awk -F'\t' '$1 == "CLASS" && $2 == "tolerant" { print $3 "\t" $4 }' <<<"$(va_census_report "$VC_SRC" classes)")"
 [ "$AR_NSEL" -eq $((AR_NVER + AR_NSKIP)) ] && TP_CLOSES=1
 [ $((AR_NSEL + AR_NEXC + AR_NUNM)) -eq "$AR_NPOP" ] && TP_PARTITION=1
 if [ "$TP_CTRL" -ne 1 ]; then
@@ -8740,7 +8960,7 @@ if [ "$TP_CTRL" -ne 1 ]; then
 elif [ "$AR_NSEL" -lt 1 ]; then
   FAIL "CTL-VA-TOLERANCE-PRESERVED: the tracked run selected $AR_NSEL files, so 'no X3 on a healthy tree' would be a statement over the empty set"
 elif [ "$AR_RC" -eq 0 ] && [ "$TP_X3" -eq 0 ] && [ "$TP_CLOSES" -eq 1 ] && [ "$TP_PARTITION" -eq 1 ]; then
-  PASS "CTL-VA-TOLERANCE-PRESERVED: the healthy tracked run is unmoved by the sweep — rc=0, ZERO X3 findings over $AR_NSEL selected files, selected = validated + skipped ($AR_NSEL = $AR_NVER + $AR_NSKIP), and selected + excluded + unmatched = the population ($AR_NSEL + $AR_NEXC + $AR_NUNM = $AR_NPOP). The 21 tolerant sites are annotated and not adjudicated, and the 1,393 empty reads a clean tree produces at them stay empty and stay green"
+  PASS "CTL-VA-TOLERANCE-PRESERVED: the healthy tracked run is unmoved by the sweep — rc=0, ZERO X3 findings over $AR_NSEL selected files, selected = validated + skipped ($AR_NSEL = $AR_NVER + $AR_NSKIP), and selected + excluded + unmatched = the population ($AR_NSEL + $AR_NEXC + $AR_NUNM = $AR_NPOP). The ${TP_TOL_SITES:-0} tolerant site(s) the census counts, on ${TP_TOL_LINES:-0} marked line(s), are annotated and not adjudicated, and the empty reads a clean tree produces at them stay empty and stay green"
 else
   FAIL "CTL-VA-TOLERANCE-PRESERVED: the sweep has moved the healthy tracked run (rc=$AR_RC x3=$TP_X3 selected=$AR_NSEL validated=$AR_NVER skipped=$AR_NSKIP excluded=$AR_NEXC unmatched=$AR_NUNM population=$AR_NPOP). An X3 on a tree with nothing wrong with it is a capture site mis-sorted out of the tolerant class — the one failure mode this design names for itself — and the finding's own label says which: $(printf '%s\n' "$AR_OUT" | awk 'index($0, "FINDING X3 ") == 1' | head -3 | tr '\n' ' ')"
 fi
@@ -13948,6 +14168,16 @@ md_flips ft_regions       'ST-CF-PIN'      st_cf_pin_assert "$ST_CF_MD_V2"
 # code-vs-site distinction this arm declares below, measured.
 md_flips ctl_codes         'CTL-COV'         ctl_cov_assert "$CTL_ARMED"
 md_flips va_check_artifact 'CTL-COV-emitter' ctl_cov_assert "$CTL_ARMED"
+
+# ── Group CTL's fail-closed ROSTER arm, registered on each side of what it compares — CTL-COV's
+# shape above, with a third subject because this arm reads TWO things. The LABEL reader: with
+# fc_labels removed the label set is empty and the emptiness limb FAILs. The TABLE reader: with
+# fc_rostered removed no label is rostered, and every one reads UNROSTERED. The EMITTER: with
+# va_main removed, the labels its calls carry leave the set while their rows stay, and those rows
+# read PHANTOM. All three subjects are shell functions, so no clause-6 opt-out is declared.
+md_flips fc_labels   'CTL-VA-FAILCLOSED-ROSTER'         fc_roster_assert "$FC_TABLE"
+md_flips fc_rostered 'CTL-VA-FAILCLOSED-ROSTER-table'   fc_roster_assert "$FC_TABLE"
+md_flips va_main     'CTL-VA-FAILCLOSED-ROSTER-emitter' fc_roster_assert "$FC_TABLE"
 
 # ── The SITE coverage arms of groups ST and CE, registered on their shared READER. st_sitemap is
 # the one subject both rest on: remove it and the derived site set is empty, the non-degeneracy
