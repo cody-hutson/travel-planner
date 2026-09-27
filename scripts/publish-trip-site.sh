@@ -53,7 +53,9 @@
 # re-reads .passphrase just before its own push; if a rotation recorded a different key
 # meanwhile, it stops and takes its own commit back out, so a later push cannot carry it.
 # rotate refuses while the per-trip clone holds a page an earlier run committed but did not
-# push: pushed on top, that page would reach history under the key being revoked.
+# push: pushed on top, that page would reach history under the key being revoked. A push
+# publishes exactly the commit its own run made, so a run that loses a race to another command
+# fails at its push instead of reporting success.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or

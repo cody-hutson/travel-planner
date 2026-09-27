@@ -37,6 +37,9 @@ exposure, and what to do if one of your trips was rotated or updated while the v
   the file, never a passphrase, and gives one remedy: unset the variable. The only way to change a
   site's passphrase is `rotate`. A trip rotated under the old behaviour, with the variable still set,
   now meets this refusal instead of being quietly re-keyed.
+- **`rotate` and `update` push exactly the commit they made.** A rotation that loses a race to a
+  concurrent `update` now fails at its push, rather than reporting success while the update's page,
+  under the old passphrase, is the live one.
 - **`update` re-checks `.passphrase` just before it pushes**, so it cannot put a passphrase back over a
   rotation that finished while it was running. When the check stops it, `update` also takes its own
   commit back out of the trip's local clone — only a commit whose page is the ciphertext it encrypted —
@@ -72,8 +75,9 @@ the earlier versions as well, `unpublish` (which deletes the repository) and the
   A check against the live site itself would cover them, and it is not part of this release.
 - Commands run on the same trip at the same moment are still not serialized. Two rotations racing
   each other can leave `.passphrase` naming a passphrase other than the one last pushed — a lockout,
-  not a leak. An update racing a rotation can, in a narrow window, still put a page under the old
-  passphrase into the site's history. Run one command per trip at a time.
+  not a leak. A rotation that loses a race to an update now fails at its push and says so, and the next
+  `update` finishes it; the update's page, under the old passphrase, can still reach the site's
+  history. Run one command per trip at a time.
 - On a trip published from the variable alone, an `update` run without the variable generates a new
   passphrase and does not announce it, so the people holding the old one are locked out. Use `rotate`
   there: it announces the passphrase it sets.
