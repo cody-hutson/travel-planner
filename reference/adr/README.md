@@ -106,4 +106,4 @@ carries the account.
 | [ADR-026](ADR-026-channel-architecture.md) | The channel architecture — what a channel is, the channel-set, what each may carry, and the crossing model | Accepted |
 | [ADR-027](ADR-027-post-trip-preference-memory.md) | Post-trip preference memory — outcomes resolved where they were measured, a group view over the trips the operator confirms, one durable dislike field, and no group slot | Accepted |
 | [ADR-028](ADR-028-derived-planning-day-block-owners.md) | Owners for the derived planning-day blocks — the trip window to the verb that records its inputs, and each traveller's window to a presence file the reconciler rebuilds | Accepted |
-| [ADR-029](ADR-029-group-approval-return-and-threshold.md) | Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part | Proposed |
+| [ADR-029](ADR-029-group-approval-return-and-threshold.md) | Group approval — the inbound return as an operator-mediated crossing, approvals the organizer records against a declared threshold, and one decision of ADR-003 superseded in part | Accepted |
