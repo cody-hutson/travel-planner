@@ -116,6 +116,16 @@ decide:**
 
 - **The section ceiling returns a yes or a no**, calibrated on the decided cases; #87 consumes Q3 and Q4.
 
+**Costs and residuals, stated rather than smoothed**
+
+- **Mode never earns a section by itself** (§ 1): a mode that would show the same content differently
+  gets a variant under Q3, so the four plan modes share one shape — the cost [the site phase-model
+  record](ADR-031-site-phase-model.md) states as its own.
+- **The ladder does not decide reach.** A proposal whose values are not readable in every state it
+  targets is blocked at Q2 (D0) and goes to the class owner or the verdict, not to the ceiling (§ 1).
+- **The ceiling is rule text** and opens no build slice of its own (*Follow-on build slices*); per-card
+  visual design is #87's, which consumes it.
+
 **Reversibility and confidence.**
 
 | Decision | Reversibility | Confidence |
