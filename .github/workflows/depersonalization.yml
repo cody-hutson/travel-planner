@@ -39,9 +39,9 @@ jobs:
 
           # Resolve the diff range from the triggering event. `github.event.pull_request`
           # is null on a push, so the PR fields cannot be read unconditionally: they would
-          # resolve to empty strings and the range would collapse to "..", which one of the
-          # three scans below accepts silently and the other two error into `|| true` —
-          # a gate that reports success having read nothing.
+          # resolve to empty strings and the range would collapse to "..", which the email
+          # scan below accepts silently as an empty diff and the metadata scan errors into
+          # its `|| true` — a gate that reports success having read nothing.
           NULL_SHA='0000000000000000000000000000000000000000'
           case "$EVENT_NAME" in
             pull_request) BASE_SHA="$PR_BASE_SHA";     HEAD_SHA="$PR_HEAD_SHA" ;;
@@ -83,25 +83,129 @@ jobs:
           EMAIL='[A-Za-z0-9._%+-]+@(gmail|ymail|yahoo|hotmail|outlook|proton|icloud|live|aol|me)\.[A-Za-z]'
           USERPATH='/(Users|home)/[A-Za-z0-9._-]+/'
 
+          # ── The content checks' filter chain, defined ONCE ──────────────────────────
+          # The control below and checks 1 and 2 after it call these same functions, so
+          # the chain the control proves is, by construction, the chain that gates. That
+          # is why the control is a stage of this step rather than a step of its own:
+          # steps share no shell state, so a separate step would need a second copy of
+          # the chain, and a copy is what drifts.
+          work="$(mktemp -d)"
+
+          # One grep stage, file to file. grep exits 0 when it matched and 1 when it
+          # matched nothing — both mean the stage RAN. Any other status means it did not,
+          # and the gate stops rather than report as clean a stream it never read. The
+          # stages are separate commands, not one pipeline, because pipefail reports only
+          # a pipeline's rightmost failure: an early stage's error would hide behind a
+          # later stage's "matched nothing". Call it directly, never inside $(…) or a
+          # pipeline, so that its exit ends the step and not a subshell.
+          grep_stage() {  # grep_stage <in> <out> <grep args…>
+            local src="$1" dst="$2" rc=0
+            shift 2
+            grep "$@" < "$src" > "$dst" || rc=$?
+            if [ "$rc" -gt 1 ]; then
+              echo "::error::grep $* exited $rc on this runner — a content-check stage could not run, so nothing was scanned."
+              exit 1
+            fi
+          }
+
+          # Writes <diff>.added — the added CONTENT lines of the unified diff in <diff>,
+          # every `+` line except the `+++ b/<path>` file headers — and <diff>.<label>,
+          # those of them matching <pattern>. Both filters are EREs on purpose: in an
+          # ERE `\+` is a literal plus under every grep, and in a BRE it is not. The
+          # header filter was once the BRE `grep -v '^\+\+\+'`. GNU grep, this runner's,
+          # reads that as "a line starting with one or more `+`", so it removed every
+          # added line; BSD grep and ugrep reject it outright, and a `|| true` absorbed
+          # the error. Either way checks 1 and 2 could never report anything.
+          # Residual, stated rather than left to be found: an added line whose own
+          # content begins with `++` reads as `+++…` in the diff and is dropped with the
+          # headers.
+          content_scan() {  # content_scan <diff> <label> <pattern>
+            grep_stage "$1" "$1.plus" -E '^\+'
+            grep_stage "$1.plus" "$1.added" -Ev '^\+\+\+'
+            grep_stage "$1.added" "$1.$2" -EI "$3"
+          }
+          lines_in() { wc -l < "$1" | tr -d ' '; }
+
+          # ── Control: both checks catch a planted leak, and only where they look ─────
+          # Runs before anything is scanned, through content_scan itself, on this
+          # runner's grep. The planted values are ASSEMBLED here rather than written out:
+          # this job scans its own source whenever this file is in the range, and a
+          # committed literal would be refused by the very checks it exists to prove.
+          at='@'
+          home_seg='home'
+          planted_email="gate.selftest${at}gmail.com"
+          planted_path="/${home_seg}/gate-selftest/notes"
+
+          # FIRE — a new SVG adding one line that carries the email and one that carries
+          # the path. Two added content lines; each check reports exactly its own.
+          printf '%s\n' \
+            'diff --git a/fig.svg b/fig.svg' \
+            'new file mode 100644' \
+            '--- /dev/null' \
+            '+++ b/fig.svg' \
+            '@@ -0,0 +1,2 @@' \
+            "+<text x=\"8\" y=\"16\">write to ${planted_email}</text>" \
+            "+<text x=\"8\" y=\"32\">notes kept in ${planted_path}</text>" \
+            > "$work/fire.diff"
+
+          # QUIET — the same values only where a check must NOT look: a file header's
+          # path and a removed line, beside one clean added line. One added content
+          # line; neither check reports anything. The header is what makes the control
+          # specific to the filter — a filter that dropped nothing would pass FIRE and
+          # fail here.
+          quiet_file="fixture${planted_path}/${planted_email}.md"
+          printf '%s\n' \
+            "diff --git a/${quiet_file} b/${quiet_file}" \
+            "--- a/${quiet_file}" \
+            "+++ b/${quiet_file}" \
+            '@@ -1 +1 @@' \
+            "-write to ${planted_email}; notes kept in ${planted_path}" \
+            '+write to the maintainer through the repository' \
+            > "$work/quiet.diff"
+
+          for arm in fire quiet; do
+            content_scan "$work/$arm.diff" email "$EMAIL"
+            content_scan "$work/$arm.diff" path "$USERPATH"
+          done
+          grep_version="$(grep --version | sed -n 1p)"
+          measured="FIRE added=$(lines_in "$work/fire.diff.added") email=$(lines_in "$work/fire.diff.email") path=$(lines_in "$work/fire.diff.path"); QUIET added=$(lines_in "$work/quiet.diff.added") email=$(lines_in "$work/quiet.diff.email") path=$(lines_in "$work/quiet.diff.path")"
+          wanted='FIRE added=2 email=1 path=1; QUIET added=1 email=0 path=0'
+          if [ "$measured" != "$wanted" ]; then
+            echo "::error::content-check control failed on ${grep_version} — measured ${measured}; wanted ${wanted}. Checks 1 and 2 cannot be trusted to read added lines, so nothing was scanned."
+            exit 1
+          fi
+          echo "Content-check control passed on ${grep_version} — ${measured}."
+
           fail=0
 
           # 1. Personal email in ADDED lines — every file EXCEPT the intentional
           #    contact homes (LICENSE, SECURITY.md) where an owner email is allowed.
-          email_hits="$(git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" -- . ':(exclude)LICENSE' ':(exclude)SECURITY.md' \
-            | grep -E '^\+' | grep -v '^\+\+\+' | grep -EI "$EMAIL" || true)"
-          if [ -n "$email_hits" ]; then
+          git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" -- . ':(exclude)LICENSE' ':(exclude)SECURITY.md' \
+            > "$work/email.diff" \
+            || { echo "::error::git diff could not read the range for check 1, so nothing was scanned."; exit 1; }
+          content_scan "$work/email.diff" hits "$EMAIL"
+          if [ -s "$work/email.diff.hits" ]; then
             echo "::error::personal email address found in added lines (allowed only in LICENSE / SECURITY.md)"
-            printf '%s\n' "$email_hits"
+            cat "$work/email.diff.hits"
             fail=1
           fi
 
           # 2. OS user-home path in ADDED lines — never allowed.
-          path_hits="$(git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" \
-            | grep -E '^\+' | grep -v '^\+\+\+' | grep -EI "$USERPATH" || true)"
-          if [ -n "$path_hits" ]; then
+          git diff --unified=0 "$BASE_SHA".."$HEAD_SHA" \
+            > "$work/path.diff" \
+            || { echo "::error::git diff could not read the range for check 2, so nothing was scanned."; exit 1; }
+          content_scan "$work/path.diff" hits "$USERPATH"
+          if [ -s "$work/path.diff.hits" ]; then
             echo "::error::OS user-home path (/Users/<name>/ or /home/<name>/) found in added lines"
-            printf '%s\n' "$path_hits"
+            cat "$work/path.diff.hits"
             fail=1
+          fi
+
+          # Say how many added lines each check read, so a green over zero added lines
+          # reads differently from a clean one.
+          echo "Added lines scanned: $(lines_in "$work/email.diff.added") by check 1 (LICENSE and SECURITY.md excluded), $(lines_in "$work/path.diff.added") by check 2."
+          if [ "$(lines_in "$work/path.diff.added")" -eq 0 ]; then
+            echo "::notice::this range adds no content lines — checks 1 and 2 had nothing to read."
           fi
 
           # 3. Commit messages + author/committer identity across the PR's commits.
