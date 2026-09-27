@@ -591,8 +591,193 @@ Each is a condition of the slice named, stated here so that no slice re-decides 
 
 ## Consequences
 
-*Authored in the commits that follow on this release branch.*
+**Positive**
+
+- **If something happens**, at any point from the first page to the trip itself, the group can reach
+  anyone who chose to be reachable, see whose emergency contact is on file — by name where the traveller
+  confirmed the contact agreed — and know that the organizer holds the ways to reach them.
+- **The way to reach an emergency contact never enters a file the site reads**, and only the organizer
+  and the filing script ever touch it.
+- **The third-party posture `ADR-004` and `ADR-006` built is kept** for everything the operator's D1 and
+  D2 did not open.
+- **Withdrawal, refusal, removal and erasure reach the carrier by construction**: nothing carries
+  forward, and erasure deletes the entry.
+- **Every mechanism is an existing one**: the private-site record's share mark; the § 5.6 declaration,
+  which the validator and the guard both read; the field-scope classes, which `promote`, `extract` and
+  composition already honour; erasure's whole-file rewrite; and the reconciler — no new agent, no new
+  dispatch and no new read.
+
+**Costs and residuals, stated rather than smoothed**
+
+- **A new § 1.1 class is decided.**
+- **The organizer is a single holder** (N-7). The mitigation is outside the system; a deputy holder is a
+  candidate future card.
+- **Removal only works forward.** It cannot recall a copy someone already made.
+- **Retention after the trip is undecided.** `ADR-004` never set one; an archived trip is frozen, with
+  erasure as its only stated exception, so an emergency contact survives the trip until someone asks
+  for removal. The carrier joins that residual, and under D1 it now also covers copies of a name
+  already published, which erasure reaches only going forward. It predates this card and is routed to
+  an intake card.
+- **"No emergency contact on file" discloses something about a person.** That is the operator's D2,
+  recorded here as its cost.
+- **Filer status is inferable on the private page**, as the private-site record states, and the carrier
+  adds no new kind of inference.
+- **The values are conduct; the labels are gradable.** Wave 1's schema arm grades the carrier's labels
+  and its three state literals. No guard reads its values on the encrypted limb, and in IDEATION the
+  validator does not run.
+- **A form edited by hand is observed by nothing until the next reconcile**, the group snapshot's
+  residual too.
+- **Every render that carries the section refuses the `--plaintext` limb.** The section renders for any
+  trip with a filer, so that opt-out is unavailable to such a trip in every phase — "nothing personal on
+  a public page", applied.
+- **The approval rule stands until it is reconciled** with the group-approval release.
+- **Go-live stays behind the private-site record's fifth safeguard**, unchanged.
+
+**Aggregation trace — what consumes each new evaluand.**
+
+| Evaluand | Consuming rule | Effect on the aggregate |
+|---|---|---|
+| the carrier joins the `bound` set | group `PB`: "the publish-bound artifact set matches the spec fence that declares it." | a § 1.1 cell landed without its fence row, or the reverse, fails a required check, so both land in one commit — by design |
+| the carrier absent in a build | the walker's exit contract, "Exit 0 clean, 1 findings, 2 degraded read."; the `site` verb: do not present the site as current | the walk exits degraded and the verb withholds "current"; nothing else blocks |
+| the way to reach a contact in an audited artifact | the validator's privacy audit: any member of the non-publishable class reaching a publish-bound artifact is always Critical | Critical wherever the audit reads, once Wave 1 names the carrier in its list; in IDEATION the audit does not run, and safeguard 6 covers the field class there |
+| the way to reach a contact in a plaintext render | the publish guard aborts on a member of the class | the `--plaintext` publish aborts |
+| "the carrier's staleness never gates a build or a publish" | `CLAUDE.md` `G8`, and `/trip-publish` rule 7: "It never branches on freshness, and adds no gate that blocks on it." | **holds** |
+| "a withdrawal needs no group approval" | the organizer-confirm gate, whose proceed set is the organizer's own confirmation | **holds at `8b2ac05`**. A proposed approval threshold in the group-approval release would hold such a republish on the group, which § 4's approval rule answers |
+
+**Blast radius — Wave 1, named here and not performed; this release keeps all of it out.**
+
+| Surface | The change these decisions oblige |
+|---|---|
+| `templates/traveler-intake.template.md` | the fields, the choices C-1 to C-4 and the notice N-1 to N-7, which replaces *private — never published* for these fields |
+| the filing script, the organizer-only file and the read block | new, in the capture build |
+| `reference/data-model.md` § *Field Scope* | the `TRIP` rows and their totals; the carrier's rules beside the group snapshot's |
+| `reference/data-architecture.md` | the § 1.1 row; § 5.1's statement of the `bound` set; the render's sources; § 5.6's way-to-reach row, with the queried set widened |
+| `reference/site-layout-spec.md` | § 3's `group-contacts` section; § 9.1's rows; § 9.2's render-table rows and element fence — re-read at the slice's base |
+| `reference/schemas/group-contacts.md` (new) and `reference/schemas/README.md` | the class schema and its coverage declaration |
+| `agents/00-enrichment.md` | the writer's contract: the read set through the projection, the population, the mark and attestation rules, the withhold rule, the grammar block and the write-stop; contact data never enters the derived model |
+| `skills/trip/SKILL.md` | the `site` verb's Reads line, in every state; `plan`'s and `replan`'s naming of the carrier write |
+| `skills/trip-record/SKILL.md` | `travelers` and `person`: the dispatcher naming; the recording verb; `erase`: the carrier's reach row, the organizer-only file, every page file, the accounting and the tally |
+| `agents/06-validator.md` | the inline list of publish-bound artifacts |
+| `CLAUDE.md` | the file-structure tree and § *How to build it* — **not** the enrichment roster row's `Output File` cell |
+| `scripts/check-round-trip.sh` and `scripts/test-artifact-schema.sh` | the carrier's per-artifact declaration, the `PB` pairing, the label arm, the erase tally; the erasure witness and `ER15` |
+| `scripts/publish-trip-site.sh` and `scripts/test-publish-guard.sh` | the widened queried set for the organizer-only file's row |
+| `examples/` | a sanitized witness of the carrier's class |
+
+**Structure determinations.**
+
+| Structure | Determination |
+|---|---|
+| `ADR-004`'s model | **changed** in part: its premise is gone |
+| the private-site record's share mark | **extended** to the in-trip contact, not built new |
+| the § 5.6 declaration | **extended** by the way-to-reach's row, with the evaluator's queried set widened for the organizer-only file |
+| the field-scope classes | **retained**: `TRIP` already bars the person record through `promote`, `extract` and composition |
+| § 1.1 | **net-new** `outputs/group-contacts.md`, because in-place is infeasible: the group snapshot, the trip context, the traveller file, the traveller model, the itinerary and the presence file each fail as a host |
+| the reconciler's write set | reviewed → **extended** by one file, written on every pass |
+| the § 3 catalog | **net-new** `group-contacts`, because no component carries a per-traveller record in every state |
+| § 9.1 and § 9.2 | **extended** by rows, in the site phase-model record's shapes |
+| the erase reach table | **extended** by the carrier's row |
+| the freshness table | reviewed → **retained**: no new relation; the carrier rides `itinerary-to-build` and `build-to-published` |
+
+**Standards followed**, adopted as design principles; the record makes no legal-compliance claim.
+
+| Choice | Standard followed |
+|---|---|
+| Minimal fields for the purpose — the closed list and its exclusions; the way to reach the contact held by the organizer alone | GDPR Art. 5(1)(c), data minimisation, and Art. 25(1), protection by design · ISO/IEC 29100, data minimization and collection limitation |
+| Consent from the person the data is about — the separate choices, and the notice given at collection | GDPR Art. 6(1)(a) and Art. 7; Recital 32 — granular, and silence or a pre-ticked box is not consent; Art. 13, information at collection · ISO/IEC 29100, consent and choice, and openness, transparency and notice |
+| The emergency contact, who is not asked directly | GDPR Art. 14's principle, informing a data subject who was not asked, discharged through the traveller (N-5): an attestation, never the contact's own consent |
+| Access limited to the people who need it — organizer-only, and the group only by the traveller's choice or attestation | GDPR Art. 25(2), protection by default · ISO/IEC 29100, need-to-know under data minimization |
+| Removal on request — the withdrawals, the contact's request, erasure | GDPR Art. 7(3), withdrawal as easy as giving, and Art. 17, erasure · ISO/IEC 29100, individual participation and access |
+| One trip only, never carried forward | GDPR Art. 5(1)(e), storage limitation — retention after the trip is the open half |
+| No health information in an emergency note | GDPR Art. 9, special categories, consistent with the private-site record's row for needs |
+| Group-only, never public | GDPR Art. 5(1)(f), confidentiality |
+
+**Three axes.** *Best practice:* the most sensitive value is kept out of every rendered file by
+construction, never redacted later; one writer per file; an undetermined read fails closed.
+*Scalability:* a new traveller costs nothing; a new field costs one list row, one fence row and one
+notice line; there is no new store beyond the organizer-only file. *Maintainability:* it reuses the
+reconciler, the engagement tokens, `ADR-028`'s keying, erase-row and naming rules, the group snapshot's
+mark and withhold rules and the site phase-model record's two-grain contract, and mints one class, one
+component and one fence name.
+
+**Reversibility and confidence.**
+
+| Decision | Reversibility | Confidence |
+|---|---|---|
+| § 1, yes in part | **EXPENSIVE** once a value is published; CHEAP while this record reads `Proposed` | HIGH |
+| § 2, the closed list, with D1's name and D2's line | **EXPENSIVE** once published | HIGH on the list; MEDIUM on D1's attestation condition, the operator's |
+| § 3, the rules and the storage rule | **CHEAP** while nothing is built; **MODERATE** once built | HIGH |
+| § 4, the choices, the notice and withdrawal | **CHEAP** | HIGH |
+| § 5, `ADR-004` section by section, and the dated note | **CHEAP** — a note in a record | HIGH |
+| § 6, the carrier | **CHEAP** while `Proposed`; **EXPENSIVE** once built | HIGH on the file, its class and its placement; MEDIUM-HIGH on the writer, whose values are conduct |
+| § 7, the approval rule | **MODERATE** | MEDIUM, until it is reconciled with the group-approval release |
+
+## What this record does not decide
+
+| Not decided here | Decided by |
+|---|---|
+| What the private site may show in general, the share mark and the safeguards | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
+| Where the group contacts section sits in each phase, and the page's shape | [the site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) |
+| What a channel is and what it may carry | `ADR-026` |
+| The form labels, the notice's wording, the organizer-only file's name and the filing script's design | Wave 1 |
+| Retention after the trip | a routed intake card |
+| A deputy holder with the organizer's access | a candidate future card |
+| Whether a withdrawal-only republish may wait on an approval threshold | nothing: § 4's rule says it never does; the reconciliation with the group-approval release happens at that release's Stage-9 plan review |
+
+## Follow-on build slices
+
+All Wave 1, none live before the fix for the rotation defect tracked privately:
+
+- **The capture build**: the trip form's fields, choices and notice; the filing script, the
+  organizer-only file and the block on agent reads; the way-to-reach's § 5.6 row with the queried set
+  widened; the `TRIP` rows; and the recording verb, shared with the private-site record.
+- **The carrier**: its class, schema, rules, writer contract through the projection, section, fences,
+  erase row, dispatcher naming, validator list and sanitized witness.
+- **Erasure's reach**: every trip page file, and the organizer-only file.
+- **The erasure witness**: relabelled or reworded, with `ER15` green.
+- **The private-site record's safeguard 6** gains the way to reach the contact when the capture ships.
+- **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, after the
+  private-site record's, in the same change as the dated note inside `ADR-004` and `ADR-011`'s dated
+  amendment.
+- **Routed, not Wave 1's by this record:** retention after the trip; a deputy holder.
 
 ## References
 
-*Authored in the commits that follow on this release branch.*
+- [The private-site record](ADR-029-what-the-private-site-may-show.md) — the coordination test, the
+  share mark this record reuses, and the safeguards it cites: 1, the notice; 3, people who did not
+  file; 4, refusal and removal at the next update; 5, the rotation fix first; 6, decision P; 7,
+  decision Q.
+- [The site phase-model record](ADR-030-site-phase-model-and-surface-contract.md) — the render table
+  that places the carrier in every state the site builds, and the ladder that returns its section.
+- [ADR-004](ADR-004-contact-emergency-privacy.md) — the contact and emergency model this record
+  supersedes in part.
+- [ADR-006](ADR-006-third-party-data-capture.md) — the third-party boundary: its scope, its Q1
+  ground and its words on the appearance of consent.
+- [ADR-026](ADR-026-channel-architecture.md) — § 2's channel admission, and § 3's intake observers and
+  encrypted-limb assertion.
+- [ADR-025](ADR-025-engagement-model-over-time.md) — the engagement value, the population floor and
+  never-carry 1.
+- [ADR-028](ADR-028-derived-planning-day-block-owners.md) — the reconciler-written derived file whose
+  keying, write-set widening, erase-row shape and naming rules the carrier reuses.
+- [ADR-003](ADR-003-group-coordination.md) — § 2, the approval that governs plan changes, which a
+  withdrawal is not.
+- [ADR-002](ADR-002-living-site-refresh.md) — the living-site record, whose privacy line, only to
+  travellers, holds.
+- [ADR-009](ADR-009-data-architecture.md) — its eighth amendment, the form the dated note inside
+  `ADR-004` takes.
+- [ADR-011](ADR-011-per-traveler-cost-estimation.md) — the restatements of `ADR-004` its dated
+  amendment corrects.
+- [ADR-021](ADR-021-installable-capability.md) — the data-root resolution the storage location reads
+  through.
+- [ADR-008](ADR-008-publish-content-guard.md) — the two-limb publish guard and the § 5.6 seam it
+  reserved.
+- `reference/data-architecture.md` — § 1.1's classes, § 5.1 and § 5.6's declaration.
+- `reference/data-model.md` — § *Field Scope*.
+- `templates/traveler-intake.template.md` and `templates/person-intake.template.md` — the forms the
+  capture lands on, and the one that never declares it.
+- `skills/trip-record/SKILL.md` — `promote`, `extract`, `profile` and the erase reach table.
+- `agents/00-enrichment.md` and `agents/06-validator.md` — the carrier's writer, and the privacy audit.
+- `scripts/publish-trip-site.sh`, `scripts/test-publish-guard.sh` and
+  `scripts/test-artifact-schema.sh` — the guard and its queried set, and the erasure witness's arm.
+- Provenance: the card, #1545; its design sub-task, #1546, carrying the design, the operator's D1 to
+  D3, the carrier and its decisions K, S, P and MG-C1; the fit review and CR-2 on #1369; decision Q on
+  #1385.
