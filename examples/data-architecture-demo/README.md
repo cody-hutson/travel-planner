@@ -319,18 +319,39 @@ the wrong one here, for a measured reason rather than a stylistic one: this
 repository's only personal-data control cannot see inside a binary.**
 
 `.github/workflows/depersonalization.yml` scans **added diff lines**. Both of its
-content arms are shaped
+content checks read `git diff --unified=0 <base>..<head> …` and pass it through the
+same grep stages, each run on its own so that an error in any of them fails the gate:
 
 ```
-git diff --unified=0 <base>..<head> … | grep -E '^\+' | grep -v '^\+\+\+' | grep -EI "<pattern>"
+grep -E '^\+'           # keep the added lines
+grep -Ev '^\+\+\+'      # drop the `+++ b/<path>` file headers
+grep -EI "<pattern>"    # match the personal-data pattern
 ```
 
-and that pipeline is blind to a binary twice over. `git diff` emits **no content
+and that chain is blind to a binary twice over. `git diff` emits **no content
 lines** for a binary file — only `Binary files a/x and b/x differ` — so there is
 nothing for `grep -E '^\+'` to match; and `grep -I` **explicitly suppresses binary
-matches** even where content did reach it. Measured on a purpose-built repository in
-which a PNG and an SVG carried the **identical** leak tokens: the SVG returned **1**
-gate hit, the PNG returned **0**, from **0** added lines.
+matches** even where content did reach it.
+
+Measured through those stages on a purpose-built repository, on macOS under BSD grep,
+in which a PNG and an SVG carried the **identical** leak tokens — an address at a
+personal-mail domain and an OS user-home path. Each check reported the SVG's added
+line; the PNG produced no added line at all, so neither check had anything to read.
+The PNG half is a property of `git diff` rather than of `grep`, so it holds on any
+runner. The SVG half depends on the `grep` doing the reading, so the gate re-measures
+it on the Linux runner every time it runs: before scanning anything, it passes
+planted SVG `<text>` lines through the same stages and fails unless each check
+reports its own.
+
+**This paragraph once said the SVG was caught, and on the runner it was not.** The
+header filter was then the *basic* regex `grep -v '^\+\+\+'`. GNU grep, which the
+runner uses, gives `\+` in a basic regex its "one or more" meaning, so the filter
+matched any line beginning with `+` and removed every added line before either check
+saw it; the BSD grep and ugrep builds measured on macOS reject the same pattern
+instead, and the `|| true` that followed turned the error into an empty result.
+Either way the gate read no added text at all, so a leak in the SVG would have passed
+as surely as one in the PNG. The argument below survives the correction because it
+rests on the PNG half, which never depended on `grep`.
 
 So a leaked email address, an OS user-home path, or a real traveller's name baked into
 the pixels of a committed screenshot **passes the gate green**. Committing this
