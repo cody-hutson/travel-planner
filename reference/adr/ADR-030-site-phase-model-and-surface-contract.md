@@ -1159,8 +1159,231 @@ compares against.
 
 ## Consequences
 
-*Authored in the commits that follow on this release branch.*
+**Positive**
+
+- **#1241's shape and IDEATION criteria are met**, and the site follows every declared state except
+  `UNSET`: a trip can move back and forth between *No destination yet* and *Destination in play*, and
+  into planning, with the page following.
+- **Completeness becomes checkable per state.** The walk's artifact pass runs over the `bound` set, and
+  an artifact excluded by its class needs no listing. That the build reads the declared phase becomes a
+  graded property through the shape pass, even though the plan modes resolve to one shape.
+- **The section ceiling returns a yes or a no**, calibrated on the decided cases; #87 consumes Q3 and Q4.
+- **The page before a plan carries what the group needs to coordinate** — who can travel when, from where
+  and how each likes to travel, in the group snapshot — and *Destination in play* is no longer the hero
+  alone. Every item on the private-site record's IN list has a rendered home before a plan, or a named
+  reason why not.
+- **In a plan mode a traveller sees today's site, plus the group contacts section.**
+- **The stale published shortlist has a declared signal**, `build-to-published`, a remedy (R1 to R3) and
+  an owner for its automation, the living-site milestone.
+- **The shortlist's refusal keeps its purpose**: one source for a chosen destination.
+- **The concealed occasion has a whole-page rule**: every component that could identify the event is
+  bound by it.
+- **New classes are cheap and forced.** A class that is not `bound` costs no map edit; a new `bound` class
+  costs one row per admitted state, and the contract half turns the check red until those rows exist.
+- **No new agent, no new read and no new writer role for the group snapshot**, and refusal, removal and
+  erasure reach it by construction at its next rebuild, because nothing in it is carried forward.
+
+**Costs and residuals, stated rather than smoothed**
+
+- **The contract surface grows** by one render-table fence, a family of walker passes, two finding codes
+  and their arms — each bounded, declared and graded.
+- **The walker needs σ from the verb.** A standalone run without it gets only the element pass, and says
+  so.
+- **The site follows the operator's declaration**, not the group's conversation.
+- **The plan modes share one shape**, so the shape criterion hinges on IDEATION.
+- **Transitions that change visible text ask for the organizer's confirmation**, by `ADR-003`'s own
+  logic; that is new behaviour.
+- **The verb index lists `site` as RUN for a plan mode with no destination**, and the verb then stops —
+  the declared residual `check` already carries.
+- **The IDEATION page stays on disk** after the first build with a destination. It is inert by the
+  newest-member rule, and erasure must reach it (§ 5).
+- **Reference matter has no § 3 component**, so the shape pass cannot see it.
+- **The concealed block lists its attendees**, by the private-site record's decided form, so a block
+  whose attendee list leaves one traveller out can itself tell that traveller something is planned. That
+  is a residual of the decided form, not re-opened here.
+- **`build-to-published` cannot see a push made from another machine**, and the shortlist against its own
+  inputs is observed by no relation.
+- **New rules sit on producers** — the hub's concealment mark and naming rules, the shortlist writer's
+  filer and withhold rules, and the reconciler's snapshot rules — and are graded only where Wave 1 adds
+  arms. The snapshot's withhold rule is conduct; only its labels are graded.
+- **A mode branch in an agent**, graded only once the register row lands.
+- **A form edited by hand is not observed until the next reconciler pass**, and a publish in between
+  shows the old entry.
+- **On a return from a plan mode to IDEATION**, the snapshot on disk is as of its last IDEATION pass until
+  reconciled; the `mode` verb names the step.
+- **An absent snapshot makes an IDEATION build degraded** — one more step, `/trip-record travelers`,
+  before a first pre-plan site.
+- **Filer status is inferable on the private page**, as the private-site record states.
+- **Pre-plan details leave the page when planning starts**, rooming preferences before rooms are booked
+  among them; a later record can admit a field into a plan mode through the ceiling.
+- **An answer given for an earlier destination cannot be detected** after the destination changes; the
+  traveller's form owns it, as it does for the plan.
+- **The hub planner's IDEATION comparison has no rendered home** until its follow-on lands.
+
+**Aggregation trace — what consumes each new evaluand.**
+
+| Evaluand | Consuming rule | Effect on the aggregate |
+|---|---|---|
+| an undispositioned `bound` class — the contract half, proposed `RT7` | the walker's exit contract, "Exit 0 clean, 1 findings, 2 degraded read."; graded as a group `W` arm in the required artifact-schema suite | the walker's contract run can exit with findings when a class turns `bound` without its render-table rows, and the arm's failure blocks a merge, so a class cannot become renderable without its rows for every admitted state |
+| a surplus component — the instance half, proposed `RT8` | the `site` verb: "This verb adds no verdict of its own and suppresses none of the script's." | a stale section left after a transition makes the verb report the site as not current; nothing else changes |
+| an admitted artifact that cannot be read — the shortlist, the group snapshot or the group contacts file absent in a state that renders it | the walker's exit contract | a degraded read; the verb withholds "current"; nothing else blocks |
+| the new finding codes | group `W`'s inventory: "A code added to the walker with no arm behind it is RED rather than latent" | neither code can ship ungraded |
+| the stop for a plan mode with no destination | the verb index: "a verb the table admits can still stop inside its own section" | a declared residual; no aggregate changes |
+| `build-to-published` reads `BEHIND` | `/trip-publish` rule 7: "It never branches on freshness, and adds no gate that blocks on it." | report-only |
+| a transition's, or a snapshot change's, visible-text change | the organizer-confirm gate, whose proceed set is the organizer's own confirmation | `update` waits for `confirm` — intended under `ADR-003` |
+| the concealed block against the location invariant | the validator: "Every event must resolve to a map link … and render it on its card." | without the stated carve-out a concealed event would read as a broken card — a Wave-1 obligation |
+| the group snapshot joins the `bound` set | group `PB`: "the publish-bound artifact set matches the spec fence that declares it." | a § 1.1 cell landed without its fence row, or the reverse, fails a required check, so both land in one commit — by design |
+| content that is out, inside a carried snapshot value | located nowhere | **unverified by design, and declared rather than asserted as fine**: no rule reads value content on the private limb; the withhold rule is conduct, and only the labels are graded |
+
+**The non-blocking claims hold.** The walk's findings never block a build's write or a publish; the
+shown relation never gates a publish; the snapshot's staleness never gates a build or a publish. The
+contract half is deliberately **not** non-blocking: it gates merges through the required suite.
+
+**Blast radius — Wave 1, named here and not performed; this release keeps all of it out.**
+
+| Surface | The change these decisions oblige |
+|---|---|
+| `skills/trip/SKILL.md` | the `site` row; the verb's own section: the stop for a plan mode with no destination, the stem rule, the shortlist, the group snapshot and the group contacts file on the Reads line, σ passed to the walker; `plan`'s naming of the snapshot write, with its condition |
+| `reference/site-layout-spec.md` | § 3: the `group-shortlist`, `group-snapshot` and `group-contacts` sections, the hero's pre-plan variant, the `is-concealed` variant and the location-invariant carve-out. § 9.1: the new authority and fence rows. § 9.2: the render-table fence and the new element fences. § 9.3: the state rows. § 9.4 and § 9.5: the three passes and the phase clause |
+| `reference/data-architecture.md` | the § 1.1 rows and cells; the render's source list; § 5.1's statement of the `bound` set |
+| `reference/data-model.md` · `reference/schemas/group-snapshot.md` (new) · `reference/schemas/README.md` | the snapshot's appended rules section; its schema and coverage declaration |
+| `agents/destination-ideation.md` · `reference/schemas/destination-shortlist.md` · the ideation example | `publish: bound`; the one-reader sentences; the writer's filer rule and its withhold rule for rendered reasons |
+| `agents/05-hub-planner.md` | the concealment mark; naming a desire only if marked, and an occasion only if marked not private; the neutral labels the private-site record requires |
+| `agents/00-enrichment.md` | the group snapshot's writer contract and grammar block, gated on IDEATION, with its output-contract table; the projection split of the private-site record's safeguard 7 |
+| `agents/06-validator.md` | its inline statement of the `bound` set; the location carve-out |
+| `scripts/check-round-trip.sh` and group `W` of `scripts/test-artifact-schema.sh` | the per-artifact declarations, the new fences and label shapes, the IDEATION rows, the non-row, and the new finding codes with their arms |
+| `scripts/test-artifact-schema.sh`, beyond group `W` | the `PB` pairing; the snapshot's label arm; group `MG`'s declared heading; the erase tally |
+| `scripts/publish-trip-site.sh` `cmd_list` · `skills/trip-publish/SKILL.md` § *list* | `build-to-published` |
+| `skills/trip-record/SKILL.md` | `travelers` and `person`: the dispatcher naming, with its condition; `group`: name the reconcile step; `profile`, `link`, `unlink` and `extract`: widen what is behind; `mode`: name the step on entry to IDEATION; `erase`: the snapshot's reach row, its accounting, and the reach over every page file |
+| `CLAUDE.md` · `reference/command-reference.md` · `README.md` | the file-structure tree, the content sources, the walk's scope, the register row, the derived row and the self-descriptions — **not** the enrichment roster row's `Output File` cell |
+| both intake templates | the notice states the snapshot's list, the mark rule and the withhold rule; the example answers that put content that is out in an IN line are replaced |
+| `examples/` | a sanitized witness of the group snapshot's class |
+| the literal sites of the page's file name | each one that states the write target gains the slug case; each generic example stays; the erasure verb's row is among them |
+
+**Structure determinations.**
+
+| Structure | Determination |
+|---|---|
+| § 9.1's fence and group `PB` | reviewed → **retained**, mode-blind, because a mode column would index reach by mode |
+| `round-trip-contract-elements` | reviewed → **retained** byte for byte, because its grader compares it with a single grammar |
+| the render table | **net-new, because in-place is infeasible**: a mode on § 9.1's fence would index reach by mode, a mode on the element fence would move gating to element grain, and rows added to a per-verb table would be counted as verbs |
+| `scripts/check-round-trip.sh` | **extended**, not forked |
+| the element fences | **extended**: a sibling fence per rendered artifact, with the same columns and the same enum |
+| § 9.3 | reviewed → **changed**: a state column |
+| § 9.5 | reviewed → **changed**: a phase dimension, closed to reach |
+| the `site` requirement row and its section | reviewed → **changed** and **extended** |
+| the § 3 catalog | **net-new** `group-shortlist` and `group-snapshot`, and the carrier's `group-contacts`, because no component represents their elements; **extended** by the hero variant and the `is-concealed` variant |
+| the § 3 location invariant | reviewed → **changed**: a stated carve-out |
+| the shortlist's schema and agent sentences | reviewed → the two refusals **retained**; the no-reader sentence **changed** to name the one reader; the ideation agent's leaning-field read **retained** |
+| § 1.1 | **net-new** `outputs/group-snapshot.md`, because in-place is infeasible: the shortlist, the trip context, the traveller model, the traveller file and the presence file each fail as a host |
+| the reconciler's write set | reviewed → **extended** by the group snapshot, written only on IDEATION passes |
+| the erase reach table | **extended** by the snapshot's row |
+| `list` | reviewed → **changed**: the observation and the tokens |
+| the mode-gated behaviour register | reviewed → **retained** for the render; **extended** by the snapshot's production gate |
+| the freshness table | reviewed → **retained**: no new relation inside `trip.freshness` |
+
+**Three axes.** *Best practice:* one declared home per fact; reads that fail closed; a reduced form
+produced at build or by the writer, never by redaction on the publish path; a report-only relation;
+withhold rather than rewrite a person's words. *Scalability:* a class that is not `bound` costs no edit,
+a new `bound` class costs one row per admitted state, a new state one row per `bound` class, and a new
+IN field one list row, one fence row and one notice line. *Maintainability:* it reuses `G5`'s modes,
+`G7`'s cell grammar, the `rendered | excluded` enum, the shipped walker, the shipped verdict family, the
+confirm gate's projection, the reconciler, the engagement tokens and `ADR-028`'s keying and erase-row
+shape, and renames nothing.
+
+**Reversibility and confidence.**
+
+| Decision | Reversibility | Confidence |
+|---|---|---|
+| § 1, the shape driver | **EXPENSIVE** once Wave-1 slices build on it; CHEAP while this record reads `Proposed` | HIGH on the driver; MEDIUM-HIGH on the grain |
+| § 2, the two-grain contract | **MODERATE** — the spec, the walker and the grader can each be reverted | HIGH |
+| § 3, the ceiling | **CHEAP** — rule text | HIGH |
+| § 4, the map | **EXPENSIVE** once built; CHEAP while `Proposed` | HIGH for *No destination yet*; MEDIUM-HIGH for *Destination in play* |
+| § 4, the carriers of the values the group may see | **MODERATE** — the rules sit on producers | MEDIUM-HIGH |
+| § 5, the admission and the pre-plan classes | **EXPENSIVE** once built — a contract row | HIGH on IDEATION and `UNSET`; MEDIUM-HIGH on the plan-mode stop |
+| § 6, transitions and staleness | **MODERATE** — report surfaces | HIGH on the policy; MEDIUM-HIGH on the identity observation |
+| § 8, Finding 1 | **CHEAP** | HIGH |
+| § 9, the group snapshot | **EXPENSIVE** once built; CHEAP while `Proposed` | HIGH on the class and placement; MEDIUM-HIGH on the production gate and its residual |
+
+## What this record does not decide
+
+| Not decided here | Decided by |
+|---|---|
+| What the private site may show, the share mark and the safeguards | [the private-site record](ADR-029-what-the-private-site-may-show.md) |
+| That a value that is out stays out when a `bound` artifact carries it, and the producers that owe it | [the private-site record](ADR-029-what-the-private-site-may-show.md) (D-2); this record names the ideation agent among them |
+| What of a traveller's contact and emergency details the group sees, and their carrier | [the contact and emergency record](ADR-031-contact-emergency-group-visibility.md) |
+| What a channel is and what it may carry | `ADR-026` |
+| The engagement axis and its boundaries | `ADR-025` |
+| Scheduled refresh, re-encryption and republish | the living-site milestone |
+| Per-card visual design | #87, which consumes this record's ceiling |
+| A traveller-writeable surface | nothing here: directionality is deferred |
+| The hub planner's IDEATION comparison artifact | a follow-on card |
+| `ADR-026` Finding 1 | a routed intake observation (§ 8) |
+| The rebuild announce for `rebuilt-each-synthesis` files | the class-wide question `ADR-028` § 2 routed |
+
+## Follow-on build slices
+
+All Wave 1, none live before the fix for the rotation defect tracked privately:
+
+- **The phase-aware build**: the `site` row and its section, σ to the walker, the stem rule with the
+  erasure reach over every page file, and the hero's pre-plan variant.
+- **The completeness contract**: the render-table fence, the per-artifact element fences, § 9.3's state
+  rows, the walker's three passes and group `W`'s arms.
+- **The shortlist's render slice**: its class edit with its § 9.1 rows in one commit, its section, its
+  writer's filer and withhold rules, and the two one-reader sentences.
+- **The group snapshot slice**: its class, schema and rules, its writer contract, its gated production
+  and register row, the dispatchers' naming, the reconcile-step namings, its section, its erase row, a
+  sanitized fixture, and its writer input re-pointed to the private-site record's projection.
+- **The concealed occasion**: the variant, the carve-outs, the mark and its joins.
+- **`build-to-published`** in `list`.
+- **The page's file-name sites**, each disposed of one by one.
+- **The group contacts section**, placed as § 4 states, in the contact and emergency record's slices.
+- **Routed, not Wave 1's by this record:** the hub's IDEATION comparison artifact; `ADR-026` Finding 1's
+  card; and the observation that `/trip research`'s filter keeps the ideation agent out on one limb only.
+- **At this milestone's close**, in the ratify chore: this record's `Accepted` flip, after the
+  private-site record's.
 
 ## References
 
-*Authored in the commits that follow on this release branch.*
+- [The private-site record](ADR-029-what-the-private-site-may-show.md) — the verdict every IDEATION cell
+  cites, its lists, its share mark, its concealed occasion, and its safeguards 1 to 7.
+- [The contact and emergency record](ADR-031-contact-emergency-group-visibility.md) — the carrier this
+  record places in every state.
+- [ADR-026](ADR-026-channel-architecture.md) — § 4's production-gating, which this record applies; § 3's
+  `may-carry`; and Finding 1, declined in § 8.
+- [ADR-025](ADR-025-engagement-model-over-time.md) — the engagement axis and its floors, the carry rule
+  and never-carries, § 4's render prohibition, and § 6's staleness family.
+- [ADR-028](ADR-028-derived-planning-day-block-owners.md) — the presence class whose class-reading
+  exclusion, keying, write-set widening and erase-row shape this record reuses.
+- [ADR-003](ADR-003-group-coordination.md) — § 2, the organizer's confirmation.
+- [ADR-007](ADR-007-command-entry-point.md) — § 2, under which nothing is deleted at a transition.
+- [ADR-008](ADR-008-publish-content-guard.md) — the one-render, two-limb publish guard.
+- [ADR-009](ADR-009-data-architecture.md) — § 4.4's fail-closed paths.
+- [ADR-010](ADR-010-per-traveler-approval-collection.md) — § 4, read through the private-site record's
+  pointer.
+- [ADR-011](ADR-011-per-traveler-cost-estimation.md) — decision 6's tripwire form, which the snapshot's
+  closed list inverts.
+- [ADR-006](ADR-006-third-party-data-capture.md) and [ADR-004](ADR-004-contact-emergency-privacy.md) —
+  the third-party and contact boundaries the snapshot's population and field list respect.
+- `reference/site-layout-spec.md` — § 3's catalog, § 7, § 8, and § 9.1 to § 9.5.
+- `reference/data-architecture.md` — § 1.1's classes, § 1.2's out-of-model dispositions, § 5.1, § 5.5
+  and § 5.6.
+- `reference/data-model.md` — § *Field Scope*, the scopes of the labels the snapshot carries.
+- `reference/schemas/destination-shortlist.md` — the shortlist's heading grain and its read-back
+  refusals.
+- `CLAUDE.md` — § *Modes*, § *Resolving a trip* (`G5` to `G8`, *What the contract returns*), § *Travel
+  Site Generation*, and the mode-gated behaviour register.
+- `skills/trip/SKILL.md` — the `site` row and section, § *ideas*, the verb index and the freshness
+  report.
+- `skills/trip-publish/SKILL.md` — the `update` row, rule 7 and § *list*.
+- `skills/trip-record/SKILL.md` — the reconcile-step namings and the erase reach table.
+- `agents/destination-ideation.md`, `agents/05-hub-planner.md`, `agents/00-enrichment.md` and
+  `agents/06-validator.md` — the producers and the auditor these decisions bind.
+- `templates/person-intake.template.md`, `templates/traveler-intake.template.md` and
+  `templates/trip-context.template.md` — the field labels the snapshot carries, and the roster.
+- `scripts/check-round-trip.sh`, `scripts/test-artifact-schema.sh` and `scripts/publish-trip-site.sh` —
+  the walker, its grader, and the publish path.
+- Provenance: the card, #1296; its design sub-task, #1388, carrying the first and second passes, the
+  operator's D-1 to D-4 and the group-snapshot step; the joint source-binding step, #1383; the plan, its
+  surface map, the fit review and CR-2 on #1369; the carrier and its decisions on #1546; decision Q on
+  #1385.
