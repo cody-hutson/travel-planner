@@ -69,8 +69,11 @@
 # meanwhile, it stops and takes its own commit back out, so a later push cannot carry it.
 # rotate refuses while the per-trip clone holds a page an earlier run committed but did not
 # push: pushed on top, that page would reach history under the key being revoked. A push
-# publishes exactly the commit its own run made, so a run that loses a race to another command
-# fails at its push instead of reporting success.
+# carries the commit its own run made, never another command's newer one, and update's push is
+# also bound to the remote state its key check saw — so a run that loses a race to another
+# command stops and says so instead of reporting success. Commands run on one trip at the same
+# moment are still not serialized; run one at a time. The site is published from main, and a
+# clone on any other branch is refused.
 #
 # Repo slug resolution (in order): <trip-dir>/.publish-slug, else the convention
 # <destination>-<year>-trip. Drop a repo name in .publish-slug to publish to a custom or
@@ -3595,8 +3598,39 @@ refuse_unpushed_residue() { # <pub_dir>
 # the meantime is not this push's to publish; and when another command has already moved the remote
 # past this commit, the push is a non-fast-forward and FAILS — so a run that lost a race says so,
 # instead of reporting success with a page that is not the one live.
-push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb>
-  git -C "$1" push --quiet origin "$2:refs/heads/main" || die "$3: the push to the per-trip repository failed."
+#
+# The commit is validated first: an empty id would make the refspec ":refs/heads/main", a DELETION
+# of the site's branch, and an id naming no commit is not a page this run made.
+#
+# With a fourth argument the push is LEASED: it succeeds only while the remote's main is still the
+# tip the caller read before its key check. update passes one, because a fast-forward alone is not
+# enough there: a rotation can record its key and push between update's check and update's push,
+# and update's page — a fast-forward on top of the rotation's commit — would then put the revoked
+# key back as the live one. The caller has checked that its commit descends from that tip, so a
+# leased push is still a fast-forward and the lease never forces anything. A leased push that fails
+# returns non-zero rather than dying, so the caller can re-check its key before it stops. git's own
+# advice after a rejected push is switched off: the script's message names the remedy that fits.
+push_trip_site() { # <pub_dir> <this-run's-own-commit> <verb> [<remote tip the caller's check saw>]
+  git -C "$1" rev-parse --verify -q "$2^{commit}" >/dev/null \
+    || die "$3: refused to push — '$2' is not a commit in $1, and an empty one would delete the site's branch. Nothing was pushed."
+  if [ -n "${4:-}" ]; then
+    git -C "$1" -c advice.pushUpdateRejected=false -c advice.pushNonFFCurrent=false \
+      push --quiet --force-with-lease="refs/heads/main:$4" origin "$2:refs/heads/main"
+    return
+  fi
+  git -C "$1" -c advice.pushUpdateRejected=false -c advice.pushNonFFCurrent=false \
+    push --quiet origin "$2:refs/heads/main" || die "$3: the push to the per-trip repository failed."
+}
+
+# The site is published from main. A reused clone on another branch — a pre-existing repository
+# served from master, say, named in .publish-slug — would take this run's commit on that branch
+# while every push here targets main, a branch nothing serves: the command reported success with
+# the served page unchanged. Refuse before anything is committed, naming the branch.
+require_publish_branch() { # <pub_dir> <verb>
+  local b
+  b="$(git -C "$1" symbolic-ref --short -q HEAD)" || b=""
+  [ "$b" = main ] && return 0
+  die "$2 refused — $1 is on branch '${b:-(detached)}', and this engine publishes the site from main. Nothing was changed. If the site is served from another branch, make main its default and publishing branch, then remove $1 (it is cloned again from the published site) and re-run."
 }
 
 cmd_update() { # <trip_dir>
@@ -3607,7 +3641,7 @@ cmd_update() { # <trip_dir>
   require_passphrase_sources_agree "$trip_dir"
   preflight; resolve_noreply_identity
 
-  local site_html pub_dir passphrase owner slug mine=""
+  local site_html pub_dir passphrase owner slug mine="" lease=""
   site_html="$(resolve_site_html "$trip_dir")"
   # THE APPROVAL GATE AND THE RENDER'S APPROVAL-CODE GUARD, as ONE call line (#552; #719 under
   # ADR-029 and the scope-lock's C5). Its position is exact and load-bearing: after the render
@@ -3618,16 +3652,29 @@ cmd_update() { # <trip_dir>
   # plaintext gate states for itself in cmd_publish. #85 relocates both by moving this line.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
+  require_publish_branch "$pub_dir" update
   passphrase="$(get_passphrase "$trip_dir")"
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
 
   # mine receives this run's own commit, read back and proved by its page (see the function).
   encrypt_verify_commit "$pub_dir" "$site_html" "$passphrase" update mine
+  # The remote tip the key check below is made against, read BEFORE the check, and the lease the
+  # push is bound to: a rotation that records its key and pushes after the check moves the remote
+  # off this tip, so this run's push fails instead of fast-forwarding over it (see push_trip_site).
+  lease="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
+    || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so its push could not be bound to what its key check saw. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
+  git -C "$pub_dir" merge-base --is-ancestor "$lease" "$mine" \
+    || die "update: this run's commit does not descend from the remote tip $pub_dir last recorded, so its push could not be a fast-forward. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
   # The key of record, re-read immediately before the push: a rotation that committed in the
   # meantime has already recorded a new key, and pushing this run's ciphertext would put the
   # key it revoked back over it.
   require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
-  push_trip_site "$pub_dir" "$mine" update
+  if ! push_trip_site "$pub_dir" "$mine" update "$lease"; then
+    # The remote moved after the check. A rotation that recorded a new key meanwhile is caught
+    # here, and this run takes its own commit back and says so; otherwise the push simply failed.
+    require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"
+    die "update: the push to the per-trip repository failed — the site changed after this run checked it, or the network did. This run published nothing; re-run update."
+  fi
   # The push succeeded, so this itinerary content IS what is published now. Recorded
   # here rather than earlier for that reason: a sidecar written before the push would
   # claim content a failed push never delivered, and the next republish would then
@@ -3888,6 +3935,7 @@ cmd_rotate() { # <trip_dir> [--passphrase <new>]
   # with an itinerary change pending, confirm or revert it first, then rotate.
   require_publish_guards "$trip_dir" "$site_html"
   pub_dir="$(ensure_pub_clone "$trip_dir")"
+  require_publish_branch "$pub_dir" rotate
   owner="$(gh api user --jq '.login')"; slug="$(slug_for "$trip_dir")"
   # A page an earlier update or rotate committed but did not push is still in the reused clone,
   # under the key this rotation is about to revoke. Refuse rather than push it (see the function).
