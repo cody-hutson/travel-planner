@@ -1,6 +1,11 @@
 # ADR-023: The interviewer's authored home and the form contract — a declared fence, the restatement homes retired, and what the next form costs
 
 - **Status:** Accepted (2026-09-20)
+  **Superseded in part (2026-09-27, Sunday)** — D1.1, where it places the numbered conduct rules, by
+  [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md). This amendment records a decision
+  taken there and takes none here: the rest of D1.1, and every other decision of this record, stands.
+  The superseded clause is retained as decided, with an inline marker at it pointing forward,
+  per `reference/adr/README.md` § *Convention*.
 - **Deciders:** repo maintainer
 - **Driving work:** the *interviewer becomes a component* milestone. This record is one of that
   milestone's two Wave-0 gating records, in the shape `ADR-012-people-library.md` and
@@ -199,6 +204,9 @@ Six clusters. The decision count is `5 + 7 + 4 + 3 + 6 + 3 = 28`, one series per
 conducts that form's interview. The numbered conduct rules and the output contract live there and
 nowhere else. Nothing is appended below the last verb section, and Zone A is not touched except
 through the repair extension point that the falsifying edit in D1.3 obliges.
+*(Superseded in part (2026-09-27, Sunday) by [ADR-039](ADR-039-interview-conduct-bundled-with-the-verb.md):
+where the numbered conduct rules are authored. The clause placing the output contract, and the
+rest of this decision, stand.)*
 
 *Rejected:* a new skill (the install loop names the shipped verbs literally and the documented
 upgrade is a bare `git pull`, so the command is unreachable for every existing install); a shared
@@ -829,7 +837,7 @@ Every residual is named with its owner. A residual with no owner is not a residu
 | # | Residual | Owner |
 |---|---|---|
 | **R1** | **`F14`, `F15`, `F18`, `F20` and `F21` stay prose, and nothing grades that a hint was offered or a transform applied.** Accepted, and stated as a non-goal rather than deferred work | **accepted**, stated by § *The seam* |
-| **R2** | **The *skill plus form* constraint was held with its cost known.** A reference document cited live at invocation is the cheapest home for conduct and matches the idiom `## profile` already uses; it is foreclosed by the constraint and not by merit, and the constraint makes one verb section the de-facto conduct library, which will read oddly at the third caller | **operator**, at milestone scope |
+| **R2** | **Lifted** — see the amendment below the table. **The *skill plus form* constraint was held with its cost known.** A reference document cited live at invocation is the cheapest home for conduct and matches the idiom `## profile` already uses; it is foreclosed by the constraint and not by merit, and the constraint makes one verb section the de-facto conduct library, which will read oddly at the third caller | **operator**, at milestone scope |
 | **R3** | `form-version:` disagreement is **detectable** and nothing acts on it in Wave 0 | the extraction slice |
 | **R4** | The `Proposed` → `Accepted` flip moves this record's `Status:` line and its index cell, and no check grades either half or their agreement | **operator**, at milestone close |
 | **R5** | **The durable form's command route needs a `CLAUDE.md` Step-1 taxonomy disposition that nobody has scoped.** `ADR-007` § 3's coverage identity requires every unit of the command surface to be covered by exactly one addressed row, and the shipped **Traveler profile** row addresses a traveller's own profile rather than a durable person record. Whether the new verb takes a new addressed row or joins the existing *whose answers* ambiguity set is a taxonomy call this record does not own. **This record edits no file but its own** | owner assigned at Wave-1 planning |
@@ -849,6 +857,8 @@ which names every candidate row and picks none when there is more than one. The 
 the resolver, in `FT`, not beside the arm D5.6 adds, as the row says; because question 3 reads the
 table through that resolver, the guard and the join cannot disagree. The row stays, marked closed, so
 the residual stays readable.
+
+**Amendment (2026-09-27, Sunday) — R2's constraint is lifted at the *one interviewer, any conforming form* milestone's scope; this corrects a claim.** The operator lifted it at that milestone's Collective Review, and [`ADR-039`](ADR-039-interview-conduct-bundled-with-the-verb.md) supersedes D1.1 in part accordingly: the conduct is authored in a file bundled beside the command file, so no verb section is the de-facto conduct library, and the cost R2 names goes with the constraint. The row stays, marked lifted, as the record of the constraint as it was held.
 
 ## References
 

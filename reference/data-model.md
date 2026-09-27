@@ -614,6 +614,23 @@ A mark's payload is **well-formed** iff it matches `^[0-9]{4}-(0[1-9]|1[0-2])$`.
 
 > **Conflict detection keys on *statedness*; composition keys on *usability*.** An `EXPIRED` value is **stated** — so it is a real second owner and contests a trip-side value — and **not usable**, so it composes to `UNKNOWN` and is reported. It is never silently used, because a plan would then check entry requirements against a lapsed document, and never silently dropped, because a vanished constraint reads as compliance.
 
+### The interview's read of an unstated value — un-asked, declined, indeterminate
+
+**`ANSWERED()` above is unchanged, and it stays the predicate every consumer branches on.** One reader alone — `/trip-record interview`, resuming a form — has to tell the members of its false class apart, and it reads them as this table partitions them. `reference/adr/ADR-022-interview-session-model.md` D1.3 is authoritative for the decision; this is its live home, read at invocation and never restated in the verb.
+
+| The field's value in the file | `ANSWERED()` | The interview reads it as | And therefore |
+|---|---|---|---|
+| anything `ANSWERED()` calls true, `none` included | true | answered | never asks it again |
+| a surviving bracketed placeholder | false | un-asked | asks it |
+| exactly `—` | false | declined | never asks it again |
+| blank, or the line absent | false | indeterminate | asks it |
+
+**A surviving bracketed placeholder is recognised by its shape, and never by comparison with the form.** It is the placeholder predicate `CLAUDE.md` § *Resolving a trip* states once, field-general — a trimmed value that opens with `[` and closes with `]` — whatever the bracket holds, with or without a `closed:` or `open:` head. A comparison against the current form's own bracket would miss every file seeded before that bracket was last reworded, and would leave such a field matching no row of the table.
+
+**The shape is tested on the whole of a field's value, and a value can span lines.** A field's value is the text after its label's colon on the bullet's own line, together with the lines that continue it: each following line indented deeper than that bullet, stopping at the first line that is not, or that is itself a labelled bullet. Those are the field's lines, and they are what a write to the field changes. A bracket opened on the bullet's line and closed on a continuation line is therefore **one** placeholder, and the field reads un-asked; a reading that stopped at the bullet's own line would take the open bracket for an answer, and never ask the field.
+
+**No other reader tells these members apart, and none may start to.** The composition lattice, the extractor partition, the promotion refusal and the enrichment defaults all branch on `ANSWERED()` alone, which is what keeps this partition invisible to them. A value reaches the declined row only because someone skipped the question: the interview writes `—` for a skip it heard, and a surviving bracket is what a question nobody has asked looks like.
+
 ### The reference month — what a horizon is compared against
 
 > **`R = max(clock month, T)`.** Both terms are `YYYY-MM`. `T` is the **trip term** — the month this trip runs to — resolved from the trip's own `trips/<slug>/trip-context.md`. On a future trip `R` is that trip's own term; where no term resolves it falls back to the clock; and it is never earlier than the clock.
