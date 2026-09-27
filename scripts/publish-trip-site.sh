@@ -3683,13 +3683,21 @@ cmd_update() { # <trip_dir>
   # old record would publish them again. The fetch comes BEFORE the key check, so the argument that
   # closes the δ interleaving is unchanged: a rotation that pushes after it moves the remote off
   # the lease, and one that pushed before it recorded its key first.
-  prior="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" || prior=""
+  # The refusal puts the record back where it was: the fetch has already moved it to the rewound
+  # tip, and a record left there would let the same command, run again, pass the comparison and
+  # publish the withdrawn pages. A clone with no record at all cannot tell a rewind from a first
+  # fetch, so it refuses too — a fresh clone always carries one. And a fetch that fails runs the
+  # key check before it stops, as a failed push does: this run's commit is already made, and if a
+  # rotation has recorded a new key since, that commit is a page under the replaced key that the
+  # next push would carry.
+  prior="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
+    || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so a rewind of the site could not be detected. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
   git -C "$pub_dir" fetch --quiet origin main \
-    || die "update: could not fetch the site's current state into $pub_dir, so its push could not be bound to it. Nothing was pushed; re-run update when the site can be reached."
+    || { require_key_of_record "$trip_dir" "$passphrase" "$pub_dir" "$mine"; die "update: could not fetch the site's current state into $pub_dir, so its push could not be bound to it. Nothing was pushed; re-run update when the site can be reached."; }
   lease="$(git -C "$pub_dir" rev-parse --verify -q refs/remotes/origin/main)" \
     || die "update: could not read the record of the remote in $pub_dir (refs/remotes/origin/main), so its push could not be bound to what its key check saw. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
-  [ -z "$prior" ] || git -C "$pub_dir" merge-base --is-ancestor "$prior" "$lease" \
-    || die "update refused — the site's history was rewound after $pub_dir last recorded it (pages withdrawn from another machine, say), and pushing now would publish them again. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site) and re-run update."
+  git -C "$pub_dir" merge-base --is-ancestor "$prior" "$lease" \
+    || { git -C "$pub_dir" update-ref refs/remotes/origin/main "$prior" "$lease"; die "update refused — the site's history was rewound after $pub_dir last recorded it (pages withdrawn from another machine, say), and pushing now would publish them again. Nothing was pushed. Remove $pub_dir (it is cloned again from the published site) and re-run update."; }
   git -C "$pub_dir" merge-base --is-ancestor "$lease" "$mine" \
     || die "update: this run's commit does not descend from the site's current tip, so its push could not be a fast-forward — another command or machine moved the site, and may already have published this run's page beneath its own. Nothing was pushed by this run. Remove $pub_dir (it is cloned again from the published site, so nothing is lost) and re-run update."
   # The key of record, re-read immediately before the push: a rotation that committed in the
