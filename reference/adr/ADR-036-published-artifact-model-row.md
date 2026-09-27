@@ -1,6 +1,6 @@
 # ADR-036: The published artifact takes no in-model row — `ADR-026` Finding 1 declined, in terms, and routed
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-27)
 - **Deciders:** repo maintainer
 - **Driving work:** #1296, the milestone-head design gate for the epic *The site serves every phase*
   (#1241). The epic's build slices are cut only after the card's records are accepted. The card's
