@@ -553,6 +553,14 @@ stands as defined, and every fail-closed path this section names is untouched.
   content and never indexes its reach — is unchanged; the group snapshot, which
   [the group-snapshot record](ADR-037-group-snapshot.md) has produced only in `IDEATION`, is one
   more instance of it.
+- **Finding 1's assignment is answered by the #1296 card.** *Findings and observations carried*,
+  Finding 1, and the matching bullet under *Follow-on build slices* assign a § 1.1 row for the
+  published artifact to whichever card next amends § 1.1. The #1296 card's slices are the next to
+  amend it, and [the published-artifact record](ADR-036-published-artifact-model-row.md) answers the
+  assignment: it declines the row in terms and routes it to an intake observation of its own, carrying
+  the orphaned-assignment evidence and the § 1.2 option. Both sentences are retained as written. Once
+  that record is accepted, the assignment has that answer and no longer waits on the next card that
+  amends § 1.1.
 
 ### 4. Reach is one crossing or two, and the engine's claims are about the first only
 
