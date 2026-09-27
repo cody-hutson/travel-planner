@@ -183,12 +183,15 @@ covered in [`people/README.md`](people/README.md) and [`groups/README.md`](group
 Publishing encrypts the site and pushes only the ciphertext to a new public GitHub repo, served
 with GitHub Pages. Visitors enter a passphrase, and the page decrypts in their browser.
 
-Run the publish script yourself, from your data folder. It lives in the engine:
+Run the publish script yourself, in a terminal. It lives in the engine, and `--data-root` tells it
+where your data folder is (`~/travel` in the install example), so it works from any directory:
 
 ```bash
-cd ~/travel
-~/.claude/skills/travel-planner/scripts/publish-trip-site.sh publish trips/<slug>
+~/.claude/skills/travel-planner/scripts/publish-trip-site.sh publish trips/<slug> --data-root ~/travel
 ```
+
+To run another subcommand from the table, swap it in for `publish trips/<slug>` and keep
+`--data-root ~/travel` at the end.
 
 | Subcommand | What it does |
 |---|---|
@@ -199,15 +202,16 @@ cd ~/travel
 | `list` | Show every trip's publish state, and which sites are out of date |
 | `unpublish trips/<slug>` | Take the site down. This deletes the repo unless you add `--disable-pages-only` |
 
-- The passphrase is saved to `trips/<slug>/.passphrase`. Share it privately. The encryption is
-  only as strong as the passphrase.
+- The passphrase is saved in your data folder, at `trips/<slug>/.passphrase`. Share it privately.
+  The encryption is only as strong as the passphrase.
 - The repo name is public and includes the destination and year, unless you used `--opaque`.
 - You can require named travelers to approve a plan change before it goes live. Declare them with
   `/trip-record .approvers`, and record their approvals with `confirm`.
 
 [`SECURITY.md`](SECURITY.md) explains what the encryption and the approvals do and don't protect.
-You can also publish without encryption, with `--plaintext`. Only you can run that, from a
-terminal. The publishing section of [`CLAUDE.md`](CLAUDE.md) describes the checks it runs first.
+You can also publish without encryption, by adding `--plaintext` to the publish line. Only you can
+run that, from a terminal. The publishing section of [`CLAUDE.md`](CLAUDE.md) describes the checks
+it runs first.
 
 ## What it costs to run
 
