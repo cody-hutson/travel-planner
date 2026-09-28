@@ -931,7 +931,7 @@ disagreement branch with no resolution.
 
 ## person <name>
 
-**Reads:** nothing of its own. Dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches, which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read once the reconcile below has returned and before `- **Total travelers:**` is written, because the disposition for that field is chosen from its current value and the counted floor, which is `## group`'s read and is cited rather than re-derived, and, on a withdrawal, for the presence probe `## group` runs on that roster's `Person` column, taken for the name this verb was given, because the withdrawal rows apply only to a member the roster does not name; and `trips/<slug>/outputs/traveler-model.md` — once that reconcile has written it, for the outside-roster count and nothing else, which is `## group`'s read of that file and is cited rather than re-derived. Dispatches `agents/00-enrichment.md` in the same reconciler role `travelers` dispatches, which reads `trips/<slug>/travelers/*.md`, `trips/<slug>/trip-context.md` and `trips/<slug>/outputs/traveler-model.md` — the model it is about to replace, read before that write because that read is what carries the `[THIRD-PARTY]` entry forward, and that entry has no source file to be re-derived from; and writes `outputs/traveler-model.md` alone.
 
 The operator-provided third-party case: a party member who will never file a profile, whose needs
 the operator supplies.
@@ -946,7 +946,9 @@ who never asked for one; it does not claim the entry leaves no trace.
   there is no default-allow outside it. **Identity data is refused** — passport, issuing country,
   validity — which `ADR-006` types as *capture refused* rather than merely undesirable. No lifecycle
   facet is populated on their behalf, and the bound is the entry **class** rather than a field list,
-  so a facet a later release adds is bounded by it too.
+  so a facet a later release adds is bounded by it too. A **withdrawal** — the operator's statement
+  that the member is not travelling — is neither a need nor identity data: it ends the entry rather
+  than adding to it (§ *A withdrawal*, below).
 - **Two marks, answering two different questions.** `[OPERATOR-PROVIDED]` records **who supplied the
   value**; `[THIRD-PARTY]` records that **the person described is not the person who spoke**.
   `[THIRD-PARTY]` is the non-publication key every downstream guard binds to, so it is present on
@@ -956,17 +958,51 @@ who never asked for one; it does not claim the entry leaves no trace.
   person is never added to any constraint's `Applies to:` roster. It may link to an existing
   governing constraint; it never creates one. This is the stated exception to link-don't-copy, and
   the reason is that `trip-context.md` is publish-bound.
-- **Never published**, in attributed or in anonymized form. In a small named party, stripping the
-  name does not strip the identification.
+- **Never published**, in attributed or in anonymized form — not their name and not their needs. In
+  a small named party, stripping the name does not strip the identification. They are still counted,
+  as one unnamed member of `- **Total travelers:**` with no `## Group` roster row, which says how
+  many travel and describes nobody; this verb brings the total up to count them once its reconcile
+  has recorded them (§ *The total*, below, and `## group` § *Roster standing of a third-party
+  member*, which also says what happens where the roster already names them).
 - **Never invented.** No operator input, no entry — not a blank one, not a `PROFILE MISSING` one. A
   `Party:` string on its own yields no entry, and a nameless party value yields none either, because
-  the name arrives with the needs or there is nothing to key an entry to.
+  the name arrives with the needs or there is nothing to key an entry to. A withdrawal is operator
+  input that ends an entry, never one that makes one.
 - **Provenance-marking records that a value is second-hand. It does not establish the described
   person's consent, and is never written or described as though it does.**
 
 **How it lands.** `ADR-006` chose the option that adds no new capture surface, so this verb captures
 the needs and dispatches the enrichment reconcile named on the `Reads:` line above, supplying them
 as the operator-provided stand-in. **The enrichment agent writes the entry; this command does not.**
+
+**The total — once the reconcile has recorded them.** When the reconcile returns having written
+`outputs/traveler-model.md`, apply `## group [<name>]`'s reconciliation table to
+`- **Total travelers:**` once, from that field's current value and the counted floor, reading the
+outside-roster count the reconcile has just written; the table is applied, never restated. This is
+how such a member is counted from the act that admits them (`## group` § *Roster standing of a
+third-party member*): a total at or above the named-traveler count but below the counted floor
+becomes the floor, a total at or above the floor — one the operator stated already counting them —
+is left as it stands, and a bracketed one becomes the floor. Where the table would ask instead,
+report its numbers, name `/trip-record group`, and write nothing. Where the reconcile's report
+carries a C4-class stop — the join's display-name guard or C4 itself — apply the asking row instead:
+report the numbers, name `/trip-record group`, and write nothing. **Echo the outgoing value before
+writing**, as `group` does. **That value is the one thing this verb writes in `trip-context.md`** —
+a number: it adds no row, changes no cell, and writes no name, least of all the one it was given. A
+reconcile that stopped writes no model, and then this verb writes nothing here either: stop means
+stop, and the next write of `/trip-record group` brings the total up.
+
+**A withdrawal — once the operator says the member is not travelling.** This verb carries that
+statement to the same reconcile, supplied as a withdrawal rather than as needs, and the reconciler's
+second exit drops the entry (`agents/00-enrichment.md`: a fresh operator statement "that withdraws
+them drops the entry"). Where that reconcile reports the entry dropped, apply `## group [<name>]`'s
+reconciliation table once, exactly as § *The total* does, reading the outside-roster count that
+reconcile leaves: its withdrawal rows decide, and they apply only where the presence probe
+`## group` runs on the roster's `Person` column finds no row for the name given. Where it finds one,
+the member sits in the named-traveler count and leaves it with their row, so the table's other rows
+decide, and this verb names `/trip-record group` for that row's removal as a departure and does not
+run it. Where the reconcile dropped nothing, because the model held no entry under that name, write
+nothing here. What a withdrawal writes in `trip-context.md` is what § *The total* allows — one
+number, echoed before it is written, and no name.
 
 **Durability, stated rather than hidden.** The entry lives only in `outputs/traveler-model.md`,
 which is `[DERIVED]` and rebuilt from source files — with this entry class **stated as an
@@ -1151,7 +1187,7 @@ test the readers.
 
 ## group [<name>]
 
-**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value, and a row being removed is echoed verbatim before it goes. Reads nothing under `trips/<slug>/travelers/` — the roster is the traveler denominator and a file count there is not, for the reason stated below. Dispatches no agent.
+**Reads:** `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, the table's own header row fixes the shape a new row is written in, the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, and a row being removed is echoed verbatim before it goes; and `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, read before that disposition is chosen because the counted floor adds it, counted from the marks on its `## ` headings and never from a name, and read as zero where the file is absent (§ *Roster standing of a third-party member*). Reads nothing under `trips/<slug>/travelers/` — the roster is the traveler denominator and a file count there is not, for the reason stated below. Dispatches no agent.
 
 **Scope — the whole of `## Group`:** the roster table, `- **Total travelers:**`, `- **Travel
 mode:**` and `- **Subgroup notes:**`. § *Write ownership* names the roster and the traveler count on
@@ -1165,6 +1201,8 @@ boundary would sit inside one section for no gain.
 - **No argument** — render the roster and `- **Total travelers:**` exactly as they stand, and ask
   what changes. **Write nothing** until the user names a change. This is the read-and-ask entry, and
   it is also the only path to a removal.
+  Render the outside-roster count beside them as a number, and where the total is below the
+  counted floor, say so with the asking row's numbers, naming nobody.
 - **A name** — a **presence probe** on the roster's `Person` column, matched trimmed and
   ASCII-case-folded, **over the named rows only**: a row whose `Person` cell is a placeholder is
   skipped before the match, per the placeholder rule below. Present → **edit that row**. Absent →
@@ -1204,24 +1242,45 @@ reason.
 whose `Person` cell is a placeholder **satisfies no presence probe** — it is never *present* for any
 name the user types, so it never selects the edit route and is never edited as though it were
 somebody's row; it **enters no count and no comparison** in the table below; and it is **never
-removed by this verb**, because removal is predicated on a named person who is not travelling and a
-placeholder names nobody. It stays exactly as it stands, which is the state `/trip-new` left and
-this verb does not own.
+removed by this verb**, because removal is predicated on a named person — one who is not
+travelling, one whose row is a duplicate or was added in error, or one § *Roster standing of a
+third-party member* below takes off the roster — and a placeholder names nobody. It stays exactly
+as it stands, which is the state `/trip-new` left and this verb does not own.
 
 **`- **Total travelers:**` reconciliation — a decision over the states the field can be in, never a
-silent adjustment.** The rules are `/trip-new`'s, carried forward: a stated total wins where one is
-given, the named-traveler count otherwise, the two may legitimately differ, and **the roster is
-never padded with placeholder rows to reach a total**, because a `[Name]` row is indistinguishable
-from a real traveler with a missing profile.
+silent adjustment.** The rules are `/trip-new`'s, carried forward, with one floor beneath them: a
+stated total at or above the counted floor wins where one is given, the counted floor otherwise,
+the two may legitimately differ, and **the roster is never padded with placeholder rows to reach a
+total**, because a `[Name]` row is indistinguishable from a real traveler with a missing profile.
+**The counted floor is the named-traveler count plus the outside-roster count** that
+§ *Roster standing of a third-party member* defines — every named traveller, and every party member
+recorded through `/trip-record person` whom the roster does not name — so no total written here
+counts fewer people than this engine knows travel, and none counts one of them twice.
 
 | State of the field after the change | Disposition |
 |---|---|
-| a bracketed placeholder | write the named-traveler count |
-| the user stated a total in this act | write the stated total |
-| a number greater than or equal to the named-traveler count | leave it — the named person was already inside the count |
-| a number less than the named-traveler count | say so and **ask**; write neither value until the user settles it |
-| a removal, and the field equalled the pre-removal named-traveler count | decrement it |
-| a removal, and the field exceeded that count | leave it, and say the unnamed remainder grew by one |
+| a bracketed placeholder | write the counted floor |
+| the user stated a total in this act | write it where it is at or above the counted floor; below it, say so and **ask**, as the asking row does |
+| a number greater than or equal to the counted floor | leave it — the named person was already inside the count, and so is every member the model records outside the roster |
+| a number below the counted floor but not below the named-traveler count, where the one change was a member's needs recorded through `/trip-record person` in this act — a re-run that re-supplies them included | write the counted floor — the reconcile that recorded them wrote the count in this same act, so no roster change postdates it |
+| a number below the counted floor, after any other change | say so — the total, the named-traveler count and the outside-roster count, as numbers and never a name — and **ask**; write neither value until the user settles it |
+| a withdrawal recorded through `/trip-record person` in this act, of a member the roster does not name, and the field equalled the pre-withdrawal counted floor — the floor the reconcile leaves, plus the member it dropped | decrement it |
+| such a withdrawal, and the field exceeded that floor | leave it, and say the unnamed remainder now counts one person more than the model records |
+| a removal other than the stale row — someone leaving the party, a duplicate row, a row added in error — and the field equalled the pre-removal counted floor | decrement it |
+| such a removal, and the field exceeded that floor | leave it, and say the unnamed remainder grew by one |
+| a stale row removed — the second state § *Roster standing of a third-party member* names | leave it, and say the unnamed remainder grew by one: the person still travels, and is counted there now |
+
+**The withdrawal rows, the removal rows and the stale-row row decide the change they name where one
+of them matches, and the rows above them decide every other change** — a withdrawal or a removal
+below its pre-change floor included, and a withdrawal of a member the roster still names, whose row
+then comes off as any departure does. **The asking row is where a stale count lands.** This verb
+reads the count as the last reconcile left it, so a row just added for someone recorded through
+`/trip-record person` stays in the outside-roster count until `/trip-record travelers` marks their
+entry `[ROSTERED]`, and the floor reads one high until then: where the user answers that the total
+already counts the person just named, write nothing and name that reconcile. The user settles the
+asking row with a total at or above the floor, and never below it — a floor the user believes too
+high is a stale count, which that reconcile refreshes, or a member who no longer travels, whose
+withdrawal § *Roster standing of a third-party member* states.
 
 **The traveler denominator is the roster and `- **Total travelers:**`, never a file count under
 `travelers/`.** That directory ships empty and stays empty until a profile is filled, so a file
@@ -1230,42 +1289,23 @@ MISSING` branch, `### Per-Traveler Planning Days [DERIVED]` and the satisfaction
 `- **Total travelers:**` that legitimately exceeds the named-traveler count is a real state and is
 never reported as a defect** — a stated total may carry a member the roster has no name for.
 
-**A `[THIRD-PARTY]` party member gets no roster row, and is not counted in `- **Total travelers:**`
-either.** `## Group` is publish-bound and so is every other field of `trip-context.md`, and
-`CLAUDE.md` states that a `[THIRD-PARTY]` value **never escalates into `trip-context.md`** and must
-not appear in any publish-bound artifact **in attributed *or* anonymized form**. The count is not
-the exception it looks like. Stripping the name is exactly what anonymizing is, and `person` states
-the consequence thirty lines above this one: *in a small named party, stripping the name does not
-strip the identification.* A total of five over four named rows publishes that a fifth party member
-exists and is not one of the four — an unnamed person, identified by subtraction, in the file the
-site build reads. That is the anonymized half of the bound, and it is the half `person` already
-rules out, so this verb agrees with `person` rather than rebutting it. A roster row would also
-assert a `travelers/<name>.md` for someone who has filed nothing, and the only way that file reaches
-existence for them is the **proxy-authored** profile `ADR-006` rejected — a durable identity
-artifact for a person who never asked for one. What that ADR contemplates instead is the profile
-that person files themselves, which this verb neither creates nor forecloses.
-
-**Where the honest denominator lives instead.** The party denominator needs-compliance and
-desire-coverage grade against is the entry set of `outputs/traveler-model.md`, which carries the
-`[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` entry — **carried forward verbatim across a reconcile rather
-than re-derived**, which is what lets that home hold an entry with no source file, and is the same
-reading `person` § *Durability* states — which `CLAUDE.md` states the site build **excludes**, and
-which the hub applies as a hard bound before any objective. That member reaches it through
-`person`'s dispatch, not through a number in a publish-bound file — so honesty is preserved in the
-artifact that can hold it and is not bought in the one that cannot. `person` records such a member's
-needs and creates no file anywhere; this verb records roster rows and the count in `trip-context.md`.
-**They meet at exactly this cell and nowhere else**, which is why it is stated here rather than left
-to the reader: a difference between the total and the named-traveler count is never reported as a
-defect to reconcile, and **it is never produced by a `[THIRD-PARTY]` member.** Where the user asks
-for one to be added to the party, name **`/trip-record person <name>`** and **do not run it**.
-
 **Removing a row.** Only from the no-argument render, or where the user names the person and states
-that they are not travelling. **Echo the whole row verbatim before writing** — the removed bytes
-survive in the transcript, which is what standing rule 2's bound asks of a write that will not
-preserve what it replaces. Remove **only that row**. **Never delete anything under `travelers/`**:
-that file is Layer-1 source and this verb has no delete path to it. Then name where the person may
-still appear, without touching either place: `outputs/traveler-model.md`, until `/trip-record
-travelers` reconciles it, and any constraint's `Applies to:` line, which is `fact`'s.
+that they are not travelling. **Before a removal, ask whatever the user has not said: whether the
+person is leaving the party or still travels, and whether their needs are recorded through
+`/trip-record person`** — this verb cannot tell either by anything it reads. One who still travels
+and is recorded there is the stale row § *Roster standing of a third-party member* takes off, and
+the table's stale-row row decides it; every other removal — a departure, a duplicate row, a row
+added in error — takes its removal rows. **Where the person leaving the party is recorded through
+`/trip-record person`, say that the decrement is not the end of it**: their entry stands, and it
+re-enters the outside-roster count at the next reconcile, once no row shares its key, until it is
+withdrawn — name `/trip-record person <name>` with the statement that they are not travelling, and
+do not run it. **Echo the whole row verbatim before writing** — the removed bytes survive in the
+transcript, which is what standing rule 2's bound asks of a write that will not preserve what it
+replaces. Remove **only that row**. **Never delete anything under `travelers/`**: that file is
+Layer-1 source and this verb has no delete path to it. Then name where the person may still appear,
+without touching either place: `outputs/traveler-model.md`, until `/trip-record travelers`
+reconciles it — or, for someone recorded through `/trip-record person`, until that withdrawal — and
+any constraint's `Applies to:` line, which is `fact`'s.
 
 **After any roster change.** Report `### Per-Traveler Planning Days [DERIVED]` as **stale** and
 **name no command** — that block has no writer in § *Write ownership*, so its staleness is reported
@@ -1275,6 +1315,138 @@ heavier than the change, which is the same call `profile` makes.
 
 **What it writes.** The `## Group` block of `trips/<slug>/trip-context.md`, and nothing else in that
 file or in any other. It writes no `[ENRICH]` field, no `[DERIVED]` block, and not the title line.
+
+### Roster standing of a third-party member
+
+**A `[THIRD-PARTY]` party member holds no `## Group` roster row, and is counted in
+`- **Total travelers:**` as an unnamed member.** This sub-section is the one statement of that
+standing: every other sentence that states it carries this sub-section's name, and none may state a
+contrary standing in the lexicon `scripts/test-corpus-hygiene.sh` group `E` declares. Such a member
+is a person whose needs the operator supplied through `## person <name>`, held as the
+`[OPERATOR-PROVIDED]` + `[THIRD-PARTY]` entry in `outputs/traveler-model.md` and never through a
+file of their own. A person the roster names is a traveller, and the two meet only in the states
+below.
+
+**Why no row.** A row prints a name in the file the site build reads: `trip-context.md` is
+publish-bound, and the site renders its `## Group` (`reference/site-layout-spec.md` § 9.1).
+`CLAUDE.md` keeps every `[THIRD-PARTY]` value out of every publish-bound artifact, and the publish
+guard's non-publishable class takes every value of such an entry (`reference/data-architecture.md`
+§ 5.3) — its name among them, which the guard's parse keys as a token. That mechanical half holds
+for every name the guard can key and for no other: `reference/adr/ADR-008-publish-content-guard.md`
+§ *Coverage boundary* residual 2 declares a name made only of stopwords, such as a member named
+Will, outside its reach, and residual 8 retracts any claim that it covers this member completely.
+So a row is kept off by this rule, never left for the guard to refuse. A row would also assert a
+`travelers/<name>.md` for someone who has filed nothing, and the only way that file reaches
+existence for them is the proxy-authored profile `reference/adr/ADR-006-third-party-data-capture.md`
+rejected — a durable identity artifact for a person who never asked for one. What that ADR
+contemplates instead is the profile that person files themselves, which this verb neither creates
+nor forecloses.
+
+**Why the count, and why it names nobody.** The party's size is a fact about the trip, not a value
+of the member's entry: `- **Total travelers:**` says how many travel and nothing about who.
+`ADR-006` § *Q3* bars a third-party-sourced **constraint** from any published artifact, attributed
+or anonymized, and a headcount states no constraint, so the published total counts such a member
+and stays honest about the party's size. They sit in the total's **unnamed remainder** — the
+difference between the total and the named-traveler count — which the table above treats as a real
+state and never as a defect. What stays out of every publish-bound file is what names or describes
+them: a row, their name, any need of theirs.
+
+**The count that keeps them in it.** `outputs/traveler-model.md` records such a member as one
+`## <Name>` heading carrying both `[OPERATOR-PROVIDED]` and `[THIRD-PARTY]`. The **outside-roster
+count** is the number of that file's `## ` headings that carry both of those marks and not
+`[ROSTERED]` — the mark the reconciler writes on such an entry while a roster row shares its key
+(`agents/00-enrichment.md` § *Traveler identity*), so a person the roster already names is never
+counted twice; a file that does not exist yet counts zero. The table above adds it to the
+named-traveler count to make the **counted floor**, and this verb, § `group-expand` and § `person`
+each apply that table.
+
+**What crosses, and the read that holds it to a count.** One integer crosses from
+`outputs/traveler-model.md`, which is `internal-hard`, into this file, which is publish-bound: the
+outside-roster count, as one summand of the counted floor, reaching `- **Total travelers:**` only as
+part of the number written there. Read that file for this count and for nothing else: a heading is
+counted by the marks it carries and never by its name, no line below a heading is used, and nothing
+read there reaches anything this verb writes or says — not a name, not a need, not a heading, not a
+mark — so the count is rendered as a number that describes nobody. That bound is a rule this verb
+follows, never a property of the read: the tool that reads the file returns every byte of it, as it
+does for `agents/04-transport.md`, whose read of the same file
+`reference/adr/ADR-011-per-traveler-cost-estimation.md` bounds the same way. What stands behind it
+mechanically is the publish guard, whose non-publishable class takes every value of such an entry
+and keys its name wherever it can (`ADR-008` § *Coverage boundary*, above).
+
+**How they come to be counted.** `## person <name>` dispatches the reconcile that records such a
+member, and then applies the table above to `- **Total travelers:**` once, from the outside-roster
+count that reconcile has just written: a total at or above the named-traveler count but below the
+counted floor becomes the floor, so the total counts them from the act that admits them and the
+operator restates nothing (`## person <name>` § *The total*). A total already at or above the floor
+is left as it stands, because a total the operator stated may already carry them as a member the
+roster has no name for, and raising it would count them twice. This verb and § `group-expand`
+apply the same table on every write they make, so a total written before a member was recorded — on
+a trip that predates this rule, or after a reconcile that stopped — is brought up to the floor by
+the next of them once the operator has seen the numbers: this verb reads a count that may predate a
+roster change it made itself, so where the field is below the floor it says so and asks rather than
+raising it.
+
+**Nothing this engine does on its own takes them out of it.** The named-traveler count never holds
+such a member while they have no row, and the counted floor always does, so no disposition of the
+table above subtracts one on their account unless the operator withdraws them: a stale row coming
+off is not a departure (the second state below), and an erasure leaves the total as it stands
+(§ `erase`, reach row 5). They leave the count only as they entered it, through `## person <name>`
+and the model: the operator's statement there that they are not travelling dispatches the
+reconcile that drops their entry (`agents/00-enrichment.md`, the second exit), the floor falls with
+it, and that verb then applies the table above once, whose withdrawal rows lower the total where it
+equalled the floor they were in and leave a total above it for the operator to restate here
+(`## person <name>` § *A withdrawal*). This engine lowers no total on its own — only on that
+statement, or on a row removed here.
+
+**Where their record lives.** Such a member's name and needs are recorded once, in their
+carried-forward entry of `outputs/traveler-model.md`. The operator's statement is that entry's
+authority and the model is its record, **carried forward verbatim across a reconcile rather than
+re-derived** (`## person <name>` § *Durability*) — every byte of it but `[ROSTERED]`, which each
+reconcile writes afresh. The same file is the party denominator needs-compliance and desire-coverage
+grade against, which `CLAUDE.md` states the site build **excludes** and the hub applies as a hard
+bound before any objective. A consumer that sizes the party for a non-publishing purpose takes the
+outside-roster count there and never reads the total for them: the total cannot tell such a member
+from any other member the roster does not name, and it can lag the model where it was written before
+they were recorded. `agents/04-transport.md` § *Input* item 7 does exactly that.
+
+**The three states.** A person recorded through `## person <name>` is in exactly one of these, and
+each has one disposition.
+
+- **No roster row, and both marks on their entry** — the standing above. They are in the
+  outside-roster count, and nothing is due.
+- **A roster row and a both-marks entry, with no usable profile of theirs on file** — they were
+  named at scaffold, before anyone knew they would never file, or added here since. The reconciler
+  joins the two as one person and marks the entry `[ROSTERED]`, so the named-traveler count holds
+  them and the outside-roster count does not. The row is the stale half, and it comes off through
+  this verb's no-argument render, which echoes it before removing it. The removal rests on the
+  third-party recording, not on travel: they still travel, now as an unnamed member, so it is not a
+  departure — the table's stale-row row applies and its removal rows do not, and the total stands.
+  The reconciler reports this state rather than removing the row (`agents/00-enrichment.md`
+  § *Traveler identity*), and its report says the person still travels, which is the answer this
+  verb asks for before any removal from the render. Until the next reconcile after the row comes
+  off, their entry still carries `[ROSTERED]` and the counted floor reads one low, which lowers no
+  total; and between the change that makes this state and the next reconcile, the publish guard's
+  refusal of a name it can key is the only catch. Where the intake template sits on file for them
+  unfilled, the row is pending rather than stale: the reconciler reports a pending profile, and the
+  row stays until they fill it, when the third state applies. Where such a person leaves the party
+  instead, their row comes off as a departure and the table's removal rows apply, but that is not
+  the end of it: their entry stands, and at the next reconcile, with no row sharing its key, it
+  carries no `[ROSTERED]` and re-enters the outside-roster count, until the operator withdraws them
+  through `## person <name>`.
+- **A usable profile of theirs on file — one they have filled, not the intake template left
+  unfilled** — they filed, and the standing is over. Where the roster does not already name them,
+  add their row here first; `/trip-record travelers`, named above for after any roster change, then
+  reconciles: the profile supersedes the entry (`agents/00-enrichment.md`, *supersede, do not
+  merge*), and they are a traveller like any other. The table leaves the total alone where it
+  already counts them and asks where it does not — and until that reconcile runs, their entry still
+  counts them outside the roster, so the asking row names the reconcile rather than a new total. In
+  this state a row is never stale.
+
+Where the user asks for someone to be added to the party who has filed nothing and never will, name
+**`/trip-record person <name>`** and **do not run it**. Someone with a profile on file is added here,
+as a traveller. Where the user says such a member no longer travels, name that verb with that
+statement, and do not run it either: their entry is its to withdraw, and a row, where the roster
+holds one, is this verb's to remove.
 
 ## fact <statement>
 
@@ -2799,7 +2971,7 @@ The group-deletion verb. **It deletes exactly one file under `groups/` and nothi
 
 ## group-expand <group-id>
 
-**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 for the render, and its `## Members` bullets, which are the whole of the member set and are read **in the file's own order** because the write order below is that order; `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, in `## link`'s order and for `## link`'s reason; `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, because the table's own header row fixes the shape a new row is written in, and because the disposition for `- **Total travelers:**` is chosen from that field's current value, which is `## group`'s read and is cited rather than re-derived; and, **per member**, exactly what `## link <name> <person-id>` declares for one member — that member's `travelers/<file>.md` existence probe, frontmatter and declared body fields; that member's `people/<person-id>.md` existence probe, H1 and declared body fields; the outgoing record on the branch where the file already names a different one; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**; and, **on the `NEW` branch alone**, exactly what `## profile <name>` declares for its create route — `templates/traveler-intake.template.md`, the copy source; `trips/<slug>/travelers/*.md`, **the entry names alone, no file opened**, which is that verb's collision-check denominator; and `reference/data-architecture.md` § 3.2, read live for the canonical traveller key that check normalizes with and **never re-authored here**. **Both per-member read sets are cited rather than re-derived, and neither is widened by being run N times** — `link`'s on every branch, `profile`'s create-route reads on `NEW` — because this verb re-implements neither the survey nor either predicate it rests on, and a second implementation of any of them would be a second source of truth for what a field is or for who is who. **No value read on any side is written anywhere by the survey**, which is `link`'s own minimality clause, preserved. Dispatches no agent.
+**Reads:** `<store-root>/groups/<group-id>.md` — the file-existence probe that gates the branch, its H1 for the render, and its `## Members` bullets, which are the whole of the member set and are read **in the file's own order** because the write order below is that order; `trips/<slug>/travelers/` — the **directory-presence probe**, taken with `Read` on the directory path itself and read only to establish whether the directory is there, in `## link`'s order and for `## link`'s reason; `trips/<slug>/trip-context.md` — the whole of `## Group`, read before it is written because the presence probe on the roster's `Person` column selects adding a row from editing one, because the table's own header row fixes the shape a new row is written in, and because the disposition for `- **Total travelers:**` is chosen from that field's current value and the counted floor, which is `## group`'s read and is cited rather than re-derived; `trips/<slug>/outputs/traveler-model.md` — for the outside-roster count and nothing else, which is `## group`'s read of that file and is cited rather than re-derived; and, **per member**, exactly what `## link <name> <person-id>` declares for one member — that member's `travelers/<file>.md` existence probe, frontmatter and declared body fields; that member's `people/<person-id>.md` existence probe, H1 and declared body fields; the outgoing record on the branch where the file already names a different one; and `reference/data-model.md` § *The classification* and § *The lattice*, read live for each field's class and scope and **never re-authored here**; and, **on the `NEW` branch alone**, exactly what `## profile <name>` declares for its create route — `templates/traveler-intake.template.md`, the copy source; `trips/<slug>/travelers/*.md`, **the entry names alone, no file opened**, which is that verb's collision-check denominator; and `reference/data-architecture.md` § 3.2, read live for the canonical traveller key that check normalizes with and **never re-authored here**. **Both per-member read sets are cited rather than re-derived, and neither is widened by being run N times** — `link`'s on every branch, `profile`'s create-route reads on `NEW` — because this verb re-implements neither the survey nor either predicate it rests on, and a second implementation of any of them would be a second source of truth for what a field is or for who is who. **No value read on any side is written anywhere by the survey**, which is `link`'s own minimality clause, preserved. Dispatches no agent.
 
 The expansion verb. It puts a group's members onto the resolved trip, each linked to their own record exactly as `link` would have linked them one at a time. **It is the only one of the six that requires a trip, and its requirement-table row reads `lifecycle: ACTIVE` for that reason** — it writes trip content, so rule 5's bound applies to it unchanged and the contract's declared default is the correct cell.
 
@@ -2809,8 +2981,9 @@ The expansion verb. It puts a group's members onto the resolved trip, each linke
 
 **What is reconciled: `- **Total travelers:**`, once, by `## group`'s own table.** The cited read is
 taken for **every one of its purposes that applies here**, not two of them: the disposition for that
-field is chosen from that field's current value, and `## group [<name>]`'s reconciliation table for
-it is **applied rather than restated**. The one purpose that does not apply is named rather than
+field is chosen from that field's current value and the counted floor, and `## group [<name>]`'s
+reconciliation table for it is **applied rather than restated**.
+The one purpose that does not apply is named rather than
 dropped — echoing a row that is being removed, which expansion never does. **Reconciling is not an
 extra write this verb reaches for; it is what makes the sentence above true.** `## group` run once
 per member reconciles the field on every one of those runs, so an expansion that left it alone would
@@ -2824,7 +2997,7 @@ roster beside a placeholder total. `/trip-new` states in terms why that pairing 
 naming three downstream contracts specified as if the number already existed; a verb that populated
 the roster and left the placeholder standing would be the act that hands them the state. **The
 table's own rows carry the bulk case unchanged**, its asking row included: a total below the
-named-traveler count is reported and **left unwritten** until the operator settles it, which lands on
+counted floor is reported and **left unwritten** until the operator settles it, which lands on
 the receipt rather than as a second gate.
 
 **What is referenced: everything durable.** Passport, needs, preferences, travel style — all reached through the one `person:` field at composition time. Composition reads the record and writes the trip, never the reverse.

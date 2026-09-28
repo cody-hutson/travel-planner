@@ -1529,7 +1529,7 @@ with no site carries no row.
 1       reference/site-layout-spec.md
 4       skills/trip-decommission/SKILL.md
 6       skills/trip-new/SKILL.md
-12      skills/trip-record/SKILL.md
+10      skills/trip-record/SKILL.md
 6       skills/trip/SKILL.md
 1       trips/README.md
 ```
