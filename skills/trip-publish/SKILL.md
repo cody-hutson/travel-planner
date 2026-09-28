@@ -229,8 +229,9 @@ the tolerance for a code span belongs to a depth **cell** and never to this line
 header row.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
-have already run; their output is the whole of the trip state this file **resolves
-against**, and the whole of the trip state it needs. It is **not** the whole of what this
+are this file's evidence entries, tool calls you issue as the data-root paragraph above
+directs; their output is the whole of the trip state this file **resolves against**, and
+the whole of the trip state it needs. It is **not** the whole of what this
 file reads, and this file used to say that it was: `update` takes a presence-and-readability
 probe on a per-trip path, and under the definition the rest of this surface uses, that probe
 is a read. Do not read `trip-context.md` in full, and do not read `trip-log.md` or anything
@@ -273,9 +274,9 @@ The two prohibitions in the paragraph above are stated because they bind verbs w
 do not mention those files at all. How a sibling command renders its own ceiling is that
 command's to state.
 
-Each pre-executed block above is a tool grant this file has to hold, and each is held for
-a use the table above names: the listing block for `Bash(ls:*)`, and the record block for
-`Bash(grep:*)`, which reads the lifecycle, the mode and the destination by value. No grant
+This file's grants for the evidence entries above are its declared minimum privilege, each
+for a use the table above names: `Bash(ls:*)` for the listing block, and `Bash(grep:*)` for
+the record block, which reads the lifecycle, the mode and the destination by value. No grant
 here is speculative and none is unused.
 
 **`contract-depth` is the maximum depth over the table, not a per-verb claim.** `list`

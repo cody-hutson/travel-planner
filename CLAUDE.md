@@ -254,7 +254,7 @@ Before doing anything, determine what kind of request this is:
 
 | Request | Read scope | Class |
 |---|---|---|
-| `/trip status` · `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the pre-executed blocks |
+| `/trip status` · `/trip-publish list` · `/trip-decommission temporary` | that verb's `**Reads:**` line | none beyond the evidence entries |
 | `/trip plan` · `replan` · `reorder` · `research` · `check` · `ideas` | that verb's `**Reads:**` line, **including its attributed-agent clause** | own + attributed-agent |
 | `/trip site` | that verb's `**Reads:**` line | own |
 | `/trip schema` | that verb's `**Reads:**` line | own |
@@ -263,7 +263,7 @@ Before doing anything, determine what kind of request this is:
 | `/trip-record group-new` · `group-list` · `group-add` · `group-drop` · `group-delete` | that verb's `**Reads:**` line — these read the group store, and `group-list` and `group-add` additionally read a person record's H1 or its existence probe alone. **None reads anything under `trips/<slug>/`**, which is why each declares `lifecycle: ANY` | own |
 | `/trip-record group-expand` | that verb's `**Reads:**` line — the group store for the member set, and then, **per member, two cited read sets rather than one**: `link`'s on every branch (that traveller file, that person record, the outgoing record on a repoint, and the classification predicates read live), and on the `NEW` branch alone `profile`'s create-route reads as well, because that branch creates the traveller file `link` refuses to create. Both are cited, not re-derived, and running either N times does not widen it | own |
 | `/trip-record erase` | that verb's `**Reads:**` line — the widest of any verb on this surface, and the only one that reads another trip **in full**: the store, every trip's traveller frontmatter to discover which trips reference the record, and then in full each trip that discovery resolved. Its residual scan reads trip roots it will **not** write | own |
-| `/trip-record history` | that verb's `**Reads:**` line — the other verb that reads across trips, and much the narrower of them: the resolved trip's traveller file for the reference it inverts, the person store for that record and the stubs redirecting to it, and **every trip's traveller frontmatter and nothing else**. It opens no trip's `trip-context.md` at all, taking each trip's destination and lifecycle from the record block that has already run | own |
+| `/trip-record history` | that verb's `**Reads:**` line — the other verb that reads across trips, and much the narrower of them: the resolved trip's traveller file for the reference it inverts, the person store for that record and the stubs redirecting to it, and **every trip's traveller frontmatter and nothing else**. It opens no trip's `trip-context.md` at all, taking each trip's destination and lifecycle from the record block issued during resolution | own |
 | `/trip-publish update` | that verb's `**Reads:**` line — a presence-and-readability probe is a read of the **path**, never of the value | own |
 | `/trip-decommission archive` · `reopen` | that verb's `**Reads:**` line | own |
 | `/trip-new` | that verb's `**Reads:**` line — one per branch, Create and Resume | own |

@@ -117,8 +117,9 @@ property the freeze is for — but it fails from whichever guard the direction r
 the finding it names differs with the direction.
 
 The ladder this cites is stated in one place and is not restated here. The blocks above
-have already run, and their output is the whole of the trip state this file **resolves
-against**: no verb re-runs either block and no verb re-derives what they already carry.
+are this file's evidence entries, tool calls you issue as the data-root paragraph above
+directs, and their output is the whole of the trip state this file **resolves against**:
+no verb re-runs either block and no verb re-derives what they already carry.
 
 **The `destination` cell.** `UNDECIDED` is the value `G6` yields on a placeholder. A cell
 reading `DECIDED` names `G6`'s decided disposition — the complement of `UNDECIDED` in the
@@ -147,13 +148,13 @@ reads is declared in its own `**Reads:**` line, which is its whole read scope, a
 section names is out of scope whether or not a file-general prohibition reaches it. The two
 above are stated because they bind verbs whose lines do not mention those files at all.
 
-Each pre-executed block above is a tool grant this file has to hold, and each is held for
-a use the table above names: the listing block for `Bash(ls:*)`, and the record block for
-`Bash(grep:*)`, which reads the lifecycle, the mode and the destination by value. Neither
-grant is speculative and neither is unused. **The header block fixes how many pre-execution
-blocks this file carries, and it already carries all of them** — no slice adds another, and a
-verb needing to know whether an artifact exists asks at verb time with `Read` or
-`Bash(ls:*)`, never with a block.
+This file's grants for the evidence entries above are its declared minimum privilege, each
+for a use the table above names: `Bash(ls:*)` for the listing block, and `Bash(grep:*)` for
+the record block, which reads the lifecycle, the mode and the destination by value. Neither
+grant is speculative and neither is unused.
+**The header block fixes how many evidence entries this file carries, and it already carries
+all of them** — no slice adds another, and a verb needing to know whether an artifact exists
+asks at verb time with `Read` or `Bash(ls:*)`, never with a block.
 
 **What `disallowed-tools` does at runtime was an open question here, and `ADR-007` has
 closed it.** Its 2026-09-11 amendment discharged the tool-list question by **quoting the
@@ -513,7 +514,7 @@ state is not why, and naming it would be a false reason.
 
 ## status
 
-**Reads:** the pre-executed blocks above, and — for the freshness report alone — one
+**Reads:** the blocks above, and — for the freshness report alone — one
 newest-first listing per relation this file declares, over that relation's operands under
 `trips/<slug>/outputs/`, taken at verb time with `Bash(ls:*)`. That listing is a filesystem
 observation and is therefore declared here: under the definition the rest of this file uses,

@@ -46,7 +46,7 @@ below names, per `ADR-007` §2 bound 2, and no grant is taken without one.
 |---|---|
 | `Bash(ls:*)` | the listing block below |
 | `Bash(grep:*)` | the record block below, which reads the lifecycle, the mode and the destination by value |
-| `Bash(date:*)` | `archive`'s closing log entry is dated from a `date +%F` tool call **in the body**, never as a further pre-execution block — the shipped convention `/trip-new` and `/trip-record log` already take, and required here because the header block below fixes how many pre-execution blocks this file carries and it already carries all of them |
+| `Bash(date:*)` | `archive`'s closing log entry is dated from a `date +%F` tool call **in the body**, never as a pre-execution block — the shipped convention `/trip-new` and `/trip-record log` already take, and required here because the contract retired that carrier and a line opening with its marker outside a fence fails `scripts/test-command-taxonomy.sh` group `I` on push |
 | `publish-trip-site.sh unpublish` | `temporary` and `archive` invoke the `unpublish` arm, with the pages-only and data-root flags, each fixed in this file. **The grant is the arm, not the script** — `ADR-007` §1 is one authorization per function, and a script-wide grant would authorize every arm of the dispatch table at once |
 | `Read` | `archive` and `reopen` read `trip-context.md` to locate the lifecycle marker line or its anchor; `archive` reads `trip-log.md` to confirm the append target exists |
 | `Edit` | `archive` inserts the marker line and appends the closing entry; `reopen` changes the marker's value |
@@ -220,12 +220,13 @@ already there, with that verb's own `## <verb>` section.
 
 ## What the blocks above are
 
-The ladder the header cites is stated in one place and is not restated here. The blocks above have
-already run, and **their output is the whole of the trip state this file resolves against** — the
-population from the listing block, and the lifecycle, the mode and the destination by value from the
-record block. No verb re-runs either block, and no verb re-derives what they already carry.
+The ladder the header cites is stated in one place and is not restated here. The blocks above are
+this file's evidence entries, tool calls you issue as the data-root paragraph above directs, and
+**their output is the whole of the trip state this file resolves against** — the population from
+the listing block, and the lifecycle, the mode and the destination by value from the record block.
+No verb re-runs either block, and no verb re-derives what they already carry.
 
-**The header block above fixes how many pre-execution blocks this file carries, and it already
+**The header block above fixes how many evidence entries this file carries, and it already
 carries all of them** — no verb and no later slice adds another. A block this file does not already
 carry is a conformance failure on push whatever a verb section says, and a date a verb needs is
 taken as a tool call in its own body, the way `/trip-new` and `/trip-record log` take theirs.
@@ -560,9 +561,9 @@ entry landed. Where a step did not run, say which one and why, and say what stat
 
 **The date.** Get it by running `date +%F` as a tool call **here in the body, not as a pre-execution
 block**, and use the bare `YYYY-MM-DD` form exactly as the call returned it. The reason is the
-contract rather than style: § *What the blocks above are* fixes how many pre-execution blocks this
-file carries and it already carries all of them, so a further one is a red check on push whatever
-this section says.
+contract rather than style: the contract retired that carrier, and a line opening with its marker
+outside a fence fails `scripts/test-command-taxonomy.sh` group `I` on push, whatever this
+section says.
 
 **The write tool, and the shape it is taken under.** `Edit`, under standing rule 5's append shape:
 the target exists, **no existing line changes**, and the entry is added at end of file. The
@@ -731,8 +732,12 @@ terms:
 
 **One mechanical constraint on the render, and it is a real hazard rather than a style note.** **No
 line of this hand-off may begin with the pre-execution marker** — a backtick-fenced bang at line
-start. Any such line is counted as an evidence block by the contract guard and turns this file's
-prefix equality red. The bare script path goes in a code span and the flags go in prose, which is the
-rendering `scripts/test-trip-resolution-contract.sh` records in its own scope constraint: it declines
-to scan `CLAUDE.md` for publish-script invocations precisely so that the conforming hand-off does not
+start. Any such line outside a fence is the retired carrier, and it fails
+`scripts/test-command-taxonomy.sh` group `I` on push, and the harness still expands a line of that
+shape at load, under this file's grants — the `unpublish` arm among them — and a failing one aborts
+the whole command. The contract guard does not count it: that
+guard counts a line opening with an evidence entry's own opener or with a retired wrapper opener.
+The bare script path goes in a code span and the flags go in prose, which is the rendering
+`scripts/test-trip-resolution-contract.sh` records in its own scope constraint: it declines to scan
+`CLAUDE.md` for publish-script invocations precisely so that the conforming hand-off does not
 become the violation.
