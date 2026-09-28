@@ -626,8 +626,8 @@ commit's timestamp as a metadata residual no revert reaches.
 
 Distinct cases, and they are distinct branches.
 
-- **A G1 STOP** — the listing canary absent from the first evidence block. Render the STOP
-  and its remedy in the contract's terms for that gate. Render no inventory, render no
+- **A G1 STOP** — any of that gate's STOP branches, a refused listing among them. Render
+  the STOP and its remedy in the contract's terms for the branch that fired. Render no inventory, render no
   empty inventory, and say nothing at all about whether anything is published. A
   conclusion about publication state drawn from a directory listing that may have failed
   is the shape the contract's stop-message rule forbids by name, and a repo-wide

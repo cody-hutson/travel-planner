@@ -35,6 +35,14 @@
 #        A code with no arm is a check indistinguishable from one that CANNOT
 #        fire, which is the precise defect this suite exists to prevent; leaving one
 #        unexercised inside the anti-drift guard would be that defect at its own root.
+#   GD   the gate ladder's refused-read disposition, read FROM CLAUDE.md: G1 carries a
+#        branch for a read the harness refused, beside its ran-and-failed branch keyed on
+#        E1's sentinel and its canary-absent branch; G0-root carries a refused arm; and each
+#        clause that writes a refused read's remedy — those two and the refusal predicate's
+#        own remedy clause — names the allowed-directories step and no word of the
+#        forbidden-remedy class, graded as words rather than as one spelling. Every code its
+#        checker emits has a must-fire arm, built from a copy of the live charter, the wrong
+#        remedy among them paraphrased; the group's own banner carries the reasoning.
 #   Three further groups assert properties of THIS FILE rather than of the contract, and
 #   each carries its full reasoning at the group rather than here: PF, that no verdict in
 #   this file is decided by a pipeline's exit status; MD, that every PASS here requires
@@ -65,10 +73,13 @@
 # "Publishing to GitHub Pages" section, which carries the literal delete line. Extending
 # an invocation scan to CLAUDE.md would therefore make the conforming hand-off itself
 # the violation. The reason is recorded beside the constraint so a later contributor
-# does not "complete" the scan. This suite reads CLAUDE.md for two purposes only: to
-# assert the section exists and is uniquely named, and to extract the canonical literals
-# that section declares (the evidence list and the header citation line). It performs no
-# other scan of that file.
+# does not "complete" the scan. This suite reads CLAUDE.md for three purposes only: to
+# assert the section exists and is uniquely named; to extract the canonical literals
+# that section declares (the evidence list, the header block's citation and
+# data-root-pointer lines, and the consumer table); and to read three declarations of
+# that section for group GD — G0-root's and G1's bullets of the gate ladder, and the
+# refusal predicate's paragraph — whose controls read the same three from copies of the
+# file with one defect planted. It performs no other scan of that file.
 #
 # ── SCOPE BOUNDARY AGAINST THE TAXONOMY GUARD ────────────────────────────────────
 # Two guards, two invariants, no overlap. This one asserts CONTRACT CONFORMANCE (header
@@ -198,7 +209,10 @@ EVID_RETIRED_OPENERS='`{
 `('
 
 # ─────────────────────────────────────────────────────────────────────────────────
-# Extraction primitives. These are the ONLY reads of CLAUDE.md in this file.
+# Extraction primitives. Every section-scoped read of CLAUDE.md in this file goes through
+# one of these or through declared_consumers (group RP). PIN1 and PIN5 read the whole file
+# for a count, and group GD's controls copy it whole to plant one defect in the copy.
+# Nothing else here opens it.
 # ─────────────────────────────────────────────────────────────────────────────────
 
 # Lines of the first fenced block carrying <info> inside the section headed <heading>.
@@ -222,6 +236,184 @@ fence_block() {  # <file> <info> <heading>
     esac
     [ "$line" = '```'"$info" ] && in_fence=1
   done < "$f"
+}
+
+# Group GD's anchors. Each is an ADDRESS — the opener of a gate bullet or of the refusal
+# predicate's paragraph, the leading words of a branch label, one of the two phrases that
+# bound the predicate's remedy clause, or a token a clause is read for — and none is a copy
+# of canonical content: GD's banner says why that distinction is the one PIN5 draws.
+GD_G1_OPENER='- **G1 — '
+GD_G0_OPENER='- **`G0-root` — '
+GD_PRED_OPENER='**The refusal predicate — '
+GD_LABEL_REFUSED='the read was refused'
+GD_LABEL_FAILED='the read ran and failed'
+GD_LABEL_CANARY='the read ran and the canary is absent'
+GD_LABEL_G0_REFUSED='the pointer read, or an observation of the value it holds, was refused'
+GD_REMEDY_FROM='a refused read STOPs with its own remedy:'
+GD_REMEDY_TO='for a single session.'
+GD_REMEDY='allowed-directories step'
+GD_REMEDY_SETTING='additionalDirectories'
+GD_REMEDY_FLAG='--add-dir'
+GD_CANARY_REMEDY='into place'
+
+# The block of the section headed <heading> that opens with <opener> — a gate-ladder bullet,
+# or a bold-led paragraph such as the refusal predicate's: that line and any continuation
+# lines, up to the next bullet, blank line or heading. A fenced block is stepped over rather
+# than read, so a fence can neither open nor extend a block. Emitted verbatim. It is the
+# section-scoped reader group GD uses, beside fence_block.
+ladder_block() {  # <file> <heading> <opener>
+  local f="$1" heading="$2" opener="$3" in_sec=0 in_fence=0 in_b=0 line
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [ "$in_sec" -eq 0 ]; then
+      [ "$line" = "$heading" ] && in_sec=1
+      continue
+    fi
+    case "$line" in
+      '```'*)
+        [ "$in_b" -eq 1 ] && break
+        in_fence=$((1 - in_fence)); continue ;;
+    esac
+    [ "$in_fence" -eq 1 ] && continue
+    case "$line" in '# '*|'## '*|'### '*) break ;; esac
+    if [ "$in_b" -eq 1 ]; then
+      case "$line" in ''|'- '*) break ;; esac
+      printf '%s\n' "$line"; continue
+    fi
+    case "$line" in "$opener"*) in_b=1; printf '%s\n' "$line" ;; esac
+  done < "$f"
+}
+
+# The branch of <bullet> whose bold label opens with <lead>, from that label to the next
+# branch separator ("; **") or to the end of the bullet. Returns 1, emitting nothing, when
+# no label opens with <lead>. Parameter expansion only — no pipeline, for group PF's reason.
+branch_clause() {  # <bullet-text> <label-lead>
+  local b="$1" lead="$2" rest
+  case "$b" in *"**$lead"*) ;; *) return 1 ;; esac
+  rest="${b#*"**$lead"}"
+  printf '%s' "**$lead${rest%%"; **"*}"
+}
+
+# The refusal predicate's REMEDY CLAUSE inside <paragraph>: from GD_REMEDY_FROM through
+# GD_REMEDY_TO. Returns 1, emitting nothing, when either bound is absent, so a missing bound
+# reads as an unreadable declaration (GB) and never as the whole paragraph — which carries
+# the forbidden-remedy class in its own prohibition sentence, and would then read as the
+# defect it forbids. The text past the first bound is taken by length rather than by a
+# shortest-prefix pattern, so the cut is linear in the paragraph.
+remedy_clause() {  # <paragraph-text>
+  local p="$1" pre rest
+  case "$p" in *"$GD_REMEDY_FROM"*) ;; *) return 1 ;; esac
+  pre="${p%%"$GD_REMEDY_FROM"*}"
+  rest="${p:$(( ${#pre} + ${#GD_REMEDY_FROM} ))}"
+  case "$rest" in *"$GD_REMEDY_TO"*) ;; *) return 1 ;; esac
+  printf '%s' "$GD_REMEDY_FROM${rest%%"$GD_REMEDY_TO"*}$GD_REMEDY_TO"
+}
+
+# gd_class <clause> — the words of the FORBIDDEN-REMEDY CLASS that <clause> carries, on one
+# line, space-separated; empty when it carries none. The class is AC-3's own prohibition —
+# a refused read "never names writing the pointer or copying the canary" — read as a family
+# of words rather than as one spelling of it: the canary, by name or by its file
+# (`README.md`); copying (copy, copies, copied, copying) and putting a file `into place`;
+# writing (write, writes, wrote, written, writing). Words are compared on a form of the
+# clause in which every character that is not a letter or a digit is a space, so a word is
+# found beside any punctuation and never inside a longer word, and each is matched in
+# either case of its first letter. The shell's own matcher only, and no regex engine: this
+# suite runs under bash 3.2 and bash 5 alike, and a word-boundary escape means different
+# things to the regex engines behind them (R-11's lesson, one level down).
+gd_class() {  # <clause>
+  local c="$1" w hits=""
+  w=" ${c//[^[:alnum:]]/ } "
+  case "$w" in *" "[Cc]"anary "*) hits="${hits}canary " ;; esac
+  case "$c" in *"README.md"*) hits="${hits}README.md " ;; esac
+  case "$w" in
+    *" "[Cc]"opy "*|*" "[Cc]"opies "*|*" "[Cc]"opied "*|*" "[Cc]"opying "*) hits="${hits}copying " ;;
+  esac
+  case "$w" in *" "[Ii]"nto place "*) hits="${hits}into-place " ;; esac
+  case "$w" in
+    *" "[Ww]"rite "*|*" "[Ww]"rites "*|*" "[Ww]"rote "*|*" "[Ww]"ritten "*|*" "[Ww]"riting "*) hits="${hits}writing " ;;
+  esac
+  printf '%s' "${hits% }"
+}
+
+# ladder_refusal_check <charter> <e1-sentinel> — FINDING lines; returns 1 when any fired.
+#   GB  a declaration could not be read — the G1 bullet, the G0-root bullet, the refusal
+#       predicate's paragraph, or the remedy clause inside it: the declaration is
+#       unreadable, which is not the same finding as absent
+#   GR  G1 carries no refused branch
+#   GA  G1's refused branch names no allowed-directories step
+#   GX  G1's refused branch carries a word of the forbidden-remedy class
+#   GF  G1 carries no ran-and-failed branch keyed on E1's sentinel
+#   GC  G1 carries no canary-absent branch giving the canary copy
+#   GP  G0-root carries no refused arm, or its refused arm names no allowed-directories
+#       step, or carries a word of the forbidden-remedy class
+#   GM  the refusal predicate's remedy clause names no allowed-directories step, or does
+#       not name both of its admission mechanisms, or carries a word of the forbidden-remedy
+#       class
+ladder_refusal_check() {
+  local c="$1" sent="$2" g1 g0 pr rcl cl hits found=0
+  g1="$(ladder_block "$c" "$SECTION_HEADING" "$GD_G1_OPENER")"
+  g0="$(ladder_block "$c" "$SECTION_HEADING" "$GD_G0_OPENER")"
+  pr="$(ladder_block "$c" "$SECTION_HEADING" "$GD_PRED_OPENER")"
+  rcl="$(remedy_clause "$pr")"
+  if [ -z "$g1" ] || [ -z "$g0" ] || [ -z "$pr" ] || [ -z "$rcl" ]; then
+    printf 'FINDING GB %s a declaration could not be read (G1 %s chars, G0-root %s chars, refusal predicate %s chars, its remedy clause %s chars)\n' \
+      "${c##*/}" "${#g1}" "${#g0}" "${#pr}" "${#rcl}"
+    return 1
+  fi
+  if cl="$(branch_clause "$g1" "$GD_LABEL_REFUSED")"; then
+    case "$cl" in
+      *"$GD_REMEDY"*) ;;
+      *) printf 'FINDING GA %s G1'"'"'s refused branch names no %s\n' "${c##*/}" "$GD_REMEDY"; found=1 ;;
+    esac
+    hits="$(gd_class "$cl")"
+    if [ -n "$hits" ]; then
+      printf 'FINDING GX %s G1'"'"'s refused branch carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
+    fi
+  else
+    printf 'FINDING GR %s G1 carries no branch labelled "%s"\n' "${c##*/}" "$GD_LABEL_REFUSED"; found=1
+  fi
+  cl="$(branch_clause "$g1" "$GD_LABEL_FAILED")"
+  if [ -z "$sent" ]; then
+    printf 'FINDING GF %s no sentinel was supplied, so the ran-and-failed branch has nothing to be keyed on\n' "${c##*/}"; found=1
+  else
+    case "$cl" in
+      *"$sent"*) ;;
+      *) printf 'FINDING GF %s G1 carries no branch labelled "%s" keyed on the sentinel %s\n' "${c##*/}" "$GD_LABEL_FAILED" "$sent"; found=1 ;;
+    esac
+  fi
+  cl="$(branch_clause "$g1" "$GD_LABEL_CANARY")"
+  case "$cl" in
+    *"$GD_CANARY_REMEDY"*) ;;
+    *) printf 'FINDING GC %s G1 carries no branch labelled "%s" giving the canary copy\n' "${c##*/}" "$GD_LABEL_CANARY"; found=1 ;;
+  esac
+  if cl="$(branch_clause "$g0" "$GD_LABEL_G0_REFUSED")"; then
+    case "$cl" in
+      *"$GD_REMEDY"*) ;;
+      *) printf 'FINDING GP %s G0-root'"'"'s refused arm names no %s\n' "${c##*/}" "$GD_REMEDY"; found=1 ;;
+    esac
+    hits="$(gd_class "$cl")"
+    if [ -n "$hits" ]; then
+      printf 'FINDING GP %s G0-root'"'"'s refused arm carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
+    fi
+  else
+    printf 'FINDING GP %s G0-root carries no arm labelled "%s"\n' "${c##*/}" "$GD_LABEL_G0_REFUSED"; found=1
+  fi
+  case "$rcl" in
+    *"$GD_REMEDY"*) ;;
+    *) printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause names no %s\n' "${c##*/}" "$GD_REMEDY"; found=1 ;;
+  esac
+  case "$rcl" in
+    *"$GD_REMEDY_SETTING"*) ;;
+    *) printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause names no %s\n' "${c##*/}" "$GD_REMEDY_SETTING"; found=1 ;;
+  esac
+  case "$rcl" in
+    *"$GD_REMEDY_FLAG"*) ;;
+    *) printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause names no %s\n' "${c##*/}" "$GD_REMEDY_FLAG"; found=1 ;;
+  esac
+  hits="$(gd_class "$rcl")"
+  if [ -n "$hits" ]; then
+    printf 'FINDING GM %s the refusal predicate'"'"'s remedy clause carries the forbidden-remedy class: %s\n' "${c##*/}" "$hits"; found=1
+  fi
+  return "$found"
 }
 
 # is_evid_line <line> — 0 iff the line OPENS with an evidence marker: one of the entry
@@ -1671,6 +1863,164 @@ EOF
     FAIL "CTLe: the repository's own skills/ tree changed across this group (was '$CTL_CMD_BEFORE', now '$CTL_CMD_AFTER') — a fixture was written into the tree this suite is measuring"
   else
     PASS "CTLe: all $CTL_FIXTURE_N fixture tree(s) this group built lie under the temp dir ($WORK), which is not inside the repository, and the repository's own skills/ tree — $CTL_CMD_N file(s), digested before the first fixture was built and again after the last — is byte-unchanged. No fixture was written into the tree this suite measures; a READ is not claimed, because a read leaves nothing here could observe"
+  fi
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# Group GD — the gate ladder keeps a refused read apart from a failed one.
+#
+# CLAUDE.md § "Resolving a trip" states the refusal predicate once and applies it at two
+# gates: `G0-root`'s pointer read and G1's listing each carry a REFUSED branch whose remedy
+# is the allowed-directories step, beside the branches for a read that ran. The defect this
+# group exists for is the one that predicate closed: a listing the harness refused, read as
+# a missing canary, and a STOP telling the operator to copy `trips/README.md` into place
+# when nothing about the directory had been observed. So the group grades the declaration.
+# It reads three declarations — the G1 bullet, the G0-root bullet and the refusal
+# predicate's paragraph — through the section constants every other read here uses,
+# CLAUDE_MD and SECTION_HEADING, so a relocation of the section re-points this group with
+# the rest of the file. Each required branch is found by its label and graded by its clause.
+#
+# A REFUSED READ'S REMEDY IS GRADED BY CLASS, IN EVERY CLAUSE THAT WRITES IT. It is written
+# three times: in G1's refused branch, in G0-root's refused arm, and in the predicate's own
+# remedy clause, to which both of those hand their STOP. Each of the three is read for the
+# forbidden-remedy class as words (gd_class) and never for one spelling of it, because a
+# checker that reads a clause for the literal it was written to find passes a paraphrase of
+# the same wrong remedy. The predicate's clause is read between its two bounding phrases,
+# not as its whole paragraph: the paragraph's own prohibition sentence names the class in
+# order to forbid it, so the paragraph as a whole would read as the defect. WHAT THE CLASS
+# DOES NOT SEE, stated so a green is not read as more than it is: it is a family of words,
+# not a meaning. A wrong remedy written in none of them — restoring the listing file, say —
+# passes unseen here, and a reader of the clause is what grades that.
+#
+# THE LABELS ARE ADDRESSES, AND THEY ARE WRITTEN DOWN. Like SECTION_HEADING, a branch label
+# locates a declaration; it is not a copy of one. The group holds the leading words of each
+# label, the phrases that bound the remedy clause and the tokens it reads a clause for, and
+# nothing else, so a reworded label fails here by name rather than passing unseen. The one
+# canonical value it needs — E1's sentinel — is DERIVED from the extracted evidence list,
+# never written here, for PIN5's reason.
+#
+# EVERY CODE THE CHECKER EMITS HAS A MUST-FIRE ARM, built from the live charter at runtime:
+# each branch removed in turn (GDc1-GDc3, GDc5); the wrong remedy PARAPHRASED into each of
+# the three clauses (GDc4, GDc6-GDc8), in words written below rather than assembled from the
+# checker's own tokens, so that no control can confirm the checker merely by repeating it;
+# the refused branch left naming no step (GDc9); and a bullet whose opener no longer reads
+# (GDc10). Each fixture is asserted to have changed the charter before its verdict is read,
+# and each verdict names the ONE code it expects, so a control that fires for the wrong
+# reason is a failure too.
+# ═════════════════════════════════════════════════════════════════════════════════
+echo
+echo "── Group GD — the gate ladder keeps a refused read apart from a failed one."
+
+if [ "$PIN_OK" -ne 1 ]; then
+  FAIL "GD0: the canonical could not be extracted, so E1's sentinel cannot be derived and no disposition can be graded — this group did not run, which is a failure and not a pass"
+else
+  GD_E1="$(sed -n '1p' "$CANON_FILE")"
+  GD_SENT="${GD_E1#*printf \'}"; GD_SENT="${GD_SENT%%\\n*}"
+  GD_G1="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_G1_OPENER")"
+  GD_G0="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_G0_OPENER")"
+  GD_PR="$(ladder_block "$CLAUDE_MD" "$SECTION_HEADING" "$GD_PRED_OPENER")"
+  GD_REM="$(remedy_clause "$GD_PR")"
+
+  # GD1 — extraction, graded first (PV-3): an unreadable declaration is a failure, never a
+  # clean read of an absent one.
+  if [ -z "$GD_G1" ]; then
+    FAIL "GD1: no bullet opening \"$GD_G1_OPENER\" was found under \"$SECTION_HEADING\" in $CLAUDE_MD — G1's declaration could not be read, so nothing below grades it"
+  elif [ -z "$GD_G0" ]; then
+    FAIL "GD1: no bullet opening \"$GD_G0_OPENER\" was found under \"$SECTION_HEADING\" in $CLAUDE_MD — G0-root's declaration could not be read, so nothing below grades it"
+  elif [ -z "$GD_PR" ]; then
+    FAIL "GD1: no paragraph opening \"$GD_PRED_OPENER\" was found under \"$SECTION_HEADING\" in $CLAUDE_MD — the refusal predicate could not be read, so the remedy both refused branches hand their STOP to is not graded"
+  elif [ -z "$GD_REM" ]; then
+    FAIL "GD1: the refusal predicate's paragraph was read, but no clause runs in it from \"$GD_REMEDY_FROM\" to \"$GD_REMEDY_TO\" — its remedy clause could not be read, so it is not graded"
+  elif [ -z "$GD_SENT" ] || [ "$GD_SENT" = "$GD_E1" ]; then
+    FAIL "GD1: E1's sentinel could not be derived from the extracted entry, so the ran-and-failed branch has no token to be graded against"
+  else
+    PASS "GD1: extraction — the G1 bullet (${#GD_G1} chars), the G0-root bullet (${#GD_G0} chars) and the refusal predicate's paragraph (${#GD_PR} chars), with its remedy clause (${#GD_REM} chars), were read from \"$SECTION_HEADING\", and E1's sentinel was derived from the extracted list (\"$GD_SENT\"), not written here"
+  fi
+
+  # GD2 — the live charter, in the remediated form: an exact status, so an absent checker
+  # reports rc=127 as a named failure rather than reaching a PASS. The text says what the
+  # checker read and what it read each clause for, with the length of each clause, so a
+  # PASS here claims no more than was graded.
+  GD_OUT="$(ladder_refusal_check "$CLAUDE_MD" "$GD_SENT")"; GD_RC=$?
+  GD_CR="$(branch_clause "$GD_G1" "$GD_LABEL_REFUSED")"
+  GD_C0="$(branch_clause "$GD_G0" "$GD_LABEL_G0_REFUSED")"
+  expect_rc 0 "GD2" "G1 carries a refused branch, a ran-and-failed branch keyed on E1's sentinel and a canary-absent branch whose remedy puts the canary $GD_CANARY_REMEDY, and G0-root carries a refused arm; and each clause that writes a refused read's remedy — G1's refused branch (${#GD_CR} chars), G0-root's refused arm (${#GD_C0} chars) and the refusal predicate's remedy clause (${#GD_REM} chars) — names the $GD_REMEDY and carries no word of the forbidden-remedy class (the canary or README.md, copying or putting into place, writing), the predicate's clause naming $GD_REMEDY_SETTING and $GD_REMEDY_FLAG as well" -- ladder_refusal_check "$CLAUDE_MD" "$GD_SENT"
+  show "$GD_OUT" 'G[BRAXFCPM]'
+
+  # The controls plant ONE defect in a copy of a conformant charter. Over a non-conformant
+  # one they could not isolate the defect they plant, and GD2 has already shown the checker
+  # firing, so they do not run — and that is reported as a failure, never passed over.
+  if [ "$GD_RC" -ne 0 ]; then
+    FAIL "GDc0: the controls plant one defect in a copy of a conformant charter, and GD2 found the live charter non-conformant (rc=$GD_RC), so no control could isolate the defect it plants — they did not run, which is a failure and not a pass"
+  else
+    # gd_without writes the live charter, with the first line carrying <old> rewritten so
+    # that <old> reads <new>, into its own file under WORK — never into the repository. The
+    # rewrite splits the line around <old> by length rather than by a pattern replacement,
+    # because bash 3.2 keeps the quotes of a quoted replacement and bash 5.2 reads an
+    # unquoted `&` in one as the match: the fixture must be the same bytes under both. An
+    # empty or absent <old> leaves the copy unchanged, which gd_arm then reports by name.
+    gd_without() {  # <out-file> <old-substring> <new-substring>
+      local line hit=0 pre
+      while IFS= read -r line || [ -n "$line" ]; do
+        if [ "$hit" -eq 0 ] && [ -n "$2" ]; then
+          case "$line" in
+            *"$2"*)
+              pre="${line%%"$2"*}"
+              line="$pre$3${line:$(( ${#pre} + ${#2} ))}"
+              hit=1 ;;
+          esac
+        fi
+        printf '%s\n' "$line"
+      done < "$CLAUDE_MD" > "$1"
+    }
+    GD_CF="$(branch_clause "$GD_G1" "$GD_LABEL_FAILED")"
+    GD_CC="$(branch_clause "$GD_G1" "$GD_LABEL_CANARY")"
+    gd_arm() {  # <id> <fixture> <expected-code> <what the fixture removed or planted>
+      local id="$1" fx="$2" code="$3" what="$4" out
+      if cmp -s "$fx" "$CLAUDE_MD"; then
+        FAIL "$id: the fixture is byte-identical to the live charter — $what did not change it, so the verdict below would prove nothing"
+        return 0
+      fi
+      out="$(ladder_refusal_check "$fx" "$GD_SENT")"
+      expect_rc 1 "$id" "MUST-FIRE — $what" -- ladder_refusal_check "$fx" "$GD_SENT"
+      gd_all="$(grep -c -E '^FINDING ' <<<"$out")"; gd_hit="$(grep -c -E "^FINDING $code " <<<"$out")"
+      if [ "${gd_hit:-0}" -ge 1 ] && [ "${gd_all:-0}" -eq "${gd_hit:-0}" ]; then
+        PASS "$id: SPECIFICITY — $gd_hit of $gd_all finding(s) carry $code, so the checker attributed the defect this fixture planted and no other"
+      else
+        FAIL "$id: the checker reported $gd_hit $code finding(s) among $gd_all: $(printf '%s' "$out" | tr '\n' ' ')"
+      fi
+    }
+    GD_FX="$WORK/gd"; mkdir -p "$GD_FX"
+
+    # Each branch removed in turn.
+    gd_without "$GD_FX/no-refused.md"  "$GD_CR; " ""
+    gd_arm "GDc1" "$GD_FX/no-refused.md"  "GR" "G1's refused branch removed"
+    gd_without "$GD_FX/no-failed.md"   "$GD_CF; " ""
+    gd_arm "GDc2" "$GD_FX/no-failed.md"   "GF" "G1's ran-and-failed branch removed"
+    gd_without "$GD_FX/no-canary.md"   "$GD_CC; " ""
+    gd_arm "GDc3" "$GD_FX/no-canary.md"   "GC" "G1's canary-absent branch removed"
+    gd_without "$GD_FX/no-g0-refused.md" "$GD_C0; " ""
+    gd_arm "GDc5" "$GD_FX/no-g0-refused.md" "GP" "G0-root's refused arm removed"
+
+    # The wrong remedy, paraphrased into each clause that writes a refused read's remedy.
+    # Every planted phrase is written out here in the words AC-3 forbids — writing the
+    # pointer, copying the canary — and none is built from a token the checker reads for.
+    gd_without "$GD_FX/refused-copies-canary.md" "$GD_CR" "$GD_CR, and copying the canary as a further fix"
+    gd_arm "GDc4" "$GD_FX/refused-copies-canary.md" "GX" "G1's refused branch made to add copying the canary as a further fix"
+    gd_without "$GD_FX/refused-writes-pointer.md" "$GD_CR" "$GD_CR, and writing the pointer again as a further fix"
+    gd_arm "GDc6" "$GD_FX/refused-writes-pointer.md" "GX" "G1's refused branch made to add writing the pointer again as a further fix"
+    gd_without "$GD_FX/g0-refused-copies.md" "$GD_C0" "$GD_C0, and copying the engine's own \`trips/README.md\` into place as a further fix"
+    gd_arm "GDc7" "$GD_FX/g0-refused-copies.md" "GP" "G0-root's refused arm made to add copying the engine's own canary into place as a further fix"
+    gd_without "$GD_FX/remedy-rewritten.md" "give the allowed-directories step as the fix" "give copying the engine's own \`trips/README.md\` into place and writing the absolute path into the pointer as the fix"
+    gd_arm "GDc8" "$GD_FX/remedy-rewritten.md" "GM" "the refusal predicate's remedy clause rewritten to give copying the canary into place and writing the pointer as the fix"
+
+    # The refused branch keeps its label and its shape and loses the step it names, and a
+    # bullet's opener is re-spelled so the bullet no longer reads.
+    GD_PRE="${GD_CR%%"$GD_REMEDY"*}"
+    gd_without "$GD_FX/refused-no-step.md" "$GD_CR" "${GD_PRE}operator${GD_CR:$(( ${#GD_PRE} + ${#GD_REMEDY} ))}"
+    gd_arm "GDc9" "$GD_FX/refused-no-step.md" "GA" "G1's refused branch left naming no step, the operator in its place"
+    gd_without "$GD_FX/g1-unreadable.md" "$GD_G1_OPENER" "- **G1: "
+    gd_arm "GDc10" "$GD_FX/g1-unreadable.md" "GB" "G1's bullet opener re-spelled, so the bullet no longer reads"
   fi
 fi
 
