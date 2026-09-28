@@ -306,8 +306,8 @@ after this one; there is no order to get right.
 
 If something has to be worked around **for this trip alone**, it is not a personal
 must-have and does not need a profile at all: it belongs in the trip's own file,
-`trip-context.md`, under `## Hard Constraints` or `## Dietary & Health`, whose
-`Applies to:` line names the people it covers.
+`trip-context.md`, under `## Hard Constraints`, where each block's `Applies to:` line
+names the people it covers, or under `## Dietary & Health`.
 
 **Say one of those two routes to them out loud when you reach this point.** A must-have
 nobody wrote down anywhere is the one thing this engine cannot plan around, and a
