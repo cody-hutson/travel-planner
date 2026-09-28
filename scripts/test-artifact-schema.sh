@@ -7426,6 +7426,14 @@ fi
 # WHERE THE READER STOPS. pc_items is not fence-aware: neither file carries a fenced block today. A
 # fence carrying a "#"-led line inside the rules section would read as a heading and end the
 # section early, which turns PC red through COUNT and DIFF rather than green.
+#
+# WHAT A REWRAP REACHES. A rewrap on whitespace alone changes no rule, and PC1 reads it as
+# agreement. The controls read it the same way. PC-C2 and PC-C3 remove or plant a WHOLE item, as
+# pc_items delimits one; PC-C4 and PC-C5 edit a heading and an item's number, which such a rewrap
+# never moves; and PC-C6 rewraps narrower than the rules it is handed. PC-C1 is the one exception,
+# and it is bounded: it finds its phrase on rule 7's item line, which keeps it under a rewrap 47
+# columns wide or wider on the card as it ships. Narrower, the phrase can leave that line, and
+# PC-C1 reads "did not land" — fail-closed.
 # ═════════════════════════════════════════════════════════════════════════════════
 echo
 echo "PC — the interview card's numbered rules agree with the interview's conduct file, rule for rule"
@@ -7604,14 +7612,21 @@ awk '/^7\. / && !d { sub(/Take only what they said/, "Take only what they meant"
 pc_landed 'PC-C1' "$WORK/pc-c1.md" "$PC_CARD" \
   && pc_control 'PC-C1' 'DIFF 7' 'MUST FIRE — a card copy with one word of rule 7 changed' "$PC_VERB" "$WORK/pc-c1.md"
 
-# PC-C2 DROP — rule 14 removed from a card copy.
-awk '/^14\. / { next } { print }' "$PC_CARD" > "$WORK/pc-c2.md"
+# PC-C2 DROP — rule 14 removed from a card copy, whole: its item line and every line pc_items joins
+# to it, up to the next item line, a blank line or a heading. Dropping the item line alone leaves a
+# wrapped rule's tail behind to join rule 13, which reads as a finding on a card PC1 accepts.
+awk '/^14\. / { d = 1; next } d && (/^[0-9]+\. / || /^[ \t]*$/ || /^#+ /) { d = 0 } !d { print }' "$PC_CARD" > "$WORK/pc-c2.md"
 pc_landed 'PC-C2' "$WORK/pc-c2.md" "$PC_CARD" \
   && pc_control 'PC-C2' "COUNT 14 13
 DIFF 14" 'MUST FIRE — a card copy without rule 14' "$PC_VERB" "$WORK/pc-c2.md"
 
-# PC-C3 ADD — a rule 15 planted after rule 14 in a conduct-file copy.
-awk '{ print } /^14\. / { print "15. **A planted rule.** It exists only in this copy." }' "$PC_VERB" > "$WORK/pc-c3.md"
+# PC-C3 ADD — a rule 15 planted after rule 14 in a conduct-file copy, after the whole of rule 14, as
+# PC-C2 drops it: planted after the item line alone, a wrapped rule 14's tail would join rule 15.
+awk -v R='15. **A planted rule.** It exists only in this copy.' '
+  p && (/^[0-9]+\. / || /^[ \t]*$/ || /^#+ /) { print R; p = 0 }
+  { print }
+  /^14\. / { p = 1 }
+  END { if (p) print R }' "$PC_VERB" > "$WORK/pc-c3.md"
 pc_landed 'PC-C3' "$WORK/pc-c3.md" "$PC_VERB" \
   && pc_control 'PC-C3' "COUNT 15 14
 DIFF 15" 'MUST FIRE — a conduct-file copy carrying a planted rule 15' "$WORK/pc-c3.md" "$PC_CARD"
@@ -7632,11 +7647,28 @@ pc_landed 'PC-C5' "$WORK/pc-c5.md" "$PC_CARD" \
 DIFF 9
 DIFF 19" 'MUST FIRE — a card copy with rule 9 renumbered 19' "$PC_VERB" "$WORK/pc-c5.md"
 
-# PC-C6 WRAP — the card copy rewrapped at 60 columns, on whitespace only. MUST NOT FIRE. fold -s
-# breaks at a space and never inside a word, so no word changes; a hyphen-breaking wrapper would.
-fold -s -w 60 "$PC_CARD" > "$WORK/pc-c6.md"
+# PC-C6 WRAP — the card copy's rules rewrapped, on whitespace only. MUST NOT FIRE. The width is 60
+# columns, or one column narrower than the rules section's longest line where that line already
+# fits in 60: a card already wrapped at 60 is unchanged by a rewrap at 60, and an unchanged copy
+# gives this control no input. Only lines inside the rules section are rewrapped, and a heading
+# never is. A line breaks only after a space, as fold -s breaks it, and a stretch with no space in
+# reach is left whole, so no word changes; a hyphen-breaking wrapper would change one.
+PC_C6_W="$(awk -v H="$PC_HEAD" '
+  /^#+ / { t = $0; sub(/^#+ /, "", t); sub(/[ \t]+$/, "", t); inb = (t == H); next }
+  inb && length($0) > m { m = length($0) }
+  END { print (m > 60 ? 60 : m - 1) }' "$PC_CARD")"
+awk -v H="$PC_HEAD" -v W="$PC_C6_W" '
+  /^#+ / { t = $0; sub(/^#+ /, "", t); sub(/[ \t]+$/, "", t); inb = (t == H); print; next }
+  !inb || length($0) <= W { print; next }
+  { s = $0
+    while (length(s) > W) {
+      c = 0; for (i = W; i > 1; i--) if (substr(s, i, 1) == " ") { c = i; break }
+      if (c == 0) break
+      print substr(s, 1, c); s = substr(s, c + 1)
+    }
+    print s }' "$PC_CARD" > "$WORK/pc-c6.md"
 pc_landed 'PC-C6' "$WORK/pc-c6.md" "$PC_CARD" \
-  && pc_control 'PC-C6' '' 'MUST NOT FIRE — a card copy rewrapped at 60 columns, whitespace only' "$PC_VERB" "$WORK/pc-c6.md"
+  && pc_control 'PC-C6' '' "MUST NOT FIRE — a card copy rewrapped at $PC_C6_W columns, whitespace only" "$PC_VERB" "$WORK/pc-c6.md"
 
 # PC-C7 READ — the conduct side's closing record removed from the stream, on pc_compare directly:
 # the one state no file mutation reaches, because pc_items always closes its stream.

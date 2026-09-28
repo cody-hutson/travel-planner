@@ -687,7 +687,7 @@ what the budget is about; each row names the commit its own figure was measured 
 | `trip` | 1,120 | ~2.2× | measured at `b89b367`. The entry point, carrying every dispatching verb and the agent roster each one reads |
 | `trip-decommission` | 653 | ~1.3× | measured at `b89b367`. Three lifecycle verbs whose ordering is load-bearing and stated in full |
 | `trip-publish` | 553 | ~1.1× | measured at `b89b367`. The publish surface, whose refusals and their reasons are the bulk of it |
-| `trip-new` | 520 | ~1.04× | measured on the commit that appended the standing confirm rule to § *What this command never does* — this one, which cannot carry its own hash. It read 468 at `b89b367` and sat inside the budget until then. The rule is one text stated in each command file rather than a citation to one, because a citation to another command's file would make this command's conduct that file's to state, which is the form `ADR-007` § *Context* requires of a command |
+| `trip-new` | 524 | ~1.05× | measured on the commit that re-measured it once the no-repository hand-off had reached § *Traveler intake* — this one, which cannot carry its own hash. It read 520 on the commit that appended the standing confirm rule to § *What this command never does*, and 468 at `b89b367`, inside the budget until that rule was appended. The rule is one text stated in each command file rather than a citation to one, because a citation to another command's file would make this command's conduct that file's to state, which is the form `ADR-007` § *Context* requires of a command |
 
 **No body content is reduced in the format conversion, deliberately.** Two constraints make the
 reduction a separate change rather than a cheap one to fold in here. A verb must behave identically
